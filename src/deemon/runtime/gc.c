@@ -82,6 +82,7 @@ PRIVATE recursive_rwlock_t gc_lock = RECURSIVE_RWLOCK_INIT;
 
 /* [lock(gc_lock)][0..1] The list root of all GC objects. */
 PRIVATE struct gc_head *gc_root  = NULL;
+PRIVATE bool did_untrack = false;
 
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
 PRIVATE rwlock_t gc_pending_lock = RWLOCK_INIT;
@@ -199,6 +200,7 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
  rwlock_endwrite(&gc_pending_lock);
 #endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
+ did_untrack = true;
  GCLOCK_RELEASE();
 #ifndef NDEBUG
  memset(head,0xcc,GC_HEAD_SIZE);
@@ -716,7 +718,11 @@ collect_restart_with_pending_hint:
  }
 #endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
 restart:
+ did_untrack = false;
  for (iter = gc_root; iter; iter = iter->gc_next) {
+  if (iter->gc_object.ob_refcnt == 0)
+      continue; /* The object may have just been decref()-ed by another thread,
+                 * but that thread hadn't had the chance to untrack it, yet. */
   ASSERT_OBJECT(&iter->gc_object);
 #ifdef CONFIG_GC_CHECK_MEMORY
   DEE_CHECKMEMORY();
@@ -736,6 +742,9 @@ restart:
     * changed all-together at this point). */
    goto restart;
   }
+  /* If something was untracked, restart because the chain may have be altered. */
+  if (did_untrack)
+      goto restart;
  }
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
  COMPILER_READ_BARRIER();
