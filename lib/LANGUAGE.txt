@@ -727,6 +727,9 @@
  *    may be, and regardless of how the compiler chose to distribute
  *    local variable indices, and without relying on stack-variable.
  *
+ *  - Using `yield' within a `finally' can no longer be used to delay
+ *    exception delivery. Instead, doing this causes weak undefined behavior.
+ *
  *  - Trailing commata without a following expression in a comma-expression
  *    will now force-create a 1-element sequence:
  *    >> print repr(42);    // 42
