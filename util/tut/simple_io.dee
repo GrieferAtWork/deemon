@@ -18,22 +18,23 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-// A simple application that shows how io works
-// and the optional stream parameter for print
+/* A simple application that shows how io works
+ * and the optional stream parameter for print */
 
-#include <file>
+import file from deemon;
 
-// Open a file in write mode
-fp = file.io("simple_io_out.txt","w");
+/* Open a file in write mode */
+fp = file.open("simple_io_out.txt","w");
 
-// Fill it with some data
-print fp: "Hello world from simple_io!";
-fp.write("This is the second line of text!\n");
+/* Fill it with some data */
+print fp: "Hello world from simple_io!";        /* Print unicode as UTF-8 */
+fp.write("This is the second line of text!\n"); /* Print string bytes (same as write("...".bytes())) */
+fp << "And this is the third line of text.\n";  /* Same as `print fp: "...",;' */
 
-// Delete the file object to free the handle
-// NOTE: This step is done automatically once
-//       'fp' would have left its scope normally
-//       (aka. At the end of this file)
+/* Delete the file object to free the handle
+ * NOTE: This step is done automatically once
+ *       'fp' would have left its scope normally
+ *       (aka. At the end of this file) */
 del fp;
 
 

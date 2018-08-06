@@ -18,12 +18,12 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-// Super classes are pretty straight forward.
-// And unlike other languages, deemon has a dedicated
-// syntax for references to super classes
+/* Super classes are pretty straight forward.
+ * And unlike other languages, deemon has a dedicated
+ * syntax for references to super classes */
 class a {
 	call_foo() {
-		// Calling an overwritten function from a derived class
+		/* Calling an overwritten function from a derived class */
 		this.foo();
 	}
 	foo() {
@@ -33,27 +33,27 @@ class a {
 class b: a {
 	foo() {
 		print type this,"--","b::foo()";
-		// Call a method from another base
-		// Note how we don't have to explicitly state
-		// which base class should be used
-		// WARNING: If you would write 'this.super.foo()',
-		//          you would once again call b::foo,
-		//          as 'this' is an instance of 'c'
-		// Internally, this super is replaced with
-		// the commented out line, where 'a' is a
-		// copy of the exprast used to declare the base
-		// of the active class above ('class b: a').
+		/* Call a method from another base
+		 * Note how we don't have to explicitly state
+		 * which base class should be used
+		 * WARNING: If you would write 'this.super.foo()',
+		 *          you would once again call b::foo,
+		 *          as 'this' is an instance of 'c'
+		 * Internally, this super is replaced with
+		 * the commented out line, where 'a' is a
+		 * copy of the exprast used to declare the base
+		 * of the active class above ('class b: a'). */
 		super.foo();
-		// __super(a,this).foo();
+		/* (this as a).foo(); */
 	}
 };
 class c: b {
-	// Member functions have two implicit attributes:
-	// The following would be defined as: [[thiscall,super(b)]]
-	// The super attribute states which class super references should link to
+	/* Member functions have two implicit attributes:
+	 * The following would be defined as: [[thiscall,super(b)]]
+	 * The super attribute states which class super references should link to */
 	foo() {
 		print type this,"--","c::foo()";
-		// Call a method from the base class
+		/* Call a method from the base class */
 		super.foo();
 	}
 };

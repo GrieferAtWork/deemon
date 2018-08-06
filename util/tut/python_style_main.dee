@@ -18,25 +18,46 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-// In python you have that
-// >> if __name__ == '__main__':
-// >>   ...
-// In this example, I show you how you can do the same thing in deemon
+/* When executed, the base source file has the preprocessor
+ * macro __MAIN__ defined. - This macro is not defined for
+ * modules.
+ * Secondly, the preprocessor has been extended to support
+ * strings in expressions, allowing you to easily check if
+ * the current __FILE__ is the __BASE_FILE__, to figure out
+ * if your source file was included from somewhere else, or
+ * is being executed directly.
+ * Note however that deemon source files that both serve as
+ * a module, and as a stand-alone executable should simply
+ * check if `__MAIN__' has been defined:
+ * >> function my_awesome_function() {
+ * >>     print "Now doing something wasesome";
+ * >> }
+ * >>
+ * >> #ifdef __MAIN__
+ * >> // Execute our awesome function if we are being executed directly
+ * >> // The python equivalent would be `if __name__ == '__main__':'
+ * >> my_awesome_function();
+ * >> #endif
+ */
 
+#ifdef __MAIN__
 
-static if (__FILE__ == __BASE_FILE__) {
-	print "BASE_FILE #1";
-}
-
-// If you're looking for something a little bit more low-level,
-// you can achive the same using only the preprocessor:
-// NOTE: This one even worked in v100, if you're
-//       that backwards-compatibility guy...
-
-#include <TPP_STR.h>
-#if TPP_STRCMP(__FILE__,__BASE_FILE__) == 0
-print "BASE_FILE #2";
+#if __FILE__ == __BASE_FILE__
+print "Main file!";
+#else
+print "File included from the main file";
 #endif
+
+#else
+
+#if __FILE__ == __BASE_FILE__
+print "Module file!";
+#else
+print "File included by a module";
+#endif
+
+#endif
+
 
 
 

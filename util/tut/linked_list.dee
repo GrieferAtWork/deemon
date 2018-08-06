@@ -112,7 +112,11 @@ global class LinkedList: sequence from deemon {
 	@"Returns a representation of @this :LinkedList in abstract-sequence syntax"
 	operator repr() -> "{ "+", ".join(for (local x: this) repr x)+" }";
 
-	this() {
+	this(init = none) {
+		if (init !is none) {
+			for (local x: init)
+				push_back(x);
+		}
 	}
 
 	~this() {
@@ -171,7 +175,7 @@ assert gc.collect() == 0;
 /* Delete our demo-list. */
 del l1;
 
-/* Now that the scarily-complex object-tree that is `l1' is no longer
+/* Now that the scarily-complex object-tree that was `l1' is no longer
  * being reference from the outside, the GC is able to clean it up. */
 assert gc.collect() != 0;
 

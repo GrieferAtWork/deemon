@@ -19,20 +19,21 @@
  */
 
 
-@"nametuple({string...} fields) -> type"
+@"({string...} fields)->type"
 @"Returns a tuple-like sequence type that where tuple indices can"
 @"also be accessed as attributes, using the given @fields as names"
 function nametuple(fields) {
-	import * from deemon;
+	import sequence, tuple, mapping from deemon;
 	local num_fields = #fields;
 	class NameTuple: sequence {
 		private m_values;
 		this(init) {
+			/* XXX: keyword arguments? */
 			if (init is mapping) {
-				m_values = tuple.make(num_fields,
+				m_values = tuple.unpack(num_fields,
 					for (local name: fields) init[name]);
 			} else {
-				m_values = tuple.make(num_fields,init);
+				m_values = tuple.unpack(num_fields,init);
 			}
 		}
 		operator [] (index) -> m_values[index];

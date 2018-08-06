@@ -18,45 +18,38 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-#if !__has_feature(__exceptions__)
-#error Your distribution of deemon seems to have exceptions disabled \
-       Without them, this file won't work, so don't even bother... \
-       To fix this, set 'DEE_CONFIG_LANGUAGE_HAVE_EXCEPTIONS' in <deemon/__conf.inl>
-#endif
-
-
 function yfunc(x) {
-	print __FUNCTION__ "("+str x+"): Entered";
+	print "yfunc("+str x+"): Entered";
 	try {
-		while (1) {
-			print __FUNCTION__ "("+str x+"): yielding:",x;
-			// Yield may never return if the iterator is destroyed.
+		for (;;) {
+			print "yfunc("+str x+"): yielding:",x;
+			/* Yield may never return if the iterator is destroyed. */
 			yield x;
 		}
 	} finally {
-		// Finally always get's executed, even if the iterator is destroyed.
-		print __FUNCTION__ "("+str x+"): in finally";
+		/* Finally always get's executed, even if the iterator is destroyed. */
+		print "yfunc("+str x+"): in finally";
 	}
 }
 
 print "Creating generator";
 generator = yfunc(42);
 print "Creating iteartor";
-iterator = generator.__iterself__();
+iterator = generator.operator iter();
 print "Begin iteration";
 
-// Read a whole bunch of stuff from 'yfunc'
-print "Received:",iterator.__iternext__();
-print "Received:",iterator.__iternext__();
-print "Received:",iterator.__iternext__();
-print "Received:",iterator.__iternext__();
-print "Received:",iterator.__iternext__();
+/* Read a whole bunch of stuff from 'yfunc' */
+print "Received:",iterator.operator next();
+print "Received:",iterator.operator next();
+print "Received:",iterator.operator next();
+print "Received:",iterator.operator next();
+print "Received:",iterator.operator next();
 
-// Multiple execution object of the same function
-iterator2 = generator.__iterself__();
+/* Multiple execution object of the same function */
+iterator2 = generator.operator iter();
 
-// Kick-start the second iterator
-print "Received:",iterator2.__iternext__();
-del iterator2; // Will print the finally message
-del iterator; // Will print another finally message
+/* Kick-start the second iterator */
+print "Received:",iterator2.operator next();
+del iterator2; /* Will print the finally message */
+del iterator;  /* Will print a second finally message */
 

@@ -55,7 +55,7 @@ function get_weak_self_dict() {
 	d["foo"] = "bar";
 	d["bar"] = "foo";
 	d["this"] = d; // Dict contains itself (requires gc to destroy)
-	return weak(d);
+	return weak d;
 }
 
 w = get_weak_self_dict();

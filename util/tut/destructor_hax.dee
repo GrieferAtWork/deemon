@@ -18,15 +18,15 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-// A little bit of hacking to demonstrate, that I
-// even thought of little cornercases like these.
-// - This works by creating a partially-executed
-//   yield function that is forced to execute
-//   a finally block (containing the actual code)
-//   once it gets destroyed.
+/* A little bit of hacking to demonstrate, that I
+ * even thought of little cornercases like these.
+ * - This works by creating a partially-executed
+ *   yield function that is forced to execute
+ *   a finally block (containing the actual code)
+ *   once it gets destroyed. */
 #define __destructor_callback{code...}\
 ({\
-	__stack local __r = (function {\
+	__stack local __r = (function() {\
 		try {\
 			yield none;\
 		} finally {\

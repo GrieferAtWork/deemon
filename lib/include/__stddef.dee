@@ -126,7 +126,7 @@ local function __ctypes_new(tp) {
 #define __builtin_choose_expr(c,tt,ff)    ((c)?(tt):(ff))
 #define __builtin_unreachable()             __asm__("" : : : "noreturn")
 #define __builtin_types_compatible_p(x,y) ((x)===(y))
-#define __builtin_last_traceback()        ((traceback from deemon).current())
+#define __builtin_last_traceback()        ((traceback from deemon).current)
 #define __builtin_super_1(x)              ((x) as type(super))
 #define __builtin_super_2(x,y)            ((x) as (y))
 #define __builtin_super(...)                __builtin_super_##__VA_NARGS__(__VA_ARGS__)
@@ -135,7 +135,7 @@ local function __ctypes_new(tp) {
 #define __builtin_offsetof(s,t)           ((s).offsetof(#t))
 
 
-#define weak     (weakref from deemon)pack
+#define weak     weakref from deemon pack
 
 /* Stub-implement removed static-if keywords (as far as possible). */
 #define __static_if(x)    if(x)

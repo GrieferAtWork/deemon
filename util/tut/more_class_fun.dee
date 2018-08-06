@@ -18,7 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-// Just a small little example where I have more fun with classes
+/* Just a small little example where I have more fun with classes */
 
 class a_class {
 
@@ -31,7 +31,7 @@ class a_class {
 	}
 
 	~this() {
-		print ">> Destructor:",__FUNCTION__,":",this;
+		print ">> Destructor: a_class",this;
 	}
 
 	this(x,y,z) {
@@ -70,7 +70,6 @@ for (x: a) print x;
 a.dump();
 
 print a+a;
-print a == a;
 
 print a.my_getset;
 del a.my_getset;

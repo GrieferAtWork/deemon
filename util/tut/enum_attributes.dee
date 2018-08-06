@@ -28,15 +28,15 @@ for (local attr: enumattr(mod)) {
 		break; /* Only enumerate exported symbols, excluding
 		        * the ones defined by base-classes */
 	local perm = "";
-	if (attr.canget()) perm += "R";
-	if (attr.candel()) perm += "D";
-	if (attr.canset()) perm += "W";
-	if (attr.cancall()) perm += "C";
-	if (attr.isprivate()) perm += "P";
-	if (attr.isinstance()) ;
+	if (attr.canget) perm += "R";
+	if (attr.candel) perm += "D";
+	if (attr.canset) perm += "W";
+	if (attr.cancall) perm += "C";
+	if (attr.isprivate) perm += "P";
+	if (attr.isinstance) ;
 	print "{}Attribute: {}.{} is {} (perm: {})".format({
-		attr.isinstance() ? "Instance-" : 
-		attr.isclass() ? "Class-" : "",
+		attr.isinstance ? "Instance-" : 
+		attr.isclass ? "Class-" : "",
 		attr.decl,
 		attr.name,
 		attr.attrtype,

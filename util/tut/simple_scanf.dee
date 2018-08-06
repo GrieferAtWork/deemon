@@ -18,10 +18,10 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-// A simple code example detailing how scanf can be used
-// For more information on how scanf actually works, know that
-// deemon offers a (mostly) standard c-compliant implementation.
-// s.a.: http://www.cplusplus.com/reference/cstdio/scanf/
+/* A simple code example detailing how scanf can be used
+ * For more information on how scanf actually works, know that
+ * deemon offers a (mostly) standard c-compliant implementation.
+ * s.a.: http://www.cplusplus.com/reference/cstdio/scanf/ */
 
 data = "000100  \t 20\n10";
 a,b,c = data.scanf("%d %d %d")...;
@@ -31,8 +31,8 @@ print "b:",b;
 print "c:",c;
 
 
-// A more advanced example, using character ranges
-// NOTE: '%[^0-9]' means: scan a string until a digit is encountered
+/* A more advanced example, using character ranges
+ * NOTE: '%[^0-9]' means: scan a string until a digit is encountered */
 data = "ab-cd42";
 a,b = data.scanf("%[^0-9]%d")...;
 

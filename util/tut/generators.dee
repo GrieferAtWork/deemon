@@ -20,7 +20,7 @@
 
 // To understand what a generator is, the following
 // two lines produce 100% the same code:
-gen = (function { for (local x: [:5]) yield x*2; })();
+gen = (function() { for (local x: [:5]) yield x*2; })();
 gen = for (local x: [:5]) x*2;
 print gen...; // 0 2 4 6 8
 

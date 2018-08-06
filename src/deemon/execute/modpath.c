@@ -207,8 +207,12 @@ make_absolute(DeeObject *__restrict path) {
    while ((++index,UNICODE_PRINTER_GETCHAR(&printer,index-1) != SEP));
    unicode_printer_truncate(&printer,index);
    /* Strip leading slashes. */
-   do begin = utf8_skipspace(begin,end);
-   while (ISSEP(begin[0]));
+   for (;;) {
+    begin = utf8_skipspace(begin,end);
+    if (begin >= end) break;
+    if (!ISSEP(*begin)) break;
+    ++begin;
+   }
   }
 #endif
  }

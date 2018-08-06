@@ -13,6 +13,8 @@ In other area, deemon continues to shine, being more expandable than ever with t
 
 Deemon is truely a universally useful language that has learned from its past mistakes and shortcomings, allowing you to write highly efficient code, that will be just as easy to read as it was to write.
 
+Code examples can be bound in <b>/util/tut</b>
+
 ### Major improvements
   - Introduction of a module-based dependency system that allows code reuse without relying on preprocessor functionality that really didn't fit a scripting language all too well.
   - With more emphasis on documentation, deemon now comes shipped with a documentation server accessing via web-browser

@@ -26,14 +26,14 @@ local sockfile = "/tmp/my_sockfile";
 local sa = sockaddr("AF_UNIX",sockfile);
 
 if (stat.exists(sockfile)) {
-	// Client
+	/* Client */
 	sock = socket("AF_UNIX");
 	sock.connect(sa);
 	sock.send("Hello!");
 	print repr sock;
 	sock.close();
 } else {
-	// Server
+	/* Server */
 	try remove(sockfile); catch (...);
 	sock = socket("AF_UNIX");
 	sock.bind(sa);

@@ -18,51 +18,52 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-#include <pipe>
-#include <process>
+import pipe, process from ipc;
+import file from deemon;
 
-// Create pipes for stdin, stdout and stderr
+/* Create pipes for stdin, stdout and stderr */
 ir,iw = pipe.new()...;
 or,ow = pipe.new()...;
 er,ew = pipe.new()...;
 
-// Create a process for 'cmd'
+/* Create a process for 'cmd' */
 p = process("cmd");
 
-// Redirect std files
+/* Redirect std files */
 p.stdin = ir;
 p.stdout = ow;
 p.stderr = ew;
 
-// Start the process
+/* Start the process */
 p.start();
 
-// Close our references to the writer files
-// NOTE: Can only be done after the process has started
+/* Close our references to the writer files
+ * NOTE: Can only be done after the process has started */
 ow.close();
 ew.close();
 
-// Feed 'cmd' with some commands
-// NOTE: As soon as they are written, they will already start getting executed
-iw.write("tree C:\\foobar\n");
+/* Feed 'cmd' with some commands
+ * NOTE: As soon as they are written,
+ *       they will already start getting executed */
+print iw: r"tree C:\foobar";
 
-// Close the input writer once we are done writing commands (signals end-of-input)
+/* Close the input writer once we are done
+ * writing commands (signals end-of-input) */
 iw.close();
 
 print p.terminated();
 
-// Capture output from 'cmd'
-// NOTE: This is done live, meaning that
-//       output is read as soon as it arrives.
-//       >> You proove yourself that it works by
-//          commenting out the 'iw.close()'
-for (l: or) print ">>",l.rstrip("\n").center(100);
-for (l: er) print "ERR>>",l.rstrip("\n");
+/* Capture output from 'cmd'
+ * NOTE: This is done live, meaning that
+ *       output is read as soon as it arrives.
+ *       >> You proove yourself that it works by
+ *          commenting out the 'iw.close()' */
+for (l: file.buffer(or))
+	print ">>",l.rstrip().center(100);
+for (l: file.buffer(er))
+	print "ERR>>",l.rstrip();
 
-print p;
-print p.win32_times();
-
-// Finally join the process (though it should already have terminated)
+/* Finally join the process (though it should already have terminated) */
 print "RETURN:",p.join();
 
 

@@ -18,15 +18,14 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-#include <sys>
-#include <fs>
-#include <error>
+import dir, joinpath, stat from fs;
+import Error from deemon;
 
 function walk(p) {
 	try {
-		for (x: fs.dir(p)) {
-			x = fs.path.join(p,x);
-			if (fs.isdir(x))
+		for (x: dir(p)) {
+			x = joinpath(p,x);
+			if (stat.isdir(x))
 				yield walk(x)...;
 			else
 				yield x;
@@ -35,15 +34,14 @@ function walk(p) {
 	}
 }
 
-
-if (#sys.argv == 1) {
+local args = [...];
+if (#args == 1) {
 	print "Expected query argument";
-	sys.exit(1);
+	return 1;
 }
-
-for (x: walk(sys.argv[1]))
+for (x: walk(args[1]))
 	print x;
- 
+
 
 
 
