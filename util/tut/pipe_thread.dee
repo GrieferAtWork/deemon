@@ -1,0 +1,61 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+// Some multi-threading where we communicate data using pipes
+
+#include <thread>
+#include <pipe>
+
+// Create a pipe pair
+reader,writer = pipe.new()...;
+
+// The thread that produces out food
+food = thread("food",function {
+	// Fill the writer pipe with some data
+	// Reminder: Both print/write versions do the same
+	for (
+		i = 0;
+		i < 20;
+		++i
+	) {
+#if 1
+		print writer: "food",i;
+#else
+		writer.write("food "+str(i)+"\n");
+#endif
+	}
+	// Close the pipe to prevent the main thread from blocking once all data is read
+	writer.close();
+});
+
+// Start the food thread
+food.start();
+
+// Read all data from the receiving end of the pipe
+// This would block indefinitely if the writer wasn't closed
+food_data = reader.readall();
+
+// Display all the data we just read
+print food_data;
+
+// Join the food thread (although it should already be finished)
+food.join();
+
+

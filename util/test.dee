@@ -1,0 +1,140 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+function return_args(args...) -> args;
+
+/* Ensure validity of how c-style cast expressions are parsed.
+ * Due to the fact that types are only known at runtime, the
+ * rules governing deemon's behavior when it comes to this are
+ * kind-of complicated, considering ambiguity. */
+assert (return_args)42 == (42,);
+assert (return_args)(42) == (42,);
+assert (return_args)((42)) == (42,);
+assert (return_args)((42,)) == ((42,),);
+assert (return_args)pack(42) == ((42,),);
+assert (return_args)(10,20,30) == (10,20,30);
+
+/* Deemon warns amount the ambiguity who's behavior we're validating here.
+ * NOTE: The first option described in the comments is the one always taken. */
+#pragma warning(push)
+#pragma warning(disable: "-Wquality")
+assert (42) + 7 == 49;    /* `(typexpr).operator add(castexpr)' vs. `(typexpr)castexpr.operator pos()' */
+assert (42) - 7 == 35;    /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
+assert (42) < 7 == false; /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(cell(castexpr))' */
+assert (42,)[0] == 42;    /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(list(castexpr))' */
+#pragma warning(pop)
+
+/* Assert special behavior that applies when
+ * `!' is encountered in cast expressions. */
+import bool from deemon;
+assert (bool) !42 == false;          /* `bool(!42)' */
+assert (bool) !!42 == true;          /* `bool(!!42)' */
+assert (bool) !!!in [bool] == false; /* `bool !in [bool]' */
+
+
+
+
+/* Test exception handler order, as well as statement result-from-handlers.
+ * The whole result-from-handlers part might not seem too important here,
+ * but it is very much so, and immensly used by try-expressions:
+ * >> local message = try get_message() catch (...) "No message available";
+ */
+function get_except_val(err) -> ({
+	try {
+		__stack local inner_stack = 7;
+		try {
+			if (err !is none)
+				throw err;
+			inner_stack+1;
+		} catch (string from deemon) {
+			inner_stack+2;
+		}
+	} catch (...) {
+		3;
+	}
+});
+
+/* Test the 3 possible branches the function above can take. */
+assert get_except_val(none) == 8, "Handler wasn't meant to be executed";
+assert get_except_val("")   == 9, "Inner handler not executed";
+assert get_except_val(1)    == 3, "Catch-all not reached";
+
+
+/* Assert string search functions. */
+assert "{abc{}abc}".index("{") == 0;
+assert "{abc{}abc}".rindex("{") == 4;
+assert "{abc{}abc}".index("}") == 5;
+assert "{abc{}abc}".rindex("}") == 9;
+assert "{abc{}abc}".index("abc") == 1;
+assert "{abc{}abc}".rindex("abc") == 6;
+assert "abc{{}}abc".index("abc") == 0;
+assert "abc{{}}abc".rindex("abc") == 7;
+assert "abc".index("abc") == 0;
+assert "abc".rindex("abc") == 0;
+
+/* Assert string split functions */
+assert "".split("/")        == [""];
+assert "/".split("/")       == ["",""];
+assert "foo".split("/")     == ["foo"];
+assert "foo/".split("/")    == ["foo",""];
+assert "foo/bar".split("/") == ["foo","bar"];
+assert "/bar".split("/")    == ["","bar"];
+
+
+/* Assert that try-expressions are functioning properly.
+ * This is a syntactical feature that the old deemon didn't have,
+ * in that you can use try-statements in expressions to create
+ * an expression that evaluates to another expression when the
+ * guarded expression throws an error. */
+{
+	function get_value(x) {
+		if (x)
+			throw 42;
+		return 11;
+	}
+	assert (try get_value(true)  catch (e...) e) == 42;
+	assert (try get_value(false) catch (e...) e) == 11;
+}
+
+
+{
+	import type_, file from deemon;
+	/* Assert that MRO of `type' itself sees `type' as an instance of `typetype',
+	 * rather than `typetype' itself. - Sounds complicated? - Well, it kind-of is,
+	 * but you may look at `Doc from doc("/deemon/type/getinstanceattr")' which
+	 * documents the finer aspects of this rather important detail. */
+	assert type_.baseof(type_);
+	assert type_.baseof(type(file));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+print "DONE";
+
+

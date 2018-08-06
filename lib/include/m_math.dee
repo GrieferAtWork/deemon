@@ -1,0 +1,99 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import math;
+import util;
+import int, float from deemon;
+
+global sin = math.sin;
+global cos = math.cos;
+global tan = math.tan;
+global sincos = math.sincos;
+global asin = math.asin;
+global acos = math.acos;
+global atan = math.atan;
+global atan2 = math.atan2;
+global asincos = math.asincos;
+global sinh = math.sinh;
+global cosh = math.cosh;
+global tanh = math.tanh;
+global sincosh = math.sincosh;
+global asinh = math.asinh;
+global acosh = math.acosh;
+global atanh = math.atanh;
+global asincosh = math.asincosh;
+global exp = math.exp;
+global frexp = math.frexp;
+global log = math.log;
+global log10 = math.log10;
+global modf = math.modf;
+global exp2 = math.exp2;
+global expm1 = math.expm1;
+global ilogb = math.ilogb;
+global log1p = math.log1p;
+global log2 = math.log2;
+global logb = math.logb;
+global scalbn = math.scalbn;
+global scalbi32n = math.scalbi32n;
+global pow = math.pow;
+global sqrt = math.sqrt;
+global cbrt = math.cbrt;
+global hypot = math.hypot;
+global erf = math.erf;
+global tgamma = math.tgamma;
+global lgamma = math.lgamma;
+function ceilf(x) -> (float)util.ceil(x);
+function floorf() -> (float)util.floor(x);
+function truncf() -> (float)util.round(x);
+function roundf(x) -> (float)(int)x;
+global i32round = util.round;
+global i64round = util.round;
+global lround = util.round;
+global llround = util.round;
+global fmod = math.fmod;
+global rint = math.rint;
+function i32rint(x) -> (int)math.rint(x);
+function i64rint(x) -> (int)math.rint(x);
+function lrint(x) -> (int)math.rint(x);
+function llrint(x) -> (int)math.rint(x);
+global nearbyint = math.nearbyint;
+global remainder = math.remainder;
+global remquo = math.remquo;
+global copysign = math.copysign;
+global nextafter = math.nextafter;
+global nexttoward = math.nexttoward;
+global fdim = math.fdim;
+global isfinite = math.isfinite;
+global isinf = math.isinf;
+global isnan = math.isnan;
+global isnormal = math.isnormal;
+global signbit = math.signbit;
+global isgreater = math.isgreater;
+global isgreaterequal = math.isgreaterequal;
+global isless = math.isless;
+global islessequal = math.islessequal;
+global islessgreater = math.islessgreater;
+global isunordered = math.isunordered;
+
+global min = util.min;
+global max = util.max;
+global abs = util.abs;
+global sqr = util.sqr;
+global ceil = util.ceil;
+global floor = util.floor;
+global round = util.round;

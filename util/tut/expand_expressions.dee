@@ -1,0 +1,121 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* A few examples that explain how expand expressions are handled
+ * The general rule for expand expression goes like this:
+ *  >> Whatever it is you're expanding, once expanded it has the effect
+ *     of all its elements wrtten as a comma-separeted list of expressions. */
+
+/* These two do the same thing */
+print repr ["foobar"...];
+print repr ["f","o","o","b","a","r"];
+
+/* There is only one exception to this rule and it effects the assign '=' operator
+ *  >> When used on the right-hand side of an assign, the sequence is expanded
+ *     into values based on the about of variables left.
+ *
+ * NOTE: When using ... on the left-hand side of an assign, it will always
+ *       expand to a single element (as is the default behaviour) */
+
+
+/* none can always be expanded to anything, re-yielding itself
+ * >> After this line, a,b,c and d are all initialized to 'none' */
+a,b,c,d = none...;
+
+/* Guess what this line does
+ * HINT: There is no expand expression in this one */
+a,b,c,d = 10,20,30,40;
+
+/* If you thought python-style, you were wrong */
+print a,b,c,d;
+
+/* This is what you were thinking about: */
+a,b,c,d = (10,20,30,40)...;
+
+print a,b,c,d;
+/* It didn't work before because we were not expanding
+ * the sequence on the right side,
+ * Or rather: no sequence was generated on the right side. */
+
+
+/* when you write:
+ * >> 'a,b,c,d = 10,20,30,40;'
+ * The compiler sees this:
+ * >> '(a,b,c,(d = 10),20,30,40);'
+ */
+
+/* But when you write:
+ * >> 'a,b,c,d = (10,20,30,40)...;'
+ * The compiler sees this:
+ * >> '((a,b,c,d) = (10,20,30,40));'
+ * NOTE: This is something that was changed in deemon 200+,
+ *       where parenthesis on the left-hand side is the inverse
+ *       of an expand-expression on the right-hand size.
+ *       For more information, look at the section on this
+ *       subject in `/lib/LANGUAGE.txt'
+ */
+
+/* Be careful with other operators,
+ * because this doesn't work:
+ * >> 'a,b,c,d += (1,2,3,4)...;'
+ */
+
+
+/* You can use 'none' in the list of arguments that
+ * gets expanded to ignore that specific value */
+function get_args() -> pack 10,20,30;
+a,none,b = get_args()...;
+print a,b; /* 10, 30 */
+
+
+
+
+
+
+
+
+/* Some notable usage cases */
+
+/* Directly expand the tuple returned and store it's values */
+import pipe from ipc;
+r,w = pipe.new()...;
+print r,w;
+del r;
+del w;
+
+
+function foo(a,b,c) {
+	print "foo("+a+","+b+","+c+")";
+}
+
+args = (10,20,30);
+
+/* Call a function with an expanded argument list
+ * NOTE: Technically, this is the fastest way of calling a function,
+ *       since the compiler detects that no argument tuple must be created. */
+foo(args...);
+foo(7,args[1:]...);
+
+
+
+
+
+
+

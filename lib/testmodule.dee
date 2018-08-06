@@ -1,0 +1,62 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+
+//function boxify(s,chrs =
+//		"\u250c\u2500\u2510"
+//		"\u2502 \u2502"
+//		"\u2514\u2500\u2518"
+//	) {
+//	import string, list from deemon;
+//	assert chrs is string;
+//	assert #chrs == 9;
+//	return "\n".join([]{
+//		local max_length = 0;
+//		local lines = list(s.splitlines());
+//		while (lines && !lines.back()) lines.popback();
+//		for (local l: lines) {
+//			if (max_length < #l)
+//				max_length = #l;
+//		}
+//		yield "{}{}{}".format({ chrs[0], chrs[1] * max_length, chrs[2] });
+//		for (local l: lines) {
+//			yield "{}{}{}".format({ chrs[3], l.ljust(max_length,chrs[4]), chrs[5] });
+//		}
+//		yield "{}{}{}".format({ chrs[6], chrs[7] * max_length, chrs[8] });
+//	}());
+//}
+
+
+print "\u250c",;
+print "\u252c",;
+print "\u2510";
+
+print "\u251c",;
+print "\u253c",;
+print "\u2524";
+
+print "\u2514",;
+print "\u2534",;
+print "\u2518";
+
+
+
+
+

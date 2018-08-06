@@ -1,0 +1,73 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+// In here I explain how scopes work and how you can explicitly
+// state from where constants/variables should be used.
+// First off: You should know that every use of a variable in an
+//            expression can be prefixed with a scope tag.
+//            But loop variables in for-in loop, or exception
+//            storage variables in catch-block are always 'local'
+
+local const name = 10;
+{
+	local const name = 20;
+	{
+		local const name = 30;
+
+		// Without a specifier, the nearest visible object is used
+		print name;             // '30'
+
+		// When 'local' is specified, only objects from the current
+		// scope can be referenced (useful to ensure a function)
+		// doesn't reference global variables when naming locals.
+		print local name;       // '30'
+
+		// When 'global' is specified, only objects from the global
+		// scope can be referenced. (That is the scope that doesn't have a predecessor)
+		// Note that this referrs to the absolute global scope, meaning
+		// that visible objects from weak scopes derived from the absolute
+		// global scope cannot be referenced.
+		// In other words: If you comment 'const name = 10' out, this won't
+		//                 magically start using 'const name = 20'.
+		print global name;      // '10'
+
+		// Nothing but an alias for 'global' for all you c++ lovers!
+		print ::name;           // '10'
+
+		// You'll probably never use this one, but '__scope' '(' <expr> ')'
+		// can be used to explicitly state the exact scope from where
+		// objects should be referenced from.
+		// Its argument is a negative, integral constant expression that
+		// should evaluate to an offset applied to the current scope.
+		// e.g.: -1 is the previous scope. -2 is the scope before that (and so on...)
+		// Note that both weak scopes and strong scopes count as an offset of '-1'
+		// And remember that some statements create hidden weak scopes.
+		print __scope(-1) name; // '20'
+		
+		// Use the third instance of 'name' that was found
+		// NOTE: new in v101
+		print __nth(3) name; // '10'
+	}
+}
+
+
+
+
+

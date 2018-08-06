@@ -1,0 +1,55 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import file, int from deemon;
+import fs;
+import process, pipe from ipc;
+
+local proc = process("x86_64-w64-mingw32-addr2line.exe",["-f","-e","deemon-gcc.exe"]);
+local ir,iw = pipe.new()...;
+local or,ow = pipe.new()...;
+
+proc.stdin  = ir;
+proc.stdout = ow;
+proc.start();
+ir.close();
+ow.close();
+or = file.buffer(or);
+
+local info = [];
+for (local l: file.open("deemon-gcc.exe.stackdump")) {
+	try {
+		local arg = (for (local x: l.split(" ")) if (x) x)[1];
+		if (!arg) continue;
+		local num = int(arg.strip().lstrip("0"),16);
+		print iw: num.tostr(16);
+		local func = or.readline().strip();
+		local loc = or.readline().strip();
+		info.append(pack(num,func,loc));
+	} catch (e...) {
+	}
+}
+iw.close();
+proc.join();
+
+for (local addr,func,loc: info) {
+	print loc,func,addr.tostr(16,"u");
+}
+

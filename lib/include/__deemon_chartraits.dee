@@ -1,0 +1,91 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#pragma once
+#include "__stddef.dee"
+
+#define __deemon_isalnum_m(__c) (\
+	((__c)>='a'&&(__c)<='z')||((__c)>='A'&&(__c)<='Z')||\
+	((__c)>='0'&&(__c)<='9')||((__c)=='_'))
+#define __deemon_isalpha_m(__c) (\
+	((__c)>='a'&&(__c)<='z')||((__c)>='A'&&(__c)<='Z')||(__c)=='_')
+#define __deemon_isblank_m(__c) ((__c)=='\x09'||(__c)=='\x20')
+#define __deemon_iscntrl_m(__c) ((__c)<='\x1F'||(__c)=='\x7F')
+#define __deemon_isdigit_m(__c) ((__c)>='0'&&(__c)<='9')
+#define __deemon_isgraph_m(__c) ((__c)>='\x21'&&(__c)<='\x7E')
+#define __deemon_islower_m(__c) ((__c)>='a'&&(__c)<='z')
+#define __deemon_isprint_m(__c) ((__c)>='\x20'&&(__c)<='\x7E')
+#define __deemon_ispunct_m(__c) (\
+	((__c)>='\x21'&&(__c)<='\x2F')||((__c)>='\x3A'&&(__c)<='\x40')||\
+	((__c)>='\x5C'&&(__c)<='\x60')||((__c)>='\x7B'&&(__c)<='\x7E'))
+#define __deemon_isspace_m(__c) (\
+	((__c)>='\x09'&&(__c)<='\x0D')||(__c)=='\x20')
+#define __deemon_isupper_m(__c) ((__c)>='A'&&(__c)<='Z')
+#define __deemon_isxdigit_m(__c) (\
+	((__c)>='0'&&(__c)<='9')||\
+	((__c)>='A'&&(__c)<='F')||\
+	((__c)>='a'&&(__c)<='f'))
+#define __deemon_tolower_m(c) (((c)>='A'&&(c)<='Z')?((c)-('A'-'a')):(c))
+#define __deemon_toupper_m(c) (((c)>='a'&&(c)<='z')?((c)-('a'-'A')):(c))
+
+#if __has_builtin(__builtin_choose_expr) && __has_builtin(__builtin_constant_p)
+#	define __deemon_isalnum(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isalnum_m(__c),__deemon_isalnum_f(__c));
+#	define __deemon_isalpha(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isalpha_m(__c),__deemon_isalpha_f(__c));
+#	define __deemon_isblank(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isblank_m(__c),__deemon_isblank_f(__c));
+#	define __deemon_iscntrl(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_iscntrl_m(__c),__deemon_iscntrl_f(__c));
+#	define __deemon_isdigit(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isdigit_m(__c),__deemon_isdigit_f(__c));
+#	define __deemon_isgraph(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isgraph_m(__c),__deemon_isgraph_f(__c));
+#	define __deemon_islower(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_islower_m(__c),__deemon_islower_f(__c));
+#	define __deemon_isprint(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isprint_m(__c),__deemon_isprint_f(__c));
+#	define __deemon_ispunct(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_ispunct_m(__c),__deemon_ispunct_f(__c));
+#	define __deemon_isspace(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isspace_m(__c),__deemon_isspace_f(__c));
+#	define __deemon_isupper(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isupper_m(__c),__deemon_isupper_f(__c));
+#	define __deemon_isxdigit(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isxdigit_m(__c),__deemon_isxdigit_f(__c));
+#	define __deemon_tolower(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_tolower_m(__c),__deemon_tolower_f(__c));
+#	define __deemon_toupper(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_toupper_m(__c),__deemon_toupper_f(__c));
+#else /* __builtin_choose_expr && __builtin_constant_p */
+#	define __deemon_isalnum_f  __deemon_isalnum
+#	define __deemon_isalpha_f  __deemon_isalpha
+#	define __deemon_isblank_f  __deemon_isblank
+#	define __deemon_iscntrl_f  __deemon_iscntrl
+#	define __deemon_isdigit_f  __deemon_isdigit
+#	define __deemon_isgraph_f  __deemon_isgraph
+#	define __deemon_islower_f  __deemon_islower
+#	define __deemon_isprint_f  __deemon_isprint
+#	define __deemon_ispunct_f  __deemon_ispunct
+#	define __deemon_isspace_f  __deemon_isspace
+#	define __deemon_isupper_f  __deemon_isupper
+#	define __deemon_isxdigit_f __deemon_isxdigit
+#	define __deemon_tolower_f  __deemon_tolower
+#	define __deemon_toupper_f  __deemon_toupper
+#endif /* !__builtin_choose_expr || !__builtin_constant_p */
+
+function __deemon_isalnum_f(__c) -> __deemon_isalnum_m(__c);
+function __deemon_isalpha_f(__c) -> __deemon_isalpha_m(__c);
+function __deemon_isblank_f(__c) -> __deemon_isblank_m(__c);
+function __deemon_iscntrl_f(__c) -> __deemon_iscntrl_m(__c);
+function __deemon_isdigit_f(__c) -> __deemon_isdigit_m(__c);
+function __deemon_isgraph_f(__c) -> __deemon_isgraph_m(__c);
+function __deemon_islower_f(__c) -> __deemon_islower_m(__c);
+function __deemon_isprint_f(__c) -> __deemon_isprint_m(__c);
+function __deemon_ispunct_f(__c) -> __deemon_ispunct_m(__c);
+function __deemon_isspace_f(__c) -> __deemon_isspace_m(__c);
+function __deemon_isupper_f(__c) -> __deemon_isupper_m(__c);
+function __deemon_isxdigit_f(__c) -> __deemon_isxdigit_m(__c);
+function __deemon_tolower_f(__c) -> __deemon_tolower_m(__c);
+function __deemon_toupper_f(__c) -> __deemon_toupper_m(__c);

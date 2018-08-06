@@ -1,0 +1,196 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import Signal, int from deemon;
+
+@"(sequence items) -> object"
+@"(object items...) -> object"
+@"@testtag:This is the tags text"
+@"         this is another line"
+@"         this is another line"
+@"        This shouldn't be apart of the tag\\\n"
+@">> foo"
+@">> bar"
+@">>   barfoo"
+@"Returns the lowers element of @items or :none when empty"
+@"Objects are always compared with the current winner as left operand"
+function min(items...) {
+	if (#items == 1)
+		return items[0] < ...;
+	return items < ...;
+}
+
+@"(sequence items) -> object"
+@"(object items...) -> object"
+@"Returns the greatest element of @items or :none when empty"
+@"Objects are always compared with the current winner as left operand"
+function max(items...) {
+	if (#items == 1)
+		return items[0] > ...;
+	return items > ...;
+}
+
+@"(sequence items) -> float"
+@"(float items...) -> float"
+@"Returns the average of all elements in @items"
+@"All elements are casted to float, added and devided by ${#items}"
+function avg(items...) {
+	if (#items == 1)
+		items = items[0];
+	local result = 0.0;
+	local count = 0;
+	for (local item: items) {
+		result += item;
+		++count;
+	}
+	return result / count;
+}
+
+@"(sequence items) -> bool"
+@"(object items...) -> bool"
+@"Returns :true if all elements in @items evaluate to :true"
+function all(items...) {
+	if (#items == 1)
+		return items[0] && ...;
+	return items && ...;
+}
+
+@"(sequence items) -> bool"
+@"(object items...) -> bool"
+@"Returns :true if any element in @items evaluates to :true"
+function any(items...) {
+	if (#items == 1)
+		return items[0] || ...;
+	return items || ...;
+}
+
+@"(sequence items) -> object"
+@"(object items...) -> object"
+@"Returns the sum of all arguments by adding them together"
+@"The result is always replaced with the addition of ${result+next}"
+@"Returns :none if no arguments are given"
+@"NOTE: Use of this function is mostly redundant and code "
+       "should be updated to use ${items + ...} instead"
+function sum(items...) {
+	if (#items == 1)
+		return items[0] + ...;
+	return items + ...;
+}
+
+@"(object x) -> object;"
+@"Returns the sqare of @x, that is ${x * x}"
+function sqr(x) {
+	return x * x;
+}
+
+@"(float x) -> int"
+@"Returns the ceiled integral value of a given :float @x"
+function ceil(x) {
+	local result = (int)x;
+	if (x > 0) {
+		if (x != result)
+			++result;
+	}
+	return result;
+}
+
+@"(float x) -> int"
+@"Returns the floored integral value of a given :float @x"
+function floor(x) {
+	local result = (int)x;
+	if (x < 0) {
+		if (x != result)
+			--result;
+	}
+	return result;
+}
+
+@"(float x) -> int;"
+@"Returns the rounded integral value of a given :float @x"
+function round(x) {
+	/* Truncated; aka. rounded towards zero. */
+	local result = (int)x;
+	local diff = x - result;
+	if (x >= 0) {
+		if (0.5 <= diff)
+			++result;
+	} else {
+		if (-0.5 <= diff)
+			++result;
+	}
+	return result;
+}
+
+@"(sequence seqs...) -> {{object...}...};"
+@"Merges @seqs given sequences into a list of @seqs-elemntal sequences,"
+@"where the index in every of those sequences is equivalent to the position of"
+@"the origin sequence in the original argument list"
+@"HINT: The size of the returned list is ${(for (x: seqs) #x) < ...}"
+@"Example:"
+@">import zip from util;"
+@">print zip([10,20,30],[40,50,60])...;    /* \"(10, 40) (20, 50) (30, 60)\" */"
+@">print zip([10,20,30],[40,50,60,70])...; /* \"(10, 40) (20, 50) (30, 60)\" */"
+@">/* `70' is ignored because the shortest sequence's length is used */"
+function zip(seqs...) {
+	local iterators = [(
+		for (local x: seqs)
+			x.operator iter()
+	)...];
+	try {
+		for (;;) {
+			yield (
+				for (local it: iterators)
+					it.operator next()...);
+		}
+	} catch (Signal.StopIteration) {
+	}
+}
+
+@"(sequence seq, int start_index = 0) -> sequence"
+@"Iterate the given @seq and yield its items, as well as"
+@"an associated index number, starting at @start_index or $0"
+@">import enumerate from util;"
+@">function enum_items() {"
+@">    yield 10;"
+@">    yield 20;"
+@">    yield 30;"
+@">}"
+@">for (local index,item: enumerate(enum_items())) {"
+@">    /* Item number 0 is 10 */"
+@">    /* Item number 1 is 20 */"
+@">    /* Item number 2 is 30 */"
+@">    print \"Item number\",index,\"is\",item;"
+@">}"
+function enumerate(seq, start_index = 0) {
+	local index = start_index;
+	for (local item: seq) {
+		yield pack(index,item);
+		++index;
+	}
+}
+
+@"(int x) -> int"
+@"(float x) -> float"
+@"(object x) -> object"
+@"Return the absolute value of a given expression."
+@">import abs from util;"
+@">print abs(10);  /* 10 */"
+@">print abs(-10); /* 10 */"
+function abs(x) {
+	return x < 0 ? -x : x;
+}

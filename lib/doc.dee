@@ -1,0 +1,2302 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import deemon;
+import docfor = doc from deemon;
+import
+	Error, Signal, module, enumattr,
+	callable, object, hasattr, file,
+	attribute, sequence, string, dict, list
+from deemon;
+import util;
+
+
+local function skip_string(text,index,quote) {
+	local string_length = #text;
+	while (index < string_length) {
+		local ch = text[index];
+		++index;
+		if (ch == "\\") {
+			if (index < string_length)
+				++index;
+		} else if (ch == quote) {
+			break;
+		}
+	}
+	return index;
+}
+
+local paren_mapping = {
+	"(" : ")",
+	"[" : "]",
+	"{" : "}",
+};
+local function skip_parenthesis(text,index,par_open) {
+	local string_length = #text;
+	local par_close = paren_mapping[par_open];
+	local recursion_par = 0;
+	local recursion_brk = 0;
+	local recursion_brc = 0;
+	while (index < string_length) {
+		local ch = text[index];
+		++index;
+		if (ch == par_close && !recursion_par &&
+		    !recursion_brk && !recursion_brc)
+			break;
+		switch (ch) {
+		case "(":
+			++recursion_par;
+			break;
+		case "[":
+			if (!recursion_par)
+				++recursion_brk;
+			break;
+		case "{":
+			if (!recursion_par && !recursion_brk)
+				++recursion_brc;
+			break;
+		case ")":
+			--recursion_par;
+			break;
+		case "]":
+			if (!recursion_par)
+				--recursion_brk;
+			break;
+		case "}":
+			if (!recursion_par && !recursion_brk)
+				--recursion_brc;
+			break;
+		default: break;
+		}
+	}
+	return index;
+}
+
+local function skip_expression(text,index) {
+	local string_length = #text;
+again:
+	if (index >= string_length)
+		return index;
+	if (text.issymstrt(index)) {
+		/* Symbol string. */
+		do ++index;
+		while (index < string_length && text.issymcont(index));
+		local next_index = index;
+		while (next_index < string_length && !text.isspace(next_index))
+			++next_index;
+		if (next_index < string_length && !text.issymstrt(next_index)) {
+			index = next_index;
+			goto again;
+		}
+		return index;
+	}
+	while (index < string_length) {
+		local ch = text[index];
+		if (ch.isspace()) break;
+		++index;
+		if (ch in ["\"","\'"])
+			index = skip_string(text,index,ch);
+		else if (ch in ["[","(","{"])
+			index = skip_parenthesis(text,index,ch);
+	}
+	return index;
+}
+
+local function split_singleparam(text) {
+	local text_length = #text;
+	local type_end = 0;
+	for (;;) {
+		type_end = skip_expression(text,type_end);
+		if (type_end >= text_length) {
+			local type_string = none;
+			local name_string = text;
+			while (name_string.endswith("...")) {
+				name_string = name_string[:-3].rstrip();
+				if (type_string is none)
+					type_string = "object";
+				type_string += "...";
+			}
+			if ("=" !in name_string)
+				return pack(type_string,name_string,none);
+			local default_expr;
+			name_string,none,default_expr = name_string.partition("=")...;
+			return pack(type_string,name_string,default_expr);
+		}
+		local name_start = type_end;
+		while (name_start < text_length && text.isspace(name_start))
+			++name_start;
+		if (text.issymstrt(name_start)) {
+			/* This might be the start of the argument name! */
+			local name_end = name_start+1;
+			while (name_end < text_length && text.issymcont(name_end))
+				++name_end;
+			local postname_start = name_end;
+continue_parsing_postname:
+			while (postname_start < text_length && text.isspace(postname_start))
+				++postname_start;
+			if (text.startswith("...",postname_start)) {
+				postname_start += 3;
+				goto continue_parsing_postname;
+			}
+			if (postname_start >= text_length || text[postname_start] == "=") {
+				/* Default argument! */
+				local type_string = text[:type_end].rstrip();
+				local name_string = text[name_start:postname_start].strip();
+				while (name_string.endswith("...")) {
+					name_string = name_string[:-3].rstrip();
+					if (!type_string)
+						type_string = "object";
+					type_string += "...";
+				}
+				if (!type_string)
+					type_string = none;
+				local defl_string = none;
+				if (postname_start < text_length) {
+					defl_string = text[postname_start+1:].lstrip();
+				}
+				return pack(
+					type_string,
+					name_string,
+					defl_string);
+			}
+		}
+		type_end = name_start;
+	}
+}
+
+local function splitlines_escapeaware(text) {
+	local text_length = #text;
+	local line_start = 0;
+	local line_end = 0;
+	while (line_end < text_length) {
+		if (!text.islf(line_end) ||
+		   (line_end && text[line_end-1] == "\\")) { /* TODO: Deal with escaped backslashes! */
+			++line_end;
+			continue;
+		}
+		yield text[line_start:line_end];
+		++line_end;
+		line_start = line_end;
+	}
+	if (line_start < text_length)
+		yield text[line_start:];
+}
+
+
+local function smart_split_line(text,max_length) {
+	local i = 0;
+	local text_length = #text;
+continue_at_i:
+	while (i < text_length) {
+		local line_start = i;
+		local line_end = text.find("\n",line_start);
+		if (line_end < 0)
+			line_end = text_length;
+		i = line_end+1;
+		for (;;) {
+			if (line_start >= line_end) break;
+			if (text.isspace(line_start)) {
+				++line_start;
+				continue;
+			}
+			if (text.isspace(line_end-1)) {
+				--line_end;
+				continue;
+			}
+			local best_split = line_start;
+			local best_value = max_length;
+			for (local j = line_start; j < line_end; ++j) {
+				local new_value = (j - line_start) - max_length;
+				if (new_value < 0)
+					new_value = -new_value;
+				if (new_value > best_value)
+					break;
+				if (text.isspace(j)) {
+					best_split = j;
+					best_value = new_value;
+					continue;
+				}
+				if (text[j] == "{") {
+					local match_end;
+					match_end = text.findmatch("{","}",j+1);
+					if (match_end < 0)
+						match_end = #text;
+					else
+						++match_end;
+					if (match_end > line_end) {
+						/* Must not touch text in braces. */
+						i = match_end;
+						yield text[line_start:match_end];
+						goto continue_at_i;
+					}
+					j = match_end;
+				}
+			}
+			local line_length = line_end - line_start;
+			if (line_length <= max_length) {
+				yield text[line_start:line_end];
+				break;
+			}
+			if (best_split == line_start)
+				best_split = line_end;
+			yield text[line_start:best_split];
+			line_start = best_split;
+		}
+	}
+}
+
+
+local function split_escapeaware(data,sep) {
+	local start = 0;
+	local length = #data;
+	local index = 0;
+	if (!length)
+		return;
+	while (index < length) {
+		local ch = data[index];
+		if (ch == sep) {
+			yield data.substr(start,index);
+			start = index + 1;
+		}
+		/* Be aware of {...} - blocks */
+		if (ch == "\\")
+			++index;
+		else if (ch == "{") {
+			++index;
+			local recursion = 1;
+			while (index < length) {
+				ch = data[index];
+				++index;
+				if (ch == "\\")
+					++index;
+				else if (ch == "{")
+					++recursion;
+				else if (ch == "}") {
+					--recursion;
+					if (!recursion)
+						break;
+				} else if (ch in ["\"","\'"] && data[index-1] != "r") {
+					/* Also be aware of strings within {...}-blocks. */
+					++index;
+					while (index < length) {
+						local end_ch = data[index];
+						++index;
+						if (end_ch == ch)
+							break;
+						if (end_ch == "\\")
+							++index;
+					}
+				}
+			}
+		} else {
+			++index;
+		}
+	}
+	yield data.substr(start,length);
+}
+
+
+
+class TextSplitter {
+
+	@"(file fp,string text,int preferred_line_length,closure)->none"
+	print_text(fp,text,preferred_line_length,closure) {
+		fp << text;
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_at(fp,content,preferred_line_length,closure) {
+		fp << content.upper();
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_dollar(fp,content,preferred_line_length,closure) {
+		fp << "<" << content << ">";
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_collon(fp,content,preferred_line_length,closure) {
+		fp << content.upper();
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_hash(fp,content,preferred_line_length,closure) {
+		fp << content.upper();
+	}
+
+	@"(file fp,string target,string text,int preferred_line_length,closure)->none"
+	decode_link(fp,target,text,preferred_line_length,closure) {
+		fp << text << "(" << target << ")";
+	}
+
+	@"(file fp,{{string...}...} table,int preferred_line_length,closure)->none"
+	decode_table(fp,table,preferred_line_length,closure) {
+		local first_row = table[0];
+		local dim_y = #table;
+		local dim_x = #first_row;
+		for (local row: table) {
+			local rowlen = #row;
+			if (dim_x < rowlen)
+				dim_x = rowlen;
+		}
+		local max_width = 0;
+		local max_row_widths = list(dim_x,1);
+		local preferred_line_widths = list(dim_x,none);
+		local absolute_total_chars = 0;
+		/* Dynamically calculate the preferred column ratio based on
+		 * the total number of characters found in individual rows. */
+		for (local i = 0; i < dim_x; ++i) {
+			local total_chars = 0;
+			for (local j = 0; j < dim_y; ++j) {
+				local row = table[j];
+				if (i >= #row) continue;
+				total_chars += #row[i];
+			}
+			absolute_total_chars += total_chars;
+			preferred_line_widths[i] = total_chars;
+		}
+		for (local i = 0; i < dim_x; ++i) {
+			preferred_line_widths[i] =
+				(preferred_line_widths[i] *
+					preferred_line_length) /
+					absolute_total_chars;
+		}
+		for (local row: table) {
+			local row_width = 0;
+			for (local i = 0; i < #row; ++i) {
+				local preferred_length;
+				if (i < #preferred_line_widths) {
+					preferred_length = preferred_line_widths[i];
+				} else {
+					preferred_length = preferred_line_length / dim_x;
+				}
+				local cell = list(
+					this.tostring(row[i],preferred_length,closure).
+					rstrip().splitlines());
+				local max_line_width = 0;
+				for (local x: cell) {
+					if (max_line_width < #x)
+						max_line_width = #x;
+				}
+				row[i] = cell;
+				if (max_row_widths[i] < max_line_width)
+					max_row_widths[i] = max_line_width;
+				row_width += max_line_width;
+			}
+			if (max_width < row_width)
+				max_width = row_width;
+		}
+		function print_sep(head,middle,tail) {
+			fp << head;
+			for (local i = 0; i < dim_x; ++i) {
+				fp << ("\u2500" * max_row_widths[i]);
+				fp << ((i == dim_x - 1) ? tail : middle);
+			}
+		}
+		function print_row(row) {
+			local max_lines = 1;
+			for (local i = 0; i < #row; ++i) {
+				local row_lines = row[i];
+				if (max_lines < #row_lines)
+					max_lines = #row_lines;
+			}
+			for (local i = 0; i < max_lines; ++i) {
+				fp << "\u2502";
+				for (local j = 0; j < dim_x; ++j) {
+					local cell_lines = ();
+					if (j < #row)
+						cell_lines = row[j];
+					local cell_line;
+					if (i < #cell_lines)
+						cell_line = cell_lines[i];
+					else
+						cell_line = "";
+					fp << cell_line.ljust(max_row_widths[j]);
+					fp << "\u2502";
+				}
+				fp << "\n";
+			}
+		}
+		print_sep("\u250c","\u252c","\u2510");
+		fp << "\n";
+		print_row(first_row);
+		if (dim_y > 1) {
+			print_sep("\u251c","\u253c","\u2524");
+			fp << "\n";
+			for (local i = 1; i < dim_y; ++i)
+				print_row(table[i]);
+		}
+		print_sep("\u2514","\u2534","\u2518");
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_percent(fp,content,preferred_line_length,closure) {
+		local cmd,none,text = content.partition(" ")...;
+		cmd = cmd.strip();
+		text = text.strip();
+		switch (cmd) {
+
+		{
+		case "link":
+			local target;
+			target,none,text = text.partition(" ")...;
+			this.decode_link(fp,target,text.lstrip(),preferred_line_length,closure);
+		}	break;
+
+		{
+			local table;
+		case "table":
+			table = list(
+				for (local line: split_escapeaware(text,"\n"))
+					list(split_escapeaware(line.lstrip(),"|")));
+			for (;;) {
+				if (!table)
+					return;
+				if (table[0])
+					break;
+				del table[0];
+			}
+			this.decode_table(fp,table,preferred_line_length,closure);
+		}	break;
+
+		default:
+			fp << "FORMAT({!r},{!r})".format({ cmd, text });
+			break;
+		}
+	}
+
+	@"(file fp,string kind,string content,int preferred_line_length,closure)->none"
+	@"@param kind One of ${\"@\"}, ${\"$\"}, ${\":\"}, ${\"%\"} or ${\"#\"}"
+	@"This function may be overwritten by sub-classes"
+	decode_tag(fp,kind,content,preferred_line_length,closure) {
+		switch (kind) {
+		case "@": /* Parameter / this-reference. */
+			return this.decode_at(fp,content,preferred_line_length,closure);
+		case "$": /* Inline code. */
+			return this.decode_dollar(fp,content,preferred_line_length,closure);
+		case ":": /* Global reference. */
+			return this.decode_collon(fp,content,preferred_line_length,closure);
+		case "#": /* Member reference. */
+			return this.decode_hash(fp,content,preferred_line_length,closure);
+		case "%": /* Special formatting. */
+			return this.decode_percent(fp,content,preferred_line_length,closure);
+		default:
+			fp << "TAG({!r},{!r})".format({ kind, content });
+			break;
+		}
+	}
+
+	@"(string text,file fp,int preferred_line_length=80,object closure=none)->none"
+	@"Decode documenation text and print it to @fp"
+	decode(text, fp, preferred_line_length = 80, closure = none) {
+		local lines = list(text.splitlines());
+		local i;
+		/* Remove line-feeds that the user didn't actually intend */
+		for (i = 0; i < #lines-1;) {
+			local line = lines[i].rstrip();
+			local nextline = lines[i+1].lstrip();
+			if (!nextline || !nextline.islower(0)) {
+				++i;
+				if (line.endswith(".") && nextline.islower(0))
+					lines[i] = nextline.upper(0,1) + nextline[1:];
+				continue;
+			}
+			lines[i] = "{} {}".format({ line, nextline });
+			lines.pop(i+1);
+		}
+		/* Automatically insert line-feeds to keep lines from growing too large. */
+		local fixed_text = "\n".join(lines);
+		if (preferred_line_length !is none)
+			fixed_text = "\n".join(smart_split_line(fixed_text,preferred_line_length));
+		local flush_start = 0;
+		local scan_end = #fixed_text;
+		for (i = 0; i < scan_end; ++i) {
+			local ch = fixed_text[i];
+			if (ch == "\\") {
+				this.print_text(fp,fixed_text[flush_start:i],preferred_line_length,closure);
+				++i;
+				flush_start = i;
+			} else if (ch in ["@","$",":","%","#"] && i < scan_end-1) {
+				local tag_start = i+1;
+				local tag_end;
+				local tag_start_ch = fixed_text[tag_start];
+				this.print_text(fp,fixed_text[flush_start:i],preferred_line_length,closure);
+				if (tag_start_ch == "{") {
+					++tag_start;
+					tag_end = fixed_text.findmatch("{","}",tag_start);
+					if (tag_end < 0)
+						tag_end = scan_end;
+					i = tag_end+1;
+				} else if (tag_start_ch == "(") {
+					tag_end = fixed_text.findmatch("(",")",tag_start);
+					if (tag_end < 0)
+						tag_end = scan_end;
+					else
+						++tag_end;
+					i = tag_end;
+				} else if (tag_start_ch == "[") {
+					tag_end = fixed_text.findmatch("[","]",tag_start);
+					if (tag_end < 0)
+						tag_end = scan_end;
+					else
+						++tag_end;
+					i = tag_end;
+				} else if (tag_start_ch.issymstrt()) {
+					tag_end = tag_start+1;
+					while (tag_end < scan_end &&
+					      (fixed_text.issymcont(tag_end) ||
+					       fixed_text[tag_end] in [".",":"]))
+						++tag_end;
+					i = tag_end;
+				} else if (tag_start_ch.isdigit()) {
+					tag_end = tag_start+1;
+					while (tag_end < scan_end && fixed_text.isalnum(tag_end))
+						++tag_end;
+					i = tag_end;
+				} else if (tag_start_ch == "\"") {
+					tag_end = tag_start+2;
+					while (tag_end < scan_end &&
+					      (fixed_text[tag_end-1] != "\"" ||
+					       fixed_text[tag_end-2] == "\\")) /* TODO: Deal with escaped backslashes! */
+						++tag_end;
+					i = tag_end;
+				} else {
+					flush_start = i;
+					continue;
+				}
+				flush_start = i;
+				/* Decode the content of the tag (virtual call!). */
+				this.decode_tag(fp,ch,
+					fixed_text[tag_start:tag_end],
+					preferred_line_length,closure);
+			}
+		}
+		if (flush_start < #fixed_text)
+			this.print_text(fp,fixed_text[flush_start:],preferred_line_length,closure);
+		this.print_text(fp,"\n",preferred_line_length,closure);
+	}
+
+	tostring(text,preferred_line_length = 80,closure = none) {
+		file.writer fp;
+		decode(text,fp,preferred_line_length,closure);
+		return fp.string;
+	}
+
+}
+
+
+local function count_leading_whitespace(line) {
+	local result = 0;
+	while (result < #line && line.isspace(result))
+		++result;
+	/* Special case for when the first non-whitespace character
+	 * is a star. - Why? Well just take a look at the leading
+	 * whitespace associated with this comment...
+	 * And although this doesn't handle all the ways of writing
+	 * C-style comments, handling them all would be wayyy too
+	 * expensive, especially when considering that spellings
+	 * other than the one where each additional line is also
+	 * proceeded by a `*' goes against deemon's style-guide.
+	 * (Or in other words: I don't like the way it looks ;) )
+	 */
+	if (result && result < #line && line[result] == "*")
+		--result;
+	return result;
+}
+
+@"A wrapper and analyzer for the human-readable portion of documentation strings"
+@"The main use of this is to enumerate the different sections found in a"
+@"documentation text, then split those further into individual documentation"
+@"links and cross-references."
+class Text {
+
+	@"->string"
+	@"The raw text string"
+	public text;
+
+	@"(string text)"
+	this(text_) {
+		text = text_;
+	}
+
+	operator repr() {
+		return "Text({!r})".format({ text });
+	}
+
+	@"->{(string,string,string)...}"
+	@"->{(string,none,string)...}"
+	@"Split the documentation text into its component parts (name,kind,content):"
+	@"%{table Part Name|Kind Value|Content"
+	@"${\"TEXT\"}|Always $none|The raw human-readable text, still containing special characters such as ${\"@\"} or ${\"$\"}, among others"
+	@"${\"SOURCE\"}|Always $none|A section of in-line source code (writted by prefixing a group of lines with ${\">\"})"
+	@"${\"TAG\"}|The name of the tag in lower-case|The text associated with the tag}"
+	operator for() {
+		local lines = [splitlines_escapeaware(text.expandtabs())...];
+		local index = 0;
+		local linecount = #lines;
+		while (index < linecount) {
+			local section = lines[index];
+			if (!section) {
+				++index;
+				continue;
+			}
+			if (section.startswith("@") && section.issymstrt(1)) {
+				/* Prototype tag. */
+				local tag_name_end = 2;
+				while (tag_name_end < #section && section.issymcont(tag_name_end))
+					++tag_name_end;
+				local tag_content_start = tag_name_end+1;
+				/* Find all lines that have at least `tag_content_start' characters of whitespace. */
+				local tag_lines_end = index+1;
+				local shared_whitespace = tag_content_start;
+				while (shared_whitespace < #section && section.isspace(shared_whitespace))
+					++shared_whitespace;
+				while (tag_lines_end < linecount) {
+					local num_whitespace = 0;
+					local line = lines[tag_lines_end];
+					if (#line < tag_content_start) break;
+					local count_whitespace = shared_whitespace;
+					if (count_whitespace > #line)
+						count_whitespace = #line;
+					while (num_whitespace < count_whitespace && line.isspace(num_whitespace))
+						++num_whitespace;
+					if (num_whitespace < tag_content_start)
+						break;
+					if (shared_whitespace > count_whitespace)
+						shared_whitespace = count_whitespace;
+					++tag_lines_end;
+				}
+				local tag_name = section[1:tag_name_end].lower();
+				local tag_content =
+					"\n".join(
+						for(local i = index; i < tag_lines_end; ++i)
+							lines[i][shared_whitespace:]
+					).rstrip();
+				if (tag_name == "interrupt" && !tag_content) {
+					tag_name    = "throw";
+					tag_content =
+						"Signal.Interrupt: The calling :thread was interrupted";
+				}
+				yield pack("TAG",tag_name,tag_content);
+				index = tag_lines_end;
+				continue;
+			}
+			if (section.startswith(">")) {
+				/* Inlined source code */
+				local source_start_line = index;
+				local common_size = 1;
+				while (common_size < #section &&
+				      (section.isspace(common_size) ||
+				       section[common_size] == ">"))
+					++common_size;
+				local common_part = section[:common_size];
+				while (index < linecount) {
+					local line = lines[index];
+					if (!line.startswith(">"))
+						break;
+					common_part = common_part[:line.common(common_part)];
+					++index;
+				}
+				common_size = #common_part;
+				local source_lines = lines[source_start_line:index];
+				local indent_factor = none;
+				for (local i = 0; i < #source_lines; ++i) {
+					local line = source_lines[i][common_size:];
+					local num_white = count_leading_whitespace(line);
+					if (num_white) {
+						if (indent_factor is none)
+							indent_factor = num_white;
+						else if (indent_factor > num_white) {
+							indent_factor = num_white;
+						} else {
+							while (num_white % indent_factor) {
+								assert indent_factor != 1;
+								--indent_factor;
+							}
+						}
+					}
+					source_lines[i] = line;
+				}
+				if ((indent_factor !is none) && (indent_factor != 4)) {
+					for (local i = 0; i < #source_lines; ++i) {
+						local line = source_lines[i];
+						local num_white = count_leading_whitespace(line);
+						line = " " * ((num_white / indent_factor) * 4) +
+							line[num_white:];
+						source_lines[i] = line;
+					}
+				}
+				yield pack(
+					"SOURCE",
+					none,
+					"\n"
+						.join(source_lines)
+						.rstrip()
+						.rstrip("\\")
+						.replace("\\\n","\n")
+				);
+				continue;
+			}
+			local text_start_line = index;
+			for (;;) {
+				++index;
+				if (index >= linecount)
+					break;
+				local line = lines[index];
+				if (!line) continue;
+				if (line.startswith("@") && line.issymstrt(1))
+					break;
+				if (line.startswith(">"))
+					break;
+			}
+			yield pack(
+				"TEXT",
+				none,
+				"\n".join(
+					lines[text_start_line:index]
+				).rstrip());
+		}
+	}
+
+	operator str() {
+		file.writer fp;
+		for (local name,kind,content: this) {
+			switch (name) {
+			case "TAG":
+				fp << "@" << kind << ": ";
+				local first_line = true;
+				local line_prefix = " "*(3+#kind);
+				for (local line:
+					TextSplitter().tostring(content).rstrip().splitlines()) {
+					if (!first_line)
+						fp << line_prefix;
+					print fp: line;
+					first_line = false;
+				}
+				break;
+			case "SOURCE":
+				for (local line: content.splitlines())
+					print fp: ">>",line;
+				break;
+			default:
+				TextSplitter().decode(content,fp);
+				break;
+			}
+		}
+		return fp.string;
+	}
+
+}
+
+
+
+@"(string text)->{(string,string,string)...}"
+@"Split a given parameter string into the individual arguments, and those"
+@"arguments into a tuple (name,type,default), where any missing option is"
+@"denoted by a none. For example, ${\"int x = 7\"} produces ${(\"int\",\"x\",\"7\")},"
+@"${\"int x\"} produces ${(\"int\",\"x\",none)}, ${\"x\"} produces ${(none,\"x\",none)},"
+@"${\"args...\"} produces ${(\"object...\",\"args\",none)},"
+@"and ${\"string x...\"} or ${\"string... x\"} produce ${(\"string...\",\"x\",none)}"
+local function split_paramstring(text) {
+	local part_start = 0;
+	local part_end = 0;
+	local string_length = #text;
+	while (part_end < string_length) {
+		local ch = text[part_end];
+		if (ch == ",") {
+			yield split_singleparam(text[part_start:part_end].strip());
+			++part_end;
+			part_start = part_end;
+		} else if (ch in ["\"","\'"]) {
+			part_end = skip_string(text,part_end+1,ch);
+		} else if (ch in ["[","(","{"]) {
+			part_end = skip_parenthesis(text,part_end+1,ch);
+		} else {
+			++part_end;
+		}
+	}
+	local final_part = text[part_start:].strip();
+	if (final_part)
+		yield split_singleparam(final_part);
+}
+
+local function count_paramstring(text) {
+	local part_start = 0;
+	local part_end = 0;
+	local string_length = #text;
+	local result = 0;
+	while (part_end < string_length) {
+		local ch = text[part_end];
+		if (ch == ",") {
+			++result;
+			++part_end;
+			part_start = part_end;
+		} else if (ch in ["\"","\'"]) {
+			part_end = skip_string(text,part_end+1,ch);
+		} else if (ch in ["[","(","{"]) {
+			part_end = skip_parenthesis(text,part_end+1,ch);
+		} else {
+			++part_end;
+		}
+	}
+	local final_part = text[part_start:].strip();
+	if (final_part)
+		++result;
+	return result;
+}
+
+
+@"A wrapper class for processing documentation prototypes for functions, or members"
+class Prototype {
+	@"->string"
+	@"The raw text of the prototype, uniformly formatted to include an"
+	@"argument list, as well as a return type, and a prefixed name."
+	public text;
+
+	@"(string text)"
+	this(text_) {
+		text = text_;
+	}
+
+	operator repr() {
+		return "Prototype({!r})".format({ text });
+	}
+
+	private m_name;
+
+	@"->string"
+	@"Returns the name of the function/operator prototypes by @this Prototype"
+	name = {
+		get() {
+			if (m_name !is bound) {
+				local name_end1 = text.find("(");
+				local name_end2 = text.rindex("->");
+				if (name_end1 < 0 || name_end2 < name_end1)
+					name_end1 = name_end2;
+				assert name_end1 >= 0;
+				m_name = text[:name_end1];
+			}
+			return m_name;
+		}
+	}
+
+	private m_returntype;
+
+	@"->string"
+	@"Returns the text for the return type of @this Prototype"
+	@"Note that this string may use abstract sequence syntax, such"
+	@"as ${\"{(string,int)...}\"}, which would referr to a sequence "
+	"of string+int tuples"
+	returntype = {
+		get() {
+			if (m_returntype !is bound) {
+				m_returntype = text[text.rindex("->")+2:].strip();
+			}
+			return m_returntype;
+		}
+	}
+
+	private m_paramstring;
+
+	@"->string"
+	@"->none"
+	@"Returns the parameter string of a function-like prototype"
+	@"(excluding surrounding parenthesis), or return :none if"
+	@"the prototype belongs to a member-, or property-like node."
+	paramstring = {
+		get() {
+			if (m_paramstring !is bound) {
+				local name_end1 = text.find("(");
+				if (name_end1 < 0)
+					/* `foo->bool' */
+					m_paramstring = none;
+				else {
+					local name_end2 = text.rfind(")->");
+					if (name_end2 < 0) {
+						/* `foo->{(string,int)...}' */
+						m_paramstring = none;
+					} else {
+						m_paramstring = text[name_end1+1:name_end2];
+					}
+				}
+			}
+			return m_paramstring;
+		}
+	}
+
+	@"->none"
+	@"->{(string,string,string)...}"
+	@"Return the individual parameters of the prototype as tuples"
+	@"(type,name,default), where any missing option is denoted"
+	@"by a none. For example, ${\"int x = 7\"} produces ${(\"int\",\"x\",\"7\")},"
+	@"${\"int x\"} produces ${(\"int\",\"x\",none)}, ${\"x\"} produces ${(none,\"x\",none)},"
+	@"${\"args...\"} produces ${(\"object...\",\"args\",none)}, and"
+	@"${\"string x...\"} or ${\"string... x\"} produce ${(\"string...\",\"x\",none)}"
+	@"In the event that @this Prototype isn't a function (s.a. #isfunction), return :none"
+	parameters = {
+		get() {
+			local parstr = paramstring;
+			if (parstr is none)
+				return none;
+			return split_paramstring(parstr);
+		}
+	}
+
+	@"->bool"
+	@"Evalutes to :true if @this Prototype is that of a function or operator"
+	@"Otherwise, the prototype belongs to a member or property (getset)"
+	isfunction = {
+		get() {
+			return paramstring !is none;
+		}
+	}
+
+	operator str() {
+		file.writer fp;
+		fp << name;
+		local params = parameters;
+		if (params !is none) {
+			fp << "(";
+			local is_first = true;
+			for (local tp,nm,df: params) {
+				if (tp is none)
+					tp = "object";
+				if (!is_first)
+					fp << ", ";
+				is_first = false;
+				fp << tp << " " << nm;
+				if (df !is none) {
+					fp << " = " << df;
+				}
+			}
+			fp << ")";
+		}
+		fp << " -> " << returntype;
+		return fp.string;
+	}
+}
+
+
+
+
+local function lookup_class_attribute(ob,name) {
+	for (local x: enumattr(ob)) {
+		if (x.isinstance)
+			continue;
+		if (x.name == name)
+			return x;
+	}
+	return none;
+}
+local function lookup_instance_attribute(ob,name) {
+	for (local x: enumattr(ob)) {
+		if (!x.isinstance)
+			continue;
+		if (x.name == name)
+			return x;
+	}
+	return none;
+}
+local function lookup_attribute(ob,name) {
+	for (local x: enumattr(ob)) {
+		if (x.name == name)
+			return x;
+	}
+	return none;
+}
+
+
+
+
+local operator_default_args = {
+	/* none as return type is a placeholder for the name of the type. */
+	"constructor" : { "", none },
+	"destructor" : { "", none },
+	"copy" : { "", none },
+	"deepcopy" : { "", none },
+	"int" : { "", "int" },
+	"bool" : { "", "bool" },
+	"str" : { "", "string" },
+	"repr" : { "", "string" },
+	"enter" : { "", "none" },
+	"leave" : { "", "none" },
+	"eq" : { "* other", "bool" },
+	"ne" : { "* other", "bool" },
+	"lo" : { "* other", "bool" },
+	"le" : { "* other", "bool" },
+	"gr" : { "* other", "bool" },
+	"ge" : { "* other", "bool" },
+	"inv" : { "", none },
+	"pos" : { "", none },
+	"neg" : { "", none },
+	"add" : { "* other", none },
+	"sub" : { "* other", none },
+	"mul" : { "* other", none },
+	"div" : { "* other", none },
+	"mod" : { "* other", none },
+	"shl" : { "* other", none },
+	"shr" : { "* other", none },
+	"and" : { "* other", none },
+	"or" : { "* other", none },
+	"xor" : { "* other", none },
+	"pow" : { "* other", none },
+	"iadd" : { "* other", none },
+	"isub" : { "* other", none },
+	"imul" : { "* other", none },
+	"idiv" : { "* other", none },
+	"imod" : { "* other", none },
+	"ishl" : { "* other", none },
+	"ishr" : { "* other", none },
+	"iand" : { "* other", none },
+	"ior" : { "* other", none },
+	"ixor" : { "* other", none },
+	"ipow" : { "* other", none },
+	"assign" : { "* other", none },
+	"moveassign" : { "* other", none },
+	"contains" : { "other", "bool" },
+	"size" : { "", "int" },
+	"iter" : { "", "iterator" },
+	"next" : { "", "object" },
+	"getitem" : { "int index", "object" },
+	"delitem" : { "int index", "none" },
+	"setitem" : { "int index,object value", "none" },
+	"getrange" : { "int start,int end", "sequence" },
+	"delrange" : { "int start,int end", "none" },
+	"setrange" : { "int start,int end,sequence value", "none" },
+	"getattr" : { "string name", "object" },
+	"delattr" : { "string name", "none" },
+	"selattr" : { "string name,object value", "none" },
+	"call" : { "args...", "object" },
+};
+
+local kind_sorting_weights = {
+	"module"         : 0x0000,
+
+	"operator"       : 0x0100,
+	"type"           : 0x0101,
+
+	"function"       : 0x0200,
+	"property"       : 0x0201,
+	"member"         : 0x0202,
+
+	"class_function" : 0x0300,
+	"class_property" : 0x0301,
+	"class_member"   : 0x0302,
+};
+
+
+local operator_sorting_weights = {
+	/* none as return type is a placeholder for the name of the type. */
+	"constructor" : 0x0000,
+	"copy"        : 0x0001,
+	"deepcopy"    : 0x0002,
+	"destructor"  : 0x0003,
+	"assign"      : 0x0004,
+	"moveassign"  : 0x0005,
+
+	"str"         : 0x0100,
+	"repr"        : 0x0101,
+	"bool"        : 0x0102,
+	"int"         : 0x0103,
+
+	"call"        : 0x0200,
+
+	"eq"          : 0x0300,
+	"ne"          : 0x0301,
+	"lo"          : 0x0302,
+	"le"          : 0x0303,
+	"gr"          : 0x0304,
+	"ge"          : 0x0305,
+
+	"inv"         : 0x0400,
+	"pos"         : 0x0401,
+	"neg"         : 0x0402,
+	"add"         : 0x0403,
+	"sub"         : 0x0404,
+	"mul"         : 0x0405,
+	"div"         : 0x0406,
+	"mod"         : 0x0407,
+	"shl"         : 0x0408,
+	"shr"         : 0x0409,
+	"and"         : 0x040a,
+	"or"          : 0x040b,
+	"xor"         : 0x040c,
+	"pow"         : 0x040d,
+	"iadd"        : 0x040e,
+	"isub"        : 0x040f,
+	"imul"        : 0x0410,
+	"idiv"        : 0x0411,
+	"imod"        : 0x0412,
+	"ishl"        : 0x0413,
+	"ishr"        : 0x0414,
+	"iand"        : 0x0415,
+	"ior"         : 0x0416,
+	"ixor"        : 0x0417,
+	"ipow"        : 0x0418,
+
+	"iter"        : 0x0500,
+	"size"        : 0x0501,
+	"contains"    : 0x0502,
+	"getitem"     : 0x0503,
+	"delitem"     : 0x0504,
+	"setitem"     : 0x0505,
+	"getrange"    : 0x0506,
+	"delrange"    : 0x0507,
+	"setrange"    : 0x0508,
+
+	"next"        : 0x0600,
+
+	"enter"       : 0x0700,
+	"leave"       : 0x0701,
+
+	"getattr"     : 0x0800,
+	"delattr"     : 0x0801,
+	"setattr"     : 0x0802,
+};
+
+local real_operator_names = {
+	"this" : "constructor",
+	"~this" : "destructor",
+	"#" : "size",
+	"\"\"" : "str",
+	"+" : { 0 : "pos", 1 : "add" },
+	"-" : { 0 : "neg", 1 : "sub" },
+	"~" : "inv",
+	"*" : "mul",
+	"/" : "div",
+	"%" : "mod",
+	"<<" : "shl",
+	">>" : "shr",
+	"&" : "and",
+	"|" : "or",
+	"^" : "xor",
+	"**" : "pow",
+	"+=" : "iadd",
+	"-=" : "isub",
+	"*=" : "imul",
+	"/=" : "idiv",
+	"%=" : "imod",
+	"<<=" : "ishl",
+	">>=" : "ishr",
+	"&=" : "iand",
+	"|=" : "ior",
+	"^=" : "ixor",
+	"**=" : "ipow",
+	":=" : "assign",
+	"move:=" : "moveassign",
+	"move=" : "moveassign",
+	":=move" : "moveassign",
+	"=move" : "moveassign",
+	"==" : "eq",
+	"!=" : "ne",
+	"<" : "lo",
+	"<=" : "le",
+	">" : "gr",
+	">=" : "ge",
+	"[]" : { 1 : "getitem", 2: "getrange" },
+	"[]=" : { 2 : "setitem", 3: "setrange" },
+	"del[]" : { 1: "delitem", 2: "delrange" },
+	"[:]" : "getrange",
+	"[:]=" : "setrange",
+	"del[:]" : "delrange",
+};
+
+
+@"(string name,callable get_argc)->string"
+@"Given a (potentially) pretty operator name, return its real name"
+local function operator_getrealname(name) {
+	local result;
+	result = real_operator_names.get(name);
+	if (result is none)
+		return name;
+	return result;
+}
+
+
+local pretty_operator_names = {
+	"constructor" : "this",
+	"destructor" : "~this",
+	"size" : "#",
+	"getitem" : "[]",
+	"setitem" : "[]=",
+	"delitem" : "del[]",
+	"getrange" : "[:]",
+	"setrange" : "[:]=",
+	"delrange" : "del[:]",
+	"pos" : "+",
+	"add" : "+",
+	"neg" : "-",
+	"sub" : "-",
+	"inv" : "~",
+	"mul" : "*",
+	"div" : "/",
+	"mod" : "%",
+	"shl" : "<<",
+	"shr" : ">>",
+	"and" : "&",
+	"or" : "|",
+	"xor" : "^",
+	"pow" : "**",
+	"iadd" : "+=",
+	"isub" : "-=",
+	"iinv" : "~=",
+	"imul" : "*=",
+	"idiv" : "/=",
+	"imod" : "%=",
+	"ishl" : "<<=",
+	"ishr" : ">>=",
+	"iand" : "&=",
+	"ior" : "|=",
+	"ixor" : "^=",
+	"ipow" : "**=",
+	"assign" : ":=",
+	"moveassign" : "move:=",
+	"eq" : "==",
+	"ne" : "!=",
+	"lo" : "<",
+	"le" : "<=",
+	"gr" : ">",
+	"ge" : ">=",
+	"getitem" : "[]",
+	"getrange" : "[:]",
+	"delitem" : "del[]",
+	"delrange" : "del[:]",
+	"setitem" : "[]=",
+	"setrange" : "[:]=",
+	"getattr" : ".",
+	"delattr" : "del.",
+	"setattr" : ".=",
+};
+
+@"(string name)->string"
+@"(string name)->none"
+@"Given an operator name such as ${\"getitem\"}, "
+@"return a pretty varient such as ${\"[]\"}"
+local function operator_getprettyname(name) {
+	return pretty_operator_names.get(name,name);
+}
+
+
+local function find_doctext_sections(text,i = 0) {
+	for (;;) {
+		i = text.find("\n\n",i);
+		if (i <= 0) break;
+		if (text[i-1] != "\\") break; /* TODO: Deal with escaped backslashes! */
+		++i;
+	}
+	return i;
+}
+
+
+@"(string text)->string"
+@"Split the given documentation text @text into sections"
+@"A documentation text section exists where 2 consecutive"
+@"linefeeds appear, without the first linefeed being escaped"
+local function split_doctext_sections(text) {
+	local start = 0;
+	local end;
+	for (;;) {
+		end = find_doctext_sections(text,start);
+		if (end < 0) end = #text;
+		if (end <= start) break;
+		yield text[start:end].rstrip().lstrip("\n");
+		start = end+2;
+	}
+}
+
+
+
+@"(string line,string type_name,bool force=false)->(string,string)"
+@"(string line,string type_name,bool force=false)->none"
+local function fix_operator_prototype(line,type_name,force = false) {
+	line = line.strip().rstrip(";").rstrip();
+	local can1_pos = line.find("(");
+	local can2_pos = line.rfind("->");
+	local name_end;
+	/**/ if (can1_pos < 0) name_end = can2_pos;
+	else if (can2_pos < 0) name_end = can1_pos;
+	else name_end = can1_pos < can2_pos ? can1_pos : can2_pos;
+	if (name_end < 0) {
+		if (line.startswith("operator ")) {
+			/* `operator str' --> `str->' */
+			line = line[#"operator ":].lstrip() + "->";
+			name_end = can2_pos = #line-2;
+		} else {
+			return none; /* Not an operator line. */
+		}
+	}
+	local operator_name = line[:name_end].lstrip().lsstrip("operator").lstrip();
+	local argument_list = line.substr(name_end).lstrip();
+	if (!force && operator_name) {
+		/* Do some strict checking for valid operator names. */
+		if (operator_name.lsstrip("del").isanysymstrt()) {
+			if (!operator_name.issymbol() &&
+			     operator_name.replace(" ","")
+			    !in ["move:=",":=move","move=","=move"])
+				return none;
+		}
+	}
+	operator_name = operator_name.replace(" ","");
+	if (!operator_name || operator_name == type_name)
+		operator_name = "constructor";
+	if (operator_name.startswith("~") && operator_name[1:] == type_name)
+		operator_name = "destructor";
+	local real_operator_name = operator_getrealname(operator_name);
+	if (real_operator_name !is string) {
+		local argc;
+		if (can2_pos >= 0) {
+			argc = count_paramstring(
+				argument_list.substr(1,(can2_pos-can1_pos)-1).strip());
+		} else {
+			argc = count_paramstring(argument_list[1:-1].strip());
+		}
+		real_operator_name = real_operator_name.get(argc,operator_name);
+	}
+	if (!argument_list.startswith("(")) {
+		argument_list = "({}){}".format({
+			operator_default_args.get(
+				real_operator_name,(none,""))[0].
+				replace("*",type_name),
+			argument_list
+		});
+	}
+	if (argument_list.endswith(")"))
+		argument_list += "->";
+	if (argument_list.endswith("->")) {
+		local return_str;
+		return_str = operator_default_args.get(
+			real_operator_name,(none,"object"))[1];
+		if (return_str is none)
+			return_str = type_name;
+		argument_list += return_str;
+	}
+	return pack(
+		real_operator_name,
+		"{}{}".format({
+			real_operator_name,
+			argument_list
+		}));
+}
+
+local function get_default_prototype(name,ismember = false) {
+	try {
+		local defls = import("__docdefaults");
+		return defls.get_default_proto(name,ismember);
+	} catch (Error.FSError.FileNotFound |
+	         Error.AttributeError) {
+		return ismember
+			? pack(none,"object")
+			: pack("args...","object")
+			;
+	}
+}
+
+
+@"(string line,string name,bool force)->string"
+@"(string line,string name,bool force)->none"
+local function fix_function_prototype(line,name,force) {
+	line = line.strip().rstrip(";").rstrip();
+	if (line.startswith("function"))
+		line = line[#"function":].lstrip();
+	if (line.startswith(name))
+		line = line[#name:].lstrip();
+	local arrow_pos = line.rfind("->");
+	local return_type = "";
+	local param_list;
+	if (arrow_pos < 0) {
+		if (!line.startswith("("))
+			return none;
+		if (!line.endswith(")"))
+			return none;
+		param_list = line[1:-1].strip();
+	} else {
+		return_type = line[arrow_pos+2:].lstrip();
+		line = line[:arrow_pos].rstrip();
+		if (line.startswith("(")) {
+			if (!line.endswith(")"))
+				return none;
+			param_list = line[1:-1].strip();
+		} else if (!force || arrow_pos != 0) {
+			return none;
+		}
+	}
+	if (param_list !is bound) {
+		if (!return_type) {
+			/* Neither parameter list, nor return type given. - Try to guess... */
+			local defl = get_default_prototype(name,true);
+			param_list = defl[0];
+			return_type = defl[1];
+		}
+		/* With an explicit return type, assume an empty parameter list. */
+		param_list = "";
+	} else if (!return_type) {
+		/* With an explicit parameter list, the return type defaults to `none' */
+		return_type = "none";
+	}
+	return "{}({})->{}".format({ name, param_list, return_type });
+}
+
+@"(string line,string name)->string"
+@"(string line,string name)->none"
+local function fix_member_prototype(line,name) {
+	line = line.strip().rstrip(";").rstrip();
+	if (line.startswith("member"))
+		line = line[#"member":].lstrip();
+	if (line.startswith(name))
+		line = line[#name:].lstrip();
+	if (!line.startswith("->"))
+		return none;
+	return "{}->{}".format({ name, line[2:].strip() });
+}
+
+
+local function generate_fallback_argument_name(i) {
+	if (i <= 26)
+		return string.chr("a".ord() + i);
+	return "arg{}".format({ i });
+}
+
+@"(function func,string name)->string"
+local function generate_pseudo_prototype(func,name) {
+	local function_code = func.__code__;
+	local argc_min = function_code.__argc_min__;
+	file.writer fp;
+	fp << name << "(";
+	if (argc_min) {
+		local argc_max = function_code.__argc_max__;
+		for (local x: [:argc_min]) {
+			if (x) fp << ",";
+			/* TODO: Use DDI to lookup the actual argument names. */
+			fp << generate_fallback_argument_name(x);
+		}
+		if (argc_max > argc_min) {
+			if (argc_min) fp << ",";
+			local default_args = function_code.__default__;
+			for (local x: [:argc_max - argc_min]) {
+				if (x) fp << ",";
+				/* TODO: Use DDI to lookup the actual argument names. */
+				fp << generate_fallback_argument_name(argc_min+x);
+				fp << "=" << repr(default_args[x]);
+			}
+		}
+		if (function_code.__hasvarargs__) {
+			if (argc_max) fp << ",";
+			/* TODO: Use DDI to lookup the actual argument names. */
+			fp << generate_fallback_argument_name(argc_max);
+			fp << "...";
+		}
+	}
+	fp << ")->object";
+	return fp.string;
+}
+
+
+global lookup_object;
+global lookup_object_path;
+
+@"The main interface for accessing the documentation API provided by deemon"
+@"Documentation text is addressed using unambiguos paths structures as follows:"
+@"The string is split into segments seperated by ${\"/\"}"
+@"Dangling leading and trailing slashes are ignored."
+@"The first segment is a module name that describes which module to search"
+@"for the documenation strings. If no slash follows, the Doc node will refer"
+@"to that module as a whole"
+@"Otherwise, the remaining segment are walked left-to-right and used to dereference"
+@"attribute names of their respective object."
+@"These attributes can optionally be prefixed with one of the following"
+@"modifiers in order to address different attributes namespaces:"
+@"%{table Prefix|Description"
+@"-${\"\"}|The attribute is either a class-attribute, or an instance-attribute (may lead "
+          "to ambiguity when a name is re-used, such as by :dict/c:keys and :dict/i:keys)"
+@"-${\"c:\"}|The attribute is a class-attribute (i.e. ${string.chr})"
+@"-${\"i:\"}|The attribute is a instance-attribute (i.e. ${string.find})"
+@"-${\"op:\"}|The attribute is a real operator name (i.e. ${\"eq\"} instead of ${\"==\"})}"
+@"Furthermore, child-nodes (attributes) can be reached using #child, and all existing "
+@"child nodes can be enumerated by using the doc-node as a sequence-like object."
+@"Some restrictions apply to Doc-nodes, most notably the restriction that the object"
+@"being documented must somehow by addressible as a module export, meaning that private (local)"
+@"functions or classes usually cannot be addressed, and that builtin objects used by the"
+@"deemon core, which aren't actually exported from the builtin deemon module cannot be"
+@"addressed without the use of the :rt module."
+global class Doc: sequence {
+
+	private m_fixed_doc = none;
+	private m_operator_doc = none;
+
+	@"->string"
+	@"A universally, unique path that can be used to address this Doc item"
+	public path;
+
+	@"->string"
+	@"The name of this documentation object (last component of #path, stripped of its namespace prefix)"
+	public name;
+
+	@"->object"
+	@"The object represented by @this Doc node"
+	@"May be unbound"
+	public object;
+
+	@"->attribute"
+	@"->none"
+	public attr;
+
+	@"->Doc"
+	@"May be unbound"
+	public parent;
+
+	@"->string"
+	@"->none"
+	@"The raw documentation text associated with this node"
+	private m_raw_doc;
+	private m_raw_doc_is_type = false;
+
+	@"(string path)"
+	@"(module mod)"
+	@"(module mod,string subpath)"
+	@"(Doc parent,string attribute_name)"
+	this(doc_parent_or_path, attribute_name?, operator_doc?) {
+		if (attribute_name !is bound) {
+			if (doc_parent_or_path is deemon.module) {
+				object    = doc_parent_or_path;
+				attr      = none;
+				m_raw_doc = none;
+				name = path = deemon.module.__name__(doc_parent_or_path);
+				return;
+			}
+			assert doc_parent_or_path is string;
+			local head,none,tail = doc_parent_or_path.strip("/ ").rpartition("/")...;
+			if (!tail) {
+				/* Module documentation */
+				if (head.startswith(".")) {
+					throw Error.ValueError(
+						"Module name {!r} is not absolute"
+						.format({ head }));
+				}
+				object    = import(head);
+				attr      = none;
+				m_raw_doc = none; /* XXX: Module documentation texts? */
+				path      = head;
+				name      = head;
+				return;
+			}
+			doc_parent_or_path = Doc(head);
+			attribute_name     = tail;
+		}
+		if (doc_parent_or_path is deemon.module)
+			doc_parent_or_path = Doc(doc_parent_or_path);
+		assert doc_parent_or_path is Doc;
+		/* Check that the parent-node allows child nodes. */
+		local my_attr;
+		local fixed_attribute_name;
+		if (!doc_parent_or_path.haschildren) {
+			if (attribute_name.startswith("op:")) {
+				attribute_name = attribute_name[3:];
+				goto err_unknown_operator;
+			}
+			fixed_attribute_name = attribute_name.lsstrip("i:").lsstrip("c:");
+			goto unknown_attribute;
+		}
+		parent = doc_parent_or_path;
+		if (attribute_name is attribute) {
+			my_attr = attribute_name;
+			fixed_attribute_name = attribute_name.name;
+			attribute_name = "{}{}".format({
+				attribute_name.isinstance ? "i:" :
+				attribute_name.isclass ? "c:" : "",
+				fixed_attribute_name
+			});
+		} else if (attribute_name.startswith("op:")) {
+			/* Operator node. */
+			path = "{}/{}".format({
+				doc_parent_or_path.path,
+				attribute_name
+			});
+			attribute_name = attribute_name[3:];
+			if (operator_doc is bound) {
+				/* Caller-provided documentation string.
+				 * -> Done by the `enumerate_operators()' function */
+				m_fixed_doc = operator_doc;
+			} else {
+				/* Manual lookup. */
+				m_fixed_doc = doc_parent_or_path.getopdoc(attribute_name);
+				if (m_fixed_doc is none) {
+err_unknown_operator:
+					throw Error.AttributeError(
+						"Unknown operator {!r} in {!r}".format({
+							attribute_name,
+							doc_parent_or_path.path
+						})
+					);
+				}
+			}
+			name = operator_getprettyname(attribute_name);
+			return;
+		} else {
+			try {
+				if (attribute_name.startswith("i:")) {
+					fixed_attribute_name = attribute_name[2:];
+					my_attr = deemon.attribute(doc_parent_or_path.object,fixed_attribute_name,"i");
+					//my_attr = lookup_instance_attribute(doc_parent_or_path.object,fixed_attribute_name);
+				} else if (attribute_name.startswith("c:")) {
+					fixed_attribute_name = attribute_name[2:];
+					my_attr = deemon.attribute(doc_parent_or_path.object,fixed_attribute_name,"i","");
+					//my_attr = lookup_class_attribute(doc_parent_or_path.object,fixed_attribute_name);
+				} else {
+					fixed_attribute_name = attribute_name;
+					my_attr = deemon.attribute(doc_parent_or_path.object,fixed_attribute_name);
+					//my_attr = lookup_attribute(doc_parent_or_path.object,fixed_attribute_name);
+				}
+			} catch (Error.AttributeError) {
+				goto unknown_attribute;
+			}
+		}
+		assert operator_doc !is bound;
+		if (my_attr is none) {
+unknown_attribute:
+			throw Error.AttributeError(
+				"Unknown attribute {!r} in {!r}".format({
+					fixed_attribute_name,
+					doc_parent_or_path.path
+				})
+			);
+		}
+		if (!my_attr.isprivate) {
+			if (!my_attr.isproperty) {
+				local parob = doc_parent_or_path.object;
+				if (parob is deemon.type_) {
+					if (my_attr.isclass) {
+						if (my_attr.isinstance) {
+							/* Use `type.getinstanceattr' to prevent ambiguity
+							 * between stuff like `dict.c:keys' and `dict.i:keys' */
+							object = parob.getinstanceattr(fixed_attribute_name);
+						} else {
+							object = parob.operator . (fixed_attribute_name);
+						}
+					}
+				} else {
+					if (my_attr.isinstance)
+						object = parob.operator . (fixed_attribute_name);
+				}
+			}
+		}
+		/* Types implement their own documentation strings. */
+		if (object is bound && object is deemon.type_) {
+			m_raw_doc = object.__doc__;
+			m_raw_doc_is_type = true;
+			if (m_raw_doc !is string)
+				m_raw_doc = "";
+		}
+		if (m_raw_doc !is bound || !m_raw_doc) {
+			m_raw_doc_is_type = false;
+			m_raw_doc = my_attr.doc.unifylines().rstrip();
+			if (!m_raw_doc) {
+				/* Try to auto-generate a minimal doc string using attribute information */
+				if (object is bound && object is deemon.function_) {
+					m_raw_doc = generate_pseudo_prototype(object,fixed_attribute_name);
+				} else {
+					local attr_type = my_attr.attrtype;
+					if (my_attr.cancall || (attr_type !is none && callable.baseof(attr_type))) {
+						m_raw_doc = "({})->{}".format(
+							get_default_prototype(fixed_attribute_name,false));
+//				} else if (deemon.type_.baseof(attr_type)) {
+//					m_raw_doc = "";
+					} else if (attr_type !is none) {
+						m_raw_doc = "->{}".format({ attr_type });
+					} else {
+						m_raw_doc = "->{}".format({
+							get_default_prototype(fixed_attribute_name,true)[1] });
+					}
+				}
+			}
+		}
+		attr = my_attr;
+		name = fixed_attribute_name;
+		path = "{}/{}".format({
+			doc_parent_or_path.path,
+			attribute_name
+		});
+	}
+
+	@"Returns the Doc node's path representation"
+	operator repr() {
+		return "Doc({!r})".format({ path });
+	}
+
+	@"->bool"
+	@"Evaluates to :true if the object is an operator"
+	isoperator = { get() -> attr !is bound && object !is bound; }
+
+	@"->bool"
+	@"Evaluates to :true if the object is function-like"
+	isfunction = { get() -> isoperator || (attr !is none && (attr.cancall || callable.baseof(attr.attrtype))); }
+
+	@"->bool"
+	@"Evaluates to :true if the object is private to its class"
+	isprivate = { get() -> attr is bound && (attr !is none && attr.isprivate); }
+
+	@"->bool"
+	@"Evaluates to :true if the object is a class-attribute"
+	isclassattr = { get() -> attr is bound && (attr !is none && !attr.isinstance); }
+
+	@"->bool"
+	@"Evaluates to :true if the object is a module"
+	ismodule = { get() -> object is bound && object is deemon.module; }
+
+	@"->bool"
+	@"Evaluates to :true if the object is a byte"
+	istype = { get() -> object is bound && object is deemon.type_; }
+
+
+	@"Returns a real name of the node (that is the decoded operator name)"
+	realname = {
+		get() {
+			if (isoperator)
+				return path[path.rindex("op:")+3:];
+			return name;
+		}
+	}
+
+	@"Returns a pretty variant of @this node's path"
+	prettypath = {
+		get() {
+			local parts = list(path.split("/"));
+			if (#parts <= 1)
+				return name;
+			local module_from_str = "{} from {}".format({
+				parts[1].lsstrip("i:"), parts[0] });
+			if (#parts <= 2)
+				return module_from_str;
+			file.writer fp;
+			fp << "(" << module_from_str << ")";
+			for (local x: parts[2:]) {
+				fp << ".";
+				if (x.startswith("i:"))
+					x = x[2:];
+				else if (x.startswith("c:"))
+					x = x[2:];
+				else if (x.startswith("op:")) {
+					fp << "operator ";
+					fp << operator_getprettyname(x[3:]);
+					continue;
+				}
+				fp << x;
+			}
+			return fp.string;
+		}
+	}
+
+	@"->string"
+	@"->none"
+	@"Returns the kind of node, which is one of the following"
+	@"%{table Name|Description"
+	@"-${\"module\"}|The node refers to a module"
+	@"-${\"type\"}|The node refers to a type"
+	@"-${\"function\"}|The node refers to a function"
+	@"-${\"class_function\"}|The node refers to a class-function"
+	@"-${\"member\"}|The node refers to a member or global module-variable"
+	@"-${\"class_member\"}|The node refers to a class-member"
+	@"-${\"property\"}|The node refers to a property"
+	@"-${\"class_property\"}|The node refers to a class-property"
+	@"-${\"operator\"}|The node refers to an operator"
+	@"-${none}|The node kind could not be determined}"
+	kind = {
+		get() {
+			if (object !is bound) {
+				if (attr !is bound)
+					return "operator";
+			} else {
+				if (object is deemon.module)
+					return "module";
+				if (object is deemon.type_)
+					return "type";
+			}
+			if (attr is bound && attr !is none) {
+				if (attr.isproperty)
+					return attr.isinstance ? "property" : "class_property";
+				if (attr.cancall || callable.baseof(attr.attrtype))
+					return attr.isinstance ? "function" : "class_function";
+				return attr.isinstance ? "member" : "class_member";
+			}
+			return none;
+		}
+	}
+
+	@"->bool"
+	@"Returns :true if @this doc node has allowed to referr to child nodes"
+	haschildren = {
+		get() {
+			if (object !is bound) {
+				if (attr !is bound)
+					return false;
+			} else {
+				if (object is deemon.module)
+					return true;
+				if (object is deemon.type_)
+					return true;
+			}
+			//if (attr is bound && attr !is none) {
+			//	if (attr.cancall || callable.baseof(attr.attrtype)) {
+			//		return attr.isinstance ? "function" : "class_function";
+			//	} else {
+			//		return attr.isinstance ? "member" : "class_member";
+			//	}
+			//}
+			return false;
+		}
+	}
+
+
+	@"->Doc"
+	@"Returns the module-node (i.e the path-base-node) of this node"
+	modulenode = {
+		get() {
+			local x = this;
+			while (x.parent is bound)
+				x = x.parent;
+			assert x.object is bound;
+			assert x.object is deemon.module;
+			return x;
+		}
+	}
+
+	@"->module"
+	@"Returns the module (i.e the path-base) of this node"
+	module = {
+		get() {
+			local x = this;
+			while (x.parent is bound)
+				x = x.parent;
+			assert x.object is bound;
+			assert x.object is deemon.module;
+			return x.object;
+		}
+	}
+
+	@"Enable support for sorting of doc-nodes"
+	operator < (other) {
+		local my_kind = kind;
+		local ot_kind = other.kind;
+		if (my_kind != ot_kind) {
+			return
+				kind_sorting_weights.get(my_kind,0) <
+				kind_sorting_weights.get(ot_kind,0);
+		}
+		if (my_kind == "operator") {
+			return
+				operator_sorting_weights.get(realname,0) <
+				operator_sorting_weights.get(other.realname,0);
+		}
+		return name < other.name;
+	}
+
+
+	@"->none"
+	@"->type"
+	@"Returns the type of the base class of @this node, or :none if"
+	@"@this node isn't a type, or if that type doesn't have a base."
+	objectbase = {
+		get() {
+			if (object !is bound ||
+				object !is deemon.type_)
+				return none;
+			return object.__base__;
+		}
+	}
+
+	@"->none"
+	@"->Doc"
+	@"Returns the doc-node for #objectbase"
+	objectbasenode = {
+		get() {
+			if (object !is bound ||
+				object !is deemon.type_)
+				return none;
+			local objbase = object.__base__;
+			if (objbase is none)
+				return none; /* no base class */
+			return lookup_object(objbase,module);
+		}
+	}
+
+	@"->Prototype"
+	private function create_auto_prototype() {
+		local text;
+		if (object is bound) {
+			local myob = object;
+			if (myob is deemon.function_) {
+				text = generate_pseudo_prototype(myob,name);
+			}
+		}
+		if (text !is bound) {
+			local is_a_function = isfunction;
+			local args = get_default_prototype(name,is_a_function);
+			text = is_a_function
+				? "{}({})->{}".format({ name, args[0], args[1] })
+				: "{}->{}".format({ name, args[1] })
+				;
+		}
+		return Prototype(text);
+	}
+
+
+	private function split_operator_docs() {
+		if (m_operator_doc !is none) return;
+		if (m_raw_doc is none) {
+			m_fixed_doc = [];
+			return;
+		}
+		if (!m_raw_doc_is_type) {
+			local prototype_docs = [];
+			local is_a_function = isfunction;
+			local not_a_function = false;
+			for (local sect: split_doctext_sections(m_raw_doc)) {
+				local line_collection = "";
+				local prototypes = [];
+				for (local line: splitlines_escapeaware(sect)) {
+					local new_prototype;
+					if (is_a_function) {
+						new_prototype = fix_function_prototype(line,name,true);
+					} else {
+						if (!not_a_function) {
+							new_prototype = fix_function_prototype(line,name,false);
+							if (new_prototype !is none) {
+								is_a_function = true;
+								goto do_append_prototype;
+							}
+						}
+						new_prototype = fix_member_prototype(line,name);
+						if (new_prototype !is none)
+							not_a_function = true;
+					}
+					if (new_prototype is none) {
+						line_collection += line;
+						line_collection += "\n";
+					} else {
+do_append_prototype:
+						if (line_collection) {
+							/* Prototype sub-section */
+							prototype_docs.append(pack(
+								prototypes,
+								Text(line_collection.rstrip())));
+							prototypes = [];
+							line_collection = "";
+						}
+						prototypes.append(Prototype(new_prototype));
+					}
+				}
+				if (!prototypes)
+					prototypes.append(create_auto_prototype());
+				prototype_docs.append(pack(
+					prototypes,
+					Text(line_collection.rstrip())));
+			}
+			m_fixed_doc = prototype_docs;
+			return;
+		}
+		local first_line = m_raw_doc.splitlines()[0];
+		local type_protos = [Prototype("{}->type".format({ name }))];
+		if (fix_operator_prototype(first_line,name,false) !is none) {
+			m_fixed_doc = [(type_protos,Text(""))];
+			m_operator_doc = m_raw_doc;
+			return;
+		}
+		local i = find_doctext_sections(m_raw_doc);
+		if (i < 0) {
+			m_fixed_doc = [(type_protos,Text(m_raw_doc))];
+			return;
+		}
+		m_fixed_doc = [(type_protos,Text(m_raw_doc[:i].rstrip()))];
+		m_operator_doc = m_raw_doc[i+2:].lstrip("\n");
+	}
+
+	@"->{({Prototype...},Text)...}"
+	@"->{(none,Text)...}"
+	@"Return the documentation text associated with this doc node"
+	@"For type nodes, documentation for operators is filtered and"
+	@"must be accessed through individual child nodes"
+	@"The $text portion of the prototype is the human-readable description, combined"
+	@"with formating tags, as well as prototype tags (such as )"
+	@">for (local prototypes, text: this.doc) {"
+	@">    for (local p: prototypes)"
+	@">        print p;"
+	@">    print repr text;"
+	@">    print;"
+	@">}"
+	@"For type-like Doc nodes, the return value is always a single-element sequence"
+	@"with :none set as prototypes, and the type description string as text, except"
+	@"for when the type has no doc, in which case an empty sequence is returned directly."
+	@"The exact layout is represented by the second prototype overload above."
+	doc = {
+		get() {
+			if (m_fixed_doc is none)
+				split_operator_docs();
+			return m_fixed_doc;
+		}
+	}
+
+	@"->string"
+	@"->none"
+	@"Return the entire operator documentation string, or none is there is none"
+	private getoperatordoc() {
+		if (m_fixed_doc is none)
+			split_operator_docs();
+		return m_operator_doc;
+	}
+
+	@"()->{(string,{Prototype...},Text)...}"
+	@"Returns the tuples (name,{proto...},text) for all operator docs"
+	private impl_enumoperatordocs() {
+		for (local sect: split_doctext_sections(getoperatordoc())) {
+			local line_collection = "";
+			local result = dict();
+			local current_operator;
+			local current_prototype = none;
+			function append_operator(name,proto) {
+				local oldval = result.get(name,none);
+				if (oldval is none) {
+					result[name] = [Prototype(proto)];
+				} else {
+					oldval.append(Prototype(proto));
+				}
+			}
+			for (local line: splitlines_escapeaware(sect)) {
+				local new_operator_name,new_operator_prototype =
+					fix_operator_prototype(line,name,current_prototype is none)...;
+				if (new_operator_name is none) {
+					if (current_prototype is none) {
+						new_operator_name = "constructor";
+						new_operator_prototype = "constructor()\n";
+						line_collection = line;
+					} else {
+						line_collection += line;
+					}
+					line_collection += "\n";
+				} else {
+					if (current_prototype !is none)
+						append_operator(current_operator,current_prototype);
+					if (line_collection) {
+						/* Prototype sub-section */
+						line_collection = Text(line_collection.rstrip());
+						for (local name, proto: result) {
+							yield pack(name,proto,line_collection);
+						}
+						result.clear();
+						line_collection = "";
+					}
+					current_operator = new_operator_name;
+					current_prototype = new_operator_prototype;
+				}
+			}
+			if (current_prototype !is none)
+				append_operator(current_operator,current_prototype);
+			line_collection = Text(line_collection.rstrip());
+			for (local name, proto: result)
+				yield pack(name,proto,line_collection);
+		}
+	}
+
+	@"->{{({Prototype...},Text)...}...}"
+	@"->none"
+	private m_operator_sections = none;
+
+	@"->{{({Prototype...},Text)...}...}"
+	@"Enumerate the (normalized) documentation texts for operators"
+	@"Normalized here means that each string starts with \"<real_operator_name>(\","
+	@"followed by the operator argument list, and so on."
+	private enumoperatordocs() {
+		if (m_operator_sections is none) {
+			local result = dict();
+			for (local name, proto, text: impl_enumoperatordocs()) {
+				local oldval = result.get(name);
+				local proto_and_text = pack(proto,text);
+				if (oldval is none) {
+					result[name] = [proto_and_text];
+					continue;
+				}
+				oldval.append(proto_and_text);
+			}
+			if (istype) {
+				local mytype = object;
+				/* TODO: Enumerate all the operators implemented by the type,
+				 *       and add all that aren't being documented as empty
+				 *       prototypes. */
+			}
+			m_operator_sections = list(result.values());
+		}
+		return m_operator_sections;
+	}
+
+	@"(string opname)->({Prototype...},Text)"
+	@"(string opname)->none"
+	@"Return the documentation text associated with a given operator"
+	private getopdoc(opname) {
+		opname = opname+"(";
+		for (local entry: enumoperatordocs()) {
+			if (entry[0][0][0].text.startswith(opname))
+				return entry;
+		}
+		return none;
+	}
+
+	@"->{Doc...}"
+	@"Enumerate nodes for all the operators implemented"
+	@"by @this node, should @this node referr to a type"
+	enumerate_operators() {
+		if (!istype)
+			return;
+		for (local x: enumoperatordocs()) {
+			yield Doc(this,"op:{}".format({ x[0][0][0].name }),x);
+		}
+	}
+
+
+	@"(string attribute_name)->Doc"
+	@"@throw AttributeError Unknown child"
+	@"Returns the node for a child @attribute_name of @this Doc node"
+	child(attribute_name) {
+		return Doc(this,attribute_name);
+	}
+
+	@"(string child_path)->Doc"
+	@"Same as #child, but accept a relative doc-path instead"
+	recursive_child(child_path) {
+		local result = this;
+		for (local x: child_path.strip("/").split("/")) {
+			x = x.strip();
+			if (!x) continue;
+			result = result.child(x);
+		}
+		return result;
+	}
+
+	@"Enumerate Doc items of all nodes directly derived from @this"
+	operator for() {
+		if (!haschildren)
+			return;
+		yield enumerate_operators()...;
+		if (object !is bound) return;
+		local my_object = object;
+		local decl_object = my_object;
+		if (decl_object !is deemon.type_ &&
+		    decl_object !is deemon.module)
+			decl_object = type decl_object;
+		for (local x: enumattr(my_object)) {
+			if (x.decl !== decl_object)
+				break;
+			yield Doc(this,x);
+		}
+	}
+
+	@"Convenience interface for printing documentation information"
+	@"in a basic, but neat (and human-readable) format"
+	operator str() {
+		file.writer fp;
+		print fp: "-"*80;
+		print fp: "| Documentation for `{}'".format({ prettypath });
+		for (local prototypes, text: doc) {
+			print fp: "-"*80;
+			for (local p: prototypes) {
+				print fp: ">>",kind,p;
+			}
+			print fp: text,;
+		}
+		print fp: "-"*80;
+		if (ismodule) {
+			local children = list(this);
+			children.sort();
+			for (local child: children) {
+				fp << child;
+			}
+		}
+		return fp.string;
+	}
+
+
+}
+
+
+
+@"(object ob,module curr_module=none)->Doc"
+@"(object ob,module curr_module=none)->none"
+@"Given an object, try to figure out where that object "
+@"originates from, and return a doc node for that object."
+@"If the given @ob cannot be traced (likely because it is a "
+@"runtime-instance), :none will be returned instead."
+global function lookup_object(ob,curr_module = none) {
+	local path = lookup_object_path(ob,curr_module);
+	if (path is none)
+		return none;
+	return Doc(path);
+}
+
+
+
+local function lookup_object_in_module(mod,ob) {
+	/* Search the export table of this module! */
+	for (local name,obj: deemon.module.__exports__(mod)) {
+		if (obj === ob) {
+			return "{}/{}".format({
+				deemon.module.__name__(mod),
+				name
+			});
+		}
+	}
+	return none;
+}
+
+
+@"(object ob,module curr_module = none)->string"
+@"(object ob,module curr_module = none)->none"
+@"Same as #lookup_object, but rather than returning"
+@"the Doc node, return its path as a string"
+global function lookup_object_path(ob,curr_module = none) {
+	if (ob is module)
+		return str ob;
+	if (ob is deemon.function_)
+		return lookup_object_in_module(ob.__code__.__module__,ob);
+	/* Search for the object in a bunch of default places. */
+	local result;
+	if (curr_module !is none) {
+		result = lookup_object_in_module(curr_module,ob);
+		if (result !is none)
+			return result;
+	}
+	result = lookup_object_in_module(deemon,ob);
+	if (result !is none) {
+		return result;
+	}
+	/* TODO: Search Error sub-classes. */
+	return none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

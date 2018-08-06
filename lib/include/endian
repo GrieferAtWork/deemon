@@ -1,0 +1,58 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#pragma once
+#include "__stddef.dee"
+
+#ifndef __BYTEORDER__
+#error Missing predefined macro: '__BYTEORDER__'
+#endif
+
+#if __BYTEORDER__ == 1234
+#	define __LIL_ENDIAN__ 1
+#elif __BYTEORDER__ == 4321
+#	define __BIG_ENDIAN__ 1
+#endif
+
+#define __swap16_m(x) (\
+	(((x)&0x00ffui16)<<8)|\
+	(((x)&0xff00ui16)>>8))
+#define __swap32_m(x) (\
+	(((x)&0x000000ffui32)<<24)|\
+	(((x)&0x0000ff00ui32)<< 8)|\
+	(((x)&0x00ff0000ui32)>> 8)|\
+	(((x)&0xff000000ui32)>>24))
+#define __swap64_m(x) (\
+	(((x)&0x00000000000000ffui64)<<56)|\
+	(((x)&0x000000000000ff00ui64)<<40)|\
+	(((x)&0x0000000000ff0000ui64)<<24)|\
+	(((x)&0x00000000ff000000ui64)<< 8)|\
+	(((x)&0x000000ff00000000ui64)>> 8)|\
+	(((x)&0x0000ff0000000000ui64)>>24)|\
+	(((x)&0x00ff000000000000ui64)>>40)|\
+	(((x)&0xff00000000000000ui64)>>56))
+
+import __swap16 = bswap16 from ctypes;
+import __swap32 = bswap32 from ctypes;
+import __swap64 = bswap64 from ctypes;
+import __swap_le16 = leswap16 from ctypes;
+import __swap_le32 = leswap32 from ctypes;
+import __swap_le64 = leswap64 from ctypes;
+import __swap_be16 = beswap16 from ctypes;
+import __swap_be32 = beswap32 from ctypes;
+import __swap_be64 = beswap64 from ctypes;

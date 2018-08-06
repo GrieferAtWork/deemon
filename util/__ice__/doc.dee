@@ -1,0 +1,340 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import docfor = doc from deemon;
+import Error, module, enumattr, callable, object, hasattr from deemon;
+
+/* TODO: Get rid of this module in favor of `doc2' */
+
+class DocToken {
+
+	@"-> string"
+	@"The raw string representative text of this token"
+	public raw;
+
+	@"-> DocItem"
+	@"The documentation item from which this token originates"
+	public item;
+
+	@"-> string"
+	@"The human-readable (but unprocessed) text portion of this documentation token"
+	@"When not given, this is an empty string"
+	public text;
+
+	@"-> string"
+	@"The line-separated header descriptor, containing overloads and prototypes"
+	public header;
+
+	operator str () -> raw;
+	operator repr () -> repr raw;
+}
+
+
+@"A class describing a unique documentation item:"
+@">> import deemon;"
+@">> import DocItem from doc;"
+@">> "
+@">> local d = DocItem(deemon)[\"list\"].deref();"
+@">> "
+@">> print repr d;"
+@">> print repr d[\"append\"];"
+@">> for (local item: d) {"
+@">>     print repr item;"
+@">> }"
+class DocItem {
+
+	@"->DocItem"
+	@"The documentation item for the owner of this one, or :none when not known"
+	private m_parent = none;
+
+	@"The object associated with this doc"
+	private m_current;
+
+	@"-> attribute"
+	@"The attribute descriptor associated with this documentation item"
+	private m_attrdesc = none;
+
+	@"-> string"
+	@"The attribute name that is currently being browsed"
+	@"When :none, the #m_text is a the documentation text of"
+	@"#m_current directly (:type or :module documentation)"
+	private m_attr;
+
+	@"-> string"
+	@"The documentation text of item"
+	@"When no documentation is assigned, set to :none"
+	private m_text;
+
+	@"-> type"
+	@"The type of the object pointed to by this documentation item, or :none"
+	private m_type = none;
+
+	@"this(object current)"
+	@"this(object current, string attr)"
+	@"this(object current, string attr, string text)"
+	this(current, attr = none, text = none) {
+		m_current = current;
+		m_attr    = attr;
+		if (text is none) {
+			try {
+				m_text = attr is none
+					? docfor(current)
+					: docfor(current,attr);
+			} catch (Error.ValueError) {
+				m_text = none;
+			}
+		} else {
+			m_text = text;
+		}
+	}
+
+#if 1
+	@"name() -> string"
+	@"Returns the name of the type/module/attribute of this documentation item"
+	name() {
+		if (m_attr !is none)
+			return m_attr;
+		return str m_current;
+	}
+
+	@"attr() -> attribute"
+	@"Returns the attribute descriptor for this item, or :none when unknown"
+	attr() {
+		if (m_attrdesc !is none)
+			return m_attrdesc;
+		if (m_attr is none)
+			return none;
+		for (local attr: enumattr(m_current)) {
+			if (attr.name == m_attr) {
+				m_attrdesc = attr;
+				return attr;
+			}
+		}
+		return none;
+	}
+
+	@"path() -> string"
+	@"@return The attribte-path of @this documentation item"
+	path(sep = ".") {
+		local result = m_parent is none
+			? str m_current : m_parent.path(sep);
+		if (m_attr !is none)
+			result += sep+m_attr;
+		return result;
+	}
+
+	@"operator str() -> string"
+	@"@return The fully qualified name of @this documentation item"
+	operator str() -> path();
+
+	@"operator repr() -> string"
+	@"@return The unformatted documentation string of @this item"
+	operator repr() {
+		if (m_text is none)
+			return "No documentation found";
+		return repr m_text;
+	}
+
+	@"hasdoc() -> bool"
+	@"@return :true if @this :DocItem contains a documentation string"
+	hasdoc() {
+		return m_text !is none;
+	}
+
+	@"hasparent() -> bool"
+	@"@return :true if @this :DocItem has a parent"
+	hasparent() {
+		return m_text !is none;
+	}
+
+	@"parent() -> DocItem"
+	@"@return The parent of this documentation item"
+	parent() {
+		if (m_parent is none)
+			throw Error.ValueError("Documentation item `"+str this+"' has no owner");
+		return m_parent;
+	}
+
+	@"deref() -> DocItem"
+	@"Try to dereferences this documentation item, returning one describing"
+	@"the object found at a given attribute, rather than an attribute itself."
+	deref() {
+		if (m_attr is none)
+			return this;
+		local new_current = m_current;
+		if (m_attr !is none) {
+			new_current = new_current.operator . (m_attr);
+		}
+		local result = DocItem(new_current);
+		result.m_parent = this;
+		return result;
+	}
+
+	@"typeof() -> type"
+	@"Returns the type of the attribute associated with"
+	@"@this documentation item, or :none when unknown"
+	typeof() {
+		if (m_type is none) {
+			if (m_attr is none) {
+				m_type = type m_current;
+			} else try {
+				m_type = type(m_current.operator . (m_attr));
+			} catch (...) {
+			}
+		}
+		return m_type;
+	}
+
+	@"current() -> object"
+	@"Returns the item for which this is the documentation controller"
+	current() {
+		if (m_attr is none)
+			return m_current;
+		return m_current.operator . (m_attr);
+	}
+
+	@"operator [] (string name) -> DocItem"
+	@"@return A child of this documentation item accessible though attribute @name"
+	operator [] (name) {
+		local new_current = m_current;
+		local parent = m_parent;
+		if (m_attr !is none) {
+			new_current = new_current.operator . (m_attr);
+			parent = this;
+		}
+		local result = DocItem(new_current,name);
+		result.m_parent = parent;
+		return result;
+	}
+
+	hasitem(name) {
+		local current = m_current;
+		if (m_attr !is none) {
+			current = current.operator . (m_attr);
+		}
+		return hasattr(current,name);
+	}
+
+	@"enumerate(bool enumerate_inherited = false) -> sequence"
+	@"Enumerate documentation items for all attributes of @this item"
+	enumerate(enumerate_inherited = false) {
+		local base = deref();
+		for (local attr: enumattr(base.m_current)) {
+			/* Stop once encountering attributes from a
+			 * different declarator than the current base. */
+			if (!enumerate_inherited &&
+				object.id(attr.decl) != object.id(base.m_current))
+				break;
+			local item = DocItem(attr.decl,attr.name,try attr.doc catch (...) none);
+			item.m_attrdesc = attr;
+			item.m_parent = this;
+			yield item;
+		}
+	}
+
+	//@"operator for () -> sequence"
+	//@"Enumerate documentation items for all attributes reachable"
+	//operator for () {
+	//	return enumerate(true);
+	//}
+
+	@"tokenize() -> [DocToken...]"
+	@"Parse and convert the text of the documentation item into text blocks and headers"
+	tokenize() {
+		local text = m_text;
+		local my_type = typeof();
+		while (text) {
+			local stripped = text.lstrip();
+			local line_position = 0;
+			local strip_position = #text-#stripped;
+			local header = "";
+			for (;;) {
+				if (stripped.startswith("function") ||
+				    stripped.startswith("operator")) {
+				} else {
+					local a,b;
+					a = stripped.find("(");
+					if (a >= 0 && stripped.find(")",a) < 0)
+						a = -1;
+					b = stripped.find("->");
+					if (a < 0) a = #stripped;
+					if (b < 0) b = #stripped;
+					if (b < a) a = b;
+					if (a >= #stripped) break;
+					if (stripped.count(" ",0,a) > 1) break;
+				}
+
+				/* Prototype/return type prefix. */
+				local temp = stripped.find("\n");
+				if (temp < 0)
+					temp = #stripped;
+				else {
+					++temp;
+				}
+				/* Append the prototype line to the header. */
+				header            += stripped[:temp];
+				stripped           = stripped[temp:];
+				line_position      = strip_position+temp;
+				strip_position    += temp;
+				local new_stripped = stripped.lstrip();
+				strip_position    += #stripped-#new_stripped;
+				stripped           = new_stripped;
+			}
+			/* Locate the end of this block. */
+			local block_end = stripped.find("\n\n");
+			/* Create a new token. */
+			local token  = DocToken();
+			token.raw    = block_end < 0 ? text : text[:block_end];
+			token.item   = this;
+			token.text   = text[
+				line_position :
+				block_end < 0 ? none : strip_position+block_end];
+			token.header = header;
+			/* Yield the token. */
+			yield token;
+			if (block_end < 0)
+				break;
+			text = text[strip_position+block_end+2:];
+		}
+	}
+#endif
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

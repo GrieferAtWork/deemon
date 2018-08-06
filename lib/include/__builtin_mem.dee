@@ -1,0 +1,57 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#pragma once
+#include "__stddef.dee"
+
+import __builtin_memcpy = memcpy from ctypes;
+import __builtin_mempcpy = mempcpy from ctypes;
+import __builtin_memccpy = memccpy from ctypes;
+import __builtin_rawmemchr = rawmemchr from ctypes;
+import __builtin_memmove = memmove from ctypes;
+import __builtin_memcmp = memcmp from ctypes;
+import __builtin_strcoll = strcoll from ctypes;
+import __builtin_strcmp = strcmp from ctypes;
+import __builtin_strncmp = strncmp from ctypes;
+import __builtin_strxfrm = strxfrm from ctypes;
+import __builtin_strcpy = strcpy from ctypes;
+import __builtin_strncpy = strncpy from ctypes;
+import __builtin_stpcpy = stpcpy from ctypes;
+import __builtin_stpncpy = stpncpy from ctypes;
+import __builtin_strcat = strcat from ctypes;
+import __builtin_memchr = memchr from ctypes;
+import __builtin_memrchr = memrchr from ctypes;
+import __builtin_strchr = strchr from ctypes;
+import __builtin_strchrnul = strchrnul from ctypes;
+import __builtin_strcasestr = strcasestr from ctypes;
+import __builtin_strcasecmp = strcasecmp from ctypes;
+import __builtin_strncasecmp = strncasecmp from ctypes;
+import __builtin_memmem = memmem from ctypes;
+import __builtin_strcspn = strcspn from ctypes;
+import __builtin_strpbrk = strpbrk from ctypes;
+import __builtin_strrchr = strrchr from ctypes;
+import __builtin_strspn = strspn from ctypes;
+import __builtin_strstr = strstr from ctypes;
+import __builtin_strtok = strtok from ctypes;
+import __builtin_strerror = strerror from ctypes;
+import __builtin_strlen = strlen from ctypes;
+import __builtin_strnlen = strnlen from ctypes;
+import __builtin_strdup = strdup from ctypes;
+import __builtin_strndup = strndup from ctypes;
+import __builtin_strncat = strncat from ctypes;
+import __builtin_memset = memset from ctypes;

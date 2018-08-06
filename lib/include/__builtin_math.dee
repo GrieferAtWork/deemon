@@ -1,0 +1,95 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#pragma once
+#include "__stddef.dee"
+
+import __builtin_sin = sin from math;
+import __builtin_cos = cos from math;
+import __builtin_tan = tan from math;
+import __builtin_sincos = sincos from math;
+import __builtin_asin = asin from math;
+import __builtin_acos = acos from math;
+import __builtin_atan = atan from math;
+import __builtin_atan2 = atan2 from math;
+import __builtin_asincos = asincos from math;
+import __builtin_sinh = sinh from math;
+import __builtin_cosh = cosh from math;
+import __builtin_tanh = tanh from math;
+import __builtin_sincosh = sincosh from math;
+import __builtin_asinh = asinh from math;
+import __builtin_acosh = acosh from math;
+import __builtin_atanh = atanh from math;
+import __builtin_asincosh = asincosh from math;
+import __builtin_exp = exp from math;
+import __builtin_frexp = frexp from math;
+import __builtin_log = log from math;
+import __builtin_log10 = log10 from math;
+import __builtin_modf = modf from math;
+import __builtin_exp2 = exp2 from math;
+import __builtin_expm1 = expm1 from math;
+import __builtin_ilogb = ilogb from math;
+import __builtin_log1p = log1p from math;
+import __builtin_log2 = log2 from math;
+import __builtin_logb = logb from math;
+import __builtin_scalbn = scalbn from math;
+import __builtin_scalbi32n = scalbi32n from math;
+import __builtin_pow = pow from math;
+import __builtin_sqrt = sqrt from math;
+import __builtin_cbrt = cbrt from math;
+import __builtin_hypot = hypot from math;
+import __builtin_erf = erf from math;
+import __builtin_tgamma = tgamma from math;
+import __builtin_lgamma = lgamma from math;
+import __builtin_ceilf = ceilf from math;
+import __builtin_floorf = floorf from math;
+import __builtin_truncf = truncf from math;
+import __builtin_roundf = roundf from math;
+import __builtin_i32round = i32round from math;
+import __builtin_i64round = i64round from math;
+import __builtin_fmod = fmod from math;
+import __builtin_rint = rint from math;
+import __builtin_i32rint = i32rint from math;
+import __builtin_i64rint = i64rint from math;
+import __builtin_nearbyint = nearbyint from math;
+import __builtin_remainder = remainder from math;
+import __builtin_remquo = remquo from math;
+import __builtin_copysign = copysign from math;
+import __builtin_nextafter = nextafter from math;
+import __builtin_nexttoward = nexttoward from math;
+import __builtin_fdim = fdim from math;
+import __builtin_isfinite = isfinite from math;
+import __builtin_isinf = isinf from math;
+import __builtin_isnan = isnan from math;
+import __builtin_isnormal = isnormal from math;
+import __builtin_signbit = signbit from math;
+import __builtin_isgreater = isgreater from math;
+import __builtin_isgreaterequal = isgreaterequal from math;
+import __builtin_isless = isless from math;
+import __builtin_islessequal = islessequal from math;
+import __builtin_islessgreater = islessgreater from math;
+import __builtin_isunordered = isunordered from math;
+
+import __builtin_min = min from util;
+import __builtin_max = max from util;
+import __builtin_abs = abs from util;
+import __builtin_sqr = sqr from util;
+import __builtin_ceil = ceil from util;
+import __builtin_floor = floor from util;
+import __builtin_round = round from util;
+

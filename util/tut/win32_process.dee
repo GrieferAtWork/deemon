@@ -1,0 +1,77 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+#include <pipe>
+#include <process>
+
+// Create pipes for stdin, stdout and stderr
+ir,iw = pipe.new()...;
+or,ow = pipe.new()...;
+er,ew = pipe.new()...;
+
+// Create a process for 'cmd'
+p = process("cmd");
+
+// Redirect std files
+p.stdin = ir;
+p.stdout = ow;
+p.stderr = ew;
+
+// Start the process
+p.start();
+
+// Close our references to the writer files
+// NOTE: Can only be done after the process has started
+ow.close();
+ew.close();
+
+// Feed 'cmd' with some commands
+// NOTE: As soon as they are written, they will already start getting executed
+iw.write("tree C:\\foobar\n");
+
+// Close the input writer once we are done writing commands (signals end-of-input)
+iw.close();
+
+print p.terminated();
+
+// Capture output from 'cmd'
+// NOTE: This is done live, meaning that
+//       output is read as soon as it arrives.
+//       >> You proove yourself that it works by
+//          commenting out the 'iw.close()'
+for (l: or) print ">>",l.rstrip("\n").center(100);
+for (l: er) print "ERR>>",l.rstrip("\n");
+
+print p;
+print p.win32_times();
+
+// Finally join the process (though it should already have terminated)
+print "RETURN:",p.join();
+
+
+
+
+
+
+
+
+
+
+

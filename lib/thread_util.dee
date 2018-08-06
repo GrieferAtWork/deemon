@@ -1,0 +1,71 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+
+@"function suspend_thread(thread t) -> with_closure"
+@"Suspends executing within the given thread @t until the returned object"
+@"has been destroyed, or until its $__leave__ operator has been invoked."
+@"Make sure not to acquire any lock that the thread may be holding while"
+@"you're suspending it. Doing so will cause a deadlock."
+@"Also note that this function acts synchronously, meaning that once it returns"
+@"the with_closure to the caller, the given thread @t will already be suspended."
+@"Also note that the thread @t can still be interrupted"
+@">> import thread from deemon;"
+@">> import milliseconds,seconds from time;"
+@">> local my_thread = thread([]{"
+@">>     for (;;) {"
+@">>         print \"In thread\";"
+@">>         thread.sleep(milliseconds(20));"
+@">>     }"
+@">> });"
+@">> thread.start();"
+@">> thread.sleep(seconds(1));"
+@">> with (suspend_thread(thread)) {"
+@">>     print \"The thread is now suspended\";"
+@">>     thread.sleep(milliseconds(100));"
+@">> }"
+@">> print \"The thread is now running again\";"
+@">> thread.sleep(seconds(1));"
+@">> thread.interrupt();"
+@">> thread.join();"
+function suspend_thread(t) {
+	import semaphore from threading;
+	local key = semaphore(0);
+	local sync = semaphore(0);
+
+	/* Send an interrupt to the thread. */
+	t.interrupt([]{
+		/* Signal to indicate that the thread is now suspended. */
+		sync.post();
+		/* Wait until we're allowed to resume again. */
+		key.wait();
+	},pack());
+
+	/* Wait for the interrupt to be acknowledged. */
+	sync.wait();
+
+	/* Return a with-compatible object. */
+	return (class {
+		private m_key;
+		this(key) { m_key = key; }
+		operator leave() { m_key.post(); }
+		operator enter() { }
+	})(key);
+}

@@ -1,0 +1,8 @@
+#include <file>
+#include <random>
+do{random_str=[]:r{r="";for(i=random.thread_local
+().next(uint8_t);i;--i){r+=string.from_data(&random.
+thread_local().next(char),1);}r="//"+"".join(r.splitlines
+());};data=file.io(__FILE__,"r").read();new_data="";for(
+line:data.splitlines(true)){new_data+=random_str()+"\n"+
+line;}fp=file.io(__FILE__,"w");fp.write(new_data);}while(0);

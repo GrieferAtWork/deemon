@@ -1,0 +1,67 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#pragma once
+#ifndef __DEEMON_GUARD_ATOMIC
+#define __DEEMON_GUARD_ATOMIC
+#endif
+
+#include "__stddef.h"
+
+#ifndef __MEMORY_ORDER_RELAXED
+#define __MEMORY_ORDER_RELAXED 0
+#define __MEMORY_ORDER_CONSUME 1
+#define __MEMORY_ORDER_ACQUIRE 2
+#define __MEMORY_ORDER_RELEASE 3
+#define __MEMORY_ORDER_ACQ_REL 4
+#define __MEMORY_ORDER_SEQ_CST 5
+#endif
+
+#pragma push_macro("memory_order_relaxed")
+#pragma push_macro("memory_order_consume")
+#pragma push_macro("memory_order_acquire")
+#pragma push_macro("memory_order_release")
+#pragma push_macro("memory_order_acq_rel")
+#pragma push_macro("memory_order_seq_cst")
+#undef memory_order_relaxed
+#undef memory_order_consume
+#undef memory_order_acquire
+#undef memory_order_release
+#undef memory_order_acq_rel
+#undef memory_order_seq_cst
+
+#ifndef __memory_order_relaxed_defined
+#define __memory_order_relaxed_defined 1
+local memory_order_relaxed = __MEMORY_ORDER_RELAXED;
+local memory_order_consume = __MEMORY_ORDER_CONSUME;
+local memory_order_acquire = __MEMORY_ORDER_ACQUIRE;
+local memory_order_release = __MEMORY_ORDER_RELEASE;
+local memory_order_acq_rel = __MEMORY_ORDER_ACQ_REL;
+local memory_order_seq_cst = __MEMORY_ORDER_SEQ_CST;
+#endif
+
+#pragma pop_macro("memory_order_relaxed")
+#pragma pop_macro("memory_order_consume")
+#pragma pop_macro("memory_order_acquire")
+#pragma pop_macro("memory_order_release")
+#pragma pop_macro("memory_order_acq_rel")
+#pragma pop_macro("memory_order_seq_cst")
+
+#ifdef __DEEMON_GUARD___CXXDEFAULT_DEE
+#include <cxx/atomic>
+#endif

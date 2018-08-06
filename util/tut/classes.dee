@@ -1,0 +1,332 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+// A small example that shows the functionality of user defined classes
+
+import * from deemon;
+
+x = 42;
+
+// NOTE: Unlike structs, classes aren't compile-time
+//       objects and are only created at runtime (unless declared with 'const')
+
+// Also note how we extend a type that's neither ''
+class foo: list {
+	// A class function
+	class function new() -> foo();
+
+	private variable;
+
+	// Note how the constructor uses a runtime-only
+	// variable from a surrounding strong scope
+	this() {
+		print "In constructor",x;
+		// Runtime member variable
+		// >> Stored in the class itself
+		this.variable = x*20;
+	}
+	// NOTE: Just as you can use 'class' or 'this' as name for constructors
+	//       and destructors, you can allso use the name of the class.
+	~foo() {
+		// Destructor callback.
+		// >> If we would revive 'this' in here, we could abort destruction
+		//    Note how we us 'this.variable', a runtime-member originally
+		//    set in the constructor.
+		print "In destructor",this.variable;
+	}
+
+	// Overriding the 'str' and 'repr' operators
+	operator str () -> "str:foo("+str super+")";
+	operator repr () -> "repr:foo("+repr super+")";
+
+	// Calling a function with the same name from an underlying object
+	function append(args...) {
+		print "Appending:",args;
+		super.append(args...);
+	}
+
+	// the 'function' prefix is optional but the name is required here
+	size() {
+		return #this;
+	}
+
+	// Overring the call operator
+	// >> All operators can be overwritten using their name (e.g.: __call__)
+	//    and most also using some fancy-shmancy combination of tokens.
+	// NOTE: Some operators like '+' and '-' link differently
+	//       based on the amount of arguments the associated function takes
+	//       >> __pos__ / __add__ - __neg__ / __sub__
+	// A full list of operators is at the end of this file
+	operator () (a,b,c) {
+		print ">> Call operator";
+		print ">> a =",a;
+		print ">> b =",b;
+		print ">> c =",c;
+	}
+
+	// properties / getsets
+	// >> You can prefix this with 'class' to create a class property
+	// Also: The 'property' prefix is optional.
+	property my_property = {
+		// There are many different ways of naming these operators...
+		// Also note, that the 'operator' prefix is optional again.
+		// For a full list of valid names, look at the end of this file
+		operator get()  { print "In Getter"; return 42; }
+		operator del()  { print "In Delete"; }
+		operator set(v) { print "In Setter",v; }
+	};
+
+};
+
+a = foo.new();
+a.append(10,20,30);
+print str a;
+print repr a;
+
+print a.my_property; // get
+del a.my_property;   // del
+a.my_property = 42;  // set
+
+
+del a;
+print "done";
+
+
+//	class insert_name_here {
+//		operator + ();              operator __pos__();
+//		operator + (right);         operator __add__(right);
+//		operator - ();              operator __neg__();
+//		operator - (right);         operator __sub__(right);
+//		operator ! ();              operator __not__();
+//		operator ~ ();              operator __inv__();
+//		operator * (right);         operator __mul__(right);
+//		operator / (right);         operator __div__(right);
+//		operator % (right);         operator __mod__(right);
+//		operator << (right);        operator __shl__(right);
+//		operator >> (right);        operator __shr__(right);
+//		operator & (right);         operator __and__(right);
+//		operator | (right);         operator __or__(right);
+//		operator ^ (right);         operator __xor__(right);
+//		operator ** (right);        operator __pow__(right);
+//		operator += (right);        operator __iadd__(right);
+//		operator -= (right);        operator __isub__(right);
+//		operator *= (right);        operator __imul__(right);
+//		operator /= (right);        operator __idiv__(right);
+//		operator %= (right);        operator __imod__(right);
+//		operator <<= (right);       operator __ishl__(right);
+//		operator >>= (right);       operator __ishr__(right);
+//		operator &= (right);        operator __iand__(right);
+//		operator |= (right);        operator __ior__(right);
+//		operator ^= (right);        operator __ixor__(right);
+//		operator **= (right);       operator __ipow__(right);
+//		operator () (args...);      operator __call__(args...);
+//		operator # ();              operator __size__();
+//		operator [] (key);          operator __getitem__(key);
+//		operator [] (lo,hi);        operator __getrange__(lo,hi);
+//		operator [:] (lo,hi);       operator __getrange__(lo,hi);
+//		operator []= (key,v);       operator __setitem__(key);
+//		operator []= (lo,hi,v);     operator __setrange__(lo,hi);
+//		operator [:]= (lo,hi,v);    operator __setrange__(lo,hi);
+//		operator del [] (key);      operator __detitem__(key);
+//		operator del [] (lo,hi);    operator __detrange__(lo,hi);
+//		operator del [:] (lo,hi);   operator __detrange__(lo,hi);
+// 		operator . (attr);          operator __getattr__(attr);
+// 		operator .= (attr,v);       operator __setattr__(attr,value);
+// 		operator del. (attr);       operator __delattr__(attr);
+//      // NOTE: The following aren't 100% identical:
+//      //       'operator for' should be implemented by a yield-function,
+//      //       while 'operator __iterself__' should return an iterator.
+//      //       >> Technically, there is no such thing as 'operator for',
+//      //          as all it really is, is a compiler-generated wrapper
+//      //          around `operator __iterself__'
+// 		operator for ();            operator __iterself__();
+// 		                            operator __iternext__();
+// 		operator ++ ();             operator __inc__();
+// 		operator -- ();             operator __dec__();
+// 		                            operator __incpost__();
+// 		                            operator __decpost__();
+// 		                            operator __contains__();
+// 		operator = (right);         operator __assign__(right);
+// 		operator copy = (right);    operator __copyassign__(right);
+// 		operator = copy (right);    operator __copyassign__(right);
+// 		operator move = (right);    operator __moveassign__(right);
+// 		operator = move (right);    operator __moveassign__(right);
+// 		copy(right);                operator __copy__(right);
+// 		move(right);                operator __move__(right);
+// 		operator copy(right);       operator __copy__(right);
+// 		operator move(right);       operator __move__(right);
+// 		class();                    operator __constructor__();
+// 		class(args...);             operator __constructor__(args...);
+// 		~class();                   operator __destructor__();
+// 		operator str();             operator __str__();
+// 		operator repr();            operator __repr__();
+// 		// The following are used to implement conversion-like operators (based on c++ syntax)
+// 		operator bool();            operator __bool__();
+// 		operator _Bool();           operator __bool__(); // secondary type name
+// 		operator string();          operator __str__();  // primary type name
+// 		// v internal type name (e.g.: 'signed int')
+// 		operator <type>();          operator __int32__();
+// 		operator <type>();          operator __int64__();
+// 		operator <type>();          operator __double__();
+//
+//      // -- The following operators can only be overwritten --
+//      // -- when extending 'file' or something derived from it --
+//
+// 		// >> read callback
+// 		// should fill up to 's' bytes of memory in 'p',
+// 		// returning the actual amount of bytes written
+// 		// If '__read__' isn't implement/allowed, an
+// 		// 'Error.RuntimeError.NotImplemented' should be thrown
+// 		// The r/w head should be moved forward by the actual amount of bytes read
+// 		// NOTE: For a more high-level approach, if the operator
+// 		//       only provides one argument (size), a string can
+// 		//       be returned with a length of up to 's' characters.
+// 		//       Though note, that this approach requires an
+// 		//       additional buffer and may be slower because of that.
+// 		// NOTE: If the runtime doesn't support pointers,
+// 		//       only the second version is available.
+// 		operator __read__(none *p, size_t s) -> size_t;
+// 		operator __read__(size_t s) -> string;
+//
+// 		// >> write callback
+// 		// should read up to 's' bytes from 'p', storing
+// 		// them in the user-defined file structure.
+// 		// If '__write__' isn't implement/allowed, an
+// 		// 'Error.RuntimeError.NotImplemented' should be thrown
+// 		// The r/w head should be moved forward by the actual amount of bytes written
+// 		// NOTE: For a more high-level approach, if the operator
+// 		//       only provides one argument, it will be provided
+// 		//       with a string describing the data that would
+// 		//       otherwise be pointed at through 'p' and 's'
+// 		// NOTE: If the runtime doesn't support pointers,
+// 		//       only the second version is available.
+// 		operator __write__(none *p, size_t s) -> size_t;
+// 		operator __write__(string data) -> size_t;
+//
+//      // >> seek callback
+//      // Based on the value of whence (file.SEEK_*),
+//      // move the r/w head using 'off' as offset argument.
+//      // If __seek__ isn't implement/allowed, an
+// 		// 'Error.RuntimeError.NotImplemented' should be thrown
+//      operator __seek__(int64_t off, int whence) -> uint64_t;
+//
+//      // >> flush callback
+//      operator __flush__() -> none;
+//
+//      // >> trunc callback
+//      // Truncate the file to the have it end at the
+//      // current r/w position (as set by seek, read or write)
+//      operator __trunc__() -> none;
+//
+//      // >> close callback
+//      // (Optional) May be called multiple times, where
+//      // every call except for the first should be a no-op.
+//      // If implemented, close() should release resources
+//      // associated with the file and possibly cause
+//      // any following calls to any other
+//      // NOTE: __close__ is NOT called automatically by the destructor.
+//      // NOTE: Any exceptions that occurr in __close__ will be ignored.
+//      operator __close__() -> none;
+//	};
+
+
+//	>> Compiler-generated class operators
+//	   NOTE: '[weakdef]' means that the operator is only defined if certain conditions are met
+//	         >> In this case, the conditions are implied by the 'if * exists' descriptions.
+//	            e.g.: The intrinsic 'operator < (right)' will only be defined if a user-defined 'operator >= (right)' is available
+//	         >> [weakdef] also prevents cyclic operators that would call each other indefinitely
+//	class insert_name_here {
+//		[weakdef] class() { /* Magic: If it exists, call the class(args...) constructor with empty arguments */ }
+//		[weakdef] class(args...) { /* Magic: if args are empty, call the class() constructor if it exists.
+//	                                  Magic: if args have 1 element and 'args[0] is insert_name_here', call the 'copy(args[0])' constructor if it exists. */ }
+//		[weakdef] copy(right) { /* Magic: copy all member variables from 'right' by reference */ }
+//		[weakdef] move(right) { /* Magic: Call the copy constructor. */ }
+//		[weakdef] operator = (right) { /* Magic: Call 'this.operator copy = (right)' if 'right is insert_name_here' and if it exists */ }
+//		[weakdef] operator copy = (right) { /* Magic: Call 'this.operator = (right)' if it exists */ }
+//		[weakdef] operator move = (right) { /* Magic: Call 'this.operator copy = (right)' if it exists. */ }
+//		[weakdef] operator bool () { /* Magic: Call '!this.operator ! ()' if it exists. */ }
+//		[weakdef] operator ! () { /* Magic: Call '!this.operator bool ()' if it exists. */ }
+//		[weakdef] operator __int32__ () { /* Magic: Call 'this.operator __int64__()' if it exists.
+//	                                         Magic: Call 'this.operator __double__()' if it exists. */ }
+//		[weakdef] operator __int64__ () { /* Magic: Call 'this.operator __int32__()' if it exists.
+//	                                         Magic: Call 'this.operator __double__()' if it exists. */ }
+//		[weakdef] operator __double__ () { /* Magic: Call 'this.operator __int64__()' if it exists.
+//	                                          Magic: Call 'this.operator __int32__()' if it exists. */ }
+//		[weakdef] operator < (right) { /* Magic: Call '!this.operator >= (right)' if it exists. */ }
+//		[weakdef] operator <= (right) { /* Magic: Call '!this.operator > (right)' if it exists. */ }
+//		[weakdef] operator == (right) { /* Magic: Call '!this.operator != (right)' if it exists. */ }
+//		[weakdef] operator != (right) { /* Magic: Call '!this.operator == (right)' if it exists. */ }
+//		[weakdef] operator > (right) { /* Magic: Call '!this.operator <= (right)' if it exists. */ }
+//		[weakdef] operator >= (right) { /* Magic: Call '!this.operator < (right)' if it exists. */ }
+//	};
+
+//	>> Allowed getset/property callback names
+//     NOTE: Remember that prefixing 'property' or 'operator' is optional,
+//           unless this is a class property, in which case not doing so will yield a warning
+//	class insert_name_here {
+//		property my_property = {
+//			//getter callbacks:
+//				operator . ();       // Operator symbol (same as __getattr__ operator)
+//				operator get();      // Short internal name
+//				operator read();     // Delphi/Pascal style
+//				operator __get__();  // Internal name (based on '__getattr__', w/o the 'attr')
+//			//delete callbacks:
+//				operator - ();       // ~Creative~ operator symbol (If just wanted some single-character version to fit in with '.' and '=')
+//				operator del ();     // Operator name / Short internal name
+//				operator del. ();    // Operator name with symbol (same as __delattr__ operator)
+//				operator delete();   // Long operator name
+//				operator __del__();  // Internal name (based on '__delattr__', w/o the 'attr')
+//			//setter callbacks:
+//				operator = (v);      // Short operator symbol
+//				operator .= (v);     // operator symbol
+//				operator set(v);     // Short internal name
+//				operator write(v);   // Delphi/Pascal style
+//				operator __set__(v); // Internal name (based on '__setattr__', w/o the 'attr')
+//		};
+//	};
+
+
+// Fun facts:
+//   - All member functions of classes are implicitly
+//     declared with '__attribute__((__thiscall__,__super__(...)))',
+//     where '...' referrs to the base of the class
+//   - The attribute operators are only invoked if all
+//     other possibilities of finding an attribute
+//     have failed. Meaning that you can't overwrite
+//     any random member of a sub-class using 'operator .'
+//   - The so-called compiler-generated operators are
+//     actually generated by the runtime.
+//   - It would technically be possible to have a property
+//     and function sharing the same name.
+//     Only thing is, that the function would always have priority.
+//   - The shortest (and most obscure) way of simulating a class constant is:
+//     class foo { class property MY_CONST = { . -> 42; } };
+
+
+
+
+
+
+
+
+
+
+
+
+

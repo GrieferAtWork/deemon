@@ -1,0 +1,2251 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* Syntactical changes in deemon 200 (there are a lot of these)
+ * NOTES:
+ *      - No particular order
+ *      - Some features may get re-added at one point using extensions,
+ *        but will never again appear in the deemon core compiler!
+ *      - This listing is an early draft and before the first official
+ *        release of the new deemon, backwards-compatible parsing will
+ *        get added, including a way for c-level deemon extensions (dex)
+ *        to define new compiler sub-routines that will implement this
+ *        backwards compatibility.
+ *      - Deemon has been completely re-coded from scratch, meaning that
+ *        any undocumented quirk (of which's existance not even I may
+ *        have been aware of) will probably not be working anymore.
+ *
+ *  - Added support for keyword arguments:
+ *    >> function foo(a = none, b = none, c = none) {
+ *    >>     print a,b,c;
+ *    >> }
+ *    >> foo(none,none,30); // none, none, 30
+ *    >> foo(c: 30);        // none, none, 30
+ *    Note however that in many cases, keyword-arguments are not really
+ *    desired, and that passing named arguments is really just an extension
+ *    on top of an existing system for passing regular arguments.
+ *    Also note that most builtin functions don't actually support named
+ *    arguments, and will throw a TypeError when being invoked while named
+ *    arguments are passed.
+ *    TODO: Remove me: At the time of this being written, user-defined functions
+ *          have yet to begun supporting keyword-arguments. - Only select builtin
+ *          functions already offer support.
+ *    TODO: Add some kind of syntax that allows user-functions to access
+ *          named arguments as a {(string,object)...}-like object, similar
+ *          to what `def foo(*args,**kwds):' does in python, then translated
+ *          to deemon `function foo(args...,???kwds???)' (??? -- something...)
+ *          to deemon `function foo(args...,{kwds})'
+ *
+ *  - Added an as-expression that add a syntactically more
+ *    fluid way of constructor super-view proxy objects:
+ *    >> class MyClass: list {
+ *    >>     append(obj) {
+ *    >>         print "My Append",obj;
+ *    >>     }
+ *    >> }
+ *    >> local x = MyClass();
+ *    >> x.append(42);           // My Append
+ *    >> (x as list).append(42); // the orignal append function.
+ *    This functionality used to be provided by __builtin_super / __super
+ *    In addition to this, as well as the introduction of the concept of
+ *    abstract base classes (not yet available in user-code; but they're
+ *    basically deemon's equivalent of interfaces), you can also cast any
+ *    kind of object to any abstract base class:
+ *    >> class MyClass {
+ *    >>     operator for() {
+ *    >>         yield 10;
+ *    >>         yield 20;
+ *    >>         yield 30;
+ *    >>     }
+ *    >> }
+ *    >> import sequence from deemon;
+ *    >> local inst = MyClass();
+ *    >> print 20 in inst; // ERROR: `operator contains' not implemented
+ *    >> print 20 in (inst as sequence); // true
+ *    >> print 19 in (inst as sequence); // false
+ *
+ *  - Added a syntactically more fluid way of testing for object binding:
+ *    >> local x;
+ *    >> if (get_cond()) {
+ *    >>     x = 42;
+ *    >> }
+ *    >> if (x is bound) // Check if `x' was bound
+ *    >>     print x;
+ *    >> if (x !is bound) // Store `7' in `x' if it wasn't bound before
+ *    >>     x = 7;
+ *    >> class MyClass {
+ *    >>     member foo;
+ *    >> }
+ *    >> local y = MyClass();
+ *    >> print y.foo is bound; // false
+ *    >> y.foo = "value";
+ *    >> print y.foo is bound; // true
+ *    A second, alternate spelling for such a test
+ *    can be made using a function-like expression:
+ *    >> class MyClass {
+ *    >>     member foo;
+ *    >> }
+ *    >> local y = MyClass();
+ *    >> print bound(y.foo); // false
+ *    >> y.foo = "value";
+ *    >> print bound(y.foo); // true
+ *    Note however that this is not an actual function,
+ *    but rather syntactical sugar.
+ *    In other words: You can't use `bound' as a function-object.
+ *
+ *  - Addition of 2 new operators `===' and `!==' that can be used to
+ *    compare 2 objects for either being the same, or being different
+ *    objects.
+ *    These operators cannot be overwritten.
+ *
+ *  - Designed a new & improved documentation system that allows for
+ *    high-level analysis, interpretation, query, and enumeration of
+ *    documentation strings, including function prototypes, as well
+ *    as a utility application (written only in usercode), that can
+ *    be used to run a doc-server locally and view documentation of
+ *    modules, their exports, as well as their types straight from a
+ *    nice browser view.
+ *    The high-level user-interface for this is made available through
+ *    the standard library module `doc':
+ *    >> import * from doc;
+ *    >> // Print documentation on the constructor of `string from deemon'
+ *    >> print Doc("deemon/string/op:constructor");
+ *    >> // Print documentation on the `keys' class-member of `dict from deemon'
+ *    >> print Doc("deemon/dict/c:keys");
+ *    >> // Print documentation on the `keys' member-function of `dict from deemon'
+ *    >> print Doc("deemon/dict/i:keys");
+ *    The exports functionality for much more than this, and a neat
+ *    usage-example is the doc-server itself found in `/deemon/doc-server.dee'.
+ *
+ *  - Remove encoding-specific string types.
+ *    Strings can still have different encodings, however the used encoding
+ *    is no longer implemented through different types, but instead as an
+ *    extended data field of a single type `string from deemon'.
+ *    -> Deemon now has a _true_ unicode (as in universal) string type
+ *       that supports representations of 8, 16, and 32 bits per character
+ *       Additionally, there are also encode() / decode() functions that
+ *       can be used to convert between different codecs
+ *       For more information, see `Doc("/deemon/string/decode")'
+ *
+ *  - Added builtin support for regular expression processing
+ *    For more information, see `Doc("/deemon/string/rematch")'
+ *
+ *  - Added support for raw string literals:
+ *    >> local x = r"C:\Windows\System32\"; // Raw string literals are not backslash-escaped
+ *    However as a down-side, such string literals cannot contain their own
+ *    termination-character, as there is no way of having it be escaped.
+ *    The main intended use of raw string literals is in regular expressions, where
+ *    they solve the problem of having to double- and tripple-escape backslashes.
+ *    WARNING: When using raw string literals, try to refrain from placing
+ *             a backslash as the last character of the string. Not because
+ *             the compiler may not be able to deal with it (because it has
+ *             no problems dealing with something like that), but because
+ *             syntax highlighting in IDEs, or in the documentation browser
+ *             may not be able to display it properly, or get confused.
+ *
+ *  - Introduction of ASP (Abstract Sequence Proxy)-like objects/types
+ *    An ASP is a light-weight sequence type usually derived from
+ *    `sequence from deemon'. However instead of pre-calculating
+ *    their values when being created, they instead save all important
+ *    parameters, from which point on they can be iterated or casted,
+ *    leaving their items to only be generated once being accessed:
+ *    >> local s = "foo,bar,foobar,baz";
+ *    >> local l = s.split(","); // This is an O(1) operation
+ *    >> for (local x: l) { // Sub-strings are generated as they are iterated
+ *    >>     print x;
+ *    >> }
+ *    This model not only improves performance drastically, especially
+ *    for absurdly large strings, but also reduces cache pollution by
+ *    minimizing the working set, as well as prevent objects that would
+ *    never be used, or had already been used from clobbering the heap.
+ *    Since an ASP is still a proper sequence in all respects (implementing
+ *    index- & range-based item access, as well as `operator #', and
+ *    all of the sequence functions provided by `sequence from deemon',
+ *    such as `find()' or `sorted()'), this transition should have no
+ *    effect on 99% of existing code.
+ *    The only existing code that might be affected is code that relied on
+ *    the specific sequence type returned by a function that now returns
+ *    an ASP, such as `(string from deemon).split', which used to return
+ *    a `list from deemon', but now returns an ASP:
+ *    >> local items;
+ *    >> items = a.split(",");
+ *    >> items.extend(b.split(","));
+ *    >> items.sort();
+ *    >> print repr items;
+ *    Porting such code is very simple, as all builtin mutable sequence
+ *    types implement a cast-construction which accepts anything that
+ *    is considered iterable:
+ *    >> local items;
+ *    >> items = [a.split(",")...]; // Manually cast to a list
+ *    >> items.extend(b.split(","));
+ *    >> items.sort();
+ *    >> print repr items;
+ *    Also note that such a change is implicitly backwards-compatible,
+ *    as the same syntax could also be used in deemon 100+ to cast a
+ *    generic iterable into a list.
+ *
+ *  - Extensive additions to the API provided for the builtin string type
+ *    No functionality has been removed, however the behavior of functions
+ *    that used to return sequences such as list objects are now allowed
+ *    (and actually do) return ASPs (abstract sequence proxies).
+ *    New functions include:
+ *      - rematch(string pattern, int start = 0, int end = -1, string rules = "") -> int
+ *        rematch(string pattern, string rules, int start = 0, int end = -1) -> int
+ *      - refind(string pattern, int start = 0, int end = -1, string rules = "") -> (int, int)
+ *        refind(string pattern, int start = 0, int end = -1, string rules = "") -> none
+ *        refind(string pattern, string rules, int start = 0, int end = -1) -> (int, int)
+ *        refind(string pattern, string rules, int start = 0, int end = -1) -> none
+ *      - rerfind(string pattern, int start = 0, int end = -1, string rules = "") -> (int, int)
+ *        rerfind(string pattern, int start = 0, int end = -1, string rules = "") -> none
+ *        rerfind(string pattern, string rules, int start = 0, int end = -1) -> (int, int)
+ *        rerfind(string pattern, string rules, int start = 0, int end = -1) -> none
+ *      - reindex(string pattern, int start = 0, int end = -1, string rules = "") -> (int, int)
+ *        reindex(string pattern, string rules, int start = 0, int end = -1) -> (int, int)
+ *        rerindex(string pattern, int start = 0, int end = -1, string rules = "") -> (int, int)
+ *      - rerindex(string pattern, string rules, int start = 0, int end = -1) -> (int, int)
+ *        relocate(string pattern, int start = 0, int end = -1, string rules = "") -> string
+ *        relocate(string pattern, string rules, int start = 0, int end = -1) -> string
+ *      - rerlocate(string pattern, int start = 0, int end = -1, string rules = "") -> string
+ *        rerlocate(string pattern, string rules, int start = 0, int end = -1) -> string
+ *      - repartition(string pattern, int start = 0, int end = -1, string rules = "") -> (string, string, string)
+ *        repartition(string pattern, string rules, int start = 0, int end = -1) -> (string, string, string)
+ *      - rerpartition(string pattern, int start = 0, int end = -1, string rules = "") -> (string, string, string)
+ *        rerpartition(string pattern, string rules, int start = 0, int end = -1) -> (string, string, string)
+ *      - rereplace(string pattern, string replace_str, int max_count = int.SIZE_MAX, string rules = "") -> string
+ *        rereplace(string pattern, string replace_str, string rules = "", int max_count = int.SIZE_MAX) -> string
+ *      - refindall(string pattern, int start = 0, int end = -1, string rules = "") -> {(int, int)...}
+ *        refindall(string pattern, string rules, int start = 0, int end = -1) -> {(int, int)...}
+ *      - relocateall(string pattern, int start = 0, int end = -1, string rules = "") -> {string...}
+ *        relocateall(string pattern, string rules, int start = 0, int end = -1) -> {string...}
+ *      - resplit(string pattern, string rules = "") -> {string...}
+ *      - decode(string encoding, string errors = "strict") -> string
+ *        decode(string encoding, string errors = "strict") -> object
+ *      - encode(string encoding, string errors = "strict") -> string
+ *        encode(string encoding, string errors = "strict") -> bytes
+ *        encode(string encoding, string errors = "strict") -> object
+ *        Reinterpret the unicode data of a string as `encoding' and return a
+ *        new string using the old string's data, then encoded as `encoding'
+ *      - issymbol(int start = 0, int end = -1) -> bool
+ *        Returns true if the substring qualifies as a valid identifier/symbol name
+ *      - isany(alpha|lower|upper|alnum|space|print|digit|decimal|numberic)(int start = 0, int end = -1) -> bool
+ *        Where the versions without `any' in the name only return true
+ *        if _all_ characters of the string match the queried property,
+ *        these functions return true if _any_ of them match.
+ *      - vercompare(string other, int other_start = 0, int other_end = -1) -> int
+ *        vercompare(int my_start, string other, int other_start = 0, int other_end = -1) -> int
+ *        vercompare(int my_start, int my_end, string other, int other_start = 0, int other_end = -1) -> int
+ *        A portable implementation of the GNU `strverscmp' function
+ *      - wildcompare(string pattern, int pattern_start = 0, int pattern_end = -1) -> int
+ *        wildcompare(int my_start, string pattern, int pattern_start = 0, int pattern_end = -1) -> int
+ *        wildcompare(int my_start, int my_end, string pattern, int pattern_start = 0, int pattern_end = -1) -> int
+ *        Returns values of the same meaning as `compare', allow wild-characters `?' and `*'
+ *        in `pattern', thus implementing `this.wmatch(pattern)' as `this.wildcompare(pattern) == 0'
+ *      - fuzzycompare(string other, int other_start = 0, int other_end = -1) -> int
+ *        fuzzycompare(int my_start, string other, int other_start = 0, int other_end = -1) -> int
+ *        fuzzycompare(int my_start, int my_end, string other, int other_start = 0, int other_end = -1) -> int
+ *        Perform a fuzzy comparison between `this' and `other', returning a score
+ *        indicating how similar the two strings are, which 0 being identical,
+ *        negative values never being returned, and greater values indicating
+ *        less alike.
+ *      - indent(string filler = "\t") -> string
+ *        Indent the string by inserting `filler' at the start, as well as after every
+ *        line-feed found in the string, excluding a trailing linefeed, similar to what
+ *        a text editor would do when you select multiple lines and press TAB.
+ *      - dedent(int max_chars = 1) -> string
+ *        dedent(int max_chars = 1, string mask) -> string
+ *        Remove up to `max_chars' whitespace-characters, or characters apart of `mask'
+ *        from the front of the string, as well as after any linefeed, similar to what
+ *        a text editor would do when you select multiple lines and press SHIFT+TAB.
+ *      - common(string other, int other_start = 0, int other_end = -1) -> int
+ *        common(int my_start, string other, int other_start = 0, int other_end = -1) -> int
+ *        common(int my_start, int my_end, string other, int other_start = 0, int other_end = -1) -> int
+ *        Returns the number of leading characters that are identical between the 2 given strings.
+ *      - rcommon(string other, int other_start = 0, int other_end = -1) -> int
+ *        rcommon(int my_start, string other, int other_start = 0, int other_end = -1) -> int
+ *        rcommon(int my_start, int my_end, string other, int other_start = 0, int other_end = -1) -> int
+ *        Returns the number of trailing characters that are identical between the 2 given strings.
+ *      - findmatch(string open, string close, int start = 0, int end = -1) -> int
+ *        rfindmatch(string open, string close, int start = 0, int end = -1) -> int
+ *        indexmatch(string open, string close, int start = 0, int end = -1) -> int
+ *        rindexmatch(string open, string close, int start = 0, int end = -1) -> int
+ *        A varient of the find/index functions that can be used to find the end/start
+ *        of a recursively structured string:
+ *        >> s = "foo(bar(),baz(42),7).strip()";
+ *        >> lcol = s.find("(");
+ *        >> print lcol; // 3
+ *        >> mtch = s.findmatch("(",")",lcol+1);
+ *        >> print repr s[lcol:mtch+1]; // "(bar(),baz(42),7)"
+ *        In this example, the index of the first ")" that isn't matched
+ *        by an accompanying "(" after the first "(" found, is returned.
+ *        If you understand what this does, you should understand that this
+ *        is quite the useful feature for disecting expressions, with the
+ *        most notable usage examples being `(' and `)', `[' and `]',
+ *        `{' and `}', and `<' and `>'.
+ *      - partitionmatch(string open, string close, int start = 0, int end = -1) -> (string,string,string)
+ *        rpartitionmatch(string open, string close, int start = 0, int end = -1) -> (string,string,string)
+ *        By making use of `findmatch' and friends, also provide a partition-like variant
+ *        that automatically splits the string into the 3 parts, before, during, and after
+ *        an encountered match, with the latter 2 being empty strings when no match is found:
+ *        >> function partitionmatch(open, close, start = 0, end = -1) {
+ *        >>     local j;
+ *        >>     local i = this.find(open,start,end);
+ *        >>     if (i < 0 || (j = this.findmatch(open,close,i+#open,end)) < 0)
+ *        >>         return (this.substr(start,end),"","");
+ *        >>     return (this.substr(start,i),this.substr(i,j+#close),this.substr(j+#close,end))
+ *        >> }
+ *      - unifylines(string replacement = "\n") -> string
+ *        Unify all linefeeds found in a string, replacing all of them with
+ *        `replacement'. This function should be used to replace stuff like
+ *        This function should be used to replace stuff like
+ *        `x.replace("\r\n","\n").replace("\r","\n")' with `x.unifylines()'.
+ *      - casereplace, casefind, caserfind, caseindex, caserindex, casecount, casecontains,
+ *        casesstrip, caselsstrip, casersstrip, casestartswith, caseendswith, casepartition,
+ *        caserpartition, casecompare, casevercompare, casewildcompare, casefuzzycompare,
+ *        casesplit, casewmatch, casecommon, casercommon, casefindmatch, caseindexmatch,
+ *        caserfindmatch, caserindexmatch, casepartitionmatch, caserpartitionmatch
+ *        Case-insensitive variants of any strings function that somehow compares
+ *        characters against each other.
+ *        Comparisons are then performed as though both operands were
+ *        made to have a common casing, following the results of either
+ *       `string.lower' or `string.upper' (which one is used is implementation-defined)
+ *    New overloads for pre-existing functions:
+ *      - is(alpha|lower|upper|alnum|space|print|digit|decimal|numberic|title)() -> bool
+ *        is(alpha|lower|upper|alnum|space|print|digit|decimal|numberic|title)(int index) -> bool
+ *        is(alpha|lower|upper|alnum|space|print|digit|decimal|numberic|title)(int start, int end) -> bool
+ *        You may now specifiy the sub-string, or character index that should be checked
+ *      - partition(string other, int start = 0, int end = -1) -> (string,string,string)
+ *        rpartition(string other, int start = 0, int end = -1) -> (string,string,string)
+ *        Now accepts substr-like string/end arguments to specifiy the sub-string to check
+ *      - wmatch(string pattern, int pattern_start = 0, int pattern_end = -1) -> bool
+ *        wmatch(int my_start, string pattern, int pattern_start = 0, int pattern_end = -1) -> bool
+ *        wmatch(int my_start, int my_end, string pattern, int pattern_start = 0, int pattern_end = -1) -> bool
+ *        Add support for compare-like arguments to specifiy the string sub-ranges to compare.
+ *    Changes to semantics of pre-existing functions:
+ *      - chr(int ord) -> string
+ *        Now always accepts any unicode character, rather than being
+ *        bound to the encoding type of the string being used.
+ *      - scanf(string format) -> sequence
+ *        Now returns an ASP
+ *      - splitlines(bool keepends = false) -> sequence
+ *        Now returns an ASP
+ *      - substr(int start = 0, int end = -1) -> string
+ *        Now accepts negative integers as alias for #this
+ *      - count(string other, int start = 0, int end = -1) -> int
+ *        Now accepts negative integers as alias for #this
+ *    Changes to the prototypes of pre-existing functions:
+ *      - OLD:contains(string ch, callable pred_eq = none) -> bool
+ *        NEW:contains(string other, int start = 0, int end = -1) -> bool
+ *        The new prototype should really be self-explainatory:
+ *        `other in this.substr(start,end)'
+ *    Deprecated functions and their new variants:
+ *      - reverse() -> string
+ *        Use `reversed' instead (which was also available in deemon 101+)
+ *
+ *  - Changes to a varienty of member functions previously found
+ *    in various sequence types, and now found as part of the
+ *    ABC (Abstract Base Class) known as `sequence from deemon'
+ *    New functions:
+ *      - reduce(callable merger) -> object
+ *        reduce(callable merger, object init) -> object
+ *        Conbine all the elements of the sequence by using `merger'
+ *        as a predicate taking 2 arguments and returning some combination.
+ *      - nonempty() -> bool
+ *        Returns true if the sequence is non-empty, similar to
+ *        directly invocing `operator bool()' on the sequence.
+ *    Deprecated functions:
+ *      - non_empty() -> bool
+ *        `nonempty' should now be used instead
+ *
+ *  - Add support for default arguments, as well as optional arguments:
+ *    >> function foo(a, x = 10, ?y, z...) {
+ *    >>     print "a:",repr a,"",;
+ *    >>     print "x:",repr x,"",;
+ *    >>     if (bound(y)) // The presence of optional arguments can be tested using `bound'
+ *    >>         print "y:",repr y,"",;
+ *    >>     print "z:",repr z;
+ *    >> }
+ *    >> foo(0);            // a: 0 x:10 z: ()
+ *    >> foo(0,7);          // a: 0 x:7 z: ()
+ *    >> foo(0,7,20);       // a: 0 x:7 y: 20 z: ()
+ *    >> foo(0,7,20,30);    // a: 0 x:7 y: 20 z: (30,)
+ *    >> foo(0,7,20,30,55); // a: 0 x:7 y: 20 z: (30, 55)
+ *
+ *  - Functions (other than bracket-style lambdas) without any arguments
+ *    must now be written with empty parenthesis, rather than allowing
+ *    the argument lists to be omitted:
+ *    >> function foo() { print "Correct"; }
+ *    >> function bar   { print "Wrong"; }
+ *    For backwards-compatibility, deemon 200 only emits a warning, but
+ *    still accepts the later syntax. However this is only being done
+ *    for backwards-compatibility and isn't required to be mirrored by
+ *    other implementations.
+ *
+ *  - Minor changes to how `deemon -F' operates:
+ *      - In d100+, changes to macros, warnings and extensions made within
+ *        format scripts were discarded at the end of a script, restoring
+ *        the original lexer state as it was before then.
+ *        In d200, the original state is no longer being restored, meaning
+ *        that macros defined, or deleted by scripts remain persistend
+ *        throughout the remainder of the documentation
+ *      - Prior to writing format output text into the associated source
+ *        file, any trailing whitespace is stripped (including any trailing
+ *        linefeeds)
+ *        If the old output text (i.e. the text that should get overwritten)
+ *        starts with a line-feed, that line-feed will be kept, and an additional
+ *        linefeed is appended after the stripped output text.
+ *        In other words:
+ *        >> local old_text = get_old_text();
+ *        >> local new_text = get_new_text();
+ *        >> new_text = new_text.rstrip();
+ *        >> if (old_text && old_text[0] in ["\r","\n"])
+ *        >>     new_text = "\n{}\n".format({ new_text });
+ *        >> DELETE(old_text);
+ *        >> INSERT(new_text);
+ *
+ *  - Removal of `operator !'
+ *      - Use of `!x' in user-code is now identical to `x.operator bool() ? false : true'
+ *
+ *  - Removal of c-compatibility (most of this can be re-implemented using `ctypes'):
+ *      - Removed `struct', `union' and `enum' user-defined types
+ *      - Removed `extern' foreign-function declarations
+ *      - Removed processing of `__attribute__' and `__declspec' in many places
+ *          - Attributes are now realized through tags, using `@attribute_name'
+ *      - Removed the `[[attribute_name]]' syntax for writing attributes
+ *          - No more ambiguity with lists.
+ *      - Removed c++-style dynamic memory management using `new' and `delete'
+ *          - `ctypes' exports low-level malloc() & free() functions.
+ *      - Removed namespaces (Replaced by modules)
+ *          - Removed recognition of the following keywords:
+ *              - `module' (used-to-be identical to c++'s `namespace' keyword)
+ *              - `import' (used-to-be identical to c++'s `using' keyword)
+ *                  - Was re-added using a new syntax, as well as a different meaning.
+ *          - There is no way to emulate the old functionality of modules except
+ *            my placing a module's contents into its own file before proceeding
+ *            to import that file as a new-style module under the old-style module's
+ *            namespace-name.
+ *            This is also how d200 emulates the old headers used by d100+.
+ *      - Removed syntax for defining pointers (`ctypes' now implements this)
+ *          - User-code making use of this, or the related `extern' statement is
+ *            incompatible with deemon200, and as of right now, no backwards-compatibility
+ *            is available for this case.
+ *            However, the related runtime functionality has not vanished:
+ *            d100+:
+ *            >> typedef struct {
+ *            >>     int x;
+ *            >>     int y;
+ *            >> } Point;
+ *            >> typedef int *IntPointer;
+ *            >> extern "mylib.dll": void __stdcall MyFunction(int x, int y);
+ *            d200+:
+ *            >> import * from ctypes;
+ *            >> local Point = struct_type {
+ *            >>     ("x", int),
+ *            >>     ("y", int)
+ *            >> };
+ *            >> local IntPointer = int.ptr;
+ *            >> local MyFunction = shlib("mylib.dll","stdcall").MyFunction;
+ *            Or if you with to bind `MyFunction' as fully type-safe:
+ *            >> local MyFunction = (void(int,int).ptr)shlib("mylib.dll","stdcall").MyFunction;
+ *
+ *      - Removed recognition of c/c++ type names as
+ *        a combination of the following keywords:
+ *          - `__int8', `int8', `int8_t', `__int16', `int16', `int16_t',
+ *            `__int32', `int32', `int32_t', `__int64', `int64', `int64_t',
+ *            `uint8', `uint8_t', `uint16', `uint16_t', `uint32', `uint32_t',
+ *            `uint64', `uint64_t', `const', `__const', `__const__', `volatile',
+ *            `__volatile', `__volatile__', `alias', `char', `wchar_t', `__wchar_t',
+ *            `char16_t', `char32_t', `short', `int', `long', `signed', `__signed',
+ *            `__signed__', `unsigned', `__unsigned', `__unsigned__', `atomic',
+ *            `_Atomic', `float', `double', `bool', `_Bool'
+ *            Single-keyword variants for all but the variations of `const' and `volatile'
+ *            will become available again once any old-style header has been included.
+ *          - Builtin types must now be `import * from deemon'-ed
+ *      - Removed c/c++ builtin constants:
+ *          - `__func__'
+ *          - `__FUNCTION__'
+ *          - `nullptr'
+ *          - `__nullptr'
+ *      - Removed the following previously ignored c/c++ keywords:
+ *          - `constexpr'
+ *      - Removed recognition of the following attribute-level modifiers:
+ *          - `alignas', `_Alignas'
+ *
+ *  - Removed recognition of `protected' in class scopes (used to be a no-op)
+ *      - With class-scope symbol visibility now implemented, the runtime-
+ *        overhead of truely enforcing the differenciation between private
+ *        and protected symbol visibility is just too great, leading me to
+ *        choose to implement `private' as what I once learned `protected'
+ *        to mean in pascal:
+ *          - Deny access from outside the class
+ *          - Allow access from within class member functions
+ *          - Allow access from within member functions of derived classes
+ *
+ *  - Removed recognition of keywords for builtin types:
+ *      - `bool'
+ *      - `string'
+ *      - `tuple'
+ *      - `list'
+ *      - `int'
+ *      - `float'
+ *      - `object'
+ *      - `dict'
+ *      - `set'
+ *      - These types must now be written as `bool from deemon' or
+ *        be imported from module `deemon' before being used:
+ *        `import bool from deemon;'
+ *      - These symbols, as well as their bindings become visible
+ *        again once any old-style header is included.
+ *      - Note however that `none', `true' and `false' are
+ *        still recognized without being imported first, as well
+ *        as the speudo-function-like `import(string module_name)'
+ *        symbol (e.g. `import(get_module_name())')
+ *
+ *  - Added the entire notion of modules
+ *      - Added the import/from-statement used to access symbols from other modules
+ *          - `import * from deemon'
+ *      - A module is a `*.dee' file or system library which can be found in the
+ *        library-path, configurable using the `-L' commandline option as well as
+ *        the `DEEMON_PATH' environment variable.
+ *        Modules can also be used relative to the current module by prefixing
+ *        the module's name with a `.' character (similar to what python does)
+ *      - Modules can use other modules, where which are actually being used
+ *        is determined at compile-time based on hidden function calls, and
+ *        the presence of `import ... from ...', `from ... import ...',
+ *        `import ...', as well as `... from ...' expressions/statements.
+ *
+ *  - Removed hundreds of __builtin_* function (as a matter of fact: _all_ of them!)
+ *    HINT: A suitable replacement (should it exist) is document as well
+ *    HINT: The largest percentage of these can (and is)
+ *          emulated once any legacy header is #include-ed.
+ *      - __builtin_object
+ *          - All builtin objects are now accessed as `... from deemon'
+ *          - When a legacy header is #include-ed, it will define a macro
+ *            that will attempt to emulate this builtin's behavior.
+ *            The emulated behavior translates to a call to `get_builtin from __builtins'
+ *      - __builtin_dex
+ *          - Instead, `import(...)' can now be used as a builtin function
+ *      - __builtin_noop / __noop
+ *      - __builtin_noexcept
+ *      - __builtin_noreturn
+ *      - __builtin_noeffect
+ *      - __builtin_constant_p
+ *      - __builtin_choose_expr(c,tt,ff)
+ *          - Replace with `c ? tt : ff'
+ *      - __builtin_unreachable()
+ *          - Replace with `__asm__("" : : : "noreturn")'
+ *      - __builtin_types_compatible_p(x,y)
+ *          - Replace with `x == y'
+ *      - __builtin_breakpoint()
+ *          - Replace with user-assembly `__asm__("debug break");'
+ *      - __builtin_typeof(x)
+ *          - Replace with `type(x)'
+ *      - __builtin_help(x)
+ *          - Replace with `(doc from deemon)(x)' or preferrably make use of `import doc'
+ *      - __builtin_offsetof(s,t)
+ *          - Replace with
+ *      - __builtin_exists
+ *      - __builtin_expect
+ *          - May get re-added in a different way, but can also be expressed
+ *            using branch-prediction tags `@likely' and `@unlikely'
+ *      - __builtin_predictable
+ *      - __builtin_exprast
+ *      - __builtin_alloca
+ *      - __builtin_bound(x)
+ *          - Replace with `bound(x)' or the even prettier `x is bound' / `x !is bound'
+ *
+ *  - Removed the move-construction operator and merged copy-assign with any-assign
+ *      - The move-assign operator still remains and is automatically preferred
+ *        over the regular assign operator when the right-hand-side operand is
+ *        the result of a `copy' or `deepcopy' unary expression, can however be
+ *        invoked manually using `x.operator move:= (y)'.
+ *
+ *  - Removed the builtin keyword `weak'.
+ *      - Weak references still exist but have been changed immensely, most
+ *        notably in the fact that not any object can be used to point to
+ *        a weak reference any longer, but rather only objects that have
+ *        explicit support, as well as tracing for weak references.
+ *      - To create a weak reference wrapper object, you must now use the
+ *        builtin type accessible as `weakref from deemon', which implements
+ *        a single-argument constructor to which the object that should be
+ *        referenced may be passed.
+ *
+ *  - Removed static-if and all associated keywords:
+ *      - `__static_if', `__static_else', `__if_exists',
+ *        `__if_not_exists', `__if_true', `__if_false'
+ *
+ *  - Removed `__assert' as an alias to `assert'
+ *  - Allow `assert' in expressions (where it requires parenthesis).
+ *  - Changed the syntax for user-messages in assert statements/expression
+ *    to be separated by `,' a token, rather than a `:' token.
+ *
+ *  - Removed statement keywords for special loops that were only ever added
+ *    to make the type of a loop more clear in error messages (which they didn't):
+ *      - `__looponce' - do { ... } while (0);
+ *      - `__loopever' - for (;;) { ... }
+ *      - `__loopnone' - while (0) { ... }
+ *    These keywords are still defined as macros once
+ *    any old-style header has been included.
+ *
+ *  - Removed logical XOR in expressions.
+ *
+ *  - Drasic changes to user-defined classes:
+ *      - Member variables are now compile-time and must be declared in the class scope.
+ *        Old-style semantics can be achieved by using `OldUserClass from d200' as base,
+ *        which is done automatically once any old-style header has been included.
+ *      - Added a way of defining member variables as private or public.
+ *      - Old source files containing #includes for any of the old system headers
+ *        that have now become obsolete will automatically have classes without
+ *        explicit base-expressions be extending `OldUserClass from d200'
+ *        >> #include <file>
+ *        >> // Implicitly converted to `class MyClass: OldUserClass from d200'
+ *        >> // because of the `#include <file>' with is an include that should
+ *        >> // no longer be made use of by new user-code.
+ *        >> class MyClass {
+ *        >>     this() {
+ *        >>         this.foo = 42;
+ *        >>     }
+ *        >> };
+ *        >> print MyClass().foo; // Still works as it did before
+ *        Just as a reminder, new usercode should be re-written as:
+ *        >> import file from deemon;
+ *        >> class MyClass {
+ *        >>     public foo;
+ *        >>     this() {
+ *        >>         foo = 42;
+ *        >>     }
+ *        >> };
+ *        >> print MyClass().foo;
+ *
+ *  - Minor syntactical additions to arrow-functions:
+ *      - Defining an arrow-function that returns an expand-expression
+ *        now truns the surrounding function into a yield-function,
+ *        yielding all the elements of the sequence being forwarded.
+ *     >> function get_value() -> 42;
+ *     Same as:
+ *     >> function get_value() {
+ *     >>     return 42;
+ *     >> }
+ *     New feature:
+ *     >> function get_values() -> [10,20,30]...;
+ *     Same as:
+ *     >> function get_values() {
+ *     >>     yield [10,20,30]...;
+ *     >> }
+ *     Or alternatively:
+ *     >> function get_values() {
+ *     >>     yield 10;
+ *     >>     yield 20;
+ *     >>     yield 30;
+ *     >> }
+ *     The same also applies to `operator for()', which thanks to this
+ *     change can now be implemented as an arrow-function returning the
+ *     expand expression pointing to an inner expression.
+ *     WARNING: Optimization is allowed to change code such as that above
+ *              to a faster variant that would be equivalent to:
+ *           >> function get_values() -> [10,20,30];
+ *              Note however that this is only done if premature evaluation
+ *              of sequence elements doesn't have any side-effects.
+ *              In other words:
+ *           >> function get_values() -> [get_a(),get_b(),get_c()]...;
+ *              Which just as a reminder can be optimized into:
+ *           >> function get_values() {
+ *           >>     yield get_a();
+ *           >>     yield get_b();
+ *           >>     yield get_c();
+ *           >> }
+ *              Would not be optimized because calls to `get_*' may have
+ *              side-effects that may not be predictable at compile-time.
+ *              With that in mind, you mustn't rely on the exact sequence
+ *              type returned by yield-functions, as the compiler may try
+ *              to optimize sequence forwarding by simply changing:
+ *           >> function get_values() {
+ *           >>     yield 10;
+ *           >>     yield 20;
+ *           >>     yield 30;
+ *           >> }
+ *              Into:
+ *           >> function get_values() {
+ *           >>     return (10,20,30);
+ *           >> }
+ *              Or if it wanted to:
+ *           >> function get_values() {
+ *           >>     return [10,20,30];
+ *           >> }
+ *
+ *
+ *  - Added the `@attribute_name' spelling for attributes
+ *  - Removed the `__super(<expr>,<type>)' builtin function
+ *    its behavior has been replaced with the much more intuitive
+ *    syntax of `<expr> as <type>'
+ *    Backwards-compatibility can easily be achieved with:
+ *    >> #if __DEEMON__ >= 200
+ *    >> #define __super(expr,type) ((expr) as (type))
+ *    >> #endif
+ *
+ *  - Addition of 2 new operators `operator enter' and
+ *   `operator leave' used by a new with-statement:
+ *    >> with (get_lock()) {
+ *    >>     print "In with-statement";
+ *    >> }
+ *    This code is identical to (except that `__hidden_symbol'
+ *    doesn't have any name as it is an anonymous, internal symbol):
+ *    >> {
+ *    >>     __stack local __hidden_symbol = get_lock();
+ *    >>     __hidden_symbol.operator enter();
+ *    >>     try {
+ *    >>         print "In with-statement";
+ *    >>     } finally {
+ *    >>         __hidden_symbol.operator leave();
+ *    >>     }
+ *    >> }
+ *    NOTE: The `get_lock()' expression is allowed to declare
+ *          new variables which are then only available within
+ *          the associated with-block
+ *          >> with (local fp = file.open("foo.txt")) {
+ *          >>     print fp.read();
+ *          >> }  // `fp' is automatically closed here!
+ *    This syntax is highly useful for implementing auto-scope
+ *    locks, or other scope-based operations that require some
+ *    custom cleanup code to be run when some object goes out-of-scope,
+ *    regardless of what the reference state of the scoped variable
+ *    may be, and regardless of how the compiler chose to distribute
+ *    local variable indices, and without relying on stack-variable.
+ *
+ *  - Trailing commata without a following expression in a comma-expression
+ *    will now force-create a 1-element sequence:
+ *    >> print repr(42);    // 42
+ *    >> print repr((42));  // 42
+ *    >> print repr((42,)); // (42,) -- single-item tuple
+ *    Prior to deemon 200, the 3rd line would have also printed `42'
+ *
+ *  - Slightly changed the semantics of expand-expression in unpack-assign statements:
+ *    >> local x,y,z = get_values()...; // This still works as expected
+ *    Internally though, unpack+assign expressions such as this now happen
+ *    when the store-ast has some kind of sequence on the left-hand-side,
+ *    while an expand-branch on the right-hand-side is not treated specially.
+ *    In other words, what the compiler will translate the code into is this:
+ *    >> (x,y,z) = get_values(); // Note how the right-hand-side isn't an expand expression.
+ *    Existing code should not be affected by this, as expand-in-store continues
+ *    to work as it always did, but it should be interesting to know how all
+ *    that's now required to do an expand-to-multiple-targets, is to use a sequence
+ *    construct on the left-hand-side (aka. the target).
+ *    NOTE: As far as the intended semantics of expand-expressions go, this
+ *          change technically fixed a bug in expand's old design, as an
+ *          expression such as `(x,y,z) = get_values()...' should (and now does)
+ *          mean that after calling `get_values()', the return value should be
+ *          expanded as a sequence. However since it is used in a binary operator,
+ *          there is only a single target item into which to expand, meaning that
+ *          the sequence must expand into a single item (as is the default-case
+ *          for any expand expression encountered in a non-specific context).
+ *          Following this, the single, expanded item must then be assigned to
+ *          the sequence on the left which is known to consist of multiple
+ *          compile-time targets, meaning that the already expanded sequence
+ *          must be expanded again. - This time into 3 target.
+ *          However prior to v200, deemon used to associate the expansion of
+ *          the return value of `get_values()' to imply the expansion required
+ *          when storing values into multiple targets on the left.
+ *          And while the intended behavior of `x,y,z = get_values()...' continues
+ *          to work the same, it only does so by transferring that single indirection
+ *          of expansion described by the `...' on the right-hand-side, by
+ *          inverting it into a sequence construct and moving it to the left,
+ *          thus leading back to the much more sensical internal representation
+ *          that is `(x,y,z) = get_values()'.
+ *          *huff* *huff* *huff*...
+ *          Basically, you can think of `(x,y,z) = get_values()' being equal
+ *          to `x,y,z = get_values()...' the same way `x-z = y' is equal to `x = y+z'
+ */
+
+
+
+/* Mockup of the entire language syntax of deemon */
+
+/* How to read (I know that a doc needing a doc is bad, but it's really not that complicated...):
+ *  x ::= y;     - Define rule x as y
+ *  x            - Reference to another rule (imagine it being replaced with the other rule's content)
+ *  'x'          - x is a character / character sequence
+ *  ?x?          - `x' should be interpreted as a human-readable exception to other rules.
+ *  <x>          - `x' describes a wildcard-enabled expression describing a token as named by TPP (e.g.: `<TOK_STRING>' or `<TPP_ISKEYWORD(*)>').
+ *  (x)          - Parenthesis to prevent ambiguity
+ *  [x]          - x is optional
+ *  a b          - Characters or tokens a and b are whitespace separated
+ *  a ## b       - a and b follow each other directly (not whitespace separated)
+ *  x ~~ y...    - Only starting at the second occurance of y, y must always be preceided by x
+ *  x ~~ y##...  - Only starting at the second occurance of y, y must always be preceided by x. Instances are not whitespace separated
+ *  x...         - x can be repeated an unlimited about of times (at least once)
+ *  x##...       - x can be repeated an unlimited about of times (at least once). Instances are not whitespace separated
+ *  a ## b...    - same as "a ## ('' ~~ b...)"
+ *  a... ## b... - same as "('' ~~ a...) ## ('' ~~ b...)"
+ *  a... ## b    - same as "('' ~~ a...) ## b"
+ *  'a'...'b'    - Range of characters between a and b (including a and b) (same as a|a+1|a+2|a+3|...|b)
+ *  x | y        - Either x or y
+ *  @file        - Special rule name: Rule describing how a file is parsed
+ */
+
+
+/* HINT: Rule names with a leading underscore mirror the names of the C-functions */
+
+#define WITHOUT_UNDERSCORE(x) (['_'...] ## x ## ['_'...])
+#define DDI(x)  x /* HINT: DDI information for this expression points to the start of `x' */
+
+_keyword  ::= <TPP_ISKEYWORD(*)>;
+_tag_name ::= _keyword;
+
+
+ast_parse_unary_base ::= (
+	/* Constant expressions. */
+	DDI(<TOK_INT>) |       /* int */
+	DDI(<TOK_CHAR>) |      /* int TODO: This should become deprecated */
+	DDI(<TOK_STRING>...) | /* string (including raw-strings) */
+
+	/* builtin constants */
+	DDI('none') |
+	DDI('true') |
+	DDI('false') |
+
+	/* Unary keyword-operators. */
+	(DDI('str') (('(' ast_parse_brace ')') | ast_parse_unary) ) |      /* __str__ */
+	(DDI('repr') (('(' ast_parse_brace ')') | ast_parse_unary) ) |     /* __repr__ */
+	(DDI('copy') (('(' ast_parse_brace ')') | ast_parse_unary) ) |     /* __copy__ */
+	(DDI('deepcopy') (('(' ast_parse_brace ')') | ast_parse_unary) ) | /* __deepcopy__ */
+	(DDI('type') (('(' ast_parse_brace ')') | ast_parse_unary) ) |     /* ACTION: typeof */
+
+	/* Unary operators. */
+	(DDI('!') ast_parse_unary) |  /* ACTION: not */
+	(DDI('#') ast_parse_unary) |  /* __size__ */
+	(DDI('~') ast_parse_unary) |  /* __inv__ */
+	(DDI('+') ast_parse_unary) |  /* __pos__ */
+	(DDI('-') ast_parse_unary) |  /* __neg__ */
+	(DDI('++') ast_parse_unary) | /* __inc__ */
+	(DDI('--') ast_parse_unary) | /* __dec__ */
+
+#if BACKWARDS_COMPATIBILITY_DEEMON_100
+	/* NOTE: An implementation is not required to support
+	 *       backwards-compatibility for using <...> in
+	 *       order to define cells. GrieferAtWork's implementation
+	 *       does, while also emitting a warning, but this is
+	 *       entirely optional. */
+	/* Backwards-compatibility with deemon v100's cell-syntax.
+	 * Newer code should instead make use of on `cell from deemon':
+	 * >> local x = (cell from deemon)();  // Empty cell
+	 * >> local y = (cell from deemon)(x); // A cell containing `x'
+	 * If backwards-compatibility is required, user-code may choose to do this:
+	 * >>
+	 */
+	(DDI('<') [ast_parse_unary] '>') | /* ACTION: cell/cell0 */
+#endif
+
+	(DDI('if') '(' ast_parse_brace ')' (
+		('else' ast_parse_brace) | /* Same as `none else ast_parse_brace' */
+		(ast_parse_brace ['else' ast_parse_brace])
+	)) |
+
+	/* Bound-expressions.
+	 * NOTE: Only certain types of expressions are accepted as
+	 *       argument to this expression, those types being:
+	 *        - Symbol expressions (including symbols that are always bound,
+	 *          which simply result in a compile-time, constant `true')
+	 *        - getattr expression (both `foo.bar' and `foo.operator . ("bar")')
+	 *          This type of use is semantically equivalent to the
+	 *          builtin function `hasattr from deemon(foo,"bar")'
+	 *          An implementation is also allowed to replace this
+	 *          kind of use with a call to said function.
+	 */
+	(DDI('bound') (('(' ast_parse_brace ')') | ast_parse_unary)) |
+
+	/* Operator function access (see detailed explaination in `x.operator ...' below) */
+	('operator' DDI(ast_parse_operator_name(false))) |
+#if 0 /* Redundant syntax. - Already implemented by a call-suffix expression */
+	('operator' DDI(ast_parse_operator_name(false)) '(' ast_parse_comma(false,false) ')') |
+#endif
+
+
+	/* Assert-expressions. */
+	('assert' '(' DDI(ast_parse_brace) [',' ast_parse_brace] ')') |
+
+	/* With-expressions. */
+	(DDI('with') '(' ast_parse_comma(false,true) ')' ast_parse_brace) |
+
+	/* Try-expressions. */
+	ast_parse_try(false) |
+
+	/* Function-expressions. */
+	(DDI('function') [_keyword] ast_parse_function(false)) |
+
+	/* Note the `final' prefix behaves identical to the @final tag. */
+	(((['final'] DDI('class')) | (DDI('class') 'final')) [_keyword] ast_parse_class) |
+
+	/* When no expression follows `pack', it evaluates to an empty tuple. */
+	(DDI('pack') (('(' [
+		('{' [ast_parse_statement...] '}') |
+		ast_parse_comma(false,false)
+	] ')') | [
+		('{' [ast_parse_statement...] '}') |
+		ast_parse_comma(true,false)
+	])) |
+
+	/* Generator expressions */
+	ast_parse_loopexpr |
+
+	/* Allow assert in expressions. */
+	ast_parse_assert(true) |
+
+	/* Allow import / from ... import statements in expression, but only
+	 * allow a restricted syntax that never defines new symbols and doesn't
+	 * allow constructs that wouldn't make sense without that permission. */
+	ast_parse_import(false) |
+
+	/* Parenthesis / [empty] tuple expression. */
+	(DDI('(') [(
+		('{' [ast_parse_statement...] '}') |
+		ast_parse_comma(false,false)
+	)] ')') |
+
+	(DDI('[') (
+		/* Lambda function.
+		 * Same as a regular `function' in expressions, but
+		 * doesn't accept names and is much shorter when written) */
+		(['&' | '='] ']' (
+			ast_parse_function_noargs(false) | /* Allow functions with missing argument lists */
+			ast_parse_function(false)
+			)) |
+		/* Range expression.
+		 * Omission of the begin/end index is the same as passing `none'.
+		 * >> for (local x: [:10])
+		 * >>     print x; // Prints the numbers 0...9
+		 * Since ranges proofed to be as useful as they are, instead of
+		 * having to #include <util> as one had to before deemon 200, I've
+		 * decided to add a dedicated syntax just for creating ranges.
+		 */
+		([ast_parse_brace] ':' [ast_parse_brace] [',' ast_parse_brace] ']') |
+		/* List expression.
+		 * NOTE: Ambiguity with lambda for `[]' is resolved by looking at the
+		 *       token following. When it's a '(', '{' or '->', it's a lambda.
+		 *       Otherwise it's a list. */
+		([ast_parse_comma(false,false)] ']') |
+	)) |
+
+	/* Package the varargs portion of the argument list in an expand expression. */
+	DDI('...') |
+
+	/* <symbol> from <module> style referencing of external variables.
+	 * >> Greatly simplifies use of external symbols by allowing access
+	 *    without the need of being imported as a local symbol beforehand.
+	 * HINT: This syntax is great for catch-statements:
+	 * >> try {
+	 * >>     print int("Not an integer");
+	 * >> } catch (Error from deemon as err) {
+	 * >>     print "Failed to convert to integer:",err;
+	 * >> }
+	 */
+	(DDI(_keyword) 'from' parse_module_name) |
+
+	(
+		[
+#if BACKWARDS_COMPATIBILITY_DEEMON_100
+			/* NOTE: An implementation is not required to support
+			 *       backwards-compatibility for using prefix as an
+			 *       alias for `.' here. GrieferAtWork's implementation
+			 *       does, while also emitting a warning, but this is
+			 *       entirely optional. */
+			'::' |     /* Only search the global scope */
+			'global' | /* Only search the global scope */
+			'local' |  /* Only search the current scope */
+#endif
+
+			/* N'th variable lookup modifier.
+			 * When searching for symbols matching the _keyword following
+			 * this prefix, don't bind to the first match found, but rather
+			 * the ast_parse_brace'th.
+			 * >> {
+			 * >>     local x = 10;
+			 * >>     {
+			 * >>         local x = 20;
+			 * >>         print __nth(1) x; // 20
+			 * >>         print __nth(2) x; // 10
+			 * >>     }
+			 * >> }
+			 * The constant expression is converted to an integer as though
+			 * it was the result of an expression `(int)ast_parse_brace',
+			 * meaning that boolean, and other integer-like object, including
+			 * `none' are accepted just as well.
+			 *
+			 * It is an error to pass a negative value, or a value equal to ZERO(0)
+			 *
+			 * The given `ast_parse_brace' must be a constant expression.
+			 * An implementation is allowed and encouraged to perform
+			 * constant propagation when an expression is given, however
+			 * it is allowed allowed to choose to emit an error in this case.
+			 */
+			('__nth' '(' ast_parse_brace ')')
+		]
+
+		/* Default case: Symbol lookup
+		 * NOTE: Scope modifiers found in in ast_parse_comma are
+		 *       propagated to this point. */
+		DDI(_keyword)
+	)
+);
+
+ast_parse_unary ::= (
+	ast_parse_unary_base
+	[(
+
+		(DDI(
+#if BACKWARDS_COMPATIBILITY_DEEMON_100
+			/* NOTE: An implementation is not required to support
+			 *       backwards-compatibility for using `::' as an
+			 *       alias for `.' here. GrieferAtWork's implementation
+			 *       does, while also emitting a warning, but this is
+			 *       entirely optional. */
+			'::' |
+#endif
+			'.'
+		) (
+
+			/* A no-op that simply returns the object itself.
+			 * NOTE: This is resolved at compile-time, meaning that
+			 *       accessing this attribute when overwritten requires
+			 *       the use of `operator . ("this")' */
+			'this' |
+
+			/* Returns the effective class of the accompanying expression.
+			 * This is usually identical to it's `type', but for super-wrappers,
+			 * it is the described type, rather than  */
+			'class' |
+
+			/* Bind an operator function to a specific object:
+			 * >> local x = 42;
+			 * >> local y = x.operator -;
+			 * >> print y();   // -42
+			 * >> print y(10); // 32
+			 * >> print operator - (42);    // -42
+			 * >> print operator - (42,10); // 32
+			 * An implementation is allowed to freely choose how to construct the
+			 * operator wrappers used for this purpose, however as already shown
+			 * in the example above, care must to ensure that ambiguous operators
+			 * can be resolved at runtime.
+			 * Due to the fact that an implementation is required to also provide
+			 * the `operators' module, it is recommended that at least unambiguous
+			 * operator functions be bound to their respective symbol found in said
+			 * module.
+			 * Note however that `x + y', `operator + (x,y)' and `x.operator + (y)',
+			 * while allowed to generate difference code, should still be considered
+			 * syntactically identical and are all allowed to be implemented through
+			 * deticated options, `(add from operators)(x,y)' is different and must
+			 * perform an external symbol call to `add from operators' at runtime.
+			 */
+			('operator' ast_parse_operator_name(false)) |
+
+#if 0 /* Redundant syntax. - Already implemented by a call-suffix expression */
+			/* Invoke an operator by name. */
+			('operator' ast_parse_operator_name(false)
+				'(' ast_parse_comma(false,false) ')') |
+#endif
+
+			/* Regular, old attribute operator invocation. */
+			_keyword
+
+		)) |
+
+		(DDI('[') (
+			/* Ranged item access.
+			 * NOTE: When used as the target in a store expression,
+			 *       this will be encoded as a __setrange__ operation. */
+			([ast_parse_brace] ':' [ast_parse_brace]) |
+			/* Indexed item access.
+			 * NOTE: When used as the target in a store expression,
+			 *       this will be encoded as a __setitem__ operation. */
+			(ast_parse_brace)
+		) ']') |
+
+		/* Brace initializer-suffix:
+		 * >> local x = list { 10, 20, 30 };
+		 * Internally, the resulting expression is done as follows:
+		 *    <expr> { <expr>... }  ---> <expr>(GENERIC_SEQUENCE(<expr>...))
+		 * In other words, the first expression is invoked with a single
+		 * argument that is some undefined iterable object which can then be
+		 * iterated to retrieve the individual items found within the braces.
+		 * NOTE: Unlike in the old deemon, no guaranty is made as to what
+		 *       the exact type of that sequence is, only that it is derived
+		 *       from `sequence from deemon' and implements the iterable
+		 *       iterface, including some iterator class that is (as always)
+		 *       accessible with the `iterator' attribute of the type.
+		 *
+		 */
+		ast_parse_brace |
+
+		/* Encode a call-expression with optional parenthesis.
+		 * >> foo pack 10,20,30; // Same as foo(10,20,30); */
+		(DDI('pack') (
+			('(' [ast_parse_argument_list] ')') |
+			[ast_parse_argument_list]
+		)) |
+
+		/* Encode a call-expression. */
+		(DDI('(') [ast_parse_argument_list] ')') |
+
+		/* Trailing increment/decrement */
+		DDI('++') |
+		DDI('--') |
+
+		/* Expand expression. */
+		DDI('...')
+
+	)...]
+);
+
+
+ast_parse_argument_list ::= (
+	(
+		/* Regular argument list (e.g. `foo(10,20)') */
+		ast_parse_comma(false,false)
+	) | (
+		/* Argument list with keyword labels (e.g. `foo(x: 10, y: 20)')
+		 * May optionally be pre-fixed with positional arguments. */
+		[ast_parse_comma(false,false) ',']
+		[',' ~~ (
+			keyword ':' ast_parse_brace
+		)...]
+	)
+);
+
+
+ast_parse_prod ::= (
+	ast_parse_unary
+	[(
+		DDI('*' | '/' | '%' | '**')
+		ast_parse_unary
+	)...]
+);
+
+ast_parse_sum ::= (
+	ast_parse_prod
+	/* NOTE: `foo + ...' returns the sum of all elements of `foo' */
+	[(
+		('+' '...') |
+		('+' ast_parse_prod) |
+		('-' ast_parse_prod)
+	)...]
+);
+
+ast_parse_shift ::= (
+	ast_parse_sum
+	[(
+		DDI('<<' | '>>')
+		ast_parse_sum
+	)...]
+);
+
+ast_parse_cmp ::= (
+	ast_parse_shift
+	/* NOTE: `foo < ...' returns the lowest element of a sequence `foo'
+	 *       `foo > ...' returns the greatest element of a sequence `foo' */
+	[(
+		(DDI('<') '...') |
+		(DDI('>') '...') |
+		(DDI('<') ast_parse_shift) |
+		(DDI('>') ast_parse_shift) |
+		(DDI('<=') ast_parse_shift) |
+		(DDI('>=') ast_parse_shift)
+	)...]
+);
+
+ast_parse_cmpeq ::= (
+	ast_parse_cmp
+	[(
+		/* Test-for-binding expression.
+		 * `foo is bound' is equivalent to `bound(foo)' (see above) */
+		(DDI(['!'...] 'is' ['!'...] 'bound')) |
+
+		(
+			(	/* The result of In and Is expression can
+				 * be inverted by surrounding '!' tokens.
+				 * NOTE: Inversion of the result only happens the sum of '!' tokens is uneven.
+				 *       In the case of `in', the result of the expression is left unchanged
+				 *       when no inversion takes place, meaning that should `rhs.operator contains'
+				 *       return a non-bool return value, that value is not casted to boolean.
+				 *       However, should an inversion take place, the result is guarantied to
+				 *       be of boolean typing, assuming that casting a non-boolean return value
+				 *       does not result in an exception being produced.
+				 * ---
+				 * The `in'-operator invokes the `operator contains' of the right-hand-side
+				 * operator. However unlike `rhs.operator contains(lhs)', which evaluates
+				 * `rhs' before `lhs', the expression `lhs in rhs' is required to evaluate
+				 * in a strict left-to-right order, meaning that in this spelling `lhs' must
+				 * be evaluated prior to `rhs', should its evaluation coincide with any
+				 * observable side-effects beyond the contents of any produced assembly.
+				 * ---
+				 * The `is'-operator is normally meant to be used in type-check expressions
+				 * where the left-hand-side operand is checked for being an instance of the
+				 * type described in the right-hand-side operand.
+				 * If the right-hand-side operand isn't a type-expression, the is-expression
+				 * always evaluates to `false'. An exception to this is when rhs evaluates
+				 * to the none-singleton object, in which case the left-hand-side operand is
+				 * checked for also being that singleton object, the same way `x is type none'
+				 * would also perform this check. However, since `type none' is final, the
+				 * check is also equivalent to `x === none' (see below)
+				 */
+				DDI(['!'...] ('in' | 'is') ['!'...]) |
+
+				/* Equal/Not-Equal operator invocation */
+				DDI('==') |
+				DDI('!=')
+
+				/* Same/different object comparison
+				 * `x === y' is are semantically equivalent to
+				 * `(object from deemon).id(x) == (object from deemon).id(y)'
+				 * A compiler is allowed to interchange the internal representation
+				 * of these 2 representations if it pleases, meaning that the builtin
+				 * member function (here accesses as an unbound member function wrapper)
+				 * `object.id' cannot be reliably overwritten by sub-classes with the
+				 * guaranty that the overwritten version is consistently called.
+				 * ---
+				 * The most notably usage case for same-object comparisons are type
+				 * objects which do not implement regular comparison operators:
+				 * >> import int, object from deemon;
+				 * >> print int == object;  // Error.RuntimeError.NotImplemented: `type.operator ==' is not implemented
+				 * >> print int != object;  // Error.RuntimeError.NotImplemented: `type.operator !=' is not implemented
+				 * >> print int === object; // false
+				 * >> print int !== object; // true
+				 * ---
+				 * The same-object/different-object operators cannot be overwritten, thus
+				 * allowing the compiler to perform extended optimization on the object.
+				 * ---
+				 * Comparing 2 constant expressions for being the same object produces
+				 * undefined results, as the chosen representation of constants (which
+				 * are allowed to be generated only once code accesses them), as well as
+				 * any potential optimizations done to merge equivalent constants is
+				 * entirely implementation-defined.
+				 * An implementation isn't even required to produce consistent result when
+				 * faced with different (or even same) compiler options, and may even be
+				 * influenced by related module being loaded from source code, or from a
+				 * pre-compiled DEC (optional, implementation-specific file format) file.
+				 * ---
+				 * Due to the special object-check case resulting from `x is none', which
+				 * checks if `x' is the none-singleton object, the expression `x === none'
+				 * produces the same results and the compiler is allowed to interchange
+				 * their internal representations.
+				 */
+				DDI('===') |
+				DDI('!==')
+			)
+
+			ast_parse_cmp
+		)
+	)...]
+);
+
+
+ast_parse_and ::= (ast_parse_cmpeq [('&' ast_parse_cmpeq)...]);
+ast_parse_xor ::= (ast_parse_and [('^' ast_parse_and)...]);
+ast_parse_or ::= (ast_parse_xor [('|' ast_parse_xor)...]);
+
+/* As-expression: Replaces the old (and no longer implemented) `__super' / `__builtin_super'
+ * expressions found in deemon 101+, this expression constructs a super-view of the
+ * left-hand-side operand, using the expression found in the right-hand-side operand
+ * as the type with which the first operand should be viewed.
+ * For more information on super-view objects, see their class documentation,
+ * as easily viewable through `/deemon/doc-server.dee' (/modules/deemon/super)
+ * The expression `x as y' is therefor equivalent to `(super_ from deemon)(x,y)',
+ * and a compiler is allowed to interchange these 2 representations, as most symbols
+ * exported from the builtin `deemon' module (including this one) cannot be overwritten. */
+ast_parse_as ::= (ast_parse_or [('as' ast_parse_or)...]);
+
+ast_parse_land ::= (
+	ast_parse_as
+	[(
+		/* NOTE: `x && ...' returns true if all items of a sequence evaluate to true. */
+		('&&' '...') |
+		/* NOTE: `x && y' is the same as `!!(x ? y : )' (aka. `(x ? !!y : false)') */
+		('&&' ast_parse_as)
+	)...]
+);
+ast_parse_lor ::= (
+	ast_parse_land
+	[(
+		/* NOTE: `x || ...' returns true if any item of a sequence evaluates to true. */
+		('||' '...') |
+		/* NOTE: `x || y' is the same as `!!(x ? : y)' (aka. `(x ? true : !!y)') */
+		('||' ast_parse_land)
+	)...]
+);
+
+ast_parse_cond ::= (
+	ast_parse_lor
+	[
+		/* `x ? y : z' --> `x ? y : z'
+		 * `x ? : z'   --> `x ? x : z'
+		 * `x ? y : '  --> `x ? y : x'
+		 * `x ? y'     --> `x ? y : none'
+		 */
+		(DDI('?') ast_parse_cond [':' [ast_parse_cond]]) |
+		(DDI('?') ':' ast_parse_cond)
+	]
+);
+
+ast_parse_assign := (
+	ast_parse_cond
+	/* Inplace operators and assign. (Note: differs from store) */
+	(
+		DDI(':=') |
+		DDI('+=') |
+		DDI('-=') |
+		DDI('*=') |
+		DDI('/=') |
+		DDI('%=') |
+		DDI('<<=') |
+		DDI('>>=') |
+		DDI('&=') |
+		DDI('|=') |
+		DDI('^=') |
+		DDI('**=')
+	)
+	ast_parse_cond
+);
+
+
+ast_parse_brace_items ::= ([
+	/* Brace initializer for lists-style sequences. */
+	(',' ~~ ast_parse_brace...) |
+	/* Brace initializer for dict-style sequences. */
+	(',' ~~ ((
+		(ast_parse_brace (':' | '=')) |
+		/* Initializer for string-keys: Same as `"_keyword" : ' */
+		('.' _keyword '=')
+	) ast_parse_brace)...) |
+]);
+
+ast_parse_brace ::= (
+	ast_parse_assign |
+	(DDI('{') ast_parse_brace_items '}')
+);
+
+_inner_comma_expression ::= (
+	/* Special parsing for classes and functions that allows the name
+	 * of the declaration and its accompanying symbol to be specified
+	 * at the same time.
+	 * Note that for functions this is the only way to specify the
+	 * the name of the this-function symbol required for a function
+	 * being able to call itself, short of storing the function in
+	 * a global variable and have it then use that global variable. */
+	(DDI(((['final'] 'class') | ('class' ['final']))) [_keyword] ast_parse_class) |
+	(DDI('function') [_keyword] ast_parse_function(?MAYBE?))
+	ast_parse_brace
+);
+
+ast_parse_comma(strict_comma,allow_vardecl) ::= (
+
+#if allow_vardecl
+	[(
+		/* Variable scope-modifiers (only one is allowed) */
+		'local' |   /* Only search for variables in the local scope.
+		             * If another variable with the same name exists in a surrounding scope,
+		             * and new variables may be created, ignore it and create a new one
+		             * superseding it local.
+		             * When used in the global scope, prevent any new symbol being declared
+		             * with this modifier from being exported by the module. */
+		'global' |  /* Search for variables only in the global (module-root) scope.
+		             * This modifier may also be used to explicitly state intent for
+		             * a symbol being declared in the global scope to be exported by
+		             * the module and made available for other modules importing this
+		             * one.
+		             * However, a symbol being exported is the default behavior for
+		             * variables declared in the global scope.
+		             * Also note that global variables can only be declared in the
+		             * ~true~ root scope of a module. i.e. They cannot be declared
+		             * in sub-scopes, or inner functions without causing compiler
+		             * errors which an implementation may choose to allow the user
+		             * to dismiss.
+		             * NOTE:
+		             *   Variables declared as global can be modified by value (i.e.
+		             *   used as operand for inplace operations), by inner functions
+		             *   of the module, or another module that imported the symbol.
+		             *   This differs from local variables, which can only be read
+		             *   from as ref-variables and not modified by-value, but only
+		             *   by-reference (s.a. `cell from deemon' on how to store
+		             *   by-value objects in by-reference data slots):
+		             * >> global x = 10;
+		             * >> local  y = 20;
+		             * >> function increment_x() {
+		             * >>     ++x; // OK
+		             * >> }
+		             * >> print x; // 10
+		             * >> increment_x();
+		             * >> print x; // 11
+		             * >> function increment_y() {
+		             * >>     ++y; // ERROR: Reference-variable cannot be used in inplace-expression
+		             * >> }
+		             * >> print y; // 10
+		             * >> increment_y();
+		             * >> print y; // 10 (assuming a previos compiler error was ignored)
+		             */
+
+		/* Variable scope-modifiers (only one is allowed) */
+		'static' |
+		'__stack'   /* Create a variable that is kept on the stack.
+		             * An implementation is not required to support this functionality,
+		             * and may instead treat stack-variables as local variables
+		             */
+	)...]
+#endif
+
+	/* Allow the process to be repeated any number of times. */
+	',' ~~ (
+		/* Store expand expression into multiple targets. */
+		((',' ~~ _inner_comma_expression...) DDI('=') _inner_comma_expression '...') |
+
+		/* Store any other expression to only a single target. */
+		(_inner_comma_expression DDI('=') _inner_comma_expression) |
+
+		/* Collect targets. */
+		(_inner_comma_expression) |
+	)...
+
+#if !strict_comma
+	/* NOTE: A trailing comma here will force the creation of a sequence */
+	[',']
+#endif
+
+#if INTERNAL(AST_COMMA_PARSESEMI)
+	/* A semicollon is only required when called from `ast_parse_statement'.
+	 * Furthermore, no semicollon is required when the last parsed
+	 * _inner_comma_expression was a class, or a function with braces:
+	 * >> class MyClass {
+	 * >> } // No semicollon required
+	 * >> function my_function() {
+	 * >> } // No semicollon required
+	 */
+	';'
+#endif
+
+);
+
+ast_parse_for_head ::= (
+	(	/* foreach-style loop. */
+		ast_parse_comma(false,true) ':'
+		ast_parse_brace
+	) |
+	(	/* c-style for loop. */
+		[ast_parse_comma(false,true)] ';'
+		[ast_parse_comma(false,false)] ';'
+		[ast_parse_comma(false,false)]
+	)
+);
+
+
+
+#define OPERAND_TYPE_OUTPUT 0
+#define OPERAND_TYPE_INPUT  1
+#define OPERAND_TYPE_LABEL  2
+asm_parse_operands(kind) ::= (
+	[',' ~~ (
+		/* An optional operand name (s.a. RULE `assembly_format_arg'). */
+		['[' _keyword ']']
+#if kind == OPERAND_TYPE_LABEL
+		/* The label that is being referenced. */
+		_keyword
+#else
+		/* The operand constraints.
+		 * The contents and meaning of this string are implementation-defined,
+		 * however, the following behavior must supported by all implementations:
+		 * #if kind == OPERAND_TYPE_OUTPUT
+		 *    - If the string starts with `+', that character is
+		 *      consumed and the operand is marked as input/output.
+		 *      As such, the expression must be writable in such a
+		 *      fashion that it could appear on the left-hand-side
+		 *      of a store expression:
+		 *        - `foo = 42;'
+		 *        - `foo.bar = 42;'
+		 *        - `foo[bar] = 42;'
+		 *        - `foo[bar:baz] = 42;'
+		 *      The assembler should then choose a suitable representation
+		 *     (e.g. a register, or memory location) for the operand, that
+		 *      either already matches the source operand, or is populated
+		 *      upon entry with the operands old value, and written back to
+		 *      the operand upon user-assembly returning normally.
+		 *      >> local x = [10];
+		 *      >> print repr x; // [10]
+		 *      >> __asm__("add %0, $1" : "+p" (x[0]));
+		 *      >> print repr x; // [11]
+		 *    - If the string starts with `=', that character is
+		 *      consumed, and the operand is marked as output-only
+		 *      The behavior here is the same as when `+' is prefixed,
+		 *      however, the assembler is not required to make the expression
+		 *      available upon entry into user-assembly, but only load the
+		 *      representation operand's assembly contents into the actual
+		 *      operand upon user-assembly returning normally.
+		 * #endif
+		 *    - If the operand cannot be represented as a specific
+		 *      operand encoding, the remaining of the string will
+		 *      continued getting parsed until an encoding is found
+		 *      that is suitable.
+		 *    - Whitespace characters, or a `,' character marks an
+		 *      explicit split between different operand encoding
+		 *      options, thus preventing ambiguity between possible
+		 *      encodings. */
+		(<TOK_STRING>...)
+		/* The actual operand expression. */
+		'(' ast_parse_brace ')'
+#endif
+	)...]
+);
+
+asm_parse_clobber ::= (
+	',' ~~ (
+		/* Standard clobber tags that must be supported by any implementation.
+		 * Note that all of these operate as mere hints to the optimizer, meaning
+		 * that a simplified implementation is allowed to just ignore these.
+		 *  - "memory":
+		 *    A memory barrier with the effect that the optimizer is not
+		 *    allowed to swap the execution order of this assembly statement
+		 *    with either the previous, or the following expression with
+		 *    any side-effects. Swapping with expression that have no
+		 *    side-effects is not affected by this clobber.
+		 *  - "reach":
+		 *    User-assembly is reachable, even if the statement appears as
+		 *    part of a sequence of unreachable statements.
+		 *    This should mirror the behavior of a free-standing, used label
+		 *    located in dead code still being reachable from the outside:
+		 *    >> if (true) {
+		 *    >>     print "Reachable #1";
+		 *    >>     // This user-assembly block doesn't return normally
+		 *    >>     __asm__("jmp .Lother_asm" : : : "noreturn");
+		 *    >>     print "Unreachable #1";
+		 *    >> } else {
+		 *    >>     print "Unreachable #2";
+		 *    >>     // This user-assembly block is reachable through
+		 *    >>     // abnormal means (because it defines an assembly label).
+		 *    >>     // NOTE: The fact that it does this is implementation-specific
+		 *    >>     //       and the actual text of the assembly statement is
+		 *    >>     //       entirely implementation-specific
+		 *    >>     __asm__(".Lother_asm:" : : : "reach");
+		 *    >>     print "Reachable #2";
+		 *    >> }
+		 *  - "noreturn":
+		 *    Indicates that a 
+		 *
+		 *  - *:
+		 *    Anything else is implementation-specific and should result
+		 *    in a compiler warning/error when used when not supported.
+		 */
+		<TOK_STRING>...
+
+	)...
+);
+
+/* Inline-assembly.
+ * NOTE: Even though this is a standartized way of writing implementation-specific
+ *       inline assembly, the actual syntax, meaning, and structure of inline assembly
+ *       is entirely implementation-specific, and an implementation is even allowed
+ *       to omit support for some kind of assembly-meta-language by causing a compiler
+ *       error when an assembly statement with a text containing non-whitespace-characters
+ *       is encountered (where whitespace here also includes line-feed characters)
+ *       However, since inline assembly can also be used to inject optimization
+ *       hints, as well as prevent memory re-ordering, any fully compliant implementation
+ *       is still required to at least implement the `memory', `reach' and `noreturn'
+ *       clobber operands.
+ * NOTE: A compiler must be capable of processing `__asm__("" ::: "memory");'
+ *       the same way it would process `__asm__("" : : : "memory");'. In other
+ *       words, if the compiler has a special token sequence that starts with
+ *       a `:', and continues with some other character which may appear in this
+ *       context, it must be able to split that token such that `:' can be
+ *       processed on its own.
+ * When appearing as an expression, an assembly statement evaluates as `none'
+ */
+ast_parse_asm ::= (
+	('__asm' | '__asm__')
+	[(
+		/* The inter-instruction semantics of user-assembly
+		 * may not be modified by an optimization pass.
+		 * e.g. (GrieferAtWork user-assembly):
+		 * >>    push $42
+		 * >>    pop
+		 * >>    adjstack #SP + 1
+		 * If volatile is set, `push $42; pop' may not be
+		 * optimized away because inter-instruction optimizations
+		 * may not be performed. However optimizing `adjstack #SP + 1'
+		 * into `push none' is still allowed regardless, since this
+		 * is an optimization affecting only a single instruction.
+		 * Additionally, inter-instruction optimizations need only
+		 * be disabled for the duration of user-assembly. Other assembly
+		 * may remain unaffected by this. */
+		['_'##...]##'volatile'##['_'##...] |
+		/* Enable the 4'th operand group used by label operands. */
+		['_'##...]##'goto'##['_'##...]
+	)...]
+	'('
+		DDI(<TOK_STRING>...) /* The assembly text (implementation-specific) */
+		/* When a `:' appears at this point, the assembly text must be
+		 * formatted prior to being interpreted as assembly.
+		 * For the format syntax, see RULE `assembly_format'
+		 * NOTE: Formatting is done every time the assembly statement
+		 *       is assembled as such, meaning that if the implementation
+		 *       chooses to implement a way for functions to be called inline,
+		 *       user-assembly statements that need formatting, need to be
+		 *       formatted once every time they are inlined.
+		 *       This is important because of the `%=' formatting rule.
+		 */
+		[':' [asm_parse_operands(OPERAND_TYPE_OUTPUT)]
+		[':' [asm_parse_operands(OPERAND_TYPE_INPUT)]
+		[':' [asm_parse_clobber]
+		[':' [asm_parse_operands(OPERAND_TYPE_LABEL)] /* Only if `goto' appeared after `__asm[__]' (See above). */
+		]]]]
+	')'
+);
+
+
+/* Formatted assembly code rule. */
+assembly_format ::= (
+	(
+		[*...]    /* Any sort of text (re-emitted as it appears here). */
+		##
+		[
+			'%' ## /* Special formatting done when `%' is encountered. */
+			(
+				/* The assembly */
+				('(' ## assembly_format_arg ## ')') |
+				assembly_format_arg
+			)
+		]
+	)...
+);
+
+/* `get_unique_number()' returns an integer that is
+ * guarantied to remain unique within the current module. */
+assembly_format_arg ::= (
+	'%' | /* EMIT("%"); */
+	'=' | /* EMIT("%Iu" % get_unique_number()); */
+
+	/* Operand reference.
+	 * When used, an implementation-specific representation
+	 * of the named/indexed operand is inserted `EMIT(...)',
+	 * with the exact representation chosen depending on what
+	 * (also) implementation-specific operand constraints were
+	 * used alongside the operand.
+	 */
+	['l']## /* The `l' prefix must appear before label references. */
+	[*...]## /* Implementation-specific operand-prefixes may be inserted here */
+	(
+		/* The addressed operand is the one that was written as:
+		 * >> __asm__("print %[foo], nl" : : [foo] "s" (42));
+		 * Where `_keyword' is `foo' in this example. */
+		('[' ## _keyword ## ']') |
+		/* The addressed operand is indexed using a decimal-encoded
+		 * integer, where `0' refers to the first operand, and so on.
+		 * Operand indices are incremented left-to-right, within the
+		 * operand list, and are not reset at any point, meaning that...
+		 * >> __asm__("mov %0, %1" : "=p" (x) : "P" (42));
+		 * ... the `%0' referrs to `x' and `%1' to `42' */
+		('0'...'9')##...
+	)
+);
+
+
+ast_parse_statement ::= (
+
+	/* Tag/attribute prefix. */
+	[('@' parse_tags)...]
+
+	/* Sub-scopes / braced statements */
+	(DDI('{') [ast_parse_statement...] '}') |
+
+	/* The empty statement. */
+	(DDI(';')) |
+
+	(DDI('if')
+		'(' ast_parse_comma(false,true) ')' ast_parse_statement
+		[ ('elif' '(' ast_parse_comma(false,true) ')' ast_parse_statement)... ]
+		[ ('else' ast_parse_statement) ]
+	) |
+
+	(DDI('with') '(' ast_parse_comma(false,true) ')' ast_parse_statement) |
+
+	(DDI('return') [ast_parse_comma(false,false)] ';') |
+	(DDI('yield') ast_parse_comma(false,false) ';') |
+	(ast_parse_import(true) ';') |
+	(DDI('throw') ast_parse_comma(false,false) ';') |
+	/* NOTE: A trailing ',' token suppresses the trailing new-line. */
+	(DDI('print') [ast_parse_comma(true,false) ':'] ast_parse_comma(true,false) [','] ';') |
+	(DDI('for') '(' ast_parse_for_head ')' ast_parse_statement) |
+
+
+	/* Same as a regular `for(x: y)' loop, but should be used to
+	 * enumerated the items of an iterator, rather than a sequence.
+	 * The regular `for(x: y)' statment can then be
+	 * implemented as `foreach(x: y.operator iter())'
+	 */
+	(DDI('foreach') '('
+		ast_parse_comma(false,true) ':'
+		ast_parse_brace
+	')' ast_parse_statement) |
+
+	/* The `assert' statement */
+	ast_parse_assert(false) |
+
+	/* Inline assembly */
+	ast_parse_asm |
+
+	/* A do...while loop */
+	(DDI('do')
+		ast_parse_statement
+#		INTERNAL(clear_current_tags())
+		parse_tags_block
+		'while' '(' ast_parse_brace ')' ';'
+	) |
+
+	/* A while... loop */
+	(DDI('while') '(' ast_parse_comma(false,true) ')' ast_parse_statement) |
+
+	/* Loop control statements */
+	(DDI('break') ';') |
+	(DDI('continue') ';') |
+
+	/* Exception handling using try...catch/finally */
+	ast_parse_try(true) |
+
+	/* Goto label. */
+	(DDI('goto') _keyword) |
+	/* Label declaration. */
+	(_keyword ':' ast_parse_statement) |
+
+	/* Case label + switch statements.
+	 * NOTE: The expression following `case' is allowed to non-constant,
+	 *       in which case they will be evaluated at runtime in order
+	 *       of appearance.
+	 *       Constant expressions will either be handled the same, or
+	 *       make use of a hidden constant tuple/dict for mapping
+	 *       switch expressions to IP/SP pairs that are then loaded
+	 *       using the `jmp pop' or `jmp pop, #pop' instructions. */
+	(DDI('case') ast_parse_brace ':' ast_parse_statement) |
+	(DDI('default') ':' ast_parse_statement) |
+	(DDI('switch') '(' ast_parse_comma(false,true) ')' ast_parse_statement) |
+
+	/* Fallback: parse a comma-expression.
+	 * NOTE: `INTERNAL(AST_COMMA_PARSESEMI)' is enabled for this call! */
+	ast_parse_comma(false,true)
+)
+#	INTERNAL(clear_current_tags())
+;
+
+
+ast_parse_catchmask ::= (
+	/* NOTE: Multiple masks can be enumerated when separated by '|' tokens.
+	 *       An error is then caught if any of the masks match the
+	 *       generated exception.
+	 *       Note that this multi-catch syntax is merely sugar for
+	 *       creating tuple expressions of types to-be caught.
+	 *       In other words, the following two catch-handler are the same:
+	 *    >> catch (int | string as foo)
+	 *    >> catch ((int, string) as foo)
+	 */
+	'|' ~~ ast_parse_unary...
+);
+
+ast_parse_try(is_statement) ::= (
+	(DDI('try')
+#if is_statement
+		ast_parse_statement
+#else
+		ast_parse_brace
+#endif
+		(
+#			INTERNAL(clear_current_tags())
+			parse_tags_block
+			(
+				('finally'
+#if is_statement
+					ast_parse_statement
+#else
+					ast_parse_brace
+#endif
+				) |
+				('catch' '(' (
+					/* Catch-all statement. */
+					('...' [_keyword]) | (_keyword '...') |
+					/* Masked-catch statement.
+					 * Additionally, a symbol name that can be used to address
+					 * the generated exception may be specified after 'as' or '->',
+					 * where the arrow is deprecated and a reminant from the old deemon. */
+					('|' ~~ ast_parse_unary... [('->' | 'as') _keyword])
+				) ')'
+#if is_statement
+					ast_parse_statement
+#else
+					ast_parse_brace
+#endif
+				)
+			)
+		)...
+);
+
+ast_parse_class ::= (
+	/* Optional base expression. */
+	[	((':' | 'extends') ast_parse_unary_base) |
+		('(' ast_parse_brace ')')
+	]
+
+	/* Class block */
+	'{' [(
+#		INTERNAL(clear_current_tags())
+
+		/* Member modifiers/tags. */
+		[(
+			('@' parse_tags) |
+			/* NOTE: `private' along only sets visibility of the following member,
+			 *        whereas `private:' sets visibility of this, as well as all
+			 *        following members without any visibility modifiers, or until
+			 *        another visibility modifier followed by a ':' is encountered. */
+			('private' [':']) |
+			('public' [':']) |
+			/* The Class member modifier can be used to declare class
+			 * members, such as class functions or properties. */
+			('class') |
+
+			/* Member type modifier.
+			 * Explicitly state the type of member that should be declared. */
+			('function') | /* Member function */
+			('property') | /* Property member */
+			('member')     /* Variable member */
+		)...]
+
+		/* Member declaration. */
+		(
+			/* NOTE: The trailing ';' is only required when the
+			 *       function is being implemented arrow-style
+			 * NOTE: Special parsing is done when the operator
+			 *       that is being defined is `__constructor__' (see below)
+			 */
+			(DDI('operator') ast_parse_operator_name(true) ast_parse_function(true)) |
+
+			/* Destrctor. NOTE: `_keyword' must be the name of the class and
+			 *                   is not accepted when the class is anonymous. */
+			(DDI('~') ('this' | _keyword)) ast_parse_function(true)) |
+
+			/* Constructor operator. */
+			(DDI('this' | _keyword)
+				'(' [parse_arglist] ')'
+				/* This part is special about the constructor operator:
+				 * Following its argument list, the user way add a list
+				 * of initializer expressions for the class's super-class,
+				 * as well as member variables. */
+				[':' parse_constructor_initializers]
+				ast_parse_function_noargs(true)
+			) |
+
+			/* Member definition. */
+			(DDI(_keyword) ['=' (
+				('{' parse_property '}') | /* Property */
+				ast_parse_brace            /* Member with initializer. */
+			)] ';') |
+
+			/* Member function function */
+			(DDI(_keyword) ast_parse_function(true))
+
+		)
+
+	)...] '}'
+);
+
+parse_constructor_initializers ::= (
+	',' ~~ (
+		/* NOTE: `_keyword' is only allowed as super-initializer
+		 *        when the class's base expression is a symbol
+		 *        who's name is then matched by `_keyword' */
+		(DDI('super' | _keyword) '(' [ast_parse_comma(false,false)] ')') |
+		/* Member initializer. */
+		(DDI(_keyword) (
+			/* Value to assign to member `_keyword'
+			 * When empty parenthesis are given, assign `none' */
+			('(' [ast_parse_brace] ')') |
+			/* Assign the given expression to the member. */
+			('=' ast_parse_brace)
+		))
+	)...
+);
+
+parse_property ::= (
+	[(
+		/* Property prefixes. */
+		[(
+			/* Ignored type prefix. */
+			('function' | 'operator') |
+		)...]
+		/* Property callback name. */
+		DDI(
+			(';')       | /* Empty statement (ignored) */
+			('get')     | /* Getter callback */
+			('del')     | /* Delete callback */
+			('set')     | /* Setter callback */
+			/* Deprecated forms (for backwards compatibility) */
+			('.')       | /* DEPRECATED: `get' */
+			('__get__') | /* DEPRECATED: `get' */
+			('read')    | /* DEPRECATED: `get' */
+			('del' '.') | /* DEPRECATED: `del' */
+			('-')       | /* DEPRECATED: `del' */
+			('__del__') | /* DEPRECATED: `del' */
+			('delete')  | /* DEPRECATED: `del' */
+			('.' '=')   | /* DEPRECATED: `set' */
+			('=')       | /* DEPRECATED: `set' */
+			('__set__') | /* DEPRECATED: `set' */
+			('write')   | /* DEPRECATED: `set' */
+			('put')       /* DEPRECATED: `set' */
+		)
+
+		/* The property callback function. */
+		ast_parse_function(true)
+
+	)...]
+);
+
+
+
+/* Argument types:
+ *   - Required argument:
+ *     - Must be provided by the caller of the function
+ *     - Always bound upon function entry
+ *     - When omitted, a `Error.TypeError' is thrown at runtime.
+ *     - May not appear after default, optional, or a variable argument
+ *   - Default argument:
+ *     - May be omitted by the caller of the function
+ *     - When omitted, contains the specified default value (which must be a constant expression)
+ *     - Always bound upon function entry
+ *     - When prefixed by a `?', that `?' is ignored
+ *     - May not appear after optional arguments (without default value), or a variable argument
+ *   - Optional argument:
+ *     - May be omitted by the caller of the function
+ *     - When omitted, the symbol is unbound upon function entry
+ *     - Only bound after being explicitly written to by the
+ *       function, or if originally provided by the caller
+ *     - May not appear after a variable argument
+ *   - Variable argument:
+ *     - Always referrs to a sequence
+ *     - Always bound upon function entry
+ *     - Empty if no variadic arguments were passed
+ *     - When defined, the function can take any number of
+ *       arguments, so long as all required arguments are defined.
+ *     - May only appear once per function, and only as
+ *       the last symbol of that function's argument list
+ *     - When defined, the function body may make use of `...'
+ *       in expressions in order to reference variable arguments
+ *       the same way access would have been done if the varargs
+ *       argument was used in an expand expression:
+ *    >> function foo(args...) {
+ *    >>     print args...;
+ *    >>     print ...;     // Same as the previous line
+ *    >> }
+ * When `none' is used as name for an argument, that argument acts
+ * as a placeholder, and cannot be addressed within the function.
+ * The argument still exists, and there may be implementation-specific
+ * ways of accessing it, such as through use of inline assembly
+ */
+parse_arglist ::= (
+	[',' ~~ (
+		['local'] /* Ignore a prefix for `local' */
+		['?']     /* Optional-argument prefix. */
+		(
+			('...') |  /* Anonymous varargs argument (must be the last argument). */
+			(
+				(
+					('none') | /* Reserved/ignored/anonymous argument */
+					(_keyword) /* Argument name */
+					['?']      /* The `?' indicating an optional argument may also appear after the argument name.
+					            * However, when used, a `?' may only appear once per argument. */
+					('none') | /* Reserved/ignored/anonymous argument */
+				)
+				[(
+					/* Named varargs (must be the last argument) */
+					('...') |
+					/* Optional default value (Once these start appearing,
+					 * all following arguments must have one as well)
+					 * NOTE: This expression must evaluate to a constant expression.
+					 *       In order to better the odds of this happening, general
+					 *       purpose AST-based optimization is performed on this
+					 *       branch.
+					 *       Such optimization _must_ at least include basic constant
+					 *       propagation, such that `10+20' or `tuple { 1, 2, 3 }'
+					 *       can be used (those were just examples...). */
+					('=' ast_parse_brace)
+				)]
+			)
+		)
+	)...]
+);
+
+ast_parse_function_noargs(parse_semicollon) ::= (
+	(	/* Arrow-return function (same as `{ return <expr>; }') */
+		'->'
+		ast_parse_brace
+#if parse_semicollon
+		';'
+#endif
+	) |
+	('{' [ast_parse_statement...] '}')
+
+);
+
+ast_parse_function(parse_semicollon) ::= (
+	'(' [parse_arglist] ')'
+	ast_parse_function_noargs(parse_semicollon)
+);
+
+parse_module_name ::= (
+	(	/* Constant token strings/keywords separated by dots */
+		/* NOTE: A module name is generated by taking the formatted preprocessor-output
+		 *       of these tokens and adding them together after discarding intermitten
+		 *       whitespace tokens:
+		 *    >> foo = import foo.bar;
+		 *    >> foo = import "foo.bar";
+		 *    >> foo = import "foo"."bar";
+		 *    >> foo = import "foo" . "bar";
+		 *    >> foo = import "foo" .bar;
+		 *    >> ...
+		 *       You get the idea... (All of those are the same module name)
+		 */
+		(('.' | '..' | '...')...) ~~ ((<TOK_STRING>...) | _keyword)...
+	)...
+);
+
+ast_parse_operator_name(allow_class_operators) ::= (
+	(TOK_INT) | /* The implementation/extension-specific operator ID. */
+	('+')     | /* Either __pos__ or __add__, depending on context. */
+	('-')     | /* Either __neg__ or __sub__, depending on context. */
+	('*')     | /* __mul__ */
+	('/')     | /* __div__ */
+	('%')     | /* __mod__ */
+	('&')     | /* __and__ */
+	('|')     | /* __or__ */
+	('^')     | /* __xor__ */
+	('~')     | /* __inv__ */
+	('=')     | /* __assign__ */
+	('<<')    | /* __shl__ */
+	('>>')    | /* __shr__ */
+	('**')    | /* __pow__ */
+	('+=')    | /* __iadd__ */
+	('-=')    | /* __isub__ */
+	('*=')    | /* __imul__ */
+	('/=')    | /* __idiv__ */
+	('%=')    | /* __imod__ */
+	('&=')    | /* __iand__ */
+	('|=')    | /* __ior__ */
+	('^=')    | /* __ixor__ */
+	('<<=')   | /* __ishl__ */
+	('>>=')   | /* __ishr__ */
+	('**=')   | /* __ipow__ */
+	('++')    | /* __inc__ */
+	('--')    | /* __dec__ */
+	('repr')  | /* __repr__ */
+	('==')    | /* __eq__ */
+	('!=')    | /* __ne__ */
+	('<')     | /* __lo__ */
+	('<=')    | /* __le__ */
+	('>')     | /* __gr__ */
+	('>=')    | /* __ge__ */
+	('#')     | /* __size__ */
+	('copy')  | /* __copy__ */
+	('deepcopy') | /* __deepcopy__ */
+#if allow_class_operators
+	('super') | /* __superargs__ */
+#endif
+	('(' ')') | /* __call__ */
+	('(' ast_parse_operator_name(allow_class_operators) ')') | /* Recursion. */
+	(<TOK_STRING>...) | /* __str__ (<TOK_STRING> must be an empty string) */
+	('str')   | /* __str__ */
+	('[' ']') | /* Either __getitem__ or __setitem__ depending on context. */
+	('[' ':' ']') | /* Either __getrange__ or __setrange__ depending on context. */
+	('[' ']' '=') | /* __setitem__ */
+	('[' ':' ']' '=') | /* __setrange__ */
+	('del' '[' ']') | /* __delitem__ */
+	('del' '[' ':' ']') | /* __delrange__ */
+	('del' '.') | /* __delattr__ */
+	('.')     | /* Either __getattr__ or __setattr__ depending on context. */
+	('.' '=') | /* __setattr__ */
+	('hash')  | /* __hash__ */
+	('next')  | /* __iternext__ */
+	('iter')  | /* __iterself__ */
+#if allow_class_operators
+	('for')   | /* A special wrapper around `__iterself__' that adds indicate
+	             * to allow a yield-function to be assigned to this operator. */
+#endif
+	('move' '=') | /* __moveassign__ */
+	('contains') | /* __contains__ */
+	('destructor') | /* __destructor__ */
+	('constructor') | /* __constructor__ */
+	('bool')  | /* __bool__ */
+	('int')   | /* __int__ */
+	('float') | /* __float__ */
+	('enter') | /* __enter__ */
+	('leave') | /* __leave__ */
+
+	/* Internal keyword names.
+	 * Internal names include all of the __*__ names found in comments
+	 * above, as well as at least the following.
+	 * Operator name comparising is performed case-sensitive after
+	 * stripping leading/trailing underscores from both the given
+	 * keyword, as well as names found in the operator database:
+	 *   - `__read__' (File operator extension)
+	 *   - `__write__' (File operator extension)
+	 *   - `__seek__' (File operator extension)
+	 *   - `__sync__' (File operator extension)
+	 *   - `__trunc__' (File operator extension)
+	 *   - `__close__' (File operator extension)
+	 *   - `__pread__' (File operator extension)
+	 *   - `__pwrite__' (File operator extension)
+	 *   - `__getc__' (File operator extension)
+	 *   - `__ungetc__' (File operator extension)
+	 *   - `__putc__' (File operator extension)
+	 * The following aliases are provided for backwards-compatibility:
+	 *   - `__lt__' == `__lo__'
+	 *   - `__gt__' == `__gr__'
+	 *   - `__readnp__' == `__read__'
+	 *   - `__writenp__' == `__write__'
+	 *   - `__double__' == `__float__'
+	 *   - `__int32__' == `__int__'
+	 *   - `__int64__' == `__int__'
+	 */
+	(WITHOUT_UNDERSCORE(_keyword))
+);
+
+
+/* Loop (aka. generator) expressions.
+ * These may appear in any unary expression and are
+ * translated to lambda-function calls:
+ * >> local x = (for (local item: get_items()) if (item != "foo") "ITEM("+item+")");
+ * Same as:
+ * >> local x = []{
+ * >>     for (local item: get_items())
+ * >>         if (item != "foo")
+ * >>             yield "ITEM("+item+")";
+ * >> }();
+ */
+parse_generator_loop ::= (
+	/* Special if-statement interpretation to
+	 * allowing for conditional generator items. */
+	(DDI('if') '(' ast_parse_comma(false,true) ')'
+		parse_generator_loop
+		['else' parse_generator_loop]
+	) |
+	(DDI('do') parse_generator_loop 'while' '(' ast_parse_brace ')') |
+	(DDI('while') '(' ast_parse_comma(false,true) ')' parse_generator_loop) |
+	(DDI('for') '(' ast_parse_for_head ')' parse_generator_loop) |
+	(DDI('foreach') '('
+		ast_parse_comma(false,true) ':'
+		ast_parse_brace
+	')' parse_generator_loop) |
+	ast_parse_brace /* This expression is wrapped in a yield-branch */
+);
+ast_parse_loopexpr ::= (
+	/* The following expression is wrapped as follows:
+	 * AST_OPERATOR:OPERATOR_CALL(AST_FUNCTION(...),AST_CONSTEXPR:pack())
+	 * Additionally, the low-level underlying expression is wrapped with a yield-statement.
+	 */
+	parse_generator_loop
+);
+
+ast_parse_assert(need_parenthesis) ::= (
+	'assert' (
+		(
+			'(' ast_parse_brace /* Assert expression */
+#if !need_parenthesis
+			[',' ast_parse_brace] /* Assert message. */
+#endif
+			/* NOTE: When no message has been given,
+			 *       the assertion expression is found
+			 *       to be a 2-element tuple expression,
+			 *       its first element is used as expression,
+			 *       while the second is used as message.
+			 *       This is required to ensure that parenthesis
+			 *       can be used to surround only the expression,
+			 *       but also both it and the message:
+			 * >> // Parenthesis around both operands.
+			 * >> assert(foo == bar, "Error");
+			 * >> // Same as previous line, but only allowed in statements:
+			 * >> assert (foo == bar), "Error";
+			 */
+			')'
+		)
+#if !need_parenthesis
+		| (
+			/* Assert without parenthesis. */
+			ast_parse_brace /* Assert expression */
+			[',' ast_parse_brace] /* Assert message */
+		)
+#endif
+	)
+);
+
+ast_parse_import(allow_vardecl) ::= (
+	/* TODO */
+);
+
+parse_tags ::= ',' ~~ (
+	/* Raw documentation string.
+	 * NOTE: This expects the string token itself, rather than a constant
+	 *       expression evaluating to a string. The later can be done using
+	 *       the `doc' tag described below. */
+	(<TOK_STRING>...) |
+
+	/* Append each constant expression string found in `ast_parse_comma'
+	 * to the active documentation string, inserting new-lines inbetween.
+	 * When `doc(auto)' is encountered, an empty line is appended, ensuing
+	 * that the documentation string is non-empty, allowing the compiler
+	 * to auto-generate anything that is missing. */
+	(WITHOUT_UNDERSCORE('doc') '(' ['auto' | ast_parse_comma(false,false)] ')') |
+
+	/* Define the class/super symbols used by a function definition to
+	 * resolve access to member symbols and the `super' expression. */
+	(WITHOUT_UNDERSCORE('class') '(' ast_parse_comma(false,false) ')') |
+	(WITHOUT_UNDERSCORE('super') '(' ast_parse_comma(false,false) ')') |
+
+	/* Various flag-style tags (simply grep the named flag to learn its meaning). */
+	(WITHOUT_UNDERSCORE('copyable')) |    /* CODE_FCOPYABLE */
+	(WITHOUT_UNDERSCORE('thiscall')) |    /* CODE_FTHISCALL */
+	(WITHOUT_UNDERSCORE('assembly')) |    /* CODE_FASSEMBLY */
+	(WITHOUT_UNDERSCORE('nobase')) |      /* AST_TAG_FNOBASE */
+	(WITHOUT_UNDERSCORE('lenient')) |     /* CODE_FLENIENT */
+	(WITHOUT_UNDERSCORE('heapframe')) |   /* CODE_FHEAPFRAME */
+	(WITHOUT_UNDERSCORE('constructor')) | /* CODE_FCONSTRUCTOR */
+	(WITHOUT_UNDERSCORE('final')) |       /* TP_FFINAL */
+	(WITHOUT_UNDERSCORE('truncate')) |    /* TP_FTRUNCATE */
+	(WITHOUT_UNDERSCORE('interrupt')) |   /* TP_FINTERRUPT */
+	(WITHOUT_UNDERSCORE('private')) |     /* CLASS_MEMBER_FPRIVATE */
+	(WITHOUT_UNDERSCORE('readonly')) |    /* CLASS_MEMBER_FREADONLY */
+	(WITHOUT_UNDERSCORE('method')) |      /* CLASS_MEMBER_FMETHOD */
+	(WITHOUT_UNDERSCORE('likely')) |      /* AST_FCOND_LIKELY */
+	(WITHOUT_UNDERSCORE('unlikely')) |    /* AST_FCOND_UNLIKELY */
+
+	/* Any unkown tag is parsed as follows for forward compatibility */
+	(WITHOUT_UNDERSCORE(_tag_name) ['(' [ast_parse_comma(false,false)] ')' ])
+)...;
+
+parse_tags_block ::= [('@' parse_tags)...];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

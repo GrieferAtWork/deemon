@@ -1,0 +1,162 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import dict, Error from deemon;
+
+local codec_cache = dict();
+
+
+@"registercodec(string codec_name, callable decode_callback, callable encode_callback = none) -> none"
+@"Register a codec @codec_name to be implemented by @callback"
+@"@callback must be a function accepting the arguments:"
+@">function decode_callback(data,errors) {"
+@">    import bytes, string from deemon;"
+@">    assert data is bytes || data is string;"
+@">    assert errors is string;"
+@">    assert errors in [\"strict\",\"ignore\",\"replace\"];"
+@">    ..."
+@">    return string(...); /* or `return bytes(...)' */"
+@">}"
+@">function encode_callback(data,errors) {"
+@">    import bytes, string from deemon;"
+@">    assert data is bytes || data is string;"
+@">    assert errors is string;"
+@">    assert errors in [\"strict\",\"ignore\",\"replace\"];"
+@">    ..."
+@">    return string(...); /* or `return bytes(...)' */"
+@">}"
+global function registercodec(codec_name, decode_callback, encode_callback = none) {
+	codec_cache[codec_name] = (decode_callback,encode_callback);
+}
+
+@"deletecodec(string codec_name)"
+@"@throw KeyError No codec with a name of @codec_name has been registered"
+@"Delete a previously registered codec @codec_name"
+global function deletecodec(codec_name) {
+	del codec_cache[codec_name];
+}
+
+
+@"Load a builtin codec @codec_name"
+local function load_codec(codec_name) {
+	local decoder;
+	local encoder = none;
+	try {
+		local fixed_name = codec_name.replace("-","").lower();
+		local module_name = "._codecs.{}".format({ fixed_name });
+		decoder = import(module_name);
+		try {
+			/* String codecs can be implemented by one of 2 ways:
+			 *  #1: global codec_page = <string-of-256-characters>
+			 *  #2: global function decode(string s, string errors) -> string;
+			 * All builtin string codecs are defined as modules found in
+			 * the `_codecs' folder within the same directory as this file.
+			 * The filename of the codec module defines the name of the codec.
+			 */
+			local cpage = decoder.codec_page;
+			if (cpage !is string from deemon || #cpage != 256) {
+				throw Error.ValueError(
+					"Invalid `codec_page' exported by {}".
+					format({ module_name }));
+			}
+			/*  */
+			decoder = [](s,errors){
+				import file, string from deemon;
+				/* TODO: Add a builtin function to quickly translate
+				 *       strings in a manner such as this one. */
+				local writer = file.writer();
+				for (local ch: s)
+					print writer: cpage[ch.ord()],;
+				/* TODO: file.writer isn't unicode-aware, yet.
+				 *       Once it is, the decode() here can go away! */
+				return writer.string.decode("utf-8",errors);
+			};
+		} catch (Error.AttributeError) {
+			decoder = decoder.decode;
+			try encoder = decoder.encode;
+			catch (Error.AttributeError);
+		}
+	} catch (Error.FSError.FileNotFound) {
+		throw Error.ValueError("Unknown codec {}".format({ codec_name }));
+	}
+	return (decoder,encoder);
+}
+
+
+@"decode(string data, string codec_name, string errors = \"strict\") -> string"
+@"decode(string data, string codec_name, string errors = \"strict\") -> bytes"
+@"decode(bytes data, string codec_name, string errors = \"strict\") -> string"
+@"decode(bytes data, string codec_name, string errors = \"strict\") -> bytes"
+@"@throw ValueError The given @codec_name does not referr to a known codec"
+@"The library function backing the runtime function :string.decode and :bytes.decode"
+@"A set of default codecs is provided, which are loaded lazily when accessed"
+global function decode(data, codec_name, errors = "strict") {
+	import Error from deemon;
+	local decoder = codec_cache.get(codec_name);
+	if (decoder !is none) {
+		decoder = decoder[0];
+	} else {
+		local encoder;
+		decoder,encoder = load_codec(codec_name)...;
+		codec_cache[codec_name] = (decoder,encoder);
+	}
+	return decoder(data,errors);
+}
+
+@"encode(string data, string codec_name, string errors = \"strict\") -> string"
+@"encode(string data, string codec_name, string errors = \"strict\") -> bytes"
+@"encode(bytes data, string codec_name, string errors = \"strict\") -> string"
+@"encode(bytes data, string codec_name, string errors = \"strict\") -> bytes"
+@"@throw ValueError The given @codec_name does not referr to a known codec"
+@"The library function backing the runtime function :string.encode and :bytes.encode"
+global function encode(data, codec_name, errors = "strict") {
+	import Error from deemon;
+	local encoder = codec_cache.get(codec_name);
+	if (encoder !is none) {
+		encoder = encoder[1];
+	} else {
+		local decoder;
+		decoder,encoder = load_codec(codec_name)...;
+		codec_cache[codec_name] = (decoder,encoder);
+	}
+	if (encoder is none) {
+		throw Error.ValueError(
+			"Cannot encode data using {}".
+			format({ codec_name }));
+	}
+	return encoder(data,errors);
+}
+
+@"listcodecs() -> {string...}"
+@"Enumerate all known codecs"
+global function listcodecs() {
+	import dir, headof, joinpath, fileof from fs;
+	import hashset from deemon;
+	local keys = codec_cache.keys();
+	yield keys...;
+	for (local x: dir(joinpath(headof(__FILE__),"_codecs"))) {
+		if (!x.endswith(".dee")) continue;
+		x = fileof(x);
+		if (x !in keys)
+			yield x;
+	}
+}
+
+
+

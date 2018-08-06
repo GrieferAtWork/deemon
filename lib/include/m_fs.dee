@@ -1,0 +1,93 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import fs;
+
+global getcwd = fs.getcwd;
+global chdir = fs.chdir;
+global tmp = fs.gettmp;
+global tmpname = none; /* TODO */
+function home(...) -> fs.user(...).home();
+function listenv() -> [fs.environ...];
+function getenv(name) -> fs.environ[name];
+function delenv(name) -> fs.environ.operator del[](name);
+function setenv(name,value) -> fs.environ.operator [] (name,value);
+function user() -> fs.user().name();
+global host = fs.gethostname;
+global path = import .m_fs_path;
+function getatime(path) -> fs.stat(path).st_atime;
+function getmtime(path) -> fs.stat(path).st_mtime;
+function getctime(path) -> fs.stat(path).st_ctime;
+function gettimes(path) {
+	__stack local st = fs.stat(path);
+	return (st.st_atime,st.st_ctime,st.st_mtime);
+}
+function setatime(path,val) -> fs.chtime(val,none,none);
+function setmtime(path,val) -> fs.chtime(none,val,none);
+function setctime(path,val) -> fs.chtime(none,none,val);
+function settimes(path,at = none,ct = none,mt = none)
+	-> fs.chtime(at,mt,ct);
+global isabs = fs.isabs;
+global isfile = fs.stat.isreg;
+global isdir = fs.stat.isdir;
+global islink = fs.stat.islnk;
+function isdrive(path) {
+	path = fs.inctrail(fs.expand(path,"pc"));
+	return fs.driveof(path) == path;
+}
+global ismount = isdrive;
+global ishidden = fs.stat.ishidden;
+global isxfile = fs.stat.isexe;
+global ischrdev = fs.stat.ischr;
+global isblkdev = fs.stat.isblk;
+global isfifo = fs.stat.isfifo;
+global issocket = fs.stat.issock;
+global exists = fs.stat.exists;
+global remove = fs.remove;
+global unlink = fs.unlink;
+global rmfile = fs.unlink;
+global mkdir = fs.mkdir;
+global rmdir = fs.rmdir;
+global copy_ = fs.copyfile;
+global move_ = fs.rename;
+global link = fs.symlink;
+global readlink = fs.readlink;
+global uid_t = fs.user;
+global gid_t = fs.group;
+global chmod = fs.chmod;
+function getmod(path) -> fs.stat(path).st_mode;
+global chown = fs.chown;
+function getown(path) {
+	__stack local st = fs.stat(path);
+	return (st.st_uid,st.st_gid);
+}
+global uidof = fs.user;
+global gidof = fs.group;
+function uidname(uid) {
+	if (uid !is fs.user)
+		uid = fs.user(uid);
+	return uid.name();
+}
+function gidname(gid) {
+	if (gid !is fs.group)
+		gid = fs.group(gid);
+	return gid.name();
+}
+global dir = fs.dir;
+global query = fs.query;
+global env = fs.environ;

@@ -1,0 +1,74 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+// A test script that punishes the thread and gc api, to make sure
+// that everything works threadsafe and correctly
+// NOTE: Output of this script may vary, which is intended.
+
+#include <thread>
+#include <gc>
+
+// NOTE: If you remember this tut from v100, you'll notice the
+//       abscence of the 'dc' lock... That's because dicts are now threadsafe!
+// HINTS:
+//   - If all you read is 'none', get a slower pc
+//   - If all you read are dict reprs, get a faster pc
+
+
+gc_collector = thread("gc.collect",function {
+	print "AAA\n"*100;
+	// Background thread, that constantly collects garbage
+	while (1) {
+		// Manually check for interrupt, because 'mutex.acquire'
+		// will only check if the acquire would block (which it
+		// doesn't once the main thread starts waiting for us)
+		thread.check_interrupt();
+		local collected = gc::collect();
+		if (collected) print "GC: Collected",collected;
+		//thread.sleep(1);
+	}
+});
+
+gc_collector.start();
+
+// Function that returns a weak reference to a dangling dict
+// >> The dict can be destroyed by the gc thread at any time
+function get_weak_self_dict() {
+	d = dict();
+	d["foo"] = "bar";
+	d["bar"] = "foo";
+	d["this"] = d; // Dict contains itself (requires gc to destroy)
+	return weak(d);
+}
+
+w = get_weak_self_dict();
+for (i = 0; i < 20000; ++i) {
+	// Constantly lock the weakref to the dangling dict
+	// Once the gc thread has destroyed the dict, this fails.
+	// The painful part is making this not crash the runtime, which it doesn't.
+	local x = w.try_lock();
+	print repr(x);
+}
+
+// Interrupt + join the gc thread
+print "interrupt:",gc_collector.interrupt();
+gc_collector.join();
+
+

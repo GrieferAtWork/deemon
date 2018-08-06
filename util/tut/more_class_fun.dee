@@ -1,0 +1,83 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+// Just a small little example where I have more fun with classes
+
+class a_class {
+
+	private m_x;
+	private m_y;
+	private m_z;
+
+	dump() {
+		print m_x,m_y,m_z;
+	}
+
+	~this() {
+		print ">> Destructor:",__FUNCTION__,":",this;
+	}
+
+	this(x,y,z) {
+		m_x = x;
+		m_y = y;
+		m_z = z;
+	}
+	operator + (right) {
+		print this,"+",right;
+		return 42;
+	}
+
+	operator str() -> "a_class({},{},{})".format({ m_x, m_y, m_z });
+	
+	operator for() {
+		yield m_x;
+		yield m_y;
+		yield m_z;
+	}
+
+	class property MY_CONSTANT = { get() -> 42; }
+
+	my_getset = {
+		get()  { print "Getter:",this; return 42; }
+		del()  { print "Delete:",this; }
+		set(v) { print "Setter:",this,v; }
+	}
+
+};
+
+a = a_class(10,20,30);
+
+print "a_class.MY_CONSTANT =",a_class.MY_CONSTANT;
+
+for (x: a) print x;
+a.dump();
+
+print a+a;
+print a == a;
+
+print a.my_getset;
+del a.my_getset;
+a.my_getset = 10;
+
+print "before";
+del a;
+print "after";
+
+

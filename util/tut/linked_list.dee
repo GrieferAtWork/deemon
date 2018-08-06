@@ -1,0 +1,182 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* Implementation of a linked_list class in user code */
+
+import gc from deemon;
+import Error from deemon;
+
+local class LinkedListNode {
+	public m_prev;
+	public m_next;
+	public m_value;
+
+	this(prev,next,value)
+		: m_prev(prev)
+		, m_next(next)
+		, m_value(value)
+	{
+	}
+	//~this() {
+	//	print "Destroying node:",this.m_value,this;
+	//	print "    >>",m_prev;
+	//	print "    >>",m_next;
+	//}
+	operator str() -> "({},{},{})".format({ m_prev, m_value, m_next });
+	operator repr() -> "LinkedListNode({!r},{!r},{!r})".format({ m_prev, m_next, m_value });
+};
+
+
+@"Not actually meant to be used, a double-linked list"
+@"class that is implemented purely in user-code."
+@"It's pretty much written as efficiently as possible, but it really"
+@"isn't how a container should be implemented in deemon"
+@"It's actual purpose is for demonstration purposes, as well as to"
+@"prove that deemon's GC (which has been re-written fully since deemon 100),"
+@"is fully capable of dealing even with the utterly painful case which doubly-linked"
+@"lists represent when it comes to cleaning up after the user."
+@"Also: Don't forget that deemon's main method of destroying objects is reference counting,"
+@"so this isn't just any ordinary GC (and neither did I copy python, like I did for `int')"
+global class LinkedList: sequence from deemon {
+	private m_front = none;
+	private m_back = none;
+
+	@"Insert the given object @ob at the front"
+	push_front(ob) {
+		local new_node = LinkedListNode(none,m_front,ob);
+		if (m_back is none)
+			m_back = new_node;
+		m_front.m_prev = new_node;
+		m_front = new_node;
+	}
+
+	@"Insert the given object @ob at the back"
+	push_back(ob) {
+		local new_node = LinkedListNode(m_back,none,ob);
+		if (m_front is none)
+			m_front = new_node;
+		m_back.m_next = new_node;
+		m_back = new_node;
+	}
+
+	@"Pop one item from the front and return it"
+	pop_front() {
+		local pop_node = m_front;
+		if (pop_node is none)
+			throw Error.ValueError("Empty list");
+		if (pop_node === m_back)
+			m_back = none;
+		m_front = pop_node.m_next;
+		m_front.m_prev = none; /* unlink */
+		return pop_node.m_value;
+	}
+
+	@"Pop one item from the back and return it"
+	pop_back() {
+		local pop_node = m_back;
+		if (pop_node is none)
+			throw Error.ValueError("Empty list");
+		if (pop_node === this.m_front)
+			m_front = none;
+		m_back = pop_node.m_prev;
+		m_back.m_next = none; /* unlink */
+		return pop_node.m_value;
+	}
+
+	@"Iterator support"
+	operator for() {
+		local node_iter = m_front;
+		while (node_iter !is none) {
+			yield node_iter.m_value;
+			node_iter = node_iter.m_next;
+		}
+	}
+
+	@"Returns a representation of @this :LinkedList in abstract-sequence syntax"
+	operator repr() -> "{ "+", ".join(for (local x: this) repr x)+" }";
+
+	this() {
+	}
+
+	~this() {
+		/* Everything in here is optional.
+		 * Its just here to enforce the destruction
+		 * of all list items asap. (instead of having to wait for the gc) */
+
+		/* If the list contains itself, then the GC may choose to clear
+		 * some of our member table in order to resolve the reference loop.
+		 * For that reason, check if that happend and exit if that is the case. */
+		if (!bound(m_front))
+			return;
+		local node_iter = m_front;
+		while (node_iter !is none) {
+			local next_node = node_iter.m_next;
+			del node_iter.m_prev;
+			del node_iter.m_next;
+			node_iter = next_node;
+			/* when 'next_node' goes out of the scope, its value gets destroyed as well */
+		}
+	}
+
+};
+
+
+#ifdef __MAIN__
+l1 = LinkedList();
+
+l1.push_front(21);
+l1.push_front(42);
+l1.push_front(84);
+for (x: [0:20])
+	l1.push_back(copy x);
+print repr l1;
+
+l1.pop_front();
+print repr l1;
+l1.pop_front();
+print repr l1;
+l1.pop_back();
+print repr l1;
+
+/* At this point it doesn't even really matter.
+ * Adding the list to itself might seem like it makes stuff
+ * even more complex, but if you had any idea of how complex
+ * the dependency-tree already is without this, you'd understand
+ * why a GC that is able to deal with any kind of doubly-linked
+ * list, regardless of it containing itself or not, must be
+ * intrinsically smart enough to deal with anything. */
+l1.push_front(l1);
+print repr l1;
+
+/* The GC doesn't do anything here! */
+assert gc.collect() == 0;
+
+/* Delete our demo-list. */
+del l1;
+
+/* Now that the scarily-complex object-tree that is `l1' is no longer
+ * being reference from the outside, the GC is able to clean it up. */
+assert gc.collect() != 0;
+
+print "DONE";
+#endif
+
+
+

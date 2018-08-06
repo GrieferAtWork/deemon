@@ -1,0 +1,53 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+// In this one I try to explain how yield works with exceptions
+// and when used within a finally block
+
+function delayed_exception(e) {
+	yield "1st";
+	try {
+		throw e;
+	} finally {
+		yield "2nd";
+	}
+	yield "3rd";
+}
+
+
+print "Creating generator...";
+gen = delayed_exception("Such error! Much Mistake! Wow.");
+it = gen.__iterself__();
+
+print "Creating iterator...";
+print it.__iternext__(); // Yields "1st"
+print it.__iternext__(); // Yields "2nd"
+try {
+	print it.__iternext__(); // Throws the initial string (which was delayed until now)
+} catch (string ob) {
+	print "Caught:",ob;
+	throw;
+}
+
+
+
+
+
+

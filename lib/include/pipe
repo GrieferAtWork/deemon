@@ -1,0 +1,45 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#pragma once
+#include "__stddef.dee"
+
+class pipe {
+	@"A wrapper around :ipc:pipe.new for existing code that assumes "
+	 "that it is possible to use :file.readline for reading from pipes"
+	@"However changes in deemon's file implementation now require the "
+	 "use of a buffer due to a dependency on the ungetc operator, meaning "
+	 "that in order to read from a pipe now, the user must wrap it within "
+	 "a :file.buffer object"
+	class function new(size_hint...) {
+		import pipe from ipc;
+		import file from deemon;
+		local r,w = pipe.new(size_hint...)...;
+		/* Wrap inside a read-only, read-through buffer to emulate the
+		 * old behavior. readline() only requires an ungetc() implementation
+		 * that can support at least a single byte being returned, which
+		 * is the exact behavior of read/write-through buffers (aka. `none')
+		 * NOTE: Also set the `close' flag so that the buffer is allowed
+		 *       to close() the underlying pipe. */
+		return (file.buffer(r,"ro,c,none"),w);
+	}
+}
+
+
+
+

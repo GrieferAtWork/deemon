@@ -1,0 +1,156 @@
+
+
+a:link {
+	color: #a1ccf7;
+}
+a:visited {
+	color: #c2ccd6;
+}
+a:hover {
+	color: blue;
+}
+
+nav {
+	position: -webkit-sticky;
+	position: sticky;
+	top: 0;
+	box-shadow: 0 4px 4px 0 rgba(0,0,0,.3);
+	border-bottom: 2px solid #8c8593;
+	background-color: #d9d6db;
+	color: black;
+	padding: 0px;
+	margin: 0px;
+	font-size: 30px;
+	font-family: Courier New;
+}
+nav ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+}
+nav ul li {
+	float: left;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+nav ul li a {
+	display: block;
+	padding: 2px 8px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	text-decoration: none; /* Gets rid of link underlines */
+}
+nav ul li a:hover {
+	color: white;
+	background-color: deepskyblue;
+}
+
+.sep {
+	padding: 0 10px;
+}
+
+
+
+nav a:link {
+	color: black;
+}
+nav a:visited {
+	color: #4d4d4d;
+}
+nav a:hover {
+	color: blue;
+}
+
+code {
+	font-family: Courier New;
+}
+
+
+body {
+	background-color: #666666;
+	color: #e6e6e6;
+	margin: 0;
+}
+main {
+	width: 1000px;
+	margin: auto;
+	border: 1px solid black;
+	background-color: #4d4d4d;
+	padding: 8px;
+	box-shadow: 0 0 4px 4px rgba(0,0,0,.2);
+}
+var {
+	font-style: normal;
+	font-family: Courier New;
+}
+table {
+	background-color: #595959;
+	border-collapse: collapse;
+	border: 1px solid black;
+}
+table, th, td {
+	margin: 0px;
+	padding: 3px;
+}
+td {
+	vertical-align: top;
+	text-align: left;
+}
+tr:hover {
+	background-color: #666666;
+}
+th {
+	background-color: #333333;
+	color: white;
+}
+
+
+.category_title {
+	font-size: 30px;
+	margin: 20px 0 10px 0;
+	border-bottom: 10px solid #d9d6db;
+}
+.source {
+	font-family: Courier New;
+	font-size: 18px;
+	background-color: black;
+	color: white;
+	border: 2px solid green;
+	padding: 5px;
+}
+.inline_source {
+	font-family: Courier New;
+	color: white;
+	border: 0px;
+	padding: 0px;
+	display: inline;
+}
+
+
+.h_kwd {
+	color: rgb(255, 128, 0);
+	font-weight: bold;
+}
+.h_kwd2 {
+	color: rgb(0, 255, 255);
+	font-weight: bold;
+}
+.h_string {
+	color: rgb(0, 255, 0);
+}
+.h_comment {
+	color: rgb(0, 255, 64);
+}
+.h_number {
+	color: rgb(255, 128, 64);
+}
+.h_symbol {
+	color: rgb(255, 255, 0);
+}
+.doc_tag {
+}
+

@@ -1,0 +1,105 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#pragma once
+#include "__stddef.dee"
+
+/* !!! This header has been replaced by the `operators' module !!! */
+
+import __str__ = str from operators;
+import __repr__ = repr from operators;
+function __type__(x) -> type x;
+import __copy__ = copy from operators;
+import __move__ = copy from operators; /* Move-constructors have been removed. */
+import __copyassign__ = assign from operators; /* copyassign and assign have been merged. */
+import __moveassign__ = moveassign from operators;
+import __assign__ = assign from operators;
+function __not__(x) -> !x; /* The not-operator has been removed. */
+import __neg__ = neg from operators;
+import __pos__ = pos from operators;
+import __inv__ = inv from operators;
+/* function __ref__(x) -> &x; */
+/* function __deref__(x) -> *x; */
+import __inc__ = inc from operators;
+import __dec__ = dec from operators;
+function __incpost__(x) -> x++;
+function __decpost__(x) -> x--;
+import __lo__ = lo from operators;
+import __le__ = le from operators;
+import __eq__ = eq from operators;
+import __ne__ = ne from operators;
+import __gr__ = gr from operators;
+import __ge__ = ge from operators;
+import __add__ = add from operators;
+import __iadd__ = iadd from operators;
+import __sub__ = sub from operators;
+import __isub__ = isub from operators;
+import __mul__ = mul from operators;
+import __imul__ = imul from operators;
+import __div__ = div from operators;
+import __idiv__ = idiv from operators;
+import __mod__ = mod from operators;
+import __imod__ = imod from operators;
+import __shl__ = shl from operators;
+import __ishl__ = ishl from operators;
+import __shr__ = shr from operators;
+import __ishr__ = ishr from operators;
+import __and__ = and from operators;
+import __iand__ = iand from operators;
+import __or__ = or from operators;
+import __ior__ = ior from operators;
+import __xor__ = xor from operators;
+import __ixor__ = ixor from operators;
+import __pow__ = pow from operators;
+import __ipow__ = ipow from operators;
+import __call__ = call from operators;
+import __size__ = size from operators;
+import __getitem__ = getitem from operators;
+import __setitem__ = setitem from operators;
+import __delitem__ = delitem from operators;
+import __getrange__ = getrange from operators;
+import __setrange__ = setrange from operators;
+import __delrange__ = delrange from operators;
+function __is__(x,y) -> x is y;
+import __contains__ = contains from operators;
+import __getattr__ = getattr from operators;
+import __delattr__ = delattr from operators;
+import __setattr__ = setattr from operators;
+import __iterself__ = iter from operators;
+import __iternext__ = next from operators;
+function __hasattr__(x,y) {
+	try {
+		x.operator . (y);
+	} catch ((Error from deemon).AttributeError |
+	         (Error from deemon).RuntimeError.NotImplemented
+	) {
+		return false;
+	}
+	return true;
+}
+function __callv__(x,y...) -> x(y...);
+import __hash__ = hash from operators;
+import __bool__ = bool from operators;
+import __read__ = read from operators;
+import __write__ = write from operators;
+import __readnp__ = read from operators;
+import __writenp__ = write from operators;
+import __seek__ = seek from operators;
+function __flush__(x) -> x.sync();
+import __trunc__ = trunc from operators;
+import __close__ = close from operators;

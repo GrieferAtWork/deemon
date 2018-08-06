@@ -1,0 +1,902 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from doc;
+import * from net;
+import * from deemon;
+import deemon;
+import util;
+
+chdir from fs(headof from fs(__FILE__));
+
+global syntax_highlight = {
+	"pack" : "h_kwd",
+	"str" : "h_kwd",
+	"repr" : "h_kwd",
+	"copy" : "h_kwd",
+	"deepcopy" : "h_kwd",
+	"type" : "h_kwd",
+	"try" : "h_kwd",
+	"catch" : "h_kwd",
+	"throw" : "h_kwd",
+	"finally" : "h_kwd",
+	"in" : "h_kwd",
+	"is" : "h_kwd",
+	"as" : "h_kwd",
+	"from" : "h_kwd",
+	"import" : "h_kwd",
+	"print" : "h_kwd",
+	"del" : "h_kwd",
+	"return" : "h_kwd",
+	"yield" : "h_kwd",
+	"break" : "h_kwd",
+	"continue" : "h_kwd",
+	"goto" : "h_kwd",
+	"for" : "h_kwd",
+	"foreach" : "h_kwd",
+	"while" : "h_kwd",
+	"do" : "h_kwd",
+	"switch" : "h_kwd",
+	"case" : "h_kwd",
+	"default" : "h_kwd",
+	"assert" : "h_kwd",
+	"with" : "h_kwd",
+	"if" : "h_kwd",
+	"else" : "h_kwd",
+	"elif" : "h_kwd",
+	"true" : "h_kwd",
+	"false" : "h_kwd",
+	"none" : "h_kwd",
+	"this" : "h_kwd",
+	"super" : "h_kwd",
+	"bound" : "h_kwd",
+	"function" : "h_kwd2",
+	"global" : "h_kwd2",
+	"local" : "h_kwd2",
+	"static" : "h_kwd2",
+	"__nth" : "h_kwd2",
+	"__stack" : "h_kwd2",
+	"final" : "h_kwd2",
+	"class" : "h_kwd2",
+	"extends" : "h_kwd2",
+	"private" : "h_kwd2",
+	"public" : "h_kwd2",
+	"operator" : "h_kwd2",
+	"property" : "h_kwd2",
+	"member" : "h_kwd2",
+};
+
+
+local error_type_links = deemon.dict();
+{	/* Recursively detect all errors, as well as their names. */
+	function find_error_links(links,error_type,path) {
+		path = "{}/{}".format({ path, str error_type });
+		links[str error_type] = path;
+		print "Found error class:",str error_type,"=",path;
+		for (local attr: deemon.enumattr(error_type)) {
+			if (attr.decl != error_type) break;
+			if (attr.attrtype != type deemon.object) break;
+			if (!attr.isclass) continue;
+			find_error_links(links,error_type.operator . (attr.name),path);
+		}
+		return none;
+	}
+	find_error_links(error_type_links,deemon.Error,"/modules/deemon");
+}
+
+
+function write_page_head(fp,title) {
+	fp <<
+		"<!DOCTYPE HTLM>\r\n"
+		"<html>\r\n"
+		"<head>\r\n"
+			"<meta charset=\"UTF-8\">"
+			"<link rel=\"stylesheet\" href=\"/style.css\">"
+			"<title>{}</title>"
+		"</head>\r\n"
+		"<body>\r\n"
+		.format({
+		title
+	});
+}
+function write_page_tail(fp) {
+	fp << "</body>\r\n</html>\r\n";
+}
+
+function split_tokens(text) {
+	local length = #text;
+	local i = 0;
+	for (;;) {
+		if (i >= length) break;
+		local tok_start = i;
+		if (text[i] == "r" && i+1 < length && text[i+1] in ["\"","\'"]) {
+			++i;
+			text[i];
+			i = text.find(text[i],i+1);
+			if (i < 0) i = length;
+			else ++i;
+		} else if (text.issymstrt(i)) {
+			do ++i;
+			while (i < length && text.issymcont(i));
+			yield text[tok_start:i];
+			continue;
+		} else if (text.isdigit(i)) {
+			do ++i;
+			while (i < length && text.isalnum(i));
+			yield text[tok_start:i];
+			continue;
+		} else if (text[i] in ["\"","\'"]) {
+			local find_end = text[i];
+			do ++i;
+			while (i < length && (text[i] != find_end || text[i-1] == "\\"));
+			if (i < length) ++i;
+		} else if (text[i:i+2] == "/*") {
+			i = text.find("*/",i+2);
+			if (i < 0)
+				i = #text;
+			else
+				i += 2;
+		} else if (text[i:i+2] == "//") {
+			i = text.find("\n",i+2);
+			if (i < 0)
+				i = #text;
+			else
+				++i;
+		} else {
+			++i;
+		}
+		if (i != tok_start)
+			yield text[tok_start:i];
+	}
+}
+
+
+function format_sourcecode(fp,d,text) {
+	for (local tok: split_tokens(text)) {
+		if (!tok) continue;
+		local fmt = syntax_highlight.get(tok,none);
+		if (fmt is none) {
+			if (tok[0] in ["\"","\'"])
+				fmt = "h_string";
+			else if (tok.startswith("//") || tok.startswith("/*"))
+				fmt = "h_comment";
+			else if (tok.startswith("r\"") || tok.startswith("r\'"))
+				fmt = "h_rawstring";
+			else if (tok[0].isdigit())
+				fmt = "h_number";
+			else if (tok[0] in [
+				"=","<",">","?",":","+","-","*","/","%",".",",",";",
+				"#","(",")","[","]","{","}","~","@","&","|","^","!"]) {
+				fmt = "h_symbol";
+			}
+		}
+		tok = tok.replace("<","&lt;");
+		tok = tok.replace(">","&gt;");
+		tok = tok.replace(" ","&nbsp;");
+		tok = tok.replace("\n","<br>\r\n");
+		if (fmt !is none) {
+			fp << "<var class=\"" << fmt << "\">" << tok << "</var>";
+		} else {
+			fp << tok;
+		}
+	}
+}
+
+global doc_cache = deemon.dict();
+global global_target_cache = deemon.dict();
+global tooltip_cache = deemon.dict();
+global get_tooltip_text;
+
+function get_doc_path(path) {
+	path = path.lstrip("/");
+	local result = doc_cache.get(path);
+	if (result is none) {
+		result = Doc(path);
+		doc_cache[path] = result;
+	}
+	return result;
+}
+
+
+function do_find_global_target(module_node,name) {
+	if (":" in name) {
+		local target_module,target_path;
+		target_module,none,target_path = name.partition(":")...;
+		return get_doc_path("/{}/{}".format({ target_module, target_path }));
+	}
+	/* #1: Search the module of the type referring to the documentation string. */
+	local did_search_deemon = module_node.object === deemon;
+	try {
+		return module_node.recursive_child(name);
+	} catch (...) {
+	}
+	/* #2: Search all modules imported by that module, but don't do so recursively. */
+	for (local x: module_node.object.__imports__) {
+		try {
+			return get_doc_path("{}/{}".format({ x.__name__, name }));
+		} catch (...) {
+		}
+		if (x === deemon)
+			did_search_deemon = true;
+	}
+	/* #3: Search the builtin `deemon' module if it wasn't already searched. */
+	if (!did_search_deemon) {
+		try {
+			return get_doc_path("deemon/{}".format({ name }));
+		} catch (...) {
+		}
+	}
+	/* #4: Recursively search all builtin errors reachable from `Error from deemon' and `Signal from deemon' */
+	local result = error_type_links.get(name);
+	if (result !is none)
+		return get_doc_path(result[#"/modules":]);
+	/* #5: Try to open a module with the specified name */
+	return get_doc_path(name);
+}
+
+function find_global_target(d,name) {
+	local module_node = d.modulenode;
+	local current_module = module_node.object;
+	name = name.replace(".","/");
+	local subcache = global_target_cache.get(current_module.__name__);
+	local result;
+	if (subcache is none) {
+		subcache = deemon.dict();
+		global_target_cache[current_module.__name__] = subcache;
+	} else {
+		result = subcache.get(name);
+		if (result !is none)
+			return result;
+	}
+	//print "do_find_global_target({!r},{!r})".format({ module_node, name });
+	result = do_find_global_target(module_node,name);
+	subcache[name] = result;
+	return result;
+}
+
+
+@"(Doc d)->string"
+function get_tooltip(d) {
+	local result = tooltip_cache.get(d.path);
+	if (result !is none)
+		return result;
+	for (local none, text: d.doc) {
+		result = get_tooltip_text(d,text);
+		if (result !is none)
+			break;
+	}
+	if (result is none)
+		result = "";
+	tooltip_cache[d.path] = result;
+	return result;
+}
+
+
+function escape_html_test(text) {
+	return text
+		.replace("<","&lt;")
+		.replace(">","&gt;")
+		.replace("\n","<br />\r\n");
+}
+
+
+function print_with_target(fp,d,target) {
+	local tooltip = get_tooltip(target);
+	if (tooltip)
+		fp << "<div class=\"tooltip\">";
+	fp << "<a href=" << repr "/modules/{}".format({ target.path });
+	fp << "><i>" << target.name << "</i></a>";
+	if (tooltip) {
+		fp	<< "<span class=\"tooltiptext\">"
+			<< tooltip
+			<< "</span></div>";
+	}
+}
+
+function print_with_link(fp,d,name) {
+	local target;
+	try {
+		target = find_global_target(d,name);
+	} catch (...) {
+		fp << "<div class=\"broken_link\"><i>" << name << "</i></div>";
+		return;
+	}
+	print_with_target(fp,d,target);
+}
+function print_local_link(fp,d,name) {
+	/* `#find' */
+	local parent = d.istype ? d : d.parent;
+	local target;
+	try {
+		target = parent.child(name);
+	} catch (...) {
+		fp	<< "<div class=\"broken_link\"><i>" << name << "</i></div>";
+		return;
+	}
+	print_with_target(fp,d,target);
+}
+function print_argument(fp,d,name) {
+	/* TODO: `@foobar' */
+	fp << "<i>" << name << "</i>";
+}
+function print_type_expr(fp,d,expr) {
+	/* TODO: Argument/return type expressions. */
+#if 0
+	fp << expr;
+#else
+	local target;
+	try {
+		target = find_global_target(d,expr);
+	} catch (...) {
+		fp << expr;
+		return;
+	}
+	print_with_target(fp,d,target);
+#endif
+}
+
+
+class HTMLTextSplitter: TextSplitter {
+
+	@"(file fp,string text,int preferred_line_length,closure)->none"
+	print_text(fp,text,preferred_line_length,closure) {
+		fp << escape_html_test(text);
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_at(fp,content,preferred_line_length,closure) {
+		print_argument(fp,closure,content);
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_dollar(fp,content,preferred_line_length,closure) {
+#if 1
+		fp << "<div class=\"tooltip\"><code class=\"inline_source\">";
+		format_sourcecode(fp,closure,content);
+		fp <<
+			"</code><span class=\"autotooltiptext\">"
+			"<div class=\"source\">";
+		format_sourcecode(fp,closure,content);
+		fp << "</div></span></div>";
+#else
+		fp << "<code class=\"inline_source\">";
+		format_sourcecode(fp,closure,content);
+		fp << "</code>";
+#endif
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_collon(fp,content,preferred_line_length,closure) {
+		print_with_link(fp,closure,content);
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_hash(fp,content,preferred_line_length,closure) {
+		print_local_link(fp,closure,content);
+	}
+
+	@"(file fp,string target,string text,int preferred_line_length,closure)->none"
+	decode_link(fp,target,text,preferred_line_length,closure) {
+		fp << "<a href=" << repr target << ">";
+		print_text(fp,text,preferred_line_length,closure);
+		fp << "</a>";
+	}
+
+	@"(file fp,{{string...}...} table,int preferred_line_length,closure)->none"
+	decode_table(fp,table,preferred_line_length,closure) {
+		fp << "<table>";
+		local is_first_row = true;
+		for (local row: table) {
+			fp << "<tr>";
+			if (is_first_row) {
+				for (local cell: row) {
+					fp << "<th><b>" << cell << "</b></th>";
+				}
+				is_first_row = false;
+			} else {
+				for (local cell: row) {
+					fp << "<td>";
+					this.decode(cell,fp,preferred_line_length,closure);
+					fp << "</td>";
+				}
+			}
+			fp << "</tr>\r\n";
+		}
+		fp << "</table>";
+	}
+}
+
+class PlainTextSplitter: HTMLTextSplitter {
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_at(fp,content,preferred_line_length,closure) {
+		fp << content;
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_dollar(fp,content,preferred_line_length,closure) {
+		fp << content;
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_collon(fp,content,preferred_line_length,closure) {
+		fp << content;
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_hash(fp,content,preferred_line_length,closure) {
+		fp << content;
+	}
+
+	@"(file fp,string target,string text,int preferred_line_length,closure)->none"
+	decode_link(fp,target,text,preferred_line_length,closure) {
+		fp << text;
+	}
+
+	@"(file fp,{{string...}...} table,int preferred_line_length,closure)->none"
+	decode_table(fp,table,preferred_line_length,closure) {
+		for (local row: table) {
+			local is_first_cell = true;
+			for (local cell: table) {
+				if (!is_first_cell) {
+					fp << " ";
+				}
+				is_first_cell = false;
+				fp << cell;
+			}
+			fp << "\n";
+		}
+	}
+}
+
+local html_splitter = HTMLTextSplitter();
+local plain_splitter = PlainTextSplitter();
+
+
+function print_prototype_params(fp,d,proto) {
+	local params = proto.parameters;
+	if (params !is none) {
+		fp << "(";
+		local is_first = true;
+		for (local typ,name,defl: params) {
+			if (!is_first)
+				fp << ", ";
+			if (typ is none)
+				typ = "object";
+			print_type_expr(fp,d,typ);
+			fp << " ";
+			print_argument(fp,d,name);
+			if (defl !is none)
+				fp << " = " << defl;
+			is_first = false;
+		}
+		fp << ")";
+	}
+	fp << " -> ";
+	print_type_expr(fp,d,proto.returntype);
+}
+function print_prototype(fp,d,name,proto,function_link = none) {
+	if (function_link is none) {
+		fp << name;
+	} else {
+		fp << "<a href={!r}>".format({ function_link }) << name << "</a>";
+	}
+	if (!name[#name-1].issymcont())
+		fp << " ";
+	print_prototype_params(fp,d,proto);
+}
+
+function print_doctag(fp,d,name,content) {
+	fp << "<tr><td><var class=\"doc_tag\">";
+	switch (name) {
+
+	case "return":
+	case "returns":
+		fp << "Returns</var></td><td>";
+		html_splitter.decode(content,fp,none,d);
+		break;
+
+	case "arg":
+	case "param":
+		fp << "Argument</var></td><td>";
+		local type_end = 0;
+		while (type_end < #content &&
+		      (content.issymstrt(type_end) ||
+		       content[type_end] in [".",":"]))
+			++type_end;
+		local error_typename = content[:type_end].rstrip(":");
+		content = content[type_end:].lstrip();
+		print_argument(fp,d,error_typename);
+		fp << "</td><td>";
+		html_splitter.decode(content,fp,none,d);
+		break;
+
+	case "throw":
+	case "throws":
+		fp << "Throws</var></td><td>";
+		local type_end = 0;
+		while (type_end < #content &&
+		      (content.issymstrt(type_end) ||
+		       content[type_end] in [".",":"]))
+			++type_end;
+		local error_typename = content[:type_end].rstrip(":");
+		content = content[type_end:].lstrip();
+		print_with_link(fp,d,error_typename);
+		fp << "</td><td>";
+		html_splitter.decode(content,fp,none,d);
+		break;
+
+	default:
+		fp << "UNKNOWN_TAG(<code>" << repr name << "</code>)</var></td><td>";
+		html_splitter.decode(content,fp,none,d);
+		break;
+	}
+	fp << "</td></tr>\r\n";
+}
+
+function print_text(fp,d,text) {
+	assert text is Text;
+	local last_name = none;
+	local last_kind = none;
+	for (local name,kind,content: text) {
+		switch (name) {
+		case "TAG":
+			if (last_name != "TAG")
+				fp << "<table>";
+			else if (last_kind != kind) {
+				fp << "</table><table>";
+			}
+			print_doctag(fp,d,kind,content);
+			break;
+		case "SOURCE":
+			if (last_name == "TAG")
+				fp << "</table>";
+			fp << "<div class=\"source\">";
+			format_sourcecode(fp,d,content);
+			fp << "</div>\r\n";
+			break;
+		default:
+			if (last_name == "TAG")
+				fp << "</table>";
+			html_splitter.decode(content,fp,none,d);
+			break;
+		}
+		last_name = name;
+		last_kind = kind;
+	}
+	if (last_name == "TAG")
+		fp << "</table>";
+}
+
+@"(Doc d,Text t)->string"
+@"(Doc d,Text t)->none"
+function get_tooltip_text(d,text) {
+	for (local name,kind,content: text) {
+		if (name != "TEXT") continue;
+		file.writer tooltip_printer;
+		plain_splitter.decode(content,tooltip_printer,none,d);
+		local tooltip_string = tooltip_printer.string.strip();
+		local tooltip_line_end = tooltip_string.find("\n");
+		if (tooltip_line_end >= 0) {
+			if (tooltip_line_end > 128)
+				tooltip_line_end = 128;
+			return tooltip_string[:tooltip_line_end].rstrip() + "...";
+		} else {
+			if (#tooltip_string > 128)
+				tooltip_string = tooltip_string[:128] + "...";
+			return tooltip_string;
+		}
+	}
+	return none;
+}
+
+
+function get_module_page(fp,path) {
+	write_page_head(fp,path[#path-1]);
+	fp << "<nav><ul>"
+		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
+		"<li><a href=\"/modules\">modules</a></li>";
+	local link_path = "/modules";
+	for (local x: path) {
+		link_path = "{}/{}".format({ link_path, x });
+		local name_start = x.find(":");
+		fp << "<li><a href=\"{}\">&gt;{}</a></li>".format({
+			link_path,
+			name_start >= 0 ? x[name_start+1:] : x
+		});
+	}
+	fp << "</ul></nav><main>\r\n";
+	local d = get_doc_path("/".join(path));
+	fp << "<h2><b>" << d.kind << "</b>: " << d.name;
+	if (d.istype) {
+		local basetype = d.objectbase;
+		if (basetype !is none) {
+			local basenode = d.objectbasenode;
+			fp << " extends <b>";
+			if (basenode !is none) {
+				fp	<< "<a href=\"/modules/"
+					<< basenode.path
+					<< "\">"
+					<< basenode.name
+					<< "</a>";
+			} else {
+				fp	<< basetype.__name__;
+			}
+			fp << "</b>";
+		}
+	}
+	fp << "</h2><hr>\r\n<div>"
+	;
+	local pretty_name = d.name;
+	for (local prototypes, text: d.doc) {
+		for (local p: prototypes) {
+			fp << "<div><code>" << d.kind << " ";
+			print_prototype(fp,d,pretty_name,p);
+			fp << "</code></div>\r\n";
+		}
+		print_text(fp,d,text);
+	}
+	fp << "</div><hr>\r\n<div><table>";
+	local children = list(d);
+	children.sort();
+	for (local child: children) {
+		local child_link = "/modules/" + child.path;
+		for (local prototypes, text: child.doc) {
+			fp << "<tr><td>" << child.kind << "</td><td>";
+			local pretty_name = child.name;
+			local tooltip = get_tooltip_text(d,text);
+			for (local p: prototypes) {
+				fp << "<div><code>";
+				if (tooltip !is none)
+					fp << "<div class=\"tooltip\">";
+				fp << "<a href="
+					<< repr child_link
+					<< ">"
+					<< pretty_name
+					<< "</a>";
+				if (tooltip !is none) {
+					fp	<< "<span class=\"tooltiptext\">"
+						<< tooltip
+						<< "</span></div>";
+				}
+				if (!pretty_name[#pretty_name-1].issymcont())
+					fp << " ";
+				print_prototype_params(fp,child,p);
+				fp << "</code></div>\r\n";
+			}
+			fp << "</td></tr>";
+		}
+	}
+	fp << "</table></div></main>\r\n";
+	write_page_tail(fp);
+}
+
+function ls_modules_path(p,prefix) {
+	import fs;
+	try {
+		for (local f: fs.dir(p)) {
+			local path = fs.joinpath(p,f);
+			if (fs.stat.isdir(path)) {
+				/* Skip files found in /include-folders. */
+				if (f == "include")
+					continue;
+				local new_prefix = "{}{}.".format({ prefix, f });
+				for (local x: ls_modules_path(path,prefix))
+					yield new_prefix + x;
+				continue;
+			}
+			if (f.startswith(".") && f.startswith(".dec"))
+				yield f[1:#f-4];
+			else if (f.endswith(".so"))
+				yield f[:#f-3];
+			else if (f.endswith(".dll"))
+				yield f[:#f-4];
+			else if (f.endswith(".dee"))
+				yield f[:#f-4];
+		}
+	} catch (...) {
+	}
+}
+function ls_modules() {
+	yield "deemon";
+	for (local p: deemon.module.path) {
+		yield ls_modules_path(p,"")...;
+	}
+}
+
+function get_modules_list(fp) {
+	write_page_head(fp,"Modules");
+	fp << "<nav><ul>"
+		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
+		"<li><a href=\"/modules\">modules</a></li>"
+		"</ul></nav><main>\r\n";
+	for (local name: ls_modules()) {
+		fp	<< "<div class=\"module_item\"><a href=\"/modules/"
+			<< name
+			<< "\">"
+			<< name
+			<< "</a></div>";
+	}
+	fp << "</main>";
+	write_page_tail(fp);
+}
+
+function get_home_page(fp) {
+	write_page_head(fp,"Home");
+	fp << "<nav><ul>"
+		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
+		"<li><a href=\"/modules\">modules</a></li>"
+		"</ul></nav><main>\r\n"
+		"<h1>Deemon Documentation</h1>\r\n"
+		"<a href=\"/modules\">List of all modules</a><br />\r\n"
+		"</main>";
+	write_page_tail(fp);
+}
+
+
+function get_page(fp,path) {
+	path = path.strip("/").strip();
+	path = path.split("/");
+	if (path[0] == "modules") {
+		if (#path >= 2) {
+			return get_module_page(fp,path[1:]);
+		}
+		return get_modules_list(fp);
+	}
+	if (path[0] == "") {
+		return get_home_page(fp);
+	}
+	throw "Missing page: {!r}".format({ path });
+}
+
+
+function ClientThreadMain(con) {
+	print "New connection:",con;
+	try {
+		try {
+			try for (;;) {
+				local msg = con.recv();
+				if (!msg)
+					break; /* The other end disconnected gracefully */
+				local command = msg.splitlines()[0];
+				local fp = file.writer();
+				local protocol = command[#command-8:];
+				if (!command.startswith("GET") ||
+				     protocol !in ["HTTP/1.1","HTTP/1.0"]) {
+					print "Bad command:",repr command;
+					fp << protocol << " 400 Bad Request\r\n";
+				} else {
+					command = command.decode("UTF-8"); /* TODO: Remove this decode */
+					command = command[3:#command-8].strip();
+					local content;
+					if (command == "/style.css") {
+						content = deemon.file.open("style.css","r").read();
+					} else {
+						content = file.writer();
+						get_page(content,command);
+//						get_page(content,command.decode("UTF-8")); /* TODO: Enable this decode */
+						content = content.string;
+					}
+					fp << protocol << " 200 OK\r\n"
+						"Content-Length: {}\r\n"
+						"Content-Type: text/html; charset=UTF-8\r\n"
+						"\r\n".format({ #content });
+					fp << content;
+				}
+				con.send(fp.string.encode("UTF-8"));
+				if (protocol == "HTTP/1.0") {
+					/* Don't allow for connection re-use.
+					 * If the we didn't do this, the client wouldn't get the
+					 * memo on the entire document having been delivered. */
+					break;
+				}
+			} catch (e...) {
+				local err_out = file.writer();
+				local err_content = file.writer();
+				write_page_head(err_content,e);
+				err_content <<
+					"<main>\r\n"
+					"<h2>DOC Server crashed</h2><br />"
+					"<hr>";
+				if (e !is string) {
+					err_content
+						<< "<b>"
+						<< str(type e)
+						<< "</b>: ";
+				}
+				err_content
+					<< (e is string ? e : repr e).replace("\n","<br />\r\n")
+					<< "<hr>"
+					<< repr(deemon.traceback.current).replace("\n","<br />\r\n")
+					<< "<hr></main>\r\n";
+				write_page_tail(err_content);
+				err_content = err_content.string;
+				err_out <<
+					"HTTP/1.1 200 OK\r\n"
+					"Content-Length: {}\r\n"
+					"Content-Type: text/html; charset=iso-8859-1\r\n"
+					"\r\n".format({ #err_content });
+				err_out << err_content;
+				con.send(err_out.string);
+				throw;
+			}
+		} finally {
+			con.close();
+			print "Disconnected:",con;
+		}
+	} catch (e...) {
+		print "Client thread crashed:";
+		print repr e;
+		print repr deemon.traceback.current;
+	}
+
+}
+
+
+
+local s;
+try {
+	s = socket("INET6",none,none);
+	s.bind("[::]:8080");
+} catch (...) {
+	s = socket("INET",none,none);
+	s.bind("0.0.0.0:8080");
+	print "Cannot use IPv6 to run server (using IPv4)";
+}
+s.listen();
+
+print "Doc Server is up & running.";
+print "Open your Web Brower and navigate to:";
+print "127.0.0.1:8080";
+print;
+print;
+
+try {
+	for (;;) {
+		local con = s.accept();
+		local th = thread(ClientThreadMain,pack con);
+		th.start();
+		th.detach();
+	}
+} finally {
+	tooltip_cache.clear();
+	global_target_cache.clear();
+	doc_cache.clear();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,797 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEX_CTYPES_LIBCTYPES_C
+#define GUARD_DEX_CTYPES_LIBCTYPES_C 1
+#define _KOS_SOURCE 1
+
+/* WARNING: Using this module trips the unspoken warranty
+ *          of me being responsible when deemon crashes. */
+
+
+#include "libctypes.h"
+#include "c_api.h"
+
+#ifdef CONFIG_HAVE_CTYPES_SEH_GUARD
+#include <Windows.h>
+#endif
+
+#include <deemon/api.h>
+#include <deemon/dex.h>
+#include <deemon/arg.h>
+#include <deemon/error.h>
+#include <deemon/int.h>
+#include <deemon/objmethod.h>
+#include <hybrid/typecore.h>
+
+DECL_BEGIN
+
+#ifdef CONFIG_HAVE_CTYPES_SEH_GUARD
+INTERN int ctypes_seh_guard(struct _EXCEPTION_POINTERS *info) {
+ DWORD dwExcept;
+ if (!info) goto done;
+ dwExcept = info->ExceptionRecord->ExceptionCode;
+ switch (dwExcept) {
+
+ case EXCEPTION_ACCESS_VIOLATION:
+  /* Throw a segfault error and run the associated handler. */
+  DeeError_Throwf(&DeeError_SegFault,"Segmentation fault when %s %p",
+                  info->ExceptionRecord->ExceptionInformation[0] == 0 ? "reading from" :
+                  info->ExceptionRecord->ExceptionInformation[0] == 1 ? "writing to" : "executing",
+                  info->ExceptionRecord->ExceptionInformation[1]);
+  goto did_handle;
+
+ /* NOTE: This SEH guard is also used to protect foreign function calls,
+  *       so we also handle other exceptions such as divide-by-zero, etc. */
+ case EXCEPTION_DATATYPE_MISALIGNMENT:
+  DeeError_Throwf(&DeeError_SegFault,"Data misalignment");
+  goto did_handle;
+ case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+  DeeError_Throwf(&DeeError_IndexError,"Array bounds exceeded");
+  goto did_handle;
+ case EXCEPTION_FLT_DENORMAL_OPERAND:
+  DeeError_Throwf(&DeeError_Arithmetic,"Denormal floating point operand");
+  goto did_handle;
+ case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+  DeeError_Throwf(&DeeError_DivideByZero,"Floating point divide by zero");
+  goto did_handle;
+ case EXCEPTION_FLT_INEXACT_RESULT:
+  DeeError_Throwf(&DeeError_Arithmetic,"Inexact floating point results");
+  goto did_handle;
+ case EXCEPTION_FLT_INVALID_OPERATION:
+  DeeError_Throwf(&DeeError_Arithmetic,"Invalid floating point operation");
+  goto did_handle;
+ case EXCEPTION_FLT_OVERFLOW:
+  DeeError_Throwf(&DeeError_IntegerOverflow,"floating point overflow");
+  goto did_handle;
+ case EXCEPTION_FLT_STACK_CHECK:
+  DeeError_Throwf(&DeeError_StackOverflow,"floating point stack overflow");
+  goto did_handle;
+ case EXCEPTION_FLT_UNDERFLOW:
+  DeeError_Throwf(&DeeError_IntegerOverflow,"floating point underflow");
+  goto did_handle;
+ case EXCEPTION_INT_DIVIDE_BY_ZERO:
+  DeeError_Throwf(&DeeError_DivideByZero,"Integer divide by zero");
+  goto did_handle;
+ case EXCEPTION_INT_OVERFLOW:
+  DeeError_Throwf(&DeeError_IntegerOverflow,"Integer overflow");
+  goto did_handle;
+ case EXCEPTION_PRIV_INSTRUCTION:
+  DeeError_Throwf(&DeeError_IllegalInstruction,"Privileged instruction");
+  goto did_handle;
+ case EXCEPTION_ILLEGAL_INSTRUCTION:
+  DeeError_Throwf(&DeeError_IllegalInstruction,"Illegal instruction");
+  goto did_handle;
+ case EXCEPTION_STACK_OVERFLOW:
+  DeeError_Throwf(&DeeError_StackOverflow,"Stack overflow");
+  goto did_handle;
+ case EXCEPTION_INVALID_HANDLE:
+  DeeError_Throwf(&DeeError_HandleClosed,"Invalid handle");
+  goto did_handle;
+
+ default: break;
+ }
+done:
+ return EXCEPTION_CONTINUE_SEARCH;
+did_handle:
+ return EXCEPTION_EXECUTE_HANDLER;
+}
+#endif
+
+
+
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_sizeof(size_t argc, DeeObject **__restrict argv) {
+ DeeSTypeObject *type;
+ DeeObject *arg; size_t result;
+ if (DeeArg_Unpack(argc,argv,"o:sizeof",&arg))
+     goto err;
+ if (DeeStruct_Check(arg))
+  type = (DeeSTypeObject *)Dee_TYPE(arg);
+ else {
+  type = DeeSType_Get(arg);
+  if unlikely(!type) goto err;
+ }
+ if (DeeLValueType_Check(type))
+     type = ((DeeLValueTypeObject *)type)->lt_orig;
+ result = DeeSType_Sizeof(type);
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_alignof(size_t argc, DeeObject **__restrict argv) {
+ DeeSTypeObject *type;
+ DeeObject *arg; size_t result;
+ if (DeeArg_Unpack(argc,argv,"o:alignof",&arg))
+     goto err;
+ if (DeeStruct_Check(arg))
+  type = (DeeSTypeObject *)Dee_TYPE(arg);
+ else {
+  type = DeeSType_Get(arg);
+  if unlikely(!type) goto err;
+ }
+ if (DeeLValueType_Check(type))
+     type = ((DeeLValueTypeObject *)type)->lt_orig;
+ result = DeeSType_Alignof(type);
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_intfor(size_t argc, DeeObject **__restrict argv) {
+ DeeSTypeObject *result = NULL;
+ bool return_signed = true; size_t intsize;
+ if (DeeArg_Unpack(argc,argv,"o|b:intfor",&intsize,&return_signed))
+     goto err;
+ switch (intsize) {
+ case 1: result = return_signed ? &DeeCInt8_Type : &DeeCUInt8_Type; break;
+ case 2: result = return_signed ? &DeeCInt16_Type : &DeeCUInt16_Type; break;
+ case 4: result = return_signed ? &DeeCInt32_Type : &DeeCUInt32_Type; break;
+ case 8: result = return_signed ? &DeeCInt64_Type : &DeeCUInt64_Type; break;
+#ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
+ case CONFIG_CTYPES_SIZEOF_CHAR:
+  result = return_signed ? &DeeCSChar_Type : &DeeCUChar_Type;
+  break;
+#endif
+#ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
+ case CONFIG_CTYPES_SIZEOF_SHORT:
+  result = return_signed ? &DeeCShort_Type : &DeeCUShort_Type;
+  break;
+#endif
+#ifdef CONFIG_INT_NEEDS_OWN_TYPE
+ case CONFIG_CTYPES_SIZEOF_INT:
+  result = return_signed ? &DeeCInt_Type : &DeeCUInt_Type;
+  break;
+#endif
+#ifdef CONFIG_LONG_NEEDS_OWN_TYPE
+#if CONFIG_CTYPES_SIZEOF_LONG != CONFIG_CTYPES_SIZEOF_INT
+ case CONFIG_CTYPES_SIZEOF_LONG:
+  result = return_signed ? &DeeCLong_Type : &DeeCULong_Type;
+  break;
+#endif
+#endif
+#ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
+ case CONFIG_CTYPES_SIZEOF_LLONG:
+  result = return_signed ? &DeeCLLong_Type : &DeeCULLong_Type;
+  break;
+#endif
+ default: break;
+ }
+ if (result)
+     return_reference_((DeeObject *)result);
+ DeeError_Throwf(&DeeError_ValueError,
+                 "No C integer type with a width of `%Iu' bytes exists",
+                 intsize);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_bswap16(size_t argc, DeeObject **__restrict argv) {
+ uint16_t i;
+ if (DeeArg_Unpack(argc,argv,"I16u:bswap16",&i))
+     return NULL;
+ return int_newu16(DEE_BSWAP16(i));
+}
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_bswap32(size_t argc, DeeObject **__restrict argv) {
+ uint32_t i;
+ if (DeeArg_Unpack(argc,argv,"I32u:bswap32",&i))
+     return NULL;
+ return int_newu32(DEE_BSWAP32(i));
+}
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_bswap64(size_t argc, DeeObject **__restrict argv) {
+ uint64_t i;
+ if (DeeArg_Unpack(argc,argv,"I64u:bswap64",&i))
+     return NULL;
+ return int_newu64(DEE_BSWAP64(i));
+}
+
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_leswap16(size_t argc, DeeObject **__restrict argv) {
+ uint16_t i;
+ if (DeeArg_Unpack(argc,argv,"I16u:leswap16",&i))
+     return NULL;
+ return int_newu16(DEE_LESWAP16(i));
+}
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_leswap32(size_t argc, DeeObject **__restrict argv) {
+ uint32_t i;
+ if (DeeArg_Unpack(argc,argv,"I32u:leswap32",&i))
+     return NULL;
+ return int_newu32(DEE_LESWAP32(i));
+}
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_leswap64(size_t argc, DeeObject **__restrict argv) {
+ uint64_t i;
+ if (DeeArg_Unpack(argc,argv,"I64u:leswap64",&i))
+     return NULL;
+ return int_newu64(DEE_LESWAP64(i));
+}
+
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_beswap16(size_t argc, DeeObject **__restrict argv) {
+ uint16_t i;
+ if (DeeArg_Unpack(argc,argv,"I16u:beswap16",&i))
+     return NULL;
+ return int_newu16(DEE_BESWAP16(i));
+}
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_beswap32(size_t argc, DeeObject **__restrict argv) {
+ uint32_t i;
+ if (DeeArg_Unpack(argc,argv,"I32u:beswap32",&i))
+     return NULL;
+ return int_newu32(DEE_BESWAP32(i));
+}
+PRIVATE DREF DeeObject *DCALL
+f_ctypes_beswap64(size_t argc, DeeObject **__restrict argv) {
+ uint64_t i;
+ if (DeeArg_Unpack(argc,argv,"I64u:beswap64",&i))
+     return NULL;
+ return int_newu64(DEE_BESWAP64(i));
+}
+
+PRIVATE DEFINE_CMETHOD(ctypes_sizeof,f_ctypes_sizeof);
+PRIVATE DEFINE_CMETHOD(ctypes_alignof,f_ctypes_alignof);
+PRIVATE DEFINE_CMETHOD(ctypes_intfor,f_ctypes_intfor);
+
+PRIVATE DEFINE_CMETHOD(ctypes_bswap16,f_ctypes_bswap16);
+PRIVATE DEFINE_CMETHOD(ctypes_bswap32,f_ctypes_bswap32);
+PRIVATE DEFINE_CMETHOD(ctypes_bswap64,f_ctypes_bswap64);
+
+PRIVATE DEFINE_CMETHOD(ctypes_leswap16,f_ctypes_leswap16);
+PRIVATE DEFINE_CMETHOD(ctypes_leswap32,f_ctypes_leswap32);
+PRIVATE DEFINE_CMETHOD(ctypes_leswap64,f_ctypes_leswap64);
+PRIVATE DEFINE_CMETHOD(ctypes_beswap16,f_ctypes_beswap16);
+PRIVATE DEFINE_CMETHOD(ctypes_beswap32,f_ctypes_beswap32);
+PRIVATE DEFINE_CMETHOD(ctypes_beswap64,f_ctypes_beswap64);
+
+PRIVATE DEFINE_CMETHOD(ctypes_malloc,capi_malloc);
+PRIVATE DEFINE_CMETHOD(ctypes_free,capi_free);
+PRIVATE DEFINE_CMETHOD(ctypes_realloc,capi_realloc);
+PRIVATE DEFINE_CMETHOD(ctypes_calloc,capi_calloc);
+PRIVATE DEFINE_CMETHOD(ctypes_trymalloc,capi_trymalloc);
+PRIVATE DEFINE_CMETHOD(ctypes_tryrealloc,capi_tryrealloc);
+PRIVATE DEFINE_CMETHOD(ctypes_trycalloc,capi_trycalloc);
+
+PRIVATE DEFINE_CMETHOD(ctypes_memcpy,capi_memcpy);
+PRIVATE DEFINE_CMETHOD(ctypes_mempcpy,capi_mempcpy);
+PRIVATE DEFINE_CMETHOD(ctypes_memccpy,capi_memccpy);
+PRIVATE DEFINE_CMETHOD(ctypes_memset,capi_memset);
+PRIVATE DEFINE_CMETHOD(ctypes_mempset,capi_mempset);
+PRIVATE DEFINE_CMETHOD(ctypes_memmove,capi_memmove);
+PRIVATE DEFINE_CMETHOD(ctypes_mempmove,capi_mempmove);
+PRIVATE DEFINE_CMETHOD(ctypes_memchr,capi_memchr);
+PRIVATE DEFINE_CMETHOD(ctypes_memlen,capi_memlen);
+PRIVATE DEFINE_CMETHOD(ctypes_memend,capi_memend);
+PRIVATE DEFINE_CMETHOD(ctypes_memrchr,capi_memrchr);
+PRIVATE DEFINE_CMETHOD(ctypes_memrlen,capi_memrlen);
+PRIVATE DEFINE_CMETHOD(ctypes_memrend,capi_memrend);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemchr,capi_rawmemchr);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemlen,capi_rawmemlen);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemrchr,capi_rawmemrchr);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemrlen,capi_rawmemrlen);
+PRIVATE DEFINE_CMETHOD(ctypes_memxchr,capi_memxchr);
+PRIVATE DEFINE_CMETHOD(ctypes_memxlen,capi_memxlen);
+PRIVATE DEFINE_CMETHOD(ctypes_memxend,capi_memxend);
+PRIVATE DEFINE_CMETHOD(ctypes_memxrchr,capi_memxrchr);
+PRIVATE DEFINE_CMETHOD(ctypes_memxrlen,capi_memxrlen);
+PRIVATE DEFINE_CMETHOD(ctypes_memxrend,capi_memxrend);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemxchr,capi_rawmemxchr);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemxlen,capi_rawmemxlen);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemxrchr,capi_rawmemxrchr);
+PRIVATE DEFINE_CMETHOD(ctypes_rawmemxrlen,capi_rawmemxrlen);
+PRIVATE DEFINE_CMETHOD(ctypes_memcmp,capi_memcmp);
+PRIVATE DEFINE_CMETHOD(ctypes_memcasecmp,capi_memcasecmp);
+PRIVATE DEFINE_CMETHOD(ctypes_memmem,capi_memmem);
+PRIVATE DEFINE_CMETHOD(ctypes_memcasemem,capi_memcasemem);
+PRIVATE DEFINE_CMETHOD(ctypes_memrmem,capi_memrmem);
+PRIVATE DEFINE_CMETHOD(ctypes_memcasermem,capi_memcasermem);
+PRIVATE DEFINE_CMETHOD(ctypes_memrev,capi_memrev);
+
+#if 0
+PRIVATE DEFINE_CMETHOD(ctypes_strlen,capi_strlen);
+PRIVATE DEFINE_CMETHOD(ctypes_strend,capi_strend);
+PRIVATE DEFINE_CMETHOD(ctypes_strnlen,capi_strnlen);
+PRIVATE DEFINE_CMETHOD(ctypes_strnend,capi_strnend);
+PRIVATE DEFINE_CMETHOD(ctypes_strchr,capi_strchr);
+PRIVATE DEFINE_CMETHOD(ctypes_strrchr,capi_strrchr);
+PRIVATE DEFINE_CMETHOD(ctypes_strnchr,capi_strnchr);
+PRIVATE DEFINE_CMETHOD(ctypes_strnrchr,capi_strnrchr);
+PRIVATE DEFINE_CMETHOD(ctypes_stroff,capi_stroff);
+PRIVATE DEFINE_CMETHOD(ctypes_strroff,capi_strroff);
+PRIVATE DEFINE_CMETHOD(ctypes_strnoff,capi_strnoff);
+PRIVATE DEFINE_CMETHOD(ctypes_strnroff,capi_strnroff);
+PRIVATE DEFINE_CMETHOD(ctypes_strchrnul,capi_strchrnul);
+PRIVATE DEFINE_CMETHOD(ctypes_strrchrnul,capi_strrchrnul);
+PRIVATE DEFINE_CMETHOD(ctypes_strnchrnul,capi_strnchrnul);
+PRIVATE DEFINE_CMETHOD(ctypes_strnrchrnul,capi_strnrchrnul);
+PRIVATE DEFINE_CMETHOD(ctypes_strcmp,capi_strcmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strncmp,capi_strncmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strcasecmp,capi_strcasecmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strncasecmp,capi_strncasecmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strcpy,capi_strcpy);
+PRIVATE DEFINE_CMETHOD(ctypes_strcat,capi_strcat);
+PRIVATE DEFINE_CMETHOD(ctypes_strncpy,capi_strncpy);
+PRIVATE DEFINE_CMETHOD(ctypes_strncat,capi_strncat);
+PRIVATE DEFINE_CMETHOD(ctypes_stpcpy,capi_stpcpy);
+PRIVATE DEFINE_CMETHOD(ctypes_stpncpy,capi_stpncpy);
+PRIVATE DEFINE_CMETHOD(ctypes_strstr,capi_strstr);
+PRIVATE DEFINE_CMETHOD(ctypes_strcasestr,capi_strcasestr);
+PRIVATE DEFINE_CMETHOD(ctypes_strverscmp,capi_strverscmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strsep,capi_strsep);
+PRIVATE DEFINE_CMETHOD(ctypes_strtok,capi_strtok);
+PRIVATE DEFINE_CMETHOD(ctypes_strtok_r,capi_strtok_r);
+PRIVATE DEFINE_CMETHOD(ctypes_index,capi_index);
+PRIVATE DEFINE_CMETHOD(ctypes_rindex,capi_rindex);
+PRIVATE DEFINE_CMETHOD(ctypes_strspn,capi_strspn);
+PRIVATE DEFINE_CMETHOD(ctypes_strcspn,capi_strcspn);
+PRIVATE DEFINE_CMETHOD(ctypes_strpbrk,capi_strpbrk);
+PRIVATE DEFINE_CMETHOD(ctypes_strcoll,capi_strcoll);
+PRIVATE DEFINE_CMETHOD(ctypes_strncoll,capi_strncoll);
+PRIVATE DEFINE_CMETHOD(ctypes_strcasecoll,capi_strcasecoll);
+PRIVATE DEFINE_CMETHOD(ctypes_strncasecoll,capi_strncasecoll);
+PRIVATE DEFINE_CMETHOD(ctypes_strxfrm,capi_strxfrm);
+PRIVATE DEFINE_CMETHOD(ctypes_strrev,capi_strrev);
+PRIVATE DEFINE_CMETHOD(ctypes_strnrev,capi_strnrev);
+PRIVATE DEFINE_CMETHOD(ctypes_strlwr,capi_strlwr);
+PRIVATE DEFINE_CMETHOD(ctypes_strupr,capi_strupr);
+PRIVATE DEFINE_CMETHOD(ctypes_strset,capi_strset);
+PRIVATE DEFINE_CMETHOD(ctypes_strnset,capi_strnset);
+PRIVATE DEFINE_CMETHOD(ctypes_strfry,capi_strfry);
+#endif
+
+PRIVATE struct dex_symbol symbols[] = {
+    /* Export the underlying type-system used by ctypes. */
+    { "structured_type", (DeeObject *)&DeeSType_Type },
+    { "pointer_type", (DeeObject *)&DeePointerType_Type },
+    { "lvalue_type", (DeeObject *)&DeeLValueType_Type },
+    { "array_type", (DeeObject *)&DeeArrayType_Type },
+    { "struct_type", (DeeObject *)&DeeStructType_Type },
+    { "function_type", (DeeObject *)&DeeCFunctionType_Type },
+    { "structured", (DeeObject *)&DeeStructured_Type },
+    { "pointer", (DeeObject *)&DeePointer_Type },
+    { "lvalue", (DeeObject *)&DeeLValue_Type },
+    { "array", (DeeObject *)&DeeArray_Type },
+    { "struct", (DeeObject *)&DeeStruct_Type },
+    { "function", (DeeObject *)&DeeCFunction_Type },
+
+    /* A wrapper around the native shared-library loader. */
+    { "shlib", (DeeObject *)&DeeShlib_Type },
+
+    /* Export all the C-types. */
+    { "void", (DeeObject *)&DeeCVoid_Type },
+    { "char", (DeeObject *)&DeeCChar_Type },
+    { "wchar_t", (DeeObject *)&DeeCWChar_Type },
+    { "char16_t", (DeeObject *)&DeeCChar16_Type },
+    { "char32_t", (DeeObject *)&DeeCChar32_Type },
+    { "bool", (DeeObject *)&DeeCBool_Type },
+    { "int8_t", (DeeObject *)&DeeCInt8_Type },
+    { "int16_t", (DeeObject *)&DeeCInt16_Type },
+    { "int32_t", (DeeObject *)&DeeCInt32_Type },
+    { "int64_t", (DeeObject *)&DeeCInt64_Type },
+    { "uint8_t", (DeeObject *)&DeeCUInt8_Type },
+    { "uint16_t", (DeeObject *)&DeeCUInt16_Type },
+    { "uint32_t", (DeeObject *)&DeeCUInt32_Type },
+    { "uint64_t", (DeeObject *)&DeeCUInt64_Type },
+    { "float", (DeeObject *)&DeeCFloat_Type },
+    { "double", (DeeObject *)&DeeCDouble_Type },
+    { "ldouble", (DeeObject *)&DeeCLDouble_Type },
+    { "schar", (DeeObject *)&DeeCSChar_Type },
+    { "uchar", (DeeObject *)&DeeCUChar_Type },
+    { "short", (DeeObject *)&DeeCShort_Type },
+    { "ushort", (DeeObject *)&DeeCUShort_Type },
+    { "int", (DeeObject *)&DeeCInt_Type },
+    { "uint", (DeeObject *)&DeeCUInt_Type },
+    { "long", (DeeObject *)&DeeCLong_Type },
+    { "ulong", (DeeObject *)&DeeCULong_Type },
+    { "llong", (DeeObject *)&DeeCLLong_Type },
+    { "ullong", (DeeObject *)&DeeCULLong_Type },
+
+    /* Other, platform-specific C-types. */
+    { "size_t", (DeeObject *)&CUINT_SIZED(__SIZEOF_SIZE_T__) },
+    { "ssize_t", (DeeObject *)&CINT_SIZED(__SIZEOF_SIZE_T__) },
+    { "ptrdiff_t", (DeeObject *)&CUINT_SIZED(__SIZEOF_PTRDIFF_T__) },
+    { "intptr_t", (DeeObject *)&CINT_SIZED(__SIZEOF_POINTER__) },
+    { "uintptr_t", (DeeObject *)&CUINT_SIZED(__SIZEOF_POINTER__) },
+
+    /* Export some helper functions */
+    { "sizeof", (DeeObject *)&ctypes_sizeof, MODSYM_FNORMAL,
+      DOC("(structured_type tp)->deemon:int\n"
+          "(structured ob)->deemon:int\n"
+          "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
+          "Returns the size of a given structured type or object in bytes") },
+    { "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FNORMAL,
+      DOC("(structured_type tp)->deemon:int\n"
+          "(structured ob)->deemon:int\n"
+          "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
+          "Returns the alignment of a given structured type or object in bytes") },
+    { "intfor", (DeeObject *)&ctypes_intfor, MODSYM_FNORMAL,
+      DOC("(deemon:int size,bool signed = true)->structured_type\n"
+          "@throw ValueError No integer matching the requirements of @size is supported") },
+
+    { "bswap16", (DeeObject *)&ctypes_bswap16, MODSYM_FNORMAL,
+      DOC("(uint16_t x)->uint16_t\n"
+          "Return @x with reversed endian") },
+    { "bswap32", (DeeObject *)&ctypes_bswap32, MODSYM_FNORMAL,
+      DOC("(uint32_t x)->uint32_t\n"
+          "Return @x with reversed endian") },
+    { "bswap64", (DeeObject *)&ctypes_bswap64, MODSYM_FNORMAL,
+      DOC("(uint64_t x)->uint64_t\n"
+          "Return @x with reversed endian") },
+
+    { "leswap16", (DeeObject *)&ctypes_leswap16, MODSYM_FNORMAL,
+      DOC("(uint16_t x)->uint16_t\n"
+          "Return a little-endian @x in host-endian, or a host-endian @x in little-endian") },
+    { "leswap32", (DeeObject *)&ctypes_leswap32, MODSYM_FNORMAL,
+      DOC("(uint32_t x)->uint32_t\n"
+          "Return a little-endian @x in host-endian, or a host-endian @x in little-endian") },
+    { "leswap64", (DeeObject *)&ctypes_leswap64, MODSYM_FNORMAL,
+      DOC("(uint64_t x)->uint64_t\n"
+          "Return a little-endian @x in host-endian, or a host-endian @x in little-endian") },
+    { "beswap16", (DeeObject *)&ctypes_beswap16, MODSYM_FNORMAL,
+      DOC("(uint16_t x)->uint16_t\n"
+          "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
+    { "beswap32", (DeeObject *)&ctypes_beswap32, MODSYM_FNORMAL,
+      DOC("(uint32_t x)->uint32_t\n"
+          "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
+    { "beswap64", (DeeObject *)&ctypes_beswap64, MODSYM_FNORMAL,
+      DOC("(uint64_t x)->uint64_t\n"
+          "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
+
+    /* <string.h> & <stdlib.h> - style ctypes functions */
+    { "malloc", (DeeObject *)&ctypes_malloc, MODSYM_FNORMAL,
+      DOC("(deemon:int size)->void.ptr\n"
+          "@throw NoMemory Insufficient memory to allocate @size bytes\n"
+          "Allocate a raw buffer of @size bytes from a heap and return a "
+          "pointer to its base\n"
+          "Passing a value of $0 for @size will allocate a minimal-sized heap-block") },
+    { "calloc", (DeeObject *)&ctypes_calloc, MODSYM_FNORMAL,
+      DOC("(deemon:int size)->void.ptr\n"
+          "(deemon:int count,deemon:int size)->void.ptr\n"
+          "@throw NoMemory Insufficient memory to allocate ${count * size} bytes\n"
+          "@throw IntegerOverflow The given @count and @size overflow :size_t when multiplied\n"
+          "Same as :malloc, but rather than leaving the newly allocated memory uninitialized, "
+          "fill it with all zeroes, the same way ${memset(malloc(size),0,size)} would\n"
+          "If the product of @count and @size equals ${0}, a minimal-sized heap-block is allocated, "
+          "however the caller must still assume that the memory range they are allowed to access "
+          "is non-existant") },
+    { "realloc", (DeeObject *)&ctypes_realloc, MODSYM_FNORMAL,
+      DOC("(void.ptr ptr,deemon:int size)->void.ptr\n"
+          "@throw NoMemory Insufficient memory to allocate @size bytes\n"
+          "Given a heap-pointer previously allocated using either :malloc, :calloc or "
+          "a prior call to :realloc, change its size to @size, either releasing then "
+          "unused trialing memory resulting from the difference between its old size "
+          "and a smaller, newer size, or try to extend it if its new size is larger "
+          "than its own, in which case a collision with another block located at the "
+          "location where the extension attempt was made will result in an entirely "
+          "new block being allocated, with all pre-existing data being copied inside.\n"
+          "In all cases, a pointer to the new heap block is returned, which may be "
+          "identical to the old block\n"
+          "If a NULL-pointer is passed for @ptr, the function behaves the same as "
+          "a call to :malloc with the given @{size}. Alternatively, if a valid heap "
+          "pointer is passed for @ptr, and @size is passed as ${0}, the heap block is "
+          "truncated to a minimal size and a heap block is returned that is semantically "
+          "equivalent to one returned by ${malloc(0)}\n"
+          "In the event of failure, the pre-existing heap-block passed for @ptr will remain unchanged") },
+    { "free", (DeeObject *)&ctypes_free, MODSYM_FNORMAL,
+      DOC("(void.ptr ptr)->none\n"
+          "Release a previously allocated heap-block returned by one of :malloc, :calloc or :realloc\n"
+          "If a NULL-pointer is passed for @ptr, this function has no effect and returns immediately") },
+    { "trymalloc", (DeeObject *)&ctypes_trymalloc, MODSYM_FNORMAL,
+      DOC("(deemon:int size)->void.ptr\n"
+          "Same as :malloc, but return a NULL-pointer if allocation isn't "
+          "possible due to lack of memory, rather than throwing a :NoMemory error") },
+    { "trycalloc", (DeeObject *)&ctypes_trycalloc, MODSYM_FNORMAL,
+      DOC("(deemon:int size)->void.ptr\n"
+          "(deemon:int count,deemon:int size)->void.ptr\n"
+          "Same as :calloc, but return a NULL-pointer if allocation isn't "
+          "possible due to lack of memory, rather than throwing a :NoMemory error") },
+    { "tryrealloc", (DeeObject *)&ctypes_tryrealloc, MODSYM_FNORMAL,
+      DOC("(void.ptr ptr,deemon:int size)->void.ptr\n"
+          "Same as :realloc, but return a NULL-pointer if allocation isn't "
+          "possible due to lack of memory, rather than throwing a :NoMemory error\n"
+          "In this event, the pre-existing heap-block passed for @ptr is not freed") },
+
+
+      
+    { "memcpy",      (DeeObject *)&ctypes_memcpy, MODSYM_FNORMAL,
+      DOC("(void.ptr dst,void.ptr src,deemon:int size)->void.ptr\n"
+          "@return Always re-returns @dst as a :void.ptr\n"
+          "Copies @n bytes of memory from @src to @dst\n"
+          "Note that the source and destination ranges may not overlap") },
+    { "mempcpy",     (DeeObject *)&ctypes_mempcpy, MODSYM_FNORMAL,
+      DOC("(void.ptr dst,void.ptr src,deemon:int size)->void.ptr\n"
+          "@return Always re-returns ${dst + size} as a :void.ptr\n"
+          "Same as :memcpy, but returns ${dst + size}") },
+    { "memccpy",     (DeeObject *)&ctypes_memccpy, MODSYM_FNORMAL,
+      DOC("(void.ptr dst,void.ptr src,deemon:int needle,deemon:int size)->void.ptr\n"
+          "@return The last modified by in @dst\n"
+          "Same as :memcpy, but stop after a byte equal to @needle is encountered in @src") },
+    { "memset",      (DeeObject *)&ctypes_memset, MODSYM_FNORMAL,
+      DOC("(void.ptr dst,deemon:int byte,deemon:int size)->void.ptr\n"
+          "@return Always re-returns @dst as a :void.ptr\n"
+          "Set every byte in the range @dst+@size to equal @byte") },
+    { "mempset",     (DeeObject *)&ctypes_mempset, MODSYM_FNORMAL,
+      DOC("(void.ptr dst,deemon:int byte,deemon:int size)->void.ptr\n"
+          "@return Always re-returns ${dst + size} as a :void.ptr\n"
+          "Same as :memset, but returns ${dst + size}") },
+    { "memmove",     (DeeObject *)&ctypes_memmove, MODSYM_FNORMAL,
+      DOC("(void.ptr dst,void.ptr src,deemon:int size)->void.ptr\n"
+          "@return Always re-returns @dst as a :void.ptr\n"
+          "Same as :memcpy, but the source and destination ranges are allowed to overlap") },
+    { "mempmove",     (DeeObject *)&ctypes_memmove, MODSYM_FNORMAL,
+      DOC("(void.ptr dst,void.ptr src,deemon:int size)->void.ptr\n"
+          "@return Always re-returns ${dst + size} as a :void.ptr\n"
+          "Same as :memcpy, but returns ${dst + size}") },
+    { "memchr",      (DeeObject *)&ctypes_memchr, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->void.ptr\n"
+          "Return a pointer to the first byte in the specified @haystack+@haystack_size "
+          "that equals @needle, or return a NULL-pointer if not found") },
+    { "memlen",      (DeeObject *)&ctypes_memlen, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->deemon:int\n"
+          "Return the offset from @haystack of the first byte equal to @needle, or @haystack_size if now found") },
+    { "memend",      (DeeObject *)&ctypes_memend, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->void.ptr\n"
+          "Return a pointer to the first byte in @haystack that is equal to @needle, or @haystack+@haystack_size if now found") },
+    { "memrchr",     (DeeObject *)&ctypes_memrchr, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->void.ptr\n"
+          "Same as :memchr, but if @needle appears multiple times, return a pointer to the last instance") },
+    { "memrlen",     (DeeObject *)&ctypes_memrlen, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->deemon:int\n"
+          "Same as :memlen, but if @needle appears multiple times, return the offset of the last instance") },
+    { "memrend",     (DeeObject *)&ctypes_memrend, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->void.ptr\n"
+          "Same as :memend, but if @needle appears multiple times, return a pointer to the last instance\n"
+          "If @needle doesn't appear at all, return a pointer to @haystack") },
+    { "rawmemchr",   (DeeObject *)&ctypes_rawmemchr, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle)->void.ptr\n"
+          "Search for the byte equal to @needle, starting at @haystack and only "
+          "stopping once one is found, or unmapped memory is reached and "
+          "the host provides support for a MMU") },
+    { "rawmemlen",   (DeeObject *)&ctypes_rawmemlen, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle)->deemon:int\n"
+          "Same as :rawmemchr, but return the offset from @haystack") },
+    { "rawmemrchr",  (DeeObject *)&ctypes_rawmemrchr, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle)->void.ptr\n"
+          "Same as :rawmemchr, but search in reverse, starting with ${haystack[-1]}\n"
+          "You can think of this function as a variant of :memrend that operates "
+          "on a buffer that spans the entirety of the available address space") },
+    { "rawmemrlen",  (DeeObject *)&ctypes_rawmemrlen, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle)->deemon:int\n"
+          "Same as :rawmemrchr, but return the positive (unsigned) offset of the "
+          "matching byte, such that ${haystack + return} points to the byte in question") },
+    { "memxchr",     (DeeObject *)&ctypes_memxchr, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->void.ptr\n"
+          "Same as :memchr, but instead of comparing bytes for being equal, compare them for being different") },
+    { "memxlen",     (DeeObject *)&ctypes_memxlen, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->deemon:int\n"
+          "Same as :memlen, but instead of comparing bytes for being equal, compare them for being different") },
+    { "memxend",     (DeeObject *)&ctypes_memxend, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->void.ptr\n"
+          "Same as :memend, but instead of comparing bytes for being equal, compare them for being different") },
+    { "memxrchr",    (DeeObject *)&ctypes_memxrchr, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->void.ptr\n"
+          "Same as :memrchr, but instead of comparing bytes for being equal, compare them for being different") },
+    { "memxrlen",    (DeeObject *)&ctypes_memxrlen, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->deemon:int\n"
+          "Same as :memrlen, but instead of comparing bytes for being equal, compare them for being different") },
+    { "memxrend",    (DeeObject *)&ctypes_memxrend, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle,deemon:int haystack_size)->void.ptr\n"
+          "Same as :memrend, but instead of comparing bytes for being equal, compare them for being different") },
+    { "rawmemxchr",  (DeeObject *)&ctypes_rawmemxchr, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle)->void.ptr\n"
+          "Same as :rawmemchr, but instead of comparing bytes for being equal, compare them for being different") },
+    { "rawmemxlen",  (DeeObject *)&ctypes_rawmemxlen, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle)->deemon:int\n"
+          "Same as :rawmemlen, but instead of comparing bytes for being equal, compare them for being different") },
+    { "rawmemxrchr", (DeeObject *)&ctypes_rawmemxrchr, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle)->void.ptr\n"
+          "Same as :rawmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
+    { "rawmemxrlen", (DeeObject *)&ctypes_rawmemxrlen, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int needle)->deemon:int\n"
+          "Same as :rawmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
+    { "memcmp",      (DeeObject *)&ctypes_memcmp, MODSYM_FNORMAL,
+      DOC("(void.ptr a,void.ptr b,deemon:int haystack_size)->deemon:int\n"
+          "Compare bytes from 2 buffers in @a and @b of equal haystack_size @haystack_size, and "
+          "search for the first non-matching byte, returning ${< 0} if that byte "
+          "in @a is smaller than its counterpart in @b, ${> 0} if the opposite "
+          "is true, and ${== 0} no such byte exists") },
+    { "memcasecmp",  (DeeObject *)&ctypes_memcasecmp, MODSYM_FNORMAL,
+      DOC("(void.ptr a,void.ptr b,deemon:int haystack_size)->deemon:int\n"
+          "Same as :memcmp, but bytes are casted as ASCII characters into a "
+          "common casing prior to comparison") },
+    { "memmem",      (DeeObject *)&ctypes_memmem, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int haystack_size,void.ptr needle,deemon:int needle_size)->void.ptr\n"
+          "Search for the first memory block in @haystack+@haystack_size that is equal to @needle+@needle_size "
+          "such that ${memcmp(candidate,needle,needle_size) == 0} and return a pointer to its starting "
+          "location in @haystack\n"
+          "If no such memory block exists, return a NULL-pointer instead") },
+    { "memcasemem",  (DeeObject *)&ctypes_memcasemem, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int haystack_size,void.ptr needle,deemon:int needle_size)->void.ptr\n"
+          "Same as :memmem, but perform case-insensitive comparisons, using :memcasecmp instead of :memcmp") },
+    { "memrmem",     (DeeObject *)&ctypes_memrmem, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int haystack_size,void.ptr needle,deemon:int needle_size)->void.ptr\n"
+          "Same as :memmem, but in case more than 1 match exists, return a pointer to the last, rather than the first") },
+    { "memcasermem", (DeeObject *)&ctypes_memcasermem, MODSYM_FNORMAL,
+      DOC("(void.ptr haystack,deemon:int haystack_size,void.ptr needle,deemon:int needle_size)->void.ptr\n"
+          "Same as :memcasemem, but in case more than 1 match exists, return a pointer to the last, rather than the first") },
+    { "memrev",      (DeeObject *)&ctypes_memrev, MODSYM_FNORMAL,
+      DOC("(void.ptr buf,deemon:int size)->void.ptr\n"
+          "Reverse the order of bytes in the given @buf+@size, such that upon return its first "
+          "byte contains the old value of the last byte, and the last byte the value of the first, "
+          "and so on.") },
+#if 0
+PRIVATE DEFINE_CMETHOD(ctypes_strlen,capi_strlen);
+PRIVATE DEFINE_CMETHOD(ctypes_strend,capi_strend);
+PRIVATE DEFINE_CMETHOD(ctypes_strnlen,capi_strnlen);
+PRIVATE DEFINE_CMETHOD(ctypes_strnend,capi_strnend);
+PRIVATE DEFINE_CMETHOD(ctypes_strchr,capi_strchr);
+PRIVATE DEFINE_CMETHOD(ctypes_strrchr,capi_strrchr);
+PRIVATE DEFINE_CMETHOD(ctypes_strnchr,capi_strnchr);
+PRIVATE DEFINE_CMETHOD(ctypes_strnrchr,capi_strnrchr);
+PRIVATE DEFINE_CMETHOD(ctypes_stroff,capi_stroff);
+PRIVATE DEFINE_CMETHOD(ctypes_strroff,capi_strroff);
+PRIVATE DEFINE_CMETHOD(ctypes_strnoff,capi_strnoff);
+PRIVATE DEFINE_CMETHOD(ctypes_strnroff,capi_strnroff);
+PRIVATE DEFINE_CMETHOD(ctypes_strchrnul,capi_strchrnul);
+PRIVATE DEFINE_CMETHOD(ctypes_strrchrnul,capi_strrchrnul);
+PRIVATE DEFINE_CMETHOD(ctypes_strnchrnul,capi_strnchrnul);
+PRIVATE DEFINE_CMETHOD(ctypes_strnrchrnul,capi_strnrchrnul);
+PRIVATE DEFINE_CMETHOD(ctypes_strcmp,capi_strcmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strncmp,capi_strncmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strcasecmp,capi_strcasecmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strncasecmp,capi_strncasecmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strcpy,capi_strcpy);
+PRIVATE DEFINE_CMETHOD(ctypes_strcat,capi_strcat);
+PRIVATE DEFINE_CMETHOD(ctypes_strncpy,capi_strncpy);
+PRIVATE DEFINE_CMETHOD(ctypes_strncat,capi_strncat);
+PRIVATE DEFINE_CMETHOD(ctypes_stpcpy,capi_stpcpy);
+PRIVATE DEFINE_CMETHOD(ctypes_stpncpy,capi_stpncpy);
+PRIVATE DEFINE_CMETHOD(ctypes_strstr,capi_strstr);
+PRIVATE DEFINE_CMETHOD(ctypes_strcasestr,capi_strcasestr);
+PRIVATE DEFINE_CMETHOD(ctypes_strverscmp,capi_strverscmp);
+PRIVATE DEFINE_CMETHOD(ctypes_strsep,capi_strsep);
+PRIVATE DEFINE_CMETHOD(ctypes_strtok,capi_strtok);
+PRIVATE DEFINE_CMETHOD(ctypes_strtok_r,capi_strtok_r);
+PRIVATE DEFINE_CMETHOD(ctypes_index,capi_index);
+PRIVATE DEFINE_CMETHOD(ctypes_rindex,capi_rindex);
+PRIVATE DEFINE_CMETHOD(ctypes_strspn,capi_strspn);
+PRIVATE DEFINE_CMETHOD(ctypes_strcspn,capi_strcspn);
+PRIVATE DEFINE_CMETHOD(ctypes_strpbrk,capi_strpbrk);
+PRIVATE DEFINE_CMETHOD(ctypes_strcoll,capi_strcoll);
+PRIVATE DEFINE_CMETHOD(ctypes_strncoll,capi_strncoll);
+PRIVATE DEFINE_CMETHOD(ctypes_strcasecoll,capi_strcasecoll);
+PRIVATE DEFINE_CMETHOD(ctypes_strncasecoll,capi_strncasecoll);
+PRIVATE DEFINE_CMETHOD(ctypes_strxfrm,capi_strxfrm);
+PRIVATE DEFINE_CMETHOD(ctypes_strrev,capi_strrev);
+PRIVATE DEFINE_CMETHOD(ctypes_strnrev,capi_strnrev);
+PRIVATE DEFINE_CMETHOD(ctypes_strlwr,capi_strlwr);
+PRIVATE DEFINE_CMETHOD(ctypes_strupr,capi_strupr);
+PRIVATE DEFINE_CMETHOD(ctypes_strset,capi_strset);
+PRIVATE DEFINE_CMETHOD(ctypes_strnset,capi_strnset);
+PRIVATE DEFINE_CMETHOD(ctypes_strfry,capi_strfry);
+#endif
+
+
+    { NULL }
+};
+
+#ifndef NDEBUG
+PRIVATE DeeSTypeObject *static_ctypes[] = {
+    (DeeSTypeObject *)&DeeStructured_Type,
+    (DeeSTypeObject *)&DeePointer_Type,
+    (DeeSTypeObject *)&DeeLValue_Type,
+    (DeeSTypeObject *)&DeeArray_Type,
+    (DeeSTypeObject *)&DeeCFunction_Type,
+    (DeeSTypeObject *)&DeeCVoid_Type,
+    (DeeSTypeObject *)&DeeCChar_Type,
+    (DeeSTypeObject *)&DeeCWChar_Type,
+    (DeeSTypeObject *)&DeeCChar16_Type,
+    (DeeSTypeObject *)&DeeCChar32_Type,
+    (DeeSTypeObject *)&DeeCBool_Type,
+    (DeeSTypeObject *)&DeeCInt8_Type,
+    (DeeSTypeObject *)&DeeCInt16_Type,
+    (DeeSTypeObject *)&DeeCInt32_Type,
+    (DeeSTypeObject *)&DeeCInt64_Type,
+    (DeeSTypeObject *)&DeeCUInt8_Type,
+    (DeeSTypeObject *)&DeeCUInt16_Type,
+    (DeeSTypeObject *)&DeeCUInt32_Type,
+    (DeeSTypeObject *)&DeeCUInt64_Type,
+    (DeeSTypeObject *)&DeeCFloat_Type,
+    (DeeSTypeObject *)&DeeCDouble_Type,
+    (DeeSTypeObject *)&DeeCLDouble_Type,
+#ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
+    (DeeSTypeObject *)&DeeCSChar_Type,
+    (DeeSTypeObject *)&DeeCUChar_Type,
+#endif
+#ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
+    (DeeSTypeObject *)&DeeCShort_Type,
+    (DeeSTypeObject *)&DeeCUShort_Type,
+#endif
+#ifdef CONFIG_INT_NEEDS_OWN_TYPE
+    (DeeSTypeObject *)&DeeCInt_Type,
+    (DeeSTypeObject *)&DeeCUInt_Type,
+#endif
+#ifdef CONFIG_LONG_NEEDS_OWN_TYPE
+    (DeeSTypeObject *)&DeeCLong_Type,
+    (DeeSTypeObject *)&DeeCULong_Type,
+#endif
+#ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
+    (DeeSTypeObject *)&DeeCLLong_Type,
+    (DeeSTypeObject *)&DeeCULLong_Type,
+#endif
+};
+PRIVATE void DCALL
+libctypes_fini(DeeDexObject *__restrict UNUSED(self)) {
+ size_t i;
+ /* Create caches of static C-types, so they don't show up as leaks. */
+ for (i = 0; i < COMPILER_LENOF(static_ctypes); ++i) {
+  Dee_Free(static_ctypes[i]->st_array.sa_list);
+#ifndef CONFIG_NO_CFUNCTION
+  Dee_Free(static_ctypes[i]->st_cfunction.sf_list);
+#endif /* !CONFIG_NO_CFUNCTION */
+ }
+}
+#endif
+
+INTDEF bool DCALL clear_void_pointer(void);
+PRIVATE bool DCALL
+libctypes_clear(DeeDexObject *__restrict UNUSED(self)) {
+ return clear_void_pointer();
+}
+
+
+PUBLIC struct dex DEX = {
+    /* .d_symbols = */symbols,
+    /* .d_init    = */NULL,
+#ifndef NDEBUG
+    /* .d_fini    = */&libctypes_fini,
+#else
+    /* .d_fini    = */NULL,
+#endif
+    /* .d_imports = */{ NULL },
+    /* .d_clear   = */&libctypes_clear
+};
+
+DECL_END
+
+
+#endif /* !GUARD_DEX_CTYPES_LIBCTYPES_C */

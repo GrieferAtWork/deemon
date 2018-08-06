@@ -1,0 +1,186 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#define DEX_BASE(name) \
+	PROJECT(name) \
+	SET_OUTPUT_DLL("/lib/"+name.replace(".","/")) \
+	LIBPATH("/.") \
+	WEAK_PROJDEP("deemon") \
+	C_FLAGS("-shared") \
+	L_FLAGS("-shared") \
+	IF(TARGET_WINDOWS) \
+		LIB("deemon") \
+		L_FLAGS("-static-libgcc") \
+	ELSE \
+		LIB(":deemon") \
+		LIB("c") \
+		L_FLAGS("-nostartfiles") \
+		L_FLAGS("-nostdlib") \
+		L_FLAGS("-Wl,-shared") \
+	FI \
+
+
+/* On windows, we _must_ use a c++ compiler because in order to be able to
+ * use static initializers using symbols imported from the deemon core,
+ * some additional initialization code needs to be generated because of
+ * how stupid dynamic linking is on windows.
+ * WARNING: If you were to remove the __attribute__((dllimport)) by overwriting
+ *          the `DDATDEF' macro defined in <deemon/api.h> and try to compile,
+ *          everything might seem to be able to compile and get linked,
+ *          but if you then were to attempt to run the program, it'll CRASH
+ *          because LD chose to improperly link the DEX and not even warn
+ *          about the ~totally insignificant~ fact that IT WILL CRASH AND
+ *          BURN BECAUSE THE WINDOWS LINKER WAS DESIGNED BY A BUNCH OF APES
+ *          ON UNICYCLES!
+ *          ... *huff* *huff* *huff*
+ *          I'm not even sure who I'm mad at most...
+ *          But at last, I've ran into this problem before, when designing the
+ *          DEX capabilities of the old deemon, but like the genius I am, I forgot
+ *          to document this discovery then, an error I WILL NOT DO AGAIN!
+ * Explaination:
+ * >> extern __attribute__((dllimport)) DeeTypeObject DeeList_Type;
+ * >> extern __attribute__((dllimport)) DeeObject *DCALL DeeList_NewHint(size_t n_prealloc);
+ * >>
+ * >> // You should really think about it like this:
+ * >> INTDEF __attribute__((section(".got"))) DeeTypeObject *__imp_DeeList_Type;
+ * >> INTDEF __attribute__((section(".got"))) DeeObject *(DCALL *__imp_DeeList_NewHint)(size_t n_prealloc);
+ * >> #define DeeList_Type         (*__imp_DeeList_Type)
+ * >> #define DeeList_NewHint      (*__imp_DeeList_NewHint)
+ *
+ * Now if you where to leave away the dllimport, this is done:
+ * >> extern DeeObject *DeeList_NewHint(size_t n_prealloc);
+ *
+ * And once the linker realizes that the function is defined by an external
+ * library, it will generate a wrapper functions that looks like this:
+ * >> INTERN DeeObject *DeeList_NewHint(size_t n_prealloc) {
+ * >>     __attribute__((section(".got"))) DeeObject *(DCALL *__imp_DeeList_NewHint)(size_t n_prealloc);
+ * >>     return (*__imp_DeeList_NewHint)(n_prealloc);
+ * >> }
+ *
+ * That works well enough for functions, but
+ * breaks when used with static initializers:
+ *
+ * >> extern DeeTypeObject DeeList_Type;
+ * >> static DeeTypeObject *my_static_variable = &DeeList_Type;
+ *
+ * Since the fact that `DeeList_Type' is actually imported from another
+ * dll is only known at link-time, the linker has no way of somehow
+ * getting `my_static_variable' to resolve to the proper address at
+ * runtime. !!!THIS IS A SHORTCOMING OF PE BINARIES ON WINDOWS!!!
+ * ELF doesn't have this problem because it allows external relocation
+ * to appear anywhere in a binary, rather than just within the GOT.
+ * However instead of warning about the fact that `my_static_variable'
+ * will contain an invalid value at runtime, possibly explaining _WHY_
+ * in a way that should make it obvious what's happening similar to how
+ * this explaination does, it chooses to do no such thing.
+ * I won't be looking into this further, but I think it's generating
+ * a wrapper functions irregardless of the fact that it's not dealing
+ * with a function, thus causing `my_static_variable' to point at the
+ * first instruction of that wrapper function who's assembly will look
+ * something like this (the double .got +/- only for illustration):
+ * >> jmp *(.got + (__imp_DeeList_Type - .got))
+ *
+ * SOLUTION:
+ * Compile everything as C++ to have the following happen when the DEX is loaded:
+ * >> INTERN __attribute__((section(".got"))) DeeTypeObject *__imp_DeeList_Type;
+ * >> static DeeTypeObject *my_static_variable = NULL;
+ * >>
+ * >> INTERN __attribute__((constructor))
+ * >> void __init_my_static_variable(void) {
+ * >>     my_static_variable = &*__imp_DeeList_Type;
+ * >> }
+ *
+ */
+#define DEX(name) \
+	SET_COMPILER("${CXX}") \
+	SET_LINKER("${CXX}") \
+	DEX_BASE(name)
+
+
+BEGIN
+	IF(NOT CONFIG_NO_DEX)
+		DEFINE("CONFIG_BUILDING_DEX")
+
+		/* Dex C extension modules. */
+
+		BEGIN
+			DEX("ctypes")
+#if 1 /* FIXME */
+			DEFINE("CONFIG_NO_CFUNCTION")
+#else
+			INCLUDE("ctypes/ffi/libffi-gcc-${TARGET_ARCH}/include")
+			OBJECT("ctypes/ffi/libffi-gcc-${TARGET_ARCH}/.libs/libffi.a")
+			PRERUN_BEGIN
+				local name = expand_options("libffi-gcc-${TARGET_ARCH}");
+				if (!fs.exists("src/dex/ctypes/ffi/"+name+"/include/ffi.h")) {
+					local target;
+					target = expand_options("${CROSS_PREFIX}");
+					if ("/" in target) target = target.rpartition("/")[2];
+					target = target.rstrip("-");
+					if (!target) target = expand_options("${TARGET_ARCH}")+"-pc-none";
+					local flags = "";
+					if (target == "i686-w64-mingw32") {
+						/* Workaround for a configure-detection-bug:
+						 *  https://bugzilla.mozilla.org/show_bug.cgi?id=1336569
+						 */
+						flags = "-DSYMBOL_UNDERSCORE";
+					}
+					COMMAND(
+						  "bash"
+						, "src/dex/ctypes/ffi/make_libffi.sh"
+						, "NAME="+name
+						, "CROSS_PREFIX="+expand_options("${CROSS_PREFIX}")
+						, "CC="+expand_options("${CC}")
+						, "CFLAGS="+flags
+						, "CXX="+expand_options("${CXX}")
+						, "CXXFLAGS="+flags
+						, "CPP="+expand_options("${CPP}")
+						, "AS="+expand_options("${AS}")
+						, "AR="+expand_options("${AR}")
+						, "NM="+expand_options("${NM}")
+						, "TARGET="+target
+					)
+				}
+			PRERUN_END
+#endif
+			SOURCE("ctypes/*.c")
+		END
+
+		BEGIN DEX("net")
+			SOURCE("net/*.c")
+			IF(TARGET_WINDOWS)
+				/* On windows, must link against this! */
+				LIB("Ws2_32")
+			FI
+		END
+
+		/* Simple extensions that don't require special link arguments. */
+		BEGIN DEX("time")         SOURCE("time/*.c")         END
+		BEGIN DEX("fs")           SOURCE("fs/*.c")           END
+		BEGIN DEX("rt")           SOURCE("rt/*.c")           END
+		BEGIN DEX("ipc")          SOURCE("ipc/*.c")          END
+		BEGIN DEX("threading")    SOURCE("threading/*.c")    END
+		BEGIN DEX("files")        SOURCE("files/*.c")        END
+		BEGIN DEX("math")         SOURCE("math/*.c")         END
+		BEGIN DEX("collections")  SOURCE("collections/*.c")  END
+		BEGIN DEX("disassembler") SOURCE("disassembler/*.c") END
+
+	FI
+END
+
+

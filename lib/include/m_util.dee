@@ -1,0 +1,62 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import util;
+import string, sequence, Signal, Error, object from deemon;
+
+global min = util.min;
+global max = util.max;
+global avg = util.avg;
+global all = util.all;
+global any = util.any;
+global sum = util.sum;
+global chr = string.chr;
+function ord(s) -> s.ord();
+global sqr = util.sqr;
+function len(seq) -> #seq;
+global ceil = util.ceil;
+global floor = util.floor;
+global round = util.round;
+global range = sequence.range;
+global id = object.id;
+global zip = util.zip;
+global enumerate = util.enumerate;
+function swap(a,b) {
+	local temp = copy a;
+	a.operator = move(b);
+	b.operator = move(temp);
+}
+global abs = util.abs;
+
+function reduce(fun,iterable,initializer = none) {
+	local it = iterable.operator iter();
+	if (initializer is none) {
+		try initializer = it.operator next();
+		catch (Signal.StopIteration) {
+			// Error.TypeError
+			throw Error.TypeError(
+				"reduce() with empty sequence and no initial value");
+		}
+	}
+	foreach (local x: it)
+		initializer = fun(initializer,x);
+	return initializer;
+}
+
+global seq = import sequence from deemon;
+global attr = import .m_util_attr;

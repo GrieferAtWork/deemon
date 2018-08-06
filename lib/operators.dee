@@ -1,0 +1,240 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* Functions from this module are referenced by the
+ * compiler when addressing unbound operators:
+ * >> local items = [10,30,20,7];
+ * >> items.sort(operator <); // Compiled as `items.sort(lo from operators)'
+ */
+
+
+@"(type tp,callable operator_function)->callable"
+@"Bind a given @operator_function to execute the "
+@"associated operator for a specific type @tp only:"
+@">import bind from operators;"
+@">import * from deemon;"
+@">local sequence_add = bind(sequence,operator +);"
+@">local foo = [10,20,30];"
+@">local bar = [40,50,60];"
+@">// Invokes `(foo as list).operator + (bar)'"
+@">print repr sequence_add(foo,bar);"
+@">// Invokes `foo.operator + (bar)'"
+@">print repr operator + (foo,bar);"
+function bind(tp,operator_function) {
+	return [](x,args...) {
+		import Error from deemon;
+		if (x !is tp && !tp.isgeneric) {
+			throw Error.TypeError(
+				"Instance of {} is not derived from {}".
+				format({ type x, tp }));
+		}
+		return operator_function((x as tp),args...);
+	};
+}
+
+
+/* Don't warn about the use of reserved keywords as identifiers.
+ * This module is _supposed_ to define symbols with those names! */
+#pragma warning("-Wno-reserved")
+
+function constructor(self,args...) -> self.operator constructor(args...);
+function copy(self) -> copy self;
+function deepcopy(self) -> deepcopy self;
+function destructor(self) -> self.operator destructor();
+function assign(self,other) -> self := other;
+function moveassign(self,other) -> self.operator = move (other);
+function str(self) -> str self;
+function repr(self) -> repr self;
+function bool(self) -> !!self;
+function call(self,args) -> self(args...);
+function next(self) -> self.operator next();
+function int(self) -> self.operator int();
+function float(self) -> self.operator float();
+function inv(self) -> ~self;
+function pos(self) -> +self;
+function neg(self) -> -self;
+function add(self,other) -> self + other;
+function sub(self,other) -> self - other;
+function mul(self,other) -> self * other;
+function div(self,other) -> self / other;
+function mod(self,other) -> self % other;
+function shl(self,other) -> self << other;
+function shr(self,other) -> self >> other;
+function and(self,other) -> self & other;
+function or(self,other) -> self | other;
+function xor(self,other) -> self ^ other;
+function pow(self,other) -> self ** other;
+function inc(self) -> self.operator ++ ();
+function dec(self) -> self.operator -- ();
+function iadd(self,other) -> self.operator += (other);
+function isub(self,other) -> self.operator -= (other);
+function imul(self,other) -> self.operator *= (other);
+function idiv(self,other) -> self.operator /= (other);
+function imod(self,other) -> self.operator %= (other);
+function ishl(self,other) -> self.operator <<= (other);
+function ishr(self,other) -> self.operator >>= (other);
+function iand(self,other) -> self.operator &= (other);
+function ior(self,other) -> self.operator |= (other);
+function ixor(self,other) -> self.operator ^= (other);
+function ipow(self,other) -> self.operator **= (other);
+function hash(self) -> self.operator hash();
+function eq(self,other) -> self == other;
+function ne(self,other) -> self != other;
+function lo(self,other) -> self < other;
+function le(self,other) -> self <= other;
+function gr(self,other) -> self > other;
+function ge(self,other) -> self >= other;
+function iter(self) -> self.operator iter();
+function size(self) -> #self;
+function contains(self,other) -> other in self;
+function getitem(self,index) -> self[index];
+function delitem(self,index) -> self.operator del[] (index);
+function setitem(self,index,value) -> self.operator [] (index,value);
+function getrange(self,begin,end) -> self[begin:end];
+function delrange(self,begin,end) -> self.operator del[:] (begin,end);
+function setrange(self,begin,end,value) -> self.operator [:] (begin,end,value);
+function getattr(self,name) -> self.operator . (name);
+function delattr(self,name) -> self.operator del. (name);
+function setattr(self,name,value) -> self.operator .= (name,value);
+function enumattr(self,...) -> self.operator enumattr(...);
+function enter(self) -> self.operator enter();
+function leave(self) -> self.operator leave();
+function read(self,...) -> self.operator read(...);
+function write(self,...) -> self.operator write(...);
+function seek(self,off,whence) -> self.operator seek(off,whence);
+function sync(self) -> self.operator sync();
+function trunc(self,pos) -> self.operator trunc(pos);
+function close(self) -> self.operator close();
+function pread(self,...) -> self.operator pread(...);
+function pwrite(self,...) -> self.operator pwrite(...);
+function getc(self) -> self.operator getc();
+function ungetc(self,c) -> self.operator ungetc(c);
+function putc(self,c) -> self.operator putc(c);
+
+
+
+/* Some helper macros to get proper debug infomation in inline assembly. */
+#define S2(...) #__VA_ARGS__
+#define S(...)  S2(__VA_ARGS__)
+#define L       .ddi __LINE__;
+#define ASM{...} __asm__ pack S2(__VA_ARGS__)
+
+
+
+/* Implementation-specific functions for ambiguous operator calls.
+ * An implementation is required to provide these, but have them
+ * invoke the (overridable) regular operators exported from this
+ * module. */
+
+@"pos(a) or add(a,b)"
+function __pooad(a,b...) {
+	ASM {
+L		push   arg @a
+L		push   cmp eq, #arg @b, $0
+L		jf     pop, 1f
+L		push   call global @pos, #1
+L		ret    pop
+L	.adjstack 1
+L	1:	unpack arg @b, #1
+L		push   call global @add, #2
+L		ret    pop
+	};
+}
+
+@"neg(a) or sub(a,b)"
+function __neosb(a,b...) {
+	ASM {
+L		push   arg @a
+L		push   cmp eq, #arg @b, $0
+L		jf     pop, 1f
+L		push   call global @neg, #1
+L		ret    pop
+L	.adjstack 1
+L	1:	unpack arg @b, #1
+L		push   call global @sub, #2
+L		ret    pop
+	};
+}
+
+@"getitem(seq,index) or setitem(seq,index,opt)"
+function __giosi(seq,index,opt...) {
+	ASM {
+L		push   arg @seq
+L		push   arg @index
+L		push   cmp eq, #arg @opt, $0
+L		jf     pop, 1f
+L		push   call global @getitem, #2
+L		ret    pop
+L	.adjstack 2
+L	1:	unpack arg @opt, #1
+L		push   call global @setitem, #3
+L		ret    pop
+	};
+}
+
+@"getrange(seq,begin,end) or setrange(seq,begin,end,opt)"
+function __grosr(seq,begin,end,opt...) {
+	ASM {
+L		push   arg @seq
+L		push   arg @begin
+L		push   arg @end
+L		push   cmp eq, #arg @opt, $0
+L		jf     pop, 1f
+L		push   call global @getrange, #3
+L		ret    pop
+L	.adjstack 3
+L	1:	unpack arg @opt, #1
+L		push   call global @setrange, #4
+L		ret    pop
+	};
+}
+
+@"getattr(obj,attr) or setattr(obj,attr,opt)"
+function __gaosa(obj,attr,opt...) {
+	ASM {
+L		push   arg @obj
+L		push   arg @attr
+L		push   cmp eq, #arg @opt, $0
+L		jf     pop, 1f
+L		push   call global @getattr, #2
+L		ret    pop
+L	.adjstack 2
+L	1:	unpack arg @opt, #1
+L		push   call global @setattr, #3
+L		ret    pop
+	};
+}
+
+
+
+@"function operator(int id, object args...) -> object"
+@"Fallback function."
+@"Any operator not exported as its S-name will invoke this"
+@"function, passing its implementation-specific ID as first"
+@"argument with all the other arguments following thereafter."
+@"Additionally, any operator with an unknown S-name calls this"
+@"function to implement its callback."
+function operator(id,args...) {
+	import Error from deemon;
+	throw Error.TypeError("Cannot invoke unknown operator #%X" % id);
+}
+
+
+
+

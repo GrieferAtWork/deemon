@@ -1,0 +1,47 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+// To understand what a generator is, the following
+// two lines produce 100% the same code:
+gen = (function { for (local x: [:5]) yield x*2; })();
+gen = for (local x: [:5]) x*2;
+print gen...; // 0 2 4 6 8
+
+print (for (local x = 0; x < 100; x += 2) 2**x)...; // 1 4 16 64 256 ...
+
+s = "foobar";
+print "-".join(for (local x: s) "!"+x+"!"); // !f!-!o!-!o!-!b!-!a!-!r!
+
+// Generator expression also work for while and do-while,
+// although considering that you can't define loop initializer
+// here, I only added these for completion's sake.
+// >> Proove me wrong, but the only thing you can do with
+//    these, that doesn't rely on 1-time evaluation, using
+//    an underlying variable, is a loop-once and an infinite loop.
+i = 13;
+print (while (i--) i)...;
+i = 37;
+print (do i*2 while (i--))...;
+
+
+
+
+
+
