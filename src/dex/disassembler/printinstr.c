@@ -1486,17 +1486,14 @@ print_duppop_stack:
   iter = old_iter;
  }
 
+ if (opcode == ASM_RET && code &&
+     code->co_flags & CODE_FYIELDING)
+     mnemonic = "yield  pop";
  print(mnemonic,strlen(mnemonic));
 do_instruction_specific:
 
  /* Also print instruction operands. */
  switch (opcode) {
-
- case ASM_RET:
-  mnemonic = "ret    ";
-  if (code && code->co_flags & CODE_FYIELDING)
-      mnemonic = "yield  ";
-  goto do_mnemonic_prefix_readonly;
 
  case ASM_INC:
  case ASM_DEC:
