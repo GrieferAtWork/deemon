@@ -48,6 +48,7 @@ struct hashset_object {
 #ifndef CONFIG_NO_THREADS
     rwlock_t             s_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
+    WEAKREF_SUPPORT
 };
 
 /* The main `hashset' container class. */

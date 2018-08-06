@@ -92,6 +92,7 @@ DeeHashSet_NewItemsInherited(size_t num_items, DREF DeeObject **__restrict items
  rwlock_init(&result->s_lock);
 #endif /* !CONFIG_NO_THREADS */
  /* Initialize and start tracking the new set. */
+ weakref_support_init(result);
  DeeObject_Init(result,&DeeHashSet_Type);
  DeeGC_Track((DeeObject *)result);
  return (DREF DeeObject *)result;
@@ -142,6 +143,7 @@ DeeHashSet_FromIterator(DeeObject *__restrict self) {
  result = (DREF Set *)DeeGCObject_Malloc(sizeof(Set));
  if unlikely(!result) return NULL;
  if unlikely(set_init_iterator(result,self)) goto err;
+ weakref_support_init(result);
  DeeObject_Init(result,&DeeHashSet_Type);
  DeeGC_Track((DeeObject *)result);
  return (DREF DeeObject *)result;
@@ -160,6 +162,7 @@ set_ctor(Set *__restrict self) {
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&self->s_lock);
 #endif /* !CONFIG_NO_THREADS */
+ weakref_support_init(self);
  return 0;
 }
 
@@ -192,6 +195,7 @@ again:
   }
  }
  DeeHashSet_LockEndRead(other);
+ weakref_support_init(self);
  return 0;
 }
 
@@ -1222,10 +1226,12 @@ set_init(Set *__restrict self,
  DeeObject *seq; int error;
  if unlikely(DeeArg_Unpack(argc,argv,"o:hashset",&seq))
     return -1;
+ /* TODO: Optimization for fast-sequence types. */
  if unlikely((seq = DeeObject_IterSelf(seq)) == NULL)
     return -1;
  error = set_init_iterator(self,seq);
  Dee_Decref(seq);
+ weakref_support_init(self);
  return error;
 }
 
@@ -1376,7 +1382,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
                             "in @this hashset, following a random order\n"
                             ),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
-    /* .tp_weakrefs = */0,
+    /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(Set),
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeSet_Type,
     /* .tp_init = */{
