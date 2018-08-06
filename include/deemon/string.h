@@ -19,9 +19,6 @@
 #ifndef GUARD_DEEMON_STRING_H
 #define GUARD_DEEMON_STRING_H 1
 
-#undef CONFIG_WCHAR_STRINGS
-#define CONFIG_WCHAR_STRINGS 1
-
 #include "api.h"
 #include "object.h"
 #include <stddef.h>

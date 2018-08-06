@@ -43,7 +43,7 @@
 #include <hybrid/atomic.h>
 #endif
 
-#ifdef CONFIG_WCHAR_STRINGS
+#if 0
 #ifdef CONFIG_HOST_WINDOWS
 #    include <Windows.h>
 #else /* CONFIG_HOST_WINDOWS */
@@ -53,7 +53,7 @@
 #    include <stdio.h>
 #endif /* !CONFIG_NO_STDIO */
 #endif /* !CONFIG_HOST_WINDOWS */
-#endif /* CONFIG_WCHAR_STRINGS */
+#endif
 
 DECL_BEGIN
 

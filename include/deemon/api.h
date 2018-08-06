@@ -90,10 +90,6 @@ DECL_BEGIN
 /* #define CONFIG_NO_THREADS 1 */
 /* #define CONFIG_NO_STDIO 1 */
 
-/* CONFIG: Enable support for wide-character encoding in strings.
- *      -> Always enabled on windows hosts. */
-/* #define CONFIG_WCHAR_STRINGS 1 */
-
 /* CONFIG:  Enable tracing of all incref()s and decref()s that
  *          happen to an object over the course of its lifetime.
  *          When deemon shuts down, dump that reference count
@@ -180,9 +176,6 @@ DECL_BEGIN
 /* Limit windows headers to only provide XP stuff. */
 #   define _WIN32_WINNT _WIN32_WINNT_WINXP
 #endif /* !_WIN32_WINNT */
-/* Always enable wide-character strings on windows. */
-#   undef CONFIG_WCHAR_STRINGS
-#   define CONFIG_WCHAR_STRINGS 1
 #endif
 
 
