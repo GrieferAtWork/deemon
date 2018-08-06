@@ -50,6 +50,7 @@ struct dict_object {
 #ifndef CONFIG_NO_THREADS
     rwlock_t          d_lock; /* Lock used for accessing this dict. */
 #endif /* !CONFIG_NO_THREADS */
+    WEAKREF_SUPPORT
 };
 
 /* The main `dict' container class (and all related types):

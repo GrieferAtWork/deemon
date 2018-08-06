@@ -101,6 +101,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict ke
  rwlock_init(&result->d_lock);
 #endif /* !CONFIG_NO_THREADS */
  /* Initialize and start tracking the new dict. */
+ weakref_support_init(result);
  DeeObject_Init(result,&DeeDict_Type);
  DeeGC_Track((DeeObject *)result);
  return (DREF DeeObject *)result;
@@ -191,6 +192,7 @@ DeeDict_FromIterator(DeeObject *__restrict self) {
  result = (DREF Dict *)DeeGCObject_Malloc(sizeof(Dict));
  if unlikely(!result) return NULL;
  if unlikely(dict_init_iterator(result,self)) goto err;
+ weakref_support_init(result);
  DeeObject_Init(result,&DeeDict_Type);
  DeeGC_Track((DeeObject *)result);
  return (DREF DeeObject *)result;
@@ -209,6 +211,7 @@ dict_ctor(Dict *__restrict self) {
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&self->d_lock);
 #endif /* !CONFIG_NO_THREADS */
+ weakref_support_init(self);
  return 0;
 }
 
@@ -242,6 +245,7 @@ again:
   }
  }
  DeeDict_LockEndRead(other);
+ weakref_support_init(self);
  return 0;
 }
 
@@ -1230,6 +1234,7 @@ dict_init(Dict *__restrict self,
     return -1;
  error = dict_init_iterator(self,seq);
  Dee_Decref(seq);
+ weakref_support_init(self);
  return error;
 }
 
@@ -1475,7 +1480,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
                             "Create a new dict, using key-items pairs extracted from @items.\n"
                             "Iterate @items and unpack each element into 2 others, using them as key and item to insert into @this dict"),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
-    /* .tp_weakrefs = */0,
+    /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(Dict),
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeMapping_Type,
     /* .tp_init = */{

@@ -237,7 +237,7 @@ PRIVATE struct type_getset ob_weakref_getsets[] = {
 
 PUBLIC DeeTypeObject DeeWeakRef_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_cell),
+    /* .tp_name     = */DeeString_STR(&str_weakref),
     /* .tp_doc      = */DOC("A weak reference to another object implementing weakref functionality\n"
                             "\n"
                             "()\n"

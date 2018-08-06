@@ -229,6 +229,9 @@ struct weakref_list {
 #define WEAKREF_SUPPORT struct weakref_list ob_weakrefs;
 #define WEAKREF_SUPPORT_ADDR(T)  offsetof(T,ob_weakrefs)
 #define WEAKREF_SUPPORT_INIT    { NULL }
+
+/* Initialize weakref support (must be called manually by
+ * constructors of types implementing weakref support!) */
 #define weakref_support_init(x) ((x)->ob_weakrefs.wl_nodes = NULL)
 
 /* Initialize the given weak reference to NULL. */
