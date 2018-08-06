@@ -333,7 +333,8 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
      new_state.reg_path = (uint16_t)(temp+1);
     } else {
      /* Special case: The filename has no path associated. */
-     filename = ascii_printer_allocstr(&strtab,filename,length+1);
+     if (length) ++length;
+     filename = ascii_printer_allocstr(&strtab,filename,length);
      if unlikely(!filename) goto err;
      file_offset = (uintptr_t)(filename - strtab.ap_string->s_str);
      new_state.reg_path = 0; /* No path. */

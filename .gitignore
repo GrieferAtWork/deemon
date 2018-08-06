@@ -1,9 +1,12 @@
-bin/*
-build/*
-src/tpp/frontend.c
-.vs/*.sdf
-.vs/*.suo
-.vs/*.opensdf
+/deemon
+/asm.S
+/input.dee
+/bin/*
+/build/*
+/src/tpp/frontend.c
+/.vs/*.sdf
+/.vs/*.suo
+/.vs/*.opensdf
 *.exe
 *.exp
 *.lib
@@ -13,8 +16,3 @@ src/tpp/frontend.c
 *.a
 *.dec
 *.stackdump
-lib/.objs/*
-lib/.deps/*
-/deemon
-/asm.S
-/input.dee

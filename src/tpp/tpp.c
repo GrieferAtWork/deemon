@@ -2244,10 +2244,10 @@ TPPFile_Filename(struct TPPFile const *__restrict self,
   assert(self);
   /* Walk along macro files to locate the underlying textfile. */
   if (self->f_kind == TPPFILE_KIND_EXPLICIT) {
-   if ((self = self->f_prev) == NULL) return NULL;
+   if ((self = self->f_prev) == NULL) goto nope;
   } else if (self->f_kind == TPPFILE_KIND_MACRO) {
    /* The definitions file may be NULL for predefined macros. */
-   if ((self = self->f_macro.m_deffile) == NULL) return NULL;
+   if ((self = self->f_macro.m_deffile) == NULL) goto nope;
   } else break;
  }
  assert(self->f_kind == TPPFILE_KIND_TEXT);
@@ -2258,6 +2258,9 @@ TPPFile_Filename(struct TPPFile const *__restrict self,
  }
  if (opt_filename_length) *opt_filename_length = self->f_namesize;
  return self->f_name;
+nope:
+ if (opt_filename_length) *opt_filename_length = 0;
+ return NULL;
 }
 
 PUBLIC struct TPPFile *TPPCALL
