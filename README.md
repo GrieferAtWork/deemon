@@ -4,9 +4,13 @@ Deemon, completely rewritten with a new focus on clean, intuitive and functional
 For more information on changes, fixes and improvements, see /lib/LANGUAGE.txt
 
 Deemon is a C-like, interpreted, object-orient and exception-enabled scripting language, greatly inspired by python's runtime library, while sharing many syntax constructs with common languages such as C, java and javascript.
+
 At its core, deemon is designed for sequence and string processing, being the inventor of the expand-expression (as seen in something like <code>x = [a...,42,b...];</code> which creates a new list consisting of the items from <code>a</code>, followed by <code>42</code>, then those from <code>b</code>), as well as including many language constructs useful in such situations, including <code>yield</code>-statements, and generator expression (such as <code>foo = for (local x: bar) x.strip();</code>, where <code>foo</code> is a sequence containing the elements of <code>bar</code> after thore were transformed with a call to a member function <code>strip</code>)
+
 Especially in this rewrite, deemon is shining more than ever when it comes to string functionality, providing <b>regular expression</b> support, as well as support for <b>wild cards</b>, alongside fully featured <b>unicode</b> support.
+
 In other area, deemon continues to shine, being more expandable than ever with the introduction of a module-based library that comes preloaded with an <code>fs</code> module allowing for filesystem operations, or the builtin <code>file from deemon</code> type allowing for optionally buffered file or TTY I/O, across modules such as <code>time</code> for working with the gregorian calender, and the <code>net</code> providing an object-orient model for sockets.
+
 Deemon is truely a universally useful language that has learned from its past mistakes and shortcomings, allowing you to write highly efficient code, that will be just as easy to read as it was to write.
 
 ### Major improvements
@@ -107,8 +111,8 @@ $ export CROSS_PREFIX="/bin/i686-w64-mingw32-"
 $ bash make.sh
 
 ## Known problems
-While the core compiles fine under linux, dex modules don't.
-I havn't yet figured out how to get an ELF shared library to link against a statically linked executable's dynamic symbol table. Deemon 100 didn't run into this problem because it had the core be a shared library, too, which I'm not going to do because dynamically relocating the core at runtime would be \_way\_ too expensive due to the enourmous number of pointers between static structures.
+While the core compiles fine under linux, dex modules don't. I havn't yet figured out how to get an ELF shared library to link against a statically linked executable's dynamic symbol table. Deemon 100 didn't run into this problem because it had the core be a shared library, too, which I'm not going to do because dynamically relocating the core at runtime would be \_way\_ too expensive due to the enourmous number of pointers between static structures.
+
 On Windows everything is pre-linked at a fixed address, and linking against executables is just as simple as linking against libraries, and I had no problems getting it to work.
 
 
