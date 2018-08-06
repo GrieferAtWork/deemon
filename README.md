@@ -1,9 +1,9 @@
-### deemon - Deemon scripting language
+# deemon - Deemon scripting language
 
 Deemon, completely rewritten with a new focus on clean, intuitive and function language design, while still maintaining a backwards compatibility rate high enough to allow for simply porting of existing code.
 For more information on changes, fixes and improvements, see /lib/LANGUAGE.txt
 
-# Major improvements
+### Major improvements
   - Introduction of a module-based dependency system that allows code reuse without relying on preprocessor functionality that really didn't fit a scripting language all too well.
   - With more emphasis on documentation, deemon now comes shipped with a documentation server accessing via web-browser
     - Links listed below require that you are running
@@ -38,7 +38,7 @@ For more information on changes, fixes and improvements, see /lib/LANGUAGE.txt
   - Added compiler warnings for various questionable cases (including use of reserved keywords as symbol names)
   - I took the time to write the entire interpreter in i386 assembly (by hand), providing a significant performance boost on 32-bit intel machines.
 
-# Noteworthy changes and fixes
+### Noteworthy changes and fixes
   - Inplace operators have significantly different operation protocols that regular operators (<code>x += y;</code> is emulated as <code>x = x + y;</code> at runtime when no inplace operator exists)
   - Clases now require the user to declare member variables (also: I actually implemented a syntax for super-initialization in constructors)
   - Introduction of new symbol classes for extern (aka. imported) and global (aka. exported) objects
@@ -53,19 +53,19 @@ For more information on changes, fixes and improvements, see /lib/LANGUAGE.txt
   - Single-element tuples can now be constructed as <code>(foo,)</code>
   - While deemon 100's compiler configuration handled pretty much any syntax problem with a warning, deemon 200 is default-configured to produce errors, thus preventing faulty code from accidentally being executed
 
-# Noteworthy maintained features (that will stay)
+### Noteworthy maintained features (that will stay)
   - Inplace soruce formatting <code>deemon -F</code>
   - <code>pack</code>-expressions to omit parenthesis (<code>foo pack 10,20</code> is the same as <code>foo(10,20)</code>)
   - A fully featured C preprocessor (it's a highly advanced version of tpp, including all of its extensions)
   - The <code>\_\_nth</code> keyword being used to select secondary variable matches.
 
-# Deprecated features (discouraged usage, but continued maintainance)
+### Deprecated features (discouraged usage, but continued maintainance)
   - <code>#include \<...\></code> You really shouldn't be including files any more. - Use modules instead (they're way better)
   - Various minor syntax changes to steer usercode to before more uniform (warned about in new code; ignored in legacy code)
   - The dedicated syntax for cells (<code>\<foo\></code> is deprecated and not encouraged)
     - Use <code>cell from deemon</code> instead.
 
-# Dropped features
+### Dropped features
   - C-emulation of <code>struct</code>, <code>extern</code>, <code>union</code>, etc.
     - The runtime-aspect is still available through ctypes (http://localhost:8080/modules/ctypes), however don't have a dedicated syntax any more
     - Maintained C-like features that won't go away:
@@ -77,7 +77,7 @@ For more information on changes, fixes and improvements, see /lib/LANGUAGE.txt
   - The <code>operator move()</code> constructor has been removed, as well as the <code>move</code> keyword.
   - Removed the logical XOR operator <code>^^</code> (just cast both operands to bool, then use the regular XOR)
 
-# Dropped features that are emulated in legacy code
+### Dropped features that are emulated in legacy code
 Legacy code being detected by it #including any of the old headers
   - C-like syntax for attributes <code>\_\_attribute\_\_((attrib))</code>, <code>\_\_declspec(attrib)</code>, <code>[[attrib]]</code>
     - Deemon 200 relies less than ever on attributes, and where they are useful, tags are used <code>@attrib</code>
