@@ -30,6 +30,7 @@
 #include <deemon/none.h>
 #include <deemon/format.h>
 #include <deemon/arg.h>
+#include <deemon/bytes.h>
 #include <deemon/string.h>
 #include <deemon/seq.h>
 #include <deemon/int.h>
@@ -544,9 +545,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self,
                  size_t max_length, bool keep_lf) {
  /* TODO: Unicode support? (or maybe change things to return a `bytes' object?) */
- DREF DeeObject *result; int ch;
- struct ascii_printer printer = ASCII_PRINTER_INIT;
- DeeTypeObject *tp_self; uint32_t features;
+ DeeTypeObject *tp_self; uint32_t features; int ch;
  int (DCALL *pgetc)(DeeFileObject *__restrict,dioflag_t);
  int (DCALL *pungetc)(DeeFileObject *__restrict,int);
  ASSERT_OBJECT(self);
@@ -577,50 +576,52 @@ DeeFile_ReadLine(DeeObject *__restrict self,
  err_unimplemented_operator(Dee_TYPE(self),FILE_OPERATOR_GETC);
  goto err;
 got_read:
- /* Keep on reading characters until a linefeed is encountered. */
- while (printer.ap_length < max_length) {
-  ch = (*pgetc)((DeeFileObject *)self,DEE_FILEIO_FNORMAL);
-  if (ch == '\r') {
-   /* If the next character is '\n', then we must consume it as well. */
+ {
+  struct bytes_printer printer = BYTES_PRINTER_INIT;
+  /* Keep on reading characters until a linefeed is encountered. */
+  while (BYTES_PRINTER_SIZE(&printer) < max_length) {
    ch = (*pgetc)((DeeFileObject *)self,DEE_FILEIO_FNORMAL);
-   if (ch >= 0 && ch != '\n')
-       ch = (*pungetc)((DeeFileObject *)self,ch);
-   if (ch == GETC_ERR) goto err;
-   /* Found a \r\n or \r-linefeed. */
-   if (keep_lf) {
-    if (ascii_printer_putc(&printer,'\r')) goto err;
-    if (ch == '\n' && printer.ap_length < max_length &&
-        ascii_printer_putc(&printer,'\n')) goto err;
+   if (ch == '\r') {
+    /* If the next character is '\n', then we must consume it as well. */
+    ch = (*pgetc)((DeeFileObject *)self,DEE_FILEIO_FNORMAL);
+    if (ch >= 0 && ch != '\n')
+        ch = (*pungetc)((DeeFileObject *)self,ch);
+    if (ch == GETC_ERR) goto err_printer;
+    /* Found a \r\n or \r-linefeed. */
+    if (keep_lf) {
+     if (bytes_printer_putbyte(&printer,'\r')) goto err_printer;
+     if (ch == '\n' && BYTES_PRINTER_SIZE(&printer) < max_length &&
+         bytes_printer_putbyte(&printer,'\n')) goto err_printer;
+    }
+    goto done;
    }
-   goto done;
-  }
-  if (ch == GETC_ERR) goto err;
-  if (ch == '\n') {
-   /* Found a \n-linefeed */
-   if (keep_lf &&
-       ascii_printer_putc(&printer,'\n'))
-       goto err;
-   goto done;
-  }
-  if (ch == GETC_EOF) {
-   /* Stop on EOF */
-   if (!printer.ap_length) {
-    /* Nothing was read -> return ITER_DONE */
-    ascii_printer_fini(&printer);
-    return ITER_DONE;
+   if (ch == GETC_ERR) goto err_printer;
+   if (ch == '\n') {
+    /* Found a \n-linefeed */
+    if (keep_lf &&
+        bytes_printer_putbyte(&printer,'\n'))
+        goto err_printer;
+    goto done;
    }
-   goto done;
+   if (ch == GETC_EOF) {
+    /* Stop on EOF */
+    if (!BYTES_PRINTER_SIZE(&printer)) {
+     /* Nothing was read -> return ITER_DONE */
+     bytes_printer_fini(&printer);
+     return ITER_DONE;
+    }
+    goto done;
+   }
+   /* Print the character. */
+   if (bytes_printer_putbyte(&printer,(uint8_t)ch))
+       goto err_printer;
   }
-  /* Print the character. */
-  if (ascii_printer_putc(&printer,(char)ch))
-      goto err;
- }
 done:
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+  return bytes_printer_pack(&printer);
+err_printer:
+  bytes_printer_fini(&printer);
+ }
 err:
- ascii_printer_fini(&printer);
  return NULL;
 }
 
@@ -630,10 +631,8 @@ err:
 PUBLIC DREF DeeObject *DCALL
 DeeFile_ReadText(DeeObject *__restrict self,
                  size_t max_length, bool readall) {
- DREF DeeObject *result; uint32_t features; DeeTypeObject *tp_self;
- /* TODO: Unicode support? (or maybe change things to return a `bytes' object?) */
- struct ascii_printer printer = ASCII_PRINTER_INIT;
- dssize_t(DCALL *pread)(DeeFileObject *__restrict,void *__restrict,size_t,dioflag_t);
+ uint32_t features; DeeTypeObject *tp_self;
+ dssize_t (DCALL *pread)(DeeFileObject *__restrict,void *__restrict,size_t,dioflag_t);
  ASSERT_OBJECT(self);
  tp_self = Dee_TYPE(self);
  if (tp_self == &DeeSuper_Type) {
@@ -643,7 +642,7 @@ DeeFile_ReadText(DeeObject *__restrict self,
  /* Figure out the getc/ungetc callbacks that should be used. */
  while (DeeFileType_CheckExact(tp_self)) {
   features = tp_self->tp_features;
-  if (features&TF_HASFILEOPS) {
+  if (features & TF_HASFILEOPS) {
    pread = ((DeeFileTypeObject *)tp_self)->ft_read;
    if likely(pread) goto got_read;
    break;
@@ -653,27 +652,29 @@ DeeFile_ReadText(DeeObject *__restrict self,
  err_unimplemented_operator(Dee_TYPE(self),FILE_OPERATOR_READ);
  goto err;
 got_read:
- for (;;) {
-  char *buffer; dssize_t read_size;
-  size_t bufsize = MIN(max_length,READTEXT_BUFSIZE);
-  /* Allocate more buffer memory. */
-  buffer = ascii_printer_alloc(&printer,bufsize);
-  if unlikely(!buffer) goto err;
-  /* Read more data. */
-  read_size = (*pread)((DeeFileObject *)self,buffer,bufsize,DEE_FILEIO_FNORMAL);
-  if unlikely(read_size < 0) goto err;
-  ascii_printer_release(&printer,bufsize-(size_t)read_size);
-  if (readall ? (size_t)read_size == 0
-              : (size_t)read_size != bufsize)
-      break; /* EOF */
-  max_length -= (size_t)read_size;
+ {
+  struct bytes_printer printer = BYTES_PRINTER_INIT;
+  for (;;) {
+   uint8_t *buffer; dssize_t read_size;
+   size_t bufsize = MIN(max_length,READTEXT_BUFSIZE);
+   /* Allocate more buffer memory. */
+   buffer = bytes_printer_alloc(&printer,bufsize);
+   if unlikely(!buffer) goto err_printer;
+   /* Read more data. */
+   read_size = (*pread)((DeeFileObject *)self,buffer,bufsize,DEE_FILEIO_FNORMAL);
+   if unlikely(read_size < 0) goto err_printer;
+   bytes_printer_release(&printer,bufsize-(size_t)read_size);
+   if (readall ? (size_t)read_size == 0
+               : (size_t)read_size != bufsize)
+       break; /* EOF */
+   max_length -= (size_t)read_size;
+  }
+ /*done:*/
+  return bytes_printer_pack(&printer);
+err_printer:
+  bytes_printer_fini(&printer);
  }
-/*done:*/
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
 err:
- ascii_printer_fini(&printer);
  return NULL;
 }
 
@@ -681,10 +682,8 @@ PUBLIC DREF DeeObject *DCALL
 DeeFile_PReadText(DeeObject *__restrict self,
                   size_t max_length, dpos_t pos,
                   bool readall) {
- DREF DeeObject *result; uint32_t features; DeeTypeObject *tp_self;
- /* TODO: Unicode support? (or maybe change things to return a `bytes' object?) */
- struct ascii_printer printer = ASCII_PRINTER_INIT;
- dssize_t(DCALL *ppread)(DeeFileObject *__restrict,void *__restrict,size_t,dpos_t,dioflag_t);
+ uint32_t features; DeeTypeObject *tp_self;
+ dssize_t (DCALL *ppread)(DeeFileObject *__restrict,void *__restrict,size_t,dpos_t,dioflag_t);
  ASSERT_OBJECT(self);
  tp_self = Dee_TYPE(self);
  if (tp_self == &DeeSuper_Type) {
@@ -704,28 +703,30 @@ DeeFile_PReadText(DeeObject *__restrict self,
  err_unimplemented_operator(Dee_TYPE(self),FILE_OPERATOR_PREAD);
  goto err;
 got_read:
- for (;;) {
-  char *buffer; dssize_t read_size;
-  size_t bufsize = MIN(max_length,READTEXT_BUFSIZE);
-  /* Allocate more buffer memory. */
-  buffer = ascii_printer_alloc(&printer,bufsize);
-  if unlikely(!buffer) goto err;
-  /* Read more data. */
-  read_size = (*ppread)((DeeFileObject *)self,buffer,bufsize,pos,DEE_FILEIO_FNORMAL);
-  if unlikely(read_size < 0) goto err;
-  ascii_printer_release(&printer,bufsize-(size_t)read_size);
-  if (readall ? (size_t)read_size == 0
-              : (size_t)read_size != bufsize)
-      break; /* EOF */
-  max_length -= (size_t)read_size;
-  pos        += (size_t)read_size;
- }
+ {
+  struct bytes_printer printer = BYTES_PRINTER_INIT;
+  for (;;) {
+   uint8_t *buffer; dssize_t read_size;
+   size_t bufsize = MIN(max_length,READTEXT_BUFSIZE);
+   /* Allocate more buffer memory. */
+   buffer = bytes_printer_alloc(&printer,bufsize);
+   if unlikely(!buffer) goto err_printer;
+   /* Read more data. */
+   read_size = (*ppread)((DeeFileObject *)self,buffer,bufsize,pos,DEE_FILEIO_FNORMAL);
+   if unlikely(read_size < 0) goto err_printer;
+   bytes_printer_release(&printer,bufsize-(size_t)read_size);
+   if (readall ? (size_t)read_size == 0
+               : (size_t)read_size != bufsize)
+       break; /* EOF */
+   max_length -= (size_t)read_size;
+   pos        += (size_t)read_size;
+  }
 /*done:*/
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+  return bytes_printer_pack(&printer);
+err_printer:
+  bytes_printer_fini(&printer);
+ }
 err:
- ascii_printer_fini(&printer);
  return NULL;
 }
 
@@ -1806,7 +1807,7 @@ file_readline(DeeObject *__restrict self,
 
 PRIVATE struct type_method file_methods[] = {
     { "read", &file_read,
-      DOC("(int max_bytes=-1,bool readall=false)->string\n"
+      DOC("(int max_bytes=-1,bool readall=false)->bytes\n"
           "Read and return at most @max_bytes of data from the file stream. "
           "When @readall is :true, keep on reading data until the buffer is full, or the "
           "read-callback returns ${0}, rather than until it returns something other than the "
@@ -1824,11 +1825,11 @@ PRIVATE struct type_method file_methods[] = {
           "returns $0 or until all data has been written, rather than invoke "
           "the write-callback only a single time.") },
     { "pread", &file_pread,
-      DOC("(int pos,int max_bytes=-1,bool readall=false)->string\n"
+      DOC("(int pos,int max_bytes=-1,bool readall=false)->bytes\n"
           "Similar to #read, but read data from a given file-offset "
           "@pos, rather than from the current file position") },
     { "preadinto", &file_preadinto,
-      DOC("(buffer dst,int pos,bool readall=false)->string\n"
+      DOC("(buffer dst,int pos,bool readall=false)->bytes\n"
           "Similar to #readinto, but read data from a given file-offset "
           "@pos, rather than from the current file position") },
     { "pwrite", &file_pwrite,
@@ -1876,10 +1877,11 @@ PRIVATE struct type_method file_methods[] = {
     { DeeString_STR(&str_size), &file_size,
       DOC("()->int\nReturns the size (in bytes) of the file stream") },
     { "readline", &file_readline,
-      DOC("(int max_bytes=-1,bool keeplf=true)->string\n"
-          "(bool keeplf)->string\n"
-          "Read one line from the file stream, but read at most @max_bytes bytes. "
-          "When @keeplf is :false, strip the trailing linefeed from the returned string") },
+      DOC("(bool keeplf)->bytes\n"
+          "(int max_bytes=-1,bool keeplf=true)->bytes\n"
+          "Read one line from the file stream, but read at most @max_bytes bytes.\n"
+          "When @keeplf is :false, strip the trailing linefeed from the returned bytes object") },
+
     { NULL }
 };
 
