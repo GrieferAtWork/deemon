@@ -64,6 +64,29 @@ ob_weakref_copy(WeakRef *__restrict self,
  return 0;
 }
 PRIVATE int DCALL
+ob_weakref_deep(WeakRef *__restrict self,
+                WeakRef *__restrict other) {
+ DREF DeeObject *refobj,*refcopy;
+ refobj = weakref_lock(&other->wr_ref);
+ if (!refobj)
+  weakref_null(&self->wr_ref);
+ else {
+  refcopy = DeeObject_DeepCopy(refobj);
+  Dee_Decref(refobj);
+  if unlikely(!refcopy) return -1;
+#ifdef NDEBUG
+  weakref_init(&self->wr_ref,refcopy);
+#else
+  {
+   bool ok = weakref_init(&self->wr_ref,refcopy);
+   ASSERT(ok && "Then how did `other' manage to create one?");
+  }
+#endif
+  Dee_Decref(refcopy);
+ }
+ return 0;
+}
+PRIVATE int DCALL
 ob_weakref_ctor(WeakRef *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  DeeObject *obj;
@@ -282,7 +305,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */&ob_weakref_init,
                 /* .tp_copy_ctor = */&ob_weakref_copy,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_deep_ctor = */&ob_weakref_deep,
                 /* .tp_any_ctor  = */&ob_weakref_ctor,
                 /* .tp_free      = */NULL,
                 {
