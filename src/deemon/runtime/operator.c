@@ -695,8 +695,17 @@ DEFINE_OPERATOR(DREF DeeObject *,DeepCopy,(DeeObject *__restrict self)) {
   * Note that the variable-and fixed-length constructors are located at the same
   * offset in the type structure, meaning that we only need to check one address. */
  if unlikely(!ctor_type->tp_init.tp_alloc.tp_deep_ctor) {
-  err_unimplemented_operator(tp_self,OPERATOR_DEEPCOPY);
-  return NULL;
+  if (!ctor_type->tp_init.tp_alloc.tp_copy_ctor) {
+   /* when neither a deepcopy, nor a regular copy operator are present
+    * assume that the object is immutable and re-return the object itself. */
+   return_reference_(self);
+  }
+  /* There isn't a deepcopy operator, but there is a copy operator.
+   * Now, if there also is a deepload operator, then we can invoke that one! */
+  if (!ctor_type->tp_init.tp_deepload) {
+   err_unimplemented_operator(tp_self,OPERATOR_DEEPCOPY);
+   return NULL;
+  }
  }
  /* Check if this object is already been constructed. */
  result = deepcopy_lookup(thread_self,self,tp_self);
@@ -712,7 +721,10 @@ DEFINE_OPERATOR(DREF DeeObject *,DeepCopy,(DeeObject *__restrict self)) {
           "Non-GC object is inheriting its constructors for a GC-enabled object");
 #endif /* CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
   /* Variable-length object. */
-  result = DeeType_INVOKE_VAR_DEEP(ctor_type,tp_self,self);
+  result = ctor_type->tp_init.tp_var.tp_deep_ctor
+         ? DeeType_INVOKE_VAR_DEEP(ctor_type,tp_self,self)
+         : DeeType_INVOKE_VAR_COPY(ctor_type,tp_self,self)
+         ;
   if unlikely(!result) goto done_endcopy;
  } else {
   ASSERT(!(ctor_type->tp_flags&TP_FVARIABLE));
@@ -734,7 +746,9 @@ DEFINE_OPERATOR(DREF DeeObject *,DeepCopy,(DeeObject *__restrict self)) {
   /* Perform basic object initialization. */
   DeeObject_Init(result,tp_self);
   /* Invoke the deepcopy constructor first. */
-  if unlikely(DeeType_INVOKE_ALLOC_DEEP(ctor_type,tp_self,result,self)) {
+  if unlikely(ctor_type->tp_init.tp_alloc.tp_copy_ctor
+            ? DeeType_INVOKE_ALLOC_DEEP(ctor_type,tp_self,result,self)
+            : DeeType_INVOKE_ALLOC_COPY(ctor_type,tp_self,result,self)) {
    /* Undo allocating and base-initializing the new object. */
    DeeObject_FreeTracker(result);
    if (ctor_type->tp_init.tp_alloc.tp_free)
