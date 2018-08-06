@@ -633,11 +633,12 @@ ast_doesnt_return(DeeAstObject *__restrict self,
   /* test the guarded expression. */
   temp = ast_doesnt_return(self->ast_try.ast_guard,flags);
   if (temp < 0) return temp;
-  if (temp) goto doesnt_return; /* The guarded expression doesn't return */
-  /* The guarded expression is predictable, and does return.
-   * If there are no handlers that ever return, the try-block doesn't either. */
-  if (!has_returning_handler)
-       goto doesnt_return;
+  if (temp) {
+   /* The guarded expression doesn't return.
+    * If there are no handlers that ever return, the try-block doesn't either */
+   if (!has_returning_handler)
+        goto doesnt_return;
+  }
   goto does_return;
  } break;
 
