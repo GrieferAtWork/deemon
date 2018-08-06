@@ -318,6 +318,7 @@ do_integer_scan:
      if (!(match_contains(sel_begin,format,*data) ^ inverse_selection))
            break;
      --width;
+     ++data;
     }
    } else {
     while (data < data_end && width) {
