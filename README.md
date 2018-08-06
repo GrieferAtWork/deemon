@@ -5,15 +5,15 @@ For more information on changes, fixes and improvements, see /lib/LANGUAGE.txt
 
 Deemon is a C-like, interpreted, object-orient and exception-enabled scripting language, greatly inspired by python's runtime library, while sharing many syntax constructs with common languages such as C, java and javascript.
 
-At its core, deemon is designed for sequence and string processing, being the inventor of the expand-expression (as seen in something like <code>x = [a...,42,b...];</code> which creates a new list consisting of the items from <code>a</code>, followed by <code>42</code>, then those from <code>b</code>), as well as including many language constructs useful in such situations, including <code>yield</code>-statements, and generator expression (such as <code>foo = for (local x: bar) x.strip();</code>, where <code>foo</code> is a sequence containing the elements of <code>bar</code> after thore were transformed with a call to a member function <code>strip</code>), or lambda functions.
+At its core, deemon is designed for sequence and string processing, being the inventor of the expand-expression (as seen in something like <code>x = [a...,42,b...];</code> which creates a new list consisting of the items from <code>a</code>, followed by <code>42</code>, then those from <code>b</code>), as well as including many language constructs useful in such situations, including <code>yield</code>-statements, lambda functions, and generator expression (such as <code>foo = for (local x: bar) x.strip();</code>, where <code>foo</code> is a sequence containing the elements of <code>bar</code> after thore were transformed with a call to a member function <code>strip</code>).
 
-Especially in this rewrite, deemon is shining more than ever when it comes to string functionality, providing <b>regular expression</b> support, as well as support for <b>wild cards</b>, alongside fully featured <b>unicode</b> support.
+Especially following this rewrite, deemon is shining more than ever when it comes to string functionality, providing <b>regular expression</b> support, as well as support for <b>wild cards</b>, alongside fully featured <b>unicode</b> integration.
 
-In other area, deemon continues to shine, being more expandable than ever with the introduction of a module-based library that comes preloaded with an <code>fs</code> module allowing for filesystem operations, or the builtin <code>file from deemon</code> type allowing for optionally buffered file or TTY I/O, across modules such as <code>time</code> for working with the gregorian calender, and the <code>net</code> providing an object-orient model for sockets.
+In other area, deemon continues to shine, being more expandable than ever with the introduction of a module-based library that comes preloaded with an <code>fs</code> module allowing for filesystem operations, or the builtin <code>file from deemon</code> type allowing for optionally buffered file or TTY I/O, across modules such as <code>time</code> for working with the gregorian calender, and <code>net</code> providing an object-orient model for sockets. But it doesn't just end there, as creating a new module is just as simple as putting together a small script containing a couple of functions.
 
-Deemon is truely a universally useful language that has learned from its past mistakes and shortcomings, allowing you to write highly efficient code, that will be just as easy to read as it was to write.
+Deemon is truely a universally useful language that has learned much from its past mistakes, shortcomings, as well as strength, allowing you to write highly efficient code, that will be just as easy to read as it was to write.
 
-Code examples can be bound in <b>/util/tut</b>
+Code examples can be found in <b>/util/tut</b>
 
 ### Major improvements
   - Introduction of a module-based dependency system that allows code reuse without relying on preprocessor functionality that really didn't fit a scripting language all too well.
