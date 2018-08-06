@@ -15,6 +15,6 @@ src/tpp/frontend.c
 *.stackdump
 lib/.objs/*
 lib/.deps/*
-deemon
-asm.S
-input.dee
+/deemon
+/asm.S
+/input.dee

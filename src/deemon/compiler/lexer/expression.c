@@ -1,0 +1,1809 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_COMPILER_LEXER_EXPRESSION_C
+#define GUARD_DEEMON_COMPILER_LEXER_EXPRESSION_C 1
+
+#include <deemon/api.h>
+#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/ast.h>
+#include <deemon/compiler/lexer.h>
+#include <deemon/seq.h>
+#include <deemon/map.h>
+#include <deemon/dict.h>
+#include <deemon/float.h>
+#include <deemon/hashset.h>
+#include <deemon/error.h>
+#include <deemon/none.h>
+#include <deemon/bool.h>
+#include <deemon/int.h>
+#include <deemon/string.h>
+#include <deemon/list.h>
+#include <deemon/tuple.h>
+
+#include <string.h> /* memchr */
+
+DECL_BEGIN
+
+#define GET_CHOP(x) (ASSERT((x) < 128),chops[x])
+INTERN uint8_t const chops[128] = {
+/*[[[deemon
+#include <util>
+
+
+local table = dict {
+    "+": "OPERATOR_ADD",
+    "-": "OPERATOR_SUB",
+    "*": "OPERATOR_MUL",
+    "/": "OPERATOR_DIV",
+    "%": "OPERATOR_MOD",
+    "<": "OPERATOR_LO",
+    ">": "OPERATOR_GR",
+    "&": "OPERATOR_AND",
+    "|": "OPERATOR_OR",
+    "^": "OPERATOR_XOR",
+};
+
+for (local x: util::range(128)) {
+    local key   = util::chr((uint8_t)x);
+    local value = table.get(key);
+    if (value is none) value = "0";
+    print "    /" "* "+repr(key)+" *" "/",value+",";
+}
+]]]*/
+    /* "\0" */ 0,
+    /* "\1" */ 0,
+    /* "\2" */ 0,
+    /* "\3" */ 0,
+    /* "\4" */ 0,
+    /* "\5" */ 0,
+    /* "\6" */ 0,
+    /* "\a" */ 0,
+    /* "\b" */ 0,
+    /* "\t" */ 0,
+    /* "\n" */ 0,
+    /* "\v" */ 0,
+    /* "\c" */ 0,
+    /* "\r" */ 0,
+    /* "\xe\xf" */ 0,
+    /* "\xf" */ 0,
+    /* "\x10" */ 0,
+    /* "\x11" */ 0,
+    /* "\x12" */ 0,
+    /* "\x13" */ 0,
+    /* "\x14" */ 0,
+    /* "\x15" */ 0,
+    /* "\x16" */ 0,
+    /* "\x17" */ 0,
+    /* "\x18" */ 0,
+    /* "\x19" */ 0,
+    /* "\x1a" */ 0,
+    /* "\e" */ 0,
+    /* "\x1c" */ 0,
+    /* "\x1d" */ 0,
+    /* "\x1e" */ 0,
+    /* "\x1f" */ 0,
+    /* " " */ 0,
+    /* "!" */ 0,
+    /* "\"" */ 0,
+    /* "#" */ 0,
+    /* "$" */ 0,
+    /* "%" */ OPERATOR_MOD,
+    /* "&" */ OPERATOR_AND,
+    /* "'" */ 0,
+    /* "(" */ 0,
+    /* ")" */ 0,
+    /* "*" */ OPERATOR_MUL,
+    /* "+" */ OPERATOR_ADD,
+    /* "," */ 0,
+    /* "-" */ OPERATOR_SUB,
+    /* "." */ 0,
+    /* "/" */ OPERATOR_DIV,
+    /* "0" */ 0,
+    /* "1" */ 0,
+    /* "2" */ 0,
+    /* "3" */ 0,
+    /* "4" */ 0,
+    /* "5" */ 0,
+    /* "6" */ 0,
+    /* "7" */ 0,
+    /* "8" */ 0,
+    /* "9" */ 0,
+    /* ":" */ 0,
+    /* ";" */ 0,
+    /* "<" */ OPERATOR_LO,
+    /* "=" */ 0,
+    /* ">" */ OPERATOR_GR,
+    /* "?" */ 0,
+    /* "@" */ 0,
+    /* "A" */ 0,
+    /* "B" */ 0,
+    /* "C" */ 0,
+    /* "D" */ 0,
+    /* "E" */ 0,
+    /* "F" */ 0,
+    /* "G" */ 0,
+    /* "H" */ 0,
+    /* "I" */ 0,
+    /* "J" */ 0,
+    /* "K" */ 0,
+    /* "L" */ 0,
+    /* "M" */ 0,
+    /* "N" */ 0,
+    /* "O" */ 0,
+    /* "P" */ 0,
+    /* "Q" */ 0,
+    /* "R" */ 0,
+    /* "S" */ 0,
+    /* "T" */ 0,
+    /* "U" */ 0,
+    /* "V" */ 0,
+    /* "W" */ 0,
+    /* "X" */ 0,
+    /* "Y" */ 0,
+    /* "Z" */ 0,
+    /* "[" */ 0,
+    /* "\\" */ 0,
+    /* "]" */ 0,
+    /* "^" */ OPERATOR_XOR,
+    /* "_" */ 0,
+    /* "`" */ 0,
+    /* "a" */ 0,
+    /* "b" */ 0,
+    /* "c" */ 0,
+    /* "d" */ 0,
+    /* "e" */ 0,
+    /* "f" */ 0,
+    /* "g" */ 0,
+    /* "h" */ 0,
+    /* "i" */ 0,
+    /* "j" */ 0,
+    /* "k" */ 0,
+    /* "l" */ 0,
+    /* "m" */ 0,
+    /* "n" */ 0,
+    /* "o" */ 0,
+    /* "p" */ 0,
+    /* "q" */ 0,
+    /* "r" */ 0,
+    /* "s" */ 0,
+    /* "t" */ 0,
+    /* "u" */ 0,
+    /* "v" */ 0,
+    /* "w" */ 0,
+    /* "x" */ 0,
+    /* "y" */ 0,
+    /* "z" */ 0,
+    /* "{" */ 0,
+    /* "|" */ OPERATOR_OR,
+    /* "}" */ 0,
+    /* "~" */ 0,
+    /* "\d" */ 0,
+//[[[end]]]
+};
+
+
+
+/* Lookup mode used by secondary AST operands */
+#define LOOKUP_SYM_SECONDARY  LOOKUP_SYM_NORMAL
+
+INTERN uint16_t parser_flags = PARSE_FNORMAL;
+INTERN bool DCALL maybe_expression_begin(void) {
+ bool result = false;
+ switch (tok) {
+ case '+':
+ case '-':
+ case '!':
+ case '~':
+ case '(':
+ case '#':
+ case '<': /* For cells. */
+ case '[': /* For lists. */
+ case '{': /* Brace initializers. */
+ case TOK_INC:
+ case TOK_DEC:
+ case TOK_INT:
+ case TOK_CHAR:
+ case TOK_FLOAT:
+ case TOK_STRING:
+  result = true;
+  break;
+
+ default:
+  /* Any kind of keyword can appear in expressions, either
+   * a native expression keyword, or as a variable name. */
+  result = TPP_ISKEYWORD(tok);
+  break;
+ }
+ return result;
+}
+INTERN bool DCALL
+maybe_expression_begin_c(char peek) {
+ bool result = false;
+ switch (peek) {
+ case '+':
+ case '-':
+ case '!':
+ case '~':
+ case '(':
+ case '#':
+ case '<': /* For cells. */
+ case '[': /* For lists. */
+ case '{': /* Brace initializers. */
+ case '\'':
+ case '\"':
+ case '_': /* For identifiers */
+ case '$': /* For identifiers */
+  result = true;
+  break;
+
+ default:
+  result = !!DeeUni_IsSymCont(peek);
+  break;
+ }
+ return result;
+}
+
+
+PRIVATE DREF DeeAstObject *FCALL
+make_bound_expression(DeeAstObject *__restrict base_expr,
+                      struct ast_loc *__restrict loc) {
+ DREF DeeAstObject *result;
+ if (base_expr->ast_type == AST_SYM) {
+  /* Check if a given symbol is bound. */
+  result = ast_setddi(ast_bndsym(base_expr->ast_sym),&base_expr->ast_ddi);
+ } else if (base_expr->ast_type == AST_OPERATOR &&
+            base_expr->ast_flag == OPERATOR_GETATTR &&
+            base_expr->ast_operator.ast_opb) {
+  /* Check if a given attribute is bound. */
+  result = ast_action2(AST_FACTION_BOUNDATTR,
+                       base_expr->ast_operator.ast_opa,
+                       base_expr->ast_operator.ast_opb);
+ } else if (WARNAT(&base_expr->ast_ddi,W_CANNOT_TEST_EXPRESSION_BINDING)) {
+  result = NULL;
+ } else {
+  /* Fallback-after-warning: Return `true' */
+  result = ast_constexpr(Dee_True);
+ }
+ return ast_putddi(result,loc);
+}
+
+
+PUBLIC int DCALL
+DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
+                          /*utf-8*/char const *__restrict start,
+                          size_t length) {
+ /* Still allow escaped line-feeds! */
+ char *flush_start = (char *)start;
+ char *end = (char *)start + length;
+ for (;;) {
+  char *candidate;
+  uint32_t ch;
+  candidate = (char *)memchr(start,'\\',(size_t)(end - (char *)start));
+  if (!candidate) break;
+  if (unicode_printer_printutf8(printer,
+                               (unsigned char *)flush_start,
+                               (size_t)(candidate - (char *)flush_start)) < 0)
+      goto err;
+  flush_start = candidate;
+  ++candidate;
+  start = (char *)candidate;
+  ASSERT(start <= end);
+  if (start < end) {
+   ch = utf8_readchar((char const **)&candidate,end);
+   if (DeeUni_IsLF(ch)) {
+    if (ch == '\r' && candidate < end && *candidate == '\n')
+        ++candidate; /* CRLF */
+    start = flush_start = candidate;
+   }
+  }
+ }
+ if (unicode_printer_printutf8(printer,
+                              (unsigned char *)flush_start,
+                              (size_t)(end - flush_start)) < 0)
+     goto err;
+ return 0;
+err:
+ return -1;
+}
+
+
+INTERN DREF DeeObject *FCALL ast_parse_string(void) {
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ ASSERT(tok == TOK_STRING);
+ do {
+  char *escape_start = token.t_begin;
+  char *escape_end = token.t_end;
+  if (escape_start < escape_end && escape_start[0] == 'r') {
+   ++escape_start;
+   if (escape_start < escape_end && escape_start[0] == '\"') ++escape_start;
+   if (escape_end > escape_start && escape_end[-1] == '\"') --escape_end;
+   if unlikely(escape_end < escape_start)
+               escape_end = escape_start;
+   if unlikely(DeeString_DecodeLFEscaped(&printer,
+                                         escape_start,
+                                        (size_t)(escape_end-escape_start)))
+      goto err;
+  } else {
+   if (escape_start < escape_end && escape_start[0] == '\"') ++escape_start;
+   if (escape_end > escape_start && escape_end[-1] == '\"') --escape_end;
+   if unlikely(escape_end < escape_start)
+               escape_end = escape_start;
+   if unlikely(DeeString_DecodeBackslashEscaped(&printer,
+                                                escape_start,
+                                               (size_t)(escape_end-escape_start),
+                                                STRING_ERROR_FSTRICT))
+      goto err;
+  }
+  if unlikely(yield() < 0) goto err;
+ } while (tok == TOK_STRING);
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_fini(&printer);
+ return NULL;
+}
+
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_unary_base(unsigned int lookup_mode) {
+ DREF DeeAstObject *result;
+ DREF DeeAstObject *merge;
+ struct ast_loc loc;
+ uint32_t old_flags;
+ switch (tok) {
+
+ {
+  int_t value;
+  DREF DeeObject *resval;
+ case TOK_INT:
+  /* Use our own integer parser, so we can process infinite-precision integers. */
+  resval = DeeInt_FromString(token.t_begin,(size_t)(token.t_end-token.t_begin),
+                             DEEINT_STRING(0,DEEINT_STRING_FESCAPED|
+                                             DEEINT_STRING_FTRY));
+  /* Check if the integer failed to be parsed. */
+  if unlikely(resval == ITER_DONE) {
+   if (WARN(W_INVALID_INTEGER))
+       goto err;
+   goto create_none;
+  }
+create_constexpr:
+  if unlikely(!resval) goto err;
+  result = ast_sethere(ast_constexpr(resval));
+  Dee_Decref(resval);
+  if unlikely(!result) goto err;
+  if unlikely(yield() < 0) goto err_r;
+  break;
+ case TOK_CHAR:
+  if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR) goto err;
+  if (WARN(W_DEPRECATED_CHARACTER_INT)) goto err;
+  resval = DeeInt_NewS64(value);
+  goto create_constexpr;
+ } break;
+
+ {
+  DREF DeeObject *resval;
+ case TOK_STRING:
+  loc_here(&loc);
+  resval = ast_parse_string();
+  if unlikely(!resval) goto err;
+  result = ast_setddi(ast_constexpr(resval),&loc);
+  Dee_Decref(resval);
+ } break;
+
+ {
+  float_t value;
+  DREF DeeObject *resval;
+ case TOK_FLOAT:
+  if (TPP_Atof(&value) == TPP_ATOF_ERR) goto err;
+  resval = DeeFloat_New((double)value);
+  if unlikely(!resval) goto err;
+  /* Construct a new branch for the constant float value. */
+  result = ast_sethere(ast_constexpr(resval));
+  Dee_Decref(resval);
+  if unlikely(!result) goto err;
+  if unlikely(yield() < 0) goto err_r;
+ } break;
+
+ {
+  DeeObject *constval;
+ case KWD_none:
+create_none:
+  constval = Dee_None;
+mkconst:
+  result = ast_sethere(ast_constexpr(constval));
+  if unlikely(!result) goto err;
+  if unlikely(yield() < 0) goto err_r;
+  break;
+ case KWD_true:  constval = Dee_True; goto mkconst;
+ case KWD_false: constval = Dee_False; goto mkconst;
+ }
+
+ case KWD_bound:
+  loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  if (tok == '(') { /* Parenthesis is optional. */
+   old_flags = TPPLexer_Current->l_flags;
+   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+   if unlikely(yield() < 0) goto err_flags;
+   result = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(likely(tok == ')') ? (yield() < 0) :
+               WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+      goto err;
+  } else {
+   result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
+  }
+  if unlikely(!result) goto err;
+  merge = make_bound_expression(result,&loc);
+  Dee_Decref(result);
+  if unlikely(!merge) goto err;
+  result = merge;
+  break;
+
+
+ {
+  uint16_t opid; /* Unary expressions. */
+ case KWD_str:      opid = OPERATOR_STR; goto do_unary_operator_kwd;
+ case KWD_repr:     opid = OPERATOR_REPR; goto do_unary_operator_kwd;
+ case KWD_copy:     opid = OPERATOR_COPY; goto do_unary_operator_kwd;
+ case KWD_deepcopy: opid = OPERATOR_DEEPCOPY;
+do_unary_operator_kwd:
+  loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  if (tok == '(') {
+   old_flags = TPPLexer_Current->l_flags;
+   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+   if unlikely(yield() < 0) goto err_flags;
+   result = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(likely(tok == ')') ? (yield() < 0) :
+               WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+      goto err;
+  } else {
+   result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
+  }
+  if unlikely(!result) goto err;
+  merge = ast_setddi(ast_operator1(opid,0,result),&loc);
+  Dee_Decref(result);
+  if unlikely(!merge) goto err;
+  result = merge;
+  break;
+ case '#':     opid = OPERATOR_SIZE; goto do_unary_operator;
+ case '~':     opid = OPERATOR_INV; goto do_unary_operator;
+ case '+':     opid = OPERATOR_POS; goto do_unary_operator;
+ case '-':     opid = OPERATOR_NEG; goto do_unary_operator;
+ case TOK_INC: opid = OPERATOR_INC; goto do_unary_operator;
+ case TOK_DEC: opid = OPERATOR_DEC;
+do_unary_operator:
+  loc_here(&loc);
+  if (yield() < 0) goto err;
+  result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
+  if unlikely(!result) goto err;
+  merge = ast_setddi(ast_operator1(opid,0,result),&loc);
+  Dee_Decref(result);
+  if unlikely(!merge) goto err;
+  result = merge;
+  break;
+ case KWD_type:
+  loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  if (tok == '(') {
+   old_flags = TPPLexer_Current->l_flags;
+   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+   if unlikely(yield() < 0) goto err_flags;
+   result = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(likely(tok == ')') ? (yield() < 0) :
+               WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+       goto err;
+  } else {
+   result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
+  }
+  if unlikely(!result) goto err;
+  merge = ast_setddi(ast_action1(AST_FACTION_TYPEOF,result),&loc);
+  Dee_Decref(result);
+  if unlikely(!merge) goto err;
+  result = merge;
+  break;
+ } break;
+
+ case '!': /* not */
+  loc_here(&loc);
+  if (yield() < 0) goto err;
+  result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
+  if unlikely(!result) goto err;
+  merge = ast_setddi(ast_bool(AST_FBOOL_NEGATE,result),&loc);
+  Dee_Decref(result);
+  result = merge;
+  break;
+
+
+  /* I admit it. I was an idiot for adding this dedicated syntax for constructing
+   * cell objects. I wasn't thinking and as a result of that, I have to maintain
+   * it for backwards compatibility.
+   * Anyways... The most I can do for now is have it emit a warning, telling that
+   * you should be using `cell from deemon' instead (which actually won't even
+   * break backwards-compatibility with the old deemon, who's `cell' object
+   * offered you the same functionality)
+   * NOTE: To ensure backwards-compatibility, you may place this
+   *       in your code in order to simply always use `cell(...)':
+   * >> #if __DEEMON__ >= 200
+   * >> import cell from deemon;
+   * >> #else
+   * >> #define cell(...) < __VA_ARGS__ >
+   * >> #endif
+   */
+ case TOK_LOGT:
+  loc_here(&loc);
+  if (WARN(W_DEPRECATED_CELL_SYNTAX)) goto err;
+  goto do_empty_cell;
+ case '<': /* cell */
+  loc_here(&loc);
+  if (WARN(W_DEPRECATED_CELL_SYNTAX)) goto err;
+  if (yield() < 0) goto err;
+  if (tok == '>') {
+   /* empty cell. */
+do_empty_cell:
+   result = ast_action0(AST_FACTION_CELL0);
+  } else {
+   result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
+   if unlikely(!result) goto err;
+   if (tok != '>' && WARN(W_EXPECTED_RANGLE_AFTER_LANGLE)) goto err_r;
+   merge = ast_action1(AST_FACTION_CELL1,result);
+   Dee_Decref(result);
+   result = merge;
+  }
+  ast_setddi(result,&loc);
+  if unlikely(yield() < 0)
+     goto err_r;
+  break;
+
+
+ {
+  DREF DeeAstObject *tt_branch;
+  DREF DeeAstObject *ff_branch;
+  uint16_t expect;
+ case KWD_if: /* if-in-expressions. */
+  expect = current_tags.at_expect;
+  loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  old_flags = TPPLexer_Current->l_flags;
+  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+  if unlikely(likely(tok == '(') ? (yield() < 0) :
+              WARN(W_EXPECTED_LPAREN_AFTER_IF)) goto err_flags;
+  result = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+  if unlikely(!result) goto err;
+  if unlikely(likely(tok == ')') ? (yield() < 0) :
+              WARN(W_EXPECTED_RPAREN_AFTER_IF)) goto err;
+  tt_branch = NULL;
+  if (tok != KWD_else && tok != KWD_elif) {
+   tt_branch = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+   if unlikely(!tt_branch) goto err_r;
+  }
+  ff_branch = NULL;
+  if (tok == KWD_elif) {
+   token.t_id = KWD_if; /* Cheat a bit... */
+   goto do_else_branch;
+  }
+  if (tok == KWD_else) {
+   if unlikely(yield() < 0) {err_tt: Dee_XDecref(tt_branch); goto err_r; }
+do_else_branch:
+   ff_branch = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+   if unlikely(!ff_branch) goto err_tt;
+  }
+  merge = ast_setddi(ast_conditional(AST_FCOND_EVAL|expect,result,tt_branch,ff_branch),&loc);
+  Dee_XDecref(ff_branch);
+  Dee_XDecref(tt_branch);
+  Dee_XDecref(result);
+  result = merge;
+ } break;
+
+ case KWD_assert:
+  result = ast_parse_assert(true);
+  break;
+
+ {
+  struct TPPKeyword *function_name;
+ case KWD_function:
+  /* Create a new function */
+  loc_here(&loc);
+  function_name = NULL;
+  if unlikely(yield() < 0) goto err;
+  if (TPP_ISKEYWORD(tok)) {
+   function_name = token.t_kwd;
+   if unlikely(yield() < 0) goto err;
+  }
+  result = ast_setddi(ast_parse_function(function_name,NULL,false),&loc);
+ } break;
+
+ {
+  struct TPPKeyword *class_name;
+  uint16_t class_flags;
+ case KWD_final:
+  class_flags = TP_FFINAL;
+  if unlikely(yield() < 0) goto err;
+  if (unlikely(tok != KWD_class) &&
+      WARN(W_EXPECTED_CLASS_AFTER_FINAL))
+      goto err;
+  goto do_create_class;
+ case KWD_class:
+  class_flags = TP_FNORMAL;
+do_create_class:
+  /* Create a new function */
+  loc_here(&loc);
+  class_name = NULL;
+  if unlikely(yield() < 0) goto err;
+  if (TPP_ISKEYWORD(tok)) {
+   if (tok == KWD_final && !(class_flags&TP_FFINAL)) {
+    /* allow `class final' as an alias for `final class' */
+    if unlikely(yield() < 0) goto err;
+    class_flags |= TP_FFINAL;
+   }
+   if (TPP_ISKEYWORD(tok)) {
+    class_name = token.t_kwd;
+    if unlikely(yield() < 0) goto err;
+   }
+  }
+  /* Actually do parse the class now. */
+  result = ast_setddi(ast_parse_class(class_flags,class_name,false,LOOKUP_SYM_NORMAL),&loc);
+ } break;
+
+ {
+  int has_paren;
+ case KWD_pack:
+  loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  has_paren = 0;
+  old_flags = TPPLexer_Current->l_flags;
+  if (tok == '(') {
+   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+   if unlikely(yield() < 0) goto err_flags;
+   has_paren = tok == '(' ? 2 : 1;
+  }
+  if (tok == '{') {
+   /* Statements in expressions. */
+   if (parser_flags & PARSE_FLFSTMT)
+       TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
+   result = ast_parse_statement(false);
+   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+  } else if (maybe_expression_begin()) {
+   /* Parse the packed expression. */
+   result = ast_parse_comma(has_paren
+                          ? AST_COMMA_FORCEMULTIPLE
+                          : AST_COMMA_FORCEMULTIPLE|AST_COMMA_STRICTCOMMA,
+                            AST_FMULTIPLE_TUPLE);
+   if likely(result &&
+             result->ast_type == AST_EXPAND) {
+    /* Wrap into a single-item tuple multiple-branch:
+     * >> print pack get_items()...; // Convert to tuple. */
+    DREF DeeAstObject **exprv;
+    ast_setddi(result,&loc);
+    exprv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+    if unlikely(!exprv) goto err_r_flags;
+    exprv[0] = result; /* Inherit */
+    merge = ast_multiple(AST_FMULTIPLE_TUPLE,1,exprv);
+    if unlikely(!merge) { Dee_Free(exprv); goto err_r_flags; }
+    result = merge; /* Inherit */
+   }
+  } else {
+   result = ast_constexpr(Dee_EmptyTuple);
+  }
+  ast_setddi(result,&loc);
+  if unlikely(!result) goto err_flags;
+  if (has_paren) {
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(likely(tok == ')') ? (yield() < 0) : 
+               WARN(W_EXPECTED_RPAREN_AFTER_PACK))
+      goto err_r;
+   if (has_paren == 1 &&
+       result->ast_type != AST_MULTIPLE) {
+    /* C-style cast expression (only for single-parenthesis expressions) */
+    merge = ast_parse_cast(result);
+    Dee_Decref(result);
+    result = merge;
+   }
+  }
+ } break;
+
+ case KWD_from:
+ case KWD_import:
+  result = ast_parse_import(false);
+  break;
+
+ case KWD_do:
+ case KWD_while:
+ case KWD_for:
+ case KWD_foreach:
+  /* Loop expressions. */
+  result = ast_parse_loopexpr();
+  break;
+
+ {
+  bool second_paren;
+ case '(':
+  /* Parenthesis. */
+  loc_here(&loc);
+  old_flags = TPPLexer_Current->l_flags;
+  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+  if unlikely(yield() < 0) goto err_flags;
+  second_paren = tok == '(';
+  if (tok == '{') {
+   /* Statements in expressions. */
+   if (parser_flags & PARSE_FLFSTMT)
+       TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
+   result = ast_parse_statement(false);
+   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+  } else if (tok == ')') {
+   /* Empty tuple. */
+   result = ast_constexpr(Dee_EmptyTuple);
+  } else {
+   /* Parenthesis / tuple expression. */
+   result = ast_parse_comma(AST_COMMA_NORMAL,
+                            AST_FMULTIPLE_TUPLE);
+   if likely(result &&
+             result->ast_type == AST_EXPAND) {
+    /* Wrap into a single-item tuple multiple-branch:
+     * >> print (get_items()...); // Convert to tuple. */
+    DREF DeeAstObject **exprv;
+    ast_setddi(result,&loc);
+    exprv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+    if unlikely(!exprv) goto err_r_flags;
+    exprv[0] = result; /* Inherit */
+    merge = ast_multiple(AST_FMULTIPLE_TUPLE,1,exprv);
+    if unlikely(!merge) { Dee_Free(exprv); goto err_r_flags; }
+    result = merge; /* Inherit */
+   }
+  }
+  ast_putddi(result,&loc);
+  if unlikely(!result)
+     goto err_flags;
+  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+  if unlikely(likely(tok == ')') ? (yield() < 0) :
+              WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+     goto err;
+  if (!second_paren &&
+       result->ast_type != AST_MULTIPLE) {
+   /* C-style cast expression (only for single-parenthesis expressions) */
+   merge = ast_parse_cast(result);
+   Dee_Decref(result);
+   result = merge;
+  }
+ } break;
+
+ case KWD_del:
+  /* Delete expression. */
+  loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  old_flags = TPPLexer_Current->l_flags;
+  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+  if unlikely(likely(tok == '(') ? (yield() < 0) :
+              WARN(W_EXPECTED_LPAREN_AFTER_DEL))
+     goto err_flags;
+  result = ast_putddi(ast_parse_del(lookup_mode),&loc);
+  if unlikely(!result) goto err_flags;
+  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+  if unlikely(likely(tok == ')') ? (yield() < 0) :
+              WARN(W_EXPECTED_RPAREN_AFTER_DEL))
+     goto err_r;
+  break;
+
+ case KWD_with:
+  result = ast_parse_with(false,false);
+  break;
+
+ case KWD_try:
+  result = ast_parse_try(false);
+  break;
+
+ {
+  int32_t name;
+ case KWD_operator:
+  /* Named, but unbound operator invocation. */
+  if unlikely(yield() < 0) goto err;
+  loc_here(&loc);
+  name = ast_parse_operator_name(P_OPERATOR_FNORMAL);
+  if unlikely(name < 0) goto err;
+  if (tok != '(') {
+   /* Bound-operator expression. */
+   merge = ast_operator_func((uint16_t)name,NULL);
+  } else {
+   DREF DeeAstObject *other;
+   old_flags = TPPLexer_Current->l_flags;
+   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+   if unlikely(yield() < 0) goto err_flags;
+   if (tok == ')') {
+    other = ast_constexpr(Dee_EmptyTuple);
+   } else {
+    other = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
+                            AST_FMULTIPLE_TUPLE);
+   }
+   if unlikely(!other) goto err_flags;
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(likely(tok == ')') ? (yield() < 0) :
+               WARN(W_EXPECTED_RPAREN)) goto err;
+   merge = ast_build_operator((uint16_t)name,
+                               /* Set the MAYBEPFX flag to suppress errors that
+                                * would normally cause the assembler to fail when
+                                * attempting to use an inplace operator on a
+                                * non-inplace symbol. */
+                               AST_OPERATOR_FMAYBEPFX,
+                               other);
+   Dee_Decref(other);
+  }
+  if unlikely(!merge) goto err;
+  result = ast_setddi(merge,&loc);
+ } break;
+
+
+ case '[': /* List */
+  loc_here(&loc);
+  old_flags = TPPLexer_Current->l_flags;
+  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+  if unlikely(yield() < 0) goto err_flags;
+  if (tok == '&' || tok == '=') {
+   if (WARN(W_DEPRECATED_LAMBDA_MODE)) goto err_flags;
+   loc_here(&loc);
+   if unlikely(yield() < 0) goto err_flags;
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(likely(tok == ']') ? (yield() < 0) :
+               WARN(W_EXPECTED_RBRACKET_AFTER_LAMBDA))
+      goto err;
+   goto do_lambda;
+  }
+  if (tok == ']') {
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(yield() < 0) goto err;
+   if (tok == '(' || tok == '{' || tok == TOK_ARROW) {
+do_lambda:
+    old_flags = TPPLexer_Current->l_flags;
+    TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+    result = ast_setddi(ast_parse_function(NULL,NULL,true),&loc);
+    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+    break;
+   }
+   result = ast_multiple(AST_FMULTIPLE_LIST,0,NULL);
+  } else {
+   if (tok == ':') {
+    DREF DeeAstObject *begin_expression;
+    DREF DeeAstObject *step_expression;
+    result = ast_constexpr(Dee_None);
+    if unlikely(!result) goto err_flags;
+    /* Range without begin index. */
+do_range_expression:
+    if unlikely(yield() < 0) goto err_r_flags;
+    begin_expression = result; /* Inherit reference. */
+    /* Parse the end index. */
+    if (tok == ',') {
+     /* No end index given. */
+     result = ast_constexpr(Dee_None);
+    } else {
+     result = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+    }
+    if unlikely(!result) { Dee_Decref(begin_expression); goto err_flags; }
+    if (tok == ',') {
+     if unlikely(yield() < 0) {err_begin_expr: Dee_Decref(begin_expression); goto err_r_flags; }
+     step_expression = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+    } else {
+     step_expression = ast_constexpr(Dee_None);
+    }
+    if unlikely(!step_expression) goto err_begin_expr;
+    /* Create the range expression. */
+    merge = ast_action3(AST_FACTION_RANGE,begin_expression,result,step_expression);
+    Dee_Decref(begin_expression);
+    Dee_Decref(result);
+    Dee_Decref(step_expression);
+    if unlikely(!merge) goto err_flags;
+    result = merge;
+   } else {
+    result = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
+                             AST_FMULTIPLE_LIST);
+    if unlikely(!result) goto err_flags;
+    if (tok == ':' &&
+        result->ast_type == AST_MULTIPLE &&
+        result->ast_multiple.ast_exprc == 1) {
+     merge = result->ast_multiple.ast_exprv[0];
+     Dee_Incref(merge);
+     Dee_Decref(result);
+     result = merge;
+     /* Range with custom start index. */
+     goto do_range_expression;
+    }
+   }
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(likely(tok == ']') ? (yield() < 0) : 
+               WARN(W_EXPECTED_RBRACKET_AFTER_LIST))
+      goto err_r;
+  }
+  ast_setddi(result,&loc);
+  break;
+
+ {
+  struct symbol *this_sym;
+  DREF DeeAstObject *this_ast;
+ case KWD_super:
+  if (!current_basescope->bs_super)
+       goto default_case;
+  this_sym = scope_lookup(&current_basescope->bs_scope,
+                           TPPLexer_LookupKeyword("this",4,0));
+  if unlikely(!this_sym) goto default_case;
+  this_ast = ast_sethere(ast_sym(this_sym));
+  if unlikely(!this_ast) goto err;
+  merge = ast_sethere(ast_sym(get_current_super()));
+  if unlikely(!merge) { Dee_Decref(this_ast); goto err; }
+  result = ast_sethere(ast_action2(AST_FACTION_AS,this_ast,merge));
+  Dee_Decref(merge);
+  Dee_Decref(this_ast);
+  if unlikely(!result) goto err;
+  if unlikely(yield() < 0) goto err_r;
+ } break;
+
+ case KWD___nth:
+  if unlikely(yield() < 0) goto err;
+  old_flags = TPPLexer_Current->l_flags;
+  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+  if unlikely(likely(tok == '(') ? (yield() < 0) :
+              WARN(W_EXPECTED_LPAREN_AFTER_NTH))
+     goto err_flags;
+  result = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+  if unlikely(!result) goto err_flags;
+  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+  /* Optimize the ast-expression to propagate constant, thus
+   * allowing the use of `__nth(2+3)' instead of forcing the
+   * user to write `__nth(5)' or `__nth(__TPP_EVAL(2+3))' */
+  if (ast_optimize_all(result,true)) goto err_r;
+  if (result->ast_type != AST_CONSTEXPR &&
+      WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
+      goto err_r;
+  if unlikely(likely(tok == ')') ? (yield() < 0) :
+              WARN(W_EXPECTED_RPAREN_AFTER_NTH))
+     goto err_r;
+  if (TPP_ISKEYWORD(tok)) {
+   unsigned int nth_symbol = 0;
+   struct symbol *sym;
+   if (result->ast_type == AST_CONSTEXPR &&
+       DeeObject_AsUInt(result->ast_constexpr,&nth_symbol)) {
+    DeeError_Handled(ERROR_HANDLED_RESTORE);
+    if (WARN(W_EXPECTED_CONSTANT_AFTER_NTH)) goto err_r;
+   }
+   Dee_Decref(result);
+   sym = lookup_nth(nth_symbol,token.t_kwd);
+   if likely(sym) {
+    result = ast_sym(sym);
+   } else {
+    if (WARN(W_UNKNOWN_NTH_SYMBOL,nth_symbol))
+        goto err;
+    result = ast_constexpr(Dee_None);
+   }
+   if unlikely(!result) goto err;
+   ast_sethere(result);
+   if unlikely(yield() < 0) goto err_r;
+  } else {
+   if (WARN(W_EXPECTED_KEYWORD_AFTER_NTH))
+       goto err_r;
+  }
+  break;
+
+ case TOK_COLLON_COLLON:
+  if (WARN(W_DEPRECATED_GLOBAL_PREFIX))
+      goto err;
+  ATTR_FALLTHROUGH
+ case KWD_global:
+  lookup_mode |= LOOKUP_SYM_VGLOBAL;
+  goto do_warn_deprecated_modifier;
+ case KWD_local:
+  lookup_mode |= LOOKUP_SYM_VLOCAL;
+do_warn_deprecated_modifier:
+  if (WARN(W_DEPRECATED_PREFIX_IN_EXPRESSION))
+      goto err;
+  if unlikely(yield() < 0) goto err;
+  goto default_case;
+
+ case TOK_DOTS:
+  if (current_basescope->bs_varargs) {
+   DREF DeeAstObject *new_result;
+   /* Reference the varargs portion of the argument list. */
+   result = ast_sethere(ast_sym(current_basescope->bs_varargs));
+   if unlikely(!result) goto err;
+   /* The old deemon neglected to do this, but we re-package
+    * the varargs portion of the argument list as an expand
+    * expression, thus allowing it to simply be forwarded
+    * in other function calls:
+    * >> function foo(a,b) {
+    * >>     print a,b;
+    * >> }
+    * >> function bar(...) {
+    * >>     foo(...); // In the old deemon you'd have to write `foo((...)...);'
+    * >> }
+    */
+   new_result = ast_sethere(ast_expand(result));
+   Dee_Decref(result);
+   if unlikely(!new_result) goto err;
+   result = new_result;
+   if unlikely(yield() < 0) goto err_r;
+   break;
+  }
+  ATTR_FALLTHROUGH
+ default:
+default_case:
+  if (TPP_ISKEYWORD(tok)) {
+   DREF struct symbol *sym; /* Perform a regular symbol lookup. */
+   struct TPPKeyword *name = token.t_kwd;
+   loc_here(&loc);
+   if unlikely(yield() < 0) goto err;
+   if (tok == KWD_from) {
+    /* `Error from deemon' - Short form of `import Error from deemon' */
+    loc_here(&loc);
+    if unlikely(yield() < 0) goto err;
+    result = ast_parse_import_single(name);
+   } else {
+    sym = lookup_symbol(lookup_mode,name,&loc);
+    if unlikely(!sym) goto err;
+    result = ast_setddi(ast_sym(sym),&loc);
+   }
+  } else {
+   if (WARN(W_UNEXPECTED_TOKEN_IN_EXPRESSION))
+       goto err;
+   result = ast_constexpr(Dee_None);
+  }
+  break;
+ }
+ return result;
+err_flags:
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+ goto err;
+err_r_flags:
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+INTERN DREF DeeAstObject *FCALL
+ast_parse_unary(unsigned int lookup_mode) {
+ DREF DeeAstObject *result;
+ DREF DeeAstObject *merge;
+ DREF DeeAstObject *other;
+ struct ast_loc loc;
+ uint32_t old_flags;
+ result = ast_parse_unary_base(lookup_mode);
+ while (result) {
+  switch (tok) {
+  
+  case TOK_COLLON_COLLON:
+   /* Backwards compatibility with deemon 100+ */
+   if (WARN(W_DEPRECATED_ATTRIBUTE_SYNTAX)) goto err_r;
+   ATTR_FALLTHROUGH
+  case '.': /* Attribute lookup */
+   loc_here(&loc);
+   if (yield() < 0) goto err_r;
+   if (TPP_ISKEYWORD(tok)) {
+    DREF DeeObject *attr_name;
+    if (tok == KWD_this) goto got_attr; /* This is really just a no-op. */
+    if (tok == KWD_class) {
+     /* Return the real class of a type, properly unwinding super. */
+     merge = ast_sethere(ast_action1(AST_FACTION_CLASSOF,result));
+    } else if (tok == KWD_super) {
+     /* Return the real class of a type, properly unwinding super. */
+     merge = ast_sethere(ast_action1(AST_FACTION_SUPEROF,result));
+    } else if (tok == KWD_operator) {
+     /* Named & bound operator invocation. */
+     int32_t name;
+     if unlikely(yield() < 0) goto err_r;
+     loc_here(&loc);
+     name = ast_parse_operator_name(P_OPERATOR_FNORMAL);
+     if unlikely(name < 0) goto err_r;
+     if (tok != '(') {
+      /* Bound-operator expression. */
+      merge = ast_operator_func((uint16_t)name,result);
+     } else {
+      old_flags = TPPLexer_Current->l_flags;
+      TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+      if (yield() < 0) goto err_r_flags;
+      if (tok == ')') {
+       other = ast_constexpr(Dee_EmptyTuple);
+      } else {
+       other = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
+                               AST_FMULTIPLE_TUPLE);
+      }
+      if unlikely(!other) goto err_r_flags;
+      TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+      if unlikely(likely(tok == ')') ? (yield() < 0) :
+                  WARN(W_EXPECTED_RPAREN)) goto err_r;
+      merge = ast_build_bound_operator((uint16_t)name,
+                                        /* Set the MAYBEPFX flag to suppress errors that
+                                         * would normally cause the assembler to fail when
+                                         * attempting to use an inplace operator on a
+                                         * non-inplace symbol. */
+                                        AST_OPERATOR_FMAYBEPFX,
+                                        result,other);
+      Dee_Decref(other);
+     }
+     Dee_Decref(result);
+     if unlikely(!merge) goto err;
+     result = ast_setddi(merge,&loc);
+     goto got_attr2;
+    } else {
+     if (is_reserved_symbol_name(token.t_kwd) &&
+         WARN(W_RESERVED_ATTRIBUTE_NAME,token.t_kwd))
+         goto err;
+     attr_name = DeeString_NewSized(token.t_kwd->k_name,
+                                    token.t_kwd->k_size);
+     if unlikely(!attr_name) goto err_r;
+     other = ast_sethere(ast_constexpr(attr_name));
+     Dee_Decref(attr_name);
+     if unlikely(!other) goto err_r;
+     merge = ast_setddi(ast_operator2(OPERATOR_GETATTR,0,result,other),&loc);
+     Dee_Decref(other);
+     Dee_Decref(result);
+     if unlikely(!merge) goto err;
+     result = merge;
+     if unlikely(yield() < 0) goto err_r;
+     goto got_attr2;
+    }
+    Dee_Decref(result);
+    if unlikely(!merge) goto err;
+    result = merge;
+got_attr:
+    if unlikely(yield() < 0) goto err_r;
+got_attr2:;
+   } else {
+    if (WARN(W_EXPECTED_KEYWORD_AFTER_DOT)) goto err_r;
+   }
+   break;
+
+  {
+  case '[': /* sequence operator */
+   loc_here(&loc);
+   old_flags = TPPLexer_Current->l_flags;
+   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+   if unlikely(yield() < 0) goto err_r_flags;
+   if (tok == ':') {
+    other = ast_constexpr(Dee_None);
+    if unlikely(!other) goto err_r_flags;
+    goto do_range;
+   }
+   other = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+   if unlikely(!other) goto err_r_flags;
+   if (tok == ':') {
+    DREF DeeAstObject *third;
+do_range:
+    /* range operator. */
+    if unlikely(yield() < 0) goto err_2_flags;
+    if (tok == ']') {
+     third = ast_constexpr(Dee_None);
+    } else {
+     third = ast_parse_brace(LOOKUP_SYM_SECONDARY,NULL);
+    }
+    if unlikely(!third) goto err_2_flags;
+    merge = ast_operator3(OPERATOR_GETRANGE,0,result,other,third);
+    Dee_Decref(third);
+   } else {
+    merge = ast_operator2(OPERATOR_GETITEM,0,result,other);
+   }
+   Dee_Decref(other);
+   Dee_Decref(result);
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(!merge) goto err;
+   result = merge;
+   if unlikely(likely(tok == ']') ? (yield() < 0) :
+               WARN(W_EXPECTED_RBRACKET_AFTER_GETITEM))
+      goto err_r;
+   ast_setddi(result,&loc);
+  } break;
+
+  {
+   DeeTypeObject *preferred_type;
+  case '{': /* Brace initializers. */
+   loc_here(&loc);
+   preferred_type = NULL;
+   if (result->ast_type == AST_CONSTEXPR) {
+    preferred_type = (DeeTypeObject *)result->ast_constexpr;
+    if (preferred_type != &DeeHashSet_Type &&
+        preferred_type != &DeeDict_Type &&
+        preferred_type != &DeeList_Type &&
+        preferred_type != &DeeTuple_Type &&
+        preferred_type != &DeeSeq_Type &&
+        preferred_type != &DeeMapping_Type)
+        preferred_type = NULL;
+   }
+   other = ast_parse_brace(LOOKUP_SYM_SECONDARY,
+                           preferred_type);
+   if unlikely(!other) goto err_r;
+#if 0 /* It's only the preferred type. - Nothing stopping the parser from using a different sequence type! */
+   if (!preferred_type)
+#endif
+   {
+    /* Use the brace AST in a single-argument call to `result' */
+    DREF DeeAstObject **elemv;
+    elemv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+    if unlikely(!elemv) { err_other: Dee_Decref(other); goto err_r; }
+    elemv[0] = other;
+    merge = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,elemv),&loc);
+    if unlikely(!merge) { Dee_Free(elemv); goto err_other; }
+    other = ast_setddi(ast_operator2(OPERATOR_CALL,0,result,merge),&loc);
+    Dee_Decref(merge);
+   }
+   /* Override the result AST when a special type-initialization was performed. */
+   Dee_Decref(result);
+   result = other;
+  } break;
+
+  {
+   DREF DeeAstObject *kw_labels;
+  case KWD_pack: /* Call expression without parenthesis. */
+   loc_here(&loc);
+   if unlikely(yield() < 0) goto err_r;
+   if (tok == '(') {
+    old_flags = TPPLexer_Current->l_flags;
+    TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+    if unlikely(yield() < 0) goto err_r_flags;
+    if (tok == ')') {
+     other = ast_setddi(ast_constexpr(Dee_EmptyTuple),&loc);
+     kw_labels = NULL;
+    } else {
+     other = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE,&kw_labels);
+    }
+    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+    if unlikely(!other) goto err;
+    if unlikely(likely(tok == ')') ? (yield() < 0) :
+                WARN(W_EXPECTED_RPAREN_AFTER_CALL))
+       goto err_r;
+   } else if (maybe_expression_begin()) {
+    other = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE|
+                                    AST_COMMA_STRICTCOMMA,
+                                   &kw_labels);
+   } else {
+    other = ast_setddi(ast_constexpr(Dee_EmptyTuple),&loc);
+    kw_labels = NULL;
+   }
+   if unlikely(!other) goto err_r;
+   if (kw_labels) {
+    merge = ast_action3(AST_FACTION_CALL_KW,
+                        result,
+                        other,
+                        kw_labels);
+    Dee_Decref(kw_labels);
+   } else {
+    merge = ast_operator2(OPERATOR_CALL,0,result,other);
+   }
+   merge = ast_setddi(merge,&loc);
+   Dee_Decref(other);
+   Dee_Decref(result);
+   if unlikely(!merge) goto err;
+   result = merge;
+  } break;
+
+  {
+   DREF DeeAstObject *kw_labels;
+  case '(': /* Call expression. */
+   loc_here(&loc);
+   old_flags = TPPLexer_Current->l_flags;
+   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+   if unlikely(yield() < 0) goto err_r_flags;
+   if (tok == ')') {
+    other = ast_setddi(ast_constexpr(Dee_EmptyTuple),&loc);
+    kw_labels = NULL;
+   } else {
+    other = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE,&kw_labels);
+   }
+   if unlikely(!other) goto err_r_flags;
+   if (kw_labels) {
+    merge = ast_action3(AST_FACTION_CALL_KW,
+                        result,
+                        other,
+                        kw_labels);
+    Dee_Decref(kw_labels);
+   } else {
+    merge = ast_operator2(OPERATOR_CALL,0,result,other);
+   }
+   merge = ast_setddi(merge,&loc);
+   Dee_Decref(other);
+   Dee_Decref(result);
+   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+   if unlikely(!merge) goto err;
+   result = merge;
+   if unlikely(likely(tok == ')') ? (yield() < 0) :
+               WARN(W_EXPECTED_RPAREN_AFTER_CALL))
+      goto err_r;
+  } break;
+
+  { /* Inplace operators. */
+   uint16_t opid;
+  case TOK_INC: opid = OPERATOR_INC; goto do_inplace_op;
+  case TOK_DEC: opid = OPERATOR_DEC;
+do_inplace_op:
+   merge = ast_sethere(ast_operator1(opid,AST_OPERATOR_FPOSTOP,result));
+   Dee_Decref(result);
+   if unlikely(!merge) goto err;
+   result = merge;
+   if unlikely(yield() < 0) goto err_r;
+  } break;
+
+  case TOK_DOTS: /* Expand expression. */
+   merge = ast_sethere(ast_expand(result));
+   Dee_Decref(result);
+   if unlikely(!merge) goto err;
+   result = merge;
+   if unlikely(yield() < 0) goto err_r;
+   break;
+
+  default:
+   goto done;
+  }
+ }
+done:
+ return result;
+err_2_flags:
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+ goto err_2;
+err_r_flags:
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+ goto err_r;
+err_2:
+ Dee_Decref(other);
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_prod(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge; tok_t cmd;
+ DREF DeeAstObject *result = ast_parse_unary(lookup_mode);
+ while (result && (cmd = tok,cmd == '*' || cmd == '/' ||
+                             cmd == '%' || cmd == TOK_POW)) {
+  struct ast_loc loc; loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  other = ast_parse_unary(LOOKUP_SYM_SECONDARY);
+  if unlikely(!other) goto err;
+  merge = ast_setddi(ast_operator2(cmd == TOK_POW ? OPERATOR_POW :
+                                   GET_CHOP(cmd),0,result,other),
+                     &loc);
+  Dee_Decref(other);
+  Dee_Decref(result);
+  result = merge;
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_sum(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge; tok_t cmd;
+ DREF DeeAstObject *result = ast_parse_prod(lookup_mode);
+ while (result && (cmd = tok,cmd == '+' || cmd == '-')) {
+  struct ast_loc loc; loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  if (tok == TOK_DOTS && cmd == '+') { /* sum */
+   if unlikely(yield() < 0) goto err;
+   merge = ast_action1(AST_FACTION_SUM,result);
+  } else {
+   other = ast_parse_prod(LOOKUP_SYM_SECONDARY);
+   if unlikely(!other) goto err;
+   merge = ast_operator2(GET_CHOP(cmd),0,result,other);
+   Dee_Decref(other);
+  }
+  ast_setddi(merge,&loc);
+  Dee_Decref(result);
+  result = merge;
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_shift(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge; tok_t cmd;
+ DREF DeeAstObject *result = ast_parse_sum(lookup_mode);
+ while (result && (cmd = tok,cmd == TOK_SHL || cmd == TOK_SHR)) {
+  struct ast_loc loc; loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  other = ast_parse_sum(LOOKUP_SYM_SECONDARY);
+  if unlikely(!other) goto err;
+  merge = ast_setddi(ast_operator2(cmd == TOK_SHL ? OPERATOR_SHL : OPERATOR_SHR,
+                                   0,result,other),
+                    &loc);
+  Dee_Decref(other);
+  Dee_Decref(result);
+  result = merge;
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_cmp(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge; tok_t cmd;
+ DREF DeeAstObject *result = ast_parse_shift(lookup_mode);
+ while (result && (cmd = tok,cmd == TOK_LOWER ||
+                             cmd == TOK_LOWER_EQUAL ||
+                             cmd == TOK_GREATER ||
+                             cmd == TOK_GREATER_EQUAL)) {
+  struct ast_loc loc; loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  if (tok == TOK_DOTS && (cmd == '<' || cmd == '>')) {
+   if unlikely(yield() < 0) goto err;
+   merge = ast_action1(cmd == '<' ? AST_FACTION_MIN : AST_FACTION_MAX,result);
+  } else {
+   other = ast_parse_shift(LOOKUP_SYM_SECONDARY);
+   if unlikely(!other) goto err;
+   merge = ast_operator2(cmd == TOK_LOWER_EQUAL ? OPERATOR_LE :
+                         cmd == TOK_GREATER_EQUAL ? OPERATOR_GE :
+                         GET_CHOP(cmd),0,result,other);
+   Dee_Decref(other);
+  }
+  ast_setddi(merge,&loc);
+  Dee_Decref(result);
+  result = merge;
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_cmpeq(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge; tok_t cmd;
+ DREF DeeAstObject *result = ast_parse_cmp(lookup_mode);
+ while (result && (cmd = tok,cmd == TOK_EQUAL ||
+                             cmd == TOK_NOT_EQUAL ||
+                             cmd == TOK_EQUAL3 ||
+                             cmd == TOK_NOT_EQUAL3 ||
+                             cmd == KWD_is ||
+                             cmd == KWD_in || cmd == '!')) {
+  bool invert = cmd == '!';
+  struct ast_loc loc; loc_here(&loc);
+yield_again:
+  if unlikely(yield() < 0) goto err;
+  if (tok == '!') { invert ^= 1; goto yield_again; }
+  if (cmd == '!') {
+   if (tok == KWD_is || tok == KWD_in) {
+    cmd = tok;
+    if unlikely(yield() < 0) goto err;
+   } else {
+    if (WARN(W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM)) goto err;
+   }
+  }
+#if 0 /* XXX: Ambiguity with unary not operator? */
+  /* Allow the operator to be inverted afterwards, too. */
+  while (tok == '!') {
+   invert ^= 1;
+   if unlikely(yield() < 0)
+      goto err;
+  }
+#endif
+  if (tok == KWD_bound && cmd == KWD_is) {
+   /* Special cast: `foo is bound' --> `bound(foo)' */
+   if unlikely(yield() < 0) goto err;
+   merge = make_bound_expression(result,&loc);
+  } else {
+   other = ast_parse_cmp(LOOKUP_SYM_SECONDARY);
+   if unlikely(!other) goto err;
+   if (cmd == TOK_EQUAL || cmd == TOK_NOT_EQUAL) {
+    merge = ast_operator2(cmd == TOK_EQUAL ? OPERATOR_EQ : OPERATOR_NE,0,result,other);
+   } else {
+    merge = ast_action2(cmd == KWD_is         ? AST_FACTION_IS :
+                        cmd == TOK_EQUAL3     ? AST_FACTION_SAMEOBJ :
+                        cmd == TOK_NOT_EQUAL3 ? AST_FACTION_DIFFOBJ :
+                                                AST_FACTION_IN,
+                        result,other);
+   }
+   ast_setddi(merge,&loc);
+   Dee_Decref(other);
+  }
+  Dee_Decref(result);
+  result = merge;
+  /* Invert the result if required, to. */
+  if (invert && result) {
+   merge = ast_setddi(ast_bool(AST_FBOOL_NEGATE,result),&loc);
+   Dee_Decref(result);
+   result = merge;
+  }
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_and(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge;
+ DREF DeeAstObject *result = ast_parse_cmpeq(lookup_mode);
+ while (result && tok == '&') {
+  struct ast_loc loc; loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  other = ast_parse_cmpeq(LOOKUP_SYM_SECONDARY);
+  if unlikely(!other) goto err;
+  merge = ast_setddi(ast_operator2(OPERATOR_AND,0,result,other),&loc);
+  Dee_Decref(other);
+  Dee_Decref(result);
+  result = merge;
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_xor(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge;
+ DREF DeeAstObject *result = ast_parse_and(lookup_mode);
+ while (result && tok == '^') {
+  struct ast_loc loc; loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  other = ast_parse_and(LOOKUP_SYM_SECONDARY);
+  if unlikely(!other) goto err;
+  merge = ast_setddi(ast_operator2(OPERATOR_XOR,0,result,other),&loc);
+  Dee_Decref(other);
+  Dee_Decref(result);
+  result = merge;
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_or(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge;
+ DREF DeeAstObject *result = ast_parse_xor(lookup_mode);
+ while (result && tok == '|') {
+  struct ast_loc loc; loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  other = ast_parse_xor(LOOKUP_SYM_SECONDARY);
+  if unlikely(!other) goto err;
+  merge = ast_setddi(ast_operator2(OPERATOR_OR,0,result,other),&loc);
+  Dee_Decref(other);
+  Dee_Decref(result);
+  result = merge;
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_as(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge;
+ DREF DeeAstObject *result = ast_parse_or(lookup_mode);
+ while (result && tok == KWD_as) {
+  struct ast_loc loc; loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  other = ast_parse_or(LOOKUP_SYM_SECONDARY);
+  if unlikely(!other) goto err;
+  merge = ast_setddi(ast_action2(AST_FACTION_AS,result,other),&loc);
+  Dee_Decref(other);
+  Dee_Decref(result);
+  result = merge;
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_land(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge;
+ DREF DeeAstObject *result = ast_parse_as(lookup_mode);
+ if (result && tok == TOK_LAND) {
+  do {
+   struct ast_loc loc; loc_here(&loc);
+   if unlikely(yield() < 0) goto err_r;
+   if (tok == TOK_DOTS) {
+    if unlikely(yield() < 0) goto err_r;
+    merge = ast_action1(AST_FACTION_ALL,result);
+   } else {
+    other = ast_parse_as(LOOKUP_SYM_SECONDARY);
+    if unlikely(!other) goto err_r;
+    merge = ast_land(result,other);
+    Dee_Decref(other);
+   }
+   ast_setddi(merge,&loc);
+   Dee_Decref(result);
+   if unlikely(!merge) goto err;
+   result = merge;
+  } while (tok == TOK_LAND);
+  if (tok == TOK_LOR &&
+      WARN(W_CONSIDER_PAREN_AROUND_LAND))
+      goto err_r;
+ }
+ return result;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_lor(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge;
+ DREF DeeAstObject *result = ast_parse_land(lookup_mode);
+ while (result && tok == TOK_LOR) {
+  struct ast_loc loc; loc_here(&loc);
+  if unlikely(yield() < 0) goto err;
+  if (tok == TOK_DOTS) {
+   if unlikely(yield() < 0) goto err;
+   merge = ast_action1(AST_FACTION_ANY,result);
+  } else {
+   other = ast_parse_land(LOOKUP_SYM_SECONDARY);
+   if unlikely(!other) goto err;
+   merge = ast_lor(result,other);
+   Dee_Decref(other);
+  }
+  ast_setddi(merge,&loc);
+  Dee_Decref(result);
+  result = merge;
+ }
+ return result;
+err: Dee_Decref(result);
+ return NULL;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_cond(unsigned int lookup_mode) {
+ DREF DeeAstObject *merge,*tt_branch,*ff_branch;
+ DREF DeeAstObject *condition = ast_parse_lor(lookup_mode);
+ /* >>  x ? y : z // >> x ? y : z
+  * >>  x ?: z    // >> x ? x : z
+  * >> (x ? y : ) // >> x ? y : x
+  * >> (x ? y)    // >> x ? y : none
+  */
+ while (condition && tok == '?') {
+  struct ast_loc loc; loc_here(&loc);
+  uint16_t expect = current_tags.at_expect;
+  if unlikely(yield() < 0) goto err;
+  if (tok == ':') {
+   /* Missing true-branch. (Reuse the condition branch!) */
+   tt_branch = condition;
+   Dee_Incref(condition);
+  } else {
+   tt_branch = ast_parse_cond(LOOKUP_SYM_SECONDARY);
+   if unlikely(!tt_branch) goto err;
+  }
+  if (tok == ':') {
+   /* Parse the false-branch. */
+   if unlikely(yield() < 0) goto err2;
+   if (!maybe_expression_begin() && tt_branch != condition) {
+    /* Missing false-branch. (Reuse the condition branch!)
+     * >> This is a new extension of deemon that completes semantics
+     *    by allowing the reverse of what `foo() ?: bar()' already does
+     *    by specifying the syntax `(foo() ? bar() :)'
+     */
+    if unlikely(yield() < 0) goto err2;
+    ff_branch = condition;
+    Dee_Incref(condition);
+   } else {
+    ff_branch = ast_parse_cond(LOOKUP_SYM_SECONDARY);
+    if unlikely(!ff_branch) goto err2;
+   }
+  } else {
+   /* Missing false-branch will be evaluated to `none' */
+   ff_branch = NULL;
+  }
+  merge = ast_setddi(ast_conditional(AST_FCOND_EVAL|expect,condition,tt_branch,ff_branch),&loc);
+  Dee_XDecref(ff_branch);
+  Dee_Decref(tt_branch);
+  Dee_Decref(condition);
+  condition = merge;
+ }
+ return condition;
+err2: Dee_Decref(tt_branch);
+err:  Dee_Decref(condition);
+ return NULL;
+}
+
+
+#define TOK_INPLACE_MIN       TOK_ADD_EQUAL
+#define OPERATOR_INPLACE_MIN  OPERATOR_INPLACE_ADD
+
+STATIC_ASSERT((TOK_ADD_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_ADD-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_SUB_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_SUB-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_MUL_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_MUL-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_DIV_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_DIV-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_MOD_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_MOD-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_SHL_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_SHL-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_SHR_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_SHR-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_AND_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_AND-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_OR_EQUAL -TOK_INPLACE_MIN) == (OPERATOR_INPLACE_OR-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_XOR_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_XOR-OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TOK_POW_EQUAL-TOK_INPLACE_MIN) == (OPERATOR_INPLACE_POW-OPERATOR_INPLACE_MIN));
+PRIVATE uint16_t const inplace_fops[] = {
+    /* [TOK_ADD_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_ADD,
+    /* [TOK_SUB_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_SUB,
+    /* [TOK_MUL_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_MUL,
+    /* [TOK_DIV_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_DIV,
+    /* [TOK_MOD_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_MOD,
+    /* [TOK_SHL_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_SHL,
+    /* [TOK_SHR_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_SHR,
+    /* [TOK_AND_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_AND,
+    /* [TOK_OR_EQUAL  - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_OR,
+    /* [TOK_XOR_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_XOR,
+    /* [TOK_POW_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_POW
+};
+
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_assign(unsigned int lookup_mode) {
+ DREF DeeAstObject *other,*merge; tok_t cmd;
+ DREF DeeAstObject *target = ast_parse_cond(lookup_mode);
+ while (target &&
+       ((cmd = tok) == TOK_COLLON_EQUAL ||
+       (cmd >= TOK_ADD_EQUAL && cmd <= TOK_XOR_EQUAL))) {
+  struct ast_loc loc; loc_here(&loc);
+  if (yield() < 0) goto err;
+  other = ast_parse_cond(LOOKUP_SYM_SECONDARY);
+  if unlikely(!other) goto err;
+  if (cmd == TOK_COLLON_EQUAL) {
+   /* Special case: move-assign. */
+   merge = ast_operator2(AST_SHOULD_MOVEASSIGN(other)
+                       ? OPERATOR_MOVEASSIGN
+                       : OPERATOR_ASSIGN,0,target,other);
+  } else {
+   /* Inplace operation. */
+   merge = ast_operator2(inplace_fops[cmd-TOK_ADD_EQUAL],0,target,other);
+  }
+  ast_setddi(merge,&loc);
+  Dee_Decref(other);
+  Dee_Decref(target);
+  target = merge;
+ }
+ return target;
+err: Dee_Decref(target);
+ return NULL;
+}
+
+#define IS_SYMBOL_NAME(tok)  \
+   (TPP_ISKEYWORD(tok) && (!KWD_ISUNARY(tok) || (tok) == KWD_none))
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_brace(unsigned int lookup_mode, DeeTypeObject *preferred_type) {
+ DREF DeeAstObject *result; uint32_t old_flags;
+ ASSERT_OBJECT_TYPE_OPT(preferred_type,&DeeType_Type);
+ if (tok == '{') {
+  struct ast_loc loc; loc_here(&loc);
+  /* Brace initializer. */
+  old_flags = TPPLexer_Current->l_flags;
+  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+  if unlikely(yield() < 0) goto err_flags;
+  result = ast_setddi(ast_parse_brace_items(preferred_type),&loc);
+  if unlikely(!result) goto err_flags;
+  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+  if unlikely(likely(tok == '}') ? (yield() < 0) : 
+              WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+     goto err_r;
+  return result;
+ }
+ return ast_parse_assign(lookup_mode);
+err_r:
+ Dee_Decref(result);
+ return NULL;
+err_flags:
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+ return NULL;
+}
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_COMPILER_LEXER_EXPRESSION_C */

@@ -1,0 +1,6 @@
+EXPORTS
+	; For compatibility with GCC, export all
+	; stdcall symbols without a leading underscore.
+	; See this mail that noone ever bothered to reply to:
+	; https://cygwin.com/ml/cygwin/2001-03/msg00514.html
+	DeeArg_VUnpack@16=_DeeArg_VUnpack@16

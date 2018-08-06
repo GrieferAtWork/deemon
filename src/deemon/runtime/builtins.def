@@ -1,0 +1,220 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+#ifndef BUILTIN
+#error "Must `#define BUILTIN(name,object,flags)' before including this file"
+#endif
+#ifndef BUILTIN_REUSE
+#define BUILTIN_REUSE BUILTIN
+#endif
+#ifndef BUILTIN_DOC
+#define BUILTIN_DOC(name,object,flags,doc) BUILTIN(name,object,flags)
+#endif
+#ifndef BUILTIN_DOC_REUSE
+#define BUILTIN_DOC_REUSE BUILTIN_DOC
+#endif
+#ifndef BUILTIN_ALIAS
+#define BUILTIN_ALIAS(name,alt,flags) BUILTIN(name,---,flags)
+#endif
+
+#include <deemon/api.h>
+#include <deemon/attribute.h>
+#include <deemon/bool.h>
+#include <deemon/callable.h>
+#include <deemon/cell.h>
+#include <deemon/class.h>
+#include <deemon/code.h>
+#include <deemon/compiler/compiler.h>
+#include <deemon/dict.h>
+#include <deemon/error.h>
+#include <deemon/file.h>
+#include <deemon/float.h>
+#include <deemon/int.h>
+#include <deemon/list.h>
+#include <deemon/map.h>
+#include <deemon/module.h>
+#include <deemon/none.h>
+#include <deemon/numeric.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/seq.h>
+#include <deemon/set.h>
+#include <deemon/bytes.h>
+#include <deemon/hashset.h>
+#include <deemon/string.h>
+#include <deemon/super.h>
+#include <deemon/thread.h>
+#include <deemon/traceback.h>
+#include <deemon/tuple.h>
+#include <deemon/weakref.h>
+
+/* Very important symbols: `Signal', `Error' and `traceback' */
+BUILTIN_REUSE(Signal,&DeeError_Signal,MODSYM_FREADONLY)
+BUILTIN_REUSE(Error,&DeeError_Error,MODSYM_FREADONLY)
+BUILTIN_REUSE(traceback,&DeeTraceback_Type,MODSYM_FREADONLY)
+
+/* Basic, builtin types. */
+BUILTIN_REUSE(bool,&DeeBool_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(string,&DeeString_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(bytes,&DeeBytes_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(tuple,&DeeTuple_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(list,&DeeList_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(dict,&DeeDict_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(hashset,&DeeHashSet_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(int,&DeeInt_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(float,&DeeFloat_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(object,&DeeObject_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(type,&DeeType_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(cell,&DeeCell_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(weakref,&DeeWeakRef_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+
+/* Abstract base classes. */
+BUILTIN_REUSE(sequence,&DeeSeq_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(mapping,&DeeMapping_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(set,&DeeSet_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(iterator,&DeeIterator_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(callable,&DeeCallable_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(numeric,&DeeNumeric_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+
+/* XXX: This one should be removed when classes have been overhauled to
+ *      include weakref-functionality as an option flag during class
+ *      creation.
+ * > How about this this: Extend the class feature byte to 16-bit, or have
+ *   one of the first 8 bits act as an extension bit that enables the second
+ *   byte. (we simply need more that 8 bits to fit everything...)
+ *   Or better yet, make member table fields mandatory and free up 2 bits,
+ *   one of which could be used for this very purpose!
+ */
+BUILTIN_REUSE(weakrefable,&DeeWeakRefAble_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+
+/* Objects that can also be accessed as builtin compiler keywords. */
+BUILTIN_REUSE(none,Dee_None,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(true,Dee_True,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(false,Dee_False,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+
+/* Core functional types. */
+BUILTIN_REUSE(function,&DeeFunction_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(code,&DeeCode_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(module,&DeeModule_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(thread,&DeeThread_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(super,&DeeSuper_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(instancemethod,&DeeInstanceMethod_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(property,&DeeProperty_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(file,&DeeFile_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(attribute,&DeeAttribute_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(enumattr,&DeeEnumAttr_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(frame,&DeeFrame_Type,MODSYM_FREADONLY)
+
+/* Functionality groups. */
+BUILTIN_DOC_REUSE(gc,&DeeGCEnumTracked_Singleton,MODSYM_FREADONLY,
+                  "A sequence-like singleton that can be used to either enumerate all "
+                  "tracked GC objects, check if an object is being tracked, or collect "
+                  "all GC objects no longer referenced anywhere else")
+
+/* Alias because `super' has special behavior when
+ * used as compile-time immediate attribute name.
+ * The proper way to access `super' would `deemon.operator . ("super")',
+ * but that's pretty long compared to `deemon.super_' */
+BUILTIN_ALIAS(super_,super,MODSYM_FREADONLY)
+BUILTIN_ALIAS(function_,function,MODSYM_FREADONLY)
+BUILTIN_ALIAS(property_,property,MODSYM_FREADONLY)
+BUILTIN_ALIAS(import_,import,MODSYM_FREADONLY)
+BUILTIN_ALIAS(type_,type,MODSYM_FREADONLY)
+
+#ifndef BUILTIN_RUNTIME_DEFINED
+#define BUILTIN_RUNTIME_DEFINED 1
+DECL_BEGIN
+
+INTDEF DeeCMethodObject rt_pooad;
+INTDEF DeeCMethodObject rt_neosb;
+INTDEF DeeCMethodObject rt_giosi;
+INTDEF DeeCMethodObject rt_grosr;
+INTDEF DeeCMethodObject rt_gaosa;
+INTDEF DeeCMethodObject rt_assert;
+INTDEF DeeCMethodObject rt_badcall;
+INTDEF DeeCMethodObject builtin_get_documentation;
+INTDEF DeeCMethodObject builtin_hasattr;
+INTDEF DeeCMethodObject builtin_boundattr;
+INTDEF DeeCMethodObject builtin_import;
+
+DECL_END
+#endif
+
+/* The builtin function for querying documentation strings.
+ * >> doc(object ob) -> string;
+ * >> doc(object ob, string attr) -> string; */
+BUILTIN_DOC(doc,&builtin_get_documentation,MODSYM_FNORMAL,
+            "(ob)->string\n"
+            "(ob,string attr)->string\n"
+            "@throw ValueError No documentation is associated with the specified object/attribute\n"
+            "@throw AttributeError The specified @ob does not contain an attribute @attr\n"
+            "@return The documentation string associated with @ob or its attribute @attr")
+
+/* Check if an object has a given attribute.
+ * >> hasattr(object ob, string attr) -> bool; */
+BUILTIN_DOC(hasattr,&builtin_hasattr,MODSYM_FREADONLY,
+            "(ob,string attr)->bool\n"
+            "@return Indicative of @ob containing an attribute @attr")
+
+/* Check if an object has a given attribute.
+ * >> boundattr(object ob, string attr, bool allow_missing = true) -> bool; */
+BUILTIN_DOC(boundattr,&builtin_boundattr,MODSYM_FREADONLY,
+            "(ob,string attr,bool allow_missing=true)->bool\n"
+            "@throw AttributeError The attribute doesn't exist, and @allow_missing is :false\n"
+            "@return Indicative of attribute @attr of @ob currently being bound\n"
+            "If the attribute doesn't exist, return :false, or an :AttributeError, "
+            "depending on the given @allow_missing\n"
+            ">import boundattr from deemon;\n"
+            ">print boundattr(foo,\"bar\",true);\n"
+            ">print foo.bar is bound; /* Functionally equivalent */\n")
+
+/* Load a module, given its name.
+ * >> import(string module_name) -> string;
+ * NOTE: This is what `import' links against when
+ *       as a stand-alone within an expression. */
+BUILTIN_DOC_REUSE(import,&builtin_import,MODSYM_FNORMAL,
+                  "(string module_name)->module\n"
+                  "@throw ValueError The given @module_name is invalid\n"
+                  "@throw FileNotFound The named @module_name could not be found\n"
+                  "@return The :module associated with the given @module_name")
+
+/* Builtin runtime operator helpers. */
+BUILTIN_REUSE(__pooad,&rt_pooad,MODSYM_FREADONLY|MODSYM_FHIDDEN)
+BUILTIN_REUSE(__neosb,&rt_neosb,MODSYM_FREADONLY|MODSYM_FHIDDEN)
+BUILTIN_REUSE(__giosi,&rt_giosi,MODSYM_FREADONLY|MODSYM_FHIDDEN)
+BUILTIN_REUSE(__grosr,&rt_grosr,MODSYM_FREADONLY|MODSYM_FHIDDEN)
+BUILTIN_REUSE(__gaosa,&rt_gaosa,MODSYM_FREADONLY|MODSYM_FHIDDEN)
+
+/* Used to implement the `assert' keyword.
+ * NOTE: This function is not marked as read-only,
+ *       because user-code is allowed to override it! */
+BUILTIN(__assert,&rt_assert,MODSYM_FHIDDEN)
+
+/* Internal function used to implement argument count checks in
+ * function taking optional arguments. */
+BUILTIN(__badcall,&rt_badcall,MODSYM_FREADONLY|MODSYM_FHIDDEN)
+
+
+
+
+#undef BUILTIN_ALIAS
+#undef BUILTIN_DOC_REUSE
+#undef BUILTIN_REUSE
+#undef BUILTIN_DOC
+#undef BUILTIN

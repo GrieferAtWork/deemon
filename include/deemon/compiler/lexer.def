@@ -1,0 +1,470 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* Unary expression keywords. */
+DEF_K(none)
+DEF_K(true)
+DEF_K(false)
+DEF_K(copy)
+DEF_K(deepcopy)
+DEF_K(str)
+DEF_K(repr)
+DEF_K(type)
+DEF_K(function)
+DEF_K(with)
+DEF_K(pack)
+DEF_K(do)
+DEF_K(while)
+DEF_K(for)
+DEF_K(foreach)
+DEF_K(__nth)
+DEF_K(from) /* Used in import statements, `x from y' and `from y import x' expressions. */
+DEF_K(operator)
+#define KWD_ISUNARY(x) \
+     (((x) >= KWD_none && (x) <= KWD_operator) || \
+       (x) == KWD_if || (x) == KWD_import || (x) == KWD_assert)
+
+DEF_K(final)
+DEF_K(class)
+DEF_K(this)
+DEF_K(super)
+DEF_K(is)
+DEF_K(in)
+
+/* New keyword: Create a super-wrapper: `<expression> as <type>' */
+DEF_K(as)
+
+/* New keyword: Check if a symbol is bound: `local x; if (bound(x)) { ... }'
+ * This function-like builtin keyword can be used to determine if a
+ * local, global, or external variable is currently bound, as well as
+ * if an object implements a specific attribute:
+ * >> if (bound(foo)) { // Check if a symbol `foo' is currently bound.
+ * >>     // `(hasattr from deemon)(foo,"attribute_name")'
+ * >>     if (bound(foo.attribute_name)) {
+ * >>     }
+ * >> }
+ * An alternate way of writing a bound-expression is:
+ * >> if (foo is bound) {
+ * >>     if (foo.attribute_name is bound) {
+ * >>     }
+ * >> }
+ * However in this encoded, you may not surround `bound' with parenthesis.
+ */
+DEF_K(bound)
+
+/* Statement keywords. */
+DEF_K(break) /* WARNING: Next token number be `continue' (keep these together) */
+DEF_K(continue)
+DEF_K(return)
+DEF_K(yield)
+DEF_K(throw)
+DEF_K(try)
+DEF_K(finally)
+DEF_K(catch)
+DEF_K(del)
+DEF_K(print)
+#ifndef CONFIG_LANGUAGE_NO_ASM
+DEF_K(__asm)
+DEF_K(__asm__)
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
+DEF_K(goto)
+DEF_K(switch)
+DEF_K(case)
+/* Reserved for future use (intended for loading compiler extensions):
+ * >> import extension C from compiler; // Enable support for C compatibility
+ * >> // The C compiler extension makes heavy use of the `ctypes' module.
+ * >> #include <string.h>
+ * >> 
+ * >> extern "libc.so": void *malloc(size_t num_bytes);
+ * >> extern "libc.so": void free(void *ptr);
+ * >> 
+ * >> void *p = malloc(42);
+ * >> print p;
+ * >> free(p);
+ * You might remember this stuff from the old deemon which had this
+ * whole deal about C compatibility. This however, I chose to leave
+ * in the past in favor of a cleaner core language.
+ * Yet I still wish to remain backwards-compatible and believe that
+ * the user should still be allowed access to foreign-functions and
+ * so on, so long that anything not using them must be designed without
+ * the possibility of some user-code randomly accessing memory without
+ * prior inclusion of the `C' compiler extension (which would then
+ * be restricted to deny access from code run by untrusted sources). */
+/* DEF_K(extension) */
+
+/* Class scope & related keywords. */
+DEF_K(private)
+DEF_K(public)
+DEF_K(property)
+DEF_K(member)
+
+/* Variable scope modifiers.
+ * The rules on where these may appear have been greatly restricted since
+ * v200, now only being allowed in variable declarations/store expressions:
+ * >> local x;          // Ok (forward declaration / unbound variable)
+ * >> local x = 42;     // Ok
+ * >> local x, local y; // ERROR (Only warned about before)
+ * >> print local x;    // ERROR (But used to be ok before)
+ * >> local x += 11;    // ERROR (But used to be ok before)
+ * >> print x;          // This is the only valid way of writing it now.
+ * >> x += 37;          // Ok.
+ * The same goes for use of `global' which now defines
+ * variables that should be exported by the module.
+ * Such variables must either be forward-declared in the
+ * root scope of a module, and when appearing locally,
+ * must always refer to an existing global variable:
+ * >> global x; // define or reference an unbound, global variable `x'.
+ * >>           // NOTE: If another inline-imported module already defined a variable `x',
+ * >>           //       that variable is referenced instead, meaning that `global' is not
+ * >>           //       only used to reference global, but also extern variables.
+ * >> x;        // Same as `global x', but warned due to missing visibility constraint.
+ * >> 
+ * >> function set_x() {
+ * >>     x = 42;        // Ok
+ * >>     global x = 42; // Ok (Does the same)
+ * >>     local x = 10;  // 
+ * >> }
+ * >> 
+ * >> local y;  // Define a local variable not exported by the module.
+ * >>           // Note that this variable cannot be used as an l-value in sub-functions,
+ * >>           // as it a global variable, but instead private to the global scope of
+ * >>           // the current module.
+ * >>           // You can think of local variables in the global scope as private objects
+ * >>           // that are not exported when another module uses `import' on use this one,
+ * >>           // whilst regular global variables (without a storage prefix) are exported
+ * >>           // and therewith visible to, as well as addressible and modifyable by other modules.
+ * >> function set_local_y() {
+ * >>     y = 42;        // Error: Cannot write to referenced variable (`y' isn't a global)
+ * >>     global y = 42; // Same error: `global y' referrs to a variable in
+ * >>                    // the root scope, not an actual `global' variable.
+ * >> }
+ * >>
+ *
+ * Note however that `__nth()' still behaves like it
+ * used to, though `__scope()' has also been removed:
+ * >> local x = 20;
+ * >> {
+ * >>     local x = 10;
+ * >>     print __nth(1) x; // 10
+ * >>     print __nth(2) x; // 20
+ * >> }
+ */
+DEF_K(local)
+DEF_K(global)
+DEF_K(static)
+DEF_K(__stack)
+
+/* Tag keyword */
+DEF_K(doc)
+DEF_K(auto)
+
+/* Re-implement our own, minimal sub-set of the TPP's builtin
+ * system macros. (Since we're configuring to disable those) */
+EXTENSION(EXT_SYSTEM_MACROS,"define-system-macros",1)
+
+/* Old-style classes simply means that any class without an explicitly
+ * defined base will be derived from `OldUserClass from d200', instead
+ * of `object from deemon' */
+EXTENSION(EXT_OLD_STYLE_CLASSES,"old-style-classes",0)
+
+/* Indicate to user-code that they are running under deemon v200 */
+PREDEFINED_MACRO_IF(__DEEMON__,HAS(EXT_SYSTEM_MACROS),"200")
+
+/* These are actually kind-of useful to determine the host platform in user-code.
+ * Therefor I'll keep them as they were in the old deemon.
+ * However, you _really_ shouldn't use them because they will confuse deemon
+ * when you move your code between platforms without deleting the `.*.dec' files. */
+#ifdef CONFIG_HOST_WINDOWS
+DEF_M_IF(__WINDOWS__,HAS(EXT_SYSTEM_MACROS))
+#endif
+#ifdef CONFIG_HOST_UNIX
+DEF_M_IF(__POSIX__,HAS(EXT_SYSTEM_MACROS))
+#endif
+
+
+WGROUP(WG_SYMBOL,"symbol",WSTATE_FATAL)
+WGROUP(WG_RESERVED,"reserved",WSTATE_FATAL)
+WGROUP(WG_CONST,"const",WSTATE_FATAL)
+WGROUP(WG_D200,"d200",WSTATE_FATAL)
+
+/* TODO: -Wzerotrip */
+/* TODO: -Wunused-label */
+
+WARNING_NAMESPACE(WN_DEEMON,2000)
+
+/* Syntax */
+DEF_WARNING(W_UNEXPECTED_TOKEN_IN_EXPRESSION,(WG_SYNTAX),WSTATE_ERROR,WARNF("Unexpected token " TOK_S " in expression",TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_IF,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `if', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_IF,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `if', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPARENT_AFTER_WITH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `with', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPARENT_AFTER_WITH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `with', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RBRACE_AFTER_LBRACE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' after `{', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_PACK,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `pack', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_LPAREN,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `(', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RANGLE_AFTER_LANGLE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `>' after `<', but got " TOK_S,TOK_A))
+DEF_WARNING(W_DEPRECATED_CELL_SYNTAX,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `<...>' for constructing cells is deprecated. Use `(cell from deemon)(...)' instead"))
+DEF_WARNING(W_DEPRECATED_ATTRIBUTE_SYNTAX,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `::' to lookup attributes is deprecated. Use `.' instead"))
+DEF_WARNING(W_DEPRECATED_GLOBAL_PREFIX,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `::' as global prefix is deprecated. Remove the prefix and rename other variables with the same name, or use `__nth'"))
+DEF_WARNING(W_DEPRECATED_PREFIX_IN_EXPRESSION,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Lookup modifiers other than `__nth' in expressions are no longer allowed since deemon 200"))
+DEF_WARNING(W_DEPRECATED_NO_PARAMETER_LIST,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("A missing parameter list in a function declaration is deprecated since deemon 200 for non-lambda-functions. Add an empty one by inserting `()'"))
+DEF_WARNING(W_DEPRECATED_CHARACTER_INT,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Writing integers as characters is deprecated since deemon 200. Consider writing `\"%$s\".ord()' instead",(size_t)(token.t_end-token.t_begin)-2,token.t_begin+1))
+DEF_WARNING(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `->' to assign an exception symbol is deprecated since deemon 200. Consider using `as' instead"))
+DEF_WARNING(W_EXPECTED_IMPORT_AFTER_FROM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `import' after `from', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_FROM_AFTER_IMPORTALL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `from' after `import * ', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_FROM_IMPORT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `from ... import', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_COMMA_IN_IMPORT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `,' in import list"))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_COMMA_FROM_IN_IMPORT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a module-name after `from' following a comma-separated import list"))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_FROM_IN_IMPORT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a module-name after `from', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_IMPORT_ALIAS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `import ... = ', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RBRACKET_AFTER_LIST,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `]' to end `list' sequence, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RBRACE_AFTER_BRACEINIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' to end a brace initializer, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_NTH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `__nth', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_NTH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `__nth', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_NTH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `__nth', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_CONSTANT_AFTER_NTH,(WG_CONST,WG_VALUE),WSTATE_ERROR,WARNF("Expected a constant expression as argument for `__nth'"))
+DEF_WARNING(W_DEPRECATED_LAMBDA_MODE,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Specifying `=' or `&' within lambda brackets is deprecated. Consider removing the modifer, which has historically always been a no-op"))
+DEF_WARNING(W_EXPECTED_RBRACKET_AFTER_LAMBDA,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `]' to begin lambda expression, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RBRACKET_AFTER_GETITEM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `]' to end `getitem' operator, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RBRACKET_AFTER_LBRACKET,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `]' after `[', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_CALL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' to end call operation, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `is' or `in' after `!', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_DOT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `.', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_VARIABLE_AFTER_VISIBILITY,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected variable name after `global' or `local', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after expression, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_RETURN,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `return', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_YIELD,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `yield', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_IMPORT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `import', but got " TOK_S,TOK_A))
+DEF_WARNING(W_YIELD_AFTER_RETURN,(WG_SYNTAX),WSTATE_ERROR,WARNF("`yield' statements are illegal after a non-empty `return' statement"))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_THROW,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `throw', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_PRINT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `print', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_ASSERT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `assert', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_DOWHILE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `do ... while', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_BREAK,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `break' or `continue', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_DEL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `del', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_ASM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `__asm__', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_DEL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `del', but got " TOK_S,TOK_A))
+DEF_WARNING(W_UNEXPECTED_EXPRESSION_FOR_DEL,(WG_SYNTAX),WSTATE_ERROR,WARNF("`del' expects a symbol, attribute, item, or range expression"))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_DEL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `del', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `catch' or `finally' after `try', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_WHILE_AFTER_DO,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `while' after `do', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_WHILE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `while', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_WHILE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `while', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_CATCH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `catch', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_CATCH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `catch', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_CATCH_AS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `as' in `catch', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LBRACE_AFTER_FUNCTION,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `{' or `->' after `function', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RBRACE_AFTER_FUNCTION,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' to end `function' code, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_VARARGS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after varargs, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_ARGLIST,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' to end argument list, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword as argument name, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT,(WG_CONST,WG_VALUE),WSTATE_ERROR,WARNF("Expected a constant expression for argument default initializer"))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_FOR,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `for', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON1_AFTER_FOR,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `for', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON2_AFTER_FOR,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a second `;' after `for', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_FOR,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `for', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_COLLON_AFTER_FOREACH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after `foreach', but got " TOK_S,TOK_A))
+DEF_WARNING(W_VARIABLE_MODIFIER_DUPLICATED,(WG_SYNTAX),WSTATE_ERROR,WARNF("The variable modifier " TOK_S " has already been used",TOK_A))
+DEF_WARNING(W_VARIABLE_MODIFIER_INCOMPATIBLE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Variable modifier " TOK_S " is incompatible with `%s'",TOK_A,ARG(char *)))
+DEF_WARNING(W_EXPECTED_CLASS_AFTER_FINAL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `class' after `final', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LBRACE_AFTER_CLASS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `{' after `class', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RBRACE_AFTER_CLASS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' after `class', but got " TOK_S,TOK_A))
+DEF_WARNING(W_FAILED_TO_PARSE_STATEMENT,(WG_SYNTAX),WSTATE_FATAL,WARNF("Failed to parse a statement from " TOK_S,TOK_A))
+DEF_WARNING(W_RETURN_IN_YIELD_FUNCTION,(WG_SYNTAX),WSTATE_ERROR,WARNF("Return statement encountered in yield function"))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `(' in tag, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `assert' in expression, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_EQUAL_AFTER_BRACE_DOT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `=' after `.' in mapping-like brace initializer, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_COLLON_AFTER_DICT_KEY,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after key in mapping-like brace initializer, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_COMMA_IN_LIST_INITIALIZER,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `,' within list initializer, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `=' after `move' in operator name, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected an empty string for `operator str'"))
+DEF_WARNING(W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `[' or `.' after `del' in operator name, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_BRACE_DOT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected keyword after `.' in brace initializer, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UNKNOWN_OPERATOR_NAME,(WG_SYNTAX),WSTATE_ERROR,WARNF("Unknown operator name " TOK_S,TOK_A))
+DEF_WARNING(W_CANNOT_TEST_EXPRESSION_BINDING,(WG_SYNTAX),WSTATE_ERROR,WARNF("Cannot test binding of expression. Expected a symbol, or attribute expression"))
+DEF_WARNING(W_UNCLEAR_CAST_INTENT,(WG_QUALITY),WSTATE_DISABLED,WARNF("Intended code behavior of potential cast expression is ambiguous and not compiled as a cast. "
+                                                                     "To suppress this warning, add a second pair of parenthesis to the previous expression"))
+DEF_WARNING(W_EXPECTED_COLLON_AFTER_KEYWORD_LABEL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after keyword label in argument list, but got " TOK_S,TOK_A))
+
+WARNING_NAMESPACE(WN_GOTO_LABEL,2380)
+DEF_WARNING(W_MISSING_STATEMENT_AFTER_LABEL,(WG_SYNTAX),WSTATE_WARN,WARNF("Expected a statement after a label, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_GOTO,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `goto', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_GOTO,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `;' after `goto', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_SWITCH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `switch', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_SWITCH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `switch', but got " TOK_S,TOK_A))
+DEF_WARNING(W_NOT_INSIDE_A_SWITCH_STATEMENT,(WG_SYNTAX),WSTATE_ERROR,WARNF("`case' and `default' labels are only allowed while inside of a switch-statement"))
+DEF_WARNING(W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Another `default' label had already been defined"))
+DEF_WARNING(W_EXPECTED_COLLON_AFTER_DEFAULT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after `default', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_COLLON_AFTER_CASE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after `case', but got " TOK_S,TOK_A))
+
+#ifndef CONFIG_LANGUAGE_NO_ASM
+WARNING_NAMESPACE(WN_ASM_PARSER,2400)
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_ASM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `__asm__', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_STRING_AFTER_ASM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a string after `__asm__', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_ASM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `__asm__', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_FOR_OPERAND_NAME,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword as operand name after `[', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `]' after `[' followed by an operand name, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_STRING_BEFORE_OPERAND_VALUE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a string before the operand value, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' before an assembly operand value, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after an assembly operand value, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword as label operand, but got " TOK_S,TOK_A))
+#endif /* CONFIG_LANGUAGE_NO_ASM */
+
+
+/* Class */
+WARNING_NAMESPACE(WN_CLASS,2500)
+DEF_WARNING(W_CLASS_FIELD_ALREADY_SPECIFIED,(WG_SYNTAX),WSTATE_ERROR,WARNF("The `class' field modifier has already been specified"))
+DEF_WARNING(W_UNEXPECTED_TOKEN_IN_CLASS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Unexpected token " TOK_S " inside of a class declaration",TOK_A))
+DEF_WARNING(W_CLASS_MEMBER_TYPE_ALREADY_SPECIFIED,(WG_SYNTAX),WSTATE_ERROR,WARNF("An explicit member type has already been specified"))
+DEF_WARNING(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,(WG_SYMBOL),WSTATE_ERROR,WARNF("A class constructor has already been defined"))
+DEF_WARNING(W_CLASS_NO_MEMBER_DEFINED,(WG_SYNTAX),WSTATE_WARN,WARNF("No member has been defined when `;' was encountered"))
+DEF_WARNING(W_EXPECTED_RBRACE_AFTER_PROPERTY,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' after property, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_CALLBACK_NAME_IN_PROPERTY,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected callback name within property declaration, but got " TOK_S,TOK_A))
+DEF_WARNING(W_PROPERTY_CALLBACK_ALREADY_DEFINED,(WG_SYMBOL),WSTATE_ERROR,WARNF("Property callback `%s' has already been defined",ARG(char *)))
+DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_ASSIGNED,(WG_SYMBOL),WSTATE_WARN,WARNF("Explicitly typed class member was not initialized"))
+DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_MATCHED,(WG_SYMBOL),WSTATE_WARN,WARNF("Explicitly typed class member expectation was not met"))
+DEF_WARNING(W_DEPRECATED_PROPERTY_MODIFIER,(WG_SYNTAX),WSTATE_ERROR,WARNF("Property modifier " TOK_S " is deprecated and ignored",TOK_A))
+DEF_WARNING(W_DEPRECATED_PROPERTY_NAME,(WG_SYNTAX),WSTATE_ERROR,WARNF("Property name " TOK_S " is deprecated. Use `%s' instead",TOK_A,ARG(char *)))
+DEF_WARNING(W_EXPECTED_PROPERTY_NAME_AFTER_TYPE_PREFIX,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a property callback name, but got " TOK_S,TOK_A))
+DEF_WARNING(W_PROPERTY_TYPE_PREFIX_ALREADY_GIVEN,(WG_SYNTAX),WSTATE_ERROR,WARNF("A property type prefix " TOK_S " had already been given",TOK_A))
+DEF_WARNING(W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `this' or the name of the class after `~', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword in the constructor initializer list, but got " TOK_S,TOK_A))
+DEF_WARNING(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Use of `class' to introduce a constructor or destructor is deprecated. Use `this' or the name of the surrounding class instead"))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_SUPER_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `super' in constructor initializer list, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_SUPER_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `super(...' in constructor initializer list, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' or `=' after member name in constructor initializer list, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_CONSTRUCTOR_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after initializer expression in constructor initializer list, but got " TOK_S,TOK_A))
+
+/* Tags */
+WARNING_NAMESPACE(WN_TAGS,2600)
+DEF_WARNING(W_UNKNOWN_TAG,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Unknown tag `%$s'",len,ARG(char *)); })
+DEF_WARNING(W_EXPECTED_ARGUMENTS_FOR_TAG,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Tag `%$s' expects arguments",len,ARG(char *)); })
+DEF_WARNING(W_UNEXPECTED_ARGUMENTS_FOR_TAG,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Tag `%$s' does not expects arguments",len,ARG(char *)); })
+DEF_WARNING(W_EXPECTED_SYMBOL_FOR_CLASS_SUPER_TAG,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a single symbol as argument to the class/super tag"))
+DEF_WARNING(W_EXPECTED_CONSTANT_EXPRESSION_FOR_TAG,(WG_CONST,WG_VALUE),WSTATE_ERROR,WARNF("Expected a constant expression for tag arguments"))
+DEF_WARNING(W_EXPECTED_STRING_FOR_DOC_TAG,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a string to follow after a `doc' tag"))
+
+/* Symbols */
+WARNING_NAMESPACE(WN_SYMBOLS,2700)
+DEF_WARNING(W_RESERVED_SYMBOL_NAME,(WG_RESERVED,WG_SYMBOL),WSTATE_WARN,WARNF("Symbol name `%s' is a reserved identifier",KWDNAME()))
+DEF_WARNING(W_RESERVED_ARGUMENT_NAME,(WG_RESERVED,WG_SYMBOL),WSTATE_WARN,WARNF("Argument name `%s' is a reserved identifier",KWDNAME()))
+DEF_WARNING(W_RESERVED_ATTRIBUTE_NAME,(WG_RESERVED,WG_SYMBOL),WSTATE_WARN,WARNF("A reserved identifier is used in an attribute lookup. Consider using `.operator . (%q) instead'",KWDNAME()))
+DEF_WARNING(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,(WG_SYMBOL),WSTATE_ERROR,WARNF("A symbol with the imported name `%s' has already been defined",KWDNAME()))
+DEF_WARNING(W_UNKNOWN_NTH_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,WARNF("Unknown %u-th symbol " TOK_S,ARG(unsigned int),TOK_A))
+DEF_WARNING(W_ARGUMENT_NAME_ALREADY_IN_USE,(WG_SYMBOL),WSTATE_ERROR,WARNF("Argument name " TOK_S " is already in use",TOK_A))
+DEF_WARNING(W_MISSING_ARGUMENT_DEFAULT_INITIAIZER,(WG_VALUE),WSTATE_WARN,WARNF("Missing argument default initializer, or optional (`?') prefix"))
+DEF_WARNING(W_MISSING_ARGUMENT_OPTIONAL_PREFIX,(WG_VALUE),WSTATE_WARN,WARNF("Non-variadic argument following optional arguments is missing its `?'-prefix"))
+DEF_WARNING(W_DEFAULT_ARGUMENT_AFTER_NONDEFAULT_OPTIONAL,(WG_VALUE),WSTATE_WARN,WARNF("Default arguments cannot be used after non-defaulting optional arguments"))
+DEF_WARNING(W_NEED_SYMBOL_FOR_INPLACE_OPERATOR,(WG_VALUE),WSTATE_ERROR,WARNF("Only variables can be used with inplace operators"))
+DEF_WARNING(W_EXPECTED_STATIC_VARIABLE,(WG_SYMBOL),WSTATE_WARN,WARNF("Expected a static variable, but `%s' has already been defined with a different storage class",KWDNAME()))
+DEF_WARNING(W_EXPECTED_STACK_VARIABLE,(WG_SYMBOL),WSTATE_WARN,WARNF("Expected a stack variable, but `%s' has already been defined with a different storage class",KWDNAME()))
+DEF_WARNING(W_UNKNOWN_VARIABLE,(WG_SYMBOL),WSTATE_ERROR,WARNF("Unknown variable `%s'",KWDNAME()))
+DEF_WARNING(W_VARIABLE_ALREADY_EXISTS,(WG_SYMBOL),WSTATE_ERROR,WARNF("Local variable `%s' already exists",KWDNAME()))
+DEF_WARNING(W_DECLARING_GLOBAL_IN_NONROOT,(WG_SYMBOL),WSTATE_WARN,WARNF("Declaring global variable `%s' outside of the root scope",KWDNAME()))
+DEF_WARNING(W_IMPORT_GLOBAL_FROM_OWN_MODULE,(WG_SYMBOL),WSTATE_ERROR,WARNF("You can't import globals from your own module"))
+DEF_WARNING(W_MODULE_IMPORT_NOT_FOUND,(WG_SYMBOL),WSTATE_ERROR,{ char *n = KWDNAME(); WARNF("Symbol `%s' could not be found in module `%s'",n,ARG(char *)); })
+DEF_WARNING(W_EXPECTED_LVALUE_FOR_INPLACE_OPERATION,(WG_SYMBOL),WSTATE_ERROR,WARNF("Expected a variable name as target for an inplace operation"))
+DEF_WARNING(W_CLASS_MEMBER_ALREADY_DEFINED,(WG_SYMBOL),WSTATE_ERROR,{ size_t s = ARG(size_t); WARNF("Class member name `%$s' had already been defined",s,ARG(char *)); })
+DEF_WARNING(W_TOO_MANY_CLASS_MEMBER,(WG_SYMBOL),WSTATE_ERROR,WARNF("Class `%s' has too many members",ARG(char *)))
+DEF_WARNING(W_MODULE_NOT_FOUND,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `%k' could not be found",ARG(DeeObject *)))
+DEF_WARNING(W_RECURSIVE_MODULE_DEPENDENCY,(WG_SYMBOL),WSTATE_ERROR,{ DeeObject *a = ARG(DeeObject *); WARNF("Recursive dependency between modules `%k' and `%k'",a,ARG(DeeObject *)); })
+DEF_WARNING(W_VARIABLE_READ_NEVER_WRITTEN,(WG_SYMBOL),WSTATE_ERROR,WARNF("Read from variable `%s' that is never written",KWDNAME()))
+DEF_WARNING(W_NO_OPERATOR_SYMBOL,(WG_SYMBOL),WSTATE_WARN,WARNF("Module `operators' is not exporting a dedicated symbol for `operator __%s__'",ARG(char *)))
+DEF_WARNING(W_NO_OPERATOR_FALLBACK_FUNCTION,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `operators' is not exporting the fallback `operator' function required to implement generic operator support"))
+DEF_WARNING(W_NO_D200_OLD_USER_CLASS,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `d200' is not exporting `OldUserClass' required to implement legacy user-classes"))
+DEF_WARNING(W_COMPARE_SODO_NONBUILTIN_UNDEFINED,(WG_SYMBOL),WSTATE_WARN,WARNF("Comparing compiler-generated constants using `===' and `!==' produces undefined results"))
+
+
+#ifndef CONFIG_LANGUAGE_NO_ASM
+
+
+WGROUP(WG_ASM_UNKNOWN_MNEMONIC,"unknown-mnemonic",WSTATE_FATAL)
+WGROUP(WG_ASM_UNKNOWN_DIRECTIVE,"unknown-directive",WSTATE_FATAL)
+WGROUP(WG_ASM_RELOCATION_MODEL,"relocation-model",WSTATE_FATAL)
+
+WARNING_NAMESPACE(WN_ASM_INTERPRETER,4100)
+DEF_WARNING(W_UASM_FAILED_PARSING_FAILED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Failed to parse an assembly directive or instruction from " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_IGNORING_TRAILING_TOKENS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Ignoring trailing token " TOK_S " after assembly directive or instruction",TOK_A))
+DEF_WARNING(W_UASM_EXPECTED_COLLON_AFTER_INTEGER,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after integer for symbol definition, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_UNKNOWN_MNEMONIC,(WG_ASM_UNKNOWN_MNEMONIC,WG_SYNTAX),WSTATE_ERROR,WARNF("Unknown mnemonic `%s'",KWDNAME()))
+DEF_WARNING(W_UASM_UNKNOWN_DIRECTIVE,(WG_ASM_UNKNOWN_DIRECTIVE,WG_SYNTAX),WSTATE_ERROR,WARNF("Unknown directive `%s'",KWDNAME()))
+DEF_WARNING(W_UASM_EXPECTED_COLLON_AFTER_PREFIX,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after storage class prefix, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_EXPECTED_COLLON_AFTER_EXTERN_PREFIX,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after `extern' prefix, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' after `{' in mnemonic operand, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `]' after `[' in mnemonic operand, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_EXPECTED_IP_OR_SP_AFTER_DOT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `IP' or `SP' after `.' following an assembly expression, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("`...' (dots) have already been used in this operand"))
+DEF_WARNING(W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `#' after `stack' operand introduction, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `#' after `stack' instruction prefix, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_HASH_FLAG_ALREADY_SET_FOR_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("`#' has already been used twice by this operand"))
+DEF_WARNING(W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("`$' has already been used by this operand"))
+
+DEF_WARNING(W_UASM_UNKNOWN_CLOBBER_NAME,(WG_VALUE),WSTATE_WARN,WARNF("Unknown clobber name `%s'",ARG(char *)))
+DEF_WARNING(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,(WG_VALUE),WSTATE_WARN,WARNF("User-assembly does not provide a value for output operand `%s'",ARG(char *)))
+DEF_WARNING(W_UASM_SYMBOL_ALREADY_DEFINED,(WG_SYMBOL),WSTATE_ERROR,WARNF("Assembly Symbol `%s' has already been defined",ARG(char *)))
+DEF_WARNING(W_UASM_DOESNT_CLEANUP_STACK,(WG_VALUE),WSTATE_WARN,WARNF("User-assembly ends without popping %lu stack entries",ARG(unsigned long)))
+DEF_WARNING(W_UASM_POPPED_UNRELATED_ITEMS,(WG_VALUE),WSTATE_ERROR,WARNF("User-assembly popped %lu unrelated stack entries",ARG(unsigned long)))
+DEF_WARNING(W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL,(WG_VALUE),WSTATE_ERROR,WARNF("Cannot perform operation with symbol"))
+DEF_WARNING(W_UASM_EXPECTED_INTEXPR,(WG_VALUE),WSTATE_ERROR,WARNF("Expected an integer assembly expression, but got " TOK_S,TOK_A))
+DEF_WARNING(W_UASM_UNSUPPORTED_EXPRESSION_FOR_AT_OPERAND,(WG_VALUE),WSTATE_ERROR,WARNF("Unsupported expression for `@' in mnemonic operand"))
+DEF_WARNING(W_UASM_STACK_VARIABLE_NOT_ALLOCATED,(WG_SYMBOL,WG_VALUE),WSTATE_ERROR,WARNF("Stack variable referenced through `@' operand is not initialized"))
+DEF_WARNING(W_UASM_EXPECTED_16BIT_IMMEDIATE_INTEGER,(WG_VALUE),WSTATE_ERROR,WARNF("Expected a 16-bit immediate, unsigned integer value"))
+DEF_WARNING(W_UASM_EXPECTED_CONSTANT_EXPRESSION_AFTER_AT_CONST,(WG_CONST,WG_VALUE),WSTATE_ERROR,WARNF("Expected a constant expression after `const @'"))
+DEF_WARNING(W_UASM_EXPECTED_CONSTANT_EXPRESSION_FOR_PSEUDO_INSTRUCTION,(WG_CONST,WG_VALUE),WSTATE_ERROR,WARNF("Expected a constant expression for use by a psuedo instruction"))
+DEF_WARNING(W_UASM_RELOCATION_MODEL_ALREADY_DEFINED,(WG_ASM_RELOCATION_MODEL,WG_VALUE),WSTATE_ERROR,WARNF("Relocation model had already been defined when `IP' or `SP' wasn encountered after `.' in an assembly expression"))
+DEF_WARNING(W_UASM_NEED_SYMBOL_FOR_RELOCATION_MODEL,(WG_ASM_RELOCATION_MODEL,WG_VALUE),WSTATE_ERROR,WARNF("Cannot set relocation model without a symbol expression"))
+DEF_WARNING(W_UASM_CANNOT_ADD_2_SYMBOLS,(WG_VALUE),WSTATE_ERROR,WARNF("Cannot add 2 operands when both contain a symbol"))
+DEF_WARNING(W_UASM_CANNOT_SUB_2_SYMBOLS,(WG_VALUE),WSTATE_ERROR,WARNF("Cannot subtract 2 operands both containing undefined, or ip-relative symbols"))
+DEF_WARNING(W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION,(WG_VALUE),WSTATE_ERROR,WARNF("Cannot set a stack depth depending on a symbol"))
+DEF_WARNING(W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT,(WG_USAGE),WSTATE_DISABLED,WARNF("Stack depth adjustment potentially leaves the stack in an undefined state"))
+DEF_WARNING(W_UASM_ILLEGAL_STACK_DEPTH,(WG_VALUE),WSTATE_ERROR,WARNF("New stack-depth value %ld is illegal",ARG(long)))
+DEF_WARNING(W_UASM_TRUNCATED_TO_FIT,(WG_VALUE),WSTATE_ERROR,WARNF("Integer argument was truncated to fit"))
+DEF_WARNING(W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL,(WG_VALUE),WSTATE_ERROR,WARNF("The `.except' pseudo op requires absolute symbols operands without offsets"))
+DEF_WARNING(W_UASM_EXCEPT_UNKNOWN_TAG,(WG_VALUE),WSTATE_ERROR,WARNF("Unknown tag is not recognized by the `.except' pseudo op"))
+DEF_WARNING(W_UASM_RELOC_UNKNOWN_NAME,(WG_VALUE),WSTATE_ERROR,WARNF("Unknown relocation name `%s'",ARG(char *)))
+DEF_WARNING(W_UASM_RELOC_NEED_DOT,(WG_VALUE),WSTATE_ERROR,WARNF("The `.reloc' pseudo op can only be used for the current code location. The first operand must be `.'"))
+DEF_WARNING(W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL,(WG_VALUE),WSTATE_ERROR,WARNF("The `.reloc' pseudo op requires an absolute symbol operand without offset"))
+DEF_WARNING(W_UASM_RELOC_NAME_NEEDS_SYMBOL,(WG_VALUE),WSTATE_ERROR,WARNF("The selected relocation name requires a symbol operand"))
+DEF_WARNING(W_UASM_RELOC_VALUE_NOT_A_SYMBOL,(WG_VALUE),WSTATE_ERROR,WARNF("The value-operand of the `.reloc' pseudo op must not be symbol-relative"))
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
+
+
+/* Assembler (code generator) warnings/errors */
+WARNING_NAMESPACE(WN_ASSEMBLER,8000)
+DEF_WARNING(W_ASM_SEQUENCE_TOO_LONG,(WG_VALUE),WSTATE_ERROR,WARNF("Sequence is too long"))
+DEF_WARNING(W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED,(WG_SYNTAX),WSTATE_ERROR,WARNF("`break' or `continue' are not allowed outside of a loop"))
+DEF_WARNING(W_ASM_STORE_TO_RVALUE,(WG_SYNTAX),WSTATE_WARN,WARNF("Store to r-value is assembled as an assignment. If this is intended, replace `=' with `:='"))
+DEF_WARNING(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,(WG_SYMBOL),WSTATE_FATAL,{ char *name = ARG(char *); WARNF("Symbol `%s' of class `%s' cannot be used in inplace operations",name,ARG(char *)); })
+DEF_WARNING(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,(WG_SYMBOL),WSTATE_FATAL,WARNF("Stack variable `%s' has not been initialized",ARG(char *)))
+DEF_WARNING(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED,(WG_SYMBOL),WSTATE_WARN,WARNF("Stack variable `%s' initialized in another scope is no longer allocated",ARG(char *)))
+DEF_WARNING(W_ASM_STACK_VARIABLE_DIFFRENT_SCOPE,(WG_SYMBOL),WSTATE_WARN,WARNF("Stack variable `%s' is not allocated within the proper scope",ARG(char *)))
+DEF_WARNING(W_ASM_PROPERTY_VARIABLE_NOT_READABLE,(WG_SYMBOL),WSTATE_WARN,WARNF("Property `%s' cannot be read from",ARG(char *)))
+DEF_WARNING(W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE,(WG_SYMBOL),WSTATE_WARN,WARNF("Property `%s' cannot be written to",ARG(char *)))
+DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,(WG_SYMBOL),WSTATE_FATAL,{ void *a = ARG(void *); WARNF("Instance member `%k' cannot be accessed from class method `%s'",a,ARG(char *)); })
+DEF_WARNING(W_ASM_CANNOT_UNBIND_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ char *a = ARG(char *); WARNF("Cannot unbind symbol `%s' of class `%s'",a,ARG(char *)); })
+DEF_WARNING(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,(WG_SYMBOL),WSTATE_ERROR,WARNF("Cannot unbind undesignated stack variable `%s' at this time",ARG(char *)))
+DEF_WARNING(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,(WG_SYMBOL),WSTATE_WARN,WARNF("Deleting stack variable `%s' will not cause the symbol to become unbound",ARG(char *)))
+DEF_WARNING(W_ASM_CANNOT_WRITE_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ char *a = ARG(char *); WARNF("Cannot write to symbol `%s' of class `%s'",a,ARG(char *)); })
+DEF_WARNING(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,(WG_SYMBOL),WSTATE_ERROR,{ void *a = ARG(void *); WARNF("Cannot modify read-only external symbol `%k from %k'",a,ARG(char *)); })
+
+WARNING_NAMESPACE(WN_ASSEMBLER_LABLES,8120)
+DEF_WARNING(W_ASM_LABEL_ALREADY_DEFINED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Label `%s' has already been defined",ARG(char *)))
+
+
+WARNING_NAMESPACE(WN_LINKER,9000)
+

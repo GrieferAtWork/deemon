@@ -1,0 +1,695 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_CODE_H
+#define GUARD_DEEMON_CODE_H 1
+
+#include "api.h"
+#include "object.h"
+#ifdef CONFIG_BUILDING_DEEMON
+#include "gc.h"
+#endif
+#include <hybrid/typecore.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#ifndef CONFIG_NO_THREADS
+#include <deemon/util/rwlock.h>
+#include <deemon/util/recursive-rwlock.h>
+#endif
+
+DECL_BEGIN
+
+/* Explanation: Global variables:
+ *   Global variables are stored in the current module.
+ *   They are addressed using the immediate operand as an
+ *   index into the current module's `mo_globalv' vector.
+ *    - Global variables can be used as l-values.
+ *    - Global variables can either be bound, or unbound.
+ *
+ * Explanation: Extern variables:
+ *   Extern variables are used to address the global
+ *   variables of a different module than the current.
+ *   They are addressed using a pair of immediate values,
+ *   written as <immX>:<immX>, where the first immediate
+ *   value acts as an index into the `mo_importv' vector
+ *   of the current module, while the second acts the
+ *   same way that a global immediate index acts by then
+ *   indexing into `mo_globalv'.
+ *    - Extern variables can be used as l-values.
+ *    - Extern variables can either be bound, or unbound.
+ * 
+ * Explanation: Local variables:
+ *   Local variables are stored in code frames and are
+ *   unique during each execution of accompanying code.
+ *    - Local variables can be used as l-values.
+ *    - Local variables can either be bound, or unbound.
+ *   
+ * Explanation: Reference variables:
+ *   Reference variables are stored in the associated function object (not code!)
+ *   and are created as fixed objects when the function is created by the surrounding
+ *   scope. Their existence becomes important in lambda expression and local functions
+ *   using variables from surrounding scopes that are not the global scope:
+ *   >> function ref_demo() {
+ *   >>     local ref_value = "foobar";
+ *   >>     function get_ref_value() {
+ *   >>         // Use an out-of-scope variable that is not part of the global scope.
+ *   >>         return ref_value;
+ *   >>     }
+ *   >>     return get_ref_value;
+ *   >> }
+ *   >> print ref_demo()(); // `"foobar"'
+ *   NOTES:
+ *    - Reference variables cannot be modified, or used as l-values.
+ *    - Reference variables are always bound.
+ *    - The originating scope can still use the referenced variable
+ *      normally, however overwriting its storage location will not
+ *      update the value referenced by lambda functions that were
+ *      constructed prior to the variable changing.
+ *
+ * Explanation: Argument variables:
+ *   Used to access arguments passed to a function.
+ *   Access to such variables undergoes special transformations in
+ *   order to pack varargs into tuples, extract the `this' argument,
+ *   and substitute default parameters.
+ *   WARNING: Argument variables cannot be modified, or used as l-values.
+ *            User-code is able to (seemingly) write to argument variables,
+ *            however the compiler will generate stubs to copy arguments
+ *            into hidden locals, and it is those that are then used for
+ *            the duration of the function call.
+ *   WARNING: Argument variables are always bound.
+ *   
+ * Explanation: Static/const variables:
+ *   Stored in the code object itself, static/const variables are
+ *   intended as extension space for storing pre-defined constants,
+ *   as well as variables to which changes remain consistent across
+ *   multiple calls to the same function (or rather underlying code object).
+ *   Special instructions are available for accessing static variables
+ *   as constants, rather than variables.
+ *    - Static variables can be used as l-values.
+ *    - Static variables can either be bound, or unbound.
+ *    - Constant variables must not be modified or contains mutable objects.
+ *    - Constant variables are always bound.
+ */
+
+struct code_frame;
+struct tuple_object;
+struct string_object;
+struct module_object;
+typedef struct code_object DeeCodeObject;
+typedef struct function_object DeeFunctionObject;
+typedef struct yield_function_object DeeYieldFunctionObject;
+typedef struct yield_function_iterator_object DeeYieldFunctionIteratorObject;
+typedef struct ddi_object DeeDDIObject;
+typedef __BYTE_TYPE__ instruction_t;
+typedef uint32_t code_addr_t;
+typedef uint32_t code_size_t;
+typedef int32_t code_saddr_t;
+
+struct except_handler {
+    /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+    DREF DeeTypeObject            *eh_mask;  /* [0..1][const] When set, only jump to this handler when the
+                                              *               last raised exception is an instance of `eh_mask'. */
+    code_addr_t                    eh_start; /* [const][<= eh_end] Exception handler protection start address. */
+    code_addr_t                    eh_end;   /* [const][>= eh_start] Exception handler protection end address. */
+    code_addr_t                    eh_addr;  /* [const][< eh_start && >= eh_end] Exception handler entry point. */
+    uint16_t                       eh_stack; /* [const] Stack depth that must be ensured when this handler is executed.
+                                              *  NOTE: When greater than the depth at the time of the exception
+                                              *        happening, the stack is filled with `none'. */
+#define EXCEPTION_HANDLER_FNORMAL  0x0000    /* Normal exception handler flags. */
+#define EXCEPTION_HANDLER_FFINALLY 0x0001    /* This handler must be executed after `finally' */
+#define EXCEPTION_HANDLER_FINTERPT 0x0002    /* This handler is allowed to handle interrupt signals.
+                                              * In other words: It's allowed to catch instances of `Signal.Interrupt' */
+#define EXCEPTION_HANDLER_FHANDLED 0x0004    /* Enter the exception handler with the exception already discarded.
+                                              * This flag is useful for exception handlers that wouldn't
+                                              * actually contain any code other than an `end catch'
+                                              * instruction, which this exception handler flag emulates
+                                              * before jumping to the handler entry point, which would
+                                              * then point back into regular text, after the empty handler. */
+#define EXCEPTION_HANDLER_FMASK    0x0007    /* Mask of known exception handler flags. */
+    uint16_t                       eh_flags; /* Exception handler flags (Set of `EXCEPTION_HANDLER_F*') */
+#if __SIZEOF_POINTER__ > 4
+    uint32_t                       eh_pad;   /* Padding... */
+#endif
+};
+
+
+#define DDI_REGS_FNORMAL 0x0000 /* Normal flags. */
+#define DDI_REGS_FISSTMT 0x0001 /* The current assembly is part of a statement
+                                 * This flag should be used as a hint for debuggers
+                                 * when setting breakpoints on a given line number,
+                                 * in that code points with this register set should
+                                 * be preferred over ones without. */
+#define DDI_REGS_FSECOND 0xff00 /* Used internally */
+#define DDI_REGS_FSECONE 0x0100 /* Used internally */
+#define DDI_REGS_FMASK   0x0001 /* Mask of known register flags */
+
+#define DDI_REGS_UNBOUND_NAME  ((uint16_t)-1) /* Symbol name address used for unbound slots. */
+struct ddi_regs {
+    code_addr_t          dr_uip;    /* The current user instruction. */
+    uint16_t             dr_usp;    /* The current stack alignment/depth.
+                                     * NOTE: If a debugger chooses to adjust the IP to manually jump to `dr_uip',
+                                     *       it must also match a stack depth of `dr_usp' before starting/continuing
+                                     *       execution of code.
+                                     *       Otherwise, the interpreter is not in a consistent state and
+                                     *       will either crash (FAST-mode), or throw an error (SAFE-mode). */
+    uint16_t             dr_flags;  /* Set of `DDI_REGS_F*' */
+    uint16_t             dr_path;   /* The current path number. (NOTE: ZERO indicates no path and all other values
+                                     *                                 are used as index-1 in the `d_path_names'
+                                     *                                 vector of the associated `DeeDDIObject') */
+    uint16_t             dr_file;   /* The current file number. */
+    uint16_t             dr_name;   /* The current function name. */
+#if (__SIZEOF_POINTER__ - (14 % __SIZEOF_POINTER__)) != 0
+    uint16_t            _dr_pad[(__SIZEOF_POINTER__ - (14 % __SIZEOF_POINTER__))/2]; /* ... */
+#endif
+    int                  dr_col;    /* The current column number within the active line. */
+    int                  dr_lno;    /* Line number (0-based). */
+};
+struct ddi_xregs {
+    struct ddi_regs      dx_base;   /* The normal register set. */
+    uint16_t             dx_spnama; /* Allocated amount of stack-item names. */
+    uint16_t             dx_lcnamc; /* [const][== ::co_localc] Number of local variable name registers. */
+#if __SIZEOF_POINTER__ > 4
+    uint16_t            _dx_pad[(sizeof(void *)/2)-2];
+#endif
+    uint16_t            *dx_spnamv; /* [0..MIN(dx_base.dr_usp,dx_spnama)|ALLOC(dx_spnama)]
+                                     * [owned] Vector of stack-symbol name registers.
+                                     * NOTE: Unallocated indices should be assumed to be unbound. */
+    uint16_t            *dx_lcnamv; /* [0..dx_lcnamc][owned] Vector of local variable name registers. */
+};
+
+struct ddi_saved {
+    struct ddi_xregs     s_save;    /* Saved register state. NOTE: `dr_uip' is undefined. */
+    struct ddi_saved    *s_prev;    /* [0..1][owned] Previous, saved register state */
+};
+struct ddi_state {
+    union {
+        struct ddi_regs  rs_regs;   /* The current register state. */
+        struct ddi_xregs rs_xregs;  /* The current register state (in extended form). */
+    };
+    struct ddi_saved    *rs_save;   /* [0..1][owned] Chain of saved register states.
+                                     * When enumerating for a traceback, this
+                                     * the list of inline function calls. */
+};
+
+/* The `struct ddi_state' matches the binary layout of `struct ddi_saved' */
+#define DDI_STATE_FIRSTSAVE(self) ((struct ddi_saved *)(self))
+
+/* Enumerate all the frames of a given DDI-state from most- to least-recent:
+ * >> struct ddi_state state;
+ * >> struct ddi_xregs *iter;
+ * >> DDI_STATE_DO(iter,&state) {
+ * >>     printf("line = %d\n",iter->dx_base.dr_lno);
+ * >> } DDI_STATE_WHILE(iter,&state);
+ */
+#define DDI_STATE_DO(ddi_xregs_iter,self) \
+ (ddi_xregs_iter) = &DDI_STATE_FIRSTSAVE(self)->s_save; do
+#define DDI_STATE_WHILE(ddi_xregs_iter,self) \
+ while (((ddi_xregs_iter) = &((struct ddi_saved *)(ddi_xregs_iter))->s_prev->s_save) != NULL)
+
+
+
+#define DDI_STATE_FNORMAL  0x0000 /* Normal DDI State iteration flags. */
+#define DDI_STATE_FNOTHROW 0x0001 /* Don't throw errors when something goes wrong, but rely on weak undefined behavior.
+                                   * This flag should be set when DDI is being enumerated to generate a traceback. */
+#define DDI_STATE_FNONAMES 0x0002 /* Don't keep track of bound symbol names */
+
+#define DDI_NEXT_DONE ((uint8_t *)0)  /* DDI Iteration stopped */
+#define DDI_NEXT_ERR  ((uint8_t *)-1) /* An error occurred. */
+
+/* Check that `x != DDI_NEXT_DONE && x != DDI_NEXT_ERR' */
+#define DDI_ISOK(x)  (((uintptr_t)(x)-1) < (uintptr_t)-2l)
+
+
+/* Initialize the given DDI register state from `code'.
+ * @param: flags:          Set of `DDI_STATE_F*'
+ * @return: * :            Successfully initialized the register state.
+ *                         A pointer to the next DDI instruction.
+ *                         This pointer can be used to enumerate DDI information.
+ * @return: DDI_NEXT_ERR:  [!DDI_STATE_FNOTHROW] An error occurred.
+ * NOTE: Upon error (return == DDI_NEXT_DONE || return == DDI_NEXT_ERR),
+ *       the given ddi-state `self' is initialized to a no-op state that
+ *       can still be used in a call to `ddi_state_fini()'! */
+DFUNDEF uint8_t *DCALL ddi_state_init(struct ddi_state *__restrict self,
+                                      DeeObject *__restrict code,
+                                      unsigned int flags);
+DFUNDEF void DCALL ddi_state_fini(struct ddi_state *__restrict self);
+
+
+
+
+/* Execute DDI instructions and update `regs' until the next checkpoint.
+ * Return the new instruction point, pointing after the that checkpoint,
+ * or return `NULL' when `DDI_STOP' has been encountered.
+ * @param: ip:                The instruction point from which DDI assembly should be read.
+ *                            During the first call, a pointer to `d_ddi' should be passed.
+ * @param: regs:     [IN|OUT] The current DDI state machine register settings.
+ *                            This register structure should not be modified
+ *                            between successive calls to this function.
+ *                            Before the first call, this structure should be
+ *                            initialized by copying its contents from `d_start'.
+ * @param: flags:             Set of `DDI_STATE_F*'
+ * @return: * :               A pointer to the next DDI instruction.
+ *                            This pointer, alongside the updated state of `regs'
+ *                            can be used in successive calls to continue
+ *                            enumerating/searching the data stream.
+ * @return: DDI_NEXT_ERR:    [ddi_next_state && !DDI_STATE_FNOTHROW] An error occurred.
+ * @return: DDI_NEXT_DONE:    The DDI information stream has ended after `DDI_STOP' was read. */
+DFUNDEF uint8_t *DCALL ddi_next_simple(uint8_t *__restrict ip, code_addr_t *__restrict puip);
+DFUNDEF uint8_t *DCALL ddi_next_regs(uint8_t *__restrict ip, struct ddi_regs *__restrict regs);
+DFUNDEF uint8_t *DCALL ddi_next_state(uint8_t *__restrict ip, struct ddi_state *__restrict regs, unsigned int flags);
+
+
+struct ddi_object {
+    OBJECT_HEAD
+    uintptr_t const            *d_static_names; /* [OFFSET(d_strtab->s_str)][0..d_nstatic][owned][const] Vector of static variable names. */
+    uintptr_t const            *d_ref_names;    /* [OFFSET(d_strtab->s_str)][0..d_nrefs][owned][const] Vector of reference variable names. */
+    uintptr_t const            *d_arg_names;    /* [OFFSET(d_strtab->s_str)][0..d_nargs][owned][const] Vector of argument variable names. */
+    uintptr_t const            *d_path_names;   /* [OFFSET(d_strtab->s_str)][0..d_paths][owned][const] Vector of path names. */
+    uintptr_t const            *d_file_names;   /* [OFFSET(d_strtab->s_str)][0..d_files][owned][const] Vector of file names. */
+    uintptr_t const            *d_symbol_names; /* [OFFSET(d_strtab->s_str)][0..d_symbols][owned][const] Vector of symbol names. */
+    DREF struct string_object  *d_strtab;       /* [1..1][const] String table of NUL-terminated strings.
+                                                 *               All offsets above point into this table. */
+    uint32_t                    d_ddi_size;     /* [const] Amount of DDI instruction bytes stored in `d_ddi' */
+    uint16_t                    d_nstatic;      /* [const] Amount of static variable names. */
+    uint16_t                    d_nrefs;        /* [const] Amount of reference variable names. */
+    uint16_t                    d_nargs;        /* [const] Amount of argument variable names. */
+    uint16_t                    d_paths;        /* [const] Amount of path strings. */
+    uint16_t                    d_files;        /* [const] Amount of argument variable names. */
+    uint16_t                    d_symbols;      /* [const] Amount of symbol names. */
+    struct ddi_regs             d_start;        /* [const] The initial DDI register state. */
+    uint8_t                     d_ddi[1];       /* [const] DDI bytecode (s.a.: `DDI_*') */
+};
+
+
+/* Query DDI information for a given code address.
+ * @param: self:            The code object for which DDI information should be queried.
+ * @param: state:     [out] DDI information for the closest checkpoint below `uip'
+ * @param: opt_endip: [out] When non-NULL, filled with the UIP of the closest checkpoint above `uip'
+ * @return: * :             Successfully found the DDI state describing `uip'
+ * @return: DDI_NEXT_ERR:   [!DDI_STATE_FNOTHROW] An error occurred.
+ * @return: DDI_NEXT_DONE:  The DDI information stream has ended after `DDI_STOP' was read. */
+DFUNDEF uint8_t *DCALL
+DeeCode_FindDDI(DeeObject *__restrict self,
+                struct ddi_state *__restrict start_state,
+                code_addr_t *opt_endip, code_addr_t uip,
+                unsigned int flags);
+
+/* NOTE: The caller is responsible for validating indices before passing them to these functions. */
+#define DeeDDI_NAME(x)           (DeeDDI_VALID_SYMBOL(x,(x)->d_start.dr_name) ? DeeDDI_SYMBOL_NAME(x,(x)->d_start.dr_name) : "")
+#define DeeDDI_STATIC_NAME(x,i)  (DeeString_STR((x)->d_strtab)+(x)->d_static_names[i])
+#define DeeDDI_REF_NAME(x,i)     (DeeString_STR((x)->d_strtab)+(x)->d_ref_names[i])
+#define DeeDDI_ARG_NAME(x,i)     (DeeString_STR((x)->d_strtab)+(x)->d_arg_names[i])
+#define DeeDDI_PATH_NAME(x,i)    (DeeString_STR((x)->d_strtab)+(x)->d_path_names[i])
+#define DeeDDI_FILE_NAME(x,i)    (DeeString_STR((x)->d_strtab)+(x)->d_file_names[i])
+#define DeeDDI_SYMBOL_NAME(x,i)  (DeeString_STR((x)->d_strtab)+(x)->d_symbol_names[i])
+#define DeeDDI_HAS_NAME(x)       (*DeeDDI_NAME(x) != '\0')
+#define DeeDDI_HAS_STATIC(x,i)   ((i) < (x)->d_nstatic && *DeeDDI_STATIC_NAME(x,i) != '\0')
+#define DeeDDI_HAS_REF(x,i)      ((i) < (x)->d_nrefs && *DeeDDI_REF_NAME(x,i) != '\0')
+#define DeeDDI_HAS_ARG(x,i)      ((i) < (x)->d_nargs && *DeeDDI_ARG_NAME(x,i) != '\0')
+#define DeeDDI_HAS_PATH(x,i)     ((i) < (x)->d_paths && *DeeDDI_PATH_NAME(x,i) != '\0')
+#define DeeDDI_HAS_FILE(x,i)     ((i) < (x)->d_files && *DeeDDI_FILE_NAME(x,i) != '\0')
+#define DeeDDI_HAS_SYMBOL(x,i)   ((i) < (x)->d_symbols && *DeeDDI_SYMBOL_NAME(x,i) != '\0')
+#define DeeDDI_VALID_STATIC(x,i) ((i) < (x)->d_nstatic)
+#define DeeDDI_VALID_REF(x,i)    ((i) < (x)->d_nrefs)
+#define DeeDDI_VALID_ARG(x,i)    ((i) < (x)->d_nargs)
+#define DeeDDI_VALID_PATH(x,i)   ((i) < (x)->d_paths)
+#define DeeDDI_VALID_FILE(x,i)   ((i) < (x)->d_files)
+#define DeeDDI_VALID_SYMBOL(x,i) ((i) < (x)->d_symbols)
+
+#define DeeDDI_Check(ob)         DeeObject_InstanceOfExact(ob,&DeeDDI_Type) /* `ddi' is final. */
+#define DeeDDI_CheckExact(ob)    DeeObject_InstanceOfExact(ob,&DeeDDI_Type)
+DDATDEF DeeTypeObject DeeDDI_Type;
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* A stub ddi-object that contains no actual information. */
+INTDEF DeeDDIObject empty_ddi;
+#endif /* CONFIG_BUILDING_DEEMON */
+
+
+
+struct code_object {
+    /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+    OBJECT_HEAD /* GC Object. */
+#define CODE_FNORMAL         0x0000          /* Normal code object flags. */
+#define CODE_FYIELDING       0x0001          /* The code is part of a yield-function. */
+#define CODE_FCOPYABLE       0x0002          /* Allow stackframes generated by this code object to be copied. */
+#define CODE_FASSEMBLY       0x0004          /* The assembly of this code object cannot be trusted not to behave
+                                              * unexpectedly. This is the case for code object received by
+                                              * marshaling, or when custom instruction sequences have been encoded.
+                                              * Additionally, `thread.check_interrupt()' is called before every jump
+                                              * instruction. */
+#define CODE_FLENIENT        0x0008          /* For use with `CODE_FASSEMBLY':
+                                              * Leniently accept out-of-bound access to stack variables, dynamically
+                                              * adding more memory as necessary when out-of-bound accesses remain
+                                              * within ~reasonable~ limits (reasonable being determined at runtime).
+                                              * This flag is usually set when the code either contains, or is fully
+                                              * written by hand in a manner that can't fully be understood by the compiler. */
+#define CODE_FVARARGS        0x0010          /* The code accepts a variable number of arguments, requiring at least `co_argc_min',
+                                              * but taking any number greater, with the remaining, unused arguments then being
+                                              * accessible as a tuple at argument index == `co_argc_max'.
+                                              * Note that this tuple is created on-the-fly and saved in `cf_vargs'. */
+#define CODE_FVARKWDS        0x0020          /* The code accepts a variable number of keywords. */
+#define CODE_FTHISCALL       0x0040          /* The code must be executed using `thiscall' calling conventions (s.a.: `struct code_frame::cf_this'). */
+#define CODE_FHEAPFRAME      0x0080          /* Frame memory should be allocated on the heap, rather than the stack. */
+#define CODE_FFINALLY        0x0100          /* Finally handlers exist that must be executed before `return'.
+                                              * WARNING: This flag must only be set when `co_exceptc != 0' */
+#define CODE_FCONSTRUCTOR    0x0200          /* Don't track the this-argument, or references to it located in locals, the stack, or arguments when
+                                              * generating tracebacks. This is required to prevent the traceback from keeping the this-argument alive
+                                              * when an error occurs, which would otherwise cause the constructor wrapper to discard that error on
+                                              * the ground of not being able to undo construction. */
+#define CODE_FMASK           0x03ff          /* Mask of known code flags. */
+#define DEC_CODE_F8BIT       0x8000          /* Used by DEC. - Does not actually appear in runtime code object, but must remain reserved */
+    uint16_t                 co_flags;       /* Code flags (Set of `CODE_F*') */
+    uint16_t                 co_localc;      /* [const] Amount of local variables used by code. */
+    uint16_t                 co_staticc;     /* [const] Amount of static variables. */
+    uint16_t                 co_refc;        /* [const] Amount of reference variables used by this code. */
+    uint16_t                 co_exceptc;     /* [const] Amount of exception handlers. */
+    uint16_t                 co_argc_min;    /* [const] Min amount of arguments required to execute this code. */
+    uint16_t                 co_argc_max;    /* [const] Max amount of arguments accepted by this code (excluding a varargs argument). */
+    uint16_t                 co_padding;     /*... */
+#define CODE_LARGEFRAME_THRESHOLD 0x100      /* When `co_framesize' turns out to be larger than this,
+                                              * it is suggested that the `CODE_FHEAPFRAME' flag be set. */
+    uint32_t                 co_framesize;   /* [const][== (co_localc + X)*sizeof(DeeObject *)]
+                                              * Min amount of bytes of local storage required by assembly of this code object.
+                                              * NOTE: `X' is the minimum stack depth required by this code object. */
+    code_size_t              co_codebytes;   /* [const] The total number of code bytes. */
+#ifndef CONFIG_NO_THREADS
+    rwlock_t                 co_static_lock; /* Lock used by `ASM_STATIC', `ASM_PUSH_STATIC' and `ASM_POP_STATIC' instructions when accessing `co_staticv'. */
+#endif
+    union {
+        DREF struct module_object
+                            *co_module;      /* [1..1] The module in which this code object was defined.
+                                              *  NOTE: Running code may assume that this field is always non-NULL,
+                                              *        yet during compilation it is NULL or some other object until
+                                              *        the module object surrounding some code object has been defined.
+                                              *  HINT: At some point during compilation, this field may also point
+                                              *        to another code object, forming a linked list to track all
+                                              *        code objects of a given module before that module has actually
+                                              *        been created. */
+        DREF DeeCodeObject  *co_next;        /* [0..1] Only used during compilation: Pointer to another code object. */
+    };
+    DREF struct string_object
+                     *const *co_keywords;    /* [1..1][const][0..co_argc_max][const] Argument keywords. */
+    DREF DeeObject   *const *co_defaultv;    /* [1..1][const][0..(co_argc_max-co_argc_min)][owned] Vector of default argument values. */
+    DREF DeeObject         **co_staticv;     /* [1..1][lock(co_staticv)][0..co_staticc][owned] Vector of constants and static variables. */
+    /* NOTE: Exception handlers are execute in order of last -> first, meaning that later handler overwrite prior ones. */
+    struct except_handler   *co_exceptv;     /* [0..co_excptc][owned] Vector of exception handler descriptors. */
+    DREF DeeDDIObject       *co_ddi;         /* [1..1][const] Debug line information. */
+    instruction_t            co_code[1];     /* [co_codebytes][const] The actual instructions encoding this code object's behavior.
+                                              * WARNING: The safe code executor assumes that the code vector does not
+                                              *          stop prematurely, or is capable of exceeding its natural ending
+                                              *          by means of simply continuing execution and overflowing past the end.
+                                              *          To prevent problems arising from this, unchecked/unpredictable code
+                                              *          should be padded with `INSTRLEN_MAX' repeated `ASM_RET_NONE' instructions,
+                                              *          thereby ensuring that upon natural completion, at least one `ASM_RET_NONE'
+                                              *          instruction is always executed, no matter what. */
+};
+
+/* Returns the max number of stack objects */
+#define DeeCode_StackDepth(x) (((x)->co_framesize / sizeof(DeeObject *)) - (x)->co_localc)
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* A stub code-object that contains a single, `ret none' instruction. */
+struct empty_code_struct {
+    /* Even though never tracked, the empty code
+     * object still needs the GC header for visiting. */
+    struct gc_head c_head;
+    DeeCodeObject  c_code;
+};
+
+#ifdef __INTELLISENSE__
+INTDEF DeeCodeObject empty_code;
+#else
+INTDEF struct empty_code_struct empty_code_head;
+#define empty_code   empty_code_head.c_code
+#endif
+#endif /* CONFIG_BUILDING_DEEMON */
+
+DDATDEF DeeTypeObject DeeCode_Type;
+#define DeeCode_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeCode_Type) /* `code' is `final' */
+#define DeeCode_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeCode_Type) /* `code' is `final' */
+
+
+/* Attempts to set the assembly flag of the given code object if it wasn't set already.
+ * Code objects with this flag set are robust to otherwise unexpected behavior, but
+ * safely setting this flag usually proves to be quite difficult as it involves ensuring
+ * that the code isn't already being executed by some other thread.
+ * For that reason, this helper function exists, which will do whatever is necessary to
+ * ensure that the code isn't running or apart of any of the execution stacks of other
+ * threads, temporarily suspending the execution of all threads but the caller's.
+ * This however is just an implementation detail that the caller must not concern themselves with.
+ * What the caller should be concerned about however is the error-return case:
+ *     In the event that the given code object is actively being executed, either by
+ *     the calling, or by any other thread, a ValueError is thrown and -1 is returned.
+ *     Otherwise when 0 is returned, the caller may assume that `CODE_FASSEMBLY' has
+ *     been set, and that modifying `co_code' to their liking, while still subject
+ *     to potential code-tearing, as well as the resulting inconsistencies that may
+ *     cause running code to throw errors, but not cause the interpreter to crash.
+ * Note that this function may also fail because an interrupt was send to the calling thread! */
+DFUNDEF int DCALL DeeCode_SetAssembly(/*Code*/DeeObject *__restrict self);
+
+
+/* Execution frame of a deemon code object.
+ * NOTE: This structure is usually allocated on the host's stack. */
+struct code_frame {
+    /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+#define CODE_FRAME_NOT_EXECUTING  ((struct code_frame *)-1)
+    struct code_frame        *cf_prev;    /* [0..1] Previous execution frame.
+                                           * NOTE: Set to `CODE_FRAME_NOT_EXECUTING' while
+                                           *       the frame is not being executed. */
+    DeeFunctionObject        *cf_func;    /* [1..1] The function running within in this frame. */
+    size_t                    cf_argc;    /* [const] Amount of input arguments. */
+    DREF DeeObject          **cf_argv;    /* [1..1][const][0..cf_argc][const] Vector of input arguments. */
+    DeeObject                *cf_kw;      /* [1..1][const] Keywords passed to the function. */
+    DREF DeeObject          **cf_frame;   /* [0..1][cf_func->fo_code->co_framesize / sizeof(DeeObject *)][owned] Frame-local work-memory used during execution. */
+    DREF DeeObject          **cf_stack;   /* [?..1][(cf_func->fo_code->co_framesize - cf_func->fo_code->co_localc * sizeof(DeeObject *)) / sizeof(DeeObject *)] Base address for the stack.
+                                           * NOTE: When `cf_stacksz != 0', then this vector is allocated on the heap. */
+    DeeObject               **cf_sp;      /* [?..1][1..1] Pointer to the location where the next-to-be pushed object is stored.
+                                           * NOTE: The stack pointer grows UPWARDS, meaning that
+                                           *       the valid object-range is `cf_stack...cf_sp' */
+    instruction_t            *cf_ip;      /* [1..1][in(cf_func->fo_code->co_code)] Current instruction pointer. */
+    DREF struct tuple_object *cf_vargs;   /* [0..1][lock(write_once)] Saved var-args object. */
+    DeeObject                *cf_this;    /* [1..1][valid_if(cf_func->fo_code->co_flags&CODE_FTHISCALL)][const]
+                                           * The `this' argument passed for this-calls. */
+    DeeObject                *cf_result;  /* [0..1] Storage location of the frame's currently set return value.
+                                           *        The caller of the frame should pre-initialize this field to NULL. */
+    uint16_t                  cf_stacksz; /* [valid_if(DeeCode_ExecFrameSafe)] Size of the heap-allocated stack.
+                                           * HINT: This field is not used by code running in fast mode
+                                           *      (aka. Code without the `CODE_FASSEMBLY' flag set). */
+    uint16_t                  cf_flags;   /* Frame flags (Only used by yield-function-iterators; set of `CODE_F*') */
+#if __SIZEOF_POINTER__ > 4
+    uint16_t                  cf_padding[2]; /* ... */
+#endif
+};
+
+
+/* Continue execution of the given code frame until it returns.
+ * NOTE: `DeeCode_ExecFrameFast' should be used unless the `CODE_FASSEMBLY'
+ *        flag is set in the code object associated with the frame.
+ * @return: * :         A new reference to the object returned by the code.
+ * @return: NULL:       An error occurred that could not be handled by user-code.
+ * @return: ITER_DONE: [CODE_FYIELDING] The iterator of the frame as finished.
+ *                HINT: Attempting to execute the frame again will yield `ITER_DONE' once more. */
+DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameFast(struct code_frame *__restrict frame);
+DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafe(struct code_frame *__restrict frame);
+
+
+#if defined(__i386__) || defined(__x86_64__)
+#define CONFIG_HAVE_EXEC_ALTSTACK 1
+#endif
+
+#ifdef CONFIG_NO_EXEC_ALTSTACK
+#undef CONFIG_HAVE_EXEC_ALTSTACK
+#endif
+
+#ifdef CONFIG_HAVE_EXEC_ALTSTACK
+#ifndef DEE_EXEC_ALTSTACK_PERIOD
+#if defined(__i386__)
+#define DEE_EXEC_ALTSTACK_PERIOD  1024 /* NOTE: Changes must be mirrored in `exec-386.S' */
+#elif defined(__x86_64__)
+#define DEE_EXEC_ALTSTACK_PERIOD  1024
+#endif
+#endif
+
+/* Switch to an alternate stack every `DEE_EXEC_ALTSTACK_PERIOD' recursions. */
+#ifndef DEE_EXEC_ALTSTACK_PERIOD
+#define DEE_EXEC_ALTSTACK_PERIOD  1024
+#endif
+
+#ifndef DEE_EXEC_ALTSTACK_SIZE
+ /* NOTE: Changes must be mirrored in `altstack-x86_64.S' */
+#define DEE_EXEC_ALTSTACK_SIZE   (__SIZEOF_POINTER__*1024*512)
+#endif
+
+/* Same as the functions above, however execute the frame
+ * on a new, heap-allocated stack, before switching back
+ * to the caller's original stack before returning.
+ * These functions are highly platform- and arch-specific, and are meant
+ * to provide some way of prevent a true stack overflow when user-code
+ * has increased `DeeExec_StackLimit' to unreasonable heights. */
+DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame);
+DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame);
+#endif /* CONFIG_HAVE_EXEC_ALTSTACK */
+
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Handle a breakpoint having been triggered in `frame'.
+ * NOTE: This function is called to deal with an encounter
+ *       of a breakpoint during execution of code.
+ * @param: frame: [in|out][OVERRIDE(->cf_result,DREF)]
+ *                 The execution frame that triggered the breakpoint.
+ *                 Anything and everything about the state described
+ *                 within this frame is subject to change by this
+ *                 function, including IP/SP, as well as the running
+ *                 code itself.
+ *                  - The stack pointer is the stack location as
+ *                    it is at the breakpoint instruction, as well
+ *                    as the instruction following thereafter.
+ *                  - The instruction pointer points to the instruction
+ *                    following the breakpoint, meaning that no further
+ *                    adjustment is required if all that's supposed to
+ *                    happen is execution continuing normally.
+ *                  - The valid stack size is always stored in `cf_stacksz'
+ * @return: * :    One of `TRIGGER_BREAKPOINT_*' describing how execution
+ *                 should continue once the breakpoint has been dealt with.
+ */
+INTDEF int DCALL trigger_breakpoint(struct code_frame *__restrict frame);
+#endif
+
+/* Breakpoint execution modes. */
+#define TRIGGER_BREAKPOINT_EXCEPT_EXIT (-2) /* Similar to `TRIGGER_BREAKPOINT_EXCEPT', but don't execute exception handlers in the calling code. */
+#define TRIGGER_BREAKPOINT_EXCEPT   (-1) /* Handle an exception triggered at `frame->cf_ip' (new value when changed) */
+#define TRIGGER_BREAKPOINT_CONTINUE   0  /* Continue execution normally at `frame->cf_ip' (new value when changed) */
+#define TRIGGER_BREAKPOINT_CONTSAFE   1  /* Same as `TRIGGER_BREAKPOINT_CONTINUE', but if execution was running in
+                                          * fast-mode (`DeeCode_ExecFrameFast()'), continue after switching to safe-mode.
+                                          * This value should be returned if unpredictable changes were made to the
+                                          * execution context that may result in the frame becoming unstable.
+                                          * Such unpredictable changes include:
+                                          *   - Adding/removing/modifying any object located on the stack:
+                                          *     - Add/remove: The stack-depth may have become unstable.
+                                          *     - Modify:     The modified value may have been designated for use by `ASM_JMP_POP',
+                                          *                   or some other instruction expecting to find a specific type of object.
+                                          *   - Changing the running assembly in an unpredictable manner.
+                                          *     - Obviously changing the assembly can be dangerous...
+                                          *   - Changing the running IP
+                                          *     - The code located at the new IP may expect a different stack-depth.
+                                          * WARNING: Any sort of changes made to SP/IP must be validated by the caller.
+                                          *          The breakpoint instruction will not perform such checks, as it is
+                                          *          expected that whoever hooked the breakpoint knows what they're doing. */
+#define TRIGGER_BREAKPOINT_RETURN     2  /* Yield/Return from the calling function normally.
+                                          * The breakpoint library may assign a reference to-be returned to
+                                          * `cf_result' before executing this instruction, though if no value
+                                          * has been assigned (`cf_result == NULL'), the interpreter will simply
+                                          * return `none' (or signal `ITER_DONE' in yield-functions) instead. */
+#define TRIGGER_BREAKPOINT_EXIT       3  /* Same as `TRIGGER_BREAKPOINT_RETURN' for non-yielding functions,
+                                          * yet for yielding functions, exit from the function by returning
+                                          * `ITER_DONE' after decref()-ing `cf_result' if it is
+                                          * neither `NULL' nor `ITER_DONE'
+                                          * WARNING: When this code is used to indicate the end of an iterator,
+                                          *          it should be noted that attempting to yielding the iterator
+                                          *          again will once again execute code, potentially leading to
+                                          *          a scenario where an iterator that already claimed to have
+                                          *          been exhausted can once again be spun. */
+#define TRIGGER_BREAKPOINT_EXIT_NOFIN 4  /* Same as `TRIGGER_BREAKPOINT_EXIT', but don't execute
+                                          * finally handlers and immediately return to the caller. */
+
+
+struct function_object {
+    /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+    OBJECT_HEAD
+    DREF DeeCodeObject       *fo_code;    /* [1..1][const] Associated code object. */
+    DREF DeeObject           *fo_refv[1]; /* [1..1][const][fo_code->co_refc] Vector of referenced objects. */
+};
+
+struct yield_function_object {
+    OBJECT_HEAD /* GC Object. */
+    DREF DeeFunctionObject   *yf_func; /* [0..1][(!= NULL) == (yf_args != NULL)][const] The function we are derived from.
+                                        * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
+    DREF struct tuple_object *yf_args; /* [0..1][(!= NULL) == (yf_func != NULL)][const] Arguments that we are called with.
+                                        * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
+    DREF DeeObject           *yf_this; /* [0..1][const] 'this' object during callback. */
+#ifndef CONFIG_NO_THREADS
+    rwlock_t                  yf_lock; /* Lock held while executing the frame of this iterator. */
+#endif
+};
+
+struct yield_function_iterator_object {
+    OBJECT_HEAD /* GC Object. */
+    DREF DeeYieldFunctionObject *yi_func;  /* [0..1] The yield function instance that created us.
+                                            * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
+    struct code_frame            yi_frame; /* [lock(yi_lock)]
+                                            * [owned(.cf_frame)]
+                                            * [owned_if(.cf_stack,.cf_stacksz)]
+                                            * [OVERRIDE(.cf_func,DREF [0..1][(!= NULL) == (:yi_func != NULL)])]
+                                            * [OVERRIDE(.cf_argv,DREF [0..1][(!= NULL) == (:yi_func != NULL)])]
+                                            * [OVERRIDE(.cf_ip,[?..1][valid_if(:yi_func != NULL)])]
+                                            * [OVERRIDE(.cf_this,DREF [0..1])]
+                                            * [.cf_argv == yi_func->yf_args || NULL]
+                                            * [.cf_this == yi_func->yf_this || NULL]
+                                            * Execution frame of this iterator. */
+#ifndef CONFIG_NO_THREADS
+    recursive_rwlock_t           yi_lock;  /* Lock held while executing the frame of this iterator.
+                                            * NOTE: This lock needs to be recursive to allow for
+                                            *       GC-visit/frame-copy while the frame is executing. */
+#endif
+};
+
+DDATDEF DeeTypeObject DeeFunction_Type;              /* foo; */
+DDATDEF DeeTypeObject DeeYieldFunction_Type;         /* foo(); */
+DDATDEF DeeTypeObject DeeYieldFunctionIterator_Type; /* foo().operator __iterself__(); */
+#define DeeFunction_Check(ob)                   DeeObject_InstanceOfExact(ob,&DeeFunction_Type) /* `function' is `final' */
+#define DeeFunction_CheckExact(ob)              DeeObject_InstanceOfExact(ob,&DeeFunction_Type)
+#define DeeYieldFunction_Check(ob)              DeeObject_InstanceOfExact(ob,&DeeYieldFunction_Type) /* `yield_function' is `final' */
+#define DeeYieldFunction_CheckExact(ob)         DeeObject_InstanceOfExact(ob,&DeeYieldFunction_Type)
+#define DeeYieldFunctionIterator_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeYieldFunctionIterator_Type) /* `yield_function.iterator' is `final' */
+#define DeeYieldFunctionIterator_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeYieldFunctionIterator_Type)
+
+
+/* Create a new function object. */
+DFUNDEF DREF DeeObject *DCALL
+DeeFunction_New(DeeObject *__restrict code, size_t refc,
+                DeeObject *const *__restrict refv);
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF DREF DeeObject *DCALL
+DeeFunction_NewInherited(DeeObject *__restrict code, size_t refc,
+                         /*inherit(on_success)*/DREF DeeObject *const *__restrict refv);
+INTDEF DREF DeeObject *DCALL
+DeeFunction_NewNoRefs(DeeObject *__restrict code);
+
+
+/* Optimized operator for calling a `function' object using the `thiscall' calling convention.
+ * NOTE: Potentially required conversions are performed by this function automatically! */
+INTDEF DREF DeeObject *DCALL
+DeeFunction_ThisCall(DeeObject *__restrict self,
+                     DeeObject *__restrict this_arg,
+                     size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL
+DeeFunction_ThisCallKw(DeeObject *__restrict self,
+                       DeeObject *__restrict this_arg,
+                       size_t argc, DeeObject **__restrict argv,
+                       DeeObject *kw);
+#endif
+
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_CODE_H */

@@ -22,6 +22,11 @@
  */
 //#define CONFIG_PRINTCMD 1
 
+/* NOTE: This file is written to be usable with both deemon 101 and deemon 200,
+ *       rather than being written purely to take advantage of deemon 200's new 
+ *       features. (Just to make it a bit easier in case deemon breaks
+ *       irreperable, and couldn't compile this file anymore) */
+
 #include <file>
 #include <error>
 #include <fs>

@@ -1,0 +1,947 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_OBJECTS_DICTPROXY_C
+#define GUARD_DEEMON_OBJECTS_DICTPROXY_C 1
+#define _KOS_SOURCE 1
+
+#include <deemon/api.h>
+#include <deemon/object.h>
+#include <deemon/gc.h>
+#include <deemon/map.h>
+#include <deemon/dict.h>
+#include <deemon/list.h>
+#include <deemon/seq.h>
+#include <deemon/arg.h>
+#include <deemon/tuple.h>
+#include <deemon/util/string.h>
+
+#include "../runtime/runtime_error.h"
+
+DECL_BEGIN
+
+INTDEF DeeObject dict_dummy;
+#define dummy  (&dict_dummy)
+
+typedef struct {
+    /* HINT: The basic algorithm and idea of iterating
+     *       a dict is the same as for a set. */
+    OBJECT_HEAD
+    DeeDictObject    *di_dict; /* [1..1][const] The dict being iterated. */
+    struct dict_item *di_next; /* [?..1][MAYBE(in(di_dict->d_elem))][atomic]
+                                *   The first candidate for the next item.
+                                *   NOTE: Before being dereferenced, this pointer is checked
+                                *         for being located inside the dict's element vector.
+                                *         In the event that it is located at its end, `ITER_DONE'
+                                *         is returned, though in the event that it is located
+                                *         outside, an error is thrown (`err_changed_sequence()'). */
+} DictIterator;
+
+#ifdef CONFIG_NO_THREADS
+#define READ_ITEM(x)            ((x)->di_next)
+#else
+#define READ_ITEM(x) ATOMIC_READ((x)->di_next)
+#endif
+
+INTERN DREF DeeObject *DCALL
+dictiterator_next_key(DictIterator *__restrict self) {
+ DREF DeeObject *result;
+ struct dict_item *item,*end;
+ DeeDictObject *dict = self->di_dict;
+ DeeDict_LockRead(dict);
+ end = dict->d_elem+(dict->d_mask+1);
+#ifndef CONFIG_NO_THREADS
+ for (;;)
+#endif
+ {
+#ifdef CONFIG_NO_THREADS
+  item = ATOMIC_READ(self->di_next);
+#else
+  struct dict_item *old_item;
+  old_item = item = ATOMIC_READ(self->di_next);
+#endif
+  /* Validate that the pointer is still located in-bounds. */
+  if (item >= end) {
+   if unlikely(item > end)
+      goto dict_has_changed;
+   goto iter_exhausted;
+  }
+  if unlikely(item < dict->d_elem)
+     goto dict_has_changed;
+  /* Search for the next non-empty item. */
+  while (item != end && (!item->di_key || item->di_key == dummy)) ++item;
+  if (item == end) {
+#ifdef CONFIG_NO_THREADS
+   self->di_next = item;
+#else
+   if (!ATOMIC_CMPXCH(self->di_next,old_item,item))
+        continue;
+#endif
+   goto iter_exhausted;
+  }
+#ifdef CONFIG_NO_THREADS
+  self->di_next = item+1;
+#else
+  if (ATOMIC_CMPXCH(self->di_next,old_item,item+1))
+      break;
+#endif
+ }
+ result = item->di_key;
+ Dee_Incref(result);
+ DeeDict_LockEndRead(dict);
+ return result;
+dict_has_changed:
+ DeeDict_LockEndRead(dict);
+ err_changed_sequence((DeeObject *)dict);
+ return NULL;
+iter_exhausted:
+ DeeDict_LockEndRead(dict);
+ return ITER_DONE;
+}
+
+PRIVATE DREF DeeObject *DCALL
+dictiterator_next_item(DictIterator *__restrict self) {
+ DREF DeeObject *result,*result_key,*result_item;
+ struct dict_item *item,*end;
+ DeeDictObject *dict = self->di_dict;
+ DeeDict_LockRead(dict);
+ end = dict->d_elem+(dict->d_mask+1);
+#ifndef CONFIG_NO_THREADS
+ for (;;)
+#endif
+ {
+#ifdef CONFIG_NO_THREADS
+  item = ATOMIC_READ(self->di_next);
+#else
+  struct dict_item *old_item;
+  old_item = item = ATOMIC_READ(self->di_next);
+#endif
+  /* Validate that the pointer is still located in-bounds. */
+  if (item >= end) {
+   if unlikely(item > end)
+      goto dict_has_changed;
+   goto iter_exhausted;
+  }
+  if unlikely(item < dict->d_elem)
+     goto dict_has_changed;
+  /* Search for the next non-empty item. */
+  while (item != end && (!item->di_key || item->di_key == dummy)) ++item;
+  if (item == end) {
+#ifdef CONFIG_NO_THREADS
+   self->di_next = item;
+#else
+   if (!ATOMIC_CMPXCH(self->di_next,old_item,item))
+        continue;
+#endif
+   goto iter_exhausted;
+  }
+#ifdef CONFIG_NO_THREADS
+  self->di_next = item+1;
+#else
+  if (ATOMIC_CMPXCH(self->di_next,old_item,item+1))
+      break;
+#endif
+ }
+ result_key  = item->di_key;
+ result_item = item->di_value;
+ Dee_Incref(result_key);
+ Dee_Incref(result_item);
+ DeeDict_LockEndRead(dict);
+ result = DeeTuple_Pack(2,result_key,result_item);
+ Dee_Decref(result_item);
+ Dee_Decref(result_key);
+ return result;
+dict_has_changed:
+ DeeDict_LockEndRead(dict);
+ err_changed_sequence((DeeObject *)dict);
+ return NULL;
+iter_exhausted:
+ DeeDict_LockEndRead(dict);
+ return ITER_DONE;
+}
+
+INTERN DREF DeeObject *DCALL
+dictiterator_next_value(DictIterator *__restrict self) {
+ DREF DeeObject *result;
+ struct dict_item *item,*end;
+ DeeDictObject *dict = self->di_dict;
+ DeeDict_LockRead(dict);
+ end = dict->d_elem+(dict->d_mask+1);
+#ifndef CONFIG_NO_THREADS
+ for (;;)
+#endif
+ {
+#ifdef CONFIG_NO_THREADS
+  item = ATOMIC_READ(self->di_next);
+#else
+  struct dict_item *old_item;
+  old_item = item = ATOMIC_READ(self->di_next);
+#endif
+  /* Validate that the pointer is still located in-bounds. */
+  if (item >= end) {
+   if unlikely(item > end)
+      goto dict_has_changed;
+   goto iter_exhausted;
+  }
+  if unlikely(item < dict->d_elem)
+     goto dict_has_changed;
+  /* Search for the next non-empty item. */
+  while (item != end && (!item->di_key || item->di_key == dummy)) ++item;
+  if (item == end) {
+#ifdef CONFIG_NO_THREADS
+   self->di_next = item;
+#else
+   if (!ATOMIC_CMPXCH(self->di_next,old_item,item))
+        continue;
+#endif
+   goto iter_exhausted;
+  }
+#ifdef CONFIG_NO_THREADS
+  self->di_next = item+1;
+#else
+  if (ATOMIC_CMPXCH(self->di_next,old_item,item+1))
+      break;
+#endif
+ }
+ result = item->di_value;
+ Dee_Incref(result);
+ DeeDict_LockEndRead(dict);
+ return result;
+dict_has_changed:
+ DeeDict_LockEndRead(dict);
+ err_changed_sequence((DeeObject *)dict);
+ return NULL;
+iter_exhausted:
+ DeeDict_LockEndRead(dict);
+ return ITER_DONE;
+}
+
+PRIVATE int DCALL
+dictiterator_bool(DictIterator *__restrict self) {
+ struct dict_item *item = READ_ITEM(self);
+ DeeDictObject *dict = self->di_dict;
+ /* Check if the iterator is in-bounds.
+  * NOTE: Since this is nothing but a shallow boolean check anyways, there
+  *       is no need to lock the dict since we're not dereferencing anything. */
+ return (item >= dict->d_elem &&
+         item <  dict->d_elem+(dict->d_mask+1));
+}
+
+INTERN int DCALL
+dictiterator_init(DictIterator *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ DeeDictObject *dict;
+ if (DeeArg_Unpack(argc,argv,"o:dict.iterator",&dict) ||
+     DeeObject_AssertType((DeeObject *)dict,&DeeDict_Type))
+     return -1;
+ self->di_dict = dict;
+ Dee_Incref(dict);
+#ifdef CONFIG_NO_THREADS
+ self->di_next = dict->d_elem;
+#else
+ self->di_next = ATOMIC_READ(dict->d_elem);
+#endif
+ return 0;
+}
+
+INTERN int DCALL
+dictiterator_ctor(DictIterator *__restrict self) {
+ self->di_dict = (DeeDictObject *)DeeDict_New();
+ if unlikely(!self->di_dict) return -1;
+ self->di_next = self->di_dict->d_elem;
+ return 0;
+}
+
+INTERN int DCALL
+dictiterator_copy(DictIterator *__restrict self,
+                  DictIterator *__restrict other) {
+ self->di_dict = other->di_dict;
+ Dee_Incref(self->di_dict);
+ self->di_next = READ_ITEM(other);
+ return 0;
+}
+
+PRIVATE void DCALL
+dictiterator_fini(DictIterator *__restrict self) {
+ Dee_Decref(self->di_dict);
+}
+PRIVATE void DCALL
+dictiterator_visit(DictIterator *__restrict self, dvisit_t proc, void *arg) {
+ Dee_Visit(self->di_dict);
+}
+
+INTDEF DeeTypeObject DictIterator_Type;
+#define DEFINE_ITERATOR_COMPARE(name,op) \
+PRIVATE int DCALL \
+name(DictIterator *__restrict self, \
+     DictIterator *__restrict other) { \
+ if (DeeObject_AssertType((DeeObject *)other,&DictIterator_Type)) \
+     return -1; \
+ return READ_ITEM(self) op READ_ITEM(other); \
+}
+DEFINE_ITERATOR_COMPARE(dictiterator_eq,==)
+DEFINE_ITERATOR_COMPARE(dictiterator_ne,!=)
+DEFINE_ITERATOR_COMPARE(dictiterator_lo,<)
+DEFINE_ITERATOR_COMPARE(dictiterator_le,<=)
+DEFINE_ITERATOR_COMPARE(dictiterator_gr,>)
+DEFINE_ITERATOR_COMPARE(dictiterator_ge,>=)
+#undef DEFINE_ITERATOR_COMPARE
+
+PRIVATE struct type_cmp dictiterator_cmp = {
+    /* .tp_hash = */NULL,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&dictiterator_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&dictiterator_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&dictiterator_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&dictiterator_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&dictiterator_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&dictiterator_ge
+};
+
+
+PRIVATE struct type_member dict_iterator_members[] = {
+    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(DictIterator,di_dict)),
+    TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject DictIterator_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"dict.iterator",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeIterator_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */&dictiterator_ctor,
+                /* .tp_copy_ctor = */&dictiterator_copy,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */&dictiterator_init,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(DictIterator)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&dictiterator_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&dictiterator_bool
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&dictiterator_visit,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */&dictiterator_cmp,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dictiterator_next_item,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */dict_iterator_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+INTERN DREF DeeObject *DCALL
+dict_iter(DeeDictObject *__restrict self) {
+ DREF DictIterator *result;
+ result = DeeObject_MALLOC(DictIterator);
+ if unlikely(!result) goto done;
+ DeeObject_Init(result,&DictIterator_Type);
+ result->di_dict = self;
+ Dee_Incref(self);
+#ifdef CONFIG_NO_THREADS
+ result->di_next = self->d_elem;
+#else
+ result->di_next = ATOMIC_READ(self->d_elem);
+#endif
+done:
+ return (DREF DeeObject *)result;
+}
+
+typedef struct {
+ OBJECT_HEAD
+ DREF DeeDictObject *dp_dict; /* [1..1][const] Referenced dict object. */
+} DictProxy;
+
+typedef struct {
+ DictIterator    dpi_base;  /* The underlying dict iterator. */
+ DREF DictProxy *dpi_proxy; /* [1..1][const] The proxy that spawned this iterator. */
+} DictProxyIterator;
+
+PRIVATE struct type_member proxy_iterator_members[] = {
+    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(DictProxyIterator,dpi_proxy)),
+    TYPE_MEMBER_END
+};
+
+PRIVATE void DCALL
+dictproxyiterator_fini(DictProxyIterator *__restrict self) {
+ Dee_Decref(self->dpi_proxy);
+}
+PRIVATE void DCALL
+dictproxyiterator_visit(DictProxyIterator *__restrict self, dvisit_t proc, void *arg) {
+ Dee_Visit(self->dpi_proxy);
+}
+
+INTERN int DCALL
+dictproxyiterator_copy(DictProxyIterator *__restrict self,
+                       DictProxyIterator *__restrict other) {
+ self->dpi_base.di_dict = other->dpi_base.di_dict;
+ self->dpi_proxy = other->dpi_proxy;
+ Dee_Incref(self->dpi_base.di_dict);
+ Dee_Incref(self->dpi_proxy);
+#ifdef CONFIG_NO_THREADS
+ self->dpi_base.di_next = other->dpi_base.di_next;
+#else
+ self->dpi_base.di_next = ATOMIC_READ(other->dpi_base.di_next);
+#endif
+ return 0;
+}
+
+PRIVATE DeeTypeObject DictProxyIterator_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"dict.proxy.iterator",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DictIterator_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */&dictproxyiterator_copy,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(DictProxyIterator)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&dictproxyiterator_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&dictproxyiterator_visit,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */proxy_iterator_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+
+INTDEF DeeTypeObject DictKeysIterator_Type;
+INTDEF DeeTypeObject DictItemsIterator_Type;
+INTDEF DeeTypeObject DictValuesIterator_Type;
+
+INTERN int DCALL
+dictproxyiterator_ctor(DictProxyIterator *__restrict self) {
+ DeeTypeObject *proxy_type;
+ proxy_type = (DeeObject_InstanceOf((DeeObject *)self,&DictKeysIterator_Type)  ? &DeeDictKeys_Type :
+               DeeObject_InstanceOf((DeeObject *)self,&DictItemsIterator_Type) ? &DeeDictItems_Type :
+                                                                                 &DeeDictValues_Type);
+ self->dpi_base.di_dict = (DeeDictObject *)DeeDict_New();
+ if unlikely(!self->dpi_base.di_dict) return -1;
+ self->dpi_proxy = DeeObject_MALLOC(DictProxy);
+ if unlikely(!self->dpi_proxy) { Dee_Decref(self->dpi_base.di_dict); return -1; }
+ DeeObject_Init(self->dpi_proxy,proxy_type);
+ self->dpi_proxy->dp_dict = self->dpi_base.di_dict;
+ Dee_Incref(self->dpi_base.di_dict);
+ return 0;
+}
+
+INTERN int DCALL
+dictproxyiterator_init(DictProxyIterator *__restrict self,
+                       size_t argc, DeeObject **__restrict argv) {
+ DictProxy *proxy;
+ if (DeeArg_Unpack(argc,argv,"o:dict.iterator",&proxy) ||
+     DeeObject_AssertType((DeeObject *)proxy,
+                           DeeObject_InstanceOf((DeeObject *)self,&DictKeysIterator_Type)  ? &DeeDictKeys_Type :
+                           DeeObject_InstanceOf((DeeObject *)self,&DictItemsIterator_Type) ? &DeeDictItems_Type :
+                                                                                             &DeeDictValues_Type
+                           ))
+     return -1;
+ self->dpi_proxy = proxy;
+ self->dpi_base.di_dict = proxy->dp_dict;
+ Dee_Incref(proxy);
+ Dee_Incref(proxy->dp_dict);
+#ifdef CONFIG_NO_THREADS
+ self->dpi_base.di_next = proxy->dp_dict->d_elem;
+#else
+ self->dpi_base.di_next = ATOMIC_READ(proxy->dp_dict->d_elem);
+#endif
+ return 0;
+}
+
+#define INIT_PROXY_ITERATOR_TYPE(tp_name,tp_iter_next) \
+{ \
+    OBJECT_HEAD_INIT(&DeeType_Type), \
+    /* .tp_name     = */tp_name, \
+    /* .tp_doc      = */NULL, \
+    /* .tp_flags    = */TP_FNORMAL, \
+    /* .tp_weakrefs = */0, \
+    /* .tp_features = */TF_NONE, \
+    /* .tp_base     = */&DictProxyIterator_Type, \
+    /* .tp_init = */{ \
+        { \
+            /* .tp_alloc = */{ \
+                /* .tp_ctor      = */&dictproxyiterator_ctor, \
+                /* .tp_copy_ctor = */&dictproxyiterator_copy, \
+                /* .tp_deep_ctor = */NULL, \
+                /* .tp_any_ctor  = */&dictproxyiterator_init, \
+                /* .tp_free      = */NULL, \
+                { \
+                    /* .tp_instance_size = */sizeof(DictProxyIterator) \
+                } \
+            } \
+        }, \
+        /* .tp_dtor        = */NULL, \
+        /* .tp_assign      = */NULL, \
+        /* .tp_move_assign = */NULL \
+    }, \
+    /* .tp_cast = */{ \
+        /* .tp_str  = */NULL, \
+        /* .tp_repr = */NULL, \
+        /* .tp_bool = */NULL \
+    }, \
+    /* .tp_call          = */NULL, \
+    /* .tp_visit         = */NULL, \
+    /* .tp_gc            = */NULL, \
+    /* .tp_math          = */NULL, \
+    /* .tp_cmp           = */NULL, \
+    /* .tp_seq           = */NULL, \
+    /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))tp_iter_next, \
+    /* .tp_attr          = */NULL, \
+    /* .tp_with          = */NULL, \
+    /* .tp_buffer        = */NULL, \
+    /* .tp_methods       = */NULL, \
+    /* .tp_getsets       = */NULL, \
+    /* .tp_members       = */NULL, \
+    /* .tp_class_methods = */NULL, \
+    /* .tp_class_getsets = */NULL, \
+    /* .tp_class_members = */NULL \
+}
+INTERN DeeTypeObject DictKeysIterator_Type =
+  INIT_PROXY_ITERATOR_TYPE("dict.keys.iterator",&dictiterator_next_key);
+INTERN DeeTypeObject DictItemsIterator_Type =
+  INIT_PROXY_ITERATOR_TYPE("dict.items.iterator",&dictiterator_next_item);
+INTERN DeeTypeObject DictValuesIterator_Type =
+  INIT_PROXY_ITERATOR_TYPE("dict.values.iterator",&dictiterator_next_value);
+#undef INIT_PROXY_ITERATOR_TYPE
+
+INTERN DREF DeeObject *DCALL
+dict_newproxy_iterator(DictProxy *__restrict self,
+                       DeeTypeObject *__restrict proxy_iterator_type) {
+ DREF DictProxyIterator *result;
+ result = DeeObject_MALLOC(DictProxyIterator);
+ if unlikely(!result) goto done;
+ DeeObject_Init((DeeObject *)result,proxy_iterator_type);
+ result->dpi_base.di_dict = self->dp_dict;
+ result->dpi_proxy        = self;
+ Dee_Incref(self->dp_dict);
+ Dee_Incref(self);
+#ifdef CONFIG_NO_THREADS
+ result->dpi_base.di_next = self->dp_dict->d_elem;
+#else
+ result->dpi_base.di_next = ATOMIC_READ(self->dp_dict->d_elem);
+#endif
+done:
+ return (DREF DeeObject *)result;
+}
+
+
+INTERN DREF DeeObject *DCALL
+dict_newproxy(DeeDictObject *__restrict self,
+              DeeTypeObject *__restrict proxy_type) {
+ DREF DictProxy *result;
+ ASSERT_OBJECT_TYPE(self,&DeeDict_Type);
+ result = (DREF DictProxy *)DeeObject_Malloc(sizeof(DictProxy));
+ if unlikely(!result) return NULL;
+ DeeObject_Init(result,proxy_type);
+ result->dp_dict = self;
+ Dee_Incref(self);
+ return (DREF DeeObject *)result;
+}
+
+
+PRIVATE int DCALL
+proxy_init(DictProxy *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ DeeObject *dict;
+ if (DeeArg_Unpack(argc,argv,"o:dict.proxy",&dict))
+     return -1;
+ if (DeeObject_AssertType(dict,&DeeDict_Type))
+     return -1;
+ self->dp_dict = (DREF DeeDictObject *)dict;
+ Dee_Incref(dict);
+ return 0;
+}
+
+PRIVATE int DCALL
+proxy_copy(DictProxy *__restrict self,
+           DictProxy *__restrict other) {
+ self->dp_dict = other->dp_dict;
+ Dee_Incref(self->dp_dict);
+ return 0;
+}
+
+PRIVATE int DCALL
+proxy_deep(DictProxy *__restrict self,
+           DictProxy *__restrict other) {
+ self->dp_dict = (DREF DeeDictObject *)DeeObject_DeepCopy((DeeObject *)other->dp_dict);
+ return self->dp_dict ? 0 : -1;
+}
+
+PRIVATE void DCALL
+proxy_fini(DictProxy *__restrict self) {
+ Dee_Decref(self->dp_dict);
+}
+
+PRIVATE int DCALL
+proxy_bool(DictProxy *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ return self->dp_dict->d_used != 0;
+#else
+ return ATOMIC_READ(self->dp_dict->d_used) != 0;
+#endif
+}
+
+PRIVATE void DCALL
+proxy_visit(DictProxy *__restrict self, dvisit_t proc, void *arg) {
+ Dee_Visit(self->dp_dict);
+}
+
+INTERN DREF DeeObject *DCALL dict_size(DeeDictObject *__restrict self);
+INTERN DREF DeeObject *DCALL
+dict_contains(DeeDictObject *__restrict self, DeeObject *__restrict key);
+
+INTERN DREF DeeObject *DCALL
+proxy_size(DictProxy *__restrict self) {
+ return dict_size(self->dp_dict);
+}
+
+INTERN DREF DeeObject *DCALL
+proxy_contains_key(DictProxy *__restrict self, DeeObject *__restrict key) {
+ return dict_contains(self->dp_dict,key);
+}
+
+PRIVATE struct type_seq proxy_seq = {
+    /* .tp_iter_self = */NULL,
+    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
+    /* .tp_contains  = */NULL,
+    /* .tp_get       = */NULL,
+    /* .tp_del       = */NULL,
+    /* .tp_set       = */NULL,
+    /* .tp_range_get = */NULL,
+    /* .tp_range_del = */NULL,
+    /* .tp_range_set = */NULL
+};
+
+PRIVATE struct type_member proxy_members[] = {
+    TYPE_MEMBER_FIELD("__dict__",STRUCT_OBJECT,offsetof(DictProxy,dp_dict)),
+    TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member proxy_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&DictProxyIterator_Type),
+    TYPE_MEMBER_END
+};
+PRIVATE struct type_member dict_keys_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&DictKeysIterator_Type),
+    TYPE_MEMBER_END
+};
+PRIVATE struct type_member dict_items_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&DictItemsIterator_Type),
+    TYPE_MEMBER_END
+};
+PRIVATE struct type_member dict_values_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&DictValuesIterator_Type),
+    TYPE_MEMBER_END
+};
+
+PRIVATE DREF DeeObject *DCALL
+dict_keys_iter(DictProxy *__restrict self) {
+ return dict_newproxy_iterator(self,&DictKeysIterator_Type);
+}
+PRIVATE DREF DeeObject *DCALL
+dict_items_iter(DictProxy *__restrict self) {
+ return dict_newproxy_iterator(self,&DictItemsIterator_Type);
+}
+PRIVATE DREF DeeObject *DCALL
+dict_values_iter(DictProxy *__restrict self) {
+ return dict_newproxy_iterator(self,&DictValuesIterator_Type);
+}
+
+PRIVATE struct type_seq dict_keys_seq = {
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys_iter,
+    /* .tp_size      = */NULL,
+    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&proxy_contains_key,
+    /* .tp_get       = */NULL,
+    /* .tp_del       = */NULL,
+    /* .tp_set       = */NULL,
+    /* .tp_range_get = */NULL,
+    /* .tp_range_del = */NULL,
+    /* .tp_range_set = */NULL
+};
+
+PRIVATE struct type_seq dict_items_seq = {
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items_iter,
+    /* .tp_size      = */NULL,
+    /* .tp_contains  = */NULL,
+    /* .tp_get       = */NULL,
+    /* .tp_del       = */NULL,
+    /* .tp_set       = */NULL,
+    /* .tp_range_get = */NULL,
+    /* .tp_range_del = */NULL,
+    /* .tp_range_set = */NULL
+};
+
+PRIVATE struct type_seq dict_values_seq = {
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_values_iter,
+    /* .tp_size      = */NULL,
+    /* .tp_contains  = */NULL,
+    /* .tp_get       = */NULL,
+    /* .tp_del       = */NULL,
+    /* .tp_set       = */NULL,
+    /* .tp_range_get = */NULL,
+    /* .tp_range_del = */NULL,
+    /* .tp_range_set = */NULL
+};
+
+
+PUBLIC DeeTypeObject DeeDictProxy_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"dict.proxy",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeSeq_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */&proxy_copy,
+                /* .tp_deep_ctor = */&proxy_deep,
+                /* .tp_any_ctor  = */&proxy_init,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(DictProxy)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&proxy_bool
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&proxy_visit,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */&proxy_seq,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */proxy_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */proxy_class_members
+};
+
+PUBLIC DeeTypeObject DeeDictKeys_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"dict.keys",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeDictProxy_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */&proxy_copy,
+                /* .tp_deep_ctor = */&proxy_deep,
+                /* .tp_any_ctor  = */&proxy_init,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(DictProxy)
+                }
+            }
+        },
+        /* .tp_dtor        = */NULL,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */&dict_keys_seq,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */NULL,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */dict_keys_class_members
+};
+
+PUBLIC DeeTypeObject DeeDictItems_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"dict.items",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeDictProxy_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */&proxy_copy,
+                /* .tp_deep_ctor = */&proxy_deep,
+                /* .tp_any_ctor  = */&proxy_init,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(DictProxy)
+                }
+            }
+        },
+        /* .tp_dtor        = */NULL,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */&dict_items_seq,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */NULL,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */dict_items_class_members
+};
+
+PUBLIC DeeTypeObject DeeDictValues_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"dict.values",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeDictProxy_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */&proxy_copy,
+                /* .tp_deep_ctor = */&proxy_deep,
+                /* .tp_any_ctor  = */&proxy_init,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(DictProxy)
+                }
+            }
+        },
+        /* .tp_dtor        = */NULL,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */&dict_values_seq,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */NULL,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */dict_values_class_members
+};
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_OBJECTS_DICTPROXY_C */

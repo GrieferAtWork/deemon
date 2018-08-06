@@ -1,0 +1,1656 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_OBJECTS_BYTES_C
+#define GUARD_DEEMON_OBJECTS_BYTES_C 1
+
+#include <deemon/api.h>
+#include <deemon/object.h>
+#include <deemon/bytes.h>
+#include <deemon/string.h>
+#include <deemon/bool.h>
+#include <deemon/none.h>
+#include <deemon/arg.h>
+#include <deemon/tuple.h>
+#include <deemon/seq.h>
+#include <deemon/int.h>
+#include <deemon/error.h>
+#include <deemon/super.h>
+
+#include "../runtime/strings.h"
+#include "../runtime/runtime_error.h"
+
+#include <hybrid/minmax.h>
+
+#include <string.h>
+
+DECL_BEGIN
+
+typedef DeeBytesObject Bytes;
+
+typedef struct {
+    OBJECT_HEAD
+    DREF Bytes          *bi_bytes; /* [1..1][const] The bytes object being iterated. */
+    ATOMIC_DATA uint8_t *bi_iter;  /* [1..1][in(bi_bytes->b_base)] Pointer to the next byte to-be iterated. */
+    uint8_t             *bi_end;   /* [1..1][const][== bi_bytes->b_base + bi_bytes->b_size]
+                                    * Pointer to one byte past the end of the bytes object being iterated. */
+} BytesIterator;
+
+INTDEF DeeTypeObject BytesIterator_Type;
+
+
+PRIVATE void DCALL
+bytesiter_fini(BytesIterator *__restrict self) {
+ Dee_Decref(self->bi_bytes);
+}
+PRIVATE void DCALL
+bytesiter_visit(BytesIterator *__restrict self, dvisit_t proc, void *arg) {
+ Dee_Visit(self->bi_bytes);
+}
+PRIVATE DREF DeeObject *DCALL
+bytesiter_next(BytesIterator *__restrict self) {
+ uint8_t *pos;
+ do {
+  pos = self->bi_iter;
+  if (pos >= self->bi_end)
+      return ITER_DONE;
+ } while (!ATOMIC_CMPXCH(self->bi_iter,pos,pos+1));
+ return DeeInt_NewU8(*pos);
+}
+PRIVATE int DCALL
+bytesiter_ctor(BytesIterator *__restrict self) {
+ self->bi_bytes = (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+ if unlikely(!self->bi_bytes) return -1;
+ self->bi_iter  = self->bi_bytes->b_data;
+ self->bi_end   = self->bi_bytes->b_data;
+ return 0;
+}
+PRIVATE int DCALL
+bytesiter_copy(BytesIterator *__restrict self,
+               BytesIterator *__restrict other) {
+ self->bi_bytes = other->bi_bytes;
+#ifdef CONFIG_NO_THREADS
+ self->bi_iter = other->bi_iter;
+#else
+ self->bi_iter = ATOMIC_READ(other->bi_iter);
+#endif
+ self->bi_end = other->bi_end;
+ Dee_Incref(self->bi_bytes);
+ return 0;
+}
+PRIVATE int DCALL
+bytesiter_init(BytesIterator *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ Bytes *bytes;
+ if (DeeArg_Unpack(argc,argv,"o:bytes.iterator",&bytes) ||
+     DeeObject_AssertTypeExact((DeeObject *)bytes,&DeeBytes_Type))
+     return -1;
+ self->bi_bytes = bytes;
+ Dee_Incref(bytes);
+ self->bi_iter = DeeBytes_DATA(bytes);
+ self->bi_end  = DeeBytes_DATA(bytes) + DeeBytes_SIZE(bytes);
+ return 0;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytesiter_eq(BytesIterator *__restrict self,
+              BytesIterator *__restrict other) {
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&BytesIterator_Type))
+     return NULL;
+ return_bool(self->bi_bytes == other->bi_bytes &&
+             self->bi_iter == other->bi_iter);
+}
+PRIVATE DREF DeeObject *DCALL
+bytesiter_ne(BytesIterator *__restrict self,
+              BytesIterator *__restrict other) {
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&BytesIterator_Type))
+     return NULL;
+ return_bool(self->bi_bytes != other->bi_bytes ||
+             self->bi_iter != other->bi_iter);
+}
+PRIVATE DREF DeeObject *DCALL
+bytesiter_lo(BytesIterator *__restrict self,
+              BytesIterator *__restrict other) {
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&BytesIterator_Type))
+     return NULL;
+ return_bool(self->bi_bytes < other->bi_bytes ||
+            (self->bi_bytes == other->bi_bytes &&
+             self->bi_iter < other->bi_iter));
+}
+PRIVATE DREF DeeObject *DCALL
+bytesiter_le(BytesIterator *__restrict self,
+              BytesIterator *__restrict other) {
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&BytesIterator_Type))
+     return NULL;
+ return_bool(self->bi_bytes < other->bi_bytes ||
+            (self->bi_bytes == other->bi_bytes &&
+             self->bi_iter <= other->bi_iter));
+}
+PRIVATE DREF DeeObject *DCALL
+bytesiter_gr(BytesIterator *__restrict self,
+              BytesIterator *__restrict other) {
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&BytesIterator_Type))
+     return NULL;
+ return_bool(self->bi_bytes > other->bi_bytes ||
+            (self->bi_bytes == other->bi_bytes &&
+             self->bi_iter > other->bi_iter));
+}
+PRIVATE DREF DeeObject *DCALL
+bytesiter_ge(BytesIterator *__restrict self,
+              BytesIterator *__restrict other) {
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&BytesIterator_Type))
+     return NULL;
+ return_bool(self->bi_bytes > other->bi_bytes ||
+            (self->bi_bytes == other->bi_bytes &&
+             self->bi_iter >= other->bi_iter));
+}
+
+PRIVATE struct type_cmp bytesiter_cmp = {
+    /* Compare operators. */
+    /* .tp_hash = */NULL,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytesiter_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytesiter_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytesiter_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytesiter_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytesiter_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytesiter_ge,
+};
+
+PRIVATE struct type_member bytesiter_members[] = {
+    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(BytesIterator,bi_bytes)),
+    TYPE_MEMBER_END
+};
+
+
+INTERN DeeTypeObject BytesIterator_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"bytes.iterator",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeIterator_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */&bytesiter_ctor,
+                /* .tp_copy_ctor = */&bytesiter_copy,
+                /* .tp_deep_ctor = */&bytesiter_copy,
+                /* .tp_any_ctor  = */&bytesiter_init,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(BytesIterator)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bytesiter_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&bytesiter_visit,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */&bytesiter_cmp,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytesiter_next,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */bytesiter_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+
+
+typedef struct {
+    uint8_t *n_data;
+    size_t   n_size;
+    uint8_t _n_buf[sizeof(size_t)];
+} Needle;
+
+#ifndef __NO_builtin_expect
+#define get_byteneedle(self,ob) __builtin_expect(get_byteneedle(self,ob),0)
+#endif
+
+INTDEF int (DCALL get_byteneedle)(Needle *__restrict self, DeeObject *__restrict ob);
+
+
+PUBLIC int
+(DCALL DeeSeq_ItemsToBytes)(uint8_t *__restrict dst, size_t num_bytes,
+                            DeeObject *__restrict seq) {
+ size_t i,fast_size; int error;
+ DREF DeeObject *iter,*elem;
+ if (DeeNone_Check(seq)) {
+  /* Special case: `none' */
+  memset(dst,0,num_bytes);
+  return 0;
+ }
+ if (DeeString_Check(seq)) {
+  /* Special case: `string' */
+  uint8_t *data = DeeString_AsBytes(seq,false);
+  if unlikely(!data) goto err;
+  if (WSTR_LENGTH(data) != num_bytes) {
+   err_invalid_unpack_size(seq,num_bytes,WSTR_LENGTH(data));
+   goto err;
+  }
+  memcpy(dst,data,num_bytes);
+  return 0;
+ }
+ if (DeeBytes_Check(seq)) {
+  /* Optional optimization for `bytes' (though this one
+   * would  also function using the fallback code below). */
+  if (DeeBytes_SIZE(seq) != num_bytes) {
+   err_invalid_unpack_size(seq,num_bytes,DeeBytes_SIZE(seq));
+   goto err;
+  }
+  /* Use `memmove', because `seq' may be a view of `dst' */
+  memmove(dst,DeeBytes_DATA(seq),num_bytes);
+  return 0;
+ }
+ fast_size = DeeFastSeq_GetSize(seq);
+ if (fast_size != DEE_FASTSEQ_NOTFAST) {
+  if (fast_size != num_bytes) {
+   err_invalid_unpack_size(seq,num_bytes,fast_size);
+   goto err;
+  }
+  /* Fast-sequence optimizations. */
+  for (i = 0; i < fast_size; ++i) {
+   elem = DeeFastSeq_GetItem(seq,i);
+   if unlikely(!elem) goto err;
+   error = DeeObject_AsUInt8(elem,&dst[i]);
+   Dee_Decref(elem);
+   if unlikely(error) goto err;
+  }
+  return 0;
+ }
+ /* Fallback: use an iterator. */
+ iter = DeeObject_IterSelf(seq);
+ if unlikely(!iter) goto err;
+ i = 0;
+ while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+  if (i >= num_bytes) {
+   err_invalid_unpack_iter_size(seq,iter,num_bytes);
+   Dee_Decref(elem);
+   goto err_iter;
+  }
+  error = DeeObject_AsUInt8(elem,&dst[i]);
+  Dee_Decref(elem);
+  if unlikely(error)
+     goto err_iter;
+  ++i;
+ }
+ if unlikely(!elem)
+    goto err_iter;
+ if unlikely(i != num_bytes) {
+  err_invalid_unpack_size(seq,num_bytes,i);
+  goto err_iter;
+ }
+ Dee_Decref(iter);
+ return 0;
+err_iter:
+ Dee_Decref(iter);
+err:
+ return -1;
+}
+
+
+PUBLIC DREF DeeObject *DCALL
+DeeBytes_FromSequence(DeeObject *__restrict seq) {
+ DREF Bytes *result; size_t i,bufsize;
+ DREF DeeObject *iter,*elem;
+ if (DeeNone_Check(seq))
+     return DeeBytes_NewBufferUninitialized(0);
+ bufsize = DeeFastSeq_GetSize(seq);
+ if (bufsize != DEE_FASTSEQ_NOTFAST) {
+  result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+
+                                          bufsize);
+  if unlikely(!result) goto err;
+  /* Fast-sequence optimizations. */
+  for (i = 0; i < bufsize; ++i) {
+   int error;
+   elem = DeeFastSeq_GetItem(seq,i);
+   if unlikely(!elem) goto err_r;
+   error = DeeObject_AsUInt8(elem,&result->b_data[i]);
+   Dee_Decref(elem);
+   if unlikely(error) goto err_r;
+  }
+  goto done;
+ }
+ /* Fallback: use an iterator. */
+ bufsize = 256;
+ result = (DREF Bytes *)DeeObject_TryMalloc(COMPILER_OFFSETOF(Bytes,b_data)+bufsize);
+ if unlikely(!bufsize) {
+  bufsize = 1;
+  result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+1);
+  if unlikely(!result) goto err;
+ }
+ iter = DeeObject_IterSelf(seq);
+ if unlikely(!iter) goto err_r;
+ i = 0;
+ while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+  ASSERT(i <= bufsize);
+  if (i >= bufsize) {
+   DREF Bytes *new_result;
+   size_t new_bufsize = bufsize * 2;
+   /* Must allocate more memory. */
+   new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
+                                                   COMPILER_OFFSETOF(Bytes,b_data)+
+                                                   new_bufsize);
+   if unlikely(!new_result) {
+    new_bufsize = i + 1;
+    new_result = (DREF Bytes *)DeeObject_Realloc(result,
+                                                 COMPILER_OFFSETOF(Bytes,b_data)+
+                                                 new_bufsize);
+    if unlikely(!new_result) goto err_r_elem;
+   }
+   result  = new_result;
+   bufsize = new_bufsize;
+  }
+  Dee_Decref(elem);
+  if unlikely(DeeObject_AsUInt8(elem,&result->b_data[i]))
+     goto err_r_elem;
+  ++i;
+ }
+ if unlikely(!elem)
+    goto err_r_iter;
+ Dee_Decref(iter);
+ /* Free unused buffer memory. */
+ if likely(i < bufsize) {
+  DREF Bytes *new_result;
+  new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
+                                                  COMPILER_OFFSETOF(Bytes,b_data)+
+                                                  i);
+  if likely(new_result) result = new_result;
+ }
+done:
+ result->b_base  = result->b_data;
+ result->b_size  = i;
+ result->b_orig  = (DREF DeeObject *)result;
+ result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_buffer.bb_base  = result->b_data;
+ result->b_buffer.bb_size  = i;
+#ifndef __INTELLISENSE__
+ result->b_buffer.bb_put   = NULL;
+#endif
+ DeeObject_Init(result,&DeeBytes_Type);
+ return (DREF DeeObject *)result;
+err_r_elem:
+ Dee_Decref(elem);
+err_r_iter:
+ Dee_Decref(iter);
+err_r:
+ DeeObject_Free(result);
+err:
+ return NULL;
+}
+
+
+
+/* Construct a bytes-buffer from `self', using the generic object-buffer interface. */
+PUBLIC DREF DeeObject *DCALL
+DeeObject_Bytes(DeeObject *__restrict self,
+                unsigned int flags,
+                size_t start, size_t end) {
+ DREF Bytes *result;
+ ASSERTF(!(flags & ~(DEE_BUFFER_FREADONLY|DEE_BUFFER_FWRITABLE)),
+         "Invalid flags %x",flags);
+ ASSERT_OBJECT(self);
+ result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data));
+ if unlikely(!result) goto done;
+ if (DeeObject_GetBuf(self,&result->b_buffer,flags))
+     goto err_r;
+ if (start > result->b_buffer.bb_size)
+     start = result->b_buffer.bb_size;
+ if (end > result->b_buffer.bb_size)
+     end = result->b_buffer.bb_size;
+ result->b_base  = (uint8_t *)result->b_buffer.bb_base + start;
+ result->b_size  = (size_t)(end - start);
+ result->b_orig  = self;
+ result->b_flags = flags;
+ Dee_Incref(self);
+ DeeObject_Init(result,&DeeBytes_Type);
+done:
+ return (DREF DeeObject *)result;
+err_r:
+ DeeObject_Free(result);
+ return NULL;
+}
+
+/* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
+PUBLIC DREF DeeObject *DCALL
+DeeBytes_NewBuffer(size_t num_bytes, uint8_t init) {
+ DREF Bytes *result;
+ result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+
+                                         num_bytes);
+ if unlikely(!result) goto done;
+ memset(result->b_data,init,num_bytes);
+ result->b_base  = result->b_data;
+ result->b_size  = num_bytes;
+ result->b_orig  = (DREF DeeObject *)result;
+ result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_buffer.bb_base  = result->b_data;
+ result->b_buffer.bb_size  = num_bytes;
+#ifndef __INTELLISENSE__
+ result->b_buffer.bb_put   = NULL;
+#endif
+ DeeObject_Init(result,&DeeBytes_Type);
+done:
+ return (DREF DeeObject *)result;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeBytes_NewBufferUninitialized(size_t num_bytes) {
+ DREF Bytes *result;
+ result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+
+                                         num_bytes);
+ if unlikely(!result) goto done;
+ result->b_base  = result->b_data;
+ result->b_size  = num_bytes;
+ result->b_orig  = (DREF DeeObject *)result;
+ result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_buffer.bb_base  = result->b_data;
+ result->b_buffer.bb_size  = num_bytes;
+#ifndef __INTELLISENSE__
+ result->b_buffer.bb_put   = NULL;
+#endif
+ DeeObject_Init(result,&DeeBytes_Type);
+done:
+ return (DREF DeeObject *)result;
+}
+PUBLIC DREF DeeObject *DCALL
+DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self,
+                      size_t num_bytes) {
+ DREF Bytes *result,*new_result;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeBytes_Type);
+ ASSERT(!DeeObject_IsShared(self));
+ result = (DREF Bytes *)self;
+ ASSERT(result->b_base  == result->b_data);
+ ASSERT(result->b_orig  == (DREF DeeObject *)result);
+ ASSERT(result->b_flags == DEE_BUFFER_FWRITABLE);
+ ASSERT(result->b_buffer.bb_base  == result->b_data);
+ ASSERT(result->b_buffer.bb_size  == result->b_size);
+again:
+ new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
+                                                 COMPILER_OFFSETOF(Bytes,b_data) +
+                                                 num_bytes);
+ if unlikely(!new_result) {
+  if (num_bytes <= result->b_size) {
+   result->b_size = result->b_buffer.bb_size = num_bytes;
+   return (DREF DeeObject *)result;
+  }
+  if (Dee_CollectMemory(COMPILER_OFFSETOF(Bytes,b_data) + num_bytes))
+      goto again;
+  return NULL;
+ }
+ new_result->b_buffer.bb_base = new_result->b_base = new_result->b_data;
+ new_result->b_buffer.bb_size = new_result->b_size = num_bytes;
+ return (DREF DeeObject *)new_result;
+}
+PUBLIC DREF DeeObject *DCALL
+DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self,
+                        size_t num_bytes) {
+ DREF Bytes *result;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeBytes_Type);
+ ASSERT(!DeeObject_IsShared(self));
+ result = (DREF Bytes *)self;
+ ASSERT(result->b_base  == result->b_data);
+ ASSERT(result->b_orig  == (DREF DeeObject *)result);
+ ASSERT(result->b_flags == DEE_BUFFER_FWRITABLE);
+ ASSERT(result->b_buffer.bb_base  == result->b_data);
+ ASSERT(result->b_buffer.bb_size  == result->b_size);
+ ASSERT(num_bytes <= result->b_size);
+ result = (DREF Bytes *)DeeObject_TryRealloc(result,
+                                             COMPILER_OFFSETOF(Bytes,b_data) +
+                                             num_bytes);
+ if unlikely(!result) {
+  result         = (DREF Bytes *)self;
+  result->b_size = result->b_buffer.bb_size = num_bytes;
+  return (DREF DeeObject *)result;
+ }
+ result->b_buffer.bb_base = result->b_base = result->b_data;
+ result->b_buffer.bb_size = result->b_size = num_bytes;
+ return (DREF DeeObject *)result;
+}
+
+
+PUBLIC DREF DeeObject *DCALL
+DeeBytes_NewView(DeeObject *__restrict owner, void *__restrict base,
+                 size_t num_bytes, unsigned int flags) {
+ DREF Bytes *result;
+ ASSERTF(!(flags & ~(DEE_BUFFER_FREADONLY|DEE_BUFFER_FWRITABLE)),
+         "Invalid flags %x",flags);
+ ASSERT_OBJECT(owner);
+ result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data));
+ if unlikely(!result) goto done;
+ result->b_base  = (uint8_t *)base;
+ result->b_size  = num_bytes;
+ result->b_orig  = owner;
+ result->b_flags = flags;
+ result->b_buffer.bb_base  = (uint8_t *)base;
+ result->b_buffer.bb_size  = num_bytes;
+#ifndef __INTELLISENSE__
+ result->b_buffer.bb_put   = NULL;
+#endif
+ Dee_Incref(owner);
+ DeeObject_Init(result,&DeeBytes_Type);
+done:
+ return (DREF DeeObject *)result;
+}
+
+
+PRIVATE void DCALL
+bytes_fini(Bytes *__restrict self) {
+ /* Check for special case: we're owning the object buffer outself. */
+ if (self->b_orig == (DREF DeeObject *)self)
+     return;
+ /* Release the object buffer held on `b_orig' */
+ DeeObject_PutBuf(self->b_orig,&self->b_buffer,self->b_flags);
+ Dee_Decref(self->b_orig);
+}
+
+PRIVATE void DCALL
+bytes_visit(Bytes *__restrict self, dvisit_t proc, void *arg) {
+ /* Check for special case: we're owning the object buffer outself. */
+ if (self->b_orig == (DREF DeeObject *)self)
+     return;
+ Dee_Visit(self->b_orig);
+}
+
+PRIVATE DREF Bytes *DCALL bytes_ctor(void) {
+ return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+}
+PRIVATE DREF Bytes *DCALL
+bytes_copy(Bytes *__restrict other) {
+ DREF Bytes *result;
+ result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(other));
+ if unlikely(!result) goto done;
+ /* Copy data from the given buffer `other' */
+ memcpy(result->b_data,DeeBytes_DATA(other),DeeBytes_SIZE(other));
+ DeeObject_Init(result,&DeeBytes_Type);
+done:
+ return result;
+}
+
+PRIVATE DREF Bytes *DCALL
+bytes_init(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *ob; unsigned int flags = DEE_BUFFER_FREADONLY;
+ size_t start = 0,end = (size_t)-1;
+ if (argc >= 2) {
+  ob = argv[0];
+  if (DeeInt_Check(ob)) {
+   uint8_t init;
+   if (DeeObject_AsSize(ob,&start)) goto err;
+   if (DeeObject_AsUInt8(argv[1],&init)) goto err;
+   return (DREF Bytes *)DeeBytes_NewBuffer(start,init);
+  }
+  if (DeeString_Check(argv[1])) {
+   char *str = DeeString_STR(argv[1]);
+   if (WSTR_LENGTH(str) != 1) goto err_invalid_mode;
+   /* */if (str[0] == 'r');
+   else if (str[0] == 'w')
+      flags = DEE_BUFFER_FWRITABLE;
+   else goto err_invalid_mode;
+   if (argc >= 3) {
+    if (DeeObject_AsSSize(argv[2],(dssize_t *)&start)) goto err;
+    if (argc >= 4) {
+     if unlikely(argc > 4) goto err_args;
+     if (DeeObject_AsSSize(argv[3],(dssize_t *)&end)) goto err;
+    }
+   }
+  } else {
+   if (DeeObject_AsSSize(argv[1],(dssize_t *)&start)) goto err;
+   if (argc >= 3) {
+    if unlikely(argc > 3) goto err_args;
+    if (DeeObject_AsSSize(argv[2],(dssize_t *)&end)) goto err;
+   }
+  }
+ } else if (!argc) {
+err_args:
+  err_invalid_argc("bytes",argc,1,4);
+  goto err;
+ } else {
+  DeeTypeObject *tp_iter;
+  DREF Bytes *result;
+  ob = argv[0];
+  if (DeeInt_Check(ob)) {
+   if (DeeObject_AsSize(ob,&start)) goto err;
+   return (DREF Bytes *)DeeBytes_NewBufferUninitialized(start);
+  }
+  tp_iter = Dee_TYPE(ob);
+  if (tp_iter == &DeeSuper_Type) {
+   tp_iter = DeeSuper_TYPE(ob);
+   ob      = DeeSuper_SELF(ob);
+  }
+  do {
+   struct type_buffer *buf = tp_iter->tp_buffer;
+   if (buf && buf->tp_getbuf) {
+    result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data));
+    if unlikely(!result) goto err;
+    /* Construct a bytes object using the buffer interface provided by `ob' */
+#ifndef __INTELLISENSE__
+    result->b_buffer.bb_put = buf->tp_putbuf;
+#endif
+    if unlikely((*buf->tp_getbuf)(ob,&result->b_buffer,DEE_BUFFER_FREADONLY))
+       goto err_r;
+    if (start > result->b_buffer.bb_size)
+        start = result->b_buffer.bb_size;
+    if (end > result->b_buffer.bb_size)
+        end = result->b_buffer.bb_size;
+    result->b_base  = (uint8_t *)result->b_buffer.bb_base + start;
+    result->b_size  = (size_t)(end - start);
+    result->b_orig  = ob;
+    result->b_flags = DEE_BUFFER_FREADONLY;
+    Dee_Incref(ob);
+    DeeObject_Init(result,&DeeBytes_Type);
+    return result;
+   }
+  } while ((tp_iter = DeeType_Base(tp_iter)) != NULL);
+  /* The object does not implement the buffer interface.
+   * -> Instead, construct the bytes object as a sequence. */
+  result = (DREF Bytes *)DeeBytes_FromSequence(ob);
+  if likely(result)
+     return result;
+  /* Translate a NotImplement error to indicate that the buffer
+   * interface is missing, rather than the sequence interface. */
+  if (DeeError_Catch(&DeeError_NotImplemented)) {
+   tp_iter = Dee_TYPE(argv[0]);
+   if (tp_iter == &DeeSuper_Type)
+       tp_iter = DeeSuper_TYPE(argv[0]);
+   err_unimplemented_operator(tp_iter,OPERATOR_GETBUF);
+  }
+  goto err;
+err_r:
+  DeeObject_Free(result);
+  goto err;
+ }
+ return (DREF Bytes *)DeeObject_Bytes(ob,flags,start,end);
+err_invalid_mode:
+ DeeError_Throwf(&DeeError_ValueError,
+                 "Invalid buffer mode %r",
+                 argv[1]);
+err:
+ return NULL;
+}
+
+
+PRIVATE int DCALL
+bytes_assign(Bytes *__restrict self,
+             DeeObject *__restrict values) {
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  return -1;
+ }
+ return DeeSeq_ItemsToBytes(DeeBytes_DATA(self),
+                            DeeBytes_SIZE(self),
+                            values);
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+bytes_str(Bytes *__restrict self) {
+ return DeeString_NewSized((char *)DeeBytes_DATA(self),
+                            DeeBytes_SIZE(self));
+}
+PRIVATE DREF DeeObject *DCALL
+bytes_repr(Bytes *__restrict self) {
+ struct ascii_printer printer = ASCII_PRINTER_INIT;
+#if 0 /* Print the bytes object using its sequence-like representation. */
+ size_t i,size; uint8_t *data;
+ if unlikely(ASCII_PRINTER_PRINT(&printer,"bytes({") < 0) goto err;
+ data = DeeBytes_DATA(self);
+ size = DeeBytes_SIZE(self);
+ for (i = 0; i < size; ++i) {
+  if (i != 0 &&
+      unlikely(ASCII_PRINTER_PRINT(&printer,", ") < 0))
+      goto err;
+  if unlikely(ascii_printer_printf(&printer,"0x%.2I8x",data[i]) < 0)
+     goto err;
+ }
+ if unlikely(ASCII_PRINTER_PRINT(&printer,"})") < 0) goto err;
+#else
+ if unlikely(ASCII_PRINTER_PRINT(&printer,"bytes(") < 0) goto err;
+ if unlikely(Dee_FormatQuote(&ascii_printer_print,&printer,
+                            (char *)DeeBytes_DATA(self),
+                             DeeBytes_SIZE(self),
+                             FORMAT_QUOTE_FNORMAL) < 0)
+    goto err;
+ if (ascii_printer_putc(&printer,')')) goto err;
+#endif
+ return ascii_printer_pack(&printer);
+err:
+ ascii_printer_fini(&printer);
+ return NULL;
+}
+PRIVATE int DCALL
+bytes_bool(Bytes *__restrict self) {
+ return DeeBytes_SIZE(self) != 0;
+}
+
+
+PRIVATE DREF BytesIterator *DCALL
+bytes_iter(Bytes *__restrict self) {
+ DREF BytesIterator *result;
+ result = DeeObject_MALLOC(BytesIterator);
+ if unlikely(!result) goto done;
+ result->bi_bytes = self;
+ result->bi_iter  = DeeBytes_DATA(self);
+ result->bi_end   = DeeBytes_DATA(self) + DeeBytes_SIZE(self);
+ Dee_Incref(self);
+ DeeObject_Init(result,&BytesIterator_Type);
+done:
+ return result;
+}
+PRIVATE DREF DeeObject *DCALL
+bytes_size(Bytes *__restrict self) {
+ return DeeInt_NewSize(DeeBytes_SIZE(self));
+}
+INTDEF DREF DeeObject *DCALL
+bytes_contains(Bytes *__restrict self,
+               DeeObject *__restrict needle);
+PRIVATE DREF DeeObject *DCALL
+bytes_getitem(Bytes *__restrict self,
+              DeeObject *__restrict index) {
+ size_t i;
+ if (DeeObject_AsSize(index,&i))
+     goto err;
+ if unlikely(i >= DeeBytes_SIZE(self)) {
+  err_index_out_of_bounds((DeeObject *)self,i,DeeBytes_SIZE(self));
+  goto err;
+ }
+ return DeeInt_NewU8(DeeBytes_DATA(self)[i]);
+err:
+ return NULL;
+}
+PRIVATE int DCALL
+bytes_delitem(Bytes *__restrict self,
+              DeeObject *__restrict index) {
+ size_t i;
+ if (DeeObject_AsSize(index,&i))
+     goto err;
+ if unlikely(i >= DeeBytes_SIZE(self)) {
+  err_index_out_of_bounds((DeeObject *)self,i,DeeBytes_SIZE(self));
+  goto err;
+ }
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
+ DeeBytes_DATA(self)[i] = 0;
+ return 0;
+err:
+ return -1;
+}
+PRIVATE int DCALL
+bytes_setitem(Bytes *__restrict self,
+              DeeObject *__restrict index,
+              DeeObject *__restrict value) {
+ size_t i; uint8_t val;
+ if (DeeObject_AsSize(index,&i))
+     goto err;
+ if (DeeObject_AsUInt8(value,&val))
+     goto err;
+ if unlikely(i >= DeeBytes_SIZE(self)) {
+  err_index_out_of_bounds((DeeObject *)self,i,DeeBytes_SIZE(self));
+  goto err;
+ }
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
+ DeeBytes_DATA(self)[i] = val;
+ return 0;
+err:
+ return -1;
+}
+PRIVATE DREF Bytes *DCALL
+bytes_getrange(Bytes *__restrict self,
+               DeeObject *__restrict begin,
+               DeeObject *__restrict end) {
+ dssize_t start_index,end_index;
+ if (DeeObject_AsSSize(begin,&start_index))
+     goto err;
+ if unlikely(start_index < 0)
+    start_index += DeeBytes_SIZE(self);
+ if (DeeNone_Check(end)) {
+  end_index = (dssize_t)DeeBytes_SIZE(self);
+ } else {
+  if (DeeObject_AsSSize(end,&end_index))
+      goto err;
+  if unlikely(end_index < 0)
+     end_index += DeeBytes_SIZE(self);
+  if ((size_t)end_index > DeeBytes_SIZE(self))
+      end_index = (dssize_t)DeeBytes_SIZE(self);
+ }
+ if unlikely((size_t)start_index >= (size_t)end_index)
+    start_index = end_index = 0;
+ return (DREF Bytes *)DeeBytes_NewView(self->b_orig,
+                                       self->b_base + (size_t)start_index,
+                                      (size_t)(end_index - start_index),
+                                       self->b_flags);
+err:
+ return NULL;
+}
+
+
+
+PRIVATE int DCALL
+bytes_setrange(Bytes *__restrict self,
+               DeeObject *__restrict begin,
+               DeeObject *__restrict end,
+               DeeObject *__restrict value) {
+ dssize_t start_index;
+ dssize_t end_index = (dssize_t)DeeBytes_SIZE(self);
+ uint8_t *dst; size_t size;
+ if (DeeObject_AsSSize(begin,&start_index) ||
+    (!DeeNone_Check(end) && DeeObject_AsSSize(end,&end_index)))
+     goto err;
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
+ if unlikely(start_index < 0) start_index += DeeBytes_SIZE(self);
+ if unlikely(end_index < 0) end_index += DeeBytes_SIZE(self);
+ if unlikely((size_t)start_index >= DeeBytes_SIZE(self) ||
+             (size_t)start_index >= (size_t)end_index)
+    start_index = end_index = 0;
+ else if unlikely((size_t)end_index > DeeBytes_SIZE(self))
+  end_index = (dssize_t)DeeBytes_SIZE(self);
+ size = (size_t)(end_index-start_index);
+ dst = DeeBytes_DATA(self) + (size_t)start_index;
+ return DeeSeq_ItemsToBytes(dst,size,value);
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+bytes_delrange(Bytes *__restrict self,
+               DeeObject *__restrict begin,
+               DeeObject *__restrict end) {
+ return bytes_setrange(self,begin,end,Dee_None);
+}
+
+
+PRIVATE dhash_t DCALL
+bytes_hash(Bytes *__restrict self) {
+ return hash_ptr(DeeBytes_DATA(self),
+                 DeeBytes_SIZE(self));
+}
+
+INTDEF bool DCALL
+string_eq_bytes(DeeStringObject *__restrict self,
+                DeeBytesObject *__restrict other);
+INTDEF int DCALL
+compare_string_bytes(DeeStringObject *__restrict lhs,
+                     DeeBytesObject *__restrict rhs);
+
+PRIVATE DREF DeeObject *DCALL
+bytes_eq(Bytes *__restrict self,
+         DeeObject *__restrict other) {
+ uint8_t *other_data; size_t other_size;
+ if (DeeString_Check(other))
+     return_bool(string_eq_bytes((DeeStringObject *)other,self));
+ if (DeeObject_AssertTypeExact(other,&DeeBytes_Type))
+     return NULL;
+ other_data = DeeBytes_DATA(other);
+ other_size = DeeBytes_SIZE(other);
+ if (DeeBytes_SIZE(self) != other_size)
+     return_false;
+ return_bool(memcmp(DeeBytes_DATA(self),other_data,other_size) == 0);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_ne(Bytes *__restrict self,
+         DeeObject *__restrict other) {
+ uint8_t *other_data; size_t other_size;
+ if (DeeString_Check(other))
+     return_bool(!string_eq_bytes((DeeStringObject *)other,self));
+ if (DeeObject_AssertTypeExact(other,&DeeBytes_Type))
+     return NULL;
+ other_data = DeeBytes_DATA(other);
+ other_size = DeeBytes_SIZE(other);
+ if (DeeBytes_SIZE(self) != other_size)
+     return_false;
+ return_bool(memcmp(DeeBytes_DATA(self),other_data,other_size) != 0);
+}
+
+PRIVATE int DCALL
+memxcmp(void const *a, size_t asiz,
+        void const *b, size_t bsiz) {
+ int result = memcmp(a,b,MIN(asiz,bsiz));
+ if (result) return result;
+ if (asiz == bsiz)
+     return 0;
+ if (asiz < bsiz)
+     return -1;
+ return 1;
+}
+
+#define DEFINE_BYTES_COMPARE(name,op) \
+PRIVATE DREF DeeObject *DCALL \
+name(Bytes *__restrict self, \
+     DeeObject *__restrict other) { \
+ uint8_t *other_data; size_t other_size; \
+ if (DeeString_Check(other)) \
+     return_bool(0 op compare_string_bytes((DeeStringObject *)other,self)); \
+ if (DeeObject_AssertTypeExact(other,&DeeBytes_Type)) \
+     return NULL; \
+ other_data = DeeBytes_DATA(other); \
+ other_size = DeeBytes_SIZE(other); \
+ return_bool(memxcmp(DeeBytes_DATA(self), \
+                     DeeBytes_SIZE(self), \
+                     other_data, \
+                     other_size) op 0); \
+}
+DEFINE_BYTES_COMPARE(bytes_lo,<)
+DEFINE_BYTES_COMPARE(bytes_le,<=)
+DEFINE_BYTES_COMPARE(bytes_gr,>)
+DEFINE_BYTES_COMPARE(bytes_ge,>=)
+#undef DEFINE_BYTES_COMPARE
+
+PRIVATE DREF Bytes *DCALL
+bytes_add(Bytes *__restrict self,
+          DeeObject *__restrict other) {
+ DREF Bytes *result; DeeBuffer buffer;
+ if (DeeObject_GetBuf(other,&buffer,DEE_BUFFER_FREADONLY))
+     return NULL;
+ result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self)+
+                                                        buffer.bb_size);
+ if likely(result) {
+  memcpy(result->b_data,DeeBytes_DATA(self),DeeBytes_SIZE(self));
+  memcpy(result->b_data+DeeBytes_SIZE(self),buffer.bb_base,buffer.bb_size);
+ }
+ DeeObject_PutBuf(other,&buffer,DEE_BUFFER_FREADONLY);
+ return result;
+}
+
+PRIVATE DREF Bytes *DCALL
+bytes_mul(Bytes *__restrict self,
+          DeeObject *__restrict other) {
+ DREF Bytes *result; uint8_t *dst,*src;
+ size_t my_length,total_length,repeat;
+ if (DeeObject_AsSize(other,&repeat))
+     return NULL;
+ if (!repeat)
+     return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+ if (repeat == 1)
+     return bytes_copy(self);
+ my_length = DeeString_SIZE(self);
+ total_length = my_length*repeat;
+ if unlikely(total_length < my_length ||
+             total_length < repeat)
+    goto err_overflow;
+ result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(total_length);
+ if unlikely(!result) goto err;
+ src = DeeBytes_DATA(self);
+ dst = DeeBytes_DATA(result);
+ while (repeat--) {
+  memcpy(dst,src,my_length);
+  dst += my_length;
+ }
+ return result;
+err_overflow:
+ err_integer_overflow_i(sizeof(size_t)*8,true);
+err:
+ return NULL;
+}
+
+INTDEF dssize_t DCALL
+DeeString_CFormat(dformatprinter printer,
+                  dformatprinter format_printer, void *arg,
+                  /*utf-8*/char const *__restrict format, size_t format_len,
+                  size_t argc, DeeObject **__restrict argv);
+
+PRIVATE DREF Bytes *DCALL
+bytes_mod(Bytes *__restrict self,
+          DeeObject *__restrict args) {
+ struct bytes_printer printer = BYTES_PRINTER_INIT;
+ DeeObject **argv; size_t argc;
+ /* C-style string formating */
+ if (DeeTuple_Check(args)) {
+  argv = DeeTuple_ELEM(args);
+  argc = DeeTuple_SIZE(args);
+ } else {
+  argv = (DeeObject **)&args;
+  argc = 1;
+ }
+ /* Use a different printer for format-copy-characters, thus allowing
+  * us to not need to both encoding the bytes from `self' as UTF-8. */
+ if unlikely(DeeString_CFormat((dformatprinter)&bytes_printer_print,
+                               (dformatprinter)&bytes_printer_append,
+                               &printer,
+                               (char const *)DeeBytes_DATA(self),
+                                DeeBytes_SIZE(self),
+                                argc,
+                                argv) < 0)
+    goto err;
+ return (DREF Bytes *)bytes_printer_pack(&printer);
+err:
+ bytes_printer_fini(&printer);
+ return NULL;
+}
+
+INTERN dssize_t DCALL
+DeeBytes_PrintUtf8(DeeObject *__restrict self,
+                   dformatprinter printer, void *arg) {
+ dssize_t temp,result = 0;
+ uint8_t *iter,*end,*flush_start;
+ end = (iter = flush_start = DeeBytes_DATA(self)) + DeeBytes_SIZE(self);
+ while (iter < end) {
+  uint8_t escape_buf[2];
+  uint8_t ch = *iter++;
+  if (ch < 0x80) continue;
+  if (flush_start < iter-1) {
+   temp = (*printer)(arg,
+                    (char const *)flush_start,
+                    (size_t)((iter-1)-flush_start));
+   if unlikely(temp < 0) goto err;
+   result += temp;
+  }
+  escape_buf[0] = 0xc0 | ((ch & 0xc0) >> 6);
+  escape_buf[1] = 0x80 | (ch & 0x3f);
+  temp = (*printer)(arg,
+                   (char const *)escape_buf,
+                    2);
+  if unlikely(temp < 0) goto err;
+  result += temp;
+  flush_start = iter;
+ }
+ if (flush_start < end) {
+  temp = (*printer)(arg,
+                   (char const *)flush_start,
+                   (size_t)(end-flush_start));
+  if unlikely(temp < 0) goto err;
+  result += temp;
+ }
+ return result;
+err:
+ return temp;
+}
+
+
+
+PRIVATE struct type_math bytes_math = {
+    /* .tp_int32  = */NULL,
+    /* .tp_int64  = */NULL,
+    /* .tp_double = */NULL,
+    /* .tp_int    = */NULL,
+    /* .tp_inv    = */NULL,
+    /* .tp_pos    = */NULL,
+    /* .tp_neg    = */NULL,
+    /* .tp_add    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_add,
+    /* .tp_sub    = */NULL,
+    /* .tp_mul    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_mul,
+    /* .tp_div    = */NULL,
+    /* .tp_mod    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_mod,
+    /* .tp_shl    = */NULL,
+    /* .tp_shr    = */NULL,
+    /* .tp_and    = */NULL,
+    /* .tp_or     = */NULL,
+    /* .tp_xor    = */NULL,
+    /* .tp_pow    = */NULL
+};
+
+PRIVATE struct type_cmp bytes_cmp = {
+    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&bytes_hash,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_ge,
+};
+
+
+PRIVATE size_t DCALL
+bytes_nsi_getsize(Bytes *__restrict self) {
+ ASSERT(DeeBytes_SIZE(self) != (size_t)-1);
+ return DeeBytes_SIZE(self);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_nsi_getitem(Bytes *__restrict self, size_t index) {
+ if unlikely(index >= DeeBytes_SIZE(self)) {
+  err_index_out_of_bounds((DeeObject *)self,index,DeeBytes_SIZE(self));
+  return NULL;
+ }
+ return DeeInt_NewU8(DeeBytes_DATA(self)[index]);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_nsi_getitem_fast(Bytes *__restrict self, size_t index) {
+ ASSERT(index < DeeBytes_SIZE(self));
+ return DeeInt_NewU8(DeeBytes_DATA(self)[index]);
+}
+
+PRIVATE struct type_nsi bytes_nsi = {
+    /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    {
+        /* .nsi_seqlike = */{
+            /* .nsi_getsize      = */(void *)&bytes_nsi_getsize,
+            /* .nsi_getsize_fast = */(void *)&bytes_nsi_getsize,
+            /* .nsi_getitem      = */(void *)&bytes_nsi_getitem,
+            /* .nsi_delitem      = */(void *)NULL, /* TODO */
+            /* .nsi_setitem      = */(void *)NULL, /* TODO */
+            /* .nsi_getitem_fast = */(void *)&bytes_nsi_getitem_fast,
+            /* .nsi_getrange     = */(void *)NULL, /* TODO */
+            /* .nsi_getrange_n   = */(void *)NULL, /* TODO */
+            /* .nsi_setrange     = */(void *)NULL, /* TODO */
+            /* .nsi_setrange_n   = */(void *)NULL, /* TODO */
+            /* .nsi_find         = */(void *)NULL, /* TODO */
+            /* .nsi_rfind        = */(void *)NULL, /* TODO */
+            /* .nsi_xch          = */(void *)NULL, /* TODO */
+            /* .nsi_insert       = */(void *)NULL,
+            /* .nsi_insertall    = */(void *)NULL,
+            /* .nsi_insertvec    = */(void *)NULL,
+            /* .nsi_pop          = */(void *)NULL,
+            /* .nsi_erase        = */(void *)NULL,
+            /* .nsi_remove       = */(void *)NULL,
+            /* .nsi_rremove      = */(void *)NULL,
+            /* .nsi_removeall    = */(void *)NULL,
+            /* .nsi_removeif     = */(void *)NULL
+        }
+    }
+};
+
+PRIVATE struct type_seq bytes_seq = {
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iter,
+    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_size,
+    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_contains,
+    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_getitem,
+    /* .tp_del       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_delitem,
+    /* .tp_set       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&bytes_setitem,
+    /* .tp_range_get = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&bytes_getrange,
+    /* .tp_range_del = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&bytes_delrange,
+    /* .tp_range_set = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&bytes_setrange,
+    /* .tp_nsi       = */&bytes_nsi
+};
+
+
+
+PRIVATE DREF DeeObject *DCALL
+bytes_isreadonly(Bytes *__restrict self) {
+ return_bool_(!(self->b_flags & DEE_BUFFER_FWRITABLE));
+}
+PRIVATE DREF DeeObject *DCALL
+bytes_iswritable(Bytes *__restrict self) {
+ return_bool_(self->b_flags & DEE_BUFFER_FWRITABLE);
+}
+
+PRIVATE struct type_getset bytes_getsets[] = {
+    { "isreadonly", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_isreadonly, NULL, NULL,
+      DOC("->bool\nEvaluates to :true if @this bytes object cannot be written to") },
+    { "iswritable", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
+      DOC("->bool\nEvaluates to :true if @this bytes object not be written to (the inverse of #isreadonly)") },
+    { NULL }
+};
+
+PRIVATE struct type_member bytes_members[] = {
+    TYPE_MEMBER_FIELD("length",STRUCT_CONST|STRUCT_SIZE_T,offsetof(Bytes,b_size)),
+    TYPE_MEMBER_END
+};
+
+
+PRIVATE int DCALL
+bytes_getbuf(Bytes *__restrict self,
+             DeeBuffer *__restrict info,
+             unsigned int flags) {
+ if ((flags & DEE_BUFFER_FWRITABLE) &&
+    !(self->b_flags & DEE_BUFFER_FWRITABLE)) {
+  err_bytes_not_writable((DeeObject *)self);
+  return -1;
+ }
+ info->bb_base = DeeBytes_DATA(self);
+ info->bb_size = DeeBytes_SIZE(self);
+ return 0;
+}
+
+PRIVATE struct type_buffer bytes_buffer = {
+    /* .tp_getbuf       = */(int(DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict,unsigned int))&bytes_getbuf,
+    /* .tp_putbuf       = */NULL,
+    /* .tp_buffer_flags = */DEE_BUFFER_TYPE_FNORMAL
+};
+
+
+INTDEF struct type_method bytes_methods[];
+
+
+PRIVATE DREF Bytes *DCALL
+bytes_fromseq(DeeTypeObject *__restrict UNUSED(self),
+              size_t argc, DeeObject **__restrict argv) {
+ DeeObject *seq;
+ if (DeeArg_Unpack(argc,argv,"o:fromseq",&seq))
+     return NULL;
+ return (DREF Bytes *)DeeBytes_FromSequence(seq);
+}
+
+PRIVATE struct type_method bytes_class_methods[] = {
+    { "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_fromseq,
+      DOC("(sequence seq)->bytes\n"
+          "@throw NotImplemented The given @seq cannot be iterated, or contains at "
+                                "least one item that cannot be converted into an integer\n"
+          "@throw IntegerOverflow At least one of the integers found in @seq is lower "
+                                 "than $0, or greater than $0xff\n"
+          "Convert the items of the given sequence @seq into integers, "
+          "and construct a writable bytes object from their values\n"
+          "Passing :none for @seq will return an empty bytes object") },
+    { NULL }
+};
+
+PRIVATE struct type_member bytes_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&BytesIterator_Type),
+    TYPE_MEMBER_END
+};
+
+
+PUBLIC DeeTypeObject DeeBytes_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */DeeString_STR(&str_bytes),
+    /* .tp_doc      = */DOC("An string-like abstract buffer object type for viewing & editing "
+                            "the memory of any object implementing the buffer interface, or "
+                            "to allocate fixed-length buffers for raw bytes which "
+                            "can then be loaded with arbitrary data (most notably "
+                            "through use of :file.readinto)\n"
+                            "A bytes object implements the sequence interface as a ${{int...}}-like sequence, "
+                            "with each integer being a value between $0 and $0xff\n"
+                            "\n"
+                            "()\n"
+                            "Construct an empty bytes object\n"
+                            "\n"
+                            "(object ob,int start=0,int end=-1)\n"
+                            "(object ob,string mode=\"r\",int start=0,int end=-1)\n"
+                            "@throw NotImplemented The given @ob does not implement the buffer protocol\n"
+                            "Construct a bytes object for viewing the memory of @ob, either "
+                            "as read-only when @mode is set to $\"r\" or omitted, or as read-write "
+                            "when set to $\"w\". The section of memory then addressed by bytes "
+                            "view starts after @start bytes, and ends at @end bytes.\n"
+                            "If either @start or @end is a negative number, it will refer to the "
+                            "end of the memory found in @ob, using an intentional integer underflow\n"
+                            "Whether or not a bytes object is read-only, or writable by "
+                            "be determined using #iswritable and #isreadonly\n"
+                            "\n"
+                            "(int num_bytes)\n"
+                            "(int num_bytes,int init)\n"
+                            "@throw IntegerOverflow The given @init is negative, or greater than $0xff\n"
+                            "Construct a writable, self-contained bytes object for a total "
+                            "of @num_bytes bytes of memory, pre-initialized to @init, or left "
+                            "undefined when @init isn't specified\n"
+                            "\n"
+                            "(sequence items)\n"
+                            "For compatibility with other sequence types, as well as the expectation "
+                            "of a sequence-like object implementing a sequence-cast-constructor, bytes "
+                            "objects also implement this overload\n"
+                            "However, given the reason for the existence of a bytes object, as well as "
+                            "the fact that a sequence object may also implement a buffer interface, which "
+                            "the ${bytes(object ob)} overload above makes use of, that overload is always "
+                            "preferred over this one. In situations where this might cause ambiguity, "
+                            "it is recommended that the #fromseq class method be used to construct the "
+                            "bytes object instead.\n"
+                            "\n"
+                            "copy->\n"
+                            "Returns a writable copy of @this bytes object, containing "
+                            "a copy of all data as a kind of snapshot\n"
+                            ">local x = \"foobar\";\n"
+                            ">local y = x.bytes();\n"
+                            ">print y[0]; /* 102 */\n"
+                            ">y = copy y;\n"
+                            ">print y[0]; /* 102 */\n"
+                            ">y[0] = 42;  /* Only allowed because the `copy' */\n"
+                            ">print y;    /* *oobar */\n"
+                            "\n"
+                            "str->\n"
+                            "Returns a string variant of @this bytes object, interpreting each byte as "
+                            "a unicode character from the range U+0000-U+00FF. This is identical "
+                            "to encoding the bytes object as a latin-1 (or iso-8859-1) string\n"
+                            "This is identical to ${this.encode(\"latin-1\")}\n"
+                            "\n"
+                            "repr->\n"
+                            "Returns the representation of @this bytes object in the form "
+                            "of ${\"bytes({!r})\".format({ this.encode(\"latin-1\") })}\n"
+                            "\n"
+                            "contains(bytes needle)\n"
+                            "contains(string needle)\n"
+                            "contains(int needle)\n"
+                            "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+                            "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+                            "Check if @needle appears within @this bytes object\n"
+                            "\n"
+                            ":=(bytes data)\n"
+                            ":=(string data)\n"
+                            ":=(sequence data)\n"
+                            "@throw BufferError @this bytes object is not writable\n"
+                            "@throw UnpackError The length of the given @data does not equal ${#this}\n"
+                            "Assign the contents of @data to @this bytes object\n"
+                            "You may pass :none for @data to clear all bytes of @this buffer\n"
+                            "\n"
+                            "[](int index)->int\n"
+                            "Returns the byte found at @index as an integer between $0 and $0xff\n"
+                            "\n"
+                            "[]=(int index,int value)\n"
+                            "@throw BufferError @this bytes object is not writable\n"
+                            "@throw IndexError The given @index is negative, or greater than the length of @this \n"
+                            "@throw IntegerOverflow @value is negative or greater than $0xff\n"
+                            "Taking the integer value of @value, assign that value to the byte found at @index\n"
+                            "\n"
+                            "del[](int index)\n"
+                            "@throw BufferError @this bytes object is not writable\n"
+                            "@throw IndexError The given @index is negative, or greater than the length of @this \n"
+                            "Same as ${this[index] = 0}, assigning a zero-byte at the given @index\n"
+                            "\n"
+                            "[:](int start,int end)->bytes\n"
+                            "Returns another bytes view for viewing a sub-range of bytes\n"
+                            "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object\n"
+                            "\n"
+                            "[:]=(int start,int end,bytes data)\n"
+                            "[:]=(int start,int end,string data)\n"
+                            "[:]=(int start,int end,sequence data)\n"
+                            "@throw BufferError @this bytes object is not writable\n"
+                            "@throw IntegerOverflow One of the integers extracted from @data is negative, or greater than $0xff\n"
+                            "@throw ValueError @data is a string containing characters ${> 0xff}\n"
+                            "@throw UnpackError The length of the given sequence @data does not match the number of bytes, that is ${end-start}. "
+                                               "If any, and how many bytes of @this bytes object were already modified is undefined\n"
+                            "Assign values to a given range of bytes\n"
+                            "You may pass :none to fill the entire range with zero-bytes\n"
+                            "\n"
+                            "del[:](int start,int end)\n"
+                            "Same as ${this[start:end] = none}, assigning zero-bytes within the given range\n"
+                            "\n"
+                            "iter->\n"
+                            "Allows for iteration of the individual bytes as integers between $0 and $0xff\n"
+                            "\n"
+                            "<(bytes other)\n"
+                            "<(string other)\n"
+                            "<=(bytes other)\n"
+                            "<=(string other)\n"
+                            "==(bytes other)\n"
+                            "==(string other)\n"
+                            "!=(bytes other)\n"
+                            "!=(string other)\n"
+                            ">(bytes other)\n"
+                            ">(string other)\n"
+                            ">=(bytes other)\n"
+                            ">=(string other)\n"
+                            "@throw ValueError The given @other is a string containing characters ${> 0xff}\n"
+                            "Perform a lexicographical comparison between @this and @other, and return the result\n"
+                            "\n"
+                            "#()\n"
+                            "Returns the number of bytes represented by @this bytes object\n"
+                            "\n"
+                            "bool()\n"
+                            "Returns :true if @this bytes object is non-empty\n"
+                            "\n"
+                            "+(bytes other)->bytes\n"
+                            "Construct a new writable bytes object that at is the concatenation of @this and @other\n"
+                            "+(string other)->bytes\n"
+                            "+(object other)->bytes\n"
+                            "Return a new writable bytes object that is the concatenation of @this and ${str(other).bytes()}\n"
+                            "\n"
+                            "*(int times)->bytes\n"
+                            "@throw IntegerOverflow @times is negative, or too large\n"
+                            "Returns @this bytes object repeated @times number of times\n"
+                            "\n"
+                            "%(tuple args)->bytes\n"
+                            "%(object arg)->bytes\n"
+                            "@throw UnicodeEncodeError Attempted to print a unicode character ${> 0xff}\n"
+                            "After interpreting the bytes from @this bytes object as LATIN-1, "
+                            "generate a printf-style format string containing only LATIN-1 characters.\n"
+                            "If @arg isn't a tuple, it is packed into one and the call is identical "
+                            "to ${this.operator % (pack(arg))}\n"
+                            "The returned bytes object is writable\n"
+                            "\n"
+                            ),
+    /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL|TP_FNAMEOBJECT,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeSeq_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_var = */{
+                /* .tp_ctor      = */&bytes_ctor,
+                /* .tp_copy_ctor = */&bytes_copy,
+                /* .tp_deep_ctor = */&bytes_copy,
+                /* .tp_any_ctor  = */&bytes_init,
+                /* .tp_free      = */NULL
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bytes_fini,
+        /* .tp_assign      = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_assign,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_str,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_repr,
+        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&bytes_bool
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&bytes_visit,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */&bytes_math,
+    /* .tp_cmp           = */&bytes_cmp,
+    /* .tp_seq           = */&bytes_seq,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */&bytes_buffer,
+    /* .tp_methods       = */bytes_methods,
+    /* .tp_getsets       = */bytes_getsets,
+    /* .tp_members       = */bytes_members,
+    /* .tp_class_methods = */bytes_class_methods,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */bytes_class_members
+};
+
+
+
+
+
+
+
+
+/* ================================================================================= */
+/*   BYTES PRINTER API                                                               */
+/* ================================================================================= */
+
+/* _Always_ inherit all byte data (even upon error) saved in
+ * `self', and construct a new bytes object from all that data, before
+ * returning a reference to that object.
+ * NOTE: A pending, incomplete UTF-8 character sequence is discarded.
+ *      ---> Regardless of return value, `self' is finalized and left
+ *           in an undefined state, the same way it would have been
+ *           after a call to `bytes_printer_fini()'
+ * @return: * :   A reference to the packed bytes object.
+ * @return: NULL: An error occurred. */
+PUBLIC DREF DeeObject *DCALL
+bytes_printer_pack(/*inherit(always)*/struct bytes_printer *__restrict self) {
+ DREF Bytes *result = self->bp_bytes;
+ if unlikely(!result)
+    return DeeBytes_NewBufferUninitialized(0);
+ /* Deallocate unused memory. */
+ if likely(self->bp_length != result->b_size) {
+  DREF Bytes *reloc;
+  reloc = (DREF Bytes *)DeeObject_TryRealloc(result,
+                                             offsetof(Bytes,b_data)+
+                                             self->bp_length);
+  if likely(reloc) result = reloc;
+  result->b_size = self->bp_length;
+ }
+ /* Do final object initialization. */
+ result->b_base  = result->b_data;
+ result->b_orig  = (DREF DeeObject *)result;
+ result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_buffer.bb_base  = result->b_data;
+ result->b_buffer.bb_size  = self->bp_length;
+#ifndef __INTELLISENSE__
+ result->b_buffer.bb_put   = NULL;
+#endif
+ DeeObject_Init(result,&DeeBytes_Type);
+ return (DREF DeeObject *)result;
+}
+
+/* Append raw byte data to the given bytes-printer, without concern
+ * about any kind of encoding. - Just copy over the raw bytes.
+ * -> A far as unicode support goes, this function has _nothing_ to
+ *    do with any kind of encoding. - It just blindly copies the given
+ *    data into the buffer of the resulting bytes object.
+ * -> The equivalent unicode_printer function is `unicode_printer_print8' */
+PUBLIC dssize_t DCALL
+bytes_printer_append(struct bytes_printer *__restrict self,
+                     uint8_t const *__restrict data, size_t datalen) {
+ Bytes *bytes;
+ size_t alloc_size;
+ ASSERT(self);
+ ASSERT(data || !datalen);
+ if ((bytes = self->bp_bytes) == NULL) {
+  /* Make sure not to allocate a bytes when the used length remains ZERO.
+   * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */
+  if unlikely(!datalen) return 0;
+  /* Allocate the initial bytes. */
+  alloc_size = 8;
+  while (alloc_size < datalen) alloc_size *= 2;
+alloc_again:
+  bytes = (Bytes *)DeeObject_TryMalloc(offsetof(Bytes,b_data)+alloc_size);
+  if unlikely(!bytes) {
+   if (alloc_size != datalen) { alloc_size = datalen; goto alloc_again; }
+   if (Dee_CollectMemory(offsetof(Bytes,b_data)+alloc_size)) goto alloc_again;
+   return -1;
+  }
+  self->bp_bytes = bytes;
+  bytes->b_size = alloc_size;
+  memcpy(bytes->b_data,data,datalen);
+  self->bp_length = datalen;
+  goto done;
+ }
+ alloc_size = bytes->b_size;
+ ASSERT(alloc_size >= self->bp_length);
+ alloc_size -= self->bp_length;
+ if unlikely(alloc_size < datalen) {
+  size_t min_alloc = self->bp_length+datalen;
+  alloc_size = (min_alloc+63) & ~63;
+realloc_again:
+  bytes = (Bytes *)DeeObject_TryRealloc(bytes,offsetof(Bytes,b_data)+alloc_size);
+  if unlikely(!bytes) {
+   bytes = self->bp_bytes;
+   if (alloc_size != min_alloc) { alloc_size = min_alloc; goto realloc_again; }
+   if (Dee_CollectMemory(offsetof(Bytes,b_data)+alloc_size))
+       goto realloc_again;
+   return -1;
+  }
+  self->bp_bytes = bytes;
+  bytes->b_size = alloc_size;
+ }
+ /* Copy data into the dynamic bytes. */
+ memcpy(bytes->b_data+self->bp_length,data,datalen);
+ self->bp_length += datalen;
+done:
+ return (dssize_t)datalen;
+}
+
+PUBLIC int
+(DCALL bytes_printer_putbyte)(struct bytes_printer *__restrict self, uint8_t ch) {
+ ASSERT(self);
+ /* Quick check: Can we print to an existing buffer. */
+ if (self->bp_bytes &&
+     self->bp_length < self->bp_bytes->b_size) {
+  self->bp_bytes->b_data[self->bp_length++] = ch;
+  goto done;
+ }
+ /* Fallback: go the long route. */
+ if (bytes_printer_append(self,(uint8_t *)&ch,1) < 0)
+     goto err;
+done:
+ return 0;
+err:
+ return -1;
+}
+
+PUBLIC void
+(DCALL bytes_printer_release)(struct bytes_printer *__restrict self,
+                              size_t datalen) {
+ ASSERT(self);
+ ASSERT(self->bp_length >= datalen);
+ /* This's actually all that needs to be
+  * done with the current implementation. */
+ self->bp_length -= datalen;
+}
+PUBLIC uint8_t *
+(DCALL bytes_printer_alloc)(struct bytes_printer *__restrict self, size_t datalen) {
+ Bytes *bytes; size_t alloc_size; uint8_t *result;
+ ASSERT(self);
+ if ((bytes = self->bp_bytes) == NULL) {
+  /* Make sure not to allocate new bytes when the used length remains ZERO.
+   * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */
+  if unlikely(!datalen) return 0;
+  /* Allocate the initial bytes. */
+  alloc_size = 8;
+  while (alloc_size < datalen) alloc_size *= 2;
+alloc_again:
+  bytes = (Bytes *)DeeObject_TryMalloc(offsetof(Bytes,b_data)+
+                                      (alloc_size+1)*sizeof(char));
+  if unlikely(!bytes) {
+   if (alloc_size != datalen) { alloc_size = datalen; goto alloc_again; }
+   if (Dee_CollectMemory(offsetof(Bytes,b_data)+
+                        (alloc_size+1)*sizeof(char)))
+       goto alloc_again;
+   return NULL;
+  }
+  self->bp_bytes = bytes;
+  bytes->b_size = alloc_size;
+  self->bp_length = datalen;
+  return bytes->b_data;
+ }
+ alloc_size = bytes->b_size;
+ ASSERT(alloc_size >= self->bp_length);
+ alloc_size -= self->bp_length;
+ if unlikely(alloc_size < datalen) {
+  size_t min_alloc = self->bp_length+datalen;
+  alloc_size = (min_alloc+63) & ~63;
+realloc_again:
+  bytes = (Bytes *)DeeObject_TryRealloc(bytes,offsetof(Bytes,b_data)+
+                                         (alloc_size+1)*sizeof(char));
+  if unlikely(!bytes) {
+   bytes = self->bp_bytes;
+   if (alloc_size != min_alloc) { alloc_size = min_alloc; goto realloc_again; }
+   if (Dee_CollectMemory(offsetof(Bytes,b_data)+
+                        (alloc_size+1)*sizeof(char)))
+       goto realloc_again;
+   return NULL;
+  }
+  self->bp_bytes = bytes;
+  bytes->b_size = alloc_size;
+ }
+ /* Append text at the end. */
+ result = bytes->b_data+self->bp_length;
+ self->bp_length += datalen;
+ return result;
+}
+
+
+
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_OBJECTS_BYTES_C */

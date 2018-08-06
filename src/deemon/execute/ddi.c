@@ -1,0 +1,662 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_EXECUTE_DDI_C
+#define GUARD_DEEMON_EXECUTE_DDI_C 1
+#define _KOS_SOURCE 1
+
+#include <deemon/api.h>
+#include <deemon/object.h>
+#include <deemon/code.h>
+#include <deemon/string.h>
+#include <deemon/asm.h>
+
+#include <hybrid/minmax.h>
+
+DECL_BEGIN
+
+
+PRIVATE int DCALL
+get_sleb(uint8_t **__restrict pip) {
+ int result,is_neg;
+ uint8_t *ip = *pip;
+ uint8_t byte = *ip++;
+ uint8_t num_bits = 6;
+ is_neg = (byte&0x40);
+ result =  byte&0x3f;
+ while (byte&0x80) {
+  byte      = *ip++;
+  result   |= (byte&0x7f) << num_bits;
+  num_bits += 7;
+ }
+ if (is_neg)
+     result = -result;
+ *pip = ip;
+ return result;
+}
+PRIVATE unsigned int DCALL
+get_uleb(uint8_t **__restrict pip) {
+ unsigned int result = 0;
+ uint8_t *ip = *pip;
+ uint8_t byte,num_bits = 0;
+ do {
+  byte      = *ip++;
+  result   |= (byte&0x7f) << num_bits;
+  num_bits += 7;
+ } while (byte&0x80);
+ *pip = ip;
+ return result;
+}
+
+PUBLIC uint8_t *DCALL
+ddi_next_simple(uint8_t *__restrict ip,
+                code_addr_t *__restrict puip) {
+ code_addr_t uip = *puip;
+ for (;;) {
+  uint8_t op = *ip++;
+  switch (op) {
+
+  case DDI_STOP:
+   *puip = uip;
+   return DDI_NEXT_DONE; /* End of DDI stream. */
+
+  case DDI_ADDUIP:
+   ++uip;
+   uip += get_uleb((uint8_t **)&ip);
+   *puip = uip;
+   return ip; /* Checkpoint. */
+
+  case DDI_ADDLNO:
+  case DDI_SETCOL:
+  case DDI_ADDUSP:
+   get_sleb((uint8_t **)&ip);
+   break;
+  case DDI_DEFLCNAME:
+   get_uleb((uint8_t **)&ip);
+   ATTR_FALLTHROUGH
+  case DDI_SETPATH:
+  case DDI_SETFILE:
+  case DDI_SETNAME:
+  case DDI_DELLCNAME:
+  case DDI_DEFSPNAME:
+  case DDI_EXTENDED:
+   get_uleb((uint8_t **)&ip);
+   break;
+  case DDI_INCUSP:
+  case DDI_DECUSP:
+   break;
+
+  default:
+   uip += DDI_GENERIC_IP(op);
+   *puip = uip;
+   return ip; /* Checkpoint. */
+  }
+ }
+}
+
+PUBLIC uint8_t *DCALL
+ddi_next_regs(uint8_t *__restrict ip,
+              struct ddi_regs *__restrict regs) {
+ /* This algorithm is heavily documented and explained in `<deemon/asm.h>' */
+ for (;;) {
+  uint8_t op = *ip++;
+  switch (op) {
+
+  case DDI_STOP:
+   return DDI_NEXT_DONE; /* End of DDI stream. */
+
+  case DDI_ADDUIP:
+   ++regs->dr_uip;
+   regs->dr_uip += get_uleb((uint8_t **)&ip);
+   return ip; /* Checkpoint. */
+
+  {
+   int temp;
+  case DDI_ADDLNO:
+   temp = get_sleb((uint8_t **)&ip);
+   if (!(regs->dr_flags & DDI_REGS_FSECOND))
+         regs->dr_lno += temp;
+  } break;
+  {
+   int temp;
+  case DDI_SETCOL:
+   temp = get_sleb((uint8_t **)&ip);
+   if (!(regs->dr_flags & DDI_REGS_FSECOND))
+         regs->dr_col = temp;
+  } break;
+  {
+   uint16_t temp;
+  case DDI_SETPATH:
+   temp = (uint16_t)get_uleb((uint8_t **)&ip);
+   if (!(regs->dr_flags & DDI_REGS_FSECOND))
+         regs->dr_path = temp;
+  } break;
+  {
+   uint16_t temp;
+  case DDI_SETFILE:
+   temp = (uint16_t)get_uleb((uint8_t **)&ip);
+   if (!(regs->dr_flags & DDI_REGS_FSECOND))
+         regs->dr_file = temp;
+  } break;
+  {
+   uint16_t temp;
+  case DDI_SETNAME:
+   temp = (uint16_t)get_uleb((uint8_t **)&ip);
+   if (!(regs->dr_flags & DDI_REGS_FSECOND))
+         regs->dr_name = temp;
+  } break;
+
+  case DDI_INCUSP:
+   ++regs->dr_usp;
+   break;
+  case DDI_DECUSP:
+   --regs->dr_usp;
+   break;
+  case DDI_ADDUSP:
+   regs->dr_usp += (int16_t)get_sleb((uint8_t **)&ip);
+   break;
+
+   /* Ignore symbol-name instructions. */
+  case DDI_DEFLCNAME:
+   get_uleb((uint8_t **)&ip);
+   ATTR_FALLTHROUGH
+  case DDI_DELLCNAME:
+  case DDI_DEFSPNAME:
+   get_uleb((uint8_t **)&ip);
+   break;
+
+  {
+   unsigned int cmd;
+  case DDI_EXTENDED:
+   cmd = get_uleb((uint8_t **)&ip);
+   switch (cmd & DDI_X_CMDMASK) {
+
+   case DDI_X_TOGGLESTMT:
+    if (!(regs->dr_flags & DDI_REGS_FSECOND))
+          regs->dr_flags ^= DDI_REGS_FISSTMT;
+    break;
+
+   case DDI_X_PUSHSTATE:
+    regs->dr_flags += DDI_REGS_FSECONE;
+    break;
+   case DDI_X_POPSTATE:
+    if (regs->dr_flags & DDI_REGS_FSECOND)
+        regs->dr_flags -= DDI_REGS_FSECONE;
+    break;
+
+   default: break;
+   }
+  } break;
+
+  default:
+   regs->dr_uip += DDI_GENERIC_IP(op);
+   if (!(regs->dr_flags & DDI_REGS_FSECOND))
+         regs->dr_lno += DDI_GENERIC_LN(op);
+   return ip; /* Checkpoint. */
+  }
+ }
+}
+
+
+
+LOCAL int DCALL
+ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
+                uint16_t min_size, unsigned int flags) {
+ uint16_t new_alloc,*new_vec;
+ new_alloc = regs->dx_spnama*2;
+ if (new_alloc < min_size)
+     new_alloc = min_size;
+ new_vec = (uint16_t *)Dee_TryRealloc(regs->dx_spnamv,
+                                      new_alloc*
+                                      sizeof(uint16_t));
+ if (!new_vec) {
+  new_alloc = min_size;
+  if (flags & DDI_STATE_FNOTHROW) {
+   new_vec = (uint16_t *)Dee_TryRealloc(regs->dx_spnamv,
+                                        new_alloc*
+                                        sizeof(uint16_t));
+  } else {
+   new_vec = (uint16_t *)Dee_Realloc(regs->dx_spnamv,
+                                     new_alloc*
+                                     sizeof(uint16_t));
+  }
+  if unlikely(!new_vec) return -1;
+ }
+ regs->dx_spnamv = new_vec;
+ regs->dx_spnama = new_alloc;
+ return 0;
+}
+
+PUBLIC uint8_t *DCALL
+ddi_next_state(uint8_t *__restrict ip,
+               struct ddi_state *__restrict self,
+               unsigned int flags) {
+ /* This algorithm is heavily documented and explained in `<deemon/asm.h>' */
+next_ip:
+ for (;;) {
+  uint8_t op = *ip++;
+  switch (op) {
+
+  case DDI_STOP:
+   return DDI_NEXT_DONE; /* End of DDI stream. */
+
+  case DDI_ADDUIP:
+   ++self->rs_regs.dr_uip;
+   self->rs_regs.dr_uip += get_uleb((uint8_t **)&ip);
+   return ip; /* Checkpoint. */
+
+  case DDI_ADDLNO:
+   self->rs_regs.dr_lno += get_sleb((uint8_t **)&ip);
+   break;
+
+  case DDI_SETCOL:
+   self->rs_regs.dr_col = get_sleb((uint8_t **)&ip);
+   break;
+
+  case DDI_SETPATH:
+   self->rs_regs.dr_path = (uint16_t)get_uleb((uint8_t **)&ip);
+   break;
+
+  case DDI_SETFILE:
+   self->rs_regs.dr_file = (uint16_t)get_uleb((uint8_t **)&ip);
+   break;
+
+  case DDI_SETNAME:
+   self->rs_regs.dr_name = (uint16_t)get_uleb((uint8_t **)&ip);
+   break;
+
+  case DDI_INCUSP:
+   ++self->rs_regs.dr_usp;
+   break;
+
+  case DDI_DECUSP:
+   --self->rs_regs.dr_usp;
+   /* Unbind the stack-symbols. */
+   if (self->rs_regs.dr_usp < self->rs_xregs.dx_spnama)
+       self->rs_xregs.dx_spnamv[self->rs_regs.dr_usp] = DDI_REGS_UNBOUND_NAME;
+   break;
+
+  {
+   int16_t offset;
+  case DDI_ADDUSP:
+   offset = (int16_t)get_sleb((uint8_t **)&ip);
+   self->rs_regs.dr_usp += offset;
+   if (offset < 0 && !(flags & DDI_STATE_FNONAMES) &&
+       self->rs_regs.dr_usp < self->rs_xregs.dx_spnama) {
+    /* Unbind all stack-symbols as they fall out of view. */
+    uint16_t i,clr_cnt;
+    clr_cnt = MIN(self->rs_xregs.dx_spnama - self->rs_regs.dr_usp,
+                 (uint16_t)-offset);
+    for (i = 0; i < clr_cnt; ++i)
+        self->rs_xregs.dx_spnamv[self->rs_regs.dr_usp + i] = DDI_REGS_UNBOUND_NAME;
+   }
+  } break;
+
+  {
+   uint16_t address;
+  case DDI_DEFSPNAME:
+   /* Define the name of a stack-symbol. */
+   address = (uint16_t)get_uleb((uint8_t **)&ip);
+   if (flags & DDI_STATE_FNONAMES)
+       break;
+   if unlikely(!self->rs_regs.dr_usp) break; /* Shouldn't happen... */
+   if (self->rs_regs.dr_usp >= self->rs_xregs.dx_spnama &&
+       ddi_xrealloc_sp(&self->rs_xregs,self->rs_regs.dr_usp,flags))
+       goto err;
+   self->rs_xregs.dx_spnamv[self->rs_regs.dr_usp-1] = address;
+  } break;
+
+  {
+   uint16_t index,address;
+  case DDI_DEFLCNAME:
+   index   = (uint16_t)get_uleb((uint8_t **)&ip);
+   address = (uint16_t)get_uleb((uint8_t **)&ip);
+   if (flags & DDI_STATE_FNONAMES)
+       break;
+   if (index >= self->rs_xregs.dx_lcnamc) {
+    /* Bind a stack-symbol. */
+    index -= self->rs_xregs.dx_lcnamc;
+    if (index >= self->rs_xregs.dx_spnama &&
+        ddi_xrealloc_sp(&self->rs_xregs,index+1,flags))
+        goto err;
+    /* Bind the stack-symbol */
+    self->rs_xregs.dx_spnamv[index] = address;
+   } else {
+    /* Bind a local-symbol. */
+    self->rs_xregs.dx_lcnamv[index] = address;
+   }
+  } break;
+
+  {
+   unsigned int index;
+  case DDI_DELLCNAME:
+   index = get_uleb((uint8_t **)&ip);
+   if (flags & DDI_STATE_FNONAMES)
+       break;
+   if (index >= self->rs_xregs.dx_lcnamc) {
+    /* Unbind a stack-symbol. */
+    index -= self->rs_xregs.dx_lcnamc;
+    if (index < self->rs_xregs.dx_spnama)
+        self->rs_xregs.dx_spnamv[index] = DDI_REGS_UNBOUND_NAME;
+   } else {
+    /* Unbind a local-symbol. */
+    self->rs_xregs.dx_lcnamv[index] = DDI_REGS_UNBOUND_NAME;
+   }
+  } break;
+
+  {
+   unsigned int cmd;
+  case DDI_EXTENDED:
+   cmd = get_uleb((uint8_t **)&ip);
+   switch (cmd & DDI_X_CMDMASK) {
+
+   case DDI_X_TOGGLESTMT:
+    self->rs_regs.dr_flags ^= DDI_REGS_FISSTMT;
+    break;
+
+   {
+    struct ddi_saved *save;
+   case DDI_X_PUSHSTATE:
+    /* Save the current register state. */
+    save = (struct ddi_saved *)Dee_TryMalloc(sizeof(struct ddi_saved));
+    if unlikely(!save) {
+     if (flags & DDI_STATE_FNOTHROW) goto next_ip;
+     save = (struct ddi_saved *)Dee_Malloc(sizeof(struct ddi_saved));
+     if unlikely(!save) goto err;
+    }
+    memcpy(&save->s_save.dx_base.dr_usp,&self->rs_xregs.dx_base.dr_usp,
+           sizeof(struct ddi_xregs)-offsetof(struct ddi_xregs,dx_spnama));
+    /* Copy bound local-symbol names */
+    save->s_save.dx_lcnamc = self->rs_xregs.dx_lcnamc;
+    if (flags & DDI_STATE_FNONAMES)
+        save->s_save.dx_lcnamc = 0;
+    if (!save->s_save.dx_lcnamc)
+         save->s_save.dx_lcnamv = NULL;
+    else {
+     save->s_save.dx_lcnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_lcnamc*
+                                                        sizeof(uint16_t));
+     if unlikely(!save->s_save.dx_lcnamv) {
+      if (flags & DDI_STATE_FNOTHROW) { Dee_Free(save); goto next_ip; }
+      save->s_save.dx_lcnamv = (uint16_t *)Dee_Malloc(self->rs_xregs.dx_lcnamc*
+                                                      sizeof(uint16_t));
+      if unlikely(!save->s_save.dx_lcnamv) goto err_save;
+     }
+     memcpy(save->s_save.dx_lcnamv,self->rs_xregs.dx_lcnamv,
+            self->rs_xregs.dx_lcnamc*sizeof(uint16_t));
+    }
+    /* Copy bound stack-symbol names */
+    save->s_save.dx_spnama = self->rs_xregs.dx_spnama;
+    if (save->s_save.dx_spnama > self->rs_xregs.dx_base.dr_usp)
+        save->s_save.dx_spnama = self->rs_xregs.dx_base.dr_usp;
+    while (save->s_save.dx_spnama &&
+           self->rs_xregs.dx_spnamv[save->s_save.dx_spnama-1] == DDI_REGS_UNBOUND_NAME)
+         --save->s_save.dx_spnama;
+    if (flags & DDI_STATE_FNONAMES)
+        save->s_save.dx_spnama = 0;
+    if (!save->s_save.dx_spnama)
+         save->s_save.dx_spnamv = NULL;
+    else {
+     save->s_save.dx_spnamv = (uint16_t *)Dee_TryMalloc(save->s_save.dx_spnama*
+                                                        sizeof(uint16_t));
+     if unlikely(!save->s_save.dx_spnamv) {
+      if (flags & DDI_STATE_FNOTHROW) { Dee_Free(save->s_save.dx_lcnamv); Dee_Free(save); goto next_ip; }
+      save->s_save.dx_spnamv = (uint16_t *)Dee_Malloc(save->s_save.dx_spnama*
+                                                      sizeof(uint16_t));
+      if unlikely(!save->s_save.dx_spnamv) goto err_save_lc;
+     }
+     memcpy(save->s_save.dx_spnamv,self->rs_xregs.dx_spnamv,
+            save->s_save.dx_spnama*sizeof(uint16_t));
+    }
+    /* Append the saved register state in the chain of states saved. */
+    save->s_prev  = self->rs_save;
+    self->rs_save = save;
+    break;
+err_save_lc:
+    Dee_Free(save->s_save.dx_lcnamv);
+err_save:
+    Dee_Free(save);
+    goto err;
+   } break;
+
+   {
+    struct ddi_saved *save;
+   case DDI_X_POPSTATE:
+    if ((save = self->rs_save) == NULL)
+         break;
+    /* Restore the saved register state (but don't modify the UIP/USP registers) */
+    Dee_Free(self->rs_xregs.dx_spnamv);
+    Dee_Free(self->rs_xregs.dx_lcnamv);
+    memcpy(&self->rs_xregs.dx_base.dr_flags,&save->s_save.dx_base.dr_flags,
+           sizeof(struct ddi_xregs)-offsetof(struct ddi_xregs,dx_base.dr_flags));
+    self->rs_save = save->s_prev;
+    Dee_Free(save);
+   } break;
+
+   default: break;
+   }
+  } break;
+
+  default:
+   self->rs_regs.dr_uip += DDI_GENERIC_IP(op);
+   self->rs_regs.dr_lno += DDI_GENERIC_LN(op);
+   return ip; /* Checkpoint. */
+  }
+ }
+err:
+ if (flags & DDI_STATE_FNOTHROW)
+     goto next_ip;
+ return DDI_NEXT_ERR;
+}
+
+PUBLIC uint8_t *DCALL
+ddi_state_init(struct ddi_state *__restrict self,
+               DeeObject *__restrict code,
+               unsigned int flags) {
+ DeeDDIObject *ddi; uint16_t i;
+ ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
+ ddi = ((DeeCodeObject *)code)->co_ddi;
+ ASSERT_OBJECT_TYPE_EXACT(ddi,&DeeDDI_Type);
+ memcpy(&self->rs_regs,&ddi->d_start,sizeof(struct ddi_regs));
+ self->rs_xregs.dx_lcnamc = ((DeeCodeObject *)code)->co_localc;
+ self->rs_xregs.dx_spnama = (uint16_t)DeeCode_StackDepth((DeeCodeObject *)code);
+ if (flags & DDI_STATE_FNONAMES) {
+  self->rs_xregs.dx_lcnamc = 0;
+  self->rs_xregs.dx_spnama = 0;
+ }
+ /* Allocate the local-name buffer. */
+ if (!self->rs_xregs.dx_lcnamc)
+      self->rs_xregs.dx_lcnamv = NULL;
+ else  {
+  self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_lcnamc*
+                                                       sizeof(uint16_t));
+  if unlikely(!self->rs_xregs.dx_lcnamv) {
+   if (flags & DDI_STATE_FNOTHROW)
+       self->rs_xregs.dx_lcnamc = 0;
+   else {
+    self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_Malloc(self->rs_xregs.dx_lcnamc*
+                                                      sizeof(uint16_t));
+    if unlikely(!self->rs_xregs.dx_lcnamv) return DDI_NEXT_ERR;
+   }
+  }
+  for (i = 0; i < self->rs_xregs.dx_lcnamc; ++i)
+      self->rs_xregs.dx_lcnamv[i] = DDI_REGS_UNBOUND_NAME;
+ }
+ /* Allocate an initial stack-name buffer. */
+ if (!self->rs_xregs.dx_spnama)
+      self->rs_xregs.dx_spnamv = NULL;
+ else {
+  self->rs_xregs.dx_spnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_spnama*
+                                                       sizeof(uint16_t));
+  if unlikely(!self->rs_xregs.dx_spnamv)
+     self->rs_xregs.dx_spnama = 0; /* The SP-buffer is optional, so don't sweat it if this failed. */
+  else {
+   for (i = 0; i < self->rs_xregs.dx_spnama; ++i)
+       self->rs_xregs.dx_spnamv[i] = DDI_REGS_UNBOUND_NAME;
+  }
+ }
+ self->rs_save = NULL;
+ return ddi->d_ddi;
+}
+PUBLIC void DCALL
+ddi_state_fini(struct ddi_state *__restrict self) {
+ struct ddi_saved *iter,*next;
+ iter = self->rs_save;
+ while (iter) {
+  next = iter->s_prev;
+  Dee_Free(iter->s_save.dx_lcnamv);
+  Dee_Free(iter->s_save.dx_spnamv);
+  Dee_Free(iter);
+  iter = next;
+ }
+ Dee_Free(self->rs_xregs.dx_lcnamv);
+ Dee_Free(self->rs_xregs.dx_spnamv);
+}
+
+
+
+DFUNDEF uint8_t *DCALL
+DeeCode_FindDDI(DeeObject *__restrict self,
+                struct ddi_state *__restrict start_state,
+                code_addr_t *opt_endip, code_addr_t uip,
+                unsigned int flags) {
+ uint8_t *ip,*end_ip;
+ ip = ddi_state_init(start_state,self,flags);
+ while (DDI_ISOK(ip)) {
+  code_addr_t end_uip;
+  end_uip = start_state->rs_regs.dr_uip;
+  end_ip = ddi_next_simple(ip,&end_uip);
+  if (!DDI_ISOK(end_ip)) { ip = end_ip; break; }
+  if (uip >= start_state->rs_regs.dr_uip && uip < end_uip) {
+   if (opt_endip) *opt_endip = end_uip;
+   return ip; /* Found it! */
+  }
+  ip = ddi_next_state(ip,start_state,flags);
+ }
+ ddi_state_fini(start_state);
+ return ip;
+}
+
+
+INTERN DeeDDIObject empty_ddi = {
+    OBJECT_HEAD_INIT(&DeeDDI_Type),
+    /* .d_static_names = */NULL,
+    /* .d_ref_names    = */NULL,
+    /* .d_arg_names    = */NULL,
+    /* .d_path_names   = */NULL,
+    /* .d_file_names   = */NULL,
+    /* .d_symbol_names = */NULL,
+    /* .d_strtab       = */(DeeStringObject *)Dee_EmptyString,
+    /* .d_ddi_size     = */1,
+    /* .d_nstatic      = */0,
+    /* .d_nrefs        = */0,
+    /* .d_nargs        = */0,
+    /* .d_paths        = */0,
+    /* .d_files        = */0,
+    /* .d_symbols      = */0,
+    /* .d_start = */{
+        /* .dr_uip   = */0,
+        /* .dr_usp   = */0,
+        /* .dr_flags = */0,
+        /* .dr_path  = */0,
+        /* .dr_file  = */0,
+        /* .dr_name  = */0,
+        /* ._dr_pad  = */{ 0 },
+        /* .dr_col   = */0,
+        /* .dr_lno   = */0
+    },
+    /* .d_ddi = */{
+        DDI_STOP
+    }
+};
+
+PRIVATE void DCALL
+ddi_fini(DeeDDIObject *__restrict self) {
+ ASSERT(self != &empty_ddi);
+ Dee_Free((void *)self->d_static_names);
+ Dee_Free((void *)self->d_ref_names);
+ Dee_Free((void *)self->d_arg_names);
+ Dee_Free((void *)self->d_path_names);
+ Dee_Free((void *)self->d_file_names);
+ Dee_Free((void *)self->d_symbol_names);
+ Dee_Decref(self->d_strtab);
+}
+
+PRIVATE struct type_member ddi_members[] = {
+    TYPE_MEMBER_FIELD("__size__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT32,offsetof(DeeDDIObject,d_ddi_size)),
+    TYPE_MEMBER_FIELD("__strtab__",STRUCT_OBJECT,offsetof(DeeDDIObject,d_strtab)),
+    TYPE_MEMBER_FIELD("__num_static__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_nstatic)),
+    TYPE_MEMBER_FIELD("__num_refs__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_nrefs)),
+    TYPE_MEMBER_FIELD("__num_args__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_nargs)),
+    TYPE_MEMBER_FIELD("__num_paths__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_paths)),
+    TYPE_MEMBER_FIELD("__num_files__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_files)),
+    TYPE_MEMBER_FIELD("__num_symbols__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_symbols)),
+    TYPE_MEMBER_END
+};
+
+PRIVATE DREF DeeDDIObject *DCALL ddi_ctor(void) {
+ return_reference_((DREF DeeDDIObject *)&empty_ddi);
+}
+
+PUBLIC DeeTypeObject DeeDDI_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"ddi",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeObject_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_var = */{
+                /* .tp_ctor      = */&ddi_ctor,
+                /* .tp_copy_ctor = */&noop_varcopy,
+                /* .tp_deep_ctor = */&noop_varcopy,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ddi_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */ddi_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_EXECUTE_DDI_C */

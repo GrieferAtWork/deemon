@@ -1,0 +1,134 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_TUPLE_H
+#define GUARD_DEEMON_TUPLE_H 1
+
+#include "api.h"
+#include "object.h"
+#include <stddef.h>
+#include <stdarg.h>
+
+DECL_BEGIN
+
+typedef struct tuple_object DeeTupleObject;
+
+struct tuple_object {
+    /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+    OBJECT_HEAD
+#ifdef __INTELLISENSE__
+    size_t          t_size;       /* [const] Tuple size. */
+    DeeObject      *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
+#else
+    size_t          t_size;       /* [const] Tuple size. */
+    DREF DeeObject *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
+#endif
+};
+#define DeeTuple_IsEmpty(ob)                ((DeeObject *)(ob) == Dee_EmptyTuple)
+#define DeeTuple_SIZE(ob)                   ((DeeTupleObject *)(ob))->t_size
+#define DeeTuple_ELEM(ob)                   ((DeeTupleObject *)(ob))->t_elem
+#define DeeTuple_GET(ob,i)                  ((DeeTupleObject *)(ob))->t_elem[i]
+#define DeeTuple_SET(ob,i,v)                ((DeeTupleObject *)(ob))->t_elem[i]=(v)
+
+#ifdef GUARD_DEEMON_OBJECTS_TUPLE_C
+struct empty_tuple_object { OBJECT_HEAD size_t t_size; };
+DDATDEF struct empty_tuple_object DeeTuple_Empty;
+#define Dee_EmptyTuple ((DeeObject *)&DeeTuple_Empty)
+#else
+DDATDEF DeeObject        DeeTuple_Empty;
+#define Dee_EmptyTuple (&DeeTuple_Empty)
+#endif
+#define return_empty_tuple  return_reference_(Dee_EmptyTuple)
+
+DDATDEF DeeTypeObject DeeTuple_Type;
+#define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x,&DeeTuple_Type) /* `tuple' is `final' */
+#define DeeTuple_CheckExact(x)  DeeObject_InstanceOfExact(x,&DeeTuple_Type)
+
+
+/* Create new tuple objects. */
+DFUNDEF DREF DeeObject *DCALL DeeTuple_NewUninitialized(size_t n);
+DFUNDEF void DCALL DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self);
+
+/* Decrement the reference counter of a tuple object filled with symbolic references.
+ * >> If the reference counter hits ZERO(0), simply free() the tuple object
+ *    without decrementing the reference counters of contained objects.
+ *    Otherwise (In case the tuple is being used elsewhere), increment
+ *    the reference counters of all contained objects.
+ * >> This function is used to safely clean up temporary, local
+ *    tuples that are not initialized to contain ~real~ references.
+ *    Using this function such tuples can be released with regards
+ *    to fixing incorrect reference counters of contained objects.
+ *    NOTE: Doing this is still ok, because the somewhere further up
+ *          the call chain, a caller owns another reference to each
+ *          contained object, even before we fix reference counters. */
+DFUNDEF void DCALL DeeTuple_DecrefSymbolic(DeeObject *__restrict self);
+
+/* Create a new tuple object from a sequence or iterator. */
+DFUNDEF DREF DeeObject *DCALL DeeTuple_FromSequence(DeeObject *__restrict self);
+DFUNDEF DREF DeeObject *DCALL DeeTuple_FromIterator(DeeObject *__restrict self);
+
+/* Return a new tuple object containing the types of each object of the given tuple. */
+DFUNDEF DREF DeeObject *DCALL DeeTuple_Types(DeeObject *__restrict self);
+
+/* Create new tuple objects. */
+DFUNDEF DREF DeeObject *DeeTuple_Pack(size_t n, ...);
+DFUNDEF DREF DeeObject *DCALL DeeTuple_VPack(size_t n, va_list args);
+DFUNDEF DREF DeeObject *DeeTuple_PackSymbolic(size_t n, /*DREF*/ ...);
+DFUNDEF DREF DeeObject *DCALL DeeTuple_VPackSymbolic(size_t n, /*DREF*/ va_list args);
+
+/* Create a new tuple from a given vector. */
+DFUNDEF DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
+DFUNDEF DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/DREF DeeObject *const *__restrict objv);
+
+/* Similar to `Dee_Packf', but parse any number of formated values and
+ * put them in a tuple, essentially doing the same as `Dee_Packf' when
+ * the entire `format' string was surrounded by `(' and `)'. */
+DFUNDEF DREF DeeObject *DeeTuple_Newf(char const *__restrict format, ...);
+DFUNDEF DREF DeeObject *DCALL DeeTuple_VNewf(char const *__restrict format, va_list args);
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Concat a tuple and some generic sequence,
+ * inheriting a reference from `self' in the process. */
+INTDEF DREF DeeObject *DCALL
+DeeTuple_ConcatInherited(DREF DeeObject *__restrict self,
+                         DeeObject *__restrict sequence);
+INTDEF DREF DeeObject *DCALL
+DeeTuple_ExtendInherited(DREF DeeObject *__restrict self,
+                         size_t argc, DREF DeeObject **__restrict argv);
+#endif
+
+/* Append all elements from an iterator to a tuple.
+ * @assume(DeeTuple_IsEmpty(*pself) || !DeeObject_IsShared(*pself)); */
+DFUNDEF int DCALL
+DeeTuple_AppendIterator(DREF DeeObject **__restrict pself,
+                        DeeObject *__restrict iterator);
+DFUNDEF int DCALL
+DeeTuple_Append(DREF DeeObject **__restrict pself,
+                DeeObject *__restrict item);
+
+#ifndef __INTELLISENSE__
+#ifndef __NO_builtin_expect
+#define DeeTuple_AppendIterator(pself,iterator) __builtin_expect(DeeTuple_AppendIterator(pself,iterator),0)
+#endif /* !__NO_builtin_expect */
+#endif
+
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_TUPLE_H */

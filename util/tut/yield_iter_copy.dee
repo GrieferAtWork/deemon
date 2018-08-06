@@ -18,9 +18,10 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-// Only functions marked as '[[copyable]]'
-// are allowed to have their stackframes copied.
-function [[copyable]] test() {
+/* Only functions marked as '@copyable'
+ * are allowed to have their stackframes copied. */
+@copyable
+function test() {
 	print "Begin";
 	yield 10;
 	try {
@@ -30,17 +31,17 @@ function [[copyable]] test() {
 	}
 }
 
-callback = test(); // Create the callback
-iterator = callback.__iterself__(); // Create an iterator
-print "first:",iterator.__iternext__(); // 10
-print "second:",iterator.__iternext__(); // 20
-// The iterator is now dangling after 'yield 20'
+callback = test(); /* Create the callback */
+iterator = callback.operator iter(); /* Create an iterator */
+print "first:",iterator.operator next(); /* 10 */
+print "second:",iterator.operator next(); /* 20 */
+/* The iterator is now dangling after 'yield 20' */
 
-// Copy the iterator (only allowed because 'test' is marked '[[copyable]]')
+/* Copy the iterator (only allowed because 'test' is marked '@copyable') */
 cpy = copy iterator;
 
-// Questionable side-effect:
-//   - Finally is execute twice, yet entered only once
+/* Questionable side-effect:
+ *   - Finally is execute twice, yet entered only once */
 del cpy;
 del iterator;
 

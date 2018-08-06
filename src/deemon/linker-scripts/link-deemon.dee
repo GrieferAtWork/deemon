@@ -1,0 +1,83 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+#include <file>
+#include <fs>
+#include <process>
+#include <pipe>
+
+fs.chdir(fs.path.head(__FILE__));
+
+local proc = process("cmd",["/c","dumpbin","/exports","../../../deemon.exe"]);
+local r,w = pipe.new()...;
+proc.stdout = w;
+proc.start();
+w.close();
+
+local symbols = [];
+for (local l: r) {
+	local name;
+	try none,none,none,name = l.scanf(" %[^ ] %[^ ] %[^ ] %[^ ]")...;
+	catch (...) continue;
+	name = name.strip();
+	if ("@" !in name) continue;
+	if (!name.startswith("_")) continue;
+	symbols.append(name);
+}
+r.close();
+proc.join();
+
+local out = file.open("link-deemon-msvc.def","w");
+print out: "EXPORTS";
+print out: "\t; For compatibility with GCC, export all";
+print out: "\t; stdcall symbols without a leading underscore.";
+print out: "\t; See this mail that noone ever bothered to reply to:";
+print out: "\t; https://cygwin.com/ml/cygwin/2001-03/msg00514.html";
+for (local name: symbols) {
+	print out: "\t"+name[1:]+"="+name;
+}
+local out = file.open("link-deemon-gcc.def","w");
+print out: "EXPORTS";
+print out: "\t; For compatibility with MSVC, export all";
+print out: "\t; stdcall symbols with a leading underscore.";
+print out: "\t; See this mail that noone ever bothered to reply to:";
+print out: "\t; https://cygwin.com/ml/cygwin/2001-03/msg00514.html";
+for (local name: symbols) {
+	print out: "\t"+name+"="+name[1:];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

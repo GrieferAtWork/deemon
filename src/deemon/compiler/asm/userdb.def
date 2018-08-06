@@ -1,0 +1,1239 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifdef __INTELLISENSE__
+#include <deemon/compiler/assembler.h>
+#undef INSTR
+#define INSTR(name,...)
+#endif
+
+#ifndef INSTR
+#ifndef __DEEMON__
+#error "Must `#define INSTR(name,...)' before including this file"
+#endif
+#endif
+
+#ifndef OVERLOAD
+#define OVERLOAD(instr_id,flags,n_args,args)
+#endif
+#define O0(instr_id,flags)      OVERLOAD(instr_id,flags,0,)
+#define O1(instr_id,flags,args) OVERLOAD(instr_id,flags,1,args)
+#define O2(instr_id,flags,args) OVERLOAD(instr_id,flags,2,args)
+#define O3(instr_id,flags,args) OVERLOAD(instr_id,flags,3,args)
+#define O4(instr_id,flags,args) OVERLOAD(instr_id,flags,4,args)
+#define O5(instr_id,flags,args) OVERLOAD(instr_id,flags,5,args)
+
+#undef MIN
+#undef MAX
+#undef REF
+#undef LOCAL
+#undef CONST
+#undef UNUSED
+
+/*[[[deemon
+#include <file>
+#include <fs>
+fs.chdir(fs.path.head(__FILE__));
+local names = [];
+local longest_name = 0;
+for (local l: file.open("../../../../include/deemon/compiler/assembler.h")) {
+    local name;
+    try name = l.scanf(" # define OPERAND_CLASS_%[^ ]")...;
+    catch (...) continue;
+    if ("(" in name) continue;
+    names.append(name);
+    if (longest_name < #name)
+        longest_name = #name;
+}
+for (local x: names) {
+    print "#define",x," "*(longest_name-#x),"OPERAND_CLASS_"+x;
+}
+]]]*/
+#define FMASK           OPERAND_CLASS_FMASK
+#define FIMMVAL         OPERAND_CLASS_FIMMVAL
+#define FBRACKETFLAG    OPERAND_CLASS_FBRACKETFLAG
+#define FBRACEFLAG      OPERAND_CLASS_FBRACEFLAG
+#define FDOTSFLAG       OPERAND_CLASS_FDOTSFLAG
+#define FSTACKFLAG      OPERAND_CLASS_FSTACKFLAG
+#define FSTACKFLAG2     OPERAND_CLASS_FSTACKFLAG2
+#define FSPADD          OPERAND_CLASS_FSPADD
+#define FSPSUB          OPERAND_CLASS_FSPSUB
+#define FSUBSP          OPERAND_CLASS_FSUBSP
+#define UNUSED          OPERAND_CLASS_UNUSED
+#define POP             OPERAND_CLASS_POP
+#define TOP             OPERAND_CLASS_TOP
+#define REF             OPERAND_CLASS_REF
+#define ARG             OPERAND_CLASS_ARG
+#define CONST           OPERAND_CLASS_CONST
+#define STATIC          OPERAND_CLASS_STATIC
+#define MODULE          OPERAND_CLASS_MODULE
+#define EXTERN          OPERAND_CLASS_EXTERN
+#define GLOBAL          OPERAND_CLASS_GLOBAL
+#define LOCAL           OPERAND_CLASS_LOCAL
+#define PREFIX          OPERAND_CLASS_PREFIX
+#define SDISP8          OPERAND_CLASS_SDISP8
+#define SDISP16         OPERAND_CLASS_SDISP16
+#define SDISP32         OPERAND_CLASS_SDISP32
+#define DISP8           OPERAND_CLASS_DISP8
+#define DISP16          OPERAND_CLASS_DISP16
+#define DISP32          OPERAND_CLASS_DISP32
+#define DISP_EQ_N2      OPERAND_CLASS_DISP_EQ_N2
+#define DISP_EQ_N1      OPERAND_CLASS_DISP_EQ_N1
+#define DISP_EQ_0       OPERAND_CLASS_DISP_EQ_0
+#define DISP_EQ_1       OPERAND_CLASS_DISP_EQ_1
+#define DISP_EQ_2       OPERAND_CLASS_DISP_EQ_2
+#define DISP8_HALF      OPERAND_CLASS_DISP8_HALF
+#define DISP16_HALF     OPERAND_CLASS_DISP16_HALF
+#define NONE            OPERAND_CLASS_NONE
+#define FOREACH         OPERAND_CLASS_FOREACH
+#define EXCEPT          OPERAND_CLASS_EXCEPT
+#define CATCH           OPERAND_CLASS_CATCH
+#define FINALLY         OPERAND_CLASS_FINALLY
+#define THIS            OPERAND_CLASS_THIS
+#define THIS_MODULE     OPERAND_CLASS_THIS_MODULE
+#define THIS_FUNCTION   OPERAND_CLASS_THIS_FUNCTION
+#define TRUE            OPERAND_CLASS_TRUE
+#define FALSE           OPERAND_CLASS_FALSE
+#define LIST            OPERAND_CLASS_LIST
+#define TUPLE           OPERAND_CLASS_TUPLE
+#define HASHSET         OPERAND_CLASS_HASHSET
+#define DICT            OPERAND_CLASS_DICT
+#define INT             OPERAND_CLASS_INT
+#define BOOL            OPERAND_CLASS_BOOL
+#define EQ              OPERAND_CLASS_EQ
+#define NE              OPERAND_CLASS_NE
+#define LO              OPERAND_CLASS_LO
+#define LE              OPERAND_CLASS_LE
+#define GR              OPERAND_CLASS_GR
+#define GE              OPERAND_CLASS_GE
+#define SO              OPERAND_CLASS_SO
+#define DO              OPERAND_CLASS_DO
+#define BREAK           OPERAND_CLASS_BREAK
+#define MIN             OPERAND_CLASS_MIN
+#define MAX             OPERAND_CLASS_MAX
+#define SUM             OPERAND_CLASS_SUM
+#define ANY             OPERAND_CLASS_ANY
+#define ALL             OPERAND_CLASS_ALL
+#define SP              OPERAND_CLASS_SP
+#define NL              OPERAND_CLASS_NL
+#define MOVE            OPERAND_CLASS_MOVE
+#define DEFAULT         OPERAND_CLASS_DEFAULT
+#define VARARGS         OPERAND_CLASS_VARARGS
+#define POP_DOTS        OPERAND_CLASS_POP_DOTS
+#define SPPOP           OPERAND_CLASS_SPPOP
+#define SPADDIMM_EQ_N2  OPERAND_CLASS_SPADDIMM_EQ_N2
+#define SPADDIMM_EQ_N1  OPERAND_CLASS_SPADDIMM_EQ_N1
+#define SPADDIMM_EQ_0   OPERAND_CLASS_SPADDIMM_EQ_0
+#define SPADDIMM_EQ_1   OPERAND_CLASS_SPADDIMM_EQ_1
+#define SPADDIMM_EQ_2   OPERAND_CLASS_SPADDIMM_EQ_2
+#define SPADDIMM8       OPERAND_CLASS_SPADDIMM8
+#define SPADDSIMM8      OPERAND_CLASS_SPADDSIMM8
+#define SPSUBIMM_EQ_N2  OPERAND_CLASS_SPSUBIMM_EQ_N2
+#define SPSUBIMM_EQ_N1  OPERAND_CLASS_SPSUBIMM_EQ_N1
+#define SPSUBIMM_EQ_0   OPERAND_CLASS_SPSUBIMM_EQ_0
+#define SPSUBIMM_EQ_1   OPERAND_CLASS_SPSUBIMM_EQ_1
+#define SPSUBIMM_EQ_2   OPERAND_CLASS_SPSUBIMM_EQ_2
+#define SPSUBIMM8       OPERAND_CLASS_SPSUBIMM8
+#define SPSUBSIMM8      OPERAND_CLASS_SPSUBSIMM8
+#define SPIMM8          OPERAND_CLASS_SPIMM8
+#define SPSIMM8         OPERAND_CLASS_SPSIMM8
+#define BRSPIMM8        OPERAND_CLASS_BRSPIMM8
+#define BRSPSIMM8       OPERAND_CLASS_BRSPSIMM8
+#define BCSPIMM8        OPERAND_CLASS_BCSPIMM8
+#define BCSPSIMM8       OPERAND_CLASS_BCSPSIMM8
+#define SPADDIMM16      OPERAND_CLASS_SPADDIMM16
+#define SPADDSIMM16     OPERAND_CLASS_SPADDSIMM16
+#define SPSUBIMM16      OPERAND_CLASS_SPSUBIMM16
+#define SPSUBSIMM16     OPERAND_CLASS_SPSUBSIMM16
+#define SPIMM16         OPERAND_CLASS_SPIMM16
+#define SPSIMM16        OPERAND_CLASS_SPSIMM16
+#define BRSPIMM16       OPERAND_CLASS_BRSPIMM16
+#define BRSPSIMM16      OPERAND_CLASS_BRSPSIMM16
+#define BCSPIMM16       OPERAND_CLASS_BCSPIMM16
+#define BCSPSIMM16      OPERAND_CLASS_BCSPSIMM16
+#define SIMM8           OPERAND_CLASS_SIMM8
+#define SIMM16          OPERAND_CLASS_SIMM16
+#define SIMM32          OPERAND_CLASS_SIMM32
+#define IMM8            OPERAND_CLASS_IMM8
+#define IMM16           OPERAND_CLASS_IMM16
+#define IMM32           OPERAND_CLASS_IMM32
+#define IMM_EQ_2        OPERAND_CLASS_IMM_EQ_2
+#define IMM_EQ_1        OPERAND_CLASS_IMM_EQ_1
+#define IMM_EQ_0        OPERAND_CLASS_IMM_EQ_0
+#define IMM_EQ_N1       OPERAND_CLASS_IMM_EQ_N1
+#define IMM_EQ_N2       OPERAND_CLASS_IMM_EQ_N2
+//[[[end]]]
+
+#define FNORMAL    ASM_OVERLOAD_FNORMAL
+#define FPUSH      ASM_OVERLOAD_FPUSH
+#define FPREFIX    ASM_OVERLOAD_FPREFIX
+#define FPREFIX_RO ASM_OVERLOAD_FPREFIX_RO
+#define FTAGS      ASM_OVERLOAD_FTAGS
+#define FF0        ASM_OVERLOAD_FF0
+#define FF0_IMM    ASM_OVERLOAD_FF0_IMM
+#define FRET       ASM_OVERLOAD_FRET
+#define FYLD       ASM_OVERLOAD_FYLD
+#define FCONSTIMM  ASM_OVERLOAD_FCONSTIMM
+
+/* Relocation mode flags. */
+#define FRELABS ASM_OVERLOAD_FRELABS
+#define FRELDSP ASM_OVERLOAD_FRELDSP
+#define FSTKABS ASM_OVERLOAD_FSTKABS
+#define FSTKDSP ASM_OVERLOAD_FSTKDSP
+
+
+
+/* NOTE: When multiple overloads could be used,
+ *       the first overload is always preferred.
+ *       With that in mind, order overloads ascendingly
+ *       when it comes to relaxed operand interpretation. */
+
+
+/* CONSTRAINTS: `ret <ps>' */
+INSTR("ret",(
+    O1(ASM_RET,     FRET,        (POP))
+    O1(ASM_RET_NONE,FRET,        (NONE))
+    O0(ASM_RET_NONE,FNORMAL)
+    O0(ASM_RET,     FRET|FPREFIX|FPREFIX_RO)
+    O1(ASM_RET,     FRET|FPREFIX_RO,(PREFIX))
+))
+
+/* CONSTRAINTS: `yield <ps>' */
+INSTR("yield",(
+    O2(ASM_YIELDALL,FYLD,                   (FOREACH)(POP))
+    O1(ASM_YIELD,   FYLD,                   (POP))
+    O0(ASM_YIELD,   FYLD|FPREFIX|FPREFIX_RO)
+    O1(ASM_YIELD,   FYLD|FPREFIX_RO,        (PREFIX))
+    O1(ASM_YIELDALL,FYLD|FPREFIX|FPREFIX_RO,(FOREACH))
+    O2(ASM_YIELDALL,FYLD|FPREFIX_RO,        (FOREACH)(PREFIX))
+))
+
+/* CONSTRAINTS: `throw <ps>' */
+INSTR("throw",(
+    O1(ASM_RETHROW,FNORMAL,(EXCEPT))
+    O1(ASM_THROW,  FNORMAL,(POP))
+    O0(ASM_THROW,  FPREFIX|FPREFIX_RO)
+    O1(ASM_THROW,  FPREFIX_RO,(PREFIX))
+))
+
+/* CONSTRAINTS: `end ...' */
+INSTR("end",(
+    O1(ASM_ENDCATCH,    FNORMAL,(CATCH))
+    O2(ASM_ENDCATCH,    FNORMAL,(CATCH)(FSTACKFLAG|DISP_EQ_0))
+    O2(ASM_ENDCATCH_N,  FNORMAL,(CATCH)(SPIMM8,-1))
+    O1(ASM_ENDFINALLY,  FNORMAL,(FINALLY))
+    O2(ASM_ENDFINALLY,  FNORMAL,(FINALLY)(FSTACKFLAG|DISP_EQ_0))
+    O2(ASM_ENDFINALLY_N,FNORMAL,(FINALLY)(SPIMM8,-1))
+))
+
+/* CONSTRAINTS: `bound b' / `bound egl' */
+INSTR("bound",(
+    O1(ASM_PUSH_BND_EXTERN,FF0|FPUSH,(EXTERN))
+    O1(ASM_PUSH_BND_GLOBAL,FF0|FPUSH,(GLOBAL))
+    O1(ASM_PUSH_BND_LOCAL, FF0|FPUSH,(LOCAL))
+))
+
+/* CONSTRAINTS: `jf <ps>, ...' */
+INSTR("jf",(
+    O2(ASM_JF,  FRELDSP,                   (POP)(SDISP8,-1))
+    O2(ASM_JF16,FRELDSP,                   (POP)(SDISP16,-2))
+    O2(ASM_JF,  FRELDSP|FPREFIX_RO,        (PREFIX)(SDISP8,-1))
+    O2(ASM_JF16,FRELDSP|FPREFIX_RO,        (PREFIX)(SDISP16,-2))
+    O1(ASM_JF,  FPREFIX|FRELDSP|FPREFIX_RO,(SDISP8,-1))
+    O1(ASM_JF16,FPREFIX|FRELDSP|FPREFIX_RO,(SDISP16,-2))
+))
+
+/* CONSTRAINTS: `jt <ps>, ...' */
+INSTR("jt",(
+    O2(ASM_JT,  FRELDSP,                   (POP)(SDISP8,-1))
+    O2(ASM_JT16,FRELDSP,                   (POP)(SDISP16,-2))
+    O2(ASM_JT,  FRELDSP|FPREFIX_RO,        (PREFIX)(SDISP8,-1))
+    O2(ASM_JT16,FRELDSP|FPREFIX_RO,        (PREFIX)(SDISP16,-2))
+    O1(ASM_JT,  FPREFIX|FRELDSP|FPREFIX_RO,(SDISP8,-1))
+    O1(ASM_JT16,FPREFIX|FRELDSP|FPREFIX_RO,(SDISP16,-2))
+))
+
+/* CONSTRAINTS: `jmp ...' */
+INSTR("jmp",(
+    O1(ASM_JMP,        FRELDSP,(SDISP8,-1))
+    O1(ASM_JMP16,      FRELDSP,(SDISP16,-2))
+    O1(ASM32_JMP,      FRELDSP,(SDISP32,-4))
+    O1(ASM_JMP_POP,    FRELDSP,(POP))
+    O2(ASM_JMP_POP_POP,FRELDSP,(POP)(SPPOP))
+))
+
+/* CONSTRAINTS: `foreach <ps>, ...' */
+INSTR("foreach",(
+    O2(ASM_FOREACH,  FRELDSP,                   (TOP)(SDISP8,-1))
+    O2(ASM_FOREACH16,FRELDSP,                   (TOP)(SDISP16,-2))
+    O2(ASM_FOREACH,  FRELDSP|FPREFIX_RO,        (PREFIX)(SDISP8,-1))
+    O2(ASM_FOREACH16,FRELDSP|FPREFIX_RO,        (PREFIX)(SDISP16,-2))
+    O1(ASM_FOREACH,  FPREFIX|FRELDSP|FPREFIX_RO,(SDISP8,-1))
+    O1(ASM_FOREACH16,FPREFIX|FRELDSP|FPREFIX_RO,(SDISP16,-2))
+))
+
+/* CONSTRAINTS: `call <egls>, ...' */
+/* CONSTRAINTS: `call <egls>, <QsQm>' */
+/* CONSTRAINTS: `call <s>, <a>, <a>' */
+INSTR("call",(
+    O2(ASM_CALL,           FSTKABS,          (TOP)(SPIMM8))				  /* call top, #imm8 */
+    O2(ASM_CALL_TUPLE,     FNORMAL,          (TOP)(POP|FDOTSFLAG))		  /* call top, pop... */
+    O2(ASM_CALL_SEQ,       FNORMAL,          (TOP)(BRSPIMM8))			  /* call top, [#imm8] */
+    O2(ASM_CALL_MAP,       FNORMAL,          (TOP)(BCSPIMM8|DISP8_HALF))  /* call top, {#imm8*2} */
+    O2(ASM_CALL_EXTERN,    FPUSH|FF0|FSTKABS,(EXTERN)(SPIMM8))			  /* call extern <imm8/16>:<imm8/16>, #imm8 */
+    O2(ASM_CALL_GLOBAL,    FPUSH|FF0|FSTKABS,(GLOBAL)(SPIMM8))			  /* call global <imm8/16>, #imm8 */
+    O2(ASM_CALL_LOCAL,     FPUSH|FF0|FSTKABS,(LOCAL)(SPIMM8))			  /* call local <imm8/16>, #imm8 */
+    O3(ASM_CALL_KW,        FSTKABS|FF0,      (TOP)(SPIMM8)(CONST))		  /* call top, #imm8, const <imm8/16> */
+    O3(ASM_CALL_TUPLE_KW,  FF0,              (TOP)(POP|FDOTSFLAG)(CONST)) /* call top, pop..., const <imm8/16> */
+    O3(ASM_CALL_TUPLE_KWDS,FNORMAL,          (TOP)(POP|FDOTSFLAG)(POP))	  /* call top, pop..., pop */
+    O3(ASM_CALL_ARGSFWD,   FNORMAL,          (TOP)(ARG)(ARG))			  /* call top, arg <imm8>, arg <imm8> */
+))
+
+/* CONSTRAINTS: `op <ps>, ..., ...' */
+/* CONSTRAINTS: `op <ps>, ..., <s>' */
+INSTR("op",(
+    O3(ASM_OPERATOR,        FSTKABS,              (TOP)(IMM8)(SPIMM8))
+    O3(ASM_OPERATOR_TUPLE,  FNORMAL,              (TOP)(IMM8)(POP|FDOTSFLAG))
+    O3(ASM16_OPERATOR,      FSTKABS,              (TOP)(IMM16)(SPIMM8))
+    O3(ASM16_OPERATOR_TUPLE,FNORMAL,              (TOP)(IMM16)(POP|FDOTSFLAG))
+    O3(ASM_OPERATOR,        FPUSH|FSTKABS,        (PREFIX)(IMM8)(SPIMM8))
+    O3(ASM_OPERATOR_TUPLE,  FPUSH,                (PREFIX)(IMM8)(POP|FDOTSFLAG))
+    O3(ASM16_OPERATOR,      FPUSH|FSTKABS,        (PREFIX)(IMM16)(SPIMM8))
+    O3(ASM16_OPERATOR_TUPLE,FPUSH,                (PREFIX)(IMM16)(POP|FDOTSFLAG))
+    O2(ASM_OPERATOR,        FPREFIX|FPUSH|FSTKABS,(IMM8)(SPIMM8))
+    O2(ASM_OPERATOR_TUPLE,  FPREFIX|FPUSH,        (IMM8)(POP|FDOTSFLAG))
+    O2(ASM16_OPERATOR,      FPREFIX|FPUSH|FSTKABS,(IMM16)(SPIMM8))
+    O2(ASM16_OPERATOR_TUPLE,FPREFIX|FPUSH,        (IMM16)(POP|FDOTSFLAG))
+))
+
+/* CONSTRAINTS: `op <gl>' */
+INSTR("del",(
+    O1(ASM_DEL_GLOBAL,FF0,(GLOBAL))
+    O1(ASM_DEL_LOCAL, FF0,(LOCAL))
+))
+
+/* CONSTRAINTS: `swap' */
+/* CONSTRAINTS: `swap <s>, <s>' */
+/* CONSTRAINTS: `swap <p>, <s>' */
+/* CONSTRAINTS: `swap <s>, <p>' */
+INSTR("swap",(
+    O0(ASM_SWAP,FNORMAL)                                  /* swap */
+    /* All the different spellings for `swap FIRST, SECOND' and `swap SECOND, FIRST' */
+    O2(ASM_SWAP,FNORMAL,(SPSUBIMM_EQ_2)(TOP))             /* swap #SP - 2, top */
+    O2(ASM_SWAP,FNORMAL,(SPADDIMM_EQ_N2)(TOP))            /* swap #SP + -2, top */
+    O2(ASM_SWAP,FNORMAL,(TOP)(SPSUBIMM_EQ_2))             /* swap top, #SP - 2 */
+    O2(ASM_SWAP,FNORMAL,(TOP)(SPADDIMM_EQ_N2))            /* swap top, #SP + -2 */
+    O2(ASM_SWAP,FNORMAL,(SPSUBIMM_EQ_1)(SPSUBIMM_EQ_2))   /* swap #SP - 1, #SP - 2 */
+    O2(ASM_SWAP,FNORMAL,(SPSUBIMM_EQ_1)(SPADDIMM_EQ_N2))  /* swap #SP - 1, #SP + -2 */
+    O2(ASM_SWAP,FNORMAL,(SPADDIMM_EQ_N1)(SPSUBIMM_EQ_2))  /* swap #SP + -1, #SP - 2 */
+    O2(ASM_SWAP,FNORMAL,(SPADDIMM_EQ_N1)(SPADDIMM_EQ_N2)) /* swap #SP + -1, #SP + -2 */
+    /* Swap with prefix.
+     * NOTE: When multi-threading is enabled, swapping with
+     *       a prefix is an atomic operation for prefixes
+     *       of types `static', `global' and `extern' */
+    O1(ASM_SWAP,FPREFIX,(TOP))                            /* PREFIX: swap top */
+    O2(ASM_SWAP,FNORMAL,(TOP)(PREFIX))                    /* swap top, PREFIX */
+    O2(ASM_SWAP,FNORMAL,(SPSUBIMM_EQ_1)(PREFIX))          /* swap #SP - 1, PREFIX */
+    O2(ASM_SWAP,FNORMAL,(SPADDIMM_EQ_N1)(PREFIX))         /* swap #SP + -1, PREFIX */
+    O2(ASM_SWAP,FNORMAL,(PREFIX)(TOP))                    /* swap PREFIX, top */
+))
+
+/* CONSTRAINTS: `lrot ...' */
+/* CONSTRAINTS: `lrot ..., <p>' */
+INSTR("lrot",(
+    O1(ASM_DELOP, FNORMAL,(FSTACKFLAG|DISP_EQ_1))
+    O1(ASM_SWAP,  FNORMAL,(FSTACKFLAG|DISP_EQ_2))
+    O1(ASM_LROT,  FSTKABS,(SPIMM8,-3))
+    O1(ASM16_LROT,FSTKABS,(SPIMM16,-3))
+    O1(ASM_DELOP, FPREFIX,(FSTACKFLAG|DISP_EQ_1))
+    O1(ASM_SWAP,  FPREFIX,(FSTACKFLAG|DISP_EQ_2))
+    O1(ASM_LROT,  FPREFIX|FSTKABS,(SPIMM8,-3))
+    O1(ASM16_LROT,FPREFIX|FSTKABS,(SPIMM16,-3))
+    O2(ASM_DELOP, FNORMAL,(FSTACKFLAG|DISP_EQ_0)(PREFIX))
+    O2(ASM_SWAP,  FNORMAL,(FSTACKFLAG|DISP_EQ_1)(PREFIX))
+    O2(ASM_LROT,  FSTKABS,(SPIMM8,-2)(PREFIX))
+    O2(ASM16_LROT,FSTKABS,(SPIMM16,-2)(PREFIX))
+))
+
+/* CONSTRAINTS: `rrot ...' */
+/* CONSTRAINTS: `rrot ..., <p>' */
+INSTR("rrot",(
+    O1(ASM_DELOP, FNORMAL,(FSTACKFLAG|DISP_EQ_1))
+    O1(ASM_SWAP,  FNORMAL,(FSTACKFLAG|DISP_EQ_2))
+    O1(ASM_RROT,  FSTKABS,(SPIMM8,-3))
+    O1(ASM16_RROT,FSTKABS,(SPIMM16,-3))
+    O1(ASM_DELOP, FPREFIX,(FSTACKFLAG|DISP_EQ_1))
+    O1(ASM_SWAP,  FPREFIX,(FSTACKFLAG|DISP_EQ_2))
+    O1(ASM_RROT,  FPREFIX|FSTKABS,(SPIMM8,-3))
+    O1(ASM16_RROT,FPREFIX|FSTKABS,(SPIMM16,-3))
+    O2(ASM_DELOP, FNORMAL,(FSTACKFLAG|DISP_EQ_0)(PREFIX))
+    O2(ASM_SWAP,  FNORMAL,(FSTACKFLAG|DISP_EQ_1)(PREFIX))
+    O2(ASM_RROT,  FSTKABS,(SPIMM8,-2)(PREFIX))
+    O2(ASM16_RROT,FSTKABS,(SPIMM16,-2)(PREFIX))
+))
+
+/* CONSTRAINTS: `dup <s>' */
+INSTR("dup",(
+    O0(ASM_DUP,    FNORMAL)
+    O1(ASM_DUP,    FNORMAL,(TOP))
+    O1(ASM_DUP,    FNORMAL,(SPSUBIMM_EQ_1))
+    O1(ASM_DUP,    FNORMAL,(SPADDIMM_EQ_N1))
+    O1(ASM_DUP_N,  FSTKDSP,(SPSUBIMM8,-2))
+    O1(ASM16_DUP_N,FSTKDSP,(SPSUBIMM16,-2))
+    O0(ASM_DUP,    FPREFIX)
+    O1(ASM_DUP,    FPREFIX,(TOP))
+    O1(ASM_DUP_N,  FPREFIX|FSTKDSP,(SPSUBIMM8,-2))
+    O1(ASM16_DUP_N,FPREFIX|FSTKDSP,(SPSUBIMM16,-2))
+))
+
+/* CONSTRAINTS: `push <P>' / `push <nEmTiTmTfracCseglTTFFTcI64N64SR>' */
+INSTR("push",(
+    O1(ASM_DUP,               FNORMAL,                  (TOP))
+    O1(ASM_DUP,               FNORMAL,                  (SPSUBIMM_EQ_1))
+    O1(ASM_DUP,               FNORMAL,                  (SPADDIMM_EQ_N1))
+    O1(ASM_DUP_N,             FSTKDSP,                  (SPSUBIMM8,-2))
+    O1(ASM16_DUP_N,           FSTKDSP,                  (SPSUBIMM16,-2))
+    O1(ASM_PUSH_CONST,        FRELABS|FCONSTIMM,        (SIMM32))
+    O1(ASM_PUSH_CONST,        FRELABS|FCONSTIMM,        (IMM32))
+    O1(ASM_PUSH_NONE,         FNORMAL,                  (NONE))
+    O1(ASM_PUSH_EXCEPT,       FNORMAL,                  (EXCEPT))
+    O1(ASM_PUSH_MODULE,       FF0,                      (MODULE))
+    O1(ASM_PUSH_THIS,         FNORMAL,                  (THIS))
+    O1(ASM_PUSH_THIS_MODULE,  FNORMAL,                  (THIS_MODULE))
+    O1(ASM_PUSH_THIS_FUNCTION,FNORMAL,                  (THIS_FUNCTION))
+    O1(ASM_PUSH_REF,          FF0,                      (REF))
+    O1(ASM_PUSH_ARG,          FF0,                      (ARG))
+    O1(ASM_PUSH_CONST,        FF0,                      (CONST))
+    O1(ASM_PUSH_STATIC,       FF0,                      (STATIC))
+    O1(ASM_PUSH_EXTERN,       FF0,                      (EXTERN))
+    O1(ASM_PUSH_GLOBAL,       FF0,                      (GLOBAL))
+    O1(ASM_PUSH_LOCAL,        FF0,                      (LOCAL))
+    O1(ASM_PUSH_TRUE,         FNORMAL,                  (TRUE))
+    O1(ASM_PUSH_FALSE,        FNORMAL,                  (FALSE))
+    O1(ASM_VARARGS_GETSIZE,   FNORMAL,                  (FSTACKFLAG|VARARGS))          /* push #varargs */
+    O1(ASM_DUP,               FPREFIX,                  (TOP))
+    O1(ASM_DUP_N,             FPREFIX|FSTKDSP,          (SPSUBIMM8,-2))
+    O1(ASM16_DUP_N,           FPREFIX|FSTKDSP,          (SPSUBIMM16,-2))
+    O1(ASM_PUSH_CONST,        FPREFIX|FRELABS|FCONSTIMM,(SIMM32))
+    O1(ASM_PUSH_CONST,        FPREFIX|FRELABS|FCONSTIMM,(IMM32))
+    O1(ASM_PUSH_NONE,         FPREFIX,                  (NONE))
+    O1(ASM_PUSH_EXCEPT,       FPREFIX,                  (EXCEPT))
+    O1(ASM_PUSH_MODULE,       FPREFIX|FF0,              (MODULE))
+    O1(ASM_PUSH_THIS,         FPREFIX,                  (THIS))
+    O1(ASM_PUSH_THIS_MODULE,  FPREFIX,                  (THIS_MODULE))
+    O1(ASM_PUSH_THIS_FUNCTION,FPREFIX,                  (THIS_FUNCTION))
+    O1(ASM_PUSH_REF,          FPREFIX|FF0,              (REF))
+    O1(ASM_PUSH_ARG,          FPREFIX|FF0,              (ARG))
+    O1(ASM_PUSH_CONST,        FPREFIX|FF0,              (CONST))
+    O1(ASM_PUSH_STATIC,       FPREFIX|FF0,              (STATIC))
+    O1(ASM_PUSH_EXTERN,       FPREFIX|FF0,              (EXTERN))
+    O1(ASM_PUSH_GLOBAL,       FPREFIX|FF0,              (GLOBAL))
+    O1(ASM_PUSH_LOCAL,        FPREFIX|FF0,              (LOCAL))
+    O1(ASM_PUSH_TRUE,         FPREFIX,                  (TRUE))
+    O1(ASM_PUSH_FALSE,        FPREFIX,                  (FALSE))
+))
+
+
+/* CONSTRAINTS: `pop' */
+/* CONSTRAINTS: `pop <p>' */
+INSTR("pop",(
+    O0(ASM_POP,       FNORMAL)
+    O1(ASM_POP,       FNORMAL,                   (TOP))
+    O1(ASM_POP,       FNORMAL,                   (SPSUBIMM_EQ_1))
+    O1(ASM_POP,       FNORMAL,                   (SPADDIMM_EQ_N1))
+    O1(ASM_POP_N,     FSTKDSP,                   (SPSUBIMM8,-2))
+    O1(ASM16_POP_N,   FSTKDSP,                   (SPSUBIMM16,-2))
+    O1(ASM_POP_STATIC,FF0,                       (STATIC))
+    O1(ASM_POP_EXTERN,FF0,                       (EXTERN))
+    O1(ASM_POP_GLOBAL,FF0,                       (GLOBAL))
+    O1(ASM_POP_LOCAL, FF0,                       (LOCAL))
+    O0(ASM_POP,       FPREFIX|FPREFIX_RO)
+    O1(ASM_POP,       FPREFIX|FPREFIX_RO,        (TOP))
+    O1(ASM_POP,       FPREFIX|FPREFIX_RO,        (SPSUBIMM_EQ_1))
+    O1(ASM_POP,       FPREFIX|FPREFIX_RO,        (SPADDIMM_EQ_N1))
+    O1(ASM_POP_N,     FPREFIX|FPREFIX_RO|FSTKDSP,(SPSUBIMM8,-2))
+    O1(ASM16_POP_N,   FPREFIX|FPREFIX_RO|FSTKDSP,(SPSUBIMM16,-2))
+    O1(ASM_POP_STATIC,FPREFIX|FPREFIX_RO|FF0,    (STATIC))
+    O1(ASM_POP_EXTERN,FPREFIX|FPREFIX_RO|FF0,    (EXTERN))
+    O1(ASM_POP_GLOBAL,FPREFIX|FPREFIX_RO|FF0,    (GLOBAL))
+    O1(ASM_POP_LOCAL, FPREFIX|FPREFIX_RO|FF0,    (LOCAL))
+))
+
+/* CONSTRAINTS: `adjstack ...' */
+INSTR("adjstack",(
+    O1(ASM_POP,       FNORMAL,(SPADDIMM_EQ_N1)) /* `adjstack #SP - 1' --> `pop' */
+    O1(ASM_POP,       FNORMAL,(SPSUBIMM_EQ_1))  /* `adjstack #SP - 1' --> `pop' */
+    O1(ASM_DELOP,     FNORMAL,(SPADDIMM_EQ_0))  /* `adjstack #SP + 0' --> `---' */
+    O1(ASM_DELOP,     FNORMAL,(SPSUBIMM_EQ_0))  /* `adjstack #SP + 0' --> `---' */
+    O1(ASM_PUSH_NONE, FNORMAL,(SPADDIMM_EQ_1))  /* `adjstack #SP + 1' --> `push none' */
+    O1(ASM_PUSH_NONE, FNORMAL,(SPSUBIMM_EQ_N1)) /* `adjstack #SP + 1' --> `push none' */
+    O1(ASM_ADJSTACK,  FSTKDSP,(SPADDSIMM8))
+    O1(ASM16_ADJSTACK,FSTKDSP,(SPADDSIMM16))
+))
+
+/* CONSTRAINTS: `super <s>, <s>' */
+/* CONSTRAINTS: `super <rge>, <Tis>' */
+INSTR("super",(
+    O2(ASM_SUPER,       FNORMAL,  (TOP)(POP))
+    O2(ASM_SUPER_THIS_R,FPUSH|FF0,(REF)(THIS))
+    O2(ASM_SUPER_THIS_G,FPUSH|FF0,(GLOBAL)(THIS))
+    O2(ASM_SUPER_THIS_E,FPUSH|FF0,(EXTERN)(THIS))
+))
+
+/* CONSTRAINTS: `cast <s>, ...' */
+INSTR("cast",(
+    O2(ASM_CAST_TUPLE,  FNORMAL,(TOP)(TUPLE))
+    O2(ASM_CAST_LIST,   FNORMAL,(TOP)(LIST))
+    O2(ASM_CAST_DICT,   FNORMAL,(TOP)(DICT))
+    O2(ASM_CAST_HASHSET,FNORMAL,(TOP)(HASHSET))
+    O2(ASM_CAST_INT,    FNORMAL,(TOP)(INT))
+    O2(ASM_BOOL,        FNORMAL,(TOP)(BOOL))
+))
+
+/* CONSTRAINTS: `pack ..., ...' */
+INSTR("pack",(
+    O2(ASM_PACK_TUPLE,    FPUSH|FSTKABS,(TUPLE)(SPIMM8))
+    O2(ASM16_PACK_TUPLE,  FPUSH|FSTKABS,(TUPLE)(SPIMM16))
+    O2(ASM_PACK_LIST,     FPUSH|FSTKABS,(LIST)(SPIMM8))
+    O2(ASM16_PACK_LIST,   FPUSH|FSTKABS,(LIST)(SPIMM16))
+    O2(ASM_PACK_HASHSET,  FPUSH|FSTKABS,(HASHSET)(SPIMM8))
+    O2(ASM16_PACK_HASHSET,FPUSH|FSTKABS,(HASHSET)(SPIMM16))
+    O2(ASM_PACK_DICT,     FPUSH|FSTKABS,(DICT)(FSTACKFLAG|DISP8_HALF))
+    O2(ASM16_PACK_DICT,   FPUSH|FSTKABS,(DICT)(FSTACKFLAG|DISP16_HALF))
+))
+
+/* CONSTRAINTS: `unpack <ps>, ...' */
+INSTR("unpack",(
+    O2(ASM_UNPACK,        FSTKABS,                   (POP)(SPIMM8))     /* unpack pop, #<imm8> */
+    O2(ASM16_UNPACK,      FSTKABS,                   (POP)(SPIMM16))    /* unpack pop, #<imm16> */
+    O2(ASM_VARARGS_UNPACK,FSTKABS,                   (VARARGS)(SPIMM8)) /* unpack varargs, #<imm8> */
+    O2(ASM_UNPACK,        FSTKABS|FPREFIX_RO,        (PREFIX)(SPIMM8))  /* unpack PREFIX, #<imm8> */
+    O2(ASM16_UNPACK,      FSTKABS|FPREFIX_RO,        (PREFIX)(SPIMM16)) /* unpack PREFIX, #<imm16> */
+    O1(ASM_UNPACK,        FSTKABS|FPREFIX|FPREFIX_RO,(SPIMM8))          /* PREFIX: unpack #<imm8> */
+    O1(ASM16_UNPACK,      FSTKABS|FPREFIX|FPREFIX_RO,(SPIMM16))         /* PREFIX: unpack #<imm16> */
+))
+
+/* CONSTRAINTS: `concat <s>, <s>' */
+INSTR("concat",(O2(ASM_CONCAT,FNORMAL,(TOP)(POP))))          /* concat top, pop */
+
+/* CONSTRAINTS: `extend <s>, ...' */
+INSTR("extend",(O2(ASM_EXTEND,FSTKABS,(TOP)(SPIMM8))))       /* extend top, #<imm8> */
+
+/* CONSTRAINTS: `typeof <s>' */
+INSTR("typeof",(O1(ASM_TYPEOF,FNORMAL,(TOP))))               /* typeof top */
+
+/* CONSTRAINTS: `classof <s>' */
+INSTR("classof",(O1(ASM_CLASSOF,FNORMAL,(TOP))))             /* classof top */
+
+/* CONSTRAINTS: `superof <s>' */
+INSTR("superof",(O1(ASM_SUPEROF,FNORMAL,(TOP))))             /* superof top */
+
+/* CONSTRAINTS: `instanceof <s>, <ns>' */
+INSTR("instanceof",(
+    O2(ASM_INSTANCEOF,FNORMAL,(TOP)(POP))                    /* instanceof top, pop */
+    O2(ASM_ISNONE,    FNORMAL,(TOP)(NONE))                   /* instanceof top, none */
+))
+
+/* CONSTRAINTS: `str <s>' */
+INSTR("str",(O1(ASM_STR,FNORMAL,(TOP))))                     /* str top */
+
+/* CONSTRAINTS: `repr <s>' */
+INSTR("repr",(O1(ASM_REPR,FNORMAL,(TOP))))                   /* repr top */
+
+/* CONSTRAINTS: `bool <s>' */
+INSTR("bool",(O1(ASM_BOOL,FNORMAL,(TOP))))                   /* bool top */
+
+/* CONSTRAINTS: `not <s>' */
+INSTR("not",(O1(ASM_NOT,FNORMAL,(TOP))))                     /* not top */
+
+/* CONSTRAINTS: `assign <s>, <s>' */
+INSTR("assign",(
+    O2(ASM_ASSIGN,     FNORMAL,(TOP)(POP))                   /* assign top, pop */
+    O3(ASM_MOVE_ASSIGN,FNORMAL,(MOVE)(TOP)(POP))             /* assign move, top, pop */
+))
+
+/* CONSTRAINTS: `copy <s>' */
+INSTR("copy",(
+    O1(ASM_COPY,FNORMAL,(TOP))                               /* copy top */
+))
+
+/* CONSTRAINTS: `deepcopy <s>' */
+INSTR("deepcopy",(
+    O1(ASM_DEEPCOPY,FNORMAL,(TOP))                           /* deepcopy top */
+))
+
+/* CONSTRAINTS: `getattr <s>, <cs>' */
+/* CONSTRAINTS: `getattr <Ti>, <c>' */
+INSTR("getattr",(
+    O2(ASM_GETATTR,       FNORMAL,  (TOP)(POP))              /* getattr top, pop */
+    O2(ASM_GETATTR_C,     FF0,      (TOP)(CONST))            /* getattr top, const <imm8/16> */
+    O2(ASM_GETATTR_THIS_C,FF0|FPUSH,(THIS)(CONST))           /* getattr this, const <imm8/16> */
+))
+
+/* CONSTRAINTS: `boundattr <s>, <s>' */
+INSTR("boundattr",(
+    O2(ASM_BOUNDATTR,     FNORMAL,  (TOP)(POP))              /* boundattr top, pop */
+))
+
+/* CONSTRAINTS: `delattr <s>, <cs>' */
+/* CONSTRAINTS: `delattr <Ti>, <c>' */
+INSTR("delattr",(
+    O2(ASM_DELATTR,       FNORMAL,(POP)(POP))                /* delattr pop, pop */
+    O2(ASM_DELATTR_C,     FF0,    (POP)(CONST))              /* delattr pop, const <imm8/16> */
+    O2(ASM_DELATTR_THIS_C,FF0,    (THIS)(CONST))             /* delattr this, const <imm8/16> */
+))
+
+/* CONSTRAINTS: `setattr <s>, <cs>, <s>' */
+/* CONSTRAINTS: `setattr <Ti>, <c>, <s>' */
+INSTR("setattr",(
+    O3(ASM_SETATTR,       FNORMAL,(POP)(POP)(POP))           /* setattr pop, pop, pop */
+    O3(ASM_SETATTR_C,     FF0,    (POP)(CONST)(POP))         /* setattr pop, const <imm8/16>, pop */
+    O3(ASM_SETATTR_THIS_C,FF0,    (THIS)(CONST)(POP))        /* setattr this, const <imm8/16>, pop */
+))
+
+
+/* CONSTRAINTS: `cmp ..., <s>, <s>' */
+INSTR("cmp",(
+    O3(ASM_CMP_EQ,FNORMAL,(EQ)(TOP)(POP))                          /* cmp eq, top, pop */
+    O3(ASM_CMP_NE,FNORMAL,(NE)(TOP)(POP))                          /* cmp ne, top, pop */
+    O3(ASM_CMP_LO,FNORMAL,(LO)(TOP)(POP))                          /* cmp lo, top, pop */
+    O3(ASM_CMP_LE,FNORMAL,(LE)(TOP)(POP))                          /* cmp le, top, pop */
+    O3(ASM_CMP_GR,FNORMAL,(GR)(TOP)(POP))                          /* cmp gr, top, pop */
+    O3(ASM_CMP_GE,FNORMAL,(GE)(TOP)(POP))                          /* cmp ge, top, pop */
+    O3(ASM_CMP_SO,FNORMAL,(SO)(TOP)(POP))                          /* cmp so, top, pop */
+    O3(ASM_CMP_DO,FNORMAL,(DO)(TOP)(POP))                          /* cmp do, top, pop */
+    O3(ASM_VARARGS_CMP_EQ_SZ,FPUSH,(EQ)(FSTACKFLAG|VARARGS)(IMM8)) /* push cmp eq, #varargs, <imm8> */
+    O3(ASM_VARARGS_CMP_EQ_SZ,FPUSH,(EQ)(IMM8)(FSTACKFLAG|VARARGS)) /* push cmp eq, <imm8>, #varargs */
+    O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,(EQ)(FSTACKFLAG|VARARGS)(IMM8)) /* push cmp gr, #varargs, <imm8> */
+    O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,(LO)(IMM8)(FSTACKFLAG|VARARGS)) /* push cmp lo, <imm8>, #varargs */
+))
+
+/* CONSTRAINTS: `class ...' */
+/* CONSTRAINTS: `class ..., <s>' */
+/* CONSTRAINTS: `class ..., <s>, <s>' */
+/* CONSTRAINTS: `class ..., <s>, <s>, <s>' */
+/* CONSTRAINTS: `class ..., <s>, <s>, <s>, <s>' */
+/* CONSTRAINTS: `class ..., <lg>' */
+/* CONSTRAINTS: `class ..., <lg>, <c>' */
+/* CONSTRAINTS: `class ..., <lg>, <c>, <c>' */
+/* CONSTRAINTS: `class ..., <lg>, <c>, <c>, <c>' */
+INSTR("class",(
+    O1(ASM_CLASS,    FPUSH|FRELABS,(IMM8))                              /* push class $<imm8> */
+    O2(ASM_CLASS,    FPUSH|FRELABS,(IMM8)(POP))                         /* push class $<imm8>, pop */
+    O3(ASM_CLASS,    FPUSH|FRELABS,(IMM8)(POP)(POP))                    /* push class $<imm8>, pop, pop */
+    O4(ASM_CLASS,    FPUSH|FRELABS,(IMM8)(POP)(POP)(POP))               /* push class $<imm8>, pop, pop, pop */
+    O5(ASM_CLASS,    FPUSH|FRELABS,(IMM8)(POP)(POP)(POP)(POP))          /* push class $<imm8>, pop, pop, pop, pop */
+    O2(ASM_CLASS_C,  FPUSH|FRELABS,(IMM8)(CONST))                       /* push class $<imm8>, const <imm8> */
+    O3(ASM_CLASS_C,  FPUSH|FRELABS,(IMM8)(CONST)(CONST))                /* push class $<imm8>, const <imm8>, pop */
+    O4(ASM_CLASS_C,  FPUSH|FRELABS,(IMM8)(CONST)(CONST)(CONST))         /* push class $<imm8>, const <imm8>, pop, pop */
+    O5(ASM_CLASS_C,  FPUSH|FRELABS,(IMM8)(CONST)(CONST)(CONST)(CONST))  /* push class $<imm8>, const <imm8>, pop, pop, pop */
+    O2(ASM_CLASS_CBL,FPUSH|FRELABS,(IMM8)(LOCAL))                       /* push class $<imm8>, local <imm8> */
+    O3(ASM_CLASS_CBL,FPUSH|FRELABS,(IMM8)(LOCAL)(CONST))                /* push class $<imm8>, local <imm8>, pop */
+    O4(ASM_CLASS_CBL,FPUSH|FRELABS,(IMM8)(LOCAL)(CONST)(CONST))         /* push class $<imm8>, local <imm8>, pop, pop */
+    O5(ASM_CLASS_CBL,FPUSH|FRELABS,(IMM8)(LOCAL)(CONST)(CONST)(CONST))  /* push class $<imm8>, local <imm8>, pop, pop, pop */
+    O2(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL))                      /* push class $<imm8>, global <imm8> */
+    O3(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL)(CONST))               /* push class $<imm8>, global <imm8>, pop */
+    O4(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL)(CONST)(CONST))        /* push class $<imm8>, global <imm8>, pop, pop */
+    O5(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL)(CONST)(CONST)(CONST)) /* push class $<imm8>, global <imm8>, pop, pop, pop */
+))
+
+/* CONSTRAINTS: `defmember <s>, ..., <s>' */
+INSTR("defmember",(
+    O3(ASM_DEFMEMBER,  FRELABS,(TOP)(IMM8)(POP))             /* defmember top, $<imm8>, pop */
+    O3(ASM16_DEFMEMBER,FRELABS,(TOP)(IMM16)(POP))            /* defmember top, $<imm16>, pop */
+))
+
+/* CONSTRAINTS: `defop <s>, ..., <s>' */
+INSTR("defop",(
+    O3(ASM_DEFOP,  FRELABS,(TOP)(IMM8)(POP))                 /* defop top, $<imm8>, pop */
+    O3(ASM16_DEFOP,FRELABS,(TOP)(IMM16)(POP))                /* defop top, $<imm16>, pop */
+))
+
+/* CONSTRAINTS: `function <c>, ...' */
+INSTR("function",(
+    O2(ASM_FUNCTION_C,   FPUSH|FF0|FSTKABS,  (CONST)(SPIMM8,-1))  /* push function const <imm8/16>, #<imm8>+1 */
+    O2(ASM_FUNCTION_C_16,FPUSH|FF0|FSTKABS,  (CONST)(SPIMM16,-1)) /* push function const <imm8/16>, #<imm16>+1 */
+    O2(ASM_FUNCTION_C,   FPREFIX|FF0|FSTKABS,(CONST)(SPIMM8,-1))  /* PREFIX: function const <imm8/16>, #<imm8>+1 */
+    O2(ASM_FUNCTION_C_16,FPREFIX|FF0|FSTKABS,(CONST)(SPIMM16,-1)) /* PREFIX: function const <imm8/16>, #<imm16>+1 */
+))
+
+/* CONSTRAINTS: `inv <s>' */
+INSTR("inv",(O1(ASM_INV,FNORMAL,(TOP))))                     /* inv top */
+
+/* CONSTRAINTS: `pos <s>' */
+INSTR("pos",(O1(ASM_POS,FNORMAL,(TOP))))                     /* pos top */
+
+/* CONSTRAINTS: `net <s>' */
+INSTR("neg",(O1(ASM_NEG,FNORMAL,(TOP))))                     /* neg top */
+
+/* CONSTRAINTS: `add <s>, <I8N32s>' */
+/* CONSTRAINTS: `<p>: add <I8N32s>' */
+/* CONSTRAINTS: `add <p>, <I8N32s>' // WARNING: Ambiguous with `add <s>' for stack-top */
+INSTR("add",(
+    O2(ASM_ADD,      FNORMAL,        (TOP)(POP))             /* add top, pop */
+    O2(ASM_ADD_SIMM8,FRELABS,        (TOP)(SIMM8))           /* add top, $<Simm8> */
+    O2(ASM_ADD_IMM32,FRELABS,        (TOP)(IMM32))           /* add top, $<imm32> */
+    O1(ASM_ADD,      FPREFIX,        (POP))                  /* PREFIX: add pop */
+    O1(ASM_ADD_SIMM8,FPREFIX|FRELABS,(SIMM8))                /* PREFIX: add $<Simm8> */
+    O1(ASM_ADD_IMM32,FPREFIX|FRELABS,(IMM32))                /* PREFIX: add $<imm32> */
+    O2(ASM_ADD,      FNORMAL,        (PREFIX)(POP))          /* add PREFIX, pop */
+    O2(ASM_ADD_SIMM8,FRELABS,        (PREFIX)(SIMM8))        /* add PREFIX, $<Simm8> */
+    O2(ASM_ADD_IMM32,FRELABS,        (PREFIX)(IMM32))        /* add PREFIX, $<imm32> */
+))
+
+/* CONSTRAINTS: `sub <s>, <I8N32s>' */
+/* CONSTRAINTS: `<p>: sub <I8N32s>' */
+/* CONSTRAINTS: `sub <p>, <I8N32s>' // WARNING: Ambiguous with `sub <s>' for stack-top */
+INSTR("sub",(
+    O2(ASM_SUB,      FNORMAL,        (TOP)(POP))             /* sub top, pop */
+    O2(ASM_SUB_SIMM8,FRELABS,        (TOP)(SIMM8))           /* sub top, $<Simm8> */
+    O2(ASM_SUB_IMM32,FRELABS,        (TOP)(IMM32))           /* sub top, $<imm32> */
+    O1(ASM_SUB,      FPREFIX,        (POP))                  /* PREFIX: sub pop */
+    O1(ASM_SUB_SIMM8,FPREFIX|FRELABS,(SIMM8))                /* PREFIX: sub $<Simm8> */
+    O1(ASM_SUB_IMM32,FPREFIX|FRELABS,(IMM32))                /* PREFIX: sub $<imm32> */
+    O2(ASM_SUB,      FNORMAL,        (PREFIX)(POP))          /* sub PREFIX, pop */
+    O2(ASM_SUB_SIMM8,FRELABS,        (PREFIX)(SIMM8))        /* sub PREFIX, $<Simm8> */
+    O2(ASM_SUB_IMM32,FRELABS,        (PREFIX)(IMM32))        /* sub PREFIX, $<imm32> */
+))
+
+/* CONSTRAINTS: `mul <s>, <I8s>' */
+/* CONSTRAINTS: `<p>: mul <I8s>' */
+/* CONSTRAINTS: `mul <p>, <I8s>' // WARNING: Ambiguous with `mul <s>' for stack-top */
+INSTR("mul",(
+    O2(ASM_MUL,      FNORMAL,        (TOP)(POP))             /* mul top, pop */
+    O2(ASM_MUL_SIMM8,FRELABS,        (TOP)(SIMM8))           /* mul top, $<Simm8> */
+    O1(ASM_MUL,      FPREFIX,        (POP))                  /* PREFIX: mul pop */
+    O1(ASM_MUL_SIMM8,FPREFIX|FRELABS,(SIMM8))                /* PREFIX: mul $<Simm8> */
+    O2(ASM_MUL,      FNORMAL,        (PREFIX)(POP))          /* mul PREFIX, pop */
+    O2(ASM_MUL_SIMM8,FRELABS,        (PREFIX)(SIMM8))        /* mul PREFIX, $<Simm8> */
+))
+
+/* CONSTRAINTS: `div <s>, <I8s>' */
+/* CONSTRAINTS: `<p>: div <I8s>' */
+/* CONSTRAINTS: `div <p>, <I8s>' // WARNING: Ambiguous with `div <s>' for stack-top */
+INSTR("div",(
+    O2(ASM_DIV,      FNORMAL,        (TOP)(POP))             /* div top, pop */
+    O2(ASM_DIV_SIMM8,FRELABS,        (TOP)(SIMM8))           /* div top, $<Simm8> */
+    O1(ASM_DIV,      FPREFIX,        (POP))                  /* PREFIX: div pop */
+    O1(ASM_DIV_SIMM8,FPREFIX|FRELABS,(SIMM8))                /* PREFIX: div $<Simm8> */
+    O2(ASM_DIV,      FNORMAL,        (PREFIX)(POP))          /* div PREFIX, pop */
+    O2(ASM_DIV_SIMM8,FRELABS,        (PREFIX)(SIMM8))        /* div PREFIX, $<Simm8> */
+))
+
+/* CONSTRAINTS: `mod <s>, <I8s>' */
+/* CONSTRAINTS: `<p>: mod <I8s>' */
+/* CONSTRAINTS: `mod <p>, <I8s>' // WARNING: Ambiguous with `mod <s>' for stack-top */
+INSTR("mod",(
+    O2(ASM_MOD,      FNORMAL,        (TOP)(POP))             /* mod top, pop */
+    O2(ASM_MOD_SIMM8,FRELABS,        (TOP)(SIMM8))           /* mod top, $<Simm8> */
+    O1(ASM_MOD,      FPREFIX,        (POP))                  /* PREFIX: mod pop */
+    O1(ASM_MOD_SIMM8,FPREFIX|FRELABS,(SIMM8))                /* PREFIX: mod $<Simm8> */
+    O2(ASM_MOD,      FNORMAL,        (PREFIX)(POP))          /* mod PREFIX, pop */
+    O2(ASM_MOD_SIMM8,FRELABS,        (PREFIX)(SIMM8))        /* mod PREFIX, $<Simm8> */
+))
+
+/* CONSTRAINTS: `shl <s>, <N8s>' */
+/* CONSTRAINTS: `<p>: shl <N8s>' */
+/* CONSTRAINTS: `shl <p>, <N8s>' // WARNING: Ambiguous with `shl <s>' for stack-top */
+INSTR("shl",(
+    O2(ASM_SHL,     FNORMAL,        (TOP)(POP))              /* shl top, pop */
+    O2(ASM_SHL_IMM8,FRELABS,        (TOP)(IMM8))             /* shl top, $<imm8> */
+    O1(ASM_SHL,     FPREFIX,        (POP))                   /* PREFIX: shl pop */
+    O1(ASM_SHL_IMM8,FPREFIX|FRELABS,(IMM8))                  /* PREFIX: shl $<imm8> */
+    O2(ASM_SHL,     FNORMAL,        (PREFIX)(POP))           /* shl PREFIX, pop */
+    O2(ASM_SHL_IMM8,FRELABS,        (PREFIX)(IMM8))          /* shl PREFIX, $<imm8> */
+))
+
+/* CONSTRAINTS: `shr <s>, <N8s>' */
+/* CONSTRAINTS: `<p>: shr <N8s>' */
+/* CONSTRAINTS: `shr <p>, <N8s>' // WARNING: Ambiguous with `shr <s>' for stack-top */
+INSTR("shr",(
+    O2(ASM_SHR,     FNORMAL,        (TOP)(POP))              /* shr top, pop */
+    O2(ASM_SHR_IMM8,FRELABS,        (TOP)(IMM8))             /* shr top, $<imm8> */
+    O1(ASM_SHR,     FPREFIX,        (POP))                   /* PREFIX: shr pop */
+    O1(ASM_SHR_IMM8,FPREFIX|FRELABS,(IMM8))                  /* PREFIX: shr $<imm8> */
+    O2(ASM_SHR,     FNORMAL,        (PREFIX)(POP))           /* shr PREFIX, pop */
+    O2(ASM_SHR_IMM8,FRELABS,        (PREFIX)(IMM8))          /* shr PREFIX, $<imm8> */
+))
+
+/* CONSTRAINTS: `and <s>, <N32s>' */
+/* CONSTRAINTS: `<p>: and <N32s>' */
+/* CONSTRAINTS: `and <p>, <N32s>' // WARNING: Ambiguous with `and <s>' for stack-top */
+INSTR("and",(
+    O2(ASM_AND,      FNORMAL,        (TOP)(POP))             /* and top, pop */
+    O2(ASM_AND_IMM32,FRELABS,        (TOP)(IMM32))           /* and top, $<imm32> */
+    O1(ASM_AND,      FPREFIX,        (POP))                  /* PREFIX: and pop */
+    O1(ASM_AND_IMM32,FPREFIX|FRELABS,(IMM32))                /* PREFIX: and $<imm32> */
+    O2(ASM_AND,      FNORMAL,        (PREFIX)(POP))          /* and PREFIX, pop */
+    O2(ASM_AND_IMM32,FRELABS,        (PREFIX)(IMM32))        /* and PREFIX, $<imm32> */
+))
+
+/* CONSTRAINTS: `or <s>, <N32s>' */
+/* CONSTRAINTS: `<p>: or <N32s>' */
+/* CONSTRAINTS: `or <p>, <N32s>' // WARNING: Ambiguous with `or <s>' for stack-top */
+INSTR("or",(
+    O2(ASM_OR,      FNORMAL,        (TOP)(POP))              /* or top, pop */
+    O2(ASM_OR_IMM32,FRELABS,        (TOP)(IMM32))            /* or top, $<imm32> */
+    O1(ASM_OR,      FPREFIX,        (POP))                   /* PREFIX: or pop */
+    O1(ASM_OR_IMM32,FPREFIX|FRELABS,(IMM32))                 /* PREFIX: or $<imm32> */
+    O2(ASM_OR,      FNORMAL,        (PREFIX)(POP))           /* or PREFIX, pop */
+    O2(ASM_OR_IMM32,FRELABS,        (PREFIX)(IMM32))         /* or PREFIX, $<imm32> */
+))
+
+/* CONSTRAINTS: `xor <s>, <N32s>' */
+/* CONSTRAINTS: `<p>: xor <N32s>' */
+/* CONSTRAINTS: `xor <p>, <N32s>' // WARNING: Ambiguous with `xor <s>' for stack-top */
+INSTR("xor",(
+    O2(ASM_XOR,      FNORMAL,        (TOP)(POP))             /* xor top, pop */
+    O2(ASM_XOR_IMM32,FRELABS,        (TOP)(IMM32))           /* xor top, $<imm32> */
+    O1(ASM_XOR,      FPREFIX,        (POP))                  /* PREFIX: xor pop */
+    O1(ASM_XOR_IMM32,FPREFIX|FRELABS,(IMM32))                /* PREFIX: xor $<imm32> */
+    O2(ASM_XOR,      FNORMAL,        (PREFIX)(POP))          /* xor PREFIX, pop */
+    O2(ASM_XOR_IMM32,FRELABS,        (PREFIX)(IMM32))        /* xor PREFIX, $<imm32> */
+))
+
+/* CONSTRAINTS: `pow <s>, <s>' */
+/* CONSTRAINTS: `<p>: pow <s>' */
+/* CONSTRAINTS: `pow <p>, <s>' // WARNING: Ambiguous with `pow <s>' for stack-top */
+INSTR("pow",(
+    O2(ASM_POW,FNORMAL,(TOP)(POP))                           /* pow top, pop */
+    O1(ASM_POW,FPREFIX,(POP))                                /* PREFIX: pow pop */
+    O2(ASM_POW,FNORMAL,(PREFIX)(POP))                        /* pow prefix, pop */
+))
+
+/* CONSTRAINTS: `inc <p>' */
+/* CONSTRAINTS: `push inc <p>' */
+INSTR("inc",(
+    O0(ASM_INC,    FPREFIX)                                  /* PREFIX: inc */
+    O0(ASM_INCPOST,FPREFIX|FPUSH)                            /* PREFIX: push inc */
+    O1(ASM_INC,    FNORMAL,(PREFIX))                         /* inc PREFIX */
+    O1(ASM_INCPOST,FPUSH,  (PREFIX))                         /* push inc PREFIX */
+))
+
+/* CONSTRAINTS: `dec <p>' */
+/* CONSTRAINTS: `push dec <p>' */
+INSTR("dec",(
+    O0(ASM_DEC,    FPREFIX)                                  /* PREFIX: dec */
+    O0(ASM_DECPOST,FPREFIX|FPUSH)                            /* PREFIX: push dec */
+    O1(ASM_DEC,    FNORMAL,(PREFIX))                         /* dec PREFIX */
+    O1(ASM_DECPOST,FPUSH,  (PREFIX))                         /* push dec PREFIX */
+))
+
+/* CONSTRAINTS: `nop' */
+/* CONSTRAINTS: `nop <p>' */
+INSTR("nop",(
+    O0(ASM_NOP,FNORMAL)                                      /* nop */
+    O0(ASM_NOP,FPREFIX|FPREFIX_RO)                           /* PREFIX: nop */
+    O1(ASM_NOP,FPREFIX_RO,(PREFIX))                          /* nop PREFIX */
+))
+
+/* CONSTRAINTS: `nop16' */
+/* CONSTRAINTS: `nop16 <p>' */
+INSTR("nop16",(
+    O0(ASM16_NOP,FNORMAL)                                    /* nop16 */
+    O0(ASM16_NOP,FPREFIX|FPREFIX_RO)                         /* PREFIX: nop16 */
+    O1(ASM16_NOP,FPREFIX_RO,(PREFIX))                        /* nop16 PREFIX */
+))
+
+/* CONSTRAINTS: `print nl' */
+/* CONSTRAINTS: `print <cp>' */
+/* CONSTRAINTS: `print <cp>, sp' */
+/* CONSTRAINTS: `print <cp>, nl' */
+/* CONSTRAINTS: `print <s>, nl' */
+/* CONSTRAINTS: `print <s>, <cp>' */
+/* CONSTRAINTS: `print <s>, <cp>, sp' */
+/* CONSTRAINTS: `print <s>, <cp>, nl' */
+INSTR("print",(
+    O1(ASM_PRINT,       FNORMAL,(POP))                       /* print pop */
+    O2(ASM_PRINT_SP,    FNORMAL,(POP)(SP))                   /* print pop, sp */
+    O2(ASM_PRINT_NL,    FNORMAL,(POP)(NL))                   /* print pop, nl */
+    O1(ASM_PRINTNL,     FNORMAL,(NL))                        /* print nl */
+    O1(ASM_PRINTALL,    FNORMAL,(POP|FDOTSFLAG))             /* print pop... */
+    O2(ASM_PRINTALL_SP, FNORMAL,(POP|FDOTSFLAG)(SP))         /* print pop..., sp */
+    O2(ASM_PRINTALL_NL, FNORMAL,(POP|FDOTSFLAG)(NL))         /* print pop..., nl */
+    O1(ASM_PRINT_C,     FF0,    (CONST))                     /* print const <imm8/16> */
+    O2(ASM_PRINT_C_SP,  FF0,    (CONST)(SP))                 /* print const <imm8/16>, sp */
+    O2(ASM_PRINT_C_NL,  FF0,    (CONST)(NL))                 /* print const <imm8/16>, nl */
+    O2(ASM_FPRINT,      FNORMAL,(TOP)(POP))                  /* print top, pop */
+    O3(ASM_FPRINT_SP,   FNORMAL,(TOP)(POP)(SP))              /* print top, pop, sp */
+    O3(ASM_FPRINT_NL,   FNORMAL,(TOP)(POP)(NL))              /* print top, pop, nl */
+    O2(ASM_FPRINTNL,    FNORMAL,(TOP)(NL))                   /* print top, nl */
+    O2(ASM_FPRINTALL,   FNORMAL,(TOP)(POP|FDOTSFLAG))        /* print top, pop... */
+    O3(ASM_FPRINTALL_SP,FNORMAL,(TOP)(POP|FDOTSFLAG)(SP))    /* print top, pop..., sp */
+    O3(ASM_FPRINTALL_NL,FNORMAL,(TOP)(POP|FDOTSFLAG)(NL))    /* print top, pop..., nl */
+    O2(ASM_FPRINT_C,    FF0,    (TOP)(CONST))                /* print top, const <imm8/16> */
+    O3(ASM_FPRINT_C_SP, FF0,    (TOP)(CONST)(SP))            /* print top, const <imm8/16>, sp */
+    O3(ASM_FPRINT_C_NL, FF0,    (TOP)(CONST)(NL))            /* print top, const <imm8/16>, nl */
+))
+
+/* CONSTRAINTS: `range <s>, <s>' */
+/* CONSTRAINTS: `range <s>, <s>, <s>' */
+/* CONSTRAINTS: `push range <Iz>, <I32>' */
+/* CONSTRAINTS: `push range default, <I32s>' */
+/* CONSTRAINTS: `push range default, <I32s>, <s>' */
+INSTR("range",(
+    O2(ASM_RANGE,         FNORMAL,      (TOP)(POP))          /* range top, pop */
+    O3(ASM_RANGE_STEP,    FNORMAL,      (TOP)(POP)(POP))     /* range top, pop, pop */
+    O2(ASM_RANGE_0_I16,   FPUSH|FRELABS,(IMM_EQ_0)(IMM16))   /* range $0, $<imm16> */
+    O2(ASM_RANGE_0_I32,   FPUSH|FRELABS,(IMM_EQ_0)(IMM32))   /* range $0, $<imm32> */
+    O2(ASM_RANGE_0_I16,   FPUSH|FRELABS,(DEFAULT)(IMM16))    /* range default, $<imm16> */
+    O2(ASM_RANGE_0_I32,   FPUSH|FRELABS,(DEFAULT)(IMM32))    /* range default, $<imm32> */
+    O2(ASM_RANGE_DEF,     FPUSH,        (DEFAULT)(POP))      /* range default, pop */
+    O3(ASM_RANGE_STEP_DEF,FPUSH,        (DEFAULT)(POP)(POP)) /* range default, pop, pop */
+))
+
+/* CONSTRAINTS: `enter <s>' */
+INSTR("enter",(
+    O1(ASM_ENTER,FNORMAL,(TOP))                            /* enter pop */
+))
+
+/* CONSTRAINTS: `leave <s>' */
+INSTR("leave",(
+    O1(ASM_LEAVE,FNORMAL,(POP))                            /* leave pop */
+))
+
+/* CONSTRAINTS: `getsize <s>' */
+INSTR("getsize",(
+    O1(ASM_GETSIZE,        FNORMAL,(TOP))                  /* getsize top */
+    O1(ASM_VARARGS_GETSIZE,FPUSH,  (VARARGS))              /* push getsize varargs */
+))
+
+/* CONSTRAINTS: `contains <s>, <s>' */
+INSTR("contains",(
+    O2(ASM_CONTAINS,  FNORMAL,  (TOP)(POP))                /* contains top, pop */
+    O2(ASM_CONTAINS_C,FF0|FPUSH,(CONST)(POP))              /* push contains const <imm8/16>, pop */
+))
+
+/* CONSTRAINTS: `getitem <s>, <I16cs>' */
+INSTR("getitem",(
+    O2(ASM_GETITEM,          FNORMAL,(TOP)(POP))           /* getitem top, pop */
+    O2(ASM_GETITEM,          FRELABS,(TOP)(SIMM16))        /* getitem top, $<Simm16> */
+    O2(ASM_GETITEM,          FF0,    (TOP)(CONST))         /* getitem top, const <imm8/16> */
+    O2(ASM_VARARGS_GETITEM,  FNORMAL,(VARARGS)(TOP))       /* getitem varargs, top */
+    O2(ASM_VARARGS_GETITEM_I,FPUSH,  (VARARGS)(IMM8))      /* push getitem varargs, $<imm8> */
+))
+
+/* CONSTRAINTS: `setitem <s>, <I16cs>, <s>' */
+INSTR("setitem",(
+    O3(ASM_SETITEM,FNORMAL,(POP)(POP)(POP))                /* setitem pop, pop, pop */
+    O3(ASM_SETITEM,FRELABS,(POP)(SIMM16)(POP))             /* setitem pop, $<Simm16>, pop */
+    O3(ASM_SETITEM,FF0,    (POP)(CONST)(POP))              /* setitem pop, const <imm8/16>, pop */
+))
+
+/* CONSTRAINTS: `delitem <s>, <s>' */
+INSTR("delitem",(
+    O2(ASM_DELITEM,FNORMAL,(POP)(POP))                     /* delitem pop, pop */
+))
+
+/* CONSTRAINTS: `iterself <s>' */
+INSTR("iterself",(
+    O1(ASM_ITERSELF,FNORMAL,(TOP))                         /* iterself top */
+))
+
+/* CONSTRAINTS: `getrange <s>, <s>, <sn>' */
+/* CONSTRAINTS: `getrange <s>, <sn>, <s>' */
+/* CONSTRAINTS: `getrange <s>, <I16>, <I16s>' */
+/* CONSTRAINTS: `getrange <s>, <I16s>, <I16>' */
+/* CONSTRAINTS: `getrange <s>, <I16>, <I16n>' */
+/* CONSTRAINTS: `getrange <s>, <I16n>, <I16>' */
+INSTR("getrange",(
+    O3(ASM_GETRANGE,   FNORMAL,(TOP)(POP)(POP))            /* getrange top, pop, pop */
+    O3(ASM_GETRANGE_PN,FNORMAL,(TOP)(POP)(NONE))           /* getrange top, pop, none */
+    O3(ASM_GETRANGE_NP,FNORMAL,(TOP)(NONE)(POP))           /* getrange top, none, pop */
+    O3(ASM_GETRANGE_PI,FRELABS,(TOP)(POP)(SIMM16))         /* getrange top, pop, $<Simm16> */
+    O3(ASM_GETRANGE_IP,FRELABS,(TOP)(SIMM16)(POP))         /* getrange top, $<Simm16>, pop */
+    O3(ASM_GETRANGE_NI,FRELABS,(TOP)(NONE)(SIMM16))        /* getrange top, none, $<Simm16> */
+    O3(ASM_GETRANGE_IN,FRELABS,(TOP)(SIMM16)(NONE))        /* getrange top, $<Simm16>, none */
+    O3(ASM_GETRANGE_II,FRELABS,(TOP)(SIMM16)(SIMM16))      /* getrange top, $<Simm16>, $<Simm16> */
+))
+
+/* CONSTRAINTS: `delrange <s>, <s>, <s>' */
+INSTR("delrange",(
+    O3(ASM_DELRANGE,   FNORMAL,(TOP)(POP)(POP))            /* delrange pop, pop, pop */
+))
+
+/* CONSTRAINTS: `getrange <s>, <s>, <sn>, <s>' */
+/* CONSTRAINTS: `getrange <s>, <sn>, <s>, <s>' */
+/* CONSTRAINTS: `getrange <s>, <I16>, <I16s>, <s>' */
+/* CONSTRAINTS: `getrange <s>, <I16s>, <I16>, <s>' */
+/* CONSTRAINTS: `getrange <s>, <I16>, <I16n>, <s>' */
+/* CONSTRAINTS: `getrange <s>, <I16n>, <I16>, <s>' */
+INSTR("setrange",(
+    O4(ASM_SETRANGE,   FNORMAL,(POP)(POP)(POP)(POP))       /* setrange pop, pop, pop, pop */
+    O4(ASM_SETRANGE_PN,FNORMAL,(POP)(POP)(NONE)(POP))      /* setrange pop, pop, none, pop */
+    O4(ASM_SETRANGE_NP,FNORMAL,(POP)(NONE)(POP)(POP))      /* setrange pop, none, pop, pop */
+    O4(ASM_SETRANGE_PI,FRELABS,(POP)(POP)(SIMM16)(POP))    /* setrange pop, pop, $<Simm16>, pop */
+    O4(ASM_SETRANGE_IP,FRELABS,(POP)(SIMM16)(POP)(POP))    /* setrange pop, $<Simm16>, pop, pop */
+    O4(ASM_SETRANGE_NI,FRELABS,(POP)(NONE)(SIMM16)(POP))   /* setrange pop, none, $<Simm16>, pop */
+    O4(ASM_SETRANGE_IN,FRELABS,(POP)(SIMM16)(NONE)(POP))   /* setrange pop, $<Simm16>, none, pop */
+    O4(ASM_SETRANGE_II,FRELABS,(POP)(SIMM16)(SIMM16)(POP)) /* setrange pop, $<Simm16>, $<Simm16>, pop */
+))
+
+/* CONSTRAINTS: `debug break' */
+INSTR("debug",(
+    O1(ASM_BREAKPOINT, FNORMAL,(BREAK)) /* debug break */
+))
+
+/* CONSTRAINTS: `ud' */
+INSTR("ud",(
+    O0(ASM_UD,FNORMAL) /* ud */
+))
+
+/* CONSTRAINTS: `callattr <s>, <cs>, ...' */
+/* CONSTRAINTS: `callattr <s>, <c>, <QlQr>' */
+/* CONSTRAINTS: `callattr <Ti>, <c>, ...' */
+INSTR("callattr",(
+    O3(ASM_CALLATTR,             FSTKABS,          (TOP)(POP)(SPIMM8))                 /* callattr top, pop, #<imm8> */
+    O3(ASM_CALLATTR_TUPLE,       FNORMAL,          (TOP)(POP)(POP|FDOTSFLAG))          /* callattr top, pop, pop... */
+    O3(ASM_CALLATTR_C,           FF0|FSTKABS,      (TOP)(CONST)(SPIMM8))               /* callattr top, const <imm8/16>, #<imm8> */
+    O3(ASM_CALLATTR_TUPLE_C,     FF0,              (TOP)(CONST)(POP|FDOTSFLAG))        /* callattr top, const <imm8/16>, pop... */
+    O3(ASM_CALLATTR_C_SEQ,       FF0,              (TOP)(CONST)(BRSPIMM8))			   /* callattr top, const <imm8/16>, [#<imm8>] */
+    O3(ASM_CALLATTR_C_MAP,       FF0,              (TOP)(CONST)(BCSPIMM8|DISP8_HALF))  /* callattr top, const <imm8/16>, {#<imm8>} */
+    O3(ASM_CALLATTR_THIS_C,      FPUSH|FF0|FSTKABS,(THIS)(CONST)(SPIMM8))              /* push callattr this, const <imm8/16>, #<imm8> */
+    O3(ASM_CALLATTR_THIS_TUPLE_C,FPUSH|FF0,        (THIS)(CONST)(POP|FDOTSFLAG))       /* push callattr this, const <imm8/16>, pop... */
+    O4(ASM_CALLATTR_C_KW,        FF0|FSTKABS,      (TOP)(CONST)(SPIMM8)(CONST))        /* callattr top, const <imm8/16>, #<imm8>, const <imm8/16> */
+    O4(ASM_CALLATTR_TUPLE_C_KW,  FF0,              (TOP)(CONST)(POP|FDOTSFLAG)(CONST)) /* callattr top, const <imm8/16>, pop..., const <imm8/16> */
+    O4(ASM_CALLATTR_KWDS,        FSTKABS,          (TOP)(POP)(SPIMM8)(POP))            /* callattr top, pop, #<imm8>, pop */
+    O4(ASM_CALLATTR_TUPLE_KWDS,  FNORMAL,          (TOP)(POP)(POP|FDOTSFLAG)(POP))     /* callattr top, pop, pop..., pop */
+))
+
+/* CONSTRAINTS: `push getmember <Ti>, <rs>, ...' */
+INSTR("getmember",(
+    O3(ASM_GETMEMBER,  FPUSH|FRELABS,            (THIS)(POP)(IMM8))  /* push getmember this, pop, $<imm8> */
+    O3(ASM16_GETMEMBER,FPUSH|FRELABS,            (THIS)(POP)(IMM16)) /* push getmember this, pop, $<imm16> */
+    O3(ASM_GETMEMBER_R,FPUSH|FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM8))  /* push getmember this, ref <imm8/16>, $<imm8> */
+    O3(ASM_GETMEMBER_R,FPUSH|FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM16)) /* push getmember this, ref <imm8/16>, $<imm16> */
+))
+
+/* CONSTRAINTS: `delmember <Ti>, <rs>, ...' */
+INSTR("delmember",(
+    O3(ASM_DELMEMBER,  FRELABS,            (THIS)(POP)(IMM8))       /* delmember this, pop, $<imm8> */
+    O3(ASM16_DELMEMBER,FRELABS,            (THIS)(POP)(IMM16))      /* delmember this, pop, $<imm16> */
+    O3(ASM_DELMEMBER_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM8))       /* delmember this, ref <imm8/16>, $<imm8> */
+    O3(ASM_DELMEMBER_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM16))      /* delmember this, ref <imm8/16>, $<imm16> */
+))
+
+/* CONSTRAINTS: `setmember <Ti>, <rs>, ..., <s>' */
+INSTR("setmember",(
+    O4(ASM_SETMEMBER,  FRELABS,            (THIS)(POP)(IMM8)(POP))  /* setmember this, pop, $<imm8>, pop */
+    O4(ASM16_SETMEMBER,FRELABS,            (THIS)(POP)(IMM16)(POP)) /* setmember this, pop, $<imm16>, pop */
+    O4(ASM_SETMEMBER_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM8)(POP))  /* setmember this, ref <imm8/16>, $<imm8>, pop */
+    O4(ASM_SETMEMBER_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM16)(POP)) /* setmember this, ref <imm8/16>, $<imm16>, pop */
+))
+
+/* CONSTRAINTS: `reduce <s>, ...' */
+INSTR("reduce",(
+    O2(ASM_REDUCE_MIN,FNORMAL,(TOP)(MIN)) /* reduce top, min */
+    O2(ASM_REDUCE_MAX,FNORMAL,(TOP)(MAX)) /* reduce top, max */
+    O2(ASM_REDUCE_SUM,FNORMAL,(TOP)(SUM)) /* reduce top, sum */
+    O2(ASM_REDUCE_ANY,FNORMAL,(TOP)(ANY)) /* reduce top, any */
+    O2(ASM_REDUCE_ALL,FNORMAL,(TOP)(ALL)) /* reduce top, all */
+))
+
+/* CONSTRAINTS: `mov <p>, <P>' / `mov <eglCsS>, <nEmTiTmTfracCseglTTFFTcI64N64SR>' */
+INSTR("mov",(
+    O2(ASM_DUP,               FNORMAL,(PREFIX)(TOP))              /* mov PREFIX, top */
+    O2(ASM_DUP,               FNORMAL,(PREFIX)(SPSUBIMM_EQ_1))    /* mov PREFIX, #SP - 1 */
+    O2(ASM_DUP,               FNORMAL,(PREFIX)(SPADDIMM_EQ_N1))   /* mov PREFIX, #SP + -1 */
+    O2(ASM_DUP_N,             FSTKDSP,(PREFIX)(SPSUBIMM8,-2))     /* mov PREFIX, #<imm8> */
+    O2(ASM16_DUP_N,           FSTKDSP,(PREFIX)(SPSUBIMM16,-2))    /* mov PREFIX, #<imm16> */
+    O2(ASM_PUSH_CONST,        FRELABS|FCONSTIMM,(PREFIX)(SIMM32)) /* mov PREFIX, $<Simm32> */
+    O2(ASM_PUSH_CONST,        FRELABS|FCONSTIMM,(PREFIX)(IMM32))  /* mov PREFIX, $<imm32> */
+    O2(ASM_PUSH_NONE,         FNORMAL,(PREFIX)(NONE))             /* mov PREFIX, none */
+    O2(ASM_PUSH_EXCEPT,       FNORMAL,(PREFIX)(EXCEPT))           /* mov PREFIX, except */
+    O2(ASM_PUSH_MODULE,       FF0,    (PREFIX)(MODULE))           /* mov PREFIX, module <imm8/16> */
+    O2(ASM_PUSH_THIS,         FNORMAL,(PREFIX)(THIS))             /* mov PREFIX, this */
+    O2(ASM_PUSH_THIS_MODULE,  FNORMAL,(PREFIX)(THIS_MODULE))      /* mov PREFIX, this_module */
+    O2(ASM_PUSH_THIS_FUNCTION,FNORMAL,(PREFIX)(THIS_FUNCTION))    /* mov PREFIX, this_function */
+    O2(ASM_PUSH_REF,          FF0,    (PREFIX)(REF))              /* mov PREFIX, ref <imm8/16> */
+    O2(ASM_PUSH_ARG,          FF0,    (PREFIX)(ARG))              /* mov PREFIX, arg <imm8/16> */
+    O2(ASM_PUSH_CONST,        FF0,    (PREFIX)(CONST))            /* mov PREFIX, const <imm8/16> */
+    O2(ASM_PUSH_STATIC,       FF0,    (PREFIX)(STATIC))           /* mov PREFIX, static <imm8/16> */
+    O2(ASM_PUSH_EXTERN,       FF0,    (PREFIX)(EXTERN))           /* mov PREFIX, extern <imm8/16>:<imm8/16> */
+    O2(ASM_PUSH_GLOBAL,       FF0,    (PREFIX)(GLOBAL))           /* mov PREFIX, global <imm8/16> */
+    O2(ASM_PUSH_LOCAL,        FF0,    (PREFIX)(LOCAL))            /* mov PREFIX, local <imm8/16> */
+    O2(ASM_PUSH_TRUE,         FNORMAL,(PREFIX)(TRUE))             /* mov PREFIX, true */
+    O2(ASM_PUSH_FALSE,        FNORMAL,(PREFIX)(FALSE))            /* mov PREFIX, false */
+    O2(ASM_POP,               FNORMAL,(TOP)(PREFIX))              /* mov top, PREFIX */
+    O2(ASM_POP,               FNORMAL,(SPSUBIMM_EQ_1)(PREFIX))    /* mov #SP - 1, PREFIX */
+    O2(ASM_POP,               FNORMAL,(SPADDIMM_EQ_N1)(PREFIX))   /* mov #SP + -1, PREFIX */
+    O2(ASM_POP_N,             FSTKDSP,(SPSUBIMM8,-2)(PREFIX))     /* mov #<imm8>, PREFIX */
+    O2(ASM16_POP_N,           FSTKDSP,(SPSUBIMM16,-2)(PREFIX))    /* mov #<imm16>, PREFIX */
+    O2(ASM_POP_STATIC,        FF0,    (STATIC)(PREFIX))           /* mov static <imm8/16>, PREFIX */
+    O2(ASM_POP_EXTERN,        FF0,    (EXTERN)(PREFIX))           /* mov extern <imm8/16>:<imm8/16>, PREFIX */
+    O2(ASM_POP_GLOBAL,        FF0,    (GLOBAL)(PREFIX))           /* mov global <imm8/16>, PREFIX */
+    O2(ASM_POP_LOCAL,         FF0,    (LOCAL)(PREFIX))            /* mov local <imm8/16>, PREFIX */
+))
+
+
+/*[[[deemon
+#include <file>
+#include <fs>
+fs.chdir(fs.path.head(__FILE__));
+local names = [];
+for (local l: file.open("../../../../include/deemon/compiler/assembler.h")) {
+    local name;
+    try name = l.scanf(" # define OPERAND_CLASS_%[^ ]")...;
+    catch (...) continue;
+    if ("(" in name) continue;
+    names.append(name);
+}
+names.reverse();
+for (local x: names) {
+    print "#undef",x;
+}
+]]]*/
+#undef IMM_EQ_N2
+#undef IMM_EQ_N1
+#undef IMM_EQ_0
+#undef IMM_EQ_1
+#undef IMM_EQ_2
+#undef IMM32
+#undef IMM16
+#undef IMM8
+#undef SIMM32
+#undef SIMM16
+#undef SIMM8
+#undef BCSPSIMM16
+#undef BCSPIMM16
+#undef BRSPSIMM16
+#undef BRSPIMM16
+#undef SPSIMM16
+#undef SPIMM16
+#undef SPSUBSIMM16
+#undef SPSUBIMM16
+#undef SPADDSIMM16
+#undef SPADDIMM16
+#undef BCSPSIMM8
+#undef BCSPIMM8
+#undef BRSPSIMM8
+#undef BRSPIMM8
+#undef SPSIMM8
+#undef SPIMM8
+#undef SPSUBSIMM8
+#undef SPSUBIMM8
+#undef SPSUBIMM_EQ_2
+#undef SPSUBIMM_EQ_1
+#undef SPSUBIMM_EQ_0
+#undef SPSUBIMM_EQ_N1
+#undef SPSUBIMM_EQ_N2
+#undef SPADDSIMM8
+#undef SPADDIMM8
+#undef SPADDIMM_EQ_2
+#undef SPADDIMM_EQ_1
+#undef SPADDIMM_EQ_0
+#undef SPADDIMM_EQ_N1
+#undef SPADDIMM_EQ_N2
+#undef SPPOP
+#undef POP_DOTS
+#undef VARARGS
+#undef DEFAULT
+#undef MOVE
+#undef NL
+#undef SP
+#undef ALL
+#undef ANY
+#undef SUM
+#undef MAX
+#undef MIN
+#undef BREAK
+#undef DO
+#undef SO
+#undef GE
+#undef GR
+#undef LE
+#undef LO
+#undef NE
+#undef EQ
+#undef INT
+#undef BOOL
+#undef DICT
+#undef HASHSET
+#undef TUPLE
+#undef LIST
+#undef FALSE
+#undef TRUE
+#undef THIS_FUNCTION
+#undef THIS_MODULE
+#undef THIS
+#undef FINALLY
+#undef CATCH
+#undef EXCEPT
+#undef FOREACH
+#undef NONE
+#undef DISP16_HALF
+#undef DISP8_HALF
+#undef DISP_EQ_2
+#undef DISP_EQ_1
+#undef DISP_EQ_0
+#undef DISP_EQ_N1
+#undef DISP_EQ_N2
+#undef DISP32
+#undef DISP16
+#undef DISP8
+#undef SDISP32
+#undef SDISP16
+#undef SDISP8
+#undef PREFIX
+#undef LOCAL
+#undef GLOBAL
+#undef EXTERN
+#undef MODULE
+#undef STATIC
+#undef CONST
+#undef ARG
+#undef REF
+#undef TOP
+#undef POP
+#undef UNUSED
+#undef FSUBSP
+#undef FSPSUB
+#undef FSPADD
+#undef FSTACKFLAG2
+#undef FSTACKFLAG
+#undef FDOTSFLAG
+#undef FBRACEFLAG
+#undef FBRACKETFLAG
+#undef FIMMVAL
+#undef FMASK
+//[[[end]]]
+
+#undef FSTKDSP
+#undef FSTKABS
+#undef FRELDSP
+#undef FRELABS
+
+#undef FCONSTIMM
+#undef FYLD
+#undef FRET
+#undef FF0_IMM
+#undef FF0
+#undef FTAGS
+#undef FPREFIX_RO
+#undef FPREFIX
+#undef FPUSH
+#undef FNORMAL
+
+#undef O5
+#undef O4
+#undef O3
+#undef O2
+#undef O1
+#undef O0
+#undef OVERLOAD
+#undef INSTR

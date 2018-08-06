@@ -1,0 +1,299 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_SYSTEM_GENERIC_FILE_C_INL
+#define GUARD_DEEMON_SYSTEM_GENERIC_FILE_C_INL 1
+#define _DOS_SOURCE 1
+#define _LARGEFILE64_SOURCE 1
+
+#include <deemon/api.h>
+#include <deemon/object.h>
+#include <deemon/file.h>
+#include <deemon/filetypes.h>
+#include <deemon/none.h>
+#include <deemon/string.h>
+#include <deemon/arg.h>
+#include <deemon/error.h>
+
+#include "../runtime/strings.h"
+#include "../runtime/runtime_error.h"
+
+DECL_BEGIN
+
+PRIVATE char const fs_unsupported_message[] = "A filesystem is not supported";
+
+PRIVATE ATTR_NOINLINE void DCALL fs_unsupported(void) {
+ DeeError_Throwf(&DeeError_UnsupportedAPI,
+                 fs_unsupported_message);
+}
+INTERN dsysfd_t DCALL
+DeeSystemFile_Fileno(/*FileSystem*/DeeObject *__restrict self) {
+ ASSERT_OBJECT_TYPE(self,(DeeTypeObject *)&DeeSystemFile_Type);
+ (void)self;
+ DeeError_Throwf(&DeeError_HandleClosed,
+                 fs_unsupported_message);
+ return (dsysfd_t)-1;
+}
+INTERN DREF DeeObject *DCALL
+DeeSystemFile_Filename(/*SystemFile*/DeeObject *__restrict self) {
+ ASSERT_OBJECT_TYPE(self,(DeeTypeObject *)&DeeSystemFile_Type);
+ (void)self;
+ fs_unsupported();
+ return NULL;
+}
+
+PUBLIC DREF /*FSFile*/DeeObject *DCALL
+DeeFile_OpenFd(dsysfd_t UNUSED(fd),
+               /*String*/DeeObject *UNUSED(filename),
+               int UNUSED(oflags), bool UNUSED(inherit_fd)) {
+ fs_unsupported();
+ return NULL;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeFile_OpenString(char const *__restrict UNUSED(filename),
+                   int UNUSED(oflags), int UNUSED(mode)) {
+ fs_unsupported();
+ return NULL;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeFile_Open(/*String*/DeeObject *__restrict UNUSED(filename),
+             int UNUSED(oflags), int UNUSED(mode)) {
+ fs_unsupported();
+ return NULL;
+}
+
+PRIVATE DeeFileObject std_file = { FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type) };
+PUBLIC ATTR_RETNONNULL
+DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
+ ASSERT(id <= DEE_STDDBG);
+ (void)id;
+ return (DeeObject *)&std_file;
+}
+
+
+PRIVATE dssize_t DCALL
+sysfile_read(DeeFileObject *__restrict UNUSED(self),
+             void *__restrict UNUSED(buffer),
+             size_t UNUSED(bufsize),
+             dioflag_t UNUSED(flags)) {
+ fs_unsupported();
+ return -1;
+}
+PRIVATE dssize_t DCALL
+sysfile_write(DeeFileObject *__restrict UNUSED(self),
+              void const *__restrict UNUSED(buffer),
+              size_t UNUSED(bufsize),
+              dioflag_t UNUSED(flags)) {
+ fs_unsupported();
+ return -1;
+}
+PRIVATE doff_t DCALL
+sysfile_seek(DeeFileObject *__restrict UNUSED(self),
+             doff_t UNUSED(off), int UNUSED(whence)) {
+ fs_unsupported();
+ return -1;
+}
+PRIVATE int DCALL
+sysfile_sync(DeeFileObject *__restrict UNUSED(self)) {
+ fs_unsupported();
+ return -1;
+}
+PRIVATE int DCALL
+sysfile_trunc(DeeFileObject *__restrict UNUSED(self),
+              dpos_t UNUSED(size)) {
+ fs_unsupported();
+ return -1;
+}
+PRIVATE int DCALL
+sysfile_close(DeeFileObject *__restrict UNUSED(self)) {
+ fs_unsupported();
+ return -1;
+}
+PRIVATE int DCALL
+sysfile_getc(DeeFileObject *__restrict UNUSED(self),
+             dioflag_t UNUSED(flags)) {
+ fs_unsupported();
+ return GETC_ERR;
+}
+PRIVATE int DCALL
+sysfile_ungetc(DeeFileObject *__restrict UNUSED(self), int UNUSED(ch)) {
+ fs_unsupported();
+ return GETC_ERR;
+}
+PRIVATE int DCALL
+sysfile_putc(DeeFileObject *__restrict UNUSED(self), int UNUSED(ch),
+             dioflag_t UNUSED(flags)) {
+ fs_unsupported();
+ return GETC_ERR;
+}
+
+PRIVATE DREF DeeObject *DCALL
+sysfile_fileno(DeeObject *__restrict UNUSED(self),
+               size_t argc, DeeObject **__restrict argv) {
+ if (!DeeArg_Unpack(argc,argv,":fileno"))
+      fs_unsupported();
+ return NULL;
+}
+
+PRIVATE struct type_method sysfile_methods[] = {
+    { "fileno", &sysfile_fileno },
+    { NULL }
+};
+
+PRIVATE DREF DeeObject *DCALL
+sysfile_class_sync(DeeObject *__restrict UNUSED(self),
+                   size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":sync"))
+     return NULL;
+ return_none;
+}
+
+PRIVATE struct type_method sysfile_class_methods[] = {
+    { "sync", &sysfile_class_sync,
+      DOC("()->none\n"
+          "Synchronize all unwritten data with the host operating system") },
+    { NULL }
+};
+
+PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
+    /* .ft_base = */{
+        OBJECT_HEAD_INIT(&DeeFileType_Type),
+        /* .tp_name     = */"system_file",
+        /* .tp_doc      = */NULL,
+        /* .tp_flags    = */TP_FNORMAL,
+        /* .tp_weakrefs = */0,
+        /* .tp_features = */TF_HASFILEOPS,
+        /* .tp_base     = */(DeeTypeObject *)&DeeFile_Type,
+        /* .tp_init = */{
+            {
+                /* .tp_alloc = */{
+                    /* .tp_ctor      = */NULL,
+                    /* .tp_copy_ctor = */NULL,
+                    /* .tp_deep_ctor = */NULL,
+                    /* .tp_any_ctor  = */NULL,
+                    /* .tp_free      = */NULL,
+                    {
+                        /* .tp_instance_size = */sizeof(DeeFileObject)
+                    }
+                }
+            },
+            /* .tp_dtor        = */NULL,
+            /* .tp_assign      = */NULL,
+            /* .tp_move_assign = */NULL
+        },
+        /* .tp_cast = */{
+            /* .tp_str  = */NULL,
+            /* .tp_repr = */NULL,
+            /* .tp_bool = */NULL
+        },
+        /* .tp_call          = */NULL,
+        /* .tp_visit         = */NULL,
+        /* .tp_gc            = */NULL,
+        /* .tp_math          = */NULL,
+        /* .tp_cmp           = */NULL,
+        /* .tp_seq           = */NULL,
+        /* .tp_iter_next     = */NULL,
+        /* .tp_attr          = */NULL,
+        /* .tp_with          = */NULL,
+        /* .tp_buffer        = */NULL,
+        /* .tp_methods       = */sysfile_methods,
+        /* .tp_getsets       = */NULL,
+        /* .tp_members       = */NULL,
+        /* .tp_class_methods = */sysfile_class_methods,
+        /* .tp_class_getsets = */NULL,
+        /* .tp_class_members = */NULL
+    },
+    /* .ft_read   = */&sysfile_read,
+    /* .ft_write  = */&sysfile_write,
+    /* .ft_seek   = */&sysfile_seek,
+    /* .ft_sync   = */&sysfile_sync,
+    /* .ft_trunc  = */&sysfile_trunc,
+    /* .ft_close  = */&sysfile_close,
+    /* .ft_pread  = */NULL,
+    /* .ft_pwrite = */NULL,
+    /* .ft_getc   = */&sysfile_getc,
+    /* .ft_ungetc = */&sysfile_ungetc,
+    /* .ft_putc   = */&sysfile_putc
+};
+
+PUBLIC DeeFileTypeObject DeeFSFile_Type = {
+    /* .ft_base = */{
+        OBJECT_HEAD_INIT(&DeeFileType_Type),
+        /* .tp_name     = */"fs_file",
+        /* .tp_doc      = */NULL,
+        /* .tp_flags    = */TP_FNORMAL,
+        /* .tp_weakrefs = */0,
+        /* .tp_features = */TF_NONE,
+        /* .tp_base     = */(DeeTypeObject *)&DeeSystemFile_Type,
+        /* .tp_init = */{
+            {
+                /* .tp_alloc = */{
+                    /* .tp_ctor      = */NULL,
+                    /* .tp_copy_ctor = */NULL,
+                    /* .tp_deep_ctor = */NULL,
+                    /* .tp_any_ctor  = */NULL,
+                    /* .tp_free      = */NULL,
+                    {
+                        /* .tp_instance_size = */sizeof(DeeFileObject)
+                    }
+                }
+            },
+            /* .tp_dtor        = */NULL,
+            /* .tp_assign      = */NULL,
+            /* .tp_move_assign = */NULL
+        },
+        /* .tp_cast = */{
+            /* .tp_str  = */NULL,
+            /* .tp_repr = */NULL,
+            /* .tp_bool = */NULL
+        },
+        /* .tp_call          = */NULL,
+        /* .tp_visit         = */NULL,
+        /* .tp_gc            = */NULL,
+        /* .tp_math          = */NULL,
+        /* .tp_cmp           = */NULL,
+        /* .tp_seq           = */NULL,
+        /* .tp_iter_next     = */NULL,
+        /* .tp_attr          = */NULL,
+        /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+        /* .tp_methods       = */NULL,
+        /* .tp_getsets       = */NULL,
+        /* .tp_members       = */NULL,
+        /* .tp_class_methods = */NULL,
+        /* .tp_class_getsets = */NULL,
+        /* .tp_class_members = */NULL
+    },
+    /* .ft_read   = */NULL,
+    /* .ft_write  = */NULL,
+    /* .ft_seek   = */NULL,
+    /* .ft_sync   = */NULL,
+    /* .ft_trunc  = */NULL,
+    /* .ft_close  = */NULL,
+    /* .ft_pread  = */NULL,
+    /* .ft_pwrite = */NULL,
+    /* .ft_getc   = */NULL,
+    /* .ft_ungetc = */NULL,
+    /* .ft_putc   = */NULL
+};
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_SYSTEM_GENERIC_FILE_C_INL */

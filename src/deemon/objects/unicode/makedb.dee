@@ -1,0 +1,317 @@
+local copyright = "
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */";
+#include <file>
+#include <fs>
+#include <util>
+
+fs::chdir(fs::path::head(__FILE__));
+local output_name = "unicode_db.h";
+
+function ctypeof(x) {
+	if (x >= 8) return "uint64_t";
+	if (x >= 4) return "uint32_t";
+	if (x >= 2) return "uint16_t";
+	return "uint8_t";
+}
+
+#if __DEEMON__ < 200
+/* Workaround for the 32-bit, unsigned integers
+ * not being unsigned in the old deemon */
+#define UNSIGNED(x) (unsigned int)x
+#else
+#define UNSIGNED(x) x
+#endif
+
+function elem_size(x) {
+	local m = util::max(x);
+	if (m is none) m = 0;
+	m = UNSIGNED(m) & UNSIGNED(0xffffffff);
+	if (m > UNSIGNED(0xffffffff)) return 8;
+	if (m > UNSIGNED(0xffff)) return 4;
+	if (m > UNSIGNED(0xff)) return 2;
+	return 1;
+}
+/* Split a sequence of ints into two smaller ones + a shift (int)
+ * that can be used to store the original values more compactly,
+ * while accessing the original values as follows:
+ * >> local a,b,shift = return...;
+ * >> tab[i] == b[(a[(unsigned)i >> shift] << shift) + (i & ((1 << shift)-1))];
+ * HINT: If no mapping exists to optimize for this, shift will equal `0'. */
+function split_tables(tab) {
+	local max_shift = 0;
+	tab = tuple(tab);
+	assert tab.non_empty();
+	{
+		local len = #tab - 1;
+		while (len) {
+			len >>= 1;
+			++max_shift;
+		}
+	}
+	local result = pack([],[],0);
+	local result_score = UNSIGNED(0xffffffff);
+	for (local shift: util::range(max_shift)) {
+		print "Testing shift",shift,"...",;
+		local size = 2**shift;
+		local a = [];
+		local b = [];
+		local cache = dict();
+		for (local i: util::range(0,#tab,size)) {
+			local part = tab[i:i+size];
+			local offset = cache.get(part);
+			if (offset is none) {
+				/* Add a new section. */
+				offset = #b;
+				cache[part] = offset;
+				b.extend(part);
+			}
+			a.append(offset >> shift);
+		}
+		local score = #a*elem_size(a)+#b*elem_size(b);
+		if (score < result_score) {
+			/* Better fit. */
+			result = pack(a,b,shift);
+			result_score = score;
+		}
+		print " done (Score: "+score+"; a: "+#a+"; b: "+#b+")";
+	}
+	return result;
+}
+
+local records = [];
+
+function read_lines(filename) {
+	print "Loading unicode database",repr filename;
+	for (local line: file.open(filename)) {
+		line = line.strip();
+		local com = line.find("#");
+		if (com >= 0) {
+			line = line[:com].strip();
+		}
+		if (!line) continue;
+		yield line;
+	}
+}
+
+for (local line: read_lines("UnicodeData.txt")) {
+	local record = list(line.split(";"));
+	local id = (int)("0x"+record[0]);
+	if (id >= #records) records.resize(id+1);
+	records[id] = record;
+	if (#record != 15)
+		print repr "ERROR: invalid record:",repr record;
+}
+for (local x: records) {
+	if (x !is none)
+		x.append(dict());
+}
+for (local line: read_lines("DerivedCoreProperties.txt")) {
+	try {
+		local range,attrib = line.split(";")...;
+		local ids;
+		range = range.strip();
+		attrib = attrib.strip();
+		if (".." in range) {
+			local begin,none,end = range.partition("..")...;
+			begin = (int)("0x"+begin.strip());
+			end = (int)("0x"+end.strip())+1;
+			ids = util::range(begin,end);
+		} else {
+			ids = [(int)("0x"+range.strip())];
+		}
+		for (local i: ids) {
+			local record = records[i];
+			if (record is none)
+				continue;
+			local aset = record[15];
+			if (attrib !in aset)
+				aset[attrib] = none;
+		}
+	} catch (...) {
+		print "Invalind line",repr line;
+		throw;
+	}
+}
+print "done";
+
+//	0000;<control>;Cc;0;BN;;;;;N;NULL;;;;
+
+#define UNICODE_FPRINT   0x0001 /* The character is printable, or SPC (` '). */
+#define UNICODE_FALPHA   0x0002 /* The character is alphabetic. */
+#define UNICODE_FSPACE   0x0004 /* The character is a space-character. */
+#define UNICODE_FLF      0x0008 /* Line-feed/line-break character. */
+#define UNICODE_FLOWER   0x0010 /* Lower-case. */
+#define UNICODE_FUPPER   0x0020 /* Upper-case. */
+#define UNICODE_FTITLE   0x0040 /* Title-case. */
+#define UNICODE_FCNTRL   0x0080 /* Control character. */
+#define UNICODE_FDIGIT   0x0100 /* The character is a digit. e.g.: `2' (ascii; `ut_digit' is `2') */
+#define UNICODE_FDECIMAL 0x0200 /* The character is a decimal. e.g: `²' (sqare; `ut_digit' is `2') */
+#define UNICODE_FSYMSTRT 0x0400 /* The character can be used as the start of an identifier. */
+#define UNICODE_FSYMCONT 0x0800 /* The character can be used to continue an identifier. */
+/*      UNICODE_F        0x1000 */
+/*      UNICODE_F        0x2000 */
+/*      UNICODE_F        0x4000 */
+/*      UNICODE_F        0x8000 */
+
+
+/* Figure out flags. */
+local descriptors = list();
+local descriptor_cache = dict();
+local descriptor_ids = [0] * #records;
+
+/* Enable symbol usage for underscore. */
+function force_symbol_character(ord,traits) {
+	local x = records[ord];
+	print repr x;
+	if (x is none) {
+		x = [none] * 16;
+		x[15] = dict();
+		records[ord] = x;
+	}
+	x = x[15];
+	for (local y: traits)
+		x[y] = none;
+	print repr records[ord];
+}
+
+/* Force some characters to be recognized in symbols.
+ * -> We use this system to detect what can be considered a
+ *    valid name, and unlike in ~real~ language, we acceept
+ *    symbol names that follow C-semantics, meaning underscores,
+ *    dollar and digits! */
+force_symbol_character("_".ord(),["XID_Start","XID_Continue"]);
+force_symbol_character("$".ord(),["XID_Start","XID_Continue"]);
+for (local x: ["0","1","2","3","4","5","6","7","8","9"])
+	force_symbol_character(x.ord(),["XID_Continue"]);
+
+
+for (local i,record: util::enumerate(records)) {
+	if ((i & 0x3ff) == 0) {
+		print "\rCalculating traits... %d%% (%d/%d)" % ((i*100)/#records,i,#records),;
+	}
+	local flags = 0;
+	local digit = 0;
+	local lower = i;
+	local upper = i;
+	local title = i;
+	if (record !is none) try {
+		local category = record[2];
+		local bidirectional = record[4];
+		local properties = record[15];
+		if (category[0] == "L")
+			flags |= UNICODE_FALPHA;
+		if (category == "Ll" || "Lowercase" in properties)
+			flags |= UNICODE_FLOWER;
+		if (category == "Lu" || "Uppercase" in properties)
+			flags |= UNICODE_FUPPER;
+		if (category == "Lt")
+			flags |= UNICODE_FTITLE;
+		if ("Line_Break" in properties || bidirectional == "B")
+			flags |= UNICODE_FLF;
+		if (category == "Zs" || bidirectional in ("WS", "B", "S"))
+			flags |= UNICODE_FSPACE;
+		if (category[0] !in ("C", "Z") || (int)("0x"+record[0]) == " ".ord())
+			flags |= UNICODE_FPRINT;
+		if (category[0] == "C")
+			flags |= UNICODE_FCNTRL;
+		if ("XID_Start" in properties)
+			flags |= UNICODE_FSYMSTRT;
+		if ("XID_Continue" in properties)
+			flags |= UNICODE_FSYMCONT;
+		if (record[12]) upper = (int)("0x"+record[12]);
+		if (record[13]) lower = (int)("0x"+record[13]);
+		if (record[14]) title = (int)("0x"+record[14]);
+		if (record[7]) {
+			flags |= UNICODE_FDIGIT;
+			if (record[6])
+				flags |= UNICODE_FDECIMAL;
+			digit = (int)(record[7]);
+		} else if (record[6]) {
+			flags |= UNICODE_FDECIMAL;
+			digit = (int)(record[6]);
+		}
+	} catch (...) {
+		print "Invalid record:",repr record;
+		throw;
+	}
+	local item = pack(flags,digit,lower-i,upper-i,title-i);
+	local id = descriptor_cache.get(item);
+	if (id is none) {
+		id = #descriptors;
+		descriptors.append(item);
+		descriptor_cache[item] = id;
+		print
+			"\rNew character type for U+%.4I32X:" % i,
+			"{",", ".join(item),"}";
+	}
+	descriptor_ids[i] = id;
+}
+print " done";
+
+
+local a,b,shift = split_tables(descriptor_ids)...;
+print "Got tables";
+print "\t#descriptors =",#descriptors;
+print "\t#a           =",#a;
+print "\t#b           =",#b;
+print "\tshift        =",shift;
+
+local out = file.open(output_name,"w");
+print out: copyright.strip();
+
+print out: "#define DESCRIPTORS_COUNT",#descriptors;
+print out: "static struct unitraits const descriptors[" + #descriptors + "] = {";
+for (local i,x: util::enumerate(descriptors)) {
+	print out: ("\t/* 0x%.2x */" % i)+"{ 0x%x, %d, 0, %d, %d, %d }," % x;
+}
+print out: "};";
+
+function print_table(out,name,tab) {
+	print out: "static",ctypeof(elem_size(tab)),"const "+name+"[" + #tab + "] = {\n\t",;
+	for (local i,x: util::enumerate(tab)) {
+		print out: "0x%x," % x,;
+		if ((i % 16) == 15) print out: "\n\t",;
+	}
+	print out: "\n};";
+}
+
+print out: "#define UNICODE_COUNT               ","0x%x" % (#records);
+print out: "#define UNICODE_COUNT_VALID         ","0x%x" % (#a << shift);
+print out: "#define SHIFT                       ",shift;
+print out: "#define TAB1_MASK                   ","0x%x" % ((1 << shift)-1);
+print out: "#define UNICODE_DESCRIPTOR_INDEX(ch)","tab2[(tab1[(unsigned int)(ch) >> SHIFT] << SHIFT) + ((unsigned int)(ch) & TAB1_MASK)]";
+print out: "#define UNICODE_DESCRIPTOR(ch)      ","descriptors[UNICODE_DESCRIPTOR_INDEX(ch)]";
+print_table(out,"tab1",a);
+print_table(out,"tab2",b);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

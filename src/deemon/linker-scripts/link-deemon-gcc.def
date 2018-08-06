@@ -1,0 +1,6 @@
+EXPORTS
+	; For compatibility with MSVC, export all
+	; stdcall symbols with a leading underscore.
+	; See this mail that noone ever bothered to reply to:
+	; https://cygwin.com/ml/cygwin/2001-03/msg00514.html
+	_DeeArg_VUnpack@16=DeeArg_VUnpack@16

@@ -1,0 +1,354 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_COMPILER_LEXER_H
+#define GUARD_DEEMON_COMPILER_LEXER_H 1
+
+#include "../api.h"
+
+#define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
+#define PARSE_FLFSTMT 0x0001 /* Parse line-feeds as statement terminators in certain places. */
+
+#ifdef CONFIG_BUILDING_DEEMON
+#include "tpp.h"
+#include "ast.h"
+#include "../string.h"
+#include <stdbool.h>
+
+DECL_BEGIN
+
+/* Parser flags (Set of `PARSE_F*'). - Currently unused... */
+INTDEF uint16_t parser_flags;
+INTDEF struct compiler_options *inner_compiler_options;
+
+
+/* Parse a string. */
+INTDEF DREF DeeObject *FCALL ast_parse_string(void);
+
+/* @param: lookup_mode: Set of `LOOKUP_SYM_*' */
+INTDEF DREF DeeAstObject *FCALL ast_parse_unary_base(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_unary(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_prod(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_sum(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_shift(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_cmp(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_cmpeq(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_and(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_xor(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_or(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_as(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_land(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_lor(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_cond(unsigned int lookup_mode);
+INTDEF DREF DeeAstObject *FCALL ast_parse_assign(unsigned int lookup_mode); /* NOTE: Also handled inplace operators. */
+
+/* Parse a brace initializer expression.
+ * When `preferred_type' is non-NULL, it describes the preferred
+ * initialization type, and when not possible to be met, a warning is emit.
+ * `NULL' can however be passed as well, in which case no such warning is
+ * emit, while any kind of generic list-style sequence is generated as a `list'. */
+INTDEF DREF DeeAstObject *FCALL ast_parse_brace(unsigned int lookup_mode, DeeTypeObject *preferred_type);
+
+/* Parse an import statement/expression.
+ * @param: allow_symbol_define: When true, allow the `import foo = x from y;' syntax,
+ *                              as well as define local symbols `x,y' for `import x,y from z'
+ *                              When false, no symbols are defined by the AST, and the returned
+ *                              AST contains either a single, or multiple symbols describing
+ *                              what was imported either as an `AST_SYM' (single) or as an
+ *                             `AST_MULTIPLE:AST_FMULTIPLE_TUPLE' (more than one symbol).
+ * >> foo = import x from y;
+ *          ^ Entry        ^ exit
+ * >> import foo = bar from baz;
+ *    ^ Entry                  ^ exit
+ * >> import("foo");
+ *    ^ Entry      ^ exit
+ * >> from foo import bar;
+ *    ^ Entry            ^ exit
+ * Accepted formats:
+ * >> from <module-name> import <import-list>
+ * >> import <import-list> from <module-name>
+ * >> import <module-list>
+ * >> import <symbol-name> = <module-name>
+ * >> import <symbol-name> = <import-name> from <module-name>
+ * >> import(<expression>)
+ */
+INTDEF DREF DeeAstObject *FCALL ast_parse_import(bool allow_symbol_define);
+/* Parse a module name and generate an AST to reference a single symbol `import_name'. */
+INTDEF DREF DeeAstObject *FCALL ast_parse_import_single(struct TPPKeyword *__restrict import_name);
+
+/* Parse a comma-separated list of expressions,
+ * as well as assignment/inplace expressions.
+ * >> foo = 42;             // (foo = (42));
+ * >> foo += 42;            // (foo += (42));
+ * >> foo,bar = (10,20)...; // (foo,bar = (10,20)...);
+ * >> foo,bar = 10;         // (foo,(bar = 10));
+ * >> { 10 }                // (list { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * >> { "foo": 10 }         // (dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * @param: mode:  Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
+ * @param: flags: Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
+ */
+INTDEF DREF DeeAstObject *DCALL
+ast_parse_comma(unsigned int mode, uint16_t flags);
+#define AST_COMMA_NORMAL        0x0000
+#define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags' */
+#define AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,' being followed by another expression.
+                                        * NOTE: When this flag is set, trailing `,' are not parsed, but remain as the active token upon exit. */
+#define AST_COMMA_ALLOWNONBLOCK 0x0040 /* Allow non-blocking yields for a trailing `;'. */
+#define AST_COMMA_ALLOWKWDLIST  0x1000 /* Stop if what a keyword list label is encountered. */
+#define AST_COMMA_PARSESINGLE   0x2000 /* Only parse a single expression. */
+#define AST_COMMA_PARSESEMI     0x4000 /* Parse a `;' as part of the expression (if a `;' is required). */
+#define AST_COMMA_ALLOWVARDECLS 0x8000 /* Allow new variables to be declared. */
+
+
+/* Parse an argument list using `ast_parse_comma',
+ * and (if present) also parse a trailing keyword label list, which is then saved as a
+ * constant ast and returned through `*pkeyword_labels'.
+ * If no keyword labels are present, `*pkeyword_labels' is filled in as `NULL'
+ * @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
+INTDEF DREF DeeAstObject *DCALL
+ast_parse_argument_list(unsigned int mode,
+                        DREF DeeAstObject **__restrict pkeyword_labels);
+
+
+/* Parse lookup mode modifiers:
+ * >> local x = 42;
+ *    ^     ^
+ */
+INTDEF int DCALL ast_parse_lookup_mode(unsigned int *__restrict pmode);
+
+/* Return true if the current token may be the begin of an expression. */
+INTDEF bool DCALL maybe_expression_begin(void);
+INTDEF bool DCALL maybe_expression_begin_c(char peek);
+
+/* Parse a try-statement/expression. */
+INTDEF DREF DeeAstObject *DCALL ast_parse_try(bool is_statement);
+
+/* Parse a with-statement/expression.
+ * NOTE: This function expects the current token to be `with' */
+INTDEF DREF DeeAstObject *FCALL ast_parse_with(bool is_statement, bool allow_nonblock);
+
+/* Parse a regular, old statement. */
+INTDEF DREF DeeAstObject *DCALL ast_parse_statement(bool allow_nonblock);
+/* Parse a sequence of statements until `end_token' is
+ * encountered at the start of a statement, or until
+ * the end of the current input-file-stack is reached.
+ * NOTE: The returned ast is usually an `AST_MULTIPLE',
+ *       which will have the given `flags' assigned.
+ * WARNING: If only a single AST would be contained
+ *          and `flags' is `AST_FMULTIPLE_KEEPLAST',
+ *          the inner expression is automatically
+ *          returned instead.
+ * NOTE: If desired, the caller is responsible to setup
+ *       or teardown a new scope before/after this function.
+ */
+INTDEF DREF DeeAstObject *DCALL
+ast_parse_statements_until(uint16_t flags, tok_t end_token);
+
+/* Parse and return an operator name.
+ * @param: features: Set of `P_OPERATOR_F*'
+ * @return: * : One of `OPERATOR_*' or `AST_OPERATOR_*'
+ * @return: -1: An error occurred. */
+INTDEF int32_t DCALL ast_parse_operator_name(uint16_t features);
+#define P_OPERATOR_FNORMAL 0x0000
+#define P_OPERATOR_FCLASS  0x0001 /* Allow class-specific operator names. */
+#define P_OPERATOR_FNOFILE 0x0002 /* Don't allow file-specific operator names. */
+
+
+/* Ambiguous operator codes.
+ * The caller should resolved these based on operand count. */
+#define AST_OPERATOR_POS_OR_ADD           0xf000 /* `+' */
+#define AST_OPERATOR_NEG_OR_SUB           0xf001 /* `-' */
+#define AST_OPERATOR_GETITEM_OR_SETITEM   0xf002 /* `[]' */
+#define AST_OPERATOR_GETRANGE_OR_SETRANGE 0xf003 /* `[:]' */
+#define AST_OPERATOR_GETATTR_OR_SETATTR   0xf004 /* `.' */
+#define AST_OPERATOR_MIN                  0xf000
+#define AST_OPERATOR_MAX                  0xf004
+
+/* Special class operators. */
+#define AST_OPERATOR_FOR                  0xf005 /* `for' */
+
+/* Build a call to an operator, given the operator's name and arguments.
+ * @param: name:  One of `OPERATOR_*' or `AST_OPERATOR_*'
+ * @param: flags: Set of `AST_OPERATOR_F*'
+ *       WARNING: This flags set may not contain `AST_OPERATOR_FVARARGS'! */
+INTDEF DREF DeeAstObject *DCALL
+ast_build_bound_operator(uint16_t name, uint16_t flags,
+                         DeeAstObject *__restrict self,
+                         DeeAstObject *__restrict args);
+/* Same as `ast_build_bound_operator', but used to build free-standing operators. */
+INTDEF DREF DeeAstObject *DCALL
+ast_build_operator(uint16_t name, uint16_t flags,
+                   DeeAstObject *__restrict args);
+
+/* Parse a loop statement that appears in an expression:
+ * When called, the current token must be one of
+ * `KWD_for', `KWD_foreach', `KWD_while' or `KWD_do'
+ * The returned expression is usually a call-operator
+ * on an anonymous lambda function.
+ */
+INTDEF DREF DeeAstObject *FCALL ast_parse_loopexpr(void);
+
+/* Parse a new function declaration, starting at either the argument
+ * list, or when not present at the following `->' or `{' token.
+ * The returned AST is of type `AST_FUNCTION'.
+ * NOTE: The caller is responsible for allocating a symbol in their
+ *       scope if the desire is to address the function by name.
+ *       This parser function will merely return the `AST_FUNCTION',
+ *       not some wrapper that assigns it to a symbol using `AST_STORE'. */
+INTDEF DREF DeeAstObject *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params);
+INTDEF DREF DeeAstObject *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params);
+INTDEF DREF DeeAstObject *DCALL ast_parse_function_noscope_noargs(bool *pneed_semi);
+
+/* Parse everything following a `del' keyword in a statement, or expression:
+ * >> foo = 7;
+ * >> print foo;
+ * >> del foo;        // Unbind + delete
+ *        ^  ^
+ * >> foo = 42;
+ * >> print foo;
+ * >> print del(foo); // Unbind only
+ *              ^  ^
+ * NOTE: When `LOOKUP_SYM_ALLOWDECL' is set in `lookup_mode',
+ *       the function is allocated to delete locally defined
+ *       variable symbols.
+ *       However, in all cases is this function allowed to
+ *       unbind variables (deleting only referring to the
+ *       compile-time symbol becoming unknown and being added to
+ *       the current scope's chain of deleted/anonymous symbols) */
+INTDEF DREF DeeAstObject *DCALL ast_parse_del(unsigned int lookup_mode);
+
+#ifndef CONFIG_LANGUAGE_NO_ASM
+/* Parse a user-defined assembly block. */
+INTDEF DREF DeeAstObject *DCALL ast_parse_asm(void);
+#endif
+
+/* Parse the argument list of a function definition,
+ * automatically creating new symbols for arguments,
+ * as well as setting code flags for variadic arguments. */
+INTDEF int DCALL parse_arglist(void);
+
+/* Parse the contents of a brace initializer,
+ * starting after the '{' token and ending on '}'.
+ * @param: preferred_type: One of:
+ *                          - DeeHashSet_Type
+ *                          - DeeDict_Type
+ *                          - DeeList_Type
+ *                          - DeeTuple_Type
+ *                          - DeeSeq_Type   // Encode as `AST_FMULTIPLE_GENERIC'
+ *                          - NULL          // Automatically determine list/dict
+ */
+INTDEF DREF DeeAstObject *FCALL ast_parse_brace_items(DeeTypeObject *preferred_type);
+
+/* Parse a class definition, starting at the `{' token (or at `:' when a base exists).
+ * The returned AST is of type `AST_CLASS' (create_symbol == false) or `AST_STORE' (create_symbol == true).
+ * @param: class_flags:   Set of `TP_F* & 0xf'
+ * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name' != NULL).
+ * @param: symbol_mode:   The mode with which to create the class symbol.
+ */
+INTDEF DREF DeeAstObject *DCALL
+ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
+                bool create_symbol, unsigned int symbol_mode);
+
+/* Parse the head header of a for-statement, returning the appropriate
+ * AST flags for creating the loop (usually `AST_FLOOP_NORMAL' or `AST_FLOOP_FOREACH'),
+ * as well as filling in the given pointers to used asts.
+ * NOTE: The caller is responsible for wrapping this function in its own
+ *       scope, should they choose to with initializers/loop element symbols
+ *       to be placed in their own scope.
+ * NOTE: Any of the given pointers may be filled with NULL if that AST is not present,
+ *       unless the loop is actually a foreach-loop, in which case they _must_ always
+ *       be present.
+ * WARNING: The caller is responsible for wrapping `*piter_or_next' in an `__iterself__()'
+ *          operator call when `AST_FLOOP_FOREACH' is part of the return mask, unless they wish
+ *          to enumerate an iterator itself (which is possible using the `__foreach' statement). */
+INTDEF int32_t DCALL ast_parse_for_head(DREF DeeAstObject **__restrict pinit,
+                                        DREF DeeAstObject **__restrict pelem_or_cond,
+                                        DREF DeeAstObject **__restrict piter_or_next);
+
+/* Parse an assertion statement. (must be started ontop of the `assert' keyword) */
+INTDEF DREF DeeAstObject *DCALL ast_parse_assert(bool needs_parenthesis);
+
+/* Parse a cast expression suffix following parenthesis, or
+ * re-return the given `typeexpr' if there is no cast operand
+ * at the current lexer position:
+ * >> local x = (int)get_value();
+ *                   ^          ^
+ *                   entry      exit
+ * >> local y = (get_value());
+ *                           ^
+ *                           entry
+ *                           ^
+ *                           exit
+ */
+INTDEF DREF DeeAstObject *DCALL ast_parse_cast(DeeAstObject *__restrict typeexpr);
+
+struct module_object;
+/* Parse a module name and return the associated module object. */
+INTDEF DREF struct module_object *DCALL parse_module_byname(void);
+INTDEF struct module_symbol *DCALL
+import_module_symbol(struct module_object *__restrict module,
+                     struct TPPKeyword *__restrict name);
+
+
+struct ast_tags {
+    struct ascii_printer at_doc;          /* [0..1] The documentation string that should be applied to the following declaration. */
+    struct symbol        *at_class;        /* [0..1] The this-class symbol. */
+    struct symbol        *at_super;        /* [0..1] The super-class symbol. */
+    uint16_t              at_code_flags;   /* Set of `CODE_F*' or'd to the next function being created. */
+    uint16_t              at_member_flags; /* Set of `CLASS_MEMBER_F*' */
+    uint16_t              at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
+    uint16_t              at_switch;       /* Set of `AST_FSWITCH_*' */
+    uint16_t              at_class_flags;  /* Set of `TP_F*' or'd to flags during creation of a new class. */
+#define AST_TAG_FNORMAL   0x0000
+#define AST_TAG_FNOBASE   0x0001           /* Don't automatically use `object' as base for user-classes without a custom base. */
+    uint16_t              at_tagflags;     /* Set of `AST_TAG_F*'. */
+};
+
+/* Current set of active AST tags.
+ * This set is cleared at least every time a statement ends,
+ * but is cleared more than that when inside of a class branch,
+ * or when declaring a function. */
+INTDEF struct ast_tags current_tags;
+
+/* Reset the current set of active tags to an empty (unallocated) state. */
+INTDEF void DCALL clear_current_tags(void);
+
+
+/* Parse tags at the current lexer position, starting
+ * immediately after the (probably) `@' token.
+ * >> @doc("foo"),doc("bar")
+ *     ^                    ^
+ *     entry                exit
+ * Note that for backwards compatibility, deemon still
+ * parses `__attribute__', `__attribute' and `__declspec'
+ * using this function. */
+INTDEF int DCALL parse_tags(void);
+/* Same as `parse_tags()', but also parses the leading `@'
+ * token and doesn't do anything if that token wasn't found. */
+INTDEF int DCALL parse_tags_block(void);
+
+#ifndef __INTELLISENSE__
+#ifndef __NO_builtin_expect
+#define parse_tags()  __builtin_expect(parse_tags(),0)
+#endif
+#endif
+
+DECL_END
+#endif /* CONFIG_BUILDING_DEEMON */
+
+#endif /* !GUARD_DEEMON_COMPILER_LEXER_H */
