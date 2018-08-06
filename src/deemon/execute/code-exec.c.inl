@@ -4733,6 +4733,7 @@ do_pack_set:
          if unlikely(!hashset_object) HANDLE_EXCEPT();
          sp -= imm_val;
          PUSH(hashset_object);
+         DISPATCH();
      }
 
      {   DREF DeeObject *dict_object;

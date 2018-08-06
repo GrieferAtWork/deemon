@@ -196,36 +196,81 @@ again:
 }
 
 PRIVATE int DCALL
-set_deep(Set *__restrict self,
-         Set *__restrict other) {
- struct hashset_item *iter,*end;
- if (set_copy(self,other)) return -1;
- /* Replace all elements with deep copies of themself. */
- end = (iter = self->s_elem)+(self->s_mask+1);
- for (; iter != end; ++iter) {
-  DREF DeeObject *copy;
-  if (!iter->si_key) continue;
-  copy = DeeObject_DeepCopy(iter->si_key);
-  if unlikely(!copy) goto err;
-  Dee_Decref(iter->si_key);
-  if (iter->si_key != copy) {
-   iter->si_key  = copy; /* Inherit reference. */
-   iter->si_hash = DeeObject_Hash(copy);
-   /* NOTE: Considering that object hashes shouldn't often change
-    *       for copies, we don't re-hash the value but optimize for
-    *       the most likely case of the hash remaining consistent. */
-  } else {
-   if (iter->si_key == dummy) continue;
+set_deepload(Set *__restrict self) {
+ DREF DeeObject **new_items,**items = NULL;
+ size_t i,hash_i,item_count,ols_item_count = 0;
+ struct hashset_item *new_map,*ols_map; size_t new_mask;
+ for (;;) {
+  DeeHashSet_LockRead(self);
+  /* Optimization: if the dict is empty, then there's nothing to copy! */
+  if (self->s_elem == empty_set_items) {
+   DeeHashSet_LockEndRead(self);
+   return 0;
   }
-  ASSERT(iter->si_key != dummy);
+  item_count = self->s_used;
+  if (item_count <= ols_item_count)
+      break;
+  DeeHashSet_LockEndRead(self);
+  new_items = (DREF DeeObject **)Dee_Realloc(items,item_count*sizeof(DREF DeeObject *));
+  if unlikely(!new_items) goto err_items;
+  ols_item_count = item_count;
+  items = new_items;
  }
+ /* Copy all used items. */
+ for (i = 0,hash_i = 0; i < item_count; ++hash_i) {
+  ASSERT(hash_i <= self->s_mask);
+  if (self->s_elem[hash_i].si_key == NULL) continue;
+  if (self->s_elem[hash_i].si_key == dummy) continue;
+  items[i] = self->s_elem[hash_i].si_key;
+  Dee_Incref(items[i]);
+  ++i;
+ }
+ DeeHashSet_LockEndRead(self);
+ /* With our own local copy of all items being
+  * used, replace all of them with deep copies. */
+ for (i = 0; i < item_count; ++i) {
+  if (DeeObject_InplaceDeepCopy(&items[i]))
+      goto err_items_v;
+ }
+ new_mask = 1;
+ while ((item_count & new_mask) != item_count)
+         new_mask = (new_mask << 1)|1;
+ new_map = (struct hashset_item *)Dee_Calloc((new_mask+1)*sizeof(struct hashset_item));
+ if unlikely(!new_map) goto err_items_v;
+ /* Insert all the copied items into the new map. */
+ for (i = 0; i < item_count; ++i) {
+  dhash_t j,perturb,hash;
+  hash = DeeObject_Hash(items[i]);
+  perturb = j = hash & new_mask;
+  for (;; j = HASHSET_HASHNX(j,perturb),HASHSET_HASHPT(perturb)) {
+   struct hashset_item *item = &new_map[j & new_mask];
+   if (item->si_key) continue; /* Already in use */
+   item->si_hash = hash;
+   item->si_key  = items[i]; /* Inherit reference. */
+   break;
+  }
+ }
+ DeeHashSet_LockWrite(self);
+ i = self->s_mask + 1;
+ self->s_mask = new_mask;
+ self->s_used = item_count;
+ self->s_size = item_count;
+ ols_map = self->s_elem;
+ self->s_elem = new_map;
+ DeeHashSet_LockEndWrite(self);
+ if (ols_map != empty_set_items) {
+  while (i--)
+      Dee_XDecref(ols_map[i].si_key);
+  Dee_Free(ols_map);
+ }
+ Dee_Free(items);
  return 0;
-err:
- iter = self->s_elem;
- for (; iter != end; ++iter) {
-  if (!iter->si_key) continue;
-  Dee_Decref(iter->si_key);
- }
+err_items_v:
+ i = item_count;
+ while (i--)
+     Dee_Decref(items[i]);
+err_items:
+ Dee_Free(items);
  return -1;
 }
 
@@ -1339,7 +1384,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */&set_ctor,
                 /* .tp_copy_ctor = */&set_copy,
-                /* .tp_deep_ctor = */&set_deep,
+                /* .tp_deep_ctor = */&set_copy,
                 /* .tp_any_ctor  = */&set_init,
                 /* .tp_free      = */NULL,
                 {
@@ -1349,7 +1394,8 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&set_fini,
         /* .tp_assign      = */NULL,
-        /* .tp_move_assign = */NULL
+        /* .tp_move_assign = */NULL,
+        /* .tp_deepload    = */(int(DCALL *)(DeeObject *__restrict))&set_deepload
     },
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
