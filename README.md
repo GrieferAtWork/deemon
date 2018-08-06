@@ -1,12 +1,19 @@
 # deemon - Deemon scripting language
 
-Deemon, completely rewritten with a new focus on clean, intuitive and function language design, while still maintaining a backwards compatibility rate high enough to allow for simply porting of existing code.
+Deemon, completely rewritten with a new focus on clean, intuitive and functional language design, while still maintaining a backwards compatibility rate high enough to allow for simple porting of existing code.
 For more information on changes, fixes and improvements, see /lib/LANGUAGE.txt
+
+Deemon is a C-like, interpreted, object-orient and exception-enabled scripting language, greatly inspired by python's runtime library, while sharing many syntax constructs with common languages such as C, java and javascript.
+At its core, deemon is designed for sequence and string processing, being the inventor of the expand-expression (as seen in something like <code>x = [a...,42,b...];</code> which creates a new list consisting of the items from <code>a</code>, followed by <code>42</code>, then those from <code>b</code>), as well as including many language constructs useful in such situations, including <code>yield</code>-statements, and generator expression (such as <code>foo = for (local x: bar) x.strip();</code>, where <code>foo</code> is a sequence containing the elements of <code>bar</code> after thore were transformed with a call to a member function <code>strip</code>)
+Especially in this rewrite, deemon is shining more than ever when it comes to string functionality, providing <b>regular expression</b> support, as well as support for <b>wild cards</b>, alongside fully featured <b>unicode</b> support.
+In other area, deemon continues to shine, being more expandable than ever with the introduction of a module-based library that comes preloaded with an <code>fs</code> module allowing for filesystem operations, or the builtin <code>file from deemon</code> type allowing for optionally buffered file or TTY I/O, across modules such as <code>time</code> for working with the gregorian calender, and the <code>net</code> providing an object-orient model for sockets.
+Deemon is truely a universally useful language that has learned from its past mistakes and shortcomings, allowing you to write highly efficient code, that will be just as easy to read as it was to write.
 
 ### Major improvements
   - Introduction of a module-based dependency system that allows code reuse without relying on preprocessor functionality that really didn't fit a scripting language all too well.
   - With more emphasis on documentation, deemon now comes shipped with a documentation server accessing via web-browser
-    - Links listed below require that you are running
+    - It should be of note that the documentation server, as well as documentation text processor is written entirely in deemon.
+    - Links listed below require that you are running it locally.
   - A complete overhaul of the builtin `string' (http://localhost:8080/modules/net/deemon/string)
     - Full unicode support all packed together into a single string type
     - Separation between raw data (http://localhost:8080/modules/net/deemon/bytes) and strings, as well as functionality to decode/encode data and strings
@@ -37,6 +44,7 @@ For more information on changes, fixes and improvements, see /lib/LANGUAGE.txt
     - If you look at it, it really has more in common with that of a CISC architecture, featuring admirable compression rates, while still executing quite fast
   - Added compiler warnings for various questionable cases (including use of reserved keywords as symbol names)
   - I took the time to write the entire interpreter in i386 assembly (by hand), providing a significant performance boost on 32-bit intel machines.
+  - The builtin <code>int</code> type can have arbitrary precision now, allowing work with a practically infinite number of digits (though I'm not claiming credit for the implementation; only for the integration and new design centered around it)
 
 ### Noteworthy changes and fixes
   - Inplace operators have significantly different operation protocols that regular operators (<code>x += y;</code> is emulated as <code>x = x + y;</code> at runtime when no inplace operator exists)
