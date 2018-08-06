@@ -231,17 +231,48 @@ ob_weakref_lock(WeakRef *__restrict self,
  if (DeeArg_Unpack(argc,argv,"|o:lock",&alt))
      return NULL;
  result = weakref_lock(&self->wr_ref);
- if (!result && (result = alt) == NULL)
-      err_cannot_lock_weakref();
+ if (!result) {
+  if ((result = alt) == NULL)
+       err_cannot_lock_weakref();
+  else Dee_Incref(result);
+ }
  return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ob_weakref_try_lock(WeakRef *__restrict self,
+                    size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result;
+ if (DeeArg_Unpack(argc,argv,":try_lock"))
+     return NULL;
+ result = weakref_lock(&self->wr_ref);
+ if (!result) {
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+ }
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ob_weakref_alive(WeakRef *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":alive"))
+     return NULL;
+ return_bool(ob_weakref_bool(self));
 }
 
 PRIVATE struct type_method ob_weakref_methods[] = {
     { "lock", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ob_weakref_lock,
-      DOC("()->object\n"
+      DOC("->object\n"
           "(object def)->object\n"
           "@throw ReferenceError The weak reference is no longer bound and no @def was given\n"
           "Lock the weak reference and return the pointed-to object") },
+    { "alive", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ob_weakref_alive,
+      DOC("->bool\nDeprecated alias for #op:bool") },
+    { "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ob_weakref_try_lock,
+      DOC("->none\n"
+          "->object\n"
+          "Deprecated alias for #lock with passing :none (${this.lock(none)})") },
     { NULL }
 };
 
