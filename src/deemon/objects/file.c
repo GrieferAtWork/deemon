@@ -1748,7 +1748,19 @@ file_ungetc(DeeObject *__restrict self,
      goto err;
  result = DeeFile_Ungetc(self,result);
  if unlikely(result == GETC_ERR) goto err;
- return_bool(result != GETC_EOF);
+ return_bool_(result != GETC_EOF);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+file_putc(DeeObject *__restrict self,
+          size_t argc, DeeObject **__restrict argv) {
+ int result; uint8_t byte;
+ if (DeeArg_Unpack(argc,argv,"I8u:putc",&byte))
+     goto err;
+ result = DeeFile_Putc(self,(int)byte);
+ if unlikely(result == GETC_ERR) goto err;
+ return_bool_(result != GETC_EOF);
 err:
  return NULL;
 }
@@ -1802,6 +1814,24 @@ file_readline(DeeObject *__restrict self,
      result = Dee_EmptyString,
      Dee_Incref(result);
  return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+file_readall(DeeObject *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ size_t max_length = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"|Id:readall",&max_length))
+     return NULL;
+ return DeeFile_ReadText(self,max_length,true);
+}
+PRIVATE DREF DeeObject *DCALL
+file_readallat(DeeObject *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ dpos_t file_pos; size_t max_length = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"I64u|Id:readallat",&file_pos,&max_length))
+     return NULL;
+ return DeeFile_PReadText(self,max_length,file_pos,true);
 }
 
 
@@ -1874,6 +1904,10 @@ PRIVATE struct type_method file_methods[] = {
           "Unget a given character @ch to be re-read the next time #getc or #read is called. "
           "If the file's start has already been reached, :false is returned and the character "
           "will not be re-read from this file") },
+    { "putc", &file_putc,
+      DOC("(int byte)->bool\n"
+          "Append a single @byte at the end of @this file, returning :true on "
+          "success, or :false if the file has entered an end-of-file state") },
     { DeeString_STR(&str_size), &file_size,
       DOC("()->int\nReturns the size (in bytes) of the file stream") },
     { "readline", &file_readline,
@@ -1882,13 +1916,36 @@ PRIVATE struct type_method file_methods[] = {
           "Read one line from the file stream, but read at most @max_bytes bytes.\n"
           "When @keeplf is :false, strip the trailing linefeed from the returned bytes object") },
 
+    /* Deprecated functions. */
+    { "readall", &file_readall,
+      DOC("(int max_bytes=-1)->bytes\n"
+          "Deprecated alias for ${this.read(max_bytes,true)}") },
+    { "readat", &file_pread,
+      DOC("(int pos,int max_bytes=-1,bool readall=false)->bytes\n"
+          "Deprecated alias for #pread") },
+    { "writeat", &file_pwrite,
+      DOC("(buffer data,int pos,bool writeall=true)->int\n"
+          "Deprecated alias for #pwrite") },
+    { "readallat", &file_readallat,
+      DOC("(int pos,int max_bytes=-1,bool readall=false)->bytes\n"
+          "Deprecated alias for ${this.pread(pos,max_bytes,true)}") },
+    { "setpos", &file_seek,
+      DOC("(int pos)->int\n"
+          "Deprecated alias for #seek") },
+    { "flush", &file_sync,
+      DOC("->none\n"
+          "Deprecated alias for #sync") },
+    { "puts", &file_write,
+      DOC("(buffer data)->int\n"
+          "Deprecated alias for #write") },
+
     { NULL }
 };
 
 PRIVATE struct type_with file_with = {
     /* Implement with-control for files to close the file upon exit. */
-    /* .tp_enter = */(int (DCALL *)(DeeObject *__restrict))NULL,
-    /* .tp_leave = */(int (DCALL *)(DeeObject *__restrict))&DeeFile_Close
+    /* .tp_enter = */NULL,
+    /* .tp_leave = */&DeeFile_Close
 };
 
 PRIVATE DREF DeeObject *DCALL
