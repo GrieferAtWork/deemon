@@ -5,7 +5,7 @@ For more information on changes, fixes and improvements, see /lib/LANGUAGE.txt
 
 Deemon is a C-like, interpreted, object-orient and exception-enabled scripting language, greatly inspired by python's runtime library, while sharing many syntax constructs with common languages such as C, java and javascript.
 
-At its core, deemon is designed for sequence and string processing, being the inventor of the expand-expression (as seen in something like <code>x = [a...,42,b...];</code> which creates a new list consisting of the items from <code>a</code>, followed by <code>42</code>, then those from <code>b</code>), as well as including many language constructs useful in such situations, including <code>yield</code>-statements, and generator expression (such as <code>foo = for (local x: bar) x.strip();</code>, where <code>foo</code> is a sequence containing the elements of <code>bar</code> after thore were transformed with a call to a member function <code>strip</code>)
+At its core, deemon is designed for sequence and string processing, being the inventor of the expand-expression (as seen in something like <code>x = [a...,42,b...];</code> which creates a new list consisting of the items from <code>a</code>, followed by <code>42</code>, then those from <code>b</code>), as well as including many language constructs useful in such situations, including <code>yield</code>-statements, and generator expression (such as <code>foo = for (local x: bar) x.strip();</code>, where <code>foo</code> is a sequence containing the elements of <code>bar</code> after thore were transformed with a call to a member function <code>strip</code>), or lambda functions.
 
 Especially in this rewrite, deemon is shining more than ever when it comes to string functionality, providing <b>regular expression</b> support, as well as support for <b>wild cards</b>, alongside fully featured <b>unicode</b> support.
 
@@ -18,45 +18,48 @@ Deemon is truely a universally useful language that has learned from its past mi
   - With more emphasis on documentation, deemon now comes shipped with a documentation server accessing via web-browser
     - It should be of note that the documentation server, as well as documentation text processor is written entirely in deemon.
     - Links listed below require that you are running it locally.
-  - A complete overhaul of the builtin `string' (http://localhost:8080/modules/net/deemon/string)
+  - A complete overhaul of the builtin <code>string</code> (http://localhost:8080/modules/deemon/string)
     - Full unicode support all packed together into a single string type
-    - Separation between raw data (http://localhost:8080/modules/net/deemon/bytes) and strings, as well as functionality to decode/encode data and strings
+    - Separation between raw data (http://localhost:8080/modules/deemon/bytes) and strings, as well as functionality to decode/encode data and strings
     - Builtin support for regular expressions
-    - Addition of miscellaneous functions such as <code>indent()</code> or <code>findmatch()</code> to help in situation where the old string type was striggling
+    - Addition of miscellaneous functions such as <code>indent()</code> or <code>findmatch()</code> to help in situation where the old string type was struggling
     - Addition of case-insensitive variants of many functions, such as <code>casefind()</code>
-  - Introduction of a common base class for any sequence-like type http://localhost:8080/modules/net/deemon/sequence
+  - Introduction of a common base class for any sequence-like type http://localhost:8080/modules/deemon/sequence
     - Includes emulation of any kind of sequence operator, as well as a huge set of member functions, including <code>find()</code>, <code>sum()</code>, <code>operator add</code> or comparisons
-    - Also introduce common base classes for set-like, and mapping-like objects
+    - Also introduced are common base classes for set-like, and mapping-like objects
   - Introduction of ASP (Abstract Sequence Proxy)-like objects allows for lazy computation in functions like <code>string.split()</code>, distributing work load across usage and essentially making such functions O(1) when invoked
   - Introduction of default, optional and named arguments for user-functions
     - <code>function foo(a,b = 10,c?)</code>
-    - <code>add(x: 10, y: 20)</code>
-  - Introduction of a same-object / different-object operator <code>===</code> and <code>!==</code>
-  - Introduction of a new syntax for constructing super-view <code>foo() as sequence</code>
+    - <code>foo(42, c: 7); // foo(42,10,7);</code>
+  - Introduction of a same-object / different-object operators <code>===</code> and <code>!==</code>
+  - Introduction of a new syntax for constructing a super-view <code>foo as sequence</code>
   - Introduction of a new syntax for checking if variables or attributes are bound <code>if (x is bound) print x;</code>
   - Introduction of <code>with</code>-statements, useful when dealing with files or synchronization primitives
     - To go alongside, 2 new operator <code>operator enter</code> and <code>operator leave</code> were introduced
-  - Introduction of an interactive excution mode <code>deemon -i</code> where code is executed as it is generated
+  - Introduction of an interactive excution mode <code>deemon -i</code> where code is executed, and results are printed as it is typed by the user
   - Introduction of a <code>deepcopy</code> keyword and operator to go alongside the <code>copy</code> keyword
     - Also includes automatic tracking of recursive objects such as a list containing itself.
   - Added support for raw string literals <code>r"the following are 2 characters: \n"</code>
-  - Overhaul of exception handlers in user-code introducing zero-effort handlers (as opposed to some stack of active handlers)
+  - Overhaul of exception handlers in user-code now introduces zero-effort exception and finally handlers (as opposed to some stack of active handlers)
   - Overhaul of user-classes now require member variables to also be declared, significantly improving runtime performance
   - Lazy compilation of module source files into pre-compiled file caches improves load time significantly
-  - Very powerful peephole optimization of generated bytecode
-  - The bytecode now generated by deemon has grown so powerful that you can actually write code using it (also included is a powerful disassembler)
-    - If you look at it, it really has more in common with that of a CISC architecture, featuring admirable compression rates, while still executing quite fast
+  - Extremely powerful peephole optimization of generated bytecode
+  - The bytecode generated by deemon has grown so powerful that you can actually write code using it, or have it be printed back to you by a powerful, builtin disassembler
+    - If you look at it, it really has more in common with that of a CISC architecture, featuring admirable text compression rates, while still executing assembly as fast as possible
   - Added compiler warnings for various questionable cases (including use of reserved keywords as symbol names)
-  - I took the time to write the entire interpreter in i386 assembly (by hand), providing a significant performance boost on 32-bit intel machines.
-  - The builtin <code>int</code> type can have arbitrary precision now, allowing work with a practically infinite number of digits (though I'm not claiming credit for the implementation; only for the integration and new design centered around it)
+  - I actually took the time to write a copy of the entire interpreter in i386 assembly (by hand), providing a significant performance boost on 32-bit Intel machines.
+  - The builtin <code>int</code> type can have arbitrary precision now, allowing operations with a practically infinite number of digits (though I'm not claiming credit for the implementation; only for the integration and new design centered around it)
 
 ### Noteworthy changes and fixes
-  - Inplace operators have significantly different operation protocols that regular operators (<code>x += y;</code> is emulated as <code>x = x + y;</code> at runtime when no inplace operator exists)
-  - Clases now require the user to declare member variables (also: I actually implemented a syntax for super-initialization in constructors)
+  - Inplace operators have significantly changed operation protocols than regular operators (<code>x += y;</code> is emulated as <code>x = x + y;</code> at runtime when no inplace operator exists)
+    - As a result of this, strings and other immutable types will appear as though they can be used in inplace operations, when in actuality they can't.
+  - Classes now require the user to declare member variables (also: I actually implemented a syntax for super-initialization in constructors)
   - Introduction of new symbol classes for extern (aka. imported) and global (aka. exported) objects
-    - Global variables are created when defining a symbols without <code>local</code> prefix in the global scope, or explicitly when prefixed with <code>global</code>
-    - Global variables can be modified by other modules, or by functions without the need of placing their values inside of a cell
-  - The style guidelines now discourage the use of underscores in symbol names (e.g. it's <code>seq.nonempty()</code> instead of <code>seq.non_empty()</code>, which is deprecated)
+    - Global variables are created when defining a symbols without a <code>local</code> prefix in the global scope, or when explicitly prefixed with <code>global</code>
+    - Global variables (symbols) can be modified by other modules or functions without the need of placing their values inside of a cell (as was, and is still required for local variables referenced in inner functions, aka. lambda expressions)
+    - Symbol and module import works the same way it does in python, with the additional that you are free to either write <code>import symbol from module</code> or <code>from module import symbol</code>.
+    - Additionally, anywhere a variable can appear, you can also write <code>foo from bar</code> which will reference a symbol <code>foo</code> from a module <code>bar</code> without you having to explicitly import that symbol beforehand.
+  - The style guidelines now discourage the use of underscores in symbol names (e.g. it's <code>seq.nonempty()</code> now, instead of <code>seq.non_empty()</code>, which is deprecated)
   - Builtin types such as <code>list</code> or <code>dict</code> must now be <code>import * from deemon;</code>-ed before they appear as symbols
   - The builtin type <code>set</code> has been renamed to <code>hashset</code>. <code>set from deemon</code> is now the base-class for set-like objects
     - Shouldn't really cause any problems in old code though, because deemon 100+'s <code>set</code>-type has always been broken, and never got fixed
@@ -66,14 +69,14 @@ Deemon is truely a universally useful language that has learned from its past mi
   - While deemon 100's compiler configuration handled pretty much any syntax problem with a warning, deemon 200 is default-configured to produce errors, thus preventing faulty code from accidentally being executed
 
 ### Noteworthy maintained features (that will stay)
-  - Inplace soruce formatting <code>deemon -F</code>
+  - Inplace source formatting <code>deemon -F</code>
   - <code>pack</code>-expressions to omit parenthesis (<code>foo pack 10,20</code> is the same as <code>foo(10,20)</code>)
   - A fully featured C preprocessor (it's a highly advanced version of tpp, including all of its extensions)
   - The <code>\_\_nth</code> keyword being used to select secondary variable matches.
 
 ### Deprecated features (discouraged usage, but continued maintainance)
   - <code>#include \<...\></code> You really shouldn't be including files any more. - Use modules instead (they're way better)
-  - Various minor syntax changes to steer usercode to before more uniform (warned about in new code; ignored in legacy code)
+  - Various minor syntax changes to steer usercode to being more uniform (warned about in new code; ignored in legacy code)
   - The dedicated syntax for cells (<code>\<foo\></code> is deprecated and not encouraged)
     - Use <code>cell from deemon</code> instead.
 
@@ -98,6 +101,7 @@ Legacy code being detected by it #including any of the old headers
     - Most notable, even <code>\_\_builtin\_object()</code> is emulated
   - Removed the <code>weak</code> keyword
   - Various keywords that all start with 2 underscores (<code>__static_if</code>, <code>__if_true</code>, etc.)
+  - The old notion of modules no longer exist (The <code>module</code> keyword was removed, and the <code>import</code> keyword's meaning has an entirely new meaning)
 
 
 
