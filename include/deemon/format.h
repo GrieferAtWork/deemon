@@ -69,6 +69,9 @@ DFUNDEF dssize_t Dee_FormatPrintf(dformatprinter printer, void *arg, char const 
 DFUNDEF dssize_t DCALL Dee_VFormatPrintf(dformatprinter printer, void *arg, char const *__restrict format, va_list args);
 
 
+#define Dee_FormatPRINT(printer,arg,str) \
+        (*printer)(arg,str,COMPILER_STRLEN(str))
+
 /* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
  * NOTE: This function always generates pure ASCII, and is therefor safe to be used
  *       when targeting an `ascii_printer' */

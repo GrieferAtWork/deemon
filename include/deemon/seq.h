@@ -197,6 +197,7 @@ DDATDEF DeeTypeObject DeeIterator_Type; /* `iterator from deemon' */
  */
 DDATDEF DeeObject      DeeSeq_EmptyInstance;
 #define Dee_EmptySeq (&DeeSeq_EmptyInstance)
+#define return_empty_seq  return_reference_(Dee_EmptySeq)
 
 
 

@@ -75,10 +75,10 @@ bytesiter_next(BytesIterator *__restrict self) {
 }
 PRIVATE int DCALL
 bytesiter_ctor(BytesIterator *__restrict self) {
- self->bi_bytes = (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
- if unlikely(!self->bi_bytes) return -1;
+ self->bi_bytes = (DREF Bytes *)Dee_EmptyBytes;
  self->bi_iter  = self->bi_bytes->b_data;
  self->bi_end   = self->bi_bytes->b_data;
+ Dee_Incref(Dee_EmptyBytes);
  return 0;
 }
 PRIVATE int DCALL
@@ -325,7 +325,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
  DREF Bytes *result; size_t i,bufsize;
  DREF DeeObject *iter,*elem;
  if (DeeNone_Check(seq))
-     return DeeBytes_NewBufferUninitialized(0);
+     return_empty_bytes;
  bufsize = DeeFastSeq_GetSize(seq);
  if (bufsize != DEE_FASTSEQ_NOTFAST) {
   result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+
@@ -585,7 +585,7 @@ bytes_visit(Bytes *__restrict self, dvisit_t proc, void *arg) {
 }
 
 PRIVATE DREF Bytes *DCALL bytes_ctor(void) {
- return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+ return_reference_((DREF Bytes *)Dee_EmptyBytes);
 }
 PRIVATE DREF Bytes *DCALL
 bytes_copy(Bytes *__restrict other) {
@@ -719,31 +719,43 @@ bytes_str(Bytes *__restrict self) {
  return DeeString_NewSized((char *)DeeBytes_DATA(self),
                             DeeBytes_SIZE(self));
 }
+
+INTERN dssize_t DCALL
+bytes_print_repr(Bytes *__restrict self, dformatprinter printer, void *arg) {
+ dssize_t temp,result;
+#if 1
+ temp = Dee_FormatQuote(printer,arg,
+                       (char *)DeeBytes_DATA(self),
+                        DeeBytes_SIZE(self),
+                        FORMAT_QUOTE_FNORMAL);
+ if unlikely(temp < 0)
+    goto err;
+ result = temp;
+ temp = Dee_FormatPRINT(printer,arg,".bytes()");
+#else
+ temp = Dee_FormatPRINT(printer,arg,"bytes(");
+ if unlikely(temp < 0) goto err;
+ result = temp;
+ temp = Dee_FormatQuote(printer,arg,
+                       (char *)DeeBytes_DATA(self),
+                        DeeBytes_SIZE(self),
+                        FORMAT_QUOTE_FNORMAL);
+ if unlikely(temp < 0)
+    goto err;
+ result += temp;
+ temp = Dee_FormatPRINT(printer,arg,")");
+#endif
+ if unlikely(temp < 0) goto err;
+ return result + temp;
+err:
+ return temp;
+}
+
 PRIVATE DREF DeeObject *DCALL
 bytes_repr(Bytes *__restrict self) {
  struct ascii_printer printer = ASCII_PRINTER_INIT;
-#if 0 /* Print the bytes object using its sequence-like representation. */
- size_t i,size; uint8_t *data;
- if unlikely(ASCII_PRINTER_PRINT(&printer,"bytes({") < 0) goto err;
- data = DeeBytes_DATA(self);
- size = DeeBytes_SIZE(self);
- for (i = 0; i < size; ++i) {
-  if (i != 0 &&
-      unlikely(ASCII_PRINTER_PRINT(&printer,", ") < 0))
-      goto err;
-  if unlikely(ascii_printer_printf(&printer,"0x%.2I8x",data[i]) < 0)
-     goto err;
- }
- if unlikely(ASCII_PRINTER_PRINT(&printer,"})") < 0) goto err;
-#else
- if unlikely(ASCII_PRINTER_PRINT(&printer,"bytes(") < 0) goto err;
- if unlikely(Dee_FormatQuote(&ascii_printer_print,&printer,
-                            (char *)DeeBytes_DATA(self),
-                             DeeBytes_SIZE(self),
-                             FORMAT_QUOTE_FNORMAL) < 0)
+ if unlikely(bytes_print_repr(self,&ascii_printer_print,&printer) < 0)
     goto err;
- if (ascii_printer_putc(&printer,')')) goto err;
-#endif
  return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
@@ -999,7 +1011,7 @@ bytes_mul(Bytes *__restrict self,
  if (DeeObject_AsSize(other,&repeat))
      return NULL;
  if (!repeat)
-     return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+     return_reference_((DREF Bytes *)Dee_EmptyBytes);
  if (repeat == 1)
      return bytes_copy(self);
  my_length = DeeString_SIZE(self);
@@ -1269,6 +1281,19 @@ PRIVATE struct type_member bytes_class_members[] = {
     TYPE_MEMBER_END
 };
 
+PUBLIC DeeBytesObject DeeBytes_Empty = {
+    OBJECT_HEAD_INIT(&DeeBytes_Type),
+    /* .b_base   = */NULL,
+    /* .b_size   = */0,
+    /* .b_orig   = */Dee_EmptyBytes,
+    /* .b_buffer = */{
+        /* .bb_base = */NULL,
+        /* .bb_size = */0,
+    },
+    /* .b_flags  = */DEE_BUFFER_FWRITABLE,
+    /* .b_data   = */{ 0 }
+};
+
 
 PUBLIC DeeTypeObject DeeBytes_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1491,7 +1516,7 @@ PUBLIC DREF DeeObject *DCALL
 bytes_printer_pack(/*inherit(always)*/struct bytes_printer *__restrict self) {
  DREF Bytes *result = self->bp_bytes;
  if unlikely(!result)
-    return DeeBytes_NewBufferUninitialized(0);
+    return_empty_bytes;
  /* Deallocate unused memory. */
  if likely(self->bp_length != result->b_size) {
   DREF Bytes *reloc;

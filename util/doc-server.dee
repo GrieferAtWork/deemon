@@ -782,7 +782,6 @@ function ClientThreadMain(con) {
 					print "Bad command:",repr command;
 					fp << protocol << " 400 Bad Request\r\n";
 				} else {
-					command = command.decode("UTF-8"); /* TODO: Remove this decode */
 					command = command[3:#command-8].strip();
 					local content;
 					if (command == "/style.css") {
@@ -790,7 +789,6 @@ function ClientThreadMain(con) {
 					} else {
 						content = file.writer();
 						get_page(content,command);
-//						get_page(content,command.decode("UTF-8")); /* TODO: Enable this decode */
 						content = content.string;
 					}
 					fp << protocol << " 200 OK\r\n"

@@ -3326,6 +3326,9 @@ DeeObject_Print(DeeObject *__restrict self,
  return result;
 }
 
+INTDEF dssize_t DCALL
+bytes_print_repr(DeeObject *__restrict self, dformatprinter printer, void *arg);
+
 PUBLIC dssize_t DCALL
 DeeObject_PrintRepr(DeeObject *__restrict self,
                     dformatprinter printer, void *arg) {
@@ -3335,7 +3338,7 @@ DeeObject_PrintRepr(DeeObject *__restrict self,
  if (DeeString_Check(self))
      return DeeString_PrintRepr(self,printer,arg,FORMAT_QUOTE_FNORMAL);
  if (DeeBytes_Check(self))
-     return Dee_FormatQuote(printer,arg,(char const *)DeeBytes_DATA(self),DeeBytes_SIZE(self),FORMAT_QUOTE_FNORMAL);
+     return bytes_print_repr(self,printer,arg);
  if (Dee_TYPE(self) == &DeeError_CompilerError)
      return comerr_print((DeeCompilerErrorObject *)self,printer,arg);
 

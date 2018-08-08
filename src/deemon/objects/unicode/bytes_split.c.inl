@@ -328,11 +328,11 @@ INTERN DeeTypeObject DeeBytesCaseSplitIterator_Type = {
 
 PRIVATE int DCALL
 bs_ctor(BytesSplit *__restrict self) {
- self->bs_bytes = (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
- if unlikely(!self->bs_bytes) return -1;
+ self->bs_bytes     = (DREF Bytes *)Dee_EmptyBytes;
  self->bs_sep_owner = NULL;
  self->bs_sep_ptr   = NULL;
  self->bs_sep_len   = 0;
+ Dee_Incref(Dee_EmptyBytes);
  return 0;
 }
 
@@ -870,9 +870,9 @@ STATIC_ASSERT(COMPILER_OFFSETOF(BytesSplit,bs_bytes) ==
 
 PRIVATE int DCALL
 bls_ctor(BytesLineSplit *__restrict self) {
- self->bls_bytes = (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
- if unlikely(!self->bls_bytes) return -1;
+ self->bls_bytes    = (DREF Bytes *)Dee_EmptyBytes;
  self->bls_keepends = false;
+ Dee_Incref(Dee_EmptyBytes);
  return 0;
 }
 

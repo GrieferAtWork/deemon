@@ -26,6 +26,8 @@
 #include <deemon/int.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/seq.h>
+#include <deemon/tuple.h>
 
 DECL_BEGIN
 
@@ -78,13 +80,41 @@ bytes_find(Bytes *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *find_ob; Needle needle;
  size_t start = 0,end = (size_t)-1; uint8_t *result;
- if (DeeArg_Unpack(argc,argv,"o|IuIu:find",&find_ob,&start,&end) ||
+ if (DeeArg_Unpack(argc,argv,"o|IdId:find",&find_ob,&start,&end) ||
      get_needle(&needle,find_ob))
      return NULL;
- result = (uint8_t *)memmemb(DeeBytes_DATA(self),
-                             DeeBytes_SIZE(self),
-                             needle.n_data,
-                             needle.n_size);
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+  result = NULL;
+ else {
+  result = (uint8_t *)memmemb(DeeBytes_DATA(self) + start,
+                              end - start,
+                              needle.n_data,
+                              needle.n_size);
+ }
+ if (!result) return_reference_(&DeeInt_MinusOne);
+ return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casefind(Bytes *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle;
+ size_t start = 0,end = (size_t)-1; uint8_t *result;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:casefind",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+  result = NULL;
+ else {
+  result = (uint8_t *)memcasememb(DeeBytes_DATA(self) + start,
+                                  end - start,
+                                  needle.n_data,
+                                  needle.n_size);
+ }
  if (!result) return_reference_(&DeeInt_MinusOne);
  return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 }
@@ -94,13 +124,41 @@ bytes_rfind(Bytes *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *find_ob; Needle needle;
  size_t start = 0,end = (size_t)-1; uint8_t *result;
- if (DeeArg_Unpack(argc,argv,"o|IuIu:rfind",&find_ob,&start,&end) ||
+ if (DeeArg_Unpack(argc,argv,"o|IdId:rfind",&find_ob,&start,&end) ||
      get_needle(&needle,find_ob))
      return NULL;
- result = (uint8_t *)memrmemb(DeeBytes_DATA(self),
-                              DeeBytes_SIZE(self),
-                              needle.n_data,
-                              needle.n_size);
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+  result = NULL;
+ else {
+  result = (uint8_t *)memrmemb(DeeBytes_DATA(self) + start,
+                               end - start,
+                               needle.n_data,
+                               needle.n_size);
+ }
+ if (!result) return_reference_(&DeeInt_MinusOne);
+ return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_caserfind(Bytes *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle;
+ size_t start = 0,end = (size_t)-1; uint8_t *result;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:caserfind",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+  result = NULL;
+ else {
+  result = (uint8_t *)memcasermemb(DeeBytes_DATA(self) + start,
+                                   end - start,
+                                   needle.n_data,
+                                   needle.n_size);
+ }
  if (!result) return_reference_(&DeeInt_MinusOne);
  return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 }
@@ -110,13 +168,44 @@ bytes_index(Bytes *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *find_ob; Needle needle;
  size_t start = 0,end = (size_t)-1; uint8_t *result;
- if (DeeArg_Unpack(argc,argv,"o|IuIu:index",&find_ob,&start,&end) ||
+ if (DeeArg_Unpack(argc,argv,"o|IdId:index",&find_ob,&start,&end) ||
      get_needle(&needle,find_ob))
      return NULL;
- result = (uint8_t *)memmemb(DeeBytes_DATA(self),
-                             DeeBytes_SIZE(self),
-                             needle.n_data,
-                             needle.n_size);
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+  result = NULL;
+ else {
+  result = (uint8_t *)memmemb(DeeBytes_DATA(self) + start,
+                              end - start,
+                              needle.n_data,
+                              needle.n_size);
+ }
+ if (!result) {
+  err_index_not_found((DeeObject *)self,find_ob);
+  return NULL;
+ }
+ return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_caseindex(Bytes *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle;
+ size_t start = 0,end = (size_t)-1; uint8_t *result;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:caseindex",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+  result = NULL;
+ else {
+  result = (uint8_t *)memcasememb(DeeBytes_DATA(self) + start,
+                                  end - start,
+                                  needle.n_data,
+                                  needle.n_size);
+ }
  if (!result) {
   err_index_not_found((DeeObject *)self,find_ob);
   return NULL;
@@ -129,13 +218,44 @@ bytes_rindex(Bytes *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  DeeObject *find_ob; Needle needle;
  size_t start = 0,end = (size_t)-1; uint8_t *result;
- if (DeeArg_Unpack(argc,argv,"o|IuIu:rindex",&find_ob,&start,&end) ||
+ if (DeeArg_Unpack(argc,argv,"o|IdId:rindex",&find_ob,&start,&end) ||
      get_needle(&needle,find_ob))
      return NULL;
- result = (uint8_t *)memrmemb(DeeBytes_DATA(self),
-                              DeeBytes_SIZE(self),
-                              needle.n_data,
-                              needle.n_size);
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+  result = NULL;
+ else {
+  result = (uint8_t *)memrmemb(DeeBytes_DATA(self) + start,
+                               end - start,
+                               needle.n_data,
+                               needle.n_size);
+ }
+ if (!result) {
+  err_index_not_found((DeeObject *)self,find_ob);
+  return NULL;
+ }
+ return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_caserindex(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle;
+ size_t start = 0,end = (size_t)-1; uint8_t *result;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:caserindex",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+  result = NULL;
+ else {
+  result = (uint8_t *)memcasermemb(DeeBytes_DATA(self) + start,
+                                   end - start,
+                                   needle.n_data,
+                                   needle.n_size);
+ }
  if (!result) {
   err_index_not_found((DeeObject *)self,find_ob);
   return NULL;
@@ -149,17 +269,50 @@ bytes_count(Bytes *__restrict self,
  DeeObject *find_ob; Needle needle; size_t result;
  size_t start = 0,end = (size_t)-1;
  uint8_t *iter; size_t size;
- if (DeeArg_Unpack(argc,argv,"o|IuIu:count",&find_ob,&start,&end) ||
+ if (DeeArg_Unpack(argc,argv,"o|IdId:count",&find_ob,&start,&end) ||
      get_needle(&needle,find_ob))
      return NULL;
  iter = DeeBytes_DATA(self);
  size = DeeBytes_SIZE(self);
+ if (end > size)
+     end = size;
  result = 0;
- while (size >= needle.n_size) {
-  if (MEMEQB(iter,needle.n_data,needle.n_size))
-      ++result;
-  --size;
-  ++iter;
+ if (start < end) {
+  end -= start;
+  iter += start;
+  while (end >= needle.n_size) {
+   if (MEMEQB(iter,needle.n_data,needle.n_size))
+       ++result;
+   --end;
+   ++iter;
+  }
+ }
+ return DeeInt_NewSize(result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casecount(Bytes *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle; size_t result;
+ size_t start = 0,end = (size_t)-1;
+ uint8_t *iter; size_t size;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:casecount",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ iter = DeeBytes_DATA(self);
+ size = DeeBytes_SIZE(self);
+ if (end > size)
+     end = size;
+ result = 0;
+ if (start < end) {
+  end -= start;
+  iter += start;
+  while (end >= needle.n_size) {
+   if (MEMCASEEQB(iter,needle.n_data,needle.n_size))
+       ++result;
+   --end;
+   ++iter;
+  }
  }
  return DeeInt_NewSize(result);
 }
@@ -169,13 +322,35 @@ bytes_contains_f(Bytes *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *find_ob; Needle needle;
  size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|IuIu:contains",&find_ob,&start,&end) ||
+ if (DeeArg_Unpack(argc,argv,"o|IdId:contains",&find_ob,&start,&end) ||
      get_needle(&needle,find_ob))
      return NULL;
- return_bool(memmemb(DeeBytes_DATA(self),
-                     DeeBytes_SIZE(self),
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+     return_false;
+ return_bool(memmemb(DeeBytes_DATA(self) + start,
+                     end - start,
                      needle.n_data,
                      needle.n_size) != NULL);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casecontains_f(Bytes *__restrict self,
+                     size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle;
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:casecontains",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+     return_false;
+ return_bool(memcasememb(DeeBytes_DATA(self) + start,
+                         end - start,
+                         needle.n_data,
+                         needle.n_size) != NULL);
 }
 
 INTDEF dssize_t DCALL
@@ -220,8 +395,8 @@ bytes_substr(Bytes *__restrict self,
       return_reference_(self);
   end = DeeBytes_SIZE(self);
  }
- if (start > end)
-     start = end;
+ if (start >= end)
+     return_reference_((DREF Bytes *)Dee_EmptyBytes);
  return (DREF Bytes *)DeeBytes_NewView(self->b_orig,
                                        self->b_base + (size_t)start,
                                       (size_t)(end-start),
@@ -273,7 +448,7 @@ bytes_reversed(Bytes *__restrict self,
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
  if (end <= start)
-     return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+     return_reference_((DREF Bytes *)Dee_EmptyBytes);
  end -= start;
  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
  if unlikely(!result) goto done;
@@ -293,7 +468,11 @@ bytes_reverse(Bytes *__restrict self,
  uint8_t *data,*dst;
  size_t start = 0,end = (size_t)-1;
  if (DeeArg_Unpack(argc,argv,"|IdId:reverse",&start,&end))
-     return NULL;
+     goto err;
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
  if (end <= start)
@@ -307,6 +486,8 @@ bytes_reverse(Bytes *__restrict self,
  }
 done:
  return_reference_(self);
+err:
+ return NULL;
 }
 
 
@@ -397,15 +578,16 @@ DeeBytes_TestAnyTrait(Bytes *__restrict self,
                       size_t end_index,
                       uniflag_t flags) {
  uint8_t *iter;
- if (start_index > DeeBytes_SIZE(self))
-     start_index = DeeBytes_SIZE(self);
  if (end_index > DeeBytes_SIZE(self))
      end_index = DeeBytes_SIZE(self);
- iter = DeeBytes_DATA(self);
- while (start_index < end_index) {
-  if (DeeUni_Flags(*iter) & flags)
-       return true;
-  ++iter,++start_index;
+ if (start_index < end_index) {
+  iter = DeeBytes_DATA(self) + start_index;
+  while (start_index < end_index) {
+   if (DeeUni_Flags(*iter) & flags)
+        return true;
+   ++iter;
+   ++start_index;
+  }
  }
  return false;
 }
@@ -417,17 +599,18 @@ DeeBytes_IsTitle(Bytes *__restrict self,
                  size_t end_index) {
  uniflag_t flags = (UNICODE_FTITLE|UNICODE_FUPPER|UNICODE_FSPACE);
  uint8_t *iter;
- if (start_index > DeeBytes_SIZE(self))
-     start_index = DeeBytes_SIZE(self);
  if (end_index > DeeBytes_SIZE(self))
      end_index = DeeBytes_SIZE(self);
- iter = DeeBytes_DATA(self);
- while (start_index < end_index) {
-  uniflag_t f = DeeUni_Flags(*iter);
-  if (!(f & flags)) return false;
-  flags = (f&UNICODE_FSPACE) ? (UNICODE_FTITLE|UNICODE_FUPPER|UNICODE_FSPACE)
-                             : (UNICODE_FLOWER|UNICODE_FSPACE);
-  ++iter,++start_index;
+ if (start_index < end_index) {
+  iter = DeeBytes_DATA(self) + start_index;
+  while (start_index < end_index) {
+   uniflag_t f = DeeUni_Flags(*iter);
+   if (!(f & flags)) return false;
+   flags = (f&UNICODE_FSPACE) ? (UNICODE_FTITLE|UNICODE_FUPPER|UNICODE_FSPACE)
+                              : (UNICODE_FLOWER|UNICODE_FSPACE);
+   ++iter;
+   ++start_index;
+  }
  }
  return true;
 }
@@ -437,16 +620,17 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
                   size_t end_index) {
  uniflag_t flags = (UNICODE_FSYMSTRT|UNICODE_FALPHA);
  uint8_t *iter;
- if (start_index > DeeBytes_SIZE(self))
-     start_index = DeeBytes_SIZE(self);
  if (end_index > DeeBytes_SIZE(self))
      end_index = DeeBytes_SIZE(self);
- iter = DeeBytes_DATA(self);
- while (start_index < end_index) {
-  if (!(DeeUni_Flags(*iter) & flags))
-        return false;
-  flags |= (UNICODE_FSYMCONT|UNICODE_FDIGIT);
-  ++iter,++start_index;
+ if (start_index < end_index) {
+  iter = DeeBytes_DATA(self) + start_index;
+  while (start_index < end_index) {
+   if (!(DeeUni_Flags(*iter) & flags))
+         return false;
+   flags |= (UNICODE_FSYMCONT|UNICODE_FDIGIT);
+   ++iter;
+   ++start_index;
+  }
  }
  return true;
 }
@@ -527,7 +711,7 @@ bytes_lower(Bytes *__restrict self,
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
  if (start >= end)
-     return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+     return_reference_((DREF Bytes *)Dee_EmptyBytes);
  end -= start;
  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
  if unlikely(!result) goto done;
@@ -545,7 +729,7 @@ bytes_upper(Bytes *__restrict self,
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
  if (start >= end)
-     return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+     return_reference_((DREF Bytes *)Dee_EmptyBytes);
  end -= start;
  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
  if unlikely(!result) goto done;
@@ -564,7 +748,7 @@ bytes_title(Bytes *__restrict self,
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
  if (start >= end)
-     return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+     return_reference_((DREF Bytes *)Dee_EmptyBytes);
  end -= start;
  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
  if unlikely(!result) goto done;
@@ -588,7 +772,7 @@ bytes_capitalize(Bytes *__restrict self,
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
  if (start >= end)
-     return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+     return_reference_((DREF Bytes *)Dee_EmptyBytes);
  end -= start;
  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
  if unlikely(!result) goto done;
@@ -607,7 +791,7 @@ bytes_swapcase(Bytes *__restrict self,
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
  if (start >= end)
-     return (DREF Bytes *)DeeBytes_NewBufferUninitialized(0);
+     return_reference_((DREF Bytes *)Dee_EmptyBytes);
  end -= start;
  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
  if unlikely(!result) goto done;
@@ -627,7 +811,7 @@ bytes_tolower(Bytes *__restrict self,
      goto err;
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
- if unlikely(!DeeBytes_WRITABLE(self)) {
+ if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
   err_bytes_not_writable((DeeObject *)self);
   goto err;
  }
@@ -645,7 +829,7 @@ bytes_toupper(Bytes *__restrict self,
      goto err;
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
- if unlikely(!DeeBytes_WRITABLE(self)) {
+ if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
   err_bytes_not_writable((DeeObject *)self);
   goto err;
  }
@@ -664,7 +848,7 @@ bytes_totitle(Bytes *__restrict self,
      goto err;
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
- if unlikely(!DeeBytes_WRITABLE(self)) {
+ if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
   err_bytes_not_writable((DeeObject *)self);
   goto err;
  }
@@ -688,12 +872,12 @@ bytes_tocapitalize(Bytes *__restrict self,
      goto err;
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  goto err;
- }
  if (start < end) {
   size_t i = start;
+  if unlikely(!DeeBytes_WRITABLE(self)) {
+   err_bytes_not_writable((DeeObject *)self);
+   goto err;
+  }
   DeeBytes_DATA(self)[i] = (uint8_t)DeeUni_ToUpper(DeeBytes_DATA(self)[i]);
   ++i;
   for (; i < end; ++i)
@@ -711,7 +895,7 @@ bytes_toswapcase(Bytes *__restrict self,
      goto err;
  if (end > DeeBytes_SIZE(self))
      end = DeeBytes_SIZE(self);
- if unlikely(!DeeBytes_WRITABLE(self)) {
+ if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
   err_bytes_not_writable((DeeObject *)self);
   goto err;
  }
@@ -745,7 +929,57 @@ bytes_replace(Bytes *__restrict self,
  end = (begin = DeeBytes_DATA(self))+(DeeBytes_SIZE(self)-(find_needle.n_size-1));
  block_begin = begin;
  if likely(max_count) while (begin <= end) {
-  if (memcmp(begin,find_needle.n_data,find_needle.n_size) == 0) {
+  if (MEMEQB(begin,find_needle.n_data,find_needle.n_size)) {
+   /* Found one */
+   if (unlikely(bytes_printer_append(&printer,block_begin,(size_t)(begin-block_begin)) < 0) ||
+       unlikely(bytes_printer_append(&printer,replace_needle.n_data,replace_needle.n_size) < 0))
+       goto err;
+   begin += find_needle.n_size;
+   block_begin = begin;
+   if (begin >= end) break;
+   if unlikely(!--max_count) break;
+   continue;
+  }
+  ++begin;
+ }
+ if unlikely(bytes_printer_append(&printer,block_begin,
+                                 (size_t)((end-block_begin)+
+                                          (find_needle.n_size-1))) < 0)
+    goto err;
+ /* Pack together a bytes object. */
+ return (DREF Bytes *)bytes_printer_pack(&printer);
+err:
+ bytes_printer_fini(&printer);
+ return NULL;
+return_self:
+ result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self));
+ if likely(result) memcpy(result->b_data,DeeBytes_DATA(self),DeeBytes_SIZE(self));
+ return result;
+}
+
+PRIVATE DREF Bytes *DCALL
+bytes_casereplace(Bytes *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ DREF Bytes *result; uint8_t *begin,*end,*block_begin;
+ DeeObject *find_ob,*replace_ob; size_t max_count = (size_t)-1;
+ Needle find_needle,replace_needle; struct bytes_printer printer;
+ if (DeeArg_Unpack(argc,argv,"oo|Iu:casereplace",&find_ob,&replace_ob,&max_count) ||
+     get_needle(&find_needle,find_ob) || get_needle(&replace_needle,replace_ob))
+     return NULL;
+ /* Handle special cases. */
+ if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
+    goto return_self;
+ if unlikely(!find_needle.n_size) {
+  if (DeeBytes_SIZE(self)) goto return_self;
+  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(replace_needle.n_size);
+  if likely(result) memcpy(result->b_data,replace_needle.n_data,replace_needle.n_size);
+  return result;
+ }
+ bytes_printer_init(&printer);
+ end = (begin = DeeBytes_DATA(self))+(DeeBytes_SIZE(self)-(find_needle.n_size-1));
+ block_begin = begin;
+ if likely(max_count) while (begin <= end) {
+  if (MEMCASEEQB(begin,find_needle.n_data,find_needle.n_size)) {
    /* Found one */
    if (unlikely(bytes_printer_append(&printer,block_begin,(size_t)(begin-block_begin)) < 0) ||
        unlikely(bytes_printer_append(&printer,replace_needle.n_data,replace_needle.n_size) < 0))
@@ -795,13 +1029,13 @@ bytes_toreplace(Bytes *__restrict self,
 
  /* Handle special cases. */
  if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
-    goto return_self;
+    goto done;
  if unlikely(!find_needle.n_size)
-    goto return_self;
+    goto done;
 
  end = (begin = DeeBytes_DATA(self))+(DeeBytes_SIZE(self)-(find_needle.n_size-1));
  if likely(max_count) while (begin <= end) {
-  if (memcmp(begin,find_needle.n_data,find_needle.n_size) == 0) {
+  if (MEMEQB(begin,find_needle.n_data,find_needle.n_size)) {
    /* Found one */
    memcpy(begin,replace_needle.n_data,replace_needle.n_size);
    begin += find_needle.n_size;
@@ -811,7 +1045,50 @@ bytes_toreplace(Bytes *__restrict self,
   }
   ++begin;
  }
-return_self:
+done:
+ return_reference_(self);
+err:
+ return NULL;
+}
+
+PRIVATE DREF Bytes *DCALL
+bytes_tocasereplace(Bytes *__restrict self,
+                    size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob,*replace_ob; size_t max_count = (size_t)-1;
+ Needle find_needle,replace_needle; uint8_t *begin,*end;
+ if (DeeArg_Unpack(argc,argv,"oo|Iu:tocasereplace",&find_ob,&replace_ob,&max_count) ||
+     get_needle(&find_needle,find_ob) || get_needle(&replace_needle,replace_ob))
+     goto err;
+ if unlikely(find_needle.n_size != replace_needle.n_size) {
+  DeeError_Throwf(&DeeError_ValueError,
+                  "Find(%Iu) and replace(%Iu) needles have different sizes",
+                  find_needle.n_size,replace_needle.n_size);
+  goto err;
+ }
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
+
+ /* Handle special cases. */
+ if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
+    goto done;
+ if unlikely(!find_needle.n_size)
+    goto done;
+
+ end = (begin = DeeBytes_DATA(self))+(DeeBytes_SIZE(self)-(find_needle.n_size-1));
+ if likely(max_count) while (begin <= end) {
+  if (MEMCASEEQB(begin,find_needle.n_data,find_needle.n_size)) {
+   /* Found one */
+   memcpy(begin,replace_needle.n_data,replace_needle.n_size);
+   begin += find_needle.n_size;
+   if (begin >= end) break;
+   if unlikely(!--max_count) break;
+   continue;
+  }
+  ++begin;
+ }
+done:
  return_reference_(self);
 err:
  return NULL;
@@ -835,6 +1112,40 @@ INTDEF DREF DeeObject *DCALL DeeBytes_CaseSplitByte(Bytes *__restrict self, uint
 INTDEF DREF DeeObject *DCALL DeeBytes_CaseSplit(Bytes *__restrict self, DeeObject *__restrict sep);
 INTDEF DREF DeeObject *DCALL DeeBytes_SplitLines(Bytes *__restrict self, bool keepends);
 
+
+PRIVATE DREF DeeObject *DCALL
+bytes_findall(Bytes *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ Needle needle; DeeObject *arg;
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:findall",&arg,&start,&end) ||
+     get_needle(&needle,arg))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+     return_empty_seq;
+ /* TODO: Proxy-sequence for finding all needles in self[start:end] */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casefindall(Bytes *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ Needle needle; DeeObject *arg;
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:casefindall",&arg,&start,&end) ||
+     get_needle(&needle,arg))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+     return_empty_seq;
+ /* TODO: Proxy-sequence for finding all needles in self[start:end] */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
 
 PRIVATE DREF DeeObject *DCALL
 bytes_split(Bytes *__restrict self,
@@ -893,6 +1204,23 @@ bytes_startswith(Bytes *__restrict self,
 }
 
 PRIVATE DREF DeeObject *DCALL
+bytes_casestartswith(Bytes *__restrict self,
+                     size_t argc, DeeObject **__restrict argv) {
+ Needle needle; DeeObject *arg;
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:casestartswith",&arg,&start,&end) ||
+     get_needle(&needle,arg))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start > end ||
+    (end -= start) < needle.n_size)
+     return_false;
+ return_bool(MEMCASEEQB(DeeBytes_DATA(self) + start,
+                        needle.n_data,needle.n_size));
+}
+
+PRIVATE DREF DeeObject *DCALL
 bytes_endswith(Bytes *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  Needle needle; DeeObject *arg;
@@ -911,6 +1239,148 @@ bytes_endswith(Bytes *__restrict self,
 }
 
 PRIVATE DREF DeeObject *DCALL
+bytes_caseendswith(Bytes *__restrict self,
+                   size_t argc, DeeObject **__restrict argv) {
+ Needle needle; DeeObject *arg;
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:caseendswith",&arg,&start,&end) ||
+     get_needle(&needle,arg))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start > end ||
+    (end - start) < needle.n_size)
+     return_false;
+ return_bool(MEMCASEEQB(DeeBytes_DATA(self) +
+                       (end - needle.n_size),
+                        needle.n_data,needle.n_size));
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_pack_partition(Bytes *__restrict self, uint8_t *find_ptr,
+                     uint8_t *__restrict start_ptr, size_t search_size,
+                     size_t needle_len) {
+ DREF DeeObject *result,*temp;
+ if (!find_ptr)
+      return DeeTuple_Pack(3,self,Dee_EmptyBytes,Dee_EmptyBytes);
+ result = DeeTuple_NewUninitialized(3);
+ if unlikely(!result) goto done;
+ temp = DeeBytes_NewView(self->b_orig,start_ptr,
+                        (size_t)(find_ptr - start_ptr),
+                         self->b_flags);
+ if unlikely(!temp) goto err_r_0;
+ DeeTuple_SET(result,0,temp); /* Inherit reference. */
+ temp = DeeBytes_NewView(self->b_orig,find_ptr,
+                         needle_len,self->b_flags);
+ if unlikely(!temp) goto err_r_1;
+ DeeTuple_SET(result,1,temp); /* Inherit reference. */
+ find_ptr += needle_len;
+ temp = DeeBytes_NewView(self->b_orig,find_ptr,
+                        (start_ptr + search_size) - find_ptr,
+                         self->b_flags);
+ if unlikely(!temp) goto err_r_2;
+ DeeTuple_SET(result,2,temp); /* Inherit reference. */
+done:
+ return result;
+err_r_2:
+ Dee_Decref(DeeTuple_GET(result,1));
+err_r_1:
+ Dee_Decref(DeeTuple_GET(result,0));
+err_r_0:
+ DeeTuple_FreeUninitialized(result);
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_parition(Bytes *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle;
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:partition",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+     return DeeTuple_Pack(3,Dee_EmptyBytes,Dee_EmptyBytes,Dee_EmptyBytes);
+ end -= start;
+ return bytes_pack_partition(self,
+                             memmemb(DeeBytes_DATA(self) + start,
+                                     end,
+                                     needle.n_data,
+                                     needle.n_size),
+                             DeeBytes_DATA(self) + start,
+                             end,
+                             needle.n_size);
+}
+PRIVATE DREF DeeObject *DCALL
+bytes_caseparition(Bytes *__restrict self,
+                   size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle;
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:casepartition",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+     return DeeTuple_Pack(3,Dee_EmptyBytes,Dee_EmptyBytes,Dee_EmptyBytes);
+ end -= start;
+ return bytes_pack_partition(self,
+                             memcasememb(DeeBytes_DATA(self) + start,
+                                         end,
+                                         needle.n_data,
+                                         needle.n_size),
+                             DeeBytes_DATA(self) + start,
+                             end,
+                             needle.n_size);
+}
+PRIVATE DREF DeeObject *DCALL
+bytes_rparition(Bytes *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle;
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:rpartition",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+     return DeeTuple_Pack(3,Dee_EmptyBytes,Dee_EmptyBytes,Dee_EmptyBytes);
+ end -= start;
+ return bytes_pack_partition(self,
+                             memrmemb(DeeBytes_DATA(self) + start,
+                                      end,
+                                      needle.n_data,
+                                      needle.n_size),
+                             DeeBytes_DATA(self) + start,
+                             end,
+                             needle.n_size);
+}
+PRIVATE DREF DeeObject *DCALL
+bytes_caserparition(Bytes *__restrict self,
+                    size_t argc, DeeObject **__restrict argv) {
+ DeeObject *find_ob; Needle needle;
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:caserpartition",&find_ob,&start,&end) ||
+     get_needle(&needle,find_ob))
+     return NULL;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+     return DeeTuple_Pack(3,Dee_EmptyBytes,Dee_EmptyBytes,Dee_EmptyBytes);
+ end -= start;
+ return bytes_pack_partition(self,
+                             memcasermemb(DeeBytes_DATA(self) + start,
+                                          end,
+                                          needle.n_data,
+                                          needle.n_size),
+                             DeeBytes_DATA(self) + start,
+                             end,
+                             needle.n_size);
+}
+
+PRIVATE DREF DeeObject *DCALL
 bytes_strip(Bytes *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  uint8_t *begin,*end; DeeObject *mask = NULL;
@@ -924,6 +1394,35 @@ bytes_strip(Bytes *__restrict self,
       goto err;
   while (begin < end && memchr(needle.n_data,*begin,needle.n_size)) ++begin;
   while (end > begin && memchr(needle.n_data,end[-1],needle.n_size)) --end;
+ } else {
+  while (begin < end && DeeUni_IsSpace(*begin)) ++begin;
+  while (end > begin && DeeUni_IsSpace(end[-1])) --end;
+ }
+ if (begin == DeeBytes_DATA(self) &&
+     end  == begin + DeeBytes_SIZE(self))
+     return_reference_((DeeObject *)self);
+ return DeeBytes_NewView(self->b_orig,
+                         begin,
+                        (size_t)(end - begin),
+                         self->b_flags);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casestrip(Bytes *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin,*end; DeeObject *mask = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:casestrip",&mask))
+     goto err;
+ begin = DeeBytes_DATA(self);
+ end  = begin + DeeBytes_SIZE(self);
+ if (mask) {
+  Needle needle;
+  if (get_needle(&needle,mask))
+      goto err;
+  while (begin < end && memcasechr(needle.n_data,*begin,needle.n_size)) ++begin;
+  while (end > begin && memcasechr(needle.n_data,end[-1],needle.n_size)) --end;
  } else {
   while (begin < end && DeeUni_IsSpace(*begin)) ++begin;
   while (end > begin && DeeUni_IsSpace(end[-1])) --end;
@@ -966,6 +1465,32 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
+bytes_caselstrip(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin,*end; DeeObject *mask = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:caselstrip",&mask))
+     goto err;
+ begin = DeeBytes_DATA(self);
+ end  = begin + DeeBytes_SIZE(self);
+ if (mask) {
+  Needle needle;
+  if (get_needle(&needle,mask))
+      goto err;
+  while (begin < end && memcasechr(needle.n_data,*begin,needle.n_size)) ++begin;
+ } else {
+  while (begin < end && DeeUni_IsSpace(*begin)) ++begin;
+ }
+ if (begin == DeeBytes_DATA(self))
+     return_reference_((DeeObject *)self);
+ return DeeBytes_NewView(self->b_orig,
+                         begin,
+                        (size_t)(end - begin),
+                         self->b_flags);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
 bytes_rstrip(Bytes *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  uint8_t *begin,*end; DeeObject *mask = NULL;
@@ -992,6 +1517,32 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
+bytes_caserstrip(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin,*end; DeeObject *mask = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:caserstrip",&mask))
+     goto err;
+ begin = DeeBytes_DATA(self);
+ end  = begin + DeeBytes_SIZE(self);
+ if (mask) {
+  Needle needle;
+  if (get_needle(&needle,mask))
+      goto err;
+  while (end > begin && memcasechr(needle.n_data,end[-1],needle.n_size)) --end;
+ } else {
+  while (end > begin && DeeUni_IsSpace(end[-1])) --end;
+ }
+ if (end == begin + DeeBytes_SIZE(self))
+     return_reference_((DeeObject *)self);
+ return DeeBytes_NewView(self->b_orig,
+                         begin,
+                        (size_t)(end - begin),
+                         self->b_flags);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
 bytes_sstrip(Bytes *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  uint8_t *begin; DeeObject *mask;
@@ -1004,14 +1555,49 @@ bytes_sstrip(Bytes *__restrict self,
  begin = DeeBytes_DATA(self);
  size  = DeeBytes_SIZE(self);
  while (size >= needle.n_size) {
-  if (memcmp(begin,needle.n_data,needle.n_size) != 0)
-      break;
+  if (!MEMEQB(begin,needle.n_data,needle.n_size))
+       break;
   begin += needle.n_size;
   size  -= needle.n_size;
  }
  while (size >= needle.n_size) {
-  if (memcmp(begin + size - needle.n_size,needle.n_data,needle.n_size) != 0)
-      break;
+  if (!MEMEQB(begin + size - needle.n_size,needle.n_data,needle.n_size))
+       break;
+  size -= needle.n_size;
+ }
+ if (begin == DeeBytes_DATA(self) &&
+     size  == DeeBytes_SIZE(self))
+     goto retself;
+ return DeeBytes_NewView(self->b_orig,
+                         begin,size,
+                         self->b_flags);
+retself:
+ return_reference_((DeeObject *)self);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casesstrip(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin; DeeObject *mask;
+ Needle needle; size_t size;
+ if (DeeArg_Unpack(argc,argv,"o:casesstrip",&mask))
+     goto err;
+ if (get_needle(&needle,mask))
+     goto err;
+ if (needle.n_size) goto retself;
+ begin = DeeBytes_DATA(self);
+ size  = DeeBytes_SIZE(self);
+ while (size >= needle.n_size) {
+  if (!MEMCASEEQB(begin,needle.n_data,needle.n_size))
+       break;
+  begin += needle.n_size;
+  size  -= needle.n_size;
+ }
+ while (size >= needle.n_size) {
+  if (!MEMCASEEQB(begin + size - needle.n_size,needle.n_data,needle.n_size))
+       break;
   size -= needle.n_size;
  }
  if (begin == DeeBytes_DATA(self) &&
@@ -1039,8 +1625,37 @@ bytes_lsstrip(Bytes *__restrict self,
  begin = DeeBytes_DATA(self);
  size  = DeeBytes_SIZE(self);
  while (size >= needle.n_size) {
-  if (memcmp(begin,needle.n_data,needle.n_size) != 0)
-      break;
+  if (!MEMEQB(begin,needle.n_data,needle.n_size))
+       break;
+  begin += needle.n_size;
+  size  -= needle.n_size;
+ }
+ if (begin == DeeBytes_DATA(self))
+     goto retself;
+ return DeeBytes_NewView(self->b_orig,
+                         begin,size,
+                         self->b_flags);
+retself:
+ return_reference_((DeeObject *)self);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_caselsstrip(Bytes *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin; DeeObject *mask;
+ Needle needle; size_t size;
+ if (DeeArg_Unpack(argc,argv,"o:caselsstrip",&mask))
+     goto err;
+ if (get_needle(&needle,mask))
+     goto err;
+ if (needle.n_size) goto retself;
+ begin = DeeBytes_DATA(self);
+ size  = DeeBytes_SIZE(self);
+ while (size >= needle.n_size) {
+  if (!MEMCASEEQB(begin,needle.n_data,needle.n_size))
+       break;
   begin += needle.n_size;
   size  -= needle.n_size;
  }
@@ -1068,8 +1683,8 @@ bytes_rsstrip(Bytes *__restrict self,
  begin = DeeBytes_DATA(self);
  size  = DeeBytes_SIZE(self);
  while (size >= needle.n_size) {
-  if (memcmp(begin + size - needle.n_size,needle.n_data,needle.n_size) != 0)
-      break;
+  if (!MEMEQB(begin + size - needle.n_size,needle.n_data,needle.n_size))
+       break;
   size -= needle.n_size;
  }
  if (size  == DeeBytes_SIZE(self))
@@ -1081,6 +1696,442 @@ retself:
  return_reference_((DeeObject *)self);
 err:
  return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casersstrip(Bytes *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin; DeeObject *mask;
+ Needle needle; size_t size;
+ if (DeeArg_Unpack(argc,argv,"o:casersstrip",&mask))
+     goto err;
+ if (get_needle(&needle,mask))
+     goto err;
+ if (needle.n_size) goto retself;
+ begin = DeeBytes_DATA(self);
+ size  = DeeBytes_SIZE(self);
+ while (size >= needle.n_size) {
+  if (!MEMCASEEQB(begin + size - needle.n_size,needle.n_data,needle.n_size))
+       break;
+  size -= needle.n_size;
+ }
+ if (size  == DeeBytes_SIZE(self))
+     goto retself;
+ return DeeBytes_NewView(self->b_orig,
+                         begin,size,
+                         self->b_flags);
+retself:
+ return_reference_((DeeObject *)self);
+err:
+ return NULL;
+}
+
+struct bcompare_args {
+    DeeObject *other;   /* [1..1] String or bytes object. */
+    uint8_t   *lhs_ptr; /* [0..my_len] Starting pointer of lhs. */
+    size_t     lhs_len; /* Number of bytes in lhs. */
+    uint8_t   *rhs_ptr; /* [0..my_len] Starting pointer of rhs. */
+    size_t     rhs_len; /* Number of bytes in rhs. */
+};
+
+PRIVATE int DCALL
+get_bcompare_args(Bytes *__restrict self,
+                  struct bcompare_args *__restrict args,
+                  size_t argc, DeeObject **__restrict argv,
+                  char const *__restrict funname) {
+ DeeObject *other; size_t temp,temp2;
+ args->lhs_ptr = DeeBytes_DATA(self);
+ args->lhs_len = DeeBytes_SIZE(self);
+ switch (argc) {
+ case 1:
+  args->other = other = argv[0];
+  if (DeeBytes_Check(other)) {
+   args->rhs_ptr = DeeBytes_DATA(other);
+   args->rhs_len = DeeBytes_SIZE(other);
+  } else {
+   if unlikely(!DeeString_Check(other))
+      goto err_type_other;
+   args->rhs_ptr = DeeString_AsBytes(other,false);
+   if unlikely(!args->rhs_ptr) goto err;
+   args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
+  }
+  break;
+ case 2:
+  if (DeeBytes_Check(argv[0])) {
+   args->other = other = argv[0];
+   if (DeeObject_AsSSize(argv[1],(dssize_t *)&temp)) goto err;
+   args->rhs_ptr = DeeBytes_DATA(other);
+   args->rhs_len = DeeBytes_SIZE(other);
+   if unlikely(temp >= args->rhs_len) {
+    args->rhs_len = 0;
+   } else {
+    args->rhs_ptr += temp;
+    args->rhs_len -= temp;
+   }
+  } else if (DeeString_Check(argv[0])) {
+   args->other = other = argv[0];
+   if (DeeObject_AsSSize(argv[1],(dssize_t *)&temp)) goto err;
+   args->rhs_ptr = DeeString_AsBytes(other,false);
+   if unlikely(!args->rhs_ptr) goto err;
+   args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
+   if unlikely(temp >= args->rhs_len) {
+    args->rhs_len = 0;
+   } else {
+    args->rhs_ptr += temp;
+    args->rhs_len -= temp;
+   }
+  } else {
+   if (DeeObject_AsSSize(argv[0],(dssize_t *)&temp)) goto err;
+   if unlikely(temp >= args->lhs_len) {
+    args->lhs_len = 0;
+   } else {
+    args->lhs_ptr += temp;
+    args->lhs_len -= temp;
+   }
+   args->other = other = argv[1];
+   if (DeeBytes_Check(other)) {
+    args->rhs_ptr = DeeBytes_DATA(other);
+    args->rhs_len = DeeBytes_SIZE(other);
+   } else {
+    if unlikely(!DeeString_Check(other))
+       goto err_type_other;
+    args->rhs_ptr = DeeString_AsBytes(other,false);
+    if unlikely(!args->rhs_ptr) goto err;
+    args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
+   }
+  }
+  break;
+ case 3:
+  if (DeeBytes_Check(argv[0])) {
+   args->other = other = argv[0];
+   args->rhs_ptr = DeeBytes_DATA(other);
+   args->rhs_len = DeeBytes_SIZE(other);
+   if (DeeObject_AsSSize(argv[1],(dssize_t *)&temp)) goto err;
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&temp2)) goto err;
+   if unlikely(temp >= args->rhs_len) {
+    args->rhs_len = 0;
+   } else {
+    if (temp2 > args->rhs_len)
+        temp2 = args->rhs_len;
+    args->rhs_ptr += temp;
+    args->rhs_len  = temp2 - temp;
+   }
+  } else if (DeeString_Check(argv[0])) {
+   args->other = other = argv[0];
+   args->rhs_ptr = DeeString_AsBytes(other,true);
+   if unlikely(!args->rhs_ptr) goto err;
+   args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
+   if (DeeObject_AsSSize(argv[1],(dssize_t *)&temp)) goto err;
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&temp2)) goto err;
+   if unlikely(temp >= args->rhs_len) {
+    args->rhs_len = 0;
+   } else {
+    if (temp2 > args->rhs_len)
+        temp2 = args->rhs_len;
+    args->rhs_ptr += temp;
+    args->rhs_len  = temp2 - temp;
+   }
+  } else if (DeeBytes_Check(argv[1])) {
+   if (DeeObject_AsSSize(argv[0],(dssize_t *)&temp)) goto err;
+   if unlikely(temp >= args->lhs_len) {
+    args->lhs_len = 0;
+   } else {
+    args->lhs_ptr += temp;
+    args->lhs_len -= temp;
+   }
+   args->other = other = argv[1];
+   args->rhs_ptr = DeeBytes_DATA(other);
+   args->rhs_len = DeeBytes_SIZE(other);
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&temp)) goto err;
+   if unlikely(temp >= args->rhs_len) {
+    args->rhs_len = 0;
+   } else {
+    args->rhs_ptr += temp;
+    args->rhs_len -= temp;
+   }
+  } else if (DeeString_Check(argv[1])) {
+   if (DeeObject_AsSSize(argv[0],(dssize_t *)&temp)) goto err;
+   if unlikely(temp >= args->lhs_len) {
+    args->lhs_len = 0;
+   } else {
+    args->lhs_ptr += temp;
+    args->lhs_len -= temp;
+   }
+   args->other = other = argv[1];
+   args->rhs_ptr = DeeString_AsBytes(other,false);
+   if unlikely(!args->rhs_ptr) goto err;
+   args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&temp)) goto err;
+   if unlikely(temp >= args->rhs_len) {
+    args->rhs_len = 0;
+   } else {
+    args->rhs_ptr += temp;
+    args->rhs_len -= temp;
+   }
+  } else {
+   if (DeeObject_AsSSize(argv[0],(dssize_t *)&temp)) goto err;
+   if (DeeObject_AsSSize(argv[1],(dssize_t *)&temp2)) goto err;
+   if (temp >= args->lhs_len) {
+    args->lhs_len = 0;
+   } else {
+    if (temp2 > args->lhs_len)
+        temp2 = args->lhs_len;
+    args->lhs_ptr += temp;
+    args->lhs_len  = temp2 - temp;
+   }
+   args->other = other = argv[2];
+   if (DeeBytes_Check(other)) {
+    args->rhs_ptr = DeeBytes_DATA(other);
+    args->rhs_len = DeeBytes_SIZE(other);
+   } else {
+    if unlikely(!DeeString_Check(other))
+       goto err_type_other;
+    args->rhs_ptr = DeeString_AsBytes(other,false);
+    if unlikely(!args->rhs_ptr) goto err;
+    args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
+   }
+  }
+  break;
+ case 4:
+  if (DeeObject_AsSSize(argv[0],(dssize_t *)&temp)) goto err;
+  if (DeeBytes_Check(argv[1])) {
+   if unlikely(temp >= args->lhs_len) {
+    args->lhs_len = 0;
+   } else {
+    args->lhs_ptr += temp;
+    args->lhs_len -= temp;
+   }
+   args->other = other = argv[1];
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&temp)) goto err;
+   if (DeeObject_AsSSize(argv[3],(dssize_t *)&temp2)) goto err;
+   args->rhs_ptr = DeeBytes_DATA(other);
+   args->rhs_len = DeeBytes_SIZE(other);
+   if (temp >= args->rhs_len) {
+    args->rhs_len = 0;
+   } else {
+    if (temp2 > args->rhs_len)
+        temp2 = args->rhs_len;
+    args->rhs_ptr += temp;
+    args->rhs_len  = temp2 - temp;
+   }
+  } else if (DeeString_Check(argv[1])) {
+   if unlikely(temp >= args->lhs_len) {
+    args->lhs_len = 0;
+   } else {
+    args->lhs_ptr += temp;
+    args->lhs_len -= temp;
+   }
+   args->other = other = argv[1];
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&temp)) goto err;
+   if (DeeObject_AsSSize(argv[3],(dssize_t *)&temp2)) goto err;
+   args->rhs_ptr = DeeString_AsBytes(other,false);
+   if unlikely(!args->rhs_ptr) goto err;
+   args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
+   if (temp >= args->rhs_len) {
+    args->rhs_len = 0;
+   } else {
+    if (temp2 > args->rhs_len)
+        temp2 = args->rhs_len;
+    args->rhs_ptr += temp;
+    args->rhs_len  = temp2 - temp;
+   }
+  } else {
+   if (DeeObject_AsSSize(argv[1],(dssize_t *)&temp2)) goto err;
+   if unlikely(temp >= args->lhs_len) {
+    args->lhs_len = 0;
+   } else {
+    if (temp2 > args->lhs_len)
+        temp2 = args->lhs_len;
+    args->lhs_ptr += temp;
+    args->lhs_len  = temp2 - temp;
+   }
+   args->other = other = argv[2];
+   if unlikely(!DeeString_Check(other))
+      goto err_type_other;
+   if (DeeObject_AsSSize(argv[3],(dssize_t *)&temp)) goto err;
+   args->rhs_ptr = DeeString_AsBytes(other,false);
+   if unlikely(!args->rhs_ptr) goto err;
+   args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
+   if (temp >= args->rhs_len) {
+    args->rhs_len = 0;
+   } else {
+    args->rhs_ptr += temp;
+    args->rhs_len -= temp;
+   }
+  }
+  break;
+ case 5:
+  if (DeeObject_AsSSize(argv[0],(dssize_t *)&temp)) goto err;
+  if (DeeObject_AsSSize(argv[1],(dssize_t *)&temp2)) goto err;
+  if (temp >= args->lhs_len) {
+   args->lhs_len = 0;
+  } else {
+   if (temp2 > args->lhs_len)
+       temp2 = args->lhs_len;
+   args->lhs_ptr += temp;
+   args->lhs_len  = temp2 - temp;
+  }
+  args->other = other = argv[2];
+  if (DeeBytes_Check(other)) {
+   args->rhs_ptr = DeeBytes_DATA(other);
+   args->rhs_len = DeeBytes_SIZE(other);
+  } else {
+   if unlikely(!DeeString_Check(other))
+      goto err_type_other;
+   args->rhs_ptr = DeeString_AsBytes(other,false);
+   if unlikely(!args->rhs_ptr) goto err;
+   args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
+  }
+  if (DeeObject_AsSSize(argv[3],(dssize_t *)&temp)) goto err;
+  if (DeeObject_AsSSize(argv[4],(dssize_t *)&temp2)) goto err;
+  if (temp >= args->rhs_len) {
+   args->rhs_len = 0;
+  } else {
+   if (temp2 > args->rhs_len)
+       temp2 = args->rhs_len;
+   args->rhs_ptr += temp;
+   args->rhs_len  = temp2 - temp;
+  }
+  break;
+ default:
+  err_invalid_argc(funname,argc,1,5);
+  goto err;
+ }
+ return 0;
+err_type_other:
+ DeeObject_TypeAssertFailed(other,&DeeBytes_Type);
+err:
+ return -1;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_compare(Bytes *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; int result;
+ if (get_bcompare_args(self,&args,argc,argv,"compare"))
+     return NULL;
+ if (args.lhs_len < args.rhs_len) {
+  result = memcmp(args.lhs_ptr,args.rhs_ptr,args.lhs_len);
+  if (result == 0) return_reference_(&DeeInt_MinusOne);
+ } else if (args.lhs_len > args.rhs_len) {
+  result = memcmp(args.lhs_ptr,args.rhs_ptr,args.rhs_len);
+  if (result == 0) return_reference_(&DeeInt_One);
+ } else {
+  result = memcmp(args.lhs_ptr,args.rhs_ptr,args.lhs_len);
+ }
+ return DeeInt_NewInt(result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_vercompare(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; int8_t result;
+ if (get_bcompare_args(self,&args,argc,argv,"vercompare"))
+     return NULL;
+ result = dee_strverscmpb(args.lhs_ptr,args.lhs_len,
+                          args.rhs_ptr,args.lhs_len);
+ return DeeInt_NewS8(result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_wildcompare(Bytes *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; int result;
+ if (get_bcompare_args(self,&args,argc,argv,"wildcompare"))
+     return NULL;
+ result = wildcompareb(args.lhs_ptr,args.lhs_len,
+                       args.rhs_ptr,args.lhs_len);
+ return DeeInt_NewInt(result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_fuzzycompare(Bytes *__restrict self,
+                   size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; dssize_t result;
+ if (get_bcompare_args(self,&args,argc,argv,"fuzzycompare"))
+     goto err;
+ result = fuzzy_compareb(args.lhs_ptr,args.lhs_len,
+                         args.rhs_ptr,args.lhs_len);
+ if unlikely(result == (dssize_t)-1) goto err;
+ return DeeInt_NewSize((size_t)result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_wmatch(Bytes *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; int result;
+ if (get_bcompare_args(self,&args,argc,argv,"wmatch"))
+     return NULL;
+ result = wildcompareb(args.lhs_ptr,args.lhs_len,
+                       args.rhs_ptr,args.lhs_len);
+ return_bool_(result == 0);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casecompare(Bytes *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; int result;
+ if (get_bcompare_args(self,&args,argc,argv,"casecompare"))
+     return NULL;
+ if (args.lhs_len < args.rhs_len) {
+  result = memcasecmp(args.lhs_ptr,args.rhs_ptr,args.lhs_len);
+  if (result == 0) return_reference_(&DeeInt_MinusOne);
+ } else if (args.lhs_len > args.rhs_len) {
+  result = memcasecmp(args.lhs_ptr,args.rhs_ptr,args.rhs_len);
+  if (result == 0) return_reference_(&DeeInt_One);
+ } else {
+  result = memcasecmp(args.lhs_ptr,args.rhs_ptr,args.lhs_len);
+ }
+ return DeeInt_NewInt(result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casevercompare(Bytes *__restrict self,
+                     size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; int8_t result;
+ if (get_bcompare_args(self,&args,argc,argv,"casevercompare"))
+     return NULL;
+ result = dee_strcaseverscmpb(args.lhs_ptr,args.lhs_len,
+                              args.rhs_ptr,args.lhs_len);
+ return DeeInt_NewS8(result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casewildcompare(Bytes *__restrict self,
+                      size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; int result;
+ if (get_bcompare_args(self,&args,argc,argv,"casewildcompare"))
+     return NULL;
+ result = wildcasecompareb(args.lhs_ptr,args.lhs_len,
+                           args.rhs_ptr,args.lhs_len);
+ return DeeInt_NewInt(result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casefuzzycompare(Bytes *__restrict self,
+                       size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; dssize_t result;
+ if (get_bcompare_args(self,&args,argc,argv,"casefuzzycompare"))
+     goto err;
+ result = fuzzy_casecompareb(args.lhs_ptr,args.lhs_len,
+                             args.rhs_ptr,args.lhs_len);
+ if unlikely(result == (dssize_t)-1) goto err;
+ return DeeInt_NewSize((size_t)result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casewmatch(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; int result;
+ if (get_bcompare_args(self,&args,argc,argv,"casewmatch"))
+     return NULL;
+ result = wildcasecompareb(args.lhs_ptr,args.lhs_len,
+                           args.rhs_ptr,args.lhs_len);
+ return_bool_(result == 0);
 }
 
 
@@ -1113,84 +2164,11 @@ INTERN struct type_method bytes_methods[] = {
           "@throw IndexError The given @index is greater than ${#this}\n"
           "Same as ${this[index]}") },
 
-    /* Bytes splitter functions. */
-    { "split", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_split,
-      DOC("(bytes needle)->{bytes...}\n"
-          "(string needle)->{bytes...}\n"
-          "(int needle)->{bytes...}\n"
-          "Split @this bytes object at each instance of @sep, "
-          "returning a sequence of the resulting parts\n"
-          "The returned bytes objects are views of @this byte object, meaning they "
-          "have the same #iswritable characteristics as @this, and refer to the same "
-          "memory") },
-    { "casesplit", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casesplit,
-      DOC("(bytes needle)->{bytes...}\n"
-          "(string needle)->{bytes...}\n"
-          "(int needle)->{bytes...}\n"
-          "Same as #split, however ascii-casing is ignored during character comparisons\n"
-          "The returned bytes objects are views of @this byte object, meaning they "
-          "have the same #iswritable characteristics as @this, and refer to the same "
-          "memory") },
-    { "splitlines", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_splitlines,
-      DOC("(bool keepends=false)->{bytes...}\n"
-          "Split @this bytes object at each linefeed, returning a sequence of all contained lines\n"
-          "When @keepends is :false, this is identical to ${this.unifylines().split(\"\\n\")}\n"
-          "When @keepends is :true, items found in the returned sequence will still have their "
-          "original, trailing line-feed appended\n"
-          "This function recognizes $\"\\n\", $\"\\r\" and $\"\\r\\n\" as linefeed sequences\n"
-          "The returned bytes objects are views of @this byte object, meaning they "
-          "have the same #iswritable characteristics as @this, and refer to the same "
-          "memory") },
-
-    /* String stripping */
-    { "strip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_strip,
-      DOC("->bytes\n"
-          "(string mask)->bytes\n"
-          "(bytes mask)->bytes\n"
-          "(int mask)->bytes\n"
-          "Strip all leading and trailing whitespace-characters, or "
-          "characters apart of @mask, and return a sub-view of @this bytes object") },
-    { "lstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lstrip,
-      DOC("->bytes\n"
-          "(string mask)->bytes\n"
-          "(bytes mask)->bytes\n"
-          "(int mask)->bytes\n"
-          "Strip all leading whitespace-characters, or characters "
-          "apart of @mask, and return a sub-view of @this bytes object") },
-    { "rstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rstrip,
-      DOC("->bytes\n"
-          "(string mask)->bytes\n"
-          "(bytes mask)->bytes\n"
-          "(int mask)->bytes\n"
-          "Strip all trailing whitespace-characters, or characters "
-          "apart of @mask, and return a sub-view of @this bytes object") },
-    { "sstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_sstrip,
-      DOC("(string other)->bytes\n"
-          "(bytes other)->bytes\n"
-          "(int other)->bytes\n"
-          "Strip all leading and trailing instances of @other from @this string\n"
-          ">local result = this;\n"
-          ">while (result.startswith(other))\n"
-          ">       result = result[#other:];\n"
-          ">while (result.endswith(other))\n"
-          ">       result = result[:#result-#other];\n") },
-    { "lsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lsstrip,
-      DOC("(string other)->bytes\n"
-          "(bytes other)->bytes\n"
-          "(int other)->bytes\n"
-          "Strip all leading instances of @other from @this string\n"
-          ">local result = this;\n"
-          ">while (result.startswith(other))\n"
-          ">       result = result[#other:];\n") },
-    { "rsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rsstrip,
-      DOC("(string other)->bytes\n"
-          "(bytes other)->bytes\n"
-          "(int other)->bytes\n"
-          "Strip all trailing instances of @other from @this string\n"
-          ">local result = this;\n"
-          ">while (result.endswith(other))\n"
-          ">       result = result[:#result-#other];\n") },
-
+    /* Bytes formatting / scanning. */
+    { "format", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_format,
+      DOC("(sequence args)->bytes") },
+    { "scanf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_scanf,
+      DOC("(string format)->sequence") },
 
     /* String/Character traits */
     { "isprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isprint,
@@ -1375,7 +2353,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if any character in "
           "${this.substr(start,end)} has title-casing") },
 
-    /* Bytes conversion */
+    /* Bytes conversion functions */
     { "lower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lower,
       DOC("(int start=0,int end=-1)->bytes\n"
           "Returns a writable copy of @this bytes object converted to lower-case (when interpreted as ASCII)") },
@@ -1393,6 +2371,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns a writable copy of @this bytes object with the casing of each "
           "character that has two different casings swapped (when interpreted as ASCII)") },
 
+    /* Inplace variants of bytes conversion functions */
     { "tolower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tolower,
       DOC("(int start=0,int end=-1)->bytes\n"
           "@throw BufferError @this bytes object is not writable\n"
@@ -1413,18 +2392,6 @@ INTERN struct type_method bytes_methods[] = {
       DOC("(int start=0,int end=-1)->bytes\n"
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #swapcase, but character modifications are performed in-place, and @this bytes object is re-returned") },
-
-    { "startswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_startswith,
-      DOC("(string needle,int start=0,int end=-1)->bool\n"
-          "(bytes needle,int start=0,int end=-1)->bool\n"
-          "(int needle,int start=0,int end=-1)->bool\n"
-          "Return :true if the sub-string ${this.substr(start,end)} starts with @other") },
-    { "endswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_endswith,
-      DOC("(string needle,int start=0,int end=-1)->bool\n"
-          "(bytes needle,int start=0,int end=-1)->bool\n"
-          "(int needle,int start=0,int end=-1)->bool\n"
-          "Return :true if the sub-string ${this.substr(start,end)} ends with @other") },
-
 
     /* Case-sensitive query functions */
     { "replace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_replace,
@@ -1485,6 +2452,12 @@ INTERN struct type_method bytes_methods[] = {
           "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
           "Find the last instance of @needle that exists within ${this.substr(start,end)}, "
           "and return its starting index") },
+    { "findall", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_findall,
+      DOC("(bytes needle,int start=0,int end=-1)->{int...}\n"
+          "(string needle,int start=0,int end=-1)->{int...}\n"
+          "(int needle,int start=0,int end=-1)->{int...}\n"
+          "Find all instances of @needle within ${this.substr(start,end)}, "
+          "and return their starting indeces as a sequence") },
     { "count", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_count,
       DOC("(bytes needle,int start=0,int end=-1)->int\n"
           "(string needle,int start=0,int end=-1)->int\n"
@@ -1501,6 +2474,332 @@ INTERN struct type_method bytes_methods[] = {
           "Similar to ${this[start:end]}, and semantically equialent to :string.substr\n"
           "This function can be used to view a sub-set of bytes from @this bytes object\n"
           "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object\n") },
+    { "strip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_strip,
+      DOC("->bytes\n"
+          "(string mask)->bytes\n"
+          "(bytes mask)->bytes\n"
+          "(int mask)->bytes\n"
+          "Strip all leading and trailing whitespace-characters, or "
+          "characters apart of @mask, and return a sub-view of @this bytes object") },
+    { "lstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lstrip,
+      DOC("->bytes\n"
+          "(string mask)->bytes\n"
+          "(bytes mask)->bytes\n"
+          "(int mask)->bytes\n"
+          "Strip all leading whitespace-characters, or characters "
+          "apart of @mask, and return a sub-view of @this bytes object") },
+    { "rstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rstrip,
+      DOC("->bytes\n"
+          "(string mask)->bytes\n"
+          "(bytes mask)->bytes\n"
+          "(int mask)->bytes\n"
+          "Strip all trailing whitespace-characters, or characters "
+          "apart of @mask, and return a sub-view of @this bytes object") },
+    { "sstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_sstrip,
+      DOC("(string other)->bytes\n"
+          "(bytes other)->bytes\n"
+          "(int other)->bytes\n"
+          "Strip all leading and trailing instances of @other from @this string\n"
+          ">local result = this;\n"
+          ">while (result.startswith(other))\n"
+          ">       result = result[#other:];\n"
+          ">while (result.endswith(other))\n"
+          ">       result = result[:#result-#other];\n") },
+    { "lsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lsstrip,
+      DOC("(string other)->bytes\n"
+          "(bytes other)->bytes\n"
+          "(int other)->bytes\n"
+          "Strip all leading instances of @other from @this string\n"
+          ">local result = this;\n"
+          ">while (result.startswith(other))\n"
+          ">       result = result[#other:];\n") },
+    { "rsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rsstrip,
+      DOC("(string other)->bytes\n"
+          "(bytes other)->bytes\n"
+          "(int other)->bytes\n"
+          "Strip all trailing instances of @other from @this string\n"
+          ">local result = this;\n"
+          ">while (result.endswith(other))\n"
+          ">       result = result[:#result-#other];\n") },
+    { "startswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_startswith,
+      DOC("(string needle,int start=0,int end=-1)->bool\n"
+          "(bytes needle,int start=0,int end=-1)->bool\n"
+          "(int needle,int start=0,int end=-1)->bool\n"
+          "Return :true if the sub-string ${this.substr(start,end)} starts with @other") },
+    { "endswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_endswith,
+      DOC("(string needle,int start=0,int end=-1)->bool\n"
+          "(bytes needle,int start=0,int end=-1)->bool\n"
+          "(int needle,int start=0,int end=-1)->bool\n"
+          "Return :true if the sub-string ${this.substr(start,end)} ends with @other") },
+    { "partition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_parition,
+      DOC("(string needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "Search for the first instance of @needle within ${this.substr(start,end)} and "
+          "return a 3-element sequence of byte objects ${(this[:pos],needle,this[pos+#needle:])}.\n"
+          "If @needle could not be found, ${(this,\"\".bytes(),\"\".bytes())} is returned") },
+    { "rpartition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rparition,
+      DOC("(string needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "Search for the last instance of @needle within ${this.substr(start,end)} and "
+          "return a 3-element sequence of strings ${(this[:pos],needle,this[pos+#needle:])}.\n"
+          "If @needle could not be found, ${(this,\"\".bytes(),\"\".bytes())} is returned") },
+    { "compare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_compare,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Compare the sub-string ${left = this.substr(my_start,my_end)} with ${right = other.substr(other_start,other_end)}, "
+          "returning ${< 0} if ${left < right}, ${> 0} if ${left > right}, or ${== 0} if they are equal") },
+    { "vercompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_vercompare,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Performs a version-string comparison. This is similar to #compare, but rather than "
+          "performing a strict lexicographical comparison, the numbers found in the strings "
+          "being compared are comparsed as a whole, solving the common problem seen in applications "
+          "such as file navigators showing a file order of `foo1.txt', `foo10.txt', `foo11.txt', `foo2.txt', etc...\n"
+          "This function is a portable implementation of the GNU function "
+          "%{link https://linux.die.net/man/3/strverscmp strverscmp}, "
+          "for which you may follow the link for further details") },
+    { "wildcompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_wildcompare,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start,my_end)} "
+          "with ${right = pattern.substr(pattern_start,pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
+          "if ${left > right}, or ${== 0} if they are equal\n"
+          "Wild-compare characters are only parsed from @pattern, allowing $\"?\" to "
+          "be matched with any single character from @this, and $\"*\" to be matched to "
+          "any number of characters") },
+    { "fuzzycompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_fuzzycompare,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Perform a fuzzy string comparison between ${this.substr(my_start,my_end)} and ${other.substr(other_start,other_end)}\n"
+          "The return value is a similarty-factor that can be used to score how close the two strings look alike.\n"
+          "How exactly the scoring is done is implementation-specific, however a score of $0 is reserved for two "
+          "strings that are perfectly identical, any two differing strings always have a score ${> 0}, and the closer "
+          "the score is to $0, the more alike they are\n"
+          "The intended use of this function is for auto-completion, as well as warning "
+          "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
+          "Note that there is another version #casefuzzycompare that also ignores casing") },
+    { "wmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_wmatch,
+      DOC("(string other,int other_start=0,int other_end=-1)->bool\n"
+          "(bytes other,int other_start=0,int other_end=-1)->bool\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->bool\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->bool\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->bool\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->bool\n"
+          "Same as #wildcompare, returning :true where #wildcompare would return $0, and :false in all other cases") },
+
+    /* Case-insensitive query functions */
+    { "casereplace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casereplace,
+      DOC("(string find_str,string replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(string find_str,bytes replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(string find_str,int replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(bytes find_str,string replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(bytes find_str,bytes replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(bytes find_str,int replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(int find_str,string replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(int find_str,bytes replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(int find_str,int replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "@throw ValueError The given @find_str or @replace_str is a string containing characters ${> 0xff}\n"
+          "@throw IntegerOverflow The given @find_str or @replace_str is an integer lower than $0, or greater than $0xff\n"
+          "Same as #replace, however ascii-casing is ignored during character comparisons") },
+    { "tocasereplace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tocasereplace,
+      DOC("(string find_str,string replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(string find_str,bytes replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(string find_str,int replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(bytes find_str,string replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(bytes find_str,bytes replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(bytes find_str,int replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(int find_str,string replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(int find_str,bytes replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "(int find_str,int replace_str,int max_count=int.SIZE_MAX)->bytes\n"
+          "@throw ValueError The given @find_str or @replace_str is a string containing characters ${> 0xff}\n"
+          "@throw IntegerOverflow The given @find_str or @replace_str is an integer lower than $0, or greater than $0xff\n"
+          "@throw ValueError The number of bytes specified by @find_str and @replace_str are not identical\n"
+          "@throw BufferError @this bytes object is not writable\n"
+          "Same as #toreplace, however ascii-casing is ignored during character comparisons") },
+    { "casefind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casefind,
+      DOC("(bytes needle,int start=0,int end=-1)->int\n"
+          "(string needle,int start=0,int end=-1)->int\n"
+          "(int needle,int start=0,int end=-1)->int\n"
+          "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+          "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+          "Same as #find, however ascii-casing is ignored during character comparisons") },
+    { "caserfind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserfind,
+      DOC("(bytes needle,int start=0,int end=-1)->int\n"
+          "(string needle,int start=0,int end=-1)->int\n"
+          "(int needle,int start=0,int end=-1)->int\n"
+          "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+          "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+          "Same as #rfind, however ascii-casing is ignored during character comparisons") },
+    { "caseindex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caseindex,
+      DOC("(bytes needle,int start=0,int end=-1)->int\n"
+          "(string needle,int start=0,int end=-1)->int\n"
+          "(int needle,int start=0,int end=-1)->int\n"
+          "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
+          "Same as #index, however ascii-casing is ignored during character comparisons") },
+    { "caserindex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserindex,
+      DOC("(bytes needle,int start=0,int end=-1)->int\n"
+          "(string needle,int start=0,int end=-1)->int\n"
+          "(int needle,int start=0,int end=-1)->int\n"
+          "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
+          "Same as #rindex, however ascii-casing is ignored during character comparisons") },
+    { "casefindall", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casefindall,
+      DOC("(bytes needle,int start=0,int end=-1)->{int...}\n"
+          "(string needle,int start=0,int end=-1)->{int...}\n"
+          "(int needle,int start=0,int end=-1)->{int...}\n"
+          "Same as #findall, however ascii-casing is ignored during character comparisons") },
+    { "casecount", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casecount,
+      DOC("(bytes needle,int start=0,int end=-1)->int\n"
+          "(string needle,int start=0,int end=-1)->int\n"
+          "(int needle,int start=0,int end=-1)->int\n"
+          "Same as #count, however ascii-casing is ignored during character comparisons") },
+    { "casecontains", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casecontains_f,
+      DOC("(bytes needle,int start=0,int end=-1)->bool\n"
+          "(string needle,int start=0,int end=-1)->bool\n"
+          "(int needle,int start=0,int end=-1)->bool\n"
+          "Same as #contains, however ascii-casing is ignored during character comparisons") },
+    { "casestrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casestrip,
+      DOC("->bytes\n"
+          "(string mask)->bytes\n"
+          "(bytes mask)->bytes\n"
+          "(int mask)->bytes\n"
+          "Same as #strip, however ascii-casing is ignored during character comparisons") },
+    { "caselstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caselstrip,
+      DOC("->bytes\n"
+          "(string mask)->bytes\n"
+          "(bytes mask)->bytes\n"
+          "(int mask)->bytes\n"
+          "Same as #lstrip, however ascii-casing is ignored during character comparisons") },
+    { "caserstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserstrip,
+      DOC("->bytes\n"
+          "(string mask)->bytes\n"
+          "(bytes mask)->bytes\n"
+          "(int mask)->bytes\n"
+          "Same as #rstrip, however ascii-casing is ignored during character comparisons") },
+    { "casesstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casesstrip,
+      DOC("(string other)->bytes\n"
+          "(bytes other)->bytes\n"
+          "(int other)->bytes\n"
+          "Same as #sstrip, however ascii-casing is ignored during character comparisons") },
+    { "caselsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caselsstrip,
+      DOC("(string other)->bytes\n"
+          "(bytes other)->bytes\n"
+          "(int other)->bytes\n"
+          "Same as #lsstrip, however ascii-casing is ignored during character comparisons") },
+    { "casersstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casersstrip,
+      DOC("(string other)->bytes\n"
+          "(bytes other)->bytes\n"
+          "(int other)->bytes\n"
+          "Same as #rsstrip, however ascii-casing is ignored during character comparisons") },
+    { "casestartswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casestartswith,
+      DOC("(string needle,int start=0,int end=-1)->bool\n"
+          "(bytes needle,int start=0,int end=-1)->bool\n"
+          "(int needle,int start=0,int end=-1)->bool\n"
+          "Same as #startswith, however ascii-casing is ignored during character comparisons") },
+    { "caseendswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caseendswith,
+      DOC("(string needle,int start=0,int end=-1)->bool\n"
+          "(bytes needle,int start=0,int end=-1)->bool\n"
+          "(int needle,int start=0,int end=-1)->bool\n"
+          "Same as #endswith, however ascii-casing is ignored during character comparisons") },
+    { "casepartition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caseparition,
+      DOC("(string needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "Same as #partition, however ascii-casing is ignored during character comparisons") },
+    { "caserpartition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserparition,
+      DOC("(string needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "Same as #rpartition, however ascii-casing is ignored during character comparisons") },
+    { "casecompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casecompare,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Same as #compare, however ascii-casing is ignored during character comparisons") },
+    { "casevercompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casevercompare,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Same as #vercompare, however ascii-casing is ignored during character comparisons") },
+    { "casewildcompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casewildcompare,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Same as #wildcompare, however ascii-casing is ignored during character comparisons") },
+    { "casefuzzycompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casefuzzycompare,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Same as #fuzzycompare, however ascii-casing is ignored during character comparisons") },
+    { "casewmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casewmatch,
+      DOC("(string other,int other_start=0,int other_end=-1)->bool\n"
+          "(bytes other,int other_start=0,int other_end=-1)->bool\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->bool\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->bool\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->bool\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->bool\n"
+          "Same as #casewmatch, however ascii-casing is ignored during character comparisons") },
+
+    /* Bytes splitter functions. */
+    { "split", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_split,
+      DOC("(bytes needle)->{bytes...}\n"
+          "(string needle)->{bytes...}\n"
+          "(int needle)->{bytes...}\n"
+          "Split @this bytes object at each instance of @sep, "
+          "returning a sequence of the resulting parts\n"
+          "The returned bytes objects are views of @this byte object, meaning they "
+          "have the same #iswritable characteristics as @this, and refer to the same "
+          "memory") },
+    { "casesplit", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casesplit,
+      DOC("(bytes needle)->{bytes...}\n"
+          "(string needle)->{bytes...}\n"
+          "(int needle)->{bytes...}\n"
+          "Same as #split, however ascii-casing is ignored during character comparisons\n"
+          "The returned bytes objects are views of @this byte object, meaning they "
+          "have the same #iswritable characteristics as @this, and refer to the same "
+          "memory") },
+    { "splitlines", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_splitlines,
+      DOC("(bool keepends=false)->{bytes...}\n"
+          "Split @this bytes object at each linefeed, returning a sequence of all contained lines\n"
+          "When @keepends is :false, this is identical to ${this.unifylines().split(\"\\n\")}\n"
+          "When @keepends is :true, items found in the returned sequence will still have their "
+          "original, trailing line-feed appended\n"
+          "This function recognizes $\"\\n\", $\"\\r\" and $\"\\r\\n\" as linefeed sequences\n"
+          "The returned bytes objects are views of @this byte object, meaning they "
+          "have the same #iswritable characteristics as @this, and refer to the same "
+          "memory") },
+
+
+
 
     /* String alignment functions. */
     { "reversed", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_reversed,
@@ -1529,12 +2828,6 @@ INTERN struct type_method bytes_methods[] = {
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #reversed, but modifications are performed "
           "in-line, before @this bytes object is re-returned") },
-
-    /* Bytes formatting / scanning. */
-    { "format", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_format,
-      DOC("(sequence args)->bytes") },
-    { "scanf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_scanf,
-      DOC("(string format)->sequence") },
 
 
     { NULL }

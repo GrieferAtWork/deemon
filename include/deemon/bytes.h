@@ -52,6 +52,22 @@ typedef struct {
  * API through which user-code can operate with bytes objects. */
 DDATDEF DeeTypeObject DeeBytes_Type;
 
+/* A singleton representing an empty bytes object.
+ * NOTE: This object is not required to be used for empty bytes.
+ *       Other instances may be used as well!
+ * NOTE: The empty bytes object is writable (though there is no memory to write to)
+ */
+#ifdef GUARD_DEEMON_OBJECTS_BYTES_C
+DDATDEF DeeBytesObject                DeeBytes_Empty;
+#define Dee_EmptyBytes ((DeeObject *)&DeeBytes_Empty)
+#else
+DDATDEF DeeObject                     DeeBytes_Empty;
+#define Dee_EmptyBytes              (&DeeBytes_Empty)
+#endif
+#define return_empty_bytes            return_reference_(Dee_EmptyBytes)
+
+
+
 /* Construct a bytes-buffer from `self', using the generic object-buffer interface. */
 DFUNDEF DREF DeeObject *DCALL DeeObject_Bytes(DeeObject *__restrict self,
                                               unsigned int flags,
