@@ -25,6 +25,7 @@
 #include <deemon/tuple.h>
 #include <deemon/int.h>
 #include <deemon/bool.h>
+#include <deemon/seq.h>
 #include <deemon/thread.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
@@ -703,28 +704,52 @@ err:
 }
 INTERN DREF DeeObject *DCALL
 DeeString_Join(DeeObject *__restrict self, DeeObject *__restrict seq) {
- DREF DeeObject *iter,*elem; bool is_first = true;
+ DREF DeeObject *iter,*elem;
+ bool is_first = true; size_t fast_size;
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeString_Type);
- iter = DeeObject_IterSelf(seq);
- if unlikely(!iter) goto err;
- while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-  /* Print `self' prior to every object, starting with the 2nd one. */
-  if unlikely(!is_first &&
-               unicode_printer_printstring(&printer,self) < 0)
-     goto err_elem;
-  if unlikely(unicode_printer_printobject(&printer,elem) < 0)
-     goto err_elem;
-  Dee_Decref(elem);
-  is_first = false;
-  if (DeeThread_CheckInterrupt())
-      goto err_iter;
+ fast_size = DeeFastSeq_GetSize(seq);
+ if (fast_size != DEE_FASTSEQ_NOTFAST) {
+  /* Fast-sequence optimizations. */
+  size_t i;
+  for (i = 0; i < fast_size; ++i) {
+   /* Print `self' prior to every object, starting with the 2nd one. */
+   if unlikely(!is_first &&
+                unicode_printer_printstring(&printer,self) < 0)
+      goto err;
+   elem = DeeFastSeq_GetItem(seq,i);
+   if unlikely(!elem) goto err;
+   if unlikely(unicode_printer_printobject(&printer,elem) < 0)
+      goto err_elem_noiter;
+   Dee_Decref(elem);
+   is_first = false;
+  }
+ } else {
+  iter = DeeObject_IterSelf(seq);
+  if unlikely(!iter) goto err;
+  while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+   /* Print `self' prior to every object, starting with the 2nd one. */
+   if unlikely(!is_first &&
+                unicode_printer_printstring(&printer,self) < 0)
+      goto err_elem;
+   if unlikely(unicode_printer_printobject(&printer,elem) < 0)
+      goto err_elem;
+   Dee_Decref(elem);
+   is_first = false;
+   if (DeeThread_CheckInterrupt())
+       goto err_iter;
+  }
+  if unlikely(!elem) goto err_iter;
+  Dee_Decref(iter);
  }
- if unlikely(!elem) goto err_iter;
- Dee_Decref(iter);
  return unicode_printer_pack(&printer);
-err_elem: Dee_Decref(elem);
-err_iter: Dee_Decref(iter);
+err_elem_noiter:
+ Dee_Decref(elem);
+ goto err;
+err_elem:
+ Dee_Decref(elem);
+err_iter:
+ Dee_Decref(iter);
 err:
  unicode_printer_fini(&printer);
  return NULL;

@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/int.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/error.h>
 #include <deemon/seq.h>
 #include <deemon/tuple.h>
@@ -1144,6 +1145,72 @@ bytes_casefindall(Bytes *__restrict self,
      return_empty_seq;
  /* TODO: Proxy-sequence for finding all needles in self[start:end] */
  DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_join(Bytes *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ DeeObject *seq;
+ if (DeeArg_Unpack(argc,argv,"o:join",&seq))
+     goto err;
+ {
+  struct bytes_printer printer = BYTES_PRINTER_INIT;
+  size_t fast_size; bool is_first = true;
+  DREF DeeObject *iterator,*elem;
+  fast_size = DeeFastSeq_GetSize(seq);
+  if (fast_size != DEE_FASTSEQ_NOTFAST) {
+   /* Fast-sequence optimizations. */
+   size_t i;
+   for (i = 0; i < fast_size; ++i) {
+    /* Print `self' prior to every object, starting with the 2nd one. */
+    if unlikely(!is_first &&
+                 bytes_printer_append(&printer,
+                                       DeeBytes_DATA(self),
+                                       DeeBytes_SIZE(self)) < 0)
+       goto err_printer;
+    elem = DeeFastSeq_GetItem(seq,i);
+    if unlikely(!elem) goto err_printer;
+    /* NOTE: `bytes_printer_printobject()' automatically
+     *        optimizes for other bytes objects being printed. */
+    if unlikely(bytes_printer_printobject(&printer,elem) < 0)
+       goto err_elem_noiter;
+    Dee_Decref(elem);
+    is_first = false;
+   }
+  } else {
+   iterator = DeeObject_IterSelf(seq);
+   if unlikely(!iterator) goto err_printer;
+   while ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
+    if unlikely(!is_first &&
+                 bytes_printer_append(&printer,
+                                       DeeBytes_DATA(self),
+                                       DeeBytes_SIZE(self)) < 0)
+       goto err_elem;
+    /* NOTE: `bytes_printer_printobject()' automatically
+     *        optimizes for other bytes objects being printed. */
+    if unlikely(bytes_printer_printobject(&printer,elem) < 0)
+       goto err_elem;
+    Dee_Decref(elem);
+    is_first = false;
+    if (DeeThread_CheckInterrupt())
+        goto err_iter;
+   }
+   if unlikely(!elem) goto err_iter;
+   Dee_Decref(iterator);
+  }
+  return bytes_printer_pack(&printer);
+err_elem_noiter:
+  Dee_Decref(elem);
+  goto err_printer;
+err_elem:
+  Dee_Decref(elem);
+err_iter:
+  Dee_Decref(iterator);
+err_printer:
+  bytes_printer_fini(&printer);
+ }
+err:
  return NULL;
 }
 
@@ -3053,6 +3120,12 @@ INTERN struct type_method bytes_methods[] = {
           "@this bytes object may be re-returned") },
 
     /* Bytes splitter functions. */
+    { "join", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_join,
+      DOC("(sequence seq)->bytes\n"
+          "Iterate @seq and convert all items into string, inserting @this "
+          "bytes object before each string's :string.bytes representation element, "
+          "starting only with the second. :bytes objects contained in @seq are not "
+          "converted to and from strings, but inserted directly") },
     { "split", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_split,
       DOC("(bytes needle)->{bytes...}\n"
           "(string needle)->{bytes...}\n"
