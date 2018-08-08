@@ -410,7 +410,7 @@ DeeThreadObject DeeThread_Main = {
     /* .t_exceptsz   = */0,
     /* .t_execsz     = */0,
 #if __SIZEOF_POINTER__ > 4
-    /* .t_padding    = */0,
+    /* .t_padding    = */{ 0 },
 #endif
     /* .t_str_curr   = */NULL,
     /* .t_repr_curr  = */NULL,
@@ -503,7 +503,9 @@ do_tickcount:
 #ifndef CONFIG_NO_THREADS
 #if defined(CONFIG_THREADS_PTHREAD) || \
     defined(CONFIG_NEED_SUSPEND_SIGNALS)
+#ifndef PTHREAD_INTERRUPT_SIGNAL
 #define PTHREAD_INTERRUPT_SIGNAL SIGUSR1
+#endif
 #define sys_threadstartup  sys_threadstartup
 PRIVATE void suspend_signal_handler(int signo);
 PRIVATE void DCALL sys_threadstartup(DeeThreadObject *__restrict self) {
@@ -1568,8 +1570,15 @@ restart:
 reread_state:
   state = ATOMIC_READ(me->t_state);
   /* Check if the thread has already terminated. */
-  if (state&THREAD_STATE_TERMINATED)
+  if (state & THREAD_STATE_TERMINATED)
       return 1;
+  if (state & THREAD_STATE_EXTERNAL) {
+   /* If the thread wasn't started, that's an error. */
+   DeeError_Throwf(&DeeError_ValueError,
+                   "Cannot deliver interrupt to external thread %k",
+                   self);
+   goto err;
+  }
 #if 0
   if unlikely(!(state&THREAD_STATE_STARTED)) {
    /* If the thread wasn't started, that's an error. */
@@ -1691,7 +1700,14 @@ DeeThread_Detach(/*Thread*/DeeObject *__restrict self) {
                   self);
   return -1;
  }
- if (me->t_state&THREAD_STATE_DETACHED) {
+ if (me->t_state & THREAD_STATE_EXTERNAL) {
+  ATOMIC_FETCHAND(me->t_state,~THREAD_STATE_DETACHING);
+  DeeError_Throwf(&DeeError_ValueError,
+                  "Cannot detach external thread %k",
+                  self);
+  return -1;
+ }
+ if (me->t_state & THREAD_STATE_DETACHED) {
   /* Thread was already detached. */
   ATOMIC_FETCHAND(me->t_state,~THREAD_STATE_DETACHING);
   return 1;
@@ -1785,6 +1801,7 @@ again:
 #ifndef CONFIG_THREADS_JOIN_SEMPAHORE
 #error "Invalid configuration"
 #endif
+   /* XXX: Deal with external threads? */
 #ifdef CONFIG_HOST_WINDOWS
    DWORD wait_state;
    wait_state = WaitForMultipleObjectsEx(1,&me->t_join,TRUE,
@@ -2155,6 +2172,7 @@ thread_fini(DeeThreadObject *__restrict self) {
  ASSERT(!self->t_repr_curr);
  ASSERT(!(self->t_state&THREAD_STATE_STARTED) ||
          (self->t_state&THREAD_STATE_TERMINATED) ||
+         (self->t_state&THREAD_STATE_EXTERNAL) ||
           self == (DeeThreadObject *)thread_tls_get());
  ASSERT(!self->t_globlpself);
 
@@ -2168,15 +2186,18 @@ thread_fini(DeeThreadObject *__restrict self) {
 #endif
 #ifdef CONFIG_THREADS_PTHREAD
   /* detach the thread descriptor. */
-  pthread_detach(self->t_thread);
+  if (!(self->t_state & THREAD_STATE_EXTERNAL))
+        pthread_detach(self->t_thread);
 #endif /* CONFIG_THREADS_PTHREAD */
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
-  /* Destroy the join-semaphore. */
+  if (!(self->t_state & THREAD_STATE_EXTERNAL)) {
+   /* Destroy the join-semaphore. */
 #ifdef CONFIG_HOST_WINDOWS
-  CloseHandle(self->t_join);
+   CloseHandle(self->t_join);
 #elif !defined(CONFIG_NO_SEMAPHORE_H)
-  sem_destroy(&self->t_join);
+   sem_destroy(&self->t_join);
 #endif
+  }
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
  }
  /* Finalize TLS objects. */
@@ -2219,6 +2240,33 @@ thread_fini(DeeThreadObject *__restrict self) {
   Dee_Free(next);
  }
 }
+
+
+#ifndef CONFIG_NO_THREADS
+#ifndef CONFIG_NO_THREADID
+PUBLIC DREF DeeObject *(DCALL DeeThread_NewExternal)(dthread_t thread, dthreadid_t id)
+#else
+PUBLIC DREF DeeObject *(DCALL DeeThread_NewExternal)(dthread_t thread)
+#endif
+{
+ DREF DeeThreadObject *result;
+ result = DeeGCObject_CALLOC(DeeThreadObject);
+ if unlikely(!result) goto done;
+ result->t_state    = (THREAD_STATE_STARTED|THREAD_STATE_EXTERNAL);
+#ifndef CONFIG_NO_THREADID
+ result->t_threadid = id;
+#endif
+ result->t_thread     = thread;
+ result->t_threadargs = (DeeTupleObject *)Dee_EmptyTuple;
+ result->t_deepassoc.da_list = empty_deep_assoc;
+ Dee_Incref(Dee_EmptyTuple);
+ DeeObject_Init(result,&DeeThread_Type);
+ DeeGC_Track((DeeObject *)result);
+done:
+ return (DREF DeeObject *)result;
+}
+#endif /* !CONFIG_NO_THREADS */
+
 
 PRIVATE DREF DeeObject *DCALL
 thread_str(DeeThreadObject *__restrict self) {

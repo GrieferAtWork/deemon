@@ -211,17 +211,17 @@ struct thread_object {
     /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
     OBJECT_HEAD /* GC object. */
     struct code_frame        *t_exec;       /* [lock(PRIVATE(DeeThread_Self()))][0..1][(!= NULL) == (t_execsz != 0)]
-                                             *  Linked list of code frames currently executing. */
+                                             * Linked list of code frames currently executing. */
     struct except_frame      *t_except;     /* [lock(PRIVATE(DeeThread_Self()))][0..1][(!= NULL) == (t_exceptsz != 0)][owned]
-                                             *  Linked list of all exceptions currently active in this thread.
-                                             *  NOTE: Once the thread has been terminated, read/write access
-                                             *        to this field is synchronized using `THREAD_STATE_STARTING'. */
+                                             * Linked list of all exceptions currently active in this thread.
+                                             * NOTE: Once the thread has been terminated, read/write access
+                                             *       to this field is synchronized using `THREAD_STATE_STARTING'. */
     uint16_t                  t_exceptsz;   /* [lock(PRIVATE(DeeThread_Self()))][(!= 0) == (t_except != NULL)]
-                                             *  The total number of currently thrown exceptions. */
+                                             * The total number of currently thrown exceptions. */
     uint16_t                  t_execsz;     /* [lock(PRIVATE(DeeThread_Self()))][(!= 0) == (t_exec != NULL)]
-                                             *  The total number of code frames being executed. */
+                                             * The total number of code frames being executed. */
 #if __SIZEOF_POINTER__ > 4
-    uint32_t                  t_padding;    /* ... */
+    uint16_t                  t_padding[(sizeof(void *)-2)/2]; /* ... */
 #endif
     struct repr_frame        *t_str_curr;   /* [lock(PRIVATE(DeeThread_Self()))][0..1] Chain of objects currently invoking the `__str__' operator. */
     struct repr_frame        *t_repr_curr;  /* [lock(PRIVATE(DeeThread_Self()))][0..1] Chain of objects currently invoking the `__repr__' operator. */
@@ -229,11 +229,11 @@ struct thread_object {
 #ifndef CONFIG_NO_THREADS
     DeeThreadObject         **t_globlpself; /* [1..1][0..1][lock(INTERN(globthread_lock))] Self pointer in the globally linked list of running thread. */
     DeeThreadObject          *t_globalnext; /* [0..1][lock(INTERN(globthread_lock))] Next running thread.
-                                             *  NOTE: This list is only used internally and no special information
-                                             *        should be determined from the values or relations of these points.
-                                             *        The only reason this exists, is so that we can define the behavior when
-                                             *        there are still running threads during shutdown (aka. when
-                                             *       `DeeThread_JoinAll()' is called) */
+                                             * NOTE: This list is only used internally and no special information
+                                             *       should be determined from the values or relations of these points.
+                                             *       The only reason this exists, is so that we can define the behavior when
+                                             *       there are still running threads during shutdown (aka. when
+                                             *      `DeeThread_JoinAll()' is called) */
     DREF struct string_object*t_threadname; /* [0..1][const] The name of this thread. */
 #define THREAD_STATE_INITIAL         0x0000 /* The initial (not-started) thread state */
 #define THREAD_STATE_STARTED         0x0001 /* The thread was started. */
@@ -246,7 +246,7 @@ struct thread_object {
 #define THREAD_STATE_DETACHING       0x0008 /* The thread is currently being detached. */
 #define THREAD_STATE_DETACHED        0x0010 /* The thread has been joined/detached. */
 #define THREAD_STATE_DIDJOIN         0x0020 /* The thread has joined. */
-//#define THREAD_STATE_EXTERNAL      0x1000 /* The thread exists externally and is not under the control of deemon. */
+#define THREAD_STATE_EXTERNAL        0x1000 /* The thread exists externally and is not under the control of deemon. */
 #define THREAD_STATE_SUSPENDREQ      0x2000 /* Implementation-specific flag: A suspend has been requested but hasn't been acknowledged yet. */
 #define THREAD_STATE_SHUTDOWNINTR    0x4000 /* Set internally to mark threads that have been interrupted for the purposes to shutdown. */
 #define THREAD_STATE_TERMINATED      0x8000 /* The thread has run its course (this unsets all other flags).
@@ -258,23 +258,23 @@ struct thread_object {
     uint16_t                  t_padding2;   /*... */
 #ifndef CONFIG_NO_THREADID
     dthreadid_t               t_threadid;   /* [valid_if(THREAD_STATE_STARTED|THREAD_STATE_TERMINATED)]
-                                             *  System-specific thread ID.
-                                             *  WARNING: As far as the system is concerned, this ID is no longer
-                                             *           valid when `THREAD_STATE_TERMINATED' has been set. */
+                                             * System-specific thread ID.
+                                             * WARNING: As far as the system is concerned, this ID is no longer
+                                             *          valid when `THREAD_STATE_TERMINATED' has been set. */
 #endif /* !CONFIG_NO_THREADID */
     dthread_t                 t_thread;     /* [valid_if(THREAD_STATE_STARTED|THREAD_STATE_TERMINATED)]
-                                             *  System-specific thread descriptor. */
+                                             * System-specific thread descriptor. */
     int                       t_suspended;  /* Thread arbitrary suspension counter (Thread must not be/stop executing when non-zero). */
     struct thread_interrupt   t_interrupt;  /* [OVERRIDE(ti_intr,[0..1])][OVERRIDE(ti_args,[== NULL || ti_intr != NULL])] Chain of pending interrupts and asynchronous callbacks to-be executed in the context of this thread. */
     DREF DeeObject           *t_threadmain; /* [0..1][lock(THREAD_STATE_STARTING)] The user-code callable object that is executed by this thread.
-                                             *  NOTE: When NULL during thread startup, this field is filled with a
-                                             *        member function `thread.self().run', which is then invoked instead.
-                                             *  HINT: Once execution completes, this field is once again reset to `NULL'. */
+                                             * NOTE: When NULL during thread startup, this field is filled with a
+                                             *       member function `thread.self().run', which is then invoked instead.
+                                             * HINT: Once execution completes, this field is once again reset to `NULL'. */
     DREF struct tuple_object *t_threadargs; /* [1..1][lock(THREAD_STATE_STARTING)]
-                                             *  An argument tuple passed to the `tp_call' operator during execution of `t_threadmain'. */
+                                             * An argument tuple passed to the `tp_call' operator during execution of `t_threadmain'. */
     DREF DeeObject           *t_threadres;  /* [0..1][lock(THREAD_STATE_STARTING)][valid_if(THREAD_STATE_TERMINATED)]
-                                             *  The return value of `t_threadmain' once it has finished execution.
-                                             *  This value is returned by the `join()' function upon success. */
+                                             * The return value of `t_threadmain' once it has finished execution.
+                                             * This value is returned by the `join()' function upon success. */
     void                     *t_tlsdata;    /* [0..?][lock(PRIVATE(DeeThread_Self()))] Thread TLS data controller. (Set to NULL during thread creation / clear) */
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
     /* Semaphore signaled when the thread becomes joinable.
@@ -320,6 +320,15 @@ struct thread_object {
 DDATDEF DeeTypeObject DeeThread_Type;
 #define DeeThread_Check(ob)      DeeObject_InstanceOf(ob,&DeeThread_Type)
 #define DeeThread_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeThread_Type)
+
+#ifndef CONFIG_NO_THREADS
+#ifndef CONFIG_NO_THREADID
+DFUNDEF DREF DeeObject *DCALL DeeThread_NewExternal(dthread_t thread, dthreadid_t id);
+#else
+DFUNDEF DREF DeeObject *DCALL DeeThread_NewExternal(dthread_t thread);
+#endif
+#endif /* !CONFIG_NO_THREADS */
+
 
 /* Start execution of the given thread.
  * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')

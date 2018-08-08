@@ -38,6 +38,8 @@
 
 #include <string.h>
 
+#include <tlhelp32.h>
+
 DECL_BEGIN
 
 INTDEF int DCALL
@@ -1186,12 +1188,238 @@ PRIVATE struct type_method process_methods[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-process_get_threads(Process *__restrict self) {
- (void)self;
- DERROR_NOTIMPLEMENTED(); /* TODO */
+#ifndef CONFIG_NO_THREADS
+typedef struct {
+    OBJECT_HEAD
+    DWORD         pt_id;      /* [const] The ID of the process to look out for, or 0 if all are good. */
+} ProcessThreads;
+
+typedef struct {
+    OBJECT_HEAD
+    HANDLE        pti_handle; /* [1..1][owned][const] The handle used to enumerate threads. */
+    THREADENTRY32 pti_entry;  /* [lock(pti_lock)] The next entry (`dwSize' is ZERO when iteration is complete) */
+    rwlock_t      pti_lock;   /* Lock for `pti_entry' */
+    DWORD         pti_id;     /* [const] The ID of the process to look out for, or 0 if all are good. */
+} ProcessThreadsIterator;
+
+INTDEF DeeTypeObject ProcessThreadsIterator_Type;
+INTDEF DeeTypeObject ProcessThreads_Type;
+
+PRIVATE DREF ProcessThreads *DCALL pt_new(DWORD pid) {
+ DREF ProcessThreads *result;
+ result = DeeObject_MALLOC(ProcessThreads);
+ if unlikely(!result) goto done;
+ result->pt_id = pid;
+ DeeObject_Init(result,&ProcessThreads_Type);
+done:
+ return result;
+}
+
+PRIVATE DREF ProcessThreadsIterator *DCALL
+pt_iter(ProcessThreads *__restrict self) {
+ DREF ProcessThreadsIterator *result;
+ result = DeeObject_MALLOC(ProcessThreadsIterator);
+ if unlikely(!result) goto done; 
+ result->pti_handle = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD,self->pt_id);
+ if (!result->pti_handle ||
+      result->pti_handle == INVALID_HANDLE_VALUE) {
+  nt_ThrowLastError();
+  goto err_r;
+ }
+ result->pti_entry.dwSize = sizeof(result->pti_entry);
+ if (!Thread32First(result->pti_handle,&result->pti_entry))
+      result->pti_entry.dwSize = 0;
+ else while (!result->pti_entry.dwSize) {
+  if (!Thread32Next(result->pti_handle,&result->pti_entry)) {
+   result->pti_entry.dwSize = 0;
+   break;
+  }
+ }
+ result->pti_id = self->pt_id;
+ rwlock_init(&result->pti_lock);
+ DeeObject_Init(result,&ProcessThreadsIterator_Type);
+done:
+ return result;
+err_r:
+ DeeObject_Free(result);
  return NULL;
 }
+
+
+PRIVATE struct type_seq pt_seq = {
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pt_iter
+};
+
+
+PRIVATE struct type_member pt_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&ProcessThreadsIterator_Type),
+    TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject ProcessThreads_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"_processthreads",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeSeq_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(ProcessThreads)
+                }
+            }
+        },
+        /* .tp_dtor        = */NULL,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */&pt_seq,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */NULL,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */pt_class_members
+};
+
+PRIVATE void DCALL
+pti_fini(ProcessThreadsIterator *__restrict self) {
+ CloseHandle(self->pti_handle);
+}
+
+PRIVATE DREF DeeObject *DCALL
+pti_next(ProcessThreadsIterator *__restrict self) {
+ DWORD /*pid,*/tid; HANDLE thread_handle;
+ DREF DeeObject *result;
+again:
+ rwlock_write(&self->pti_lock);
+ if (!self->pti_entry.dwSize) {
+done:
+  rwlock_endwrite(&self->pti_lock);
+  return ITER_DONE;
+ }
+ for (;;) {
+  if (self->pti_entry.dwSize >= COMPILER_OFFSETAFTER(THREADENTRY32,th32OwnerProcessID) &&
+     (self->pti_id == 0 || self->pti_entry.th32OwnerProcessID == self->pti_id))
+      break;
+  do {
+   self->pti_entry.dwSize = sizeof(self->pti_entry);
+   if (!Thread32Next(self->pti_handle,&self->pti_entry))
+        goto done;
+  } while (!self->pti_entry.dwSize);
+ }
+ /*pid = self->pti_entry.th32OwnerProcessID;*/
+ tid = self->pti_entry.th32ThreadID;
+ do {
+  self->pti_entry.dwSize = sizeof(self->pti_entry);
+  if (!Thread32Next(self->pti_handle,&self->pti_entry)) {
+   self->pti_entry.dwSize = 0;
+   break;
+  }
+ } while (!self->pti_entry.dwSize);
+ rwlock_endwrite(&self->pti_lock);
+ thread_handle = OpenThread(SYNCHRONIZE,FALSE,tid);
+ if (thread_handle == NULL)
+     goto again;
+#ifndef CONFIG_NO_THREADID
+ result = DeeThread_NewExternal(thread_handle,tid);
+#else
+ result = DeeThread_NewExternal(thread_handle);
+#endif
+ if unlikely(!result)
+    CloseHandle(thread_handle);
+ return result;
+}
+
+PRIVATE DREF ProcessThreads *DCALL
+pti_getseq(ProcessThreadsIterator *__restrict self) {
+ return pt_new(self->pti_id);
+}
+
+PRIVATE struct type_getset pti_getsets[] = {
+    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pti_getseq },
+    { NULL }
+};
+
+INTERN DeeTypeObject ProcessThreadsIterator_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"_processthreadsiterator",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeIterator_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(ProcessThreadsIterator)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&pti_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pti_next,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */pti_getsets,
+    /* .tp_members       = */NULL,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+
+PRIVATE DREF DeeObject *DCALL
+process_get_threads(Process *__restrict self) {
+ if (!(self->p_state & PROCESS_FSTARTED) ||
+      (self->p_state & PROCESS_FTERMINATED))
+       return_reference_(Dee_EmptySeq);
+ return (DREF DeeObject *)pt_new(self->p_id);
+}
+#endif
 
 PRIVATE DREF DeeObject *DCALL
 process_get_files(Process *__restrict self) {
@@ -1637,7 +1865,10 @@ err:
 
 
 PRIVATE struct type_getset process_getsets[] = {
-    { "threads", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads },
+#ifndef CONFIG_NO_THREADS
+    { "threads", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads, NULL, NULL,
+      DOC("->{thread...}\nEnumerate all the threads of @this process") },
+#endif
     { "files", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_files },
     { "stdin", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdin,
                (int(DCALL *)(DeeObject *__restrict))&process_del_stdin,

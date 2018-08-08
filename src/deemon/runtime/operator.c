@@ -2901,9 +2901,9 @@ DeeObject_ExtendInherited(DREF DeeObject *__restrict self,
 }
 
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_GetRangeBeginIndex(DeeObject *__restrict self,
-                             dssize_t begin, DeeObject *__restrict end) {
+PUBLIC DREF DeeObject *
+(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *__restrict self,
+                                     dssize_t begin, DeeObject *__restrict end) {
  LOAD_ITER;
  ASSERT_OBJECT(end);
  do {
@@ -2933,9 +2933,9 @@ err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
  return NULL;
 }
-PUBLIC DREF DeeObject *DCALL
-DeeObject_GetRangeEndIndex(DeeObject *__restrict self,
-                           DeeObject *__restrict begin, dssize_t end) {
+PUBLIC DREF DeeObject *
+(DCALL DeeObject_GetRangeEndIndex)(DeeObject *__restrict self,
+                                   DeeObject *__restrict begin, dssize_t end) {
  LOAD_ITER;
  ASSERT_OBJECT(begin);
  do {
@@ -2962,9 +2962,9 @@ err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
  return NULL;
 }
-PUBLIC DREF DeeObject *DCALL
-DeeObject_GetRangeIndex(DeeObject *__restrict self,
-                        dssize_t begin, dssize_t end) {
+PUBLIC DREF DeeObject *
+(DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self,
+                                dssize_t begin, dssize_t end) {
  LOAD_ITER;
  do {
   if (iter->tp_seq && iter->tp_seq->tp_range_get) {
@@ -2990,10 +2990,10 @@ err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
  return NULL;
 }
-PUBLIC int DCALL
-DeeObject_SetRangeBeginIndex(DeeObject *__restrict self,
-                             dssize_t begin, DeeObject *__restrict end,
-                             DeeObject *__restrict value) {
+PUBLIC int
+(DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self,
+                                     dssize_t begin, DeeObject *__restrict end,
+                                     DeeObject *__restrict value) {
  LOAD_ITER;
  ASSERT_OBJECT(end);
  ASSERT_OBJECT(value);
@@ -3024,10 +3024,10 @@ err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
  return -1;
 }
-PUBLIC int DCALL
-DeeObject_SetRangeEndIndex(DeeObject *__restrict self,
-                           DeeObject *__restrict begin, dssize_t end,
-                           DeeObject *__restrict value) {
+PUBLIC int
+(DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self,
+                                   DeeObject *__restrict begin, dssize_t end,
+                                   DeeObject *__restrict value) {
  LOAD_ITER;
  ASSERT_OBJECT(begin);
  ASSERT_OBJECT(value);
@@ -3055,10 +3055,10 @@ err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SETRANGE);
  return -1;
 }
-PUBLIC int DCALL
-DeeObject_SetRangeIndex(DeeObject *__restrict self,
-                        dssize_t begin, dssize_t end,
-                        DeeObject *__restrict value) {
+PUBLIC int
+(DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self,
+                                dssize_t begin, dssize_t end,
+                                DeeObject *__restrict value) {
  LOAD_ITER;
  ASSERT_OBJECT(value);
  do {

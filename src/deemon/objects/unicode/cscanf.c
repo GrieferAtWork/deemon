@@ -546,7 +546,7 @@ ssi_copy(StringScanIterator *__restrict self,
 
 INTERN DeeTypeObject StringScanIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_stringscanner.iterator",
+    /* .tp_name     = */"_stringscanneriterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
