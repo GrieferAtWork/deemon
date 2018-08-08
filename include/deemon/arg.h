@@ -115,7 +115,7 @@ struct kwds_object {
 };
 
 DDATDEF DeeTypeObject DeeKwds_Type;
-#define DeeKwds_SIZE(ob)       ((DeeKwdsObject *)(ob))->kw_size
+#define DeeKwds_SIZE(ob)       ((DeeKwdsObject *)REQUIRES_OBJECT(ob))->kw_size
 #define DeeKwds_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeKwds_Type) /* _kwds is final */
 #define DeeKwds_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeKwds_Type)
 

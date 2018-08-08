@@ -148,11 +148,11 @@ DDATDEF DeeTypeObject             DeeError_HandleClosed;
 DDATDEF DeeTypeObject DeeError_AppExit;
 struct appexit_object { OBJECT_HEAD int ae_exitcode; };
 #define DeeAppExit_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeError_AppExit)
-#define DeeAppExit_Exitcode(ob) ((struct appexit_object *)(ob))->ae_exitcode
+#define DeeAppExit_Exitcode(ob) ((struct appexit_object *)REQUIRES_OBJECT(ob))->ae_exitcode
 
 struct threadexit_object { OBJECT_HEAD DREF DeeObject *te_result; };
 #define DeeThreadExit_Check(ob)    DeeObject_InstanceOfExact(ob,&DeeError_ThreadExit)
-#define DeeThreadExit_Result(ob) ((struct threadexit_object *)(ob))->te_result
+#define DeeThreadExit_Result(ob) ((struct threadexit_object *)REQUIRES_OBJECT(ob))->te_result
 
 struct string_object;
 

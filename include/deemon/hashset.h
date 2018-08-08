@@ -113,26 +113,26 @@ DFUNDEF DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, DRE
  *       Yet the point here is, that this is similar to what python
  *       does for its dictionary lookup.
  */
-#define HASHSET_HASHST(self,hash)      ((hash) & ((DeeHashSetObject *)(self))->s_mask)
+#define HASHSET_HASHST(self,hash)      ((hash) & ((DeeHashSetObject *)REQUIRES_OBJECT(self))->s_mask)
 #define HASHSET_HASHNX(hs,perturb)    (((hs) << 2) + (hs) + (perturb) + 1)
 #define HASHSET_HASHPT(perturb)        ((perturb) >>= 5) /* This `5' is tunable. */
-#define HASHSET_HASHIT(self,i)        (((DeeHashSetObject *)(self))->s_elem+((i) & ((DeeHashSetObject *)(self))->s_mask))
+#define HASHSET_HASHIT(self,i)        (((DeeHashSetObject *)REQUIRES_OBJECT(self))->s_elem+((i) & ((DeeHashSetObject *)REQUIRES_OBJECT(self))->s_mask))
 
 
 
 #ifndef CONFIG_NO_THREADS
-#define DeeHashSet_LockReading(x)    rwlock_reading(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockWriting(x)    rwlock_writing(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockTryread(x)    rwlock_tryread(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockTrywrite(x)   rwlock_trywrite(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockRead(x)       rwlock_read(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockWrite(x)      rwlock_write(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockUpgrade(x)    rwlock_upgrade(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockDowngrade(x)  rwlock_downgrade(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockEndWrite(x)   rwlock_endwrite(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockEndRead(x)    rwlock_endread(&((DeeHashSetObject *)(x))->s_lock)
-#define DeeHashSet_LockEnd(x)        rwlock_end(&((DeeHashSetObject *)(x))->s_lock)
+#define DeeHashSet_LockReading(x)    rwlock_reading(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockWriting(x)    rwlock_writing(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockTryread(x)    rwlock_tryread(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockTrywrite(x)   rwlock_trywrite(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockRead(x)       rwlock_read(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockWrite(x)      rwlock_write(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockUpgrade(x)    rwlock_upgrade(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockDowngrade(x)  rwlock_downgrade(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockEndWrite(x)   rwlock_endwrite(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockEndRead(x)    rwlock_endread(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockEnd(x)        rwlock_end(&((DeeHashSetObject *)REQUIRES_OBJECT(x))->s_lock)
 #else
 #define DeeHashSet_LockReading(x)          1
 #define DeeHashSet_LockWriting(x)          1

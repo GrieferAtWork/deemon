@@ -39,7 +39,7 @@ struct bool_object { OBJECT_HEAD };
 
 #define DeeBool_Check(x)      DeeObject_InstanceOfExact(x,&DeeBool_Type) /* `bool' is `final'. */
 #define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeBool_Type)
-#define DeeBool_IsTrue(x)   ((DeeBoolObject *)(x) != &Dee_FalseTrue[0])
+#define DeeBool_IsTrue(x)   ((DeeBoolObject *)REQUIRES_OBJECT(x) != &Dee_FalseTrue[0])
 #define DeeBool_For(val)    ((DeeObject *)&Dee_FalseTrue[!!(val)])
 #define return_bool(val)      return_reference(DeeBool_For(val))
 #define return_bool_(val)     return_reference_(DeeBool_For(val))

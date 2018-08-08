@@ -208,10 +208,10 @@ struct module_object {
                                                 * Hash-vector for translating a string into a `uint16_t' index for `mo_globalv'.
                                                 * This is where module symbol names are stored and also used to
                                                 * implement symbol access by name at runtime. */
-#define MODULE_HASHST(self,hash)  ((hash) & ((DeeModuleObject *)(self))->mo_bucketm)
+#define MODULE_HASHST(self,hash)  ((hash) & ((DeeModuleObject *)REQUIRES_OBJECT(self))->mo_bucketm)
 #define MODULE_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
 #define MODULE_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define MODULE_HASHIT(self,i)     (((DeeModuleObject *)(self))->mo_bucketv+((i) & ((DeeModuleObject *)(self))->mo_bucketm))
+#define MODULE_HASHIT(self,i)     (((DeeModuleObject *)REQUIRES_OBJECT(self))->mo_bucketv+((i) & ((DeeModuleObject *)REQUIRES_OBJECT(self))->mo_bucketm))
     DREF DeeModuleObject *const *mo_importv;   /* [1..1][const_if(MODULE_FDIDLOAD)][0..rs_importc][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
     DREF DeeObject             **mo_globalv;   /* [0..1][lock(mo_lock)][0..mo_globalc][valid_if(MODULE_FDIDLOAD)][owned] Vector of module-private global variables. */
     DREF struct code_object     *mo_root;      /* [0..1][lock(mo_lock)][const_if(MODULE_FDIDLOAD)] Root code object (Also used as constructor).

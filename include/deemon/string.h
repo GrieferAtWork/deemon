@@ -323,15 +323,15 @@ DDATDEF DeeTypeObject DeeString_Type;
  *        found in `x->s_data->u_data[STRING_WIDTH_4BYTE]', while `DeeString_SIZE()'
  *        refers to the number of bytes used by the multi-byte string.
  */
-#define DeeString_STR(x)   (((DeeStringObject *)(x))->s_str)
-#define DeeString_SIZE(x)  (((DeeStringObject *)(x))->s_len)
-#define DeeString_END(x)   (((DeeStringObject *)(x))->s_str+((DeeStringObject *)(x))->s_len)
+#define DeeString_STR(x)   (((DeeStringObject *)REQUIRES_OBJECT(x))->s_str)
+#define DeeString_SIZE(x)  (((DeeStringObject *)REQUIRES_OBJECT(x))->s_len)
+#define DeeString_END(x)   (((DeeStringObject *)REQUIRES_OBJECT(x))->s_str+((DeeStringObject *)(x))->s_len)
 
 
-#define DeeString_STR8(x)  (((DeeStringObject *)(x))->s_data ? (uint8_t *)((DeeStringObject *)(x))->s_data->u_data[STRING_WIDTH_1BYTE] : (uint8_t *)((DeeStringObject *)(x))->s_str)
-#define DeeString_STR16(x) ((uint16_t *)((DeeStringObject *)(x))->s_data->u_data[STRING_WIDTH_2BYTE])
-#define DeeString_STR32(x) ((uint32_t *)((DeeStringObject *)(x))->s_data->u_data[STRING_WIDTH_4BYTE])
-#define DeeString_LEN8(x)  (((DeeStringObject *)(x))->s_data ? WSTR_LENGTH(((DeeStringObject *)(x))->s_data->u_data[STRING_WIDTH_1BYTE]) : ((DeeStringObject *)(x))->s_len)
+#define DeeString_STR8(x)  (((DeeStringObject *)REQUIRES_OBJECT(x))->s_data ? (uint8_t *)((DeeStringObject *)(x))->s_data->u_data[STRING_WIDTH_1BYTE] : (uint8_t *)((DeeStringObject *)(x))->s_str)
+#define DeeString_STR16(x) ((uint16_t *)((DeeStringObject *)REQUIRES_OBJECT(x))->s_data->u_data[STRING_WIDTH_2BYTE])
+#define DeeString_STR32(x) ((uint32_t *)((DeeStringObject *)REQUIRES_OBJECT(x))->s_data->u_data[STRING_WIDTH_4BYTE])
+#define DeeString_LEN8(x)  (((DeeStringObject *)REQUIRES_OBJECT(x))->s_data ? WSTR_LENGTH(((DeeStringObject *)(x))->s_data->u_data[STRING_WIDTH_1BYTE]) : ((DeeStringObject *)(x))->s_len)
 #define DeeString_LEN16(x)  WSTR_LENGTH(DeeString_STR16(x))
 #define DeeString_LEN32(x)  WSTR_LENGTH(DeeString_STR32(x))
 
@@ -346,22 +346,22 @@ DDATDEF DeeTypeObject DeeString_Type;
 
 
 /* Check if the given string object `x' has its hash calculated. */
-#define DeeString_HASHOK(x)  (((DeeStringObject *)(x))->s_hash != (dhash_t)-1)
-#define DeeString_HASH(x)     ((DeeStringObject *)(x))->s_hash
+#define DeeString_HASHOK(x)  (((DeeStringObject *)REQUIRES_OBJECT(x))->s_hash != (dhash_t)-1)
+#define DeeString_HASH(x)     ((DeeStringObject *)REQUIRES_OBJECT(x))->s_hash
 
 /* Check if the given string object `x' is an (the) empty string. */
-#define DeeString_IsEmpty(x)  (((DeeStringObject *)(x))->s_len == 0)
+#define DeeString_IsEmpty(x)  (((DeeStringObject *)REQUIRES_OBJECT(x))->s_len == 0)
 
 
 /* Return the unicode character-width of characters found in the given string `x' */
 #define DeeString_WIDTH(x) \
-     (((DeeStringObject *)(x))->s_data ? \
-      ((DeeStringObject *)(x))->s_data->u_width : \
+     (((DeeStringObject *)REQUIRES_OBJECT(x))->s_data ? \
+      ((DeeStringObject *)REQUIRES_OBJECT(x))->s_data->u_width : \
         STRING_WIDTH_1BYTE)
 
-#define DeeString_Is1Byte(x) (!((DeeStringObject *)(x))->s_data || ((DeeStringObject *)(x))->s_data->u_width == STRING_WIDTH_1BYTE)
-#define DeeString_Is2Byte(x) (((DeeStringObject *)(x))->s_data && ((DeeStringObject *)(x))->s_data->u_width == STRING_WIDTH_2BYTE)
-#define DeeString_Is4Byte(x) (((DeeStringObject *)(x))->s_data && ((DeeStringObject *)(x))->s_data->u_width == STRING_WIDTH_4BYTE)
+#define DeeString_Is1Byte(x) (!((DeeStringObject *)REQUIRES_OBJECT(x))->s_data || ((DeeStringObject *)(x))->s_data->u_width == STRING_WIDTH_1BYTE)
+#define DeeString_Is2Byte(x) (((DeeStringObject *)REQUIRES_OBJECT(x))->s_data && ((DeeStringObject *)(x))->s_data->u_width == STRING_WIDTH_2BYTE)
+#define DeeString_Is4Byte(x) (((DeeStringObject *)REQUIRES_OBJECT(x))->s_data && ((DeeStringObject *)(x))->s_data->u_width == STRING_WIDTH_4BYTE)
 
 /* Return a pointer to the unicode character-array for which all
  * characters can be fitted into the same number of bytes, the
@@ -369,10 +369,10 @@ DDATDEF DeeTypeObject DeeString_Type;
  * or `DeeString_WLEN(x)', with their individual size in bytes determinable
  * as `STRING_SIZEOF_WIDTH(DeeString_WSTR(x))'.
  * HINT: The string length returned by `operator size' is `DeeString_WLEN()' */
-#define DeeString_WSTR(x)   _DeeString_WStr((DeeStringObject *)(x))
-#define DeeString_WLEN(x)   _DeeString_WLen((DeeStringObject *)(x))
-#define DeeString_WEND(x)   _DeeString_WEnd((DeeStringObject *)(x))
-#define DeeString_WSIZ(x)   _DeeString_WSiz((DeeStringObject *)(x))
+#define DeeString_WSTR(x)   _DeeString_WStr((DeeStringObject *)REQUIRES_OBJECT(x))
+#define DeeString_WLEN(x)   _DeeString_WLen((DeeStringObject *)REQUIRES_OBJECT(x))
+#define DeeString_WEND(x)   _DeeString_WEnd((DeeStringObject *)REQUIRES_OBJECT(x))
+#define DeeString_WSIZ(x)   _DeeString_WSiz((DeeStringObject *)REQUIRES_OBJECT(x))
 
 FORCELOCAL size_t *DCALL _DeeString_WStr(DeeStringObject *__restrict x) {
  if (x->s_data) return x->s_data->u_data[x->s_data->u_width];
@@ -870,8 +870,8 @@ DFUNDEF DREF DeeObject *DCALL _DeeString_Chr32(uint32_t ch);
 
 
 /* Get/Set a character, given its index within the string. */
-#define DeeString_GetChar(self,index)       _DeeString_GetChar((DeeStringObject *)(self),index)
-#define DeeString_SetChar(self,index,value) _DeeString_SetChar((DeeStringObject *)(self),index,value)
+#define DeeString_GetChar(self,index)       _DeeString_GetChar((DeeStringObject *)REQUIRES_OBJECT(self),index)
+#define DeeString_SetChar(self,index,value) _DeeString_SetChar((DeeStringObject *)REQUIRES_OBJECT(self),index,value)
 
 FORCELOCAL uint32_t DCALL
 _DeeString_GetChar(DeeStringObject *__restrict self, size_t index) {

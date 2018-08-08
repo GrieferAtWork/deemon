@@ -37,13 +37,13 @@ typedef struct {
     uint8_t         b_data[1]; /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the bytes object owns its own data) */
 } DeeBytesObject;
 
-#define DeeBytes_DATA(x)        ((DeeBytesObject *)(x))->b_base
-#define DeeBytes_SIZE(x)        ((DeeBytesObject *)(x))->b_size
+#define DeeBytes_DATA(x)        ((DeeBytesObject *)REQUIRES_OBJECT(x))->b_base
+#define DeeBytes_SIZE(x)        ((DeeBytesObject *)REQUIRES_OBJECT(x))->b_size
 #define DeeBytes_TERM(x)        (DeeBytes_DATA(x)+DeeBytes_SIZE(x))
-#define DeeBytes_WRITABLE(x)    (((DeeBytesObject *)(x))->b_flags & DEE_BUFFER_FWRITABLE)
+#define DeeBytes_WRITABLE(x)    (((DeeBytesObject *)REQUIRES_OBJECT(x))->b_flags & DEE_BUFFER_FWRITABLE)
 #define DeeBytes_Check(x)       DeeObject_InstanceOfExact(x,&DeeBytes_Type) /* `bytes' is final. */
 #define DeeBytes_CheckExact(x)  DeeObject_InstanceOfExact(x,&DeeBytes_Type)
-#define DeeBytes_IsEmpty(x)     (((DeeBytesObject *)(x))->b_size==0)
+#define DeeBytes_IsEmpty(x)     (((DeeBytesObject *)REQUIRES_OBJECT(x))->b_size==0)
 
 /* The builtin `bytes' data type.
  * This type offers functionality identical to what can also be found in

@@ -34,9 +34,9 @@ struct gc_head {
 };
 #define GC_OBJECT_OFFSET  offsetof(struct gc_head,gc_object)
 #define GC_HEAD_SIZE      offsetof(struct gc_head,gc_object)
-#define DeeGC_Head(ob)   ((struct gc_head *)((uintptr_t)(ob)-GC_OBJECT_OFFSET))
+#define DeeGC_Head(ob)   ((struct gc_head *)((uintptr_t)REQUIRES_OBJECT(ob)-GC_OBJECT_OFFSET))
 #define DeeGC_Object(ob) (&(ob)->gc_object)
-#define DeeGC_Check(ob)  (Dee_TYPE(ob)->tp_flags&TP_FGC && (!DeeType_Check(ob) || (((DeeTypeObject *)(ob))->tp_flags&TP_FHEAP)))
+#define DeeGC_Check(ob)  (Dee_TYPE(ob)->tp_flags&TP_FGC && (!DeeType_Check(ob) || (((DeeTypeObject *)REQUIRES_OBJECT(ob))->tp_flags&TP_FHEAP)))
 
 /* Begin/end tracking a given GC-allocated object.
  * `DeeGC_Track()' must be called explicitly when the object

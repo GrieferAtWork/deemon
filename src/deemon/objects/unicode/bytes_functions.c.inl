@@ -2471,7 +2471,7 @@ bytes_indent(Bytes *__restrict self,
   uint8_t *flush_start,*iter,*end;
   /* Start by inserting the initial, unconditional indentation at the start. */
   if (bytes_printer_append(&printer,filler.n_data,filler.n_size) < 0)
-      goto err;
+      goto err_printer;
   iter = DeeBytes_DATA(self);
   end  = iter + DeeBytes_SIZE(self);
   flush_start = iter;
@@ -2484,11 +2484,11 @@ bytes_indent(Bytes *__restrict self,
     /* Flush all unwritten data up to this point. */
     if (bytes_printer_append(&printer,flush_start,
                             (size_t)(iter-flush_start)) < 0)
-        goto err;
+        goto err_printer;
     flush_start = iter;
     /* Insert the filler just before the linefeed. */
     if (bytes_printer_append(&printer,filler.n_data,filler.n_size) < 0)
-        goto err;
+        goto err_printer;
     continue;
    }
    ++iter;
@@ -2504,7 +2504,7 @@ bytes_indent(Bytes *__restrict self,
    /* Flush the remainder. */
    if (bytes_printer_append(&printer,flush_start,
                            (size_t)(iter-flush_start)) < 0)
-       goto err;
+       goto err_printer;
   }
   return bytes_printer_pack(&printer);
 err_printer:

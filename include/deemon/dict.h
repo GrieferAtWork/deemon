@@ -121,26 +121,26 @@ DFUNDEF DREF DeeObject *DCALL DeeDict_NewKeyItemsInherited(size_t num_keyitems, 
  *       Yet the point here is, that this is similar to what python
  *       does for its dictionary lookup.
  */
-#define DICT_HASHST(self,hash)  ((hash) & ((DeeDictObject *)(self))->d_mask)
+#define DICT_HASHST(self,hash)  ((hash) & ((DeeDictObject *)REQUIRES_OBJECT(self))->d_mask)
 #define DICT_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
 #define DICT_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define DICT_HASHIT(self,i)     (((DeeDictObject *)(self))->d_elem+((i) & ((DeeDictObject *)(self))->d_mask))
+#define DICT_HASHIT(self,i)     (((DeeDictObject *)REQUIRES_OBJECT(self))->d_elem+((i) & ((DeeDictObject *)REQUIRES_OBJECT(self))->d_mask))
 
 
 
 #ifndef CONFIG_NO_THREADS
-#define DeeDict_LockReading(x)    rwlock_reading(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockWriting(x)    rwlock_writing(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockTryread(x)    rwlock_tryread(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockTrywrite(x)   rwlock_trywrite(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockRead(x)       rwlock_read(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockWrite(x)      rwlock_write(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockUpgrade(x)    rwlock_upgrade(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockDowngrade(x)  rwlock_downgrade(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockEndWrite(x)   rwlock_endwrite(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockEndRead(x)    rwlock_endread(&((DeeDictObject *)(x))->d_lock)
-#define DeeDict_LockEnd(x)        rwlock_end(&((DeeDictObject *)(x))->d_lock)
+#define DeeDict_LockReading(x)    rwlock_reading(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockWriting(x)    rwlock_writing(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockTryread(x)    rwlock_tryread(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockTrywrite(x)   rwlock_trywrite(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockRead(x)       rwlock_read(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockWrite(x)      rwlock_write(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockUpgrade(x)    rwlock_upgrade(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockDowngrade(x)  rwlock_downgrade(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockEndWrite(x)   rwlock_endwrite(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockEndRead(x)    rwlock_endread(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockEnd(x)        rwlock_end(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
 #else
 #define DeeDict_LockReading(x)          1
 #define DeeDict_LockWriting(x)          1

@@ -93,10 +93,10 @@ DFUNDEF int DCALL DeeRoSet_Contains(DeeObject *__restrict self, DeeObject *__res
 DFUNDEF bool DCALL DeeRoSet_ContainsString(DeeObject *__restrict self, char const *__restrict key, size_t key_length);
 
 /* Hash-iteration control. */
-#define ROSET_HASHST(self,ro)      ((ro) & ((DeeRoSetObject *)(self))->rs_mask)
+#define ROSET_HASHST(self,ro)      ((ro) & ((DeeRoSetObject *)REQUIRES_OBJECT(self))->rs_mask)
 #define ROSET_HASHNX(hs,perturb)  (((hs) << 2) + (hs) + (perturb) + 1)
 #define ROSET_HASHPT(perturb)      ((perturb) >>= 5) /* This `5' is tunable. */
-#define ROSET_HASHIT(self,i)      (((DeeRoSetObject *)(self))->rs_elem+((i) & ((DeeRoSetObject *)(self))->rs_mask))
+#define ROSET_HASHIT(self,i)      (((DeeRoSetObject *)REQUIRES_OBJECT(self))->rs_elem+((i) & ((DeeRoSetObject *)REQUIRES_OBJECT(self))->rs_mask))
 
 DECL_END
 

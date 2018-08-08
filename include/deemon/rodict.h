@@ -85,10 +85,10 @@ DFUNDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringDef(DeeObject *__restrict s
 DFUNDEF bool DCALL DeeRoDict_HasItemString(DeeObject *__restrict self, char const *__restrict key);
 
 /* Hash-iteration control. */
-#define RODICT_HASHST(self,hash)  ((hash) & ((DeeRoDictObject *)(self))->rd_mask)
+#define RODICT_HASHST(self,hash)  ((hash) & ((DeeRoDictObject *)REQUIRES_OBJECT(self))->rd_mask)
 #define RODICT_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
 #define RODICT_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define RODICT_HASHIT(self,i)     (((DeeRoDictObject *)(self))->rd_elem+((i) & ((DeeRoDictObject *)(self))->rd_mask))
+#define RODICT_HASHIT(self,i)     (((DeeRoDictObject *)REQUIRES_OBJECT(self))->rd_elem+((i) & ((DeeRoDictObject *)REQUIRES_OBJECT(self))->rd_mask))
 
 
 DECL_END

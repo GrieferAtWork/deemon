@@ -37,8 +37,8 @@ struct super_object {
     DREF DeeObject     *s_self; /* [1..1][const] Wrapped object (Never another super-object). */
 };
 
-#define DeeSuper_TYPE(x) ((DeeSuperObject *)(x))->s_type
-#define DeeSuper_SELF(x) ((DeeSuperObject *)(x))->s_self
+#define DeeSuper_TYPE(x) ((DeeSuperObject *)REQUIRES_OBJECT(x))->s_type
+#define DeeSuper_SELF(x) ((DeeSuperObject *)REQUIRES_OBJECT(x))->s_self
 
 DDATDEF DeeTypeObject DeeSuper_Type;
 #define DeeSuper_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeSuper_Type) /* `super' is `final' */

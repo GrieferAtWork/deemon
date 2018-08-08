@@ -142,7 +142,7 @@ struct inverse_set_object {
     OBJECT_HEAD
     DREF DeeObject *is_set; /* [1..1][const] The underlying set. */
 };
-#define DeeInverseSet_SET(ob) (((DeeInverseSetObject *)(ob))->is_set)
+#define DeeInverseSet_SET(ob) (((DeeInverseSetObject *)REQUIRES_OBJECT(ob))->is_set)
 
 DDATDEF DeeTypeObject DeeInverseSet_Type;
 #define DeeInverseSet_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeInverseSet_Type) /* _inverseset is final */

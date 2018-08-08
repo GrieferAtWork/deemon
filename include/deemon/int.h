@@ -85,8 +85,8 @@ struct int_object {
                            * The total number of digits is the absolute value of `ob_size',
                            * which is negative if the value of the integer is too. */
 };
-#define DeeInt_SIZE(x)  ((DeeIntObject *)(x))->ob_size
-#define DeeInt_DIGIT(x) ((DeeIntObject *)(x))->ob_digit
+#define DeeInt_SIZE(x)  ((DeeIntObject *)REQUIRES_OBJECT(x))->ob_size
+#define DeeInt_DIGIT(x) ((DeeIntObject *)REQUIRES_OBJECT(x))->ob_digit
 
 
 #define DEE_PRIVATE_ABS(value) ((value) < 0 ? -(value) : (value))
@@ -465,12 +465,12 @@ DFUNDEF uint8_t *DCALL DeeInt_GetSleb(DeeObject *__restrict self, uint8_t *__res
 DFUNDEF uint8_t *DCALL DeeInt_GetUleb(DeeObject *__restrict self, uint8_t *__restrict writer);
 
 /* Calculate the worst-case required memory for writing a given integer in LEB format. */
-#define DEEINT_SLEB_MAXSIZE(self) (((DeeIntObject *)(self))->ob_size < 0 ? \
-                                  (((-((DeeIntObject *)(self))->ob_size + 1)*DIGIT_BITS)/7) : \
-                                  ((( ((DeeIntObject *)(self))->ob_size + 1)*DIGIT_BITS)/7))
-#define DEEINT_ULEB_MAXSIZE(self) ((((size_t)((DeeIntObject *)(self))->ob_size + 1)*DIGIT_BITS)/7)
+#define DEEINT_SLEB_MAXSIZE(self) (((DeeIntObject *)REQUIRES_OBJECT(self))->ob_size < 0 ? \
+                                  (((-((DeeIntObject *)REQUIRES_OBJECT(self))->ob_size + 1)*DIGIT_BITS)/7) : \
+                                  ((( ((DeeIntObject *)REQUIRES_OBJECT(self))->ob_size + 1)*DIGIT_BITS)/7))
+#define DEEINT_ULEB_MAXSIZE(self) ((((size_t)((DeeIntObject *)REQUIRES_OBJECT(self))->ob_size + 1)*DIGIT_BITS)/7)
 
-#define DeeInt_IsNeg(self) (((DeeIntObject *)(self))->ob_size < 0)
+#define DeeInt_IsNeg(self) (((DeeIntObject *)REQUIRES_OBJECT(self))->ob_size < 0)
 
 
 /* Convert an integer to/from a string.

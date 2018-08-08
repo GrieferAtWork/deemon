@@ -39,11 +39,11 @@ struct tuple_object {
     DREF DeeObject *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
 #endif
 };
-#define DeeTuple_IsEmpty(ob)                ((DeeObject *)(ob) == Dee_EmptyTuple)
-#define DeeTuple_SIZE(ob)                   ((DeeTupleObject *)(ob))->t_size
-#define DeeTuple_ELEM(ob)                   ((DeeTupleObject *)(ob))->t_elem
-#define DeeTuple_GET(ob,i)                  ((DeeTupleObject *)(ob))->t_elem[i]
-#define DeeTuple_SET(ob,i,v)                ((DeeTupleObject *)(ob))->t_elem[i]=(v)
+#define DeeTuple_IsEmpty(ob)                ((DeeObject *)REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
+#define DeeTuple_SIZE(ob)                   ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_size
+#define DeeTuple_ELEM(ob)                   ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem
+#define DeeTuple_GET(ob,i)                  ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]
+#define DeeTuple_SET(ob,i,v)                ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]=(v)
 
 #ifdef GUARD_DEEMON_OBJECTS_TUPLE_C
 struct empty_tuple_object { OBJECT_HEAD size_t t_size; };

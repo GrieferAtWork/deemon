@@ -42,8 +42,8 @@ DDATDEF DeeObject     DeeNone_Singleton;
 /* WARNING: If these two macros are ever changed, make sure to allow
  *         `NULL' to be passed for `x', as code exists that assumes
  *          this being possible (btw: `NULL' should evaluate to `false') */
-#define DeeNone_Check(x)      ((DeeObject *)(x) == Dee_None) /* `none' is a singleton. */
-#define DeeNone_CheckExact(x) ((DeeObject *)(x) == Dee_None)
+#define DeeNone_Check(x)      ((DeeObject *)REQUIRES_OBJECT(x) == Dee_None) /* `none' is a singleton. */
+#define DeeNone_CheckExact(x) ((DeeObject *)REQUIRES_OBJECT(x) == Dee_None)
 
 
 DECL_END

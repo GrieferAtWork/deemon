@@ -126,6 +126,13 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 
 
 #ifdef __INTELLISENSE__
+#define REQUIRES_OBJECT(x) ((void)&(x)->ob_refcnt,(x))
+#else
+#define REQUIRES_OBJECT(x) (x)
+#endif
+
+
+#ifdef __INTELLISENSE__
 #define OBJECT_HEAD           \
     dref_t ob_refcnt; DeeTypeObject *ob_type; \
     DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
@@ -183,7 +190,7 @@ struct object_ { OBJECT_HEAD };
 
 #ifndef NDEBUG
 #define DeeObject_DoCheck(ob) \
-      (((DeeObject *)(ob))->ob_refcnt && \
+      (((DeeObject *)REQUIRES_OBJECT(ob))->ob_refcnt && \
        ((DeeObject *)(ob))->ob_type && \
        ((DeeObject *)(ob))->ob_type->ob_refcnt)
 #define DeeObject_Check(ob) \
@@ -269,10 +276,10 @@ DFUNDEF DREF DeeObject *DCALL weakref_cmpxch(weakref_t *__restrict self,
 
 /* Type visit helpers. */
 typedef void (DCALL *dvisit_t)(DeeObject *__restrict self, void *arg);
-#define Dee_Visit(ob)  (*proc)((DeeObject *)(ob),arg)
+#define Dee_Visit(ob)  (*proc)((DeeObject *)REQUIRES_OBJECT(ob),arg)
 #define Dee_XVisit(ob) (!(ob) || (Dee_Visit(ob),0))
 #define Dee_VISIT(ob)  Dee_Visit(ob)
-#define Dee_XVISIT(ob) do{ DeeObject *const _x_ = (DeeObject *)(ob); Dee_XVisit(_x_); }__WHILE0
+#define Dee_XVISIT(ob) do{ DeeObject *const _x_ = (DeeObject *)REQUIRES_OBJECT(ob); Dee_XVisit(_x_); }__WHILE0
 
 /* Used to undo object construction in generic sub-classes after
  * base classes have already been constructed, before a later
@@ -493,7 +500,7 @@ DFUNDEF bool DCALL Dee_DecrefWasOk_traced(DeeObject *__restrict ob, char const *
 #define Dee_XClear(x)        (!(x) || Dee_Clear(x))
 
 #define return_reference(ob) \
- do{ DeeObject *const _result_ = (DeeObject *)(ob); \
+ do{ DeeObject *const _result_ = (DeeObject *)REQUIRES_OBJECT(ob); \
      Dee_Incref(_result_); return _result_; \
  }__WHILE0
 
@@ -1066,7 +1073,7 @@ struct type_member {
 #define TYPE_MEMBER_FIELD_DOC(name,type,offset,doc) \
   { ("\0" name)+1, { (DeeObject *)(uintptr_t)((uint32_t)(type) | ((uint32_t)(offset) << 16)) }, DOC(doc) }
 #define TYPE_MEMBER_CONST_DOC(name,value,doc)        \
-  { ("!" name)+1, { (DeeObject *)(value) }, DOC(doc) }
+  { ("!" name)+1, { (DeeObject *)REQUIRES_OBJECT(value) }, DOC(doc) }
 #define TYPE_MEMBER_FIELD(name,type,offset) TYPE_MEMBER_FIELD_DOC(name,type,offset,NULL)
 #define TYPE_MEMBER_CONST(name,value)       TYPE_MEMBER_CONST_DOC(name,value,NULL)
 
@@ -1407,19 +1414,19 @@ struct type_object {
     /* ... Extended type fields go here (e.g.: `DeeFileTypeObject') */
     /* ... `struct class_desc' of class types goes here */
 };
-#define DeeType_IsVariable(x)     (((DeeTypeObject *)(x))->tp_flags&TP_FVARIABLE)
-#define DeeType_IsFinal(x)        (((DeeTypeObject *)(x))->tp_flags&TP_FFINAL)
-#define DeeType_IsGC(x)           (((DeeTypeObject *)(x))->tp_flags&TP_FGC)
-#define DeeType_IsClass(x)        (((DeeTypeObject *)(x))->tp_class != NULL)
-#define DeeType_IsInterrupt(x)    (((DeeTypeObject *)(x))->tp_flags&TP_FINTERRUPT)
-#define DeeType_IsGeneric(x)      (((DeeTypeObject *)(x))->tp_flags&TP_FABSTRACT)
-#define DeeType_IsArithmetic(x)   (((DeeTypeObject *)(x))->tp_math != NULL)
-#define DeeType_IsComparable(x)   (((DeeTypeObject *)(x))->tp_cmp != NULL)
-#define DeeType_IsSequence(x)     (((DeeTypeObject *)(x))->tp_seq != NULL)
-#define DeeType_IsIterator(x)     (((DeeTypeObject *)(x))->tp_iter_next != NULL)
-#define DeeType_IsTypeType(x)        DeeType_IsInherited((DeeTypeObject *)(x),&DeeType_Type)
-#define DeeType_Base(x)           (((DeeTypeObject *)(x))->tp_base)
-#define DeeType_GCPriority(x)     (((DeeTypeObject *)(x))->tp_gc ? ((DeeTypeObject *)(x))->tp_gc->tp_gcprio : GC_PRIORITY_LATE)
+#define DeeType_IsVariable(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FVARIABLE)
+#define DeeType_IsFinal(x)        (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FFINAL)
+#define DeeType_IsGC(x)           (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FGC)
+#define DeeType_IsClass(x)        (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_class != NULL)
+#define DeeType_IsInterrupt(x)    (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FINTERRUPT)
+#define DeeType_IsGeneric(x)      (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FABSTRACT)
+#define DeeType_IsArithmetic(x)   (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_math != NULL)
+#define DeeType_IsComparable(x)   (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_cmp != NULL)
+#define DeeType_IsSequence(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_seq != NULL)
+#define DeeType_IsIterator(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_iter_next != NULL)
+#define DeeType_IsTypeType(x)        DeeType_IsInherited((DeeTypeObject *)REQUIRES_OBJECT(x),&DeeType_Type)
+#define DeeType_Base(x)           (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_base)
+#define DeeType_GCPriority(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc->tp_gcprio : GC_PRIORITY_LATE)
 #define DeeObject_GCPriority(x)      DeeType_GCPriority(Dee_TYPE(x))
 #define DeeObject_IsInterrupt(x)     DeeType_IsInterrupt(Dee_TYPE(x))
 

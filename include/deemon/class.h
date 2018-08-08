@@ -122,10 +122,10 @@ struct member_table {
                                    *  Hash-vector of member descriptors. */
 };
 
-#define DeeMemberTable_HASHST(self,hash)  ((hash) & ((DeeMemberTableObject *)(self))->mt_mask)
+#define DeeMemberTable_HASHST(self,hash)  ((hash) & ((DeeMemberTableObject *)REQUIRES_OBJECT(self))->mt_mask)
 #define DeeMemberTable_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
 #define DeeMemberTable_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define DeeMemberTable_HASHIT(self,i)     (((DeeMemberTableObject *)(self))->mt_list+((i) & ((DeeMemberTableObject *)(self))->mt_mask))
+#define DeeMemberTable_HASHIT(self,i)     (((DeeMemberTableObject *)REQUIRES_OBJECT(self))->mt_list+((i) & ((DeeMemberTableObject *)(self))->mt_mask))
 
 
 #ifdef GUARD_DEEMON_OBJECTS_CLASS_C
@@ -385,7 +385,7 @@ DeeInstance_SetMemberSafe(DeeTypeObject *__restrict tp_self,
  * dynamic user-defined class types for any kind of type. */
 #if 1
 #define DeeClass_DESC(self) \
- (ASSERT(DeeType_Check(self)),ASSERT(DeeClass_Check(self)),((DeeTypeObject *)(self))->tp_class)
+ (ASSERT(DeeType_Check(self)),ASSERT(DeeClass_Check(self)),((DeeTypeObject *)REQUIRES_OBJECT(self))->tp_class)
 #else
 /* This version is slower and doesn't work for custom type classes being destroyed:
  * See. During object destruction, the object type is constantly altered to reflect
@@ -396,10 +396,10 @@ DeeInstance_SetMemberSafe(DeeTypeObject *__restrict tp_self,
  *      can't rely on the instance-size of the class's type to get that offset. */
 #define DeeClass_DESC(self) \
  (ASSERT(DeeType_Check(self)),ASSERT(DeeClass_Check(self)), \
-  ((struct class_desc *)((uintptr_t)(self)+Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size)))
+  ((struct class_desc *)REQUIRES_OBJECT((uintptr_t)(self)+Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size)))
 #endif
 #define DeeInstance_DESC(cdesc,self) \
-  ((struct instance_desc *)((uintptr_t)(self)+(cdesc)->c_addr))
+  ((struct instance_desc *)REQUIRES_OBJECT((uintptr_t)(self)+(cdesc)->c_addr))
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Return a pointer to the class-member of a given class descriptor.

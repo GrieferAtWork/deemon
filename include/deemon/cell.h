@@ -37,21 +37,21 @@ struct cell_object {
 #endif /* !CONFIG_NO_THREADS */
 };
 
-#define DeeCell_Item(x) ((DeeCellObject *)(x))->c_item
+#define DeeCell_Item(x) ((DeeCellObject *)REQUIRES_OBJECT(x))->c_item
 
 #ifndef CONFIG_NO_THREADS
-#define DeeCell_LockReading(x)    rwlock_reading(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockWriting(x)    rwlock_writing(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockTryread(x)    rwlock_tryread(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockTrywrite(x)   rwlock_trywrite(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockRead(x)       rwlock_read(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockWrite(x)      rwlock_write(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockUpgrade(x)    rwlock_upgrade(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockDowngrade(x)  rwlock_downgrade(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockEndWrite(x)   rwlock_endwrite(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockEndRead(x)    rwlock_endread(&((DeeCellObject *)(x))->c_lock)
-#define DeeCell_LockEnd(x)        rwlock_end(&((DeeCellObject *)(x))->c_lock)
+#define DeeCell_LockReading(x)    rwlock_reading(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockWriting(x)    rwlock_writing(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockTryread(x)    rwlock_tryread(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockTrywrite(x)   rwlock_trywrite(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockRead(x)       rwlock_read(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockWrite(x)      rwlock_write(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockUpgrade(x)    rwlock_upgrade(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockDowngrade(x)  rwlock_downgrade(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockEndWrite(x)   rwlock_endwrite(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockEndRead(x)    rwlock_endread(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockEnd(x)        rwlock_end(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
 #else
 #define DeeCell_LockReading(x)          1
 #define DeeCell_LockWriting(x)          1
