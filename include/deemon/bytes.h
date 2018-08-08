@@ -43,6 +43,7 @@ typedef struct {
 #define DeeBytes_WRITABLE(x)    (((DeeBytesObject *)(x))->b_flags & DEE_BUFFER_FWRITABLE)
 #define DeeBytes_Check(x)       DeeObject_InstanceOfExact(x,&DeeBytes_Type) /* `bytes' is final. */
 #define DeeBytes_CheckExact(x)  DeeObject_InstanceOfExact(x,&DeeBytes_Type)
+#define DeeBytes_IsEmpty(x)     (((DeeBytesObject *)(x))->b_size==0)
 
 /* The builtin `bytes' data type.
  * This type offers functionality identical to what can also be found in

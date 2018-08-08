@@ -2351,7 +2351,7 @@ bytes_expandtabs(Bytes *__restrict self,
   uint8_t *iter,*end,*flush_start;
   size_t line_inset = 0;
   iter = DeeBytes_DATA(self);
-  end  = iter + DeeBytes_SIZE(iter);
+  end  = iter + DeeBytes_SIZE(self);
   flush_start = iter;
   for (; iter < end; ++iter) {
    uint8_t ch = *iter;
@@ -2407,7 +2407,7 @@ bytes_unifylines(Bytes *__restrict self,
   struct bytes_printer printer = BYTES_PRINTER_INIT;
   uint8_t *iter,*end,*flush_start;
   iter = DeeBytes_DATA(self);
-  end  = iter + DeeBytes_SIZE(iter);
+  end  = iter + DeeBytes_SIZE(self);
   flush_start = iter;
   for (; iter < end; ++iter) {
    uint8_t ch = *iter;
@@ -2448,6 +2448,149 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeObject *DCALL
+bytes_indent(Bytes *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ DeeObject *filler_ob = NULL; Needle filler;
+ if (DeeArg_Unpack(argc,argv,"|o:indent",&filler_ob))
+     goto err;
+ if (filler_ob) {
+  if (get_needle(&filler,filler_ob))
+      goto err;
+  if unlikely(!filler.n_size || DeeBytes_IsEmpty(self))
+     goto retself;
+ } else {
+  if unlikely(DeeBytes_IsEmpty(self))
+     goto retself;
+  filler.n_data    = filler._n_buf;
+  filler.n_size    = 1;
+  filler._n_buf[0] = ASCII_TAB;
+ }
+ {
+  struct bytes_printer printer = BYTES_PRINTER_INIT;
+  uint8_t *flush_start,*iter,*end;
+  /* Start by inserting the initial, unconditional indentation at the start. */
+  if (bytes_printer_append(&printer,filler.n_data,filler.n_size) < 0)
+      goto err;
+  iter = DeeBytes_DATA(self);
+  end  = iter + DeeBytes_SIZE(self);
+  flush_start = iter;
+  while (iter < end) {
+   uint8_t ch = *iter;
+   if (DeeUni_IsLF(ch)) {
+    ++iter;
+    /* Deal with windows-style linefeeds. */
+    if (ch == ASCII_CR && *iter == ASCII_LF) ++iter;
+    /* Flush all unwritten data up to this point. */
+    if (bytes_printer_append(&printer,flush_start,
+                            (size_t)(iter-flush_start)) < 0)
+        goto err;
+    flush_start = iter;
+    /* Insert the filler just before the linefeed. */
+    if (bytes_printer_append(&printer,filler.n_data,filler.n_size) < 0)
+        goto err;
+    continue;
+   }
+   ++iter;
+  }
+  if (iter == flush_start) {
+   /* Either the string is empty or ends with a line-feed.
+    * In either case, we must remove `filler' from its end,
+    * because we're not supposed to have the resulting
+    * string include it as trailing memory. */
+   ASSERT(BYTES_PRINTER_SIZE(&printer) >= filler.n_size);
+   bytes_printer_release(&printer,filler.n_size);
+  } else {
+   /* Flush the remainder. */
+   if (bytes_printer_append(&printer,flush_start,
+                           (size_t)(iter-flush_start)) < 0)
+       goto err;
+  }
+  return bytes_printer_pack(&printer);
+err_printer:
+  bytes_printer_fini(&printer);
+ }
+err:
+ return NULL;
+retself:
+ return_reference_((DeeObject *)self);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_dedent(Bytes *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ size_t max_chars = 1; DeeObject *mask_ob = NULL;
+ if (DeeArg_Unpack(argc,argv,"|Iuo:dedent",&max_chars,&mask_ob))
+     goto err;
+ if unlikely(!max_chars) goto retself;
+ {
+  struct bytes_printer printer = BYTES_PRINTER_INIT;
+  uint8_t *flush_start,*iter,*end; size_t i;
+  iter = DeeBytes_DATA(self);
+  end  = iter + DeeBytes_SIZE(self);
+  if (mask_ob) {
+   Needle mask;
+   if (get_needle(&mask,mask_ob))
+       goto err_printer;
+
+   /* Remove leading characters. */
+   for (i = 0; i < max_chars && memchr(mask.n_data,*iter,mask.n_size); ++i) ++iter;
+   flush_start = iter;
+   while (iter < end) {
+    uint8_t ch = *iter;
+    if (DeeUni_IsLF(ch)) {
+     ++iter;
+     if (ch == UNICODE_CR && *iter == UNICODE_LF) ++iter;
+     /* Flush all unwritten data up to this point. */
+     if (bytes_printer_append(&printer,flush_start,
+                             (size_t)(iter-flush_start)) < 0)
+         goto err;
+     /* Skip up to `max_chars' characters after a linefeed. */
+     for (i = 0; i < max_chars && memchr(mask.n_data,*iter,mask.n_size); ++i) ++iter;
+     flush_start = iter;
+     continue;
+    }
+    ++iter;
+   }
+   /* Flush the remainder. */
+   if (bytes_printer_append(&printer,flush_start,
+                           (size_t)(iter-flush_start)) < 0)
+       goto err;
+  } else {
+   /* Remove leading characters. */
+   for (i = 0; i < max_chars && DeeUni_IsSpace(*iter); ++i) ++iter;
+   flush_start = iter;
+   while (iter < end) {
+    uint8_t ch = *iter;
+    if (DeeUni_IsLF(ch)) {
+     ++iter;
+     if (ch == ASCII_CR && *iter == ASCII_LF) ++iter;
+     /* Flush all unwritten data up to this point. */
+     if (bytes_printer_append(&printer,flush_start,
+                             (size_t)(iter-flush_start)) < 0)
+         goto err;
+     /* Skip up to `max_chars' characters after a linefeed. */
+     for (i = 0; i < max_chars && DeeUni_IsSpace(*iter); ++i) ++iter;
+     flush_start = iter;
+     continue;
+    }
+    ++iter;
+   }
+   /* Flush the remainder. */
+   if (bytes_printer_append(&printer,flush_start,
+                           (size_t)(iter-flush_start)) < 0)
+       goto err;
+  }
+  return bytes_printer_pack(&printer);
+err_printer:
+  bytes_printer_fini(&printer);
+ }
+err:
+ return NULL;
+retself:
+ return_reference_((DeeObject *)self);
+}
+
 
 INTERN struct type_method bytes_methods[] = {
     { "decode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_decode,
@@ -2477,6 +2620,26 @@ INTERN struct type_method bytes_methods[] = {
           "@throw IntegerOverflow The given @index is lower than $0\n"
           "@throw IndexError The given @index is greater than ${#this}\n"
           "Same as ${this[index]}") },
+
+    /* Bytes-specific functions. */
+    { "resized", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_resized,
+      DOC("(int new_size)->bytes\n"
+          "(int new_size,int filler)->bytes\n"
+          "Return a new writable bytes object with a length of @new_size, and its "
+          "first ${(#this,new_size) < ...} bytes initialized from ${this.substr(0,new_size)}, "
+          "with the remainder then either left uninitialized, or initialized to @filler\n"
+          "Note that because a bytes object cannot be resized in-line, code using this function "
+          "must make use of the returned bytes object:\n"
+          ">local x = \"foobar\";\n"
+          ">local y = x.bytes();\n"
+          ">print repr y; /* \"foobar\" */\n"
+          ">y = y.resized(16,\"?\".ord());\n"
+          ">print repr y; /* \"foobar??" "??" "??" "??" "??\" */") },
+    { "reverse", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_reverse,
+      DOC("(int start=0,int end=-1)->bytes\n"
+          "@throw BufferError @this bytes object is not writable\n"
+          "Same as #reversed, but modifications are performed "
+          "in-line, before @this bytes object is re-returned") },
 
     /* Bytes formatting / scanning. */
     { "format", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_format,
@@ -3154,25 +3317,23 @@ INTERN struct type_method bytes_methods[] = {
           "have the same #iswritable characteristics as @this, and refer to the same "
           "memory") },
 
-    /* Bytes-specific functions. */
-    { "resized", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_resized,
-      DOC("(int new_size)->bytes\n"
-          "(int new_size,int filler)->bytes\n"
-          "Return a new writable bytes object with a length of @new_size, and its "
-          "first ${(#this,new_size) < ...} bytes initialized from ${this.substr(0,new_size)}, "
-          "with the remainder then either left uninitialized, or initialized to @filler\n"
-          "Note that because a bytes object cannot be resized in-line, code using this function "
-          "must make use of the returned bytes object:\n"
-          ">local x = \"foobar\";\n"
-          ">local y = x.bytes();\n"
-          ">print repr y; /* \"foobar\" */\n"
-          ">y = y.resized(16,\"?\".ord());\n"
-          ">print repr y; /* \"foobar??" "??" "??" "??" "??\" */") },
-    { "reverse", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_reverse,
-      DOC("(int start=0,int end=-1)->bytes\n"
-          "@throw BufferError @this bytes object is not writable\n"
-          "Same as #reversed, but modifications are performed "
-          "in-line, before @this bytes object is re-returned") },
+    /* String indentation. */
+    { "indent", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_indent,
+      DOC("(string filler=\"\\t\")->bytes\n"
+          "(bytes filler)->bytes\n"
+          "(int filler)->bytes\n"
+          "Using @this bytes object as result, insert @filler at the front, as well as after "
+          "every ascii-linefeed with the exception of one that may be located at its end\n"
+          "The inteded use is for generating strings from structured data, such as HTML:\n"
+          ">text = \"<html>\n{}\n</html>\".format({ get_html_bytes().strip().indent() });\n") },
+    { "dedent", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_dedent,
+      DOC("(int max_chars=1)->bytes\n"
+          "(int max_chars=1,string mask)->bytes\n"
+          "(int max_chars=1,bytes mask)->bytes\n"
+          "(int max_chars=1,int mask)->bytes\n"
+          "Using @this string as result, remove up to @max_chars whitespace "
+          "(s.a. #isspace) characters, or if given: characters apart of @mask "
+          "from the front, as well as following any linefeed") },
 
 
     { NULL }

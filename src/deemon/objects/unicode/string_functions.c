@@ -1301,7 +1301,7 @@ DeeString_Indent(DeeObject *__restrict self,
     ++iter.cp8;
    }
    if (iter.cp8 == flush_start.cp8) {
-    /* Either the string is empty, ends with a line-feed.
+    /* Either the string is empty or ends with a line-feed.
      * In either case, we must remove `filler' from its end,
      * because we're not supposed to have the resulting
      * string include it as trailing memory. */
@@ -1326,7 +1326,7 @@ DeeString_Indent(DeeObject *__restrict self,
      ++iter.cp16;
      if (ch == UNICODE_CR && *iter.cp16 == UNICODE_LF) ++iter.cp16;
      if (unicode_printer_print16(&printer,flush_start.cp16,
-                               (size_t)(iter.cp16-flush_start.cp16)) < 0)
+                                (size_t)(iter.cp16-flush_start.cp16)) < 0)
          goto err;
      flush_start.cp16 = iter.cp16;
      if (unicode_printer_printobject(&printer,filler) < 0)
@@ -1342,7 +1342,7 @@ DeeString_Indent(DeeObject *__restrict self,
                              DeeString_WLEN(filler));
    } else {
     if (unicode_printer_print16(&printer,flush_start.cp16,
-                              (size_t)(iter.cp16-flush_start.cp16)) < 0)
+                               (size_t)(iter.cp16-flush_start.cp16)) < 0)
         goto err;
    }
    break;
@@ -1356,7 +1356,7 @@ DeeString_Indent(DeeObject *__restrict self,
      ++iter.cp32;
      if (ch == UNICODE_CR && *iter.cp32 == UNICODE_LF) ++iter.cp32;
      if (unicode_printer_print32(&printer,flush_start.cp32,
-                               (size_t)(iter.cp32-flush_start.cp32)) < 0)
+                                (size_t)(iter.cp32-flush_start.cp32)) < 0)
          goto err;
      flush_start.cp32 = iter.cp32;
      if (unicode_printer_printobject(&printer,filler) < 0)
@@ -1372,7 +1372,7 @@ DeeString_Indent(DeeObject *__restrict self,
                              DeeString_WLEN(filler));
    } else {
     if (unicode_printer_print32(&printer,flush_start.cp32,
-                              (size_t)(iter.cp32-flush_start.cp32)) < 0)
+                               (size_t)(iter.cp32-flush_start.cp32)) < 0)
         goto err;
    }
    break;

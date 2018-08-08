@@ -48,6 +48,7 @@ DECL_BEGIN
 #define ASCII_ZERO     48 /* '0' */
 #define ASCII_CR       13 /* '\r' */
 #define ASCII_LF       10 /* '\n' */
+#define ASCII_TAB       9 /* '\t' */
 
 #define UNICODE_SPACE  32 /* ' ' */
 #define UNICODE_ZERO   48 /* '0' */
