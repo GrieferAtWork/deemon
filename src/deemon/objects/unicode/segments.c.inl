@@ -32,7 +32,7 @@ typedef struct {
     DREF DeeStringObject *s_str;   /* [1..1][const] The string that is being segmented. */
     size_t                s_siz;   /* [!0][const] The size of a single segment. */
     ATOMIC_DATA uint8_t  *s_ptr;   /* [1..1][in(DeeString_WSTR(s_str))] Pointer to the start of the next segment. */
-    ATOMIC_DATA uint8_t  *s_end;   /* [1..1][== DeeString_WEND(s_str)] End pointer. */
+    uint8_t              *s_end;   /* [1..1][== DeeString_WEND(s_str)] End pointer. */
     unsigned int          s_width; /* [const] The width of a single character. */
 } StringSegmentsIterator;
 
@@ -85,7 +85,7 @@ PRIVATE int DCALL
 ssegiter_init(StringSegmentsIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  StringSegments *seg;
- if (DeeArg_Unpack(argc,argv,"o:_stringsegments.iterator",&seg) ||
+ if (DeeArg_Unpack(argc,argv,"o:_stringsegmentsiterator",&seg) ||
      DeeObject_AssertTypeExact((DeeObject *)seg,&StringSegments_Type))
      goto err;
  self->s_str   = seg->s_str;
@@ -176,7 +176,7 @@ PRIVATE struct type_cmp ssegiter_cmp = {
 
 INTERN DeeTypeObject StringSegmentsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_stringsegments.iterator",
+    /* .tp_name     = */"_stringsegmentsiterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -221,7 +221,7 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
 };
-
+#undef READ_PTR
 
 
 
@@ -390,6 +390,7 @@ PRIVATE struct type_member sseg_members[] = {
 };
 
 PRIVATE struct type_member sseg_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&StringSegmentsIterator_Type),
     TYPE_MEMBER_END
 };
 

@@ -25,6 +25,7 @@
 #include <deemon/tuple.h>
 #include <deemon/int.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/bytes.h>
@@ -716,6 +717,8 @@ DeeString_Join(DeeObject *__restrict self, DeeObject *__restrict seq) {
      goto err_elem;
   Dee_Decref(elem);
   is_first = false;
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  if unlikely(!elem) goto err_iter;
  Dee_Decref(iter);
@@ -2252,12 +2255,38 @@ not_found:
 err:
  return NULL;
 }
+INTDEF DREF DeeObject *DCALL
+DeeString_FindAll(String *__restrict self,
+                  String *__restrict other,
+                  size_t start, size_t end);
+INTDEF DREF DeeObject *DCALL
+DeeString_CaseFindAll(String *__restrict self,
+                      String *__restrict other,
+                      size_t start, size_t end);
+PRIVATE DREF DeeObject *DCALL
+string_findall(String *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ String *other; size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:findall",&other,&start,&end) ||
+     DeeObject_AssertTypeExact((DeeObject *)other,&DeeString_Type))
+     return NULL;
+ return DeeString_FindAll(self,other,start,end);
+}
+PRIVATE DREF DeeObject *DCALL
+string_casefindall(String *__restrict self,
+                   size_t argc, DeeObject **__restrict argv) {
+ String *other; size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:casefindall",&other,&start,&end) ||
+     DeeObject_AssertTypeExact((DeeObject *)other,&DeeString_Type))
+     return NULL;
+ return DeeString_CaseFindAll(self,other,start,end);
+}
 PRIVATE DREF DeeObject *DCALL
 string_casefind(String *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
- String *other; size_t begin = 0,end = (size_t)-1;
+ String *other; size_t start = 0,end = (size_t)-1;
  dssize_t result; union dcharptr ptr,lhs,rhs; size_t mylen;
- if (DeeArg_Unpack(argc,argv,"o|IdId:casefind",&other,&begin,&end) ||
+ if (DeeArg_Unpack(argc,argv,"o|IdId:casefind",&other,&start,&end) ||
      DeeObject_AssertTypeExact((DeeObject *)other,&DeeString_Type))
      goto err;
  result = -1;
@@ -2267,10 +2296,10 @@ string_casefind(String *__restrict self,
   lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
   rhs.cp8 = DeeString_As1Byte((DeeObject *)other);
   mylen = WSTR_LENGTH(lhs.ptr);
-  if unlikely(begin > mylen) begin = mylen;
+  if unlikely(start > mylen) start = mylen;
   if likely(end > mylen) end = mylen;
-  if unlikely(end <= begin) break;
-  ptr.cp8 = memcasememb(lhs.cp8 + begin,end - begin,
+  if unlikely(end <= start) break;
+  ptr.cp8 = memcasememb(lhs.cp8 + start,end - start,
                         rhs.cp8,WSTR_LENGTH(rhs.cp8));
   if (ptr.cp8) result = ptr.cp8 - lhs.cp8;
   break;
@@ -2280,10 +2309,10 @@ string_casefind(String *__restrict self,
   rhs.cp16 = DeeString_As2Byte((DeeObject *)other);
   if unlikely(!rhs.cp16) goto err;
   mylen = WSTR_LENGTH(lhs.ptr);
-  if unlikely(begin > mylen) begin = mylen;
+  if unlikely(start > mylen) start = mylen;
   if likely(end > mylen) end = mylen;
-  if unlikely(end <= begin) break;
-  ptr.cp16 = memcasememw(lhs.cp16 + begin,end - begin,
+  if unlikely(end <= start) break;
+  ptr.cp16 = memcasememw(lhs.cp16 + start,end - start,
                          rhs.cp16,WSTR_LENGTH(rhs.cp16));
   if (ptr.cp16) result = ptr.cp16 - lhs.cp16;
   break;
@@ -2293,10 +2322,10 @@ string_casefind(String *__restrict self,
   rhs.cp32 = DeeString_As4Byte((DeeObject *)other);
   if unlikely(!rhs.cp32) goto err;
   mylen = WSTR_LENGTH(lhs.ptr);
-  if unlikely(begin > mylen) begin = mylen;
+  if unlikely(start > mylen) start = mylen;
   if likely(end > mylen) end = mylen;
-  if unlikely(end <= begin) break;
-  ptr.cp32 = memcasememl(lhs.cp32 + begin,end - begin,
+  if unlikely(end <= start) break;
+  ptr.cp32 = memcasememl(lhs.cp32 + start,end - start,
                          rhs.cp32,WSTR_LENGTH(rhs.cp32));
   if (ptr.cp32) result = ptr.cp32 - lhs.cp32;
   break;
@@ -8521,8 +8550,6 @@ INTERN struct type_method string_methods[] = {
       DOC("(string needle,int start=0,int end=-1)->int\n"
           "Find the last instance of @needle within ${this.substr(start,end)}, "
           "and return its starting index, or ${-1} if no such position exists") },
-    /* TODO: findall(string needle,int start=0,int end=-1)->{int...} */
-    /* TODO: casefindall(string needle,int start=0,int end=-1)->{int...} */
     { "index", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_index,
       DOC("(string needle,int start=0,int end=-1)->int\n"
           "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
@@ -8533,6 +8560,10 @@ INTERN struct type_method string_methods[] = {
           "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
           "Find the last instance of @needle within ${this.substr(start,end)}, "
           "and return its starting index") },
+    { "findall", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_findall,
+       DOC("(string needle,int start=0,int end=-1)->{int...}\n"
+          "Find all instances of @needle within ${this.substr(start,end)}, "
+          "and return their starting indeces as a sequence") },
     { "count", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_count,
       DOC("(string needle,int start=0,int end=-1)->int\n"
           "Count the number of instances of @needle that exist within ${this.substr(start,end)}, "
@@ -8670,6 +8701,9 @@ INTERN struct type_method string_methods[] = {
     { "caserindex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caserindex,
       DOC("(string needle,int start=0,int end=-1)->int\n"
           "Same as #rindex, however casing is ignored during character comparisons") },
+    { "casefindall", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casefindall,
+       DOC("(string needle,int start=0,int end=-1)->{int...}\n"
+          "Same as #findall, however casing is ignored during character comparisons") },
     { "casecount", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casecount,
       DOC("(string needle,int start=0,int end=-1)->int\n"
           "Same as #count, however casing is ignored during character comparisons") },
@@ -9694,6 +9728,7 @@ DECL_END
 #include "split.c.inl"
 #include "segments.c.inl"
 #include "reproxy.c.inl"
+#include "finder.c.inl"
 
 /* Include this last! */
 #include "bytes_functions.c.inl"
