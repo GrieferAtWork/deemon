@@ -230,7 +230,6 @@ done:
  return (dssize_t)datalen;
 }
 
-/* Pack together data from a string printer and return the generated contained string. */
 PUBLIC DREF DeeObject *
 (DCALL ascii_printer_pack)(struct ascii_printer *__restrict self) {
  DREF String *result = self->ap_string;
@@ -249,28 +248,9 @@ PUBLIC DREF DeeObject *
  DeeObject_Init(result,&DeeString_Type);
  result->s_hash = (dhash_t)-1;
  result->s_data = NULL;
- self->ap_string = NULL;
- return (DREF DeeObject *)result;
-}
-
-PUBLIC DREF DeeObject *
-(DCALL ascii_printer_pack)(struct ascii_printer *__restrict self) {
- DREF String *result = self->ap_string;
- if unlikely(!result) return_reference_(Dee_EmptyString);
- /* Deallocate unused memory. */
- if likely(self->ap_length != result->s_len) {
-  DREF String *reloc;
-  reloc = (DREF String *)DeeObject_TryRealloc(result,offsetof(String,s_str)+
-                                             (self->ap_length+1)*sizeof(char));
-  if likely(reloc) result = reloc;
-  result->s_len = self->ap_length;
- }
- /* Make sure to terminate the c-string representation. */
- result->s_str[self->ap_length] = '\0';
- /* Do final object initialization. */
- DeeObject_Init(result,&DeeString_Type);
- result->s_hash = (dhash_t)-1;
- result->s_data = NULL;
+#ifndef NDEBUG
+ memset(self,0xcc,sizeof(*self));
+#endif
  return (DREF DeeObject *)result;
 }
 
