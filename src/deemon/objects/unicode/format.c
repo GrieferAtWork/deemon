@@ -25,6 +25,7 @@
 #include <deemon/object.h>
 #include <deemon/int.h>
 #include <deemon/error.h>
+#include <deemon/thread.h>
 #include <deemon/dict.h>
 #include <deemon/tuple.h>
 #include <deemon/none.h>
@@ -312,9 +313,14 @@ object_vector_extend(struct object_vector *__restrict self,
  while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
   result = object_vector_append(self,elem);
   if (result) break; /* Error */
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  Dee_Decref(iter);
  return result;
+err_iter:
+ Dee_Decref(iter);
+ return -1;
 }
 
 LOCAL void DCALL

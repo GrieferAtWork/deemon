@@ -25,6 +25,7 @@
 #include <deemon/int.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/thread.h>
 #include <deemon/list.h>
 #include <deemon/none.h>
 #include <deemon/tuple.h>
@@ -52,9 +53,14 @@ INTERN size_t DCALL DeeSeq_Size(DeeObject *__restrict self) {
    return (size_t)-1;
   }
   ++result;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  Dee_Decref(iter);
- return elem ? result : (size_t)-1;
+ if likely(elem)
+    return result;
+err:
+ return (size_t)-1;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -68,9 +74,13 @@ iterator_get_nth(DeeObject *__restrict self,
       return elem;
   Dee_Decref(elem);
   ++current_index;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  if (elem)
      err_index_out_of_bounds(sequence,index,current_index);
+ return NULL;
+err:
  return NULL;
 }
 
@@ -330,6 +340,10 @@ DeeSeq_Back(DeeObject *__restrict self) {
     while (ITER_ISOK(next = DeeObject_IterNext(temp))) {
      Dee_XDecref(result);
      result = next;
+     if (DeeThread_CheckInterrupt()) {
+      Dee_Decref(result);
+      goto err;
+     }
     }
     Dee_Decref(temp);
     /* */if unlikely(!next) Dee_XClear(result);
@@ -373,6 +387,10 @@ DeeSeq_Reduce(DeeObject *__restrict self,
     return NULL;
    }
    result = merge;
+  }
+  if (DeeThread_CheckInterrupt()) {
+   Dee_Decref(result);
+   return NULL;
   }
  }
  Dee_Decref(iterator);
@@ -421,6 +439,7 @@ DeeSeq_Sum(DeeObject *__restrict self) {
    error = DeeObject_Print(elem,(dformatprinter)&unicode_printer_print,&p);
    Dee_Decref(elem);
    if unlikely(error < 0) goto err_string;
+   if (DeeThread_CheckInterrupt()) goto err_string;
   }
   if unlikely(!elem) goto err_string;
   Dee_Decref(iterator);
@@ -437,11 +456,15 @@ err_string:
   /* Check for errors. */
   if unlikely(!merge) goto err_iter;
   result = merge;
+  if (DeeThread_CheckInterrupt())
+      goto err_iter_r;
  }
  Dee_Decref(iterator);
  if unlikely(!elem)
     Dee_Clear(result);
  return result;
+err_iter_r:
+ Dee_Decref(result);
 err_iter:
  Dee_Decref(iterator);
  return NULL;
@@ -450,7 +473,7 @@ INTERN int DCALL
 DeeSeq_Any(DeeObject *__restrict self) {
  DREF DeeObject *iterator,*elem;
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
-    return -1;
+    goto err;
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
   int temp = DeeObject_Bool(elem);
   Dee_Decref(elem);
@@ -458,15 +481,23 @@ DeeSeq_Any(DeeObject *__restrict self) {
    Dee_Decref(iterator);
    return temp; /* error or true */
   }
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  Dee_Decref(iterator);
- return unlikely(!elem) ? -1 : 0;
+ if likely(elem)
+    return 0;
+err:
+ return -1;
+err_iter:
+ Dee_Decref(iterator);
+ goto err;
 }
 INTERN int DCALL
 DeeSeq_All(DeeObject *__restrict self) {
  DREF DeeObject *iterator,*elem;
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
-    return -1;
+    goto err;
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
   int temp = DeeObject_Bool(elem);
   Dee_Decref(elem);
@@ -474,15 +505,23 @@ DeeSeq_All(DeeObject *__restrict self) {
    Dee_Decref(iterator);
    return temp; /* error or false */
   }
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  Dee_Decref(iterator);
- return unlikely(!elem) ? -1 : 1;
+ if likely(elem)
+    return 1;
+err:
+ return -1;
+err_iter:
+ Dee_Decref(iterator);
+ goto err;
 }
 INTERN int DCALL
 DeeSeq_Parity(DeeObject *__restrict self) {
  DREF DeeObject *iterator,*elem; int result = 0;
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
-    return -1;
+    goto err;
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
   int temp = DeeObject_Bool(elem);
   Dee_Decref(elem);
@@ -490,11 +529,14 @@ DeeSeq_Parity(DeeObject *__restrict self) {
    if unlikely(temp < 0) goto err_iter;
    result ^= 1; /* Invert parity. */
   }
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  Dee_Decref(iterator);
  return unlikely(!elem) ? -1 : result;
 err_iter:
  Dee_Decref(iterator);
+err:
  return -1;
 }
 INTERN DREF DeeObject *DCALL
@@ -502,14 +544,15 @@ DeeSeq_Min(DeeObject *__restrict self, DeeObject *pred_lo) {
  DREF DeeObject *elem,*iterator,*result = NULL;
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
     goto done;
- while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  if (!result) result = elem;
+ while ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
+  if (!result)
+   result = elem;
   else {
    int temp;
    if (pred_lo) {
     DREF DeeObject *pred_result;
     pred_result = DeeObject_CallPack(pred_lo,2,result,elem);
-    if unlikely(!pred_result) goto err_elem_iter;
+    if unlikely(!pred_result) goto err_r_iter_elem;
     temp = DeeObject_Bool(pred_result);
     Dee_Decref(pred_result);
    } else {
@@ -517,7 +560,7 @@ DeeSeq_Min(DeeObject *__restrict self, DeeObject *pred_lo) {
    }
    if (temp <= 0) {
     Dee_Decref(result);
-    if unlikely(temp < 0) goto err_elem_iter;
+    if unlikely(temp < 0) goto err_r_iter_elem;
     /* Continue working with `elem' after
      * `result < elem' evaluated to `false' */
     result = elem;
@@ -525,16 +568,23 @@ DeeSeq_Min(DeeObject *__restrict self, DeeObject *pred_lo) {
     Dee_Decref(elem);
    }
   }
+  if (DeeThread_CheckInterrupt())
+      goto err_r_iter;
  }
+ if unlikely(!elem)
+    goto err_r_iter;
  Dee_Decref(iterator);
- if unlikely(!elem) { Dee_XDecref(result); return NULL; }
  /* Return `none' when the sequence was empty. */
- if (!result) { result = Dee_None; Dee_Incref(Dee_None); }
+ if (!result) {
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+ }
 done:
  return result;
-err_elem_iter:
- Dee_Decref(result);
+err_r_iter_elem:
  Dee_Decref(elem);
+err_r_iter:
+ Dee_XDecref(result);
  Dee_Decref(iterator);
  return NULL;
 }
@@ -544,14 +594,15 @@ DeeSeq_Max(DeeObject *__restrict self, DeeObject *pred_lo) {
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
     goto done;
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  if (!result) result = elem;
+  if (!result)
+   result = elem;
   else {
    int temp;
    if (pred_lo) {
     DREF DeeObject *pred_result;
     pred_result = DeeObject_CallPack(pred_lo,2,result,elem);
     if unlikely(!pred_result)
-       goto err_elem_iter;
+       goto err_r_iter_elem;
     temp = DeeObject_Bool(pred_result);
     Dee_Decref(pred_result);
    } else {
@@ -560,7 +611,7 @@ DeeSeq_Max(DeeObject *__restrict self, DeeObject *pred_lo) {
    if (temp != 0) {
     Dee_Decref(result);
     if unlikely(temp < 0)
-       goto err_elem_iter;
+       goto err_r_iter_elem;
     /* Continue working with `elem' after
      * `result < elem' evaluated to `true' */
     result = elem;
@@ -568,16 +619,23 @@ DeeSeq_Max(DeeObject *__restrict self, DeeObject *pred_lo) {
     Dee_Decref(elem);
    }
   }
+  if (DeeThread_CheckInterrupt())
+      goto err_r_iter;
  }
+ if unlikely(!elem)
+    goto err_r_iter;
  Dee_Decref(iterator);
- if unlikely(!elem) { Dee_XDecref(result); return NULL; }
  /* Return `none' when the sequence was empty. */
- if (!result) { result = Dee_None; Dee_Incref(Dee_None); }
+ if (!result) {
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+ }
 done:
  return result;
-err_elem_iter:
- Dee_Decref(result);
+err_r_iter_elem:
  Dee_Decref(elem);
+err_r_iter:
+ Dee_XDecref(result);
  Dee_Decref(iterator);
  return NULL;
 }
@@ -608,11 +666,15 @@ DeeSeq_Count(DeeObject *__restrict self,
    ++result; /* Found one! */
   }
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  Dee_Decref(iterator);
  if unlikely(!elem) return -1;
  return result;
-err_elem: Dee_Decref(elem);
+err_elem:
+ Dee_Decref(elem);
+err_iter:
  Dee_Decref(iterator);
  return -1;
 }
@@ -643,11 +705,15 @@ DeeSeq_Locate(DeeObject *__restrict self,
    return elem;
   }
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  Dee_Decref(iterator);
  if (elem) err_item_not_found(self,search_item);
  return NULL;
-err_elem: Dee_Decref(elem);
+err_elem:
+ Dee_Decref(elem);
+err_iter:
  Dee_Decref(iterator);
  return NULL;
 }
@@ -679,12 +745,16 @@ DeeSeq_RLocate(DeeObject *__restrict self,
    result = elem;
   }
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  Dee_Decref(iterator);
  /* */if unlikely(!elem) Dee_XClear(result);
  else if (!result) err_item_not_found(self,search_item);
  return result;
-err_elem: Dee_Decref(elem);
+err_elem:
+ Dee_Decref(elem);
+err_iter:
  Dee_Decref(iterator);
  Dee_XDecref(result);
  return NULL;
@@ -863,9 +933,12 @@ check:
     while (ITER_ISOK(next = DeeObject_IterNext(temp))) {
      Dee_XDecref(result);
      result = next;
+     if (DeeThread_CheckInterrupt())
+         goto err_r;
     }
     Dee_Decref(temp);
     if unlikely(!next) {
+err_r:
      Dee_XDecref(result);
      goto err;
     }
@@ -903,6 +976,8 @@ iterator_find(DeeObject *__restrict iterator,
   }
   Dee_Decref(elem);
   --start;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
   if (pred_eq) {
@@ -926,9 +1001,12 @@ iterator_find(DeeObject *__restrict iterator,
    goto err;
   }
   if (!--search_size)
-       return -1; /* End of search size */
+      goto not_found; /* End of search size */
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  if unlikely(!elem) goto err;
+not_found:
  return -1; /* Not found. */
 err:
  return -2;
@@ -951,6 +1029,8 @@ iterator_rfind(DeeObject *__restrict iterator,
   }
   Dee_Decref(elem);
   --start;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
   if (pred_eq) {
@@ -975,6 +1055,8 @@ iterator_rfind(DeeObject *__restrict iterator,
   }
   if (!--search_size)
        return result; /* End of search size */
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  if unlikely(!elem) goto err;
  return result;
@@ -1409,7 +1491,7 @@ DeeIter_Lo(DeeObject *__restrict lhs,
  ASSERT_OBJECT(rhs);
  do {
   if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-   if unlikely(!lhs_elem) return -1;
+   if unlikely(!lhs_elem) goto err;
    if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
         return unlikely(!rhs_elem) ? -1 : 0; /* size:equal */
    Dee_Decref(rhs_elem);
@@ -1430,8 +1512,12 @@ DeeIter_Lo(DeeObject *__restrict lhs,
   }
   Dee_Decref(rhs_elem);
   Dee_Decref(lhs_elem);
+  if (DeeThread_CheckInterrupt())
+      goto err;
  } while (result == 0);
  return result;
+err:
+ return -1;
 }
 INTERN int DCALL
 DeeIter_Le(DeeObject *__restrict lhs,
@@ -1459,8 +1545,12 @@ DeeIter_Le(DeeObject *__restrict lhs,
   }
   Dee_Decref(rhs_elem);
   Dee_Decref(lhs_elem);
+  if (DeeThread_CheckInterrupt())
+      goto err;
  } while (result == 0);
  return result;
+err:
+ return -1;
 }
 INTERN int DCALL
 DeeIter_Eq(DeeObject *__restrict lhs,
@@ -1472,7 +1562,7 @@ DeeIter_Eq(DeeObject *__restrict lhs,
  ASSERT_OBJECT(rhs);
  do {
   if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-   if unlikely(!lhs_elem) return -1;
+   if unlikely(!lhs_elem) goto err;
    if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
         return unlikely(!rhs_elem) ? -1 : 1; /* size:equal */
    Dee_Decref(rhs_elem);
@@ -1485,8 +1575,12 @@ DeeIter_Eq(DeeObject *__restrict lhs,
   result = DeeObject_CompareEq(lhs_elem,rhs_elem);
   Dee_Decref(rhs_elem);
   Dee_Decref(lhs_elem);
+  if (DeeThread_CheckInterrupt())
+      goto err;
  } while (result > 0);
  return result;
+err:
+ return -1;
 }
 
 INTERN int DCALL
@@ -1764,6 +1858,8 @@ DeeSeq_EqIF(DeeObject *__restrict lhs,
   Dee_Decref(rhs_elem);
   Dee_Decref(lhs_elem);
   if (temp <= 0) goto err;
+  if (DeeThread_CheckInterrupt())
+      goto err_m1;
  }
  lhs_elem = DeeObject_IterNext(lhs);
  if (lhs_elem != ITER_DONE) {
@@ -1772,6 +1868,8 @@ DeeSeq_EqIF(DeeObject *__restrict lhs,
   return 0;
  }
  return 1;
+err_m1:
+ temp = -1;
 err:
  return temp;
 }
@@ -1811,11 +1909,11 @@ DeeSeq_LoIF(DeeObject *__restrict lhs,
  ASSERT_OBJECT(lhs);
  for (i = 0; i < rhsc; ++i) {
   if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-   if unlikely(!lhs_elem) return -1;
+   if unlikely(!lhs_elem) goto err;
    return 1; /* size:lower */
   }
   rhs_elem = DeeFastSeq_GetItem(rhs,i);
-  if unlikely(!rhs_elem) { Dee_Decref(lhs_elem); return -1; }
+  if unlikely(!rhs_elem) { Dee_Decref(lhs_elem); goto err; }
   result = DeeObject_CompareLo(lhs_elem,rhs_elem);
   if (result == 0) { /* *lhs < *rhs : false */
    result = DeeObject_CompareLo(rhs_elem,lhs_elem);
@@ -1829,8 +1927,12 @@ DeeSeq_LoIF(DeeObject *__restrict lhs,
   Dee_Decref(lhs_elem);
   if (result != 0)
       return result;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  return 0; /* size:greater */
+err:
+ return -1;
 }
 INTERN int DCALL
 DeeSeq_LeIV(DeeObject *__restrict lhs,
@@ -1841,7 +1943,7 @@ DeeSeq_LeIV(DeeObject *__restrict lhs,
  ASSERT_OBJECT(lhs);
  for (i = 0; i < rhsc; ++i) {
   if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-   if unlikely(!lhs_elem) return -1;
+   if unlikely(!lhs_elem) goto err;
    return 1; /* size:lower */
   }
   result = DeeObject_CompareLo(lhs_elem,rhsv[i]);
@@ -1855,13 +1957,17 @@ DeeSeq_LeIV(DeeObject *__restrict lhs,
   Dee_Decref(lhs_elem);
   if (result != 0)
       return result;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-  if unlikely(!lhs_elem) return -1;
+  if unlikely(!lhs_elem) goto err;
   return 1; /* size:equal */
  }
  Dee_Decref(lhs_elem);
  return 0; /* size:greater */
+err:
+ return -1;
 }
 INTERN int DCALL
 DeeSeq_LeIF(DeeObject *__restrict lhs,
@@ -1872,11 +1978,11 @@ DeeSeq_LeIF(DeeObject *__restrict lhs,
  ASSERT_OBJECT(lhs);
  for (i = 0; i < rhsc; ++i) {
   if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-   if unlikely(!lhs_elem) return -1;
+   if unlikely(!lhs_elem) goto err;
    return 1; /* size:lower */
   }
   rhs_elem = DeeFastSeq_GetItem(rhs,i);
-  if unlikely(!rhs_elem) { Dee_Decref(lhs_elem); return -1; }
+  if unlikely(!rhs_elem) { Dee_Decref(lhs_elem); goto err; }
   result = DeeObject_CompareLo(lhs_elem,rhs_elem);
   if (result == 0) { /* *lhs < *rhs : false */
    result = DeeObject_CompareLo(rhs_elem,lhs_elem);
@@ -1890,13 +1996,17 @@ DeeSeq_LeIF(DeeObject *__restrict lhs,
   Dee_Decref(lhs_elem);
   if (result != 0)
       return result;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-  if unlikely(!lhs_elem) return -1;
+  if unlikely(!lhs_elem) goto err;
   return 1; /* size:equal */
  }
  Dee_Decref(lhs_elem);
  return 0; /* size:greater */
+err:
+ return -1;
 }
 
 

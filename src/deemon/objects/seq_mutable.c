@@ -25,6 +25,7 @@
 #include <deemon/int.h>
 #include <deemon/bool.h>
 #include <deemon/none.h>
+#include <deemon/thread.h>
 #include <deemon/class.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
@@ -838,6 +839,8 @@ nsi_insert_iterator(struct type_nsi *__restrict nsi,
    Dee_Decref(elem);
    if unlikely(error) goto err;
    if (index != (size_t)-1) ++index;
+   if (DeeThread_CheckInterrupt())
+       goto err;
   }
   if unlikely(!elem) goto err;
  } else if (nsi->nsi_seqlike.nsi_insertvec) {
@@ -846,6 +849,8 @@ nsi_insert_iterator(struct type_nsi *__restrict nsi,
    error = (*nsi->nsi_seqlike.nsi_insertvec)(self,index,1,&elem);
    Dee_Decref(elem);
    if unlikely(error) goto err;
+   if (DeeThread_CheckInterrupt())
+       goto err;
   }
   if unlikely(!elem) goto err;
  } else {
@@ -888,6 +893,8 @@ nsi_insert_sequence_as_single(struct type_nsi *__restrict nsi,
   Dee_Decref(elem);
   if unlikely(temp) goto err_iter;
   if (index != (size_t)-1) ++index;
+   if (DeeThread_CheckInterrupt())
+       goto err_iter;
  }
  if unlikely(elem) goto err_iter;
  Dee_Decref(iterator);
@@ -969,6 +976,8 @@ DeeSeq_SetRange(DeeObject *__restrict self,
       Dee_Decref(elem);
       if unlikely(result) goto err_valiter;
       ++start;
+      if (DeeThread_CheckInterrupt())
+          goto err_valiter;
      }
      /* Insert the remainder */
      result = nsi_insert_iterator(nsi,self,start,values_iterator);
@@ -1025,6 +1034,8 @@ erase_remainder:
      Dee_Decref(elem);
      if unlikely(result) goto err;
      ++start;
+     if (DeeThread_CheckInterrupt())
+         goto err;
     }
     ASSERT(start == end);
     /* Insert the remainder. */
@@ -1196,6 +1207,8 @@ DeeSeq_SetRangeN(DeeObject *__restrict self, size_t start,
       Dee_Decref(elem);
       if unlikely(result) goto err_valiter;
       ++start;
+      if (DeeThread_CheckInterrupt())
+          goto err_valiter;
      }
      /* Insert the remainder */
      result = nsi_insert_iterator(nsi,self,start,values_iterator);
@@ -1245,6 +1258,8 @@ erase_remainder:
      Dee_Decref(elem);
      if unlikely(result) goto err;
      ++start;
+     if (DeeThread_CheckInterrupt())
+         goto err;
     }
     ASSERT(start == mylen);
     /* Insert the remainder. */
@@ -1488,6 +1503,8 @@ do_insert_as_single:
      if unlikely(!callback_result)
         goto err_append_function_iterator;
      Dee_Decref(callback_result);
+     if (DeeThread_CheckInterrupt())
+         goto err_append_function_iterator;
     }
     if unlikely(!elem) goto err_append_function_iterator;
     Dee_Decref(iterator);
@@ -1758,6 +1775,8 @@ do_insert_as_single:
      if unlikely(!callback_result)
         goto err_append_function_iterator;
      Dee_Decref(callback_result);
+     if (DeeThread_CheckInterrupt())
+         goto err_append_function_iterator;
     }
     if unlikely(!elem) goto err_append_function_iterator;
     Dee_Decref(iterator);
@@ -1803,6 +1822,8 @@ err_append_function:
      if unlikely(!callback_result)
         goto err_insert_function_iterator;
      Dee_Decref(callback_result);
+     if (DeeThread_CheckInterrupt())
+         goto err_insert_function_iterator;
     }
     if unlikely(!elem) goto err_insert_function_iterator;
     Dee_Decref(iterator);
@@ -1937,6 +1958,8 @@ do_insert_as_single:
      if unlikely(!callback_result)
         goto err_append_function_iterator;
      Dee_Decref(callback_result);
+     if (DeeThread_CheckInterrupt())
+         goto err_append_function_iterator;
     }
     if unlikely(!elem) goto err_append_function_iterator;
     Dee_Decref(iterator);
@@ -1982,6 +2005,8 @@ err_append_function:
      if unlikely(!callback_result)
         goto err_insert_function_iterator;
      Dee_Decref(callback_result);
+     if (DeeThread_CheckInterrupt())
+         goto err_insert_function_iterator;
     }
     if unlikely(!elem) goto err_insert_function_iterator;
     Dee_Decref(iterator);

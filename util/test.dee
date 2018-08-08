@@ -26,6 +26,7 @@ function return_args(args...) -> args;
  * kind-of complicated, considering ambiguity. */
 assert (return_args)42 == (42,);
 assert (return_args)(42) == (42,);
+assert (return_args)(42,) == (42,);
 assert (return_args)((42)) == (42,);
 assert (return_args)((42,)) == ((42,),);
 assert (return_args)pack(42) == ((42,),);

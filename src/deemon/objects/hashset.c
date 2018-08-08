@@ -26,6 +26,7 @@
 #include <deemon/gc.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/thread.h>
 #include <deemon/format.h>
 #include <deemon/arg.h>
 #include <deemon/seq.h>
@@ -130,6 +131,8 @@ set_init_iterator(Set *__restrict self,
   if unlikely(DeeHashSet_Insert((DeeObject *)self,elem) < 0)
      goto err_elem;
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  if unlikely(!elem) goto err;
  return 0;

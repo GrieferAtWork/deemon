@@ -25,6 +25,7 @@
 #include <deemon/seq.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/int.h>
 #include <deemon/tuple.h>
 #include <deemon/arg.h>
@@ -458,6 +459,8 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
   /* Insert the key-value pair into the resulting dict. */
   if unlikely(insert(result,mask,&elem_count,key,value))
      goto err_r;
+  if (DeeThread_CheckInterrupt())
+      goto err_r;
  }
  if unlikely(!elem) goto err_r;
  /* Fill in control members and setup the resulting object. */

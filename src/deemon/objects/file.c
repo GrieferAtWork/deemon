@@ -25,6 +25,7 @@
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/super.h>
+#include <deemon/thread.h>
 #include <deemon/module.h>
 #include <deemon/bool.h>
 #include <deemon/none.h>
@@ -795,12 +796,15 @@ DeeFile_PrintAll(DeeObject *__restrict self,
   if unlikely(result) goto err_elem;
   Dee_Decref(elem);
   is_first = false;
+  if (DeeThread_CheckInterrupt())
+      goto err_ob;
  }
  Dee_Decref(ob);
  if unlikely(!elem) goto err_m1;
  return 0;
 err_elem:
  Dee_Decref(elem);
+err_ob:
  Dee_Decref(ob);
 err:
  return result;
@@ -830,10 +834,14 @@ DeeFile_PrintAllSp(DeeObject *__restrict self,
   result = DeeFile_PrintObjectSp(self,elem);
   Dee_Decref(elem);
   if unlikely(result) { Dee_Decref(ob); return result; }
+  if (DeeThread_CheckInterrupt())
+      goto err_ob;
  }
+ if unlikely(!elem) goto err_ob;
  Dee_Decref(ob);
- if unlikely(!elem) goto err;
  return 0;
+err_ob:
+ Dee_Decref(ob);
 err:
  return -1;
 }

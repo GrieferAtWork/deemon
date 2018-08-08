@@ -3761,10 +3761,15 @@ DeeObject_Foreach(DeeObject *__restrict self,
   Dee_Decref(elem);
   if unlikely(temp < 0) { result = temp; break; }
   result += temp; /* Propagate return values by summarizing them. */
+  if (DeeThread_CheckInterrupt())
+      goto err_self;
  }
+ if unlikely(!elem)
+    goto err_self;
  Dee_Decref(self);
- if unlikely(!elem) goto err;
  return result;
+err_self:
+ Dee_Decref(self);
 err:
  return -1;
 }

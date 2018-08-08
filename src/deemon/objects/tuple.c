@@ -25,6 +25,7 @@
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/int.h>
 #include <deemon/seq.h>
 #include <deemon/arg.h>
@@ -375,6 +376,8 @@ DeeTuple_FromIterator(DeeObject *__restrict self) {
    }
   }
   result->t_elem[used_size++] = elem; /* Inherit reference. */
+  if (DeeThread_CheckInterrupt())
+      goto err_cleanup;
  }
  if unlikely(!elem) {
 err_cleanup:
@@ -522,12 +525,14 @@ PUBLIC int (DCALL DeeTuple_AppendIterator)(DREF DeeObject **__restrict pself,
    if unlikely(DeeTuple_ResizeUninitialized((DREF DeeTupleObject **)pself,
                                              used_size+incfactor)) {
     Dee_Decref(elem);
-    return -1;
+    goto err;
    }
    incfactor *= 2;
   }
   DeeTuple_SET(*pself,used_size,elem); /* Inherit reference. */
   ++used_size;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  if (used_size != DeeTuple_SIZE(*pself)) {
   if unlikely(DeeTuple_ResizeUninitialized((DREF DeeTupleObject **)pself,used_size)) {
@@ -536,10 +541,13 @@ PUBLIC int (DCALL DeeTuple_AppendIterator)(DREF DeeObject **__restrict pself,
    iter = DeeTuple_ELEM(*pself)+used_size;
    end  = DeeTuple_ELEM(*pself)+DeeTuple_SIZE(*pself);
    for (; iter != end; ++iter) Dee_INCREF(*iter = Dee_None);
-   return -1;
+   goto err;
   }
  }
- return elem ? 0 : -1;
+ if likely(elem)
+    return 0;
+err:
+ return -1;
 }
 PUBLIC int (DCALL DeeTuple_Append)(DREF DeeObject **__restrict pself,
                                    DeeObject *__restrict item) {

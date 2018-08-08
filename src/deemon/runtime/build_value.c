@@ -25,6 +25,7 @@
 #include <deemon/object.h>
 #include <deemon/none.h>
 #include <deemon/error.h>
+#include <deemon/thread.h>
 #include <deemon/string.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>
@@ -460,9 +461,17 @@ again:
   break;
 invalid_argc:
   /* Count the remaining arguments for the error message. */
-  do Dee_Decref(elem),++argc;
-  while (ITER_ISOK(elem = DeeObject_IterNext(iterator)));
-  if unlikely(!elem) return -1;
+  do {
+   Dee_Decref(elem);
+   ++argc;
+   if (DeeThread_CheckInterrupt())
+       goto err_iter;
+  } while (ITER_ISOK(elem = DeeObject_IterNext(iterator)));
+  if unlikely(!elem) {
+err_iter:
+   Dee_Decref(iterator);
+   return -1;
+  }
 invalid_argc2:
   Dee_Decref(iterator);
   {

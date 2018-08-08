@@ -25,6 +25,7 @@
 #include <deemon/seq.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/int.h>
 #include <deemon/arg.h>
 #include <deemon/set.h>
@@ -369,6 +370,8 @@ DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
   /* Insert the key-value pair into the resulting set. */
   if unlikely(insert(result,mask,elem))
      goto err_r;
+  if (DeeThread_CheckInterrupt())
+      goto err_r;
   ++elem_count;
  }
  if unlikely(!elem) goto err_r;

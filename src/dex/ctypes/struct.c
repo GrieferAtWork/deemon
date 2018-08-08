@@ -25,6 +25,7 @@
 #include <deemon/bool.h>
 #include <deemon/int.h>
 #include <deemon/gc.h>
+#include <deemon/thread.h>
 #include <deemon/arg.h>
 #include <deemon/error.h>
 #include <deemon/string.h>
@@ -123,6 +124,8 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
    break;
   }
   ++field_count;
+  if (DeeThread_CheckInterrupt())
+      goto err_r;
  }
  if unlikely(!elem) goto err_r;
  /* Fill in size & alignment info. */
@@ -625,11 +628,16 @@ struct_assign(DeeStructTypeObject *__restrict tp_self,
   int temp;
   temp = struct_setpair(tp_self,self,elem);
   Dee_Decref(elem);
-  if unlikely(temp) { Dee_Decref(value); goto err; }
+  if unlikely(temp) goto err_value;
+  if (DeeThread_CheckInterrupt())
+      goto err_value;
  }
+ if unlikely(!elem)
+    goto err_value;
  Dee_Decref(value);
- if unlikely(!elem) goto err;
  return 0;
+err_value:
+ Dee_Decref(value);
 err:
  return -1;
 }

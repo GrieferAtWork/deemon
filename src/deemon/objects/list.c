@@ -29,6 +29,7 @@
 #include <deemon/format.h>
 #include <deemon/string.h>
 #include <deemon/seq.h>
+#include <deemon/thread.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/arg.h>
@@ -166,6 +167,8 @@ do_realloc:
   }
   /* Store all elements in the vector. */
   vector[size++] = elem;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  if unlikely(!elem) goto err;
  /* Save the allocated vector in the list.
@@ -654,8 +657,13 @@ PUBLIC int (DCALL DeeList_AppendIterator)(DeeObject *__restrict self,
   error = DeeList_Append(self,elem);
   Dee_Decref(elem);
   if (error) return error;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
- return elem ? 0 : -1;
+ if likely(elem)
+    return 0;
+err:
+ return -1;
 }
 
 PUBLIC int (DCALL DeeList_AppendSequence)(DeeObject *__restrict self,
@@ -761,8 +769,13 @@ PUBLIC int (DCALL DeeList_InsertIterator)(DeeObject *__restrict self, size_t ind
   Dee_Decref(elem);
   if unlikely(error) return error;
   ++index;
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
- return elem ? 0 : -1;
+ if likely(elem)
+    return 0;
+err:
+ return -1;
 }
 PUBLIC int (DCALL DeeList_InsertSequence)(DeeObject *__restrict self, size_t index,
                                           DeeObject *__restrict sequence) {

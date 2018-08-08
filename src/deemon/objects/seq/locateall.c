@@ -25,6 +25,7 @@
 #include <deemon/none.h>
 #include <deemon/error.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/arg.h>
 #include <hybrid/minmax.h>
 
@@ -126,11 +127,14 @@ locatoriter_next(LocatorIterator *__restrict self) {
    break; /* Found it */
   }
   Dee_Decref(result);
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  /* Return the located element. */
  return result;
 err_r:
  Dee_Decref(result);
+err:
  return NULL;
 }
 

@@ -25,6 +25,7 @@
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
+#include <deemon/thread.h>
 #include <deemon/format.h>
 #include <deemon/bytes.h>
 #include <deemon/object.h>
@@ -1272,6 +1273,8 @@ string_class_fromseq(DeeObject *__restrict UNUSED(self),
    if unlikely(temp) goto err_iter;
    if unlikely(unicode_printer_putc(&printer,chr))
       goto err_iter;
+   if (DeeThread_CheckInterrupt())
+       goto err_iter;
   }
   if unlikely(!elem) goto err_iter;
   Dee_Decref(iter);

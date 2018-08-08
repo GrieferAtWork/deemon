@@ -25,6 +25,7 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/arg.h>
 #include <deemon/int.h>
 
@@ -231,6 +232,8 @@ subrange_iter(SubRange *__restrict self) {
    break;
   }
   Dee_Decref(discard);
+  if (DeeThread_CheckInterrupt())
+      goto err_iterator2;
  }
  DeeObject_Init(result,&DeeSubRangeIterator_Type);
  return (DREF DeeObject *)result;
@@ -471,6 +474,8 @@ subrangen_iter(SubRangeN *__restrict self) {
    break; /* End of sequence. */
   }
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
 done:
  return result;

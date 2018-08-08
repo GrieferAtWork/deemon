@@ -57,7 +57,8 @@ transiter_bool(TransformationIterator *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 transiter_next(TransformationIterator *__restrict self) {
- DREF DeeObject *result = DeeObject_IterNext(self->ti_iter);
+ DREF DeeObject *result;
+ result = DeeObject_IterNext(self->ti_iter);
  if (ITER_ISOK(result)) {
   DREF DeeObject *new_result;
   /* Invoke the transformation callback. */

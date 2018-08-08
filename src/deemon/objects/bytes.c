@@ -25,6 +25,7 @@
 #include <deemon/string.h>
 #include <deemon/bool.h>
 #include <deemon/none.h>
+#include <deemon/thread.h>
 #include <deemon/arg.h>
 #include <deemon/tuple.h>
 #include <deemon/seq.h>
@@ -371,10 +372,12 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
    result  = new_result;
    bufsize = new_bufsize;
   }
-  Dee_Decref(elem);
   if unlikely(DeeObject_AsUInt8(elem,&result->b_data[i]))
      goto err_r_elem;
+  Dee_Decref(elem);
   ++i;
+  if (DeeThread_CheckInterrupt())
+      goto err_r_iter;
  }
  if unlikely(!elem)
     goto err_r_iter;

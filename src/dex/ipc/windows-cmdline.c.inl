@@ -25,6 +25,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/thread.h>
 #include <deemon/list.h>
 
 #include <string.h>
@@ -112,10 +113,15 @@ cmdline_add_args(struct ascii_printer *__restrict printer,
   else result = cmdline_add_arg(printer,(DeeStringObject *)elem);
   Dee_Decref(elem);
   if unlikely(result) break;
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
+ if unlikely(!elem)
+    goto err_iter;
  Dee_Decref(iter);
- if unlikely(!elem) goto err;
  return result;
+err_iter:
+ Dee_Decref(iter);
 err:
  return -1;
 }

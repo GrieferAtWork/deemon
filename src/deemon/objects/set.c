@@ -25,6 +25,7 @@
 #include <deemon/set.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/int.h>
 #include <deemon/format.h>
 #include <deemon/string.h>
@@ -199,6 +200,8 @@ set_issubset_impl(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
   if unlikely(temp < 0) goto err_iter;
   if unlikely(!temp) { result = -1; break; }
   ++result; /* Count the number of found items. */
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  Dee_Decref(lhs_iter);
  if unlikely(!lhs_item) result = -1;
@@ -287,6 +290,8 @@ DeeSet_IsDisjoint(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
   Dee_Decref(item);
   if unlikely(temp < 0) goto err_iter;
   if (temp) { result = 0; break; } /* Rhs does contain this one... */
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  Dee_Decref(iter);
  if unlikely(!item)
@@ -385,6 +390,8 @@ set_inplace_sub(DeeObject **__restrict pself,
    Dee_Decref(remove_args[0]);
    if unlikely(!callback_result) goto err_iter;
    Dee_Decref(callback_result);
+   if (DeeThread_CheckInterrupt())
+       goto err_iter;
   }
   if unlikely(!remove_args[0]) goto err_iter;
   Dee_Decref(items);

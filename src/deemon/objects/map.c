@@ -25,6 +25,7 @@
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/format.h>
 #include <deemon/string.h>
 #include <deemon/error.h>
@@ -710,6 +711,8 @@ map_getitem(DeeObject *__restrict self, DeeObject *__restrict key) {
    }
   }
   Dee_Decref(item_value);
+  if (DeeThread_CheckInterrupt())
+      goto err_iter;
  }
  if (item == ITER_DONE)
      err_unknown_key(self,key);
@@ -782,6 +785,8 @@ map_repr(DeeObject *__restrict self) {
   Dee_Decref(elem_key);
   if (print_error < 0) goto err1;
   is_first = false;
+  if (DeeThread_CheckInterrupt())
+      goto err1;
  }
  if unlikely(!elem) goto err1;
  if unlikely((is_first ? unicode_printer_putascii(&p,'}')
@@ -981,6 +986,8 @@ DeeMap_GetLast(DeeObject *__restrict self) {
   if (!ITER_ISOK(next)) break;
   Dee_Decref(result);
   result = next;
+  if (DeeThread_CheckInterrupt())
+      goto err_result;
  }
  Dee_Decref(iter);
  if unlikely(!next)
@@ -990,6 +997,9 @@ err_empty:
  err_empty_sequence(self);
 err:
  return NULL;
+err_result:
+ Dee_Decref(result);
+ goto err;
 }
 
 PRIVATE int DCALL

@@ -25,6 +25,7 @@
 #include <deemon/set.h>
 #include <deemon/error.h>
 #include <deemon/bool.h>
+#include <deemon/thread.h>
 #include <deemon/arg.h>
 
 #include "set.h"
@@ -177,6 +178,10 @@ read_from_iter:
  Dee_Decref(iter); /* Reference inherited from `sui_iter' */
  iter = result;
  is_second = true;
+ if (DeeThread_CheckInterrupt()) {
+  Dee_Decref(iter);
+  return NULL;
+ }
  goto read_from_iter;
 done:
  return result;
@@ -565,6 +570,10 @@ read_from_iter:
  Dee_Decref(iter); /* Reference inherited from `ssd_iter' */
  iter = result;
  is_second = true;
+ if (DeeThread_CheckInterrupt()) {
+  Dee_Decref(iter);
+  return NULL;
+ }
  goto read_from_iter;
 done:
  return result;
@@ -773,7 +782,10 @@ again:
  temp = DeeObject_Contains(self->sii_other,result);
  if (temp <= 0) {
   Dee_Decref(result);
-  if (!temp) goto again; /* If the object isn't contained within, read the next one. */
+  if (!temp) {
+   if (!DeeThread_CheckInterrupt())
+        goto again; /* If the object isn't contained within, read the next one. */
+  }
   result = NULL; /* Error... */
  }
 done:
@@ -1008,7 +1020,10 @@ again:
  temp = DeeObject_Contains(self->sdi_other,result);
  if (temp != 0) {
   Dee_Decref(result);
-  if (temp) goto again; /* If the object is contained within, read the next one. */
+  if (temp) {
+   if (!DeeThread_CheckInterrupt())
+        goto again; /* If the object is contained within, read the next one. */
+  }
   result = NULL; /* Error... */
  }
 done:

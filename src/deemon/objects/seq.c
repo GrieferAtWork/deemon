@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/none.h>
 #include <deemon/arg.h>
+#include <deemon/thread.h>
 #include <deemon/error.h>
 #include <deemon/string.h>
 #include <deemon/set.h>
@@ -829,6 +830,7 @@ seq_repr(DeeObject *__restrict self) {
   if (unicode_printer_printf(&p,"%s%r",is_first ? "" : ", ",elem) < 0) goto err2;
   is_first = false;
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt()) goto err1;
  }
  if unlikely(!elem) goto err1;
  if unlikely((is_first ? unicode_printer_putascii(&p,'}')
@@ -3409,6 +3411,7 @@ iterator_repr(DeeObject *__restrict self) {
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
   if unlikely(unicode_printer_printf(&p,", %r",elem) < 0) goto err2;
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt()) goto err1;
  }
  if unlikely(!elem) goto err1;
  if unlikely(UNICODE_PRINTER_PRINT(&p," }") < 0) goto err1;
@@ -3439,7 +3442,7 @@ iterator_inplace_add(DeeObject **__restrict pself,
  size_t count;
  /* Increment the iterator by `(int)count' */
  if (DeeObject_AsSize(countob,&count))
-     return -1;
+     goto err;
  while (count--) {
   /* Simply advance the iterator and discard its value. */
   DeeObject *elem = DeeObject_IterNext(*pself);
@@ -3447,11 +3450,15 @@ iterator_inplace_add(DeeObject **__restrict pself,
    /* ITER_DONE was reached. - No point in advancing any further. */
    if (elem == ITER_DONE)
        break;
-   return -1;
+   goto err;
   }
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  return 0;
+err:
+ return -1;
 }
 PRIVATE DREF DeeObject *DCALL
 iterator_add(DeeObject *__restrict self,
@@ -3500,15 +3507,21 @@ PRIVATE dssize_t DCALL
 get_remaining_iterations(DeeObject *__restrict self) {
  dssize_t result; DREF DeeObject *elem;
  if unlikely((self = DeeObject_Copy(self)) == NULL)
-    return -1;
+    goto err;
  result = 0;
  while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
   ++result;
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt())
+      goto err_self;
  }
+ if unlikely(!elem) goto err_self;
  Dee_Decref(self);
- if unlikely(!elem) return -1;
  return result;
+err_self:
+ Dee_Decref(self);
+err:
+ return -1;
 }
 
 

@@ -25,6 +25,7 @@
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
+#include <deemon/thread.h>
 #include <deemon/int.h>
 #include <deemon/gc.h>
 #include <deemon/seq.h>
@@ -159,6 +160,8 @@ dict_insert_iterator(Dict *__restrict self,
   Dee_Decref(key);
   Dee_Decref(it);
   Dee_Decref(elem);
+  if (DeeThread_CheckInterrupt())
+      goto err;
  }
  if unlikely(!elem) goto err;
  return 0;

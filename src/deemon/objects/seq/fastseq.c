@@ -26,6 +26,7 @@
 #include <deemon/list.h>
 #include <deemon/none.h>
 #include <deemon/int.h>
+#include <deemon/thread.h>
 #include <deemon/bytes.h>
 #include <deemon/string.h>
 
@@ -192,6 +193,8 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
    alloc_size = new_alloc_size;
   }
   result[i++] = elem; /* Inherit reference. */
+  if (DeeThread_CheckInterrupt())
+      goto err_r_iter;
  }
  if unlikely(!elem) goto err_r_iter;
  Dee_Decref(iter);
