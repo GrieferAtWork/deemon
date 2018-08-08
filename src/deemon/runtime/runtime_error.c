@@ -274,8 +274,14 @@ err_keywords_not_found(char const *__restrict keyword) {
 INTERN ATTR_COLD int DCALL
 err_invalid_segment_size(size_t segsz) {
  return DeeError_Throwf(&DeeError_ValueError,
-                        "Invalid segment or distribution size: %Iu",
+                        "Invalid segment size: %Iu",
                         segsz);
+}
+INTERN ATTR_COLD int DCALL
+err_invalid_distribution_count(size_t distcnt) {
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "Invalid distribution count: %Iu",
+                        distcnt);
 }
 INTERN ATTR_COLD int DCALL
 err_invalid_argc(char const *function_name, size_t argc_cur,

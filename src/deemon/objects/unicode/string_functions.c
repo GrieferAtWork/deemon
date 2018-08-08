@@ -3019,19 +3019,36 @@ string_back(String *__restrict self,
 }
 
 INTDEF DREF DeeObject *DCALL
-DeeString_Segments(DeeObject *__restrict self, size_t segment_size);
+DeeString_Segments(DeeObject *__restrict self, size_t substring_length);
 
 PRIVATE DREF DeeObject *DCALL
 string_segments(String *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
- size_t segment_size;
- if (DeeArg_Unpack(argc,argv,"Iu:segments",&segment_size))
+ size_t substring_length;
+ if (DeeArg_Unpack(argc,argv,"Iu:segments",&substring_length))
      return NULL;
- if unlikely(!segment_size) {
-  err_invalid_segment_size(segment_size);
+ if unlikely(!substring_length) {
+  err_invalid_segment_size(substring_length);
   return NULL;
  }
- return DeeString_Segments((DeeObject *)self,segment_size);
+ return DeeString_Segments((DeeObject *)self,substring_length);
+}
+
+PRIVATE DREF DeeObject *DCALL
+string_distribute(String *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ size_t substring_count;
+ size_t substring_length;
+ if (DeeArg_Unpack(argc,argv,"Iu:distribute",&substring_count))
+     return NULL;
+ if unlikely(!substring_count) {
+  err_invalid_distribution_count(substring_count);
+  return NULL;
+ }
+ substring_length  = DeeString_WLEN(self);
+ substring_length += substring_count - 1;
+ substring_length /= substring_count;
+ return DeeString_Segments((DeeObject *)self,substring_length);
 }
 
 PRIVATE ATTR_COLD int DCALL err_empty_filler(void) {
@@ -6906,16 +6923,12 @@ match_not_found:
  if unlikely(!result->t_elem[0]) goto err_r_0;
  result->t_elem[1] = Dee_EmptyString;
  result->t_elem[2] = Dee_EmptyString;
-#ifdef CONFIG_NO_THREADS
- Dee_EmptyString->ob_refcnt += 2;
-#else
- ATOMIC_FETCHADD(Dee_EmptyString->ob_refcnt,2);
-#endif
+ Dee_Incref_n(Dee_EmptyString,2);
  goto done;
 err_r_2:
- Dee_DecrefDokill(result->t_elem[1]);
+ Dee_Decref_likely(result->t_elem[1]);
 err_r_1:
- Dee_DecrefDokill(result->t_elem[0]);
+ Dee_Decref_likely(result->t_elem[0]);
 err_r_0:
  DeeTuple_FreeUninitialized((DeeObject *)result);
 err:
@@ -6968,7 +6981,7 @@ string_rpartitionmatch(String *__restrict self,
                                (size_t)((match_end.cp8 + clos_len) -
                                          match_start.cp8)),
              DeeString_New1Byte(match_end.cp8 + clos_len,
-                               (size_t)(scan_str.cp8 + end)-
+                               (size_t)(scan_str.cp8 + end) -
                                (size_t)(match_end.cp8 + clos_len)));
   break;
  CASE_WIDTH_2BYTE:
@@ -6999,7 +7012,7 @@ string_rpartitionmatch(String *__restrict self,
                                (size_t)((match_end.cp16 + clos_len) -
                                          match_start.cp16)),
              DeeString_New2Byte(match_end.cp16 + clos_len,
-                               (size_t)(scan_str.cp16 + end)-
+                               (size_t)(scan_str.cp16 + end) -
                                (size_t)(match_end.cp16 + clos_len)));
   break;
  CASE_WIDTH_4BYTE:
@@ -7030,7 +7043,7 @@ string_rpartitionmatch(String *__restrict self,
                                (size_t)((match_end.cp32 + clos_len) -
                                          match_start.cp32)),
              DeeString_New4Byte(match_end.cp32 + clos_len,
-                               (size_t)(scan_str.cp32 + end)-
+                               (size_t)(scan_str.cp32 + end) -
                                (size_t)(match_end.cp32 + clos_len)));
   break;
  }
@@ -7042,16 +7055,12 @@ match_not_found:
  if unlikely(!result->t_elem[0]) goto err_r_0;
  result->t_elem[1] = Dee_EmptyString;
  result->t_elem[2] = Dee_EmptyString;
-#ifdef CONFIG_NO_THREADS
- Dee_EmptyString->ob_refcnt += 2;
-#else
- ATOMIC_FETCHADD(Dee_EmptyString->ob_refcnt,2);
-#endif
+ Dee_Incref_n(Dee_EmptyString,2);
  goto done;
 err_r_2:
- Dee_DecrefDokill(result->t_elem[1]);
+ Dee_Decref_likely(result->t_elem[1]);
 err_r_1:
- Dee_DecrefDokill(result->t_elem[0]);
+ Dee_Decref_likely(result->t_elem[0]);
 err_r_0:
  DeeTuple_FreeUninitialized((DeeObject *)result);
 err:
@@ -7179,16 +7188,12 @@ match_not_found:
  if unlikely(!result->t_elem[0]) goto err_r_0;
  result->t_elem[1] = Dee_EmptyString;
  result->t_elem[2] = Dee_EmptyString;
-#ifdef CONFIG_NO_THREADS
- Dee_EmptyString->ob_refcnt += 2;
-#else
- ATOMIC_FETCHADD(Dee_EmptyString->ob_refcnt,2);
-#endif
+ Dee_Incref_n(Dee_EmptyString,2);
  goto done;
 err_r_2:
- Dee_DecrefDokill(result->t_elem[1]);
+ Dee_Decref_likely(result->t_elem[1]);
 err_r_1:
- Dee_DecrefDokill(result->t_elem[0]);
+ Dee_Decref_likely(result->t_elem[0]);
 err_r_0:
  DeeTuple_FreeUninitialized((DeeObject *)result);
 err:
@@ -7241,7 +7246,7 @@ string_caserpartitionmatch(String *__restrict self,
                                (size_t)((match_end.cp8 + clos_len) -
                                          match_start.cp8)),
              DeeString_New1Byte(match_end.cp8 + clos_len,
-                               (size_t)(scan_str.cp8 + end)-
+                               (size_t)(scan_str.cp8 + end) -
                                (size_t)(match_end.cp8 + clos_len)));
   break;
  CASE_WIDTH_2BYTE:
@@ -7272,7 +7277,7 @@ string_caserpartitionmatch(String *__restrict self,
                                (size_t)((match_end.cp16 + clos_len) -
                                          match_start.cp16)),
              DeeString_New2Byte(match_end.cp16 + clos_len,
-                               (size_t)(scan_str.cp16 + end)-
+                               (size_t)(scan_str.cp16 + end) -
                                (size_t)(match_end.cp16 + clos_len)));
   break;
  CASE_WIDTH_4BYTE:
@@ -7303,7 +7308,7 @@ string_caserpartitionmatch(String *__restrict self,
                                (size_t)((match_end.cp32 + clos_len) -
                                          match_start.cp32)),
              DeeString_New4Byte(match_end.cp32 + clos_len,
-                               (size_t)(scan_str.cp32 + end)-
+                               (size_t)(scan_str.cp32 + end) -
                                (size_t)(match_end.cp32 + clos_len)));
   break;
  }
@@ -7315,16 +7320,12 @@ match_not_found:
  if unlikely(!result->t_elem[0]) goto err_r_0;
  result->t_elem[1] = Dee_EmptyString;
  result->t_elem[2] = Dee_EmptyString;
-#ifdef CONFIG_NO_THREADS
- Dee_EmptyString->ob_refcnt += 2;
-#else
- ATOMIC_FETCHADD(Dee_EmptyString->ob_refcnt,2);
-#endif
+ Dee_Incref_n(Dee_EmptyString,2);
  goto done;
 err_r_2:
- Dee_DecrefDokill(result->t_elem[1]);
+ Dee_Decref_likely(result->t_elem[1]);
 err_r_1:
- Dee_DecrefDokill(result->t_elem[0]);
+ Dee_Decref_likely(result->t_elem[0]);
 err_r_0:
  DeeTuple_FreeUninitialized((DeeObject *)result);
 err:
@@ -8970,10 +8971,21 @@ INTERN struct type_method string_methods[] = {
           "Same as #rpartitionmatch, however casing is ignored during character comparisons") },
 
     { "segments", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_segments,
-      DOC("(int count)->{string...}\n"
-          "Split @this string into segments, each exactly @count characters long, with the "
+      DOC("(int substring_length)->{string...}\n"
+          "Split @this string into segments, each exactly @substring_length characters long, with the "
           "last segment containing the remaining characters and having a length of between "
-          "$1 and @count characters.") },
+          "$1 and @substring_length characters.\n"
+          "This function is similar to #distribute, but instead of being given the "
+          "length of sub-strings and figuring out their amount, this function takes "
+          "the amount of sub-strings and figures out their lengths") },
+    { "distribute", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_distribute,
+      DOC("(int substring_count)->{string...}\n"
+          "Split @this string into @substring_count similarly sized sub-strings, each with a "
+          "length of ${(#this + (substring_count - 1)) / substring_count}, followed by a last, optional "
+          "sub-string containing all remaining characters.\n"
+          "This function is similar to #segments, but instead of being given the "
+          "amount of sub-strings and figuring out their lengths, this function takes "
+          "the length of sub-strings and figures out their amount") },
 
     /* Regex functions. */
     { "rematch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_rematch,
