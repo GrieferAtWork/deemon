@@ -741,6 +741,7 @@ DeeString_SStrip(DeeObject *__restrict self,
   otherstr.cp8 = DeeString_As1Byte(other);
   mylen        = WSTR_LENGTH(mystr.cp8);
   otherlen     = WSTR_LENGTH(otherstr.cp8);
+  if unlikely(!otherlen) goto retself;
   newstr.cp8 = mystr.cp8,newlen = mylen;
   while (newlen >= otherlen &&
          MEMEQB(newstr.cp8,otherstr.cp8,otherlen))
@@ -759,6 +760,7 @@ DeeString_SStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp16) goto err;
   mylen         = WSTR_LENGTH(mystr.cp16);
   otherlen      = WSTR_LENGTH(otherstr.cp16);
+  if unlikely(!otherlen) goto retself;
   newstr.cp16 = mystr.cp16,newlen = mylen;
   while (newlen >= otherlen &&
          MEMEQB(newstr.cp16,otherstr.cp16,otherlen))
@@ -779,6 +781,7 @@ DeeString_SStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp32) goto err;
   mylen         = WSTR_LENGTH(mystr.cp32);
   otherlen      = WSTR_LENGTH(otherstr.cp32);
+  if unlikely(!otherlen) goto retself;
   newstr.cp32 = mystr.cp32,newlen = mylen;
   while (newlen >= otherlen &&
          MEMEQB(newstr.cp32,otherstr.cp32,otherlen))
@@ -814,6 +817,7 @@ DeeString_LSStrip(DeeObject *__restrict self,
   otherstr.cp8 = DeeString_As1Byte(other);
   mylen        = WSTR_LENGTH(mystr.cp8);
   otherlen     = WSTR_LENGTH(otherstr.cp8);
+  if unlikely(!otherlen) goto retself;
   newstr.cp8 = mystr.cp8,newlen = mylen;
   while (newlen >= otherlen &&
          MEMEQB(newstr.cp8,otherstr.cp8,otherlen))
@@ -828,6 +832,7 @@ DeeString_LSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp16) goto err;
   mylen         = WSTR_LENGTH(mystr.cp16);
   otherlen      = WSTR_LENGTH(otherstr.cp16);
+  if unlikely(!otherlen) goto retself;
   newstr.cp16 = mystr.cp16,newlen = mylen;
   while (newlen >= otherlen &&
          MEMEQB(newstr.cp16,otherstr.cp16,otherlen))
@@ -844,6 +849,7 @@ DeeString_LSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp32) goto err;
   mylen         = WSTR_LENGTH(mystr.cp32);
   otherlen      = WSTR_LENGTH(otherstr.cp32);
+  if unlikely(!otherlen) goto retself;
   newstr.cp32 = mystr.cp32,newlen = mylen;
   while (newlen >= otherlen &&
          MEMEQB(newstr.cp32,otherstr.cp32,otherlen))
@@ -875,6 +881,7 @@ DeeString_RSStrip(DeeObject *__restrict self,
   otherstr.cp8 = DeeString_As1Byte(other);
   mylen        = WSTR_LENGTH(mystr.cp8);
   otherlen     = WSTR_LENGTH(otherstr.cp8);
+  if unlikely(!otherlen) goto retself;
   newlen       = mylen;
   while (newlen >= otherlen &&
          MEMEQB(mystr.cp8 + (newlen - otherlen),
@@ -890,6 +897,7 @@ DeeString_RSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp16) goto err;
   mylen         = WSTR_LENGTH(mystr.cp16);
   otherlen      = WSTR_LENGTH(otherstr.cp16);
+  if unlikely(!otherlen) goto retself;
   newlen        = mylen;
   while (newlen >= otherlen &&
          MEMEQW(mystr.cp16 + (newlen - otherlen),
@@ -907,6 +915,7 @@ DeeString_RSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp32) goto err;
   mylen         = WSTR_LENGTH(mystr.cp32);
   otherlen      = WSTR_LENGTH(otherstr.cp32);
+  if unlikely(!otherlen) goto retself;
   newlen        = mylen;
   while (newlen >= otherlen &&
          MEMEQL(mystr.cp32 + (newlen - otherlen),
@@ -942,6 +951,7 @@ DeeString_CaseSStrip(DeeObject *__restrict self,
   otherstr.cp8 = DeeString_As1Byte(other);
   mylen        = WSTR_LENGTH(mystr.cp8);
   otherlen     = WSTR_LENGTH(otherstr.cp8);
+  if unlikely(!otherlen) goto retself;
   newstr.cp8 = mystr.cp8,newlen = mylen;
   while (newlen >= otherlen &&
          MEMCASEEQB(newstr.cp8,otherstr.cp8,otherlen))
@@ -960,6 +970,7 @@ DeeString_CaseSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp16) goto err;
   mylen         = WSTR_LENGTH(mystr.cp16);
   otherlen      = WSTR_LENGTH(otherstr.cp16);
+  if unlikely(!otherlen) goto retself;
   newstr.cp16 = mystr.cp16,newlen = mylen;
   while (newlen >= otherlen &&
          MEMCASEEQB(newstr.cp16,otherstr.cp16,otherlen))
@@ -980,6 +991,7 @@ DeeString_CaseSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp32) goto err;
   mylen         = WSTR_LENGTH(mystr.cp32);
   otherlen      = WSTR_LENGTH(otherstr.cp32);
+  if unlikely(!otherlen) goto retself;
   newstr.cp32 = mystr.cp32,newlen = mylen;
   while (newlen >= otherlen &&
          MEMCASEEQB(newstr.cp32,otherstr.cp32,otherlen))
@@ -1015,6 +1027,7 @@ DeeString_CaseLSStrip(DeeObject *__restrict self,
   otherstr.cp8 = DeeString_As1Byte(other);
   mylen        = WSTR_LENGTH(mystr.cp8);
   otherlen     = WSTR_LENGTH(otherstr.cp8);
+  if unlikely(!otherlen) goto retself;
   newstr.cp8 = mystr.cp8,newlen = mylen;
   while (newlen >= otherlen &&
          MEMCASEEQB(newstr.cp8,otherstr.cp8,otherlen))
@@ -1029,6 +1042,7 @@ DeeString_CaseLSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp16) goto err;
   mylen         = WSTR_LENGTH(mystr.cp16);
   otherlen      = WSTR_LENGTH(otherstr.cp16);
+  if unlikely(!otherlen) goto retself;
   newstr.cp16 = mystr.cp16,newlen = mylen;
   while (newlen >= otherlen &&
          MEMCASEEQB(newstr.cp16,otherstr.cp16,otherlen))
@@ -1045,6 +1059,7 @@ DeeString_CaseLSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp32) goto err;
   mylen         = WSTR_LENGTH(mystr.cp32);
   otherlen      = WSTR_LENGTH(otherstr.cp32);
+  if unlikely(!otherlen) goto retself;
   newstr.cp32 = mystr.cp32,newlen = mylen;
   while (newlen >= otherlen &&
          MEMCASEEQB(newstr.cp32,otherstr.cp32,otherlen))
@@ -1076,6 +1091,7 @@ DeeString_CaseRSStrip(DeeObject *__restrict self,
   otherstr.cp8 = DeeString_As1Byte(other);
   mylen        = WSTR_LENGTH(mystr.cp8);
   otherlen     = WSTR_LENGTH(otherstr.cp8);
+  if unlikely(!otherlen) goto retself;
   newlen       = mylen;
   while (newlen >= otherlen &&
          MEMCASEEQB(mystr.cp8 + (newlen - otherlen),
@@ -1091,6 +1107,7 @@ DeeString_CaseRSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp16) goto err;
   mylen         = WSTR_LENGTH(mystr.cp16);
   otherlen      = WSTR_LENGTH(otherstr.cp16);
+  if unlikely(!otherlen) goto retself;
   newlen        = mylen;
   while (newlen >= otherlen &&
          MEMCASEEQW(mystr.cp16 + (newlen - otherlen),
@@ -1108,6 +1125,7 @@ DeeString_CaseRSStrip(DeeObject *__restrict self,
   if unlikely(!otherstr.cp32) goto err;
   mylen         = WSTR_LENGTH(mystr.cp32);
   otherlen      = WSTR_LENGTH(otherstr.cp32);
+  if unlikely(!otherlen) goto retself;
   newlen        = mylen;
   while (newlen >= otherlen &&
          MEMCASEEQL(mystr.cp32 + (newlen - otherlen),
