@@ -3019,6 +3019,8 @@ string_distribute(String *__restrict self,
  substring_length  = DeeString_WLEN(self);
  substring_length += substring_count - 1;
  substring_length /= substring_count;
+ if unlikely(!substring_length)
+    return_empty_seq;
  return DeeString_Segments((DeeObject *)self,substring_length);
 }
 
