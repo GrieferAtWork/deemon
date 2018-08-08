@@ -78,8 +78,8 @@ local invert_options = list { "!", "NOT" };
 local root_folder = fix_pathstring(fs.path.head(__FILE__).replace("\\","/").rstrip("/"));
 fs.chdir(root_folder);
 
-#if __has_include("misc/paths.dee")
-#include "misc/paths.dee"
+#if __has_include("util/misc/paths.dee")
+#include "util/misc/paths.dee"
 #endif
 
 #ifdef __WINDOWS__
