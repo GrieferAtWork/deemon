@@ -496,6 +496,20 @@ err:
  return NULL;
 }
 
+PRIVATE DREF Bytes *DCALL
+bytes_makewritable(Bytes *__restrict self,
+                   size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":makewritable"))
+     goto err;
+ if (DeeBytes_WRITABLE(self))
+     return_reference_(self);
+ /* Return a copy of `self' */
+ return (DREF Bytes *)DeeBytes_NewBufferData(DeeBytes_DATA(self),
+                                             DeeBytes_SIZE(self));
+err:
+ return NULL;
+}
+
 
 PRIVATE DREF DeeObject *DCALL
 bytes_ord(Bytes *__restrict self,
@@ -3159,6 +3173,15 @@ INTERN struct type_method bytes_methods[] = {
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #reversed, but modifications are performed "
           "in-line, before @this bytes object is re-returned") },
+    { "makewritable", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_makewritable,
+      DOC("->bytes\n"
+          "Either re-return @this bytes object is it already #iswritable, or create a "
+          "copy (s.a. #op:copy) and return it:\n"
+          ">function makewritable() {\n"
+          "> if (this.iswritable)\n"
+          ">  return this;\n"
+          "> return copy this;\n"
+          ">}") },
 
     /* Bytes formatting / scanning. */
     { "format", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_format,
@@ -4048,6 +4071,8 @@ INTERN struct type_method bytes_methods[] = {
           "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
           "Same as #rpartitionmatch, however casing is ignored during character comparisons") },
 
+    /* TODO: partition() */
+    /* TODO: distribute() */
 
     { NULL }
 };
