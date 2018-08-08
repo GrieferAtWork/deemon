@@ -90,7 +90,7 @@ assert "abc".index("abc") == 0;
 assert "abc".rindex("abc") == 0;
 
 /* Assert string split functions */
-assert "".split("/")        == [""];
+assert "".split("/")        == [];
 assert "/".split("/")       == ["",""];
 assert "foo".split("/")     == ["foo"];
 assert "foo/".split("/")    == ["foo",""];

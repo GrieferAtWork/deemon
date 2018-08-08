@@ -43,7 +43,9 @@
 
 DECL_BEGIN
 
+#define DeeUni_IsSign(x) ((x)=='+' || (x)=='-')
 #define UNICODE_SPACE  32 /* ' ' */
+#define UNICODE_ZERO   48 /* '0' */
 #define UNICODE_CR     13 /* '\r' */
 #define UNICODE_LF     10 /* '\n' */
 
@@ -316,16 +318,39 @@ LOCAL uint32_t *dee_memlowerrchrl(uint32_t const *__restrict p, uint32_t c, size
 #define MEMCASEEQB(a,b,s) (memcasecmp(a,b,s) == 0)
 #elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
 #define MEMCASEEQB(a,b,s) (_memicmp(a,b,s) == 0)
+#define memcasecmp         _memicmp
 #else
 #define MEMCASEEQB(a,b,s)  dee_memcaseeqb((uint8_t *)(a),(uint8_t *)(b),s)
 LOCAL bool dee_memcaseeqb(uint8_t const *a, uint8_t const *b, size_t s) {
  while (s--) {
-  if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
-      return false;
+  uint8_t lhs = *a;
+  uint8_t rhs = *b;
+  if (lhs != rhs) {
+   lhs = (uint8_t)DeeUni_ToLower(lhs);
+   rhs = (uint8_t)DeeUni_ToLower(rhs);
+   if (lhs != rhs)
+       return false;
+  }
   ++a;
   ++b;
  }
  return true;
+}
+#define memcasecmp         dee_memcasecmp
+LOCAL int dee_memcasecmp(uint8_t const *a, uint8_t const *b, size_t s) {
+ while (s--) {
+  uint8_t lhs = *a;
+  uint8_t rhs = *b;
+  if (lhs != rhs) {
+   lhs = (uint8_t)DeeUni_ToLower(lhs);
+   rhs = (uint8_t)DeeUni_ToLower(rhs);
+   if (lhs != rhs)
+       return (int)lhs - (int)rhs;
+  }
+  ++a;
+  ++b;
+ }
+ return 0;
 }
 #endif
 #define MEMCASEEQW(a,b,s)  dee_memcaseeqw((uint16_t *)(a),(uint16_t *)(b),s)
@@ -692,9 +717,41 @@ DEFINE_RFIND_MATCH_FUNCTION(rfind_casematchl,uint32_t,memcasermeml,MEMCASEEQL)
 #define wildcompare wildcasecomparel
 #include "wildcompare.c.inl"
 
-
-
 typedef DeeStringObject String;
+
+
+PRIVATE void DCALL memfilb(uint8_t *__restrict dst, size_t num_bytes,
+                           uint8_t const *__restrict src, size_t src_bytes) {
+ ASSERT(src_bytes != 0);
+ while (num_bytes > src_bytes) {
+  memcpyb(dst,src,src_bytes);
+  num_bytes -= src_bytes;
+  dst       += src_bytes;
+ }
+ memcpyb(dst,src,num_bytes);
+}
+PRIVATE void DCALL memfilw(uint16_t *__restrict dst, size_t num_words,
+                           uint16_t const *__restrict src, size_t src_words) {
+ ASSERT(src_words != 0);
+ while (num_words > src_words) {
+  memcpyw(dst,src,src_words);
+  num_words -= src_words;
+  dst       += src_words;
+ }
+ memcpyw(dst,src,num_words);
+}
+PRIVATE void DCALL memfill(uint32_t *__restrict dst, size_t num_dwords,
+                           uint32_t const *__restrict src, size_t src_dwords) {
+ ASSERT(src_dwords != 0);
+ while (num_dwords > src_dwords) {
+  memcpyl(dst,src,src_dwords);
+  num_dwords -= src_dwords;
+  dst       += src_dwords;
+ }
+ memcpyl(dst,src,num_dwords);
+}
+
+
 
 DECL_END
 

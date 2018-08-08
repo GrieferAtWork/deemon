@@ -635,15 +635,15 @@ DeeString_TryResizeBuffer32(uint32_t *buffer, size_t num_chars) {
  }
  return (uint32_t *)result;
 }
-FORCELOCAL void DeeString_FreeBuffer16(uint16_t *buffer) {
+FORCELOCAL void DeeString_Free2ByteBuffer(uint16_t *buffer) {
  if (buffer) Dee_Free((size_t *)buffer-1);
 }
-#define DeeString_FreeBuffer32(buffer)   DeeString_FreeBuffer16((uint16_t *)(buffer)) 
-#define DeeString_FreeWideBuffer(buffer) DeeString_FreeBuffer16((uint16_t *)(buffer))
-DFUNDEF DREF DeeObject *DCALL DeeString_PackChar16Buffer(/*inherit(always)*/uint16_t *__restrict text);
-DFUNDEF DREF DeeObject *DCALL DeeString_TryPackChar16Buffer(/*inherit(on_success)*/uint16_t *__restrict text);
-#define DeeString_PackChar32Buffer(text)    DeeString_PackUtf32Buffer(text,STRING_ERROR_FIGNORE)
-#define DeeString_TryPackChar32Buffer(text) DeeString_TryPackUtf32Buffer(text)
+#define DeeString_Free4ByteBuffer(buffer) DeeString_Free2ByteBuffer((uint16_t *)(buffer)) 
+#define DeeString_FreeWideBuffer(buffer)  DeeString_Free2ByteBuffer((uint16_t *)(buffer))
+DFUNDEF DREF DeeObject *DCALL DeeString_Pack2ByteBuffer(/*inherit(always)*/uint16_t *__restrict text);
+DFUNDEF DREF DeeObject *DCALL DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/uint16_t *__restrict text);
+#define DeeString_Pack4ByteBuffer(text)    DeeString_PackUtf32Buffer(text,STRING_ERROR_FIGNORE)
+#define DeeString_TryPack4ByteBuffer(text) DeeString_TryPackUtf32Buffer(text)
 
 /* @param: error_mode: One of `STRING_ERROR_F*' */
 DFUNDEF DREF DeeObject *DCALL DeeString_PackUtf16Buffer(/*inherit(always)*/uint16_t *__restrict text, unsigned int error_mode);
@@ -738,9 +738,9 @@ DeeString_PackWidthBuffer(/*inherit(always)*/void *buffer,
  } break;
 
  CASE_WIDTH_2BYTE:
-  return DeeString_PackChar16Buffer((uint16_t *)buffer);
+  return DeeString_Pack2ByteBuffer((uint16_t *)buffer);
  CASE_WIDTH_4BYTE:
-  return DeeString_PackChar32Buffer((uint32_t *)buffer);
+  return DeeString_Pack4ByteBuffer((uint32_t *)buffer);
  }
 }
 FORCELOCAL DREF DeeObject *DCALL
@@ -759,9 +759,9 @@ DeeString_TryPackWidthBuffer(/*inherit(on_success)*/void *buffer,
  } break;
 
  CASE_WIDTH_2BYTE:
-  return DeeString_TryPackChar16Buffer((uint16_t *)buffer);
+  return DeeString_TryPack2ByteBuffer((uint16_t *)buffer);
  CASE_WIDTH_4BYTE:
-  return DeeString_TryPackChar32Buffer((uint32_t *)buffer);
+  return DeeString_TryPack4ByteBuffer((uint32_t *)buffer);
  }
 }
 FORCELOCAL void DCALL

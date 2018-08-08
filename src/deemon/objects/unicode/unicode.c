@@ -576,7 +576,7 @@ load_2byte_width:
    }
    /* Save the utf-16 encoded string. */
    if (!ATOMIC_CMPXCH(utf->u_utf16,NULL,result)) {
-    DeeString_FreeBuffer16(result);
+    DeeString_Free2ByteBuffer(result);
     return utf->u_utf16;
    }
    return result;
@@ -642,7 +642,7 @@ err_invalid_unicode:
   *dst = 0;
   /* Save the utf-16 encoded string. */
   if (!ATOMIC_CMPXCH(utf->u_utf16,NULL,result)) {
-   DeeString_FreeBuffer16(result);
+   DeeString_Free2ByteBuffer(result);
    return utf->u_utf16;
   }
   return result;
@@ -1347,7 +1347,7 @@ utf32_to_utf8(uint32_t *__restrict src, size_t src_len,
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_PackChar16Buffer(/*inherit(always)*/uint16_t *__restrict text) {
+DeeString_Pack2ByteBuffer(/*inherit(always)*/uint16_t *__restrict text) {
  size_t i,length,utf8_length;
  DREF String *result; struct string_utf *utf;
  ASSERT(text);
@@ -1397,7 +1397,7 @@ err:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_TryPackChar16Buffer(/*inherit(on_success)*/uint16_t *__restrict text) {
+DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/uint16_t *__restrict text) {
  size_t i,length,utf8_length;
  DREF String *result; struct string_utf *utf;
  ASSERT(text);
@@ -1972,7 +1972,7 @@ use_buffer32:
                      "Invalid utf-8 character byte 0x%.2I8x",
                      ch);
 err_buffer32:
-     DeeString_FreeBuffer32(buffer32);
+     DeeString_Free4ByteBuffer(buffer32);
      goto err_r;
     }
     ch32 = utf8_getchar(iter,seqlen);
@@ -2027,7 +2027,7 @@ err_buffer32:
                      "Invalid utf-8 character byte 0x%.2I8x",
                      ch);
 err_buffer16:
-     DeeString_FreeBuffer16(buffer16);
+     DeeString_Free2ByteBuffer(buffer16);
      goto err_r;
     }
     ch32 = utf8_getchar(iter,seqlen);
@@ -2039,7 +2039,7 @@ err_buffer16:
      simple_length = (size_t)(dst16 - buffer16);
      for (i = 0; i < simple_length; ++i)
          buffer32[i] = buffer16[i];
-     DeeString_FreeBuffer16(buffer16);
+     DeeString_Free2ByteBuffer(buffer16);
      dst32 = buffer32 + simple_length;
      *dst32++ = ch32;
      goto use_buffer32;
@@ -2214,7 +2214,7 @@ PUBLIC DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch) {
  buffer = DeeString_NewBuffer16(1);
  if unlikely(!buffer) return NULL;
  buffer[0] = ch;
- return DeeString_PackChar16Buffer(buffer);
+ return DeeString_Pack2ByteBuffer(buffer);
 }
 PUBLIC DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch) {
  if (ch <= 0xff)
@@ -2224,13 +2224,13 @@ PUBLIC DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch) {
   buffer = DeeString_NewBuffer16(1);
   if unlikely(!buffer) return NULL;
   buffer[0] = (uint16_t)ch;
-  return DeeString_PackChar16Buffer(buffer);
+  return DeeString_Pack2ByteBuffer(buffer);
  } else {
   uint32_t *buffer;
   buffer = DeeString_NewBuffer32(1);
   if unlikely(!buffer) return NULL;
   buffer[0] = ch;
-  return DeeString_PackChar32Buffer(buffer);
+  return DeeString_Pack4ByteBuffer(buffer);
  }
 }
 
