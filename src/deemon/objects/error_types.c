@@ -166,8 +166,10 @@ error_init(DeeErrorObject *__restrict self) {
 PRIVATE int DCALL
 error_copy(DeeErrorObject *__restrict self,
            DeeErrorObject *__restrict other) {
- Dee_XINCREF(self->e_inner = other->e_inner);
- Dee_XINCREF(self->e_message = other->e_message);
+ self->e_inner   = other->e_inner;
+ self->e_message = other->e_message;
+ Dee_XIncref(self->e_inner);
+ Dee_XIncref(self->e_message);
  ASSERT(Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size >=
         sizeof(DeeErrorObject));
  memset(self+1,0,

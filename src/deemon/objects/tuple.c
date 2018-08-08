@@ -437,8 +437,11 @@ DeeTuple_Types(DeeObject *__restrict self) {
  if unlikely(!result) return NULL;
  end = (iter = DeeTuple_ELEM(result))+DeeTuple_SIZE(result);
  src =  DeeTuple_ELEM(self);
- for (; iter != end; ++iter,++src)
-      Dee_INCREF(*iter = (DeeObject *)Dee_TYPE(*src));
+ for (; iter != end; ++iter,++src) {
+  DeeTypeObject *tp = Dee_TYPE(*src);
+  Dee_Incref(tp);
+  *iter = (DeeObject *)tp;
+ }
  return result;
 }
 
@@ -536,11 +539,10 @@ PUBLIC int (DCALL DeeTuple_AppendIterator)(DREF DeeObject **__restrict pself,
  }
  if (used_size != DeeTuple_SIZE(*pself)) {
   if unlikely(DeeTuple_ResizeUninitialized((DREF DeeTupleObject **)pself,used_size)) {
-   DeeObject **iter,**end;
    /* To bring the tuple back into a valid state, fill unused elements with `none'. */
-   iter = DeeTuple_ELEM(*pself)+used_size;
-   end  = DeeTuple_ELEM(*pself)+DeeTuple_SIZE(*pself);
-   for (; iter != end; ++iter) Dee_INCREF(*iter = Dee_None);
+   size_t count = DeeTuple_SIZE(*pself) - used_size;
+   Dee_Incref_n(Dee_None,count);
+   MEMFIL_PTR(DeeTuple_ELEM(*pself) + used_size,Dee_None,count);
    goto err;
   }
  }
@@ -584,7 +586,11 @@ DeeTuple_ExtendInherited(DREF DeeObject *__restrict self,
   if unlikely(!result) goto err;
   dst = DeeTuple_ELEM(result);
   end = (iter = DeeTuple_ELEM(self))+DeeTuple_SIZE(self);
-  while (iter != end) Dee_INCREF(*dst++ = *iter++);
+  while (iter != end) {
+   DeeObject *ob = *iter++;
+   Dee_Incref(ob);
+   *dst++ = ob;
+  }
   MEMCPY_PTR(dst,argv,argc);
   Dee_Decref(self);
  }
@@ -611,7 +617,11 @@ DeeTuple_ConcatInherited(DREF DeeObject *__restrict self,
        goto err_inherit;
    end = (iter = result->t_elem+old_size)+DeeTuple_SIZE(sequence);
    src = DeeTuple_ELEM(sequence);
-   for (; iter != end; ++iter,++src) Dee_INCREF(*iter = *src);
+   for (; iter != end; ++iter,++src) {
+    DeeObject *ob = *src;
+    Dee_Incref(ob);
+    *iter = ob;
+   }
    goto done;
   }
 #endif
@@ -639,7 +649,11 @@ handle_list_size:
    /* Copy elements from the list. */
    end = (iter = result->t_elem+old_size)+DeeTuple_SIZE(sequence);
    srcdst = DeeList_ELEM(sequence);
-   for (; iter != end; ++iter,++srcdst) Dee_INCREF(*iter = *srcdst);
+   for (; iter != end; ++iter,++srcdst) {
+    DeeObject *ob = *srcdst;
+    Dee_Incref(ob);
+    *iter = ob;
+   }
    DeeList_LockEndRead(sequence);
    goto done;
   }
@@ -651,9 +665,17 @@ handle_list_size:
    if unlikely(!result) goto err_inherit;
    src = DeeTuple_ELEM(result);
    end = (iter = DeeTuple_ELEM(self))+DeeTuple_SIZE(self);
-   while (iter != end) Dee_INCREF(*src++ = *iter++);
+   while (iter != end) {
+    DeeObject *ob = *iter++;
+    Dee_Incref(ob);
+    *src++ = ob;
+   }
    end = (iter = DeeTuple_ELEM(sequence))+DeeTuple_SIZE(sequence);
-   while (iter != end) Dee_INCREF(*src++ = *iter++);
+   while (iter != end) {
+    DeeObject *ob = *iter++;
+    Dee_Incref(ob);
+    *src++ = ob;
+   }
    Dee_Decref(self);
    goto done;
   }
@@ -673,11 +695,19 @@ handle_list_size2:
    }
    srcdst = DeeTuple_ELEM(result)+DeeTuple_SIZE(self);
    end = (iter = DeeList_ELEM(sequence))+used_list_size;
-   while (iter != end) Dee_INCREF(*srcdst++ = *iter++);
+   while (iter != end) {
+    DeeObject *ob = *iter++;
+    Dee_Incref(ob);
+    *srcdst++ = ob;
+   }
    DeeList_LockEndRead(sequence);
    srcdst = DeeTuple_ELEM(result);
    end = (iter = DeeTuple_ELEM(self))+DeeTuple_SIZE(self);
-   while (iter != end) Dee_INCREF(*srcdst++ = *iter++);
+   while (iter != end) {
+    DeeObject *ob = *iter++;
+    Dee_Incref(ob);
+    *srcdst++ = ob;
+   }
    Dee_Decref(self);
    goto done;
   }

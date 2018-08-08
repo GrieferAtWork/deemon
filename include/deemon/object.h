@@ -492,15 +492,6 @@ DFUNDEF bool DCALL Dee_DecrefWasOk_traced(DeeObject *__restrict ob, char const *
 #define Dee_Clear(x)         (Dee_Decref(x),(x) = NULL,0)
 #define Dee_XClear(x)        (!(x) || Dee_Clear(x))
 
-/* Same as the macros above, but only evaluate the object once. */
-#define Dee_INCREF(x)      Dee_Incref(x)
-#define Dee_DECREF(x)  do{ DeeObject *const _x_ = (DeeObject *)(x); Dee_Decref(_x_); }__WHILE0
-#define Dee_DECREFNOKILL(x) Dee_DecrefNokill(x)
-#define Dee_XINCREF(x) do{ DeeObject *const _x_ = (DeeObject *)(x); Dee_XIncref(_x_); }__WHILE0
-#define Dee_XDECREF(x) do{ DeeObject *const _x_ = (DeeObject *)(x); Dee_XDecref(_x_); }__WHILE0
-#define Dee_CLEAR(x)   do{ DeeObject **const _x_ = (DeeObject **)&(x); Dee_Clear(*_x_); }__WHILE0
-#define Dee_XCLEAR(x)  do{ DeeObject **const _x_ = (DeeObject **)&(x); Dee_XClear(*_x_); }__WHILE0
-
 #define return_reference(ob) \
  do{ DeeObject *const _result_ = (DeeObject *)(ob); \
      Dee_Incref(_result_); return _result_; \

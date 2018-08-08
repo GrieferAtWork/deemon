@@ -288,9 +288,9 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 
 PRIVATE void DCALL
 yf_dtor(YFunction *__restrict self) {
- Dee_XDECREF(self->yf_func);
- Dee_XDECREF(self->yf_args);
- Dee_XDECREF(self->yf_this);
+ Dee_XDecref(self->yf_func);
+ Dee_XDecref(self->yf_args);
+ Dee_XDecref(self->yf_this);
 }
 PRIVATE void DCALL
 yf_visit(YFunction *__restrict self, dvisit_t proc, void *arg) {
@@ -317,9 +317,9 @@ yf_clear(YFunction *__restrict self) {
  Dee_XDecref(obj[1]);
  Dee_XDecref(obj[2]);
 #else
- Dee_XCLEAR(self->yf_func);
- Dee_XCLEAR(self->yf_args);
- Dee_XCLEAR(self->yf_this);
+ Dee_XClear(self->yf_func);
+ Dee_XClear(self->yf_args);
+ Dee_XClear(self->yf_this);
 #endif
 }
 
@@ -342,9 +342,12 @@ yf_copy(YFunction *__restrict self,
  rwlock_init(&self->yf_lock);
  rwlock_read(&other->yf_lock);
 #endif
- Dee_XINCREF(self->yf_func = other->yf_func);
- Dee_XINCREF(self->yf_args = other->yf_args);
- Dee_XINCREF(self->yf_this = other->yf_this);
+ self->yf_func = other->yf_func;
+ self->yf_args = other->yf_args;
+ self->yf_this = other->yf_this;
+ Dee_XIncref(self->yf_func);
+ Dee_XIncref(self->yf_args);
+ Dee_XIncref(self->yf_this);
 #ifndef CONFIG_NO_THREADS
  rwlock_endread(&other->yf_lock);
 #endif
@@ -387,9 +390,12 @@ yf_new(YFunction *__restrict self,
   DeeError_Throwf(&DeeError_TypeError,"Invalid presence of this-argument");
   return -1;
  }
- Dee_INCREF(self->yf_this  = func);
- Dee_INCREF(self->yf_this  = args);
- Dee_XINCREF(self->yf_this = this_);
+ self->yf_func = (DREF DeeFunctionObject *)func;
+ self->yf_args = (DREF DeeTupleObject *)args;
+ self->yf_this = this_;
+ Dee_Incref(self->yf_this);
+ Dee_Incref(self->yf_this);
+ Dee_XIncref(self->yf_this);
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&self->yf_lock);
 #endif
@@ -841,14 +847,22 @@ again:
    if unlikely(!self->yi_frame.cf_stack) goto nomem;
    src = other->yi_frame.cf_stack;
    end = (iter = self->yi_frame.cf_stack)+self->yi_frame.cf_stacksz;
-   for (; iter != end; ++iter,++src) Dee_INCREF(*iter = *src);
+   for (; iter != end; ++iter,++src) {
+    DeeObject *ob = *src;
+    Dee_Incref(ob);
+    *iter = ob;
+   }
   }
   self->yi_frame.cf_frame = (DREF DeeObject **)Dee_TryMalloc(code->co_framesize);
   if unlikely(!self->yi_frame.cf_frame) goto nomem_stack;
   /* Copy local variables. */
   src = other->yi_frame.cf_frame;
   end = (iter = self->yi_frame.cf_frame)+code->co_localc;
-  for (; iter != end; ++iter,++src) Dee_XINCREF(*iter = *src);
+  for (; iter != end; ++iter,++src) {
+   DeeObject *ob = *src;
+   *iter = ob;
+   Dee_Incref(ob);
+  }
   if (!self->yi_frame.cf_stacksz) {
    /* Relocate + copy a frame-shared stack. */
    self->yi_frame.cf_stack = self->yi_frame.cf_frame+code->co_localc;
@@ -860,7 +874,11 @@ again:
    /* Copy the stack. */
    src = other->yi_frame.cf_stack;
    end = (iter = self->yi_frame.cf_stack)+stack_size;
-   for (; iter != end; ++iter,++src) Dee_INCREF(*iter = *src);
+   for (; iter != end; ++iter,++src) {
+    DeeObject *ob = *src;
+    Dee_Incref(ob);
+    *iter = ob;
+   }
   } else {
    *(uintptr_t *)&self->yi_frame.cf_sp += (uintptr_t)self->yi_frame.cf_stack;
    stack_size = self->yi_frame.cf_stacksz;

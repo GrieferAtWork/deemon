@@ -549,15 +549,27 @@ DeeSeq_Concat(DeeObject *__restrict self,
    if unlikely(!result) goto err;
    dst = DeeTuple_ELEM(result);
    end = (iter = DeeTuple_ELEM(self))+DeeTuple_SIZE(self);
-   for (; iter != end; ++iter,++dst) Dee_INCREF(*dst = *iter);
+   for (; iter != end; ++iter,++dst) {
+    DeeObject *ob = *iter;
+    Dee_Incref(ob);
+    *dst = ob;
+   }
    end = (iter = DeeTuple_ELEM(other))+DeeTuple_SIZE(other);
-   for (; iter != end; ++iter,++dst) Dee_INCREF(*dst = *iter);
+   for (; iter != end; ++iter,++dst) {
+    DeeObject *ob = *iter;
+    Dee_Incref(ob);
+    *dst = ob;
+   }
   } else {
    result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(DeeTuple_SIZE(self)+1);
    if unlikely(!result) goto err;
    dst = DeeTuple_ELEM(result);
    end = (iter = DeeTuple_ELEM(self))+DeeTuple_SIZE(self);
-   for (; iter != end; ++iter,++dst) Dee_INCREF(*dst = *iter);
+   for (; iter != end; ++iter,++dst) {
+    DeeObject *ob = *iter;
+    Dee_Incref(ob);
+    *dst = ob;
+   }
    *dst = self;
    Dee_Incref(self);
   }
@@ -568,7 +580,11 @@ DeeSeq_Concat(DeeObject *__restrict self,
   *dst++ = self;
   Dee_Incref(self);
   end = (iter = DeeTuple_ELEM(other))+DeeTuple_SIZE(other);
-  for (; iter != end; ++iter,++dst) Dee_INCREF(*dst = *iter);
+  for (; iter != end; ++iter,++dst) {
+   DeeObject *ob = *iter;
+   Dee_Incref(ob);
+   *dst = ob;
+  }
  } else {
   result = (DREF DeeTupleObject *)DeeTuple_Pack(2,self,other);
   if unlikely(!result) goto err;

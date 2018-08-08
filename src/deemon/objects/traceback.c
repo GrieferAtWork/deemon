@@ -109,7 +109,9 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
       *iter = Dee_None;
       Dee_Incref(Dee_None);
      } else {
-      Dee_INCREF(*iter = *src_iter);
+      DeeObject *ob = *src_iter;
+      Dee_Incref(ob);
+      *iter = ob;
      }
     }
    }
@@ -128,7 +130,9 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
       *iter = Dee_None;
       Dee_Incref(Dee_None);
      } else {
-      Dee_XINCREF(*iter = *source_iter);
+      DeeObject *ob = *source_iter;
+      Dee_XIncref(ob);
+      *iter = ob;
      }
     }
    }

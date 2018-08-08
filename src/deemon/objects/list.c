@@ -100,7 +100,11 @@ again:
  }
  end = (iter = self->l_elem)+self->l_size;
  src = other->l_elem;
- for (; iter != end; ++iter,++src) Dee_INCREF(*iter = *src);
+ for (; iter != end; ++iter,++src) {
+  DeeObject *ob = *src;
+  Dee_Incref(ob);
+  *iter = ob;
+ }
  DeeList_LockEndRead(other);
  return 0;
 }
@@ -755,7 +759,11 @@ do_realloc:
             (me->l_size-(index+objc)));
  /* Store the given elements. */
  me->l_size += objc;
- while (objc--) Dee_INCREF(me->l_elem[index++] = *objv++);
+ while (objc--) {
+  DeeObject *ob = *objv++;
+  Dee_Incref(ob);
+  me->l_elem[index++] = ob;
+ }
  DeeList_LockEndWrite(me);
  return 0;
 }
