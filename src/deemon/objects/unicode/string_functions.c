@@ -5179,7 +5179,7 @@ PRIVATE DREF DeeObject *DCALL
 string_fuzzycompare(String *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  union dcharptr my_str,ot_str;
- size_t my_len,ot_len,result;
+ size_t my_len,ot_len; dssize_t result;
  struct compare_args args;
  if (get_compare_args(&args,argc,argv,"fuzzycompare"))
      goto err;
@@ -5244,7 +5244,8 @@ string_fuzzycompare(String *__restrict self,
                           ot_str.cp32,ot_len);
   break;
  }
- return DeeInt_NewSize(result);
+ if unlikely(result == (dssize_t)-1) goto err;
+ return DeeInt_NewSize((size_t)result);
 err:
  return NULL;
 }
@@ -5253,7 +5254,7 @@ PRIVATE DREF DeeObject *DCALL
 string_casefuzzycompare(String *__restrict self,
                         size_t argc, DeeObject **__restrict argv) {
  union dcharptr my_str,ot_str;
- size_t my_len,ot_len,result;
+ size_t my_len,ot_len; dssize_t result;
  struct compare_args args;
  if (get_compare_args(&args,argc,argv,"casefuzzycompare"))
      goto err;
@@ -5318,7 +5319,8 @@ string_casefuzzycompare(String *__restrict self,
                               ot_str.cp32,ot_len);
   break;
  }
- return DeeInt_NewSize(result);
+ if unlikely(result == (dssize_t)-1) goto err;
+ return DeeInt_NewSize((size_t)result);
 err:
  return NULL;
 }
@@ -8652,7 +8654,7 @@ INTERN struct type_method string_methods[] = {
           "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
           "Performs a version-string comparison. This is similar to #compare, but rather than "
           "performing a strict lexicographical comparison, the numbers found in the strings "
-          "being compared are comparsed as a whole, fixing the common problem seen in applications "
+          "being compared are comparsed as a whole, solving the common problem seen in applications "
           "such as file navigators showing a file order of `foo1.txt', `foo10.txt', `foo11.txt', `foo2.txt', etc...\n"
           "This function is a portable implementation of the GNU function "
           "%{link https://linux.die.net/man/3/strverscmp strverscmp}, "
@@ -8675,7 +8677,7 @@ INTERN struct type_method string_methods[] = {
           "The return value is a similarty-factor that can be used to score how close the two strings look alike.\n"
           "How exactly the scoring is done is implementation-specific, however a score of $0 is reserved for two "
           "strings that are perfectly identical, any two differing strings always have a score ${> 0}, and the closer "
-          "the score is to $0, the more alike they actually are\n"
+          "the score is to $0, the more alike they are\n"
           "The intended use of this function is for auto-completion, as well as warning "
           "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
           "Note that there is another version #casefuzzycompare that also ignores casing") },
