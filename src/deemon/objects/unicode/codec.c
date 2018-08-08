@@ -349,24 +349,24 @@ err_bytes_printer:
   void *str = DeeString_WSTR(self);
   SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
   CASE_WIDTH_1BYTE:
-   if unlikely(Dee_FormatQuote8(&ascii_printer_print,&printer,
-                               (uint8_t *)str,WSTR_LENGTH(str),
-                                FORMAT_QUOTE_FNORMAL|
-                                FORMAT_QUOTE_FPRINTRAW) < 0)
+   if unlikely(Dee_FormatQuote8((dformatprinter)&ascii_printer_print,&printer,
+                                (uint8_t *)str,WSTR_LENGTH(str),
+                                 FORMAT_QUOTE_FNORMAL|
+                                 FORMAT_QUOTE_FPRINTRAW) < 0)
       goto err_ascii_printer;
    break;
   CASE_WIDTH_2BYTE:
-   if unlikely(Dee_FormatQuote16(&ascii_printer_print,&printer,
-                                (uint16_t *)str,WSTR_LENGTH(str),
-                                 FORMAT_QUOTE_FNORMAL|
-                                 FORMAT_QUOTE_FPRINTRAW) < 0)
+   if unlikely(Dee_FormatQuote16((dformatprinter)&ascii_printer_print,&printer,
+                                 (uint16_t *)str,WSTR_LENGTH(str),
+                                  FORMAT_QUOTE_FNORMAL|
+                                  FORMAT_QUOTE_FPRINTRAW) < 0)
       goto err_ascii_printer;
    break;
   CASE_WIDTH_4BYTE:
-   if unlikely(Dee_FormatQuote32(&ascii_printer_print,&printer,
-                                (uint32_t *)str,WSTR_LENGTH(str),
-                                 FORMAT_QUOTE_FNORMAL|
-                                 FORMAT_QUOTE_FPRINTRAW) < 0)
+   if unlikely(Dee_FormatQuote32((dformatprinter)&ascii_printer_print,&printer,
+                                 (uint32_t *)str,WSTR_LENGTH(str),
+                                  FORMAT_QUOTE_FNORMAL|
+                                  FORMAT_QUOTE_FPRINTRAW) < 0)
       goto err_ascii_printer;
    break;
   }

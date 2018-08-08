@@ -492,7 +492,7 @@ array_sub(DeeArrayTypeObject *__restrict tp_self,
 
 PRIVATE DREF DeeObject *DCALL
 array_repr(DeeArrayTypeObject *__restrict tp_self, void *base) {
- DREF DeeObject *result; union pointer iter,end; size_t item_size;
+ union pointer iter,end; size_t item_size;
  struct ascii_printer p = ASCII_PRINTER_INIT;
  /* Print all array elements in a fashion that mimics `sequence.operator repr' */
  if unlikely(ASCII_PRINTER_PRINT(&p,"{ ") < 0) goto err;
@@ -513,9 +513,7 @@ array_repr(DeeArrayTypeObject *__restrict tp_self, void *base) {
   iter.uint += item_size;
  }
  if unlikely(ASCII_PRINTER_PRINT(&p," }") < 0) goto err;
- result = ascii_printer_pack(&p);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&p);
 err:
  ascii_printer_fini(&p);
  return NULL;

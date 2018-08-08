@@ -1052,7 +1052,8 @@ struct ascii_printer {
 #define ASCII_PRINTER_LEN(self) ((self)->ap_length)
 
 /* Append the given data to a string printer. (HINT: Use this one as a `dformatprinter') */
-DFUNDEF dssize_t DCALL ascii_printer_print(void *self, char const *__restrict data, size_t datalen);
+DFUNDEF dssize_t DCALL ascii_printer_print(struct ascii_printer *__restrict self, char const *__restrict data, size_t datalen);
+
 DFUNDEF char *DCALL ascii_printer_alloc(struct ascii_printer *__restrict self, size_t datalen);
 /* Release the last `datalen' bytes from the printer to be
  * re-used in subsequent calls, or be truncated eventually. */
@@ -1061,11 +1062,11 @@ DFUNDEF void DCALL ascii_printer_release(struct ascii_printer *__restrict self, 
 #ifdef __INTELLISENSE__
 dssize_t ascii_printer_printf(struct ascii_printer *__restrict self, char const *__restrict format, ...);
 dssize_t ascii_printer_vprintf(struct ascii_printer *__restrict self, char const *__restrict format, va_list args);
-#define ASCII_PRINTER_PRINT(self,S)                ascii_printer_print(&(self)->ap_length,S,COMPILER_STRLEN(S))
+#define ASCII_PRINTER_PRINT(self,S)                ascii_printer_print(self,S,COMPILER_STRLEN(S))
 #else
 #define ASCII_PRINTER_PRINT(self,S)                ascii_printer_print(self,S,COMPILER_STRLEN(S))
-#define ascii_printer_printf(self,...)             Dee_FormatPrintf(&ascii_printer_print,self,__VA_ARGS__)
-#define ascii_printer_vprintf(self,format,args)    Dee_VFormatPrintf(&ascii_printer_print,self,format,args)
+#define ascii_printer_printf(self,...)             Dee_FormatPrintf((dformatprinter)&ascii_printer_print,self,__VA_ARGS__)
+#define ascii_printer_vprintf(self,format,args)    Dee_VFormatPrintf((dformatprinter)&ascii_printer_print,self,format,args)
 #endif
 
 /* Print a single character, returning -1 on error or 0 on success. */
@@ -1084,15 +1085,9 @@ DFUNDEF char *DCALL
 ascii_printer_allocstr(struct ascii_printer *__restrict self,
                        char const *__restrict str, size_t length);
 
-
 /* Pack together data from a string printer and return the generated contained string.
- * NOTE: Upon success, `self' will be reset to no longer contain any heap-data, meaning
- *       that a call to `ascii_printer_fini()' can be omitted in the event of success. */
-DFUNDEF DREF DeeObject *DCALL ascii_printer_pack(struct ascii_printer *__restrict self);
-/* Similar to `ascii_printer_pack()', but always finalize `self',
- * regardless of whether or not the function succeeds. */
-DFUNDEF DREF DeeObject *DCALL ascii_printer_packfini(struct ascii_printer *__restrict self);
-
+ * Upon success, as well as upon failure, the state of `self' is undefined upon return. */
+DFUNDEF DREF DeeObject *DCALL ascii_printer_pack(/*inherit(always)*/struct ascii_printer *__restrict self);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

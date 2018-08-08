@@ -654,7 +654,7 @@ struct_init(DeeStructTypeObject *__restrict tp_self,
 
 PRIVATE DREF DeeObject *DCALL
 struct_repr(DeeStructTypeObject *__restrict tp_self, void *self) {
- DREF DeeObject *result; size_t i; bool is_first = true;
+ size_t i; bool is_first = true;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  if (ascii_printer_printf(&printer,"%s { ",tp_self->st_base.st_base.tp_name) < 0)
      goto err;
@@ -674,9 +674,7 @@ struct_repr(DeeStructTypeObject *__restrict tp_self, void *self) {
  if ((is_first ? ascii_printer_putc(&printer,'}')
                : ASCII_PRINTER_PRINT(&printer," }")) < 0)
      goto err;
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;

@@ -1778,7 +1778,7 @@ done:
  if unlikely(!iter) goto err;
  *iter = '.'; /* NOTE: The remainder is written in the source-class loop below. */
  module_filename = ascii_printer_pack(&full_path);
- if unlikely(!module_filename) goto err;
+ if unlikely(!module_filename) goto err_noprinter;
  /* Loop through known extensions and classes while trying to find what belongs. */
 #ifndef CONFIG_NO_DEC
  iter = DeeString_END(module_filename)-4,i = 0;
@@ -1841,6 +1841,7 @@ done:
  return (DREF DeeObject *)result;
 err:
  ascii_printer_fini(&full_path);
+err_noprinter:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
@@ -1953,9 +1954,7 @@ handle_error:
  while ((size_t)req_size && printer.ap_string->s_str[(size_t)req_size-1] == '/') --req_size;
  printer.ap_string->s_str[(size_t)(req_size++)] = '/';
  ascii_printer_release(&printer,(size_t)(bufsize-(size_t)req_size));
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;

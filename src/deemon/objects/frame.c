@@ -164,12 +164,9 @@ print_ddi(struct ascii_printer *__restrict printer,
 
 PRIVATE DREF DeeObject *DCALL
 print_ddi_string(DeeCodeObject *__restrict code, code_addr_t ip) {
- DREF DeeObject *result;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  if unlikely(print_ddi(&printer,code,ip) < 0) goto err;
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;

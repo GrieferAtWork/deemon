@@ -2453,8 +2453,7 @@ PRIVATE struct type_member socket_members[] = {
 
 PRIVATE DREF DeeObject *DCALL
 socket_str(DeeSocketObject *__restrict self) {
- bool has_sock,has_peer; uint16_t state;
- DREF DeeObject *result; SockAddr sock,peer;
+ bool has_sock,has_peer; uint16_t state; SockAddr sock,peer;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  state = ATOMIC_READ(self->s_state);
  if (ascii_printer_printf(&printer,"<socket %K, %K, %K: ",
@@ -2490,9 +2489,7 @@ socket_str(DeeSocketObject *__restrict self) {
                             state&SOCKET_FSHUTDOWN_W ? "w" : "") < 0) goto err;
  }
  if (ASCII_PRINTER_PRINT(&printer,">") < 0) goto err;
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;
@@ -2501,8 +2498,7 @@ err:
 #if 0
 PRIVATE DREF DeeObject *DCALL
 socket_repr(DeeSocketObject *__restrict self) {
- bool has_sock,has_peer; uint16_t state;
- DREF DeeObject *result; SockAddr sock,peer;
+ bool has_sock,has_peer; uint16_t state; SockAddr sock,peer;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  state = ATOMIC_READ(self->s_state);
  if (ascii_printer_printf(&printer,"<socket(%R,%R,%R): ",
@@ -2538,9 +2534,7 @@ socket_repr(DeeSocketObject *__restrict self) {
                              state&SOCKET_FSHUTDOWN_W ? "w" : "") < 0) goto err;
  }
  if (ASCII_PRINTER_PRINT(&printer,">") < 0) goto err;
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;

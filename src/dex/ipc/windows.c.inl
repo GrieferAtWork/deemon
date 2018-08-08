@@ -99,12 +99,9 @@ err:
 /* Pack the given procenv into an environment string. */
 PRIVATE DREF DeeObject *DCALL
 pack_environ(DeeObject *__restrict procenv) {
- DREF DeeObject *result;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  if unlikely(print_environ(&printer,procenv)) goto err;
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;
@@ -1852,13 +1849,14 @@ process_set_argv(Process *__restrict self, DeeObject *__restrict value) {
  /* Pack together a commandline. */
  if unlikely(cmdline_add_args(&printer,value)) goto err;
  cmdline = (DREF DeeStringObject *)ascii_printer_pack(&printer);
- if unlikely(!cmdline) goto err;
+ if unlikely(!cmdline) goto err_noprinter;
  /* Set the commandline of the process. */
  result = process_set_cmdline(self,(DeeObject *)cmdline);
  Dee_Decref(cmdline);
  return result;
 err:
  ascii_printer_fini(&printer);
+err_noprinter:
  return -1;
 }
 
@@ -1965,7 +1963,7 @@ process_init(Process *__restrict self,
 
  /* Pack together the commandline. */
  self->p_cmdline = (DREF DeeStringObject *)ascii_printer_pack(&cmdline);
- if unlikely(!self->p_cmdline) goto err_exe;
+ if unlikely(!self->p_cmdline) goto err_exe_noprinter;
  self->p_exe = (DREF DeeStringObject *)exe; /* Inherit */
 
  /* Initialize all the other fields. */
@@ -1985,7 +1983,11 @@ err_exe:
  Dee_Decref(exe);
 err:
  ascii_printer_fini(&cmdline);
+err_noprinter:
  return -1;
+err_exe_noprinter:
+ Dee_Decref(exe);
+ goto err_noprinter;
 }
 
 PRIVATE struct type_gc process_gc = {

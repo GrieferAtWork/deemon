@@ -25,6 +25,7 @@
 #include <deemon/int.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/bytes.h>
 #include <deemon/thread.h>
 #include <deemon/list.h>
 #include <deemon/none.h>
@@ -415,6 +416,38 @@ DeeSeq_Sum(DeeObject *__restrict self) {
   /* Special case: empty sequence. */
   if unlikely(!result) goto err_iter;
   return_none;
+ }
+ if (DeeBytes_Check(result)) {
+  struct bytes_printer p; dssize_t error;
+  elem = DeeObject_IterNext(iterator);
+  if (!ITER_ISOK(elem)) {
+   Dee_Decref(iterator);
+   /* Simple case: Nothing to combine. - No need to use a printer. */
+   if (elem == ITER_DONE)
+       return result;
+   Dee_Decref(result);
+   return NULL;
+  }
+  /* Use a unicode printer. */
+  bytes_printer_init(&p);
+  error = bytes_printer_append(&p,DeeBytes_DATA(result),DeeBytes_SIZE(result));
+  if (error >= 0) error = DeeObject_Print(elem,(dformatprinter)&bytes_printer_print,&p);
+  Dee_Decref(elem);
+  Dee_Decref(result);
+  if unlikely(error < 0) goto err_bytes;
+  /* Now print all the rest into the string as well. */
+  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+   error = DeeObject_Print(elem,(dformatprinter)&bytes_printer_print,&p);
+   Dee_Decref(elem);
+   if unlikely(error < 0) goto err_bytes;
+   if (DeeThread_CheckInterrupt()) goto err_bytes;
+  }
+  if unlikely(!elem) goto err_bytes;
+  Dee_Decref(iterator);
+  return bytes_printer_pack(&p);
+err_bytes:
+  bytes_printer_fini(&p);
+  goto err_iter;
  }
  if (DeeString_Check(result)) {
   struct unicode_printer p; dssize_t error;

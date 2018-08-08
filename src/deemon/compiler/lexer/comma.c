@@ -286,6 +286,7 @@ next_expr:
    if (function_symbol->sym_class == SYM_CLASS_VAR &&
       !function_symbol->sym_var.sym_doc) {
     function_symbol->sym_var.sym_doc = (DREF struct string_object *)ascii_printer_pack(&current_tags.at_doc);
+    ascii_printer_init(&current_tags.at_doc);
     if (!function_symbol->sym_var.sym_doc) goto err;
    }
   }
@@ -358,6 +359,7 @@ set_typed_var:
      var_symbol->sym_class = SYM_CLASS_VAR;
      /* Package together documentation tags for this variable symbol. */
      var_symbol->sym_var.sym_doc = (DREF struct string_object *)ascii_printer_pack(&current_tags.at_doc);
+     ascii_printer_init(&current_tags.at_doc);
      if unlikely(!var_symbol->sym_var.sym_doc) goto err_current;
     }
    }

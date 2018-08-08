@@ -172,16 +172,14 @@ err:
  return -1;
 }
 PUBLIC dssize_t
-(DCALL ascii_printer_print)(void *self,
+(DCALL ascii_printer_print)(struct ascii_printer *__restrict self,
                             char const *__restrict data,
                             size_t datalen) {
- struct ascii_printer *me;
  String *string;
  size_t alloc_size;
  ASSERT(self);
  ASSERT(data || !datalen);
- me = (struct ascii_printer *)self;
- if ((string = me->ap_string) == NULL) {
+ if ((string = self->ap_string) == NULL) {
   /* Make sure not to allocate a string when the used length remains ZERO.
    * >> Must be done to assure the expectation of `if(ap_length == 0) ap_string == NULL' */
   if unlikely(!datalen) return 0;
@@ -197,37 +195,37 @@ alloc_again:
                         (alloc_size+1)*sizeof(char))) goto alloc_again;
    return -1;
   }
-  me->ap_string = string;
+  self->ap_string = string;
   string->s_len = alloc_size;
   memcpy(string->s_str,data,datalen*sizeof(char));
-  me->ap_length = datalen;
+  self->ap_length = datalen;
   goto done;
  }
  alloc_size = string->s_len;
- ASSERT(alloc_size >= me->ap_length);
- alloc_size -= me->ap_length;
+ ASSERT(alloc_size >= self->ap_length);
+ alloc_size -= self->ap_length;
  if unlikely(alloc_size < datalen) {
-  size_t min_alloc = me->ap_length+datalen;
+  size_t min_alloc = self->ap_length+datalen;
   alloc_size = (min_alloc+63) & ~63;
 realloc_again:
   string = (String *)DeeObject_TryRealloc(string,offsetof(String,s_str)+
                                          (alloc_size+1)*sizeof(char));
   if unlikely(!string) {
-   string = me->ap_string;
+   string = self->ap_string;
    if (alloc_size != min_alloc) { alloc_size = min_alloc; goto realloc_again; }
    if (Dee_CollectMemory(offsetof(String,s_str)+
                         (alloc_size+1)*sizeof(char)))
        goto realloc_again;
    return -1;
   }
-  me->ap_string = string;
+  self->ap_string = string;
   string->s_len = alloc_size;
  }
  /* Copy text into the dynamic string. */
  /*DEE_DPRINTF("PRINT: %IX - `%.*s'\n",datalen,(int)datalen,data);*/
- memcpy(string->s_str+me->ap_length,
+ memcpy(string->s_str+self->ap_length,
         data,datalen*sizeof(char));
- me->ap_length += datalen;
+ self->ap_length += datalen;
 done:
  return (dssize_t)datalen;
 }
@@ -256,7 +254,7 @@ PUBLIC DREF DeeObject *
 }
 
 PUBLIC DREF DeeObject *
-(DCALL ascii_printer_packfini)(struct ascii_printer *__restrict self) {
+(DCALL ascii_printer_pack)(struct ascii_printer *__restrict self) {
  DREF String *result = self->ap_string;
  if unlikely(!result) return_reference_(Dee_EmptyString);
  /* Deallocate unused memory. */
@@ -498,21 +496,21 @@ string_repr(DeeObject *__restrict self) {
  void *str = DeeString_WSTR(self);
  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
  CASE_WIDTH_1BYTE:
-  if unlikely(Dee_FormatQuote8(&ascii_printer_print,&printer,
-                              (uint8_t *)str,WSTR_LENGTH(str),
-                               FORMAT_QUOTE_FNORMAL) < 0)
+  if unlikely(Dee_FormatQuote8((dformatprinter)&ascii_printer_print,&printer,
+                               (uint8_t *)str,WSTR_LENGTH(str),
+                                FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
  CASE_WIDTH_2BYTE:
-  if unlikely(Dee_FormatQuote16(&ascii_printer_print,&printer,
-                               (uint16_t *)str,WSTR_LENGTH(str),
-                                FORMAT_QUOTE_FNORMAL) < 0)
+  if unlikely(Dee_FormatQuote16((dformatprinter)&ascii_printer_print,&printer,
+                                (uint16_t *)str,WSTR_LENGTH(str),
+                                 FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
  CASE_WIDTH_4BYTE:
-  if unlikely(Dee_FormatQuote32(&ascii_printer_print,&printer,
-                               (uint32_t *)str,WSTR_LENGTH(str),
-                                FORMAT_QUOTE_FNORMAL) < 0)
+  if unlikely(Dee_FormatQuote32((dformatprinter)&ascii_printer_print,&printer,
+                                (uint32_t *)str,WSTR_LENGTH(str),
+                                 FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
  }

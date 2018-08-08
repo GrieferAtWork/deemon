@@ -1310,7 +1310,9 @@ err:
 #else
  struct ascii_printer p = ASCII_PRINTER_INIT;
  /* Simply print this integer to the printer, using decimal encoding. */
- if (DeeInt_Print(self,DEEINT_PRINT_DEC,&ascii_printer_print,&p) < 0)
+ if (DeeInt_Print(self,DEEINT_PRINT_DEC,
+                 (dformatprinter)&ascii_printer_print,
+                 &p) < 0)
      goto err;
  return ascii_printer_pack(&p);
 err:
@@ -1358,7 +1360,9 @@ err_printer:
   unicode_printer_fini(&printer);
 #else
   struct ascii_printer printer = ASCII_PRINTER_INIT;
-  if unlikely(DeeInt_Print(self,flags,&ascii_printer_print,&printer) < 0)
+  if unlikely(DeeInt_Print(self,flags,
+                          (dformatprinter)&ascii_printer_print,
+                          &printer) < 0)
      goto err_printer;
   return ascii_printer_pack(&printer);
 err_printer:
@@ -1389,7 +1393,7 @@ err_printer:
   struct ascii_printer printer = ASCII_PRINTER_INIT;
   if unlikely(DeeInt_Print(self,
                            DEEINT_PRINT(16,DEEINT_PRINT_FNUMSYS),
-                          &ascii_printer_print,
+                          (dformatprinter)&ascii_printer_print,
                           &printer) < 0)
      goto err_printer;
   return ascii_printer_pack(&printer);

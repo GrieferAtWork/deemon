@@ -281,13 +281,10 @@ err:
 INTERN DREF DeeObject *DCALL
 asm_invocation_tostring(struct asm_invocation *__restrict self,
                         struct asm_mnemonic *__restrict instr) {
- DREF DeeObject *result;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  if unlikely(asm_invocation_print(self,instr,&printer) < 0)
     goto err;
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;

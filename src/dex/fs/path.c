@@ -231,7 +231,6 @@ fs_pathabs(DeeObject *__restrict path, DeeObject *pwd) {
                             DeeString_SIZE(path)) < 0)
       goto err_printer;
   result = ascii_printer_pack(&printer);
-  if unlikely(!result) goto err_printer;
   goto done;
 err_printer:
   ascii_printer_fini(&printer);
@@ -521,8 +520,7 @@ err:
 
 INTERN DREF DeeObject *DCALL
 fs_pathjoin(size_t pathc, DeeObject **__restrict pathv) {
- DREF DeeObject *result; size_t i;
- char nextsep = SEP;
+ size_t i; char nextsep = SEP;
  struct ascii_printer printer;
  /* Special case: Return `.' when no paths are given. */
  if unlikely(!pathc)
@@ -554,9 +552,7 @@ fs_pathjoin(size_t pathc, DeeObject **__restrict pathv) {
   if (!ISSEP(nextsep))
        nextsep = SEP;
  }
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;
@@ -597,7 +593,7 @@ next:
  switch (ch) {
 
  {
-  int error;
+  dssize_t error;
   char *home_start;
  case '~':
   if (!(options&FS_EXPAND_FHOME))
@@ -633,9 +629,9 @@ next:
     goto err;
    }
    /* Print the home path. */
-   error = (int)DeeObject_Print(homepath,
-                               &ascii_printer_print,
-                               &printer);
+   error = DeeObject_Print(homepath,
+                          (dformatprinter)&ascii_printer_print,
+                           &printer);
    Dee_Decref(homepath);
    if unlikely(error < 0) goto err;
    error = 0;
@@ -899,7 +895,7 @@ return_upper:
  }
  /* Pack everything together. */
  path = ascii_printer_pack(&printer);
- if unlikely(!path) goto err;
+ if unlikely(!path) goto err_without_printer;
  if (options&FS_EXPAND_FREL) {
   /* Force the path to become relative. */
   DREF DeeObject *new_path;
@@ -927,9 +923,7 @@ return_upper:
  return path;
 err:
  ascii_printer_fini(&printer);
-#ifdef CONFIG_HOST_WINDOWS
 err_without_printer:
-#endif
  return NULL;
 }
 

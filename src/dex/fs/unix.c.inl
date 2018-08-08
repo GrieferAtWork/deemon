@@ -290,12 +290,9 @@ err:
 }
 
 INTERN DREF DeeObject *DCALL fs_getcwd(void) {
- DREF DeeObject *result;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  if (fs_printcwd(&printer)) goto err;
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;
@@ -1411,10 +1408,11 @@ err:
 
 INTERN DREF DeeObject *DCALL
 fs_readlink(DeeObject *__restrict path) {
- DREF DeeObject *result; char *buffer; int error;
+ char *buffer; int error;
  size_t bufsize,new_size; ssize_t req_size;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  if (!DeeString_Check(path)) {
+  DREF DeeObject *result;
   path = DeeFile_Filename(path);
   if unlikely(!path) goto err;
   result = fs_readlink(path);
@@ -1463,9 +1461,7 @@ no_link:
  }
  /* Release unused data. */
  ascii_printer_release(&printer,(size_t)(bufsize-req_size));
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;

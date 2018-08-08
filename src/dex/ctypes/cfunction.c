@@ -217,9 +217,11 @@ PRIVATE DREF DeeObject *DCALL
 generate_function_name(DeeSTypeObject *__restrict return_type,
                        cc_t calling_convention, size_t argc,
                        DeeSTypeObject **__restrict argv) {
- DREF DeeObject *result; size_t i; char const *cc_name;
+ size_t i; char const *cc_name;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
- if (DeeObject_Print((DeeObject *)return_type,&ascii_printer_print,&printer) < 0)
+ if (DeeObject_Print((DeeObject *)return_type,
+                     (dformatprinter)&ascii_printer_print,
+                     &printer) < 0)
      goto err;
  if (calling_convention != CC_DEFAULT) {
   if (ASCII_PRINTER_PRINT(&printer," ") < 0) goto err;
@@ -233,13 +235,13 @@ generate_function_name(DeeSTypeObject *__restrict return_type,
   if (ASCII_PRINTER_PRINT(&printer,"void") < 0) goto err;
  } else for (i = 0; i < argc; ++i) {
   if (i != 0 && ASCII_PRINTER_PRINT(&printer,", ") < 0) goto err;
-  if (DeeObject_Print((DeeObject *)argv[i],&ascii_printer_print,&printer) < 0)
+  if (DeeObject_Print((DeeObject *)argv[i],
+                      (dformatprinter)&ascii_printer_print,
+                      &printer) < 0)
       goto err;
  }
  if (ASCII_PRINTER_PRINT(&printer,")") < 0) goto err;
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;

@@ -123,16 +123,17 @@ libdisasm_public_printcode_f(size_t argc,
      parse_asm_flags(DeeString_STR(flags_ob),&flags)))
      goto err;
  if (!fp) {
-  struct ascii_printer printer = ASCII_PRINTER_INIT;
-  error = libdisasm_printcode(&ascii_printer_print,&printer,
+  struct unicode_printer printer = UNICODE_PRINTER_INIT;
+  error = libdisasm_printcode((dformatprinter)&unicode_printer_print,
+                              &printer,
                                code->co_code,
                                code->co_code+code->co_codebytes,
                                code,NULL,flags);
   if unlikely(error < 0) {
-   ascii_printer_fini(&printer);
+   unicode_printer_fini(&printer);
    goto err;
   }
-  return ascii_printer_packfini(&printer);
+  return unicode_printer_pack(&printer);
  }
  error = libdisasm_printcode((dformatprinter)&DeeFile_WriteAll,fp,
                               code->co_code,

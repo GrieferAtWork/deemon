@@ -175,7 +175,7 @@ cmdline_split(DeeStringObject *__restrict cmdline) {
       goto err_r_printer;
   /* Pack together the argument. */
   arg = ascii_printer_pack(&printer);
-  if unlikely(!arg) goto err_r_printer;
+  if unlikely(!arg) goto err_r;
   /* Add the argument to the resulting list. */
   temp = DeeList_Append(result,arg);
   Dee_Decref(arg);

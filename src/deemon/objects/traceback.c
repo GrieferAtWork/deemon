@@ -448,9 +448,8 @@ print_ddi(struct ascii_printer *__restrict printer,
 
 PRIVATE DREF DeeObject *DCALL
 traceback_repr(DeeTracebackObject *__restrict self) {
- DREF DeeObject *result; uint16_t i;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
- i = self->tb_numframes;
+ uint16_t i = self->tb_numframes;
  while (i--) {
   DREF DeeCodeObject *code;
   code_addr_t ip; dssize_t error;
@@ -463,9 +462,7 @@ traceback_repr(DeeTracebackObject *__restrict self) {
   Dee_Decref(code);
   if unlikely(error < 0) goto err;
  }
- result = ascii_printer_pack(&printer);
- if unlikely(!result) goto err;
- return result;
+ return ascii_printer_pack(&printer);
 err:
  ascii_printer_fini(&printer);
  return NULL;

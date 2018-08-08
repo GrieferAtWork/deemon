@@ -170,9 +170,11 @@ INTERN DREF DeeModuleObject *DCALL
 parse_module_byname(void) {
  DREF DeeModuleObject *result = NULL;
  struct ascii_printer name = ASCII_PRINTER_INIT;
- if unlikely(parse_module_name(&name)) goto done;
+ if unlikely(parse_module_name(&name)) goto done2;
  if unlikely(!name.ap_string) {
   result = import_module_by_name((DeeStringObject *)Dee_EmptyString);
+done2:
+  ascii_printer_fini(&name);
  } else {
   DREF DeeStringObject *module_name;
   module_name = (DeeStringObject *)ascii_printer_pack(&name);
@@ -181,7 +183,6 @@ parse_module_byname(void) {
   Dee_Decref(module_name);
  }
 done:
- ascii_printer_fini(&name);
  return result;
 }
 
@@ -205,16 +206,15 @@ import_module_symbol(DeeModuleObject *__restrict module,
 
 INTERN DREF DeeAstObject *FCALL
 ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
- struct ascii_printer printer;
+ struct ascii_printer printer = ASCII_PRINTER_INIT;
  DREF DeeStringObject *module_name;
  DREF DeeModuleObject *module;
  struct symbol *extern_symbol;
  struct module_symbol *modsym;
- ascii_printer_init(&printer);
  /* Parse the name of the module from which to import a symbol. */
  if unlikely(parse_module_name(&printer)) goto err_printer;
  module_name = (DREF DeeStringObject *)ascii_printer_pack(&printer);
- if unlikely(!module_name) goto err_printer;
+ if unlikely(!module_name) goto err;
  module = import_module_by_name(module_name);
  Dee_Decref(module_name);
  if unlikely(!module) goto err;
@@ -242,9 +242,13 @@ ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
  }
  /* Return the whole thing as a symbol-ast. */
  return ast_sym(extern_symbol);
-err_module: Dee_Decref(module); goto err;
-err_printer: ascii_printer_fini(&printer);
-err: return NULL;
+err_module:
+ Dee_Decref(module);
+ goto err;
+err_printer:
+ ascii_printer_fini(&printer);
+err:
+ return NULL;
 }
 
 #if 0 /* TODO: Re-write the import statement parser. */
@@ -491,7 +495,7 @@ ast_parse_import(bool allow_symbol_define) {
      goto err_printer;
   module_name = (DREF DeeStringObject *)ascii_printer_pack(&printer);
   if unlikely(!module_name)
-     goto err_printer;
+     goto err;
   module = import_module_by_name(module_name);
   Dee_Decref(module_name);
   if unlikely(!module)
@@ -526,7 +530,7 @@ ast_parse_import(bool allow_symbol_define) {
      goto err_printer;
   module_name = (DREF DeeStringObject *)ascii_printer_pack(&printer);
   if unlikely(!module_name)
-     goto err_printer;
+     goto err;
   module = import_module_by_name(module_name);
   Dee_Decref(module_name);
   if unlikely(!module)
@@ -561,7 +565,7 @@ do_load_module:
       goto err_printer;
    module_name = (DREF DeeStringObject *)ascii_printer_pack(&printer);
    if unlikely(!module_name)
-      goto err_printer;
+      goto err;
    /* Load an inner module. */
    module = import_module_by_name(module_name);
    if unlikely(!module) { Dee_Decref(module_name); goto err; }
@@ -738,9 +742,9 @@ module_name_in_asts:
     ascii_printer_init(&printer);
     /* Parse the module's name. */
     if unlikely(parse_module_name(&printer))
-       goto err_astv;
+       goto err_printer_astv;
     module_name = (DREF DeeStringObject *)ascii_printer_pack(&printer);
-    if unlikely(!module_name) goto err_printer_astv;
+    if unlikely(!module_name) goto err_astv;
     /* Import the module specified by this name. */
     module = import_module_by_name(module_name);
     Dee_Decref(module_name);
@@ -854,7 +858,7 @@ do_import_alias_module:
     if unlikely(parse_module_name(&printer))
        goto err_printer;
     module_name = (DREF DeeStringObject *)ascii_printer_pack(&printer);
-    if unlikely(!module_name) goto err_printer;
+    if unlikely(!module_name) goto err;
     module = import_module_by_name(module_name);
     Dee_Decref(module_name);
     if unlikely(!module) goto err;
@@ -880,7 +884,7 @@ do_import_alias_module_noparse:
      goto do_import_single_module_load;
     }
     module_name = (DREF DeeStringObject *)ascii_printer_pack(&printer);
-    if unlikely(!module_name) goto err_printer;
+    if unlikely(!module_name) goto err;
     module = import_module_by_name(module_name);
     Dee_Decref(module_name);
     if unlikely(!module) goto err;
@@ -919,7 +923,7 @@ do_import_alias_module_noparse:
     goto do_import_single_module_load;
    }
    module_name = (DREF DeeStringObject *)ascii_printer_pack(&printer);
-   if unlikely(!module_name) goto err_printer;
+   if unlikely(!module_name) goto err;
    module = import_module_by_name(module_name);
    Dee_Decref(module_name);
    if unlikely(!module) goto err;

@@ -150,7 +150,7 @@ INTERN DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags) {
  }
  /* If there are flags that we didn't recognize, return them as an integer. */
  if (flags&~match_mask) goto fallback;
- return ascii_printer_packfini(&printer);
+ return ascii_printer_pack(&printer);
 fallback:
  ascii_printer_fini(&printer);
  return DeeInt_NewInt(flags);

@@ -532,7 +532,7 @@ do_realloc:
  }
  /* Pack the string printer and call it a day. */
  result->d_strtab = (DREF struct string_object *)ascii_printer_pack(&strtab);
- if unlikely(!result->d_strtab) goto err;
+ if unlikely(!result->d_strtab) goto err_noprinter;
  if (!current_basescope->bs_name) {
   /* If no function name was set, mark the initial DDI-name register as invalid. */
   result->d_start.dr_name = (uint16_t)-1;
@@ -544,6 +544,7 @@ do_realloc:
 err:
  /* Free all buffers and fail. */
  ascii_printer_fini(&strtab);
+err_noprinter:
  Dee_Free((void *)result->d_symbol_names);
  Dee_Free((void *)result->d_file_names);
  Dee_Free((void *)result->d_path_names);

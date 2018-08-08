@@ -741,7 +741,9 @@ class_maker_pack(struct class_maker *__restrict self) {
 
  /* Create a new branch for the documentation string (if it exists). */
  if (ASCII_PRINTER_LEN(&self->cm_doc) != 0) {
-  DREF DeeObject *doc_str = ascii_printer_pack(&self->cm_doc);
+  DREF DeeObject *doc_str;
+  doc_str = ascii_printer_pack(&self->cm_doc);
+  ascii_printer_init(&self->cm_doc);
   if unlikely(!doc_str) goto err;
   doc_ast = ast_constexpr(doc_str);
   Dee_Decref(doc_str);

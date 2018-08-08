@@ -773,7 +773,9 @@ err:
 PRIVATE DREF DeeObject *DCALL
 bytes_repr(Bytes *__restrict self) {
  struct ascii_printer printer = ASCII_PRINTER_INIT;
- if unlikely(bytes_print_repr(self,&ascii_printer_print,&printer) < 0)
+ if unlikely(bytes_print_repr(self,
+                             (dformatprinter)&ascii_printer_print,
+                             &printer) < 0)
     goto err;
  return ascii_printer_pack(&printer);
 err:
@@ -1093,6 +1095,12 @@ DeeBytes_PrintUtf8(DeeObject *__restrict self,
                    dformatprinter printer, void *arg) {
  dssize_t temp,result = 0;
  uint8_t *iter,*end,*flush_start;
+ /* Optimizations for special printer targets. */
+ if (printer == (dformatprinter)&bytes_printer_print)
+     return bytes_printer_append((struct bytes_printer *)arg,DeeBytes_DATA(self),DeeBytes_SIZE(self));
+ if (printer == (dformatprinter)&unicode_printer_print)
+     return unicode_printer_print8((struct unicode_printer *)arg,DeeBytes_DATA(self),DeeBytes_SIZE(self));
+
  end = (iter = flush_start = DeeBytes_DATA(self)) + DeeBytes_SIZE(self);
  while (iter < end) {
   uint8_t escape_buf[2];
