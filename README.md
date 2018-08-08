@@ -53,15 +53,17 @@ Code examples can be found in <b>/util/tut</b>
   - The builtin <code>int</code> type can have arbitrary precision now, allowing operations with a practically infinite number of digits (though I'm not claiming credit for the implementation; only for the integration and new design centered around it)
 
 ### Noteworthy changes and fixes
-  - Inplace operators have significantly changed operation protocols than regular operators (<code>x += y;</code> is emulated as <code>x = x + y;</code> at runtime when no inplace operator exists)
-    - As a result of this, strings and other immutable types will appear as though they can be used in inplace operations, when in actuality they can't.
+  - Inplace operators now have significantly different operation protocols than regular operators (<code>x += y;</code> is emulated as <code>x = x + y;</code> at runtime when no inplace operator exists)
+    - As a result of this, strings and other immutable types will appear as though they can be used in inplace operations, when in reality they can't.
+    - As a consequence of this, r-values (such as function return values) cannot be used in inplace operations
   - Classes now require the user to declare member variables (also: I actually implemented a syntax for super-initialization in constructors)
   - Introduction of new symbol classes for extern (aka. imported) and global (aka. exported) objects
     - Global variables are created when defining a symbols without a <code>local</code> prefix in the global scope, or when explicitly prefixed with <code>global</code>
-    - Global variables (symbols) can be modified by other modules or functions without the need of placing their values inside of a cell (as was, and is still required for local variables referenced in inner functions, aka. lambda expressions)
-    - Symbol and module import works the same way it does in python, with the additional that you are free to either write <code>import symbol from module</code> or <code>from module import symbol</code>.
+    - Global variables (symbols) can be modified by other modules or functions without the need of placing their values inside of a cell (as was, and is still required for local variables referenced in inner functions, or lambda expressions)
+    - Symbol and module import works the same way it does in python, with the additional that you are free to write either <code>import symbol from module</code> or <code>from module import symbol</code>.
     - Additionally, anywhere a variable can appear, you can also write <code>foo from bar</code> which will reference a symbol <code>foo</code> from a module <code>bar</code> without you having to explicitly import that symbol beforehand.
-  - The style guidelines now discourage the use of underscores in symbol names (e.g. it's <code>seq.nonempty()</code> now, instead of <code>seq.non_empty()</code>, which is deprecated)
+  - New style guidelines discourage the use of underscores in symbol names (e.g. it's <code>seq.nonempty()</code> now, instead of <code>seq.non_empty()</code>, which is deprecated)
+  - New style guidelines discourage the use of functions for state checks, or alternate representations (e.g. it's <code>thread.wasstarted</code> now, instead of <code>thread.started()</code>, which is deprecated)
   - Builtin types such as <code>list</code> or <code>dict</code> must now be <code>import * from deemon;</code>-ed before they appear as symbols
   - The builtin type <code>set</code> has been renamed to <code>hashset</code>. <code>set from deemon</code> is now the base-class for set-like objects
     - Shouldn't really cause any problems in old code though, because deemon 100+'s <code>set</code>-type has always been broken, and never got fixed
@@ -76,15 +78,16 @@ Code examples can be found in <b>/util/tut</b>
   - A fully featured C preprocessor (it's a highly advanced version of tpp, including all of its extensions)
   - The <code>\_\_nth</code> keyword being used to select secondary variable matches.
 
-### Deprecated features (discouraged usage, but continued maintainance)
+### Deprecated features (discouraged usage, but continued maintainance for now)
   - <code>#include \<...\></code> You really shouldn't be including files any more. - Use modules instead (they're way better)
   - Various minor syntax changes to steer usercode to being more uniform (warned about in new code; ignored in legacy code)
-  - The dedicated syntax for cells (<code>\<foo\></code> is deprecated and not encouraged)
+  - The dedicated syntax for cells (<code>\<foo\></code> is deprecated and very much discouraged)
     - Use <code>cell from deemon</code> instead.
+    - Also note that with the introduction of global variables, cell indirection is no longer required in most cases
 
 ### Dropped features
   - C-emulation of <code>struct</code>, <code>extern</code>, <code>union</code>, etc.
-    - The runtime-aspect is still available through ctypes (http://localhost:8080/modules/ctypes), however don't have a dedicated syntax any more
+    - The runtime-aspect is still available through ctypes (http://localhost:8080/modules/ctypes), however no longer has a dedicated syntax
     - Maintained C-like features that won't go away:
       - C-like casts <code>(int)x</code> (same as <code>int(x)</code>)
       - C-like variable declarations <code>int x = y;</code> (same as <code>local x = int(y);</code>)
@@ -101,6 +104,7 @@ Legacy code being detected by it #including any of the old headers
     - Note that tags will likely undergo their own overhaul in the near future in order to user-code to define its own tags
   - The millions of <code>\_\_builtin*</code> functions have all been removed
     - Most notable, even <code>\_\_builtin\_object()</code> is emulated
+  - The <code>move</code> keyword is defined as an alias for <code>copy</code>
   - Removed the <code>weak</code> keyword
   - Various keywords that all start with 2 underscores (<code>__static_if</code>, <code>__if_true</code>, etc.)
   - The old notion of modules no longer exist (The <code>module</code> keyword was removed, and the <code>import</code> keyword's meaning has an entirely new meaning)

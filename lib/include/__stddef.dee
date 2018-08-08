@@ -134,8 +134,9 @@ local function __ctypes_new(tp) {
 #define __builtin_bound(x)                  bound(x)
 #define __builtin_offsetof(s,t)           ((s).offsetof(#t))
 
-
+/* Define some unary-expression keywords that got removed */
 #define weak     weakref from deemon pack
+#define move     copy
 
 /* Stub-implement removed static-if keywords (as far as possible). */
 #define __static_if(x)    if(x)

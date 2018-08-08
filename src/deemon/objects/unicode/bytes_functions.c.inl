@@ -3145,7 +3145,7 @@ INTERN struct type_method bytes_methods[] = {
       DOC("(int start=0,int end=-1)->bytes\n"
           "Same as #substr (here for ABI compatibility with :string.bytes)") },
     { "ord", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_ord,
-      DOC("()->int\n"
+      DOC("->int\n"
           "@throw ValueError The length of @this bytes object is not equal to ${1}\n"
           "Same as ${this[0]}\n"
           "\n"
@@ -3191,7 +3191,7 @@ INTERN struct type_method bytes_methods[] = {
 
     /* String/Character traits */
     { "isprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isprint,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3199,7 +3199,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all "
           "characters in ${this.substr(start,end)} are printable") },
     { "isalpha", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isalpha,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3207,7 +3207,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are alphabetical") },
     { "isspace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isspace,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3215,7 +3215,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are space-characters") },
     { "islf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_islf,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3223,7 +3223,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are line-feeds") },
     { "islower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_islower,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3231,7 +3231,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are lower-case") },
     { "isupper", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isupper,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3239,7 +3239,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are upper-case") },
     { "iscntrl", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_iscntrl,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3247,7 +3247,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are control characters") },
     { "isdigit", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isdigit,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3255,7 +3255,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are digits") },
     { "isdecimal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isdecimal,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3263,7 +3263,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are dicimal characters") },
     { "issymstrt", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_issymstrt,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3271,7 +3271,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} can be used to start a symbol name") },
     { "issymcont", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_issymcont,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3279,7 +3279,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} can be used to continue a symbol name") },
     { "isalnum", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isalnum,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3287,7 +3287,7 @@ INTERN struct type_method bytes_methods[] = {
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are alpha-numerical") },
     { "isnumeric", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isnumeric,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -3300,7 +3300,7 @@ INTERN struct type_method bytes_methods[] = {
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if the character at ${this[index]} has title-casing\n"
           "\n"
-          "()->bool\n"
+          "->bool\n"
           "(int start=0,int end=-1)->bool\n"
           "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
           "follows title-casing, meaning that space is followed by upper-case") },
@@ -3310,7 +3310,7 @@ INTERN struct type_method bytes_methods[] = {
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if the character at ${this[index]} can be used to start a symbol name\n"
           "\n"
-          "()->bool\n"
+          "->bool\n"
           "(int start,int end)->bool\n"
           "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
           "is a valid symbol name") },
