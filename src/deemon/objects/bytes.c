@@ -486,6 +486,25 @@ done:
  return (DREF DeeObject *)result;
 }
 PUBLIC DREF DeeObject *DCALL
+DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
+ DREF Bytes *result;
+ result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+
+                                         num_bytes);
+ if unlikely(!result) goto done;
+ result->b_base  = (uint8_t *)memcpy(result->b_data,data,num_bytes);
+ result->b_size  = num_bytes;
+ result->b_orig  = (DREF DeeObject *)result;
+ result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_buffer.bb_base  = result->b_data;
+ result->b_buffer.bb_size  = num_bytes;
+#ifndef __INTELLISENSE__
+ result->b_buffer.bb_put   = NULL;
+#endif
+ DeeObject_Init(result,&DeeBytes_Type);
+done:
+ return (DREF DeeObject *)result;
+}
+PUBLIC DREF DeeObject *DCALL
 DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self,
                       size_t num_bytes) {
  DREF Bytes *result,*new_result;
@@ -1598,7 +1617,7 @@ done:
 }
 
 PUBLIC int
-(DCALL bytes_printer_putbyte)(struct bytes_printer *__restrict self, uint8_t ch) {
+(DCALL bytes_printer_putb)(struct bytes_printer *__restrict self, uint8_t ch) {
  ASSERT(self);
  /* Quick check: Can we print to an existing buffer. */
  if (self->bp_bytes &&
@@ -1611,6 +1630,20 @@ PUBLIC int
      goto err;
 done:
  return 0;
+err:
+ return -1;
+}
+
+PUBLIC dssize_t
+(DCALL bytes_printer_repeat)(struct bytes_printer *__restrict self,
+                             uint8_t ch, size_t count) {
+ uint8_t *buffer;
+ ASSERT(self);
+ buffer = bytes_printer_alloc(self,count);
+ if unlikely(!buffer) goto err;
+ /* Simply do a memset to initialize bytes data. */
+ memset(buffer,ch,count);
+ return (dssize_t)count;
 err:
  return -1;
 }

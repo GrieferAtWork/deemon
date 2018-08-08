@@ -590,9 +590,9 @@ got_read:
     if (ch == GETC_ERR) goto err_printer;
     /* Found a \r\n or \r-linefeed. */
     if (keep_lf) {
-     if (bytes_printer_putbyte(&printer,'\r')) goto err_printer;
+     if (bytes_printer_putb(&printer,'\r')) goto err_printer;
      if (ch == '\n' && BYTES_PRINTER_SIZE(&printer) < max_length &&
-         bytes_printer_putbyte(&printer,'\n')) goto err_printer;
+         bytes_printer_putb(&printer,'\n')) goto err_printer;
     }
     goto done;
    }
@@ -600,7 +600,7 @@ got_read:
    if (ch == '\n') {
     /* Found a \n-linefeed */
     if (keep_lf &&
-        bytes_printer_putbyte(&printer,'\n'))
+        bytes_printer_putb(&printer,'\n'))
         goto err_printer;
     goto done;
    }
@@ -614,7 +614,7 @@ got_read:
     goto done;
    }
    /* Print the character. */
-   if (bytes_printer_putbyte(&printer,(uint8_t)ch))
+   if (bytes_printer_putb(&printer,(uint8_t)ch))
        goto err_printer;
   }
 done:

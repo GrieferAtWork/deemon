@@ -2134,6 +2134,253 @@ bytes_casewmatch(Bytes *__restrict self,
  return_bool_(result == 0);
 }
 
+PRIVATE DREF DeeObject *DCALL
+bytes_center(Bytes *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result; size_t width;
+ DeeObject *filler_ob = NULL; Needle filler;
+ if (DeeArg_Unpack(argc,argv,"Iu|o:center",&width,&filler_ob))
+     goto err;
+ if (filler_ob) {
+  if (get_needle(&filler,filler_ob))
+      goto err;
+ } else {
+  filler.n_data    = filler._n_buf;
+  filler.n_size    = 1;
+  filler._n_buf[0] = 0x20; /* ' ' */
+ }
+ if (width <= DeeBytes_SIZE(self)) {
+  result = DeeBytes_NewBufferData(DeeBytes_DATA(self),
+                                  DeeBytes_SIZE(self));
+ } else {
+  size_t fill_front,fill_back;
+  result = DeeBytes_NewBufferUninitialized(width);
+  if unlikely(!result) goto err;
+  fill_front  = (width - DeeBytes_SIZE(self));
+  fill_back   = fill_front/2;
+  fill_front -= fill_back;
+  memfilb(DeeBytes_DATA(result) + 0,fill_front,filler.n_data,filler.n_size);
+  memcpyb(DeeBytes_DATA(result) + fill_front,
+          DeeBytes_DATA(self),DeeBytes_SIZE(self));
+  memfilb(DeeBytes_DATA(result) + fill_front + DeeBytes_SIZE(self),
+          fill_back,filler.n_data,filler.n_size);
+ }
+ return result;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_ljust(Bytes *__restrict self,
+            size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result; size_t width;
+ DeeObject *filler_ob = NULL; Needle filler;
+ if (DeeArg_Unpack(argc,argv,"Iu|o:ljust",&width,&filler_ob))
+     goto err;
+ if (filler_ob) {
+  if (get_needle(&filler,filler_ob))
+      goto err;
+ } else {
+  filler.n_data    = filler._n_buf;
+  filler.n_size    = 1;
+  filler._n_buf[0] = 0x20; /* ' ' */
+ }
+ if (width <= DeeBytes_SIZE(self)) {
+  result = DeeBytes_NewBufferData(DeeBytes_DATA(self),
+                                  DeeBytes_SIZE(self));
+ } else {
+  size_t fill_back;
+  result = DeeBytes_NewBufferUninitialized(width);
+  if unlikely(!result) goto err;
+  fill_back = (width - DeeBytes_SIZE(self));
+  memcpyb(DeeBytes_DATA(result) + 0,
+          DeeBytes_DATA(self),DeeBytes_SIZE(self));
+  memfilb(DeeBytes_DATA(result) + DeeBytes_SIZE(self),
+          fill_back,filler.n_data,filler.n_size);
+ }
+ return result;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_rjust(Bytes *__restrict self,
+            size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result; size_t width;
+ DeeObject *filler_ob = NULL; Needle filler;
+ if (DeeArg_Unpack(argc,argv,"Iu|o:rjust",&width,&filler_ob))
+     goto err;
+ if (filler_ob) {
+  if (get_needle(&filler,filler_ob))
+      goto err;
+ } else {
+  filler.n_data    = filler._n_buf;
+  filler.n_size    = 1;
+  filler._n_buf[0] = 0x20; /* ' ' */
+ }
+ if (width <= DeeBytes_SIZE(self)) {
+  result = DeeBytes_NewBufferData(DeeBytes_DATA(self),
+                                  DeeBytes_SIZE(self));
+ } else {
+  size_t fill_front;
+  result = DeeBytes_NewBufferUninitialized(width);
+  if unlikely(!result) goto err;
+  fill_front  = (width - DeeBytes_SIZE(self));
+  memfilb(DeeBytes_DATA(result) + 0,fill_front,filler.n_data,filler.n_size);
+  memcpyb(DeeBytes_DATA(result) + fill_front,
+          DeeBytes_DATA(self),DeeBytes_SIZE(self));
+ }
+ return result;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_zfill(Bytes *__restrict self,
+            size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result; size_t width;
+ DeeObject *filler_ob = NULL; Needle filler;
+ if (DeeArg_Unpack(argc,argv,"Iu|o:zfill",&width,&filler_ob))
+     goto err;
+ if (filler_ob) {
+  if (get_needle(&filler,filler_ob))
+      goto err;
+ } else {
+  filler.n_data    = filler._n_buf;
+  filler.n_size    = 1;
+  filler._n_buf[0] = 0x30; /* '0' */
+ }
+ if (width <= DeeBytes_SIZE(self)) {
+  result = DeeBytes_NewBufferData(DeeBytes_DATA(self),
+                                  DeeBytes_SIZE(self));
+ } else {
+  size_t fill_front,src_len; uint8_t *dst,*src;
+  result = DeeBytes_NewBufferUninitialized(width);
+  if unlikely(!result) goto err;
+  dst        = DeeBytes_DATA(result);
+  src        = DeeBytes_DATA(self);
+  src_len    = DeeBytes_SIZE(self);
+  fill_front = (width - src_len);
+  while (src_len && DeeUni_IsSign(src[0])) {
+   *dst++ = *src++;
+   --src_len;
+  }
+  memfilb(dst + 0,fill_front,filler.n_data,filler.n_size);
+  memcpyb(dst + fill_front,src,src_len);
+ }
+ return result;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_expandtabs(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ size_t tab_width = 8;
+ if (DeeArg_Unpack(argc,argv,"|Iu:expandtabs",&tab_width))
+     goto err;
+ {
+  struct bytes_printer printer = BYTES_PRINTER_INIT;
+  uint8_t *iter,*end,*flush_start;
+  size_t line_inset = 0;
+  iter = DeeBytes_DATA(self);
+  end  = iter + DeeBytes_SIZE(iter);
+  flush_start = iter;
+  for (; iter < end; ++iter) {
+   uint8_t ch = *iter;
+   if (!DeeUni_IsTab(ch)) {
+    ++line_inset;
+    if (DeeUni_IsLF(ch))
+        line_inset = 0; /* Reset insets at line starts. */
+    continue;
+   }
+   if (bytes_printer_append(&printer,flush_start,
+                           (size_t)(iter-flush_start)) < 0)
+       goto err_printer;
+   /* Replace with white-space. */
+   if likely(tab_width) {
+    line_inset = tab_width - (line_inset % tab_width);
+    if (bytes_printer_repeat(&printer,ASCII_SPACE,line_inset) < 0)
+        goto err_printer;
+    line_inset = 0;
+   }
+   flush_start = iter+1;
+  }
+  if (!BYTES_PRINTER_SIZE(&printer))
+       goto retself;
+  if (bytes_printer_append(&printer,flush_start,
+                          (size_t)(iter-flush_start)) < 0)
+      goto err_printer;
+  return bytes_printer_pack(&printer);
+retself:
+  bytes_printer_fini(&printer);
+  return_reference_((DeeObject *)self);
+err_printer:
+  bytes_printer_fini(&printer);
+ }
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_unifylines(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ DeeObject *replace_ob; Needle replace;
+ if (DeeArg_Unpack(argc,argv,"|o:unifylines",&replace_ob))
+     goto err;
+ if (replace_ob) {
+  if (get_needle(&replace,replace_ob))
+      goto err;
+ } else {
+  replace.n_data    = replace._n_buf;
+  replace.n_size    = 1;
+  replace._n_buf[0] = '\n';
+ }
+ {
+  struct bytes_printer printer = BYTES_PRINTER_INIT;
+  uint8_t *iter,*end,*flush_start;
+  iter = DeeBytes_DATA(self);
+  end  = iter + DeeBytes_SIZE(iter);
+  flush_start = iter;
+  for (; iter < end; ++iter) {
+   uint8_t ch = *iter;
+   if (ch != ASCII_CR && ch != ASCII_LF)
+       continue; /* Not a line-feed character */
+   if (replace.n_size == 1 && ch == replace.n_data[0]) {
+    if (ch != ASCII_CR)
+        continue; /* No-op replacement. */
+    if (iter + 1 >= end)
+        continue; /* Cannot be CRLF */
+    if (iter[1] != ASCII_LF)
+        continue; /* Isn't CRLF */
+   }
+   if (bytes_printer_append(&printer,flush_start,
+                           (size_t)(iter-flush_start)) < 0)
+       goto err_printer;
+   if (bytes_printer_append(&printer,
+                             replace.n_data,
+                             replace.n_size) < 0)
+       goto err_printer;
+   if (ch == ASCII_CR && iter + 1 < end && iter[1] == ASCII_LF)
+       ++iter;
+   flush_start = iter+1;
+  }
+  if (!BYTES_PRINTER_SIZE(&printer))
+       goto retself;
+  if (bytes_printer_append(&printer,flush_start,
+                          (size_t)(iter-flush_start)) < 0)
+      goto err_printer;
+  return bytes_printer_pack(&printer);
+retself:
+  bytes_printer_fini(&printer);
+  return_reference_((DeeObject *)self);
+err_printer:
+  bytes_printer_fini(&printer);
+ }
+err:
+ return NULL;
+}
+
 
 INTERN struct type_method bytes_methods[] = {
     { "decode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_decode,
@@ -2769,6 +3016,42 @@ INTERN struct type_method bytes_methods[] = {
           "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->bool\n"
           "Same as #casewmatch, however ascii-casing is ignored during character comparisons") },
 
+    /* Bytes alignment functions. */
+    { "center", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_center,
+      DOC("(int width,string filler=\" \")->string\n"
+          "(int width,bytes filler)->string\n"
+          "(int width,int filler)->string\n"
+          "Use a writable copy of @this bytes object as result, then evenly "
+          "insert @filler at the front and back to pad its length to @width bytes") },
+    { "ljust", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_ljust,
+      DOC("(int width,string filler=\" \")->string\n"
+          "Use a writable copy of @this bytes object as result, then "
+          "insert @filler at the back to pad its length to @width bytes") },
+    { "rjust", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rjust,
+      DOC("(int width,string filler=\" \")->string\n"
+          "Use a writable copy of @this bytes object as result, then "
+          "insert @filler at the front to pad its length to @width bytes") },
+    { "zfill", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_zfill,
+      DOC("(int width,string filler=\"0\")->string\n"
+          "Skip leading ${\'+\'} and ${\'-\'} ascii-characters, then insert @filler "
+          "to pad the resulting string to a length of @width bytes") },
+    { "reversed", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_reversed,
+      DOC("(int start=0,int end=-1)->bytes\n"
+          "Return a copy of the sub-string ${this.substr(start,end)} with its byte order reversed") },
+    { "expandtabs", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_expandtabs,
+      DOC("(int tabwidth=8)->bytes\n"
+          "Expand tab characters with whitespace offset from the "
+          "start of their respective line at multiples of @tabwidth\n"
+          "Note that in the event of no tabs being found, @this bytes object may be re-returned") },
+    { "unifylines", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_unifylines,
+      DOC("(string replacement=\"\\n\")->bytes\n"
+          "(bytes replacement)->bytes\n"
+          "(int replacement)->bytes\n"
+          "Unify all ascii-linefeed character sequences ($\"\\n\", $\"\\r\" and $\"\\r\\n\") "
+          "found in @this bytes object to make exclusive use of @replacement\n"
+          "Note that in the event of no line-feeds differing from @replacement being found, "
+          "@this bytes object may be re-returned") },
+
     /* Bytes splitter functions. */
     { "split", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_split,
       DOC("(bytes needle)->{bytes...}\n"
@@ -2797,17 +3080,6 @@ INTERN struct type_method bytes_methods[] = {
           "The returned bytes objects are views of @this byte object, meaning they "
           "have the same #iswritable characteristics as @this, and refer to the same "
           "memory") },
-
-
-
-
-    /* String alignment functions. */
-    { "reversed", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_reversed,
-      DOC("(int start=0,int end=-1)->bytes\n"
-          "Return the sub-string ${this.substr(start,end)} with its byte order reversed") },
-
-
-
 
     /* Bytes-specific functions. */
     { "resized", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_resized,

@@ -4679,7 +4679,7 @@ bytes_printer_putc(struct bytes_printer *__restrict self, char ch) {
  /* Quick check: If the character is apart of the
   *              ASCII range, just append it as a byte. */
  if likely((uint8_t)ch < 0x80)
-    return bytes_printer_putbyte(self,(uint8_t)ch);
+    return bytes_printer_putb(self,(uint8_t)ch);
  /* Print the character as a UTF-8 string. */
  return bytes_printer_print(self,&ch,1) < 0 ? -1 : 0;
 }

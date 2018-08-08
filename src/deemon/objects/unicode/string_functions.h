@@ -44,6 +44,11 @@
 DECL_BEGIN
 
 #define DeeUni_IsSign(x) ((x)=='+' || (x)=='-')
+#define ASCII_SPACE    32 /* ' ' */
+#define ASCII_ZERO     48 /* '0' */
+#define ASCII_CR       13 /* '\r' */
+#define ASCII_LF       10 /* '\n' */
+
 #define UNICODE_SPACE  32 /* ' ' */
 #define UNICODE_ZERO   48 /* '0' */
 #define UNICODE_CR     13 /* '\r' */
@@ -723,32 +728,44 @@ typedef DeeStringObject String;
 PRIVATE void DCALL memfilb(uint8_t *__restrict dst, size_t num_bytes,
                            uint8_t const *__restrict src, size_t src_bytes) {
  ASSERT(src_bytes != 0);
- while (num_bytes > src_bytes) {
-  memcpyb(dst,src,src_bytes);
-  num_bytes -= src_bytes;
-  dst       += src_bytes;
+ if (src_bytes == 1) {
+  memsetb(dst,src[0],num_bytes);
+ } else {
+  while (num_bytes > src_bytes) {
+   memcpyb(dst,src,src_bytes);
+   num_bytes -= src_bytes;
+   dst       += src_bytes;
+  }
+  memcpyb(dst,src,num_bytes);
  }
- memcpyb(dst,src,num_bytes);
 }
 PRIVATE void DCALL memfilw(uint16_t *__restrict dst, size_t num_words,
                            uint16_t const *__restrict src, size_t src_words) {
  ASSERT(src_words != 0);
- while (num_words > src_words) {
-  memcpyw(dst,src,src_words);
-  num_words -= src_words;
-  dst       += src_words;
+ if (src_words == 1) {
+  memsetw(dst,src[0],num_words);
+ } else {
+  while (num_words > src_words) {
+   memcpyw(dst,src,src_words);
+   num_words -= src_words;
+   dst       += src_words;
+  }
+  memcpyw(dst,src,num_words);
  }
- memcpyw(dst,src,num_words);
 }
 PRIVATE void DCALL memfill(uint32_t *__restrict dst, size_t num_dwords,
                            uint32_t const *__restrict src, size_t src_dwords) {
  ASSERT(src_dwords != 0);
- while (num_dwords > src_dwords) {
-  memcpyl(dst,src,src_dwords);
-  num_dwords -= src_dwords;
-  dst       += src_dwords;
+ if (src_dwords == 1) {
+  memsetl(dst,src[0],num_dwords);
+ } else {
+  while (num_dwords > src_dwords) {
+   memcpyl(dst,src,src_dwords);
+   num_dwords -= src_dwords;
+   dst       += src_dwords;
+  }
+  memcpyl(dst,src,num_dwords);
  }
- memcpyl(dst,src,num_dwords);
 }
 
 

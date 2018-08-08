@@ -75,6 +75,7 @@ DFUNDEF DREF DeeObject *DCALL DeeObject_Bytes(DeeObject *__restrict self,
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
 DFUNDEF DREF DeeObject *DCALL DeeBytes_NewBuffer(size_t num_bytes, uint8_t init);
 DFUNDEF DREF DeeObject *DCALL DeeBytes_NewBufferUninitialized(size_t num_bytes);
+DFUNDEF DREF DeeObject *DCALL DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
 DFUNDEF DREF DeeObject *DCALL DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
 DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
 
@@ -163,7 +164,10 @@ DFUNDEF dssize_t
 DFUNDEF int (DCALL bytes_printer_putc)(struct bytes_printer *__restrict self, char ch);
 
 /* Append a single byte. */
-DFUNDEF int (DCALL bytes_printer_putbyte)(struct bytes_printer *__restrict self, uint8_t byte);
+DFUNDEF int (DCALL bytes_printer_putb)(struct bytes_printer *__restrict self, uint8_t byte);
+
+/* Repeat the given `byte' a total of `count' times. */
+DFUNDEF dssize_t (DCALL bytes_printer_repeat)(struct bytes_printer *__restrict self, uint8_t byte, size_t count);
 
 
 /* Append raw byte data to the given bytes-printer, without concern
@@ -188,7 +192,7 @@ DFUNDEF void (DCALL bytes_printer_release)(struct bytes_printer *__restrict self
 #ifndef __NO_builtin_expect
 #define DeeSeq_ItemsToBytes(dst,num_bytes,seq) __builtin_expect(DeeSeq_ItemsToBytes(dst,num_bytes,seq),0)
 #define bytes_printer_putc(self,ch)            __builtin_expect(bytes_printer_putc(self,ch),0)
-#define bytes_printer_putbyte(self,byte)       __builtin_expect(bytes_printer_putbyte(self,byte),0)
+#define bytes_printer_putb(self,byte)       __builtin_expect(bytes_printer_putb(self,byte),0)
 #endif
 #endif
 
