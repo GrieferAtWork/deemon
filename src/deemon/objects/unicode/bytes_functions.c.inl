@@ -2684,6 +2684,207 @@ err:
 }
 
 
+PRIVATE DREF DeeObject *DCALL
+bytes_findmatch(Bytes *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *ptr,*scan_str; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:findmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto err_not_found; /* Empty search area. */
+ scan_len = end - start;
+ scan_str = DeeBytes_DATA(self);
+ ptr = find_matchb(scan_str + start,scan_len,
+                   s_open.n_data,s_open.n_size,
+                   s_clos.n_data,s_clos.n_size);
+ if unlikely(!ptr) goto err_not_found;
+ return DeeInt_NewSize((size_t)(ptr - scan_str));
+err_not_found:
+ return_reference_(&DeeInt_MinusOne);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_rfindmatch(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *ptr,*scan_str; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:rfindmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto err_not_found; /* Empty search area. */
+ scan_len = end - start;
+ scan_str = DeeBytes_DATA(self);
+ ptr = rfind_matchb(scan_str + start,scan_len,
+                    s_open.n_data,s_open.n_size,
+                    s_clos.n_data,s_clos.n_size);
+ if unlikely(!ptr) goto err_not_found;
+ return DeeInt_NewSize((size_t)(ptr - scan_str));
+err_not_found:
+ return_reference_(&DeeInt_MinusOne);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_indexmatch(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *ptr,*scan_str; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:indexmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto err_not_found; /* Empty search area. */
+ scan_len = end - start;
+ scan_str = DeeBytes_DATA(self);
+ ptr = find_matchb(scan_str + start,scan_len,
+                   s_open.n_data,s_open.n_size,
+                   s_clos.n_data,s_clos.n_size);
+ if unlikely(!ptr) goto err_not_found;
+ return DeeInt_NewSize((size_t)(ptr - scan_str));
+err_not_found:
+ err_index_not_found((DeeObject *)self,s_clos_ob);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_rindexmatch(Bytes *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *ptr,*scan_str; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:rindexmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto err_not_found; /* Empty search area. */
+ scan_len = end - start;
+ scan_str = DeeBytes_DATA(self);
+ ptr = rfind_matchb(scan_str + start,scan_len,
+                    s_open.n_data,s_open.n_size,
+                    s_clos.n_data,s_clos.n_size);
+ if unlikely(!ptr) goto err_not_found;
+ return DeeInt_NewSize((size_t)(ptr - scan_str));
+err_not_found:
+ err_index_not_found((DeeObject *)self,s_open_ob);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casefindmatch(Bytes *__restrict self,
+                    size_t argc, DeeObject **__restrict argv) {
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *ptr,*scan_str; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:casefindmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto err_not_found; /* Empty search area. */
+ scan_len = end - start;
+ scan_str = DeeBytes_DATA(self);
+ ptr = find_casematchb(scan_str + start,scan_len,
+                       s_open.n_data,s_open.n_size,
+                       s_clos.n_data,s_clos.n_size);
+ if unlikely(!ptr) goto err_not_found;
+ return DeeInt_NewSize((size_t)(ptr - scan_str));
+err_not_found:
+ return_reference_(&DeeInt_MinusOne);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_caserfindmatch(Bytes *__restrict self,
+                     size_t argc, DeeObject **__restrict argv) {
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *ptr,*scan_str; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:caserfindmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto err_not_found; /* Empty search area. */
+ scan_len = end - start;
+ scan_str = DeeBytes_DATA(self);
+ ptr = rfind_casematchb(scan_str + start,scan_len,
+                        s_open.n_data,s_open.n_size,
+                        s_clos.n_data,s_clos.n_size);
+ if unlikely(!ptr) goto err_not_found;
+ return DeeInt_NewSize((size_t)(ptr - scan_str));
+err_not_found:
+ return_reference_(&DeeInt_MinusOne);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_caseindexmatch(Bytes *__restrict self,
+                     size_t argc, DeeObject **__restrict argv) {
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *ptr,*scan_str; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:caseindexmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto err_not_found; /* Empty search area. */
+ scan_len = end - start;
+ scan_str = DeeBytes_DATA(self);
+ ptr = find_casematchb(scan_str + start,scan_len,
+                       s_open.n_data,s_open.n_size,
+                       s_clos.n_data,s_clos.n_size);
+ if unlikely(!ptr) goto err_not_found;
+ return DeeInt_NewSize((size_t)(ptr - scan_str));
+err_not_found:
+ err_index_not_found((DeeObject *)self,s_clos_ob);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_caserindexmatch(Bytes *__restrict self,
+                      size_t argc, DeeObject **__restrict argv) {
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *ptr,*scan_str; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:caserindexmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto err_not_found; /* Empty search area. */
+ scan_len = end - start;
+ scan_str = DeeBytes_DATA(self);
+ ptr = rfind_casematchb(scan_str + start,scan_len,
+                        s_open.n_data,s_open.n_size,
+                        s_clos.n_data,s_clos.n_size);
+ if unlikely(!ptr) goto err_not_found;
+ return DeeInt_NewSize((size_t)(ptr - scan_str));
+err_not_found:
+ err_index_not_found((DeeObject *)self,s_open_ob);
+err:
+ return NULL;
+}
+
+
 INTERN struct type_method bytes_methods[] = {
     { "decode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_decode,
       DOC("(string codec,string errors=\"strict\")->string\n"
@@ -3461,6 +3662,111 @@ INTERN struct type_method bytes_methods[] = {
           "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
           "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
           "Same as #rcommon, however ascii-casing is ignored during character comparisons") },
+
+    /* Find match character sequences */
+    { "findmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_findmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->int\n"
+          "(string open,bytes close,int start=0,int end=-1)->int\n"
+          "(string open,int close,int start=0,int end=-1)->int\n"
+          "(bytes open,string close,int start=0,int end=-1)->int\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
+          "(bytes open,int close,int start=0,int end=-1)->int\n"
+          "(int open,string close,int start=0,int end=-1)->int\n"
+          "(int open,bytes close,int start=0,int end=-1)->int\n"
+          "(int open,int close,int start=0,int end=-1)->int\n"
+          "Similar to #find, but do a recursive search for the "
+          "first @close that doesn't have a match @{open}\n"
+          "For more information, see :string.findmatch") },
+    { "indexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_indexmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->int\n"
+          "(string open,bytes close,int start=0,int end=-1)->int\n"
+          "(string open,int close,int start=0,int end=-1)->int\n"
+          "(bytes open,string close,int start=0,int end=-1)->int\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
+          "(bytes open,int close,int start=0,int end=-1)->int\n"
+          "(int open,string close,int start=0,int end=-1)->int\n"
+          "(int open,bytes close,int start=0,int end=-1)->int\n"
+          "(int open,int close,int start=0,int end=-1)->int\n"
+          "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
+          "Same as #findmatch, but throw an :IndexError instead of "
+          "returning ${-1} if no @close without a match @open exists") },
+    { "casefindmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casefindmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->int\n"
+          "(string open,bytes close,int start=0,int end=-1)->int\n"
+          "(string open,int close,int start=0,int end=-1)->int\n"
+          "(bytes open,string close,int start=0,int end=-1)->int\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
+          "(bytes open,int close,int start=0,int end=-1)->int\n"
+          "(int open,string close,int start=0,int end=-1)->int\n"
+          "(int open,bytes close,int start=0,int end=-1)->int\n"
+          "(int open,int close,int start=0,int end=-1)->int\n"
+          "Same as #findmatch, however casing is ignored during character comparisons") },
+    { "caseindexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caseindexmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->int\n"
+          "(string open,bytes close,int start=0,int end=-1)->int\n"
+          "(string open,int close,int start=0,int end=-1)->int\n"
+          "(bytes open,string close,int start=0,int end=-1)->int\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
+          "(bytes open,int close,int start=0,int end=-1)->int\n"
+          "(int open,string close,int start=0,int end=-1)->int\n"
+          "(int open,bytes close,int start=0,int end=-1)->int\n"
+          "(int open,int close,int start=0,int end=-1)->int\n"
+          "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
+          "Same as #indexmatch, however casing is ignored during character comparisons") },
+    { "rfindmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rfindmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->int\n"
+          "(string open,bytes close,int start=0,int end=-1)->int\n"
+          "(string open,int close,int start=0,int end=-1)->int\n"
+          "(bytes open,string close,int start=0,int end=-1)->int\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
+          "(bytes open,int close,int start=0,int end=-1)->int\n"
+          "(int open,string close,int start=0,int end=-1)->int\n"
+          "(int open,bytes close,int start=0,int end=-1)->int\n"
+          "(int open,int close,int start=0,int end=-1)->int\n"
+          "Similar to #findmatch, but operate in a mirrored fashion, searching for the "
+          "last instance of @open that has no match @close within ${this.substr(start,end)}:\n"
+          ">s = \"get_string().foo(bar(),baz(42),7).length\";\n"
+          ">lcol = s.find(\")\");\n"
+          ">print lcol; /* 19 */\n"
+          ">mtch = s.rfindmatch(\"(\",\")\",0,lcol);\n"
+          ">print repr s[mtch:lcol+1]; /* \"(bar(),baz(42),7)\" */\n"
+          "If no @open without a match @close exists, ${-1} is returned") },
+    { "rindexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rindexmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->int\n"
+          "(string open,bytes close,int start=0,int end=-1)->int\n"
+          "(string open,int close,int start=0,int end=-1)->int\n"
+          "(bytes open,string close,int start=0,int end=-1)->int\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
+          "(bytes open,int close,int start=0,int end=-1)->int\n"
+          "(int open,string close,int start=0,int end=-1)->int\n"
+          "(int open,bytes close,int start=0,int end=-1)->int\n"
+          "(int open,int close,int start=0,int end=-1)->int\n"
+          "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
+          "Same as #rfindmatch, but throw an :IndexError instead of "
+          "returning ${-1} if no @open without a match @close exists") },
+    { "caserfindmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserfindmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->int\n"
+          "(string open,bytes close,int start=0,int end=-1)->int\n"
+          "(string open,int close,int start=0,int end=-1)->int\n"
+          "(bytes open,string close,int start=0,int end=-1)->int\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
+          "(bytes open,int close,int start=0,int end=-1)->int\n"
+          "(int open,string close,int start=0,int end=-1)->int\n"
+          "(int open,bytes close,int start=0,int end=-1)->int\n"
+          "(int open,int close,int start=0,int end=-1)->int\n"
+          "Same as #rfindmatch, however casing is ignored during character comparisons") },
+    { "caserindexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserindexmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->int\n"
+          "(string open,bytes close,int start=0,int end=-1)->int\n"
+          "(string open,int close,int start=0,int end=-1)->int\n"
+          "(bytes open,string close,int start=0,int end=-1)->int\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
+          "(bytes open,int close,int start=0,int end=-1)->int\n"
+          "(int open,string close,int start=0,int end=-1)->int\n"
+          "(int open,bytes close,int start=0,int end=-1)->int\n"
+          "(int open,int close,int start=0,int end=-1)->int\n"
+          "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
+          "Same as #rindexmatch, however casing is ignored during character comparisons") },
 
 
     { NULL }

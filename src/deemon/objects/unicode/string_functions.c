@@ -6627,7 +6627,7 @@ string_rindexmatch(String *__restrict self,
  return DeeInt_NewSize(result);
 err_not_found:
  err_index_not_found((DeeObject *)self,
-                     (DeeObject *)s_clos);
+                     (DeeObject *)s_open);
 err:
  return NULL;
 }
@@ -6779,7 +6779,7 @@ string_caserindexmatch(String *__restrict self,
  return DeeInt_NewSize(result);
 err_not_found:
  err_index_not_found((DeeObject *)self,
-                     (DeeObject *)s_clos);
+                     (DeeObject *)s_open);
 err:
  return NULL;
 }
@@ -8901,11 +8901,11 @@ INTERN struct type_method string_methods[] = {
           "returning ${-1} if no @close without a match @open exists") },
     { "casefindmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casefindmatch,
       DOC("(string open,string close,int start=0,int end=-1)->int\n"
-          "Same as :findmatch, however casing is ignored during character comparisons") },
+          "Same as #findmatch, however casing is ignored during character comparisons") },
     { "caseindexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caseindexmatch,
       DOC("(string open,string close,int start=0,int end=-1)->int\n"
           "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
-          "Same as :indexmatch, however casing is ignored during character comparisons") },
+          "Same as #indexmatch, however casing is ignored during character comparisons") },
     { "rfindmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_rfindmatch,
       DOC("(string open,string close,int start=0,int end=-1)->int\n"
           "Similar to #findmatch, but operate in a mirrored fashion, searching for the "
@@ -8923,11 +8923,11 @@ INTERN struct type_method string_methods[] = {
           "returning ${-1} if no @open without a match @close exists") },
     { "caserfindmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caserfindmatch,
       DOC("(string open,string close,int start=0,int end=-1)->int\n"
-          "Same as :rfindmatch, however casing is ignored during character comparisons") },
+          "Same as #rfindmatch, however casing is ignored during character comparisons") },
     { "caserindexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caserindexmatch,
       DOC("(string open,string close,int start=0,int end=-1)->int\n"
           "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
-          "Same as :rindexmatch, however casing is ignored during character comparisons") },
+          "Same as #rindexmatch, however casing is ignored during character comparisons") },
 
     /* Using the find-match functionality, also provide a partitioning version */
     { "partitionmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_partitionmatch,
