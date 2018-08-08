@@ -87,6 +87,9 @@ DFUNDEF DREF DeeObject *DCALL
 DeeBytes_NewView(DeeObject *__restrict owner, void *__restrict base,
                  size_t num_bytes, unsigned int flags);
 
+#define DeeBytes_NewSubView(self,base,num_bytes) \
+        DeeBytes_NewView((self)->b_orig,base,num_bytes,(self)->b_flags)
+
 /* Construct a writable bytes-object that is initialized from the
  * items of the given `seq' casted to integers in the range of 00-FF */
 DFUNDEF DREF DeeObject *DCALL

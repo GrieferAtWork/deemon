@@ -386,11 +386,8 @@ err:
 
 
 PRIVATE DREF Bytes *DCALL
-bytes_substr(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
- size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"|IdId:substr",&start,&end))
-     goto err;
+bytes_getsubstr(Bytes *__restrict self,
+                size_t start, size_t end) {
  if (end >= DeeBytes_SIZE(self)) {
   if (start == 0)
       return_reference_(self);
@@ -398,10 +395,18 @@ bytes_substr(Bytes *__restrict self,
  }
  if (start >= end)
      return_reference_((DREF Bytes *)Dee_EmptyBytes);
- return (DREF Bytes *)DeeBytes_NewView(self->b_orig,
-                                       self->b_base + (size_t)start,
-                                      (size_t)(end-start),
-                                       self->b_flags);
+ return (DREF Bytes *)DeeBytes_NewSubView(self,
+                                          self->b_base + (size_t)start,
+                                         (size_t)(end-start));
+}
+
+PRIVATE DREF Bytes *DCALL
+bytes_substr(Bytes *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"|IdId:substr",&start,&end))
+     goto err;
+ return bytes_getsubstr(self,start,end);
 err:
  return NULL;
 }
@@ -1332,19 +1337,16 @@ bytes_pack_partition(Bytes *__restrict self, uint8_t *find_ptr,
       return DeeTuple_Pack(3,self,Dee_EmptyBytes,Dee_EmptyBytes);
  result = DeeTuple_NewUninitialized(3);
  if unlikely(!result) goto done;
- temp = DeeBytes_NewView(self->b_orig,start_ptr,
-                        (size_t)(find_ptr - start_ptr),
-                         self->b_flags);
+ temp = DeeBytes_NewSubView(self,start_ptr,
+                           (size_t)(find_ptr - start_ptr));
  if unlikely(!temp) goto err_r_0;
  DeeTuple_SET(result,0,temp); /* Inherit reference. */
- temp = DeeBytes_NewView(self->b_orig,find_ptr,
-                         needle_len,self->b_flags);
+ temp = DeeBytes_NewSubView(self,find_ptr,needle_len);
  if unlikely(!temp) goto err_r_1;
  DeeTuple_SET(result,1,temp); /* Inherit reference. */
  find_ptr += needle_len;
- temp = DeeBytes_NewView(self->b_orig,find_ptr,
-                        (start_ptr + search_size) - find_ptr,
-                         self->b_flags);
+ temp = DeeBytes_NewSubView(self,find_ptr,
+                           (start_ptr + search_size) - find_ptr);
  if unlikely(!temp) goto err_r_2;
  DeeTuple_SET(result,2,temp); /* Inherit reference. */
 done:
@@ -1468,10 +1470,9 @@ bytes_strip(Bytes *__restrict self,
  if (begin == DeeBytes_DATA(self) &&
      end  == begin + DeeBytes_SIZE(self))
      return_reference_((DeeObject *)self);
- return DeeBytes_NewView(self->b_orig,
-                         begin,
-                        (size_t)(end - begin),
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,
+                           (size_t)(end - begin));
 err:
  return NULL;
 }
@@ -1497,10 +1498,9 @@ bytes_casestrip(Bytes *__restrict self,
  if (begin == DeeBytes_DATA(self) &&
      end  == begin + DeeBytes_SIZE(self))
      return_reference_((DeeObject *)self);
- return DeeBytes_NewView(self->b_orig,
-                         begin,
-                        (size_t)(end - begin),
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,
+                           (size_t)(end - begin));
 err:
  return NULL;
 }
@@ -1523,10 +1523,9 @@ bytes_lstrip(Bytes *__restrict self,
  }
  if (begin == DeeBytes_DATA(self))
      return_reference_((DeeObject *)self);
- return DeeBytes_NewView(self->b_orig,
-                         begin,
-                        (size_t)(end - begin),
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,
+                           (size_t)(end - begin));
 err:
  return NULL;
 }
@@ -1549,10 +1548,9 @@ bytes_caselstrip(Bytes *__restrict self,
  }
  if (begin == DeeBytes_DATA(self))
      return_reference_((DeeObject *)self);
- return DeeBytes_NewView(self->b_orig,
-                         begin,
-                        (size_t)(end - begin),
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,
+                           (size_t)(end - begin));
 err:
  return NULL;
 }
@@ -1575,10 +1573,9 @@ bytes_rstrip(Bytes *__restrict self,
  }
  if (end == begin + DeeBytes_SIZE(self))
      return_reference_((DeeObject *)self);
- return DeeBytes_NewView(self->b_orig,
-                         begin,
-                        (size_t)(end - begin),
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,
+                           (size_t)(end - begin));
 err:
  return NULL;
 }
@@ -1601,10 +1598,9 @@ bytes_caserstrip(Bytes *__restrict self,
  }
  if (end == begin + DeeBytes_SIZE(self))
      return_reference_((DeeObject *)self);
- return DeeBytes_NewView(self->b_orig,
-                         begin,
-                        (size_t)(end - begin),
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,
+                           (size_t)(end - begin));
 err:
  return NULL;
 }
@@ -1635,9 +1631,8 @@ bytes_sstrip(Bytes *__restrict self,
  if (begin == DeeBytes_DATA(self) &&
      size  == DeeBytes_SIZE(self))
      goto retself;
- return DeeBytes_NewView(self->b_orig,
-                         begin,size,
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,size);
 retself:
  return_reference_((DeeObject *)self);
 err:
@@ -1670,9 +1665,8 @@ bytes_casesstrip(Bytes *__restrict self,
  if (begin == DeeBytes_DATA(self) &&
      size  == DeeBytes_SIZE(self))
      goto retself;
- return DeeBytes_NewView(self->b_orig,
-                         begin,size,
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,size);
 retself:
  return_reference_((DeeObject *)self);
 err:
@@ -1699,9 +1693,8 @@ bytes_lsstrip(Bytes *__restrict self,
  }
  if (begin == DeeBytes_DATA(self))
      goto retself;
- return DeeBytes_NewView(self->b_orig,
-                         begin,size,
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,size);
 retself:
  return_reference_((DeeObject *)self);
 err:
@@ -1728,9 +1721,8 @@ bytes_caselsstrip(Bytes *__restrict self,
  }
  if (begin == DeeBytes_DATA(self))
      goto retself;
- return DeeBytes_NewView(self->b_orig,
-                         begin,size,
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,size);
 retself:
  return_reference_((DeeObject *)self);
 err:
@@ -1756,9 +1748,8 @@ bytes_rsstrip(Bytes *__restrict self,
  }
  if (size  == DeeBytes_SIZE(self))
      goto retself;
- return DeeBytes_NewView(self->b_orig,
-                         begin,size,
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,size);
 retself:
  return_reference_((DeeObject *)self);
 err:
@@ -1784,9 +1775,8 @@ bytes_casersstrip(Bytes *__restrict self,
  }
  if (size  == DeeBytes_SIZE(self))
      goto retself;
- return DeeBytes_NewView(self->b_orig,
-                         begin,size,
-                         self->b_flags);
+ return DeeBytes_NewSubView(self,
+                            begin,size);
 retself:
  return_reference_((DeeObject *)self);
 err:
@@ -2884,6 +2874,242 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeObject *DCALL
+bytes_partitionmatch(Bytes *__restrict self,
+                     size_t argc, DeeObject **__restrict argv) {
+ DREF DeeTupleObject *result;
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *scan_str,*match_start,*match_end; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:partitionmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+#define SET_BYTES(a,b,c) \
+ do{ \
+   if ((result->t_elem[0] = (DREF DeeObject *)(a)) == NULL) goto err_r_0; \
+   if ((result->t_elem[1] = (DREF DeeObject *)(b)) == NULL) goto err_r_1; \
+   if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) goto err_r_2; \
+ }__WHILE0
+ result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
+ if unlikely(!result) goto err;
+ scan_str = DeeBytes_DATA(self);
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto match_not_found; /* Empty search area. */
+ scan_len = end - start;
+ match_start = memmemb(scan_str + start,scan_len,
+                       s_open.n_data,s_open.n_size);
+ if unlikely(!match_start) goto match_not_found;
+ match_end = find_matchb(match_start + s_open.n_size,scan_len -
+                        (match_start - (scan_str + start)),
+                         s_open.n_data,s_open.n_size,
+                         s_clos.n_data,s_clos.n_size);
+ if unlikely(!match_end) goto match_not_found;
+ SET_BYTES(DeeBytes_NewSubView(self,scan_str,
+                              (size_t)(match_start-scan_str)),
+           DeeBytes_NewSubView(self,match_start,
+                              (match_end + s_clos.n_size) -
+                               match_start),
+           DeeBytes_NewSubView(self,match_end + s_clos.n_size,
+                              (size_t)(scan_str + end) -
+                              (size_t)(match_end + s_clos.n_size)));
+#undef SET_BYTES
+done:
+ return (DREF DeeObject *)result;
+match_not_found:
+ result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self,start,end);
+ if unlikely(!result->t_elem[0]) goto err_r_0;
+ result->t_elem[1] = Dee_EmptyBytes;
+ result->t_elem[2] = Dee_EmptyBytes;
+ Dee_Incref_n(Dee_EmptyBytes,2);
+ goto done;
+err_r_2:
+ Dee_Decref_likely(result->t_elem[1]);
+err_r_1:
+ Dee_Decref_likely(result->t_elem[0]);
+err_r_0:
+ DeeTuple_FreeUninitialized((DeeObject *)result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_rpartitionmatch(Bytes *__restrict self,
+                      size_t argc, DeeObject **__restrict argv) {
+ DREF DeeTupleObject *result;
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *scan_str,*match_start,*match_end; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:rpartitionmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+#define SET_BYTES(a,b,c) \
+ do{ \
+   if ((result->t_elem[0] = (DREF DeeObject *)(a)) == NULL) goto err_r_0; \
+   if ((result->t_elem[1] = (DREF DeeObject *)(b)) == NULL) goto err_r_1; \
+   if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) goto err_r_2; \
+ }__WHILE0
+ result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
+ if unlikely(!result) goto err;
+ scan_str = DeeBytes_DATA(self);
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto match_not_found; /* Empty search area. */
+ scan_len = end - start;
+ match_end = memrmemb(scan_str + start,scan_len,
+                      s_clos.n_data,s_clos.n_size);
+ if unlikely(!match_end) goto match_not_found;
+ match_start = rfind_matchb(scan_str + start,
+                           (size_t)(match_end - (scan_str + start)),
+                            s_open.n_data,s_open.n_size,
+                            s_clos.n_data,s_clos.n_size);
+ if unlikely(!match_start) goto match_not_found;
+ SET_BYTES(DeeBytes_NewSubView(self,scan_str,
+                              (size_t)(match_start - scan_str)),
+           DeeBytes_NewSubView(self,match_start,
+                              (size_t)((match_end + s_clos.n_size) -
+                                        match_start)),
+           DeeBytes_NewSubView(self,match_end + s_clos.n_size,
+                              (size_t)(scan_str + end) -
+                              (size_t)(match_end + s_clos.n_size)));
+#undef SET_BYTES
+done:
+ return (DREF DeeObject *)result;
+match_not_found:
+ result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self,start,end);
+ if unlikely(!result->t_elem[0]) goto err_r_0;
+ result->t_elem[1] = Dee_EmptyString;
+ result->t_elem[2] = Dee_EmptyString;
+ Dee_Incref_n(Dee_EmptyString,2);
+ goto done;
+err_r_2:
+ Dee_Decref_likely(result->t_elem[1]);
+err_r_1:
+ Dee_Decref_likely(result->t_elem[0]);
+err_r_0:
+ DeeTuple_FreeUninitialized((DeeObject *)result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casepartitionmatch(Bytes *__restrict self,
+                         size_t argc, DeeObject **__restrict argv) {
+ DREF DeeTupleObject *result;
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *scan_str,*match_start,*match_end; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:casepartitionmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+#define SET_BYTES(a,b,c) \
+ do{ \
+   if ((result->t_elem[0] = (DREF DeeObject *)(a)) == NULL) goto err_r_0; \
+   if ((result->t_elem[1] = (DREF DeeObject *)(b)) == NULL) goto err_r_1; \
+   if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) goto err_r_2; \
+ }__WHILE0
+ result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
+ if unlikely(!result) goto err;
+ scan_str = DeeBytes_DATA(self);
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto match_not_found; /* Empty search area. */
+ scan_len = end - start;
+ match_start = memcasememb(scan_str + start,scan_len,
+                           s_open.n_data,s_open.n_size);
+ if unlikely(!match_start) goto match_not_found;
+ match_end = find_casematchb(match_start + s_open.n_size,scan_len -
+                            (match_start - (scan_str + start)),
+                             s_open.n_data,s_open.n_size,
+                             s_clos.n_data,s_clos.n_size);
+ if unlikely(!match_end) goto match_not_found;
+ SET_BYTES(DeeBytes_NewSubView(self,scan_str,
+                              (size_t)(match_start-scan_str)),
+           DeeBytes_NewSubView(self,match_start,
+                              (match_end + s_clos.n_size) -
+                               match_start),
+           DeeBytes_NewSubView(self,match_end + s_clos.n_size,
+                              (size_t)(scan_str + end) -
+                              (size_t)(match_end + s_clos.n_size)));
+#undef SET_BYTES
+done:
+ return (DREF DeeObject *)result;
+match_not_found:
+ result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self,start,end);
+ if unlikely(!result->t_elem[0]) goto err_r_0;
+ result->t_elem[1] = Dee_EmptyBytes;
+ result->t_elem[2] = Dee_EmptyBytes;
+ Dee_Incref_n(Dee_EmptyBytes,2);
+ goto done;
+err_r_2:
+ Dee_Decref_likely(result->t_elem[1]);
+err_r_1:
+ Dee_Decref_likely(result->t_elem[0]);
+err_r_0:
+ DeeTuple_FreeUninitialized((DeeObject *)result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_caserpartitionmatch(Bytes *__restrict self,
+                          size_t argc, DeeObject **__restrict argv) {
+ DREF DeeTupleObject *result;
+ DeeObject *s_open_ob,*s_clos_ob; size_t start = 0,end = (size_t)-1;
+ uint8_t *scan_str,*match_start,*match_end; size_t scan_len; Needle s_open,s_clos;
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:caserpartitionmatch",&s_open_ob,&s_clos_ob,&start,&end) ||
+     get_needle(&s_open,s_open_ob) || get_needle(&s_clos,s_clos_ob))
+     goto err;
+#define SET_BYTES(a,b,c) \
+ do{ \
+   if ((result->t_elem[0] = (DREF DeeObject *)(a)) == NULL) goto err_r_0; \
+   if ((result->t_elem[1] = (DREF DeeObject *)(b)) == NULL) goto err_r_1; \
+   if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) goto err_r_2; \
+ }__WHILE0
+ result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
+ if unlikely(!result) goto err;
+ scan_str = DeeBytes_DATA(self);
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if unlikely(end <= start)
+    goto match_not_found; /* Empty search area. */
+ scan_len = end - start;
+ match_end = memcasermemb(scan_str + start,scan_len,
+                          s_clos.n_data,s_clos.n_size);
+ if unlikely(!match_end) goto match_not_found;
+ match_start = rfind_casematchb(scan_str + start,
+                               (size_t)(match_end - (scan_str + start)),
+                                s_open.n_data,s_open.n_size,
+                                s_clos.n_data,s_clos.n_size);
+ if unlikely(!match_start) goto match_not_found;
+ SET_BYTES(DeeBytes_NewSubView(self,scan_str,
+                              (size_t)(match_start - scan_str)),
+           DeeBytes_NewSubView(self,match_start,
+                              (size_t)((match_end + s_clos.n_size) -
+                                        match_start)),
+           DeeBytes_NewSubView(self,match_end + s_clos.n_size,
+                              (size_t)(scan_str + end) -
+                              (size_t)(match_end + s_clos.n_size)));
+#undef SET_BYTES
+done:
+ return (DREF DeeObject *)result;
+match_not_found:
+ result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self,start,end);
+ if unlikely(!result->t_elem[0]) goto err_r_0;
+ result->t_elem[1] = Dee_EmptyString;
+ result->t_elem[2] = Dee_EmptyString;
+ Dee_Incref_n(Dee_EmptyString,2);
+ goto done;
+err_r_2:
+ Dee_Decref_likely(result->t_elem[1]);
+err_r_1:
+ Dee_Decref_likely(result->t_elem[0]);
+err_r_0:
+ DeeTuple_FreeUninitialized((DeeObject *)result);
+err:
+ return NULL;
+}
+
 
 INTERN struct type_method bytes_methods[] = {
     { "decode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_decode,
@@ -3767,6 +3993,60 @@ INTERN struct type_method bytes_methods[] = {
           "(int open,int close,int start=0,int end=-1)->int\n"
           "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
           "Same as #rindexmatch, however casing is ignored during character comparisons") },
+
+    /* Using the find-match functionality, also provide a partitioning version */
+    { "partitionmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_partitionmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(string open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(string open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "A hybrid between #find, #findmatch and #partition that returns the strings surrounding "
+          "the matched string portion, the first being the substring prior to the match, "
+          "the second being the matched string itself (including the @open and @close strings), "
+          "and the third being the substring after the match\n"
+          "For more information see :string.partitionmatch") },
+    { "rpartitionmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rpartitionmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(string open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(string open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "A hybrid between #rfind, #rfindmatch and #rpartition that returns the strings surrounding "
+          "the matched string portion, the first being the substring prior to the match, "
+          "the second being the matched string itself (including the @open and @close strings), "
+          "and the third being the substring after the match.\n"
+          "For more information see :string.rpartitionmatch") },
+    { "casepartitionmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casepartitionmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(string open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(string open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "Same as #partitionmatch, however casing is ignored during character comparisons") },
+    { "caserpartitionmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserpartitionmatch,
+      DOC("(string open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(string open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(string open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(bytes open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+          "Same as #rpartitionmatch, however casing is ignored during character comparisons") },
 
 
     { NULL }
