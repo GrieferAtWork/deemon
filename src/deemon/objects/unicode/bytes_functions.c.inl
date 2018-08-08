@@ -2591,6 +2591,98 @@ retself:
  return_reference_((DeeObject *)self);
 }
 
+PRIVATE DREF DeeObject *DCALL
+bytes_common(Bytes *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; size_t result = 0;
+ if (get_bcompare_args(self,&args,argc,argv,"common"))
+     goto err;
+ if (args.lhs_len > args.rhs_len)
+     args.lhs_len = args.rhs_len;
+ while (result < args.lhs_len) {
+  if (args.lhs_ptr[result] != args.rhs_ptr[result])
+      break;
+  ++result;
+ }
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_rcommon(Bytes *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; size_t result = 0;
+ if (get_bcompare_args(self,&args,argc,argv,"rcommon"))
+     goto err;
+ args.lhs_ptr += args.lhs_len;
+ args.rhs_ptr += args.rhs_len;
+ if (args.lhs_len > args.rhs_len)
+     args.lhs_len = args.rhs_len;
+ while (result < args.lhs_len) {
+  if (args.lhs_ptr[-1] != args.rhs_ptr[-1])
+      break;
+  ++result;
+  --args.lhs_ptr;
+  --args.rhs_ptr;
+ }
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casecommon(Bytes *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; size_t result = 0;
+ if (get_bcompare_args(self,&args,argc,argv,"casecommon"))
+     goto err;
+ if (args.lhs_len > args.rhs_len)
+     args.lhs_len = args.rhs_len;
+ while (result < args.lhs_len) {
+  uint8_t a = args.lhs_ptr[result];
+  uint8_t b = args.rhs_ptr[result];
+  if (a != b) {
+   a = (uint8_t)DeeUni_IsLower(a);
+   b = (uint8_t)DeeUni_IsLower(b);
+   if (a != b)
+       break;
+  }
+  ++result;
+ }
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_casercommon(Bytes *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ struct bcompare_args args; size_t result = 0;
+ if (get_bcompare_args(self,&args,argc,argv,"casercommon"))
+     goto err;
+ args.lhs_ptr += args.lhs_len;
+ args.rhs_ptr += args.rhs_len;
+ if (args.lhs_len > args.rhs_len)
+     args.lhs_len = args.rhs_len;
+ while (result < args.lhs_len) {
+  uint8_t a = args.lhs_ptr[-1];
+  uint8_t b = args.rhs_ptr[-1];
+  if (a != b) {
+   a = (uint8_t)DeeUni_IsLower(a);
+   b = (uint8_t)DeeUni_IsLower(b);
+   if (a != b)
+       break;
+  }
+  ++result;
+  --args.lhs_ptr;
+  --args.rhs_ptr;
+ }
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+
 
 INTERN struct type_method bytes_methods[] = {
     { "decode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_decode,
@@ -3334,6 +3426,41 @@ INTERN struct type_method bytes_methods[] = {
           "Using @this string as result, remove up to @max_chars whitespace "
           "(s.a. #isspace) characters, or if given: characters apart of @mask "
           "from the front, as well as following any linefeed") },
+
+    /* Common-character search functions. */
+    { "common", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_common,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Returns the number of common leading bytes shared between @this and @other, "
+          "or in other words: the lowest index $i for which ${this[i] != other.bytes()[i]} is true") },
+    { "rcommon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rcommon,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Returns the number of common trailing bytes shared between @this and @other") },
+    { "casecommon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casecommon,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Same as #common, however ascii-casing is ignored during character comparisons") },
+    { "casercommon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casercommon,
+      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
+          "(bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
+          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+          "Same as #rcommon, however ascii-casing is ignored during character comparisons") },
 
 
     { NULL }
