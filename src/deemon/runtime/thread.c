@@ -3151,7 +3151,7 @@ PRIVATE struct type_getset thread_getsets[] = {
       DOC("->{{object,traceback}...}\n"
           "@throw ValueEror @this thread hasn't terminated yet\n"
           "Returns a sequence of 2-element tuples describing the errors that were "
-          "active when the thread crashed (s.a. #crashed), or an empty sequence when "
+          "active when the thread crashed (s.a. #hascrashed), or an empty sequence when "
           "the thread didn't crash\n"
           "The first element of each tuple is the error that was ${throw}n, and the "
           "second element is the accompanying traceback, or :none when not known.\n"

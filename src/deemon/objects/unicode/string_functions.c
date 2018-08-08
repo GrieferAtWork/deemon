@@ -6930,7 +6930,7 @@ INTERN struct type_method string_methods[] = {
           "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
           "$\"?\" in the returned bytes object") },
     { "ord", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_ord,
-      DOC("()->int\n"
+      DOC("->int\n"
           "@throw ValueError The length of @this string is not equal to ${1}\n"
           "Return the ordinal integral value of @this single-character string\n"
           "\n"
@@ -7032,7 +7032,7 @@ INTERN struct type_method string_methods[] = {
 
     /* String/Character traits */
     { "isprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isprint,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7040,7 +7040,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all "
           "characters in ${this.substr(start,end)} are printable") },
     { "isalpha", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isalpha,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7048,7 +7048,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} are alphabetical") },
     { "isspace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isspace,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7056,7 +7056,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} are space-characters") },
     { "islf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_islf,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7064,7 +7064,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} are line-feeds") },
     { "islower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_islower,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7072,7 +7072,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} are lower-case") },
     { "isupper", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isupper,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7080,7 +7080,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} are upper-case") },
     { "iscntrl", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_iscntrl,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7088,7 +7088,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} are control characters") },
     { "isdigit", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isdigit,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7096,7 +7096,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} are digits") },
     { "isdecimal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isdecimal,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7104,7 +7104,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} are dicimal characters") },
     { "issymstrt", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_issymstrt,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7112,7 +7112,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} can be used to start a symbol name") },
     { "issymcont", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_issymcont,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7120,7 +7120,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} can be used to continue a symbol name") },
     { "isalnum", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isalnum,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7128,7 +7128,7 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} are alpha-numerical") },
     { "isnumeric", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isnumeric,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(int index)->bool\n"
           "(int start,int end)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -7141,7 +7141,7 @@ INTERN struct type_method string_methods[] = {
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if the character at ${this[index]} has title-casing\n"
           "\n"
-          "()->bool\n"
+          "->bool\n"
           "(int start=0,int end=-1)->bool\n"
           "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
           "follows title-casing, meaning that space is followed by title-case, "
@@ -7152,7 +7152,7 @@ INTERN struct type_method string_methods[] = {
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if the character at ${this[index]} can be used to start a symbol name\n"
           "\n"
-          "()->bool\n"
+          "->bool\n"
           "(int start,int end)->bool\n"
           "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
           "is a valid symbol name") },
@@ -7282,17 +7282,17 @@ INTERN struct type_method string_methods[] = {
           "string functions that allow start/end-style arguments, including #find, #compare, "
           "as well as many others") },
     { "strip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_strip,
-      DOC("()->string\n"
+      DOC("->string\n"
           "(string mask)->string\n"
           "Strip all leading and trailing whitespace-characters, or "
           "characters apart of @mask, and return the resulting string") },
     { "lstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_lstrip,
-      DOC("()->string\n"
+      DOC("->string\n"
           "(string mask)->string\n"
           "Strip all leading whitespace-characters, or "
           "characters apart of @mask, and return the resulting string") },
     { "rstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_rstrip,
-      DOC("()->string\n"
+      DOC("->string\n"
           "(string mask)->string\n"
           "Strip all trailing whitespace-characters, or "
           "characters apart of @mask, and return the resulting string") },
@@ -7400,15 +7400,15 @@ INTERN struct type_method string_methods[] = {
       DOC("(string needle,int start=0,int end=-1)->bool\n"
           "Same as #contains, however casing is ignored during character comparisons") },
     { "casestrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casestrip,
-      DOC("()->string\n"
+      DOC("->string\n"
           "(string mask)->string\n"
           "Same as #strip, however casing is ignored during character comparisons when @mask is given") },
     { "caselstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caselstrip,
-      DOC("()->string\n"
+      DOC("->string\n"
           "(string mask)->string\n"
           "Same as #lstrip, however casing is ignored during character comparisons when @mask is given") },
     { "caserstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caserstrip,
-      DOC("()->string\n"
+      DOC("->string\n"
           "(string mask)->string\n"
           "Same as #rstrip, however casing is ignored during character comparisons when @mask is given") },
     { "casesstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casesstrip,

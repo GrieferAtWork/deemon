@@ -665,11 +665,6 @@ PRIVATE int DCALL operation_mode_format(int argc, char **argv);
 
 
 
-/* TODO: Add support for python-like raw string literals:
- *    >> local x = r"\n"; // same as "\\n" (basically: they don't interpret backslash-escape,
- *    >>                  //                           but also can't contain '\"'-characters)
- */
-
 
 /* ==================================================================== *
  * --- MAIN()                                                           *

@@ -3737,14 +3737,25 @@ PUBLIC dssize_t DCALL
 DeeObject_Foreach(DeeObject *__restrict self,
                   dforeach_t proc, void *arg) {
  dssize_t temp,result = 0;
- DREF DeeObject *elem;
+ DREF DeeObject *elem; size_t fast_size;
  ASSERT(proc);
- /* TODO: Optimizations for tuple, list, set, cell, etc. */
-
-
+ fast_size = DeeFastSeq_GetSize(self);
+ if (fast_size != DEE_FASTSEQ_NOTFAST) {
+  size_t i;
+  /* Optimization for fast-sequence object. */
+  for (i = 0; i < fast_size; ++i) {
+   elem = DeeFastSeq_GetItem(self,i);
+   if unlikely(!elem) goto err;
+   temp = (*proc)(arg,elem);
+   Dee_Decref(elem);
+   if unlikely(temp < 0) { result = temp; break; }
+   result += temp;
+  }
+  return result;
+ }
  /* Fallback: Use an iterator. */
  if ((self = DeeObject_IterSelf(self)) == NULL)
-      return -1;
+      goto err;
  while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
   temp = (*proc)(arg,elem);
   Dee_Decref(elem);
@@ -3752,8 +3763,10 @@ DeeObject_Foreach(DeeObject *__restrict self,
   result += temp; /* Propagate return values by summarizing them. */
  }
  Dee_Decref(self);
- if unlikely(!elem) return -1;
+ if unlikely(!elem) goto err;
  return result;
+err:
+ return -1;
 }
 #endif
 
