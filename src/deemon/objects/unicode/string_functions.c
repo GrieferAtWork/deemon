@@ -2989,35 +2989,6 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-string_front(String *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
- void *str = DeeString_WSTR(self);
- int width = DeeString_WIDTH(self);
- if (DeeArg_Unpack(argc,argv,":front"))
-     return NULL;
- if unlikely(!WSTR_LENGTH(str)) {
-  err_empty_sequence((DeeObject *)self);
-  return NULL;
- }
- return DeeString_Chr(STRING_WIDTH_GETCHAR(width,str,0));
-}
-
-PRIVATE DREF DeeObject *DCALL
-string_back(String *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
- void *str = DeeString_WSTR(self);
- int width = DeeString_WIDTH(self);
- size_t length = WSTR_LENGTH(str);
- if (DeeArg_Unpack(argc,argv,":front"))
-     return NULL;
- if unlikely(!length) {
-  err_empty_sequence((DeeObject *)self);
-  return NULL;
- }
- return DeeString_Chr(STRING_WIDTH_GETCHAR(width,str,length-1));
-}
-
 INTDEF DREF DeeObject *DCALL
 DeeString_Segments(DeeObject *__restrict self, size_t substring_length);
 
@@ -9331,14 +9302,10 @@ INTERN struct type_method string_methods[] = {
           "Check if @this contains a match for the given regular expression @pattern (s.a. #contains)\n"
           "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}") },
 
-
-    /* String optimizations for standard sequence functions. */
-    { "front", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_front },
-    { "back", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_back },
-
     /* Deprecated functions. */
     { "reverse", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_reversed,
-      DOC("(int start=0,int end=-1)->string\nDeprecated alias for #reversed") },
+      DOC("(int start=0,int end=-1)->string\n"
+          "Deprecated alias for #reversed") },
     { NULL }
 };
 

@@ -1289,6 +1289,29 @@ string_hashed(String *__restrict self) {
  return_bool(self->s_hash != DEE_STRING_HASH_UNSET);
 }
 
+PRIVATE DREF DeeObject *DCALL
+string_getfirst(String *__restrict self) {
+ void *str = DeeString_WSTR(self);
+ int width = DeeString_WIDTH(self);
+ if unlikely(!WSTR_LENGTH(str)) {
+  err_empty_sequence((DeeObject *)self);
+  return NULL;
+ }
+ return DeeString_Chr(STRING_WIDTH_GETCHAR(width,str,0));
+}
+
+PRIVATE DREF DeeObject *DCALL
+string_getlast(String *__restrict self) {
+ void *str = DeeString_WSTR(self);
+ int width = DeeString_WIDTH(self);
+ size_t length = WSTR_LENGTH(str);
+ if unlikely(!length) {
+  err_empty_sequence((DeeObject *)self);
+  return NULL;
+ }
+ return DeeString_Chr(STRING_WIDTH_GETCHAR(width,str,length-1));
+}
+
 
 PRIVATE struct type_getset string_getsets[] = {
     { "ordinals", &DeeString_Ordinals, NULL, NULL,
@@ -1298,6 +1321,16 @@ PRIVATE struct type_getset string_getsets[] = {
     { "__hashed__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hashed, NULL, NULL,
       DOC("->bool\n"
           "Evaluates to :true if @this string has been hashed") },
+    { "first",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
+      DOC("->string\n"
+          "@throw ValueError @this string is empty\n"
+          "Returns the first character of @this string") },
+    { "last",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getlast, NULL, NULL,
+      DOC("->string\n"
+          "@throw ValueError @this string is empty\n"
+          "Returns the last character of @this string") },
     { NULL }
 };
 

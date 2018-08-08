@@ -608,14 +608,8 @@ PRIVATE DREF Bytes *DCALL bytes_ctor(void) {
 }
 PRIVATE DREF Bytes *DCALL
 bytes_copy(Bytes *__restrict other) {
- DREF Bytes *result;
- result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(other));
- if unlikely(!result) goto done;
- /* Copy data from the given buffer `other' */
- memcpy(result->b_data,DeeBytes_DATA(other),DeeBytes_SIZE(other));
- DeeObject_Init(result,&DeeBytes_Type);
-done:
- return result;
+ return (DREF Bytes *)DeeBytes_NewBufferData(DeeBytes_DATA(other),
+                                             DeeBytes_SIZE(other));
 }
 
 PRIVATE DREF Bytes *DCALL
@@ -1243,11 +1237,79 @@ bytes_iswritable(Bytes *__restrict self) {
  return_bool_(self->b_flags & DEE_BUFFER_FWRITABLE);
 }
 
+
+PRIVATE DREF DeeObject *DCALL
+bytes_getfirst(Bytes *__restrict self) {
+ if unlikely(DeeBytes_IsEmpty(self)) {
+  err_empty_sequence((DeeObject *)self);
+  return NULL;
+ }
+ return DeeInt_NewU8(DeeBytes_DATA(self)[0]);
+}
+PRIVATE int DCALL
+bytes_setfirst(Bytes *__restrict self, DeeObject *__restrict value) {
+ uint8_t int_value;
+ if unlikely(DeeBytes_IsEmpty(self))
+    return err_empty_sequence((DeeObject *)self);
+ if unlikely(!DeeBytes_WRITABLE(self))
+    return err_bytes_not_writable((DeeObject *)self);
+ if unlikely(DeeObject_AsUInt8(value,&int_value))
+    return -1; 
+ DeeBytes_DATA(self)[0] = int_value;
+ return 0;
+}
+PRIVATE DREF DeeObject *DCALL
+bytes_getlast(Bytes *__restrict self) {
+ if unlikely(DeeBytes_IsEmpty(self)) {
+  err_empty_sequence((DeeObject *)self);
+  return NULL;
+ }
+ return DeeInt_NewU8(DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1]);
+}
+PRIVATE int DCALL
+bytes_setlast(Bytes *__restrict self, DeeObject *__restrict value) {
+ uint8_t int_value;
+ if unlikely(DeeBytes_IsEmpty(self))
+    return err_empty_sequence((DeeObject *)self);
+ if unlikely(!DeeBytes_WRITABLE(self))
+    return err_bytes_not_writable((DeeObject *)self);
+ if unlikely(DeeObject_AsUInt8(value,&int_value))
+    return -1; 
+ DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1] = int_value;
+ return 0;
+}
+
+PRIVATE int DCALL
+bytes_delfirst(Bytes *__restrict self) {
+ return bytes_setfirst(self,Dee_None);
+}
+PRIVATE int DCALL
+bytes_dellast(Bytes *__restrict self) {
+ return bytes_setlast(self,Dee_None);
+}
+
+
 PRIVATE struct type_getset bytes_getsets[] = {
     { "isreadonly", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_isreadonly, NULL, NULL,
       DOC("->bool\nEvaluates to :true if @this bytes object cannot be written to") },
     { "iswritable", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
       DOC("->bool\nEvaluates to :true if @this bytes object not be written to (the inverse of #isreadonly)") },
+    { "first",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getfirst,
+      (int(DCALL *)(DeeObject *__restrict))&bytes_delfirst,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_setfirst,
+      DOC("->int\n"
+          "@throw ValueError @this bytes object is empty\n"
+          "@throw BufferError Attempted to modify the byte when @this bytes object is not writable\n"
+          "Access the first byte of @this bytes object") },
+    { "last",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getlast,
+      (int(DCALL *)(DeeObject *__restrict))&bytes_dellast,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_setlast,
+      DOC("->int\n"
+          "@throw ValueError @this bytes object is empty\n"
+          "@throw BufferError Attempted to modify the byte when @this bytes object is not writable\n"
+          "Access the last byte of @this bytes object") },
     { NULL }
 };
 
