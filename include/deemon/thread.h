@@ -301,18 +301,20 @@ struct thread_object {
  * WARNING: The information returned by these is highly volatile and
  *          only a snapshot of what used to be at a certain point. */
 #ifndef CONFIG_NO_THREADS
-#define DeeThread_IsStarted(x)     (((DeeThreadObject *)(x))->t_state & THREAD_STATE_STARTED)
-#define DeeThread_IsDetached(x)    (((DeeThreadObject *)(x))->t_state & THREAD_STATE_DETACHED)
-#define DeeThread_HasTerminated(x) (((DeeThreadObject *)(x))->t_state & THREAD_STATE_TERMINATED)
-#define DeeThread_IsInterrupted(x) (((DeeThreadObject *)(x))->t_state & THREAD_STATE_INTERRUPTED)
-#define DeeThread_HasCrashed(x)    (((DeeThreadObject *)(x))->t_state & THREAD_STATE_TERMINATED && \
-                                    ((DeeThreadObject *)(x))->t_except != NULL)
+#define DeeThread_IsRunning(x)      ((((DeeThreadObject *)(x))->t_state & (THREAD_STATE_STARTED|THREAD_STATE_TERMINATED)) == THREAD_STATE_STARTED)
+#define DeeThread_HasStarted(x)     (((DeeThreadObject *)(x))->t_state & THREAD_STATE_STARTED)
+#define DeeThread_WasDetached(x)    (((DeeThreadObject *)(x))->t_state & THREAD_STATE_DETACHED)
+#define DeeThread_HasTerminated(x)  (((DeeThreadObject *)(x))->t_state & THREAD_STATE_TERMINATED)
+#define DeeThread_WasInterrupted(x) (((DeeThreadObject *)(x))->t_state & THREAD_STATE_INTERRUPTED)
+#define DeeThread_HasCrashed(x)     (((DeeThreadObject *)(x))->t_state & THREAD_STATE_TERMINATED && \
+                                     ((DeeThreadObject *)(x))->t_except != NULL)
 #else
-#define DeeThread_IsStarted(x)        1
-#define DeeThread_IsDetached(x)       0
-#define DeeThread_HasTerminated(x)    0
-#define DeeThread_IsInterrupted(x)    0
-#define DeeThread_HasCrashed(x)       0
+#define DeeThread_IsRunning(x)        true
+#define DeeThread_HasStarted(x)       true
+#define DeeThread_WasDetached(x)      false
+#define DeeThread_HasTerminated(x)    false
+#define DeeThread_WasInterrupted(x)   false
+#define DeeThread_HasCrashed(x)       false
 #endif
 
 

@@ -2497,57 +2497,41 @@ thread_interrupt(DeeObject *__restrict self, size_t argc,
 err:
  return NULL;
 }
-PRIVATE DREF DeeObject *DCALL
-thread_id(DeeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
- dthreadid_t result;
- if (DeeArg_Unpack(argc,argv,":id") ||
-     DeeThread_GetTid(self,&result))
-     return NULL;
- return DeeInt_Newu(SIZEOF_DTHREADID_T,result);
-}
 
 PRIVATE DREF DeeObject *DCALL
 thread_started(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":started"))
      return NULL;
- return_bool_(DeeThread_IsStarted(self));
+ return_bool(DeeThread_HasStarted(self));
 }
 PRIVATE DREF DeeObject *DCALL
 thread_detached(DeeObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":detached"))
      return NULL;
- return_bool_(DeeThread_IsDetached(self));
+ return_bool(DeeThread_WasDetached(self));
 }
 PRIVATE DREF DeeObject *DCALL
 thread_terminated(DeeObject *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":terminated"))
      return NULL;
- return_bool_(DeeThread_HasTerminated(self));
+ return_bool(DeeThread_HasTerminated(self));
 }
 PRIVATE DREF DeeObject *DCALL
 thread_interrupted(DeeObject *__restrict self,
                    size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":interrupted"))
      return NULL;
- return_bool_(DeeThread_IsInterrupted(self));
+ return_bool(DeeThread_WasInterrupted(self));
 }
 PRIVATE DREF DeeObject *DCALL
 thread_crashed(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":crashed"))
      return NULL;
- return_bool_(DeeThread_HasCrashed(self));
-}
-PRIVATE DREF DeeObject *DCALL
-thread_traceback(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":traceback"))
-     return NULL;
- return DeeThread_Trace(self);
+ return_bool(DeeThread_HasCrashed(self));
 }
 
 #ifndef CONFIG_NO_THREADS
@@ -2559,81 +2543,6 @@ err_not_terminated(DeeThreadObject *__restrict self) {
 }
 #endif
 
-PRIVATE DREF DeeObject *DCALL
-thread_crashinfo(DeeThreadObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":crashinfo"))
-     goto err;
- {
-#ifdef CONFIG_NO_THREADS
-  (void)self;
-  err_no_thread_api();
-#else
-  uint16_t state,i,count;
-  DREF DeeTupleObject *result;
-restart:
-  do {
-   state = ATOMIC_READ(self->t_state);
-   if (!(state&THREAD_STATE_TERMINATED)) {
-    err_not_terminated(self);
-    goto err;
-   }
-  } while (ATOMIC_CMPXCH_WEAK(self->t_state,state,state|
-                              THREAD_STATE_STARTING));
-  ASSERT((self->t_exceptsz != 0) == (self->t_except != NULL));
-  if (self->t_exceptsz == 0) {
-   /* No active exceptions. */
-   result = (DREF DeeTupleObject *)Dee_EmptyTuple;
-   Dee_Incref(result);
-  } else {
-   struct except_frame *frame_iter;
-   count = self->t_exceptsz;
-   size_t reqsize = (offsetof(DeeTupleObject,t_elem)+
-                     count*sizeof(DREF DeeObject *));
-   result = (DREF DeeTupleObject *)DeeObject_TryMalloc(reqsize);
-   if unlikely(!result) {
-    ATOMIC_FETCHAND(self->t_state,~THREAD_STATE_STARTING);
-    if (Dee_CollectMemory(reqsize)) goto restart;
-    goto err;
-   }
-   result->t_size = (size_t)reqsize;
-   frame_iter = self->t_except;
-   for (i = 0; i < count; ++i) {
-    DREF DeeTupleObject *item;
-    ASSERT(frame_iter);
-    /* Create the element tuple. */
-    item = (DREF DeeTupleObject *)DeeObject_TryMalloc(offsetof(DeeTupleObject,t_elem)+
-                                                      2*sizeof(DREF DeeObject *));
-    if unlikely(!item) goto err_start_over;
-    DeeObject_Init(item,&DeeTuple_Type);
-    /* Fill in the item with information from the frame. */
-    item->t_size = 2;
-    item->t_elem[0] = (DREF DeeObject *)frame_iter->ef_error;
-    item->t_elem[1] = (DREF DeeObject *)frame_iter->ef_trace;
-    if (!item->t_elem[1]) item->t_elem[1] = Dee_None;
-    Dee_Incref(item->t_elem[0]);
-    Dee_Incref(item->t_elem[1]);
-    result->t_elem[i] = (DREF DeeObject *)item; /* Inherit */
-    frame_iter = frame_iter->ef_prev;
-   }
-   DeeObject_Init(result,&DeeTuple_Type);
-  }
-  ATOMIC_FETCHAND(self->t_state,~THREAD_STATE_STARTING);
-  return (DREF DeeObject *)result;
-err_start_over:
-  {
-   bool can_start_over;
-   can_start_over = Dee_CollectMemory(offsetof(DeeTupleObject,t_elem)+
-                                      2*sizeof(DREF DeeObject *));
-   while (i--) Dee_DecrefDokill(result->t_elem[i]);
-   DeeObject_Free(result);
-   if (can_start_over) goto restart;
-  }
-#endif
- }
-err:
- return NULL;
-}
 
 PRIVATE DREF DeeObject *DCALL
 thread_crash_error(DeeThreadObject *__restrict self,
@@ -2716,20 +2625,20 @@ err:
 
 PRIVATE struct type_method thread_methods[] = {
     { "start", &thread_start,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "@throw SystemError Failed to start @this thread for some reason\n"
           "@return true: The :thread is now running\n"
           "@return false: The :thread had already been started\n"
           "Starts @this thread") },
     { "detach", &thread_detach,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "@throw ValueError @this thread was never started\n"
           "@throw SystemError Failed to detach @this thread for some reason\n"
           "@return true: The :thread has been detached\n"
           "@return false: The :thread was already detached\n"
           "Detaches @this thread") },
     { "join", &thread_join,
-      DOC("()->object\n"
+      DOC("->object\n"
           "@interrupt\n"
           "@throw ValueError @this thread was never started\n"
           "@throw SystemError Failed to join @this thread for some reason\n"
@@ -2738,7 +2647,7 @@ PRIVATE struct type_method thread_methods[] = {
           "Joins @this thread and returns the return value of its main function\n"
           "In the event") },
     { "tryjoin", &thread_tryjoin,
-      DOC("()->(bool,object)\n"
+      DOC("->(bool,object)\n"
           "@throw ValueError @this thread was never started\n"
           "@throw SystemError Failed to join @this thread for some reason\n"
           "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
@@ -2750,7 +2659,7 @@ PRIVATE struct type_method thread_methods[] = {
           "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
           "Same as #join, but only attempt to join for a given @timeout_in_microseconds") },
     { "interrupt", &thread_interrupt,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "(object signal)->bool\n"
           "(callable async_func, tuple async_args)->bool\n"
           "@return true: The interrupt was delivered\n"
@@ -2774,60 +2683,37 @@ PRIVATE struct type_method thread_methods[] = {
           "returns :true, as indicative of the thread no longer being able to receive new interrupts. "
           "However to truely ensure that all interrupts have been processed, you must #join @this thread\n"
           "User-code may also check for interrupts explicitly by calling `:thread.check_interrupt'") },
-    { "id", &thread_id,
-      DOC("()->int\n"
-          "@throw ValueError The thread hasn't been started yet\n"
-          "@throw SystemError The system does not provide a way to query thread ids\n"
-          "Returns an operating-system specific id of @this thread") },
     { "started", &thread_started,
-      DOC("()->bool\n"
-          "Returns :true if @this thread was started") },
+      DOC("->bool\n"
+          "Deprecated alias for #hasstarted") },
     { "detached", &thread_detached,
-      DOC("()->bool\n"
-          "Returns :true if @this thread has been detached") },
+      DOC("->bool\n"
+          "Deprecated alias for #wasdetached") },
     { "terminated", &thread_terminated,
-      DOC("()->bool\n"
-          "Returns :true if @this thread has terminated") },
+      DOC("->bool\n"
+          "Deprecated alias for #hasterminated") },
     { "interrupted", &thread_interrupted,
-      DOC("()->bool\n"
-          "Returns :true if interrupts are pending for @this thread") },
+      DOC("->bool\n"
+          "Deprecated alias for #wasinterrupted") },
     { "crashed", &thread_crashed,
-      DOC("()->bool\n"
-          "Returns :true if @this thread has crashed, that "
-          "is having #terminated while errors were still active\n"
-          "When true, attempting to join @this thread will cause any "
-          "of those errors to be rethrown in the #current thread") },
-    { "crashinfo", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&thread_crashinfo,
-      DOC("()->{{object,traceback}...}\n"
-          "@throw ValueEror @this thread hasn't terminated yet\n"
-          "Returns a sequence of 2-element tuples describing the errors that were "
-          "active when the thread crashed (s.a. #crashed), or an empty sequence when "
-          "the thread didn't crash\n"
-          "The first element of each tuple is the error that was ${throw}n, and the "
-          "second element is the accompanying traceback, or :none when not known.\n"
-          "This function replaces the deprecated #crash_error and #crash_traceback "
-          "functions that did something similar prior to deemon 200\n"
-          "When iterated, elements of the returned sequence identify errors that "
-          "caused the crash from most to least recently thrown") },
-    { "traceback", &thread_traceback,
-      DOC("()->traceback\n"
-          "Generate a traceback for the thread's current execution position") },
+      DOC("->bool\n"
+          "Deprecated alias for #hascrashed") },
 
     /* Old, deprecated function names for backwards compatibility */
     { "try_join", &thread_tryjoin,
-      DOC("()->(bool,object)\n"
+      DOC("->(bool,object)\n"
           "Old, deprecated name for #tryjoin") },
     { "timed_join", &thread_timedjoin,
       DOC("(int timeout_in_microseconds)->(bool,object)\n"
           "Old, deprecated name for #timedjoin") },
     { "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&thread_crash_error,
-      DOC("()->traceback\n"
-          "()->none\n"
-          "Deprecated function that does the same as ${this.crashinfo().first()[0]}") },
+      DOC("->traceback\n"
+          "->none\n"
+          "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
     { "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&thread_crash_traceback,
-      DOC("()->traceback\n"
-          "()->none\n"
-          "Deprecated function that does the same as ${this.crashinfo().first()[1]}") },
+      DOC("->traceback\n"
+          "->none\n"
+          "Deprecated function that does the same as ${this.crashinfo.first()[1]}") },
     { NULL }
 };
 
@@ -2908,7 +2794,10 @@ err:
 PRIVATE struct type_getset thread_class_getsets[] = {
     { "current",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_current_get, NULL, NULL,
-      DOC("Returns a thread descriptor for the calling thread") },
+       DOC("Returns a thread descriptor for the calling thread") },
+    /* TODO: enumerate -> {thread...} 
+     * >> Returns a proxy sequence for enumerating all
+     *    deemon-threads; s.a. `add_running_thread()' */
     { NULL }
 };
 PRIVATE struct type_member thread_class_members[] = {
@@ -2917,18 +2806,18 @@ PRIVATE struct type_member thread_class_members[] = {
 };
 PRIVATE struct type_method thread_class_methods[] = {
     { "self", &thread_self,
-      DOC("()->thread\n"
+      DOC("->thread\n"
           "Deprecated alias for #current") },
     { "selfid", &thread_selfid,
-      DOC("()->int\n"
+      DOC("->int\n"
           "@throw SystemError The system does not provide a way to query thread ids\n"
           "Deprecated alias for ${thread.current.id}") },
     { "check_interrupt", &thread_check_interrupt,
-      DOC("()->none\n"
+      DOC("->none\n"
           "@interrupt\n"
           "Checks for interrupts in the calling thread") },
     { "yield", &thread_yield,
-      DOC("()->none\n"
+      DOC("->none\n"
           "Willingly preempt execution to another thread or process") },
     { "sleep", &thread_sleep,
       DOC("(int timeout_in_microseconds)->none\n"
@@ -2939,9 +2828,6 @@ PRIVATE struct type_method thread_class_methods[] = {
           "@throw ThreadExit Always thrown to exit the current thread\n"
           "Throw a :ThreadExit error object in order to terminate execution "
           "within the current thread") },
-    /* TODO: enum() -> {thread...} 
-     * >> Returns a proxy sequence for enumerating all
-     *    deemon-threads; s.a. `add_running_thread()' */
     { NULL }
 };
 
@@ -3121,6 +3007,112 @@ restart:
 #endif
 }
 
+
+PRIVATE DREF DeeObject *DCALL
+thread_id(DeeObject *__restrict self) {
+ dthreadid_t result;
+ if (DeeThread_GetTid(self,&result))
+     return NULL;
+ return DeeInt_Newu(SIZEOF_DTHREADID_T,result);
+}
+PRIVATE DREF DeeObject *DCALL
+thread_isrunning(DeeObject *__restrict self) {
+ return_bool(DeeThread_IsRunning(self));
+}
+PRIVATE DREF DeeObject *DCALL
+thread_hasstarted(DeeObject *__restrict self) {
+ return_bool(DeeThread_HasStarted(self));
+}
+PRIVATE DREF DeeObject *DCALL
+thread_wasdetached(DeeObject *__restrict self) {
+ return_bool(DeeThread_WasDetached(self));
+}
+PRIVATE DREF DeeObject *DCALL
+thread_hasterminated(DeeObject *__restrict self) {
+ return_bool(DeeThread_HasTerminated(self));
+}
+PRIVATE DREF DeeObject *DCALL
+thread_wasinterrupted(DeeObject *__restrict self) {
+ return_bool(DeeThread_WasInterrupted(self));
+}
+PRIVATE DREF DeeObject *DCALL
+thread_hascrashed(DeeObject *__restrict self) {
+ return_bool(DeeThread_HasCrashed(self));
+}
+
+PRIVATE DREF DeeObject *DCALL
+thread_crashinfo(DeeThreadObject *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ (void)self;
+ err_no_thread_api();
+#else
+ uint16_t state,i,count;
+ DREF DeeTupleObject *result;
+restart:
+ do {
+  state = ATOMIC_READ(self->t_state);
+  if (!(state&THREAD_STATE_TERMINATED)) {
+   err_not_terminated(self);
+   goto err;
+  }
+ } while (ATOMIC_CMPXCH_WEAK(self->t_state,state,state|
+                             THREAD_STATE_STARTING));
+ ASSERT((self->t_exceptsz != 0) == (self->t_except != NULL));
+ if (self->t_exceptsz == 0) {
+  /* No active exceptions. */
+  result = (DREF DeeTupleObject *)Dee_EmptyTuple;
+  Dee_Incref(result);
+ } else {
+  struct except_frame *frame_iter;
+  count = self->t_exceptsz;
+  size_t reqsize = (offsetof(DeeTupleObject,t_elem)+
+                    count*sizeof(DREF DeeObject *));
+  result = (DREF DeeTupleObject *)DeeObject_TryMalloc(reqsize);
+  if unlikely(!result) {
+   ATOMIC_FETCHAND(self->t_state,~THREAD_STATE_STARTING);
+   if (Dee_CollectMemory(reqsize)) goto restart;
+   goto err;
+  }
+  result->t_size = (size_t)reqsize;
+  frame_iter = self->t_except;
+  for (i = 0; i < count; ++i) {
+   DREF DeeTupleObject *item;
+   ASSERT(frame_iter);
+   /* Create the element tuple. */
+   item = (DREF DeeTupleObject *)DeeObject_TryMalloc(offsetof(DeeTupleObject,t_elem)+
+                                                     2*sizeof(DREF DeeObject *));
+   if unlikely(!item) goto err_start_over;
+   DeeObject_Init(item,&DeeTuple_Type);
+   /* Fill in the item with information from the frame. */
+   item->t_size = 2;
+   item->t_elem[0] = (DREF DeeObject *)frame_iter->ef_error;
+   item->t_elem[1] = (DREF DeeObject *)frame_iter->ef_trace;
+   if (!item->t_elem[1]) item->t_elem[1] = Dee_None;
+   Dee_Incref(item->t_elem[0]);
+   Dee_Incref(item->t_elem[1]);
+   result->t_elem[i] = (DREF DeeObject *)item; /* Inherit */
+   frame_iter = frame_iter->ef_prev;
+  }
+  DeeObject_Init(result,&DeeTuple_Type);
+ }
+ ATOMIC_FETCHAND(self->t_state,~THREAD_STATE_STARTING);
+ return (DREF DeeObject *)result;
+err_start_over:
+ {
+  bool can_start_over;
+  can_start_over = Dee_CollectMemory(offsetof(DeeTupleObject,t_elem)+
+                                     2*sizeof(DREF DeeObject *));
+  while (i--) Dee_DecrefDokill(result->t_elem[i]);
+  DeeObject_Free(result);
+  if (can_start_over) goto restart;
+ }
+err:
+#endif
+ return NULL;
+}
+
+
+
 PRIVATE struct type_getset thread_getsets[] = {
     { "callback",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callback_get,
@@ -3155,6 +3147,47 @@ PRIVATE struct type_getset thread_getsets[] = {
           "This is similar to what is returned by #join, but in the event that "
           "the thread terminated because it crashed, :none is returned rather "
           "than all the errors that caused the thread to crash being encapsulated and propagated") },
+    { "crashinfo", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_crashinfo, NULL, NULL,
+      DOC("->{{object,traceback}...}\n"
+          "@throw ValueEror @this thread hasn't terminated yet\n"
+          "Returns a sequence of 2-element tuples describing the errors that were "
+          "active when the thread crashed (s.a. #crashed), or an empty sequence when "
+          "the thread didn't crash\n"
+          "The first element of each tuple is the error that was ${throw}n, and the "
+          "second element is the accompanying traceback, or :none when not known.\n"
+          "This function replaces the deprecated #crash_error and #crash_traceback "
+          "functions that did something similar prior to deemon 200\n"
+          "When iterated, elements of the returned sequence identify errors that "
+          "caused the crash from most to least recently thrown") },
+    { "traceback", &DeeThread_Trace, NULL, NULL,
+      DOC("->traceback\n"
+          "Generate a traceback for the thread's current execution position") },
+    { "id", &thread_id, NULL, NULL,
+      DOC("->int\n"
+          "@throw ValueError The thread hasn't been started yet\n"
+          "@throw SystemError The system does not provide a way to query thread ids\n"
+          "Returns an operating-system specific id of @this thread") },
+    { "isrunning", &thread_isrunning, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this thread is current running (i.e. #wasstarted, but hasn't #hasterminated)") },
+    { "hasstarted", &thread_hasstarted, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this thread has been started") },
+    { "wasdetached", &thread_wasdetached, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this thread has been detached") },
+    { "hasterminated", &thread_hasterminated, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this thread has terminated") },
+    { "wasinterrupted", &thread_wasinterrupted, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if interrupts are pending for @this thread") },
+    { "hascrashed", &thread_hascrashed, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this thread has crashed, that "
+          "is having #hasterminated while errors were still active\n"
+          "When :true, attempting to #join @this thread will cause all of the "
+          "errors to be rethrown in the calling thread as a :ThreadCrash error") },
     { NULL }
 };
 
@@ -3529,6 +3562,12 @@ DeeThread_Trace(/*Thread*/DeeObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
  DeeThreadObject *me = (DeeThreadObject *)self;
  if (me != DeeThread_Self()) {
+  if (me->t_state & THREAD_STATE_EXTERNAL) {
+   DeeError_Throwf(&DeeError_ValueError,
+                   "Cannot trace external thread %k",
+                   self);
+   goto err;
+  }
   /* Must suspend and capture this thread. */
   for (;;) {
    uint16_t traceback_size = ATOMIC_READ(me->t_execsz);

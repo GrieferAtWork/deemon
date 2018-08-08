@@ -1417,6 +1417,8 @@ process_get_threads(Process *__restrict self) {
  if (!(self->p_state & PROCESS_FSTARTED) ||
       (self->p_state & PROCESS_FTERMINATED))
        return_reference_(Dee_EmptySeq);
+ if (self == &this_process)
+     return DeeObject_GetAttrString((DeeObject *)&DeeThread_Type,"enumerate");
  return (DREF DeeObject *)pt_new(self->p_id);
 }
 #endif
@@ -1441,11 +1443,11 @@ err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name)
 }
 
 PRIVATE DREF DeeObject *DCALL
-process_get_attribute(Process *__restrict self,
-                      DWORD dwAttributeId) {
+process_get_attribute_and_unlock(Process *__restrict self,
+                                 DWORD dwAttributeId) {
  DREF DeeObject *result;
  HANDLE orig_handle,final_handle;
- rwlock_read(&self->p_lock);
+ ASSERT(rwlock_reading(&self->p_lock));
  orig_handle = self->p_handle;
  rwlock_endread(&self->p_lock);
  final_handle = orig_handle;
@@ -1479,8 +1481,7 @@ process_get_std(Process *__restrict self, int stdno) {
   if (!result) err_unbound_attribute(&DeeProcess_Type,std_names[stdno]);
   return result;
  }
- rwlock_endread(&self->p_lock);
- return process_get_attribute(self,stdno);
+ return process_get_attribute_and_unlock(self,stdno);
 }
 
 PRIVATE int DCALL
@@ -1586,8 +1587,7 @@ process_get_environ(Process *__restrict self) {
        err_unbound_attribute(&DeeProcess_Type,DeeString_STR(&str_environ));
   return result;
  }
- rwlock_endread(&self->p_lock);
- return process_get_attribute(self,PROCATTR_ENVIRONMENT);
+ return process_get_attribute_and_unlock(self,PROCATTR_ENVIRONMENT);
 }
 PRIVATE int DCALL
 process_set_environ(Process *__restrict self, DeeObject *value) {
@@ -1635,8 +1635,7 @@ process_get_pwd(Process *__restrict self) {
        err_unbound_attribute(&DeeProcess_Type,"pwd");
   return (DREF DeeObject *)result;
  }
- rwlock_endread(&self->p_lock);
- return process_get_attribute(self,PROCATTR_CURRENTDIRECTORY);
+ return process_get_attribute_and_unlock(self,PROCATTR_CURRENTDIRECTORY);
 }
 
 PRIVATE int DCALL
@@ -1703,7 +1702,8 @@ process_get_exe(Process *__restrict self) {
  rwlock_endread(&self->p_lock);
  result = (DREF DeeStringObject *)nt_QueryFullProcessImageName(orig_handle,0);
  if (result != (DREF DeeStringObject *)ITER_DONE) goto done_setbuf;
- result = (DREF DeeStringObject *)process_get_attribute(self,PROCATTR_IMAGEPATHNAME);
+ rwlock_read(&self->p_lock);
+ result = (DREF DeeStringObject *)process_get_attribute_and_unlock(self,PROCATTR_IMAGEPATHNAME);
  if (!result) goto done;
 done_setbuf:
  rwlock_write(&self->p_lock);
@@ -1779,8 +1779,7 @@ process_get_cmdline(Process *__restrict self) {
   err_unbound_attribute(&DeeProcess_Type,"cmdline");
   goto done;
  }
- rwlock_endread(&self->p_lock);
- result = (DREF DeeStringObject *)process_get_attribute(self,PROCATTR_COMMANDLINE);
+ result = (DREF DeeStringObject *)process_get_attribute_and_unlock(self,PROCATTR_COMMANDLINE);
  if (!result) goto done;
  rwlock_write(&self->p_lock);
  if (!self->p_cmdline) {
@@ -2143,7 +2142,7 @@ INTERN DeeTypeObject DeeProcEnum_Type = {
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
     /* .tp_cmp           = */NULL,
-    /* .tp_seq           = */NULL,
+    /* .tp_seq           = */NULL, /* TODO */
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
