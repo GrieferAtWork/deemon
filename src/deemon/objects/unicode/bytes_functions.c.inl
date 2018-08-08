@@ -910,7 +910,178 @@ bytes_endswith(Bytes *__restrict self,
                     needle.n_data,needle.n_size));
 }
 
+PRIVATE DREF DeeObject *DCALL
+bytes_strip(Bytes *__restrict self,
+            size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin,*end; DeeObject *mask = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:strip",&mask))
+     goto err;
+ begin = DeeBytes_DATA(self);
+ end  = begin + DeeBytes_SIZE(self);
+ if (mask) {
+  Needle needle;
+  if (get_needle(&needle,mask))
+      goto err;
+  while (begin < end && memchr(needle.n_data,*begin,needle.n_size)) ++begin;
+  while (end > begin && memchr(needle.n_data,end[-1],needle.n_size)) --end;
+ } else {
+  while (begin < end && DeeUni_IsSpace(*begin)) ++begin;
+  while (end > begin && DeeUni_IsSpace(end[-1])) --end;
+ }
+ if (begin == DeeBytes_DATA(self) &&
+     end  == begin + DeeBytes_SIZE(self))
+     return_reference_((DeeObject *)self);
+ return DeeBytes_NewView(self->b_orig,
+                         begin,
+                        (size_t)(end - begin),
+                         self->b_flags);
+err:
+ return NULL;
+}
 
+PRIVATE DREF DeeObject *DCALL
+bytes_lstrip(Bytes *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin,*end; DeeObject *mask = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:lstrip",&mask))
+     goto err;
+ begin = DeeBytes_DATA(self);
+ end  = begin + DeeBytes_SIZE(self);
+ if (mask) {
+  Needle needle;
+  if (get_needle(&needle,mask))
+      goto err;
+  while (begin < end && memchr(needle.n_data,*begin,needle.n_size)) ++begin;
+ } else {
+  while (begin < end && DeeUni_IsSpace(*begin)) ++begin;
+ }
+ if (begin == DeeBytes_DATA(self))
+     return_reference_((DeeObject *)self);
+ return DeeBytes_NewView(self->b_orig,
+                         begin,
+                        (size_t)(end - begin),
+                         self->b_flags);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_rstrip(Bytes *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin,*end; DeeObject *mask = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:rstrip",&mask))
+     goto err;
+ begin = DeeBytes_DATA(self);
+ end  = begin + DeeBytes_SIZE(self);
+ if (mask) {
+  Needle needle;
+  if (get_needle(&needle,mask))
+      goto err;
+  while (end > begin && memchr(needle.n_data,end[-1],needle.n_size)) --end;
+ } else {
+  while (end > begin && DeeUni_IsSpace(end[-1])) --end;
+ }
+ if (end == begin + DeeBytes_SIZE(self))
+     return_reference_((DeeObject *)self);
+ return DeeBytes_NewView(self->b_orig,
+                         begin,
+                        (size_t)(end - begin),
+                         self->b_flags);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_sstrip(Bytes *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin; DeeObject *mask;
+ Needle needle; size_t size;
+ if (DeeArg_Unpack(argc,argv,"o:sstrip",&mask))
+     goto err;
+ if (get_needle(&needle,mask))
+     goto err;
+ if (needle.n_size) goto retself;
+ begin = DeeBytes_DATA(self);
+ size  = DeeBytes_SIZE(self);
+ while (size >= needle.n_size) {
+  if (memcmp(begin,needle.n_data,needle.n_size) != 0)
+      break;
+  begin += needle.n_size;
+  size  -= needle.n_size;
+ }
+ while (size >= needle.n_size) {
+  if (memcmp(begin + size - needle.n_size,needle.n_data,needle.n_size) != 0)
+      break;
+  size -= needle.n_size;
+ }
+ if (begin == DeeBytes_DATA(self) &&
+     size  == DeeBytes_SIZE(self))
+     goto retself;
+ return DeeBytes_NewView(self->b_orig,
+                         begin,size,
+                         self->b_flags);
+retself:
+ return_reference_((DeeObject *)self);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_lsstrip(Bytes *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin; DeeObject *mask;
+ Needle needle; size_t size;
+ if (DeeArg_Unpack(argc,argv,"o:lsstrip",&mask))
+     goto err;
+ if (get_needle(&needle,mask))
+     goto err;
+ if (needle.n_size) goto retself;
+ begin = DeeBytes_DATA(self);
+ size  = DeeBytes_SIZE(self);
+ while (size >= needle.n_size) {
+  if (memcmp(begin,needle.n_data,needle.n_size) != 0)
+      break;
+  begin += needle.n_size;
+  size  -= needle.n_size;
+ }
+ if (begin == DeeBytes_DATA(self))
+     goto retself;
+ return DeeBytes_NewView(self->b_orig,
+                         begin,size,
+                         self->b_flags);
+retself:
+ return_reference_((DeeObject *)self);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_rsstrip(Bytes *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ uint8_t *begin; DeeObject *mask;
+ Needle needle; size_t size;
+ if (DeeArg_Unpack(argc,argv,"o:rsstrip",&mask))
+     goto err;
+ if (get_needle(&needle,mask))
+     goto err;
+ if (needle.n_size) goto retself;
+ begin = DeeBytes_DATA(self);
+ size  = DeeBytes_SIZE(self);
+ while (size >= needle.n_size) {
+  if (memcmp(begin + size - needle.n_size,needle.n_data,needle.n_size) != 0)
+      break;
+  size -= needle.n_size;
+ }
+ if (size  == DeeBytes_SIZE(self))
+     goto retself;
+ return DeeBytes_NewView(self->b_orig,
+                         begin,size,
+                         self->b_flags);
+retself:
+ return_reference_((DeeObject *)self);
+err:
+ return NULL;
+}
 
 
 INTERN struct type_method bytes_methods[] = {
@@ -970,6 +1141,56 @@ INTERN struct type_method bytes_methods[] = {
           "The returned bytes objects are views of @this byte object, meaning they "
           "have the same #iswritable characteristics as @this, and refer to the same "
           "memory") },
+
+    /* String stripping */
+    { "strip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_strip,
+      DOC("->bytes\n"
+          "(string mask)->bytes\n"
+          "(bytes mask)->bytes\n"
+          "(int mask)->bytes\n"
+          "Strip all leading and trailing whitespace-characters, or "
+          "characters apart of @mask, and return a sub-view of @this bytes object") },
+    { "lstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lstrip,
+      DOC("->bytes\n"
+          "(string mask)->bytes\n"
+          "(bytes mask)->bytes\n"
+          "(int mask)->bytes\n"
+          "Strip all leading whitespace-characters, or characters "
+          "apart of @mask, and return a sub-view of @this bytes object") },
+    { "rstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rstrip,
+      DOC("->bytes\n"
+          "(string mask)->bytes\n"
+          "(bytes mask)->bytes\n"
+          "(int mask)->bytes\n"
+          "Strip all trailing whitespace-characters, or characters "
+          "apart of @mask, and return a sub-view of @this bytes object") },
+    { "sstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_sstrip,
+      DOC("(string other)->bytes\n"
+          "(bytes other)->bytes\n"
+          "(int other)->bytes\n"
+          "Strip all leading and trailing instances of @other from @this string\n"
+          ">local result = this;\n"
+          ">while (result.startswith(other))\n"
+          ">       result = result[#other:];\n"
+          ">while (result.endswith(other))\n"
+          ">       result = result[:#result-#other];\n") },
+    { "lsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lsstrip,
+      DOC("(string other)->bytes\n"
+          "(bytes other)->bytes\n"
+          "(int other)->bytes\n"
+          "Strip all leading instances of @other from @this string\n"
+          ">local result = this;\n"
+          ">while (result.startswith(other))\n"
+          ">       result = result[#other:];\n") },
+    { "rsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rsstrip,
+      DOC("(string other)->bytes\n"
+          "(bytes other)->bytes\n"
+          "(int other)->bytes\n"
+          "Strip all trailing instances of @other from @this string\n"
+          ">local result = this;\n"
+          ">while (result.endswith(other))\n"
+          ">       result = result[:#result-#other];\n") },
+
 
     /* String/Character traits */
     { "isprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isprint,
