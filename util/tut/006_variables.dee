@@ -1,0 +1,419 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* Deemon is a strongly scoped language, and variables
+ * reflect this. Once a variable has been declared, it
+ * is only accessible from that scope, and any child
+ * scope of it. */
+
+/* The simplest way to write a scope is to use braces: */
+{
+	local x = 10;
+	{
+		local x = 20; /* This is a new declaration */
+		print x; /* 20 */
+	}
+	print x;     /* 10 */
+	{
+		x = 30;  /* Not a new declaration */
+		print x; /* 30 */
+	}
+	print x;     /* 30 */
+	{
+		local x; /* This is a new declaration */
+		x = 40;  /* initialize the new declaration */
+		print x; /* 40 */
+	}
+	print x;     /* 30 */
+	{
+		print x; /* 30 */
+	}
+}
+
+{
+	foo;
+	{
+		foo = 7;
+	}
+	print foo;
+}
+
+
+/* From this we can already gather the following:
+ * - Variables must be declared before they can be used
+ * - Variable names can be re-used in sub-scopes
+ * - Variables must not necessarily be initialized when being declared
+ * - Variables can be assigned using `='
+ * - Variables of the same name found in outer scopes retain
+ *   their values, even if inner scopes re-use that name.
+ * - When variables are used, the closest match is used
+ * - The `local' prefix can be omitted when new variables are declared,
+ *   however doing so isn't recommended as the variable may unexpectedly
+ *   link against an outer symbol of the same name.
+ */
+
+/* With those rules in mind, there are some special rules
+ * that affect the global scope of a module, i.e. the one
+ * that this comment is written. */
+
+foobar = 32;
+print foobar;
+
+/* `foobar' here is more than just a regular local variable.
+ * Because it is written as part of the global scope, it becomes a global
+ * variable, making is somewhat special, in that other modules may reference
+ * it, it's value, as well as being able to re-assign a different value that
+ * will then become visible here as well. */
+
+global barfoo = foobar;
+print barfoo;
+
+/* Global variables can explicitly be defined by being declared as `global',
+ * using the same rules as `local' with the exception that a `global' prefix
+ * in a scope other than the global scope is illegal. */
+{
+	/* WARNING: Declaring global variable `not_really_allowed' outside of the root scope */
+	global not_really_allowed;
+}
+
+
+/* The following example now introduces the `import' statement, which may be
+ * used to access the variables of another module.
+ * For this, also take a look at `006_variables_module.dee'
+ * NOTE: Once you run time tutorial file, a new file `.006_variables_module.dec'
+ *       will appear in this folder. - Don't be alarmed, it's a precompiled
+ *       cache file for `006_variables_module.dee'. - You may simply ignore
+ *       it, or delete it, however it will reappear if you run this tutorial
+ *       again, and will be updated if `006_variables_module.dee' changes.
+ */
+{
+	local but_im_not = "I wasn't imported";
+	{
+		import * from .demo_module;
+		print im_an_export;       /* Yes I am */
+		print im_another_export;  /* Me too */
+		print but_im_not;         /* I wasn't imported (our local variable above) */
+	}
+	print im_another_export from .demo_module; /* Me too */
+
+	{
+		import .demo_module;
+		print demo_module.im_an_export;       /* Yes I am */
+		print demo_module.im_another_export;  /* Me too */
+	}
+
+	{
+		import mod = .demo_module;
+		print mod.im_an_export;       /* Yes I am */
+		print mod.im_another_export;  /* Me too */
+		mod.im_another_export = "The new value";
+	}
+
+	{
+		import im_another_export from .demo_module;
+		print im_another_export;  /* "The new value" */
+	}
+}
+
+/* Let's talk about the the import statement for a moment.
+ *   - The import statement is pretty much the same as it is in python,
+ *     with a hand full of additions. However despite the fact that one
+ *     of them can already be seen above (strings in module names), let's
+ *     recite python's rules (as far as I understood them, and implemented
+ *     them in deemon):
+ *       - A module name is the filename of that module without it's extension
+ *       - `.' characters seen in a module name act as references to sub-directories
+ *       - A leading `.' character means that the import is relative to the
+ *         file containing the statement.
+ *       - 2 consecutive `..' characters translate to `/../'
+ *       - 3 consecutive `...' characters translate to `/../../', etc.
+ *       - Names without a leading `.' character will be searched for in the module
+ *         search path, which by default contains `/lib' (in the deemon source tree)
+ *     Examles:
+ *       - util       --> "${LIBPATH}/util.dee"
+ *       - sys.util   --> "${LIBPATH}/sys/util.dee"
+ *       - .bar       --> "${CURRENT_SOURCE_PATH}/bar.dee"
+ *       - ..bar      --> "${CURRENT_SOURCE_PATH}/../bar.dee"
+ *       - ..foo.bar  --> "${CURRENT_SOURCE_PATH}/../foo/bar.dee"
+ *       - .          --> "${CURRENT_SOURCE_FILE}.dee" -- `import foo = .' defines `foo' as the current module
+ *   - Modules themself are also objects which can be imported as:
+ *       - import foo;                      // Defines a local variable `foo' as the module `foo'
+ *       - import foo.bar;                  // Defines a local variable `bar' as the module `foo.bar'
+ *       - import foobar = foo.bar;         // Defines a local variable `foobar' as the module `foo.bar'
+ *       - import sym from foo.bar;         // Defines a local symbol `sym' as an alias for `sym from foo.bar'
+ *       - import mysym = sym from foo.bar; // Defines a local symbol `mysym' as an alias for `sym from foo.bar'
+ *   - When importing a module with a name containing characters
+ *     that are not valid identifiers, the following syntax can be used;
+ *       - `import myname = ".foo.1234actual-name"'
+ *   - When not wanting to bind a variable from another module to a local symbol,
+ *     you are also able to write `symbol from module'
+ */
+
+{
+	import util;
+	print util;  /* util (which is a module found in /lib/util.dee) */
+	util = 7;
+	/* Module symbols behave like variables, but if it wasn't
+	 * for the assignment above, the compiler is normally able
+	 * to optimize away the use of an actual local variable. */
+	print util;
+}
+
+/* The import statement is a very powerful construct,
+ * which can be written in a variety of different ways */
+{
+	from .demo_module import im_another_export;
+	print im_another_export;
+}
+{
+	from .demo_module import *;
+	print im_another_export;
+}
+{
+	import im_another_export from .demo_module;
+	print im_another_export;
+}
+{
+	import * from .demo_module;
+	print im_another_export;
+}
+{
+	print im_another_export from .demo_module;
+}
+
+
+/* You may have already noticed that that both
+ * global and local variables can be unbound: */
+{
+	local x;
+//	print x; /* Would cause an error because `x' isn't bound */
+}
+
+/* In such situations, you can use the `bound(x)' or `x is bound' or `x !is bound'
+ * expression to determine if a symbol, attribute, or item `x' is bound. */
+{
+	local x;
+	print x is bound;  /* false (but may be undefined, because the compiler is allowed re-use a variable from a previous assignment) */
+	x = 42;
+	print x is bound;  /* true */
+}
+
+/* Normally (and contrary to what scopes may let you thing), local variables
+ * are only unbound at the end of the containing function, rather than at the
+ * end of the scope containing them, while in the mean time the compiler is
+ * allowed to re-use that variable in sibling scopes without being required
+ * to unbind the variable in the mean time, meaning that uninitialized local
+ * variables may still contain values bleeding over from other scopes.
+ * This can be prevented by manually deleting (and thereby unbinding) a variable: */
+{
+	local x = "Outer x";
+	{
+		local x = "Inner x";
+		print x;   /* Inner x */
+		del x;     /* >> UNBIND(x);
+		            * >> DELETE_SYMBOL(x);
+		            * Note that the UNBIND() is not necessarily done when a variable simply
+		            * goes out of scope, but only once the containing function returns.
+		            */
+		print x;   /* Outer x */
+	}
+	/* >> DELETE_SYMBOL(x);
+	 * Note that "Outer x" is not unbound here! */
+}
+
+
+
+
+/* So now that you understand the difference between local and global,
+ * as well as how to use them, let's take a quick look at some other
+ * special variable types.
+ * Static variables cannot be mixed with global variables, and it is
+ * recommended to always include a `local' prefix when declaring them,
+ * so-as to prevent unintended matching against other variables of the
+ * same name.
+ */
+{
+	static local x = 42;
+	print x;
+}
+/* Static variables are somewhat special in that their first initialize
+ * is executed only once, and in the fact that when re-assigned, new
+ * values will stay across multiple invocations of the surrounding
+ * function (see tutorial about functions) */
+
+
+/* Lastly, there are `__stack' variables, an optional extension that is
+ * can simply be ignored by deemon distributions choosing not to implement
+ * it, while in those that do referring to variables that should be stored
+ * on the execution stack, allowing them to be referenced quicker, and
+ * potentially allow store expressions to be omitted from generated code.
+ * Just like `static' variables, `__stack' variables can only be used as
+ * local variables, meaning you should always include a `local' prefix
+ * when declaring them.
+ * Use of `__stack' variables is never required, and in certain situations
+ * may even break code. Additionally, with optimizations enabled, the compiler
+ * may automatically recognize where the use of a stack variable could lead
+ * to improved performace, meaning that the manual declaration of a stack
+ * variable is practically never required.
+ * However this tutorial file being all about variables, it's as good a place
+ * as any to mention what the meaning of __stack is when it appears in code.
+ */
+{
+	__stack local x = 42;
+	print x;
+}
+
+
+
+/* That's all the different types of variables there are. Now on to a hand
+ * full of special cases and extensions. */
+
+{
+	local foo = "outer";
+	{
+		local foo = "inner";
+		print foo;          /* "inner" */
+		print __nth(1) foo; /* "inner" */
+		print __nth(2) foo; /* "outer" */
+	}
+}
+
+/* `__nth(<intexpr>)' can be prefixed before variable names in order
+ * to select the n'th match of a given name, rather than the first.
+ * This is a lesser used feature which none-the-less finds great use
+ * in autogenerated code using scopes to structure its data tree. */
+
+
+
+{
+	import list from deemon; /* See `Doc("/deemon/list")'. */
+	list a = { 10, 20, 30 };
+	print repr a;  /* [10,20,30] */
+	list b;
+	print repr b;  /* [] */
+	list c({ 1, 2, 3 });
+	print repr c;  /* [1,2,3] */
+	list d();
+	print repr d;  /* [] */
+	list e { 9, 8, 7 };
+	print repr e;  /* [9,8,7] */
+}
+/* Local variables can also be declared as `<type_expr> <symbol_name>',
+ * following C/C++ syntax, while also allowing for the immediate initialization:
+ *  - list a = { 10, 20, 30 };  -- local a = list({ 10, 20, 30 });
+ *  - list b;                   -- local b = list();
+ *  - list c({ 1, 2, 3 });      -- local c = list({ 1, 2, 3 });
+ *  - list d();                 -- local d = list();
+ *  - list e { 9, 8, 7 };       -- local e = list({ 9, 8, 7 });
+ */
+
+
+/* Now that we've seen `=' being used to assign variables, it should
+ * be noted that it can also be used in 3 other situations. */
+{
+	local x = [1,2,3];
+	x.allocated = 9;      /* This is a setattr expression. */
+	x[1]  = "foo";        /* This is a setitem expression. */
+	print repr x;         /* [1, "foo", 3] */
+	x[2:] = { 5, 6, 7 };  /* This is a setrange expression. */
+	print repr x;         /* [1, "foo", 5, 6, 7] */
+
+	/* Also note that in all of the examples above, `del'
+	 * can also be used to invoke different behavior: */
+	del x[3:];
+	print repr x;         /* [1, "foo", 5] */
+	del x[1];
+	print repr x;         /* [1, 5] */
+	del x.allocated;      /* This is a delattr expression. (which deletes any overallocations made by the list) */
+	print repr x;         /* [1, 5] */
+}
+
+
+
+
+/* With variables, one more thing worth mentioning are inplace operators */
+{
+	local x = 10;
+	print x;    /* 10 */
+	x += 20;
+	print x;    /* 30 */
+	++x;
+	print x;    /* 31 */
+	print x++;  /* 31 */
+	print x;    /* 32 */
+	print --x;  /* 31 */
+}
+
+/* While they should be fairly self-explainatory, especially to something
+ * who already knows C, it should be mentioned that while inplace operators
+ * are their own operators at runtime, an expression such as `x += 20'
+ * may also be emulated as `x = x + 20' when the type of `x' is immutable.
+ * This also applies to `x.y += 20' potentially becoming `x.y = x.y + 20',
+ * as well as the same when appearing in in `x[y] += 20' becoming `x[y] = x[y] + 20'
+ * Note however that in all cases, the operands found in the left-hand-side are only
+ * evaluated once, meaning that in `x[y] += 20', `y' is only evaluated once, and all
+ * its side-effects only happen once too.
+ *  - It should also be noted that deemon enforces a strong left-to-right evaluation order.
+ */
+
+
+
+
+
+/* The expand expression used in variable assignments. */
+{
+	local values = (10,20,30);
+	local x,y,z = values...;
+	print x;  /* 10 */
+	print y;  /* 20 */
+	print z;  /* 30 */
+
+	/* An alternate representation of the line above. */
+	(x,y,z) = ("foo","bar","foobar");
+	print x;  /* foo */
+	print y;  /* bar */
+	print z;  /* foobar */
+
+	x,y = (1,2)...,z = 7;
+	print x;  /* 1 */
+	print y;  /* 2 */
+	print z;  /* 7 */
+
+}
+
+/* Using an expand expression when assigning to a comma-seperated
+ * list of variables, that expression is unpacked to match the number
+ * of target expressions, allowing for multiple return values in
+ * functions (explained later) */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

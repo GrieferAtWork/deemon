@@ -1,0 +1,64 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* Deemon supports a plethora of arithmetic operators, and
+ * properly deals with operator precedence but let's start simple */
+print 20 + 10; /* 30 */
+print 20 - 10; /* 10 */
+print 20 * 10; /* 200 */
+print 20 / 10; /* 2 */
+
+print 2 + 3 * 4; /* 14 */
+print 3 * 4 + 2; /* 14 */
+
+/* The operators supported are the same also available in C, in
+ * addition to some others that are mostly unrelated to arithmetic
+ * and introduced in later tutorials. */
+print 1 << 2; /* 4 */
+/* >>, &, |, ^, %, ~x, +x, -x,  */
+
+/* The last operator is power */
+print 2 ** 10; /* 1024 */
+
+/* all arithmetic operators are also available as inplace variants,
+ * however those are introduced later, in conjunction to variables. */
+
+
+/* Operators can also be applied to types other than integers. */
+print "foo" + "bar"; /* foobar */
+
+/* Another group of operators are the comparison operators. */
+print 10 == 20; /* false -- equal */
+print 10 != 20; /* true  -- not equal */
+print 10 <  20; /* true  -- lower than */
+print 10 <= 20; /* true  -- lower than or equal to */
+print 10 >  20; /* false -- greater than */
+print 10 >= 20; /* false -- greater than or equal to */
+
+/* In order to easy working with non-decimal numbers, integers may
+ * be written in their hexadecimal, binary or octal forms. */
+print 0xff;     /* 255  -- hexadecimal */
+print 077;      /* 63   -- octal */
+print 0b1011;   /* 11   -- binary */
+
+
+
+
+

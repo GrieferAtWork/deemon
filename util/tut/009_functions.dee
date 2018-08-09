@@ -1,0 +1,130 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+/* functions in deemon code in 3 kinds: regular functions, lambda functions, and generators.
+ * Now that I said that, forget that I did, because they're actually all the same. */
+
+
+@"A regular function that is exported from this module"
+function foo(x,y) {
+	print "foo("+x+","+y+")";
+	return x + y;
+}
+
+print foo(10,20); /* 30 */
+
+
+function bar(x,args...) {
+	/* args is a tuple containing all variable arguments passed to the function. */
+	print "x =",x;
+	print "args =",args;
+	/* Without a `return' statement, the function returns `none' */
+}
+
+bar(1,2,3,4);
+
+
+/* Arguments can be given a default value, and be omitted during invocation. */
+function baz(x,y = 7,z = 8) {
+	print "baz("+x+","+y+","+z+")";
+}
+baz(1);
+baz(1,2);
+baz(1,2,3);
+
+
+function foobar(x,y = 11,z?) {
+	/* A variable can be declared with a trailing `?', marking
+	 * it as optional, with its presence then being detectable
+	 * as the symbol either being bound, or not */
+	print "baz("+x+","+y+","+(z is bound ? z : "<NOT BOUND>")+")";
+}
+foobar(1);
+foobar(1,2);
+foobar(1,2,3);
+
+
+/* Finally, let's quickly look at lambda functions. */
+local variable_outside_of_lambda = "foobar";
+local lambda = [](x,y) {
+	print variable_outside_of_lambda; /* This is a reference symbol. */
+	return x < y;
+};
+print lambda(10,20); /* true */
+print lambda(20,10); /* false */
+/* They're really nothing special, other than you being allowed
+ * to omit the argument list when the lambda doesn't take any. */
+
+
+
+/* Now that we've seen regular functions, their arguments, as well as
+ * a function returning a value, let's take a look at what `yield' does. */
+function yielding_function(items) {
+	for (local x: items) {
+		print "Now yielding value from",x;
+		yield x * 2;
+	}
+}
+
+/* If you run this tutorial, you will see that the 2 print statments
+ * will output their text in all at once, but alternatingly.
+ * This is because the `yield' above causes execution of the function
+ * to be suspended, have it return a value to our for-loop here, before
+ * our for-loop passed control back to the yield function.
+ * Essentially, this means that when wanting to transform a sequence,
+ * instead of having to transform it in its entirety before being able
+ * to continue with the next step, you can simply use yield functions
+ * to construct a wrapper that transforms your original sequence as
+ * they are needed.
+ */
+for (local x: yielding_function([:20])) {
+	print "Got value:",x;
+}
+
+
+/* The ability to do this, as well as its usefulness is what lead to
+ * the introduction of generator expressions. */
+local mygen = for (local x: [:10]) 2 ** x;
+
+for (local x: mygen) {
+	print "mygen>",x;  /* 1,2,4,8,16,32,64,128,256,512 */
+}
+
+/* Remember expand expressions, with which you can easily create a
+ * modifiable list from the items of your generator. */
+local values = [mygen...];
+print repr values;
+
+
+
+/* Though really fancy, generator expressions aren't anything special,
+ * as they could also be expressed using lambdas: */
+mygen = [] {
+	for (local x: [:10])
+		yield 2 ** x;
+}(); /* NOTE: The yield function of a generator must be
+      *       invoked to construct the sequence instance */
+print repr mygen;
+
+
+
+
+

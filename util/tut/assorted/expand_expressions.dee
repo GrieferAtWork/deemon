@@ -107,9 +107,7 @@ function foo(a,b,c) {
 
 args = (10,20,30);
 
-/* Call a function with an expanded argument list
- * NOTE: Technically, this is the fastest way of calling a function,
- *       since the compiler detects that no argument tuple must be created. */
+/* Call a function with an expanded argument list */
 foo(args...);
 foo(7,args[1:]...);
 

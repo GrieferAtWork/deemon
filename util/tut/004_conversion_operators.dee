@@ -1,0 +1,57 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* Deemon includes a variety of operators for conversion.
+ * One operator that has already been seen, but not actually mentioned
+ * as such is the str-operator, which can manually be invoked by pre-fixing
+ * an object-expression with `str', optionally followed by parenthesis. */
+print str(12) + str(34); /* 1234 */
+
+/* Operators are provided on a per-type basis, meaning that their behavior
+ * depends on what object they are being invoked upon. However, not all
+ * objects must necessary implement all operators, with missing ones causing
+ * an Error.RuntimeError.NotImplemented being thrown (see tutorial for exceptions) */
+print !12;  /* Logical negation        -- false */
+print !!12; /* Logical double-negation -- true */
+print ~12;  /* Bit-wise inversion      -- -13 */
+print -12;  /* Negation                -- -12 */
+
+/* Another importable unary operator is `repr', which operates similarly
+ * to `str', but is meant to return a representation of how an expression
+ * would be written in usercode in order to produce that object. */
+print repr 12;               /* Still prints `12', because that's how you would write this object. */
+print repr("foo\n" + "bar"); /* Prints "foo\nbar". */
+
+
+/* One more unary keyword-like operator exists, which is `type' */
+print type 10;     /* int */
+print type "foo";  /* string */
+print type str 10; /* string */
+
+/* The `type' expression simply returns the type of the expression it is given */
+
+
+
+
+
+
+
+
+

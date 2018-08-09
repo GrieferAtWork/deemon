@@ -1,0 +1,145 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+/* Finally! Let's talk about some basic statments, as well as control flow: */
+local x = 42;
+
+if (x == 42) {
+	x = 7;
+} else {
+	print "x wasn't 42, but is",x;
+}
+print "Now x is",x;
+
+/* Deemon implements any kind of statment also seen in C (including labels) */
+
+switch (x) {
+case 4:
+	print "4";
+	/* FALLTHRU */
+case 5:
+	print "4 or 5";
+	break;
+default:
+	print "default";
+	break;
+}
+
+for (local i = 0; i < 10; ++i)
+	print "for: i =",i;
+
+do {
+	print "do: x =",x;
+} while ((x -= 2) > 2);
+
+while ((x % 20) != 11) {
+	print "while: x =",x;
+	++x;
+}
+
+if (x == 11)
+	goto next;
+print "Didn't go to `next'";
+next:
+print "This is `next'";
+
+
+
+print x ? "x is true" : "x isn't true";
+print x ? : "x isn't true";      /* Re-use `x' as true-branch */
+print x ? "x is true";           /* Use `none' as false-branch */
+print x ? "x is true" : ;        /* Use `x' as false-branch */
+
+local y = false;
+
+print x || y; /* true  -- Logical or  -- Same as `!!x ? : y' */
+print x && y; /* false -- Logical and -- Same as `!!x ? !!y : ' */
+/* Note that in logical or/and, the second branch is not evaluated
+ * if it doesn't have to be. */
+
+
+
+/* Since deemon supports exceptions, it has try-catch/finally statements.
+ * Also note that any arbitrary object can be thrown as an exception,
+ * though builtin functions usually only thrown object derived from either
+ * `Error from deemon' or `Signal from deemon'
+ */
+try {
+	try {
+		print "Reachable";
+		throw 42;
+		print "Not reachable";
+	} finally {
+		print "In finally (always executed, no matter what)";
+	}
+	print "Also not reachable";
+} catch (e...) {
+	print "caught:",e; /* caught: 42 */
+}
+
+/* Catch-expressions can be written in one of the following ways:
+ *   - catch (...)              -- Catch any kind of object that isn't an interrupt
+ *   - catch (e...)             -- Catch any kind of object that isn't an interrupt and store it in a newly created local variable `e'
+ *   - @interrupt catch (...)   -- Catch any kind of object
+ *   - @interrupt catch (e...)  -- Catch any kind of object and store it in a newly created local variable `e'
+ *   - catch (<typeexpr>)       -- Catch any object `x' where `x is <typeexpr>' is true
+ *                                 <typeexpr> is evaluated only when an exception occurs
+ *   - catch (<typeexpr> as e)  -- Same as `catch (<typeexpr>)', but also store it in a newly created local variable `e'
+ */
+
+
+/* Additionally, in order to best support sequences, for-each statements exist: */
+local items = { 10, 20, 30 };
+for (local x: items) {
+	print x;
+}
+
+/* An going even further, in order to best support sequences-of-sequences,
+ * you can do something like this: */
+local item_pairs = { { "a", 10 }, { "b", 20 }, { "c", 30 } };
+for (local x,y: item_pairs) {
+	print x,y;
+}
+
+/* This becomes especially interesting when dealing with mapping-like objects,
+ * as those objects are generally written as {(object,object)...}, meaning they're
+ * usually sequences of 2-element sequences. */
+{
+	import dict from deemon;
+	local items = dict {
+		"a" : 3,
+		"b" : 19,
+		"c" : 31,
+	};
+	items["foobar"] = items + ...;
+	for (local key,value: items)
+		print key,"=",repr value;
+}
+
+/* Deemon also includes the `continue' and `break' statements which may
+ * only appear in loops, with `continue' jumping to the next-, or
+ * condition-expression, and `break' jumping just after the loop. */
+
+
+/* Some more statements exist, such a `return' and `yield' statment,
+ * as well as `function' and `class' however those are handled in
+ * the tutorial on functions and classes. */
+

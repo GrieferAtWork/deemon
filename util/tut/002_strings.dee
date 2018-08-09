@@ -18,19 +18,25 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-// A really, really, really simple example to showcase conversion operators
-// Task to the reader: 'Find the two tokens that can still be removed.'
+/* As already seen in 001, strings are
+ * written using "double quotes". */
+print "I am a string";
 
-class my_class {
-	operator int() -> 42;
-};
+/* Deemon uses the same mechanisms as C when
+ * it comes to special character escaping */
+print "A string including some \"double quotes\", a \\-character, and a\nLine feed";
 
-print 10+my_class(); // guess what this does...
+/* Deemon has integrated, and automatic unicode support,
+ * allowing you to simply include unicode characters in
+ * strings without any additional work having to be done. */
+print "\u2554\u2550\u2550\u2550\u2557";
+print "\u255a\u2550\u2550\u2550\u255d";
 
-
-
-
-
+/* Specifically for more advanced features such
+ * as regular expressions, a second way of writing
+ * strings, known as raw string literals exists,
+ * which doesn't process backslash-escape sequences. */
+print r"A linefeed is written as \n";
 
 
 

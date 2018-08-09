@@ -1,0 +1,166 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* One of the main focal points of deemon are its abilities for working
+ * with sequences. For this purpose, multiple syntax constructs exist,
+ * however this file will only introduce sequence operators, as well as
+ * the expand expression. */
+
+/* Deemon's contains dedicated syntax for 4 different types of sequences: */
+print repr([ 10, 20, 30 ]);     /* List objects -- Mutable, resizable, ordered */
+print repr(( 10, 20, 30 ));     /* Tuple objects -- ordered */
+print repr({ 10, 20, 30 });     /* Abstract sequence -- Context-dependent behavior */
+print repr({ 10: 20, 30: 40 }); /* Abstract mapping -- Context-dependent behavior */
+
+/* Now don't be confused at this point.
+ * Abstract sequences / mapping objects are quite simply:
+ *  - Instead of telling the compiler that you want a set of objects in the
+ *    form of a list or tuple (both of which are further elaborated below),
+ *    you are simply telling it that you don't care what their typing will
+ *    be at runtime, so long as their types will be derived from
+ *      - `sequence from deemon'  for Abstract sequence expressions
+ *      - `mapping from deemon'   for Abstract mapping expressions
+ */
+
+/* tuples, and how ambiguity with arithmetic parenthesis is handled. */
+print (10,20,30);  /* This is a 3-element tuple `(10,20,30)' */
+print (10,20,);    /* This is a 2-element tuple `(10,20)' */
+print (10,20);     /* This is a 2-element tuple `(10,20)' */
+print (10,);       /* This is a 1-element tuple `(10)' */
+print (10);        /* This isn't a tuple, but still referrs to `10' */
+
+/* lists, and how they actually differ from tuples.
+ * To anwer this, I have to reach ahead a little bit and quickly
+ * introduce variables. - They should be self-explainatory for now,
+ * so don't worry about they for the time being. */
+local x = [10,20,30];
+print x; /* [10,20,30] */
+x.append(40);
+print x; /* [10,20,30,40] */
+/* Lists are mutable, meaning that elements can be appened, removed, inserted, etc.
+ * Tuples however aren't, as they are fixed-length, and cannot be modified once created. */
+
+/* Sequence length expressions. */
+print #[10,20,30];      /* 3 */
+print #"foobar";        /* 6 */
+/* Sequence expressions can be prefixed by `#', which will return the length of that sequence. */
+
+/* You can test for the presence of an item within a sequence by using `in' */
+print 10 in [10,20,30]; /* true */
+print 10 in [40,50,60]; /* false */
+
+/* Index and sub-range expressions. */
+print [10,20,30][1];   /* 20 */
+/* An index expression is written as `<sequence>[<index>]'
+ * In most cases, `<index>' is an integer expression, and `<sequence>'
+ * is the sequence being indexed, in which case `<index>' must be non-negative
+ * and lower than the length of the sequence (index >= 0 && index < #sequence). */
+
+/* Quite similar to sequence indexing, you may also access a sub-range
+ * of a sequence using a syntax that is quite similar: */
+print repr [10,20,30,40][1:2];   /* [20] */
+print repr [10,20,30,40][2:];    /* [30,40] */
+print repr [10,20,30,40][:1];    /* [10] */
+print repr [10,20,30,40][:];     /* [10,20,30,40] */
+print repr [10,20,30,40][:-1];   /* [10,20,30] */
+/* Sequence range expressions are written as `<sequence>[<start>:<end>]'
+ * However unlike sequence indexing, they are much more powerful, while
+ * also returning another sequence (generally an abstract sequence)
+ * Additionally, omission of either `<start>' or `<end>' (which is the same
+ * as passing `none', which is explained in a later tutorial), will result
+ * in that expression taking the value of either the lowest, or the greatest
+ * index, meaning that `seq[2:]' usually behaves the same as `seq[2:#seq]'.
+ * Secondly, passing negative values for either `<start>' or `<end>' will
+ * have that index be internally transformed to instead referr to that
+ * value added to the length of the sequence:
+ * In other words: `seq[:-1]' is the same as `seq[:-1+#seq]' aka. `seq[:#seq-1]' */
+
+
+
+/* Another important sequence construct are range expressions.
+ * Note the abstract sequence syntax! */
+print repr [:10];     /* { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 } */
+print repr [2:10];    /* { 2, 3, 4, 5, 6, 7, 8, 9 } */
+print repr [2:10,3];  /* { 2, 5, 8 } */
+print repr [10:0,-3]; /* { 10, 7, 4, 1 } */
+
+/* Range expressions are written as `[<start>:<end>,<step>]',
+ * with `<start>' defaulting to a default-constructed instance
+ * of end (which is usually just `0'), and `<step>' being omitting
+ * resulting in `operator ++' (explained later alongside variables),
+ * or in its presence resulting in `operator +' being used.
+ * For integers, you can simply think of `<step>' defaulting to `1' */
+
+/* Don't get confused from their similarly though. Range expressions
+ * are _not_ lists, but abtract sequences themself, meaning you'd have
+ * to cast them to a list because you can modify their values, which
+ * brings me to the expand expression. */
+
+/* [10, 20, 30, 40, 50, 60, 70] */
+print repr [(10, 20, 30)..., 40, [50, 60, 70]...];
+print repr [[:8]...,4];  /* [0, 1, 2, 3, 4, 5, 6, 7, 4] */
+
+/* It should be quote obvious how expand expressions work, but
+ * just in case you aren't understanding, the 3 dots (`...') are
+ * what is referred to as an expand modifier applied to whatever
+ * expression they are following.
+ * Their behavior is to then interpret that expression as a sequence
+ * who's arguments are then taken and re-interpreted as though they
+ * were written as a list of comma-seperated expression at the same
+ * location as the expand modifier. */
+print repr((["a","b","c"]...)); /* Cast to tuple -- ("a", "b", "c") */
+print repr([("a","b","c")...]); /* Cast to list  -- ["a", "b", "c"] */
+
+/* Expand expressions can be used anywhere a comma-seperated list of
+ * expressions can be used, which includes argument lists, print statements, etc.
+ * The only place where expand has special meaning is when it is used in
+ * assignments (explained later) */
+
+
+
+/* A second type of sequence object exists, which are mapping-like objects */
+local x = { "a" : 42, "b": 17, 14: "foobar" };
+print x["a"]; /* 42 */
+print x["b"]; /* 17 */
+print x[14];  /* foobar */
+
+/* It should already be quite obvious what mapping-like objects are.
+ * They're often called associative arrays, or dictionaries, or hashed lists,
+ * or you-get-the-idea-so-lets-move-one
+ * As mentioned, deemon includes an abstract syntax for defining a
+ * generic mapping-like object, as can be seen in the example above.
+ * Mapping-like objects are usually derived from Doc("/deemon/mapping")
+ * Additionally, deemon includes a builtin type for mutable mappings
+ * known as `dict from deemon', which is basically the same as python
+ * type of the same name. */
+
+
+
+/* Expand expressions (or rather dots `...') can also be used in a couple
+ * of other places when working with sequences: */
+local items = { 10, 20, 30, 3, 5, 9, 11 };
+print items < ...; /* Return the smallest element of a sequence (3); `none' if empty */
+print items > ...; /* Return the largest element of a sequence (30); `none' if empty */
+print items + ...; /* Return the sum of all element in a sequence (88); `none' if empty */
+
+
+
+
+

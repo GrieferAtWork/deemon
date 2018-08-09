@@ -1,0 +1,100 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+/* In any piece of code, there are always 3 predefined symbols that
+ * can appear in any kind of expression: */
+
+print none;   /* none */
+print true;   /* true */
+print false;  /* false */
+
+/* Both `true' and `false' should be self-explainatory. They are simply
+ * the 2 possible incarnations of the boolean singleton object, and are
+ * commonly used as return values for comparison operators, or function
+ * results. */
+
+/* `none' on the other hand is a no-op / placeholder singleton with a
+ * variety of special meanings: */
+local x = 42;
+print x is none; /* false -- alias for `x is type none' */
+
+/* Using none in an unpack-expression always
+ * produces the required number of results. */
+local x,y,z = none...;
+print x,y,z; /* none none none */
+
+
+/* `none' implements any arbitrary attribute and all operators by
+ * simply re-returning itself (it's the ultimate no-op after all). */
+print (none.foo.bar.whatever + 7) * 3; /* none */
+
+/* `none' is often used as a placeholder for unassigned variables,
+ * or in functions as fallback for default-arguments. */
+
+
+/* Using `none' as the target of a file-targeted print expression
+ * results in the print being discarded. */
+print none: x,y,z;
+
+
+/* `none' can also be used to discard a specific value in an unpack expression */
+local values = (10,20,30);
+local x,none,y = values...;
+print x,y; /* 10 30 */
+
+
+
+
+
+/* When it comes to object attributes, 4 attributes are
+ * predefined by the compiler and cannot be overwritten. */
+
+local x = "foobar";
+
+print x.this;  /* Same as `x' */
+print x.super; /* Same as `x as object from deemon' */
+print x.class; /* Same as `string' (differs from `type' in that the viewed type is returned for super-wrappers) */
+print x.operator + ("baz"); /* Same as `x + "bar"' */
+
+/* Note that the `operator' attribute is very special, in that
+ * it can be used to construct bound operator functions. */
+local y = x.operator +;
+print y("1234");   /* foobar1234 */
+print y("barfoo"); /* foobarbarfoo */
+
+/* Also note that `operator <name>' can also be used by itself. */
+print operator + (x,"1234"); /* foobar1234 */
+
+/* When it comes to which operators exist, as well as what their names
+ * are, look at the tutorial for classes. */
+
+
+
+
+
+
+
+
+
+
+
+
+
