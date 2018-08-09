@@ -1691,7 +1691,6 @@ ast_parse_cond(unsigned int lookup_mode) {
      *    by allowing the reverse of what `foo() ?: bar()' already does
      *    by specifying the syntax `(foo() ? bar() :)'
      */
-    if unlikely(yield() < 0) goto err2;
     ff_branch = condition;
     Dee_Incref(condition);
    } else {
