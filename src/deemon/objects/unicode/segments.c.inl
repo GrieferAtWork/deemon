@@ -54,7 +54,7 @@ typedef struct {
 INTDEF DeeTypeObject StringSegmentsIterator_Type;
 INTDEF DeeTypeObject StringSegments_Type;
 INTDEF DREF DeeObject *DCALL
-DeeString_Segments(DeeObject *__restrict self,
+DeeString_Segments(String *__restrict self,
                    size_t segment_size);
 
 
@@ -136,7 +136,7 @@ ssegiter_bool(StringSegmentsIterator *__restrict self) {
 
 PRIVATE DREF StringSegments *DCALL
 ssegiter_getseq(StringSegmentsIterator *__restrict self) {
- return (DREF StringSegments *)DeeString_Segments((DeeObject *)self->s_str,
+ return (DREF StringSegments *)DeeString_Segments(self->s_str,
                                                   self->s_siz);
 }
 
@@ -150,7 +150,7 @@ PRIVATE struct type_getset ssegiter_getsets[] = {
 PRIVATE DREF DeeObject *DCALL \
 name(StringSegmentsIterator *__restrict self, \
      StringSegmentsIterator *__restrict other) { \
- if (DeeObject_AssertTypeExact((DeeObject *)other,&StringSegmentsIterator_Type)) \
+ if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self))) \
      return NULL; \
  return_bool(READ_PTR(self) op READ_PTR(other)); \
 }
@@ -445,7 +445,7 @@ INTERN DeeTypeObject StringSegments_Type = {
 
 
 INTERN DREF DeeObject *DCALL
-DeeString_Segments(DeeObject *__restrict self,
+DeeString_Segments(String *__restrict self,
                    size_t segment_size) {
  DREF StringSegments *result;
  ASSERT(segment_size != 0);

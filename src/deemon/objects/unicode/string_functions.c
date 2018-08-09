@@ -2990,7 +2990,7 @@ err:
 
 
 INTDEF DREF DeeObject *DCALL
-DeeString_Segments(DeeObject *__restrict self, size_t substring_length);
+DeeString_Segments(String *__restrict self, size_t substring_length);
 
 PRIVATE DREF DeeObject *DCALL
 string_segments(String *__restrict self,
@@ -3002,7 +3002,7 @@ string_segments(String *__restrict self,
   err_invalid_segment_size(substring_length);
   return NULL;
  }
- return DeeString_Segments((DeeObject *)self,substring_length);
+ return DeeString_Segments(self,substring_length);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -3021,7 +3021,7 @@ string_distribute(String *__restrict self,
  substring_length /= substring_count;
  if unlikely(!substring_length)
     return_empty_seq;
- return DeeString_Segments((DeeObject *)self,substring_length);
+ return DeeString_Segments(self,substring_length);
 }
 
 PRIVATE ATTR_COLD int DCALL err_empty_filler(void) {

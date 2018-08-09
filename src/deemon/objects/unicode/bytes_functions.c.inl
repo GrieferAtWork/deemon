@@ -3124,6 +3124,42 @@ err:
  return NULL;
 }
 
+INTDEF DREF DeeObject *DCALL
+DeeBytes_Segments(DeeBytesObject *__restrict self, size_t substring_length);
+
+PRIVATE DREF DeeObject *DCALL
+bytes_segments(Bytes *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ size_t substring_length;
+ if (DeeArg_Unpack(argc,argv,"Iu:segments",&substring_length))
+     return NULL;
+ if unlikely(!substring_length) {
+  err_invalid_segment_size(substring_length);
+  return NULL;
+ }
+ return DeeBytes_Segments(self,substring_length);
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_distribute(Bytes *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ size_t substring_count;
+ size_t substring_length;
+ if (DeeArg_Unpack(argc,argv,"Iu:distribute",&substring_count))
+     return NULL;
+ if unlikely(!substring_count) {
+  err_invalid_distribution_count(substring_count);
+  return NULL;
+ }
+ substring_length  = DeeBytes_SIZE(self);
+ substring_length += substring_count - 1;
+ substring_length /= substring_count;
+ if unlikely(!substring_length)
+    return_empty_seq;
+ return DeeBytes_Segments(self,substring_length);
+}
+
+
 
 INTERN struct type_method bytes_methods[] = {
     { "decode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_decode,
@@ -4071,8 +4107,22 @@ INTERN struct type_method bytes_methods[] = {
           "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
           "Same as #rpartitionmatch, however casing is ignored during character comparisons") },
 
-    /* TODO: partition() */
-    /* TODO: distribute() */
+    { "segments", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_segments,
+      DOC("(int substring_length)->{bytes...}\n"
+          "Split @this bytes object into segments, each exactly @substring_length characters long, with the "
+          "last segment containing the remaining characters and having a length of between "
+          "$1 and @substring_length characters.\n"
+          "This function is similar to #distribute, but instead of being given the "
+          "length of sub-strings and figuring out their amount, this function takes "
+          "the amount of sub-strings and figures out their lengths") },
+    { "distribute", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_distribute,
+      DOC("(int substring_count)->{bytes...}\n"
+          "Split @this bytes object into @substring_count similarly sized sub-strings, each with a "
+          "length of ${(#this + (substring_count - 1)) / substring_count}, followed by a last, optional "
+          "sub-string containing all remaining characters.\n"
+          "This function is similar to #segments, but instead of being given the "
+          "amount of sub-strings and figuring out their lengths, this function takes "
+          "the length of sub-strings and figures out their amount") },
 
     { NULL }
 };
@@ -4082,6 +4132,7 @@ DECL_END
 
 #ifndef __INTELLISENSE__
 #include "bytes_split.c.inl"
+#include "bytes_segments.c.inl"
 #endif
 
 #endif /* !GUARD_DEEMON_OBJECTS_UNICODE_BYTES_FUNCTIONS_C_INL */
