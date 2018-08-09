@@ -411,7 +411,6 @@ create_from_anon:
  }
  if unlikely(!sym) goto err;
  if (module == current_rootscope->rs_module) {
-  Dee_Decref(module);
   if (WARN(W_IMPORT_GLOBAL_FROM_OWN_MODULE))
       goto err_sym;
   goto import_whole_module;
@@ -429,6 +428,7 @@ create_from_anon:
  sym->sym_class             = SYM_CLASS_EXTERN;
  sym->sym_extern.sym_modsym = modsym;
  sym->sym_extern.sym_module = module;
+ Dee_Incref(module);
  return ast_setddi(ast_sym(sym),&loc);
 err_sym:
  sym->sym_class = SYM_CLASS_THIS_MODULE;
@@ -518,6 +518,7 @@ ast_parse_import(bool allow_symbol_define) {
   }
   /* Now that we've got the module, we can parse imports. */
   result = ast_parse_import_single_from(module,allow_symbol_define);
+  Dee_Decref(module);
  } else if (tok == '*' && allow_symbol_define) {
   DREF DeeStringObject *module_name;
   /* Syntax: `import * from foo' */

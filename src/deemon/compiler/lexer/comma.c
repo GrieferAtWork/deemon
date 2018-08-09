@@ -429,7 +429,7 @@ set_typed_var:
     }
     TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
     if unlikely(!args) goto err_current;
-    if (!has_paren) {
+    if (has_paren) {
      if unlikely(likely(tok == ')') ? (yield() < 0) :
                  WARN(W_EXPECTED_RPAREN_AFTER_CALL)) {
 err_args:

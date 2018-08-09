@@ -1582,6 +1582,12 @@ do_prefix:
    *pstacksz -= *psp_sub;
    break;
 
+  case ASM_UNPACK:
+   *psp_add   = *(uint8_t *)(prefix_ip + 1);
+   *psp_sub   = 0;
+   *pstacksz += *psp_add;
+   break;
+
   case ASM_EXTENDED1:
    op = prefix_ip[1];
    switch (op) {
@@ -1608,13 +1614,18 @@ do_prefix:
     break;
    case ASM16_LROT & 0xff:
    case ASM16_RROT & 0xff:
-    *psp_add = *(uint16_t *)(prefix_ip + 2);
+    *psp_add = ASM_BSWAPIMM16(*(uint16_t *)(prefix_ip + 2));
     *psp_sub = *psp_add;
     break;
    case ASM16_DUP_N & 0xff:
    case ASM16_POP_N & 0xff:
-    *psp_add = *(uint16_t *)(prefix_ip + 2);
+    *psp_add = ASM_BSWAPIMM16(*(uint16_t *)(prefix_ip + 2));
     *psp_sub = *psp_add;
+    break;
+   case ASM16_UNPACK & 0xff:
+    *psp_add   = ASM_BSWAPIMM16(*(uint16_t *)(prefix_ip + 2));
+    *psp_sub   = 0;
+    *pstacksz += *psp_add;
     break;
    default:
     *psp_add = 0;

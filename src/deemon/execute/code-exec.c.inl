@@ -5356,7 +5356,7 @@ do_prefix_operator_tuple:
       DREF DeeObject *sequence;
       imm_val = READ_imm8();
 prefix_do_unpack:
-      ASSERT_USAGE(-1,+(int)imm_val);
+      ASSERT_USAGE(-0,+(int)imm_val);
       sequence = get_prefix_object();
       if unlikely(!sequence) HANDLE_EXCEPT();
       error = DeeObject_Unpack(sequence,imm_val,sp);

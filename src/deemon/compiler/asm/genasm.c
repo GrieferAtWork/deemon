@@ -376,11 +376,11 @@ get_module_symbol(DeeModuleObject *__restrict module,
 
 
 struct seqops {
- /* Opcodes are encoded in big-endian.
-  * When the mask 0xff00 is ZERO, the opcode is a single byte long. */
- DeeTypeObject *so_typ;    /* The deemon type for this sequence. */
- uint16_t       so_pck[2]; /* Pack - [0]: 8-bit; [1]: 16-bit; */
- uint16_t       so_cas;    /* Cast */
+    /* Opcodes are encoded in big-endian.
+     * When the mask 0xff00 is ZERO, the opcode is a single byte long. */
+    DeeTypeObject *so_typ;    /* The deemon type for this sequence. */
+    uint16_t       so_pck[2]; /* Pack - [0]: 8-bit; [1]: 16-bit; */
+    uint16_t       so_cas;    /* Cast */
 };
 
 
@@ -473,6 +473,7 @@ check_symbol:
      int32_t mid = asm_msymid(sym);
      if unlikely(mid < 0) goto err;
      if (asm_gpush_module_p((uint16_t)mid)) goto err;
+     Dee_Decref(sym->sym_module.sym_module);
     } else {
      ASSERT(sym->sym_class == SYM_CLASS_EXCEPT);
      if (asm_gpush_except_p()) goto err;
