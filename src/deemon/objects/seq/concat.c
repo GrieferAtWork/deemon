@@ -570,8 +570,8 @@ DeeSeq_Concat(DeeObject *__restrict self,
     Dee_Incref(ob);
     *dst = ob;
    }
-   *dst = self;
-   Dee_Incref(self);
+   *dst = other;
+   Dee_Incref(other);
   }
  } else if (DeeObject_InstanceOf(other,&DeeCat_Type)) {
   result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(1+DeeTuple_SIZE(other));
