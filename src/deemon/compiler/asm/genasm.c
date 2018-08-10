@@ -3066,12 +3066,15 @@ cast_this_as_symbol:
    uint16_t operator_name;
   ACTION(AST_FACTION_ASSERT)
   ACTION(AST_FACTION_ASSERT_M)
+   expr = ast->ast_action.ast_act0;
    if (current_assembler.a_flag&ASM_FNOASSERT) {
     /* Discard the assert-expression and message and emit a constant true. */
-    if (PUSH_RESULT && asm_gpush_constexpr(Dee_True)) goto err;
+    if (PUSH_RESULT) {
+     if (ast_genasm(expr,gflags))
+         goto err;
+    }
     goto done;
    }
-   expr = ast->ast_action.ast_act0;
    message = NULL;
    if (action_type == (AST_FACTION_ASSERT_M&AST_FACTION_KINDMASK))
        message = ast->ast_action.ast_act1;
