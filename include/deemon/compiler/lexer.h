@@ -146,7 +146,7 @@ INTDEF DREF DeeAstObject *FCALL ast_parse_brace_list(DeeAstObject *__restrict in
  * >> import <symbol-name> = <import-name> from <module-name>
  * >> import(<expression>)
  */
-INTDEF DREF DeeAstObject *FCALL ast_parse_import(bool allow_symbol_define);
+INTDEF DREF DeeAstObject *FCALL ast_parse_import(void);
 /* Parse a module name and generate an AST to reference a single symbol `import_name'. */
 INTDEF DREF DeeAstObject *FCALL ast_parse_import_single(struct TPPKeyword *__restrict import_name);
 

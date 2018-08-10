@@ -227,6 +227,7 @@ DEF_WARNING(W_DEPRECATED_CHARACTER_INT,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Wr
 DEF_WARNING(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `->' to assign an exception symbol is deprecated since deemon 200. Consider using `as' instead"))
 DEF_WARNING(W_DEPRECATED_FUNCTION_IN_EXPRESSION,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `function' to define lambdas in expressions is deprecafted. Consider using `[]' instead"))
 DEF_WARNING(W_EXPECTED_IMPORT_AFTER_FROM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `import' after `from', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_IMPORT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `import' in expression, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_FROM_AFTER_IMPORTALL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `from' after `import * ', but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_FROM_IMPORT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `from ... import', but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_COMMA_IN_IMPORT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `,' in import list"))

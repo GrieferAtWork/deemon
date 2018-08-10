@@ -36,8 +36,11 @@
 #include <deemon/stringutils.h>
 #include <deemon/list.h>
 #include <deemon/tuple.h>
+#include <deemon/module.h>
 
 #include <string.h> /* memchr */
+
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -731,10 +734,27 @@ do_create_class:
   }
  } break;
 
- case KWD_from:
+ {
+  struct symbol *import_symbol;
  case KWD_import:
-  result = ast_parse_import(false);
-  break;
+  import_symbol = new_unnamed_symbol();
+  if unlikely(!import_symbol) goto err;
+  /* Setup an external symbol pointing at `import from deemon' */
+  import_symbol->sym_class             = SYM_CLASS_EXTERN;
+  import_symbol->sym_extern.sym_module = get_deemon_module();
+  Dee_Incref(import_symbol->sym_extern.sym_module);
+  import_symbol->sym_extern.sym_modsym = DeeModule_GetSymbolString(import_symbol->sym_extern.sym_module,
+                                                                   DeeString_STR(&str_import),
+                                                                   DeeString_Hash(&str_import));
+  ASSERT(import_symbol->sym_extern.sym_modsym);
+  result = ast_sethere(ast_sym(import_symbol));
+  if unlikely(yield() < 0) goto err_r;
+  /* The specs officially only allow `import' in expression, when followed by `(' or `pack'
+   * So we simply emit an error if what follows isn't one of those. */
+  if (tok != '(' && tok != KWD_pack &&
+      WARN(W_EXPECTED_LPAREN_AFTER_IMPORT))
+      goto err_r;
+ } break;
 
  case KWD_do:
  case KWD_while:

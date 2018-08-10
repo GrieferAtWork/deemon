@@ -839,10 +839,9 @@ ast_parse_statement_or_braces ::= (
 	 * >> print repr ({ assert(foo()); });                   // STMT: <foo()>
 	 * >> print repr ({ assert(foo()); 7; });                // STMT: 7
 	 * Using these rules, all possible cases are implicitly dealt with.
-	 * NOTE: Although also allowed in expression, `import' and `del'
-	 *       are always interpreted as a statement, as there is no
-	 *       syntactical different between their statement and
-	 *       expression variants.
+	 * NOTE: Although also allowed in expression, `del' is always
+	 *       interpreted as a statement, as there is no syntactical
+	 *       different between their statement and expression variants.
 	 *       Additionally `assert()' with parenthesis is always recognized
 	 *       as its expression variant, despite the fact that the statement
 	 *       variant allows something like `assert (foo), "message"'
@@ -950,10 +949,14 @@ ast_parse_unary_base ::= (
 	/* Allow assert in expressions. */
 	ast_parse_assert(true) |
 
-	/* Allow import / from ... import statements in expression, but only
-	 * allow a restricted syntax that never defines new symbols and doesn't
-	 * allow constructs that wouldn't make sense without that permission. */
-	ast_parse_import(false) |
+	/* Import a module, given its name.
+	 * >> local x = import(".foo.bar"); // Same as `import x = .foo.bar;'
+	 * Using this, modules can be imported at runtime, allowing names only
+	 * available at runtime to be used, thus enabling dynamic dependencies. */
+	( 'import' (
+		(['pack'] '(' ast_parse_expression ')') |
+		('pack' ast_parse_expression)
+	)  |
 
 	/* Parenthesis / [empty] tuple expression. */
 	(DDI('(') [(
@@ -1725,7 +1728,7 @@ ast_parse_statement ::= (
 
 	(DDI('return') [ast_parse_comma(false,false)] ';') |
 	(DDI('yield') ast_parse_comma(false,false) ';') |
-	(ast_parse_import(true) ';') |
+	(ast_parse_import ';') |
 	(DDI('throw') ast_parse_comma(false,false) ';') |
 	/* NOTE: A trailing ',' token suppresses the trailing new-line. */
 	(DDI('print') [ast_parse_comma(true,false) ':'] ast_parse_comma(true,false) [','] ';') |
@@ -2236,7 +2239,7 @@ ast_parse_assert(need_parenthesis) ::= (
 	)
 );
 
-ast_parse_import(allow_vardecl) ::= (
+ast_parse_import ::= (
 	/* TODO */
 );
 

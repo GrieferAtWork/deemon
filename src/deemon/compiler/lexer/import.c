@@ -298,8 +298,7 @@ err:
 
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_import(bool allow_symbol_define) {
+INTERN DREF DeeAstObject *FCALL ast_parse_import(void) {
  DREF DeeAstObject *result;
  /* Valid ways of writing import statements:
   *  - import("deemon");
@@ -373,8 +372,7 @@ ast_parse_import(bool allow_symbol_define) {
 #else
 
 PRIVATE DREF DeeAstObject *DCALL
-ast_parse_import_single_from(DeeModuleObject *__restrict module,
-                             bool allow_symbol_define) {
+ast_parse_import_single_from(DeeModuleObject *__restrict module) {
  struct module_symbol *modsym;
  struct symbol *sym;
  struct TPPKeyword *name;
@@ -397,17 +395,13 @@ import_whole_module:
  }
  name = token.t_kwd;
  if unlikely(yield() < 0) goto err;
- if (allow_symbol_define) {
-  if unlikely(has_local_symbol(name)) {
-   /* TODO: Allow re-import of the same symbol under the same name! */
-   if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,name))
-       goto err;
-   goto create_from_anon;
-  }
-  sym = new_local_symbol(name);
- } else {
-create_from_anon:
+ if unlikely(has_local_symbol(name)) {
+  /* TODO: Allow re-import of the same symbol under the same name! */
+  if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,name))
+      goto err;
   sym = new_unnamed_symbol();
+ } else {
+  sym = new_local_symbol(name);
  }
  if unlikely(!sym) goto err;
  if (module == current_rootscope->rs_module) {
@@ -475,8 +469,7 @@ err:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_import(bool allow_symbol_define) {
+INTERN DREF DeeAstObject *FCALL ast_parse_import(void) {
  DREF DeeAstObject *result;
  DREF DeeModuleObject *module;
  struct ast_loc loc; tok_t start;
@@ -503,7 +496,7 @@ ast_parse_import(bool allow_symbol_define) {
   if unlikely(likely(tok == KWD_import) ? (yield() < 0) :
               WARN(W_EXPECTED_IMPORT_AFTER_FROM))
      goto err_module;
-  if (allow_symbol_define && tok == '*') {
+  if (tok == '*') {
    /* Special case: import all symbols from a module into the current scope.
     *               Because returning a multiple-ast for every symbol in this
     *               case is not only unpredictable, but would also be waaay
@@ -517,9 +510,9 @@ ast_parse_import(bool allow_symbol_define) {
    return ast_setddi(ast_constexpr(Dee_None),&loc);
   }
   /* Now that we've got the module, we can parse imports. */
-  result = ast_parse_import_single_from(module,allow_symbol_define);
+  result = ast_parse_import_single_from(module);
   Dee_Decref(module);
- } else if (tok == '*' && allow_symbol_define) {
+ } else if (tok == '*') {
   DREF DeeStringObject *module_name;
   /* Syntax: `import * from foo' */
   if unlikely(yield() < 0) goto err;
@@ -551,6 +544,7 @@ ast_parse_import(bool allow_symbol_define) {
   import_name = token.t_kwd;
   if unlikely(yield() < 0) goto err;
   if (TOK_ISDOT(tok)) {
+   char *import_name_begin;
    /* Syntax: `import foo.bar.baz'
     * >> When symbols can be defined:   `import baz = foo.bar.baz'
     * >> When symbols can't be defined: `import("foo.bar.baz")' */
@@ -572,29 +566,24 @@ do_load_module:
    if unlikely(!module) { Dee_Decref(module_name); goto err; }
    /* `import foo.bar' is the same as `import bar = foo.bar' when we're allowed to define symbols.
     *  Otherwise, we encapsulate the module in an anonymous symbol. */
-   if (allow_symbol_define) {
-    char *import_name_begin;
-    import_name_begin = (char *)memrchr(DeeString_STR(module_name),'.',
-                                        DeeString_SIZE(module_name));
-    if (import_name_begin) ++import_name_begin;
-    else import_name_begin = DeeString_STR(module_name);
-    import_name = TPPLexer_LookupKeyword(import_name_begin,
-                                        (size_t)((DeeString_STR(module_name) +
-                                                  DeeString_SIZE(module_name))-
-                                                  import_name_begin),1);
-    Dee_Decref(module_name);
-    if unlikely(!import_name) goto err_module;
-    if unlikely(has_local_symbol(import_name)) {
-     /* TODO: Allow re-import of the same symbol under the same name! */
-     if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,import_name))
-         goto err_module;
-     goto import_anon;
-    }
-    result_symbol = new_local_symbol(import_name);
-   } else {
-import_anon:
+   import_name_begin = (char *)memrchr(DeeString_STR(module_name),'.',
+                                       DeeString_SIZE(module_name));
+   if (import_name_begin) ++import_name_begin;
+   else import_name_begin = DeeString_STR(module_name);
+   import_name = TPPLexer_LookupKeyword(import_name_begin,
+                                       (size_t)((DeeString_STR(module_name) +
+                                                 DeeString_SIZE(module_name))-
+                                                 import_name_begin),1);
+   Dee_Decref(module_name);
+   if unlikely(!import_name) goto err_module;
+   if unlikely(has_local_symbol(import_name)) {
+    /* TODO: Allow re-import of the same symbol under the same name! */
+    if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,import_name))
+        goto err_module;
     Dee_Decref(module_name);
     result_symbol = new_unnamed_symbol();
+   } else {
+    result_symbol = new_local_symbol(import_name);
    }
    if unlikely(!result_symbol) goto err_module;
    if (module == current_rootscope->rs_module) {
@@ -628,33 +617,28 @@ do_import_multiple:
    for (;;) {
     DREF DeeAstObject *new_ast;
     struct symbol *ast_symbol;
-    if (allow_symbol_define) {
-     char *symbol_name_start;
-     struct TPPKeyword *symbol_name = import_name;
-     symbol_name_start = (char *)memrchr(import_name->k_name,'.',
-                                         import_name->k_size);
-     if (symbol_name_start) {
-      ++symbol_name_start;
-      symbol_name = TPPLexer_LookupKeyword(symbol_name_start,
-                                          (size_t)((import_name->k_name+
-                                                    import_name->k_size)-
-                                                    symbol_name_start),
-                                           1);
-      if unlikely(!symbol_name) goto err_astv;
-     }
-     if unlikely(has_local_symbol(symbol_name)) {
-      /* TODO: Allow re-import of the same symbol under the same name! */
-      if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,symbol_name))
-          goto err_astv;
-      goto import_anon_module;
-     }
-     ast_symbol = new_local_symbol(symbol_name);
-     if unlikely(!ast_symbol) goto err_astv;
-    } else {
-import_anon_module:
-     ast_symbol = new_unnamed_symbol();
-     if unlikely(!ast_symbol) goto err_astv;
+    char *symbol_name_start;
+    struct TPPKeyword *symbol_name = import_name;
+    symbol_name_start = (char *)memrchr(import_name->k_name,'.',
+                                        import_name->k_size);
+    if (symbol_name_start) {
+     ++symbol_name_start;
+     symbol_name = TPPLexer_LookupKeyword(symbol_name_start,
+                                         (size_t)((import_name->k_name+
+                                                   import_name->k_size)-
+                                                   symbol_name_start),
+                                          1);
+     if unlikely(!symbol_name) goto err_astv;
     }
+    if unlikely(has_local_symbol(symbol_name)) {
+     /* TODO: Allow re-import of the same symbol under the same name! */
+     if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,symbol_name))
+         goto err_astv;
+     ast_symbol = new_unnamed_symbol();
+    } else {
+     ast_symbol = new_local_symbol(symbol_name);
+    }
+    if unlikely(!ast_symbol) goto err_astv;
     /* Temporary storage of names. - deleted later. */
     ast_symbol->sym_module.sym_module = (DREF DeeModuleObject *)import_name;
     /* Some set symbol class to keep the symbol in a consistent state.
@@ -817,7 +801,7 @@ import_each_module:
    /* Create the multi-ast that will be returned. */
    result = ast_multiple(AST_FMULTIPLE_KEEPLAST,astc,astv);
    if unlikely(!result) goto err_astv;
-  } else if (tok == '=' && allow_symbol_define) {
+  } else if (tok == '=') {
    DREF DeeStringObject *module_name;
    struct TPPKeyword *symbol_name;
    struct symbol *import_sym;
@@ -941,17 +925,13 @@ do_import_alias_module_noparse:
     goto do_import_single_module;
    }
    /* Got the module from which we're importing. */
-   if (allow_symbol_define) {
-    if unlikely(has_local_symbol(import_name)) {
-     /* TODO: Allow re-import of the same symbol under the same name! */
-     if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,import_name))
-         goto err_module;
-     goto import_anon_symbol;
-    }
-    import_symbol = new_local_symbol(import_name);
-   } else {
-import_anon_symbol:
+   if unlikely(has_local_symbol(import_name)) {
+    /* TODO: Allow re-import of the same symbol under the same name! */
+    if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,import_name))
+        goto err_module;
     import_symbol = new_unnamed_symbol();
+   } else {
+    import_symbol = new_local_symbol(import_name);
    }
    if unlikely(!import_symbol) goto err_module;
    /* Link this symbol against the specified module import. */
@@ -962,6 +942,7 @@ import_anon_symbol:
    result = ast_setddi(ast_sym(import_symbol),&loc);
   } else {
    struct symbol *modsym;
+   struct TPPKeyword *symbol_name;
    DREF DeeStringObject *module_name;
    if (TOK_ISDOT(tok)) {
     /* Syntax: `import foo.bar'
@@ -989,30 +970,26 @@ do_import_single_module_load:
    Dee_Decref(module_name);
    if unlikely(!module) goto err;
 do_import_single_module:
-   if (allow_symbol_define) {
-    struct TPPKeyword *symbol_name = import_name;
-    char *symbol_name_start;
-    symbol_name_start = (char *)memrchr(import_name->k_name,'.',
-                                        import_name->k_size);
-    if (symbol_name_start) {
-     ++symbol_name_start;
-     symbol_name = TPPLexer_LookupKeyword(symbol_name_start,
-                                         (size_t)((import_name->k_name+
-                                                   import_name->k_size)-
-                                                   symbol_name_start),
-                                          1);
-     if unlikely(!symbol_name) goto err_module;
-    }
-    if unlikely(has_local_symbol(symbol_name)) {
-     /* TODO: Allow re-import of the same symbol under the same name! */
-     if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,symbol_name))
-         goto err_module;
-     goto import_single_anon_module;
-    }
-    modsym = new_local_symbol(symbol_name);
-   } else {
-import_single_anon_module:
+   symbol_name = import_name;
+   char *symbol_name_start;
+   symbol_name_start = (char *)memrchr(import_name->k_name,'.',
+                                       import_name->k_size);
+   if (symbol_name_start) {
+    ++symbol_name_start;
+    symbol_name = TPPLexer_LookupKeyword(symbol_name_start,
+                                        (size_t)((import_name->k_name+
+                                                  import_name->k_size)-
+                                                  symbol_name_start),
+                                         1);
+    if unlikely(!symbol_name) goto err_module;
+   }
+   if unlikely(has_local_symbol(symbol_name)) {
+    /* TODO: Allow re-import of the same symbol under the same name! */
+    if (WARN(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,symbol_name))
+        goto err_module;
     modsym = new_unnamed_symbol();
+   } else {
+    modsym = new_local_symbol(symbol_name);
    }
    if unlikely(!modsym) goto err_module;
    if (module == current_rootscope->rs_module) {

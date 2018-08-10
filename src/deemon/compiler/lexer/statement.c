@@ -320,7 +320,7 @@ do_else_branch:
 
  case KWD_from:
  case KWD_import:
-  result = ast_parse_import(true);
+  result = ast_parse_import();
   if unlikely(!result) goto err;
   if unlikely(likely(is_semicollon()) ? (yield_semicollonnbif(allow_nonblock) < 0) :
               WARN(W_EXPECTED_SEMICOLLON_AFTER_IMPORT))
