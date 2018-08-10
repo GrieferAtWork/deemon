@@ -742,7 +742,7 @@ INTERN ATTR_COLD int DCALL
 err_unimplemented_operator(DeeSTypeObject *__restrict tp, uint16_t operator_name) {
  struct opinfo *info;
  info = Dee_OperatorInfo(Dee_TYPE((DeeObject *)tp),operator_name);
- ASSERT_OBJECT(tp);
+ ASSERT_OBJECT((DeeTypeObject *)tp);
  ASSERT(DeeType_Check((DeeObject *)tp));
  return DeeError_Throwf(&DeeError_NotImplemented,
                         "Operator `%k.__%s__' is not implemented",
@@ -753,7 +753,7 @@ PRIVATE int DCALL
 struct_ctor(DeeObject *__restrict self) {
  DeeSTypeObject *tp_self = (DeeSTypeObject *)Dee_TYPE(self);
  while (!DeeSType_Check((DeeObject *)tp_self))
-     tp_self = (DeeSTypeObject *)DeeType_Base(tp_self);
+     tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self);
  /* ZERO-initialize by default. */
  memset(DeeStruct_Data(self),0,DeeSType_Sizeof(tp_self));
  return 0;
@@ -763,7 +763,7 @@ struct_copy(DeeObject *__restrict self,
             DeeObject *__restrict other) {
  DeeSTypeObject *tp_self = (DeeSTypeObject *)Dee_TYPE(self);
  while (!DeeSType_Check((DeeObject *)tp_self))
-     tp_self = (DeeSTypeObject *)DeeType_Base(tp_self);
+     tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self);
  /* Copy memory. */
  memcpy(DeeStruct_Data(self),
         DeeStruct_Data(other),
@@ -778,7 +778,7 @@ struct_init(DeeObject *__restrict self,
  do {
   if (tp_self->st_init)
       return (*tp_self->st_init)(orig_type,DeeStruct_Data(self),argc,argv);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_CONSTRUCTOR);
  return 0;
@@ -1221,7 +1221,7 @@ DeeStruct_Assign(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_assign)
       return (*tp_self->st_assign)(orig_type,self,value);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  if (DeeObject_InstanceOf(value,(DeeTypeObject *)orig_type)) {
   uint8_t *dst,*src; size_t size; /* Copy-assign. */
@@ -1267,7 +1267,7 @@ DeeStruct_Str(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_cast.st_str)
       return (*tp_self->st_cast.st_str)(orig_type,self);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_STR);
  return NULL;
@@ -1279,7 +1279,7 @@ DeeStruct_Repr(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_cast.st_repr)
       return (*tp_self->st_cast.st_repr)(orig_type,self);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_REPR);
  return NULL;
@@ -1291,7 +1291,7 @@ DeeStruct_Bool(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_cast.st_bool)
       return (*tp_self->st_cast.st_bool)(orig_type,self);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  return err_unimplemented_operator(orig_type,OPERATOR_BOOL);
 }
@@ -1303,7 +1303,7 @@ DeeStruct_Call(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_call)
       return (*tp_self->st_call)(orig_type,self,argc,argv);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_CALL);
  return NULL;
@@ -1316,7 +1316,7 @@ DeeStruct_Int32(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_math && tp_self->st_math->st_int32)
       return (*tp_self->st_math->st_int32)(orig_type,self,result);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  return err_unimplemented_operator(orig_type,OPERATOR_INT);
 }
@@ -1327,7 +1327,7 @@ DeeStruct_Int64(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_math && tp_self->st_math->st_int64)
       return (*tp_self->st_math->st_int64)(orig_type,self,result);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  return err_unimplemented_operator(orig_type,OPERATOR_INT);
 }
@@ -1338,7 +1338,7 @@ DeeStruct_Double(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_math && tp_self->st_math->st_double)
       return (*tp_self->st_math->st_double)(orig_type,self,result);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  return err_unimplemented_operator(orig_type,OPERATOR_FLOAT);
 }
@@ -1348,7 +1348,7 @@ DeeStruct_Int(DeeSTypeObject *__restrict tp_self, void *self) {
  do {
   if (tp_self->st_math && tp_self->st_math->st_int)
       return (*tp_self->st_math->st_int)(orig_type,self);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_INT);
  return NULL;
@@ -1360,7 +1360,7 @@ DeeStruct_Xxx(DeeSTypeObject *__restrict tp_self, void *self) { \
  do { \
   if (tp_self->st_math && tp_self->st_math->st_xxx) \
       return (*tp_self->st_math->st_xxx)(orig_type,self); \
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL && \
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL && \
            DeeSType_Check(tp_self)); \
  err_unimplemented_operator(orig_type,OPERATOR_XXX); \
  return error_result; \
@@ -1373,7 +1373,7 @@ DeeStruct_Xxx(DeeSTypeObject *__restrict tp_self, void *self, \
  do { \
   if (tp_self->st_math && tp_self->st_math->st_xxx) \
       return (*tp_self->st_math->st_xxx)(orig_type,self,other); \
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL && \
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL && \
            DeeSType_Check(tp_self)); \
  err_unimplemented_operator(orig_type,OPERATOR_XXX); \
  return error_result; \
@@ -1422,7 +1422,7 @@ DeeStruct_Eq(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_cmp && tp_self->st_cmp->st_eq)
       return (*tp_self->st_cmp->st_eq)(orig_type,self,some_object);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Compare object data. */
  if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
@@ -1438,7 +1438,7 @@ DeeStruct_Ne(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_cmp && tp_self->st_cmp->st_ne)
       return (*tp_self->st_cmp->st_ne)(orig_type,self,some_object);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Compare object data. */
  if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
@@ -1454,7 +1454,7 @@ DeeStruct_Lo(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_cmp && tp_self->st_cmp->st_lo)
       return (*tp_self->st_cmp->st_lo)(orig_type,self,some_object);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Compare object data. */
  if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
@@ -1470,7 +1470,7 @@ DeeStruct_Le(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_cmp && tp_self->st_cmp->st_le)
       return (*tp_self->st_cmp->st_le)(orig_type,self,some_object);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Compare object data. */
  if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
@@ -1486,7 +1486,7 @@ DeeStruct_Gr(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_cmp && tp_self->st_cmp->st_gr)
       return (*tp_self->st_cmp->st_gr)(orig_type,self,some_object);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Compare object data. */
  if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
@@ -1502,7 +1502,7 @@ DeeStruct_Ge(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_cmp && tp_self->st_cmp->st_ge)
       return (*tp_self->st_cmp->st_ge)(orig_type,self,some_object);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Compare object data. */
  if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
@@ -1517,7 +1517,7 @@ DeeStruct_IterSelf(DeeSTypeObject *__restrict tp_self, void *self) {
  do {
   if (tp_self->st_seq && tp_self->st_seq->stp_iter_self)
       return (*tp_self->st_seq->stp_iter_self)(orig_type,self);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_ITERSELF);
  return NULL;
@@ -1528,7 +1528,7 @@ DeeStruct_GetSize(DeeSTypeObject *__restrict tp_self, void *self) {
  do {
   if (tp_self->st_seq && tp_self->st_seq->stp_size)
       return (*tp_self->st_seq->stp_size)(orig_type,self);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_SIZE);
  return NULL;
@@ -1540,7 +1540,7 @@ DeeStruct_Contains(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_seq && tp_self->st_seq->stp_contains)
       return (*tp_self->st_seq->stp_contains)(orig_type,self,some_object);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_CONTAINS);
  return NULL;
@@ -1553,7 +1553,7 @@ DeeStruct_GetItem(DeeSTypeObject *__restrict tp_self, void *self,
  do {
   if (tp_self->st_seq && tp_self->st_seq->stp_get)
       return (*tp_self->st_seq->stp_get)(orig_type,self,index);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Fallback: Implement getitem as `ind(add)' --> `foo[2]' same as `*(foo + 2)' */
  result = DeeStruct_Add(tp_self,self,index);
@@ -1569,7 +1569,7 @@ DeeStruct_DelItem(DeeSTypeObject *__restrict tp_self, void *self,
  do {
   if (tp_self->st_seq && tp_self->st_seq->stp_del)
       return (*tp_self->st_seq->stp_del)(orig_type,self,index);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Fallback: Do a setitem operation with `none' */
  return DeeStruct_SetItem(tp_self,self,index,Dee_None);
@@ -1583,7 +1583,7 @@ DeeStruct_SetItem(DeeSTypeObject *__restrict tp_self, void *self,
  do {
   if (tp_self->st_seq && tp_self->st_seq->stp_set)
       return (*tp_self->st_seq->stp_set)(orig_type,self,index,value);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Fallback: Implement setitem as
   * `ind(add) := value' --> `foo[2] = value'
@@ -1607,7 +1607,7 @@ DeeStruct_GetRange(DeeSTypeObject *__restrict tp_self, void *self,
  do {
   if (tp_self->st_seq && tp_self->st_seq->stp_range_get)
       return (*tp_self->st_seq->stp_range_get)(orig_type,self,begin,end);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_GETRANGE);
  return NULL;
@@ -1620,7 +1620,7 @@ DeeStruct_DelRange(DeeSTypeObject *__restrict tp_self, void *self,
  do {
   if (tp_self->st_seq && tp_self->st_seq->stp_range_del)
       return (*tp_self->st_seq->stp_range_del)(orig_type,self,begin,end);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  return err_unimplemented_operator(orig_type,OPERATOR_DELRANGE);
 }
@@ -1633,7 +1633,7 @@ DeeStruct_SetRange(DeeSTypeObject *__restrict tp_self, void *self,
  do {
   if (tp_self->st_seq && tp_self->st_seq->stp_range_set)
       return (*tp_self->st_seq->stp_range_set)(orig_type,self,begin,end,value);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  return err_unimplemented_operator(orig_type,OPERATOR_SETRANGE);
 }
@@ -1646,7 +1646,7 @@ DeeStruct_GetAttr(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_attr && tp_self->st_attr->st_getattr)
       return (*tp_self->st_attr->st_getattr)(orig_type,self,name);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  /* Special attributes: `sizeof' and `alignof' */
 
@@ -1662,7 +1662,7 @@ DeeStruct_DelAttr(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_attr && tp_self->st_attr->st_delattr)
       return (*tp_self->st_attr->st_delattr)(orig_type,self,name);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  return err_unimplemented_operator(orig_type,OPERATOR_DELATTR);
 }
@@ -1675,7 +1675,7 @@ DeeStruct_SetAttr(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_attr && tp_self->st_attr->st_setattr)
       return (*tp_self->st_attr->st_setattr)(orig_type,self,name,value);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  return err_unimplemented_operator(orig_type,OPERATOR_SETATTR);
 }
@@ -1686,7 +1686,7 @@ DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
  do {
   if (tp_self->st_attr && tp_self->st_attr->st_enumattr)
       return (*tp_self->st_attr->st_enumattr)(orig_type,proc,arg);
- } while ((tp_self = (DeeSTypeObject *)DeeType_Base(tp_self)) != NULL &&
+ } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  return 0;
 }
@@ -1816,7 +1816,7 @@ ftype_fini(DeeCFunctionTypeObject *__restrict self) {
 PRIVATE void DCALL
 ftype_visit(DeeCFunctionTypeObject *__restrict self, dvisit_t proc, void *arg) {
  size_t i;
- Dee_Visit(self->ft_orig);
+ Dee_Visit((DeeTypeObject *)self->ft_orig);
  for (i = 0; i < self->ft_argc; ++i)
      Dee_Visit((DeeObject *)self->ft_argv[i]);
 }

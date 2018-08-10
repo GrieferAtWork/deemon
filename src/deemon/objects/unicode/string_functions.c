@@ -30,6 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/bytes.h>
+#include <deemon/stringutils.h>
 
 DECL_BEGIN
 
@@ -8426,6 +8427,7 @@ INTERN struct type_method string_methods[] = {
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} can be used to continue a symbol name") },
+    /* TODO: isascii */
     { "isalnum", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isalnum,
       DOC("->bool\n"
           "(int index)->bool\n"

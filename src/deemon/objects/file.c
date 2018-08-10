@@ -1490,12 +1490,12 @@ PRIVATE struct type_getset file_class_getsets[] = {
 };
 
 PRIVATE struct type_member file_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeFile_Type),
-    TYPE_MEMBER_CONST("reader",&DeeFileReader_Type),
-    TYPE_MEMBER_CONST("writer",&DeeFileWriter_Type),
-    TYPE_MEMBER_CONST("buffer",&DeeFileBuffer_Type),
-    TYPE_MEMBER_CONST("system",&DeeSystemFile_Type),
-    TYPE_MEMBER_CONST_DOC("io",&DeeFile_Type,
+    TYPE_MEMBER_CONST("iterator",(DeeObject *)&DeeFile_Type),
+    TYPE_MEMBER_CONST("reader",(DeeObject *)&DeeFileReader_Type),
+    TYPE_MEMBER_CONST("writer",(DeeObject *)&DeeFileWriter_Type),
+    TYPE_MEMBER_CONST("buffer",(DeeObject *)&DeeFileBuffer_Type),
+    TYPE_MEMBER_CONST("system",(DeeObject *)&DeeSystemFile_Type),
+    TYPE_MEMBER_CONST_DOC("io",(DeeObject *)&DeeFile_Type,
                           "Deprecated alias for backwards-compatible access to "
                           "std-streams that used to be located in ${file.io.stdxxx}\n"
                           "Starting with deemon v200, these streams can now be found "

@@ -174,13 +174,14 @@ got_result:
 INTERN void DCALL
 tuple_tp_free(void *__restrict ob) {
  ASSERT(ob);
- ASSERT(!DeeTuple_IsEmpty(ob));
- ASSERT(DeeTuple_SIZE(ob) != 0);
+ ASSERT(!DeeTuple_IsEmpty((DeeObject *)ob));
+ ASSERT(DeeTuple_SIZE((DeeObject *)ob) != 0);
 #ifndef NDEBUG
- MEMSET_PTR(DeeTuple_ELEM(ob),0xcc,DeeTuple_SIZE(ob));
+ MEMSET_PTR(DeeTuple_ELEM((DeeObject *)ob),0xcc,
+            DeeTuple_SIZE((DeeObject *)ob));
 #endif
- if (DeeTuple_SIZE(ob) < TUPLE_CACHE_MAXCOUNT) {
-  struct tuple_cache *c = &cache[DeeTuple_SIZE(ob)-1];
+ if (DeeTuple_SIZE((DeeObject *)ob) < TUPLE_CACHE_MAXCOUNT) {
+  struct tuple_cache *c = &cache[DeeTuple_SIZE((DeeObject *)ob)-1];
   if (c->c_count < TUPLE_CACHE_MAXSIZE) {
    LOCK(c->c_lock);
 #ifndef CONFIG_NO_THREADS
@@ -1311,7 +1312,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&tuple_visit,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
+    /* .tp_math          = */NULL, /* TODO: tp_add should return a tuple */
     /* .tp_cmp           = */&tuple_cmp,
     /* .tp_seq           = */&tuple_seq,
     /* .tp_iter_next     = */NULL,

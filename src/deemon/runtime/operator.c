@@ -3612,7 +3612,11 @@ DEFINE_OPERATOR(void,PutBuf,
                 unsigned int flags)) {
  ASSERTF(!(flags & ~(DEE_BUFFER_FWRITABLE)),
           "Unknown buffers flags in %x",flags);
-#if 1
+#ifdef __INTELLISENSE__
+ (void)self;
+ (void)info;
+ (void)flags;
+#elif 1
 #ifdef DEFINE_TYPE_OPERATORS
  (void)tp_self;
 #endif

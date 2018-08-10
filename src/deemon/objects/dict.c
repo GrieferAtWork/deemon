@@ -1401,6 +1401,13 @@ dict_update(DeeDictObject *__restrict self,
 }
 
 
+/* TODO: Introduce a function `__missing__(key)->object' that is called
+ *       when a key can't be found (won't be called by GetItemDef()).
+ *       The default implementation of this function should then throw
+ *       a `KeyError', rather than `operator []' itself.
+ *    -> User-classes can then override that function to implement
+ *       some custom behavior for dealing with missing keys.
+ */
 
 PRIVATE struct type_method dict_methods[] = {
     { DeeString_STR(&str_get), (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_get,

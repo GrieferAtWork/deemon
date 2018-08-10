@@ -399,7 +399,7 @@ DeeInstance_SetMemberSafe(DeeTypeObject *__restrict tp_self,
   ((struct class_desc *)REQUIRES_OBJECT((uintptr_t)(self)+Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size)))
 #endif
 #define DeeInstance_DESC(cdesc,self) \
-  ((struct instance_desc *)REQUIRES_OBJECT((uintptr_t)(self)+(cdesc)->c_addr))
+  ((struct instance_desc *)((uintptr_t)REQUIRES_OBJECT(self)+(cdesc)->c_addr))
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Return a pointer to the class-member of a given class descriptor.

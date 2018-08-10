@@ -29,6 +29,7 @@
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/arg.h>

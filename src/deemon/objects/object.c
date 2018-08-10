@@ -849,8 +849,18 @@ object_any_ctor(DeeObject *__restrict UNUSED(self),
 
 PRIVATE DREF DeeObject *DCALL object_str(DeeObject *__restrict self) {
 #if 1
- if (Dee_TYPE(self)->tp_name)
-     return DeeString_New(Dee_TYPE(self)->tp_name);
+ DeeTypeObject *tp_self = Dee_TYPE(self);
+ if (tp_self->tp_name) {
+  if (tp_self->tp_flags & TP_FNAMEOBJECT) {
+   DREF DeeStringObject *result;
+   result = COMPILER_CONTAINER_OF(tp_self->tp_name,
+                                  DeeStringObject,
+                                  s_str);
+   Dee_Incref(result);
+   return (DREF DeeObject *)result;
+  }
+  return DeeString_New(tp_self->tp_name);
+ }
 #else
  if (self->ob_type != &DeeObject_Type) {
   err_unimplemented_operator(self->ob_type,OPERATOR_STR);

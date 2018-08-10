@@ -84,8 +84,8 @@ err_fread_hwrite: Dee_Decref(fReader); goto err_hwriter;
 
 
 PRIVATE struct type_member pipe_class_members[] = {
-    TYPE_MEMBER_CONST("reader",&DeePipeReader_Type),
-    TYPE_MEMBER_CONST("writer",&DeePipeWriter_Type),
+    TYPE_MEMBER_CONST("reader",(DeeObject *)&DeePipeReader_Type),
+    TYPE_MEMBER_CONST("writer",(DeeObject *)&DeePipeWriter_Type),
     TYPE_MEMBER_END
 };
 

@@ -30,6 +30,7 @@
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/compiler/compiler.h>

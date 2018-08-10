@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/error.h>
 
 #include <string.h>

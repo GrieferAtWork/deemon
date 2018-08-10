@@ -23,6 +23,7 @@
 #include <deemon/object.h>
 #include <deemon/format.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <hybrid/minmax.h>
 
 #include <stdarg.h>

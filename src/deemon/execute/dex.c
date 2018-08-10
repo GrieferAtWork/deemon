@@ -173,7 +173,7 @@ dex_load_file(DeeDexObject *__restrict self,
           sym->ds_obj,sym->ds_name,DeeString_STR(input_file));
   /* Create objects for the symbol's name and documentation.
    * XXX: Create doc-strings lazily? */
-  name_ob = DeeString_New(sym->ds_name);
+  name_ob = DeeString_NewAuto(sym->ds_name);
   if unlikely(!name_ob) goto err_glob_elem;
   doc_ob = NULL;
   if (sym->ds_doc) {
@@ -336,6 +336,7 @@ INTERN bool DCALL DeeDex_Cleanup(void) {
 
 INTERN void DCALL DeeDex_Finalize(void) {
  DREF DeeDexObject *dex;
+again:
 #ifndef CONFIG_NO_THREADS
  rwlock_write(&dex_lock);
 #endif
@@ -343,41 +344,18 @@ INTERN void DCALL DeeDex_Finalize(void) {
   dex_chain    = dex->d_next;
   dex->d_pself = NULL;
   dex->d_next  = NULL;
+  if (!Dee_DecrefIfNotOne((DeeObject *)dex)) {
 #ifndef CONFIG_NO_THREADS
-  rwlock_endwrite(&dex_lock);
+   rwlock_endwrite(&dex_lock);
 #endif
-  Dee_Decref((DeeObject *)dex);
-#ifndef CONFIG_NO_THREADS
-  rwlock_write(&dex_lock);
-#endif
+   Dee_Decref((DeeObject *)dex);
+   goto again;
+  }
  }
 #ifndef CONFIG_NO_THREADS
  rwlock_endwrite(&dex_lock);
 #endif
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 INTERN int DCALL

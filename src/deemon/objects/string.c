@@ -30,6 +30,7 @@
 #include <deemon/bytes.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/seq.h>
 #include <deemon/arg.h>
 #include <deemon/int.h>
@@ -377,6 +378,7 @@ DeeString_New(/*unsigned*/char const *__restrict str) {
  return DeeString_NewSized(str,strlen(str));
 }
 
+
 PRIVATE DREF DeeObject *DCALL
 string_new_empty(void) {
  return_empty_string;
@@ -390,7 +392,7 @@ string_new(size_t argc, DeeObject **__restrict argv) {
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_VNewf(/*unsigned*/char const *__restrict format, va_list args) {
+DeeString_VNewf(/*utf-8*/char const *__restrict format, va_list args) {
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
  if unlikely(unicode_printer_vprintf(&printer,format,args) < 0)
     goto err;
@@ -401,9 +403,9 @@ err:
 }
 
 PUBLIC DREF DeeObject *
-DeeString_Newf(/*unsigned*/char const *__restrict format, ...) {
- DREF DeeObject *result;
+DeeString_Newf(/*utf-8*/char const *__restrict format, ...) {
  va_list args;
+ DREF DeeObject *result;
  va_start(args,format);
  result = DeeString_VNewf(format,args);
  va_end(args);

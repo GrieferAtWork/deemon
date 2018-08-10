@@ -24,6 +24,7 @@
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/util/cache.h>

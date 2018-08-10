@@ -296,7 +296,7 @@ PRIVATE SystemFile sysf_std[] = {
     { LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL }
 #ifdef CONFIG_HOST_WINDOWS
     ,
-    { LFILE_OBJECT_HEAD_INIT(&DebugFile_Type), (FILE *)-1, NULL, NULL }
+    { LFILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)-1, NULL, NULL }
 #endif
 };
 PUBLIC ATTR_RETNONNULL
@@ -306,7 +306,7 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
  result = &sysf_std[id];
  if unlikely(!result->sf_handle) {
   FILE *new_file;
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__CRT_DOS)
   new_file = (__iob_func() + id);
 #else
   switch (id) {
@@ -353,8 +353,9 @@ sysfile_read(SystemFile *__restrict self, void *__restrict buffer,
              size_t bufsize, dioflag_t UNUSED(flags)) {
  size_t result;
  if (!self->sf_handle) return error_file_closed(self);
- result = (size_t)fread(buffer,1,bufsize,self->sf_handle);
- if (!result && ferror(self->sf_handle)) return error_file_io(self);
+ result = (size_t)fread(buffer,1,bufsize,(FILE *)self->sf_handle);
+ if (!result && ferror((FILE *)self->sf_handle))
+      return error_file_io(self);
  return (dssize_t)result;
 }
 PRIVATE dssize_t DCALL
@@ -363,8 +364,9 @@ sysfile_write(SystemFile *__restrict self,
               size_t bufsize, dioflag_t UNUSED(flags)) {
  size_t result;
  if (!self->sf_handle) return error_file_closed(self);
- result = (size_t)fwrite(buffer,1,bufsize,self->sf_handle);
- if (!result && ferror(self->sf_handle)) return error_file_io(self);
+ result = (size_t)fwrite(buffer,1,bufsize,(FILE *)self->sf_handle);
+ if (!result && ferror((FILE *)self->sf_handle))
+      return error_file_io(self);
  return (dssize_t)result;
 }
 
@@ -373,27 +375,27 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
  doff_t result;
  if (!self->sf_handle) return error_file_closed(self);
 #ifdef _MSC_VER
- if (_fseeki64(self->sf_handle,(long long)off,whence))
+ if (_fseeki64((FILE *)self->sf_handle,(long long)off,whence))
      return error_file_io(self);
- result = _ftelli64(self->sf_handle);
+ result = _ftelli64((FILE *)self->sf_handle);
  if (result == -1)
      return error_file_io(self);
 #elif defined(__USE_LARGEFILE64) && !defined(__CYGWIN__)
- if (fseeko64(self->sf_handle,(off64_t)off,whence))
+ if (fseeko64((FILE *)self->sf_handle,(off64_t)off,whence))
      return error_file_io(self);
- result = (doff_t)ftello64(self->sf_handle);
+ result = (doff_t)ftello64((FILE *)self->sf_handle);
  if (result == -1)
      return error_file_io(self);
 #elif defined(__USE_LARGEFILE) || defined(__USE_XOPEN2K)
- if (fseeko(self->sf_handle,(off64_t)off,whence))
+ if (fseeko((FILE *)self->sf_handle,(off64_t)off,whence))
      return error_file_io(self);
- result = (doff_t)ftello(self->sf_handle);
+ result = (doff_t)ftello((FILE *)self->sf_handle);
  if (result == -1)
      return error_file_io(self);
 #else
- if (fseek(self->sf_handle,(long)off,whence))
+ if (fseek((FILE *)self->sf_handle,(long)off,whence))
      return error_file_io(self);
- result = (doff_t)ftello(self->sf_handle);
+ result = (doff_t)ftello((FILE *)self->sf_handle);
  if ((long)result == -1L)
      return error_file_io(self);
 #endif
@@ -402,24 +404,26 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 
 PRIVATE int DCALL sysfile_sync(SystemFile *__restrict self) {
  if (!self->sf_handle) return error_file_closed(self);
- if (fflush(self->sf_handle) && ferror(self->sf_handle))
+ if (fflush((FILE *)self->sf_handle) &&
+     ferror((FILE *)self->sf_handle))
      return error_file_io(self);
  return 0;
 }
 
 PRIVATE int DCALL
 sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
- if (!self->sf_handle) return error_file_closed(self);
+ if (!self->sf_handle)
+      return error_file_closed(self);
 #ifdef _MSC_VER
- if (_chsize_s(fileno(self->sf_handle),(long long)size))
+ if (_chsize_s(fileno((FILE *)self->sf_handle),(long long)size))
      return error_file_io(self);
  return 0;
 #elif defined(__unix__) && defined(__USE_LARGEFILE64) && !defined(__CYGWIN__)
- if (ftruncate64(fileno(self->sf_handle),(off64_t)size))
+ if (ftruncate64(fileno((FILE *)self->sf_handle),(off64_t)size))
      return error_file_io(self);
  return 0;
 #elif defined(__unix__)
- if (ftruncate(fileno(self->sf_handle),(off_t)size))
+ if (ftruncate(fileno((FILE *)self->sf_handle),(off_t)size))
      return error_file_io(self);
  return 0;
 #else
@@ -432,7 +436,8 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 PRIVATE int DCALL
 sysfile_close(SystemFile *__restrict self) {
  if (!self->sf_handle) return error_file_closed(self);
- if (self->sf_ownhandle && fclose(self->sf_ownhandle))
+ if (self->sf_ownhandle &&
+     fclose((FILE *)self->sf_ownhandle))
      return error_file_io(self);
 #ifndef CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD
  if (self >= sysf_std && self < COMPILER_ENDOF(sysf_std)) {
@@ -452,9 +457,9 @@ sysfile_getc(SystemFile *__restrict self, dioflag_t UNUSED(flags)) {
   error_file_closed(self);
   return GETC_ERR;
  }
- result = getc(self->sf_handle);
+ result = getc((FILE *)self->sf_handle);
  if (result == EOF) {
-  if (ferror(self->sf_handle)) {
+  if (ferror((FILE *)self->sf_handle)) {
    error_file_io(self);
    return GETC_ERR;
   }
@@ -471,23 +476,25 @@ sysfile_ungetc(SystemFile *__restrict self, int ch) {
   return GETC_ERR;
  }
 #if EOF == GETC_EOF
- result = ungetc(ch,self->sf_handle);
- if (result != EOF) result = 0;
+ result = ungetc(ch,(FILE *)self->sf_handle);
+ if (result != EOF)
+     result = 0;
  return result;
 #else
- result = ungetc(ch,self->sf_handle);
+ result = ungetc(ch,(FILE *)self->sf_handle);
  return result == EOF ? GETC_EOF : 0;
 #endif
 }
 
 PRIVATE int DCALL
-sysfile_putc(SystemFile *__restrict self, int ch) {
+sysfile_putc(SystemFile *__restrict self, int ch,
+             dioflag_t UNUSED(flags)) {
  if (!self->sf_handle) {
   error_file_closed(self);
   return GETC_ERR;
  }
- if (putc(ch,self->sf_handle) == EOF &&
-     ferror(self->sf_handle)) {
+ if (putc(ch,(FILE *)self->sf_handle) == EOF &&
+     ferror((FILE *)self->sf_handle)) {
   error_file_io(self);
   return GETC_ERR;
  }
@@ -509,7 +516,8 @@ DeeSystemFile_Fileno(/*SystemFile*/DeeObject *__restrict self) {
  dsysfd_t result;
  ASSERT_OBJECT_TYPE(self,(DeeTypeObject *)&DeeSystemFile_Type);
  result = (dsysfd_t)((SystemFile *)self)->sf_handle;
- if (result == NULL) error_file_closed((SystemFile *)self);
+ if (result == NULL)
+     error_file_closed((SystemFile *)self);
  return result;
 #endif
 }
@@ -562,8 +570,8 @@ sysfile_flush(SystemFile *__restrict self,
 }
 
 struct mode_name {
- char name[4]; /* Mode name. */
- int  flag;    /* Mode flags. */
+    char name[4]; /* Mode name. */
+    int  flag;    /* Mode flags. */
 };
 
 PRIVATE struct mode_name const mode_names[] = {
@@ -637,7 +645,7 @@ again_setbuf:
   return NULL;
  }
  /* Apply the buffer */
- if (setvbuf(self->sf_handle,NULL,mode,size)) {
+ if (setvbuf((FILE *)self->sf_handle,NULL,mode,size)) {
   DeeFile_LockEndWrite(self);
   if (Dee_CollectMemory(size))
       goto again_setbuf;
@@ -683,7 +691,7 @@ PRIVATE struct type_member sysfile_members[] = {
 PRIVATE void DCALL
 sysfile_fini(SystemFile *__restrict self) {
  if (self->sf_ownhandle)
-     fclose(self->sf_ownhandle);
+     fclose((FILE *)self->sf_ownhandle);
  Dee_XDecref(self->sf_filename);
 }
 
@@ -763,7 +771,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
     /* .ft_pwrite = */NULL,
     /* .ft_getc   = */(int (DCALL *)(DeeFileObject *__restrict,dioflag_t))&sysfile_getc,
     /* .ft_ungetc = */(int (DCALL *)(DeeFileObject *__restrict,int))&sysfile_ungetc,
-    /* .ft_putc   = */(int (DCALL *)(DeeFileObject *__restrict,int))&sysfile_putc
+    /* .ft_putc   = */(int (DCALL *)(DeeFileObject *__restrict,int,dioflag_t))&sysfile_putc
 };
 
 PUBLIC DeeFileTypeObject DeeFSFile_Type = {

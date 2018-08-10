@@ -111,7 +111,9 @@ INTERN DREF DeeObject *DCALL fs_gettmp(void) { return fs_getcwd(); }
 INTERN int DCALL fs_printcwd(struct ascii_printer *__restrict UNUSED(printer)) { return fs_unsupported(); }
 INTERN DREF DeeObject *DCALL fs_getcwd(void) { fs_unsupported(); return NULL; }
 INTERN int DCALL fs_chdir(DeeObject *__restrict UNUSED(path)) { return fs_unsupported(); }
+#ifndef __INTELLISENSE__
 #include "generic-user.c.inl"
+#endif
 PRIVATE int DCALL
 stat_ctor(DeeObject *__restrict UNUSED(self),
           size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
@@ -343,7 +345,9 @@ fs_readlink(DeeObject *__restrict UNUSED(path)) {
  return fs_getcwd();
 }
 
+#ifndef __INTELLISENSE__
 #include "generic-dir.c.inl"
+#endif
 
 DECL_END
 

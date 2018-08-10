@@ -37,6 +37,7 @@
 #include <deemon/none.h>
 #include <deemon/arg.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/numeric.h>
 
 #include <string.h>

@@ -29,6 +29,7 @@
 #include <deemon/filetypes.h>
 #include <deemon/exec.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
 #include <deemon/thread.h>

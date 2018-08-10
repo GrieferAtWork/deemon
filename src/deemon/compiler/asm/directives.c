@@ -51,6 +51,13 @@ INTERN struct asm_symtab     symtab;
 #define symtab current_userasm.ua_symtab
 #endif
 
+/* TODO: Implement case-folding and re-write the entire case-insensitive
+ *       string/bytes API to use it. - E.g. `ß -> ss'
+ * Use this: https://unicode.org/Public/UNIDATA/CaseFolding.txt
+ * Using it, also introduce a function `string.casefold()'
+ */
+
+
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */
 #if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
 #define MEMCASEEQ(a,b,s) (memcasecmp(a,b,s) == 0)

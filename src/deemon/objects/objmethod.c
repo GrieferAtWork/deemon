@@ -163,7 +163,7 @@ objmethod_get_name(DeeObjMethodObject *__restrict self) {
  char const *name;
  name = object_find_objmethod(self->om_self,self->om_func);
  if unlikely(!name) name = "?";
- return DeeString_New(name);
+ return DeeString_NewAuto(name);
 }
 
 

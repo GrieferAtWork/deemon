@@ -19,6 +19,10 @@
 #ifndef GUARD_DEX_FS_GENERIC_USER_C_INL
 #define GUARD_DEX_FS_GENERIC_USER_C_INL 1
 
+#ifdef __INTELLISENSE__
+#include "generic.c.inl"
+#endif
+
 INTERN DREF DeeObject *DCALL fs_gethome(bool try_get) { if (!try_get) fs_unsupported(); return NULL; }
 INTERN int DCALL fs_printhome(struct ascii_printer *__restrict printer, bool try_get) { if (try_get) return 1; return fs_unsupported(); }
 INTERN DeeTypeObject DeeUser_Type = {

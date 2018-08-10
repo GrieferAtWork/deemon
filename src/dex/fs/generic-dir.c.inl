@@ -21,6 +21,11 @@
 
 #include "libfs.h"
 
+#ifdef __INTELLISENSE__
+#include "generic.c.inl"
+#include <deemon/seq.h>
+#endif
+
 INTERN DREF DeeObject *DCALL
 diriter_next(DeeObject *__restrict UNUSED(self)) {
  fs_unsupported();

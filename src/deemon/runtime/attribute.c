@@ -1770,8 +1770,7 @@ DeeModule_DocAttrString(DeeModuleObject *__restrict self,
   if (strcmp(DeeString_STR(item->ss_name),attr_name)) continue;
   if (item->ss_doc) return_reference_((DeeObject *)item->ss_doc);
   DeeModule_UnlockSymbols((DeeObject *)self);
-  err_nodoc_attribute(self->mo_name->s_str,
-                      DeeString_STR(attr_name));
+  err_nodoc_attribute(self->mo_name->s_str,attr_name);
   return NULL;
  }
  DeeModule_UnlockSymbols((DeeObject *)self);

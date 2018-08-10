@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <hybrid/limits.h>
 
 DECL_BEGIN
 
@@ -784,9 +785,85 @@ DeeString_FreeWidthBuffer(void *buffer, unsigned int width) {
 DFUNDEF DREF DeeObject *DCALL DeeString_New(/*unsigned*/char const *__restrict str);
 #define DeeString_NewWithHash(str,hash) DeeString_New(str) /* XXX: Take advantage of this? */
 
+
+/* Check if `str' is the `DeeString_STR()' of a string object, and return
+ * a pointer to that object, only if it being that can be guarantied.
+ * Otherwise return `NULL'.
+ * WARNING: In order to prevent race conditions, only use this function
+ *          with statically allocated strings, as a heap implementation
+ *          that doesn't fill free memory and uses a block-size field in
+ *          an unfortunate location could falsely trigger a match. */
+#ifdef PAGESIZE
+LOCAL DeeObject *DCALL
+DeeString_IsObject(/*unsigned*/char const *__restrict str) {
+ DeeStringObject *base;
+ base = COMPILER_CONTAINER_OF(str,DeeStringObject,s_str);
+ /* Check if the string object base would be part of the same page
+  * as the string pointer we were given. - Only if it is, we can
+  * safely access the supposed string object to check if it matches
+  * what we'd expect of a string instance. */
+ if (((uintptr_t)base & ~(PAGESIZE-1)) ==
+     ((uintptr_t)str & ~(PAGESIZE-1))) {
+  /* Most important check: Does the object type indicate that it's a string. */
+  if (base->ob_type == &DeeString_Type) {
+   /* Check that the object's reference counter is non-zero.
+    * The combination of these 2 checks can verify a string object
+    * allowed by any kind of allocator, regardless of what may be
+    * done to freed objects:
+    * #1: If the heap does some debug stuff to memset() free memory,
+    *     and the given `str' is allocated within such a region, ob_type
+    *     would not be a pointer to `DeeString_Type'
+    * #2: If the heap doesn't do debug-memset()-stuff, and we were unlucky
+    *     enough to be given an `str' allocated at the exact location where
+    *     then `ob_refcnt' would still be zero.
+    * #3: UNLUCKY: Same as in #2, but `ob_refcnt' is the heap-size field,
+    *              in which case we'd get an invalid match by assuming
+    *              that the heap-size field was our reference counter.
+    * -> Because of case #3, this function can't be used for heap-allocated strings. */
+   if (base->ob_refcnt != 0)
+       return (DeeObject *)base;
+  }
+ }
+ return NULL;
+}
+LOCAL DREF DeeObject *DCALL
+DeeString_NewAuto(/*unsigned*/char const *__restrict str) {
+ DeeObject *result;
+ result = DeeString_IsObject(str);
+ if (result)
+  Dee_Incref(result);
+ else {
+  result = DeeString_New(str);
+ }
+ return result;
+}
+LOCAL DREF DeeObject *DCALL
+DeeString_NewAutoWithHash(/*unsigned*/char const *__restrict str, dhash_t hash) {
+ DeeObject *result;
+ result = DeeString_IsObject(str);
+ if (result) {
+  dhash_t str_hash = ((DeeStringObject *)result)->s_hash;
+  if (str_hash != hash) {
+   if (str_hash != DEE_STRING_HASH_UNSET)
+       goto return_new_string;
+   ((DeeStringObject *)result)->s_hash = hash;
+  }
+  Dee_Incref(result);
+ } else {
+return_new_string:
+  result = DeeString_NewWithHash(str,hash);
+ }
+ return result;
+}
+#else
+#define DeeString_IsObject(str)            ((DeeObject *)NULL)
+#define DeeString_NewAuto(str)               DeeString_New(str)
+#define DeeString_NewAutoWithHash(str,hash)  DeeString_NewWithHash(str,hash)
+#endif
+
 /* Construct a new string using printf-like (and deemon-enhanced) format-arguments. */
-DFUNDEF DREF DeeObject *DeeString_Newf(/*unsigned*/char const *__restrict format, ...);
-DFUNDEF DREF DeeObject *DCALL DeeString_VNewf(/*unsigned*/char const *__restrict format, va_list args);
+DFUNDEF DREF DeeObject *DeeString_Newf(/*utf-8*/char const *__restrict format, ...);
+DFUNDEF DREF DeeObject *DCALL DeeString_VNewf(/*utf-8*/char const *__restrict format, va_list args);
 
 /* Construct strings with basic width-data. */
 DFUNDEF DREF DeeObject *DCALL DeeString_NewSized(/*unsigned*/char const *__restrict str, size_t length);
@@ -868,43 +945,6 @@ DFUNDEF DREF DeeObject *DCALL _DeeString_Chr16(uint16_t ch);
 DFUNDEF DREF DeeObject *DCALL _DeeString_Chr32(uint32_t ch);
 #endif
 
-
-/* Get/Set a character, given its index within the string. */
-#define DeeString_GetChar(self,index)       _DeeString_GetChar((DeeStringObject *)REQUIRES_OBJECT(self),index)
-#define DeeString_SetChar(self,index,value) _DeeString_SetChar((DeeStringObject *)REQUIRES_OBJECT(self),index,value)
-
-FORCELOCAL uint32_t DCALL
-_DeeString_GetChar(DeeStringObject *__restrict self, size_t index) {
- size_t *str; struct string_utf *utf = self->s_data;
- if (!utf) {
-  ASSERT(index < self->s_len);
-  return ((uint8_t *)self->s_str)[index];
- }
- str = utf->u_data[utf->u_width];
- ASSERT(index < WSTR_LENGTH(str));
- SWITCH_SIZEOF_WIDTH(utf->u_width) {
- CASE_WIDTH_1BYTE: return ((uint8_t *)str)[index];
- CASE_WIDTH_2BYTE: return ((uint16_t *)str)[index];
- CASE_WIDTH_4BYTE: return ((uint32_t *)str)[index];
- }
-}
-FORCELOCAL void DCALL
-_DeeString_SetChar(DeeStringObject *__restrict self,
-                   size_t index, uint32_t value) {
- size_t *str; struct string_utf *utf = self->s_data;
- if (!utf) {
-  ASSERT(index < self->s_len);
-  self->s_str[index] = (uint8_t)value;
- } else {
-  str = utf->u_data[utf->u_width];
-  ASSERT(index < WSTR_LENGTH(str));
-  SWITCH_SIZEOF_WIDTH(utf->u_width) {
-  CASE_WIDTH_1BYTE: ((uint8_t *)str)[index] = (uint8_t)value; break;
-  CASE_WIDTH_2BYTE: ((uint16_t *)str)[index] = (uint16_t)value; break;
-  CASE_WIDTH_4BYTE: ((uint32_t *)str)[index] = (uint32_t)value; break;
-  }
- }
-}
 
 
 
@@ -1001,38 +1041,6 @@ FORCELOCAL bool DCALL _DeeUni_IsDigitX(uint32_t ch, uint8_t x) {
  struct unitraits *record = DeeUni_Descriptor(ch);
  return (record->ut_flags & UNICODE_FDIGIT) && record->ut_digit == x;
 }
-
-#define DeeString_Foreach(self,ibegin,iend,iter,end,...) \
-do{ void *_str_ = DeeString_WSTR(self); \
-    size_t _len_ = WSTR_LENGTH(_str_); \
-    if (_len_ > (iend)) \
-        _len_ = (iend); \
-    if ((ibegin) < _len_) { \
-        switch (DeeString_WIDTH(self)) { \
-        { \
-            char *iter,*end; \
-        CASE_WIDTH_1BYTE: \
-            iter = (char *)_str_; \
-            end = (char *)_str_ + _len_; \
-            for (; iter != end; ++iter) do __VA_ARGS__ __WHILE0; \
-        } break; \
-        { \
-            uint16_t *iter,*end; \
-        CASE_WIDTH_2BYTE: \
-            iter = (uint16_t *)_str_; \
-            end = (uint16_t *)_str_ + _len_; \
-            for (; iter != end; ++iter) do __VA_ARGS__ __WHILE0; \
-        } break; \
-        { \
-            uint32_t *iter,*end; \
-        CASE_WIDTH_4BYTE: \
-            iter = (uint32_t *)_str_; \
-            end = (uint32_t *)_str_ + _len_; \
-            for (; iter != end; ++iter) do __VA_ARGS__ __WHILE0; \
-        } break; \
-        } \
-    } \
-}__WHILE0
 
 
 /* ================================================================================= */
@@ -1200,14 +1208,20 @@ DFUNDEF dssize_t
 /* Explicitly print utf-8/utf-32 text. */
 #ifdef __INTELLISENSE__
 DFUNDEF dssize_t
+(DCALL unicode_printer_printascii)(struct unicode_printer *__restrict self,
+                                   /*ascii*/char const *__restrict text,
+                                   size_t textlen);
+DFUNDEF dssize_t
 (DCALL unicode_printer_printutf8)(struct unicode_printer *__restrict self,
-                                  unsigned char const *__restrict text,
+                                  /*utf-8*/unsigned char const *__restrict text,
                                   size_t textlen);
 DFUNDEF dssize_t
 (DCALL unicode_printer_printutf32)(struct unicode_printer *__restrict self,
-                                   uint32_t const *__restrict text,
+                                   /*utf-32*/uint32_t const *__restrict text,
                                    size_t textlen);
 #else
+#define unicode_printer_printascii(self,text,textlen) \
+        unicode_printer_print8(self,(uint8_t *)(text),textlen)
 #define unicode_printer_printutf8(self,text,textlen) \
         unicode_printer_print(self,(char *)(text),textlen)
 #define unicode_printer_printutf32(self,text,textlen) \
@@ -1413,42 +1427,6 @@ dssize_t (unicode_printer_printobjectrepr)(struct unicode_printer *__restrict se
 #endif
 
 
-
-/* UTF-8 helper API */
-DDATDEF uint8_t const utf8_sequence_len[256];
-DFUNDEF uint32_t (DCALL utf8_readchar)(char const **__restrict piter, char const *__restrict end);
-DFUNDEF uint32_t (DCALL utf8_readchar_u)(char const **__restrict piter);
-DFUNDEF uint32_t (DCALL utf8_readchar_rev)(char const **__restrict pend, char const *__restrict begin);
-DFUNDEF char *(DCALL utf8_writechar)(char *__restrict buffer, uint32_t ch); /* Up to `UTF8_MAX_MBLEN' bytes may be used in `buffer' */
-#define UTF8_MAX_MBLEN  8 /* The max length of a UTF-8 multi-byte sequence (100% future-proof,
-                           * as this is the theoretical limit. - The actual limit would be `4') */
-
-
-LOCAL char *
-(DCALL utf8_skipspace)(char const *__restrict str,
-                       char const *__restrict end) {
- char *result;
- for (;;) {
-  uint32_t chr;
-  result = (char *)str;
-  chr = utf8_readchar((char const **)&str,end);
-  if (!DeeUni_IsSpace(chr)) break;
- }
- return result;
-}
-
-LOCAL char *
-(DCALL utf8_skipspace_rev)(char const *__restrict end,
-                           char const *__restrict begin) {
- char *result;
- for (;;) {
-  uint32_t chr;
-  result = (char *)end;
-  chr = utf8_readchar_rev((char const **)&end,begin);
-  if (!DeeUni_IsSpace(chr)) break;
- }
- return result;
-}
 
 
 

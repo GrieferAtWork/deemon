@@ -26,6 +26,7 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 
 #include "../../runtime/runtime_error.h"
 

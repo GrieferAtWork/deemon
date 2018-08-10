@@ -64,9 +64,9 @@ for (local i: [:256]) {
     // -> If this list ever becomes corrupt and deemon is re-built, you must find
     //   `#define DeeUni_Flags(ch) ...' in <deemon/string.h>, and temporarily replace
     //    it with `#define DeeUni_Flags(ch) (DeeUni_Descriptor(ch)->ut_flags)',
-    //    then re-compile deemon, then run time format-script once again, then
-    //    restore the original definition of `DeeUni_Flags', then re-compile deemon
-    //    once again!
+    //    then re-compile deemon, then run this format-script once again, then
+    //    restore the original definition of `DeeUni_Flags', and finally re-compile
+    //    deemon once again!
     if (s.isprint())   flags |= UNICODE_FPRINT;
     if (s.isalpha())   flags |= UNICODE_FALPHA;
     if (s.isspace())   flags |= UNICODE_FSPACE;

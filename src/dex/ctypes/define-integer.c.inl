@@ -812,8 +812,8 @@ PRIVATE X(Integer) X(int_max) = {
 #if !defined(NO_SIGNED_TYPE_NAME) && \
     !defined(NO_UNSIGNED_TYPE_NAME)
 PRIVATE struct type_member X(int_class_members)[] = {
-    TYPE_MEMBER_CONST("signed",&SIGNED_TYPE_NAME),
-    TYPE_MEMBER_CONST("unsigned",&UNSIGNED_TYPE_NAME),
+    TYPE_MEMBER_CONST("signed",(DeeObject *)&SIGNED_TYPE_NAME),
+    TYPE_MEMBER_CONST("unsigned",(DeeObject *)&UNSIGNED_TYPE_NAME),
     TYPE_MEMBER_CONST("min",&X(int_min)),
     TYPE_MEMBER_CONST("max",&X(int_max)),
     TYPE_MEMBER_END

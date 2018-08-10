@@ -33,6 +33,7 @@
 #include <deemon/bool.h>
 #include <deemon/int.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/list.h>
 #include <deemon/tuple.h>
 

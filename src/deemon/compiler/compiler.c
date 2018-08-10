@@ -77,9 +77,9 @@ load_compiler(DeeCompilerObject *__restrict compiler) {
  current_scope = compiler->cp_scope;
  ASSERT_OBJECT(current_scope);
  current_basescope = current_scope->s_base;
- ASSERT_OBJECT(current_basescope);
+ ASSERT_OBJECT((DeeObject *)current_basescope);
  current_rootscope = current_basescope->bs_root;
- ASSERT_OBJECT(current_rootscope);
+ ASSERT_OBJECT((DeeObject *)current_rootscope);
  inner_compiler_options = compiler->cp_inner_options;
  memcpy(&current_tags,&compiler->cp_tags,sizeof(struct ast_tags));
  parser_flags = compiler->cp_parser_flags;
@@ -99,8 +99,8 @@ save_compiler(DeeCompilerObject *__restrict compiler) {
  ASSERT(recursive_rwlock_writing(&DeeCompiler_Lock));
 #endif
  ASSERT_OBJECT(current_scope);
- ASSERT_OBJECT(current_basescope);
- ASSERT_OBJECT(current_rootscope);
+ ASSERT_OBJECT((DeeObject *)current_basescope);
+ ASSERT_OBJECT((DeeObject *)current_rootscope);
  ASSERT(current_basescope == current_scope->s_base);
  ASSERT(current_rootscope == current_basescope->bs_root);
  compiler->cp_scope = current_scope;

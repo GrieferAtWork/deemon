@@ -55,6 +55,7 @@ PRIVATE struct dex_symbol symbols[] = {
     { "copysign", (DeeObject *)&math_copysign, MODSYM_FNORMAL,
       DOC("(float x,float y)->float\n"
           "Return @x with the sign copied from @y") },
+    /* TODO */
     { "pi", (DeeObject *)&math_pi, MODSYM_FNORMAL, DOC("The mathematical constant PI") },
     { NULL }
 };

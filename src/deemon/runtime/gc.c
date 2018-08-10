@@ -905,10 +905,11 @@ PUBLIC ATTR_MALLOC void *(DCALL DeeGCObject_Calloc)(size_t n_bytes) {
 PUBLIC void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes) {
  if (p) {
 #ifdef GCHEAD_ISTRACKED
-  ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head(p)),
+  ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p)),
           "Object was still being tracked");
 #endif /* GCHEAD_ISTRACKED */
-  p = DeeObject_Realloc(DeeGC_Head(p),GC_HEAD_SIZE+n_bytes);
+  p = DeeObject_Realloc(DeeGC_Head((DeeObject *)p),
+                        GC_HEAD_SIZE+n_bytes);
  } else {
   p = DeeObject_Malloc(GC_HEAD_SIZE+n_bytes);
  }
@@ -926,10 +927,11 @@ PUBLIC void *
 (DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes) {
  if (p) {
 #ifdef GCHEAD_ISTRACKED
-  ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head(p)),
+  ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p)),
           "Object was still being tracked");
 #endif /* GCHEAD_ISTRACKED */
-  p = DeeObject_TryRealloc(DeeGC_Head(p),GC_HEAD_SIZE+n_bytes);
+  p = DeeObject_TryRealloc(DeeGC_Head((DeeObject *)p),
+                           GC_HEAD_SIZE+n_bytes);
  } else {
   p = DeeObject_TryMalloc(GC_HEAD_SIZE+n_bytes);
  }
@@ -940,10 +942,10 @@ PUBLIC void
 (DCALL DeeGCObject_Free)(void *p) {
  if (p) {
 #ifdef GCHEAD_ISTRACKED
-  ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head(p)),
+  ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p)),
           "Object was still being tracked");
 #endif /* GCHEAD_ISTRACKED */
-  DeeObject_Free(DeeGC_Head(p));
+  DeeObject_Free(DeeGC_Head((DeeObject *)p));
  }
 }
 

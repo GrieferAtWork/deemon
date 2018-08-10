@@ -30,6 +30,7 @@
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 
 #include <string.h>
 
