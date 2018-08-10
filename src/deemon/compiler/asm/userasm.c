@@ -1335,7 +1335,7 @@ do_regular_ref:
  case ASM_OP_IMMZERO:
   if (ast->ast_type != AST_CONSTEXPR) goto next_option;
   if (!DeeInt_Check(ast->ast_constexpr)) goto next_option;
-  if (!DeeInt_TryGetU32(ast->ast_constexpr,&value)) goto next_option;
+  if (!DeeInt_TryAsU32(ast->ast_constexpr,&value)) goto next_option;
   if (value != 0) goto next_option;
   result = DeeString_New("$0");
  } break;
@@ -1452,7 +1452,7 @@ do_regular_ref:
   __IF0 { case ASM_OP_SIMM64: intmin = INT64_MIN; intmax = INT64_MAX; }
   if (ast->ast_type != AST_CONSTEXPR) goto next_option;
   if (!DeeInt_Check(ast->ast_constexpr)) goto next_option;
-  if (!DeeInt_TryGetS64(ast->ast_constexpr,&intval)) goto next_option;
+  if (!DeeInt_TryAsS64(ast->ast_constexpr,&intval)) goto next_option;
   if (intval < intmin || intval > intmax) goto next_option;
   result = DeeString_Newf("$%I64d",intval);
   break;
@@ -1466,7 +1466,7 @@ do_regular_ref:
   __IF0 { case ASM_OP_IMM64: intmax = UINT64_MAX; }
   if (ast->ast_type != AST_CONSTEXPR) goto next_option;
   if (!DeeInt_Check(ast->ast_constexpr)) goto next_option;
-  if (!DeeInt_TryGetU64(ast->ast_constexpr,&intval)) goto next_option;
+  if (!DeeInt_TryAsU64(ast->ast_constexpr,&intval)) goto next_option;
   if (intval > intmax) goto next_option;
   result = DeeString_Newf("$%I64u",intval);
   break;

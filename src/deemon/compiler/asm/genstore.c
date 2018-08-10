@@ -234,7 +234,7 @@ ast_gen_setitem(DeeAstObject *__restrict sequence,
   int32_t int_index;
   /* Special optimizations for constant indices. */
   if (DeeInt_Check(index->ast_constexpr) &&
-      DeeInt_TryGetS32(index->ast_constexpr,&int_index) &&
+      DeeInt_TryAsS32(index->ast_constexpr,&int_index) &&
       int_index >= INT16_MIN && int_index <= INT16_MAX) {
    if unlikely(asm_gpush2_duplast(sequence,value,ddi_ast,gflags))
       goto err;
@@ -274,7 +274,7 @@ ast_gen_setrange(DeeAstObject *__restrict sequence,
    /* Optimization: `setrange pop, none, [pop | $<Simm16>], pop' */
    if (end->ast_type == AST_CONSTEXPR &&
        DeeInt_Check(end->ast_constexpr) &&
-       DeeInt_TryGetS32(end->ast_constexpr,&index) &&
+       DeeInt_TryAsS32(end->ast_constexpr,&index) &&
        index >= INT16_MIN && index <= INT16_MAX) {
     /* `setrange pop, none, $<Simm16>, pop' */
     if unlikely(asm_gpush2_duplast(sequence,value,ddi_ast,gflags))
@@ -289,7 +289,7 @@ ast_gen_setrange(DeeAstObject *__restrict sequence,
    goto done;
   }
   if (DeeInt_Check(begin_index) &&
-      DeeInt_TryGetS32(begin_index,&index) &&
+      DeeInt_TryAsS32(begin_index,&index) &&
       index >= INT16_MIN && index <= INT16_MAX) {
    if (end->ast_type == AST_CONSTEXPR) {
     int32_t index2;
@@ -302,7 +302,7 @@ ast_gen_setrange(DeeAstObject *__restrict sequence,
      goto done;
     }
     if (DeeInt_Check(end_index) &&
-        DeeInt_TryGetS32(end_index,&index2) &&
+        DeeInt_TryAsS32(end_index,&index2) &&
         index2 >= INT16_MIN && index2 <= INT16_MAX) {
      /* `setrange pop, $<Simm16>, $<Simm16>, pop' */
      if unlikely(asm_gpush2_duplast(sequence,value,ddi_ast,gflags))
@@ -328,7 +328,7 @@ ast_gen_setrange(DeeAstObject *__restrict sequence,
    goto done;
   }
   if (DeeInt_Check(end_index) &&
-      DeeInt_TryGetS32(end_index,&index) &&
+      DeeInt_TryAsS32(end_index,&index) &&
       index >= INT16_MIN && index <= INT16_MAX) {
    /* `setrange pop, pop, $<Simm16>, pop' */
    if unlikely(asm_gpush3_duplast(sequence,begin,value,ddi_ast,gflags))
@@ -933,7 +933,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
     int32_t int_index;
     /* Special optimizations for constant indices. */
     if (DeeInt_Check(index->ast_constexpr) &&
-        DeeInt_TryGetS32(index->ast_constexpr,&int_index) &&
+        DeeInt_TryAsS32(index->ast_constexpr,&int_index) &&
         int_index >= INT16_MIN && int_index <= INT16_MAX) {
      if (asm_putddi(ast)) goto err;
      if (asm_gswap()) goto err;
@@ -971,7 +971,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
      /* Optimization: `setrange pop, none, [pop | $<Simm16>], pop' */
      if (end->ast_type == AST_CONSTEXPR &&
          DeeInt_Check(end->ast_constexpr) &&
-         DeeInt_TryGetS32(end->ast_constexpr,&index) &&
+         DeeInt_TryAsS32(end->ast_constexpr,&index) &&
          index >= INT16_MIN && index <= INT16_MAX) {
       /* `setrange pop, none, $<Simm16>, pop' */
       if (asm_gswap()) goto err; /* STACK: base, item */
@@ -985,7 +985,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
      goto done;
     }
     if (DeeInt_Check(begin_index) &&
-        DeeInt_TryGetS32(begin_index,&index) &&
+        DeeInt_TryAsS32(begin_index,&index) &&
         index >= INT16_MIN && index <= INT16_MAX) {
      if (end->ast_type == AST_CONSTEXPR) {
       int32_t index2;
@@ -997,7 +997,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
        goto done;
       }
       if (DeeInt_Check(end_index) &&
-          DeeInt_TryGetS32(end_index,&index2) &&
+          DeeInt_TryAsS32(end_index,&index2) &&
           index2 >= INT16_MIN && index2 <= INT16_MAX) {
        /* `setrange pop, $<Simm16>, $<Simm16>, pop' */
        if (asm_gswap()) goto err;                                      /* STACK: base, item */
@@ -1022,7 +1022,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
      goto done;
     }
     if (DeeInt_Check(end_index) &&
-        DeeInt_TryGetS32(end_index,&index) &&
+        DeeInt_TryAsS32(end_index,&index) &&
         index >= INT16_MIN && index <= INT16_MAX) {
      /* `setrange pop, pop, $<Simm16>, pop' */
      if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;           /* STACK: item, base, begin */

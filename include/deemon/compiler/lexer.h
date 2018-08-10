@@ -266,8 +266,7 @@ ast_build_operator(uint16_t name, uint16_t flags,
  * When called, the current token must be one of
  * `KWD_for', `KWD_foreach', `KWD_while' or `KWD_do'
  * The returned expression is usually a call-operator
- * on an anonymous lambda function.
- */
+ * on an anonymous lambda function. */
 INTDEF DREF DeeAstObject *FCALL ast_parse_loopexpr(void);
 
 /* Parse a new function declaration, starting at either the argument

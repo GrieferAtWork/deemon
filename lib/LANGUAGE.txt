@@ -50,7 +50,7 @@
  *          named arguments as a {(string,object)...}-like object, similar
  *          to what `def foo(*args,**kwds):' does in python, then translated
  *          to deemon `function foo(args...,???kwds???)' (??? -- something...)
- *          to deemon `function foo(args...,{kwds})'
+ *          Maybe `function foo(args...,{kwds})'?
  *
  *  - Added an as-expression that add a syntactically more
  *    fluid way of constructor super-view proxy objects:
@@ -811,9 +811,7 @@ _tag_name ::= _keyword;
 
 
 ast_parse_statement_or_braces ::= (
-	/* NOTE: The differenciation between brace items
-	 *       and expressions is quite complex here, and
-	 *       in cases of ambiguity, a warning is emit.
+	/* NOTE: The differenciation between brace items and expressions is quite complex:
 	 * >> print repr ({ });                                  // EXPR: { }
 	 * >> print repr ({ ; });                                // STMT: none
 	 * >> print repr ({ 10, 20, 30 });                       // EXPR: { 10, 20, 30 }
@@ -838,7 +836,7 @@ ast_parse_statement_or_braces ::= (
 	 * >> print repr ({ assert(foo()), 7 });                 // EXPR: { <foo()>, 7 }
 	 * >> print repr ({ assert(foo()); });                   // STMT: <foo()>
 	 * >> print repr ({ assert(foo()); 7; });                // STMT: 7
-	 * Using these rules, all possible cases are implicitly dealt with.
+	 * Using these rules, all possible cases can be dealt with.
 	 * NOTE: Although also allowed in expression, `del' is always
 	 *       interpreted as a statement, as there is no syntactical
 	 *       different between their statement and expression variants.
@@ -914,10 +912,6 @@ ast_parse_unary_base ::= (
 
 	/* Operator function access (see detailed explaination in `x.operator ...' below) */
 	('operator' DDI(ast_parse_operator_name(false))) |
-#if 0 /* Redundant syntax. - Already implemented by a call-suffix expression */
-	('operator' DDI(ast_parse_operator_name(false)) '(' ast_parse_comma(false,false) ')') |
-#endif
-
 
 	/* Assert-expressions. */
 	('assert' '(' DDI(ast_parse_expression) [',' ast_parse_expression] ')') |
@@ -953,10 +947,10 @@ ast_parse_unary_base ::= (
 	 * >> local x = import(".foo.bar"); // Same as `import x = .foo.bar;'
 	 * Using this, modules can be imported at runtime, allowing names only
 	 * available at runtime to be used, thus enabling dynamic dependencies. */
-	( 'import' (
+	(DDI('import') (
 		(['pack'] '(' ast_parse_expression ')') |
 		('pack' ast_parse_expression)
-	)  |
+	) |
 
 	/* Parenthesis / [empty] tuple expression. */
 	(DDI('(') [(

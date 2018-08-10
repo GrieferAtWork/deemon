@@ -222,7 +222,8 @@ err_integer_overflow(DeeObject *__restrict overflowing_object,
                      unsigned int cutoff_bits, bool positive_overflow) {
  ASSERT_OBJECT(overflowing_object);
  ASSERT(cutoff_bits == 8  || cutoff_bits == 16 ||
-        cutoff_bits == 32 || cutoff_bits == 64);
+        cutoff_bits == 32 || cutoff_bits == 64 ||
+        cutoff_bits == 128);
  return DeeError_Throwf(&DeeError_IntegerOverflow,
                         "%s integer overflow after %u bits in %k",
                         positive_overflow ? "positive" : "negative",
@@ -231,7 +232,8 @@ err_integer_overflow(DeeObject *__restrict overflowing_object,
 INTERN ATTR_COLD int DCALL
 err_integer_overflow_i(unsigned int cutoff_bits, bool positive_overflow) {
  ASSERT(cutoff_bits == 8  || cutoff_bits == 16 ||
-        cutoff_bits == 32 || cutoff_bits == 64);
+        cutoff_bits == 32 || cutoff_bits == 64 ||
+        cutoff_bits == 128);
  return DeeError_Throwf(&DeeError_IntegerOverflow,
                         "%s integer overflow after %u bits",
                         positive_overflow ? "positive" : "negative",

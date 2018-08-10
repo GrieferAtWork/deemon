@@ -986,6 +986,92 @@ again:
  return (dssize_t)bytes_written;
 }
 
+
+typedef union {
+    struct {
+        /* Use our own structure so it gets aligned by 64 bits,
+         * and `Offset' can be assigned directly, without some
+         * sh1tty wrapper code. */
+        uintptr_t Internal;
+        uintptr_t InternalHigh;
+#ifdef CONFIG_LITTLE_ENDIAN
+        uint64_t  Offset;
+#else
+        uint32_t  Offset;
+        uint32_t  OffsetHigh;
+#endif
+    }   me;
+    OVERLAPPED    ms;
+} my_OVERLAPPED;
+
+PRIVATE dssize_t DCALL
+sysfile_pread(SystemFile *__restrict self,
+              void *__restrict buffer,
+              size_t bufsize, dpos_t pos,
+              dioflag_t UNUSED(flags)) {
+ DWORD bytes_written;
+ my_OVERLAPPED overlapped;
+#if __SIZEOF_SIZE_T__ > 4
+ if unlikely(bufsize > UINT32_MAX)
+    bufsize = UINT32_MAX;
+#endif
+again:
+ memset(&overlapped,0,sizeof(overlapped));
+#ifdef CONFIG_LITTLE_ENDIAN
+ overlapped.me.Offset = pos;
+#else
+ overlapped.me.Offset     = (uint32_t)pos;
+ overlapped.me.OffsetHigh = (uint32_t)(pos >> 32);
+#endif
+ if unlikely(!ReadFile(self->sf_handle,buffer,
+                      (DWORD)bufsize,
+                      &bytes_written,
+                      (LPOVERLAPPED)&overlapped)) {
+  DWORD error = GetLastError();
+  if (error == ERROR_OPERATION_ABORTED) {
+   if (DeeThread_CheckInterrupt())
+       return -1;
+   goto again;
+  }
+  return error_file_io(self);
+ }
+ return (dssize_t)bytes_written;
+}
+
+PRIVATE dssize_t DCALL
+sysfile_pwrite(SystemFile *__restrict self,
+               void const *__restrict buffer,
+               size_t bufsize, dpos_t pos,
+               dioflag_t UNUSED(flags)) {
+ DWORD bytes_written;
+ my_OVERLAPPED overlapped;
+#if __SIZEOF_SIZE_T__ > 4
+ if unlikely(bufsize > UINT32_MAX)
+    bufsize = UINT32_MAX;
+#endif
+again:
+ memset(&overlapped,0,sizeof(overlapped));
+#ifdef CONFIG_LITTLE_ENDIAN
+ overlapped.me.Offset = pos;
+#else
+ overlapped.me.Offset     = (uint32_t)pos;
+ overlapped.me.OffsetHigh = (uint32_t)(pos >> 32);
+#endif
+ if unlikely(!WriteFile(self->sf_handle,buffer,
+                       (DWORD)bufsize,
+                       &bytes_written,
+                       (LPOVERLAPPED)&overlapped)) {
+  DWORD error = GetLastError();
+  if (error == ERROR_OPERATION_ABORTED) {
+   if (DeeThread_CheckInterrupt())
+       return -1;
+   goto again;
+  }
+  return error_file_io(self);
+ }
+ return (dssize_t)bytes_written;
+}
+
 PRIVATE doff_t DCALL
 sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
  DWORD result; LONG high;
@@ -1174,8 +1260,8 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
     /* .ft_sync   = */(int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
     /* .ft_trunc  = */(int (DCALL *)(DeeFileObject *__restrict,dpos_t))&sysfile_trunc,
     /* .ft_close  = */(int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
-    /* .ft_pread  = */NULL, /* TODO (Possible with the use of OVERLAPPED) */
-    /* .ft_pwrite = */NULL, /* TODO (Possible with the use of OVERLAPPED) */
+    /* .ft_pread  = */(dssize_t (DCALL *)(DeeFileObject *__restrict,void *__restrict,size_t,dpos_t,dioflag_t))&sysfile_pread,
+    /* .ft_pwrite = */(dssize_t (DCALL *)(DeeFileObject *__restrict,void const *__restrict,size_t,dpos_t,dioflag_t))&sysfile_pwrite,
     /* .ft_getc   = */NULL,
     /* .ft_ungetc = */NULL,
     /* .ft_putc   = */NULL

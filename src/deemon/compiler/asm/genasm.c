@@ -2144,7 +2144,7 @@ pop_unused:
      /* Lookup a varargs-argument by index. */
      if (ast->ast_operator.ast_opb->ast_type == AST_CONSTEXPR &&
          DeeInt_Check(ast->ast_operator.ast_opb->ast_constexpr) &&
-         DeeInt_TryGetU32(ast->ast_operator.ast_opb->ast_constexpr,&va_index)) {
+         DeeInt_TryAsU32(ast->ast_operator.ast_opb->ast_constexpr,&va_index)) {
       /* Optional arguments are actually apart of varargs, so
        * we need to adjust the user-given index to have its base
        * be located just after the varargs. */
@@ -2172,7 +2172,7 @@ pop_unused:
    index = ast->ast_operator.ast_opb->ast_constexpr;
    /* Special optimizations for integer indices. */
    if (DeeInt_Check(index) &&
-       DeeInt_TryGetS32(index,&temp) &&
+       DeeInt_TryAsS32(index,&temp) &&
        temp >= INT16_MIN && temp <= INT16_MAX) {
     if (ast_genasm(ast->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ast) || asm_ggetitem_index((int16_t)temp)) goto err;
@@ -2248,7 +2248,7 @@ check_getattr_sym:
     if (end->ast_type == AST_CONSTEXPR) {
      DeeObject *const_end = end->ast_constexpr;
      if (DeeInt_Check(const_begin) &&
-         DeeInt_TryGetS32(const_begin,&intval) &&
+         DeeInt_TryAsS32(const_begin,&intval) &&
          intval >= INT16_MIN && intval <= INT16_MAX) {
       int32_t endval;
       if (DeeNone_Check(const_end)) {
@@ -2257,7 +2257,7 @@ check_getattr_sym:
        goto pop_unused;
       }
       if (DeeInt_Check(const_end) &&
-          DeeInt_TryGetS32(const_end,&endval) &&
+          DeeInt_TryAsS32(const_end,&endval) &&
           endval >= INT16_MIN && endval <= INT16_MAX) {
        if (asm_putddi(ast)) goto err;
        if (asm_ggetrange_ii((int16_t)intval,(int16_t)endval)) goto err;
@@ -2265,7 +2265,7 @@ check_getattr_sym:
       }
      } else if (DeeNone_Check(const_begin) &&
                 DeeInt_Check(const_end) &&
-                DeeInt_TryGetS32(const_end,&intval) &&
+                DeeInt_TryAsS32(const_end,&intval) &&
                 intval >= INT16_MIN && intval <= INT16_MAX) {
       if (asm_putddi(ast)) goto err;
       if (asm_ggetrange_ni((int16_t)intval)) goto err;
@@ -2279,7 +2279,7 @@ check_getattr_sym:
      goto pop_unused;
     }
     if (DeeInt_Check(const_begin) &&
-        DeeInt_TryGetS32(const_begin,&intval) &&
+        DeeInt_TryAsS32(const_begin,&intval) &&
         intval >= INT16_MIN && intval <= INT16_MAX) {
      if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ast)) goto err;
@@ -2295,7 +2295,7 @@ check_getattr_sym:
      goto pop_unused;
     }
     if (DeeInt_Check(const_end) &&
-        DeeInt_TryGetS32(const_end,&intval) &&
+        DeeInt_TryAsS32(const_end,&intval) &&
         intval >= INT16_MIN && intval <= INT16_MAX) {
      if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ast)) goto err;
@@ -2356,7 +2356,7 @@ check_getattr_sym:
    if unlikely(!ast->ast_operator.ast_opb) goto generic_operator;
    if (ast->ast_operator.ast_opb->ast_type != AST_CONSTEXPR) break;
    if (!DeeInt_Check(ast->ast_operator.ast_opb->ast_constexpr)) break;
-   if (DeeInt_TryGetS32(ast->ast_operator.ast_opb->ast_constexpr,&intval) &&
+   if (DeeInt_TryAsS32(ast->ast_operator.ast_opb->ast_constexpr,&intval) &&
       (intval >= INT8_MIN && intval <= INT8_MAX)) {
     if (ast_genasm(ast->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
     if (operator_name == OPERATOR_ADD ? asm_gadd_simm8((int8_t)intval)
@@ -2364,7 +2364,7 @@ check_getattr_sym:
         goto err;
     goto pop_unused;
    }
-   if (DeeInt_TryGetU32(ast->ast_operator.ast_opb->ast_constexpr,
+   if (DeeInt_TryAsU32(ast->ast_operator.ast_opb->ast_constexpr,
                        (uint32_t *)&intval)) {
     if (ast_genasm(ast->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
     if (operator_name == OPERATOR_ADD ? asm_gadd_imm32(*(uint32_t *)&intval)
@@ -2383,7 +2383,7 @@ check_getattr_sym:
    if (ast->ast_operator.ast_opa->ast_type != AST_SYM) break;
    if (!asm_can_prefix_symbol(ast->ast_operator.ast_opa->ast_sym)) break;
    if (!DeeInt_Check(ast->ast_operator.ast_opb->ast_constexpr)) break;
-   if (DeeInt_TryGetS32(ast->ast_operator.ast_opb->ast_constexpr,&intval) &&
+   if (DeeInt_TryAsS32(ast->ast_operator.ast_opb->ast_constexpr,&intval) &&
       (intval >= INT8_MIN && intval <= INT8_MAX)) {
     if (asm_gprefix_symbol(ast->ast_operator.ast_opa->ast_sym,
                            ast->ast_operator.ast_opa)) goto err;
@@ -2395,7 +2395,7 @@ push_a_if_used:
         goto err;
     goto done;
    }
-   if (DeeInt_TryGetU32(ast->ast_operator.ast_opb->ast_constexpr,
+   if (DeeInt_TryAsU32(ast->ast_operator.ast_opb->ast_constexpr,
                        (uint32_t *)&intval)) {
     if (asm_gprefix_symbol(ast->ast_operator.ast_opa->ast_sym,
                            ast->ast_operator.ast_opa)) goto err;
@@ -2414,7 +2414,7 @@ push_a_if_used:
    if unlikely(!ast->ast_operator.ast_opb) goto generic_operator;
    if (ast->ast_operator.ast_opb->ast_type != AST_CONSTEXPR) break;
    if (!DeeInt_Check(ast->ast_operator.ast_opb->ast_constexpr)) break;
-   if (DeeInt_TryGetS32(ast->ast_operator.ast_opb->ast_constexpr,&intval) &&
+   if (DeeInt_TryAsS32(ast->ast_operator.ast_opb->ast_constexpr,&intval) &&
       (intval >= INT8_MIN && intval <= INT8_MAX)) {
     if (ast_genasm(ast->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
     if (operator_name == OPERATOR_MUL ? asm_gmul_simm8((int8_t)intval) :
@@ -2435,7 +2435,7 @@ push_a_if_used:
    if (ast->ast_operator.ast_opa->ast_type != AST_SYM) break;
    if (!asm_can_prefix_symbol(ast->ast_operator.ast_opa->ast_sym)) break;
    if (!DeeInt_Check(ast->ast_operator.ast_opb->ast_constexpr)) break;
-   if (DeeInt_TryGetS32(ast->ast_operator.ast_opb->ast_constexpr,&intval) &&
+   if (DeeInt_TryAsS32(ast->ast_operator.ast_opb->ast_constexpr,&intval) &&
       (intval >= INT8_MIN && intval <= INT8_MAX)) {
     if (asm_gprefix_symbol(ast->ast_operator.ast_opa->ast_sym,
                            ast->ast_operator.ast_opa)) goto err;
@@ -2455,7 +2455,7 @@ push_a_if_used:
    if unlikely(!ast->ast_operator.ast_opb) goto generic_operator;
    if (ast->ast_operator.ast_opb->ast_type != AST_CONSTEXPR) break;
    if (!DeeInt_Check(ast->ast_operator.ast_opb->ast_constexpr)) break;
-   if (DeeInt_TryGetU32(ast->ast_operator.ast_opb->ast_constexpr,&intval)) {
+   if (DeeInt_TryAsU32(ast->ast_operator.ast_opb->ast_constexpr,&intval)) {
     if (ast_genasm(ast->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
     if (operator_name == OPERATOR_AND ? asm_gand_imm32(intval) :
         operator_name == OPERATOR_OR  ? asm_gor_imm32(intval) :
@@ -2475,7 +2475,7 @@ push_a_if_used:
    if (ast->ast_operator.ast_opa->ast_type != AST_SYM) break;
    if (!asm_can_prefix_symbol(ast->ast_operator.ast_opa->ast_sym)) break;
    if (!DeeInt_Check(ast->ast_operator.ast_opb->ast_constexpr)) break;
-   if (DeeInt_TryGetU32(ast->ast_operator.ast_opb->ast_constexpr,&intval)) {
+   if (DeeInt_TryAsU32(ast->ast_operator.ast_opb->ast_constexpr,&intval)) {
     if (asm_gprefix_symbol(ast->ast_operator.ast_opa->ast_sym,
                            ast->ast_operator.ast_opa)) goto err;
     if (operator_name == OPERATOR_INPLACE_AND ? asm_gand_inplace_imm32(intval) :
@@ -2592,7 +2592,7 @@ push_a_if_used:
    /* If the expression result isn't being used,
     * then there is no need to do anything! */
    if (!PUSH_RESULT) goto done;
-   if (!DeeInt_TryGetU32(sizeval,&va_size_val)) break;
+   if (!DeeInt_TryAsU32(sizeval,&va_size_val)) break;
    /* Adjust for the number of optional arguments. */
    va_size_val += current_basescope->bs_argc_opt;
    if (va_size_val > UINT8_MAX) break;
@@ -2952,13 +2952,13 @@ cast_this_as_symbol:
     uint32_t intval;
     if (DeeNone_Check(index_object) ||
        (DeeInt_Check(index_object) &&
-       (DeeInt_TryGetU32(index_object,&intval) && intval == 0))) {
+       (DeeInt_TryAsU32(index_object,&intval) && intval == 0))) {
      /* Special optimization: The begin index is not set, or equal to int(0). */
      if (AST_ISNONE(ast->ast_action.ast_act2) &&
         (ast->ast_action.ast_act1->ast_type == AST_CONSTEXPR &&
         (index_object = ast->ast_action.ast_act1->ast_constexpr,
          DeeInt_Check(index_object)) &&
-         DeeInt_TryGetU32(index_object,&intval))) {
+         DeeInt_TryAsU32(index_object,&intval))) {
       /* Special optimization: No step is given and the
        * end index is known to be a constant integer. */
       if (PUSH_RESULT && (asm_putddi(ast) || asm_grange_0_i(intval))) goto err;

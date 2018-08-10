@@ -1463,7 +1463,7 @@ DEFINE_OPERATOR(int,GetInt32,
      intob = (*iter->tp_math->tp_int)(self);
     }
     if unlikely(!intob) return -1;
-    error = DeeInt_Get32(intob,result);
+    error = DeeInt_As32(intob,result);
     Dee_Decref(intob);
     return error;
    }
@@ -1526,7 +1526,7 @@ DEFINE_OPERATOR(int,GetInt64,
      intob = (*iter->tp_math->tp_int)(self);
     }
     if unlikely(!intob) return -1;
-    error = DeeInt_Get64(intob,result);
+    error = DeeInt_As64(intob,result);
     Dee_Decref(intob);
     return error;
    }
@@ -1610,7 +1610,7 @@ return_trunc64: *result = (uint32_t)val64; return 0;
      intob = (*iter->tp_math->tp_int)(self);
     }
     if unlikely(!intob) return -1;
-    error = DeeInt_GetU32(intob,result);
+    error = DeeInt_AsU32(intob,result);
     Dee_Decref(intob);
     return error;
    }
@@ -1689,7 +1689,7 @@ return_trunc64: *result = (int32_t)val64; return 0;
      intob = (*iter->tp_math->tp_int)(self);
     }
     if unlikely(!intob) return -1;
-    error = DeeInt_GetS32(intob,result);
+    error = DeeInt_AsS32(intob,result);
     Dee_Decref(intob);
     return error;
    }
@@ -1759,7 +1759,7 @@ neg_overflow: err_integer_overflow(self,64,false);
      intob = (*iter->tp_math->tp_int)(self);
     }
     if unlikely(!intob) return -1;
-    error = DeeInt_GetU64(intob,result);
+    error = DeeInt_AsU64(intob,result);
     Dee_Decref(intob);
     return error;
    }
@@ -1824,7 +1824,7 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
      intob = (*iter->tp_math->tp_int)(self);
     }
     if unlikely(!intob) return -1;
-    error = DeeInt_GetS64(intob,result);
+    error = DeeInt_AsS64(intob,result);
     Dee_Decref(intob);
     return error;
    }

@@ -968,7 +968,7 @@ err:
 
 
 PUBLIC int DCALL
-DeeInt_TryGet32(DeeObject *__restrict self, int32_t *__restrict value) {
+DeeInt_TryAs32(DeeObject *__restrict self, int32_t *__restrict value) {
  uint32_t prev,result; int sign;
  dssize_t i;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeInt_Type);
@@ -1007,7 +1007,7 @@ overflow:
  return INT_UNSIGNED;
 }
 PUBLIC int DCALL
-DeeInt_TryGet64(DeeObject *__restrict self, int64_t *__restrict value) {
+DeeInt_TryAs64(DeeObject *__restrict self, int64_t *__restrict value) {
  uint64_t prev,result; int sign;
  dssize_t i;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeInt_Type);
@@ -1045,88 +1045,171 @@ overflow:
  *value = (int64_t)result;
  return INT_UNSIGNED;
 }
+PUBLIC int DCALL
+DeeInt_TryAs128(DeeObject *__restrict self, dint128_t *__restrict value) {
+ duint128_t result; int sign;
+ dssize_t i;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeInt_Type);
+ switch (DeeInt_SIZE(self)) {
+ case 0:
+  DUINT128_GET64(*value)[DEE_INT128_LS64] = 0;
+  DUINT128_GET64(*value)[DEE_INT128_MS64] = 0;
+  return 0;
+ case 1:
+  DUINT128_GET64(*value)[DEE_INT128_LS64] = DeeInt_DIGIT(self)[0];
+  DUINT128_GET64(*value)[DEE_INT128_MS64] = 0;
+  return INT_UNSIGNED;
+ case -1:
+  DUINT128_GETS64(*value)[DEE_INT128_LS64] = -DeeInt_DIGIT(self)[0];
+  DUINT128_GETS64(*value)[DEE_INT128_MS64] = 0;
+  return INT_SIGNED;
+ default: break;
+ }
+ DUINT128_SET(result,0);
+ sign = 1;
+ i = DeeInt_SIZE(self);
+ if (i < 0) sign = -1,i = -i;
+ while (--i >= 0) {
+  if (DUINT128_SHL_WILL_OVERFLOW(result,DIGIT_BITS))
+      goto overflow;
+  DUINT128_SHL(result,DIGIT_BITS);
+  DUINT128_OR(result,DeeInt_DIGIT(self)[i]);
+ }
+ if (sign < 0) {
+  if (!DINT128_ISMAX(result)) {
+   DSINT128_TONEG(result);
+  } else if (DINT128_IS0MMIN(result)) {
+   DINT128_SETMIN(result);
+  } else {
+overflow:
+   return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
+  }
+  *(duint128_t *)value = result;
+  return INT_SIGNED;
+ }
+ *(duint128_t *)value = result;
+ return INT_UNSIGNED;
+}
 
-PUBLIC bool (DCALL DeeInt_TryGetS32)(DeeObject *__restrict self,
+PUBLIC bool (DCALL DeeInt_TryAsS32)(DeeObject *__restrict self,
                                      int32_t *__restrict value) {
- int error = DeeInt_TryGet32(self,value);
+ int error = DeeInt_TryAs32(self,value);
  if (error == INT_UNSIGNED && *(uint32_t *)value > INT32_MAX)
      return false;
  return (error != INT_POS_OVERFLOW &&
          error != INT_NEG_OVERFLOW);
 }
-PUBLIC bool (DCALL DeeInt_TryGetS64)(DeeObject *__restrict self,
+PUBLIC bool (DCALL DeeInt_TryAsS64)(DeeObject *__restrict self,
                                      int64_t *__restrict value) {
- int error = DeeInt_TryGet64(self,value);
- if (error == INT_UNSIGNED && *(uint64_t *)value > INT32_MAX)
+ int error = DeeInt_TryAs64(self,value);
+ if (error == INT_UNSIGNED && *(uint64_t *)value > INT64_MAX)
      return false;
  return (error != INT_POS_OVERFLOW &&
          error != INT_NEG_OVERFLOW);
 }
-PUBLIC bool (DCALL DeeInt_TryGetU32)(DeeObject *__restrict self,
+PUBLIC bool (DCALL DeeInt_TryAsS128)(DeeObject *__restrict self,
+                                      dint128_t *__restrict value) {
+ int error = DeeInt_TryAs128(self,value);
+ if (error == INT_UNSIGNED && DSINT128_ISNEG(*value))
+     return false;
+ return (error != INT_POS_OVERFLOW &&
+         error != INT_NEG_OVERFLOW);
+}
+PUBLIC bool (DCALL DeeInt_TryAsU32)(DeeObject *__restrict self,
                                      uint32_t *__restrict value) {
- int error = DeeInt_TryGet32(self,(int32_t *)value);
+ int error = DeeInt_TryAs32(self,(int32_t *)value);
  if (error == INT_SIGNED && *(int32_t *)value < 0)
      return false;
  return (error != INT_POS_OVERFLOW &&
          error != INT_NEG_OVERFLOW);
 }
-PUBLIC bool (DCALL DeeInt_TryGetU64)(DeeObject *__restrict self,
+PUBLIC bool (DCALL DeeInt_TryAsU64)(DeeObject *__restrict self,
                                      uint64_t *__restrict value) {
- int error = DeeInt_TryGet64(self,(int64_t *)value);
+ int error = DeeInt_TryAs64(self,(int64_t *)value);
  if (error == INT_SIGNED && *(int64_t *)value < 0)
+     return false;
+ return (error != INT_POS_OVERFLOW &&
+         error != INT_NEG_OVERFLOW);
+}
+PUBLIC bool (DCALL DeeInt_TryAsU128)(DeeObject *__restrict self,
+                                      duint128_t *__restrict value) {
+ int error = DeeInt_TryAs128(self,(dint128_t *)value);
+ if (error == INT_SIGNED && DSINT128_ISNEG(*value))
      return false;
  return (error != INT_POS_OVERFLOW &&
          error != INT_NEG_OVERFLOW);
 }
 
 
-PUBLIC int DCALL
-DeeInt_Get32(DeeObject *__restrict self, int32_t *__restrict value) {
- int result = DeeInt_TryGet32(self,value);
+PUBLIC int (DCALL DeeInt_As32)(DeeObject *__restrict self, int32_t *__restrict value) {
+ int result = DeeInt_TryAs32(self,value);
  if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW) {
   err_integer_overflow(self,32,result == INT_POS_OVERFLOW);
   return -1;
  }
  return result;
 }
-PUBLIC int DCALL
-DeeInt_Get64(DeeObject *__restrict self, int64_t *__restrict value) {
- int result = DeeInt_TryGet64(self,value);
+PUBLIC int (DCALL DeeInt_As64)(DeeObject *__restrict self, int64_t *__restrict value) {
+ int result = DeeInt_TryAs64(self,value);
  if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW) {
   err_integer_overflow(self,64,result == INT_POS_OVERFLOW);
   return -1;
  }
  return result;
 }
+PUBLIC int (DCALL DeeInt_As128)(DeeObject *__restrict self, dint128_t *__restrict value) {
+ int result = DeeInt_TryAs128(self,value);
+ if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW) {
+  err_integer_overflow(self,128,result == INT_POS_OVERFLOW);
+  return -1;
+ }
+ return result;
+}
 
-PUBLIC int (DCALL DeeInt_GetS32)(DeeObject *__restrict self, int32_t *__restrict value) {
- int error = DeeInt_Get32(self,value);
+PUBLIC int (DCALL DeeInt_AsS32)(DeeObject *__restrict self, int32_t *__restrict value) {
+ int error = DeeInt_As32(self,value);
  if (error == INT_UNSIGNED && *(uint32_t *)value > INT32_MAX) {
   err_integer_overflow(self,32,true);
   return -1;
  }
  return 0;
 }
-PUBLIC int (DCALL DeeInt_GetS64)(DeeObject *__restrict self, int64_t *__restrict value) {
- int error = DeeInt_Get64(self,value);
+PUBLIC int (DCALL DeeInt_AsS64)(DeeObject *__restrict self, int64_t *__restrict value) {
+ int error = DeeInt_As64(self,value);
  if (error == INT_UNSIGNED && *(uint64_t *)value > INT64_MAX) {
   err_integer_overflow(self,64,true);
   return -1;
  }
  return 0;
 }
-PUBLIC int (DCALL DeeInt_GetU32)(DeeObject *__restrict self, uint32_t *__restrict value) {
- int error = DeeInt_Get32(self,(int32_t *)value);
+PUBLIC int (DCALL DeeInt_AsS128)(DeeObject *__restrict self, dint128_t *__restrict value) {
+ int error = DeeInt_As128(self,value);
+ if (error == INT_UNSIGNED && DSINT128_ISNEG(*value)) {
+  err_integer_overflow(self,128,true);
+  return -1;
+ }
+ return 0;
+}
+PUBLIC int (DCALL DeeInt_AsU32)(DeeObject *__restrict self, uint32_t *__restrict value) {
+ int error = DeeInt_As32(self,(int32_t *)value);
  if (error == INT_SIGNED && *(int32_t *)value < 0) {
   err_integer_overflow(self,32,false);
   return -1;
  }
  return 0;
 }
-PUBLIC int (DCALL DeeInt_GetU64)(DeeObject *__restrict self, uint64_t *__restrict value) {
- int error = DeeInt_Get64(self,(int64_t *)value);
+PUBLIC int (DCALL DeeInt_AsU64)(DeeObject *__restrict self, uint64_t *__restrict value) {
+ int error = DeeInt_As64(self,(int64_t *)value);
  if (error == INT_SIGNED && *(int64_t *)value < 0) {
   err_integer_overflow(self,64,false);
+  return -1;
+ }
+ return 0;
+}
+PUBLIC int (DCALL DeeInt_AsU128)(DeeObject *__restrict self, duint128_t *__restrict value) {
+ int error = DeeInt_As128(self,(dint128_t *)value);
+ if (error == INT_SIGNED && DSINT128_ISNEG(*value)) {
+  err_integer_overflow(self,128,false);
   return -1;
  }
  return 0;
@@ -1165,8 +1248,8 @@ PRIVATE int DCALL int_bool(DeeObject *__restrict self) {
 
 
 PRIVATE struct type_math int_math = {
-    /* .tp_int32  = */&DeeInt_Get32,
-    /* .tp_int64  = */&DeeInt_Get64,
+    /* .tp_int32  = */&DeeInt_As32,
+    /* .tp_int64  = */&DeeInt_As64,
     /* .tp_double = */NULL,
     /* .tp_int    = */&DeeObject_NewRef,
     /* .tp_inv    = */(DeeObject *(DCALL *)(DeeObject *__restrict))&int_inv,

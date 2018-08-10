@@ -28,7 +28,7 @@
 #elif defined(CONFIG_HOST_WINDOWS)
 #include "windows.c.inl"
 #elif defined(CONFIG_HOST_UNIX)
-#include "unix.c.inl" /* TODO */
+#include "unix.c.inl"
 #elif 1
 /* -> The nothread variant uses atomics to try and implement thread support */
 #include "nothread.c.inl"

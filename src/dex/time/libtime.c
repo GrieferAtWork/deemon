@@ -1175,9 +1175,8 @@ PRIVATE int DCALL
 object_as_int128(DeeObject *__restrict self,
                  dint128_t *__restrict presult) {
  int64_t value;
- if (DeeInt_Check(self)) {
-  /* TODO: Special handling to translate an int-object to 128-bit c-int. */
- }
+ if (DeeInt_Check(self))
+     return DeeInt_AsS128(presult);
  if (DeeObject_AsInt64(self,&value))
      return -1;
  *presult = (dint128_t)value;

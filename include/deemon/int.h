@@ -296,50 +296,6 @@ DDATDEF DeeObject     DeeInt_MinusOne;
 #define DeeInt_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeInt_Type)
 
 
-#define INT_SIGNED         0  /* The returned integer value is signed. */
-#define INT_UNSIGNED       1  /* The returned integer value is unsigned. */
-#define INT_POS_OVERFLOW   2  /* ERROR: The returned integer value overflows into the positive. */
-#define INT_NEG_OVERFLOW (-2) /* ERROR: The returned integer value overflows into the negative. */
-/* Extract the 32 or 64-bit value of the given integer.
- * @return: One of `INT_*' (See above) */
-DFUNDEF int DCALL DeeInt_TryGet32(DeeObject *__restrict self, int32_t *__restrict value);
-DFUNDEF int DCALL DeeInt_TryGet64(DeeObject *__restrict self, int64_t *__restrict value);
-
-/* Similar to the functions above, but explicitly require signed/unsigned 32/64-bit values. */
-DFUNDEF bool DCALL DeeInt_TryGetS32(DeeObject *__restrict self, int32_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryGetS64(DeeObject *__restrict self, int64_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryGetU32(DeeObject *__restrict self, uint32_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryGetU64(DeeObject *__restrict self, uint64_t *__restrict value);
-
-#define DEE_PRIVATE_TRYGETSINT_4 DeeInt_TryGetS32
-#define DEE_PRIVATE_TRYGETSINT_8 DeeInt_TryGetS64
-#define DEE_PRIVATE_TRYGETUINT_4 DeeInt_TryGetU32
-#define DEE_PRIVATE_TRYGETUINT_8 DeeInt_TryGetU64
-#define DEE_PRIVATE_TRYGETSINT(size) DEE_PRIVATE_TRYGETSINT_##size
-#define DEE_PRIVATE_TRYGETUINT(size) DEE_PRIVATE_TRYGETUINT_##size
-#define DeeInt_TryGetS(size,self,val) DEE_PRIVATE_TRYGETSINT(size)(self,val)
-#define DeeInt_TryGetU(size,self,val) DEE_PRIVATE_TRYGETUINT(size)(self,val)
-
-#define DeeInt_TryGetSSize(self,val)    DeeInt_TryGetS(__SIZEOF_SIZE_T__,self,val)
-#define DeeInt_TryGetSize(self,val)     DeeInt_TryGetU(__SIZEOF_SIZE_T__,self,val)
-#define DeeInt_TryGetIntptr(self,val)   DeeInt_TryGetS(__SIZEOF_POINTER__,self,val)
-#define DeeInt_TryGetUIntptr(self,val)  DeeInt_TryGetU(__SIZEOF_POINTER__,self,val)
-
-
-/* Same as the functions above, but raise an `Error.ValueError.Arithmetic.IntegerOverflow'
- * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and returns -1. */
-DFUNDEF int DCALL DeeInt_Get32(DeeObject *__restrict self, int32_t *__restrict value);
-DFUNDEF int DCALL DeeInt_Get64(DeeObject *__restrict self, int64_t *__restrict value);
-
-/* Read the signed/unsigned values from the given integer.
- * @return: 0:  Successfully read the value.
- * @return: -1: An error occurred (Integer overflow). */
-DFUNDEF int DCALL DeeInt_GetS32(DeeObject *__restrict self, int32_t *__restrict value);
-DFUNDEF int DCALL DeeInt_GetS64(DeeObject *__restrict self, int64_t *__restrict value);
-DFUNDEF int DCALL DeeInt_GetU32(DeeObject *__restrict self, uint32_t *__restrict value);
-DFUNDEF int DCALL DeeInt_GetU64(DeeObject *__restrict self, uint64_t *__restrict value);
-
-
 #if defined(__UINT128_TYPE__) || \
     defined(__SIZEOF_INT128__)
 #define CONFIG_NATIVE_INT128 1
@@ -388,15 +344,15 @@ typedef duint128_t dint128_t;
 #endif
 
 #ifdef CONFIG_LITTLE_ENDIAN
-#define DEE_INT128_MS8   15
-#define DEE_INT128_MS16  7
-#define DEE_INT128_MS32  3
-#define DEE_INT128_MS64  1
+#define DEE_INT128_MS8       15
+#define DEE_INT128_MS16      7
+#define DEE_INT128_MS32      3
+#define DEE_INT128_MS64      1
 #else
-#define DEE_INT128_MS8   0
-#define DEE_INT128_MS16  0
-#define DEE_INT128_MS32  0
-#define DEE_INT128_MS64  0
+#define DEE_INT128_MS8       0
+#define DEE_INT128_MS16      0
+#define DEE_INT128_MS32      0
+#define DEE_INT128_MS64      0
 #endif
 #define DEE_INT128_LS8  (15-DEE_INT128_MS8)
 #define DEE_INT128_LS16 (7-DEE_INT128_MS16)
@@ -412,7 +368,15 @@ typedef duint128_t dint128_t;
 #define DSINT128_ISNUL(x) ((x) == 0)
 #define DSINT128_IS64(x)  ((x) >= INT64_MIN && (x) <= INT64_MAX)
 #define DUINT128_IS64(x)  ((x) <= UINT64_MAX)
+#define DUINT128_OR(x,v)  (void)((x) |= (v))
+#define DUINT128_AND(x,v) (void)((x) &= (v))
+#define DUINT128_XOR(x,v) (void)((x) ^= (v))
 #define DUINT128_SHR(x,n) (*(duint128_t *)&(x) >>= (n))
+#define DUINT128_SHL(x,n) (*(duint128_t *)&(x) <<= (n))
+#define DUINT128_SET(x,v) (*(duint128_t *)&(x) = (v))
+#define DSINT128_SET(x,v) (*(dint128_t *)&(x) = (v))
+#define DUINT128_SHL_WILL_OVERFLOW(x,n) \
+      (((duint128_t)((duint128_t)(x) << (n)) >> (n)) != (duint128_t)(x))
 #else
 #define DSINT128_DEC(x)   ((DUINT128_GET64(x)[DEE_INT128_LS64]--) || \
                            (--DUINT128_GET64(x)[DEE_INT128_MS64]))
@@ -420,20 +384,57 @@ typedef duint128_t dint128_t;
                            (++DUINT128_GET64(x)[DEE_INT128_MS64]))
 #define DSINT128_INV(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] ^= -1, \
                            DUINT128_GET64(x)[DEE_INT128_MS64] ^= -1)
-#define DSINT128_TONEG(x) (DSINT128_DEC(x),DSINT128_INV(x)) /* x = ~(x-1); */
+#define DSINT128_TONEG(x) (DSINT128_DEC(x),DSINT128_INV(x)) /* x = -x  <===>  x = ~(x-1); */
 #define DSINT128_ISNEG(x) (DUINT128_GETS8(x)[DEE_INT128_MS8] < 0)
 #define DSINT128_ISNUL(x) (!DUINT128_GET64(x)[DEE_INT128_LS64] && \
                            !DUINT128_GET64(x)[DEE_INT128_MS64])
 #define DSINT128_IS64(x)  (DUINT128_GET64(x)[DEE_INT128_MS64] == 0 || \
                            DUINT128_GETS64(x)[DEE_INT128_MS64] == -1)
 #define DUINT128_IS64(x)  (DUINT128_GET64(x)[DEE_INT128_MS64] == 0)
+#define DUINT128_SET(x,v) \
+       (DUINT128_GET64(x)[DEE_INT128_MS64] = 0, \
+        DUINT128_GET64(x)[DEE_INT128_LS64] = (uint64_t)(v))
+#define DSINT128_SET(x,v) \
+       (DUINT128_GETS64(x)[DEE_INT128_MS64] = (v) < 0 ? (int64_t)-1 : 0, \
+        DUINT128_GETS64(x)[DEE_INT128_LS64] = (int64_t)(v))
+#define DUINT128_OR(x,v) \
+       (sizeof(v) == 1 ? (void)(DUINT128_GET8(x)[DEE_INT128_LS8] |= (uint8_t)(v)) : \
+        sizeof(v) == 2 ? (void)(DUINT128_GET16(x)[DEE_INT128_LS16] |= (uint16_t)(v)) : \
+        sizeof(v) == 4 ? (void)(DUINT128_GET32(x)[DEE_INT128_LS32] |= (uint32_t)(v)) : \
+                         (void)(DUINT128_GET64(x)[DEE_INT128_LS64] |= (uint64_t)(v)))
+#define DUINT128_AND(x,v) \
+       (sizeof(v) == 1 ? (void)(DUINT128_GET8(x)[DEE_INT128_LS8] &= (uint8_t)(v)) : \
+        sizeof(v) == 2 ? (void)(DUINT128_GET16(x)[DEE_INT128_LS16] &= (uint16_t)(v)) : \
+        sizeof(v) == 4 ? (void)(DUINT128_GET32(x)[DEE_INT128_LS32] &= (uint32_t)(v)) : \
+                         (void)(DUINT128_GET64(x)[DEE_INT128_LS64] &= (uint64_t)(v)))
+#define DUINT128_XOR(x,v) \
+       (sizeof(v) == 1 ? (void)(DUINT128_GET8(x)[DEE_INT128_LS8] ^= (uint8_t)(v)) : \
+        sizeof(v) == 2 ? (void)(DUINT128_GET16(x)[DEE_INT128_LS16] ^= (uint16_t)(v)) : \
+        sizeof(v) == 4 ? (void)(DUINT128_GET32(x)[DEE_INT128_LS32] ^= (uint32_t)(v)) : \
+                         (void)(DUINT128_GET64(x)[DEE_INT128_LS64] ^= (uint64_t)(v)))
+
+
 /* Unsigned shift-right for n <= 64 */
 #define DUINT128_SHR(x,n) \
  (DUINT128_GET64(x)[DEE_INT128_LS64] >>= (n), \
   DUINT128_GET64(x)[DEE_INT128_LS64]  |= \
       (DUINT128_GET64(x)[DEE_INT128_MS64] & ((UINT64_C(1) << (n))-1)) << (64-(n)), \
   DUINT128_GET64(x)[DEE_INT128_MS64] >>= (n))
+/* Unsigned shift-left for n <= 64 */
+#define DUINT128_SHL(x,n) \
+ (DUINT128_GET64(x)[DEE_INT128_MS64] <<= (n), \
+  DUINT128_GET64(x)[DEE_INT128_MS64] |= \
+      (DUINT128_GET64(x)[DEE_INT128_LS64] & ((UINT64_C(1) << (64-(n)))-1)) >> (64-(n)), \
+  DUINT128_GET64(x)[DEE_INT128_LS64] <<= (n))
+#define DUINT128_SHL_WILL_OVERFLOW(x,n) \
+ ((DUINT128_GET64(x)[DEE_INT128_MS64] & (((UINT64_C(1) << (n))-1) << (64-(n)))) != 0)
 #endif
+
+#define DINT128_SETMIN(x)  (DUINT128_GET64(x)[DEE_INT128_LS64] = ~(uint64_t)0,DUINT128_GET64(x)[DEE_INT128_MS64] = ~(UINT64_C(1) << 63))
+#define DINT128_SETMAX(x)  (DUINT128_GET64(x)[DEE_INT128_LS64] = 0,DUINT128_GET64(x)[DEE_INT128_MS64] = (UINT64_C(1) << 63))
+#define DINT128_ISMIN(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] == ~(uint64_t)0 && DUINT128_GET64(x)[DEE_INT128_MS64] == ~(UINT64_C(1) << 63))
+#define DINT128_ISMAX(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] == 0 && DUINT128_GET64(x)[DEE_INT128_MS64] == (UINT64_C(1) << 63))
+#define DINT128_IS0MMIN(x) (DUINT128_GET64(x)[DEE_INT128_LS64] == 1 && DUINT128_GET64(x)[DEE_INT128_MS64] == (UINT64_C(1) << 63)) /* x == (0 - MIN) */
 
 
 
@@ -471,6 +472,61 @@ DFUNDEF uint8_t *DCALL DeeInt_GetUleb(DeeObject *__restrict self, uint8_t *__res
 #define DEEINT_ULEB_MAXSIZE(self) ((((size_t)((DeeIntObject *)REQUIRES_OBJECT(self))->ob_size + 1)*DIGIT_BITS)/7)
 
 #define DeeInt_IsNeg(self) (((DeeIntObject *)REQUIRES_OBJECT(self))->ob_size < 0)
+
+
+#define INT_SIGNED         0  /* The returned integer value is signed. */
+#define INT_UNSIGNED       1  /* The returned integer value is unsigned. */
+#define INT_POS_OVERFLOW   2  /* ERROR: The returned integer value overflows into the positive. */
+#define INT_NEG_OVERFLOW (-2) /* ERROR: The returned integer value overflows into the negative. */
+
+/* Extract the 32-, 64- or 128-bit value of the given integer.
+ * NOTE: In theory, deemon integers can have arbitrarily large
+ *       values, however in deemon's C api, we must limit ourself
+ *       to only a set number of bits.
+ * @return: One of `INT_*' (See above) */
+DFUNDEF int DCALL DeeInt_TryAs32(DeeObject *__restrict self, int32_t *__restrict value);
+DFUNDEF int DCALL DeeInt_TryAs64(DeeObject *__restrict self, int64_t *__restrict value);
+DFUNDEF int DCALL DeeInt_TryAs128(DeeObject *__restrict self, dint128_t *__restrict value);
+
+/* Similar to the functions above, but explicitly require signed/unsigned 32/64-bit values. */
+DFUNDEF bool DCALL DeeInt_TryAsS32(DeeObject *__restrict self, int32_t *__restrict value);
+DFUNDEF bool DCALL DeeInt_TryAsS64(DeeObject *__restrict self, int64_t *__restrict value);
+DFUNDEF bool DCALL DeeInt_TryAsS128(DeeObject *__restrict self, dint128_t *__restrict value);
+DFUNDEF bool DCALL DeeInt_TryAsU32(DeeObject *__restrict self, uint32_t *__restrict value);
+DFUNDEF bool DCALL DeeInt_TryAsU64(DeeObject *__restrict self, uint64_t *__restrict value);
+DFUNDEF bool DCALL DeeInt_TryAsU128(DeeObject *__restrict self, duint128_t *__restrict value);
+
+/* Same as the functions above, but raise an `Error.ValueError.Arithmetic.IntegerOverflow'
+ * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and returns -1. */
+DFUNDEF int DCALL DeeInt_As32(DeeObject *__restrict self, int32_t *__restrict value);
+DFUNDEF int DCALL DeeInt_As64(DeeObject *__restrict self, int64_t *__restrict value);
+DFUNDEF int DCALL DeeInt_As128(DeeObject *__restrict self, dint128_t *__restrict value);
+
+/* Read the signed/unsigned values from the given integer.
+ * @return: 0:  Successfully read the value.
+ * @return: -1: An error occurred (Integer overflow). */
+DFUNDEF int DCALL DeeInt_AsS32(DeeObject *__restrict self, int32_t *__restrict value);
+DFUNDEF int DCALL DeeInt_AsS64(DeeObject *__restrict self, int64_t *__restrict value);
+DFUNDEF int DCALL DeeInt_AsS128(DeeObject *__restrict self, dint128_t *__restrict value);
+DFUNDEF int DCALL DeeInt_AsU32(DeeObject *__restrict self, uint32_t *__restrict value);
+DFUNDEF int DCALL DeeInt_AsU64(DeeObject *__restrict self, uint64_t *__restrict value);
+DFUNDEF int DCALL DeeInt_AsU128(DeeObject *__restrict self, duint128_t *__restrict value);
+
+
+#define DEE_PRIVATE_TRYGETSINT_4 DeeInt_TryAsS32
+#define DEE_PRIVATE_TRYGETSINT_8 DeeInt_TryAsS64
+#define DEE_PRIVATE_TRYGETUINT_4 DeeInt_TryAsU32
+#define DEE_PRIVATE_TRYGETUINT_8 DeeInt_TryAsU64
+#define DEE_PRIVATE_TRYGETSINT(size) DEE_PRIVATE_TRYGETSINT_##size
+#define DEE_PRIVATE_TRYGETUINT(size) DEE_PRIVATE_TRYGETUINT_##size
+#define DeeInt_TryAsS(size,self,val) DEE_PRIVATE_TRYGETSINT(size)(self,val)
+#define DeeInt_TryAsU(size,self,val) DEE_PRIVATE_TRYGETUINT(size)(self,val)
+
+#define DeeInt_TryAsSSize(self,val)    DeeInt_TryAsS(__SIZEOF_SIZE_T__,self,val)
+#define DeeInt_TryAsSize(self,val)     DeeInt_TryAsU(__SIZEOF_SIZE_T__,self,val)
+#define DeeInt_TryAsIntptr(self,val)   DeeInt_TryAsS(__SIZEOF_POINTER__,self,val)
+#define DeeInt_TryAsUIntptr(self,val)  DeeInt_TryAsU(__SIZEOF_POINTER__,self,val)
+
 
 
 /* Convert an integer to/from a string.
@@ -554,14 +610,14 @@ DeeInt_Print(DREF DeeObject *self, uint32_t radix_and_flags,
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeInt_GetS32(self,value)    __builtin_expect(DeeInt_GetS32(self,value),0)
-#define DeeInt_GetS64(self,value)    __builtin_expect(DeeInt_GetS64(self,value),0)
-#define DeeInt_GetU32(self,value)    __builtin_expect(DeeInt_GetU32(self,value),0)
-#define DeeInt_GetU64(self,value)    __builtin_expect(DeeInt_GetU64(self,value),0)
-#define DeeInt_TryGetS32(self,value) __builtin_expect(DeeInt_TryGetS32(self,value),true)
-#define DeeInt_TryGetS64(self,value) __builtin_expect(DeeInt_TryGetS64(self,value),true)
-#define DeeInt_TryGetU32(self,value) __builtin_expect(DeeInt_TryGetU32(self,value),true)
-#define DeeInt_TryGetU64(self,value) __builtin_expect(DeeInt_TryGetU64(self,value),true)
+#define DeeInt_AsS32(self,value)    __builtin_expect(DeeInt_AsS32(self,value),0)
+#define DeeInt_AsS64(self,value)    __builtin_expect(DeeInt_AsS64(self,value),0)
+#define DeeInt_AsU32(self,value)    __builtin_expect(DeeInt_AsU32(self,value),0)
+#define DeeInt_AsU64(self,value)    __builtin_expect(DeeInt_AsU64(self,value),0)
+#define DeeInt_TryAsS32(self,value) __builtin_expect(DeeInt_TryAsS32(self,value),true)
+#define DeeInt_TryAsS64(self,value) __builtin_expect(DeeInt_TryAsS64(self,value),true)
+#define DeeInt_TryAsU32(self,value) __builtin_expect(DeeInt_TryAsU32(self,value),true)
+#define DeeInt_TryAsU64(self,value) __builtin_expect(DeeInt_TryAsU64(self,value),true)
 #endif /* !__NO_builtin_expect */
 #endif
 

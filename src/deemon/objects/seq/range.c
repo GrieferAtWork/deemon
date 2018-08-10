@@ -857,12 +857,12 @@ DeeRange_New(DeeObject *__restrict begin,
  /* Check for special optimizations for the likely case of int-only arguments. */
  {
   dssize_t i_begin,i_end,i_step;
-  if ((DeeInt_Check(begin) && DeeInt_TryGetSSize(begin,&i_begin)) &&
-      (DeeInt_Check(end) && DeeInt_TryGetSSize(end,&i_end)) &&
+  if ((DeeInt_Check(begin) && DeeInt_TryAsSSize(begin,&i_begin)) &&
+      (DeeInt_Check(end) && DeeInt_TryAsSSize(end,&i_end)) &&
        i_begin <= i_end) {
    i_step = 1;
    if (step && (!DeeInt_Check(step) ||
-                !DeeInt_TryGetSSize(step,&i_step) ||
+                !DeeInt_TryAsSSize(step,&i_step) ||
                  i_step == 0))
        goto do_object_range;
    /* Create an integer-based range. */

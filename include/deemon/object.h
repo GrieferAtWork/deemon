@@ -1868,6 +1868,7 @@ DFUNDEF DREF DeeObject *DCALL DeeObject_VCallf(DeeObject *__restrict self, char 
 DFUNDEF DREF DeeObject *DCALL DeeObject_VThisCallf(DeeObject *__restrict self, DeeObject *__restrict this_arg, char const *__restrict format, va_list args);
 
 /* Generate and return the hash of a given object. */
+/* TODO: Go through all uses and check that none are done with held rw-locks */
 DFUNDEF dhash_t DCALL DeeObject_Hash(DeeObject *__restrict self);
 
 /* GC operator invocation.
