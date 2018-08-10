@@ -124,6 +124,7 @@
     <ClCompile Include="..\src\deemon\compiler\lexer\del.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\expression.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\function.c" />
+    <ClCompile Include="..\src\deemon\compiler\lexer\hybrid.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\import.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\kwlabel.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\loopexpr.c" />

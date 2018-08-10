@@ -650,6 +650,9 @@
     <ClCompile Include="..\src\deemon\compiler\lexer\kwlabel.c">
       <Filter>src\deemon\compiler\lexer</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\hybrid.c">
+      <Filter>src\deemon\compiler\lexer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">

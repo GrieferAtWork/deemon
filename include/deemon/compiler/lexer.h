@@ -107,6 +107,37 @@ INTDEF DREF DeeAstObject *FCALL ast_parse_assign_operand(/*inherit(always)*/DREF
 /* Parse a top-level expression. */
 #define ast_parse_expression(lookup_mode) ast_parse_assign(lookup_mode)
 
+
+#define AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
+#define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
+#define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
+
+/* @param: mode:            Set of `AST_COMMA_*' - What is allowed and when should we pack values.
+ * @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
+INTERN DREF DeeAstObject *FCALL
+ast_parse_statement_or_expression(uint16_t mode,
+                                  unsigned int *pwas_expression);
+
+/* Given a unary expression `ast', parse anything that may
+ * follow it before it could be considered a full expression. */
+INTDEF DREF DeeAstObject *FCALL
+ast_parse_unary_postexpr(/*inherit(always)*/DREF DeeAstObject *__restrict ast);
+
+/* Parse a statement or a brace-expression, with the current token being a `{' */
+INTDEF DREF DeeAstObject *FCALL
+ast_parse_statement_or_braces(unsigned int *pwas_expression);
+
+
+/* Given an `key'-expression in `{ key : foo }', parse the remainder
+ * of a brace expression with the current token being a `:' */
+INTDEF DREF DeeAstObject *FCALL ast_parse_mapping(DeeAstObject *__restrict initial_key);
+
+/* Given an `item'-expression in `{ item, foo }', parse the remainder
+ * of a brace expression with the current token being a `,' */
+INTDEF DREF DeeAstObject *FCALL ast_parse_brace_list(DeeAstObject *__restrict initial_item);
+
+
+
 /* Parse an import statement/expression.
  * @param: allow_symbol_define: When true, allow the `import foo = x from y;' syntax,
  *                              as well as define local symbols `x,y' for `import x,y from z'
