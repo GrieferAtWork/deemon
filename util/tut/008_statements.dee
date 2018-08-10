@@ -139,7 +139,12 @@ for (local x,y: item_pairs) {
  * condition-expression, and `break' jumping just after the loop. */
 
 
+/* TODO: with */
+/* TODO: foreach */
+
+
+
 /* Some more statements exist, such a `return' and `yield' statment,
  * as well as `function' and `class' however those are handled in
- * the tutorial on functions and classes. */
+ * the tutorials on functions and classes. */
 
