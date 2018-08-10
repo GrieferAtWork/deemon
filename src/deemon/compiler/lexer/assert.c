@@ -46,8 +46,12 @@ ast_parse_assert(bool needs_parenthesis) {
    * >> assert (foo == bar), "Error";
    * >> ASSERT(foo == bar, "Error");
    */
-  result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  result = ast_parse_unary(LOOKUP_SYM_NORMAL);
   if unlikely(!result) goto err;
+  if (!needs_parenthesis) {
+   result = ast_parse_unary_postexpr(result);
+   if unlikely(!result) goto err;
+  }
   if (!needs_parenthesis && tok == ',') {
    /* The message was passed individually. */
    if unlikely(yield() < 0) goto err_r;
