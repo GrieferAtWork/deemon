@@ -68,7 +68,8 @@ ast_parse_for_head(DREF DeeAstObject **__restrict pinit,
  DREF DeeAstObject *iter_or_next = NULL;
  if (tok != ';') {
   init = ast_parse_comma(AST_COMMA_ALLOWVARDECLS,
-                         AST_FMULTIPLE_TUPLE);
+                         AST_FMULTIPLE_TUPLE,
+                         NULL);
   if unlikely(!init) goto err;
   if (tok == ':') {
    if unlikely(yield() < 0) goto err;
@@ -76,7 +77,7 @@ ast_parse_for_head(DREF DeeAstObject **__restrict pinit,
    elem_or_cond = init;
    init         = NULL;
    result      |= AST_FLOOP_FOREACH;
-   iter_or_next = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+   iter_or_next = ast_parse_expression(LOOKUP_SYM_NORMAL);
    if unlikely(!iter_or_next) goto err;
    goto done;
   }
@@ -85,7 +86,7 @@ ast_parse_for_head(DREF DeeAstObject **__restrict pinit,
              WARN(W_EXPECTED_SEMICOLLON1_AFTER_FOR))
     goto err;
  if (tok != ';') {
-  elem_or_cond = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  elem_or_cond = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!elem_or_cond) goto err;
  }
  if unlikely(likely(tok == ';') ? (yield() < 0) :
@@ -94,7 +95,7 @@ ast_parse_for_head(DREF DeeAstObject **__restrict pinit,
  if (tok == ')') {
   iter_or_next = NULL;
  } else {
-  iter_or_next = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  iter_or_next = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!iter_or_next) goto err;
  }
 done:
@@ -224,7 +225,8 @@ again:
      goto err_flags;
   result = ast_parse_comma(AST_COMMA_NORMAL|
                            AST_COMMA_ALLOWVARDECLS,
-                           AST_FMULTIPLE_KEEPLAST);
+                           AST_FMULTIPLE_KEEPLAST,
+                           NULL);
   if unlikely(!result)
      goto err_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -279,7 +281,8 @@ do_else_branch:
         WARN(W_RETURN_IN_YIELD_FUNCTION)) goto err;
    current_basescope->bs_cflags |= BASESCOPE_FRETURN;
    result = ast_parse_comma(AST_COMMA_NORMAL,
-                            AST_FMULTIPLE_TUPLE);
+                            AST_FMULTIPLE_TUPLE,
+                            NULL);
    if unlikely(!result) goto err;
    merge = ast_return(result);
    Dee_Decref(result);
@@ -298,7 +301,8 @@ do_else_branch:
   if unlikely(yield() < 0) goto err;
   result = ast_parse_comma(AST_COMMA_NORMAL|
                            AST_COMMA_FORCEMULTIPLE,
-                           AST_FMULTIPLE_TUPLE);
+                           AST_FMULTIPLE_TUPLE,
+                           NULL);
   if unlikely(!result) goto err;
   merge = ast_setddi(ast_expand(result),&loc);
   Dee_Decref(result);
@@ -330,7 +334,8 @@ do_else_branch:
    result = ast_throw(NULL);
   } else {
    result = ast_parse_comma(AST_COMMA_NORMAL,
-                            AST_FMULTIPLE_TUPLE);
+                            AST_FMULTIPLE_TUPLE,
+                            NULL);
    if unlikely(!result) goto err;
    merge = ast_throw(result);
    Dee_Decref(result);
@@ -364,7 +369,8 @@ do_else_branch:
     *       causes the generated assembly to omit a terminating linefeed. */
    result = ast_parse_comma(AST_COMMA_FORCEMULTIPLE|
                             AST_COMMA_STRICTCOMMA,
-                            AST_FMULTIPLE_TUPLE);
+                            AST_FMULTIPLE_TUPLE,
+                            NULL);
    if unlikely(!result) goto err;
    if (tok == ':') {
     DREF DeeAstObject *text;
@@ -383,7 +389,8 @@ do_else_branch:
     } else {
      text = ast_parse_comma(AST_COMMA_FORCEMULTIPLE|
                             AST_COMMA_STRICTCOMMA,
-                            AST_FMULTIPLE_TUPLE);
+                            AST_FMULTIPLE_TUPLE,
+                            NULL);
     }
     if unlikely(!text) goto err_r;
     merge = ast_action2(tok == ','
@@ -498,12 +505,13 @@ err_loop:
      goto err_flags;
   if unlikely(scope_push()) goto err_flags;
   foreach_elem = ast_parse_comma(AST_COMMA_ALLOWVARDECLS,
-                                 AST_FMULTIPLE_TUPLE);
+                                 AST_FMULTIPLE_TUPLE,
+                                 NULL);
   if unlikely(!foreach_elem) goto err_flags;
   if unlikely(likely(tok == ':') ? (yield() < 0) :
               WARN(W_EXPECTED_COLLON_AFTER_FOREACH))
      goto err_foreach_elem;
-  foreach_iter = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  foreach_iter = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!foreach_iter)
      goto err_foreach_elem;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -557,7 +565,7 @@ err_foreach_elem:
   if unlikely(likely(tok == '(') ? (yield() < 0) :
               WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
      goto err_r_flags;
-  cond = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  cond = ast_parse_expression(LOOKUP_SYM_NORMAL);
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
               WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
@@ -585,7 +593,8 @@ err_foreach_elem:
      goto err_flags;
   result = ast_parse_comma(AST_COMMA_NORMAL|
                            AST_COMMA_ALLOWVARDECLS,
-                           AST_FMULTIPLE_KEEPLAST);
+                           AST_FMULTIPLE_KEEPLAST,
+                           NULL);
   if unlikely(!result) goto err_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -717,7 +726,8 @@ err_foreach_elem:
   /* Parse the switch-expression (NOTE: Allow variable declarations). */
   result = ast_parse_comma(AST_COMMA_NORMAL|
                            AST_COMMA_ALLOWVARDECLS,
-                           AST_FMULTIPLE_KEEPLAST);
+                           AST_FMULTIPLE_KEEPLAST,
+                           NULL);
   if unlikely(!result) goto err_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -782,11 +792,11 @@ err_r_switch:
 
  default:
   if (TPP_ISKEYWORD(tok)) {
-   struct TPPFile *token_file; char *next_token;
-   next_token = peek_next_token(&token_file);
+   char *next_token;
+   next_token = peek_next_token(NULL);
    if unlikely(!next_token) goto err;
    if (*next_token == ':' &&
-      (next_token = advance_wraplf(next_token),
+       (next_token = advance_wraplf(next_token),
        *next_token != ':' && *next_token != '=')) {
     /* Define a label. */
     struct text_label *def_label;
@@ -845,7 +855,7 @@ handle_post_label:
     loc_here(&loc);
     if unlikely(yield() < 0) goto err;
     /* Parse the case expression. */
-    result = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+    result = ast_parse_expression(LOOKUP_SYM_NORMAL);
     if unlikely(!result) goto err;
     if unlikely(likely(tok == ':') ? (yield() < 0) :
                 WARN(W_EXPECTED_COLLON_AFTER_CASE))
@@ -888,7 +898,8 @@ handle_post_label:
   result = ast_parse_comma(allow_nonblock
                         ? (AST_COMMA_NORMAL|AST_COMMA_ALLOWVARDECLS|AST_COMMA_PARSESEMI|AST_COMMA_ALLOWNONBLOCK)
                         : (AST_COMMA_NORMAL|AST_COMMA_ALLOWVARDECLS|AST_COMMA_PARSESEMI),
-                           AST_FMULTIPLE_KEEPLAST);
+                           AST_FMULTIPLE_KEEPLAST,
+                           NULL);
   /*if unlikely(!result) goto err;*/
   break;
  }

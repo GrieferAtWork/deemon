@@ -46,12 +46,12 @@ ast_parse_assert(bool needs_parenthesis) {
    * >> assert (foo == bar), "Error";
    * >> ASSERT(foo == bar, "Error");
    */
-  result = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  result = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!result) goto err;
   if (!needs_parenthesis && tok == ',') {
    /* The message was passed individually. */
    if unlikely(yield() < 0) goto err_r;
-   message = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+   message = ast_parse_expression(LOOKUP_SYM_NORMAL);
    if unlikely(!message) goto err_r;
   } else if (result->ast_type == AST_MULTIPLE &&
              result->ast_flag == AST_FMULTIPLE_TUPLE &&
@@ -69,11 +69,11 @@ ast_parse_assert(bool needs_parenthesis) {
   if (needs_parenthesis &&
       WARN(W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
       goto err;
-  result = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  result = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!result) goto err;
   if (tok == ',') {
    if unlikely(yield() < 0) goto err_r;
-   message = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+   message = ast_parse_expression(LOOKUP_SYM_NORMAL);
    if unlikely(!message) goto err_r;
   }
  }

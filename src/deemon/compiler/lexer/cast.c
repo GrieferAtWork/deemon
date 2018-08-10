@@ -102,7 +102,8 @@ not_a_cast:
   second_paren = tok == '(';
   /* Parse the cast-expression / argument list. */
   merge = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
-                          AST_FMULTIPLE_TUPLE);
+                          AST_FMULTIPLE_TUPLE,
+                          NULL);
   if unlikely(!merge) goto err_flags;
   ASSERT(merge->ast_type == AST_MULTIPLE);
   ASSERT(merge->ast_flag == AST_FMULTIPLE_TUPLE);

@@ -29,8 +29,8 @@
 DECL_BEGIN
 
 
-INTDEF DREF DeeAstObject *DCALL
-ast_parse_argument_list(unsigned int mode,
+INTERN DREF DeeAstObject *DCALL
+ast_parse_argument_list(uint16_t mode,
                         DREF DeeAstObject **__restrict pkeyword_labels) {
  DREF DeeAstObject *result;
  DREF DeeAstObject *kwdlist_ast;
@@ -38,7 +38,8 @@ ast_parse_argument_list(unsigned int mode,
  *pkeyword_labels = NULL;
  ASSERT(mode & AST_COMMA_FORCEMULTIPLE);
  result = ast_parse_comma(mode|AST_COMMA_ALLOWKWDLIST,
-                          AST_FMULTIPLE_TUPLE);
+                          AST_FMULTIPLE_TUPLE,
+                          NULL);
  if unlikely(!result) goto err;
  if (tok == TOK_POW) {
   /* XXX: I really don't like using `**' for this.
@@ -48,7 +49,7 @@ ast_parse_argument_list(unsigned int mode,
    */
   if unlikely(yield() < 0) goto err_r;
   /* Parse the keyword invocation AST. */
-  *pkeyword_labels = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  *pkeyword_labels = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!*pkeyword_labels) goto err_r;
  } else if (TPP_ISKEYWORD(tok)) {
   char *next = peek_next_token(NULL);
@@ -101,7 +102,7 @@ ast_parse_argument_list(unsigned int mode,
      multiple_a = new_alloc;
     }
     /* Parse the expression that is bound to the keyword. */
-    argument_value = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+    argument_value = ast_parse_expression(LOOKUP_SYM_NORMAL);
     if unlikely(!argument_value) goto err_r_kwdlist;
     result->ast_multiple.ast_exprv[result->ast_multiple.ast_exprc++] = argument_value; /* Inherit reference. */
     if (tok != ',') break;

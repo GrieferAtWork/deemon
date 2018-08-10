@@ -57,12 +57,55 @@ INTDEF DREF DeeAstObject *FCALL ast_parse_lor(unsigned int lookup_mode);
 INTDEF DREF DeeAstObject *FCALL ast_parse_cond(unsigned int lookup_mode);
 INTDEF DREF DeeAstObject *FCALL ast_parse_assign(unsigned int lookup_mode); /* NOTE: Also handled inplace operators. */
 
-/* Parse a brace initializer expression.
- * When `preferred_type' is non-NULL, it describes the preferred
- * initialization type, and when not possible to be met, a warning is emit.
- * `NULL' can however be passed as well, in which case no such warning is
- * emit, while any kind of generic list-style sequence is generated as a `list'. */
-INTDEF DREF DeeAstObject *FCALL ast_parse_brace(unsigned int lookup_mode, DeeTypeObject *preferred_type);
+/* With the current token one of the unary operator symbols, consume
+ * it and parse the second operand before returning the combination */
+INTDEF DREF DeeAstObject *FCALL ast_parse_prod_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_sum_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_shift_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_cmp_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_cmpeq_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_and_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_xor_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_or_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_as_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_land_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_lor_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_cond_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+INTDEF DREF DeeAstObject *FCALL ast_parse_assign_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs);
+
+/* Check if the given token qualifies for the associated operation parser function. */
+#define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TOK_POW)
+#define TOKEN_IS_SUM(tok)    ((tok) == '+' || (tok) == '-')
+#define TOKEN_IS_SHIFT(tok)  ((tok) == TOK_SHL || (tok) == TOK_SHR)
+#define TOKEN_IS_CMP(tok)    ((tok) == TOK_LOWER || (tok) == TOK_LOWER_EQUAL || (tok) == TOK_GREATER || (tok) == TOK_GREATER_EQUAL)
+#define TOKEN_IS_CMPEQ(tok)  ((tok) == TOK_EQUAL || (tok) == TOK_NOT_EQUAL || (tok) == TOK_EQUAL3 || (tok) == TOK_NOT_EQUAL3 || (tok) == KWD_is || (tok) == KWD_in || (tok) == '!')
+#define TOKEN_IS_AND(tok)    ((tok) == '&')
+#define TOKEN_IS_XOR(tok)    ((tok) == '^')
+#define TOKEN_IS_OR(tok)     ((tok) == '|')
+#define TOKEN_IS_AS(tok)     ((tok) == KWD_as)
+#define TOKEN_IS_LAND(tok)   ((tok) == TOK_LAND)
+#define TOKEN_IS_LOR(tok)    ((tok) == TOK_LOR)
+#define TOKEN_IS_COND(tok)   ((tok) == '?')
+#define TOKEN_IS_ASSIGN(tok) ((tok) == TOK_COLLON_EQUAL || ((tok) >= TOK_ADD_EQUAL && (tok) <= TOK_POW_EQUAL))
+
+#define CASE_TOKEN_IS_PROD   case '*': case '/': case '%': case TOK_POW
+#define CASE_TOKEN_IS_SUM    case '+': case '-'
+#define CASE_TOKEN_IS_SHIFT  case TOK_SHL: case TOK_SHR
+#define CASE_TOKEN_IS_CMP    case TOK_LOWER: case TOK_LOWER_EQUAL: case TOK_GREATER: case TOK_GREATER_EQUAL
+#define CASE_TOKEN_IS_CMPEQ  case TOK_EQUAL: case TOK_NOT_EQUAL: case TOK_EQUAL3: case TOK_NOT_EQUAL3: case KWD_is: case KWD_in: case '!'
+#define CASE_TOKEN_IS_AND    case '&'
+#define CASE_TOKEN_IS_XOR    case '^'
+#define CASE_TOKEN_IS_OR     case '|'
+#define CASE_TOKEN_IS_AS     case KWD_as
+#define CASE_TOKEN_IS_LAND   case TOK_LAND
+#define CASE_TOKEN_IS_LOR    case TOK_LOR
+#define CASE_TOKEN_IS_COND   case '?'
+#define CASE_TOKEN_IS_ASSIGN case TOK_COLLON_EQUAL: case TOK_ADD_EQUAL: case TOK_SUB_EQUAL: case TOK_MUL_EQUAL: case TOK_DIV_EQUAL: case TOK_MOD_EQUAL: \
+                             case TOK_SHL_EQUAL: case TOK_SHR_EQUAL: case TOK_AND_EQUAL: case TOK_OR_EQUAL: case TOK_XOR_EQUAL: case TOK_POW_EQUAL
+                             
+
+/* Parse a top-level expression. */
+#define ast_parse_expression(lookup_mode) ast_parse_assign(lookup_mode)
 
 /* Parse an import statement/expression.
  * @param: allow_symbol_define: When true, allow the `import foo = x from y;' syntax,
@@ -99,11 +142,13 @@ INTDEF DREF DeeAstObject *FCALL ast_parse_import_single(struct TPPKeyword *__res
  * >> foo,bar = 10;         // (foo,(bar = 10));
  * >> { 10 }                // (list { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
  * >> { "foo": 10 }         // (dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
- * @param: mode:  Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
- * @param: flags: Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
- */
+ * @param: mode:         Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
+ * @param: flags:        Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
+ * @param: pparser_mode: When non-NULL, instead of parsing a `;' when required,
+ *                       set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
 INTDEF DREF DeeAstObject *DCALL
-ast_parse_comma(unsigned int mode, uint16_t flags);
+ast_parse_comma(uint16_t mode, uint16_t flags,
+                uint16_t *pout_mode);
 #define AST_COMMA_NORMAL        0x0000
 #define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags' */
 #define AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,' being followed by another expression.
@@ -114,6 +159,9 @@ ast_parse_comma(unsigned int mode, uint16_t flags);
 #define AST_COMMA_PARSESEMI     0x4000 /* Parse a `;' as part of the expression (if a `;' is required). */
 #define AST_COMMA_ALLOWVARDECLS 0x8000 /* Allow new variables to be declared. */
 
+#define AST_COMMA_OUT_FNORMAL   0x0000 /* Normal comma output flags. */
+#define AST_COMMA_OUT_FNEEDSEMI 0x0001 /* Set if a semicolon is required. */
+
 
 /* Parse an argument list using `ast_parse_comma',
  * and (if present) also parse a trailing keyword label list, which is then saved as a
@@ -121,7 +169,7 @@ ast_parse_comma(unsigned int mode, uint16_t flags);
  * If no keyword labels are present, `*pkeyword_labels' is filled in as `NULL'
  * @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
 INTDEF DREF DeeAstObject *DCALL
-ast_parse_argument_list(unsigned int mode,
+ast_parse_argument_list(uint16_t mode,
                         DREF DeeAstObject **__restrict pkeyword_labels);
 
 
@@ -243,16 +291,8 @@ INTDEF DREF DeeAstObject *DCALL ast_parse_asm(void);
 INTDEF int DCALL parse_arglist(void);
 
 /* Parse the contents of a brace initializer,
- * starting after the '{' token and ending on '}'.
- * @param: preferred_type: One of:
- *                          - DeeHashSet_Type
- *                          - DeeDict_Type
- *                          - DeeList_Type
- *                          - DeeTuple_Type
- *                          - DeeSeq_Type   // Encode as `AST_FMULTIPLE_GENERIC'
- *                          - NULL          // Automatically determine list/dict
- */
-INTDEF DREF DeeAstObject *FCALL ast_parse_brace_items(DeeTypeObject *preferred_type);
+ * starting after the '{' token and ending on '}'. */
+INTDEF DREF DeeAstObject *FCALL ast_parse_brace_items(void);
 
 /* Parse a class definition, starting at the `{' token (or at `:' when a base exists).
  * The returned AST is of type `AST_CLASS' (create_symbol == false) or `AST_STORE' (create_symbol == true).
@@ -303,6 +343,23 @@ INTDEF DREF struct module_object *DCALL parse_module_byname(void);
 INTDEF struct module_symbol *DCALL
 import_module_symbol(struct module_object *__restrict module,
                      struct TPPKeyword *__restrict name);
+
+
+
+struct astlist {
+    size_t              ast_c; /* Amount of branches in use. */
+    size_t              ast_a; /* [>= ast_c] Allocated amount of branches. */
+    DREF DeeAstObject **ast_v; /* [1..1][0..ast_c|ALLOC(ast_a)][owned] Vector of branches. */
+};
+#define ASTLIST_INIT {0,0,NULL}
+
+INTDEF void DCALL astlist_fini(struct astlist *__restrict self);
+INTDEF int DCALL astlist_upsize(struct astlist *__restrict self, size_t min_add);
+INTDEF void DCALL astlist_trunc(struct astlist *__restrict self);
+INTDEF int DCALL astlist_append(struct astlist *__restrict self, DeeAstObject *__restrict ast);
+INTDEF int DCALL astlist_appendall(struct astlist *__restrict self, struct astlist *__restrict other);
+
+
 
 
 struct ast_tags {

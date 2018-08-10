@@ -99,7 +99,7 @@ PRIVATE DREF DeeObject *FCALL do_parse_constant(void) {
  DREF DeeAstObject *const_ast;
  DREF DeeObject *result;
  if unlikely(scope_push()) goto err;
- const_ast = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+ const_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
  scope_pop();
  if unlikely(!const_ast) goto err;
  /* Optimize the constant branch to allow for constant propagation. */

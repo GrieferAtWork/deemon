@@ -162,7 +162,7 @@ done_dots:
    /* Yield the `=' token. */
    if unlikely(yield() < 0) goto err;
    /* Parse the initializer. */
-   initializer = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+   initializer = ast_parse_expression(LOOKUP_SYM_NORMAL);
    if unlikely(!initializer) goto err;
    if (in_optional_args) {
     Dee_Decref(initializer);
@@ -316,7 +316,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   loc_here(&arrow_loc);
   if unlikely(yield() < 0) goto err;
   /* Expression function. */
-  code = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  code = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!code) goto err;
   result = code->ast_type == AST_EXPAND
          ? (current_basescope->bs_flags |= CODE_FYIELDING,ast_yield(code))
@@ -368,7 +368,7 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
   loc_here(&arrow_loc);
   if unlikely(yield() < 0) goto err;
   /* Expression function. */
-  code = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  code = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!code) goto err;
   result = code->ast_type == AST_EXPAND
          ? (current_basescope->bs_flags |= CODE_FYIELDING,ast_yield(code))

@@ -72,7 +72,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
   *       so-as to make it easier to make use of with-statements
   *       where the with-expression is re-used inside the block. */
  result = ast_parse_comma(AST_COMMA_NORMAL|AST_COMMA_ALLOWVARDECLS,
-                          AST_FMULTIPLE_TUPLE);
+                          AST_FMULTIPLE_TUPLE,
+                          NULL);
  if unlikely(!result) goto err_scope_flags;
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -111,7 +112,7 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 
  /* Finally, parse the content of the wrapped try-statement. */
  result = is_statement ? ast_parse_statement(allow_nonblock)
-                       : ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+                       : ast_parse_expression(LOOKUP_SYM_NORMAL);
  if unlikely(!result) goto err_result_v_1;
 
  /* Create the leave-expression for the finally block. */

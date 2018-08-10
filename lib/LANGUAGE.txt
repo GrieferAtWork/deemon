@@ -810,6 +810,21 @@ _keyword  ::= <TPP_ISKEYWORD(*)>;
 _tag_name ::= _keyword;
 
 
+ast_parse_statement_or_braces ::= (
+	/* NOTE: The differenciation between brace items
+	 *       and expressions is quite complex here, and
+	 *       in cases of ambiguity, a warning is emit.
+	 * example: `print repr ({ 10, 20, 30 });'         -- { 10, 20, 30 }
+	 * example: `print repr ({ { 10, 20, 30 } });'     -- { { 10, 20, 30 } }
+	 * example: `print repr ({ { 10, 20, 30; } });'    -- 30  (statement)
+	 * example: `print repr ({ { 10, 20, 30; } 7; });' -- 7   (statement)
+	 * example: `print repr ({ { 10, 20, 30 }; });'    -- { 10, 20, 30 }  (statement containing a brace expression)
+	 * Using these rules, most normal cases are implicitly dealt with.
+	 */
+	[ast_parse_statement...] |
+	ast_parse_brace_items
+);
+
 ast_parse_unary_base ::= (
 	/* Constant expressions. */
 	DDI(<TOK_INT>) |       /* int */
@@ -822,11 +837,11 @@ ast_parse_unary_base ::= (
 	DDI('false') |
 
 	/* Unary keyword-operators. */
-	(DDI('str') (('(' ast_parse_brace ')') | ast_parse_unary) ) |      /* __str__ */
-	(DDI('repr') (('(' ast_parse_brace ')') | ast_parse_unary) ) |     /* __repr__ */
-	(DDI('copy') (('(' ast_parse_brace ')') | ast_parse_unary) ) |     /* __copy__ */
-	(DDI('deepcopy') (('(' ast_parse_brace ')') | ast_parse_unary) ) | /* __deepcopy__ */
-	(DDI('type') (('(' ast_parse_brace ')') | ast_parse_unary) ) |     /* ACTION: typeof */
+	(DDI('str') (('(' ast_parse_expression ')') | ast_parse_unary) ) |      /* __str__ */
+	(DDI('repr') (('(' ast_parse_expression ')') | ast_parse_unary) ) |     /* __repr__ */
+	(DDI('copy') (('(' ast_parse_expression ')') | ast_parse_unary) ) |     /* __copy__ */
+	(DDI('deepcopy') (('(' ast_parse_expression ')') | ast_parse_unary) ) | /* __deepcopy__ */
+	(DDI('type') (('(' ast_parse_expression ')') | ast_parse_unary) ) |     /* ACTION: typeof */
 
 	/* Unary operators. */
 	(DDI('!') ast_parse_unary) |  /* ACTION: not */
@@ -853,9 +868,9 @@ ast_parse_unary_base ::= (
 	(DDI('<') [ast_parse_unary] '>') | /* ACTION: cell/cell0 */
 #endif
 
-	(DDI('if') '(' ast_parse_brace ')' (
-		('else' ast_parse_brace) | /* Same as `none else ast_parse_brace' */
-		(ast_parse_brace ['else' ast_parse_brace])
+	(DDI('if') '(' ast_parse_expression ')' (
+		('else' ast_parse_expression) | /* Same as `none else ast_parse_expression' */
+		(ast_parse_expression ['else' ast_parse_expression])
 	)) |
 
 	/* Bound-expressions.
@@ -869,7 +884,7 @@ ast_parse_unary_base ::= (
 	 *          An implementation is also allowed to replace this
 	 *          kind of use with a call to said function.
 	 */
-	(DDI('bound') (('(' ast_parse_brace ')') | ast_parse_unary)) |
+	(DDI('bound') (('(' ast_parse_expression ')') | ast_parse_unary)) |
 
 	/* Operator function access (see detailed explaination in `x.operator ...' below) */
 	('operator' DDI(ast_parse_operator_name(false))) |
@@ -879,10 +894,10 @@ ast_parse_unary_base ::= (
 
 
 	/* Assert-expressions. */
-	('assert' '(' DDI(ast_parse_brace) [',' ast_parse_brace] ')') |
+	('assert' '(' DDI(ast_parse_expression) [',' ast_parse_expression] ')') |
 
 	/* With-expressions. */
-	(DDI('with') '(' ast_parse_comma(false,true) ')' ast_parse_brace) |
+	(DDI('with') '(' ast_parse_comma(false,true) ')' ast_parse_expression) |
 
 	/* Try-expressions. */
 	ast_parse_try(false) |
@@ -895,10 +910,10 @@ ast_parse_unary_base ::= (
 
 	/* When no expression follows `pack', it evaluates to an empty tuple. */
 	(DDI('pack') (('(' [
-		('{' [ast_parse_statement...] '}') |
+		('{' ast_parse_statement_or_braces '}') |
 		ast_parse_comma(false,false)
 	] ')') | [
-		('{' [ast_parse_statement...] '}') |
+		('{' ast_parse_statement_or_braces '}') |
 		ast_parse_comma(true,false)
 	])) |
 
@@ -915,9 +930,12 @@ ast_parse_unary_base ::= (
 
 	/* Parenthesis / [empty] tuple expression. */
 	(DDI('(') [(
-		('{' [ast_parse_statement...] '}') |
+		('{' ast_parse_statement_or_braces '}') |
 		ast_parse_comma(false,false)
 	)] ')') |
+
+	(DDI('{') ast_parse_brace_items '}')
+
 
 	(DDI('[') (
 		/* Lambda function.
@@ -935,7 +953,7 @@ ast_parse_unary_base ::= (
 		 * having to #include <util> as one had to before deemon 200, I've
 		 * decided to add a dedicated syntax just for creating ranges.
 		 */
-		([ast_parse_brace] ':' [ast_parse_brace] [',' ast_parse_brace] ']') |
+		([ast_parse_expression] ':' [ast_parse_expression] [',' ast_parse_expression] ']') |
 		/* List expression.
 		 * NOTE: Ambiguity with lambda for `[]' is resolved by looking at the
 		 *       token following. When it's a '(', '{' or '->', it's a lambda.
@@ -974,7 +992,7 @@ ast_parse_unary_base ::= (
 			/* N'th variable lookup modifier.
 			 * When searching for symbols matching the _keyword following
 			 * this prefix, don't bind to the first match found, but rather
-			 * the ast_parse_brace'th.
+			 * the ast_parse_expression'th.
 			 * >> {
 			 * >>     local x = 10;
 			 * >>     {
@@ -984,18 +1002,18 @@ ast_parse_unary_base ::= (
 			 * >>     }
 			 * >> }
 			 * The constant expression is converted to an integer as though
-			 * it was the result of an expression `(int)ast_parse_brace',
+			 * it was the result of an expression `(int)ast_parse_expression',
 			 * meaning that boolean, and other integer-like object, including
 			 * `none' are accepted just as well.
 			 *
 			 * It is an error to pass a negative value, or a value equal to ZERO(0)
 			 *
-			 * The given `ast_parse_brace' must be a constant expression.
+			 * The given `ast_parse_expression' must be a constant expression.
 			 * An implementation is allowed and encouraged to perform
 			 * constant propagation when an expression is given, however
 			 * it is allowed allowed to choose to emit an error in this case.
 			 */
-			('__nth' '(' ast_parse_brace ')')
+			('__nth' '(' ast_parse_expression ')')
 		]
 
 		/* Default case: Symbol lookup
@@ -1070,11 +1088,11 @@ ast_parse_unary ::= (
 			/* Ranged item access.
 			 * NOTE: When used as the target in a store expression,
 			 *       this will be encoded as a __setrange__ operation. */
-			([ast_parse_brace] ':' [ast_parse_brace]) |
+			([ast_parse_expression] ':' [ast_parse_expression]) |
 			/* Indexed item access.
 			 * NOTE: When used as the target in a store expression,
 			 *       this will be encoded as a __setitem__ operation. */
-			(ast_parse_brace)
+			(ast_parse_expression)
 		) ']') |
 
 		/* Brace initializer-suffix:
@@ -1091,7 +1109,7 @@ ast_parse_unary ::= (
 		 *       accessible with the `iterator' attribute of the type.
 		 *
 		 */
-		ast_parse_brace |
+		ast_parse_expression |
 
 		/* Encode a call-expression with optional parenthesis.
 		 * >> foo pack 10,20,30; // Same as foo(10,20,30); */
@@ -1123,7 +1141,7 @@ ast_parse_argument_list ::= (
 		 * May optionally be pre-fixed with positional arguments. */
 		[ast_parse_comma(false,false) ',']
 		[',' ~~ (
-			keyword ':' ast_parse_brace
+			keyword ':' ast_parse_expression
 		)...]
 	)
 );
@@ -1325,18 +1343,17 @@ ast_parse_assign := (
 
 ast_parse_brace_items ::= ([
 	/* Brace initializer for lists-style sequences. */
-	(',' ~~ ast_parse_brace...) |
+	(',' ~~ ast_parse_expression...) |
 	/* Brace initializer for dict-style sequences. */
 	(',' ~~ ((
-		(ast_parse_brace (':' | '=')) |
+		(ast_parse_expression (':' | '=')) |
 		/* Initializer for string-keys: Same as `"_keyword" : ' */
 		('.' _keyword '=')
-	) ast_parse_brace)...) |
+	) ast_parse_expression)...) |
 ]);
 
-ast_parse_brace ::= (
-	ast_parse_assign |
-	(DDI('{') ast_parse_brace_items '}')
+ast_parse_expression ::= (
+	ast_parse_assign
 );
 
 _inner_comma_expression ::= (
@@ -1349,7 +1366,7 @@ _inner_comma_expression ::= (
 	 * a global variable and have it then use that global variable. */
 	(DDI(((['final'] 'class') | ('class' ['final']))) [_keyword] ast_parse_class) |
 	(DDI('function') [_keyword] ast_parse_function(?MAYBE?))
-	ast_parse_brace
+	ast_parse_expression
 );
 
 ast_parse_comma(strict_comma,allow_vardecl) ::= (
@@ -1442,7 +1459,7 @@ ast_parse_comma(strict_comma,allow_vardecl) ::= (
 ast_parse_for_head ::= (
 	(	/* foreach-style loop. */
 		ast_parse_comma(false,true) ':'
-		ast_parse_brace
+		ast_parse_expression
 	) |
 	(	/* c-style for loop. */
 		[ast_parse_comma(false,true)] ';'
@@ -1504,7 +1521,7 @@ asm_parse_operands(kind) ::= (
 		 *      encodings. */
 		(<TOK_STRING>...)
 		/* The actual operand expression. */
-		'(' ast_parse_brace ')'
+		'(' ast_parse_expression ')'
 #endif
 	)...]
 );
@@ -1541,7 +1558,7 @@ asm_parse_clobber ::= (
 		 *    >>     print "Reachable #2";
 		 *    >> }
 		 *  - "noreturn":
-		 *    Indicates that a 
+		 *    Indicates that a
 		 *
 		 *  - *:
 		 *    Anything else is implementation-specific and should result
@@ -1695,7 +1712,7 @@ ast_parse_statement ::= (
 	 */
 	(DDI('foreach') '('
 		ast_parse_comma(false,true) ':'
-		ast_parse_brace
+		ast_parse_expression
 	')' ast_parse_statement) |
 
 	/* The `assert' statement */
@@ -1709,7 +1726,7 @@ ast_parse_statement ::= (
 		ast_parse_statement
 #		INTERNAL(clear_current_tags())
 		parse_tags_block
-		'while' '(' ast_parse_brace ')' ';'
+		'while' '(' ast_parse_expression ')' ';'
 	) |
 
 	/* A while... loop */
@@ -1735,7 +1752,7 @@ ast_parse_statement ::= (
 	 *       make use of a hidden constant tuple/dict for mapping
 	 *       switch expressions to IP/SP pairs that are then loaded
 	 *       using the `jmp pop' or `jmp pop, #pop' instructions. */
-	(DDI('case') ast_parse_brace ':' ast_parse_statement) |
+	(DDI('case') ast_parse_expression ':' ast_parse_statement) |
 	(DDI('default') ':' ast_parse_statement) |
 	(DDI('switch') '(' ast_parse_comma(false,true) ')' ast_parse_statement) |
 
@@ -1765,7 +1782,7 @@ ast_parse_try(is_statement) ::= (
 #if is_statement
 		ast_parse_statement
 #else
-		ast_parse_brace
+		ast_parse_expression
 #endif
 		(
 #			INTERNAL(clear_current_tags())
@@ -1775,7 +1792,7 @@ ast_parse_try(is_statement) ::= (
 #if is_statement
 					ast_parse_statement
 #else
-					ast_parse_brace
+					ast_parse_expression
 #endif
 				) |
 				('catch' '(' (
@@ -1790,7 +1807,7 @@ ast_parse_try(is_statement) ::= (
 #if is_statement
 					ast_parse_statement
 #else
-					ast_parse_brace
+					ast_parse_expression
 #endif
 				)
 			)
@@ -1800,7 +1817,7 @@ ast_parse_try(is_statement) ::= (
 ast_parse_class ::= (
 	/* Optional base expression. */
 	[	((':' | 'extends') ast_parse_unary_base) |
-		('(' ast_parse_brace ')')
+		('(' ast_parse_expression ')')
 	]
 
 	/* Class block */
@@ -1854,7 +1871,7 @@ ast_parse_class ::= (
 			/* Member definition. */
 			(DDI(_keyword) ['=' (
 				('{' parse_property '}') | /* Property */
-				ast_parse_brace            /* Member with initializer. */
+				ast_parse_expression            /* Member with initializer. */
 			)] ';') |
 
 			/* Member function function */
@@ -1875,9 +1892,9 @@ parse_constructor_initializers ::= (
 		(DDI(_keyword) (
 			/* Value to assign to member `_keyword'
 			 * When empty parenthesis are given, assign `none' */
-			('(' [ast_parse_brace] ')') |
+			('(' [ast_parse_expression] ')') |
 			/* Assign the given expression to the member. */
-			('=' ast_parse_brace)
+			('=' ast_parse_expression)
 		))
 	)...
 );
@@ -1983,7 +2000,7 @@ parse_arglist ::= (
 					 *       Such optimization _must_ at least include basic constant
 					 *       propagation, such that `10+20' or `tuple { 1, 2, 3 }'
 					 *       can be used (those were just examples...). */
-					('=' ast_parse_brace)
+					('=' ast_parse_expression)
 				)]
 			)
 		)
@@ -1993,7 +2010,7 @@ parse_arglist ::= (
 ast_parse_function_noargs(parse_semicollon) ::= (
 	(	/* Arrow-return function (same as `{ return <expr>; }') */
 		'->'
-		ast_parse_brace
+		ast_parse_expression
 #if parse_semicollon
 		';'
 #endif
@@ -2143,14 +2160,14 @@ parse_generator_loop ::= (
 		parse_generator_loop
 		['else' parse_generator_loop]
 	) |
-	(DDI('do') parse_generator_loop 'while' '(' ast_parse_brace ')') |
+	(DDI('do') parse_generator_loop 'while' '(' ast_parse_expression ')') |
 	(DDI('while') '(' ast_parse_comma(false,true) ')' parse_generator_loop) |
 	(DDI('for') '(' ast_parse_for_head ')' parse_generator_loop) |
 	(DDI('foreach') '('
 		ast_parse_comma(false,true) ':'
-		ast_parse_brace
+		ast_parse_expression
 	')' parse_generator_loop) |
-	ast_parse_brace /* This expression is wrapped in a yield-branch */
+	ast_parse_expression /* This expression is wrapped in a yield-branch */
 );
 ast_parse_loopexpr ::= (
 	/* The following expression is wrapped as follows:
@@ -2163,9 +2180,9 @@ ast_parse_loopexpr ::= (
 ast_parse_assert(need_parenthesis) ::= (
 	'assert' (
 		(
-			'(' ast_parse_brace /* Assert expression */
+			'(' ast_parse_expression /* Assert expression */
 #if !need_parenthesis
-			[',' ast_parse_brace] /* Assert message. */
+			[',' ast_parse_expression] /* Assert message. */
 #endif
 			/* NOTE: When no message has been given,
 			 *       the assertion expression is found
@@ -2185,8 +2202,8 @@ ast_parse_assert(need_parenthesis) ::= (
 #if !need_parenthesis
 		| (
 			/* Assert without parenthesis. */
-			ast_parse_brace /* Assert expression */
-			[',' ast_parse_brace] /* Assert message */
+			ast_parse_expression /* Assert expression */
+			[',' ast_parse_expression] /* Assert message */
 		)
 #endif
 	)

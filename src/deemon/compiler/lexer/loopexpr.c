@@ -70,7 +70,8 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   /* NOTE: Allow variable declarations within the condition. */
   result = ast_parse_comma(LOOKUP_SYM_NORMAL|
                            LOOKUP_SYM_ALLOWDECL,
-                           AST_FMULTIPLE_KEEPLAST);
+                           AST_FMULTIPLE_KEEPLAST,
+                           NULL);
   if unlikely(!result) goto err_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -113,7 +114,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   if unlikely(likely(tok == '(') ? (yield() < 0) :
               WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
      goto err_r_flags;
-  other = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  other = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!other)
      goto err_r_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -140,7 +141,8 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   /* NOTE: Allow variable declarations within the condition. */
   result = ast_parse_comma(LOOKUP_SYM_NORMAL|
                            LOOKUP_SYM_ALLOWDECL,
-                           AST_FMULTIPLE_KEEPLAST);
+                           AST_FMULTIPLE_KEEPLAST,
+                           NULL);
   if unlikely(!result)
      goto err_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -231,12 +233,13 @@ err_for_loop:
               WARN(W_EXPECTED_LPAREN_AFTER_FOR))
      goto err_flags;
   foreach_elem = ast_parse_comma(AST_COMMA_ALLOWVARDECLS,
-                                 AST_FMULTIPLE_TUPLE);
+                                 AST_FMULTIPLE_TUPLE,
+                                 NULL);
   if unlikely(!foreach_elem) goto err_flags;
   if unlikely(likely(tok == ':') ? (yield() < 0) :
               WARN(W_EXPECTED_COLLON_AFTER_FOREACH))
      goto err_foreach_elem_flags;
-  foreach_iter = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  foreach_iter = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!foreach_iter)
      goto err_foreach_elem_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -267,7 +270,7 @@ err_foreach_elem_flags:
 
  default:
   /* Fallback: parse a brace expression and wrap it inside a yield-statement. */
-  result = wrap_yield(ast_parse_brace(LOOKUP_SYM_NORMAL,NULL),ddi_loc);
+  result = wrap_yield(ast_parse_expression(LOOKUP_SYM_NORMAL),ddi_loc);
   break;
  }
  return result;

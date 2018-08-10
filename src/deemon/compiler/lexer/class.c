@@ -835,7 +835,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
    /* Now we must mirror argument symbols from the constructor scope in this new one. */
    if unlikely(copy_argument_symbols(self->cm_ctor_scope)) goto err_flags;
    /* Now we need to parse the argument list that's going to be provided as super-args. */
-   superargs = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,AST_FMULTIPLE_TUPLE);
+   superargs = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,AST_FMULTIPLE_TUPLE,NULL);
    if unlikely(!superargs) goto err_flags;
    /* With the argument-tuple at hand, wrap it in a return + function ast. */
    merge = ast_setddi(ast_return(superargs),&loc);
@@ -869,7 +869,7 @@ done_superargs:
    /* Member initializer (c++ style). */
    if (tok == '=' || tok == KWD_pack) {
     if unlikely(yield() < 0) goto err;
-    initializer_ast = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+    initializer_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
     if unlikely(!initializer_ast) goto err;
    } else {
     old_flags = TPPLexer_Current->l_flags;
@@ -881,7 +881,7 @@ done_superargs:
      /* Special case: Same as `= none' (aka: initializer to `none') */
      initializer_ast = ast_setddi(ast_constexpr(Dee_None),&loc);
     } else {
-     initializer_ast = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+     initializer_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
     }
     if unlikely(!initializer_ast) goto err_flags;
     TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -1109,7 +1109,7 @@ do_parse_class_base:
    * Though I should note that the intended syntax is `class foo: bar { ... }' */
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
   if unlikely(yield() < 0) goto err;
-  maker.cm_base = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+  maker.cm_base = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!maker.cm_base) goto err;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -1610,11 +1610,11 @@ err_property:
     /* Member assignment. (part of the initialization) */
     if (SYM_ISCLASSMEMBER(member_symbol)) {
      /* Class member. */
-     init_ast = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+     init_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
     } else {
      /* Instance member. */
      if (class_maker_push_ctorscope(&maker)) goto err;
-     init_ast = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+     init_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
      basescope_pop();
     }
     if unlikely(!init_ast) goto err;

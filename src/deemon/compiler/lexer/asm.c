@@ -147,14 +147,14 @@ asm_parse_operands(struct operand_list *__restrict list,
    if (tok == KWD_pack) {
     if unlikely(yield() < 0) goto err_type;
     if (tok == '(') goto with_paren;
-    operand_value = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+    operand_value = ast_parse_expression(LOOKUP_SYM_NORMAL);
     if unlikely(!operand_value) goto err_type;
    } else {
 with_paren:
     if unlikely(likely(tok == '(') ? (yield() < 0) :
                 WARN(W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
        goto err_type;
-    operand_value = ast_parse_brace(LOOKUP_SYM_NORMAL,NULL);
+    operand_value = ast_parse_expression(LOOKUP_SYM_NORMAL);
     if unlikely(!operand_value) goto err_type;
     if unlikely(likely(tok == ')') ? (yield() < 0) :
                 WARN(W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))

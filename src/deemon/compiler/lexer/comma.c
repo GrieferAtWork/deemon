@@ -41,20 +41,15 @@ DECL_BEGIN
 #define IS_SYMBOL_NAME(tok)  \
    (TPP_ISKEYWORD(tok) && (!KWD_ISUNARY(tok) || (tok) == KWD_none))
 
-struct astlist {
- size_t              ast_c; /* Amount of branches in use. */
- size_t              ast_a; /* [>= ast_c] Allocated amount of branches. */
- DREF DeeAstObject **ast_v; /* [1..1][0..ast_c|ALLOC(ast_a)][owned] Vector of branches. */
-};
-#define ASTLIST_INIT {0,0,NULL}
-PRIVATE void DCALL
+
+INTERN void DCALL
 astlist_fini(struct astlist *__restrict self) {
  size_t i;
  for (i = 0; i < self->ast_c; ++i)
      Dee_Decref(self->ast_v[i]);
  Dee_Free(self->ast_v);
 }
-PRIVATE int DCALL
+INTERN int DCALL
 astlist_upsize(struct astlist *__restrict self,
                size_t min_add) {
  DREF DeeAstObject **new_vector;
@@ -81,7 +76,7 @@ do_realloc:
  return 0;
 }
 
-PRIVATE void DCALL
+INTERN void DCALL
 astlist_trunc(struct astlist *__restrict self) {
  DREF DeeAstObject **new_vector;
  if (self->ast_c == self->ast_a) return;
@@ -89,7 +84,7 @@ astlist_trunc(struct astlist *__restrict self) {
                                                    sizeof(DREF DeeAstObject *));
  if likely(new_vector) self->ast_v = new_vector;
 }
-PRIVATE int DCALL
+INTERN int DCALL
 astlist_append(struct astlist *__restrict self,
                DeeAstObject *__restrict ast) {
  if (self->ast_c == self->ast_a &&
@@ -98,7 +93,7 @@ astlist_append(struct astlist *__restrict self,
  Dee_Incref(ast);
  return 0;
 }
-PRIVATE int DCALL
+INTERN int DCALL
 astlist_appendall(struct astlist *__restrict self,
                   struct astlist *__restrict other) {
  size_t avail = self->ast_a-self->ast_c;
@@ -193,7 +188,7 @@ err:
 
 
 INTERN DREF DeeAstObject *DCALL
-ast_parse_comma(unsigned int mode, uint16_t flags) {
+ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *pout_mode) {
  DREF DeeAstObject *current; bool need_semi; int error;
  unsigned int lookup_mode; struct ast_loc loc;
  /* In: "foo,bar = 10,x,y = getvalue()...,7"
@@ -328,7 +323,7 @@ next_expr:
    if (WARN(W_EXPECTED_VARIABLE_AFTER_VISIBILITY))
        goto err;
   }
-  current = ast_parse_brace(lookup_mode,NULL);
+  current = ast_parse_expression(lookup_mode);
   /* Check for errors. */
   if unlikely(!current)
      goto err;
@@ -384,24 +379,12 @@ set_typed_var:
     */
    if (tok == '=' || tok == '{') {
     /* Single-operand argument list. */
-    DeeTypeObject *preferred_type;
     DREF DeeAstObject **exprv;
     struct ast_loc equal_loc;
     loc_here(&equal_loc);
-    preferred_type = NULL;
-    if (current->ast_type == AST_CONSTEXPR) {
-     preferred_type = (DeeTypeObject *)current->ast_constexpr;
-     if (preferred_type != &DeeHashSet_Type &&
-         preferred_type != &DeeDict_Type &&
-         preferred_type != &DeeList_Type &&
-         preferred_type != &DeeTuple_Type &&
-         preferred_type != &DeeSeq_Type &&
-         preferred_type != &DeeMapping_Type)
-         preferred_type = NULL;
-    }
     if (tok == '=' && unlikely(yield() < 0)) goto err_current;
     /* Parse a preferred-type brace expression. */
-    args = ast_parse_brace(LOOKUP_SYM_NORMAL,preferred_type);
+    args = ast_parse_expression(LOOKUP_SYM_NORMAL);
     if unlikely(!args) goto err_current;
     /* Wrap the returned ast in a 1-element tuple (for the argument list) */
     exprv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
@@ -425,7 +408,8 @@ set_typed_var:
      args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
     } else {
      args = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
-                            AST_FMULTIPLE_TUPLE);
+                            AST_FMULTIPLE_TUPLE,
+                            NULL);
     }
     TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
     if unlikely(!args) goto err_current;
@@ -504,7 +488,8 @@ continue_at_comma:
   if unlikely(yield() < 0) goto err_current;
   store_source = ast_parse_comma(AST_COMMA_PARSESINGLE|
                                 (mode&AST_COMMA_STRICTCOMMA),
-                                 AST_FMULTIPLE_KEEPLAST);
+                                 AST_FMULTIPLE_KEEPLAST,
+                                 NULL);
   if unlikely(!store_source) goto err_current;
   need_semi = !!(mode&AST_COMMA_PARSESEMI);
   /* Now everything depends on whether or not what
@@ -616,7 +601,10 @@ done_expression:
   }
  }
 done_expression_nomerge:
- if (need_semi) {
+ if (pout_mode) {
+  if (need_semi)
+     *pout_mode |= AST_COMMA_OUT_FNEEDSEMI;
+ } else if (need_semi) {
   /* Consume a `;' token as part of the expression. */
   if likely(tok == ';' || tok == '\n') {
    do {

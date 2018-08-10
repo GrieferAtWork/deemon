@@ -133,7 +133,8 @@ again:
     args_ast = ast_sethere(ast_constexpr(Dee_EmptyTuple));
    } else {
     args_ast = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
-                               AST_FMULTIPLE_TUPLE);
+                               AST_FMULTIPLE_TUPLE,
+                               NULL);
    }
    if unlikely(!args_ast) goto err_flags;
    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
