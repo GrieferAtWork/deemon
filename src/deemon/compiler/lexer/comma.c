@@ -327,7 +327,8 @@ next_expr:
   /* Check for errors. */
   if unlikely(!current)
      goto err;
-  if (lookup_mode&LOOKUP_SYM_ALLOWDECL && TPP_ISKEYWORD(tok)) {
+  if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) && TPP_ISKEYWORD(tok) &&
+    (!(mode & AST_COMMA_NOSUFFIXKWD) || !is_reserved_symbol_name(token.t_kwd))) {
    struct symbol *var_symbol;
    DREF DeeAstObject *args,*merge;
    struct ast_loc symbol_name_loc;

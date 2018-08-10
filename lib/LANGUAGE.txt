@@ -814,12 +814,39 @@ ast_parse_statement_or_braces ::= (
 	/* NOTE: The differenciation between brace items
 	 *       and expressions is quite complex here, and
 	 *       in cases of ambiguity, a warning is emit.
-	 * example: `print repr ({ 10, 20, 30 });'         -- { 10, 20, 30 }
-	 * example: `print repr ({ { 10, 20, 30 } });'     -- { { 10, 20, 30 } }
-	 * example: `print repr ({ { 10, 20, 30; } });'    -- 30  (statement)
-	 * example: `print repr ({ { 10, 20, 30; } 7; });' -- 7   (statement)
-	 * example: `print repr ({ { 10, 20, 30 }; });'    -- { 10, 20, 30 }  (statement containing a brace expression)
-	 * Using these rules, most normal cases are implicitly dealt with.
+	 * >> print repr ({ });                                  // EXPR: { }
+	 * >> print repr ({ ; });                                // STMT: none
+	 * >> print repr ({ 10, 20, 30 });                       // EXPR: { 10, 20, 30 }
+	 * >> print repr ({ { } });                              // EXPR: { { } }
+	 * >> print repr ({ { }; });                             // STMT: none
+	 * >> print repr ({ { ; } });                            // STMT: none
+	 * >> print repr ({ { 10, 20, 30 } });                   // EXPR: { { 10, 20, 30 } }
+	 * >> print repr ({ { 10, 20, 30; } });                  // STMT: 30
+	 * >> print repr ({ { 10, 20, 30; } 7; });               // STMT: 7
+	 * >> print repr ({ { 10, 20, 30 }; });                  // STMT: { 10, 20, 30 }  (the statement contains a brace expression)
+	 * >> print repr ({ try foo() catch (...) bar() });      // EXPR: { <foo() or bar()> }
+	 * >> print repr ({ try foo() catch (...) bar(), 6 });   // EXPR: { <foo() or bar()>, 6 }
+	 * >> print repr ({ try foo(); catch (...) bar(); });    // STMT: <foo() or bar()>
+	 * >> print repr ({ try foo(); catch (...) bar(); 6; }); // STMT: 6
+	 * >> print repr ({ if (foo()) bar() });                 // EXPR: { <bar() or none> }  (same as `{ foo() ? bar() : none }')
+	 * >> print repr ({ if (foo()) bar() else baz() });      // EXPR: { <bar() or baz()> }
+	 * >> print repr ({ if (foo()) bar(); });                // STMT: <bar() or none>      (same as `({ if (foo()) bar(); else none; })')
+	 * >> print repr ({ if (foo()) bar(); else baz(); });    // STMT: <bar() or baz()>
+	 * >> print repr ({ with (foo()) bar() });               // EXPR: { <bar()> }
+	 * >> print repr ({ with (foo()) bar(); });              // STMT: <bar()>
+	 * >> print repr ({ assert(foo()) });                    // EXPR: { <foo()> }
+	 * >> print repr ({ assert(foo()), 7 });                 // EXPR: { <foo()>, 7 }
+	 * >> print repr ({ assert(foo()); });                   // STMT: <foo()>
+	 * >> print repr ({ assert(foo()); 7; });                // STMT: 7
+	 * Using these rules, all possible cases are implicitly dealt with.
+	 * NOTE: Although also allowed in expression, `import' and `del'
+	 *       are always interpreted as a statement, as there is no
+	 *       syntactical different between their statement and
+	 *       expression variants.
+	 *       Additionally `assert()' with parenthesis is always recognized
+	 *       as its expression variant, despite the fact that the statement
+	 *       variant allows something like `assert (foo), "message"'
+	 *       Simply write code like this as `assert((foo), "message")'
 	 */
 	[ast_parse_statement...] |
 	ast_parse_brace_items

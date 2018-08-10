@@ -49,34 +49,49 @@ INTERN DREF DeeAstObject *FCALL
 ast_parse_statement_or_expression(uint16_t mode,
                                   unsigned int *pwas_expression) {
  DREF DeeAstObject *result;
+ unsigned int was_expression;
  switch (tok) {
+
+
  case '{':
-  result = ast_parse_statement_or_braces(pwas_expression);
+  result = ast_parse_statement_or_braces(&was_expression);
   if unlikely(!result) goto err;
-  if (*pwas_expression != AST_PARSE_WASEXPR_NO) {
+  if (was_expression != AST_PARSE_WASEXPR_NO) {
    /* Try to parse a suffix expression.
     * If there was one, then we know that it actually was an expression. */
    unsigned long token_num = token.t_num;
    result = ast_parse_unary_postexpr(result);
    if (token_num != token.t_num)
-      *pwas_expression = AST_PARSE_WASEXPR_YES;
+       was_expression = AST_PARSE_WASEXPR_YES;
   }
+  if (pwas_expression)
+     *pwas_expression = was_expression;
   break;
 
- case KWD_if:       /* TODO: if in expressions? */
- case KWD_from:     /* TODO: import in expressions? */
- case KWD_import:   /* TODO: import in expressions? */
+ case KWD_try:
+  result = ast_parse_try_hybrid(pwas_expression);
+  break;
+
+ case KWD_if:
+  result = ast_parse_if_hybrid(pwas_expression);
+  break;
+
+ case KWD_with:
+  result = ast_parse_with_hybrid(pwas_expression);
+  break;
+
+ case KWD_assert:
+  result = ast_parse_assert_hybrid(pwas_expression);
+  break;
+
  case KWD_for:      /* TODO: generator expressions? */
  case KWD_foreach:  /* TODO: generator expressions? */
  case KWD_do:       /* TODO: generator expressions? */
  case KWD_while:    /* TODO: generator expressions? */
- case KWD_assert:   /* TODO: assert in expressions? */
- case KWD_with:     /* TODO: with in expressions? */
- case KWD_try:      /* TODO: try in expressions? */
- case KWD_class:    /* TODO: class in expressions? */
- case KWD_function: /* TODO: function in expressions? */
- case KWD_del:      /* TODO: del in expressions? */
 
+ case KWD_from:
+ case KWD_import:
+ case KWD_del:
  case KWD_return:
  case KWD_yield:
  case KWD_throw:
@@ -130,11 +145,76 @@ err:
  return NULL;
 }
 
+
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_if_hybrid(unsigned int *pwas_expression) {
+ DREF DeeAstObject *tt_branch;
+ DREF DeeAstObject *ff_branch;
+ DREF DeeAstObject *result,*merge;
+ uint16_t expect; struct ast_loc loc;
+ uint32_t old_flags; unsigned int was_expression;
+ expect = current_tags.at_expect;
+ loc_here(&loc);
+ if unlikely(yield() < 0) goto err;
+ old_flags = TPPLexer_Current->l_flags;
+ TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+ if unlikely(likely(tok == '(') ? (yield() < 0) :
+             WARN(W_EXPECTED_LPAREN_AFTER_IF)) goto err_flags;
+ result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+ if unlikely(!result) goto err;
+ if unlikely(likely(tok == ')') ? (yield() < 0) :
+             WARN(W_EXPECTED_RPAREN_AFTER_IF)) goto err;
+ tt_branch = NULL;
+ was_expression = AST_PARSE_WASEXPR_MAYBE;
+ if (tok != KWD_else && tok != KWD_elif) {
+  tt_branch = ast_parse_hybrid_primary(&was_expression);
+  if unlikely(!tt_branch) goto err_r;
+ }
+ ff_branch = NULL;
+ if (tok == KWD_elif) {
+  token.t_id = KWD_if; /* Cheat a bit... */
+  goto do_else_branch;
+ }
+ if (tok == KWD_else) {
+  if unlikely(yield() < 0)
+     goto err_tt;
+do_else_branch:
+  ff_branch = ast_parse_hybrid_secondary(&was_expression);
+  if unlikely(!ff_branch)
+     goto err_tt;
+ }
+ merge = ast_setddi(ast_conditional(AST_FCOND_EVAL|expect,
+                                    result,
+                                    tt_branch,
+                                    ff_branch),
+                   &loc);
+ Dee_XDecref(ff_branch);
+ Dee_XDecref(tt_branch);
+ Dee_XDecref(result);
+ if (pwas_expression)
+    *pwas_expression = was_expression;
+ return merge;
+err_tt:
+ Dee_XDecref(tt_branch);
+err_r:
+ Dee_Decref(result);
+ goto err;
+err_flags:
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+err:
+ return NULL;
+}
+
+
+
 INTERN DREF DeeAstObject *FCALL
 ast_parse_statement_or_braces(unsigned int *pwas_expression) {
  DREF DeeAstObject *result,**new_elemv;
  DREF DeeAstObject *remainder;
  struct ast_loc loc;
+ unsigned int was_expression;
  ASSERT(tok == '{');
  loc_here(&loc);
  if unlikely(yield() < 0) goto err;
@@ -160,16 +240,18 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
   break;
 
 
- {
-  unsigned int inner_mode;
  case '{': /* Recursion! */
   if unlikely(scope_push() < 0) goto err;
-  result = ast_parse_statement_or_braces(&inner_mode);
+  result = ast_parse_statement_or_braces(&was_expression);
+  ASSERT(!result ||
+          result->ast_type == AST_MULTIPLE ||
+          result->ast_type == AST_CONSTEXPR);
+parse_remainder_after_hybrid_popscope:
   if unlikely(!result) goto err;
-  ASSERT(result->ast_type == AST_MULTIPLE);
-  if (inner_mode == AST_PARSE_WASEXPR_NO)
+parse_remainder_after_hybrid_popscope_resok:
+  if (was_expression == AST_PARSE_WASEXPR_NO)
       goto parse_remainder_after_statement;
-  if (inner_mode == AST_PARSE_WASEXPR_YES) {
+  if (was_expression == AST_PARSE_WASEXPR_YES) {
    result = ast_parse_unary_postexpr(result);
    if unlikely(!result) goto err;
 check_recursion_after_expression_suffix:
@@ -185,14 +267,22 @@ parse_remainder_after_comma_popscope:
     remainder = ast_parse_brace_list(result);
     if unlikely(!remainder) goto err_r;
     Dee_Decref(result);
-    result = remainder;
+    result = ast_setddi(remainder,&loc);
+    if unlikely(likely(tok == '}') ? (yield() < 0) : 
+                WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+       goto err_r;
     if (pwas_expression)
        *pwas_expression = AST_PARSE_WASEXPR_YES;
     break;
    }
-   if unlikely(likely(tok == '}') ? (yield() < 0) : 
-               WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
-      goto err_r;
+   if likely(tok == '}') {
+parse_remainder_before_rbrace_popscope_wrap:
+    if unlikely(yield() < 0)
+       goto err_r;
+   } else {
+    if unlikely(WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+       goto err_r;
+   }
    /* Wrap the result as a single sequence. */
    new_elemv = (DREF DeeAstObject **)Dee_Malloc(1 * sizeof(DREF DeeAstObject *));
    if unlikely(!new_elemv) goto err_r;
@@ -208,7 +298,7 @@ parse_remainder_after_comma_popscope:
   if (tok == ':')
       goto parse_remainder_after_colon_popscope;
   if (tok == '}')
-      goto parse_remainder_before_rbrace_popscope;
+      goto parse_remainder_before_rbrace_popscope_wrap;
   {
    unsigned long token_num = token.t_num;
    result = ast_parse_unary_postexpr(result);
@@ -216,24 +306,47 @@ parse_remainder_after_comma_popscope:
    if (token_num != token.t_num)
        goto check_recursion_after_expression_suffix;
   }
-  result->ast_flag = AST_FMULTIPLE_KEEPLAST;
+#if 0
+  if (result->ast_type == AST_MULTIPLE)
+      result->ast_flag = AST_FMULTIPLE_KEEPLAST;
+#endif
   goto parse_remainder_after_statement;
- } break;
 
- case KWD_if:       /* TODO: if in expressions? */
- case KWD_from:     /* TODO: import in expressions? */
- case KWD_import:   /* TODO: import in expressions? */
+ case KWD_try:
+  if unlikely(scope_push() < 0) goto err;
+  result = ast_parse_try_hybrid(&was_expression);
+  goto parse_remainder_after_hybrid_popscope;
+
+ case KWD_if:
+  if unlikely(scope_push() < 0) goto err;
+  result = ast_parse_if_hybrid(&was_expression);
+  goto parse_remainder_after_hybrid_popscope;
+
+ case KWD_with:
+  if unlikely(scope_push() < 0) goto err;
+  result = ast_parse_with_hybrid(&was_expression);
+  goto parse_remainder_after_hybrid_popscope;
+
+ case KWD_assert:
+  if unlikely(scope_push() < 0) goto err;
+  result = ast_parse_assert_hybrid(&was_expression);
+  if unlikely(!result) goto err;
+  /* Special case: `assert' statements require a trailing ';' token.
+   *               If that token exists, we know for sure that this is a statement! */
+  if (tok == ';') {
+   was_expression = AST_PARSE_WASEXPR_NO;
+   if unlikely(yield() < 0) goto err_r;
+  }
+  goto parse_remainder_after_hybrid_popscope_resok;
+
  case KWD_for:      /* TODO: generator expressions? */
  case KWD_foreach:  /* TODO: generator expressions? */
  case KWD_do:       /* TODO: generator expressions? */
  case KWD_while:    /* TODO: generator expressions? */
- case KWD_assert:   /* TODO: assert in expressions? */
- case KWD_with:     /* TODO: with in expressions? */
- case KWD_try:      /* TODO: try in expressions? */
- case KWD_class:    /* TODO: class in expressions? */
- case KWD_function: /* TODO: function in expressions? */
- case KWD_del:      /* TODO: del in expressions? */
 
+ case KWD_from:
+ case KWD_import:
+ case KWD_del:
  case KWD_return:
  case KWD_yield:
  case KWD_throw:
@@ -294,7 +407,7 @@ is_a_statement:
   ASSERT(result->ast_flag == AST_FMULTIPLE_GENERIC);
   if (!current_scope->s_mapc) {
    if (tok == '}') {
-parse_remainder_before_rbrace_popscope:
+/*parse_remainder_before_rbrace_popscope:*/
     /* Sequence-like brace expression. */
     if unlikely(yield() < 0) goto err;
 parse_remainder_after_rbrace_popscope:

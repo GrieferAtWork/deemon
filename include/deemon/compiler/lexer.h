@@ -107,25 +107,10 @@ INTDEF DREF DeeAstObject *FCALL ast_parse_assign_operand(/*inherit(always)*/DREF
 /* Parse a top-level expression. */
 #define ast_parse_expression(lookup_mode) ast_parse_assign(lookup_mode)
 
-
-#define AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
-#define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
-#define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
-
-/* @param: mode:            Set of `AST_COMMA_*' - What is allowed and when should we pack values.
- * @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
-INTERN DREF DeeAstObject *FCALL
-ast_parse_statement_or_expression(uint16_t mode,
-                                  unsigned int *pwas_expression);
-
 /* Given a unary expression `ast', parse anything that may
  * follow it before it could be considered a full expression. */
 INTDEF DREF DeeAstObject *FCALL
 ast_parse_unary_postexpr(/*inherit(always)*/DREF DeeAstObject *__restrict ast);
-
-/* Parse a statement or a brace-expression, with the current token being a `{' */
-INTDEF DREF DeeAstObject *FCALL
-ast_parse_statement_or_braces(unsigned int *pwas_expression);
 
 
 /* Given an `key'-expression in `{ key : foo }', parse the remainder
@@ -185,6 +170,9 @@ ast_parse_comma(uint16_t mode, uint16_t flags,
 #define AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,' being followed by another expression.
                                         * NOTE: When this flag is set, trailing `,' are not parsed, but remain as the active token upon exit. */
 #define AST_COMMA_ALLOWNONBLOCK 0x0040 /* Allow non-blocking yields for a trailing `;'. */
+#define AST_COMMA_NOSUFFIXKWD   0x0080 /* Don't parse c-style variable declarations for reserved keywords.
+                                        * This is required for `else', `catch', `finally', etc.
+                                        * >> `try foo catch (...)' (don't interpret as `local catch = foo(...)' when starting with `foo') */
 #define AST_COMMA_ALLOWKWDLIST  0x1000 /* Stop if what a keyword list label is encountered. */
 #define AST_COMMA_PARSESINGLE   0x2000 /* Only parse a single expression. */
 #define AST_COMMA_PARSESEMI     0x4000 /* Parse a `;' as part of the expression (if a `;' is required). */
@@ -352,7 +340,7 @@ INTDEF int32_t DCALL ast_parse_for_head(DREF DeeAstObject **__restrict pinit,
                                         DREF DeeAstObject **__restrict piter_or_next);
 
 /* Parse an assertion statement. (must be started ontop of the `assert' keyword) */
-INTDEF DREF DeeAstObject *DCALL ast_parse_assert(bool needs_parenthesis);
+INTDEF DREF DeeAstObject *FCALL ast_parse_assert(bool needs_parenthesis);
 
 /* Parse a cast expression suffix following parenthesis, or
  * re-return the given `typeexpr' if there is no cast operand
@@ -366,7 +354,68 @@ INTDEF DREF DeeAstObject *DCALL ast_parse_assert(bool needs_parenthesis);
  *                           ^
  *                           exit
  */
-INTDEF DREF DeeAstObject *DCALL ast_parse_cast(DeeAstObject *__restrict typeexpr);
+INTDEF DREF DeeAstObject *FCALL ast_parse_cast(DeeAstObject *__restrict typeexpr);
+
+
+
+
+#define AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
+#define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
+#define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
+
+/* @param: mode:            Set of `AST_COMMA_*' - What is allowed and when should we pack values.
+ * @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
+INTERN DREF DeeAstObject *FCALL
+ast_parse_statement_or_expression(uint16_t mode,
+                                  unsigned int *pwas_expression);
+
+/* Flags for parsing a single expression in hybrid mode. */
+#define AST_COMMA_MODE_HYBRID_SINGLE \
+       (AST_COMMA_PARSESINGLE | AST_COMMA_NOSUFFIXKWD | \
+        AST_COMMA_ALLOWVARDECLS | AST_COMMA_PARSESEMI)
+
+/* Parse a primary and second expression in hybrid mode. */
+#define ast_parse_hybrid_primary(pwas_expression) \
+        ast_parse_statement_or_expression(AST_COMMA_MODE_HYBRID_SINGLE,pwas_expression)
+LOCAL DREF DeeAstObject *FCALL
+ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
+ DREF DeeAstObject *result;
+ switch (*pwas_expression) {
+ case AST_PARSE_WASEXPR_NO:
+  result = ast_parse_statement(false);
+  break;
+ case AST_PARSE_WASEXPR_YES:
+  result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  break;
+ case AST_PARSE_WASEXPR_MAYBE:
+  result = ast_parse_statement_or_expression(AST_COMMA_MODE_HYBRID_SINGLE,
+                                             pwas_expression);
+  break;
+ default: __builtin_unreachable();
+ }
+ return result;
+}
+
+
+
+
+/* Parse a statement or a brace-expression, with the current token being a `{' */
+INTDEF DREF DeeAstObject *FCALL
+ast_parse_statement_or_braces(unsigned int *pwas_expression);
+
+/* With the current token being `try', parse the construct and
+ * try to figure out if it's a statement or an expression. */
+INTERN DREF DeeAstObject *FCALL ast_parse_try_hybrid(unsigned int *pwas_expression);
+/* Same as `ast_parse_try_hybrid' but for if statements / expressions. */
+INTERN DREF DeeAstObject *FCALL ast_parse_if_hybrid(unsigned int *pwas_expression);
+/* Same as `ast_parse_try_hybrid' but for with statements / expressions. */
+INTERN DREF DeeAstObject *FCALL ast_parse_with_hybrid(unsigned int *pwas_expression);
+/* Same as `ast_parse_try_hybrid' but for assert statements / expressions. */
+INTERN DREF DeeAstObject *FCALL ast_parse_assert_hybrid(unsigned int *pwas_expression);
+
+
+
+
 
 struct module_object;
 /* Parse a module name and return the associated module object. */

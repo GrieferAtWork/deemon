@@ -27,7 +27,7 @@
 
 DECL_BEGIN
 
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF DeeAstObject *FCALL
 ast_parse_cast(DeeAstObject *__restrict typeexpr) {
  uint32_t old_flags;
  DREF DeeAstObject *result,*merge,**exprv;

@@ -165,6 +165,120 @@ err_scope_r:
 }
 
 
+INTERN DREF DeeAstObject *FCALL
+ast_parse_with_hybrid(unsigned int *pwas_expression) {
+ struct ast_loc loc;
+ struct symbol *expression_sym;
+ DREF DeeAstObject *result,*other,*merge;
+ DREF DeeAstObject **result_v;
+ uint32_t old_flags;
+ ASSERT(tok == KWD_with);
+ loc_here(&loc);
+ if unlikely(yield() < 0) goto err;
+ if (scope_push()) goto err;
+ old_flags = TPPLexer_Current->l_flags;
+ TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+ if unlikely(likely(tok == '(') ? (yield() < 0) :
+             WARN(W_EXPECTED_LPARENT_AFTER_WITH))
+    goto err_scope_flags;
+ /* Parse the expression for the with.
+  * NOTE: We always allow the user to declare variables in here,
+  *       so-as to make it easier to make use of with-statements
+  *       where the with-expression is re-used inside the block. */
+ result = ast_parse_comma(AST_COMMA_NORMAL|AST_COMMA_ALLOWVARDECLS,
+                          AST_FMULTIPLE_TUPLE,
+                          NULL);
+ if unlikely(!result) goto err_scope_flags;
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+ if unlikely(likely(tok == ')') ? (yield() < 0) :
+             WARN(W_EXPECTED_RPARENT_AFTER_WITH))
+    goto err_scope_r;
+ /* Create the symbol that's going to contain the with-expression. */
+ expression_sym = new_unnamed_symbol();
+ if unlikely(!expression_sym) goto err_scope_r;
+ /* Use s stack variable. */
+ expression_sym->sym_class           = SYM_CLASS_STACK;
+ expression_sym->sym_stack.sym_nstck = current_scope->s_stk;
+ current_scope->s_stk                = expression_sym;
+ /* Generate the store expression. */
+ other = ast_setddi(ast_sym(expression_sym),&loc);
+ if unlikely(!other) goto err_scope_r;
+ merge = ast_setddi(ast_action2(AST_FACTION_STORE,other,result),&loc);
+ Dee_Decref(other);
+ Dee_Decref(result);
+ if unlikely(!merge) goto err_scope;
+ result = merge;
+ /* At this point, we've written the expression into a
+  * symbol, which we can access normally from now on. */
+ /* Create a vector that's going to be used for the AST_MULTIPLE:
+  * [0] -- __hidden_symbol = with_expression;
+  * [1] -- __hidden_symbol.operator enter();
+  * [2] -- try ... finally { __hidden_symbol.operator leave(); } */
+ result_v = (DREF DeeAstObject **)Dee_Malloc(3*sizeof(DREF DeeAstObject *));
+ if unlikely(!result_v) goto err_scope_r;
+ result_v[0] = result; /* Inherit */
+ result = ast_setddi(ast_sym(expression_sym),&loc);
+ if unlikely(!result) goto err_result_v_0;
+ merge = ast_operator1(OPERATOR_ENTER,AST_OPERATOR_FNORMAL,result);
+ Dee_Decref(result);
+ if unlikely(!merge) goto err_result_v_0;
+ result_v[1] = merge; /* Inherit. */
+
+ /* Finally, parse the content of the wrapped try-statement. */
+ result = ast_parse_statement_or_expression(AST_COMMA_MODE_HYBRID_SINGLE,
+                                            pwas_expression);
+ if unlikely(!result) goto err_result_v_1;
+
+ /* Create the leave-expression for the finally block. */
+ merge = ast_setddi(ast_sym(expression_sym),&loc);
+ if unlikely(!merge) goto err_result_v_1_r;
+ /* Invoke the leave operator on the symbol. */
+ other = ast_operator1(OPERATOR_LEAVE,AST_OPERATOR_FNORMAL,merge);
+ Dee_Decref(merge);
+ if unlikely(!other) goto err_result_v_1_r;
+
+ /* Wrap the with-block in a try-finally AST with the leave-statement. */
+ merge = ast_setddi(ast_tryfinally(result,
+                                   other),
+                   &loc);
+ Dee_Decref(other);
+ Dee_Decref(result);
+ if unlikely(!merge) goto err_result_v_1;
+ result_v[2] = merge; /* Inherit */
+
+ /* At this point, we've created all the necessary expression and it
+  * is time to pack everything together in a multiple-ast.
+  * HINT: as it happens, the try-statement is the last expression in
+  *       this ast, which is exactly what we want the with-statement
+  *       to evaluate to when used in an expression (aka. whatever
+  *       the user writes as the last expression of the try-block). */
+ result = ast_setddi(ast_multiple(AST_FMULTIPLE_KEEPLAST,3,result_v),&loc);
+ if unlikely(!result) goto err_result_v_2;
+ scope_pop();
+ return result;
+err_result_v_2:
+ Dee_Decref(result_v[2]);
+err_result_v_1:
+ Dee_Decref(result_v[1]);
+err_result_v_0:
+ Dee_Decref(result_v[0]);
+ Dee_Free(result_v);
+err_scope:
+ scope_pop();
+err:
+ return NULL;
+err_scope_flags:
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+ goto err_scope;
+err_result_v_1_r:
+ Dee_Decref(result);
+ goto err_result_v_1;
+err_scope_r:
+ Dee_Decref(result);
+ goto err_scope;
+}
+
+
 
 DECL_END
 
