@@ -1375,8 +1375,6 @@ struct ext_def {
 
 PRIVATE struct ext_def const extensions[] = {
 #ifndef CONFIG_NO_DEC
- /* Define if the `dec' loader is the first extension checked. */
-#define CONFIG_DEC_LOADER_COMES_FIRST 1
     { {'d','e','c'}, MODULE_FILECLASS_COMPILED },
 #endif
     { {'d','e','e'}, MODULE_FILECLASS_SOURCE },
@@ -1540,6 +1538,7 @@ DeeModule_Open(DeeObject *__restrict module_name,
 #ifndef CONFIG_NO_DEC
    char *filepart_start;
 #endif
+   /* TODO: Make this function unicode compatible. */
    full_path = DeeString_NewBuffer(DeeString_SIZE(path)+1+
 #ifndef CONFIG_NO_DEC
                                    1+ /* The `.' prefixed before DEC files. */
@@ -1599,34 +1598,21 @@ DeeModule_Open(DeeObject *__restrict module_name,
        memmove(filepart_start,filepart_start+1,
               (size_t)(iter-filepart_start)*sizeof(char));
        iter[3] = '\0';
-#ifdef CONFIG_DEC_LOADER_COMES_FIRST
        --DeeString_SIZE(full_path);
-#endif /* CONFIG_DEC_LOADER_COMES_FIRST */
       }
      } else
 #endif
      {
-#ifndef CONFIG_NO_DEC
-#ifndef CONFIG_DEC_LOADER_COMES_FIRST
-      --DeeString_SIZE(full_path);
-#endif /* !CONFIG_DEC_LOADER_COMES_FIRST */
-#endif
       memcpy(iter,extensions[i].source_ext,
              SOURCE_EXTENSION_MAX*sizeof(char));
       /* Open the module source file. */
       result = (DREF DeeModuleObject *)DeeModule_OpenFile(full_path,module_name,
                                                           extensions[i].source_class,
                                                           options);
-#ifndef CONFIG_NO_DEC
-#ifndef CONFIG_DEC_LOADER_COMES_FIRST
-      if (result == (DREF DeeModuleObject *)ITER_DONE)
-          ++DeeString_SIZE(full_path);
-#endif /* !CONFIG_DEC_LOADER_COMES_FIRST */
-#endif
      }
      /* Stop if something other than file-not-found happened. */
      if (result != (DREF DeeModuleObject *)ITER_DONE) break;
-     DeeString_FreeWidth(full_path);
+     DeeString_FreeWidth(full_path); /* TODO: Remove me */
     } while (++i != COMPILER_LENOF(extensions));
     Dee_Decref(full_path);
    }
@@ -1682,25 +1668,26 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
  DREF DeeObject *module_filename;
  char *iter,*begin,*end,ch,*flush_start;
 #ifndef CONFIG_NO_DEC
- char *module_name_start;
+ size_t module_name_start;
  size_t module_name_size;
+ size_t module_ext_start;
 #endif
- /* TODO: Unicode-aware */
- struct ascii_printer full_path = ASCII_PRINTER_INIT;
+ struct unicode_printer full_path = UNICODE_PRINTER_INIT;
  ASSERT_OBJECT_TYPE_EXACT(module_name,&DeeString_Type);
- flush_start = begin = DeeString_STR(module_name);
- end = (iter = begin)+DeeString_SIZE(module_name);
+ flush_start = begin = DeeString_AsUtf8(module_name);
+ if unlikely(!begin) goto err;
+ end = (iter = begin)+WSTR_LENGTH(begin);
  /* Shouldn't happen: Not actually a relative module name. */
  if (begin == end || *begin != '.')
      return DeeModule_Open(module_name,options,throw_error);
- if (ascii_printer_print(&full_path,module_pathname,module_pathsize) < 0)
+ if (unicode_printer_print(&full_path,module_pathname,module_pathsize) < 0)
      goto err;
  /* Add a trailing slash is necessary. */
  if (module_pathsize && !ISSEP(module_pathname[module_pathsize-1]) &&
-     ascii_printer_putc(&full_path,SEP)) goto err;
+     unicode_printer_putascii(&full_path,SEP)) goto err;
  /* Interpret and process the given module name. */
 #ifndef CONFIG_NO_DEC
- module_name_start = begin;
+ module_name_start = UNICODE_PRINTER_LENGTH(&full_path);
 #endif
 next:
  ch = *iter++;
@@ -1722,40 +1709,44 @@ next:
  }
  /* Flush the current part and append another slash. */
  if (flush_start != iter-1) {
-  if (ascii_printer_print(&full_path,flush_start,
-                          (size_t)(iter-flush_start)-1) < 0 ||
-      ascii_printer_putc(&full_path,SEP))
+  if (unicode_printer_print(&full_path,flush_start,
+                           (size_t)(iter-flush_start)-1) < 0 ||
+      unicode_printer_putascii(&full_path,SEP))
       goto err;
  }
  /* Handle parent directory references. */
  for (; *iter == '.'; ++iter) {
-  if (full_path.ap_string) {
-   char *new_end; size_t old_length;
-   old_length = full_path.ap_length;
-   while (old_length &&
-          ISSEP(full_path.ap_string->s_str[old_length-1]))
-          --old_length;
-   new_end = (char *)memrchr(full_path.ap_string->s_str,'/',old_length);
+  if (UNICODE_PRINTER_LENGTH(&full_path)) {
+   size_t old_length,new_end;
+   old_length = UNICODE_PRINTER_LENGTH(&full_path);
+   while (old_length) {
+    uint32_t ch;
+    ch = UNICODE_PRINTER_GETCHAR(&full_path,old_length-1);
+    if (!ISSEP(ch)) break;
+    --old_length;
+   }
+   new_end = (size_t)unicode_printer_memchr(&full_path,'/',0,old_length);
 #ifdef CONFIG_HOST_WINDOWS
-   if (!new_end)
-        new_end = (char *)memrchr(full_path.ap_string->s_str,'\\',old_length);
+   {
+    size_t temp;
+    temp = (size_t)unicode_printer_memchr(&full_path,'\\',0,old_length);
+    if (new_end > temp)
+        new_end = temp;
+   }
 #endif
-   if (new_end) {
+   if (new_end != (size_t)-1) {
     /* Truncate the existing path. */
     ++new_end;
-    full_path.ap_length = (size_t)(new_end-full_path.ap_string->s_str);
-#ifndef NDEBUG
-    *new_end = '\0'; /* For better debug readability. */
-#endif
+    unicode_printer_truncate(&full_path,new_end);
     continue;
    }
   }
   /* Append a host-specific parent directory reference. */
-  if (ascii_printer_print(&full_path,".." SEP_S,3) < 0)
+  if (unicode_printer_printascii(&full_path,".." SEP_S,3) < 0)
       goto err;
  }
 #ifndef CONFIG_NO_DEC
- module_name_start = iter;
+ module_name_start = UNICODE_PRINTER_LENGTH(&full_path);
 #endif
  flush_start = iter;
  goto next;
@@ -1763,57 +1754,70 @@ done:
  --iter;
  /* Print the remainder. */
  if (iter > flush_start) {
-  if (ascii_printer_print(&full_path,flush_start,
-                          (size_t)(iter-flush_start)) < 0)
+  if (unicode_printer_print(&full_path,flush_start,
+                           (size_t)(iter-flush_start)) < 0)
       goto err;
  }
 #ifndef CONFIG_NO_DEC
- module_name_size = (size_t)(iter-module_name_start);
+ module_name_size = (UNICODE_PRINTER_LENGTH(&full_path) -
+                     module_name_start);
 #endif
  /* With the full path now printed, reserve memory for the extension. */
- iter = ascii_printer_alloc(&full_path,
+ {
+  dssize_t temp;
+  temp = unicode_printer_reserve(&full_path,
 #ifndef CONFIG_NO_DEC
-                             1+
+                                 1 +
 #endif
-                             1+SOURCE_EXTENSION_MAX);
- if unlikely(!iter) goto err;
- *iter = '.'; /* NOTE: The remainder is written in the source-class loop below. */
- module_filename = ascii_printer_pack(&full_path);
+                                 1 + SOURCE_EXTENSION_MAX);
+  if unlikely(temp == -1) goto err;
+  /* NOTE: The remainder is written in the source-class loop below. */
+  UNICODE_PRINTER_SETCHAR(&full_path,temp,'.');
+ }
+ module_filename = unicode_printer_pack(&full_path);
  if unlikely(!module_filename) goto err_noprinter;
  /* Loop through known extensions and classes while trying to find what belongs. */
 #ifndef CONFIG_NO_DEC
- iter = DeeString_END(module_filename)-4,i = 0;
- module_name_start = (DeeString_END(module_filename)-
+ module_ext_start = DeeString_WLEN(module_filename);
+ module_name_start = (module_ext_start -
                      (2+SOURCE_EXTENSION_MAX+module_name_size));
+ module_ext_start -= 4;
 #else
- iter = DeeString_END(module_filename)-3,i = 0;
+ module_ext_start = DeeString_WLEN(module_filename) - 3;
 #endif
+ i = 0;
  do {
 #ifndef CONFIG_NO_DEC
   if (extensions[i].source_class == MODULE_FILECLASS_COMPILED) {
-   memmove(module_name_start+1,module_name_start,(module_name_size+1)*sizeof(char));
-   module_name_start[0] = '.';
-   *(uint32_t *)(iter+1) = ENCODE4('d','e','c',0);
+   DeeString_Memmove(module_filename,
+                     module_name_start+1,
+                     module_name_start,
+                     module_name_size+1);
+   DeeString_SetChar(module_filename,module_name_start,'.');
+   DeeString_SetChar(module_filename,module_ext_start + 1,'d');
+   DeeString_SetChar(module_filename,module_ext_start + 2,'e');
+   DeeString_SetChar(module_filename,module_ext_start + 3,'c');
+   DeeString_SetChar(module_filename,module_ext_start + 4,0);
    result = (DREF DeeModuleObject *)DeeModule_OpenFile(module_filename,NULL,
                                                        extensions[i].source_class,
                                                        options);
    if (result == (DREF DeeModuleObject *)ITER_DONE) {
-    memmove(module_name_start,module_name_start+1,(module_name_size+1)*sizeof(char));
-    iter[3] = '\0';
-#ifdef CONFIG_DEC_LOADER_COMES_FIRST
-    --DeeString_SIZE(module_filename);
-#endif
+    DeeString_Memmove(module_filename,
+                      module_name_start,
+                      module_name_start+1,
+                      module_name_size+1);
+    //DeeString_SetChar(module_filename,module_ext_start + 3,0);
+    DeeString_PopbackAscii(module_filename);
    }
   } else
 #endif
   {
-#ifndef CONFIG_NO_DEC
-#ifndef CONFIG_DEC_LOADER_COMES_FIRST
-   --DeeString_SIZE(module_filename);
-#endif
-#endif
    /* Graft the current extension onto the path. */
-   memcpy(iter,extensions[i].source_ext,SOURCE_EXTENSION_MAX*sizeof(char));
+   size_t j;
+   for (j = 0; j < SOURCE_EXTENSION_MAX; ++j) {
+    DeeString_SetChar(module_filename,module_ext_start + j,
+                      extensions[i].source_ext[j]);
+   }
    /* NOTE: We pass NULL for `module_name' to this function, so it can figure
     *       out what the module's name is itself, while also not attempting to
     *       register it as a global module, yet still register it under its
@@ -1821,15 +1825,8 @@ done:
    result = (DREF DeeModuleObject *)DeeModule_OpenFile(module_filename,NULL,
                                                        extensions[i].source_class,
                                                        options);
-#ifndef CONFIG_NO_DEC
-#ifndef CONFIG_DEC_LOADER_COMES_FIRST
-   if (result == (DREF DeeModuleObject *)ITER_DONE)
-       ++DeeString_SIZE(module_filename);
-#endif
-#endif
   }
   if (result != (DREF DeeModuleObject *)ITER_DONE) break;
-  DeeString_FreeWidth(module_filename);
  } while (++i != COMPILER_LENOF(extensions));
  Dee_Decref(module_filename);
  /* Throw an error if the module could not be found
@@ -1841,7 +1838,7 @@ done:
  }
  return (DREF DeeObject *)result;
 err:
- ascii_printer_fini(&full_path);
+ unicode_printer_fini(&full_path);
 err_noprinter:
  return NULL;
 }
