@@ -65,205 +65,22 @@ LOCAL char *
 
 
 /* Get/Set a character, given its index within the string. */
-#define DeeString_GetChar(self,index)       _DeeString_GetChar((DeeStringObject *)REQUIRES_OBJECT(self),index)
-#define DeeString_SetChar(self,index,value) _DeeString_SetChar((DeeStringObject *)REQUIRES_OBJECT(self),index,value)
+#define DeeString_GetChar(self,index)       DeeString_GetChar((DeeStringObject *)REQUIRES_OBJECT(self),index)
+#define DeeString_SetChar(self,index,value) DeeString_SetChar((DeeStringObject *)REQUIRES_OBJECT(self),index,value)
+DFUNDEF uint32_t (DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index);
+DFUNDEF void (DCALL DeeString_SetChar)(DeeStringObject *__restrict self, size_t index, uint32_t value);
 
-FORCELOCAL uint32_t DCALL
-_DeeString_GetChar(DeeStringObject *__restrict self, size_t index) {
- size_t *str; struct string_utf *utf = self->s_data;
- if (!utf) {
-  ASSERT(index <= self->s_len);
-  return ((uint8_t *)self->s_str)[index];
- }
- str = utf->u_data[utf->u_width];
- ASSERT(index <= WSTR_LENGTH(str));
- SWITCH_SIZEOF_WIDTH(utf->u_width) {
- CASE_WIDTH_1BYTE: return ((uint8_t *)str)[index];
- CASE_WIDTH_2BYTE: return ((uint16_t *)str)[index];
- CASE_WIDTH_4BYTE: return ((uint32_t *)str)[index];
- }
-}
-FORCELOCAL void DCALL
-_DeeString_SetChar(DeeStringObject *__restrict self,
-                   size_t index, uint32_t value) {
- size_t *str;
- struct string_utf *utf = self->s_data;
- if (!utf) {
-  ASSERT((index < self->s_len) ||
-         (index == self->s_len && !value));
-  self->s_str[index] = (uint8_t)value;
- } else {
-  str = utf->u_data[utf->u_width];
-  ASSERT((index < WSTR_LENGTH(str)) ||
-         (index == WSTR_LENGTH(str) && !value));
-  SWITCH_SIZEOF_WIDTH(utf->u_width) {
-  CASE_WIDTH_1BYTE: ((uint8_t *)str)[index] = (uint8_t)value; break;
-  CASE_WIDTH_2BYTE: ((uint16_t *)str)[index] = (uint16_t)value; break;
-  CASE_WIDTH_4BYTE: ((uint32_t *)str)[index] = (uint32_t)value; break;
-  }
- }
-}
 
+/* Move `num_chars' characters from `src' to `dst' */
 #define DeeString_Memmove(self,dst,src,num_chars) \
-       _DeeString_Memmove((DeeStringObject *)REQUIRES_OBJECT(self),dst,src,num_chars)
-LOCAL void DCALL
-_DeeString_Memmove(DeeStringObject *__restrict self,
-                   size_t dst, size_t src, size_t num_chars) {
- union dcharptr str;
- struct string_utf *utf = self->s_data;
- if (!utf) {
-  ASSERT((dst+num_chars) <= self->s_len+1);
-  ASSERT((src+num_chars) <= self->s_len+1);
-  memmove(self->s_str + dst,
-          self->s_str + src,
-          num_chars * sizeof(char));
- } else {
-  str.ptr = utf->u_data[utf->u_width];
-  ASSERT((dst+num_chars) <= WSTR_LENGTH(str.ptr));
-  ASSERT((src+num_chars) <= WSTR_LENGTH(str.ptr));
-  if (utf->u_utf8 &&
-      utf->u_utf8 != (char *)DeeString_STR(self) &&
-      utf->u_utf8 != (char *)utf->u_data[STRING_WIDTH_1BYTE]) {
-   ASSERT(str.ptr != utf->u_utf8);
-   Dee_Free(((size_t *)utf->u_utf8)-1);
-   utf->u_utf8 = NULL;
-  }
-  if (utf->u_utf16 &&
-      utf->u_utf16 != (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE]) {
-   ASSERT(str.ptr != utf->u_utf16);
-   Dee_Free(((size_t *)utf->u_utf16) - 1);
-   utf->u_utf16 = NULL;
-  }
-  SWITCH_SIZEOF_WIDTH(utf->u_width) {
-  CASE_WIDTH_1BYTE:
-   memmove(str.cp8 + dst,str.cp8 + src,num_chars * 1);
-   if (utf->u_data[STRING_WIDTH_2BYTE]) {
-    str.ptr = utf->u_data[STRING_WIDTH_2BYTE];
-    memmove(str.cp16 + dst,str.cp16 + src,num_chars * 2);
-   }
-   if (utf->u_data[STRING_WIDTH_4BYTE]) {
-    str.ptr = utf->u_data[STRING_WIDTH_4BYTE];
-    memmove(str.cp32 + dst,str.cp32 + src,num_chars * 4);
-   }
-   break;
-  CASE_WIDTH_2BYTE:
-   ASSERT(!utf->u_data[STRING_WIDTH_1BYTE]);
-   memmove(str.cp16 + dst,str.cp16 + src,num_chars * 1);
-   if (utf->u_data[STRING_WIDTH_4BYTE]) {
-    str.ptr = utf->u_data[STRING_WIDTH_4BYTE];
-    memmove(str.cp32 + dst,str.cp32 + src,num_chars * 4);
-   }
-   goto check_1byte;
-  CASE_WIDTH_4BYTE:
-   if (utf->u_data[STRING_WIDTH_2BYTE]) {
-    if (utf->u_utf16 == (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE])
-        utf->u_utf16 = NULL;
-    Dee_Free(((size_t *)utf->u_data[STRING_WIDTH_2BYTE])-1);
-    utf->u_data[STRING_WIDTH_2BYTE] = NULL;
-   }
-   if (utf->u_utf16) {
-    ASSERT(utf->u_utf16 != (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE]);
-    Dee_Free((size_t *)utf->u_utf16 - 1);
-    utf->u_utf16 = NULL;
-   }
-   memmove(str.cp32 + dst,str.cp32 + src,num_chars * 1);
-check_1byte:
-   if (utf->u_data[STRING_WIDTH_1BYTE]) {
-    /* String bytes data. */
-    if (utf->u_data[STRING_WIDTH_1BYTE] == (size_t *)DeeString_STR(self)) {
-     ASSERT(DeeString_SIZE(self) == WSTR_LENGTH(str.ptr));
-     memmove(DeeString_STR(self) + dst,
-             DeeString_STR(self) + src,num_chars * sizeof(char));
-     return;
-    }
-    if (utf->u_utf8 == (char *)utf->u_data[STRING_WIDTH_1BYTE])
-        utf->u_utf8 = NULL;
-    Dee_Free((size_t *)utf->u_data[STRING_WIDTH_1BYTE] - 1);
-    utf->u_data[STRING_WIDTH_1BYTE] = NULL;
-   }
-   if (utf->u_utf8) {
-    if (utf->u_utf8 == (char *)DeeString_STR(self)) {
-     /* Must update the utf-8 representation. */
-     if (DeeString_SIZE(self) == WSTR_LENGTH(str.ptr)) {
-      /* No unicode character. -> We can simply memmove the UTF-8 variable to update it. */
-      memmove(DeeString_STR(self) + dst,
-              DeeString_STR(self) + src,num_chars * sizeof(char));
-     } else {
-      /* The difficult case. */
-      char *utf8_src,*utf8_dst,*end;
-      size_t i;
-      if (dst < src) {
-       i = dst;
-       utf8_dst = DeeString_STR(self);
-       while (i--) utf8_readchar_u((char const **)&utf8_dst);
-       utf8_src = utf8_dst;
-       i = src - dst;
-       while (i--) utf8_readchar_u((char const **)&utf8_src);
-       end = utf8_src;
-       i = num_chars;
-       while (i--) utf8_readchar_u((char const **)&end);
-      } else {
-       i = dst;
-       utf8_src = DeeString_STR(self);
-       while (i--) utf8_readchar_u((char const **)&utf8_src);
-       utf8_dst = utf8_src;
-       i = dst - src;
-       if (num_chars > i) {
-        while (i--) utf8_readchar_u((char const **)&utf8_dst);
-        i = num_chars - (dst - src);
-        end = utf8_dst;
-        while (i--) utf8_readchar_u((char const **)&end);
-       } else {
-        end = NULL;
-        while (i--) {
-         if (!num_chars--)
-              end = utf8_dst;
-         utf8_readchar_u((char const **)&utf8_dst);
-        }
-        ASSERT(end != NULL);
-       }
-      }
-      memmove(utf8_dst,utf8_src,(size_t)(end - utf8_src));
-     }
-    } else {
-     ASSERT(utf->u_utf8 != (char *)utf->u_data[STRING_WIDTH_1BYTE]);
-     Dee_Free((size_t *)utf->u_utf8 - 1);
-     utf->u_utf8 = NULL;
-    }
-   }
-   break;
-  }
- }
-}
-
-
-#define DEE_PRIVATE_WSTR_DECLEN(x) \
-   (ASSERT(WSTR_LENGTH(x)),--WSTR_LENGTH(x),(x)[WSTR_LENGTH(x)] = 0)
+        DeeString_Memmove((DeeStringObject *)REQUIRES_OBJECT(self),dst,src,num_chars)
+DFUNDEF void (DCALL DeeString_Memmove)(DeeStringObject *__restrict self,
+                                       size_t dst, size_t src, size_t num_chars);
 
 /* Pop the last character of a string, which must be an ASCII character. */
 #define DeeString_PopbackAscii(self) \
-       _DeeString_PopbackAscii((DeeStringObject *)REQUIRES_OBJECT(self))
-LOCAL void DCALL
-_DeeString_PopbackAscii(DeeStringObject *__restrict self) {
- struct string_utf *utf = self->s_data;
- DEE_PRIVATE_WSTR_DECLEN(self->s_str);
- if (utf) {
-  if (utf->u_data[STRING_WIDTH_1BYTE] &&
-      utf->u_data[STRING_WIDTH_1BYTE] != (size_t *)DeeString_STR(self))
-      DEE_PRIVATE_WSTR_DECLEN((uint8_t *)utf->u_data[STRING_WIDTH_1BYTE]);
-  if (utf->u_data[STRING_WIDTH_2BYTE])
-      DEE_PRIVATE_WSTR_DECLEN((uint16_t *)utf->u_data[STRING_WIDTH_2BYTE]);
-  if (utf->u_data[STRING_WIDTH_4BYTE])
-      DEE_PRIVATE_WSTR_DECLEN((uint32_t *)utf->u_data[STRING_WIDTH_4BYTE]);
-  if (utf->u_utf8 &&
-      utf->u_utf8 != (char *)utf->u_data[STRING_WIDTH_1BYTE] &&
-      utf->u_utf8 != DeeString_STR(self))
-      DEE_PRIVATE_WSTR_DECLEN(utf->u_utf8);
-  if (utf->u_utf16 &&
-      utf->u_utf16 != (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE])
-      DEE_PRIVATE_WSTR_DECLEN(utf->u_utf16);
- }
-}
+        DeeString_PopbackAscii((DeeStringObject *)REQUIRES_OBJECT(self))
+DFUNDEF void (DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self);
 
 
 

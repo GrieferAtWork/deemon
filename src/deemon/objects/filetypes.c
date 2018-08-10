@@ -1450,7 +1450,8 @@ again:
     Dee_Free((size_t *)utf->u_data[STRING_WIDTH_4BYTE] - 1);
    } else if (width == STRING_WIDTH_4BYTE && utf->u_data[STRING_WIDTH_2BYTE]) {
     Dee_Free((size_t *)utf->u_data[STRING_WIDTH_2BYTE] - 1);
-    if (utf->u_utf16 && utf->u_utf16 != (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE])
+    if (utf->u_utf16 &&
+       (uint16_t *)utf->u_utf16 != (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE])
         Dee_Free((size_t *)utf->u_utf16 - 1);
    }
    if (utf->u_utf8 && utf->u_utf8 != wstr->s_str)

@@ -906,7 +906,7 @@ DeeModule_OpenFile(DeeObject *__restrict source_pathname,
  /* Dismiss attempt to load DEC files when the DEC loader has been disabled. */
  if ((file_class&MODULE_FILECLASS_MASK) == MODULE_FILECLASS_COMPILED &&
       options && (options->co_decloader&DEC_FDISABLE)) {
-  /* Throw an error istead if the caller requested this. */
+  /* Throw an error instead if the caller requested this. */
   if (file_class&MODULE_FILECLASS_THROWERROR) {
    err_file_not_found(DeeString_STR(source_pathname));
    return NULL;
@@ -1483,7 +1483,7 @@ DeeModule_GetString(char const *__restrict module_name) {
         (ch) == '*' || (ch) == '\'' || (ch) == '\"'))
 #else
 #define IS_VALID_MODULE_CHARACTER(ch) \
-     ((DeeUni_Flags(ch32)& \
+     ((DeeUni_Flags(ch)& \
       (UNICODE_FALPHA|UNICODE_FLOWER|UNICODE_FUPPER|UNICODE_FTITLE| \
        UNICODE_FDIGIT|UNICODE_FDECIMAL|UNICODE_FSYMSTRT|UNICODE_FSYMCONT)) || \
      ((ch) == '-' || (ch) == '=' || (ch) == ',' || (ch) == '(' || \
@@ -1495,6 +1495,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeModule_Open(DeeObject *__restrict module_name,
                struct compiler_options *options,
                bool throw_error) {
+ DREF DeeObject *path;
  DREF DeeModuleObject *result;
  DeeListObject *paths; size_t i;
  ASSERT_OBJECT_TYPE_EXACT(module_name,&DeeString_Type);
@@ -1520,7 +1521,7 @@ DeeModule_Open(DeeObject *__restrict module_name,
  rwlock_endread(&modules_glob_lock);
 #endif /* !CONFIG_NO_THREADS */
  if (result) {
-  if likely(result->mo_flags&MODULE_FDIDLOAD)
+  if likely(result->mo_flags & MODULE_FDIDLOAD)
      goto done; /* Found a cached module. */
   Dee_Decref(result);
  }
@@ -1529,119 +1530,151 @@ DeeModule_Open(DeeObject *__restrict module_name,
  paths = DeeModule_GetPath();
  DeeList_LockRead(paths);
  for (i = 0; i < DeeList_SIZE(paths); ++i) {
-  DREF DeeObject *path;
   path = DeeList_GET(paths,i);
   Dee_Incref(path);
   DeeList_LockEndRead(paths);
   if (DeeString_Check(path)) {
-   DREF DeeObject *full_path;
+   size_t j,length,module_ext_start;
 #ifndef CONFIG_NO_DEC
-   char *filepart_start;
+   size_t module_name_start,module_name_size;
 #endif
-   /* TODO: Make this function unicode compatible. */
-   full_path = DeeString_NewBuffer(DeeString_SIZE(path)+1+
+   struct unicode_printer printer = UNICODE_PRINTER_INIT;
+   DREF DeeStringObject *module_path;
+   /* Try to speed this up by reserving some memory in the printer. */
+   unicode_printer_allocate(&printer,
+                            DeeString_SIZE(path) + 1 +
 #ifndef CONFIG_NO_DEC
-                                   1+ /* The `.' prefixed before DEC files. */
+                            1 + /* The `.' prefixed before DEC files. */
 #endif
-                                   DeeString_SIZE(module_name)+
-                                   1+SOURCE_EXTENSION_MAX);
-   if unlikely(!full_path)
-    result = NULL;
-   else {
-    char *iter = DeeString_STR(full_path); size_t n,i;
-    memcpy(iter,DeeString_STR(path),DeeString_SIZE(path)*sizeof(char));
-    iter   += DeeString_SIZE(path);
-    /* Strip trailing slashes. */
-    while (iter != DeeString_STR(full_path) &&
-           ISSEP(iter[-1]))
-         --iter;
-    *iter++ = SEP;
+                            DeeString_SIZE(module_name) +
+                            1 + SOURCE_EXTENSION_MAX);
+   /* Start out by printing the given path. */
+   if unlikely(unicode_printer_printstring(&printer,path) < 0)
+      goto err_path_printer;
+   /* Strip trailing slashes. */
+   for (;;) {
+    uint32_t ch;
+    length = UNICODE_PRINTER_LENGTH(&printer);
+    if (!length) break;
+    ch = UNICODE_PRINTER_GETCHAR(&printer,length - 1);
+    if (!ISSEP(ch)) break;
+    unicode_printer_truncate(&printer,length - 1);
+   }
+   /* Append a single slash. */
+   if unlikely(unicode_printer_putascii(&printer,SEP))
+      goto err_path_printer;
+   /* Append the module filename. */
+   j = UNICODE_PRINTER_LENGTH(&printer);
 #ifndef CONFIG_NO_DEC
-    filepart_start = iter;
+   module_name_start = j;
 #endif
-    memcpy(iter,DeeString_STR(module_name),DeeString_SIZE(module_name)*sizeof(char));
-    n = DeeString_SIZE(module_name);
-    /* Convert the module name into a path name while validating its contents. */
-    for (; n; --n) {
-     if (*iter == '.') {
-      *iter = SEP;
-#ifndef CONFIG_NO_DEC
-      filepart_start = iter+1;
-#endif
-      ++iter;
-     } else {
-      uint32_t ch32 = utf8_readchar((char const **)&iter,iter+n);
-      if (!IS_VALID_MODULE_CHARACTER(ch32)) {
-       Dee_Decref(full_path);
-       Dee_Decref(path);
-       goto err_badname;
-      }
+   if unlikely(unicode_printer_printstring(&printer,module_name) < 0)
+      goto err_path_printer;
+   module_ext_start = UNICODE_PRINTER_LENGTH(&printer);
+   /* Validate the path and convert `.' into `/' */
+   for (; j < module_ext_start; ++j) {
+    uint32_t ch;
+    ch = UNICODE_PRINTER_GETCHAR(&printer,j);
+    if (ch != '.') {
+     if (!IS_VALID_MODULE_CHARACTER(ch)) {
+err_invalid_name:
+      err_invalid_module_name(module_name);
+err_path_printer:
+      unicode_printer_fini(&printer);
+      goto err_path;
      }
+     continue;
     }
-    *iter++ = '.';
-    /* Go through extensions and associated classes and try to open them in order. */
-    i = 0;
-    do {
+    /* Make sure the next character isn't another `.'
+     * (which isn't allowed in system module names) */
+    if (j + 1 >= module_ext_start)
+        goto err_invalid_name;
+    if (UNICODE_PRINTER_GETCHAR(&printer,j+1) == '.')
+        goto err_invalid_name;
+    /* Convert to a slash. */
+    UNICODE_PRINTER_SETCHAR(&printer,j,SEP);
 #ifndef CONFIG_NO_DEC
-     if (extensions[i].source_class == MODULE_FILECLASS_COMPILED) {
-      /* Shift the filename. */
-      memmove(filepart_start+1,filepart_start,
-             (size_t)(iter-filepart_start)*sizeof(char));
-      filepart_start[0] = '.';
-      *(uint32_t *)(iter+1) = ENCODE4('d','e','c',0);
-      /* Open the module source file. */
-      result = (DREF DeeModuleObject *)DeeModule_OpenFile(full_path,module_name,
+    module_name_start = j + 1;
+#endif
+   }
+   /* Reserve characters for the extension. */
+   if (unicode_printer_reserve(&printer,
+#ifndef CONFIG_NO_DEC
+                               1 +
+#endif
+                               1 + SOURCE_EXTENSION_MAX) < 0)
+       goto err_path_printer;
+   UNICODE_PRINTER_SETCHAR(&printer,module_ext_start,'.');
+   ++module_ext_start;
+#ifndef CONFIG_NO_DEC
+   module_name_size = module_ext_start - module_name_start;
+#endif
+
+   /* pack together the full module path. */
+   module_path = (REF DeeStringObject *)unicode_printer_pack(&printer);
+   if unlikely(!module_path) goto err_path;
+   j = 0;
+   do {
+#ifndef CONFIG_NO_DEC
+    if (extensions[j].source_class == MODULE_FILECLASS_COMPILED) {
+     /* Shift the filename. */
+     DeeString_Memmove(module_path,
+                       module_name_start + 1,
+                       module_name_start,
+                       module_name_size);
+     DeeString_SetChar(module_path,module_name_start,'.');
+     DeeString_SetChar(module_path,module_ext_start + 1,'d');
+     DeeString_SetChar(module_path,module_ext_start + 2,'e');
+     DeeString_SetChar(module_path,module_ext_start + 3,'c');
+     /* Open the module source file. */
+     result = (DREF DeeModuleObject *)DeeModule_OpenFile((DeeObject *)module_path,module_name,
                                                           MODULE_FILECLASS_COMPILED,
                                                           options);
-      if (result == (DREF DeeModuleObject *)ITER_DONE) {
-       /* Undo the path modifications done for the leading `.' of DEC files. */
-       memmove(filepart_start,filepart_start+1,
-              (size_t)(iter-filepart_start)*sizeof(char));
-       iter[3] = '\0';
-       --DeeString_SIZE(full_path);
-      }
-     } else
+     if (result != (DREF DeeModuleObject *)ITER_DONE)
+         goto done_path;
+     /* Undo the path modifications done for the leading `.' of DEC files. */
+     DeeString_Memmove(module_path,
+                       module_name_start,
+                       module_name_start + 1,
+                       module_name_size);
+     DeeString_PopbackAscii(module_path);
+    } else
 #endif
-     {
-      memcpy(iter,extensions[i].source_ext,
-             SOURCE_EXTENSION_MAX*sizeof(char));
-      /* Open the module source file. */
-      result = (DREF DeeModuleObject *)DeeModule_OpenFile(full_path,module_name,
-                                                          extensions[i].source_class,
-                                                          options);
+    {
+     size_t k;
+     for (k = 0; k < SOURCE_EXTENSION_MAX; ++k) {
+      DeeString_SetChar(module_path,module_ext_start + k,
+                        extensions[j].source_ext[k]);
      }
-     /* Stop if something other than file-not-found happened. */
-     if (result != (DREF DeeModuleObject *)ITER_DONE) break;
-     DeeString_FreeWidth(full_path); /* TODO: Remove me */
-    } while (++i != COMPILER_LENOF(extensions));
-    Dee_Decref(full_path);
-   }
-   Dee_Decref(path);
-   /* If we've found the module or an error other than
-    * file-not-found occurred, then don't continue. */
-   if (result != (DREF DeeModuleObject *)ITER_DONE)
-       goto done;
+     result = (DREF DeeModuleObject *)DeeModule_OpenFile((DeeObject *)module_path,module_name,
+                                                          extensions[j].source_class,
+                                                          options);
+     if (result != (DREF DeeModuleObject *)ITER_DONE) {
+done_path:
+      Dee_Decref(module_path);
+      Dee_Decref(path);
+      goto done;
+     }
+    }
+   } while (++j < COMPILER_LENOF(extensions));
+   Dee_Decref(module_path);
   } else {
-   /* Simply ignore anything that isn't a string. */
-   Dee_Decref(path);
+   /* `path' isn't a string */
   }
+  Dee_Decref(path);
   DeeList_LockRead(paths);
  }
  DeeList_LockEndRead(paths);
- /* If we're not supposed to throw an
-  * error, return `ITER_DONE' instead. */
- if (!throw_error) {
-  result = (DREF DeeModuleObject *)ITER_DONE;
-  goto done;
- }
+ if (!throw_error)
+      return ITER_DONE;
  err_module_not_found(module_name);
+err:
+ return NULL;
+err_path:
+ Dee_Decref(path);
  goto err;
 done:
  return (DREF DeeObject *)result;
-err_badname:
- err_invalid_module_name(module_name);
-err:
- return NULL;
 }
 
 PUBLIC DREF DeeObject *DCALL
@@ -1665,7 +1698,7 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
                        struct compiler_options *options,
                        bool throw_error) {
  DREF DeeModuleObject *result; size_t i;
- DREF DeeObject *module_filename;
+ DREF DeeStringObject *module_path;
  char *iter,*begin,*end,ch,*flush_start;
 #ifndef CONFIG_NO_DEC
  size_t module_name_start;
@@ -1760,7 +1793,7 @@ done:
  }
 #ifndef CONFIG_NO_DEC
  module_name_size = (UNICODE_PRINTER_LENGTH(&full_path) -
-                     module_name_start);
+                     module_name_start) + 1;
 #endif
  /* With the full path now printed, reserve memory for the extension. */
  {
@@ -1774,40 +1807,38 @@ done:
   /* NOTE: The remainder is written in the source-class loop below. */
   UNICODE_PRINTER_SETCHAR(&full_path,temp,'.');
  }
- module_filename = unicode_printer_pack(&full_path);
- if unlikely(!module_filename) goto err_noprinter;
+ module_path = (DREF DeeStringObject *)unicode_printer_pack(&full_path);
+ if unlikely(!module_path) goto err_noprinter;
  /* Loop through known extensions and classes while trying to find what belongs. */
 #ifndef CONFIG_NO_DEC
- module_ext_start = DeeString_WLEN(module_filename);
+ module_ext_start = DeeString_WLEN(module_path);
  module_name_start = (module_ext_start -
-                     (2+SOURCE_EXTENSION_MAX+module_name_size));
- module_ext_start -= 4;
+                     (1+SOURCE_EXTENSION_MAX+module_name_size));
+ module_ext_start -= SOURCE_EXTENSION_MAX + 1;
 #else
- module_ext_start = DeeString_WLEN(module_filename) - 3;
+ module_ext_start = DeeString_WLEN(module_path) - SOURCE_EXTENSION_MAX;
 #endif
  i = 0;
  do {
 #ifndef CONFIG_NO_DEC
   if (extensions[i].source_class == MODULE_FILECLASS_COMPILED) {
-   DeeString_Memmove(module_filename,
+   DeeString_Memmove(module_path,
                      module_name_start+1,
                      module_name_start,
-                     module_name_size+1);
-   DeeString_SetChar(module_filename,module_name_start,'.');
-   DeeString_SetChar(module_filename,module_ext_start + 1,'d');
-   DeeString_SetChar(module_filename,module_ext_start + 2,'e');
-   DeeString_SetChar(module_filename,module_ext_start + 3,'c');
-   DeeString_SetChar(module_filename,module_ext_start + 4,0);
-   result = (DREF DeeModuleObject *)DeeModule_OpenFile(module_filename,NULL,
-                                                       extensions[i].source_class,
-                                                       options);
+                     module_name_size);
+   DeeString_SetChar(module_path,module_name_start,'.');
+   DeeString_SetChar(module_path,module_ext_start + 1,'d');
+   DeeString_SetChar(module_path,module_ext_start + 2,'e');
+   DeeString_SetChar(module_path,module_ext_start + 3,'c');
+   result = (DREF DeeModuleObject *)DeeModule_OpenFile((DeeObject *)module_path,NULL,
+                                                        extensions[i].source_class,
+                                                        options);
    if (result == (DREF DeeModuleObject *)ITER_DONE) {
-    DeeString_Memmove(module_filename,
+    DeeString_Memmove(module_path,
                       module_name_start,
-                      module_name_start+1,
-                      module_name_size+1);
-    //DeeString_SetChar(module_filename,module_ext_start + 3,0);
-    DeeString_PopbackAscii(module_filename);
+                      module_name_start + 1,
+                      module_name_size);
+    DeeString_PopbackAscii(module_path);
    }
   } else
 #endif
@@ -1815,20 +1846,20 @@ done:
    /* Graft the current extension onto the path. */
    size_t j;
    for (j = 0; j < SOURCE_EXTENSION_MAX; ++j) {
-    DeeString_SetChar(module_filename,module_ext_start + j,
+    DeeString_SetChar(module_path,module_ext_start + j,
                       extensions[i].source_ext[j]);
    }
    /* NOTE: We pass NULL for `module_name' to this function, so it can figure
     *       out what the module's name is itself, while also not attempting to
     *       register it as a global module, yet still register it under its
     *       absolute filename. */
-   result = (DREF DeeModuleObject *)DeeModule_OpenFile(module_filename,NULL,
-                                                       extensions[i].source_class,
-                                                       options);
+   result = (DREF DeeModuleObject *)DeeModule_OpenFile((DeeObject *)module_path,NULL,
+                                                        extensions[i].source_class,
+                                                        options);
   }
   if (result != (DREF DeeModuleObject *)ITER_DONE) break;
  } while (++i != COMPILER_LENOF(extensions));
- Dee_Decref(module_filename);
+ Dee_Decref(module_path);
  /* Throw an error if the module could not be found
   * and if we're not supposed to return `ITER_DONE'. */
  if (result == (DREF DeeModuleObject *)ITER_DONE &&

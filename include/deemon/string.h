@@ -223,9 +223,15 @@ struct string_utf {
     char      *u_utf8;  /* [0..1][lock(WRITE_ONCE)][owned_if(!= :s_str)]
                          * A lazily allocated width-string (meaning you can use `WSTR_LENGTH' to
                          * determine its length), representing the UTF-8 variant of this string. */
+#if __SIZEOF_WCHAR_T__ == 2
+    dwchar_t  *u_utf16; /* [0..1][lock(WRITE_ONCE)][owned_if(!= u_data[STRING_WIDTH_2BYTE])]
+                         * A lazily allocated width-string (meaning you can use `WSTR_LENGTH' to
+                         * determine its length), representing the UTF-16 variant of this string. */
+#else
     uint16_t  *u_utf16; /* [0..1][lock(WRITE_ONCE)][owned_if(!= u_data[STRING_WIDTH_2BYTE])]
                          * A lazily allocated width-string (meaning you can use `WSTR_LENGTH' to
                          * determine its length), representing the UTF-16 variant of this string. */
+#endif
 };
 #define string_utf_fini(self,str) \
 do{ unsigned int i; \
@@ -238,7 +244,7 @@ do{ unsigned int i; \
     if ((self)->u_utf8 && (self)->u_utf8 != (char *)DeeString_STR(str) && \
         (self)->u_utf8 != (char *)(self)->u_data[STRING_WIDTH_1BYTE]) \
         Dee_Free(((size_t *)(self)->u_utf8)-1); \
-    if ((self)->u_utf16 && (self)->u_utf16 != (uint16_t *)(self)->u_data[STRING_WIDTH_2BYTE]) \
+    if ((self)->u_utf16 && (uint16_t *)(self)->u_utf16 != (uint16_t *)(self)->u_data[STRING_WIDTH_2BYTE]) \
         Dee_Free(((size_t *)(self)->u_utf16)-1); \
 }__WHILE0
 
@@ -1153,7 +1159,6 @@ void unicode_printer_fini(struct unicode_printer *__restrict self);
        (self)->up_length = (len))
 #endif
 
-
 /* _Always_ inherit all string data (even upon error) saved in
  * `self', and construct a new string from all that data, before
  * returning a reference to that string.
@@ -1167,6 +1172,12 @@ DFUNDEF DREF DeeObject *DCALL
 unicode_printer_pack(/*inherit(always)*/struct unicode_printer *__restrict self);
 DFUNDEF DREF DeeObject *DCALL
 unicode_printer_trypack(/*inherit(on_success)*/struct unicode_printer *__restrict self);
+
+/* Try to pre-allocate memory for `num_chars' characters.
+ * NOTE: This function merely acts as a hint, and calls may even be ignored. */
+DFUNDEF void DCALL
+unicode_printer_allocate(struct unicode_printer *__restrict self,
+                         size_t num_chars);
 
 /* Append a single character to the given printer.
  * If `ch' can't fit the currently set `up_width', copy already
