@@ -214,7 +214,7 @@ function get_doc_path(path) {
 }
 
 
-function do_find_global_target(module_node,name) {
+function do_find_global_target(module_node,name,allow_module_root = true) {
 	if (":" in name) {
 		local target_module,target_path;
 		target_module,none,target_path = name.partition(":")...;
@@ -247,10 +247,12 @@ function do_find_global_target(module_node,name) {
 	if (result !is none)
 		return get_doc_path(result[#"/modules":]);
 	/* #5: Try to open a module with the specified name */
-	return get_doc_path(name);
+	if (allow_module_root)
+		return get_doc_path(name);
+	return none;
 }
 
-function find_global_target(d,name) {
+function find_global_target(d,name,allow_module_root = true) {
 	local module_node = d.modulenode;
 	local current_module = module_node.object;
 	name = name.replace(".","/");
@@ -265,7 +267,7 @@ function find_global_target(d,name) {
 			return result;
 	}
 	//print "do_find_global_target({!r},{!r})".format({ module_node, name });
-	result = do_find_global_target(module_node,name);
+	result = do_find_global_target(module_node,name,allow_module_root);
 	subcache[name] = result;
 	return result;
 }
@@ -309,10 +311,10 @@ function print_with_target(fp,d,target) {
 	}
 }
 
-function print_with_link(fp,d,name) {
+function print_with_link(fp,d,name,allow_module_root = true) {
 	local target;
 	try {
-		target = find_global_target(d,name);
+		target = find_global_target(d,name,allow_module_root);
 	} catch (...) {
 		fp << "<div class=\"broken_link\"><i>" << name << "</i></div>";
 		return;
@@ -342,7 +344,7 @@ function print_type_expr(fp,d,expr) {
 #else
 	local target;
 	try {
-		target = find_global_target(d,expr);
+		target = find_global_target(d,expr,false);
 	} catch (...) {
 		fp << expr;
 		return;
@@ -537,7 +539,7 @@ function print_doctag(fp,d,name,content) {
 			++type_end;
 		local error_typename = content[:type_end].rstrip(":");
 		content = content[type_end:].lstrip();
-		print_with_link(fp,d,error_typename);
+		print_with_link(fp,d,error_typename,false);
 		fp << "</td><td>";
 		html_splitter.decode(content,fp,none,d);
 		break;
