@@ -68,15 +68,27 @@ struct symbol {
 #define SYM_FNORMAL      0x0000         /* Normal symbol flags. */
     uint16_t             sym_flag;      /* Symbol flags (Set of `SYM_F*' dependent on `sym_class') */
 #if __SIZEOF_POINTER__ > 4
-    uint16_t             sym_pad[2];    /* ... */
+    uint16_t             sym_pad[(sizeof(void *)/2)-2]; /* ... */
 #endif
     uint32_t             sym_read;      /* The amount of times that this symbol is read from. */
     uint32_t             sym_write;     /* The amount of times that this symbol is written to. (Excluding an initial assignment)
                                          * HINT: Using this field, the code generator performs constant optimization. */
     union {
 
+#define SYM_MARK_USED(x)  \
+   ((x)->sym_class == SYM_CLASS_EXTERN ? \
+      (void)((x)->sym_flag &= ~SYM_FEXTERN_WEAK) : \
+      (void)0)
+#define SYM_IS_WEAK(x)    \
+  (((x)->sym_class == SYM_CLASS_EXTERN && ((x)->sym_flag & SYM_FEXTERN_WEAK)) || \
+   ((x)->sym_class == SYM_CLASS_AMBIGUOUS))
+#define SYM_CLEAR_WEAK(x) \
+   ((x)->sym_class == SYM_CLASS_EXTERN ? (void)Dee_Decref((x)->sym_extern.sym_module) : (void)0, \
+    (x)->sym_read = (x)->sym_write = 0)
+
         struct {
 #define SYM_CLASS_EXTERN               0x0000      /* External symbol. (NOTE: Doesn't use `SYM_FALLOC') */
+#   define SYM_FEXTERN_WEAK            0x4000      /* FLAG: The variable is weakly imported, and is silently overwritten by an explicit import, or declaration. */
 #   define SYM_FEXTERN_ALLOC           0x8000      /* FLAG: The module index for the variable has been allocated. */
             DREF struct module_object *sym_module; /* [1..1][const] The module exporting this symbol. */
             struct module_symbol      *sym_modsym; /* [1..1] The symbol that is being imported from `sym_module'. */
@@ -170,13 +182,10 @@ struct symbol {
 #define SYM_CLASS_THIS          0x900c /* The `this' variable in class-member functions (thiscall functions).
                                         * NOTE: This class requires that `s_scope->s_base'
                                         *       have the `SCOPE_FTHISCALL' flag set. */
+#define SYM_CLASS_AMBIGUOUS     0x900d /* An ambiguous symbol. */
     };
 };
 
-
-
-/* Check if a given symbol class allows the symbols to be written. */
-#define SYM_WRITABLE(x)       (!((x)->sym_class&0x8000))
 /* Symbol classes that must be referenced when not part of the current base-scope. */
 #define SYM_MUST_REFERENCE(x) \
   ((x)->sym_class != SYM_CLASS_EXTERN && \

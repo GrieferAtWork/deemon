@@ -409,14 +409,20 @@ class_maker_addmember(struct class_maker *__restrict self,
  }
  /* Make sure that no local symbol exists with the given name.
   * >> This is the compile-time portion of addressing symbols. */
- if unlikely(has_local_symbol(name)) {
-  PERR(W_CLASS_MEMBER_ALREADY_DEFINED,
-       name->k_name,name->k_size);
-  goto err;
+ result = get_local_symbol(name);
+ if unlikely(result) {
+  if (SYM_IS_WEAK(result)) {
+   SYM_CLEAR_WEAK(result);
+  } else {
+   PERR(W_CLASS_MEMBER_ALREADY_DEFINED,
+        name->k_name,name->k_size);
+   goto err;
+  }
+ } else {
+  /* Create a new local symbol for this member. */
+  result = new_local_symbol(name);
+  if unlikely(!result) goto err;
  }
- /* Create a new local symbol for this member. */
- result = new_local_symbol(name);
- if unlikely(!result) goto err;
  /* Initialize that symbol to be a member symbol. */
  result->sym_class             = SYM_CLASS_MEMBER;
  result->sym_flag              = table_id;

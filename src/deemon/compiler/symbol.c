@@ -905,6 +905,35 @@ seach_single:
          WARNAT(warn_loc,W_EXPECTED_STATIC_VARIABLE,name))
          goto err;
     }
+    if ((mode&LOOKUP_SYM_ALLOWDECL) && SYM_IS_WEAK(result)) {
+     /* Re-declare this symbol. */
+     SYM_CLEAR_WEAK(result);
+     result->sym_class = SYM_CLASS_VAR;
+     if ((mode&LOOKUP_SYM_VGLOBAL) ||
+        ((mode&LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT &&
+          /* Default variable lookup in the root scope creates global variables. */
+          current_scope == (DeeScopeObject *)current_rootscope)) {
+      result->sym_flag = SYM_FVAR_GLOBAL;
+     } else {
+      if (mode&LOOKUP_SYM_STACK) {
+       result->sym_class = SYM_CLASS_STACK;
+       result->sym_flag  = SYM_FNORMAL;
+#ifndef NDEBUG
+       result->sym_stack.sym_offset = 0xcccc;
+#endif
+       /* Add the symbol to the chain of stack variables in this scope. */
+       result->sym_stack.sym_nstck = iter->s_stk;
+       result->sym_stack.sym_bound = 0;
+       iter->s_stk = result;
+      } else {
+       result->sym_flag = (mode & LOOKUP_SYM_STATIC)
+                        ? SYM_FVAR_STATIC
+                        : SYM_FVAR_LOCAL;
+      }
+     }
+     return result;
+    }
+    SYM_MARK_USED(result);
     /* Recursively add references for the scope path that leads to this symbol. */
     if (iter->s_base != current_basescope &&
         SYM_MUST_REFERENCE(result))
@@ -926,6 +955,7 @@ seach_single:
   while (result && result->sym_name != name)
          result = result->sym_next;
   if (result) {
+   SYM_MARK_USED(result);
    /* Check if the symbol must be referenced. */
    if (iter->s_base != current_basescope &&
        SYM_MUST_REFERENCE(result)) {
@@ -946,11 +976,11 @@ create_variable:
  /* Create a new symbol. */
  if unlikely((result = sym_alloc()) == NULL)
     goto err;
- result->sym_class = SYM_CLASS_VAR;
  result->sym_read  = 0;
  result->sym_write = 0;
  result->sym_name  = name;
  result->sym_scope = current_scope;
+ result->sym_class = SYM_CLASS_VAR;
  result->sym_var.sym_doc = NULL;
  if ((mode&LOOKUP_SYM_VGLOBAL) ||
     ((mode&LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT &&
@@ -1005,6 +1035,7 @@ lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name) {
    if (result->sym_name == name) {
     /* Return this instance if it is the one that was requested. */
     if (!nth--) {
+     SYM_MARK_USED(result);
      /* Check if the symbol must be referenced. */
      if (iter->s_base != current_basescope && SYM_MUST_REFERENCE(result)) {
       /* Recursively add references for the scope path that leads to this symbol. */

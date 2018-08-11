@@ -164,7 +164,7 @@ again:
 
 /* NOTE: _Always_ inherits references to `key' and `value' */
 INTERN void DCALL
-rodict_insert_nocheck(DREF DeeRoDictObject *__restrict self,
+rodict_insert_nocheck(DeeRoDictObject *__restrict self,
                       dhash_t hash,
                       DREF DeeObject *__restrict key,
                       DREF DeeObject *__restrict value) {
@@ -183,7 +183,7 @@ rodict_insert_nocheck(DREF DeeRoDictObject *__restrict self,
 
 /* NOTE: _Always_ inherits references to `key' */
 INTERN void DCALL
-roset_insert_nocheck(DREF DeeRoSetObject *__restrict self,
+roset_insert_nocheck(DeeRoSetObject *__restrict self,
                      dhash_t hash,
                      DREF DeeObject *__restrict key) {
  size_t i,perturb; struct roset_item *item;
@@ -822,6 +822,12 @@ check_sym_class:
  case SYM_CLASS_THIS:
   return asm_gpush_this();
 
+ case SYM_CLASS_AMBIGUOUS:
+  if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
+               sym->sym_name->k_name))
+      goto err;
+  return asm_gpush_none();
+
  default:
   ASSERTF(0,"Unsupporetd variable type");
  }
@@ -1078,6 +1084,11 @@ check_sym_class:
   return asm_gboundattr();
  } break;
 
+ case SYM_CLASS_AMBIGUOUS:
+  if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
+               sym->sym_name->k_name))
+      goto err;
+  goto fallback;
 
  default:
 fallback:
@@ -1215,12 +1226,18 @@ check_sym_class:
  } break;
 
  case SYM_CLASS_PROPERTY:
-  if (!sym->sym_property.sym_get)
-       return 0;
+  if (!sym->sym_property.sym_del)
+       return 0; /* TODO: Warning */
   /* Generate a zero-argument call to the delete symbol. */
   if (asm_gcall_symbol(sym->sym_property.sym_del,0,warn_ast))
       goto err;
   return asm_gpop();
+
+ case SYM_CLASS_AMBIGUOUS:
+  if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
+               sym->sym_name->k_name))
+      goto err;
+  return 0;
 
  default:
 err_invalid:
@@ -1379,6 +1396,12 @@ check_sym_class:
        goto err;
   }
   /* Pop the return value. */
+  return asm_gpop();
+
+ case SYM_CLASS_AMBIGUOUS:
+  if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
+               sym->sym_name->k_name))
+      goto err;
   return asm_gpop();
 
  default:

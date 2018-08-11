@@ -331,40 +331,71 @@ err:
 }
 
 
+INTERN int DCALL
+ast_decode_unicode_string(struct unicode_printer *__restrict printer) {
+ ASSERT(tok == TOK_STRING);
+ char *escape_start = token.t_begin;
+ char *escape_end = token.t_end;
+ if (escape_start < escape_end && escape_start[0] == 'r') {
+  ++escape_start;
+  if (escape_start < escape_end && escape_start[0] == '\"') ++escape_start;
+  if (escape_end > escape_start && escape_end[-1] == '\"') --escape_end;
+  if unlikely(escape_end < escape_start)
+              escape_end = escape_start;
+  if unlikely(DeeString_DecodeLFEscaped(printer,
+                                        escape_start,
+                                       (size_t)(escape_end-escape_start)))
+     goto err;
+ } else {
+  if (escape_start < escape_end && escape_start[0] == '\"') ++escape_start;
+  if (escape_end > escape_start && escape_end[-1] == '\"') --escape_end;
+  if unlikely(escape_end < escape_start)
+              escape_end = escape_start;
+  if unlikely(DeeString_DecodeBackslashEscaped(printer,
+                                               escape_start,
+                                              (size_t)(escape_end-escape_start),
+                                               STRING_ERROR_FSTRICT))
+     goto err;
+ }
+ return 0;
+err:
+ return -1;
+}
+
 INTERN DREF DeeObject *FCALL ast_parse_string(void) {
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
  ASSERT(tok == TOK_STRING);
  do {
-  char *escape_start = token.t_begin;
-  char *escape_end = token.t_end;
-  if (escape_start < escape_end && escape_start[0] == 'r') {
-   ++escape_start;
-   if (escape_start < escape_end && escape_start[0] == '\"') ++escape_start;
-   if (escape_end > escape_start && escape_end[-1] == '\"') --escape_end;
-   if unlikely(escape_end < escape_start)
-               escape_end = escape_start;
-   if unlikely(DeeString_DecodeLFEscaped(&printer,
-                                         escape_start,
-                                        (size_t)(escape_end-escape_start)))
-      goto err;
-  } else {
-   if (escape_start < escape_end && escape_start[0] == '\"') ++escape_start;
-   if (escape_end > escape_start && escape_end[-1] == '\"') --escape_end;
-   if unlikely(escape_end < escape_start)
-               escape_end = escape_start;
-   if unlikely(DeeString_DecodeBackslashEscaped(&printer,
-                                                escape_start,
-                                               (size_t)(escape_end-escape_start),
-                                                STRING_ERROR_FSTRICT))
-      goto err;
-  }
-  if unlikely(yield() < 0) goto err;
+  if unlikely(ast_decode_unicode_string(&printer))
+     goto err;
+  if unlikely(yield() < 0)
+     goto err;
  } while (tok == TOK_STRING);
  return unicode_printer_pack(&printer);
 err:
  unicode_printer_fini(&printer);
  return NULL;
 }
+
+INTERN DREF DeeAstObject *FCALL ast_sym_import_from_deemon(void) {
+ struct symbol *import_symbol;
+ DREF DeeAstObject *result;
+ import_symbol = new_unnamed_symbol();
+ if unlikely(!import_symbol) goto err;
+ /* Setup an external symbol pointing at `import from deemon' */
+ import_symbol->sym_class             = SYM_CLASS_EXTERN;
+ import_symbol->sym_extern.sym_module = get_deemon_module();
+ Dee_Incref(import_symbol->sym_extern.sym_module);
+ import_symbol->sym_extern.sym_modsym = DeeModule_GetSymbolString(import_symbol->sym_extern.sym_module,
+                                                                  DeeString_STR(&str_import),
+                                                                  DeeString_Hash(&str_import));
+ ASSERT(import_symbol->sym_extern.sym_modsym);
+ result = ast_sym(import_symbol);
+ return result;
+err:
+ return NULL;
+}
+
 
 INTERN DREF DeeAstObject *FCALL
 ast_parse_unary_base(unsigned int lookup_mode) {
@@ -734,27 +765,16 @@ do_create_class:
   }
  } break;
 
- {
-  struct symbol *import_symbol;
  case KWD_import:
-  import_symbol = new_unnamed_symbol();
-  if unlikely(!import_symbol) goto err;
-  /* Setup an external symbol pointing at `import from deemon' */
-  import_symbol->sym_class             = SYM_CLASS_EXTERN;
-  import_symbol->sym_extern.sym_module = get_deemon_module();
-  Dee_Incref(import_symbol->sym_extern.sym_module);
-  import_symbol->sym_extern.sym_modsym = DeeModule_GetSymbolString(import_symbol->sym_extern.sym_module,
-                                                                   DeeString_STR(&str_import),
-                                                                   DeeString_Hash(&str_import));
-  ASSERT(import_symbol->sym_extern.sym_modsym);
-  result = ast_sethere(ast_sym(import_symbol));
+  result = ast_sethere(ast_sym_import_from_deemon());
+  if unlikely(!result) goto err;
   if unlikely(yield() < 0) goto err_r;
   /* The specs officially only allow `import' in expression, when followed by `(' or `pack'
    * So we simply emit an error if what follows isn't one of those. */
   if (tok != '(' && tok != KWD_pack &&
       WARN(W_EXPECTED_LPAREN_AFTER_IMPORT))
       goto err_r;
- } break;
+  break;
 
  case KWD_do:
  case KWD_while:

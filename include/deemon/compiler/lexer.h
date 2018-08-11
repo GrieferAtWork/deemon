@@ -32,6 +32,8 @@
 
 DECL_BEGIN
 
+struct unicode_printer;
+
 /* Parser flags (Set of `PARSE_F*'). - Currently unused... */
 INTDEF uint16_t parser_flags;
 INTDEF struct compiler_options *inner_compiler_options;
@@ -39,6 +41,9 @@ INTDEF struct compiler_options *inner_compiler_options;
 
 /* Parse a string. */
 INTDEF DREF DeeObject *FCALL ast_parse_string(void);
+
+/* Decode the current token (which must be a TOK_STRING) as a unicode string. */
+INTDEF int DCALL ast_decode_unicode_string(struct unicode_printer *__restrict printer);
 
 /* @param: lookup_mode: Set of `LOOKUP_SYM_*' */
 INTDEF DREF DeeAstObject *FCALL ast_parse_unary_base(unsigned int lookup_mode);
@@ -107,10 +112,13 @@ INTDEF DREF DeeAstObject *FCALL ast_parse_assign_operand(/*inherit(always)*/DREF
 /* Parse a top-level expression. */
 #define ast_parse_expression(lookup_mode) ast_parse_assign(lookup_mode)
 
+/* Given a basic unary expression `ast', parse its unary
+ * suffix (including attribute, call, range & item operators). */
+INTDEF DREF DeeAstObject *FCALL ast_parse_unary_suffix(/*inherit(always)*/DREF DeeAstObject *__restrict ast);
+
 /* Given a unary expression `ast', parse anything that may
  * follow it before it could be considered a full expression. */
-INTDEF DREF DeeAstObject *FCALL
-ast_parse_unary_postexpr(/*inherit(always)*/DREF DeeAstObject *__restrict ast);
+INTDEF DREF DeeAstObject *FCALL ast_parse_unary_postexpr(/*inherit(always)*/DREF DeeAstObject *__restrict ast);
 
 
 /* Given an `key'-expression in `{ key : foo }', parse the remainder
