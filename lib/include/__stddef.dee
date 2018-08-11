@@ -1,19 +1,19 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
- *                                                                            *
- * This software is provided 'as-is', without any express or implied          *
- * warranty. In no event will the authors be held liable for any damages      *
- * arising from the use of this software.                                     *
- *                                                                            *
- * Permission is granted to anyone to use this software for any purpose,      *
- * including commercial applications, and to alter it and redistribute it     *
- * freely, subject to the following restrictions:                             *
- *                                                                            *
- * 1. The origin of this software must not be misrepresented; you must not    *
- *    claim that you wrote the original software. If you use this software    *
- *    in a product, an acknowledgement in the product documentation would be  *
- *    appreciated but is not required.                                        *
+/* Copyright (c) 2018 Griefer@Work   *
+ *     *
+ * This software is provided 'as-is', without any express or implied *
+ * warranty. In no event will the authors be held liable for any damages *
+ * arising from the use of this software.   *
+ *     *
+ * Permission is granted to anyone to use this software for any purpose, *
+ * including commercial applications, and to alter it and redistribute it *
+ * freely, subject to the following restrictions:  *
+ *     *
+ * 1. The origin of this software must not be misrepresented; you must not *
+ * claim that you wrote the original software. If you use this software *
+ * in a product, an acknowledgement in the product documentation would be *
+ * appreciated but is not required.   *
  * 2. Altered source versions must be plainly marked as such, and must not be *
- *    misrepresented as being the original software.                          *
+ * misrepresented as being the original software.  *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #pragma once
@@ -59,33 +59,33 @@
 
 /* Attribute and declspec has been replaced by tags. */
 #define __PRIVATE_ATTRIBUTE(...) @__VA_ARGS__
-#define __declspec(...)          @__VA_ARGS__
-#define __attribute(x)            __PRIVATE_ATTRIBUTE x
-#define __attribute__(x)          __PRIVATE_ATTRIBUTE x
+#define __declspec(...) @__VA_ARGS__
+#define __attribute(x) __PRIVATE_ATTRIBUTE x
+#define __attribute__(x) __PRIVATE_ATTRIBUTE x
 
 /* Put after a macro function to prevent it from expanding */
 #define __NO_MACRO
 
-#define __unused         /* nothing */
+#define __unused /* nothing */
 
 
 /* A _really_ dirty fix for an incompatibility
  * between deemon200+'s dict member functions:
- *  - While the intention of dict's proxy views had always been to
- *    emulate python, deemon 100+ did this incorrectly and had swapped
- *    the meaning of `items' and `values'
- *  - In python (just as in deemon200), items() is a sequence of 2-element
- *    tuples, each referring to a key-value pair, while values() is the
- *    same sequence, however only referring to the value-portion.
- *  - To keep backwards-compatibility with older code, as well as considering
- *    that old code was usually written to use dict.items() / dict.keys()
- *    directly, we simply make use of macros to swap the 2 functions within
- *    the preprocessor.
+ * - While the intention of dict's proxy views had always been to
+ * emulate python, deemon 100+ did this incorrectly and had swapped
+ * the meaning of `items' and `values'
+ * - In python (just as in deemon200), items() is a sequence of 2-element
+ * tuples, each referring to a key-value pair, while values() is the
+ * same sequence, however only referring to the value-portion.
+ * - To keep backwards-compatibility with older code, as well as considering
+ * that old code was usually written to use dict.items() / dict.keys()
+ * directly, we simply make use of macros to swap the 2 functions within
+ * the preprocessor.
  * -> This is _extremely_ ugly, however since we _really_ don't care about
- *    how little, or how much we're clobbering the root-namespace in here,
- *    considering our sole purpose is to ensure backwards-compatibility,
- *    macros are the easiest, and simplest sollution! */
-#define items()  values __NO_MACRO()
+ * how little, or how much we're clobbering the root-namespace in here,
+ * considering our sole purpose is to ensure backwards-compatibility,
+ * macros are the easiest, and simplest sollution! */
+#define items() values __NO_MACRO()
 #define values() items __NO_MACRO()
 
 
@@ -95,102 +95,86 @@ local function __ctypes_new(tp) {
 	import malloc, sizeof from ctypes;
 	return (tp.ptr)malloc(sizeof(tp));
 }
-#define new      __ctypes_new pack
-#define delete   (free from ctypes)pack
+#define new     __ctypes_new pack
+#define delete (free from ctypes)pack
 #endif
 
 
 /* Re-implement some old builtin functions as macros. */
-#define __builtin_dex(x)                    import(x)
-#define __builtin_breakpoint()            __asm__("debug break")
-#define __builtin_typeof(x)                 type(x)
-#define __builtin_help(...)               ((doc from deemon)(__VA_ARGS__))
-#define __builtin_expect(x,y)              (x)
-#define __builtin_object(id)               (get_builtin from __builtins(id))
-#define __builtin_predictable(x)            false
-#define __builtin_exprast(...)              none
-#define __builtin_alloca(sz)               (malloc from ctypes)(sz) /* It's a leak, but it'll work... */
-#define __builtin_noop(...)                 none
-#define __noop(...)                         none
-#define _Noexcept(...)                      false
-#define __builtin_noexcept(...)             false
-#define _Noreturn(...)                      false
-#define __builtin_noreturn(...)             false
-#define __builtin_noeffect(...)             false
-#define __builtin_constant_p(...)           false
-#define __builtin_unused_1(a)            ({ a; none; })
-#define __builtin_unused_2(a,b)          ({ a; b; })
-#define __builtin_unused(...)               __builtin_unused_##__VA_NARGS__(__VA_ARGS__)
-#define __builtin_dead(x)                  (true || (x))
-#define __builtin_exists(x)                 true /* we can only hope... */
-#define __builtin_choose_expr(c,tt,ff)    ((c)?(tt):(ff))
-#define __builtin_unreachable()             __asm__("" : : : "noreturn")
+#define __builtin_dex(x)  import(x)
+#define __builtin_breakpoint() __asm__("debug break")
+#define __builtin_typeof(x)  type(x)
+#define __builtin_help(...) ((doc from deemon)(__VA_ARGS__))
+#define __builtin_expect(x,y) (x)
+#define __builtin_object(id) (get_builtin from __builtins(id))
+#define __builtin_predictable(x) false
+#define __builtin_exprast(...) none
+#define __builtin_alloca(sz) (malloc from ctypes)(sz) /* It's a leak, but it'll work... */
+#define __builtin_noop(...)  none
+#define __noop(...)  none
+#define _Noexcept(...)  false
+#define __builtin_noexcept(...) false
+#define _Noreturn(...)  false
+#define __builtin_noreturn(...) false
+#define __builtin_noeffect(...) false
+#define __builtin_constant_p(...) false
+#define __builtin_unused_1(a) ({ a; none; })
+#define __builtin_unused_2(a,b) ({ a; b; })
+#define __builtin_unused(...) __builtin_unused_##__VA_NARGS__(__VA_ARGS__)
+#define __builtin_dead(x)  (true || (x))
+#define __builtin_exists(x)  true /* we can only hope... */
+#define __builtin_choose_expr(c,tt,ff) ((c)?(tt):(ff))
+#define __builtin_unreachable() __asm__("" : : : "noreturn")
 #define __builtin_types_compatible_p(x,y) ((x)===(y))
-#define __builtin_last_traceback()        ((traceback from deemon).current)
-#define __builtin_super_1(x)              ((x) as type(super))
-#define __builtin_super_2(x,y)            ((x) as (y))
-#define __builtin_super(...)                __builtin_super_##__VA_NARGS__(__VA_ARGS__)
-#define __super(...)                        __builtin_super_##__VA_NARGS__(__VA_ARGS__)
-#define __builtin_bound(x)                  bound(x)
-#define __builtin_offsetof(s,t)           ((s).offsetof(#t))
+#define __builtin_last_traceback() ((traceback from deemon).current)
+#define __builtin_super_1(x) ((x) as type(super))
+#define __builtin_super_2(x,y) ((x) as (y))
+#define __builtin_super(...) __builtin_super_##__VA_NARGS__(__VA_ARGS__)
+#define __super(...)  __builtin_super_##__VA_NARGS__(__VA_ARGS__)
+#define __builtin_bound(x)  bound(x)
+#define __builtin_offsetof(s,t) ((s).offsetof(#t))
 
 /* Define some unary-expression keywords that got removed */
-#define weak     weakref from deemon pack
-#define move     copy
+#define weak weakref from deemon pack
+#define move copy
 
 /* Stub-implement removed static-if keywords (as far as possible). */
-#define __static_if(x)    if(x)
-#define __static_else     else
-#define __if_true         if(true)
-#define __if_false        if(false)
+#define __static_if(x) if(x)
+#define __static_else else
+#define __if_true if(true)
+#define __if_false if(false)
 
 /* Re-define the removed alias for `assert' */
-#define __assert          assert
+#define __assert assert
 
 /* Re-define removed loop statements. */
-#define __looponce{...}   do { __VA_ARGS__ } while (0)
-#define __loopever        for (;;)
-#define __loopnone        while (0)
+#define __looponce{...} do { __VA_ARGS__ } while (0)
+#define __loopever for (;;)
+#define __loopnone while (0)
 
 /* Delete some keywords that got removed. */
-#define const      /* nothing */
-#define constexpr  /* nothing */
+#define const /* nothing */
+#define constexpr /* nothing */
 
 /* Import some of the symbols that old code assumes to be visible. */
-import bool, string, tuple, list, int, float, object, dict from deemon;
-import set = hashset from deemon;
+from deemon import
+	bool, string, tuple, list, int,
+	float, object, dict, set = hashset
+;
 
 /* Import some C-types.
  * Note however that we can't actually support stuff
  * like `x = (unsigned int)42', because there's no way
  * of defining multi-keyword identifiers. */
-import __int8   = int8_t from ctypes;
-import __int16  = int16_t from ctypes;
-import __int32  = int32_t from ctypes;
-import __int64  = int64_t from ctypes;
-import int8     = int8_t from ctypes;
-import int16    = int16_t from ctypes;
-import int32    = int32_t from ctypes;
-import int64    = int64_t from ctypes;
-import uint8    = uint8_t from ctypes;
-import uint16   = uint16_t from ctypes;
-import uint32   = uint32_t from ctypes;
-import uint64   = uint64_t from ctypes;
-import _Bool    = bool from ctypes;
-import signed   = int from ctypes;
-import unsigned = uint from ctypes;
-import char     = char from ctypes;
-import short    = short from ctypes;
-import long     = long from ctypes;
-import double   = double from ctypes;
-import int8_t   = int8_t from ctypes;
-import int16_t  = int16_t from ctypes;
-import int32_t  = int32_t from ctypes;
-import int64_t  = int64_t from ctypes;
-import uint8_t  = uint8_t from ctypes;
-import uint16_t = uint16_t from ctypes;
-import uint32_t = uint32_t from ctypes;
-import uint64_t = uint64_t from ctypes;
+from ctypes import
+	__int8 = int8_t, __int16 = int16_t, __int32 = int32_t, __int64 = int64_t,
+	int8 = int8_t, int16 = int16_t, int32 = int32_t, int64 = int64_t,
+	uint8 = uint8_t, uint16 = uint16_t, uint32 = uint32_t, uint64 = uint64_t,
+	_Bool = bool, signed = int, unsigned = uint, char = char, short = short,
+	long = long, double = double, int8_t = int8_t, int16_t = int16_t,
+	int32_t = int32_t, int64_t = int64_t, uint8_t = uint8_t, uint16_t = uint16_t,
+	uint32_t = uint32_t, uint64_t = uint64_t
+;
 
 
 /* Enable some preprocessor extensions for better legacy support. */
@@ -202,7 +186,7 @@ import uint64_t = uint64_t from ctypes;
 
 /* Not necessarily true, but legacy deemon was only ever built on
  * little-endian machines, meaning that this actually used to be true. */
-#define __BYTEORDER__  1234
+#define __BYTEORDER__ 1234
 
 
 #define __MEMORY_ORDER_RELAXED 0
@@ -243,7 +227,7 @@ import uint64_t = uint64_t from ctypes;
 
 
 
-/* HINT: `__FORMAT__'        -- Defined for code parsed by `deemon -F' (including scripts)
+/* HINT: `__FORMAT__' -- Defined for code parsed by `deemon -F' (including scripts)
  * HINT: `__FORMAT_SCRIPT__' -- Defined for scripts found in comments by `deemon -F' */
 #if defined(__FORMAT__) && defined(__FORMAT_SCRIPT__)
 /* We're currently inside of an old-style format script.
@@ -265,14 +249,14 @@ import uint64_t = uint64_t from ctypes;
  * headers, we can reverse-engineer the value of PWD that an old-style
  * format script would expect.
  * NOTE: Old-style scripts often used to do something like the
- *       following to change PWD to their script:
- *       >> #include <fs>
- *       >> fs.chdir(fs.path.head(__FILE__));
- *       Because after doing that, they'd get a consistent execution
- *       context for opening other files in order to produce format
- *       output.
- *       In deemon 200+ this is no longer necessary because PWD
- *       will have already been set to what the above would achive.
+ * following to change PWD to their script:
+ * >> #include <fs>
+ * >> fs.chdir(fs.path.head(__FILE__));
+ * Because after doing that, they'd get a consistent execution
+ * context for opening other files in order to produce format
+ * output.
+ * In deemon 200+ this is no longer necessary because PWD
+ * will have already been set to what the above would achive.
  */
 {
 	/* Change PWD to the original PWD */

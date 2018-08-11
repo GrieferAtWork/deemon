@@ -19,9 +19,9 @@
 #pragma once
 #include "__stddef.dee"
 
-function __builtin_extern(f__,__n,__t = none) {
-	import ctypes;
-	__stack local __res = ctypes.shlib(__f).operator . (__n);
+function __builtin_extern(__f,__n,__t = none) {
+	import shlib from ctypes;
+	__stack local __res = shlib(__f).operator . (__n);
 	if (__t !is none) __res = __t(__res);
 	return __res;
 }

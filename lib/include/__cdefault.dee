@@ -20,5 +20,6 @@
 #include "__stddef.dee"
 #include "__builtin_gcc.dee"
 
-#define _Generic(x,...) (switch (type(x)) { __VA_ARGS__ })
+/* `switch' can't be used in expressions anymore... */
+//#define _Generic(x,...) (switch (type(x)) { __VA_ARGS__ })
 import void, sizeof from ctypes;
