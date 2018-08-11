@@ -84,13 +84,16 @@ ast_parse_statement_or_expression(uint16_t mode,
   result = ast_parse_assert_hybrid(pwas_expression);
   break;
 
+ case KWD_import:
+  result = ast_parse_import_hybrid(pwas_expression);
+  break;
+
  case KWD_for:      /* TODO: generator expressions? */
  case KWD_foreach:  /* TODO: generator expressions? */
  case KWD_do:       /* TODO: generator expressions? */
  case KWD_while:    /* TODO: generator expressions? */
 
  case KWD_from:
- case KWD_import:
  case KWD_del:
  case KWD_return:
  case KWD_yield:
@@ -330,22 +333,32 @@ parse_remainder_before_rbrace_popscope_wrap:
  case KWD_assert:
   if unlikely(scope_push() < 0) goto err;
   result = ast_parse_assert_hybrid(&was_expression);
+parse_remainder_after_semicolon_hybrid_popscope:
   if unlikely(!result) goto err;
-  /* Special case: `assert' statements require a trailing ';' token.
-   *               If that token exists, we know for sure that this is a statement! */
+
+  /* Special case: `assert' statements require a trailing `;' token.
+   *                If that token exists, we know for sure that this is a statement! */
   if (tok == ';') {
    was_expression = AST_PARSE_WASEXPR_NO;
    if unlikely(yield() < 0) goto err_r;
   }
   goto parse_remainder_after_hybrid_popscope_resok;
 
+ case KWD_import:
+  if unlikely(scope_push() < 0) goto err;
+  result = ast_parse_import_hybrid(&was_expression);
+  if unlikely(!result) goto err;
+  /* Same as `assert': `import' requires a trailing `;' */
+  goto parse_remainder_after_semicolon_hybrid_popscope;
+
+
  case KWD_for:      /* TODO: generator expressions? */
  case KWD_foreach:  /* TODO: generator expressions? */
  case KWD_do:       /* TODO: generator expressions? */
  case KWD_while:    /* TODO: generator expressions? */
 
+
  case KWD_from:
- case KWD_import:
  case KWD_del:
  case KWD_return:
  case KWD_yield:

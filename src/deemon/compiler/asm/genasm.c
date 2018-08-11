@@ -2035,7 +2035,7 @@ err_hand_frame:
   } else {
    /* If the result isn't being used, follow the regular comma-rule
     * to generate expected assembly for code like this:
-    * >> foo()...; // the results of foo() can be as comma-seperated,
+    * >> foo()...; // the results of foo() can be as comma-separated,
     * >>           // but doing so doesn't have any special meaning.
     */
    if (ast_genasm(ast->ast_expandexpr,gflags))

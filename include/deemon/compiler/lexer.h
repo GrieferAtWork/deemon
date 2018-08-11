@@ -419,6 +419,8 @@ INTERN DREF DeeAstObject *FCALL ast_parse_if_hybrid(unsigned int *pwas_expressio
 INTERN DREF DeeAstObject *FCALL ast_parse_with_hybrid(unsigned int *pwas_expression);
 /* Same as `ast_parse_try_hybrid' but for assert statements / expressions. */
 INTERN DREF DeeAstObject *FCALL ast_parse_assert_hybrid(unsigned int *pwas_expression);
+/* Same as `ast_parse_try_hybrid' but for import statements / expressions. */
+INTERN DREF DeeAstObject *FCALL ast_parse_import_hybrid(unsigned int *pwas_expression);
 
 
 

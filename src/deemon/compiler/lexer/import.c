@@ -608,6 +608,235 @@ err:
 
 INTDEF DREF DeeAstObject *FCALL ast_sym_import_from_deemon(void);
 
+INTERN int FCALL ast_parse_post_import(void) {
+/* - import deemon;
+ * - import deemon, util;
+ * - import my_deemon = deemon;
+ * - import my_deemon = "deemon";
+ * - import my_deemon = deemon, my_util = util;
+ * - import deemon as my_deemon;
+ * - import "deemon" as my_deemon;
+ * - import deemon as my_deemon, util as my_util;
+ * - import * from deemon;
+ * - import object from deemon;
+ * - import object, list from deemon;
+ * - import my_object = object from deemon;
+ * - import my_object = "object" from deemon;
+ * - import my_object = object, my_list = list from deemon;
+ * - import object as my_object from deemon;
+ * - import "object" as my_object from deemon;
+ * - import object as my_object, list as my_list from deemon; */
+ int error; struct import_item item;
+ bool allow_modules = true;
+ struct ast_loc star_loc;
+ struct import_item *item_v;
+ size_t item_a,item_c;
+ DREF DeeModuleObject *module;
+ star_loc.l_file = NULL; /* When non-NULL, import all */
+ if (tok == '*') {
+  loc_here(&star_loc);
+  if unlikely(yield() < 0) goto err;
+  if (tok == KWD_from) {
+   if unlikely(yield() < 0) goto err;
+   module = parse_module_byname();
+   if unlikely(!module) goto err;
+   error = ast_import_all_from_module(module,&star_loc);
+   Dee_Decref(module);
+   goto done;
+  } else if (tok == ',') {
+   item_a = item_c = 0;
+   item_v = NULL;
+   allow_modules = false;
+   goto import_parse_list;
+  }
+  if (WARN(W_EXPECTED_COMMA_OR_FROM_AFTER_START_IN_IMPORT_LIST))
+      goto err;
+  goto done;
+ }
+ error = parse_import_symbol(&item,true);
+ if unlikely(error < 0) goto err;
+ if unlikely(error == 2) goto done;
+ if (error) {
+  /* Module import list */
+  for (;;) {
+import_item_as_module:
+   error = ast_import_module(&item);
+   Dee_XDecref(item.ii_import_name);
+   if unlikely(error) goto err;
+parse_module_import_list:
+   if (tok != ',') break;
+   if unlikely(yield() < 0) goto err;
+   error = parse_import_symbol(&item,true);
+   if unlikely(error < 0) goto err;
+   if unlikely(error == 2) break;
+  }
+  /* Warn if the module import list is followed by a `from' */
+  if (tok == KWD_from &&
+      WARN(W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST))
+      goto err;
+ } else if (tok == KWD_from) {
+  /*  - `import foo from bar' */
+  if unlikely(yield() < 0) goto err_item;
+  module = parse_module_byname();
+  if unlikely(!module) goto err_item;
+  error = ast_import_single_from_module(module,&item);
+  Dee_XDecref(item.ii_import_name);
+  Dee_Decref(module);
+  if unlikely(error) goto err;
+ } else if (tok == ',') {
+  item_a = 4;
+  item_v = (struct import_item *)Dee_TryMalloc(4*sizeof(struct import_item));
+  if unlikely(!item_v) {
+   item_a = 2;
+   item_v = (struct import_item *)Dee_Malloc(2*sizeof(struct import_item));
+   if unlikely(!item_v) goto err_item;
+  }
+  item_v[0] = item;
+  item_c = 1;
+import_parse_list:
+  do {
+   ASSERT(tok == ',');
+   if unlikely(yield() < 0)
+      goto err_item_v;
+   if (tok == '*') {
+    if (star_loc.l_file) {
+     if (WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
+         goto err_item_v;
+    } else {
+     loc_here(&star_loc);
+    }
+    if unlikely(yield() < 0)
+       goto err_item_v;
+    /* Don't allow modules after `*' confirmed that symbols are being imported.
+     * -> There is no such thing as import-all-modules. */
+    allow_modules = false;
+   } else {
+    /* Parse the next import item. */
+    ASSERT(item_c <= item_a);
+    if (item_c >= item_a) {
+     /* Allocate more space. */
+     struct import_item *new_item_v;
+     size_t new_item_a = item_a * 2;
+     if unlikely(!new_item_a) new_item_a = 2;
+     new_item_v = (struct import_item *)Dee_TryRealloc(item_v,new_item_a*
+                                                       sizeof(struct import_item));
+     if unlikely(!new_item_v) {
+      new_item_a = item_c + 1;
+      new_item_v = (struct import_item *)Dee_Realloc(item_v,new_item_a*
+                                                     sizeof(struct import_item));
+      if unlikely(!new_item_v) goto err_item_v;
+     }
+     item_v = new_item_v;
+     item_a = new_item_a;
+    }
+    error = parse_import_symbol(&item_v[item_c],allow_modules);
+    if unlikely(error < 0) goto err_item_v;
+    if unlikely(error == 2) break;
+    ++item_c; /* Import parsing confirmed. */
+    if (error) {
+     /* We're dealing with a module import list!
+      * -> Import all items already parsed as modules. */
+     size_t i;
+     ASSERT(allow_modules);
+     for (i = 0; i < item_c; ++i) {
+      if unlikely(ast_import_module(&item_v[i]))
+         goto err_item_v;
+      Dee_XClear(item_v[i].ii_import_name);
+     }
+     Dee_Free(item_v);
+     /* Then continue by parsing the remainder as a module import list. */
+     goto parse_module_import_list;
+    }
+   }
+  } while (tok == ',');
+  /* A multi-item, comma-separated import list has now been parsed. */
+  if (tok == KWD_from) {
+   size_t i;
+   /* import foo, bar, foobar from foobarfoo;  (symbol import) */
+   if unlikely(yield() < 0) goto err_item_v;
+   module = parse_module_byname();
+   if unlikely(!module) goto err_item_v;
+   /* If `*' was apart of the symbol import list,
+    * start by importing all symbols from the module. */
+   if (star_loc.l_file) {
+    if unlikely(ast_import_all_from_module(module,&star_loc))
+       goto err_item_v_module;
+   }
+   /* Now import all the explicitly defined symbols. */
+   for (i = 0; i < item_c; ++i) {
+    if unlikely(ast_import_single_from_module(module,&item_v[i]))
+       goto err_item_v_module;
+    Dee_XClear(item_v[i].ii_import_name);
+   }
+   Dee_Decref(module);
+  } else {
+   size_t i;
+   if unlikely(!allow_modules) {
+    /* Warn if there is a `from' missing following a symbol import list. */
+    if (WARN(W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST))
+        goto err_item_v;
+   }
+   /* import foo, bar, foobar;  (module import) */
+   for (i = 0; i < item_c; ++i) {
+    if unlikely(ast_import_module(&item_v[i]))
+       goto err_item_v;
+    Dee_XClear(item_v[i].ii_import_name);
+   }
+  }
+  Dee_Free(item_v);
+  goto done;
+err_item_v_module:
+  Dee_Decref(module);
+err_item_v:
+  while (item_c--)
+      Dee_XDecref(item_v[item_c].ii_import_name);
+  Dee_Free(item_v);
+  goto err;
+err_item:
+  Dee_XDecref(item.ii_import_name);
+  goto err;
+ } else {
+  /* This is simply a single-module, stand-along import statement. */
+  goto import_item_as_module;
+ }
+done:
+ return 0;
+err:
+ return -1;
+}
+
+INTERN DREF DeeAstObject *FCALL
+ast_parse_import_hybrid(unsigned int *pwas_expression) {
+ DREF DeeAstObject *result;
+ struct ast_loc import_loc;
+ ASSERT(tok == KWD_import);
+ loc_here(&import_loc);
+ if unlikely(yield() < 0) goto err;
+ if (tok == '(' || tok == KWD_pack) {
+  /* `import', as seen in expressions. */
+  result = ast_setddi(ast_sym_import_from_deemon(),&import_loc);
+  if unlikely(!result) goto err;
+  result = ast_parse_unary_suffix(result);
+  if unlikely(!result) goto err;
+  result = ast_parse_unary_postexpr(result);
+  if (pwas_expression)
+     *pwas_expression = AST_PARSE_WASEXPR_YES;
+ } else {
+  result = ast_setddi(ast_constexpr(Dee_None),&import_loc);
+  if unlikely(!result) goto err;
+  if unlikely(ast_parse_post_import())
+     goto err_r;
+  if (pwas_expression)
+     *pwas_expression = AST_PARSE_WASEXPR_NO;
+ }
+ return result;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+
+
 INTERN DREF DeeAstObject *FCALL ast_parse_import(void) {
  DREF DeeModuleObject *module;
  DREF DeeAstObject *result;
@@ -766,197 +995,8 @@ INTERN DREF DeeAstObject *FCALL ast_parse_import(void) {
   }
   result = ast_setddi(ast_constexpr(Dee_None),&import_loc);
   if unlikely(!result) goto err;
-  /* - import deemon;
-   * - import deemon, util;
-   * - import my_deemon = deemon;
-   * - import my_deemon = "deemon";
-   * - import my_deemon = deemon, my_util = util;
-   * - import deemon as my_deemon;
-   * - import "deemon" as my_deemon;
-   * - import deemon as my_deemon, util as my_util;
-   * - import * from deemon;
-   * - import object from deemon;
-   * - import object, list from deemon;
-   * - import my_object = object from deemon;
-   * - import my_object = "object" from deemon;
-   * - import my_object = object, my_list = list from deemon;
-   * - import object as my_object from deemon;
-   * - import "object" as my_object from deemon;
-   * - import object as my_object, list as my_list from deemon; */
-  {
-   int error; struct import_item item;
-   bool allow_modules = true;
-   struct ast_loc star_loc;
-   struct import_item *item_v;
-   size_t item_a,item_c;
-   star_loc.l_file = NULL; /* When non-NULL, import all */
-   if (tok == '*') {
-    loc_here(&star_loc);
-    if unlikely(yield() < 0) goto err_r;
-    if (tok == KWD_from) {
-     if unlikely(yield() < 0) goto err_r;
-     module = parse_module_byname();
-     if unlikely(!module) goto err_r;
-     error = ast_import_all_from_module(module,&star_loc);
-     Dee_Decref(module);
-     goto done;
-    } else if (tok == ',') {
-     item_a = item_c = 0;
-     item_v = NULL;
-     allow_modules = false;
-     goto import_parse_list;
-    }
-    if (WARN(W_EXPECTED_COMMA_OR_FROM_AFTER_START_IN_IMPORT_LIST))
-        goto err_r;
-    goto done;
-   }
-   error = parse_import_symbol(&item,true);
-   if unlikely(error < 0) goto err_r;
-   if unlikely(error == 2) goto done;
-   if (error) {
-    /* Module import list */
-    for (;;) {
-import_item_as_module:
-     error = ast_import_module(&item);
-     Dee_XDecref(item.ii_import_name);
-     if unlikely(error) goto err_r;
-parse_module_import_list:
-     if (tok != ',') break;
-     if unlikely(yield() < 0) goto err_r;
-     error = parse_import_symbol(&item,true);
-     if unlikely(error < 0) goto err_r;
-     if unlikely(error == 2) break;
-    }
-    /* Warn if the module import list is followed by a `from' */
-    if (tok == KWD_from &&
-        WARN(W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST))
-        goto err_r;
-   } else if (tok == KWD_from) {
-    /*  - `import foo from bar' */
-    if unlikely(yield() < 0) goto err_r_item;
-    module = parse_module_byname();
-    if unlikely(!module) goto err_r_item;
-    error = ast_import_single_from_module(module,&item);
-    Dee_XDecref(item.ii_import_name);
-    Dee_Decref(module);
-    if unlikely(error) goto err_r;
-   } else if (tok == ',') {
-    item_a = 4;
-    item_v = (struct import_item *)Dee_TryMalloc(4*sizeof(struct import_item));
-    if unlikely(!item_v) {
-     item_a = 2;
-     item_v = (struct import_item *)Dee_Malloc(2*sizeof(struct import_item));
-     if unlikely(!item_v) goto err_r_item;
-    }
-    item_v[0] = item;
-    item_c = 1;
-import_parse_list:
-    do {
-     ASSERT(tok == ',');
-     if unlikely(yield() < 0)
-        goto err_r_item_v;
-     if (tok == '*') {
-      if (star_loc.l_file) {
-       if (WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
-           goto err_r_item_v;
-      } else {
-       loc_here(&star_loc);
-      }
-      if unlikely(yield() < 0)
-         goto err_r_item_v;
-      /* Don't allow modules after `*' confirmed that symbols are being imported.
-       * -> There is no such thing as import-all-modules. */
-      allow_modules = false;
-     } else {
-      /* Parse the next import item. */
-      ASSERT(item_c <= item_a);
-      if (item_c >= item_a) {
-       /* Allocate more space. */
-       struct import_item *new_item_v;
-       size_t new_item_a = item_a * 2;
-       if unlikely(!new_item_a) new_item_a = 2;
-       new_item_v = (struct import_item *)Dee_TryRealloc(item_v,new_item_a*
-                                                         sizeof(struct import_item));
-       if unlikely(!new_item_v) {
-        new_item_a = item_c + 1;
-        new_item_v = (struct import_item *)Dee_Realloc(item_v,new_item_a*
-                                                       sizeof(struct import_item));
-        if unlikely(!new_item_v) goto err_r_item_v;
-       }
-       item_v = new_item_v;
-       item_a = new_item_a;
-      }
-      error = parse_import_symbol(&item_v[item_c],allow_modules);
-      if unlikely(error < 0) goto err_r_item_v;
-      if unlikely(error == 2) break;
-      ++item_c; /* Import parsing confirmed. */
-      if (error) {
-       /* We're dealing with a module import list!
-        * -> Import all items already parsed as modules. */
-       size_t i;
-       ASSERT(allow_modules);
-       for (i = 0; i < item_c; ++i) {
-        if unlikely(ast_import_module(&item_v[i]))
-           goto err_r_item_v;
-        Dee_XClear(item_v[i].ii_import_name);
-       }
-       Dee_Free(item_v);
-       /* Then continue by parsing the remainder as a module import list. */
-       goto parse_module_import_list;
-      }
-     }
-    } while (tok == ',');
-    /* A multi-item, comma-seperated import list has now been parsed. */
-    if (tok == KWD_from) {
-     size_t i;
-     /* import foo, bar, foobar from foobarfoo;  (symbol import) */
-     if unlikely(yield() < 0) goto err_r_item_v;
-     module = parse_module_byname();
-     if unlikely(!module) goto err_r_item_v;
-     /* If `*' was apart of the symbol import list,
-      * start by importing all symbols from the module. */
-     if (star_loc.l_file) {
-      if unlikely(ast_import_all_from_module(module,&star_loc))
-         goto err_r_item_v_module;
-     }
-     /* Now import all the explicitly defined symbols. */
-     for (i = 0; i < item_c; ++i) {
-      if unlikely(ast_import_single_from_module(module,&item_v[i]))
-         goto err_r_item_v_module;
-      Dee_XClear(item_v[i].ii_import_name);
-     }
-     Dee_Decref(module);
-    } else {
-     size_t i;
-     if unlikely(!allow_modules) {
-      /* Warn if there is a `from' missing following a symbol import list. */
-      if (WARN(W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST))
-          goto err_r_item_v;
-     }
-     /* import foo, bar, foobar;  (module import) */
-     for (i = 0; i < item_c; ++i) {
-      if unlikely(ast_import_module(&item_v[i]))
-         goto err_r_item_v;
-      Dee_XClear(item_v[i].ii_import_name);
-     }
-    }
-    Dee_Free(item_v);
-    goto done;
-err_r_item_v_module:
-    Dee_Decref(module);
-err_r_item_v:
-    while (item_c--)
-        Dee_XDecref(item_v[item_c].ii_import_name);
-    Dee_Free(item_v);
-    goto err_r;
-err_r_item:
-    Dee_XDecref(item.ii_import_name);
-    goto err_r;
-   } else {
-    /* This is simply a single-module, stand-along import statement. */
-    goto import_item_as_module;
-   }
-  }
+  if unlikely(ast_parse_post_import())
+     goto err_r;
  }
 done:
  return result;

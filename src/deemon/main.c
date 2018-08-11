@@ -689,13 +689,6 @@ int main(int argc, char *argv[]) {
  SetConsoleOutputCP(GetOEMCP());
 #endif
 
- /* TODO: When using `import *' to import a symbol that has already been defined,
-  *       change the pre-existing symbol to an error-symbol which, when used,
-  *       will cause a compiler error.
-  *       That way, user-code can safely use `import *' without much regard to the
-  *       symbols exported by various modules, knowing that as long as a colliding
-  *       symbol is not accessed, no ill effects are to be had. */
-
  /*_CrtSetBreakAlloc(280169);*/
 
  /* Literally the only deemon component that actually needs to

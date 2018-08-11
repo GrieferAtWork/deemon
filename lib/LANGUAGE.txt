@@ -836,6 +836,10 @@ ast_parse_statement_or_braces ::= (
 	 * >> print repr ({ assert(foo()), 7 });                 // EXPR: { <foo()>, 7 }
 	 * >> print repr ({ assert(foo()); });                   // STMT: <foo()>
 	 * >> print repr ({ assert(foo()); 7; });                // STMT: 7
+	 * >> print repr ({ import("deemon") });                 // EXPR: { import("deemon") }
+	 * >> print repr ({ import("deemon"); });                // STMT: import("deemon")
+	 * >> print repr ({ import deemon; });                   // STMT: none
+	 * >> print repr ({ import deemon; deemon; });           // STMT: import("deemon")
 	 * Using these rules, all possible cases can be dealt with.
 	 * NOTE: Although also allowed in expression, `del' is always
 	 *       interpreted as a statement, as there is no syntactical
