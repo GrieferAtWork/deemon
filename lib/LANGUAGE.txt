@@ -864,12 +864,20 @@ ast_parse_unary_base ::= (
 	DDI('true') |
 	DDI('false') |
 
-	/* Unary keyword-operators. */
-	(DDI('str') (('(' ast_parse_expression ')') | ast_parse_unary) ) |      /* __str__ */
-	(DDI('repr') (('(' ast_parse_expression ')') | ast_parse_unary) ) |     /* __repr__ */
-	(DDI('copy') (('(' ast_parse_expression ')') | ast_parse_unary) ) |     /* __copy__ */
-	(DDI('deepcopy') (('(' ast_parse_expression ')') | ast_parse_unary) ) | /* __deepcopy__ */
-	(DDI('type') (('(' ast_parse_expression ')') | ast_parse_unary) ) |     /* ACTION: typeof */
+	/* Unary keyword-operators.
+	 * NOTE: When `ast_parse_unary' starts with parenthesis, the associated
+	 *       expression is only parsed as `ast_parse_unary_base'.
+	 *       This means that `str(foo).bar' is parsed as `(str foo).bar',
+	 *       rather than `str(foo.bar)', which would be done without this
+	 *       special rule.
+	 *       However, this is only done when parenthesis is found, meaning
+	 *       that `str foo.bar' is still parsed as `str(foo.bar)'
+	 */
+	(DDI('str') ast_parse_unary) |      /* __str__ */
+	(DDI('repr') ast_parse_unary) |     /* __repr__ */
+	(DDI('copy') ast_parse_unary) |     /* __copy__ */
+	(DDI('deepcopy') ast_parse_unary) | /* __deepcopy__ */
+	(DDI('type') ast_parse_unary) |     /* ACTION: typeof */
 
 	/* Unary operators. */
 	(DDI('!') ast_parse_unary) |  /* ACTION: not */

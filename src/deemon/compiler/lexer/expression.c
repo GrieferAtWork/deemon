@@ -46,6 +46,8 @@ DECL_BEGIN
 
 #undef CONFIG_PARSE_UNARY_KEYWORD_CONSUMED_PARENTHESIS
 //#define CONFIG_PARSE_UNARY_KEYWORD_CONSUMED_PARENTHESIS 1
+#undef CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS
+#define CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS 1
 
 
 #define GET_CHOP(x) (ASSERT((x) < 128),chops[x])
@@ -514,6 +516,10 @@ do_unary_operator_kwd:
                WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
       goto err;
   } else
+#elif defined(CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS)
+  if (tok == '(') {
+   result = ast_parse_unary_base(LOOKUP_SYM_SECONDARY);
+  } else
 #endif
   {
    result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
@@ -553,6 +559,10 @@ do_unary_operator:
    if unlikely(likely(tok == ')') ? (yield() < 0) :
                WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
        goto err;
+  } else
+#elif defined(CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS)
+  if (tok == '(') {
+   result = ast_parse_unary_base(LOOKUP_SYM_SECONDARY);
   } else
 #endif
   {
