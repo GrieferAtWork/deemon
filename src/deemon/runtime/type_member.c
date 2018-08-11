@@ -30,10 +30,13 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
-#include <hybrid/atomic.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
+
+#ifndef CONFIG_NO_THREADS
+#include <hybrid/atomic.h>
+#endif
 
 #include "../runtime/runtime_error.h"
 
@@ -63,10 +66,12 @@ type_member_typefor(struct type_member *__restrict self) {
  case STRUCT_INT16:
  case STRUCT_INT32:
  case STRUCT_INT64:
+ case STRUCT_INT128:
  case STRUCT_UNSIGNED|STRUCT_INT8:
  case STRUCT_UNSIGNED|STRUCT_INT16:
  case STRUCT_UNSIGNED|STRUCT_INT32:
  case STRUCT_UNSIGNED|STRUCT_INT64:
+ case STRUCT_UNSIGNED|STRUCT_INT128:
   return &DeeInt_Type;
  default: break;
  }
@@ -437,26 +442,26 @@ handle_null_ob:
  CASE(STRUCT_LDOUBLE):
   return DeeFloat_New((double)FIELD(long double));
 
- {
-  union { int32_t i32; int64_t i64; uint32_t u32; uint64_t u64; } value;
-  __IF0 { CASE(STRUCT_INT8):  value.i32 = (int32_t)FIELD(int8_t); }
-  __IF0 { CASE(STRUCT_INT16): value.i32 = (int32_t)FIELD(int16_t); }
-  __IF0 { CASE(STRUCT_UNSIGNED|STRUCT_INT8):  value.u32 = (uint32_t)FIELD(uint8_t); }
-  __IF0 { CASE(STRUCT_UNSIGNED|STRUCT_INT16): value.u32 = (uint32_t)FIELD(uint16_t); }
-  __IF0 { CASE(STRUCT_UNSIGNED|STRUCT_INT32): CASE(STRUCT_INT32): value.i32 = FIELD(int32_t); }
-  __IF0 { CASE(STRUCT_UNSIGNED|STRUCT_INT64): CASE(STRUCT_INT64): value.i64 = FIELD(int64_t); }
-  if ((desc->m_field.m_type&~(STRUCT_UNSIGNED)) == STRUCT_INT64) {
-   if (desc->m_field.m_type&STRUCT_UNSIGNED) {
-    return DeeInt_NewU64(value.u64);
-   } else {
-    return DeeInt_NewS64(value.i64);
-   }
-  } else if (desc->m_field.m_type&STRUCT_UNSIGNED) {
-   return DeeInt_NewU32(value.u32);
-  } else {
-   return DeeInt_NewS32(value.i32);
-  }
- } break;
+ CASE(STRUCT_INT8):
+  return DeeInt_NewS8(FIELD(int8_t));
+ CASE(STRUCT_UNSIGNED|STRUCT_INT8):
+  return DeeInt_NewU8(FIELD(uint8_t));
+ CASE(STRUCT_INT16):
+  return DeeInt_NewS16(FIELD(int16_t));
+ CASE(STRUCT_UNSIGNED|STRUCT_INT16):
+  return DeeInt_NewU16(FIELD(uint16_t));
+ CASE(STRUCT_INT32):
+  return DeeInt_NewS32(FIELD(int32_t));
+ CASE(STRUCT_UNSIGNED|STRUCT_INT32):
+  return DeeInt_NewU32(FIELD(uint32_t));
+ CASE(STRUCT_INT64):
+  return DeeInt_NewS64(FIELD(int64_t));
+ CASE(STRUCT_UNSIGNED|STRUCT_INT64):
+  return DeeInt_NewU64(FIELD(uint64_t));
+ CASE(STRUCT_INT128):
+  return DeeInt_NewS128(FIELD(dint128_t));
+ CASE(STRUCT_UNSIGNED|STRUCT_INT128):
+  return DeeInt_NewU128(FIELD(duint128_t));
 
 #undef CASE
  default: break;
@@ -494,6 +499,8 @@ type_member_bound(struct type_member *__restrict desc,
  CASE(STRUCT_INT32):
  CASE(STRUCT_UNSIGNED|STRUCT_INT64):
  CASE(STRUCT_INT64):
+ CASE(STRUCT_UNSIGNED|STRUCT_INT128):
+ CASE(STRUCT_INT128):
   return true;
 
  CASE(STRUCT_WOBJECT):
@@ -518,6 +525,12 @@ type_member_set(struct type_member *__restrict desc,
      goto cant_access;
  switch (desc->m_field.m_type&~(STRUCT_ATOMIC)) {
 
+#ifdef CONFIG_NO_THREADS
+#define WRITE(dst,src) (dst) = (src)
+#else
+#define WRITE(dst,src) ATOMIC_WRITE(dst,src)
+#endif
+
  case STRUCT_WOBJECT_OPT:
   if (DeeNone_Check(value)) {
    weakref_clear(&FIELD(weakref_t));
@@ -540,7 +553,7 @@ type_member_set(struct type_member *__restrict desc,
    if (DeeObject_AsChar(value,&chr_value))
        return -1;
   }
-  ATOMIC_WRITE(FIELD(char),chr_value);
+  WRITE(FIELD(char),chr_value);
   return 0;
  }
 
@@ -574,32 +587,76 @@ type_member_set(struct type_member *__restrict desc,
   return 0;
  } break;
 
+
+
  {
-  union { int32_t i32; int64_t i64; } data;
-  case STRUCT_UNSIGNED|STRUCT_INT8: case STRUCT_INT8:
-  case STRUCT_UNSIGNED|STRUCT_INT16: case STRUCT_INT16:
-  case STRUCT_UNSIGNED|STRUCT_INT32: case STRUCT_INT32:
-   if (DeeObject_AsInt32(value,&data.i32)) return -1;
-   goto set_integer;
-  case STRUCT_UNSIGNED|STRUCT_INT64: case STRUCT_INT64:
-   if (DeeObject_AsInt64(value,&data.i64)) return -1;
-set_integer:
-  switch (desc->m_field.m_type&~(STRUCT_ATOMIC)) {
-  case STRUCT_UNSIGNED|STRUCT_INT8:  case STRUCT_INT8:
-   ATOMIC_WRITE(FIELD(int8_t),(int8_t)data.i32);
-   break;
-  case STRUCT_UNSIGNED|STRUCT_INT16: case STRUCT_INT16:
-   ATOMIC_WRITE(FIELD(int16_t),(int16_t)data.i32);
-   break;
-  case STRUCT_UNSIGNED|STRUCT_INT32: case STRUCT_INT32:
-   ATOMIC_WRITE(FIELD(int32_t),data.i32);
-   break;
-  default:
-   ATOMIC_WRITE(FIELD(int64_t),data.i64);
-   break;
-  }
-  return 0;
- } break;
+  union {
+   int8_t     s8;
+   int16_t    s16;
+   int32_t    s32;
+   int64_t    s64;
+   dint128_t  s128;
+   uint8_t    u8;
+   uint16_t   u16;
+   uint32_t   u32;
+   uint64_t   u64;
+   duint128_t u128;
+  } data;
+ case STRUCT_UNSIGNED|STRUCT_INT8:
+  if (DeeObject_AsUInt8(value,&data.u8)) goto err;
+  WRITE(FIELD(uint8_t),data.u8);
+  break;
+ case STRUCT_INT8:
+  if (DeeObject_AsInt8(value,&data.s8)) goto err;
+  WRITE(FIELD(int8_t),data.s8);
+  break;
+ case STRUCT_UNSIGNED|STRUCT_INT16:
+  if (DeeObject_AsUInt16(value,&data.u16)) goto err;
+  WRITE(FIELD(uint16_t),data.u16);
+  break;
+ case STRUCT_INT16:
+  if (DeeObject_AsInt16(value,&data.s16)) goto err;
+  WRITE(FIELD(int16_t),data.s16);
+  break;
+ case STRUCT_UNSIGNED|STRUCT_INT32:
+  if (DeeObject_AsUInt32(value,&data.u32)) goto err;
+  WRITE(FIELD(uint32_t),data.u32);
+  break;
+ case STRUCT_INT32:
+  if (DeeObject_AsInt32(value,&data.s32)) goto err;
+  WRITE(FIELD(int32_t),data.s32);
+  break;
+ case STRUCT_UNSIGNED|STRUCT_INT64:
+  if (DeeObject_AsUInt64(value,&data.u64)) goto err;
+  WRITE(FIELD(uint64_t),data.u64);
+  break;
+ case STRUCT_INT64:
+  if (DeeObject_AsInt64(value,&data.s64)) goto err;
+  WRITE(FIELD(int64_t),data.s64);
+  break;
+ case STRUCT_UNSIGNED|STRUCT_INT128:
+  if (DeeObject_AsUInt128(value,&data.u128)) goto err;
+#ifndef CONFIG_NO_THREADS
+  COMPILER_WRITE_BARRIER();
+#endif
+  FIELD(duint128_t) = data.u128;
+#ifndef CONFIG_NO_THREADS
+  COMPILER_WRITE_BARRIER();
+#endif
+  break;
+ case STRUCT_INT128:
+  if (DeeObject_AsInt128(value,&data.s128)) goto err;
+#ifndef CONFIG_NO_THREADS
+  COMPILER_WRITE_BARRIER();
+#endif
+  FIELD(dint128_t) = data.s128;
+#ifndef CONFIG_NO_THREADS
+  COMPILER_WRITE_BARRIER();
+#endif
+  break;
+ }
+
+#undef WRITE
 
  default: break;
  }
@@ -607,6 +664,7 @@ set_integer:
 cant_access:
  err_cant_access_attribute(type_member_typeof(desc,self),
                            desc->m_name,ATTR_ACCESS_SET);
+err:
  return -1;
 }
 
