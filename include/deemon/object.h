@@ -92,6 +92,54 @@ DFUNDEF dhash_t DCALL hash_caseptrl(uint32_t const *__restrict ptr, size_t n_byt
 #define DeeObject_Id(ob)          ((uintptr_t)(ob))
 
 
+#if defined(__UINT128_TYPE__) || \
+    defined(__SIZEOF_INT128__)
+#define CONFIG_NATIVE_INT128 1
+#ifdef __UINT128_TYPE__
+typedef __INT128_TYPE__  dint128_t;
+typedef __UINT128_TYPE__ duint128_t;
+#else
+typedef signed __int128   dint128_t;
+typedef unsigned __int128 duint128_t;
+#endif
+#define DUINT128_GET8(x)   ((uint8_t *)&(x))
+#define DUINT128_GET16(x)  ((uint16_t *)&(x))
+#define DUINT128_GET32(x)  ((uint32_t *)&(x))
+#define DUINT128_GET64(x)  ((uint64_t *)&(x))
+#define DUINT128_GETS8(x)  ((int8_t *)&(x))
+#define DUINT128_GETS16(x) ((int16_t *)&(x))
+#define DUINT128_GETS32(x) ((int32_t *)&(x))
+#define DUINT128_GETS64(x) ((int64_t *)&(x))
+#else
+#define DUINT128_GET8(x)   ((x).int_i8)
+#define DUINT128_GET16(x)  ((x).int_i16)
+#define DUINT128_GET32(x)  ((x).int_i32)
+#define DUINT128_GET64(x)  ((x).int_i64)
+#define DUINT128_GETS8(x)  ((int8_t *)(x).int_i8)
+#define DUINT128_GETS16(x) ((int16_t *)(x).int_i16)
+#define DUINT128_GETS32(x) ((int32_t *)(x).int_i32)
+#define DUINT128_GETS64(x) ((int64_t *)(x).int_i64)
+typedef union {
+    uint64_t int_i64[2];
+    uint32_t int_i32[4];
+    uint16_t int_i16[8];
+    uint8_t  int_i8[16];
+} duint128_t;
+#ifdef __cplusplus
+/* Allow the types to differ for function overloading,
+ * although internally, the same type is used. */
+typedef union {
+    uint64_t int_i64[2];
+    uint32_t int_i32[4];
+    uint16_t int_i16[8];
+    uint8_t  int_i8[16];
+} dint128_t;
+#else
+typedef duint128_t dint128_t;
+#endif
+#endif
+
+
 #ifdef CONFIG_TRACE_REFCHANGES
 struct refchange {
     char const        *rc_file; /* [1..1][SENTINAL(NULL)] The file in which the change happened. */
@@ -1026,7 +1074,8 @@ struct type_getset {
 #define STRUCT_INT16       0x0801 /* `int16_t' */
 #define STRUCT_INT32       0x0802 /* `int32_t' */
 #define STRUCT_INT64       0x0803 /* `int64_t' */
-#define STRUCT_UNSIGNED    0x0004 /* FLAG: Unsigned integer (Use with `STRUCT_INT*'). */
+#define STRUCT_INT128      0x0804 /* `dint128_t' */
+#define STRUCT_UNSIGNED    0x0008 /* FLAG: Unsigned integer (Use with `STRUCT_INT*'). */
 #define STRUCT_ATOMIC      0x4000 /* FLAG: Atomic read/write access (Use with `STRUCT_INT*'). */
 #define STRUCT_CONST       0x8000 /* FLAG: Read-only field. */
 
@@ -1887,16 +1936,19 @@ DFUNDEF int DCALL DeeObject_GetInt8(DeeObject *__restrict self, int8_t *__restri
 DFUNDEF int DCALL DeeObject_GetInt16(DeeObject *__restrict self, int16_t *__restrict result);
 DFUNDEF int DCALL DeeObject_GetInt32(DeeObject *__restrict self, int32_t *__restrict result);
 DFUNDEF int DCALL DeeObject_GetInt64(DeeObject *__restrict self, int64_t *__restrict result);
+DFUNDEF int DCALL DeeObject_GetInt128(DeeObject *__restrict self, dint128_t *__restrict result);
 
 /* Integral/Floating-point conversion operator invocation. */
 DFUNDEF int DCALL DeeObject_AsInt8(DeeObject *__restrict self, int8_t *__restrict result);
 DFUNDEF int DCALL DeeObject_AsInt16(DeeObject *__restrict self, int16_t *__restrict result);
 DFUNDEF int DCALL DeeObject_AsInt32(DeeObject *__restrict self, int32_t *__restrict result);
 DFUNDEF int DCALL DeeObject_AsInt64(DeeObject *__restrict self, int64_t *__restrict result);
+DFUNDEF int DCALL DeeObject_AsInt128(DeeObject *__restrict self, dint128_t *__restrict result);
 DFUNDEF int DCALL DeeObject_AsUInt8(DeeObject *__restrict self, uint8_t *__restrict result);
 DFUNDEF int DCALL DeeObject_AsUInt16(DeeObject *__restrict self, uint16_t *__restrict result);
 DFUNDEF int DCALL DeeObject_AsUInt32(DeeObject *__restrict self, uint32_t *__restrict result);
 DFUNDEF int DCALL DeeObject_AsUInt64(DeeObject *__restrict self, uint64_t *__restrict result);
+DFUNDEF int DCALL DeeObject_AsUInt128(DeeObject *__restrict self, duint128_t *__restrict result);
 DFUNDEF int DCALL DeeObject_AsDouble(DeeObject *__restrict self, double *__restrict result);
 
 /* Cast-to-pointer conversion operator invocation. */

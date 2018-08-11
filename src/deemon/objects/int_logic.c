@@ -41,6 +41,12 @@ DECL_BEGIN
 #define KARATSUBA_SQUARE_CUTOFF (2*KARATSUBA_CUTOFF)
 #define FIVEARY_CUTOFF           8
 
+#if DIGIT_BITS <= 31
+#define DeeInt_NewMedian(x) DeeInt_NewS32(x)
+#else
+#define DeeInt_NewMedian(x) DeeInt_NewS64(x)
+#endif
+
 
 #define SWAP(T,a,b) do{ T const _temp_ = (a); (a) = (b); (b) = _temp_; }__WHILE0
 #define ABS(x)        ((x) < 0 ? -(x) : (x))
@@ -75,7 +81,7 @@ int_copy(DeeIntObject const *__restrict self) {
 }
 
 INTERN DREF DeeIntObject *DCALL
-int_normalize(DREF DeeIntObject *__restrict v) {
+int_normalize(/*inherit(always)*/DREF DeeIntObject *__restrict v) {
  dssize_t j = ABS(v->ob_size);
  dssize_t i = j;
  while (i > 0 && v->ob_digit[i-1] == 0) --i;
@@ -153,9 +159,11 @@ x_sub(DeeIntObject *__restrict a,
 INTERN DREF DeeObject *DCALL
 int_add(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
  DeeIntObject *z;
- if ((b = (DeeIntObject *)DeeObject_Int((DeeObject *)b)) == NULL) return NULL;
+ if ((b = (DeeIntObject *)DeeObject_Int((DeeObject *)b)) == NULL)
+      return NULL;
  if (ABS(a->ob_size) <= 1 && ABS(b->ob_size) <= 1) {
-  z = (DeeIntObject *)DeeInt_NewInt(MEDIUM_VALUE(a)+MEDIUM_VALUE(b));
+  z = (DeeIntObject *)DeeInt_NewMedian(MEDIUM_VALUE(a) +
+                                       MEDIUM_VALUE(b));
   goto done;
  }
  if (a->ob_size < 0) {
@@ -181,14 +189,15 @@ int_sub(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
  DeeIntObject *z;
  if ((b = (DeeIntObject *)DeeObject_Int((DeeObject *)b)) == NULL) return NULL;
  if (ABS(a->ob_size) <= 1 && ABS(b->ob_size) <= 1) {
-  z = (DeeIntObject *)DeeInt_NewInt(MEDIUM_VALUE(a)-MEDIUM_VALUE(b));
+  z = (DeeIntObject *)DeeInt_NewMedian(MEDIUM_VALUE(a) -
+                                       MEDIUM_VALUE(b));
   goto done;
  }
  if (a->ob_size < 0) {
   if (b->ob_size < 0)
        z = x_sub(a,b);
   else z = x_add(a,b);
-  if (z != NULL && z->ob_size != 0)
+  if (z != NULL/* && z->ob_size != 0*/)
       z->ob_size = -z->ob_size;
  } else {
   if (b->ob_size < 0)
@@ -197,6 +206,488 @@ int_sub(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
  }
 done:
  Dee_Decref(b);
+ return (DeeObject *)z;
+}
+
+
+
+PRIVATE DREF DeeIntObject *DCALL
+x_add_int(DeeIntObject *__restrict a, digit b) {
+ dssize_t size_a = ABS(a->ob_size);
+ dssize_t i; DeeIntObject *z;
+ digit carry;
+ ASSERT(size_a >= 2);
+ z = DeeInt_Alloc(size_a+1);
+ if (z == NULL) return NULL;
+ carry = a->ob_digit[0] + b;
+ z->ob_digit[0] = carry & DIGIT_MASK;
+ carry >>= DIGIT_BITS;
+ for (i = 1; i < size_a; ++i) {
+  carry += a->ob_digit[i];
+  z->ob_digit[i] = carry & DIGIT_MASK;
+  carry >>= DIGIT_BITS;
+ }
+ z->ob_digit[i] = carry;
+ return int_normalize(z);
+}
+
+PRIVATE DREF DeeIntObject *DCALL
+x_add_int2(DeeIntObject *__restrict a, twodigits b) {
+ dssize_t size_a = ABS(a->ob_size);
+ dssize_t i; DeeIntObject *z; digit carry;
+ ASSERT(size_a >= 2);
+ z = DeeInt_Alloc(size_a+1);
+ if (z == NULL) return NULL;
+ carry = a->ob_digit[0] + (b & DIGIT_MASK);
+ z->ob_digit[0] = carry & DIGIT_MASK;
+ carry >>= DIGIT_BITS;
+ carry += a->ob_digit[1] + ((b >> DIGIT_BITS) & DIGIT_MASK);
+ z->ob_digit[1] = carry & DIGIT_MASK;
+ carry >>= DIGIT_BITS;
+ for (i = 2; i < size_a; ++i) {
+  carry += a->ob_digit[i];
+  z->ob_digit[i] = carry & DIGIT_MASK;
+  carry >>= DIGIT_BITS;
+ }
+ z->ob_digit[i] = carry;
+ return int_normalize(z);
+}
+
+#if (DIGIT_BITS * 2) < 32
+PRIVATE DREF DeeIntObject *DCALL
+x_add_int3(DeeIntObject *__restrict a, uint32_t b) {
+ dssize_t size_a = ABS(a->ob_size);
+ dssize_t i; DeeIntObject *z; digit carry;
+ ASSERT(size_a >= 2);
+ if (size_a == 2) {
+  uint64_t a_value;
+  a_value = a->ob_digit[0] | (a->ob_digit[1] << DIGIT_BITS);
+  if (a->ob_size < 0)
+      return (DREF DeeIntObject *)DeeInt_NewS64((-(int64_t)a_value) + (int64_t)b);
+  return (DREF DeeIntObject *)DeeInt_NewU64(a_value + b);
+ }
+ ASSERT(size_a >= 3);
+ z = DeeInt_Alloc(size_a+1);
+ if (z == NULL) return NULL;
+ carry = a->ob_digit[0] + (b & DIGIT_MASK);
+ z->ob_digit[0] = carry & DIGIT_MASK;
+ carry >>= DIGIT_BITS;
+ carry += a->ob_digit[1] + ((b >> DIGIT_BITS) & DIGIT_MASK);
+ z->ob_digit[1] = carry & DIGIT_MASK;
+ carry >>= DIGIT_BITS;
+ carry += a->ob_digit[2] + ((b >> (DIGIT_BITS * 2)) & DIGIT_MASK);
+ z->ob_digit[2] = carry & DIGIT_MASK;
+ carry >>= DIGIT_BITS;
+ for (i = 3; i < size_a; ++i) {
+  carry += a->ob_digit[i];
+  z->ob_digit[i] = carry & DIGIT_MASK;
+  carry >>= DIGIT_BITS;
+ }
+ z->ob_digit[i] = carry;
+ return int_normalize(z);
+}
+#endif
+
+
+PRIVATE DREF DeeIntObject *DCALL
+x_sub_revint(digit a, DeeIntObject *__restrict b) {
+ dssize_t size_b = ABS(b->ob_size);
+ dssize_t i; DeeIntObject *z; digit borrow;
+ ASSERT(size_b >= 2);
+ z = DeeInt_Alloc(size_b);
+ if (z == NULL) return NULL;
+ borrow = b->ob_digit[0] - a;
+ z->ob_digit[0] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ for (i = 1; i < size_b; ++i) {
+  borrow = b->ob_digit[i] - borrow;
+  z->ob_digit[i] = borrow & DIGIT_MASK;
+  borrow >>= DIGIT_BITS;
+  borrow &= 1;
+ }
+ ASSERT(borrow == 0);
+ z->ob_size = -z->ob_size;
+ return int_normalize(z);
+}
+
+#if (DIGIT_BITS * 2) < 32
+PRIVATE DREF DeeIntObject *DCALL
+x_sub_int3(DeeIntObject *__restrict a, uint32_t b);
+PRIVATE DREF DeeIntObject *DCALL
+x_sub_revint3(uint32_t a, DeeIntObject *__restrict b) {
+ dssize_t size_b = ABS(b->ob_size);
+ DeeIntObject *z; digit borrow;
+ ASSERT(size_b >= 2);
+ if (3 < size_b) {
+  z = x_sub_int3(b,a);
+  if (z) z->ob_size = -z->ob_size;
+  return z;
+ }
+ ASSERT(size_b == 2 || size_b == 3);
+ if (3 == size_b) {
+  uint64_t b_value;
+  b_value   = b->ob_digit[2];
+  b_value <<= DIGIT_BITS;
+  b_value  |= b->ob_digit[1];
+  b_value <<= DIGIT_BITS;
+  b_value  |= b->ob_digit[0];
+  if (a == b_value)
+      return_reference_((DeeIntObject *)&DeeInt_Zero);
+  if (a < b_value) {
+   z = (DeeIntObject *)DeeInt_NewU64(b_value - a);
+   if (z) z->ob_size = -z->ob_size;
+   return z;
+  }
+  return (DeeIntObject *)DeeInt_NewU64(a - b_value);
+ }
+ ASSERT(size_b == 2);
+ z = DeeInt_Alloc(3);
+ if (z == NULL) return NULL;
+ borrow = (a & DIGIT_MASK) - b->ob_digit[0];
+ z->ob_digit[0] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ borrow = ((a >> DIGIT_BITS) & DIGIT_MASK) - b->ob_digit[1] - borrow;
+ z->ob_digit[1] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ borrow = ((a >> (DIGIT_BITS * 2)) & DIGIT_MASK) - borrow;
+ z->ob_digit[2] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ ASSERT(borrow == 0);
+ return int_normalize(z);
+}
+#endif
+
+
+PRIVATE DREF DeeIntObject *DCALL
+x_sub_int(DeeIntObject *__restrict a, digit b) {
+ dssize_t size_a = ABS(a->ob_size);
+ dssize_t i; DeeIntObject *z; digit borrow;
+ ASSERT(size_a >= 2);
+ z = DeeInt_Alloc(size_a);
+ if (z == NULL) return NULL;
+ borrow = a->ob_digit[0] - b;
+ z->ob_digit[0] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ for (i = 1; i < size_a; ++i) {
+  borrow = a->ob_digit[i] - borrow;
+  z->ob_digit[i] = borrow & DIGIT_MASK;
+  borrow >>= DIGIT_BITS;
+  borrow &= 1;
+ }
+ ASSERT(borrow == 0);
+ return int_normalize(z);
+}
+
+PRIVATE DREF DeeIntObject *DCALL
+x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
+ dssize_t size_a = ABS(a->ob_size);
+ dssize_t i; DeeIntObject *z; digit borrow;
+ ASSERT(size_a >= 2);
+ if (size_a == 2) {
+  twodigits a_value;
+  a_value   = a->ob_digit[1];
+  a_value <<= DIGIT_BITS;
+  a_value  |= a->ob_digit[0];
+  if (a_value == b)
+      return_reference_((DeeIntObject *)&DeeInt_Zero);
+  if (a_value < b) {
+   b -= a_value;
+   if (b <= DIGIT_MASK) {
+    z = DeeInt_Alloc(2);
+    if unlikely(!z) return NULL;
+    z->ob_digit[0] = (digit)b;
+    z->ob_size = -1;
+   } else {
+    z = DeeInt_Alloc(2);
+    if unlikely(!z) return NULL;
+    z->ob_digit[0] = b & DIGIT_MASK;
+    z->ob_digit[1] = (b >> DIGIT_BITS) & DIGIT_MASK;
+    z->ob_size = -2;
+   }
+   return z;
+  }
+  a_value -= b;
+  if (a_value <= DIGIT_MASK) {
+   z = DeeInt_Alloc(2);
+   if unlikely(!z) return NULL;
+   z->ob_digit[0] = (digit)a_value;
+  } else {
+   z = DeeInt_Alloc(2);
+   if unlikely(!z) return NULL;
+   z->ob_digit[0] = a_value & DIGIT_MASK;
+   z->ob_digit[1] = (a_value >> DIGIT_BITS) & DIGIT_MASK;
+  }
+  return z;
+ }
+ z = DeeInt_Alloc(size_a);
+ if (z == NULL) return NULL;
+ borrow = a->ob_digit[0] - (b & DIGIT_MASK);
+ z->ob_digit[0] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ borrow = a->ob_digit[1] - ((b >> DIGIT_BITS) & DIGIT_MASK) - borrow;
+ z->ob_digit[1] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ for (i = 2; i < size_a; ++i) {
+  borrow = a->ob_digit[i] - borrow;
+  z->ob_digit[i] = borrow & DIGIT_MASK;
+  borrow >>= DIGIT_BITS;
+  borrow &= 1;
+ }
+ ASSERT(borrow == 0);
+ return int_normalize(z);
+}
+
+#if (DIGIT_BITS * 2) < 32
+PRIVATE DREF DeeIntObject *DCALL
+x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
+ dssize_t size_a = ABS(a->ob_size);
+ digit borrow; dssize_t i; DeeIntObject *z;
+ ASSERT(size_a >= 2);
+ if (size_a == 2) {
+  z = x_sub_revint3(b,a);
+  if (z) z->ob_size = -z->ob_size;
+  return z;
+ }
+ if (size_a == 3) {
+  uint64_t a_value;
+  a_value   = a->ob_digit[2];
+  a_value <<= DIGIT_BITS;
+  a_value  |= a->ob_digit[1];
+  a_value <<= DIGIT_BITS;
+  a_value  |= a->ob_digit[0];
+  if (a_value == b)
+      return_reference_((DeeIntObject *)&DeeInt_Zero);
+  if (a_value < b) {
+   b -= (uint32_t)a_value;
+   if (b <= DIGIT_MASK) {
+    z = DeeInt_Alloc(2);
+    if unlikely(!z) return NULL;
+    z->ob_digit[0] = (digit)b;
+    z->ob_size = -1;
+   } else if (b <= ((twodigits)1 << (DIGIT_BITS * 2))-1) {
+    z = DeeInt_Alloc(2);
+    if unlikely(!z) return NULL;
+    z->ob_digit[0] = b & DIGIT_MASK;
+    z->ob_digit[1] = (b >> DIGIT_BITS) & DIGIT_MASK;
+    z->ob_size = -2;
+   } else {
+    z = DeeInt_Alloc(3);
+    if unlikely(!z) return NULL;
+    z->ob_digit[0] = b & DIGIT_MASK;
+    z->ob_digit[1] = (b >> DIGIT_BITS) & DIGIT_MASK;
+    z->ob_digit[2] = (b >> (DIGIT_BITS*2)) & DIGIT_MASK;
+    z->ob_size = -3;
+   }
+   return z;
+  }
+  a_value -= b;
+  if (a_value <= DIGIT_MASK) {
+   z = DeeInt_Alloc(2);
+   if unlikely(!z) return NULL;
+   z->ob_digit[0] = (digit)a_value;
+  } else if (a_value <= ((twodigits)1 << (DIGIT_BITS * 2))-1) {
+   z = DeeInt_Alloc(2);
+   if unlikely(!z) return NULL;
+   z->ob_digit[0] = a_value & DIGIT_MASK;
+   z->ob_digit[1] = (a_value >> DIGIT_BITS) & DIGIT_MASK;
+  } else {
+   z = DeeInt_Alloc(3);
+   if unlikely(!z) return NULL;
+   z->ob_digit[0] = a_value & DIGIT_MASK;
+   z->ob_digit[1] = (a_value >> DIGIT_BITS) & DIGIT_MASK;
+   z->ob_digit[2] = (a_value >> (DIGIT_BITS*2)) & DIGIT_MASK;
+  }
+  return z;
+ }
+ z = DeeInt_Alloc(size_a);
+ if (z == NULL) return NULL;
+ borrow = a->ob_digit[0] - (b & DIGIT_MASK);
+ z->ob_digit[0] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ borrow = a->ob_digit[1] - ((b >> DIGIT_BITS) & DIGIT_MASK) - borrow;
+ z->ob_digit[1] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ borrow = a->ob_digit[2] - ((b >> (DIGIT_BITS*2)) & DIGIT_MASK) - borrow;
+ z->ob_digit[2] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ for (i = 3; i < size_a; ++i) {
+  borrow = a->ob_digit[i] - borrow;
+  z->ob_digit[i] = borrow & DIGIT_MASK;
+  borrow >>= DIGIT_BITS;
+  borrow &= 1;
+ }
+ ASSERT(borrow == 0);
+ return int_normalize(z);
+}
+#endif
+
+
+
+PRIVATE DREF DeeIntObject *DCALL
+x_sub_revint2(twodigits a,
+              DeeIntObject *__restrict b) {
+ dssize_t size_b = ABS(b->ob_size);
+ DeeIntObject *z;
+ digit borrow;
+ ASSERT(size_b >= 2);
+ if (2 < size_b) {
+  z = x_sub_int2(b,a);
+  if (z) z->ob_size = -z->ob_size;
+  return z;
+ }
+ ASSERT(2 == size_b);
+ if ((a & DIGIT_MASK) == b->ob_digit[0]) {
+  if (((a >> DIGIT_BITS) & DIGIT_MASK) == b->ob_digit[1])
+        return_reference_((DeeIntObject *)&DeeInt_Zero);
+  if (((a >> DIGIT_BITS) & DIGIT_MASK) < b->ob_digit[1])
+        goto do_reverse;
+ } else if ((a & DIGIT_MASK) < b->ob_digit[0]) {
+do_reverse:
+  z = x_sub_int2(b,a);
+  if (z) z->ob_size = -z->ob_size;
+  return z;
+ }
+ z = DeeInt_Alloc(2);
+ if (z == NULL) return NULL;
+ borrow = (a & DIGIT_MASK) - b->ob_digit[0];
+ z->ob_digit[0] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ borrow = ((a >> DIGIT_BITS) & DIGIT_MASK) - b->ob_digit[1] - borrow;
+ z->ob_digit[1] = borrow & DIGIT_MASK;
+ borrow >>= DIGIT_BITS;
+ borrow &= 1;
+ ASSERT(borrow == 0);
+ return int_normalize(z);
+}
+
+INTERN DREF DeeObject *DCALL
+DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b) {
+ DeeIntObject *z;
+ if (!b) return_reference_((DREF DeeObject *)a);
+ if (ABS(a->ob_size) <= 1)
+     return DeeInt_NewMedian(MEDIUM_VALUE(a) + b);
+ if (a->ob_size < 0) {
+  if (b < 0) {
+   z = x_add_int(a,(digit)-b);
+   if (z && z->ob_size)
+       z->ob_size = -z->ob_size;
+  } else {
+   z = x_sub_revint((digit)b,a);
+  }
+ } else if (b < 0) {
+  z = x_sub_int(a,(digit)-b);
+ } else {
+  z = x_add_int(a,(digit)b);
+ }
+ return (DREF DeeObject *)z;
+}
+
+INTERN DREF DeeObject *DCALL
+DeeInt_AddU32(DeeIntObject *__restrict a, uint32_t b) {
+ DeeIntObject *z;
+ if (!b) return_reference_((DREF DeeObject *)a);
+ if (ABS(a->ob_size) <= 1)
+     return DeeInt_NewS64((int64_t)MEDIUM_VALUE(a) + (int64_t)b);
+ if (a->ob_size < 0) {
+  if (b <= DIGIT_MASK) {
+   z = x_sub_revint((digit)b,a);
+  }
+#if (DIGIT_BITS * 2) >= 32
+  else {
+   z = x_sub_revint2((twodigits)b,a);
+  }
+#else
+  else if (b <= ((uint32_t)1 << (DIGIT_BITS * 2))-1) {
+   z = x_sub_revint2((twodigits)b,a);
+  } else {
+   z = x_sub_revint3((twodigits)b,a);
+  }
+#endif
+ } else if (b <= DIGIT_MASK) {
+  z = x_add_int(a,(digit)b);
+ }
+#if (DIGIT_BITS * 2) >= 32
+ else {
+  z = x_add_int2(a,(twodigits)b);
+ }
+#else
+ else if (b <= ((uint32_t)1 << (DIGIT_BITS * 2))-1) {
+  z = x_add_int2(a,(twodigits)b);
+ } else {
+  z = x_add_int3(a,b);
+ }
+#endif
+ return (DREF DeeObject *)z;
+}
+
+INTERN DREF DeeObject *DCALL
+DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b) {
+ DeeIntObject *z;
+ if (ABS(a->ob_size) <= 1)
+     return DeeInt_NewMedian(MEDIUM_VALUE(a) - b);
+ if (a->ob_size < 0) {
+  if (b < 0)
+       z = x_sub_int(a,(digit)-b);
+  else z = x_add_int(a,(digit)b);
+  if (z != NULL/* && z->ob_size != 0*/)
+      z->ob_size = -z->ob_size;
+ } else {
+  if (b < 0)
+       z = x_add_int(a,(digit)-b);
+  else z = x_sub_int(a,(digit)b);
+ }
+ return (DeeObject *)z;
+}
+
+INTERN DREF DeeObject *DCALL
+DeeInt_SubU32(DeeIntObject *__restrict a, uint32_t b) {
+ DeeIntObject *z;
+ if (ABS(a->ob_size) <= 1)
+     return DeeInt_NewS64((int64_t)MEDIUM_VALUE(a) - (int64_t)b);
+ if (a->ob_size < 0) {
+  if (b <= DIGIT_MASK) {
+   z = x_add_int(a,(digit)b);
+  }
+#if (DIGIT_BITS * 2) >= 32
+  else {
+   z = x_add_int2(a,(twodigits)b);
+  }
+#else
+  else if (b <= ((uint32_t)1 << (DIGIT_BITS * 2))-1) {
+   z = x_add_int2(a,(twodigits)b);
+  } else {
+   z = x_add_int3(a,b);
+  }
+#endif
+  if (z != NULL/* && z->ob_size != 0*/)
+      z->ob_size = -z->ob_size;
+ } else {
+  if (b <= DIGIT_MASK) {
+   z = x_sub_int(a,(digit)b);
+  }
+#if (DIGIT_BITS * 2) >= 32
+  else {
+   z = x_sub_int2(a,(twodigits)b);
+  }
+#else
+  else if (b <= ((uint32_t)1 << (DIGIT_BITS * 2))-1) {
+   z = x_sub_int2(a,(twodigits)b);
+  } else {
+   z = x_sub_int3(a,b);
+  }
+#endif
+ }
  return (DeeObject *)z;
 }
 
@@ -556,8 +1047,8 @@ int_divrem(DeeIntObject *__restrict a,
 
 
 PRIVATE unsigned char const BitLengthTable[32] = {
- 0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4,
- 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+    0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
 };
 
 LOCAL int DCALL bits_in_digit(digit d) {
@@ -686,7 +1177,7 @@ INTERN DeeObject *DCALL int_mod(DeeIntObject *__restrict a, DeeIntObject *__rest
 INTERN DREF DeeObject *DCALL int_inv(DeeIntObject *__restrict v) {
  DeeIntObject *x;
  if (ABS(v->ob_size) <=1)
-  return DeeInt_NewInt(-(MEDIUM_VALUE(v)+1));
+     return DeeInt_NewMedian(-(MEDIUM_VALUE(v) + 1));
  x = (DeeIntObject *)int_add(v,(DeeIntObject *)&DeeInt_One);
  if (x == NULL) return NULL;
  x->ob_size = -x->ob_size;
@@ -696,7 +1187,7 @@ INTERN DREF DeeObject *DCALL int_inv(DeeIntObject *__restrict v) {
 INTERN DREF DeeObject *DCALL int_neg(DeeIntObject *__restrict v) {
  DeeIntObject *z;
  if (ABS(v->ob_size) <= 1)
-  return DeeInt_NewInt(-MEDIUM_VALUE(v));
+     return DeeInt_NewMedian(-MEDIUM_VALUE(v));
  z = (DeeIntObject *)int_copy(v);
  if (z != NULL) z->ob_size = -v->ob_size;
  return (DeeObject *)z;

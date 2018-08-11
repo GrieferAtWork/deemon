@@ -1171,18 +1171,7 @@ time_intval(DeeTimeObject *__restrict self) {
 }
 
 #ifdef HAVE_128BIT_TIME
-PRIVATE int DCALL
-object_as_int128(DeeObject *__restrict self,
-                 dint128_t *__restrict presult) {
- int64_t value;
- if (DeeInt_Check(self))
-     return DeeInt_AsS128(presult);
- if (DeeObject_AsInt64(self,&value))
-     return -1;
- *presult = (dint128_t)value;
- return 0;
-}
-#define object_as_time       object_as_int128
+#define object_as_time       DeeObject_AsInt128
 #define object_as_time_half  DeeObject_AsInt64
 #else
 #define object_as_time       DeeObject_AsInt64
@@ -1710,9 +1699,9 @@ PRIVATE struct type_math time_math = {
 PRIVATE DREF DeeObject *DCALL
 time_class_bits(DeeObject *__restrict UNUSED(self)) {
 #ifdef HAVE_128BIT_TIME
- return DeeInt_NewU32(128);
+ return DeeInt_NewAutoFit(128);
 #else
- return DeeInt_NewU32(64);
+ return DeeInt_NewAutoFit(64);
 #endif
 }
 

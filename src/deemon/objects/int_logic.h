@@ -57,6 +57,11 @@ INTDEF DREF DeeObject *DCALL int_xor(DeeIntObject *__restrict a, DeeIntObject *_
 INTDEF DREF DeeObject *DCALL int_or(DeeIntObject *__restrict a, DeeIntObject *__restrict b);
 INTDEF DREF DeeObject *DCALL int_pow(DeeIntObject *__restrict a, DeeIntObject *__restrict b);
 
+INTDEF DREF DeeObject *DCALL DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b);
+INTDEF DREF DeeObject *DCALL DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b);
+INTDEF DREF DeeObject *DCALL DeeInt_AddU32(DeeIntObject *__restrict a, uint32_t b);
+INTDEF DREF DeeObject *DCALL DeeInt_SubU32(DeeIntObject *__restrict a, uint32_t b);
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_INT_LOGIC_H */

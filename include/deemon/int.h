@@ -53,6 +53,102 @@
 
 DECL_BEGIN
 
+
+#ifdef CONFIG_LITTLE_ENDIAN
+#define DEE_INT128_MS8       15
+#define DEE_INT128_MS16      7
+#define DEE_INT128_MS32      3
+#define DEE_INT128_MS64      1
+#else
+#define DEE_INT128_MS8       0
+#define DEE_INT128_MS16      0
+#define DEE_INT128_MS32      0
+#define DEE_INT128_MS64      0
+#endif
+#define DEE_INT128_LS8  (15-DEE_INT128_MS8)
+#define DEE_INT128_LS16 (7-DEE_INT128_MS16)
+#define DEE_INT128_LS32 (3-DEE_INT128_MS32)
+#define DEE_INT128_LS64 (1-DEE_INT128_MS64)
+
+#ifdef CONFIG_NATIVE_INT128
+#define DSINT128_DEC(x)   (--(x))
+#define DSINT128_INC(x)   (++(x))
+#define DSINT128_INV(x)   ((x) ^= -1)
+#define DSINT128_TONEG(x) ((x) = -(x))
+#define DSINT128_ISNEG(x) ((x) < 0)
+#define DSINT128_ISNUL(x) ((x) == 0)
+#define DSINT128_IS64(x)  ((x) >= INT64_MIN && (x) <= INT64_MAX)
+#define DUINT128_IS64(x)  ((x) <= UINT64_MAX)
+#define DUINT128_OR(x,v)  (void)((x) |= (v))
+#define DUINT128_AND(x,v) (void)((x) &= (v))
+#define DUINT128_XOR(x,v) (void)((x) ^= (v))
+#define DUINT128_SHR(x,n) (*(duint128_t *)&(x) >>= (n))
+#define DUINT128_SHL(x,n) (*(duint128_t *)&(x) <<= (n))
+#define DUINT128_SET(x,v) (*(duint128_t *)&(x) = (v))
+#define DSINT128_SET(x,v) (*(dint128_t *)&(x) = (v))
+#define DUINT128_SHL_WILL_OVERFLOW(x,n) \
+      (((duint128_t)((duint128_t)(x) << (n)) >> (n)) != (duint128_t)(x))
+#else
+#define DSINT128_DEC(x)   ((DUINT128_GET64(x)[DEE_INT128_LS64]-- == 0) ? \
+                           (void)(--DUINT128_GET64(x)[DEE_INT128_MS64]) : (void)0)
+#define DSINT128_INC(x)   ((++DUINT128_GET64(x)[DEE_INT128_LS64] == 0) ? \
+                           (void)(++DUINT128_GET64(x)[DEE_INT128_MS64]) : (void)0)
+#define DSINT128_INV(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] ^= -1, \
+                           DUINT128_GET64(x)[DEE_INT128_MS64] ^= -1)
+#define DSINT128_TONEG(x) (DSINT128_DEC(x),DSINT128_INV(x)) /* x = -x  <===>  x = ~(x-1); */
+#define DSINT128_ISNEG(x) (DUINT128_GETS8(x)[DEE_INT128_MS8] < 0)
+#define DSINT128_ISNUL(x) (!DUINT128_GET64(x)[DEE_INT128_LS64] && \
+                           !DUINT128_GET64(x)[DEE_INT128_MS64])
+#define DSINT128_IS64(x)  (DUINT128_GET64(x)[DEE_INT128_MS64] == 0 || \
+                           DUINT128_GETS64(x)[DEE_INT128_MS64] == -1)
+#define DUINT128_IS64(x)  (DUINT128_GET64(x)[DEE_INT128_MS64] == 0)
+#define DUINT128_SET(x,v) \
+       (DUINT128_GET64(x)[DEE_INT128_MS64] = 0, \
+        DUINT128_GET64(x)[DEE_INT128_LS64] = (uint64_t)(v))
+#define DSINT128_SET(x,v) \
+       (DUINT128_GETS64(x)[DEE_INT128_MS64] = (v) < 0 ? (int64_t)-1 : 0, \
+        DUINT128_GETS64(x)[DEE_INT128_LS64] = (int64_t)(v))
+#define DUINT128_OR(x,v) \
+       (sizeof(v) == 1 ? (void)(DUINT128_GET8(x)[DEE_INT128_LS8] |= (uint8_t)(v)) : \
+        sizeof(v) == 2 ? (void)(DUINT128_GET16(x)[DEE_INT128_LS16] |= (uint16_t)(v)) : \
+        sizeof(v) == 4 ? (void)(DUINT128_GET32(x)[DEE_INT128_LS32] |= (uint32_t)(v)) : \
+                         (void)(DUINT128_GET64(x)[DEE_INT128_LS64] |= (uint64_t)(v)))
+#define DUINT128_AND(x,v) \
+       (sizeof(v) == 1 ? (void)(DUINT128_GET8(x)[DEE_INT128_LS8] &= (uint8_t)(v)) : \
+        sizeof(v) == 2 ? (void)(DUINT128_GET16(x)[DEE_INT128_LS16] &= (uint16_t)(v)) : \
+        sizeof(v) == 4 ? (void)(DUINT128_GET32(x)[DEE_INT128_LS32] &= (uint32_t)(v)) : \
+                         (void)(DUINT128_GET64(x)[DEE_INT128_LS64] &= (uint64_t)(v)))
+#define DUINT128_XOR(x,v) \
+       (sizeof(v) == 1 ? (void)(DUINT128_GET8(x)[DEE_INT128_LS8] ^= (uint8_t)(v)) : \
+        sizeof(v) == 2 ? (void)(DUINT128_GET16(x)[DEE_INT128_LS16] ^= (uint16_t)(v)) : \
+        sizeof(v) == 4 ? (void)(DUINT128_GET32(x)[DEE_INT128_LS32] ^= (uint32_t)(v)) : \
+                         (void)(DUINT128_GET64(x)[DEE_INT128_LS64] ^= (uint64_t)(v)))
+
+
+/* Unsigned shift-right for n <= 64 */
+#define DUINT128_SHR(x,n) \
+ (DUINT128_GET64(x)[DEE_INT128_LS64] >>= (n), \
+  DUINT128_GET64(x)[DEE_INT128_LS64]  |= \
+      (DUINT128_GET64(x)[DEE_INT128_MS64] & ((UINT64_C(1) << (n))-1)) << (64-(n)), \
+  DUINT128_GET64(x)[DEE_INT128_MS64] >>= (n))
+/* Unsigned shift-left for n <= 64 */
+#define DUINT128_SHL(x,n) \
+ (DUINT128_GET64(x)[DEE_INT128_MS64] <<= (n), \
+  DUINT128_GET64(x)[DEE_INT128_MS64] |= \
+      (DUINT128_GET64(x)[DEE_INT128_LS64] & ((UINT64_C(1) << (64-(n)))-1)) >> (64-(n)), \
+  DUINT128_GET64(x)[DEE_INT128_LS64] <<= (n))
+#define DUINT128_SHL_WILL_OVERFLOW(x,n) \
+ ((DUINT128_GET64(x)[DEE_INT128_MS64] & (((UINT64_C(1) << (n))-1) << (64-(n)))) != 0)
+#endif
+
+#define DINT128_SETMIN(x)  (DUINT128_GET64(x)[DEE_INT128_LS64] = ~(uint64_t)0,DUINT128_GET64(x)[DEE_INT128_MS64] = ~(UINT64_C(1) << 63))
+#define DINT128_SETMAX(x)  (DUINT128_GET64(x)[DEE_INT128_LS64] = 0,DUINT128_GET64(x)[DEE_INT128_MS64] = (UINT64_C(1) << 63))
+#define DINT128_ISMIN(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] == ~(uint64_t)0 && DUINT128_GET64(x)[DEE_INT128_MS64] == ~(UINT64_C(1) << 63))
+#define DINT128_ISMAX(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] == 0 && DUINT128_GET64(x)[DEE_INT128_MS64] == (UINT64_C(1) << 63))
+#define DINT128_IS0MMIN(x) (DUINT128_GET64(x)[DEE_INT128_LS64] == 1 && DUINT128_GET64(x)[DEE_INT128_MS64] == (UINT64_C(1) << 63)) /* x == (0 - MIN) */
+
+
+
 typedef struct int_object DeeIntObject;
 
 #if __SIZEOF_POINTER__ == 8
@@ -296,146 +392,6 @@ DDATDEF DeeObject     DeeInt_MinusOne;
 #define DeeInt_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeInt_Type)
 
 
-#if defined(__UINT128_TYPE__) || \
-    defined(__SIZEOF_INT128__)
-#define CONFIG_NATIVE_INT128 1
-#ifdef __UINT128_TYPE__
-typedef __INT128_TYPE__  dint128_t;
-typedef __UINT128_TYPE__ duint128_t;
-#else
-typedef signed __int128   dint128_t;
-typedef unsigned __int128 duint128_t;
-#endif
-#define DUINT128_GET8(x)   ((uint8_t *)&(x))
-#define DUINT128_GET16(x)  ((uint16_t *)&(x))
-#define DUINT128_GET32(x)  ((uint32_t *)&(x))
-#define DUINT128_GET64(x)  ((uint64_t *)&(x))
-#define DUINT128_GETS8(x)  ((int8_t *)&(x))
-#define DUINT128_GETS16(x) ((int16_t *)&(x))
-#define DUINT128_GETS32(x) ((int32_t *)&(x))
-#define DUINT128_GETS64(x) ((int64_t *)&(x))
-#else
-#define DUINT128_GET8(x)   ((x).int_i8)
-#define DUINT128_GET16(x)  ((x).int_i16)
-#define DUINT128_GET32(x)  ((x).int_i32)
-#define DUINT128_GET64(x)  ((x).int_i64)
-#define DUINT128_GETS8(x)  ((int8_t *)(x).int_i8)
-#define DUINT128_GETS16(x) ((int16_t *)(x).int_i16)
-#define DUINT128_GETS32(x) ((int32_t *)(x).int_i32)
-#define DUINT128_GETS64(x) ((int64_t *)(x).int_i64)
-typedef union {
-    uint64_t int_i64[2];
-    uint32_t int_i32[4];
-    uint16_t int_i16[8];
-    uint8_t  int_i8[16];
-} duint128_t;
-#ifdef __cplusplus
-/* Allow the types to differ for function overloading,
- * although internally, the same type is used. */
-typedef union {
-    uint64_t int_i64[2];
-    uint32_t int_i32[4];
-    uint16_t int_i16[8];
-    uint8_t  int_i8[16];
-} dint128_t;
-#else
-typedef duint128_t dint128_t;
-#endif
-#endif
-
-#ifdef CONFIG_LITTLE_ENDIAN
-#define DEE_INT128_MS8       15
-#define DEE_INT128_MS16      7
-#define DEE_INT128_MS32      3
-#define DEE_INT128_MS64      1
-#else
-#define DEE_INT128_MS8       0
-#define DEE_INT128_MS16      0
-#define DEE_INT128_MS32      0
-#define DEE_INT128_MS64      0
-#endif
-#define DEE_INT128_LS8  (15-DEE_INT128_MS8)
-#define DEE_INT128_LS16 (7-DEE_INT128_MS16)
-#define DEE_INT128_LS32 (3-DEE_INT128_MS32)
-#define DEE_INT128_LS64 (1-DEE_INT128_MS64)
-
-#ifdef CONFIG_NATIVE_INT128
-#define DSINT128_DEC(x)   (--(x))
-#define DSINT128_INC(x)   (++(x))
-#define DSINT128_INV(x)   ((x) ^= -1)
-#define DSINT128_TONEG(x) ((x) = -(x))
-#define DSINT128_ISNEG(x) ((x) < 0)
-#define DSINT128_ISNUL(x) ((x) == 0)
-#define DSINT128_IS64(x)  ((x) >= INT64_MIN && (x) <= INT64_MAX)
-#define DUINT128_IS64(x)  ((x) <= UINT64_MAX)
-#define DUINT128_OR(x,v)  (void)((x) |= (v))
-#define DUINT128_AND(x,v) (void)((x) &= (v))
-#define DUINT128_XOR(x,v) (void)((x) ^= (v))
-#define DUINT128_SHR(x,n) (*(duint128_t *)&(x) >>= (n))
-#define DUINT128_SHL(x,n) (*(duint128_t *)&(x) <<= (n))
-#define DUINT128_SET(x,v) (*(duint128_t *)&(x) = (v))
-#define DSINT128_SET(x,v) (*(dint128_t *)&(x) = (v))
-#define DUINT128_SHL_WILL_OVERFLOW(x,n) \
-      (((duint128_t)((duint128_t)(x) << (n)) >> (n)) != (duint128_t)(x))
-#else
-#define DSINT128_DEC(x)   ((DUINT128_GET64(x)[DEE_INT128_LS64]-- == 0) ? \
-                           (void)(--DUINT128_GET64(x)[DEE_INT128_MS64]) : (void)0)
-#define DSINT128_INC(x)   ((++DUINT128_GET64(x)[DEE_INT128_LS64] == 0) ? \
-                           (void)(++DUINT128_GET64(x)[DEE_INT128_MS64]) : (void)0)
-#define DSINT128_INV(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] ^= -1, \
-                           DUINT128_GET64(x)[DEE_INT128_MS64] ^= -1)
-#define DSINT128_TONEG(x) (DSINT128_DEC(x),DSINT128_INV(x)) /* x = -x  <===>  x = ~(x-1); */
-#define DSINT128_ISNEG(x) (DUINT128_GETS8(x)[DEE_INT128_MS8] < 0)
-#define DSINT128_ISNUL(x) (!DUINT128_GET64(x)[DEE_INT128_LS64] && \
-                           !DUINT128_GET64(x)[DEE_INT128_MS64])
-#define DSINT128_IS64(x)  (DUINT128_GET64(x)[DEE_INT128_MS64] == 0 || \
-                           DUINT128_GETS64(x)[DEE_INT128_MS64] == -1)
-#define DUINT128_IS64(x)  (DUINT128_GET64(x)[DEE_INT128_MS64] == 0)
-#define DUINT128_SET(x,v) \
-       (DUINT128_GET64(x)[DEE_INT128_MS64] = 0, \
-        DUINT128_GET64(x)[DEE_INT128_LS64] = (uint64_t)(v))
-#define DSINT128_SET(x,v) \
-       (DUINT128_GETS64(x)[DEE_INT128_MS64] = (v) < 0 ? (int64_t)-1 : 0, \
-        DUINT128_GETS64(x)[DEE_INT128_LS64] = (int64_t)(v))
-#define DUINT128_OR(x,v) \
-       (sizeof(v) == 1 ? (void)(DUINT128_GET8(x)[DEE_INT128_LS8] |= (uint8_t)(v)) : \
-        sizeof(v) == 2 ? (void)(DUINT128_GET16(x)[DEE_INT128_LS16] |= (uint16_t)(v)) : \
-        sizeof(v) == 4 ? (void)(DUINT128_GET32(x)[DEE_INT128_LS32] |= (uint32_t)(v)) : \
-                         (void)(DUINT128_GET64(x)[DEE_INT128_LS64] |= (uint64_t)(v)))
-#define DUINT128_AND(x,v) \
-       (sizeof(v) == 1 ? (void)(DUINT128_GET8(x)[DEE_INT128_LS8] &= (uint8_t)(v)) : \
-        sizeof(v) == 2 ? (void)(DUINT128_GET16(x)[DEE_INT128_LS16] &= (uint16_t)(v)) : \
-        sizeof(v) == 4 ? (void)(DUINT128_GET32(x)[DEE_INT128_LS32] &= (uint32_t)(v)) : \
-                         (void)(DUINT128_GET64(x)[DEE_INT128_LS64] &= (uint64_t)(v)))
-#define DUINT128_XOR(x,v) \
-       (sizeof(v) == 1 ? (void)(DUINT128_GET8(x)[DEE_INT128_LS8] ^= (uint8_t)(v)) : \
-        sizeof(v) == 2 ? (void)(DUINT128_GET16(x)[DEE_INT128_LS16] ^= (uint16_t)(v)) : \
-        sizeof(v) == 4 ? (void)(DUINT128_GET32(x)[DEE_INT128_LS32] ^= (uint32_t)(v)) : \
-                         (void)(DUINT128_GET64(x)[DEE_INT128_LS64] ^= (uint64_t)(v)))
-
-
-/* Unsigned shift-right for n <= 64 */
-#define DUINT128_SHR(x,n) \
- (DUINT128_GET64(x)[DEE_INT128_LS64] >>= (n), \
-  DUINT128_GET64(x)[DEE_INT128_LS64]  |= \
-      (DUINT128_GET64(x)[DEE_INT128_MS64] & ((UINT64_C(1) << (n))-1)) << (64-(n)), \
-  DUINT128_GET64(x)[DEE_INT128_MS64] >>= (n))
-/* Unsigned shift-left for n <= 64 */
-#define DUINT128_SHL(x,n) \
- (DUINT128_GET64(x)[DEE_INT128_MS64] <<= (n), \
-  DUINT128_GET64(x)[DEE_INT128_MS64] |= \
-      (DUINT128_GET64(x)[DEE_INT128_LS64] & ((UINT64_C(1) << (64-(n)))-1)) >> (64-(n)), \
-  DUINT128_GET64(x)[DEE_INT128_LS64] <<= (n))
-#define DUINT128_SHL_WILL_OVERFLOW(x,n) \
- ((DUINT128_GET64(x)[DEE_INT128_MS64] & (((UINT64_C(1) << (n))-1) << (64-(n)))) != 0)
-#endif
-
-#define DINT128_SETMIN(x)  (DUINT128_GET64(x)[DEE_INT128_LS64] = ~(uint64_t)0,DUINT128_GET64(x)[DEE_INT128_MS64] = ~(UINT64_C(1) << 63))
-#define DINT128_SETMAX(x)  (DUINT128_GET64(x)[DEE_INT128_LS64] = 0,DUINT128_GET64(x)[DEE_INT128_MS64] = (UINT64_C(1) << 63))
-#define DINT128_ISMIN(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] == ~(uint64_t)0 && DUINT128_GET64(x)[DEE_INT128_MS64] == ~(UINT64_C(1) << 63))
-#define DINT128_ISMAX(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] == 0 && DUINT128_GET64(x)[DEE_INT128_MS64] == (UINT64_C(1) << 63))
-#define DINT128_IS0MMIN(x) (DUINT128_GET64(x)[DEE_INT128_LS64] == 1 && DUINT128_GET64(x)[DEE_INT128_MS64] == (UINT64_C(1) << 63)) /* x == (0 - MIN) */
-
 
 
 /* Integer object creation. */
@@ -451,9 +407,19 @@ DFUNDEF DREF DeeObject *DCALL DeeInt_NewU128(duint128_t val);
 DFUNDEF DREF DeeObject *DCALL DeeInt_NewS8(int8_t val);
 DFUNDEF DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
 #else
-#define DeeInt_NewU8  DeeInt_NewU32
-#define DeeInt_NewS8  DeeInt_NewS32
+#define DeeInt_NewU8  DeeInt_NewU16
+#define DeeInt_NewS8  DeeInt_NewS16
 #endif
+
+#define DeeInt_NewAutoFit(v) \
+ ((v) < 0 ? ((v) >= INT8_MIN ? DeeInt_NewS8((int8_t)(v)) : \
+             (v) >= INT16_MIN ? DeeInt_NewS16((int16_t)(v)) : \
+             (v) >= INT32_MIN ? DeeInt_NewS32((int32_t)(v)) : \
+                                DeeInt_NewS64((int32_t)(v))) \
+          : ((v) <= INT8_MIN ? DeeInt_NewU8((uint8_t)(v)) : \
+             (v) <= INT16_MIN ? DeeInt_NewU16((uint16_t)(v)) : \
+             (v) <= INT32_MIN ? DeeInt_NewU32((uint32_t)(v)) : \
+                                DeeInt_NewU64((uint32_t)(v))))
 
 
 /* Create an integer from signed/unsigned LEB data. */

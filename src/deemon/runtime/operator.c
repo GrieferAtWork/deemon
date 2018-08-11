@@ -52,6 +52,7 @@
 #include "runtime_error.h"
 #include "strings.h"
 #include "../objects/seq/svec.h"
+#include "../objects/int_logic.h"
 
 /* Operator invocation. */
 
@@ -1438,8 +1439,7 @@ DEFINE_OPERATOR(int,GetInt32,
        *result = (int32_t)val64;
        return val64 < INT32_MIN ? INT_SIGNED : INT_UNSIGNED;
       }
-      err_integer_overflow(self,32,val64 > 0);
-      return -1;
+      return err_integer_overflow(self,32,val64 > 0);
      }
     } else {
      if unlikely((uint64_t)val64 > UINT32_MAX) {
@@ -1447,8 +1447,7 @@ DEFINE_OPERATOR(int,GetInt32,
        *result = (uint32_t)val64;
        return INT_UNSIGNED;
       }
-      err_integer_overflow(self,32,true);
-      return -1;
+      return err_integer_overflow(self,32,true);
      }
     }
     *result = (int32_t)(uint64_t)val64;
@@ -1485,8 +1484,7 @@ DEFINE_OPERATOR(int,GetInt32,
        return INT_UNSIGNED;
       }
      }
-     err_integer_overflow(self,32,resflt > 0);
-     return -1;
+     return err_integer_overflow(self,32,resflt > 0);
     }
     if (resflt < 0) { *result = (int32_t)resflt; return INT_SIGNED; }
     *result = (int32_t)(uint32_t)resflt;
@@ -1548,8 +1546,7 @@ DEFINE_OPERATOR(int,GetInt64,
        return INT_UNSIGNED;
       }
      }
-     err_integer_overflow(self,64,resflt > 0);
-     return -1;
+     return err_integer_overflow(self,64,resflt > 0);
     }
     if (resflt < 0) { *result = (int64_t)resflt; return INT_SIGNED; }
     *result = (int64_t)(uint64_t)resflt;
@@ -1561,6 +1558,86 @@ DEFINE_OPERATOR(int,GetInt64,
  return -1;
 }
 
+#ifndef DEFINE_TYPE_OPERATORS
+DEFINE_OPERATOR(int,GetInt128,
+               (DeeObject *__restrict self,
+                dint128_t *__restrict result)) {
+ int error;
+ LOAD_ITER;
+ do {
+  if (iter->tp_math) {
+   if (iter == &DeeInt_Type)
+       return DeeInt_As128(self,result);
+   if (iter->tp_math->tp_int) {
+    /* Cast to integer, then read its value. */
+    DREF DeeObject *intob;
+    if (iter->tp_math->tp_int == &class_wrap_int)
+     intob = class_int(iter,self);
+    else {
+     intob = (*iter->tp_math->tp_int)(self);
+    }
+    if unlikely(!intob) return -1;
+    error = DeeInt_As128(intob,result);
+    Dee_Decref(intob);
+    return error;
+   }
+   if (iter->tp_math->tp_int64) {
+    DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
+    error = (*iter->tp_math->tp_int64)(self,&DUINT128_GETS64(*result)[DEE_INT128_LS64]);
+    if (error == INT_SIGNED && DUINT128_GETS64(*result)[DEE_INT128_LS64] < 0)
+        DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
+    return error;
+   }
+   if (iter->tp_math->tp_int32) {
+    int32_t val32;
+    DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
+    error = (*iter->tp_math->tp_int32)(self,&val32);
+    if unlikely(error < 0) return -1;
+    if (error == INT_SIGNED) {
+     if (val32 < 0)
+         DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
+     DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)val32;
+    } else {
+     DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)(uint64_t)(uint32_t)val32;
+    }
+    return error;
+   }
+   if (iter->tp_math->tp_double) {
+    double resflt;
+    if (iter->tp_math->tp_double == &class_wrap_double)
+     error = class_double(iter,self,&resflt);
+    else {
+     error = (*iter->tp_math->tp_double)(self,&resflt);
+    }
+    if unlikely(error < 0) return -1;
+    DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
+    if unlikely(resflt < INT64_MIN || resflt > UINT64_MAX) {
+     if (iter->tp_flags&TP_FTRUNCATE) {
+      if (resflt < 0) {
+       DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)resflt;
+       DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
+       return INT_SIGNED;
+      } else {
+       DUINT128_GETS64(*result)[DEE_INT128_LS64] = (uint64_t)resflt;
+       return INT_UNSIGNED;
+      }
+     }
+     return err_integer_overflow(self,64,resflt > 0);
+    }
+    if (resflt < 0) {
+     DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)resflt;
+     DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
+     return INT_SIGNED;
+    }
+    DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)(uint64_t)resflt;
+    return INT_UNSIGNED;
+   }
+  }
+ } while ((iter = DeeType_Base(iter)) != NULL);
+ err_unimplemented_operator(GET_TP_SELF(),OPERATOR_INT);
+ return -1;
+}
+#endif
 
 
 #ifndef DEFINE_TYPE_OPERATORS
@@ -1578,8 +1655,7 @@ PUBLIC int (DCALL DeeObject_AsUInt32)(DeeObject *__restrict self,
     if unlikely(error == INT_SIGNED && *(int32_t *)result < 0) {
      if (iter->tp_flags&TP_FTRUNCATE) return 0;
 neg_overflow:
-     err_integer_overflow(self,32,0);
-     return -1;
+     return err_integer_overflow(self,32,0);
     }
     return 0;
    }
@@ -1595,8 +1671,7 @@ return_trunc64: *result = (uint32_t)val64; return 0;
     }
     if unlikely((uint64_t)val64 > (uint64_t)UINT32_MAX) {
      if (iter->tp_flags&TP_FTRUNCATE) goto return_trunc64;
-     err_integer_overflow(self,32,1);
-     return -1;
+     return err_integer_overflow(self,32,1);
     }
     *result = (int32_t)(uint64_t)val64;
     return 0;
@@ -1627,8 +1702,7 @@ return_trunc64: *result = (uint32_t)val64; return 0;
       *result = (uint32_t)resflt;
       return 0;
      }
-     err_integer_overflow(self,32,resflt > 0);
-     return -1;
+     return err_integer_overflow(self,32,resflt > 0);
     }
     *result = (uint32_t)resflt;
     return error;
@@ -1652,8 +1726,7 @@ PUBLIC int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
     if unlikely(error < 0) return -1;
     if unlikely(error == INT_UNSIGNED && (uint32_t)*result > INT32_MAX) {
      if (iter->tp_flags&TP_FTRUNCATE) return 0;
-     err_integer_overflow(self,32,1);
-     return -1;
+     return err_integer_overflow(self,32,1);
     }
     return 0;
    }
@@ -1664,17 +1737,17 @@ PUBLIC int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
     if (error == INT_SIGNED) {
      if unlikely(val64 < INT32_MIN || val64 > INT32_MAX) {
       if (iter->tp_flags&TP_FTRUNCATE) {
-return_trunc64: *result = (int32_t)val64; return 0;
+return_trunc64:
+       *result = (int32_t)val64;
+       return 0;
       }
-      err_integer_overflow(self,32,val64 > 0);
-      return -1;
+      return err_integer_overflow(self,32,val64 > 0);
      }
      *result = (int32_t)val64;
     } else {
      if unlikely((uint64_t)val64 > INT32_MAX) {
       if (iter->tp_flags&TP_FTRUNCATE) goto return_trunc64;
-      err_integer_overflow(self,32,1);
-      return -1;
+      return err_integer_overflow(self,32,1);
      }
      *result = (int32_t)(uint64_t)val64;
     }
@@ -1706,8 +1779,7 @@ return_trunc64: *result = (int32_t)val64; return 0;
       *result = (int32_t)resflt;
       return 0;
      }
-     err_integer_overflow(self,32,resflt > 0);
-     return -1;
+     return err_integer_overflow(self,32,resflt > 0);
     }
     *result = (int32_t)resflt;
     return error;
@@ -1731,8 +1803,8 @@ PUBLIC int (DCALL DeeObject_AsUInt64)(DeeObject *__restrict self,
     if unlikely(error < 0) return -1;
     if unlikely(error == INT_SIGNED && *(int64_t *)result < 0) {
      if (iter->tp_flags&TP_FTRUNCATE) return 0;
-neg_overflow: err_integer_overflow(self,64,false);
-     return -1;
+neg_overflow:
+     return err_integer_overflow(self,64,false);
     }
     return 0;
    }
@@ -1776,8 +1848,7 @@ neg_overflow: err_integer_overflow(self,64,false);
       *result = (uint64_t)resflt;
       return 0;
      }
-     err_integer_overflow(self,64,resflt > 0);
-     return -1;
+     return err_integer_overflow(self,64,resflt > 0);
     }
     *result = (int64_t)resflt;
     return error;
@@ -1801,8 +1872,7 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
     if unlikely(error < 0) return -1;
     if unlikely(error == INT_UNSIGNED && (uint64_t)*result > INT64_MAX) {
      if (iter->tp_flags&TP_FTRUNCATE) return 0;
-     err_integer_overflow(self,64,true);
-     return -1;
+     return err_integer_overflow(self,64,true);
     }
     return 0;
    }
@@ -1841,8 +1911,7 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
       *result = (int64_t)resflt;
       return 0;
      }
-     err_integer_overflow(self,64,resflt > 0);
-     return -1;
+     return err_integer_overflow(self,64,resflt > 0);
     }
     *result = (int64_t)resflt;
     return error;
@@ -1851,6 +1920,20 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(Dee_TYPE(self),OPERATOR_INT);
  return -1;
+}
+PUBLIC int (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
+                                      dint128_t *__restrict result) {
+ int error = DeeObject_GetInt128(self,result);
+ if (error == INT_UNSIGNED && DSINT128_ISNEG(*result))
+     return err_integer_overflow(self,128,true);
+ return 0;
+}
+PUBLIC int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
+                                       duint128_t *__restrict result) {
+ int error = DeeObject_GetInt128(self,(dint128_t *)result);
+ if (error == INT_SIGNED && DSINT128_ISNEG(*result))
+     return err_integer_overflow(self,128,false);
+ return 0;
 }
 #endif /* !DEFINE_TYPE_OPERATORS */
 
@@ -1912,8 +1995,7 @@ DeeObject_GetInt8(DeeObject *__restrict self,
     *result = (int8_t)val32;
     return *result < 0 ? INT_SIGNED : INT_UNSIGNED;
    }
-   err_integer_overflow(self,8,val32 > 0);
-   return -1;
+   return err_integer_overflow(self,8,val32 > 0);
   }
   *result = (int8_t)val32;
  } else {
@@ -1922,8 +2004,7 @@ DeeObject_GetInt8(DeeObject *__restrict self,
     *result = (uint8_t)val32;
     return INT_UNSIGNED;
    }
-   err_integer_overflow(self,8,true);
-   return -1;
+   return err_integer_overflow(self,8,true);
   }
   *result = (int8_t)(uint8_t)val32;
  }
@@ -1941,8 +2022,7 @@ DeeObject_GetInt16(DeeObject *__restrict self,
     *result = (int16_t)val32;
     return *result < 0 ? INT_SIGNED : INT_UNSIGNED;
    }
-   err_integer_overflow(self,16,val32 > 0);
-   return -1;
+   return err_integer_overflow(self,16,val32 > 0);
   }
   *result = (int16_t)val32;
  } else {
@@ -1951,8 +2031,7 @@ DeeObject_GetInt16(DeeObject *__restrict self,
     *result = (uint16_t)val32;
     return INT_UNSIGNED;
    }
-   err_integer_overflow(self,16,true);
-   return -1;
+   return err_integer_overflow(self,16,true);
   }
   *result = (int16_t)(uint16_t)val32;
  }
@@ -1967,8 +2046,7 @@ PUBLIC int (DCALL DeeObject_AsInt8)(DeeObject *__restrict self,
  if (val32 < INT8_MIN || val32 > INT8_MAX) {
   if (type_get_int_caster(Dee_TYPE(self))->tp_flags&TP_FTRUNCATE)
       goto return_value;
-  err_integer_overflow(self,8,val32 > 0);
-  return -1;
+  return err_integer_overflow(self,8,val32 > 0);
  }
 return_value:
  *result = (int8_t)val32;
@@ -1982,8 +2060,7 @@ PUBLIC int (DCALL DeeObject_AsInt16)(DeeObject *__restrict self,
  if (val32 < INT16_MIN || val32 > INT16_MAX) {
   if (type_get_int_caster(Dee_TYPE(self))->tp_flags&TP_FTRUNCATE)
       goto return_value;
-  err_integer_overflow(self,16,val32 > 0);
-  return -1;
+  return err_integer_overflow(self,16,val32 > 0);
  }
 return_value:
  *result = (int8_t)val32;
@@ -1997,8 +2074,7 @@ PUBLIC int (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self,
  if (val32 > UINT8_MAX) {
   if (type_get_int_caster(Dee_TYPE(self))->tp_flags&TP_FTRUNCATE)
       goto return_value;
-  err_integer_overflow(self,8,true);
-  return -1;
+  return err_integer_overflow(self,8,true);
  }
 return_value:
  *result = (uint8_t)val32;
@@ -2012,8 +2088,7 @@ PUBLIC int (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self,
  if (val32 > UINT16_MAX) {
   if (type_get_int_caster(Dee_TYPE(self))->tp_flags&TP_FTRUNCATE)
       goto return_value;
-  err_integer_overflow(self,16,true);
-  return -1;
+  return err_integer_overflow(self,16,true);
  }
 return_value:
  *result = (uint16_t)val32;
@@ -2133,8 +2208,10 @@ DeeObject_AddS8(DeeObject *__restrict self, int8_t val) {
  do {
   if (iter->tp_math && iter->tp_math->tp_add) {
    DREF DeeObject *intob,*result;
-   /* TODO: Optimizations for `int' */
-   intob = DeeInt_NewS32(val);
+   /* Optimization for `int' */
+   if (iter == &DeeInt_Type)
+       return DeeInt_AddSDigit((DeeIntObject *)self,val);
+   intob = DeeInt_NewS8(val);
    if unlikely(!intob) goto err;
    if (iter->tp_math->tp_add == &class_wrap_add)
     result = class_add(iter,self,intob);
@@ -2155,8 +2232,10 @@ DeeObject_SubS8(DeeObject *__restrict self, int8_t val) {
  do {
   if (iter->tp_math && iter->tp_math->tp_sub) {
    DREF DeeObject *intob,*result;
-   /* TODO: Optimizations for `int' */
-   intob = DeeInt_NewS32(val);
+   /* Optimization for `int' */
+   if (iter == &DeeInt_Type)
+       return DeeInt_SubSDigit((DeeIntObject *)self,val);
+   intob = DeeInt_NewS8(val);
    if unlikely(!intob) goto err;
    if (iter->tp_math->tp_sub == &class_wrap_sub)
     result = class_sub(iter,self,intob);
@@ -2177,7 +2256,9 @@ DeeObject_AddInt(DeeObject *__restrict self, uint32_t val) {
  do {
   if (iter->tp_math && iter->tp_math->tp_add) {
    DREF DeeObject *intob,*result;
-   /* TODO: Optimizations for `int' */
+   /* Optimization for `int' */
+   if (iter == &DeeInt_Type)
+       return DeeInt_AddU32((DeeIntObject *)self,val);
    intob = DeeInt_NewU32(val);
    if unlikely(!intob) goto err;
    if (iter->tp_math->tp_add == &class_wrap_add)
@@ -2199,7 +2280,9 @@ DeeObject_SubInt(DeeObject *__restrict self, uint32_t val) {
  do {
   if (iter->tp_math && iter->tp_math->tp_sub) {
    DREF DeeObject *intob,*result;
-   /* TODO: Optimizations for `int' */
+   /* Optimization for `int' */
+   if (iter == &DeeInt_Type)
+       return DeeInt_SubU32((DeeIntObject *)self,val);
    intob = DeeInt_NewU32(val);
    if unlikely(!intob) goto err;
    if (iter->tp_math->tp_sub == &class_wrap_sub)
@@ -2222,7 +2305,7 @@ DeeObject_MulInt(DeeObject *__restrict self, int8_t val) {
   if (iter->tp_math && iter->tp_math->tp_mul) {
    DREF DeeObject *intob,*result;
    /* TODO: Optimizations for `int' */
-   intob = DeeInt_NewS32(val);
+   intob = DeeInt_NewS8(val);
    if unlikely(!intob) goto err;
    if (iter->tp_math->tp_mul == &class_wrap_mul)
     result = class_mul(iter,self,intob);
@@ -2244,7 +2327,7 @@ DeeObject_DivInt(DeeObject *__restrict self, int8_t val) {
   if (iter->tp_math && iter->tp_math->tp_div) {
    DREF DeeObject *intob,*result;
    /* TODO: Optimizations for `int' */
-   intob = DeeInt_NewS32(val);
+   intob = DeeInt_NewS8(val);
    if unlikely(!intob) goto err;
    if (iter->tp_math->tp_div == &class_wrap_div)
     result = class_div(iter,self,intob);
@@ -2266,7 +2349,7 @@ DeeObject_ModInt(DeeObject *__restrict self, int8_t val) {
   if (iter->tp_math && iter->tp_math->tp_mod) {
    DREF DeeObject *intob,*result;
    /* TODO: Optimizations for `int' */
-   intob = DeeInt_NewS32(val);
+   intob = DeeInt_NewS8(val);
    if unlikely(!intob) goto err;
    if (iter->tp_math->tp_mod == &class_wrap_mod)
     result = class_mod(iter,self,intob);
@@ -2288,7 +2371,7 @@ DeeObject_ShlInt(DeeObject *__restrict self, uint8_t val) {
   if (iter->tp_math && iter->tp_math->tp_shl) {
    DREF DeeObject *intob,*result;
    /* TODO: Optimizations for `int' */
-   intob = DeeInt_NewS32(val);
+   intob = DeeInt_NewU8(val);
    if unlikely(!intob) goto err;
    if (iter->tp_math->tp_shl == &class_wrap_shl)
     result = class_shl(iter,self,intob);
@@ -2310,7 +2393,7 @@ DeeObject_ShrInt(DeeObject *__restrict self, uint8_t val) {
   if (iter->tp_math && iter->tp_math->tp_shr) {
    DREF DeeObject *intob,*result;
    /* TODO: Optimizations for `int' */
-   intob = DeeInt_NewS32(val);
+   intob = DeeInt_NewU8(val);
    if unlikely(!intob) goto err;
    if (iter->tp_math->tp_shr == &class_wrap_shr)
     result = class_shr(iter,self,intob);
@@ -2562,15 +2645,15 @@ DeeObject_InplaceXXX(DREF DeeObject **__restrict pself, intX_t val) { \
 err: \
  return -1; \
 }
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddS8,DeeInt_NewS32,int8_t,add,OPERATOR_INPLACE_ADD)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubS8,DeeInt_NewS32,int8_t,sub,OPERATOR_INPLACE_SUB)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddS8,DeeInt_NewS8,int8_t,add,OPERATOR_INPLACE_ADD)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubS8,DeeInt_NewS8,int8_t,sub,OPERATOR_INPLACE_SUB)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddInt,DeeInt_NewU32,uint32_t,add,OPERATOR_INPLACE_ADD)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubInt,DeeInt_NewU32,uint32_t,sub,OPERATOR_INPLACE_SUB)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceMulInt,DeeInt_NewS32,int8_t,mul,OPERATOR_INPLACE_MUL)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceDivInt,DeeInt_NewS32,int8_t,div,OPERATOR_INPLACE_DIV)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceModInt,DeeInt_NewS32,int8_t,mod,OPERATOR_INPLACE_MOD)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShlInt,DeeInt_NewU32,uint8_t,shl,OPERATOR_INPLACE_SHL)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShrInt,DeeInt_NewU32,uint8_t,shr,OPERATOR_INPLACE_SHR)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceMulInt,DeeInt_NewS8,int8_t,mul,OPERATOR_INPLACE_MUL)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceDivInt,DeeInt_NewS8,int8_t,div,OPERATOR_INPLACE_DIV)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceModInt,DeeInt_NewS8,int8_t,mod,OPERATOR_INPLACE_MOD)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShlInt,DeeInt_NewU8,uint8_t,shl,OPERATOR_INPLACE_SHL)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShrInt,DeeInt_NewU8,uint8_t,shr,OPERATOR_INPLACE_SHR)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAndInt,DeeInt_NewU32,uint32_t,and,OPERATOR_INPLACE_AND)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceOrInt,DeeInt_NewU32,uint32_t,or,OPERATOR_INPLACE_OR)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorInt,DeeInt_NewU32,uint32_t,xor,OPERATOR_INPLACE_XOR)
@@ -2739,10 +2822,8 @@ DEFINE_OPERATOR(size_t,Size,(DeeObject *__restrict self)) {
         goto err_ob;
     Dee_Decref(sizeob);
     /* Deal with negative-one */
-    if unlikely(result == (size_t)-1) {
-     err_integer_overflow_i(sizeof(size_t)*8,true);
-     goto err;
-    }
+    if unlikely(result == (size_t)-1)
+       return err_integer_overflow_i(sizeof(size_t)*8,true);
     return result;
    }
   } while ((iter = DeeType_Base(iter)) != NULL);
