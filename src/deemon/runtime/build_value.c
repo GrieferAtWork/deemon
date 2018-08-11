@@ -907,18 +907,21 @@ PUBLIC int
   }
   /* All remaining arguments are passed through
    * keywords found in `kwlist .. kwlist + x'. */
-  while (kw_argc--) {
+  for (;;) {
    dhash_t keyword_hash; size_t kwd_index;
    if (*format == '|') { is_optional = true; ++format; }
    if (!*format || *format == ':') {
     ASSERTF(!kwlist->k_name,"Keyword list too long");
-    goto invalid_argc; /* Too many arguments.
-                        * TODO: This can also happen when:
-                        * >> function foo(x,bar = none);
-                        * >> foo(x: 10, baz: 20);
-                        * In this case we should do a fuzzy match and
-                        * warn the caller that instead of `baz', they
-                        * probably meant `bar' */
+    if (kw_argc) {
+     /* TODO: This can also happen when:
+      * >> function foo(x,bar = none);
+      * >> foo(x: 10, baz: 20);
+      * In this case we should do a fuzzy match and
+      * warn the caller that instead of `baz', they
+      * probably meant `bar' */
+     goto invalid_argc; /* Too many arguments. */
+    }
+    break;
    }
    /* Find the matching positional argument. */
    ASSERTF(kwlist->k_name,"Keyword list too short");
@@ -958,17 +961,19 @@ PUBLIC int
     ASSERT(kwd_index < ((DeeKwdsObject *)kw)->kw_size);
     temp = Dee_VPUnpackf(argv[kwd_index],(char const **)&format,pargs);
     if unlikely(temp) return temp;
+    ASSERT(kw_argc);
+    if (!--kw_argc) {
+     if (is_optional) break;
+     /* TODO: This can also happen when:
+      * >> function foo(x,bar);
+      * >> foo(x: 10, baz: 20);
+      * In this case we should do a fuzzy match and
+      * warn the caller that instead of `baz', they
+      * probably meant `bar' */
+     goto invalid_argc; /* Too few arguments. */
+    }
    }
    ++kwlist;
-  }
-  if (*format && *format != ':') {
-   /* TODO: This can also happen when:
-    * >> function foo(x,bar);
-    * >> foo(x: 10, baz: 20);
-    * In this case we should do a fuzzy match and
-    * warn the caller that instead of `baz', they
-    * probably meant `bar' */
-   goto invalid_argc; /* Too few arguments. */
   }
   return 0; /* Done! */
  }
