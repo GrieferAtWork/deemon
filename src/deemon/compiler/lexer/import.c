@@ -148,6 +148,10 @@ ast_parse_module_name(struct unicode_printer *__restrict printer) {
    result = 1;
    if unlikely(yield() < 0)
       goto err;
+   if (UNICODE_PRINTER_LENGTH(printer) == 1 &&
+      (!TPP_ISKEYWORD(tok) && tok != TOK_STRING &&
+       !TOK_ISDOT(tok)))
+       break; /* Special case: `.' is a valid name for the current module. */
   } else if (TPP_ISKEYWORD(tok)) {
    if (unicode_printer_print(printer,
                              token.t_kwd->k_name,
@@ -206,7 +210,7 @@ INTERN DREF DeeModuleObject *DCALL parse_module_byname(void) {
  DREF DeeStringObject *module_name;
  struct unicode_printer name = UNICODE_PRINTER_INIT;
  struct ast_loc loc; loc_here(&loc);
- if unlikely(ast_parse_module_name(&name))
+ if unlikely(ast_parse_module_name(&name) < 0)
     goto err_printer;
  module_name = (DREF DeeStringObject *)unicode_printer_pack(&name);
  if unlikely(!module_name) goto err;
@@ -373,8 +377,16 @@ parse_import_symbol(struct import_item *__restrict result,
   unicode_printer_init(&printer);
 complete_module_name:
   return_value = 1;
-  if unlikely(ast_parse_module_name(&printer))
+  if unlikely(unicode_printer_printascii(&printer,"...",dot_count(tok)) < 0)
      goto err_printer;
+  if unlikely(yield() < 0)
+     goto err_printer;
+  /* Make sure to properly parse `import . as me' */
+  if ((TPP_ISKEYWORD(tok) && tok != KWD_as) || tok == TOK_STRING ||
+      (UNICODE_PRINTER_LENGTH(&printer) != 1)) {
+   if unlikely(ast_parse_module_name(&printer) < 0)
+      goto err_printer;
+  }
   result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
   if unlikely(!result->ii_import_name) goto err;
   if (tok == KWD_as) {
@@ -582,8 +594,10 @@ ast_import_module(struct import_item *__restrict item) {
    goto init_import_symbol;
   }
   /* Another symbol with the same name had already been imported. */
-  if (import_symbol->sym_class == SYM_CLASS_MODULE &&
-      import_symbol->sym_module.sym_module == module) {
+  if ((import_symbol->sym_class == SYM_CLASS_MODULE &&
+       import_symbol->sym_module.sym_module == module) ||
+      (module == current_rootscope->rs_module &&
+       import_symbol->sym_class == SYM_CLASS_THIS_MODULE)) {
    /* The same module has already been imported under this name! */
   } else {
    if (WARNAT(&item->ii_import_loc,W_IMPORT_ALIAS_IS_ALREADY_DEFINED,item->ii_symbol_name))
@@ -594,9 +608,14 @@ ast_import_module(struct import_item *__restrict item) {
   import_symbol = new_local_symbol(item->ii_symbol_name);
   if unlikely(!import_symbol) goto err_module;
 init_import_symbol:
-  import_symbol->sym_class             = SYM_CLASS_MODULE;
-  import_symbol->sym_flag              = SYM_FNORMAL;
-  import_symbol->sym_module.sym_module = module; /* Inherit reference */
+  import_symbol->sym_flag = SYM_FNORMAL;
+  if (module == current_rootscope->rs_module) {
+   import_symbol->sym_class = SYM_CLASS_THIS_MODULE;
+   Dee_Decref(module);
+  } else {
+   import_symbol->sym_class             = SYM_CLASS_MODULE;
+   import_symbol->sym_module.sym_module = module; /* Inherit reference */
+  }
  }
  return 0;
 err_module:
