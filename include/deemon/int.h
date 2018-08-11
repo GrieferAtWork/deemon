@@ -378,10 +378,10 @@ typedef duint128_t dint128_t;
 #define DUINT128_SHL_WILL_OVERFLOW(x,n) \
       (((duint128_t)((duint128_t)(x) << (n)) >> (n)) != (duint128_t)(x))
 #else
-#define DSINT128_DEC(x)   ((DUINT128_GET64(x)[DEE_INT128_LS64]--) || \
-                           (--DUINT128_GET64(x)[DEE_INT128_MS64]))
-#define DSINT128_INC(x)   ((++DUINT128_GET64(x)[DEE_INT128_LS64]) || \
-                           (++DUINT128_GET64(x)[DEE_INT128_MS64]))
+#define DSINT128_DEC(x)   ((DUINT128_GET64(x)[DEE_INT128_LS64]-- == 0) ? \
+                           (void)(--DUINT128_GET64(x)[DEE_INT128_MS64]) : (void)0)
+#define DSINT128_INC(x)   ((++DUINT128_GET64(x)[DEE_INT128_LS64] == 0) ? \
+                           (void)(++DUINT128_GET64(x)[DEE_INT128_MS64]) : (void)0)
 #define DSINT128_INV(x)   (DUINT128_GET64(x)[DEE_INT128_LS64] ^= -1, \
                            DUINT128_GET64(x)[DEE_INT128_MS64] ^= -1)
 #define DSINT128_TONEG(x) (DSINT128_DEC(x),DSINT128_INV(x)) /* x = -x  <===>  x = ~(x-1); */
@@ -505,13 +505,23 @@ DFUNDEF int DCALL DeeInt_As128(DeeObject *__restrict self, dint128_t *__restrict
 /* Read the signed/unsigned values from the given integer.
  * @return: 0:  Successfully read the value.
  * @return: -1: An error occurred (Integer overflow). */
-DFUNDEF int DCALL DeeInt_AsS32(DeeObject *__restrict self, int32_t *__restrict value);
-DFUNDEF int DCALL DeeInt_AsS64(DeeObject *__restrict self, int64_t *__restrict value);
-DFUNDEF int DCALL DeeInt_AsS128(DeeObject *__restrict self, dint128_t *__restrict value);
-DFUNDEF int DCALL DeeInt_AsU32(DeeObject *__restrict self, uint32_t *__restrict value);
-DFUNDEF int DCALL DeeInt_AsU64(DeeObject *__restrict self, uint64_t *__restrict value);
-DFUNDEF int DCALL DeeInt_AsU128(DeeObject *__restrict self, duint128_t *__restrict value);
+DFUNDEF int (DCALL DeeInt_AsS32)(DeeObject *__restrict self, int32_t *__restrict value);
+DFUNDEF int (DCALL DeeInt_AsS64)(DeeObject *__restrict self, int64_t *__restrict value);
+DFUNDEF int (DCALL DeeInt_AsS128)(DeeObject *__restrict self, dint128_t *__restrict value);
+DFUNDEF int (DCALL DeeInt_AsU32)(DeeObject *__restrict self, uint32_t *__restrict value);
+DFUNDEF int (DCALL DeeInt_AsU64)(DeeObject *__restrict self, uint64_t *__restrict value);
+DFUNDEF int (DCALL DeeInt_AsU128)(DeeObject *__restrict self, duint128_t *__restrict value);
 
+
+/* Convert an integer to a binary-encoded data array. */
+DFUNDEF int
+(DCALL DeeInt_AsBytes)(DeeObject *__restrict self,
+                       void *__restrict dst, size_t length,
+                       bool little_endian, bool as_signed);
+/* Convert a binary-encoded data array into an integer. */
+DFUNDEF DREF DeeObject *
+(DCALL DeeInt_FromBytes)(void const *__restrict buf, size_t length,
+                         bool little_endian, bool as_signed);
 
 #define DEE_PRIVATE_TRYGETSINT_4 DeeInt_TryAsS32
 #define DEE_PRIVATE_TRYGETSINT_8 DeeInt_TryAsS64

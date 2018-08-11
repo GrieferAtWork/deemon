@@ -2167,6 +2167,7 @@ DFUNDEF int (DCALL DeeObject_Leave)(DeeObject *__restrict self);
 
 
 /* Object buffer interface.
+ * @param: flags: Set of `DEE_BUFFER_F*'
  * @throw: Error.RuntimeError.NotImplemented: The object doesn't implement the buffer protocol.
  * @throw: Error.ValueError.BufferError:      The object is an atomic buffer, or cannot be written to. */
 DFUNDEF int (DCALL DeeObject_GetBuf)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);

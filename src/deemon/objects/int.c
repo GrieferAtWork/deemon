@@ -32,6 +32,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/int.h>
+#include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/bool.h>
 #include <deemon/none.h>
@@ -1216,6 +1217,317 @@ PUBLIC int (DCALL DeeInt_AsU128)(DeeObject *__restrict self, duint128_t *__restr
 }
 
 
+PUBLIC int
+(DCALL DeeInt_AsBytes)(DeeObject *__restrict self,
+                       void *__restrict dst, size_t length,
+                       bool little_endian, bool as_signed) {
+ uint8_t *writer; twodigits temp;
+ size_t i,count,remaining; dssize_t incr;
+ size_t num_bits; uint8_t leading_byte;
+ digit last_digit; unsigned int last_bits;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeInt_Type);
+ count = (size_t)DeeInt_SIZE(self);
+ if unlikely(!count) {
+  /* Special case: zero. */
+  memset(dst,0,length);
+  return 0;
+ }
+ leading_byte = 0;
+ if ((dssize_t)count < 0) {
+  count = (size_t)-(dssize_t)count;
+  leading_byte = 0xff;
+  if unlikely(!as_signed) {
+   err_integer_overflow((DeeObject *)self,0,false);
+   goto err;
+  }
+ }
+ if (little_endian) {
+  incr   = 1;
+  writer = (uint8_t *)dst;
+ } else {
+  incr   = -1;
+  writer = (uint8_t *)dst + length - 1;
+ }
+ temp = 0;
+ num_bits = 0;
+ remaining = length;
+ for (i = 0; i < count-1; ++i) {
+  temp |= (twodigits)DeeInt_DIGIT(self)[i] << num_bits;
+  num_bits += DIGIT_BITS;
+  while (num_bits >= 8) {
+   if (!remaining)
+       goto err_overflow;
+   num_bits -= 8;
+   *writer = temp & 0xff;
+   writer += incr;
+   --remaining;
+   temp >>= 8;
+   temp &= ((twodigits)1 << num_bits) - 1;
+  }
+ }
+ ASSERT(i == count-1);
+ last_digit = DeeInt_DIGIT(self)[i];
+ last_bits  = DIGIT_BITS;
+ /* The last bit was read. - Now truncate leading zeros. */
+ while (last_bits && !(last_digit & ((digit)1 << (last_bits-1))))
+     --last_bits;
+ temp |= (twodigits)last_digit << num_bits;
+ num_bits += last_bits;
+ /* Write all remaining full bytes. */
+ while (num_bits >= 8) {
+  if (!remaining)
+      goto err_overflow;
+  num_bits -= 8;
+  *writer = temp & 0xff;
+  writer += incr;
+  --remaining;
+  temp >>= 8;
+  temp &= ((twodigits)1 << num_bits) - 1;
+ }
+
+ if (num_bits) {
+  /* There are still some more remaining bits. */
+  uint8_t lead_mask = ((uint8_t)1 << num_bits)-1;
+  if (!remaining)
+      goto err_overflow;
+#if 1
+  *writer = temp & lead_mask;
+#else
+  *writer  = leading_byte & ~lead_mask;
+  *writer |= temp & lead_mask;
+#endif
+  writer += incr;
+  --remaining;
+ } else if (!remaining && as_signed) {
+  /* No space left for a sign bit. */
+  goto err_overflow;
+ }
+ /* Fill in all remaining bytes with the leading byte. */
+ memset(little_endian ? (void *)writer : dst,leading_byte,remaining);
+#if 1
+ if (DeeInt_SIZE(self) < 0) {
+  /* The integer is negative. -> We must decrement +
+   * invert all the integer bits that were written. */
+  size_t total_bits = num_bits + (length - remaining) * 8;
+  if (num_bits) total_bits -= 8;
+  num_bits = total_bits;
+  writer = (uint8_t *)dst;
+  if (!little_endian) writer += length - 1;
+  while (num_bits >= 8) {
+   if ((*writer)-- != 0) goto done_decr;
+   writer += incr;
+   num_bits -= 8;
+  }
+  if (num_bits) {
+   /* Decrement the last partial byte. */
+   uint8_t old_byte = *writer;
+   uint8_t byte_mask = ((uint8_t)1 << num_bits)-1;
+   uint8_t new_byte = (uint8_t)((old_byte & byte_mask) - 1);
+   *writer  = old_byte & ~byte_mask;
+   *writer |= new_byte & byte_mask;
+  }
+done_decr:
+  /* With the decrementation complete, we must now invert all bits. */
+  num_bits = total_bits;
+  writer = (uint8_t *)dst;
+  if (!little_endian) writer += length - 1;
+  while (num_bits >= 8) {
+   *writer = ~*writer;
+   writer += incr;
+   num_bits -= 8;
+  }
+  if (num_bits) {
+#if 1
+   *writer = ~*writer;
+#else
+   /* Invert the last partial byte. */
+   uint8_t old_byte = *writer;
+   uint8_t byte_mask = ((uint8_t)1 << num_bits)-1;
+   *writer = (old_byte & ~byte_mask) | (~old_byte & byte_mask);
+#endif
+  }
+ }
+#endif
+ return 0;
+err_overflow:
+ err_integer_overflow(self,length * 8,true);
+err:
+ return -1;
+}
+
+PUBLIC DREF DeeObject *
+(DCALL DeeInt_FromBytes)(void const *__restrict buf, size_t length,
+                         bool little_endian, bool as_signed) {
+ DREF DeeIntObject *result;
+ size_t total_bits;
+ size_t total_digits;
+ bool is_negative = false;
+ total_bits = length * 8;
+ if (as_signed) {
+  uint8_t sign_byte;
+  uint8_t msb_byte;
+  unsigned int msb_topbit;
+  if (!length)
+       goto return_zero;
+  sign_byte = 0x00;
+  if (little_endian) {
+   if (((uint8_t *)buf)[length - 1] & 0x80) {
+    sign_byte   = 0xff;
+    is_negative = true;
+   }
+   /* Strip leading sign bytes. */
+   while (((uint8_t *)buf)[length - 1] == sign_byte) {
+    if (!--length) {
+     if (sign_byte) goto return_m1;
+     goto return_zero;
+    }
+    total_bits -= 8;
+   }
+   msb_byte = ((uint8_t *)buf)[length - 1];
+  } else {
+   if (((uint8_t *)buf)[0] & 0x80) {
+    sign_byte   = 0xff;
+    is_negative = true;
+   }
+   /* Strip leading sign bytes. */
+   while (((uint8_t *)buf)[0] == sign_byte) {
+    if (!--length) {
+     if (sign_byte) goto return_m1;
+     goto return_zero;
+    }
+    total_bits -= 8;
+    buf = (void *)((uint8_t *)buf + 1);
+   }
+   msb_byte = ((uint8_t *)buf)[0];
+  }
+  /* Strip leading bits. */
+  msb_topbit = 7;
+  while (msb_topbit) {
+   /* Find the last 1-bit in MSB */
+   uint8_t msb_mask = (1 << msb_topbit);
+   if ((msb_byte & msb_mask) != (sign_byte & msb_mask))
+        break;
+   --msb_topbit;
+  }
+  total_bits -= (7 - msb_topbit);
+ } else {
+  uint8_t msb_byte;
+  unsigned int msb_topbit;
+  if (little_endian) {
+   while (length && !((uint8_t *)buf)[length-1])
+      --length,total_bits -= 8;
+   if (!length)
+        goto return_zero;
+   msb_byte = ((uint8_t *)buf)[length-1];
+  } else {
+   while (length && !((uint8_t *)buf)[0]) {
+    --length;
+    total_bits -= 8;
+    buf = (void *)((uint8_t *)buf + 1);
+   }
+   if (!length)
+        goto return_zero;
+   msb_byte = ((uint8_t *)buf)[0];
+  }
+  msb_topbit = 7;
+  while (msb_topbit) {
+   /* Find the last 1-bit in MSB */
+   if (msb_byte & (1 << msb_topbit))
+       break;
+   --msb_topbit;
+  }
+  total_bits -= (7 - msb_topbit);
+ }
+ /* At this point, we've determined the exact number
+  * of bits, as well as having extracted the sign bit,
+  * and having stripped unused sign extensions. */
+ total_digits = (total_bits + (DIGIT_BITS-1)) / DIGIT_BITS;
+ ASSERT(total_digits >= 1);
+ result = DeeInt_Alloc(total_digits);
+ if unlikely(!result) goto done;
+ /* Now to actually fill in integer digit data. */
+ {
+  twodigits temp = 0;
+  unsigned num_bits = 0;
+  size_t byte_index = 0;
+  size_t digit_index = 0;
+  for (; byte_index < length; ++byte_index) {
+   if (byte_index == length - 1) {
+    unsigned int byte_bits = total_bits % 8;
+    uint8_t byte_value;
+    if (!byte_bits) byte_bits = 8;
+    if (little_endian) {
+     byte_value = ((uint8_t *)buf)[byte_index];
+    } else {
+     byte_value = ((uint8_t *)buf)[(length - 1) - byte_index];
+    }
+    temp |= (digit)(byte_value & (uint8_t)((1 << byte_bits) - 1)) << num_bits;
+    num_bits += byte_bits;
+   } else {
+    if (little_endian) {
+     temp |= (digit)((uint8_t *)buf)[byte_index] << num_bits;
+    } else {
+     temp |= (digit)((uint8_t *)buf)[(length - 1) - byte_index] << num_bits;
+    }
+    num_bits += 8;
+   }
+#if DIGIT_BITS >= 8
+   if (num_bits >= DIGIT_BITS)
+#else
+   while (num_bits >= DIGIT_BITS)
+#endif
+   {
+    ASSERT(digit_index < total_digits);
+    num_bits -= DIGIT_BITS;
+    result->ob_digit[digit_index] = temp & DIGIT_MASK;
+    temp >>= DIGIT_BITS;
+    temp &= ((twodigits)1 << num_bits)-1;
+    ++digit_index;
+   }
+  }
+  ASSERT(num_bits ? (digit_index == total_digits-1)
+                  : (digit_index == total_digits));
+  ASSERT(num_bits == total_bits - (digit_index * DIGIT_BITS));
+  ASSERT(num_bits < DIGIT_BITS);
+  if (num_bits) {
+   /* Fill in the last digit with the remaining bits. */
+   result->ob_digit[digit_index] = temp & ((digit)1 << num_bits)-1;
+  }
+#if 1
+  if (is_negative) {
+   /* Transform all written bits: `dec();inv();' */
+   for (digit_index = 0; digit_index < total_digits - 1; ++digit_index) {
+    if ((result->ob_digit[digit_index])-- != 0)
+        goto done_decr;
+    result->ob_digit[digit_index] &= DIGIT_MASK;
+   }
+   /* Decrement the remaining number of bits. */
+   if (!num_bits) num_bits = DIGIT_BITS;
+   if ((result->ob_digit[digit_index])-- != 0)
+       goto done_decr;
+   result->ob_digit[digit_index] &= ((digit)1 << num_bits)-1;
+done_decr:
+   /* With the decrementation complete, we must now invert all bits. */
+   for (digit_index = 0; digit_index < total_digits; ++digit_index)
+       result->ob_digit[digit_index] ^= DIGIT_MASK;
+   /* Mask non-set bits of the most significant digit. */
+   result->ob_digit[total_digits - 1] &= ((digit)1 << num_bits)-1;
+  }
+#endif
+ }
+
+ /* Finally, fill in the integer size field. */
+ result->ob_size = (dssize_t)total_digits;
+ if (is_negative) result->ob_size = -result->ob_size;
+done:
+ return (DREF DeeObject *)result;
+return_m1:
+ return_reference_((DeeObject *)&DeeInt_MinusOne);
+return_zero:
+ return_reference_((DeeObject *)&DeeInt_Zero);
+}
+
+
 
 
 
@@ -1489,6 +1801,108 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeObject *DCALL
+int_tobytes(DeeIntObject *__restrict self,
+            size_t argc, DeeObject **__restrict argv,
+            DeeObject *kw) {
+ struct keyword kwlist[] = { K(length), K(byteorder), K(signed), KEND };
+ size_t length; DeeObject *byteorder = Dee_None;
+ bool is_signed = false; bool encode_little;
+ DREF DeeObject *result;
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"Iu|ob:tobytes",
+                    &length,&byteorder,&is_signed))
+     goto err;
+ if (DeeNone_Check(byteorder)) {
+#ifdef CONFIG_LITTLE_ENDIAN
+  encode_little = true;
+#else
+  encode_little = false;
+#endif
+ } else {
+  if (DeeObject_AssertTypeExact(byteorder,&DeeString_Type))
+      goto err;
+  if (DeeString_EQUALS_ASCII(byteorder,"little"))
+      encode_little = true;
+  else if (DeeString_EQUALS_ASCII(byteorder,"big"))
+      encode_little = false;
+  else {
+   DeeError_Throwf(&DeeError_ValueError,
+                   "Invalid byteorder %r",
+                   byteorder);
+   goto err;
+  }
+ }
+ /* Encode integer bytes. */
+ result = DeeBytes_NewBufferUninitialized(length);
+ if unlikely(!result) goto err;
+ if (DeeInt_AsBytes((DeeObject *)self,
+                     DeeBytes_DATA(result),
+                     length,encode_little,
+                     is_signed))
+     goto err_r;
+ return result;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+int_frombytes(DeeObject *__restrict UNUSED(self),
+              size_t argc, DeeObject **__restrict argv,
+              DeeObject *kw) {
+ struct keyword kwlist[] = { K(bytes), K(byteorder), K(signed), KEND };
+ DeeObject *bytes; DeeObject *byteorder = Dee_None;
+ bool is_signed = false; bool encode_little; DeeBuffer buf;
+ DREF DeeObject *result;
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|ob:frombytes",
+                    &bytes,&byteorder,&is_signed))
+     goto err;
+ if (DeeNone_Check(byteorder)) {
+#ifdef CONFIG_LITTLE_ENDIAN
+  encode_little = true;
+#else
+  encode_little = false;
+#endif
+ } else {
+  if (DeeObject_AssertTypeExact(byteorder,&DeeString_Type))
+      goto err;
+  if (DeeString_EQUALS_ASCII(byteorder,"little"))
+      encode_little = true;
+  else if (DeeString_EQUALS_ASCII(byteorder,"big"))
+      encode_little = false;
+  else {
+   DeeError_Throwf(&DeeError_ValueError,
+                   "Invalid byteorder %r",
+                   byteorder);
+   goto err;
+  }
+ }
+ if (DeeObject_GetBuf(bytes,&buf,DEE_BUFFER_FREADONLY))
+     goto err;
+ result = DeeInt_FromBytes(buf.bb_base,
+                           buf.bb_size,
+                           encode_little,
+                           is_signed);
+ DeeObject_PutBuf(bytes,&buf,DEE_BUFFER_FREADONLY);
+ return result;
+err:
+ return NULL;
+}
+
+PRIVATE struct type_method int_class_methods[] = {
+    { "frombytes", (dobjmethod_t)&int_frombytes,
+      DOC("(buffer bytes,string byteorder=none,bool signed=false)->int\n"
+          "@param byteorder The byteorder encoding used by the returned bytes. "
+                           "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
+                           "or $none (for host-endian)\n"
+          "@throw ValueError The given @byteorder string isn't recognized\n"
+          "The inverse of #tobytes, decoding a given bytes buffer @bytes to construct an integer"),
+      TYPE_METHOD_FKWDS },
+    { NULL }
+};
+
 PRIVATE struct type_method int_methods[] = {
     { "tostr", &int_tostr,
       DOC("(int radix=10,string mode=\"\")->string\n"
@@ -1504,6 +1918,19 @@ PRIVATE struct type_method int_methods[] = {
     { "hex", &int_hex,
       DOC("()->string\n"
           "Short-hand alias for ${this.tostr(16,\"n\")}") },
+    { "tobytes", (dobjmethod_t)&int_tobytes,
+      DOC("(int length,string byteorder=none,bool signed=false)->bytes\n"
+          "@param byteorder The byteorder encoding used by the returned bytes. "
+                           "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
+                           "or $none (for host-endian)\n"
+          "@throw IntegerOverflow @signed is false and @this integer is negative\n"
+          "@throw ValueError The given @byteorder string isn't recognized\n"
+          "Returns the data of @this integer as a @length bytes long "
+          "writable bytes object that is disjunct from @this integer.\n"
+          "When @signed is :false, throw an :IntegerOverflow if @this "
+          "integer is negative. Otherwise use two's complement to encode "
+          "negative integers"),
+      TYPE_METHOD_FKWDS },
     { NULL }
 };
 
@@ -1519,20 +1946,20 @@ DEFINE_UINT32(int_size_max,SSIZE_MAX);
 
 PRIVATE struct type_member int_class_members[] = {
     TYPE_MEMBER_CONST_DOC("SIZE_MAX",&int_size_max,
-    "The max value acceptable for sequence sizes, or indices\n"
-    "Note that despite its name, this constant is not necessarily "
-    "equal to the well-known C-constant of the same name, accessible "
-    "in deemon as ${(size_t from ctypes).max}\n"
-    "Note that this value is guarantied to be sufficiently great, such that "
-    "a sequence consisting of SIZE_MAX elements, each addressed as its own "
-    "member, or modifyable index in some array, is impossible to achive due "
-    "to memory constraints.\n"
-    "In this implementation, $SIZE_MAX is ${2**31} on 32-bit hosts, and ${2**63} on 64-bit hosts\n"
-    "Custom, mutable sequences with sizes greater than this may expirience inaccuracies "
-    "with the default implementation of function such as :sequence.insert's index-argument "
-    "potentially not being able to correctly determine if a negative or positive number was given\n"
-    "Such behavior may be considered a bug, however it falls under the category of doesn't-matter-wont-fix\n"
-    ),
+                          "The max value acceptable for sequence sizes, or indices\n"
+                          "Note that despite its name, this constant is not necessarily "
+                          "equal to the well-known C-constant of the same name, accessible "
+                          "in deemon as ${(size_t from ctypes).max}\n"
+                          "Note that this value is guarantied to be sufficiently great, such that "
+                          "a sequence consisting of SIZE_MAX elements, each addressed as its own "
+                          "member, or modifyable index in some array, is impossible to achive due "
+                          "to memory constraints.\n"
+                          "In this implementation, $SIZE_MAX is ${2**31} on 32-bit hosts, and ${2**63} on 64-bit hosts\n"
+                          "Custom, mutable sequences with sizes greater than this may expirience inaccuracies "
+                          "with the default implementation of function such as :sequence.insert's index-argument "
+                          "potentially not being able to correctly determine if a negative or positive number was given\n"
+                          "Such behavior may be considered a bug, however it falls under the category of doesn't-matter-wont-fix\n"
+                          ),
     { NULL }
 };
 
@@ -1659,7 +2086,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
     /* .tp_methods       = */int_methods,
     /* .tp_getsets       = */NULL,
     /* .tp_members       = */NULL,
-    /* .tp_class_methods = */NULL,
+    /* .tp_class_methods = */int_class_methods,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */int_class_members
 };

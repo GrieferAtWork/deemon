@@ -360,6 +360,10 @@ DDATDEF DeeTypeObject DeeString_Type;
 #define DeeString_IsEmpty(x)  (((DeeStringObject *)REQUIRES_OBJECT(x))->s_len == 0)
 
 
+#define DeeString_EQUALS_ASCII(x,ascii_str) \
+       (DeeString_SIZE(x) == COMPILER_STRLEN(ascii_str) && \
+        memcmp(DeeString_STR(x),ascii_str,sizeof(ascii_str)-sizeof(char)) == 0)
+
 /* Return the unicode character-width of characters found in the given string `x' */
 #define DeeString_WIDTH(x) \
      (((DeeStringObject *)REQUIRES_OBJECT(x))->s_data ? \
