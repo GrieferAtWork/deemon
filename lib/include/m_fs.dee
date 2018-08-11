@@ -17,6 +17,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 import fs;
+import fs_path = .m_fs_path;
 
 global getcwd = fs.getcwd;
 global chdir = fs.chdir;
@@ -29,7 +30,7 @@ function delenv(name) -> fs.environ.operator del[](name);
 function setenv(name,value) -> fs.environ.operator [] (name,value);
 function user() -> fs.user().name();
 global host = fs.gethostname;
-global path = import .m_fs_path;
+global path = fs_path;
 function getatime(path) -> fs.stat(path).st_atime;
 function getmtime(path) -> fs.stat(path).st_mtime;
 function getctime(path) -> fs.stat(path).st_ctime;
