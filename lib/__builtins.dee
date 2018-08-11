@@ -53,7 +53,7 @@ local __objects = deemon.list {
 	/* 0x0008 */ deemon.string,
 	/* 0x0009 */ deemon.weakref,
 	/* 0x000a */ deemon.tuple,
-	/* 0x000b */ rt.typetype,
+	/* 0x000b */ deemon.type_,
 	/* 0x000c */ rt.nonetype,
 	/* 0x000d */ none, /* __builtin_object (Filled below) */
 	/* 0x000e */ deemon.tuple.iterator,
