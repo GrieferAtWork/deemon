@@ -18,16 +18,16 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import query, chdir, headof from fs;
-
-chdir(headof(__FILE__));
-
-for (local x: query("test/*.dee")) {
-	local test_name = x[:-4];
-	print ">> Running test:",test_name;
-	import(".test." + test_name);
+/* Assert that try-expressions are functioning properly.
+ * This is a syntactical feature that the old deemon didn't have,
+ * in that you can use try-statements in expressions to create
+ * an expression that evaluates to another expression when the
+ * guarded expression throws an error. */
+function get_value(x) {
+	if (x)
+		throw 42;
+	return 11;
 }
 
-print "DONE";
-
-
+assert (try get_value(true)  catch (e...) e) == 42;
+assert (try get_value(false) catch (e...) e) == 11;

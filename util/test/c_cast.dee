@@ -1,0 +1,52 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+function return_args(args...) -> args;
+
+/* Ensure validity of how c-style cast expressions are parsed.
+ * Due to the fact that types are only known at runtime, the
+ * rules governing deemon's behavior when it comes to this are
+ * kind-of complicated, considering ambiguity. */
+assert (return_args)42 == (42,);
+assert (return_args)(42) == (42,);
+assert (return_args)(42,) == (42,);
+assert (return_args)((42)) == (42,);
+assert (return_args)((42,)) == ((42,),);
+assert (return_args)pack(42) == ((42,),);
+assert (return_args)(10,20,30) == (10,20,30);
+
+/* Deemon warns amount the ambiguity who's behavior we're validating here.
+ * NOTE: The first option described in the comments is the one always taken. */
+#pragma warning(push)
+#pragma warning(disable: "-Wquality")
+assert (42) + 7 == 49;    /* `(typexpr).operator add(castexpr)' vs. `(typexpr)castexpr.operator pos()' */
+assert (42) - 7 == 35;    /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
+assert (42) < 7 == false; /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(cell(castexpr))' */
+assert (42,)[0] == 42;    /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(list(castexpr))' */
+#pragma warning(pop)
+
+/* Assert special behavior that applies when
+ * `!' is encountered in cast expressions. */
+import bool from deemon;
+assert (bool) !42 == false;          /* `bool(!42)' */
+assert (bool) !!42 == true;          /* `bool(!!42)' */
+assert (bool) !!!in [bool] == false; /* `bool !in [bool]' */
+
+

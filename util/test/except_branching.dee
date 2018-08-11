@@ -18,16 +18,28 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import query, chdir, headof from fs;
+/* Test exception handler order, as well as statement result-from-handlers.
+ * The whole result-from-handlers part might not seem too important here,
+ * but it is very much so, and immensly used by try-expressions:
+ * >> local message = try get_message() catch (...) "No message available";
+ */
+function get_except_val(err) -> ({
+	try {
+		__stack local inner_stack = 7;
+		try {
+			if (err !is none)
+				throw err;
+			inner_stack+1;
+		} catch (string from deemon) {
+			inner_stack+2;
+		}
+	} catch (...) {
+		3;
+	}
+});
 
-chdir(headof(__FILE__));
-
-for (local x: query("test/*.dee")) {
-	local test_name = x[:-4];
-	print ">> Running test:",test_name;
-	import(".test." + test_name);
-}
-
-print "DONE";
-
+/* Test the 3 possible branches the function above can take. */
+assert get_except_val(none) == 8, "Handler wasn't meant to be executed";
+assert get_except_val("")   == 9, "Inner handler not executed";
+assert get_except_val(1)    == 3, "Catch-all not reached";
 

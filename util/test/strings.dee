@@ -18,16 +18,25 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import query, chdir, headof from fs;
 
-chdir(headof(__FILE__));
+/* Assert string search functions. */
+assert "{abc{}abc}".index("{") == 0;
+assert "{abc{}abc}".rindex("{") == 4;
+assert "{abc{}abc}".index("}") == 5;
+assert "{abc{}abc}".rindex("}") == 9;
+assert "{abc{}abc}".index("abc") == 1;
+assert "{abc{}abc}".rindex("abc") == 6;
+assert "abc{{}}abc".index("abc") == 0;
+assert "abc{{}}abc".rindex("abc") == 7;
+assert "abc".index("abc") == 0;
+assert "abc".rindex("abc") == 0;
 
-for (local x: query("test/*.dee")) {
-	local test_name = x[:-4];
-	print ">> Running test:",test_name;
-	import(".test." + test_name);
-}
-
-print "DONE";
+/* Assert string split functions */
+assert "".split("/")        == [];
+assert "/".split("/")       == ["",""];
+assert "foo".split("/")     == ["foo"];
+assert "foo/".split("/")    == ["foo",""];
+assert "foo/bar".split("/") == ["foo","bar"];
+assert "/bar".split("/")    == ["","bar"];
 
 

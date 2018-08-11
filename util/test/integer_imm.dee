@@ -1,0 +1,75 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+local n123456789  = 123456789;
+local n0xffffffff = 0xffffffff;
+local n0xfffffff  = 0xfffffff;
+local n0xffffff   = 0xffffff;
+local n0xfffff    = 0xfffff;
+local n0xffff     = 0xffff;
+local n0xfff      = 0xfff;
+local n0xff       = 0xff;
+local n0xf        = 0xf;
+local n128        = 128;
+local n127        = 127;
+local n1          = 1;
+local n0          = 0;
+
+function get_message(x) -> "x = "+x;
+
+for (local x: [
+	n0,n1,n127,n128,n0xff,n0xfff,n0xffff,n0xfffff,
+	n0xffffff,n0xfffffff,n0xffffffff,n123456789]) {
+	assert x + 123456789 == x + n123456789, get_message(x);
+	assert x - 123456789 == x - n123456789, get_message(x);
+	assert x + 0xffffffff == x + n0xffffffff, get_message(x);
+	assert x - 0xffffffff == x - n0xffffffff, get_message(x);
+	assert x + 0xfffffff == x + n0xfffffff, get_message(x);
+	assert x - 0xfffffff == x - n0xfffffff, get_message(x);
+	assert x + 0xffffff == x + n0xffffff, get_message(x);
+	assert x - 0xffffff == x - n0xffffff, get_message(x);
+	assert x + 0xfffff == x + n0xfffff, get_message(x);
+	assert x - 0xfffff == x - n0xfffff, get_message(x);
+	assert x + 0xffff == x + n0xffff, get_message(x);
+	assert x - 0xffff == x - n0xffff, get_message(x);
+	assert x + 0xfff == x + n0xfff, get_message(x);
+	assert x - 0xfff == x - n0xfff, get_message(x);
+	assert x + 0xff == x + n0xff, get_message(x);
+	assert x - 0xff == x - n0xff, get_message(x);
+	assert x + 0xf == x + n0xf, get_message(x);
+	assert x + (-0xf) == x + (-n0xf), get_message(x);
+	assert x - 0xf == x - n0xf, get_message(x);
+	assert x - (-0xf) == x - (-n0xf), get_message(x);
+	assert x + 128 == x + n128, get_message(x);
+	assert x - 128 == x - n128, get_message(x);
+	assert x + (-127) == x + (-n127), get_message(x);
+	assert x + 127 == x + n127, get_message(x);
+	assert x - (-127) == x - (-n127), get_message(x);
+	assert x - 127 == x - n127, get_message(x);
+	assert x + (-1) == x + (-n1), get_message(x);
+	assert x + 1 == x + n1, get_message(x);
+	assert x - (-1) == x - (-n1), get_message(x);
+	assert x - 1 == x - n1, get_message(x);
+	assert x + (-0) == x + (-n0), get_message(x);
+	assert x + 0 == x + n0, get_message(x);
+	assert x - (-0) == x - (-n0), get_message(x);
+	assert x - 0 == x - n0, get_message(x);
+}
+

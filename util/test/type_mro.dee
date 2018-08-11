@@ -18,16 +18,11 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import query, chdir, headof from fs;
-
-chdir(headof(__FILE__));
-
-for (local x: query("test/*.dee")) {
-	local test_name = x[:-4];
-	print ">> Running test:",test_name;
-	import(".test." + test_name);
-}
-
-print "DONE";
-
+import type_, file from deemon;
+/* Assert that MRO of `type' itself sees `type' as an instance of `typetype',
+ * rather than `typetype' itself. - Sounds complicated? - Well, it kind-of is,
+ * but you may look at `print Doc from doc("/deemon/type/getinstanceattr");' which
+ * documents the finer aspects of this rather important detail. */
+assert type_.baseof(type_);
+assert type_.baseof(type(file));
 
