@@ -1263,9 +1263,13 @@ do_xcopy_3:
 
  case AST_SYM:
  case AST_BNDSYM:
-  ASSERT(other->ast_sym->sym_read);
-  temp->ast_sym->sym_read = other->ast_sym->sym_read;
-  ++temp->ast_sym->sym_read;
+  ASSERT(other->ast_sym);
+  temp->ast_sym = other->ast_sym;
+  if (temp->ast_flag) {
+   ++temp->ast_sym->sym_write;
+  } else {
+   ++temp->ast_sym->sym_read;
+  }
   break;
 
  case AST_GOTO:
