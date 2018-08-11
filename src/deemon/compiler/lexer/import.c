@@ -927,6 +927,7 @@ INTERN DREF DeeAstObject *FCALL ast_parse_import(void) {
    * - from deemon import "object" as my_object;
    * - from deemon import object as my_object, list as my_list; */
   DREF DeeStringObject *module_name;
+  bool did_import_all = false;
   result = ast_setddi(ast_constexpr(Dee_None),&import_loc);
   if unlikely(!result) goto err;
   if unlikely(yield() < 0) goto err_r;
@@ -945,10 +946,14 @@ INTERN DREF DeeAstObject *FCALL ast_parse_import(void) {
   for (;;) {
    /* Parse an entire import list. */
    if (tok == '*') {
+    if (did_import_all &&
+        WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
+        goto err_r_module;
     if unlikely(ast_import_all_from_module(module,NULL))
        goto err_r_module;
     if unlikely(yield() < 0)
        goto err_r_module;
+    did_import_all = true;
    } else {
     int error; struct import_item item;
     error = parse_import_symbol(&item,false);
