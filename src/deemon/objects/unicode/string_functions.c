@@ -1233,6 +1233,34 @@ DeeString_TestAnyTrait(DeeObject *__restrict self,
  });
  return false;
 }
+INTERN bool DCALL
+DeeString_IsAscii(DeeObject *__restrict self,
+                  size_t start_index,
+                  size_t end_index) {
+ struct string_utf *utf;
+ utf = ((DeeStringObject *)self)->s_data;
+ if (utf && utf->u_flags & STRING_UTF_FASCII)
+     return true;
+ DeeString_Foreach(self,start_index,end_index,iter,end,{
+  if (*iter > 0x7f)
+      return false;
+ });
+ /* Remember if the whole string is ASCII. */
+ if (utf && start_index == 0 &&
+     end_index >= DeeString_WLEN(self))
+     utf->u_flags |= STRING_UTF_FASCII;
+ return true;
+}
+INTERN bool DCALL
+DeeString_IsAnyAscii(DeeObject *__restrict self,
+                     size_t start_index,
+                     size_t end_index) {
+ DeeString_Foreach(self,start_index,end_index,iter,end,{
+  if (*iter <= 0x7f)
+      return true;
+ });
+ return false;
+}
 
 
 INTERN bool DCALL
@@ -1959,7 +1987,7 @@ err:
  return NULL;
 }
 
-#define DEFINE_STRING_TRAIT(name,function,flag) \
+#define DEFINE_STRING_TRAIT(name,function,test_ch) \
 PRIVATE DREF DeeObject *DCALL \
 string_##name(String *__restrict self, \
               size_t argc, DeeObject **__restrict argv) { \
@@ -1975,7 +2003,7 @@ string_##name(String *__restrict self, \
    goto err; \
   } \
   ch = DeeString_GetChar(self,start); \
-  return_bool(DeeUni_Flags(ch) & (flag)); \
+  return_bool(test_ch); \
  } else { \
   if (DeeArg_Unpack(argc,argv,"|IdId" #name,&start,&end)) \
       goto err; \
@@ -1993,21 +2021,22 @@ string_##name(String *__restrict self, \
      return NULL; \
  return_bool(function((DeeObject *)self,start,end)); \
 }
-DEFINE_STRING_TRAIT(isprint,DeeString_IsPrint,UNICODE_FPRINT)
-DEFINE_STRING_TRAIT(isalpha,DeeString_IsAlpha,UNICODE_FALPHA)
-DEFINE_STRING_TRAIT(isspace,DeeString_IsSpace,UNICODE_FSPACE)
-DEFINE_STRING_TRAIT(islf,DeeString_IsLF,UNICODE_FLF)
-DEFINE_STRING_TRAIT(islower,DeeString_IsLower,UNICODE_FLOWER)
-DEFINE_STRING_TRAIT(isupper,DeeString_IsUpper,UNICODE_FUPPER)
-DEFINE_STRING_TRAIT(iscntrl,DeeString_IsCntrl,UNICODE_FCNTRL)
-DEFINE_STRING_TRAIT(isdigit,DeeString_IsDigit,UNICODE_FDIGIT)
-DEFINE_STRING_TRAIT(isdecimal,DeeString_IsDecimal,UNICODE_FDECIMAL)
-DEFINE_STRING_TRAIT(issymstrt,DeeString_IsSymStrt,UNICODE_FSYMSTRT)
-DEFINE_STRING_TRAIT(issymcont,DeeString_IsSymCont,UNICODE_FSYMCONT)
-DEFINE_STRING_TRAIT(isalnum,DeeString_IsAlnum,UNICODE_FALPHA|UNICODE_FDIGIT)
-DEFINE_STRING_TRAIT(isnumeric,DeeString_IsNumeric,UNICODE_FDECIMAL|UNICODE_FDIGIT)
-DEFINE_STRING_TRAIT(istitle,DeeString_IsTitle,UNICODE_FTITLE)
-DEFINE_STRING_TRAIT(issymbol,DeeString_IsSymbol,UNICODE_FSYMSTRT)
+DEFINE_STRING_TRAIT(isprint,DeeString_IsPrint,DeeUni_Flags(ch) & UNICODE_FPRINT)
+DEFINE_STRING_TRAIT(isalpha,DeeString_IsAlpha,DeeUni_Flags(ch) & UNICODE_FALPHA)
+DEFINE_STRING_TRAIT(isspace,DeeString_IsSpace,DeeUni_Flags(ch) & UNICODE_FSPACE)
+DEFINE_STRING_TRAIT(islf,DeeString_IsLF,DeeUni_Flags(ch) & UNICODE_FLF)
+DEFINE_STRING_TRAIT(islower,DeeString_IsLower,DeeUni_Flags(ch) & UNICODE_FLOWER)
+DEFINE_STRING_TRAIT(isupper,DeeString_IsUpper,DeeUni_Flags(ch) & UNICODE_FUPPER)
+DEFINE_STRING_TRAIT(iscntrl,DeeString_IsCntrl,DeeUni_Flags(ch) & UNICODE_FCNTRL)
+DEFINE_STRING_TRAIT(isdigit,DeeString_IsDigit,DeeUni_Flags(ch) & UNICODE_FDIGIT)
+DEFINE_STRING_TRAIT(isdecimal,DeeString_IsDecimal,DeeUni_Flags(ch) & UNICODE_FDECIMAL)
+DEFINE_STRING_TRAIT(issymstrt,DeeString_IsSymStrt,DeeUni_Flags(ch) & UNICODE_FSYMSTRT)
+DEFINE_STRING_TRAIT(issymcont,DeeString_IsSymCont,DeeUni_Flags(ch) & UNICODE_FSYMCONT)
+DEFINE_STRING_TRAIT(isalnum,DeeString_IsAlnum,DeeUni_Flags(ch) & (UNICODE_FALPHA|UNICODE_FDIGIT))
+DEFINE_STRING_TRAIT(isnumeric,DeeString_IsNumeric,DeeUni_Flags(ch) & (UNICODE_FDECIMAL|UNICODE_FDIGIT))
+DEFINE_STRING_TRAIT(istitle,DeeString_IsTitle,DeeUni_Flags(ch) & UNICODE_FTITLE)
+DEFINE_STRING_TRAIT(issymbol,DeeString_IsSymbol,DeeUni_Flags(ch) & UNICODE_FSYMSTRT)
+DEFINE_STRING_TRAIT(isascii,DeeString_IsAscii,ch <= 0x7f)
 DEFINE_ANY_STRING_TRAIT(isanyprint,DeeString_IsAnyPrint)
 DEFINE_ANY_STRING_TRAIT(isanyalpha,DeeString_IsAnyAlpha)
 DEFINE_ANY_STRING_TRAIT(isanyspace,DeeString_IsAnySpace)
@@ -2022,6 +2051,7 @@ DEFINE_ANY_STRING_TRAIT(isanysymcont,DeeString_IsAnySymCont)
 DEFINE_ANY_STRING_TRAIT(isanyalnum,DeeString_IsAnyAlnum)
 DEFINE_ANY_STRING_TRAIT(isanynumeric,DeeString_IsAnyNumeric)
 DEFINE_ANY_STRING_TRAIT(isanytitle,DeeString_IsAnyTitle)
+DEFINE_ANY_STRING_TRAIT(isanyascii,DeeString_IsAnyAscii)
 #undef DEFINE_ANY_STRING_TRAIT
 #undef DEFINE_STRING_TRAIT
 
@@ -8560,15 +8590,6 @@ INTERN struct type_method string_methods[] = {
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} can be used to continue a symbol name") },
-    /* TODO: isascii */
-    /* TODO:
-     * >> asdigit()->int
-     *    @throw ValueError The string is longer than a single character
-     *    @throw ValueError The character isn't numeric
-     * >> asdigit(int index)->int
-     *    @throw ValueError The character at @index isn't numeric
-     * >> asdigit(int index,int defl)->int
-     */
     { "isalnum", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isalnum,
       DOC("->bool\n"
           "(int index)->bool\n"
@@ -8606,6 +8627,22 @@ INTERN struct type_method string_methods[] = {
           "(int start,int end)->bool\n"
           "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
           "is a valid symbol name") },
+    { "isascii", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isascii,
+      DOC("->bool\n"
+          "(int index)->bool\n"
+          "(int start,int end)->bool\n"
+          "@throw IndexError The given @index is larger than ${#this}\n"
+          "@throw IntegerOverflow The given @index is negative or too large\n"
+          "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start,end)} "
+          "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
+    /* TODO:
+     * >> asdigit()->int
+     *    @throw ValueError The string is longer than a single character
+     *    @throw ValueError The character isn't numeric
+     * >> asdigit(int index)->int
+     *    @throw ValueError The character at @index isn't numeric
+     * >> asdigit(int index,int defl)->int
+     */
 
     { "isanyprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isanyprint,
       DOC("(int start=0,int end=-1)->bool\n"
@@ -8663,6 +8700,10 @@ INTERN struct type_method string_methods[] = {
       DOC("(int start=0,int end=-1)->bool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} has title-casing") },
+    { "isanyascii", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isanyascii,
+      DOC("(int start=0,int end=-1)->bool\n"
+          "Returns :true if any character in ${this.substr(start,end)} is "
+          "an ascii character, that is has an ordinal value ${<= 0x7f}") },
 
     /* String conversion */
     { "lower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_lower,

@@ -134,7 +134,7 @@ wildcompare(T const *string, size_t string_length,
       *pattern == '?'
 #ifdef NOCASE
       ||
-      DeeUni_ToLower(*pattern) == DeeUni_ToLower(*string) /* TODO: case-fold */
+      DeeUni_ToLower(*pattern) == DeeUni_ToLower(*string)
 #endif
       )
   {
