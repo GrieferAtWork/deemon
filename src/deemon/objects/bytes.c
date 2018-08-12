@@ -529,6 +529,7 @@ again:
       goto again;
   return NULL;
  }
+ result->b_orig = (DREF DeeObject *)result;
  new_result->b_buffer.bb_base = new_result->b_base = new_result->b_data;
  new_result->b_buffer.bb_size = new_result->b_size = num_bytes;
  return (DREF DeeObject *)new_result;
@@ -554,6 +555,7 @@ DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self,
   result->b_size = result->b_buffer.bb_size = num_bytes;
   return (DREF DeeObject *)result;
  }
+ result->b_orig = (DREF DeeObject *)result;
  result->b_buffer.bb_base = result->b_base = result->b_data;
  result->b_buffer.bb_size = result->b_size = num_bytes;
  return (DREF DeeObject *)result;
