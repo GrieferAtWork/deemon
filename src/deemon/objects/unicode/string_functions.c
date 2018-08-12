@@ -454,6 +454,9 @@ DeeString_ExpandTabs(DeeObject *__restrict self, size_t tab_width) {
   iter.cp8 = DeeString_Get1Byte(self);
   end.cp8  = iter.cp8 + WSTR_LENGTH(iter.cp8);
   flush_start.cp8 = iter.cp8;
+  unicode_printer_allocate(&printer,
+                          (size_t)(end.cp8 - iter.cp8),
+                           STRING_WIDTH_1BYTE);
   for (; iter.cp8 < end.cp8; ++iter.cp8) {
    uint8_t ch = *iter.cp8;
    if (!DeeUni_IsTab(ch)) {
@@ -474,8 +477,8 @@ DeeString_ExpandTabs(DeeObject *__restrict self, size_t tab_width) {
    }
    flush_start.cp8 = iter.cp8+1;
   }
-  if (!UNICODE_PRINTER_LENGTH(&printer))
-       goto retself;
+  if (UNICODE_PRINTER_ISEMPTY(&printer))
+      goto retself;
   if (unicode_printer_print8(&printer,flush_start.cp8,
                             (size_t)(iter.cp8-flush_start.cp8)) < 0)
       goto err;
@@ -484,6 +487,9 @@ DeeString_ExpandTabs(DeeObject *__restrict self, size_t tab_width) {
   iter.cp16 = DeeString_Get2Byte(self);
   end.cp16  = iter.cp16 + WSTR_LENGTH(iter.cp16);
   flush_start.cp16 = iter.cp16;
+  unicode_printer_allocate(&printer,
+                          (size_t)(end.cp16 - iter.cp16),
+                           STRING_WIDTH_2BYTE);
   for (; iter.cp16 < end.cp16; ++iter.cp16) {
    uint16_t ch = *iter.cp16;
    if (!DeeUni_IsTab(ch)) {
@@ -504,8 +510,8 @@ DeeString_ExpandTabs(DeeObject *__restrict self, size_t tab_width) {
    }
    flush_start.cp16 = iter.cp16+1;
   }
-  if (!UNICODE_PRINTER_LENGTH(&printer))
-       goto retself;
+  if (UNICODE_PRINTER_ISEMPTY(&printer))
+      goto retself;
   if (unicode_printer_print16(&printer,flush_start.cp16,
                              (size_t)(iter.cp16-flush_start.cp16)) < 0)
       goto err;
@@ -514,6 +520,9 @@ DeeString_ExpandTabs(DeeObject *__restrict self, size_t tab_width) {
   iter.cp32 = DeeString_Get4Byte(self);
   end.cp32  = iter.cp32 + WSTR_LENGTH(iter.cp32);
   flush_start.cp32 = iter.cp32;
+  unicode_printer_allocate(&printer,
+                          (size_t)(end.cp32 - iter.cp32),
+                           STRING_WIDTH_4BYTE);
   for (; iter.cp32 < end.cp32; ++iter.cp32) {
    uint32_t ch = *iter.cp32;
    if (!DeeUni_IsTab(ch)) {
@@ -534,8 +543,8 @@ DeeString_ExpandTabs(DeeObject *__restrict self, size_t tab_width) {
    }
    flush_start.cp32 = iter.cp32+1;
   }
-  if (!UNICODE_PRINTER_LENGTH(&printer))
-       goto retself;
+  if (UNICODE_PRINTER_ISEMPTY(&printer))
+      goto retself;
   if (unicode_printer_print32(&printer,flush_start.cp32,
                              (size_t)(iter.cp32-flush_start.cp32)) < 0)
       goto err;
@@ -560,6 +569,9 @@ DeeString_UnifyLines(DeeObject *__restrict self,
   iter.cp8 = DeeString_Get1Byte(self);
   end.cp8  = iter.cp8 + WSTR_LENGTH(iter.cp8);
   flush_start.cp8 = iter.cp8;
+  unicode_printer_allocate(&printer,
+                          (size_t)(end.cp8 - iter.cp8),
+                           STRING_WIDTH_1BYTE);
   for (; iter.cp8 < end.cp8; ++iter.cp8) {
    uint8_t ch = *iter.cp8;
    if (!DeeUni_IsLF(ch)) continue;
@@ -570,8 +582,8 @@ DeeString_UnifyLines(DeeObject *__restrict self,
    if (ch == UNICODE_CR && iter.cp8[1] == UNICODE_LF) ++iter.cp8;
    flush_start.cp8 = iter.cp8+1;
   }
-  if (!UNICODE_PRINTER_LENGTH(&printer))
-       goto retself;
+  if (UNICODE_PRINTER_ISEMPTY(&printer))
+      goto retself;
   if (unicode_printer_print8(&printer,flush_start.cp8,
                             (size_t)(iter.cp8-flush_start.cp8)) < 0)
       goto err;
@@ -580,6 +592,9 @@ DeeString_UnifyLines(DeeObject *__restrict self,
   iter.cp16 = DeeString_Get2Byte(self);
   end.cp16  = iter.cp16 + WSTR_LENGTH(iter.cp16);
   flush_start.cp16 = iter.cp16;
+  unicode_printer_allocate(&printer,
+                          (size_t)(end.cp16 - iter.cp16),
+                           STRING_WIDTH_2BYTE);
   for (; iter.cp16 < end.cp16; ++iter.cp16) {
    uint16_t ch = *iter.cp16;
    if (!DeeUni_IsLF(ch)) continue;
@@ -590,8 +605,8 @@ DeeString_UnifyLines(DeeObject *__restrict self,
    if (ch == UNICODE_CR && iter.cp16[1] == UNICODE_LF) ++iter.cp16;
    flush_start.cp16 = iter.cp16+1;
   }
-  if (!UNICODE_PRINTER_LENGTH(&printer))
-       goto retself;
+  if (UNICODE_PRINTER_ISEMPTY(&printer))
+      goto retself;
   if (unicode_printer_print16(&printer,flush_start.cp16,
                              (size_t)(iter.cp16-flush_start.cp16)) < 0)
       goto err;
@@ -600,6 +615,9 @@ DeeString_UnifyLines(DeeObject *__restrict self,
   iter.cp32 = DeeString_Get4Byte(self);
   end.cp32  = iter.cp32 + WSTR_LENGTH(iter.cp32);
   flush_start.cp32 = iter.cp32;
+  unicode_printer_allocate(&printer,
+                          (size_t)(end.cp32 - iter.cp32),
+                           STRING_WIDTH_4BYTE);
   for (; iter.cp32 < end.cp32; ++iter.cp32) {
    uint32_t ch = *iter.cp32;
    if (!DeeUni_IsLF(ch)) continue;
@@ -610,8 +628,8 @@ DeeString_UnifyLines(DeeObject *__restrict self,
    if (ch == UNICODE_CR && iter.cp32[1] == UNICODE_LF) ++iter.cp32;
    flush_start.cp32 = iter.cp32+1;
   }
-  if (!UNICODE_PRINTER_LENGTH(&printer))
-       goto retself;
+  if (UNICODE_PRINTER_ISEMPTY(&printer))
+      goto retself;
   if (unicode_printer_print32(&printer,flush_start.cp32,
                              (size_t)(iter.cp32-flush_start.cp32)) < 0)
       goto err;
@@ -635,6 +653,9 @@ DeeString_UnifyLinesLf(DeeObject *__restrict self) {
   iter.cp8 = DeeString_Get1Byte(self);
   end.cp8  = iter.cp8 + WSTR_LENGTH(iter.cp8);
   flush_start.cp8 = iter.cp8;
+  unicode_printer_allocate(&printer,
+                          (size_t)(end.cp8 - iter.cp8),
+                           STRING_WIDTH_1BYTE);
   for (; iter.cp8 < end.cp8; ++iter.cp8) {
    uint8_t ch = *iter.cp8;
    if (!DeeUni_IsLF(ch)) continue;
@@ -646,8 +667,8 @@ DeeString_UnifyLinesLf(DeeObject *__restrict self) {
    if (ch == UNICODE_CR && iter.cp8[1] == UNICODE_LF) ++iter.cp8;
    flush_start.cp8 = iter.cp8+1;
   }
-  if (!UNICODE_PRINTER_LENGTH(&printer))
-       goto retself;
+  if (UNICODE_PRINTER_ISEMPTY(&printer))
+      goto retself;
   if (unicode_printer_print8(&printer,flush_start.cp8,
                             (size_t)(iter.cp8-flush_start.cp8)) < 0)
       goto err;
@@ -656,6 +677,9 @@ DeeString_UnifyLinesLf(DeeObject *__restrict self) {
   iter.cp16 = DeeString_Get2Byte(self);
   end.cp16  = iter.cp16 + WSTR_LENGTH(iter.cp16);
   flush_start.cp16 = iter.cp16;
+  unicode_printer_allocate(&printer,
+                          (size_t)(end.cp16 - iter.cp16),
+                           STRING_WIDTH_2BYTE);
   for (; iter.cp16 < end.cp16; ++iter.cp16) {
    uint16_t ch = *iter.cp16;
    if (!DeeUni_IsLF(ch)) continue;
@@ -667,8 +691,8 @@ DeeString_UnifyLinesLf(DeeObject *__restrict self) {
    if (ch == UNICODE_CR && iter.cp16[1] == UNICODE_LF) ++iter.cp16;
    flush_start.cp16 = iter.cp16+1;
   }
-  if (!UNICODE_PRINTER_LENGTH(&printer))
-       goto retself;
+  if (UNICODE_PRINTER_ISEMPTY(&printer))
+      goto retself;
   if (unicode_printer_print16(&printer,flush_start.cp16,
                              (size_t)(iter.cp16-flush_start.cp16)) < 0)
       goto err;
@@ -677,6 +701,9 @@ DeeString_UnifyLinesLf(DeeObject *__restrict self) {
   iter.cp32 = DeeString_Get4Byte(self);
   end.cp32  = iter.cp32 + WSTR_LENGTH(iter.cp32);
   flush_start.cp32 = iter.cp32;
+  unicode_printer_allocate(&printer,
+                          (size_t)(end.cp32 - iter.cp32),
+                           STRING_WIDTH_4BYTE);
   for (; iter.cp32 < end.cp32; ++iter.cp32) {
    uint32_t ch = *iter.cp32;
    if (!DeeUni_IsLF(ch)) continue;
@@ -688,8 +715,8 @@ DeeString_UnifyLinesLf(DeeObject *__restrict self) {
    if (ch == UNICODE_CR && iter.cp32[1] == UNICODE_LF) ++iter.cp32;
    flush_start.cp32 = iter.cp32+1;
   }
-  if (!UNICODE_PRINTER_LENGTH(&printer))
-       goto retself;
+  if (UNICODE_PRINTER_ISEMPTY(&printer))
+      goto retself;
   if (unicode_printer_print32(&printer,flush_start.cp32,
                              (size_t)(iter.cp32-flush_start.cp32)) < 0)
       goto err;
@@ -1701,7 +1728,7 @@ string_replace(String *__restrict self,
     * >> In that case we don't need to write the entire string to it,
     *    but can simply return a reference to the original string,
     *    saving on memory and speeding up the function by a lot. */
-   if (UNICODE_PRINTER_LENGTH(&p) == 0 && begin.cp8 == mystr.cp8)
+   if (UNICODE_PRINTER_ISEMPTY(&p) && begin.cp8 == mystr.cp8)
        goto retself;
    if unlikely(unicode_printer_print8(&p,begin.cp8,(size_t)(end.cp8-begin.cp8)) < 0)
       goto err_printer;
@@ -1726,7 +1753,7 @@ string_replace(String *__restrict self,
     if unlikely(!--max_count) break;
     begin.cp16 = ptr.cp16 + findlen;
    }
-   if (UNICODE_PRINTER_LENGTH(&p) == 0 && begin.cp16 == mystr.cp16)
+   if (UNICODE_PRINTER_ISEMPTY(&p) && begin.cp16 == mystr.cp16)
        goto retself;
    if unlikely(unicode_printer_print16(&p,begin.cp16,(size_t)(end.cp16-begin.cp16)) < 0)
       goto err_printer;
@@ -1751,7 +1778,7 @@ string_replace(String *__restrict self,
     if unlikely(!--max_count) break;
     begin.cp32 = ptr.cp32 + findlen;
    }
-   if (UNICODE_PRINTER_LENGTH(&p) == 0 && begin.cp32 == mystr.cp32)
+   if (UNICODE_PRINTER_ISEMPTY(&p) && begin.cp32 == mystr.cp32)
        goto retself;
    if unlikely(unicode_printer_print32(&p,begin.cp32,(size_t)(end.cp32-begin.cp32)) < 0)
       goto err_printer;
@@ -1812,7 +1839,7 @@ string_casereplace(String *__restrict self,
     * >> In that case we don't need to write the entire string to it,
     *    but can simply return a reference to the original string,
     *    saving on memory and speeding up the function by a lot. */
-   if (UNICODE_PRINTER_LENGTH(&p) == 0 && begin.cp8 == mystr.cp8)
+   if (UNICODE_PRINTER_ISEMPTY(&p) && begin.cp8 == mystr.cp8)
        goto retself;
    if unlikely(unicode_printer_print8(&p,begin.cp8,(size_t)(end.cp8-begin.cp8)) < 0)
       goto err_printer;
@@ -1838,7 +1865,7 @@ string_casereplace(String *__restrict self,
     if unlikely(!--max_count) break;
     begin.cp16 = ptr.cp16 + match_length;
    }
-   if (UNICODE_PRINTER_LENGTH(&p) == 0 && begin.cp16 == mystr.cp16)
+   if (UNICODE_PRINTER_ISEMPTY(&p) && begin.cp16 == mystr.cp16)
        goto retself;
    if unlikely(unicode_printer_print16(&p,begin.cp16,(size_t)(end.cp16-begin.cp16)) < 0)
       goto err_printer;
@@ -1864,7 +1891,7 @@ string_casereplace(String *__restrict self,
     if unlikely(!--max_count) break;
     begin.cp32 = ptr.cp32 + match_length;
    }
-   if (UNICODE_PRINTER_LENGTH(&p) == 0 && begin.cp32 == mystr.cp32)
+   if (UNICODE_PRINTER_ISEMPTY(&p) && begin.cp32 == mystr.cp32)
        goto retself;
    if unlikely(unicode_printer_print32(&p,begin.cp32,(size_t)(end.cp32-begin.cp32)) < 0)
       goto err_printer;
@@ -2064,21 +2091,29 @@ string_casefold(String *__restrict self,
    my_end.cp8         = my_iter.cp8 + end;
    my_iter.cp8       += start;
    my_flush_start.cp8 = my_iter.cp8;
-   unicode_printer_allocate(&printer,(size_t)(my_end.cp8 - my_iter.cp8));
+   unicode_printer_allocate(&printer,(size_t)(my_end.cp8 - my_iter.cp8),
+                             STRING_WIDTH_1BYTE);
    for (; my_iter.cp8 < my_end.cp8; ++my_iter.cp8) {
     uint8_t ch = *my_iter.cp8;
     foldlen = DeeUni_ToFolded(ch,buf);
     if (foldlen == 1 && buf[0] == (uint32_t)ch)
         continue; /* The character representation doesn't change. */
     /* Flush all unwritten data. */
-    if (unicode_printer_print8(&printer,my_flush_start.cp8,
-                              (size_t)(my_iter.cp8 - my_flush_start.cp8)))
-        goto err_printer;
+    if unlikely(unicode_printer_print8(&printer,my_flush_start.cp8,
+                                      (size_t)(my_iter.cp8 - my_flush_start.cp8)) < 0)
+       goto err_printer;
     /* Print the case-folded character representation. */
-    if (unicode_printer_print32(&printer,buf,foldlen))
-        goto err_printer;
+    if unlikely(unicode_printer_print32(&printer,buf,foldlen) < 0)
+       goto err_printer;
     my_flush_start.cp8 = my_iter.cp8 + 1;
    }
+   /* Optimization: don't return a new string if nothing was folded. */
+   if (UNICODE_PRINTER_ISEMPTY(&printer))
+       goto return_self;
+   /* Flush the remainder. */
+   if unlikely(unicode_printer_print8(&printer,my_flush_start.cp8,
+                                     (size_t)(my_end.cp8 - my_flush_start.cp8)) < 0)
+      goto err_printer;
    break;
   CASE_WIDTH_2BYTE:
    my_iter.cp16 = DeeString_Get2Byte((DeeObject *)self);
@@ -2088,21 +2123,29 @@ string_casefold(String *__restrict self,
    my_end.cp16         = my_iter.cp16 + end;
    my_iter.cp16       += start;
    my_flush_start.cp16 = my_iter.cp16;
-   unicode_printer_allocate(&printer,(size_t)(my_end.cp16 - my_iter.cp16));
+   unicode_printer_allocate(&printer,(size_t)(my_end.cp16 - my_iter.cp16),
+                             STRING_WIDTH_2BYTE);
    for (; my_iter.cp16 < my_end.cp16; ++my_iter.cp16) {
     uint16_t ch = *my_iter.cp16;
     foldlen = DeeUni_ToFolded(ch,buf);
     if (foldlen == 1 && buf[0] == (uint32_t)ch)
         continue; /* The character representation doesn't change. */
     /* Flush all unwritten data. */
-    if (unicode_printer_print16(&printer,my_flush_start.cp16,
-                              (size_t)(my_iter.cp16 - my_flush_start.cp16)))
-        goto err_printer;
+    if unlikely(unicode_printer_print16(&printer,my_flush_start.cp16,
+                                       (size_t)(my_iter.cp16 - my_flush_start.cp16)) < 0)
+       goto err_printer;
     /* Print the case-folded character representation. */
-    if (unicode_printer_print32(&printer,buf,foldlen))
-        goto err_printer;
+    if unlikely(unicode_printer_print32(&printer,buf,foldlen) < 0)
+       goto err_printer;
     my_flush_start.cp16 = my_iter.cp16 + 1;
    }
+   /* Optimization: don't return a new string if nothing was folded. */
+   if (UNICODE_PRINTER_ISEMPTY(&printer))
+       goto return_self;
+   /* Flush the remainder. */
+   if unlikely(unicode_printer_print16(&printer,my_flush_start.cp16,
+                                      (size_t)(my_end.cp16 - my_flush_start.cp16)) < 0)
+      goto err_printer;
    break;
   CASE_WIDTH_4BYTE:
    my_iter.cp32 = DeeString_Get4Byte((DeeObject *)self);
@@ -2112,24 +2155,35 @@ string_casefold(String *__restrict self,
    my_end.cp32         = my_iter.cp32 + end;
    my_iter.cp32       += start;
    my_flush_start.cp32 = my_iter.cp32;
-   unicode_printer_allocate(&printer,(size_t)(my_end.cp32 - my_iter.cp32));
+   unicode_printer_allocate(&printer,(size_t)(my_end.cp32 - my_iter.cp32),
+                             STRING_WIDTH_4BYTE);
    for (; my_iter.cp32 < my_end.cp32; ++my_iter.cp32) {
     uint32_t ch = *my_iter.cp32;
     foldlen = DeeUni_ToFolded(ch,buf);
     if (foldlen == 1 && buf[0] == (uint32_t)ch)
         continue; /* The character representation doesn't change. */
     /* Flush all unwritten data. */
-    if (unicode_printer_print32(&printer,my_flush_start.cp32,
-                              (size_t)(my_iter.cp32 - my_flush_start.cp32)))
-        goto err_printer;
+    if unlikely(unicode_printer_print32(&printer,my_flush_start.cp32,
+                                       (size_t)(my_iter.cp32 - my_flush_start.cp32)) < 0)
+       goto err_printer;
     /* Print the case-folded character representation. */
-    if (unicode_printer_print32(&printer,buf,foldlen))
-        goto err_printer;
+    if unlikely(unicode_printer_print32(&printer,buf,foldlen) < 0)
+       goto err_printer;
     my_flush_start.cp32 = my_iter.cp32 + 1;
    }
+   /* Optimization: don't return a new string if nothing was folded. */
+   if (UNICODE_PRINTER_ISEMPTY(&printer))
+       goto return_self;
+   /* Flush the remainder. */
+   if unlikely(unicode_printer_print32(&printer,my_flush_start.cp32,
+                                      (size_t)(my_end.cp32 - my_flush_start.cp32)) < 0)
+      goto err_printer;
    break;
   }
   return unicode_printer_pack(&printer);
+return_self:
+  unicode_printer_fini(&printer);
+  return_reference_((DeeObject *)self);
 return_empty:
   unicode_printer_fini(&printer);
   return_empty_string;

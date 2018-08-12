@@ -2675,17 +2675,114 @@ utf8_writechar(char *__restrict buffer, uint32_t ch) {
 
 
 
+#undef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+#define CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION 1
 
 
 
 /* Unicode printer API */
-
-PUBLIC void DCALL
+PUBLIC bool DCALL
 unicode_printer_allocate(struct unicode_printer *__restrict self,
-                         size_t num_chars) {
- /* TODO */
- (void)self;
- (void)num_chars;
+                         size_t num_chars, unsigned int width) {
+ ASSERT(!(width & ~UNICODE_PRINTER_FWIDTH));
+ if (!self->up_buffer) {
+  /* Allocate an initial buffer. */
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  self->up_length = num_chars;
+  self->up_flags  = (unsigned char)width;
+#else
+  ASSERT(!self->up_length);
+  self->up_buffer = DeeString_TryNewWidthBuffer(num_chars,width);
+  if (!self->up_buffer) goto err;
+  self->up_flags = (unsigned char)width;
+#endif
+ } else {
+  /* Check if sufficient memory is already available. */
+  union dcharptr buffer; size_t avail,required;
+  buffer.ptr = self->up_buffer;
+  avail = WSTR_LENGTH(buffer.ptr);
+  required = self->up_length + num_chars;
+  ASSERT(self->up_length <= avail);
+  if (avail < required) {
+   /* Try to pre-allocate memory by extending upon what has already been written. */
+   SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+   CASE_WIDTH_1BYTE:
+    if (width == STRING_WIDTH_1BYTE) {
+     DeeStringObject *new_string;
+     new_string = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(buffer.ptr,
+                                                                                DeeStringObject,
+                                                                                s_str),
+                                                          COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                         (required + 1)*sizeof(char));
+     if unlikely(!new_string) goto err;
+     new_string->s_len = required;
+     self->up_buffer = new_string->s_str;
+    } else if (width == STRING_WIDTH_2BYTE) {
+     /* Upgrade to a 2-byte string. */
+     uint16_t *new_buffer; size_t i;
+     new_buffer = DeeString_TryNewBuffer16(required);
+     if unlikely(!new_buffer) goto err;
+     for (i = 0; i < self->up_length; ++i)
+         new_buffer[i] = (uint16_t)buffer.cp8[i];
+     DeeObject_Free(COMPILER_CONTAINER_OF(buffer.ptr,
+                                          DeeStringObject,
+                                          s_str));
+     self->up_buffer = new_buffer;
+#if STRING_WIDTH_1BYTE != 0
+     self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#endif
+     self->up_flags |= STRING_WIDTH_2BYTE;
+    } else {
+     /* Upgrade to a 4-byte string. */
+     uint32_t *new_buffer; size_t i;
+     new_buffer = DeeString_TryNewBuffer32(required);
+     if unlikely(!new_buffer) goto err;
+     for (i = 0; i < self->up_length; ++i)
+         new_buffer[i] = (uint32_t)buffer.cp8[i];
+     DeeObject_Free(COMPILER_CONTAINER_OF(buffer.ptr,
+                                          DeeStringObject,
+                                          s_str));
+     self->up_buffer = new_buffer;
+#if STRING_WIDTH_1BYTE != 0
+     self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#endif
+     self->up_flags |= STRING_WIDTH_4BYTE;
+    }
+    break;
+   CASE_WIDTH_2BYTE:
+    if (width <= STRING_WIDTH_2BYTE) {
+     uint16_t *new_buffer;
+     /* Extend the 2-byte buffer. */
+     new_buffer = DeeString_TryResizeBuffer16(buffer.cp16,required);
+     if unlikely(!new_buffer) goto err;
+     self->up_buffer = new_buffer;
+    } else {
+     /* Upgrade to a 4-byte buffer. */
+     uint32_t *new_buffer; size_t i;
+     new_buffer = DeeString_TryNewBuffer32(required);
+     if unlikely(!new_buffer) goto err;
+     for (i = 0; i < self->up_length; ++i)
+         new_buffer[i] = (uint32_t)buffer.cp16[i];
+     DeeString_Free2ByteBuffer(buffer.cp16);
+     self->up_buffer = new_buffer;
+     self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+     self->up_flags |= STRING_WIDTH_4BYTE;
+    }
+    break;
+   {
+    uint32_t *new_buffer;
+   CASE_WIDTH_4BYTE:
+    /* Extend the 4-byte buffer. */
+    new_buffer = DeeString_TryResizeBuffer32(buffer.cp32,required);
+    if unlikely(!new_buffer) goto err;
+    self->up_buffer = new_buffer;
+   } break;
+   }
+  }
+ }
+ return true;
+err:
+ return false;
 }
 
 
@@ -2759,6 +2856,35 @@ LOCAL int
  void *string = self->up_buffer;
  if (!string) {
   /* Allocate the initial buffer. */
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  if (self->up_length > UNICODE_PRINTER_INITIAL_BUFSIZE ||
+     (self->up_flags & UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE) {
+   self->up_buffer = DeeString_TryNewWidthBuffer(self->up_length,
+                                                 self->up_flags & UNICODE_PRINTER_FWIDTH);
+   if (!self->up_buffer) goto allocate_initial_normally;
+   self->up_length = 1;
+   UNICODE_PRINTER_SETCHAR(self,0,ch);
+   goto done;
+  } else {
+   DeeStringObject *buffer;
+allocate_initial_normally:
+   ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+   buffer = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject,s_str)+
+                                                  (UNICODE_PRINTER_INITIAL_BUFSIZE+1)*sizeof(char));
+   if likely(buffer) {
+    buffer->s_len = UNICODE_PRINTER_INITIAL_BUFSIZE;
+   } else {
+    buffer = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject,s_str)+
+                                                (1+1)*sizeof(char));
+    if unlikely(!buffer) goto err;
+    buffer->s_len = 1;
+   }
+   buffer->s_str[0] = (char)ch;
+   self->up_buffer = buffer->s_str;
+   self->up_length = 1;
+   goto done;
+  }
+#else
   DeeStringObject *buffer;
   ASSERT(!self->up_length);
   ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
@@ -2776,6 +2902,7 @@ LOCAL int
   self->up_buffer = buffer->s_str;
   self->up_length = 1;
   goto done;
+#endif
  }
  size_avail = WSTR_LENGTH(string);
  ASSERT(size_avail >= self->up_length);
@@ -2848,7 +2975,7 @@ cast_16to32(uint16_t *__restrict buffer,
  if unlikely(!result) goto done;
  for (i = 0; i < used_length; ++i)
      result[i] = (uint32_t)buffer[i];
- Dee_Free(((size_t *)buffer)-1);
+ Dee_Free((size_t *)buffer - 1);
 done:
  return result;
 }
@@ -2874,6 +3001,45 @@ PUBLIC int
  string = self->up_buffer;
  if (!string) {
   /* Allocate the initial buffer. */
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  size_t initial_length;
+  initial_length = self->up_length;
+  if (initial_length < UNICODE_PRINTER_INITIAL_BUFSIZE)
+      initial_length = UNICODE_PRINTER_INITIAL_BUFSIZE;
+  if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_4BYTE)
+       goto allocate_initial_as_32;
+  if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_2BYTE && ch <= 0xffff)
+       goto allocate_initial_as_16;
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+  if (ch <= 0xffff) {
+allocate_initial_as_16:
+   string = DeeString_TryNewBuffer16(initial_length);
+   if unlikely(!string) {
+    string = DeeString_TryNewBuffer16(UNICODE_PRINTER_INITIAL_BUFSIZE);
+    if unlikely(!string) {
+     string = DeeString_NewBuffer16(1);
+     if unlikely(!string) goto err;
+    }
+   }
+   ((uint16_t *)string)[0] = (uint16_t)ch;
+   self->up_flags |= STRING_WIDTH_2BYTE;
+  } else {
+allocate_initial_as_32:
+   string = DeeString_TryNewBuffer32(initial_length);
+   if unlikely(!string) {
+    string = DeeString_TryNewBuffer32(UNICODE_PRINTER_INITIAL_BUFSIZE);
+    if unlikely(!string) {
+     string = DeeString_NewBuffer32(1);
+     if unlikely(!string) goto err;
+    }
+   }
+   ((uint32_t *)string)[0] = ch;
+   self->up_flags |= STRING_WIDTH_4BYTE;
+  }
+  self->up_length = 1;
+  self->up_buffer = string;
+  goto done;
+#else
   ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
   if (ch <= 0xffff) {
    string = DeeString_TryNewBuffer16(UNICODE_PRINTER_INITIAL_BUFSIZE);
@@ -2894,7 +3060,8 @@ PUBLIC int
   }
   self->up_length = 1;
   self->up_buffer = string;
-  return 0;
+  goto done;
+#endif
  }
  ASSERT(self->up_length <= WSTR_LENGTH(string));
  SWITCH_SIZEOF_WIDTH (self->up_flags & UNICODE_PRINTER_FWIDTH) {
@@ -2930,10 +3097,10 @@ append_2byte:
    if (self->up_length == WSTR_LENGTH(string)) {
     /* Must allocate more memory. */
     string = DeeString_TryResizeBuffer16((uint16_t *)string,
-                                             WSTR_LENGTH(string)*2);
+                                          WSTR_LENGTH(string)*2);
     if unlikely(!string) {
      string = DeeString_ResizeBuffer16((uint16_t *)self->up_buffer,
-                                           self->up_length+1);
+                                        self->up_length+1);
      if unlikely(!string) goto err;
     }
     self->up_buffer = string;
@@ -2968,6 +3135,7 @@ append_4byte:
   break;
  }
  ++self->up_length;
+done:
  return 0;
 err:
  return -1;
@@ -3164,13 +3332,23 @@ unicode_printer_print8(struct unicode_printer *__restrict self,
  if (!string) {
   String *base_string;
   size_t initial_alloc;
+#ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
   ASSERT(!self->up_length);
   ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+#endif
   if unlikely(!textlen) goto done;
   /* Allocate the initial buffer. */
   initial_alloc = textlen;
   if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
       initial_alloc = UNICODE_PRINTER_INITIAL_BUFSIZE;
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  if (initial_alloc < self->up_length)
+      initial_alloc = self->up_length;
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#if STRING_WIDTH_1BYTE != 0
+  self->up_flags |= STRING_WIDTH_1BYTE;
+#endif
+#endif
   base_string = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String,s_str)+
                                              (initial_alloc+1)*sizeof(char));
   if unlikely(!base_string) {
@@ -3269,13 +3447,23 @@ unicode_printer_repeatascii(struct unicode_printer *__restrict self,
  if (!string) {
   String *base_string;
   size_t initial_alloc;
+#ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
   ASSERT(!self->up_length);
   ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+#endif
   if unlikely(!num_chars) goto done;
   /* Allocate the initial buffer. */
   initial_alloc = num_chars;
   if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
       initial_alloc = UNICODE_PRINTER_INITIAL_BUFSIZE;
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  if (initial_alloc < self->up_length)
+      initial_alloc = self->up_length;
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#if STRING_WIDTH_1BYTE != 0
+  self->up_flags |= STRING_WIDTH_1BYTE;
+#endif
+#endif
   base_string = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String,s_str)+
                                              (initial_alloc+1)*sizeof(char));
   if unlikely(!base_string) {
@@ -3372,11 +3560,25 @@ unicode_printer_print16(struct unicode_printer *__restrict self,
  size_t result = textlen;
  void *string = self->up_buffer;
  if (!string) {
+  size_t initial_alloc;
+#ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
   ASSERT(!self->up_length);
   ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+#endif
   if unlikely(!textlen) goto done;
+  initial_alloc = textlen;
+  if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
+      initial_alloc = UNICODE_PRINTER_INITIAL_BUFSIZE;
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  if (initial_alloc < self->up_length)
+      initial_alloc = self->up_length;
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#if STRING_WIDTH_1BYTE != 0
+  self->up_flags |= STRING_WIDTH_1BYTE;
+#endif
+#endif
   /* Allocate the initial buffer. */
-  string = DeeString_TryNewBuffer16(MAX(textlen,UNICODE_PRINTER_INITIAL_BUFSIZE));
+  string = DeeString_TryNewBuffer16(initial_alloc);
   if unlikely(!string) {
    string = DeeString_NewBuffer16(textlen);
    if unlikely(!string) goto err;
@@ -3480,12 +3682,28 @@ unicode_printer_print32(struct unicode_printer *__restrict self,
                         size_t textlen) {
  size_t i,result = textlen;
  void *string = self->up_buffer;
+ if (textlen == 1)
+     return unicode_printer_putc(self,text[0]) ? -1 : 1;
  if (!string) {
+  size_t initial_alloc;
+#ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
   ASSERT(!self->up_length);
   ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+#endif
   if unlikely(!textlen) goto done;
+  initial_alloc = textlen;
+  if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
+      initial_alloc = UNICODE_PRINTER_INITIAL_BUFSIZE;
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  if (initial_alloc < self->up_length)
+      initial_alloc = self->up_length;
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#if STRING_WIDTH_1BYTE != 0
+  self->up_flags |= STRING_WIDTH_1BYTE;
+#endif
+#endif
   /* Allocate the initial buffer. */
-  string = DeeString_TryNewBuffer32(MAX(textlen,UNICODE_PRINTER_INITIAL_BUFSIZE));
+  string = DeeString_TryNewBuffer32(initial_alloc);
   if unlikely(!string) {
    string = DeeString_NewBuffer32(textlen);
    if unlikely(!string) goto err;
@@ -3644,126 +3862,131 @@ unicode_printer_printinto(struct unicode_printer *__restrict self,
   * bit complicated since we need to convert everything on-the-fly. */
  str = self->up_buffer;
  result = 0;
- SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+ if (str != NULL)
+#endif
  {
-  char *iter,*end,*flush_start;
- CASE_WIDTH_1BYTE:
-  /* If we're a 1-byte string, at the very least
-   * we can directly print out ASCII-only data, and
-   * make use of a flush-like buffering system. */
-  end = (flush_start = iter = (char *)str)+length;
-  while (iter < end) {
-   uint8_t ut8_encoded[2];
-   uint8_t ch = (uint8_t)*iter;
-   if likely(ch < 0x80) { ++iter; continue; }
-   /* LATIN-1 character (must flush until here, then print its unicode variant) */
-   if (flush_start < iter) {
-    temp = (*printer)(arg,flush_start,(size_t)(iter-flush_start));
+  SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+  {
+   char *iter,*end,*flush_start;
+  CASE_WIDTH_1BYTE:
+   /* If we're a 1-byte string, at the very least
+    * we can directly print out ASCII-only data, and
+    * make use of a flush-like buffering system. */
+   end = (flush_start = iter = (char *)str)+length;
+   while (iter < end) {
+    uint8_t ut8_encoded[2];
+    uint8_t ch = (uint8_t)*iter;
+    if likely(ch < 0x80) { ++iter; continue; }
+    /* LATIN-1 character (must flush until here, then print its unicode variant) */
+    if (flush_start < iter) {
+     temp = (*printer)(arg,flush_start,(size_t)(iter-flush_start));
+     if unlikely(temp < 0) goto err;
+     result += temp;
+    }
+    ut8_encoded[0] = 0xc0 | ((ch & 0xc0) >> 6);
+    ut8_encoded[1] = 0x80 | (ch & 0x3f);
+    /* Print the UTF-8 variant. */
+    temp = (*printer)(arg,(char *)ut8_encoded,2);
+    if unlikely(temp < 0) goto err;
+    result += temp;
+
+    flush_start = ++iter;
+   }
+   /* Flush the remainder. */
+   if (flush_start < end) {
+    temp = (*printer)(arg,flush_start,(size_t)(end-flush_start));
     if unlikely(temp < 0) goto err;
     result += temp;
    }
-   ut8_encoded[0] = 0xc0 | ((ch & 0xc0) >> 6);
-   ut8_encoded[1] = 0x80 | (ch & 0x3f);
-   /* Print the UTF-8 variant. */
-   temp = (*printer)(arg,(char *)ut8_encoded,2);
-   if unlikely(temp < 0) goto err;
-   result += temp;
-
-   flush_start = ++iter;
-  }
-  /* Flush the remainder. */
-  if (flush_start < end) {
-   temp = (*printer)(arg,flush_start,(size_t)(end-flush_start));
-   if unlikely(temp < 0) goto err;
-   result += temp;
-  }
- } break;
- {
-  size_t i;
- CASE_WIDTH_2BYTE:
-  /* Since our string already uses more than 1 byte per character,
-   * there'd be no point in trying to buffer anything, since any
-   * buffer we'd be using would also have to be allocated by us.
-   * Instead, let the caller deal with buffering (if they wish to),
-   * and simply print one character at a time. */
-  for (i = 0; i < length; ++i) {
-   uint8_t utf8_repr[3];
-   uint8_t utf8_length;
-   uint16_t ch = ((uint16_t *)str)[i];
-   if (ch <= UTF8_1BYTE_MAX) {
-    utf8_repr[0] = (uint8_t)ch;
-    utf8_length = 1;
-   } else if (ch <= UTF8_2BYTE_MAX) {
-    utf8_repr[0] = 0xc0 | (uint8_t)((ch >> 6)/* & 0x1f*/);
-    utf8_repr[1] = 0x80 | (uint8_t)((ch) & 0x3f);
-    utf8_length = 2;
-   } else {
-    utf8_repr[0] = 0xe0 | (uint8_t)((ch >> 12)/* & 0x0f*/);
-    utf8_repr[1] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-    utf8_repr[2] = 0x80 | (uint8_t)((ch) & 0x3f);
-    utf8_length = 3;
+  } break;
+  {
+   size_t i;
+  CASE_WIDTH_2BYTE:
+   /* Since our string already uses more than 1 byte per character,
+    * there'd be no point in trying to buffer anything, since any
+    * buffer we'd be using would also have to be allocated by us.
+    * Instead, let the caller deal with buffering (if they wish to),
+    * and simply print one character at a time. */
+   for (i = 0; i < length; ++i) {
+    uint8_t utf8_repr[3];
+    uint8_t utf8_length;
+    uint16_t ch = ((uint16_t *)str)[i];
+    if (ch <= UTF8_1BYTE_MAX) {
+     utf8_repr[0] = (uint8_t)ch;
+     utf8_length = 1;
+    } else if (ch <= UTF8_2BYTE_MAX) {
+     utf8_repr[0] = 0xc0 | (uint8_t)((ch >> 6)/* & 0x1f*/);
+     utf8_repr[1] = 0x80 | (uint8_t)((ch) & 0x3f);
+     utf8_length = 2;
+    } else {
+     utf8_repr[0] = 0xe0 | (uint8_t)((ch >> 12)/* & 0x0f*/);
+     utf8_repr[1] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+     utf8_repr[2] = 0x80 | (uint8_t)((ch) & 0x3f);
+     utf8_length = 3;
+    }
+    temp = (*printer)(arg,(char *)utf8_repr,utf8_length);
+    if unlikely(temp < 0) goto err;
+    result += temp;
    }
-   temp = (*printer)(arg,(char *)utf8_repr,utf8_length);
-   if unlikely(temp < 0) goto err;
-   result += temp;
-  }
- } break;
- {
-  size_t i;
- CASE_WIDTH_4BYTE:
-  /* Same as the 2-byte variant: print one character at a time. */
-  for (i = 0; i < length; ++i) {
-   uint8_t utf8_repr[7];
-   uint8_t utf8_length;
-   uint32_t ch = ((uint32_t *)str)[i];
-   if (ch <= UTF8_1BYTE_MAX) {
-    utf8_repr[0] = (uint8_t)ch;
-    utf8_length = 1;
-   } else if (ch <= UTF8_2BYTE_MAX) {
-    utf8_repr[0] = 0xc0 | (uint8_t)((ch >> 6)/* & 0x1f*/);
-    utf8_repr[1] = 0x80 | (uint8_t)((ch) & 0x3f);
-    utf8_length = 2;
-   } else if (ch <= UTF8_3BYTE_MAX) {
-    utf8_repr[0] = 0xe0 | (uint8_t)((ch >> 12)/* & 0x0f*/);
-    utf8_repr[1] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-    utf8_repr[2] = 0x80 | (uint8_t)((ch) & 0x3f);
-    utf8_length = 3;
-   } else if (ch <= UTF8_4BYTE_MAX) {
-    utf8_repr[0] = 0xf0 | (uint8_t)((ch >> 18)/* & 0x07*/);
-    utf8_repr[1] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-    utf8_repr[2] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-    utf8_repr[3] = 0x80 | (uint8_t)((ch) & 0x3f);
-    utf8_length = 4;
-   } else if (ch <= UTF8_5BYTE_MAX) {
-    utf8_repr[0] = 0xf8 | (uint8_t)((ch >> 24)/* & 0x03*/);
-    utf8_repr[1] = 0x80 | (uint8_t)((ch >> 18) & 0x3f);
-    utf8_repr[2] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-    utf8_repr[3] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-    utf8_repr[4] = 0x80 | (uint8_t)((ch) & 0x3f);
-    utf8_length = 5;
-   } else if (ch <= UTF8_6BYTE_MAX) {
-    utf8_repr[0] = 0xfc | (uint8_t)((ch >> 30)/* & 0x01*/);
-    utf8_repr[1] = 0x80 | (uint8_t)((ch >> 24) & 0x3f);
-    utf8_repr[2] = 0x80 | (uint8_t)((ch >> 18) & 0x3f);
-    utf8_repr[3] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-    utf8_repr[4] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-    utf8_repr[5] = 0x80 | (uint8_t)((ch) & 0x3f);
-    utf8_length = 6;
-   } else {
-    utf8_repr[0] = 0xfe;
-    utf8_repr[1] = 0x80 | (uint8_t)((ch >> 30) & 0x03/* & 0x3f*/);
-    utf8_repr[2] = 0x80 | (uint8_t)((ch >> 24) & 0x3f);
-    utf8_repr[3] = 0x80 | (uint8_t)((ch >> 18) & 0x3f);
-    utf8_repr[4] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-    utf8_repr[5] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-    utf8_repr[6] = 0x80 | (uint8_t)((ch) & 0x3f);
-    utf8_length = 7;
+  } break;
+  {
+   size_t i;
+  CASE_WIDTH_4BYTE:
+   /* Same as the 2-byte variant: print one character at a time. */
+   for (i = 0; i < length; ++i) {
+    uint8_t utf8_repr[7];
+    uint8_t utf8_length;
+    uint32_t ch = ((uint32_t *)str)[i];
+    if (ch <= UTF8_1BYTE_MAX) {
+     utf8_repr[0] = (uint8_t)ch;
+     utf8_length = 1;
+    } else if (ch <= UTF8_2BYTE_MAX) {
+     utf8_repr[0] = 0xc0 | (uint8_t)((ch >> 6)/* & 0x1f*/);
+     utf8_repr[1] = 0x80 | (uint8_t)((ch) & 0x3f);
+     utf8_length = 2;
+    } else if (ch <= UTF8_3BYTE_MAX) {
+     utf8_repr[0] = 0xe0 | (uint8_t)((ch >> 12)/* & 0x0f*/);
+     utf8_repr[1] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+     utf8_repr[2] = 0x80 | (uint8_t)((ch) & 0x3f);
+     utf8_length = 3;
+    } else if (ch <= UTF8_4BYTE_MAX) {
+     utf8_repr[0] = 0xf0 | (uint8_t)((ch >> 18)/* & 0x07*/);
+     utf8_repr[1] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
+     utf8_repr[2] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+     utf8_repr[3] = 0x80 | (uint8_t)((ch) & 0x3f);
+     utf8_length = 4;
+    } else if (ch <= UTF8_5BYTE_MAX) {
+     utf8_repr[0] = 0xf8 | (uint8_t)((ch >> 24)/* & 0x03*/);
+     utf8_repr[1] = 0x80 | (uint8_t)((ch >> 18) & 0x3f);
+     utf8_repr[2] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
+     utf8_repr[3] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+     utf8_repr[4] = 0x80 | (uint8_t)((ch) & 0x3f);
+     utf8_length = 5;
+    } else if (ch <= UTF8_6BYTE_MAX) {
+     utf8_repr[0] = 0xfc | (uint8_t)((ch >> 30)/* & 0x01*/);
+     utf8_repr[1] = 0x80 | (uint8_t)((ch >> 24) & 0x3f);
+     utf8_repr[2] = 0x80 | (uint8_t)((ch >> 18) & 0x3f);
+     utf8_repr[3] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
+     utf8_repr[4] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+     utf8_repr[5] = 0x80 | (uint8_t)((ch) & 0x3f);
+     utf8_length = 6;
+    } else {
+     utf8_repr[0] = 0xfe;
+     utf8_repr[1] = 0x80 | (uint8_t)((ch >> 30) & 0x03/* & 0x3f*/);
+     utf8_repr[2] = 0x80 | (uint8_t)((ch >> 24) & 0x3f);
+     utf8_repr[3] = 0x80 | (uint8_t)((ch >> 18) & 0x3f);
+     utf8_repr[4] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
+     utf8_repr[5] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+     utf8_repr[6] = 0x80 | (uint8_t)((ch) & 0x3f);
+     utf8_length = 7;
+    }
+    temp = (*printer)(arg,(char *)utf8_repr,utf8_length);
+    if unlikely(temp < 0) goto err;
+    result += temp;
    }
-   temp = (*printer)(arg,(char *)utf8_repr,utf8_length);
-   if unlikely(temp < 0) goto err;
-   result += temp;
+  } break;
   }
- } break;
  }
  return result;
 err:
@@ -3776,20 +3999,32 @@ unicode_printer_reserve(struct unicode_printer *__restrict self,
  size_t result = self->up_length;
  void *str = self->up_buffer;
  if unlikely(!str) {
-  String *init_buffer; size_t init_size;
+  String *init_buffer; size_t initial_alloc;
+#ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
   ASSERT(self->up_length == 0);
   ASSERT(self->up_flags == STRING_WIDTH_1BYTE);
+#endif
   /* Allocate the initial buffer. */
-  init_size = MAX(num_chars,UNICODE_PRINTER_INITIAL_BUFSIZE);
+  initial_alloc = num_chars;
+  if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
+      initial_alloc = UNICODE_PRINTER_INITIAL_BUFSIZE;
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  if (initial_alloc < self->up_length)
+      initial_alloc = self->up_length;
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#if STRING_WIDTH_1BYTE != 0
+  self->up_flags |= STRING_WIDTH_1BYTE;
+#endif
+#endif
   init_buffer = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String,s_str)+
-                                            (init_size+1)*sizeof(char));
+                                             (initial_alloc+1)*sizeof(char));
   if unlikely(!init_buffer) {
-   init_size = num_chars;
+   initial_alloc = num_chars;
    init_buffer = (String *)DeeObject_Malloc(COMPILER_OFFSETOF(String,s_str)+
-                                          (init_size+1)*sizeof(char));
+                                           (initial_alloc+1)*sizeof(char));
    if unlikely(!init_buffer) goto err;
   }
-  init_buffer->s_len = init_size;
+  init_buffer->s_len = initial_alloc;
   self->up_buffer = init_buffer;
   self->up_length = num_chars;
  } else {
@@ -3900,14 +4135,24 @@ unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
   String *base_string;
   size_t initial_alloc;
   uint8_t num_pending;
+#ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
   ASSERT(!self->up_length);
   ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+#endif
   num_pending = (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
-  length     += num_pending;
+  length += num_pending;
   /* Allocate the initial buffer. */
   initial_alloc = length;
   if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
       initial_alloc = UNICODE_PRINTER_INITIAL_BUFSIZE;
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  if (initial_alloc < self->up_length)
+      initial_alloc = self->up_length;
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#if STRING_WIDTH_1BYTE != 0
+  self->up_flags |= STRING_WIDTH_1BYTE;
+#endif
+#endif
   base_string = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String,s_str)+
                                              (initial_alloc+1)*sizeof(char));
   if unlikely(!base_string) {
@@ -4063,7 +4308,7 @@ unicode_printer_confirm_utf8(struct unicode_printer *__restrict self,
    confirm_length += num_pending;
    self->up_flags &= ~UNICODE_PRINTER_FPENDING;
   }
-  ASSERT(buf              >= (char *)((uint8_t *)self->up_buffer));
+  ASSERT(buf                >= (char *)((uint8_t *)self->up_buffer));
   ASSERT(buf+confirm_length <= (char *)((uint8_t *)self->up_buffer+self->up_length));
   /* Now that the caller initialized the UTF-8 content, we must
    * check if it contains any unicode sequences that cannot appear
@@ -4224,11 +4469,25 @@ unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
                                size_t length) {
  void *string = self->up_buffer;
  if (!string) {
+  size_t initial_alloc;
+#ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
   ASSERT(!self->up_length);
   ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+#endif
   if (self->up_flags & UNICODE_PRINTER_FPENDING) ++length;
   /* Allocate the initial buffer. */
-  string = DeeString_TryNewBuffer16(MAX(length,UNICODE_PRINTER_INITIAL_BUFSIZE));
+  initial_alloc = length;
+  if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
+      initial_alloc = UNICODE_PRINTER_INITIAL_BUFSIZE;
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  if (initial_alloc < self->up_length)
+      initial_alloc = self->up_length;
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#if STRING_WIDTH_1BYTE != 0
+  self->up_flags |= STRING_WIDTH_1BYTE;
+#endif
+#endif
+  string = DeeString_TryNewBuffer16(initial_alloc);
   if unlikely(!string) {
    string = DeeString_TryNewBuffer16(length);
    if unlikely(!string) goto err;
@@ -4430,7 +4689,7 @@ check_low_surrogate:
     *dst = 0;
     ASSERT(dst == w32_string + result_length);
     /* Store the new 32-bit string buffer in the printer. */
-    Dee_Free(self->up_buffer);
+    Dee_Free((size_t *)self->up_buffer - 1);
     self->up_buffer = w32_string;
     self->up_length = result_length;
     self->up_flags &= ~UNICODE_PRINTER_FWIDTH;

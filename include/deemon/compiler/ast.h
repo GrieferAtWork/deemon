@@ -339,6 +339,9 @@ struct ast_object {
 #define AST_OPERATOR_FMAYBEPFX  0x0004       /* FLAG: If the operator is an inplace operation, always generate code and don't
                                               *       cause a compiler error if the operation will cause an error at runtime.
                                               *       This flag is usually set for explicit operator invocations. */
+#define AST_OPERATOR_FDONTOPT   0x8000       /* Don't perform constant propagation optimization on this branch.
+                                              * Usually just set by the optimizer itself, so-as not to re-attempt
+                                              * constant propagation after doing so failed before. */
             uint16_t            ast_exflag;  /* Set of `AST_OPERATOR_F*' */
         }                       ast_operator; /* General purpose operator AST. */
         DREF DeeAstObject      *ast_operator_ops[4];

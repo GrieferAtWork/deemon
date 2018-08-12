@@ -2569,6 +2569,21 @@ optimize_conditional_bool_predictable_inherit_multiple:
   unsigned int opcount; int temp;
   DREF DeeObject *operator_result;
  case AST_OPERATOR:
+  /* Only optimize sub-branches, but don't propagate constants
+   * if the branch has already been optimized before. */
+  if (self->ast_operator.ast_exflag & AST_OPERATOR_FDONTOPT) {
+   if (ast_optimize(self->ast_operator.ast_opa,true)) goto err;
+   if (self->ast_operator.ast_opb) {
+    if (ast_optimize(self->ast_operator.ast_opb,true)) goto err;
+    if (self->ast_operator.ast_opc) {
+     if (ast_optimize(self->ast_operator.ast_opc,true)) goto err;
+     if (self->ast_operator.ast_opd &&
+         ast_optimize(self->ast_operator.ast_opd,true)) goto err;
+    }
+   }
+   break;
+  }
+  self->ast_operator.ast_exflag |= AST_OPERATOR_FDONTOPT;
   /* If the result isn't used, then we can delete the postop flag. */
   if (!result_used)
        self->ast_operator.ast_exflag &= ~(AST_OPERATOR_FPOSTOP);

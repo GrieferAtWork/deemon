@@ -280,24 +280,6 @@ DEFINE_CELL_COMPARE(cell_ge,>=)
 
 PRIVATE struct type_cmp cell_cmp = {
     /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))NULL,
-    /* This is a very important implementation detail:
-     *     The compare operators of a cell will compare the contained object's
-     *     id, rather than the contained objects themself (as would be expected)
-     *     of practically any other sequence type.
-     *     The compiler knows this and ast-optimization will automatically
-     *     perform the following optimizations:
-     *       - `<foo> == <bar>' --> `foo === bar'
-     *       - `<foo> != <bar>' --> `foo !== bar'
-     *       -  ... // Repeated for `<', `<=', `>' and `>='
-     *
-     *     Additionally, during parsing the following conversion is
-     *     performed to implemented what used to be `__builtin_isbound()':
-     *     >> global x;
-     *     >> print <x> != <>; // false
-     *     >> x = 42;
-     *     >> print <x> != <>; // true
-     * TODO: This hasn't been implemented, yet.
-     */
     /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&cell_eq,
     /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&cell_ne,
     /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&cell_lo,

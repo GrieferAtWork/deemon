@@ -1547,7 +1547,9 @@ DeeModule_Open(DeeObject *__restrict module_name,
                             1 + /* The `.' prefixed before DEC files. */
 #endif
                             DeeString_SIZE(module_name) +
-                            1 + SOURCE_EXTENSION_MAX);
+                            1 + SOURCE_EXTENSION_MAX,
+                            STRING_WIDTH_COMMON(DeeString_WIDTH(path),
+                                                DeeString_WIDTH(module_name)));
    /* Start out by printing the given path. */
    if unlikely(unicode_printer_printstring(&printer,path) < 0)
       goto err_path_printer;
@@ -1749,7 +1751,7 @@ next:
  }
  /* Handle parent directory references. */
  for (; *iter == '.'; ++iter) {
-  if (UNICODE_PRINTER_LENGTH(&full_path)) {
+  if (UNICODE_PRINTER_LENGTH(&full_path) != 0) {
    size_t old_length,new_end;
    old_length = UNICODE_PRINTER_LENGTH(&full_path);
    while (old_length) {

@@ -545,7 +545,6 @@ DeeFile_Filename(DeeObject *__restrict self) {
 PUBLIC DREF DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self,
                  size_t max_length, bool keep_lf) {
- /* TODO: Unicode support? (or maybe change things to return a `bytes' object?) */
  DeeTypeObject *tp_self; uint32_t features; int ch;
  int (DCALL *pgetc)(DeeFileObject *__restrict,dioflag_t);
  int (DCALL *pungetc)(DeeFileObject *__restrict,int);

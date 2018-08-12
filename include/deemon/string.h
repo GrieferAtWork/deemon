@@ -684,12 +684,30 @@ DeeString_NewWidthBuffer(size_t num_chars, unsigned int width) {
   DeeStringObject *result;
   result = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject,s_str)+
                                               (num_chars+1)*sizeof(char));
-  if likely(result) result->s_len = num_chars;
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
   return result->s_str;
  } else {
   size_t *result;
   result = (size_t *)Dee_Malloc(sizeof(size_t)+(num_chars+1)*
                                 STRING_SIZEOF_WIDTH(width));
+  if likely(result) *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL void *DCALL
+DeeString_TryNewWidthBuffer(size_t num_chars, unsigned int width) {
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject,s_str)+
+                                                 (num_chars+1)*sizeof(char));
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
+  return result->s_str;
+ } else {
+  size_t *result;
+  result = (size_t *)Dee_TryMalloc(sizeof(size_t)+(num_chars+1)*
+                                   STRING_SIZEOF_WIDTH(width));
   if likely(result) *result++ = num_chars;
   return result;
  }
@@ -1155,6 +1173,7 @@ void unicode_printer_fini(struct unicode_printer *__restrict self);
 #define unicode_printer_fini(self) DeeString_FreeWidthBuffer((self)->up_buffer,UNICODE_PRINTER_WIDTH(self))
 #endif
 
+#define UNICODE_PRINTER_ISEMPTY(x)     ((x)->up_buffer == NULL)
 #define UNICODE_PRINTER_LENGTH(x)      ((x)->up_length) /* Used length */
 #define UNICODE_PRINTER_BUFSIZE(x)     ((x)->up_buffer ? WSTR_LENGTH((x)->up_buffer) : NULL) /* Allocated length */
 #define UNICODE_PRINTER_WIDTH(x)       ((x)->up_flags&UNICODE_PRINTER_FWIDTH) /* Current width */
@@ -1191,10 +1210,12 @@ DFUNDEF DREF DeeObject *DCALL
 unicode_printer_trypack(/*inherit(on_success)*/struct unicode_printer *__restrict self);
 
 /* Try to pre-allocate memory for `num_chars' characters.
- * NOTE: This function merely acts as a hint, and calls may even be ignored. */
-DFUNDEF void DCALL
+ * NOTE: This function merely acts as a hint, and calls may even be ignored.
+ * @return: true:  The pre-allocation was successful.
+ * @return: false: The pre-allocation has failed. */
+DFUNDEF bool DCALL
 unicode_printer_allocate(struct unicode_printer *__restrict self,
-                         size_t num_chars);
+                         size_t num_chars, unsigned int width);
 
 /* Append a single character to the given printer.
  * If `ch' can't fit the currently set `up_width', copy already
