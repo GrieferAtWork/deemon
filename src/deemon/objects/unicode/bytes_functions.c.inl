@@ -631,7 +631,8 @@ bytes_scanf(Bytes *__restrict self,
 
 INTERN bool DCALL
 DeeBytes_TestTrait(Bytes *__restrict self,
-                   size_t start_index, size_t end_index,
+                   size_t start_index,
+                   size_t end_index,
                    uniflag_t flags) {
  uint8_t *iter;
  if (start_index > DeeBytes_SIZE(self))
@@ -642,6 +643,23 @@ DeeBytes_TestTrait(Bytes *__restrict self,
  while (start_index < end_index) {
   if (!(DeeUni_Flags(*iter) & flags))
         return false;
+  ++iter,++start_index;
+ }
+ return true;
+}
+INTERN bool DCALL
+DeeBytes_IsAscii(Bytes *__restrict self,
+                 size_t start_index,
+                 size_t end_index) {
+ uint8_t *iter;
+ if (start_index > DeeBytes_SIZE(self))
+     start_index = DeeBytes_SIZE(self);
+ if (end_index > DeeBytes_SIZE(self))
+     end_index = DeeBytes_SIZE(self);
+ iter = DeeBytes_DATA(self);
+ while (start_index < end_index) {
+  if (*iter > 0x7f)
+      return false;
   ++iter,++start_index;
  }
  return true;
@@ -659,6 +677,24 @@ DeeBytes_TestAnyTrait(Bytes *__restrict self,
   while (start_index < end_index) {
    if (DeeUni_Flags(*iter) & flags)
         return true;
+   ++iter;
+   ++start_index;
+  }
+ }
+ return false;
+}
+INTERN bool DCALL
+DeeBytes_IsAnyAscii(Bytes *__restrict self,
+                    size_t start_index,
+                    size_t end_index) {
+ uint8_t *iter;
+ if (end_index > DeeBytes_SIZE(self))
+     end_index = DeeBytes_SIZE(self);
+ if (start_index < end_index) {
+  iter = DeeBytes_DATA(self) + start_index;
+  while (start_index < end_index) {
+   if (*iter <= 0x7f)
+       return true;
    ++iter;
    ++start_index;
   }
@@ -709,7 +745,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
  return true;
 }
 
-#define DEFINE_BYTES_TRAIT(name,function,flag) \
+#define DEFINE_BYTES_TRAIT(name,function,test_ch) \
 PRIVATE DREF DeeObject *DCALL \
 bytes_##name(Bytes *__restrict self, \
              size_t argc, DeeObject **__restrict argv) { \
@@ -725,7 +761,7 @@ bytes_##name(Bytes *__restrict self, \
    goto err; \
   } \
   ch = DeeBytes_DATA(self)[start]; \
-  return_bool(DeeUni_Flags(ch) & (flag)); \
+  return_bool(test_ch); \
  } else { \
   if (DeeArg_Unpack(argc,argv,"|IdId" #name,&start,&end)) \
       goto err; \
@@ -743,21 +779,22 @@ bytes_##name(Bytes *__restrict self, \
      return NULL; \
  return_bool(function(self,start,end)); \
 }
-DEFINE_BYTES_TRAIT(isprint,DeeBytes_IsPrint,UNICODE_FPRINT)
-DEFINE_BYTES_TRAIT(isalpha,DeeBytes_IsAlpha,UNICODE_FALPHA)
-DEFINE_BYTES_TRAIT(isspace,DeeBytes_IsSpace,UNICODE_FSPACE)
-DEFINE_BYTES_TRAIT(islf,DeeBytes_IsLF,UNICODE_FLF)
-DEFINE_BYTES_TRAIT(islower,DeeBytes_IsLower,UNICODE_FLOWER)
-DEFINE_BYTES_TRAIT(isupper,DeeBytes_IsUpper,UNICODE_FUPPER)
-DEFINE_BYTES_TRAIT(iscntrl,DeeBytes_IsCntrl,UNICODE_FCNTRL)
-DEFINE_BYTES_TRAIT(isdigit,DeeBytes_IsDigit,UNICODE_FDIGIT)
-DEFINE_BYTES_TRAIT(isdecimal,DeeBytes_IsDecimal,UNICODE_FDECIMAL)
-DEFINE_BYTES_TRAIT(issymstrt,DeeBytes_IsSymStrt,UNICODE_FSYMSTRT)
-DEFINE_BYTES_TRAIT(issymcont,DeeBytes_IsSymStrt,UNICODE_FSYMCONT)
-DEFINE_BYTES_TRAIT(isalnum,DeeBytes_IsAlnum,UNICODE_FALPHA|UNICODE_FDIGIT)
-DEFINE_BYTES_TRAIT(isnumeric,DeeBytes_IsNumeric,UNICODE_FDECIMAL|UNICODE_FDIGIT)
-DEFINE_BYTES_TRAIT(istitle,DeeBytes_IsTitle,UNICODE_FTITLE)
-DEFINE_BYTES_TRAIT(issymbol,DeeBytes_IsSymbol,UNICODE_FSYMSTRT)
+DEFINE_BYTES_TRAIT(isprint,DeeBytes_IsPrint,DeeUni_Flags(ch) & UNICODE_FPRINT)
+DEFINE_BYTES_TRAIT(isalpha,DeeBytes_IsAlpha,DeeUni_Flags(ch) & UNICODE_FALPHA)
+DEFINE_BYTES_TRAIT(isspace,DeeBytes_IsSpace,DeeUni_Flags(ch) & UNICODE_FSPACE)
+DEFINE_BYTES_TRAIT(islf,DeeBytes_IsLF,DeeUni_Flags(ch) & UNICODE_FLF)
+DEFINE_BYTES_TRAIT(islower,DeeBytes_IsLower,DeeUni_Flags(ch) & UNICODE_FLOWER)
+DEFINE_BYTES_TRAIT(isupper,DeeBytes_IsUpper,DeeUni_Flags(ch) & UNICODE_FUPPER)
+DEFINE_BYTES_TRAIT(iscntrl,DeeBytes_IsCntrl,DeeUni_Flags(ch) & UNICODE_FCNTRL)
+DEFINE_BYTES_TRAIT(isdigit,DeeBytes_IsDigit,DeeUni_Flags(ch) & UNICODE_FDIGIT)
+DEFINE_BYTES_TRAIT(isdecimal,DeeBytes_IsDecimal,DeeUni_Flags(ch) & UNICODE_FDECIMAL)
+DEFINE_BYTES_TRAIT(issymstrt,DeeBytes_IsSymStrt,DeeUni_Flags(ch) & UNICODE_FSYMSTRT)
+DEFINE_BYTES_TRAIT(issymcont,DeeBytes_IsSymStrt,DeeUni_Flags(ch) & UNICODE_FSYMCONT)
+DEFINE_BYTES_TRAIT(isalnum,DeeBytes_IsAlnum,DeeUni_Flags(ch) & (UNICODE_FALPHA|UNICODE_FDIGIT))
+DEFINE_BYTES_TRAIT(isnumeric,DeeBytes_IsNumeric,(UNICODE_FDECIMAL|UNICODE_FDIGIT))
+DEFINE_BYTES_TRAIT(istitle,DeeBytes_IsTitle,DeeUni_Flags(ch) & UNICODE_FTITLE)
+DEFINE_BYTES_TRAIT(issymbol,DeeBytes_IsSymbol,DeeUni_Flags(ch) & UNICODE_FSYMSTRT)
+DEFINE_BYTES_TRAIT(isascii,DeeBytes_IsAscii,ch <= 0x7f)
 DEFINE_ANY_BYTES_TRAIT(isanyprint,DeeBytes_IsAnyPrint)
 DEFINE_ANY_BYTES_TRAIT(isanyalpha,DeeBytes_IsAnyAlpha)
 DEFINE_ANY_BYTES_TRAIT(isanyspace,DeeBytes_IsAnySpace)
@@ -772,6 +809,7 @@ DEFINE_ANY_BYTES_TRAIT(isanysymcont,DeeBytes_IsAnySymStrt)
 DEFINE_ANY_BYTES_TRAIT(isanyalnum,DeeBytes_IsAnyAlnum)
 DEFINE_ANY_BYTES_TRAIT(isanynumeric,DeeBytes_IsAnyNumeric)
 DEFINE_ANY_BYTES_TRAIT(isanytitle,DeeBytes_IsAnyTitle)
+DEFINE_ANY_BYTES_TRAIT(isanyascii,DeeBytes_IsAnyAscii)
 #undef DEFINE_ANY_BYTES_TRAIT
 #undef DEFINE_BYTES_TRAIT
 
@@ -3419,6 +3457,14 @@ INTERN struct type_method bytes_methods[] = {
           "(int start,int end)->bool\n"
           "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
           "is a valid symbol name") },
+    { "isascii", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isascii,
+      DOC("->bool\n"
+          "(int index)->bool\n"
+          "(int start,int end)->bool\n"
+          "@throw IndexError The given @index is larger than ${#this}\n"
+          "@throw IntegerOverflow The given @index is negative or too large\n"
+          "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start,end)} "
+          "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
 
     { "isanyprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanyprint,
       DOC("(int start=0,int end=-1)->bool\n"
@@ -3476,6 +3522,10 @@ INTERN struct type_method bytes_methods[] = {
       DOC("(int start=0,int end=-1)->bool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} has title-casing") },
+    { "isanyascii", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanyascii,
+      DOC("(int start=0,int end=-1)->bool\n"
+          "Returns :true if any character in ${this.substr(start,end)} are "
+          "ascii-characters, that is have an ordinal value ${<= 0x7f}") },
 
     /* Bytes conversion functions */
     { "lower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lower,
