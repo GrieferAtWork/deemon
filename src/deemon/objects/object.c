@@ -486,11 +486,6 @@ again:
 
 
 
-INTERN DREF DeeObject *DCALL
-noop_varcopy(DeeObject *__restrict self) {
- /* TODO: Replace with `DeeObject_NewRef()' everywhere. */
- return_reference_(self);
-}
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
  ASSERT_OBJECT(self);

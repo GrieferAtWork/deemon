@@ -1678,10 +1678,10 @@ err:
 PRIVATE struct type_math time_math = {
     /* .tp_int32  = */(int(DCALL *)(DeeObject *__restrict,int32_t *__restrict))&time_int32,
     /* .tp_int64  = */(int(DCALL *)(DeeObject *__restrict,int64_t *__restrict))&time_int64,
-    /* .tp_double = */(int(DCALL *)(DeeObject *__restrict,double *__restrict))NULL,
+    /* .tp_double = */NULL,
     /* .tp_int    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_int,
-    /* .tp_inv    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-    /* .tp_pos    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeObject_NewRef,
+    /* .tp_inv    = */NULL,
+    /* .tp_pos    = */&DeeObject_NewRef,
     /* .tp_neg    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_neg,
     /* .tp_add    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&time_add,
     /* .tp_sub    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&time_sub,

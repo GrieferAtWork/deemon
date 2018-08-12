@@ -1451,8 +1451,8 @@ PUBLIC DeeTypeObject DeeString_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */&string_new_empty,
-                /* .tp_copy_ctor = */&noop_varcopy,
-                /* .tp_deep_ctor = */&noop_varcopy,
+                /* .tp_copy_ctor = */&DeeObject_NewRef,
+                /* .tp_deep_ctor = */&DeeObject_NewRef,
                 /* .tp_any_ctor  = */&string_new
             }
         },

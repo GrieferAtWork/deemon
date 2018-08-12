@@ -598,7 +598,7 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */(DREF DeeObject *(DCALL *)(void))&roset_init,
-                /* .tp_copy_ctor = */&noop_varcopy,
+                /* .tp_copy_ctor = */&DeeObject_NewRef,
                 /* .tp_deep_ctor = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_deepcopy,
                 /* .tp_any_ctor  = */(DREF DeeObject *(DCALL *)(size_t,DeeObject **__restrict))&roset_ctor,
                 /* .tp_free      = */NULL

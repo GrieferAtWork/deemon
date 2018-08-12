@@ -800,7 +800,7 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */(DREF DeeObject *(DCALL *)(void))&rodict_ctor,
-                /* .tp_copy_ctor = */&noop_varcopy,
+                /* .tp_copy_ctor = */&DeeObject_NewRef,
                 /* .tp_deep_ctor = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_deepcopy,
                 /* .tp_any_ctor  = */(DREF DeeObject *(DCALL *)(size_t,DeeObject **__restrict))&rodict_init,
                 /* .tp_free      = */NULL

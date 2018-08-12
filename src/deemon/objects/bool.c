@@ -264,8 +264,8 @@ PUBLIC DeeTypeObject DeeBool_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */&bool_return_false,
-                /* .tp_copy_ctor = */&noop_varcopy,
-                /* .tp_deep_ctor = */&noop_varcopy,
+                /* .tp_copy_ctor = */&DeeObject_NewRef,
+                /* .tp_deep_ctor = */&DeeObject_NewRef,
                 /* .tp_any_ctor  = */&bool_new
             }
         },

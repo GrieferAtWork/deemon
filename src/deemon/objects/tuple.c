@@ -315,39 +315,60 @@ DeeTuple_NewVectorSymbolic(size_t objc, DeeObject *const *__restrict objv) {
 PUBLIC DREF DeeObject *DCALL
 DeeTuple_FromSequence(DeeObject *__restrict self) {
  DREF DeeObject *result;
+ size_t i,seq_length;
  ASSERT_OBJECT(self);
  /* Optimizations for specific types such as `tuple' and `list' */
  if (DeeTuple_CheckExact(self))
      return_reference_(self);
  if (DeeList_CheckExact(self)) {
   DREF DeeObject **src;
-  size_t i,list_size = ATOMIC_READ(DeeList_SIZE(self));
+  seq_length = ATOMIC_READ(DeeList_SIZE(self));
 list_size_changed:
-  result = DeeTuple_NewUninitialized(list_size);
-  if unlikely(!result) return NULL;
+  result = DeeTuple_NewUninitialized(seq_length);
+  if unlikely(!result) goto err;
   COMPILER_READ_BARRIER();
   DeeList_LockRead(self);
-  if unlikely(list_size != DeeList_SIZE(self)) {
-   list_size = DeeList_SIZE(self);
+  if unlikely(seq_length != DeeList_SIZE(self)) {
+   seq_length = DeeList_SIZE(self);
    DeeList_LockEndRead(self);
    DeeTuple_FreeUninitialized(result);
    goto list_size_changed;
   }
   src = DeeList_ELEM(self);
-  MEMCPY_PTR(DeeTuple_ELEM(result),src,list_size);
-  for (i = 0; i < list_size; ++i)
+  MEMCPY_PTR(DeeTuple_ELEM(result),src,seq_length);
+  for (i = 0; i < seq_length; ++i)
       Dee_Incref(src[i]);
   DeeList_LockEndRead(self);
-  return result;
+  goto done;
  }
- /* TODO: fast-sequence compatible. */
-
+ /* Optimization for fast-sequence compatible objects. */
+ seq_length = DeeFastSeq_GetSize(self);
+ if (seq_length != DEE_FASTSEQ_NOTFAST) {
+  DREF DeeObject *elem;
+  if (seq_length == 0)
+      return_empty_tuple;
+  result = DeeTuple_NewUninitialized(seq_length);
+  if unlikely(!result) goto err;
+  for (i = 0; i < seq_length; ++i) {
+   elem = DeeFastSeq_GetItem(self,i);
+   if unlikely(!elem) goto err_r;
+   DeeTuple_SET(result,i,elem); /* Inherit reference. */
+  }
+  goto done;
+ }
  /* Use general-purpose iterators to create a new tuple. */
  self = DeeObject_IterSelf(self);
- if unlikely(!self) return NULL;
+ if unlikely(!self) goto err;
  result = DeeTuple_FromIterator(self);
  Dee_Decref(self);
+done:
  return result;
+err_r:
+ while (i--)
+     Dee_Decref(DeeTuple_GET(result,i));
+ DeeTuple_FreeUninitialized(result);
+err:
+ return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
 DeeTuple_FromIterator(DeeObject *__restrict self) {
@@ -1500,8 +1521,8 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */&tuple_ctor,
-                /* .tp_copy_ctor = */&noop_varcopy,
-                /* .tp_deep_ctor = */&noop_varcopy,
+                /* .tp_copy_ctor = */&DeeObject_NewRef,
+                /* .tp_deep_ctor = */&DeeObject_NewRef,
                 /* .tp_any_ctor  = */&tuple_init,
 #if TUPLE_CACHE_MAXCOUNT
                 /* .tp_free      = */&tuple_tp_free,

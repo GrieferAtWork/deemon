@@ -337,13 +337,6 @@ DFUNDEF bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
                            DeeObject *__restrict self);
 
-#ifdef CONFIG_BUILDING_DEEMON
-/* Basically the same as `DeeObject_NewRef()', but
- * intended for tp_copy_ctor / tp_deep_ctor for
- * variable, immutable objects such as tuple or int. */
-INTDEF DREF DeeObject *DCALL noop_varcopy(DeeObject *__restrict self);
-#endif
-
 /* incref() + return `self' */
 DFUNDEF DREF DeeObject *DCALL DeeObject_NewRef(DeeObject *__restrict self);
 #if defined(CONFIG_NO_BADREFCNT_CHECKS) && !defined(CONFIG_TRACE_REFCHANGES)

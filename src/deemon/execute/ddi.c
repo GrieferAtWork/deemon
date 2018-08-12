@@ -624,8 +624,8 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */&ddi_ctor,
-                /* .tp_copy_ctor = */&noop_varcopy,
-                /* .tp_deep_ctor = */&noop_varcopy,
+                /* .tp_copy_ctor = */&DeeObject_NewRef,
+                /* .tp_deep_ctor = */&DeeObject_NewRef,
                 /* .tp_any_ctor  = */NULL,
                 /* .tp_free      = */NULL
             }

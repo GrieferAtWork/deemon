@@ -2196,8 +2196,8 @@ PUBLIC DeeTypeObject DeeInt_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */&int_return_zero,
-                /* .tp_copy_ctor = */&noop_varcopy, /* No need to actually copy. - Integers are immutable! */
-                /* .tp_deep_ctor = */&noop_varcopy,
+                /* .tp_copy_ctor = */&DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
+                /* .tp_deep_ctor = */&DeeObject_NewRef,
                 /* .tp_any_ctor  = */&int_new
             }
         },

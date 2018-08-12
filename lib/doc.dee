@@ -1076,7 +1076,7 @@ local operator_default_args = {
 	"getitem" : { "int index", "object" },
 	"delitem" : { "int index", "none" },
 	"setitem" : { "int index,object value", "none" },
-	"getrange" : { "int start,int end", "sequence" },
+	"getrange" : { "int start,int end", none },
 	"delrange" : { "int start,int end", "none" },
 	"setrange" : { "int start,int end,sequence value", "none" },
 	"getattr" : { "string name", "object" },

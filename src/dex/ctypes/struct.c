@@ -285,11 +285,6 @@ struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg
 }
 
 PRIVATE DREF DeeObject *DCALL
-noop_varcopy(DeeObject *__restrict self) {
- return_reference_(self);
-}
-
-PRIVATE DREF DeeObject *DCALL
 struct_type_isstruct(DeeStructTypeObject *__restrict UNUSED(self),
                      size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":isstruct"))
@@ -385,8 +380,8 @@ INTERN DeeTypeObject DeeStructType_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */(void *)&struct_type_new_empty,
-                /* .tp_copy_ctor = */(void *)&noop_varcopy,
-                /* .tp_deep_ctor = */(void *)&noop_varcopy,
+                /* .tp_copy_ctor = */(void *)&DeeObject_NewRef,
+                /* .tp_deep_ctor = */(void *)&DeeObject_NewRef,
                 /* .tp_any_ctor  = */(void *)&struct_type_init,
                 /* .tp_free      = */NULL
             }

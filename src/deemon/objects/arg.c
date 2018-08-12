@@ -536,7 +536,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */(DREF DeeObject *(DCALL *)(void))&kwds_ctor,
-                /* .tp_copy_ctor = */&noop_varcopy,
+                /* .tp_copy_ctor = */&DeeObject_NewRef,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(DREF DeeObject *(DCALL *)(size_t,DeeObject **__restrict))&kwds_init,
                 /* .tp_free      = */NULL
