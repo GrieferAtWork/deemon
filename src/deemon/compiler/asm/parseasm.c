@@ -728,7 +728,7 @@ do_parse_module_operands(void) {
  if (tok == '@') {
   DREF DeeModuleObject *mod;
   if unlikely(yield() < 0) goto err;
-  mod = parse_module_byname();
+  mod = parse_module_byname(true);
   if unlikely(!mod) goto err;
   /* Add the module to the assembler's import list. */
   result = asm_newmodule(mod);
@@ -748,7 +748,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
  /* Parse a module by name. */
  if (tok == '@') {
   if unlikely(yield() < 0) goto err;
-  module = parse_module_byname();
+  module = parse_module_byname(true);
   if unlikely(!module) goto err;
   /* Add the module to the assembler's import list. */
   temp = asm_newmodule(module);
@@ -777,7 +777,8 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
   if unlikely(!symbol_name) goto err_module;
   modsym = import_module_symbol(module,symbol_name);
   if unlikely(!modsym) {
-   if (WARN(W_MODULE_IMPORT_NOT_FOUND,symbol_name,
+   if (WARN(W_MODULE_IMPORT_NOT_FOUND,
+            symbol_name->k_name,
             DeeString_STR(module->mo_name)))
        goto err_module;
    *pgid = 0;

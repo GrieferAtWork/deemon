@@ -139,7 +139,8 @@ import_module_symbol(DeeModuleObject *__restrict module,
  * @return:  0: OK
  * @return: -1: Error */
 PRIVATE int DCALL
-ast_parse_module_name(struct unicode_printer *__restrict printer) {
+ast_parse_module_name(struct unicode_printer *__restrict printer,
+                      bool for_alias) {
  int result = 0;
  for (;;) {
   if (TOK_ISDOT(tok)) {
@@ -153,8 +154,13 @@ ast_parse_module_name(struct unicode_printer *__restrict printer) {
        !TOK_ISDOT(tok)))
        break; /* Special case: `.' is a valid name for the current module. */
   } else if (TPP_ISKEYWORD(tok)) {
-   /* TODO: Warn about reserved identifiers
-    *    -> Reserved identifiers should be written as strings. */
+   /* Warn about reserved identifiers.
+    * -> Reserved identifiers should be written as strings. */
+   if (is_reserved_symbol_name(token.t_kwd) &&
+       WARN(for_alias ? W_RESERVED_IDENTIFIER_IN_MODULE_NAME
+                      : W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS,
+            token.t_kwd))
+       goto err;
    if (unicode_printer_print(printer,
                              token.t_kwd->k_name,
                              token.t_kwd->k_size) < 0)
@@ -181,11 +187,17 @@ err:
 }
 
 PRIVATE int DCALL
-ast_parse_symbol_name(struct unicode_printer *__restrict printer) {
+ast_parse_symbol_name(struct unicode_printer *__restrict printer,
+                      bool for_alias) {
  int result = 0;
  if (TPP_ISKEYWORD(tok)) {
-  /* TODO: Warn about reserved identifiers
-   *    -> Reserved identifiers should be written as strings. */
+  /* Warn about reserved identifiers.
+   * -> Reserved identifiers should be written as string imports. */
+  if (is_reserved_symbol_name(token.t_kwd) &&
+      WARN(for_alias ? W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME
+                     : W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS,
+           token.t_kwd))
+      goto err;
   if (unicode_printer_print(printer,
                             token.t_kwd->k_name,
                             token.t_kwd->k_size) < 0)
@@ -209,12 +221,12 @@ err:
 }
 
 
-INTERN DREF DeeModuleObject *DCALL parse_module_byname(void) {
+INTERN DREF DeeModuleObject *DCALL parse_module_byname(bool for_alias) {
  DREF DeeModuleObject *result;
  DREF DeeStringObject *module_name;
  struct unicode_printer name = UNICODE_PRINTER_INIT;
  struct ast_loc loc; loc_here(&loc);
- if unlikely(ast_parse_module_name(&name) < 0)
+ if unlikely(ast_parse_module_name(&name,for_alias) < 0)
     goto err_printer;
  module_name = (DREF DeeStringObject *)unicode_printer_pack(&name);
  if unlikely(!module_name) goto err;
@@ -233,7 +245,7 @@ ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
  struct symbol *extern_symbol;
  struct module_symbol *modsym;
  /* Parse the name of the module from which to import a symbol. */
- module = parse_module_byname();
+ module = parse_module_byname(true);
  if unlikely(!module) goto err;
  /* We've got the module. - Now just create an anonymous symbol. */
  extern_symbol = new_unnamed_symbol();
@@ -241,7 +253,8 @@ ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
  /* Lookup the symbol which we're importing. */
  modsym = import_module_symbol(module,import_name);
  if unlikely(!modsym) {
-  if (WARN(W_MODULE_IMPORT_NOT_FOUND,import_name,
+  if (WARN(W_MODULE_IMPORT_NOT_FOUND,
+           import_name->k_name,
            DeeString_STR(module->mo_name)))
       goto err_module;
   if (module == current_rootscope->rs_module) {
@@ -333,24 +346,28 @@ parse_import_symbol(struct import_item *__restrict result,
    * - `foo.bar'
    * - `foo.bar as foobar' */
   result->ii_symbol_name = token.t_kwd;
-  /* TODO: Warn about reserved identifiers
-   *    -> Reserved identifiers should be written as strings. */
   if unlikely(yield() < 0) goto err;
   if (tok == '=') {
    /* - `foo = bar'
     * - `foo = .foo.bar'
     * - `foo = "bar"' */
+   if (is_reserved_symbol_name(result->ii_symbol_name) &&
+       WARNAT(&result->ii_import_loc,W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,result->ii_symbol_name))
+       goto err;
    if unlikely(yield() < 0) goto err;
    unicode_printer_init(&printer);
    loc_here(&result->ii_import_loc);
    return_value = allow_module_name
-                ? ast_parse_module_name(&printer)
-                : ast_parse_symbol_name(&printer)
+                ? ast_parse_module_name(&printer,true)
+                : ast_parse_symbol_name(&printer,true)
                 ;
    if unlikely(return_value < 0) goto err_printer;
    result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
    if unlikely(!result->ii_import_name) goto err;
   } else if (tok == KWD_as) {
+   if (is_reserved_symbol_name(result->ii_symbol_name) &&
+       WARNAT(&result->ii_import_loc,W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME,result->ii_symbol_name))
+       goto err;
    if unlikely(yield() < 0) goto err;
    /* - `foo as bar' */
    if (TPP_ISKEYWORD(tok)) {
@@ -359,6 +376,9 @@ parse_import_symbol(struct import_item *__restrict result,
                                                                        STRING_ERROR_FSTRICT);
     if unlikely(!result->ii_import_name) goto err;
     result->ii_symbol_name = token.t_kwd;
+    if (is_reserved_symbol_name(token.t_kwd) &&
+        WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,token.t_kwd))
+        goto err;
     if unlikely(yield() < 0) goto err;
    } else {
     if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
@@ -368,6 +388,9 @@ parse_import_symbol(struct import_item *__restrict result,
   } else if (TOK_ISDOT(tok) && allow_module_name) {
    /* - `foo.bar'
     * - `foo.bar as foobar' */
+   if (is_reserved_symbol_name(result->ii_symbol_name) &&
+       WARNAT(&result->ii_import_loc,W_RESERVED_IDENTIFIER_IN_MODULE_NAME,result->ii_symbol_name))
+       goto err;
    unicode_printer_init(&printer);
    if unlikely(unicode_printer_print(&printer,
                                       result->ii_symbol_name->k_name,
@@ -375,6 +398,12 @@ parse_import_symbol(struct import_item *__restrict result,
       goto err_printer;
    goto complete_module_name;
   } else {
+   if (is_reserved_symbol_name(result->ii_symbol_name) &&
+       WARNAT(&result->ii_import_loc,
+               allow_module_name ? W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME
+                                 : W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME,
+               result->ii_symbol_name))
+       goto err;
    result->ii_import_name = NULL;
   }
  } else if (TOK_ISDOT(tok) && allow_module_name) {
@@ -390,7 +419,7 @@ complete_module_name:
   /* Make sure to properly parse `import . as me' */
   if ((TPP_ISKEYWORD(tok) && tok != KWD_as) || tok == TOK_STRING ||
       (UNICODE_PRINTER_LENGTH(&printer) != 1)) {
-   if unlikely(ast_parse_module_name(&printer) < 0)
+   if unlikely(ast_parse_module_name(&printer,true) < 0)
       goto err_printer;
   }
   result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
@@ -403,8 +432,11 @@ complete_module_name:
         goto err_name;
     goto autogenerate_symbol_name;
    }
-   /* TODO: Warn about reserved identifiers */
    result->ii_symbol_name = token.t_kwd;
+   /* Warn about reserved identifiers */
+   if (is_reserved_symbol_name(token.t_kwd) &&
+       WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,token.t_kwd))
+       goto err_name;
    if unlikely(yield() < 0) goto err_name;
   } else {
    /* - `.foo.bar' */
@@ -413,7 +445,13 @@ autogenerate_symbol_name:
    result->ii_symbol_name = get_module_symbol_name(result->ii_import_name,
                                                    return_value != 0);
    if unlikely(!result->ii_symbol_name) goto err_name;
-   /* TODO: Warn about reserved identifiers */
+   /* Warn about the auto-generated name being a reserved identifiers */
+   if (is_reserved_symbol_name(result->ii_symbol_name) &&
+       WARNAT(&result->ii_import_loc,
+               allow_module_name ? W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME
+                                 : W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME,
+               result->ii_symbol_name))
+       goto err_name;
   }
  } else if (tok == TOK_STRING) {
   /* - `"foo"'
@@ -422,8 +460,8 @@ autogenerate_symbol_name:
    * - `"foo.bar" as foobar' */
   unicode_printer_init(&printer);
   return_value = allow_module_name
-               ? ast_parse_module_name(&printer)
-               : ast_parse_symbol_name(&printer)
+               ? ast_parse_module_name(&printer,true)
+               : ast_parse_symbol_name(&printer,true)
                ;
   if unlikely(return_value < 0) goto err_printer;
   result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
@@ -438,7 +476,10 @@ autogenerate_symbol_name:
    goto autogenerate_symbol_name;
   }
   result->ii_symbol_name = token.t_kwd;
-  /* TODO: Warn about reserved identifiers */
+  /* Warn about reserved identifiers in alias names. */
+  if (is_reserved_symbol_name(token.t_kwd) &&
+      WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,token.t_kwd))
+      goto err_name;
   if unlikely(yield() < 0) goto err_name;
  } else {
   if (WARN(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))
@@ -666,7 +707,7 @@ INTERN int FCALL ast_parse_post_import(void) {
   if unlikely(yield() < 0) goto err;
   if (tok == KWD_from) {
    if unlikely(yield() < 0) goto err;
-   module = parse_module_byname();
+   module = parse_module_byname(true);
    if unlikely(!module) goto err;
    error = ast_import_all_from_module(module,&star_loc);
    Dee_Decref(module);
@@ -705,7 +746,7 @@ parse_module_import_list:
  } else if (tok == KWD_from) {
   /*  - `import foo from bar' */
   if unlikely(yield() < 0) goto err_item;
-  module = parse_module_byname();
+  module = parse_module_byname(true);
   if unlikely(!module) goto err_item;
   error = ast_import_single_from_module(module,&item);
   Dee_XDecref(item.ii_import_name);
@@ -782,7 +823,7 @@ import_parse_list:
    size_t i;
    /* import foo, bar, foobar from foobarfoo;  (symbol import) */
    if unlikely(yield() < 0) goto err_item_v;
-   module = parse_module_byname();
+   module = parse_module_byname(true);
    if unlikely(!module) goto err_item_v;
    /* If `*' was apart of the symbol import list,
     * start by importing all symbols from the module. */
@@ -868,7 +909,6 @@ err:
 INTERN DREF DeeAstObject *FCALL ast_parse_import(void) {
  DREF DeeModuleObject *module;
  DREF DeeAstObject *result;
- struct unicode_printer printer;
  struct ast_loc import_loc;
  /* There are many valid ways of writing import statements:
   *  - import("deemon");
@@ -954,18 +994,11 @@ INTERN DREF DeeAstObject *FCALL ast_parse_import(void) {
    * - from deemon import object as my_object;
    * - from deemon import "object" as my_object;
    * - from deemon import object as my_object, list as my_list; */
-  DREF DeeStringObject *module_name;
   bool did_import_all = false;
   result = ast_setddi(ast_constexpr(Dee_None),&import_loc);
   if unlikely(!result) goto err;
   if unlikely(yield() < 0) goto err_r;
-  unicode_printer_init(&printer);
-  loc_here(&import_loc);
-  if unlikely(ast_parse_module_name(&printer)) goto err_r_printer;
-  module_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
-  if unlikely(!module_name) goto err_r;
-  module = import_module_by_name(module_name,&import_loc);
-  Dee_Decref(module_name);
+  module = parse_module_byname(true);
   if unlikely(!module) goto err_r;
   /* All right! we've got the module. */
   if unlikely(likely(tok == KWD_import) ? (yield() < 0) :
@@ -1035,9 +1068,6 @@ done:
  return result;
 err_r_module:
  Dee_Decref(module);
- goto err_r;
-err_r_printer:
- unicode_printer_fini(&printer);
 err_r:
  Dee_Decref(result);
 err:

@@ -427,8 +427,11 @@ INTERN DREF DeeAstObject *FCALL ast_parse_import_hybrid(unsigned int *pwas_expre
 
 
 struct module_object;
-/* Parse a module name and return the associated module object. */
-INTDEF DREF struct module_object *DCALL parse_module_byname(void);
+/* Parse a module name and return the associated module object.
+ * @param: for_alias: Should be `true' if the name is used in `foo = <name>',
+ *                    or if no alias can be used where the name appears,
+ *                    else `false' */
+INTDEF DREF struct module_object *DCALL parse_module_byname(bool for_alias);
 INTDEF struct module_symbol *DCALL
 import_module_symbol(struct module_object *__restrict module,
                      struct TPPKeyword *__restrict name);
