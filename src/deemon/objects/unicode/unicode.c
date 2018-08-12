@@ -2685,11 +2685,20 @@ PUBLIC bool DCALL
 unicode_printer_allocate(struct unicode_printer *__restrict self,
                          size_t num_chars, unsigned int width) {
  ASSERT(!(width & ~UNICODE_PRINTER_FWIDTH));
+ if unlikely(!num_chars) goto done;
  if (!self->up_buffer) {
   /* Allocate an initial buffer. */
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
-  self->up_length = num_chars;
-  self->up_flags  = (unsigned char)width;
+  if likely(!self->up_length) {
+   self->up_length = num_chars;
+   self->up_flags |= (unsigned char)width;
+  } else {
+   width = (unsigned int)STRING_WIDTH_COMMON((unsigned int)(self->up_flags & UNICODE_PRINTER_FWIDTH),
+                                              width);
+   self->up_length += num_chars;
+   self->up_flags  &= ~UNICODE_PRINTER_FWIDTH;
+   self->up_flags  |= width;
+  }
 #else
   ASSERT(!self->up_length);
   self->up_buffer = DeeString_TryNewWidthBuffer(num_chars,width);
@@ -2780,6 +2789,7 @@ unicode_printer_allocate(struct unicode_printer *__restrict self,
    }
   }
  }
+done:
  return true;
 err:
  return false;
