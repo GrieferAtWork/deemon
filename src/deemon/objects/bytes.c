@@ -1350,9 +1350,197 @@ bytes_fromseq(DeeTypeObject *__restrict UNUSED(self),
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
  if (DeeArg_Unpack(argc,argv,"o:fromseq",&seq))
-     return NULL;
+     goto err;
  return (DREF Bytes *)DeeBytes_FromSequence(seq);
+err:
+ return NULL;
 }
+
+PRIVATE DREF Bytes *DCALL
+bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
+              size_t argc, DeeObject **__restrict argv) {
+ DeeObject *hex_str; DREF Bytes *result; uint8_t *dst;
+ union dcharptr iter,end; size_t length;
+ if (DeeArg_Unpack(argc,argv,"o:fromhex",&hex_str) ||
+     DeeObject_AssertTypeExact(hex_str,&DeeString_Type))
+     goto err;
+ SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(hex_str)) {
+ CASE_WIDTH_1BYTE:
+  iter.cp8 = DeeString_Get1Byte(hex_str);
+  length   = WSTR_LENGTH(iter.cp8);
+  result   = (DREF Bytes *)DeeBytes_NewBufferUninitialized(length / 2);
+  if unlikely(!result) goto err;
+  dst     = DeeBytes_DATA(result);
+  end.cp8 = iter.cp8 + length;
+  for (;;) {
+   uint8_t byte_value;
+   uint8_t ch;
+   for (;;) {
+    if (iter.cp8 == end.cp8) goto done;
+    if (!DeeUni_IsSpace(iter.cp8[0])) break;
+    ++iter.cp8;
+   }
+   ch = *iter.cp8++;
+   if (ch >= '0' && ch <= '9') {
+    byte_value = (uint8_t)(ch - '0');
+   } else if (ch >= 'a' && ch <= 'f') {
+    byte_value = (uint8_t)(10 + (ch - 'a'));
+   } else if (ch >= 'A' && ch <= 'F') {
+    byte_value = (uint8_t)(10 + (ch - 'A'));
+   } else {
+    struct unitraits *trt;
+    trt = DeeUni_Descriptor(ch);
+    if (!(trt->ut_flags & UNICODE_FDIGIT))
+          goto err_invalid;
+    byte_value = trt->ut_digit;
+   }
+   if (iter.cp8 == end.cp8)
+       goto err_unbalanced;
+   ch = *iter.cp8++;
+   byte_value <<= 4;
+   if (ch >= '0' && ch <= '9') {
+    byte_value |= (uint8_t)(ch - '0');
+   } else if (ch >= 'a' && ch <= 'f') {
+    byte_value |= (uint8_t)(10 + (ch - 'a'));
+   } else if (ch >= 'A' && ch <= 'F') {
+    byte_value |= (uint8_t)(10 + (ch - 'A'));
+   } else {
+    struct unitraits *trt;
+    trt = DeeUni_Descriptor(ch);
+    if (!(trt->ut_flags & UNICODE_FDIGIT))
+          goto err_invalid;
+    byte_value |= trt->ut_digit;
+   }
+   ASSERT(dst < DeeBytes_TERM(result));
+   *dst++ = byte_value;
+  }
+  break;
+ CASE_WIDTH_2BYTE:
+  iter.cp16 = DeeString_Get2Byte(hex_str);
+  length    = WSTR_LENGTH(iter.cp16);
+  result    = (DREF Bytes *)DeeBytes_NewBufferUninitialized(length / 2);
+  if unlikely(!result) goto err;
+  dst       = DeeBytes_DATA(result);
+  end.cp16  = iter.cp16 + length;
+  for (;;) {
+   uint8_t byte_value;
+   uint16_t ch;
+   for (;;) {
+    if (iter.cp16 == end.cp16) goto done;
+    if (!DeeUni_IsSpace(iter.cp16[0])) break;
+    ++iter.cp16;
+   }
+   ch = *iter.cp16++;
+   if (ch >= '0' && ch <= '9') {
+    byte_value = (uint8_t)(ch - '0');
+   } else if (ch >= 'a' && ch <= 'f') {
+    byte_value = (uint8_t)(10 + (ch - 'a'));
+   } else if (ch >= 'A' && ch <= 'F') {
+    byte_value = (uint8_t)(10 + (ch - 'A'));
+   } else {
+    struct unitraits *trt;
+    trt = DeeUni_Descriptor(ch);
+    if (!(trt->ut_flags & UNICODE_FDIGIT))
+          goto err_invalid;
+    byte_value = trt->ut_digit;
+   }
+   if (iter.cp16 == end.cp16)
+       goto err_unbalanced;
+   ch = *iter.cp16++;
+   byte_value <<= 4;
+   if (ch >= '0' && ch <= '9') {
+    byte_value |= (uint8_t)(ch - '0');
+   } else if (ch >= 'a' && ch <= 'f') {
+    byte_value |= (uint8_t)(10 + (ch - 'a'));
+   } else if (ch >= 'A' && ch <= 'F') {
+    byte_value |= (uint8_t)(10 + (ch - 'A'));
+   } else {
+    struct unitraits *trt;
+    trt = DeeUni_Descriptor(ch);
+    if (!(trt->ut_flags & UNICODE_FDIGIT))
+          goto err_invalid;
+    byte_value |= trt->ut_digit;
+   }
+   ASSERT(dst < DeeBytes_TERM(result));
+   *dst++ = byte_value;
+  }
+  break;
+ CASE_WIDTH_4BYTE:
+  iter.cp32 = DeeString_Get4Byte(hex_str);
+  length    = WSTR_LENGTH(iter.cp32);
+  result    = (DREF Bytes *)DeeBytes_NewBufferUninitialized(length / 2);
+  if unlikely(!result) goto err;
+  dst       = DeeBytes_DATA(result);
+  end.cp32  = iter.cp32 + length;
+  for (;;) {
+   uint8_t byte_value;
+   uint32_t ch;
+   for (;;) {
+    if (iter.cp32 == end.cp32) goto done;
+    if (!DeeUni_IsSpace(iter.cp32[0])) break;
+    ++iter.cp32;
+   }
+   ch = *iter.cp32++;
+   if (ch >= '0' && ch <= '9') {
+    byte_value = (uint8_t)(ch - '0');
+   } else if (ch >= 'a' && ch <= 'f') {
+    byte_value = (uint8_t)(10 + (ch - 'a'));
+   } else if (ch >= 'A' && ch <= 'F') {
+    byte_value = (uint8_t)(10 + (ch - 'A'));
+   } else {
+    struct unitraits *trt;
+    trt = DeeUni_Descriptor(ch);
+    if (!(trt->ut_flags & UNICODE_FDIGIT))
+          goto err_invalid;
+    byte_value = trt->ut_digit;
+   }
+   if (iter.cp32 == end.cp32)
+       goto err_unbalanced;
+   ch = *iter.cp32++;
+   byte_value <<= 4;
+   if (ch >= '0' && ch <= '9') {
+    byte_value |= (uint8_t)(ch - '0');
+   } else if (ch >= 'a' && ch <= 'f') {
+    byte_value |= (uint8_t)(10 + (ch - 'a'));
+   } else if (ch >= 'A' && ch <= 'F') {
+    byte_value |= (uint8_t)(10 + (ch - 'A'));
+   } else {
+    struct unitraits *trt;
+    trt = DeeUni_Descriptor(ch);
+    if (!(trt->ut_flags & UNICODE_FDIGIT))
+          goto err_invalid;
+    byte_value |= trt->ut_digit;
+   }
+   ASSERT(dst < DeeBytes_TERM(result));
+   *dst++ = byte_value;
+  }
+  break;
+ }
+done:
+ {
+  size_t used;
+  used = (size_t)(dst - DeeBytes_DATA(result));
+  ASSERT(used <= DeeBytes_SIZE(result));
+  if unlikely(used != DeeBytes_SIZE(result)) {
+   result = (DREF Bytes *)DeeBytes_TruncateBuffer((DeeObject *)result,
+                                                   used);
+  }
+ }
+ return result;
+err_invalid:
+ DeeError_Throwf(&DeeError_ValueError,
+                 "Non-hexadecimal character in %r",
+                 hex_str);
+ goto err;
+err_unbalanced:
+ DeeError_Throwf(&DeeError_ValueError,
+                 "Unbalanced hexadecimal character in %r",
+                 hex_str);
+err:
+ return NULL;
+}
+
+
 
 PRIVATE struct type_method bytes_class_methods[] = {
     { "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_fromseq,
@@ -1364,6 +1552,18 @@ PRIVATE struct type_method bytes_class_methods[] = {
           "Convert the items of the given sequence @seq into integers, "
           "and construct a writable bytes object from their values\n"
           "Passing :none for @seq will return an empty bytes object") },
+    { "fromhex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_fromhex,
+      DOC("(string hex_string)->bytes\n"
+          "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
+          "@throw ValueError The given @hex_string contains an unbalanced hexadecimal digit\n"
+          "Decode a given string containing only digit characters, characters between $\"a\" and $\"f\" "
+          "or $\"A\" and $\"F\", or optional space characters seperating pairs of such characters.\n"
+          "Each pair of hexadecimal digits is then interpreted as a byte that is then used to construct "
+          "the resulting bytes object.\n"
+          "Note that this function is called also called by the $\"hex\" codec, meaning that ${string.decode(\"hex\")} "
+          "is the same as calling this functions, while ${bytes.encode(\"hex\")} is the same as calling #hex\n"
+          ">local data = \"DE AD BE EF\".decode(\"hex\");\n"
+          ">print repr data; /* TODO: repr-comment */") },
     { NULL }
 };
 
