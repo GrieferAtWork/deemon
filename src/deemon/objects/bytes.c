@@ -1562,8 +1562,8 @@ PRIVATE struct type_method bytes_class_methods[] = {
           "the resulting bytes object.\n"
           "Note that this function is called also called by the $\"hex\" codec, meaning that ${string.decode(\"hex\")} "
           "is the same as calling this functions, while ${bytes.encode(\"hex\")} is the same as calling #hex\n"
-          ">local data = \"DE AD BE EF\".decode(\"hex\");\n"
-          ">print repr data; /* TODO: repr-comment */") },
+          ">local data = \"DEAD BEEF\".decode(\"hex\");\n"
+          ">print repr data; /* \"\\xDE\\xAD\\xBE\\xEF\".bytes() */") },
     { NULL }
 };
 

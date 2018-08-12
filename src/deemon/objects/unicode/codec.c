@@ -48,6 +48,7 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
  iter = str = DeeString_STR(name);
  end  = iter + length;
  for (; iter < end; ++iter) {
+  /* TODO: Use case folding to normalize codec names! */
   if (*iter == '_' || DeeUni_IsUpper(*iter)) {
    char *dst;
    result = DeeString_NewBuffer(length);
@@ -677,9 +678,9 @@ PRIVATE DREF DeeObject *DCALL libcodecs_get(void) {
    libcodecs = result;
   }
   rwlock_endwrite(&libcodecs_lock);
+  if unlikely(DeeModule_RunInit(result) < 0)
+     Dee_Clear(result);
  }
- if unlikely(DeeModule_RunInit(result) < 0)
-    Dee_Clear(result);
  return result;
 }
 

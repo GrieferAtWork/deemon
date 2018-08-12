@@ -17,12 +17,17 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+import bytes from deemon;
+
+
 @"->string"
 function encode(x,errors = none) {
-	return x.bytes().hex();
+	if (x is bytes)
+		return x.hex();
+	return bytes(x).hex();
 }
+
 @"->bytes"
 function decode(x,errors = none) {
-	import bytes from deemon;
 	return bytes.fromhex(str x);
 }

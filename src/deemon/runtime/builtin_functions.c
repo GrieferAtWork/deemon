@@ -91,8 +91,8 @@ f_builtin_import(size_t argc, DeeObject **__restrict argv) {
      DeeObject_AssertTypeExact(module_name,&DeeString_Type))
      return NULL;
  result = DeeModule_Import(module_name,NULL,true);
- if unlikely(result && DeeModule_RunInit(result) < 0)
-    Dee_Clear(result);
+ if (likely(result) && unlikely(DeeModule_RunInit(result) < 0))
+     Dee_Clear(result);
  return result;
 }
 INTERN DEFINE_CMETHOD(builtin_import,&f_builtin_import);

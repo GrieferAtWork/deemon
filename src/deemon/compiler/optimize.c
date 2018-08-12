@@ -1807,8 +1807,9 @@ again:
      (sym->sym_extern.sym_modsym->ss_flags & MODSYM_FCONSTEXPR)) {
    /* The symbol is allowed to be expanded at compile-time. */
    DREF DeeObject *symval; int error;
-   DeeModuleObject *symmod = sym->sym_extern.sym_module;
-   error = DeeModule_RunInit((DeeObject *)symmod);
+   DeeModuleObject *symmod;
+   symmod = sym->sym_extern.sym_module;
+   error  = DeeModule_RunInit((DeeObject *)symmod);
    if unlikely(error < 0) goto err;
    if (error == 0) {
     /* The module is not initialized. */

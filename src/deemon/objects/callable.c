@@ -34,7 +34,8 @@ INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 PUBLIC DeeTypeObject DeeCallable_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_callable),
-    /* .tp_doc      = */DOC("Base class for callable types such as :function, :instancemethod, :objmethod, etc."),
+    /* .tp_doc      = */DOC("Base class for callable types such as :function or :instancemethod, "
+                            "as well as any implementation-specific, wrapper object type"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

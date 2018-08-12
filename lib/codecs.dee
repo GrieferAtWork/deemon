@@ -21,6 +21,11 @@ import dict, Error from deemon;
 
 local codec_cache = dict();
 
+/* TODO: Now that the way codecs are handled has settled down,
+ *       re-write this module to best fit the finalized API.
+ * For example: The deemon core is responsible for normalizing
+ *              codec names, instead of that being our job! */
+
 
 @"registercodec(string codec_name, callable decode_callback, callable encode_callback = none) -> none"
 @"Register a codec @codec_name to be implemented by @callback"
@@ -60,7 +65,7 @@ local function load_codec(codec_name) {
 	try {
 		local fixed_name = codec_name.replace("-","").lower();
 		local module_name = "._codecs.{}".format({ fixed_name });
-		decoder = import(module_name);
+		local module = import(module_name);
 		try {
 			/* String codecs can be implemented by one of 2 ways:
 			 *  #1: global codec_page = <string-of-256-characters>
@@ -69,7 +74,7 @@ local function load_codec(codec_name) {
 			 * the `_codecs' folder within the same directory as this file.
 			 * The filename of the codec module defines the name of the codec.
 			 */
-			local cpage = decoder.codec_page;
+			local cpage = module.codec_page;
 			if (cpage !is string from deemon || #cpage != 256) {
 				throw Error.ValueError(
 					"Invalid `codec_page' exported by {}".
@@ -88,11 +93,11 @@ local function load_codec(codec_name) {
 				return writer.string.decode("utf-8",errors);
 			};
 		} catch (Error.AttributeError) {
-			decoder = decoder.decode;
-			try encoder = decoder.encode;
+			decoder = module.decode;
+			try encoder = module.encode;
 			catch (Error.AttributeError);
 		}
-	} catch (Error.FSError.FileNotFound) {
+	} catch (Error.SystemError.FSError.FileNotFound) {
 		throw Error.ValueError("Unknown codec {}".format({ codec_name }));
 	}
 	return (decoder,encoder);
