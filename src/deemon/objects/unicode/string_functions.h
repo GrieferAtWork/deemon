@@ -258,13 +258,13 @@ LOCAL uint32_t *dee_memrmeml(uint32_t const *__restrict haystack, size_t haystac
 #define DEFINE_FOLD_COMPARE(name,T) \
 PRIVATE size_t DCALL \
 name(T const *__restrict data, size_t datalen, \
-     T fold[UNICODE_FOLDED_MAX], size_t fold_len);
+     uint32_t fold[UNICODE_FOLDED_MAX], size_t fold_len);
 #else
 #define DEFINE_FOLD_COMPARE(name,T) \
 PRIVATE size_t DCALL \
 name(T const *__restrict data, size_t datalen, \
-     T fold[UNICODE_FOLDED_MAX], size_t fold_len) { \
- T buf[UNICODE_FOLDED_MAX]; \
+     uint32_t fold[UNICODE_FOLDED_MAX], size_t fold_len) { \
+ uint32_t buf[UNICODE_FOLDED_MAX]; \
  size_t buflen; \
  ASSERT(datalen >= 1); \
  buflen = DeeUni_ToFolded(data[0],buf); \
@@ -384,7 +384,7 @@ DEFINE_FOLD_COMPARE(dee_foldcmpl,uint32_t)
 LOCAL T *DCALL \
 name(T const *__restrict haystack, \
      T needle, size_t haystack_length) { \
- T fold[UNICODE_FOLDED_MAX]; \
+ uint32_t fold[UNICODE_FOLDED_MAX]; \
  size_t len = DeeUni_ToFolded(needle,fold); \
  for (; haystack_length; ++haystack,--haystack_length) { \
   if (dee_foldcmp(haystack,haystack_length,fold,len)) \
@@ -396,7 +396,7 @@ LOCAL T *DCALL \
 rname(T const *__restrict haystack, \
       T needle, size_t haystack_length) { \
  T *iter = (T *)haystack+haystack_length; \
- T fold[UNICODE_FOLDED_MAX]; \
+ uint32_t fold[UNICODE_FOLDED_MAX]; \
  size_t len = DeeUni_ToFolded(needle,fold); \
  size_t datalen = 0; \
  while (iter-- != (T *)haystack) { \
@@ -415,11 +415,11 @@ DEFINE_MEMCASECHR(dee_memcasechrl,dee_memcaserchrl,uint32_t,dee_foldcmpl)
 struct name { \
     T const *uf_dataptr; \
     size_t   uf_datalen; \
-    T        uf_buf[UNICODE_FOLDED_MAX]; \
+    uint32_t uf_buf[UNICODE_FOLDED_MAX]; \
     uint8_t  uf_len; \
     uint8_t  uf_idx; \
 }; \
-LOCAL T DCALL \
+LOCAL uint32_t DCALL \
 name##_getc(struct name *__restrict self) \
 { \
  if (self->uf_idx < self->uf_len) \
@@ -431,7 +431,7 @@ name##_getc(struct name *__restrict self) \
  --self->uf_datalen; \
  return self->uf_buf[0]; \
 } \
-LOCAL T DCALL \
+LOCAL uint32_t DCALL \
 name##_getc_back(struct name *__restrict self) \
 { \
  if (self->uf_idx < self->uf_len) \
@@ -450,11 +450,11 @@ DEFINE_UNICODE_FOLDREADER_API(unicode_foldreaderl,uint32_t)
 
 #ifdef __INTELLISENSE__
 extern "C++" {
-uint8_t unicode_foldreader_getc(struct unicode_foldreaderb &x);
-uint16_t unicode_foldreader_getc(struct unicode_foldreaderw &x);
+uint32_t unicode_foldreader_getc(struct unicode_foldreaderb &x);
+uint32_t unicode_foldreader_getc(struct unicode_foldreaderw &x);
 uint32_t unicode_foldreader_getc(struct unicode_foldreaderl &x);
-uint8_t unicode_foldreader_getc_back(struct unicode_foldreaderb &x);
-uint16_t unicode_foldreader_getc_back(struct unicode_foldreaderw &x);
+uint32_t unicode_foldreader_getc_back(struct unicode_foldreaderb &x);
+uint32_t unicode_foldreader_getc_back(struct unicode_foldreaderw &x);
 uint32_t unicode_foldreader_getc_back(struct unicode_foldreaderl &x);
 }
 #elif !defined(__NO_builtin_choose_expr)
@@ -812,7 +812,7 @@ name(T const *__restrict a, size_t alen, \
  for (i = 0; i < folded_blen; ++i) v0[i] = i; \
  unicode_foldreader_init(a_reader,a,alen); \
  for (i = 0; i < folded_alen; ++i) { \
-  T a_value = unicode_foldreader_getc(a_reader); \
+  uint32_t a_value = unicode_foldreader_getc(a_reader); \
   v1[0] = i+1; \
   unicode_foldreader_init(b_reader,b,blen); \
   for (j = 0; j < folded_blen; ++j) { \

@@ -51,7 +51,7 @@ size_t (DCALL DeeUni_FoldedLength)(uint32_t const *__restrict text, size_t lengt
 LOCAL size_t
 (DCALL _DeeUni_FoldedLength_b)(uint8_t *__restrict text, size_t length) {
  size_t i,result = 0;
- uint8_t buf[UNICODE_FOLDED_MAX];
+ uint32_t buf[UNICODE_FOLDED_MAX];
  for (i = 0; i < length; ++i)
      result += DeeUni_ToFolded(text[i],buf);
  return result;
@@ -59,7 +59,7 @@ LOCAL size_t
 LOCAL size_t
 (DCALL _DeeUni_FoldedLength_w)(uint16_t *__restrict text, size_t length) {
  size_t i,result = 0;
- uint16_t buf[UNICODE_FOLDED_MAX];
+ uint32_t buf[UNICODE_FOLDED_MAX];
  for (i = 0; i < length; ++i)
      result += DeeUni_ToFolded(text[i],buf);
  return result;

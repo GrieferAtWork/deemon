@@ -27,6 +27,9 @@ DECL_BEGIN
 #ifndef __INTELLISENSE__
 #include "unicode_db.h"
 
+#if UNICODE_FOLD_DESCRIPTORS >= 0xff
+#error "Too many unicode fold extension characters"
+#endif
 
 static struct unitraits const default_traits = { 0x0, 0, 0, 0, 0, 0 };
 PUBLIC struct unitraits *DCALL
@@ -35,44 +38,25 @@ DeeUni_Descriptor(uint32_t ch) {
     return (struct unitraits *)&UNICODE_DESCRIPTOR(ch);
  return (struct unitraits *)&default_traits;
 }
+PUBLIC ATTR_PURE size_t
+(DCALL DeeUni_ToFolded)(uint32_t ch,
+                        uint32_t buf[UNICODE_FOLDED_MAX]) {
+ struct unitraits *trt;
+ struct unifold *fold;
+ trt = DeeUni_Descriptor(ch);
+ if (trt->ut_fold == 0xff) {
+  buf[0] = DeeUni_ToLower(ch);
+  return 1;
+ }
+ fold = &fold_descriptors[trt->ut_fold];
+ buf[0] = fold->uf_repl[0];
+ if ((buf[1] = fold->uf_repl[1]) == 0)
+      return 1;
+ if ((buf[2] = fold->uf_repl[2]) == 0)
+      return 2;
+ return 3;
+}
 #endif
-
-PUBLIC ATTR_PURE size_t
-(DCALL DeeUni_ToFolded_b)(uint8_t ch,
-                          uint8_t buf[UNICODE_FOLDED_MAX]) {
- if (ch == 0xDF) {
-  buf[0] = 's';
-  buf[1] = 's';
-  return 2;
- }
- /* TODO */
- buf[0] = (uint8_t)DeeUni_ToLower(ch);
- return 1;
-}
-PUBLIC ATTR_PURE size_t
-(DCALL DeeUni_ToFolded_w)(uint16_t ch,
-                          uint16_t buf[UNICODE_FOLDED_MAX]) {
- if (ch == 0xDF) {
-  buf[0] = 's';
-  buf[1] = 's';
-  return 2;
- }
- /* TODO */
- buf[0] = (uint16_t)DeeUni_ToLower(ch);
- return 1;
-}
-PUBLIC ATTR_PURE size_t
-(DCALL DeeUni_ToFolded_l)(uint32_t ch,
-                          uint32_t buf[UNICODE_FOLDED_MAX]) {
- if (ch == 0xDF) {
-  buf[0] = 's';
-  buf[1] = 's';
-  return 2;
- }
- /* TODO */
- buf[0] = (uint32_t)DeeUni_ToLower(ch);
- return 1;
-}
 
 
 #define UNICODE_FPRINT   0x0001

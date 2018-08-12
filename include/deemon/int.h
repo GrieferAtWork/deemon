@@ -511,6 +511,9 @@ DFUNDEF DREF DeeObject *
 DFUNDEF DREF DeeObject *DCALL
 DeeInt_FromString(/*utf-8*/char const *__restrict str,
                   size_t len, uint32_t radix_and_flags);
+DFUNDEF DREF DeeObject *DCALL
+DeeInt_FromAscii(/*ascii*/char const *__restrict str,
+                 size_t len, uint32_t radix_and_flags);
 #define DEEINT_STRING(radix,flags) ((radix) << DEEINT_STRING_RSHIFT | (flags))
 #define DEEINT_STRING_RSHIFT   16
 #define DEEINT_STRING_FNORMAL  0x0000

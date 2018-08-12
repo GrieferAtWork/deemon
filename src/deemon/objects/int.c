@@ -804,6 +804,131 @@ invalid:
  return NULL;
 }
 
+PUBLIC DREF DeeObject *DCALL
+DeeInt_FromAscii(/*ascii*/char const *__restrict str,
+                 size_t len, uint32_t radix_and_flags) {
+ unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
+ bool negative = false; DREF DeeIntObject *result;
+ char *iter,*begin = (char *)str,*end = (char *)str+len;
+ digit *dst; twodigits number; uint8_t num_bits;
+ uint8_t bits_per_digit;
+ /* Parse a sign prefix. */
+ for (;; ++begin) {
+  if (begin == end) goto invalid;
+  if (*begin == '+') continue;
+  if (*begin == '-') { negative = !negative; continue; }
+  if (*begin == '\\' && (radix_and_flags&DEEINT_STRING_FESCAPED)) {
+   char begin_plus_one = begin[1];
+   if (DeeUni_IsLF(begin_plus_one)) {
+    begin += 2;
+    if (begin_plus_one == '\r' && begin[0] == '\n')
+        ++begin;
+    continue;
+   }
+  }
+  break;
+ }
+ if (!radix) {
+  /* Automatically determine the radix. */
+  char leading_zero = *begin;
+  if (DeeUni_IsDigitX(leading_zero,0)) {
+   ++begin;
+   if (begin == end) /* Special case: int(0) */
+       return_reference_((DeeObject *)&DeeInt_Zero);
+   while (*begin == '\\' && (radix_and_flags&DEEINT_STRING_FESCAPED)) {
+    char begin_plus_one = begin[1];
+    if (DeeUni_IsLF(begin_plus_one)) {
+     begin += 2;
+     if (begin_plus_one == '\r' && begin[0] == '\n')
+         ++begin;
+     continue;
+    }
+    break;
+   }
+   /* */if (*begin == 'x' || *begin == 'X') radix = 16,++begin;
+   else if (*begin == 'b' || *begin == 'B') radix = 2,++begin;
+   else radix = 8;
+  } else {
+   radix = 10;
+  }
+ }
+ if unlikely(begin == end)
+    goto invalid;
+ ASSERT(radix >= 2);
+ if ((radix&(radix-1)) != 0) {
+  result = int_from_nonbinary_string(begin,end,radix,radix_and_flags);
+  /* Check for errors. */
+  if unlikely(!ITER_ISOK(result)) {
+   if unlikely(result == (DREF DeeIntObject *)ITER_DONE)
+      goto invalid;
+   goto done;
+  }
+ } else {
+  bits_per_digit = 0; /* bits_per_digit = ceil(sqrt(radix)) */
+  while ((unsigned int)(1 << bits_per_digit) < radix) ++bits_per_digit;
+  { size_t num_digits = 1+((len*bits_per_digit)/DIGIT_BITS);
+    result = DeeInt_Alloc(num_digits);
+    if unlikely(!result) goto done;
+    memset(result->ob_digit,0,num_digits*sizeof(digit));
+  }
+  dst = result->ob_digit;
+  number = 0,num_bits = 0;
+  /* Parse the integer starting with the least significant bits. */
+  iter = end;
+  while (iter > begin) {
+   char ch; digit dig;
+   ch = *--iter;
+   /* */if (ch >= '0' && ch <= '9') dig = (digit)(ch - '0');
+   else if (ch >= 'a' && ch <= 'z') dig = 10 + (digit)(ch - 'a');
+   else if (ch >= 'A' && ch <= 'Z') dig = 10 + (digit)(ch - 'A');
+   else if (DeeUni_IsLF(ch) &&
+           (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+    if (iter == begin) goto invalid_r;
+    if (iter[-1] == '\\') { --iter; continue; }
+    if (iter[-1] == '\r' && ch == '\n' &&
+        iter-1 != begin && iter[-2] == '\\')
+    { iter -= 2; continue; }
+    goto invalid_r;
+   } else {
+    goto invalid_r;
+   }
+   /* Got the digit. */
+   if unlikely(dig >= radix)
+      goto invalid_r;
+   /* Add the digit to out number buffer. */
+   number   |= (twodigits)dig << num_bits;
+   num_bits += bits_per_digit;
+   while (num_bits >= DIGIT_BITS) {
+    *dst++    = (digit)(number & DIGIT_MASK);
+    number  >>= DIGIT_BITS;
+    num_bits -= DIGIT_BITS;
+   }
+  }
+  /* Append trailing bits. */
+  if (num_bits) {
+   ASSERT(num_bits < DIGIT_BITS);
+   *dst = (digit)number;
+  }
+  while (result->ob_size &&
+        !result->ob_digit[result->ob_size-1])
+       --result->ob_size;
+ }
+ /* Negate the integer if it was prefixed by `-' */
+ if (negative)
+     result->ob_size = -result->ob_size;
+done:
+ return (DREF DeeObject *)result;
+invalid_r:
+ Dee_DecrefDokill(result);
+invalid:
+ if (radix_and_flags&DEEINT_STRING_FTRY)
+     return ITER_DONE;
+ DeeError_Throwf(&DeeError_ValueError,
+                 "Invalid integer %$q",
+                 len,str);
+ return NULL;
+}
+
 PRIVATE dssize_t DCALL
 DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,
                     dformatprinter printer, void *arg) {
@@ -1540,14 +1665,25 @@ int_new(size_t argc, DeeObject **__restrict argv) {
  DeeObject *val; uint16_t radix = 0;
  if (DeeArg_Unpack(argc,argv,"o|I16u:int",&val,&radix))
      goto err;
- if (!DeeString_Check(val))
-      return DeeObject_Int(val);
- if unlikely(radix == 1) {
-  DeeError_Throwf(&DeeError_ValueError,"Invalid radix = 1");
+ if (DeeString_Check(val)) {
+  char *utf8 = DeeString_AsUtf8(val);
+  if unlikely(!utf8) goto err;
+  if unlikely(radix == 1) goto err_bad_radix;
+  return DeeInt_FromString(utf8,
+                           WSTR_LENGTH(utf8),
+                           DEEINT_STRING(radix,
+                                         DEEINT_STRING_FNORMAL));
  }
- /* TODO: String encodings? */
- return DeeInt_FromString(DeeString_STR(val),DeeString_SIZE(val),
-                          DEEINT_STRING(radix,DEEINT_STRING_FNORMAL));
+ if (DeeBytes_Check(val)) {
+  if unlikely(radix == 1) goto err_bad_radix;
+  return DeeInt_FromAscii((char *)DeeBytes_DATA(val),
+                           DeeBytes_SIZE(val),
+                           DEEINT_STRING(radix,
+                                         DEEINT_STRING_FNORMAL));
+ }
+ return DeeObject_Int(val);
+err_bad_radix:
+ DeeError_Throwf(&DeeError_ValueError,"Invalid radix = 1");
 err:
  return NULL;
 }
@@ -1980,10 +2116,11 @@ PUBLIC DeeTypeObject DeeInt_Type = {
                             "Converts @ob into an integer\n"
                             "\n"
                             "(string s, int radix = 0)\n"
+                            "(bytes s, int radix = 0)\n"
                             "@throw ValueError The given string @s is not a valid integer\n"
                             "@throw ValueError The given @radix is invalid\n"
-                            "Convert the given string @s into an integer\n"
-                            "When radix is $0, automatically detect it based on a prefix such as ${\"0x\"}. "
+                            "Convert the given :string or :bytes object @s into an integer\n"
+                            "When @radix is $0, automatically detect it based on a prefix such as ${\"0x\"}. "
                             "Otherwise, use @radix as it is provided\n"
                             "\n"
                             "str->\n"

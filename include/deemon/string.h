@@ -990,12 +990,12 @@ DDATDEF uniflag_t const DeeAscii_Flags[256];
 #define DeeAscii_AsDigit(ch)  ((uint8_t)(ch)-0x30)
 
 struct unitraits {
-    uniflag_t const ut_flags;   /* Character flags (Set of `UNICODE_F*') */
-    uint8_t   const ut_digit;   /* Digit/decimal value (`DeeUni_IsNumeric'), or 0. */
-    uint8_t   const ut_padding; /* ... */
-    int32_t   const ut_lower;   /* Delta added to the character to convert it to lowercase, or 0. */
-    int32_t   const ut_upper;   /* Delta added to the character to convert it to uppercase, or 0. */
-    int32_t   const ut_title;   /* Delta added to the character to convert it to titlecase, or 0. */
+    uniflag_t const ut_flags; /* Character flags (Set of `UNICODE_F*') */
+    uint8_t   const ut_digit; /* Digit/decimal value (`DeeUni_IsNumeric'), or 0. */
+    uint8_t   const ut_fold;  /* Unicode fold extension index, or `0xff'. */
+    int32_t   const ut_lower; /* Delta added to the character to convert it to lowercase, or 0. */
+    int32_t   const ut_upper; /* Delta added to the character to convert it to uppercase, or 0. */
+    int32_t   const ut_title; /* Delta added to the character to convert it to titlecase, or 0. */
 };
 
 /* Unicode character traits database access. */
@@ -1006,21 +1006,7 @@ DFUNDEF ATTR_RETNONNULL ATTR_CONST struct unitraits *(DCALL DeeUni_Descriptor)(u
 /* case-fold the given unicode character `ch', and
  * return the number of resulting folded characters.
  * @assume(return >= 1 && return <= UNICODE_FOLDED_MAX); */
-#ifdef __INTELLISENSE__
-extern "C++" {
-size_t (DCALL DeeUni_ToFolded)(uint8_t ch, uint8_t buf[UNICODE_FOLDED_MAX]);
-size_t (DCALL DeeUni_ToFolded)(uint16_t ch, uint16_t buf[UNICODE_FOLDED_MAX]);
-size_t (DCALL DeeUni_ToFolded)(uint32_t ch, uint32_t buf[UNICODE_FOLDED_MAX]);
-}
-#else
-DFUNDEF ATTR_PURE size_t (DCALL DeeUni_ToFolded_b)(uint8_t ch, uint8_t buf[UNICODE_FOLDED_MAX]);
-DFUNDEF ATTR_PURE size_t (DCALL DeeUni_ToFolded_w)(uint16_t ch, uint16_t buf[UNICODE_FOLDED_MAX]);
-DFUNDEF ATTR_PURE size_t (DCALL DeeUni_ToFolded_l)(uint32_t ch, uint32_t buf[UNICODE_FOLDED_MAX]);
-#define DeeUni_ToFolded(ch,buf) \
- (sizeof(*(buf)) == 1 ? DeeUni_ToFolded_b((uint8_t)(ch),(uint8_t *)(buf)) : \
-  sizeof(*(buf)) == 2 ? DeeUni_ToFolded_w((uint16_t)(ch),(uint16_t *)(buf)) : \
-                        DeeUni_ToFolded_l((uint32_t)(ch),(uint32_t *)(buf)))
-#endif
+DFUNDEF ATTR_PURE size_t (DCALL DeeUni_ToFolded)(uint32_t ch, uint32_t buf[UNICODE_FOLDED_MAX]);
 
 
 #if 0
