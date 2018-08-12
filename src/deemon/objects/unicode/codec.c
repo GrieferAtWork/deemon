@@ -39,8 +39,8 @@ DECL_BEGIN
 #define ENCODE4(a,b,c,d) ((d)|(c)<<8|(b)<<16|(a)<<24)
 #endif
 
-PRIVATE DREF DeeObject *DCALL
-normalize_name(DeeObject *__restrict name) {
+INTERN DREF DeeObject *DCALL
+DeeCodec_NormalizeName(DeeObject *__restrict name) {
  char *iter,*end,*str; size_t length;
  DREF DeeObject *result;
  ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
@@ -689,30 +689,91 @@ PRIVATE DeeObject *error_module_names[] = {
     /* [STRING_ERROR_FIGNORE] = */&str_ignore
 };
 
+struct codec_error {
+    char name[8];
+    int  flags;
+};
+
+PRIVATE struct codec_error const codec_error_db[] = {
+    { "strict", STRING_ERROR_FSTRICT },
+    { "replace", STRING_ERROR_FREPLAC },
+    { "ignore", STRING_ERROR_FIGNORE }
+};
+
+INTERN unsigned int DCALL
+DeeCodec_GetErrorMode(char const *__restrict errors) {
+ size_t i;
+ for (i = 0; i < COMPILER_LENOF(codec_error_db); ++i) {
+  if (strcmp(codec_error_db[i].name,errors) != 0)
+      continue;
+  return codec_error_db[i].flags;
+ }
+ DeeError_Throwf(&DeeError_ValueError,
+                 "Invalid error code %q",
+                 errors);
+ return (unsigned int)-1;
+}
+
+
+
+/* @return: ITER_DONE: Not an internal codec. */
+INTERN DREF DeeObject *DCALL
+DeeCodec_DecodeIntern(DeeObject *__restrict self,
+                      DeeObject *__restrict name,
+                      unsigned int error_mode) {
+ char const *name_str;
+ ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
+ name_str = DeeString_STR(name);
+ SWITCH_BUILTIN_CODECS(
+  name_str,
+  return convert_ascii(self,error_mode,true),
+  return decode_c_escape(self,error_mode),
+  return convert_latin1(self,error_mode,true),
+  return decode_utf16(self,error_mode,IS_LITTLE_ENDIAN),
+  return decode_utf16(self,error_mode,false),
+  return decode_utf16(self,error_mode,true),
+  return decode_utf32(self,error_mode,IS_LITTLE_ENDIAN),
+  return decode_utf32(self,error_mode,false),
+  return decode_utf32(self,error_mode,true),
+  return decode_utf8(self,error_mode)
+ );
+ return ITER_DONE;
+}
+
+INTERN DREF DeeObject *DCALL
+DeeCodec_EncodeIntern(DeeObject *__restrict self,
+                      DeeObject *__restrict name,
+                      unsigned int error_mode) {
+ char const *name_str;
+ ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
+ name_str = DeeString_STR(name);
+ SWITCH_BUILTIN_CODECS(
+  name_str,
+  return convert_ascii(self,error_mode,false),
+  return encode_c_escape(self),
+  return convert_latin1(self,error_mode,false),
+  return encode_utf16(self,error_mode),
+  return encode_utf16_be(self,error_mode),
+  return encode_utf16_le(self,error_mode),
+  return encode_utf32(self),
+  return encode_utf32_be(self),
+  return encode_utf32_le(self),
+  return encode_utf8(self)
+ );
+ return ITER_DONE;
+}
+
 
 PUBLIC DREF DeeObject *DCALL
 DeeCodec_Decode(DeeObject *__restrict self,
                 DeeObject *__restrict name,
                 unsigned int error_mode) {
  DREF DeeObject *result,*libcodecs;
- char const *name_str;
  ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
- name = normalize_name(name);
+ name = DeeCodec_NormalizeName(name);
  if unlikely(!name) goto err;
- name_str = DeeString_STR(name);
- SWITCH_BUILTIN_CODECS(
-  name_str,
-  { result = convert_ascii(self,error_mode,true); goto done; },
-  { result = decode_c_escape(self,error_mode); goto done; },
-  { result = convert_latin1(self,error_mode,true); goto done; },
-  { result = decode_utf16(self,error_mode,IS_LITTLE_ENDIAN); goto done; },
-  { result = decode_utf16(self,error_mode,false); goto done; },
-  { result = decode_utf16(self,error_mode,true); goto done; },
-  { result = decode_utf32(self,error_mode,IS_LITTLE_ENDIAN); goto done; },
-  { result = decode_utf32(self,error_mode,false); goto done; },
-  { result = decode_utf32(self,error_mode,true); goto done; },
-  { result = decode_utf8(self,error_mode); goto done; }
- );
+ result = DeeCodec_DecodeIntern(self,name,error_mode);
+ if (result != ITER_DONE) goto done;
  libcodecs = libcodecs_get();
  if unlikely(!libcodecs) {
   if (DeeError_Catch(&DeeError_FileNotFound))
@@ -750,7 +811,7 @@ DeeCodec_Encode(DeeObject *__restrict self,
  DREF DeeObject *result,*libcodecs;
  char const *name_str;
  ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
- name = normalize_name(name);
+ name = DeeCodec_NormalizeName(name);
  if unlikely(!name) goto err;
  name_str = DeeString_STR(name);
  SWITCH_BUILTIN_CODECS(

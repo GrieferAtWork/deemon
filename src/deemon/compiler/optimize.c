@@ -23,6 +23,8 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/none.h>
+#include <deemon/arg.h>
+#include <deemon/bytes.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/roset.h>
@@ -52,6 +54,7 @@
 #include <deemon/callable.h>
 
 #include <stdarg.h>
+#include <string.h>
 
 DECL_BEGIN
 
@@ -1677,6 +1680,91 @@ warn_idcompare_nonbuiltin(DeeAstObject *__restrict warn_ast) {
 #endif
 
 
+INTDEF DREF DeeObject *DCALL string_decode(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL string_encode(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+
+INTDEF DREF DeeObject *DCALL DeeCodec_NormalizeName(DeeObject *__restrict name);
+INTDEF unsigned int DCALL DeeCodec_GetErrorMode(char const *__restrict errors);
+INTDEF DREF DeeObject *DCALL DeeCodec_DecodeIntern(DeeObject *__restrict self, DeeObject *__restrict name, unsigned int error_mode);
+INTDEF DREF DeeObject *DCALL DeeCodec_EncodeIntern(DeeObject *__restrict self, DeeObject *__restrict name, unsigned int error_mode);
+
+PRIVATE DREF DeeObject *DCALL
+emulate_object_decode(DeeObject *__restrict self,
+                      size_t argc, DeeObject **__restrict argv) {
+ /* Something like `"foo".encode("UTF-8")' can still be
+  * optimized at compile-time, however `"foo".encode("hex")'
+  * mustn't, because the codec is implemented externally */
+ DeeObject *name; char *errors = NULL;
+ unsigned int error_mode = STRING_ERROR_FSTRICT;
+ if (DeeArg_Unpack(argc,argv,"o|s:decode",&name,&errors) ||
+     DeeObject_AssertTypeExact(name,&DeeString_Type))
+     goto err;
+ if (errors) {
+  error_mode = DeeCodec_GetErrorMode(errors);
+  if unlikely(error_mode == (unsigned int)-1) goto err;
+ }
+ return DeeCodec_DecodeIntern(self,name,error_mode);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+emulate_object_encode(DeeObject *__restrict self,
+                      size_t argc, DeeObject **__restrict argv) {
+ DeeObject *name; char *errors = NULL;
+ unsigned int error_mode = STRING_ERROR_FSTRICT;
+ if (DeeArg_Unpack(argc,argv,"o|s:encode",&name,&errors) ||
+     DeeObject_AssertTypeExact(name,&DeeString_Type))
+     goto err;
+ if (errors) {
+  error_mode = DeeCodec_GetErrorMode(errors);
+  if unlikely(error_mode == (unsigned int)-1) goto err;
+ }
+ return DeeCodec_EncodeIntern(self,name,error_mode);
+err:
+ return NULL;
+}
+
+
+/* Returns `ITER_DONE' if the call isn't allowed. */
+PRIVATE DREF DeeObject *DCALL
+emulate_method_call(DeeObject *__restrict self,
+                    size_t argc, DeeObject **__restrict argv) {
+ if (DeeObjMethod_Check(self)) {
+  /* Must emulate encode() and decode() functions, so they don't
+   * call into libcodecs, which should only be loaded at runtime!
+   * However, builtin codecs are still allowed!
+   * NOTE: Both `string' and `bytes' use the same underlying
+   *       function in order to implement `encode' and `decode'! */
+  dobjmethod_t method;
+  method = ((DeeObjMethodObject *)self)->om_func;
+  if (method == &string_encode)
+      return emulate_object_encode(((DeeObjMethodObject *)self)->om_self,argc,argv);
+  if (method == &string_decode)
+      return emulate_object_decode(((DeeObjMethodObject *)self)->om_self,argc,argv);
+ }
+ return DeeObject_Call(self,argc,argv);
+}
+
+/* Returns `ITER_DONE' if the call isn't allowed. */
+INTERN DREF DeeObject *DCALL
+emulate_member_call(DeeObject *__restrict base,
+                    DeeObject *__restrict name,
+                    size_t argc, DeeObject **__restrict argv) {
+#define NAME_EQ(x) \
+       (DeeString_SIZE(name) == COMPILER_STRLEN(x) && \
+        memcmp(DeeString_STR(name),x,sizeof(x)-sizeof(char)) == 0)
+ if (DeeString_Check(base) || DeeBytes_Check(base)) {
+  /* Same as the other call emulator: special
+   * handling for (string|bytes).(encode|decode) */
+  if (NAME_EQ("encode"))
+      return emulate_object_encode(base,argc,argv);
+  if (NAME_EQ("decode"))
+      return emulate_object_decode(base,argc,argv);
+ }
+ return DeeObject_CallAttr(base,name,argc,argv);
+}
+
 
 INTERN int (DCALL ast_optimize)(DeeAstObject *__restrict self, bool result_used) {
  ASSERT_OBJECT_TYPE(self,&DeeAst_Type);
@@ -2619,10 +2707,12 @@ optimize_conditional_bool_predictable_inherit_multiple:
      if (args->ast_type == AST_CONSTEXPR && DeeTuple_Check(args->ast_constexpr)) {
       /* All right! everything has fallen into place, and this is
        * a valid candidate for <getattr> -> <call> optimization. */
-      operator_result = DeeObject_CallAttr(base->ast_constexpr,
-                                           name->ast_constexpr,
-                                           DeeTuple_SIZE(args->ast_constexpr),
-                                           DeeTuple_ELEM(args->ast_constexpr));
+      operator_result = emulate_member_call(base->ast_constexpr,
+                                            name->ast_constexpr,
+                                            DeeTuple_SIZE(args->ast_constexpr),
+                                            DeeTuple_ELEM(args->ast_constexpr));
+      if (operator_result == ITER_DONE)
+          goto done; /* Call wasn't allowed. */
 #ifdef HAVE_VERBOSE
       if (operator_result &&
           allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
@@ -2681,14 +2771,45 @@ cleanup_operands:
     }
     argv[i] = operand;
    }
-   if (self->ast_operator.ast_exflag&AST_OPERATOR_FPOSTOP) {
+   /* Special handling when performing a call operation. */
+   if (self->ast_flag == OPERATOR_CALL) {
+    if (opcount != 2) goto not_allowed;
+    if (!DeeTuple_Check(argv[1])) goto not_allowed;
+    if unlikely(self->ast_operator.ast_exflag & AST_OPERATOR_FPOSTOP) {
+     operator_result = DeeObject_Copy(argv[0]);
+     if likely(operator_result) {
+      DREF DeeObject *real_result;
+      real_result = emulate_method_call(argv[0],
+                                        DeeTuple_SIZE(argv[1]),
+                                        DeeTuple_ELEM(argv[1]));
+      if likely(real_result)
+         Dee_Decref(real_result);
+      else {
+       Dee_Clear(operator_result);
+      }
+     }
+    } else {
+     operator_result = emulate_method_call(argv[0],
+                                           DeeTuple_SIZE(argv[1]),
+                                           DeeTuple_ELEM(argv[1]));
+    }
+    if (operator_result == ITER_DONE) {
+not_allowed:
+     for (i = 0; i < opcount; ++i)
+          Dee_Decref(argv[i]);
+     goto done;
+    }
+   } else if (self->ast_operator.ast_exflag & AST_OPERATOR_FPOSTOP) {
     /* Return a copy of the original operand. */
     operator_result = DeeObject_Copy(argv[0]);
-    if unlikely(operator_result) {
+    if likely(operator_result) {
      DREF DeeObject *real_result;
      real_result = DeeObject_InvokeOperator(argv[0],self->ast_flag,opcount-1,argv+1);
-     if likely(real_result) Dee_Decref(real_result);
-     else Dee_Clear(operator_result);
+     if likely(real_result)
+        Dee_Decref(real_result);
+     else {
+      Dee_Clear(operator_result);
+     }
     }
    } else {
     operator_result = DeeObject_InvokeOperator(argv[0],self->ast_flag,opcount-1,argv+1);

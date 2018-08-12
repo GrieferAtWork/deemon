@@ -986,6 +986,7 @@ struct type_buffer {
                             unsigned int flags);
 #define DEE_BUFFER_FREADONLY 0x0000 /* Acquire the buffer for reading. */
 #define DEE_BUFFER_FWRITABLE 0x0001 /* Acquire the buffer for reading / writing. */
+#define DEE_BUFFER_FMASK     0x0001 /* Mask of known buffer flags. */
     /* Release a previously acquired buffer.
      * @param: flags: Set of `DEE_BUFFER_F*' (same as were passed to `tp_getbuf') */
     void (DCALL *tp_putbuf)(DeeObject *__restrict self,

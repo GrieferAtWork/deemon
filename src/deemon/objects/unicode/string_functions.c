@@ -3041,17 +3041,8 @@ err:
  return NULL;
 }
 
-
-struct codec_error {
-    char name[8];
-    int  flags;
-};
-
-PRIVATE struct codec_error const codec_error_db[] = {
-    { "strict", STRING_ERROR_FSTRICT },
-    { "replace", STRING_ERROR_FREPLAC },
-    { "ignore", STRING_ERROR_FIGNORE }
-};
+INTDEF unsigned int DCALL
+DeeCodec_GetErrorMode(char const *__restrict errors);
 
 
 INTERN DREF DeeObject *DCALL
@@ -3063,19 +3054,9 @@ string_decode(DeeObject *__restrict self,
      DeeObject_AssertTypeExact(name,&DeeString_Type))
      goto err;
  if (errors) {
-  size_t i;
-  for (i = 0; i < COMPILER_LENOF(codec_error_db); ++i) {
-   if (strcmp(codec_error_db[i].name,errors) != 0)
-       continue;
-   error_mode = codec_error_db[i].flags;
-   goto got_errors;
-  }
-  DeeError_Throwf(&DeeError_ValueError,
-                  "Invalid error code %q",
-                  errors);
-  goto err;
+  error_mode = DeeCodec_GetErrorMode(errors);
+  if unlikely(error_mode == (unsigned int)-1) goto err;
  }
-got_errors:
  return DeeCodec_Decode(self,name,error_mode);
 err:
  return NULL;
@@ -3090,19 +3071,9 @@ string_encode(DeeObject *__restrict self,
      DeeObject_AssertTypeExact(name,&DeeString_Type))
      goto err;
  if (errors) {
-  size_t i;
-  for (i = 0; i < COMPILER_LENOF(codec_error_db); ++i) {
-   if (strcmp(codec_error_db[i].name,errors) != 0)
-       continue;
-   error_mode = codec_error_db[i].flags;
-   goto got_errors;
-  }
-  DeeError_Throwf(&DeeError_ValueError,
-                  "Invalid error code %q",
-                  errors);
-  goto err;
+  error_mode = DeeCodec_GetErrorMode(errors);
+  if unlikely(error_mode == (unsigned int)-1) goto err;
  }
-got_errors:
  return DeeCodec_Encode(self,name,error_mode);
 err:
  return NULL;
@@ -8590,6 +8561,14 @@ INTERN struct type_method string_methods[] = {
           "Returns :true if $this, ${this[index]}, or all characters "
           "in ${this.substr(start,end)} can be used to continue a symbol name") },
     /* TODO: isascii */
+    /* TODO:
+     * >> asdigit()->int
+     *    @throw ValueError The string is longer than a single character
+     *    @throw ValueError The character isn't numeric
+     * >> asdigit(int index)->int
+     *    @throw ValueError The character at @index isn't numeric
+     * >> asdigit(int index,int defl)->int
+     */
     { "isalnum", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isalnum,
       DOC("->bool\n"
           "(int index)->bool\n"
