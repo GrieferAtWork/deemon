@@ -32,10 +32,10 @@ typedef struct dex_object DeeDexObject;
 
 
 struct dex_symbol {
-    char const *ds_name;  /* [1..1][SENTINEL(NULL)] Name of this symbol. */
-    DeeObject  *ds_obj;   /* [0..1] The initial value of this symbol. */
-    uintptr_t   ds_flags; /* Set of `MODSYM_F*'. */
-    char const *ds_doc;   /* [0..1] An optional documentation string. */
+    char const          *ds_name;  /* [1..1][SENTINEL(NULL)] Name of this symbol. */
+    DeeObject           *ds_obj;   /* [0..1] The initial value of this symbol. */
+    uintptr_t            ds_flags; /* Set of `MODSYM_F*'. */
+    /*utf-8*/char const *ds_doc;   /* [0..1] An optional documentation string. */
 };
 
 struct dex {

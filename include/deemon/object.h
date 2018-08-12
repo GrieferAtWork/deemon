@@ -1035,21 +1035,21 @@ typedef int (DCALL *ddelmethod_t)(DeeObject *__restrict self);
 typedef int (DCALL *dsetmethod_t)(DeeObject *__restrict self, DeeObject *__restrict value);
 
 struct type_method {
-    char const  *m_name; /* [1..1][SENTINAL(NULL)] Method name. */
-    dobjmethod_t m_func; /* [1..1] The method that is getting invoked. */
-    char const  *m_doc;  /* [0..1] Documentation string. */
+    char const          *m_name;   /* [1..1][SENTINAL(NULL)] Method name. */
+    dobjmethod_t         m_func;   /* [1..1] The method that is getting invoked. */
+    /*utf-8*/char const *m_doc;    /* [0..1] Documentation string. */
 #define TYPE_METHOD_FNORMAL 0x0000 /* Normal type method flags. */
 #define TYPE_METHOD_FKWDS   0x0001 /* `m_func' takes a keywords argument.
                                     * When set, `m_func' is actually a `dkwobjmethod_t' */
-    uintptr_t    m_flag; /* Method flags (Set of `TYPE_METHOD_F*'). */
+    uintptr_t            m_flag;   /* Method flags (Set of `TYPE_METHOD_F*'). */
 };
 struct type_getset {
-    char const  *gs_name; /* [1..1][SENTINAL(NULL)] Member name. */
+    char const          *gs_name; /* [1..1][SENTINAL(NULL)] Member name. */
     /* Getset callbacks (NULL callbacks will result in `Error.AttributeError' being raised) */
-    dgetmethod_t gs_get;  /* [0..1] Getter callback. */
-    ddelmethod_t gs_del;  /* [0..1] Delete callback. */
-    dsetmethod_t gs_set;  /* [0..1] Setter callback. */
-    char const  *gs_doc;  /* [0..1] Documentation string. */
+    dgetmethod_t         gs_get;  /* [0..1] Getter callback. */
+    ddelmethod_t         gs_del;  /* [0..1] Delete callback. */
+    dsetmethod_t         gs_set;  /* [0..1] Setter callback. */
+    /*utf-8*/char const *gs_doc;  /* [0..1] Documentation string. */
 };
 
 
@@ -1105,15 +1105,15 @@ struct type_getset {
 
 
 struct type_member {
-    char const         *m_name;   /* [1..1][SENTINAL(NULL)] Member name. */
+    char const          *m_name;   /* [1..1][SENTINAL(NULL)] Member name. */
     union {
-        DeeObject      *m_const;  /* [valid_if(m_name[-1] == '!')][1..1] Constant. */
+        DeeObject       *m_const;  /* [valid_if(m_name[-1] == '!')][1..1] Constant. */
         struct {
-            uint16_t    m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
-            uint16_t    m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
-        }               m_field;
+            uint16_t     m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
+            uint16_t     m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
+        }                m_field;
     };
-    char const         *m_doc;    /* [0..1] Documentation string. */
+    /*utf-8*/char const *m_doc;    /* [0..1] Documentation string. */
 };
 
 #define TYPE_MEMBER_ISCONST(x) ((x)->m_name[-1] == '!')
@@ -1372,7 +1372,7 @@ struct class_desc;
 struct type_object {
     OBJECT_HEAD
     char const             *tp_name;     /* [0..1] Name of this type. */
-    char const             *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
+    /*utf-8*/char const    *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
 #define TP_FNORMAL          0x0000       /* Normal type flags. */
 #define TP_FFINAL           0x0001       /* The class cannot be sub-classed again. */
 #define TP_FTRUNCATE        0x0002       /* Truncate values during integer conversion, rather than throwing an `OverflowError'. */
@@ -1724,7 +1724,7 @@ INTDEF int DCALL type_obmemb_find(DeeTypeObject *__restrict tp_self, struct attr
 #define type_method_get(desc,self) \
   (((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_New((dkwobjmethod_t)(desc)->m_func,self) \
                                         : DeeObjMethod_New((desc)->m_func,self))
-#define type_method_doc(desc)                         DeeString_New((desc)->m_doc)
+#define type_method_doc(desc)                        DeeString_NewUtf8((desc)->m_doc,strlen((desc)->m_doc),STRING_ERROR_FIGNORE)
 #define type_method_call(desc,self,argc,argv) \
   (((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_CallFunc((dkwobjmethod_t)(desc)->m_func,self,argc,argv,NULL) \
                                         : DeeObjMethod_CallFunc((desc)->m_func,self,argc,argv))
@@ -1735,24 +1735,25 @@ INTDEF DREF DeeObject *DCALL type_method_call_kw_normal(struct type_method *__re
 #define type_obmeth_get(cls_type,desc) \
   (((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwClsMethod_New(cls_type,(dkwobjmethod_t)(desc)->m_func) \
                                         : DeeClsMethod_New(cls_type,(desc)->m_func))
-#define type_obmeth_doc(desc)                         DeeString_New((desc)->m_doc)
+#define type_obmeth_doc(desc)             DeeString_NewUtf8((desc)->m_doc,strlen((desc)->m_doc),STRING_ERROR_FIGNORE)
 INTDEF DREF DeeObject *DCALL type_obmeth_call(DeeTypeObject *__restrict cls_type, struct type_method *__restrict desc, size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL type_obmeth_call_kw(DeeTypeObject *__restrict cls_type, struct type_method *__restrict desc, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF DREF DeeObject *DCALL type_getset_get(struct type_getset *__restrict desc, DeeObject *__restrict self);
 #define type_obprop_get(cls_type,desc)  DeeClsProperty_New(cls_type,desc)
 INTDEF DREF DeeObject *DCALL type_obprop_call(DeeTypeObject *__restrict cls_type, dgetmethod_t getter, size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL type_obprop_call_kw(DeeTypeObject *__restrict cls_type, dgetmethod_t getter, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define type_obprop_doc(desc)                        DeeString_New((desc)->gs_doc)
+#define type_obprop_doc(desc)             DeeString_NewUtf8((desc)->gs_doc,strlen((desc)->gs_doc),STRING_ERROR_FIGNORE)
 #define type_obmemb_get(cls_type,desc)    DeeClsMember_New(cls_type,desc)
+#define type_obmemb_doc(desc)             DeeString_NewUtf8((desc)->m_doc,strlen((desc)->m_doc),STRING_ERROR_FIGNORE)
 INTDEF DREF DeeObject *DCALL type_obmemb_call(DeeTypeObject *__restrict cls_type, struct type_member *__restrict desc, size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL type_obmemb_call_kw(DeeTypeObject *__restrict cls_type, struct type_member *__restrict desc, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define type_getset_doc(desc)                        DeeString_New((desc)->gs_doc)
+#define type_getset_doc(desc)             DeeString_NewUtf8((desc)->gs_doc,strlen((desc)->gs_doc),STRING_ERROR_FIGNORE)
 INTDEF int DCALL type_getset_del(struct type_getset *__restrict desc, DeeObject *__restrict self);
 INTDEF int DCALL type_getset_set(struct type_getset *__restrict desc, DeeObject *__restrict self, DeeObject *__restrict value);
 INTDEF DREF DeeObject *DCALL type_member_get(struct type_member *__restrict desc, DeeObject *__restrict self);
 INTDEF bool DCALL type_member_bound(struct type_member *__restrict desc, DeeObject *__restrict self);
-#define type_member_doc(desc)                        DeeString_New((desc)->m_doc)
-#define type_member_del(desc,self)                 type_member_set(desc,self,Dee_None)
+#define type_member_doc(desc)             DeeString_NewUtf8((desc)->m_doc,strlen((desc)->m_doc),STRING_ERROR_FIGNORE)
+#define type_member_del(desc,self)        type_member_set(desc,self,Dee_None)
 INTDEF int DCALL type_member_set(struct type_member *__restrict desc, DeeObject *__restrict self, DeeObject *__restrict value);
 
 

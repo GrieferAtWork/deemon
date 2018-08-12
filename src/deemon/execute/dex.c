@@ -177,7 +177,9 @@ dex_load_file(DeeDexObject *__restrict self,
   if unlikely(!name_ob) goto err_glob_elem;
   doc_ob = NULL;
   if (sym->ds_doc) {
-   doc_ob = DeeString_New(sym->ds_doc);
+   doc_ob = DeeString_NewUtf8(sym->ds_doc,
+                              strlen(sym->ds_doc),
+                              STRING_ERROR_FIGNORE);
    if unlikely(!doc_ob) { Dee_Decref(name_ob); goto err_glob_elem; }
   }
   hash    = DeeString_Hash(name_ob);

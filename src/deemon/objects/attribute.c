@@ -495,7 +495,9 @@ do_realloc:
   new_attr->a_info.a_doc = COMPILER_CONTAINER_OF(attr_doc,DeeStringObject,s_str);
   Dee_Incref(new_attr->a_info.a_doc);
  } else {
-  new_attr->a_info.a_doc = (DREF DeeStringObject *)DeeString_New(attr_doc);
+  new_attr->a_info.a_doc = (DREF DeeStringObject *)DeeString_NewUtf8(attr_doc,
+                                                                     strlen(attr_doc),
+                                                                     STRING_ERROR_FIGNORE);
   if unlikely(!new_attr->a_info.a_doc) goto err_name;
  }
  new_attr->a_info.a_decl     = declarator;
@@ -1078,7 +1080,9 @@ attribute_lookup_enum(DeeObject *__restrict declarator,
   result->a_doc = COMPILER_CONTAINER_OF(attr_doc,DeeStringObject,s_str);
   Dee_Incref(result->a_doc);
  } else {
-  result->a_doc = (DREF struct string_object *)DeeString_New(attr_doc);
+  result->a_doc = (DREF struct string_object *)DeeString_NewUtf8(attr_doc,
+                                                                 strlen(attr_doc),
+                                                                 STRING_ERROR_FIGNORE);
   if unlikely(!result->a_doc) goto err;
  }
  result->a_decl = declarator;

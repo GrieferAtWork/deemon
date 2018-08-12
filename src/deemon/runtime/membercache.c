@@ -359,7 +359,7 @@ membercache_docattr(struct membercache *__restrict cache, char const *base,
    err_nodoc_attribute(base,name);
    return NULL;
   }
-  return DeeString_New(cstring);
+  return DeeString_NewUtf8(cstring,strlen(cstring),STRING_ERROR_FIGNORE);
  }
 done:
  MEMBERCACHE_ENDREAD(cache);
@@ -1538,7 +1538,7 @@ type_method_find(struct membercache *__restrict cache, DeeObject *__restrict dec
                   chain);
   result->a_doc = NULL;
   if (chain->m_doc) {
-   result->a_doc = (DREF struct string_object *)DeeString_New(chain->m_doc);
+   result->a_doc = (DREF DeeStringObject *)type_method_doc(chain);
    if unlikely(!result->a_doc) return -1;
   }
   result->a_decl = decl;
@@ -1567,7 +1567,7 @@ type_getset_find(struct membercache *__restrict cache, DeeObject *__restrict dec
   membercache_add(cache,chain->gs_name,rules->alr_hash,MEMBERCACHE_GETSET,chain);
   result->a_doc = NULL;
   if (chain->gs_doc) {
-   result->a_doc = (DREF struct string_object *)DeeString_New(chain->gs_doc);
+   result->a_doc = (DREF DeeStringObject *)type_getset_doc(chain);
    if unlikely(!result->a_doc) return -1;
   }
   result->a_perm     = perm;
@@ -1604,7 +1604,7 @@ type_member_find(struct membercache *__restrict cache, DeeObject *__restrict dec
   }
   result->a_doc = NULL;
   if (chain->m_doc) {
-   result->a_doc = (DREF struct string_object *)DeeString_New(chain->m_doc);
+   result->a_doc = (DREF DeeStringObject *)type_member_doc(chain);
    if unlikely(!result->a_doc) return -1;
   }
   result->a_decl = decl;
@@ -1644,7 +1644,7 @@ membercache_find(struct membercache *__restrict cache,
         goto not_found;
    result->a_doc = NULL;
    if (doc) {
-    result->a_doc = (DREF struct string_object *)DeeString_New(doc);
+    result->a_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,strlen(doc),STRING_ERROR_FIGNORE);
     if unlikely(!result->a_doc) return -1;
    }
    result->a_decl = decl;
@@ -1667,7 +1667,7 @@ membercache_find(struct membercache *__restrict cache,
         goto not_found;
    result->a_doc = NULL;
    if (doc) {
-    result->a_doc = (DREF struct string_object *)DeeString_New(doc);
+    result->a_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,strlen(doc),STRING_ERROR_FIGNORE);
     if unlikely(!result->a_doc) return -1;
    }
    result->a_perm     = perm;
@@ -1696,7 +1696,7 @@ membercache_find(struct membercache *__restrict cache,
    }
    result->a_doc = NULL;
    if (member.m_doc) {
-    result->a_doc = (DREF struct string_object *)DeeString_New(member.m_doc);
+    result->a_doc = (DREF DeeStringObject *)type_member_doc(&member);
     if unlikely(!result->a_doc) return -1;
    }
    result->a_decl = decl;
@@ -1739,7 +1739,7 @@ membercache_findinstanceattr(DeeTypeObject *__restrict self,
         goto not_found;
    result->a_doc = NULL;
    if (doc) {
-    result->a_doc = (DREF struct string_object *)DeeString_New(doc);
+    result->a_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,strlen(doc),STRING_ERROR_FIGNORE);
     if unlikely(!result->a_doc) return -1;
    }
    result->a_decl = (DREF DeeObject *)self;
@@ -1763,7 +1763,7 @@ membercache_findinstanceattr(DeeTypeObject *__restrict self,
         goto not_found;
    result->a_doc = NULL;
    if (doc) {
-    result->a_doc = (DREF struct string_object *)DeeString_New(doc);
+    result->a_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,strlen(doc),STRING_ERROR_FIGNORE);
     if unlikely(!result->a_doc) return -1;
    }
    result->a_perm     = perm;
@@ -1792,7 +1792,7 @@ membercache_findinstanceattr(DeeTypeObject *__restrict self,
    }
    result->a_doc = NULL;
    if (member.m_doc) {
-    result->a_doc = (DREF struct string_object *)DeeString_New(member.m_doc);
+    result->a_doc = (DREF DeeStringObject *)type_member_doc(&member);
     if unlikely(!result->a_doc) return -1;
    }
    result->a_decl = (DREF DeeObject *)self;
@@ -1828,7 +1828,7 @@ type_obmeth_find(DeeTypeObject *__restrict tp_self,
   membercache_add(&tp_self->tp_cache,chain->m_name,rules->alr_hash,MEMBERCACHE_METHOD,chain);
   result->a_doc = NULL;
   if (chain->m_doc) {
-   result->a_doc = (DREF struct string_object *)DeeString_New(chain->m_doc);
+   result->a_doc = (DREF DeeStringObject *)type_obmeth_doc(chain);
    if unlikely(!result->a_doc) return -1;
   }
   result->a_perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_PERMGET|ATTR_PERMCALL|ATTR_WRAPPER;
@@ -1857,7 +1857,7 @@ type_obprop_find(DeeTypeObject *__restrict tp_self,
   membercache_add(&tp_self->tp_cache,chain->gs_name,rules->alr_hash,MEMBERCACHE_GETSET,chain);
   result->a_doc = NULL;
   if (chain->gs_doc) {
-   result->a_doc = (DREF struct string_object *)DeeString_New(chain->gs_doc);
+   result->a_doc = (DREF DeeStringObject *)type_obprop_doc(chain);
    if unlikely(!result->a_doc) return -1;
   }
   result->a_perm     = perm;
@@ -1884,7 +1884,7 @@ type_obmemb_find(DeeTypeObject *__restrict tp_self,
   membercache_add(&tp_self->tp_cache,chain->m_name,rules->alr_hash,MEMBERCACHE_MEMBER,chain);
   result->a_doc = NULL;
   if (chain->m_doc) {
-   result->a_doc = (DREF struct string_object *)DeeString_New(chain->m_doc);
+   result->a_doc = (DREF DeeStringObject *)type_obmemb_doc(chain);
    if unlikely(!result->a_doc) return -1;
   }
   result->a_perm     = perm;

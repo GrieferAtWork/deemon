@@ -3737,7 +3737,9 @@ DeeObject_Doc(DeeObject *__restrict self) {
   if (me->tp_flags&TP_FDOCOBJECT) {
    return_reference_((DeeObject *)COMPILER_CONTAINER_OF(me->tp_doc,DeeStringObject,s_str));
   }
-  return DeeString_New(me->tp_doc);
+  return DeeString_NewUtf8(me->tp_doc,
+                           strlen(me->tp_doc),
+                           STRING_ERROR_FIGNORE);
  }
  /* Fallback: Look for an attribute `__doc__' */
  result = DeeObject_GetAttrString(self,"__doc__");

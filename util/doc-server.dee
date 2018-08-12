@@ -791,13 +791,13 @@ function ClientThreadMain(con) {
 					} else {
 						content = file.writer();
 						get_page(content,command);
-						content = content.string;
+						content = content.string.encode("utf-8");
 					}
 					fp << protocol << " 200 OK\r\n"
 						"Content-Length: {}\r\n"
 						"Content-Type: text/html; charset=UTF-8\r\n"
 						"\r\n".format({ #content });
-					fp << content;
+					fp.write(content);
 				}
 				con.send(fp.string.encode("UTF-8"));
 				if (protocol == "HTTP/1.0") {
@@ -826,13 +826,13 @@ function ClientThreadMain(con) {
 					<< repr(deemon.traceback.current).replace("\n","<br />\r\n")
 					<< "<hr></main>\r\n";
 				write_page_tail(err_content);
-				err_content = err_content.string;
+				err_content = err_content.string.encode("utf-8");
 				err_out <<
 					"HTTP/1.1 200 OK\r\n"
 					"Content-Length: {}\r\n"
-					"Content-Type: text/html; charset=iso-8859-1\r\n"
+					"Content-Type: text/html; charset=UTF-8\r\n"
 					"\r\n".format({ #err_content });
-				err_out << err_content;
+				err_out.write(err_content);
 				con.send(err_out.string);
 				throw;
 			}
