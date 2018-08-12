@@ -266,6 +266,7 @@ call_format_function:
      Dee_Decref(format_str_obj);
     }
    }
+   Dee_Decref(format_function);
    if unlikely(!callback_result)
       return -1;
    result = DeeObject_Print(callback_result,printer,arg);
