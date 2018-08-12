@@ -155,7 +155,7 @@ uasm_label_symbol(struct TPPKeyword *__restrict name) {
  size -= COMPILER_STRLEN(USERLABEL_PREFIX);
  label_number = 0;
  while (size) {
-  if (!DeeUni_IsDigit(*text))
+  if (!DeeUni_IsDecimal(*text))
        goto not_a_label;
   label_number *= 10;
   label_number += DeeUni_AsDigit(*text);

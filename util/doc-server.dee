@@ -136,7 +136,7 @@ function split_tokens(text) {
 			while (i < length && text.issymcont(i));
 			yield text[tok_start:i];
 			continue;
-		} else if (text.isdigit(i)) {
+		} else if (text.isdecimal(i)) {
 			do ++i;
 			while (i < length && text.isalnum(i));
 			yield text[tok_start:i];
@@ -178,7 +178,7 @@ function format_sourcecode(fp,d,text) {
 				fmt = "h_comment";
 			else if (tok.startswith("r\"") || tok.startswith("r\'"))
 				fmt = "h_rawstring";
-			else if (tok[0].isdigit())
+			else if (tok[0].isdecimal())
 				fmt = "h_number";
 			else if (tok[0] in [
 				"=","<",">","?",":","+","-","*","/","%",".",",",";",

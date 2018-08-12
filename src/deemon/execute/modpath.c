@@ -1485,7 +1485,7 @@ DeeModule_GetString(char const *__restrict module_name) {
 #define IS_VALID_MODULE_CHARACTER(ch) \
      ((DeeUni_Flags(ch)& \
       (UNICODE_FALPHA|UNICODE_FLOWER|UNICODE_FUPPER|UNICODE_FTITLE| \
-       UNICODE_FDIGIT|UNICODE_FDECIMAL|UNICODE_FSYMSTRT|UNICODE_FSYMCONT)) || \
+       UNICODE_FDECIMAL|UNICODE_FSYMSTRT|UNICODE_FSYMCONT)) || \
      ((ch) == '-' || (ch) == '=' || (ch) == ',' || (ch) == '(' || \
       (ch) == ')' || (ch) == '[' || (ch) == ']' || (ch) == '{' || \
       (ch) == '}' || (ch) == '<' || (ch) == '>' || (ch) == '+'))

@@ -143,13 +143,13 @@ next_format:
       ignore_data = true,
       ch32 = utf8_readchar_u((char const **)&format);
   /* Check: is the max field width given. */
-  if (DeeUni_IsDigit(ch32)) {
+  if (DeeUni_IsDecimal(ch32)) {
    width = DeeUni_AsDigit(ch32);
    for (;;) {
     if (format >= format_end)
         goto out_formatend;
     ch32 = utf8_readchar_u((char const **)&format);
-    if (!DeeUni_IsDigit(ch32)) break;
+    if (!DeeUni_IsDecimal(ch32)) break;
     width *= 10;
     width += DeeUni_AsDigit(ch32);
    }
@@ -181,7 +181,7 @@ do_integer_scan:
     uint32_t ch32; char *prev_data;
     prev_data = data;
     ch32 = is_bytes ? (uint32_t)(uint8_t)*data++ : utf8_readchar((char const **)&data,data_end);
-    if (DeeUni_IsDigitX(ch32,0)) {
+    if (DeeUni_IsDecimalX(ch32,0)) {
      --width;
      if (width && (*data == 'x' || *data == 'X')) {
       scan_radix = 16;
@@ -214,7 +214,7 @@ do_integer_scan:
     prev_data = data;
     ch32   = is_bytes ? (uint32_t)(uint8_t)*data++ : utf8_readchar((char const **)&data,data_end);
     traits = DeeUni_Descriptor(ch32);
-    if (!(traits->ut_flags & UNICODE_FDIGIT) ||
+    if (!(traits->ut_flags & UNICODE_FDECIMAL) ||
           traits->ut_digit >= scan_radix) {
      data = prev_data;
      break;

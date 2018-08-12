@@ -702,7 +702,7 @@ DeeInt_FromString(/*utf-8*/char const *__restrict str,
   /* Automatically determine the radix. */
   char *old_begin = begin; uint32_t leading_zero;
   leading_zero = utf8_readchar((char const **)&begin,end);
-  if (DeeUni_IsDigitX(leading_zero,0)) {
+  if (DeeUni_IsDecimalX(leading_zero,0)) {
    if (begin == end) /* Special case: int(0) */
        return_reference_((DeeObject *)&DeeInt_Zero);
    while (*begin == '\\' && (radix_and_flags&DEEINT_STRING_FESCAPED)) {
@@ -753,7 +753,7 @@ DeeInt_FromString(/*utf-8*/char const *__restrict str,
    struct unitraits *trt;
    ch = utf8_readchar_rev((char const **)&iter,begin);
    trt = DeeUni_Descriptor(ch);
-   /* */if (trt->ut_flags & UNICODE_FDIGIT) dig = trt->ut_digit;
+   /* */if (trt->ut_flags & UNICODE_FDECIMAL) dig = trt->ut_digit;
    else if (ch >= 'a' && ch <= 'z') dig = 10+(digit)(ch-'a');
    else if (ch >= 'A' && ch <= 'Z') dig = 10+(digit)(ch-'A');
    else if (DeeUni_IsLF(ch) &&
@@ -831,7 +831,7 @@ DeeInt_FromAscii(/*ascii*/char const *__restrict str,
  if (!radix) {
   /* Automatically determine the radix. */
   char leading_zero = *begin;
-  if (DeeUni_IsDigitX(leading_zero,0)) {
+  if (DeeUni_IsDecimalX(leading_zero,0)) {
    ++begin;
    if (begin == end) /* Special case: int(0) */
        return_reference_((DeeObject *)&DeeInt_Zero);

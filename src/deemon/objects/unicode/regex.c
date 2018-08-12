@@ -92,7 +92,7 @@ check_greedy2:
     result->mc_min = 0;
    } else {
     trt = DeeUni_Descriptor(ch32);
-    if (trt->ut_flags & UNICODE_FDIGIT) {
+    if (trt->ut_flags & UNICODE_FDECIMAL) {
      /* Digit. */
      result->mc_min = trt->ut_digit;
      for (;;) {
@@ -105,13 +105,13 @@ err_eof_in_repeat:
       }
       ch32 = utf8_readchar((char const **)&piter,pend);
       trt = DeeUni_Descriptor(ch32);
-      if (!(trt->ut_flags & UNICODE_FDIGIT)) break;
+      if (!(trt->ut_flags & UNICODE_FDECIMAL)) break;
       result->mc_min *= 10;
       result->mc_min += trt->ut_digit;
      }
     } else {
      DeeError_Throwf(&DeeError_ValueError,
-                     "Expected `,' or a digit after `{' in "
+                     "Expected `,' or a decimal after `{' in "
                      "regular expression, but got %I32c",ch32);
      goto err;
     }
@@ -132,14 +132,14 @@ err_eof_in_repeat:
      result->mc_max = (size_t)-1;
     } else {
      trt = DeeUni_Descriptor(ch32);
-     if (trt->ut_flags & UNICODE_FDIGIT) {
+     if (trt->ut_flags & UNICODE_FDECIMAL) {
       result->mc_max = trt->ut_digit;
       for (;;) {
        if (piter >= pend)
            goto err_eof_in_repeat;
        ch32 = utf8_readchar((char const **)&piter,pend);
        trt = DeeUni_Descriptor(ch32);
-       if (!(trt->ut_flags & UNICODE_FDIGIT)) break;
+       if (!(trt->ut_flags & UNICODE_FDECIMAL)) break;
        result->mc_max *= 10;
        result->mc_max += trt->ut_digit;
       }
@@ -422,7 +422,7 @@ parse_u8(char **ppiter, char *pend,
   char *prev_piter = *ppiter;
   uint32_t ch = utf8_readchar((char const **)ppiter,pend);
   struct unitraits *trt = DeeUni_Descriptor(ch);
-  if (!(trt->ut_flags & UNICODE_FDIGIT)) {
+  if (!(trt->ut_flags & UNICODE_FDECIMAL)) {
    *ppiter = prev_piter;
    break;
   }
@@ -997,11 +997,11 @@ match_unicode_trait:
    piter = parse_match_count(piter,pend,&match);
    if unlikely(!piter) goto err;
    DO_CHARACTERWISE_MATCH(DeeUni_Flags(data_ch) &
-                         (UNICODE_FALPHA|UNICODE_FDIGIT|
+                         (UNICODE_FALPHA|UNICODE_FDECIMAL|
                           UNICODE_FSYMSTRT|UNICODE_FSYMCONT));
    goto check_match;
   case 'W':
-   mask = UNICODE_FALPHA|UNICODE_FDIGIT|UNICODE_FSYMSTRT|UNICODE_FSYMCONT;
+   mask = UNICODE_FALPHA|UNICODE_FDECIMAL|UNICODE_FSYMSTRT|UNICODE_FSYMCONT;
    flag = 0;
    goto match_unicode_trait;
 
@@ -1042,7 +1042,7 @@ match_unicode_trait:
 
 #define IS_ALNUM_EXTENDED(ch) \
  (DeeUni_Flags(data_ch)&(UNICODE_FALPHA|UNICODE_FLOWER|UNICODE_FUPPER|UNICODE_FTITLE| \
-                         UNICODE_FDIGIT|UNICODE_FSYMSTRT|UNICODE_FSYMCONT))
+                         UNICODE_FDECIMAL|UNICODE_FSYMSTRT|UNICODE_FSYMCONT))
 
   {
    char *temp_diter;

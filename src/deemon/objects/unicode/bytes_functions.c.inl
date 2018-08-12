@@ -612,7 +612,7 @@ bytes_scanf(Bytes *__restrict self,
 #define DeeBytes_IsDecimal(self,start,end)    DeeBytes_TestTrait(self,start,end,UNICODE_FDECIMAL)
 #define DeeBytes_IsSymStrt(self,start,end)    DeeBytes_TestTrait(self,start,end,UNICODE_FSYMSTRT)
 #define DeeBytes_IsSymCont(self,start,end)    DeeBytes_TestTrait(self,start,end,UNICODE_FSYMCONT)
-#define DeeBytes_IsAlnum(self,start,end)      DeeBytes_TestTrait(self,start,end,UNICODE_FALPHA|UNICODE_FDIGIT)
+#define DeeBytes_IsAlnum(self,start,end)      DeeBytes_TestTrait(self,start,end,UNICODE_FALPHA|UNICODE_FDECIMAL)
 #define DeeBytes_IsNumeric(self,start,end)    DeeBytes_TestTrait(self,start,end,UNICODE_FDIGIT|UNICODE_FDECIMAL)
 #define DeeBytes_IsAnyPrint(self,start,end)   DeeBytes_TestAnyTrait(self,start,end,UNICODE_FPRINT)
 #define DeeBytes_IsAnyAlpha(self,start,end)   DeeBytes_TestAnyTrait(self,start,end,UNICODE_FALPHA)
@@ -626,7 +626,7 @@ bytes_scanf(Bytes *__restrict self,
 #define DeeBytes_IsAnyDecimal(self,start,end) DeeBytes_TestAnyTrait(self,start,end,UNICODE_FDECIMAL)
 #define DeeBytes_IsAnySymStrt(self,start,end) DeeBytes_TestAnyTrait(self,start,end,UNICODE_FSYMSTRT)
 #define DeeBytes_IsAnySymCont(self,start,end) DeeBytes_TestAnyTrait(self,start,end,UNICODE_FSYMCONT)
-#define DeeBytes_IsAnyAlnum(self,start,end)   DeeBytes_TestAnyTrait(self,start,end,UNICODE_FALPHA|UNICODE_FDIGIT)
+#define DeeBytes_IsAnyAlnum(self,start,end)   DeeBytes_TestAnyTrait(self,start,end,UNICODE_FALPHA|UNICODE_FDECIMAL)
 #define DeeBytes_IsAnyNumeric(self,start,end) DeeBytes_TestAnyTrait(self,start,end,UNICODE_FDIGIT|UNICODE_FDECIMAL)
 
 INTERN bool DCALL
@@ -728,7 +728,7 @@ INTERN bool DCALL
 DeeBytes_IsSymbol(Bytes *__restrict self,
                   size_t start_index,
                   size_t end_index) {
- uniflag_t flags = (UNICODE_FSYMSTRT|UNICODE_FALPHA);
+ uniflag_t flags = UNICODE_FSYMSTRT;
  uint8_t *iter;
  if (end_index > DeeBytes_SIZE(self))
      end_index = DeeBytes_SIZE(self);
@@ -737,7 +737,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
   while (start_index < end_index) {
    if (!(DeeUni_Flags(*iter) & flags))
          return false;
-   flags |= (UNICODE_FSYMCONT|UNICODE_FDIGIT);
+   flags = UNICODE_FSYMCONT;
    ++iter;
    ++start_index;
   }
@@ -790,8 +790,8 @@ DEFINE_BYTES_TRAIT(isdigit,DeeBytes_IsDigit,DeeUni_Flags(ch) & UNICODE_FDIGIT)
 DEFINE_BYTES_TRAIT(isdecimal,DeeBytes_IsDecimal,DeeUni_Flags(ch) & UNICODE_FDECIMAL)
 DEFINE_BYTES_TRAIT(issymstrt,DeeBytes_IsSymStrt,DeeUni_Flags(ch) & UNICODE_FSYMSTRT)
 DEFINE_BYTES_TRAIT(issymcont,DeeBytes_IsSymStrt,DeeUni_Flags(ch) & UNICODE_FSYMCONT)
-DEFINE_BYTES_TRAIT(isalnum,DeeBytes_IsAlnum,DeeUni_Flags(ch) & (UNICODE_FALPHA|UNICODE_FDIGIT))
-DEFINE_BYTES_TRAIT(isnumeric,DeeBytes_IsNumeric,(UNICODE_FDECIMAL|UNICODE_FDIGIT))
+DEFINE_BYTES_TRAIT(isalnum,DeeBytes_IsAlnum,DeeUni_Flags(ch) & (UNICODE_FALPHA|UNICODE_FDECIMAL))
+DEFINE_BYTES_TRAIT(isnumeric,DeeBytes_IsNumeric,DeeUni_Flags(ch) & (UNICODE_FDECIMAL|UNICODE_FDIGIT))
 DEFINE_BYTES_TRAIT(istitle,DeeBytes_IsTitle,DeeUni_Flags(ch) & UNICODE_FTITLE)
 DEFINE_BYTES_TRAIT(issymbol,DeeBytes_IsSymbol,DeeUni_Flags(ch) & UNICODE_FSYMSTRT)
 DEFINE_BYTES_TRAIT(isascii,DeeBytes_IsAscii,ch <= 0x7f)

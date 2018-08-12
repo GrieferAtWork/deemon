@@ -84,8 +84,8 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
    Dee_Decref(key);
   }
   fmt_start = key_end;
- } else if (DeeUni_IsDigit(ch)) {
-  // list-style index lookup
+ } else if (DeeUni_IsDecimal(ch)) {
+  /* list-style index lookup */
   DREF DeeObject *key;
   char *index_end = fmt_start+1;
   ASSERT(!DeeUni_IsSymCont('}'));
@@ -179,8 +179,8 @@ Formatter_GetUnaryIndex(char **__restrict pfmt_start) {
      ++key_end;
   result = DeeString_NewSized(fmt_start,(size_t)(key_end-fmt_start));
   fmt_start = key_end;
- } else if (DeeUni_IsDigit(ch)) {
-  // list-style index lookup
+ } else if (DeeUni_IsDecimal(ch)) {
+  /* list-style index lookup */
   char *index_end = fmt_start+1;
   ASSERT(!DeeUni_IsSymCont('}'));
   index_end = fmt_start+1;

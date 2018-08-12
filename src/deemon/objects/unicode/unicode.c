@@ -4798,7 +4798,7 @@ parse_hex_integer:
      val = 10 + ((uint8_t)ch32 - 'A');
     else {
      desc = DeeUni_Descriptor(ch32);
-     if (!(desc->ut_flags & UNICODE_FDIGIT) ||
+     if (!(desc->ut_flags & UNICODE_FDECIMAL) ||
            desc->ut_digit >= 10) {
       iter = old_iter;
       break;
@@ -4847,7 +4847,7 @@ parse_oct_integer:
      char const *old_iter = iter;
      ch32 = utf8_readchar(&iter,end);
      desc = DeeUni_Descriptor(ch32);
-     if (!(desc->ut_flags & UNICODE_FDIGIT) ||
+     if (!(desc->ut_flags & UNICODE_FDECIMAL) ||
            desc->ut_digit >= 8) {
       iter = old_iter;
       break;
@@ -4868,7 +4868,7 @@ parse_oct_integer:
     desc = DeeUni_Descriptor(ch32);
     if (desc->ut_flags & UNICODE_FLF)
         break; /* Escaped line-feed */
-    if ((desc->ut_flags & UNICODE_FDIGIT) &&
+    if ((desc->ut_flags & UNICODE_FDECIMAL) &&
         (desc->ut_digit < 8)) {
      /* Unicode digit character. */
      digit_value = desc->ut_digit;

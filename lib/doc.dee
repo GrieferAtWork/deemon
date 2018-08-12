@@ -564,7 +564,7 @@ class TextSplitter {
 					       fixed_text[tag_end] in [".",":"]))
 						++tag_end;
 					i = tag_end;
-				} else if (tag_start_ch.isdigit()) {
+				} else if (tag_start_ch.isdecimal()) {
 					tag_end = tag_start+1;
 					while (tag_end < scan_end && fixed_text.isalnum(tag_end))
 						++tag_end;

@@ -1664,14 +1664,14 @@ has_operand:
      goto err;
     }
    } else {
-    if (!DeeUni_IsDigit(ch)) {
+    if (!DeeUni_IsDecimal(ch)) {
      DeeError_Throwf(&DeeError_CompilerError,
                      "Expected `[' or a digit after `%%' in user-assembly text");
      goto err;
     }
     opno = DeeUni_AsDigit(ch);
     ch = *iter++;
-    while (DeeUni_IsDigit(ch)) {
+    while (DeeUni_IsDecimal(ch)) {
      opno *= 10;
      opno += DeeUni_AsDigit(ch);
      ch = *iter++;

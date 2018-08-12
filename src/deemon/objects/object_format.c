@@ -80,14 +80,14 @@ object_format_generic(DeeObject *__restrict self,
  if unlikely(format_str >= format_end)
     goto err_bad_format_str;
  ch = *format_str++;
- if (!DeeUni_IsDigit(ch))
+ if (!DeeUni_IsDecimal(ch))
       goto err_bad_format_str;
  alignment_width = DeeUni_AsDigit(ch);
  filler_str      = NULL;
  filler_len      = 0;
  while (format_str < format_end) {
   ch = *format_str++;
-  if (!DeeUni_IsDigit(ch)) {
+  if (!DeeUni_IsDecimal(ch)) {
    if (ch != ':')
        goto err_bad_format_str;
    filler_str = format_str;

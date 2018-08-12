@@ -1208,7 +1208,7 @@ err:
 #define DeeString_IsAnyDecimal(self,start,end) DeeString_TestAnyTrait(self,start,end,UNICODE_FDECIMAL)
 #define DeeString_IsAnySymStrt(self,start,end) DeeString_TestAnyTrait(self,start,end,UNICODE_FSYMSTRT)
 #define DeeString_IsAnySymCont(self,start,end) DeeString_TestAnyTrait(self,start,end,UNICODE_FSYMCONT)
-#define DeeString_IsAnyAlnum(self,start,end)   DeeString_TestAnyTrait(self,start,end,UNICODE_FALPHA|UNICODE_FDIGIT)
+#define DeeString_IsAnyAlnum(self,start,end)   DeeString_TestAnyTrait(self,start,end,UNICODE_FALPHA|UNICODE_FDECIMAL)
 #define DeeString_IsAnyNumeric(self,start,end) DeeString_TestAnyTrait(self,start,end,UNICODE_FDIGIT|UNICODE_FDECIMAL)
 
 INTERN bool DCALL
@@ -1289,11 +1289,11 @@ INTERN bool DCALL
 DeeString_IsSymbol(DeeObject *__restrict self,
                    size_t start_index,
                    size_t end_index) {
- uniflag_t flags = (UNICODE_FSYMSTRT|UNICODE_FALPHA);
+ uniflag_t flags = UNICODE_FSYMSTRT;
  DeeString_Foreach(self,start_index,end_index,iter,end,{
   if (!(DeeUni_Flags(*iter)&flags))
         return false;
-  flags |= (UNICODE_FSYMCONT|UNICODE_FDIGIT);
+  flags = UNICODE_FSYMCONT;
  });
  return true;
 }
@@ -2032,7 +2032,7 @@ DEFINE_STRING_TRAIT(isdigit,DeeString_IsDigit,DeeUni_Flags(ch) & UNICODE_FDIGIT)
 DEFINE_STRING_TRAIT(isdecimal,DeeString_IsDecimal,DeeUni_Flags(ch) & UNICODE_FDECIMAL)
 DEFINE_STRING_TRAIT(issymstrt,DeeString_IsSymStrt,DeeUni_Flags(ch) & UNICODE_FSYMSTRT)
 DEFINE_STRING_TRAIT(issymcont,DeeString_IsSymCont,DeeUni_Flags(ch) & UNICODE_FSYMCONT)
-DEFINE_STRING_TRAIT(isalnum,DeeString_IsAlnum,DeeUni_Flags(ch) & (UNICODE_FALPHA|UNICODE_FDIGIT))
+DEFINE_STRING_TRAIT(isalnum,DeeString_IsAlnum,DeeUni_Flags(ch) & (UNICODE_FALPHA|UNICODE_FDECIMAL))
 DEFINE_STRING_TRAIT(isnumeric,DeeString_IsNumeric,DeeUni_Flags(ch) & (UNICODE_FDECIMAL|UNICODE_FDIGIT))
 DEFINE_STRING_TRAIT(istitle,DeeString_IsTitle,DeeUni_Flags(ch) & UNICODE_FTITLE)
 DEFINE_STRING_TRAIT(issymbol,DeeString_IsSymbol,DeeUni_Flags(ch) & UNICODE_FSYMSTRT)

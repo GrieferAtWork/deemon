@@ -1390,7 +1390,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
    } else {
     struct unitraits *trt;
     trt = DeeUni_Descriptor(ch);
-    if (!(trt->ut_flags & UNICODE_FDIGIT))
+    if (!(trt->ut_flags & UNICODE_FDECIMAL))
           goto err_invalid;
     byte_value = trt->ut_digit;
    }
@@ -1407,7 +1407,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
    } else {
     struct unitraits *trt;
     trt = DeeUni_Descriptor(ch);
-    if (!(trt->ut_flags & UNICODE_FDIGIT))
+    if (!(trt->ut_flags & UNICODE_FDECIMAL))
           goto err_invalid;
     byte_value |= trt->ut_digit;
    }
@@ -1440,7 +1440,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
    } else {
     struct unitraits *trt;
     trt = DeeUni_Descriptor(ch);
-    if (!(trt->ut_flags & UNICODE_FDIGIT))
+    if (!(trt->ut_flags & UNICODE_FDECIMAL))
           goto err_invalid;
     byte_value = trt->ut_digit;
    }
@@ -1457,7 +1457,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
    } else {
     struct unitraits *trt;
     trt = DeeUni_Descriptor(ch);
-    if (!(trt->ut_flags & UNICODE_FDIGIT))
+    if (!(trt->ut_flags & UNICODE_FDECIMAL))
           goto err_invalid;
     byte_value |= trt->ut_digit;
    }
@@ -1490,7 +1490,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
    } else {
     struct unitraits *trt;
     trt = DeeUni_Descriptor(ch);
-    if (!(trt->ut_flags & UNICODE_FDIGIT))
+    if (!(trt->ut_flags & UNICODE_FDECIMAL))
           goto err_invalid;
     byte_value = trt->ut_digit;
    }
@@ -1507,7 +1507,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
    } else {
     struct unitraits *trt;
     trt = DeeUni_Descriptor(ch);
-    if (!(trt->ut_flags & UNICODE_FDIGIT))
+    if (!(trt->ut_flags & UNICODE_FDECIMAL))
           goto err_invalid;
     byte_value |= trt->ut_digit;
    }

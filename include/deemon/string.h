@@ -984,8 +984,8 @@ DFUNDEF DREF DeeObject *DCALL _DeeString_Chr32(uint32_t ch);
 #define UNICODE_FUPPER   0x0020 /* Upper-case. */
 #define UNICODE_FTITLE   0x0040 /* Title-case. */
 #define UNICODE_FCNTRL   0x0080 /* Control character. */
-#define UNICODE_FDIGIT   0x0100 /* The character is a digit. e.g.: `2' (ascii; `ut_digit' is `2') */
-#define UNICODE_FDECIMAL 0x0200 /* The character is a decimal. e.g: `²' (sqare; `ut_digit' is `2') */
+#define UNICODE_FDIGIT   0x0100 /* The character is a digit. e.g.: `²' (sqare; `ut_digit' is `2') */
+#define UNICODE_FDECIMAL 0x0200 /* The character is a decimal. e.g: `5' (ascii; `ut_digit' is `5') */
 #define UNICODE_FSYMSTRT 0x0400 /* The character can be used as the start of an identifier. */
 #define UNICODE_FSYMCONT 0x0800 /* The character can be used to continue an identifier. */
 /*      UNICODE_F        0x1000 */
@@ -1060,7 +1060,7 @@ FORCELOCAL uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 #define DeeUni_IsAlpha(ch)    (DeeUni_Flags(ch)&UNICODE_FALPHA)
 #define DeeUni_IsLower(ch)    (DeeUni_Flags(ch)&UNICODE_FLOWER)
 #define DeeUni_IsUpper(ch)    (DeeUni_Flags(ch)&UNICODE_FUPPER)
-#define DeeUni_IsAlnum(ch)    (DeeUni_Flags(ch)&(UNICODE_FALPHA|UNICODE_FDIGIT))
+#define DeeUni_IsAlnum(ch)    (DeeUni_Flags(ch)&(UNICODE_FALPHA|UNICODE_FDECIMAL))
 #define DeeUni_IsSpace(ch)    (DeeUni_Flags(ch)&UNICODE_FSPACE)
 #define DeeUni_IsTab(ch)      ((ch) == 9)
 #define DeeUni_IsLF(ch)       (DeeUni_Flags(ch)&UNICODE_FLF)
@@ -1071,12 +1071,12 @@ FORCELOCAL uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 #define DeeUni_IsTitle(ch)    (DeeUni_Flags(ch)&(UNICODE_FTITLE|UNICODE_FUPPER))
 #define DeeUni_IsSymStrt(ch)  (DeeUni_Flags(ch)&UNICODE_FSYMSTRT)
 #define DeeUni_IsSymCont(ch)  (DeeUni_Flags(ch)&UNICODE_FSYMCONT)
-#define DeeUni_IsDigitX(ch,x) \
+#define DeeUni_IsDecimalX(ch,x) \
        (sizeof(ch) == 1 ? ((uint8_t)(ch) == (uint8_t)('0'+(x))) : \
-                          ((ch) == '0'+(x) || _DeeUni_IsDigitX(ch,x)))
-FORCELOCAL bool DCALL _DeeUni_IsDigitX(uint32_t ch, uint8_t x) {
+                          ((ch) == '0'+(x) || _DeeUni_IsDecimalX(ch,x)))
+FORCELOCAL bool DCALL _DeeUni_IsDecimalX(uint32_t ch, uint8_t x) {
  struct unitraits *record = DeeUni_Descriptor(ch);
- return (record->ut_flags & UNICODE_FDIGIT) && record->ut_digit == x;
+ return (record->ut_flags & UNICODE_FDECIMAL) && record->ut_digit == x;
 }
 
 
