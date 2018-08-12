@@ -2055,6 +2055,116 @@ DEFINE_ANY_STRING_TRAIT(isanyascii,DeeString_IsAnyAscii)
 #undef DEFINE_ANY_STRING_TRAIT
 #undef DEFINE_STRING_TRAIT
 
+PRIVATE DREF DeeObject *DCALL
+string_asnumber(String *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ uint32_t ch; DeeObject *defl = NULL;
+ struct unitraits *trt;
+ if (argc == 0) {
+  if unlikely(DeeString_WLEN(self) != 1)
+     goto err_not_single_char;
+  ch = DeeString_GetChar(self,0);
+ } else {
+  size_t index;
+  if (DeeArg_Unpack(argc,argv,"Iu|o:asnumber",&index,&defl))
+      goto err;
+  if unlikely(index >= DeeString_WLEN(self)) {
+   err_index_out_of_bounds((DeeObject *)self,index,
+                            DeeString_WLEN(self));
+   goto err;
+  }
+  ch = DeeString_GetChar(self,index);
+ }
+ trt = DeeUni_Descriptor(ch);
+ if (!(trt->ut_flags & (UNICODE_FDIGIT|UNICODE_FDECIMAL)))
+       goto err_not_numeric;
+ return DeeInt_NewU8(trt->ut_digit);
+err_not_numeric:
+ if (defl)
+     return_reference_(defl);
+ DeeError_Throwf(&DeeError_ValueError,
+                 "Unicode character %I32C is not numeric",
+                 ch);
+ goto err;
+err_not_single_char:
+ err_expected_single_character_string((DeeObject *)self);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+string_asdigit(String *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ uint32_t ch; DeeObject *defl = NULL;
+ struct unitraits *trt;
+ if (argc == 0) {
+  if unlikely(DeeString_WLEN(self) != 1)
+     goto err_not_single_char;
+  ch = DeeString_GetChar(self,0);
+ } else {
+  size_t index;
+  if (DeeArg_Unpack(argc,argv,"Iu|o:asdigit",&index,&defl))
+      goto err;
+  if unlikely(index >= DeeString_WLEN(self)) {
+   err_index_out_of_bounds((DeeObject *)self,index,
+                            DeeString_WLEN(self));
+   goto err;
+  }
+  ch = DeeString_GetChar(self,index);
+ }
+ trt = DeeUni_Descriptor(ch);
+ if (!(trt->ut_flags & UNICODE_FDIGIT))
+       goto err_not_numeric;
+ return DeeInt_NewU8(trt->ut_digit);
+err_not_numeric:
+ if (defl)
+     return_reference_(defl);
+ DeeError_Throwf(&DeeError_ValueError,
+                 "Unicode character %I32C isn't a digit",
+                 ch);
+ goto err;
+err_not_single_char:
+ err_expected_single_character_string((DeeObject *)self);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+string_asdecimal(String *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ uint32_t ch; DeeObject *defl = NULL;
+ struct unitraits *trt;
+ if (argc == 0) {
+  if unlikely(DeeString_WLEN(self) != 1)
+     goto err_not_single_char;
+  ch = DeeString_GetChar(self,0);
+ } else {
+  size_t index;
+  if (DeeArg_Unpack(argc,argv,"Iu|o:asdecimal",&index,&defl))
+      goto err;
+  if unlikely(index >= DeeString_WLEN(self)) {
+   err_index_out_of_bounds((DeeObject *)self,index,
+                            DeeString_WLEN(self));
+   goto err;
+  }
+  ch = DeeString_GetChar(self,index);
+ }
+ trt = DeeUni_Descriptor(ch);
+ if (!(trt->ut_flags & UNICODE_FDECIMAL))
+       goto err_not_numeric;
+ return DeeInt_NewU8(trt->ut_digit);
+err_not_numeric:
+ if (defl)
+     return_reference_(defl);
+ DeeError_Throwf(&DeeError_ValueError,
+                 "Unicode character %I32C isn't a decimal",
+                 ch);
+ goto err;
+err_not_single_char:
+ err_expected_single_character_string((DeeObject *)self);
+err:
+ return NULL;
+}
+
+
 INTDEF DREF DeeObject *DCALL DeeString_Convert(DeeObject *__restrict self, size_t start, size_t end, uintptr_t kind);
 INTDEF DREF DeeObject *DCALL DeeString_ToTitle(DeeObject *__restrict self, size_t start, size_t end);
 INTDEF DREF DeeObject *DCALL DeeString_Capitalize(DeeObject *__restrict self, size_t start, size_t end);
@@ -8605,7 +8715,8 @@ INTERN struct type_method string_methods[] = {
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all characters "
-          "in ${this.substr(start,end)} qualify as digit or decimal characters") },
+          "in ${this.substr(start,end)} qualify as digit or decimal characters\n"
+          "This function is the logical union of #isdigit and #isdecimal") },
     { "istitle", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_istitle,
       DOC("(int index)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
@@ -8621,7 +8732,8 @@ INTERN struct type_method string_methods[] = {
       DOC("(int index)->bool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
-          "Returns :true if the character at ${this[index]} can be used to start a symbol name\n"
+          "Returns :true if the character at ${this[index]} can be used "
+          "to start a symbol name. Same as ${this.issymstrt(index)}\n"
           "\n"
           "->bool\n"
           "(int start,int end)->bool\n"
@@ -8635,14 +8747,45 @@ INTERN struct type_method string_methods[] = {
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start,end)} "
           "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
-    /* TODO:
-     * >> asdigit()->int
-     *    @throw ValueError The string is longer than a single character
-     *    @throw ValueError The character isn't numeric
-     * >> asdigit(int index)->int
-     *    @throw ValueError The character at @index isn't numeric
-     * >> asdigit(int index,int defl)->int
-     */
+    { "asnumber", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_asnumber,
+      DOC("->int\n"
+          "@throw ValueError The string is longer than a single character\n"
+          "(int index)->int\n"
+          "@throw ValueError The character at @index isn't numeric\n"
+          "(int index,int defl)->int\n"
+          "(int index,object defl)->object\n"
+          "@throw IntegerOverflow The given @index is negative or too large\n"
+          "@throw IndexError The given @index is out of bounds\n"
+          "Return the numeric value of the @index'th or only character of @this string, "
+          "or throw a :ValueError or return @defl if that character isn't #isnumeric\n"
+          ">print \"5\".isdigit();   /* true */\n"
+          ">print \"5\".isdecimal(); /* true */\n"
+          ">print \"5\".isnumeric(); /* true */\n"
+          ">print \"5\".asnumber();  /* 5 */\n"
+          ">print \"\xC2\xB2\".isdigit();   /* true */\n"
+          ">print \"\xC2\xB2\".isdecimal(); /* false */\n"
+          ">print \"\xC2\xB2\".isnumeric(); /* true */\n"
+          ">print \"\xC2\xB2\".asnumber();  /* 2 */") },
+    { "asdigit", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_asdigit,
+      DOC("->int\n"
+          "@throw ValueError The string is longer than a single character\n"
+          "(int index)->int\n"
+          "@throw ValueError The character at @index isn't numeric\n"
+          "(int index,int defl)->int\n"
+          "(int index,object defl)->object\n"
+          "@throw IntegerOverflow The given @index is negative or too large\n"
+          "@throw IndexError The given @index is out of bounds\n"
+          "Same as #asnumber, but only succeed if the selected character matches #isdigit, rather than #isnumeric\n") },
+    { "asdecimal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_asdecimal,
+      DOC("->int\n"
+          "@throw ValueError The string is longer than a single character\n"
+          "(int index)->int\n"
+          "@throw ValueError The character at @index isn't numeric\n"
+          "(int index,int defl)->int\n"
+          "(int index,object defl)->object\n"
+          "@throw IntegerOverflow The given @index is negative or too large\n"
+          "@throw IndexError The given @index is out of bounds\n"
+          "Same as #asnumber, but only succeed if the selected character matches #isdecimal, rather than #isnumeric\n") },
 
     { "isanyprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isanyprint,
       DOC("(int start=0,int end=-1)->bool\n"
