@@ -340,6 +340,8 @@ list_size_changed:
   DeeList_LockEndRead(self);
   return result;
  }
+ /* TODO: fast-sequence compatible. */
+
  /* Use general-purpose iterators to create a new tuple. */
  self = DeeObject_IterSelf(self);
  if unlikely(!self) return NULL;
@@ -1267,6 +1269,148 @@ tuple_ge(Tuple *__restrict self, DeeObject *__restrict other) {
  return_bool_(!result);
 }
 
+PRIVATE DREF DeeObject *DCALL
+tuple_concat(Tuple *__restrict self,
+             DeeObject *__restrict other) {
+ DREF DeeObject *result,**dst,*temp,*iterator;
+ size_t i,my_length,ot_length;
+ my_length = DeeTuple_SIZE(self);
+ if (my_length == 0)
+     return DeeTuple_FromSequence(other);
+ if (DeeTuple_Check(other)) {
+  ot_length = DeeTuple_SIZE(other);
+  if (ot_length == 0)
+      goto return_self;
+  result = DeeTuple_NewUninitialized(my_length + ot_length);
+  if unlikely(!result) goto err;
+  dst = DeeTuple_ELEM(result);
+  for (i = 0; i < my_length; ++i) {
+   temp = DeeTuple_GET(self,i);
+   Dee_Incref(temp);
+   *dst++ = temp; /* Inherit reference. */
+  }
+  for (i = 0; i < ot_length; ++i) {
+   temp = DeeTuple_GET(other,i);
+   Dee_Incref(temp);
+   *dst++ = temp; /* Inherit reference. */
+  }
+  goto done;
+ }
+ ot_length = DeeFastSeq_GetSize(other);
+ if (ot_length != DEE_FASTSEQ_NOTFAST) {
+  if (ot_length == 0)
+      goto return_self;
+  result = DeeTuple_NewUninitialized(my_length + ot_length);
+  if unlikely(!result) goto err;
+  dst = DeeTuple_ELEM(result);
+  for (i = 0; i < my_length; ++i) {
+   temp = DeeTuple_GET(self,i);
+   Dee_Incref(temp);
+   *dst++ = temp; /* Inherit reference. */
+  }
+  for (i = 0; i < ot_length; ++i) {
+   temp = DeeFastSeq_GetItem(other,i);
+   if unlikely(!temp) goto err_r;
+   *dst++ = temp; /* Inherit reference. */
+  }
+  goto done;
+ }
+ /* Fallback: use iterator. */
+ result = DeeTuple_NewUninitialized(my_length + 8);
+ if unlikely(!result) goto err;
+ dst = DeeTuple_ELEM(result);
+ iterator = DeeObject_IterSelf(other);
+ if unlikely(!iterator) goto err_r;
+ for (i = 0; i < my_length; ++i) {
+  temp = DeeTuple_GET(self,i);
+  Dee_Incref(temp);
+  *dst++ = temp; /* Inherit reference. */
+ }
+ ot_length = 0;
+ while (ITER_ISOK(temp = DeeObject_IterNext(iterator))) {
+  ASSERT(my_length <= DeeTuple_SIZE(result));
+  if (my_length >= DeeTuple_SIZE(result)) {
+   if unlikely(DeeTuple_ResizeUninitialized((DeeTupleObject **)&result,my_length * 2))
+      goto err_r;
+  }
+  ASSERT(my_length < DeeTuple_SIZE(result));
+  DeeTuple_SET(result,my_length,temp); /* Inherit reference. */
+  ++my_length;
+ }
+ if unlikely(!temp) goto err_r_iterator;
+ Dee_Decref(iterator);
+ if unlikely(DeeTuple_ResizeUninitialized((DeeTupleObject **)&result,my_length))
+    goto err_r;
+done:
+ return result;
+return_self:
+ return_reference_((DeeObject *)self);
+err_r_iterator:
+ Dee_Decref(iterator);
+err_r:
+ while (dst-- != DeeTuple_ELEM(result))
+     Dee_Decref(*dst);
+ DeeTuple_FreeUninitialized(result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+tuple_repeat(Tuple *__restrict self,
+             DeeObject *__restrict other) {
+ size_t i,count,total_length,my_length;
+ DREF DeeObject *result,**dst;
+ if (DeeObject_AsSize(other,&count))
+     goto err;
+ if (!count) goto return_empty;
+ if (count == 1) return_reference_((DeeObject *)self);
+ /* Repeat `self' `count' number of times. */
+ my_length = DeeTuple_SIZE(self);
+ if (my_length == 0) goto return_empty;
+ total_length = my_length * count;
+ if unlikely(total_length < count ||
+             total_length < my_length)
+    goto err_overflow;
+ result = DeeTuple_NewUninitialized(total_length);
+ if unlikely(!result) goto err;
+ /* Create all the new references that will be contained in the new tuple. */
+ for (i = 0; i < my_length; ++i)
+     Dee_Incref_n(DeeTuple_GET(self,i),count);
+ /* Fill in the resulting tuple with repetitions of ourself. */
+ dst = DeeTuple_ELEM(result);
+ while (count--) {
+  MEMCPY_PTR(dst,DeeTuple_ELEM(self),my_length);
+  dst += my_length;
+ }
+ return result;
+return_empty:
+ return_empty_tuple;
+err_overflow:
+ err_integer_overflow(other,sizeof(size_t) * 8,true);
+err:
+ return NULL;
+}
+
+PRIVATE struct type_math tuple_math = {
+    /* .tp_int32  = */NULL,
+    /* .tp_int64  = */NULL,
+    /* .tp_double = */NULL,
+    /* .tp_int    = */NULL,
+    /* .tp_inv    = */NULL,
+    /* .tp_pos    = */NULL,
+    /* .tp_neg    = */NULL,
+    /* .tp_add    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_concat,
+    /* .tp_sub    = */NULL,
+    /* .tp_mul    = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_repeat,
+    /* .tp_div    = */NULL,
+    /* .tp_mod    = */NULL,
+    /* .tp_shl    = */NULL,
+    /* .tp_shr    = */NULL,
+    /* .tp_and    = */NULL,
+    /* .tp_or     = */NULL,
+    /* .tp_xor    = */NULL,
+    /* .tp_pow    = */NULL,
+};
 PRIVATE struct type_cmp tuple_cmp = {
     /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&tuple_hash,
     /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_eq,
@@ -1281,7 +1425,73 @@ PRIVATE struct type_cmp tuple_cmp = {
 PUBLIC DeeTypeObject DeeTuple_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_tuple),
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("A builtin type that is similar to :list, however represents a fixed-length, "
+                            "immutable sequence of objects. Tuples are fast, low-level :sequence-like objects "
+                            "that are written as ${(elem1,elem2,etc)}, with the exception of single-element "
+                            "tuples being written as ${(single_element,)}\n"
+                            "\n"
+                            "()\n"
+                            "Construct an empty tuple\n"
+                            "\n"
+                            "(sequence items)\n"
+                            "Construct a new tuple that is pre-initializes with the elements from @items\n"
+                            "\n"
+                            "str->\n"
+                            "Returns a representation of @this tuple:\n"
+                            ">operator str() {\n"
+                            "> return \"(\" + \", \".join(this) + \")\";\n"
+                            ">}\n"
+                            "\n"
+                            "repr->\n"
+                            "Returns a representation of @this tuple:\n"
+                            ">operator repr() {\n"
+                            "> if (#this == 1)\n"
+                            ">  return \"({!r},)\".format({ this[0] });\n"
+                            "> return \"(\" + \", \".join(for (local x: this) repr x) + \")\";\n"
+                            ">}\n"
+                            "\n"
+                            "bool->\n"
+                            "Returns :true if @this tuple is non-empty\n"
+                            "\n"
+                            "+(tuple other)->\n"
+                            "+(sequence other)->\n"
+                            "@throw NotImplemented The given @other isn't iterable\n"
+                            "Returns a new tuple consisting of the elements from @this, followed by "
+                            "those from @other, which may be another tuple, or a generic sequence\n"
+                            "\n"
+                            "*(int count)->\n"
+                            "@throw IntegerOverflow The given @count is negative, or too large\n"
+                            "Return a new tuple consisting of the elements from @this, repeated @count times\n"
+                            "When @count is $0, an empty tuple is returned. When @count is $1, @this tuple is re-returned\n"
+                            "\n"
+                            "==->\n"
+                            "!=->\n"
+                            "<->\n"
+                            "<=->\n"
+                            ">->\n"
+                            ">=->\n"
+                            "Perform a lexicographical comparison between the elements of @this tuple and the given @other sequence\n"
+                            "\n"
+                            "iter->\n"
+                            "Returns an iterator for enumerating the elements of @this tuple\n"
+                            "\n"
+                            "#->\n"
+                            "Returns the number of elements contained inside of @this tuple\n"
+                            "\n"
+                            "contains->\n"
+                            "Returns :true if @elem is apart of @this tuple, or @false otherwise\n"
+                            "\n"
+                            "[](int index)->\n"
+                            "@throw IntegerOverflow The given @index is negative, or too large\n"
+                            "@throw IndexError The given @index is out of bounds\n"
+                            "Returns the @index'th item of @this tuple\n"
+                            "\n"
+                            "[:](int start,int end)->\n"
+                            "Returns a new tuple for the given subrange, following the usual rules for "
+                            "negative @start or @end values, as well as :none being passed for either "
+                            "(s.a. :sequence.op:getrange)\n"
+                            "\n"
+                            ),
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1312,7 +1522,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&tuple_visit,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL, /* TODO: tp_add should return a tuple */
+    /* .tp_math          = */&tuple_math,
     /* .tp_cmp           = */&tuple_cmp,
     /* .tp_seq           = */&tuple_seq,
     /* .tp_iter_next     = */NULL,

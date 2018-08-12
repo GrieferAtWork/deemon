@@ -215,7 +215,10 @@ function get_doc_path(path) {
 
 
 function do_find_global_target(module_node,name,allow_module_root = true) {
-	if (":" in name) {
+	local colon_pos = name.find(":");
+	if (colon_pos >= 0 &&
+	   (colon_pos < 2 ||
+	   (name[colon_pos-2:colon_pos] != "op" && name[colon_pos-1] !in ["c","i"]))) {
 		local target_module,target_path;
 		target_module,none,target_path = name.partition(":")...;
 		return get_doc_path("/{}/{}".format({ target_module, target_path }));
