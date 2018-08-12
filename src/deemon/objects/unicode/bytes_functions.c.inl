@@ -505,6 +505,19 @@ err:
 }
 
 PRIVATE DREF Bytes *DCALL
+bytes_makereadonly(Bytes *__restrict self,
+                   size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":makereadonly"))
+     goto err;
+ if (!DeeBytes_WRITABLE(self))
+      return_reference_(self);
+ return (DREF Bytes *)DeeBytes_NewSubViewRo(self,
+                                            DeeBytes_DATA(self),
+                                            DeeBytes_SIZE(self));
+err:
+ return NULL;
+}
+PRIVATE DREF Bytes *DCALL
 bytes_makewritable(Bytes *__restrict self,
                    size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":makewritable"))
@@ -3220,7 +3233,11 @@ INTERN struct type_method bytes_methods[] = {
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #reversed, but modifications are performed "
           "in-line, before @this bytes object is re-returned") },
-    /* TODO: makereadonly() */
+    { "makereadonly", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_makereadonly,
+      DOC("->bytes\n"
+          "The inverse of #makewritable, either re-returning @this bytes object if it "
+          "already is read-only, or construct a view for the data contained within @this "
+          "bytes object, but making that view read-only") },
     { "makewritable", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_makewritable,
       DOC("->bytes\n"
           "Either re-return @this bytes object is it already #iswritable, or create a "
