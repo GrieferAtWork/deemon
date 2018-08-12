@@ -2046,6 +2046,99 @@ string_swapcase(String *__restrict self,
  return DeeString_Swapcase((DeeObject *)self,start,end);
 }
 PRIVATE DREF DeeObject *DCALL
+string_casefold(String *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"|IdId:casefold",&start,&end))
+     goto err;
+ {
+  struct unicode_printer printer = UNICODE_PRINTER_INIT;
+  union dcharptr my_iter,my_flush_start,my_end;
+  uint32_t buf[UNICODE_FOLDED_MAX]; size_t foldlen;
+  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+  CASE_WIDTH_1BYTE:
+   my_iter.cp8 = DeeString_Get1Byte((DeeObject *)self);
+   if (end > WSTR_LENGTH(my_iter.cp8))
+       end = WSTR_LENGTH(my_iter.cp8);
+   if unlikely(start >= end) goto return_empty;
+   my_end.cp8         = my_iter.cp8 + end;
+   my_iter.cp8       += start;
+   my_flush_start.cp8 = my_iter.cp8;
+   for (; my_iter.cp8 < my_end.cp8; ++my_iter.cp8) {
+    uint8_t ch = *my_iter.cp8;
+    foldlen = DeeUni_ToFolded(ch,buf);
+    if (foldlen == 1 && buf[0] == (uint32_t)ch)
+        continue; /* The character representation doesn't change. */
+    /* Flush all unwritten data. */
+    if (unicode_printer_print8(&printer,my_flush_start.cp8,
+                              (size_t)(my_iter.cp8 - my_flush_start.cp8)))
+        goto err_printer;
+    /* Print the case-folded character representation. */
+    if (unicode_printer_print32(&printer,buf,foldlen))
+        goto err_printer;
+    my_flush_start.cp8 = my_iter.cp8 + 1;
+   }
+   break;
+  CASE_WIDTH_2BYTE:
+   my_iter.cp16 = DeeString_Get2Byte((DeeObject *)self);
+   if (end > WSTR_LENGTH(my_iter.cp16))
+       end = WSTR_LENGTH(my_iter.cp16);
+   if unlikely(start >= end) goto return_empty;
+   my_end.cp16         = my_iter.cp16 + end;
+   my_iter.cp16       += start;
+   my_flush_start.cp16 = my_iter.cp16;
+   for (; my_iter.cp16 < my_end.cp16; ++my_iter.cp16) {
+    uint16_t ch = *my_iter.cp16;
+    foldlen = DeeUni_ToFolded(ch,buf);
+    if (foldlen == 1 && buf[0] == (uint32_t)ch)
+        continue; /* The character representation doesn't change. */
+    /* Flush all unwritten data. */
+    if (unicode_printer_print16(&printer,my_flush_start.cp16,
+                              (size_t)(my_iter.cp16 - my_flush_start.cp16)))
+        goto err_printer;
+    /* Print the case-folded character representation. */
+    if (unicode_printer_print32(&printer,buf,foldlen))
+        goto err_printer;
+    my_flush_start.cp16 = my_iter.cp16 + 1;
+   }
+   break;
+  CASE_WIDTH_4BYTE:
+   my_iter.cp32 = DeeString_Get4Byte((DeeObject *)self);
+   if (end > WSTR_LENGTH(my_iter.cp32))
+       end = WSTR_LENGTH(my_iter.cp32);
+   if unlikely(start >= end) goto return_empty;
+   my_end.cp32         = my_iter.cp32 + end;
+   my_iter.cp32       += start;
+   my_flush_start.cp32 = my_iter.cp32;
+   for (; my_iter.cp32 < my_end.cp32; ++my_iter.cp32) {
+    uint32_t ch = *my_iter.cp32;
+    foldlen = DeeUni_ToFolded(ch,buf);
+    if (foldlen == 1 && buf[0] == (uint32_t)ch)
+        continue; /* The character representation doesn't change. */
+    /* Flush all unwritten data. */
+    if (unicode_printer_print32(&printer,my_flush_start.cp32,
+                              (size_t)(my_iter.cp32 - my_flush_start.cp32)))
+        goto err_printer;
+    /* Print the case-folded character representation. */
+    if (unicode_printer_print32(&printer,buf,foldlen))
+        goto err_printer;
+    my_flush_start.cp32 = my_iter.cp32 + 1;
+   }
+   break;
+  }
+  return unicode_printer_pack(&printer);
+return_empty:
+  unicode_printer_fini(&printer);
+  return_empty_string;
+err_printer:
+  unicode_printer_fini(&printer);
+ }
+err:
+ return NULL;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
 string_find(String *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  String *other; size_t begin = 0,end = (size_t)-1;
@@ -8544,6 +8637,22 @@ INTERN struct type_method string_methods[] = {
       DOC("(int start=0,int end=-1)->string\n"
           "Returns @this string with the casing of each "
           "character that has two different casings swapped") },
+    { "casefold", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casefold,
+      DOC("(int start=0,int end=-1)->string\n"
+          "Returns @this string with its casing folded.\n"
+          "The equivalent of the string returned by this function is what is "
+          "used by the case-insensitive string APIs, such as #casefind\n"
+          "The case folding algorithm implemented matches what "
+          "%{link https://www.w3.org/International/wiki/Case_folding unicode} "
+          "describes as full case folding\n"
+          "At its core, case-folding a string is fairly similar to #lower, however "
+          "the differences start to appear when characters such as $\"\xC3\x9F\" are being "
+          "used, $\"\xC3\x9F\" being a german character that doesn't have a lower- or upper-case "
+          "variant, however in the absence of unicode support is often written as $\"ss\".\n"
+          "The obvious problem here is that this alternative representation uses 2 characters "
+          "where previously there was only one. #casefold solves this problem by replacing $\"\xC3\x9F\" "
+          "with $\"ss\", allowing functions such as #casecompare to indicate equal strings in "
+          "cases such as ${\"Stra\xC3\x9F" "e\".casecompare(\"Strasse\") == 0}") },
 
     /* Case-sensitive query functions */
     { "replace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_replace,
@@ -8695,86 +8804,86 @@ INTERN struct type_method string_methods[] = {
     /* Case-insensitive query functions */
     { "casereplace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casereplace,
       DOC("(string find_str,string replace_str,int max_count=int.SIZE_MAX)->int\n"
-          "Same as #replace, however perform a case-folded search") },
+          "Same as #replace, however perform a case-folded search (s.a. #casefold)") },
     { "casefind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casefind,
       DOC("(string needle,int start=0,int end=-1)->(int,int)\n"
-          "Same as #find, however perform a case-folded search and return the start and end indices of the match") },
+          "Same as #find, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)") },
     { "caserfind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caserfind,
       DOC("(string needle,int start=0,int end=-1)->(int,int)\n"
-          "Same as #rfind, however perform a case-folded search and return the start and end indices of the match") },
+          "Same as #rfind, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)") },
     { "caseindex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caseindex,
       DOC("(string needle,int start=0,int end=-1)->(int,int)\n"
-          "Same as #index, however perform a case-folded search and return the start and end indices of the match") },
+          "Same as #index, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)") },
     { "caserindex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caserindex,
       DOC("(string needle,int start=0,int end=-1)->(int,int)\n"
-          "Same as #rindex, however perform a case-folded search and return the start and end indices of the match") },
+          "Same as #rindex, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)") },
     { "casefindall", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casefindall,
        DOC("(string needle,int start=0,int end=-1)->{(int,int)...}\n"
-          "Same as #findall, however perform a case-folded search and return the star and end indices of matches") },
+          "Same as #findall, however perform a case-folded search and return the star and end indices of matches (s.a. #casefold)") },
     { "casecount", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casecount,
       DOC("(string needle,int start=0,int end=-1)->int\n"
-          "Same as #count, however perform a case-folded search") },
+          "Same as #count, however perform a case-folded search (s.a. #casefold)") },
     { "casecontains", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casecontains_f,
       DOC("(string needle,int start=0,int end=-1)->bool\n"
-          "Same as #contains, however perform a case-folded search") },
+          "Same as #contains, however perform a case-folded search (s.a. #casefold)") },
     { "casestrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casestrip,
       DOC("->string\n"
           "(string mask)->string\n"
-          "Same as #strip, however perform a case-folded search when @mask is given") },
+          "Same as #strip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
     { "caselstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caselstrip,
       DOC("->string\n"
           "(string mask)->string\n"
-          "Same as #lstrip, however perform a case-folded search when @mask is given") },
+          "Same as #lstrip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
     { "caserstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caserstrip,
       DOC("->string\n"
           "(string mask)->string\n"
-          "Same as #rstrip, however perform a case-folded search when @mask is given") },
+          "Same as #rstrip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
     { "casesstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casesstrip,
       DOC("(string other)->string\n"
-          "Same as #sstrip, however perform a case-folded search") },
+          "Same as #sstrip, however perform a case-folded search (s.a. #casefold)") },
     { "caselsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caselsstrip,
       DOC("(string other)->string\n"
-          "Same as #lsstrip, however perform a case-folded search") },
+          "Same as #lsstrip, however perform a case-folded search (s.a. #casefold)") },
     { "casersstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casersstrip,
       DOC("(string other)->string\n"
-          "Same as #rsstrip, however perform a case-folded search") },
+          "Same as #rsstrip, however perform a case-folded search (s.a. #casefold)") },
     { "casestartswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casestartswith,
       DOC("(string other,int start=0,int end=-1)->bool\n"
-          "Same as #startswith, however perform a case-folded search") },
+          "Same as #startswith, however perform a case-folded search (s.a. #casefold)") },
     { "caseendswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caseendswith,
       DOC("(string other,int start=0,int end=-1)->bool\n"
-          "Same as #endswith, however perform a case-folded search") },
+          "Same as #endswith, however perform a case-folded search (s.a. #casefold)") },
     { "casepartition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caseparition,
       DOC("(string needle,int start=0,int end=-1)->(string,string,string)\n"
-          "Same as #partition, however perform a case-folded search") },
+          "Same as #partition, however perform a case-folded search (s.a. #casefold)") },
     { "caserpartition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caserparition,
       DOC("(string needle,int start=0,int end=-1)->(string,string,string)\n"
-          "Same as #rpartition, however perform a case-folded search") },
+          "Same as #rpartition, however perform a case-folded search (s.a. #casefold)") },
     { "casecompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casecompare,
       DOC("(string other,int other_start=0,int other_end=-1)->int\n"
           "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
           "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "Same as #compare, however compare strings with their casing folded") },
+          "Same as #compare, however compare strings with their casing folded (s.a. #casefold)") },
     { "casevercompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casevercompare,
       DOC("(string other,int other_start=0,int other_end=-1)->int\n"
           "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
           "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "Same as #vercompare, however compare strings with their casing folded") },
+          "Same as #vercompare, however compare strings with their casing folded (s.a. #casefold)") },
     { "casewildcompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casewildcompare,
       DOC("(string pattern,int pattern_start=0,int pattern_end=-1)->int\n"
           "(int my_start,string pattern,int pattern_start=0,int pattern_end=-1)->int\n"
           "(int my_start,int my_end,string pattern,int pattern_start=0,int pattern_end=-1)->int\n"
-          "Same as #wildcompare, however compare strings with their casing folded") },
+          "Same as #wildcompare, however compare strings with their casing folded (s.a. #casefold)") },
     { "casefuzzycompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casefuzzycompare,
       DOC("(string other,int other_start=0,int other_end=-1)->int\n"
           "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
           "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "Same as #fuzzycompare, however compare strings with their casing folded") },
+          "Same as #fuzzycompare, however compare strings with their casing folded (s.a. #casefold)") },
     { "casewmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casewmatch,
       DOC("(string pattern,int pattern_start=0,int pattern_end=-1)->bool\n"
           "(int my_start,string pattern,int pattern_start=0,int pattern_end=-1)->bool\n"
           "(int my_start,int my_end,string pattern,int pattern_start=0,int pattern_end=-1)->bool\n"
-          "Same as #wmatch, however compare strings with their casing folded") },
+          "Same as #wmatch, however compare strings with their casing folded (s.a. #casefold)") },
 
     /* String alignment functions. */
     { "center", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_center,
