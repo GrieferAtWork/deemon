@@ -530,6 +530,39 @@ bytes_makewritable(Bytes *__restrict self,
 err:
  return NULL;
 }
+PRIVATE DREF DeeObject *DCALL
+bytes_hex(Bytes *__restrict self,
+          size_t argc, DeeObject **__restrict argv) {
+ size_t start = 0,end = (size_t)-1,i; char *dst;
+ DREF DeeStringObject *result; uint8_t *data;
+ if (DeeArg_Unpack(argc,argv,"|IdId:hex",&start,&end))
+     goto err;
+ if (end > DeeBytes_SIZE(self))
+     end = DeeBytes_SIZE(self);
+ if (start >= end)
+     return_empty_string;
+ end  -= start;
+ data  = DeeBytes_DATA(self);
+ data += start;
+ result = (DREF DeeStringObject *)DeeString_NewBuffer(end * 2);
+ if unlikely(!result) goto err;
+ dst = DeeString_STR(result);
+ for (i = 0; i < end; ++i) {
+  uint8_t byte = data[i];
+  uint8_t nibble;
+#ifndef CONFIG_NO_THREADS
+  COMPILER_READ_BARRIER();
+#endif
+  nibble = byte >> 4;
+  *dst++ = nibble >= 10 ? (char)('a' + (nibble - 10)) : (char)('0' + nibble);
+  byte  &= 0xf;
+  *dst++ = nibble >= 10 ? (char)('a' + (byte - 10)) : (char)('0' + byte);
+ }
+ ASSERT(dst == DeeString_END(result));
+ return (DREF DeeObject *)result;
+err:
+ return NULL;
+}
 
 
 PRIVATE DREF DeeObject *DCALL
@@ -3247,6 +3280,13 @@ INTERN struct type_method bytes_methods[] = {
           ">  return this;\n"
           "> return copy this;\n"
           ">}") },
+    { "hex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_hex,
+      DOC("(int start=0,int end=-1)->string\n"
+          "Returns a hex-encoded string for the bytes contained within "
+          "${this.substr(start,end)}, that is a string containing 2 characters "
+          "for each encoded byte, both of which are lower-case hexadecimal digits\n"
+          "The returned string is formatted such that #fromhex can be used to decode "
+          "it into another bytes object") },
 
     /* Bytes formatting / scanning. */
     { "format", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_format,
