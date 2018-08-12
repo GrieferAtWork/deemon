@@ -3437,6 +3437,10 @@ INTERN struct type_method bytes_methods[] = {
       DOC("(int start=0,int end=-1)->bytes\n"
           "Returns a writable copy of @this bytes object with the casing of each "
           "character that has two different casings swapped (when interpreted as ASCII)") },
+    { "casefold", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lower,
+      DOC("(int start=0,int end=-1)->bytes\n"
+          "Alias for #{lower}. This function exists to match :string.casefold in "
+          "order to improve binary compatibility between :bytes and :string objects") },
 
     /* Inplace variants of bytes conversion functions */
     { "tolower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tolower,
@@ -3459,6 +3463,10 @@ INTERN struct type_method bytes_methods[] = {
       DOC("(int start=0,int end=-1)->bytes\n"
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #swapcase, but character modifications are performed in-place, and @this bytes object is re-returned") },
+    { "tocasefold", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tolower,
+      DOC("(int start=0,int end=-1)->bytes\n"
+          "@throw BufferError @this bytes object is not writable\n"
+          "Alias for #tolower, here to coincide with #casefold existing as an alias for #lower") },
 
     /* Case-sensitive query functions */
     { "replace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_replace,
