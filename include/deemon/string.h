@@ -888,7 +888,7 @@ DREF DeeObject *DeeString_New1Byte(uint8_t const *__restrict str, size_t length)
 
 
 /* Construct a string from a UTF-8 character sequence. */
-DFUNDEF DREF DeeObject *DCALL DeeString_NewUtf8(char const *__restrict str, size_t length,
+DFUNDEF DREF DeeObject *DCALL DeeString_NewUtf8(/*utf-8*/char const *__restrict str, size_t length,
                                                 unsigned int error_mode);
 
 /* Construct strings from UTF-16/32 encoded content.
@@ -1183,6 +1183,10 @@ void unicode_printer_fini(struct unicode_printer *__restrict self);
  * @return: NULL: An error occurred. */
 DFUNDEF DREF DeeObject *DCALL
 unicode_printer_pack(/*inherit(always)*/struct unicode_printer *__restrict self);
+
+/* Same as `unicode_printer_pack()', but don't throw errors upon failure, but
+ * simply return `NULL' and leave `self' in a valid state, ready for the call
+ * to be repeated at a later time. */
 DFUNDEF DREF DeeObject *DCALL
 unicode_printer_trypack(/*inherit(on_success)*/struct unicode_printer *__restrict self);
 
@@ -1204,16 +1208,29 @@ DFUNDEF int (DCALL unicode_printer_putascii)(struct unicode_printer *__restrict 
 DFUNDEF int (DCALL unicode_printer_pututf8)(struct unicode_printer *__restrict self, char ch);
 /* Append a UTF-16 character. */
 DFUNDEF int (DCALL unicode_printer_pututf16)(struct unicode_printer *__restrict self, uint16_t ch);
+
 /* Append a UTF-32 character. */
 #ifdef __INTELLISENSE__
 int (unicode_printer_pututf32)(struct unicode_printer *__restrict self, uint32_t ch);
 #else
-#define unicode_printer_pututf32  unicode_printer_putc
+#define unicode_printer_pututf32(self,ch)  unicode_printer_putc(self,ch)
+#endif
+
+/* Append an 8-, 16-, or 32-bit unicode character. */
+#ifdef __INTELLISENSE__
+int (unicode_printer_put8)(struct unicode_printer *__restrict self, uint8_t ch);
+int (unicode_printer_put16)(struct unicode_printer *__restrict self, uint16_t ch);
+int (unicode_printer_put32)(struct unicode_printer *__restrict self, uint32_t ch);
+#else
+#define unicode_printer_put8(self,ch)   unicode_printer_putc(self,ch)
+#define unicode_printer_put16(self,ch)  unicode_printer_putc(self,ch)
+#define unicode_printer_put32(self,ch)  unicode_printer_putc(self,ch)
 #endif
 
 /* Append UTF-8 text to the back of the given printer.
  * An incomplete UTF-8 sequences can be completed by future uses of this function.
  * HINT: This function is intentionally designed as compatible with `dformatprinter'
+ *       >> DeeObject_Print(ob,(dformatprinter)&unicode_printer_print,&printer);
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
 DFUNDEF dssize_t
@@ -1237,7 +1254,7 @@ DFUNDEF dssize_t
                                    size_t textlen);
 DFUNDEF dssize_t
 (DCALL unicode_printer_printutf8)(struct unicode_printer *__restrict self,
-                                  /*utf-8*/unsigned char const *__restrict text,
+                                  /*utf-8*/char const *__restrict text,
                                   size_t textlen);
 DFUNDEF dssize_t
 (DCALL unicode_printer_printutf32)(struct unicode_printer *__restrict self,
@@ -1247,7 +1264,7 @@ DFUNDEF dssize_t
 #define unicode_printer_printascii(self,text,textlen) \
         unicode_printer_print8(self,(uint8_t *)(text),textlen)
 #define unicode_printer_printutf8(self,text,textlen) \
-        unicode_printer_print(self,(char *)(text),textlen)
+        unicode_printer_print(self,text,textlen)
 #define unicode_printer_printutf32(self,text,textlen) \
         unicode_printer_print32(self,text,textlen)
 #endif
@@ -1394,13 +1411,6 @@ dssize_t (unicode_printer_confirm_wchar)(struct unicode_printer *__restrict self
 #define unicode_printer_confirm_wchar(self,buf,final_length)   unicode_printer_confirm_utf32(self,(uint32_t *)(buf),final_length)
 #endif
 
-/* Find a given unicode character within the specified index-range.
- * @return: * : The index of the character, offset from the start of the printer.
- * @return: -1: The character wasn't found. */
-DFUNDEF dssize_t (DCALL unicode_printer_memchr)(struct unicode_printer *__restrict self, uint32_t chr, size_t start, size_t length);
-DFUNDEF dssize_t (DCALL unicode_printer_memrchr)(struct unicode_printer *__restrict self, uint32_t chr, size_t start, size_t length);
-
-
 #if 0
 /* Allocate raw unicode character buffer. */
 DFUNDEF uint8_t *DCALL unicode_printer_alloc8(struct unicode_printer *__restrict self, size_t length);                       /* Dee_Malloc()-like */
@@ -1422,6 +1432,15 @@ DFUNDEF uint32_t *DCALL unicode_printer_tryresize32(struct unicode_printer *__re
 DFUNDEF void DCALL unicode_printer_free32(struct unicode_printer *__restrict self, uint32_t *buf);                             /* Dee_Free()-like */
 DFUNDEF dssize_t DCALL unicode_printer_confirm32(struct unicode_printer *__restrict self, uint32_t *buf, size_t final_length);
 #endif
+
+
+
+/* Find a given unicode character within the specified index-range.
+ * @return: * : The index of the character, offset from the start of the printer.
+ * @return: -1: The character wasn't found. */
+DFUNDEF dssize_t (DCALL unicode_printer_memchr)(struct unicode_printer *__restrict self, uint32_t chr, size_t start, size_t length);
+DFUNDEF dssize_t (DCALL unicode_printer_memrchr)(struct unicode_printer *__restrict self, uint32_t chr, size_t start, size_t length);
+
 
 
 #ifndef __INTELLISENSE__

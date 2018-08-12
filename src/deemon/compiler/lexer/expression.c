@@ -306,9 +306,8 @@ DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
   uint32_t ch;
   candidate = (char *)memchr(start,'\\',(size_t)(end - (char *)start));
   if (!candidate) break;
-  if (unicode_printer_printutf8(printer,
-                               (unsigned char *)flush_start,
-                               (size_t)(candidate - (char *)flush_start)) < 0)
+  if (unicode_printer_printutf8(printer,flush_start,
+                               (size_t)(candidate - flush_start)) < 0)
       goto err;
   flush_start = candidate;
   ++candidate;
@@ -323,8 +322,7 @@ DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
    }
   }
  }
- if (unicode_printer_printutf8(printer,
-                              (unsigned char *)flush_start,
+ if (unicode_printer_printutf8(printer,flush_start,
                               (size_t)(end - flush_start)) < 0)
      goto err;
  return 0;
