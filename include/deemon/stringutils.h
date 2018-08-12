@@ -37,6 +37,44 @@ DFUNDEF char *(DCALL utf8_writechar)(char *__restrict buffer, uint32_t ch); /* U
                            * as this is the theoretical limit. - The actual limit would be `4') */
 
 
+#ifdef __INTELLISENSE__
+extern "C++" {
+size_t (DCALL DeeUni_FoldedLength)(uint8_t const *__restrict text, size_t length);
+size_t (DCALL DeeUni_FoldedLength)(uint16_t const *__restrict text, size_t length);
+size_t (DCALL DeeUni_FoldedLength)(uint32_t const *__restrict text, size_t length);
+}
+#else
+#define DeeUni_FoldedLength(text,length) \
+    (sizeof(*(text)) == 1 ? _DeeUni_FoldedLength_b((uint8_t *)(text),length) : \
+     sizeof(*(text)) == 2 ? _DeeUni_FoldedLength_w((uint16_t *)(text),length) : \
+                            _DeeUni_FoldedLength_l((uint32_t *)(text),length))
+LOCAL size_t
+(DCALL _DeeUni_FoldedLength_b)(uint8_t *__restrict text, size_t length) {
+ size_t i,result = 0;
+ uint8_t buf[UNICODE_FOLDED_MAX];
+ for (i = 0; i < length; ++i)
+     result += DeeUni_ToFolded(text[i],buf);
+ return result;
+}
+LOCAL size_t
+(DCALL _DeeUni_FoldedLength_w)(uint16_t *__restrict text, size_t length) {
+ size_t i,result = 0;
+ uint16_t buf[UNICODE_FOLDED_MAX];
+ for (i = 0; i < length; ++i)
+     result += DeeUni_ToFolded(text[i],buf);
+ return result;
+}
+LOCAL size_t
+(DCALL _DeeUni_FoldedLength_l)(uint32_t *__restrict text, size_t length) {
+ size_t i,result = 0;
+ uint32_t buf[UNICODE_FOLDED_MAX];
+ for (i = 0; i < length; ++i)
+     result += DeeUni_ToFolded(text[i],buf);
+ return result;
+}
+#endif
+
+
 LOCAL char *
 (DCALL utf8_skipspace)(char const *__restrict str,
                        char const *__restrict end) {

@@ -153,6 +153,8 @@ ast_parse_module_name(struct unicode_printer *__restrict printer) {
        !TOK_ISDOT(tok)))
        break; /* Special case: `.' is a valid name for the current module. */
   } else if (TPP_ISKEYWORD(tok)) {
+   /* TODO: Warn about reserved identifiers
+    *    -> Reserved identifiers should be written as strings. */
    if (unicode_printer_print(printer,
                              token.t_kwd->k_name,
                              token.t_kwd->k_size) < 0)
@@ -182,6 +184,8 @@ PRIVATE int DCALL
 ast_parse_symbol_name(struct unicode_printer *__restrict printer) {
  int result = 0;
  if (TPP_ISKEYWORD(tok)) {
+  /* TODO: Warn about reserved identifiers
+   *    -> Reserved identifiers should be written as strings. */
   if (unicode_printer_print(printer,
                             token.t_kwd->k_name,
                             token.t_kwd->k_size) < 0)
@@ -329,6 +333,8 @@ parse_import_symbol(struct import_item *__restrict result,
    * - `foo.bar'
    * - `foo.bar as foobar' */
   result->ii_symbol_name = token.t_kwd;
+  /* TODO: Warn about reserved identifiers
+   *    -> Reserved identifiers should be written as strings. */
   if unlikely(yield() < 0) goto err;
   if (tok == '=') {
    /* - `foo = bar'
@@ -397,6 +403,7 @@ complete_module_name:
         goto err_name;
     goto autogenerate_symbol_name;
    }
+   /* TODO: Warn about reserved identifiers */
    result->ii_symbol_name = token.t_kwd;
    if unlikely(yield() < 0) goto err_name;
   } else {
@@ -406,6 +413,7 @@ autogenerate_symbol_name:
    result->ii_symbol_name = get_module_symbol_name(result->ii_import_name,
                                                    return_value != 0);
    if unlikely(!result->ii_symbol_name) goto err_name;
+   /* TODO: Warn about reserved identifiers */
   }
  } else if (tok == TOK_STRING) {
   /* - `"foo"'
@@ -430,6 +438,7 @@ autogenerate_symbol_name:
    goto autogenerate_symbol_name;
   }
   result->ii_symbol_name = token.t_kwd;
+  /* TODO: Warn about reserved identifiers */
   if unlikely(yield() < 0) goto err_name;
  } else {
   if (WARN(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))

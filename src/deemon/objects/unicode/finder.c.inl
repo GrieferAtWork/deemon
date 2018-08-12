@@ -232,40 +232,43 @@ again:
 PRIVATE DREF DeeObject *DCALL
 scfi_next(StringFindIterator *__restrict self) {
  union dcharptr ptr,new_ptr;
+ size_t match_length,result;
 again:
  ptr.ptr = ATOMIC_READ(self->sfi_ptr.ptr);
  SWITCH_SIZEOF_WIDTH(self->sfi_width) {
  CASE_WIDTH_1BYTE:
   new_ptr.cp8 = memcasememb(ptr.cp8,(size_t)(self->sfi_end.cp8 - ptr.cp8),
                             self->sfi_needle_ptr.cp8,
-                            self->sfi_needle_len);
-  if (new_ptr.cp8) {
-   if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp8,ptr.cp8,new_ptr.cp8 + self->sfi_needle_len))
-        goto again;
-   return DeeInt_NewSize((size_t)(new_ptr.cp8 - self->sfi_start.cp8));
-  }
+                            self->sfi_needle_len,
+                           &match_length);
+  if (!new_ptr.cp8) goto iter_done;
+  if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp8,ptr.cp8,new_ptr.cp8 + match_length))
+       goto again;
+  result = (size_t)(new_ptr.cp8 - self->sfi_start.cp8);
   break;
  CASE_WIDTH_2BYTE:
   new_ptr.cp16 = memcasememw(ptr.cp16,(size_t)(self->sfi_end.cp16 - ptr.cp16),
                              self->sfi_needle_ptr.cp16,
-                             self->sfi_needle_len);
-  if (new_ptr.cp16) {
-   if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp16,ptr.cp16,new_ptr.cp16 + self->sfi_needle_len))
-        goto again;
-   return DeeInt_NewSize((size_t)(new_ptr.cp16 - self->sfi_start.cp16));
-  }
+                             self->sfi_needle_len,
+                            &match_length);
+  if (!new_ptr.cp16) goto iter_done;
+  if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp16,ptr.cp16,new_ptr.cp16 + match_length))
+       goto again;
+  result = (size_t)(new_ptr.cp16 - self->sfi_start.cp16);
   break;
  CASE_WIDTH_4BYTE:
   new_ptr.cp32 = memcasememl(ptr.cp32,(size_t)(self->sfi_end.cp32 - ptr.cp32),
                              self->sfi_needle_ptr.cp32,
-                             self->sfi_needle_len);
-  if (new_ptr.cp32) {
-   if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp32,ptr.cp32,new_ptr.cp32 + self->sfi_needle_len))
-        goto again;
-   return DeeInt_NewSize((size_t)(new_ptr.cp32 - self->sfi_start.cp32));
-  }
+                             self->sfi_needle_len,
+                            &match_length);
+  if (!new_ptr.cp32) goto iter_done;
+  if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp32,ptr.cp32,new_ptr.cp32 + match_length))
+       goto again;
+  result = (size_t)(new_ptr.cp32 - self->sfi_start.cp32);
   break;
  }
+ return DeeTuple_Newf("IuIu",result,result + match_length);
+iter_done:
  return ITER_DONE;
 }
 
@@ -304,17 +307,17 @@ scfi_bool(StringFindIterator *__restrict self) {
  CASE_WIDTH_1BYTE:
   ptr.cp8 = memcasememb(ptr.cp8,(size_t)(self->sfi_end.cp8 - ptr.cp8),
                         self->sfi_needle_ptr.cp8,
-                        self->sfi_needle_len);
+                        self->sfi_needle_len,NULL);
   break;
  CASE_WIDTH_2BYTE:
   ptr.cp16 = memcasememw(ptr.cp16,(size_t)(self->sfi_end.cp16 - ptr.cp16),
                          self->sfi_needle_ptr.cp16,
-                         self->sfi_needle_len);
+                         self->sfi_needle_len,NULL);
   break;
  CASE_WIDTH_4BYTE:
   ptr.cp32 = memcasememl(ptr.cp32,(size_t)(self->sfi_end.cp32 - ptr.cp32),
                          self->sfi_needle_ptr.cp32,
-                         self->sfi_needle_len);
+                         self->sfi_needle_len,NULL);
   break;
  }
  return ptr.ptr != NULL;

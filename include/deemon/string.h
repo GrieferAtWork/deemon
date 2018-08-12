@@ -1000,6 +1000,29 @@ struct unitraits {
 
 /* Unicode character traits database access. */
 DFUNDEF ATTR_RETNONNULL ATTR_CONST struct unitraits *(DCALL DeeUni_Descriptor)(uint32_t ch);
+
+#define UNICODE_FOLDED_MAX 3
+
+/* case-fold the given unicode character `ch', and
+ * return the number of resulting folded characters.
+ * @assume(return >= 1 && return <= UNICODE_FOLDED_MAX); */
+#ifdef __INTELLISENSE__
+extern "C++" {
+size_t (DCALL DeeUni_ToFolded)(uint8_t ch, uint8_t buf[UNICODE_FOLDED_MAX]);
+size_t (DCALL DeeUni_ToFolded)(uint16_t ch, uint16_t buf[UNICODE_FOLDED_MAX]);
+size_t (DCALL DeeUni_ToFolded)(uint32_t ch, uint32_t buf[UNICODE_FOLDED_MAX]);
+}
+#else
+DFUNDEF ATTR_PURE size_t (DCALL DeeUni_ToFolded_b)(uint8_t ch, uint8_t buf[UNICODE_FOLDED_MAX]);
+DFUNDEF ATTR_PURE size_t (DCALL DeeUni_ToFolded_w)(uint16_t ch, uint16_t buf[UNICODE_FOLDED_MAX]);
+DFUNDEF ATTR_PURE size_t (DCALL DeeUni_ToFolded_l)(uint32_t ch, uint32_t buf[UNICODE_FOLDED_MAX]);
+#define DeeUni_ToFolded(ch,buf) \
+ (sizeof(*(buf)) == 1 ? DeeUni_ToFolded_b((uint8_t)(ch),(uint8_t *)(buf)) : \
+  sizeof(*(buf)) == 2 ? DeeUni_ToFolded_w((uint16_t)(ch),(uint16_t *)(buf)) : \
+                        DeeUni_ToFolded_l((uint32_t)(ch),(uint32_t *)(buf)))
+#endif
+
+
 #if 0
 #define DeeUni_Flags(ch)        (DeeUni_Descriptor(ch)->ut_flags)
 #else

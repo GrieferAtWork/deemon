@@ -96,7 +96,7 @@ PRIVATE DREF DeeObject *DCALL
 casesplititer_next(StringSplitIterator *__restrict self) {
  /* Literally the same as the non-case version, but use `memcasemem(b|w|l)' instead. */
  uint8_t *result_start,*result_end;
- uint8_t *next_ptr; size_t result_len;
+ uint8_t *next_ptr; size_t result_len,match_length;
  do {
   result_start = ATOMIC_READ(self->s_next);
   if (!result_start) return ITER_DONE;
@@ -104,31 +104,34 @@ casesplititer_next(StringSplitIterator *__restrict self) {
   CASE_WIDTH_1BYTE:
    result_end = (uint8_t *)memcasememb((uint8_t *)result_start,
                                        (uint8_t *)self->s_end-(uint8_t *)result_start,
-                                       (uint8_t *)self->s_sep,self->s_sepsz);
+                                       (uint8_t *)self->s_sep,self->s_sepsz,
+                                       &match_length);
    if (!result_end)
         result_end = self->s_end,
         next_ptr = NULL;
-   else next_ptr = result_end+self->s_sepsz*1;
+   else next_ptr = result_end+match_length*1;
    result_len = (size_t)((uint8_t *)result_end-(uint8_t *)result_start);
    break;
   CASE_WIDTH_2BYTE:
    result_end = (uint8_t *)memcasememw((uint16_t *)result_start,
                                        (uint16_t *)self->s_end-(uint16_t *)result_start,
-                                       (uint16_t *)self->s_sep,self->s_sepsz);
+                                       (uint16_t *)self->s_sep,self->s_sepsz,
+                                       &match_length);
    if (!result_end)
         result_end = self->s_end,
         next_ptr = NULL;
-   else next_ptr = result_end+self->s_sepsz*2;
+   else next_ptr = result_end+match_length*2;
    result_len = (size_t)((uint16_t *)result_end-(uint16_t *)result_start);
    break;
   CASE_WIDTH_4BYTE:
    result_end = (uint8_t *)memcasememl((uint32_t *)result_start,
                                        (uint32_t *)self->s_end-(uint32_t *)result_start,
-                                       (uint32_t *)self->s_sep,self->s_sepsz);
+                                       (uint32_t *)self->s_sep,self->s_sepsz,
+                                       &match_length);
    if (!result_end)
         result_end = self->s_end,
         next_ptr = NULL;
-   else next_ptr = result_end+self->s_sepsz*4;
+   else next_ptr = result_end+match_length*4;
    result_len = (size_t)((uint32_t *)result_end-(uint32_t *)result_start);
    break;
   }

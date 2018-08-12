@@ -49,7 +49,7 @@ local class LinkedListNode {
 @"It's pretty much written as efficiently as possible, but it really"
 @"isn't how a container should be implemented in deemon"
 @"It's actual purpose is for demonstration purposes, as well as to"
-@"prove that deemon's GC (which has been re-written fully since deemon 100),"
+@"prove that deemon's GC (which has been re-written fully in deemon 200),"
 @"is fully capable of dealing even with the utterly painful case which doubly-linked"
 @"lists represent when it comes to cleaning up after the user."
 @"Also: Don't forget that deemon's main method of destroying objects is reference counting,"
@@ -59,7 +59,7 @@ global class LinkedList: sequence from deemon {
 	private m_back = none;
 
 	@"Insert the given object @ob at the front"
-	push_front(ob) {
+	pushfront(ob) {
 		local new_node = LinkedListNode(none,m_front,ob);
 		if (m_back is none)
 			m_back = new_node;
@@ -68,7 +68,7 @@ global class LinkedList: sequence from deemon {
 	}
 
 	@"Insert the given object @ob at the back"
-	push_back(ob) {
+	pushback(ob) {
 		local new_node = LinkedListNode(m_back,none,ob);
 		if (m_front is none)
 			m_front = new_node;
@@ -77,7 +77,7 @@ global class LinkedList: sequence from deemon {
 	}
 
 	@"Pop one item from the front and return it"
-	pop_front() {
+	popfront() {
 		local pop_node = m_front;
 		if (pop_node is none)
 			throw Error.ValueError("Empty list");
@@ -89,7 +89,7 @@ global class LinkedList: sequence from deemon {
 	}
 
 	@"Pop one item from the back and return it"
-	pop_back() {
+	popback() {
 		local pop_node = m_back;
 		if (pop_node is none)
 			throw Error.ValueError("Empty list");
@@ -110,12 +110,14 @@ global class LinkedList: sequence from deemon {
 	}
 
 	@"Returns a representation of @this :LinkedList in abstract-sequence syntax"
-	operator repr() -> "{ "+", ".join(for (local x: this) repr x)+" }";
+	operator repr() {
+		return "{ "+", ".join(for (local x: this) repr x)+" }";
+	}
 
 	this(init = none) {
 		if (init !is none) {
 			for (local x: init)
-				push_back(x);
+				pushback(x);
 		}
 	}
 
@@ -126,7 +128,8 @@ global class LinkedList: sequence from deemon {
 
 		/* If the list contains itself, then the GC may choose to clear
 		 * some of our member table in order to resolve the reference loop.
-		 * For that reason, check if that happend and exit if that is the case. */
+		 * For that reason, check if that happend by seeing if `m_front'
+		 * is still bound and exit if that is the case. */
 		if (!bound(m_front))
 			return;
 		local node_iter = m_front;
@@ -145,18 +148,18 @@ global class LinkedList: sequence from deemon {
 #ifdef __MAIN__
 l1 = LinkedList();
 
-l1.push_front(21);
-l1.push_front(42);
-l1.push_front(84);
+l1.pushfront(21);
+l1.pushfront(42);
+l1.pushfront(84);
 for (x: [0:20])
-	l1.push_back(copy x);
+	l1.pushback(copy x);
 print repr l1;
 
-l1.pop_front();
+l1.popfront();
 print repr l1;
-l1.pop_front();
+l1.popfront();
 print repr l1;
-l1.pop_back();
+l1.popback();
 print repr l1;
 
 /* At this point it doesn't even really matter.
@@ -166,7 +169,7 @@ print repr l1;
  * why a GC that is able to deal with any kind of doubly-linked
  * list, regardless of it containing itself or not, must be
  * intrinsically smart enough to deal with anything. */
-l1.push_front(l1);
+l1.pushfront(l1);
 print repr l1;
 
 /* The GC doesn't do anything here! */

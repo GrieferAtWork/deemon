@@ -30,8 +30,58 @@
 #define T       char
 #endif
 
-
-
+#ifdef CASEFOLD
+PRIVATE int DCALL
+wildcompare(unicode_foldreader(T) *string,
+            unicode_foldreader(T) *pattern) {
+ uint32_t pattern_ch,ch;
+ for (;;) {
+  if (unicode_foldreader_empty(*string)) {
+   /* End of string (if the patter is empty, or only contains '*', we have a match) */
+   for (;;) {
+    if (unicode_foldreader_empty(*pattern))
+        return 0;
+    ch = unicode_foldreader_getc(*pattern);
+    if (ch != '*') break;
+   }
+   return -1;
+  }
+  if (unicode_foldreader_empty(*pattern))
+      return 1; /* Pattern end doesn't match */
+  pattern_ch = unicode_foldreader_getc(*pattern);
+  if (pattern_ch == '*') {
+   /* Skip starts */
+   do {
+    if (unicode_foldreader_empty(*pattern))
+        return 0; /* Pattern ends with '*' (matches everything) */
+    pattern_ch = unicode_foldreader_getc(*pattern);
+   } while (pattern_ch == '*');
+   if (pattern_ch == '?')
+       continue; /* Match any --> already found */
+   for (;;) {
+    ch = unicode_foldreader_getc(*string);
+    if (ch == pattern_ch) {
+     /* Recursively check if the rest of the string and pattern match */
+     unicode_foldreader(T) string_copy = *string;
+     unicode_foldreader(T) pattern_copy = *pattern;
+     if (!wildcompare(&string_copy,&pattern_copy))
+          return 0;
+    } else if (unicode_foldreader_empty(*string)) {
+     return -1; /* Wildcard suffix not found */
+    }
+   }
+  }
+  ch = unicode_foldreader_getc(*string);;
+  if (pattern_ch == ch ||
+      pattern_ch == '?')
+      continue; /* single character match */
+  break; /* mismatch */
+ }
+ if (ch < pattern_ch)
+     return -1;
+ return 1;
+}
+#else
 PRIVATE Treturn DCALL
 wildcompare(T const *string, size_t string_length,
             T const *pattern, size_t pattern_length) {
@@ -39,23 +89,23 @@ wildcompare(T const *string, size_t string_length,
  T const *string_end = string+string_length;
  T const *pattern_end = pattern+pattern_length;
  for (;;) {
-  if (string == string_end) {
+  if (string >= string_end) {
    /* End of string (if the patter is empty, or only contains '*', we have a match) */
    for (;;) {
-    if (pattern == pattern_end)
+    if (pattern >= pattern_end)
         return 0;
     if (*pattern != '*') break;
     ++pattern;
    }
    return -(Treturn)*pattern;
   }
-  if (pattern == pattern_end)
+  if (pattern >= pattern_end)
       return (Treturn)*string; /* Pattern end doesn't match */
   if (*pattern == '*') {
    /* Skip starts */
    do {
     ++pattern;
-    if (pattern == pattern_end)
+    if (pattern >= pattern_end)
         return 0; /* Pattern ends with '*' (matches everything) */
    } while (*pattern == '*');
    card_post = *pattern++;
@@ -75,7 +125,7 @@ wildcompare(T const *string, size_t string_length,
      if (!wildcompare(string,(size_t)(string_end-string),
                       pattern,(size_t)(pattern_end-pattern)))
           return 0;
-    } else if (!ch) {
+    } else if (string >= string_end) {
      return -(Treturn)card_post; /* Wildcard suffix not found */
     }
    }
@@ -84,7 +134,7 @@ wildcompare(T const *string, size_t string_length,
       *pattern == '?'
 #ifdef NOCASE
       ||
-      DeeUni_ToLower(*pattern) == DeeUni_ToLower(*string)
+      DeeUni_ToLower(*pattern) == DeeUni_ToLower(*string) /* TODO: case-fold */
 #endif
       )
   {
@@ -97,7 +147,10 @@ next:
  }
  return (Treturn)*string - (Treturn)*pattern;
 }
+#endif
 
+
+#undef CASEFOLD
 #undef NOCASE
 #undef Treturn
 #undef wildcompare

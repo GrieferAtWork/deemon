@@ -22,7 +22,7 @@ local copyright = "
 #include <util>
 
 fs::chdir(fs::path::head(__FILE__));
-local output_name = "unicode_db.h";
+local output_name = "../unicode_db.h";
 
 function ctypeof(x) {
 	if (x >= 8) return "uint64_t";

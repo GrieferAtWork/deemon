@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/util/string.h>
 #include <hybrid/minmax.h>
 
@@ -65,16 +66,16 @@ LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
  return NULL;
 }
 #define memmem  dee_memmem
-LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_len,
-                       void const *__restrict needle, size_t needle_len) {
+LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
+                       void const *__restrict needle, size_t needle_length) {
  void const *candidate; uint8_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
+ if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
- haystack_len -= needle_len-1,marker = *(uint8_t *)needle;
- while ((candidate = memchr(haystack,marker,haystack_len)) != NULL) {
-  if (memcmp(candidate,needle,needle_len) == 0)
+ haystack_length -= needle_length-1,marker = *(uint8_t *)needle;
+ while ((candidate = memchr(haystack,marker,haystack_length)) != NULL) {
+  if (memcmp(candidate,needle,needle_length) == 0)
       return (void *)candidate;
-  haystack_len = ((uintptr_t)haystack+haystack_len)-((uintptr_t)candidate+1);
+  haystack_length = ((uintptr_t)haystack+haystack_length)-((uintptr_t)candidate+1);
   haystack     = (void const *)((uintptr_t)candidate+1);
  }
  return NULL;
@@ -156,178 +157,484 @@ LOCAL uint32_t *dee_memrchrl(uint32_t const *__restrict p, uint32_t c, size_t n)
 #endif
 
 #define memrmem  dee_memrmem
-LOCAL void *dee_memrmem(void const *__restrict haystack, size_t haystack_len,
-                        void const *__restrict needle, size_t needle_len) {
+LOCAL void *dee_memrmem(void const *__restrict haystack, size_t haystack_length,
+                        void const *__restrict needle, size_t needle_length) {
  void const *candidate; uint8_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
+ if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
- haystack_len -= needle_len-1,marker = *(uint8_t *)needle;
- while ((candidate = memrchr(haystack,marker,haystack_len)) != NULL) {
-  if (memcmp(candidate,needle,needle_len) == 0)
+ haystack_length -= needle_length-1,marker = *(uint8_t *)needle;
+ while ((candidate = memrchr(haystack,marker,haystack_length)) != NULL) {
+  if (memcmp(candidate,needle,needle_length) == 0)
       return (void *)candidate;
   if unlikely(candidate == haystack) break;
-  haystack_len = (uintptr_t)candidate-(uintptr_t)haystack;
+  haystack_length = (uintptr_t)candidate-(uintptr_t)haystack;
  }
  return NULL;
 }
-#define memmemb(haystack,haystack_len,needle,needle_len)  \
-     ((uint8_t *)memmem(haystack,haystack_len,needle,needle_len))
-#define memrmemb(haystack,haystack_len,needle,needle_len)  \
-     ((uint8_t *)memrmem(haystack,haystack_len,needle,needle_len))
+#define memmemb(haystack,haystack_length,needle,needle_length)  \
+     ((uint8_t *)memmem(haystack,haystack_length,needle,needle_length))
+#define memrmemb(haystack,haystack_length,needle,needle_length)  \
+     ((uint8_t *)memrmem(haystack,haystack_length,needle,needle_length))
 
 #define memmemw  dee_memmemw
-LOCAL uint16_t *dee_memmemw(uint16_t const *__restrict haystack, size_t haystack_len,
-                            uint16_t const *__restrict needle, size_t needle_len) {
+LOCAL uint16_t *dee_memmemw(uint16_t const *__restrict haystack, size_t haystack_length,
+                            uint16_t const *__restrict needle, size_t needle_length) {
  uint16_t const *candidate; uint16_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
+ if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
- haystack_len -= needle_len-1,marker = *(uint16_t *)needle;
- while ((candidate = memchrw(haystack,marker,haystack_len)) != NULL) {
-  if (MEMEQW(candidate,needle,needle_len))
+ haystack_length -= needle_length-1,marker = *(uint16_t *)needle;
+ while ((candidate = memchrw(haystack,marker,haystack_length)) != NULL) {
+  if (MEMEQW(candidate,needle,needle_length))
       return (uint16_t *)candidate;
-  haystack_len = (haystack+haystack_len)-(candidate+1);
+  haystack_length = (haystack+haystack_length)-(candidate+1);
   haystack     = candidate+1;
  }
  return NULL;
 }
 #define memrmemw  dee_memrmemw
-LOCAL uint16_t *dee_memrmemw(uint16_t const *__restrict haystack, size_t haystack_len,
-                             uint16_t const *__restrict needle, size_t needle_len) {
+LOCAL uint16_t *dee_memrmemw(uint16_t const *__restrict haystack, size_t haystack_length,
+                             uint16_t const *__restrict needle, size_t needle_length) {
  uint16_t const *candidate; uint16_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
+ if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
- haystack_len -= needle_len-1,marker = *(uint16_t *)needle;
- while ((candidate = memrchrw(haystack,marker,haystack_len)) != NULL) {
-  if (MEMEQW(candidate,needle,needle_len))
+ haystack_length -= needle_length-1,marker = *(uint16_t *)needle;
+ while ((candidate = memrchrw(haystack,marker,haystack_length)) != NULL) {
+  if (MEMEQW(candidate,needle,needle_length))
       return (uint16_t *)candidate;
   if unlikely(candidate == haystack) break;
-  haystack_len = candidate-haystack;
+  haystack_length = candidate-haystack;
  }
  return NULL;
 }
 
 #define memmeml  dee_memmeml
-LOCAL uint32_t *dee_memmeml(uint32_t const *__restrict haystack, size_t haystack_len,
-                            uint32_t const *__restrict needle, size_t needle_len) {
+LOCAL uint32_t *dee_memmeml(uint32_t const *__restrict haystack, size_t haystack_length,
+                            uint32_t const *__restrict needle, size_t needle_length) {
  uint32_t const *candidate; uint32_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
+ if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
- haystack_len -= needle_len-1,marker = *(uint32_t *)needle;
- while ((candidate = memchrl(haystack,marker,haystack_len)) != NULL) {
-  if (MEMEQL(candidate,needle,needle_len))
+ haystack_length -= needle_length-1,marker = *(uint32_t *)needle;
+ while ((candidate = memchrl(haystack,marker,haystack_length)) != NULL) {
+  if (MEMEQL(candidate,needle,needle_length))
       return (uint32_t *)candidate;
-  haystack_len = (haystack+haystack_len)-(candidate+1);
+  haystack_length = (haystack+haystack_length)-(candidate+1);
   haystack     = candidate+1;
  }
  return NULL;
 }
 #define memrmeml  dee_memrmeml
-LOCAL uint32_t *dee_memrmeml(uint32_t const *__restrict haystack, size_t haystack_len,
-                             uint32_t const *__restrict needle, size_t needle_len) {
+LOCAL uint32_t *dee_memrmeml(uint32_t const *__restrict haystack, size_t haystack_length,
+                             uint32_t const *__restrict needle, size_t needle_length) {
  uint32_t const *candidate; uint32_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
+ if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
- haystack_len -= needle_len-1,marker = *(uint32_t *)needle;
- while ((candidate = memrchrl(haystack,marker,haystack_len)) != NULL) {
-  if (MEMEQL(candidate,needle,needle_len))
+ haystack_length -= needle_length-1,marker = *(uint32_t *)needle;
+ while ((candidate = memrchrl(haystack,marker,haystack_length)) != NULL) {
+  if (MEMEQL(candidate,needle,needle_length))
       return (uint32_t *)candidate;
   if unlikely(candidate == haystack) break;
-  haystack_len = candidate-haystack;
+  haystack_length = candidate-haystack;
  }
  return NULL;
 }
+
+
+
+
+
+
 
 /* Case-insensitive string functions. */
-#ifndef CONFIG_NO_CTYPE
-#define memcasechr(p,c,n)    memlowerchr(p,tolower(c),n)
-#define memcasechrb(p,c,n)   memlowerchrb(p,(uint8_t)tolower(c),n)
-#define memcaserchr(p,c,n)   memlowerrchr(p,tolower(c),n)
-#define memcaserchrb(p,c,n)  memlowerrchrb(p,(uint8_t)tolower(c),n)
-#else
-#define memcasechr(p,c,n)    memlowerchr(p,DeeUni_ToLower(c),n)
-#define memcasechrb(p,c,n)   memlowerchrb(p,(uint8_t)DeeUni_ToLower(c),n)
-#define memcaserchr(p,c,n)   memlowerrchr(p,DeeUni_ToLower(c),n)
-#define memcaserchrb(p,c,n)  memlowerrchrb(p,(uint8_t)DeeUni_ToLower(c),n)
-#endif
-#define memcasechrw(p,c,n)   memlowerchrw(p,(uint16_t)DeeUni_ToLower(c),n)
-#define memcasechrl(p,c,n)   memlowerchrl(p,DeeUni_ToLower(c),n)
-#define memcaserchrw(p,c,n)  memlowerrchrw(p,(uint16_t)DeeUni_ToLower(c),n)
-#define memcaserchrl(p,c,n)  memlowerrchrl(p,DeeUni_ToLower(c),n)
-#define memlowerchr(p,c,n)   memlowerchrb(p,(uint8_t)(c),n)
-#define memlowerrchr(p,c,n)  memlowerrchrb(p,(uint8_t)(c),n)
-#define memlowerchrb(p,c,n)  ((uint8_t *)dee_memlowerchr(p,c,n))
-#define memlowerchrw(p,c,n)  dee_memlowerchrw(p,c,n)
-#define memlowerchrl(p,c,n)  dee_memlowerchrl(p,c,n)
-#define memlowerrchrb(p,c,n) ((uint8_t *)dee_memlowerrchr(p,c,n))
-#define memlowerrchrw(p,c,n) dee_memlowerrchrw(p,c,n)
-#define memlowerrchrl(p,c,n) dee_memlowerrchrl(p,c,n)
+#define memcasechr(haystack,needle,haystack_length)    dee_memcasechrb((uint8_t *)(haystack),(uint8_t)(needle),haystack_length)
+#define memcaserchr(haystack,needle,haystack_length)   dee_memcaserchrb((uint8_t *)(haystack),(uint8_t)(needle),haystack_length)
+#define memcasechrb(haystack,needle,haystack_length)   dee_memcasechrb(haystack,needle,haystack_length)
+#define memcaserchrb(haystack,needle,haystack_length)  dee_memcaserchrb(haystack,needle,haystack_length)
+#define memcasechrw(haystack,needle,haystack_length)   dee_memcasechrw(haystack,needle,haystack_length)
+#define memcaserchrw(haystack,needle,haystack_length)  dee_memcaserchrw(haystack,needle,haystack_length)
+#define memcasechrl(haystack,needle,haystack_length)   dee_memcasechrl(haystack,needle,haystack_length)
+#define memcaserchrl(haystack,needle,haystack_length)  dee_memcaserchrl(haystack,needle,haystack_length)
 
-LOCAL void *dee_memlowerchr(void const *__restrict p, uint8_t c, size_t n) {
- uint8_t *iter = (uint8_t *)p;
- for (; n--; ++iter) {
-#ifdef CONFIG_NO_CTYPE
-  if ((uint8_t)DeeUni_ToLower(*iter) == c)
-       return iter;
+#ifdef __INTELLISENSE__
+#define DEFINE_FOLD_COMPARE(name,T) \
+PRIVATE size_t DCALL \
+name(T const *__restrict data, size_t datalen, \
+     T fold[UNICODE_FOLDED_MAX], size_t fold_len);
 #else
-  if ((uint8_t)tolower(*iter) == c)
-       return iter;
+#define DEFINE_FOLD_COMPARE(name,T) \
+PRIVATE size_t DCALL \
+name(T const *__restrict data, size_t datalen, \
+     T fold[UNICODE_FOLDED_MAX], size_t fold_len) { \
+ T buf[UNICODE_FOLDED_MAX]; \
+ size_t buflen; \
+ ASSERT(datalen >= 1); \
+ buflen = DeeUni_ToFolded(data[0],buf); \
+ switch (fold_len) { \
+ case 1: \
+  if (buf[0] == fold[0]) \
+      goto ok_1; \
+  if (buflen >= 2 && buf[1] == fold[0]) \
+      goto ok_1; \
+  if (buflen >= 3 && buf[2] == fold[0]) \
+      goto ok_1; \
+  break; \
+ case 2: \
+  if (buflen == 1) { \
+   if (buf[0] != fold[0]) break; \
+   if (datalen < 2) break; \
+   DeeUni_ToFolded(data[1],buf); \
+   if (buf[0] == fold[1]) goto ok_2; \
+  } else if (buflen == 2) { \
+   if (buf[0] == fold[0] && buf[1] == fold[1]) \
+       goto ok_1; \
+   if (buf[1] == fold[0]) { \
+    if (datalen < 2) break; \
+    DeeUni_ToFolded(data[1],buf); \
+    if (buf[0] == fold[1]) goto ok_2; \
+   } \
+  } else { \
+   if (buf[0] == fold[0] && buf[1] == fold[1]) \
+       goto ok_1; \
+   if (buf[1] == fold[0] && buf[2] == fold[1]) \
+       goto ok_1; \
+   if (buf[2] == fold[0]) { \
+    if (datalen < 2) break; \
+    DeeUni_ToFolded(data[1],buf); \
+    if (buf[0] == fold[1]) goto ok_2; \
+   } \
+  } \
+  break; \
+ case 3: \
+  if (buflen == 1) { \
+   if (buf[0] != fold[0]) break; \
+   if (datalen < 2) break; \
+   buflen = DeeUni_ToFolded(data[1],buf); \
+   if (buf[0] != fold[1]) break; \
+   if (buflen == 1) { \
+    if (datalen < 3) break; \
+    DeeUni_ToFolded(data[2],buf); \
+    if (buf[0] == fold[2]) \
+        goto ok_3; \
+   } else { \
+    if (buf[1] == fold[2]) \
+        goto ok_2; \
+   } \
+  } else if (buflen == 2) { \
+   if (buf[0] == fold[0] && buf[1] == fold[1]) { \
+    if (datalen < 2) break; \
+    DeeUni_ToFolded(data[1],buf); \
+    if (buf[0] == fold[2]) goto ok_2; \
+   } \
+   if (buf[1] == fold[0]) { \
+    if (datalen < 2) break; \
+    buflen = DeeUni_ToFolded(data[1],buf); \
+    if (buf[0] != fold[1]) break; \
+    if (buflen == 1) { \
+     if (datalen < 3) break; \
+     DeeUni_ToFolded(data[2],buf); \
+     if (buf[0] == fold[2]) \
+         goto ok_3; \
+    } else { \
+     if (buf[1] == fold[2]) \
+         goto ok_2; \
+    } \
+   } \
+  } else { \
+   if (buf[0] == fold[0] && buf[1] == fold[1] && buf[2] == fold[2]) \
+       goto ok_1; \
+   if (buf[1] == fold[0] && buf[2] == fold[1]) { \
+    if (datalen < 2) break; \
+    DeeUni_ToFolded(data[1],buf); \
+    if (buf[0] == fold[2]) goto ok_2; \
+   } \
+   if (buf[2] == fold[0]) { \
+    if (datalen < 2) break; \
+    buflen = DeeUni_ToFolded(data[1],buf); \
+    if (buf[0] != fold[1]) break; \
+    if (buflen == 1) { \
+     if (datalen < 3) break; \
+     buflen = DeeUni_ToFolded(data[2],buf); \
+     if (buf[0] == fold[2]) \
+         goto ok_3; \
+    } else { \
+     if (buf[1] == fold[2]) \
+         goto ok_2; \
+    } \
+   } \
+  } \
+  break; \
+ default: __builtin_unreachable(); \
+ } \
+ return 0; \
+ok_1: \
+ return 1; \
+ok_2: \
+ return 2; \
+ok_3: \
+ return 3; \
+}
 #endif
- }
- return NULL;
+DEFINE_FOLD_COMPARE(dee_foldcmpb,uint8_t)
+DEFINE_FOLD_COMPARE(dee_foldcmpw,uint16_t)
+DEFINE_FOLD_COMPARE(dee_foldcmpl,uint32_t)
+#undef DEFINE_FOLD_COMPARE
+
+
+
+#define DEFINE_MEMCASECHR(name,rname,T,dee_foldcmp) \
+LOCAL T *DCALL \
+name(T const *__restrict haystack, \
+     T needle, size_t haystack_length) { \
+ T fold[UNICODE_FOLDED_MAX]; \
+ size_t len = DeeUni_ToFolded(needle,fold); \
+ for (; haystack_length; ++haystack,--haystack_length) { \
+  if (dee_foldcmp(haystack,haystack_length,fold,len)) \
+      return (T *)haystack; \
+ } \
+ return NULL; \
+} \
+LOCAL T *DCALL \
+rname(T const *__restrict haystack, \
+      T needle, size_t haystack_length) { \
+ T *iter = (T *)haystack+haystack_length; \
+ T fold[UNICODE_FOLDED_MAX]; \
+ size_t len = DeeUni_ToFolded(needle,fold); \
+ size_t datalen = 0; \
+ while (iter-- != (T *)haystack) { \
+  ++datalen; \
+  if (dee_foldcmp(iter,datalen,fold,len)) \
+      return iter; \
+ } \
+ return NULL; \
 }
-LOCAL uint16_t *dee_memlowerchrw(uint16_t const *__restrict p, uint16_t c, size_t n) {
- for (; n--; ++p) {
-  if ((uint16_t)DeeUni_ToLower(*p) == c)
-       return (uint16_t *)p;
- }
- return NULL;
+DEFINE_MEMCASECHR(dee_memcasechrb,dee_memcaserchrb,uint8_t,dee_foldcmpb)
+DEFINE_MEMCASECHR(dee_memcasechrw,dee_memcaserchrw,uint16_t,dee_foldcmpw)
+DEFINE_MEMCASECHR(dee_memcasechrl,dee_memcaserchrl,uint32_t,dee_foldcmpl)
+#undef DEFINE_MEMCASECHR
+
+#define DEFINE_UNICODE_FOLDREADER_API(name,T) \
+struct name { \
+    T const *uf_dataptr; \
+    size_t   uf_datalen; \
+    T        uf_buf[UNICODE_FOLDED_MAX]; \
+    uint8_t  uf_len; \
+    uint8_t  uf_idx; \
+}; \
+LOCAL T DCALL \
+name##_getc(struct name *__restrict self) \
+{ \
+ if (self->uf_idx < self->uf_len) \
+     return self->uf_buf[self->uf_idx++]; \
+ ASSERT(self->uf_datalen); \
+ self->uf_idx = 1; \
+ self->uf_len = (uint8_t)DeeUni_ToFolded(*self->uf_dataptr,self->uf_buf); \
+ ++self->uf_dataptr; \
+ --self->uf_datalen; \
+ return self->uf_buf[0]; \
+} \
+LOCAL T DCALL \
+name##_getc_back(struct name *__restrict self) \
+{ \
+ if (self->uf_idx < self->uf_len) \
+     return self->uf_buf[--self->uf_len]; \
+ ASSERT(self->uf_datalen); \
+ self->uf_idx = 0; \
+ --self->uf_datalen; \
+ self->uf_len = (uint8_t)DeeUni_ToFolded(self->uf_dataptr[self->uf_datalen], \
+                                         self->uf_buf) - 1; \
+ return self->uf_buf[self->uf_len]; \
 }
-LOCAL uint32_t *dee_memlowerchrl(uint32_t const *__restrict p, uint32_t c, size_t n) {
- for (; n--; ++p) {
-  if (DeeUni_ToLower(*p) == c)
-      return (uint32_t *)p;
- }
- return NULL;
+DEFINE_UNICODE_FOLDREADER_API(unicode_foldreaderb,uint8_t)
+DEFINE_UNICODE_FOLDREADER_API(unicode_foldreaderw,uint16_t)
+DEFINE_UNICODE_FOLDREADER_API(unicode_foldreaderl,uint32_t)
+#undef DEFINE_UNICODE_FOLDREADER_API
+
+#ifdef __INTELLISENSE__
+extern "C++" {
+uint8_t unicode_foldreader_getc(struct unicode_foldreaderb &x);
+uint16_t unicode_foldreader_getc(struct unicode_foldreaderw &x);
+uint32_t unicode_foldreader_getc(struct unicode_foldreaderl &x);
+uint8_t unicode_foldreader_getc_back(struct unicode_foldreaderb &x);
+uint16_t unicode_foldreader_getc_back(struct unicode_foldreaderw &x);
+uint32_t unicode_foldreader_getc_back(struct unicode_foldreaderl &x);
 }
-LOCAL void *dee_memlowerrchr(void const *__restrict p, uint8_t c, size_t n) {
- uint8_t *iter = (uint8_t *)p+n;
- while (iter-- != (uint8_t *)p) {
-#ifdef CONFIG_NO_CTYPE
-  if ((uint8_t)DeeUni_ToLower(*iter) == c)
-       return iter;
+#elif !defined(__NO_builtin_choose_expr)
+#define unicode_foldreader_getc(x) \
+      __builtin_choose_expr(sizeof(*(x).uf_dataptr) == 1,unicode_foldreaderb_getc((struct unicode_foldreaderb *)&(x)), \
+      __builtin_choose_expr(sizeof(*(x).uf_dataptr) == 2,unicode_foldreaderw_getc((struct unicode_foldreaderw *)&(x)), \
+                                                         unicode_foldreaderl_getc((struct unicode_foldreaderl *)&(x)))) \
+
+#define unicode_foldreader_getc_back(x) \
+      __builtin_choose_expr(sizeof(*(x).uf_dataptr) == 1,unicode_foldreaderb_getc_back((struct unicode_foldreaderb *)&(x)), \
+      __builtin_choose_expr(sizeof(*(x).uf_dataptr) == 2,unicode_foldreaderw_getc_back((struct unicode_foldreaderw *)&(x)), \
+                                                         unicode_foldreaderl_getc_back((struct unicode_foldreaderl *)&(x)))) \
+
 #else
-  if ((uint8_t)tolower(*iter) == c)
-       return iter;
+#define unicode_foldreader_getc(x) \
+      (sizeof(*(x).uf_dataptr) == 1 ? unicode_foldreaderb_getc((struct unicode_foldreaderb *)&(x)) : \
+       sizeof(*(x).uf_dataptr) == 2 ? unicode_foldreaderw_getc((struct unicode_foldreaderw *)&(x)) : \
+                                      unicode_foldreaderl_getc((struct unicode_foldreaderl *)&(x)))
+#define unicode_foldreader_getc_back(x) \
+      (sizeof(*(x).uf_dataptr) == 1 ? unicode_foldreaderb_getc_back((struct unicode_foldreaderb *)&(x)) : \
+       sizeof(*(x).uf_dataptr) == 2 ? unicode_foldreaderw_getc_back((struct unicode_foldreaderw *)&(x)) : \
+                                      unicode_foldreaderl_getc_back((struct unicode_foldreaderl *)&(x)))
 #endif
- }
- return NULL;
-}
-LOCAL uint16_t *dee_memlowerrchrw(uint16_t const *__restrict p, uint16_t c, size_t n) {
- uint16_t *iter = (uint16_t *)p+n;
- while (iter-- != (uint16_t *)p) {
-  if ((uint16_t)DeeUni_ToLower(*iter) == c)
-       return iter;
- }
- return NULL;
-}
-LOCAL uint32_t *dee_memlowerrchrl(uint32_t const *__restrict p, uint32_t c, size_t n) {
- uint32_t *iter = (uint32_t *)p+n;
- while (iter-- != (uint32_t *)p) {
-  if (DeeUni_ToLower(*iter) == c)
-      return iter;
- }
- return NULL;
-}
+#define unicode_foldreader_init(x,data,len) \
+      ((x).uf_dataptr = (data),(x).uf_datalen = (len), \
+       (x).uf_len = (x).uf_idx = 0)
+#define unicode_foldreader_empty(x) \
+     (!(x).uf_datalen && ((x).uf_idx >= (x).uf_len))
+#define DEE_PRIVATE_UNICODE_FOLDREADER_uint8_t   unicode_foldreaderb
+#define DEE_PRIVATE_UNICODE_FOLDREADER_uint16_t  unicode_foldreaderw
+#define DEE_PRIVATE_UNICODE_FOLDREADER_uint32_t  unicode_foldreaderl
+#define unicode_foldreader(T)  struct PP_PRIVATE_CAT2(DEE_PRIVATE_UNICODE_FOLDREADER_,T)
+
+
+
+
 
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQB(a,b,s) (memcasecmp(a,b,s) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQB(a,b,s) (_memicmp(a,b,s) == 0)
-#define memcasecmp         _memicmp
-#else
-#define MEMCASEEQB(a,b,s)  dee_memcaseeqb((uint8_t *)(a),(uint8_t *)(b),s)
-LOCAL bool dee_memcaseeqb(uint8_t const *a, uint8_t const *b, size_t s) {
+#define MEMCASEEQB(a,a_size,b,b_size)         dee_memcaseeqb(a,a_size,b,b_size)
+#define MEMCASEEQW(a,a_size,b,b_size)         dee_memcaseeqw(a,a_size,b,b_size)
+#define MEMCASEEQL(a,a_size,b,b_size)         dee_memcaseeql(a,a_size,b,b_size)
+#define MEMCASESTARTSWITHB(a,a_size,b,b_size) dee_memcasestartswithb(a,a_size,b,b_size)
+#define MEMCASESTARTSWITHW(a,a_size,b,b_size) dee_memcasestartswithw(a,a_size,b,b_size)
+#define MEMCASESTARTSWITHL(a,a_size,b,b_size) dee_memcasestartswithl(a,a_size,b,b_size)
+#define MEMCASEENDSWITHB(a,a_size,b,b_size)   dee_memcaseendswithb(a,a_size,b,b_size)
+#define MEMCASEENDSWITHW(a,a_size,b,b_size)   dee_memcaseendswithw(a,a_size,b,b_size)
+#define MEMCASEENDSWITHL(a,a_size,b,b_size)   dee_memcaseendswithl(a,a_size,b,b_size)
+
+#define DEFINE_MEMCASEEQ(name,T) \
+LOCAL bool DCALL \
+name(T const *a, size_t a_size, \
+     T const *b, size_t b_size) { \
+ unicode_foldreader(T) a_reader; \
+ unicode_foldreader(T) b_reader; \
+ unicode_foldreader_init(a_reader,a,a_size); \
+ unicode_foldreader_init(b_reader,b,b_size); \
+ while (!unicode_foldreader_empty(a_reader)) { \
+  if (unicode_foldreader_empty(b_reader)) \
+      return false; \
+  if (unicode_foldreader_getc(a_reader) != \
+      unicode_foldreader_getc(b_reader)) \
+      return false; \
+ } \
+ return unicode_foldreader_empty(b_reader); \
+}
+DEFINE_MEMCASEEQ(dee_memcaseeqb,uint8_t)
+DEFINE_MEMCASEEQ(dee_memcaseeqw,uint16_t)
+DEFINE_MEMCASEEQ(dee_memcaseeql,uint32_t)
+#undef DEFINE_MEMCASEEQ
+
+#define DEFINE_MEMCASESTARTSWITH(name,T) \
+LOCAL size_t DCALL \
+name(T const *a, size_t a_size, \
+     T const *b, size_t b_size) { \
+ unicode_foldreader(T) a_reader; \
+ unicode_foldreader(T) b_reader; \
+ unicode_foldreader_init(a_reader,a,a_size); \
+ unicode_foldreader_init(b_reader,b,b_size); \
+ while (!unicode_foldreader_empty(b_reader)) { \
+  if (unicode_foldreader_empty(a_reader) || \
+     (unicode_foldreader_getc(a_reader) != \
+      unicode_foldreader_getc(b_reader))) \
+      return 0; \
+ } \
+ return (size_t)(a_reader.uf_dataptr - a); \
+}
+DEFINE_MEMCASESTARTSWITH(dee_memcasestartswithb,uint8_t)
+DEFINE_MEMCASESTARTSWITH(dee_memcasestartswithw,uint16_t)
+DEFINE_MEMCASESTARTSWITH(dee_memcasestartswithl,uint32_t)
+#undef DEFINE_MEMCASESTARTSWITH
+
+#define DEFINE_MEMCASEENDSWITH(name,T) \
+LOCAL size_t DCALL \
+name(T const *a, size_t a_size, \
+     T const *b, size_t b_size) { \
+ unicode_foldreader(T) a_reader; \
+ unicode_foldreader(T) b_reader; \
+ unicode_foldreader_init(a_reader,a,a_size); \
+ unicode_foldreader_init(b_reader,b,b_size); \
+ while (!unicode_foldreader_empty(b_reader)) { \
+  if (unicode_foldreader_empty(a_reader) || \
+     (unicode_foldreader_getc_back(a_reader) != \
+      unicode_foldreader_getc_back(b_reader))) \
+      return 0; \
+ } \
+ return a_size - a_reader.uf_datalen; \
+}
+DEFINE_MEMCASEENDSWITH(dee_memcaseendswithb,uint8_t)
+DEFINE_MEMCASEENDSWITH(dee_memcaseendswithw,uint16_t)
+DEFINE_MEMCASEENDSWITH(dee_memcaseendswithl,uint32_t)
+#undef DEFINE_MEMCASEENDSWITH
+
+#define memcasememb   dee_memcasememb
+#define memcasermemb  dee_memcasermemb
+#define memcasememw   dee_memcasememw
+#define memcasermemw  dee_memcasermemw
+#define memcasememl   dee_memcasememl
+#define memcasermeml  dee_memcasermeml
+
+#define DEFINE_MEMCASEMEM(name,rname,T,MEMCASESTARTSWITH,MEMCASEENDSWITH) \
+LOCAL T *DCALL \
+name(T const *__restrict haystack, size_t haystack_length, \
+     T const *__restrict needle, size_t needle_length, \
+      size_t *pmatch_length) { \
+ for (; haystack_length; --haystack_length,++haystack) { \
+  size_t match_length; \
+  match_length = MEMCASESTARTSWITH(haystack,haystack_length,needle,needle_length); \
+  if (match_length) { \
+   if (pmatch_length) \
+      *pmatch_length = match_length; \
+   return (T *)haystack; \
+  } \
+ } \
+ return NULL; \
+} \
+LOCAL T *DCALL \
+rname(T const *__restrict haystack, size_t haystack_length, \
+      T const *__restrict needle, size_t needle_length, \
+      size_t *pmatch_length) { \
+ for (; haystack_length; --haystack_length) { \
+  size_t match_length; \
+  match_length = MEMCASEENDSWITH(haystack,haystack_length,needle,needle_length); \
+  if (match_length) { \
+   if (pmatch_length) \
+      *pmatch_length = match_length; \
+   return (T *)haystack + haystack_length - match_length; \
+  } \
+ } \
+ return NULL; \
+}
+DEFINE_MEMCASEMEM(dee_memcasememb,dee_memcasermemb,uint8_t,MEMCASESTARTSWITHB,MEMCASEENDSWITHB)
+DEFINE_MEMCASEMEM(dee_memcasememw,dee_memcasermemw,uint16_t,MEMCASESTARTSWITHW,MEMCASEENDSWITHW)
+DEFINE_MEMCASEMEM(dee_memcasememl,dee_memcasermeml,uint32_t,MEMCASESTARTSWITHL,MEMCASEENDSWITHL)
+#undef DEFINE_MEMCASEMEM
+
+LOCAL int DCALL
+dee_memcasecmpb(uint8_t const *a, size_t a_size,
+                uint8_t const *b, size_t b_size) {
+ unicode_foldreader(uint8_t) a_reader;
+ unicode_foldreader(uint8_t) b_reader;
+ unicode_foldreader_init(a_reader,a,a_size);
+ unicode_foldreader_init(b_reader,b,b_size);
+ for (;;) {
+  uint32_t cha,chb;
+  if (unicode_foldreader_empty(a_reader))
+      return unicode_foldreader_empty(b_reader) ? 0 : -1;
+  if (unicode_foldreader_empty(b_reader))
+      return 1;
+  cha = unicode_foldreader_getc(a_reader);
+  chb = unicode_foldreader_getc(b_reader);
+  if (cha != chb)
+      return cha < chb ? -1 : 1;
+ }
+}
+
+
+
+/* ASCII case-insensitive functions (for `bytes'). */
+LOCAL bool DCALL
+dee_memasciicaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
  while (s--) {
   uint8_t lhs = *a;
   uint8_t rhs = *b;
@@ -342,8 +649,64 @@ LOCAL bool dee_memcaseeqb(uint8_t const *a, uint8_t const *b, size_t s) {
  }
  return true;
 }
-#define memcasecmp         dee_memcasecmp
-LOCAL int dee_memcasecmp(uint8_t const *a, uint8_t const *b, size_t s) {
+
+LOCAL uint8_t *DCALL
+dee_memasciicasechr(uint8_t const *__restrict haystack,
+                    uint8_t needle, size_t haystack_length) {
+ needle = (uint8_t)DeeUni_ToLower(needle);
+ while (haystack_length--) {
+  if ((uint8_t)DeeUni_ToLower(*haystack) == needle)
+       return (uint8_t *)haystack;
+  ++haystack;
+ }
+ return NULL;
+}
+LOCAL uint8_t *DCALL
+dee_memasciicaserchr(uint8_t const *__restrict haystack,
+                     uint8_t needle, size_t haystack_length) {
+ uint8_t *iter = (uint8_t *)haystack+haystack_length;
+ needle = (uint8_t)DeeUni_ToLower(needle);
+ while (iter-- != (uint8_t *)haystack) {
+  if ((uint8_t)DeeUni_ToLower(*iter) == needle)
+       return iter;
+ }
+ return NULL;
+}
+LOCAL uint8_t *DCALL
+dee_memasciicasemem(uint8_t const *haystack, size_t haystack_length,
+                    uint8_t const *needle, size_t needle_length) {
+ uint8_t *candidate; uint8_t marker;
+ if unlikely(!needle_length || needle_length > haystack_length)
+    return NULL;
+ haystack_length -= needle_length;
+ marker = (uint8_t)DeeUni_ToLower(*needle);
+ while ((candidate = dee_memasciicasechr(haystack,marker,haystack_length)) != NULL) {
+  if (dee_memasciicaseeq(candidate,needle,needle_length))
+      return candidate;
+  haystack_length = (size_t)((haystack + haystack_length) - candidate);
+  haystack        = candidate + 1;
+ }
+ return NULL;
+}
+LOCAL uint8_t *DCALL
+dee_memasciicasermem(uint8_t const *haystack, size_t haystack_length,
+                     uint8_t const *needle, size_t needle_length) {
+ uint8_t *candidate; uint8_t marker;
+ if unlikely(!needle_length || needle_length > haystack_length)
+    return NULL;
+ haystack_length -= needle_length;
+ marker = (uint8_t)DeeUni_ToLower(*needle);
+ while ((candidate = dee_memasciicaserchr(haystack,marker,haystack_length)) != NULL) {
+  if (dee_memasciicaseeq(candidate,needle,needle_length))
+      return candidate;
+  if unlikely(candidate == haystack) break;
+  haystack_length = (size_t)((candidate/* - 1*/) - haystack);
+ }
+ return NULL;
+}
+
+#define memasciicasecmp  dee_memasciicasecmp
+LOCAL int dee_memasciicasecmp(uint8_t const *a, uint8_t const *b, size_t s) {
  while (s--) {
   uint8_t lhs = *a;
   uint8_t rhs = *b;
@@ -358,150 +721,24 @@ LOCAL int dee_memcasecmp(uint8_t const *a, uint8_t const *b, size_t s) {
  }
  return 0;
 }
-#endif
-#define MEMCASEEQW(a,b,s)  dee_memcaseeqw((uint16_t *)(a),(uint16_t *)(b),s)
-#define MEMCASEEQL(a,b,s)  dee_memcaseeql((uint32_t *)(a),(uint32_t *)(b),s)
-LOCAL bool dee_memcaseeqw(uint16_t const *a, uint16_t const *b, size_t s) {
- while (s--) {
-  if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
-      return false;
-  ++a;
-  ++b;
- }
- return true;
-}
-LOCAL bool dee_memcaseeql(uint32_t const *a, uint32_t const *b, size_t s) {
- while (s--) {
-  if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
-      return false;
-  ++a;
-  ++b;
- }
- return true;
-}
 
-#define memcasememb(haystack,haystack_len,needle,needle_len)  \
-     ((uint8_t *)memcasemem(haystack,haystack_len,needle,needle_len))
-#define memcasemem  dee_memcasemem
-LOCAL void *dee_memcasemem(void const *__restrict haystack, size_t haystack_len,
-                           void const *__restrict needle, size_t needle_len) {
- void const *candidate; uint8_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
-    return NULL;
- haystack_len -= needle_len;
-#ifdef CONFIG_NO_CTYPE
- marker = (uint8_t)DeeUni_ToLower(*(uint8_t *)needle);
-#else
- marker = (uint8_t)tolower(*(uint8_t *)needle);
-#endif
- while ((candidate = memlowerchr(haystack,marker,haystack_len)) != NULL) {
-  if (MEMCASEEQB(candidate,needle,needle_len))
-      return (void *)candidate;
-  haystack_len = ((uintptr_t)haystack+haystack_len)-(uintptr_t)candidate;
-  haystack     = (void const *)((uintptr_t)candidate+1);
- }
- return NULL;
-}
-#define memcasermemb(haystack,haystack_len,needle,needle_len)  \
-     ((uint8_t *)memcasermem(haystack,haystack_len,needle,needle_len))
-#define memcasermem  dee_memcasermem
-LOCAL void *dee_memcasermem(void const *__restrict haystack, size_t haystack_len,
-                            void const *__restrict needle, size_t needle_len) {
- void const *candidate; uint8_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
-    return NULL;
- haystack_len -= needle_len;
-#ifdef CONFIG_NO_CTYPE
- marker = (uint8_t)DeeUni_ToLower(*(uint8_t *)needle);
-#else
- marker = (uint8_t)tolower(*(uint8_t *)needle);
-#endif
- while ((candidate = memlowerrchr(haystack,marker,haystack_len)) != NULL) {
-  if (MEMCASEEQB(candidate,needle,needle_len))
-      return (void *)candidate;
-  if unlikely(candidate == haystack) break;
-  haystack_len = (((uintptr_t)candidate)-1)-(uintptr_t)haystack;
- }
- return NULL;
-}
 
-#define memcasememw  dee_memcasememw
-LOCAL uint16_t *dee_memcasememw(uint16_t const *__restrict haystack, size_t haystack_len,
-                                uint16_t const *__restrict needle, size_t needle_len) {
- uint16_t const *candidate; uint16_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
-    return NULL;
- haystack_len -= needle_len;
- marker = (uint16_t)DeeUni_ToLower(*(uint16_t *)needle);
- while ((candidate = memlowerchrw(haystack,marker,haystack_len)) != NULL) {
-  if (MEMCASEEQW(candidate,needle,needle_len))
-      return (uint16_t *)candidate;
-  haystack_len = (haystack+haystack_len)-candidate;
-  haystack     = candidate+1;
- }
- return NULL;
-}
-#define memcasermemw  dee_memcasermemw
-LOCAL uint16_t *dee_memcasermemw(uint16_t const *__restrict haystack, size_t haystack_len,
-                                 uint16_t const *__restrict needle, size_t needle_len) {
- uint16_t const *candidate; uint16_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
-    return NULL;
- haystack_len -= needle_len;
- marker = (uint16_t)DeeUni_ToLower(*(uint16_t *)needle);
- while ((candidate = memlowerrchrw(haystack,marker,haystack_len)) != NULL) {
-  if (MEMCASEEQW(candidate,needle,needle_len))
-      return (uint16_t *)candidate;
-  if unlikely(candidate == haystack) break;
-  haystack_len = (candidate-1)-haystack;
- }
- return NULL;
-}
 
-#define memcasememl  dee_memcasememl
-LOCAL uint32_t *dee_memcasememl(uint32_t const *__restrict haystack, size_t haystack_len,
-                                uint32_t const *__restrict needle, size_t needle_len) {
- uint32_t const *candidate; uint32_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
-    return NULL;
- haystack_len -= needle_len;
- marker = DeeUni_ToLower(*(uint32_t *)needle);
- while ((candidate = memlowerchrl(haystack,marker,haystack_len)) != NULL) {
-  if (MEMCASEEQL(candidate,needle,needle_len))
-      return (uint32_t *)candidate;
-  haystack_len = (haystack+haystack_len)-candidate;
-  haystack     = candidate+1;
- }
- return NULL;
-}
-#define memcasermeml  dee_memcasermeml
-LOCAL uint32_t *dee_memcasermeml(uint32_t const *__restrict haystack, size_t haystack_len,
-                                 uint32_t const *__restrict needle, size_t needle_len) {
- uint32_t const *candidate; uint32_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
-    return NULL;
- haystack_len -= needle_len;
- marker = DeeUni_ToLower(*(uint32_t *)needle);
- while ((candidate = memlowerrchrl(haystack,marker,haystack_len)) != NULL) {
-  if (MEMCASEEQL(candidate,needle,needle_len))
-      return (uint32_t *)candidate;
-  if unlikely(candidate == haystack) break;
-  haystack_len = (candidate-1)-haystack;
- }
- return NULL;
-}
 
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
-#define STRCASEEQ(a,b) (strcasecmp(a,b) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define STRCASEEQ(a,b) (_stricmp(a,b) == 0)
-#else
 #define STRCASEEQ(a,b) dee_strcaseeq(a,b)
-LOCAL bool dee_strcaseeq(char const *a, char const *b) {
- while (*a && DeeUni_ToLower(*a) == DeeUni_ToLower(*b));
+LOCAL bool DCALL dee_strcaseeq(char const *a, char const *b) {
+ while (*a && DeeUni_ToLower(*a) == DeeUni_ToLower(*b)) ++a,++b;
  return !*b;
 }
-#endif
+
+LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
+ while (length--) {
+  if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
+      return false;
+  ++a,++b;
+ }
+ return true;
+}
 
 
 /* As found here: https://en.wikipedia.org/wiki/Levenshtein_distance */
@@ -525,9 +762,10 @@ name(T const *__restrict a, size_t alen, \
  } \
  for (i = 0; i < blen; ++i) v0[i] = i; \
  for (i = 0; i < alen; ++i) { \
+  T a_value = transform(a[i]); \
   v1[0] = i+1; \
-  for (j = 0; j < blen; j++) { \
-   cost  = (transform(a[i]) == transform(b[j])) ? 0u : 1u; \
+  for (j = 0; j < blen; ++j) { \
+   cost  = (a_value == transform(b[j])) ? 0u : 1u; \
    cost += v0[j]; \
    temp  = v1[j]+1; \
    if (temp < cost) cost = temp; \
@@ -542,14 +780,63 @@ name(T const *__restrict a, size_t alen, \
  if (temp > SSIZE_MAX) temp = SSIZE_MAX; \
  return temp; \
 }
-
 DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_compareb,uint8_t,)
 DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_comparew,uint16_t,)
 DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_comparel,uint32_t,)
-DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_casecompareb,uint8_t,DeeUni_ToLower)
-DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_casecomparew,uint16_t,DeeUni_ToLower)
-DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_casecomparel,uint32_t,DeeUni_ToLower)
+DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_asciicasecompareb,uint8_t,(uint8_t)DeeUni_ToLower)
 #undef DEFINE_FUZZY_COMPARE_FUNCTION
+
+#define DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(name,T) \
+PRIVATE dssize_t DCALL \
+name(T const *__restrict a, size_t alen, \
+     T const *__restrict b, size_t blen) { \
+ size_t *v0,*v1,i,j,cost,temp; bool isheap; \
+ unicode_foldreader(T) a_reader; \
+ unicode_foldreader(T) b_reader; \
+ size_t folded_alen,folded_blen; \
+ folded_alen = DeeUni_FoldedLength(a,alen); \
+ folded_blen = DeeUni_FoldedLength(b,blen); \
+ if unlikely(!folded_alen) return folded_blen; \
+ if unlikely(!folded_blen) return folded_alen; \
+ if (folded_blen > (128+1)*sizeof(size_t)) { \
+  v0 = (size_t *)Dee_Malloc((folded_blen+1)*sizeof(size_t)); \
+  if unlikely(!v0) return -1; \
+  v1 = (size_t *)Dee_Malloc((folded_blen+1)*sizeof(size_t)); \
+  if unlikely(!v1) { Dee_Free(v0); return -1; } \
+  isheap = true; \
+ } else { \
+  v0 = (size_t *)alloca((folded_blen+1)*sizeof(size_t)); \
+  v1 = (size_t *)alloca((folded_blen+1)*sizeof(size_t)); \
+  isheap = false; \
+ } \
+ for (i = 0; i < folded_blen; ++i) v0[i] = i; \
+ unicode_foldreader_init(a_reader,a,alen); \
+ for (i = 0; i < folded_alen; ++i) { \
+  T a_value = unicode_foldreader_getc(a_reader); \
+  v1[0] = i+1; \
+  unicode_foldreader_init(b_reader,b,blen); \
+  for (j = 0; j < folded_blen; ++j) { \
+   cost  = (a_value == unicode_foldreader_getc(b_reader)) ? 0u : 1u; \
+   cost += v0[j]; \
+   temp  = v1[j]+1; \
+   if (temp < cost) cost = temp; \
+   temp  = v0[j+1]+1; \
+   if (temp < cost) cost = temp; \
+   v1[j+1] = cost; \
+  } \
+  ASSERT(unicode_foldreader_empty(b_reader)); \
+  memcpy(v0,v1,folded_blen*sizeof(size_t)); \
+ } \
+ ASSERT(unicode_foldreader_empty(a_reader)); \
+ temp = v1[folded_blen]; \
+ if (isheap) Dee_Free(v0),Dee_Free(v1); \
+ if (temp > SSIZE_MAX) temp = SSIZE_MAX; \
+ return temp; \
+}
+DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(fuzzy_casecompareb,uint8_t)
+DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(fuzzy_casecomparew,uint16_t)
+DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(fuzzy_casecomparel,uint32_t)
+#undef DEFINE_FUZZY_FOLDCOMPARE_FUNCTION
 
 #define DEFINE_VERSION_COMPARE_FUNCTION(name,T,Ts,transform,IF_TRANSFORM) \
 PRIVATE Ts DCALL \
@@ -608,9 +895,9 @@ name(T *__restrict a, size_t a_size, \
 DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpb,uint8_t,int8_t,,DEE_PRIVATE_IF_FALSE)
 DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpw,uint16_t,int16_t,,DEE_PRIVATE_IF_FALSE)
 DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpl,uint32_t,int32_t,,DEE_PRIVATE_IF_FALSE)
-DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpb,uint8_t,int8_t,DeeUni_ToLower,DEE_PRIVATE_IF_TRUE)
-DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpw,uint16_t,int16_t,DeeUni_ToLower,DEE_PRIVATE_IF_TRUE)
-DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpl,uint32_t,int32_t,DeeUni_ToLower,DEE_PRIVATE_IF_TRUE)
+DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpb,uint8_t,int8_t,DeeUni_ToLower,DEE_PRIVATE_IF_TRUE)   /* TODO: case-fold */
+DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpw,uint16_t,int16_t,DeeUni_ToLower,DEE_PRIVATE_IF_TRUE) /* TODO: case-fold */
+DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpl,uint32_t,int32_t,DeeUni_ToLower,DEE_PRIVATE_IF_TRUE) /* TODO: case-fold */
 #undef DEE_PRIVATE_IF_TRUE
 #undef DEE_PRIVATE_IF_FALSE
 #undef DEFINE_VERSION_COMPARE_FUNCTION
@@ -648,12 +935,50 @@ name(T *__restrict scan_str, size_t scan_size, \
  } \
  return scan_str; \
 }
+#define DEFINE_CASEFIND_MATCH_FUNCTION(name,T,memcasemem,MEMCASESTARTSWITH) \
+PRIVATE T *DCALL \
+name(T *__restrict scan_str, size_t scan_size, \
+     T *__restrict open_str, size_t open_size, \
+     T *__restrict clos_str, size_t clos_size, \
+     size_t *pmatch_length) { \
+ size_t recursion = 0; \
+ if unlikely(!clos_size) return NULL; \
+ if unlikely(!open_size) \
+    return memcasemem(scan_str,scan_size,clos_str,clos_size,pmatch_length); \
+ while (scan_size) { \
+  size_t length; \
+  length = MEMCASESTARTSWITH(scan_str,scan_size,clos_str,clos_size); \
+  if (length) { \
+   if (!recursion) { \
+    if (pmatch_length) \
+       *pmatch_length = length; \
+    return scan_str; \
+   } \
+   --recursion; \
+   scan_str  += length; \
+   scan_size -= length; \
+   continue; \
+  } \
+  length = MEMCASESTARTSWITH(scan_str,scan_size,open_str,open_size); \
+  if (length) { \
+   ++recursion; \
+   scan_str  += length; \
+   scan_size -= length; \
+   continue; \
+  } \
+  ++scan_str; \
+  --scan_size; \
+ } \
+ return NULL; \
+}
+DEFINE_FIND_MATCH_FUNCTION(find_asciicasematchb,uint8_t,dee_memasciicasemem,dee_memasciicaseeq)
 DEFINE_FIND_MATCH_FUNCTION(find_matchb,uint8_t,memmemb,MEMEQB)
 DEFINE_FIND_MATCH_FUNCTION(find_matchw,uint16_t,memmemw,MEMEQW)
 DEFINE_FIND_MATCH_FUNCTION(find_matchl,uint32_t,memmeml,MEMEQL)
-DEFINE_FIND_MATCH_FUNCTION(find_casematchb,uint8_t,memcasememb,MEMCASEEQB)
-DEFINE_FIND_MATCH_FUNCTION(find_casematchw,uint16_t,memcasememw,MEMCASEEQW)
-DEFINE_FIND_MATCH_FUNCTION(find_casematchl,uint32_t,memcasememl,MEMCASEEQL)
+DEFINE_CASEFIND_MATCH_FUNCTION(find_casematchb,uint8_t,memcasememb,MEMCASESTARTSWITHB)
+DEFINE_CASEFIND_MATCH_FUNCTION(find_casematchw,uint16_t,memcasememw,MEMCASESTARTSWITHW)
+DEFINE_CASEFIND_MATCH_FUNCTION(find_casematchl,uint32_t,memcasememl,MEMCASESTARTSWITHL)
+#undef DEFINE_CASEFIND_MATCH_FUNCTION
 #undef DEFINE_FIND_MATCH_FUNCTION
 
 #define DEFINE_RFIND_MATCH_FUNCTION(name,T,memrmem,MEMEQ) \
@@ -688,12 +1013,47 @@ name(T *__restrict scan_str, size_t scan_size, \
  } \
  return scan_str; \
 }
+#define DEFINE_CASERFIND_MATCH_FUNCTION(name,T,memcasermem,MEMCASEENDSWITH) \
+PRIVATE T *DCALL \
+name(T *__restrict scan_str, size_t scan_size, \
+     T *__restrict open_str, size_t open_size, \
+     T *__restrict clos_str, size_t clos_size, \
+     size_t *pmatch_length) { \
+ size_t recursion = 0; \
+ if unlikely(!open_size) return NULL; \
+ if unlikely(!clos_size) \
+    return memcasermem(scan_str,scan_size,open_str,open_size,pmatch_length); \
+ while (scan_size) { \
+  size_t length; \
+  length = MEMCASEENDSWITH(scan_str,scan_size,open_str,open_size); \
+  if (length) { \
+   scan_size -= length; \
+   if (!recursion) { \
+    if (pmatch_length) \
+       *pmatch_length = length; \
+    return scan_str + scan_size; \
+   } \
+   --recursion; \
+   continue; \
+  } \
+  length = MEMCASEENDSWITH(scan_str,scan_size,clos_str,clos_size); \
+  if (length) { \
+   ++recursion; \
+   scan_size -= length; \
+   continue; \
+  } \
+  --scan_size; \
+ } \
+ return NULL; \
+}
+DEFINE_RFIND_MATCH_FUNCTION(rfind_asciicasematchb,uint8_t,dee_memasciicasermem,dee_memasciicaseeq)
 DEFINE_RFIND_MATCH_FUNCTION(rfind_matchb,uint8_t,memrmemb,MEMEQB)
 DEFINE_RFIND_MATCH_FUNCTION(rfind_matchw,uint16_t,memrmemw,MEMEQW)
 DEFINE_RFIND_MATCH_FUNCTION(rfind_matchl,uint32_t,memrmeml,MEMEQL)
-DEFINE_RFIND_MATCH_FUNCTION(rfind_casematchb,uint8_t,memcasermemb,MEMCASEEQB)
-DEFINE_RFIND_MATCH_FUNCTION(rfind_casematchw,uint16_t,memcasermemw,MEMCASEEQW)
-DEFINE_RFIND_MATCH_FUNCTION(rfind_casematchl,uint32_t,memcasermeml,MEMCASEEQL)
+DEFINE_CASERFIND_MATCH_FUNCTION(rfind_casematchb,uint8_t,memcasermemb,MEMCASEENDSWITHB)
+DEFINE_CASERFIND_MATCH_FUNCTION(rfind_casematchw,uint16_t,memcasermemw,MEMCASEENDSWITHW)
+DEFINE_CASERFIND_MATCH_FUNCTION(rfind_casematchl,uint32_t,memcasermeml,MEMCASEENDSWITHL)
+#undef DEFINE_CASERFIND_MATCH_FUNCTION
 #undef DEFINE_RFIND_MATCH_FUNCTION
 
 
@@ -711,14 +1071,19 @@ DEFINE_RFIND_MATCH_FUNCTION(rfind_casematchl,uint32_t,memcasermeml,MEMCASEEQL)
 
 #define NOCASE
 #define T           uint8_t
+#define wildcompare dee_wildasccicasecompareb
+#include "wildcompare.c.inl"
+
+
+#define CASEFOLD
+#define T           uint8_t
 #define wildcompare wildcasecompareb
 #include "wildcompare.c.inl"
-#define NOCASE
+#define CASEFOLD
 #define T           uint16_t
 #define wildcompare wildcasecomparew
 #include "wildcompare.c.inl"
-#define NOCASE
-#define Treturn     int64_t
+#define CASEFOLD
 #define T           uint32_t
 #define wildcompare wildcasecomparel
 #include "wildcompare.c.inl"
