@@ -1008,6 +1008,7 @@ struct assembler_state {
 #define ASM_OP_EXTERN        OPNAME1('e')         /* `extern <imm8|16>:<imm8|16>' An external symbol. */
 #define ASM_OP_GLOBAL        OPNAME1('g')         /* `global <imm8|16>'           A global symbol. */
 #define ASM_OP_LOCAL         OPNAME1('l')         /* `local <imm8|16>'            A local symbol. */
+#define ASM_OP_LOCAL_GEN     OPNAME1('L')         /* `local <imm8|16>'            A local symbol (allow the use of an anonymous local). */
 #define ASM_OP_TRUE          OPNAME2('T','T')     /* `true'                       A constant true. */
 #define ASM_OP_FALSE         OPNAME2('F','F')     /* `false'                      A constant false. */
 #define ASM_OP_IMMZERO       OPNAME2('I','z')     /* `$0'                         An integer equal to zero. */
@@ -1054,18 +1055,41 @@ PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
 
 INTDEF DeeObject dict_dummy;
 
+struct cleanup_mode {
+    uint16_t cm_kind;   /* The kind of cleanup (One of `CLEANUP_MODE_F*') */
+#define CLEANUP_MODE_FNONE      0x0000 /* No special cleanup required. */
+#define CLEANUP_MODE_FSTACK     0x0001 /* Cleanup by popping a value from the stack. */
+#define CLEANUP_MODE_FLOCAL     0x0002 /* Cleanup by deleting a local variable. */
+#define CLEANUP_MODE_FLOCAL_POP 0x0003 /* Cleanup by loading from a local variable & deleting it. */
+    uint16_t cm_value;  /* For `CLEANUP_MODE_FLOCAL*': The local variable ID */
+};
+
+
+#ifndef NDEBUG
+#define INITIALIZE_FAKE_LOCAL_SYMBOL(sym,lid) \
+   (memset((sym),0xcc,sizeof(struct symbol)), \
+   (sym)->sym_class = SYM_CLASS_VAR, \
+   (sym)->sym_flag = SYM_FVAR_ALLOC|SYM_FVAR_LOCAL, \
+   (sym)->sym_var.sym_index = (lid))
+#else
+#define INITIALIZE_FAKE_LOCAL_SYMBOL(sym,lid) \
+  ((sym)->sym_class = SYM_CLASS_VAR, \
+   (sym)->sym_flag = SYM_FVAR_ALLOC|SYM_FVAR_LOCAL, \
+   (sym)->sym_var.sym_index = (lid))
+#endif
+
 
 PRIVATE DREF DeeObject *DCALL
 get_assembly_formatter_oprepr(DeeAstObject *__restrict ast,
                               char const *__restrict format, int mode,
-                              bool *__restrict must_pop_output,
+                              struct cleanup_mode *__restrict cleanup,
                               struct assembler_state const *__restrict init_state) {
  DREF DeeObject *result;
  uint32_t option;
  char const *format_start = format;
  bool try_repr = !!(mode&OPTION_MODE_TRY);
  mode &= ~OPTION_MODE_TRY;
- ASSERT(must_pop_output);
+ ASSERT(cleanup);
 next_option:
  option = 0;
 cont_option:
@@ -1137,7 +1161,7 @@ unknown_encoding:
       goto err_undefined_mode;
   /* Must pop the operand if it isn't input-only. */
   if (mode != OPTION_MODE_INPUT)
-     *must_pop_output = true;
+      cleanup->cm_kind = CLEANUP_MODE_FSTACK;
   if (mode != OPTION_MODE_OUTPUT) {
    if (ast_genasm(ast,ASM_G_FPUSHRES))
        goto err;
@@ -1309,10 +1333,35 @@ do_regular_ref:
       ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
   if (ast->ast_sym->sym_class != SYM_CLASS_VAR) goto next_option;
   if ((ast->ast_sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_LOCAL) goto next_option;
+write_regular_local:
   if (mode == OPTION_MODE_INPUT)
        lid = asm_lsymid_for_read(ast->ast_sym,ast);
   else lid = asm_lsymid(ast->ast_sym);
   if unlikely(lid < 0) goto err;
+  result = DeeString_Newf("local %I16u",(uint16_t)lid);
+ } break;
+
+ {
+  int32_t lid;
+ case ASM_OP_LOCAL_GEN:
+  if (ast->ast_type == AST_SYM) {
+   while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
+       ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
+   if (ast->ast_sym->sym_class == SYM_CLASS_VAR &&
+      (ast->ast_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL)
+       goto write_regular_local;
+  }
+  lid = asm_newlocal();
+  if unlikely(lid < 0) goto err;
+  if (mode != OPTION_MODE_OUTPUT) {
+   struct symbol temp;
+   INITIALIZE_FAKE_LOCAL_SYMBOL(&temp,(uint16_t)lid);
+   if (asm_gmov_symdst(&temp,ast,ast)) goto err;
+  }
+  cleanup->cm_kind = CLEANUP_MODE_FLOCAL;
+  if (mode != OPTION_MODE_INPUT)
+      cleanup->cm_kind = CLEANUP_MODE_FLOCAL_POP;
+  cleanup->cm_value = (uint16_t)lid;
   result = DeeString_Newf("local %I16u",(uint16_t)lid);
  } break;
 
@@ -1485,10 +1534,10 @@ do_regular_ref:
  case ASM_OP_PREFIX:
   if (mode == OPTION_MODE_INPUT) {
    result = get_assembly_formatter_oprepr(ast,"ceglCsS",mode|OPTION_MODE_TRY,
-                                          must_pop_output,init_state);
+                                          cleanup,init_state);
   } else {
    result = get_assembly_formatter_oprepr(ast,"eglCsS",mode|OPTION_MODE_TRY,
-                                          must_pop_output,init_state);
+                                          cleanup,init_state);
   }
   if (!result) goto err;
   if (result != ITER_DONE) break;
@@ -1496,28 +1545,28 @@ do_regular_ref:
 
  case ASM_OP_INTEGER:
   result = get_assembly_formatter_oprepr(ast,"I32N32",mode|OPTION_MODE_TRY,
-                                         must_pop_output,init_state);
+                                         cleanup,init_state);
   if (!result) goto err;
   if (result != ITER_DONE) break;
   goto next_option;
 
  case ASM_OP_SYMBOL:
   result = get_assembly_formatter_oprepr(ast,"racCseglRS",mode|OPTION_MODE_TRY,
-                                         must_pop_output,init_state);
+                                         cleanup,init_state);
   if (!result) goto err;
   if (result != ITER_DONE) break;
   goto next_option;
 
  case ASM_OP_VARIABLE:
   result = get_assembly_formatter_oprepr(ast,"eglS",mode|OPTION_MODE_TRY,
-                                         must_pop_output,init_state);
+                                         cleanup,init_state);
   if (!result) goto err;
   if (result != ITER_DONE) break;
   goto next_option;
 
  case ASM_OP_BINDABLE:
   result = get_assembly_formatter_oprepr(ast,"egl",mode|OPTION_MODE_TRY,
-                                         must_pop_output,init_state);
+                                         cleanup,init_state);
   if (!result) goto err;
   if (result != ITER_DONE) break;
   goto next_option;
@@ -1528,11 +1577,11 @@ do_regular_ref:
   if (mode == OPTION_MODE_INPUT)
    result = get_assembly_formatter_oprepr(ast,"nEmTiTmTfracCseglTTFFTcI64N64SR",
                                           mode|OPTION_MODE_TRY,
-                                          must_pop_output,init_state);
+                                          cleanup,init_state);
   else {
    result = get_assembly_formatter_oprepr(ast,"eglCsS",
                                           mode|OPTION_MODE_TRY,
-                                          must_pop_output,init_state);
+                                          cleanup,init_state);
   }
   if (!result) goto err;
   if (result != ITER_DONE) break;
@@ -1757,7 +1806,7 @@ ast_genasm_userasm(DeeAstObject *__restrict ast) {
  /*ref*/struct TPPString *assembly_text;
  /*ref*/struct TPPFile *assembly_file,*old_eob;
  struct asm_operand *iter; size_t i,count;
- bool *must_pop_ops = NULL,*must_pop_dst;
+ struct cleanup_mode *cleanup_actions = NULL,*cleanup_dst;
  uint32_t old_lexer_flags,old_lexer_tokens;
  /* Save the assembler state before user-assembly is processed. */
  old_state.as_handlerc = current_assembler.a_handlerc;
@@ -1768,10 +1817,10 @@ ast_genasm_userasm(DeeAstObject *__restrict ast) {
  /* Keep track of operands that must be popped during cleanup. */
  if (ast->ast_assembly.ast_num_o ||
      ast->ast_assembly.ast_num_i) {
-  must_pop_ops = (bool *)Dee_Calloc((ast->ast_assembly.ast_num_o+
-                                     ast->ast_assembly.ast_num_i)*
-                                     sizeof(bool));
-  if unlikely(!must_pop_ops) goto err;
+  cleanup_actions = (struct cleanup_mode *)Dee_Calloc((ast->ast_assembly.ast_num_o+
+                                                       ast->ast_assembly.ast_num_i)*
+                                                       sizeof(struct cleanup_mode));
+  if unlikely(!cleanup_actions) goto err;
  }
 
  if (ast->ast_flag&AST_FASSEMBLY_FORMAT) {
@@ -1784,25 +1833,25 @@ ast_genasm_userasm(DeeAstObject *__restrict ast) {
   if unlikely(!formatter.af_opreprv) goto err;
   ascii_printer_init(&formatter.af_printer);
   /* Generate text representations of assembly operands. */
-  dst      = formatter.af_opreprv;
-  iter     = ast->ast_assembly.ast_opv;
-  count    = ast->ast_assembly.ast_num_o;
-  must_pop_dst = must_pop_ops;
+  dst         = formatter.af_opreprv;
+  iter        = ast->ast_assembly.ast_opv;
+  count       = ast->ast_assembly.ast_num_o;
+  cleanup_dst = cleanup_actions;
   /* Format output operands. */
-  for (; count; --count,++dst,++iter,++must_pop_dst) {
+  for (; count; --count,++dst,++iter,++cleanup_dst) {
    *dst = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
                                                                 iter->ao_type->s_text,
                                                                 OPTION_MODE_UNDEF,
-                                                                must_pop_dst,&old_state);
+                                                                cleanup_dst,&old_state);
    if unlikely(!*dst) goto err_formatter;
   }
   /* Format output operands. */
   count = ast->ast_assembly.ast_num_i;
-  for (; count; --count,++dst,++iter,++must_pop_dst) {
+  for (; count; --count,++dst,++iter,++cleanup_dst) {
    *dst = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
                                                                 iter->ao_type->s_text,
                                                                 OPTION_MODE_INPUT,
-                                                                must_pop_dst,&old_state);
+                                                                cleanup_dst,&old_state);
    if unlikely(!*dst) goto err_formatter;
   }
   /* Format label operands. */
@@ -1827,27 +1876,27 @@ err_formatter:
   *       requires formatting to be enabled by default, but the specs
   *       don't state that this _must_ be the case, so we must still
   *       evaluate all the operands. */
- must_pop_dst = must_pop_ops;
+ cleanup_dst = cleanup_actions;
  iter  = ast->ast_assembly.ast_opv;
  count = ast->ast_assembly.ast_num_o;
  /* Format output operands. */
- for (; count; --count,++iter,++must_pop_dst) {
+ for (; count; --count,++iter,++cleanup_dst) {
   DREF DeeStringObject *temp;
   temp = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
                                                                iter->ao_type->s_text,
                                                                OPTION_MODE_UNDEF,
-                                                               must_pop_dst,&old_state);
+                                                               cleanup_dst,&old_state);
   if unlikely(!temp) goto err;
   Dee_Decref(temp);
  }
  count = ast->ast_assembly.ast_num_i;
  /* Format input operands. */
- for (; count; --count,++iter,++must_pop_dst) {
+ for (; count; --count,++iter,++cleanup_dst) {
   DREF DeeStringObject *temp;
   temp = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
                                                                iter->ao_type->s_text,
                                                                OPTION_MODE_INPUT,
-                                                               must_pop_dst,&old_state);
+                                                               cleanup_dst,&old_state);
   if unlikely(!temp) goto err;
   Dee_Decref(temp);
  }
@@ -1990,31 +2039,49 @@ create_assembly_file:
           ast->ast_assembly.ast_num_i);
  while (count--) {
   DeeAstObject *operand;
-  if (!must_pop_ops[count]) continue;
-  operand = ast->ast_assembly.ast_opv[count].ao_expr;
-  if unlikely(current_assembler.a_stackcur <= old_state.as_stackcur) {
-   /* The user broke stack alignment (just evaluate the operand). */
-   if (ast->ast_assembly.ast_opv[count].ao_name) {
-    if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
-             ast->ast_assembly.ast_opv[count].ao_name->k_name))
+  switch (cleanup_actions[count].cm_kind) {
+
+  case CLEANUP_MODE_FSTACK:
+   operand = ast->ast_assembly.ast_opv[count].ao_expr;
+   if unlikely(current_assembler.a_stackcur <= old_state.as_stackcur) {
+    /* The user broke stack alignment (just evaluate the operand). */
+    if (ast->ast_assembly.ast_opv[count].ao_name) {
+     if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
+              ast->ast_assembly.ast_opv[count].ao_name->k_name))
+         goto err;
+    } else {
+     char buffer[32];
+     Dee_sprintf(buffer,"%%%Iu",(size_t)count);
+     if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,buffer))
+         goto err;
+    }
+    if (ast_genasm(operand,ASM_G_FNORMAL))
         goto err;
    } else {
-    char buffer[32];
-    Dee_sprintf(buffer,"%%%Iu",(size_t)count);
-    if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,buffer))
+    /* Pop the stack-top expression into this operand. */
+    uint16_t expected = current_assembler.a_stackcur-1;
+    if (asm_gpop_expr(operand))
         goto err;
+    /* Account of stack-slot re-use in stack displacement mode. */
+    ASSERT(current_assembler.a_stackcur == expected ||
+           current_assembler.a_flag&ASM_FSTACKDISP);
+    old_state.as_stackcur += current_assembler.a_stackcur-expected;
    }
-   if (ast_genasm(operand,ASM_G_FNORMAL))
-       goto err;
-  } else {
-   /* Pop the stack-top expression into this operand. */
-   uint16_t expected = current_assembler.a_stackcur-1;
-   if (asm_gpop_expr(operand))
-       goto err;
-   /* Account of stack-slot re-use in stack displacement mode. */
-   ASSERT(current_assembler.a_stackcur == expected ||
-          current_assembler.a_flag&ASM_FSTACKDISP);
-   old_state.as_stackcur += current_assembler.a_stackcur-expected;
+   break;
+
+  {
+   struct symbol temp;
+  case CLEANUP_MODE_FLOCAL_POP:
+   operand = ast->ast_assembly.ast_opv[count].ao_expr;
+   INITIALIZE_FAKE_LOCAL_SYMBOL(&temp,cleanup_actions[count].cm_value);
+   if (asm_gmov_symsrc(operand,&temp,operand)) goto err;
+  }
+   ATTR_FALLTHROUGH
+  case CLEANUP_MODE_FLOCAL:
+   asm_dellocal(cleanup_actions[count].cm_value);
+   break;
+
+  default: break;
   }
  }
 
@@ -2035,12 +2102,12 @@ create_assembly_file:
   }
   if (asm_gsetstack(old_state.as_stackcur)) goto err;
  }
- Dee_Free(must_pop_ops);
+ Dee_Free(cleanup_actions);
  return result;
 err_text:
  TPPString_Decref(assembly_text);
 err:
- Dee_Free(must_pop_ops);
+ Dee_Free(cleanup_actions);
  return -1;
 }
 
