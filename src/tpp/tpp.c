@@ -9366,7 +9366,8 @@ struct incback_slot_t {
  /*ref*/struct TPPFile *is_file; /* [1..1] Backup file pointer. */
  char                  *is_fpos; /* [1..1] Old `f_pos' pointer. */
 };
-#define incback_slot_quit(self) TPPFile_Decref((self)->is_file)
+#define incback_slot_quit(self) \
+   (on_popfile((self)->is_file),TPPFile_Decref((self)->is_file))
 
 PRIVATE void TPPCALL
 incback_slot_backup(struct incback_slot_t *__restrict self) {
