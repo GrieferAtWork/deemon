@@ -264,6 +264,9 @@
     <ClInclude Include="..\include\deemon\stringutils.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq_functions.h">
+      <Filter>src\deemon\objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">

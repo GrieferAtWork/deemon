@@ -34,9 +34,12 @@
 
 #include <hybrid/minmax.h>
 
+#include "seq_functions.h"
+
 #include "../runtime/runtime_error.h"
 
 DECL_BEGIN
+
 
 INTERN size_t DCALL DeeSeq_Size(DeeObject *__restrict self) {
  DREF DeeObject *iter,*elem; size_t result = 0;
@@ -100,7 +103,8 @@ DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
   if ((seq = tp_self->tp_seq) != NULL) {
    struct type_nsi *nsi;
    if ((nsi = seq->tp_nsi) != NULL &&
-        nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+        nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+        is_noninherited_nsi(tp_self,seq,nsi)) {
     if (nsi->nsi_seqlike.nsi_getitem)
         return (*nsi->nsi_seqlike.nsi_getitem)(self,index);
     if (nsi->nsi_seqlike.nsi_getitem_fast) {
@@ -121,7 +125,7 @@ DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
      goto return_result_first;
     }
    }
-   if (seq->tp_get) {
+   if (has_noninherited_getitem(tp_self,seq)) {
     DREF DeeObject *index_ob;
     index_ob = DeeInt_NewSize(index);
     if unlikely(!index_ob) goto err;
@@ -129,7 +133,7 @@ DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
     Dee_Decref(index_ob);
     return result;
    }
-   if (seq->tp_range_get) {
+   if (has_noninherited_getrange(tp_self,seq)) {
     DREF DeeObject *real_result;
     DREF DeeObject *index_ob,*index_plus1_ob;
     index_ob = DeeInt_NewSize(index);
@@ -197,14 +201,15 @@ DeeSeq_NonEmpty(DeeObject *__restrict self) {
   if ((seq = tp_self->tp_seq) != NULL) {
    struct type_nsi *nsi;
    DREF DeeObject *temp;
-   if ((nsi = seq->tp_nsi) != NULL) {
+   if ((nsi = seq->tp_nsi) != NULL &&
+       is_noninherited_nsi(tp_self,seq,nsi)) {
     size_t length = (*nsi->nsi_common.nsi_getsize)(self);
     if unlikely(length == (size_t)-1)
        goto err;
     return length != 0;
    }
-   if (seq->tp_size) {
-    if (tp_self->tp_cast.tp_bool)
+   if (has_noninherited_size(tp_self,seq)) {
+    if (has_noninherited_bool(tp_self))
         return (*tp_self->tp_cast.tp_bool)(self);
     temp = (*seq->tp_size)(self);
     if unlikely(!temp) goto err;
@@ -249,7 +254,8 @@ DeeSeq_Front(DeeObject *__restrict self) {
    DREF DeeObject *temp;
    if ((nsi = seq->tp_nsi) != NULL &&
         nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
-        nsi->nsi_seqlike.nsi_getitem) {
+        nsi->nsi_seqlike.nsi_getitem &&
+        is_noninherited_nsi(tp_self,seq,nsi)) {
     result = (*nsi->nsi_seqlike.nsi_getitem)(self,0);
     if unlikely(!result) {
      if (DeeError_Catch(&DeeError_IndexError))
@@ -257,7 +263,7 @@ DeeSeq_Front(DeeObject *__restrict self) {
     }
     return result;
    }
-   if (seq->tp_get) {
+   if (has_noninherited_getitem(tp_self,seq)) {
     result = (*seq->tp_get)(self,&DeeInt_Zero);
     if unlikely(!result) {
      if (DeeError_Catch(&DeeError_IndexError))
@@ -297,7 +303,8 @@ DeeSeq_Back(DeeObject *__restrict self) {
   if ((seq = tp_self->tp_seq) != NULL) {
    struct type_nsi *nsi;
    if ((nsi = seq->tp_nsi) != NULL &&
-        nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+        nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+        is_noninherited_nsi(tp_self,seq,nsi)) {
     if (nsi->nsi_seqlike.nsi_getitem) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
@@ -306,7 +313,7 @@ DeeSeq_Back(DeeObject *__restrict self) {
          return (*nsi->nsi_seqlike.nsi_getitem_fast)(self,seq_length - 1);
      return (*nsi->nsi_seqlike.nsi_getitem)(self,seq_length - 1);
     }
-    if (seq->tp_get) {
+    if (has_noninherited_getitem(tp_self,seq)) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
      if unlikely(!seq_length) goto err_empty;
@@ -317,7 +324,8 @@ DeeSeq_Back(DeeObject *__restrict self) {
      return result;
     }
    }
-   if (seq->tp_get && seq->tp_size) {
+   if (has_noninherited_getitem(tp_self,seq) &&
+       has_noninherited_size(tp_self,seq)) {
     int size_is_nonzero;
     temp = (*seq->tp_size)(self);
     if unlikely(!temp) goto err;
@@ -838,7 +846,8 @@ DeeSeq_StartsWith(DeeObject *__restrict self,
    DREF DeeObject *temp;
    if ((nsi = seq->tp_nsi) != NULL &&
         nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
-        nsi->nsi_seqlike.nsi_getitem) {
+        nsi->nsi_seqlike.nsi_getitem &&
+        is_noninherited_nsi(tp_self,seq,nsi)) {
     int error;
     result = (*nsi->nsi_seqlike.nsi_getitem)(self,0);
     if unlikely(!result) {
@@ -860,7 +869,7 @@ check:
     }
     return error;
    }
-   if (seq->tp_get) {
+   if (has_noninherited_getitem(tp_self,seq)) {
     result = (*seq->tp_get)(self,&DeeInt_Zero);
     if unlikely(!result) {
      if (DeeError_Catch(&DeeError_IndexError))
@@ -903,7 +912,8 @@ DeeSeq_EndsWith(DeeObject *__restrict self,
   if ((seq = tp_self->tp_seq) != NULL) {
    struct type_nsi *nsi;
    if ((nsi = seq->tp_nsi) != NULL &&
-        nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+        nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+        is_noninherited_nsi(tp_self,seq,nsi)) {
     if (nsi->nsi_seqlike.nsi_getitem) {
      int error;
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
@@ -929,7 +939,7 @@ check:
      }
      return error;
     }
-    if (seq->tp_get) {
+    if (has_noninherited_getitem(tp_self,seq)) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
      if unlikely(!seq_length) goto err_empty;
@@ -941,7 +951,8 @@ check:
      goto check;
     }
    }
-   if (seq->tp_get && seq->tp_size) {
+   if (has_noninherited_getitem(tp_self,seq) &&
+       has_noninherited_size(tp_self,seq)) {
     int size_is_nonzero;
     temp = (*seq->tp_size)(self);
     if unlikely(!temp) goto err;
@@ -1113,7 +1124,8 @@ DeeSeq_Find(DeeObject *__restrict self,
   struct type_seq *seq = tp_self->tp_seq;
   if (seq) {
    struct type_nsi *nsi = seq->tp_nsi;
-   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+       is_noninherited_nsi(tp_self,seq,nsi)) {
     if (nsi->nsi_seqlike.nsi_find)
         return (*nsi->nsi_seqlike.nsi_find)(self,start,end,search_item,pred_eq);
     if (nsi->nsi_seqlike.nsi_getitem_fast) {
@@ -1181,7 +1193,7 @@ DeeSeq_Find(DeeObject *__restrict self,
      }
      return -1;
     }
-    if (seq->tp_get) {
+    if (has_noninherited_getitem(tp_self,seq)) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
 do_lookup_tpget:
@@ -1222,7 +1234,8 @@ do_lookup_tpget:
      return -1;
     }
    }
-   if (seq->tp_get && seq->tp_size) {
+   if (has_noninherited_getitem(tp_self,seq) &&
+       has_noninherited_size(tp_self,seq)) {
     temp = (*seq->tp_size)(self);
     if unlikely(!temp) goto err;
     if (DeeObject_AsSize(temp,&seq_length)) goto err_temp;
@@ -1263,7 +1276,8 @@ DeeSeq_RFind(DeeObject *__restrict self,
   struct type_seq *seq = tp_self->tp_seq;
   if (seq) {
    struct type_nsi *nsi = seq->tp_nsi;
-   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+       is_noninherited_nsi(tp_self,seq,nsi)) {
     if (nsi->nsi_seqlike.nsi_find)
         return (*nsi->nsi_seqlike.nsi_find)(self,start,end,search_item,pred_eq);
     if (nsi->nsi_seqlike.nsi_getitem_fast) {
@@ -1333,7 +1347,7 @@ DeeSeq_RFind(DeeObject *__restrict self,
      } while (i-- > start);
      return -1;
     }
-    if (seq->tp_get) {
+    if (has_noninherited_getitem(tp_self,seq)) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
 do_lookup_tpget:
@@ -1375,7 +1389,8 @@ do_lookup_tpget:
      return -1;
     }
    }
-   if (seq->tp_get && seq->tp_size) {
+   if (has_noninherited_getitem(tp_self,seq) &&
+       has_noninherited_size(tp_self,seq)) {
     temp = (*seq->tp_size)(self);
     if unlikely(!temp) goto err;
     if (DeeObject_AsSize(temp,&seq_length)) goto err_temp;

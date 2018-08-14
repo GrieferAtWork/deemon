@@ -1717,6 +1717,107 @@ class_trygetoperator(DeeTypeObject *__restrict self,
  return result;
 }
 
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+INTERN void DCALL
+DeeClass_InheritOperator(DeeTypeObject *__restrict self,
+                         uint16_t name,
+                         DeeObject *__restrict value) {
+ struct class_desc *desc = DeeClass_DESC(self);
+ if likely(name < CLASS_OPERATOR_USERCOUNT) {
+  struct class_optable *table;
+  /* Most likely case: in-bounds operator. */
+again:
+  table = desc->c_ops[name / CLASS_HEADER_OPC2];
+  if unlikely(!table) {
+   /* Allocate a missing table. */
+   table = (struct class_optable *)Dee_TryCalloc(sizeof(struct class_optable));
+   if unlikely(!table) return;
+   if (!ATOMIC_CMPXCH(desc->c_ops[name / CLASS_HEADER_OPC2],NULL,table)) {
+    Dee_Free(table);
+    goto again;
+   }
+  }
+  INSTANCE_DESC_WRITE(&desc->c_class);
+  if (!table->co_operators[name % CLASS_HEADER_OPC2]) {
+   table->co_operators[name % CLASS_HEADER_OPC2] = value;
+   Dee_Incref(value);
+  }
+  INSTANCE_DESC_ENDWRITE(&desc->c_class);
+ } else {
+  /* Extended operator. */
+  ASSERT(name >= OPERATOR_EXTENDED(0));
+  if (!desc->c_exopv) return;
+  INSTANCE_DESC_WRITE(&desc->c_class);
+  if (!desc->c_exopv[name]) {
+   desc->c_exopv[name] = value;
+   Dee_Incref(value);
+  }
+  INSTANCE_DESC_ENDWRITE(&desc->c_class);
+ }
+}
+#endif
+
+INTERN DREF DeeObject *DCALL
+DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
+ DREF DeeObject *result;
+ result = DeeClass_TryGetOperator(self,name);
+ if unlikely(!result)
+    err_unimplemented_operator(self,name);
+ return result;
+}
+INTERN DREF DeeObject *DCALL
+DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
+ DREF DeeObject *result;
+ struct class_desc *desc = DeeClass_DESC(self);
+ if likely(name < CLASS_OPERATOR_USERCOUNT) {
+  struct class_optable *table;
+  /* Most likely case: in-bounds operator. */
+  table = desc->c_ops[name/CLASS_HEADER_OPC2];
+  if unlikely(!table) goto inherit_from_base;
+  INSTANCE_DESC_READ(&desc->c_class);
+  result = table->co_operators[name % CLASS_HEADER_OPC2];
+  if unlikely(!result) {
+   INSTANCE_DESC_ENDREAD(&desc->c_class);
+   goto inherit_from_base;
+  }
+  Dee_Incref(result);
+  INSTANCE_DESC_ENDREAD(&desc->c_class);
+ } else {
+  /* Extended operator. */
+  ASSERT(name >= OPERATOR_EXTENDED(0));
+  ASSERT(desc->c_exopv);
+  INSTANCE_DESC_READ(&desc->c_class);
+  result = desc->c_exopv[name];
+  if unlikely(!result) {
+   INSTANCE_DESC_ENDREAD(&desc->c_class);
+   goto inherit_from_base;
+  }
+  Dee_Incref(result);
+  INSTANCE_DESC_ENDREAD(&desc->c_class);
+ }
+ return result;
+inherit_from_base:
+ for (;;) {
+  self = DeeType_Base(self);
+  if (!self || !DeeType_IsClass(self))
+       return NULL;
+  result = class_trygetoperator(self,name);
+  if (result) break;
+ }
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DeeClass_InheritOperator(self,name,result);
+#endif
+ return result;
+}
+INTERN DREF DeeObject *DCALL
+DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ /* TODO: Don't consider operators cached from base-classes. */
+#endif
+ return class_trygetoperator(self,name);
+}
+
+
 
 /* Type-specific class operator wrappers.
  * NOTE: These are required because they are also invoked from `super',

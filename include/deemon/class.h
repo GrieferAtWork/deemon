@@ -263,18 +263,18 @@ struct class_desc {
     /* NOTE: This structure is destroyed from the destructor
      *       of `DeeType_Type' when pointed to by `tp_class'. */
     uintptr_t                  c_addr;  /* [const] Offset to an inline-allocated `struct instance_desc'
-                                         *          that can be found in every instance of this class.
-                                         *   HINT:  This field us usually equal to `:tp_base->tp_init.tp_alloc.tp_instance_size',
-                                         *          meaning that the instance descriptor is allocated after the underlying object.
-                                         *          This way, instance fields can be stacked ontop of each other, allowing for
-                                         *          one class to be derived from another, and so on... */
+                                         *         that can be found in every instance of this class.
+                                         *   HINT: This field us usually equal to `:tp_base->tp_init.tp_alloc.tp_instance_size',
+                                         *         meaning that the instance descriptor is allocated after the underlying object.
+                                         *         This way, instance fields can be stacked ontop of each other, allowing for
+                                         *         one class to be derived from another, and so on... */
     DREF DeeMemberTableObject *c_mem;   /* [1..1][const] Class instance member table descriptor. */
     DREF DeeMemberTableObject *c_cmem;  /* [1..1][const] Class member table descriptor. (For class functions, etc.) */
     struct class_optable      *c_ops[CLASS_HEADER_OPC1]; /* [0..1][owned][lock(c_class.ih_lock)][*] Table of operators. */
     DREF DeeObject           **c_exopv; /* [0..1][lock(c_class.ih_lock)][0..:ob_type->tp_exops][owned]
-                                         *   Vector of extended operator callbacks, used by type-type
-                                         *   extensions, such as `&DeeFileType_Type'.
-                                         *   NOTE: This vector is lazily allocated on first use. */
+                                         * Vector of extended operator callbacks, used by type-type
+                                         * extensions, such as `&DeeFileType_Type'.
+                                         * NOTE: This vector is lazily allocated on first use. */
     struct instance_desc       c_class; /* Instance descriptor for storing members described by `c_cmem'. */
 };
 
@@ -516,6 +516,26 @@ instancemember_wrapper(DeeTypeObject *__restrict class_type,
 #define DeeInstance_DelMember(tp_self,self,index)           __builtin_expect(DeeInstance_DelMember(tp_self,self,index),0)
 #define DeeInstance_DelMemberSafe(tp_self,self,index)       __builtin_expect(DeeInstance_DelMemberSafe(tp_self,self,index),0)
 #define DeeInstance_SetMemberSafe(tp_self,self,index,value) __builtin_expect(DeeInstance_SetMemberSafe(tp_self,self,index,value),0)
+#endif
+#endif
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Return the nearest operator function for `name',
+ * implemented by `self', which must be a class type.
+ * If the operator doesn't exist, return NULL and throw
+ * a NotImplemented error, or return NULL and don't throw
+ * an error when `DeeClass_TryGetOperator()' was used. */
+INTDEF DREF DeeObject *DCALL DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name);
+INTDEF DREF DeeObject *DCALL DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name);
+/* Same as `DeeClass_TryGetOperator()', but only return a operator
+ * if that operator was implemented by the given class itself, rather
+ * that the given class, or one of its base-classes. */
+INTDEF DREF DeeObject *DCALL DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+/* Similar to `DeeClass_SetOperator()', however used to lazily inherit operators
+ * from base-types, caching them for faster retrieval when used the next time. */
+INTDEF void DCALL DeeClass_InheritOperator(DeeTypeObject *__restrict self, uint16_t name, DeeObject *__restrict value);
 #endif
 #endif
 

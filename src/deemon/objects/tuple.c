@@ -1224,10 +1224,7 @@ tuple_sizeof(Tuple *__restrict self,
 }
 
 PRIVATE DREF DeeObject *DCALL
-tuple_front(Tuple *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":front"))
-     return NULL;
+tuple_first(Tuple *__restrict self) {
  if unlikely(DeeTuple_IsEmpty(self)) {
   err_empty_sequence((DeeObject *)self);
   return NULL;
@@ -1235,10 +1232,7 @@ tuple_front(Tuple *__restrict self,
  return_reference_(DeeTuple_GET(self,0));
 }
 PRIVATE DREF DeeObject *DCALL
-tuple_back(Tuple *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":back"))
-     return NULL;
+tuple_last(Tuple *__restrict self) {
  if unlikely(DeeTuple_IsEmpty(self)) {
   err_empty_sequence((DeeObject *)self);
   return NULL;
@@ -1246,10 +1240,14 @@ tuple_back(Tuple *__restrict self,
  return_reference_(DeeTuple_GET(self,DeeTuple_SIZE(self)-1));
 }
 
+
 PRIVATE struct type_method tuple_methods[] = {
     { "__sizeof__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&tuple_sizeof },
-    { "front", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&tuple_front },
-    { "back", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&tuple_back },
+    { NULL }
+};
+PRIVATE struct type_getset tuple_getsets[] = {
+    { "first", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_first, NULL, NULL },
+    { "last", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_last, NULL, NULL },
     { NULL }
 };
 
@@ -1551,7 +1549,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */tuple_methods,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */tuple_getsets,
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */tuple_class_methods,
     /* .tp_class_getsets = */NULL,

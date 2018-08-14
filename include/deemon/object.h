@@ -1430,21 +1430,9 @@ struct type_object {
     struct type_method     *tp_class_methods; /* [0..1] Class methods. */
     struct type_getset     *tp_class_getsets; /* [0..1] Class getset. */
     struct type_member     *tp_class_members; /* [0..1] Class members. */
-    /* [0..1] Same as `tp_call', but using keywords.
-     * NOTE: When `tp_call' is also implemented, `kw' is guarantied to be non-NULL.
-     *       Otherwise, `NULL' is passed when the object is invoked without keyword arguments. */
+    /* [0..1] Same as `tp_call', but using keywords. */
     DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *__restrict self, size_t argc,
                                         DeeObject **__restrict argv, DeeObject *kw);
-#if 0
-    /* An optional extension to `tp_call' and when implemented, requires `tp_call' to be as well.
-     * To allow for passing argument names through an argument list itself, when invoked,
-     * `kwds' is a mapping-style object from which argument values not passed through
-     * `argv' can potentially be loaded using `DeeObject_GetItem*()'.
-     * Additionally, `kwds' may hold values of arguments specified
-     * after a variadic portion of the argument list. */
-    DREF DeeObject *(DCALL *tp_call_kwds)(DeeObject *__restrict self, size_t argc,
-                                          DeeObject **__restrict argv, DeeObject *__restrict kwds);
-#endif
     /* Lazily-filled hash-table of instance members.
      * >> The member vectors are great for static allocation, but walking
      *    all of them each time a member is accessed is way too slow.
@@ -1472,6 +1460,58 @@ struct type_object {
 #define DeeType_GCPriority(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc->tp_gcprio : GC_PRIORITY_LATE)
 #define DeeObject_GCPriority(x)      DeeType_GCPriority(Dee_TYPE(x))
 #define DeeObject_IsInterrupt(x)     DeeType_IsInterrupt(Dee_TYPE(x))
+
+
+#undef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#define CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE 1
+
+
+/* Check if `name' is being implemented by the given path, or has been inherited by a base-type. */
+DFUNDEF bool DCALL DeeType_HasInheritedOperator(DeeTypeObject *__restrict self, uint16_t name);
+
+/* Same as `DeeType_HasInheritedOperator()', however don't return `true' if the
+ * operator has been inherited implicitly through caching mechanisms. */
+DFUNDEF bool DCALL DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name);
+
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF bool DCALL type_inherit_constructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
+INTDEF bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str */
+INTDEF bool DCALL type_inherit_repr(DeeTypeObject *__restrict self);          /* tp_repr */
+INTDEF bool DCALL type_inherit_bool(DeeTypeObject *__restrict self);          /* tp_bool */
+INTDEF bool DCALL type_inherit_call(DeeTypeObject *__restrict self);          /* tp_call */
+INTDEF bool DCALL type_inherit_hash(DeeTypeObject *__restrict self);          /* tp_hash */
+INTDEF bool DCALL type_inherit_int(DeeTypeObject *__restrict self);           /* tp_int, tp_int32, tp_int64, tp_double */
+INTDEF bool DCALL type_inherit_inv(DeeTypeObject *__restrict self);           /* tp_inv */
+INTDEF bool DCALL type_inherit_pos(DeeTypeObject *__restrict self);           /* tp_pos */
+INTDEF bool DCALL type_inherit_neg(DeeTypeObject *__restrict self);           /* tp_neg */
+INTDEF bool DCALL type_inherit_add(DeeTypeObject *__restrict self);           /* tp_add, tp_sub, tp_inplace_add, tp_inplace_sub, tp_inc, tp_dec */
+INTDEF bool DCALL type_inherit_mul(DeeTypeObject *__restrict self);           /* tp_mul, tp_inplace_mul */
+INTDEF bool DCALL type_inherit_div(DeeTypeObject *__restrict self);           /* tp_div, tp_inplace_div */
+INTDEF bool DCALL type_inherit_mod(DeeTypeObject *__restrict self);           /* tp_mod, tp_inplace_mod */
+INTDEF bool DCALL type_inherit_shl(DeeTypeObject *__restrict self);           /* tp_shl, tp_inplace_shl */
+INTDEF bool DCALL type_inherit_shr(DeeTypeObject *__restrict self);           /* tp_shr, tp_inplace_shr */
+INTDEF bool DCALL type_inherit_and(DeeTypeObject *__restrict self);           /* tp_and, tp_inplace_and */
+INTDEF bool DCALL type_inherit_or(DeeTypeObject *__restrict self);            /* tp_or, tp_inplace_or */
+INTDEF bool DCALL type_inherit_xor(DeeTypeObject *__restrict self);           /* tp_xor, tp_inplace_xor */
+INTDEF bool DCALL type_inherit_pow(DeeTypeObject *__restrict self);           /* tp_pow, tp_inplace_pow */
+INTDEF bool DCALL type_inherit_compare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
+INTDEF bool DCALL type_inherit_iternext(DeeTypeObject *__restrict self);      /* tp_iter_next */
+INTDEF bool DCALL type_inherit_iterself(DeeTypeObject *__restrict self);      /* tp_iter_self */
+INTDEF bool DCALL type_inherit_size(DeeTypeObject *__restrict self);          /* tp_size */
+INTDEF bool DCALL type_inherit_contains(DeeTypeObject *__restrict self);      /* tp_contains */
+INTDEF bool DCALL type_inherit_getitem(DeeTypeObject *__restrict self);       /* tp_get */
+INTDEF bool DCALL type_inherit_delitem(DeeTypeObject *__restrict self);       /* tp_del */
+INTDEF bool DCALL type_inherit_setitem(DeeTypeObject *__restrict self);       /* tp_set */
+INTDEF bool DCALL type_inherit_getrange(DeeTypeObject *__restrict self);      /* tp_range_get */
+INTDEF bool DCALL type_inherit_delrange(DeeTypeObject *__restrict self);      /* tp_range_del */
+INTDEF bool DCALL type_inherit_setrange(DeeTypeObject *__restrict self);      /* tp_range_set */
+INTDEF bool DCALL type_inherit_nsi(DeeTypeObject *__restrict self);           /* tp_nsi (only succeeds if `self' has no `tp_seq' field) */
+INTDEF bool DCALL type_inherit_with(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
+INTDEF bool DCALL type_inherit_buffer(DeeTypeObject *__restrict self);        /* tp_getbuf, tp_putbuf, tp_buffer_flags */
+#endif
+#endif
+
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Lookup an attribute from cache.
@@ -2219,6 +2259,23 @@ DFUNDEF int (DCALL DeeObject_Leave)(DeeObject *__restrict self);
  * @throw: Error.ValueError.BufferError:      The object is an atomic buffer, or cannot be written to. */
 DFUNDEF int (DCALL DeeObject_GetBuf)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
 DFUNDEF void (DCALL DeeObject_PutBuf)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
+
+
+
+#if 0
+/* A singleton instance of a stand-alone, hidden type that is not derive
+ * from any other object, and is used as special return value in operators
+ * in order to indicate that the operator cannot be used.
+ * Having an operator function return this value is the same as throwing
+ * a `NotImplemented' error (which should not be confused with this, as it
+ * is actually something completely different).
+ * Also note that unlike a completely missing operator, an operator returning
+ * this value will immediately indicate failure to the user, rather than having
+ * them continue searching for a matching implementation by searching sub-classes. */
+DDATDEF DeeObject DeeNotImplemented_Singleton;
+#define Dee_NotImplemented          (&DeeNotImplemented_Singleton)
+#define DeeNotImplemented_Check(ob) ((ob) == Dee_NotImplemented)
+#endif
 
 
 #ifndef __OPTIMIZE_SIZE__

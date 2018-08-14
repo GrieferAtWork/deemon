@@ -91,14 +91,46 @@ DeeType_IsInherited(DeeTypeObject *__restrict test_type,
 
 
 
+/* Inheriting the weakref support address works, however
+ * it slows down object destruction more than it speeds up
+ * weakref usage, so we don't actually use it!. */
+#undef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
+#if defined(CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE) && 0
+#define CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS 1
+#endif
 
+#ifdef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
+#define has_noninherited_weakrefs(tp) \
+      ((tp)->tp_weakrefs != 0 && (!(tp)->tp_base || (tp)->tp_base->tp_weakrefs != (tp)->tp_weakrefs))
+#else
+#define has_noninherited_weakrefs(tp) \
+      ((tp)->tp_weakrefs != 0)
+#endif
+
+
+#ifdef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
+PRIVATE bool DCALL
+type_inherit_weakrefs(DeeTypeObject *__restrict self) {
+ DeeTypeObject *base = DeeType_Base(self);
+ if (!base) return false;
+ if (!base->tp_weakrefs)
+      type_inherit_weakrefs(base);
+ self->tp_weakrefs = base->tp_weakrefs;
+ return true;
+}
+#endif
 
 /* ==== Core Object API ==== */
 LOCAL struct weakref_list *DCALL
 weakrefs_get(DeeObject *__restrict ob) {
  DeeTypeObject *tp = Dee_TYPE(ob);
+#ifdef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
+ if unlikely(!tp->tp_weakrefs)
+    type_inherit_weakrefs(tp);
+#else
  while (!tp->tp_weakrefs && DeeType_Base(tp))
          tp = DeeType_Base(tp);
+#endif
  return (struct weakref_list *)((uintptr_t)ob+tp->tp_weakrefs);
 }
 #define WEAKREFS_GET(ob) weakrefs_get(ob)
@@ -521,7 +553,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
   }
 destroy_weak:
   /* Delete all weak references linked against this type level. */
-  if (undo_start->tp_weakrefs != 0) {
+  if (has_noninherited_weakrefs(undo_start)) {
    struct weakref *iter,*next;
    struct weakref_list *list;
    ASSERT(undo_start->tp_weakrefs >= sizeof(DeeObject));
@@ -750,7 +782,7 @@ PUBLIC void (DCALL DeeObject_Destroy_d)
     }
    }
    /* Delete all weak references linked against this type level. */
-   if (type->tp_weakrefs != 0) {
+   if (has_noninherited_weakrefs(type)) {
     ASSERT(type->tp_weakrefs >= sizeof(DeeObject));
     clear_weakrefs((struct weakref_list *)((uintptr_t)self+type->tp_weakrefs));
    }
@@ -803,7 +835,7 @@ PUBLIC void (DCALL DeeObject_Destroy_d)
     }
    }
    /* Delete all weak references linked against this type level. */
-   if (type->tp_weakrefs != 0) {
+   if (has_noninherited_weakrefs(type)) {
     ASSERT(type->tp_weakrefs >= sizeof(DeeObject));
     clear_weakrefs((struct weakref_list *)((uintptr_t)self+type->tp_weakrefs));
    }
@@ -2488,6 +2520,27 @@ PUBLIC void DCALL DeeAssert_BadObjectTypeOpt(char const *UNUSED(file), int UNUSE
 PUBLIC void DCALL DeeAssert_BadObjectTypeExact(char const *UNUSED(file), int UNUSED(line), DeeObject *UNUSED(ob), DeeTypeObject *__restrict UNUSED(wanted_type)) {}
 PUBLIC void DCALL DeeAssert_BadObjectTypeExactOpt(char const *UNUSED(file), int UNUSED(line), DeeObject *UNUSED(ob), DeeTypeObject *__restrict UNUSED(wanted_type)) {}
 #endif
+
+
+
+/* Check if `name' is being implemented by the given path, or has been inherited by a base-type. */
+PUBLIC bool DCALL
+DeeType_HasInheritedOperator(DeeTypeObject *__restrict self, uint16_t name) {
+ do if (DeeType_HasOperator(self,name)) return true;
+ while ((self = DeeType_Base(self)) != NULL);
+ return false;
+}
+
+/* Same as `DeeType_HasInheritedOperator()', however don't return `true' if the
+ * operator has been inherited implicitly through caching mechanisms. */
+PUBLIC bool DCALL
+DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
+ (void)self;
+ (void)name;
+ /* TODO */
+ return false;
+}
+
 
 DECL_END
 

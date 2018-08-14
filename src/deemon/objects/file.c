@@ -79,6 +79,7 @@ DeeFile_##Read(DeeObject *__restrict self UNPACK_ARGS(n,args)) \
   tp_self = DeeSuper_TYPE(self); \
   self    = DeeSuper_SELF(self); \
  } \
+ /* TODO: Make use of operator inheritance. */ \
  while (DeeFileType_CheckExact(tp_self)) { \
   if (tp_self->tp_features&TF_HASFILEOPS) { \
    if unlikely(!((DeeFileTypeObject *)tp_self)->ft_read) \
@@ -117,6 +118,7 @@ DeeFile_Read(DeeObject *__restrict self,
                                                       bufsize,
                                                       DEE_FILEIO_FNORMAL);
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return 0;
@@ -141,6 +143,7 @@ DeeFile_Write(DeeObject *__restrict self,
                                                        bufsize,
                                                        DEE_FILEIO_FNORMAL);
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return 0;
@@ -168,6 +171,7 @@ DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *psize) {
    if (psize) *psize = trunc_pos;
    return result;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return 0;
@@ -197,6 +201,7 @@ PUBLIC int DCALL DeeFile_Getc(DeeObject *__restrict self) {
    } else break;
    return result;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return GETC_EOF;
@@ -226,6 +231,7 @@ DeeFile_Getcf(DeeObject *__restrict self, dioflag_t flags) {
    } else break;
    return result;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return GETC_EOF;
@@ -256,6 +262,7 @@ DeeFile_Putc(DeeObject *__restrict self, int ch) {
    } else break;
    return result;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return GETC_EOF;
@@ -285,6 +292,7 @@ DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t flags) {
    } else break;
    return result;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return GETC_EOF;
@@ -313,6 +321,7 @@ DeeFile_PRead(DeeObject *__restrict self,
    } else break;
    return result;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return 0;
@@ -340,6 +349,7 @@ DeeFile_PReadf(DeeObject *__restrict self,
    } else break;
    return result;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return 0;
@@ -367,6 +377,7 @@ DeeFile_PWrite(DeeObject *__restrict self,
    } else break;
    return result;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return 0;
@@ -394,6 +405,7 @@ DeeFile_PWritef(DeeObject *__restrict self,
    } else break;
    return result;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  if (DeeNone_Check(self)) return 0;
@@ -571,6 +583,7 @@ DeeFile_ReadLine(DeeObject *__restrict self,
    }
    break;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  err_unimplemented_operator(Dee_TYPE(self),FILE_OPERATOR_GETC);
@@ -647,6 +660,7 @@ DeeFile_ReadText(DeeObject *__restrict self,
    if likely(pread) goto got_read;
    break;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  err_unimplemented_operator(Dee_TYPE(self),FILE_OPERATOR_READ);
@@ -698,6 +712,7 @@ DeeFile_PReadText(DeeObject *__restrict self,
    if likely(ppread) goto got_read;
    break;
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  err_unimplemented_operator(Dee_TYPE(self),FILE_OPERATOR_PREAD);
@@ -1797,6 +1812,7 @@ file_size(DeeObject *__restrict self,
     return DeeInt_NewU64((uint64_t)filesize);
    }
   }
+  /* TODO: Make use of operator inheritance. */
   tp_self = DeeType_Base(tp_self);
  }
  err_unimplemented_operator(Dee_TYPE(self),

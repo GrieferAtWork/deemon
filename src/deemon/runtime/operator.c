@@ -26,6 +26,7 @@
 #include <deemon/object.h>
 #include <deemon/gc.h>
 #include <deemon/rodict.h>
+#include <deemon/float.h>
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
@@ -227,6 +228,480 @@ INTDEF int DCALL class_wrap_leave(DeeObject *__restrict self);
 #define CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS 1
 
 #ifndef DEFINE_TYPE_OPERATORS
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+INTERN bool DCALL
+type_inherit_constructors(DeeTypeObject *__restrict self) {
+ DeeTypeObject *base;
+ if (!(self->tp_flags & TP_FINHERITCTOR) ||
+      (base = self->tp_base) == NULL)
+     return false;
+ type_inherit_constructors(base);
+ ASSERT((base->tp_flags & TP_FVARIABLE) ==
+        (self->tp_flags & TP_FVARIABLE));
+ DEE_DPRINTF("Inherit constructors from %q into %q\n",
+             base->tp_name,self->tp_name);
+ if (self->tp_flags & TP_FVARIABLE) {
+  self->tp_init.tp_var.tp_ctor        = base->tp_init.tp_var.tp_ctor;
+  self->tp_init.tp_var.tp_copy_ctor   = base->tp_init.tp_var.tp_copy_ctor;
+  self->tp_init.tp_var.tp_deep_ctor   = base->tp_init.tp_var.tp_deep_ctor;
+  self->tp_init.tp_var.tp_any_ctor    = base->tp_init.tp_var.tp_any_ctor;
+  self->tp_init.tp_var.tp_free        = base->tp_init.tp_var.tp_free;
+  self->tp_init.tp_var.tp_any_ctor_kw = base->tp_init.tp_var.tp_any_ctor_kw;
+ } else {
+  if (base->tp_init.tp_alloc.tp_free) {
+#ifndef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
+   ASSERT((base->tp_flags&TP_FGC) == (self->tp_flags&TP_FGC));
+#else /* !CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
+   ASSERTF(!(base->tp_flags&TP_FGC) || (self->tp_flags&TP_FGC),
+           "Non-GC object is inheriting its constructors for a GC-enabled object");
+#endif /* CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
+   self->tp_init.tp_alloc.tp_alloc = base->tp_init.tp_alloc.tp_alloc;
+   self->tp_init.tp_alloc.tp_free  = base->tp_init.tp_alloc.tp_free;
+  }
+  self->tp_init.tp_alloc.tp_ctor        = base->tp_init.tp_alloc.tp_ctor;
+  self->tp_init.tp_alloc.tp_copy_ctor   = base->tp_init.tp_alloc.tp_copy_ctor;
+  self->tp_init.tp_alloc.tp_deep_ctor   = base->tp_init.tp_alloc.tp_deep_ctor;
+  self->tp_init.tp_alloc.tp_any_ctor    = base->tp_init.tp_alloc.tp_any_ctor;
+  self->tp_init.tp_alloc.tp_any_ctor_kw = base->tp_init.tp_alloc.tp_any_ctor_kw;
+ }
+ self->tp_init.tp_assign      = base->tp_init.tp_assign;
+ self->tp_init.tp_move_assign = base->tp_init.tp_move_assign;
+ self->tp_init.tp_deepload    = base->tp_init.tp_deepload;
+ return true;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeObject_NewDefault(DeeTypeObject *__restrict object_type) {
+ DREF DeeObject *result;
+ ASSERT_OBJECT(object_type);
+ ASSERT(DeeType_Check(object_type));
+ if (object_type->tp_flags&TP_FVARIABLE) {
+  if (object_type->tp_init.tp_var.tp_ctor) {
+do_invoke_var_ctor:
+   return DeeType_INVOKE_VAR_CTOR(object_type,object_type);
+  }
+  if (object_type->tp_init.tp_var.tp_any_ctor) {
+do_invoke_var_any_ctor:
+   return DeeType_INVOKE_VAR_ANY(object_type,object_type,0,NULL);
+  }
+  if (object_type->tp_init.tp_var.tp_any_ctor_kw) {
+do_invoke_var_any_ctor_kw:
+   return DeeType_INVOKE_VAR_ANY_KW(object_type,object_type,0,NULL,NULL);
+  }
+  if (type_inherit_constructors(object_type)) {
+   if (object_type->tp_init.tp_var.tp_ctor)
+       goto do_invoke_var_ctor;
+   if (object_type->tp_init.tp_var.tp_any_ctor)
+       goto do_invoke_var_any_ctor;
+   if (object_type->tp_init.tp_var.tp_any_ctor_kw)
+       goto do_invoke_var_any_ctor_kw;
+  }
+ } else {
+  int error;
+  ASSERT(!(object_type->tp_flags&TP_FVARIABLE));
+  if (object_type->tp_init.tp_alloc.tp_free)
+   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+  else if (object_type->tp_flags&TP_FGC)
+   result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+  else {
+   result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+  }
+  if unlikely(!result) goto err;
+  DeeObject_Init(result,object_type);
+  if (object_type->tp_init.tp_alloc.tp_ctor) {
+do_invoke_alloc_ctor:
+   error = DeeType_INVOKE_ALLOC_CTOR(object_type,object_type,result);
+  } else if (object_type->tp_init.tp_alloc.tp_any_ctor) {
+do_invoke_alloc_any_ctor:
+   error = DeeType_INVOKE_ALLOC_ANY(object_type,object_type,result,0,NULL);
+  } else if (object_type->tp_init.tp_alloc.tp_any_ctor_kw) {
+do_invoke_alloc_any_ctor_kw:
+   error = DeeType_INVOKE_ALLOC_ANY_KW(object_type,object_type,result,0,NULL,NULL);
+  } else {
+   DeeObject_FreeTracker(result);
+   if (object_type->tp_init.tp_alloc.tp_free)
+    DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+   else if (object_type->tp_flags & TP_FGC)
+    DeeGCObject_Free(result);
+   else {
+    DeeObject_Free(result);
+   }
+   if (!type_inherit_constructors(object_type))
+        goto err_not_implemented_r;
+   if (object_type->tp_init.tp_alloc.tp_free)
+    result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+   else if (object_type->tp_flags & TP_FGC)
+    result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+   else {
+    result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+   }
+   if unlikely(!result) goto err_object_type;
+   DeeObject_InitNoref(result,object_type);
+   if (object_type->tp_init.tp_alloc.tp_ctor)
+       goto do_invoke_alloc_ctor;
+   if (object_type->tp_init.tp_alloc.tp_any_ctor)
+       goto do_invoke_alloc_any_ctor;
+   if (object_type->tp_init.tp_alloc.tp_any_ctor_kw)
+       goto do_invoke_alloc_any_ctor_kw;
+   goto err_not_implemented_r;
+  }
+  if unlikely(error) goto err_r;
+  /* Begin tracking the returned object. */
+  if (object_type->tp_flags & TP_FGC)
+      DeeGC_Track(result);
+  return result;
+ }
+ err_unimplemented_constructor(object_type,0,NULL);
+err:
+ return NULL;
+err_not_implemented_r:
+ err_unimplemented_constructor(object_type,0,NULL);
+err_r:
+ DeeObject_FreeTracker(result);
+ if (object_type->tp_init.tp_alloc.tp_free)
+  DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+ else if (object_type->tp_flags & TP_FGC)
+  DeeGCObject_Free(result);
+ else {
+  DeeObject_Free(result);
+ }
+err_object_type:
+ Dee_Decref(object_type);
+ goto err;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeObject_New(DeeTypeObject *__restrict object_type,
+              size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result;
+ ASSERT_OBJECT(object_type);
+ ASSERT(DeeType_Check(object_type));
+ if (object_type->tp_flags&TP_FVARIABLE) {
+  if (object_type->tp_init.tp_var.tp_ctor && !argc) {
+do_invoke_var_ctor:
+   return DeeType_INVOKE_VAR_CTOR(object_type,object_type);
+  }
+  if (object_type->tp_init.tp_var.tp_any_ctor) {
+do_invoke_var_any_ctor:
+   return DeeType_INVOKE_VAR_ANY(object_type,object_type,argc,argv);
+  }
+  if (object_type->tp_init.tp_var.tp_any_ctor_kw) {
+do_invoke_var_any_ctor_kw:
+   return DeeType_INVOKE_VAR_ANY_KW(object_type,object_type,argc,argv,NULL);
+  }
+  if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
+      DeeObject_InstanceOf(argv[0],object_type)) {
+do_invoke_var_copy:
+   return DeeType_INVOKE_VAR_COPY(object_type,object_type,argv[0]);
+  }
+  if (type_inherit_constructors(object_type)) {
+   if (object_type->tp_init.tp_var.tp_ctor && !argc)
+       goto do_invoke_var_ctor;
+   if (object_type->tp_init.tp_var.tp_any_ctor)
+       goto do_invoke_var_any_ctor;
+   if (object_type->tp_init.tp_var.tp_any_ctor_kw)
+       goto do_invoke_var_any_ctor_kw;
+   if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
+       DeeObject_InstanceOf(argv[0],object_type))
+       goto do_invoke_var_copy;
+  }
+ } else {
+  int error;
+  ASSERT(!(object_type->tp_flags&TP_FVARIABLE));
+  if (object_type->tp_init.tp_alloc.tp_free)
+   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+  else if (object_type->tp_flags&TP_FGC)
+   result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+  else {
+   result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+  }
+  if unlikely(!result) goto err;
+  DeeObject_Init(result,object_type);
+  if (object_type->tp_init.tp_alloc.tp_ctor && !argc) {
+do_invoke_alloc_ctor:
+   error = DeeType_INVOKE_ALLOC_CTOR(object_type,object_type,result);
+  } else if (object_type->tp_init.tp_alloc.tp_any_ctor) {
+do_invoke_alloc_any_ctor:
+   error = DeeType_INVOKE_ALLOC_ANY(object_type,object_type,result,argc,argv);
+  } else if (object_type->tp_init.tp_alloc.tp_any_ctor_kw) {
+do_invoke_alloc_any_ctor_kw:
+   error = DeeType_INVOKE_ALLOC_ANY_KW(object_type,object_type,result,argc,argv,NULL);
+  } else if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
+             DeeObject_InstanceOf(argv[0],object_type)) {
+do_invoke_alloc_copy:
+   error = DeeType_INVOKE_ALLOC_COPY(object_type,object_type,result,argv[0]);
+  } else {
+   DeeObject_FreeTracker(result);
+   if (object_type->tp_init.tp_alloc.tp_free)
+    DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+   else if (object_type->tp_flags & TP_FGC)
+    DeeGCObject_Free(result);
+   else {
+    DeeObject_Free(result);
+   }
+   if (!type_inherit_constructors(object_type))
+        goto err_not_implemented_r;
+   if (object_type->tp_init.tp_alloc.tp_free)
+    result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+   else if (object_type->tp_flags & TP_FGC)
+    result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+   else {
+    result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+   }
+   if unlikely(!result) goto err_object_type;
+   DeeObject_InitNoref(result,object_type);
+   if (object_type->tp_init.tp_alloc.tp_ctor && argc == 0)
+       goto do_invoke_alloc_ctor;
+   if (object_type->tp_init.tp_alloc.tp_any_ctor)
+       goto do_invoke_alloc_any_ctor;
+   if (object_type->tp_init.tp_alloc.tp_any_ctor_kw)
+       goto do_invoke_alloc_any_ctor_kw;
+   if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
+       DeeObject_InstanceOf(argv[0],object_type))
+       goto do_invoke_alloc_copy;
+   goto err_not_implemented_r;
+  }
+  if unlikely(error) goto err_r;
+  /* Begin tracking the returned object. */
+  if (object_type->tp_flags & TP_FGC)
+      DeeGC_Track(result);
+  return result;
+ }
+ err_unimplemented_constructor(object_type,argc,argv);
+err:
+ return NULL;
+err_not_implemented_r:
+ err_unimplemented_constructor(object_type,argc,argv);
+err_r:
+ DeeObject_FreeTracker(result);
+ if (object_type->tp_init.tp_alloc.tp_free)
+  DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+ else if (object_type->tp_flags & TP_FGC)
+  DeeGCObject_Free(result);
+ else {
+  DeeObject_Free(result);
+ }
+err_object_type:
+ Dee_Decref(object_type);
+ goto err;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeObject_NewKw(DeeTypeObject *__restrict object_type,
+                size_t argc, DeeObject **__restrict argv,
+                DeeObject *kw) {
+ DREF DeeObject *result;
+ ASSERT_OBJECT(object_type);
+ ASSERT(DeeType_Check(object_type));
+ if (object_type->tp_flags&TP_FVARIABLE) {
+  if (object_type->tp_init.tp_var.tp_ctor && !argc) {
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto check_nonunary_var_constructors;
+    } else {
+     size_t kw_size = DeeObject_Size(kw);
+     if unlikely(kw_size == (size_t)-1) goto err;
+     if (kw_size != 0)
+         goto check_nonunary_var_constructors;
+    }
+   }
+do_invoke_var_ctor:
+   return DeeType_INVOKE_VAR_CTOR(object_type,object_type);
+  }
+check_nonunary_var_constructors:
+  if (object_type->tp_init.tp_var.tp_any_ctor_kw) {
+do_invoke_var_any_ctor_kw:
+   return DeeType_INVOKE_VAR_ANY_KW(object_type,object_type,argc,argv,kw);
+  }
+  if (object_type->tp_init.tp_var.tp_any_ctor) {
+do_invoke_var_any_ctor:
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto err_no_keywords;
+    } else {
+     size_t kw_size = DeeObject_Size(kw);
+     if unlikely(kw_size == (size_t)-1) goto err;
+     if (kw_size != 0)
+         goto err_no_keywords;
+    }
+   }
+   return DeeType_INVOKE_VAR_ANY(object_type,object_type,argc,argv);
+  }
+  if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
+      DeeObject_InstanceOf(argv[0],object_type)) {
+do_invoke_var_copy:
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto err_no_keywords;
+    } else {
+     size_t kw_size = DeeObject_Size(kw);
+     if unlikely(kw_size == (size_t)-1) goto err;
+     if (kw_size != 0)
+         goto err_no_keywords;
+    }
+   }
+   return DeeType_INVOKE_VAR_COPY(object_type,object_type,argv[0]);
+  }
+  if (type_inherit_constructors(object_type)) {
+   if (object_type->tp_init.tp_var.tp_ctor && !argc) {
+    if (kw) {
+     if (DeeKwds_Check(kw)) {
+      if (DeeKwds_SIZE(kw) != 0)
+          goto check_nonunary_var_constructors_ex;
+     } else {
+      size_t kw_size = DeeObject_Size(kw);
+      if unlikely(kw_size == (size_t)-1) goto err;
+      if (kw_size != 0)
+          goto check_nonunary_var_constructors_ex;
+     }
+    }
+    goto do_invoke_var_ctor;
+   }
+check_nonunary_var_constructors_ex:
+   if (object_type->tp_init.tp_var.tp_any_ctor)
+       goto do_invoke_var_any_ctor;
+   if (object_type->tp_init.tp_var.tp_any_ctor_kw)
+       goto do_invoke_var_any_ctor_kw;
+   if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
+       DeeObject_InstanceOf(argv[0],object_type))
+       goto do_invoke_var_copy;
+  }
+ } else {
+  int error;
+  ASSERT(!(object_type->tp_flags&TP_FVARIABLE));
+  if (object_type->tp_init.tp_alloc.tp_free)
+   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+  else if (object_type->tp_flags&TP_FGC)
+   result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+  else {
+   result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+  }
+  if unlikely(!result) goto err;
+  DeeObject_Init(result,object_type);
+  if (object_type->tp_init.tp_alloc.tp_ctor && !argc) {
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto check_nonunary_constructors;
+    } else {
+     size_t kw_size = DeeObject_Size(kw);
+     if unlikely(kw_size == (size_t)-1) goto err_r;
+     if (kw_size != 0)
+         goto check_nonunary_constructors;
+    }
+   }
+do_invoke_alloc_ctor:
+   error = DeeType_INVOKE_ALLOC_CTOR(object_type,object_type,result);
+  } else check_nonunary_constructors: if (object_type->tp_init.tp_alloc.tp_any_ctor_kw) {
+do_invoke_alloc_any_ctor_kw:
+   error = DeeType_INVOKE_ALLOC_ANY_KW(object_type,object_type,result,argc,argv,kw);
+  } else if (object_type->tp_init.tp_alloc.tp_any_ctor) {
+do_invoke_alloc_any_ctor:
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto err_no_keywords_r;
+    } else {
+     size_t kw_size = DeeObject_Size(kw);
+     if unlikely(kw_size == (size_t)-1) goto err_r;
+     if (kw_size != 0)
+         goto err_no_keywords_r;
+    }
+   }
+   error = DeeType_INVOKE_ALLOC_ANY(object_type,object_type,result,argc,argv);
+  } else if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
+             DeeObject_InstanceOf(argv[0],object_type)) {
+do_invoke_alloc_copy:
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto err_no_keywords_r;
+    } else {
+     size_t kw_size = DeeObject_Size(kw);
+     if unlikely(kw_size == (size_t)-1) goto err_r;
+     if (kw_size != 0)
+         goto err_no_keywords_r;
+    }
+   }
+   error = DeeType_INVOKE_ALLOC_COPY(object_type,object_type,result,argv[0]);
+  } else {
+   DeeObject_FreeTracker(result);
+   if (object_type->tp_init.tp_alloc.tp_free)
+    DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+   else if (object_type->tp_flags & TP_FGC)
+    DeeGCObject_Free(result);
+   else {
+    DeeObject_Free(result);
+   }
+   if (!type_inherit_constructors(object_type))
+        goto err_not_implemented_r;
+   if (object_type->tp_init.tp_alloc.tp_free)
+    result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+   else if (object_type->tp_flags & TP_FGC)
+    result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+   else {
+    result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
+   }
+   if unlikely(!result) goto err_object_type;
+   DeeObject_InitNoref(result,object_type);
+   if (object_type->tp_init.tp_alloc.tp_ctor && argc == 0) {
+    if (kw) {
+     if (DeeKwds_Check(kw)) {
+      if (DeeKwds_SIZE(kw) != 0)
+          goto check_nonunary_constructors_ex;
+     } else {
+      size_t kw_size = DeeObject_Size(kw);
+      if unlikely(kw_size == (size_t)-1) goto err_r;
+      if (kw_size != 0)
+          goto check_nonunary_constructors_ex;
+     }
+    }
+    goto do_invoke_alloc_ctor;
+   }
+check_nonunary_constructors_ex:
+   if (object_type->tp_init.tp_alloc.tp_any_ctor_kw)
+       goto do_invoke_alloc_any_ctor_kw;
+   if (object_type->tp_init.tp_alloc.tp_any_ctor)
+       goto do_invoke_alloc_any_ctor;
+   if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
+       DeeObject_InstanceOf(argv[0],object_type))
+       goto do_invoke_alloc_copy;
+   goto err_not_implemented_r;
+  }
+  if unlikely(error) goto err_r;
+  /* Begin tracking the returned object. */
+  if (object_type->tp_flags & TP_FGC)
+      DeeGC_Track(result);
+  return result;
+ }
+ err_unimplemented_constructor(object_type,argc,argv);
+err:
+ return NULL;
+err_no_keywords_r:
+ err_keywords_ctor_not_accepted(object_type,kw);
+ goto err_r;
+err_not_implemented_r:
+ err_unimplemented_constructor(object_type,argc,argv);
+err_r:
+ DeeObject_FreeTracker(result);
+ if (object_type->tp_init.tp_alloc.tp_free)
+  DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+ else if (object_type->tp_flags & TP_FGC)
+  DeeGCObject_Free(result);
+ else {
+  DeeObject_Free(result);
+ }
+err_object_type:
+ Dee_Decref(object_type);
+ goto err;
+err_no_keywords:
+ err_keywords_ctor_not_accepted(object_type,kw);
+ goto err;
+}
+#else /* CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE */
 PUBLIC DREF DeeObject *DCALL
 DeeObject_NewDefault(DeeTypeObject *__restrict object_type) {
  DeeTypeObject *ctor_type = object_type;
@@ -524,6 +999,8 @@ err_no_keywords:
  err_keywords_ctor_not_accepted(object_type,kw);
  goto err;
 }
+#endif
+
 
 #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
@@ -547,7 +1024,7 @@ DeeObject_VNewPack(DeeTypeObject *__restrict object_type,
  DeeTuple_DecrefSymbolic(args_tuple);
  return result;
 }
-#endif
+#endif /* !CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE */
 
 PUBLIC DREF DeeObject *DCALL
 DeeObject_VNewf(DeeTypeObject *__restrict object_type,
@@ -581,10 +1058,11 @@ DeeObject_Newf(DeeTypeObject *__restrict object_type,
  va_end(args);
  return result;
 }
-#endif /* !DEFINE_TYPE_OPERATORS */
+#endif /* DEFINE_TYPE_OPERATORS */
 
 #ifdef DEFINE_TYPE_OPERATORS
 #define LOAD_TP_SELF   ASSERT_OBJECT_TYPE(self,tp_self)
+#define LOAD_TP_SELFP  ASSERT(pself); ASSERT_OBJECT_TYPE(*pself,tp_self)
 #define LOAD_ITER      DeeTypeObject *iter = tp_self
 #define LOAD_ITERP     DeeTypeObject *iter = tp_self
 #define GET_TP_SELF()  tp_self
@@ -593,6 +1071,10 @@ DeeObject_Newf(DeeTypeObject *__restrict object_type,
 #define LOAD_TP_SELF   DeeTypeObject *tp_self; \
                        ASSERT_OBJECT(self); \
                        tp_self = Dee_TYPE(self)
+#define LOAD_TP_SELFP  DeeTypeObject *tp_self; \
+                       ASSERT(pself); \
+                       ASSERT_OBJECT(*pself); \
+                       tp_self = Dee_TYPE(*pself)
 #define LOAD_ITER      DeeTypeObject *iter; \
                        ASSERT_OBJECT(self); \
                        iter = Dee_TYPE(self)
@@ -606,6 +1088,272 @@ DeeObject_Newf(DeeTypeObject *__restrict object_type,
  
 
 
+STATIC_ASSERT(COMPILER_OFFSETOF(DeeTypeObject,tp_init.tp_alloc.tp_deep_ctor) ==
+              COMPILER_OFFSETOF(DeeTypeObject,tp_init.tp_var.tp_deep_ctor));
+
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+DEFINE_OPERATOR(DREF DeeObject *,DeepCopy,(DeeObject *__restrict self)) {
+ DREF DeeObject *result;
+ DeeThreadObject *thread_self = DeeThread_Self();
+ LOAD_TP_SELF;
+ /* Check to make sure that a deepcopy construction is implemented by this type.
+  * Note that the variable-and fixed-length constructors are located at the same
+  * offset in the type structure, meaning that we only need to check one address. */
+ if unlikely(!tp_self->tp_init.tp_alloc.tp_deep_ctor) {
+  if (!tp_self->tp_init.tp_alloc.tp_copy_ctor) {
+   if (type_inherit_constructors(tp_self)) {
+    if (tp_self->tp_init.tp_alloc.tp_deep_ctor)
+        goto got_deep_copy;
+    if (tp_self->tp_init.tp_alloc.tp_copy_ctor)
+        goto got_normal_copy;
+   }
+   /* when neither a deepcopy, nor a regular copy operator are present
+    * assume that the object is immutable and re-return the object itself. */
+   return_reference_(self);
+  }
+got_normal_copy:
+  /* There isn't a deepcopy operator, but there is a copy operator.
+   * Now, if there also is a deepload operator, then we can invoke that one! */
+  if (!tp_self->tp_init.tp_deepload) {
+   err_unimplemented_operator(tp_self,OPERATOR_DEEPCOPY);
+   return NULL;
+  }
+ }
+got_deep_copy:
+
+ /* Check if this object is already been constructed. */
+ result = deepcopy_lookup(thread_self,self,tp_self);
+ if (result) return_reference_(result);
+ deepcopy_begin(thread_self);
+ /* Allocate an to basic construction of the deepcopy object. */
+ if (tp_self->tp_flags & TP_FVARIABLE) {
+  ASSERT(tp_self->tp_flags&TP_FVARIABLE);
+#ifndef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
+  ASSERT((tp_self->tp_flags&TP_FGC) == (tp_self->tp_flags&TP_FGC));
+#else /* !CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
+  ASSERTF(!(tp_self->tp_flags&TP_FGC) || (tp_self->tp_flags&TP_FGC),
+          "Non-GC object is inheriting its constructors for a GC-enabled object");
+#endif /* CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
+  /* Variable-length object. */
+  result = tp_self->tp_init.tp_var.tp_deep_ctor
+         ? DeeType_INVOKE_VAR_DEEP(tp_self,tp_self,self)
+         : DeeType_INVOKE_VAR_COPY(tp_self,tp_self,self)
+         ;
+  if unlikely(!result) goto done_endcopy;
+ } else {
+  ASSERT(!(tp_self->tp_flags&TP_FVARIABLE));
+  /* Static-length object. */
+  if (tp_self->tp_init.tp_alloc.tp_free)
+#ifndef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
+   ASSERT((tp_self->tp_flags&TP_FGC) == (tp_self->tp_flags&TP_FGC)),
+#else /* !CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
+   ASSERTF(!(tp_self->tp_flags&TP_FGC) || (tp_self->tp_flags&TP_FGC),
+           "Non-GC object is inheriting its constructors for a GC-enabled object"),
+#endif /* CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
+   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(tp_self,tp_self);
+  else if (tp_self->tp_flags&TP_FGC)
+   result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
+  else {
+   result = (DREF DeeObject *)DeeObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
+  }
+  if unlikely(!result) goto done_endcopy;
+  /* Perform basic object initialization. */
+  DeeObject_Init(result,tp_self);
+  /* Invoke the deepcopy constructor first. */
+  if unlikely(tp_self->tp_init.tp_alloc.tp_copy_ctor
+            ? DeeType_INVOKE_ALLOC_DEEP(tp_self,tp_self,result,self)
+            : DeeType_INVOKE_ALLOC_COPY(tp_self,tp_self,result,self)) {
+   /* Undo allocating and base-initializing the new object. */
+   DeeObject_FreeTracker(result);
+   if (tp_self->tp_init.tp_alloc.tp_free)
+    DeeType_INVOKE_ALLOC_FREE(tp_self,tp_self,result);
+   else if (tp_self->tp_flags&TP_FGC)
+    DeeGCObject_Free(result);
+   else {
+    DeeObject_Free(result);
+   }
+   Dee_Decref(tp_self);
+   result = NULL;
+   goto done_endcopy;
+  }
+  /* Begin tracking the returned object if this is a GC type. */
+  if (tp_self->tp_flags&TP_FGC)
+      DeeGC_Track(result);
+ }
+ /* Now comes the interesting part concerning
+  * recursion possible with deepcopy. */
+ if (tp_self->tp_init.tp_deepload) {
+  /* The type implements the deepload callback, meaning that we must
+   * always track the copies association to allow for recursion before
+   * attempting to invoke the object. */
+
+  /* Must always track this association in case the object attempts
+   * to reference itself (which should only happen by GC objects, but
+   * then again: it is likely that only GC objects would ever implement
+   * tp_deepload to begin with, as non-GC objects could just create all
+   * the necessary deep copies straight from the regular tp_deep_ctor
+   * callback) */
+  if (Dee_DeepCopyAddAssoc(result,self))
+      goto err_result_endcopy;
+  if unlikely((*tp_self->tp_init.tp_deepload)(result))
+     goto done_endcopy;
+done_endcopy:
+  deepcopy_end(thread_self);
+ } else {
+  /* Optimization: In the event that this is the first-level deepcopy call,
+   *               yet the type does not implement the deepload protocol
+   *              (as could be the case for immutable sequence types like
+   *               tuple, which could still contain the same object twice),
+   *               then we don't need to track the association of this
+   *               specific deepcopy, as it would have just become undone
+   *               as soon as `deepcopy_end()' cleared the association map.
+   *               However if this deepcopy is part of a larger hierarchy of
+   *               recursive deepcopy operations, then we must still trace
+   *               the association of this new entry in case it also appears
+   *               in some different branch of the tree of remaining objects
+   *               still to-be copied. */
+  if (deepcopy_end(thread_self)) {
+   if (Dee_DeepCopyAddAssoc(result,self))
+       goto err_result;
+  }
+ }
+done:
+ return result;
+err_result_endcopy: Dee_Clear(result);
+err_result: Dee_Clear(result); goto done;
+}
+DEFINE_OPERATOR(DREF DeeObject *,Copy,(DeeObject *__restrict self)) {
+ DREF DeeObject *result;
+ LOAD_TP_SELF;
+ if (tp_self->tp_flags&TP_FVARIABLE) {
+  if (tp_self->tp_init.tp_var.tp_copy_ctor) {
+do_invoke_var_copy:
+   return DeeType_INVOKE_VAR_COPY(tp_self,tp_self,self);
+  }
+  if (tp_self->tp_init.tp_var.tp_deep_ctor) {
+do_invoke_var_deep:
+#ifdef DEFINE_TYPE_OPERATORS
+   return DeeObject_TDeepCopy(tp_self,self);
+#else
+   return DeeObject_DeepCopy(self);
+#endif
+  }
+  if (tp_self->tp_init.tp_var.tp_any_ctor) {
+do_invoke_var_any_ctor:
+   return DeeType_INVOKE_VAR_ANY(tp_self,tp_self,1,(DeeObject **)&self);
+  }
+  if (tp_self->tp_init.tp_var.tp_any_ctor_kw) {
+do_invoke_var_any_ctor_kw:
+   return DeeType_INVOKE_VAR_ANY_KW(tp_self,tp_self,1,(DeeObject **)&self,NULL);
+  }
+  if (type_inherit_constructors(tp_self)) {
+   if (tp_self->tp_init.tp_var.tp_copy_ctor)
+       goto do_invoke_var_copy;
+   if (tp_self->tp_init.tp_var.tp_deep_ctor)
+       goto do_invoke_var_deep;
+   if (tp_self->tp_init.tp_var.tp_any_ctor)
+       goto do_invoke_var_any_ctor;
+   if (tp_self->tp_init.tp_var.tp_any_ctor_kw)
+       goto do_invoke_var_any_ctor_kw;
+  }
+ } else if (tp_self->tp_init.tp_alloc.tp_copy_ctor) {
+  int error;
+do_invoke_alloc_copy:
+  if (tp_self->tp_init.tp_alloc.tp_free)
+   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(tp_self,tp_self);
+  else if (tp_self->tp_flags&TP_FGC)
+   result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
+  else {
+   result = (DREF DeeObject *)DeeObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
+  }
+  if unlikely(!result) goto err;
+  DeeObject_Init(result,tp_self);
+  error = DeeType_INVOKE_ALLOC_COPY(tp_self,tp_self,result,self);
+  if unlikely(error) goto err_r;
+  /* Begin tracking the returned object. */
+  if (tp_self->tp_flags & TP_FGC)
+      DeeGC_Track(result);
+  return result;
+ } else if (tp_self->tp_init.tp_alloc.tp_deep_ctor) {
+  goto do_invoke_var_deep;
+ } else {
+  int error;
+  ASSERT(!(tp_self->tp_flags&TP_FVARIABLE));
+  if (tp_self->tp_init.tp_alloc.tp_free)
+   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(tp_self,tp_self);
+  else if (tp_self->tp_flags&TP_FGC)
+   result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
+  else {
+   result = (DREF DeeObject *)DeeObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
+  }
+  if unlikely(!result) goto err;
+  DeeObject_Init(result,tp_self);
+  if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
+do_invoke_alloc_any_ctor:
+   error = DeeType_INVOKE_ALLOC_ANY(tp_self,tp_self,result,1,(DeeObject **)&self);
+  } else if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
+do_invoke_alloc_any_ctor_kw:
+   error = DeeType_INVOKE_ALLOC_ANY_KW(tp_self,tp_self,result,1,(DeeObject **)&self,NULL);
+  } else {
+   DeeObject_FreeTracker(result);
+   if (tp_self->tp_init.tp_alloc.tp_free)
+    DeeType_INVOKE_ALLOC_FREE(tp_self,tp_self,result);
+   else if (tp_self->tp_flags & TP_FGC)
+    DeeGCObject_Free(result);
+   else {
+    DeeObject_Free(result);
+   }
+   if (!type_inherit_constructors(tp_self))
+        goto err_not_implemented_r;
+   if (tp_self->tp_init.tp_alloc.tp_copy_ctor) {
+    Dee_DecrefNokill(tp_self);
+    goto do_invoke_alloc_copy;
+   }
+   if (tp_self->tp_init.tp_alloc.tp_deep_ctor) {
+    Dee_DecrefNokill(tp_self);
+    goto do_invoke_var_deep;
+   }
+   if (tp_self->tp_init.tp_alloc.tp_free)
+    result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(tp_self,tp_self);
+   else if (tp_self->tp_flags & TP_FGC)
+    result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
+   else {
+    result = (DREF DeeObject *)DeeObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
+   }
+   if unlikely(!result) goto err_object_type;
+   DeeObject_InitNoref(result,tp_self);
+   if (tp_self->tp_init.tp_alloc.tp_any_ctor)
+       goto do_invoke_alloc_any_ctor;
+   if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw)
+       goto do_invoke_alloc_any_ctor_kw;
+   goto err_not_implemented_r;
+  }
+  if unlikely(error) goto err_r;
+  /* Begin tracking the returned object. */
+  if (tp_self->tp_flags & TP_FGC)
+      DeeGC_Track(result);
+  return result;
+ }
+ err_unimplemented_constructor(tp_self,0,NULL);
+err:
+ return NULL;
+err_not_implemented_r:
+ err_unimplemented_constructor(tp_self,0,NULL);
+err_r:
+ DeeObject_FreeTracker(result);
+ if (tp_self->tp_init.tp_alloc.tp_free)
+  DeeType_INVOKE_ALLOC_FREE(tp_self,tp_self,result);
+ else if (tp_self->tp_flags & TP_FGC)
+  DeeGCObject_Free(result);
+ else {
+  DeeObject_Free(result);
+ }
+err_object_type:
+ Dee_Decref(tp_self);
+ goto err;
+}
+
+#else /* CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE */
 DEFINE_OPERATOR(DREF DeeObject *,Copy,(DeeObject *__restrict self)) {
  DeeTypeObject *ctor_type;
  LOAD_TP_SELF;
@@ -678,9 +1426,6 @@ done:
  err_unimplemented_operator(tp_self,OPERATOR_COPY);
  return NULL;
 }
-
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeTypeObject,tp_init.tp_alloc.tp_deep_ctor) ==
-              COMPILER_OFFSETOF(DeeTypeObject,tp_init.tp_var.tp_deep_ctor));
 
 DEFINE_OPERATOR(DREF DeeObject *,DeepCopy,(DeeObject *__restrict self)) {
  DeeTypeObject *ctor_type;
@@ -809,6 +1554,9 @@ done:
 err_result_endcopy: Dee_Clear(result);
 err_result: Dee_Clear(result); goto done;
 }
+#endif /* !CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE */
+
+
 #ifndef DEFINE_TYPE_OPERATORS
 PUBLIC int (DCALL DeeObject_InplaceDeepCopy)(DREF DeeObject **__restrict pself) {
  DeeObject *objcopy,*old_object;
@@ -877,28 +1625,104 @@ err:  return -1;
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(int,Assign,(DeeObject *__restrict self, DeeObject *__restrict some_object)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
  LOAD_TP_SELF;
  ASSERT_OBJECT(some_object);
- do {
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*result;
+  op = tp_self->tp_flags & TP_FINHERITCTOR
+     ? DeeClass_TryGetOperator(tp_self,OPERATOR_ASSIGN)
+     : DeeClass_TryGetPrivateOperator(tp_self,OPERATOR_ASSIGN)
+     ;
+  if likely(op) {
+   result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object);
+   Dee_Decref(op);
+   if unlikely(!result) goto err;
+   Dee_Decref(result);
+   return 0;
+  }
+ } else {
   if (tp_self->tp_init.tp_assign) {
-   if (tp_self->tp_init.tp_assign == &class_wrap_assign)
-       return class_assign(tp_self,self,some_object);
+do_assign:
    return (*tp_self->tp_init.tp_assign)(self,some_object);
   }
- } while ((tp_self->tp_flags&TP_FINHERITCTOR) &&
-          (tp_self = DeeType_Base(tp_self)) != NULL);
+  if (type_inherit_constructors(tp_self)) {
+   if (tp_self->tp_init.tp_assign)
+       goto do_assign;
+  }
+ }
+ err_unimplemented_operator(GET_TP_SELF(),OPERATOR_ASSIGN);
+err:
+ return -1;
+#else
+ LOAD_ITER;
+ do {
+  if (iter->tp_init.tp_assign) {
+   if (iter->tp_init.tp_assign == &class_wrap_assign)
+       return class_assign(iter,self,some_object);
+   return (*iter->tp_init.tp_assign)(self,some_object);
+  }
+ } while ((iter->tp_flags&TP_FINHERITCTOR) &&
+          (iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_ASSIGN);
  return -1;
+#endif
 }
 DEFINE_OPERATOR(int,MoveAssign,(DeeObject *__restrict self, DeeObject *__restrict other)) {
  LOAD_TP_SELF;
  ASSERT_OBJECT(other);
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ if (!(tp_self->tp_flags & TP_FMOVEANY) &&
+       DeeObject_AssertType(other,tp_self))
+     return -1;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*result;
+  op = tp_self->tp_flags & TP_FINHERITCTOR
+     ? DeeClass_TryGetOperator(tp_self,OPERATOR_MOVEASSIGN)
+     : DeeClass_TryGetPrivateOperator(tp_self,OPERATOR_MOVEASSIGN)
+     ;
+  if likely(op) {
+call_op:
+   result = DeeObject_ThisCall(op,self,1,(DeeObject **)&other);
+   Dee_Decref(op);
+   if unlikely(!result) goto err;
+   Dee_Decref(result);
+   return 0;
+  }
+  op = tp_self->tp_flags & TP_FINHERITCTOR
+     ? DeeClass_TryGetOperator(tp_self,OPERATOR_ASSIGN)
+     : DeeClass_TryGetPrivateOperator(tp_self,OPERATOR_ASSIGN)
+     ;
+  if likely(op) {
+   DeeClass_InheritOperator(tp_self,OPERATOR_MOVEASSIGN,op);
+   goto call_op;
+  }
+ } else {
+  if (tp_self->tp_init.tp_move_assign) {
+do_move_assign:
+   return (*tp_self->tp_init.tp_move_assign)(self,other);
+  }
+  if (tp_self->tp_init.tp_assign) {
+do_assign:
+   return (*tp_self->tp_init.tp_assign)(self,other);
+  }
+  if (type_inherit_constructors(tp_self)) {
+   if (tp_self->tp_init.tp_move_assign)
+       goto do_move_assign;
+   if (tp_self->tp_init.tp_assign)
+       goto do_assign;
+  }
+ }
+ err_unimplemented_operator(GET_TP_SELF(),OPERATOR_MOVEASSIGN);
+err:
+ return -1;
+#else
  do {
   if (!(tp_self->tp_flags&TP_FMOVEANY) &&
         DeeObject_AssertType(other,tp_self))
       return -1;
   if (tp_self->tp_init.tp_move_assign) {
-   if (tp_self->tp_init.tp_assign == &class_wrap_move_assign)
+   if (tp_self->tp_init.tp_move_assign == &class_wrap_move_assign)
        return class_move_assign(tp_self,self,other);
    return (*tp_self->tp_init.tp_move_assign)(self,other);
   }
@@ -911,6 +1735,7 @@ DEFINE_OPERATOR(int,MoveAssign,(DeeObject *__restrict self, DeeObject *__restric
           (tp_self = DeeType_Base(tp_self)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_MOVEASSIGN);
  return -1;
+#endif
 }
 
 
@@ -950,8 +1775,113 @@ STATIC_ASSERT(COMPILER_OFFSETOF(struct trepr_frame,rf_obj) ==
 #define Xrepr_frame repr_frame
 #endif
 
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifndef DEFINE_TYPE_OPERATORS
+#define DEFINE_TYPE_INHERIT_FUNCTION(name,opname,field) \
+INTERN bool DCALL \
+name(DeeTypeObject *__restrict self) { \
+ DeeTypeObject *base = DeeType_Base(self); \
+ if (!base || \
+    (!base->field && !name(base))) \
+     return false; \
+ DEE_DPRINTF("Inherit `" opname "' from %q into %q\n", \
+             base->tp_name,self->tp_name); \
+ self->field = base->field; \
+ return true; \
+}
+#define DEFINE_TYPE_INHERIT_FUNCTION2(name,opname,field,field2) \
+INTERN bool DCALL \
+name(DeeTypeObject *__restrict self) { \
+ DeeTypeObject *base = DeeType_Base(self); \
+ if (!base || \
+    (!base->field && !base->field2 && !name(base))) \
+     return false; \
+ DEE_DPRINTF("Inherit `" opname "' from %q into %q\n", \
+             base->tp_name,self->tp_name); \
+ self->field  = base->field; \
+ self->field2 = base->field2; \
+ return true; \
+}
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_str,"operator str",tp_cast.tp_str)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_repr,"operator repr",tp_cast.tp_repr)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_bool,"operator bool",tp_cast.tp_bool)
+DEFINE_TYPE_INHERIT_FUNCTION2(type_inherit_call,"operator call",tp_call,tp_call_kw)
+#undef DEFINE_TYPE_INHERIT_FUNCTION2
+#undef DEFINE_TYPE_INHERIT_FUNCTION
+#endif
+#endif
+
 
 DEFINE_OPERATOR(DREF DeeObject *,Str,(DeeObject *__restrict self)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *result;
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_STR);
+  if likely(op) {
+   struct Xrepr_frame opframe;
+   DeeThreadObject *this_thread;
+   this_thread = DeeThread_Self();
+   /* Trace objects for which __str__ is being invoked. */
+   opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_str_curr;
+#ifdef DEFINE_TYPE_OPERATORS
+   if unlikely(repr_contains(opframe.rf_prev,tp_self,self)) {
+    Dee_Decref(op);
+    goto recursion;
+   }
+   opframe.rf_obj  = self;
+   opframe.rf_type = tp_self;
+   this_thread->t_str_curr = (struct repr_frame *)&opframe;
+#else /* DEFINE_TYPE_OPERATORS */
+   if unlikely(repr_contains(opframe.rf_prev,self)) {
+    Dee_Decref(op);
+    goto recursion;
+   }
+   opframe.rf_obj  = self;
+   this_thread->t_str_curr = &opframe;
+#endif /* !DEFINE_TYPE_OPERATORS */
+   result = DeeObject_ThisCall(op,self,0,NULL);
+   this_thread->t_str_curr = (struct repr_frame *)opframe.rf_prev;
+   Dee_Decref(op);
+   if (result && DeeObject_AssertTypeExact(result,&DeeString_Type))
+       Dee_Clear(result);
+   return result;
+  }
+ }
+ if unlikely(!tp_self->tp_cast.tp_str &&
+             !type_inherit_str(tp_self))
+    goto missing;
+ /* Handle string-repr recursion for GC objects. */
+ if (tp_self->tp_flags&TP_FGC) {
+  struct Xrepr_frame opframe;
+  DeeThreadObject *this_thread;
+  this_thread = DeeThread_Self();
+  /* Trace objects for which __str__ is being invoked. */
+  opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_str_curr;
+#ifdef DEFINE_TYPE_OPERATORS
+  if unlikely(repr_contains(opframe.rf_prev,tp_self,self)) goto recursion;
+  opframe.rf_obj  = self;
+  opframe.rf_type = tp_self;
+  this_thread->t_str_curr = (struct repr_frame *)&opframe;
+#else /* DEFINE_TYPE_OPERATORS */
+  if unlikely(repr_contains(opframe.rf_prev,self)) goto recursion;
+  opframe.rf_obj  = self;
+  this_thread->t_str_curr = &opframe;
+#endif /* !DEFINE_TYPE_OPERATORS */
+  result = (*tp_self->tp_cast.tp_str)(self);
+  this_thread->t_str_curr = (struct repr_frame *)opframe.rf_prev;
+  ASSERT_OBJECT_TYPE_EXACT_OPT(result,&DeeString_Type);
+  return result;
+ }
+ /* Non-gc object (much simpler) */
+ return (*tp_self->tp_cast.tp_str)(self);
+missing:
+ err_unimplemented_operator(tp_self,OPERATOR_STR);
+ return NULL;
+recursion:
+ return_reference_(&str_dots);
+#else
  LOAD_ITER;
  do {
   if (iter->tp_cast.tp_str) {
@@ -989,8 +1919,78 @@ DEFINE_OPERATOR(DREF DeeObject *,Str,(DeeObject *__restrict self)) {
  return NULL;
 recursion:
  return_reference_(&str_dots);
+#endif
 }
 DEFINE_OPERATOR(DREF DeeObject *,Repr,(DeeObject *__restrict self)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *result;
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_REPR);
+  if likely(op) {
+   struct Xrepr_frame opframe;
+   DeeThreadObject *this_thread;
+   this_thread = DeeThread_Self();
+   /* Trace objects for which __repr__ is being invoked. */
+   opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_repr_curr;
+#ifdef DEFINE_TYPE_OPERATORS
+   if unlikely(repr_contains(opframe.rf_prev,tp_self,self)) {
+    Dee_Decref(op);
+    goto recursion;
+   }
+   opframe.rf_obj  = self;
+   opframe.rf_type = tp_self;
+   this_thread->t_repr_curr = (struct repr_frame *)&opframe;
+#else /* DEFINE_TYPE_OPERATORS */
+   if unlikely(repr_contains(opframe.rf_prev,self)) {
+    Dee_Decref(op);
+    goto recursion;
+   }
+   opframe.rf_obj  = self;
+   this_thread->t_repr_curr = &opframe;
+#endif /* !DEFINE_TYPE_OPERATORS */
+   result = DeeObject_ThisCall(op,self,0,NULL);
+   this_thread->t_repr_curr = (struct repr_frame *)opframe.rf_prev;
+   Dee_Decref(op);
+   if (result && DeeObject_AssertTypeExact(result,&DeeString_Type))
+       Dee_Clear(result);
+   return result;
+  }
+ }
+ if unlikely(!tp_self->tp_cast.tp_repr &&
+             !type_inherit_repr(tp_self))
+    goto missing;
+ /* Handle string-repr recursion for GC objects. */
+ if (tp_self->tp_flags&TP_FGC) {
+  struct Xrepr_frame opframe;
+  DeeThreadObject *this_thread;
+  this_thread = DeeThread_Self();
+  /* Trace objects for which __repr__ is being invoked. */
+  opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_repr_curr;
+#ifdef DEFINE_TYPE_OPERATORS
+  if unlikely(repr_contains(opframe.rf_prev,tp_self,self)) goto recursion;
+  opframe.rf_obj  = self;
+  opframe.rf_type = tp_self;
+  this_thread->t_repr_curr = (struct repr_frame *)&opframe;
+#else /* DEFINE_TYPE_OPERATORS */
+  if unlikely(repr_contains(opframe.rf_prev,self)) goto recursion;
+  opframe.rf_obj  = self;
+  this_thread->t_repr_curr = &opframe;
+#endif /* !DEFINE_TYPE_OPERATORS */
+  result = (*tp_self->tp_cast.tp_repr)(self);
+  this_thread->t_repr_curr = (struct repr_frame *)opframe.rf_prev;
+  ASSERT_OBJECT_TYPE_EXACT_OPT(result,&DeeString_Type);
+  return result;
+ }
+ /* Non-gc object (much simpler) */
+ return (*tp_self->tp_cast.tp_repr)(self);
+missing:
+ err_unimplemented_operator(tp_self,OPERATOR_REPR);
+ return NULL;
+recursion:
+ return_reference_(&str_dots);
+#else
  LOAD_ITER;
  do {
   if (iter->tp_cast.tp_repr) {
@@ -1028,6 +2028,7 @@ DEFINE_OPERATOR(DREF DeeObject *,Repr,(DeeObject *__restrict self)) {
  return NULL;
 recursion:
  return_reference_(&str_dots);
+#endif
 }
 
 #undef Xrepr_frame
@@ -1037,21 +2038,73 @@ DEFINE_OPERATOR(int,Bool,(DeeObject *__restrict self)) {
   *  -> In this case, we return the result immediately! */
  if (self == Dee_True) return 1;
  if (self == Dee_False) return 0;
- LOAD_ITER;
- do {
-  if (iter->tp_cast.tp_bool) {
-   if (iter->tp_cast.tp_bool == &class_wrap_bool)
-       return class_bool(iter,self);
-   return (*iter->tp_cast.tp_bool)(self);
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ {
+  LOAD_TP_SELF;
+  if (DeeType_IsClass(tp_self)) {
+   DREF DeeObject *op,*result; int error;
+   op = DeeClass_TryGetOperator(tp_self,OPERATOR_BOOL);
+   if likely(op) {
+    result = DeeObject_ThisCall(op,self,0,NULL);
+    Dee_Decref(op);
+    if unlikely(!result) goto err;
+    /* Enforce boolean return value to prevent infinite loop. */
+    if unlikely(DeeObject_AssertTypeExact(result,&DeeBool_Type)) {
+     Dee_Decref(result);
+     goto err;
+    }
+    error = DeeBool_IsTrue(result);
+    Dee_Decref(result);
+    return error;
+   }
   }
- } while ((iter = DeeType_Base(iter)) != NULL);
+  if likely(tp_self->tp_cast.tp_bool ||
+            type_inherit_bool(tp_self))
+     return (*tp_self->tp_cast.tp_bool)(self);
+  err_unimplemented_operator(tp_self,OPERATOR_BOOL);
+err:
+  return -1;
+ }
+#else
+ {
+  LOAD_ITER;
+  do {
+   if (iter->tp_cast.tp_bool) {
+    if (iter->tp_cast.tp_bool == &class_wrap_bool)
+        return class_bool(iter,self);
+    return (*iter->tp_cast.tp_bool)(self);
+   }
+  } while ((iter = DeeType_Base(iter)) != NULL);
+ }
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_BOOL);
  return -1;
+#endif
 }
 
 DEFINE_OPERATOR(DREF DeeObject *,Call,
                (DeeObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_CALL);
+  if likely(op) {
+   ASSERT(!DeeType_IsClass(Dee_TYPE(op))); /* TODO: Enforce this in `DeeClass_SetOperator()' */
+   result = DeeObject_ThisCall(op,self,argc,argv);
+   Dee_Decref(op);
+   return result;
+  }
+ }
+ do {
+  if (tp_self->tp_call)
+      return (*tp_self->tp_call)(self,argc,argv);
+  if (tp_self->tp_call_kw)
+      return (*tp_self->tp_call_kw)(self,argc,argv,NULL);
+ } while (type_inherit_call(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_CALL);
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_call) {
@@ -1064,21 +2117,53 @@ DEFINE_OPERATOR(DREF DeeObject *,Call,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_CALL);
  return NULL;
+#endif
 }
 
 DEFINE_OPERATOR(DREF DeeObject *,CallKw,
                (DeeObject *__restrict self, size_t argc,
                 DeeObject **__restrict argv, DeeObject *kw)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_CALL);
+  if likely(op) {
+   ASSERT(!DeeType_IsClass(Dee_TYPE(op))); /* TODO: Enforce this in `DeeClass_SetOperator()' */
+   result = DeeObject_ThisCallKw(op,self,argc,argv,kw);
+   Dee_Decref(op);
+   return result;
+  }
+ }
+ do {
+  if (tp_self->tp_call_kw)
+      return (*tp_self->tp_call_kw)(self,argc,argv,kw); /* TODO: class_wrap */
+  if (tp_self->tp_call) {
+   /* Object doesn't support keyword arguments. */
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto err_no_keywords;
+    } else {
+     size_t kw_length;
+     kw_length = DeeObject_Size(kw);
+     if unlikely(kw_length == (size_t)-1) return NULL;
+     if (kw_length != 0) goto err_no_keywords;
+    }
+   }
+   return (*tp_self->tp_call)(self,argc,argv);
+  }
+ } while (type_inherit_call(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_CALL);
+ return NULL;
+err_no_keywords:
+ err_keywords_not_accepted(tp_self,kw);
+ return NULL;
+#else
  LOAD_ITER;
  do {
-  if (iter->tp_call_kw) {
-   if (iter->tp_call && !kw) {
-    if (iter->tp_call == &class_wrap_call)
-        return class_call(iter,self,argc,argv);
-    return (*iter->tp_call)(self,argc,argv);
-   }
-   return (*iter->tp_call_kw)(self,argc,argv,kw); /* TODO: class_wrap */
-  }
+  if (iter->tp_call_kw)
+      return (*iter->tp_call_kw)(self,argc,argv,kw); /* TODO: class_wrap */
   if (iter->tp_call) {
    /* Object doesn't support keyword arguments. */
    if (kw) {
@@ -1102,6 +2187,7 @@ DEFINE_OPERATOR(DREF DeeObject *,CallKw,
 err_no_keywords:
  err_keywords_not_accepted(GET_TP_SELF(),kw);
  return NULL;
+#endif
 }
 
 #ifndef DEFINE_TYPE_OPERATORS
@@ -1315,8 +2401,55 @@ DeeObject_ThisCallf(DeeObject *__restrict self,
 }
 #endif /* !DEFINE_TYPE_OPERATORS */
 
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifndef DEFINE_TYPE_OPERATORS
+INTERN bool DCALL type_inherit_hash(DeeTypeObject *__restrict self) {
+ DeeTypeObject *base = DeeType_Base(self);
+ struct type_cmp *base_cmp;
+ if (!base ||
+   (((base_cmp = base->tp_cmp) == NULL ||
+     !base_cmp->tp_hash) &&
+     !type_inherit_hash(base)))
+      return false;
+ base_cmp = base->tp_cmp;
+ if (self->tp_cmp) {
+  self->tp_cmp->tp_hash = base_cmp->tp_hash;
+ } else {
+  self->tp_cmp = base_cmp;
+ }
+ return true;
+}
+#endif /* !DEFINE_TYPE_OPERATORS */
+#endif
+
 
 DEFINE_OPERATOR(dhash_t,Hash,(DeeObject *__restrict self)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*result; dhash_t result_value;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_HASH);
+  if likely(op) {
+   result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if (!result)
+    DeeError_Handled(ERROR_HANDLED_RESTORE);
+   else {
+    if (DeeInt_Check(result) &&
+        DeeInt_TryAsSize(result,&result_value)) {
+     Dee_Decref(result);
+     return result_value;
+    }
+    Dee_Decref(result);
+   }
+  }
+ }
+ do {
+  if (tp_self->tp_cmp && tp_self->tp_cmp->tp_hash)
+      return (*tp_self->tp_cmp->tp_hash)(self);
+ } while (type_inherit_hash(tp_self));
+ return DeeObject_HashGeneric(self);
+#else
  LOAD_TP_SELF;
  do {
   if (tp_self->tp_cmp && tp_self->tp_cmp->tp_hash) {
@@ -1326,6 +2459,7 @@ DEFINE_OPERATOR(dhash_t,Hash,(DeeObject *__restrict self)) {
   }
  } while ((tp_self = DeeType_Base(tp_self)) != NULL);
  return DeeObject_HashGeneric(self);
+#endif
 }
 
 
@@ -1363,10 +2497,10 @@ DeeObject_VisitAll(DeeObject *__restrict self,
  DeeObject_Visit(self,proc,arg);
  /* Only visit heap-allocated types. */
 #if 1
- if (Dee_TYPE(self)->tp_flags&TP_FHEAP)
+ if (Dee_TYPE(self)->tp_flags & TP_FHEAP)
     (*proc)((DeeObject *)Dee_TYPE(self),arg);
 #else
- if (Dee_TYPE(self)->tp_flags&TP_FHEAP)
+ if (Dee_TYPE(self)->tp_flags & TP_FHEAP)
      DeeObject_Visit((DeeObject *)Dee_TYPE(self),proc,arg);
 #endif
 }
@@ -1414,11 +2548,136 @@ DeeObject_PClear(DeeObject *__restrict self,
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifndef DEFINE_TYPE_OPERATORS
+INTERN bool DCALL type_inherit_int(DeeTypeObject *__restrict self) {
+ DeeTypeObject *base = DeeType_Base(self);
+ struct type_math *base_math;
+ if (!base ||
+   (((base_math = base->tp_math) == NULL ||
+    (!base_math->tp_int && !base_math->tp_int32 &&
+     !base_math->tp_int64 && !base_math->tp_double)) &&
+     !type_inherit_int(base)))
+     return false;
+ DEE_DPRINTF("Inherit `operator int' from %q into %q\n",
+             base->tp_name,self->tp_name);
+ base_math = base->tp_math;
+ if (!self->tp_math) {
+  self->tp_math = base_math;
+ } else {
+  self->tp_math->tp_int32  = base_math->tp_int32;
+  self->tp_math->tp_int64  = base_math->tp_int64;
+  self->tp_math->tp_double = base_math->tp_double;
+  self->tp_math->tp_int    = base_math->tp_int;
+ }
+ return true;
+}
+#endif /* !DEFINE_TYPE_OPERATORS */
+#endif
+
 
 
 DEFINE_OPERATOR(int,GetInt32,
                (DeeObject *__restrict self,
                 int32_t *__restrict result)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ int error; double resflt;
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeInt_Type)) {
+err_op_result:
+    Dee_Decref(op_result);
+    goto err;
+   }
+   error = DeeInt_As32(op_result,result);
+   Dee_Decref(op_result);
+   return error;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_FLOAT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeFloat_Type))
+       goto err_op_result;
+   resflt = DeeFloat_VALUE(op_result);
+   Dee_Decref(op_result);
+   goto set_float_result;
+  }
+ }
+ do {
+  if (tp_self->tp_math) {
+   if (tp_self->tp_math->tp_int32)
+       return (*tp_self->tp_math->tp_int32)(self,result);
+   if (tp_self->tp_math->tp_int64) {
+    int64_t val64;
+    error = (*tp_self->tp_math->tp_int64)(self,&val64);
+    if unlikely(error < 0) return -1;
+    if (error == INT_SIGNED) {
+     if unlikely(val64 < INT32_MIN || val64 > INT32_MAX) {
+      if (val64 > 0) {
+       *result = (int32_t)((uint32_t)(uint64_t)val64);
+       return INT_UNSIGNED;
+      }
+      if (tp_self->tp_flags&TP_FTRUNCATE) {
+       *result = (int32_t)val64;
+       return val64 < INT32_MIN ? INT_SIGNED : INT_UNSIGNED;
+      }
+      return err_integer_overflow(self,32,val64 > 0);
+     }
+    } else {
+     if unlikely((uint64_t)val64 > UINT32_MAX) {
+      if (tp_self->tp_flags&TP_FTRUNCATE) {
+       *result = (uint32_t)val64;
+       return INT_UNSIGNED;
+      }
+      return err_integer_overflow(self,32,true);
+     }
+    }
+    *result = (int32_t)(uint64_t)val64;
+    return error;
+   }
+   if (tp_self->tp_math->tp_int) {
+    /* Cast to integer, then read its value. */
+    DREF DeeObject *intob;
+    intob = (*tp_self->tp_math->tp_int)(self);
+    if unlikely(!intob) return -1;
+    error = DeeInt_As32(intob,result);
+    Dee_Decref(intob);
+    return error;
+   }
+   if (tp_self->tp_math->tp_double) {
+    error = (*tp_self->tp_math->tp_double)(self,&resflt);
+    if unlikely(error < 0) return -1;
+set_float_result:
+    if unlikely(resflt < INT32_MIN || resflt > UINT32_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) {
+      if (resflt < 0) {
+       *result = (int32_t)resflt;
+       return INT_SIGNED;
+      } else {
+       *result = (uint32_t)resflt;
+       return INT_UNSIGNED;
+      }
+     }
+     return err_integer_overflow(self,32,resflt > 0);
+    }
+    if (resflt < 0) { *result = (int32_t)resflt; return INT_SIGNED; }
+    *result = (int32_t)(uint32_t)resflt;
+    return INT_UNSIGNED;
+   }
+  }
+ } while (type_inherit_int(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INT);
+err:
+ return -1;
+#else
  int error;
  LOAD_ITER;
  do {
@@ -1494,10 +2753,92 @@ DEFINE_OPERATOR(int,GetInt32,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_INT);
  return -1;
+#endif
 }
 DEFINE_OPERATOR(int,GetInt64,
                (DeeObject *__restrict self,
                 int64_t *__restrict result)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ int error; double resflt;
+ LOAD_TP_SELF;
+  if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeInt_Type)) {
+err_op_result:
+    Dee_Decref(op_result);
+    goto err;
+   }
+   error = DeeInt_As64(op_result,result);
+   Dee_Decref(op_result);
+   return error;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_FLOAT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeFloat_Type))
+       goto err_op_result;
+   resflt = DeeFloat_VALUE(op_result);
+   Dee_Decref(op_result);
+   goto set_float_result;
+  }
+ }
+ do {
+  if (tp_self->tp_math) {
+   if (tp_self->tp_math->tp_int64)
+       return (*tp_self->tp_math->tp_int64)(self,result);
+   if (tp_self->tp_math->tp_int32) {
+    int32_t val32;
+    error = (*tp_self->tp_math->tp_int32)(self,&val32);
+    if unlikely(error < 0) return -1;
+    if (error == INT_SIGNED) {
+     *result = (int64_t)val32;
+    } else {
+     *result = (int64_t)(uint64_t)(uint32_t)val32;
+    }
+    return error;
+   }
+   if (tp_self->tp_math->tp_int) {
+    /* Cast to integer, then read its value. */
+    DREF DeeObject *intob;
+    intob = (*tp_self->tp_math->tp_int)(self);
+    if unlikely(!intob) return -1;
+    error = DeeInt_As64(intob,result);
+    Dee_Decref(intob);
+    return error;
+   }
+   if (tp_self->tp_math->tp_double) {
+    error = (*tp_self->tp_math->tp_double)(self,&resflt);
+    if unlikely(error) return -1;
+set_float_result:
+    if unlikely(resflt < INT64_MIN || resflt > UINT64_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) {
+      if (resflt < 0) {
+       *result = (int64_t)resflt;
+       return INT_SIGNED;
+      } else {
+       *result = (uint64_t)resflt;
+       return INT_UNSIGNED;
+      }
+     }
+     return err_integer_overflow(self,64,resflt > 0);
+    }
+    if (resflt < 0) { *result = (int64_t)resflt; return INT_SIGNED; }
+    *result = (int64_t)(uint64_t)resflt;
+    return INT_UNSIGNED;
+   }
+  }
+ } while (type_inherit_int(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INT);
+err:
+ return -1;
+#else
  int error;
  LOAD_ITER;
  do {
@@ -1556,12 +2897,118 @@ DEFINE_OPERATOR(int,GetInt64,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_INT);
  return -1;
+#endif
 }
 
 #ifndef DEFINE_TYPE_OPERATORS
 DEFINE_OPERATOR(int,GetInt128,
                (DeeObject *__restrict self,
                 dint128_t *__restrict result)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ int error; double resflt;
+ LOAD_TP_SELF;
+ if (tp_self == &DeeInt_Type)
+     return DeeInt_As128(self,result);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeInt_Type)) {
+err_op_result:
+    Dee_Decref(op_result);
+    goto err;
+   }
+   error = DeeInt_As128(op_result,result);
+   Dee_Decref(op_result);
+   return error;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_FLOAT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeFloat_Type))
+       goto err_op_result;
+   resflt = DeeFloat_VALUE(op_result);
+   Dee_Decref(op_result);
+   goto set_float_result;
+  }
+ }
+ do {
+  if (tp_self->tp_math) {
+   if (tp_self->tp_math->tp_int) {
+    /* Cast to integer, then read its value. */
+    DREF DeeObject *intob;
+    if (tp_self->tp_math->tp_int == &class_wrap_int)
+     intob = class_int(tp_self,self);
+    else {
+     intob = (*tp_self->tp_math->tp_int)(self);
+    }
+    if unlikely(!intob) return -1;
+    error = DeeInt_As128(intob,result);
+    Dee_Decref(intob);
+    return error;
+   }
+   if (tp_self->tp_math->tp_int64) {
+    DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
+    error = (*tp_self->tp_math->tp_int64)(self,&DUINT128_GETS64(*result)[DEE_INT128_LS64]);
+    if (error == INT_SIGNED && DUINT128_GETS64(*result)[DEE_INT128_LS64] < 0)
+        DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
+    return error;
+   }
+   if (tp_self->tp_math->tp_int32) {
+    int32_t val32;
+    DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
+    error = (*tp_self->tp_math->tp_int32)(self,&val32);
+    if unlikely(error < 0) return -1;
+    if (error == INT_SIGNED) {
+     if (val32 < 0)
+         DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
+     DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)val32;
+    } else {
+     DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)(uint64_t)(uint32_t)val32;
+    }
+    return error;
+   }
+   if (tp_self->tp_math->tp_double) {
+    if (tp_self->tp_math->tp_double == &class_wrap_double)
+     error = class_double(tp_self,self,&resflt);
+    else {
+     error = (*tp_self->tp_math->tp_double)(self,&resflt);
+    }
+    if unlikely(error < 0) return -1;
+set_float_result:
+    DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
+    if unlikely(resflt < INT64_MIN || resflt > UINT64_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) {
+      if (resflt < 0) {
+       DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)resflt;
+       DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
+       return INT_SIGNED;
+      } else {
+       DUINT128_GETS64(*result)[DEE_INT128_LS64] = (uint64_t)resflt;
+       return INT_UNSIGNED;
+      }
+     }
+     return err_integer_overflow(self,64,resflt > 0);
+    }
+    if (resflt < 0) {
+     DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)resflt;
+     DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
+     return INT_SIGNED;
+    }
+    DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)(uint64_t)resflt;
+    return INT_UNSIGNED;
+   }
+  }
+ } while (type_inherit_int(tp_self));
+err:
+ err_unimplemented_operator(tp_self,OPERATOR_INT);
+ return -1;
+#else
  int error;
  LOAD_ITER;
  do {
@@ -1636,6 +3083,7 @@ DEFINE_OPERATOR(int,GetInt128,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_INT);
  return -1;
+#endif
 }
 #endif
 
@@ -1643,6 +3091,101 @@ DEFINE_OPERATOR(int,GetInt128,
 #ifndef DEFINE_TYPE_OPERATORS
 PUBLIC int (DCALL DeeObject_AsUInt32)(DeeObject *__restrict self,
                                       uint32_t *__restrict result) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ int error; double resflt;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeInt_Type)) {
+err_op_result:
+    Dee_Decref(op_result);
+    goto err;
+   }
+   error = DeeInt_AsU32(op_result,result);
+   Dee_Decref(op_result);
+   return error;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_FLOAT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeFloat_Type))
+       goto err_op_result;
+   resflt = DeeFloat_VALUE(op_result);
+   Dee_Decref(op_result);
+   goto set_float_result;
+  }
+ }
+ do {
+  if (tp_self->tp_math) {
+   if (tp_self->tp_math->tp_int32) {
+    error = (*tp_self->tp_math->tp_int32)(self,(int32_t *)result);
+    if unlikely(error < 0) return -1;
+    if unlikely(error == INT_SIGNED && *(int32_t *)result < 0) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) return 0;
+neg_overflow:
+     return err_integer_overflow(self,32,0);
+    }
+    return 0;
+   }
+   if (tp_self->tp_math->tp_int64) {
+    int64_t val64;
+    error = (*tp_self->tp_math->tp_int64)(self,&val64);
+    if (error < 0) return -1;
+    if unlikely(error == INT_SIGNED && val64 < 0) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) {
+return_trunc64: *result = (uint32_t)val64; return 0;
+     }
+     goto neg_overflow;
+    }
+    if unlikely((uint64_t)val64 > (uint64_t)UINT32_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) goto return_trunc64;
+     return err_integer_overflow(self,32,1);
+    }
+    *result = (int32_t)(uint64_t)val64;
+    return 0;
+   }
+   if (tp_self->tp_math->tp_int) {
+    /* Cast to integer, then read its value. */
+    DREF DeeObject *intob;
+    if (tp_self->tp_math->tp_int == &class_wrap_int)
+     intob = class_int(tp_self,self);
+    else {
+     intob = (*tp_self->tp_math->tp_int)(self);
+    }
+    if unlikely(!intob) return -1;
+    error = DeeInt_AsU32(intob,result);
+    Dee_Decref(intob);
+    return error;
+   }
+   if (tp_self->tp_math->tp_double) {
+    error = (*tp_self->tp_math->tp_double)(self,&resflt);
+    if unlikely(error < 0) return -1;
+set_float_result:
+    if unlikely(resflt < 0 || resflt > UINT32_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) {
+      *result = (uint32_t)resflt;
+      return 0;
+     }
+     return err_integer_overflow(self,32,resflt > 0);
+    }
+    *result = (uint32_t)resflt;
+    return 0;
+   }
+  }
+ } while (type_inherit_int(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INT);
+err:
+ return -1;
+#else
  int error;
  DeeTypeObject *iter;
  ASSERT_OBJECT(self);
@@ -1711,10 +3254,107 @@ return_trunc64: *result = (uint32_t)val64; return 0;
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(Dee_TYPE(self),OPERATOR_INT);
  return -1;
+#endif
 }
 
 PUBLIC int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
                                      int32_t *__restrict result) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ int error; double resflt;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeInt_Type)) {
+err_op_result:
+    Dee_Decref(op_result);
+    goto err;
+   }
+   error = DeeInt_AsS32(op_result,result);
+   Dee_Decref(op_result);
+   return error;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_FLOAT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeFloat_Type))
+       goto err_op_result;
+   resflt = DeeFloat_VALUE(op_result);
+   Dee_Decref(op_result);
+   goto set_float_result;
+  }
+ }
+ do {
+  if (tp_self->tp_math) {
+   if (tp_self->tp_math->tp_int32) {
+    error = (*tp_self->tp_math->tp_int32)(self,result);
+    if unlikely(error < 0) return -1;
+    if unlikely(error == INT_UNSIGNED && (uint32_t)*result > INT32_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) return 0;
+     return err_integer_overflow(self,32,1);
+    }
+    return 0;
+   }
+   if (tp_self->tp_math->tp_int64) {
+    int64_t val64;
+    error = (*tp_self->tp_math->tp_int64)(self,&val64);
+    if unlikely(error < 0) return -1;
+    if (error == INT_SIGNED) {
+     if unlikely(val64 < INT32_MIN || val64 > INT32_MAX) {
+      if (tp_self->tp_flags&TP_FTRUNCATE) {
+return_trunc64:
+       *result = (int32_t)val64;
+       return 0;
+      }
+      return err_integer_overflow(self,32,val64 > 0);
+     }
+     *result = (int32_t)val64;
+    } else {
+     if unlikely((uint64_t)val64 > INT32_MAX) {
+      if (tp_self->tp_flags&TP_FTRUNCATE) goto return_trunc64;
+      return err_integer_overflow(self,32,1);
+     }
+     *result = (int32_t)(uint64_t)val64;
+    }
+    return 0;
+   }
+   if (tp_self->tp_math->tp_int) {
+    /* Cast to integer, then read its value. */
+    DREF DeeObject *intob;
+    intob = (*tp_self->tp_math->tp_int)(self);
+    if unlikely(!intob) return -1;
+    error = DeeInt_AsS32(intob,result);
+    Dee_Decref(intob);
+    return error;
+   }
+   if (tp_self->tp_math->tp_double) {
+    error = (*tp_self->tp_math->tp_double)(self,&resflt);
+    if unlikely(error < 0) return -1;
+set_float_result:
+    if unlikely(resflt < INT32_MIN || resflt > INT32_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) {
+      *result = (int32_t)resflt;
+      return 0;
+     }
+     return err_integer_overflow(self,32,resflt > 0);
+    }
+    *result = (int32_t)resflt;
+    return 0;
+   }
+  }
+ } while (type_inherit_int(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INT);
+err:
+ return -1;
+#else
  int error;
  DeeTypeObject *iter;
  ASSERT_OBJECT(self);
@@ -1788,10 +3428,99 @@ return_trunc64:
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(Dee_TYPE(self),OPERATOR_INT);
  return -1;
+#endif
 }
 
 PUBLIC int (DCALL DeeObject_AsUInt64)(DeeObject *__restrict self,
                                       uint64_t *__restrict result) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ int error; double resflt;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeInt_Type)) {
+err_op_result:
+    Dee_Decref(op_result);
+    goto err;
+   }
+   error = DeeInt_AsU64(op_result,result);
+   Dee_Decref(op_result);
+   return error;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_FLOAT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeFloat_Type))
+       goto err_op_result;
+   resflt = DeeFloat_VALUE(op_result);
+   Dee_Decref(op_result);
+   goto set_float_result;
+  }
+ }
+ do {
+  if (tp_self->tp_math) {
+   if (tp_self->tp_math->tp_int64) {
+    error = (*tp_self->tp_math->tp_int64)(self,(int64_t *)result);
+    if unlikely(error < 0) return -1;
+    if unlikely(error == INT_SIGNED && *(int64_t *)result < 0) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) return 0;
+neg_overflow:
+     return err_integer_overflow(self,64,false);
+    }
+    return 0;
+   }
+   if (tp_self->tp_math->tp_int32) {
+    int32_t val32;
+    error = (*tp_self->tp_math->tp_int32)(self,&val32);
+    if unlikely(error < 0) goto err;
+    if unlikely(error == INT_SIGNED && val32 < 0) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) {
+      *result = (uint64_t)(int64_t)val32;
+      return 0;
+     }
+     goto neg_overflow;
+    }
+    *result = (uint64_t)(uint32_t)val32;
+    return 0;
+   }
+   if (tp_self->tp_math->tp_int) {
+    /* Cast to integer, then read its value. */
+    DREF DeeObject *intob;
+    intob = (*tp_self->tp_math->tp_int)(self);
+    if unlikely(!intob) goto err;
+    error = DeeInt_AsU64(intob,result);
+    Dee_Decref(intob);
+    return error;
+   }
+   if (tp_self->tp_math->tp_double) {
+    error = (*tp_self->tp_math->tp_double)(self,&resflt);
+    if unlikely(error) goto err;
+set_float_result:
+    if unlikely(resflt < 0 || resflt > UINT64_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) {
+      *result = (uint64_t)resflt;
+      return 0;
+     }
+     return err_integer_overflow(self,64,resflt > 0);
+    }
+    *result = (int64_t)resflt;
+    return 0;
+   }
+  }
+ } while (type_inherit_int(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INT);
+err:
+ return -1;
+#else
  int error;
  DeeTypeObject *iter;
  ASSERT_OBJECT(self);
@@ -1857,10 +3586,93 @@ neg_overflow:
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(Dee_TYPE(self),OPERATOR_INT);
  return -1;
+#endif
 }
 
 PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
                                      int64_t *__restrict result) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ int error; double resflt;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeInt_Type)) {
+err_op_result:
+    Dee_Decref(op_result);
+    goto err;
+   }
+   error = DeeInt_AsS64(op_result,result);
+   Dee_Decref(op_result);
+   return error;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_FLOAT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeFloat_Type))
+       goto err_op_result;
+   resflt = DeeFloat_VALUE(op_result);
+   Dee_Decref(op_result);
+   goto set_float_result;
+  }
+ }
+ do {
+  if (tp_self->tp_math) {
+   if (tp_self->tp_math->tp_int64) {
+    error = (*tp_self->tp_math->tp_int64)(self,result);
+    if unlikely(error < 0) return -1;
+    if unlikely(error == INT_UNSIGNED && (uint64_t)*result > INT64_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) return 0;
+     return err_integer_overflow(self,64,true);
+    }
+    return 0;
+   }
+   if (tp_self->tp_math->tp_int32) {
+    int32_t val32;
+    error = (*tp_self->tp_math->tp_int32)(self,&val32);
+    if (error < 0) return -1;
+    if (error == INT_SIGNED)
+         *result = (int64_t)val32;
+    else *result = (int64_t)((uint64_t)(uint32_t)val32);
+    return 0;
+   }
+   if (tp_self->tp_math->tp_int) {
+    /* Cast to integer, then read its value. */
+    DREF DeeObject *intob;
+    intob = (*tp_self->tp_math->tp_int)(self);
+    if unlikely(!intob) return -1;
+    error = DeeInt_AsS64(intob,result);
+    Dee_Decref(intob);
+    return error;
+   }
+   if (tp_self->tp_math->tp_double) {
+    error = (*tp_self->tp_math->tp_double)(self,&resflt);
+    if unlikely(error < 0) return -1;
+set_float_result:
+    if unlikely(resflt < INT64_MIN || resflt > INT64_MAX) {
+     if (tp_self->tp_flags&TP_FTRUNCATE) {
+      *result = (int64_t)resflt;
+      return 0;
+     }
+     return err_integer_overflow(self,64,resflt > 0);
+    }
+    *result = (int64_t)resflt;
+    return 0;
+   }
+  }
+ } while (type_inherit_int(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INT);
+err:
+ return -1;
+#else
  int error;
  DeeTypeObject *iter;
  ASSERT_OBJECT(self);
@@ -1920,6 +3732,7 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(Dee_TYPE(self),OPERATOR_INT);
  return -1;
+#endif
 }
 PUBLIC int (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
                                       dint128_t *__restrict result) {
@@ -1940,6 +3753,80 @@ PUBLIC int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
 DEFINE_OPERATOR(int,AsDouble,
                (DeeObject *__restrict self,
                 double *__restrict result)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ union {
+     int32_t res32;
+     int64_t res64;
+ } res;
+ int error;
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_FLOAT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeFloat_Type))
+       goto err_op_result;
+   *result = DeeFloat_VALUE(op_result);
+   Dee_Decref(op_result);
+   return 0;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeInt_Type)) {
+err_op_result:
+    Dee_Decref(op_result);
+    goto err;
+   }
+   error = DeeInt_AsS64(op_result,&res.res64);
+   Dee_Decref(op_result);
+   *result = (double)res.res64;
+   return error;
+  }
+ }
+ do {
+  if (tp_self->tp_math) {
+   if (tp_self->tp_math->tp_double) {
+    if (tp_self->tp_math->tp_double == &class_wrap_double)
+        return class_double(tp_self,self,result);
+    return (*tp_self->tp_math->tp_double)(self,result);
+   }
+   if (tp_self->tp_math->tp_int64) {
+    error = (*tp_self->tp_math->tp_int64)(self,&res.res64);
+    if (error == INT_UNSIGNED)
+         *result = (double)(uint64_t)res.res64;
+    else *result = (double)res.res64;
+    return error < 0 ? -1 : 0;
+   }
+   if (tp_self->tp_math->tp_int32) {
+    error = (*tp_self->tp_math->tp_int32)(self,&res.res32);
+    if (error == INT_UNSIGNED)
+         *result = (double)(uint32_t)res.res32;
+    else *result = (double)res.res32;
+    return error < 0 ? -1 : 0;
+   }
+   if (tp_self->tp_math->tp_int) {
+    DREF DeeObject *temp_int;
+    temp_int = (*tp_self->tp_math->tp_int)(self);
+    if unlikely(!temp_int) goto err;
+    error = DeeInt_As64(temp_int,&res.res64);
+    Dee_Decref(temp_int);
+    if (error == INT_UNSIGNED)
+         *result = (double)(uint64_t)res.res64;
+    else *result = (double)res.res64;
+    return error < 0 ? -1 : 0;
+   }
+  }
+ } while (type_inherit_int(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_FLOAT);
+err:
+ return -1;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math) {
@@ -1968,18 +3855,24 @@ DEFINE_OPERATOR(int,AsDouble,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_FLOAT);
  return -1;
+#endif
 }
 
 
 #ifndef DEFINE_TYPE_OPERATORS
 INTERN DeeTypeObject *DCALL
 type_get_int_caster(DeeTypeObject *__restrict start) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ while (!DeeType_HasOperator(start,OPERATOR_INT))
+         start = DeeType_Base(start);
+#else
  while (ASSERT(start),
        (!start->tp_math ||
        (!start->tp_math->tp_int32 &&
         !start->tp_math->tp_int64 &&
         !start->tp_math->tp_double)))
          start = DeeType_Base(start);
+#endif
  return start;
 }
 
@@ -2097,10 +3990,80 @@ return_value:
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *,Int,(DeeObject *__restrict self)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF; double fltval;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeInt_Type)) {
+err_op_result:
+    Dee_Clear(op_result);
+   }
+   return op_result;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_FLOAT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   if (DeeObject_AssertTypeExact(op_result,&DeeFloat_Type))
+       goto err_op_result;
+   fltval = DeeFloat_VALUE(op_result);
+   Dee_Decref(op_result);
+   goto return_float_value;
+  }
+ }
+ do {
+  if (tp_self->tp_math) {
+   if (tp_self->tp_math->tp_int) {
+    if (tp_self->tp_math->tp_int == &class_wrap_int)
+        return class_int(tp_self,self);
+    return (*tp_self->tp_math->tp_int)(self);
+   }
+   if (tp_self->tp_math->tp_int64) {
+    int64_t val64; int error;
+    error = (*tp_self->tp_math->tp_int64)(self,&val64);
+    if unlikely(error < 0) goto err;
+    if (error == INT_SIGNED) {
+     return DeeInt_NewS64(val64);
+    } else {
+     return DeeInt_NewU64((uint64_t)val64);
+    }
+   }
+   if (tp_self->tp_math->tp_int32) {
+    int32_t val32; int error;
+    error = (*tp_self->tp_math->tp_int32)(self,&val32);
+    if unlikely(error < 0) goto err;
+    if (error == INT_SIGNED) {
+     return DeeInt_NewS32(val32);
+    } else {
+     return DeeInt_NewU32((uint32_t)val32);
+    }
+   }
+   if (tp_self->tp_math->tp_double) {
+    int error;
+    error = (*tp_self->tp_math->tp_double)(self,&fltval);
+    if unlikely(error < 0) return NULL;
+return_float_value:
+    if (fltval < INT64_MIN || fltval > UINT64_MAX) {
+     if (!(tp_self->tp_flags&TP_FTRUNCATE)) {
+      err_integer_overflow(self,64,fltval > 0);
+      return NULL;
+     }
+    }
+    return DeeInt_NewS64((int64_t)fltval);
+   }
+  }
+ } while (type_inherit_int(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INT);
+err:
+ return NULL;
+#else
  LOAD_ITER;
- /* Optimization: No need to do this if `self' already is an integer. */
- if (GET_TP_SELF() == &DeeInt_Type)
-     return_reference_(self);
  do {
   if (iter->tp_math) {
    if (iter->tp_math->tp_int) {
@@ -2148,10 +4111,168 @@ DEFINE_OPERATOR(DREF DeeObject *,Int,(DeeObject *__restrict self)) {
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_INT);
  return NULL;
+#endif
 }
 
 
-#define DEFINE_MATH_OPERATOR1(name,xxx,error) \
+
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifndef DEFINE_TYPE_OPERATORS
+#define DEFINE_TYPE_INHERIT_FUNCTION(name,opname,field) \
+INTERN bool DCALL \
+name(DeeTypeObject *__restrict self) { \
+ struct type_math *base_math; \
+ DeeTypeObject *base = DeeType_Base(self); \
+ if (!base || \
+   (((base_math = base->tp_math) == NULL || \
+    (!base_math->tp_##field && \
+     !base_math->tp_inplace_##field)) && !name(base))) \
+      return false; \
+ DEE_DPRINTF("Inherit `" opname "' from %q into %q\n", \
+             base->tp_name,self->tp_name); \
+ if (self->tp_math) { \
+  self->tp_math->tp_##field         = base_math->tp_##field; \
+  self->tp_math->tp_inplace_##field = base_math->tp_inplace_##field; \
+ } else { \
+  self->tp_math = base_math; \
+ } \
+ return true; \
+}
+#define DEFINE_TYPE_INHERIT_FUNCTION1(name,opname,field) \
+INTERN bool DCALL \
+name(DeeTypeObject *__restrict self) { \
+ struct type_math *base_math; \
+ DeeTypeObject *base = DeeType_Base(self); \
+ if (!base || \
+   (((base_math = base->tp_math) == NULL || \
+     !base_math->tp_##field) && !name(base))) \
+      return false; \
+ DEE_DPRINTF("Inherit `" opname "' from %q into %q\n", \
+             base->tp_name,self->tp_name); \
+ base_math = base->tp_math; \
+ if (self->tp_math) { \
+  self->tp_math->tp_##field = base_math->tp_##field; \
+ } else { \
+  self->tp_math = base_math; \
+ } \
+ return true; \
+}
+DEFINE_TYPE_INHERIT_FUNCTION1(type_inherit_inv,"operator inv",inv)
+DEFINE_TYPE_INHERIT_FUNCTION1(type_inherit_pos,"operator pos",pos)
+DEFINE_TYPE_INHERIT_FUNCTION1(type_inherit_neg,"operator neg",neg)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_mul,"operator mul",mul)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_div,"operator div",div)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_mod,"operator mod",mod)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_shl,"operator shl",shl)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_shr,"operator shr",shr)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_and,"operator and",and)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_or, "operator or", or)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_xor,"operator xor",xor)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_pow,"operator pow",pow)
+
+/* inc,dec,add,sub,iadd & isub are all apart of the same operator group. */
+INTERN bool DCALL type_inherit_add(DeeTypeObject *__restrict self) {
+ struct type_math *base_math;
+ DeeTypeObject *base = DeeType_Base(self);
+ if (!base ||
+   (((base_math = base->tp_math) == NULL ||
+    (!base_math->tp_add && !base_math->tp_inplace_add &&
+     !base_math->tp_sub && !base_math->tp_inplace_sub &&
+     !base_math->tp_inc && !base_math->tp_dec)) && !type_inherit_add(base)))
+      return false;
+ DEE_DPRINTF("Inherit `operator add' %q from into %q\n",
+             base->tp_name,self->tp_name);
+ base_math = base->tp_math;
+ if (self->tp_math) {
+  self->tp_math->tp_inc = base_math->tp_inc;
+  self->tp_math->tp_dec = base_math->tp_dec;
+  self->tp_math->tp_add = base_math->tp_add;
+  self->tp_math->tp_sub = base_math->tp_sub;
+  self->tp_math->tp_inplace_add = base_math->tp_inplace_add;
+  self->tp_math->tp_inplace_sub = base_math->tp_inplace_sub;
+ } else {
+  self->tp_math = base_math;
+ }
+ return true;
+}
+#undef DEFINE_TYPE_INHERIT_FUNCTION1
+#undef DEFINE_TYPE_INHERIT_FUNCTION
+#endif
+#endif
+
+
+#ifdef DEFINE_TYPE_OPERATORS
+#define COPY_SELF() DeeObject_TCopy(tp_self,self)
+#else
+#define COPY_SELF() DeeObject_Copy(self)
+#endif
+
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#define DEFINE_MATH_OPERATOR1(name,xxx,operator_name) \
+DEFINE_OPERATOR(DREF DeeObject *,name,(DeeObject *__restrict self)) { \
+ LOAD_TP_SELF; \
+ if (DeeType_IsClass(tp_self)) { \
+  DREF DeeObject *op,*op_result; \
+  op = DeeClass_TryGetOperator(tp_self,operator_name); \
+  if likely(op) { \
+   op_result = DeeObject_ThisCall(op,self,0,NULL); \
+   Dee_Decref(op); \
+   return op_result; \
+  } \
+ } \
+ do { \
+  if (tp_self->tp_math && tp_self->tp_math->tp_##xxx) \
+      return (*tp_self->tp_math->tp_##xxx)(self); \
+ } while (type_inherit_##xxx(tp_self)); \
+ err_unimplemented_operator(tp_self,operator_name); \
+ return NULL; \
+}
+#define DEFINE_MATH_OPERATOR2(name,xxx,operator_name,inplace_operator_name) \
+DEFINE_OPERATOR(DREF DeeObject *,name,\
+               (DeeObject *__restrict self, \
+                DeeObject *__restrict some_object)) { \
+ LOAD_TP_SELF; \
+ ASSERT_OBJECT(some_object); \
+ if (DeeType_IsClass(tp_self)) { \
+  DREF DeeObject *op,*op_result; \
+  op = DeeClass_TryGetOperator(tp_self,operator_name); \
+  if likely(op) { \
+   op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object); \
+   Dee_Decref(op); \
+   return op_result; \
+  } \
+  op = DeeClass_TryGetOperator(tp_self,inplace_operator_name); \
+  if likely(op) { \
+   if unlikely((self = COPY_SELF()) == NULL) \
+    op_result = NULL; \
+   else { \
+    op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object); \
+    Dee_Decref(self); \
+   } \
+   Dee_Decref(op); \
+   return op_result; \
+  } \
+ } \
+ do { \
+  struct type_math *math; \
+  if ((math = tp_self->tp_math) != NULL) { \
+   if (tp_self->tp_math->tp_##xxx) \
+       return (*tp_self->tp_math->tp_##xxx)(self,some_object); \
+   if (tp_self->tp_math->tp_inplace_##xxx) { \
+    int error; \
+    if unlikely((self = COPY_SELF()) == NULL) goto err; \
+    error = (*tp_self->tp_math->tp_inplace_##xxx)(&self,some_object); \
+    if unlikely(error) Dee_Clear(self); \
+    return self; \
+   } \
+  } \
+ } while (type_inherit_##xxx(tp_self)); \
+ err_unimplemented_operator(tp_self,operator_name); \
+err: \
+ return NULL; \
+}
+#else
+#define DEFINE_MATH_OPERATOR1(name,xxx,operator_name) \
 DEFINE_OPERATOR(DREF DeeObject *,name,(DeeObject *__restrict self)) { \
  LOAD_ITER; \
  do { \
@@ -2164,10 +4285,10 @@ DEFINE_OPERATOR(DREF DeeObject *,name,(DeeObject *__restrict self)) { \
    return (*iter->tp_math->tp_##xxx)(self); \
   } \
  } while ((iter = DeeType_Base(iter)) != NULL); \
- err_unimplemented_operator(GET_TP_SELF(),error); \
+ err_unimplemented_operator(GET_TP_SELF(),operator_name); \
  return NULL; \
 }
-#define DEFINE_MATH_OPERATOR2(name,xxx,error) \
+#define DEFINE_MATH_OPERATOR2(name,xxx,operator_name,inplace_operator_name) \
 DEFINE_OPERATOR(DREF DeeObject *,name,\
                (DeeObject *__restrict self, \
                 DeeObject *__restrict some_object)) { \
@@ -2183,27 +4304,144 @@ DEFINE_OPERATOR(DREF DeeObject *,name,\
    return (*iter->tp_math->tp_##xxx)(self,some_object); \
   } \
  } while ((iter = DeeType_Base(iter)) != NULL); \
- err_unimplemented_operator(GET_TP_SELF(),error); \
+ err_unimplemented_operator(GET_TP_SELF(),operator_name); \
  return NULL; \
 }
+#endif
 DEFINE_MATH_OPERATOR1(Inv,inv,OPERATOR_INV)
 DEFINE_MATH_OPERATOR1(Pos,pos,OPERATOR_POS)
 DEFINE_MATH_OPERATOR1(Neg,neg,OPERATOR_NEG)
+DEFINE_MATH_OPERATOR2(Mul,mul,OPERATOR_MUL,OPERATOR_INPLACE_MUL)
+DEFINE_MATH_OPERATOR2(Div,div,OPERATOR_DIV,OPERATOR_INPLACE_DIV)
+DEFINE_MATH_OPERATOR2(Mod,mod,OPERATOR_MOD,OPERATOR_INPLACE_MOD)
+DEFINE_MATH_OPERATOR2(Shl,shl,OPERATOR_SHL,OPERATOR_INPLACE_SHL)
+DEFINE_MATH_OPERATOR2(Shr,shr,OPERATOR_SHR,OPERATOR_INPLACE_SHR)
+DEFINE_MATH_OPERATOR2(And,and,OPERATOR_AND,OPERATOR_INPLACE_AND)
+DEFINE_MATH_OPERATOR2(Or, or, OPERATOR_OR,OPERATOR_INPLACE_OR)
+DEFINE_MATH_OPERATOR2(Xor,xor,OPERATOR_XOR,OPERATOR_INPLACE_XOR)
+DEFINE_MATH_OPERATOR2(Pow,pow,OPERATOR_POW,OPERATOR_INPLACE_POW)
+
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+DEFINE_OPERATOR(DREF DeeObject *,Add,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict some_object)) {
+ LOAD_TP_SELF;
+ ASSERT_OBJECT(some_object);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_ADD);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object);
+   Dee_Decref(op);
+   return op_result;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INPLACE_ADD);
+  if likely(op) {
+   if unlikely((self = COPY_SELF()) == NULL)
+      op_result = NULL;
+   else {
+    op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object);
+    Dee_Decref(self);
+   }
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  struct type_math *math = tp_self->tp_math;
+  if (math) {
+   if (math->tp_add)
+       return (*math->tp_add)(self,some_object);
+   if (math->tp_inplace_add) {
+    if unlikely((self = COPY_SELF()) == NULL) goto err;
+    if unlikely((*math->tp_inplace_add)(&self,some_object))
+       goto err_self;
+    return self;
+   }
+   if (math->tp_sub) break;         /* XXX: `x + y --> x - (-y)' */
+   if (math->tp_inplace_sub) break; /* XXX: `x += y --> x -= (-y)' */
+   if (math->tp_inc) break;
+   if (math->tp_dec) break;
+  }
+ } while (type_inherit_add(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_ADD);
+err:
+ return NULL;
+err_self:
+ Dee_Decref(self);
+ goto err;
+}
+DEFINE_OPERATOR(DREF DeeObject *,Sub,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict some_object)) {
+ LOAD_TP_SELF;
+ ASSERT_OBJECT(some_object);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_SUB);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object);
+   Dee_Decref(op);
+   return op_result;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INPLACE_SUB);
+  if likely(op) {
+   if unlikely((self = COPY_SELF()) == NULL)
+      op_result = NULL;
+   else {
+    op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object);
+    Dee_Decref(self);
+   }
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  struct type_math *math = tp_self->tp_math;
+  if (math) {
+   if (math->tp_sub)
+       return (*math->tp_sub)(self,some_object);
+   if (math->tp_inplace_sub) {
+    if unlikely((self = COPY_SELF()) == NULL) goto err;
+    if unlikely((*math->tp_inplace_sub)(&self,some_object))
+       goto err_self;
+    return self;
+   }
+   if (math->tp_add) break;         /* XXX: `x - y --> x + (-y)' */
+   if (math->tp_inplace_add) break; /* XXX: `x -= y --> x += (-y)' */
+   if (math->tp_inc) break;
+   if (math->tp_dec) break;
+  }
+ } while (type_inherit_add(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_SUB);
+err:
+ return NULL;
+err_self:
+ Dee_Decref(self);
+ goto err;
+}
+
+#else
 DEFINE_MATH_OPERATOR2(Add,add,OPERATOR_ADD)
 DEFINE_MATH_OPERATOR2(Sub,sub,OPERATOR_SUB)
-DEFINE_MATH_OPERATOR2(Mul,mul,OPERATOR_MUL)
-DEFINE_MATH_OPERATOR2(Div,div,OPERATOR_DIV)
-DEFINE_MATH_OPERATOR2(Mod,mod,OPERATOR_MOD)
-DEFINE_MATH_OPERATOR2(Shl,shl,OPERATOR_SHL)
-DEFINE_MATH_OPERATOR2(Shr,shr,OPERATOR_SHR)
-DEFINE_MATH_OPERATOR2(And,and,OPERATOR_AND)
-DEFINE_MATH_OPERATOR2(Or, or, OPERATOR_OR)
-DEFINE_MATH_OPERATOR2(Xor,xor,OPERATOR_XOR)
-DEFINE_MATH_OPERATOR2(Pow,pow,OPERATOR_POW)
+#endif
 
 #ifndef DEFINE_TYPE_OPERATORS
 PUBLIC DREF DeeObject *DCALL
 DeeObject_AddS8(DeeObject *__restrict self, int8_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* Optimization for `int' */
+ if (DeeInt_Check(self))
+     return DeeInt_AddSDigit((DeeIntObject *)self,val);
+ val_ob = DeeInt_NewS8(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Add(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_add) {
@@ -2225,9 +4463,24 @@ DeeObject_AddS8(DeeObject *__restrict self, int8_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_ADD);
 err:
  return NULL;
+#endif
 }
+
 PUBLIC DREF DeeObject *DCALL
 DeeObject_SubS8(DeeObject *__restrict self, int8_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* Optimization for `int' */
+ if (DeeInt_Check(self))
+     return DeeInt_SubSDigit((DeeIntObject *)self,val);
+ val_ob = DeeInt_NewS8(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Sub(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_sub) {
@@ -2249,9 +4502,23 @@ DeeObject_SubS8(DeeObject *__restrict self, int8_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SUB);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_AddInt(DeeObject *__restrict self, uint32_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* Optimization for `int' */
+ if (DeeInt_Check(self))
+     return DeeInt_AddU32((DeeIntObject *)self,val);
+ val_ob = DeeInt_NewU32(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Add(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_add) {
@@ -2273,9 +4540,23 @@ DeeObject_AddInt(DeeObject *__restrict self, uint32_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_ADD);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_SubInt(DeeObject *__restrict self, uint32_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* Optimization for `int' */
+ if (DeeInt_Check(self))
+     return DeeInt_SubU32((DeeIntObject *)self,val);
+ val_ob = DeeInt_NewU32(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Sub(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_sub) {
@@ -2297,9 +4578,21 @@ DeeObject_SubInt(DeeObject *__restrict self, uint32_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SUB);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_MulInt(DeeObject *__restrict self, int8_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* TODO: Optimization for `int' */
+ val_ob = DeeInt_NewS8(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Mul(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_mul) {
@@ -2319,9 +4612,21 @@ DeeObject_MulInt(DeeObject *__restrict self, int8_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_MUL);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_DivInt(DeeObject *__restrict self, int8_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* TODO: Optimization for `int' */
+ val_ob = DeeInt_NewS8(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Div(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_div) {
@@ -2341,9 +4646,21 @@ DeeObject_DivInt(DeeObject *__restrict self, int8_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_DIV);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_ModInt(DeeObject *__restrict self, int8_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* TODO: Optimization for `int' */
+ val_ob = DeeInt_NewS8(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Mod(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_mod) {
@@ -2363,9 +4680,21 @@ DeeObject_ModInt(DeeObject *__restrict self, int8_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_MOD);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_ShlInt(DeeObject *__restrict self, uint8_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* TODO: Optimization for `int' */
+ val_ob = DeeInt_NewU8(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Shl(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_shl) {
@@ -2385,9 +4714,21 @@ DeeObject_ShlInt(DeeObject *__restrict self, uint8_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SHL);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_ShrInt(DeeObject *__restrict self, uint8_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* TODO: Optimization for `int' */
+ val_ob = DeeInt_NewU8(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Shr(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_shr) {
@@ -2407,9 +4748,21 @@ DeeObject_ShrInt(DeeObject *__restrict self, uint8_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SHR);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_AndInt(DeeObject *__restrict self, uint32_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* TODO: Optimization for `int' */
+ val_ob = DeeInt_NewU32(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_And(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_and) {
@@ -2429,9 +4782,21 @@ DeeObject_AndInt(DeeObject *__restrict self, uint32_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_AND);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_OrInt(DeeObject *__restrict self, uint32_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* TODO: Optimization for `int' */
+ val_ob = DeeInt_NewU32(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Or(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_or) {
@@ -2451,9 +4816,21 @@ DeeObject_OrInt(DeeObject *__restrict self, uint32_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_OR);
 err:
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_XorInt(DeeObject *__restrict self, uint32_t val) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *val_ob,*result;
+ /* TODO: Optimization for `int' */
+ val_ob = DeeInt_NewU32(val);
+ if unlikely(!val_ob) goto err;
+ result = DeeObject_Xor(self,val_ob);
+ Dee_Decref(val_ob);
+ return result;
+err:
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_math && iter->tp_math->tp_xor) {
@@ -2473,14 +4850,77 @@ DeeObject_XorInt(DeeObject *__restrict self, uint32_t val) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_XOR);
 err:
  return NULL;
+#endif
 }
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 #undef DEFINE_MATH_OPERATOR2
 #undef DEFINE_MATH_OPERATOR1
+#undef COPY_SELF
 
 
 DEFINE_OPERATOR(int,Inc,(DeeObject **__restrict pself)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELFP;
+ /* TODO: Optimization for `int' */
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_INC);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,*pself,0,NULL);
+set_op_result:
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(*pself);
+   *pself = op_result; /* Inherit reference. */
+   return 0;
+  }
+  if ((op = DeeClass_TryGetOperator(tp_self,OPERATOR_INPLACE_ADD)) != NULL ||
+      (op = DeeClass_TryGetOperator(tp_self,OPERATOR_ADD)) != NULL) {
+   DeeObject *argv[1] = { &DeeInt_One };
+   op_result = DeeObject_ThisCall(op,*pself,1,argv);
+   goto set_op_result;
+  }
+  if ((op = DeeClass_TryGetOperator(tp_self,OPERATOR_INPLACE_SUB)) != NULL ||
+      (op = DeeClass_TryGetOperator(tp_self,OPERATOR_SUB)) != NULL) {
+   DeeObject *argv[1] = { &DeeInt_MinusOne };
+   op_result = DeeObject_ThisCall(op,*pself,1,argv);
+   goto set_op_result;
+  }
+ }
+ do {
+  struct type_math *math;
+  if ((math = tp_self->tp_math) != NULL) {
+   if (math->tp_inc)
+       return (*math->tp_inc)(pself);
+   if (math->tp_inplace_add)
+       return (*math->tp_inplace_add)(pself,&DeeInt_One);
+   if (math->tp_add) {
+    DREF DeeObject *temp;
+    temp = (*math->tp_add)(*pself,&DeeInt_One);
+    if unlikely(!temp) goto err;
+    Dee_Decref(*pself);
+    *pself = temp;
+    return 0;
+   }
+   if (math->tp_inplace_sub)
+       return (*math->tp_inplace_sub)(pself,&DeeInt_MinusOne);
+   if (math->tp_sub) {
+    DREF DeeObject *temp;
+    temp = (*math->tp_sub)(*pself,&DeeInt_MinusOne);
+    if unlikely(!temp) goto err;
+    Dee_Decref(*pself);
+    *pself = temp;
+    return 0;
+   }
+   if (math->tp_dec)
+       break;
+  }
+ } while (type_inherit_add(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INC);
+err:
+ return -1;
+#else
  LOAD_ITERP;
  do {
   if (iter->tp_math) {
@@ -2517,9 +4957,71 @@ DEFINE_OPERATOR(int,Inc,(DeeObject **__restrict pself)) {
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_PSELF(),OPERATOR_INC);
  return -1;
+#endif
 }
 
 DEFINE_OPERATOR(int,Dec,(DeeObject **__restrict pself)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELFP;
+ /* TODO: Optimization for `int' */
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_DEC);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,*pself,0,NULL);
+set_op_result:
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(*pself);
+   *pself = op_result; /* Inherit reference. */
+   return 0;
+  }
+  if ((op = DeeClass_TryGetOperator(tp_self,OPERATOR_INPLACE_SUB)) != NULL ||
+      (op = DeeClass_TryGetOperator(tp_self,OPERATOR_SUB)) != NULL) {
+   DeeObject *argv[1] = { &DeeInt_One };
+   op_result = DeeObject_ThisCall(op,*pself,1,argv);
+   goto set_op_result;
+  }
+  if ((op = DeeClass_TryGetOperator(tp_self,OPERATOR_INPLACE_ADD)) != NULL ||
+      (op = DeeClass_TryGetOperator(tp_self,OPERATOR_ADD)) != NULL) {
+   DeeObject *argv[1] = { &DeeInt_MinusOne };
+   op_result = DeeObject_ThisCall(op,*pself,1,argv);
+   goto set_op_result;
+  }
+ }
+ do {
+  struct type_math *math;
+  if ((math = tp_self->tp_math) != NULL) {
+   if (math->tp_dec)
+       return (*math->tp_dec)(pself);
+   if (math->tp_inplace_sub)
+       return (*math->tp_inplace_sub)(pself,&DeeInt_One);
+   if (math->tp_sub) {
+    DREF DeeObject *temp;
+    temp = (*math->tp_sub)(*pself,&DeeInt_One);
+    if unlikely(!temp) goto err;
+    Dee_Decref(*pself);
+    *pself = temp;
+    return 0;
+   }
+   if (math->tp_inplace_add)
+       return (*math->tp_inplace_add)(pself,&DeeInt_MinusOne);
+   if (math->tp_add) {
+    DREF DeeObject *temp;
+    temp = (*math->tp_add)(*pself,&DeeInt_MinusOne);
+    if unlikely(!temp) goto err;
+    Dee_Decref(*pself);
+    *pself = temp;
+    return 0;
+   }
+   if (math->tp_inc)
+       break;
+  }
+ } while (type_inherit_add(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_DEC);
+err:
+ return -1;
+#else
  LOAD_ITERP;
  do {
   if (iter->tp_math) {
@@ -2556,6 +5058,7 @@ DEFINE_OPERATOR(int,Dec,(DeeObject **__restrict pself)) {
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_PSELF(),OPERATOR_DEC);
  return -1;
+#endif
 }
 
 #define DEFINE_MATH_INPLACE_OPERATOR2(name,xxx,operator_name) \
@@ -2589,8 +5092,6 @@ DEFINE_OPERATOR(int,name,(DeeObject **__restrict pself, \
  err_unimplemented_operator(GET_TP_PSELF(),operator_name); \
  return -1; \
 }
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceAdd,add,OPERATOR_INPLACE_ADD)
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceSub,sub,OPERATOR_INPLACE_SUB)
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceMul,mul,OPERATOR_INPLACE_MUL)
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceDiv,div,OPERATOR_INPLACE_DIV)
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceMod,mod,OPERATOR_INPLACE_MOD)
@@ -2600,10 +5101,111 @@ DEFINE_MATH_INPLACE_OPERATOR2(InplaceAnd,and,OPERATOR_INPLACE_AND)
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceOr, or, OPERATOR_INPLACE_OR)
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceXor,xor,OPERATOR_INPLACE_XOR)
 DEFINE_MATH_INPLACE_OPERATOR2(InplacePow,pow,OPERATOR_INPLACE_POW)
+
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+DEFINE_OPERATOR(int,InplaceAdd,
+               (DeeObject **__restrict pself,
+                DeeObject *__restrict some_object)) {
+ LOAD_TP_SELFP;
+ ASSERT_OBJECT(some_object);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  if likely((op = DeeClass_TryGetOperator(tp_self,OPERATOR_INPLACE_ADD)) != NULL ||
+            (op = DeeClass_TryGetOperator(tp_self,OPERATOR_ADD)) != NULL) {
+   op_result = DeeObject_ThisCall(op,*pself,1,(DeeObject **)&some_object);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(*pself);
+   *pself = op_result;
+   return 0;
+  }
+ }
+ do {
+  struct type_math *math = tp_self->tp_math;
+  if (math) {
+   if (math->tp_inplace_add)
+       return (*math->tp_inplace_add)(pself,some_object);
+   if (math->tp_add) {
+    DREF DeeObject *temp;
+    temp = (*math->tp_add)(*pself,some_object);
+    if unlikely(!temp) goto err;
+    Dee_Decref(*pself);
+    *pself = temp;
+    return 0;
+   }
+   if (math->tp_sub) break;         /* XXX: `x - y --> x + (-y)' */
+   if (math->tp_inplace_sub) break; /* XXX: `x -= y --> x += (-y)' */
+   if (math->tp_inc) break;
+   if (math->tp_dec) break;
+  }
+ } while (type_inherit_add(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INPLACE_ADD);
+err:
+ return -1;
+}
+DEFINE_OPERATOR(int,InplaceSub,
+               (DeeObject **__restrict pself,
+                DeeObject *__restrict some_object)) {
+ LOAD_TP_SELFP;
+ ASSERT_OBJECT(some_object);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  if likely((op = DeeClass_TryGetOperator(tp_self,OPERATOR_INPLACE_SUB)) != NULL ||
+            (op = DeeClass_TryGetOperator(tp_self,OPERATOR_SUB)) != NULL) {
+   op_result = DeeObject_ThisCall(op,*pself,1,(DeeObject **)&some_object);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(*pself);
+   *pself = op_result;
+   return 0;
+  }
+ }
+ do {
+  struct type_math *math = tp_self->tp_math;
+  if (math) {
+   if (math->tp_inplace_sub)
+       return (*math->tp_inplace_sub)(pself,some_object);
+   if (math->tp_sub) {
+    DREF DeeObject *temp;
+    temp = (*math->tp_sub)(*pself,some_object);
+    if unlikely(!temp) goto err;
+    Dee_Decref(*pself);
+    *pself = temp;
+    return 0;
+   }
+   if (math->tp_add) break;         /* XXX: `x + y --> x - (-y)' */
+   if (math->tp_inplace_add) break; /* XXX: `x += y --> x -= (-y)' */
+   if (math->tp_inc) break;
+   if (math->tp_dec) break;
+  }
+ } while (type_inherit_add(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_INPLACE_ADD);
+err:
+ return -1;
+}
+#else
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceAdd,add,OPERATOR_INPLACE_ADD)
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceSub,sub,OPERATOR_INPLACE_SUB)
+#endif
+
 #undef DEFINE_MATH_INPLACE_OPERATOR2
 
 #ifndef DEFINE_TYPE_OPERATORS
-#define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,DeeInt_NewXXX,intX_t,xxx,operator_name) \
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,xxx,operator_name) \
+PUBLIC int DCALL \
+DeeObject_InplaceXXX(DREF DeeObject **__restrict pself, intX_t val) { \
+ DREF DeeObject *temp; int result; \
+ temp = DeeInt_NewXXX(val); \
+ if unlikely(!temp) goto err; \
+ result = reg(pself,temp); \
+ Dee_Decref(temp); \
+ return result; \
+err: \
+ return -1; \
+}
+#else
+#define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,xxx,operator_name) \
 PUBLIC int DCALL \
 DeeObject_InplaceXXX(DREF DeeObject **__restrict pself, intX_t val) { \
  int result; DREF DeeObject *temp_val; \
@@ -2625,7 +5227,6 @@ DeeObject_InplaceXXX(DREF DeeObject **__restrict pself, intX_t val) { \
    if (iter->tp_math->tp_##xxx) \
    { \
     DREF DeeObject *temp; \
-    /* TODO: Optimizations for `int' */ \
     temp_val = DeeInt_NewXXX(val); \
     if unlikely(!temp_val) goto err; \
     if (iter->tp_math->tp_##xxx == &class_wrap_##xxx) \
@@ -2645,18 +5246,19 @@ DeeObject_InplaceXXX(DREF DeeObject **__restrict pself, intX_t val) { \
 err: \
  return -1; \
 }
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddS8,DeeInt_NewS8,int8_t,add,OPERATOR_INPLACE_ADD)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubS8,DeeInt_NewS8,int8_t,sub,OPERATOR_INPLACE_SUB)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddInt,DeeInt_NewU32,uint32_t,add,OPERATOR_INPLACE_ADD)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubInt,DeeInt_NewU32,uint32_t,sub,OPERATOR_INPLACE_SUB)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceMulInt,DeeInt_NewS8,int8_t,mul,OPERATOR_INPLACE_MUL)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceDivInt,DeeInt_NewS8,int8_t,div,OPERATOR_INPLACE_DIV)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceModInt,DeeInt_NewS8,int8_t,mod,OPERATOR_INPLACE_MOD)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShlInt,DeeInt_NewU8,uint8_t,shl,OPERATOR_INPLACE_SHL)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShrInt,DeeInt_NewU8,uint8_t,shr,OPERATOR_INPLACE_SHR)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAndInt,DeeInt_NewU32,uint32_t,and,OPERATOR_INPLACE_AND)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceOrInt,DeeInt_NewU32,uint32_t,or,OPERATOR_INPLACE_OR)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorInt,DeeInt_NewU32,uint32_t,xor,OPERATOR_INPLACE_XOR)
+#endif
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddS8,DeeObject_InplaceAdd,DeeInt_NewS8,int8_t,add,OPERATOR_INPLACE_ADD)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubS8,DeeObject_InplaceSub,DeeInt_NewS8,int8_t,sub,OPERATOR_INPLACE_SUB)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddInt,DeeObject_InplaceAdd,DeeInt_NewU32,uint32_t,add,OPERATOR_INPLACE_ADD)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubInt,DeeObject_InplaceSub,DeeInt_NewU32,uint32_t,sub,OPERATOR_INPLACE_SUB)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceMulInt,DeeObject_InplaceMul,DeeInt_NewS8,int8_t,mul,OPERATOR_INPLACE_MUL)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceDivInt,DeeObject_InplaceDiv,DeeInt_NewS8,int8_t,div,OPERATOR_INPLACE_DIV)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceModInt,DeeObject_InplaceMod,DeeInt_NewS8,int8_t,mod,OPERATOR_INPLACE_MOD)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShlInt,DeeObject_InplaceShl,DeeInt_NewU8,uint8_t,shl,OPERATOR_INPLACE_SHL)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShrInt,DeeObject_InplaceShr,DeeInt_NewU8,uint8_t,shr,OPERATOR_INPLACE_SHR)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAndInt,DeeObject_InplaceAnd,DeeInt_NewU32,uint32_t,and,OPERATOR_INPLACE_AND)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceOrInt,DeeObject_InplaceOr,DeeInt_NewU32,uint32_t,or,OPERATOR_INPLACE_OR)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorInt,DeeObject_InplaceXor,DeeInt_NewU32,uint32_t,xor,OPERATOR_INPLACE_XOR)
 #undef DEFINE_MATH_INPLACE_INT_OPERATOR
 #endif /* !DEFINE_TYPE_OPERATORS */
 
@@ -2678,7 +5280,73 @@ invoke_not(DREF DeeObject *ob) {
 
 
 
-#define DEFINE_COMPARE_OPERATOR(name,fwd,bck,error) \
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifndef DEFINE_TYPE_OPERATORS
+INTERN bool DCALL type_inherit_compare(DeeTypeObject *__restrict self) {
+ struct type_cmp *base_cmp;
+ DeeTypeObject *base = DeeType_Base(self);
+ if (!base ||
+   (((base_cmp = base->tp_cmp) == NULL ||
+    (!base_cmp->tp_eq && !base_cmp->tp_ne &&
+     !base_cmp->tp_lo && !base_cmp->tp_le &&
+     !base_cmp->tp_gr && !base_cmp->tp_ge)) &&
+     !type_inherit_compare(base)))
+      return false;
+ DEE_DPRINTF("Inherit `operator <compare>' %q from into %q\n",
+             base->tp_name,self->tp_name);
+ base_cmp = base->tp_cmp;
+ if (self->tp_cmp) {
+  self->tp_cmp->tp_eq = base_cmp->tp_eq;
+  self->tp_cmp->tp_ne = base_cmp->tp_ne;
+  self->tp_cmp->tp_lo = base_cmp->tp_lo;
+  self->tp_cmp->tp_le = base_cmp->tp_le;
+  self->tp_cmp->tp_gr = base_cmp->tp_gr;
+  self->tp_cmp->tp_ge = base_cmp->tp_ge;
+ } else {
+  self->tp_cmp = base_cmp;
+ }
+ return true;
+}
+#endif /* !DEFINE_TYPE_OPERATORS */
+
+#define DEFINE_COMPARE_OPERATOR(name,fwd,bck,operator_name,operator_name_bck) \
+DEFINE_OPERATOR(DREF DeeObject *,name, \
+               (DeeObject *__restrict self, \
+                DeeObject *__restrict some_object)) { \
+ LOAD_TP_SELF; \
+ ASSERT_OBJECT(some_object); \
+ if (DeeType_IsClass(tp_self)) { \
+  DREF DeeObject *op,*op_result; \
+  op = DeeClass_TryGetOperator(tp_self,operator_name); \
+  if (op) { \
+   op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object); \
+   Dee_Decref(op); \
+   return op_result; \
+  } \
+  op = DeeClass_TryGetOperator(tp_self,operator_name_bck); \
+  if (op) { \
+   op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object); \
+   Dee_Decref(op); \
+   return invoke_not(op_result); \
+  } \
+ } else if (tp_self->tp_cmp) { \
+  if (tp_self->tp_cmp->tp_##fwd) \
+      return (*tp_self->tp_cmp->tp_##fwd)(self,some_object); \
+  if (tp_self->tp_cmp->tp_##bck) \
+      return invoke_not((*tp_self->tp_cmp->tp_##bck)(self,some_object)); \
+ } \
+ if (type_inherit_compare(tp_self)) { \
+  ASSERT(tp_self->tp_cmp); \
+  if (tp_self->tp_cmp->tp_##fwd) \
+      return (*tp_self->tp_cmp->tp_##fwd)(self,some_object); \
+  if (tp_self->tp_cmp->tp_##bck) \
+      return invoke_not((*tp_self->tp_cmp->tp_##bck)(self,some_object)); \
+ } \
+ err_unimplemented_operator(GET_TP_SELF(),operator_name); \
+ return NULL; \
+}
+#else
+#define DEFINE_COMPARE_OPERATOR(name,fwd,bck,operator_name,operator_name_bck) \
 DEFINE_OPERATOR(DREF DeeObject *,name, \
                (DeeObject *__restrict self, \
                 DeeObject *__restrict some_object)) { \
@@ -2703,12 +5371,13 @@ DEFINE_OPERATOR(DREF DeeObject *,name, \
  err_unimplemented_operator(GET_TP_SELF(),error); \
  return NULL; \
 }
-DEFINE_COMPARE_OPERATOR(CompareEqObject,eq,ne,OPERATOR_EQ)
-DEFINE_COMPARE_OPERATOR(CompareNeObject,ne,eq,OPERATOR_NE)
-DEFINE_COMPARE_OPERATOR(CompareLoObject,lo,ge,OPERATOR_LO)
-DEFINE_COMPARE_OPERATOR(CompareLeObject,le,gr,OPERATOR_LE)
-DEFINE_COMPARE_OPERATOR(CompareGrObject,gr,lo,OPERATOR_GR)
-DEFINE_COMPARE_OPERATOR(CompareGeObject,ge,le,OPERATOR_GE)
+#endif
+DEFINE_COMPARE_OPERATOR(CompareEqObject,eq,ne,OPERATOR_EQ,OPERATOR_NE)
+DEFINE_COMPARE_OPERATOR(CompareNeObject,ne,eq,OPERATOR_NE,OPERATOR_EQ)
+DEFINE_COMPARE_OPERATOR(CompareLoObject,lo,ge,OPERATOR_LO,OPERATOR_GE)
+DEFINE_COMPARE_OPERATOR(CompareLeObject,le,gr,OPERATOR_LE,OPERATOR_GR)
+DEFINE_COMPARE_OPERATOR(CompareGrObject,gr,lo,OPERATOR_GR,OPERATOR_LO)
+DEFINE_COMPARE_OPERATOR(CompareGeObject,ge,le,OPERATOR_GE,OPERATOR_LE)
 #undef DEFINE_COMPARE_OPERATOR
 
 
@@ -2765,6 +5434,85 @@ DeeObject_CompareNe(DeeObject *__restrict self,
 }
 #endif /* !DEFINE_TYPE_OPERATORS */
 
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifndef DEFINE_TYPE_OPERATORS
+#define DEFINE_TYPE_INHERIT_FUNCTION(name,field) \
+INTERN bool DCALL \
+name(DeeTypeObject *__restrict self) { \
+ DeeTypeObject *base = DeeType_Base(self); \
+ struct type_seq *base_seq; \
+ if (!base || \
+   (((base_seq = base->tp_seq) == NULL || \
+    (!base_seq->field)) && !name(base))) \
+      return false; \
+ base_seq = base->tp_seq; \
+ if (self->tp_seq) { \
+  self->tp_seq->field = base_seq->field; \
+ } else { \
+  self->tp_seq = base_seq; \
+ } \
+ return true; \
+}
+INTERN bool DCALL
+type_inherit_iternext(DeeTypeObject *__restrict self) {
+ DeeTypeObject *base = DeeType_Base(self);
+ if (!base ||
+    (!base->tp_iter_next &&
+     !type_inherit_iternext(base)))
+      return false;
+ self->tp_iter_next = base->tp_iter_next;
+ return true;
+}
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_iterself,tp_iter_self)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_size,tp_size)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_contains,tp_contains)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_getitem,tp_get)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_delitem,tp_del)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_setitem,tp_set)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_getrange,tp_range_get)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_delrange,tp_range_del)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_setrange,tp_range_set)
+#undef DEFINE_TYPE_INHERIT_FUNCTION
+#endif /* !DEFINE_TYPE_OPERATORS */
+
+DEFINE_OPERATOR(DREF DeeObject *,IterSelf,(DeeObject *__restrict self)) {
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_ITERSELF);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  struct type_seq *seq = tp_self->tp_seq;
+  if (seq && seq->tp_iter_self)
+      return (*seq->tp_iter_self)(self);
+ } while (type_inherit_iterself(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_ITERSELF);
+ return NULL;
+}
+DEFINE_OPERATOR(DREF DeeObject *,IterNext,(DeeObject *__restrict self)) {
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_ITERNEXT);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  if (tp_self->tp_iter_next)
+      return (*tp_self->tp_iter_next)(self);
+ } while (type_inherit_iternext(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_ITERNEXT);
+ return NULL;
+}
+#else
 DEFINE_OPERATOR(DREF DeeObject *,IterSelf,(DeeObject *__restrict self)) {
  LOAD_ITER;
  do {
@@ -2789,6 +5537,7 @@ DEFINE_OPERATOR(DREF DeeObject *,IterNext,(DeeObject *__restrict self)) {
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_ITERNEXT);
  return NULL;
 }
+#endif
 
 
 
@@ -2797,46 +5546,89 @@ DEFINE_OPERATOR(DREF DeeObject *,IterNext,(DeeObject *__restrict self)) {
 #ifndef DEFINE_TYPE_OPERATORS
 
 DEFINE_OPERATOR(size_t,Size,(DeeObject *__restrict self)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
  DREF DeeObject *sizeob;
  size_t result;
- /* Fallback: invoke the size-operator. */
- {
-  LOAD_ITER;
-  do {
-   DREF DeeObject *(DCALL *tp_size)(DeeObject *__restrict self);;
-   if (iter->tp_seq && (tp_size = iter->tp_seq->tp_size) != NULL) {
-    struct type_nsi *nsi;
-    /* NSI optimizations. */
-    nsi = iter->tp_seq->tp_nsi;
-    if (nsi) {
-     ASSERT(nsi->nsi_common.nsi_getsize);
-     return (*nsi->nsi_common.nsi_getsize)(self);
-    }
-    if (tp_size == &class_wrap_size)
-     sizeob = class_size(iter,self);
-    else {
-     sizeob = (*tp_size)(self);
-    }
-    if unlikely(!sizeob) goto err;
-    if (DeeObject_AsSize(sizeob,&result))
-        goto err_ob;
-    Dee_Decref(sizeob);
-    /* Deal with negative-one */
-    if unlikely(result == (size_t)-1)
-       return err_integer_overflow_i(sizeof(size_t)*8,true);
-    return result;
-   }
-  } while ((iter = DeeType_Base(iter)) != NULL);
-  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SIZE);
-  return (size_t)-1;
-err_ob:
-  Dee_Decref(sizeob);
-err:
-  return (size_t)-1;
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_SIZE);
+  if likely(op) {
+   sizeob = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   goto decode_sizeob;
+  }
  }
+ do {
+  DREF DeeObject *(DCALL *tp_size)(DeeObject *__restrict self);
+  if (tp_self->tp_seq &&
+     (tp_size = tp_self->tp_seq->tp_size) != NULL) {
+   struct type_nsi *nsi;
+   /* NSI optimizations. */
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi) {
+    ASSERT(nsi->nsi_common.nsi_getsize);
+    return (*nsi->nsi_common.nsi_getsize)(self);
+   }
+   sizeob = (*tp_size)(self);
+decode_sizeob:
+   if unlikely(!sizeob) goto err;
+   if (DeeObject_AsSize(sizeob,&result))
+       goto err_ob;
+   Dee_Decref(sizeob);
+   /* Deal with negative-one */
+   if unlikely(result == (size_t)-1)
+      return err_integer_overflow_i(sizeof(size_t)*8,true);
+   return result;
+  }
+ } while (type_inherit_size(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_SIZE);
+ return (size_t)-1;
+err_ob:
+ Dee_Decref(sizeob);
+err:
+ return (size_t)-1;
+#else
+ DREF DeeObject *sizeob;
+ size_t result;
+ LOAD_ITER;
+ do {
+  DREF DeeObject *(DCALL *tp_size)(DeeObject *__restrict self);
+  if (iter->tp_seq && (tp_size = iter->tp_seq->tp_size) != NULL) {
+   struct type_nsi *nsi;
+   /* NSI optimizations. */
+   nsi = iter->tp_seq->tp_nsi;
+   if (nsi) {
+    ASSERT(nsi->nsi_common.nsi_getsize);
+    return (*nsi->nsi_common.nsi_getsize)(self);
+   }
+   if (tp_size == &class_wrap_size)
+    sizeob = class_size(iter,self);
+   else {
+    sizeob = (*tp_size)(self);
+   }
+   if unlikely(!sizeob) goto err;
+   if (DeeObject_AsSize(sizeob,&result))
+       goto err_ob;
+   Dee_Decref(sizeob);
+   /* Deal with negative-one */
+   if unlikely(result == (size_t)-1)
+      return err_integer_overflow_i(sizeof(size_t)*8,true);
+   return result;
+  }
+ } while ((iter = DeeType_Base(iter)) != NULL);
+ err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SIZE);
+ return (size_t)-1;
+err_ob:
+ Dee_Decref(sizeob);
+err:
+ return (size_t)-1;
+#endif
 }
 
-DEFINE_OPERATOR(int,Contains,(DeeObject *__restrict self, DeeObject *__restrict some_object)) {
+DEFINE_OPERATOR(int,Contains,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict some_object)) {
  DREF DeeObject *resultob; int result;
  resultob = DeeObject_ContainsObject(self,some_object);
  if unlikely(!resultob) goto err;
@@ -2849,6 +5641,24 @@ err:
 #endif
 
 DEFINE_OPERATOR(DREF DeeObject *,SizeObject,(DeeObject *__restrict self)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_SIZE);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_size)
+      return (*tp_self->tp_seq->tp_size)(self);
+ } while (type_inherit_size(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_SIZE);
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_seq && iter->tp_seq->tp_size) {
@@ -2859,11 +5669,30 @@ DEFINE_OPERATOR(DREF DeeObject *,SizeObject,(DeeObject *__restrict self)) {
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SIZE);
  return NULL;
+#endif
 }
 
 DEFINE_OPERATOR(DREF DeeObject *,ContainsObject,
                (DeeObject *__restrict self,
                 DeeObject *__restrict some_object)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_CONTAINS);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&some_object);
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_contains)
+      return (*tp_self->tp_seq->tp_contains)(self,some_object);
+ } while (type_inherit_contains(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_CONTAINS);
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_seq && iter->tp_seq->tp_contains) {
@@ -2874,10 +5703,29 @@ DEFINE_OPERATOR(DREF DeeObject *,ContainsObject,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_CONTAINS);
  return NULL;
+#endif
 }
 DEFINE_OPERATOR(DREF DeeObject *,GetItem,
                (DeeObject *__restrict self,
                 DeeObject *__restrict index)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_GETITEM);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&index);
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_get)
+      return (*tp_self->tp_seq->tp_get)(self,index);
+ } while (type_inherit_getitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_GETITEM);
+ return NULL;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(index);
  do {
@@ -2889,9 +5737,32 @@ DEFINE_OPERATOR(DREF DeeObject *,GetItem,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETITEM);
  return NULL;
+#endif
 }
-DEFINE_OPERATOR(int,DelItem,(DeeObject *__restrict self,
-                             DeeObject *__restrict index)) {
+DEFINE_OPERATOR(int,DelItem,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict index)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_DELITEM);
+  if likely(op) {
+   op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&index);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_del)
+      return (*tp_self->tp_seq->tp_del)(self,index);
+ } while (type_inherit_delitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_DELITEM);
+err:
+ return -1;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(index);
  do {
@@ -2903,10 +5774,35 @@ DEFINE_OPERATOR(int,DelItem,(DeeObject *__restrict self,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_DELITEM);
  return -1;
+#endif
 }
 DEFINE_OPERATOR(int,SetItem,(DeeObject *__restrict self,
                              DeeObject *__restrict index,
                              DeeObject *__restrict value)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_SETITEM);
+  if likely(op) {
+   DeeObject *argv[2];
+   argv[0] = index;
+   argv[1] = value;
+   op_result = DeeObject_ThisCall(op,self,2,argv);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_set)
+      return (*tp_self->tp_seq->tp_set)(self,index,value);
+ } while (type_inherit_setitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_SETITEM);
+err:
+ return -1;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(index);
  ASSERT_OBJECT(value);
@@ -2919,11 +5815,33 @@ DEFINE_OPERATOR(int,SetItem,(DeeObject *__restrict self,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_DELITEM);
  return -1;
+#endif
 }
 DEFINE_OPERATOR(DREF DeeObject *,GetRange,
                (DeeObject *__restrict self,
                 DeeObject *__restrict begin,
                 DeeObject *__restrict end)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_GETRANGE);
+  if likely(op) {
+   DeeObject *argv[2];
+   argv[0] = begin;
+   argv[1] = end;
+   op_result = DeeObject_ThisCall(op,self,2,argv);
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get)
+      return (*tp_self->tp_seq->tp_range_get)(self,begin,end);
+ } while (type_inherit_getrange(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_GETRANGE);
+ return NULL;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(begin);
  ASSERT_OBJECT(end);
@@ -2936,6 +5854,7 @@ DEFINE_OPERATOR(DREF DeeObject *,GetRange,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
  return NULL;
+#endif
 }
 #ifndef DEFINE_TYPE_OPERATORS
 
@@ -2984,7 +5903,53 @@ DeeObject_ExtendInherited(DREF DeeObject *__restrict self,
 
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_GetRangeBeginIndex)(DeeObject *__restrict self,
-                                     dssize_t begin, DeeObject *__restrict end) {
+                                     dssize_t begin,
+                                     DeeObject *__restrict end) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ ASSERT_OBJECT(end);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_GETRANGE);
+  if (op) {
+   DeeObject *argv[2];
+   argv[0] = DeeInt_NewSSize(begin);
+   if unlikely(!argv[0]) goto err;
+   argv[1] = end;
+   op_result = DeeObject_ThisCall(op,self,2,argv);
+   Dee_Decref(argv[0]);
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  struct type_seq *seq = tp_self->tp_seq;
+  if (seq && seq->tp_range_get) {
+   dssize_t end_index;
+   struct type_nsi *nsi;
+   DREF DeeObject *begin_ob,*result;
+   /* NSI optimizations. */
+   nsi = seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+    if (DeeNone_Check(end)) {
+     if (nsi->nsi_seqlike.nsi_getrange_n)
+         return (*nsi->nsi_seqlike.nsi_getrange_n)(self,begin);
+    } else if (nsi->nsi_seqlike.nsi_getrange) {
+     if (DeeObject_AsSSize(end,&end_index)) goto err;
+     return (*nsi->nsi_seqlike.nsi_getrange)(self,begin,end_index);
+    }
+   }
+   begin_ob = DeeInt_NewSSize(begin);
+   if unlikely(!begin_ob) goto err;
+   result = (*seq->tp_range_get)(self,begin_ob,end);
+   Dee_Decref(begin_ob);
+   return result;
+  }
+ } while (type_inherit_getrange(tp_self));
+err:
+ err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
+ return NULL;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(end);
  do {
@@ -3013,10 +5978,52 @@ PUBLIC DREF DeeObject *
 err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_GetRangeEndIndex)(DeeObject *__restrict self,
                                    DeeObject *__restrict begin, dssize_t end) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ ASSERT_OBJECT(begin);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_GETRANGE);
+  if (op) {
+   DeeObject *argv[2];
+   argv[1] = DeeInt_NewSSize(end);
+   if unlikely(!argv[1]) goto err;
+   argv[0] = begin;
+   op_result = DeeObject_ThisCall(op,self,2,argv);
+   Dee_Decref(argv[1]);
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
+   dssize_t begin_index;
+   DREF DeeObject *end_ob,*result;
+   struct type_nsi *nsi;
+   /* NSI optimizations. */
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+    if (nsi->nsi_seqlike.nsi_getrange) {
+     if (DeeObject_AsSSize(begin,&begin_index)) goto err;
+     return (*nsi->nsi_seqlike.nsi_getrange)(self,begin_index,end);
+    }
+   }
+   end_ob = DeeInt_NewSSize(end);
+   if unlikely(!end_ob) goto err;
+   result = (*tp_self->tp_seq->tp_range_get)(self,begin,end_ob);
+   Dee_Decref(end_ob);
+   return result;
+  }
+ } while (type_inherit_getrange(tp_self));
+err:
+ err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
+ return NULL;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(begin);
  do {
@@ -3042,10 +6049,54 @@ PUBLIC DREF DeeObject *
 err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
  return NULL;
+#endif
 }
+
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self,
                                 dssize_t begin, dssize_t end) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_GETRANGE);
+  if (op) {
+   DeeObject *argv[2];
+   argv[0] = DeeInt_NewSSize(begin);
+   if unlikely(!argv[0]) goto err;
+   argv[1] = DeeInt_NewSSize(end);
+   if unlikely(!argv[1]) { Dee_Decref(argv[0]); goto err; }
+   op_result = DeeObject_ThisCall(op,self,2,argv);
+   Dee_Decref(argv[1]);
+   Dee_Decref(argv[0]);
+   Dee_Decref(op);
+   return op_result;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
+   DREF DeeObject *begin_ob,*end_ob,*result;
+   struct type_nsi *nsi;
+   /* NSI optimizations. */
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+    if (nsi->nsi_seqlike.nsi_getrange)
+        return (*nsi->nsi_seqlike.nsi_getrange)(self,begin,end);
+   }
+   begin_ob = DeeInt_NewSSize(begin);
+   if unlikely(!begin_ob) goto err;
+   end_ob   = DeeInt_NewSSize(end);
+   if unlikely(!end_ob) { Dee_Decref(begin_ob); goto err; }
+   result = (*tp_self->tp_seq->tp_range_get)(self,begin_ob,end_ob);
+   Dee_Decref(end_ob);
+   Dee_Decref(begin_ob);
+   return result;
+  }
+ } while (type_inherit_getrange(tp_self));
+err:
+ err_unimplemented_operator(tp_self,OPERATOR_GETRANGE);
+ return NULL;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_seq && iter->tp_seq->tp_range_get) {
@@ -3070,11 +6121,60 @@ PUBLIC DREF DeeObject *
 err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
  return NULL;
+#endif
 }
 PUBLIC int
 (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self,
                                      dssize_t begin, DeeObject *__restrict end,
                                      DeeObject *__restrict value) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ ASSERT_OBJECT(end);
+ ASSERT_OBJECT(value);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_SETRANGE);
+  if (op) {
+   DeeObject *argv[3];
+   argv[0] = DeeInt_NewSSize(begin);
+   if unlikely(!argv[0]) goto err;
+   argv[1] = end;
+   argv[2] = value;
+   op_result = DeeObject_ThisCall(op,self,3,argv);
+   Dee_Decref(argv[0]);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
+   int result; DREF DeeObject *begin_ob;
+   struct type_nsi *nsi;
+   /* NSI optimizations. */
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+    if (DeeNone_Check(end)) {
+     if (nsi->nsi_seqlike.nsi_setrange_n)
+         return (*nsi->nsi_seqlike.nsi_setrange_n)(self,begin,value);
+    } else if (nsi->nsi_seqlike.nsi_setrange) {
+     dssize_t end_index;
+     if (DeeObject_AsSSize(end,&end_index)) goto err;
+     return (*nsi->nsi_seqlike.nsi_setrange)(self,begin,end_index,value);
+    }
+   }
+   begin_ob = DeeInt_NewSSize(begin);
+   if unlikely(!begin_ob) goto err;
+   result = (*tp_self->tp_seq->tp_range_set)(self,begin_ob,end,value);
+   Dee_Decref(begin_ob);
+   return result;
+  }
+ } while (type_inherit_setrange(tp_self));
+err:
+ err_unimplemented_operator(tp_self,OPERATOR_SETRANGE);
+ return -1;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(end);
  ASSERT_OBJECT(value);
@@ -3102,13 +6202,59 @@ PUBLIC int
   }
  } while ((iter = DeeType_Base(iter)) != NULL);
 err:
- err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETRANGE);
+ err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SETRANGE);
  return -1;
+#endif
 }
 PUBLIC int
 (DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self,
                                    DeeObject *__restrict begin, dssize_t end,
                                    DeeObject *__restrict value) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ ASSERT_OBJECT(begin);
+ ASSERT_OBJECT(value);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_SETRANGE);
+  if (op) {
+   DeeObject *argv[3];
+   argv[1] = DeeInt_NewSSize(end);
+   if unlikely(!argv[1]) goto err;
+   argv[0] = begin;
+   argv[2] = value;
+   op_result = DeeObject_ThisCall(op,self,3,argv);
+   Dee_Decref(argv[1]);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
+   int result; DREF DeeObject *end_ob;
+   struct type_nsi *nsi;
+   /* NSI optimizations. */
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+    if (nsi->nsi_seqlike.nsi_setrange) {
+     dssize_t start_index;
+     if (DeeObject_AsSSize(begin,&start_index)) goto err;
+     return (*nsi->nsi_seqlike.nsi_setrange)(self,start_index,end,value);
+    }
+   }
+   end_ob = DeeInt_NewSSize(end);
+   if unlikely(!end_ob) goto err;
+   result = (*tp_self->tp_seq->tp_range_set)(self,begin,end_ob,value);
+   Dee_Decref(end_ob);
+   return result;
+  }
+ } while (type_inherit_setrange(tp_self));
+err:
+ err_unimplemented_operator(tp_self,OPERATOR_SETRANGE);
+ return -1;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(begin);
  ASSERT_OBJECT(value);
@@ -3135,11 +6281,58 @@ PUBLIC int
 err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SETRANGE);
  return -1;
+#endif
 }
 PUBLIC int
 (DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self,
                                 dssize_t begin, dssize_t end,
                                 DeeObject *__restrict value) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ ASSERT_OBJECT(value);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_SETRANGE);
+  if (op) {
+   DeeObject *argv[3];
+   argv[0] = DeeInt_NewSSize(begin);
+   if unlikely(!argv[0]) goto err;
+   argv[1] = DeeInt_NewSSize(end);
+   if unlikely(!argv[1]) { Dee_Decref(argv[0]); goto err; }
+   argv[2] = value;
+   op_result = DeeObject_ThisCall(op,self,3,argv);
+   Dee_Decref(argv[1]);
+   Dee_Decref(argv[0]);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_range_set) {
+   DREF DeeObject *begin_ob,*end_ob; int result;
+   struct type_nsi *nsi;
+   /* NSI optimizations. */
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+    if (nsi->nsi_seqlike.nsi_setrange)
+        return (*nsi->nsi_seqlike.nsi_setrange)(self,begin,end,value);
+   }
+   begin_ob = DeeInt_NewSSize(begin);
+   if unlikely(!begin_ob) goto err;
+   end_ob   = DeeInt_NewSSize(end);
+   if unlikely(!end_ob) { Dee_Decref(begin_ob); goto err; }
+   result = (*tp_self->tp_seq->tp_range_set)(self,begin_ob,end_ob,value);
+   Dee_Decref(end_ob);
+   Dee_Decref(begin_ob);
+   return result;
+  }
+ } while (type_inherit_setrange(tp_self));
+err:
+ err_unimplemented_operator(tp_self,OPERATOR_SETRANGE);
+ return -1;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(value);
  do {
@@ -3165,12 +6358,43 @@ PUBLIC int
 err:
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SETRANGE);
  return -1;
+#endif
 }
 #endif
 
 DEFINE_OPERATOR(int,DelRange,(DeeObject *__restrict self,
                               DeeObject *__restrict begin,
                               DeeObject *__restrict end)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ ASSERT_OBJECT(begin);
+ ASSERT_OBJECT(end);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_DELRANGE);
+  if likely(op) {
+#if defined(__i386__) && (defined(_MSC_VER) || defined(__GNUC__))
+   op_result = DeeObject_ThisCall(op,self,2,&begin);
+#else
+   DeeObject *argv[2];
+   argv[0] = begin;
+   argv[1] = end;
+   op_result = DeeObject_ThisCall(op,self,2,argv);
+#endif
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_range_del)
+      return (*tp_self->tp_seq->tp_range_del)(self,begin,end);
+ } while (type_inherit_delrange(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_DELRANGE);
+err:
+ return -1;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(begin);
  ASSERT_OBJECT(end);
@@ -3183,11 +6407,44 @@ DEFINE_OPERATOR(int,DelRange,(DeeObject *__restrict self,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_DELRANGE);
  return -1;
+#endif
 }
 DEFINE_OPERATOR(int,SetRange,(DeeObject *__restrict self,
                               DeeObject *__restrict begin,
                               DeeObject *__restrict end,
                               DeeObject *__restrict value)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ ASSERT_OBJECT(begin);
+ ASSERT_OBJECT(end);
+ ASSERT_OBJECT(value);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_SETRANGE);
+  if likely(op) {
+#if defined(__i386__) && (defined(_MSC_VER) || defined(__GNUC__))
+   op_result = DeeObject_ThisCall(op,self,3,&begin);
+#else
+   DeeObject *argv[3];
+   argv[0] = begin;
+   argv[1] = end;
+   argv[2] = value;
+   op_result = DeeObject_ThisCall(op,self,3,argv);
+#endif
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_range_set)
+      return (*tp_self->tp_seq->tp_range_set)(self,begin,end,value);
+ } while (type_inherit_setrange(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_SETRANGE);
+err:
+ return -1;
+#else
  LOAD_ITER;
  ASSERT_OBJECT(begin);
  ASSERT_OBJECT(end);
@@ -3201,6 +6458,7 @@ DEFINE_OPERATOR(int,SetRange,(DeeObject *__restrict self,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SETRANGE);
  return -1;
+#endif
 }
 
 
@@ -3210,6 +6468,44 @@ PUBLIC DREF DeeObject *DCALL
 DeeObject_GetItemDef(DeeObject *__restrict self,
                      DeeObject *__restrict key,
                      DeeObject *__restrict def) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *result;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_GETITEM);
+  if (op) {
+   result = DeeObject_ThisCall(op,self,1,(DeeObject **)&key);
+   Dee_Decref(op);
+   goto check_result;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
+   struct type_nsi *nsi;
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP) {
+    if (nsi->nsi_maplike.nsi_getdefault)
+        return (*nsi->nsi_maplike.nsi_getdefault)(self,key,def);
+   }
+   result = (*tp_self->tp_seq->tp_get)(self,key);
+check_result:
+   if unlikely(!result) {
+    if (DeeError_Catch(&DeeError_KeyError) ||
+        DeeError_Catch(&DeeError_NotImplemented)) {
+     if (def != ITER_DONE)
+         Dee_Incref(def);
+     return def;
+    }
+   }
+   return result;
+  }
+ } while (type_inherit_getitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_GETITEM);
+ return NULL;
+#else
  DREF DeeObject *result;
  DeeTypeObject *tp_self;
  ASSERT_OBJECT(self);
@@ -3236,10 +6532,48 @@ DeeObject_GetItemDef(DeeObject *__restrict self,
  } while ((tp_self = DeeType_Base(tp_self)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETITEM);
  return NULL;
+#endif
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_GetItemIndex(DeeObject *__restrict self,
                        size_t index) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *index_ob,*result;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_GETITEM);
+  if (op) {
+   index_ob = DeeInt_NewSize(index);
+   if unlikely(!index_ob) { Dee_Decref(op); goto err; }
+   result = DeeObject_ThisCall(op,self,1,(DeeObject **)&index_ob);
+   Dee_Decref(index_ob);
+   Dee_Decref(op);
+   return result;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
+   struct type_nsi *nsi;
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+    if (nsi->nsi_seqlike.nsi_getitem)
+        return (*nsi->nsi_seqlike.nsi_getitem)(self,index);
+   }
+   /* Fallback create an integer object and use it for indexing. */
+   index_ob = DeeInt_NewSize(index);
+   if unlikely(!index_ob) goto err;
+   result = (*tp_self->tp_seq->tp_get)(self,index_ob);
+   Dee_Decref(index_ob);
+   return result;
+  }
+ } while (type_inherit_getitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_GETITEM);
+err:
+ return NULL;
+#else
  DREF DeeObject *index_ob,*result;
  DeeTypeObject *tp_self;
  ASSERT_OBJECT(self);
@@ -3262,10 +6596,50 @@ DeeObject_GetItemIndex(DeeObject *__restrict self,
  } while ((tp_self = DeeType_Base(tp_self)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETITEM);
  return NULL;
+#endif
 }
 
 PUBLIC int (DCALL DeeObject_DelItemIndex)(DeeObject *__restrict self,
                                           size_t index) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *index_ob; int result;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_DELITEM);
+  if (op) {
+   index_ob = DeeInt_NewSize(index);
+   if unlikely(!index_ob) { Dee_Decref(op); goto err; }
+   op_result = DeeObject_ThisCall(op,self,1,(DeeObject **)&index_ob);
+   Dee_Decref(index_ob);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_del) {
+   struct type_nsi *nsi;
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+    if (nsi->nsi_seqlike.nsi_delitem)
+        return (*nsi->nsi_seqlike.nsi_delitem)(self,index);
+   }
+   /* Fallback create an integer object and use it for indexing. */
+   index_ob = DeeInt_NewSize(index);
+   if unlikely(!index_ob) goto err;
+   result = (*tp_self->tp_seq->tp_del)(self,index_ob);
+   Dee_Decref(index_ob);
+   return result;
+  }
+ } while (type_inherit_getitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_DELITEM);
+err:
+ return -1;
+#else
  DREF DeeObject *index_ob; int result;
  DeeTypeObject *tp_self;
  ASSERT_OBJECT(self);
@@ -3288,10 +6662,52 @@ PUBLIC int (DCALL DeeObject_DelItemIndex)(DeeObject *__restrict self,
  } while ((tp_self = DeeType_Base(tp_self)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_DELITEM);
  return -1;
+#endif
 }
 PUBLIC int (DCALL DeeObject_SetItemIndex)(DeeObject *__restrict self,
                                           size_t index,
                                           DeeObject *__restrict value) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ DREF DeeObject *index_ob; int result;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_SETITEM);
+  if (op) {
+   DeeObject *argv[2];
+   argv[0] = DeeInt_NewSize(index);
+   if unlikely(!argv[0]) { Dee_Decref(op); goto err; }
+   argv[1] = value;
+   op_result = DeeObject_ThisCall(op,self,2,argv);
+   Dee_Decref(argv[0]);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_set) {
+   struct type_nsi *nsi;
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+    if (nsi->nsi_seqlike.nsi_setitem)
+        return (*nsi->nsi_seqlike.nsi_setitem)(self,index,value);
+   }
+   /* Fallback create an integer object and use it for indexing. */
+   index_ob = DeeInt_NewSize(index);
+   if unlikely(!index_ob) goto err;
+   result = (*tp_self->tp_seq->tp_set)(self,index_ob,value);
+   Dee_Decref(index_ob);
+   return result;
+  }
+ } while (type_inherit_getitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_DELITEM);
+err:
+ return -1;
+#else
  DREF DeeObject *index_ob; int result;
  DeeTypeObject *tp_self;
  ASSERT_OBJECT(self);
@@ -3314,6 +6730,7 @@ PUBLIC int (DCALL DeeObject_SetItemIndex)(DeeObject *__restrict self,
  } while ((tp_self = DeeType_Base(tp_self)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_SETITEM);
  return -1;
+#endif
 }
 
 PUBLIC DREF DeeObject *DCALL
@@ -3480,6 +6897,7 @@ DEFINE_OPERATOR(DREF DeeObject *,GetAttr,
   if (iter->tp_attr) {
 do_iter_attr:
    if likely(iter->tp_attr->tp_getattr) {
+    /* TODO: New operator system? */
     if (iter->tp_attr->tp_getattr == &class_wrap_getattr)
         return class_getattr(iter,self,attr_name);
     return (*iter->tp_attr->tp_getattr)(self,attr_name);
@@ -3537,6 +6955,7 @@ DEFINE_OPERATOR(int,DelAttr,
   if (iter->tp_attr) {
 do_iter_attr:
    if likely(iter->tp_attr->tp_delattr) {
+    /* TODO: New operator system? */
     if (iter->tp_attr->tp_delattr == &class_wrap_delattr)
         return class_delattr(iter,self,attr_name);
     return (*iter->tp_attr->tp_delattr)(self,attr_name);
@@ -3601,6 +7020,7 @@ DEFINE_OPERATOR(int,SetAttr,
   if (iter->tp_attr) {
 do_iter_attr:
    if (iter->tp_attr->tp_setattr) {
+    /* TODO: New operator system? */
     if (iter->tp_attr->tp_setattr == &class_wrap_setattr)
         return class_setattr(iter,self,attr_name,value);
     return (*iter->tp_attr->tp_setattr)(self,attr_name,value);
@@ -3619,8 +7039,64 @@ done:
  return temp;
 }
 
+
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifndef DEFINE_TYPE_OPERATORS
+INTERN bool DCALL
+type_inherit_with(DeeTypeObject *__restrict self) {
+ DeeTypeObject *base = DeeType_Base(self);
+ struct type_with *base_with;
+ if (!base ||
+   (((base_with = base->tp_with) == NULL ||
+    (!base_with->tp_enter && !base_with->tp_leave)) &&
+     !type_inherit_with(base)))
+      return false;
+ base_with = base->tp_with;
+ if unlikely(self->tp_with) {
+  self->tp_with->tp_enter = base_with->tp_enter;
+  self->tp_with->tp_leave = base_with->tp_leave;
+ } else {
+  self->tp_with = base_with;
+ }
+ return true;
+}
+#endif /* !DEFINE_TYPE_OPERATORS */
+#endif
+
 DEFINE_OPERATOR(int,Enter,
                (DeeObject *__restrict self)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_ENTER);
+  if (op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_LEAVE);
+  if (op) {
+   Dee_Decref(op);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_with) {
+   if (tp_self->tp_with->tp_enter)
+       return (*tp_self->tp_with->tp_enter)(self);
+   /* Special case: When `tp_leave' is implemented,
+    * a missing `tp_enter' behaves as a no-op. */
+   if (tp_self->tp_with->tp_leave)
+       return 0;
+  }
+ } while (type_inherit_with(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_ENTER);
+err:
+ return -1;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_with) {
@@ -3637,10 +7113,43 @@ DEFINE_OPERATOR(int,Enter,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_ENTER);
  return -1;
+#endif
 }
 
 DEFINE_OPERATOR(int,Leave,
                (DeeObject *__restrict self)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ LOAD_TP_SELF;
+ if (DeeType_IsClass(tp_self)) {
+  DREF DeeObject *op,*op_result;
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_LEAVE);
+  if (op) {
+   op_result = DeeObject_ThisCall(op,self,0,NULL);
+   Dee_Decref(op);
+   if unlikely(!op_result) goto err;
+   Dee_Decref(op_result);
+   return 0;
+  }
+  op = DeeClass_TryGetOperator(tp_self,OPERATOR_ENTER);
+  if (op) {
+   Dee_Decref(op);
+   return 0;
+  }
+ }
+ do {
+  if (tp_self->tp_with) {
+   if (tp_self->tp_with->tp_leave)
+       return (*tp_self->tp_with->tp_leave)(self);
+   /* Special case: When `tp_enter' is implemented,
+    * a missing `tp_leave' behaves as a no-op. */
+   if (tp_self->tp_with->tp_enter)
+       return 0;
+  }
+ } while (type_inherit_with(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_LEAVE);
+err:
+ return -1;
+#else
  LOAD_ITER;
  do {
   if (iter->tp_with) {
@@ -3657,12 +7166,62 @@ DEFINE_OPERATOR(int,Leave,
  } while ((iter = DeeType_Base(iter)) != NULL);
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_LEAVE);
  return -1;
+#endif
 }
+
+
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifndef DEFINE_TYPE_OPERATORS
+INTERN bool DCALL
+type_inherit_buffer(DeeTypeObject *__restrict self) {
+ DeeTypeObject *base = DeeType_Base(self);
+ struct type_buffer *base_buffer;
+ if (!base ||
+   (((base_buffer = base->tp_buffer) == NULL ||
+    (!base_buffer->tp_getbuf)) &&
+     !type_inherit_buffer(base)))
+      return false;
+ base_buffer = base->tp_buffer;
+ if unlikely(self->tp_buffer) {
+  memcpy(self->tp_buffer,base_buffer,
+         sizeof(struct type_buffer));
+ } else {
+  self->tp_buffer = base_buffer;
+ }
+ return true;
+}
+#endif /* !DEFINE_TYPE_OPERATORS */
+#endif
+
 
 DEFINE_OPERATOR(int,GetBuf,
                (DeeObject *__restrict self,
                 DeeBuffer *__restrict info,
                 unsigned int flags)) {
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ ASSERTF(!(flags & ~(DEE_BUFFER_FWRITABLE)),
+          "Unknown buffers flags in %x",flags);
+ LOAD_TP_SELF;
+ do {
+  struct type_buffer *buf = tp_self->tp_buffer;
+  if (buf && buf->tp_getbuf) {
+   if unlikely((flags & DEE_BUFFER_FWRITABLE) &&
+               (buf->tp_buffer_flags & DEE_BUFFER_TYPE_FREADONLY)) {
+    DeeError_Throwf(&DeeError_BufferError,
+                    "Cannot write to read-only buffer of type %k",
+                    tp_self);
+    goto err;
+   }
+#ifndef __INTELLISENSE__
+   info->bb_put = buf->tp_putbuf;
+#endif
+   return (*buf->tp_getbuf)(self,info,flags);
+  }
+ } while (type_inherit_buffer(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_GETBUF);
+err:
+ return -1;
+#else
  ASSERTF(!(flags & ~(DEE_BUFFER_FWRITABLE)),
           "Unknown buffers flags in %x",flags);
  LOAD_ITER;
@@ -3685,6 +7244,7 @@ DEFINE_OPERATOR(int,GetBuf,
  err_unimplemented_operator(GET_TP_SELF(),OPERATOR_GETBUF);
 err:
  return -1;
+#endif
 }
 
 DEFINE_OPERATOR(void,PutBuf,
@@ -3703,6 +7263,15 @@ DEFINE_OPERATOR(void,PutBuf,
 #endif
  if (info->bb_put)
    (*info->bb_put)(self,info,flags);
+#elif defined(CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE)
+ LOAD_TP_SELF;
+ do {
+  if (tp_self->tp_buffer && tp_self->tp_buffer->tp_getbuf) {
+   if (tp_self->tp_buffer->tp_putbuf)
+     (*tp_self->tp_buffer->tp_putbuf)(self,info,flags);
+   break;
+  }
+ } while (type_inherit_buffer(tp_self));
 #else
  LOAD_ITER;
  do {
@@ -3864,6 +7433,27 @@ err:
  return -1;
 }
 #endif
+
+
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+#ifndef DEFINE_TYPE_OPERATORS
+INTERN bool DCALL
+type_inherit_nsi(DeeTypeObject *__restrict self) {
+ DeeTypeObject *base = DeeType_Base(self);
+ struct type_seq *base_seq;
+ if (!base ||
+   (((base_seq = base->tp_seq) == NULL ||
+     (base_seq->tp_nsi == NULL)) &&
+     !type_inherit_nsi(base)))
+     return false;
+ if (self->tp_seq != NULL) /* Some other sequence interface has already been implemented! */
+     return false;
+ self->tp_seq = base->tp_seq;
+ return true;
+}
+#endif
+#endif
+
 
 DECL_END
 

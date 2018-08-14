@@ -645,6 +645,134 @@ PRIVATE struct type_seq set_seq = {
 INTDEF int DCALL
 seq_ctor(DeeObject *__restrict UNUSED(self));
 
+
+/* TODO: insert(object item)->bool
+ *       >> // Option #1:
+ *       >> return this.insertall([item]) != 0;
+ *       >> // Option #2:
+ *       >> if (item in this)
+ *       >>     return false;
+ *       >> this += [item];
+ *       >> // Option #3:
+ *       >> if (item in this)
+ *       >>     return false;
+ *       >> this |= [item];
+ * TODO: insertall(sequence items)->int
+ *       >> local result = 0;
+ *       >> for (local x: items) {
+ *       >>     // Option #1:
+ *       >>     if (this.insert([x]))
+ *       >>         ++result;
+ *       >>     // Option #2:
+ *       >>     if (x in this)
+ *       >>         continue;
+ *       >>     this += [x];
+ *       >>     // Option #3:
+ *       >>     if (x in this)
+ *       >>         continue;
+ *       >>     this |= [x];
+ *       >>     ++result;
+ *       >> }
+ *       >> return result;
+ * TODO: remove(object item)->bool
+ *       >> // Option #1:
+ *       >> return this.removeall([item]) != 0;
+ *       >> // Option #2:
+ *       >> if (item in this)
+ *       >>     return false;
+ *       >> this -= [item];
+ *       >> return true;
+ *       >> // Option #3:
+ *       >> if (item in this)
+ *       >>     return false;
+ *       >> this &= ~([item] as set from deemon);
+ *       >> return true;
+ * TODO: removeall(sequence items)->int
+ *       >> local result = 0;
+ *       >> for (local x: items) {
+ *       >>     // Option #1:
+ *       >>     if (this.remove(x))
+ *       >>         ++result;
+ *       >>     // Option #2:
+ *       >>     if (x in this)
+ *       >>         continue;
+ *       >>     this -= [x];
+ *       >>     ++result;
+ *       >>     // Option #3:
+ *       >>     if (x in this)
+ *       >>         continue;
+ *       >>     this &= ~([x] as set from deemon);
+ *       >>     ++result;
+ *       >> }
+ *       >> return result;
+ * TODO: clear()->none
+ *       >> // Option #1:
+ *       >> this := (set from deemon)();
+ *       >> // Option #2:
+ *       >> this.removeall(this);
+ *       >> // Option #3:
+ *       >> this -= this;
+ *       >> // Option #4:
+ *       >> this &= ~this;
+ *       >> // Option #5:
+ *       >> this ^= this;
+ *       >> // Option #6:
+ *       >> for (local x: items)
+ *       >>     this.remove(x);
+ * TODO: operator += (sequence items)
+ *       >> // Option #1:
+ *       >> this |= items;
+ *       >> // Option #2:
+ *       >> this.insertall(items);
+ *       >> // Option #3:
+ *       >> for (local x: items) {
+ *       >>     this.insert(x);
+ *       >> }
+ *       >> // Option #4:
+ *       >> this := (this + items)
+ *       >> return this;
+ * TODO: operator |= (sequence items)
+ *       >> // Option #1:
+ *       >> this += items;
+ *       >> // Option #2:
+ *       >> this.insertall(items);
+ *       >> // Option #3:
+ *       >> for (local x: items) {
+ *       >>     this.insert(x);
+ *       >> }
+ *       >> // Option #4:
+ *       >> this := (this | items);
+ *       >> return this;
+ * TODO: operator &= (sequence items)
+ *       >> if (items is <negated set>) {
+ *       >>     // Option #1:
+ *       >>     this -= ~items;
+ *       >>     // Option #2:
+ *       >>     this.removeall(~items);
+ *       >>     // Option #3:
+ *       >>     for (local x: ~items) {
+ *       >>         this.remove(x];
+ *       >>     }
+ *       >> } else {
+ *       >>     // Option #1:
+ *       >>     this := (this & items);
+ *       >> }
+ *       >> return this;
+ * TODO: operator := (sequence items)
+ *       >> this.clear(); // s.a. default handling for clear()
+ *       >> // Option #1:
+ *       >> this += items;
+ *       >> // Option #2:
+ *       >> this.insertall(items);
+ *       >> // Option #3:
+ *       >> for (local x: items) {
+ *       >>     this.insert(x);
+ *       >> }
+ *       >> // Option #4:
+ *       >> this := (this | items);
+ *       >> return this;
+ */
+
 PUBLIC DeeTypeObject DeeSet_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_set),

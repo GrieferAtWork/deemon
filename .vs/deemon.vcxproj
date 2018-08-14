@@ -84,6 +84,7 @@
     <ClInclude Include="..\src\deemon\objects\seq\subrange.h" />
     <ClInclude Include="..\src\deemon\objects\seq\svec.h" />
     <ClInclude Include="..\src\deemon\objects\seq\transform.h" />
+    <ClInclude Include="..\src\deemon\objects\seq_functions.h" />
     <ClInclude Include="..\src\deemon\objects\unicode\codec.h" />
     <ClInclude Include="..\src\deemon\objects\unicode\string_functions.h" />
     <ClInclude Include="..\src\deemon\runtime\builtin.h" />

@@ -35,6 +35,8 @@
 #endif
 
 #include "seq/svec.h"
+#include "seq_functions.h"
+
 #include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
 
@@ -51,10 +53,17 @@ DECL_BEGIN
 PUBLIC struct type_nsi *DCALL
 DeeType_NSI(DeeTypeObject *__restrict tp) {
  ASSERT_OBJECT_TYPE(tp,&DeeType_Type);
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ do {
+  if (tp->tp_seq)
+      return tp->tp_seq->tp_nsi;
+ } while (type_inherit_nsi(tp));
+#else
  do {
   if (tp->tp_seq)
       return tp->tp_seq->tp_nsi;
  } while ((tp = DeeType_Base(tp)) != NULL);
+#endif
  return NULL;
 }
 
@@ -305,6 +314,14 @@ seqiterator_init(SeqIterator *__restrict self,
      DeeObject_AssertTypeExact(self->si_index,&DeeInt_Type))
      return -1;
  tp_iter = Dee_TYPE(self->si_seq);
+#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
+ if ((!tp_iter->tp_seq || !tp_iter->tp_seq->tp_get) &&
+      !type_inherit_getitem(tp_iter)) {
+  return err_unimplemented_operator(tp_iter,OPERATOR_GETITEM);
+ }
+ ASSERT(tp_iter->tp_seq);
+ ASSERT(tp_iter->tp_seq->tp_get);
+#else
  for (;;) {
   if (tp_iter->tp_seq && tp_iter->tp_seq->tp_get)
       break;
@@ -314,6 +331,7 @@ seqiterator_init(SeqIterator *__restrict self,
    return -1;
   }
  } 
+#endif
  self->si_getitem = tp_iter->tp_seq->tp_get;
  self->si_size    = DeeObject_SizeObject(self->si_seq);
  if unlikely(!self->si_size) return -1;
@@ -515,9 +533,10 @@ seq_iterself(DeeObject *__restrict self) {
  /* To prevent recursion, we must manually search for the proper
   * callback in order to check if it isn't `seq_getitem' / `seq_size'. */
  while (tp_iter != &DeeSeq_Type) {
-  if (tp_iter->tp_seq) {
-   if (tp_iter->tp_seq->tp_size) found |= 1;
-   if (tp_iter->tp_seq->tp_get)  found |= 2;
+  struct type_seq *seq;
+  if ((seq = tp_iter->tp_seq) != NULL) {
+   if (seq->tp_size && seq->tp_size != &seq_size)  found |= 1;
+   if (seq->tp_get && seq->tp_get != &seq_getitem) found |= 2;
    if (found == (1|2)) {
     /* Yes, this one's OK! */
     DREF SeqIterator *result;
@@ -527,13 +546,19 @@ seq_iterself(DeeObject *__restrict self) {
     result->si_getitem = tp_iter->tp_seq->tp_get;
     if unlikely(!result->si_getitem) {
      tp_iter = Dee_TYPE(self);
-     while (!tp_iter->tp_seq && !tp_iter->tp_seq->tp_get)
+     /* TODO: Make use of operator inheritance. */
+     while (!tp_iter->tp_seq &&
+           (!tp_iter->tp_seq->tp_get ||
+             tp_iter->tp_seq->tp_get == &seq_getitem))
              tp_iter = DeeType_Base(tp_iter);
      result->si_getitem = tp_iter->tp_seq->tp_get;
     }
     if unlikely(!tp_iter->tp_seq->tp_size) {
      tp_iter = Dee_TYPE(self);
-     while (!tp_iter->tp_seq && !tp_iter->tp_seq->tp_size)
+     /* TODO: Make use of operator inheritance. */
+     while (!tp_iter->tp_seq &&
+           (!tp_iter->tp_seq->tp_size ||
+             tp_iter->tp_seq->tp_size == &seq_size))
              tp_iter = DeeType_Base(tp_iter);
     }
     /* Figure out the size of the sequence. */
@@ -853,17 +878,18 @@ seq_iterator_get(DeeTypeObject *__restrict self) {
      return_reference_(&DeeIterator_Type);
  iter = self,found = 0;
  do {
+  struct type_seq *seq;
   ASSERT(iter);
-  if (iter->tp_seq) {
+  if ((seq = iter->tp_seq) != NULL) {
    /* If sub-classes override both the get+size operators, then our stub-version is used. */
-   if (iter->tp_seq->tp_get) found |= 1;
-   if (iter->tp_seq->tp_size) found |= 2;
+   if (seq->tp_get && seq->tp_get != &seq_getitem) found |= 1;
+   if (seq->tp_size && seq->tp_size != &seq_size) found |= 2;
    /* If any sub-class that isn't the sequence type itself implements
     * the iterator interface, then it should be responsible for providing
     * the `iterator' class member.
     * With that in mind, us being here probably indicates that such a member is
     * missing, meaning that we should fail and act as though there's no such field. */
-   if (iter->tp_seq->tp_iter_self) goto fail;
+   if (seq->tp_iter_self) goto fail;
   }
  } while ((iter = DeeType_Base(iter)) != &DeeSeq_Type);
  /* If we've found everything that's need to implement
@@ -1086,13 +1112,14 @@ seq_endswith(DeeObject *__restrict self,
  result = DeeSeq_EndsWith(self,elem,pred_eq);
  return unlikely(result < 0) ? NULL : DeeObject_NewRef(DeeBool_For(result));
 }
-PRIVATE int DCALL
-get_find_args(char const *__restrict name,
-              size_t argc, DeeObject **__restrict argv,
-              DeeObject **__restrict pelem,
-              DeeObject **__restrict ppred_eq,
-              size_t *__restrict pstart,
-              size_t *__restrict pend) {
+
+INTERN int DCALL
+get_sequence_find_args(char const *__restrict name,
+                       size_t argc, DeeObject **__restrict argv,
+                       DeeObject **__restrict pelem,
+                       DeeObject **__restrict ppred_eq,
+                       size_t *__restrict pstart,
+                       size_t *__restrict pend) {
  switch (argc) {
  case 1:
   *pelem    = argv[0];
@@ -1155,28 +1182,34 @@ seq_find(DeeObject *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq;
  dssize_t result; size_t start,end;
- if (get_find_args("find",argc,argv,&elem,&pred_eq,&start,&end))
-     return NULL;
+ if (get_sequence_find_args("find",argc,argv,&elem,&pred_eq,&start,&end))
+     goto err;
  result = DeeSeq_Find(self,start,end,elem,pred_eq);
- return unlikely(result == -2) ? NULL : DeeInt_NewSSize(result);
+ if unlikely(result == -2) goto err;
+ return DeeInt_NewSSize(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_rfind(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq;
  dssize_t result; size_t start,end;
- if (get_find_args("rfind",argc,argv,&elem,&pred_eq,&start,&end))
-     return NULL;
+ if (get_sequence_find_args("rfind",argc,argv,&elem,&pred_eq,&start,&end))
+     goto err;
  result = DeeSeq_RFind(self,start,end,elem,pred_eq);
- return unlikely(result == -2) ? NULL : DeeInt_NewSSize(result);
+ if unlikely(result == -2) goto err;
+ return DeeInt_NewSSize(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_index(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq;
  dssize_t result; size_t start,end;
- if (get_find_args("index",argc,argv,&elem,&pred_eq,&start,&end))
-     return NULL;
+ if (get_sequence_find_args("index",argc,argv,&elem,&pred_eq,&start,&end))
+     goto err;
  result = DeeSeq_Find(self,start,end,elem,pred_eq);
  if unlikely(result < 0) {
   if unlikely(result == -2) goto err;
@@ -1194,8 +1227,8 @@ seq_rindex(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq;
  dssize_t result; size_t start,end;
- if (get_find_args("rindex",argc,argv,&elem,&pred_eq,&start,&end))
-     return NULL;
+ if (get_sequence_find_args("rindex",argc,argv,&elem,&pred_eq,&start,&end))
+     goto err;
  result = DeeSeq_RFind(self,start,end,elem,pred_eq);
  if unlikely(result < 0) {
   if unlikely(result == -2) goto err;
@@ -1351,7 +1384,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_remove(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq; int result; size_t start,end;
- if (get_find_args("remove",argc,argv,&elem,&pred_eq,&start,&end))
+ if (get_sequence_find_args("remove",argc,argv,&elem,&pred_eq,&start,&end))
      return NULL;
  result = DeeSeq_Remove(self,start,end,elem,pred_eq);
  if unlikely(result < 0) return NULL;
@@ -1361,7 +1394,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_rremove(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq; int result; size_t start,end;
- if (get_find_args("rremove",argc,argv,&elem,&pred_eq,&start,&end))
+ if (get_sequence_find_args("rremove",argc,argv,&elem,&pred_eq,&start,&end))
      return NULL;
  result = DeeSeq_RRemove(self,start,end,elem,pred_eq);
  if unlikely(result < 0) return NULL;
@@ -1371,7 +1404,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_removeall(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq; size_t result; size_t start,end;
- if (get_find_args("removeall",argc,argv,&elem,&pred_eq,&start,&end))
+ if (get_sequence_find_args("removeall",argc,argv,&elem,&pred_eq,&start,&end))
      return NULL;
  result = DeeSeq_RemoveAll(self,start,end,elem,pred_eq);
  if unlikely(result == (size_t)-1) return NULL;

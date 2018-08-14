@@ -1128,10 +1128,7 @@ PRIVATE bool DCALL determine_isdst(DeeTimeObject *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-time_isdst(DeeTimeObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isdst"))
-     return NULL;
+time_isdst(DeeTimeObject *__restrict self) {
  return_bool(determine_isdst(self));
 }
 
@@ -1143,11 +1140,6 @@ PRIVATE struct type_method time_methods[] = {
           "Views of all available representation can also be generated "
           "using properties of the same names, meaning that this function "
           "could also be implemented using $__getattr__") },
-    { "isdst", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&time_isdst,
-      DOC("()->bool\n"
-          "Returns :true if DaylightSavingsTime is in active at @this time\n"
-          "Note that this implementation does not perform any special "
-          "handling no matter if daylight savings is active or not") },
     { "format", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&time_doformat,
       DOC("(string format)->string\n"
           "Format @this time object using a given strftime-style @format string") },
@@ -1403,6 +1395,11 @@ PRIVATE struct type_getset time_getsets[] = {
            ">print x;        // 2 days\n"
            ">print int(x);   // 2*24*60*60*1000*1000\n"
            ">print x.intval; // 2") },
+    { "isdst", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_isdst, NULL, NULL,
+      DOC("()->bool\n"
+          "Returns :true if DaylightSavingsTime is in active at @this time\n"
+          "Note that this implementation does not perform any special "
+          "handling no matter if daylight savings is active or not") },
     { "timepart",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_timepart_get,
       (int(DCALL *)(DeeObject *__restrict))&time_timepart_del,
