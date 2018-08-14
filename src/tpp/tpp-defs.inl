@@ -360,7 +360,7 @@ HAS_EXTENSION_IF(tpp_token_collon_collon,         TPPLexer_Current->l_extokens&T
 #if !defined(TPP_CONFIG_EXTENSION_ALTMAC) || TPP_CONFIG_EXTENSION_ALTMAC
 HAS_EXTENSION_IF(tpp_macro_calling_conventions,   HAVE_EXTENSION_ALTMAC)
 #endif
-HAS_EXTENSION_IF(tpp_strict_whitespace,           (TPPLexer_Current->l_flags&TPPLEXER_FLAG_KEEP_ARG_WHITESPACE))
+HAS_EXTENSION_IF(tpp_strict_whitespace,           HAVE_EXTENSION_ARGSPACE)
 HAS_EXTENSION_IF(tpp_strict_integer_overflow,     TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_OVERFLOW)) ||
                                                   TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_CLAMPED)))
 HAS_EXTENSION_IF(tpp_support_ansi_characters,     0) /* TODO: (Re-)add support for this. */
@@ -545,6 +545,9 @@ EXTENSION(EXT_ALTMAC,           "alternative-macro-parenthesis",TPP_CONFIG_EXTEN
 #endif
 #ifndef TPP_CONFIG_EXTENSION_RECMAC
 EXTENSION(EXT_RECMAC,           "macro-recursion",              TPP_CONFIG_EXTENSION_RECMAC_DEFAULT)
+#endif
+#ifndef TPP_CONFIG_EXTENSION_ARGSPACE
+EXTENSION(EXT_ARGSPACE,         "macro-argument-whitespace",    TPP_CONFIG_EXTENSION_ARGSPACE_DEFAULT)
 #endif
 #ifndef TPP_CONFIG_EXTENSION_BININTEGRAL
 EXTENSION(EXT_BININTEGRAL,      "binary-literals",              TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)

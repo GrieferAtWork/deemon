@@ -78,6 +78,7 @@
 /* #define TPP_CONFIG_EXTENSION_STR_E             1 = 1 */
 /* #define TPP_CONFIG_EXTENSION_ALTMAC            1 = 1 */
 /* #define TPP_CONFIG_EXTENSION_RECMAC            1 = 0 */
+/* #define TPP_CONFIG_EXTENSION_ARGSPACE          1 = 0 */
 /* #define TPP_CONFIG_EXTENSION_BININTEGRAL       1 = 1 */
 /* #define TPP_CONFIG_EXTENSION_MSVC_PRAGMA       1 = 1 */
 /* #define TPP_CONFIG_EXTENSION_STRINGOPS         1 = 1 */
@@ -598,7 +599,9 @@ struct TPPMacroFile {
 #define TPP_MACROFILE_FLAG_FUNC_VARIADIC     0x00000100 /* The last argument of the function is variadic. */
 #define TPP_MACROFILE_FLAG_FUNC_SELFEXPAND   0x00000200 /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
                                                          * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion') */
-#define TPP_MACROFILE_FLAG_OWNSNAME          0x00000400 /* The associated ":f_name" member is owned. */
+#define TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC   0x00000400 /* When set, keep whitespace surrounding macro arguments during invication.
+                                                         * WARNING: Also affects recursive macro expansion. */
+#define TPP_MACROFILE_FLAG_OWNSNAME          0x00000800 /* The associated ":f_name" member is owned. */
 #define TPP_MACROFILE_MASK_FUNC_STARTCH      0x00003000 /* The character that should be recognized as start of an argument list (one of the macros below). */
 #define TPP_MACROFILE_FUNC_START_LPAREN      0x00000000 /* `(...)' */
 #define TPP_MACROFILE_FUNC_START_LBRACKET    0x00001000 /* `[...]' */
@@ -1442,7 +1445,7 @@ TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexe
 #define TPPLEXER_FLAG_MESSAGE_LOCATION       0x00004000 /* Print the file+line location in messages from `#pragma message'. */
 #define TPPLEXER_FLAG_MESSAGE_NOLINEFEED     0x00008000 /* Don't print a linefeed following the user-provided message in `#pragma message'. */
 #define TPPLEXER_FLAG_INCLUDESTRING          0x00010000 /* Parse strings as #include strings (without \-escape sequences). (WARNING: system-style (<...>) strings must be handled manually by the caller) */
-#define TPPLEXER_FLAG_KEEP_ARG_WHITESPACE    0x00020000 /* When set, keep whitespace surrounding macro arguments (WARNING: Also affects recursive macro expansion). */
+/*      TPPLEXER_FLAG_                       0x00020000  * */
 #define TPPLEXER_FLAG_NO_LEGACY_GUARDS       0x00040000 /* Don't recognize legacy #include-guards
                                                          * WARNING: Not setting this option may lead to whitespace and comments at the
                                                          *          start and end of a guarded file to not be emit on a second pass.
@@ -1471,7 +1474,7 @@ TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexe
 #define TPPLEXER_FLAG_PRAGMA_KEEPMASK \
        (TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE|TPPLEXER_FLAG_TERMINATE_STRING_LF\
        |TPPLEXER_FLAG_ASM_COMMENTS|TPPLEXER_FLAG_MESSAGE_LOCATION\
-       |TPPLEXER_FLAG_MESSAGE_NOLINEFEED|TPPLEXER_FLAG_KEEP_ARG_WHITESPACE\
+       |TPPLEXER_FLAG_MESSAGE_NOLINEFEED\
        |TPPLEXER_FLAG_NO_LEGACY_GUARDS|TPPLEXER_FLAG_WERROR\
        |TPPLEXER_FLAG_WSYSTEMHEADERS|TPPLEXER_FLAG_NO_DEPRECATED\
        |TPPLEXER_FLAG_MSVC_MESSAGEFORMAT|TPPLEXER_FLAG_NO_WARNINGS\

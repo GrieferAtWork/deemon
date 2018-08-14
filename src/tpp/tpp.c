@@ -643,6 +643,9 @@ do{ tok_t              _old_tok_id    = token.t_id; \
 #ifndef TPP_CONFIG_EXTENSION_RECMAC_DEFAULT
 #define TPP_CONFIG_EXTENSION_RECMAC_DEFAULT                  0
 #endif
+#ifndef TPP_CONFIG_EXTENSION_ARGSPACE_DEFAULT
+#define TPP_CONFIG_EXTENSION_ARGSPACE_DEFAULT                0
+#endif
 #ifndef TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT
 #define TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT             1
 #endif
@@ -834,6 +837,12 @@ do{ tok_t              _old_tok_id    = token.t_id; \
 #else
 #define NO_EXTENSION_RECMAC 1
 #define IF_CONFIG_EXTENSION_RECMAC(x,y) y
+#endif
+#if !defined(TPP_CONFIG_EXTENSION_ARGSPACE) || TPP_CONFIG_EXTENSION_ARGSPACE
+#define IF_CONFIG_EXTENSION_ARGSPACE(x,y) x
+#else
+#define NO_EXTENSION_ARGSPACE 1
+#define IF_CONFIG_EXTENSION_ARGSPACE(x,y) y
 #endif
 #if !defined(TPP_CONFIG_EXTENSION_BININTEGRAL) || TPP_CONFIG_EXTENSION_BININTEGRAL
 #define IF_CONFIG_EXTENSION_BININTEGRAL(x,y) x
@@ -1137,6 +1146,11 @@ do{ tok_t              _old_tok_id    = token.t_id; \
 #define HAVE_EXTENSION_RECMAC            TPP_CONFIG_EXTENSION_RECMAC
 #else
 #define HAVE_EXTENSION_RECMAC            HAS(EXT_RECMAC)
+#endif
+#ifdef TPP_CONFIG_EXTENSION_ARGSPACE
+#define HAVE_EXTENSION_ARGSPACE          TPP_CONFIG_EXTENSION_ARGSPACE
+#else
+#define HAVE_EXTENSION_ARGSPACE          HAS(EXT_ARGSPACE)
 #endif
 #ifdef TPP_CONFIG_EXTENSION_BININTEGRAL
 #define HAVE_EXTENSION_BININTEGRAL       TPP_CONFIG_EXTENSION_BININTEGRAL
@@ -3989,7 +4003,8 @@ TPPFile_NewDefine(void) {
 #if !defined(NO_EXTENSION_ALTMAC)
 common_function_macro:
 #endif
-  if (HAVE_EXTENSION_RECMAC) macro_flags |= TPP_MACROFILE_FLAG_FUNC_SELFEXPAND;
+  if (HAVE_EXTENSION_RECMAC)   macro_flags |= TPP_MACROFILE_FLAG_FUNC_SELFEXPAND;
+  if (HAVE_EXTENSION_ARGSPACE) macro_flags |= TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC;
   break;
 #if !defined(NO_EXTENSION_ALTMAC)
  case '[': argend_token = ']',macro_flags = TPP_MACROFILE_KIND_FUNCTION|TPP_MACROFILE_FUNC_START_LBRACKET; goto common_call_extension;
@@ -7364,6 +7379,8 @@ create_block:
     if unlikely(!alloc_ifdef(block_mode)) goto seterr;
    } else {
     breakeob();
+    /* TODO: line-feeds skipped here should be emitted to the caller
+     *       when `TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF' is set. */
     if unlikely(!skip_pp_block() && tok < 0) goto err;
     result = tok;
     if (!result || result == KWD_else || result == KWD_elif) {
@@ -7449,6 +7466,8 @@ not_a_guard:
     /* Must skip this block now! */
 skip_block_and_parse:
     breakeob();
+    /* TODO: line-feeds skipped here should be emitted to the caller
+     *       when `TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF' is set. */
     if unlikely(!skip_pp_block()) goto err;
     /* In all cases, we can simply let the
      * default directive-handlers do the job! */
@@ -9306,10 +9325,11 @@ expand_function_macro(struct TPPFile *__restrict macro,
  struct TPPString *old_text;
  char *old_begin,*old_end,*old_pos;
  /* Enable all tokens to properly include _everything_ when expanding arguments. */
- CURRENT.l_flags |= TPPLEXER_FLAG_WANTCOMMENTS|
-                    TPPLEXER_FLAG_WANTSPACE|
-                    TPPLEXER_FLAG_WANTLF|
-                    TPPLEXER_FLAG_COMMENT_NOOWN_LF;
+ CURRENT.l_flags |= (TPPLEXER_FLAG_WANTCOMMENTS|
+                     TPPLEXER_FLAG_WANTSPACE|
+                     TPPLEXER_FLAG_WANTLF|
+                     TPPLEXER_FLAG_COMMENT_NOOWN_LF|
+                     TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF);
  /* We use explicit EOB by setting the `l_eob_file' field below! */
  CURRENT.l_flags &= ~(TPPLEXER_FLAG_NO_SEEK_ON_EOB);
  /* NOTE: The expansion implementation screws with the current lexer's
@@ -9358,7 +9378,7 @@ incback_slot_backup(struct incback_slot_t *__restrict self) {
  /* Backup and transfer one file into this include backup. */
  self->is_file = token.t_file; /* Inherit reference. */
  self->is_fpos = token.t_file->f_pos;
- token.t_file = token.t_file->f_prev;
+ token.t_file  = token.t_file->f_prev;
 #if TPP_CONFIG_DEBUG
  self->is_file->f_prev = NULL;
 #endif
@@ -9382,14 +9402,14 @@ incback_slot_restore(struct incback_slot_t *self) {
 }
 
 struct incback_t {
- size_t                 ib_morec;     /* Amount of additional backup slots. */
- size_t                 ib_morea;     /* Allocated amount of additional backup slots. */
- struct incback_slot_t *ib_morev;     /* [0..ib_morec][owned] Vector of additional backup slots. */
- char                  *ib_tok_begin; /* [1..1] Old `t_begin' pointer of the token. */
- char                  *ib_tok_end;   /* [1..1] Old `t_end' pointer of the token. */
- struct TPPKeyword     *ib_tok_kwd;   /* [1..1] Old `t_kwd' pointer of the token. */
- unsigned long          ib_tok_num;   /* Old token number. */
- char                  *ib_args_fpos; /* [1..1] Old `f_pos' pointer of the arguments file. */
+    size_t                 ib_morec;     /* Amount of additional backup slots. */
+    size_t                 ib_morea;     /* Allocated amount of additional backup slots. */
+    struct incback_slot_t *ib_morev;     /* [0..ib_morec][owned] Vector of additional backup slots. */
+    char                  *ib_tok_begin; /* [1..1] Old `t_begin' pointer of the token. */
+    char                  *ib_tok_end;   /* [1..1] Old `t_end' pointer of the token. */
+    struct TPPKeyword     *ib_tok_kwd;   /* [1..1] Old `t_kwd' pointer of the token. */
+    unsigned long          ib_tok_num;   /* Old token number. */
+    char                  *ib_args_fpos; /* [1..1] Old `f_pos' pointer of the arguments file. */
 };
 
 PRIVATE int TPPCALL
@@ -9587,7 +9607,7 @@ at_next_non_whitespace:
   *       the various macro arguments.
   */
  pushf();
- CURRENT.l_flags |= TPPLEXER_FLAG_NO_SEEK_ON_EOB;
+ CURRENT.l_flags |= (TPPLEXER_FLAG_NO_SEEK_ON_EOB);
  {
   int paren_recursion[4];
   struct argcache_t *argv,*arg_iter,*arg_last,*arg_end;
@@ -9852,7 +9872,7 @@ done_args:
    arg_iter->ac_offset_end   *= sizeof(char);
    arg_iter->ac_offset_begin += text_offset;
    arg_iter->ac_offset_end   += text_offset;
-   if (!(CURRENT.l_flags&TPPLEXER_FLAG_KEEP_ARG_WHITESPACE)) {
+   if (!(macro->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC)) {
     arg_iter->ac_begin = skip_whitespace_and_comments(arg_iter->ac_begin,arg_iter->ac_end);
     arg_iter->ac_end = skip_whitespace_and_comments_rev(arg_iter->ac_end,arg_iter->ac_begin);
    }
