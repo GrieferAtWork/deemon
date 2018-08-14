@@ -287,64 +287,76 @@ sseg_size(StringSegments *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 sseg_contains(StringSegments *__restrict self,
-              DeeObject *__restrict other) {
+              DeeStringObject *__restrict other) {
  DeeStringObject *str;
- void *other_str;
- if (DeeObject_AssertTypeExact(other,&DeeString_Type))
+ union dcharptr my_str,my_end,ot_str;
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeString_Type))
      goto err;
  str = self->s_str;
- /* TODO: Use common width */
- other_str = DeeString_AsWidth(other,DeeString_WIDTH(str));
- if unlikely(!other_str) goto err;
- if (WSTR_LENGTH(other_str) != self->s_siz) {
+ if (DeeString_WLEN(other) != self->s_siz) {
   size_t last_part,last_index;
-  if (WSTR_LENGTH(other_str) > self->s_siz)
+  if (DeeString_WLEN(other) > self->s_siz)
       goto do_return_false;
   last_part  = DeeString_WLEN(str);
   last_part %= self->s_siz;
-  if (WSTR_LENGTH(other_str) != last_part)
+  if (DeeString_WLEN(other) != last_part)
       goto do_return_false;
   last_index = DeeString_WLEN(str) - last_part;
-  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(str)) {
+  SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(str),
+                                          DeeString_WIDTH(other))) {
   CASE_WIDTH_1BYTE:
-   return_bool(MEMEQB(DeeString_STR8(str) + last_index,other_str,last_part));
+   my_str.cp8 = DeeString_As1Byte((DeeObject *)str);
+   ot_str.cp8 = DeeString_As1Byte((DeeObject *)other);
+   return_bool(MEMEQB(my_str.cp8 + last_index,ot_str.cp8,last_part));
   CASE_WIDTH_2BYTE:
-   return_bool(MEMEQW(DeeString_STR16(str) + last_index,other_str,last_part));
+   my_str.cp16 = DeeString_As2Byte((DeeObject *)str);
+   if unlikely(!my_str.cp16) goto err;
+   ot_str.cp16 = DeeString_As2Byte((DeeObject *)other);
+   if unlikely(!ot_str.cp16) goto err;
+   return_bool(MEMEQW(my_str.cp16 + last_index,ot_str.cp16,last_part));
   CASE_WIDTH_4BYTE:
-   return_bool(MEMEQL(DeeString_STR32(str) + last_index,other_str,last_part));
+   my_str.cp32 = DeeString_As4Byte((DeeObject *)str);
+   if unlikely(!my_str.cp32) goto err;
+   ot_str.cp32 = DeeString_As4Byte((DeeObject *)other);
+   if unlikely(!ot_str.cp32) goto err;
+   return_bool(MEMEQL(my_str.cp32 + last_index,ot_str.cp32,last_part));
   }
  }
- SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(str)) {
- {
-  uint8_t *iter,*end;
+ SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(str),
+                                         DeeString_WIDTH(other))) {
  CASE_WIDTH_1BYTE:
-  iter = DeeString_STR8(str);
-  end  = iter + WSTR_LENGTH(iter) - self->s_siz;
-  for (; iter <= end; iter += self->s_siz) {
-   if (MEMEQB(iter,other_str,self->s_siz))
+  my_str.cp8 = DeeString_As1Byte((DeeObject *)str);
+  ot_str.cp8 = DeeString_As1Byte((DeeObject *)other);
+  my_end.cp8 = my_str.cp8 + WSTR_LENGTH(my_str.cp8) - self->s_siz;
+  for (; my_str.cp8 <= my_end.cp8; my_str.cp8 += self->s_siz) {
+   if (MEMEQB(my_str.cp8,ot_str.cp8,self->s_siz))
        goto do_return_true;
   }
- } break;
- {
-  uint16_t *iter,*end;
+  break;
+
  CASE_WIDTH_2BYTE:
-  iter = DeeString_STR16(str);
-  end  = iter + WSTR_LENGTH(iter) - self->s_siz;
-  for (; iter <= end; iter += self->s_siz) {
-   if (MEMEQW(iter,other_str,self->s_siz))
+  my_str.cp16 = DeeString_As2Byte((DeeObject *)str);
+  if unlikely(!my_str.cp16) goto err;
+  ot_str.cp16 = DeeString_As2Byte((DeeObject *)other);
+  if unlikely(!ot_str.cp16) goto err;
+  my_end.cp16 = my_str.cp16 + WSTR_LENGTH(my_str.cp16) - self->s_siz;
+  for (; my_str.cp16 <= my_end.cp16; my_str.cp16 += self->s_siz) {
+   if (MEMEQW(my_str.cp16,ot_str.cp16,self->s_siz))
        goto do_return_true;
   }
- } break;
- {
-  uint32_t *iter,*end;
+  break;
+
  CASE_WIDTH_4BYTE:
-  iter = DeeString_STR32(str);
-  end  = iter + WSTR_LENGTH(iter) - self->s_siz;
-  for (; iter <= end; iter += self->s_siz) {
-   if (MEMEQL(iter,other_str,self->s_siz))
+  my_str.cp32 = DeeString_As4Byte((DeeObject *)str);
+  if unlikely(!my_str.cp32) goto err;
+  ot_str.cp32 = DeeString_As4Byte((DeeObject *)other);
+  if unlikely(!ot_str.cp32) goto err;
+  my_end.cp32 = my_str.cp32 + WSTR_LENGTH(my_str.cp32) - self->s_siz;
+  for (; my_str.cp32 <= my_end.cp32; my_str.cp32 += self->s_siz) {
+   if (MEMEQL(my_str.cp32,ot_str.cp32,self->s_siz))
        goto do_return_true;
   }
- } break;
+  break;
  }
 do_return_false:
  return_false;
