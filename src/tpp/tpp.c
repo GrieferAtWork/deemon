@@ -6340,15 +6340,19 @@ PUBLIC tok_t TPPCALL TPPLexer_YieldRaw(void) {
  assert(TPPLexer_Current);
  /* Check for special lexer state. */
 again:
+ file = token.t_file;
  if (CURRENT.l_flags&(TPPLEXER_FLAG_ERROR|TPPLEXER_FLAG_EOF_ON_PAREN)) {
   /* Refuse parsing more data if an error occurred. */
   if (CURRENT.l_flags&TPPLEXER_FLAG_ERROR) return TOK_ERR;
   assert(CURRENT.l_flags&TPPLEXER_FLAG_EOF_ON_PAREN);
   /* Refuse to return anything other than EOF when eof-on-paren is
    * turned on and the parenthesis recursion has dropped to ZERO(0). */
-  if (!CURRENT.l_eof_paren) { return tok = TOK_EOF; }
+  if (!CURRENT.l_eof_paren) {
+   if (file)
+       token.t_begin = token.t_end = file->f_pos;
+   return tok = TOK_EOF;
+  }
  }
- file = token.t_file;
  assert(file);
  iter = file->f_pos,end = file->f_end;
  /* Skip some leading wrapped linefeeds. */
@@ -8399,7 +8403,7 @@ create_int_file:
      TPPLexer_Yield();
     }
     if (tok == ')') TPPLexer_Yield();
-    else WARN(W_EXPECTED_RPAREN),tok = 0; /* NOTE: Set tok to 0 to force a reload below. */
+    else WARN(W_EXPECTED_RPAREN)/*,tok = 0*/; /* NOTE: Set tok to 0 to force a reload below. */
    }
    if (!pragma_error) token.t_file->f_pos = old_filepos; /* Restore the old file pointer. */
    popeof();
@@ -8409,7 +8413,7 @@ create_int_file:
    popf();
 #endif
    if (!pragma_error) TPPLexer_YieldPP(); /* Don't parse pragmas again to prevent infinite recursion. */
-   else if (!tok) goto again; /* If we managed to parse the pragma, continue parsing afterwards. */
+   else /*if (!tok)*/ goto again; /* If we managed to parse the pragma, continue parsing afterwards. */
    result = tok;
   } break;
 #endif
@@ -11677,8 +11681,10 @@ pragma_tpp_exec:
                         TPPLEXER_FLAG_WANTLF|
                         TPPLEXER_FLAG_NO_MACROS|
                         TPPLEXER_FLAG_NO_DIRECTIVES|
-                        TPPLEXER_FLAG_NO_BUILTIN_MACROS);
+                        TPPLEXER_FLAG_NO_BUILTIN_MACROS|
+                        TPPLEXER_FLAG_EOF_ON_PAREN);
    pusheof();
+   CURRENT.l_eof_paren;
    /* Yield everything from this file. */
    while (TPPLexer_Yield() > 0);
    popeof();
@@ -11692,6 +11698,8 @@ pragma_tpp_exec:
    assert(old_token_begin <= prev_file->f_end);
    assert(old_token_begin <= prev_file->f_pos);
    prev_file->f_pos = old_token_begin;
+   TPPLexer_PopFile();
+   assert(prev_file == token.t_file);
    TPPLexer_Yield();
   }
   return 1;
