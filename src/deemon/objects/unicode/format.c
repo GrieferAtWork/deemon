@@ -844,12 +844,50 @@ format_bytes_impl(struct formatter *__restrict self,
    }
    ++format_start;
   } else if (*format_start == ':') {
-   /* TODO: Format according to the format string (after converting it from LATIN-1 to UTF-8). */
-   print_error = DeeObject_Print(in_arg,printer,arg);
+   /* Format according to the format string. */
+   char *content_start = format_start + 1;
+   char *content_end = format_end;
+   char *content_iter;
+   /* Check if the format string contains additional format commands. */
+   content_iter = content_start;
+   for (; content_iter < content_end; ++content_iter) {
+    if (*content_iter == '{' || *content_iter == '}') {
+     /* Special format-string pre-processing is required. */
+     struct formatter inner_formatter;
+     struct unicode_printer format_string_printer = UNICODE_PRINTER_INIT;
+     DREF DeeObject *format_string;
+     inner_formatter.f_iter        = content_iter;
+     inner_formatter.f_end         = content_end;
+     inner_formatter.f_flush_start = content_start;
+     inner_formatter.f_seqiter     = self->f_seqiter;
+     inner_formatter.f_args        = self->f_args;
+     /* Format the format string, thus allowing it
+      * to contain text from input arguments. */
+     print_error = format_bytes_impl(&inner_formatter,
+                                    (dformatprinter)&unicode_printer_print,
+                                    (dformatprinter)&unicode_printer_print,
+                                     &format_string_printer);
+     self->f_seqiter = inner_formatter.f_seqiter;
+     if unlikely(print_error < 0) {
+      unicode_printer_fini(&format_string_printer);
+      goto err_arg;
+     }
+     format_string = unicode_printer_pack(&format_string_printer);
+     if unlikely(!format_string) goto err_arg;
+     /* Now use the generated format-string to format the input argument. */
+     print_error = DeeObject_PrintFormat(in_arg,printer,arg,format_string);
+     Dee_Decref(format_string);
+     goto check_print_error;
+    }
+   }
+   /* No pre-processing required -> Just format the object as it is right now! */
+   print_error = DeeObject_PrintFormatString(in_arg,printer,arg,content_start,
+                                            (size_t)(content_end - content_start));
   } else {
 print_normal:
    print_error = DeeObject_Print(in_arg,printer,arg);
   }
+check_print_error:
   Dee_Decref(in_arg);
   if unlikely(print_error < 0)
      goto err;
