@@ -142,8 +142,8 @@ global function encode(data, codec_name, errors = "strict") {
 	}
 	if (encoder is none) {
 		throw Error.ValueError(
-			"Cannot encode data using {}".
-			format({ codec_name }));
+			"Cannot encode data using {}"
+			.format({ codec_name }));
 	}
 	return encoder(data,errors);
 }

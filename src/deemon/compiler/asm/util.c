@@ -290,7 +290,7 @@ push_tuple_parts:
   }
   return 0;
  }
- if (DeeList_Check(value)) {
+ if (DeeList_CheckExact(value)) {
   size_t start,end; int temp;
   bool is_first_part = true;
   DeeList_LockRead(value);
