@@ -1,0 +1,39 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* CODEC PAGE: iso 8859-2:1999 to unicode */
+
+global cp =
+	"\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17"
+	"\20\21\22\23\24\25\26\27\30\31\32\e\34\35\36\37"
+	" !\"#$%&\'()*+,-./"
+	"0123456789:;<=>?"
+	"@ABCDEFGHIJKLMNO"
+	"PQRSTUVWXYZ[\\]^_"
+	"`abcdefghijklmno"
+	"pqrstuvwxyz{|}~\x7F"
+	"\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F"
+	"\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\x9B\x9C\x9D\x9E\x9F"
+	"\xA0\u0104\u02D8\u0141\xA4\u013D\u015A\xA7\xA8\u0160\u015E\u0164\u0179\xAD\u017D\u017B"
+	"\xB0\u0105\u02DB\u0142\xB4\u013E\u015B\u02C7\xB8\u0161\u015F\u0165\u017A\u02DD\u017E\u017C"
+	"\u0154\xC1\xC2\u0102\xC4\u0139\u0106\xC7\u010C\xC9\u0118\xCB\u011A\xCD\xCE\u010E"
+	"\u0110\u0143\u0147\xD3\xD4\u0150\xD6\xD7\u0158\u016E\xDA\u0170\xDC\xDD\u0162\xDF"
+	"\u0155\xE1\xE2\u0103\xE4\u013A\u0107\xE7\u010D\xE9\u0119\xEB\u011B\xED\xEE\u010F"
+	"\u0111\u0144\u0148\xF3\xF4\u0151\xF6\xF7\u0159\u016F\xFA\u0171\xFC\xFD\u0163\u02D9"
+;

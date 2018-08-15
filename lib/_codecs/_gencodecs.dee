@@ -41,11 +41,7 @@ function ParseUnicodeDefinitionsFile(lines) {
 			if (name is none) {
 				l = l.lstrip("#").lstrip().lower();
 				if (l.startswith("name:")) {
-					l = l[#"name:":].lstrip();
-					local name_end = 0;
-					while (name_end < #l && l.issymcont(name_end))
-						++name_end;
-					name = l[:name_end];
+					name = l[#"name:":].lstrip().rsstrip(" to unicode");
 				}
 			}
 			continue;
@@ -117,7 +113,7 @@ function load_from_path(path) {
 	session.CWD(path);
 	for (local line: session.LIST()) {
 		local filename = str line[line.rindex(" ")+1:];
-		if (filename.lower() in ["readme.txt"])
+		if (filename.lower() in ["readme.txt","datedversions"])
 			continue;
 		local data_filename = "data/{}".format({ filename });
 		local data;
@@ -133,6 +129,11 @@ function load_from_path(path) {
 		if (name is none)
 			name = filename.partition(".")[0].lower();
 		local codec_shortname = name.partition("_")[0];
+		if (codec_shortname.startswith("iso/iec "))
+			codec_shortname = "iso"+codec_shortname[#"iso/iec ":];
+		if (codec_shortname.startswith("iso "))
+			codec_shortname = "iso"+codec_shortname[#"iso ":];
+		codec_shortname = codec_shortname.partition(":")[0].strip();
 		local codec_filename = "{}.dee".format({ codec_shortname });
 		if (!fs.stat.exists(codec_filename)) {
 			if (text !is none) {
@@ -151,6 +152,7 @@ load_from_path("/Public/MAPPINGS/VENDORS/MICSFT/PC");
 load_from_path("/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS");
 load_from_path("/Public/MAPPINGS/VENDORS/NEXT");
 //load_from_path("/Public/MAPPINGS/VENDORS/MICSFT/WindowsBestFit");
+load_from_path("/Public/MAPPINGS/ISO8859");
 #endif
 
 

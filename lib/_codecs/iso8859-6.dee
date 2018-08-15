@@ -1,0 +1,39 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* CODEC PAGE: iso 8859-6:1999 to unicode */
+
+global cp =
+	"\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17"
+	"\20\21\22\23\24\25\26\27\30\31\32\e\34\35\36\37"
+	" !\"#$%&\'()*+,-./"
+	"0123456789:;<=>?"
+	"@ABCDEFGHIJKLMNO"
+	"PQRSTUVWXYZ[\\]^_"
+	"`abcdefghijklmno"
+	"pqrstuvwxyz{|}~\x7F"
+	"\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F"
+	"\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\x9B\x9C\x9D\x9E\x9F"
+	"\xA0\0\0\0\xA4\0\0\0\0\0\0\0\u060C\xAD\0\0"
+	"\0\0\0\0\0\0\0\0\0\0\0\u061B\0\0\0\u061F"
+	"\0\u0621\u0622\u0623\u0624\u0625\u0626\u0627\u0628\u0629\u062A\u062B\u062C\u062D\u062E\u062F"
+	"\u0630\u0631\u0632\u0633\u0634\u0635\u0636\u0637\u0638\u0639\u063A\0\0\0\0\0"
+	"\u0640\u0641\u0642\u0643\u0644\u0645\u0646\u0647\u0648\u0649\u064A\u064B\u064C\u064D\u064E\u064F"
+	"\u0650\u0651\u0652\0\0\0\0\0\0\0\0\0\0\0\0\0"
+;

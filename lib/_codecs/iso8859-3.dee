@@ -1,0 +1,39 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* CODEC PAGE: iso/iec 8859-3:1999 to unicode */
+
+global cp =
+	"\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17"
+	"\20\21\22\23\24\25\26\27\30\31\32\e\34\35\36\37"
+	" !\"#$%&\'()*+,-./"
+	"0123456789:;<=>?"
+	"@ABCDEFGHIJKLMNO"
+	"PQRSTUVWXYZ[\\]^_"
+	"`abcdefghijklmno"
+	"pqrstuvwxyz{|}~\x7F"
+	"\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F"
+	"\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\x9B\x9C\x9D\x9E\x9F"
+	"\xA0\u0126\u02D8\xA3\xA4\0\u0124\xA7\xA8\u0130\u015E\u011E\u0134\xAD\0\u017B"
+	"\xB0\u0127\xB2\xB3\xB4\xB5\u0125\xB7\xB8\u0131\u015F\u011F\u0135\xBD\0\u017C"
+	"\xC0\xC1\xC2\0\xC4\u010A\u0108\xC7\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF"
+	"\0\xD1\xD2\xD3\xD4\u0120\xD6\xD7\u011C\xD9\xDA\xDB\xDC\u016C\u015C\xDF"
+	"\xE0\xE1\xE2\0\xE4\u010B\u0109\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF"
+	"\0\xF1\xF2\xF3\xF4\u0121\xF6\xF7\u011D\xF9\xFA\xFB\xFC\u016D\u015D\u02D9"
+;
