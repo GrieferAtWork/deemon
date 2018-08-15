@@ -697,6 +697,8 @@ function ls_modules_path(p,prefix) {
 	try {
 		for (local f: fs.dir(p)) {
 			local path = fs.joinpath(p,f);
+			if (f.startswith("_"))
+				continue; /* Hidden symbol (e.g. `_codecs') */
 			if (fs.stat.isdir(path)) {
 				/* Skip files found in /include-folders. */
 				if (f == "include")

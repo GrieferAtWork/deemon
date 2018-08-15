@@ -104,11 +104,11 @@ import file from deemon;
 import socket from net;
 import FTPSession from net.ftp;
 
-local session = FTPSession()
+local session = FTPSession(none,true)
 	.CONNECT("ftp.unicode.org")
 	.USER()
-	.PASS()
-;
+	.PASS();
+
 function load_from_path(path) {
 	session.CWD(path);
 	for (local line: session.LIST()) {

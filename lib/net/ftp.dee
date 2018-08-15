@@ -46,7 +46,7 @@ class FTPSession {
 	private m_verbose;
 
 	@"(socket sock=none)->FTPSession"
-	this(sock = none, verbose = true) {
+	this(sock = none, verbose = false) {
 		if (sock is none)
 			sock = socket("INET","STREAM","TCP");
 		m_socket = sock;
