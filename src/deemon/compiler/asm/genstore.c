@@ -399,6 +399,7 @@ INTERN int
                         struct symbol *__restrict src_sym,
                         DeeAstObject *__restrict ddi_ast) {
  int32_t symid;
+ ASSERT(asm_can_prefix_symbol(dst_sym));
 check_src_sym_class:
  switch (src_sym->sym_class) {
 
@@ -522,6 +523,7 @@ INTERN int
 (DCALL asm_gmov_symdst)(struct symbol *__restrict dst_sym,
                         DeeAstObject *__restrict src,
                         DeeAstObject *__restrict ddi_ast) {
+ ASSERT(asm_can_prefix_symbol(dst_sym));
  switch (src->ast_type) {
 
   /* The ASM_FUNCTION* instructions can be used with a prefix to
@@ -576,7 +578,7 @@ INTERN int
 (DCALL asm_gmov_symsrc)(DeeAstObject *__restrict dst,
                         struct symbol *__restrict src_sym,
                         DeeAstObject *__restrict ddi_ast) {
- if (dst->ast_type == AST_SYM)
+ if (dst->ast_type == AST_SYM && asm_can_prefix_symbol(dst->ast_sym))
      return asm_gmov_symsym(dst->ast_sym,src_sym,ddi_ast);
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gpush_symbol(src_sym,ddi_ast)) goto err;
@@ -603,7 +605,7 @@ again:
   dst_sym = dst->ast_sym;
 
   /* Special instructions that allow a symbol prefix to specify the target. */
-  if (!PUSH_RESULT)
+  if (!PUSH_RESULT && asm_can_prefix_symbol(dst_sym))
        return asm_gmov_symdst(dst_sym,src,dst);
 
 check_dst_sym_class:

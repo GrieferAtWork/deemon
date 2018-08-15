@@ -3993,9 +3993,10 @@ TPPFile_NewDefine(void) {
  assert(keyword_entry);
  curfile = token.t_file;
  /* Emit some warning about redefining stuff. */
- if (TPP_ISKEYWORD(token.t_id) && !TPP_ISUSERKEYWORD(token.t_id) &&
-    !WARN(W_REDEFINING_BUILTIN_KEYWORD,keyword_entry))
-     return NULL;
+ if (TPP_ISKEYWORD(token.t_id) && !TPP_ISUSERKEYWORD(token.t_id)) {
+  if (!WARN(W_REDEFINING_BUILTIN_KEYWORD,keyword_entry))
+       return NULL;
+ }
  while (SKIP_WRAPLF(curfile->f_pos,curfile->f_end));
  /* Check the character immediately after the name of the macro. */
  switch (*curfile->f_pos) {

@@ -1682,11 +1682,13 @@ INTDEF int DCALL asm_gmov_function(struct symbol *__restrict dst,
                                    DeeAstObject *__restrict function_ast,
                                    DeeAstObject *__restrict dst_warn_ast);
 
-/* Move the given symbol `src_sym' into `dst_sym'. */
+/* Move the given symbol `src_sym' into `dst_sym'.
+ * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
 INTDEF int DCALL asm_gmov_symsym(struct symbol *__restrict dst_sym,
                                  struct symbol *__restrict src_sym,
                                  DeeAstObject *__restrict ddi_ast);
-/* Store the expression in `src' into `dst'. */
+/* Store the expression in `src' into `dst'.
+ * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
 INTDEF int DCALL asm_gmov_symdst(struct symbol *__restrict dst_sym,
                                  DeeAstObject *__restrict src,
                                  DeeAstObject *__restrict ddi_ast);

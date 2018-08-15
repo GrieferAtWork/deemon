@@ -187,7 +187,14 @@ struct clobber_desc {
 PRIVATE struct clobber_desc const clobber_descs[] = {
     { "memory",   AST_FASSEMBLY_MEMORY },   /* Memory barrier. */
     { "reach",    AST_FASSEMBLY_REACH },    /* User-assembly can be reached through non-conventional means. */
-    { "noreturn", AST_FASSEMBLY_NORETURN }, /* User-assembly doesn't return normally (i.e. returns using `ret', or `throw'). */
+    { "noreturn", AST_FASSEMBLY_NORETURN }, /* User-assembly doesn't return normally (i.e. returns using `ret', or `throw').
+                                             * NOTE: This flag can also be used to hint to the optimizer
+                                             *       that a branch is not reachable:
+                                             * >> if (never_true()) {
+                                             * >>     __asm__("" : : : "noreturn");
+                                             * >>     print "This print statement can be optimized away";
+                                             * >> }
+                                             */
     { "sp",       AST_FASSEMBLY_CLOBSP },   /* Don't warn about miss-aligned stack pointers. */
     { "cc", 0 },                            /* Ignored... */
 };
@@ -240,6 +247,32 @@ LOCAL bool DCALL is_collon(void) {
 }
 
 
+#if 0
+struct tpp_string_printer {
+    struct TPPString *sp_string; /* [0..1][owned] String buffer. */
+    size_t            sp_length; /* Used string length. */
+};
+
+PRIVATE int TPPCALL
+tpp_string_printer_append(char const *__restrict buf, size_t bufsize,
+                          struct tpp_string_printer *__restrict self) {
+
+
+}
+
+
+PRIVATE /*REF*/struct TPPString *DCALL parse_brace_text(void) {
+ struct tpp_string_printer printer;
+ printer.sp_string = NULL;
+ printer.sp_length = 0;
+
+}
+#endif
+
+
+
+
+
 INTERN DREF DeeAstObject *DCALL ast_parse_asm(void) {
  struct ast_loc loc; bool is_asm_goto = false;
  uint16_t ast_flags = AST_FASSEMBLY_NORMAL;
@@ -283,6 +316,47 @@ with_paren:
  if (tok == TOK_STRING) {
   text = TPPLexer_ParseString();
   if unlikely(!text) goto err_flags;
+#if 0
+ } else if (tok == '{') {
+  /* TODO: Auto-format token-based source code:
+   *    >> __asm__({
+   *    >>    print @"Now throwing", sp
+   *    >>    push  %0
+   *    >>    print pop, nl
+   *    >>    throw %0
+   *    >> }  :
+   *    >>    : "P" (42)
+   *    >> );
+   * Same as:
+   *    >> __asm__(
+   *    >>    ".ddi ...\nprint @\"Now throwing\", sp\n"
+   *    >>    ".ddi ...\npush  %0\n"
+   *    >>    ".ddi ...\nprint pop, nl\n"
+   *    >>    ".ddi ...\nthrow %0\n"
+   *    >>    :
+   *    >>    : "P" (42));
+   * A DDI directive is automatically inserted at the start, as
+   * well as after every linefeed or `;' character, excluding
+   * multiple consecutive line-feeds or `;', as well some that
+   * may be trailing. - In other words: before every actual
+   * directive.
+   * Additionally, no DDI directives are inserted before instructions
+   * that start with a `.' token (i.e. pseudo instructions; aka.
+   * assembler directives). That way, the user may override DDI
+   * information for a single instruction at a time.
+   * Using this, debug information is automatically generated
+   * in associated with the locations of instructions, rather
+   * than leaving it up to the programmer to include DDI directives
+   * manually.
+   * Further special handling is done to prevent the generation
+   * of DDI directions inside of recursive () or [] pairs. However,
+   * recursive {} pairs will still produce DDi directives in order
+   * to allow for brace-like inner code object definitions.
+   * Also note that the generated DDI information will even contain
+   * column information for the exact positions of found instructions.
+   * Assembly is terminated once a `}' token matching the initial `{'
+   * is found. */
+#endif
  } else {
   if (WARN(W_EXPECTED_STRING_AFTER_ASM))
       goto err_flags;
