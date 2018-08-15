@@ -1,0 +1,133 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+@"({bytes...} lines)->string"
+@"({string...} lines)->string"
+@"Decode the lines of a unicode definitions file, and return "
+ "a 256-character string that can be used to decode that format"
+function ParseUnicodeDefinitionsFile(lines) {
+	import string from deemon;
+	local result = [0] * 256;
+	for (local l: lines) {
+		l = l.strip();
+		if (!l || l.startswith("#"))
+			continue;
+		try {
+			local chr,uni = l.scanf(" 0x%x 0x%x")...;
+			result[chr] = uni;
+		} catch (...) {
+			continue;
+		}
+	}
+	return string.fromseq(result);
+}
+
+function convert_txt(data) {
+	local pattern = 
+	"/* Copyright (c) 2018 Griefer@Work                                            *\n"
+	" *                                                                            *\n"
+	" * This software is provided 'as-is', without any express or implied          *\n"
+	" * warranty. In no event will the authors be held liable for any damages      *\n"
+	" * arising from the use of this software.                                     *\n"
+	" *                                                                            *\n"
+	" * Permission is granted to anyone to use this software for any purpose,      *\n"
+	" * including commercial applications, and to alter it and redistribute it     *\n"
+	" * freely, subject to the following restrictions:                             *\n"
+	" *                                                                            *\n"
+	" * 1. The origin of this software must not be misrepresented; you must not    *\n"
+	" *    claim that you wrote the original software. If you use this software    *\n"
+	" *    in a product, an acknowledgement in the product documentation would be  *\n"
+	" *    appreciated but is not required.                                        *\n"
+	" * 2. Altered source versions must be plainly marked as such, and must not be *\n"
+	" *    misrepresented as being the original software.                          *\n"
+	" * 3. This notice may not be removed or altered from any source distribution. *\n"
+	" */\n"
+	"\n"
+	"global codec_page =\n"
+	"{};\n";
+	local cp = ParseUnicodeDefinitionsFile(data.splitlines());
+	local text = pattern.format({
+		(for (local x: cp.segments(16))
+			"\t{!r}\n".format({ x })) + ...
+	});
+	return text;
+}
+
+#if defined(__MAIN__)
+
+import fs;
+import file from deemon;
+
+fs.chdir(fs.headof(__FILE__));
+function generate_codec(name,data) {
+	local text = convert_txt(data);
+	file.open("{}.dee".format({ name }),"w") << text;
+}
+generate_codec("cp1250",file.open("cp1250.txt").read());
+
+import socket from net;
+import FTPSession from net.ftp;
+
+local session = FTPSession()
+	.CONNECT("ftp.unicode.org")
+	.USER()
+	.PASS()
+;
+function load_from_file(filename) {
+	local name = filename.partition(".")[0].lower();
+	print "Loading",filename,"as",name;
+	local data = session.RETR(filename);
+	file.open(filename,"w").write(data);
+	generate_codec(name,data);
+}
+function load_from_path(path) {
+	session.CWD(path);
+	for (local line: session.LIST()) {
+		local filename = str line[line.rindex(" ")+1:];
+		if (fs.stat.exists(filename))
+			continue;
+		load_from_file(filename);
+	}
+}
+load_from_path("/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS");
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
