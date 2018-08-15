@@ -76,7 +76,6 @@ local function load_codec(codec_name) {
 			 * The filename of the codec module defines the name of the codec.
 			 */
 			local cpage = module.cp;
-			print #cpage;
 			if (cpage !is string from deemon || #cpage != 256) {
 				throw Error.ValueError(
 					"Invalid `cp' exported by {}".
@@ -89,10 +88,8 @@ local function load_codec(codec_name) {
 				 *       strings in a manner such as this one. */
 				local writer = file.writer();
 				for (local ch: s)
-					print writer: cpage[ch.ord()],;
-				/* TODO: file.writer isn't unicode-aware, yet.
-				 *       Once it is, the decode() here can go away! */
-				return writer.string.decode("utf-8",errors);
+					writer << cpage[ch.ord()];
+				return writer.string;
 			};
 		} catch (Error.AttributeError) {
 			decoder = module.decode;
@@ -102,6 +99,7 @@ local function load_codec(codec_name) {
 	} catch (Error.SystemError.FSError.FileNotFound) {
 		throw Error.ValueError("Unknown codec {}".format({ codec_name }));
 	}
+	print "HERE";
 	return (decoder,encoder);
 }
 

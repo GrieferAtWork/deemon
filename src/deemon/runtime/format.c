@@ -699,15 +699,15 @@ PUBLIC dssize_t DCALL
 Dee_FormatQuote8(dformatprinter printer, void *arg,
                  uint8_t const *__restrict text, size_t textlen,
                  unsigned int flags) {
- char encoded_text[4]; size_t encoded_text_size;
- dssize_t result = 0,temp; unsigned char ch;
+ char encoded_text[6]; size_t encoded_text_size;
+ dssize_t result = 0,temp; uint8_t ch;
  uint8_t const *iter,*end,*flush_start; char const *c_hex;
  end = (iter = flush_start = text)+textlen;
  c_hex = decimals[!(flags&FORMAT_QUOTE_FUPPERHEX)];
  encoded_text[0] = '\\';
  if (!(flags&FORMAT_QUOTE_FPRINTRAW)) print("\"",1);
  while (iter != end) {
-  ch = *(unsigned char *)iter;
+  ch = *iter;
   if (ch < 32    || ch >= 127  || ch == '\'' ||
       ch == '\"' || ch == '\\' ||
      (flags&FORMAT_QUOTE_FNOASCII)) {
@@ -728,6 +728,12 @@ Dee_FormatQuote8(dformatprinter printer, void *arg,
 default_ctrl:
      if (flags&FORMAT_QUOTE_FFORCEHEX) goto encode_hex;
 encode_oct:
+     if (iter + 1 < end) {
+      struct unitraits *desc = DeeUni_Descriptor(iter[1]);
+      if ((desc->ut_flags & UNICODE_FDECIMAL) &&
+          (desc->ut_digit < 8))
+           goto encode_hex;
+     }
      if (ch <= 0x07) {
       encoded_text[1] = tooct((ch & 0x07));
       encoded_text_size = 2;
@@ -767,14 +773,35 @@ special_control:
 /*default_nonascii:*/
     if (flags&FORMAT_QUOTE_FFORCEOCT) goto encode_oct;
 encode_hex:
+    if (iter + 1 < end) {
+     uint8_t next_ch = iter[1];
+     /* Prevent ambiguity in something like "\x12ff" supposed to be "\x12" "ff" by using "\u0012ff" */
+     if ((next_ch >= 'a' && next_ch <= 'f') ||
+         (next_ch >= 'A' && next_ch <= 'F')) {
+encode_uni:
+      encoded_text[1] = 'u';
+      encoded_text[2] = '0';
+      encoded_text[3] = '0';
+      encoded_text[4] = c_hex[(ch & 0xf0) >> 4];
+      encoded_text[5] = c_hex[ch&0xf];
+      encoded_text_size = 6;
+      goto print_encoded;
+     } else {
+      struct unitraits *desc;
+      desc = DeeUni_Descriptor(next_ch);
+      if ((desc->ut_flags & UNICODE_FDECIMAL) &&
+          (desc->ut_digit < 10))
+           goto encode_uni;
+     }
+    }
     encoded_text[1] = 'x';
-    encoded_text_size = 4;
     if (ch <= 0xf) {
-     encoded_text[2] = '0';
-     encoded_text[3] = c_hex[ch];
+     encoded_text[2] = c_hex[ch];
+     encoded_text_size = 3;
     } else {
      encoded_text[2] = c_hex[(ch & 0xf0) >> 4];
      encoded_text[3] = c_hex[ch&0xf];
+     encoded_text_size = 4;
     }
 print_encoded:
     print(encoded_text,encoded_text_size);
@@ -815,6 +842,12 @@ Dee_FormatQuote16(dformatprinter printer, void *arg,
 default_ctrl:
      if (flags&FORMAT_QUOTE_FFORCEHEX) goto encode_hex;
 encode_oct:
+     if (i + 1 < textlen) {
+      struct unitraits *desc = DeeUni_Descriptor(text[i + 1]);
+      if ((desc->ut_flags & UNICODE_FDECIMAL) &&
+          (desc->ut_digit < 8))
+           goto encode_hex;
+     }
      if (ch <= 0x07) {
       encoded_text[1] = tooct((ch & 0x0007));
       encoded_text_size = 2;
@@ -875,24 +908,28 @@ special_control:
 /*default_nonascii:*/
     if (flags&FORMAT_QUOTE_FFORCEOCT) goto encode_oct;
 encode_hex:
+    if (i + 1 < textlen) {
+     struct unitraits *desc;
+     uint16_t next_ch = text[i + 1];
+     if ((next_ch >= 'a' && next_ch <= 'f') ||
+         (next_ch >= 'A' && next_ch <= 'F'))
+          goto encode_uni;
+     desc = DeeUni_Descriptor(next_ch);
+     if ((desc->ut_flags & UNICODE_FDECIMAL) &&
+         (desc->ut_digit < 10))
+          goto encode_uni;
+    }
     if (ch <= 0xf) {
      encoded_text[1] = 'x';
-     encoded_text[2] = '0';
-     encoded_text[3] = c_hex[ch];
-     encoded_text_size = 4;
+     encoded_text[2] = c_hex[ch];
+     encoded_text_size = 3;
     } else if (ch <= 0xff) {
      encoded_text[1] = 'x';
      encoded_text[2] = c_hex[(ch & 0x00f0) >> 4];
      encoded_text[3] = c_hex[ch&0x000f];
      encoded_text_size = 4;
-    } else if (ch <= 0xfff) {
-     encoded_text[1] = 'u';
-     encoded_text[2] = '0';
-     encoded_text[3] = c_hex[(ch & 0x0f00) >> 8];
-     encoded_text[4] = c_hex[(ch & 0x00f0) >> 4];
-     encoded_text[5] = c_hex[ch&0x000f];
-     encoded_text_size = 6;
     } else {
+encode_uni:
      encoded_text[1] = 'u';
      encoded_text[2] = c_hex[(ch & 0xf000) >> 12];
      encoded_text[3] = c_hex[(ch & 0x0f00) >> 8];
@@ -939,6 +976,12 @@ Dee_FormatQuote32(dformatprinter printer, void *arg,
 default_ctrl:
      if (flags&FORMAT_QUOTE_FFORCEHEX) goto encode_hex;
 encode_oct:
+     if (i + 1 < textlen) {
+      struct unitraits *desc = DeeUni_Descriptor(text[i + 1]);
+      if ((desc->ut_flags & UNICODE_FDECIMAL) &&
+          (desc->ut_digit < 8))
+           goto encode_hex;
+     }
      if (ch <= 0x07) {
       encoded_text[1] = tooct((ch & 0x00000007));
       encoded_text_size = 2;
@@ -1054,63 +1097,33 @@ special_control:
 /*default_nonascii:*/
     if (flags&FORMAT_QUOTE_FFORCEOCT) goto encode_oct;
 encode_hex:
+    if (i + 1 < textlen) {
+     struct unitraits *desc;
+     uint32_t next_ch = text[i + 1];
+     if ((next_ch >= 'a' && next_ch <= 'f') ||
+         (next_ch >= 'A' && next_ch <= 'F'))
+          goto encode_uni;
+     desc = DeeUni_Descriptor(next_ch);
+     if ((desc->ut_flags & UNICODE_FDECIMAL) &&
+         (desc->ut_digit < 10))
+          goto encode_uni;
+    }
     if (ch <= 0xf) {
      encoded_text[1] = 'x';
-     encoded_text[2] = '0';
-     encoded_text[3] = c_hex[ch];
-     encoded_text_size = 4;
+     encoded_text[2] = c_hex[ch];
+     encoded_text_size = 3;
     } else if (ch <= 0xff) {
      encoded_text[1] = 'x';
      encoded_text[2] = c_hex[(ch & 0x000000f0) >> 4];
      encoded_text[3] = c_hex[ch&0x0000000f];
      encoded_text_size = 4;
-    } else if (ch <= 0xfff) {
-     encoded_text[1] = 'u';
-     encoded_text[2] = '0';
-     encoded_text[3] = c_hex[(ch & 0x00000f00) >> 8];
-     encoded_text[4] = c_hex[(ch & 0x000000f0) >> 4];
-     encoded_text[5] = c_hex[ch&0x0000000f];
-     encoded_text_size = 6;
-    } else if (ch <= 0xffff) {
+    } else encode_uni: if (ch <= 0xffff) {
      encoded_text[1] = 'u';
      encoded_text[2] = c_hex[(ch & 0x0000f000) >> 12];
      encoded_text[3] = c_hex[(ch & 0x00000f00) >> 8];
      encoded_text[4] = c_hex[(ch & 0x000000f0) >> 4];
      encoded_text[5] = c_hex[ch&0x0000000f];
      encoded_text_size = 6;
-    } else if (ch <= 0xfffff) {
-     encoded_text[1] = 'U';
-     encoded_text[2] = '0';
-     encoded_text[3] = '0';
-     encoded_text[4] = '0';
-     encoded_text[5] = c_hex[(ch & 0x000f0000) >> 16];
-     encoded_text[6] = c_hex[(ch & 0x0000f000) >> 12];
-     encoded_text[7] = c_hex[(ch & 0x00000f00) >> 8];
-     encoded_text[8] = c_hex[(ch & 0x000000f0) >> 4];
-     encoded_text[9] = c_hex[ch&0x0000000f];
-     encoded_text_size = 10;
-    } else if (ch <= 0xffffff) {
-     encoded_text[1] = 'U';
-     encoded_text[2] = '0';
-     encoded_text[3] = '0';
-     encoded_text[4] = c_hex[(ch & 0x00f00000) >> 20];
-     encoded_text[5] = c_hex[(ch & 0x000f0000) >> 16];
-     encoded_text[6] = c_hex[(ch & 0x0000f000) >> 12];
-     encoded_text[7] = c_hex[(ch & 0x00000f00) >> 8];
-     encoded_text[8] = c_hex[(ch & 0x000000f0) >> 4];
-     encoded_text[9] = c_hex[ch&0x0000000f];
-     encoded_text_size = 10;
-    } else if (ch <= 0xfffffff) {
-     encoded_text[1] = 'U';
-     encoded_text[2] = '0';
-     encoded_text[3] = c_hex[(ch & 0x0f000000) >> 24];
-     encoded_text[4] = c_hex[(ch & 0x00f00000) >> 20];
-     encoded_text[5] = c_hex[(ch & 0x000f0000) >> 16];
-     encoded_text[6] = c_hex[(ch & 0x0000f000) >> 12];
-     encoded_text[7] = c_hex[(ch & 0x00000f00) >> 8];
-     encoded_text[8] = c_hex[(ch & 0x000000f0) >> 4];
-     encoded_text[9] = c_hex[ch&0x0000000f];
-     encoded_text_size = 10;
     } else {
      encoded_text[1] = 'U';
      encoded_text[2] = c_hex[(ch & 0xf0000000) >> 28];
@@ -1164,6 +1177,14 @@ Dee_FormatQuote(dformatprinter printer, void *arg,
 default_ctrl:
      if (flags&FORMAT_QUOTE_FFORCEHEX) goto encode_hex;
 encode_oct:
+     if (text < textend) {
+      char const *new_text = text;
+      uint32_t next_ch = utf8_readchar((char const **)&new_text,textend);
+      struct unitraits *desc = DeeUni_Descriptor(next_ch);
+      if ((desc->ut_flags & UNICODE_FDECIMAL) &&
+          (desc->ut_digit < 8))
+           goto encode_hex;
+     }
      if (ch <= 0x07) {
       encoded_text[1] = tooct((ch & 0x00000007));
       encoded_text_size = 2;
@@ -1279,63 +1300,34 @@ special_control:
 /*default_nonascii:*/
     if (flags&FORMAT_QUOTE_FFORCEOCT) goto encode_oct;
 encode_hex:
+    if (text < textend) {
+     char const *new_text = text;
+     uint32_t next_ch = utf8_readchar((char const **)&new_text,textend);
+     struct unitraits *desc;
+     if ((next_ch >= 'a' && next_ch <= 'f') ||
+         (next_ch >= 'A' && next_ch <= 'F'))
+          goto encode_uni;
+     desc = DeeUni_Descriptor(next_ch);
+     if ((desc->ut_flags & UNICODE_FDECIMAL) &&
+         (desc->ut_digit < 10))
+          goto encode_uni;
+    }
     if (ch <= 0xf) {
      encoded_text[1] = 'x';
-     encoded_text[2] = '0';
-     encoded_text[3] = c_hex[ch];
-     encoded_text_size = 4;
+     encoded_text[2] = c_hex[ch];
+     encoded_text_size = 3;
     } else if (ch <= 0xff) {
      encoded_text[1] = 'x';
      encoded_text[2] = c_hex[(ch & 0x000000f0) >> 4];
      encoded_text[3] = c_hex[ch&0x0000000f];
      encoded_text_size = 4;
-    } else if (ch <= 0xfff) {
-     encoded_text[1] = 'u';
-     encoded_text[2] = '0';
-     encoded_text[3] = c_hex[(ch & 0x00000f00) >> 8];
-     encoded_text[4] = c_hex[(ch & 0x000000f0) >> 4];
-     encoded_text[5] = c_hex[ch&0x0000000f];
-     encoded_text_size = 6;
-    } else if (ch <= 0xffff) {
+    } else encode_uni: if (ch <= 0xffff) {
      encoded_text[1] = 'u';
      encoded_text[2] = c_hex[(ch & 0x0000f000) >> 12];
      encoded_text[3] = c_hex[(ch & 0x00000f00) >> 8];
      encoded_text[4] = c_hex[(ch & 0x000000f0) >> 4];
      encoded_text[5] = c_hex[ch&0x0000000f];
      encoded_text_size = 6;
-    } else if (ch <= 0xfffff) {
-     encoded_text[1] = 'U';
-     encoded_text[2] = '0';
-     encoded_text[3] = '0';
-     encoded_text[4] = '0';
-     encoded_text[5] = c_hex[(ch & 0x000f0000) >> 16];
-     encoded_text[6] = c_hex[(ch & 0x0000f000) >> 12];
-     encoded_text[7] = c_hex[(ch & 0x00000f00) >> 8];
-     encoded_text[8] = c_hex[(ch & 0x000000f0) >> 4];
-     encoded_text[9] = c_hex[ch&0x0000000f];
-     encoded_text_size = 10;
-    } else if (ch <= 0xffffff) {
-     encoded_text[1] = 'U';
-     encoded_text[2] = '0';
-     encoded_text[3] = '0';
-     encoded_text[4] = c_hex[(ch & 0x00f00000) >> 20];
-     encoded_text[5] = c_hex[(ch & 0x000f0000) >> 16];
-     encoded_text[6] = c_hex[(ch & 0x0000f000) >> 12];
-     encoded_text[7] = c_hex[(ch & 0x00000f00) >> 8];
-     encoded_text[8] = c_hex[(ch & 0x000000f0) >> 4];
-     encoded_text[9] = c_hex[ch&0x0000000f];
-     encoded_text_size = 10;
-    } else if (ch <= 0xfffffff) {
-     encoded_text[1] = 'U';
-     encoded_text[2] = '0';
-     encoded_text[3] = c_hex[(ch & 0x0f000000) >> 24];
-     encoded_text[4] = c_hex[(ch & 0x00f00000) >> 20];
-     encoded_text[5] = c_hex[(ch & 0x000f0000) >> 16];
-     encoded_text[6] = c_hex[(ch & 0x0000f000) >> 12];
-     encoded_text[7] = c_hex[(ch & 0x00000f00) >> 8];
-     encoded_text[8] = c_hex[(ch & 0x000000f0) >> 4];
-     encoded_text[9] = c_hex[ch&0x0000000f];
-     encoded_text_size = 10;
     } else {
      encoded_text[1] = 'U';
      encoded_text[2] = c_hex[(ch & 0xf0000000) >> 28];
