@@ -1032,6 +1032,7 @@ struct assembler_state {
 #define ASM_OP_PUSH          OPNAME1('P')         /* Input operand:  Same as `nEmTiTmTfracCseglTTFFTcI64N64SR' (All operands accepted by the `push' instruction)
                                                    * Output operand: Same as `eglCsS' (All operands accepted by the `pop' instruction)
                                                    * In/out operand: Same as output operand (All operands accepted by both the `push' and `pop' instructions) */
+#define ASM_OP_ANYTHING      OPNAME1('x')         /* Any kind of operand (only really meaningful for artificial dependencies). */
 
 #define OPTION_MODE_UNDEF    0
 #define OPTION_MODE_INPUT    1
@@ -1143,6 +1144,7 @@ unknown_encoding:
   break;
 
  case ASM_OP_ABSSTACK:
+abs_stack_any:
   if ((mode == OPTION_MODE_INOUT || mode == OPTION_MODE_INPUT) &&
        ast->ast_type == AST_SYM) {
    while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
@@ -1586,6 +1588,15 @@ write_regular_local:
   if (!result) goto err;
   if (result != ITER_DONE) break;
   goto next_option;
+
+ case ASM_OP_ANYTHING:
+  result = get_assembly_formatter_oprepr(ast,"nEMTiTmTfracCseglTTFFI64N64CaQsQm",
+                                         mode|OPTION_MODE_TRY,
+                                         cleanup,init_state);
+  if (!result) goto err;
+  if (result != ITER_DONE) break;
+  /* Fallback: use the stack to pass the value. */
+  goto abs_stack_any;
 
   /* Continue reading in the option name. */
  default: goto cont_option;

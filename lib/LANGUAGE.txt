@@ -1554,7 +1554,20 @@ asm_parse_operands(kind) ::= (
 		 *    - Whitespace characters, or a `,' character marks an
 		 *      explicit split between different operand encoding
 		 *      options, thus preventing ambiguity between possible
-		 *      encodings. */
+		 *      encodings.
+		 *    - The operand encoding options `x' is allowed for any
+		 *      kind of expression, and may be used to create artificial
+		 *      dependencies:
+		 *   >> __asm__("" : "+x" (foo));
+		 *      As far as the compiler is concerned, this piece of code
+		 *      read from & writes to an expression `foo', meaning that
+		 *     `foo' cannot be optimized away as a constant, or be deleted
+		 *      when not used otherwise.
+		 *   >> __asm__("<code>" : "+x" (foo[6]));
+		 *      LOAD(UNDEFINED_01 = foo.operator getitem(6))
+		 *      <code>
+		 *      STORE(foo.operator setitem(6,UNDEFINED_01))
+		 */
 		(<TOK_STRING>...)
 		/* The actual operand expression. */
 		'(' ast_parse_expression ')'
@@ -1646,7 +1659,27 @@ ast_parse_asm ::= (
 		['_'##...]##'goto'##['_'##...]
 	)...]
 	'('
-		DDI(<TOK_STRING>...) /* The assembly text (implementation-specific) */
+		(
+			/* The assembly text (implementation-specific) */
+			DDI(<TOK_STRING>...) |
+
+			/* A different way of writing assembly is by writing the text
+			 * that would otherwise go into a string inside of braces.
+			 * If this spelling is used, the compiler is allowed to attempt
+			 * to automatically insert alignment & debug directives/instructions
+			 * in order to encode the exact source locations of written instructions.
+			 * While the standard does not specify an exact format for assembly,
+			 * when written, the ending `}' token is the one matching the opening
+			 * `{' token, not accounting for `{' and `}' characters found inside of
+			 * strings or comments (in case the implementation uses strings, or allows
+			 * comments inside of assembly text)
+			 * Even if the implementation doesn't support assembly representation,
+			 * empty assembly text (after stripping spaces and line-feeds),
+			 * `__asm__({  })' should still act the same as `__asm__("")', meaning
+			 * that it must be allowed, and act as a carrier for tags, as well as
+			 * any possible side-effect caused by operands. */
+			DDI('{') [ * ...] '}'
+		)
 		/* When a `:' appears at this point, the assembly text must be
 		 * formatted prior to being interpreted as assembly.
 		 * For the format syntax, see RULE `assembly_format'

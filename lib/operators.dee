@@ -127,16 +127,6 @@ function getc(self) -> self.operator getc();
 function ungetc(self,c) -> self.operator ungetc(c);
 function putc(self,c) -> self.operator putc(c);
 
-
-
-/* Some helper macros to get proper debug infomation in inline assembly. */
-#define S2(...) #__VA_ARGS__
-#define S(...)  S2(__VA_ARGS__)
-#define L       .ddi __LINE__;
-#define ASM{...} __asm__ pack S2(__VA_ARGS__)
-
-
-
 /* Implementation-specific functions for ambiguous operator calls.
  * An implementation is required to provide these, but have them
  * invoke the (overridable) regular operators exported from this
@@ -144,81 +134,105 @@ function putc(self,c) -> self.operator putc(c);
 
 @"pos(a) or add(a,b)"
 function __pooad(a,b...) {
-	ASM {
-L		push   arg @a
-L		push   cmp eq, #arg @b, $0
-L		jf     pop, 1f
-L		push   call global @pos, #1
-L		ret    pop
-L	.adjstack 1
-L	1:	unpack arg @b, #1
-L		push   call global @add, #2
-L		ret    pop
-	};
+	__asm__({
+		push   arg @a
+		push   cmp eq, #arg @b, $0
+		jf     pop, 1f
+		push   call global @pos, #1
+		ret    pop
+	.adjstack 1
+1:		unpack arg @b, #1
+		push   call global @add, #2
+		ret    pop
+	}	:
+		: "x" (a)
+		, "x" (b)
+		: "noreturn"
+	);
 }
 
 @"neg(a) or sub(a,b)"
 function __neosb(a,b...) {
-	ASM {
-L		push   arg @a
-L		push   cmp eq, #arg @b, $0
-L		jf     pop, 1f
-L		push   call global @neg, #1
-L		ret    pop
-L	.adjstack 1
-L	1:	unpack arg @b, #1
-L		push   call global @sub, #2
-L		ret    pop
-	};
+	__asm__({
+		push   arg @a
+		push   cmp eq, #arg @b, $0
+		jf     pop, 1f
+		push   call global @neg, #1
+		ret    pop
+	.adjstack 1
+1:		unpack arg @b, #1
+		push   call global @sub, #2
+		ret    pop
+	}	:
+		: "x" (a)
+		, "x" (b)
+		: "noreturn"
+	);
 }
 
 @"getitem(seq,index) or setitem(seq,index,opt)"
 function __giosi(seq,index,opt...) {
-	ASM {
-L		push   arg @seq
-L		push   arg @index
-L		push   cmp eq, #arg @opt, $0
-L		jf     pop, 1f
-L		push   call global @getitem, #2
-L		ret    pop
-L	.adjstack 2
-L	1:	unpack arg @opt, #1
-L		push   call global @setitem, #3
-L		ret    pop
-	};
+	__asm__({
+		push   arg @seq
+		push   arg @index
+		push   cmp eq, #arg @opt, $0
+		jf     pop, 1f
+		push   call global @getitem, #2
+		ret    pop
+	.adjstack 2
+1:		unpack arg @opt, #1
+		push   call global @setitem, #3
+		ret    pop
+	}	:
+		: "x" (seq)
+		, "x" (index)
+		, "x" (opt)
+		: "noreturn"
+	);
 }
 
 @"getrange(seq,begin,end) or setrange(seq,begin,end,opt)"
 function __grosr(seq,begin,end,opt...) {
-	ASM {
-L		push   arg @seq
-L		push   arg @begin
-L		push   arg @end
-L		push   cmp eq, #arg @opt, $0
-L		jf     pop, 1f
-L		push   call global @getrange, #3
-L		ret    pop
-L	.adjstack 3
-L	1:	unpack arg @opt, #1
-L		push   call global @setrange, #4
-L		ret    pop
-	};
+	__asm__({
+		push   arg @seq
+		push   arg @begin
+		push   arg @end
+		push   cmp eq, #arg @opt, $0
+		jf     pop, 1f
+		push   call global @getrange, #3
+		ret    pop
+	.adjstack 3
+1:		unpack arg @opt, #1
+		push   call global @setrange, #4
+		ret    pop
+	}	:
+		: "x" (seq)
+		, "x" (begin)
+		, "x" (end)
+		, "x" (opt)
+		: "noreturn"
+	);
 }
 
 @"getattr(obj,attr) or setattr(obj,attr,opt)"
 function __gaosa(obj,attr,opt...) {
-	ASM {
-L		push   arg @obj
-L		push   arg @attr
-L		push   cmp eq, #arg @opt, $0
-L		jf     pop, 1f
-L		push   call global @getattr, #2
-L		ret    pop
-L	.adjstack 2
-L	1:	unpack arg @opt, #1
-L		push   call global @setattr, #3
-L		ret    pop
-	};
+	__asm__({
+		push   arg @obj
+		push   arg @attr
+		push   cmp eq, #arg @opt, $0
+		jf     pop, 1f
+		push   call global @getattr, #2
+		ret    pop
+	.adjstack 2
+1:		unpack arg @opt, #1
+		push   call global @setattr, #3
+		ret    pop
+	}	:
+		: "x" (obj)
+		, "x" (attr)
+		, "x" (opt)
+		: "noreturn"
+	);
 }
 
 

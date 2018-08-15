@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_COMPILER_LEXER_ASM_C 1
 
 #include <deemon/api.h>
+#include <deemon/format.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
@@ -247,25 +248,188 @@ LOCAL bool DCALL is_collon(void) {
 }
 
 
-#if 0
+#if 1
 struct tpp_string_printer {
     struct TPPString *sp_string; /* [0..1][owned] String buffer. */
     size_t            sp_length; /* Used string length. */
 };
 
-PRIVATE int TPPCALL
-tpp_string_printer_append(char const *__restrict buf, size_t bufsize,
-                          struct tpp_string_printer *__restrict self) {
-
-
+PRIVATE int
+(TPPCALL tpp_string_printer_append)(char const *__restrict buf, size_t bufsize,
+                                    struct tpp_string_printer *__restrict self) {
+ struct TPPString *string;
+ size_t alloc_size;
+ ASSERT(self);
+ ASSERT(buf || !bufsize);
+ if ((string = self->sp_string) == NULL) {
+  /* Make sure not to allocate a string when the used length remains ZERO.
+   * >> Must be done to assure the expectation of `if(sp_length == 0) sp_string == NULL' */
+  if unlikely(!bufsize) return 0;
+  /* Allocate the initial string. */
+  alloc_size = 8;
+  while (alloc_size < bufsize) alloc_size *= 2;
+alloc_again:
+  string = (struct TPPString *)Dee_TryMalloc(offsetof(struct TPPString,s_text)+
+                                            (alloc_size + 1)*sizeof(char));
+  if unlikely(!string) {
+   if (alloc_size != bufsize) { alloc_size = bufsize; goto alloc_again; }
+   if (Dee_CollectMemory(offsetof(struct TPPString,s_text)+
+                        (alloc_size+1)*sizeof(char))) goto alloc_again;
+   return -1;
+  }
+  self->sp_string = string;
+  string->s_size = alloc_size;
+  memcpy(string->s_text,buf,bufsize*sizeof(char));
+  self->sp_length = bufsize;
+  goto done;
+ }
+ alloc_size = string->s_size;
+ ASSERT(alloc_size >= self->sp_length);
+ alloc_size -= self->sp_length;
+ if unlikely(alloc_size < bufsize) {
+  size_t min_alloc = self->sp_length+bufsize;
+  alloc_size = (min_alloc+63) & ~63;
+realloc_again:
+  string = (struct TPPString *)Dee_TryRealloc(string,offsetof(struct TPPString,s_text)+
+                                             (alloc_size + 1)*sizeof(char));
+  if unlikely(!string) {
+   string = self->sp_string;
+   if (alloc_size != min_alloc) { alloc_size = min_alloc; goto realloc_again; }
+   if (Dee_CollectMemory(offsetof(struct TPPString,s_text)+
+                        (alloc_size+1)*sizeof(char)))
+       goto realloc_again;
+   return -1;
+  }
+  self->sp_string = string;
+  string->s_size = alloc_size;
+ }
+ /* Copy text into the dynamic string. */
+ memcpy(string->s_text+self->sp_length,
+        buf,bufsize*sizeof(char));
+ self->sp_length += bufsize;
+done:
+ return 0;
 }
+PRIVATE dssize_t DCALL
+tpp_string_printer_print(void *arg, char const *__restrict buf, size_t bufsize) {
+ if unlikely(tpp_string_printer_append(buf,bufsize,(struct tpp_string_printer *)arg))
+    return -1;
+ return (dssize_t)bufsize;
+}
+
+PUBLIC /*REF*/ struct TPPString *
+(TPPCALL tpp_string_printer_pack)(struct tpp_string_printer *__restrict self) {
+ /*REF*/ struct TPPString *result = (struct TPPString *)self->sp_string;
+ if unlikely(!result)
+    return TPPString_NewEmpty();
+ /* Deallocate unused memory. */
+ if likely(self->sp_length != result->s_size) {
+  DREF struct TPPString *reloc;
+  reloc = (DREF struct TPPString *)Dee_TryRealloc(result,offsetof(struct TPPString,s_text)+
+                                                 (self->sp_length + 1)*sizeof(char));
+  if likely(reloc) result = reloc;
+  result->s_size = self->sp_length;
+ }
+ /* Make sure to terminate the c-string representation. */
+ result->s_text[self->sp_length] = '\0';
+ /* Do final object initialization. */
+ result->s_refcnt = 1;
+#ifndef NDEBUG
+ memset(self,0xcc,sizeof(*self));
+#endif
+ return result;
+}
+
 
 
 PRIVATE /*REF*/struct TPPString *DCALL parse_brace_text(void) {
  struct tpp_string_printer printer;
+ unsigned int brace_recursion = 0;
+ unsigned int paren_recursion = 0;
+ unsigned int bracket_recursion = 0;
+ uint32_t old_flags;
+ bool is_after_linefeed = true;
+ struct TPPFile *last_file = NULL;
  printer.sp_string = NULL;
  printer.sp_length = 0;
-
+ old_flags = TPPLexer_Current->l_flags;
+ TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTCOMMENTS|
+                               TPPLEXER_FLAG_WANTSPACE|
+                               TPPLEXER_FLAG_WANTLF|
+                               TPPLEXER_FLAG_TERMINATE_STRING_LF|
+                               TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF|
+                               TPPLEXER_FLAG_COMMENT_NOOWN_LF|
+                               TPPLEXER_FLAG_NO_DIRECTIVES|
+                               TPPLEXER_FLAG_NO_MACROS|
+                               TPPLEXER_FLAG_NO_BUILTIN_MACROS);
+ ASSERT(tok == '{');
+ for (;;) {
+  if unlikely(yield() < 0) goto err_printer;
+  switch (tok) {
+  case 0: goto done;
+  case '(': ++paren_recursion; goto default_case;
+  case ')': --paren_recursion; goto default_case;
+  case '[': if (paren_recursion == 0) ++bracket_recursion; goto default_case;
+  case ']': if (paren_recursion == 0) --bracket_recursion; goto default_case;
+  case '{':
+   if (paren_recursion == 0 && bracket_recursion == 0)
+       ++brace_recursion;
+   goto default_case;
+  case '}':
+   if (paren_recursion == 0 && bracket_recursion == 0) {
+    if (!brace_recursion) goto done;
+    --brace_recursion;
+   }
+   goto default_case;
+  case ' ':
+   break;
+  case '\n':
+  case ';':
+   /* Insert DDI directives after line-feeds and `;' tokens. */
+   is_after_linefeed = true;
+   break;
+  default:
+   if (is_after_linefeed && TPP_ISKEYWORD(tok)) {
+    struct ast_loc loc;
+    dssize_t error;
+    loc_here(&loc);
+    /* Insert an automatic DDI directive, describing
+     * the location of this instruction token. */
+    if (loc.l_file == last_file) {
+     error = Dee_FormatPrintf(&tpp_string_printer_print,&printer,
+                              ".ddi %d,%d;\t",
+                              loc.l_line+1,
+                              loc.l_col+1);
+    } else {
+     last_file = loc.l_file;
+     error = Dee_FormatPrintf(&tpp_string_printer_print,&printer,
+                              ".ddi %$q,%d,%d;\t",
+                              loc.l_file->f_namesize,
+                              loc.l_file->f_name,
+                              loc.l_line+1,
+                              loc.l_col+1);
+    }
+    if unlikely(error < 0) goto err_printer;
+   }
+default_case:
+   is_after_linefeed = false;
+   break;
+  }
+  if unlikely(TPP_PrintToken((printer_t)&tpp_string_printer_append,&printer))
+     goto err_printer;
+ }
+done:
+ TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
+ TPPLexer_Current->l_flags |= old_flags;
+ /* Yield the final `}'-token. */
+ if unlikely(yield() < 0)
+    goto err_printer;
+ return tpp_string_printer_pack(&printer);
+err_printer:
+ Dee_Free(printer.sp_string);
+ TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
+ TPPLexer_Current->l_flags |= old_flags;
+ return NULL;
 }
 #endif
 
@@ -316,9 +480,9 @@ with_paren:
  if (tok == TOK_STRING) {
   text = TPPLexer_ParseString();
   if unlikely(!text) goto err_flags;
-#if 0
+#if 1
  } else if (tok == '{') {
-  /* TODO: Auto-format token-based source code:
+  /* Auto-format token-based source code:
    *    >> __asm__({
    *    >>    print @"Now throwing", sp
    *    >>    push  %0
@@ -356,6 +520,8 @@ with_paren:
    * column information for the exact positions of found instructions.
    * Assembly is terminated once a `}' token matching the initial `{'
    * is found. */
+  text = parse_brace_text();
+  if unlikely(!text) goto err_flags;
 #endif
  } else {
   if (WARN(W_EXPECTED_STRING_AFTER_ASM))

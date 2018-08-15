@@ -571,6 +571,7 @@ do_handle_ddi:
     }
    } else {
     /* `.ddi <filename:string>, <line:imm>, <col:imm>' */
+    if unlikely(yield() < 0) goto err_ddi_line;
     col = do_parse_constant();
     if unlikely(!col) goto err_ddi_line;
    }
