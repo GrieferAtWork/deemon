@@ -1,0 +1,156 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import NetError, socket, sockaddr from net;
+
+
+@"An object-oriented interface for working with the FTP protocol"
+@">local session = FTPSession()\n"
+@"> .CONNECT(\"ftp.unicode.org\")\n"
+@"> .USER()\n"
+@"> .PASS()\n"
+@"> .CWD(\"/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS\")\n"
+@">;\n"
+@">for (local line: session.LIST())\n"
+@"> print repr line;\n"
+class FTPSession {
+
+	private m_socket;
+	private m_passv_address;
+	private m_verbose;
+
+	@"(socket sock=none)->FTPSession"
+	this(sock = none, verbose = true) {
+		if (sock is none)
+			sock = socket("INET","STREAM","TCP");
+		m_socket = sock;
+		m_verbose = verbose;
+	}
+
+	@"(string addr,int port=21)->FTPSession"
+	CONNECT(addr,port = 21) {
+		m_socket.connect(addr,port);
+		local resp = m_socket.recv();
+		if (!resp.startswith("220 "))
+			throw NetError("Not an FTP server: {!r}".format({ resp }));
+		if (m_verbose)
+			print "CONNECT:",repr resp;
+		return this;
+	}
+
+	@"(string name=\"anonymous\")->FTPSession"
+	USER(name = "anonymous") {
+		m_socket.send("USER {}\r\n".format({ name }));
+		local resp = m_socket.recv();
+		if (!resp.startswith("331 "))
+			throw NetError("FTP login failed: {!r}".format({ resp }));
+		if (m_verbose)
+			print "USER:",repr resp;
+		return this;
+	}
+
+	@"(string pass=\"mozilla@example.com\")->FTPSession"
+	PASS(pass = "mozilla@example.com") {
+		m_socket.send("PASS {}\r\n".format({ pass }));
+		local resp = m_socket.recv();
+		if (!resp.startswith("230 "))
+			throw NetError("FTP password rejected: {!r}".format({ resp }));
+		if (m_verbose)
+			print "PASS:",repr resp;
+		return this;
+	}
+
+	@"->FTPSession"
+	PASV() {
+		m_socket.send("PASV\r\n");
+		local resp = m_socket.recv();
+		if (!resp.startswith("227 "))
+			throw NetError("FTP passive mode failed: {!r}".format({ resp }));
+		local a,b,c,d,e,f = resp[resp.index("(")+1:].scanf("%d,%d,%d,%d,%d,%d")...;
+		m_passv_address = sockaddr("INET",a,b,c,d,(e << 8) | f);
+		if (m_verbose)
+			print "PASV:",repr resp;
+		return this;
+	}
+
+	@"(string path)->FTPSession"
+	CWD(path) {
+		m_socket.send("CWD {}\r\n".format({ path }));
+		local resp = m_socket.recv();
+		if (!resp.startswith("250 "))
+			throw NetError("FTP CWD failed: {!r}".format({ resp }));
+		if (m_verbose)
+			print "CWD:",repr resp;
+		return this;
+	}
+
+	private receive(command_name,command) {
+		if (m_passv_address !is bound)
+			PASV();
+		m_socket.send(command);
+		local passive_socket = socket("INET","STREAM","TCP");
+		passive_socket.connect(m_passv_address);
+		del m_passv_address;
+		local resp = m_socket.recv();
+		if (!resp.startswith("150 "))
+			throw NetError("FTP {} failed: {!r}".format({ command_name, resp }));
+		if (m_verbose)
+			print command_name + ":",repr resp;
+		local result = passive_socket.recv();
+		passive_socket.close();
+		local resp = m_socket.recv();
+		if (!resp.startswith("226 "))
+			throw NetError("FTP {} failed: {!r}".format({ command_name, resp }));
+		if (m_verbose)
+			print command_name + ":",repr resp;
+		return result;
+	}
+
+	@"->{bytes...}"
+	LIST() {
+		return receive("LIST","LIST\r\n").rstrip().splitlines();
+	}
+
+	@"(string filename)->bytes"
+	RETR(filename) {
+		return receive("RETR","RETR {}\r\n".format({ filename }));
+	}
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
