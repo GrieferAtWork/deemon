@@ -17,17 +17,23 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import bytes from deemon;
+/* CODEC PAGE: cp863_doscanadaf */
 
-
-@"->string"
-function encode(x,errors = none) {
-	if (x is bytes)
-		return x.hex();
-	return bytes(x).hex();
-}
-
-@"->bytes"
-function decode(x,errors = none) {
-	return bytes.fromhex(str x);
-}
+global cp =
+	"\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17"
+	"\20\21\22\23\24\25\26\27\30\31\32\e\34\35\36\37"
+	" !\"#$%&\'()*+,-./"
+	"0123456789:;<=>?"
+	"@ABCDEFGHIJKLMNO"
+	"PQRSTUVWXYZ[\\]^_"
+	"`abcdefghijklmno"
+	"pqrstuvwxyz{|}~\x7F"
+	"\xC7\xFC\xE9\xE2\xC2\xE0\xB6\xE7\xEA\xEB\xE8\xEF\xEE\u2017\xC0\xA7"
+	"\xC9\xC8\xCA\xF4\xCB\xCF\xFB\xF9\xA4\xD4\xDC\xA2\xA3\xD9\xDB\u0192"
+	"\xA6\xB4\xF3\xFA\xA8\xB8\xB3\xAF\xCE\u2310\xAC\xBD\xBC\xBE\xAB\xBB"
+	"\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255D\u255C\u255B\u2510"
+	"\u2514\u2534\u252C\u251C\u2500\u253C\u255E\u255F\u255A\u2554\u2569\u2566\u2560\u2550\u256C\u2567"
+	"\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256B\u256A\u2518\u250C\u2588\u2584\u258C\u2590\u2580"
+	"\u03B1\xDF\u0393\u03C0\u03A3\u03C3\xB5\u03C4\u03A6\u0398\u03A9\u03B4\u221E\u03C6\u03B5\u2229"
+	"\u2261\xB1\u2265\u2264\u2320\u2321\xF7\u2248\xB0\u2219\xB7\u221A\u207F\xB2\u25A0\xA0"
+;

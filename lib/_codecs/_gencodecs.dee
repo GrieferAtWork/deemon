@@ -18,28 +18,57 @@
  */
 
 
-@"({bytes...} lines)->string"
-@"({string...} lines)->string"
+@"({bytes...} lines)->string,string"
+@"({string...} lines)->string,string"
+@"({bytes...} lines)->none"
+@"({string...} lines)->none"
 @"Decode the lines of a unicode definitions file, and return "
  "a 256-character string that can be used to decode that format"
+@"If the input @lines contain characters greater than $0xff, :none is "
+ "returned, and the caller should not attempt to override the codec file, "
+ "as special handling is required for the codepage format"
 function ParseUnicodeDefinitionsFile(lines) {
 	import string from deemon;
 	local result = [0] * 256;
+	for (local i: [:128])
+		result[i] = i;
+	local name = none;
 	for (local l: lines) {
 		l = l.strip();
-		if (!l || l.startswith("#"))
+		if (!l)
 			continue;
-		try {
-			local chr,uni = l.scanf(" 0x%x 0x%x")...;
-			result[chr] = uni;
-		} catch (...) {
+		if (l.startswith("#")) {
+			if (name is none) {
+				l = l.lstrip("#").lstrip().lower();
+				if (l.startswith("name:")) {
+					l = l[#"name:":].lstrip();
+					local name_end = 0;
+					while (name_end < #l && l.issymcont(name_end))
+						++name_end;
+					name = l[:name_end];
+				}
+			}
 			continue;
 		}
+		try {
+			local chr,uni = l.scanf(" 0x%x 0x%x")...;
+			if (chr > 0xff)
+				return none;
+			result[chr] = uni;
+		} catch (...) {
+			try {
+				local chr = l.scanf(" 0x%x")...;
+				if (chr > 0xff)
+					return none;
+				result[chr] = 0;
+			} catch (...) {
+			}
+		}
 	}
-	return string.fromseq(result);
+	return pack(string.fromseq(result),name);
 }
 
-function convert_txt(data) {
+function FormatCodecPageSourceFile(page,name) {
 	local pattern = 
 	"/* Copyright (c) 2018 Griefer@Work                                            *\n"
 	" *                                                                            *\n"
@@ -60,28 +89,22 @@ function convert_txt(data) {
 	" * 3. This notice may not be removed or altered from any source distribution. *\n"
 	" */\n"
 	"\n"
-	"global codec_page =\n"
+	"/* CODEC PAGE: {} */\n"
+	"\n"
+	"global cp =\n"
 	"{};\n";
-	local cp = ParseUnicodeDefinitionsFile(data.splitlines());
-	local text = pattern.format({
-		(for (local x: cp.segments(16))
+	return pattern.format({
+		name,
+		(for (local x: page.segments(16))
 			"\t{!r}\n".format({ x })) + ...
 	});
-	return text;
 }
+
 
 #if defined(__MAIN__)
 
 import fs;
 import file from deemon;
-
-fs.chdir(fs.headof(__FILE__));
-function generate_codec(name,data) {
-	local text = convert_txt(data);
-	file.open("{}.dee".format({ name }),"w") << text;
-}
-generate_codec("cp1250",file.open("cp1250.txt").read());
-
 import socket from net;
 import FTPSession from net.ftp;
 
@@ -90,23 +113,44 @@ local session = FTPSession()
 	.USER()
 	.PASS()
 ;
-function load_from_file(filename) {
-	local name = filename.partition(".")[0].lower();
-	print "Loading",filename,"as",name;
-	local data = session.RETR(filename);
-	file.open(filename,"w").write(data);
-	generate_codec(name,data);
-}
 function load_from_path(path) {
 	session.CWD(path);
 	for (local line: session.LIST()) {
 		local filename = str line[line.rindex(" ")+1:];
-		if (fs.stat.exists(filename))
+		if (filename.lower() in ["readme.txt"])
 			continue;
-		load_from_file(filename);
+		local data_filename = "data/{}".format({ filename });
+		local data;
+		if (!fs.stat.exists(data_filename)) {
+			data = session.RETR(filename);
+			file.open(data_filename,"w").write(data);
+		} else {
+			data = file.open(data_filename,"r").read();
+		}
+		local text,name = ParseUnicodeDefinitionsFile(data.splitlines())...;
+		if (text is none)
+			continue;
+		if (name is none)
+			name = filename.partition(".")[0].lower();
+		local codec_shortname = name.partition("_")[0];
+		local codec_filename = "{}.dee".format({ codec_shortname });
+		if (!fs.stat.exists(codec_filename)) {
+			if (text !is none) {
+				print "Loading",filename,"as",codec_filename,"from",data_filename;
+				text = FormatCodecPageSourceFile(text,name);
+				file.open(codec_filename,"w") << text;
+			}
+		}
 	}
 }
+
+fs.chdir(fs.headof(__FILE__));
+load_from_path("/Public/MAPPINGS/VENDORS/MICSFT/EBCDIC");
+load_from_path("/Public/MAPPINGS/VENDORS/MICSFT/MAC");
+load_from_path("/Public/MAPPINGS/VENDORS/MICSFT/PC");
 load_from_path("/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS");
+load_from_path("/Public/MAPPINGS/VENDORS/NEXT");
+//load_from_path("/Public/MAPPINGS/VENDORS/MICSFT/WindowsBestFit");
 #endif
 
 

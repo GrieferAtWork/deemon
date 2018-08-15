@@ -19,6 +19,16 @@
 
 import NetError, socket, sockaddr from net;
 
+local function recv_all(socket) {
+	local result = socket.recv();
+	local temp = result;
+	while (temp) {
+		temp = socket.recv();
+		result += temp;
+	}
+	return result;
+}
+
 
 @"An object-oriented interface for working with the FTP protocol"
 @">local session = FTPSession()\n"
@@ -112,7 +122,7 @@ class FTPSession {
 			throw NetError("FTP {} failed: {!r}".format({ command_name, resp }));
 		if (m_verbose)
 			print command_name + ":",repr resp;
-		local result = passive_socket.recv();
+		local result = recv_all(passive_socket);
 		passive_socket.close();
 		local resp = m_socket.recv();
 		if (!resp.startswith("226 "))

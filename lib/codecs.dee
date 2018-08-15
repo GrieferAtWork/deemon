@@ -68,16 +68,18 @@ local function load_codec(codec_name) {
 		local module = import(module_name);
 		try {
 			/* String codecs can be implemented by one of 2 ways:
-			 *  #1: global codec_page = <string-of-256-characters>
+			 *  #1: global cp = <string-of-256-characters>
 			 *  #2: global function decode(string s, string errors) -> string;
+			 *      global function encode(string s, string errors) -> string;
 			 * All builtin string codecs are defined as modules found in
 			 * the `_codecs' folder within the same directory as this file.
 			 * The filename of the codec module defines the name of the codec.
 			 */
-			local cpage = module.codec_page;
+			local cpage = module.cp;
+			print #cpage;
 			if (cpage !is string from deemon || #cpage != 256) {
 				throw Error.ValueError(
-					"Invalid `codec_page' exported by {}".
+					"Invalid `cp' exported by {}".
 					format({ module_name }));
 			}
 			/*  */

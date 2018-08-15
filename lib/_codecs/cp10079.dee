@@ -17,7 +17,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-/* CODEC PAGE: cp1256 */
+/* CODEC PAGE: cp10079_macicelandic */
 
 global cp =
 	"\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17"
@@ -28,12 +28,12 @@ global cp =
 	"PQRSTUVWXYZ[\\]^_"
 	"`abcdefghijklmno"
 	"pqrstuvwxyz{|}~\x7F"
-	"\u20AC\u067E\u201A\u0192\u201E\u2026\u2020\u2021\u02C6\u2030\u0679\u2039\u0152\u0686\u0698\u0688"
-	"\u06AF\u2018\u2019\u201C\u201D\u2022\u2013\u2014\u06A9\u2122\u0691\u203A\u0153\u200C\u200D\u06BA"
-	"\xA0\u060C\xA2\xA3\xA4\xA5\xA6\xA7\xA8\xA9\u06BE\xAB\xAC\xAD\xAE\xAF"
-	"\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\u061B\xBB\xBC\xBD\xBE\u061F"
-	"\u06C1\u0621\u0622\u0623\u0624\u0625\u0626\u0627\u0628\u0629\u062A\u062B\u062C\u062D\u062E\u062F"
-	"\u0630\u0631\u0632\u0633\u0634\u0635\u0636\xD7\u0637\u0638\u0639\u063A\u0640\u0641\u0642\u0643"
-	"\xE0\u0644\xE2\u0645\u0646\u0647\u0648\xE7\xE8\xE9\xEA\xEB\u0649\u064A\xEE\xEF"
-	"\u064B\u064C\u064D\u064E\xF4\u064F\u0650\xF7\u0651\xF9\u0652\xFB\xFC\u200E\u200F\u06D2"
+	"\xC4\xC5\xC7\xC9\xD1\xD6\xDC\xE1\xE0\xE2\xE4\xE3\xE5\xE7\xE9\xE8"
+	"\xEA\xEB\xED\xEC\xEE\xEF\xF1\xF3\xF2\xF4\xF6\xF5\xFA\xF9\xFB\xFC"
+	"\xDD\xB0\xA2\xA3\xA7\u2022\xB6\xDF\xAE\xA9\u2122\xB4\xA8\u2260\xC6\xD8"
+	"\u221E\xB1\u2264\u2265\xA5\xB5\u2202\u2211\u220F\u03C0\u222B\xAA\xBA\u2126\xE6\xF8"
+	"\xBF\xA1\xAC\u221A\u0192\u2248\u2206\xAB\xBB\u2026\xA0\xC0\xC3\xD5\u0152\u0153"
+	"\u2013\u2014\u201C\u201D\u2018\u2019\xF7\u25CA\xFF\u0178\u2044\xA4\xD0\xF0\xDE\xFE"
+	"\xFD\xB7\u201A\u201E\u2030\xC2\xCA\xC1\xCB\xC8\xCD\xCE\xCF\xCC\xD3\xD4"
+	"\0\xD2\xDA\xDB\xD9\u0131\u02C6\u02DC\xAF\u02D8\u02D9\u02DA\xB8\u02DD\u02DB\u02C7"
 ;

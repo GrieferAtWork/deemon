@@ -17,7 +17,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-/* CODEC PAGE: cp1256 */
+/* CODEC PAGE: cp857_dosturkish */
 
 global cp =
 	"\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17"
@@ -28,12 +28,12 @@ global cp =
 	"PQRSTUVWXYZ[\\]^_"
 	"`abcdefghijklmno"
 	"pqrstuvwxyz{|}~\x7F"
-	"\u20AC\u067E\u201A\u0192\u201E\u2026\u2020\u2021\u02C6\u2030\u0679\u2039\u0152\u0686\u0698\u0688"
-	"\u06AF\u2018\u2019\u201C\u201D\u2022\u2013\u2014\u06A9\u2122\u0691\u203A\u0153\u200C\u200D\u06BA"
-	"\xA0\u060C\xA2\xA3\xA4\xA5\xA6\xA7\xA8\xA9\u06BE\xAB\xAC\xAD\xAE\xAF"
-	"\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\u061B\xBB\xBC\xBD\xBE\u061F"
-	"\u06C1\u0621\u0622\u0623\u0624\u0625\u0626\u0627\u0628\u0629\u062A\u062B\u062C\u062D\u062E\u062F"
-	"\u0630\u0631\u0632\u0633\u0634\u0635\u0636\xD7\u0637\u0638\u0639\u063A\u0640\u0641\u0642\u0643"
-	"\xE0\u0644\xE2\u0645\u0646\u0647\u0648\xE7\xE8\xE9\xEA\xEB\u0649\u064A\xEE\xEF"
-	"\u064B\u064C\u064D\u064E\xF4\u064F\u0650\xF7\u0651\xF9\u0652\xFB\xFC\u200E\u200F\u06D2"
+	"\xC7\xFC\xE9\xE2\xE4\xE0\xE5\xE7\xEA\xEB\xE8\xEF\xEE\u0131\xC4\xC5"
+	"\xC9\xE6\xC6\xF4\xF6\xF2\xFB\xF9\u0130\xD6\xDC\xF8\xA3\xD8\u015E\u015F"
+	"\xE1\xED\xF3\xFA\xF1\xD1\u011E\u011F\xBF\xAE\xAC\xBD\xBC\xA1\xAB\xBB"
+	"\u2591\u2592\u2593\u2502\u2524\xC1\xC2\xC0\xA9\u2563\u2551\u2557\u255D\xA2\xA5\u2510"
+	"\u2514\u2534\u252C\u251C\u2500\u253C\xE3\xC3\u255A\u2554\u2569\u2566\u2560\u2550\u256C\xA4"
+	"\xBA\xAA\xCA\xCB\xC8\0\xCD\xCE\xCF\u2518\u250C\u2588\u2584\xA6\xCC\u2580"
+	"\xD3\xDF\xD4\xD2\xF5\xD5\xB5\0\xD7\xDA\xDB\xD9\xEC\xFF\xAF\xB4"
+	"\xAD\xB1\0\xBE\xB6\xA7\xF7\xB8\xB0\xA8\xB7\xB9\xB3\xB2\u25A0\xA0"
 ;
