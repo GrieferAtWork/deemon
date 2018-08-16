@@ -916,13 +916,18 @@ check_dst_sym_class_hybrid:
  case AST_MULTIPLE:
   /* Special handling for unpack expressions (i.e. `(a,b,c) = foo()'). */
   if (dst->ast_flag == AST_FMULTIPLE_KEEPLAST) {
-   size_t i;
+   size_t i = 0;
    if (dst->ast_multiple.ast_exprc == 0)
        return ast_genasm(src,gflags);
    /* Compile all branches except for the last one normally. */
-   for (i = 0; i < dst->ast_multiple.ast_exprc-1; ++i)
-      if (ast_genasm(dst->ast_multiple.ast_exprv[i],ASM_G_FNORMAL))
-          goto err;
+   if (dst->ast_multiple.ast_exprc > 1) {
+    ASM_PUSH_SCOPE(dst->ast_scope,err);
+    for (; i < dst->ast_multiple.ast_exprc-1; ++i) {
+     if (ast_genasm(dst->ast_multiple.ast_exprv[i],ASM_G_FNORMAL))
+         goto err;
+    }
+    ASM_POP_SCOPE(0,err);
+   }
    /* The last branch is the one we're going to write to. */
    dst = dst->ast_multiple.ast_exprv[i];
    goto again;
@@ -1009,15 +1014,21 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
 
  case AST_MULTIPLE:
   if (ast->ast_flag == AST_FMULTIPLE_KEEPLAST) {
-   size_t i;
+   size_t i = 0;
    /* Special case: Store to KEEP-last multiple AST:
     *               Evaluate all branches but the last without using them.
     *               Then simply write the value to the last expression.
     */
    if (ast->ast_multiple.ast_exprc == 0)
        return asm_gpop();
-   for (i = 0; i != ast->ast_multiple.ast_exprc-1; ++i)
-      if (ast_genasm(ast->ast_multiple.ast_exprv[i],ASM_G_FNORMAL)) goto err;
+   if (ast->ast_multiple.ast_exprc > 1)  {
+    ASM_PUSH_SCOPE(ast->ast_scope,err);
+    for (; i != ast->ast_multiple.ast_exprc-1; ++i) {
+     if (ast_genasm(ast->ast_multiple.ast_exprv[i],ASM_G_FNORMAL))
+         goto err;
+    }
+    ASM_POP_SCOPE(0,err);
+   }
    ASSERT(i == ast->ast_multiple.ast_exprc-1);
    return asm_gpop_expr(ast->ast_multiple.ast_exprv[i]);
   }

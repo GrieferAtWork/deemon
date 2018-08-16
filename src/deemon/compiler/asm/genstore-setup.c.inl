@@ -53,11 +53,17 @@ INTERN int (DCALL asm_gpop_expr_leave)(DeeAstObject *__restrict ast, unsigned in
     *               Evaluate all branches but the last without using them.
     *               Then simply write the value to the last expression. */
 #ifdef ENTER
-   size_t i;
+   size_t i = 0;
    if (ast->ast_multiple.ast_exprc == 0)
        goto done;
-   for (i = 0; i < ast->ast_multiple.ast_exprc-1; ++i)
-      if (ast_genasm(ast->ast_multiple.ast_exprv[i],ASM_G_FNORMAL)) goto err;
+   if (ast->ast_multiple.ast_exprc > 1) {
+    ASM_PUSH_SCOPE(ast->ast_scope,err);
+    for (; i < ast->ast_multiple.ast_exprc-1; ++i) {
+     if (ast_genasm(ast->ast_multiple.ast_exprv[i],ASM_G_FNORMAL))
+         goto err;
+    }
+    ASM_POP_SCOPE(0,err);
+   }
    ASSERT(i == ast->ast_multiple.ast_exprc-1);
    if (asm_gpop_expr_enter(ast->ast_multiple.ast_exprv[i])) goto err;
 #else
