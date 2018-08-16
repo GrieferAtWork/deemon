@@ -31,7 +31,7 @@ local function recv_all(socket) {
 
 
 @"An object-oriented interface for working with the FTP protocol"
-@">local session = FTPSession()\n"
+@">local session = FTPClient()\n"
 @"> .CONNECT(\"ftp.unicode.org\")\n"
 @"> .USER()\n"
 @"> .PASS()\n"
@@ -39,13 +39,13 @@ local function recv_all(socket) {
 @">;\n"
 @">for (local line: session.LIST())\n"
 @"> print repr line;\n"
-class FTPSession {
+class FTPClient {
 
 	private m_socket;
 	private m_passv_address;
 	private m_verbose;
 
-	@"(socket sock=none)->FTPSession"
+	@"(socket sock=none)->FTPClient"
 	this(sock = none, verbose = false) {
 		if (sock is none)
 			sock = socket("INET","STREAM","TCP");
@@ -53,7 +53,7 @@ class FTPSession {
 		m_verbose = verbose;
 	}
 
-	@"(string addr,int port=21)->FTPSession"
+	@"(string addr,int port=21)->FTPClient"
 	CONNECT(addr,port = 21) {
 		m_socket.connect(addr,port);
 		local resp = m_socket.recv();
@@ -64,7 +64,7 @@ class FTPSession {
 		return this;
 	}
 
-	@"(string name=\"anonymous\")->FTPSession"
+	@"(string name=\"anonymous\")->FTPClient"
 	USER(name = "anonymous") {
 		m_socket.send("USER {}\r\n".format({ name }));
 		local resp = m_socket.recv();
@@ -75,7 +75,7 @@ class FTPSession {
 		return this;
 	}
 
-	@"(string pass=\"mozilla@example.com\")->FTPSession"
+	@"(string pass=\"mozilla@example.com\")->FTPClient"
 	PASS(pass = "mozilla@example.com") {
 		m_socket.send("PASS {}\r\n".format({ pass }));
 		local resp = m_socket.recv();
@@ -86,7 +86,7 @@ class FTPSession {
 		return this;
 	}
 
-	@"->FTPSession"
+	@"->FTPClient"
 	PASV() {
 		m_socket.send("PASV\r\n");
 		local resp = m_socket.recv();
@@ -99,7 +99,7 @@ class FTPSession {
 		return this;
 	}
 
-	@"(string path)->FTPSession"
+	@"(string path)->FTPClient"
 	CWD(path) {
 		m_socket.send("CWD {}\r\n".format({ path }));
 		local resp = m_socket.recv();

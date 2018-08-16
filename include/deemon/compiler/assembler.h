@@ -1440,7 +1440,6 @@ INTDEF int DCALL asm_gpop_expr(DeeAstObject *__restrict ast);
 /* Same as `asm_gpop_expr()', but pop `astc' values, one in each AST. */
 INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, DeeAstObject **__restrict astv);
 
-
 /* Assembly code generation flags (gflags) */
 #define ASM_G_FNORMAL   0x0000 /* Normal asm G-flags. */
 #define ASM_G_FPUSHRES  0x0001 /* Push the result of the expression. */
@@ -1731,16 +1730,17 @@ INTDEF int DCALL asm_gmov_function(struct symbol *__restrict dst,
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
 INTDEF int DCALL asm_gmov_symsym(struct symbol *__restrict dst_sym,
                                  struct symbol *__restrict src_sym,
-                                 DeeAstObject *__restrict ddi_ast);
+                                 DeeAstObject *__restrict dst_ast,
+                                 DeeAstObject *__restrict src_ast);
 /* Store the expression in `src' into `dst'.
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
 INTDEF int DCALL asm_gmov_symdst(struct symbol *__restrict dst_sym,
                                  DeeAstObject *__restrict src,
-                                 DeeAstObject *__restrict ddi_ast);
+                                 DeeAstObject *__restrict dst_ast);
 /* Store the symbol `src_sym' into the expression `dst'. */
 INTDEF int DCALL asm_gmov_symsrc(DeeAstObject *__restrict dst,
                                  struct symbol *__restrict src_sym,
-                                 DeeAstObject *__restrict ddi_ast);
+                                 DeeAstObject *__restrict src_ast);
 
 
 

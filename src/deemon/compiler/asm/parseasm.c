@@ -876,7 +876,7 @@ PRIVATE int32_t FCALL do_parse_local_operands(void) {
       sym = SYMBOL_ALIAS(sym);
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (sym->s_type != SYMBOL_TYPE_LOCAL ||
-      SYMBOL_MUST_REFERENCE(sym))
+      SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 #else
   if (SYMBOL_TYPE(sym) != SYM_CLASS_VAR ||
      (sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_LOCAL)
@@ -1052,7 +1052,7 @@ PRIVATE int32_t FCALL do_parse_static_operands(void) {
       sym = SYMBOL_ALIAS(sym);
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (sym->s_type != SYMBOL_TYPE_STATIC ||
-      SYMBOL_MUST_REFERENCE(sym))
+      SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 #else
   if (SYMBOL_TYPE(sym) != SYM_CLASS_VAR ||
      (sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_STATIC)

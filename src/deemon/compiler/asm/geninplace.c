@@ -176,7 +176,7 @@ ast_gen_setattr_inplace(DeeAstObject *__restrict base,
        base->ast_sym = SYMBOL_ALIAS(base->ast_sym);
    if (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_THIS
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-       && !SYMBOL_MUST_REFERENCE(base->ast_sym)
+       && !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)
 #endif
        ) {
     if (asm_ggetattr_this_const((uint16_t)cid)) goto err; /* this.name */

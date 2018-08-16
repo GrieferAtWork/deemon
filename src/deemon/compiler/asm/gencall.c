@@ -75,7 +75,7 @@ asm_gcall_expr(DeeAstObject *__restrict func,
    if (SYMBOL_TYPE(arg_sym) != SYM_CLASS_ARG)
        goto not_argument_forward;
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-   if (SYMBOL_MUST_REFERENCE(arg_sym))
+   if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
        goto not_argument_forward;
 #endif
    start_offset = SYMBOL_ARG_INDEX(arg_sym);
@@ -91,7 +91,7 @@ asm_gcall_expr(DeeAstObject *__restrict func,
    if (SYMBOL_TYPE(arg_sym) != SYM_CLASS_ARG)
        goto not_argument_forward;
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-   if (SYMBOL_MUST_REFERENCE(arg_sym))
+   if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
        goto not_argument_forward;
 #endif
    start_offset = SYMBOL_ARG_INDEX(arg_sym);
@@ -119,7 +119,7 @@ asm_gcall_expr(DeeAstObject *__restrict func,
    if (SYMBOL_TYPE(arg_sym) != SYM_CLASS_ARG)
        goto not_argument_forward;
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-   if (SYMBOL_MUST_REFERENCE(arg_sym))
+   if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
        goto not_argument_forward;
 #endif
    if ((size_t)SYMBOL_ARG_INDEX(arg_sym) != (size_t)start_offset+i)
@@ -180,7 +180,7 @@ not_argument_forward:
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
          funsym->s_type == SYMBOL_TYPE_GLOBAL ||
         (funsym->s_type == SYMBOL_TYPE_LOCAL &&
-        !SYMBOL_MUST_REFERENCE(funsym))
+        !SYMBOL_MUST_REFERENCE_TYPEMAY(funsym))
 #else
          SYMBOL_TYPE(funsym) == SYM_CLASS_VAR &&
        ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL ||
@@ -310,7 +310,7 @@ check_function_symbol_class:
          function_self->ast_sym = SYMBOL_ALIAS(function_self->ast_sym);
      if (SYMBOL_TYPE(function_self->ast_sym) == SYM_CLASS_THIS
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-         && !SYMBOL_MUST_REFERENCE(function_self->ast_sym)
+         && !SYMBOL_MUST_REFERENCE_TYPEMAY(function_self->ast_sym)
 #endif
          ) {
       if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
@@ -466,7 +466,7 @@ check_function_symbol_class:
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
        funsym->s_type == SYMBOL_TYPE_GLOBAL ||
       (funsym->s_type == SYMBOL_TYPE_LOCAL &&
-      !SYMBOL_MUST_REFERENCE(funsym))
+      !SYMBOL_MUST_REFERENCE_TYPEMAY(funsym))
 #else
        SYMBOL_TYPE(funsym) == SYM_CLASS_VAR &&
      ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL ||

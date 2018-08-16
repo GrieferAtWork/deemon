@@ -102,9 +102,9 @@ function FormatCodecPageSourceFile(page,name) {
 import fs;
 import file from deemon;
 import socket from net;
-import FTPSession from net.ftp;
+import FTPClient from net.ftp;
 
-local session = FTPSession(none,true)
+local session = FTPClient(none,true)
 	.CONNECT("ftp.unicode.org")
 	.USER()
 	.PASS();

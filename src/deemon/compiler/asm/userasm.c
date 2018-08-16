@@ -1174,7 +1174,7 @@ abs_stack_any:
        ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (ast->ast_sym->s_type == SYM_CLASS_STACK &&
-      !SYMBOL_MUST_REFERENCE(ast->ast_sym) &&
+      !SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym) &&
       (ast->ast_sym->s_flag & SYMBOL_FALLOC))
 #else
    if (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_STACK &&
@@ -1214,10 +1214,10 @@ abs_stack_any:
   if (ast->ast_type != AST_SYM) goto next_option;
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
-#endif
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_EXCEPT) goto next_option;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
+#endif
   result = &str_except;
   Dee_Incref(result);
   break;
@@ -1238,10 +1238,10 @@ abs_stack_any:
   if (ast->ast_type != AST_SYM) goto next_option;
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
-#endif
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_THIS) goto next_option;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
+#endif
   result = &str_this;
   Dee_Incref(result);
   break;
@@ -1261,7 +1261,7 @@ abs_stack_any:
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_THIS_FUNCTION) goto next_option;
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+  if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
 #endif
   result = &str_this_function;
   Dee_Incref(result);
@@ -1317,7 +1317,7 @@ do_regular_ref:
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_ARG) goto next_option;
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+  if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
 #endif
   if (DeeBaseScope_IsArgOptional(current_basescope,SYMBOL_ARG_INDEX(ast->ast_sym)) ||
      (DeeBaseScope_HasOptional(current_basescope) &&
@@ -1344,7 +1344,7 @@ do_regular_ref:
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (ast->ast_sym->s_type != SYMBOL_TYPE_STATIC) goto next_option;
-  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+  if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
 #else
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR) goto next_option;
   if ((ast->ast_sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_STATIC) goto next_option;
@@ -1397,7 +1397,7 @@ do_regular_ref:
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (ast->ast_sym->s_type != SYMBOL_TYPE_LOCAL) goto next_option;
-  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+  if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
 #else
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR) goto next_option;
   if ((ast->ast_sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_LOCAL) goto next_option;
@@ -1418,7 +1418,7 @@ write_regular_local:
        ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (ast->ast_sym->s_type == SYMBOL_TYPE_LOCAL &&
-      !SYMBOL_MUST_REFERENCE(ast->ast_sym))
+      !SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym))
        goto write_regular_local;
 #else
    if (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_VAR &&

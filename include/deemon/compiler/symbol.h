@@ -180,6 +180,10 @@ struct symbol {
 /* Check if a given symbol `x' must be addressed as a reference */
 #define SYMBOL_MUST_REFERENCE(x)   (SYMBOL_TYPE_MAYREF((x)->s_type) && (x)->s_scope->s_base != current_basescope)
 
+/* Same as `SYMBOL_MUST_REFERENCE()', but the caller already knows
+ * that the symbol's type may be referenced (`SYMBOL_TYPE_MAYREF(x->s_type) == true') */
+#define SYMBOL_MUST_REFERENCE_TYPEMAY(x) (ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type)),(x)->s_scope->s_base != current_basescope)
+
 /* Check if a given symbol `x' can be addressed as a reference */
 #define SYMBOL_MAY_REFERENCE(x)    ((x)->s_scope->s_base != current_basescope)
 
@@ -290,7 +294,6 @@ struct symbol {
         }                              sym_arg;    /* Argument variable. */
 #define SYMBOL_ARG_INDEX(x)  ((x)->sym_arg.sym_index)
 
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
         struct {
 #define SYM_CLASS_REF                  0x8004      /* Referenced variable. */
 #   define SYM_FREF_ALLOC              0x8000      /* FLAG: The reference has been allocated. */
@@ -307,7 +310,6 @@ struct symbol {
                                                     * >> Used to track which symbols a reference has already been created for. */
             uint16_t                   sym_index;  /* [valid_if(SYM_FREF_ALLOC)] Reference index. */
         }                              sym_ref;    /* Referenced variable. */
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
 
         struct {
 #define SYM_CLASS_MEMBER               0x0005      /* Instance member slot. */
@@ -315,12 +317,10 @@ struct symbol {
 #   define SYM_FMEMBER_CLASS           0x0001      /* FLAG: The symbol is part of the class member table. */
             struct symbol             *sym_class;  /* [1..1] A symbol describing the class that is defining this member. */
             struct member_entry       *sym_member; /* [1..1] The member that is being described. */
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
             struct symbol             *sym_ref;    /* [0..1] A chain of symbols that are referencing this member.
                                                     * NOTE: Every entry is another SYM_CLASS_MEMBER, who's `sym_member.sym_class'
                                                     *       field is a `SYM_CLASS_REF' to our `sym_member.sym_class', as well as
                                                     *       sharing the same `sym_member' pointer. */
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
         }                              sym_member;
 #define SYMBOL_FIELD_CLASS(x)      ((x)->sym_member.sym_class)
 #define SYMBOL_FIELD_MEMBER(x)     ((x)->sym_member.sym_member)

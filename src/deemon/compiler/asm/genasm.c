@@ -2191,7 +2191,7 @@ pop_unused:
         sym = SYMBOL_ALIAS(sym);
     if (SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-       !SYMBOL_MUST_REFERENCE(sym) &&
+       !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
 #endif
        (current_basescope->bs_flags & CODE_FVARARGS) &&
         DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) {
@@ -2383,7 +2383,7 @@ check_getattr_sym:
          sym = SYMBOL_ALIAS(sym);
      if (SYMBOL_TYPE(sym) == SYM_CLASS_THIS
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-         && !SYMBOL_MUST_REFERENCE(sym)
+         && !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)
 #endif
          ) {
       if (asm_gdelattr_this_const(attrid)) goto err;
@@ -2558,7 +2558,7 @@ push_a_if_used:
         enter_expr->ast_sym = SYMBOL_ALIAS(enter_expr->ast_sym);
     if (SYMBOL_TYPE(enter_expr->ast_sym) == SYM_CLASS_STACK &&
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-       !SYMBOL_MUST_REFERENCE(enter_expr->ast_sym) &&
+       !SYMBOL_MUST_REFERENCE_TYPEMAY(enter_expr->ast_sym) &&
        (enter_expr->ast_sym->s_flag & SYMBOL_FALLOC) &&
 #else
        (enter_expr->ast_sym->sym_flag & SYM_FSTK_ALLOC) &&
@@ -2598,7 +2598,7 @@ push_a_if_used:
         sym = SYMBOL_ALIAS(sym);
     if (SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-       !SYMBOL_MUST_REFERENCE(sym) &&
+       !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
 #endif
         DeeBaseScope_IsArgVarArgs(current_basescope,
                                   SYMBOL_ARG_INDEX(sym))) {
@@ -2658,7 +2658,7 @@ push_a_if_used:
        sym = SYMBOL_ALIAS(sym);
    if (SYMBOL_TYPE(sym) != SYM_CLASS_ARG) break;
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-   if (SYMBOL_MUST_REFERENCE(sym)) break;
+   if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) break;
 #endif
    if (!DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) break;
    if (sizeast->ast_type != AST_CONSTEXPR) break;
@@ -3517,7 +3517,7 @@ emit_instruction:
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
     if (base_sym->s_type == SYMBOL_TYPE_GLOBAL ||
        (base_sym->s_type == SYMBOL_TYPE_LOCAL &&
-       !SYMBOL_MUST_REFERENCE(base_sym)))
+       !SYMBOL_MUST_REFERENCE_TYPEMAY(base_sym)))
 #else                                    
     if (SYMBOL_TYPE(base_sym) == SYM_CLASS_VAR &&
       ((base_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL ||
@@ -3563,7 +3563,7 @@ class_fallback:
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
     if (super_sym->s_type == SYM_CLASS_STACK &&
       !(super_sym->s_flag & SYMBOL_FALLOC) &&
-       !SYMBOL_MUST_REFERENCE(super_sym))
+       !SYMBOL_MUST_REFERENCE_TYPEMAY(super_sym))
 #else
     if (SYMBOL_TYPE(super_sym) == SYM_CLASS_STACK &&
       !(super_sym->sym_flag&SYM_FSTK_ALLOC))
@@ -3762,7 +3762,7 @@ done:
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
      if (iter->s_type != SYMBOL_TYPE_LOCAL) continue;
      if (!(iter->s_flag & SYMBOL_FALLOC)) continue;
-     ASSERT(!SYMBOL_MUST_REFERENCE(iter));
+     ASSERT(!SYMBOL_MUST_REFERENCE_TYPEMAY(iter));
      asm_dellocal(iter->s_symid);
      iter->s_flag &= ~SYMBOL_FALLOC;
 #else
