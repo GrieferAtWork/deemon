@@ -304,9 +304,6 @@ DEFINE_AST_GENERATOR(ast_bndsym,(struct symbol *__restrict sym)) {
   result->ast_type   = AST_BNDSYM;
   result->ast_bndsym = sym;
   SYMBOL_INC_NBOUND(sym);
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-  SYMBOL_INC_NREAD(sym);
-#endif
   INIT_REF(result);
  }
  return result;
@@ -1004,9 +1001,6 @@ do_xdecref_3:
   break;
  case AST_BNDSYM:
   SYMBOL_DEC_NBOUND(self->ast_bndsym);
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-  SYMBOL_DEC_NREAD(self->ast_bndsym);
-#endif
   break;
 
  case AST_GOTO:

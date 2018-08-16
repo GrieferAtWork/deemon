@@ -80,11 +80,6 @@ struct text_label {
 };
 
 
-#undef CONFIG_USE_NEW_SYMBOL_TYPE
-#define CONFIG_USE_NEW_SYMBOL_TYPE 1 /* TODO: Make this mandatory. */
-
-
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 struct symbol {
     struct symbol       *s_next;   /* [0..1][owned] Next symbol with the same modulated `s_name->k_id' */
     struct TPPKeyword   *s_name;   /* [1..1][const] Name of this symbol. */
@@ -201,179 +196,12 @@ struct symbol {
 #define SYMBOL_GETSET_DELETE(x)    ((x)->s_getset.gs_del)   /* TODO: Remove me */
 #define SYMBOL_GETSET_SETTER(x)    ((x)->s_getset.gs_set)   /* TODO: Remove me */
 
-#endif /* CONFIG_USE_NEW_SYMBOL_TYPE */
-
 
 
 /* Finalize the given symbol. */
 INTERN void DCALL symbol_fini(struct symbol *__restrict self);
 
 
-
-
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-struct symbol {
-    struct symbol       *sym_next;      /* [0..1][owned] Next symbol with the same modulated `sym_name->k_id' */
-#define SYMBOL_NAME(x) ((x)->sym_name->k_name)
-    struct TPPKeyword   *sym_name;      /* [1..1][const] Name of this symbol. */
-#define SYMBOL_SCOPE(x)((x)->sym_scope)
-    DeeScopeObject      *sym_scope;     /* [1..1] The scope declaring this symbol. */
-#define SYMBOL_TYPE(x) ((x)->sym_class)
-    uint16_t             sym_class;     /* Symbol class. (One of `SYM_CLASS_*')
-                                         * This describes how is the variable addressed, and where does it live.
-                                         * Sorry, deemon has a lot of these... */
-#define SYM_FNORMAL      0x0000         /* Normal symbol flags. */
-    uint16_t             sym_flag;      /* Symbol flags (Set of `SYM_F*' dependent on `sym_class') */
-#if __SIZEOF_POINTER__ > 4
-    uint16_t             sym_pad[(sizeof(void *)/2)-2]; /* ... */
-#endif
-#define SYMBOL_NREAD(x)      ((x)->sym_read)
-#define SYMBOL_NWRITE(x)     ((x)->sym_write)
-#define SYMBOL_INC_NREAD(x)  ((void)++(x)->sym_read)
-#define SYMBOL_INC_NWRITE(x) ((void)++(x)->sym_write)
-#define SYMBOL_DEC_NREAD(x)  (ASSERT((x)->sym_read),(void)--(x)->sym_read)
-#define SYMBOL_DEC_NWRITE(x) (ASSERT((x)->sym_write),(void)--(x)->sym_write)
-    uint32_t             sym_read;      /* The amount of times that this symbol is read from. */
-    uint32_t             sym_write;     /* The amount of times that this symbol is written to. (Excluding an initial assignment)
-                                         * HINT: Using this field, the code generator performs constant optimization. */
-    union {
-
-#define SYMBOL_MARK_USED(x)  \
-   ((x)->sym_class == SYM_CLASS_EXTERN ? \
-      (void)((x)->sym_flag &= ~SYM_FEXTERN_WEAK) : \
-      (void)0)
-#define SYMBOL_IS_WEAK(x)    \
-  (((x)->sym_class == SYM_CLASS_EXTERN && ((x)->sym_flag & SYM_FEXTERN_WEAK)) || \
-   ((x)->sym_class == SYM_CLASS_AMBIGUOUS))
-#define SYMBOL_CLEAR_WEAK(x) \
-   ((x)->sym_class == SYM_CLASS_EXTERN ? (void)Dee_Decref((x)->sym_extern.sym_module) : (void)0, \
-    (x)->sym_read = (x)->sym_write = 0)
-
-        struct {
-#define SYM_CLASS_EXTERN               0x0000      /* External symbol. (NOTE: Doesn't use `SYM_FALLOC') */
-#   define SYM_FEXTERN_WEAK            0x4000      /* FLAG: The variable is weakly imported, and is silently overwritten by an explicit import, or declaration. */
-#   define SYM_FEXTERN_ALLOC           0x8000      /* FLAG: The module index for the variable has been allocated. */
-            DREF struct module_object *sym_module; /* [1..1][const] The module exporting this symbol. */
-            struct module_symbol      *sym_modsym; /* [1..1] The symbol that is being imported from `sym_module'. */
-            uint16_t                   sym_modid;  /* [valid_if(SYM_FEXTERN_ALLOC)] The module's index in the `rs_importv' vector of the current root-scope. */
-        }                              sym_extern; /* External variable. */
-#define SYMBOL_EXTERN_MODULE(x)    ((x)->sym_extern.sym_module)
-#define SYMBOL_EXTERN_SYMBOL(x)    ((x)->sym_extern.sym_modsym)
-
-        struct {
-#define SYM_CLASS_VAR                  0x0001      /* Variable. */
-#   define SYM_FVAR_GLOBAL             0x0000      /* Global variable. */
-#   define SYM_FVAR_LOCAL              0x0001      /* Local variable. */
-#   define SYM_FVAR_STATIC             0x0002      /* Static variable. */
-#   define SYM_FVAR_MASK               0x00ff      /* MASK: The mask for the variable sub-class. */
-#   define SYM_FVAR_ALLOC              0x8000      /* FLAG: The variable has been allocated.
-                                                    * HINT: Code can (and does) assume that this flag is only set during code generation. */
-            uint16_t                   sym_index;  /* [valid_if(SYM_FVAR_ALLOC)] Variable index (either global, local or static). */
-            DREF struct string_object *sym_doc;    /* [0..1] Optional documentation string for global variables. */
-        }                              sym_var;    /* Variable. */
-
-        struct {
-#define SYM_CLASS_STACK                0x0002      /* Stack-based Variable. */
-#   define SYM_FSTK_ALLOC              0x8000      /* FLAG: The variable has been allocated.
-                                                    * HINT: Code can (and does) assume that this flag is only set during code generation. */
-#   define SYM_FSTK_NOUNBIND_OK        0x0001      /* FLAG: If the symbol appears in a `del' expression, and `sym_bound' is non-ZERO,
-                                                    *       still don't warn about the fact that a stack variable isn't being unbound,
-                                                    *       but is only being overwritten. */
-            uint16_t                   sym_offset; /* Absolute stack address. */
-            struct symbol             *sym_nstck;  /* [0..1] Next stack-based variable apart of the current scope. */
-            uint32_t                   sym_bound;  /* The number of times that the symbol appears as part of a `bound()' expression. */
-        }                              sym_stack;  /* Stack-based Variable. */
-#define SYMBOL_STACK_OFFSET(x)  ((x)->sym_stack.sym_offset)
-#define SYMBOL_NBOUND(x)        ((x)->sym_class == SYM_CLASS_STACK ? (x)->sym_stack.sym_bound : 0)
-#define SYMBOL_INC_NBOUND(x)    ((x)->sym_class == SYM_CLASS_STACK ? (void)(++(x)->sym_stack.sym_bound) : (void)0)
-#define SYMBOL_DEC_NBOUND(x)    ((x)->sym_class == SYM_CLASS_STACK ? (void)(ASSERT((x)->sym_stack.sym_bound != 0),--(x)->sym_stack.sym_bound) : (void)0)
-
-        struct {
-#define SYM_CLASS_ARG                  0x0003      /* Argument variable. */
-            uint16_t                   sym_index;  /* [const] Virtual argument index. */
-        }                              sym_arg;    /* Argument variable. */
-#define SYMBOL_ARG_INDEX(x)  ((x)->sym_arg.sym_index)
-
-        struct {
-#define SYM_CLASS_REF                  0x8004      /* Referenced variable. */
-#   define SYM_FREF_ALLOC              0x8000      /* FLAG: The reference has been allocated. */
-            struct symbol             *sym_ref;    /* [1..1][->sym_scope->s_base == sym_scope->s_base->bs_prev]
-                                                    * A variable referenced from the previous base-scope.
-                                                    * NOTE: For every symbol, only one reference symbol
-                                                    *       must ever be created in each child scope.
-                                                    *       When referenced variables are used more than
-                                                    *       once, the same reference must be re-used, so-as
-                                                    *       to prevent creation of multiple references for
-                                                    *       the same symbol. */
-            struct symbol             *sym_rnext;  /* [0..1][CHAIN(sym_scope->s_base->bs_refs)]
-                                                    * Chain of referenced variables in the current base-scope.
-                                                    * >> Used to track which symbols a reference has already been created for. */
-            uint16_t                   sym_index;  /* [valid_if(SYM_FREF_ALLOC)] Reference index. */
-        }                              sym_ref;    /* Referenced variable. */
-
-        struct {
-#define SYM_CLASS_MEMBER               0x0005      /* Instance member slot. */
-#   define SYM_FMEMBER_INST            0x0000      /* VALUE: The symbol is part of the instance member table. */
-#   define SYM_FMEMBER_CLASS           0x0001      /* FLAG: The symbol is part of the class member table. */
-            struct symbol             *sym_class;  /* [1..1] A symbol describing the class that is defining this member. */
-            struct member_entry       *sym_member; /* [1..1] The member that is being described. */
-            struct symbol             *sym_ref;    /* [0..1] A chain of symbols that are referencing this member.
-                                                    * NOTE: Every entry is another SYM_CLASS_MEMBER, who's `sym_member.sym_class'
-                                                    *       field is a `SYM_CLASS_REF' to our `sym_member.sym_class', as well as
-                                                    *       sharing the same `sym_member' pointer. */
-        }                              sym_member;
-#define SYMBOL_FIELD_CLASS(x)      ((x)->sym_member.sym_class)
-#define SYMBOL_FIELD_MEMBER(x)     ((x)->sym_member.sym_member)
-
-        struct {
-#define SYM_CLASS_MODULE               0x0006      /* Import module reference. */
-#   define SYM_FMODULE_ALLOC           0x8000      /* FLAG: The import module index has been assigned. */
-            DREF struct module_object *sym_module; /* [1..1] The referenced module. */
-            uint16_t                   sym_modid;  /* [valid_if(SYM_FMODULE_ALLOC)] The module's index in the `rs_importv' vector of the current root-scope. */
-        }                              sym_module; /* Import module reference. */
-#define SYMBOL_MODULE_MODULE(x)    ((x)->sym_module.sym_module)
-
-        struct {
-#define SYM_CLASS_PROPERTY             0x0007      /* Property symbol (invokes callbacks for get/del/set). */
-            struct symbol             *sym_get;    /* [0..1] The getter callback. */
-            struct symbol             *sym_del;    /* [0..1] The delete callback. */
-            struct symbol             *sym_set;    /* [0..1] the setter callback. */
-        }                              sym_property; /* Property symbol. */
-#define SYMBOL_GETSET_GETTER(x)    ((x)->sym_property.sym_get)
-#define SYMBOL_GETSET_DELETE(x)    ((x)->sym_property.sym_del)
-#define SYMBOL_GETSET_SETTER(x)    ((x)->sym_property.sym_set)
-
-#define SYM_CLASS_ALIAS                0x0008      /* Alias for another symbol. */
-        struct {
-            struct symbol             *sym_alias;  /* [1..1][->sym_scope == sym_scope]
-                                                    * The symbol being aliased.
-                                                    * NOTE: In class scopes, this type of symbol is used
-                                                    *       for forward references and as placeholder. */
-        }                              sym_alias;
-#define SYMBOL_ALIAS(x)      ((x)->sym_alias.sym_alias)
-
-        /* Other symbol classes that reference special symbols. */
-#define SYM_CLASS_EXCEPT        0x1009 /* The current exception. */
-#define SYM_CLASS_THIS_MODULE   0x900a /* The current module. */
-#define SYM_CLASS_THIS_FUNCTION 0x900b /* The function object identified by `s_scope->s_base'. */
-#define SYM_CLASS_THIS          0x900c /* The `this' variable in class-member functions (thiscall functions).
-                                        * NOTE: This class requires that `s_scope->s_base'
-                                        *       have the `SCOPE_FTHISCALL' flag set. */
-#define SYM_CLASS_AMBIGUOUS     0x900d /* An ambiguous symbol. */
-    };
-};
-/* Symbol classes that must be referenced when not part of the current base-scope. */
-#define SYM_MUST_REFERENCE(x) \
-  ((x)->sym_class != SYM_CLASS_EXTERN && \
-   (x)->sym_class != SYM_CLASS_MODULE && \
-   (x)->sym_class != SYM_CLASS_THIS_MODULE && \
-  ((x)->sym_class != SYM_CLASS_VAR || \
-   (x)->sym_flag  != SYM_FVAR_GLOBAL))
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
-
-
-
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 #define sym_next                s_next              /* TODO: Remove me */
 #define sym_name                s_name              /* TODO: Remove me */
 #define SYM_CLASS_EXTERN        SYMBOL_TYPE_EXTERN  /* TODO: Remove me */
@@ -387,24 +215,11 @@ struct symbol {
 #define SYM_CLASS_THIS_FUNCTION SYMBOL_TYPE_MYFUNC  /* TODO: Remove me */
 #define SYM_CLASS_THIS          SYMBOL_TYPE_THIS    /* TODO: Remove me */
 #define SYM_CLASS_AMBIGUOUS     SYMBOL_TYPE_AMBIG   /* TODO: Remove me */
-#endif
-
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 INTDEF char const symclass_names[0x1f + 1][8];
 #define SYMCLASS_NAME(cls) symclass_names[(cls)&0x1f]
-#else
-INTDEF char const symclass_names[0xf + 1][14];
-#define SYMCLASS_NAME(cls) symclass_names[(cls)&0xf]
-#endif
-
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-/* Return the real symbol given a symbol that may be a reference. */
-INTDEF struct symbol *DCALL sym_realsym(struct symbol *__restrict self);
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
-
 #endif
 
 
@@ -422,24 +237,11 @@ struct scope_object {
     size_t                   s_mapc;  /* Amount of symbols defined within the hash-map `s_map'. */
     size_t                   s_mapa;  /* Allocated vector size of the symbol hash-map `s_map'. */
     struct symbol           *s_del;   /* [0..1][owned] Chain of symbols that have been deleted. (And thereby made invisible) */
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-    struct symbol           *s_stk;   /* [0..1][CHAIN(->sym_stack.sym_nstck)] Chain of stack-based symbols. */
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 #define SCOPE_FNORMAL        0x0000   /* Normal scope flags. */
 #define SCOPE_FCLASS         0x0001   /* Class scope. */
     uint16_t                 s_flags; /* Scope flags (Set of `SCOPE_F*'). */
     uint16_t                 s_pad[(sizeof(void *)/2)-1];
-#endif /* CONFIG_USE_NEW_SYMBOL_TYPE */
 };
-
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-#define SCOPE_ADD_STACKSYM(self,x) \
- (void)(ASSERT((x)->sym_class == SYM_CLASS_STACK), \
-               (x)->sym_flag = SYM_FNORMAL, \
-               (x)->sym_stack.sym_nstck = (self)->s_stk, \
-               (self)->s_stk = (x))
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
 
 
 
@@ -460,9 +262,6 @@ struct base_scope_object {
     struct text_label  *bs_swcase;     /* [0..1][CHAIN(->tl_next)][owned] Chain of switch labels.
                                         * NOTE: This chain links cases in the reverse order of their appearance. */
     struct text_label  *bs_swdefl;     /* [0..1][owned] Default label in a switch statement. */
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-    struct symbol      *bs_refs;       /* [0..1] Chain of references defined for this scope. */
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
     struct symbol      *bs_super;      /* [0..1] A symbol describing the super-identifier in thiscall functions.
                                         * NOTE:  If necessary, this symbol is replaced with a `SYM_CLASS_REF' variable
                                         *        upon first access (call to `get_current_super()'), following the usual
@@ -617,13 +416,6 @@ INTDEF struct text_label *DCALL new_case_label(struct ast_object *__restrict exp
 INTDEF struct text_label *DCALL new_default_label(void);
 
 
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-/* Safely create a reference to a given symbol from `current_basescope'. */
-INTDEF struct symbol *DCALL
-symbol_reference(DeeBaseScopeObject *__restrict current_basescope,
-                 struct symbol *__restrict sym);
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
-
 /* Lookup a symbol in the given scope. */
 INTDEF struct symbol *DCALL
 scope_lookup(DeeScopeObject *__restrict scope,
@@ -636,10 +428,8 @@ scope_lookup(DeeScopeObject *__restrict scope,
  * This is done when creating superargs class operators. */
 INTDEF int DCALL copy_argument_symbols(DeeBaseScopeObject *__restrict other);
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 /* Fully link all forward-defined symbols inside of a class scope. */
 INTDEF int DCALL link_forward_symbols(void);
-#endif /* CONFIG_USE_NEW_SYMBOL_TYPE */
 
 /* Allocate and return a new symbol private to the current scope.
  * NOTE: The caller must ensure that no variable with the given name already exist.

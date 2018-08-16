@@ -542,13 +542,8 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
    sym = new_local_symbol(name);
    if unlikely(!sym) goto err;
    /* Define this symbol as an import from this module. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    sym->s_type  = SYMBOL_TYPE_EXTERN;
    sym->s_flag |= SYMBOL_FWEAK; /* Symbols import by `*' are defined weakly. */
-#else
-   SYMBOL_TYPE(sym) = SYM_CLASS_EXTERN;
-   sym->sym_flag = SYM_FEXTERN_WEAK; /* Symbols import by `*' are defined weakly. */
-#endif
    SYMBOL_EXTERN_MODULE(sym) = module;
    SYMBOL_EXTERN_SYMBOL(sym) = iter;
    Dee_Incref(module);
@@ -611,12 +606,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
   import_symbol = new_local_symbol(item->ii_symbol_name);
   if unlikely(!import_symbol) goto err;
 init_import_symbol:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   import_symbol->s_type = SYMBOL_TYPE_EXTERN;
-#else
-  SYMBOL_TYPE(import_symbol)             = SYM_CLASS_EXTERN;
-  import_symbol->sym_flag              = SYM_FNORMAL;
-#endif
   SYMBOL_EXTERN_MODULE(import_symbol) = module;
   SYMBOL_EXTERN_SYMBOL(import_symbol) = sym;
   Dee_Incref(module);
@@ -666,9 +656,6 @@ ast_import_module(struct import_item *__restrict item) {
   import_symbol = new_local_symbol(item->ii_symbol_name);
   if unlikely(!import_symbol) goto err_module;
 init_import_symbol:
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-  import_symbol->sym_flag = SYM_FNORMAL;
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
   if (module == current_rootscope->rs_module) {
    SYMBOL_TYPE(import_symbol) = SYM_CLASS_THIS_MODULE;
    Dee_Decref(module);

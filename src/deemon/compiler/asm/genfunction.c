@@ -95,10 +95,8 @@ asm_gpush_function(DeeAstObject *__restrict function_ast) {
     goto err_refv;
  /* Push referenced symbols. */
  for (i = 0; i < refc; ++i) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   refv[i].sr_sym->s_flag  = refv[i].sr_orig_flag;
   refv[i].sr_sym->s_refid = refv[i].sr_orig_refid;
-#endif
   if (asm_gpush_symbol(refv[i].sr_sym,function_ast))
       goto err_refv;
  }
@@ -145,10 +143,8 @@ asm_gmov_function(struct symbol *__restrict dst,
     goto err_refv;
  /* Push referenced symbols. */
  for (i = 0; i < refc; ++i) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   refv[i].sr_sym->s_flag  = refv[i].sr_orig_flag;
   refv[i].sr_sym->s_refid = refv[i].sr_orig_refid;
-#endif
   if (asm_gpush_symbol(refv[i].sr_sym,function_ast))
       goto err_refv;
  }

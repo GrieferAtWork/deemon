@@ -75,16 +75,9 @@ check_symbol:
     if (asm_gpush_symbol(sym,warn_ast)) goto err;
     if (asm_gpop_local((uint16_t)lid)) goto err;
 #endif
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
     sym->s_type  = SYMBOL_TYPE_LOCAL;
     sym->s_flag |= SYMBOL_FALLOC;
     sym->s_symid = (uint16_t)lid;
-#else
-    SYMBOL_TYPE(sym) = SYM_CLASS_VAR;
-    sym->sym_flag = SYM_FVAR_LOCAL | SYM_FVAR_ALLOC;
-    sym->sym_var.sym_doc = NULL;
-    sym->sym_var.sym_index = (uint16_t)lid;
-#endif
    } break;
 
    default: break;
@@ -115,30 +108,15 @@ set_new_scope:
   current_assembler.a_scope = scope;
   while (scope && scope != old_scope) {
    if (!(current_assembler.a_flag&ASM_FSTACKDISP)) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
     struct symbol **bucket_iter,**bucket_end,*iter;
     bucket_end = (bucket_iter = scope->s_map) + scope->s_mapa;
     for (; bucket_iter < bucket_end; ++bucket_iter)
     for (iter = *bucket_iter; iter; iter = iter->s_next)
-    if (iter->s_type == SYMBOL_TYPE_STACK)
-#else
-    struct symbol *iter = scope->s_stk;
-    for (; iter; iter = iter->sym_stack.sym_nstck)
-#endif
-    {
+    if (iter->s_type == SYMBOL_TYPE_STACK) {
      /* Allocate memory for stack-variables when stack displacement is disabled. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-     if (iter->s_nwrite)
-#else
-     if (iter->sym_write)
-#endif
-     {
+     if (iter->s_nwrite) {
       /* Allocate this stack variable. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
       iter->s_flag |= SYMBOL_FALLOC;
-#else
-      iter->sym_flag |= SYM_FSTK_ALLOC;
-#endif
       SYMBOL_STACK_OFFSET(iter)  = current_assembler.a_stackcur;
       SYMBOL_STACK_OFFSET(iter) += num_stack_vars;
       if (asm_putddi_sbind(SYMBOL_STACK_OFFSET(iter),
@@ -146,11 +124,7 @@ set_new_scope:
           goto err;
       ++num_stack_vars;
      } else {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
       iter->s_flag &= ~SYMBOL_FALLOC;
-#else
-      iter->sym_flag &= ~SYM_FSTK_ALLOC;
-#endif
      }
     }
    }
@@ -188,18 +162,11 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve
    for (i = 0; i < scope->s_mapa; ++i) {
     struct symbol *iter = scope->s_map[i];
     for (; iter; iter = iter->sym_next) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
      if (iter->s_type != SYMBOL_TYPE_LOCAL) continue;
      if (!(iter->s_flag & SYMBOL_FALLOC)) continue;
      ASSERT(!SYMBOL_MUST_REFERENCE_TYPEMAY(iter));
      asm_dellocal(iter->s_symid);
      iter->s_flag &= ~SYMBOL_FALLOC;
-#else
-     if (iter->sym_class != SYM_CLASS_VAR) continue;
-     if (iter->sym_flag != (SYM_FVAR_ALLOC|SYM_FVAR_LOCAL)) continue;
-     asm_dellocal(iter->sym_var.sym_index);
-     iter->sym_flag &= ~SYM_FVAR_ALLOC;
-#endif
     }
    }
    scope = scope->s_prev;
@@ -208,24 +175,12 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve
  }
  /* Pop all new stack variables initialized between this and the previous scope. */
  do {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   struct symbol **bucket_iter,**bucket_end,*iter;
   bucket_end = (bucket_iter = scope->s_map) + scope->s_mapa;
   for (; bucket_iter < bucket_end; ++bucket_iter)
   for (iter = *bucket_iter; iter; iter = iter->s_next)
-  if (iter->s_type == SYMBOL_TYPE_STACK)
-#else
-  struct symbol *iter = scope->s_stk;
-  for (; iter; iter = iter->sym_stack.sym_nstck)
-#endif
-  {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-   if (iter->s_flag & SYMBOL_FALLOC)
-#else
-   ASSERT(iter->sym_class == SYM_CLASS_STACK);
-   if (iter->sym_flag & SYM_FSTK_ALLOC)
-#endif
-   {
+  if (iter->s_type == SYMBOL_TYPE_STACK) {
+   if (iter->s_flag & SYMBOL_FALLOC) {
     if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
         goto err;
     ++num_stack_vars;

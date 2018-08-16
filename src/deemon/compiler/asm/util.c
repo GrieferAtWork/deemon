@@ -561,12 +561,8 @@ err:
 }
 
 PRIVATE int DCALL check_thiscall(struct symbol *__restrict sym) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  ASSERT(sym->s_type == SYMBOL_TYPE_CFIELD ||
         sym->s_type == SYMBOL_TYPE_IFIELD);
-#else
- ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_MEMBER);
-#endif
  /* Throw a compiler-error when one attempts to
   * access an instance member from a class method.
   * We must check this now because at runtime, the fast-mode interpreter
@@ -588,13 +584,11 @@ PRIVATE int (DCALL asm_gpush_thisas)(struct symbol *__restrict class_type,
  /* Special instructions exist to push `this' as a
   * specific class type when the type is a certain symbol. */
 check_ct_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  if (SYMBOL_MUST_REFERENCE(class_type)) {
   symid = asm_rsymid(class_type);
   if unlikely(symid < 0) goto err;
   return asm_gsuper_this_r((uint16_t)symid);
  }
-#endif
  switch (SYMBOL_TYPE(class_type)) {
  
  case SYM_CLASS_ALIAS:
@@ -602,25 +596,10 @@ check_ct_class:
   class_type = SYMBOL_ALIAS(class_type);
   goto check_ct_class;
 
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
- case SYM_CLASS_REF:
-  symid = asm_rsymid(class_type);
-  if unlikely(symid < 0) goto err;
-  return asm_gsuper_this_r((uint16_t)symid);
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
-
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYMBOL_TYPE_GLOBAL:
-#else /* CONFIG_USE_NEW_SYMBOL_TYPE */
- case SYM_CLASS_VAR:
-  if ((class_type->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL)
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
-  {
-   symid = asm_gsymid_for_read(class_type,warn_ast);
-   if unlikely(symid < 0) goto err;
-   return asm_gsuper_this_g((uint16_t)symid);
-  }
-  break;
+  symid = asm_gsymid_for_read(class_type,warn_ast);
+  if unlikely(symid < 0) goto err;
+  return asm_gsuper_this_g((uint16_t)symid);
 
  case SYM_CLASS_EXTERN:
   ASSERT(SYMBOL_EXTERN_SYMBOL(class_type));
@@ -650,10 +629,7 @@ PRIVATE int (DCALL asm_gcall_symbol)(struct symbol *__restrict function,
  int32_t symid;
  /* Attempt a direct call to the symbol. */
 check_function_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
- if (!SYMBOL_MUST_REFERENCE(function))
-#endif
- {
+ if (!SYMBOL_MUST_REFERENCE(function)) {
   switch (SYMBOL_TYPE(function)) {
 
   case SYM_CLASS_ALIAS:
@@ -669,27 +645,13 @@ check_function_class:
        goto err;
    goto done;
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   case SYMBOL_TYPE_GLOBAL:
    if unlikely((symid = asm_gsymid_for_read(function,warn_ast)) < 0) goto err;
    return asm_gcall_global((uint16_t)symid,num_args);
+
   case SYMBOL_TYPE_LOCAL:
    if unlikely((symid = asm_lsymid_for_read(function,warn_ast)) < 0) goto err;
    return asm_gcall_local((uint16_t)symid,num_args);
-#else
-  case SYM_CLASS_VAR:
-   if ((function->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL) {
-    if unlikely((symid = asm_gsymid_for_read(function,warn_ast)) < 0) goto err;
-    if (asm_gcall_global((uint16_t)symid,num_args)) goto err;
-    goto done;
-   }
-   if ((function->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL) {
-    if unlikely((symid = asm_lsymid_for_read(function,warn_ast)) < 0) goto err;
-    if (asm_gcall_local((uint16_t)symid,num_args)) goto err;
-    goto done;
-   }
-   break;
-#endif
 
   default: break;
   }
@@ -711,19 +673,15 @@ INTERN int (DCALL asm_gpush_symbol)(struct symbol *__restrict sym,
  int32_t symid;
  ASSERT(sym);
 check_sym_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  if (SYMBOL_MUST_REFERENCE(sym)) {
   symid = asm_rsymid(sym);
   if unlikely(symid < 0) goto err;
   return asm_gpush_ref((uint16_t)symid);
  }
-#endif
  switch (SYMBOL_TYPE(sym)) {
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYMBOL_TYPE_NONE:
   return asm_gpush_none();
-#endif
 
  case SYM_CLASS_ALIAS:
   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
@@ -742,7 +700,6 @@ check_sym_class:
   ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
   return asm_gpush_extern((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYMBOL_TYPE_GLOBAL:
   symid = asm_gsymid_for_read(sym,warn_ast);
   if unlikely(symid < 0) goto err;
@@ -757,39 +714,11 @@ check_sym_class:
   symid = asm_ssymid_for_read(sym,warn_ast);
   if unlikely(symid < 0) goto err;
   return asm_gpush_static((uint16_t)symid);
-#else
- case SYM_CLASS_VAR:
-  switch (sym->sym_flag&SYM_FVAR_MASK) {
-
-  case SYM_FVAR_GLOBAL:
-   symid = asm_gsymid_for_read(sym,warn_ast);
-   if unlikely(symid < 0) goto err;
-   return asm_gpush_global((uint16_t)symid);
-
-  case SYM_FVAR_LOCAL:
-   symid = asm_lsymid_for_read(sym,warn_ast);
-   if unlikely(symid < 0) goto err;
-   return asm_gpush_local((uint16_t)symid);
-
-  case SYM_FVAR_STATIC:
-   symid = asm_ssymid_for_read(sym,warn_ast);
-   if unlikely(symid < 0) goto err;
-   return asm_gpush_static((uint16_t)symid);
-
-  default: ASSERTF(0,"Invalid variable type");
-  }
-  break;
-#endif
 
  {
   uint16_t offset,absolute_stack_addr;
  case SYM_CLASS_STACK:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  if unlikely(!(sym->s_flag & SYMBOL_FALLOC))
-#else
-  if unlikely(!(sym->sym_flag&SYM_FSTK_ALLOC))
-#endif
-  {
+  if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
    ASM_ERR(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,
            SYMBOL_NAME(sym));
    goto err;
@@ -816,30 +745,14 @@ check_sym_class:
  case SYM_CLASS_ARG:
   return asm_gpush_varg(SYMBOL_ARG_INDEX(sym));
 
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
- case SYM_CLASS_REF:
-  symid = asm_rsymid(sym);
-  if unlikely(symid < 0) goto err;
-  return asm_gpush_ref((uint16_t)symid);
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
-
  {
   struct symbol *class_sym;
   struct member_entry *member;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYMBOL_TYPE_CFIELD:
  case SYMBOL_TYPE_IFIELD:
-#else
- case SYM_CLASS_MEMBER:
-#endif
   class_sym = SYMBOL_FIELD_CLASS(sym);
   member = SYMBOL_FIELD_MEMBER(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  if (sym->s_type == SYMBOL_TYPE_CFIELD)
-#else
-  if (sym->sym_flag & SYM_FMEMBER_CLASS)
-#endif
-  {
+  if (sym->s_type == SYMBOL_TYPE_CFIELD) {
    /* Do a regular attribute lookup on the class itself. */
    if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
   } else {
@@ -849,25 +762,11 @@ check_sym_class:
     /* Regular, old member variable. (this one has its own instruction) */
     while (SYMBOL_TYPE(class_sym) == SYM_CLASS_ALIAS)
         class_sym = SYMBOL_ALIAS(class_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-    if (SYMBOL_MAY_REFERENCE(class_sym))
-#else
-    if (SYMBOL_TYPE(class_sym) == SYM_CLASS_REF)
-#endif
-    {
+    if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
      if unlikely(symid < 0) goto err;
      return asm_ggetmember_r((uint16_t)symid,member->cme_addr);
     }
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-    if (SYMBOL_TYPE(class_sym) == SYM_CLASS_VAR &&
-       (class_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL &&
-        current_scope != (DeeScopeObject *)current_rootscope) {
-     symid = asm_grsymid(class_sym);
-     if unlikely(symid < 0) goto err;
-     return asm_ggetmember_r((uint16_t)symid,member->cme_addr);
-    }
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
     return asm_ggetmember(member->cme_addr);
    }
@@ -923,10 +822,8 @@ INTERN bool DCALL
 asm_can_prefix_symbol(struct symbol *__restrict sym) {
  ASSERT(sym);
 check_sym_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  if (SYMBOL_MUST_REFERENCE(sym))
      return false;
-#endif
  switch (SYMBOL_TYPE(sym)) {
 
  case SYM_CLASS_ALIAS:
@@ -934,24 +831,10 @@ check_sym_class:
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYMBOL_TYPE_GLOBAL:
  case SYMBOL_TYPE_LOCAL:
  case SYMBOL_TYPE_STATIC:
   return true;
-#else
- case SYM_CLASS_VAR:
-  switch (sym->sym_flag&SYM_FVAR_MASK) {
-
-  case SYM_FVAR_GLOBAL:
-  case SYM_FVAR_LOCAL:
-  case SYM_FVAR_STATIC:
-   return true;
-
-  default: break;
-  }
-  break;
-#endif
 
  case SYM_CLASS_EXTERN:
   if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & (MODSYM_FPROPERTY|MODSYM_FREADONLY))
@@ -960,11 +843,7 @@ check_sym_class:
 
  case SYM_CLASS_STACK:
   /* Only allocated stack symbols can be used in prefix expressions. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  return !!(sym->s_flag & SYMBOL_FALLOC);
-#else
-  return !!(sym->sym_flag & SYM_FSTK_ALLOC);
-#endif
+  return (sym->s_flag & SYMBOL_FALLOC) != 0;
 
  default: break;
  }
@@ -975,10 +854,8 @@ INTERN bool DCALL
 asm_can_prefix_symbol_for_read(struct symbol *__restrict sym) {
  ASSERT(sym);
 check_sym_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  if (SYMBOL_MUST_REFERENCE(sym))
      return false;
-#endif
  switch (SYMBOL_TYPE(sym)) {
 
  case SYM_CLASS_ALIAS:
@@ -986,24 +863,10 @@ check_sym_class:
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYMBOL_TYPE_GLOBAL:
  case SYMBOL_TYPE_LOCAL:
  case SYMBOL_TYPE_STATIC:
   return true;
-#else
- case SYM_CLASS_VAR:
-  switch (sym->sym_flag&SYM_FVAR_MASK) {
-
-  case SYM_FVAR_GLOBAL:
-  case SYM_FVAR_LOCAL:
-  case SYM_FVAR_STATIC:
-   return true;
-
-  default: break;
-  }
-  break;
-#endif
 
  case SYM_CLASS_EXTERN:
   if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
@@ -1012,11 +875,7 @@ check_sym_class:
 
  case SYM_CLASS_STACK:
   /* Only allocated stack symbols can be used in prefix expressions. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  return !!(sym->s_flag & SYMBOL_FALLOC);
-#else
-  return !!(sym->sym_flag & SYM_FSTK_ALLOC);
-#endif
+  return (sym->s_flag & SYMBOL_FALLOC) != 0;
 
  default: break;
  }
@@ -1030,9 +889,7 @@ INTERN int (DCALL asm_gprefix_symbol)(struct symbol *__restrict sym,
  ASSERT(sym);
  (void)warn_ast;
 check_sym_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  ASSERT(!SYMBOL_MUST_REFERENCE(sym));
-#endif
  switch (SYMBOL_TYPE(sym)) {
 
  case SYM_CLASS_ALIAS:
@@ -1048,7 +905,6 @@ check_sym_class:
   ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
   return asm_pextern((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYMBOL_TYPE_GLOBAL:
   symid = asm_gsymid(sym);
   if unlikely(symid < 0) goto err;
@@ -1063,36 +919,9 @@ check_sym_class:
   symid = asm_ssymid(sym);
   if unlikely(symid < 0) goto err;
   return asm_pstatic((uint16_t)symid);
-#else
- case SYM_CLASS_VAR:
-  switch (sym->sym_flag&SYM_FVAR_MASK) {
-
-  case SYM_FVAR_GLOBAL:
-   symid = asm_gsymid(sym);
-   if unlikely(symid < 0) goto err;
-   return asm_pglobal((uint16_t)symid);
-
-  case SYM_FVAR_LOCAL:
-   symid = asm_lsymid(sym);
-   if unlikely(symid < 0) goto err;
-   return asm_plocal((uint16_t)symid);
-
-  case SYM_FVAR_STATIC:
-   symid = asm_ssymid(sym);
-   if unlikely(symid < 0) goto err;
-   return asm_pstatic((uint16_t)symid);
-
-  default: goto err_invalid;
-  }
-  break;
-#endif
 
  case SYM_CLASS_STACK:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   ASSERT(sym->s_flag & SYMBOL_FALLOC);
-#else
-  ASSERT(sym->sym_flag & SYM_FSTK_ALLOC);
-#endif
   if (current_assembler.a_stackcur <= SYMBOL_STACK_OFFSET(sym)) {
    /* This can happen in code like this:
     * __stack local foo;
@@ -1109,16 +938,9 @@ check_sym_class:
   return asm_pstack(SYMBOL_STACK_OFFSET(sym));
 
  default:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   ASM_ERR(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,
           sym->sym_name->k_name,
           SYMCLASS_NAME(SYMBOL_TYPE(sym)));
-#else
-err_invalid:
-  ASM_ERR(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,
-          sym_realsym(sym)->sym_name->k_name,
-          SYMCLASS_NAME(SYMBOL_TYPE(sym)));
-#endif
   goto err;
  }
  __builtin_unreachable();
@@ -1131,10 +953,8 @@ INTERN int (DCALL asm_gpush_bnd_symbol)(struct symbol *__restrict sym,
  int32_t symid;
  ASSERT(sym);
 check_sym_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  if (SYMBOL_MUST_REFERENCE(sym))
      goto fallback;
-#endif
  switch (SYMBOL_TYPE(sym)) {
 
  case SYM_CLASS_ALIAS:
@@ -1162,7 +982,6 @@ check_sym_class:
   ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
   return asm_gpush_bnd_extern((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYMBOL_TYPE_GLOBAL:
   if (!sym->s_nwrite)
        return asm_gpush_false();
@@ -1177,47 +996,15 @@ check_sym_class:
   if unlikely(symid < 0) goto err;
   return asm_gpush_bnd_local((uint16_t)symid);
 
-#else
- case SYM_CLASS_VAR:
-  switch (sym->sym_flag&SYM_FVAR_MASK) {
-
-  case SYM_FVAR_GLOBAL:
-   if (!sym->sym_write)
-        return asm_gpush_false();
-   symid = asm_gsymid(sym);
-   if unlikely(symid < 0) goto err;
-   return asm_gpush_bnd_global((uint16_t)symid);
-
-  case SYM_FVAR_LOCAL:
-   if (!sym->sym_write)
-        return asm_gpush_false();
-   symid = asm_lsymid(sym);
-   if unlikely(symid < 0) goto err;
-   return asm_gpush_bnd_local((uint16_t)symid);
-
-  default: break;
-  }
-  goto fallback;
-#endif
-
  {
   struct symbol *class_sym;
   struct member_entry *member;
   /* Class members can be unbound... */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYMBOL_TYPE_CFIELD:
  case SYMBOL_TYPE_IFIELD:
-#else
- case SYM_CLASS_MEMBER:
-#endif
   class_sym = SYMBOL_FIELD_CLASS(sym);
   member = SYMBOL_FIELD_MEMBER(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  if (sym->s_type == SYMBOL_TYPE_CFIELD)
-#else
-  if (sym->sym_flag&SYM_FMEMBER_CLASS)
-#endif
-  {
+  if (sym->s_type == SYMBOL_TYPE_CFIELD) {
    /* Do a regular attribute lookup on the class itself. */
    if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
   } else {
@@ -1226,25 +1013,11 @@ check_sym_class:
    if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
     while (SYMBOL_TYPE(class_sym) == SYM_CLASS_ALIAS)
         class_sym = SYMBOL_ALIAS(class_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-    if (SYMBOL_MAY_REFERENCE(class_sym))
-#else
-    if (SYMBOL_TYPE(class_sym) == SYM_CLASS_REF)
-#endif
-    {
+    if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
      if unlikely(symid < 0) goto err;
      return asm_gboundmember_r((uint16_t)symid,member->cme_addr);
     }
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-    if (SYMBOL_TYPE(class_sym) == SYM_CLASS_VAR &&
-       (class_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL &&
-        current_scope != (DeeScopeObject *)current_rootscope) {
-     symid = asm_grsymid(class_sym);
-     if unlikely(symid < 0) goto err;
-     return asm_gboundmember_r((uint16_t)symid,member->cme_addr);
-    }
-#endif
     /* Regular, old member variable. (this one has its own instruction) */
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
     return asm_gboundmember(member->cme_addr);
@@ -1279,10 +1052,7 @@ INTERN int (DCALL asm_gdel_symbol)(struct symbol *__restrict sym,
  int32_t symid;
  ASSERT(sym);
 check_sym_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
- if (!SYMBOL_MUST_REFERENCE(sym))
-#endif
- {
+ if (!SYMBOL_MUST_REFERENCE(sym)) {
   switch (SYMBOL_TYPE(sym)) {
 
   case SYM_CLASS_ALIAS:
@@ -1290,7 +1060,6 @@ check_sym_class:
    sym = SYMBOL_ALIAS(sym);
    goto check_sym_class;
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   case SYMBOL_TYPE_GLOBAL:
    if (!(sym->s_flag & SYMBOL_FALLOC) && !sym->s_nwrite)
          return 0;
@@ -1304,29 +1073,6 @@ check_sym_class:
    symid = asm_lsymid(sym);
    if unlikely(symid < 0) goto err;
    return asm_gdel_local((uint16_t)symid);
-
-#else
-  case SYM_CLASS_VAR:
-   switch (sym->sym_flag&SYM_FVAR_MASK) {
-
-   case SYM_FVAR_GLOBAL:
-    if (!(sym->sym_flag & SYM_FVAR_ALLOC) &&
-        !sym->sym_write) return 0;
-    symid = asm_gsymid(sym);
-    if unlikely(symid < 0) goto err;
-    return asm_gdel_global((uint16_t)symid);
-
-   case SYM_FVAR_LOCAL:
-    if (!(sym->sym_flag & SYM_FVAR_ALLOC) &&
-        !sym->sym_write) return 0;
-    symid = asm_lsymid(sym);
-    if unlikely(symid < 0) goto err;
-    return asm_gdel_local((uint16_t)symid);
-
-   default: goto err_invalid;
-   }
-   break;
-#endif
 
   {
    struct module_symbol *modsym;
@@ -1360,33 +1106,18 @@ check_sym_class:
    /* If `bound()' is used on the symbol, warn about the fact that
     * doing this will not actually unbind the symbol, but only delete
     * the value that was being stored. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (sym->s_nbound != 0 &&
      !(sym->s_flag & SYMBOL_FSTACK_NOUNBIND_OK) &&
        WARN(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,SYMBOL_NAME(sym)))
        goto err;
-   if (!(sym->s_flag & SYMBOL_FALLOC))
-#else
-   if (sym->sym_stack.sym_bound != 0 &&
-     !(sym->sym_flag & SYM_FSTK_NOUNBIND_OK) &&
-       WARN(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,SYMBOL_NAME(sym)))
-       goto err;
-   if (!(sym->sym_flag & SYM_FSTK_ALLOC))
-#endif
-   {
+   if (!(sym->s_flag & SYMBOL_FALLOC)) {
     /* If the stack variable hasn't been allocated, but is being written
      * to at some point, then we can't actually unbind it by overwriting
      * it, meaning that we can't generate the code that the user would
      * expect from us. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
     if (sym->s_nwrite != 0 &&
         WARN(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,SYMBOL_NAME(sym)))
         goto err;
-#else
-    if (sym->sym_write != 0 &&
-        WARN(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,SYMBOL_NAME(sym)))
-        goto err;
-#endif
     return 0;
    }
    /* Overwrite the stack-variable with `none':
@@ -1398,20 +1129,11 @@ check_sym_class:
   {
    struct symbol *class_sym;
    struct member_entry *member;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   case SYMBOL_TYPE_CFIELD:
   case SYMBOL_TYPE_IFIELD:
-#else
-  case SYM_CLASS_MEMBER:
-#endif
    class_sym = SYMBOL_FIELD_CLASS(sym);
    member = SYMBOL_FIELD_MEMBER(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-   if (sym->s_type == SYMBOL_TYPE_CFIELD)
-#else
-   if (sym->sym_flag & SYM_FMEMBER_CLASS)
-#endif
-   {
+   if (sym->s_type == SYMBOL_TYPE_CFIELD) {
     /* Do a regular attribute lookup on the class itself. */
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
    } else {
@@ -1421,25 +1143,11 @@ check_sym_class:
      /* Regular, old member variable. (this one has its own instruction) */
      while (SYMBOL_TYPE(class_sym) == SYM_CLASS_ALIAS)
          class_sym = SYMBOL_ALIAS(class_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-     if (SYMBOL_MAY_REFERENCE(class_sym))
-#else
-     if (SYMBOL_TYPE(class_sym) == SYM_CLASS_REF)
-#endif
-     {
+     if (SYMBOL_MAY_REFERENCE(class_sym)) {
       symid = asm_rsymid(class_sym);
       if unlikely(symid < 0) goto err;
       return asm_gdelmember_r((uint16_t)symid,member->cme_addr);
      }
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-     if (SYMBOL_TYPE(class_sym) == SYM_CLASS_VAR &&
-        (class_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL &&
-         current_scope != (DeeScopeObject *)current_rootscope) {
-      symid = asm_grsymid(class_sym);
-      if unlikely(symid < 0) goto err;
-      return asm_gdelmember_r((uint16_t)symid,member->cme_addr);
-     }
-#endif
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
      return asm_gdelmember(member->cme_addr);
     }
@@ -1453,21 +1161,12 @@ check_sym_class:
   } break;
 
   case SYM_CLASS_PROPERTY:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (!sym->s_getset.gs_del)
         return 0; /* TODO: Warning */
    /* Generate a zero-argument call to the delete symbol. */
    if (asm_gcall_symbol(sym->s_getset.gs_del,0,warn_ast))
        goto err;
    return asm_gpop();
-#else
-   if (!sym->sym_property.sym_del)
-        return 0; /* TODO: Warning */
-   /* Generate a zero-argument call to the delete symbol. */
-   if (asm_gcall_symbol(sym->sym_property.sym_del,0,warn_ast))
-       goto err;
-   return asm_gpop();
-#endif
 
   case SYM_CLASS_AMBIGUOUS:
    if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
@@ -1478,16 +1177,9 @@ check_sym_class:
   default: break;
   }
  }
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  return ASM_WARN(W_ASM_CANNOT_UNBIND_SYMBOL,
                  SYMBOL_NAME(sym),
                  SYMCLASS_NAME(SYMBOL_TYPE(sym)));
-#else
-err_invalid:
- return ASM_WARN(W_ASM_CANNOT_UNBIND_SYMBOL,
-                 sym_realsym(sym)->sym_name->k_name,
-                 SYMCLASS_NAME(SYMBOL_TYPE(sym)));
-#endif
 err:
  return -1;
 }
@@ -1497,10 +1189,7 @@ INTERN int (DCALL asm_gpop_symbol)(struct symbol *__restrict sym,
  int32_t symid;
  ASSERT(sym);
 check_sym_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
- if (!SYMBOL_MUST_REFERENCE(sym))
-#endif
- {
+ if (!SYMBOL_MUST_REFERENCE(sym)) {
   switch (SYMBOL_TYPE(sym)) {
 
   case SYM_CLASS_ALIAS:
@@ -1528,7 +1217,6 @@ check_sym_class:
    }
    return asm_gpop_extern((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   case SYMBOL_TYPE_GLOBAL:
    symid = asm_gsymid(sym);
    if unlikely(symid < 0) goto err;
@@ -1543,38 +1231,10 @@ check_sym_class:
    symid = asm_ssymid(sym);
    if unlikely(symid < 0) goto err;
    return asm_gpop_static((uint16_t)symid);
-#else
-  case SYM_CLASS_VAR:
-   switch (sym->sym_flag&SYM_FVAR_MASK) {
-
-   case SYM_FVAR_GLOBAL:
-    symid = asm_gsymid(sym);
-    if unlikely(symid < 0) goto err;
-    return asm_gpop_global((uint16_t)symid);
-
-   case SYM_FVAR_LOCAL:
-    symid = asm_lsymid(sym);
-    if unlikely(symid < 0) goto err;
-    return asm_gpop_local((uint16_t)symid);
-
-   case SYM_FVAR_STATIC:
-    symid = asm_ssymid(sym);
-    if unlikely(symid < 0) goto err;
-    return asm_gpop_static((uint16_t)symid);
-
-   default: ASSERTF(0,"Invalid variable type");
-   }
-   break;
-#endif
 
   case SYM_CLASS_STACK:
    ASSERT(current_assembler.a_stackcur);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-   if unlikely(!(sym->s_flag & SYMBOL_FALLOC))
-#else
-   if unlikely(!(sym->sym_flag & SYM_FSTK_ALLOC))
-#endif
-   {
+   if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
     /* This is where the magic of lazy stack initialization happens! */
     if (current_assembler.a_flag&ASM_FSTACKDISP) {
      if (current_assembler.a_scope != SYMBOL_SCOPE(sym)) {
@@ -1622,13 +1282,8 @@ check_sym_class:
       if (ASM_WARN(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE,SYMBOL_NAME(sym)))
           goto err;
      }
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
      sym->s_flag |= SYMBOL_FALLOC;
      sym->s_symid = current_assembler.a_stackcur-1;
-#else
-     sym->sym_flag |= SYM_FSTK_ALLOC;
-     SYMBOL_STACK_OFFSET(sym) = current_assembler.a_stackcur-1;
-#endif
      if (asm_putddi_sbind(SYMBOL_STACK_OFFSET(sym),sym->sym_name))
          goto err;
      return 0; /* Leave without popping anything! */
@@ -1642,20 +1297,11 @@ check_sym_class:
   {
    struct symbol *class_sym;
    struct member_entry *member;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   case SYMBOL_TYPE_CFIELD:
   case SYMBOL_TYPE_IFIELD:
-#else
-  case SYM_CLASS_MEMBER:
-#endif
    class_sym = SYMBOL_FIELD_CLASS(sym);
    member = SYMBOL_FIELD_MEMBER(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-   if (sym->s_type == SYMBOL_TYPE_CFIELD)
-#else
-   if (sym->sym_flag & SYM_FMEMBER_CLASS)
-#endif
-   {
+   if (sym->s_type == SYMBOL_TYPE_CFIELD) {
     /* Do a regular attribute lookup on the class itself. */
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
    } else {
@@ -1665,26 +1311,11 @@ check_sym_class:
      /* Regular, old member variable. (this one has its own instruction) */
      while (SYMBOL_TYPE(class_sym) == SYM_CLASS_ALIAS)
          class_sym = SYMBOL_ALIAS(class_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-     if (SYMBOL_MAY_REFERENCE(class_sym))
-#else
-     if (SYMBOL_TYPE(class_sym) == SYM_CLASS_REF)
-#endif
-     {
+     if (SYMBOL_MAY_REFERENCE(class_sym)) {
       symid = asm_rsymid(class_sym);
       if unlikely(symid < 0) goto err;
       return asm_gsetmember_r((uint16_t)symid,member->cme_addr);
      }
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-     if (SYMBOL_TYPE(class_sym) == SYM_CLASS_VAR &&
-        (class_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL &&
-         current_scope != (DeeScopeObject *)current_rootscope) {
-      /* Bind global variables to reference symbols. */
-      symid = asm_grsymid(class_sym);
-      if unlikely(symid < 0) goto err;
-      return asm_gsetmember_r((uint16_t)symid,member->cme_addr);
-     }
-#endif
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
      if (asm_gswap()) goto err; /* Swap value and self-operand to fix the ordering. */
      return asm_gsetmember(member->cme_addr);

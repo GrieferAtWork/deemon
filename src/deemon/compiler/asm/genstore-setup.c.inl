@@ -152,11 +152,8 @@ INTERN int (DCALL asm_gpop_expr_leave)(DeeAstObject *__restrict ast, unsigned in
     if (base->ast_type == AST_SYM) {
      while (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_ALIAS)
          base->ast_sym = SYMBOL_ALIAS(base->ast_sym);
-     if (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_THIS
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-         && !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)
-#endif
-         ) {
+     if (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_THIS &&
+        !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)) {
 #ifdef LEAVE
       if (asm_putddi(ast)) goto err;
       if (PUSH_RESULT && asm_gdup()) goto err;

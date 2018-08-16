@@ -174,11 +174,8 @@ ast_gen_setattr_inplace(DeeAstObject *__restrict base,
   if (base->ast_type == AST_SYM) {
    while (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_ALIAS)
        base->ast_sym = SYMBOL_ALIAS(base->ast_sym);
-   if (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_THIS
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-       && !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)
-#endif
-       ) {
+   if (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_THIS &&
+      !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)) {
     if (asm_ggetattr_this_const((uint16_t)cid)) goto err; /* this.name */
     if ((gflags & ASM_G_FPUSHRES) && is_post_operator) {
      if (asm_gdup()) goto err;   /* this.name, this.name */

@@ -109,14 +109,9 @@ do_realloc_symv:
    arg = new_unnamed_symbol();
    if unlikely(!arg) goto err;
    /* Initialize the symbol as an argument. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    arg->s_type  = SYMBOL_TYPE_ARG;
    arg->s_flag  = SYMBOL_FALLOC;
    arg->s_symid = current_basescope->bs_argc;
-#else
-   arg->sym_class         = SYM_CLASS_ARG;
-   arg->sym_arg.sym_index = current_basescope->bs_argc;
-#endif
    /* Add the symbol to the argument symbol vector. */
    current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
    goto done_dots;
@@ -130,14 +125,9 @@ do_realloc_symv:
   arg = parse_argument_name();
   if unlikely(!arg) goto err;
   /* Initialize the symbol as an argument. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   arg->s_type  = SYMBOL_TYPE_ARG;
   arg->s_flag  = SYMBOL_FALLOC;
   arg->s_symid = current_basescope->bs_argc;
-#else
-  arg->sym_class         = SYM_CLASS_ARG;
-  arg->sym_arg.sym_index = current_basescope->bs_argc;
-#endif
   /* Add the symbol to the argument symbol vector. */
   current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
   if unlikely(yield() < 0) goto err;

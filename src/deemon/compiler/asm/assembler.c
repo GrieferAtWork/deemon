@@ -2361,46 +2361,6 @@ err_too_many_locals:
  return -1;
 }
 
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-INTERN int32_t DCALL
-asm_newref(struct symbol *__restrict ref_sym) {
- uint16_t result = current_assembler.a_refc;
- ASSERT(result <= current_assembler.a_refa);
- if unlikely(result == UINT16_MAX) {
-  DeeError_Throwf(&DeeError_CompilerError,
-                  "Too many reference variables");
-  return -1;
- }
- if (result == current_assembler.a_refa) {
-  /* Must allocate more references. */
-  struct asm_symbol_ref *new_vector; uint16_t new_size;
-  new_size = current_assembler.a_refa;
-  if (!new_size) new_size = 1;
-  new_size *= 2;
-  if unlikely(new_size <= result) new_size = UINT16_MAX;
-do_realloc:
-  new_vector = (struct asm_symbol_ref *)Dee_TryRealloc(current_assembler.a_refv,new_size*
-                                                       sizeof(struct asm_symbol_ref));
-  if unlikely(!new_vector) {
-   if (new_size != result+1) { new_size = result+1; goto do_realloc; }
-   if (Dee_CollectMemory(new_size*sizeof(struct asm_symbol_ref))) goto do_realloc;
-   return -1;
-  }
-  current_assembler.a_refv = new_vector;
-  current_assembler.a_refa = new_size;
- }
- ++current_assembler.a_refc;
- current_assembler.a_refv[result].sr_sym = ref_sym;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
- current_assembler.a_refv[result].sr_orig_refid = ref_sym->s_refid;
- current_assembler.a_refv[result].sr_orig_flag  = ref_sym->s_flag;
- ref_sym->s_refid = result;
- ref_sym->s_flag |= SYMBOL_FALLOCREF;
-#endif
- return result;
-}
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
-
 INTERN void DCALL asm_dellocal(uint16_t index) {
  ASSERTF(index < current_assembler.a_localc,
          "Invalid variable index");
@@ -2454,18 +2414,10 @@ asm_gsymid(struct symbol *__restrict sym) {
  struct TPPKeyword *name;
  struct module_symbol *iter; dhash_t perturb,i;
  ASSERT(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  ASSERT(sym->s_type == SYMBOL_TYPE_GLOBAL);
  ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope,&DeeRootScope_Type);
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
-#else
- ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_VAR);
- ASSERT((sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL);
- ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope,&DeeRootScope_Type);
- if (sym->sym_flag & SYM_FVAR_ALLOC)
-     return sym->sym_var.sym_index;
-#endif
 
  /* Figure out the name and hash of this symbol's name.
   * NOTE: This is where we stop using TPP's indices for hashing
@@ -2494,7 +2446,6 @@ asm_gsymid(struct symbol *__restrict sym) {
              name->k_size*sizeof(char)) == 0) {
    /* Found a match! - This global variable had already been defined. */
    result = iter->ss_index;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    sym->s_symid = result;
    /* Set the allocated-flag, so we don't have to do this again for this symbol. */
    sym->s_flag |= SYMBOL_FALLOC;
@@ -2503,16 +2454,6 @@ asm_gsymid(struct symbol *__restrict sym) {
     iter->ss_doc = sym->s_global.g_doc;
     Dee_Incref(iter->ss_doc);
    }
-#else
-   sym->sym_var.sym_index = result;
-   /* Set the allocated-flag, so we don't have to do this again for this symbol. */
-   sym->sym_flag |= SYM_FVAR_ALLOC;
-   /* Better late than never... */
-   if (!iter->ss_doc && sym->sym_var.sym_doc) {
-    iter->ss_doc = sym->sym_var.sym_doc;
-    Dee_Incref(iter->ss_doc);
-   }
-#endif
    return result;
   }
  }
@@ -2540,11 +2481,7 @@ asm_gsymid(struct symbol *__restrict sym) {
   if (iter->ss_name) continue;
   iter->ss_name  = (DREF struct string_object *)DeeString_NewSized(name->k_name,name->k_size);
   if unlikely(!iter->ss_name) goto err;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   iter->ss_doc = sym->s_global.g_doc;
-#else
-  iter->ss_doc = sym->sym_var.sym_doc;
-#endif
   Dee_XIncref(iter->ss_doc); /* Assign a documentation string. */
   iter->ss_name->s_hash = name_hash;
   iter->ss_hash         = name_hash;
@@ -2554,17 +2491,10 @@ asm_gsymid(struct symbol *__restrict sym) {
  }
  /* Increment to indicate that this index has now bee taken up. */
  ++current_rootscope->rs_globalc;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  /* Save the generated index in the given symbol. */
  sym->s_symid = result;
  /* Mark the given symbol as being allocated. */
  sym->s_flag |= SYMBOL_FALLOC;
-#else
- /* Save the generated index in the given symbol. */
- sym->sym_var.sym_index = result;
- /* Mark the given symbol as being allocated. */
- sym->sym_flag |= SYM_FVAR_ALLOC;
-#endif
  /* And we're done! */
  return result;
 err:
@@ -2575,28 +2505,16 @@ INTERN int32_t DCALL
 asm_lsymid(struct symbol *__restrict sym) {
  int32_t new_index;
  ASSERT(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  ASSERT(!SYMBOL_MUST_REFERENCE(sym));
  ASSERT(sym->s_type == SYMBOL_TYPE_LOCAL);
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
-#else
- ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_VAR);
- ASSERT((sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL);
- if (sym->sym_flag & SYM_FVAR_ALLOC)
-     return sym->sym_var.sym_index;
-#endif
  /* Allocate a new local variable index for the given symbol. */
  new_index = asm_newlocal();
  if unlikely(new_index < 0) goto end;
  ASSERT(new_index <= UINT16_MAX);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  sym->s_symid = (uint16_t)new_index;
  sym->s_flag |= SYMBOL_FALLOC;
-#else
- sym->sym_var.sym_index = (uint16_t)new_index;
- sym->sym_flag |= SYM_FVAR_ALLOC;
-#endif
  /* Generate DDI information for the local->symbol binding. */
  if (asm_putddi_lbind((uint16_t)new_index,sym->sym_name))
      return -1;
@@ -2608,29 +2526,17 @@ INTERN int32_t DCALL
 asm_ssymid(struct symbol *__restrict sym) {
  int32_t new_index;
  ASSERT(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  ASSERT(!SYMBOL_MUST_REFERENCE(sym));
  ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_STATIC);
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
-#else
- ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_VAR);
- ASSERT((sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_STATIC);
- if (sym->sym_flag&SYM_FVAR_ALLOC)
-     return sym->sym_var.sym_index;
-#endif
  /* Allocate a new static variable index for the given symbol.
   * NOTE: By default, `Dee_None' is used for default-initialization of static variables. */
  new_index = asm_newstatic(Dee_None);
  if unlikely(new_index < 0) goto end;
  ASSERT(new_index <= UINT16_MAX);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  sym->s_symid = (uint16_t)new_index;
  sym->s_flag |= SYMBOL_FALLOC;
-#else
- sym->sym_var.sym_index = (uint16_t)new_index;
- sym->sym_flag         |= SYM_FVAR_ALLOC;
-#endif
 end:
  return new_index;
 }
@@ -2638,20 +2544,12 @@ end:
 INTERN int32_t DCALL
 asm_gsymid_for_read(struct symbol *__restrict sym,
                     DeeAstObject *__restrict warn_ast) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_GLOBAL);
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
  if (!sym->s_nwrite &&
       WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym->s_name))
       goto err;
-#else
- if (sym->sym_flag & SYM_FVAR_ALLOC)
-     return sym->sym_var.sym_index;
- if (!sym->sym_write &&
-      WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym->sym_name))
-      goto err;
-#endif
  return asm_gsymid(sym);
 err:
  return -1;
@@ -2659,7 +2557,6 @@ err:
 INTERN int32_t DCALL
 asm_lsymid_for_read(struct symbol *__restrict sym,
                     DeeAstObject *__restrict warn_ast) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  ASSERT(!SYMBOL_MUST_REFERENCE(sym));
  ASSERT(sym->s_type == SYMBOL_TYPE_LOCAL);
  if (sym->s_flag & SYMBOL_FALLOC)
@@ -2667,13 +2564,6 @@ asm_lsymid_for_read(struct symbol *__restrict sym,
  if (!sym->s_nwrite &&
       WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym->s_name))
       goto err;
-#else
- if (sym->sym_flag & SYM_FVAR_ALLOC)
-     return sym->sym_var.sym_index;
- if (!sym->sym_write &&
-      WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym->sym_name))
-      goto err;
-#endif
  return asm_lsymid(sym);
 err:
  return -1;
@@ -2681,7 +2571,6 @@ err:
 INTERN int32_t DCALL
 asm_ssymid_for_read(struct symbol *__restrict sym,
                     DeeAstObject *__restrict warn_ast) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  ASSERT(!SYMBOL_MUST_REFERENCE(sym));
  ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_STATIC);
  if (sym->s_flag & SYMBOL_FALLOC)
@@ -2689,20 +2578,12 @@ asm_ssymid_for_read(struct symbol *__restrict sym,
  if (!sym->s_nwrite &&
       WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym->s_name))
       goto err;
-#else
- if (sym->sym_flag & SYM_FVAR_ALLOC)
-     return sym->sym_var.sym_index;
- if (!sym->sym_write &&
-      WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym->sym_name))
-      goto err;
-#endif
  return asm_ssymid(sym);
 err:
  return -1;
 }
 
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 INTERN int32_t DCALL
 asm_rsymid(struct symbol *__restrict sym) {
  uint16_t result;
@@ -2744,45 +2625,6 @@ do_realloc:
  sym->s_flag |= SYMBOL_FALLOCREF;
  return result;
 }
-#else
-INTERN int32_t DCALL
-asm_rsymid(struct symbol *__restrict sym) {
- int32_t result_index;
- ASSERT(sym);
- ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_REF);
- ASSERT(sym->sym_ref.sym_ref);
- ASSERT_OBJECT_TYPE((DeeObject *)sym->sym_ref.sym_ref->sym_scope,&DeeScope_Type);
- ASSERT_OBJECT_TYPE((DeeObject *)sym->sym_ref.sym_ref->sym_scope->s_base,&DeeBaseScope_Type);
- ASSERTF(sym->sym_ref.sym_ref->sym_scope->s_base == current_basescope->bs_prev,
-         "The symbol does not originate from the previous base-scope.");
- if (sym->sym_flag&SYM_FREF_ALLOC)
-     return sym->sym_ref.sym_index;
- /* Create a new reference for the aliased symbol. */
- result_index = asm_newref(sym->sym_ref.sym_ref);
- if unlikely(result_index < 0) goto end;
- sym->sym_ref.sym_index = (uint16_t)result_index;
- sym->sym_flag         |= SYM_FREF_ALLOC;
-end:
- return result_index;
-}
-INTERN int32_t DCALL
-asm_grsymid(struct symbol *__restrict sym) {
- uint16_t i;
- ASSERT(sym);
- ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_VAR);
- ASSERT((sym->sym_flag & SYM_FVAR_MASK) == SYM_FVAR_GLOBAL);
- ASSERT(sym->sym_scope == (DeeScopeObject *)current_rootscope);
- ASSERT(sym->sym_scope != current_scope);
- /* Search for a pre-existing reference to this symbol. */
- i = current_assembler.a_refc;
- while (i) {
-  --i;
-  if (current_assembler.a_refv[i].sr_sym == sym)
-      return i;
- }
- return asm_newref(sym);
-}
-#endif
 
 
 
@@ -2841,13 +2683,8 @@ asm_esymid(struct symbol *__restrict sym) {
  DeeModuleObject *module;
  ASSERT(sym);
  ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_EXTERN);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
-#else
- if (sym->sym_flag&SYM_FEXTERN_ALLOC)
-     return sym->sym_extern.sym_modid;
-#endif
  module = SYMBOL_EXTERN_MODULE(sym);
  if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FEXTERN) {
   ASSERT(SYMBOL_EXTERN_SYMBOL(sym)->ss_extern.ss_impid < module->mo_importc);
@@ -2857,13 +2694,8 @@ asm_esymid(struct symbol *__restrict sym) {
  if unlikely(result < 0) goto end;
  ASSERT(result <= UINT16_MAX);
  /* Cache the module ID within the symbol. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  sym->s_symid = (uint16_t)result;
  sym->s_flag |= SYMBOL_FALLOC;
-#else
- sym->sym_extern.sym_modid = (uint16_t)result;
- sym->sym_flag |= SYM_FEXTERN_ALLOC;
-#endif
 end:
  return result;
 }
@@ -2873,24 +2705,14 @@ asm_msymid(struct symbol *__restrict sym) {
  int32_t result;
  ASSERT(sym);
  ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_MODULE);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
-#else
- if (sym->sym_flag&SYM_FMODULE_ALLOC)
-     return sym->sym_module.sym_modid;
-#endif
  result = asm_newmodule(SYMBOL_EXTERN_MODULE(sym));
  if unlikely(result < 0) goto end;
  ASSERT(result <= UINT16_MAX);
  /* Cache the module ID within the symbol. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  sym->s_symid = (uint16_t)result;
  sym->s_flag |= SYMBOL_FALLOC;
-#else
- sym->sym_module.sym_modid = (uint16_t)result;
- sym->sym_flag |= SYM_FMODULE_ALLOC;
-#endif
 end:
  return result;
 }
@@ -2957,20 +2779,10 @@ do_savearg:
      did_define_header_ddi = true;
     }
     if (asm_gmov_varg(sym,argid,code_ast,true)) goto err;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    } else if (sym->s_nwrite != 0) {
-#else
-   } else if (sym->sym_write != 0) {
-#endif
     /* Must convert this one into a local variable. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-    SYMBOL_TYPE(sym) = SYMBOL_TYPE_LOCAL;
-    sym->s_flag     &= ~SYMBOL_FALLOC;
-#else
-    SYMBOL_TYPE(sym)     = SYM_CLASS_VAR;
-    sym->sym_flag        = SYM_FVAR_LOCAL;
-    sym->sym_var.sym_doc = NULL;
-#endif
+    sym->s_type  = SYMBOL_TYPE_LOCAL;
+    sym->s_flag &= ~SYMBOL_FALLOC;
     goto do_savearg;
 #if 0
    } else if (sym->sym_read == 0 &&

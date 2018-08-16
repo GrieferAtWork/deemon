@@ -278,21 +278,12 @@ next_expr:
    function_symbol = lookup_symbol(symbol_mode,function_name,&loc);
    if unlikely(!function_symbol) goto err;
    /* Pack together the documentation string for the function. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (function_symbol->s_type == SYMBOL_TYPE_GLOBAL &&
       !function_symbol->s_global.g_doc) {
     function_symbol->s_global.g_doc = (DREF DeeStringObject *)unicode_printer_pack(&current_tags.at_doc);
     unicode_printer_init(&current_tags.at_doc);
     if unlikely(!function_symbol->s_global.g_doc) goto err;
    }
-#else
-   if (function_symbol->sym_class == SYM_CLASS_VAR &&
-      !function_symbol->sym_var.sym_doc) {
-    function_symbol->sym_var.sym_doc = (DREF DeeStringObject *)unicode_printer_pack(&current_tags.at_doc);
-    unicode_printer_init(&current_tags.at_doc);
-    if unlikely(!function_symbol->sym_var.sym_doc) goto err;
-   }
-#endif
   }
   current = ast_setddi(ast_parse_function(function_name,&need_semi,false),&loc);
   if unlikely(!current) goto err;
@@ -350,7 +341,6 @@ next_expr:
     /* Create a new symbol for the initialized variable. */
     var_symbol = new_local_symbol(token.t_kwd);
     if unlikely(!var_symbol) goto err_current;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
     if (lookup_mode & LOOKUP_SYM_STATIC) {
      var_symbol->s_type = SYMBOL_TYPE_STATIC;
     } else if (lookup_mode & LOOKUP_SYM_STACK) {
@@ -364,25 +354,6 @@ next_expr:
     } else {
      var_symbol->s_type = SYMBOL_TYPE_LOCAL;
     }
-#else
-    if (lookup_mode & LOOKUP_SYM_STATIC) {
-     var_symbol->sym_flag = SYM_FVAR_STATIC;
-     goto set_typed_var;
-    } else if (lookup_mode & LOOKUP_SYM_STACK) {
-     var_symbol->sym_class = SYM_CLASS_STACK;
-    } else if (lookup_mode & LOOKUP_SYM_VGLOBAL) {
-     var_symbol->sym_flag = SYM_FVAR_GLOBAL;
-     goto set_typed_var;
-    } else {
-     var_symbol->sym_flag = SYM_FVAR_LOCAL;
-set_typed_var:
-     var_symbol->sym_class = SYM_CLASS_VAR;
-     /* Package together documentation tags for this variable symbol. */
-     var_symbol->sym_var.sym_doc = (DREF DeeStringObject *)unicode_printer_pack(&current_tags.at_doc);
-     unicode_printer_init(&current_tags.at_doc);
-     if unlikely(!var_symbol->sym_var.sym_doc) goto err_current;
-    }
-#endif
    }
    if unlikely(yield() < 0) goto err_current;
    /* Allow syntax like this:

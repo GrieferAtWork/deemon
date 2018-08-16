@@ -74,10 +74,8 @@ asm_gcall_expr(DeeAstObject *__restrict func,
        arg_sym = SYMBOL_ALIAS(arg_sym);
    if (SYMBOL_TYPE(arg_sym) != SYM_CLASS_ARG)
        goto not_argument_forward;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
        goto not_argument_forward;
-#endif
    start_offset = SYMBOL_ARG_INDEX(arg_sym);
    /* Make sure that this is the varargs symbol. */
    if (!DeeBaseScope_IsArgVarArgs(current_basescope,start_offset))
@@ -90,10 +88,8 @@ asm_gcall_expr(DeeAstObject *__restrict func,
        arg_sym = SYMBOL_ALIAS(arg_sym);
    if (SYMBOL_TYPE(arg_sym) != SYM_CLASS_ARG)
        goto not_argument_forward;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
        goto not_argument_forward;
-#endif
    start_offset = SYMBOL_ARG_INDEX(arg_sym);
    /* Make sure that this isn't the varargs symbol. */
    if (DeeBaseScope_IsArgVarArgs(current_basescope,start_offset))
@@ -118,10 +114,8 @@ asm_gcall_expr(DeeAstObject *__restrict func,
        arg_sym = SYMBOL_ALIAS(arg_sym);
    if (SYMBOL_TYPE(arg_sym) != SYM_CLASS_ARG)
        goto not_argument_forward;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
        goto not_argument_forward;
-#endif
    if ((size_t)SYMBOL_ARG_INDEX(arg_sym) != (size_t)start_offset+i)
        goto not_argument_forward;
    /* Optional arguments cannot be forwarded, because accessing
@@ -176,17 +170,9 @@ not_argument_forward:
         funsym = SYMBOL_ALIAS(funsym);
     if ((SYMBOL_TYPE(funsym) == SYM_CLASS_EXTERN &&
        !(SYMBOL_EXTERN_SYMBOL(funsym)->ss_flags & MODSYM_FPROPERTY)) ||
-        (
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-         funsym->s_type == SYMBOL_TYPE_GLOBAL ||
+        (funsym->s_type == SYMBOL_TYPE_GLOBAL ||
         (funsym->s_type == SYMBOL_TYPE_LOCAL &&
-        !SYMBOL_MUST_REFERENCE_TYPEMAY(funsym))
-#else
-         SYMBOL_TYPE(funsym) == SYM_CLASS_VAR &&
-       ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL ||
-        (funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL)
-#endif
-        )) {
+        !SYMBOL_MUST_REFERENCE_TYPEMAY(funsym)))) {
      if unlikely(push_tuple_items(args->ast_constexpr)) goto err;
      /* Direct call to symbol. */
      if (asm_putddi(ddi_ast)) goto err;
@@ -194,11 +180,7 @@ not_argument_forward:
       if unlikely((symid = asm_esymid(funsym)) < 0) goto err;
       ASSERT(SYMBOL_EXTERN_SYMBOL(funsym));
       if (asm_gcall_extern((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(funsym)->ss_index,argc)) goto err;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
      } else if (funsym->s_type == SYMBOL_TYPE_GLOBAL) {
-#else
-     } else if ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL) {
-#endif
       if unlikely((symid = asm_gsymid_for_read(funsym,func)) < 0) goto err;
       if (asm_gcall_global((uint16_t)symid,argc)) goto err;
      } else {
@@ -222,10 +204,7 @@ not_argument_forward:
      if (function_self->ast_type == AST_SYM) {
       struct symbol *sym = function_self->ast_sym;
 check_function_symbol_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-      if (!SYMBOL_MUST_REFERENCE(sym))
-#endif
-      {
+      if (!SYMBOL_MUST_REFERENCE(sym)) {
        switch (SYMBOL_TYPE(sym)) {
        case SYM_CLASS_ALIAS:
         ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
@@ -308,11 +287,8 @@ check_function_symbol_class:
     if (function_self->ast_type == AST_SYM) {
      while (SYMBOL_TYPE(function_self->ast_sym) == SYM_CLASS_ALIAS)
          function_self->ast_sym = SYMBOL_ALIAS(function_self->ast_sym);
-     if (SYMBOL_TYPE(function_self->ast_sym) == SYM_CLASS_THIS
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-         && !SYMBOL_MUST_REFERENCE_TYPEMAY(function_self->ast_sym)
-#endif
-         ) {
+     if (SYMBOL_TYPE(function_self->ast_sym) == SYM_CLASS_THIS &&
+        !SYMBOL_MUST_REFERENCE_TYPEMAY(function_self->ast_sym)) {
       if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
       if (asm_putddi(ddi_ast)) goto err;
       if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
@@ -462,17 +438,9 @@ check_function_symbol_class:
       funsym = SYMBOL_ALIAS(funsym);
   if ((SYMBOL_TYPE(funsym) == SYM_CLASS_EXTERN &&
      !(SYMBOL_EXTERN_SYMBOL(funsym)->ss_flags & MODSYM_FPROPERTY)) ||
-      (
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-       funsym->s_type == SYMBOL_TYPE_GLOBAL ||
+      (funsym->s_type == SYMBOL_TYPE_GLOBAL ||
       (funsym->s_type == SYMBOL_TYPE_LOCAL &&
-      !SYMBOL_MUST_REFERENCE_TYPEMAY(funsym))
-#else
-       SYMBOL_TYPE(funsym) == SYM_CLASS_VAR &&
-     ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL ||
-      (funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL)
-#endif
-       )) {
+      !SYMBOL_MUST_REFERENCE_TYPEMAY(funsym)))) {
    for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
    /* Direct call to symbol. */
    if (asm_putddi(ddi_ast)) goto err;
@@ -480,11 +448,7 @@ check_function_symbol_class:
     if unlikely((symid = asm_esymid(funsym)) < 0) goto err;
     ASSERT(SYMBOL_EXTERN_SYMBOL(funsym));
     if (asm_gcall_extern((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(funsym)->ss_index,argc)) goto err;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    } else if (funsym->s_type == SYMBOL_TYPE_GLOBAL) {
-#else
-   } else if ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL) {
-#endif
     if unlikely((symid = asm_gsymid_for_read(funsym,func)) < 0) goto err;
     if (asm_gcall_global((uint16_t)symid,argc)) goto err;
    } else {
@@ -508,10 +472,7 @@ check_function_symbol_class:
    if (function_self->ast_type == AST_SYM) {
     struct symbol *sym = function_self->ast_sym;
 check_getattr_base_symbol_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-    if (!SYMBOL_MUST_REFERENCE(sym))
-#endif
-    {
+    if (!SYMBOL_MUST_REFERENCE(sym)) {
      switch (SYMBOL_TYPE(sym)) {
 
      case SYM_CLASS_ALIAS:

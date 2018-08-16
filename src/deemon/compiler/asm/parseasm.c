@@ -822,13 +822,7 @@ PRIVATE int32_t FCALL do_parse_global_operands(void) {
   }
   while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
       sym = SYMBOL_ALIAS(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  if (sym->s_type != SYMBOL_TYPE_GLOBAL)
-#else
-  if (SYMBOL_TYPE(sym) != SYM_CLASS_VAR ||
-     (sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_GLOBAL)
-#endif
-  {
+  if (sym->s_type != SYMBOL_TYPE_GLOBAL) {
    DeeError_Throwf(&DeeError_CompilerError,
                    "Symbol `%s' is not a global symbol",
                    symbol_name->k_name);
@@ -874,14 +868,8 @@ PRIVATE int32_t FCALL do_parse_local_operands(void) {
   }
   while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
       sym = SYMBOL_ALIAS(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (sym->s_type != SYMBOL_TYPE_LOCAL ||
-      SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
-#else
-  if (SYMBOL_TYPE(sym) != SYM_CLASS_VAR ||
-     (sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_LOCAL)
-#endif
-  {
+      SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
    DeeError_Throwf(&DeeError_CompilerError,
                    "Symbol `%s' is not a local symbol",
                    symbol_name->k_name);
@@ -993,29 +981,14 @@ PRIVATE int32_t FCALL do_parse_ref_operands(void) {
   while (scope_iter) {
    sym = scope_lookup(&current_basescope->bs_scope,
                        symbol_name);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    /* Only consider symbols that may be referenced. */
    if (sym && SYMBOL_MAY_REFERENCE(sym)) break;
-#else
-   /* Only consider symbols that must be referenced. */
-   if (sym && SYM_MUST_REFERENCE(sym)) break;
-#endif
    scope_iter = scope_iter->s_prev;
   }
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-  if (!sym || !SYMBOL_MAY_REFERENCE(sym))
-#else
-  if (!sym || !SYM_MUST_REFERENCE(sym))
-#endif
-  {
+  if (!sym || !SYMBOL_MAY_REFERENCE(sym)) {
    err_unknown_symbol(symbol_name);
    goto err;
   }
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-  /* Cast a reference indirection to the given symbol. */
-  sym = symbol_reference(current_basescope,sym);
-  if unlikely(!sym) goto err;
-#endif
   /* Link and lookup the symbol's reference index. */
   result = asm_rsymid(sym);
  } else {
@@ -1050,14 +1023,8 @@ PRIVATE int32_t FCALL do_parse_static_operands(void) {
   }
   while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
       sym = SYMBOL_ALIAS(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (sym->s_type != SYMBOL_TYPE_STATIC ||
-      SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
-#else
-  if (SYMBOL_TYPE(sym) != SYM_CLASS_VAR ||
-     (sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_STATIC)
-#endif
-  {
+      SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
    DeeError_Throwf(&DeeError_CompilerError,
                    "Symbol `%s' is not a static symbol",
                    symbol_name->k_name);
@@ -1175,15 +1142,12 @@ allocate_constant:
   /* Symbol expression. */
   sym = expr->ast_sym;
 check_sym_class:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (SYMBOL_MUST_REFERENCE(sym)) {
    symid = asm_rsymid(sym);
    if unlikely(symid < 0) goto err;
    result->io_class = OPERAND_CLASS_REF;
    result->io_symid = (uint16_t)symid;
-  } else
-#endif
-  {
+  } else {
    switch (SYMBOL_TYPE(sym)) {
   
    case SYM_CLASS_ALIAS:
@@ -1199,7 +1163,6 @@ check_sym_class:
     result->io_extern.io_symid = SYMBOL_EXTERN_SYMBOL(sym)->ss_index;
     break;
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    case SYMBOL_TYPE_GLOBAL:
     symid = asm_gsymid(sym);
     if unlikely(symid < 0) goto err;
@@ -1218,40 +1181,12 @@ check_sym_class:
     result->io_class = OPERAND_CLASS_STATIC;
     result->io_symid = (uint16_t)symid;
     break;
-#else
-   case SYM_CLASS_VAR:
-    switch (sym->sym_flag&SYM_FVAR_MASK) {
-    case SYM_FVAR_GLOBAL:
-     symid = asm_gsymid(sym);
-     if unlikely(symid < 0) goto err;
-     result->io_class = OPERAND_CLASS_GLOBAL;
-     break;
-    case SYM_FVAR_LOCAL:
-     symid = asm_lsymid(sym);
-     if unlikely(symid < 0) goto err;
-     result->io_class = OPERAND_CLASS_LOCAL;
-     break;
-    case SYM_FVAR_STATIC:
-     symid = asm_ssymid(sym);
-     if unlikely(symid < 0) goto err;
-     result->io_class = OPERAND_CLASS_STATIC;
-     break;
-    default: goto unsupported_expression;
-    }
-    result->io_symid = (uint16_t)symid;
-    break;
-#endif
 
    case SYM_CLASS_STACK:
     result->io_intexpr.ie_rel = (uint16_t)-1;
     result->io_intexpr.ie_sym = NULL;
     result->io_intexpr.ie_val = SYMBOL_STACK_OFFSET(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-    if (!(sym->s_flag & SYMBOL_FALLOC))
-#else
-    if (!(sym->sym_flag&SYM_FSTK_ALLOC))
-#endif
-    {
+    if (!(sym->s_flag & SYMBOL_FALLOC)) {
      if (WARN(W_UASM_STACK_VARIABLE_NOT_ALLOCATED))
          goto err;
      result->io_intexpr.ie_val = 0;
@@ -1268,15 +1203,6 @@ check_sym_class:
     result->io_class = OPERAND_CLASS_ARG;
     result->io_symid = SYMBOL_ARG_INDEX(sym);
     break;
-
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-   case SYM_CLASS_REF:
-    symid = asm_rsymid(sym);
-    if unlikely(symid < 0) goto err;
-    result->io_class = OPERAND_CLASS_REF;
-    result->io_symid = (uint16_t)symid;
-    break;
-#endif
 
    case SYM_CLASS_MODULE:
     symid = asm_msymid(sym);

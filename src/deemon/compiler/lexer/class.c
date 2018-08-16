@@ -73,49 +73,17 @@ relocate_member_table(struct member_entry *__restrict entry,
  bend = (biter = current_scope->s_map)+current_scope->s_mapa;
  for (; biter != bend; ++biter) {
   for (iter = *biter; iter; iter = iter->sym_next) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
         iter->s_type == SYMBOL_TYPE_CFIELD) &&
         iter->s_field.f_member == entry)
         iter->s_field.f_member = new_entry;
-#else
-   if (iter->sym_class == SYM_CLASS_MEMBER &&
-       iter->sym_member.sym_member == entry) {
-    struct symbol *ref = iter->sym_member.sym_ref;
-    iter->sym_member.sym_member = new_entry;
-    for (; ref; ref = ref->sym_member.sym_ref) {
-     ASSERT(ref->sym_class == SYM_CLASS_MEMBER);
-     ASSERT(ref->sym_member.sym_class);
-     ASSERT(ref->sym_member.sym_class->sym_class == SYM_CLASS_REF);
-     ASSERT(sym_realsym(ref->sym_member.sym_class) == iter->sym_member.sym_class);
-     ASSERT(ref->sym_member.sym_member == entry);
-     ref->sym_member.sym_member = new_entry;
-    }
-   }
-#endif
   }
  }
  for (iter = current_scope->s_del; iter; iter = iter->sym_next) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
        iter->s_type == SYMBOL_TYPE_CFIELD) &&
        iter->s_field.f_member == entry)
        iter->s_field.f_member = new_entry;
-#else
-  if (iter->sym_class == SYM_CLASS_MEMBER &&
-      iter->sym_member.sym_member == entry) {
-   struct symbol *ref = iter->sym_member.sym_ref;
-   iter->sym_member.sym_member = new_entry;
-   for (; ref; ref = ref->sym_member.sym_ref) {
-    ASSERT(ref->sym_class == SYM_CLASS_MEMBER);
-    ASSERT(ref->sym_member.sym_class);
-    ASSERT(ref->sym_member.sym_class->sym_class == SYM_CLASS_REF);
-    ASSERT(sym_realsym(ref->sym_member.sym_class) == iter->sym_member.sym_class);
-    ASSERT(ref->sym_member.sym_member == entry);
-    ref->sym_member.sym_member = new_entry;
-   }
-  }
-#endif
  }
 }
 
@@ -129,55 +97,19 @@ relocate_member_vector(struct member_entry *__restrict old_base,
  bend = (biter = current_scope->s_map)+current_scope->s_mapa;
  for (; biter != bend; ++biter) {
   for (iter = *biter; iter; iter = iter->sym_next) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
         iter->s_type == SYMBOL_TYPE_CFIELD) &&
         iter->s_field.f_member >= old_base &&
         iter->s_field.f_member < old_end)
       *(uintptr_t *)&iter->s_field.f_member += offset_to_new_base;
-#else
-   if (iter->sym_class == SYM_CLASS_MEMBER &&
-       iter->sym_member.sym_member >= old_base &&
-       iter->sym_member.sym_member < old_end) {
-    struct symbol *ref = iter->sym_member.sym_ref;
-    *(uintptr_t *)&iter->sym_member.sym_member += offset_to_new_base;
-    for (; ref; ref = ref->sym_member.sym_ref) {
-     ASSERT(ref->sym_class == SYM_CLASS_MEMBER);
-     ASSERT(ref->sym_member.sym_class);
-     ASSERT(ref->sym_member.sym_class->sym_class == SYM_CLASS_REF);
-     ASSERT(sym_realsym(ref->sym_member.sym_class) == iter->sym_member.sym_class);
-     ASSERT(ref->sym_member.sym_member == (struct member_entry *)
-           (*(uintptr_t *)&iter->sym_member.sym_member-offset_to_new_base));
-     *(uintptr_t *)&ref->sym_member.sym_member += offset_to_new_base;
-    }
-   }
-#endif
   }
  }
  for (iter = current_scope->s_del; iter; iter = iter->sym_next) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
        iter->s_type == SYMBOL_TYPE_CFIELD) &&
        iter->s_field.f_member >= old_base &&
        iter->s_field.f_member < old_end)
      *(uintptr_t *)&iter->s_field.f_member += offset_to_new_base;
-#else
-  if (iter->sym_class == SYM_CLASS_MEMBER &&
-      iter->sym_member.sym_member >= old_base &&
-      iter->sym_member.sym_member < old_end) {
-   struct symbol *ref = iter->sym_member.sym_ref;
-   *(uintptr_t *)&iter->sym_member.sym_member += offset_to_new_base;
-   for (; ref; ref = ref->sym_member.sym_ref) {
-    ASSERT(ref->sym_class == SYM_CLASS_MEMBER);
-    ASSERT(ref->sym_member.sym_class);
-    ASSERT(ref->sym_member.sym_class->sym_class == SYM_CLASS_REF);
-    ASSERT(sym_realsym(ref->sym_member.sym_class) == iter->sym_member.sym_class);
-    ASSERT(ref->sym_member.sym_member == (struct member_entry *)
-          (*(uintptr_t *)&iter->sym_member.sym_member-offset_to_new_base));
-    *(uintptr_t *)&ref->sym_member.sym_member += offset_to_new_base;
-   }
-  }
-#endif
  }
 }
 
@@ -278,22 +210,21 @@ again:
 }
 
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 #define SYM_FMEMBER_INST  0x0000 /* SYMBOL_TYPE_IFIELD */
 #define SYM_FMEMBER_CLASS 0x0001 /* SYMBOL_TYPE_CFIELD */
 #define SYMBOL_TYPE_FROM_FMEMBER(x) (SYMBOL_TYPE_IFIELD+(x))
 STATIC_ASSERT(SYMBOL_TYPE_FROM_FMEMBER(SYM_FMEMBER_INST)  == SYMBOL_TYPE_IFIELD);
 STATIC_ASSERT(SYMBOL_TYPE_FROM_FMEMBER(SYM_FMEMBER_CLASS) == SYMBOL_TYPE_CFIELD);
-#endif
+
 
 /* Make sure that we can use these as indices in a 2-element array. */
 STATIC_ASSERT(SYM_FMEMBER_INST  < 2);
 STATIC_ASSERT(SYM_FMEMBER_CLASS < 2);
 
 struct table_descriptor {
- DREF DeeMemberTableObject *td_field; /* [0..1] The member table (mutable; lazy-alloc) */
- size_t                     td_usage; /* Required size of the `ih_vtab' vector at runtime.
-                                       *  (Later written into `td_field->mt_size', which currently contains the amount of members). */
+    DREF DeeMemberTableObject *td_field; /* [0..1] The member table (mutable; lazy-alloc) */
+    size_t                     td_usage; /* Required size of the `ih_vtab' vector at runtime.
+                                          *  (Later written into `td_field->mt_size', which currently contains the amount of members). */
 };
 struct class_maker {
     uint16_t                   cm_flags;       /* Class flags (Set of `TP_F*'). */
@@ -385,15 +316,9 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
 
 /* Check if an initializer for a given symbol must be processed in the
  * context of the constructor scope (false) or the outside class scope (true) */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 #define SYM_ISCLASSMEMBER(x) \
   ((x)->s_type == SYMBOL_TYPE_CFIELD || \
   ((x)->s_field.f_member->cme_flag&CLASS_MEMBER_FCLASSMEM))
-#else
-#define SYM_ISCLASSMEMBER(x) \
-  ((x)->sym_flag == SYM_FMEMBER_CLASS || \
-  ((x)->sym_member.sym_member->cme_flag&CLASS_MEMBER_FCLASSMEM))
-#endif
 
 /* Allocate a new class member, automatically assigning the next VTABLE
  * id, as well as creating symbols in the associated member tables and
@@ -458,10 +383,8 @@ class_maker_addmember(struct class_maker *__restrict self,
  if unlikely(result) {
   if (SYMBOL_IS_WEAK(result)) {
    SYMBOL_CLEAR_WEAK(result);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   } else if (result->s_type == SYMBOL_TYPE_FWD) {
    /* Define a forward-referenced class symbol. */
-#endif
   } else {
    PERR(W_CLASS_MEMBER_ALREADY_DEFINED,
         name->k_name,name->k_size);
@@ -473,18 +396,10 @@ class_maker_addmember(struct class_maker *__restrict self,
   if unlikely(!result) goto err;
  }
  /* Initialize that symbol to be a member symbol. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  result->s_type           = SYMBOL_TYPE_FROM_FMEMBER(table_id);
  result->s_field.f_class  = self->cm_classsym;
  result->s_field.f_member = entry;
  SYMBOL_INC_NREAD(self->cm_classsym);
-#else
- result->sym_class             = SYM_CLASS_MEMBER;
- result->sym_flag              = table_id;
- result->sym_member.sym_class  = self->cm_classsym;
- result->sym_member.sym_member = entry;
- result->sym_member.sym_ref    = NULL;
-#endif
  return result;
 err:
  return NULL;
@@ -536,18 +451,10 @@ do_realloc_anonv:
  result = new_unnamed_symbol();
  if unlikely(!result) goto err;
  /* Initialize that symbol to be a member symbol. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  result->s_type           = SYMBOL_TYPE_FROM_FMEMBER(table_id);
  result->s_field.f_class  = self->cm_classsym;
  result->s_field.f_member = entry;
  SYMBOL_INC_NREAD(self->cm_classsym);
-#else
- result->sym_class             = SYM_CLASS_MEMBER;
- result->sym_flag              = table_id;
- result->sym_member.sym_class  = self->cm_classsym;
- result->sym_member.sym_member = entry;
- result->sym_member.sym_ref    = NULL;
-#endif
  return result;
 err:
  return NULL;
@@ -608,26 +515,14 @@ class_maker_addinit(struct class_maker *__restrict self,
  ASSERT(self);
  ASSERT(sym);
  ASSERT(SYMBOL_FIELD_CLASS(sym) == self->cm_classsym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  ASSERT(sym->s_type == SYMBOL_TYPE_CFIELD ||
         sym->s_type == SYMBOL_TYPE_IFIELD);
-#else
- ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_MEMBER);
- ASSERT(sym->sym_flag == SYM_FMEMBER_INST ||
-        sym->sym_flag == SYM_FMEMBER_CLASS);
-#endif
  ASSERT_OBJECT_TYPE(ast,&DeeAst_Type);
  ASSERT(self->cm_initc <= self->cm_inita);
  ASSERT(self->cm_class_initc <= self->cm_class_inita);
  entry = SYMBOL_FIELD_MEMBER(sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  if (sym->s_type == SYMBOL_TYPE_IFIELD &&
-   !(entry->cme_flag&CLASS_MEMBER_FCLASSMEM))
-#else
- if (sym->sym_flag == SYM_FMEMBER_INST &&
-   !(entry->cme_flag&CLASS_MEMBER_FCLASSMEM))
-#endif
- {
+   !(entry->cme_flag&CLASS_MEMBER_FCLASSMEM)) {
   DREF DeeAstObject *symbol_ast;
   /* Run the given AST during construction of instances. */
   /* Handle instance member initializers. */
@@ -638,10 +533,6 @@ class_maker_addinit(struct class_maker *__restrict self,
   /* Check if we need to allocate more memory for the initializer vector. */
   if unlikely(priv_reserve_instance_init(self)) goto err;
   /* Create a new AST to store to the given symbol. */
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-  sym = symbol_reference(self->cm_ctor_scope,sym);
-  if unlikely(!sym) goto err;
-#endif
   symbol_ast = ast_sym(sym);
   if unlikely(!symbol_ast) goto err;
   ast = ast_setddi(ast_action2(AST_FACTION_STORE,symbol_ast,
@@ -1259,22 +1150,14 @@ use_object_base:
   maker.cm_classsym = new_unnamed_symbol();
   if unlikely(!maker.cm_classsym) goto err;
   SYMBOL_TYPE(maker.cm_classsym) = SYM_CLASS_STACK;
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-  SCOPE_ADD_STACKSYM(current_scope,maker.cm_classsym);
-#endif
  }
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  current_scope->s_flags |= SCOPE_FCLASS;
-#endif
 
  /* Create a symbol for the class's super type. */
  if (maker.cm_base) {
   maker.cm_supersym = new_unnamed_symbol();
   if unlikely(!maker.cm_supersym) goto err;
   SYMBOL_TYPE(maker.cm_supersym) = SYM_CLASS_STACK;
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-  SCOPE_ADD_STACKSYM(current_scope,maker.cm_supersym);
-#endif
  }
 
  default_member_flags = CLASS_MEMBER_FPUBLIC;
@@ -1657,21 +1540,13 @@ define_constructor:
          !prop_callbacks[CLASS_PROPERTY_SET]) {
       /* Optimization: when no delete or setting callback
        *               was given, mark the symbol as read-only. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
       member_symbol->s_field.f_member->cme_flag |= CLASS_MEMBER_FREADONLY;
-#else
-      member_symbol->sym_member.sym_member->cme_flag |= CLASS_MEMBER_FREADONLY;
-#endif
       *pusage_counter += 1;
      } else {
       *pusage_counter += CLASS_PROPERTY_CALLBACK_COUNT;
      }
      /* Load the base address of the property. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
      prop_addr = member_symbol->s_field.f_member->cme_addr;
-#else
-     prop_addr = member_symbol->sym_member.sym_member->cme_addr;
-#endif
      for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i) {
       struct symbol *callback_symbol;
       /* Skip callbacks that have not been defined. */
@@ -1764,9 +1639,7 @@ check_need_semi:
   }
  }
 done_class_modal:
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
  if unlikely(link_forward_symbols()) goto err;
-#endif
  result = class_maker_pack(&maker);
  scope_pop();
  class_maker_fini(&maker);

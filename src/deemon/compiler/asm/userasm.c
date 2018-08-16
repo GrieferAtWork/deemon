@@ -1066,7 +1066,6 @@ struct cleanup_mode {
 };
 
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 #ifndef NDEBUG
 #define INITIALIZE_FAKE_LOCAL_SYMBOL(sym,lid) \
    (memset((sym),0xcc,sizeof(struct symbol)), \
@@ -1086,20 +1085,6 @@ struct cleanup_mode {
     (sym)->s_type   = SYMBOL_TYPE_LOCAL, \
     (sym)->s_flag   = SYMBOL_FALLOC, \
     (sym)->s_symid  = (lid))
-#endif
-#else
-#ifndef NDEBUG
-#define INITIALIZE_FAKE_LOCAL_SYMBOL(sym,lid) \
-   (memset((sym),0xcc,sizeof(struct symbol)), \
-   (sym)->sym_class = SYM_CLASS_VAR, \
-   (sym)->sym_flag = SYM_FVAR_ALLOC|SYM_FVAR_LOCAL, \
-   (sym)->sym_var.sym_index = (lid))
-#else
-#define INITIALIZE_FAKE_LOCAL_SYMBOL(sym,lid) \
-  ((sym)->sym_class = SYM_CLASS_VAR, \
-   (sym)->sym_flag = SYM_FVAR_ALLOC|SYM_FVAR_LOCAL, \
-   (sym)->sym_var.sym_index = (lid))
-#endif
 #endif
 
 
@@ -1172,15 +1157,9 @@ abs_stack_any:
        ast->ast_type == AST_SYM) {
    while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
        ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (ast->ast_sym->s_type == SYM_CLASS_STACK &&
       !SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym) &&
-      (ast->ast_sym->s_flag & SYMBOL_FALLOC))
-#else
-   if (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_STACK &&
-      (ast->ast_sym->sym_flag & SYM_FSTK_ALLOC))
-#endif
-   {
+      (ast->ast_sym->s_flag & SYMBOL_FALLOC)) {
     /* in/out stack-operand */
     result = DeeString_Newf("stack #%I16u",SYMBOL_STACK_OFFSET(ast->ast_sym));
     break;
@@ -1215,9 +1194,7 @@ abs_stack_any:
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_EXCEPT) goto next_option;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
-#endif
   result = &str_except;
   Dee_Incref(result);
   break;
@@ -1239,9 +1216,7 @@ abs_stack_any:
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_THIS) goto next_option;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
-#endif
   result = &str_this;
   Dee_Incref(result);
   break;
@@ -1260,9 +1235,7 @@ abs_stack_any:
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_THIS_FUNCTION) goto next_option;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
-#endif
   result = &str_this_function;
   Dee_Incref(result);
   break;
@@ -1273,12 +1246,7 @@ abs_stack_any:
   if (ast->ast_type != AST_SYM) goto next_option;
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (!SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
-#else
-  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_REF) goto next_option;
-do_regular_ref:
-#endif
   rid = asm_rsymid(ast->ast_sym);
   if unlikely(rid < 0) goto err;
   result = DeeString_Newf("ref %I16u",(uint16_t)rid);
@@ -1290,23 +1258,9 @@ do_regular_ref:
   if (ast->ast_type != AST_SYM) goto next_option;
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   /* Check for may-reference, thus allowing anything that ~could~ be referenced. */
   if (!SYMBOL_MAY_REFERENCE(ast->ast_sym)) goto next_option;
   rid = asm_rsymid(ast->ast_sym);
-#else
-  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_REF) goto next_option;
-  if (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_REF)
-      goto do_regular_ref;
-  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR)
-      goto next_option;
-  if ((ast->ast_sym->sym_flag&SYM_FVAR_ALLOC) != SYM_FVAR_GLOBAL)
-      goto next_option;
-  if (current_scope == (DREF DeeScopeObject *)current_rootscope)
-      goto next_option; /* Cannot reference globals from within the root scope itself. */
-  /* Global-reference symbol ID */
-  rid = asm_grsymid(ast->ast_sym);
-#endif
   if unlikely(rid < 0) goto err;
   result = DeeString_Newf("ref %I16u",(uint16_t)rid);
  } break;
@@ -1316,9 +1270,7 @@ do_regular_ref:
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_ARG) goto next_option;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
-#endif
   if (DeeBaseScope_IsArgOptional(current_basescope,SYMBOL_ARG_INDEX(ast->ast_sym)) ||
      (DeeBaseScope_HasOptional(current_basescope) &&
       DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(ast->ast_sym))))
@@ -1342,13 +1294,8 @@ do_regular_ref:
   if (ast->ast_type != AST_SYM) goto next_option;
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (ast->ast_sym->s_type != SYMBOL_TYPE_STATIC) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
-#else
-  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR) goto next_option;
-  if ((ast->ast_sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_STATIC) goto next_option;
-#endif
   if (mode == OPTION_MODE_INPUT)
        sid = asm_ssymid_for_read(ast->ast_sym,ast);
   else sid = asm_ssymid(ast->ast_sym);
@@ -1376,12 +1323,7 @@ do_regular_ref:
   if (ast->ast_type != AST_SYM) goto next_option;
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (ast->ast_sym->s_type != SYMBOL_TYPE_EXTERN) goto next_option;
-#else
-  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR) goto next_option;
-  if ((ast->ast_sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_GLOBAL) goto next_option;
-#endif
   if (mode == OPTION_MODE_INPUT)
        gid = asm_gsymid_for_read(ast->ast_sym,ast);
   else gid = asm_gsymid(ast->ast_sym);
@@ -1395,13 +1337,8 @@ do_regular_ref:
   if (ast->ast_type != AST_SYM) goto next_option;
   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (ast->ast_sym->s_type != SYMBOL_TYPE_LOCAL) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
-#else
-  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR) goto next_option;
-  if ((ast->ast_sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_LOCAL) goto next_option;
-#endif
 write_regular_local:
   if (mode == OPTION_MODE_INPUT)
        lid = asm_lsymid_for_read(ast->ast_sym,ast);
@@ -1416,15 +1353,9 @@ write_regular_local:
   if (ast->ast_type == AST_SYM) {
    while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
        ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
    if (ast->ast_sym->s_type == SYMBOL_TYPE_LOCAL &&
       !SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym))
        goto write_regular_local;
-#else
-   if (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_VAR &&
-      (ast->ast_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL)
-       goto write_regular_local;
-#endif
   }
   lid = asm_newlocal();
   if unlikely(lid < 0) goto err;

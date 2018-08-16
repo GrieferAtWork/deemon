@@ -593,7 +593,6 @@ INTDEF struct asm_sym *FCALL uasm_fbsymbol_def(struct TPPKeyword *__restrict nam
 
 
 struct asm_symbol_ref {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
     /* Symbol reference in the new symbol format are somewhat different:
      *   - Instead of having its own symbol class, symbol references
      *     are automatically created for any kind of symbol that must
@@ -617,6 +616,8 @@ struct asm_symbol_ref {
      *    `SYMBOL_FALLOCREF', indicating if `s_refid' is valid), are
      *     preserved and must be restored when an assembler instance
      *     finishes.
+     *   - For more information on when this is required, take a look
+     *     at the test `/util/test/recursive_references.dee'
      */
     struct symbol         *sr_sym;         /* [1..1][const]
                                             * [->s_flags & SYMBOL_FALLOCREF]
@@ -624,9 +625,6 @@ struct asm_symbol_ref {
                                             * The symbol being referenced. */
     uint16_t               sr_orig_refid;  /* [const] The original value of `sr_sym->s_refid', before that symbol */
     uint16_t               sr_orig_flag;   /* [const] The original value of `sr_sym->s_flag', who's `SYMBOL_FALLOCREF' bit must be restored. */
-#else
-    struct symbol         *sr_sym;        /* [1..1][->sym_class == SYM_CLASS_REF] The symbol being referenced. */
-#endif
 };
 
 struct assembler {
@@ -988,13 +986,6 @@ INTDEF int32_t DCALL asm_newstatic(DeeObject *initializer);
 /* Allocate a new local variable index. */
 INTDEF int32_t DCALL asm_newlocal(void);
 
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-/* Allocate a new reference index that points to a given symbol.
- * NOTE: The given `ref_sym' must be located within `current_basescope->bs_prev'
- * WARNING: Do not use this function directly. use `asm_rsymid' instead */
-INTDEF int32_t DCALL asm_newref(struct symbol *__restrict ref_sym);
-#endif /* !#ifndef CONFIG_USE_NEW_SYMBOL_TYPE */
-
 /* Mark a given local variable as no longer being in use.
  * Once this is done, later calls to `asm_newlocal()' are allowed
  * to re-use `index' when the `ASM_FREUSELOC' assembler flag is set.
@@ -1015,12 +1006,7 @@ INTDEF int32_t DCALL asm_ssymid(struct symbol *__restrict sym);  /* `SYM_CLASS_V
 INTDEF int32_t DCALL asm_esymid(struct symbol *__restrict sym);  /* `SYM_CLASS_EXTERN' (Returns the module index in the current root-scope's import vector)
                                                                   *  NOTE: This function will dereference external aliases. */
 INTDEF int32_t DCALL asm_msymid(struct symbol *__restrict sym);  /* `SYM_CLASS_MODULE' */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
 INTDEF int32_t DCALL asm_rsymid(struct symbol *__restrict sym);  /* Reference a symbol for a lower base-scope. */
-#else
-INTDEF int32_t DCALL asm_grsymid(struct symbol *__restrict sym); /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' -> `SYM_CLASS_REF' (returns a reference index for a global variable) */
-INTDEF int32_t DCALL asm_rsymid(struct symbol *__restrict sym);  /* `SYM_CLASS_REF' */
-#endif
 
 /* These versions emit read-before-write warnings if the symbol hadn't been allocated, yet. */
 INTDEF int32_t DCALL asm_gsymid_for_read(struct symbol *__restrict sym, DeeAstObject *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */

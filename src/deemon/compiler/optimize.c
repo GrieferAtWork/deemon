@@ -763,28 +763,15 @@ ast_is_nothrow(DeeAstObject *__restrict self, bool result_used) {
  case AST_SYM:
   /* Access to some symbols is nothrow. */
   sym = self->ast_sym;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   /* Ref vars are static and never cause exceptions. */
   if (SYMBOL_MUST_REFERENCE(sym))
       goto is_nothrow;
-#endif
   switch (SYMBOL_TYPE(sym)) {
 
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   case SYMBOL_TYPE_STATIC:
    /* Since static variables can never be unbound,
     * accessing them can never cause any exceptions. */
    goto is_nothrow;
-#else
-  case SYM_CLASS_VAR:
-   /* Since static variables can never be unbound,
-    * accessing them can never cause any exceptions. */
-   if ((sym->sym_flag & SYM_FVAR_MASK) == SYM_FVAR_STATIC)
-        goto is_nothrow;
-   /* NOTE: Due to debugger interference, other var-symbols
-    *       _can_ actually cause exceptions. */
-   break;
-#endif
 
   case SYM_CLASS_STACK:
    /* Stack-based symbols can never be unbound, so
@@ -802,12 +789,6 @@ ast_is_nothrow(DeeAstObject *__restrict self, bool result_used) {
        DeeBaseScope_IsArgReqOrDefl(current_basescope,SYMBOL_ARG_INDEX(sym)))
        goto is_nothrow;
    break;
-
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-  case SYM_CLASS_REF:
-   /* Ref vars are static and never cause exceptions. */
-   goto is_nothrow;
-#endif
 
   case SYM_CLASS_MODULE:
    /* Imported modules are static and never cause exceptions. */
@@ -948,16 +929,10 @@ ast_uses_symbol(DeeAstObject *__restrict self,
   if (self->ast_class.ast_classsym == sym ||
       self->ast_class.ast_supersym == sym)
       goto yup;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if ((SYMBOL_TYPE(sym) == SYMBOL_TYPE_IFIELD ||
        SYMBOL_TYPE(sym) == SYMBOL_TYPE_CFIELD) &&
        SYMBOL_FIELD_CLASS(sym) == self->ast_class.ast_classsym)
        goto yup;
-#else
-  if (SYMBOL_TYPE(sym) == SYM_CLASS_MEMBER &&
-      SYMBOL_FIELD_CLASS(sym) == self->ast_class.ast_classsym)
-      goto yup;
-#endif
   end = (iter = self->ast_class.ast_memberv)+
                 self->ast_class.ast_memberc;
   for (; iter != end; ++iter) {
@@ -1300,17 +1275,8 @@ do_xcopy_3:
  case AST_BNDSYM:
   ASSERT(other->ast_sym);
   temp->ast_sym = other->ast_sym;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   ASSERT(SYMBOL_NBOUND(other->ast_sym));
   SYMBOL_INC_NBOUND(temp->ast_sym);
-#else
-  if (other->ast_sym->sym_class == SYM_CLASS_STACK) {
-   ASSERT(temp->ast_sym->sym_stack.sym_bound);
-   ++temp->ast_sym->sym_stack.sym_bound;
-  }
-  ASSERT(SYMBOL_NREAD(other->ast_sym));
-  SYMBOL_INC_NREAD(temp->ast_sym);
-#endif
   break;
 
  case AST_GOTO:
@@ -1805,12 +1771,7 @@ again:
         self->ast_scope->s_prev->ob_type == /* Parent scope has the same type */
         self->ast_scope->ob_type &&         /* ... */
        !self->ast_scope->s_mapc &&          /* Current scope has no symbols */
-       !self->ast_scope->s_del              /* Current scope has no deleted symbol */
-#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-       &&
-       !self->ast_scope->s_stk              /* Current scope has no stack symbol */
-#endif
-       ) {
+       !self->ast_scope->s_del) {           /* Current scope has no deleted symbol */
   /* Use the parent's scope. */
   DeeScopeObject *new_scope;
   new_scope = self->ast_scope->s_prev;
