@@ -1493,6 +1493,13 @@ INTDEF int DCALL asm_gstore(DeeAstObject *__restrict dst,
                             DeeAstObject *__restrict ddi_ast,
                             unsigned int gflags);
 
+/* Store the given constant expression into `dst'. */
+INTDEF int DCALL
+asm_gstore_constexpr(DeeAstObject *__restrict dst, DeeObject *__restrict src,
+                     DeeAstObject *__restrict ddi_ast,
+                     DeeAstObject *__restrict src_ddi_ast,
+                     unsigned int gflags);
+
 /* Unpack the given expression into `num_targets' stack slots. */
 INTDEF int DCALL asm_gunpack_expr(DeeAstObject *__restrict src,
                                   uint16_t num_targets,
@@ -1769,19 +1776,21 @@ INTDEF int DCALL asm_gmov_function(struct symbol *__restrict dst,
 
 /* Move the given symbol `src_sym' into `dst_sym'.
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
-INTDEF int DCALL asm_gmov_symsym(struct symbol *__restrict dst_sym,
-                                 struct symbol *__restrict src_sym,
-                                 DeeAstObject *__restrict dst_ast,
-                                 DeeAstObject *__restrict src_ast);
+INTDEF int (DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
+                                    struct symbol *__restrict src_sym,
+                                    DeeAstObject *__restrict dst_ast,
+                                    DeeAstObject *__restrict src_ast);
+
 /* Store the expression in `src' into `dst'.
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
-INTDEF int DCALL asm_gmov_symdst(struct symbol *__restrict dst_sym,
-                                 DeeAstObject *__restrict src,
-                                 DeeAstObject *__restrict dst_ast);
+INTDEF int (DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
+                                    DeeAstObject *__restrict src,
+                                    DeeAstObject *__restrict dst_ast);
+
 /* Store the symbol `src_sym' into the expression `dst'. */
-INTDEF int DCALL asm_gmov_symsrc(DeeAstObject *__restrict dst,
-                                 struct symbol *__restrict src_sym,
-                                 DeeAstObject *__restrict src_ast);
+INTDEF int (DCALL asm_gmov_ast_sym)(DeeAstObject *__restrict dst,
+                                    struct symbol *__restrict src_sym,
+                                    DeeAstObject *__restrict src_ast);
 
 
 

@@ -83,45 +83,49 @@ INTERN int (DCALL asm_gpop_expr_leave)(DeeAstObject *__restrict ast, unsigned in
     inner->ast_temp = current_assembler.a_stackcur - old_stacksz;
    }
 #else
-   if (asm_putddi(ast)) goto err;
-   if (PUSH_RESULT) {
+   {
     uint16_t total_diff = 0;
+    size_t count;
     /* Move the result below the block of stack-temporaries used by target-expressions. */
-    if (asm_gdup()) goto err;
-    i = ast->ast_multiple.ast_exprc;
+    count = ast->ast_multiple.ast_exprc;
+    if (asm_putddi(ast)) goto err;
+    if (asm_gunpack((uint16_t)count)) goto err;
+    i = count;
     while (i--) total_diff += ast->ast_multiple.ast_exprv[i]->ast_temp;
-    if (total_diff != 0) {
-     /* <temp...>, result */
-     if (asm_gdup()) goto err;                /* <temp...>, result, result */
-     if (asm_grrot(total_diff + 2)) goto err; /* result, <temp...>, result */
+    if (PUSH_RESULT) {
+     if (asm_gdup()) goto err; /* <temp...>, result, result */
+     if (total_diff != 0 && asm_grrot(total_diff + 2)) goto err; /* result, <temp...>, result */
     }
-   }
-   i = ast->ast_multiple.ast_exprc;
-   if (asm_gunpack((uint16_t)i)) goto err;
-   if (i) {
-    size_t count,j;
-    /* Right now, the stack looks like this:
-     * [result], T0a, T0b, T1a, T1b, T2a, T2b, V0, V1, V2
-     * However, we want it to look like this:
-     * [result], T0a, T0b, V0, T1a, T1b, V1, T2a, T2b, V2
-     * Because of this, we must adjust the stack. */
-    count = i;
-    if (asm_grrot((uint16_t)i))
-        goto err; /* T0a, T0b, T1a, T1b, T2a, T2b, V2, V0, V1 */
-    /* -> asm_grrot(5); // T0a, T0b, T1a, T1b, V1, T2a, T2b, V2, V0 */
-    /* -> asm_grrot(7); // T0a, T0b, V0, T1a, T1b, V1, T2a, T2b, V2 */
-    while (i-- > 1) {
-     uint16_t total = (uint16_t)count;
-     for (j = i; j < count; ++j)
-         total += ast->ast_multiple.ast_exprv[j]->ast_temp;
-     if (asm_grrot(total)) goto err;
-    }
-
-    /* The leave-stack is unwound in reverse order! */
-    i = ast->ast_multiple.ast_exprc;
-    while (i--) {
-     if (asm_gpop_expr_leave(ast->ast_multiple.ast_exprv[i],ASM_G_FNORMAL))
+    /* Directly leave expressions that didn't use any stack-temporaries. */
+    while (count && ast->ast_multiple.ast_exprv[count-1]->ast_temp == 0) {
+     if (asm_gpop_expr_leave(ast->ast_multiple.ast_exprv[count-1],ASM_G_FNORMAL))
          goto err;
+     --count;
+    }
+    if (count) {
+     size_t j;
+     /* Right now, the stack looks like this:
+      * [result], T0a, T0b, T1a, T1b, T2a, T2b, V0, V1, V2
+      * However, we want it to look like this:
+      * [result], T0a, T0b, V0, T1a, T1b, V1, T2a, T2b, V2
+      * Because of this, we must adjust the stack. */
+     if (asm_grrot((uint16_t)count))
+         goto err; /* T0a, T0b, T1a, T1b, T2a, T2b, V2, V0, V1 */
+     /* -> asm_grrot(5); // T0a, T0b, T1a, T1b, V1, T2a, T2b, V2, V0 */
+     /* -> asm_grrot(7); // T0a, T0b, V0, T1a, T1b, V1, T2a, T2b, V2 */
+     i = count;
+     while (i-- > 1) {
+      uint16_t total = (uint16_t)count;
+      for (j = i; j < count; ++j)
+          total += ast->ast_multiple.ast_exprv[j]->ast_temp;
+      if (asm_grrot(total)) goto err;
+     }
+     /* The leave-stack is unwound in reverse order! */
+     i = count;
+     while (i--) {
+      if (asm_gpop_expr_leave(ast->ast_multiple.ast_exprv[i],ASM_G_FNORMAL))
+          goto err;
+     }
     }
    }
 #endif

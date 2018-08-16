@@ -402,7 +402,7 @@ err:
 
 
 INTERN int
-(DCALL asm_gmov_symsym)(struct symbol *__restrict dst_sym,
+(DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
                         struct symbol *__restrict src_sym,
                         DeeAstObject *__restrict dst_ast,
                         DeeAstObject *__restrict src_ast) {
@@ -573,10 +573,11 @@ err:
  return -1;
 }
 
+
 INTERN int
-(DCALL asm_gmov_symdst)(struct symbol *__restrict dst_sym,
-                        DeeAstObject *__restrict src,
-                        DeeAstObject *__restrict dst_ast) {
+(DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
+                         DeeAstObject *__restrict src,
+                         DeeAstObject *__restrict dst_ast) {
  ASSERT(asm_can_prefix_symbol(dst_sym));
  switch (src->ast_type) {
 
@@ -586,7 +587,7 @@ INTERN int
   return asm_gmov_function(dst_sym,src,dst_ast);
 
  case AST_SYM:
-  return asm_gmov_symsym(dst_sym,src->ast_sym,dst_ast,src);
+  return asm_gmov_sym_sym(dst_sym,src->ast_sym,dst_ast,src);
 
  {
   DeeObject *constval;
@@ -629,23 +630,28 @@ err:
 }
 
 INTERN int
-(DCALL asm_gmov_symsrc)(DeeAstObject *__restrict dst,
-                        struct symbol *__restrict src_sym,
-                        DeeAstObject *__restrict src_ast) {
+(DCALL asm_gmov_ast_sym)(DeeAstObject *__restrict dst,
+                         struct symbol *__restrict src_sym,
+                         DeeAstObject *__restrict src_ast) {
  switch (dst->ast_type) {
  case AST_SYM:
   if (asm_can_prefix_symbol(dst->ast_sym))
-      return asm_gmov_symsym(dst->ast_sym,src_sym,dst,src_ast);
+      return asm_gmov_sym_sym(dst->ast_sym,src_sym,dst,src_ast);
   break;
  default: break;
  }
  if (asm_putddi(src_ast)) goto err;
+ if (asm_gpop_expr_enter(dst)) goto err;
  if (asm_gpush_symbol(src_sym,src_ast)) goto err;
+ if (asm_gpop_expr_leave(dst,ASM_G_FNORMAL)) goto err;
  return asm_gpop_expr(dst);
 err:
  return -1;
 }
 
+INTDEF int (DCALL asm_gmov_ast_constexpr)(DeeAstObject *__restrict dst,
+                                          DeeObject *__restrict src,
+                                          DeeAstObject *__restrict src_ast);
 
 
 INTERN int
@@ -663,7 +669,7 @@ again:
 
   /* Special instructions that allow a symbol prefix to specify the target. */
   if (!PUSH_RESULT && asm_can_prefix_symbol(dst_sym))
-       return asm_gmov_symdst(dst_sym,src,dst);
+       return asm_gmov_sym_ast(dst_sym,src,dst);
 
 check_dst_sym_class:
   switch (SYMBOL_TYPE(dst_sym)) {
@@ -870,8 +876,6 @@ check_dst_sym_class_hybrid:
     }
    }
   }
-
-  goto default_case;
  } break;
 
 
@@ -879,7 +883,7 @@ check_dst_sym_class_hybrid:
   /* Check for special case: store into a constant
    * expression `none' is the same as `pop' */
   if (!DeeNone_Check(dst->ast_constexpr))
-       goto default_case;
+       break;
   /* Store-to-none is a no-op (so just assembly the source-expression). */
   return ast_genasm(src,gflags);
 
@@ -907,9 +911,8 @@ check_dst_sym_class_hybrid:
 
   default: break;
   }
-  goto default_case;
+  break;
 
- {
  case AST_MULTIPLE:
   /* Special handling for unpack expressions (i.e. `(a,b,c) = foo()'). */
   if (dst->ast_flag == AST_FMULTIPLE_KEEPLAST) {
@@ -924,33 +927,45 @@ check_dst_sym_class_hybrid:
    dst = dst->ast_multiple.ast_exprv[i];
    goto again;
   }
-
-  goto default_case;
- } break;
-
-
- default:
-default_case:
-  /* TODO: Special handling when the stored value uses the target:
-   *  >> local my_list = [10,20,my_list]; // Should create a self-referencing list.
-   * ASM:
-   *  >>    pack list 0
-   *  >>    pop  local @my_list
-   *  >>    push local @my_list  // May be optimized to a dup
-   *  >>    push $10
-   *  >>    push $20
-   *  >>    push local @my_list
-   *  >>    pack list 3
-   *  >>    move assign top, pop // Move-assign the second list.
-   * Essentially, this would look like this:
-   *  >> local my_list = [];
-   *  >> my_list := [10,20,my_list]; */
-  if (asm_gpop_expr_enter(dst)) goto err;
-  if (ast_genasm(src,ASM_G_FPUSHRES)) goto err;
-  if (asm_gpop_expr_leave(dst,gflags)) goto err;
+  /* Optimization for special case: (a,b,c) = (d,e,f); */
+  if (src->ast_type == AST_MULTIPLE &&
+      src->ast_flag != AST_FMULTIPLE_KEEPLAST &&
+      src->ast_multiple.ast_exprc == dst->ast_multiple.ast_exprc &&
+     !ast_multiple_hasexpand(src) && !PUSH_RESULT) {
+   size_t i;
+   for (i = 0; i < src->ast_multiple.ast_exprc; ++i) {
+    if (asm_gstore(dst->ast_multiple.ast_exprv[i],
+                   src->ast_multiple.ast_exprv[i],
+                   ddi_ast,gflags))
+        goto err;
+   }
+   goto done;
+  }
+  if (src->ob_type == AST_CONSTEXPR) {
+   /* TODO: Optimizations for `none'. */
+   /* TODO: Optimizations for sequence constants. */
+  }
   break;
 
+ default: break;
  }
+ /* TODO: Special handling when the stored value uses the target:
+  *  >> local my_list = [10,20,my_list]; // Should create a self-referencing list.
+  * ASM:
+  *  >>    pack list 0
+  *  >>    pop  local @my_list
+  *  >>    push local @my_list  // May be optimized to a dup
+  *  >>    push $10
+  *  >>    push $20
+  *  >>    push local @my_list
+  *  >>    pack list 3
+  *  >>    move assign top, pop // Move-assign the second list.
+  * Essentially, this would look like this:
+  *  >> local my_list = [];
+  *  >> my_list := [10,20,my_list]; */
+ if (asm_gpop_expr_enter(dst)) goto err;
+ if (ast_genasm(src,ASM_G_FPUSHRES)) goto err;
+ if (asm_gpop_expr_leave(dst,gflags)) goto err;
 done:
  return 0;
 err:

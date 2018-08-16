@@ -1431,7 +1431,7 @@ write_regular_local:
   if (mode != OPTION_MODE_OUTPUT) {
    struct symbol temp;
    INITIALIZE_FAKE_LOCAL_SYMBOL(&temp,(uint16_t)lid);
-   if (asm_gmov_symdst(&temp,ast,ast)) goto err;
+   if (asm_gmov_sym_ast(&temp,ast,ast)) goto err;
   }
   cleanup->cm_kind = CLEANUP_MODE_FLOCAL;
   if (mode != OPTION_MODE_INPUT)
@@ -2158,7 +2158,7 @@ create_assembly_file:
   case CLEANUP_MODE_FLOCAL_POP:
    operand = ast->ast_assembly.ast_opv[count].ao_expr;
    INITIALIZE_FAKE_LOCAL_SYMBOL(&temp,cleanup_actions[count].cm_value);
-   if (asm_gmov_symsrc(operand,&temp,operand)) goto err;
+   if (asm_gmov_ast_sym(operand,&temp,operand)) goto err;
   }
    ATTR_FALLTHROUGH
   case CLEANUP_MODE_FLOCAL:
