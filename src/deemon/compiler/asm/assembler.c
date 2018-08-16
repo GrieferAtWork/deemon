@@ -2710,8 +2710,8 @@ asm_rsymid(struct symbol *__restrict sym) {
  result = current_assembler.a_refc;
  if ((sym->s_flag & SYMBOL_FALLOCREF) &&
      (sym->s_refid < result) &&
-      current_assembler.a_refv[result].sr_sym == sym)
-      return result;
+      current_assembler.a_refv[sym->s_refid].sr_sym == sym)
+      return sym->s_refid;
  ASSERT(result <= current_assembler.a_refa);
  if unlikely(result == UINT16_MAX) {
   DeeError_Throwf(&DeeError_CompilerError,

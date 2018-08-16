@@ -81,7 +81,7 @@ struct text_label {
 
 
 #undef CONFIG_USE_NEW_SYMBOL_TYPE
-#define CONFIG_USE_NEW_SYMBOL_TYPE 1
+#define CONFIG_USE_NEW_SYMBOL_TYPE 1 /* TODO: Make this mandatory. */
 
 
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
