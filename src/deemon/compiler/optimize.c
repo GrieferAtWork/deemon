@@ -139,7 +139,7 @@ ast_predict_type(DeeAstObject *__restrict self) {
 
  case AST_SYM:
   /* Certain symbol classes alawys refer to specific object types. */
-  switch (self->ast_sym->sym_class) {
+  switch (SYMBOL_TYPE(self->ast_sym)) {
   case SYM_CLASS_MODULE:
   case SYM_CLASS_THIS_MODULE:
    return &DeeModule_Type;
@@ -161,7 +161,7 @@ ast_predict_type(DeeAstObject *__restrict self) {
     */
    bscope = self->ast_scope->s_base;
    if (bscope->bs_flags & CODE_FVARARGS &&
-       DeeBaseScope_IsArgVarArgs(bscope,self->ast_sym->sym_arg.sym_index))
+       DeeBaseScope_IsArgVarArgs(bscope,SYMBOL_ARG_INDEX(self->ast_sym)))
        return &DeeTuple_Type;
   } break;
   default: break;
@@ -763,8 +763,19 @@ ast_is_nothrow(DeeAstObject *__restrict self, bool result_used) {
  case AST_SYM:
   /* Access to some symbols is nothrow. */
   sym = self->ast_sym;
-  switch (sym->sym_class) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  /* Ref vars are static and never cause exceptions. */
+  if (SYMBOL_MUST_REFERENCE(sym))
+      goto is_nothrow;
+#endif
+  switch (SYMBOL_TYPE(sym)) {
 
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  case SYMBOL_TYPE_STATIC:
+   /* Since static variables can never be unbound,
+    * accessing them can never cause any exceptions. */
+   goto is_nothrow;
+#else
   case SYM_CLASS_VAR:
    /* Since static variables can never be unbound,
     * accessing them can never cause any exceptions. */
@@ -773,6 +784,7 @@ ast_is_nothrow(DeeAstObject *__restrict self, bool result_used) {
    /* NOTE: Due to debugger interference, other var-symbols
     *       _can_ actually cause exceptions. */
    break;
+#endif
 
   case SYM_CLASS_STACK:
    /* Stack-based symbols can never be unbound, so
@@ -786,14 +798,16 @@ ast_is_nothrow(DeeAstObject *__restrict self, bool result_used) {
     * Additionally, the symbol must never be written to, because
     * if it is, it gets turned into a local variable, which _can_
     * cause exceptions when accessed. */
-   if (sym->sym_write == 0 &&
-       DeeBaseScope_IsArgReqOrDefl(current_basescope,sym->sym_arg.sym_index))
+   if (SYMBOL_NWRITE(sym) == 0 &&
+       DeeBaseScope_IsArgReqOrDefl(current_basescope,SYMBOL_ARG_INDEX(sym)))
        goto is_nothrow;
    break;
 
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
   case SYM_CLASS_REF:
    /* Ref vars are static and never cause exceptions. */
    goto is_nothrow;
+#endif
 
   case SYM_CLASS_MODULE:
    /* Imported modules are static and never cause exceptions. */
@@ -934,9 +948,16 @@ ast_uses_symbol(DeeAstObject *__restrict self,
   if (self->ast_class.ast_classsym == sym ||
       self->ast_class.ast_supersym == sym)
       goto yup;
-  if (sym->sym_class == SYM_CLASS_MEMBER &&
-      sym->sym_member.sym_class == self->ast_class.ast_classsym)
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if ((SYMBOL_TYPE(sym) == SYMBOL_TYPE_IFIELD ||
+       SYMBOL_TYPE(sym) == SYMBOL_TYPE_CFIELD) &&
+       SYMBOL_FIELD_CLASS(sym) == self->ast_class.ast_classsym)
+       goto yup;
+#else
+  if (SYMBOL_TYPE(sym) == SYM_CLASS_MEMBER &&
+      SYMBOL_FIELD_CLASS(sym) == self->ast_class.ast_classsym)
       goto yup;
+#endif
   end = (iter = self->ast_class.ast_memberv)+
                 self->ast_class.ast_memberc;
   for (; iter != end; ++iter) {
@@ -1268,19 +1289,28 @@ do_xcopy_3:
   ASSERT(other->ast_sym);
   temp->ast_sym = other->ast_sym;
   if (temp->ast_flag) {
-   ASSERT(other->ast_sym->sym_write);
-   ++temp->ast_sym->sym_write;
+   ASSERT(SYMBOL_NWRITE(other->ast_sym));
+   SYMBOL_INC_NWRITE(temp->ast_sym);
   } else {
-   ASSERT(other->ast_sym->sym_read);
-   ++temp->ast_sym->sym_read;
+   ASSERT(SYMBOL_NREAD(other->ast_sym));
+   SYMBOL_INC_NREAD(temp->ast_sym);
   }
   break;
 
  case AST_BNDSYM:
   ASSERT(other->ast_sym);
-  ASSERT(other->ast_sym->sym_read);
   temp->ast_sym = other->ast_sym;
-  ++temp->ast_sym->sym_read;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  ASSERT(SYMBOL_NBOUND(other->ast_sym));
+  SYMBOL_INC_NBOUND(temp->ast_sym);
+#else
+  if (other->ast_sym->sym_class == SYM_CLASS_STACK) {
+   ASSERT(temp->ast_sym->sym_stack.sym_bound);
+   ++temp->ast_sym->sym_stack.sym_bound;
+  }
+  ASSERT(SYMBOL_NREAD(other->ast_sym));
+  SYMBOL_INC_NREAD(temp->ast_sym);
+#endif
   break;
 
  case AST_GOTO:
@@ -1775,8 +1805,12 @@ again:
         self->ast_scope->s_prev->ob_type == /* Parent scope has the same type */
         self->ast_scope->ob_type &&         /* ... */
        !self->ast_scope->s_mapc &&          /* Current scope has no symbols */
-       !self->ast_scope->s_del &&           /* Current scope has no deleted symbol */
-       !self->ast_scope->s_stk) {           /* Current scope has no stack symbol */
+       !self->ast_scope->s_del              /* Current scope has no deleted symbol */
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
+       &&
+       !self->ast_scope->s_stk              /* Current scope has no stack symbol */
+#endif
+       ) {
   /* Use the parent's scope. */
   DeeScopeObject *new_scope;
   new_scope = self->ast_scope->s_prev;
@@ -1801,24 +1835,24 @@ again:
   if (self->ast_flag)
       break;
   sym = self->ast_sym;
-  ASSERT(sym->sym_read);
+  ASSERT(SYMBOL_NREAD(sym));
   /* Optimize constant, extern symbols. */
-  if (sym->sym_class == SYM_CLASS_EXTERN &&
-     (sym->sym_extern.sym_modsym->ss_flags & MODSYM_FCONSTEXPR)) {
+  if (SYMBOL_TYPE(sym) == SYM_CLASS_EXTERN &&
+     (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FCONSTEXPR)) {
    /* The symbol is allowed to be expanded at compile-time. */
    DREF DeeObject *symval; int error;
    DeeModuleObject *symmod;
-   symmod = sym->sym_extern.sym_module;
+   symmod = SYMBOL_EXTERN_MODULE(sym);
    error  = DeeModule_RunInit((DeeObject *)symmod);
    if unlikely(error < 0) goto err;
    if (error == 0) {
     /* The module is not initialized. */
-    ASSERT(sym->sym_extern.sym_modsym->ss_index <
+    ASSERT(SYMBOL_EXTERN_SYMBOL(sym)->ss_index <
            symmod->mo_globalc);
 #ifndef CONFIG_NO_THREADS
     rwlock_read(&symmod->mo_lock);
 #endif
-    symval = symmod->mo_globalv[sym->sym_extern.sym_modsym->ss_index];
+    symval = symmod->mo_globalv[SYMBOL_EXTERN_SYMBOL(sym)->ss_index];
     Dee_XIncref(symval);
 #ifndef CONFIG_NO_THREADS
     rwlock_endread(&symmod->mo_lock);
@@ -1838,8 +1872,7 @@ again:
      /* Set the value as a constant expression. */
      self->ast_constexpr = symval; /* Inherit */
      self->ast_type      = AST_CONSTEXPR;
-     ASSERT(sym->sym_read);
-     --sym->sym_read; /* Trace read references. */
+     SYMBOL_DEC_NREAD(sym); /* Trace read references. */
      goto did_optimize;
     }
 done_set_constexpr:

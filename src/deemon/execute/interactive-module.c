@@ -1118,14 +1118,22 @@ imod_init(InteractiveModule *__restrict self,
   dots->sym_name = &TPPKeyword_Empty;
   dots->sym_next = root_scope->rs_scope.bs_scope.s_del;
   root_scope->rs_scope.bs_scope.s_del = dots;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  dots->s_flag   = SYMBOL_FALLOC;
+  dots->s_nread  = 0;
+  dots->s_nwrite = 0;
+  dots->s_nbound = 0;
+  dots->s_scope  = &root_scope->rs_scope.bs_scope;
+#else
   dots->sym_flag  = SYM_FNORMAL;
   dots->sym_read  = 0;
   dots->sym_write = 0;
   dots->sym_scope = &root_scope->rs_scope.bs_scope;
+#endif
   root_scope->rs_scope.bs_argv = (struct symbol **)Dee_Malloc(1*sizeof(struct symbol *));
   if unlikely(!root_scope->rs_scope.bs_argv) { sym_free(dots); goto err_compiler; }
-  dots->sym_class                 = SYM_CLASS_ARG;
-  dots->sym_arg.sym_index         = 0;
+  SYMBOL_TYPE(dots)               = SYM_CLASS_ARG;
+  SYMBOL_ARG_INDEX(dots)          = 0;
   root_scope->rs_scope.bs_argc    = 1;
   root_scope->rs_scope.bs_argv[0] = dots;
   root_scope->rs_scope.bs_varargs = dots;
@@ -1204,13 +1212,24 @@ err_compiler_basefile:
                                             DeeString_SIZE(modsym->ss_name),
                                             1);
     if unlikely(!sym->sym_name) goto err_compiler_basefile;
-    sym->sym_class         = SYM_CLASS_VAR;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+    sym->s_type         = SYMBOL_TYPE_GLOBAL;
+    sym->s_flag         = SYMBOL_FALLOC;
+    sym->s_symid        = modsym->ss_index;
+    sym->s_global.g_doc = NULL;
+    sym->s_nread        = 0;
+    sym->s_nwrite       = 1; /* The initial write done by the pre-initialization. */
+    sym->s_nbound       = 0;
+    sym->s_decl.l_file  = NULL;
+#else
+    SYMBOL_TYPE(sym)       = SYM_CLASS_VAR;
     sym->sym_flag          = SYM_FVAR_ALLOC|SYM_FVAR_GLOBAL;
     sym->sym_read          = 0;
     sym->sym_write         = 1; /* The initial write done by the pre-initialization. */
     sym->sym_scope         = current_scope;
     sym->sym_var.sym_index = modsym->ss_index; /* Bind to this global index. */
     sym->sym_var.sym_doc   = NULL;
+#endif
     /* Register the symbol in the current scope. */
     if (++current_scope->s_mapc > current_scope->s_mapa) {
      /* Must rehash this scope. */

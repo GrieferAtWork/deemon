@@ -529,8 +529,8 @@ do_create_base_name:
   if unlikely(!dots) goto err_compiler;
   current_basescope->bs_argv    = (struct symbol **)Dee_Malloc(1*sizeof(struct symbol *));
   if unlikely(!current_basescope->bs_argv) goto err_compiler;
-  dots->sym_class               = SYM_CLASS_ARG;
-  dots->sym_arg.sym_index       = 0;
+  SYMBOL_TYPE(dots)             = SYM_CLASS_ARG;
+  SYMBOL_ARG_INDEX(dots)        = 0;
   current_basescope->bs_argc    = 1;
   current_basescope->bs_argv[0] = dots;
   current_basescope->bs_varargs = dots;
@@ -571,7 +571,7 @@ do_create_base_name:
  }
 
  {
-  uint16_t refc; struct symbol **refv;
+  uint16_t refc; struct asm_symbol_ref *refv;
   root_code = code_compile(ast,assembler_flags,&refc,&refv);
   ASSERT(!root_code || !refc);
   ASSERT(!root_code || !refv);

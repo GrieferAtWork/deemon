@@ -292,7 +292,7 @@ compiler_fini(DeeCompilerObject *__restrict self) {
  if (!(self->cp_flags & COMPILER_FKEEPLEXER))
        TPPLexer_Quit(&self->cp_lexer);
  Dee_Decref(self->cp_scope);
- ascii_printer_fini(&self->cp_tags.at_doc);
+ unicode_printer_fini(&self->cp_tags.at_doc);
 }
 
 PRIVATE void DCALL

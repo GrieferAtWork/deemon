@@ -455,17 +455,17 @@ INTDEF int DCALL astlist_appendall(struct astlist *__restrict self, struct astli
 
 
 struct ast_tags {
-    struct ascii_printer at_doc;          /* [0..1] The documentation string that should be applied to the following declaration. */
-    struct symbol        *at_class;        /* [0..1] The this-class symbol. */
-    struct symbol        *at_super;        /* [0..1] The super-class symbol. */
-    uint16_t              at_code_flags;   /* Set of `CODE_F*' or'd to the next function being created. */
-    uint16_t              at_member_flags; /* Set of `CLASS_MEMBER_F*' */
-    uint16_t              at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
-    uint16_t              at_switch;       /* Set of `AST_FSWITCH_*' */
-    uint16_t              at_class_flags;  /* Set of `TP_F*' or'd to flags during creation of a new class. */
-#define AST_TAG_FNORMAL   0x0000
-#define AST_TAG_FNOBASE   0x0001           /* Don't automatically use `object' as base for user-classes without a custom base. */
-    uint16_t              at_tagflags;     /* Set of `AST_TAG_F*'. */
+    struct unicode_printer at_doc;          /* [0..1] The documentation string that should be applied to the following declaration. */
+    struct symbol         *at_class;        /* [0..1] The this-class symbol. */
+    struct symbol         *at_super;        /* [0..1] The super-class symbol. */
+    uint16_t               at_code_flags;   /* Set of `CODE_F*' or'd to the next function being created. */
+    uint16_t               at_member_flags; /* Set of `CLASS_MEMBER_F*' */
+    uint16_t               at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
+    uint16_t               at_switch;       /* Set of `AST_FSWITCH_*' */
+    uint16_t               at_class_flags;  /* Set of `TP_F*' or'd to flags during creation of a new class. */
+#define AST_TAG_FNORMAL    0x0000
+#define AST_TAG_FNOBASE    0x0001           /* Don't automatically use `object' as base for user-classes without a custom base. */
+    uint16_t               at_tagflags;     /* Set of `AST_TAG_F*'. */
 };
 
 /* Current set of active AST tags.

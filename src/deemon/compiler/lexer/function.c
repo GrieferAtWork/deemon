@@ -109,8 +109,14 @@ do_realloc_symv:
    arg = new_unnamed_symbol();
    if unlikely(!arg) goto err;
    /* Initialize the symbol as an argument. */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   arg->s_type  = SYMBOL_TYPE_ARG;
+   arg->s_flag  = SYMBOL_FALLOC;
+   arg->s_symid = current_basescope->bs_argc;
+#else
    arg->sym_class         = SYM_CLASS_ARG;
    arg->sym_arg.sym_index = current_basescope->bs_argc;
+#endif
    /* Add the symbol to the argument symbol vector. */
    current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
    goto done_dots;
@@ -124,8 +130,14 @@ do_realloc_symv:
   arg = parse_argument_name();
   if unlikely(!arg) goto err;
   /* Initialize the symbol as an argument. */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  arg->s_type  = SYMBOL_TYPE_ARG;
+  arg->s_flag  = SYMBOL_FALLOC;
+  arg->s_symid = current_basescope->bs_argc;
+#else
   arg->sym_class         = SYM_CLASS_ARG;
   arg->sym_arg.sym_index = current_basescope->bs_argc;
+#endif
   /* Add the symbol to the argument symbol vector. */
   current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
   if unlikely(yield() < 0) goto err;
@@ -295,7 +307,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   /* Create a new symbol to allow for function-self-referencing. */
   funcself_symbol = new_local_symbol(name);
   if unlikely(!funcself_symbol) goto err;
-  funcself_symbol->sym_class = SYM_CLASS_THIS_FUNCTION;
+  SYMBOL_TYPE(funcself_symbol) = SYM_CLASS_THIS_FUNCTION;
  }
  if (tok == '(') {
   /* Argument list. */

@@ -65,7 +65,31 @@ INTERN DeeRootScopeObject  *current_rootscope = NULL;
 INTERN DeeModuleObject     *current_module    = NULL;
 
 
-INTERN char const symclass_names[16][14] = {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+INTERN char const symclass_names[0x1f + 1][8] = {
+    /* [SYMBOL_TYPE_NONE  ] = */"none",
+    /* [SYMBOL_TYPE_GLOBAL] = */"global",
+    /* [SYMBOL_TYPE_EXTERN] = */"extern",
+    /* [SYMBOL_TYPE_MODULE] = */"module",
+    /* [SYMBOL_TYPE_MYMOD ] = */"mymod",
+    /* [SYMBOL_TYPE_GETSET] = */"getset",
+    /* [SYMBOL_TYPE_CFIELD] = */"cfield",
+    /* [SYMBOL_TYPE_IFIELD] = */"ifield",
+    /* [SYMBOL_TYPE_ALIAS ] = */"alias",
+    /* [SYMBOL_TYPE_ARG   ] = */"arg",
+    /* [SYMBOL_TYPE_LOCAL ] = */"local",
+    /* [SYMBOL_TYPE_STACK ] = */"stack",
+    /* [SYMBOL_TYPE_STATIC] = */"static",
+    /* [SYMBOL_TYPE_EXCEPT] = */"except",
+    /* [SYMBOL_TYPE_MYFUNC] = */"myfunc",
+    /* [SYMBOL_TYPE_THIS  ] = */"this",
+    /* [SYMBOL_TYPE_AMBIG ] = */"ambig",
+    /* [SYMBOL_TYPE_FWD   ] = */"fwd",
+    "?","?","?","?","?","?","?",
+    "?","?","?","?","?","?","?"
+};
+#else
+INTERN char const symclass_names[0xf + 1][14] = {
     /* [SYM_CLASS_EXTERN        & 0xf] = */"extern",
     /* [SYM_CLASS_VAR           & 0xf] = */"var",
     /* [SYM_CLASS_STACK         & 0xf] = */"stack",
@@ -81,11 +105,38 @@ INTERN char const symclass_names[16][14] = {
     /* [SYM_CLASS_THIS          & 0xf] = */"this",
     "?","?","?" /* Padding... */
 };
+#endif
 
 
-/* -------- DeeScopeObject Implementation -------- */
-PRIVATE void DCALL
-delsym(struct symbol *__restrict self) {
+INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ switch (self->s_type) {
+ case SYMBOL_TYPE_EXTERN:
+ case SYMBOL_TYPE_MODULE:
+  Dee_Decref(self->s_module);
+  break;
+ case SYMBOL_TYPE_GLOBAL:
+  Dee_XDecref(self->s_global.g_doc);
+  break;
+ case SYMBOL_TYPE_CFIELD:
+ case SYMBOL_TYPE_IFIELD:
+  SYMBOL_DEC_NREAD(self->s_field.f_class);
+  break;
+ case SYMBOL_TYPE_GETSET:
+  if (self->s_getset.gs_get)
+      SYMBOL_DEC_NREAD(self->s_getset.gs_get);
+  if (self->s_getset.gs_del)
+      SYMBOL_DEC_NREAD(self->s_getset.gs_del);
+  if (self->s_getset.gs_set)
+      SYMBOL_DEC_NREAD(self->s_getset.gs_set);
+  break;
+ case SYMBOL_TYPE_AMBIG:
+  Dee_Free(self->s_ambig.a_declv);
+  break;
+
+ default: break;
+ }
+#else
  switch (self->sym_class) {
  case SYM_CLASS_EXTERN:
  case SYM_CLASS_MODULE:
@@ -94,17 +145,42 @@ delsym(struct symbol *__restrict self) {
  case SYM_CLASS_VAR:
   Dee_XDecref(self->sym_var.sym_doc);
   break;
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYM_CLASS_REF:
   ASSERT(self->sym_ref.sym_ref);
   ASSERT(self->sym_ref.sym_ref->sym_read);
   --self->sym_ref.sym_ref->sym_read;
   break;
+#endif
  default: break;
  }
+#endif
+}
+
+
+
+/* -------- DeeScopeObject Implementation -------- */
+PRIVATE void DCALL
+delsym(struct symbol *__restrict self) {
+ symbol_fini(self);
  sym_free(self);
 }
 PRIVATE void DCALL
 visitsym(struct symbol *__restrict self, dvisit_t proc, void *arg) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ switch (self->s_type) {
+ case SYMBOL_TYPE_EXTERN:
+ case SYMBOL_TYPE_MODULE:
+  Dee_Visit(self->s_module);
+  break;
+#if 0
+ case SYMBOL_TYPE_GLOBAL:
+  Dee_XVisit(self->s_global.g_doc);
+  break;
+#endif
+ default: break;
+ }
+#else
  switch (self->sym_class) {
  case SYM_CLASS_EXTERN:
  case SYM_CLASS_MODULE:
@@ -115,7 +191,15 @@ visitsym(struct symbol *__restrict self, dvisit_t proc, void *arg) {
   break;
  default: break;
  }
+#endif
 }
+
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+#define sym_next  s_next  /* TODO: Remove me */
+#define sym_name  s_name  /* TODO: Remove me */
+#define sym_scope s_scope /* TODO: Remove me */
+#endif
+
 PRIVATE void DCALL
 scope_fini(DeeScopeObject *__restrict self) {
  struct symbol **biter,**bend,*iter,*next;
@@ -249,10 +333,13 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
                       self->bs_swdefl);
  {
   DREF DeeObject **iter,**end;
-  struct symbol *sym_iter,*sym_next;
   end = (iter = self->bs_default)+(self->bs_argc_max-
                                    self->bs_argc_min);
   for (; iter != end; ++iter) Dee_Decref(*iter);
+ }
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
+ {
+  struct symbol *sym_iter,*sym_next;
   sym_iter = self->bs_refs;
   while (sym_iter) {
    ASSERT(sym_iter->sym_class == SYM_CLASS_REF);
@@ -261,6 +348,7 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
    sym_iter = sym_next;
   }
  }
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
  Dee_Free(self->bs_default);
  Dee_Free(self->bs_argv);
 }
@@ -278,10 +366,13 @@ base_scope_visit(DeeBaseScopeObject *__restrict self,
  visit_switch_cases(self->bs_swcase,proc,arg);
  {
   DREF DeeObject **iter,**end;
-  struct symbol *sym_iter;
   end = (iter = self->bs_default)+(self->bs_argc_max-
                                    self->bs_argc_min);
   for (; iter != end; ++iter) Dee_Visit(*iter);
+ }
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
+ {
+  struct symbol *sym_iter;
   sym_iter = self->bs_refs;
   while (sym_iter) {
    ASSERT(sym_iter->sym_class == SYM_CLASS_REF);
@@ -289,6 +380,7 @@ base_scope_visit(DeeBaseScopeObject *__restrict self,
    sym_iter = sym_iter->sym_ref.sym_rnext;
   }
  }
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
  recursive_rwlock_endread(&DeeCompiler_Lock);
 }
 
@@ -537,7 +629,8 @@ INTERN void DCALL basescope_pop(void) {
  Dee_Decref((DeeObject *)pop_scope); /* Drop the reference previously stored in `current_scope' */
 }
 
-INTERN struct symbol *DCALL
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
+PRIVATE struct symbol *DCALL
 basescope_addref(DeeBaseScopeObject *__restrict self,
                  struct symbol *__restrict sym) {
  struct symbol *refsym;
@@ -547,11 +640,11 @@ basescope_addref(DeeBaseScopeObject *__restrict self,
  ASSERT_OBJECT_TYPE(sym->sym_scope,&DeeScope_Type);
  ASSERT(SYM_MUST_REFERENCE(sym));
  ASSERT(sym->sym_scope->s_base != self);
- if (sym->sym_class == SYM_CLASS_MEMBER) {
+ if (SYMBOL_TYPE(sym) == SYM_CLASS_MEMBER) {
   /* Special case: For class members, only reference the
    * associated class symbol, not Not the member itself. */
   struct symbol *class_sym,*new_sym;
-  class_sym = sym->sym_member.sym_class;
+  class_sym = SYMBOL_FIELD_CLASS(sym);
   if (!SYM_MUST_REFERENCE(class_sym))
        return sym;
   class_sym = basescope_addref(self,class_sym);
@@ -562,7 +655,7 @@ basescope_addref(DeeBaseScopeObject *__restrict self,
   for (; new_sym; new_sym = new_sym->sym_next) {
    if (new_sym->sym_class == SYM_CLASS_MEMBER &&
        new_sym->sym_member.sym_class == class_sym &&
-       new_sym->sym_member.sym_member == sym->sym_member.sym_member)
+       new_sym->sym_member.sym_member == SYMBOL_FIELD_MEMBER(sym))
        return new_sym;
   }
 #endif
@@ -581,7 +674,7 @@ basescope_addref(DeeBaseScopeObject *__restrict self,
   new_sym->sym_scope             = current_scope;
   new_sym->sym_class             = SYM_CLASS_MEMBER;
   new_sym->sym_member.sym_class  = class_sym;
-  new_sym->sym_member.sym_member = sym->sym_member.sym_member;
+  new_sym->sym_member.sym_member = SYMBOL_FIELD_MEMBER(sym);
   /* If the symbol table is relocated, this pointer becomes invalid.
    * Therefor, we must keep track of all referencing
    * symbols, so we can update them when that happens. */
@@ -625,7 +718,9 @@ basescope_addref(DeeBaseScopeObject *__restrict self,
 err:
  return NULL;
 }
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
 
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
 INTERN struct symbol *DCALL
 symbol_reference(DeeBaseScopeObject *__restrict current_basescope,
                  struct symbol *__restrict sym) {
@@ -638,6 +733,7 @@ symbol_reference(DeeBaseScopeObject *__restrict current_basescope,
      return sym;
  return basescope_addref(current_basescope,sym);
 }
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
 
 INTERN int DCALL
 copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
@@ -679,8 +775,14 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
    sym = other_sym->sym_name == &TPPKeyword_Empty
        ? new_unnamed_symbol() : new_local_symbol(other_sym->sym_name);
    if unlikely(!sym) goto err;
-   sym->sym_class         = SYM_CLASS_ARG;
-   sym->sym_arg.sym_index = other_sym->sym_arg.sym_index;
+   SYMBOL_TYPE(sym) = SYM_CLASS_ARG;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   ASSERT(other_sym->s_symid == (uint16_t)i);
+   sym->s_flag  = SYMBOL_FALLOC;
+   sym->s_symid = (uint16_t)i;
+#else
+   SYMBOL_ARG_INDEX(sym) = other_sym->sym_arg.sym_index;
+#endif
    /* Save the symbol in our vector. */
    current_basescope->bs_argv[i] = sym;
   }
@@ -704,12 +806,68 @@ err:
 }
 
 
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+PRIVATE int DCALL
+link_forward_symbol(struct symbol *__restrict self) {
+ DeeScopeObject *iter;
+ if (SYMBOL_TYPE(self) != SYMBOL_TYPE_FWD)
+     return 0;
+ iter = current_scope->s_prev;
+ for (; iter; iter = iter->s_prev) {
+  struct symbol *outer_match;
+  outer_match = scope_lookup(iter,self->sym_name);
+  if (!outer_match) continue;
+  /* Setup the symbol as an alias for another, outer symbol. */
+  ASSERT(!(self->s_flag & (SYMBOL_FALLOCREF|SYMBOL_FALLOC)));
+  self->s_type  = SYMBOL_TYPE_ALIAS;
+  self->s_alias = outer_match;
+  outer_match->s_nread  += self->s_nread;
+  outer_match->s_nwrite += self->s_nwrite;
+  outer_match->s_nbound += self->s_nbound;
+#ifndef NDEBUG
+  self->s_nread  = 0xcccc;
+  self->s_nwrite = 0xcccc;
+  self->s_nbound = 0xcccc;
+#endif
+  return 0;
+ }
+ if (WARNAT(&self->s_decl,W_UNKNOWN_VARIABLE,SYMBOL_NAME(self)))
+     goto err;
+ self->s_type = SYMBOL_TYPE_NONE; /* Prevent the assembler from crashing later... */
+ return 0;
+err:
+ return -1;
+}
+
+INTERN int DCALL link_forward_symbols(void) {
+ struct symbol **bucket_iter,**bucket_end,*iter;
+ ASSERT(current_scope->s_flags & SCOPE_FCLASS);
+ bucket_end = (bucket_iter = current_scope->s_map) + current_scope->s_mapa;
+ for (; bucket_iter < bucket_end; ++bucket_iter) {
+  iter = *bucket_iter;
+  for (; iter; iter = iter->s_next)
+     if unlikely(link_forward_symbol(iter)) goto err;
+ }
+ /* Must also perform final linking on symbols that have been deleted. */
+ iter = current_scope->s_del;
+ for (; iter; iter = iter->s_next)
+    if unlikely(link_forward_symbol(iter)) goto err;
+ return 0;
+err:
+ return -1;
+}
+#endif /* CONFIG_USE_NEW_SYMBOL_TYPE */
+
+
+
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
 INTERN struct symbol *DCALL
 sym_realsym(struct symbol *__restrict self) {
  while ((ASSERT(self),self->sym_class == SYM_CLASS_REF))
          self = self->sym_ref.sym_ref;
  return self;
 }
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
 
 INTERN int DCALL
 rehash_scope(DeeScopeObject *__restrict iter) {
@@ -892,22 +1050,49 @@ seach_single:
           result = result->sym_next;
    /* Simple case: If the variable was found, return it. */
    if (result) {
-    if (mode&LOOKUP_SYM_STACK) {
+    if (mode & LOOKUP_SYM_STACK) {
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
      struct symbol *realsym = sym_realsym(result);
      if (realsym->sym_class != SYM_CLASS_STACK &&
          WARNAT(warn_loc,W_EXPECTED_STACK_VARIABLE,name))
          goto err;
+#else /* !CONFIG_USE_NEW_SYMBOL_TYPE */
+     if (result->s_type != SYM_CLASS_STACK &&
+         WARNAT(warn_loc,W_EXPECTED_STACK_VARIABLE,name))
+         goto err;
+#endif /* CONFIG_USE_NEW_SYMBOL_TYPE */
     }
-    if (mode&LOOKUP_SYM_STATIC) {
+    if (mode & LOOKUP_SYM_STATIC) {
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
      struct symbol *realsym = sym_realsym(result);
      if (realsym->sym_class != SYM_CLASS_VAR &&
          realsym->sym_flag  != SYM_FVAR_STATIC &&
          WARNAT(warn_loc,W_EXPECTED_STATIC_VARIABLE,name))
          goto err;
+#else /* !CONFIG_USE_NEW_SYMBOL_TYPE */
+     /* TODO: Add a reference to the declaration of the selected variable in the message */
+     if (result->s_type != SYMBOL_TYPE_STATIC &&
+         WARNAT(warn_loc,W_EXPECTED_STATIC_VARIABLE,name))
+         goto err;
+#endif /* CONFIG_USE_NEW_SYMBOL_TYPE */
     }
-    if ((mode&LOOKUP_SYM_ALLOWDECL) && SYM_IS_WEAK(result)) {
+    if ((mode&LOOKUP_SYM_ALLOWDECL) && SYMBOL_IS_WEAK(result)) {
      /* Re-declare this symbol. */
-     SYM_CLEAR_WEAK(result);
+     SYMBOL_CLEAR_WEAK(result);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     if ((mode&LOOKUP_SYM_VGLOBAL) ||
+        ((mode&LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT &&
+          /* Default variable lookup in the root scope creates global variables. */
+          current_scope == (DeeScopeObject *)current_rootscope)) {
+      result->s_type = SYMBOL_TYPE_GLOBAL;
+     } else if (mode & LOOKUP_SYM_STACK) {
+      result->s_type = SYM_CLASS_STACK;
+     } else if (mode & LOOKUP_SYM_STATIC) {
+      result->s_type = SYMBOL_TYPE_STATIC;
+     } else {
+      result->s_type = SYMBOL_TYPE_LOCAL;
+     }
+#else
      result->sym_class = SYM_CLASS_VAR;
      if ((mode&LOOKUP_SYM_VGLOBAL) ||
         ((mode&LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT &&
@@ -931,13 +1116,16 @@ seach_single:
                         : SYM_FVAR_LOCAL;
       }
      }
+#endif
      return result;
     }
-    SYM_MARK_USED(result);
+    SYMBOL_MARK_USED(result);
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
     /* Recursively add references for the scope path that leads to this symbol. */
     if (iter->s_base != current_basescope &&
         SYM_MUST_REFERENCE(result))
         result = basescope_addref(current_basescope,result);
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
     return result;
    }
   }
@@ -955,19 +1143,37 @@ seach_single:
   while (result && result->sym_name != name)
          result = result->sym_next;
   if (result) {
-   SYM_MARK_USED(result);
+   SYMBOL_MARK_USED(result);
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
    /* Check if the symbol must be referenced. */
    if (iter->s_base != current_basescope &&
        SYM_MUST_REFERENCE(result)) {
     /* Recursively add references for the scope path that leads to this symbol. */
     result = basescope_addref(current_basescope,result);
    }
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
    return result;
   }
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (iter->s_flags & SCOPE_FCLASS) {
+   /* Reached a class scope.
+    * In order to allow for forward symbol declarations in class declarations,
+    * we must remember that this is where the symbol was first used, and perform
+    * the final linking when the class has been fully declared, at which point
+    * the symbol has either been re-declared as a member of the class, or will
+    * be linked to other declarations that may be visible outside of the class. */
+   if unlikely((result = sym_alloc()) == NULL)
+      goto err;
+   memset(result,0,sizeof(*result));
+   result->s_name  = name;
+   result->s_type  = SYMBOL_TYPE_FWD;
+   goto add_result_to_iter;
+  }
+#endif
  } while ((iter = iter->s_prev) != NULL);
 create_variable:
  if (!(mode&LOOKUP_SYM_ALLOWDECL) &&
-       WARNAT(warn_loc,W_UNKNOWN_VARIABLE,name))
+       WARNAT(warn_loc,W_UNKNOWN_VARIABLE,name->k_name))
        goto err;
  if ((mode&LOOKUP_SYM_VGLOBAL) &&
       current_scope != (DeeScopeObject *)current_rootscope &&
@@ -976,20 +1182,39 @@ create_variable:
  /* Create a new symbol. */
  if unlikely((result = sym_alloc()) == NULL)
     goto err;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ memset(result,0,sizeof(*result));
+ result->s_name  = name;
+ result->s_scope = current_scope;
+ result->s_type  = SYMBOL_TYPE_FWD;
+#else
  result->sym_read  = 0;
  result->sym_write = 0;
  result->sym_name  = name;
- result->sym_scope = current_scope;
  result->sym_class = SYM_CLASS_VAR;
  result->sym_var.sym_doc = NULL;
+#endif
  if ((mode&LOOKUP_SYM_VGLOBAL) ||
     ((mode&LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT &&
       /* Default variable lookup in the root scope creates global variables. */
       current_scope == (DeeScopeObject *)current_rootscope)) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  result->s_type = SYMBOL_TYPE_GLOBAL;
+#else
   result->sym_flag = SYM_FVAR_GLOBAL;
+#endif
   iter = (DeeScopeObject *)current_rootscope;
  } else {
   iter = current_scope;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (mode&LOOKUP_SYM_STACK) {
+   result->s_type = SYMBOL_TYPE_STACK;
+  } else if (mode&LOOKUP_SYM_STATIC) {
+   result->s_type = SYMBOL_TYPE_STATIC;
+  } else {
+   result->s_type = SYMBOL_TYPE_LOCAL;
+  }
+#else
   if (mode&LOOKUP_SYM_STACK) {
    result->sym_class = SYM_CLASS_STACK;
    result->sym_flag  = SYM_FNORMAL;
@@ -1003,7 +1228,11 @@ create_variable:
   } else {
    result->sym_flag = (mode&LOOKUP_SYM_STATIC ? SYM_FVAR_STATIC : SYM_FVAR_LOCAL);
   }
+#endif
  }
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+add_result_to_iter:
+#endif
  if (++iter->s_mapc > iter->s_mapa) {
   /* Must rehash this scope. */
   if unlikely(rehash_scope(iter)) goto err_r;
@@ -1013,6 +1242,18 @@ create_variable:
  bucket = &iter->s_map[name->k_id % iter->s_mapa];
  result->sym_next = *bucket;
  *bucket = result;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ result->s_scope = current_scope;
+ if (warn_loc)
+  memcpy(&result->s_decl,
+          warn_loc,
+          sizeof(struct ast_loc));
+ else {
+  loc_here(&result->s_decl);
+ }
+#else
+ result->sym_scope = current_scope;
+#endif
  return result;
 err_r:
  --iter->s_mapc;
@@ -1035,12 +1276,14 @@ lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name) {
    if (result->sym_name == name) {
     /* Return this instance if it is the one that was requested. */
     if (!nth--) {
-     SYM_MARK_USED(result);
+     SYMBOL_MARK_USED(result);
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
      /* Check if the symbol must be referenced. */
      if (iter->s_base != current_basescope && SYM_MUST_REFERENCE(result)) {
       /* Recursively add references for the scope path that leads to this symbol. */
       result = basescope_addref(current_basescope,result);
      }
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
      return result;
     }
     break;
@@ -1068,10 +1311,19 @@ new_local_symbol(struct TPPKeyword *__restrict name) {
  bucket            = &current_scope->s_map[name->k_id % current_scope->s_mapa];
  result->sym_next  = *bucket;
  *bucket           = result;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ result->s_flag    = SYMBOL_FNORMAL;
+ result->s_nread   = 0;
+ result->s_nwrite  = 0;
+ result->s_nbound  = 0;
+ result->s_scope   = current_scope;
+ loc_here(&result->s_decl); /* TODO: Let the caller pass this one. */
+#else
  result->sym_flag  = SYM_FNORMAL;
  result->sym_read  = 0;
  result->sym_write = 0;
  result->sym_scope = current_scope;
+#endif
  return result;
 err_r:
  --current_scope->s_mapc;
@@ -1088,10 +1340,19 @@ new_unnamed_symbol(void) {
  result->sym_name = &TPPKeyword_Empty;
  result->sym_next = current_scope->s_del;
  current_scope->s_del = result;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ result->s_flag    = SYMBOL_FNORMAL;
+ result->s_nread   = 0;
+ result->s_nwrite  = 0;
+ result->s_nbound  = 0;
+ result->s_scope   = current_scope;
+ loc_here(&result->s_decl); /* TODO: Let the caller pass this one. */
+#else
  result->sym_flag  = SYM_FNORMAL;
  result->sym_read  = 0;
  result->sym_write = 0;
  result->sym_scope = current_scope;
+#endif
  return result;
 }
 INTERN struct symbol *DCALL
@@ -1231,18 +1492,22 @@ INTERN struct symbol *DCALL get_current_class(void) {
  struct symbol *result;
  result = current_basescope->bs_class;
  ASSERT(result);
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
  if (result->sym_scope->s_base != current_basescope &&
      SYM_MUST_REFERENCE(result))
      result = basescope_addref(current_basescope,result);
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
  return result;
 }
 INTERN struct symbol *DCALL get_current_super(void) {
  struct symbol *result;
  result = current_basescope->bs_super;
  ASSERT(result);
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
  if (result->sym_scope->s_base != current_basescope &&
      SYM_MUST_REFERENCE(result))
      result = basescope_addref(current_basescope,result);
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
  return result;
 }
 

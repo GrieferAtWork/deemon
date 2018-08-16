@@ -97,22 +97,6 @@ struct class_member {
 };
 
 struct TPPFile;
-struct ast_loc {
-    struct TPPFile      *l_file; /* [0..1] Location file. */
-#ifdef CONFIG_BUILDING_DEEMON
-    union{
-        struct TPPLCInfo l_lc;   /* [valid_if(l_file != NULL)] Line/column information. */
-        struct{
-            int          l_line; /* [valid_if(l_file != NULL)] Location line. */
-            int          l_col;  /* [valid_if(l_file != NULL)] Location column. */
-        };
-    };
-#else
-     int                 l_line; /* [valid_if(l_file != NULL)] Location line. */
-     int                 l_col;  /* [valid_if(l_file != NULL)] Location column. */
-#endif
-};
-
 struct TPPKeyword;
 struct string_object;
 

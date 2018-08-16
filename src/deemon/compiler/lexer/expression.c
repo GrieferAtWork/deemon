@@ -383,13 +383,23 @@ INTERN DREF DeeAstObject *FCALL ast_sym_import_from_deemon(void) {
  import_symbol = new_unnamed_symbol();
  if unlikely(!import_symbol) goto err;
  /* Setup an external symbol pointing at `import from deemon' */
- import_symbol->sym_class             = SYM_CLASS_EXTERN;
- import_symbol->sym_extern.sym_module = get_deemon_module();
- Dee_Incref(import_symbol->sym_extern.sym_module);
- import_symbol->sym_extern.sym_modsym = DeeModule_GetSymbolString(import_symbol->sym_extern.sym_module,
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ import_symbol->s_type = SYMBOL_TYPE_EXTERN;
+ import_symbol->s_extern.e_module = get_deemon_module();
+ Dee_Incref(import_symbol->s_extern.e_module);
+ import_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(import_symbol->s_extern.e_module,
+                                                              DeeString_STR(&str_import),
+                                                              DeeString_Hash(&str_import));
+ ASSERT(import_symbol->s_extern.e_symbol);
+#else
+ SYMBOL_TYPE(import_symbol)             = SYM_CLASS_EXTERN;
+ SYMBOL_EXTERN_MODULE(import_symbol) = get_deemon_module();
+ Dee_Incref(SYMBOL_EXTERN_MODULE(import_symbol));
+ SYMBOL_EXTERN_SYMBOL(import_symbol) = DeeModule_GetSymbolString(SYMBOL_EXTERN_MODULE(import_symbol),
                                                                   DeeString_STR(&str_import),
                                                                   DeeString_Hash(&str_import));
- ASSERT(import_symbol->sym_extern.sym_modsym);
+ ASSERT(SYMBOL_EXTERN_SYMBOL(import_symbol));
+#endif
  result = ast_sym(import_symbol);
  return result;
 err:

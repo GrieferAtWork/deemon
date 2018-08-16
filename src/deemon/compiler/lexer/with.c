@@ -83,9 +83,13 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
  expression_sym = new_unnamed_symbol();
  if unlikely(!expression_sym) goto err_scope_r;
  /* Use s stack variable. */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ expression_sym->s_type = SYMBOL_TYPE_STACK;
+#else
  expression_sym->sym_class           = SYM_CLASS_STACK;
  expression_sym->sym_stack.sym_nstck = current_scope->s_stk;
  current_scope->s_stk                = expression_sym;
+#endif
  /* Generate the store expression. */
  other = ast_setddi(ast_sym(expression_sym),&loc);
  if unlikely(!other) goto err_scope_r;
@@ -197,9 +201,13 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
  expression_sym = new_unnamed_symbol();
  if unlikely(!expression_sym) goto err_scope_r;
  /* Use s stack variable. */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ expression_sym->s_type = SYMBOL_TYPE_STACK;
+#else
  expression_sym->sym_class           = SYM_CLASS_STACK;
  expression_sym->sym_stack.sym_nstck = current_scope->s_stk;
  current_scope->s_stk                = expression_sym;
+#endif
  /* Generate the store expression. */
  other = ast_setddi(ast_sym(expression_sym),&loc);
  if unlikely(!other) goto err_scope_r;

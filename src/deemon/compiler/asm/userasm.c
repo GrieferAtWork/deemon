@@ -1001,7 +1001,7 @@ struct assembler_state {
 #define ASM_OP_THIS_MODULE   OPNAME2('T','m')     /* `this_module'                The calling module. */
 #define ASM_OP_THIS_FUNCTION OPNAME2('T','f')     /* `this_function'              The calling function. */
 #define ASM_OP_REF           OPNAME1('r')         /* `ref <imm8|16>'              A referenced variable. */
-#define ASM_OP_REF_GLOBAL    OPNAME1('R')         /* `ref <imm8|16>'              A referenced variable (allow global variables outside the global base-scope to be loaded as references). */
+#define ASM_OP_REF_GEN       OPNAME1('R')         /* `ref <imm8|16>'              A referenced variable (create new references for variables where that is possible). */
 #define ASM_OP_ARG           OPNAME1('a')         /* `arg <imm8|16>'              An argument variable. */
 #define ASM_OP_CONST         OPNAME1('c')         /* `const <imm8|16>'            A constant expression. */
 #define ASM_OP_STATIC        OPNAME2('C','s')     /* `static <imm8|16>'           A static expression. */
@@ -1066,6 +1066,28 @@ struct cleanup_mode {
 };
 
 
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+#ifndef NDEBUG
+#define INITIALIZE_FAKE_LOCAL_SYMBOL(sym,lid) \
+   (memset((sym),0xcc,sizeof(struct symbol)), \
+   (sym)->s_decl.l_file = NULL, \
+   (sym)->s_scope  = (DeeScopeObject *)current_basescope, \
+   (sym)->s_nread  = (sym)->s_nwrite = 1, \
+   (sym)->s_nbound = 0, \
+   (sym)->s_type   = SYMBOL_TYPE_LOCAL, \
+   (sym)->s_flag   = SYMBOL_FALLOC, \
+   (sym)->s_symid  = (lid))
+#else
+#define INITIALIZE_FAKE_LOCAL_SYMBOL(sym,lid) \
+   ((sym)->s_decl.l_file = NULL, \
+    (sym)->s_scope  = (DeeScopeObject *)current_basescope, \
+    (sym)->s_nread  = (sym)->s_nwrite = 1, \
+    (sym)->s_nbound = 0, \
+    (sym)->s_type   = SYMBOL_TYPE_LOCAL, \
+    (sym)->s_flag   = SYMBOL_FALLOC, \
+    (sym)->s_symid  = (lid))
+#endif
+#else
 #ifndef NDEBUG
 #define INITIALIZE_FAKE_LOCAL_SYMBOL(sym,lid) \
    (memset((sym),0xcc,sizeof(struct symbol)), \
@@ -1077,6 +1099,7 @@ struct cleanup_mode {
   ((sym)->sym_class = SYM_CLASS_VAR, \
    (sym)->sym_flag = SYM_FVAR_ALLOC|SYM_FVAR_LOCAL, \
    (sym)->sym_var.sym_index = (lid))
+#endif
 #endif
 
 
@@ -1147,12 +1170,19 @@ unknown_encoding:
 abs_stack_any:
   if ((mode == OPTION_MODE_INOUT || mode == OPTION_MODE_INPUT) &&
        ast->ast_type == AST_SYM) {
-   while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-       ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-   if (ast->ast_sym->sym_class == SYM_CLASS_STACK &&
-      (ast->ast_sym->sym_flag & SYM_FSTK_ALLOC)) {
+   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if (ast->ast_sym->s_type == SYM_CLASS_STACK &&
+      !SYMBOL_MUST_REFERENCE(ast->ast_sym) &&
+      (ast->ast_sym->s_flag & SYMBOL_FALLOC))
+#else
+   if (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_STACK &&
+      (ast->ast_sym->sym_flag & SYM_FSTK_ALLOC))
+#endif
+   {
     /* in/out stack-operand */
-    result = DeeString_Newf("stack #%I16u",ast->ast_sym->sym_stack.sym_offset);
+    result = DeeString_Newf("stack #%I16u",SYMBOL_STACK_OFFSET(ast->ast_sym));
     break;
    }
   }
@@ -1182,9 +1212,12 @@ abs_stack_any:
 
  case ASM_OP_EXCEPT:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_EXCEPT) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+#endif
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_EXCEPT) goto next_option;
   result = &str_except;
   Dee_Incref(result);
   break;
@@ -1193,9 +1226,9 @@ abs_stack_any:
   int32_t mid;
  case ASM_OP_MODULE:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_MODULE) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_MODULE) goto next_option;
   mid = asm_msymid(ast->ast_sym);
   if unlikely(mid < 0) goto err;
   result = DeeString_Newf("module %I16u",(uint16_t)mid);
@@ -1203,27 +1236,33 @@ abs_stack_any:
 
  case ASM_OP_THIS:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_THIS) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+#endif
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_THIS) goto next_option;
   result = &str_this;
   Dee_Incref(result);
   break;
 
  case ASM_OP_THIS_MODULE:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_THIS_MODULE) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_THIS_MODULE) goto next_option;
   result = &str_this_module;
   Dee_Incref(result);
   break;
 
  case ASM_OP_THIS_FUNCTION:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_THIS_FUNCTION) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_THIS_FUNCTION) goto next_option;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+#endif
   result = &str_this_function;
   Dee_Incref(result);
   break;
@@ -1232,10 +1271,14 @@ abs_stack_any:
   int32_t rid;
  case ASM_OP_REF:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_REF) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (!SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+#else
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_REF) goto next_option;
 do_regular_ref:
+#endif
   rid = asm_rsymid(ast->ast_sym);
   if unlikely(rid < 0) goto err;
   result = DeeString_Newf("ref %I16u",(uint16_t)rid);
@@ -1243,13 +1286,19 @@ do_regular_ref:
 
  {
   int32_t rid;
- case ASM_OP_REF_GLOBAL:
+ case ASM_OP_REF_GEN:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class == SYM_CLASS_REF)
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  /* Check for may-reference, thus allowing anything that ~could~ be referenced. */
+  if (!SYMBOL_MAY_REFERENCE(ast->ast_sym)) goto next_option;
+  rid = asm_rsymid(ast->ast_sym);
+#else
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_REF) goto next_option;
+  if (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_REF)
       goto do_regular_ref;
-  if (ast->ast_sym->sym_class != SYM_CLASS_VAR)
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR)
       goto next_option;
   if ((ast->ast_sym->sym_flag&SYM_FVAR_ALLOC) != SYM_FVAR_GLOBAL)
       goto next_option;
@@ -1257,20 +1306,24 @@ do_regular_ref:
       goto next_option; /* Cannot reference globals from within the root scope itself. */
   /* Global-reference symbol ID */
   rid = asm_grsymid(ast->ast_sym);
+#endif
   if unlikely(rid < 0) goto err;
   result = DeeString_Newf("ref %I16u",(uint16_t)rid);
  } break;
 
  case ASM_OP_ARG:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_ARG) goto next_option;
-  if (DeeBaseScope_IsArgOptional(current_basescope,ast->ast_sym->sym_arg.sym_index) ||
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_ARG) goto next_option;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+#endif
+  if (DeeBaseScope_IsArgOptional(current_basescope,SYMBOL_ARG_INDEX(ast->ast_sym)) ||
      (DeeBaseScope_HasOptional(current_basescope) &&
-      DeeBaseScope_IsArgVarArgs(current_basescope,ast->ast_sym->sym_arg.sym_index)))
+      DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(ast->ast_sym))))
       goto next_option; /* Optional arguments, or the varargs with optional present cannot be addressed directly. */
-  result = DeeString_Newf("arg %I16u",ast->ast_sym->sym_arg.sym_index);
+  result = DeeString_Newf("arg %I16u",SYMBOL_ARG_INDEX(ast->ast_sym));
   break;
 
  {
@@ -1287,10 +1340,15 @@ do_regular_ref:
   int32_t sid;
  case ASM_OP_STATIC:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_VAR) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (ast->ast_sym->s_type != SYMBOL_TYPE_STATIC) goto next_option;
+  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+#else
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR) goto next_option;
   if ((ast->ast_sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_STATIC) goto next_option;
+#endif
   if (mode == OPTION_MODE_INPUT)
        sid = asm_ssymid_for_read(ast->ast_sym,ast);
   else sid = asm_ssymid(ast->ast_sym);
@@ -1302,24 +1360,28 @@ do_regular_ref:
   int32_t eid;
  case ASM_OP_EXTERN:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_EXTERN) goto next_option;
-  if (ast->ast_sym->sym_extern.sym_modsym->ss_flags & MODSYM_FPROPERTY) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_EXTERN) goto next_option;
+  if (SYMBOL_EXTERN_SYMBOL(ast->ast_sym)->ss_flags & MODSYM_FPROPERTY) goto next_option;
   eid = asm_esymid(ast->ast_sym);
   if unlikely(eid < 0) goto err;
   result = DeeString_Newf("extern %I16u:%I16u",(uint16_t)eid,
-                          ast->ast_sym->sym_extern.sym_modsym->ss_index);
+                          SYMBOL_EXTERN_SYMBOL(ast->ast_sym)->ss_index);
  } break;
 
  {
   int32_t gid;
  case ASM_OP_GLOBAL:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_VAR) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (ast->ast_sym->s_type != SYMBOL_TYPE_EXTERN) goto next_option;
+#else
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR) goto next_option;
   if ((ast->ast_sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_GLOBAL) goto next_option;
+#endif
   if (mode == OPTION_MODE_INPUT)
        gid = asm_gsymid_for_read(ast->ast_sym,ast);
   else gid = asm_gsymid(ast->ast_sym);
@@ -1331,10 +1393,15 @@ do_regular_ref:
   int32_t lid;
  case ASM_OP_LOCAL:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-  if (ast->ast_sym->sym_class != SYM_CLASS_VAR) goto next_option;
+  while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (ast->ast_sym->s_type != SYMBOL_TYPE_LOCAL) goto next_option;
+  if (SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
+#else
+  if (SYMBOL_TYPE(ast->ast_sym) != SYM_CLASS_VAR) goto next_option;
   if ((ast->ast_sym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_LOCAL) goto next_option;
+#endif
 write_regular_local:
   if (mode == OPTION_MODE_INPUT)
        lid = asm_lsymid_for_read(ast->ast_sym,ast);
@@ -1347,11 +1414,17 @@ write_regular_local:
   int32_t lid;
  case ASM_OP_LOCAL_GEN:
   if (ast->ast_type == AST_SYM) {
-   while (ast->ast_sym->sym_class == SYM_CLASS_ALIAS)
-       ast->ast_sym = ast->ast_sym->sym_alias.sym_alias;
-   if (ast->ast_sym->sym_class == SYM_CLASS_VAR &&
+   while (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_ALIAS)
+       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if (ast->ast_sym->s_type == SYMBOL_TYPE_LOCAL &&
+      !SYMBOL_MUST_REFERENCE(ast->ast_sym))
+       goto write_regular_local;
+#else
+   if (SYMBOL_TYPE(ast->ast_sym) == SYM_CLASS_VAR &&
       (ast->ast_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL)
        goto write_regular_local;
+#endif
   }
   lid = asm_newlocal();
   if unlikely(lid < 0) goto err;

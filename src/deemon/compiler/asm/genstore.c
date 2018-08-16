@@ -174,38 +174,42 @@ ast_gen_setattr(DeeAstObject *__restrict base,
   if (base->ast_type == AST_SYM) {
    struct symbol *sym = base->ast_sym;
 check_base_symbol_class:
-   switch (sym->sym_class) {
-
-   case SYM_CLASS_ALIAS:
-    ASSERT(sym != sym->sym_alias.sym_alias);
-    ASSERT(sym->sym_scope == sym->sym_alias.sym_alias->sym_scope);
-    sym = sym->sym_alias.sym_alias;
-    goto check_base_symbol_class;
-
-   case SYM_CLASS_THIS:
-    cid = asm_newconst(name->ast_constexpr);
-    if unlikely(cid < 0) goto err;
-    if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
-    if (PUSH_RESULT && (asm_putddi(ddi_ast) || asm_gdup())) goto err;
-    if (asm_gsetattr_this_const((uint16_t)cid)) goto err;
-    goto done;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if (!SYMBOL_MUST_REFERENCE(sym))
+#endif
    {
-    struct module_symbol *modsym; int32_t module_id;
-   case SYM_CLASS_MODULE: /* module.attr --> pop extern ... */
-    modsym = get_module_symbol(sym->sym_module.sym_module,
-                              (DeeStringObject *)name->ast_constexpr);
-    if (!modsym) break;
-    module_id = asm_msymid(sym);
-    if unlikely(module_id < 0) goto err;
-    /* Push an external symbol accessed through its module. */
-    if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
-    if (asm_putddi(ddi_ast)) goto err;
-    if (PUSH_RESULT && asm_gdup()) goto err;
-    if (asm_gpop_extern((uint16_t)module_id,modsym->ss_index)) goto err;
-    goto done;
-   } break;
-   default:
-    break;
+    switch (SYMBOL_TYPE(sym)) {
+
+    case SYM_CLASS_ALIAS:
+     ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+     sym = SYMBOL_ALIAS(sym);
+     goto check_base_symbol_class;
+
+    case SYM_CLASS_THIS:
+     cid = asm_newconst(name->ast_constexpr);
+     if unlikely(cid < 0) goto err;
+     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
+     if (PUSH_RESULT && (asm_putddi(ddi_ast) || asm_gdup())) goto err;
+     if (asm_gsetattr_this_const((uint16_t)cid)) goto err;
+     goto done;
+    {
+     struct module_symbol *modsym; int32_t module_id;
+    case SYM_CLASS_MODULE: /* module.attr --> pop extern ... */
+     modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),
+                               (DeeStringObject *)name->ast_constexpr);
+     if (!modsym) break;
+     module_id = asm_msymid(sym);
+     if unlikely(module_id < 0) goto err;
+     /* Push an external symbol accessed through its module. */
+     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
+     if (PUSH_RESULT && asm_gdup()) goto err;
+     if (asm_gpop_extern((uint16_t)module_id,modsym->ss_index)) goto err;
+     goto done;
+    } break;
+    default:
+     break;
+    }
    }
   }
   if unlikely(asm_gpush2_duplast(base,value,ddi_ast,gflags))
@@ -367,12 +371,15 @@ asm_gunpack_expr(DeeAstObject *__restrict src,
  }
  if (src->ast_type == AST_SYM) {
   struct symbol *sym = src->ast_sym;
-  while (sym->sym_class == SYM_CLASS_ALIAS)
-      sym = sym->sym_alias.sym_alias;
-  if (sym->sym_class == SYM_CLASS_ARG &&
+  while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+      sym = SYMBOL_ALIAS(sym);
+  if (SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
      (current_basescope->bs_flags & CODE_FVARARGS) &&
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     !SYMBOL_MUST_REFERENCE(sym) &&
+#endif
      !DeeBaseScope_HasOptional(current_basescope) &&
-      DeeBaseScope_IsArgVarArgs(current_basescope,sym->sym_arg.sym_index)) {
+      DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) {
    /* Unpack the varargs argument. */
    if (asm_putddi(ddi_ast)) goto err;
    return asm_gvarargs_unpack(num_targets);
@@ -401,25 +408,38 @@ INTERN int
  int32_t symid;
  ASSERT(asm_can_prefix_symbol(dst_sym));
 check_src_sym_class:
- switch (src_sym->sym_class) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ if (SYMBOL_MUST_REFERENCE(src_sym)) {
+  /* mov PREFIX, ref <imm8/16> */
+  symid = asm_rsymid(src_sym);
+  if unlikely(symid < 0) goto err;
+  if (asm_putddi(ddi_ast)) goto err;
+  if (asm_gprefix_symbol(dst_sym,ddi_ast)) goto err;
+  return asm_gpush_ref_p((uint16_t)symid);
+ }
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
+ switch (SYMBOL_TYPE(src_sym)) {
 
  case SYM_CLASS_ALIAS:
-  ASSERT(src_sym != src_sym->sym_alias.sym_alias);
-  ASSERT(src_sym->sym_scope == src_sym->sym_alias.sym_alias->sym_scope);
-  src_sym = src_sym->sym_alias.sym_alias;
+  ASSERT(src_sym != SYMBOL_ALIAS(src_sym));
+  src_sym = SYMBOL_ALIAS(src_sym);
   goto check_src_sym_class;
 
  case SYM_CLASS_STACK:
   /* mov PREFIX, #... */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (!(src_sym->s_flag & SYMBOL_FALLOC)) break;
+#else
   if (!(src_sym->sym_flag & SYM_FSTK_ALLOC)) break;
+#endif
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,ddi_ast)) goto err;
-  if (src_sym->sym_stack.sym_offset == current_assembler.a_stackcur-1) {
+  if (SYMBOL_STACK_OFFSET(src_sym) == current_assembler.a_stackcur-1) {
    return asm_gdup_p();
   } else {
    uint16_t offset;
    offset = (uint16_t)((current_assembler.a_stackcur -
-                        src_sym->sym_stack.sym_offset)-1);
+                        SYMBOL_STACK_OFFSET(src_sym))-1);
    return asm_gdup_n_p(offset);
   }
   break;
@@ -456,6 +476,7 @@ check_src_sym_class:
   if (asm_gprefix_symbol(dst_sym,ddi_ast)) goto err;
   return asm_gpush_this_function_p();
 
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
  case SYM_CLASS_REF:
   /* mov PREFIX, ref <imm8/16> */
   symid = asm_rsymid(src_sym);
@@ -463,15 +484,44 @@ check_src_sym_class:
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,ddi_ast)) goto err;
   return asm_gpush_ref_p((uint16_t)symid);
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
 
  case SYM_CLASS_ARG:
   /* mov PREFIX, arg <imm8/16> */
-  if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,src_sym->sym_arg.sym_index))
+  if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,SYMBOL_ARG_INDEX(src_sym)))
        break; /* Can only be used for required, or default arguments. */
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,ddi_ast)) goto err;
-  return asm_gpush_arg_p(src_sym->sym_arg.sym_index);
+  return asm_gpush_arg_p(SYMBOL_ARG_INDEX(src_sym));
 
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ case SYMBOL_TYPE_GLOBAL:
+  /* mov PREFIX, global <imm8/16> */
+  if (!(src_sym->s_flag & SYMBOL_FALLOC)) break;
+  symid = asm_gsymid_for_read(src_sym,ddi_ast);
+  if unlikely(symid < 0) goto err;
+  if (asm_putddi(ddi_ast)) goto err;
+  if (asm_gprefix_symbol(dst_sym,ddi_ast)) goto err;
+  return asm_gpush_global_p((uint16_t)symid);
+
+ case SYMBOL_TYPE_LOCAL:
+  /* mov PREFIX, local <imm8/16> */
+  if (!(src_sym->s_flag & SYMBOL_FALLOC)) break;
+  symid = asm_lsymid_for_read(src_sym,ddi_ast);
+  if unlikely(symid < 0) goto err;
+  if (asm_putddi(ddi_ast)) goto err;
+  if (asm_gprefix_symbol(dst_sym,ddi_ast)) goto err;
+  return asm_gpush_local_p((uint16_t)symid);
+
+ case SYMBOL_TYPE_STATIC:
+  /* mov PREFIX, static <imm8/16> */
+  if (!(src_sym->s_flag & SYMBOL_FALLOC)) break;
+  symid = asm_ssymid_for_read(src_sym,ddi_ast);
+  if unlikely(symid < 0) goto err;
+  if (asm_putddi(ddi_ast)) goto err;
+  if (asm_gprefix_symbol(dst_sym,ddi_ast)) goto err;
+  return asm_gpush_static_p((uint16_t)symid);
+#else
  case SYM_CLASS_VAR:
   if (!(src_sym->sym_flag & SYM_FVAR_ALLOC))
         break;
@@ -499,16 +549,18 @@ check_src_sym_class:
    return asm_gpush_static_p((uint16_t)symid);
   default: break;
   }
+  break;
+#endif
 
  case SYM_CLASS_EXTERN:
   /* mov PREFIX, extern <imm8/16>:<imm8/16> */
-  if (src_sym->sym_extern.sym_modsym->ss_flags & MODSYM_FPROPERTY)
+  if (SYMBOL_EXTERN_SYMBOL(src_sym)->ss_flags & MODSYM_FPROPERTY)
       break; /* Cannot be used for external properties. */
   symid = asm_esymid(src_sym);
   if unlikely(symid < 0) goto err;
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,ddi_ast)) goto err;
-  return asm_gpush_extern_p((uint16_t)symid,src_sym->sym_extern.sym_modsym->ss_index);
+  return asm_gpush_extern_p((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(src_sym)->ss_index);
 
  default: break;
  }
@@ -609,16 +661,24 @@ again:
        return asm_gmov_symdst(dst_sym,src,dst);
 
 check_dst_sym_class:
-  switch (dst_sym->sym_class) {
+  switch (SYMBOL_TYPE(dst_sym)) {
 
   case SYM_CLASS_ALIAS:
-   ASSERT(dst_sym != dst_sym->sym_alias.sym_alias);
-   ASSERT(dst_sym->sym_scope == dst_sym->sym_alias.sym_alias->sym_scope);
-   dst_sym = dst_sym->sym_alias.sym_alias;
+   ASSERT(dst_sym != SYMBOL_ALIAS(dst_sym));
+   dst_sym = SYMBOL_ALIAS(dst_sym);
    goto check_dst_sym_class;
 
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  case SYMBOL_TYPE_GLOBAL:
+  case SYMBOL_TYPE_LOCAL:
+  case SYMBOL_TYPE_STATIC:
+   if (dst_sym->s_type == SYMBOL_TYPE_STATIC &&
+     !(dst_sym->s_flag & SYMBOL_FALLOC))
+#else
   case SYM_CLASS_VAR:
-   if (dst_sym->sym_flag == (SYM_FVAR_STATIC & ~SYM_FVAR_ALLOC)) {
+   if (dst_sym->sym_flag == (SYM_FVAR_STATIC & ~SYM_FVAR_ALLOC))
+#endif
+   {
     int32_t sid;
     /* Special case: Unallocated static variable
      * > The first assignment is used as the static initializer */
@@ -629,8 +689,13 @@ check_dst_sym_class:
       *    static value and not have to generate any runtime code! */
      sid = asm_newstatic(src->ast_constexpr);
      if unlikely(sid < 0) goto err;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     dst_sym->s_symid = (uint16_t)sid;
+     dst_sym->s_flag |= SYMBOL_FALLOC;
+#else
      dst_sym->sym_var.sym_index = (uint16_t)sid;
      dst_sym->sym_flag |= SYM_FVAR_ALLOC;
+#endif
      if (PUSH_RESULT &&
         (asm_putddi(ddi_ast) ||
          asm_gpush_static((uint16_t)sid)))
@@ -698,76 +763,106 @@ check_dst_sym_class:
   }
   if (src->ast_type == AST_SYM && !PUSH_RESULT &&
       asm_can_prefix_symbol_for_read(src->ast_sym)) {
+   int32_t symid;
 check_dst_sym_class_hybrid:
-   switch (dst_sym->sym_class) {
-
-   case SYM_CLASS_ALIAS:
-    ASSERT(dst_sym != dst_sym->sym_alias.sym_alias);
-    ASSERT(dst_sym->sym_scope == dst_sym->sym_alias.sym_alias->sym_scope);
-    dst_sym = dst_sym->sym_alias.sym_alias;
-    goto check_dst_sym_class_hybrid;
-
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if (!SYMBOL_MUST_REFERENCE(dst_sym))
+#endif
    {
-    int32_t symid;
-   case SYM_CLASS_VAR:
-    switch (dst_sym->sym_flag & SYM_FVAR_MASK) {
-    case SYM_FVAR_GLOBAL:
+    switch (SYMBOL_TYPE(dst_sym)) {
+
+    case SYM_CLASS_ALIAS:
+     ASSERT(dst_sym != SYMBOL_ALIAS(dst_sym));
+     dst_sym = SYMBOL_ALIAS(dst_sym);
+     goto check_dst_sym_class_hybrid;
+
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+    case SYMBOL_TYPE_GLOBAL:
      /* mov global <imm8/16>, PREFIX */
      symid = asm_gsymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
      if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
      return asm_gpop_global_p((uint16_t)symid);
-    case SYM_FVAR_LOCAL:
+
+    case SYMBOL_TYPE_LOCAL:
      /* mov local <imm8/16>, PREFIX */
      symid = asm_lsymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
      if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
      return asm_gpop_local_p((uint16_t)symid);
-    case SYM_FVAR_STATIC:
+
+    case SYMBOL_TYPE_STATIC:
      /* mov static <imm8/16>, PREFIX */
      symid = asm_ssymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
      if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
      return asm_gpop_static_p((uint16_t)symid);
+#else
+    case SYM_CLASS_VAR:
+     switch (dst_sym->sym_flag & SYM_FVAR_MASK) {
+     case SYM_FVAR_GLOBAL:
+      /* mov global <imm8/16>, PREFIX */
+      symid = asm_gsymid(dst_sym);
+      if unlikely(symid < 0) goto err;
+      if (asm_putddi(dst)) goto err;
+      if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+      return asm_gpop_global_p((uint16_t)symid);
+     case SYM_FVAR_LOCAL:
+      /* mov local <imm8/16>, PREFIX */
+      symid = asm_lsymid(dst_sym);
+      if unlikely(symid < 0) goto err;
+      if (asm_putddi(dst)) goto err;
+      if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+      return asm_gpop_local_p((uint16_t)symid);
+     case SYM_FVAR_STATIC:
+      /* mov static <imm8/16>, PREFIX */
+      symid = asm_ssymid(dst_sym);
+      if unlikely(symid < 0) goto err;
+      if (asm_putddi(dst)) goto err;
+      if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+      return asm_gpop_static_p((uint16_t)symid);
+     default: break;
+     }
+     break;
+#endif
+
+    case SYM_CLASS_EXTERN:
+     /* mov extern <imm8/16>, PREFIX */
+     if (SYMBOL_EXTERN_SYMBOL(dst_sym)->ss_flags &
+        (MODSYM_FREADONLY|MODSYM_FPROPERTY)) break;
+     symid = asm_esymid(dst_sym);
+     if unlikely(symid < 0) goto err;
+     if (asm_putddi(dst)) goto err;
+     if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+     return asm_gpop_extern_p((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(dst_sym)->ss_index);
+
+    case SYM_CLASS_STACK:
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     if (!(dst_sym->s_flag & SYMBOL_FALLOC))
+           break;
+#else
+     if (!(dst_sym->sym_flag & SYM_FSTK_ALLOC))
+           break;
+#endif
+     if (asm_putddi(ddi_ast)) goto err;
+     if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+     if (SYMBOL_STACK_OFFSET(dst_sym) == current_assembler.a_stackcur-1) {
+      /* mov top, PREFIX */
+      return asm_gpop_p();
+     } else {
+      /* mov #<imm8/16>, PREFIX */
+      uint16_t offset;
+      offset = (uint16_t)((current_assembler.a_stackcur -
+                           SYMBOL_STACK_OFFSET(dst_sym))-1);
+      return asm_gpop_n_p(offset);
+     }
+     break;
+
     default: break;
     }
-   } break;
-
-   {
-    int32_t modid;
-   case SYM_CLASS_EXTERN:
-    /* mov extern <imm8/16>, PREFIX */
-    if (dst_sym->sym_extern.sym_modsym->ss_flags &
-       (MODSYM_FREADONLY|MODSYM_FPROPERTY)) break;
-    modid = asm_esymid(dst_sym);
-    if unlikely(modid < 0) goto err;
-    if (asm_putddi(dst)) goto err;
-    if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
-    return asm_gpop_extern_p((uint16_t)modid,dst_sym->sym_extern.sym_modsym->ss_index);
-   } break;
-
-   case SYM_CLASS_STACK:
-    if (!(dst_sym->sym_flag & SYM_FSTK_ALLOC))
-          break;
-    if (asm_putddi(ddi_ast)) goto err;
-    if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
-    if (dst_sym->sym_stack.sym_offset ==
-        current_assembler.a_stackcur-1) {
-     /* mov top, PREFIX */
-     return asm_gpop_p();
-    } else {
-     /* mov #<imm8/16>, PREFIX */
-     uint16_t offset;
-     offset = (uint16_t)((current_assembler.a_stackcur -
-                          dst_sym->sym_stack.sym_offset)-1);
-     return asm_gpop_n_p(offset);
-    }
-    break;
-
-   default: break;
    }
   }
 
@@ -938,9 +1033,13 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
     DeeAstObject *base = ast->ast_operator.ast_opa;
     if unlikely(cid < 0) goto err;
     if (base->ast_type == AST_SYM) {
-     while (base->ast_sym->sym_class == SYM_CLASS_ALIAS)
-         base->ast_sym = base->ast_sym->sym_alias.sym_alias;
-     if (base->ast_sym->sym_class == SYM_CLASS_THIS) {
+     while (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_ALIAS)
+         base->ast_sym = SYMBOL_ALIAS(base->ast_sym);
+     if (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_THIS
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+         && !SYMBOL_MUST_REFERENCE(base->ast_sym)
+#endif
+         ) {
       if (asm_putddi(ast)) goto err;
       if (asm_gsetattr_this_const((uint16_t)cid)) goto err;
       goto done;

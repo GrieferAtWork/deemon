@@ -33,29 +33,18 @@ DECL_BEGIN
 
 INTERN struct ast_tags current_tags;
 INTERN void DCALL clear_current_tags(void) {
- ascii_printer_fini(&current_tags.at_doc);
+ unicode_printer_fini(&current_tags.at_doc);
  memset(&current_tags,0,sizeof(struct ast_tags));
 }
 
 PRIVATE int DCALL append_doc_string(void) {
  ASSERT(tok == TOK_STRING);
- size_t total_written = 0;
  do {
-  char *buffer;
-  char *string_begin = token.t_begin;
-  char *string_end = token.t_end;
-  size_t unescape_size;
-  if (string_begin != string_end && *string_begin == '\"') ++string_begin;
-  if (string_begin != string_end && string_end[-1] == '\"') --string_end;
-  unescape_size = TPP_SizeofUnescape(string_begin,(size_t)(string_end-string_begin),1);
-  total_written += unescape_size;
-  buffer = ascii_printer_alloc(&current_tags.at_doc,unescape_size);
-  if unlikely(!buffer) goto err;
-  TPP_Unescape(buffer,string_begin,(size_t)(string_end-string_begin),1);
+  if unlikely(ast_decode_unicode_string(&current_tags.at_doc)) goto err;
   if unlikely(yield() < 0) goto err;
  } while (tok == TOK_STRING);
  /* Append a line-feed at the end. */
- if unlikely(ascii_printer_putc(&current_tags.at_doc,'\n') < 0)
+ if unlikely(unicode_printer_putascii(&current_tags.at_doc,'\n'))
     goto err;
  return 0;
 err:
@@ -120,7 +109,7 @@ again:
    if unlikely(yield() < 0) goto err_flags;
    if (tok == KWD_auto && tag_id == KWD_doc) {
     /* Special case: `@doc(auto)' */
-    if unlikely(ascii_printer_print(&current_tags.at_doc,"\n",1) < 0)
+    if unlikely(unicode_printer_putascii(&current_tags.at_doc,'\n'))
        goto err_flags;
     if unlikely(yield() < 0) goto err_flags;
     TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -190,9 +179,7 @@ need_constexpr:
    for (i = 0; i < DeeTuple_SIZE(tag_args); ++i) {
     DeeObject *arg = DeeTuple_GET(tag_args,i);
     if (DeeString_Check(arg)) {
-     if unlikely(ascii_printer_print(&current_tags.at_doc,
-                                       DeeString_STR(arg),
-                                       DeeString_SIZE(arg)) < 0)
+     if unlikely(unicode_printer_printstring(&current_tags.at_doc,arg) < 0)
         goto err_args;
      continue;
     }

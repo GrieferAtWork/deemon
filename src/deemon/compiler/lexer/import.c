@@ -258,17 +258,17 @@ ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
            DeeString_STR(module->mo_name)))
       goto err_module;
   if (module == current_rootscope->rs_module) {
-   extern_symbol->sym_class = SYM_CLASS_THIS_MODULE;
+   SYMBOL_TYPE(extern_symbol) = SYM_CLASS_THIS_MODULE;
    Dee_Decref(module);
   } else {
-   extern_symbol->sym_class             = SYM_CLASS_MODULE;
-   extern_symbol->sym_module.sym_module = module; /* Inherit reference. */
+   SYMBOL_TYPE(extern_symbol)             = SYM_CLASS_MODULE;
+   SYMBOL_MODULE_MODULE(extern_symbol) = module; /* Inherit reference. */
   }
  } else {
   /* Setup this symbol as an external reference. */
-  extern_symbol->sym_class             = SYM_CLASS_EXTERN;
-  extern_symbol->sym_extern.sym_module = module; /* Inherit reference. */
-  extern_symbol->sym_extern.sym_modsym = modsym;
+  SYMBOL_TYPE(extern_symbol)             = SYM_CLASS_EXTERN;
+  SYMBOL_EXTERN_MODULE(extern_symbol) = module; /* Inherit reference. */
+  SYMBOL_EXTERN_SYMBOL(extern_symbol) = modsym;
  }
  /* Return the whole thing as a symbol-ast. */
  return ast_sym(extern_symbol);
@@ -531,22 +531,26 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
     * >> import * from b;
     * >> import foo from b;  // Explicitly link `foo' to be import from the desired module.
     */
-   if (SYM_IS_WEAK(sym) &&
-      (sym->sym_extern.sym_module != module ||
-       sym->sym_extern.sym_modsym != iter)) {
-    SYM_CLEAR_WEAK(sym);
-    sym->sym_class = SYM_CLASS_AMBIGUOUS;
-    sym->sym_flag  = SYM_FNORMAL;
+   if (SYMBOL_IS_WEAK(sym) &&
+      (SYMBOL_EXTERN_MODULE(sym) != module ||
+       SYMBOL_EXTERN_SYMBOL(sym) != iter)) {
+    SYMBOL_CLEAR_WEAK(sym);
+    SYMBOL_TYPE(sym) = SYM_CLASS_AMBIGUOUS;
    }
    continue; /* Skip this one... */
   } else {
    sym = new_local_symbol(name);
    if unlikely(!sym) goto err;
    /* Define this symbol as an import from this module. */
-   sym->sym_class             = SYM_CLASS_EXTERN;
-   sym->sym_flag              = SYM_FEXTERN_WEAK; /* Symbols import by `*' are defined weakly. */
-   sym->sym_extern.sym_module = module;
-   sym->sym_extern.sym_modsym = iter;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   sym->s_type  = SYMBOL_TYPE_EXTERN;
+   sym->s_flag |= SYMBOL_FWEAK; /* Symbols import by `*' are defined weakly. */
+#else
+   SYMBOL_TYPE(sym) = SYM_CLASS_EXTERN;
+   sym->sym_flag = SYM_FEXTERN_WEAK; /* Symbols import by `*' are defined weakly. */
+#endif
+   SYMBOL_EXTERN_MODULE(sym) = module;
+   SYMBOL_EXTERN_SYMBOL(sym) = iter;
    Dee_Incref(module);
   }
  }
@@ -589,14 +593,14 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
  }
  import_symbol = get_local_symbol(item->ii_symbol_name);
  if unlikely(import_symbol) {
-  if (SYM_IS_WEAK(import_symbol)) {
-   SYM_CLEAR_WEAK(import_symbol);
+  if (SYMBOL_IS_WEAK(import_symbol)) {
+   SYMBOL_CLEAR_WEAK(import_symbol);
    goto init_import_symbol;
   }
   /* Another symbol with the same name had already been imported. */
-  if (import_symbol->sym_class == SYM_CLASS_EXTERN &&
-      import_symbol->sym_extern.sym_module == module &&
-      import_symbol->sym_extern.sym_modsym == sym) {
+  if (SYMBOL_TYPE(import_symbol) == SYM_CLASS_EXTERN &&
+      SYMBOL_EXTERN_MODULE(import_symbol) == module &&
+      SYMBOL_EXTERN_SYMBOL(import_symbol) == sym) {
    /* It was the same symbol that had been imported before.
     * -> Ignore the secondary import! */
   } else {
@@ -607,10 +611,14 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
   import_symbol = new_local_symbol(item->ii_symbol_name);
   if unlikely(!import_symbol) goto err;
 init_import_symbol:
-  import_symbol->sym_class             = SYM_CLASS_EXTERN;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  import_symbol->s_type = SYMBOL_TYPE_EXTERN;
+#else
+  SYMBOL_TYPE(import_symbol)             = SYM_CLASS_EXTERN;
   import_symbol->sym_flag              = SYM_FNORMAL;
-  import_symbol->sym_extern.sym_module = module;
-  import_symbol->sym_extern.sym_modsym = sym;
+#endif
+  SYMBOL_EXTERN_MODULE(import_symbol) = module;
+  SYMBOL_EXTERN_SYMBOL(import_symbol) = sym;
   Dee_Incref(module);
  }
 done:
@@ -639,15 +647,15 @@ ast_import_module(struct import_item *__restrict item) {
  if unlikely(!module) goto err;
  import_symbol = get_local_symbol(item->ii_symbol_name);
  if unlikely(import_symbol) {
-  if (SYM_IS_WEAK(import_symbol)) {
-   SYM_CLEAR_WEAK(import_symbol);
+  if (SYMBOL_IS_WEAK(import_symbol)) {
+   SYMBOL_CLEAR_WEAK(import_symbol);
    goto init_import_symbol;
   }
   /* Another symbol with the same name had already been imported. */
-  if ((import_symbol->sym_class == SYM_CLASS_MODULE &&
-       import_symbol->sym_module.sym_module == module) ||
+  if ((SYMBOL_TYPE(import_symbol) == SYM_CLASS_MODULE &&
+       SYMBOL_MODULE_MODULE(import_symbol) == module) ||
       (module == current_rootscope->rs_module &&
-       import_symbol->sym_class == SYM_CLASS_THIS_MODULE)) {
+       SYMBOL_TYPE(import_symbol) == SYM_CLASS_THIS_MODULE)) {
    /* The same module has already been imported under this name! */
   } else {
    if (WARNAT(&item->ii_import_loc,W_IMPORT_ALIAS_IS_ALREADY_DEFINED,item->ii_symbol_name))
@@ -658,13 +666,15 @@ ast_import_module(struct import_item *__restrict item) {
   import_symbol = new_local_symbol(item->ii_symbol_name);
   if unlikely(!import_symbol) goto err_module;
 init_import_symbol:
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
   import_symbol->sym_flag = SYM_FNORMAL;
+#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
   if (module == current_rootscope->rs_module) {
-   import_symbol->sym_class = SYM_CLASS_THIS_MODULE;
+   SYMBOL_TYPE(import_symbol) = SYM_CLASS_THIS_MODULE;
    Dee_Decref(module);
   } else {
-   import_symbol->sym_class             = SYM_CLASS_MODULE;
-   import_symbol->sym_module.sym_module = module; /* Inherit reference */
+   SYMBOL_TYPE(import_symbol)             = SYM_CLASS_MODULE;
+   SYMBOL_MODULE_MODULE(import_symbol) = module; /* Inherit reference */
   }
  }
  return 0;

@@ -149,6 +149,17 @@ do_generic:
   DeeObject *function_name = rt_operator_names[name-AST_OPERATOR_MIN];
   function_symbol = new_unnamed_symbol();
   if unlikely(!function_symbol) goto err;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  function_symbol->s_type = SYMBOL_TYPE_EXTERN;
+  function_symbol->s_extern.e_module = get_deemon_module();
+  Dee_Incref(function_symbol->s_extern.e_module);
+  function_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(function_symbol->s_extern.e_module,
+                                                                 DeeString_STR(function_name),
+                                                                 DeeString_Hash(function_name));
+  ASSERTF(function_symbol->s_extern.e_symbol,
+          "Missing runtime function `%s'",
+          DeeString_STR(function_name));
+#else
   function_symbol->sym_class             = SYM_CLASS_EXTERN;
   function_symbol->sym_flag              = SYM_FNORMAL;
   function_symbol->sym_extern.sym_module = get_deemon_module();
@@ -159,6 +170,7 @@ do_generic:
   ASSERTF(function_symbol->sym_extern.sym_modsym,
           "Missing runtime function `%s'",
           DeeString_STR(function_name));
+#endif
   function_ast = ast_sym(function_symbol);
   if unlikely(!function_ast) goto err;
   args = ast_operator2(OPERATOR_CALL,0,function_ast,args);
@@ -237,6 +249,17 @@ do_generic:
   args = new_args; /* This is now the argument tuple for the builtin function call. */
   function_symbol = new_unnamed_symbol();
   if unlikely(!function_symbol) goto err_args;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  function_symbol->s_type = SYMBOL_TYPE_EXTERN;
+  function_symbol->s_extern.e_module = get_deemon_module();
+  Dee_Incref(function_symbol->s_extern.e_module);
+  function_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(function_symbol->s_extern.e_module,
+                                                                 DeeString_STR(function_name),
+                                                                 DeeString_Hash(function_name));
+  ASSERTF(function_symbol->s_extern.e_symbol,
+          "Missing runtime function `%s'",
+          DeeString_STR(function_name));
+#else
   function_symbol->sym_class             = SYM_CLASS_EXTERN;
   function_symbol->sym_flag              = SYM_FNORMAL;
   function_symbol->sym_extern.sym_module = get_deemon_module();
@@ -247,6 +270,7 @@ do_generic:
   ASSERTF(function_symbol->sym_extern.sym_modsym,
           "Missing runtime function `%s'",
           DeeString_STR(function_name));
+#endif
   function_ast = ast_sym(function_symbol);
   if unlikely(!function_ast) goto err_args;
   new_args = ast_operator2(OPERATOR_CALL,0,function_ast,args);

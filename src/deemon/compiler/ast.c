@@ -168,8 +168,8 @@ ast_incwrite(DeeAstObject *__restrict self) {
  case AST_SYM:
   ASSERT(self->ast_sym);
   if (self->ast_flag++ == 0) {
-   --self->ast_sym->sym_read;
-   ++self->ast_sym->sym_write;
+   SYMBOL_DEC_NREAD(self->ast_sym);
+   SYMBOL_INC_NWRITE(self->ast_sym);
   }
   break;
  {
@@ -190,7 +190,7 @@ ast_incwriteonly(DeeAstObject *__restrict self) {
  case AST_SYM:
   ASSERT(self->ast_sym);
   if (self->ast_flag++ == 0)
-      ++self->ast_sym->sym_write;
+      SYMBOL_INC_NWRITE(self->ast_sym);
   break;
  {
   DeeAstObject **iter,**end;
@@ -211,8 +211,8 @@ ast_decwrite(DeeAstObject *__restrict self) {
   ASSERT(self->ast_sym);
   ASSERT(self->ast_flag);
   if (!--self->ast_flag) {
-   --self->ast_sym->sym_write;
-   ++self->ast_sym->sym_read;
+   SYMBOL_DEC_NWRITE(self->ast_sym);
+   SYMBOL_INC_NREAD(self->ast_sym);
   }
   break;
  {
@@ -234,7 +234,7 @@ ast_decwriteonly(DeeAstObject *__restrict self) {
   ASSERT(self->ast_sym);
   ASSERT(self->ast_flag);
   if (!--self->ast_flag)
-       --self->ast_sym->sym_write;
+       SYMBOL_DEC_NWRITE(self->ast_sym);
   break;
  {
   DeeAstObject **iter,**end;
@@ -279,7 +279,7 @@ DEFINE_AST_GENERATOR(ast_sym,
   result->ast_type = AST_SYM;
   result->ast_flag = 0; /* Start out as a read-reference. */
   result->ast_sym  = sym;
-  ++sym->sym_read;
+  SYMBOL_INC_NREAD(sym);
   INIT_REF(result);
  }
  return result;
@@ -301,11 +301,12 @@ DEFINE_AST_GENERATOR(ast_bndsym,(struct symbol *__restrict sym)) {
  DREF DeeAstObject *result = ast_new();
  ASSERT(sym);
  if likely(result) {
-  if (sym->sym_class == SYM_CLASS_STACK)
-    ++sym->sym_stack.sym_bound;
   result->ast_type   = AST_BNDSYM;
   result->ast_bndsym = sym;
-  ++sym->sym_read;
+  SYMBOL_INC_NBOUND(sym);
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
+  SYMBOL_INC_NREAD(sym);
+#endif
   INIT_REF(result);
  }
  return result;
@@ -775,8 +776,8 @@ DEFINE_AST_GENERATOR(ast_class,
   result->ast_class.ast_supersym = super_symbol;
   result->ast_class.ast_anonc    = anonc;
   result->ast_class.ast_anonv    = anonv;
-  if (class_symbol) ++class_symbol->sym_write;
-  if (super_symbol) ++super_symbol->sym_write;
+  if (class_symbol) SYMBOL_INC_NWRITE(class_symbol);
+  if (super_symbol) SYMBOL_INC_NWRITE(super_symbol);
   Dee_XIncref(base);
   Dee_XIncref(name);
   Dee_XIncref(doc);
@@ -939,14 +940,10 @@ ast_fini_contents(DeeAstObject *__restrict self) {
   Dee_Free(self->ast_class.ast_memberv);
   Dee_Free(self->ast_class.ast_anonv);
   Dee_XDecref(self->ast_class.ast_cmem);
-  if (self->ast_class.ast_classsym) {
-   ASSERT(self->ast_class.ast_classsym->sym_write);
-   --self->ast_class.ast_classsym->sym_write;
-  }
-  if (self->ast_class.ast_supersym) {
-   ASSERT(self->ast_class.ast_supersym->sym_write);
-   --self->ast_class.ast_supersym->sym_write;
-  }
+  if (self->ast_class.ast_classsym)
+      SYMBOL_DEC_NWRITE(self->ast_class.ast_classsym);
+  if (self->ast_class.ast_supersym)
+      SYMBOL_DEC_NWRITE(self->ast_class.ast_supersym);
  }
   ATTR_FALLTHROUGH
  case AST_OPERATOR:
@@ -1003,15 +1000,13 @@ do_xdecref_3:
 
  case AST_SYM:
   ASSERTF(!self->ast_flag,"At least some write-wrappers havn't been unwound.");
-  goto dec_sym_read;
+  SYMBOL_DEC_NREAD(self->ast_sym);
+  break;
  case AST_BNDSYM:
-  if (self->ast_sym->sym_class == SYM_CLASS_STACK) {
-   ASSERT(self->ast_sym->sym_stack.sym_bound);
-   --self->ast_sym->sym_stack.sym_bound;
-  }
-dec_sym_read:
-  ASSERT(self->ast_sym->sym_read);
-  --self->ast_sym->sym_read;
+  SYMBOL_DEC_NBOUND(self->ast_bndsym);
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
+  SYMBOL_DEC_NREAD(self->ast_bndsym);
+#endif
   break;
 
  case AST_GOTO:

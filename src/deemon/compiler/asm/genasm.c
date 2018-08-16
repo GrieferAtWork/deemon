@@ -443,15 +443,14 @@ transpose_modified_symbols(DeeScopeObject *__restrict scope) {
  for (i = 0; i < scope->s_mapa; ++i) {
   struct symbol *sym = scope->s_map[i];
   for (; sym; sym = sym->sym_next) {
-   if (!sym->sym_write)
+   if (!SYMBOL_NWRITE(sym))
         continue; /* Symbol is never actually being written to! */
 check_symbol:
-   switch (sym->sym_class) {
+   switch (SYMBOL_TYPE(sym)) {
 
    case SYM_CLASS_ALIAS:
-    ASSERT(sym != sym->sym_alias.sym_alias);
-    ASSERT(sym->sym_scope == sym->sym_alias.sym_alias->sym_scope);
-    sym = sym->sym_alias.sym_alias;
+    ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+    sym = SYMBOL_ALIAS(sym);
     goto check_symbol;
 
 
@@ -469,23 +468,29 @@ check_symbol:
     if unlikely(lid < 0) goto err;
 #if 1
     if (asm_plocal((uint16_t)lid)) goto err;
-    if (sym->sym_class == SYM_CLASS_MODULE) {
+    if (SYMBOL_TYPE(sym) == SYM_CLASS_MODULE) {
      int32_t mid = asm_msymid(sym);
      if unlikely(mid < 0) goto err;
      if (asm_gpush_module_p((uint16_t)mid)) goto err;
-     Dee_Decref(sym->sym_module.sym_module);
+     Dee_Decref(SYMBOL_MODULE_MODULE(sym));
     } else {
-     ASSERT(sym->sym_class == SYM_CLASS_EXCEPT);
+     ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_EXCEPT);
      if (asm_gpush_except_p()) goto err;
     }
 #else
     if (asm_gpush_symbol(sym,warn_ast)) goto err;
     if (asm_gpop_local((uint16_t)lid)) goto err;
 #endif
-    sym->sym_class         = SYM_CLASS_VAR;
-    sym->sym_flag          = SYM_FVAR_LOCAL|SYM_FVAR_ALLOC;
-    sym->sym_var.sym_doc   = NULL;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+    sym->s_type  = SYMBOL_TYPE_LOCAL;
+    sym->s_flag |= SYMBOL_FALLOC;
+    sym->s_symid = (uint16_t)lid;
+#else
+    SYMBOL_TYPE(sym) = SYM_CLASS_VAR;
+    sym->sym_flag = SYM_FVAR_LOCAL | SYM_FVAR_ALLOC;
+    sym->sym_var.sym_doc = NULL;
     sym->sym_var.sym_index = (uint16_t)lid;
+#endif
    } break;
 
    default: break;
@@ -523,27 +528,54 @@ set_new_scope:
    new_scope = ast->ast_scope;
    current_assembler.a_scope = new_scope;
    while (new_scope && new_scope != old_scope) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+    struct symbol **bucket_iter,**bucket_end,*iter;
+    bucket_end = (bucket_iter = new_scope->s_map) + new_scope->s_mapa;
+    for (; bucket_iter < bucket_end; ++bucket_iter)
+    for (iter = *bucket_iter; iter; iter = iter->s_next)
+    if (iter->s_type == SYMBOL_TYPE_STACK)
+#else
     struct symbol *iter = new_scope->s_stk;
-    while (iter) {
+    for (; iter; iter = iter->sym_stack.sym_nstck;)
+#endif
+    {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     /* Mark the variable as not being allocated (shouldn't really happen...). */
+     if unlikely(iter->s_flag & SYMBOL_FALLOC)
+#else
      ASSERT(iter->sym_class == SYM_CLASS_STACK);
      /* Mark the variable as not being allocated (shouldn't really happen...). */
-     if unlikely(iter->sym_flag & SYM_FSTK_ALLOC) {
-      if (asm_putddi_sunbind(iter->sym_stack.sym_offset))
+     if unlikely(iter->sym_flag & SYM_FSTK_ALLOC)
+#endif
+     {
+      if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
           goto err;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+      iter->s_flag &= ~SYMBOL_FALLOC;
+#else
       iter->sym_flag &= ~SYM_FSTK_ALLOC;
+#endif
      }
      /* Allocate memory for stack-variables when stack displacement is disabled. */
-     if (iter->sym_write && !(current_assembler.a_flag&ASM_FSTACKDISP)) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     if (iter->s_nwrite && !(current_assembler.a_flag&ASM_FSTACKDISP))
+#else
+     if (iter->sym_write && !(current_assembler.a_flag&ASM_FSTACKDISP))
+#endif
+     {
       /* Allocate this stack variable. */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+      iter->s_flag |= SYMBOL_FALLOC;
+#else
       iter->sym_flag |= SYM_FSTK_ALLOC;
-      iter->sym_stack.sym_offset  = current_assembler.a_stackcur;
-      iter->sym_stack.sym_offset += num_stack_vars;
-      if (asm_putddi_sbind(iter->sym_stack.sym_offset,
+#endif
+      SYMBOL_STACK_OFFSET(iter)  = current_assembler.a_stackcur;
+      SYMBOL_STACK_OFFSET(iter) += num_stack_vars;
+      if (asm_putddi_sbind(SYMBOL_STACK_OFFSET(iter),
                            iter->sym_name))
           goto err;
       ++num_stack_vars;
      }
-     iter = iter->sym_stack.sym_nstck;
     }
     if (transpose_modified_symbols(new_scope))
         goto err;
@@ -570,12 +602,15 @@ set_new_scope:
   if (!PUSH_RESULT) break;
   if (asm_putddi(ast)) goto err;
   sym = ast->ast_sym;
-  while (sym->sym_class == SYM_CLASS_ALIAS)
-      sym = sym->sym_alias.sym_alias;
+  while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+      sym = SYMBOL_ALIAS(sym);
   if ((gflags & ASM_G_FLAZYBOOL) &&
-       sym->sym_class == SYM_CLASS_ARG &&
+       SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+      !SYMBOL_MUST_REFERENCE(sym) &&
+#endif
       (current_basescope->bs_flags & CODE_FVARARGS) &&
-       DeeBaseScope_IsArgVarArgs(current_basescope,sym->sym_arg.sym_index)) {
+       DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) {
    /* Special case: If the caller accesses the varargs-symbol in a boolean-context,
     *               then we can simply check if the number of varargs is non-zero,
     *               emulating the behavior of tuple's `operator bool()'.
@@ -590,13 +625,22 @@ set_new_scope:
 
  case AST_UNBIND:
   if (asm_putddi(ast)) goto err;
-  while (ast->ast_unbind->sym_class == SYM_CLASS_ALIAS)
-      ast->ast_unbind = ast->ast_unbind->sym_alias.sym_alias;
+  while (SYMBOL_TYPE(ast->ast_unbind) == SYM_CLASS_ALIAS)
+      ast->ast_unbind = SYMBOL_ALIAS(ast->ast_unbind);
   if (asm_gdel_symbol(ast->ast_unbind,ast)) goto err;
-  if (ast->ast_unbind->sym_class == SYM_CLASS_VAR &&
-      ast->ast_unbind->sym_flag == (SYM_FVAR_LOCAL|SYM_FVAR_ALLOC))
-      asm_dellocal(ast->ast_unbind->sym_var.sym_index),
-      ast->ast_unbind->sym_flag &= ~SYM_FVAR_ALLOC;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (ast->ast_unbind->s_type == SYMBOL_TYPE_LOCAL &&
+      ast->ast_unbind->s_scope->s_base == current_basescope) {
+   asm_dellocal(ast->ast_unbind->s_symid);
+   ast->ast_unbind->s_flag &= ~SYMBOL_FALLOC;
+  }
+#else
+  if (SYMBOL_TYPE(ast->ast_unbind) == SYM_CLASS_VAR &&
+      ast->ast_unbind->sym_flag == (SYM_FVAR_LOCAL|SYM_FVAR_ALLOC)) {
+   asm_dellocal(ast->ast_unbind->sym_var.sym_index);
+   ast->ast_unbind->sym_flag &= ~SYM_FVAR_ALLOC;
+  }
+#endif
 done_push_none:
   if (PUSH_RESULT && asm_gpush_none()) goto err;
   break;
@@ -1627,15 +1671,28 @@ err_hand_frame:
     num_stack_vars = 0;
     new_scope = ast->ast_scope;
     while (new_scope && new_scope != old_scope) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     struct symbol **bucket_iter,**bucket_end,*iter;
+     bucket_end = (bucket_iter = new_scope->s_map) + new_scope->s_mapa;
+     for (; bucket_iter < bucket_end; ++bucket_iter)
+     for (iter = *bucket_iter; iter; iter = iter->s_next)
+     if (iter->s_type == SYMBOL_TYPE_STACK)
+#else
      struct symbol *iter = new_scope->s_stk;
-     while (iter) {
+     for (; iter; iter = iter->sym_stack.sym_nstck)
+#endif
+     {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+      if (iter->s_flag & SYMBOL_FALLOC)
+#else
       ASSERT(iter->sym_class == SYM_CLASS_STACK);
-      if (iter->sym_flag & SYM_FSTK_ALLOC) {
-       if (asm_putddi_sunbind(iter->sym_stack.sym_offset))
+      if (iter->sym_flag & SYM_FSTK_ALLOC)
+#endif
+      {
+       if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
            goto err;
        ++num_stack_vars;
       }
-      iter = iter->sym_stack.sym_nstck;
      }
      new_scope = new_scope->s_prev;
     }
@@ -2130,11 +2187,14 @@ pop_unused:
    }
    if (sequence->ast_type == AST_SYM) {
     struct symbol *sym = sequence->ast_sym;
-    while (sym->sym_class == SYM_CLASS_ALIAS)
-        sym = sym->sym_alias.sym_alias;
-    if (sym->sym_class == SYM_CLASS_ARG &&
+    while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+        sym = SYMBOL_ALIAS(sym);
+    if (SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+       !SYMBOL_MUST_REFERENCE(sym) &&
+#endif
        (current_basescope->bs_flags & CODE_FVARARGS) &&
-        DeeBaseScope_IsArgVarArgs(current_basescope,sym->sym_arg.sym_index)) {
+        DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) {
      uint32_t va_index;
      if (!PUSH_RESULT) {
       if (ast_genasm(ast->ast_operator.ast_opb,ASM_G_FNORMAL))
@@ -2198,11 +2258,10 @@ pop_unused:
     if (ast->ast_operator.ast_opa->ast_type == AST_SYM) {
      struct symbol *sym = ast->ast_operator.ast_opa->ast_sym;
 check_getattr_sym:
-     switch (sym->sym_class) {
+     switch (SYMBOL_TYPE(sym)) {
      case SYM_CLASS_ALIAS:
-      ASSERT(sym != sym->sym_alias.sym_alias);
-      ASSERT(sym->sym_scope == sym->sym_alias.sym_alias->sym_scope);
-      sym = sym->sym_alias.sym_alias;
+      ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+      sym = SYMBOL_ALIAS(sym);
       goto check_getattr_sym;
 
      case SYM_CLASS_THIS:
@@ -2214,7 +2273,7 @@ check_getattr_sym:
      {
       struct module_symbol *modsym; int32_t module_id;
      case SYM_CLASS_MODULE: /* module.attr --> push extern ... */
-      modsym = get_module_symbol(sym->sym_module.sym_module,name);
+      modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),name);
       if (!modsym) break;
       if (!PUSH_RESULT) goto done;
       module_id = asm_msymid(sym);
@@ -2320,9 +2379,13 @@ check_getattr_sym:
     if unlikely(attrid < 0) goto err;
     if (ast->ast_operator.ast_opa->ast_type == AST_SYM) {
      struct symbol *sym = ast->ast_operator.ast_opa->ast_sym;
-     while (sym->sym_class == SYM_CLASS_ALIAS)
-         sym = sym->sym_alias.sym_alias;
-     if (sym->sym_class == SYM_CLASS_THIS) {
+     while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+         sym = SYMBOL_ALIAS(sym);
+     if (SYMBOL_TYPE(sym) == SYM_CLASS_THIS
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+         && !SYMBOL_MUST_REFERENCE(sym)
+#endif
+         ) {
       if (asm_gdelattr_this_const(attrid)) goto err;
       goto done_push_none;
      }
@@ -2491,10 +2554,16 @@ push_a_if_used:
   case OPERATOR_ENTER:
    enter_expr = ast->ast_operator.ast_opa;
    if (enter_expr->ast_type == AST_SYM) {
-    while (enter_expr->ast_sym->sym_class == SYM_CLASS_ALIAS)
-        enter_expr->ast_sym = enter_expr->ast_sym->sym_alias.sym_alias;
-    if (enter_expr->ast_sym->sym_class == SYM_CLASS_STACK &&
-        enter_expr->ast_sym->sym_stack.sym_offset == current_assembler.a_stackcur - 1) {
+    while (SYMBOL_TYPE(enter_expr->ast_sym) == SYM_CLASS_ALIAS)
+        enter_expr->ast_sym = SYMBOL_ALIAS(enter_expr->ast_sym);
+    if (SYMBOL_TYPE(enter_expr->ast_sym) == SYM_CLASS_STACK &&
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+       !SYMBOL_MUST_REFERENCE(enter_expr->ast_sym) &&
+       (enter_expr->ast_sym->s_flag & SYMBOL_FALLOC) &&
+#else
+       (enter_expr->ast_sym->sym_flag & SYM_FSTK_ALLOC) &&
+#endif
+        SYMBOL_STACK_OFFSET(enter_expr->ast_sym) == current_assembler.a_stackcur - 1) {
      /* Special optimization: Since `ASM_ENTER' doesn't modify the top stack item,
       * if the operand _is_ the top stack item, then we can simply generate the enter
       * instruction without the need of any kludge. */
@@ -2525,11 +2594,14 @@ push_a_if_used:
    if ((current_basescope->bs_flags & CODE_FVARARGS) &&
         ast->ast_operator.ast_opa->ast_type == AST_SYM) {
     struct symbol *sym = ast->ast_operator.ast_opa->ast_sym;
-    while (sym->sym_class == SYM_CLASS_ALIAS)
-        sym = sym->sym_alias.sym_alias;
-    if (sym->sym_class == SYM_CLASS_ARG &&
+    while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+        sym = SYMBOL_ALIAS(sym);
+    if (SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+       !SYMBOL_MUST_REFERENCE(sym) &&
+#endif
         DeeBaseScope_IsArgVarArgs(current_basescope,
-                                  sym->sym_arg.sym_index)) {
+                                  SYMBOL_ARG_INDEX(sym))) {
      /* Special case: Get the size of varargs. */
      if (!PUSH_RESULT) goto done;
      if (asm_putddi(ast)) goto err;
@@ -2582,10 +2654,13 @@ push_a_if_used:
     sym     = ast->ast_operator.ast_opb->ast_operator.ast_opa->ast_sym;
     sizeast = ast->ast_operator.ast_opa;
    }
-   while (sym->sym_class == SYM_CLASS_ALIAS)
-       sym = sym->sym_alias.sym_alias;
-   if (sym->sym_class != SYM_CLASS_ARG) break;
-   if (!DeeBaseScope_IsArgVarArgs(current_basescope,sym->sym_arg.sym_index)) break;
+   while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+       sym = SYMBOL_ALIAS(sym);
+   if (SYMBOL_TYPE(sym) != SYM_CLASS_ARG) break;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if (SYMBOL_MUST_REFERENCE(sym)) break;
+#endif
+   if (!DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) break;
    if (sizeast->ast_type != AST_CONSTEXPR) break;
    sizeval = sizeast->ast_constexpr;
    if (!DeeInt_Check(sizeval)) break;
@@ -2873,39 +2948,53 @@ operator_without_prefix:
    if (PUSH_RESULT &&
        ast->ast_action.ast_act0->ast_type == AST_SYM) {
     struct symbol *this_sym = ast->ast_action.ast_act0->ast_sym;
-    while (this_sym->sym_class == SYM_CLASS_ALIAS)
-        this_sym = this_sym->sym_alias.sym_alias;
-    if (this_sym->sym_class == SYM_CLASS_THIS &&
+    while (SYMBOL_TYPE(this_sym) == SYM_CLASS_ALIAS)
+        this_sym = SYMBOL_ALIAS(this_sym);
+    if (SYMBOL_TYPE(this_sym) == SYM_CLASS_THIS &&
         ast->ast_action.ast_act1->ast_type == AST_SYM) {
      /* Special optimizations for `this as ...' */
      int32_t symid;
      struct symbol *typesym = ast->ast_action.ast_act1->ast_sym;
 cast_this_as_symbol:
-     switch (typesym->sym_class) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     if (SYMBOL_MUST_REFERENCE(typesym)) {
+      symid = asm_rsymid(typesym);
+      if unlikely(symid < 0) goto err;
+      if (asm_gsuper_this_r(symid)) goto err;
+      goto done;
+     }
+#endif
+     switch (SYMBOL_TYPE(typesym)) {
      case SYM_CLASS_ALIAS:
-      ASSERT(typesym != typesym->sym_alias.sym_alias);
-      ASSERT(typesym->sym_scope == typesym->sym_alias.sym_alias->sym_scope);
-      typesym = typesym->sym_alias.sym_alias;
+      ASSERT(typesym != SYMBOL_ALIAS(typesym));
+      typesym = SYMBOL_ALIAS(typesym);
       goto cast_this_as_symbol;
 
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
      case SYM_CLASS_REF:
       symid = asm_rsymid(typesym);
       if unlikely(symid < 0) goto err;
       if (asm_gsuper_this_r(symid)) goto err;
       goto done;
+#endif
+
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     case SYMBOL_TYPE_GLOBAL:
+#else
      case SYM_CLASS_VAR:
       if ((typesym->sym_flag&SYM_FVAR_MASK) != SYM_FVAR_GLOBAL)
            break;
+#endif
       symid = asm_gsymid_for_read(typesym,ast->ast_action.ast_act1);
       if unlikely(symid < 0) goto err;
       if (asm_gsuper_this_g(symid)) goto err;
       goto done;
      case SYM_CLASS_EXTERN:
-      if (typesym->sym_extern.sym_modsym->ss_flags & MODSYM_FPROPERTY)
+      if (SYMBOL_EXTERN_SYMBOL(typesym)->ss_flags & MODSYM_FPROPERTY)
           break;
       symid = asm_esymid(typesym);
       if unlikely(symid < 0) goto err;
-      if (asm_gsuper_this_e(symid,typesym->sym_extern.sym_modsym->ss_index)) goto err;
+      if (asm_gsuper_this_e(symid,SYMBOL_EXTERN_SYMBOL(typesym)->ss_index)) goto err;
       goto done;
      default: break;
      }
@@ -3344,7 +3433,16 @@ emit_instruction:
   if (ast->ast_class.ast_imem) genflags |= CLASSGEN_FHASIMEM,++opcount;
   if (ast->ast_class.ast_cmem) genflags |= CLASSGEN_FHASCMEM,++opcount;
   super_sym = ast->ast_class.ast_supersym;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if (super_sym) {
+   if (super_sym->s_type == SYMBOL_TYPE_ALIAS)
+       super_sym = super_sym->s_alias;
+   if (!super_sym->s_nread)
+        super_sym = NULL;
+  }
+#else
   if (super_sym && !super_sym->sym_read) super_sym = NULL;
+#endif
 
   /* Now to actually create the class. */
   if ((!ast->ast_class.ast_name ||
@@ -3414,13 +3512,24 @@ emit_instruction:
    }
    if (base->ast_type == AST_SYM) {
     struct symbol *base_sym = base->ast_sym;
-    while (base_sym->sym_class == SYM_CLASS_ALIAS)
-        base_sym = base_sym->sym_alias.sym_alias;
-    if (base_sym->sym_class == SYM_CLASS_VAR &&
+    while (SYMBOL_TYPE(base_sym) == SYM_CLASS_ALIAS)
+        base_sym = SYMBOL_ALIAS(base_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+    if (base_sym->s_type == SYMBOL_TYPE_GLOBAL ||
+       (base_sym->s_type == SYMBOL_TYPE_LOCAL &&
+       !SYMBOL_MUST_REFERENCE(base_sym)))
+#else                                    
+    if (SYMBOL_TYPE(base_sym) == SYM_CLASS_VAR &&
       ((base_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL ||
-       (base_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL)) {
+       (base_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL))
+#endif
+    {
      int32_t varid; bool is_global;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     is_global = base_sym->s_type == SYMBOL_TYPE_GLOBAL;
+#else
      is_global = (base_sym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL;
+#endif
      varid = is_global ? asm_gsymid_for_read(base_sym,base)
                        : asm_lsymid_for_read(base_sym,base);
      if unlikely(varid < 0) goto err;
@@ -3449,12 +3558,24 @@ class_fallback:
        goto err;
    if (super_sym) {
     /* Write the class base to the super-symbol. */
-    while (super_sym->sym_class == SYM_CLASS_ALIAS)
-        super_sym = super_sym->sym_alias.sym_alias;
-    if (super_sym->sym_class == SYM_CLASS_STACK &&
-      !(super_sym->sym_flag&SYM_FSTK_ALLOC)) {
+    while (SYMBOL_TYPE(super_sym) == SYM_CLASS_ALIAS)
+        super_sym = SYMBOL_ALIAS(super_sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+    if (super_sym->s_type == SYM_CLASS_STACK &&
+      !(super_sym->s_flag & SYMBOL_FALLOC) &&
+       !SYMBOL_MUST_REFERENCE(super_sym))
+#else
+    if (SYMBOL_TYPE(super_sym) == SYM_CLASS_STACK &&
+      !(super_sym->sym_flag&SYM_FSTK_ALLOC))
+#endif
+    {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     super_sym->s_symid = current_assembler.a_stackcur-1;
+     super_sym->s_flag |= SYMBOL_FALLOC;
+#else
      super_sym->sym_stack.sym_offset = current_assembler.a_stackcur-1;
      super_sym->sym_flag            |= SYM_FSTK_ALLOC;
+#endif
      if (asm_gdup()) goto err;
     } else {
      if (asm_gdup()) goto err;
@@ -3638,10 +3759,18 @@ done:
    for (i = 0; i < new_scope->s_mapa; ++i) {
     struct symbol *iter = new_scope->s_map[i];
     for (; iter; iter = iter->sym_next) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     if (iter->s_type != SYMBOL_TYPE_LOCAL) continue;
+     if (!(iter->s_flag & SYMBOL_FALLOC)) continue;
+     ASSERT(!SYMBOL_MUST_REFERENCE(iter));
+     asm_dellocal(iter->s_symid);
+     iter->s_flag &= ~SYMBOL_FALLOC;
+#else
      if (iter->sym_class != SYM_CLASS_VAR) continue;
      if (iter->sym_flag != (SYM_FVAR_ALLOC|SYM_FVAR_LOCAL)) continue;
      asm_dellocal(iter->sym_var.sym_index);
      iter->sym_flag &= ~SYM_FVAR_ALLOC;
+#endif
     }
    }
    new_scope = new_scope->s_prev;
@@ -3657,15 +3786,28 @@ done:
    num_stack_vars = 0;
    new_scope = ast->ast_scope;
    while (new_scope && new_scope != old_scope) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+    struct symbol **bucket_iter,**bucket_end,*iter;
+    bucket_end = (bucket_iter = new_scope->s_map) + new_scope->s_mapa;
+    for (; bucket_iter < bucket_end; ++bucket_iter)
+    for (iter = *bucket_iter; iter; iter = iter->s_next)
+    if (iter->s_type == SYMBOL_TYPE_STACK)
+#else
     struct symbol *iter = new_scope->s_stk;
-    while (iter) {
+    for (; iter; iter = iter->sym_stack.sym_nstck)
+#endif
+    {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     if (iter->s_flag & SYMBOL_FALLOC)
+#else
      ASSERT(iter->sym_class == SYM_CLASS_STACK);
-     if (iter->sym_flag & SYM_FSTK_ALLOC) {
-      if (asm_putddi_sunbind(iter->sym_stack.sym_offset))
+     if (iter->sym_flag & SYM_FSTK_ALLOC)
+#endif
+     {
+      if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
           goto err;
       ++num_stack_vars;
      }
-     iter = iter->sym_stack.sym_nstck;
     }
     new_scope = new_scope->s_prev;
    }

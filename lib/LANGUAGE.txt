@@ -1548,9 +1548,10 @@ asm_parse_operands(kind) ::= (
 		 *      operand upon user-assembly returning normally.
 		 * #endif
 		 *    - If the operand cannot be represented as a specific
-		 *      operand encoding, the remaining of the string will
+		 *      operand encoding, the remainder of the string will
 		 *      continued getting parsed until an encoding is found
-		 *      that is suitable.
+		 *      that is suitable, or until the string ends, which
+		 *      is an error.
 		 *    - Whitespace characters, or a `,' character marks an
 		 *      explicit split between different operand encoding
 		 *      options, thus preventing ambiguity between possible

@@ -31,7 +31,7 @@ DECL_BEGIN
 PRIVATE DREF DeeCodeObject *DCALL
 ast_assemble_function(DeeAstObject *__restrict function_ast,
                       uint16_t *__restrict prefc,
-                      struct symbol ***__restrict prefv) {
+                      struct asm_symbol_ref **__restrict prefv) {
  DREF DeeCodeObject *result;
  DeeScopeObject *prev_scope;
  ASSERT(function_ast->ast_type == AST_FUNCTION);
@@ -69,7 +69,7 @@ err:
 INTERN int DCALL
 asm_gpush_function(DeeAstObject *__restrict function_ast) {
  DREF DeeCodeObject *code; int32_t cid;
- uint16_t i,refc; struct symbol **refv;
+ uint16_t i,refc; struct asm_symbol_ref *refv;
  code = ast_assemble_function(function_ast,&refc,&refv);
  if unlikely(!code) goto err;
  if (asm_putddi(function_ast)) goto err;
@@ -95,7 +95,11 @@ asm_gpush_function(DeeAstObject *__restrict function_ast) {
     goto err_refv;
  /* Push referenced symbols. */
  for (i = 0; i < refc; ++i) {
-  if (asm_gpush_symbol(refv[i],function_ast))
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  refv[i].sr_sym->s_flag  = refv[i].sr_orig_flag;
+  refv[i].sr_sym->s_refid = refv[i].sr_orig_refid;
+#endif
+  if (asm_gpush_symbol(refv[i].sr_sym,function_ast))
       goto err_refv;
  }
  Dee_Free(refv);
@@ -114,7 +118,7 @@ asm_gmov_function(struct symbol *__restrict dst,
                   DeeAstObject *__restrict function_ast,
                   DeeAstObject *__restrict dst_warn_ast) {
  DREF DeeCodeObject *code; int32_t cid;
- uint16_t i,refc; struct symbol **refv;
+ uint16_t i,refc; struct asm_symbol_ref *refv;
  code = ast_assemble_function(function_ast,&refc,&refv);
  if unlikely(!code) goto err;
  if (asm_putddi(function_ast)) goto err;
@@ -141,7 +145,11 @@ asm_gmov_function(struct symbol *__restrict dst,
     goto err_refv;
  /* Push referenced symbols. */
  for (i = 0; i < refc; ++i) {
-  if (asm_gpush_symbol(refv[i],function_ast))
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  refv[i].sr_sym->s_flag  = refv[i].sr_orig_flag;
+  refv[i].sr_sym->s_refid = refv[i].sr_orig_refid;
+#endif
+  if (asm_gpush_symbol(refv[i].sr_sym,function_ast))
       goto err_refv;
  }
  Dee_Free(refv);

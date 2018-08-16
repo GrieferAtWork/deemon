@@ -73,6 +73,12 @@ relocate_member_table(struct member_entry *__restrict entry,
  bend = (biter = current_scope->s_map)+current_scope->s_mapa;
  for (; biter != bend; ++biter) {
   for (iter = *biter; iter; iter = iter->sym_next) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
+        iter->s_type == SYMBOL_TYPE_CFIELD) &&
+        iter->s_field.f_member == entry)
+        iter->s_field.f_member = new_entry;
+#else
    if (iter->sym_class == SYM_CLASS_MEMBER &&
        iter->sym_member.sym_member == entry) {
     struct symbol *ref = iter->sym_member.sym_ref;
@@ -86,9 +92,16 @@ relocate_member_table(struct member_entry *__restrict entry,
      ref->sym_member.sym_member = new_entry;
     }
    }
+#endif
   }
  }
  for (iter = current_scope->s_del; iter; iter = iter->sym_next) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
+       iter->s_type == SYMBOL_TYPE_CFIELD) &&
+       iter->s_field.f_member == entry)
+       iter->s_field.f_member = new_entry;
+#else
   if (iter->sym_class == SYM_CLASS_MEMBER &&
       iter->sym_member.sym_member == entry) {
    struct symbol *ref = iter->sym_member.sym_ref;
@@ -102,6 +115,7 @@ relocate_member_table(struct member_entry *__restrict entry,
     ref->sym_member.sym_member = new_entry;
    }
   }
+#endif
  }
 }
 
@@ -115,6 +129,13 @@ relocate_member_vector(struct member_entry *__restrict old_base,
  bend = (biter = current_scope->s_map)+current_scope->s_mapa;
  for (; biter != bend; ++biter) {
   for (iter = *biter; iter; iter = iter->sym_next) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
+        iter->s_type == SYMBOL_TYPE_CFIELD) &&
+        iter->s_field.f_member >= old_base &&
+        iter->s_field.f_member < old_end)
+      *(uintptr_t *)&iter->s_field.f_member += offset_to_new_base;
+#else
    if (iter->sym_class == SYM_CLASS_MEMBER &&
        iter->sym_member.sym_member >= old_base &&
        iter->sym_member.sym_member < old_end) {
@@ -130,9 +151,17 @@ relocate_member_vector(struct member_entry *__restrict old_base,
      *(uintptr_t *)&ref->sym_member.sym_member += offset_to_new_base;
     }
    }
+#endif
   }
  }
  for (iter = current_scope->s_del; iter; iter = iter->sym_next) {
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
+       iter->s_type == SYMBOL_TYPE_CFIELD) &&
+       iter->s_field.f_member >= old_base &&
+       iter->s_field.f_member < old_end)
+     *(uintptr_t *)&iter->s_field.f_member += offset_to_new_base;
+#else
   if (iter->sym_class == SYM_CLASS_MEMBER &&
       iter->sym_member.sym_member >= old_base &&
       iter->sym_member.sym_member < old_end) {
@@ -148,6 +177,7 @@ relocate_member_vector(struct member_entry *__restrict old_base,
     *(uintptr_t *)&ref->sym_member.sym_member += offset_to_new_base;
    }
   }
+#endif
  }
 }
 
@@ -247,6 +277,15 @@ again:
  return NULL;
 }
 
+
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+#define SYM_FMEMBER_INST  0x0000 /* SYMBOL_TYPE_IFIELD */
+#define SYM_FMEMBER_CLASS 0x0001 /* SYMBOL_TYPE_CFIELD */
+#define SYMBOL_TYPE_FROM_FMEMBER(x) (SYMBOL_TYPE_IFIELD+(x))
+STATIC_ASSERT(SYMBOL_TYPE_FROM_FMEMBER(SYM_FMEMBER_INST)  == SYMBOL_TYPE_IFIELD);
+STATIC_ASSERT(SYMBOL_TYPE_FROM_FMEMBER(SYM_FMEMBER_CLASS) == SYMBOL_TYPE_CFIELD);
+#endif
+
 /* Make sure that we can use these as indices in a 2-element array. */
 STATIC_ASSERT(SYM_FMEMBER_INST  < 2);
 STATIC_ASSERT(SYM_FMEMBER_CLASS < 2);
@@ -267,27 +306,27 @@ struct class_maker {
     DREF DeeAstObject         *cm_name;        /* [0..1] An AST evaluating to the name of the class. */
 #endif
     struct table_descriptor    cm_tables[2];   /* SYM_FMEMBER_INST:  The instance member table.
-                                                *  SYM_FMEMBER_CLASS: The class member table. */
+                                                * SYM_FMEMBER_CLASS: The class member table. */
     DREF DeeAstObject         *cm_ctor;        /* [0..1][(!= NULL) == (cm_ctor_scope != NULL) == (cm_initc != 0)]
-                                                *   The class's constructor function AST (AST_FUNCTION) */
+                                                * The class's constructor function AST (AST_FUNCTION) */
     DREF DeeBaseScopeObject   *cm_ctor_scope;  /* [0..1][(!= NULL) == (cm_ctor != NULL) == (cm_initc != 0)] (lazy-alloc)
-                                                *   The base-scope in which member initializers and the constructor are executed. */
-    struct ascii_printer      cm_doc;         /* A string printer for the documentation of this class. */
+                                                * The base-scope in which member initializers and the constructor are executed. */
+    struct unicode_printer     cm_doc;         /* A string printer for the documentation of this class. */
     size_t                     cm_initc;       /* [(!= 0) == (cm_ctor_scope != NULL) == (cm_ctor != NULL)]
-                                                *   Amount of ASTs executed before the actual constructor. */
+                                                * Amount of ASTs executed before the actual constructor. */
     size_t                     cm_inita;       /* [>= cm_initc] Allocated amount of ASTs executed before the actual constructor. */
     DREF DeeAstObject        **cm_initv;       /* [0..cm_initc|ALLOC(cm_inita)][owned][[*]->ast_scope == cm_ctor_scope]
-                                                *   Vector of ASTs executed before the actual constructor.
-                                                *   NOTE: Each of these asts is generated in the context of the `cm_ctor_scope' scope. */
+                                                * Vector of ASTs executed before the actual constructor.
+                                                * NOTE: Each of these asts is generated in the context of the `cm_ctor_scope' scope. */
     size_t                     cm_class_initc; /* Amount of class member initializers. */
     size_t                     cm_class_inita; /* Allocate amount of class member initializers. */
     struct class_member       *cm_class_initv; /* [0..cm_class_initc|ALLOC(cm_class_inita)][owned]
-                                                *  Vector of class member initializers.
-                                                *  This contains stuff like creation of operator callbacks and
-                                                *  instance methods using the `CLASS_MEMBER_FCLASSMEM' flag. */
+                                                * Vector of class member initializers.
+                                                * This contains stuff like creation of operator callbacks and
+                                                * instance methods using the `CLASS_MEMBER_FCLASSMEM' flag. */
     struct symbol             *cm_classsym;    /* [1..1] The symbol describing the class in the scope it is defined in.
-                                                *  This symbol is assigned in the base scope of every member
-                                                *  function/operator that is parsed. */
+                                                * This symbol is assigned in the base scope of every member
+                                                * function/operator that is parsed. */
     struct symbol             *cm_supersym;    /* [0..1] Same as `cm_classsym', but instead describes the class's super-class. */
     size_t                     cm_anonc;       /* Amount of anonymous class members. */
     size_t                     cm_anona;       /* Allocated amount of anonymous class members. */
@@ -316,7 +355,7 @@ class_maker_push_methscope(struct class_maker *__restrict self,
  /* Define a symbol `this' that can be used to access the this-argument. */
  this_sym = new_local_symbol(TPPLexer_LookupKeyword("this",4,0));
  if unlikely(!this_sym) goto err;
- this_sym->sym_class = SYM_CLASS_THIS; /* As simple as that! */
+ SYMBOL_TYPE(this_sym) = SYM_CLASS_THIS; /* As simple as that! */
  if (pthis_sym) *pthis_sym = this_sym;
  return 0;
 err:
@@ -346,9 +385,15 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
 
 /* Check if an initializer for a given symbol must be processed in the
  * context of the constructor scope (false) or the outside class scope (true) */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+#define SYM_ISCLASSMEMBER(x) \
+  ((x)->s_type == SYMBOL_TYPE_CFIELD || \
+  ((x)->s_field.f_member->cme_flag&CLASS_MEMBER_FCLASSMEM))
+#else
 #define SYM_ISCLASSMEMBER(x) \
   ((x)->sym_flag == SYM_FMEMBER_CLASS || \
   ((x)->sym_member.sym_member->cme_flag&CLASS_MEMBER_FCLASSMEM))
+#endif
 
 /* Allocate a new class member, automatically assigning the next VTABLE
  * id, as well as creating symbols in the associated member tables and
@@ -411,8 +456,12 @@ class_maker_addmember(struct class_maker *__restrict self,
   * >> This is the compile-time portion of addressing symbols. */
  result = get_local_symbol(name);
  if unlikely(result) {
-  if (SYM_IS_WEAK(result)) {
-   SYM_CLEAR_WEAK(result);
+  if (SYMBOL_IS_WEAK(result)) {
+   SYMBOL_CLEAR_WEAK(result);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+  } else if (result->s_type == SYMBOL_TYPE_FWD) {
+   /* Define a forward-referenced class symbol. */
+#endif
   } else {
    PERR(W_CLASS_MEMBER_ALREADY_DEFINED,
         name->k_name,name->k_size);
@@ -424,11 +473,18 @@ class_maker_addmember(struct class_maker *__restrict self,
   if unlikely(!result) goto err;
  }
  /* Initialize that symbol to be a member symbol. */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ result->s_type           = SYMBOL_TYPE_FROM_FMEMBER(table_id);
+ result->s_field.f_class  = self->cm_classsym;
+ result->s_field.f_member = entry;
+ SYMBOL_INC_NREAD(self->cm_classsym);
+#else
  result->sym_class             = SYM_CLASS_MEMBER;
  result->sym_flag              = table_id;
  result->sym_member.sym_class  = self->cm_classsym;
  result->sym_member.sym_member = entry;
  result->sym_member.sym_ref    = NULL;
+#endif
  return result;
 err:
  return NULL;
@@ -480,11 +536,18 @@ do_realloc_anonv:
  result = new_unnamed_symbol();
  if unlikely(!result) goto err;
  /* Initialize that symbol to be a member symbol. */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ result->s_type           = SYMBOL_TYPE_FROM_FMEMBER(table_id);
+ result->s_field.f_class  = self->cm_classsym;
+ result->s_field.f_member = entry;
+ SYMBOL_INC_NREAD(self->cm_classsym);
+#else
  result->sym_class             = SYM_CLASS_MEMBER;
  result->sym_flag              = table_id;
  result->sym_member.sym_class  = self->cm_classsym;
  result->sym_member.sym_member = entry;
  result->sym_member.sym_ref    = NULL;
+#endif
  return result;
 err:
  return NULL;
@@ -544,16 +607,27 @@ class_maker_addinit(struct class_maker *__restrict self,
  struct class_member *member;
  ASSERT(self);
  ASSERT(sym);
- ASSERT(sym->sym_class == SYM_CLASS_MEMBER);
- ASSERT(sym->sym_member.sym_class == self->cm_classsym);
+ ASSERT(SYMBOL_FIELD_CLASS(sym) == self->cm_classsym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ ASSERT(sym->s_type == SYMBOL_TYPE_CFIELD ||
+        sym->s_type == SYMBOL_TYPE_IFIELD);
+#else
+ ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_MEMBER);
  ASSERT(sym->sym_flag == SYM_FMEMBER_INST ||
         sym->sym_flag == SYM_FMEMBER_CLASS);
+#endif
  ASSERT_OBJECT_TYPE(ast,&DeeAst_Type);
  ASSERT(self->cm_initc <= self->cm_inita);
  ASSERT(self->cm_class_initc <= self->cm_class_inita);
- entry = sym->sym_member.sym_member;
+ entry = SYMBOL_FIELD_MEMBER(sym);
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ if (sym->s_type == SYMBOL_TYPE_IFIELD &&
+   !(entry->cme_flag&CLASS_MEMBER_FCLASSMEM))
+#else
  if (sym->sym_flag == SYM_FMEMBER_INST &&
-   !(entry->cme_flag&CLASS_MEMBER_FCLASSMEM)) {
+   !(entry->cme_flag&CLASS_MEMBER_FCLASSMEM))
+#endif
+ {
   DREF DeeAstObject *symbol_ast;
   /* Run the given AST during construction of instances. */
   /* Handle instance member initializers. */
@@ -564,8 +638,10 @@ class_maker_addinit(struct class_maker *__restrict self,
   /* Check if we need to allocate more memory for the initializer vector. */
   if unlikely(priv_reserve_instance_init(self)) goto err;
   /* Create a new AST to store to the given symbol. */
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
   sym = symbol_reference(self->cm_ctor_scope,sym);
   if unlikely(!sym) goto err;
+#endif
   symbol_ast = ast_sym(sym);
   if unlikely(!symbol_ast) goto err;
   ast = ast_setddi(ast_action2(AST_FACTION_STORE,symbol_ast,
@@ -627,7 +703,7 @@ class_maker_fini(struct class_maker *__restrict self) {
  }
  Dee_XDecref(self->cm_ctor);
  Dee_XDecref((DeeObject *)self->cm_ctor_scope);
- ascii_printer_fini(&self->cm_doc);
+ unicode_printer_fini(&self->cm_doc);
  for (i = 0; i < self->cm_initc; ++i)
       Dee_Decref(self->cm_initv[i]);
  Dee_Free(self->cm_initv);
@@ -746,10 +822,10 @@ class_maker_pack(struct class_maker *__restrict self) {
      goto err;
 
  /* Create a new branch for the documentation string (if it exists). */
- if (ASCII_PRINTER_LEN(&self->cm_doc) != 0) {
+ if (UNICODE_PRINTER_LENGTH(&self->cm_doc) != 0) {
   DREF DeeObject *doc_str;
-  doc_str = ascii_printer_pack(&self->cm_doc);
-  ascii_printer_init(&self->cm_doc);
+  doc_str = unicode_printer_pack(&self->cm_doc);
+  unicode_printer_init(&self->cm_doc);
   if unlikely(!doc_str) goto err;
   doc_ast = ast_constexpr(doc_str);
   Dee_Decref(doc_str);
@@ -1097,8 +1173,8 @@ ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
  class_maker_init(&maker);
  /* Inherit the documentation string printer. */
  maker.cm_flags = class_flags;
- memcpy(&maker.cm_doc,&current_tags.at_doc,sizeof(struct ascii_printer));
- memset(&current_tags.at_doc,0,sizeof(struct ascii_printer));
+ memcpy(&maker.cm_doc,&current_tags.at_doc,sizeof(struct unicode_printer));
+ unicode_printer_init(&current_tags.at_doc);
 
  ASSERT(name || !create_symbol);
  if (tok == ':') {
@@ -1147,9 +1223,9 @@ do_parse_class_base:
     /* Back the reference to OldUserClass into a symbol. */
     base_symbol = new_unnamed_symbol();
     if unlikely(!base_symbol) { Dee_Decref(d200_module); goto err; }
-    base_symbol->sym_class = SYM_CLASS_EXTERN;
-    base_symbol->sym_extern.sym_module = d200_module; /* Inherit reference. */
-    base_symbol->sym_extern.sym_modsym = oldbase_sym;
+    SYMBOL_TYPE(base_symbol) = SYM_CLASS_EXTERN;
+    SYMBOL_EXTERN_MODULE(base_symbol) = d200_module; /* Inherit reference. */
+    SYMBOL_EXTERN_SYMBOL(base_symbol) = oldbase_sym;
     /* Create a symbol-ast for the base expression. */
     maker.cm_base = ast_sym(base_symbol);
    } else {
@@ -1182,15 +1258,23 @@ use_object_base:
   if (scope_push()) goto err;
   maker.cm_classsym = new_unnamed_symbol();
   if unlikely(!maker.cm_classsym) goto err;
-  maker.cm_classsym->sym_class = SYM_CLASS_STACK;
+  SYMBOL_TYPE(maker.cm_classsym) = SYM_CLASS_STACK;
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
   SCOPE_ADD_STACKSYM(current_scope,maker.cm_classsym);
+#endif
  }
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ current_scope->s_flags |= SCOPE_FCLASS;
+#endif
+
  /* Create a symbol for the class's super type. */
  if (maker.cm_base) {
   maker.cm_supersym = new_unnamed_symbol();
   if unlikely(!maker.cm_supersym) goto err;
-  maker.cm_supersym->sym_class = SYM_CLASS_STACK;
+  SYMBOL_TYPE(maker.cm_supersym) = SYM_CLASS_STACK;
+#ifndef CONFIG_USE_NEW_SYMBOL_TYPE
   SCOPE_ADD_STACKSYM(current_scope,maker.cm_supersym);
+#endif
  }
 
  default_member_flags = CLASS_MEMBER_FPUBLIC;
@@ -1573,13 +1657,21 @@ define_constructor:
          !prop_callbacks[CLASS_PROPERTY_SET]) {
       /* Optimization: when no delete or setting callback
        *               was given, mark the symbol as read-only. */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+      member_symbol->s_field.f_member->cme_flag |= CLASS_MEMBER_FREADONLY;
+#else
       member_symbol->sym_member.sym_member->cme_flag |= CLASS_MEMBER_FREADONLY;
+#endif
       *pusage_counter += 1;
      } else {
       *pusage_counter += CLASS_PROPERTY_CALLBACK_COUNT;
      }
      /* Load the base address of the property. */
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     prop_addr = member_symbol->s_field.f_member->cme_addr;
+#else
      prop_addr = member_symbol->sym_member.sym_member->cme_addr;
+#endif
      for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i) {
       struct symbol *callback_symbol;
       /* Skip callbacks that have not been defined. */
@@ -1672,6 +1764,9 @@ check_need_semi:
   }
  }
 done_class_modal:
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+ if unlikely(link_forward_symbols()) goto err;
+#endif
  result = class_maker_pack(&maker);
  scope_pop();
  class_maker_fini(&maker);

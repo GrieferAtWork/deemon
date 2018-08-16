@@ -70,11 +70,15 @@ asm_gcall_expr(DeeAstObject *__restrict func,
    if (arg->ast_type != AST_SYM)
        goto not_argument_forward;
    arg_sym = arg->ast_sym;
-   while (arg_sym->sym_class == SYM_CLASS_ALIAS)
-       arg_sym = arg_sym->sym_alias.sym_alias;
-   if (arg_sym->sym_class != SYM_CLASS_ARG)
+   while (SYMBOL_TYPE(arg_sym) == SYM_CLASS_ALIAS)
+       arg_sym = SYMBOL_ALIAS(arg_sym);
+   if (SYMBOL_TYPE(arg_sym) != SYM_CLASS_ARG)
        goto not_argument_forward;
-   start_offset = arg_sym->sym_arg.sym_index;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if (SYMBOL_MUST_REFERENCE(arg_sym))
+       goto not_argument_forward;
+#endif
+   start_offset = SYMBOL_ARG_INDEX(arg_sym);
    /* Make sure that this is the varargs symbol. */
    if (!DeeBaseScope_IsArgVarArgs(current_basescope,start_offset))
         goto not_argument_forward;
@@ -82,11 +86,15 @@ asm_gcall_expr(DeeAstObject *__restrict func,
    if (arg->ast_type != AST_SYM)
        goto not_argument_forward;
    arg_sym = arg->ast_sym;
-   while (arg_sym->sym_class == SYM_CLASS_ALIAS)
-       arg_sym = arg_sym->sym_alias.sym_alias;
-   if (arg_sym->sym_class != SYM_CLASS_ARG)
+   while (SYMBOL_TYPE(arg_sym) == SYM_CLASS_ALIAS)
+       arg_sym = SYMBOL_ALIAS(arg_sym);
+   if (SYMBOL_TYPE(arg_sym) != SYM_CLASS_ARG)
        goto not_argument_forward;
-   start_offset = arg_sym->sym_arg.sym_index;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if (SYMBOL_MUST_REFERENCE(arg_sym))
+       goto not_argument_forward;
+#endif
+   start_offset = SYMBOL_ARG_INDEX(arg_sym);
    /* Make sure that this isn't the varargs symbol. */
    if (DeeBaseScope_IsArgVarArgs(current_basescope,start_offset))
        goto not_argument_forward;
@@ -106,11 +114,15 @@ asm_gcall_expr(DeeAstObject *__restrict func,
    if (arg->ast_type != AST_SYM)
        goto not_argument_forward;
    arg_sym = arg->ast_sym;
-   while (arg_sym->sym_class == SYM_CLASS_ALIAS)
-       arg_sym = arg_sym->sym_alias.sym_alias;
-   if (arg_sym->sym_class != SYM_CLASS_ARG)
+   while (SYMBOL_TYPE(arg_sym) == SYM_CLASS_ALIAS)
+       arg_sym = SYMBOL_ALIAS(arg_sym);
+   if (SYMBOL_TYPE(arg_sym) != SYM_CLASS_ARG)
        goto not_argument_forward;
-   if ((size_t)arg_sym->sym_arg.sym_index != (size_t)start_offset+i)
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   if (SYMBOL_MUST_REFERENCE(arg_sym))
+       goto not_argument_forward;
+#endif
+   if ((size_t)SYMBOL_ARG_INDEX(arg_sym) != (size_t)start_offset+i)
        goto not_argument_forward;
    /* Optional arguments cannot be forwarded, because accessing
     * them can have the side-effect of them not being bound, so
@@ -124,7 +136,7 @@ asm_gcall_expr(DeeAstObject *__restrict func,
        *               this very specific argument-forward call. */
   if ((size_t)args->ast_multiple.ast_exprc <=
       (size_t)(func->ast_type == AST_OPERATOR && func->ast_flag == OPERATOR_GETATTR ? 3 : 1) &&
-      !DeeBaseScope_IsArgVarArgs(current_basescope,arg_sym->sym_arg.sym_index))
+      !DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(arg_sym)))
        goto not_argument_forward;
 #endif
 
@@ -160,21 +172,33 @@ not_argument_forward:
     * always make use of constant expression tuples... */
    if (func->ast_type == AST_SYM) {
     funsym = func->ast_sym;
-    while (funsym->sym_class == SYM_CLASS_ALIAS)
-        funsym = funsym->sym_alias.sym_alias;
-    if ((funsym->sym_class == SYM_CLASS_EXTERN &&
-       !(funsym->sym_extern.sym_modsym->ss_flags & MODSYM_FPROPERTY)) ||
-        (funsym->sym_class == SYM_CLASS_VAR &&
+    while (SYMBOL_TYPE(funsym) == SYM_CLASS_ALIAS)
+        funsym = SYMBOL_ALIAS(funsym);
+    if ((SYMBOL_TYPE(funsym) == SYM_CLASS_EXTERN &&
+       !(SYMBOL_EXTERN_SYMBOL(funsym)->ss_flags & MODSYM_FPROPERTY)) ||
+        (
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+         funsym->s_type == SYMBOL_TYPE_GLOBAL ||
+        (funsym->s_type == SYMBOL_TYPE_LOCAL &&
+        !SYMBOL_MUST_REFERENCE(funsym))
+#else
+         SYMBOL_TYPE(funsym) == SYM_CLASS_VAR &&
        ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL ||
-        (funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL))) {
+        (funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL)
+#endif
+        )) {
      if unlikely(push_tuple_items(args->ast_constexpr)) goto err;
      /* Direct call to symbol. */
      if (asm_putddi(ddi_ast)) goto err;
-     if (funsym->sym_class == SYM_CLASS_EXTERN) {
+     if (SYMBOL_TYPE(funsym) == SYM_CLASS_EXTERN) {
       if unlikely((symid = asm_esymid(funsym)) < 0) goto err;
-      ASSERT(funsym->sym_extern.sym_modsym);
-      if (asm_gcall_extern((uint16_t)symid,funsym->sym_extern.sym_modsym->ss_index,argc)) goto err;
+      ASSERT(SYMBOL_EXTERN_SYMBOL(funsym));
+      if (asm_gcall_extern((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(funsym)->ss_index,argc)) goto err;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+     } else if (funsym->s_type == SYMBOL_TYPE_GLOBAL) {
+#else
      } else if ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL) {
+#endif
       if unlikely((symid = asm_gsymid_for_read(funsym,func)) < 0) goto err;
       if (asm_gcall_global((uint16_t)symid,argc)) goto err;
      } else {
@@ -198,36 +222,40 @@ not_argument_forward:
      if (function_self->ast_type == AST_SYM) {
       struct symbol *sym = function_self->ast_sym;
 check_function_symbol_class:
-      switch (sym->sym_class) {
-      case SYM_CLASS_ALIAS:
-       ASSERT(sym != sym->sym_alias.sym_alias);
-       ASSERT(sym->sym_scope == sym->sym_alias.sym_alias->sym_scope);
-       sym = sym->sym_alias.sym_alias;
-       goto check_function_symbol_class;
-
-      case SYM_CLASS_THIS:
-       /* call to the `this' argument. (aka. in-class member call) */
-       if unlikely(push_tuple_items(args->ast_constexpr)) goto err;
-       attrid = asm_newconst(function_attr->ast_constexpr);
-       if unlikely(attrid < 0) goto err;
-       if (asm_putddi(ddi_ast)) goto err;
-       if (asm_gcallattr_this_const((uint16_t)attrid,argc)) goto err;
-       goto pop_unused;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+      if (!SYMBOL_MUST_REFERENCE(sym))
+#endif
       {
-       struct module_symbol *modsym; int32_t module_id;
-      case SYM_CLASS_MODULE: /* module.attr() --> call extern ... */
-       modsym = get_module_symbol(sym->sym_module.sym_module,
-                                 (DeeStringObject *)function_attr->ast_constexpr);
-       if (!modsym) break;
-       module_id = asm_msymid(sym);
-       if unlikely(module_id < 0) goto err;
-       /* Do a call to an external symbol. `ASM_CALL_EXTERN' */
-       if unlikely(push_tuple_items(args->ast_constexpr)) goto err;
-       if (asm_putddi(ddi_ast)) goto err;
-       if (asm_gcall_extern((uint16_t)module_id,modsym->ss_index,argc)) goto err;
-       goto pop_unused;
-      } break;
-      default: break;
+       switch (SYMBOL_TYPE(sym)) {
+       case SYM_CLASS_ALIAS:
+        ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+        sym = SYMBOL_ALIAS(sym);
+        goto check_function_symbol_class;
+
+       case SYM_CLASS_THIS:
+        /* call to the `this' argument. (aka. in-class member call) */
+        if unlikely(push_tuple_items(args->ast_constexpr)) goto err;
+        attrid = asm_newconst(function_attr->ast_constexpr);
+        if unlikely(attrid < 0) goto err;
+        if (asm_putddi(ddi_ast)) goto err;
+        if (asm_gcallattr_this_const((uint16_t)attrid,argc)) goto err;
+        goto pop_unused;
+       {
+        struct module_symbol *modsym; int32_t module_id;
+       case SYM_CLASS_MODULE: /* module.attr() --> call extern ... */
+        modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),
+                                  (DeeStringObject *)function_attr->ast_constexpr);
+        if (!modsym) break;
+        module_id = asm_msymid(sym);
+        if unlikely(module_id < 0) goto err;
+        /* Do a call to an external symbol. `ASM_CALL_EXTERN' */
+        if unlikely(push_tuple_items(args->ast_constexpr)) goto err;
+        if (asm_putddi(ddi_ast)) goto err;
+        if (asm_gcall_extern((uint16_t)module_id,modsym->ss_index,argc)) goto err;
+        goto pop_unused;
+       } break;
+       default: break;
+       }
       }
      }
      /* Only do this for 0/1 arguments:
@@ -278,9 +306,13 @@ check_function_symbol_class:
     int32_t attrid = asm_newconst(function_attr->ast_constexpr);
     if unlikely(attrid < 0) goto err;
     if (function_self->ast_type == AST_SYM) {
-     while (function_self->ast_sym->sym_class == SYM_CLASS_ALIAS)
-         function_self->ast_sym = function_self->ast_sym->sym_alias.sym_alias;
-     if (function_self->ast_sym->sym_class == SYM_CLASS_THIS) {
+     while (SYMBOL_TYPE(function_self->ast_sym) == SYM_CLASS_ALIAS)
+         function_self->ast_sym = SYMBOL_ALIAS(function_self->ast_sym);
+     if (SYMBOL_TYPE(function_self->ast_sym) == SYM_CLASS_THIS
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+         && !SYMBOL_MUST_REFERENCE(function_self->ast_sym)
+#endif
+         ) {
       if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
       if (asm_putddi(ddi_ast)) goto err;
       if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
@@ -426,21 +458,33 @@ check_function_symbol_class:
 
  if (func->ast_type == AST_SYM) {
   funsym = func->ast_sym;
-  while (funsym->sym_class == SYM_CLASS_ALIAS)
-      funsym = funsym->sym_alias.sym_alias;
-  if ((funsym->sym_class == SYM_CLASS_EXTERN &&
-     !(funsym->sym_extern.sym_modsym->ss_flags & MODSYM_FPROPERTY)) ||
-      (funsym->sym_class == SYM_CLASS_VAR &&
+  while (SYMBOL_TYPE(funsym) == SYM_CLASS_ALIAS)
+      funsym = SYMBOL_ALIAS(funsym);
+  if ((SYMBOL_TYPE(funsym) == SYM_CLASS_EXTERN &&
+     !(SYMBOL_EXTERN_SYMBOL(funsym)->ss_flags & MODSYM_FPROPERTY)) ||
+      (
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+       funsym->s_type == SYMBOL_TYPE_GLOBAL ||
+      (funsym->s_type == SYMBOL_TYPE_LOCAL &&
+      !SYMBOL_MUST_REFERENCE(funsym))
+#else
+       SYMBOL_TYPE(funsym) == SYM_CLASS_VAR &&
      ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL ||
-      (funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL))) {
+      (funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_LOCAL)
+#endif
+       )) {
    for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
    /* Direct call to symbol. */
    if (asm_putddi(ddi_ast)) goto err;
-   if (funsym->sym_class == SYM_CLASS_EXTERN) {
+   if (SYMBOL_TYPE(funsym) == SYM_CLASS_EXTERN) {
     if unlikely((symid = asm_esymid(funsym)) < 0) goto err;
-    ASSERT(funsym->sym_extern.sym_modsym);
-    if (asm_gcall_extern((uint16_t)symid,funsym->sym_extern.sym_modsym->ss_index,argc)) goto err;
+    ASSERT(SYMBOL_EXTERN_SYMBOL(funsym));
+    if (asm_gcall_extern((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(funsym)->ss_index,argc)) goto err;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+   } else if (funsym->s_type == SYMBOL_TYPE_GLOBAL) {
+#else
    } else if ((funsym->sym_flag&SYM_FVAR_MASK) == SYM_FVAR_GLOBAL) {
+#endif
     if unlikely((symid = asm_gsymid_for_read(funsym,func)) < 0) goto err;
     if (asm_gcall_global((uint16_t)symid,argc)) goto err;
    } else {
@@ -464,37 +508,41 @@ check_function_symbol_class:
    if (function_self->ast_type == AST_SYM) {
     struct symbol *sym = function_self->ast_sym;
 check_getattr_base_symbol_class:
-    switch (sym->sym_class) {
-
-    case SYM_CLASS_ALIAS:
-     ASSERT(sym != sym->sym_alias.sym_alias);
-     ASSERT(sym->sym_scope == sym->sym_alias.sym_alias->sym_scope);
-     sym = sym->sym_alias.sym_alias;
-     goto check_getattr_base_symbol_class;
-
-    case SYM_CLASS_THIS:
-     /* call to the `this' argument. (aka. in-class member call) */
-     for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
-     attrid = asm_newconst(function_attr->ast_constexpr);
-     if unlikely(attrid < 0) goto err;
-     if (asm_putddi(ddi_ast)) goto err;
-     if (asm_gcallattr_this_const((uint16_t)attrid,argc)) goto err;
-     goto pop_unused;
+#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
+    if (!SYMBOL_MUST_REFERENCE(sym))
+#endif
     {
-     struct module_symbol *modsym; int32_t module_id;
-    case SYM_CLASS_MODULE: /* module.attr() --> call extern ... */
-     modsym = get_module_symbol(sym->sym_module.sym_module,
-                               (DeeStringObject *)function_attr->ast_constexpr);
-     if (!modsym) break;
-     module_id = asm_msymid(sym);
-     if unlikely(module_id < 0) goto err;
-     /* Do a call to an external symbol. `ASM_CALL_EXTERN' */
-     for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
-     if (asm_putddi(ddi_ast)) goto err;
-     if (asm_gcall_extern((uint16_t)module_id,modsym->ss_index,argc)) goto err;
-     goto pop_unused;
-    } break;
-    default: break;
+     switch (SYMBOL_TYPE(sym)) {
+
+     case SYM_CLASS_ALIAS:
+      ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+      sym = SYMBOL_ALIAS(sym);
+      goto check_getattr_base_symbol_class;
+
+     case SYM_CLASS_THIS:
+      /* call to the `this' argument. (aka. in-class member call) */
+      for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+      attrid = asm_newconst(function_attr->ast_constexpr);
+      if unlikely(attrid < 0) goto err;
+      if (asm_putddi(ddi_ast)) goto err;
+      if (asm_gcallattr_this_const((uint16_t)attrid,argc)) goto err;
+      goto pop_unused;
+     {
+      struct module_symbol *modsym; int32_t module_id;
+     case SYM_CLASS_MODULE: /* module.attr() --> call extern ... */
+      modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),
+                                (DeeStringObject *)function_attr->ast_constexpr);
+      if (!modsym) break;
+      module_id = asm_msymid(sym);
+      if unlikely(module_id < 0) goto err;
+      /* Do a call to an external symbol. `ASM_CALL_EXTERN' */
+      for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+      if (asm_putddi(ddi_ast)) goto err;
+      if (asm_gcall_extern((uint16_t)module_id,modsym->ss_index,argc)) goto err;
+      goto pop_unused;
+     } break;
+     default: break;
+     }
     }
    }
    /* call to some other object. */
