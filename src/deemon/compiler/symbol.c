@@ -1138,21 +1138,22 @@ seach_single:
  do {
   /* Look through all scopes. */
   ASSERT(iter->s_mapc <= iter->s_mapa);
-  if (!iter->s_mapa) continue;
-  result = iter->s_map[name->k_id % iter->s_mapa];
-  while (result && result->sym_name != name)
-         result = result->sym_next;
-  if (result) {
-   SYMBOL_MARK_USED(result);
+  if (iter->s_mapa) {
+   result = iter->s_map[name->k_id % iter->s_mapa];
+   while (result && result->sym_name != name)
+          result = result->sym_next;
+   if (result) {
+    SYMBOL_MARK_USED(result);
 #ifndef CONFIG_USE_NEW_SYMBOL_TYPE
-   /* Check if the symbol must be referenced. */
-   if (iter->s_base != current_basescope &&
-       SYM_MUST_REFERENCE(result)) {
-    /* Recursively add references for the scope path that leads to this symbol. */
-    result = basescope_addref(current_basescope,result);
-   }
+    /* Check if the symbol must be referenced. */
+    if (iter->s_base != current_basescope &&
+        SYM_MUST_REFERENCE(result)) {
+     /* Recursively add references for the scope path that leads to this symbol. */
+     result = basescope_addref(current_basescope,result);
+    }
 #endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
-   return result;
+    return result;
+   }
   }
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE
   if (iter->s_flags & SCOPE_FCLASS) {
