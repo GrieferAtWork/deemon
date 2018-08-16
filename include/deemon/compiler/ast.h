@@ -128,6 +128,8 @@ struct ast_object {
     uint16_t             ast_type;  /* AST Type (One of `AST_*') */
 #define AST_FNORMAL      0x0000     /* Normal AST flags. */
     uint16_t             ast_flag;  /* AST Flags (Set of `AST_F*', dependent on `ast_type') */
+    uint16_t             ast_temp;  /* Temporary value used during assembly. */
+    uint16_t             ast_pad;   /* ... */
     union {
 
         /* Base expressions (symbol / constant) */

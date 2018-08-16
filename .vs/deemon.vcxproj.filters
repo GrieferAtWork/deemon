@@ -656,6 +656,9 @@
     <ClCompile Include="..\src\deemon\compiler\lexer\hybrid.c">
       <Filter>src\deemon\compiler\lexer</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\scope.c">
+      <Filter>src\deemon\compiler\asm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">
@@ -720,6 +723,9 @@
     </None>
     <None Include="..\src\deemon\objects\unicode\bytes_segments.c.inl">
       <Filter>src\deemon\objects\unicode</Filter>
+    </None>
+    <None Include="..\src\deemon\compiler\asm\genstore-setup.c.inl">
+      <Filter>src\deemon\compiler\asm</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

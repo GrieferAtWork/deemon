@@ -1775,9 +1775,13 @@ do_optimize_dupmov_8bit:
      {
       uint16_t abs_sp;
      case ASM_POP_N:
-      ASSERT(stacksz >= 2);
+      ASSERT((stacksz + 1) >= 2);
       abs_sp = (stacksz + 1) - (*(uint8_t *)(next_instruction + 1) + 2);
-      if (abs_sp <= UINT8_MAX) {
+      if (abs_sp == last_operand_address) {
+       memset(iter,ASM_DELOP,(size_t)((next_instruction + 2) - iter));
+       SET_RESULTF(iter,"Remove redundant `dup; pop #SP-2' instruction pair");
+       goto continue_at_iter;
+      } else if (abs_sp <= UINT8_MAX) {
        temp[0] = ASM_STACK;
        temp[1] = (uint8_t)abs_sp;
        memcpy(temp + 2,iter,next_instruction - iter);
@@ -1822,15 +1826,20 @@ do_optimize_dupmov_16bit:
       {
        uint16_t abs_sp;
       case ASM16_POP_N & 0xff:
-       ASSERT(stacksz >= 2);
-       abs_sp = (stacksz + 1) - (*(uint8_t *)(next_instruction + 1) + 2);
-       temp[0] = (ASM16_STACK & 0xff00) >> 8;
-       temp[1] = ASM16_STACK & 0xff;
-       temp[2] = abs_sp & 0xff;
-       temp[3] = (abs_sp & 0xff00) >> 8;
-       memcpy(temp+4,iter,next_instruction-iter);
-       memcpy(iter,temp,4+(next_instruction-iter));
-       SET_RESULTF(iter,"Construct 16-bit mov-instruction from dup+pop stack");
+       ASSERT((stacksz + 1) >= 2);
+       abs_sp = (stacksz + 1) - (*(uint16_t *)(next_instruction + 2) + 2);
+       if (abs_sp == last_operand_address) {
+        memset(iter,ASM_DELOP,(size_t)((next_instruction + 4) - iter));
+        SET_RESULTF(iter,"Remove redundant `dup; pop #SP-2' instruction pair");
+       } else {
+        temp[0] = (ASM16_STACK & 0xff00) >> 8;
+        temp[1] = ASM16_STACK & 0xff;
+        temp[2] = abs_sp & 0xff;
+        temp[3] = (abs_sp & 0xff00) >> 8;
+        memcpy(temp+4,iter,next_instruction-iter);
+        memcpy(iter,temp,4+(next_instruction-iter));
+        SET_RESULTF(iter,"Construct 16-bit mov-instruction from dup+pop stack");
+       }
        goto continue_at_iter;
       } break;
 

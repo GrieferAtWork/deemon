@@ -632,8 +632,13 @@ INTERN int
 (DCALL asm_gmov_symsrc)(DeeAstObject *__restrict dst,
                         struct symbol *__restrict src_sym,
                         DeeAstObject *__restrict src_ast) {
- if (dst->ast_type == AST_SYM && asm_can_prefix_symbol(dst->ast_sym))
-     return asm_gmov_symsym(dst->ast_sym,src_sym,dst,src_ast);
+ switch (dst->ast_type) {
+ case AST_SYM:
+  if (asm_can_prefix_symbol(dst->ast_sym))
+      return asm_gmov_symsym(dst->ast_sym,src_sym,dst,src_ast);
+  break;
+ default: break;
+ }
  if (asm_putddi(src_ast)) goto err;
  if (asm_gpush_symbol(src_sym,src_ast)) goto err;
  return asm_gpop_expr(dst);
@@ -649,9 +654,7 @@ INTERN int
                    DeeAstObject *__restrict ddi_ast,
                    unsigned int gflags) {
 again:
-
  switch (dst->ast_type) {
-
 
  {
   struct symbol *dst_sym;
@@ -906,37 +909,24 @@ check_dst_sym_class_hybrid:
   }
   goto default_case;
 
+ {
  case AST_MULTIPLE:
   /* Special handling for unpack expressions (i.e. `(a,b,c) = foo()'). */
   if (dst->ast_flag == AST_FMULTIPLE_KEEPLAST) {
    size_t i;
    if (dst->ast_multiple.ast_exprc == 0)
        return ast_genasm(src,gflags);
-   /* Special case: `({ foo; bar; baz; }) = 42' --> `foo; bar; baz = 42;' */
+   /* Compile all branches except for the last one normally. */
    for (i = 0; i < dst->ast_multiple.ast_exprc-1; ++i)
-      if (ast_genasm(dst->ast_multiple.ast_exprv[i],ASM_G_FNORMAL)) goto err;
-   /* asm_gstore(dst->ast_multiple.ast_exprv[i],src,ddi_ast,gflags); */
+      if (ast_genasm(dst->ast_multiple.ast_exprv[i],ASM_G_FNORMAL))
+          goto err;
+   /* The last branch is the one we're going to write to. */
    dst = dst->ast_multiple.ast_exprv[i];
    goto again;
   }
-  /* TODO: What about the left-to-right evaluation rule?
-   *       The expressions from `dst' are evaluated after those from `src'... */
-  /* Fallback... */
-  if (PUSH_RESULT) {
-   /* Duplicate the sequence being unpacked, to-be returned by the expression */
-   if (ast_genasm(src,ASM_G_FPUSHRES)) goto err;
-   if (PUSH_RESULT && asm_gdup()) goto err;
-   if (asm_gunpack((uint16_t)dst->ast_multiple.ast_exprc)) goto err;
-  } else {
-   /* Use the optimize unpacking function */
-   if (asm_gunpack_expr(src,(uint16_t)dst->ast_multiple.ast_exprc,ddi_ast))
-       goto err;
-  }
-  /* Unpack the sequence into all of the target expressions. */
-  if (asm_gpop_expr_multiple(dst->ast_multiple.ast_exprc,
-                             dst->ast_multiple.ast_exprv))
-      goto err;
-  break;
+
+  goto default_case;
+ } break;
 
 
  default:
@@ -955,11 +945,11 @@ default_case:
    * Essentially, this would look like this:
    *  >> local my_list = [];
    *  >> my_list := [10,20,my_list]; */
-  /* TODO: The order of execution isn't correct here! */
+  if (asm_gpop_expr_enter(dst)) goto err;
   if (ast_genasm(src,ASM_G_FPUSHRES)) goto err;
-  if (PUSH_RESULT && (asm_putddi(ddi_ast) || asm_gdup())) goto err;
-  if (asm_gpop_expr(dst)) goto err;
+  if (asm_gpop_expr_leave(dst,gflags)) goto err;
   break;
+
  }
 done:
  return 0;
@@ -971,7 +961,7 @@ err:
 
 INTERN int DCALL
 asm_gpop_expr_multiple(size_t astc, DeeAstObject **__restrict astv) {
- size_t i;
+ size_t i,j;
  /* Optimization: Trailing asts with no side-effects can be handled in reverse order */
  while (astc && !ast_has_sideeffects(astv[astc-1])) {
   --astc; /* This way we don't have to rotate stack-elements. */
@@ -981,9 +971,9 @@ asm_gpop_expr_multiple(size_t astc, DeeAstObject **__restrict astv) {
  i = 0;
  /* Find the first AST that does actually have side-effects. */
  while (i < astc && !ast_has_sideeffects(astv[i])) ++i;
- for (; i < astc; ++i) {
-  if (asm_glrot((uint16_t)(astc-i))) goto err;
-  if (asm_gpop_expr(astv[i])) goto err;
+ for (j = i; j < astc; ++j) {
+  if (asm_glrot((uint16_t)(astc-j))) goto err;
+  if (asm_gpop_expr(astv[j])) goto err;
  }
  /* Handle leading asts without side-effects in reverse order. */
  while (i--) if (asm_gpop_expr(astv[i])) goto err;
@@ -1112,12 +1102,14 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
          DeeInt_TryAsS32(end->ast_constexpr,&index) &&
          index >= INT16_MIN && index <= INT16_MAX) {
       /* `setrange pop, none, $<Simm16>, pop' */
+      if (asm_putddi(ast)) goto err;
       if (asm_gswap()) goto err; /* STACK: base, item */
       if (asm_gsetrange_ni((int16_t)index)) goto err;
       goto done;
      }
      /* `setrange pop, none, pop, pop' */
      if (ast_genasm(end,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, end */
+     if (asm_putddi(ast)) goto err;
      if (asm_glrot(3)) goto err;         /* STACK: base, end, item */
      if (asm_gsetrange_np()) goto err;   /* STACK: - */
      goto done;
@@ -1130,6 +1122,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
       DeeObject *end_index = end->ast_constexpr;
       if (DeeNone_Check(end_index)) {
        /* `setrange pop, $<Simm16>, none, pop' */
+       if (asm_putddi(ast)) goto err;
        if (asm_gswap()) goto err;                      /* STACK: base, item */
        if (asm_gsetrange_in((int16_t)index)) goto err; /* STACK: - */
        goto done;
@@ -1138,12 +1131,14 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
           DeeInt_TryAsS32(end_index,&index2) &&
           index2 >= INT16_MIN && index2 <= INT16_MAX) {
        /* `setrange pop, $<Simm16>, $<Simm16>, pop' */
+       if (asm_putddi(ast)) goto err;
        if (asm_gswap()) goto err;                                      /* STACK: base, item */
        if (asm_gsetrange_ii((int16_t)index,(int16_t)index2)) goto err; /* STACK: - */
        goto done;
       }
      }
      if (ast_genasm(end,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, end */
+     if (asm_putddi(ast)) goto err;
      if (asm_glrot(3)) goto err;         /* STACK: base, end, item */
      if (asm_gsetrange_ip((int16_t)index)) goto err; /* STACK: - */
      goto done;
@@ -1155,6 +1150,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
     if (DeeNone_Check(end_index)) {
      /* `setrange pop, pop, none, pop' */
      if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, begin */
+     if (asm_putddi(ast)) goto err;
      if (asm_glrot(3)) goto err;           /* STACK: base, begin, item */
      if (asm_gsetrange_pn()) goto err;     /* STACK: - */
      goto done;
@@ -1164,6 +1160,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
         index >= INT16_MIN && index <= INT16_MAX) {
      /* `setrange pop, pop, $<Simm16>, pop' */
      if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;           /* STACK: item, base, begin */
+     if (asm_putddi(ast)) goto err;
      if (asm_glrot(3)) goto err;                     /* STACK: base, begin, item */
      if (asm_gsetrange_pi((int16_t)index)) goto err; /* STACK: - */
      goto done;
@@ -1209,5 +1206,14 @@ err:
 }
 
 DECL_END
+
+#ifndef __INTELLISENSE__
+#undef ENTER
+#undef LEAVE
+#define ENTER 1
+#include "genstore-setup.c.inl"
+#define LEAVE 1
+#include "genstore-setup.c.inl"
+#endif
 
 #endif /* !GUARD_DEEMON_COMPILER_ASM_GENSTORE_C */

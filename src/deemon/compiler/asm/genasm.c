@@ -433,161 +433,18 @@ PRIVATE int DCALL cast_sequence(uint16_t type) {
 }
 
 
-/* Go through all the symbols of `scope' and generate wrapper
- * code for storing symbols of read-only classes, that are still
- * being written to in local variable.
- * This includes symbols such as module references, or exception-variables. */
-LOCAL int DCALL
-transpose_modified_symbols(DeeScopeObject *__restrict scope) {
- size_t i;
- for (i = 0; i < scope->s_mapa; ++i) {
-  struct symbol *sym = scope->s_map[i];
-  for (; sym; sym = sym->sym_next) {
-   if (!SYMBOL_NWRITE(sym))
-        continue; /* Symbol is never actually being written to! */
-check_symbol:
-   switch (SYMBOL_TYPE(sym)) {
-
-   case SYM_CLASS_ALIAS:
-    ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
-    sym = SYMBOL_ALIAS(sym);
-    goto check_symbol;
-
-
-   {
-    int32_t lid;
-   case SYM_CLASS_MODULE:
-   case SYM_CLASS_EXCEPT:
-    /* Don't transpose these types of symbols.
-     * Doing so would not reflect the user-expectation. */
-   //case SYM_CLASS_REF:
-   //case SYM_CLASS_THIS_MODULE:
-   //case SYM_CLASS_THIS_FUNCTION:
-   //case SYM_CLASS_THIS:
-    lid = asm_newlocal();
-    if unlikely(lid < 0) goto err;
-#if 1
-    if (asm_plocal((uint16_t)lid)) goto err;
-    if (SYMBOL_TYPE(sym) == SYM_CLASS_MODULE) {
-     int32_t mid = asm_msymid(sym);
-     if unlikely(mid < 0) goto err;
-     if (asm_gpush_module_p((uint16_t)mid)) goto err;
-     Dee_Decref(SYMBOL_MODULE_MODULE(sym));
-    } else {
-     ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_EXCEPT);
-     if (asm_gpush_except_p()) goto err;
-    }
-#else
-    if (asm_gpush_symbol(sym,warn_ast)) goto err;
-    if (asm_gpop_local((uint16_t)lid)) goto err;
-#endif
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-    sym->s_type  = SYMBOL_TYPE_LOCAL;
-    sym->s_flag |= SYMBOL_FALLOC;
-    sym->s_symid = (uint16_t)lid;
-#else
-    SYMBOL_TYPE(sym) = SYM_CLASS_VAR;
-    sym->sym_flag = SYM_FVAR_LOCAL | SYM_FVAR_ALLOC;
-    sym->sym_var.sym_doc = NULL;
-    sym->sym_var.sym_index = (uint16_t)lid;
-#endif
-   } break;
-
-   default: break;
-   }
-  }
- }
- return 0;
-err:
- return -1;
-}
-
 
 
 /* The heart of the compiler: The AST --> Assembly generator. */
 INTERN int (DCALL ast_genasm)(DeeAstObject *__restrict ast,
                               unsigned int gflags) {
 #define PUSH_RESULT   (gflags & ASM_G_FPUSHRES)
- uint16_t stack_old = current_assembler.a_stackcur;
- DeeScopeObject *old_scope;
- uint16_t num_stack_vars = 0;
  struct ast_loc *old_loc;
  ASSERT_OBJECT_TYPE(ast,&DeeAst_Type);
  /* Set the given AST as location information for error messages. */
  old_loc = current_assembler.a_error;
  current_assembler.a_error = &ast->ast_ddi;
- old_scope = current_assembler.a_scope;
- if (ast->ast_scope != old_scope) {
-  DeeScopeObject *new_scope = ast->ast_scope;
-  /* Make sure that the old scope can be reached from the new one. */
-  if (!old_scope) goto set_new_scope;
-  do new_scope = new_scope->s_prev;
-  while (new_scope && new_scope != old_scope);
-  if (new_scope) {
-set_new_scope:
-   new_scope = ast->ast_scope;
-   current_assembler.a_scope = new_scope;
-   while (new_scope && new_scope != old_scope) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-    struct symbol **bucket_iter,**bucket_end,*iter;
-    bucket_end = (bucket_iter = new_scope->s_map) + new_scope->s_mapa;
-    for (; bucket_iter < bucket_end; ++bucket_iter)
-    for (iter = *bucket_iter; iter; iter = iter->s_next)
-    if (iter->s_type == SYMBOL_TYPE_STACK)
-#else
-    struct symbol *iter = new_scope->s_stk;
-    for (; iter; iter = iter->sym_stack.sym_nstck;)
-#endif
-    {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-     /* Mark the variable as not being allocated (shouldn't really happen...). */
-     if unlikely(iter->s_flag & SYMBOL_FALLOC)
-#else
-     ASSERT(iter->sym_class == SYM_CLASS_STACK);
-     /* Mark the variable as not being allocated (shouldn't really happen...). */
-     if unlikely(iter->sym_flag & SYM_FSTK_ALLOC)
-#endif
-     {
-      if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
-          goto err;
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-      iter->s_flag &= ~SYMBOL_FALLOC;
-#else
-      iter->sym_flag &= ~SYM_FSTK_ALLOC;
-#endif
-     }
-     /* Allocate memory for stack-variables when stack displacement is disabled. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-     if (iter->s_nwrite && !(current_assembler.a_flag&ASM_FSTACKDISP))
-#else
-     if (iter->sym_write && !(current_assembler.a_flag&ASM_FSTACKDISP))
-#endif
-     {
-      /* Allocate this stack variable. */
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-      iter->s_flag |= SYMBOL_FALLOC;
-#else
-      iter->sym_flag |= SYM_FSTK_ALLOC;
-#endif
-      SYMBOL_STACK_OFFSET(iter)  = current_assembler.a_stackcur;
-      SYMBOL_STACK_OFFSET(iter) += num_stack_vars;
-      if (asm_putddi_sbind(SYMBOL_STACK_OFFSET(iter),
-                           iter->sym_name))
-          goto err;
-      ++num_stack_vars;
-     }
-    }
-    if (transpose_modified_symbols(new_scope))
-        goto err;
-    new_scope = new_scope->s_prev;
-   }
-   if (num_stack_vars) {
-    /* Adjust the stack accordingly. */
-    if (asm_gadjstack((int16_t)num_stack_vars))
-        goto err;
-   }
-  }
- }
+ ASM_PUSH_SCOPE(ast->ast_scope,err);
  switch (ast->ast_type) {
 
  case AST_CONSTEXPR:
@@ -1659,50 +1516,7 @@ err_hand_frame:
   /* Reset the stack depth to its original value.
    * NOTE: The current value may be distorted and invalid due to
    *       stack variables having been initialized inside the loop. */
-  if (current_assembler.a_flag&ASM_FSTACKDISP) {
-   /* Cleanup in stack-displacement mode. */
-   ASSERT(/*PUSH_RESULT ? current_assembler.a_stackcur >= stack_old+1
-                      : */current_assembler.a_stackcur >= stack_old);
-   if (current_assembler.a_scope != old_scope) {
-    /* Count the number of stack variables that were initialized within the loop.
-     * The loop break/exit symbol will be defined with these symbols already deleted, thus
-     * moving the job of cleaning up the stack to whoever tries to jump out of the loop. */
-    DeeScopeObject *new_scope;
-    num_stack_vars = 0;
-    new_scope = ast->ast_scope;
-    while (new_scope && new_scope != old_scope) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-     struct symbol **bucket_iter,**bucket_end,*iter;
-     bucket_end = (bucket_iter = new_scope->s_map) + new_scope->s_mapa;
-     for (; bucket_iter < bucket_end; ++bucket_iter)
-     for (iter = *bucket_iter; iter; iter = iter->s_next)
-     if (iter->s_type == SYMBOL_TYPE_STACK)
-#else
-     struct symbol *iter = new_scope->s_stk;
-     for (; iter; iter = iter->sym_stack.sym_nstck)
-#endif
-     {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-      if (iter->s_flag & SYMBOL_FALLOC)
-#else
-      ASSERT(iter->sym_class == SYM_CLASS_STACK);
-      if (iter->sym_flag & SYM_FSTK_ALLOC)
-#endif
-      {
-       if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
-           goto err;
-       ++num_stack_vars;
-      }
-     }
-     new_scope = new_scope->s_prev;
-    }
-   }
-  }
-  current_assembler.a_stackcur -= num_stack_vars;
-  /*num_stack_vars = 0;*/
-  ASSERT(current_assembler.a_flag&ASM_FSTACKDISP
-       ? current_assembler.a_stackcur >= stack_old
-       : current_assembler.a_stackcur == stack_old);
+  ASM_BREAK_SCOPE(PUSH_RESULT ? 1 : 0,err);
 
   /* This is where `break' jumps to. (After the re-aligned stack) */
   asm_defsym(loop_break);
@@ -3748,93 +3562,9 @@ got_class_incsp:
   ASSERTF(0,"Invalid AST type: %x",(unsigned int)ast->ast_type);
   break;
  }
-
 done:
- /* Search for local variables that have went out-of-scope. */
- if (current_assembler.a_flag&ASM_FREUSELOC &&
-     current_assembler.a_scope != old_scope) {
-  DeeScopeObject *new_scope = ast->ast_scope;
-  while (new_scope && new_scope != old_scope) {
-   size_t i;
-   for (i = 0; i < new_scope->s_mapa; ++i) {
-    struct symbol *iter = new_scope->s_map[i];
-    for (; iter; iter = iter->sym_next) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-     if (iter->s_type != SYMBOL_TYPE_LOCAL) continue;
-     if (!(iter->s_flag & SYMBOL_FALLOC)) continue;
-     ASSERT(!SYMBOL_MUST_REFERENCE_TYPEMAY(iter));
-     asm_dellocal(iter->s_symid);
-     iter->s_flag &= ~SYMBOL_FALLOC;
-#else
-     if (iter->sym_class != SYM_CLASS_VAR) continue;
-     if (iter->sym_flag != (SYM_FVAR_ALLOC|SYM_FVAR_LOCAL)) continue;
-     asm_dellocal(iter->sym_var.sym_index);
-     iter->sym_flag &= ~SYM_FVAR_ALLOC;
-#endif
-    }
-   }
-   new_scope = new_scope->s_prev;
-  }
- }
- if (current_assembler.a_flag & ASM_FSTACKDISP) {
-  /* Cleanup in stack-displacement mode. */
-  ASSERT(PUSH_RESULT ? current_assembler.a_stackcur >= stack_old+1
-                     : current_assembler.a_stackcur >= stack_old);
-  if (current_assembler.a_scope != old_scope) {
-   /* Pop all new stack variables initialized between this and the previous scope. */
-   DeeScopeObject *new_scope;
-   num_stack_vars = 0;
-   new_scope = ast->ast_scope;
-   while (new_scope && new_scope != old_scope) {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-    struct symbol **bucket_iter,**bucket_end,*iter;
-    bucket_end = (bucket_iter = new_scope->s_map) + new_scope->s_mapa;
-    for (; bucket_iter < bucket_end; ++bucket_iter)
-    for (iter = *bucket_iter; iter; iter = iter->s_next)
-    if (iter->s_type == SYMBOL_TYPE_STACK)
-#else
-    struct symbol *iter = new_scope->s_stk;
-    for (; iter; iter = iter->sym_stack.sym_nstck)
-#endif
-    {
-#ifdef CONFIG_USE_NEW_SYMBOL_TYPE
-     if (iter->s_flag & SYMBOL_FALLOC)
-#else
-     ASSERT(iter->sym_class == SYM_CLASS_STACK);
-     if (iter->sym_flag & SYM_FSTK_ALLOC)
-#endif
-     {
-      if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
-          goto err;
-      ++num_stack_vars;
-     }
-    }
-    new_scope = new_scope->s_prev;
-   }
-  }
- }
- if (num_stack_vars) {
-  /* Cleanup stack variables that were allocated in this scope. */
-  if (PUSH_RESULT) {
-   /* Special case: Must preserve the result value! */
-   /* Generate this code:
-    * >> ...               // ..., a, b, c, d, result
-    * >> pop      #4       // ..., result, b, c, d
-    * >> adjstack #SP - 3  // ..., result
-    */
-   if (asm_gpop_n(num_stack_vars-1)) goto err;
-   if (asm_gadjstack(-(int16_t)(num_stack_vars-1)))
-    goto err;
-  } else {
-   if (asm_gadjstack(-(int16_t)num_stack_vars))
-    goto err;
-  }
- }
+ ASM_POP_SCOPE(PUSH_RESULT ? 1 : 0,err);
 done_noalign:
- current_assembler.a_scope = old_scope;
- ASSERT(current_assembler.a_flag&ASM_FSTACKDISP ||
-       (PUSH_RESULT ? current_assembler.a_stackcur == stack_old+1
-                    : current_assembler.a_stackcur == stack_old));
  current_assembler.a_error = old_loc;
  return 0;
 err:

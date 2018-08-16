@@ -1578,6 +1578,7 @@ check_sym_class:
     /* This is where the magic of lazy stack initialization happens! */
     if (current_assembler.a_flag&ASM_FSTACKDISP) {
      if (current_assembler.a_scope != SYMBOL_SCOPE(sym)) {
+      DeeScopeObject *my_scope;
       /* Warn about undefined behavior when the variable isn't from the current scope:
        * >> __stack local foo;
        * >> {
@@ -1594,7 +1595,31 @@ check_sym_class:
        * >> }
        * NOTE: This problem does not arise when stack displacement is disabled...
        */
-      if (ASM_WARN(W_ASM_STACK_VARIABLE_DIFFRENT_SCOPE,SYMBOL_NAME(sym)))
+      my_scope = current_assembler.a_scope;
+      do my_scope = my_scope->s_prev;
+      while (my_scope && my_scope != SYMBOL_SCOPE(sym));
+      if (!my_scope) {
+       if (ASM_WARN(W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE,SYMBOL_NAME(sym)))
+           goto err;
+       /* If the scope of the symbol is reachable from the current scope, then
+        * we can still allocate the stack-symbol (even though we really shouldn't).
+        * However if it isn't, then we mustn't allow the symbol to be allocated,
+        * because there would be no one to clean up this allocation!
+        * >> ({ __stack local foo; }) = 7;
+        */
+       return asm_gpop();
+      }
+      /* The scope can be reached, so the variable is actually owned by an
+       * active portion of the assembler, meaning it will get cleaned up
+       * when its associated scope ends:
+       * >> {
+       * >>     __stack local foo;
+       * >>     {
+       * >>         foo = 7; // Initialized (and allocated) in non-owning scope
+       * >>     }
+       * >> }
+       */
+      if (ASM_WARN(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE,SYMBOL_NAME(sym)))
           goto err;
      }
 #ifdef CONFIG_USE_NEW_SYMBOL_TYPE

@@ -563,8 +563,8 @@ INSTR("not",(O1(ASM_NOT,FNORMAL,(TOP))))                     /* not top */
 
 /* CONSTRAINTS: `assign <s>, <s>' */
 INSTR("assign",(
-    O2(ASM_ASSIGN,     FNORMAL,(TOP)(POP))                   /* assign top, pop */
-    O3(ASM_MOVE_ASSIGN,FNORMAL,(MOVE)(TOP)(POP))             /* assign move, top, pop */
+    O2(ASM_ASSIGN,     FNORMAL,(POP)(POP))                   /* assign pop, pop */
+    O3(ASM_MOVE_ASSIGN,FNORMAL,(MOVE)(POP)(POP))             /* assign move, pop, pop */
 ))
 
 /* CONSTRAINTS: `copy <s>' */

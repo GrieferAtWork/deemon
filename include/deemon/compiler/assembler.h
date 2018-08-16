@@ -1440,6 +1440,47 @@ INTDEF int DCALL asm_gpop_expr(DeeAstObject *__restrict ast);
 /* Same as `asm_gpop_expr()', but pop `astc' values, one in each AST. */
 INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, DeeAstObject **__restrict astv);
 
+/* Generate code before and after the source expression in when
+ * trying to store an expression in a given destination `ast'
+ * -> asm_gpop_expr_enter(dst);
+ * -> ast_genasm(src,ASM_G_FPUSHRES);
+ * -> asm_gpop_expr_leave(dst);
+ * In `a[b] = c':
+ * -> diff = asm_gpop_expr_enter(dst); // push a; push b;
+ * -> ast_genasm(src,ASM_G_FPUSHRES);  // push c;
+ * -> asm_gpop_expr_leave(dst,diff);   // setrange pop, pop, pop;
+ */
+INTDEF int DCALL asm_gpop_expr_enter(DeeAstObject *__restrict ast);
+INTDEF int DCALL asm_gpop_expr_leave(DeeAstObject *__restrict ast, unsigned int gflags);
+
+
+#ifdef NDEBUG
+INTDEF int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
+INTDEF int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve);
+#define ASM_PUSH_SCOPE(scope,err) \
+do{ DeeScopeObject *_old_scope = current_assembler.a_scope; \
+    if (asm_enter_scope(scope)) goto err
+/* @param: num_preserve: The amount of stack-entires to keep when returning. */
+#define ASM_BREAK_SCOPE(num_preserve,err) \
+    if (asm_leave_scope(_old_scope,num_preserve)) goto err
+#define ASM_POP_SCOPE(num_preserve,err) \
+    ASM_BREAK_SCOPE(num_preserve,err); \
+}__WHILE0
+#else
+INTDEF int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
+INTDEF int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve, uint16_t old_stacksz);
+#define ASM_PUSH_SCOPE(scope,err) \
+do{ DeeScopeObject *_old_scope = current_assembler.a_scope; \
+    uint16_t _old_stack = current_assembler.a_stackcur; \
+    if (asm_enter_scope(scope)) goto err
+#define ASM_BREAK_SCOPE(num_preserve,err) \
+    if (asm_leave_scope(_old_scope,num_preserve,_old_stack)) goto err
+#define ASM_POP_SCOPE(num_preserve,err) \
+    ASM_BREAK_SCOPE(num_preserve,err); \
+}__WHILE0
+#endif
+
+
 /* Assembly code generation flags (gflags) */
 #define ASM_G_FNORMAL   0x0000 /* Normal asm G-flags. */
 #define ASM_G_FPUSHRES  0x0001 /* Push the result of the expression. */

@@ -430,7 +430,7 @@ struct scope_object {
 #define SCOPE_FCLASS         0x0001   /* Class scope. */
     uint16_t                 s_flags; /* Scope flags (Set of `SCOPE_F*'). */
     uint16_t                 s_pad[(sizeof(void *)/2)-1];
-#endif /* !CONFIG_USE_NEW_SYMBOL_TYPE */
+#endif /* CONFIG_USE_NEW_SYMBOL_TYPE */
 };
 
 #ifndef CONFIG_USE_NEW_SYMBOL_TYPE

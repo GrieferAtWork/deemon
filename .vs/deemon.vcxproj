@@ -106,6 +106,7 @@
     <ClCompile Include="..\src\deemon\compiler\asm\modgen.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\parseasm.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\peephole.c" />
+    <ClCompile Include="..\src\deemon\compiler\asm\scope.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\userasm.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\userdb.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\util.c" />
@@ -225,6 +226,7 @@
   <ItemGroup>
     <None Include="..\include\deemon\compiler\lexer.def" />
     <None Include="..\src\.sources" />
+    <None Include="..\src\deemon\compiler\asm\genstore-setup.c.inl" />
     <None Include="..\src\deemon\compiler\asm\userdb.def" />
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">true</DeploymentContent>

@@ -348,7 +348,7 @@ asm_putddi_bind(uint16_t ddi_class,
   struct ddi_checkpoint *last_checkpoint;
   struct ddi_binding *new_vector;
   last_checkpoint = &current_assembler.a_ddi.da_checkv[current_assembler.a_ddi.da_checkc-1];
-  for (i = 0; i < current_assembler.a_ddi.da_bndc; ++i) {
+  for (i = 0; i < last_checkpoint->dc_bndc; ++i) {
    binding = &last_checkpoint->dc_bndv[i];
    if (binding->db_class != ddi_class) continue;
    if (binding->db_index != index) continue;
