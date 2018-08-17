@@ -439,11 +439,9 @@ PRIVATE int DCALL cast_sequence(uint16_t type) {
 INTERN int (DCALL ast_genasm)(DeeAstObject *__restrict ast,
                               unsigned int gflags) {
 #define PUSH_RESULT   (gflags & ASM_G_FPUSHRES)
- struct ast_loc *old_loc;
  ASSERT_OBJECT_TYPE(ast,&DeeAst_Type);
  /* Set the given AST as location information for error messages. */
- old_loc = current_assembler.a_error;
- current_assembler.a_error = &ast->ast_ddi;
+ ASM_PUSH_LOC(&ast->ast_ddi);
  ASM_PUSH_SCOPE(ast->ast_scope,err);
  switch (ast->ast_type) {
 
@@ -3491,10 +3489,10 @@ got_class_incsp:
 done:
  ASM_POP_SCOPE(PUSH_RESULT ? 1 : 0,err);
 done_noalign:
- current_assembler.a_error = old_loc;
+ ASM_BREAK_LOC();
  return 0;
 err:
- current_assembler.a_error = old_loc;
+ ASM_POP_LOC();
  return -1;
 #undef PUSH_RESULT
 }

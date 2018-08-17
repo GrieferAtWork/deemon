@@ -1455,6 +1455,16 @@ do{ DeeScopeObject *_old_scope = current_assembler.a_scope; \
     ASM_BREAK_SCOPE(num_preserve,err); \
 }__WHILE0
 
+#define ASM_PUSH_LOC(loc) \
+do{ struct ast_loc *_old_loc = current_assembler.a_error; \
+    if ((loc)->l_file) current_assembler.a_error = (loc)
+#define ASM_BREAK_LOC() \
+    current_assembler.a_error = _old_loc
+#define ASM_POP_LOC() \
+    ASM_BREAK_LOC(); \
+}__WHILE0
+
+
 /* Assembly code generation flags (gflags) */
 #define ASM_G_FNORMAL   0x0000 /* Normal asm G-flags. */
 #define ASM_G_FPUSHRES  0x0001 /* Push the result of the expression. */

@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/rodict.h>
+#include <deemon/int.h>
 #include <deemon/tuple.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/assembler.h>
@@ -121,6 +122,31 @@ err:
  return NULL;
 }
 
+PRIVATE bool DCALL
+try_get_integer_as_u16(DeeObject *__restrict self,
+                       uint16_t *__restrict result) {
+ if (DeeInt_Check(self)) {
+  uint32_t val;
+  if (!DeeInt_TryAsU32(self,&val)) goto nope;
+  if (val > UINT16_MAX) goto nope;
+  *result = (uint16_t)val;
+  return true;
+ }
+ if (DeeObject_InstanceOfExact(self,&DeeRelInt_Type)) {
+  int_t val;
+  DeeRelIntObject *me = (DeeRelIntObject *)self;
+  if (!ASM_SYM_DEFINED(me->ri_sym)) goto nope;
+  if (me->ri_mode == RELINT_MODE_FADDR)
+      goto nope; /* Address values may change during relocation. */
+  val  = me->ri_add;
+  val += me->ri_sym->as_stck;
+  if unlikely(val < 0 || val > UINT16_MAX) goto nope;
+  *result = (uint16_t)val;
+  return true;
+ }
+nope:
+ return false;
+}
 
 
 
@@ -131,6 +157,9 @@ ast_genasm_switch(DeeAstObject *__restrict ast) {
  struct asm_sym *default_sym; size_t i,num_constants;
  uint16_t old_finflag; int temp;
  int32_t default_cid = -1,jumptable_cid = -1;
+ uint16_t stack_size_after_jump = 0;
+ code_addr_t case_unpack_addr = 0;
+ bool has_expression = false;
  ASSERT_OBJECT_TYPE(ast,&DeeAst_Type);
  ASSERT(ast->ast_type == AST_SWITCH);
 
@@ -142,10 +171,6 @@ ast_genasm_switch(DeeAstObject *__restrict ast) {
  current_assembler.a_loopctl[ASM_LOOPCTL_BRK] = switch_break;
  old_finflag = current_assembler.a_finflag;
  current_assembler.a_finflag |= ASM_FINFLAG_NOLOOP;
-
- /* Assemble text for the switch expression. */
- if (ast_genasm(ast->ast_switch.ast_expr,ASM_G_FPUSHRES))
-     goto err;
 
  if (ast->ast_switch.ast_default) {
   /* The default label shouldn't be allocated yet, but
@@ -200,6 +225,12 @@ ast_genasm_switch(DeeAstObject *__restrict ast) {
   }
   /* Generate a runtime check for this case. */
   if likely(!temp) {
+   if (!has_expression) {
+    /* Assemble text for the switch expression. */
+    if (ast_genasm(ast->ast_switch.ast_expr,ASM_G_FPUSHRES))
+        goto err_cases;
+    has_expression = true;
+   }
    if unlikely(emit_runtime_check(ast,cases->tl_expr,case_sym))
       goto err_cases;
   }
@@ -225,6 +256,12 @@ err_cases:
   *               greater than the benefits it would give us. */
  if (num_constants <= 1) {
 /*use_runtime_checks:*/
+  if (!has_expression) {
+   /* Assemble text for the switch expression. */
+   if (ast_genasm(ast->ast_switch.ast_expr,ASM_G_FPUSHRES))
+       goto err;
+   has_expression = true;
+  }
   for (i = 0; i < num_constants; ++i) {
    if unlikely(emit_runtime_check(ast,constant_cases->tl_expr,
                                       constant_cases->tl_asym))
@@ -246,7 +283,7 @@ err_cases:
 
  {
   DREF DeeObject *jump_table;
-  DREF DeeObject *default_target;
+  DREF DeeObject *default_target; int32_t get_cid;
   jump_table = DeeRoDict_NewWithHint(num_constants);
   if unlikely(!jump_table) goto err;
   for (i = 0; i < num_constants; ++i) {
@@ -282,21 +319,29 @@ err_jump_table:
    if (asm_gpush_constexpr(jump_table))
        goto err_jump_table;
   }
-  Dee_Decref_unlikely(jump_table);                      /* expr, jump_table */
-  if (asm_gswap()) goto err;                            /* jump_table, expr */
+  Dee_Decref_unlikely(jump_table);
+  if (!has_expression) {
+   /* Assemble text for the switch expression. */
+   if (ast_genasm(ast->ast_switch.ast_expr,ASM_G_FPUSHRES))
+       goto err_cases;
+   has_expression = true;
+  } else {
+   if (asm_gswap()) goto err;
+  }
+  /* jump_table, expr */
   default_target = pack_target_tuple(default_sym);
   if unlikely(!default_target) goto err;
   default_cid = asm_newconst(default_target);
   Dee_Decref_unlikely(default_target);
   if unlikely(default_cid < 0) goto err;
   if (asm_gpush_const((uint16_t)default_cid)) goto err; /* jump_table, expr, default */
-  default_cid = asm_newconst(&str_get);
-  if unlikely(default_cid < 0) goto err;
-  if (asm_gcallattr_const((uint16_t)default_cid,2)) goto err; /* target */
+  get_cid = asm_newconst(&str_get);
+  if unlikely(get_cid < 0) goto err;
+  if (asm_gcallattr_const((uint16_t)get_cid,2)) goto err; /* target */
+  case_unpack_addr = asm_ip();
   if (asm_gunpack(2)) goto err; /* target.IP, target.SP */
   if (asm_gjmp_pop_pop()) goto err;
-  /* XXX: Some way of optimizing for the case of all
-   *      targets sharing the same stack indirection. */
+  stack_size_after_jump = current_assembler.a_stackcur;
  }
 #else
  goto use_runtime_checks;
@@ -317,7 +362,8 @@ do_generate_block:
  current_assembler.a_finflag = old_finflag;
  current_assembler.a_loopctl[ASM_LOOPCTL_BRK] = old_break;
 
- if (jumptable_cid >= 0) {
+ if (jumptable_cid >= 0 &&
+    (current_assembler.a_flag & (ASM_FOPTIMIZE|ASM_FOPTIMIZE_SIZE))) {
   /* Check if all jump targets share the same stack depth,
    * and if they do, optimize the generated assembly:
    * OLD:
@@ -334,10 +380,81 @@ do_generate_block:
    * >>    callattr top, @"get", #2                // target
    * >>    jmp      pop                            // ...
    */
-  /* TODO */
-
+  size_t i; uint16_t common_sp,alt_sp;
+  DeeRoDictObject *jump_table;
+  DeeObject *default_target;
+  instruction_t *unpack;
+  jump_table     = (DeeRoDictObject *)current_assembler.a_constv[jumptable_cid];
+  default_target = current_assembler.a_constv[default_cid];
+  if unlikely(!DeeRoDict_Check(jump_table)) goto done; /* Shouldn't happen */
+  if unlikely(!DeeTuple_Check(default_target)) goto done; /* Shouldn't happen */
+  if unlikely(DeeTuple_SIZE(default_target) != 2) goto done; /* Shouldn't happen */
+  if (!try_get_integer_as_u16(DeeTuple_GET(default_target,1),&common_sp))
+       goto done;
+  /* Make sure that all constant cases share the same common SP value. */
+  for (i = 0; i <= jump_table->rd_mask; ++i) {
+   DeeObject *case_target;
+   if (!jump_table->rd_elem[i].di_key) continue;
+   case_target = jump_table->rd_elem[i].di_value;
+   if unlikely(!DeeTuple_Check(case_target)) goto done; /* Shouldn't happen */
+   if unlikely(DeeTuple_SIZE(case_target) != 2) goto done; /* Shouldn't happen */
+   if (!try_get_integer_as_u16(DeeTuple_GET(case_target,1),&alt_sp))
+        goto done;
+   if (common_sp != alt_sp)
+       goto done; /* Case-label has a different stack-indirection. */
+  }
+  unpack = &current_assembler.a_curr->sec_begin[case_unpack_addr + 0];
+  ASSERT(unpack[0] == ASM_UNPACK);
+  ASSERT(unpack[1] == 2);
+  ASSERT(unpack[2] == (ASM_JMP_POP_POP & 0xff00) >> 8);
+  ASSERT(unpack[3] == (ASM_JMP_POP_POP & 0xff));
+  if (common_sp == stack_size_after_jump) {
+   /* No adjustment is required! */
+   unpack[0] = ASM_JMP_POP;
+   unpack[1] = ASM_DELOP;
+   unpack[2] = ASM_DELOP;
+   unpack[3] = ASM_DELOP;
+update_constants:
+   /* Change all the constants.
+    * XXX: What if one of these constants got re-used in the mean time?
+    *      In that case we'd be changing somebody else constant, too.
+    *      I mean: It shouldn't be able to happen, but what if it could in the future? */
+   current_assembler.a_constv[default_cid] = DeeTuple_GET(default_target,0);
+   Dee_Incref(DeeTuple_GET(default_target,0));
+   Dee_Decref_likely(default_target);
+   for (i = 0; i <= jump_table->rd_mask; ++i) {
+    DeeObject *case_target;
+    if (!jump_table->rd_elem[i].di_key) continue;
+    case_target = jump_table->rd_elem[i].di_value;
+    ASSERT(DeeTuple_Check(case_target));
+    ASSERT(DeeTuple_SIZE(case_target) == 2);
+    jump_table->rd_elem[i].di_value = DeeTuple_GET(case_target,0);
+    Dee_Incref(DeeTuple_GET(case_target,0));
+    Dee_Decref_likely(case_target);
+   }
+  } else if (common_sp == stack_size_after_jump + 1) {
+   /* >> callattr top, @"get", #2
+    * >> push     none
+    * >> swap
+    * >> jmp      pop
+    */
+   unpack[0] = ASM_PUSH_NONE;
+   unpack[1] = ASM_SWAP;
+   unpack[2] = ASM_JMP_POP;
+   unpack[3] = ASM_DELOP;
+   goto update_constants;
+  } else if (common_sp == stack_size_after_jump - 1) {
+   /* >> callattr top, @"get", #2
+    * >> pop      #SP - 2
+    * >> jmp      pop */
+   unpack[0] = ASM_POP_N;
+   unpack[1] = 0;
+   unpack[2] = ASM_JMP_POP;
+   unpack[3] = ASM_DELOP;
+   goto update_constants;
+  }
  }
-
+done:
  return 0;
 err:
  return -1;

@@ -2885,7 +2885,7 @@ generic_operator_optimizations:
  case AST_ACTION:
   /* TODO: The result-used parameter depends on what kind of action it is...
    * TODO: Optimize AST order of `AST_FACTION_IN' and `AST_FACTION_AS'.
-   * TOOD: Do constant propagation when branches are known at compile-time. */
+   * TODO: Do constant propagation when branches are known at compile-time. */
   switch (self->ast_flag) {
 
   case AST_FACTION_STORE:

@@ -59,15 +59,6 @@
 
 DECL_BEGIN
 
-/* TODO: Change the type-hint syntax in doc texts from
- *      `foo(int x) -> bool' to `foo(x: int): bool'
- *       That way, we can have this syntax also be used
- *       by user-function, which can then merge prototype
- *       documentation with actual implementation:
- *    >> function add(x: int, y: int): int -> x+y;
- *       Implicit doc-text:
- *    >> @"(x:int,y:int):int"
- */
 
 #if defined(_MSC_FULL_VER)
 /* >> http://stackoverflow.com/questions/70013/how-to-detect-if-im-compiling-code-with-visual-studio-2008 */
