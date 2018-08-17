@@ -177,12 +177,12 @@ check_base_symbol_class:
    if (!SYMBOL_MUST_REFERENCE(sym)) {
     switch (SYMBOL_TYPE(sym)) {
 
-    case SYM_CLASS_ALIAS:
-     ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+    case SYMBOL_TYPE_ALIAS:
+     ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
      sym = SYMBOL_ALIAS(sym);
      goto check_base_symbol_class;
 
-    case SYM_CLASS_THIS:
+    case SYMBOL_TYPE_THIS:
      cid = asm_newconst(name->ast_constexpr);
      if unlikely(cid < 0) goto err;
      if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
@@ -191,7 +191,7 @@ check_base_symbol_class:
      goto done;
     {
      struct module_symbol *modsym; int32_t module_id;
-    case SYM_CLASS_MODULE: /* module.attr --> pop extern ... */
+    case SYMBOL_TYPE_MODULE: /* module.attr --> pop extern ... */
      modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),
                                (DeeStringObject *)name->ast_constexpr);
      if (!modsym) break;
@@ -368,13 +368,13 @@ asm_gunpack_expr(DeeAstObject *__restrict src,
  }
  if (src->ast_type == AST_SYM) {
   struct symbol *sym = src->ast_sym;
-  while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
       sym = SYMBOL_ALIAS(sym);
-  if (SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
+  if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
      (current_basescope->bs_flags & CODE_FVARARGS) &&
      !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
      !DeeBaseScope_HasOptional(current_basescope) &&
-      DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) {
+      DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)) {
    /* Unpack the varargs argument. */
    if (asm_putddi(ddi_ast)) goto err;
    return asm_gvarargs_unpack(num_targets);
@@ -414,12 +414,12 @@ check_src_sym_class:
  }
  switch (SYMBOL_TYPE(src_sym)) {
 
- case SYM_CLASS_ALIAS:
+ case SYMBOL_TYPE_ALIAS:
   ASSERT(src_sym != SYMBOL_ALIAS(src_sym));
   src_sym = SYMBOL_ALIAS(src_sym);
   goto check_src_sym_class;
 
- case SYM_CLASS_STACK:
+ case SYMBOL_TYPE_STACK:
   /* mov PREFIX, #... */
   if (!(src_sym->s_flag & SYMBOL_FALLOC)) break;
   if (asm_putddi(dst_ast)) goto err;
@@ -434,13 +434,13 @@ check_src_sym_class:
   }
   break;
 
- case SYM_CLASS_EXCEPT:
+ case SYMBOL_TYPE_EXCEPT:
   /* mov PREFIX, except */
   if (asm_putddi(dst_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,dst_ast)) goto err;
   return asm_gpush_except_p();
 
- case SYM_CLASS_MODULE:
+ case SYMBOL_TYPE_MODULE:
   /* mov PREFIX, module <imm8/16> */
   symid = asm_msymid(src_sym);
   if unlikely(symid < 0) goto err;
@@ -448,31 +448,31 @@ check_src_sym_class:
   if (asm_gprefix_symbol(dst_sym,dst_ast)) goto err;
   return asm_gpush_module_p((uint16_t)symid);
 
- case SYM_CLASS_THIS:
+ case SYMBOL_TYPE_THIS:
   /* mov PREFIX, this */
   if (asm_putddi(dst_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,dst_ast)) goto err;
   return asm_gpush_this_p();
 
- case SYM_CLASS_THIS_MODULE:
+ case SYMBOL_TYPE_MYMOD:
   /* mov PREFIX, this_module */
   if (asm_putddi(dst_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,dst_ast)) goto err;
   return asm_gpush_this_module_p();
 
- case SYM_CLASS_THIS_FUNCTION:
+ case SYMBOL_TYPE_MYFUNC:
   /* mov PREFIX, this_function */
   if (asm_putddi(dst_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,dst_ast)) goto err;
   return asm_gpush_this_function_p();
 
- case SYM_CLASS_ARG:
+ case SYMBOL_TYPE_ARG:
   /* mov PREFIX, arg <imm8/16> */
-  if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,SYMBOL_ARG_INDEX(src_sym)))
+  if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,src_sym->s_symid))
        break; /* Can only be used for required, or default arguments. */
   if (asm_putddi(dst_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,dst_ast)) goto err;
-  return asm_gpush_arg_p(SYMBOL_ARG_INDEX(src_sym));
+  return asm_gpush_arg_p(src_sym->s_symid);
 
  case SYMBOL_TYPE_GLOBAL:
   /* mov PREFIX, global <imm8/16> */
@@ -501,7 +501,7 @@ check_src_sym_class:
   if (asm_gprefix_symbol(dst_sym,dst_ast)) goto err;
   return asm_gpush_static_p((uint16_t)symid);
 
- case SYM_CLASS_EXTERN:
+ case SYMBOL_TYPE_EXTERN:
   /* mov PREFIX, extern <imm8/16>:<imm8/16> */
   if (SYMBOL_EXTERN_SYMBOL(src_sym)->ss_flags & MODSYM_FPROPERTY)
       break; /* Cannot be used for external properties. */
@@ -622,7 +622,7 @@ again:
 check_dst_sym_class:
   switch (SYMBOL_TYPE(dst_sym)) {
 
-  case SYM_CLASS_ALIAS:
+  case SYMBOL_TYPE_ALIAS:
    ASSERT(dst_sym != SYMBOL_ALIAS(dst_sym));
    dst_sym = SYMBOL_ALIAS(dst_sym);
    goto check_dst_sym_class;
@@ -716,7 +716,7 @@ check_dst_sym_class_hybrid:
    if (!SYMBOL_MUST_REFERENCE(dst_sym)) {
     switch (SYMBOL_TYPE(dst_sym)) {
 
-    case SYM_CLASS_ALIAS:
+    case SYMBOL_TYPE_ALIAS:
      ASSERT(dst_sym != SYMBOL_ALIAS(dst_sym));
      dst_sym = SYMBOL_ALIAS(dst_sym);
      goto check_dst_sym_class_hybrid;
@@ -745,7 +745,7 @@ check_dst_sym_class_hybrid:
      if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
      return asm_gpop_static_p((uint16_t)symid);
 
-    case SYM_CLASS_EXTERN:
+    case SYMBOL_TYPE_EXTERN:
      /* mov extern <imm8/16>, PREFIX */
      if (SYMBOL_EXTERN_SYMBOL(dst_sym)->ss_flags &
         (MODSYM_FREADONLY|MODSYM_FPROPERTY)) break;
@@ -755,7 +755,7 @@ check_dst_sym_class_hybrid:
      if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
      return asm_gpop_extern_p((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(dst_sym)->ss_index);
 
-    case SYM_CLASS_STACK:
+    case SYMBOL_TYPE_STACK:
      if (!(dst_sym->s_flag & SYMBOL_FALLOC))
            break;
      if (asm_putddi(ddi_ast)) goto err;
@@ -951,9 +951,9 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
     DeeAstObject *base = ast->ast_operator.ast_opa;
     if unlikely(cid < 0) goto err;
     if (base->ast_type == AST_SYM) {
-     while (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_ALIAS)
+     while (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_ALIAS)
          base->ast_sym = SYMBOL_ALIAS(base->ast_sym);
-     if (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_THIS &&
+     if (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)) {
       if (asm_putddi(ast)) goto err;
       if (asm_gsetattr_this_const((uint16_t)cid)) goto err;

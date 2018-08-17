@@ -258,15 +258,15 @@ ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
            DeeString_STR(module->mo_name)))
       goto err_module;
   if (module == current_rootscope->rs_module) {
-   SYMBOL_TYPE(extern_symbol) = SYM_CLASS_THIS_MODULE;
+   SYMBOL_TYPE(extern_symbol) = SYMBOL_TYPE_MYMOD;
    Dee_Decref(module);
   } else {
-   SYMBOL_TYPE(extern_symbol)             = SYM_CLASS_MODULE;
+   SYMBOL_TYPE(extern_symbol)             = SYMBOL_TYPE_MODULE;
    SYMBOL_MODULE_MODULE(extern_symbol) = module; /* Inherit reference. */
   }
  } else {
   /* Setup this symbol as an external reference. */
-  SYMBOL_TYPE(extern_symbol)             = SYM_CLASS_EXTERN;
+  SYMBOL_TYPE(extern_symbol)             = SYMBOL_TYPE_EXTERN;
   SYMBOL_EXTERN_MODULE(extern_symbol) = module; /* Inherit reference. */
   SYMBOL_EXTERN_SYMBOL(extern_symbol) = modsym;
  }
@@ -524,7 +524,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
     * That way, modules exporting symbols with the same name can still
     * both be used in the same namespace, with all symbols from both
     * imported using `import *'
-    * Additionally, `SYM_CLASS_AMBIGUOUS' symbols are weak, meaning that
+    * Additionally, `SYMBOL_TYPE_AMBIG' symbols are weak, meaning that
     * in a situation where 2 modules `a' and `b' both define `foo', you
     * can write:
     * >> import * from a;
@@ -535,7 +535,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
       (SYMBOL_EXTERN_MODULE(sym) != module ||
        SYMBOL_EXTERN_SYMBOL(sym) != iter)) {
     SYMBOL_CLEAR_WEAK(sym);
-    SYMBOL_TYPE(sym) = SYM_CLASS_AMBIGUOUS;
+    SYMBOL_TYPE(sym) = SYMBOL_TYPE_AMBIG;
    }
    continue; /* Skip this one... */
   } else {
@@ -593,7 +593,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
    goto init_import_symbol;
   }
   /* Another symbol with the same name had already been imported. */
-  if (SYMBOL_TYPE(import_symbol) == SYM_CLASS_EXTERN &&
+  if (SYMBOL_TYPE(import_symbol) == SYMBOL_TYPE_EXTERN &&
       SYMBOL_EXTERN_MODULE(import_symbol) == module &&
       SYMBOL_EXTERN_SYMBOL(import_symbol) == sym) {
    /* It was the same symbol that had been imported before.
@@ -642,10 +642,10 @@ ast_import_module(struct import_item *__restrict item) {
    goto init_import_symbol;
   }
   /* Another symbol with the same name had already been imported. */
-  if ((SYMBOL_TYPE(import_symbol) == SYM_CLASS_MODULE &&
+  if ((SYMBOL_TYPE(import_symbol) == SYMBOL_TYPE_MODULE &&
        SYMBOL_MODULE_MODULE(import_symbol) == module) ||
       (module == current_rootscope->rs_module &&
-       SYMBOL_TYPE(import_symbol) == SYM_CLASS_THIS_MODULE)) {
+       SYMBOL_TYPE(import_symbol) == SYMBOL_TYPE_MYMOD)) {
    /* The same module has already been imported under this name! */
   } else {
    if (WARNAT(&item->ii_import_loc,W_IMPORT_ALIAS_IS_ALREADY_DEFINED,item->ii_symbol_name))
@@ -657,10 +657,10 @@ ast_import_module(struct import_item *__restrict item) {
   if unlikely(!import_symbol) goto err_module;
 init_import_symbol:
   if (module == current_rootscope->rs_module) {
-   SYMBOL_TYPE(import_symbol) = SYM_CLASS_THIS_MODULE;
+   SYMBOL_TYPE(import_symbol) = SYMBOL_TYPE_MYMOD;
    Dee_Decref(module);
   } else {
-   SYMBOL_TYPE(import_symbol)             = SYM_CLASS_MODULE;
+   SYMBOL_TYPE(import_symbol)             = SYMBOL_TYPE_MODULE;
    SYMBOL_MODULE_MODULE(import_symbol) = module; /* Inherit reference */
   }
  }

@@ -2425,7 +2425,7 @@ asm_gsymid(struct symbol *__restrict sym) {
   *       since the `TPPKeyword' still representing the name of this
   *       symbol won't be around anymore once the module itself has
   *       been compiled. */
- name      = sym->sym_name;
+ name      = sym->s_name;
  name_hash = hash_ptr(name->k_name,name->k_size);
 
  /* To prevent multiple-definition problems of the same global variable,
@@ -2516,7 +2516,7 @@ asm_lsymid(struct symbol *__restrict sym) {
  sym->s_symid = (uint16_t)new_index;
  sym->s_flag |= SYMBOL_FALLOC;
  /* Generate DDI information for the local->symbol binding. */
- if (asm_putddi_lbind((uint16_t)new_index,sym->sym_name))
+ if (asm_putddi_lbind((uint16_t)new_index,sym->s_name))
      return -1;
 end:
  return new_index;
@@ -2682,7 +2682,7 @@ asm_esymid(struct symbol *__restrict sym) {
  int32_t result;
  DeeModuleObject *module;
  ASSERT(sym);
- ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_EXTERN);
+ ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_EXTERN);
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
  module = SYMBOL_EXTERN_MODULE(sym);
@@ -2704,7 +2704,7 @@ INTERN int32_t DCALL
 asm_msymid(struct symbol *__restrict sym) {
  int32_t result;
  ASSERT(sym);
- ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_MODULE);
+ ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_MODULE);
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
  result = asm_newmodule(SYMBOL_EXTERN_MODULE(sym));
@@ -2768,9 +2768,9 @@ restart:
   struct symbol **iter,**end,*sym;
   end = (iter = current_basescope->bs_argv)+current_basescope->bs_argc;
   for (; iter != end; ++iter) {
-   while ((sym = *iter,SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS))
+   while ((sym = *iter,SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS))
        *iter = SYMBOL_ALIAS(sym);
-   if (SYMBOL_TYPE(sym) != SYM_CLASS_ARG) {
+   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) {
     uint16_t argid;
 do_savearg:
     argid = (uint16_t)(iter - current_basescope->bs_argv);
@@ -2786,7 +2786,7 @@ do_savearg:
     goto do_savearg;
 #if 0
    } else if (sym->sym_read == 0 &&
-              SYMBOL_ARG_INDEX(sym) == current_basescope->bs_argc_max &&
+              sym->s_symid == current_basescope->bs_argc_max &&
               current_basescope->bs_argc_opt) {
     /* TODO: Option arguments that were never used can something be
      *       converted into default-arguments, at which point we may

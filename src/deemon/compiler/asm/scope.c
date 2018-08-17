@@ -36,39 +36,39 @@ transpose_modified_symbols(DeeScopeObject *__restrict scope) {
  size_t i;
  for (i = 0; i < scope->s_mapa; ++i) {
   struct symbol *sym = scope->s_map[i];
-  for (; sym; sym = sym->sym_next) {
+  for (; sym; sym = sym->s_next) {
    if (!SYMBOL_NWRITE(sym))
         continue; /* Symbol is never actually being written to! */
 check_symbol:
    switch (SYMBOL_TYPE(sym)) {
 
-   case SYM_CLASS_ALIAS:
-    ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+   case SYMBOL_TYPE_ALIAS:
+    ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
     sym = SYMBOL_ALIAS(sym);
     goto check_symbol;
 
 
    {
     int32_t lid;
-   case SYM_CLASS_MODULE:
-   case SYM_CLASS_EXCEPT:
+   case SYMBOL_TYPE_MODULE:
+   case SYMBOL_TYPE_EXCEPT:
     /* Don't transpose these types of symbols.
      * Doing so would not reflect the user-expectation. */
    //case SYM_CLASS_REF:
-   //case SYM_CLASS_THIS_MODULE:
-   //case SYM_CLASS_THIS_FUNCTION:
-   //case SYM_CLASS_THIS:
+   //case SYMBOL_TYPE_MYMOD:
+   //case SYMBOL_TYPE_MYFUNC:
+   //case SYMBOL_TYPE_THIS:
     lid = asm_newlocal();
     if unlikely(lid < 0) goto err;
 #if 1
     if (asm_plocal((uint16_t)lid)) goto err;
-    if (SYMBOL_TYPE(sym) == SYM_CLASS_MODULE) {
+    if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_MODULE) {
      int32_t mid = asm_msymid(sym);
      if unlikely(mid < 0) goto err;
      if (asm_gpush_module_p((uint16_t)mid)) goto err;
      Dee_Decref(SYMBOL_MODULE_MODULE(sym));
     } else {
-     ASSERT(SYMBOL_TYPE(sym) == SYM_CLASS_EXCEPT);
+     ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_EXCEPT);
      if (asm_gpush_except_p()) goto err;
     }
 #else
@@ -106,6 +106,9 @@ asm_enter_scope(DeeScopeObject *__restrict scope) {
  if (new_scope) {
 set_new_scope:
   current_assembler.a_scope = scope;
+#ifndef NDEBUG
+  scope->s_old_stack = current_assembler.a_stackcur;
+#endif
   while (scope && scope != old_scope) {
    if (!(current_assembler.a_flag&ASM_FSTACKDISP)) {
     struct symbol **bucket_iter,**bucket_end,*iter;
@@ -120,7 +123,7 @@ set_new_scope:
       SYMBOL_STACK_OFFSET(iter)  = current_assembler.a_stackcur;
       SYMBOL_STACK_OFFSET(iter) += num_stack_vars;
       if (asm_putddi_sbind(SYMBOL_STACK_OFFSET(iter),
-                           iter->sym_name))
+                           iter->s_name))
           goto err;
       ++num_stack_vars;
      } else {
@@ -144,11 +147,7 @@ err:
  return -1;
 }
 INTERN int DCALL
-asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve
-#ifndef NDEBUG
-                , uint16_t old_stacksz
-#endif
-                ) {
+asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve) {
  uint16_t num_stack_vars;
  DeeScopeObject *scope;
  scope = current_assembler.a_scope;
@@ -161,7 +160,7 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve
    size_t i;
    for (i = 0; i < scope->s_mapa; ++i) {
     struct symbol *iter = scope->s_map[i];
-    for (; iter; iter = iter->sym_next) {
+    for (; iter; iter = iter->s_next) {
      if (iter->s_type != SYMBOL_TYPE_LOCAL) continue;
      if (!(iter->s_flag & SYMBOL_FALLOC)) continue;
      ASSERT(!SYMBOL_MUST_REFERENCE_TYPEMAY(iter));
@@ -197,17 +196,18 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve
          "num_preserve   = %I16u\n",
         (uint16_t)(num_stack_vars + num_preserve),
         (uint16_t)current_assembler.a_stackcur,
-        (uint16_t)old_stacksz,
+        (uint16_t)current_assembler.a_scope->s_old_stack,
         (uint16_t)num_stack_vars,
         (uint16_t)num_preserve);
- ASSERTF(current_assembler.a_stackcur == old_stacksz + num_stack_vars + num_preserve,
+ ASSERTF(current_assembler.a_stackcur ==
+         current_assembler.a_scope->s_old_stack + num_stack_vars + num_preserve,
          "Invalid stack depth when leaving scope (expected %I16u, but got %I16u)\n"
          "old_stacksz    = %I16u\n"
          "num_stack_vars = %I16u\n"
          "num_preserve   = %I16u\n",
-        (uint16_t)(old_stacksz + num_stack_vars + num_preserve),
+        (uint16_t)(current_assembler.a_scope->s_old_stack + num_stack_vars + num_preserve),
         (uint16_t)current_assembler.a_stackcur,
-        (uint16_t)old_stacksz,
+        (uint16_t)current_assembler.a_scope->s_old_stack,
         (uint16_t)num_stack_vars,
         (uint16_t)num_preserve);
 #else

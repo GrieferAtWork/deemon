@@ -72,14 +72,14 @@ relocate_member_table(struct member_entry *__restrict entry,
  struct symbol **biter,**bend,*iter;
  bend = (biter = current_scope->s_map)+current_scope->s_mapa;
  for (; biter != bend; ++biter) {
-  for (iter = *biter; iter; iter = iter->sym_next) {
+  for (iter = *biter; iter; iter = iter->s_next) {
    if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
         iter->s_type == SYMBOL_TYPE_CFIELD) &&
         iter->s_field.f_member == entry)
         iter->s_field.f_member = new_entry;
   }
  }
- for (iter = current_scope->s_del; iter; iter = iter->sym_next) {
+ for (iter = current_scope->s_del; iter; iter = iter->s_next) {
   if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
        iter->s_type == SYMBOL_TYPE_CFIELD) &&
        iter->s_field.f_member == entry)
@@ -96,7 +96,7 @@ relocate_member_vector(struct member_entry *__restrict old_base,
  if (!offset_to_new_base) return;
  bend = (biter = current_scope->s_map)+current_scope->s_mapa;
  for (; biter != bend; ++biter) {
-  for (iter = *biter; iter; iter = iter->sym_next) {
+  for (iter = *biter; iter; iter = iter->s_next) {
    if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
         iter->s_type == SYMBOL_TYPE_CFIELD) &&
         iter->s_field.f_member >= old_base &&
@@ -104,7 +104,7 @@ relocate_member_vector(struct member_entry *__restrict old_base,
       *(uintptr_t *)&iter->s_field.f_member += offset_to_new_base;
   }
  }
- for (iter = current_scope->s_del; iter; iter = iter->sym_next) {
+ for (iter = current_scope->s_del; iter; iter = iter->s_next) {
   if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
        iter->s_type == SYMBOL_TYPE_CFIELD) &&
        iter->s_field.f_member >= old_base &&
@@ -286,7 +286,7 @@ class_maker_push_methscope(struct class_maker *__restrict self,
  /* Define a symbol `this' that can be used to access the this-argument. */
  this_sym = new_local_symbol(TPPLexer_LookupKeyword("this",4,0));
  if unlikely(!this_sym) goto err;
- SYMBOL_TYPE(this_sym) = SYM_CLASS_THIS; /* As simple as that! */
+ SYMBOL_TYPE(this_sym) = SYMBOL_TYPE_THIS; /* As simple as that! */
  if (pthis_sym) *pthis_sym = this_sym;
  return 0;
 err:
@@ -347,7 +347,7 @@ class_maker_addmember(struct class_maker *__restrict self,
  ASSERT(ppusage_counter);
  ASSERT(self);
  ASSERT(self->cm_classsym);
- ASSERT(self->cm_classsym->sym_name);
+ ASSERT(self->cm_classsym->s_name);
  desc = &self->cm_tables[table_id];
  if (!desc->td_field &&
      (desc->td_field = DeeMemberTable_New()) == NULL) goto err;
@@ -372,7 +372,7 @@ class_maker_addmember(struct class_maker *__restrict self,
   /* -2 because 2 == 3-1 and 3 is the max number of slots required for a property */
   if unlikely(addr > UINT16_MAX-2) {
    PERR(W_TOO_MANY_CLASS_MEMBER,
-        self->cm_classsym->sym_name->k_name);
+        self->cm_classsym->s_name->k_name);
    goto err;
   }
   entry->cme_addr = (uint16_t)addr; /* Save the starting VTABLE address of this member. */
@@ -416,7 +416,7 @@ class_maker_addanon(struct class_maker *__restrict self,
  struct member_entry *entry;
  ASSERT(self);
  ASSERT(self->cm_classsym);
- ASSERT(self->cm_classsym->sym_name);
+ ASSERT(self->cm_classsym->s_name);
  ASSERTF(self->cm_tables[table_id].td_field,
          "How did you get an index %u if the associated table %u doesn't exist",
         (unsigned int)index,(unsigned int)table_id);
@@ -779,7 +779,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
    */
   if (self->cm_base && (initializer_name->k_id == KWD_super ||
      (self->cm_base->ast_type == AST_SYM &&
-      self->cm_base->ast_sym->sym_name == initializer_name))) {
+      self->cm_base->ast_sym->s_name == initializer_name))) {
    DREF DeeAstObject *superargs,*merge;
    int temp; bool has_paren;
    old_flags = TPPLexer_Current->l_flags;
@@ -1114,7 +1114,7 @@ do_parse_class_base:
     /* Back the reference to OldUserClass into a symbol. */
     base_symbol = new_unnamed_symbol();
     if unlikely(!base_symbol) { Dee_Decref(d200_module); goto err; }
-    SYMBOL_TYPE(base_symbol) = SYM_CLASS_EXTERN;
+    SYMBOL_TYPE(base_symbol) = SYMBOL_TYPE_EXTERN;
     SYMBOL_EXTERN_MODULE(base_symbol) = d200_module; /* Inherit reference. */
     SYMBOL_EXTERN_SYMBOL(base_symbol) = oldbase_sym;
     /* Create a symbol-ast for the base expression. */
@@ -1149,7 +1149,7 @@ use_object_base:
   if (scope_push()) goto err;
   maker.cm_classsym = new_unnamed_symbol();
   if unlikely(!maker.cm_classsym) goto err;
-  SYMBOL_TYPE(maker.cm_classsym) = SYM_CLASS_STACK;
+  SYMBOL_TYPE(maker.cm_classsym) = SYMBOL_TYPE_STACK;
  }
  current_scope->s_flags |= SCOPE_FCLASS;
 
@@ -1157,7 +1157,7 @@ use_object_base:
  if (maker.cm_base) {
   maker.cm_supersym = new_unnamed_symbol();
   if unlikely(!maker.cm_supersym) goto err;
-  SYMBOL_TYPE(maker.cm_supersym) = SYM_CLASS_STACK;
+  SYMBOL_TYPE(maker.cm_supersym) = SYMBOL_TYPE_STACK;
  }
 
  default_member_flags = CLASS_MEMBER_FPUBLIC;

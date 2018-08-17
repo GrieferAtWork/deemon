@@ -297,7 +297,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   /* Create a new symbol to allow for function-self-referencing. */
   funcself_symbol = new_local_symbol(name);
   if unlikely(!funcself_symbol) goto err;
-  SYMBOL_TYPE(funcself_symbol) = SYM_CLASS_THIS_FUNCTION;
+  SYMBOL_TYPE(funcself_symbol) = SYMBOL_TYPE_MYFUNC;
  }
  if (tok == '(') {
   /* Argument list. */

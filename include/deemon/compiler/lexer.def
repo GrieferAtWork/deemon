@@ -467,7 +467,7 @@ DEF_WARNING(W_ASM_SEQUENCE_TOO_LONG,(WG_VALUE),WSTATE_ERROR,WARNF("Sequence is t
 DEF_WARNING(W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED,(WG_SYNTAX),WSTATE_ERROR,WARNF("`break' or `continue' are not allowed outside of a loop"))
 DEF_WARNING(W_ASM_STORE_TO_RVALUE,(WG_SYNTAX),WSTATE_WARN,WARNF("Store to r-value is assembled as an assignment. If this is intended, replace `=' with `:='"))
 DEF_WARNING(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,(WG_SYMBOL),WSTATE_FATAL,{ char *name = ARG(char *); WARNF("Symbol `%s' of class `%s' cannot be used in inplace operations",name,ARG(char *)); })
-DEF_WARNING(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,(WG_SYMBOL),WSTATE_FATAL,WARNF("Stack variable `%s' has not been initialized",ARG(char *)))
+DEF_WARNING(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,(WG_SYMBOL),WSTATE_WARN,WARNF("Stack variable `%s' has not been initialized",ARG(char *)))
 DEF_WARNING(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED,(WG_SYMBOL),WSTATE_WARN,WARNF("Stack variable `%s' initialized in another scope is no longer allocated",ARG(char *)))
 DEF_WARNING(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE,(WG_SYMBOL),WSTATE_WARN,WARNF("Stack variable `%s' is not allocated within the proper scope",ARG(char *)))
 DEF_WARNING(W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE,(WG_SYMBOL),WSTATE_ERROR,WARNF("The owner scope of stack variable `%s' is not reachable",ARG(char *)))

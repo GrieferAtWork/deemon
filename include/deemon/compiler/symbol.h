@@ -62,7 +62,7 @@ struct ast_loc {
 
 struct text_label {
     struct text_label          *tl_next; /* [0..1][owned] Next case-label, or the next symbol with
-                                          *               the same modulated `sym_name->k_id' */
+                                          *               the same modulated `s_name->k_id' */
     union {
 #ifdef __INTELLISENSE__
              struct ast_object *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|ast_cases))][const]
@@ -158,19 +158,45 @@ struct symbol {
 };
 
 
+/* Return the alias of a `SYMBOL_TYPE_ALIAS'-typed symbol
+ * `x', or `x' itself if it's some other kind of type. */
+#define SYMBOL_UNWIND_ALIAS(x) \
+   ((x)->s_type == SYMBOL_TYPE_ALIAS ? \
+   (ASSERT((x)->s_alias->s_type != SYMBOL_TYPE_ALIAS),(x)->s_alias) : (x))
+
+/* Inplace-unwind alias symbol references.
+ * -> Same as `x = SYMBOL_UNWIND_ALIAS(x)' */
+#define SYMBOL_INPLACE_UNWIND_ALIAS(x) \
+   ((x)->s_type == SYMBOL_TYPE_ALIAS ? \
+   ((x) = (x)->s_alias,ASSERT((x)->s_type != SYMBOL_TYPE_ALIAS),(void)0) : (void)0)
+
+/* Return the name of a given symbol `x' as a `char *' pointer. */
 #define SYMBOL_NAME(x)             ((x)->s_name->k_name)
-#define SYMBOL_NREAD(x)          (*((x)->s_type == SYMBOL_TYPE_ALIAS ? &(x)->s_alias->s_nread : &(x)->s_nread))
-#define SYMBOL_NWRITE(x)         (*((x)->s_type == SYMBOL_TYPE_ALIAS ? &(x)->s_alias->s_nwrite : &(x)->s_nwrite))
-#define SYMBOL_NBOUND(x)         (*((x)->s_type == SYMBOL_TYPE_ALIAS ? &(x)->s_alias->s_nbound : &(x)->s_nbound))
+
+/* Get/inc/dec the read-, write- and bound- access counters. */
+#define SYMBOL_NREAD(x)            ((x)->s_type == SYMBOL_TYPE_ALIAS ? (x)->s_alias->s_nread : (x)->s_nread)
+#define SYMBOL_NWRITE(x)           ((x)->s_type == SYMBOL_TYPE_ALIAS ? (x)->s_alias->s_nwrite : (x)->s_nwrite)
+#define SYMBOL_NBOUND(x)           ((x)->s_type == SYMBOL_TYPE_ALIAS ? (x)->s_alias->s_nbound : (x)->s_nbound)
 #define SYMBOL_INC_NREAD(x)        ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)++(x)->s_alias->s_nread : (void)++(x)->s_nread)
 #define SYMBOL_INC_NWRITE(x)       ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)++(x)->s_alias->s_nwrite : (void)++(x)->s_nwrite)
 #define SYMBOL_INC_NBOUND(x)       ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)++(x)->s_alias->s_nbound : (void)++(x)->s_nbound)
 #define SYMBOL_DEC_NREAD(x)        ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)(ASSERT((x)->s_alias->s_nread != 0),--(x)->s_alias->s_nread) : (void)(ASSERT((x)->s_nread != 0),--(x)->s_nread))
 #define SYMBOL_DEC_NWRITE(x)       ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)(ASSERT((x)->s_alias->s_nwrite != 0),--(x)->s_alias->s_nwrite) : (void)(ASSERT((x)->s_nwrite != 0),--(x)->s_nwrite))
 #define SYMBOL_DEC_NBOUND(x)       ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)(ASSERT((x)->s_alias->s_nbound != 0),--(x)->s_alias->s_nbound) : (void)(ASSERT((x)->s_nbound != 0),--(x)->s_nbound))
+
+/* Mark the given symbol `x' as in-use, turning a weakly
+ * linked symbol into one that is strongly linked.
+ * -> Weakly linked symbols can be re-declared retroactively, with
+ *    the act of doing so not causing any compiler warnings. */
 #define SYMBOL_MARK_USED(x)        (void)((x)->s_flag &= ~SYMBOL_FWEAK)
+
+/* Check if a given symbol `x' has been declared as a weak symbol. */
 #define SYMBOL_IS_WEAK(x)          ((x)->s_flag & SYMBOL_FWEAK)
-#define SYMBOL_CLEAR_WEAK(x)       (symbol_fini(x),(x)->s_nread = (x)->s_nwrite = 0,(x)->s_flag &= ~SYMBOL_FWEAK)
+
+/* Clear the linkage of a given symbol `x', leaving `x->s_type',
+ * as well as all type-specific fields undefined. */
+#define SYMBOL_CLEAR_WEAK(x) \
+       (symbol_fini(x),(x)->s_flag &= ~SYMBOL_FWEAK)
 
 /* Check if a given symbol `x' must be addressed as a reference */
 #define SYMBOL_MUST_REFERENCE(x)   (SYMBOL_TYPE_MAYREF((x)->s_type) && (x)->s_scope->s_base != current_basescope)
@@ -191,30 +217,11 @@ struct symbol {
 #define SYMBOL_EXTERN_SYMBOL(x)    ((x)->s_extern.e_symbol) /* TODO: Remove me */
 #define SYMBOL_MODULE_MODULE(x)    ((x)->s_module)          /* TODO: Remove me */
 #define SYMBOL_STACK_OFFSET(x)     ((x)->s_symid)           /* TODO: Remove me */
-#define SYMBOL_ARG_INDEX(x)        ((x)->s_symid)           /* TODO: Remove me */
-#define SYMBOL_GETSET_GETTER(x)    ((x)->s_getset.gs_get)   /* TODO: Remove me */
-#define SYMBOL_GETSET_DELETE(x)    ((x)->s_getset.gs_del)   /* TODO: Remove me */
-#define SYMBOL_GETSET_SETTER(x)    ((x)->s_getset.gs_set)   /* TODO: Remove me */
 
 
 
 /* Finalize the given symbol. */
 INTERN void DCALL symbol_fini(struct symbol *__restrict self);
-
-
-#define sym_next                s_next              /* TODO: Remove me */
-#define sym_name                s_name              /* TODO: Remove me */
-#define SYM_CLASS_EXTERN        SYMBOL_TYPE_EXTERN  /* TODO: Remove me */
-#define SYM_CLASS_STACK         SYMBOL_TYPE_STACK   /* TODO: Remove me */
-#define SYM_CLASS_ARG           SYMBOL_TYPE_ARG     /* TODO: Remove me */
-#define SYM_CLASS_MODULE        SYMBOL_TYPE_MODULE  /* TODO: Remove me */
-#define SYM_CLASS_PROPERTY      SYMBOL_TYPE_GETSET  /* TODO: Remove me */
-#define SYM_CLASS_ALIAS         SYMBOL_TYPE_ALIAS   /* TODO: Remove me */
-#define SYM_CLASS_EXCEPT        SYMBOL_TYPE_EXCEPT  /* TODO: Remove me */
-#define SYM_CLASS_THIS_MODULE   SYMBOL_TYPE_MYMOD   /* TODO: Remove me */
-#define SYM_CLASS_THIS_FUNCTION SYMBOL_TYPE_MYFUNC  /* TODO: Remove me */
-#define SYM_CLASS_THIS          SYMBOL_TYPE_THIS    /* TODO: Remove me */
-#define SYM_CLASS_AMBIGUOUS     SYMBOL_TYPE_AMBIG   /* TODO: Remove me */
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -240,7 +247,14 @@ struct scope_object {
 #define SCOPE_FNORMAL        0x0000   /* Normal scope flags. */
 #define SCOPE_FCLASS         0x0001   /* Class scope. */
     uint16_t                 s_flags; /* Scope flags (Set of `SCOPE_F*'). */
+#ifndef NDEBUG
+    uint16_t                 s_old_stack; /* Used by stack alignment assertions during assembly: The stack depth when the scope was entered. */
+#if __SIZEOF_POINTER__ > 4
+    uint16_t                 s_pad[(sizeof(void *)/2)-2];
+#endif
+#else
     uint16_t                 s_pad[(sizeof(void *)/2)-1];
+#endif
 };
 
 
@@ -283,7 +297,7 @@ struct base_scope_object {
                                         *   >> function bar(x) { print x; x = 10; print x; }
                                         * [[*]->s_index == *] The index in this vector _MUST_ mirror the argument index.
                                         * [[*]->s_scope == self] All symbols referenced _MUST_ be associated with `bs_prev'.
-                                        * [[*]->s_class == SYM_CLASS_ARG] All symbols referenced _MUST_ be argument symbols.
+                                        * [[*]->s_class == SYMBOL_TYPE_ARG] All symbols referenced _MUST_ be argument symbols.
                                         * Only symbols of the following classes (should) appear as references (because other's don't make sense):
                                         * ASSEMBLY:
                                         *   >> foo:

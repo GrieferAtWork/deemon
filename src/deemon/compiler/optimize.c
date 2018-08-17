@@ -140,14 +140,14 @@ ast_predict_type(DeeAstObject *__restrict self) {
  case AST_SYM:
   /* Certain symbol classes alawys refer to specific object types. */
   switch (SYMBOL_TYPE(self->ast_sym)) {
-  case SYM_CLASS_MODULE:
-  case SYM_CLASS_THIS_MODULE:
+  case SYMBOL_TYPE_MODULE:
+  case SYMBOL_TYPE_MYMOD:
    return &DeeModule_Type;
-  case SYM_CLASS_THIS_FUNCTION:
+  case SYMBOL_TYPE_MYFUNC:
    return &DeeFunction_Type;
   {
    DeeBaseScopeObject *bscope;
-  case SYM_CLASS_ARG:
+  case SYMBOL_TYPE_ARG:
    /* The type of the varargs-argument is always a tuple!
     * This deduction is required to optimize:
     * >> local x = (...);
@@ -161,7 +161,7 @@ ast_predict_type(DeeAstObject *__restrict self) {
     */
    bscope = self->ast_scope->s_base;
    if (bscope->bs_flags & CODE_FVARARGS &&
-       DeeBaseScope_IsArgVarArgs(bscope,SYMBOL_ARG_INDEX(self->ast_sym)))
+       DeeBaseScope_IsArgVarArgs(bscope,self->ast_sym->s_symid))
        return &DeeTuple_Type;
   } break;
   default: break;
@@ -773,12 +773,12 @@ ast_is_nothrow(DeeAstObject *__restrict self, bool result_used) {
     * accessing them can never cause any exceptions. */
    goto is_nothrow;
 
-  case SYM_CLASS_STACK:
+  case SYMBOL_TYPE_STACK:
    /* Stack-based symbols can never be unbound, so
     * accessing them is always a nothrow operation. */
    goto is_nothrow;
 
-  case SYM_CLASS_ARG:
+  case SYMBOL_TYPE_ARG:
    /* Accessing non-variadic & non-optional argument symbols is nothrow.
     * Only varargs themself can potentially cause exceptions
     * when accessed at runtime.
@@ -786,18 +786,18 @@ ast_is_nothrow(DeeAstObject *__restrict self, bool result_used) {
     * if it is, it gets turned into a local variable, which _can_
     * cause exceptions when accessed. */
    if (SYMBOL_NWRITE(sym) == 0 &&
-       DeeBaseScope_IsArgReqOrDefl(current_basescope,SYMBOL_ARG_INDEX(sym)))
+       DeeBaseScope_IsArgReqOrDefl(current_basescope,sym->s_symid))
        goto is_nothrow;
    break;
 
-  case SYM_CLASS_MODULE:
+  case SYMBOL_TYPE_MODULE:
    /* Imported modules are static and never cause exceptions. */
    goto is_nothrow;
 
-  case SYM_CLASS_EXCEPT:
-  case SYM_CLASS_THIS_MODULE:
-  case SYM_CLASS_THIS_FUNCTION:
-  case SYM_CLASS_THIS:
+  case SYMBOL_TYPE_EXCEPT:
+  case SYMBOL_TYPE_MYMOD:
+  case SYMBOL_TYPE_MYFUNC:
+  case SYMBOL_TYPE_THIS:
    /* These never cause exceptions, either. */
    goto is_nothrow;
 
@@ -1798,7 +1798,7 @@ again:
   sym = self->ast_sym;
   ASSERT(SYMBOL_NREAD(sym));
   /* Optimize constant, extern symbols. */
-  if (SYMBOL_TYPE(sym) == SYM_CLASS_EXTERN &&
+  if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_EXTERN &&
      (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FCONSTEXPR)) {
    /* The symbol is allowed to be expanded at compile-time. */
    DREF DeeObject *symval; int error;

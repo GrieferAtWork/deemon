@@ -1003,9 +1003,9 @@ INTDEF int32_t DCALL asm_newmodule(struct module_object *__restrict mod);
 INTDEF int32_t DCALL asm_gsymid(struct symbol *__restrict sym);  /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
 INTDEF int32_t DCALL asm_lsymid(struct symbol *__restrict sym);  /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
 INTDEF int32_t DCALL asm_ssymid(struct symbol *__restrict sym);  /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
-INTDEF int32_t DCALL asm_esymid(struct symbol *__restrict sym);  /* `SYM_CLASS_EXTERN' (Returns the module index in the current root-scope's import vector)
+INTDEF int32_t DCALL asm_esymid(struct symbol *__restrict sym);  /* `SYMBOL_TYPE_EXTERN' (Returns the module index in the current root-scope's import vector)
                                                                   *  NOTE: This function will dereference external aliases. */
-INTDEF int32_t DCALL asm_msymid(struct symbol *__restrict sym);  /* `SYM_CLASS_MODULE' */
+INTDEF int32_t DCALL asm_msymid(struct symbol *__restrict sym);  /* `SYMBOL_TYPE_MODULE' */
 INTDEF int32_t DCALL asm_rsymid(struct symbol *__restrict sym);  /* Reference a symbol for a lower base-scope. */
 
 /* These versions emit read-before-write warnings if the symbol hadn't been allocated, yet. */
@@ -1440,7 +1440,6 @@ INTDEF int DCALL asm_gpop_expr_enter(DeeAstObject *__restrict ast);
 INTDEF int DCALL asm_gpop_expr_leave(DeeAstObject *__restrict ast, unsigned int gflags);
 
 
-#ifdef NDEBUG
 INTDEF int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
 INTDEF int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve);
 #define ASM_PUSH_SCOPE(scope,err) \
@@ -1452,19 +1451,6 @@ do{ DeeScopeObject *_old_scope = current_assembler.a_scope; \
 #define ASM_POP_SCOPE(num_preserve,err) \
     ASM_BREAK_SCOPE(num_preserve,err); \
 }__WHILE0
-#else
-INTDEF int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
-INTDEF int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve, uint16_t old_stacksz);
-#define ASM_PUSH_SCOPE(scope,err) \
-do{ DeeScopeObject *_old_scope = current_assembler.a_scope; \
-    uint16_t _old_stack = current_assembler.a_stackcur; \
-    if (asm_enter_scope(scope)) goto err
-#define ASM_BREAK_SCOPE(num_preserve,err) \
-    if (asm_leave_scope(_old_scope,num_preserve,_old_stack)) goto err
-#define ASM_POP_SCOPE(num_preserve,err) \
-    ASM_BREAK_SCOPE(num_preserve,err); \
-}__WHILE0
-#endif
 
 
 /* Assembly code generation flags (gflags) */

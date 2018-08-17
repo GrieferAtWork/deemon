@@ -529,8 +529,9 @@ do_create_base_name:
   if unlikely(!dots) goto err_compiler;
   current_basescope->bs_argv    = (struct symbol **)Dee_Malloc(1*sizeof(struct symbol *));
   if unlikely(!current_basescope->bs_argv) goto err_compiler;
-  SYMBOL_TYPE(dots)             = SYM_CLASS_ARG;
-  SYMBOL_ARG_INDEX(dots)        = 0;
+  dots->s_type  = SYMBOL_TYPE_ARG;
+  dots->s_symid = 0;
+  dots->s_flag |= SYMBOL_FALLOC;
   current_basescope->bs_argc    = 1;
   current_basescope->bs_argv[0] = dots;
   current_basescope->bs_varargs = dots;

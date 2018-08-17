@@ -459,13 +459,13 @@ INTERN int (DCALL ast_genasm)(DeeAstObject *__restrict ast,
   if (!PUSH_RESULT) break;
   if (asm_putddi(ast)) goto err;
   sym = ast->ast_sym;
-  while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
       sym = SYMBOL_ALIAS(sym);
   if ((gflags & ASM_G_FLAZYBOOL) &&
-       SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
+       SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
       !SYMBOL_MUST_REFERENCE(sym) &&
       (current_basescope->bs_flags & CODE_FVARARGS) &&
-       DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) {
+       DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)) {
    /* Special case: If the caller accesses the varargs-symbol in a boolean-context,
     *               then we can simply check if the number of varargs is non-zero,
     *               emulating the behavior of tuple's `operator bool()'.
@@ -480,7 +480,7 @@ INTERN int (DCALL ast_genasm)(DeeAstObject *__restrict ast,
 
  case AST_UNBIND:
   if (asm_putddi(ast)) goto err;
-  while (SYMBOL_TYPE(ast->ast_unbind) == SYM_CLASS_ALIAS)
+  while (SYMBOL_TYPE(ast->ast_unbind) == SYMBOL_TYPE_ALIAS)
       ast->ast_unbind = SYMBOL_ALIAS(ast->ast_unbind);
   if (asm_gdel_symbol(ast->ast_unbind,ast)) goto err;
   if (ast->ast_unbind->s_type == SYMBOL_TYPE_LOCAL &&
@@ -1172,7 +1172,7 @@ do_multimask_rethrow:
      *      this optimization when user-assembly appears in exception
      *      handlers.
      *      Other than that: Check if the handler contains any use
-     *      of `SYM_CLASS_EXCEPT' symbols that don't originate from
+     *      of `SYMBOL_TYPE_EXCEPT' symbols that don't originate from
      *      other catch-handlers that may be reachable from inside.
      */
     is_empty_handler = !needs_cleanup && !PUSH_RESULT;
@@ -1991,12 +1991,12 @@ pop_unused:
    }
    if (sequence->ast_type == AST_SYM) {
     struct symbol *sym = sequence->ast_sym;
-    while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+    while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
         sym = SYMBOL_ALIAS(sym);
-    if (SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
+    if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
        !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
        (current_basescope->bs_flags & CODE_FVARARGS) &&
-        DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) {
+        DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)) {
      uint32_t va_index;
      if (!PUSH_RESULT) {
       if (ast_genasm(ast->ast_operator.ast_opb,ASM_G_FNORMAL))
@@ -2061,12 +2061,12 @@ pop_unused:
      struct symbol *sym = ast->ast_operator.ast_opa->ast_sym;
 check_getattr_sym:
      switch (SYMBOL_TYPE(sym)) {
-     case SYM_CLASS_ALIAS:
-      ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+     case SYMBOL_TYPE_ALIAS:
+      ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
       sym = SYMBOL_ALIAS(sym);
       goto check_getattr_sym;
 
-     case SYM_CLASS_THIS:
+     case SYMBOL_TYPE_THIS:
       attrid = asm_newconst((DeeObject *)name);
       if unlikely(attrid < 0) goto err;
       if (asm_putddi(ast)) goto err;
@@ -2074,7 +2074,7 @@ check_getattr_sym:
       goto pop_unused;
      {
       struct module_symbol *modsym; int32_t module_id;
-     case SYM_CLASS_MODULE: /* module.attr --> push extern ... */
+     case SYMBOL_TYPE_MODULE: /* module.attr --> push extern ... */
       modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),name);
       if (!modsym) break;
       if (!PUSH_RESULT) goto done;
@@ -2181,9 +2181,9 @@ check_getattr_sym:
     if unlikely(attrid < 0) goto err;
     if (ast->ast_operator.ast_opa->ast_type == AST_SYM) {
      struct symbol *sym = ast->ast_operator.ast_opa->ast_sym;
-     while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+     while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
          sym = SYMBOL_ALIAS(sym);
-     if (SYMBOL_TYPE(sym) == SYM_CLASS_THIS &&
+     if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
       if (asm_gdelattr_this_const(attrid)) goto err;
       goto done_push_none;
@@ -2353,9 +2353,9 @@ push_a_if_used:
   case OPERATOR_ENTER:
    enter_expr = ast->ast_operator.ast_opa;
    if (enter_expr->ast_type == AST_SYM) {
-    while (SYMBOL_TYPE(enter_expr->ast_sym) == SYM_CLASS_ALIAS)
+    while (SYMBOL_TYPE(enter_expr->ast_sym) == SYMBOL_TYPE_ALIAS)
         enter_expr->ast_sym = SYMBOL_ALIAS(enter_expr->ast_sym);
-    if (SYMBOL_TYPE(enter_expr->ast_sym) == SYM_CLASS_STACK &&
+    if (SYMBOL_TYPE(enter_expr->ast_sym) == SYMBOL_TYPE_STACK &&
        !SYMBOL_MUST_REFERENCE_TYPEMAY(enter_expr->ast_sym) &&
        (enter_expr->ast_sym->s_flag & SYMBOL_FALLOC) &&
         SYMBOL_STACK_OFFSET(enter_expr->ast_sym) == current_assembler.a_stackcur - 1) {
@@ -2389,12 +2389,12 @@ push_a_if_used:
    if ((current_basescope->bs_flags & CODE_FVARARGS) &&
         ast->ast_operator.ast_opa->ast_type == AST_SYM) {
     struct symbol *sym = ast->ast_operator.ast_opa->ast_sym;
-    while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+    while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
         sym = SYMBOL_ALIAS(sym);
-    if (SYMBOL_TYPE(sym) == SYM_CLASS_ARG &&
+    if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
        !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
         DeeBaseScope_IsArgVarArgs(current_basescope,
-                                  SYMBOL_ARG_INDEX(sym))) {
+                                  sym->s_symid)) {
      /* Special case: Get the size of varargs. */
      if (!PUSH_RESULT) goto done;
      if (asm_putddi(ast)) goto err;
@@ -2447,11 +2447,11 @@ push_a_if_used:
     sym     = ast->ast_operator.ast_opb->ast_operator.ast_opa->ast_sym;
     sizeast = ast->ast_operator.ast_opa;
    }
-   while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+   while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
        sym = SYMBOL_ALIAS(sym);
-   if (SYMBOL_TYPE(sym) != SYM_CLASS_ARG) break;
+   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) break;
    if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) break;
-   if (!DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym))) break;
+   if (!DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)) break;
    if (sizeast->ast_type != AST_CONSTEXPR) break;
    sizeval = sizeast->ast_constexpr;
    if (!DeeInt_Check(sizeval)) break;
@@ -2739,9 +2739,9 @@ operator_without_prefix:
    if (PUSH_RESULT &&
        ast->ast_action.ast_act0->ast_type == AST_SYM) {
     struct symbol *this_sym = ast->ast_action.ast_act0->ast_sym;
-    while (SYMBOL_TYPE(this_sym) == SYM_CLASS_ALIAS)
+    while (SYMBOL_TYPE(this_sym) == SYMBOL_TYPE_ALIAS)
         this_sym = SYMBOL_ALIAS(this_sym);
-    if (SYMBOL_TYPE(this_sym) == SYM_CLASS_THIS &&
+    if (SYMBOL_TYPE(this_sym) == SYMBOL_TYPE_THIS &&
         ast->ast_action.ast_act1->ast_type == AST_SYM) {
      /* Special optimizations for `this as ...' */
      int32_t symid;
@@ -2754,7 +2754,7 @@ cast_this_as_symbol:
       goto done;
      }
      switch (SYMBOL_TYPE(typesym)) {
-     case SYM_CLASS_ALIAS:
+     case SYMBOL_TYPE_ALIAS:
       ASSERT(typesym != SYMBOL_ALIAS(typesym));
       typesym = SYMBOL_ALIAS(typesym);
       goto cast_this_as_symbol;
@@ -2765,7 +2765,7 @@ cast_this_as_symbol:
       if (asm_gsuper_this_g(symid)) goto err;
       goto done;
 
-     case SYM_CLASS_EXTERN:
+     case SYMBOL_TYPE_EXTERN:
       if (SYMBOL_EXTERN_SYMBOL(typesym)->ss_flags & MODSYM_FPROPERTY)
           break;
       symid = asm_esymid(typesym);
@@ -3285,7 +3285,7 @@ emit_instruction:
    }
    if (base->ast_type == AST_SYM) {
     struct symbol *base_sym = base->ast_sym;
-    while (SYMBOL_TYPE(base_sym) == SYM_CLASS_ALIAS)
+    while (SYMBOL_TYPE(base_sym) == SYMBOL_TYPE_ALIAS)
         base_sym = SYMBOL_ALIAS(base_sym);
     if (base_sym->s_type == SYMBOL_TYPE_GLOBAL ||
        (base_sym->s_type == SYMBOL_TYPE_LOCAL &&
@@ -3320,9 +3320,9 @@ class_fallback:
        goto err;
    if (super_sym) {
     /* Write the class base to the super-symbol. */
-    while (SYMBOL_TYPE(super_sym) == SYM_CLASS_ALIAS)
+    while (SYMBOL_TYPE(super_sym) == SYMBOL_TYPE_ALIAS)
         super_sym = SYMBOL_ALIAS(super_sym);
-    if (super_sym->s_type == SYM_CLASS_STACK &&
+    if (super_sym->s_type == SYMBOL_TYPE_STACK &&
       !(super_sym->s_flag & SYMBOL_FALLOC) &&
        !SYMBOL_MUST_REFERENCE_TYPEMAY(super_sym)) {
      super_sym->s_symid = current_assembler.a_stackcur-1;

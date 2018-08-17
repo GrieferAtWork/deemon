@@ -167,7 +167,7 @@ do_realloc_catchv:
      ASSERT(!has_local_symbol(token.t_kwd));
      guard_symbol = new_local_symbol(token.t_kwd);
      if unlikely(!guard_symbol) goto err_try_flags;
-     SYMBOL_TYPE(guard_symbol) = SYM_CLASS_EXCEPT;
+     SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags;
     }
    } else if (TPP_ISKEYWORD(tok)) {
@@ -182,7 +182,7 @@ do_realloc_catchv:
      ASSERT(!has_local_symbol(token.t_kwd));
      guard_symbol = new_local_symbol(token.t_kwd);
      if unlikely(!guard_symbol) goto err_try;
-     SYMBOL_TYPE(guard_symbol) = SYM_CLASS_EXCEPT;
+     SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags; /* Yield the exception addressing keyword. */
      if unlikely(yield() < 0) goto err_try_flags; /* Yield `...'. */
     } else {
@@ -217,7 +217,7 @@ parse_catch_symbol:
      ASSERT(!has_local_symbol(token.t_kwd));
      guard_symbol = new_local_symbol(token.t_kwd);
      if unlikely(!guard_symbol) goto err_try_flags;
-     SYMBOL_TYPE(guard_symbol) = SYM_CLASS_EXCEPT;
+     SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags;
     }
    }
@@ -330,7 +330,7 @@ do_realloc_catchv:
      ASSERT(!has_local_symbol(token.t_kwd));
      guard_symbol = new_local_symbol(token.t_kwd);
      if unlikely(!guard_symbol) goto err_try_flags;
-     SYMBOL_TYPE(guard_symbol) = SYM_CLASS_EXCEPT;
+     SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags;
     }
    } else if (TPP_ISKEYWORD(tok)) {
@@ -345,7 +345,7 @@ do_realloc_catchv:
      ASSERT(!has_local_symbol(token.t_kwd));
      guard_symbol = new_local_symbol(token.t_kwd);
      if unlikely(!guard_symbol) goto err_try;
-     SYMBOL_TYPE(guard_symbol) = SYM_CLASS_EXCEPT;
+     SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags; /* Yield the exception addressing keyword. */
      if unlikely(yield() < 0) goto err_try_flags; /* Yield `...'. */
     } else {
@@ -380,7 +380,7 @@ parse_catch_symbol:
      ASSERT(!has_local_symbol(token.t_kwd));
      guard_symbol = new_local_symbol(token.t_kwd);
      if unlikely(!guard_symbol) goto err_try_flags;
-     SYMBOL_TYPE(guard_symbol) = SYM_CLASS_EXCEPT;
+     SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags;
     }
    }

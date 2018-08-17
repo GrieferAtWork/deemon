@@ -104,7 +104,7 @@ userassembler_fini(void) {
 
 PRIVATE bool FCALL symtab_rehash(void) {
  struct asm_sym **new_map,**biter,**bend;
- struct asm_sym *sym_iter,*sym_next,**bucket;
+ struct asm_sym *sym_iter,*s_next,**bucket;
  size_t old_size = symtab.st_alloc;
  size_t new_size = old_size;
  if (!new_size) new_size = 1;
@@ -127,11 +127,11 @@ rehash_realloc:
  for (; biter != bend; ++biter) {
   sym_iter = *biter;
   while (sym_iter) {
-   sym_next = sym_iter->as_uhnxt;
+   s_next = sym_iter->as_uhnxt;
    bucket = &new_map[sym_iter->as_uname->k_id % new_size];
    sym_iter->as_uhnxt = *bucket;
    *bucket = sym_iter;
-   sym_iter = sym_next;
+   sym_iter = s_next;
   }
  }
  Dee_Free(symtab.st_map);
@@ -820,7 +820,7 @@ PRIVATE int32_t FCALL do_parse_global_operands(void) {
    err_unknown_symbol(symbol_name);
    goto err;
   }
-  while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
       sym = SYMBOL_ALIAS(sym);
   if (sym->s_type != SYMBOL_TYPE_GLOBAL) {
    DeeError_Throwf(&DeeError_CompilerError,
@@ -866,7 +866,7 @@ PRIVATE int32_t FCALL do_parse_local_operands(void) {
    err_unknown_symbol(symbol_name);
    goto err;
   }
-  while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
       sym = SYMBOL_ALIAS(sym);
   if (sym->s_type != SYMBOL_TYPE_LOCAL ||
       SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
@@ -941,16 +941,16 @@ PRIVATE int32_t FCALL do_parse_arg_operands(void) {
    err_unknown_symbol(symbol_name);
    goto err;
   }
-  while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
       sym = SYMBOL_ALIAS(sym);
-  if (SYMBOL_TYPE(sym) != SYM_CLASS_ARG) {
+  if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) {
    DeeError_Throwf(&DeeError_CompilerError,
                    "Symbol `%s' is not an argument symbol",
                    symbol_name->k_name);
    goto err;
   }
-  if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,SYMBOL_ARG_INDEX(sym)) &&
-     (!DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym)) ||
+  if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,sym->s_symid) &&
+     (!DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid) ||
        DeeBaseScope_HasOptional(current_basescope))) {
    DeeError_Throwf(&DeeError_CompilerError,
                    "Argument `%s' cannot be addressed as a regular argument",
@@ -958,7 +958,7 @@ PRIVATE int32_t FCALL do_parse_arg_operands(void) {
    goto err;
   }
   /* Link the symbol's argument index. */
-  result = SYMBOL_ARG_INDEX(sym);
+  result = sym->s_symid;
  } else {
   result = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
  }
@@ -1021,7 +1021,7 @@ PRIVATE int32_t FCALL do_parse_static_operands(void) {
    err_unknown_symbol(symbol_name);
    goto err;
   }
-  while (SYMBOL_TYPE(sym) == SYM_CLASS_ALIAS)
+  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
       sym = SYMBOL_ALIAS(sym);
   if (sym->s_type != SYMBOL_TYPE_STATIC ||
       SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
@@ -1150,12 +1150,12 @@ check_sym_class:
   } else {
    switch (SYMBOL_TYPE(sym)) {
   
-   case SYM_CLASS_ALIAS:
-    ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+   case SYMBOL_TYPE_ALIAS:
+    ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
     sym = SYMBOL_ALIAS(sym);
     goto check_sym_class;
 
-   case SYM_CLASS_EXTERN:
+   case SYMBOL_TYPE_EXTERN:
     symid = asm_esymid(sym);
     if unlikely(symid < 0) goto err;
     result->io_class           = OPERAND_CLASS_EXTERN;
@@ -1182,7 +1182,7 @@ check_sym_class:
     result->io_symid = (uint16_t)symid;
     break;
 
-   case SYM_CLASS_STACK:
+   case SYMBOL_TYPE_STACK:
     result->io_intexpr.ie_rel = (uint16_t)-1;
     result->io_intexpr.ie_sym = NULL;
     result->io_intexpr.ie_val = SYMBOL_STACK_OFFSET(sym);
@@ -1195,35 +1195,35 @@ check_sym_class:
     result->io_class |= OPERAND_CLASS_FSTACKFLAG;
     break;
 
-   case SYM_CLASS_ARG:
-    if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,SYMBOL_ARG_INDEX(sym)) &&
-       (!DeeBaseScope_IsArgVarArgs(current_basescope,SYMBOL_ARG_INDEX(sym)) ||
+   case SYMBOL_TYPE_ARG:
+    if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,sym->s_symid) &&
+       (!DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid) ||
          DeeBaseScope_HasOptional(current_basescope)))
          goto unsupported_expression;
     result->io_class = OPERAND_CLASS_ARG;
-    result->io_symid = SYMBOL_ARG_INDEX(sym);
+    result->io_symid = sym->s_symid;
     break;
 
-   case SYM_CLASS_MODULE:
+   case SYMBOL_TYPE_MODULE:
     symid = asm_msymid(sym);
     if unlikely(symid < 0) goto err;
     result->io_class = OPERAND_CLASS_MODULE;
     result->io_symid = (uint16_t)symid;
     break;
 
-   case SYM_CLASS_EXCEPT:
+   case SYMBOL_TYPE_EXCEPT:
     result->io_class = OPERAND_CLASS_EXCEPT;
     break;
 
-   case SYM_CLASS_THIS_MODULE:
+   case SYMBOL_TYPE_MYMOD:
     result->io_class = OPERAND_CLASS_THIS_MODULE;
     break;
 
-   case SYM_CLASS_THIS_FUNCTION:
+   case SYMBOL_TYPE_MYFUNC:
     result->io_class = OPERAND_CLASS_THIS_FUNCTION;
     break;
 
-   case SYM_CLASS_THIS:
+   case SYMBOL_TYPE_THIS:
     result->io_class = OPERAND_CLASS_THIS;
     break;
 

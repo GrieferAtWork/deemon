@@ -589,7 +589,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
    sym = other_sym->s_name == &TPPKeyword_Empty
        ? new_unnamed_symbol() : new_local_symbol(other_sym->s_name);
    if unlikely(!sym) goto err;
-   SYMBOL_TYPE(sym) = SYM_CLASS_ARG;
+   SYMBOL_TYPE(sym) = SYMBOL_TYPE_ARG;
    ASSERT(other_sym->s_symid == (uint16_t)i);
    sym->s_flag  = SYMBOL_FALLOC;
    sym->s_symid = (uint16_t)i;
@@ -850,7 +850,7 @@ seach_single:
    /* Simple case: If the variable was found, return it. */
    if (result) {
     if (mode & LOOKUP_SYM_STACK) {
-     if (result->s_type != SYM_CLASS_STACK &&
+     if (result->s_type != SYMBOL_TYPE_STACK &&
          WARNAT(warn_loc,W_EXPECTED_STACK_VARIABLE,name))
          goto err;
     }
@@ -869,7 +869,7 @@ seach_single:
           current_scope == (DeeScopeObject *)current_rootscope)) {
       result->s_type = SYMBOL_TYPE_GLOBAL;
      } else if (mode & LOOKUP_SYM_STACK) {
-      result->s_type = SYM_CLASS_STACK;
+      result->s_type = SYMBOL_TYPE_STACK;
      } else if (mode & LOOKUP_SYM_STATIC) {
       result->s_type = SYMBOL_TYPE_STATIC;
      } else {

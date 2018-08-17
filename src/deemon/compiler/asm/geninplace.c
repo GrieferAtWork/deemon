@@ -172,9 +172,9 @@ ast_gen_setattr_inplace(DeeAstObject *__restrict base,
   int32_t cid = asm_newconst(name->ast_constexpr);
   if unlikely(cid < 0) goto err;
   if (base->ast_type == AST_SYM) {
-   while (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_ALIAS)
+   while (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_ALIAS)
        base->ast_sym = SYMBOL_ALIAS(base->ast_sym);
-   if (SYMBOL_TYPE(base->ast_sym) == SYM_CLASS_THIS &&
+   if (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_THIS &&
       !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)) {
     if (asm_ggetattr_this_const((uint16_t)cid)) goto err; /* this.name */
     if ((gflags & ASM_G_FPUSHRES) && is_post_operator) {

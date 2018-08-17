@@ -1115,18 +1115,18 @@ imod_init(InteractiveModule *__restrict self,
 #ifndef NDEBUG
   memset(dots,0xcc,sizeof(struct symbol));
 #endif
-  dots->sym_name = &TPPKeyword_Empty;
-  dots->sym_next = root_scope->rs_scope.bs_scope.s_del;
+  dots->s_name   = &TPPKeyword_Empty;
+  dots->s_next   = root_scope->rs_scope.bs_scope.s_del;
   root_scope->rs_scope.bs_scope.s_del = dots;
   dots->s_flag   = SYMBOL_FALLOC;
   dots->s_nread  = 0;
   dots->s_nwrite = 0;
   dots->s_nbound = 0;
   dots->s_scope  = &root_scope->rs_scope.bs_scope;
+  dots->s_type   = SYMBOL_TYPE_ARG;
+  dots->s_symid  = 0;
   root_scope->rs_scope.bs_argv = (struct symbol **)Dee_Malloc(1*sizeof(struct symbol *));
   if unlikely(!root_scope->rs_scope.bs_argv) { sym_free(dots); goto err_compiler; }
-  SYMBOL_TYPE(dots)               = SYM_CLASS_ARG;
-  SYMBOL_ARG_INDEX(dots)          = 0;
   root_scope->rs_scope.bs_argc    = 1;
   root_scope->rs_scope.bs_argv[0] = dots;
   root_scope->rs_scope.bs_varargs = dots;
@@ -1201,10 +1201,10 @@ err_compiler_basefile:
      COMPILER_END();
      goto err_basefile;
     }
-    sym->sym_name  = TPPLexer_LookupKeyword(DeeString_STR(modsym->ss_name),
+    sym->s_name  = TPPLexer_LookupKeyword(DeeString_STR(modsym->ss_name),
                                             DeeString_SIZE(modsym->ss_name),
                                             1);
-    if unlikely(!sym->sym_name) goto err_compiler_basefile;
+    if unlikely(!sym->s_name) goto err_compiler_basefile;
     sym->s_type         = SYMBOL_TYPE_GLOBAL;
     sym->s_flag         = SYMBOL_FALLOC;
     sym->s_symid        = modsym->ss_index;
@@ -1221,8 +1221,8 @@ err_compiler_basefile:
     }
     /* Insert the new symbol into the scope lookup map. */
     ASSERT(current_scope->s_mapa != 0);
-    bucket = &current_scope->s_map[sym->sym_name->k_id % current_scope->s_mapa];
-    sym->sym_next = *bucket;
+    bucket = &current_scope->s_map[sym->s_name->k_id % current_scope->s_mapa];
+    sym->s_next = *bucket;
     *bucket = sym;
    }
    COMPILER_END();

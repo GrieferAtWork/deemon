@@ -569,8 +569,9 @@ PRIVATE int DCALL check_thiscall(struct symbol *__restrict sym) {
   * assumes that a this-argument is present when an instruction using it
   * is encountered, while the safe-mode interpreter throws an error if not.
   * But since we're trying to generate code for fast-mode, we need to check this now. */
- if (current_basescope->bs_flags&CODE_FTHISCALL)
-     return 0;
+ if ((current_basescope->bs_flags & CODE_FTHISCALL) &&
+     (current_basescope->bs_class == sym->s_field.f_class))
+      return 0;
  return ASM_ERR(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,
                 SYMBOL_FIELD_MEMBER(sym)->cme_name,
                 current_basescope->bs_name ?
@@ -591,7 +592,7 @@ check_ct_class:
  }
  switch (SYMBOL_TYPE(class_type)) {
  
- case SYM_CLASS_ALIAS:
+ case SYMBOL_TYPE_ALIAS:
   ASSERT(class_type != SYMBOL_ALIAS(class_type));
   class_type = SYMBOL_ALIAS(class_type);
   goto check_ct_class;
@@ -601,7 +602,7 @@ check_ct_class:
   if unlikely(symid < 0) goto err;
   return asm_gsuper_this_g((uint16_t)symid);
 
- case SYM_CLASS_EXTERN:
+ case SYMBOL_TYPE_EXTERN:
   ASSERT(SYMBOL_EXTERN_SYMBOL(class_type));
   if (SYMBOL_EXTERN_SYMBOL(class_type)->ss_flags & MODSYM_FPROPERTY)
       break;
@@ -632,12 +633,12 @@ check_function_class:
  if (!SYMBOL_MUST_REFERENCE(function)) {
   switch (SYMBOL_TYPE(function)) {
 
-  case SYM_CLASS_ALIAS:
+  case SYMBOL_TYPE_ALIAS:
    ASSERT(function != SYMBOL_ALIAS(function));
    function = SYMBOL_ALIAS(function);
    goto check_function_class;
 
-  case SYM_CLASS_EXTERN:
+  case SYMBOL_TYPE_EXTERN:
    if (SYMBOL_EXTERN_SYMBOL(function)->ss_flags & MODSYM_FEXTERN) break;
    if unlikely((symid = asm_esymid(function)) < 0) goto err;
    ASSERT(SYMBOL_EXTERN_SYMBOL(function));
@@ -683,12 +684,12 @@ check_sym_class:
  case SYMBOL_TYPE_NONE:
   return asm_gpush_none();
 
- case SYM_CLASS_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+ case SYMBOL_TYPE_ALIAS:
+  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
- case SYM_CLASS_EXTERN:
+ case SYMBOL_TYPE_EXTERN:
   symid = asm_esymid(sym);
   if unlikely(symid < 0) goto err;
   if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) {
@@ -717,11 +718,12 @@ check_sym_class:
 
  {
   uint16_t offset,absolute_stack_addr;
- case SYM_CLASS_STACK:
+ case SYMBOL_TYPE_STACK:
   if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
-   ASM_ERR(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,
-           SYMBOL_NAME(sym));
-   goto err;
+   if (ASM_WARN(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,
+                SYMBOL_NAME(sym)))
+       goto err;
+   return asm_gpush_none();
   }
   absolute_stack_addr = SYMBOL_STACK_OFFSET(sym);
   if (current_assembler.a_stackcur <= absolute_stack_addr) {
@@ -742,8 +744,8 @@ check_sym_class:
   return offset == 0 ? asm_gdup() : asm_gdup_n(offset-1);
  } break;
 
- case SYM_CLASS_ARG:
-  return asm_gpush_varg(SYMBOL_ARG_INDEX(sym));
+ case SYMBOL_TYPE_ARG:
+  return asm_gpush_varg(sym->s_symid);
 
  {
   struct symbol *class_sym;
@@ -760,7 +762,7 @@ check_sym_class:
    /* Generate special assembly for accessing different kinds of members. */
    if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
     /* Regular, old member variable. (this one has its own instruction) */
-    while (SYMBOL_TYPE(class_sym) == SYM_CLASS_ALIAS)
+    while (SYMBOL_TYPE(class_sym) == SYMBOL_TYPE_ALIAS)
         class_sym = SYMBOL_ALIAS(class_sym);
     if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
@@ -779,32 +781,32 @@ check_sym_class:
   return asm_ggetattr_const((uint16_t)symid);
  } break;
 
- case SYM_CLASS_MODULE:
+ case SYMBOL_TYPE_MODULE:
   symid = asm_msymid(sym);
   if unlikely(symid < 0) goto err;
   return asm_gpush_module((uint16_t)symid);
 
- case SYM_CLASS_PROPERTY:
-  if (!SYMBOL_GETSET_GETTER(sym)) {
+ case SYMBOL_TYPE_GETSET:
+  if (!sym->s_getset.gs_get) {
    if (ASM_WARN(W_ASM_PROPERTY_VARIABLE_NOT_READABLE,
                 SYMBOL_NAME(sym)))
        goto err;
    return asm_gpush_none();
   }
   /* Generate a zero-argument call to the getter symbol. */
-  return asm_gcall_symbol(SYMBOL_GETSET_GETTER(sym),0,warn_ast);
+  return asm_gcall_symbol(sym->s_getset.gs_get,0,warn_ast);
 
   /* Misc. symbol classes. */
- case SYM_CLASS_EXCEPT:
+ case SYMBOL_TYPE_EXCEPT:
   return asm_gpush_except();
- case SYM_CLASS_THIS_MODULE:
+ case SYMBOL_TYPE_MYMOD:
   return asm_gpush_this_module();
- case SYM_CLASS_THIS_FUNCTION:
+ case SYMBOL_TYPE_MYFUNC:
   return asm_gpush_this_function();
- case SYM_CLASS_THIS:
+ case SYMBOL_TYPE_THIS:
   return asm_gpush_this();
 
- case SYM_CLASS_AMBIGUOUS:
+ case SYMBOL_TYPE_AMBIG:
   if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
                SYMBOL_NAME(sym)))
       goto err;
@@ -826,8 +828,8 @@ check_sym_class:
      return false;
  switch (SYMBOL_TYPE(sym)) {
 
- case SYM_CLASS_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+ case SYMBOL_TYPE_ALIAS:
+  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
@@ -836,12 +838,12 @@ check_sym_class:
  case SYMBOL_TYPE_STATIC:
   return true;
 
- case SYM_CLASS_EXTERN:
+ case SYMBOL_TYPE_EXTERN:
   if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & (MODSYM_FPROPERTY|MODSYM_FREADONLY))
       break; /* Cannot write-prefix properties, or read-only symbols. */
   return true;
 
- case SYM_CLASS_STACK:
+ case SYMBOL_TYPE_STACK:
   /* Only allocated stack symbols can be used in prefix expressions. */
   return (sym->s_flag & SYMBOL_FALLOC) != 0;
 
@@ -858,8 +860,8 @@ check_sym_class:
      return false;
  switch (SYMBOL_TYPE(sym)) {
 
- case SYM_CLASS_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+ case SYMBOL_TYPE_ALIAS:
+  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
@@ -868,12 +870,12 @@ check_sym_class:
  case SYMBOL_TYPE_STATIC:
   return true;
 
- case SYM_CLASS_EXTERN:
+ case SYMBOL_TYPE_EXTERN:
   if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
       break; /* Cannot prefix properties. */
   return true;
 
- case SYM_CLASS_STACK:
+ case SYMBOL_TYPE_STACK:
   /* Only allocated stack symbols can be used in prefix expressions. */
   return (sym->s_flag & SYMBOL_FALLOC) != 0;
 
@@ -892,12 +894,12 @@ check_sym_class:
  ASSERT(!SYMBOL_MUST_REFERENCE(sym));
  switch (SYMBOL_TYPE(sym)) {
 
- case SYM_CLASS_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+ case SYMBOL_TYPE_ALIAS:
+  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
- case SYM_CLASS_EXTERN:
+ case SYMBOL_TYPE_EXTERN:
   ASSERTF(!(SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY),
           "Cannot prefix property symbols");
   symid = asm_esymid(sym);
@@ -920,7 +922,7 @@ check_sym_class:
   if unlikely(symid < 0) goto err;
   return asm_pstatic((uint16_t)symid);
 
- case SYM_CLASS_STACK:
+ case SYMBOL_TYPE_STACK:
   ASSERT(sym->s_flag & SYMBOL_FALLOC);
   if (current_assembler.a_stackcur <= SYMBOL_STACK_OFFSET(sym)) {
    /* This can happen in code like this:
@@ -939,7 +941,7 @@ check_sym_class:
 
  default:
   ASM_ERR(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,
-          sym->sym_name->k_name,
+          sym->s_name->k_name,
           SYMCLASS_NAME(SYMBOL_TYPE(sym)));
   goto err;
  }
@@ -957,24 +959,24 @@ check_sym_class:
      goto fallback;
  switch (SYMBOL_TYPE(sym)) {
 
- case SYM_CLASS_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+ case SYMBOL_TYPE_ALIAS:
+  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
  {
   uint16_t opt_index;
- case SYM_CLASS_ARG:
-  if (!DeeBaseScope_IsArgOptional(current_basescope,SYMBOL_ARG_INDEX(sym)))
+ case SYMBOL_TYPE_ARG:
+  if (!DeeBaseScope_IsArgOptional(current_basescope,sym->s_symid))
        goto fallback;
   /* Optional arguments can be unbound */
-  opt_index  = SYMBOL_ARG_INDEX(sym);
+  opt_index  = sym->s_symid;
   opt_index -= current_basescope->bs_argc_max;
   /* The argument is bound when there is a sufficient number of variable arguments present. */
   return asm_gcmp_gr_varargs_sz(opt_index);
  } break;
 
- case SYM_CLASS_EXTERN:
+ case SYMBOL_TYPE_EXTERN:
   if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
       goto fallback;
   symid = asm_esymid(sym);
@@ -1011,7 +1013,7 @@ check_sym_class:
    if unlikely(check_thiscall(sym)) goto err;
    /* Generate special assembly for accessing different kinds of members. */
    if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
-    while (SYMBOL_TYPE(class_sym) == SYM_CLASS_ALIAS)
+    while (SYMBOL_TYPE(class_sym) == SYMBOL_TYPE_ALIAS)
         class_sym = SYMBOL_ALIAS(class_sym);
     if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
@@ -1032,7 +1034,7 @@ check_sym_class:
   return asm_gboundattr();
  } break;
 
- case SYM_CLASS_AMBIGUOUS:
+ case SYMBOL_TYPE_AMBIG:
   if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
                SYMBOL_NAME(sym)))
       goto err;
@@ -1055,8 +1057,8 @@ check_sym_class:
  if (!SYMBOL_MUST_REFERENCE(sym)) {
   switch (SYMBOL_TYPE(sym)) {
 
-  case SYM_CLASS_ALIAS:
-   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+  case SYMBOL_TYPE_ALIAS:
+   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
    sym = SYMBOL_ALIAS(sym);
    goto check_sym_class;
 
@@ -1077,7 +1079,7 @@ check_sym_class:
   {
    struct module_symbol *modsym;
    int32_t mid;
-  case SYM_CLASS_EXTERN:
+  case SYMBOL_TYPE_EXTERN:
    modsym = SYMBOL_EXTERN_SYMBOL(sym);
    mid = asm_esymid(sym);
    if unlikely(mid < 0) goto err;
@@ -1102,7 +1104,7 @@ check_sym_class:
    }
   } break;
 
-  case SYM_CLASS_STACK:
+  case SYMBOL_TYPE_STACK:
    /* If `bound()' is used on the symbol, warn about the fact that
     * doing this will not actually unbind the symbol, but only delete
     * the value that was being stored. */
@@ -1141,7 +1143,7 @@ check_sym_class:
     /* Generate special assembly for accessing different kinds of members. */
     if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
      /* Regular, old member variable. (this one has its own instruction) */
-     while (SYMBOL_TYPE(class_sym) == SYM_CLASS_ALIAS)
+     while (SYMBOL_TYPE(class_sym) == SYMBOL_TYPE_ALIAS)
          class_sym = SYMBOL_ALIAS(class_sym);
      if (SYMBOL_MAY_REFERENCE(class_sym)) {
       symid = asm_rsymid(class_sym);
@@ -1160,7 +1162,7 @@ check_sym_class:
    return asm_gdelattr_const((uint16_t)symid);
   } break;
 
-  case SYM_CLASS_PROPERTY:
+  case SYMBOL_TYPE_GETSET:
    if (!sym->s_getset.gs_del)
         return 0; /* TODO: Warning */
    /* Generate a zero-argument call to the delete symbol. */
@@ -1168,7 +1170,7 @@ check_sym_class:
        goto err;
    return asm_gpop();
 
-  case SYM_CLASS_AMBIGUOUS:
+  case SYMBOL_TYPE_AMBIG:
    if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
                 SYMBOL_NAME(sym)))
        goto err;
@@ -1192,12 +1194,12 @@ check_sym_class:
  if (!SYMBOL_MUST_REFERENCE(sym)) {
   switch (SYMBOL_TYPE(sym)) {
 
-  case SYM_CLASS_ALIAS:
-   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYM_CLASS_ALIAS);
+  case SYMBOL_TYPE_ALIAS:
+   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
    sym = SYMBOL_ALIAS(sym);
    goto check_sym_class;
 
-  case SYM_CLASS_EXTERN:
+  case SYMBOL_TYPE_EXTERN:
    ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
    if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags&MODSYM_FREADONLY) {
     /* ERROR: Can't modify read-only external symbol. */
@@ -1232,7 +1234,7 @@ check_sym_class:
    if unlikely(symid < 0) goto err;
    return asm_gpop_static((uint16_t)symid);
 
-  case SYM_CLASS_STACK:
+  case SYMBOL_TYPE_STACK:
    ASSERT(current_assembler.a_stackcur);
    if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
     /* This is where the magic of lazy stack initialization happens! */
@@ -1281,10 +1283,17 @@ check_sym_class:
        */
       if (ASM_WARN(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE,SYMBOL_NAME(sym)))
           goto err;
+#ifndef NDEBUG
+      my_scope = current_assembler.a_scope;
+      do {
+       ++my_scope->s_old_stack;
+       my_scope = my_scope->s_prev;
+      } while (my_scope != SYMBOL_SCOPE(sym));
+#endif
      }
      sym->s_flag |= SYMBOL_FALLOC;
      sym->s_symid = current_assembler.a_stackcur-1;
-     if (asm_putddi_sbind(SYMBOL_STACK_OFFSET(sym),sym->sym_name))
+     if (asm_putddi_sbind(SYMBOL_STACK_OFFSET(sym),sym->s_name))
          goto err;
      return 0; /* Leave without popping anything! */
     }
@@ -1309,7 +1318,7 @@ check_sym_class:
     /* Generate special assembly for accessing different kinds of members. */
     if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
      /* Regular, old member variable. (this one has its own instruction) */
-     while (SYMBOL_TYPE(class_sym) == SYM_CLASS_ALIAS)
+     while (SYMBOL_TYPE(class_sym) == SYMBOL_TYPE_ALIAS)
          class_sym = SYMBOL_ALIAS(class_sym);
      if (SYMBOL_MAY_REFERENCE(class_sym)) {
       symid = asm_rsymid(class_sym);
@@ -1330,20 +1339,20 @@ check_sym_class:
    return asm_gsetattr_const((uint16_t)symid);
   } break;
 
-  case SYM_CLASS_PROPERTY:
-   if (!SYMBOL_GETSET_SETTER(sym)) {
+  case SYMBOL_TYPE_GETSET:
+   if (!sym->s_getset.gs_set) {
     if (ASM_WARN(W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE,
                  SYMBOL_NAME(sym)))
         goto err;
    } else {
     /* Generate a one-argument call to the setter symbol. */
-    if (asm_gcall_symbol(SYMBOL_GETSET_SETTER(sym),1,warn_ast))
+    if (asm_gcall_symbol(sym->s_getset.gs_set,1,warn_ast))
         goto err;
    }
    /* Pop the return value. */
    return asm_gpop();
 
-  case SYM_CLASS_AMBIGUOUS:
+  case SYMBOL_TYPE_AMBIG:
    if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
                 SYMBOL_NAME(sym)))
        goto err;
@@ -1403,8 +1412,7 @@ err:
 }
 
 
-INTERN int DCALL
-asm_gcmp_eq_varargs_sz(uint16_t sz) {
+INTERN int (DCALL asm_gcmp_eq_varargs_sz)(uint16_t sz) {
  DREF DeeObject *temp; int32_t cid;
  if (sz <= UINT8_MAX)
      return _asm_gcmp_eq_varargs_sz((uint8_t)sz);
@@ -1419,8 +1427,7 @@ asm_gcmp_eq_varargs_sz(uint16_t sz) {
 err:
  return -1;
 }
-INTERN int DCALL
-asm_gcmp_gr_varargs_sz(uint16_t sz) {
+INTERN int (DCALL asm_gcmp_gr_varargs_sz)(uint16_t sz) {
  DREF DeeObject *temp; int32_t cid;
  if (sz <= UINT8_MAX)
      return _asm_gcmp_gr_varargs_sz((uint8_t)sz);
@@ -1439,10 +1446,10 @@ err:
 
 
 /* Store the value of the virtual argument `argid' in `dst' */
-INTERN int DCALL
-asm_gmov_varg(struct symbol *__restrict dst, uint16_t argid,
-              DeeAstObject *__restrict warn_ast,
-              bool ignore_unbound) {
+INTERN int
+(DCALL asm_gmov_varg)(struct symbol *__restrict dst, uint16_t argid,
+                      DeeAstObject *__restrict warn_ast,
+                      bool ignore_unbound) {
  if (ignore_unbound &&
      DeeBaseScope_IsArgOptional(current_basescope,argid)) {
   /* Check if the argument is bound, and don't do the mov if it isn't. */
