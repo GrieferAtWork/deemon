@@ -368,8 +368,7 @@ asm_gunpack_expr(DeeAstObject *__restrict src,
  }
  if (src->ast_type == AST_SYM) {
   struct symbol *sym = src->ast_sym;
-  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-      sym = SYMBOL_ALIAS(sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
   if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
      (current_basescope->bs_flags & CODE_FVARARGS) &&
      !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
@@ -415,7 +414,7 @@ check_src_sym_class:
  switch (SYMBOL_TYPE(src_sym)) {
 
  case SYMBOL_TYPE_ALIAS:
-  ASSERT(src_sym != SYMBOL_ALIAS(src_sym));
+  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(src_sym)) != SYMBOL_TYPE_ALIAS);
   src_sym = SYMBOL_ALIAS(src_sym);
   goto check_src_sym_class;
 
@@ -623,7 +622,7 @@ check_dst_sym_class:
   switch (SYMBOL_TYPE(dst_sym)) {
 
   case SYMBOL_TYPE_ALIAS:
-   ASSERT(dst_sym != SYMBOL_ALIAS(dst_sym));
+   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(dst_sym)) != SYMBOL_TYPE_ALIAS);
    dst_sym = SYMBOL_ALIAS(dst_sym);
    goto check_dst_sym_class;
 
@@ -717,7 +716,7 @@ check_dst_sym_class_hybrid:
     switch (SYMBOL_TYPE(dst_sym)) {
 
     case SYMBOL_TYPE_ALIAS:
-     ASSERT(dst_sym != SYMBOL_ALIAS(dst_sym));
+     ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(dst_sym)) != SYMBOL_TYPE_ALIAS);
      dst_sym = SYMBOL_ALIAS(dst_sym);
      goto check_dst_sym_class_hybrid;
 
@@ -951,8 +950,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
     DeeAstObject *base = ast->ast_operator.ast_opa;
     if unlikely(cid < 0) goto err;
     if (base->ast_type == AST_SYM) {
-     while (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_ALIAS)
-         base->ast_sym = SYMBOL_ALIAS(base->ast_sym);
+     SYMBOL_INPLACE_UNWIND_ALIAS(base->ast_sym);
      if (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)) {
       if (asm_putddi(ast)) goto err;

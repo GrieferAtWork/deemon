@@ -70,8 +70,7 @@ asm_gcall_expr(DeeAstObject *__restrict func,
    if (arg->ast_type != AST_SYM)
        goto not_argument_forward;
    arg_sym = arg->ast_sym;
-   while (SYMBOL_TYPE(arg_sym) == SYMBOL_TYPE_ALIAS)
-       arg_sym = SYMBOL_ALIAS(arg_sym);
+   SYMBOL_INPLACE_UNWIND_ALIAS(arg_sym);
    if (SYMBOL_TYPE(arg_sym) != SYMBOL_TYPE_ARG)
        goto not_argument_forward;
    if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
@@ -84,8 +83,7 @@ asm_gcall_expr(DeeAstObject *__restrict func,
    if (arg->ast_type != AST_SYM)
        goto not_argument_forward;
    arg_sym = arg->ast_sym;
-   while (SYMBOL_TYPE(arg_sym) == SYMBOL_TYPE_ALIAS)
-       arg_sym = SYMBOL_ALIAS(arg_sym);
+   SYMBOL_INPLACE_UNWIND_ALIAS(arg_sym);
    if (SYMBOL_TYPE(arg_sym) != SYMBOL_TYPE_ARG)
        goto not_argument_forward;
    if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
@@ -110,8 +108,7 @@ asm_gcall_expr(DeeAstObject *__restrict func,
    if (arg->ast_type != AST_SYM)
        goto not_argument_forward;
    arg_sym = arg->ast_sym;
-   while (SYMBOL_TYPE(arg_sym) == SYMBOL_TYPE_ALIAS)
-       arg_sym = SYMBOL_ALIAS(arg_sym);
+   SYMBOL_INPLACE_UNWIND_ALIAS(arg_sym);
    if (SYMBOL_TYPE(arg_sym) != SYMBOL_TYPE_ARG)
        goto not_argument_forward;
    if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
@@ -166,8 +163,7 @@ not_argument_forward:
     * always make use of constant expression tuples... */
    if (func->ast_type == AST_SYM) {
     funsym = func->ast_sym;
-    while (SYMBOL_TYPE(funsym) == SYMBOL_TYPE_ALIAS)
-        funsym = SYMBOL_ALIAS(funsym);
+    SYMBOL_INPLACE_UNWIND_ALIAS(funsym);
     if ((SYMBOL_TYPE(funsym) == SYMBOL_TYPE_EXTERN &&
        !(SYMBOL_EXTERN_SYMBOL(funsym)->ss_flags & MODSYM_FPROPERTY)) ||
         (funsym->s_type == SYMBOL_TYPE_GLOBAL ||
@@ -285,8 +281,7 @@ check_function_symbol_class:
     int32_t attrid = asm_newconst(function_attr->ast_constexpr);
     if unlikely(attrid < 0) goto err;
     if (function_self->ast_type == AST_SYM) {
-     while (SYMBOL_TYPE(function_self->ast_sym) == SYMBOL_TYPE_ALIAS)
-         function_self->ast_sym = SYMBOL_ALIAS(function_self->ast_sym);
+     SYMBOL_INPLACE_UNWIND_ALIAS(function_self->ast_sym);
      if (SYMBOL_TYPE(function_self->ast_sym) == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_TYPEMAY(function_self->ast_sym)) {
       if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
@@ -434,8 +429,7 @@ check_function_symbol_class:
 
  if (func->ast_type == AST_SYM) {
   funsym = func->ast_sym;
-  while (SYMBOL_TYPE(funsym) == SYMBOL_TYPE_ALIAS)
-      funsym = SYMBOL_ALIAS(funsym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(funsym);
   if ((SYMBOL_TYPE(funsym) == SYMBOL_TYPE_EXTERN &&
      !(SYMBOL_EXTERN_SYMBOL(funsym)->ss_flags & MODSYM_FPROPERTY)) ||
       (funsym->s_type == SYMBOL_TYPE_GLOBAL ||

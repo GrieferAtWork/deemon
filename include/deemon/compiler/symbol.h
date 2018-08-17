@@ -92,7 +92,7 @@ struct symbol {
 #define SYMBOL_TYPE_GETSET 0x0005  /* A get/set property symbol. */
 #define SYMBOL_TYPE_IFIELD 0x0006  /* An instance member symbol. */
 #define SYMBOL_TYPE_CFIELD 0x0007  /* An class member symbol. */
-#define SYMBOL_TYPE_ALIAS  0x0008  /* An alias for a different symbol. -- TODO: Go though all places where this is unwound, and replace while-loops with if-checks */
+#define SYMBOL_TYPE_ALIAS  0x0008  /* An alias for a different symbol. */
 #define SYMBOL_TYPE_ARG    0x0009  /* An argument passed to a function. */
 #define SYMBOL_TYPE_LOCAL  0x000a  /* A local symbol. */
 #define SYMBOL_TYPE_STACK  0x000b  /* A stack symbol. */

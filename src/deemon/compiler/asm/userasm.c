@@ -1155,8 +1155,7 @@ unknown_encoding:
 abs_stack_any:
   if ((mode == OPTION_MODE_INOUT || mode == OPTION_MODE_INPUT) &&
        ast->ast_type == AST_SYM) {
-   while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+   SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
    if (ast->ast_sym->s_type == SYMBOL_TYPE_STACK &&
       !SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym) &&
       (ast->ast_sym->s_flag & SYMBOL_FALLOC)) {
@@ -1191,8 +1190,7 @@ abs_stack_any:
 
  case ASM_OP_EXCEPT:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYMBOL_TYPE_EXCEPT) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
   result = &str_except;
@@ -1203,8 +1201,7 @@ abs_stack_any:
   int32_t mid;
  case ASM_OP_MODULE:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYMBOL_TYPE_MODULE) goto next_option;
   mid = asm_msymid(ast->ast_sym);
   if unlikely(mid < 0) goto err;
@@ -1213,8 +1210,7 @@ abs_stack_any:
 
  case ASM_OP_THIS:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYMBOL_TYPE_THIS) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
   result = &str_this;
@@ -1223,8 +1219,7 @@ abs_stack_any:
 
  case ASM_OP_THIS_MODULE:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYMBOL_TYPE_MYMOD) goto next_option;
   result = &str_this_module;
   Dee_Incref(result);
@@ -1232,8 +1227,7 @@ abs_stack_any:
 
  case ASM_OP_THIS_FUNCTION:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYMBOL_TYPE_MYFUNC) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
   result = &str_this_function;
@@ -1244,8 +1238,7 @@ abs_stack_any:
   int32_t rid;
  case ASM_OP_REF:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (!SYMBOL_MUST_REFERENCE(ast->ast_sym)) goto next_option;
   rid = asm_rsymid(ast->ast_sym);
   if unlikely(rid < 0) goto err;
@@ -1256,8 +1249,7 @@ abs_stack_any:
   int32_t rid;
  case ASM_OP_REF_GEN:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   /* Check for may-reference, thus allowing anything that ~could~ be referenced. */
   if (!SYMBOL_MAY_REFERENCE(ast->ast_sym)) goto next_option;
   rid = asm_rsymid(ast->ast_sym);
@@ -1267,8 +1259,7 @@ abs_stack_any:
 
  case ASM_OP_ARG:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYMBOL_TYPE_ARG) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
   if (DeeBaseScope_IsArgOptional(current_basescope,ast->ast_sym->s_symid) ||
@@ -1292,8 +1283,7 @@ abs_stack_any:
   int32_t sid;
  case ASM_OP_STATIC:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (ast->ast_sym->s_type != SYMBOL_TYPE_STATIC) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
   if (mode == OPTION_MODE_INPUT)
@@ -1307,8 +1297,7 @@ abs_stack_any:
   int32_t eid;
  case ASM_OP_EXTERN:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (SYMBOL_TYPE(ast->ast_sym) != SYMBOL_TYPE_EXTERN) goto next_option;
   if (SYMBOL_EXTERN_SYMBOL(ast->ast_sym)->ss_flags & MODSYM_FPROPERTY) goto next_option;
   eid = asm_esymid(ast->ast_sym);
@@ -1321,8 +1310,7 @@ abs_stack_any:
   int32_t gid;
  case ASM_OP_GLOBAL:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (ast->ast_sym->s_type != SYMBOL_TYPE_EXTERN) goto next_option;
   if (mode == OPTION_MODE_INPUT)
        gid = asm_gsymid_for_read(ast->ast_sym,ast);
@@ -1335,8 +1323,7 @@ abs_stack_any:
   int32_t lid;
  case ASM_OP_LOCAL:
   if (ast->ast_type != AST_SYM) goto next_option;
-  while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-      ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
   if (ast->ast_sym->s_type != SYMBOL_TYPE_LOCAL) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym)) goto next_option;
 write_regular_local:
@@ -1351,8 +1338,7 @@ write_regular_local:
   int32_t lid;
  case ASM_OP_LOCAL_GEN:
   if (ast->ast_type == AST_SYM) {
-   while (SYMBOL_TYPE(ast->ast_sym) == SYMBOL_TYPE_ALIAS)
-       ast->ast_sym = SYMBOL_ALIAS(ast->ast_sym);
+   SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
    if (ast->ast_sym->s_type == SYMBOL_TYPE_LOCAL &&
       !SYMBOL_MUST_REFERENCE_TYPEMAY(ast->ast_sym))
        goto write_regular_local;

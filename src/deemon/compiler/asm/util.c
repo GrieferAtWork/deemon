@@ -593,7 +593,7 @@ check_ct_class:
  switch (SYMBOL_TYPE(class_type)) {
  
  case SYMBOL_TYPE_ALIAS:
-  ASSERT(class_type != SYMBOL_ALIAS(class_type));
+  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(class_type)) != SYMBOL_TYPE_ALIAS);
   class_type = SYMBOL_ALIAS(class_type);
   goto check_ct_class;
 
@@ -634,7 +634,7 @@ check_function_class:
   switch (SYMBOL_TYPE(function)) {
 
   case SYMBOL_TYPE_ALIAS:
-   ASSERT(function != SYMBOL_ALIAS(function));
+   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(function)) != SYMBOL_TYPE_ALIAS);
    function = SYMBOL_ALIAS(function);
    goto check_function_class;
 
@@ -762,8 +762,7 @@ check_sym_class:
    /* Generate special assembly for accessing different kinds of members. */
    if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
     /* Regular, old member variable. (this one has its own instruction) */
-    while (SYMBOL_TYPE(class_sym) == SYMBOL_TYPE_ALIAS)
-        class_sym = SYMBOL_ALIAS(class_sym);
+    SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
     if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
      if unlikely(symid < 0) goto err;
@@ -1013,8 +1012,7 @@ check_sym_class:
    if unlikely(check_thiscall(sym)) goto err;
    /* Generate special assembly for accessing different kinds of members. */
    if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
-    while (SYMBOL_TYPE(class_sym) == SYMBOL_TYPE_ALIAS)
-        class_sym = SYMBOL_ALIAS(class_sym);
+    SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
     if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
      if unlikely(symid < 0) goto err;
@@ -1143,8 +1141,7 @@ check_sym_class:
     /* Generate special assembly for accessing different kinds of members. */
     if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
      /* Regular, old member variable. (this one has its own instruction) */
-     while (SYMBOL_TYPE(class_sym) == SYMBOL_TYPE_ALIAS)
-         class_sym = SYMBOL_ALIAS(class_sym);
+     SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
      if (SYMBOL_MAY_REFERENCE(class_sym)) {
       symid = asm_rsymid(class_sym);
       if unlikely(symid < 0) goto err;
@@ -1318,8 +1315,7 @@ check_sym_class:
     /* Generate special assembly for accessing different kinds of members. */
     if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
      /* Regular, old member variable. (this one has its own instruction) */
-     while (SYMBOL_TYPE(class_sym) == SYMBOL_TYPE_ALIAS)
-         class_sym = SYMBOL_ALIAS(class_sym);
+     SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
      if (SYMBOL_MAY_REFERENCE(class_sym)) {
       symid = asm_rsymid(class_sym);
       if unlikely(symid < 0) goto err;

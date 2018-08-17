@@ -2768,8 +2768,8 @@ restart:
   struct symbol **iter,**end,*sym;
   end = (iter = current_basescope->bs_argv)+current_basescope->bs_argc;
   for (; iter != end; ++iter) {
-   while ((sym = *iter,SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS))
-       *iter = SYMBOL_ALIAS(sym);
+   sym = *iter;
+   SYMBOL_INPLACE_UNWIND_ALIAS(sym);
    if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) {
     uint16_t argid;
 do_savearg:

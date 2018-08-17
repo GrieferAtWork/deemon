@@ -459,8 +459,7 @@ INTERN int (DCALL ast_genasm)(DeeAstObject *__restrict ast,
   if (!PUSH_RESULT) break;
   if (asm_putddi(ast)) goto err;
   sym = ast->ast_sym;
-  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-      sym = SYMBOL_ALIAS(sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
   if ((gflags & ASM_G_FLAZYBOOL) &&
        SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
       !SYMBOL_MUST_REFERENCE(sym) &&
@@ -480,8 +479,7 @@ INTERN int (DCALL ast_genasm)(DeeAstObject *__restrict ast,
 
  case AST_UNBIND:
   if (asm_putddi(ast)) goto err;
-  while (SYMBOL_TYPE(ast->ast_unbind) == SYMBOL_TYPE_ALIAS)
-      ast->ast_unbind = SYMBOL_ALIAS(ast->ast_unbind);
+  SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_unbind);
   if (asm_gdel_symbol(ast->ast_unbind,ast)) goto err;
   if (ast->ast_unbind->s_type == SYMBOL_TYPE_LOCAL &&
       ast->ast_unbind->s_scope->s_base == current_basescope) {
@@ -1991,8 +1989,7 @@ pop_unused:
    }
    if (sequence->ast_type == AST_SYM) {
     struct symbol *sym = sequence->ast_sym;
-    while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-        sym = SYMBOL_ALIAS(sym);
+    SYMBOL_INPLACE_UNWIND_ALIAS(sym);
     if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
        !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
        (current_basescope->bs_flags & CODE_FVARARGS) &&
@@ -2181,8 +2178,7 @@ check_getattr_sym:
     if unlikely(attrid < 0) goto err;
     if (ast->ast_operator.ast_opa->ast_type == AST_SYM) {
      struct symbol *sym = ast->ast_operator.ast_opa->ast_sym;
-     while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-         sym = SYMBOL_ALIAS(sym);
+     SYMBOL_INPLACE_UNWIND_ALIAS(sym);
      if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
       if (asm_gdelattr_this_const(attrid)) goto err;
@@ -2353,8 +2349,7 @@ push_a_if_used:
   case OPERATOR_ENTER:
    enter_expr = ast->ast_operator.ast_opa;
    if (enter_expr->ast_type == AST_SYM) {
-    while (SYMBOL_TYPE(enter_expr->ast_sym) == SYMBOL_TYPE_ALIAS)
-        enter_expr->ast_sym = SYMBOL_ALIAS(enter_expr->ast_sym);
+    SYMBOL_INPLACE_UNWIND_ALIAS(enter_expr->ast_sym);
     if (SYMBOL_TYPE(enter_expr->ast_sym) == SYMBOL_TYPE_STACK &&
        !SYMBOL_MUST_REFERENCE_TYPEMAY(enter_expr->ast_sym) &&
        (enter_expr->ast_sym->s_flag & SYMBOL_FALLOC) &&
@@ -2389,8 +2384,7 @@ push_a_if_used:
    if ((current_basescope->bs_flags & CODE_FVARARGS) &&
         ast->ast_operator.ast_opa->ast_type == AST_SYM) {
     struct symbol *sym = ast->ast_operator.ast_opa->ast_sym;
-    while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-        sym = SYMBOL_ALIAS(sym);
+    SYMBOL_INPLACE_UNWIND_ALIAS(sym);
     if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
        !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
         DeeBaseScope_IsArgVarArgs(current_basescope,
@@ -2447,8 +2441,7 @@ push_a_if_used:
     sym     = ast->ast_operator.ast_opb->ast_operator.ast_opa->ast_sym;
     sizeast = ast->ast_operator.ast_opa;
    }
-   while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-       sym = SYMBOL_ALIAS(sym);
+   SYMBOL_INPLACE_UNWIND_ALIAS(sym);
    if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) break;
    if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) break;
    if (!DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)) break;
@@ -2739,8 +2732,7 @@ operator_without_prefix:
    if (PUSH_RESULT &&
        ast->ast_action.ast_act0->ast_type == AST_SYM) {
     struct symbol *this_sym = ast->ast_action.ast_act0->ast_sym;
-    while (SYMBOL_TYPE(this_sym) == SYMBOL_TYPE_ALIAS)
-        this_sym = SYMBOL_ALIAS(this_sym);
+    SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
     if (SYMBOL_TYPE(this_sym) == SYMBOL_TYPE_THIS &&
         ast->ast_action.ast_act1->ast_type == AST_SYM) {
      /* Special optimizations for `this as ...' */
@@ -2755,7 +2747,7 @@ cast_this_as_symbol:
      }
      switch (SYMBOL_TYPE(typesym)) {
      case SYMBOL_TYPE_ALIAS:
-      ASSERT(typesym != SYMBOL_ALIAS(typesym));
+      ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(typesym)) != SYMBOL_TYPE_ALIAS);
       typesym = SYMBOL_ALIAS(typesym);
       goto cast_this_as_symbol;
 
@@ -3211,8 +3203,7 @@ emit_instruction:
   if (ast->ast_class.ast_cmem) genflags |= CLASSGEN_FHASCMEM,++opcount;
   super_sym = ast->ast_class.ast_supersym;
   if (super_sym) {
-   if (super_sym->s_type == SYMBOL_TYPE_ALIAS)
-       super_sym = super_sym->s_alias;
+   SYMBOL_INPLACE_UNWIND_ALIAS(super_sym);
    if (!super_sym->s_nread)
         super_sym = NULL;
   }
@@ -3285,8 +3276,7 @@ emit_instruction:
    }
    if (base->ast_type == AST_SYM) {
     struct symbol *base_sym = base->ast_sym;
-    while (SYMBOL_TYPE(base_sym) == SYMBOL_TYPE_ALIAS)
-        base_sym = SYMBOL_ALIAS(base_sym);
+    SYMBOL_INPLACE_UNWIND_ALIAS(base_sym);
     if (base_sym->s_type == SYMBOL_TYPE_GLOBAL ||
        (base_sym->s_type == SYMBOL_TYPE_LOCAL &&
        !SYMBOL_MUST_REFERENCE_TYPEMAY(base_sym))) {
@@ -3320,8 +3310,7 @@ class_fallback:
        goto err;
    if (super_sym) {
     /* Write the class base to the super-symbol. */
-    while (SYMBOL_TYPE(super_sym) == SYMBOL_TYPE_ALIAS)
-        super_sym = SYMBOL_ALIAS(super_sym);
+    SYMBOL_INPLACE_UNWIND_ALIAS(super_sym);
     if (super_sym->s_type == SYMBOL_TYPE_STACK &&
       !(super_sym->s_flag & SYMBOL_FALLOC) &&
        !SYMBOL_MUST_REFERENCE_TYPEMAY(super_sym)) {

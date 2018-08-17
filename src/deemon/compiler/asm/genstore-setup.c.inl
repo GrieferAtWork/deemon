@@ -150,8 +150,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(DeeAstObject *__restrict ast, unsigned in
     DeeAstObject *base = ast->ast_operator.ast_opa;
     if unlikely(cid < 0) goto err;
     if (base->ast_type == AST_SYM) {
-     while (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_ALIAS)
-         base->ast_sym = SYMBOL_ALIAS(base->ast_sym);
+     SYMBOL_INPLACE_UNWIND_ALIAS(base->ast_sym);
      if (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)) {
 #ifdef LEAVE

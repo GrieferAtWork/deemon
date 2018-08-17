@@ -820,8 +820,7 @@ PRIVATE int32_t FCALL do_parse_global_operands(void) {
    err_unknown_symbol(symbol_name);
    goto err;
   }
-  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-      sym = SYMBOL_ALIAS(sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
   if (sym->s_type != SYMBOL_TYPE_GLOBAL) {
    DeeError_Throwf(&DeeError_CompilerError,
                    "Symbol `%s' is not a global symbol",
@@ -866,8 +865,7 @@ PRIVATE int32_t FCALL do_parse_local_operands(void) {
    err_unknown_symbol(symbol_name);
    goto err;
   }
-  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-      sym = SYMBOL_ALIAS(sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
   if (sym->s_type != SYMBOL_TYPE_LOCAL ||
       SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
    DeeError_Throwf(&DeeError_CompilerError,
@@ -941,8 +939,7 @@ PRIVATE int32_t FCALL do_parse_arg_operands(void) {
    err_unknown_symbol(symbol_name);
    goto err;
   }
-  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-      sym = SYMBOL_ALIAS(sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) {
    DeeError_Throwf(&DeeError_CompilerError,
                    "Symbol `%s' is not an argument symbol",
@@ -1021,8 +1018,7 @@ PRIVATE int32_t FCALL do_parse_static_operands(void) {
    err_unknown_symbol(symbol_name);
    goto err;
   }
-  while (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ALIAS)
-      sym = SYMBOL_ALIAS(sym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
   if (sym->s_type != SYMBOL_TYPE_STATIC ||
       SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
    DeeError_Throwf(&DeeError_CompilerError,
