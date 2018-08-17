@@ -122,13 +122,13 @@ struct symbol {
                                     *  - SYMBOL_TYPE_STACK:  Absolute stack position of the symbol.
                                     *  - SYMBOL_TYPE_STATIC: SID of the symbol. */
     uint16_t             s_refid;  /* [valid_if(SYMBOL_FALLOCREF)]
-                                    * The effective reference ID of the symbol within the current assembler,
+                                    * The effective reference ID (RID) of the symbol within the current assembler,
                                     * when the symbol is declared in a different base-scope, and must be
                                     * used in order to construct an inner function making use of it. */
     struct ast_loc       s_decl;   /* [const] The source location first referencing where the symbol. */
-    uint32_t             s_nread;  /* [valid_if(!= SYMBOL_TYPE_ALIAS)] Number of times the symbol is read */
-    uint32_t             s_nwrite; /* [valid_if(!= SYMBOL_TYPE_ALIAS)] Number of times the symbol is written */
-    uint32_t             s_nbound; /* [valid_if(!= SYMBOL_TYPE_ALIAS)] Number of times the symbol is checking for being bound */
+    uint32_t             s_nread;  /* [valid_if(s_type != SYMBOL_TYPE_ALIAS)] Number of times the symbol is read */
+    uint32_t             s_nwrite; /* [valid_if(s_type != SYMBOL_TYPE_ALIAS)] Number of times the symbol is written */
+    uint32_t             s_nbound; /* [valid_if(s_type != SYMBOL_TYPE_ALIAS)] Number of times the symbol is checking for being bound */
     union {                        /* Type-specific symbol data. */
         struct {
             DREF struct module_object *e_module; /* [1..1] The module from which the symbol is imported. */
@@ -208,25 +208,30 @@ struct symbol {
 /* Check if a given symbol `x' can be addressed as a reference */
 #define SYMBOL_MAY_REFERENCE(x)    ((x)->s_scope->s_base != current_basescope)
 
-#define SYMBOL_ALIAS(x)            ((x)->s_alias)           /* TODO: Remove me */
-#define SYMBOL_SCOPE(x)            ((x)->s_scope)           /* TODO: Remove me */
-#define SYMBOL_TYPE(x)             ((x)->s_type)            /* TODO: Remove me */
-#define SYMBOL_FIELD_CLASS(x)      ((x)->s_field.f_class)   /* TODO: Remove me */
-#define SYMBOL_FIELD_MEMBER(x)     ((x)->s_field.f_member)  /* TODO: Remove me */
-#define SYMBOL_EXTERN_MODULE(x)    ((x)->s_extern.e_module) /* TODO: Remove me */
-#define SYMBOL_EXTERN_SYMBOL(x)    ((x)->s_extern.e_symbol) /* TODO: Remove me */
-#define SYMBOL_MODULE_MODULE(x)    ((x)->s_module)          /* TODO: Remove me */
-#define SYMBOL_STACK_OFFSET(x)     ((x)->s_symid)           /* TODO: Remove me */
+#define SYMBOL_ALIAS(x)            ((x)->s_alias)           /* XXX: Remove me? */
+#define SYMBOL_SCOPE(x)            ((x)->s_scope)           /* XXX: Remove me? */
+#define SYMBOL_TYPE(x)             ((x)->s_type)            /* XXX: Remove me? */
+#define SYMBOL_FIELD_CLASS(x)      ((x)->s_field.f_class)   /* XXX: Remove me? */
+#define SYMBOL_FIELD_MEMBER(x)     ((x)->s_field.f_member)  /* XXX: Remove me? */
+#define SYMBOL_EXTERN_MODULE(x)    ((x)->s_extern.e_module) /* XXX: Remove me? */
+#define SYMBOL_EXTERN_SYMBOL(x)    ((x)->s_extern.e_symbol) /* XXX: Remove me? */
+#define SYMBOL_MODULE_MODULE(x)    ((x)->s_module)          /* XXX: Remove me? */
+#define SYMBOL_STACK_OFFSET(x)     ((x)->s_symid)           /* XXX: Remove me? */
 
 
 
 /* Finalize the given symbol. */
-INTERN void DCALL symbol_fini(struct symbol *__restrict self);
+INTDEF void DCALL symbol_fini(struct symbol *__restrict self);
+
+/* Add a 3rd, 4th, etc. ambiguity location to a given symbol.
+ * When `loc' is NULL, the current location is used. */
+INTDEF void DCALL symbol_addambig(struct symbol *__restrict self,
+                                  struct ast_loc *loc);
 
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF char const symclass_names[0x1f + 1][8];
-#define SYMCLASS_NAME(cls) symclass_names[(cls)&0x1f]
+#define SYMBOL_TYPE_NAME(cls) symclass_names[(cls)&0x1f]
 #endif
 
 
@@ -451,13 +456,13 @@ INTDEF int DCALL link_forward_symbols(void);
  *       only one of which will actually be addressable.
  * NOTE: The caller is also required to initialize the returned
  *       symbol, who's class is undefined up until that point. */
-INTDEF struct symbol *DCALL new_local_symbol(struct TPPKeyword *__restrict name);
+INTDEF struct symbol *DCALL new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc);
 INTDEF struct symbol *DCALL get_local_symbol(struct TPPKeyword *__restrict name);
 #define has_local_symbol(name) (get_local_symbol(name) != NULL)
 /* Delete a given local symbol, making it anonymous. */
 INTDEF void DCALL del_local_symbol(struct symbol *__restrict sym);
 /* Create a new unnamed (aka. deleted) symbol. */
-INTDEF struct symbol *DCALL new_unnamed_symbol(void);
+INTDEF struct symbol *DCALL new_unnamed_symbol();
 
 
 /* Get symbols describing the current class or its super type.

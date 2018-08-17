@@ -165,7 +165,7 @@ do_realloc_catchv:
      if unlikely(scope_push() < 0) goto err_try_flags;
      is_new_scope = true;
      ASSERT(!has_local_symbol(token.t_kwd));
-     guard_symbol = new_local_symbol(token.t_kwd);
+     guard_symbol = new_local_symbol(token.t_kwd,NULL);
      if unlikely(!guard_symbol) goto err_try_flags;
      SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags;
@@ -180,7 +180,7 @@ do_realloc_catchv:
      if unlikely(scope_push() < 0) goto err_try_flags;
      is_new_scope = true;
      ASSERT(!has_local_symbol(token.t_kwd));
-     guard_symbol = new_local_symbol(token.t_kwd);
+     guard_symbol = new_local_symbol(token.t_kwd,NULL);
      if unlikely(!guard_symbol) goto err_try;
      SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags; /* Yield the exception addressing keyword. */
@@ -215,7 +215,7 @@ parse_catch_symbol:
      ASSERT(!is_new_scope);
      is_new_scope = true;
      ASSERT(!has_local_symbol(token.t_kwd));
-     guard_symbol = new_local_symbol(token.t_kwd);
+     guard_symbol = new_local_symbol(token.t_kwd,NULL);
      if unlikely(!guard_symbol) goto err_try_flags;
      SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags;
@@ -328,7 +328,7 @@ do_realloc_catchv:
      if unlikely(scope_push() < 0) goto err_try_flags;
      is_new_scope = true;
      ASSERT(!has_local_symbol(token.t_kwd));
-     guard_symbol = new_local_symbol(token.t_kwd);
+     guard_symbol = new_local_symbol(token.t_kwd,NULL);
      if unlikely(!guard_symbol) goto err_try_flags;
      SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags;
@@ -343,7 +343,7 @@ do_realloc_catchv:
      if unlikely(scope_push() < 0) goto err_try_flags;
      is_new_scope = true;
      ASSERT(!has_local_symbol(token.t_kwd));
-     guard_symbol = new_local_symbol(token.t_kwd);
+     guard_symbol = new_local_symbol(token.t_kwd,NULL);
      if unlikely(!guard_symbol) goto err_try;
      SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags; /* Yield the exception addressing keyword. */
@@ -378,7 +378,7 @@ parse_catch_symbol:
      ASSERT(!is_new_scope);
      is_new_scope = true;
      ASSERT(!has_local_symbol(token.t_kwd));
-     guard_symbol = new_local_symbol(token.t_kwd);
+     guard_symbol = new_local_symbol(token.t_kwd,NULL);
      if unlikely(!guard_symbol) goto err_try_flags;
      SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
      if unlikely(yield() < 0) goto err_try_flags;

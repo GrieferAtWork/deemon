@@ -89,6 +89,25 @@ INTERN char const symclass_names[0x1f + 1][8] = {
 };
 
 
+INTERN void DCALL
+symbol_addambig(struct symbol *__restrict self,
+                struct ast_loc *loc) {
+ struct ast_loc *new_vec;
+ ASSERT(self);
+ ASSERT(self->s_type == SYMBOL_TYPE_AMBIG);
+ new_vec = (struct ast_loc *)Dee_TryRealloc(self->s_ambig.a_declv,
+                                           (self->s_ambig.a_declc + 1) *
+                                            sizeof(struct ast_loc));
+ if unlikely(!new_vec) return;
+ self->s_ambig.a_declv = new_vec;
+ new_vec += self->s_ambig.a_declc++;
+ if (loc) {
+  memcpy(new_vec,loc,sizeof(struct ast_loc));
+ } else {
+  loc_here(new_vec);
+ }
+}
+
 INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
  switch (self->s_type) {
  case SYMBOL_TYPE_EXTERN:
@@ -587,7 +606,8 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
    other_sym = other->bs_argv[i];
    ASSERT(other_sym);
    sym = other_sym->s_name == &TPPKeyword_Empty
-       ? new_unnamed_symbol() : new_local_symbol(other_sym->s_name);
+       ? new_unnamed_symbol()
+       : new_local_symbol(other_sym->s_name,&other_sym->s_decl);
    if unlikely(!sym) goto err;
    SYMBOL_TYPE(sym) = SYMBOL_TYPE_ARG;
    ASSERT(other_sym->s_symid == (uint16_t)i);
@@ -1004,7 +1024,7 @@ lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name) {
 
 
 INTERN struct symbol *DCALL
-new_local_symbol(struct TPPKeyword *__restrict name) {
+new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
  struct symbol *result,**bucket;
  ASSERT(name);
  if unlikely((result = sym_alloc()) == NULL) return NULL;
@@ -1024,7 +1044,11 @@ new_local_symbol(struct TPPKeyword *__restrict name) {
  result->s_nwrite  = 0;
  result->s_nbound  = 0;
  result->s_scope   = current_scope;
- loc_here(&result->s_decl); /* TODO: Let the caller pass this one. */
+ if (loc) {
+  memcpy(&result->s_decl,loc,sizeof(struct ast_loc));
+ } else {
+  loc_here(&result->s_decl);
+ }
  return result;
 err_r:
  --current_scope->s_mapc;
@@ -1032,21 +1056,21 @@ err_r:
  return NULL;
 }
 INTERN struct symbol *DCALL
-new_unnamed_symbol(void) {
+new_unnamed_symbol() {
  struct symbol *result;
  if unlikely((result = sym_alloc()) == NULL) return NULL;
 #ifndef NDEBUG
  memset(result,0xcc,sizeof(struct symbol));
 #endif
- result->s_name = &TPPKeyword_Empty;
- result->s_next = current_scope->s_del;
- current_scope->s_del = result;
- result->s_flag    = SYMBOL_FNORMAL;
- result->s_nread   = 0;
- result->s_nwrite  = 0;
- result->s_nbound  = 0;
- result->s_scope   = current_scope;
- loc_here(&result->s_decl); /* TODO: Let the caller pass this one. */
+ result->s_name        = &TPPKeyword_Empty;
+ result->s_next        = current_scope->s_del;
+ current_scope->s_del  = result;
+ result->s_flag        = SYMBOL_FNORMAL;
+ result->s_nread       = 0;
+ result->s_nwrite      = 0;
+ result->s_nbound      = 0;
+ result->s_scope       = current_scope;
+ result->s_decl.l_file = NULL;
  return result;
 }
 INTERN struct symbol *DCALL

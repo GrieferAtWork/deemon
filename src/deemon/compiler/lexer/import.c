@@ -258,17 +258,17 @@ ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
            DeeString_STR(module->mo_name)))
       goto err_module;
   if (module == current_rootscope->rs_module) {
-   SYMBOL_TYPE(extern_symbol) = SYMBOL_TYPE_MYMOD;
+   extern_symbol->s_type = SYMBOL_TYPE_MYMOD;
    Dee_Decref(module);
   } else {
-   SYMBOL_TYPE(extern_symbol)             = SYMBOL_TYPE_MODULE;
-   SYMBOL_MODULE_MODULE(extern_symbol) = module; /* Inherit reference. */
+   extern_symbol->s_type = SYMBOL_TYPE_MODULE;
+   extern_symbol->s_module = module; /* Inherit reference. */
   }
  } else {
   /* Setup this symbol as an external reference. */
-  SYMBOL_TYPE(extern_symbol)             = SYMBOL_TYPE_EXTERN;
-  SYMBOL_EXTERN_MODULE(extern_symbol) = module; /* Inherit reference. */
-  SYMBOL_EXTERN_SYMBOL(extern_symbol) = modsym;
+  extern_symbol->s_type            = SYMBOL_TYPE_EXTERN;
+  extern_symbol->s_extern.e_module = module; /* Inherit reference. */
+  extern_symbol->s_extern.e_symbol = modsym;
  }
  /* Return the whole thing as a symbol-ast. */
  return ast_sym(extern_symbol);
@@ -531,21 +531,36 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
     * >> import * from b;
     * >> import foo from b;  // Explicitly link `foo' to be import from the desired module.
     */
-   if (SYMBOL_IS_WEAK(sym) &&
-      (SYMBOL_EXTERN_MODULE(sym) != module ||
-       SYMBOL_EXTERN_SYMBOL(sym) != iter)) {
-    SYMBOL_CLEAR_WEAK(sym);
-    SYMBOL_TYPE(sym) = SYMBOL_TYPE_AMBIG;
+   if (!SYMBOL_IS_WEAK(sym))
+        continue; /* Not a weakly declared symbol. */
+   if (sym->s_type == SYMBOL_TYPE_EXTERN &&
+       sym->s_extern.e_module == module &&
+       sym->s_extern.e_symbol == iter)
+       continue; /* Same declaration. */
+   if (sym->s_type != SYMBOL_TYPE_AMBIG) {
+    /* Turn the symbol into one that is ambiguous. */
+    symbol_fini(sym);
+    sym->s_type = SYMBOL_TYPE_AMBIG;
+    if (loc) {
+     memcpy(&sym->s_ambig.a_decl2,loc,
+             sizeof(struct ast_loc));
+    } else {
+     loc_here(&sym->s_ambig.a_decl2);
+    }
+    sym->s_ambig.a_declc = 0;
+    sym->s_ambig.a_declv = NULL;
+   } else {
+    /* Add another ambiguous symbol declaration location. */
+    symbol_addambig(sym,loc);
    }
-   continue; /* Skip this one... */
   } else {
-   sym = new_local_symbol(name);
+   sym = new_local_symbol(name,loc);
    if unlikely(!sym) goto err;
    /* Define this symbol as an import from this module. */
    sym->s_type  = SYMBOL_TYPE_EXTERN;
-   sym->s_flag |= SYMBOL_FWEAK; /* Symbols import by `*' are defined weakly. */
-   SYMBOL_EXTERN_MODULE(sym) = module;
-   SYMBOL_EXTERN_SYMBOL(sym) = iter;
+   sym->s_flag |= SYMBOL_FWEAK; /* Symbols imported by `*' are defined weakly. */
+   sym->s_extern.e_module = module;
+   sym->s_extern.e_symbol = iter;
    Dee_Incref(module);
   }
  }
@@ -603,7 +618,8 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
        goto err;
   }
  } else {
-  import_symbol = new_local_symbol(item->ii_symbol_name);
+  import_symbol = new_local_symbol(item->ii_symbol_name,
+                                  &item->ii_import_loc);
   if unlikely(!import_symbol) goto err;
 init_import_symbol:
   import_symbol->s_type = SYMBOL_TYPE_EXTERN;
@@ -653,7 +669,8 @@ ast_import_module(struct import_item *__restrict item) {
   }
   Dee_Decref(module);
  } else {
-  import_symbol = new_local_symbol(item->ii_symbol_name);
+  import_symbol = new_local_symbol(item->ii_symbol_name,
+                                  &item->ii_import_loc);
   if unlikely(!import_symbol) goto err_module;
 init_import_symbol:
   if (module == current_rootscope->rs_module) {

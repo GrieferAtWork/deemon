@@ -24,6 +24,7 @@
 #include <deemon/object.h>
 #include <deemon/thread.h>
 #include <deemon/format.h>
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/compiler/ast.h>
@@ -46,6 +47,28 @@ INTDEF char const *TPPCALL find_most_likely_warning(char const *__restrict name)
 INTDEF char const *TPPCALL find_most_likely_extension(char const *__restrict name);
 
 PRIVATE dssize_t DCALL
+print_symbol_declaration(struct unicode_printer *__restrict printer,
+                         struct symbol *__restrict sym) {
+ dssize_t temp,result;
+ if (!sym->s_decl.l_file) return 0;
+ result = unicode_printer_printf(printer,
+                                 TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
+                                 ? "\n%s(%d,%d) : "
+                                 : "\n%s:%d:%d: ",
+                                 TPPFile_Filename(sym->s_decl.l_file,NULL),
+                                 sym->s_decl.l_line + 1,
+                                 sym->s_decl.l_col + 1);
+ if unlikely(result < 0) goto err;
+ temp = unicode_printer_printf(printer,"See reference to declaration of `%s'",SYMBOL_NAME(sym));
+ if unlikely(temp < 0) goto err_temp;
+ return result + temp;
+err_temp:
+ return temp;
+err:
+ return result;
+}
+
+PRIVATE dssize_t DCALL
 print_warning_message(struct unicode_printer *__restrict _printer,
                       int _wnum, va_list _args) {
  dssize_t _warnf_temp,_warnf_result = 0;
@@ -53,6 +76,10 @@ print_warning_message(struct unicode_printer *__restrict _printer,
 #ifndef __INTELLISENSE__
 #define WARNF(...)  \
  do{ if ((_warnf_temp = unicode_printer_printf(_printer,__VA_ARGS__)) < 0) goto _warnf_err; \
+     _warnf_result += _warnf_temp; \
+ }__WHILE0
+#define PRINT_SYMBOL_DECLARATION(sym)  \
+ do{ if ((_warnf_temp = print_symbol_declaration(_printer,sym)) < 0) goto _warnf_err; \
      _warnf_result += _warnf_temp; \
  }__WHILE0
 #define MARK(x) "`" x "'"
@@ -89,6 +116,7 @@ print_warning_message(struct unicode_printer *__restrict _printer,
 #undef Q
 #undef MARK
 #undef WARNF
+#undef PRINT_SYMBOL_DECLARATION
 #endif
 _warnf_end:
  if (_temp_string)

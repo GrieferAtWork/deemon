@@ -285,7 +285,7 @@ next_expr:
     if unlikely(!function_symbol->s_global.g_doc) goto err;
    }
   }
-  current = ast_setddi(ast_parse_function(function_name,&need_semi,false),&loc);
+  current = ast_parse_function(function_name,&need_semi,false,&loc);
   if unlikely(!current) goto err;
   clear_current_tags();
   if (function_symbol) {
@@ -339,7 +339,7 @@ next_expr:
         goto err_current;
    } else {
     /* Create a new symbol for the initialized variable. */
-    var_symbol = new_local_symbol(token.t_kwd);
+    var_symbol = new_local_symbol(token.t_kwd,NULL);
     if unlikely(!var_symbol) goto err_current;
     if (lookup_mode & LOOKUP_SYM_STATIC) {
      var_symbol->s_type = SYMBOL_TYPE_STATIC;

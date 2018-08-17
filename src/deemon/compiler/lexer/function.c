@@ -49,7 +49,7 @@ create_anon_argument:
        goto err;
   }
   /* Create a new symbol for the argument. */
-  result = new_local_symbol(argument_name);
+  result = new_local_symbol(argument_name,NULL);
  }
  return result;
 err:
@@ -273,20 +273,22 @@ err:
 
 INTERN DREF DeeAstObject *DCALL
 ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
-                   bool allow_missing_params) {
+                   bool allow_missing_params,
+                   struct ast_loc *name_loc) {
  DREF DeeAstObject *result;
  if unlikely(basescope_push()) return NULL;
  current_basescope->bs_flags |= current_tags.at_code_flags;
  current_basescope->bs_class  = current_tags.at_class;
  current_basescope->bs_super  = current_tags.at_super;
- result = ast_parse_function_noscope(name,pneed_semi,allow_missing_params);
+ result = ast_parse_function_noscope(name,pneed_semi,allow_missing_params,name_loc);
  basescope_pop();
  return result;
 }
 INTERN DREF DeeAstObject *DCALL
 ast_parse_function_noscope(struct TPPKeyword *name,
                            bool *pneed_semi,
-                           bool allow_missing_params) {
+                           bool allow_missing_params,
+                           struct ast_loc *name_loc) {
  uint32_t old_flags;
  DREF DeeAstObject *result,*code;
  /* Add information from tags. */
@@ -295,7 +297,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   /* Save the function name in the base scope. */
   current_basescope->bs_name = name;
   /* Create a new symbol to allow for function-self-referencing. */
-  funcself_symbol = new_local_symbol(name);
+  funcself_symbol = new_local_symbol(name,name_loc);
   if unlikely(!funcself_symbol) goto err;
   SYMBOL_TYPE(funcself_symbol) = SYMBOL_TYPE_MYFUNC;
  }
@@ -351,7 +353,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
  ASSERT(current_basescope->bs_scope.s_prev);
  result->ast_scope = current_basescope->bs_scope.s_prev;
  Dee_Incref(result->ast_scope);
- return result;
+ return ast_setddi(result,name_loc);
 err_flags:
  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;

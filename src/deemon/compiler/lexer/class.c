@@ -284,7 +284,7 @@ class_maker_push_methscope(struct class_maker *__restrict self,
  current_basescope->bs_class  = self->cm_classsym;
  current_basescope->bs_super  = self->cm_supersym;
  /* Define a symbol `this' that can be used to access the this-argument. */
- this_sym = new_local_symbol(TPPLexer_LookupKeyword("this",4,0));
+ this_sym = new_local_symbol(TPPLexer_LookupKeyword("this",4,0),NULL);
  if unlikely(!this_sym) goto err;
  SYMBOL_TYPE(this_sym) = SYMBOL_TYPE_THIS; /* As simple as that! */
  if (pthis_sym) *pthis_sym = this_sym;
@@ -338,7 +338,8 @@ PRIVATE struct symbol *DCALL
 class_maker_addmember(struct class_maker *__restrict self,
                       struct TPPKeyword *__restrict name,
                       uint16_t table_id, uint16_t flags,
-                      size_t **__restrict ppusage_counter) {
+                      size_t **__restrict ppusage_counter,
+                      struct ast_loc *loc) {
  struct symbol *result;
  DREF DeeStringObject *name_str;
  struct table_descriptor *desc;
@@ -371,8 +372,8 @@ class_maker_addmember(struct class_maker *__restrict self,
   size_t addr = **ppusage_counter;
   /* -2 because 2 == 3-1 and 3 is the max number of slots required for a property */
   if unlikely(addr > UINT16_MAX-2) {
-   PERR(W_TOO_MANY_CLASS_MEMBER,
-        self->cm_classsym->s_name->k_name);
+   PERRAT(loc,W_TOO_MANY_CLASS_MEMBER,
+          self->cm_classsym->s_name->k_name);
    goto err;
   }
   entry->cme_addr = (uint16_t)addr; /* Save the starting VTABLE address of this member. */
@@ -386,13 +387,13 @@ class_maker_addmember(struct class_maker *__restrict self,
   } else if (result->s_type == SYMBOL_TYPE_FWD) {
    /* Define a forward-referenced class symbol. */
   } else {
-   PERR(W_CLASS_MEMBER_ALREADY_DEFINED,
-        name->k_name,name->k_size);
+   PERRAT(loc,W_CLASS_MEMBER_ALREADY_DEFINED,
+          name->k_name,name->k_size);
    goto err;
   }
  } else {
   /* Create a new local symbol for this member. */
-  result = new_local_symbol(name);
+  result = new_local_symbol(name,loc);
   if unlikely(!result) goto err;
  }
  /* Initialize that symbol to be a member symbol. */
@@ -1030,11 +1031,11 @@ got_callback_id:
  need_semi = false;
  if (table_id == SYM_FMEMBER_CLASS) {
   /* Parse a new function in the class scope. */
-  callback = ast_parse_function(NULL,&need_semi,false);
+  callback = ast_parse_function(NULL,&need_semi,false,&loc);
  } else {
   if unlikely(class_maker_push_methscope(maker,NULL)) goto err;
   /* Parse a new function in its own member-method scope. */
-  callback = ast_parse_function_noscope(NULL,&need_semi,false);
+  callback = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
   basescope_pop();
  }
  if unlikely(!ast_setddi(callback,&loc)) goto err;
@@ -1316,9 +1317,9 @@ define_operator:
      *                                             AST_MULTIPLE(AST_FMULTIPLE_TUPLE,[
      *                                                          AST_SYM(this)]))))' */
     if unlikely(class_maker_push_methscope(&maker,NULL)) return NULL;
-    yield_function = ast_setddi(ast_parse_function_noscope(NULL,&need_semi,false),&loc);
+    yield_function = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
     basescope_pop();
-    if unlikely(!yield_function) { err_operator_ast_ddi: operator_ast = NULL; goto set_operator_ast_ddi; }
+    if unlikely(!yield_function) { err_operator_ast_ddi: operator_ast = NULL; goto got_operator_ast; }
     AST_FMULTIPLE_TUPLE;
     temp = ast_setddi(ast_sym(this_sym),&loc);
     if unlikely(!temp) { err_yield_function: Dee_Decref(yield_function); goto err_operator_ast_ddi; }
@@ -1345,7 +1346,7 @@ define_operator:
     Dee_Decref(operator_ast);
     if unlikely(!temp) goto err_operator_ast_ddi;
     /* And finally: the surrounding function. */
-    operator_ast = ast_function(temp,current_basescope);
+    operator_ast = ast_setddi(ast_function(temp,current_basescope),&loc);
     Dee_Decref(temp);
     if unlikely(!operator_ast) goto err_operator_ast_ddi;
     assert(operator_ast->ast_scope == current_scope);
@@ -1369,10 +1370,9 @@ define_operator:
     if unlikely(class_maker_push_methscope(&maker,NULL)) goto err;
     /* Parse a new function in its own member-method scope. */
     current_basescope->bs_name = operator_name_kwd;
-    operator_ast = ast_parse_function_noscope(NULL,&need_semi,false);
+    operator_ast = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
    }
-set_operator_ast_ddi:
-   operator_ast = ast_setddi(operator_ast,&loc);
+got_operator_ast:
    basescope_pop();
    if unlikely(!operator_ast) goto err;
    ASSERT(operator_ast->ast_type == AST_FUNCTION);
@@ -1499,11 +1499,11 @@ define_constructor:
    if (is_semicollon()) {
     if (member_class != MEMBER_CLASS_AUTO &&
         member_class != MEMBER_CLASS_MEMBER &&
-        WARN(W_CLASS_MEMBER_TYPE_NOT_ASSIGNED))
+        WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_ASSIGNED))
         goto err;
     /* Uninitialized instance/class member. */
     if (!class_maker_addmember(&maker,member_name,member_table,
-                                member_flags,&pusage_counter))
+                                member_flags,&pusage_counter,&loc))
          goto err;
     ++*pusage_counter;
     if unlikely(yield_semicollon() < 0) goto err;
@@ -1517,7 +1517,7 @@ define_constructor:
      uint16_t i,prop_addr;
      if (member_class != MEMBER_CLASS_AUTO &&
          member_class != MEMBER_CLASS_GETSET &&
-         WARN(W_CLASS_MEMBER_TYPE_NOT_MATCHED))
+         WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED))
          goto err;
      if unlikely(yield() < 0) goto err;
      /* Properties are always allocated in class memory and have the FPROPERTY flag set. */
@@ -1527,7 +1527,7 @@ define_constructor:
          member_flags |= CLASS_MEMBER_FMETHOD;
      /* Define the property symbol. */
      member_symbol = class_maker_addmember(&maker,member_name,member_table,
-                                            member_flags,&pusage_counter);
+                                            member_flags,&pusage_counter,&loc);
      if unlikely(!member_symbol) goto err;
      /* Parse the property declaration. */
      if unlikely(parse_property(prop_callbacks,&maker,member_table))
@@ -1575,10 +1575,10 @@ err_property:
     }
     if (member_class != MEMBER_CLASS_AUTO &&
         member_class != MEMBER_CLASS_MEMBER &&
-        WARN(W_CLASS_MEMBER_TYPE_NOT_MATCHED))
+        WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED))
         goto err;
     member_symbol = class_maker_addmember(&maker,member_name,member_table,
-                                           member_flags,&pusage_counter);
+                                           member_flags,&pusage_counter,&loc);
     if unlikely(!member_symbol) goto err;
     /* Member assignment. (part of the initialization) */
     if (SYM_ISCLASSMEMBER(member_symbol)) {
@@ -1604,7 +1604,7 @@ err_property:
    }
    if (member_class != MEMBER_CLASS_AUTO &&
        member_class != MEMBER_CLASS_METHOD &&
-       WARN(W_CLASS_MEMBER_TYPE_NOT_MATCHED))
+       WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED))
        goto err;
    /* Everything else is parsed as a member function.
     * NOTE: We mark such members are read-only because the intention is to never overwrite them. */
@@ -1612,15 +1612,15 @@ err_property:
    if (member_table != SYM_FMEMBER_CLASS)
        member_flags |= CLASS_MEMBER_FMETHOD;
    member_symbol = class_maker_addmember(&maker,member_name,member_table,
-                                          member_flags,&pusage_counter);
+                                          member_flags,&pusage_counter,&loc);
    if unlikely(!member_symbol) goto err;
    if (member_table == SYM_FMEMBER_CLASS) {
     /* Parse a new function in the class scope. */
-    init_ast = ast_parse_function(member_name,&need_semi,false);
+    init_ast = ast_parse_function(member_name,&need_semi,false,&loc);
    } else {
     if unlikely(class_maker_push_methscope(&maker,NULL)) goto err;
     /* Parse a new function in its own member-method scope. */
-    init_ast = ast_parse_function_noscope(member_name,&need_semi,false);
+    init_ast = ast_parse_function_noscope(member_name,&need_semi,false,&loc);
     basescope_pop();
    }
    if unlikely(!init_ast) goto err;

@@ -138,7 +138,8 @@ ast_predict_type(DeeAstObject *__restrict self) {
  } break;
 
  case AST_SYM:
-  /* Certain symbol classes alawys refer to specific object types. */
+  /* Certain symbol classes always refer to specific object types. */
+  SYMBOL_INPLACE_UNWIND_ALIAS(self->ast_sym);
   switch (SYMBOL_TYPE(self->ast_sym)) {
   case SYMBOL_TYPE_MODULE:
   case SYMBOL_TYPE_MYMOD:
@@ -763,6 +764,7 @@ ast_is_nothrow(DeeAstObject *__restrict self, bool result_used) {
  case AST_SYM:
   /* Access to some symbols is nothrow. */
   sym = self->ast_sym;
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
   /* Ref vars are static and never cause exceptions. */
   if (SYMBOL_MUST_REFERENCE(sym))
       goto is_nothrow;
@@ -926,6 +928,8 @@ ast_uses_symbol(DeeAstObject *__restrict self,
  {
   struct class_member *iter,*end;
  case AST_CLASS:
+  SYMBOL_INPLACE_UNWIND_ALIAS(self->ast_class.ast_classsym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(self->ast_class.ast_supersym);
   if (self->ast_class.ast_classsym == sym ||
       self->ast_class.ast_supersym == sym)
       goto yup;
@@ -1796,7 +1800,8 @@ again:
   if (self->ast_flag)
       break;
   sym = self->ast_sym;
-  ASSERT(SYMBOL_NREAD(sym));
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
+  ASSERT(sym->s_nread);
   /* Optimize constant, extern symbols. */
   if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_EXTERN &&
      (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FCONSTEXPR)) {

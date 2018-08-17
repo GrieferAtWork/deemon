@@ -573,7 +573,7 @@ PRIVATE int DCALL check_thiscall(struct symbol *__restrict sym) {
      (current_basescope->bs_class == sym->s_field.f_class))
       return 0;
  return ASM_ERR(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,
-                SYMBOL_FIELD_MEMBER(sym)->cme_name,
+                sym,
                 current_basescope->bs_name ?
                 current_basescope->bs_name->k_name : "?");
 }
@@ -668,6 +668,11 @@ err:
  return -1;
 }
 
+PRIVATE ATTR_COLD int (DCALL asm_warn_ambiguous_symbol)(struct symbol *__restrict sym) {
+ ASSERT(sym->s_type == SYMBOL_TYPE_AMBIG);
+ return ASM_WARNAT(&sym->s_decl,W_ASM_AMBIGUOUS_SYMBOL,sym);
+}
+
 
 INTERN int (DCALL asm_gpush_symbol)(struct symbol *__restrict sym,
                                     DeeAstObject *__restrict warn_ast) {
@@ -720,8 +725,7 @@ check_sym_class:
   uint16_t offset,absolute_stack_addr;
  case SYMBOL_TYPE_STACK:
   if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
-   if (ASM_WARN(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,
-                SYMBOL_NAME(sym)))
+   if (ASM_WARN(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,sym))
        goto err;
    return asm_gpush_none();
   }
@@ -735,8 +739,7 @@ check_sym_class:
     * }
     * print foo; // Error here
     */
-   if (ASM_WARN(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED,
-                SYMBOL_NAME(sym)))
+   if (ASM_WARN(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED,sym))
        goto err;
    return asm_gpush_none();
   }
@@ -787,8 +790,7 @@ check_sym_class:
 
  case SYMBOL_TYPE_GETSET:
   if (!sym->s_getset.gs_get) {
-   if (ASM_WARN(W_ASM_PROPERTY_VARIABLE_NOT_READABLE,
-                SYMBOL_NAME(sym)))
+   if (ASM_WARN(W_ASM_PROPERTY_VARIABLE_NOT_READABLE,sym))
        goto err;
    return asm_gpush_none();
   }
@@ -806,8 +808,7 @@ check_sym_class:
   return asm_gpush_this();
 
  case SYMBOL_TYPE_AMBIG:
-  if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
-               SYMBOL_NAME(sym)))
+  if (asm_warn_ambiguous_symbol(sym))
       goto err;
   return asm_gpush_none();
 
@@ -932,16 +933,13 @@ check_sym_class:
     * }
     * print foo; // Error here
     */
-   ASM_ERR(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED,
-           SYMBOL_NAME(sym));
+   ASM_ERR(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED,sym);
    goto err;
   }
   return asm_pstack(SYMBOL_STACK_OFFSET(sym));
 
  default:
-  ASM_ERR(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,
-          sym->s_name->k_name,
-          SYMCLASS_NAME(SYMBOL_TYPE(sym)));
+  ASM_ERR(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,sym);
   goto err;
  }
  __builtin_unreachable();
@@ -1033,8 +1031,7 @@ check_sym_class:
  } break;
 
  case SYMBOL_TYPE_AMBIG:
-  if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
-               SYMBOL_NAME(sym)))
+  if (asm_warn_ambiguous_symbol(sym))
       goto err;
   goto fallback;
 
@@ -1108,7 +1105,7 @@ check_sym_class:
     * the value that was being stored. */
    if (sym->s_nbound != 0 &&
      !(sym->s_flag & SYMBOL_FSTACK_NOUNBIND_OK) &&
-       WARN(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,SYMBOL_NAME(sym)))
+       WARN(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,sym))
        goto err;
    if (!(sym->s_flag & SYMBOL_FALLOC)) {
     /* If the stack variable hasn't been allocated, but is being written
@@ -1116,7 +1113,7 @@ check_sym_class:
      * it, meaning that we can't generate the code that the user would
      * expect from us. */
     if (sym->s_nwrite != 0 &&
-        WARN(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,SYMBOL_NAME(sym)))
+        WARN(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,sym))
         goto err;
     return 0;
    }
@@ -1168,17 +1165,14 @@ check_sym_class:
    return asm_gpop();
 
   case SYMBOL_TYPE_AMBIG:
-   if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
-                SYMBOL_NAME(sym)))
+   if (asm_warn_ambiguous_symbol(sym))
        goto err;
    return 0;
 
   default: break;
   }
  }
- return ASM_WARN(W_ASM_CANNOT_UNBIND_SYMBOL,
-                 SYMBOL_NAME(sym),
-                 SYMCLASS_NAME(SYMBOL_TYPE(sym)));
+ return ASM_WARN(W_ASM_CANNOT_UNBIND_SYMBOL,sym);
 err:
  return -1;
 }
@@ -1200,9 +1194,7 @@ check_sym_class:
    ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
    if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags&MODSYM_FREADONLY) {
     /* ERROR: Can't modify read-only external symbol. */
-    if (ASM_WARN(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,
-                 SYMBOL_EXTERN_SYMBOL(sym)->ss_name,
-                 SYMBOL_EXTERN_MODULE(sym)->mo_name))
+    if (ASM_WARN(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,sym))
         goto err;
     return asm_gpop(); /* Fallback: Simply discard the value. */
    }
@@ -1258,7 +1250,7 @@ check_sym_class:
       do my_scope = my_scope->s_prev;
       while (my_scope && my_scope != SYMBOL_SCOPE(sym));
       if (!my_scope) {
-       if (ASM_WARN(W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE,SYMBOL_NAME(sym)))
+       if (ASM_WARN(W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE,sym))
            goto err;
        /* If the scope of the symbol is reachable from the current scope, then
         * we can still allocate the stack-symbol (even though we really shouldn't).
@@ -1278,7 +1270,7 @@ check_sym_class:
        * >>     }
        * >> }
        */
-      if (ASM_WARN(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE,SYMBOL_NAME(sym)))
+      if (ASM_WARN(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE,sym))
           goto err;
 #ifndef NDEBUG
       my_scope = current_assembler.a_scope;
@@ -1294,9 +1286,9 @@ check_sym_class:
          goto err;
      return 0; /* Leave without popping anything! */
     }
-    ASM_ERR(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,
-            SYMBOL_NAME(sym));
-    goto err;
+    if (ASM_WARN(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,sym))
+        goto err;
+    return asm_gpop();
    }
    return asm_gpop_stack(SYMBOL_STACK_OFFSET(sym));
 
@@ -1337,8 +1329,7 @@ check_sym_class:
 
   case SYMBOL_TYPE_GETSET:
    if (!sym->s_getset.gs_set) {
-    if (ASM_WARN(W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE,
-                 SYMBOL_NAME(sym)))
+    if (ASM_WARN(W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE,sym))
         goto err;
    } else {
     /* Generate a one-argument call to the setter symbol. */
@@ -1349,8 +1340,7 @@ check_sym_class:
    return asm_gpop();
 
   case SYMBOL_TYPE_AMBIG:
-   if (ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,
-                SYMBOL_NAME(sym)))
+   if (asm_warn_ambiguous_symbol(sym))
        goto err;
    return asm_gpop();
 
@@ -1360,7 +1350,7 @@ check_sym_class:
  /* Warn about the fact that the symbol cannot be written. */
  if (ASM_WARN(W_ASM_CANNOT_WRITE_SYMBOL,
               SYMBOL_NAME(sym),
-              SYMCLASS_NAME(SYMBOL_TYPE(sym))))
+              SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))))
      goto err;
  return asm_gpop(); /* Fallback: Simply discard the value. */
 err:

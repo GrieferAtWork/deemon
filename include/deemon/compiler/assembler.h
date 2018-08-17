@@ -647,8 +647,10 @@ struct assembler {
     struct asm_sym        *a_loopctl[ASM_LOOPCTL_COUNT]; /* Loop control symbols. */
     DeeScopeObject        *a_scope;    /* [0..1] The scope of the last AST (Used for tracking stack-based variables) */
     struct ast_loc        *a_error;    /* [0..1] An AST location that is used as context for displaying assembler messages/warnings. */
-#define ASM_ERR(...)  PERRAT(current_assembler.a_error,__VA_ARGS__)
-#define ASM_WARN(...) WARNAT(current_assembler.a_error,__VA_ARGS__)
+#define ASM_ERR(...)        PERRAT(current_assembler.a_error,__VA_ARGS__)
+#define ASM_WARN(...)       WARNAT(current_assembler.a_error,__VA_ARGS__)
+#define ASM_ERRAT(loc,...)  PERRAT(loc,__VA_ARGS__)
+#define ASM_WARNAT(loc,...) WARNAT(loc,__VA_ARGS__)
     struct ddi_assembler   a_ddi;      /* Deemon debug information assembler subsystem. */
     struct handler_frame  *a_handler;  /* [0..1][(!= NULL) == (a_handlerc != 0)] Chain of active exception handlers. */
 #ifndef CONFIG_LANGUAGE_NO_ASM
@@ -1442,6 +1444,7 @@ INTDEF int DCALL asm_gpop_expr_leave(DeeAstObject *__restrict ast, unsigned int 
 
 INTDEF int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
 INTDEF int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve);
+
 #define ASM_PUSH_SCOPE(scope,err) \
 do{ DeeScopeObject *_old_scope = current_assembler.a_scope; \
     if (asm_enter_scope(scope)) goto err
@@ -1451,7 +1454,6 @@ do{ DeeScopeObject *_old_scope = current_assembler.a_scope; \
 #define ASM_POP_SCOPE(num_preserve,err) \
     ASM_BREAK_SCOPE(num_preserve,err); \
 }__WHILE0
-
 
 /* Assembly code generation flags (gflags) */
 #define ASM_G_FNORMAL   0x0000 /* Normal asm G-flags. */

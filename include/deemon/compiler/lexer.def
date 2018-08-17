@@ -464,22 +464,42 @@ DEF_WARNING(W_UASM_RELOC_VALUE_NOT_A_SYMBOL,(WG_VALUE),WSTATE_ERROR,WARNF("The v
 /* Assembler (code generator) warnings/errors */
 WARNING_NAMESPACE(WN_ASSEMBLER,8000)
 DEF_WARNING(W_ASM_SEQUENCE_TOO_LONG,(WG_VALUE),WSTATE_ERROR,WARNF("Sequence is too long"))
-DEF_WARNING(W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED,(WG_SYNTAX),WSTATE_ERROR,WARNF("`break' or `continue' are not allowed outside of a loop"))
 DEF_WARNING(W_ASM_STORE_TO_RVALUE,(WG_SYNTAX),WSTATE_WARN,WARNF("Store to r-value is assembled as an assignment. If this is intended, replace `=' with `:='"))
-DEF_WARNING(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,(WG_SYMBOL),WSTATE_FATAL,{ char *name = ARG(char *); WARNF("Symbol `%s' of class `%s' cannot be used in inplace operations",name,ARG(char *)); })
-DEF_WARNING(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,(WG_SYMBOL),WSTATE_WARN,WARNF("Stack variable `%s' has not been initialized",ARG(char *)))
-DEF_WARNING(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED,(WG_SYMBOL),WSTATE_WARN,WARNF("Stack variable `%s' initialized in another scope is no longer allocated",ARG(char *)))
-DEF_WARNING(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE,(WG_SYMBOL),WSTATE_WARN,WARNF("Stack variable `%s' is not allocated within the proper scope",ARG(char *)))
-DEF_WARNING(W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE,(WG_SYMBOL),WSTATE_ERROR,WARNF("The owner scope of stack variable `%s' is not reachable",ARG(char *)))
-DEF_WARNING(W_ASM_PROPERTY_VARIABLE_NOT_READABLE,(WG_SYMBOL),WSTATE_WARN,WARNF("Property `%s' cannot be read from",ARG(char *)))
-DEF_WARNING(W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE,(WG_SYMBOL),WSTATE_WARN,WARNF("Property `%s' cannot be written to",ARG(char *)))
-DEF_WARNING(W_ASM_AMBIGUOUS_SYMBOL,(WG_SYMBOL),WSTATE_WARN,WARNF("Symbol `%s' has been imported ambiguously",ARG(char *)))
-DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,(WG_SYMBOL),WSTATE_FATAL,{ void *a = ARG(void *); WARNF("Instance member `%k' cannot be accessed from class method `%s'",a,ARG(char *)); })
-DEF_WARNING(W_ASM_CANNOT_UNBIND_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ char *a = ARG(char *); WARNF("Cannot unbind symbol `%s' of class `%s'",a,ARG(char *)); })
-DEF_WARNING(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,(WG_SYMBOL),WSTATE_ERROR,WARNF("Cannot unbind undesignated stack variable `%s' at this time",ARG(char *)))
-DEF_WARNING(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,(WG_SYMBOL),WSTATE_WARN,WARNF("Deleting stack variable `%s' will not cause the symbol to become unbound",ARG(char *)))
-DEF_WARNING(W_ASM_CANNOT_WRITE_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ char *a = ARG(char *); WARNF("Cannot write to symbol `%s' of class `%s'",a,ARG(char *)); })
-DEF_WARNING(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,(WG_SYMBOL),WSTATE_ERROR,{ void *a = ARG(void *); WARNF("Cannot modify read-only external symbol `%k from %k'",a,ARG(char *)); })
+DEF_WARNING(W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED,(WG_SYNTAX),WSTATE_ERROR,WARNF("`break' or `continue' are not allowed outside of a loop"))
+DEF_WARNING(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,(WG_SYMBOL),WSTATE_FATAL,{ struct symbol *sym = ARG(struct symbol *); WARNF("Symbol `%s' of class `%s' cannot be used in inplace operations",SYMBOL_NAME(sym),SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_STACK_VARIABLE_NOT_INITIALIZED,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Stack variable `%s' has not been initialized",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Stack variable `%s' initialized in another scope is no longer allocated",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE,(WG_SYMBOL),WSTATE_WARN,{ struct symbol *sym = ARG(struct symbol *); WARNF("Stack variable `%s' is not allocated within the proper scope",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("The owner scope of stack variable `%s' is not reachable",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_PROPERTY_VARIABLE_NOT_READABLE,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Property `%s' cannot be read from",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Property `%s' cannot be written to",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_AMBIGUOUS_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{
+    struct symbol *sym = ARG(struct symbol *); size_t i;
+    char const *decl_format = TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT ? "\n%s(%d,%d) : " : "\n%s:%d:%d: ";
+    WARNF("Symbol `%s' has been declared ambiguously",SYMBOL_NAME(sym));
+    if (sym->s_ambig.a_decl2.l_file) {
+        WARNF(decl_format,
+              TPPFile_Filename(sym->s_ambig.a_decl2.l_file,NULL),
+              sym->s_ambig.a_decl2.l_line + 1,
+              sym->s_ambig.a_decl2.l_col + 1);
+        WARNF("See reference to 2nd declaration");
+    }
+    for (i = 0; i < sym->s_ambig.a_declc; ++i) {
+        struct ast_loc *altloc = &sym->s_ambig.a_declv[i];
+        if (!altloc->l_file) continue;
+        WARNF(decl_format,
+              TPPFile_Filename(altloc->l_file,NULL),
+              altloc->l_line + 1,
+              altloc->l_col + 1);
+        WARNF("See reference to %lu%s declaration",(unsigned long)i + 3,i == 0 ? "rd" : "th");
+    }
+})
+DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,(WG_SYMBOL),WSTATE_FATAL,{ struct symbol *sym = ARG(struct symbol *); WARNF("Instance member `%k' cannot be accessed from class method `%s'",SYMBOL_FIELD_MEMBER(sym)->cme_name,ARG(char *)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_CANNOT_UNBIND_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind symbol `%s' of class `%s'",SYMBOL_NAME(sym),SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind undesignated stack variable `%s' at this time",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,(WG_SYMBOL),WSTATE_WARN,{ struct symbol *sym = ARG(struct symbol *); WARNF("Deleting stack variable `%s' will not cause the symbol to become unbound",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_CANNOT_WRITE_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot write to symbol `%s' of class `%s'",SYMBOL_NAME(sym),SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot modify read-only external symbol `%k from %k'",SYMBOL_EXTERN_SYMBOL(sym)->ss_name,SYMBOL_EXTERN_MODULE(sym)->mo_name); PRINT_SYMBOL_DECLARATION(sym); })
 
 WARNING_NAMESPACE(WN_ASSEMBLER_LABLES,8120)
 DEF_WARNING(W_ASM_LABEL_ALREADY_DEFINED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Label `%s' has already been defined",ARG(char *)))

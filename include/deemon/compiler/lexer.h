@@ -284,8 +284,8 @@ INTDEF DREF DeeAstObject *FCALL ast_parse_loopexpr(void);
  *       scope if the desire is to address the function by name.
  *       This parser function will merely return the `AST_FUNCTION',
  *       not some wrapper that assigns it to a symbol using `AST_STORE'. */
-INTDEF DREF DeeAstObject *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params);
-INTDEF DREF DeeAstObject *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params);
+INTDEF DREF DeeAstObject *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
+INTDEF DREF DeeAstObject *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
 INTDEF DREF DeeAstObject *DCALL ast_parse_function_noscope_noargs(bool *pneed_semi);
 
 /* Parse everything following a `del' keyword in a statement, or expression:

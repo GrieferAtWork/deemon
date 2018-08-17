@@ -379,7 +379,6 @@ err:
 
 INTERN DREF DeeAstObject *FCALL ast_sym_import_from_deemon(void) {
  struct symbol *import_symbol;
- DREF DeeAstObject *result;
  import_symbol = new_unnamed_symbol();
  if unlikely(!import_symbol) goto err;
  /* Setup an external symbol pointing at `import from deemon' */
@@ -390,8 +389,7 @@ INTERN DREF DeeAstObject *FCALL ast_sym_import_from_deemon(void) {
                                                               DeeString_STR(&str_import),
                                                               DeeString_Hash(&str_import));
  ASSERT(import_symbol->s_extern.e_symbol);
- result = ast_sym(import_symbol);
- return result;
+ return ast_sym(import_symbol);
 err:
  return NULL;
 }
@@ -683,7 +681,7 @@ do_else_branch:
    function_name = token.t_kwd;
    if unlikely(yield() < 0) goto err;
   }
-  result = ast_setddi(ast_parse_function(function_name,NULL,false),&loc);
+  result = ast_parse_function(function_name,NULL,false,&loc);
  } break;
 
  {
@@ -948,7 +946,7 @@ do_create_class:
 do_lambda:
     old_flags = TPPLexer_Current->l_flags;
     TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-    result = ast_setddi(ast_parse_function(NULL,NULL,true),&loc);
+    result = ast_parse_function(NULL,NULL,true,&loc);
     TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
     break;
    }
@@ -1115,8 +1113,8 @@ do_warn_deprecated_modifier:
    break;
   }
   ATTR_FALLTHROUGH
- default:
 default_case:
+ default:
   if (TPP_ISKEYWORD(tok)) {
    DREF struct symbol *sym; /* Perform a regular symbol lookup. */
    struct TPPKeyword *name = token.t_kwd;
@@ -1130,13 +1128,14 @@ default_case:
    } else {
     sym = lookup_symbol(lookup_mode,name,&loc);
     if unlikely(!sym) goto err;
-    result = ast_setddi(ast_sym(sym),&loc);
+    result = ast_sym(sym);
    }
   } else {
    if (WARN(W_UNEXPECTED_TOKEN_IN_EXPRESSION))
        goto err;
    result = ast_constexpr(Dee_None);
   }
+  ast_setddi(result,&loc);
   break;
  }
  return result;
