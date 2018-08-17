@@ -572,8 +572,7 @@ PRIVATE int DCALL check_thiscall(struct symbol *__restrict sym) {
  if ((current_basescope->bs_flags & CODE_FTHISCALL) &&
      (current_basescope->bs_class == sym->s_field.f_class))
       return 0;
- return ASM_ERR(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,
-                sym,
+ return ASM_ERR(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,sym,
                 current_basescope->bs_name ?
                 current_basescope->bs_name->k_name : "?");
 }
@@ -1351,9 +1350,7 @@ check_sym_class:
   }
  }
  /* Warn about the fact that the symbol cannot be written. */
- if (ASM_WARN(W_ASM_CANNOT_WRITE_SYMBOL,
-              SYMBOL_NAME(sym),
-              SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))))
+ if (ASM_WARN(W_ASM_CANNOT_WRITE_SYMBOL,sym))
      goto err;
  return asm_gpop(); /* Fallback: Simply discard the value. */
 err:
