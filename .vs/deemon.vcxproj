@@ -35,6 +35,7 @@
     <ClInclude Include="..\include\deemon\compiler\dec.h" />
     <ClInclude Include="..\include\deemon\compiler\error.h" />
     <ClInclude Include="..\include\deemon\compiler\lexer.h" />
+    <ClInclude Include="..\include\deemon\compiler\optimize.h" />
     <ClInclude Include="..\include\deemon\compiler\symbol.h" />
     <ClInclude Include="..\include\deemon\compiler\tpp.h" />
     <ClInclude Include="..\include\deemon\cxx\api.h" />
@@ -100,6 +101,7 @@
     <ClCompile Include="..\src\deemon\compiler\asm\genfaster.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genfunction.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\geninplace.c" />
+    <ClCompile Include="..\src\deemon\compiler\asm\genloop.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genoperator_func.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genstore.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genswitch.c" />
@@ -135,7 +137,11 @@
     <ClCompile Include="..\src\deemon\compiler\lexer\tag.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\try.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\with.c" />
-    <ClCompile Include="..\src\deemon\compiler\optimize.c" />
+    <ClCompile Include="..\src\deemon\compiler\optimize\assign.c" />
+    <ClCompile Include="..\src\deemon\compiler\optimize\constant_traits.c" />
+    <ClCompile Include="..\src\deemon\compiler\optimize\operator.c" />
+    <ClCompile Include="..\src\deemon\compiler\optimize\optimize.c" />
+    <ClCompile Include="..\src\deemon\compiler\optimize\traits.c" />
     <ClCompile Include="..\src\deemon\compiler\symbol.c" />
     <ClCompile Include="..\src\deemon\compiler\tpp.c" />
     <ClCompile Include="..\src\deemon\execute\code.c" />

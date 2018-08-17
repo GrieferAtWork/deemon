@@ -30,6 +30,7 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 #include <deemon/util/rwlock.h>
+#include <deemon/compiler/optimize.h>
 
 #include <string.h>
 

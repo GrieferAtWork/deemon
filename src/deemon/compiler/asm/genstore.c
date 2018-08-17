@@ -28,6 +28,7 @@
 #include <deemon/string.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/assembler.h>
+#include <deemon/compiler/optimize.h>
 
 DECL_BEGIN
 

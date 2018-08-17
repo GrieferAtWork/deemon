@@ -1776,6 +1776,24 @@ INTDEF int (DCALL asm_gmov_ast_sym)(DeeAstObject *__restrict dst,
                                     struct symbol *__restrict src_sym,
                                     DeeAstObject *__restrict src_ast);
 
+/* @param: loop_flags:   Set of `AST_FLOOP_*'
+ * @param: elem_or_cond: The loop element target ([0..1] in a foreach loop),
+ *                       or the loop-continue condition ([0..1] in other loop types).
+ * @param: iter_or_next: The loop iterator ([1..1] in a foreach loop),
+ *                       or an optional expression executed at the end
+ *                       of each iteration, and jumped to by `continue' ([0..1])
+ * @param: block:        The main loop block executed in each iteration ([0..1])
+ * @param: ddi_ast:      A branch used for debug information.
+ * @return: * :         `loop_break' -- This symbol must be defined immediatly
+ *                       after the loop, however after variables allocated by
+ *                       the scope have been disposed of. */
+INTDEF struct asm_sym *
+(DCALL asm_genloop)(uint16_t loop_flags,
+                    DeeAstObject *elem_or_cond,
+                    DeeAstObject *iter_or_next,
+                    DeeAstObject *block,
+                    DeeAstObject *__restrict ddi_ast);
+
 
 
 #ifndef __INTELLISENSE__

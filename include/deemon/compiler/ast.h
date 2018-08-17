@@ -104,27 +104,29 @@ struct string_object;
 struct TPPString;
 struct asm_text {
     /*REF*/struct TPPString    *at_text;  /* [0..1] Assembly text string. */
-    /* XXX: DDI information? */
-};
-struct asm_operand {
-    struct TPPKeyword          *ao_name;  /* [0..1] User-defined name for this operand. */
-    /*REF*/ struct TPPString   *ao_type;  /* [0..1][if((self - :ast_opv) <  :ast_num_o+:ast_num_i,[1..1])]
-                                           *        [if((self - :ast_opv) >= :ast_num_o+:ast_num_i,[0..0])]
-                                           *   Allowed operand types (A string of `ASM_OP_*' from `genasm-userasm.c').
-                                           *   NOTE: Only, and always `NULL' for label operands. */
-    union{
-        DREF DeeAstObject      *ao_expr;  /* [1..1][valid_if((self - :ast_opv) < :ast_num_o+:ast_num_i)] Input/output operand expression. */
-        struct text_label      *ao_label; /* [1..1][valid_if((self - :ast_opv) >= :ast_num_o+:ast_num_i)] Label operand.
-                                           *   NOTE: Also holds a reference to `tl_goto' */
-    };
 };
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
+
+struct asm_operand {
+#ifndef CONFIG_LANGUAGE_NO_ASM
+    struct TPPKeyword          *ao_name;  /* [0..1] User-defined name for this operand. */
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
+    /*REF*/ struct TPPString   *ao_type;  /* [0..1][if((self - :ast_opv) <  :ast_num_o+:ast_num_i,[1..1])]
+                                           *       [if((self - :ast_opv) >= :ast_num_o+:ast_num_i,[0..0])]
+                                           * Allowed operand types (A string of `ASM_OP_*' from `genasm-userasm.c').
+                                           * NOTE: Only, and always `NULL' for label operands. */
+    union {
+        DREF DeeAstObject      *ao_expr;  /* [1..1][valid_if((self - :ast_opv) < :ast_num_o+:ast_num_i)] Input/output operand expression. */
+        struct text_label      *ao_label; /* [1..1][valid_if((self - :ast_opv) >= :ast_num_o+:ast_num_i)] Label operand.
+                                           * NOTE: Also holds a reference to `tl_goto' */
+    };
+};
 
 struct ast_object {
     OBJECT_HEAD
     DREF DeeScopeObject *ast_scope; /* [1..1] The scope in which this AST exists. */
     struct ast_loc       ast_ddi;   /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
-                                     *   Debug information describing the location of this AST. */
+                                     * Debug information describing the location of this AST. */
     uint16_t             ast_type;  /* AST Type (One of `AST_*') */
 #define AST_FNORMAL      0x0000     /* Normal AST flags. */
     uint16_t             ast_flag;  /* AST Flags (Set of `AST_F*', dependent on `ast_type') */
@@ -479,8 +481,6 @@ struct ast_object {
         }                      ast_switch;
 
 
-
-#ifndef CONFIG_LANGUAGE_NO_ASM
 #define AST_ASSEMBLY          0x0016   /* User-defined inline assembly (following GCC's __asm__ keyword).
                                         * >> __asm__ [volatile][goto]("text..."
                                         * >>                         [: <ouput_operands>
@@ -521,7 +521,9 @@ struct ast_object {
                                         *       there and then, in essence changing the code as though they were never
                                         *       there at all. */
         struct {
+#ifndef CONFIG_LANGUAGE_NO_ASM
             struct asm_text     ast_text;  /* The assembly text (not formatted yet). */
+#endif
             size_t              ast_num_o; /* Amount of output operands. */
             size_t              ast_num_i; /* Amount of input operands. */
             size_t              ast_num_l; /* Amount of input operands. */
@@ -531,7 +533,6 @@ struct ast_object {
                                             *   - ast_num_o..ast_num_o+ast_num_i-1 are input operands.
                                             *   - ast_num_o+ast_num_i..ast_opc-1 are label operands. */
         }                    ast_assembly;
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
     };
 };
@@ -682,10 +683,13 @@ DEFINE_AST_GENERATOR(ast_goto,(struct text_label *__restrict lbl, DeeBaseScopeOb
  * WARNING: Inherits both `cases' and `default_case' upon success. */
 DEFINE_AST_GENERATOR(ast_switch,(uint16_t flags, DeeAstObject *__restrict expr, DeeAstObject *__restrict block,
                                  struct text_label *cases, struct text_label *default_case));
-#ifndef CONFIG_LANGUAGE_NO_ASM
 /* [AST_ASSEMBLY] WARNING: Inherits a heap-allocated vector `opv' upon success; @param: flags: Set of `AST_FASSEMBLY_*' */
+#ifdef CONFIG_LANGUAGE_NO_ASM
+DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, size_t num_o, size_t num_i, size_t num_l, /*inherit*/struct asm_operand *__restrict opv));
+#else /* !CONFIG_LANGUAGE_NO_ASM */
 DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict text, size_t num_o, size_t num_i, size_t num_l, /*inherit*/struct asm_operand *__restrict opv));
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
+
 #undef DEFINE_AST_GENERATOR
 
 #ifndef CONFIG_NO_AST_DEBUG
@@ -719,7 +723,9 @@ DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict 
 #define ast_label(flags,lbl,base_scope)                        ast_label_d(__FILE__,__LINE__,flags,lbl,base_scope)
 #define ast_goto(lbl,base_scope)                               ast_goto_d(__FILE__,__LINE__,lbl,base_scope)
 #define ast_switch(flags,expr,block,cases,default_case)        ast_switch_d(__FILE__,__LINE__,flags,expr,block,cases,default_case)
-#ifndef CONFIG_LANGUAGE_NO_ASM
+#ifdef CONFIG_LANGUAGE_NO_ASM
+#define ast_assembly(flags,num_o,num_i,num_l,opv)              ast_assembly_d(__FILE__,__LINE__,flags,num_o,num_i,num_l,opv)
+#else /* CONFIG_LANGUAGE_NO_ASM */
 #define ast_assembly(flags,text,num_o,num_i,num_l,opv)         ast_assembly_d(__FILE__,__LINE__,flags,text,num_o,num_i,num_l,opv)
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 #endif /* !CONFIG_NO_AST_DEBUG */
@@ -731,84 +737,8 @@ DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict 
 #define ast_land(a,b)   ast_conditional(AST_FCOND_BOOL,a,b,a) /* `a && b' */
 #define ast_lor(a,b)    ast_conditional(AST_FCOND_BOOL,a,a,b) /* `a || b' */
 
-/* Perform optimizations, such as substituting constants and symbols, etc.
- * HINT: Constants have been implemented somewhat differently in deemon v200:
- *       Instead of requiring the user to explicitly state them as such,
- *       constants may appear to no longer exist at all.
- *       Yet in actuality, what can now be considered a constant is really
- *       a variable (symbol) that is initialized once and only ever read
- *       from then on out.
- * NOTE: The caller should test for the `OPTIMIZE_FENABLED' flag before
- *       calling this function, and don't call it when it is set.
- * @return:  0: The branch was potentially optimized.
- * @return: -1: An error occurred. */
-INTDEF int DCALL ast_optimize(DeeAstObject *__restrict self, bool result_used);
-INTDEF uint16_t optimizer_flags; /* Set of `OPTIMIZE_F*' */
-INTDEF uint16_t unwind_limit;    /* The max amount of times that a loop may be unwound. */
-INTDEF unsigned int optimizer_count; /* Incremented each time `ast_optimize' performs an optimization */
-
-/* Similar to `ast_optimize()', but keeps on doing it's thing while `optimizer_count' changes.
- * NOTE: When the `OPTIMIZE_FONEPASS' flag is set, this function behaves identical to `ast_optimize()' */
-INTDEF int DCALL ast_optimize_all(DeeAstObject *__restrict self, bool result_used);
-
-/* Check if `a' and `b' are semantically speaking the same AST.
- * When the `OPTIMIZE_FNOCOMPARE' flag is set, this always returns `false' */
-INTDEF bool DCALL ast_equal(DeeAstObject *__restrict a, DeeAstObject *__restrict b);
-
-/* Check if the 2 given ASTs can be exchanged in such a way that
- * the second is executed prior to the first within assembly.
- * This usually means that the first does not have any impact
- * on the latter, nor does it invoke any side-effects that could
- * have any influence on the other.
- * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `false'. */
-INTDEF bool DCALL ast_can_exchange(DeeAstObject *__restrict first,
-                                   DeeAstObject *__restrict second);
-
-/* Check if the given ast `self' makes use of `sym' in any way.
- * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `true'. */
-INTDEF bool DCALL ast_uses_symbol(DeeAstObject *__restrict self,
-                                  struct symbol *__restrict sym);
-
-/* Do a shallow assignment of `other' onto `self' */
-INTDEF int DCALL ast_assign(DeeAstObject *__restrict self,
-                            DeeAstObject *__restrict other);
-/* Graft `other' onto `self', assigning it if both branches have the same scope,
- * or converting `self' into a single-expression multiple-ast containing `other.' */
-INTDEF int DCALL ast_graft_onto(DeeAstObject *__restrict self,
-                                DeeAstObject *__restrict other);
-/* Internal optimization helpers... */
-INTDEF bool DCALL ast_has_sideeffects(DeeAstObject *__restrict self);
-INTDEF bool DCALL ast_is_nothrow(DeeAstObject *__restrict self, bool result_used);
-/* Checks if a branch _NEVER_ returns normally (e.g. `yield' can return normally; `return' can't)
- * Something like a label is unpredictable, as it can return even if the previous instruction can't.
- * @return  0: does return
- * @return  1: doesn't return
- * @return -1: always reachable / unpredictable
- * @return -2: always reachable / unpredictable & doesn't return */
-INTDEF int DCALL ast_doesnt_return(DeeAstObject *__restrict self, unsigned int flags);
-#define AST_DOESNT_RETURN_FNORMAL     0x0000 /*  */
-#define AST_DOESNT_RETURN_FINLOOP     0x0001
-#define AST_DOESNT_RETURN_FINCATCH    0x0002
-#define AST_DOESNT_RETURN_FINCATCHALL 0x0004
-
-/* 0: false, > 0: true, < 0: unpredictable. */
-INTDEF int DCALL ast_get_boolean(DeeAstObject *__restrict self);
-/* Same as `ast_get_boolean()', but return `-1' if the ast has side-effects. */
-INTDEF int DCALL ast_get_boolean_noeffect(DeeAstObject *__restrict self);
-
-/* Predict the typing of a given AST, or return NULL when unpredictable.
- * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'. */
-INTDEF DeeTypeObject *DCALL ast_predict_type(DeeAstObject *__restrict self);
-
-/* Return true if a given AST_MULTIPLE contains expand ASTs. */
-INTDEF bool DCALL ast_multiple_hasexpand(DeeAstObject *__restrict self);
-
-#ifndef __INTELLISENSE__
-#ifndef __NO_builtin_expect
-#define ast_optimize(self,result_used)     __builtin_expect(ast_optimize(self,result_used),0)
-#define ast_optimize_all(self,result_used) __builtin_expect(ast_optimize_all(self,result_used),0)
-#endif
-#endif
+/* Return true if a given `AST_MULTIPLE' contains expand ASTs. */
+INTDEF bool (DCALL ast_multiple_hasexpand)(DeeAstObject *__restrict self);
 
 
 #endif /* !CONFIG_BUILDING_DEEMON */

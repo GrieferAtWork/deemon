@@ -23,6 +23,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/compiler/optimize.h>
 #include <deemon/seq.h>
 #include <deemon/map.h>
 #include <deemon/dict.h>

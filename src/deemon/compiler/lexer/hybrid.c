@@ -88,10 +88,12 @@ ast_parse_statement_or_expression(uint16_t mode,
   result = ast_parse_import_hybrid(pwas_expression);
   break;
 
- case KWD_for:      /* TODO: generator expressions? */
- case KWD_foreach:  /* TODO: generator expressions? */
- case KWD_do:       /* TODO: generator expressions? */
- case KWD_while:    /* TODO: generator expressions? */
+ case KWD_for:
+ case KWD_foreach:
+ case KWD_do:
+ case KWD_while:
+  result = ast_parse_loopexpr_hybrid(pwas_expression);
+  break;
 
  case KWD_from:
  case KWD_del:
@@ -352,10 +354,13 @@ parse_remainder_after_semicolon_hybrid_popscope:
   goto parse_remainder_after_semicolon_hybrid_popscope;
 
 
- case KWD_for:      /* TODO: generator expressions? */
- case KWD_foreach:  /* TODO: generator expressions? */
- case KWD_do:       /* TODO: generator expressions? */
- case KWD_while:    /* TODO: generator expressions? */
+ case KWD_for:
+ case KWD_foreach:
+ case KWD_do:
+ case KWD_while:
+  if unlikely(scope_push() < 0) goto err;
+  result = ast_parse_loopexpr_hybrid(&was_expression);
+  goto parse_remainder_after_hybrid_popscope;
 
 
  case KWD_from:

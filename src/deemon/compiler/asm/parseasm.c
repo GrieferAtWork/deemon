@@ -34,6 +34,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/assembler.h>
+#include <deemon/compiler/optimize.h>
 #include <deemon/module.h>
 
 #include "../../runtime/strings.h"

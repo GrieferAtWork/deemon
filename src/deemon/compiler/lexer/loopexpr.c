@@ -331,6 +331,14 @@ err:
 }
 
 
+INTERN DREF DeeAstObject *FCALL
+ast_parse_loopexpr_hybrid(unsigned int *pwas_expression) {
+ /* TODO */
+ *pwas_expression = AST_PARSE_WASEXPR_NO;
+ return ast_parse_statement(false);
+}
+
+
 
 DECL_END
 

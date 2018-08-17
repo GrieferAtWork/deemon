@@ -24,6 +24,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/compiler/optimize.h>
 #include <deemon/error.h>
 
 DECL_BEGIN

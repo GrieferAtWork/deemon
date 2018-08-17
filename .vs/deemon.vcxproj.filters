@@ -52,6 +52,9 @@
     <Filter Include="include\deemon\cxx">
       <UniqueIdentifier>{b3c0bb46-c5e1-4b27-b4d8-69587a053822}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\deemon\compiler\optimize">
+      <UniqueIdentifier>{7b7ab99b-1ea8-4790-9060-8490929f397e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\deemon\api.h">
@@ -267,6 +270,9 @@
     <ClInclude Include="..\src\deemon\objects\seq_functions.h">
       <Filter>src\deemon\objects</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\optimize.h">
+      <Filter>include\deemon\compiler</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -367,9 +373,6 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\compiler\lexer\expression.c">
       <Filter>src\deemon\compiler\lexer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\deemon\compiler\optimize.c">
-      <Filter>src\deemon\compiler</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\system\file.c">
       <Filter>src\deemon\system</Filter>
@@ -658,6 +661,24 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\compiler\asm\scope.c">
       <Filter>src\deemon\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genloop.c">
+      <Filter>src\deemon\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\optimize.c">
+      <Filter>src\deemon\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\traits.c">
+      <Filter>src\deemon\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\assign.c">
+      <Filter>src\deemon\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\constant_traits.c">
+      <Filter>src\deemon\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\operator.c">
+      <Filter>src\deemon\compiler\optimize</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -31,6 +31,7 @@
 #include <deemon/string.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/assembler.h>
+#include <deemon/compiler/optimize.h>
 #include <deemon/util/cache.h>
 #include <deemon/util/recursive-rwlock.h>
 #include <deemon/traceback.h>

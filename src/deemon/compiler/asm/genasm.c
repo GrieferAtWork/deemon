@@ -37,6 +37,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/assembler.h>
+#include <deemon/compiler/optimize.h>
 #include <deemon/util/string.h>
 
 #include <string.h>
@@ -1342,177 +1343,24 @@ err_hand_frame:
   goto err;
  } break;
 
-
  {
-  struct asm_sym *old_break;
-  struct asm_sym *old_continue;
-  struct asm_sym *loop_break,*loop_continue;
-  uint16_t old_finflag;
+  struct asm_sym *loop_break;
  case AST_LOOP:
-  /* Save old loop control symbols. */
-  old_break     = current_assembler.a_loopctl[ASM_LOOPCTL_BRK];
-  old_continue  = current_assembler.a_loopctl[ASM_LOOPCTL_CON];
-  /* Create new symbols for loop control. */
-  loop_break    = asm_newsym();
+  loop_break = asm_genloop(ast->ast_flag,
+                           ast->ast_loop.ast_elem,
+                           ast->ast_loop.ast_iter,
+                           ast->ast_loop.ast_loop,
+                           ast);
   if unlikely(!loop_break) goto err;
-  loop_continue = asm_newsym();
-  if unlikely(!loop_continue) goto err;
-  /* Setup the new loop control symbols. */
-  current_assembler.a_loopctl[ASM_LOOPCTL_BRK] = loop_break;
-  current_assembler.a_loopctl[ASM_LOOPCTL_CON] = loop_continue;
-  /* Set the out-of-loop flag for execution of existing finally handler. */
-  old_finflag = current_assembler.a_finflag;
-  current_assembler.a_finflag |= ASM_FINFLAG_NOLOOP;
 
-  /* Now let's get to work! */
-  if (ast->ast_flag&AST_FLOOP_FOREACH) {
-   struct asm_sec *prev_section;
-   /* >> foreach()-style loop. */
-   /* Start out by evaluating the loop iterator. */
-   if (ast->ast_loop.ast_iter->ast_type == AST_OPERATOR &&
-       ast->ast_loop.ast_iter->ast_flag == OPERATOR_ITERSELF &&
-     !(ast->ast_loop.ast_iter->ast_operator.ast_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS)) &&
-       ast->ast_loop.ast_iter->ast_operator.ast_opa) {
-    /* Generate a sequence as an ASP, thus optimizing away unnecessary casts. */
-    if (ast_genasm_asp(ast->ast_loop.ast_iter->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
-    if (asm_putddi(ast->ast_loop.ast_iter)) goto err;
-    if (asm_giterself()) goto err;
-   } else {
-    if (ast_genasm(ast->ast_loop.ast_iter,ASM_G_FPUSHRES)) goto err;
-   }
-   /* This is where the loop starts! (and where `continue' jump to) */
-   asm_defsym(loop_continue);
-   /* The foreach instruction will jump to the break-address
-    * when the iterator has been exhausted. */
-   if (asm_putddi(ast)) goto err;
-   if (asm_gjmp(ASM_FOREACH,loop_break)) goto err;
-   asm_diicsp(); /* -2, +1: loop-branch of a foreach instruction. */
-   /* HINT: Right now, the stack looks like this:
-    *       ..., iterator, elem */
-   prev_section = current_assembler.a_curr;
-   /* Put the loop block into the cold section if it's unlikely to be executed. */
-   if (ast->ast_flag&AST_FLOOP_UNLIKELY &&
-       prev_section != &current_assembler.a_sect[SECTION_COLD]) {
-    struct asm_sym *loop_begin;
-    loop_begin = asm_newsym();
-    if unlikely(!loop_begin) goto err;
-    if (asm_putddi(ast)) goto err;
-    if (asm_gjmp(ASM_JMP,loop_begin)) goto err; /* Jump into cold text. */
-    current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
-   }
-
-   /* Store the foreach iterator into the loop variable(s) */
-   if (ast->ast_loop.ast_elem) {
-    if (asm_gpop_expr(ast->ast_loop.ast_elem))
-        goto err;
-   } else {
-    if (asm_gpop())
-        goto err;
-   }
-
-   /* Generate the loop block itself. */
-   if (ast->ast_loop.ast_loop &&
-       ast_genasm(ast->ast_loop.ast_loop,ASM_G_FNORMAL))
-       goto err;
-
-   if (asm_putddi(ast)) goto err;
-   if (asm_gjmp(ASM_JMP,loop_continue)) goto err; /* Jump back to yield the next item. */
-   current_assembler.a_curr = prev_section;
-
-   /* -1: Adjust for the `ASM_FOREACH' instruction popping the iterator once it's empty. */
-   asm_decsp();
-  } else if (ast->ast_flag&AST_FLOOP_POSTCOND) {
-   struct asm_sym *loop_block = asm_newsym();
-   if unlikely(!loop_block) goto err;
-   asm_defsym(loop_block);
-   /* NOTE: There's no point in trying to put some if this stuff into
-    *       the cold section when the `AST_FLOOP_UNLIKELY' flag is set.
-    *       Since the loop-block is always executed, we'd always have
-    *       to jump into cold text, which would kind-of defeat the purpose
-    *       considering that it's meant to contain code that's unlikely
-    *       to be called. */
-   /* Generate the loop itself. */
-   if (ast->ast_loop.ast_loop &&
-       ast_genasm(ast->ast_loop.ast_loop,ASM_G_FNORMAL)) goto err;
-
-   /* Evaluate the condition after the loop (and after the continue-symbol). */
-   asm_defsym(loop_continue);
-   if (ast->ast_loop.ast_next &&
-       ast_genasm(ast->ast_loop.ast_next,ASM_G_FNORMAL)) goto err;
-   if (ast->ast_loop.ast_cond) {
-    if (asm_gjcc(ast->ast_loop.ast_cond,ASM_JT,loop_block,ast))
-        goto err; /* if (cond) goto loop_block; */
-   } else {
-    if (asm_putddi(ast)) goto err;
-    if (asm_gjmp(ASM_JMP,loop_block)) goto err; /* if (cond) goto loop_block; */
-   }
-  } else {
-   struct asm_sym *loop_block;
-   if (!ast->ast_loop.ast_next) {
-    loop_block = loop_continue;
-   } else {
-    loop_block = asm_newsym();
-    if unlikely(!loop_block) goto err;
-   }
-   asm_defsym(loop_block);
-   /* Evaluate the condition before the loop. */
-   if (ast->ast_flag&AST_FLOOP_UNLIKELY &&
-       current_assembler.a_curr != &current_assembler.a_sect[SECTION_COLD]) {
-    struct asm_sec *prev_section;
-    struct asm_sym *loop_enter;
-    loop_enter = asm_newsym();
-    if unlikely(!loop_enter) goto err;
-    if (asm_gjcc(ast->ast_loop.ast_cond,ASM_JT,loop_enter,ast))
-        goto err; /* if (cond) goto enter_loop; */
-
-    prev_section = current_assembler.a_curr;
-    current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
-    asm_defsym(loop_enter);
-
-    /* Generate the loop itself. */
-    if (ast->ast_loop.ast_loop &&
-        ast_genasm(ast->ast_loop.ast_loop,ASM_G_FNORMAL)) goto err;
-
-    if (ast->ast_loop.ast_next) {
-     asm_defsym(loop_continue);
-     if (ast_genasm(ast->ast_loop.ast_next,ASM_G_FNORMAL)) goto err;
-    }
-    /* Jump back to re-evaluate the condition. */
-    if (asm_putddi(ast)) goto err;
-    if (asm_gjmp(ASM_JMP,loop_block)) goto err;
-    current_assembler.a_curr = prev_section;
-   } else {
-    if (ast->ast_loop.ast_cond &&
-        asm_gjcc(ast->ast_loop.ast_cond,ASM_JF,loop_break,ast))
-        goto err; /* if (!(cond)) break; */
-
-    /* Generate the loop itself. */
-    if (ast->ast_loop.ast_loop &&
-        ast_genasm(ast->ast_loop.ast_loop,ASM_G_FNORMAL)) goto err;
-
-    if (ast->ast_loop.ast_next) {
-     asm_defsym(loop_continue);
-     if (ast_genasm(ast->ast_loop.ast_next,ASM_G_FNORMAL)) goto err;
-    }
-    /* Jump back to re-evaluate the condition. */
-    if (asm_putddi(ast)) goto err;
-    if (asm_gjmp(ASM_JMP,loop_block)) goto err;
-   }
-  }
   /* Reset the stack depth to its original value.
    * NOTE: The current value may be distorted and invalid due to
    *       stack variables having been initialized inside the loop. */
-  ASM_BREAK_SCOPE(PUSH_RESULT ? 1 : 0,err);
+  ASM_BREAK_SCOPE(0,err);
 
   /* This is where `break' jumps to. (After the re-aligned stack) */
   asm_defsym(loop_break);
 
-  ASSERT(current_assembler.a_finflag&ASM_FINFLAG_NOLOOP);
-  current_assembler.a_finflag = old_finflag;
-
-  /* Restore old loop control symbols. */
-  current_assembler.a_loopctl[ASM_LOOPCTL_CON] = old_continue;
-  current_assembler.a_loopctl[ASM_LOOPCTL_BRK] = old_break;
   /* Loop expressions simply return `none'. */
   /* Because we've already cleaned up after stack variables initialized
    * within the loop's scope, we must not allow the code below to do so again! */
