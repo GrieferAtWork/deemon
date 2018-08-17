@@ -80,7 +80,7 @@ struct compiler_object {
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
     uint16_t                 cp_parser_flags;    /* == ::parser_flags */
     uint16_t                 cp_optimizer_flags; /* == ::optimizer_flags */
-    uint16_t                 cp_unwind_limit;    /* == ::unwind_limit */
+    uint16_t                 cp_unwind_limit;    /* == ::optimizer_unwind_limit */
 #endif /* CONFIG_BUILDING_DEEMON */
 };
 

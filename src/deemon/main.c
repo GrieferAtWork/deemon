@@ -220,37 +220,51 @@ PRIVATE int DCALL cmd_o(char *arg) {
  return 0;
 }
 PRIVATE int DCALL cmd_O(char *arg) {
- int level = atoi(arg);
- script_options.co_optimizer &= ~(OPTIMIZE_FENABLED|OPTIMIZE_FCSE|OPTIMIZE_FCONSTSYMS);
- script_options.co_assembler &= ~(ASM_FSTACKDISP|ASM_FPEEPHOLE|
-                                  ASM_FOPTIMIZE|ASM_FREUSELOC|ASM_FNODDI);
- /* Level #4: Disable features that hinder optimization (i.e. debug info) */
- if (level >= 4) {
-  script_options.co_assembler |= ASM_FNODDI;
-  script_options.co_optimizer |= (OPTIMIZE_FCSE |     /* CSE results in somewhat obscured DDI
-                                                       * info, so we only enable it at level#4 */
-                                  OPTIMIZE_FNOUSESYMS /* Removing unused symbols obviously leads to those
-                                                       * symbols not showing up in DDI information, thus
-                                                       * resulting in those symbols also not showing up
-                                                       * in generated debug information, or assembly. */
-                                  );
+ int level;
+ script_options.co_optimizer &= ~(OPTIMIZE_FENABLED | OPTIMIZE_FCSE |
+                                  OPTIMIZE_FCONSTSYMS | OPTIMIZE_FNOUSESYMS);
+ script_options.co_assembler &= ~(ASM_FSTACKDISP | ASM_FPEEPHOLE |
+                                  ASM_FOPTIMIZE | ASM_FREUSELOC | ASM_FNODDI);
+ script_options.co_unwind_limit = 0;
+ if (strcmp(arg,"s") == 0) {
+  /* Optimize for size. */
+  script_options.co_optimizer   |= (OPTIMIZE_FCSE | OPTIMIZE_FNOUSESYMS |
+                                    OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS);
+  script_options.co_unwind_limit = 1; /* Only unwind loops with 0, or 1 iteration! */
+  script_options.co_assembler   |= (ASM_FREUSELOC | ASM_FSTACKDISP |
+                                    ASM_FPEEPHOLE | ASM_FOPTIMIZE |
+                                    ASM_FOPTIMIZE_SIZE);
+ } else {
+  level = atoi(arg);
+  /* Level #4: Disable features that hinder optimization (i.e. debug info) */
+  if (level >= 4) {
+   script_options.co_assembler |= ASM_FNODDI;
+   script_options.co_optimizer |= (OPTIMIZE_FCSE |     /* CSE results in somewhat obscured DDI
+                                                        * info, so we only enable it at level#4 */
+                                   OPTIMIZE_FNOUSESYMS /* Removing unused symbols obviously leads to those
+                                                        * symbols not showing up in DDI information, thus
+                                                        * resulting in those symbols also not showing up
+                                                        * in generated debug information, or assembly. */
+                                   );
+   script_options.co_unwind_limit = 4;
+  }
+  /* Level #3: Enable the AST-level optimization pass.
+   *        -> This is mainly where constant propagation is implemented,
+   *           among other, minor optimizations such as double-casts to
+   *           known types */
+  if (level >= 3) script_options.co_optimizer |= (OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS),
+                  script_options.co_assembler |= (ASM_FREUSELOC);
+  /* Level #2: Enable initialization-is-allocation for __stack variable & peephole optimization.
+   *        -> Note that peephole also implements dead-code elimination, as well
+   *           as various other optimizations, such as elimination or variable
+   *           reads/writes, among other things.
+   *           However, peephole is greatly restricted by debug information where the
+   *           existence of DDI checkpoints prevents inter-opcode optimizations. */
+  if (level >= 2) script_options.co_assembler |= (ASM_FSTACKDISP | ASM_FPEEPHOLE);
+  /* Level #1: Enable general assembly optimizations (mainly affects automatic
+   *           instruction width selection, used to minimize assembly size). */
+  if (level >= 1) script_options.co_assembler |= (ASM_FOPTIMIZE);
  }
- /* Level #3: Enable the AST-level optimization pass.
-  *        -> This is mainly where constant propagation is implemented,
-  *           among other, minor optimizations such as double-casts to
-  *           known types */
- if (level >= 3) script_options.co_optimizer |= (OPTIMIZE_FENABLED|OPTIMIZE_FCONSTSYMS),
-                 script_options.co_assembler |= ASM_FREUSELOC;
- /* Level #2: Enable initialization-is-allocation for __stack variable & peephole optimization.
-  *        -> Note that peephole also implements dead-code elimination, as well
-  *           as various other optimizations, such as elimination or variable
-  *           reads/writes, among other things.
-  *           However, peephole is greatly restricted by debug information where the
-  *           existence of DDI checkpoints prevents inter-opcode optimizations. */
- if (level >= 2) script_options.co_assembler |= ASM_FSTACKDISP|ASM_FPEEPHOLE;
- /* Level #1: Enable general assembly optimizations (mainly affects automatic
-  *           instruction width selection, used to minimize assembly size). */
- if (level >= 1) script_options.co_assembler |= ASM_FOPTIMIZE;
  return 0;
 }
 PRIVATE int DCALL cmd_i(char *UNUSED(arg)) {
@@ -1012,7 +1026,7 @@ INTERN struct compiler_options import_options = {
     /* .co_compiler      = */COMPILER_FNORMAL,
     /* .co_parser        = */PARSE_FNORMAL,
     /* .co_optimizer     = */OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS,
-    /* .co_unwind_limit  = */4,
+    /* .co_unwind_limit  = */0,
     /* .co_assembler     = */ASM_FOPTIMIZE|ASM_FPEEPHOLE|ASM_FREUSELOC|ASM_FSTACKDISP,
     /* .co_decloader     = */DEC_FNORMAL,
 #ifdef DEC_WRITE_FNORMAL

@@ -507,7 +507,7 @@ do_create_base_name:
   inner_compiler_options   = options->co_inner;
   parser_flags             = options->co_parser;
   optimizer_flags          = options->co_optimizer;
-  unwind_limit             = options->co_unwind_limit;
+  optimizer_unwind_limit   = options->co_unwind_limit;
   if (options->co_tabwidth)
       TPPLexer_Current->l_tabsize = (size_t)options->co_tabwidth;
   if (parser_flags & PARSE_FLFSTMT)

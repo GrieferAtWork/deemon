@@ -37,7 +37,7 @@ DECL_BEGIN
                                     *          phase of code generation. */
 #define OPTIMIZE_FONEPASS   0x0008 /* FLAG: Only perform a single optimization pass. */
 #define OPTIMIZE_FCSE       0x0100 /* FLAG: Perform common-subexpression-elimination. (i.e. moving stuff out of conditional expressions) */
-#define OPTIMIZE_FCONSTSYMS 0x0200 /* FLAG: Allow local, stack & static variables that are only written once, to be turned into constants. */
+#define OPTIMIZE_FCONSTSYMS 0x0200 /* FLAG: Allow local, stack & static variables that are only written once to be turned into constants. */
 #define OPTIMIZE_FNOUSESYMS 0x0400 /* FLAG: Allow local, stack & static variables that were written, but never read from to be removed. */
 #define OPTIMIZE_FNOCOMPARE 0x4000 /* FLAG: Comparing ASTs always returns `false'. */
 #define OPTIMIZE_FNOPREDICT 0x8000 /* FLAG: Disable type prediction of ASTs.
@@ -88,9 +88,9 @@ INTDEF int (DCALL ast_optimize_multiple)(struct ast_optimize_stack *__restrict s
 INTDEF int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
 INTDEF int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
 
-INTDEF uint16_t optimizer_flags; /* Set of `OPTIMIZE_F*' */
-INTDEF uint16_t unwind_limit;    /* The max amount of times that a loop may be unwound. */
-INTDEF unsigned int optimizer_count; /* Incremented each time `ast_optimize' performs an optimization */
+INTDEF uint16_t optimizer_flags;        /* Set of `OPTIMIZE_F*' */
+INTDEF uint16_t optimizer_unwind_limit; /* The max amount of times that a loop may be unwound. */
+INTDEF unsigned int optimizer_count;    /* Incremented each time `ast_optimize' performs an optimization */
 
 /* Similar to `ast_optimize()', but keeps on doing it's thing while `optimizer_count' changes.
  * NOTE: When the `OPTIMIZE_FONEPASS' flag is set, this function behaves identical to `ast_optimize()' */

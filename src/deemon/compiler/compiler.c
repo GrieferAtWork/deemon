@@ -85,7 +85,7 @@ load_compiler(DeeCompilerObject *__restrict compiler) {
  memcpy(&current_tags,&compiler->cp_tags,sizeof(struct ast_tags));
  parser_flags = compiler->cp_parser_flags;
  optimizer_flags = compiler->cp_optimizer_flags;
- unwind_limit = compiler->cp_unwind_limit;
+ optimizer_unwind_limit = compiler->cp_unwind_limit;
  if (!(compiler->cp_flags & COMPILER_FKEEPLEXER))
        memxch(&TPPLexer_Global,&compiler->cp_lexer,sizeof(struct TPPLexer));
  if (!(compiler->cp_flags & COMPILER_FKEEPERROR))
@@ -117,7 +117,7 @@ save_compiler(DeeCompilerObject *__restrict compiler) {
 
  compiler->cp_parser_flags = parser_flags;
  compiler->cp_optimizer_flags = optimizer_flags;
- compiler->cp_unwind_limit = unwind_limit;
+ compiler->cp_unwind_limit = optimizer_unwind_limit;
  if (!(compiler->cp_flags & COMPILER_FKEEPLEXER))
        memxch(&TPPLexer_Global,&compiler->cp_lexer,sizeof(struct TPPLexer));
  if (!(compiler->cp_flags & COMPILER_FKEEPERROR))

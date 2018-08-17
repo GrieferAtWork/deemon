@@ -59,9 +59,9 @@
 
 DECL_BEGIN
 
-INTERN uint16_t optimizer_flags     = OPTIMIZE_FDISABLED;
-INTERN uint16_t unwind_limit        = 0;
-INTERN unsigned int optimizer_count = 0;
+INTERN uint16_t optimizer_flags        = OPTIMIZE_FDISABLED;
+INTERN uint16_t optimizer_unwind_limit = 0;
+INTERN unsigned int optimizer_count    = 0;
 
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
 INTERN void ast_optimize_verbose(DeeAstObject *__restrict self, char const *format, ...) {
@@ -167,7 +167,7 @@ again:
   if (self->ast_flag&AST_FLOOP_FOREACH) {
    /* foreach-style loop. */
    if (ast_optimize(&stack,self->ast_loop.ast_iter,true)) goto err;
-   if (unwind_limit != 0) {
+   if (optimizer_unwind_limit != 0) {
     /* TODO: Loop unwinding when `self->ast_loop.ast_iter'
      *       evaluates to a constant expression.
      * >> for (local x: [:3])
