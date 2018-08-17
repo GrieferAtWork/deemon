@@ -25,6 +25,7 @@
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/compiler.h>
+#include <deemon/compiler/optimize.h>
 #include <deemon/compiler/dec.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/error.h>
@@ -220,19 +221,25 @@ PRIVATE int DCALL cmd_o(char *arg) {
 }
 PRIVATE int DCALL cmd_O(char *arg) {
  int level = atoi(arg);
- script_options.co_optimizer &= ~(OPTIMIZE_FENABLED|OPTIMIZE_FCSE);
+ script_options.co_optimizer &= ~(OPTIMIZE_FENABLED|OPTIMIZE_FCSE|OPTIMIZE_FCONSTSYMS);
  script_options.co_assembler &= ~(ASM_FSTACKDISP|ASM_FPEEPHOLE|
                                   ASM_FOPTIMIZE|ASM_FREUSELOC|ASM_FNODDI);
  /* Level #4: Disable features that hinder optimization (i.e. debug info) */
- if (level >= 4) script_options.co_assembler |= ASM_FNODDI,
-                 script_options.co_optimizer |= OPTIMIZE_FCSE; /* CSE results in somewhat obscured DDI
-                                                                * info, so we only enable it at level#4 */
+ if (level >= 4) {
+  script_options.co_assembler |= ASM_FNODDI;
+  script_options.co_optimizer |= (OPTIMIZE_FCSE |     /* CSE results in somewhat obscured DDI
+                                                       * info, so we only enable it at level#4 */
+                                  OPTIMIZE_FNOUSESYMS /* Removing unused symbols obviously leads to those
+                                                       * symbols not showing up in DDI information, thus
+                                                       * resulting in those symbols also not showing up
+                                                       * in generated debug information, or assembly. */
+                                  );
+ }
  /* Level #3: Enable the AST-level optimization pass.
   *        -> This is mainly where constant propagation is implemented,
   *           among other, minor optimizations such as double-casts to
-  *           known types
-  */
- if (level >= 3) script_options.co_optimizer |= OPTIMIZE_FENABLED,
+  *           known types */
+ if (level >= 3) script_options.co_optimizer |= (OPTIMIZE_FENABLED|OPTIMIZE_FCONSTSYMS),
                  script_options.co_assembler |= ASM_FREUSELOC;
  /* Level #2: Enable initialization-is-allocation for __stack variable & peephole optimization.
   *        -> Note that peephole also implements dead-code elimination, as well
@@ -419,6 +426,7 @@ struct compiler_flag {
 PRIVATE struct compiler_flag const compiler_flags[] = {
     { "lfstmt",        0, FIELD(co_parser),    PARSE_FLFSTMT },
     { "ast-optimize",  0, FIELD(co_optimizer), OPTIMIZE_FENABLED },
+    { "ast-constsyms", 0, FIELD(co_optimizer), OPTIMIZE_FCONSTSYMS },
     { "ast-predict",   1, FIELD(co_optimizer), OPTIMIZE_FNOPREDICT },
     { "ast-compare",   1, FIELD(co_optimizer), OPTIMIZE_FNOCOMPARE },
     { "ast-onepass",   0, FIELD(co_optimizer), OPTIMIZE_FONEPASS },
@@ -1003,7 +1011,7 @@ INTERN struct compiler_options import_options = {
     /* .co_tabwidth      = */0,
     /* .co_compiler      = */COMPILER_FNORMAL,
     /* .co_parser        = */PARSE_FNORMAL,
-    /* .co_optimizer     = */OPTIMIZE_FENABLED,
+    /* .co_optimizer     = */OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS,
     /* .co_unwind_limit  = */4,
     /* .co_assembler     = */ASM_FOPTIMIZE|ASM_FPEEPHOLE|ASM_FREUSELOC|ASM_FSTACKDISP,
     /* .co_decloader     = */DEC_FNORMAL,

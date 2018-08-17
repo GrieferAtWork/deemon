@@ -16,8 +16,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_OPERATOR_C
-#define GUARD_DEEMON_COMPILER_OPTIMIZE_OPERATOR_C 1
+#ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_OPERATOR_C
+#define GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_OPERATOR_C 1
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
@@ -119,20 +119,21 @@ emulate_member_call(DeeObject *__restrict base,
 }
 
 
-INTERN int (DCALL ast_optimize_operator)(DeeAstObject *__restrict self, bool result_used) {
+INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack,
+                                         DeeAstObject *__restrict self, bool result_used) {
  unsigned int opcount; int temp;
  DREF DeeObject *operator_result;
  ASSERT(self->ast_type == AST_OPERATOR);
  /* Only optimize sub-branches, but don't propagate constants
   * if the branch has already been optimized before. */
  if (self->ast_operator.ast_exflag & AST_OPERATOR_FDONTOPT) {
-  if (ast_optimize(self->ast_operator.ast_opa,true)) goto err;
+  if (ast_optimize(stack,self->ast_operator.ast_opa,true)) goto err;
   if (self->ast_operator.ast_opb) {
-   if (ast_optimize(self->ast_operator.ast_opb,true)) goto err;
+   if (ast_optimize(stack,self->ast_operator.ast_opb,true)) goto err;
    if (self->ast_operator.ast_opc) {
-    if (ast_optimize(self->ast_operator.ast_opc,true)) goto err;
+    if (ast_optimize(stack,self->ast_operator.ast_opc,true)) goto err;
     if (self->ast_operator.ast_opd &&
-        ast_optimize(self->ast_operator.ast_opd,true)) goto err;
+        ast_optimize(stack,self->ast_operator.ast_opd,true)) goto err;
    }
   }
   return 0;
@@ -162,14 +163,18 @@ INTERN int (DCALL ast_optimize_operator)(DeeAstObject *__restrict self, bool res
   DeeAstObject *base = self->ast_operator.ast_opa->ast_operator.ast_opa;
   DeeAstObject *name = self->ast_operator.ast_opa->ast_operator.ast_opb;
   DeeAstObject *args = self->ast_operator.ast_opb;
+  struct ast_optimize_stack function_base;
+  function_base.os_ast  = self->ast_operator.ast_opa;
+  function_base.os_prev = stack;
+  function_base.os_used = true;
   /* Optimize the attribute name and make sure it's a constant string. */
-  if (ast_optimize(name,true)) goto err;
+  if (ast_optimize(&function_base,name,true)) goto err;
   if (name->ast_type == AST_CONSTEXPR && DeeString_Check(name->ast_constexpr)) {
    /* Optimize the base-expression and make sure it's constant. */
-   if (ast_optimize(base,true)) goto err;
+   if (ast_optimize(&function_base,base,true)) goto err;
    if (base->ast_type == AST_CONSTEXPR) {
     /* Optimize the argument list and make sure it's a constant tuple. */
-    if (ast_optimize(args,true)) goto err;
+    if (ast_optimize(stack,args,true)) goto err;
     if (args->ast_type == AST_CONSTEXPR && DeeTuple_Check(args->ast_constexpr)) {
      /* All right! everything has fallen into place, and this is
       * a valid candidate for <getattr> -> <call> optimization. */
@@ -195,16 +200,16 @@ INTERN int (DCALL ast_optimize_operator)(DeeAstObject *__restrict self, bool res
  }
 
  opcount = 1;
- if (ast_optimize(self->ast_operator.ast_opa,true)) goto err;
+ if (ast_optimize(stack,self->ast_operator.ast_opa,true)) goto err;
  if (self->ast_operator.ast_opb) {
   ++opcount;
-  if (ast_optimize(self->ast_operator.ast_opb,true)) goto err;
+  if (ast_optimize(stack,self->ast_operator.ast_opb,true)) goto err;
   if (self->ast_operator.ast_opc) {
    ++opcount;
-   if (ast_optimize(self->ast_operator.ast_opc,true)) goto err;
+   if (ast_optimize(stack,self->ast_operator.ast_opc,true)) goto err;
    if (self->ast_operator.ast_opd) {
     ++opcount;
-    if (ast_optimize(self->ast_operator.ast_opd,true)) goto err;
+    if (ast_optimize(stack,self->ast_operator.ast_opd,true)) goto err;
    }
   }
  }
@@ -355,4 +360,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_OPTIMIZE_OPERATOR_C */
+#endif /* !GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_OPERATOR_C */

@@ -24,7 +24,47 @@
 
 DECL_BEGIN
 
+#define OPTIMIZE_FNORMAL    0x0000 /* Default optimizer flags. */
+#define OPTIMIZE_FDISABLED  0x0000 /* VALUE: AST-Optimization is disabled. */
+#define OPTIMIZE_FENABLED   0x0001 /* FLAG: AST-Optimization is enabled (May be or'd with other options below).
+                                    *       This is the main optimizer feature flag that enables constant propagation,
+                                    *       and is required to enable all other optimizations.
+                                    * WARNING: AST optimizations may break DDI consistency by deleting/skewing
+                                    *          branches that would otherwise remain available, thus changing the
+                                    *          positions of checkpoints, as well as their number.
+                                    *          It is therefor recommended not to set this flag unless also
+                                    *          passing the `ASM_FNODDI' flag to the assembler during the last
+                                    *          phase of code generation. */
+#define OPTIMIZE_FONEPASS   0x0008 /* FLAG: Only perform a single optimization pass. */
+#define OPTIMIZE_FCSE       0x0100 /* FLAG: Perform common-subexpression-elimination. (i.e. moving stuff out of conditional expressions) */
+#define OPTIMIZE_FCONSTSYMS 0x0200 /* FLAG: Allow local, stack & static variables that are only written once, to be turned into constants. */
+#define OPTIMIZE_FNOUSESYMS 0x0400 /* FLAG: Allow local, stack & static variables that were written, but never read from to be removed. */
+#define OPTIMIZE_FNOCOMPARE 0x4000 /* FLAG: Comparing ASTs always returns `false'. */
+#define OPTIMIZE_FNOPREDICT 0x8000 /* FLAG: Disable type prediction of ASTs.
+                                    *       AST type prediction is able to affect code beyond the optimization
+                                    *       pass, as certain ASTs need to generate less assembly when the type
+                                    *       of an operand is already known at compile-time (or rather assembly-time).
+                                    *       For example: `x = !!y;' When it is known that `y' already is a boolean,
+                                    *       then no intermediate code must be generated before assigning its value
+                                    *       to `x'. However when `OPTIMIZE_FNOPREDICT' is set, code to cast `y' to
+                                    *       a boolean is generated in all cases, regardless of what the actual type
+                                    *       of `y' might be if it was even known at all.
+                                    * NOTE: Unlike other optimization flags, this one is unaffected by `OPTIMIZE_FENABLED'.
+                                    * NOTE: This also causes `ast_has_sideeffects()' to always return `true',
+                                    *       `ast_get_boolean()' to always return `-1', as well as disable other
+                                    *       internal ast analyzers that are only used for automatic optimizations
+                                    *       during assembly to allow for smaller code generation. */
+
+
+
 #ifdef CONFIG_BUILDING_DEEMON
+
+struct ast_optimize_stack {
+    struct ast_optimize_stack *os_prev; /* [0..1] The ast from which the optimization originates. */
+    DeeAstObject              *os_ast;  /* [1..1] The ast being optimized. */
+    bool                       os_used; /* True if this stack-branch is being used. */
+};
+
 
 /* Perform optimizations, such as substituting constants and symbols, etc.
  * HINT: Constants have been implemented somewhat differently in deemon v200:
@@ -37,10 +77,16 @@ DECL_BEGIN
  *       calling this function, and don't call it when it is set.
  * @return:  0: The branch was potentially optimized.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL ast_optimize)(DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize)(struct ast_optimize_stack *parent, DeeAstObject *__restrict self, bool result_used);
 
-/* Ast optimization sub-functions. */
-INTDEF int (DCALL ast_optimize_operator)(DeeAstObject *__restrict self, bool result_used);
+/* Ast optimization sub-functions.
+ * @param: self:        == stack->os_ast
+ * @param: result_used: == stack->os_used */
+INTDEF int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_action)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_multiple)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
 
 INTDEF uint16_t optimizer_flags; /* Set of `OPTIMIZE_F*' */
 INTDEF uint16_t unwind_limit;    /* The max amount of times that a loop may be unwound. */
@@ -48,7 +94,7 @@ INTDEF unsigned int optimizer_count; /* Incremented each time `ast_optimize' per
 
 /* Similar to `ast_optimize()', but keeps on doing it's thing while `optimizer_count' changes.
  * NOTE: When the `OPTIMIZE_FONEPASS' flag is set, this function behaves identical to `ast_optimize()' */
-INTDEF int DCALL ast_optimize_all(DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_all)(DeeAstObject *__restrict self, bool result_used);
 
 /* Check if `a' and `b' are semantically speaking the same AST.
  * When the `OPTIMIZE_FNOCOMPARE' flag is set, this always returns `false' */
@@ -89,6 +135,15 @@ INTDEF DeeAstObject *DCALL ast_setscope_and_ddi(DeeAstObject *ast,
 /* Internal optimization helpers... */
 INTDEF bool DCALL ast_has_sideeffects(DeeAstObject *__restrict self);
 INTDEF bool DCALL ast_is_nothrow(DeeAstObject *__restrict self, bool result_used);
+
+/* Check if a given ast `self' is, or contains a `goto' branch,
+ * or a `break' / `continue' branch when `consider_loopctl' is set. */
+INTDEF bool DCALL ast_contains_goto(DeeAstObject *__restrict self, uint16_t consider_loopctl);
+#define AST_CONTAINS_GOTO_CONSIDER_NONE     0x00
+#define AST_CONTAINS_GOTO_CONSIDER_CONTINUE 0x01
+#define AST_CONTAINS_GOTO_CONSIDER_BREAK    0x02
+#define AST_CONTAINS_GOTO_CONSIDER_ALL      0xff
+
 
 /* Checks if a branch _NEVER_ returns normally (e.g. `yield' can return normally; `return' can't)
  * Something like a label is unpredictable, as it can return even if the previous instruction can't.

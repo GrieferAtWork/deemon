@@ -132,7 +132,7 @@ again:
                WARN(W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG))
       goto err_args;
    /* Optimize the arguments AST to reduce the argument tuple. */
-   if (ast_optimize(args_ast,true)) goto err_args;
+   if (ast_optimize(NULL,args_ast,true)) goto err_args;
   }
   __IF0 {
 need_constexpr:

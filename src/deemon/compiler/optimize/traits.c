@@ -1114,6 +1114,188 @@ ast_equal(DeeAstObject *__restrict a,
 }
 
 
+
+/* Check if a given ast `self' is, or contains a `goto' branch,
+ * or a `break' / `continue' branch when `consider_loopctl' is true.
+ * NOTE: `goto' branches found in inner functions are not considered here! */
+INTERN bool DCALL
+ast_contains_goto(DeeAstObject *__restrict self,
+                  uint16_t consider_loopctl) {
+ switch (self->ast_type) {
+
+ case AST_CONSTEXPR:
+ case AST_SYM:
+ case AST_UNBIND:
+ case AST_BNDSYM:
+ case AST_FUNCTION:
+no:
+  return false;
+
+ {
+  size_t i;
+ case AST_MULTIPLE:
+  for (i = 0; i < self->ast_multiple.ast_exprc; ++i) {
+   if (ast_contains_goto(self->ast_multiple.ast_exprv[i],consider_loopctl))
+       goto yes;
+  }
+  goto no;
+ }
+
+ case AST_RETURN:
+ case AST_YIELD:
+ case AST_THROW:
+ case AST_BOOL:
+ case AST_EXPAND:
+ case AST_OPERATOR_FUNC:
+  if (!self->ast_returnexpr) goto no;
+  return ast_contains_goto(self->ast_returnexpr,consider_loopctl);
+
+ {
+  size_t i;
+ case AST_TRY:
+  if (ast_contains_goto(self->ast_try.ast_guard,consider_loopctl))
+      goto yes;
+  for (i = 0; i < self->ast_try.ast_catchc; ++i) {
+   if (self->ast_try.ast_catchv[i].ce_mask &&
+       ast_contains_goto(self->ast_try.ast_catchv[i].ce_mask,consider_loopctl))
+       goto yes;
+   if (ast_contains_goto(self->ast_try.ast_catchv[i].ce_code,consider_loopctl))
+       goto yes;
+  }
+  goto no;
+ } break;
+
+ case AST_LOOP:
+  if (self->ast_loop.ast_cond &&
+      ast_contains_goto(self->ast_loop.ast_cond,AST_CONTAINS_GOTO_CONSIDER_NONE))
+      goto yes;
+  if (self->ast_loop.ast_next &&
+      ast_contains_goto(self->ast_loop.ast_next,AST_CONTAINS_GOTO_CONSIDER_NONE))
+      goto yes;
+  if (self->ast_loop.ast_loop &&
+      ast_contains_goto(self->ast_loop.ast_loop,AST_CONTAINS_GOTO_CONSIDER_NONE))
+      goto yes;
+  goto no;
+
+ case AST_LOOPCTL:
+  if (self->ast_flag == AST_FLOOPCTL_BRK
+      ? (consider_loopctl & AST_CONTAINS_GOTO_CONSIDER_BREAK)
+      : (consider_loopctl & AST_CONTAINS_GOTO_CONSIDER_CONTINUE))
+      goto yes;
+  goto no;
+
+ case AST_CONDITIONAL:
+  if (ast_contains_goto(self->ast_conditional.ast_cond,consider_loopctl))
+      goto yes;
+  if (self->ast_conditional.ast_tt &&
+      self->ast_conditional.ast_tt != self->ast_conditional.ast_cond &&
+      ast_contains_goto(self->ast_conditional.ast_tt,consider_loopctl))
+      goto yes;
+  if (self->ast_conditional.ast_ff &&
+      self->ast_conditional.ast_ff != self->ast_conditional.ast_cond &&
+      ast_contains_goto(self->ast_conditional.ast_ff,consider_loopctl))
+      goto yes;
+  goto no;
+
+ case AST_OPERATOR:
+  if (self->ast_operator.ast_opa) {
+   if (ast_contains_goto(self->ast_operator.ast_opa,consider_loopctl))
+       goto yes;
+   if (self->ast_operator.ast_opb) {
+    if (ast_contains_goto(self->ast_operator.ast_opb,consider_loopctl))
+        goto yes;
+    if (self->ast_operator.ast_opc) {
+     if (ast_contains_goto(self->ast_operator.ast_opc,consider_loopctl))
+         goto yes;
+     if (self->ast_operator.ast_opd) {
+      if (ast_contains_goto(self->ast_operator.ast_opd,consider_loopctl))
+          goto yes;
+     }
+    }
+   }
+  }
+  goto no;
+
+ case AST_ACTION:
+  switch (AST_FACTION_ARGC_GT(self->ast_flag)) {
+  case 3: if (ast_contains_goto(self->ast_action.ast_act0,consider_loopctl)) goto yes;
+  case 2: if (ast_contains_goto(self->ast_action.ast_act0,consider_loopctl)) goto yes;
+  case 1: if (ast_contains_goto(self->ast_action.ast_act0,consider_loopctl)) goto yes;
+  default: break;
+  }
+  goto no;
+
+ {
+  size_t i;
+ case AST_CLASS:
+  if (self->ast_class.ast_base &&
+      ast_contains_goto(self->ast_class.ast_base,consider_loopctl))
+      goto yes;
+  if (self->ast_class.ast_name &&
+      ast_contains_goto(self->ast_class.ast_name,consider_loopctl))
+      goto yes;
+  if (self->ast_class.ast_doc &&
+      ast_contains_goto(self->ast_class.ast_doc,consider_loopctl))
+      goto yes;
+  if (self->ast_class.ast_imem &&
+      ast_contains_goto(self->ast_class.ast_imem,consider_loopctl))
+      goto yes;
+  if (self->ast_class.ast_cmem &&
+      ast_contains_goto(self->ast_class.ast_cmem,consider_loopctl))
+      goto yes;
+  for (i = 0; i < self->ast_class.ast_memberc; ++i) {
+   if (ast_contains_goto(self->ast_class.ast_memberv[i].cm_ast,consider_loopctl))
+       goto yes;
+  }
+  goto no;
+ }
+
+ {
+  struct text_label *iter;
+ case AST_SWITCH:
+  /* Don't consider `break', which appears as part of the switch-branch! */
+  consider_loopctl &= ~AST_CONTAINS_GOTO_CONSIDER_BREAK;
+  if (ast_contains_goto(self->ast_switch.ast_expr,consider_loopctl))
+      goto yes;
+  if (ast_contains_goto(self->ast_switch.ast_block,consider_loopctl))
+      goto yes;
+  /* Don't forget to check the case expressions, too. */
+  iter = self->ast_switch.ast_cases;
+  for (; iter; iter = iter->tl_next) {
+   if (ast_contains_goto(iter->tl_expr,consider_loopctl))
+       goto yes;
+  }
+  goto no;
+ }
+
+ {
+  size_t i;
+ case AST_ASSEMBLY:
+#if 0 /* Nope! - User-assembly should mark variables it uses manually!
+       * >> local x = "foobar";
+       * >> __asm__("" : "+x" (x)); // This prevents `x' from being optimized away! */
+  if (self->ast_flag & AST_FASSEMBLY_NORETURN)
+      goto yes;
+#endif
+  /* Check user-assembly operands. */
+  for (i = 0; i <
+       self->ast_assembly.ast_num_i +
+       self->ast_assembly.ast_num_i; ++i) {
+   if (ast_contains_goto(self->ast_assembly.ast_opv[i].ao_expr,consider_loopctl))
+       goto yes;
+  }
+  goto no;
+ }
+
+ default: break;
+ }
+ /* fallback: Any branch we don't recognize may point to a GOTO branch.
+  *        -> While we should be able to recognize everything, we still
+  *           got to be as future-proof as possible! */
+yes:
+ return true;
+}
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_COMPILER_OPTIMIZE_TRAITS_C */

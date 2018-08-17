@@ -102,6 +102,7 @@ struct symbol {
 #define SYMBOL_TYPE_THIS   0x000f  /* The this-argument of a function. */
 #define SYMBOL_TYPE_AMBIG  0x0010  /* An ambiguous symbol (caused by `import *' when an overlap occurrs). */
 #define SYMBOL_TYPE_FWD    0x0011  /* A forward-defined symbol. */
+#define SYMBOL_TYPE_CONST  0x0012  /* A symbol that evaluates to a constant expression. */
 #define SYMBOL_TYPE_MAYREF(x) ((x) >= SYMBOL_TYPE_ARG)
     uint16_t             s_type;   /* Symbol class. (One of `SYMBOL_TYPE_*')
                                     * This describes how is the variable addressed, and where does it live. */
@@ -154,6 +155,8 @@ struct symbol {
             size_t                     a_declc;  /* Number of additional declaration locations. */
             struct ast_loc            *a_declv;  /* [0..a_declc][owned] Additional declaration locations. */
         }                s_ambig;  /* [SYMBOL_TYPE_AMBIG] */
+        DREF DeeObject  *s_const;  /* [SYMBOL_TYPE_CONST] The constant that the symbol evaluates to. */
+
     };
 };
 

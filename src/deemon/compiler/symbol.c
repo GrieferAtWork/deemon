@@ -84,8 +84,9 @@ INTERN char const symclass_names[0x1f + 1][8] = {
     /* [SYMBOL_TYPE_THIS  ] = */"this",
     /* [SYMBOL_TYPE_AMBIG ] = */"ambig",
     /* [SYMBOL_TYPE_FWD   ] = */"fwd",
+    /* [SYMBOL_TYPE_CONST ] = */"const",
     "?","?","?","?","?","?","?",
-    "?","?","?","?","?","?","?"
+    "?","?","?","?","?","?"
 };
 
 
@@ -131,6 +132,9 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
   break;
  case SYMBOL_TYPE_AMBIG:
   Dee_Free(self->s_ambig.a_declv);
+  break;
+ case SYMBOL_TYPE_CONST:
+  Dee_Decref(self->s_const);
   break;
 
  default: break;

@@ -95,7 +95,8 @@ asm_gpush_function(DeeAstObject *__restrict function_ast) {
     goto err_refv;
  /* Push referenced symbols. */
  for (i = 0; i < refc; ++i) {
-  refv[i].sr_sym->s_flag  = refv[i].sr_orig_flag;
+  refv[i].sr_sym->s_flag &= ~(SYMBOL_FALLOC|SYMBOL_FALLOCREF);
+  refv[i].sr_sym->s_flag |= refv[i].sr_orig_flag & (SYMBOL_FALLOC|SYMBOL_FALLOCREF);
   refv[i].sr_sym->s_refid = refv[i].sr_orig_refid;
   if (asm_gpush_symbol(refv[i].sr_sym,function_ast))
       goto err_refv;
@@ -143,7 +144,8 @@ asm_gmov_function(struct symbol *__restrict dst,
     goto err_refv;
  /* Push referenced symbols. */
  for (i = 0; i < refc; ++i) {
-  refv[i].sr_sym->s_flag  = refv[i].sr_orig_flag;
+  refv[i].sr_sym->s_flag &= ~(SYMBOL_FALLOC|SYMBOL_FALLOCREF);
+  refv[i].sr_sym->s_flag |= refv[i].sr_orig_flag & (SYMBOL_FALLOC|SYMBOL_FALLOCREF);
   refv[i].sr_sym->s_refid = refv[i].sr_orig_refid;
   if (asm_gpush_symbol(refv[i].sr_sym,function_ast))
       goto err_refv;

@@ -812,6 +812,9 @@ check_sym_class:
       goto err;
   return asm_gpush_none();
 
+ case SYMBOL_TYPE_CONST:
+  return asm_gpush_constexpr(sym->s_const);
+
  default:
   ASSERTF(0,"Unsupporetd variable type");
  }

@@ -142,14 +142,14 @@ struct ast_object {
                                               * NOTE: When set to `none', this AST can be used as a noop expression. */
 
 #define AST_SYM              0x0001          /* `foo' */
-        struct symbol       *ast_sym;        /* [1..1][REF(->sym_read) / REF(->sym_write)] Symbol referenced by this AST.
+        struct symbol       *ast_sym;        /* [1..1][REF(->s_nread) | REF(->s_wread)] Symbol referenced by this AST.
                                               * NOTE: When ast_flag is non-zero, then the symbol is being written to. */
 
 #define AST_UNBIND           0x0002          /* `del foo' */
-        struct symbol       *ast_unbind;     /* [1..1] The symbol that should be unbound. */
+        struct symbol       *ast_unbind;     /* [1..1][REF(->s_nwrite)] The symbol that should be unbound. */
 
 #define AST_BNDSYM           0x0003          /* `bound(foo)' */
-        struct symbol       *ast_bndsym;     /* [1..1][REF(->sym_read)] The symbol that should be checked for being bound. */
+        struct symbol       *ast_bndsym;     /* [1..1][REF(->s_nbound)] The symbol that should be checked for being bound. */
 
         /* Statement expressions. */
 #define AST_MULTIPLE                    0x0004  /* Multiple, consecutive statements/expressions.
@@ -557,35 +557,6 @@ DDATDEF DeeTypeObject DeeAst_Type;
 #define DeeAst_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeAst_Type)
 
 
-
-#define OPTIMIZE_FNORMAL    0x0000 /* Default optimizer flags. */
-#define OPTIMIZE_FDISABLED  0x0000 /* VALUE: AST-Optimization is disabled. */
-#define OPTIMIZE_FENABLED   0x0001 /* FLAG: AST-Optimization is enabled (May be or'd with other options below).
-                                    *       This is the main optimizer feature flag that enables constant propagation,
-                                    *       and is required to enable all other optimizations.
-                                    * WARNING: AST optimizations may break DDI consistency by deleting/skewing
-                                    *          branches that would otherwise remain available, thus changing the
-                                    *          positions of checkpoints, as well as their number.
-                                    *          It is therefor recommended not to set this flag unless also
-                                    *          passing the `ASM_FNODDI' flag to the assembler during the last
-                                    *          phase of code generation. */
-#define OPTIMIZE_FONEPASS   0x0008 /* FLAG: Only perform a single optimization pass. */
-#define OPTIMIZE_FCSE       0x0100 /* FLAG: Perform common-subexpression-elimination. (i.e. moving stuff out of conditional expressions) */
-#define OPTIMIZE_FNOCOMPARE 0x4000 /* FLAG: Comparing ASTs always returns `false'. */
-#define OPTIMIZE_FNOPREDICT 0x8000 /* FLAG: Disable type prediction of ASTs.
-                                    *       AST type prediction is able to affect code beyond the optimization
-                                    *       pass, as certain ASTs need to generate less assembly when the type
-                                    *       of an operand is already known at compile-time (or rather assembly-time).
-                                    *       For example: `x = !!y;' When it is known that `y' already is a boolean,
-                                    *       then no intermediate code must be generated before assigning its value
-                                    *       to `x'. However when `OPTIMIZE_FNOPREDICT' is set, code to cast `y' to
-                                    *       a boolean is generated in all cases, regardless of what the actual type
-                                    *       of `y' might be if it was even known at all.
-                                    * NOTE: Unlike other optimization flags, this one is unaffected by `OPTIMIZE_FENABLED'.
-                                    * NOTE: This also causes `ast_has_sideeffects()' to always return `true',
-                                    *       `ast_get_boolean()' to always return `-1', as well as disable other
-                                    *       internal ast analyzers that are only used for automatic optimizations
-                                    *       during assembly to allow for smaller code generation. */
 
 
 #ifdef CONFIG_BUILDING_DEEMON

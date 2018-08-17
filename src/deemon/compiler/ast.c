@@ -292,6 +292,7 @@ DEFINE_AST_GENERATOR(ast_unbind,
  if likely(result) {
   result->ast_type   = AST_UNBIND;
   result->ast_unbind = sym;
+  SYMBOL_INC_NWRITE(sym);
   INIT_REF(result);
  }
  return result;
@@ -1014,6 +1015,9 @@ do_xdecref_3:
   ASSERTF(!self->ast_flag,"At least some write-wrappers havn't been unwound.");
   SYMBOL_DEC_NREAD(self->ast_sym);
   break;
+ case AST_UNBIND:
+  SYMBOL_DEC_NWRITE(self->ast_unbind);
+  break;
  case AST_BNDSYM:
   SYMBOL_DEC_NBOUND(self->ast_bndsym);
   break;
@@ -1070,7 +1074,6 @@ do_xdecref_3:
  } break;
 
  //case AST_LOOPCTL:
- //case AST_UNBIND:
  default: break;
  }
 }

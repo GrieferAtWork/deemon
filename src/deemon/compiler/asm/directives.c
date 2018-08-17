@@ -104,7 +104,7 @@ PRIVATE DREF DeeObject *FCALL do_parse_constant(void) {
  scope_pop();
  if unlikely(!const_ast) goto err;
  /* Optimize the constant branch to allow for constant propagation. */
- if unlikely(ast_optimize(const_ast,true))
+ if unlikely(ast_optimize(NULL,const_ast,true))
     goto err_const_ast;
  if (const_ast->ast_type == AST_CONSTEXPR &&
      asm_allowconst(const_ast->ast_constexpr)) {

@@ -1,0 +1,117 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_SYMBOL_C
+#define GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_SYMBOL_C 1
+#define _KOS_SOURCE 1
+
+#include <deemon/api.h>
+#include <deemon/object.h>
+#include <deemon/module.h>
+#include <deemon/error.h>
+#include <deemon/none.h>
+#include <deemon/compiler/ast.h>
+#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
+
+DECL_BEGIN
+
+INTERN int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack,
+                                       DeeAstObject *__restrict self, bool result_used) {
+ struct symbol *sym;
+ DREF DeeObject *symval;
+ ASSERT(self->ast_type == AST_SYM);
+ (void)stack;
+ /* If the symbol is being written to, then we can't optimize for external constants. */
+ if (self->ast_flag)
+     return 0;
+ sym = self->ast_sym;
+ if (!result_used) {
+  OPTIMIZE_VERBOSE("Remove unused symbol ast");
+  SYMBOL_DEC_NREAD(sym);
+  self->ast_type = AST_CONSTEXPR;
+  self->ast_constexpr = Dee_None;
+  Dee_Incref(Dee_None);
+  goto did_optimize;
+ }
+ SYMBOL_INPLACE_UNWIND_ALIAS(sym);
+ ASSERT(sym->s_nread);
+ /* Optimize constant, extern symbols. */
+ if (sym->s_type == SYMBOL_TYPE_EXTERN &&
+    (sym->s_extern.e_symbol->ss_flags & MODSYM_FCONSTEXPR)) {
+  /* The symbol is allowed to be expanded at compile-time. */
+  int error;
+  DeeModuleObject *symmod;
+  symmod = SYMBOL_EXTERN_MODULE(sym);
+  error  = DeeModule_RunInit((DeeObject *)symmod);
+  if unlikely(error < 0) goto err;
+  if (error == 0) {
+   /* The module is not initialized. */
+   ASSERT(sym->s_extern.e_symbol->ss_index <
+          symmod->mo_globalc);
+#ifndef CONFIG_NO_THREADS
+   rwlock_read(&symmod->mo_lock);
+#endif
+   symval = symmod->mo_globalv[sym->s_extern.e_symbol->ss_index];
+   Dee_XIncref(symval);
+#ifndef CONFIG_NO_THREADS
+   rwlock_endread(&symmod->mo_lock);
+#endif
+   /* Make sure that the symbol value is allowed
+    * to be expanded in constant expression. */
+   if likely(symval) {
+    int allowed;
+set_constant_expression:
+    allowed = allow_constexpr(symval);
+    if (allowed == CONSTEXPR_USECOPY) {
+     if (DeeObject_InplaceDeepCopy(&symval)) {
+      DeeError_Handled(ERROR_HANDLED_RESTORE);
+      goto done_set_constexpr;
+     }
+    } else if (allowed != CONSTEXPR_ALLOWED) {
+     goto done_set_constexpr;
+    }
+    /* Set the value as a constant expression. */
+    self->ast_constexpr = symval; /* Inherit */
+    self->ast_type      = AST_CONSTEXPR;
+    SYMBOL_DEC_NREAD(sym); /* Trace read references. */
+    OPTIMIZE_VERBOSE("Inline constant symbol expression %r",symval);
+    goto did_optimize;
+   }
+done_set_constexpr:
+   Dee_Decref(symval);
+  }
+ }
+ /* Check for symbols that are actually constant expression. */
+ if (sym->s_type == SYMBOL_TYPE_CONST) {
+  symval = sym->s_const;
+  Dee_Incref(symval);
+  goto set_constant_expression;
+ }
+ return 0;
+err:
+ return -1;
+did_optimize:
+ ++optimizer_count;
+ return 0;
+}
+
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_SYMBOL_C */
