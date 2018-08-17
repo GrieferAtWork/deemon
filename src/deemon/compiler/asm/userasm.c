@@ -21,7 +21,13 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/compiler/ast.h>
+#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/compiler.h>
+#include <deemon/compiler/assembler.h>
 #include <deemon/error.h>
+
+#ifndef CONFIG_LANGUAGE_NO_ASM
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/tuple.h>
@@ -31,20 +37,18 @@
 #include <deemon/int.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/tpp.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/assembler.h>
 #include <deemon/module.h>
 
 #include "../../runtime/strings.h"
 
 #include <string.h>
 #include <limits.h>
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
+
 DECL_BEGIN
 
+#ifndef CONFIG_LANGUAGE_NO_ASM
 INTERN dssize_t DCALL
 asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
                          struct ascii_printer *__restrict printer) {
@@ -2111,8 +2115,69 @@ err:
  Dee_Free(cleanup_actions);
  return -1;
 }
+#else /* !CONFIG_LANGUAGE_NO_ASM */
+PRIVATE int DCALL
+compile_operator(struct asm_operand *__restrict op, bool is_output) {
+ char const *format;
+ DeeAstObject *ast = op->ao_expr;
+ ASSERT(op->ao_type);
+ format = op->ao_type->s_text;
+ if (is_output) {
+  /* Since there is no portable way of providing a values, `=x', while
+   * having an explicitly defined meaning, can't actually be used, since
+   * there would be nothing to store into it.
+   * However, `+x' is portable, and has the meaning of `op = op', which
+   * may actually have side-effects for non-symbol operands. */
+  if (strcmp(format,"+x") != 0) {
+   if (*format != '+' && *format != '=')
+        goto err_undefined_mode;
+   goto err_illegal_mode;
+  }
+  if (ast->ast_type == AST_SYM) {
+   SYMBOL_INPLACE_UNWIND_ALIAS(ast->ast_sym);
+   if (ast->ast_sym->s_type != SYMBOL_TYPE_GETSET)
+       goto done;
+  }
+  if (ast_genasm(ast,ASM_G_FPUSHRES)) goto err;
+  if (asm_gpop_expr(ast)) goto err;
+ } else {
+  if (strcmp(format,"x") != 0)
+      goto err_illegal_mode;
+  if (ast_genasm(ast,ASM_G_FNORMAL)) goto err;
+ }
+done:
+ return 0;
+err:
+ return -1;
+err_illegal_mode:
+ return DeeError_Throwf(&DeeError_CompilerError,
+                        "Illegal operand encoding %q",
+                        format);
+err_undefined_mode:
+ return DeeError_Throwf(&DeeError_CompilerError,
+                        "No operand mode has been defined by %q",
+                        format);
+}
+
+INTERN int DCALL
+ast_genasm_userasm(DeeAstObject *__restrict ast) {
+ size_t i;
+ ASSERT(ast->ast_type == AST_ASSEMBLY);
+ /* Still compile assembly operands. */
+ for (i = 0; i < ast->ast_assembly.ast_num_o; ++i) {
+  if (compile_operator(&ast->ast_assembly.ast_opv[i],true))
+      goto err;
+ }
+ for (i = 0; i < ast->ast_assembly.ast_num_i; ++i) {
+  if (compile_operator(&ast->ast_assembly.ast_opv[ast->ast_assembly.ast_num_o + i],false))
+      goto err;
+ }
+ return 0;
+err:
+ return -1;
+}
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 DECL_END
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 #endif /* !GUARD_DEEMON_COMPILER_ASM_USERASM_C */

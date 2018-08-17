@@ -1302,6 +1302,7 @@ action_set_expr_result:
   /* TODO: Looking at the type of the switch-expression, check if we can delete
    *       some impossible cases. (e.g. integer cases with string-expression) */
   break;
+
  {
   struct asm_operand *iter,*end;
  case AST_ASSEMBLY:

@@ -306,10 +306,8 @@ INTDEF DREF DeeAstObject *DCALL ast_parse_function_noscope_noargs(bool *pneed_se
  *       the current scope's chain of deleted/anonymous symbols) */
 INTDEF DREF DeeAstObject *DCALL ast_parse_del(unsigned int lookup_mode);
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
 /* Parse a user-defined assembly block. */
 INTDEF DREF DeeAstObject *DCALL ast_parse_asm(void);
-#endif
 
 /* Parse the argument list of a function definition,
  * automatically creating new symbols for arguments,

@@ -103,10 +103,8 @@ ast_parse_statement_or_expression(uint16_t mode,
  case KWD_print:
  case KWD_break:
  case KWD_continue:
-#ifndef CONFIG_LANGUAGE_NO_ASM
  case KWD___asm:
  case KWD___asm__:
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
  case KWD_goto:
  case KWD_switch:
  case KWD_case:
@@ -371,10 +369,8 @@ parse_remainder_after_semicolon_hybrid_popscope:
  case KWD_print:
  case KWD_break:
  case KWD_continue:
-#ifndef CONFIG_LANGUAGE_NO_ASM
  case KWD___asm:
  case KWD___asm__:
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
  case KWD_goto:
  case KWD_switch:
  case KWD_case:

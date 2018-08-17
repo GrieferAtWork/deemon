@@ -672,7 +672,6 @@ err_foreach_elem:
      goto err_r;
   break;
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
  case KWD___asm:
  case KWD___asm__:
   result = ast_parse_asm();
@@ -680,7 +679,6 @@ err_foreach_elem:
               WARN(W_EXPECTED_SEMICOLLON_AFTER_ASM))
      goto err_r;
   break;
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
  {
   struct text_label *goto_label;

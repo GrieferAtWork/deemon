@@ -132,6 +132,9 @@ function putc(self,c) -> self.operator putc(c);
  * invoke the (overridable) regular operators exported from this
  * module. */
 
+#if __DEEMON_VARIANT__ == "gatw" && \
+	__has_feature(deemon_inline_assembly)
+
 @"pos(a) or add(a,b)"
 function __pooad(a,b...) {
 	__asm__({
@@ -234,6 +237,33 @@ function __gaosa(obj,attr,opt...) {
 		: "noreturn"
 	);
 }
+#else
+
+@"pos(a) or add(a,b)"
+function __pooad(a,b?) {
+	return b !is bound ? pos(a) : add(a,b);
+}
+
+@"neg(a) or sub(a,b)"
+function __neosb(a,b...) {
+	return b !is bound ? neg(a) : sub(a,b);
+}
+
+@"getitem(seq,index) or setitem(seq,index,opt)"
+function __giosi(seq,index,opt?) {
+	return opt !is bound ? getitem(seq,index) : setitem(seq,index,opt);
+}
+
+@"getrange(seq,begin,end) or setrange(seq,begin,end,opt)"
+function __grosr(seq,begin,end,opt?) {
+	return opt !is bound ? getrange(seq,begin,end) : setrange(seq,begin,end,opt);
+}
+
+@"getattr(obj,attr) or setattr(obj,attr,opt)"
+function __gaosa(obj,attr,opt?) {
+	return opt !is bound ? getattr(obj,attr) : setattr(obj,attr,opt);
+}
+#endif
 
 
 

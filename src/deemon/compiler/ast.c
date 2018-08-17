@@ -849,19 +849,35 @@ DEFINE_AST_GENERATOR(ast_switch,
 DEFINE_AST_GENERATOR(ast_assembly,
                     (uint16_t flags, struct TPPString *__restrict text,
                      size_t num_o, size_t num_i, size_t num_l,
-                   /*inherit*/struct asm_operand *__restrict opv)) {
+                   /*inherit*/struct asm_operand *__restrict opv))
+#else /* !CONFIG_LANGUAGE_NO_ASM */
+DEFINE_AST_GENERATOR(ast_assembly,
+                    (uint16_t flags,
+                     size_t num_o, size_t num_i, size_t num_l,
+                   /*inherit*/struct asm_operand *__restrict opv))
+#endif /* CONFIG_LANGUAGE_NO_ASM */
+{
  DREF DeeAstObject *result;
+#ifndef CONFIG_LANGUAGE_NO_ASM
  ASSERT(text);
+#endif
  ASSERT(!(num_o+num_i+num_l) || opv);
  if likely((result = ast_new()) != NULL) {
   size_t i;
   /* Track the writes to output operands. */
-  for (i = 0; i < num_o; ++i)
-     ast_incwrite(opv[i].ao_expr);
+  for (i = 0; i < num_o; ++i) {
+   if (ASM_OPERAND_IS_INOUT(&opv[i])) {
+    ast_incwriteonly(opv[i].ao_expr);
+   } else {
+    ast_incwrite(opv[i].ao_expr);
+   }
+  }
   result->ast_type = AST_ASSEMBLY;
   result->ast_flag = flags;
+#ifndef CONFIG_LANGUAGE_NO_ASM
   result->ast_assembly.ast_text.at_text = text;
   TPPString_Incref(text);
+#endif
   result->ast_assembly.ast_num_o = num_o;
   result->ast_assembly.ast_num_i = num_i;
   result->ast_assembly.ast_num_l = num_l;
@@ -871,7 +887,6 @@ DEFINE_AST_GENERATOR(ast_assembly,
  }
  return result;
 }
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 #undef DEFINE_AST_GENERATOR
 
 INTERN bool DCALL
@@ -1019,7 +1034,6 @@ do_xdecref_3:
   Dee_Decref(self->ast_switch.ast_block);
   break;
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
  {
   struct asm_operand *iter,*end;
   size_t i;
@@ -1028,8 +1042,14 @@ do_xdecref_3:
                (self->ast_assembly.ast_num_o+
                 self->ast_assembly.ast_num_i);
   /* Track the writes to output operands. */
-  for (i = 0; i < self->ast_assembly.ast_num_o; ++i)
-     ast_decwrite(self->ast_assembly.ast_opv[i].ao_expr);
+  for (i = 0; i < self->ast_assembly.ast_num_o; ++i) {
+   struct asm_operand *op = &self->ast_assembly.ast_opv[i];
+   if (ASM_OPERAND_IS_INOUT(op)) {
+    ast_decwriteonly(op->ao_expr);
+   } else {
+    ast_decwrite(op->ao_expr);
+   }
+  }
   for (; iter != end; ++iter) {
    ASSERT(iter->ao_type);
    ASSERT(iter->ao_expr);
@@ -1044,9 +1064,10 @@ do_xdecref_3:
    --iter->ao_label->tl_goto;
   }
   Dee_Free(self->ast_assembly.ast_opv);
+#ifndef CONFIG_LANGUAGE_NO_ASM
   TPPString_Decref(self->ast_assembly.ast_text.at_text);
+#endif
  } break;
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
  //case AST_LOOPCTL:
  //case AST_UNBIND:

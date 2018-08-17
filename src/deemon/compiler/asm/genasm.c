@@ -3323,12 +3323,10 @@ got_class_incsp:
    */
   goto done_push_none;
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
  case AST_ASSEMBLY:
   if unlikely(ast_genasm_userasm(ast))
      goto err;
   goto done_push_none;
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
  default:
   ASSERTF(0,"Invalid AST type: %x",(unsigned int)ast->ast_type);

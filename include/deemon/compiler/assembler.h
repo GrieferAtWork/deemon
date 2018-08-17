@@ -1722,10 +1722,8 @@ INTDEF DeeAstObject *DCALL ast_strip_seqcast(DeeAstObject *__restrict ast);
 /* Generate text for a given `AST_SWITCH' branch. */
 INTDEF int DCALL ast_genasm_switch(DeeAstObject *__restrict ast);
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
 /* Generate user-assembly for a given `AST_ASSEMBLY' branch. */
 INTDEF int DCALL ast_genasm_userasm(DeeAstObject *__restrict ast);
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 /* Compile a DDI object for use by generated code. */
 INTDEF DREF DeeDDIObject *DCALL ddi_compile(void);

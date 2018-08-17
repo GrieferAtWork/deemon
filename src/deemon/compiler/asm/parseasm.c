@@ -1733,7 +1733,7 @@ continue_line:
       unlikely(yield() < 0)) goto err;
   /* Warn if this didn't go anywhere. */
   if unlikely(old_num == token.t_num) {
-   if (WARN(W_UASM_FAILED_PARSING_FAILED))
+   if (WARN(W_UASM_PARSING_FAILED))
        goto err;
    if unlikely(yield() < 0) goto err;
   }

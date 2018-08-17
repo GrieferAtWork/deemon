@@ -30,6 +30,21 @@
 
 DECL_BEGIN
 
+
+#if 0 /* When defined, implement user-assembly as described
+       * by `/lib/LANGUAGE.txt' for distributions lacking
+       * inline-assembly support.
+       *  - Still allow assembly for creation of artificial
+       *    dependencies restricting the ast-based optimizer.
+       *  - Cause a compiler error when the assembly text contains
+       *    non-whitespace characters.
+       */
+#undef CONFIG_LANGUAGE_NO_ASM
+#define CONFIG_LANGUAGE_NO_ASM 1
+#endif
+
+
+
 struct ast_loc;
 struct ast_object;
 

@@ -96,9 +96,7 @@ ast_predict_type(DeeAstObject *__restrict self) {
  case AST_THROW:
  case AST_LOOPCTL:
  case AST_SWITCH:
-#ifndef CONFIG_LANGUAGE_NO_ASM
  case AST_ASSEMBLY:
-#endif
   return &DeeNone_Type;
 #if 0
  case AST_TRY:
@@ -654,7 +652,6 @@ ast_doesnt_return(DeeAstObject *__restrict self,
   /* The simple never-return-branches */
   goto doesnt_return;
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
  {
   size_t i;
   bool has_noreturn;
@@ -677,7 +674,6 @@ ast_doesnt_return(DeeAstObject *__restrict self,
       goto doesnt_return; /* If the user-assembly states that it doesn't return, then this ast doesn't either! */
   goto does_return;
  } break;
-#endif
 
  case AST_CONDITIONAL:
   /* Simple case: If the condition doesn't return, neither
@@ -942,7 +938,6 @@ ast_uses_symbol(DeeAstObject *__restrict self,
   if (self->ast_loop.ast_loop && ast_uses_symbol(self->ast_loop.ast_loop,sym)) goto yup;
   break;
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
  {
   struct asm_operand *iter,*end;
  case AST_ASSEMBLY:
@@ -958,7 +953,6 @@ ast_uses_symbol(DeeAstObject *__restrict self,
        goto yup;
   }
  } break;
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
  default: break;
  }

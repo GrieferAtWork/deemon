@@ -25,7 +25,6 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
 DECL_BEGIN
 
 #define OPERAND_TYPE_OUTPUT 0
@@ -103,11 +102,15 @@ asm_parse_operands(struct operand_list *__restrict list,
  while ((type == OPERAND_TYPE_LABEL ? TPP_ISKEYWORD(tok)
                                     : tok == TOK_STRING) ||
          tok == '[') {
+#ifndef CONFIG_LANGUAGE_NO_ASM
   struct TPPKeyword *name = NULL;
+#endif /* CONFIG_LANGUAGE_NO_ASM */
   if (tok == '[') {
    if unlikely(yield() < 0) goto err;
    if (TPP_ISKEYWORD(tok)) {
+#ifndef CONFIG_LANGUAGE_NO_ASM
     name = token.t_kwd;
+#endif /* CONFIG_LANGUAGE_NO_ASM */
     if unlikely(yield() < 0) goto err;
    } else {
     if (WARN(W_EXPECTED_KEYWORD_FOR_OPERAND_NAME))
@@ -166,7 +169,9 @@ with_paren:
    operand->ao_type = operand_type; /* Inherit */
    operand->ao_expr = operand_value; /* Inherit */
   }
+#ifndef CONFIG_LANGUAGE_NO_ASM
   operand->ao_name = name;
+#endif /* CONFIG_LANGUAGE_NO_ASM */
   /* Yield the trailing comma. */
   if (tok != ',') break;
   if unlikely(yield() < 0) goto err;
@@ -218,7 +223,7 @@ PRIVATE int32_t DCALL asm_parse_clobber(void) {
     }
    }
   }
-  if (WARN(W_UASM_UNKNOWN_CLOBBER_NAME,name->s_text))
+  if (WARN(W_UNKNOWN_CLOBBER_NAME,name->s_text))
       goto err_name;
 got_clobber:
   TPPString_Decref(name);
@@ -248,7 +253,6 @@ LOCAL bool DCALL is_collon(void) {
 }
 
 
-#if 1
 struct tpp_string_printer {
     struct TPPString *sp_string; /* [0..1][owned] String buffer. */
     size_t            sp_length; /* Used string length. */
@@ -431,9 +435,30 @@ err_printer:
  TPPLexer_Current->l_flags |= old_flags;
  return NULL;
 }
+
+
+#ifdef CONFIG_LANGUAGE_NO_ASM
+PRIVATE int DCALL
+check_empty_assembly_text(struct TPPString *__restrict text,
+                          struct ast_loc *loc) {
+ char const *iter,*end;
+ end = (iter = text->s_text) + text->s_size;
+ /* Make sure that the string contains only whitespace. */
+ for (;;) {
+  if (iter >= end) goto ok;
+  if (!DeeUni_IsSpace(*iter)) break;
+  ++iter;
+ }
+ for (;;) {
+  if (iter >= end) goto ok;
+  if (!DeeUni_IsSpace(end[-1])) break;
+  --end;
+ }
+ return WARNAT(loc,W_UASM_NOT_SUPPORTED);
+ok:
+ return 0;
+}
 #endif
-
-
 
 
 
@@ -480,7 +505,6 @@ with_paren:
  if (tok == TOK_STRING) {
   text = TPPLexer_ParseString();
   if unlikely(!text) goto err_flags;
-#if 1
  } else if (tok == '{') {
   /* Auto-format token-based source code:
    *    >> __asm__({
@@ -522,12 +546,19 @@ with_paren:
    * is found. */
   text = parse_brace_text();
   if unlikely(!text) goto err_flags;
-#endif
  } else {
   if (WARN(W_EXPECTED_STRING_AFTER_ASM))
       goto err_flags;
   text = TPPString_NewEmpty();
  }
+
+#ifdef CONFIG_LANGUAGE_NO_ASM
+ /* When user-assembly is disabled, only empty (or
+  * fully whitespace) strings are allowed as text. */
+ if unlikely(check_empty_assembly_text(text,&loc))
+    goto err_ops;
+#endif /* CONFIG_LANGUAGE_NO_ASM */
+
  if (is_collon()) {
   if unlikely(yield() < 0) goto err_ops;
   /* Enable assembly formatting. */
@@ -563,11 +594,19 @@ with_paren:
         operands.ol_count[OPERAND_TYPE_OUTPUT]+
         operands.ol_count[OPERAND_TYPE_INPUT]+
         operands.ol_count[OPERAND_TYPE_LABEL]);
+#ifdef CONFIG_LANGUAGE_NO_ASM
+ result = ast_assembly(ast_flags,
+                       operands.ol_count[OPERAND_TYPE_OUTPUT],
+                       operands.ol_count[OPERAND_TYPE_INPUT],
+                       operands.ol_count[OPERAND_TYPE_LABEL],
+                       operands.ol_v);
+#else /* CONFIG_LANGUAGE_NO_ASM */
  result = ast_assembly(ast_flags,text,
                        operands.ol_count[OPERAND_TYPE_OUTPUT],
                        operands.ol_count[OPERAND_TYPE_INPUT],
                        operands.ol_count[OPERAND_TYPE_LABEL],
                        operands.ol_v);
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
  if unlikely(!result) goto err_ops;
  /* NOTE: `ast_assembly' has inherited the operand vector upon success. */
  TPPString_Decref(text);
@@ -584,6 +623,5 @@ err:
 
 
 DECL_END
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 #endif /* !GUARD_DEEMON_COMPILER_LEXER_ASM_C */

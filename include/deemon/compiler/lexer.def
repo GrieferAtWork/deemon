@@ -79,10 +79,8 @@ DEF_K(finally)
 DEF_K(catch)
 DEF_K(del)
 DEF_K(print)
-#ifndef CONFIG_LANGUAGE_NO_ASM
 DEF_K(__asm)
 DEF_K(__asm__)
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 DEF_K(goto)
 DEF_K(switch)
 DEF_K(case)
@@ -185,6 +183,13 @@ EXTENSION(EXT_OLD_STYLE_CLASSES,"old-style-classes",0)
 
 /* Indicate to user-code that they are running under deemon v200 */
 PREDEFINED_MACRO_IF(__DEEMON__,HAS(EXT_SYSTEM_MACROS),"200")
+PREDEFINED_MACRO_IF(__DEEMON_VARIANT__,HAS(EXT_SYSTEM_MACROS),"\"gatw\"")
+
+#ifndef CONFIG_LANGUAGE_NO_ASM
+/* Feature-check for user-code to see if deemon was
+ * built with support for inline assembly enabled. */
+HAS_FEATURE_IF(deemon_inline_assembly,1)
+#endif
 
 /* These are actually kind-of useful to determine the host platform in user-code.
  * Therefor I'll keep them as they were in the old deemon.
@@ -317,7 +322,6 @@ DEF_WARNING(W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED,(WG_SYNTAX),WSTATE_ERROR,WA
 DEF_WARNING(W_EXPECTED_COLLON_AFTER_DEFAULT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after `default', but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_COLLON_AFTER_CASE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after `case', but got " TOK_S,TOK_A))
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
 WARNING_NAMESPACE(WN_ASM_PARSER,2400)
 DEF_WARNING(W_EXPECTED_LPAREN_AFTER_ASM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `__asm__', but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_STRING_AFTER_ASM,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a string after `__asm__', but got " TOK_S,TOK_A))
@@ -328,7 +332,7 @@ DEF_WARNING(W_EXPECTED_STRING_BEFORE_OPERAND_VALUE,(WG_SYNTAX),WSTATE_ERROR,WARN
 DEF_WARNING(W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' before an assembly operand value, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after an assembly operand value, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword as label operand, but got " TOK_S,TOK_A))
-#endif /* CONFIG_LANGUAGE_NO_ASM */
+DEF_WARNING(W_UNKNOWN_CLOBBER_NAME,(WG_VALUE),WSTATE_WARN,WARNF("Unknown clobber name `%s'",ARG(char *)))
 
 
 /* Class */
@@ -407,15 +411,19 @@ DEF_WARNING(W_NO_D200_OLD_USER_CLASS,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `d20
 DEF_WARNING(W_COMPARE_SODO_NONBUILTIN_UNDEFINED,(WG_SYMBOL),WSTATE_WARN,WARNF("Comparing compiler-generated constants using `===' and `!==' produces undefined results"))
 
 
-#ifndef CONFIG_LANGUAGE_NO_ASM
+#ifdef CONFIG_LANGUAGE_NO_ASM
+WARNING_NAMESPACE(WN_ASM_INTERPRETER,4100)
+DEF_WARNING(W_UASM_NOT_SUPPORTED,(WG_SYNTAX),WSTATE_ERROR,
+            WARNF("User-assembly statements with non-empty assembly text are not supported"))
 
-
+#else /* CONFIG_LANGUAGE_NO_ASM */
 WGROUP(WG_ASM_UNKNOWN_MNEMONIC,"unknown-mnemonic",WSTATE_FATAL)
 WGROUP(WG_ASM_UNKNOWN_DIRECTIVE,"unknown-directive",WSTATE_FATAL)
 WGROUP(WG_ASM_RELOCATION_MODEL,"relocation-model",WSTATE_FATAL)
 
 WARNING_NAMESPACE(WN_ASM_INTERPRETER,4100)
-DEF_WARNING(W_UASM_FAILED_PARSING_FAILED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Failed to parse an assembly directive or instruction from " TOK_S,TOK_A))
+WARNING(W_UNUSED_4100,(WG_VALUE),WSTATE_DISABLED) /* `W_UASM_NOT_SUPPORTED' */
+DEF_WARNING(W_UASM_PARSING_FAILED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Failed to parse an assembly directive or instruction from " TOK_S,TOK_A))
 DEF_WARNING(W_UASM_IGNORING_TRAILING_TOKENS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Ignoring trailing token " TOK_S " after assembly directive or instruction",TOK_A))
 DEF_WARNING(W_UASM_EXPECTED_COLLON_AFTER_INTEGER,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after integer for symbol definition, but got " TOK_S,TOK_A))
 DEF_WARNING(W_UASM_UNKNOWN_MNEMONIC,(WG_ASM_UNKNOWN_MNEMONIC,WG_SYNTAX),WSTATE_ERROR,WARNF("Unknown mnemonic `%s'",KWDNAME()))
@@ -430,8 +438,6 @@ DEF_WARNING(W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WA
 DEF_WARNING(W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `#' after `stack' instruction prefix, but got " TOK_S,TOK_A))
 DEF_WARNING(W_UASM_HASH_FLAG_ALREADY_SET_FOR_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("`#' has already been used twice by this operand"))
 DEF_WARNING(W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND,(WG_SYNTAX),WSTATE_ERROR,WARNF("`$' has already been used by this operand"))
-
-DEF_WARNING(W_UASM_UNKNOWN_CLOBBER_NAME,(WG_VALUE),WSTATE_WARN,WARNF("Unknown clobber name `%s'",ARG(char *)))
 DEF_WARNING(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,(WG_VALUE),WSTATE_WARN,WARNF("User-assembly does not provide a value for output operand `%s'",ARG(char *)))
 DEF_WARNING(W_UASM_SYMBOL_ALREADY_DEFINED,(WG_SYMBOL),WSTATE_ERROR,WARNF("Assembly Symbol `%s' has already been defined",ARG(char *)))
 DEF_WARNING(W_UASM_DOESNT_CLEANUP_STACK,(WG_VALUE),WSTATE_WARN,WARNF("User-assembly ends without popping %lu stack entries",ARG(unsigned long)))

@@ -121,6 +121,8 @@ struct asm_operand {
                                            * NOTE: Also holds a reference to `tl_goto' */
     };
 };
+#define ASM_OPERAND_IS_INOUT(x) ((x)->ao_type->s_text[0] == '+')
+
 
 struct ast_object {
     OBJECT_HEAD

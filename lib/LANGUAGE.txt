@@ -1661,7 +1661,31 @@ ast_parse_asm ::= (
 	)...]
 	'('
 		(
-			/* The assembly text (implementation-specific) */
+			/* The assembly text (implementation-specific)
+			 * If provided by multiple distributions, the actual syntax
+			 * used can be defined by checking the `__DEEMON_VARIANT__'
+			 * predefined macro, which expands to a string.
+			 * For example, in GrieferAtWork's implementation, this macro
+			 * expands to "gatw", so you can do the following:
+			 * >> function add(a,b) {
+			 * >> #if __DEEMON_VARIANT__ == "gatw" && __has_feature(deemon_inline_assembly)
+			 * >>     __asm__("add %0, %1; ret pop"
+			 * >>             :
+			 * >>             : "s" (a), "s" (b)
+			 * >>             : "noreturn");
+			 * >> #elif __DEEMON_VARIANT__ == "someother_else"
+			 * >>     // No other implementation exists right now, but this could
+			 * >>     // be what user-assembly in its syntax would look like.
+			 * >>     __asm__("mov %%a, %0 + %1\n"
+			 * >>             "ret %%a"
+			 * >>             :
+			 * >>             : "V" (a), "V" (b)
+			 * >>             : "noreturn");
+			 * >> #else
+			 * >>     return a + b;
+			 * >> #endif
+			 * >> }
+			 */
 			DDI(<TOK_STRING>...) |
 
 			/* A different way of writing assembly is by writing the text
