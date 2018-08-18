@@ -205,13 +205,18 @@ INTERN int
                            bool result_used) {
  switch (ast->ast_type) {
 
- case AST_CONSTEXPR:
+ case AST_CONSTEXPR: /* Doesn't affect any symbols. */
+ case AST_GOTO:      /* We don't care about jumps, or behavior after no-return. */
+ case AST_FUNCTION:  /* Inner functions can't modify any of the symbols we're after. */
+ case AST_LOOPCTL:   /* Same as `AST_GOTO': we don't care about jumps. */
   break;
+
  case AST_SYM:
-  if (ast->ast_flag)
+  if (ast->ast_flag) /* Untracked write to symbol -> Symbol now has an undefined value. */
       return ast_assumes_setsymval(self,ast->ast_sym,NULL);
   break;
- case AST_UNBIND:
+
+ case AST_UNBIND:    /* Symbol gets unbound (XXX: maybe track this as `ITER_DONE'?) */
   return ast_assumes_setsymval(self,ast->ast_sym,NULL);
 
  {
@@ -233,8 +238,12 @@ INTERN int
   break;
 
   /* TODO: All the other branch types. */
+  /* TODO: Remember the special handling required for
+   *      `AST_CONDITIONAL', `AST_LOOP' and `AST_TRY'. */
+
 
  default:
+ /*case AST_LABEL:*/ /* Labels are way too unpredictable to allow for this type of optimization... */
   /* Default case: anything we don't recognize clears all assumptions,
    *               so we remain as future-proof as possible with new
    *               types of branches. */

@@ -272,12 +272,7 @@ again:
   return ast_optimize_action(stack,self,result_used);
 
  case AST_SWITCH:
-  if (ast_optimize(stack,self->ast_switch.ast_expr,true)) goto err;
-  if (ast_optimize(stack,self->ast_switch.ast_block,false)) goto err;
-  /* TODO: Delete constant cases shared with the default-case. */
-  /* TODO: Looking at the type of the switch-expression, check if we can delete
-   *       some impossible cases. (e.g. integer cases with string-expression) */
-  break;
+  return ast_optimize_switch(stack,self,result_used);
 
  {
   struct asm_operand *iter,*end;

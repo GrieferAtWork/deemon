@@ -146,6 +146,7 @@
     <ClCompile Include="..\src\deemon\compiler\optimize\opt_loop.c" />
     <ClCompile Include="..\src\deemon\compiler\optimize\opt_multiple.c" />
     <ClCompile Include="..\src\deemon\compiler\optimize\opt_operator.c" />
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_switch.c" />
     <ClCompile Include="..\src\deemon\compiler\optimize\opt_symbol.c" />
     <ClCompile Include="..\src\deemon\compiler\optimize\opt_try.c" />
     <ClCompile Include="..\src\deemon\compiler\optimize\traits.c" />

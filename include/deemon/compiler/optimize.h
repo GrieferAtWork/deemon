@@ -251,6 +251,7 @@ INTDEF int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict sta
 INTDEF int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
 INTDEF int (DCALL ast_optimize_loop)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
 INTDEF int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
 
 INTDEF uint16_t optimizer_flags;        /* Set of `OPTIMIZE_F*' */
 INTDEF uint16_t optimizer_unwind_limit; /* The max amount of times that a loop may be unwound. */

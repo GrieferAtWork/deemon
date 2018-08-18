@@ -203,7 +203,7 @@ err_ff_tt_assumes:
    self->ast_flag               = AST_FMULTIPLE_KEEPLAST;
    self->ast_multiple.ast_exprc = 2;
    self->ast_multiple.ast_exprv = elemv;
-   Dee_Decref(other_branch);
+   Dee_XDecref(other_branch);
   }
   OPTIMIZE_VERBOSE("Expanding conditional branch with constant condition\n");
   goto did_optimize;

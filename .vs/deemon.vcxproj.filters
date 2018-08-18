@@ -701,6 +701,9 @@
     <ClCompile Include="..\src\deemon\compiler\optimize\opt_try.c">
       <Filter>src\deemon\compiler\optimize</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_switch.c">
+      <Filter>src\deemon\compiler\optimize</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">
