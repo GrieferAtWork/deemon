@@ -892,7 +892,7 @@ PRIVATE int32_t FCALL do_parse_constexpr(void) {
  scope_pop();
  if unlikely(!imm_const) goto err;
  /* Optimize the constant branch to allow for constant propagation. */
- if unlikely(ast_optimize(NULL,imm_const,true)) {
+ if unlikely(ast_optimize_all(imm_const,true)) {
 err_imm_const:
   Dee_Decref(imm_const);
   goto err;
@@ -1253,7 +1253,7 @@ do_parse_atoperand(struct asm_invoke_operand *__restrict result) {
  scope_pop();
  if unlikely(!imm_expr) goto err;
  /* Optimize the constant branch to allow for constant propagation. */
- if unlikely(ast_optimize(NULL,imm_expr,true))
+ if unlikely(ast_optimize_all(imm_expr,true))
     goto err_imm_expr;
  if unlikely(do_translate_operand_ast(result,imm_expr))
     goto err_imm_expr;

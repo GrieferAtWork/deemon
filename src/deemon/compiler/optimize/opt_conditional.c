@@ -24,6 +24,7 @@
 #include <deemon/object.h>
 #include <deemon/bool.h>
 #include <deemon/tuple.h>
+#include <deemon/none.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 
@@ -38,12 +39,6 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
  /* TODO: Optimize the inner expressions in regards to
   *       them only being used as a boolean expression. */
  if (ast_optimize(stack,self->ast_conditional.ast_cond,true)) goto err;
- if (self->ast_conditional.ast_tt &&
-     self->ast_conditional.ast_tt != self->ast_conditional.ast_cond &&
-     ast_optimize(stack,self->ast_conditional.ast_tt,result_used)) goto err;
- if (self->ast_conditional.ast_ff &&
-     self->ast_conditional.ast_ff != self->ast_conditional.ast_cond &&
-     ast_optimize(stack,self->ast_conditional.ast_ff,result_used)) goto err;
  if (self->ast_conditional.ast_tt == self->ast_conditional.ast_cond &&
      self->ast_conditional.ast_ff == self->ast_conditional.ast_cond) {
   /* ??? Why though? */
@@ -63,8 +58,77 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
   OPTIMIZE_VERBOSE("Remove no-op conditional branch\n");
   goto did_optimize;
  }
-
- constant_condition = ast_get_boolean(self);
+#ifdef OPTIMIZE_FASSUME
+ if (optimizer_flags & OPTIMIZE_FASSUME) {
+  /* we're supposed to be making assumptions. */
+  bool has_tt = self->ast_conditional.ast_tt && self->ast_conditional.ast_tt != self->ast_conditional.ast_cond;
+  bool has_ff = self->ast_conditional.ast_ff && self->ast_conditional.ast_ff != self->ast_conditional.ast_cond;
+  struct ast_assumes tt_assumes;
+  struct ast_assumes ff_assumes;
+  struct ast_optimize_stack child_stack;
+  if (has_tt && has_ff) {
+   if unlikely(ast_assumes_initcond(&tt_assumes,stack->os_assume))
+      goto err;
+   child_stack.os_prev   = stack;
+   child_stack.os_assume = &tt_assumes;
+   child_stack.os_ast    = self->ast_conditional.ast_tt;
+   child_stack.os_used   = result_used;
+   if unlikely(ast_optimize(&child_stack,child_stack.os_ast,result_used)) {
+err_tt_assumes:
+    ast_assumes_fini(&tt_assumes);
+    goto err;
+   }
+   if unlikely(ast_assumes_initcond(&ff_assumes,stack->os_assume))
+      goto err_tt_assumes;
+   child_stack.os_prev   = stack;
+   child_stack.os_assume = &ff_assumes;
+   child_stack.os_ast    = self->ast_conditional.ast_ff;
+   child_stack.os_used   = result_used;
+   if unlikely(ast_optimize(&child_stack,child_stack.os_ast,result_used)) {
+err_ff_tt_assumes:
+    ast_assumes_fini(&ff_assumes);
+    goto err_tt_assumes;
+   }
+   /* With true-branch and false-branch assumptions now made, merge them! */
+   if unlikely(ast_assumes_mergecond(&tt_assumes,&ff_assumes))
+      goto err_ff_tt_assumes;
+   ast_assumes_fini(&ff_assumes);
+  } else {
+   ASSERT(has_tt || has_ff);
+   if unlikely(ast_assumes_initcond(&tt_assumes,stack->os_assume))
+      goto err;
+   child_stack.os_prev   = stack;
+   child_stack.os_assume = &tt_assumes;
+   child_stack.os_ast    = has_tt
+                         ? self->ast_conditional.ast_tt
+                         : self->ast_conditional.ast_ff
+                         ;
+   child_stack.os_used   = result_used;
+   if unlikely(ast_optimize(&child_stack,child_stack.os_ast,result_used))
+      goto err_tt_assumes;
+   /* Merge made assumptions with a NULL-branch, behaving
+    * the same as a merge with an empty set of assumptions. */
+   if unlikely(ast_assumes_mergecond(&tt_assumes,NULL))
+      goto err_tt_assumes;
+  }
+  /* Finally, merge newly made assumptions onto those made by the caller. */
+  if unlikely(ast_assumes_merge(stack->os_assume,&tt_assumes))
+     goto err_tt_assumes;
+  ast_assumes_fini(&tt_assumes);
+ } else
+#endif
+ {
+  if (self->ast_conditional.ast_tt &&
+      self->ast_conditional.ast_tt != self->ast_conditional.ast_cond &&
+      ast_optimize(stack,self->ast_conditional.ast_tt,result_used))
+      goto err;
+  if (self->ast_conditional.ast_ff &&
+      self->ast_conditional.ast_ff != self->ast_conditional.ast_cond &&
+      ast_optimize(stack,self->ast_conditional.ast_ff,result_used))
+      goto err;
+ }
+ /* Load the constant value of the condition as a boolean. */
+ constant_condition = ast_get_boolean(self->ast_conditional.ast_cond);
  if (constant_condition >= 0) {
   DeeAstObject *eval_branch,*other_branch;
   /* Only evaluate the tt/ff-branch. */
@@ -75,12 +139,26 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
    eval_branch  = self->ast_conditional.ast_ff;
    other_branch = self->ast_conditional.ast_tt;
   }
-  /* We can't optimize away the dead branch when it contains a label. */
+  /* We can't optimize away the dead branch when it contains a label.
+   * TODO: That's not true. - Just could do an unreachable-pass on the
+   *       other branch that deletes all branches before the first label! */
   if (other_branch && ast_doesnt_return(other_branch,AST_DOESNT_RETURN_FNORMAL) < 0)
       goto after_constant_condition;
-  if (eval_branch == self->ast_conditional.ast_cond) {
+  if (!eval_branch) {
+   /* No branch is being evaluated. - Just replace the branch with `none' */
+   /* TODO: In relation to the `TODO: That's not true...': we'd have to assign
+    *       `{ <everything_after_label_in(other_branch)>; none; }' instead,
+    *       if `other_branch' contains a `label'. */
+   ast_fini_contents(self);
+   self->ast_type = AST_CONSTEXPR;
+   self->ast_constexpr = Dee_None;
+   Dee_Incref(Dee_None);
+  } else if (eval_branch == self->ast_conditional.ast_cond) {
    /* Special case: The branch that is getting evaluated
     *               is referencing the condition. */
+   /* TODO: In relation to the `TODO: That's not true...': we'd have to assign
+    *       `{ __stack local _temp = <eval_branch>; <everything_after_label_in(other_branch)>; _temp; }'
+    *       instead, if `other_branch' contains a `label'. */
    if (self->ast_flag&AST_FCOND_BOOL) {
     /* Must also convert `eval_branch' to a boolean. */
     DREF DeeAstObject *graft; int temp;
@@ -104,6 +182,10 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
     * >>     print "Here";
     * >> }
     */
+   /* TODO: In relation to the `TODO: That's not true...': we'd have to assign
+    *       `{ <ast_cond>; __stack local _temp = <eval_branch>;
+    *          <everything_after_label_in(other_branch)>; _temp; }'
+    *       instead, if `other_branch' contains a `label'. */
    elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
    if unlikely(!elemv) goto err;
    elemv[0] = self->ast_conditional.ast_cond;
@@ -115,12 +197,13 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
     Dee_Decref(eval_branch);
     eval_branch = merge;
    }
-   elemv[1] = eval_branch; /* Inherit */
+   elemv[1] = eval_branch; /* Inherit reference */
    /* Override (and inherit) this AST. */
    self->ast_type               = AST_MULTIPLE;
    self->ast_flag               = AST_FMULTIPLE_KEEPLAST;
    self->ast_multiple.ast_exprc = 2;
    self->ast_multiple.ast_exprv = elemv;
+   Dee_Decref(other_branch);
   }
   OPTIMIZE_VERBOSE("Expanding conditional branch with constant condition\n");
   goto did_optimize;

@@ -79,8 +79,8 @@ INTERN int
  switch (self->ast_flag) {
 
  case AST_FACTION_STORE:
-  /* Check for store-to-none (which is a no-op that translates to the stored expression) */
   if (ast_optimize(stack,self->ast_action.ast_act0,true)) goto err;
+  /* Check for store-to-none (which is a no-op that translates to the stored expression) */
   if (self->ast_action.ast_act0->ast_type == AST_CONSTEXPR &&
       DeeNone_Check(self->ast_action.ast_act0->ast_constexpr)) {
    /* Optimize the source-expression with propagated result-used settings. */
@@ -90,6 +90,11 @@ INTERN int
    goto did_optimize;
   }
   if (ast_optimize(stack,self->ast_action.ast_act1,true)) goto err;
+  if (self->ast_action.ast_act0->ast_type == AST_MULTIPLE) {
+   /* TODO: Unwind store-to-multiple, if doing so doesn't cause any
+    *       undesired side-effects, such as a change in execution
+    *       order. */
+  }
   if (self->ast_action.ast_act0->ast_type == AST_SYM) {
    struct symbol *target_sym;
    ASSERTF(self->ast_action.ast_act0->ast_flag != 0,
@@ -109,169 +114,191 @@ INTERN int
    goto did_optimize;
    }
    /* Check if what's being assigned is a constant expression. */
-   if (self->ast_action.ast_act1->ast_type == AST_CONSTEXPR &&
-      (optimizer_flags & OPTIMIZE_FCONSTSYMS)) {
-    if (target_sym->s_nwrite == 1 &&
-      !(target_sym->s_flag & (SYMBOL_FALLOC|SYMBOL_FALLOCREF)) &&
-       (target_sym->s_type == SYMBOL_TYPE_LOCAL ||
-        target_sym->s_type == SYMBOL_TYPE_STACK ||
-        target_sym->s_type == SYMBOL_TYPE_STATIC) &&
-        allow_constexpr(self->ast_action.ast_act1->ast_constexpr) == CONSTEXPR_ALLOWED) {
-     /* Everything seems to check out so far.
-      * However, we must still be careful to make sure that the symbol's scope is
-      * reachable from our current scope, as well as that between our own ast, and
-      * the first ast apart of the symbol's scope, no conditional AST or loop that
-      * doesn't guaranty that it's block is executed at least once exists:
-      * Example #1:
-      * >> local x;
-      * >> if (foo()) {
-      * >>     x = "foobar"; // This can't be propagated
-      * >> }
-      * >> print x;
-      * Example #2:
-      * >> local x;
-      * >> {
-      * >>     x = "foobar"; // This be propagated
-      * >> }
-      * >> print x;
-      * Example #3:
-      * >> local x;
-      * >> for (local y: foo()) {
-      * >>     x = "foobar"; // This can't be propagated
-      * >> }
-      * >> print x;
-      * Example #4:
-      * >> local x;
-      * >> local i = 1;
-      * >> do {
-      * >>     x = "foobar"; // This can be propagated
-      * >> } while (--i != 0);
-      * >> print x;
-      * NOTE: Checks for `goto' are required to ensure that no side-effects
-      *       are broken by inlining constants assigned to variables:
-      * >>     local x;
-      * >>     goto foo;     // Because of this `goto', our branch becomes conditional,
-      * >>                   // and just as with regular conditional branches, constant
-      * >>                   // symbols cannot be propagated outside of them!
-      * >>     x = "foobar";
-      * >> foo:
-      * >>     print x;
-      */
-     struct ast_optimize_stack *iter = stack;
-     struct ast_optimize_stack *prev_stack = NULL;
-     DeeScopeObject *symbol_scope = target_sym->s_scope;
-     bool found_scope = false;
-     for (;;) {
-      DeeAstObject *iter_ast = iter->os_ast;
-      if (iter_ast == self) goto stack_next;
-      if (iter_ast->ast_scope != symbol_scope && found_scope)
-          break; /* We've exited the declaration scope successfully. */
-      /* Check what kind of AST we're dealing with here. */
-      if (iter_ast->ast_type == AST_CONDITIONAL) {
-       /* If we're originating from the condition-branch itself, then
-        * we know that we aren't actually a conditional branch ourself,
-        * but rather get executed unconditionally! */
-       if (prev_stack->os_ast != iter_ast->ast_conditional.ast_cond)
-           goto done_symbol_store;
-      } else if (iter_ast->ast_type == AST_LOOP) {
-       /* Make sure that our expression is run at least once by the loop. */
-       DeeAstObject *prev_ast = prev_stack->os_ast;
-       if (iter_ast->ast_flag & AST_FLOOP_FOREACH) {
-        if (iter_ast->ast_loop.ast_iter == prev_ast)
-            goto stack_next; /* It's OK. - The iterator is always executed. */
-        if (!ast_iterator_is_nonempty(iter_ast->ast_loop.ast_iter))
-            goto done_symbol_store; /* The iterator may be empty, meaning that `elem' and `loop' may not be executed! */
-        if (ast_contains_goto(iter_ast->ast_loop.ast_iter,AST_CONTAINS_GOTO_CONSIDER_NONE))
+   if (self->ast_action.ast_act1->ast_type == AST_CONSTEXPR) {
+    if (optimizer_flags & OPTIMIZE_FCONSTSYMS) {
+     if (target_sym->s_nwrite == 1 &&
+       !(target_sym->s_flag & (SYMBOL_FALLOC|SYMBOL_FALLOCREF)) &&
+        (target_sym->s_type == SYMBOL_TYPE_LOCAL ||
+         target_sym->s_type == SYMBOL_TYPE_STACK ||
+         target_sym->s_type == SYMBOL_TYPE_STATIC) &&
+         allow_constexpr(self->ast_action.ast_act1->ast_constexpr) == CONSTEXPR_ALLOWED) {
+      /* Everything seems to check out so far.
+       * However, we must still be careful to make sure that the symbol's scope is
+       * reachable from our current scope, as well as that between our own ast, and
+       * the first ast apart of the symbol's scope, no conditional AST or loop that
+       * doesn't guaranty that it's block is executed at least once exists:
+       * Example #1:
+       * >> local x;
+       * >> if (foo()) {
+       * >>     x = "foobar"; // This can't be propagated
+       * >> }
+       * >> print x;
+       * Example #2:
+       * >> local x;
+       * >> {
+       * >>     x = "foobar"; // This be propagated
+       * >> }
+       * >> print x;
+       * Example #3:
+       * >> local x;
+       * >> for (local y: foo()) {
+       * >>     x = "foobar"; // This can't be propagated
+       * >> }
+       * >> print x;
+       * Example #4:
+       * >> local x;
+       * >> local i = 1;
+       * >> do {
+       * >>     x = "foobar"; // This can be propagated
+       * >> } while (--i != 0);
+       * >> print x;
+       * NOTE: Checks for `goto' are required to ensure that no side-effects
+       *       are broken by inlining constants assigned to variables:
+       * >>     local x;
+       * >>     goto foo;     // Because of this `goto', our branch becomes conditional,
+       * >>                   // and just as with regular conditional branches, constant
+       * >>                   // symbols cannot be propagated outside of them!
+       * >>     x = "foobar";
+       * >> foo:
+       * >>     print x;
+       */
+      struct ast_optimize_stack *iter = stack;
+      struct ast_optimize_stack *prev_stack = NULL;
+      DeeScopeObject *symbol_scope = target_sym->s_scope;
+      bool found_scope = false;
+      for (;;) {
+       DeeAstObject *iter_ast = iter->os_ast;
+       if (iter_ast == self) goto stack_next;
+       if (iter_ast->ast_scope != symbol_scope && found_scope)
+           break; /* We've exited the declaration scope successfully. */
+       /* Check what kind of AST we're dealing with here. */
+       if (iter_ast->ast_type == AST_CONDITIONAL) {
+        /* If we're originating from the condition-branch itself, then
+         * we know that we aren't actually a conditional branch ourself,
+         * but rather get executed unconditionally! */
+        if (prev_stack->os_ast != iter_ast->ast_conditional.ast_cond)
             goto done_symbol_store;
-        if (ast_uses_symbol(iter_ast->ast_loop.ast_iter,target_sym))
-            goto done_symbol_store; /* The iterator uses our symbol. */
-        if (iter_ast->ast_loop.ast_elem) {
-         if (iter_ast->ast_loop.ast_elem == prev_ast)
-             goto stack_next;
-         if (ast_contains_goto(iter_ast->ast_loop.ast_elem,AST_CONTAINS_GOTO_CONSIDER_NONE))
+       } else if (iter_ast->ast_type == AST_LOOP) {
+        /* Make sure that our expression is run at least once by the loop. */
+        DeeAstObject *prev_ast = prev_stack->os_ast;
+        if (iter_ast->ast_flag & AST_FLOOP_FOREACH) {
+         if (iter_ast->ast_loop.ast_iter == prev_ast)
+             goto stack_next; /* It's OK. - The iterator is always executed. */
+         if (!ast_iterator_is_nonempty(iter_ast->ast_loop.ast_iter))
+             goto done_symbol_store; /* The iterator may be empty, meaning that `elem' and `loop' may not be executed! */
+         if (ast_contains_goto(iter_ast->ast_loop.ast_iter,AST_CONTAINS_GOTO_CONSIDER_NONE))
              goto done_symbol_store;
-         if (ast_uses_symbol(iter_ast->ast_loop.ast_elem,target_sym))
-             goto done_symbol_store; /* The element-expression uses our symbol. */
+         if (ast_uses_symbol(iter_ast->ast_loop.ast_iter,target_sym))
+             goto done_symbol_store; /* The iterator uses our symbol. */
+         if (iter_ast->ast_loop.ast_elem) {
+          if (iter_ast->ast_loop.ast_elem == prev_ast)
+              goto stack_next;
+          if (ast_contains_goto(iter_ast->ast_loop.ast_elem,AST_CONTAINS_GOTO_CONSIDER_NONE))
+              goto done_symbol_store;
+          if (ast_uses_symbol(iter_ast->ast_loop.ast_elem,target_sym))
+              goto done_symbol_store; /* The element-expression uses our symbol. */
+         }
+        } else if (iter_ast->ast_flag & AST_FLOOP_POSTCOND) {
+         if (iter_ast->ast_loop.ast_loop) {
+          if (iter_ast->ast_loop.ast_loop == prev_ast)
+              goto stack_next;
+          if (ast_contains_goto(iter_ast->ast_loop.ast_loop,AST_CONTAINS_GOTO_CONSIDER_NONE))
+              goto done_symbol_store;
+          if (ast_uses_symbol(iter_ast->ast_loop.ast_loop,target_sym))
+              goto done_symbol_store;
+         }
+         if (iter_ast->ast_loop.ast_next) {
+          if (iter_ast->ast_loop.ast_next == prev_ast)
+              goto stack_next;
+          if (ast_contains_goto(iter_ast->ast_loop.ast_next,AST_CONTAINS_GOTO_CONSIDER_NONE))
+              goto done_symbol_store;
+          if (ast_uses_symbol(iter_ast->ast_loop.ast_next,target_sym))
+              goto done_symbol_store;
+         }
+        } else {
+         if (!iter_ast->ast_loop.ast_cond) 
+              goto stack_next; /* Without a condition, the loop is guarantied to execute. */
+         /* Since the condition may be false, we might not get executed. */
+         goto done_symbol_store;
         }
-       } else if (iter_ast->ast_flag & AST_FLOOP_POSTCOND) {
-        if (iter_ast->ast_loop.ast_loop) {
-         if (iter_ast->ast_loop.ast_loop == prev_ast)
-             goto stack_next;
-         if (ast_contains_goto(iter_ast->ast_loop.ast_loop,AST_CONTAINS_GOTO_CONSIDER_NONE))
-             goto done_symbol_store;
-         if (ast_uses_symbol(iter_ast->ast_loop.ast_loop,target_sym))
-             goto done_symbol_store;
-        }
-        if (iter_ast->ast_loop.ast_next) {
-         if (iter_ast->ast_loop.ast_next == prev_ast)
-             goto stack_next;
-         if (ast_contains_goto(iter_ast->ast_loop.ast_next,AST_CONTAINS_GOTO_CONSIDER_NONE))
-             goto done_symbol_store;
-         if (ast_uses_symbol(iter_ast->ast_loop.ast_next,target_sym))
-             goto done_symbol_store;
+       } else if (iter_ast->ast_type == AST_MULTIPLE) {
+        /* Check if there is a `goto' before the matching sub-ast,
+         * which might be used to skip our expression. */
+        size_t i;
+        DeeAstObject *prev_ast = prev_stack->os_ast;
+        for (i = 0; i < iter_ast->ast_multiple.ast_exprc; ++i) {
+         DeeAstObject *sub_ast = iter_ast->ast_multiple.ast_exprv[i];
+         if (prev_ast == sub_ast)
+             break;
+         if (ast_contains_goto(sub_ast,AST_CONTAINS_GOTO_CONSIDER_ALL))
+             goto done_symbol_store; /* There's a goto between declaration & initialization */
+         if (ast_uses_symbol(sub_ast,target_sym))
+             goto done_symbol_store; /* Nope! - The symbol is used prior to it being assigned. */
         }
        } else {
-        if (!iter_ast->ast_loop.ast_cond) 
-             goto stack_next; /* Without a condition, the loop is guarantied to execute. */
-        /* Since the condition may be false, we might not get executed. */
+        /* Don't run any risks. - Use a whitelist of allowed branches
+         * between the symbol being declared, and the symbol being
+         * initialized. */
         goto done_symbol_store;
        }
-      } else if (iter_ast->ast_type == AST_MULTIPLE) {
-       /* Check if there is a `goto' before the matching sub-ast,
-        * which might be used to skip our expression. */
-       size_t i;
-       DeeAstObject *prev_ast = prev_stack->os_ast;
-       for (i = 0; i < iter_ast->ast_multiple.ast_exprc; ++i) {
-        DeeAstObject *sub_ast = iter_ast->ast_multiple.ast_exprv[i];
-        if (prev_ast == sub_ast)
-            break;
-        if (ast_contains_goto(sub_ast,AST_CONTAINS_GOTO_CONSIDER_ALL))
-            goto done_symbol_store; /* There's a goto between declaration & initialization */
-        if (ast_uses_symbol(sub_ast,target_sym))
-            goto done_symbol_store; /* Nope! - The symbol is used prior to it being assigned. */
+ stack_next:
+       if (iter_ast->ast_scope == symbol_scope)
+           found_scope = true;
+       prev_stack = iter;
+       iter = iter->os_prev;
+       if (!iter) {
+        if (found_scope) break;
+        goto done_symbol_store;
        }
-      } else {
-       /* Don't run any risks. - Use a whitelist of allowed branches
-        * between the symbol being declared, and the symbol being
-        * initialized. */
-       goto done_symbol_store;
       }
-stack_next:
-      if (iter_ast->ast_scope == symbol_scope)
-          found_scope = true;
-      prev_stack = iter;
-      iter = iter->os_prev;
-      if (!iter) {
-       if (found_scope) break;
-       goto done_symbol_store;
-      }
-     }
 
-     /* Everything checks out. - We can use this symbol for constant propagation. */
-     OPTIMIZE_VERBOSE("Defining symbol `%s' as a constant evaluating to `%r'\n",
-                      SYMBOL_NAME(target_sym),self->ast_action.ast_act1->ast_constexpr);
-     target_sym->s_type  = SYMBOL_TYPE_CONST;
-     target_sym->s_const = self->ast_action.ast_act1->ast_constexpr;
-     Dee_Incref(target_sym->s_const);
-     /* Replace the store-branch with a  */
-     if unlikely(ast_graft_onto(self,self->ast_action.ast_act1)) goto err;
-     goto did_optimize;
+      /* Everything checks out. - We can use this symbol for constant propagation. */
+      OPTIMIZE_VERBOSE("Defining symbol `%s' as a constant evaluating to `%r'\n",
+                       SYMBOL_NAME(target_sym),self->ast_action.ast_act1->ast_constexpr);
+      target_sym->s_type  = SYMBOL_TYPE_CONST;
+      target_sym->s_const = self->ast_action.ast_act1->ast_constexpr;
+      Dee_Incref(target_sym->s_const);
+      /* Replace the store-branch with a  */
+      if unlikely(ast_graft_onto(self,self->ast_action.ast_act1)) goto err;
+      goto did_optimize;
+     }
+     if (!target_sym->s_nread && target_sym->s_nbound &&
+         !DeeNone_Check(self->ast_action.ast_act1->ast_constexpr)) {
+      /* Special case: the symbol is never read from, but checking for being bound.
+       *  - In this case, we can instead assign a quicker value (`Dee_None'),
+       *    that the constant currently being used. */
+      OPTIMIZE_VERBOSE("Store `none' in symbol `%s' only ever checked for being bound, rather than `%r'\n",
+                       SYMBOL_NAME(target_sym),self->ast_action.ast_act1->ast_constexpr);
+      Dee_Incref(Dee_None);
+      Dee_Decref(self->ast_action.ast_act1->ast_constexpr);
+      self->ast_action.ast_act1->ast_constexpr = Dee_None;
+      goto did_optimize;
+     }
     }
-    if (!target_sym->s_nread && target_sym->s_nbound &&
-        !DeeNone_Check(self->ast_action.ast_act1->ast_constexpr)) {
-     /* Special case: the symbol is never read from, but checking for being bound.
-      *  - In this case, we can instead assign a quicker value (`Dee_None'),
-      *    that the constant currently being used. */
-     OPTIMIZE_VERBOSE("Store `none' in symbol `%s' only ever checked for being bound, rather than `%r'\n",
-                      SYMBOL_NAME(target_sym),self->ast_action.ast_act1->ast_constexpr);
-     Dee_Incref(Dee_None);
-     Dee_Decref(self->ast_action.ast_act1->ast_constexpr);
-     self->ast_action.ast_act1->ast_constexpr = Dee_None;
-     goto did_optimize;
-    }
-   }
-  }
 done_symbol_store:
+#ifdef OPTIMIZE_FASSUME
+    if (optimizer_flags & OPTIMIZE_FASSUME) {
+     if (allow_constexpr(self->ast_action.ast_act1->ast_constexpr) != CONSTEXPR_ALLOWED)
+         goto unset_symbol_assumption;
+     if (ast_assumes_setsymval(stack->os_assume,
+                               target_sym,
+                               self->ast_action.ast_act1->ast_constexpr))
+         goto err;
+    }
+#endif
+    ;
+   }
+#ifdef OPTIMIZE_FASSUME
+   else if (optimizer_flags & OPTIMIZE_FASSUME) {
+unset_symbol_assumption:
+    if (ast_assumes_setsymval(stack->os_assume,
+                              target_sym,
+                              NULL))
+        goto err;
+   }
+#endif
+  }
+
   break;
 
  case AST_FACTION_IN:

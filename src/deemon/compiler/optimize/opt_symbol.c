@@ -38,11 +38,21 @@ INTERN int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict sta
  ASSERT(self->ast_type == AST_SYM);
  (void)stack;
  /* If the symbol is being written to, then we can't optimize for external constants. */
- if (self->ast_flag)
-     return 0;
+ if (self->ast_flag) {
+#ifdef OPTIMIZE_FASSUME
+  /* Generic write with unknown value.
+   * -> Remove assumptions made on the symbol. */
+  if (optimizer_flags & OPTIMIZE_FASSUME) {
+   return ast_assumes_setsymval(stack->os_assume,
+                                self->ast_sym,
+                                NULL);
+  }
+#endif
+  return 0;
+ }
  sym = self->ast_sym;
  if (!result_used) {
-  OPTIMIZE_VERBOSE("Remove unused symbol ast");
+  OPTIMIZE_VERBOSE("Remove unused symbol ast\n");
   SYMBOL_DEC_NREAD(sym);
   self->ast_type = AST_CONSTEXPR;
   self->ast_constexpr = Dee_None;
@@ -90,7 +100,7 @@ set_constant_expression:
     self->ast_constexpr = symval; /* Inherit */
     self->ast_type      = AST_CONSTEXPR;
     SYMBOL_DEC_NREAD(sym); /* Trace read references. */
-    OPTIMIZE_VERBOSE("Inline constant symbol expression %r",symval);
+    OPTIMIZE_VERBOSE("Inline constant symbol expression %r\n",symval);
     goto did_optimize;
    }
 done_set_constexpr:
@@ -103,6 +113,16 @@ done_set_constexpr:
   Dee_Incref(symval);
   goto set_constant_expression;
  }
+
+#ifdef OPTIMIZE_FASSUME
+ /* Check on symbol assumptions to see if we can optimize
+  * this variable away, and into a constant expression. */
+ if (optimizer_flags & OPTIMIZE_FASSUME) {
+  symval = ast_assumes_getsymval(stack->os_assume,sym);
+  if (symval) goto set_constant_expression;
+ }
+#endif
+
  return 0;
 err:
  return -1;

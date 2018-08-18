@@ -692,6 +692,15 @@
     <ClCompile Include="..\src\deemon\compiler\optimize\opt_conditional.c">
       <Filter>src\deemon\compiler\optimize</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_loop.c">
+      <Filter>src\deemon\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\assumes.c">
+      <Filter>src\deemon\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_try.c">
+      <Filter>src\deemon\compiler\optimize</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">

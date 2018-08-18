@@ -80,12 +80,38 @@ INTERN void ast_optimize_verbose(DeeAstObject *__restrict self, char const *form
 
 
 
-INTERN int (DCALL ast_optimize)(struct ast_optimize_stack *parent,
+INTERN int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent,
                                 DeeAstObject *__restrict self, bool result_used) {
  struct ast_optimize_stack stack;
- stack.os_prev = parent;
- stack.os_ast  = self;
- stack.os_used = result_used;
+ stack.os_prev   = parent;
+ stack.os_ast    = self;
+ stack.os_used   = result_used;
+#ifdef OPTIMIZE_FASSUME
+ stack.os_assume = parent->os_assume;
+#endif /* OPTIMIZE_FASSUME */
+ return ast_dooptimize(&stack,self,result_used);
+}
+INTERN int (DCALL ast_startoptimize)(DeeAstObject *__restrict self, bool result_used) {
+ struct ast_optimize_stack stack;
+ int result;
+#ifdef OPTIMIZE_FASSUME
+ struct ast_assumes assumes;
+#endif /* OPTIMIZE_FASSUME */
+ stack.os_prev   = NULL;
+ stack.os_ast    = self;
+ stack.os_used   = result_used;
+#ifdef OPTIMIZE_FASSUME
+ stack.os_assume = &assumes;
+ ast_assumes_init(&assumes);
+#endif /* OPTIMIZE_FASSUME */
+ result = ast_dooptimize(&stack,self,result_used);
+#ifdef OPTIMIZE_FASSUME
+ ast_assumes_fini(&assumes);
+#endif /* OPTIMIZE_FASSUME */
+ return result;
+}
+INTERN int (DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack,
+                                  DeeAstObject *__restrict self, bool result_used) {
  ASSERT_OBJECT_TYPE(self,&DeeAst_Type);
 again:
  /* Check for interrupts to allow the user to stop optimization */
@@ -114,175 +140,37 @@ again:
  switch (self->ast_type) {
 
  case AST_SYM:
-  return ast_optimize_symbol(&stack,self,result_used);
+  return ast_optimize_symbol(stack,self,result_used);
 
  case AST_MULTIPLE:
-  return ast_optimize_multiple(&stack,self,result_used);
+  return ast_optimize_multiple(stack,self,result_used);
+
+#ifdef OPTIMIZE_FASSUME
+ case AST_UNBIND:
+  /* Delete assumptions made about the symbol. */
+  if (optimizer_flags & OPTIMIZE_FASSUME)
+      return ast_assumes_setsymval(stack->os_assume,self->ast_unbind,NULL);
+  break;
+#endif
+
+ /* TODO: Using assumptions, we could also track if a symbol if a symbol is bound? */
 
  case AST_RETURN:
  case AST_YIELD:
  case AST_THROW:
   if (self->ast_returnexpr &&
-      ast_optimize(&stack,self->ast_returnexpr,true))
+      ast_optimize(stack,self->ast_returnexpr,true))
       goto err;
   break;
 
- {
-  struct catch_expr *iter,*end;
  case AST_TRY:
-  if (ast_optimize(&stack,self->ast_try.ast_guard,result_used))
-      goto err;
-  if (ast_is_nothrow(self->ast_try.ast_guard,result_used)) {
-   /* TODO: `try { foo; } finally { bar; }' -> `({ __stack local _r = foo; bar; _r; })'
-    * TODO: `try { foo; } catch (...) { bar; }' -> `(foo)' */
-  }
-  end = (iter = self->ast_try.ast_catchv)+self->ast_try.ast_catchc;
-  for (; iter != end; ++iter) {
-   if (ast_optimize(&stack,iter->ce_code,result_used)) goto err;
-   if (iter->ce_mask &&
-       ast_optimize(&stack,iter->ce_mask,!(iter->ce_flags & EXCEPTION_HANDLER_FFINALLY))) goto err;
-   if (!(iter->ce_flags & EXCEPTION_HANDLER_FFINALLY)) {
-    /* `catch (object)' --> `catch (...)' */
-    if (iter->ce_mask &&
-        iter->ce_mask->ast_type == AST_CONSTEXPR &&
-        iter->ce_mask->ast_constexpr == (DeeObject *)&DeeObject_Type) {
-     OPTIMIZE_VERBOSE("Optimize object-mask to catch-all\n");
-     ++optimizer_count;
-     Dee_Clear(iter->ce_mask);
-    }
-    /* Set the `CATCH_EXPR_FSECOND' flag for all noexcept catch-handlers. */
-    if (!(iter->ce_mode & CATCH_EXPR_FSECOND) &&
-          ast_is_nothrow(iter->ce_code,result_used) &&
-       (!iter->ce_mask || ast_is_nothrow(iter->ce_mask,true))) {
-     OPTIMIZE_VERBOSE("Optimize nothrow catch-handler\n");
-     iter->ce_mode |= CATCH_EXPR_FSECOND;
-    }
-   }
-  }
- } break;
+  return ast_optimize_try(stack,self,result_used);
 
  case AST_LOOP:
-  if (self->ast_loop.ast_loop &&
-      ast_optimize(&stack,self->ast_loop.ast_loop,false)) goto err;
-  if (self->ast_flag&AST_FLOOP_FOREACH) {
-   /* foreach-style loop. */
-   if (ast_optimize(&stack,self->ast_loop.ast_iter,true)) goto err;
-   if (optimizer_unwind_limit != 0) {
-    /* TODO: Loop unwinding when `self->ast_loop.ast_iter'
-     *       evaluates to a constant expression.
-     * >> for (local x: [:3])
-     * >>      print x;
-     * Optimize to:
-     * >> print 0;
-     * >> print 1;
-     * >> print 2;
-     * Optimize to:
-     * >> print "0";
-     * >> print "1";
-     * >> print "2";
-     * Optimize to:
-     * >> print "0\n",;
-     * >> print "1\n",;
-     * >> print "2\n",;
-     * Optimize to:
-     * >> print "0\n1\n2\n",;
-     */
-   }
-  } else {
-   if (self->ast_loop.ast_cond &&
-       ast_optimize(&stack,self->ast_loop.ast_cond,true)) goto err;
-   if (self->ast_loop.ast_next &&
-       ast_optimize(&stack,self->ast_loop.ast_next,false)) goto err;
-   if (self->ast_loop.ast_cond) {
-    /* TODO: Do this optimization in regards to the current, known state of variables. */
-    int condition_value;
-    /* Optimize constant conditions. */
-    condition_value = ast_get_boolean(self->ast_loop.ast_cond);
-    if (condition_value > 0) {
-     /* Forever-loop (Discard the condition). */
-     Dee_Clear(self->ast_loop.ast_cond);
-     OPTIMIZE_VERBOSE("Removing constant-true loop condition\n");
-     ++optimizer_count;
-    } else if (condition_value == 0) {
-#if 0 /* TODO: Can only be done when no loop control statements are used. */
-     /* Unused loop:
-      * >> while (0) { ... }     // optimize to `none'
-      * >> do { ... } while (0); // optimize to `{ ...; none; }' */
-     if (self->ast_flag&AST_FLOOP_POSTCOND) {
-      /* Convert to `{ <loop>; <next>; <cond>; none; }' */
-      DREF DeeAstObject **elemv,*none_ast,**iter;
-      elemv = (DREF DeeAstObject **)Dee_Malloc(4*sizeof(DREF DeeAstObject *));
-      if unlikely(!elemv) goto err;
-      none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None),self);
-      if unlikely(!none_ast) { Dee_Free(elemv); goto err; }
-      iter = elemv;
-      *iter++ = self->ast_loop.ast_loop; /* Inherit */
-      if (self->ast_loop.ast_next)
-         *iter++ = self->ast_loop.ast_next; /* Inherit */
-      *iter++ = self->ast_loop.ast_cond; /* Inherit */
-      *iter++ = none_ast; /* Inherit */
-      /* Convert into a multiple-ast. */
-      self->ast_multiple.ast_exprc = (size_t)(iter-elemv);
-      self->ast_type               = AST_MULTIPLE;
-      self->ast_flag               = AST_FMULTIPLE_KEEPLAST;
-      self->ast_multiple.ast_exprv = elemv; /* Inherit */
-      OPTIMIZE_VERBOSE("Unwinding loop only iterated once\n");
-     } else {
-      /* Convert to `{ <cond>; none; }' */
-      DREF DeeAstObject **elemv,*none_ast;
-      elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
-      if unlikely(!elemv) goto err;
-      none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None),self);
-      if unlikely(!none_ast) { Dee_Free(elemv); goto err; }
-      elemv[0] = self->ast_loop.ast_cond; /* Inherit */
-      elemv[1] = none_ast; /* Inherit */
-      /* Convert into a multiple-ast. */
-      self->ast_multiple.ast_exprc = 2;
-      self->ast_type               = AST_MULTIPLE;
-      self->ast_flag               = AST_FMULTIPLE_KEEPLAST;
-      self->ast_multiple.ast_exprv = elemv; /* Inherit */
-      OPTIMIZE_VERBOSE("Deleting loop never executed\n");
-     }
-     goto did_optimize;
-#endif
-    }
-   }
-   if (!(self->ast_flag&AST_FLOOP_POSTCOND)) {
-    /* TODO: If the condition is known to be true during the first
-     *       pass, convert the loop to a post-conditional loop:
-     * >> {
-     * >>     local i = 0;
-     * >>     for (; i < 10; ++i)
-     * >>         print i;
-     * >> }
-     * Optimize to:
-     * >> {
-     * >>     local i = 0;
-     * >>     do {
-     * >>         print i;
-     * >>         ++i;
-     * >>     } while (i < 10);
-     * >> }
-     */
-   }
-   /* TODO: Convert to a foreach-style loop (potentially allowing
-    *       for further optimization through loop unwinding):
-    * >> {
-    * >>     local i = 0;
-    * >>     do {
-    * >>         print i;
-    * >>         ++i;
-    * >>     } while (i < 10);
-    * >> }
-    * Optimize to:
-    * >> for (local i: [0:10,1])
-    * >>     print i;
-    */
-  }
-  break;
+  return ast_optimize_loop(stack,self,result_used);
 
  case AST_CONDITIONAL:
-  return ast_optimize_conditional(&stack,self,result_used);
+  return ast_optimize_conditional(stack,self,result_used);
 
  {
   int ast_value;
@@ -290,7 +178,7 @@ again:
  case AST_BOOL:
   /* TODO: Optimize the inner expression in regards to
    *       it only being used as a boolean expression */
-  if (ast_optimize(&stack,self->ast_boolexpr,result_used)) goto err;
+  if (ast_optimize(stack,self->ast_boolexpr,result_used)) goto err;
   /* If the result doesn't matter, don't perform a negation. */
   if (!result_used) self->ast_flag &= ~AST_FBOOL_NEGATE;
 
@@ -338,11 +226,11 @@ again:
  } break;
 
  case AST_EXPAND:
-  if (ast_optimize(&stack,self->ast_expandexpr,result_used))
+  if (ast_optimize(stack,self->ast_expandexpr,result_used))
       goto err;
   break;
  case AST_FUNCTION:
-  if (ast_optimize(&stack,self->ast_function.ast_code,false))
+  if (ast_optimize(stack,self->ast_function.ast_code,false))
       goto err;
   if (!DeeCompiler_Current->cp_options ||
      !(DeeCompiler_Current->cp_options->co_assembler & ASM_FNODEC)) {
@@ -370,17 +258,22 @@ again:
    OPTIMIZE_VERBOSE("Removing unused label\n");
    goto did_optimize;
   }
+#ifdef OPTIMIZE_FASSUME
+  if (optimizer_flags & OPTIMIZE_FASSUME &&
+      ast_assumes_undefined(stack->os_assume))
+      goto err;
+#endif
   break;
 
  case AST_OPERATOR:
-  return ast_optimize_operator(&stack,self,result_used);
+  return ast_optimize_operator(stack,self,result_used);
 
  case AST_ACTION:
-  return ast_optimize_action(&stack,self,result_used);
+  return ast_optimize_action(stack,self,result_used);
 
  case AST_SWITCH:
-  if (ast_optimize(&stack,self->ast_switch.ast_expr,true)) goto err;
-  if (ast_optimize(&stack,self->ast_switch.ast_block,false)) goto err;
+  if (ast_optimize(stack,self->ast_switch.ast_expr,true)) goto err;
+  if (ast_optimize(stack,self->ast_switch.ast_block,false)) goto err;
   /* TODO: Delete constant cases shared with the default-case. */
   /* TODO: Looking at the type of the switch-expression, check if we can delete
    *       some impossible cases. (e.g. integer cases with string-expression) */
@@ -393,7 +286,7 @@ again:
                (self->ast_assembly.ast_num_i+
                 self->ast_assembly.ast_num_o);
   for (; iter != end; ++iter) {
-   if (ast_optimize(&stack,iter->ao_expr,true))
+   if (ast_optimize(stack,iter->ao_expr,true))
        goto err;
   }
  } break;
@@ -413,7 +306,7 @@ INTERN int (DCALL ast_optimize_all)(DeeAstObject *__restrict self, bool result_u
  unsigned int old_value;
  do {
   old_value = optimizer_count;
-  result = ast_optimize(NULL,self,result_used);
+  result = ast_startoptimize(self,result_used);
   if unlikely(result) break;
   /* Stop after the first pass if the `OPTIMIZE_FONEPASS' flag is set. */
   if (optimizer_flags&OPTIMIZE_FONEPASS) break;

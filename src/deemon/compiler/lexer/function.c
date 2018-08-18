@@ -173,8 +173,8 @@ done_dots:
    }
    /* Do optimizations on the AST to allow for a bit for complex
     * expression that can still be resolved at compile-time.
-    * (`ast_optimize()' is where constant propagation happens) */
-   if (ast_optimize(NULL,initializer,true)) {
+    * (`ast_optimize_all()' is where constant propagation happens) */
+   if (ast_optimize_all(initializer,true)) {
 err_initializer:
     Dee_Decref(initializer);
     goto err;

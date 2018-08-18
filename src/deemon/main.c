@@ -222,14 +222,24 @@ PRIVATE int DCALL cmd_o(char *arg) {
 PRIVATE int DCALL cmd_O(char *arg) {
  int level;
  script_options.co_optimizer &= ~(OPTIMIZE_FENABLED | OPTIMIZE_FCSE |
-                                  OPTIMIZE_FCONSTSYMS | OPTIMIZE_FNOUSESYMS);
+                                  OPTIMIZE_FCONSTSYMS | OPTIMIZE_FNOUSESYMS
+#ifdef OPTIMIZE_FASSUME
+                                  |
+                                  OPTIMIZE_FASSUME
+#endif
+                                  );
  script_options.co_assembler &= ~(ASM_FSTACKDISP | ASM_FPEEPHOLE |
                                   ASM_FOPTIMIZE | ASM_FREUSELOC | ASM_FNODDI);
  script_options.co_unwind_limit = 0;
  if (strcmp(arg,"s") == 0) {
   /* Optimize for size. */
   script_options.co_optimizer   |= (OPTIMIZE_FCSE | OPTIMIZE_FNOUSESYMS |
-                                    OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS);
+                                    OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS
+#if defined(OPTIMIZE_FASSUME) && 0
+                                    |
+                                    OPTIMIZE_FASSUME
+#endif
+                                    );
   script_options.co_unwind_limit = 1; /* Only unwind loops with 0, or 1 iteration! */
   script_options.co_assembler   |= (ASM_FREUSELOC | ASM_FSTACKDISP |
                                     ASM_FPEEPHOLE | ASM_FOPTIMIZE |
@@ -245,6 +255,14 @@ PRIVATE int DCALL cmd_O(char *arg) {
                                                         * symbols not showing up in DDI information, thus
                                                         * resulting in those symbols also not showing up
                                                         * in generated debug information, or assembly. */
+#ifdef OPTIMIZE_FASSUME
+                                   |
+                                   OPTIMIZE_FASSUME    /* Similar to `OPTIMIZE_FNOUSESYMS', assumptions can lead
+                                                        * to symbols being turned into constants at unexpected
+                                                        * times, which is why we only enable them here.
+                                                        * Another reason is that they are quite expensive...
+                                                        */
+#endif
                                    );
    script_options.co_unwind_limit = 4;
   }
@@ -252,18 +270,27 @@ PRIVATE int DCALL cmd_O(char *arg) {
    *        -> This is mainly where constant propagation is implemented,
    *           among other, minor optimizations such as double-casts to
    *           known types */
-  if (level >= 3) script_options.co_optimizer |= (OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS),
-                  script_options.co_assembler |= (ASM_FREUSELOC);
+  if (level >= 3) {
+   script_options.co_optimizer |= (OPTIMIZE_FENABLED |
+                                   OPTIMIZE_FCONSTSYMS
+                                   );
+   script_options.co_assembler |= (ASM_FREUSELOC);
+  }
   /* Level #2: Enable initialization-is-allocation for __stack variable & peephole optimization.
    *        -> Note that peephole also implements dead-code elimination, as well
    *           as various other optimizations, such as elimination or variable
    *           reads/writes, among other things.
    *           However, peephole is greatly restricted by debug information where the
    *           existence of DDI checkpoints prevents inter-opcode optimizations. */
-  if (level >= 2) script_options.co_assembler |= (ASM_FSTACKDISP | ASM_FPEEPHOLE);
+  if (level >= 2) {
+   script_options.co_assembler |= (ASM_FSTACKDISP | ASM_FPEEPHOLE);
+  }
   /* Level #1: Enable general assembly optimizations (mainly affects automatic
-   *           instruction width selection, used to minimize assembly size). */
-  if (level >= 1) script_options.co_assembler |= (ASM_FOPTIMIZE);
+   *           instruction width selection, used to minimize assembly size, as
+   *           well as rudimentary deletion of `adjstack #SP + 0' instructions). */
+  if (level >= 1) {
+   script_options.co_assembler |= (ASM_FOPTIMIZE);
+  }
  }
  return 0;
 }
@@ -441,6 +468,10 @@ PRIVATE struct compiler_flag const compiler_flags[] = {
     { "lfstmt",        0, FIELD(co_parser),    PARSE_FLFSTMT },
     { "ast-optimize",  0, FIELD(co_optimizer), OPTIMIZE_FENABLED },
     { "ast-constsyms", 0, FIELD(co_optimizer), OPTIMIZE_FCONSTSYMS },
+    { "ast-unused",    0, FIELD(co_optimizer), OPTIMIZE_FNOUSESYMS },
+#ifdef OPTIMIZE_FASSUME
+    { "ast-assume",    0, FIELD(co_optimizer), OPTIMIZE_FASSUME },
+#endif
     { "ast-predict",   1, FIELD(co_optimizer), OPTIMIZE_FNOPREDICT },
     { "ast-compare",   1, FIELD(co_optimizer), OPTIMIZE_FNOCOMPARE },
     { "ast-onepass",   0, FIELD(co_optimizer), OPTIMIZE_FONEPASS },

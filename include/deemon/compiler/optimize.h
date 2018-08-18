@@ -39,6 +39,9 @@ DECL_BEGIN
 #define OPTIMIZE_FCSE       0x0100 /* FLAG: Perform common-subexpression-elimination. (i.e. moving stuff out of conditional expressions) */
 #define OPTIMIZE_FCONSTSYMS 0x0200 /* FLAG: Allow local, stack & static variables that are only written once to be turned into constants. */
 #define OPTIMIZE_FNOUSESYMS 0x0400 /* FLAG: Allow local, stack & static variables that were written, but never read from to be removed. */
+#if 1
+#define OPTIMIZE_FASSUME    0x0800 /* FLAG: Allow assumptions to be made about the value of variables. */
+#endif
 #define OPTIMIZE_FNOCOMPARE 0x4000 /* FLAG: Comparing ASTs always returns `false'. */
 #define OPTIMIZE_FNOPREDICT 0x8000 /* FLAG: Disable type prediction of ASTs.
                                     *       AST type prediction is able to affect code beyond the optimization
@@ -59,10 +62,167 @@ DECL_BEGIN
 
 #ifdef CONFIG_BUILDING_DEEMON
 
+
+#ifdef OPTIMIZE_FASSUME
+struct ast_symbol_assume {
+    struct symbol      *sa_sym;   /* [0..1] The symbol on which assumptions are made. */
+    DREF DeeObject     *sa_value; /* [0..1][valid_if(sa_sym)] The assumed value of `sa_sym', or NULL if unknown. */
+};
+#define AST_SYMBOL_ASSUME_HASH(x) ((x)->sa_sym->s_name->k_id)
+
+struct ast_symbol_assumes {
+    size_t                    sa_size; /* Number of symbol assumptions. */
+    size_t                    sa_mask; /* Allocated hash-vector mask. */
+    struct ast_symbol_assume *sa_elem; /* [0..sa_mask + 1][owned] Hash-vector of symbol assumes. */
+};
+#define AST_SYMBOL_ASSUMES_HASHST(self,hash)  ((hash) & (self)->sa_mask)
+#define AST_SYMBOL_ASSUMES_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
+#define AST_SYMBOL_ASSUMES_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
+#define AST_SYMBOL_ASSUMES_HASHIT(self,i)     ((self)->sa_elem+((i) & (self)->sa_mask))
+
+struct ast_assumes {
+    struct ast_assumes const *aa_prev; /* [0..1] When inside of a conditional branch, this points
+                                        *        to the set of assumptions made before the conditional
+                                        *        portion. */
+    struct ast_symbol_assumes aa_syms; /* Symbol assumptions. */
+};
+
+
+/* Add an assumption that the value of `sym' currently is set to `value'.
+ * When `value' is `NULL', assume that the value of `sym' is now undefined.
+ * NOTE: Depending on the type of `sym', no assumption may be made, such as
+ *       in the case of external, or global variables, which may arbitrarily
+ *       be modified by other threads running independently on the caller.
+ * @return:  0: OK.
+ * @return: -1: An error occurred. */
+INTDEF int DCALL
+ast_assumes_setsymval(struct ast_assumes *__restrict self,
+                      struct symbol *__restrict sym,
+                      DeeObject *value);
+
+/* Lookup the assumed value of a given symbol `sym', and return a reference to it.
+ * NOTE: When no such assumption is available, or the symbol is assumed to be
+ *       unknown, `NULL' is returned, but no error is thrown. */
+INTDEF DREF DeeObject *DCALL
+ast_assumes_getsymval(struct ast_assumes *__restrict self,
+                      struct symbol *__restrict sym);
+
+
+/* Update `self' to be the state of assumptions as it would be
+ * if `ast' would have been optimized using those assumptions.
+ * However, `ast' will not actually be optimized!
+ * This is used in cases where it is necessary to determine changes
+ * in assumptions made ahead of time, in order to determine which
+ * assumptions will continue to hold, which have changed, etc, such
+ * as in a loop:
+ * >> local x = "foobar";
+ * >> for (local y: get_items()) {
+ * >>     // If we were to blindly optimize the loop with previous assumptions,
+ * >>     // this use of `x' would get optimized into a constant `"foobar"',
+ * >>     // despite the fact that `x' will be re-written further down below.
+ * >>     print x;
+ * >>     x = y;
+ * >> }
+ * In cases such as this, we will gather all assumptions made by a
+ * loop ahead of time, before actually going ahead and performing
+ * optimizations.
+ * Then, knowing the assumptions at the start and end of the loop,
+ * we can merge then using `ast_assumes_mergecond()' (the logic here
+ * being that a loop is a conditional branch in that it will either
+ * continue running, in which case the new state will be used, or will
+ * exit, in which case the old state will be used), thus meaning that
+ * during a generic iteration, the true state of assumptions is the
+ * intersections of assumptions made before and after the loop.
+ * @return:  0: OK.
+ * @return: -1: An error occurred. */
+INTDEF int DCALL
+ast_assumes_gather(struct ast_assumes *__restrict self,
+                   DeeAstObject *__restrict ast,
+                   bool result_used);
+
+
+
+/* Assume a fully undefined state, creating new negative
+ * assumptions for all previously made positive ones.
+ * This must be done when encountering a label, as the state
+ * of symbols would not be known at this point. */
+INTDEF int DCALL
+ast_assumes_undefined(struct ast_assumes *__restrict self);
+/* Override _all_ assumptions */
+INTDEF int DCALL
+ast_assumes_undefined_all(struct ast_assumes *__restrict self);
+
+/* Initialize an empty set of ast assumptions. */
+INTDEF void DCALL
+ast_assumes_init(struct ast_assumes *__restrict self);
+
+/* Finalize the given ast assumptions. */
+INTDEF void DCALL
+ast_assumes_fini(struct ast_assumes *__restrict self);
+
+/* Setup AST assumption at the start of a conditional branch,
+ * where the conditionally executed code is located in `child',
+ * while assumptions already made until then are in `parent'
+ * @return:  0: OK.
+ * @return: -1: An error occurred. */
+INTDEF int DCALL
+ast_assumes_initcond(struct ast_assumes *__restrict child,
+                     struct ast_assumes const *__restrict parent);
+
+/* Merge assumptions made in `child' and `sibling', such that
+ * only assumptions made in both spaces still hold true, saving
+ * that intersection in `child'. Or in other words:
+ *   -> Remove all of `child's assumptions, not also made by `sibling'
+ *   -> child = child & sibling;
+ * >> local foo = 7;
+ * >> if (bar()) {
+ * >>     foo = 14;
+ * >>     print "bar() was true";
+ * >> } else {
+ * >>     foo = 14;
+ * >> }
+ * >> // ASSUME(foo == 7)
+ * Note however that negative assumptions (i.e. assumptions made
+ * that state that the value of a symbol currently is unknown),
+ * are merged as a union, meaning that it suffices for either `child'
+ * or `sibling' to explicitly not know the value of a symbol, which
+ * is required in cases such as the following:
+ * >> local foo = 7;
+ * >> if (bar()) {
+ * >>     foo = get_new_foo();
+ * >> } else {
+ * >>     foo = 14;
+ * >> }
+ * >> // ASSUME(foo == UNKNOWN) // Even though both branches made assumptions for `foo'
+ * When `sibling' is `NULL', only keep negative assumptions.
+ * WARNING: `sibling' (when non-NULL) may have its data stolen.
+ * @return:  0: OK.
+ * @return: -1: An error occurred. */
+INTDEF int DCALL
+ast_assumes_mergecond(struct ast_assumes *__restrict child,
+                      struct ast_assumes *sibling);
+
+/* Merge the assumptions made by `follower' with `self' in a situation
+ * where `follower' is a piece of follow-up code to `self', resulting
+ * in the same behavior as would have been caused by all assumptions
+ * made by `follower' instead having been made in `self'
+ * This is used to merge assumptions from conditional branches onto
+ * those made by the parent-branch, after they had been merged with
+ * each other.
+ * WARNING: `follower' may have its data stolen. */
+INTDEF int DCALL
+ast_assumes_merge(struct ast_assumes *__restrict self,
+                  struct ast_assumes *__restrict follower);
+#endif /* OPTIMIZE_FASSUME */
+
+
 struct ast_optimize_stack {
-    struct ast_optimize_stack *os_prev; /* [0..1] The ast from which the optimization originates. */
-    DeeAstObject              *os_ast;  /* [1..1] The ast being optimized. */
-    bool                       os_used; /* True if this stack-branch is being used. */
+    struct ast_optimize_stack *os_prev;   /* [0..1] The ast from which the optimization originates. */
+    DeeAstObject              *os_ast;    /* [1..1] The ast being optimized. */
+#ifdef OPTIMIZE_FASSUME
+    struct ast_assumes        *os_assume; /* [1..1] Valid assumptions within the current branch. */
+#endif /* OPTIMIZE_FASSUME */
+    bool                       os_used;   /* True if this stack-branch is being used. */
 };
 
 
@@ -77,7 +237,9 @@ struct ast_optimize_stack {
  *       calling this function, and don't call it when it is set.
  * @return:  0: The branch was potentially optimized.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL ast_optimize)(struct ast_optimize_stack *parent, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_startoptimize)(DeeAstObject *__restrict self, bool result_used);
 
 /* Ast optimization sub-functions.
  * @param: self:        == stack->os_ast
@@ -87,6 +249,8 @@ INTDEF int (DCALL ast_optimize_action)(struct ast_optimize_stack *__restrict sta
 INTDEF int (DCALL ast_optimize_multiple)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
 INTDEF int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
 INTDEF int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_loop)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
 
 INTDEF uint16_t optimizer_flags;        /* Set of `OPTIMIZE_F*' */
 INTDEF uint16_t optimizer_unwind_limit; /* The max amount of times that a loop may be unwound. */
@@ -159,6 +323,7 @@ INTDEF int DCALL ast_doesnt_return(DeeAstObject *__restrict self, unsigned int f
 
 /* 0: false, > 0: true, < 0: unpredictable. */
 INTDEF int DCALL ast_get_boolean(DeeAstObject *__restrict self);
+
 /* Same as `ast_get_boolean()', but return `-1' if the ast has side-effects. */
 INTDEF int DCALL ast_get_boolean_noeffect(DeeAstObject *__restrict self);
 

@@ -167,6 +167,9 @@ INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict s
   function_base.os_ast  = self->ast_operator.ast_opa;
   function_base.os_prev = stack;
   function_base.os_used = true;
+#ifdef OPTIMIZE_FASSUME
+  function_base.os_assume = stack->os_assume;
+#endif /* OPTIMIZE_FASSUME */
   /* Optimize the attribute name and make sure it's a constant string. */
   if (ast_optimize(&function_base,name,true)) goto err;
   if (name->ast_type == AST_CONSTEXPR && DeeString_Check(name->ast_constexpr)) {
