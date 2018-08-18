@@ -280,17 +280,21 @@ ast_assumes_undefined_all(struct ast_assumes *__restrict self) {
  if unlikely(ast_assumes_undefined(self))
     goto err;
  iter = self->aa_prev;
- for (; iter; iter = iter->aa_prev) {
-  if (!iter->aa_syms.sa_size) continue;
-  for (i = 0; i <= iter->aa_syms.sa_mask; ++i) {
-   struct ast_symbol_assume *ass;
-   ass = &iter->aa_syms.sa_elem[i];
-   if (!ass->sa_sym) continue;
-   if (!ass->sa_value) continue; /* Already a negative assumption (don't matter) */
-   /* Overrule with a negative assumption. */
-   if unlikely(ast_assumes_setsymval(self,ass->sa_sym,NULL))
-      goto err;
+ while (iter) {
+  if (iter->aa_syms.sa_size) {
+   for (i = 0; i <= iter->aa_syms.sa_mask; ++i) {
+    struct ast_symbol_assume *ass;
+    ass = &iter->aa_syms.sa_elem[i];
+    if (!ass->sa_sym) continue;
+    if (!ass->sa_value) continue; /* Already a negative assumption (don't matter) */
+    /* Overrule with a negative assumption. */
+    if unlikely(ast_assumes_setsymval(self,ass->sa_sym,NULL))
+       goto err;
+   }
   }
+  if (iter->aa_flag & AST_ASSUMES_FFUNCTION)
+      break; /* Function base assumptions set. */
+  iter = iter->aa_prev;
  }
  return 0;
 err:
@@ -304,6 +308,7 @@ ast_assumes_init(struct ast_assumes *__restrict self) {
  self->aa_syms.sa_size = 0;
  self->aa_syms.sa_mask = 0;
  self->aa_syms.sa_elem = NULL;
+ self->aa_flag         = AST_ASSUMES_FNORMAL;
 }
 
 /* Finalize the given ast assumptions. */
@@ -331,6 +336,18 @@ ast_assumes_initcond(struct ast_assumes *__restrict child,
  child->aa_syms.sa_size = 0;
  child->aa_syms.sa_mask = 0;
  child->aa_syms.sa_elem = NULL;
+ child->aa_flag         = AST_ASSUMES_FNORMAL;
+ return 0;
+}
+
+INTERN int DCALL
+ast_assumes_initfunction(struct ast_assumes *__restrict child,
+                         struct ast_assumes const *__restrict parent) {
+ child->aa_prev         = parent;
+ child->aa_syms.sa_size = 0;
+ child->aa_syms.sa_mask = 0;
+ child->aa_syms.sa_elem = NULL;
+ child->aa_flag         = AST_ASSUMES_FFUNCTION;
  return 0;
 }
 

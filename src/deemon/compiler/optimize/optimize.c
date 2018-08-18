@@ -230,8 +230,31 @@ again:
       goto err;
   break;
  case AST_FUNCTION:
-  if (ast_optimize(stack,self->ast_function.ast_code,false))
-      goto err;
+#ifdef OPTIMIZE_FASSUME
+  if (optimizer_flags & OPTIMIZE_FASSUME) {
+   struct ast_assumes child_assumes;
+   struct ast_optimize_stack child_stack;
+   /* Assumptions made in functions shouldn't bleed into the outside,
+    * so we use a sub-set of assumption within the function. */
+   if (ast_assumes_initfunction(&child_assumes,stack->os_assume))
+       goto err;
+   child_stack.os_assume = &child_assumes;
+   child_stack.os_ast    = self->ast_function.ast_code;
+   child_stack.os_prev   = stack;
+   child_stack.os_used   = false;
+   if (ast_optimize(&child_stack,child_stack.os_ast,false)) {
+    ast_assumes_fini(&child_assumes);
+    goto err;
+   }
+   /* Don't let child assumptions bleed to the outside. - Assumptions
+    * made in the function are discarded once we're back on the outside. */
+   ast_assumes_fini(&child_assumes);
+  } else
+#endif
+  {
+   if (ast_optimize(stack,self->ast_function.ast_code,false))
+       goto err;
+  }
   if (!DeeCompiler_Current->cp_options ||
      !(DeeCompiler_Current->cp_options->co_assembler & ASM_FNODEC)) {
    /* TODO: Replace initializers of function default-arguments that
@@ -260,7 +283,7 @@ again:
   }
 #ifdef OPTIMIZE_FASSUME
   if (optimizer_flags & OPTIMIZE_FASSUME &&
-      ast_assumes_undefined(stack->os_assume))
+      ast_assumes_undefined_all(stack->os_assume))
       goto err;
 #endif
   break;
@@ -277,12 +300,37 @@ again:
  {
   struct asm_operand *iter,*end;
  case AST_ASSEMBLY:
-  end = (iter = self->ast_assembly.ast_opv)+
-               (self->ast_assembly.ast_num_i+
-                self->ast_assembly.ast_num_o);
-  for (; iter != end; ++iter) {
-   if (ast_optimize(stack,iter->ao_expr,true))
-       goto err;
+#ifdef OPTIMIZE_FASSUME
+  if (optimizer_flags & OPTIMIZE_FASSUME) {
+   end = (iter = self->ast_assembly.ast_opv + self->ast_assembly.ast_num_o) +
+                                              self->ast_assembly.ast_num_i;
+   for (; iter < end; ++iter) {
+    if (ast_optimize(stack,iter->ao_expr,true))
+        goto err;
+   }
+   /* If the assembly branch is marked as reachable from the outside,
+    * then we must act the same as we do for label assumptions, and
+    * delete all assumptions already made. */
+   if ((self->ast_flag & AST_FASSEMBLY_REACH) &&
+        ast_assumes_undefined_all(stack->os_assume))
+        goto err;
+   /* Optimize output operands in respect to new assumptions,
+    * as those are executed _after_ input operands. */
+   end = (iter = self->ast_assembly.ast_opv) + self->ast_assembly.ast_num_o;
+   for (; iter < end; ++iter) {
+    if (ast_optimize(stack,iter->ao_expr,true))
+        goto err;
+   }
+  } else
+#endif
+  {
+   end = (iter = self->ast_assembly.ast_opv)+
+                (self->ast_assembly.ast_num_i+
+                 self->ast_assembly.ast_num_o);
+   for (; iter < end; ++iter) {
+    if (ast_optimize(stack,iter->ao_expr,true))
+        goto err;
+   }
   }
  } break;
 

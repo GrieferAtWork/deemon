@@ -85,6 +85,9 @@ struct ast_assumes {
                                         *        to the set of assumptions made before the conditional
                                         *        portion. */
     struct ast_symbol_assumes aa_syms; /* Symbol assumptions. */
+#define AST_ASSUMES_FNORMAL   0x0000   /* Normal assumption flags. */
+#define AST_ASSUMES_FFUNCTION 0x0001   /* These assumptions represent the base of a function. */
+    uint16_t                  aa_flag; /* Assumption flags (Set of `AST_ASSUMES_F*'). */
 };
 
 
@@ -148,7 +151,7 @@ ast_assumes_gather(struct ast_assumes *__restrict self,
  * of symbols would not be known at this point. */
 INTDEF int DCALL
 ast_assumes_undefined(struct ast_assumes *__restrict self);
-/* Override _all_ assumptions */
+/* Override _all_ assumptions made within the current function. */
 INTDEF int DCALL
 ast_assumes_undefined_all(struct ast_assumes *__restrict self);
 
@@ -168,6 +171,12 @@ ast_assumes_fini(struct ast_assumes *__restrict self);
 INTDEF int DCALL
 ast_assumes_initcond(struct ast_assumes *__restrict child,
                      struct ast_assumes const *__restrict parent);
+
+/* Initialize a set of assumptions for a child-function.
+ * This also affects the limit of `ast_assumes_undefined_all()' */
+INTDEF int DCALL
+ast_assumes_initfunction(struct ast_assumes *__restrict child,
+                         struct ast_assumes const *__restrict parent);
 
 /* Merge assumptions made in `child' and `sibling', such that
  * only assumptions made in both spaces still hold true, saving
