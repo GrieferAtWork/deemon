@@ -188,7 +188,7 @@ again:
   if unlikely(scope_push() < 0) goto err;
   if unlikely(yield() < 0) goto err;
   /* Enter a new scope and parse expressions. */
-  result = ast_setddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&loc);
+  result = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&loc);
   if unlikely(!result) goto err;
   while (tok == '\n') if unlikely(yield() < 0) goto err_r;
   if unlikely(likely(tok == '}') ? (yield() < 0) :

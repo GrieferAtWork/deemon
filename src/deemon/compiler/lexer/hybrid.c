@@ -383,7 +383,7 @@ is_a_statement:
   /* Enter a new scope and parse expressions. */
   if (parser_flags & PARSE_FLFSTMT)
       TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-  result = ast_setddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&loc);
+  result = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&loc);
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
   if unlikely(!result) goto err;
   while (tok == '\n') if unlikely(yield() < 0) goto err_r;
@@ -472,7 +472,7 @@ parse_remainder_after_statement:
    if unlikely(yield() < 0)
       goto err_r;
   } else {
-   remainder = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}');
+   remainder = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&loc);
    if unlikely(!remainder) goto err_r;
    if (remainder->ast_type == AST_MULTIPLE &&
        remainder->ast_flag == AST_FMULTIPLE_KEEPLAST &&

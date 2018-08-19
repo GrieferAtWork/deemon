@@ -330,13 +330,15 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   code = ast_setddi(result,&arrow_loc);
   if (pneed_semi) *pneed_semi = true;
  } else {
+  struct ast_loc brace_loc;
+  loc_here(&brace_loc);
   old_flags = TPPLexer_Current->l_flags;
   if (parser_flags & PARSE_FLFSTMT)
       TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == '{') ? (yield() < 0) :
               WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
      goto err_flags;
-  code = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}');
+  code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&brace_loc);
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == '}') ? (yield() < 0) :
@@ -382,13 +384,15 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
   code = ast_setddi(result,&arrow_loc);
   if (pneed_semi) *pneed_semi = true;
  } else {
+  struct ast_loc brace_loc;
+  loc_here(&brace_loc);
   old_flags = TPPLexer_Current->l_flags;
   if (parser_flags & PARSE_FLFSTMT)
       TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == '{') ? (yield() < 0) :
               WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
      goto err_flags;
-  code = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}');
+  code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&brace_loc);
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == '}') ? (yield() < 0) :

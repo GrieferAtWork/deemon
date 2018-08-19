@@ -491,6 +491,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
      }
      is_first = false;
     }
+    /* TODO: DDI commands for local/stack name bindings. */
     if (last_print_ddi.dr_path != ddi.rs_regs.dr_path ||
         last_print_ddi.dr_file != ddi.rs_regs.dr_file) {
      char const *path = "",*file = "";

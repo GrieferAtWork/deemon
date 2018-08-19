@@ -106,8 +106,7 @@ struct kwds_object {
      *          but rather for the non-positional argument indices used by
      *          those keywords. - It's actually {(string,int)...}-like
      *          However, you can easily construct a {(string,object)...}-like
-     *          mapping by calling `DeeKwdsMapping_New()' (see below)
-     * TODO: This object needs to be encodable in DEC files! */
+     *          mapping by calling `DeeKwdsMapping_New()' (see below) */
     OBJECT_HEAD
     size_t            kw_size;   /* [const] The number of valid entries in `kw_map'. */
     size_t            kw_mask;   /* [const] Mask for keyword names. */
