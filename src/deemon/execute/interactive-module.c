@@ -313,7 +313,7 @@ do_exec_code:
  if (!DeeObject_InstanceOf(DeeThread_Self()->t_except->ef_error,
                           &DeeError_IllegalInstruction))
       goto done_exec; /* Something other than the illegal-instruction error that we're looking for. */
- current_traceback = DeeThread_Self()->t_except->ef_trace;
+ current_traceback = except_frame_gettb(DeeThread_Self()->t_except);
  current_code = self->im_module.mo_root;
  if unlikely(!current_code) goto done_exec;
  preexisting_codesize = current_code->co_codebytes;

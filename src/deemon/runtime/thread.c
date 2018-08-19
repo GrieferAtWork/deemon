@@ -1966,7 +1966,8 @@ relock_state:
     ((DeeErrorObject *)frame_dst->ef_error)->e_inner = frame_src->ef_error;
     frame_dst->ef_trace = frame_src->ef_trace;
     Dee_Incref(frame_src->ef_error);
-    Dee_XIncref(frame_src->ef_trace);
+    if (ITER_ISOK(frame_src->ef_trace))
+        Dee_Incref(frame_src->ef_trace);
     if (!req_alloc) {
      frame_dst->ef_prev = NULL;
     } else {
@@ -2083,7 +2084,8 @@ thread_doclear(DeeThreadObject *__restrict self) {
  while (old_except) {
   struct except_frame *next = old_except->ef_prev;
   Dee_Decref(old_except->ef_error);
-  Dee_XDecref(old_except->ef_trace);
+  if (ITER_ISOK(old_except->ef_trace))
+      Dee_Decref(old_except->ef_trace);
   ef_free(old_except);
   old_except = next;
   result = true;
@@ -2154,7 +2156,8 @@ thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
   for (iter = self->t_except; iter;
        iter = iter->ef_prev) {
    Dee_Visit(iter->ef_error);
-   Dee_XVisit(iter->ef_trace);
+   if (ITER_ISOK(iter->ef_trace))
+       Dee_Visit(iter->ef_trace);
   }
   /* Same deal with TLS data as with exceptions: Only
    * visit them if the thread has already terminated. */
@@ -2208,13 +2211,17 @@ thread_fini(DeeThreadObject *__restrict self) {
   struct except_frame *next;
   next = frame->ef_prev;
   if (!(self->t_state&THREAD_STATE_DIDJOIN)) {
+   DeeTracebackObject *trace = frame->ef_trace;
+   if (trace == (DeeTracebackObject *)ITER_DONE)
+       trace = NULL;
    /* Display thread errors if they hadn't been propagated during a join(). */
    DeeError_Display("Unhandled thread error\n",
                    (DeeObject *)frame->ef_error,
-                   (DeeObject *)frame->ef_trace);
+                   (DeeObject *)trace);
   }
   Dee_Decref(frame->ef_error);
-  Dee_XDecref(frame->ef_trace);
+  if (ITER_ISOK(frame->ef_trace))
+      Dee_Decref(frame->ef_trace);
   ef_free(frame);
   frame = next;
  }
@@ -2609,8 +2616,10 @@ thread_crash_traceback(DeeThreadObject *__restrict self,
    err_no_active_exception();
    goto err;
   }
-  result = (DREF DeeObject *)self->t_except->ef_trace;
-  if (!result) result = Dee_None;;
+  result = (DeeObject *)self->t_except->ef_trace;
+  if (result == ITER_DONE && self == DeeThread_Self())
+      result = (DeeObject *)except_frame_gettb(self->t_except);
+  if (!result) result = Dee_None;
   ASSERT_OBJECT(result);
   Dee_Incref(result);
   ATOMIC_FETCHAND(self->t_state,~THREAD_STATE_STARTING);
@@ -3087,7 +3096,10 @@ restart:
    item->t_size = 2;
    item->t_elem[0] = (DREF DeeObject *)frame_iter->ef_error;
    item->t_elem[1] = (DREF DeeObject *)frame_iter->ef_trace;
-   if (!item->t_elem[1]) item->t_elem[1] = Dee_None;
+   if (!item->t_elem[1] && self == DeeThread_Self())
+        item->t_elem[1] = (DeeObject *)except_frame_gettb(frame_iter);
+   if (!ITER_ISOK(item->t_elem[1]))
+        item->t_elem[1] = Dee_None;
    Dee_Incref(item->t_elem[0]);
    Dee_Incref(item->t_elem[1]);
    result->t_elem[i] = (DREF DeeObject *)item; /* Inherit */
@@ -3679,6 +3691,16 @@ err:
  }
 #endif
  return (DREF DeeObject *)DeeTraceback_New((DeeThreadObject *)self);
+}
+
+
+/* Returns the traceback of a given exception-frame, or
+ * `NULL' if no traceback exists for the exception. */
+INTERN struct traceback_object *DCALL
+except_frame_gettb(struct except_frame *__restrict self) {
+ if (self->ef_trace == (DREF DeeTracebackObject *)ITER_DONE)
+     self->ef_trace = DeeTraceback_New(DeeThread_Self());
+ return self->ef_trace;
 }
 
 

@@ -1223,21 +1223,6 @@
 #define INSTRLEN_MAX   12 /* `extern <imm16>:<imm16>: function const <imm16>, #<imm16>+1'. */
 
 
-/* TODO: the assembler interpreter is lacking the following instructions:
- *  - ASM_CALL_KW               0x0b
- *  - ASM_CALL_TUPLE_KW         0x0c
- *  - ASM16_CALL_KW             0xf00b
- *  - ASM16_CALL_TUPLE_KW       0xf00c
- *  - ASM_CALL_TUPLE_KWDS       0xf020
- *  - ASM_CALLATTR_C_KW         0xce
- *  - ASM_CALLATTR_TUPLE_C_KW   0xcf
- *  - ASM16_CALLATTR_C_KW       0xf0ce
- *  - ASM16_CALLATTR_TUPLE_C_KW 0xf0cf
- *  - ASM_CALLATTR_KWDS         0xf0d0
- *  - ASM_CALLATTR_TUPLE_KWDS   0xf0d1
- */
-
-
 
 /* A second, smaller bytecode interpreter exists who's sole purpose is
  * to translate text addresses to source file/line/col/etc. information.

@@ -3965,7 +3965,8 @@ do_setattr_this_c:
           *pframe = frame->ef_prev;
           --this_thread->t_exceptsz;
           /* Destroy the frame in question. */
-          Dee_XDecref(frame->ef_trace);
+          if (ITER_ISOK(frame->ef_trace))
+              Dee_Decref(frame->ef_trace);
           Dee_Decref(frame->ef_error);
           ef_free(frame);
          }
@@ -6095,6 +6096,13 @@ handle_except:
   ASSERTF(except_recursion < this_thread->t_exceptsz,
           "No new exceptions have been thrown");
   ASSERTF(this_thread->t_except,"No error has been set");
+  /* Lazily allocate a missing traceback.
+   * TODO: Only include information that would become lost _now_ in the traceback.
+   *       All other information should be added as the stack continues being
+   *       unwound, thus allowing for O(1) exceptions in small helper functions,
+   *       regardless of how deep the current execution stack actually is! */
+  if (this_thread->t_except->ef_trace == (DREF DeeTracebackObject *)ITER_DONE)
+      this_thread->t_except->ef_trace = DeeTraceback_New(this_thread);
   current_exception = this_thread->t_except->ef_error;
   current_except = code->co_exceptv+code->co_exceptc;
   while (current_except-- != code->co_exceptv) {
@@ -6137,7 +6145,8 @@ exec_except:
    ASSERT(this_thread->t_execsz);
    iter = this_thread->t_except;
    for (; iter; iter = iter->ef_prev) {
-    if (!iter->ef_trace) continue;
+    if (!ITER_ISOK(iter->ef_trace))
+         continue;
     if unlikely(iter->ef_trace->tb_thread != this_thread) continue;
     DeeTraceback_AddFrame(iter->ef_trace,frame,
                           this_thread->t_execsz-1);

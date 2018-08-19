@@ -61,12 +61,16 @@ struct except_frame {
     struct except_frame          *ef_prev;  /* [0..1][lock(PRIVATE(DeeThread_Self()))][owned] Previous frame. */
     DREF DeeObject               *ef_error; /* [1..1][const] The actual error object that got thrown. */
     DREF struct traceback_object *ef_trace; /* [0..1][const] A copy of the execution stack at the time of the error being thrown.
-                                             * TODO: This object should be lazily allocated upon first access,
-                                             *       and unwind data should be saved lazily as it goes out of
-                                             *       scope prior to that first access.
-                                             *    -> Saving the entire traceback when an error actually occurrs
-                                             *       is really just _way_ too expensive! */
+                                             * NOTE: When `ITER_DONE' the traceback has yet to be allocated.
+                                             * NOTE: Set to `NULL' when there is no traceback. */
 };
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Returns the traceback of a given exception-frame, or
+ * `NULL' if no traceback exists for the exception. */
+INTDEF struct traceback_object *DCALL
+except_frame_gettb(struct except_frame *__restrict self);
+#endif
 
 struct repr_frame {
     struct repr_frame *rf_prev; /* [0..1][lock(PRIVATE(DeeThread_Self()))] Previous frame. */

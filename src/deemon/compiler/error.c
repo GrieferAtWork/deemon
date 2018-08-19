@@ -267,7 +267,8 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
     if (!current_parser_errors.pe_master)
          current_parser_errors.pe_master = (DeeCompilerErrorObject *)iter->ef_error;
     *piter = iter->ef_prev;
-    Dee_XDecref(iter->ef_trace);
+    if (ITER_ISOK(iter->ef_trace))
+        Dee_Decref(iter->ef_trace);
     --caller->t_exceptsz;
     ef_free(iter);
     continue;
@@ -389,13 +390,16 @@ err_handle_all_but_last:
 #ifndef CONFIG_NO_THREADS
   if (DeeObject_IsInterrupt(iter->ef_error)) {
    /* Restore interrupts. */
-   Dee_XDecref(iter->ef_trace);
+   if (ITER_ISOK(iter->ef_trace))
+       Dee_Decref(iter->ef_trace);
    restore_interrupt_error(caller,iter);
   } else
 #endif
   {
-   DeeError_Display(NULL,iter->ef_error,(DeeObject *)iter->ef_trace);
-   Dee_XDecref(iter->ef_trace);
+   DeeError_Display(NULL,iter->ef_error,
+                   (DeeObject *)except_frame_gettb(iter));
+   if (ITER_ISOK(iter->ef_trace))
+       Dee_Decref(iter->ef_trace);
    Dee_Decref(iter->ef_error);
    ef_free(iter);
   }

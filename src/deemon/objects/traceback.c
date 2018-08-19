@@ -494,7 +494,7 @@ traceback_current(DeeObject *__restrict UNUSED(self)) {
   err_no_active_exception();
   return NULL;
  }
- result = (DREF DeeObject *)thread->t_except->ef_trace;
+ result = (DREF DeeObject *)except_frame_gettb(thread->t_except);
  if unlikely(!result) result = (DREF DeeObject *)&empty_traceback;
  Dee_Incref(result);
  return result;

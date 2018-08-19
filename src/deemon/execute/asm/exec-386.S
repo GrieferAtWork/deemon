@@ -1053,7 +1053,28 @@ run_finally_after_return:
 	movl   SP_OFFSET(4) L_THIS_THREAD, %eax
 	movl   t_except(%eax), %eax
 	ASSERT_NONZERO(%eax)
-	movl   ef_error(%eax), %eax /* eax = this_thread->t_except->ef_error */
+	cmpl   $(ITER_DONE), ef_trace(%eax)
+	jne    5f
+	/* Lazily allocate tracebacks. */
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl  %ecx
+	ADJUST_CFA_OFFSET(4)
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	pushl  SP_OFFSET(16) L_THIS_THREAD
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeTraceback_New,4)
+	ADJUST_CFA_OFFSET(-4)
+	movl   8(%esp), %edx
+	movl   %eax, ef_trace(%edx)
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	popl   %ecx
+	ADJUST_CFA_OFFSET(-4)
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+5:	movl   ef_error(%eax), %eax /* eax = this_thread->t_except->ef_error */
 	ASSERT_NONZERO(%eax)
 	/* Check if the error is an interrupt and if so, make
 	 * sure that the handler is allowed to process interrupts. */
@@ -1375,8 +1396,10 @@ target_endcatch_n:
 	movl   %ecx, (%eax)        /* *pframe = frame->ef_prev */
 	/* Destroy the frame in question. (the frame is located in EDX) */
 	movl   ef_trace(%edx), %eax
-	testl  %eax, %eax
-	jz     1f                  /* Dee_XDecref(frame->ef_trace); */
+	decl   %eax
+	cmpl   $-2, %eax
+	jz     1f                  /* if (ITER_ISOK(frame->ef_trace)) Dee_Decref(frame->ef_trace); */
+	incl   %eax
 	decref %eax, 0, 0, 1       /* Preserve EDX */
 1:	movl   ef_error(%edx), %eax/* Dee_Decref(frame->ef_error); */
 	decref %eax, 0, 0, 1       /* Preserve EDX */

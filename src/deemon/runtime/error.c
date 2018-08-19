@@ -69,7 +69,7 @@ DeeError_Print(char const *reason, unsigned int handle_errors) {
 #endif
  {
   DeeError_Display(reason,error_object,
-                  (DeeObject *)thread_self->t_except->ef_trace);
+                  (DeeObject *)except_frame_gettb(thread_self->t_except));
  }
  /* If we're not supposed to handle any errors, then don't */
  if (handle_errors == ERROR_PRINT_DONTHANDLE)
@@ -129,11 +129,7 @@ DeeError_Throw(DeeObject *__restrict ob) {
     goto done;
  frame->ef_prev  = ts->t_except;
  frame->ef_error = ob;
-#if 0
- frame->ef_trace = NULL;
-#else
- frame->ef_trace = DeeTraceback_New(ts);
-#endif
+ frame->ef_trace = (DREF DeeTracebackObject *)ITER_DONE;
  ts->t_except    = frame;
  Dee_Incref(ob);
  ++ts->t_exceptsz;
@@ -199,7 +195,8 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
  STATIC_ASSERT(COMPILER_OFFSETOF(struct thread_interrupt,ti_intr) ==
                COMPILER_OFFSETOF(struct except_frame,ef_error));
  /* Drop a reference to the traceback. - Those don't get scheduled. */
- Dee_XDecref(frame->ef_trace);
+ if (ITER_ISOK(frame->ef_trace))
+     Dee_Decref(frame->ef_trace);
  while (ATOMIC_FETCHOR(ts->t_state,THREAD_STATE_INTERRUPTING) &
                                    THREAD_STATE_INTERRUPTING)
         SCHED_YIELD();
@@ -259,7 +256,8 @@ PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode)
  }
 #endif /* !CONFIG_NO_THREADS */
  Dee_Decref(frame->ef_error);
- Dee_XDecref(frame->ef_trace);
+ if (ITER_ISOK(frame->ef_trace))
+     Dee_Decref(frame->ef_trace);
  ef_free(frame);
  return true;
 }
