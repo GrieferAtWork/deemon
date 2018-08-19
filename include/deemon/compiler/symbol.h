@@ -284,10 +284,7 @@ struct base_scope_object {
     struct text_label  *bs_swcase;     /* [0..1][CHAIN(->tl_next)][owned] Chain of switch labels.
                                         * NOTE: This chain links cases in the reverse order of their appearance. */
     struct text_label  *bs_swdefl;     /* [0..1][owned] Default label in a switch statement. */
-    struct symbol      *bs_super;      /* [0..1] A symbol describing the super-identifier in thiscall functions.
-                                        * NOTE:  If necessary, this symbol is replaced with a `SYM_CLASS_REF' variable
-                                        *        upon first access (call to `get_current_super()'), following the usual
-                                        *        rules for accessing out-of-scope variables. */
+    struct symbol      *bs_super;      /* [0..1] A symbol describing the super-identifier in thiscall functions. */
     struct symbol      *bs_class;      /* [0..1] Same as `bs_super', but instead used to refer to a class's own
                                         *        type, which is required for accessing instance members by index. */
     DeeCodeObject      *bs_restore;    /* [0..1] Pointer to the generated code object (once that code object has been generated)
@@ -467,18 +464,6 @@ INTDEF void DCALL del_local_symbol(struct symbol *__restrict sym);
 /* Create a new unnamed (aka. deleted) symbol. */
 INTDEF struct symbol *DCALL new_unnamed_symbol();
 
-
-/* Get symbols describing the current class or its super type.
- * NOTE: These functions will lazily allocate references for
- *       out-of-scope symbols, only returning NULL when allocation
- *       of those symbols fails due to lack of memory.
- *       The caller on the other hand is required to check
- *       if a class/super type is available _BEFOREHAND_
- *       using the below `has_current_*()' macros. */
-INTDEF struct symbol *DCALL get_current_class(void);
-INTDEF struct symbol *DCALL get_current_super(void);
-#define has_current_class() (current_basescope->bs_class != NULL)
-#define has_current_super() (current_basescope->bs_super != NULL)
 
 
 #ifndef __INTELLISENSE__

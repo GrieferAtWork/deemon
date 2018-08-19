@@ -1210,22 +1210,6 @@ done:
 }
 
 
-INTERN struct symbol *DCALL get_current_class(void) {
- /* TODO: Remove this function */
- struct symbol *result;
- result = current_basescope->bs_class;
- ASSERT(result);
- return result;
-}
-INTERN struct symbol *DCALL get_current_super(void) {
- /* TODO: Remove this function */
- struct symbol *result;
- result = current_basescope->bs_super;
- ASSERT(result);
- return result;
-}
-
-
 DECL_END
 
 #endif /* !GUARD_DEEMON_COMPILER_SYMBOL_H */

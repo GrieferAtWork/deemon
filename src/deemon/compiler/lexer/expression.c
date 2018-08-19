@@ -1019,7 +1019,7 @@ do_range_expression:
   if unlikely(!this_sym) goto default_case;
   this_ast = ast_sethere(ast_sym(this_sym));
   if unlikely(!this_ast) goto err;
-  merge = ast_sethere(ast_sym(get_current_super()));
+  merge = ast_sethere(ast_sym(current_basescope->bs_super));
   if unlikely(!merge) { Dee_Decref(this_ast); goto err; }
   result = ast_sethere(ast_action2(AST_FACTION_AS,this_ast,merge));
   Dee_Decref(merge);

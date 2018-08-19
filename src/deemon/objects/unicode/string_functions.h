@@ -68,15 +68,16 @@ LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
 #define memmem  dee_memmem
 LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
                        void const *__restrict needle, size_t needle_length) {
- void const *candidate; uint8_t marker;
+ uint8_t *candidate; uint8_t marker;
  if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
  haystack_length -= needle_length-1,marker = *(uint8_t *)needle;
- while ((candidate = memchr(haystack,marker,haystack_length)) != NULL) {
+ while ((candidate = (uint8_t *)memchr(haystack,marker,haystack_length)) != NULL) {
   if (memcmp(candidate,needle,needle_length) == 0)
       return (void *)candidate;
-  haystack_length = ((uintptr_t)haystack+haystack_length)-((uintptr_t)candidate+1);
-  haystack     = (void const *)((uintptr_t)candidate+1);
+  ++candidate;
+  haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;
+  haystack        = (void const *)candidate;
  }
  return NULL;
 }
@@ -164,10 +165,9 @@ LOCAL void *dee_memrmem(void const *__restrict haystack, size_t haystack_length,
     return NULL;
  haystack_length -= needle_length-1,marker = *(uint8_t *)needle;
  while ((candidate = memrchr(haystack,marker,haystack_length)) != NULL) {
-  if (memcmp(candidate,needle,needle_length) == 0)
+  if (MEMEQB(candidate,needle,needle_length))
       return (void *)candidate;
-  if unlikely(candidate == haystack) break;
-  haystack_length = (uintptr_t)candidate-(uintptr_t)haystack;
+  haystack_length = (uintptr_t)candidate - (uintptr_t)haystack;
  }
  return NULL;
 }
@@ -186,8 +186,9 @@ LOCAL uint16_t *dee_memmemw(uint16_t const *__restrict haystack, size_t haystack
  while ((candidate = memchrw(haystack,marker,haystack_length)) != NULL) {
   if (MEMEQW(candidate,needle,needle_length))
       return (uint16_t *)candidate;
-  haystack_length = (haystack+haystack_length)-(candidate+1);
-  haystack     = candidate+1;
+  ++candidate;
+  haystack_length = (haystack + haystack_length) - candidate;
+  haystack        = candidate;
  }
  return NULL;
 }
@@ -201,8 +202,7 @@ LOCAL uint16_t *dee_memrmemw(uint16_t const *__restrict haystack, size_t haystac
  while ((candidate = memrchrw(haystack,marker,haystack_length)) != NULL) {
   if (MEMEQW(candidate,needle,needle_length))
       return (uint16_t *)candidate;
-  if unlikely(candidate == haystack) break;
-  haystack_length = candidate-haystack;
+  haystack_length = candidate - haystack;
  }
  return NULL;
 }
@@ -217,8 +217,9 @@ LOCAL uint32_t *dee_memmeml(uint32_t const *__restrict haystack, size_t haystack
  while ((candidate = memchrl(haystack,marker,haystack_length)) != NULL) {
   if (MEMEQL(candidate,needle,needle_length))
       return (uint32_t *)candidate;
-  haystack_length = (haystack+haystack_length)-(candidate+1);
-  haystack     = candidate+1;
+  ++candidate;
+  haystack_length = (haystack + haystack_length) - candidate;
+  haystack        = candidate;
  }
  return NULL;
 }
@@ -232,8 +233,7 @@ LOCAL uint32_t *dee_memrmeml(uint32_t const *__restrict haystack, size_t haystac
  while ((candidate = memrchrl(haystack,marker,haystack_length)) != NULL) {
   if (MEMEQL(candidate,needle,needle_length))
       return (uint32_t *)candidate;
-  if unlikely(candidate == haystack) break;
-  haystack_length = candidate-haystack;
+  haystack_length = candidate - haystack;
  }
  return NULL;
 }
@@ -678,13 +678,14 @@ dee_memasciicasemem(uint8_t const *haystack, size_t haystack_length,
  uint8_t *candidate; uint8_t marker;
  if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
- haystack_length -= needle_length;
+ haystack_length -= needle_length-1;
  marker = (uint8_t)DeeUni_ToLower(*needle);
  while ((candidate = dee_memasciicasechr(haystack,marker,haystack_length)) != NULL) {
   if (dee_memasciicaseeq(candidate,needle,needle_length))
       return candidate;
+  ++candidate;
   haystack_length = (size_t)((haystack + haystack_length) - candidate);
-  haystack        = candidate + 1;
+  haystack        = candidate;
  }
  return NULL;
 }
@@ -694,13 +695,13 @@ dee_memasciicasermem(uint8_t const *haystack, size_t haystack_length,
  uint8_t *candidate; uint8_t marker;
  if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
- haystack_length -= needle_length;
  marker = (uint8_t)DeeUni_ToLower(*needle);
+ haystack_length -= needle_length-1;
  while ((candidate = dee_memasciicaserchr(haystack,marker,haystack_length)) != NULL) {
   if (dee_memasciicaseeq(candidate,needle,needle_length))
       return candidate;
   if unlikely(candidate == haystack) break;
-  haystack_length = (size_t)((candidate/* - 1*/) - haystack);
+  haystack_length = (size_t)(candidate - haystack);
  }
  return NULL;
 }

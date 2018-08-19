@@ -772,6 +772,9 @@
     <None Include="..\src\deemon\compiler\asm\genstore-setup.c.inl">
       <Filter>src\deemon\compiler\asm</Filter>
     </None>
+    <None Include="..\src\deemon\objects\unicode\bytes_finder.c.inl">
+      <Filter>src\deemon\objects\unicode</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

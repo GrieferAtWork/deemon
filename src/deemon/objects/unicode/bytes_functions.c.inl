@@ -1332,40 +1332,25 @@ INTDEF DREF DeeObject *DCALL DeeBytes_Split(Bytes *__restrict self, DeeObject *_
 INTDEF DREF DeeObject *DCALL DeeBytes_CaseSplitByte(Bytes *__restrict self, uint8_t sep);
 INTDEF DREF DeeObject *DCALL DeeBytes_CaseSplit(Bytes *__restrict self, DeeObject *__restrict sep);
 INTDEF DREF DeeObject *DCALL DeeBytes_SplitLines(Bytes *__restrict self, bool keepends);
-
+INTDEF DREF DeeObject *DCALL DeeBytes_FindAll(Bytes *__restrict self, DeeObject *__restrict other, size_t start, size_t end);
+INTDEF DREF DeeObject *DCALL DeeBytes_CaseFindAll(Bytes *__restrict self, DeeObject *__restrict other, size_t start, size_t end);
 
 PRIVATE DREF DeeObject *DCALL
 bytes_findall(Bytes *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- Needle needle; DeeObject *arg;
- size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|IdId:findall",&arg,&start,&end) ||
-     get_needle(&needle,arg))
+ DeeObject *arg; size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:findall",&arg,&start,&end))
      return NULL;
- if (end > DeeBytes_SIZE(self))
-     end = DeeBytes_SIZE(self);
- if (start >= end)
-     return_empty_seq;
- /* TODO: Proxy-sequence for finding all needles in self[start:end] */
- DERROR_NOTIMPLEMENTED();
- return NULL;
+ return DeeBytes_FindAll(self,arg,start,end);
 }
 
 PRIVATE DREF DeeObject *DCALL
 bytes_casefindall(Bytes *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
- Needle needle; DeeObject *arg;
- size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|IdId:casefindall",&arg,&start,&end) ||
-     get_needle(&needle,arg))
+ DeeObject *arg; size_t start = 0,end = (size_t)-1;
+ if (DeeArg_Unpack(argc,argv,"o|IdId:casefindall",&arg,&start,&end))
      return NULL;
- if (end > DeeBytes_SIZE(self))
-     end = DeeBytes_SIZE(self);
- if (start >= end)
-     return_empty_seq;
- /* TODO: Proxy-sequence for finding all needles in self[start:end] */
- DERROR_NOTIMPLEMENTED();
- return NULL;
+ return DeeBytes_CaseFindAll(self,arg,start,end);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -4409,6 +4394,7 @@ DECL_END
 #ifndef __INTELLISENSE__
 #include "bytes_split.c.inl"
 #include "bytes_segments.c.inl"
+#include "bytes_finder.c.inl"
 #endif
 
 #endif /* !GUARD_DEEMON_OBJECTS_UNICODE_BYTES_FUNCTIONS_C_INL */
