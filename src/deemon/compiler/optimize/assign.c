@@ -30,9 +30,8 @@ DECL_BEGIN
 INTDEF void DCALL ast_incwrite(DeeAstObject *__restrict self);
 INTDEF void DCALL ast_decwrite(DeeAstObject *__restrict self);
 
-INTERN int DCALL
-ast_assign(DeeAstObject *__restrict self,
-           DeeAstObject *__restrict other) {
+INTERN int (DCALL ast_assign)(DeeAstObject *__restrict self,
+                              DeeAstObject *__restrict other) {
  uint8_t buffer[(sizeof(DeeAstObject)-
                  COMPILER_OFFSETOF(DeeAstObject,ast_type))];
  /* Use a temporary buffer for the variable portion of the AST.
@@ -209,9 +208,8 @@ err:
  return -1;
 #undef temp
 }
-INTERN int DCALL
-ast_graft_onto(DeeAstObject *__restrict self,
-               DeeAstObject *__restrict other) {
+INTERN int (DCALL ast_graft_onto)(DeeAstObject *__restrict self,
+                                  DeeAstObject *__restrict other) {
  DREF DeeAstObject **elemv;
  if (self->ast_scope == other->ast_scope)
      return ast_assign(self,other);

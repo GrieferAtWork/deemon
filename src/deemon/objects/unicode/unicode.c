@@ -4973,8 +4973,8 @@ err_bytes_too_large:
  goto err;
 }
 
-PUBLIC int DCALL
-bytes_printer_putc(struct bytes_printer *__restrict self, char ch) {
+PUBLIC int
+(DCALL bytes_printer_putc)(struct bytes_printer *__restrict self, char ch) {
  /* Quick check: If the character is apart of the
   *              ASCII range, just append it as a byte. */
  if likely((uint8_t)ch < 0x80)

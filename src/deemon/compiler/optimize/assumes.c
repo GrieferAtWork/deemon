@@ -43,8 +43,8 @@ DECL_BEGIN
 
 
 
-PRIVATE int DCALL
-ast_assumes_rehashsymbol(struct ast_assumes *__restrict self) {
+PRIVATE int
+(DCALL ast_assumes_rehashsymbol)(struct ast_assumes *__restrict self) {
  struct ast_symbol_assume *new_vector,*iter,*end;
  size_t new_mask = self->aa_syms.sa_mask;
  new_mask = (new_mask << 1)|1;
@@ -101,8 +101,8 @@ ast_assumes_newsymbol(struct ast_assumes *__restrict self,
  dhash_t i,perturb,hash;
  hash = sym->s_name->k_id;
  if (!self->aa_syms.sa_elem) {
-  if (ast_assumes_rehashsymbol(self))
-      goto err;
+  if unlikely(ast_assumes_rehashsymbol(self))
+     goto err;
  }
 again:
  i = perturb = hash & self->aa_syms.sa_mask;
@@ -112,8 +112,8 @@ again:
   item = AST_SYMBOL_ASSUMES_HASHIT(&self->aa_syms,i);
   if (!item->sa_sym) {
    if (self->aa_syms.sa_size >= self->aa_syms.sa_mask) {
-    if (ast_assumes_rehashsymbol(self))
-        goto err;
+    if unlikely(ast_assumes_rehashsymbol(self))
+       goto err;
     goto again;
    }
    item->sa_sym = sym;
@@ -260,8 +260,8 @@ err:
  * assumptions for all previously made positive ones.
  * This must be done when encountering a label, as the state
  * of symbols would not be known at this point. */
-INTERN int DCALL
-ast_assumes_undefined(struct ast_assumes *__restrict self) {
+INTERN int
+(DCALL ast_assumes_undefined)(struct ast_assumes *__restrict self) {
  size_t i;
  /* Mark all assumptions made locally as invalid. */
  if (self->aa_syms.sa_elem) {
@@ -273,8 +273,8 @@ ast_assumes_undefined(struct ast_assumes *__restrict self) {
  return 0;
 }
 
-INTERN int DCALL
-ast_assumes_undefined_all(struct ast_assumes *__restrict self) {
+INTERN int
+(DCALL ast_assumes_undefined_all)(struct ast_assumes *__restrict self) {
  size_t i;
  struct ast_assumes const *iter;
  if unlikely(ast_assumes_undefined(self))
@@ -329,9 +329,9 @@ ast_assumes_fini(struct ast_assumes *__restrict self) {
  * while assumptions already made until then are in `parent'
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTERN int DCALL
-ast_assumes_initcond(struct ast_assumes *__restrict child,
-                     struct ast_assumes const *__restrict parent) {
+INTERN int
+(DCALL ast_assumes_initcond)(struct ast_assumes *__restrict child,
+                             struct ast_assumes const *__restrict parent) {
  child->aa_prev         = parent;
  child->aa_syms.sa_size = 0;
  child->aa_syms.sa_mask = 0;
@@ -340,9 +340,11 @@ ast_assumes_initcond(struct ast_assumes *__restrict child,
  return 0;
 }
 
-INTERN int DCALL
-ast_assumes_initfunction(struct ast_assumes *__restrict child,
-                         struct ast_assumes const *__restrict parent) {
+/* Initialize a set of assumptions for a child-function.
+ * This also affects the limit of `ast_assumes_undefined_all()' */
+INTERN int
+(DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child,
+                                 struct ast_assumes const *__restrict parent) {
  child->aa_prev         = parent;
  child->aa_syms.sa_size = 0;
  child->aa_syms.sa_mask = 0;
@@ -392,9 +394,9 @@ same_constant_value(DeeObject *__restrict a,
  * WARNING: `sibling' (when non-NULL) may have its data stolen.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTERN int DCALL
-ast_assumes_mergecond(struct ast_assumes *__restrict child,
-                      struct ast_assumes *sibling) {
+INTERN int
+(DCALL ast_assumes_mergecond)(struct ast_assumes *__restrict child,
+                              struct ast_assumes *sibling) {
  size_t i;
  if (!sibling)
       return ast_assumes_undefined(child);
@@ -444,9 +446,9 @@ err:
  * those made by the parent-branch, after they had been merged with
  * each other.
  * WARNING: `follower' may have its data stolen. */
-INTERN int DCALL
-ast_assumes_merge(struct ast_assumes *__restrict self,
-                  struct ast_assumes *__restrict follower) {
+INTERN int
+(DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
+                          struct ast_assumes *__restrict follower) {
  size_t i;
  if (follower->aa_syms.sa_size) {
   if (!self->aa_syms.sa_size) {

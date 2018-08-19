@@ -1616,7 +1616,7 @@ PUBLIC DREF DeeObject *
   ASSERT(num_bits < DIGIT_BITS);
   if (num_bits) {
    /* Fill in the last digit with the remaining bits. */
-   result->ob_digit[digit_index] = temp & ((digit)1 << num_bits)-1;
+   result->ob_digit[digit_index] = temp & (((digit)1 << num_bits)-1);
   }
 #if 1
   if (is_negative) {
@@ -1630,7 +1630,7 @@ PUBLIC DREF DeeObject *
    if (!num_bits) num_bits = DIGIT_BITS;
    if ((result->ob_digit[digit_index])-- != 0)
        goto done_decr;
-   result->ob_digit[digit_index] &= ((digit)1 << num_bits)-1;
+   result->ob_digit[digit_index] &= (((digit)1 << num_bits)-1);
 done_decr:
    /* With the decrementation complete, we must now invert all bits. */
    for (digit_index = 0; digit_index < total_digits; ++digit_index)

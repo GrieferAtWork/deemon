@@ -4261,7 +4261,7 @@ DEFINE_OPERATOR(DREF DeeObject *,name,\
    if (tp_self->tp_math->tp_inplace_##xxx) { \
     int error; \
     if unlikely((self = COPY_SELF()) == NULL) goto err; \
-    error = (*tp_self->tp_math->tp_inplace_##xxx)(&self,some_object); \
+    error = (*tp_self->tp_math->tp_inplace_##xxx)((DeeObject **)&self,some_object); \
     if unlikely(error) Dee_Clear(self); \
     return self; \
    } \
@@ -4354,7 +4354,7 @@ DEFINE_OPERATOR(DREF DeeObject *,Add,
        return (*math->tp_add)(self,some_object);
    if (math->tp_inplace_add) {
     if unlikely((self = COPY_SELF()) == NULL) goto err;
-    if unlikely((*math->tp_inplace_add)(&self,some_object))
+    if unlikely((*math->tp_inplace_add)((DeeObject **)&self,some_object))
        goto err_self;
     return self;
    }
@@ -4403,7 +4403,7 @@ DEFINE_OPERATOR(DREF DeeObject *,Sub,
        return (*math->tp_sub)(self,some_object);
    if (math->tp_inplace_sub) {
     if unlikely((self = COPY_SELF()) == NULL) goto err;
-    if unlikely((*math->tp_inplace_sub)(&self,some_object))
+    if unlikely((*math->tp_inplace_sub)((DeeObject **)&self,some_object))
        goto err_self;
     return self;
    }
@@ -6374,7 +6374,7 @@ DEFINE_OPERATOR(int,DelRange,(DeeObject *__restrict self,
   op = DeeClass_TryGetOperator(tp_self,OPERATOR_DELRANGE);
   if likely(op) {
 #if defined(__i386__) && (defined(_MSC_VER) || defined(__GNUC__))
-   op_result = DeeObject_ThisCall(op,self,2,&begin);
+   op_result = DeeObject_ThisCall(op,self,2,(DeeObject **)&begin);
 #else
    DeeObject *argv[2];
    argv[0] = begin;
@@ -6423,7 +6423,7 @@ DEFINE_OPERATOR(int,SetRange,(DeeObject *__restrict self,
   op = DeeClass_TryGetOperator(tp_self,OPERATOR_SETRANGE);
   if likely(op) {
 #if defined(__i386__) && (defined(_MSC_VER) || defined(__GNUC__))
-   op_result = DeeObject_ThisCall(op,self,3,&begin);
+   op_result = DeeObject_ThisCall(op,self,3,(DeeObject **)&begin);
 #else
    DeeObject *argv[3];
    argv[0] = begin;

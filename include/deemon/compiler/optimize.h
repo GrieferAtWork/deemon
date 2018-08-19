@@ -98,10 +98,9 @@ struct ast_assumes {
  *       be modified by other threads running independently on the caller.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTDEF int DCALL
-ast_assumes_setsymval(struct ast_assumes *__restrict self,
-                      struct symbol *__restrict sym,
-                      DeeObject *value);
+INTDEF int (DCALL ast_assumes_setsymval)(struct ast_assumes *__restrict self,
+                                         struct symbol *__restrict sym,
+                                         DeeObject *value);
 
 /* Lookup the assumed value of a given symbol `sym', and return a reference to it.
  * NOTE: When no such assumption is available, or the symbol is assumed to be
@@ -138,10 +137,9 @@ ast_assumes_getsymval(struct ast_assumes *__restrict self,
  * intersections of assumptions made before and after the loop.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTDEF int DCALL
-ast_assumes_gather(struct ast_assumes *__restrict self,
-                   DeeAstObject *__restrict ast,
-                   bool result_used);
+INTDEF int (DCALL ast_assumes_gather)(struct ast_assumes *__restrict self,
+                                      DeeAstObject *__restrict ast,
+                                      bool result_used);
 
 
 
@@ -149,11 +147,9 @@ ast_assumes_gather(struct ast_assumes *__restrict self,
  * assumptions for all previously made positive ones.
  * This must be done when encountering a label, as the state
  * of symbols would not be known at this point. */
-INTDEF int DCALL
-ast_assumes_undefined(struct ast_assumes *__restrict self);
+INTDEF int (DCALL ast_assumes_undefined)(struct ast_assumes *__restrict self);
 /* Override _all_ assumptions made within the current function. */
-INTDEF int DCALL
-ast_assumes_undefined_all(struct ast_assumes *__restrict self);
+INTDEF int (DCALL ast_assumes_undefined_all)(struct ast_assumes *__restrict self);
 
 /* Initialize an empty set of ast assumptions. */
 INTDEF void DCALL
@@ -168,15 +164,13 @@ ast_assumes_fini(struct ast_assumes *__restrict self);
  * while assumptions already made until then are in `parent'
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTDEF int DCALL
-ast_assumes_initcond(struct ast_assumes *__restrict child,
-                     struct ast_assumes const *__restrict parent);
+INTDEF int (DCALL ast_assumes_initcond)(struct ast_assumes *__restrict child,
+                                        struct ast_assumes const *__restrict parent);
 
 /* Initialize a set of assumptions for a child-function.
  * This also affects the limit of `ast_assumes_undefined_all()' */
-INTDEF int DCALL
-ast_assumes_initfunction(struct ast_assumes *__restrict child,
-                         struct ast_assumes const *__restrict parent);
+INTDEF int (DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child,
+                                            struct ast_assumes const *__restrict parent);
 
 /* Merge assumptions made in `child' and `sibling', such that
  * only assumptions made in both spaces still hold true, saving
@@ -207,9 +201,8 @@ ast_assumes_initfunction(struct ast_assumes *__restrict child,
  * WARNING: `sibling' (when non-NULL) may have its data stolen.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTDEF int DCALL
-ast_assumes_mergecond(struct ast_assumes *__restrict child,
-                      struct ast_assumes *sibling);
+INTDEF int (DCALL ast_assumes_mergecond)(struct ast_assumes *__restrict child,
+                                         struct ast_assumes *sibling);
 
 /* Merge the assumptions made by `follower' with `self' in a situation
  * where `follower' is a piece of follow-up code to `self', resulting
@@ -219,9 +212,8 @@ ast_assumes_mergecond(struct ast_assumes *__restrict child,
  * those made by the parent-branch, after they had been merged with
  * each other.
  * WARNING: `follower' may have its data stolen. */
-INTDEF int DCALL
-ast_assumes_merge(struct ast_assumes *__restrict self,
-                  struct ast_assumes *__restrict follower);
+INTDEF int (DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
+                                     struct ast_assumes *__restrict follower);
 #endif /* OPTIMIZE_FASSUME */
 
 
@@ -289,13 +281,13 @@ INTDEF bool DCALL ast_uses_symbol(DeeAstObject *__restrict self,
                                   struct symbol *__restrict sym);
 
 /* Do a shallow assignment of `other' onto `self' */
-INTDEF int DCALL ast_assign(DeeAstObject *__restrict self,
-                            DeeAstObject *__restrict other);
+INTDEF int (DCALL ast_assign)(DeeAstObject *__restrict self,
+                              DeeAstObject *__restrict other);
 
 /* Graft `other' onto `self', assigning it if both branches have the same scope,
  * or converting `self' into a single-expression multiple-ast containing `other.' */
-INTDEF int DCALL ast_graft_onto(DeeAstObject *__restrict self,
-                                DeeAstObject *__restrict other);
+INTDEF int (DCALL ast_graft_onto)(DeeAstObject *__restrict self,
+                                  DeeAstObject *__restrict other);
 
 /* Finalize the contents of `self', but don't destroy the object itself. */
 INTDEF void DCALL ast_fini_contents(DeeAstObject *__restrict self);
@@ -325,17 +317,17 @@ INTDEF bool DCALL ast_contains_goto(DeeAstObject *__restrict self, uint16_t cons
  * @return  1: doesn't return
  * @return -1: always reachable / unpredictable
  * @return -2: always reachable / unpredictable & doesn't return */
-INTDEF int DCALL ast_doesnt_return(DeeAstObject *__restrict self, unsigned int flags);
+INTDEF int (DCALL ast_doesnt_return)(DeeAstObject *__restrict self, unsigned int flags);
 #define AST_DOESNT_RETURN_FNORMAL     0x0000 /*  */
 #define AST_DOESNT_RETURN_FINLOOP     0x0001
 #define AST_DOESNT_RETURN_FINCATCH    0x0002
 #define AST_DOESNT_RETURN_FINCATCHALL 0x0004
 
 /* 0: false, > 0: true, < 0: unpredictable. */
-INTDEF int DCALL ast_get_boolean(DeeAstObject *__restrict self);
+INTDEF int (DCALL ast_get_boolean)(DeeAstObject *__restrict self);
 
 /* Same as `ast_get_boolean()', but return `-1' if the ast has side-effects. */
-INTDEF int DCALL ast_get_boolean_noeffect(DeeAstObject *__restrict self);
+INTDEF int (DCALL ast_get_boolean_noeffect)(DeeAstObject *__restrict self);
 
 /* Predict the typing of a given AST, or return NULL when unpredictable.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'. */
@@ -350,7 +342,7 @@ INTDEF DeeTypeObject *DCALL ast_predict_type(DeeAstObject *__restrict self);
 /* Return if the optimizer is allowed to perform
  * operations on/with a constant instance `self'.
  * @return: * : One of `CONSTEXPR_*' */
-INTDEF int DCALL allow_constexpr(DeeObject *__restrict self);
+INTDEF int (DCALL allow_constexpr)(DeeObject *__restrict self);
 
 /* Check if a given object `type' is a type that implements a cast-constructor.
  * When `type' isn't derived from `DeeType_Type', always return `false' */
@@ -359,8 +351,22 @@ INTDEF bool DCALL has_cast_constructor(DeeObject *__restrict type);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define ast_optimize(self,result_used)     __builtin_expect(ast_optimize(self,result_used),0)
-#define ast_optimize_all(self,result_used) __builtin_expect(ast_optimize_all(self,result_used),0)
+#ifdef OPTIMIZE_FASSUME
+#define ast_assumes_setsymval(self,sym,value)    __builtin_expect(ast_assumes_setsymval(self,sym,value),0)
+#define ast_assumes_gather(self,ast,result_used) __builtin_expect(ast_assumes_gather(self,ast,result_used),0)
+#define ast_assumes_undefined(self)              __builtin_expect(ast_assumes_undefined(self),0)
+#define ast_assumes_undefined_all(self)          __builtin_expect(ast_assumes_undefined_all(self),0)
+#define ast_assumes_initcond(child,parent)       __builtin_expect(ast_assumes_initcond(child,parent),0)
+#define ast_assumes_initfunction(child,parent)   __builtin_expect(ast_assumes_initfunction(child,parent),0)
+#define ast_assumes_mergecond(child,sibling)     __builtin_expect(ast_assumes_mergecond(child,sibling),0)
+#define ast_assumes_merge(self,follower)         __builtin_expect(ast_assumes_merge(self,follower),0)
+#endif /* OPTIMIZE_FASSUME */
+#define ast_optimize(parent,self,result_used)    __builtin_expect(ast_optimize(parent,self,result_used),0)
+#define ast_dooptimize(stack,self,result_used)   __builtin_expect(ast_dooptimize(stack,self,result_used),0)
+#define ast_startoptimize(self,result_used)      __builtin_expect(ast_startoptimize(self,result_used),0)
+#define ast_optimize_all(self,result_used)       __builtin_expect(ast_optimize_all(self,result_used),0)
+#define ast_assign(self,other)                   __builtin_expect(ast_assign(self,other),0)
+#define ast_graft_onto(self,other)               __builtin_expect(ast_graft_onto(self,other),0)
 #endif
 #endif
 

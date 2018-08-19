@@ -133,6 +133,7 @@ again:
   OPTIMIZE_VERBOSEAT(self,"Inherit parent scope above empty child scope\n");
 #endif
  }
+ /* TODO: Remove unused symbols from scopes (s.a. `s_nread == 0 && s_nwrite == 0 && s_nbound == 0') */
 
  /* TODO: Move variables declared in outer scopes, but only used in inner ones
   *       into those inner scopes, thus improving local-variable-reuse optimizations
@@ -145,15 +146,18 @@ again:
  case AST_MULTIPLE:
   return ast_optimize_multiple(stack,self,result_used);
 
-#ifdef OPTIMIZE_FASSUME
  case AST_UNBIND:
+#ifdef OPTIMIZE_FASSUME
   /* Delete assumptions made about the symbol. */
   if (optimizer_flags & OPTIMIZE_FASSUME)
       return ast_assumes_setsymval(stack->os_assume,self->ast_unbind,NULL);
-  break;
 #endif
+  break;
 
- /* TODO: Using assumptions, we could also track if a symbol if a symbol is bound? */
+ case AST_BNDSYM:
+  /* TODO: Always `false' for `local-symbols' with `s_nwrite == 0' */
+  /* TODO: Using assumptions, we could also track if a symbol if a symbol is bound? */
+  break;
 
  case AST_RETURN:
  case AST_YIELD:

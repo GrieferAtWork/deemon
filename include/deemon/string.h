@@ -121,7 +121,7 @@ union dcharptr {
 #define STRING_WIDTH_COMMON(x,y) \
     XBLOCK({ unsigned int _x=(x),_y=(y); XRETURN _x >= _y ? _x : _y; })
 #define STRING_WIDTH_COMMON3(x,y,z) \
-    XBLOCK({ unsigned int _x=(x),_y=(y),_z(z); XRETURN _x >= _y ? (_x >= _z ? _x : _z) : (_y >= _z ? _y : _z); })
+    XBLOCK({ unsigned int _x=(x),_y=(y),_z=(z); XRETURN _x >= _y ? (_x >= _z ? _x : _z) : (_y >= _z ? _y : _z); })
 #elif !defined(__NO_ATTR_FORCEINLINE) && (!defined(_MSC_VER) || defined(NDEBUG))
 FORCELOCAL ATTR_CONST unsigned int DCALL
 string_width_common(unsigned int x, unsigned int y) {

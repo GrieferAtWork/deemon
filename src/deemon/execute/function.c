@@ -137,11 +137,21 @@ PRIVATE struct type_member function_class_members[] = {
     TYPE_MEMBER_CONST("yield_function",&DeeYieldFunction_Type),
     TYPE_MEMBER_END
 };
+
+PRIVATE DREF DeeObject *DCALL
+function_getrefs(DeeFunctionObject *__restrict self) {
+ return DeeRefVector_NewReadonly((DeeObject *)self,
+                                  self->fo_code->co_refc,
+                                  self->fo_refv);
+}
+
+PRIVATE struct type_getset function_getsets[] = {
+    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_getrefs, NULL, NULL,
+      DOC("->sequence") },
+    { NULL }
+};
 PRIVATE struct type_member function_members[] = {
     TYPE_MEMBER_FIELD("__code__",STRUCT_OBJECT,offsetof(DeeFunctionObject,fo_code)),
-#if 0 /* TODO: Enable access to referenced variables through a getset proxy-sequence */
-    TYPE_MEMBER_FIELD("__refs__",STRUCT_OBJECT,offsetof(DeeFunctionObject,fo_refs)),
-#endif
     TYPE_MEMBER_END
 };
 
@@ -279,7 +289,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */function_getsets,
     /* .tp_members       = */function_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

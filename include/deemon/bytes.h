@@ -225,7 +225,7 @@ dssize_t (bytes_printer_printobjectrepr)(struct bytes_printer *__restrict self, 
 #ifndef __NO_builtin_expect
 #define DeeSeq_ItemsToBytes(dst,num_bytes,seq) __builtin_expect(DeeSeq_ItemsToBytes(dst,num_bytes,seq),0)
 #define bytes_printer_putc(self,ch)            __builtin_expect(bytes_printer_putc(self,ch),0)
-#define bytes_printer_putb(self,byte)       __builtin_expect(bytes_printer_putb(self,byte),0)
+#define bytes_printer_putb(self,byte)          __builtin_expect(bytes_printer_putb(self,byte),0)
 #endif
 #endif
 

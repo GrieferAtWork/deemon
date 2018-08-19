@@ -37,7 +37,7 @@
 #include <thread>
 #include <time>
 
-local config_verbose = true;
+local config_verbose = false;
 local config_max_compilers = 8;
 local config_force_compile = false;
 local config_compile_single = false;
