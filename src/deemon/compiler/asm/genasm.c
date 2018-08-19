@@ -3247,6 +3247,13 @@ got_class_incsp:
  case AST_LABEL:
   label = ast->ast_label.ast_label;
   ASSERT(label);
+  if (!label->tl_goto) {
+   if (WARNAST(ast,W_ASM_LABEL_NEVER_USED,
+               ast->ast_flag&AST_FLABEL_CASE ?
+              (label->tl_expr ? "case" : "default") :
+               label->tl_name->k_name))
+       goto err;
+  }
   sym = label->tl_asym;
   if (!sym) {
    sym = asm_newsym();

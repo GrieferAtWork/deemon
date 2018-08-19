@@ -813,13 +813,16 @@ handle_post_label:
      if unlikely(WARN(W_MISSING_STATEMENT_AFTER_LABEL))
         goto err;
      result = ast_constexpr(Dee_None);
+     if unlikely(!result) goto err;
+     label_ast = ast_setddi(ast_label(label_flags,def_label,current_basescope),&loc);
+     if unlikely(!label_ast) goto err_r;
     } else {
+     label_ast = ast_setddi(ast_label(label_flags,def_label,current_basescope),&loc);
+     if unlikely(!label_ast) goto err;
      /* Parse the statement that is prefixed by the label. */
      result = ast_parse_statement(allow_nonblock);
+     if unlikely(!result) { Dee_Decref(label_ast); goto err; }
     }
-    if unlikely(!result) goto err;
-    label_ast = ast_setddi(ast_label(label_flags,def_label,current_basescope),&loc);
-    if unlikely(!label_ast) goto err_r;
     if (!DeeObject_IsShared(result) &&
          result->ast_type == AST_MULTIPLE &&
          result->ast_flag == AST_FMULTIPLE_KEEPLAST) {

@@ -277,6 +277,11 @@ again:
   if (!self->ast_label.ast_label->tl_goto) {
    /* The label was never used. - Ergo: it should not exist.
     * To signify this, we simply convert this branch to `none'. */
+   if (WARNAST(self,W_ASM_LABEL_NEVER_USED,
+               self->ast_flag&AST_FLABEL_CASE ?
+              (self->ast_label.ast_label->tl_expr ? "case" : "default") :
+               self->ast_label.ast_label->tl_name->k_name))
+       goto err;
    Dee_Decref((DeeObject *)self->ast_label.ast_base);
    self->ast_type      = AST_CONSTEXPR;
    self->ast_flag      = AST_FNORMAL;
