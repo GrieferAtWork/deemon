@@ -195,11 +195,13 @@ PRIVATE uint8_t operation_mode = OPERATION_MODE_RUNSCRIPT;
 #define EMITPP_FMAGICTOKENS    0x4000 /* Enable ~magic~ tokens for small line-shifts to prevent a #line being emit. */
 PRIVATE uint16_t emitpp_state = EMITPP_FNORMAL;
 PRIVATE DREF DeeObject *emitpp_dpout = NULL; /* Output stream for source dependencies. */
-
+PRIVATE char const *emitasm_flags = NULL; /* Additional flags to-be used when printing assembly. */
 
 
 INTDEF struct compiler_options import_options; /* Options used to compile imported libraries. */
 INTDEF struct compiler_options script_options; /* Options used to compile the user-script. */
+
+
 
 PRIVATE int DCALL compiler_setup(void *arg);
 PRIVATE int DCALL error_handler(struct compiler_error_object *__restrict error, int fatality_mode, void *arg);
@@ -300,7 +302,11 @@ PRIVATE int DCALL cmd_i(char *UNUSED(arg)) {
  return 0;
 }
 PRIVATE int DCALL cmd_E(char *UNUSED(arg)) { operation_mode = OPERATION_MODE_PRINTPP; return 0; }
-PRIVATE int DCALL cmd_S(char *UNUSED(arg)) { operation_mode = OPERATION_MODE_PRINTASM; return 0; }
+PRIVATE int DCALL cmd_S(char *arg) {
+ if (arg && *arg) emitasm_flags = arg;
+ operation_mode = OPERATION_MODE_PRINTASM;
+ return 0;
+}
 PRIVATE int DCALL cmd_F(char *UNUSED(arg)) { operation_mode = OPERATION_MODE_FORMAT; return 0; }
 PRIVATE int DCALL cmd_P(char *UNUSED(arg)) { emitpp_state |= EMITPP_FNOLINE; return 0; }
 PRIVATE int DCALL cmd_c(char *UNUSED(arg)) {
@@ -585,7 +591,7 @@ PRIVATE struct cmd_option preprocessor_options[] = {
 };
 PRIVATE struct cmd_option assembler_options[] = {
     { CMD_FARG|CMD_FARGIMM, "O", NULL, { &cmd_O }, doc_cmdO },
-    { CMD_FJOINABLE, "S", NULL, { &cmd_S }, doc_cmdS },
+    { CMD_FJOINABLE|CMD_FARG|CMD_FARGIMM|CMD_FARGOPT|CMD_FARGEQ, "S", NULL, { &cmd_S }, doc_cmdS },
     CMD_OPTION_SENTINEL
 };
 PRIVATE struct cmd_option linker_options[] = {
@@ -630,7 +636,7 @@ PRIVATE struct cmd_option cmdline_options[] = {
     { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "W", NULL, { &cmd_W }, doc_cmdW },
 
     /* Assembler-specific options that are promoted into the root commandline namespace. */
-    { CMD_FJOINABLE, "S", NULL, { &cmd_S }, doc_cmdS },
+    { CMD_FJOINABLE|CMD_FARG|CMD_FARGIMM|CMD_FARGOPT|CMD_FARGEQ, "S", NULL, { &cmd_S }, doc_cmdS },
     { CMD_FARG|CMD_FARGIMM, "O", NULL, { &cmd_O }, doc_cmdO },
 
     /* Linker-specific options that are promoted into the root commandline namespace. */
@@ -871,14 +877,16 @@ int main(int argc, char *argv[]) {
     PRIVATE DEFINE_STRING(str_disassembler,"disassembler");
     DREF DeeObject *disassembler_module;
     disassembler_module = DeeModule_Open((DeeObject *)&str_disassembler,NULL,true);
-    if unlikely(!disassembler_module) temp = -1;
+    if unlikely(!disassembler_module)
+     temp = -1;
     else {
      DREF DeeObject *disasm_error;
-     disasm_error = DeeObject_CallAttrStringPack(disassembler_module,
-                                                 "printcode",
-                                                 2,
-                                                 user_module->mo_root,
-                                                 script_options.co_decoutput);
+     disasm_error = DeeObject_CallAttrStringf(disassembler_module,
+                                              "printcode",
+                                              emitasm_flags ? "oos" : "oo",
+                                              user_module->mo_root,
+                                              script_options.co_decoutput,
+                                              emitasm_flags);
      Dee_Decref(disassembler_module);
      Dee_XDecref(disasm_error);
      temp = disasm_error ? 0 : -1;

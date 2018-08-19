@@ -204,10 +204,11 @@ check_short_options:
                             CMD_FNORMAL,CMD_FNORMAL);
     if (!opt) continue;
     if (opt->co_flags&(CMD_FARG|CMD_FGROUP)) {
-     if ((opt->co_flags&CMD_FARGEQ) &&
-          cmd[cmd_len] == '=') {
+     if ((opt->co_flags&CMD_FARGEQ) && cmd[cmd_len] == '=') {
       /* Immediate argument, following an equal sign. */
       arg = cmd+cmd_len+1;
+     } else if (opt->co_flags & CMD_FJOINABLE) {
+      arg = NULL;
      } else {
       if (!(opt->co_flags&(CMD_FARGIMM|CMD_FGROUP)))
             continue; /* Not allowed with an immediate argument. */
@@ -230,7 +231,7 @@ check_short_options:
 has_opt:
   ASSERT(opt);
   ASSERT(opt->co_func);
-  if (!arg && argc &&
+  if (!arg && argc && !(opt->co_flags&CMD_FARGEQ) &&
      ((opt->co_flags&(CMD_FARG|CMD_FARGONLYIMM)) == (CMD_FARG) ||
       (opt->co_flags&CMD_FGROUP)) &&
     (!(opt->co_flags&CMD_FARGOPT) || **argv != '-')) {
@@ -309,12 +310,12 @@ has_opt:
     goto err;
    }
    /* Execute a command-option, or query it for later execution. */
-   if (opt->co_flags&CMD_FRUNLATER) {
+   if (opt->co_flags & CMD_FRUNLATER) {
     result = cmd_addlater(opt->co_func,arg);
    } else {
     result = (*opt->co_func)(arg);
    }
-   if (opt->co_flags&CMD_FJOINABLE) {
+   if ((opt->co_flags & CMD_FJOINABLE) && !arg) {
     cmd += cmd_len;
     if (*cmd) goto search_joined_cmd;
    }
