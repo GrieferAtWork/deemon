@@ -6125,7 +6125,7 @@ handle_except:
 exec_except_maybe_handle:
  /* If the exception handler requests it,
   * already handle the error beforehand. */
- if (current_except->eh_flags&EXCEPTION_HANDLER_FHANDLED)
+ if (current_except->eh_flags & EXCEPTION_HANDLER_FHANDLED)
      DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 exec_except:
  ASSERTF(current_except->eh_addr <  current_except->eh_start ||

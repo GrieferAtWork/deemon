@@ -132,7 +132,7 @@ struct except_handler {
                                               *  NOTE: When greater than the depth at the time of the exception
                                               *        happening, the stack is filled with `none'. */
 #define EXCEPTION_HANDLER_FNORMAL  0x0000    /* Normal exception handler flags. */
-#define EXCEPTION_HANDLER_FFINALLY 0x0001    /* This handler must be executed after `finally' */
+#define EXCEPTION_HANDLER_FFINALLY 0x0001    /* This handler must be executed as a `finally' handler. */
 #define EXCEPTION_HANDLER_FINTERPT 0x0002    /* This handler is allowed to handle interrupt signals.
                                               * In other words: It's allowed to catch instances of `Signal.Interrupt' */
 #define EXCEPTION_HANDLER_FHANDLED 0x0004    /* Enter the exception handler with the exception already discarded.

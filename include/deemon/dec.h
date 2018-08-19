@@ -353,7 +353,7 @@ typedef struct PACKED {
 } Dec_8BitMemberEntry;
 
 typedef struct PACKED {
-    uint16_t        mt_siz;        /* The required size of a VTABLE associated with this member table. */
+    uint8_t         mt_siz[1];     /* The required size of a VTABLE associated with this member table (decode using `Dec_DecodePointer'). */
     uint8_t         mt_len[1];     /* The amount of member symbols defined (decode using `Dec_DecodePointer'). */
     Dec_MemberEntry mt_members[1]; /* [mt_len] One entry for each member. */
 } Dec_MemberTable;
@@ -363,6 +363,18 @@ typedef struct PACKED {
     uint8_t             mt_len[1];     /* The amount of member symbols defined (decode using `Dec_DecodePointer'). */
     Dec_8BitMemberEntry mt_members[1]; /* [mt_len] One entry for each member. */
 } Dec_8BitMemberTable;
+
+
+typedef struct PACKED {
+    uint8_t       kwe_nam[1];    /* Name of the keyword (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+                                  * NOTE: Decode using `Dec_DecodePointer()' */
+} Dec_KwdsEntry;
+typedef struct PACKED {
+    uint8_t       kw_siz;        /* The amount of keyword entries. */
+    Dec_KwdsEntry kw_members[1]; /* [kw_siz] One entry for each member.
+                                  * NOTE: The keyword index (`struct kwds_entry::ke_index')
+                                  *       is the index into this vector. */
+} Dec_Kwds;
 
 
 
@@ -405,7 +417,7 @@ Dec_DecodePointer(uint8_t **__restrict pptr) {
 #define DTYPE_LIST       0x06   /* +n   `DeeList_Type'   -- Followed by `Dec_DecodePointer()' describing the length, then length more `DTYPE_*' codes for each element. */
 #define DTYPE_MEMTAB     0x07   /* +n   `DeeMemberTable_Type' -- Followed by an immediate `Dec_8BitMemberTable' structure. */
 #define DTYPE_FUNCTION   0x08   /* +n   `DeeFunction_Type' -- An immediate `Dec_Code' data structure defining a new code object, packed within a function object. - Following this, referenced objects are stored in-line. */
-/*      DTYPE_           0x09    */
+#define DTYPE_KWDS       0x09   /* +n   `DeeKwds_Type'   -- An immediate `Dec_Kwds' data structure defining a new keywords object. */
 /*      DTYPE_           0x0a    */
 /*      DTYPE_           0x0b    */
 /*      DTYPE_           0x0c    */
@@ -438,7 +450,7 @@ Dec_DecodePointer(uint8_t **__restrict pptr) {
 /*      DTYPE16_            0x0f0d  */
 /*      DTYPE16_            0x0f0e  */
 #define DTYPE16_CELL        0x0f0d /* +n     `DeeCell_Type'  -- Followed either by `DTYPE_NULL' for an empty cell, or another object that is contained within. */
-/*      DTYPE16_            0x0f0f  */
+#define DTYPE16_EXTENDED    0x0f0f /* Reserved for future expansion. */
 #define DTYPE16_BUILTIN_MIN 0x0f10 /* All extended type codes greater than this refer to a custom builtin SET id-0x10,
                                     * that is then followed by 1 more byte naming the object within that set:
                                     * >> 0x0f1142 // Use builtin object 0x42 from set #0x01  */

@@ -26,6 +26,7 @@
 #include <deemon/dec.h>
 
 #ifndef CONFIG_NO_DEC
+#include <deemon/arg.h>
 #include <deemon/asm.h>
 #include <deemon/float.h>
 #include <deemon/file.h>
@@ -1064,7 +1065,7 @@ err: result = -1; goto stop;
 }
 
 PRIVATE DREF DeeObject *DCALL
-DeeMemberTable_NewSized(uint16_t vtab_size, uint32_t num_symbols) {
+DeeMemberTable_NewSized(size_t vtab_size, uint32_t num_symbols) {
  DREF DeeMemberTableObject *result;
  struct member_entry *member_vector;
  size_t hashmask = 1;
@@ -1079,8 +1080,8 @@ DeeMemberTable_NewSized(uint16_t vtab_size, uint32_t num_symbols) {
  if unlikely(!result) { Dee_Free(member_vector); goto done; }
  DeeObject_Init(result,&DeeMemberTable_Type);
  /* Initialize the new member table descriptor. */
- result->mt_size = (size_t)vtab_size;
- result->mt_mask = (size_t)hashmask;
+ result->mt_size = vtab_size;
+ result->mt_mask = hashmask;
  result->mt_list = member_vector;
 done:
  return (DREF DeeObject *)result;
@@ -1279,6 +1280,32 @@ err_function_code:
   }
  } break;
 
+ {
+  uint32_t i,count;
+  char *strtab; uint8_t *end;
+ case DTYPE_KWDS:
+  /* Invocation keywords descriptor. */
+  count  = Dec_DecodePointer(&reader);
+  result = DeeKwds_NewWithHint(count);
+  if unlikely(!result) goto done;
+  strtab = (char *)(self->df_base + DEE_LESWAP32(self->df_ehdr->e_stroff));
+  end    = self->df_base + self->df_size;
+  for (i = 0; i < count; ++i) {
+   uint32_t addr; char *name; size_t name_len;
+   if unlikely(reader >= end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
+   addr = Dec_DecodePointer(&reader);
+   name = strtab + addr;
+   if unlikely(name >= (char *)end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
+   name_len = strlen(name);
+   if unlikely(DeeKwds_Append(&result,
+                               name,
+                               name_len,
+                               hash_ptr(name,name_len)))
+      goto err_r;
+  }
+ } break;
+
+
  case DTYPE_EXTENDED:
   code = *reader++;
   switch (code) {
@@ -1391,11 +1418,11 @@ err_function_code:
   } break;
 
   {
-   uint16_t size; uint8_t *end;
-   uint32_t length; char *strtab;
+   uint8_t *end; char *strtab;
+   uint32_t size,length;
   case DTYPE16_MEMTAB & 0xff:
    /* Big member table object descriptor. */
-   size   = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
+   size   = Dec_DecodePointer(&reader);
    length = Dec_DecodePointer(&reader);
    result = DeeMemberTable_NewSized(size,length);
    if unlikely(!result) goto done;

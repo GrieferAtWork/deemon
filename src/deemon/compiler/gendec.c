@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_NO_DEC
+#include <deemon/arg.h>
 #include <deemon/object.h>
 #include <deemon/none.h>
 #include <deemon/file.h>
@@ -455,9 +456,13 @@ dec_putmemtab(DeeMemberTableObject *__restrict self) {
  if (dec_putb(DTYPE_MEMTAB)) goto err;
 
  /* Emit the size of the member table. */
- if (use_8bit ? dec_putb((uint8_t)self->mt_size)
-              : dec_putw((uint16_t)self->mt_size))
-     goto err;
+ if (use_8bit) {
+  if (dec_putb((uint8_t)self->mt_size))
+      goto err;
+ } else {
+  if (dec_putptr((uint32_t)self->mt_size))
+      goto err;
+ }
 
  /* Count the number of used entires. */
  end = (iter = self->mt_list)+(self->mt_mask+1);
@@ -503,6 +508,38 @@ dec_putmemtab(DeeMemberTableObject *__restrict self) {
     dec_curr = oldsec;
     if (dec_putptr(straddr)) goto err;               /* Dec_MemberEntry.mt_doc */
    }
+  }
+ }
+ return 0;
+err:
+ return -1;
+}
+
+/* Emit a `DTYPE_KWDS', followed by a keywords descriptor. */
+PRIVATE int DCALL
+dec_putkwds(DeeKwdsObject *__restrict self) {
+ if (dec_putb(DTYPE_KWDS)) goto err;
+ if (dec_putptr(self->kw_size)) goto err; /* Dec_Kwds.kw_siz */
+ if (self->kw_size) {
+  size_t i,j;
+  for (i = 0; i < self->kw_size; ++i) {
+   uint32_t straddr; uint8_t *strptr;
+   struct dec_section *oldsec;
+   DeeStringObject *name;
+   for (j = 0;; ++j) {
+    ASSERT(j <= self->kw_mask);
+    if (self->kw_map[j].ke_index == i)
+        break;
+   }
+   name     = self->kw_map[j].ke_name;
+   oldsec   = dec_curr;
+   dec_curr = SC_STRING;
+   strptr   = dec_allocstr(DeeString_STR(name),
+                          (DeeString_SIZE(name)+1)*sizeof(char));
+   if unlikely(!strptr) goto err;
+   straddr  = dec_ptr2addr(strptr);
+   dec_curr = oldsec;
+   if (dec_putptr(straddr)) goto err; /* Dec_KwdsEntry.kwe_nam */
   }
  }
  return 0;
@@ -819,6 +856,10 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
  if (tp_self == &DeeMemberTable_Type) {
   /* Emit a member table. */
   return dec_putmemtab((DeeMemberTableObject *)self);
+ }
+ if (tp_self == &DeeKwds_Type) {
+  /* Emit a keywords descriptor. */
+  return dec_putkwds((DeeKwdsObject *)self);
  }
  if (tp_self == &DeeCode_Type) {
   if (dec_putb(DTYPE_CODE)) goto err;

@@ -38,6 +38,7 @@
 #include <deemon/list.h>
 #include <deemon/dict.h>
 #include <deemon/hashset.h>
+#include <deemon/arg.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
@@ -53,6 +54,7 @@ PRIVATE DeeTypeObject *constant_types[] = {
     &DeeNone_Type,
     &DeeBool_Type,
     &DeeMemberTable_Type, /* Required for class declarations. */
+    &DeeKwds_Type,        /* Required for functions calls with keywords. */
     &DeeCode_Type,        /* Not really, but must count because code objects live in constant slots. */
     &DeeRelInt_Type       /* Required so-as to support constant relocations.
                            * Objects of this type don't actually show up */
