@@ -341,11 +341,8 @@ function print_argument(fp,d,name) {
 	fp << "<i>" << name << "</i>";
 }
 function print_type_expr(fp,d,expr) {
-	/* TODO: Argument/return type expressions. */
-#if 0
-	fp << expr;
-#else
 	local target;
+	/* TODO: Deal with stuff like `{type...}' or `(x,y,z)' or `object...' */
 	try {
 		target = find_global_target(d,expr,false);
 	} catch (...) {
@@ -353,7 +350,6 @@ function print_type_expr(fp,d,expr) {
 		return;
 	}
 	print_with_target(fp,d,target);
-#endif
 }
 
 

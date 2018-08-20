@@ -107,6 +107,7 @@ DECL_BEGIN
 
 PRIVATE char const str_usage[] =
 "Usage: deemon [options...] <infile> [args...]\n"
+"       deemon [options...] -F <sourcefiles...>\n"
 "       deemon [options...] -i\n"
 ;
 PRIVATE char const str_minhelp[] =
@@ -523,16 +524,16 @@ PRIVATE int DCALL cmd_C(char *arg) {
 
 
 
-PRIVATE char const doc_cmdc[]    = "\tOnly build (parse + compile) the given source file. Don't run it afterwards";
+PRIVATE char const doc_cmdc[]    = "Only build (parse + compile) the given source file. Don't run it afterwards";
 PRIVATE char const doc_cmdo[]    = "<name>\tRedirect output to a given file (defaults to STDOUT)";
-PRIVATE char const doc_cmdO[]    = "level\tSet the optimization level as an integer `level' between 0 and 3 (default: 1)";
-PRIVATE char const doc_cmdS[]    = "Emit deemon module assembly after compiling a user-script";
+PRIVATE char const doc_cmdO[]    = "level\tSet the optimization level as an integer `level' between 0 and 4 (default: 1).\nYou may also pass `s' to optimize for size";
+PRIVATE char const doc_cmdS[]    = "[=options]\tEmit deemon module assembly after compiling a user-script.\n`options' is a string of flags passed to `printcode from disassembler'";
 PRIVATE char const doc_cmdA[]    = "pred=answer\tDefine an assertion `pred' as `answer'\n"
                                    "-pred[=answer]\tDelete `answer' or all assertions previously made about `pred'";
 PRIVATE char const doc_cmdf[]    = "[no-]<extension>\tEnable/Disable a given `extension' (s.a.: `--help extensions')";
 PRIVATE char const doc_cmdW[]    = "[no-]<warning>\tEnable/Disable a given `warning' (s.a.: `--help warnings')";
-PRIVATE char const doc_cmdname[] = "<name>\tSet the name of the main module";
-PRIVATE char const doc_cmdi[]    = "Read, compile, and execute sourcecode interactively from the stdin";
+PRIVATE char const doc_cmdname[] = "=<name>\tSet the name of the main module";
+PRIVATE char const doc_cmdi[]    = " ...\tRead, compile, and execute sourcecode interactively from the stdin";
 PRIVATE char const doc_cmdE[]    = "Emit preprocessor output, rather than running a user-script";
 PRIVATE char const doc_cmdP[]    = "Disable emission of #line adjustment directives (Default: on)";
 PRIVATE char const doc_cmdD[]    = "sym[=val=1]\tDefines `sym' as `val'";
@@ -554,7 +555,7 @@ PRIVATE char const doc_cmd_trigraphs[] = "Enable recognition of trigraph charact
 PRIVATE char const doc_cmd_traditional[] = "Enable recognition of traditional tokens & macros (Default: off)";
 
 PRIVATE struct cmd_option preprocessor_options[] = {
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "name", { &cmdpp_name }, "<name>\tSet the name used for `__FILE__' and debug informations by `INFILE' (Useful when running in interactive mode)" },
+    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "name", { &cmdpp_name }, " <name>\tSet the name used for `__FILE__' and debug informations by `INFILE'\nUseful when running in interactive mode" },
     { CMD_FJOINABLE, "E", NULL, { &cmd_E }, doc_cmdE },
     { CMD_FJOINABLE, "P", NULL, { &cmd_P }, doc_cmdP },
     { CMD_FARG|CMD_FARGIMM, "o", NULL, { &cmd_o }, doc_cmdo },
@@ -605,14 +606,18 @@ PRIVATE struct cmd_option cmdline_options[] = {
 
     /* Basic options. */
     { CMD_FNORMAL, "", "version", { &cmd_version }, "Display version information" },
-    { CMD_FARG|CMD_FARGOPT, "", "help", { &cmd_help }, "[subject]\tDisplays this help, or help on the given `subject'" },
+    { CMD_FARG|CMD_FARGOPT, "", "help", { &cmd_help },
+      "\tDisplays this help\n"
+      " <subject>\tDisplay help on a specific <subject> (one of `extensions', `warnings')\n"
+      " <option>\tDisplay help on a given commandline <option> (e.g. `--help Wp,E')\n"
+      " /<path>\tDisplay a formatted documentation string concerning a given <path> (e.g. `--help /deemon/string')" },
     { CMD_FJOINABLE, "F", NULL, { &cmd_F }, "Enable file formatting" },
     { CMD_FARG|CMD_FARGIMM, "C", NULL, { &cmd_C }, "[no-]<opt>\tEnable/disable a given compiler option <opt> (s.a. `--help compiler-options')" },
 
     /* Sub-option namespaces. */
-    { CMD_FGROUP, "Wp", NULL, { preprocessor_options }, "Preprocessor-specific options" },
-    { CMD_FGROUP, "Wa", NULL, { assembler_options }, "Assembler-specific options" },
-    { CMD_FGROUP, "Wl", NULL, { linker_options }, "Linker-specific options" },
+    { CMD_FGROUP, "Wp", NULL, { preprocessor_options }, ",...\tPreprocessor-specific options (s.a. `--help Wp')" },
+    { CMD_FGROUP, "Wa", NULL, { assembler_options }, ",...\tAssembler-specific options (s.a. `--help Wa')" },
+    { CMD_FGROUP, "Wl", NULL, { linker_options }, ",...\tLinker-specific options (s.a. `--help Wl')" },
 
     /* Preprocessor-specific options that are promoted into the root commandline namespace. */
     { CMD_FJOINABLE, "E", NULL, { &cmd_E }, doc_cmdE },
@@ -628,7 +633,7 @@ PRIVATE struct cmd_option cmdline_options[] = {
     { CMD_FRUNLATER, "", "pp", { &cmd_pp }, doc_cmdpp },
     { CMD_FLONG1DASH, "", "undef", { &cmd_undef }, doc_cmd_undef },
     { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ|CMD_FRUNLATER, "", "message-format", { &cmd_message_format }, doc_cmdmessage_format },
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "ftabstop", { &cmd_ftabstop }, doc_cmd_ftabstop },
+    { CMD_FLONG1DASH|CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "ftabstop", { &cmd_ftabstop }, doc_cmd_ftabstop },
     { CMD_FLONG1DASH|CMD_FRUNLATER, "", "trigraphs", { &cmd_trigraphs }, doc_cmd_trigraphs },
     { CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional", { &cmd_traditional }, doc_cmd_traditional },
     { CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional-cpp", { &cmd_traditional }, doc_cmd_traditional },
@@ -668,18 +673,228 @@ err:
 err_nofp:
  return -1;
 }
+
+PRIVATE size_t DCALL
+display_help_namewidth(struct cmd_option *__restrict option,
+                       char const *__restrict prefix) {
+ char const *name,*text,*arg_end,*line_end;
+ size_t name_length,width,result = 0;
+ size_t prefix_length = strlen(prefix);
+ if (option->co_longname) {
+  name  = option->co_longname;
+  width = 2;
+ } else {
+  name  = option->co_shortnam;
+  width = 1;
+ }
+ width += prefix_length;
+ text = option->co_doc;
+ if (!text) text = "";
+ name_length  = strlen(name);
+ name_length += width;
+ width = name_length;
+ arg_end = strchr(text,'\t');
+ if (arg_end) {
+print_arg_end:
+  width += (size_t)(arg_end - text);
+  text = arg_end + 1;
+ }
+print_text_space:
+ line_end = strchr(text,'\n');
+ if (result < width)
+     result = width;
+ if (line_end) {
+  ++line_end;
+  text = line_end;
+  arg_end = strchr(text,'\t');
+  if (arg_end) {
+   width = name_length;
+   goto print_arg_end;
+  }
+  width = 0;
+  goto print_text_space;
+ }
+ return result;
+}
+
+PRIVATE int DCALL
+display_help(dformatprinter printer, void *arg,
+             struct cmd_option *__restrict option,
+             size_t name_width, char const *__restrict prefix) {
+ char const *name,*text,*arg_end,*line_end;
+ size_t name_length,width,prefix_length;
+ prefix_length = strlen(prefix);
+ name = option->co_longname ? option->co_longname : option->co_shortnam;
+ text = option->co_doc;
+ if (!text) text = "";
+ name_length = strlen(name);
+ if ((*printer)(arg,prefix,prefix_length) < 0)
+     goto err;
+ width = name == option->co_longname ? 2 : 1;
+ if ((*printer)(arg,"--",width) < 0)
+     goto err;
+ width += prefix_length;
+ if ((*printer)(arg,name,name_length) < 0)
+     goto err;
+ width += name_length;
+ arg_end = strchr(text,'\t');
+ if (arg_end) {
+print_arg_end:
+  if (*prefix && *text == ' ') {
+   if ((*printer)(arg,",",1) < 0)
+       goto err;
+   if ((*printer)(arg,text + 1,(size_t)(arg_end - (text + 1))) < 0)
+       goto err;
+  } else {
+   if ((*printer)(arg,text,(size_t)(arg_end - text)) < 0)
+       goto err;
+  }
+  width += (size_t)(arg_end - text);
+  text = arg_end + 1;
+ }
+print_text_space:
+ if (name_width > width) {
+  if (Dee_FormatRepeat(printer,arg,' ',name_width - width) < 0)
+      goto err;
+ }
+ line_end = strchr(text,'\n');
+ if (line_end) {
+  ++line_end;
+  if ((*printer)(arg,text,(size_t)(line_end - text)) < 0)
+      goto err;
+  text = line_end;
+  arg_end = strchr(text,'\t');
+  if (arg_end) {
+    if ((*printer)(arg,prefix,prefix_length) < 0)
+        goto err;
+   width = name == option->co_longname ? 2 : 1;
+   if ((*printer)(arg,"--",width) < 0)
+       goto err;
+   width += prefix_length;
+   if ((*printer)(arg,name,name_length) < 0)
+       goto err;
+   width += name_length;
+   goto print_arg_end;
+  }
+  width = 0;
+  goto print_text_space;
+
+ }
+ if ((*printer)(arg,text,strlen(text)) < 0)
+     goto err;
+ if ((*printer)(arg,"\n",1) < 0)
+     goto err;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+display_help_group(dformatprinter printer, void *arg,
+                   struct cmd_option *__restrict group,
+                   char const *__restrict prefix) {
+ size_t temp,max_width = 0;
+ struct cmd_option *iter;
+ for (iter = group; !CMD_OPTION_ISSENTINEL(iter); ++iter) {
+  temp = display_help_namewidth(iter,prefix);
+  if (max_width < temp)
+      max_width = temp;
+ }
+ if (max_width > 40) max_width = 40;
+ for (iter = group; !CMD_OPTION_ISSENTINEL(iter); ++iter) {
+  if (display_help(printer,arg,iter,max_width + 1,prefix))
+      goto err;
+ }
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+display_help_single(dformatprinter printer, void *arg,
+                    struct cmd_option *__restrict option,
+                    char const *__restrict prefix) {
+ if (option->co_flags & CMD_FGROUP) {
+  size_t prefix_length = strlen(prefix);
+  char *buf,*dst;
+  buf = (char *)alloca(prefix_length + COMPILER_LENOF(option->co_shortnam) + 3);
+  memcpy(buf,prefix,prefix_length);
+  dst = buf + prefix_length;
+  *dst++ = '-';
+  memcpy(dst,option->co_shortnam,COMPILER_LENOF(option->co_shortnam));
+  dst += strlen(option->co_shortnam);
+  *dst++ = ',';
+  *dst++ = '\0';
+  return display_help_group(printer,arg,option->co_group,buf);
+ }
+ return display_help(printer,arg,option,
+                     display_help_namewidth(option,prefix) + 1,
+                     prefix);
+}
+
+PRIVATE int DCALL
+display_help_query(dformatprinter printer, void *arg,
+                   struct cmd_option *__restrict group,
+                   char const *__restrict query,
+                   char const *__restrict prefix) {
+ char *comma = (char *)strchr(query,',');
+ size_t query_length = comma ? (size_t)(comma - (char *)query) : strlen(query);
+ for (; !CMD_OPTION_ISSENTINEL(group); ++group) {
+  if ((query_length < COMPILER_LENOF(group->co_shortnam) &&
+       group->co_shortnam[query_length] == '\0' &&
+       memcmp(query,group->co_shortnam,query_length*sizeof(char)) == 0) ||
+      (group->co_longname && memcmp(group->co_longname,query,query_length) == 0)) {
+   /* Found the option in question. */
+   if (!comma) return display_help_single(printer,arg,group,prefix);
+   if (group->co_flags & CMD_FGROUP) {
+    char *buf,*dst; size_t prefix_length = strlen(prefix);
+    buf = (char *)alloca(prefix_length + COMPILER_LENOF(group->co_shortnam) + 3);
+    memcpy(buf,prefix,prefix_length);
+    dst = buf + prefix_length;
+    *dst++ = '-';
+    memcpy(dst,group->co_shortnam,COMPILER_LENOF(group->co_shortnam));
+    dst += strlen(group->co_shortnam);
+    *dst++ = ',';
+    *dst++ = '\0';
+    return display_help_query(printer,arg,group->co_group,comma + 1,buf);
+   }
+  }
+ }
+ if (Dee_FormatPrintf(printer,arg,"Unknown option %$q%s%s\n",
+                      query_length,query,*prefix ? " in group " : "",
+                      prefix) < 0)
+     goto err;
+ return 0;
+err:
+ return -1;
+}
+
 PRIVATE int DCALL cmd_help(char *arg) {
- struct cmd_option *help_option;
  DREF DeeObject *fp;
  fp = DeeFile_GetStd(DEE_STDERR);
  if unlikely(!fp) goto err_nofp;
- help_option = cmdline_options;
- (void)arg; /* TODO: Display help for a specific option. */
- if (DeeFile_WriteAll(fp,str_usage,COMPILER_STRLEN(str_usage)) < 0)
-     goto err;
- (void)help_option;
- /* TODO: Display help on all options from `cmdline_options' */
-
+ if (!arg) {
+  /* Display help on all options from `cmdline_options' */
+  if (DeeFile_WriteAll(fp,str_usage,COMPILER_STRLEN(str_usage)) < 0)
+      goto err;
+  if (display_help_group((dformatprinter)&DeeFile_WriteAll,fp,cmdline_options,""))
+      goto err;
+ } else if (arg[0] != '/') {
+  if (display_help_query((dformatprinter)&DeeFile_WriteAll,fp,cmdline_options,arg,""))
+      goto err;
+ } else {
+  /* `print Doc from doc(arg)' */
+  DREF DeeObject *doc_module,*doc_node; dssize_t error;
+  doc_module = DeeModule_OpenString("doc",NULL,true);
+  if unlikely(!doc_module) goto err;
+  if unlikely(DeeModule_RunInit(doc_module)) doc_node = NULL;
+  else doc_node = DeeObject_CallAttrStringf(doc_module,"Doc","s",arg);
+  Dee_Decref(doc_module);
+  if unlikely(!doc_node) goto err;
+  error = DeeObject_Print(doc_node,(dformatprinter)&DeeFile_WriteAll,fp);
+  Dee_Decref(doc_node);
+  if unlikely(error < 0) goto err;
+ }
  Dee_Decref(fp);
  return exit_ok();
 err:
