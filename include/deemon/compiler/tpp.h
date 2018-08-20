@@ -109,6 +109,7 @@ INTDEF struct TPPFile *DCALL tpp_unknown_file(int mode, char *__restrict filenam
 #define TPP_CONFIG_USERDEFINED_KWD_IMPORT       1
 #define TPP_CONFIG_USERDEFINED_KWD_IF           1
 
+
 /* Configure non-variable TPP options. */
 #if 1
 /* #define TPP_CONFIG_FEATURE_TRIGRAPHS           0 */

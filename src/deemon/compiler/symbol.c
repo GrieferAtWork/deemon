@@ -146,6 +146,7 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
 /* -------- DeeScopeObject Implementation -------- */
 PRIVATE void DCALL
 delsym(struct symbol *__restrict self) {
+ DeeCompiler_DelItem(self);
  symbol_fini(self);
  sym_free(self);
 }
@@ -168,6 +169,7 @@ visitsym(struct symbol *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE void DCALL
 scope_fini(DeeScopeObject *__restrict self) {
  struct symbol **biter,**bend,*iter,*next;
+ DeeCompiler_DelItem(self);
  bend = (biter = self->s_map)+self->s_mapa;
  for (; biter != bend; ++biter) {
   iter = *biter;
@@ -288,6 +290,7 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
    iter = *biter;
    while (iter) {
     next = iter->tl_next;
+    DeeCompiler_DelItem(iter);
     lbl_free(iter);
     iter = next;
    }

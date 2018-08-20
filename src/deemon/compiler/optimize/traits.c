@@ -341,7 +341,7 @@ ast_has_sideeffects(DeeAstObject *__restrict self) {
  switch (self->ast_type) {
  case AST_CONSTEXPR:
  case AST_SYM:       /* `UnboundLocal' errors don't count as valid side-effects. */
- case AST_BNDSYM:
+ case AST_BOUND:
   return false;
 
  {
@@ -415,7 +415,7 @@ ast_doesnt_return(DeeAstObject *__restrict self,
  case AST_CONSTEXPR:
  case AST_SYM:
  case AST_UNBIND:
- case AST_BNDSYM:
+ case AST_BOUND:
  case AST_FUNCTION: /* Function definitions always return normally. */
   goto does_return;
 
@@ -783,7 +783,7 @@ ast_is_nothrow(DeeAstObject *__restrict self, bool result_used) {
   }
  } break;
 
- case AST_BNDSYM:
+ case AST_BOUND:
   /* Checking if a symbol is bound is nothrow. */
   goto is_nothrow;
 
@@ -864,7 +864,7 @@ ast_uses_symbol(DeeAstObject *__restrict self,
  switch (self->ast_type) {
  case AST_SYM:
  case AST_UNBIND:
- case AST_BNDSYM:
+ case AST_BOUND:
   return self->ast_sym == sym;
  {
   DREF DeeAstObject **iter,**end;
@@ -981,7 +981,7 @@ ast_can_exchange(DeeAstObject *__restrict first,
   */
  switch (first->ast_type) {
  case AST_SYM:
- case AST_BNDSYM:
+ case AST_BOUND:
  case AST_UNBIND:
   if (!ast_uses_symbol(second,first->ast_sym))
        goto yup;
@@ -990,7 +990,7 @@ ast_can_exchange(DeeAstObject *__restrict first,
  }
  switch (second->ast_type) {
  case AST_SYM:
- case AST_BNDSYM:
+ case AST_BOUND:
  case AST_UNBIND:
   if (!ast_uses_symbol(first,second->ast_sym))
        goto yup;
@@ -1034,7 +1034,7 @@ ast_equal_impl(DeeAstObject *__restrict a,
 
  case AST_SYM:
  case AST_UNBIND:
- case AST_BNDSYM:
+ case AST_BOUND:
   /* TODO: If the symbols aren't identical, the branches may still
    *       have the same meaning, dependent on the context:
    *    >> if (foo()) {
@@ -1126,7 +1126,7 @@ ast_contains_goto(DeeAstObject *__restrict self,
  case AST_CONSTEXPR:
  case AST_SYM:
  case AST_UNBIND:
- case AST_BNDSYM:
+ case AST_BOUND:
  case AST_FUNCTION:
 no:
   return false;

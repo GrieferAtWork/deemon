@@ -22,6 +22,7 @@
 #include "../api.h"
 #include "../object.h"
 #ifndef CONFIG_NO_THREADS
+#include "../util/rwlock.h"
 #include "../util/recursive-rwlock.h"
 #endif
 
@@ -38,6 +39,58 @@ DECL_BEGIN
 
 typedef struct compiler_object DeeCompilerObject;
 struct compiler_options;
+
+#ifdef CONFIG_BUILDING_DEEMON
+#define COMPILER_ITEM_OBJECT_HEAD(T) \
+        OBJECT_HEAD \
+        DREF DeeCompilerObject *ci_compiler; /* [1..1][const] The associated compiler. */ \
+        DeeCompilerItemObject **ci_pself;    /* [1..1][== self][1..1][lock(co_compiler->cp_item_lock)] Compiler item self-pointer. */ \
+        DeeCompilerItemObject  *ci_next;     /* [0..1][lock(co_compiler->cp_item_lock)] Next compiler item. */ \
+        T                      *ci_value;    /* [0..1][lock(DeeCompiler_Lock)] Pointer to the associated object. \
+                                              * What exactly is pointed to depends on the compiler item type. */
+
+typedef struct compiler_item_object DeeCompilerItemObject;
+typedef struct compiler_wrapper_object DeeCompilerWrapperObject;
+struct compiler_item_object { COMPILER_ITEM_OBJECT_HEAD(void) };
+struct compiler_wrapper_object {
+    OBJECT_HEAD
+    DREF DeeCompilerObject *cw_compiler; /* [1..1][const] The compiler being wrapped. */
+};
+#define COMPILER_ITEM_HASH(x) Dee_HashPointer((x)->ci_value)
+INTDEF DeeTypeObject DeeCompilerItem_Type;
+INTDEF DeeTypeObject DeeCompilerWrapper_Type;
+
+/* Construct and return a wrapper for a sub-component of the current compiler. */
+INTDEF DREF DeeObject *DCALL DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
+                                                    DeeTypeObject *__restrict type);
+
+/* Lookup or create a new compiler item for `value' */
+INTDEF DREF DeeObject *DCALL DeeCompiler_GetItem(DeeTypeObject *__restrict type,
+                                                 void *__restrict value);
+
+/* Delete (clear) the compiler item associated with `value'. */
+INTDEF bool DCALL DeeCompiler_DelItem(void *value);
+
+/* Delete (clear) all compiler items matching the given `type'. */
+INTDEF size_t DCALL DeeCompiler_DelItemType(DeeTypeObject *__restrict type);
+
+/* Returns the value of a given compiler item.
+ * @return: * :   A pointer to the item's value.
+ * @return: NULL: The item got deleted (a ReferenceError was thrown) */
+INTDEF void *DCALL DeeCompilerItem_GetValue(DeeObject *__restrict self);
+#define DeeCompilerItem_VALUE(self,T) \
+   ((T *)DeeCompilerItem_GetValue((DeeObject *)REQUIRES_OBJECT(self)))
+
+
+struct compiler_items {
+    size_t                  ci_size; /* [lock(ci_lock)] Amount of existing compiler items. */
+    size_t                  ci_mask; /* [lock(ci_lock)] Hash-map mask. */
+    DeeCompilerItemObject **ci_list; /* [0..1][0..ci_mask+1][owned] Hash-map of compiler items. */
+#ifndef CONFIG_NO_THREADS
+    rwlock_t                ci_lock; /* Lock for compiler items. */
+#endif
+};
+#endif
 
 struct compiler_object {
     /* >> Since the compiler is a fairly large system, divided into _a_ _lot_ of
@@ -69,6 +122,7 @@ struct compiler_object {
     WEAKREF_SUPPORT
 #ifdef CONFIG_BUILDING_DEEMON
     /* [OVERRIDE(*,[valid_if(self != DeeCompiler_Active.wr_obj)])] */
+    struct compiler_items    cp_items;           /* Hash-map of user-code compiler item wrappers. */
     DREF DeeScopeObject     *cp_scope;           /* [1..1] == ::current_scope */
     struct compiler_options *cp_inner_options;   /* [0..1] == ::inner_compiler_options */
     struct ast_tags          cp_tags;            /* == ::current_tags */

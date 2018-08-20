@@ -1800,7 +1800,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
   * >> /-*[[[end]]]*-/
   * Additionally (as can already be seen), this will also cause a
   * trailing line-feed to be re-appended to generated text, after it
-  * has been tripped of all trailing whitespace (including linefeeds):
+  * has been stripped of all trailing whitespace (including linefeeds):
   * >> local output_text = get_output_text();
   * >> output_text = output_text.rstrip();
   * >> if (has_leading_linefeed)

@@ -154,7 +154,7 @@ again:
 #endif
   break;
 
- case AST_BNDSYM:
+ case AST_BOUND:
   /* TODO: Always `false' for `local-symbols' with `s_nwrite == 0' */
   /* TODO: Using assumptions, we could also track if a symbol if a symbol is bound? */
   break;

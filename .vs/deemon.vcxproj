@@ -34,6 +34,7 @@
     <ClInclude Include="..\include\deemon\compiler\compiler.h" />
     <ClInclude Include="..\include\deemon\compiler\dec.h" />
     <ClInclude Include="..\include\deemon\compiler\error.h" />
+    <ClInclude Include="..\include\deemon\compiler\interface.h" />
     <ClInclude Include="..\include\deemon\compiler\lexer.h" />
     <ClInclude Include="..\include\deemon\compiler\optimize.h" />
     <ClInclude Include="..\include\deemon\compiler\symbol.h" />
@@ -119,6 +120,9 @@
     <ClCompile Include="..\src\deemon\compiler\error.c" />
     <ClCompile Include="..\src\deemon\compiler\gendec.c" />
     <ClCompile Include="..\src\deemon\compiler\instrlen.c" />
+    <ClCompile Include="..\src\deemon\compiler\interface\core.c" />
+    <ClCompile Include="..\src\deemon\compiler\interface\icompiler.c" />
+    <ClCompile Include="..\src\deemon\compiler\interface\ilexer.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\asm.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\assert.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\brace.c" />

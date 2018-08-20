@@ -1813,6 +1813,9 @@ PUBLIC void TPPCALL
 TPPFile_Destroy(struct TPPFile *__restrict self) {
  assert(self);
  assert(self->f_text);
+#ifdef TPP_CONFIG_CALLBACK_ON_DESTROY_FILE
+ TPP_CONFIG_CALLBACK_ON_DESTROY_FILE(self);
+#endif
  TPPString_Decref(self->f_text);
  switch (self->f_kind) {
  case TPPFILE_KIND_TEXT:
@@ -2277,6 +2280,28 @@ nope:
  return NULL;
 }
 
+PUBLIC char const *TPPCALL
+TPPFile_RealFilename(struct TPPFile const *__restrict self,
+                     size_t *opt_filename_length) {
+ 
+ for (;;) {
+  assert(self);
+  /* Walk along macro files to locate the underlying textfile. */
+  if (self->f_kind == TPPFILE_KIND_EXPLICIT) {
+   if ((self = self->f_prev) == NULL) goto nope;
+  } else if (self->f_kind == TPPFILE_KIND_MACRO) {
+   /* The definitions file may be NULL for predefined macros. */
+   if ((self = self->f_macro.m_deffile) == NULL) goto nope;
+  } else break;
+ }
+ assert(self->f_kind == TPPFILE_KIND_TEXT);
+ if (opt_filename_length) *opt_filename_length = self->f_namesize;
+ return self->f_name;
+nope:
+ if (opt_filename_length) *opt_filename_length = 0;
+ return NULL;
+}
+
 PUBLIC struct TPPFile *TPPCALL
 TPPLexer_Textfile(void) {
  struct TPPFile *result;
@@ -2572,7 +2597,7 @@ convert_encoding(/*ref*/struct TPPString *data,
 #endif
 
 PUBLIC int TPPCALL
-TPPFile_NextChunk(struct TPPFile *__restrict self, int flags) {
+TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
  char *effective_end,*old_textbegin;
  struct TPPString *newchunk;
  size_t end_offset,prefix_size;
@@ -4236,7 +4261,7 @@ skip_argument_name:
  result->f_pos = result->f_begin;
  {
   int warn_error;
-  uint32_t kwd_flags = TPPKeyword_GetFlags(keyword_entry);
+  uint32_t kwd_flags = TPPKeyword_GetFlags(keyword_entry,0);
   if (keyword_entry->k_macro) {
    struct TPPFile *oldfile = keyword_entry->k_macro;
    if (((size_t)(oldfile->f_end-oldfile->f_begin) !=
@@ -6303,11 +6328,16 @@ TPPLexer_LookupEscapedKeyword(char const *__restrict name, size_t namelen,
 
 
 PUBLIC uint32_t TPPCALL
-TPPKeyword_GetFlags(struct TPPKeyword const *__restrict self) {
+TPPKeyword_GetFlags(struct TPPKeyword const *__restrict self,
+                    int check_without_underscores) {
  uint32_t result;
  assert(self);
  assert(TPPLexer_Current);
 again:
+ if (self->k_rare && self->k_rare->kr_flags) {
+  result = self->k_rare->kr_flags;
+  goto done;
+ }
 #if TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
 #ifndef __INTELLISENSE__
 #define KWD_FLAGS(name,flags) \
@@ -6327,30 +6357,25 @@ again:
 #include "tpp-defs.inl"
 #undef KWD_FLAGS
 #endif
- default:
+ default: break;
 #endif
-  if (self->k_rare && self->k_rare->kr_flags)
-   result = self->k_rare->kr_flags;
-  else {
-   char const *begin,*end,*real_end;
-   /* Check for an alias with less underscores. */
-   real_end = end = (begin = self->k_name)+self->k_size;
-   while (begin != end && *begin == '_') ++begin;
-   while (end != begin && end[-1] == '_') --end;
-   result = TPP_KEYWORDFLAG_NONE;
-   if (begin != self->k_name || end != real_end) {
-    /* Was able to remove some leading/terminating underscores.
-     * >> Check for an alternative keyword with them removed. */
-    self = TPPLexer_LookupKeyword(begin,(size_t)(end-begin),0);
-    if (self && (!self->k_rare ||
-        /* Don't allow alias if the no-underscores flag is set. */
-      !(self->k_rare->kr_flags&TPP_KEYWORDFLAG_NO_UNDERSCORES)))
-        goto again;
-   }
+ }
+ result = TPP_KEYWORDFLAG_NONE;
+ if (check_without_underscores) {
+  char const *begin,*end,*real_end;
+  /* Check for an alias with less underscores. */
+  real_end = end = (begin = self->k_name)+self->k_size;
+  while (begin != end && *begin == '_') ++begin;
+  while (end != begin && end[-1] == '_') --end;
+  if (begin != self->k_name || end != real_end) {
+   /* Was able to remove some leading/terminating underscores.
+    * >> Check for an alternative keyword with them removed. */
+   self = TPPLexer_LookupKeyword(begin,(size_t)(end-begin),0);
+   if (self && (!self->k_rare ||
+       /* Don't allow alias if the no-underscores flag is set. */
+     !(self->k_rare->kr_flags&TPP_KEYWORDFLAG_NO_UNDERSCORES)))
+       goto again;
   }
-#if !TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
-  break;
-#endif
  }
 done:
  return result;
@@ -7255,7 +7280,7 @@ def_skip_until_lf:
     keyword = token.t_kwd;
     assert(keyword);
     if (keyword->k_macro) {
-     if (TPPKeyword_GetFlags(keyword)&TPP_KEYWORDFLAG_LOCKED)
+     if (TPPKeyword_GetFlags(keyword,0) & TPP_KEYWORDFLAG_LOCKED)
          WARN(W_CANT_UNDEF_LOCKED_KEYWORD,keyword);
      else TPPKeyword_Undef(keyword);
     } else if (TPP_ISBUILTINMACRO(tok)) {
@@ -8250,7 +8275,7 @@ create_int_file:
      if (FALSE) { case KWD___has_feature:            mask = TPP_KEYWORDFLAG_HAS_FEATURE;
                   if (HAVE_EXTENSION_EXT_ARE_FEATURES) mask |= TPP_KEYWORDFLAG_HAS_EXTENSION;
      }
-     intval = !!(TPPKeyword_GetFlags(keyword)&mask);
+     intval = !!(TPPKeyword_GetFlags(keyword,1)&mask);
      break;
     }
 #endif
@@ -9624,6 +9649,8 @@ at_next_non_whitespace:
   */
  pushf();
  CURRENT.l_flags |= (TPPLEXER_FLAG_NO_SEEK_ON_EOB);
+ if (macro->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC)
+     CURRENT.l_flags |= (TPPLEXER_FLAG_WANTSPACE|TPPLEXER_FLAG_WANTLF);
  {
   int paren_recursion[4];
   struct argcache_t *argv,*arg_iter,*arg_last,*arg_end;
@@ -12028,8 +12055,8 @@ yield_after_include_path:
    if unlikely(error == 2) error = 0;
    if unlikely(!error) {
     WARN(mode ? W_INCLUDE_PATH_ALREADY_EXISTS
-                       : W_UNKNOWN_INCLUDE_PATH,
-                  path,size);
+              : W_UNKNOWN_INCLUDE_PATH,
+         path,size);
    }
    if (path != path_string.c_data.c_string->s_text)
        free(path);

@@ -277,7 +277,7 @@ make_bound_expression(DeeAstObject *__restrict base_expr,
  DREF DeeAstObject *result;
  if (base_expr->ast_type == AST_SYM) {
   /* Check if a given symbol is bound. */
-  result = ast_setddi(ast_bndsym(base_expr->ast_sym),&base_expr->ast_ddi);
+  result = ast_setddi(ast_bound(base_expr->ast_sym),&base_expr->ast_ddi);
  } else if (base_expr->ast_type == AST_OPERATOR &&
             base_expr->ast_flag == OPERATOR_GETATTR &&
             base_expr->ast_operator.ast_opb) {

@@ -160,7 +160,7 @@ do_xcopy_3:
   }
   break;
 
- case AST_BNDSYM:
+ case AST_BOUND:
   ASSERT(other->ast_sym);
   temp->ast_sym = other->ast_sym;
   ASSERT(SYMBOL_NBOUND(other->ast_sym));

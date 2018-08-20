@@ -55,6 +55,9 @@
     <Filter Include="src\deemon\compiler\optimize">
       <UniqueIdentifier>{7b7ab99b-1ea8-4790-9060-8490929f397e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\deemon\compiler\interface">
+      <UniqueIdentifier>{aeb9a0ca-b69e-4dca-b272-d320ee5ec8a2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\deemon\api.h">
@@ -271,6 +274,9 @@
       <Filter>src\deemon\objects</Filter>
     </ClInclude>
     <ClInclude Include="..\include\deemon\compiler\optimize.h">
+      <Filter>include\deemon\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\interface.h">
       <Filter>include\deemon\compiler</Filter>
     </ClInclude>
   </ItemGroup>
@@ -703,6 +709,15 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\compiler\optimize\opt_switch.c">
       <Filter>src\deemon\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\core.c">
+      <Filter>src\deemon\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\icompiler.c">
+      <Filter>src\deemon\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\ilexer.c">
+      <Filter>src\deemon\compiler\interface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

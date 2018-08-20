@@ -298,12 +298,12 @@ DEFINE_AST_GENERATOR(ast_unbind,
  return result;
 }
 
-DEFINE_AST_GENERATOR(ast_bndsym,(struct symbol *__restrict sym)) {
+DEFINE_AST_GENERATOR(ast_bound,(struct symbol *__restrict sym)) {
  DREF DeeAstObject *result = ast_new();
  ASSERT(sym);
  if likely(result) {
-  result->ast_type   = AST_BNDSYM;
-  result->ast_bndsym = sym;
+  result->ast_type   = AST_BOUND;
+  result->ast_bound = sym;
   SYMBOL_INC_NBOUND(sym);
   INIT_REF(result);
  }
@@ -1018,8 +1018,8 @@ do_xdecref_3:
  case AST_UNBIND:
   SYMBOL_DEC_NWRITE(self->ast_unbind);
   break;
- case AST_BNDSYM:
-  SYMBOL_DEC_NBOUND(self->ast_bndsym);
+ case AST_BOUND:
+  SYMBOL_DEC_NBOUND(self->ast_bound);
   break;
 
  case AST_GOTO:
@@ -1080,6 +1080,8 @@ do_xdecref_3:
 
 PRIVATE void DCALL
 ast_fini(DeeAstObject *__restrict self) {
+ ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
+ DeeCompiler_DelItem(self);
  if (self->ast_ddi.l_file)
      TPPFile_Decref(self->ast_ddi.l_file);
  ast_fini_contents(self);
@@ -1087,6 +1089,8 @@ ast_fini(DeeAstObject *__restrict self) {
   *       ast itself references some symbol that is owned by this scope. */
  Dee_Decref(self->ast_scope);
 }
+
+
 
 
 PUBLIC DeeTypeObject DeeAst_Type = {

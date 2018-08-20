@@ -26,6 +26,7 @@
 #include <deemon/api.h>
 #include <deemon/compiler/error.h>
 #include <deemon/compiler/tpp.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/file.h>
@@ -92,12 +93,16 @@ DECL_END
 #undef calloc
 #undef realloc
 #undef free
+#undef empty_code
 
 /* Redirect heap allocations to use deemon's general-purpose heap. */
 #define malloc(s)    Dee_TryMalloc(s)
 #define calloc(c,s)  Dee_TryCalloc((c)*(s))
 #define realloc(p,s) Dee_TryRealloc(p,s)
 #define free(p)      Dee_Free(p)
+
+#define TPP_CONFIG_CALLBACK_ON_DESTROY_FILE(self) \
+        DeeCompiler_DelItem(self)
 
 #undef PRIVATE
 #define PRIVATE      INTERN

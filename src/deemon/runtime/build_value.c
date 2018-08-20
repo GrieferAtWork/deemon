@@ -386,7 +386,10 @@ do_strnlen:
   }
 do_string:
   ASSERTF(format[-1] == 's',"Invalid format: `%s' (`%s')",format,*pformat);
-  result = DeeString_NewSized(string,string_length);
+  /* TODO: `%I8s' -- latin-1 string */
+  /* TODO: `%I16s' -- 2-byte string */
+  /* TODO: `%I32s' -- utf-32 string */
+  result = DeeString_NewUtf8(string,string_length,STRING_ERROR_FIGNORE);
  } break;
 
 

@@ -126,6 +126,7 @@ struct asm_operand {
 
 struct ast_object {
     OBJECT_HEAD
+    /* XXX: Maybe not use an object for this, but rather a raw struct? */
     DREF DeeScopeObject *ast_scope; /* [1..1] The scope in which this AST exists. */
     struct ast_loc       ast_ddi;   /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
                                      * Debug information describing the location of this AST. */
@@ -148,8 +149,8 @@ struct ast_object {
 #define AST_UNBIND           0x0002          /* `del foo' */
         struct symbol       *ast_unbind;     /* [1..1][REF(->s_nwrite)] The symbol that should be unbound. */
 
-#define AST_BNDSYM           0x0003          /* `bound(foo)' */
-        struct symbol       *ast_bndsym;     /* [1..1][REF(->s_nbound)] The symbol that should be checked for being bound. */
+#define AST_BOUND            0x0003          /* `bound(foo)' */
+        struct symbol       *ast_bound;      /* [1..1][REF(->s_nbound)] The symbol that should be checked for being bound. */
 
         /* Statement expressions. */
 #define AST_MULTIPLE                    0x0004  /* Multiple, consecutive statements/expressions.
@@ -598,8 +599,8 @@ DEFINE_AST_GENERATOR(ast_constexpr,(DeeObject *__restrict constant_expression));
 DEFINE_AST_GENERATOR(ast_sym,(struct symbol *__restrict sym));
 /* [AST_UNBIND] */
 DEFINE_AST_GENERATOR(ast_unbind,(struct symbol *__restrict sym));
-/* [AST_BNDSYM] */
-DEFINE_AST_GENERATOR(ast_bndsym,(struct symbol *__restrict sym));
+/* [AST_BOUND] */
+DEFINE_AST_GENERATOR(ast_bound,(struct symbol *__restrict sym));
 /* [AST_MULTIPLE] WARNING: Inherits a heap-allocated vector `exprv' upon success; @param: flags: Set of `AST_FMULTIPLE_*' */
 DEFINE_AST_GENERATOR(ast_multiple,(uint16_t flags, size_t exprc, /*inherit*/DREF DeeAstObject **__restrict exprv));
 /* [AST_RETURN] NOTE: `return_expr' may be `NULL' */
@@ -669,7 +670,7 @@ DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict 
 #define ast_constexpr(constant_expression)                     ast_constexpr_d(__FILE__,__LINE__,constant_expression)
 #define ast_sym(sym)                                           ast_sym_d(__FILE__,__LINE__,sym)
 #define ast_unbind(sym)                                        ast_unbind_d(__FILE__,__LINE__,sym)
-#define ast_bndsym(sym)                                        ast_bndsym_d(__FILE__,__LINE__,sym)
+#define ast_bound(sym)                                         ast_bound_d(__FILE__,__LINE__,sym)
 #define ast_multiple(flags,exprc,exprv)                        ast_multiple_d(__FILE__,__LINE__,flags,exprc,exprv)
 #define ast_return(return_expr)                                ast_return_d(__FILE__,__LINE__,return_expr)
 #define ast_yield(yield_expr)                                  ast_yield_d(__FILE__,__LINE__,yield_expr)

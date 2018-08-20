@@ -522,7 +522,7 @@ struct TPPTextFile {
     /*ref*/struct TPPString *f_usedname;    /* [0..1] When non-NULL, an override to the used filename (as set by `#line') */
     TPP(line_t)              f_lineoff;     /* Offset of `f_begin' from the original start of the file in lines. */
     TPP(stream_t)            f_stream;      /* Stream handle for reading more data. */
-    TPP(stream_t)            f_ownedstream; /* Usually equal to `f_stream', the stream that should be closed when it's EOF is reached (set of `TPP_STREAM_INVALID' if TPP shouldn't close the stream). */
+    TPP(stream_t)            f_ownedstream; /* Usually equal to `f_stream', the stream that should be closed when it's EOF is reached (set to `TPP_STREAM_INVALID' if TPP shouldn't close the stream). */
     /* NOTE: `:f_end' may not be equal to the end of `:f_text'.
      *        The difference between the two should be prefixed to the next chunk. */
     struct TPPKeyword       *f_guard;       /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
@@ -743,6 +743,12 @@ TPPFUN char const *TPPCALL
 TPPFile_Filename(struct TPPFile const *__restrict self,
                  size_t *opt_filename_length);
 
+/* Same as `TPPFile_Filename()', however return the original
+ * file name if a #line directive was used to override it. */
+TPPFUN char const *TPPCALL
+TPPFile_RealFilename(struct TPPFile const *__restrict self,
+                     size_t *opt_filename_length);
+
 /* If the given file is a macro-file, ensure that it
  * owns a copy of its own name. In other words,
  * replace the file's name with a copy of itself when
@@ -800,7 +806,7 @@ TPPFUN struct TPPFile *TPPCALL TPPFile_NewDefine(void);
  * @return:  0: Not enough available memory
  * #endif
  */
-TPPFUN int TPPCALL TPPFile_NextChunk(struct TPPFile *__restrict self, int flags);
+TPPFUN int TPPCALL TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags);
 #define TPPFILE_NEXTCHUNK_FLAG_NONE   0x0000 /* No special behavior modification. */
 #define TPPFILE_NEXTCHUNK_FLAG_EXTEND 0x0001 /* Extend the current file chunk. */
 #define TPPFILE_NEXTCHUNK_FLAG_BINARY 0x0002 /* Read data in binary mode (don't convert to UTF-8 without BOM).
@@ -1375,7 +1381,8 @@ struct TPPKeyword {
 
 /* Returns the effective keyword flags of `self'.
  * @return: A set of `TPP_KEYWORDFLAG_*' */
-TPPFUN uint32_t TPPCALL TPPKeyword_GetFlags(struct TPPKeyword const *__restrict self);
+TPPFUN uint32_t TPPCALL TPPKeyword_GetFlags(struct TPPKeyword const *__restrict self,
+                                            int check_without_underscores);
 
 
 struct TPPKeywordMap {
@@ -1431,7 +1438,7 @@ TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexe
 #define TPPLEXER_FLAG_WANTLF                 0x00000004 /* Emit LF tokens. */
 #define TPPLEXER_FLAG_NO_SEEK_ON_EOB         0x00000008 /* Don't seek the next chunk when the current one ends (instead, signal EOF). */
 #define TPPLEXER_FLAG_NO_POP_ON_EOF          0x00000010 /* Don't pop the top file when an EOF occurs. */
-#define TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE  0x00000020 /* Keep whitespace tokens around the front and back of macros. */
+#define TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE  0x00000020 /* Keep whitespace tokens around the front and back of macro texts. */
 #ifdef TPP_CONFIG_NONBLOCKING_IO
 #define TPPLEXER_FLAG_NONBLOCKING            0x00000040 /* Enable non-blocking I/O in files that support that flag.
                                                          * When enabled, the lexer will produce EOF tokens in text files
@@ -1445,8 +1452,8 @@ TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexe
 #define TPPLEXER_FLAG_TERMINATE_STRING_LF    0x00000080 /* Terminate character/string sequences when a linefeed is detected (also emit a warning in that case). */
 #define TPPLEXER_FLAG_NO_DIRECTIVES          0x00000100 /* Disable evaluation of preprocessor directives. */
 #define TPPLEXER_FLAG_NO_MACROS              0x00000200 /* Disable expansion of macros (user defined only; builtin must be disabled explicitly with `TPPLEXER_FLAG_NO_BUILTIN_MACROS'). */
-#define TPPLEXER_FLAG_ASM_COMMENTS           0x00000400 /* Suppress warnings for unknown/invalid preprocessor directives, instead either emitting them as `TOK_COMMENT' or ignoring them based on `TPPLEXER_FLAG_WANTCOMMENTS'. */
-#define TPPLEXER_FLAG_NO_BUILTIN_MACROS      0x00000800 /* When set, don't expand _any_ builtin macros (such as __FILE__ and __LINE__). */
+#define TPPLEXER_FLAG_NO_BUILTIN_MACROS      0x00000400 /* When set, don't expand _any_ builtin macros (such as __FILE__ and __LINE__). */
+#define TPPLEXER_FLAG_ASM_COMMENTS           0x00000800 /* Suppress warnings for unknown/invalid preprocessor directives, instead either emitting them as `TOK_COMMENT' or ignoring them based on `TPPLEXER_FLAG_WANTCOMMENTS'. */
 #define TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF     0x00001000 /* Linefeeds terminating preprocessor directives are not part of those directives and are instead re-emit (Meaningless without `TPPLEXER_FLAG_WANTLF').
                                                          * WARNING: Using this flag is not recommended, as a freshly defined macro will modify
                                                          *          text from the file and set the first character of that linefeed to `\0'. */
@@ -1462,7 +1469,7 @@ TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexe
                                                          *          in situations such as these. */
 #define TPPLEXER_FLAG_WERROR                 0x00080000 /* All warnings are turned into errors (NOTE: less powerful than `TPPLEXER_FLAG_WSYSTEMHEADERS'). */
 #define TPPLEXER_FLAG_WSYSTEMHEADERS         0x00100000 /* Still emit warnings in system headers (alongside errors). */
-#define TPPLEXER_FLAG_NO_DEPRECATED          0x00200000 /* Don't warn about deprecated keywords. */
+#define TPPLEXER_FLAG_NO_DEPRECATED          0x00200000 /* Don't warn about deprecated or poisoned keywords. */
 #define TPPLEXER_FLAG_MSVC_MESSAGEFORMAT     0x00400000 /* Use msvc's file+line format `%s(%d,%d) : ' instead of GCC's `%s:%d:%d: '. */
 #define TPPLEXER_FLAG_NO_WARNINGS            0x00800000 /* Don't emit warnings. */
 #define TPPLEXER_FLAG_NO_ENCODING            0x01000000 /* Don't try to detect file encodings (Everything is UTF-8 without BOM; aka. raw text). */

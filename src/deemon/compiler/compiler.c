@@ -244,7 +244,8 @@ DeeCompiler_New(DeeObject *__restrict module,
                                                          (DeeObject **)&module);
  if unlikely(!result->cp_scope) goto err_r;
  weakref_support_init(result);
- memset(&result->cp_tags,0,sizeof(struct ast_tags));
+ memset(&result->cp_tags,0,sizeof(result->cp_tags));
+ memset(&result->cp_items,0,sizeof(result->cp_items));
  result->cp_flags           = flags;
  result->cp_prev            = NULL;
  result->cp_recursion       = 0;
@@ -294,6 +295,7 @@ compiler_fini(DeeCompilerObject *__restrict self) {
        TPPLexer_Quit(&self->cp_lexer);
  Dee_Decref(self->cp_scope);
  unicode_printer_fini(&self->cp_tags.at_doc);
+ Dee_Free(self->cp_items.ci_list);
 }
 
 PRIVATE void DCALL
@@ -306,13 +308,11 @@ compiler_visit(DeeCompilerObject *__restrict self, dvisit_t proc, void *arg) {
  Dee_Visit(self->cp_scope);
 }
 
-PRIVATE struct type_member compiler_class_members[] = {
-    TYPE_MEMBER_CONST("ast",&DeeAst_Type),
-    TYPE_MEMBER_CONST("scope",&DeeScope_Type),
-    TYPE_MEMBER_CONST("base_scope",&DeeBaseScope_Type),
-    TYPE_MEMBER_CONST("root_scope",&DeeRootScope_Type),
-    TYPE_MEMBER_END
-};
+INTDEF struct type_method compiler_methods[];
+INTDEF struct type_getset compiler_getsets[];
+INTDEF struct type_member compiler_class_members[];
+
+INTDEF int DCALL compiler_init(DeeCompilerObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
 PUBLIC DeeTypeObject DeeCompiler_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -332,7 +332,8 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
                 /* .tp_free      = */NULL,
                 {
                     /* .tp_instance_size = */sizeof(DeeCompilerObject)
-                }
+                },
+                /* .tp_any_ctor_kw = */&compiler_init,
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&compiler_fini,
@@ -354,8 +355,8 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_methods       = */compiler_methods,
+    /* .tp_getsets       = */compiler_getsets,
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

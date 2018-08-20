@@ -517,8 +517,9 @@ do_create_base_name:
    /* Run a custom setup protocol. */
    result = (*options->co_setup)(options->co_setup_arg);
    if unlikely(result < 0) {
-    COMPILER_END();
+    DeeCompiler_End();
     Dee_Decref(compiler);
+    recursive_rwlock_endwrite(&DeeCompiler_Lock);
     return result;
    }
   }
@@ -595,14 +596,16 @@ do_create_base_name:
  if (parser_rethrow(result != 0))
      result = -1;
 
- COMPILER_END();
+ DeeCompiler_End();
  Dee_Decref(compiler);
+ recursive_rwlock_endwrite(&DeeCompiler_Lock);
  return result;
 err_compiler_ast:
  Dee_Decref(ast);
 err_compiler:
- COMPILER_END();
+ DeeCompiler_End();
  Dee_Decref(compiler);
+ recursive_rwlock_endwrite(&DeeCompiler_Lock);
 err:
  return -1;
 }

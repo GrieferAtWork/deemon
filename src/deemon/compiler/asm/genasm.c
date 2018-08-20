@@ -489,7 +489,7 @@ done_push_none:
   if (PUSH_RESULT && asm_gpush_none()) goto err;
   break;
 
- case AST_BNDSYM:
+ case AST_BOUND:
   if (!PUSH_RESULT) break;
   if (asm_putddi(ast)) goto err;
   if (asm_gpush_bnd_symbol(ast->ast_sym,ast)) goto err;
