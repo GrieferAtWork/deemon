@@ -5115,8 +5115,6 @@ PUBLIC int TPPCALL TPPLexer_Init(struct TPPLexer *__restrict self) {
         sizeof(default_warnings_state) <= TPP_OFFSETAFTER(struct TPPWarningState,ws_padding));
  assert(sizeof(default_extensions_state) >= TPP_EXTENSIONS_BITSETSIZE &&
         sizeof(default_extensions_state) <= TPP_OFFSETAFTER(struct TPPExtState,es_padding));
-#if defined(__DCC_VERSION__) && __DCC_INDIRECTION__ > __DCC_VERSION__
-#endif
  memcpy(self->l_extensions.es_bitset,&default_extensions_state,TPP_EXTENSIONS_BITSETSIZE);
  memcpy(self->l_warnings.w_basestate.ws_state,&default_warnings_state,TPP_WARNING_BITSETSIZE);
 #ifdef TPP_CONFIG_DYN_CALLBACKS
@@ -6310,35 +6308,51 @@ TPPKeyword_GetFlags(struct TPPKeyword const *__restrict self) {
  assert(self);
  assert(TPPLexer_Current);
 again:
- switch (self->k_id) {
-  /* Lookup dynamic flags. */
+#if TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
 #ifndef __INTELLISENSE__
-#define KWD_FLAGS(name,flags)  case name: result = (uint32_t)(flags); break;
+#define KWD_FLAGS(name,flags) \
+ if (TPPKeyword_EQUALS(self,#name)) { result = (flags); goto done; }
+
 #include "tpp-defs.inl"
 #undef KWD_FLAGS
 #endif
-  default:
-   if (self->k_rare && self->k_rare->kr_flags)
-    result = self->k_rare->kr_flags;
-   else {
-    char const *begin,*end,*real_end;
-    /* Check for an alias with less underscores. */
-    real_end = end = (begin = self->k_name)+self->k_size;
-    while (begin != end && *begin == '_') ++begin;
-    while (end != begin && end[-1] == '_') --end;
-    result = TPP_KEYWORDFLAG_NONE;
-    if (begin != self->k_name || end != real_end) {
-     /* Was able to remove some leading/terminating underscores.
-      * >> Check for an alternative keyword with them removed. */
-     self = TPPLexer_LookupKeyword(begin,(size_t)(end-begin),0);
-     if (self && (!self->k_rare ||
-         /* Don't allow alias if the no-underscores flag is set. */
-       !(self->k_rare->kr_flags&TPP_KEYWORDFLAG_NO_UNDERSCORES)))
-         goto again;
-    }
+#else
+ switch (self->k_id)
+#endif
+ {
+  /* Lookup dynamic flags. */
+#if !TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
+#ifndef __INTELLISENSE__
+#define KWD_FLAGS(name,flags)  case name: result = (uint32_t)(flags); goto done;
+#include "tpp-defs.inl"
+#undef KWD_FLAGS
+#endif
+ default:
+#endif
+  if (self->k_rare && self->k_rare->kr_flags)
+   result = self->k_rare->kr_flags;
+  else {
+   char const *begin,*end,*real_end;
+   /* Check for an alias with less underscores. */
+   real_end = end = (begin = self->k_name)+self->k_size;
+   while (begin != end && *begin == '_') ++begin;
+   while (end != begin && end[-1] == '_') --end;
+   result = TPP_KEYWORDFLAG_NONE;
+   if (begin != self->k_name || end != real_end) {
+    /* Was able to remove some leading/terminating underscores.
+     * >> Check for an alternative keyword with them removed. */
+    self = TPPLexer_LookupKeyword(begin,(size_t)(end-begin),0);
+    if (self && (!self->k_rare ||
+        /* Don't allow alias if the no-underscores flag is set. */
+      !(self->k_rare->kr_flags&TPP_KEYWORDFLAG_NO_UNDERSCORES)))
+        goto again;
    }
-   break;
+  }
+#if !TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
+  break;
+#endif
  }
+done:
  return result;
 }
 
@@ -11516,281 +11530,298 @@ check_file_dependency(struct TPPFile *__restrict depfile) {
  return 1;
 }
 
-PUBLIC int TPPCALL
-TPPLexer_ParseBuiltinPragma(void) {
- switch (tok) {
 
- { /* Setup a #include guard for the current source file. */
-  struct TPPFile *textfile;
- case KWD_once:
-  textfile = TPPLexer_Textfile();
+PRIVATE int TPPCALL parse_pragma_once(void) {
+ /* Setup a #include guard for the current source file. */
+ struct TPPFile *textfile;
+ textfile = TPPLexer_Textfile();
 #if TPP_CONFIG_ONELEXER == 1
-  assert(builtin_keywords[KWD___LINE__-TOK_KEYWORD_BEGIN]->k_id == KWD___LINE__);
-  textfile->f_textfile.f_guard = builtin_keywords[KWD___LINE__-TOK_KEYWORD_BEGIN];
+ assert(builtin_keywords[KWD___LINE__ - TOK_KEYWORD_BEGIN]->k_id == KWD___LINE__);
+ textfile->f_textfile.f_guard = builtin_keywords[KWD___LINE__ - TOK_KEYWORD_BEGIN];
 #else
-  { /* We must ~really~ lookup the keyword... */
-   struct TPPKeyword *keyword;
-   keyword = TPPLexer_LookupKeyword("__LINE__",8,0);
-   assert(keyword);
-   assert(keyword->k_id == KWD___LINE__);
-   textfile->f_textfile.f_guard = keyword;
-  }
+ { /* We must ~really~ lookup the keyword... */
+  struct TPPKeyword *keyword;
+  keyword = TPPLexer_LookupKeyword("__LINE__",8,0);
+  assert(keyword);
+  assert(keyword->k_id == KWD___LINE__);
+  textfile->f_textfile.f_guard = keyword;
+ }
 #endif
-  /* Prevent other code from attempting to detect a legacy guard. */
-  textfile->f_textfile.f_flags   |= TPP_TEXTFILE_FLAG_NOGUARD;
-  textfile->f_textfile.f_newguard = NULL;
-  return 1;
- } break;
+ /* Prevent other code from attempting to detect a legacy guard. */
+ textfile->f_textfile.f_flags   |= TPP_TEXTFILE_FLAG_NOGUARD;
+ textfile->f_textfile.f_newguard = NULL;
+ return 1;
+}
 
- { /* push/pop a macro definition. */
-  struct TPPKeyword *keyword;
-  struct TPPConst const_val;
-  tok_t mode; int should_undef;
- case KWD_push_macro:
- case KWD_pop_macro:
-  mode = tok;
+PRIVATE int TPPCALL parse_pragma_pushpop_macro(bool is_push_macro) {
+ /* push/pop a macro definition. */
+ struct TPPKeyword *keyword;
+ struct TPPConst const_val;
+ int should_undef;
+ yield();
+ if (tok == '(') yield();
+ else WARN(W_EXPECTED_LPAREN);
+ should_undef = tok == KWD_undef;
+ if (should_undef) {
   yield();
-  if (tok == '(') yield();
-  else WARN(W_EXPECTED_LPAREN);
-  should_undef = tok == KWD_undef;
-  if (should_undef) {
-   yield();
-   if (tok != ',') WARN(W_EXPECTED_COMMA);
-   else yield();
-  }
-  for (;;) {
-   if unlikely(!TPPLexer_Eval(&const_val)) goto err;
-   if (const_val.c_kind != TPP_CONST_STRING) {
-    WARN(W_EXPECTED_STRING_AFTER_PUSHMACRO,&const_val);
-   } else {
-    keyword = TPPLexer_LookupKeyword(const_val.c_data.c_string->s_text,
-                                     const_val.c_data.c_string->s_size,1);
-    if unlikely(!keyword) goto seterr;
-    if (mode == KWD_push_macro) {
-     if unlikely(!keyword_pushmacro(keyword)) goto seterr;
-     /* Delete the macro definition. */
-     if (should_undef && keyword->k_macro) TPPKeyword_Undef(keyword);
-    } else {
-     keyword_popmacro(keyword,should_undef);
-    }
-   }
-   TPPConst_Quit(&const_val);
-   if (tok != ',') break;
-   yield();
-  }
-  if (tok != ')') WARN(W_EXPECTED_RPAREN);
+  if (tok != ',') WARN(W_EXPECTED_COMMA);
   else yield();
-  return 1;
- } break;
-
- case KWD_region:
- case KWD_endregion:
-  /* God damn! This was one of the hardest pragmas to add support for!
-   * I still don't know how I did it, but I hope the following line manages to explain it. */
-  return 1; /* It's literally meant to improve highlighting in IDEs! */
-
- { /* Emit a custom message to stderr. */
-  int with_paren;
-  struct TPPConst message;
- case KWD_message:
-  yield();
-  /* NOTE: In MSVC, the surrounding `(...)' are _not_ optional, but
-   *       gcc does make them be (so we must follow its example...) */
-  with_paren = tok == '(';
-  if (with_paren) yield();
-  if unlikely(!TPPLexer_Eval(&message)) goto err;
-  if (message.c_kind != TPP_CONST_STRING) {
-   WARN(W_EXPECTED_STRING_AFTER_MESSAGE,&message);
-  } else {
-   if (CURRENT.l_flags&TPPLEXER_FLAG_MESSAGE_LOCATION) {
-    struct TPPLCInfo lc_info; TPPLexer_LC(&lc_info);
-    fprintf(stderr,CURRENT.l_flags&TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
-            ? "%s(%d,%d) : " : "%s:%d:%d: ",
-            TPPLexer_FILE(NULL),
-           (int)(lc_info.lc_line+1),
-           (int)(lc_info.lc_col+1));
-    fprintf(stderr,"#pragma message: ");
-    fflush(stderr);
-   }
-   if (!(CURRENT.l_flags&TPPLEXER_FLAG_MESSAGE_NOLINEFEED)) {
-    register char oldch,*poldch;
-    oldch = *(poldch = message.c_data.c_string->s_text+
-                       message.c_data.c_string->s_size);
-    *poldch = '\n';
-    fwrite(message.c_data.c_string->s_text,sizeof(char),
-           message.c_data.c_string->s_size+1,stderr);
-    *poldch = oldch;
-   } else {
-    fwrite(message.c_data.c_string->s_text,sizeof(char),
-           message.c_data.c_string->s_size,stderr);
-   }
-  }
-  TPPConst_Quit(&message);
-  if (with_paren && unlikely(tok != ')')) WARN(W_EXPECTED_RPAREN);
-  else yield();
-  return 1;
- } break;
-
- { /* Do exactly the same as we'd do for `#error',
-    * with a syntax identical to `#pragma message'. */
-  struct TPPConst error_message;
-  int warning_error;
- case KWD_error:
-  yield();
-  if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
-  else yield();
-  if unlikely(!TPPLexer_Eval(&error_message)) goto err;
-  if (error_message.c_kind != TPP_CONST_STRING) {
-   if (!WARN(W_EXPECTED_STRING_AFTER_PRGERROR,&error_message)) goto err;
-  } else {
-   warning_error = WARN(W_ERROR,error_message.c_data.c_string->s_text,
-                                         error_message.c_data.c_string->s_size);
-   TPPString_Decref(error_message.c_data.c_string);
-   if unlikely(!warning_error) goto err;
-  }
-  if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
-  else yield();
- } break;
-
- { /* Mark a given identifier as deprecated. */
-  struct TPPConst ident_name;
-  struct TPPKeyword *keyword;
- case KWD_deprecated:
-  yield();
-  if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
-  else yield();
-  if unlikely(!TPPLexer_Eval(&ident_name)) goto err;
-  if unlikely(ident_name.c_kind != TPP_CONST_STRING) {
-   if (!WARN(W_EXPECTED_STRING_AFTER_DEPRECATED,&ident_name)) goto err;
-  } else {
-   keyword = TPPLexer_LookupKeyword(ident_name.c_data.c_string->s_text,
-                                    ident_name.c_data.c_string->s_size,1);
-   TPPConst_Quit(&ident_name);
-   if unlikely(!keyword || !TPPKeyword_API_MAKERARE(keyword)) goto err;
-   keyword->k_rare->kr_flags |= TPP_KEYWORDFLAG_IS_DEPRECATED;
-  }
-  if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
-  else yield();
-  return 1;
- } break;
-
- { /* Execute a given string as within the preprocessor,
-    * discarding all output but keeping everything else. */
-  struct TPPConst exec_code;
-  struct TPPFile *exec_file;
- case KWD_tpp_exec:
-pragma_tpp_exec:
-  yield();
-  if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
-  else yield();
-  if unlikely(!TPPLexer_Eval(&exec_code)) goto err;
-  if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
-  else yield();
-  if unlikely(exec_code.c_kind != TPP_CONST_STRING) {
-   if (!WARN(W_EXPECTED_STRING_AFTER_TPP_EXEC,&exec_code)) goto err;
-  } else {
-   char *old_token_begin;
-   struct TPPFile *prev_file;
-   exec_file = TPPFile_NewExplicitInherited(exec_code.c_data.c_string);
-   if unlikely(!exec_file) { TPPString_Decref(exec_code.c_data.c_string); goto err; }
-   old_token_begin = token.t_begin;
-   pushfile_inherited(exec_file);
-   pushf();
-   /* Disable some unnecessary tokens and make sure
-    * that macros & preprocessor directives are enabled. */
-   CURRENT.l_flags &= ~(TPPLEXER_FLAG_WANTCOMMENTS|
-                        TPPLEXER_FLAG_WANTSPACE|
-                        TPPLEXER_FLAG_WANTLF|
-                        TPPLEXER_FLAG_NO_MACROS|
-                        TPPLEXER_FLAG_NO_DIRECTIVES|
-                        TPPLEXER_FLAG_NO_BUILTIN_MACROS|
-                        TPPLEXER_FLAG_EOF_ON_PAREN);
-   pusheof();
-   CURRENT.l_eof_paren;
-   /* Yield everything from this file. */
-   while (TPPLexer_Yield() > 0);
-   popeof();
-   popf();
-   assert(token.t_file);
-   assert(token.t_file != &TPPFile_Empty);
-   assert(token.t_file == exec_file);
-   assert(token.t_file->f_prev);
-   prev_file = token.t_file->f_prev;
-   assert(old_token_begin >= prev_file->f_begin);
-   assert(old_token_begin <= prev_file->f_end);
-   assert(old_token_begin <= prev_file->f_pos);
-   prev_file->f_pos = old_token_begin;
-   TPPLexer_PopFile();
-   assert(prev_file == token.t_file);
-   TPPLexer_Yield();
-  }
-  return 1;
- } break;
-
- { /* Set the flags associated with a given keyword. */
-  struct TPPConst const_val;
-  struct TPPKeyword *keyword;
-  uint32_t new_flags;
- case KWD_tpp_set_keyword_flags:
-pragma_tpp_set_keyword_flags:
-  yield();
-  if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
-  else yield();
+ }
+ for (;;) {
   if unlikely(!TPPLexer_Eval(&const_val)) goto err;
   if (const_val.c_kind != TPP_CONST_STRING) {
-   WARN(W_EXPECTED_STRING_AFTER_TPP_SETF,&const_val);
-   keyword = NULL;
+   WARN(W_EXPECTED_STRING_AFTER_PUSHMACRO,&const_val);
   } else {
    keyword = TPPLexer_LookupKeyword(const_val.c_data.c_string->s_text,
                                     const_val.c_data.c_string->s_size,1);
-   TPPString_Decref(const_val.c_data.c_string);
-   if unlikely(!keyword || !TPPKeyword_API_MAKERARE(keyword)) goto err;
+   if unlikely(!keyword) goto seterr;
+   if (is_push_macro) {
+    if unlikely(!keyword_pushmacro(keyword)) goto seterr;
+    /* Delete the macro definition. */
+    if (should_undef && keyword->k_macro) TPPKeyword_Undef(keyword);
+   } else {
+    keyword_popmacro(keyword,should_undef);
+   }
   }
-  if unlikely(tok != ',') WARN(W_EXPECTED_COMMA);
-  else yield();
-  if unlikely(!TPPLexer_Eval(&const_val)) goto err;
-  TPPConst_ToInt(&const_val);
-  new_flags = (uint32_t)const_val.c_data.c_int;
-  if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
-  else yield();
-  if likely(keyword) {
-   assert(keyword->k_rare);
-   keyword->k_rare->kr_flags &= ~(TPP_KEYWORDFLAG_USERMASK);
-   keyword->k_rare->kr_flags |= (new_flags&TPP_KEYWORDFLAG_USERMASK);
-  }
-  return 1;
- } break;
-
- { /* Configure warning behavior by group/id.
-    * NOTE: Warning IDs have been chosen for backwards-compatibility with the old TPP. */
- case KWD_warning:
-pragma_warning:
+  TPPConst_Quit(&const_val);
+  if (tok != ',') break;
   yield();
-  if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
-  else yield();
-  for (;;) {
-   wstate_t newstate; int wset_error;
-   struct TPPConst val; char *warning_text;
-   switch (tok) {
-   case KWD_push: /* Push warnings. */
+ }
+ if (tok != ')') WARN(W_EXPECTED_RPAREN);
+ else yield();
+ return 1;
+seterr:
+ TPPLexer_SetErr();
+err:
+ return 0;
+}
+
+PRIVATE int TPPCALL parse_pragma_message(void) {
+ /* Emit a custom message to stderr. */
+ int with_paren; struct TPPConst message;
+ yield();
+ /* NOTE: In MSVC, the surrounding `(...)' are _not_ optional, but
+  *       gcc does make them be (so we must follow its example...) */
+ with_paren = tok == '(';
+ if (with_paren) yield();
+ if unlikely(!TPPLexer_Eval(&message)) goto err;
+ if (message.c_kind != TPP_CONST_STRING) {
+  WARN(W_EXPECTED_STRING_AFTER_MESSAGE,&message);
+ } else {
+  if (CURRENT.l_flags&TPPLEXER_FLAG_MESSAGE_LOCATION) {
+   struct TPPLCInfo lc_info; TPPLexer_LC(&lc_info);
+   fprintf(stderr,CURRENT.l_flags&TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
+           ? "%s(%d,%d) : " : "%s:%d:%d: ",
+           TPPLexer_FILE(NULL),
+          (int)(lc_info.lc_line+1),
+          (int)(lc_info.lc_col+1));
+   fprintf(stderr,"#pragma message: ");
+   fflush(stderr);
+  }
+  if (!(CURRENT.l_flags&TPPLEXER_FLAG_MESSAGE_NOLINEFEED)) {
+   register char oldch,*poldch;
+   oldch = *(poldch = message.c_data.c_string->s_text+
+                      message.c_data.c_string->s_size);
+   *poldch = '\n';
+   fwrite(message.c_data.c_string->s_text,sizeof(char),
+          message.c_data.c_string->s_size+1,stderr);
+   *poldch = oldch;
+  } else {
+   fwrite(message.c_data.c_string->s_text,sizeof(char),
+          message.c_data.c_string->s_size,stderr);
+  }
+ }
+ TPPConst_Quit(&message);
+ if (with_paren && unlikely(tok != ')')) WARN(W_EXPECTED_RPAREN);
+ else yield();
+ return 1;
+err:
+ return 0;
+}
+
+PRIVATE int TPPCALL parse_pragma_error(void) {
+ /* Do exactly the same as we'd do for `#error',
+  * with a syntax identical to `#pragma message'. */
+ struct TPPConst error_message;
+ int warning_error;
+ yield();
+ if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
+ else yield();
+ if unlikely(!TPPLexer_Eval(&error_message)) goto err;
+ if (error_message.c_kind != TPP_CONST_STRING) {
+  if (!WARN(W_EXPECTED_STRING_AFTER_PRGERROR,&error_message)) goto err;
+ } else {
+  warning_error = WARN(W_ERROR,error_message.c_data.c_string->s_text,
+                                        error_message.c_data.c_string->s_size);
+  TPPString_Decref(error_message.c_data.c_string);
+  if unlikely(!warning_error) goto err;
+ }
+ if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
+ else yield();
+ return 1;
+err:
+ return 0;
+}
+
+PRIVATE int TPPCALL parse_pragma_deprecated(void) {
+ /* Mark a given identifier as deprecated. */
+ struct TPPConst ident_name;
+ struct TPPKeyword *keyword;
+ yield();
+ if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
+ else yield();
+ if unlikely(!TPPLexer_Eval(&ident_name)) goto err;
+ if unlikely(ident_name.c_kind != TPP_CONST_STRING) {
+  if (!WARN(W_EXPECTED_STRING_AFTER_DEPRECATED,&ident_name)) goto err;
+ } else {
+  keyword = TPPLexer_LookupKeyword(ident_name.c_data.c_string->s_text,
+                                   ident_name.c_data.c_string->s_size,1);
+  TPPConst_Quit(&ident_name);
+  if unlikely(!keyword || !TPPKeyword_API_MAKERARE(keyword)) goto err;
+  keyword->k_rare->kr_flags |= TPP_KEYWORDFLAG_IS_DEPRECATED;
+ }
+ if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
+ else yield();
+ return 1;
+err:
+ return 0;
+}
+
+PRIVATE int TPPCALL parse_pragma_tpp_exec(void) {
+ /* Execute a given string as within the preprocessor,
+  * discarding all output but keeping everything else. */
+ struct TPPConst exec_code;
+ struct TPPFile *exec_file;
+ yield();
+ if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
+ else yield();
+ if unlikely(!TPPLexer_Eval(&exec_code)) goto err;
+ if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
+ else yield();
+ if unlikely(exec_code.c_kind != TPP_CONST_STRING) {
+  if (!WARN(W_EXPECTED_STRING_AFTER_TPP_EXEC,&exec_code)) goto err;
+ } else {
+  char *old_token_begin;
+  struct TPPFile *prev_file;
+  exec_file = TPPFile_NewExplicitInherited(exec_code.c_data.c_string);
+  if unlikely(!exec_file) { TPPString_Decref(exec_code.c_data.c_string); goto err; }
+  old_token_begin = token.t_begin;
+  pushfile_inherited(exec_file);
+  pushf();
+  /* Disable some unnecessary tokens and make sure
+   * that macros & preprocessor directives are enabled. */
+  CURRENT.l_flags &= ~(TPPLEXER_FLAG_WANTCOMMENTS|
+                       TPPLEXER_FLAG_WANTSPACE|
+                       TPPLEXER_FLAG_WANTLF|
+                       TPPLEXER_FLAG_NO_MACROS|
+                       TPPLEXER_FLAG_NO_DIRECTIVES|
+                       TPPLEXER_FLAG_NO_BUILTIN_MACROS|
+                       TPPLEXER_FLAG_EOF_ON_PAREN);
+  pusheof();
+  CURRENT.l_eof_paren;
+  /* Yield everything from this file. */
+  while (TPPLexer_Yield() > 0);
+  popeof();
+  popf();
+  assert(token.t_file);
+  assert(token.t_file != &TPPFile_Empty);
+  assert(token.t_file == exec_file);
+  assert(token.t_file->f_prev);
+  prev_file = token.t_file->f_prev;
+  assert(old_token_begin >= prev_file->f_begin);
+  assert(old_token_begin <= prev_file->f_end);
+  assert(old_token_begin <= prev_file->f_pos);
+  prev_file->f_pos = old_token_begin;
+  TPPLexer_PopFile();
+  assert(prev_file == token.t_file);
+  TPPLexer_Yield();
+ }
+ return 1;
+err:
+ return 0;
+}
+
+PRIVATE int TPPCALL parse_pragma_tpp_set_keyword_flags(void) {
+ /* Set the flags associated with a given keyword. */
+ struct TPPConst const_val;
+ struct TPPKeyword *keyword;
+ uint32_t new_flags;
+ yield();
+ if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
+ else yield();
+ if unlikely(!TPPLexer_Eval(&const_val)) goto err;
+ if (const_val.c_kind != TPP_CONST_STRING) {
+  WARN(W_EXPECTED_STRING_AFTER_TPP_SETF,&const_val);
+  keyword = NULL;
+ } else {
+  keyword = TPPLexer_LookupKeyword(const_val.c_data.c_string->s_text,
+                                   const_val.c_data.c_string->s_size,1);
+  TPPString_Decref(const_val.c_data.c_string);
+  if unlikely(!keyword || !TPPKeyword_API_MAKERARE(keyword)) goto err;
+ }
+ if unlikely(tok != ',') WARN(W_EXPECTED_COMMA);
+ else yield();
+ if unlikely(!TPPLexer_Eval(&const_val)) goto err;
+ TPPConst_ToInt(&const_val);
+ new_flags = (uint32_t)const_val.c_data.c_int;
+ if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
+ else yield();
+ if likely(keyword) {
+  assert(keyword->k_rare);
+  keyword->k_rare->kr_flags &= ~(TPP_KEYWORDFLAG_USERMASK);
+  keyword->k_rare->kr_flags |= (new_flags&TPP_KEYWORDFLAG_USERMASK);
+ }
+ return 1;
+err:
+ return 0;
+}
+
+#ifdef TPP_CONFIG_USERDEFINED_KWD_PUSH
+#define CURRENT_KEYWORD_IS_PUSH    (tok == KWD_push)
+#else
+#define CURRENT_KEYWORD_IS_PUSH     TPPKeyword_EQUALS(token.t_kwd,"push")
+#endif
+#ifdef TPP_CONFIG_USERDEFINED_KWD_POP
+#define CURRENT_KEYWORD_IS_POP     (tok == KWD_pop)
+#else
+#define CURRENT_KEYWORD_IS_POP      TPPKeyword_EQUALS(token.t_kwd,"pop")
+#endif
+#ifdef TPP_CONFIG_USERDEFINED_KWD_DEFAULT
+#define CURRENT_KEYWORD_IS_DEFAULT (tok == KWD_default)
+#else
+#define CURRENT_KEYWORD_IS_DEFAULT  TPPKeyword_EQUALS(token.t_kwd,"default")
+#endif
+
+
+PRIVATE int TPPCALL parse_pragma_warning(void) {
+ /* Configure warning behavior by group/id.
+  * NOTE: Warning IDs have been chosen for backwards-compatibility with the old TPP. */
+ yield();
+ if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
+ else yield();
+ for (;;) {
+  wstate_t newstate; int wset_error;
+  struct TPPConst val; char *warning_text;
+  if (TPP_ISKEYWORD(tok)) {
+   if (CURRENT_KEYWORD_IS_PUSH) {
+    /* Push warnings. */
     if unlikely(!TPPLexer_PushWarnings())
        goto seterr;
     yield();
-    break;
-   case KWD_pop: /* Pop warnings. */
+    goto next_command;
+   }
+   if (CURRENT_KEYWORD_IS_POP) {
+    /* Pop warnings. */
     if (!TPPLexer_PopWarnings() &&
         !WARN(W_CANT_POP_WARNINGS))
          goto err;
     yield();
-    break;
-
-   { /* Set the state of a given set of warnings. */
-    if (FALSE) { case KWD_disable:  newstate = WSTATE_DISABLED; }
-    if (FALSE) { /*case KWD_warning:*/
-                 case KWD_enable:   newstate = WSTATE_WARN; }
-    if (FALSE) { case KWD_suppress: newstate = WSTATE_SUPPRESS; }
-    if (FALSE) { case KWD_error:    newstate = WSTATE_FATAL; }
-    if (FALSE) { case KWD_default:  newstate = WSTATE_DEFAULT; }
+    goto next_command;
+   }
+   /* Set the state of a given set of warnings. */
+   if (TPPKeyword_EQUALS(token.t_kwd,"disable")) {
+    newstate = WSTATE_DISABLED;
+set_warning_newstate_pop:
     yield();
 set_warning_newstate:
     if (tok != ':') {
@@ -11814,352 +11845,442 @@ set_warning_newstate:
       if (!wset_error) goto seterr;
      }
     }
-   } break;
-
-   { /* Parse constant:
-      * >> #pragma warning("-Wno-comments") // Same as `#pragma warning(disable: "comments")'
-      * >> #pragma warning("-Wcomments")    // Same as `#pragma warning(default: "comments")'
-      * The old TPP also allowed an integral ID for a new warning mode:
-      * >> #pragma warning(-1: 42) // Same as `#pragma warning(error: 42)'
-      * >> #pragma warning(0: 42) // Same as `#pragma warning(enable: 42)'
-      * >> #pragma warning(1: 42) // Same as `#pragma warning(disable: 42)'
-      * >> #pragma warning(2: 42) // Same as `#pragma warning(suppress: 42)'
-      * Both of these idea are merged here!
-      */
-   default:
-    if unlikely(!TPPLexer_Eval(&val)) goto err;
-    if (val.c_kind == TPP_CONST_INTEGRAL) {
-     /* NOTE: Technically, the old TPP allowed numbers `x' greater than 2 to
-      *       be specified here, which would in return suppress the warning
-      *       an additional `x-1' times.
-      *       This behavior is not supported by the new TPP!
-      */
-          if (val.c_data.c_int < 0) newstate = WSTATE_FATAL;
-     else if (val.c_data.c_int == 0) newstate = WSTATE_WARN;
-     else if (val.c_data.c_int == 1) newstate = WSTATE_DISABLED;
-     else newstate = WSTATE_SUPPRESS;
-     goto set_warning_newstate;
-    } else if (val.c_kind == TPP_CONST_STRING) {
-     /* Very nice-looking warning directives:
-      * >> #pragma warning(push,"-Wno-syntax")
-      * >> ... // Do something ~nasty~.
-      * >> #pragma warning(pop)
-      */
-     newstate = WSTATE_FATAL;
-     warning_text = val.c_data.c_string->s_text;
-     if (*warning_text == '-') ++warning_text;
-     if (*warning_text == 'W') ++warning_text;
-          if (!memcmp(warning_text,"no-",3*sizeof(char))) warning_text += 3,newstate = WSTATE_DISABLED;
-     else if (!memcmp(warning_text,"def-",4*sizeof(char))) warning_text += 4,newstate = WSTATE_DEFAULT;
-     else if (!memcmp(warning_text,"sup-",4*sizeof(char))) warning_text += 4,newstate = WSTATE_SUPPRESS;
-     else if (!memcmp(warning_text,"suppress-",9*sizeof(char))) warning_text += 9,newstate = WSTATE_SUPPRESS;
-     wset_error = TPPLexer_SetWarnings(warning_text,newstate);
-     if (wset_error == 2) wset_error = WARN(W_INVALID_WARNING,&val);
-     TPPString_Decref(val.c_data.c_string);
-     if unlikely(!wset_error) goto seterr;
-    } else {
-     if unlikely(!WARN(W_EXPECTED_WARNING_NAMEORID,&val)) goto err;
-    }
-   } break;
+    goto next_command;
    }
-   if (tok != ',') break;
-   yield();
+   if (/*tok == KWD_warning ||*/
+       TPPKeyword_EQUALS(token.t_kwd,"enable")) {
+    newstate = WSTATE_WARN;
+    goto set_warning_newstate_pop;
+   }
+   if (TPPKeyword_EQUALS(token.t_kwd,"suppress")) {
+    newstate = WSTATE_SUPPRESS;
+    goto set_warning_newstate_pop;
+   }
+   if (tok == KWD_error) {
+    newstate = WSTATE_FATAL;
+    goto set_warning_newstate_pop;
+   }
+   if (CURRENT_KEYWORD_IS_DEFAULT) {
+    newstate = WSTATE_DEFAULT;
+    goto set_warning_newstate_pop;
+   }
   }
-  if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
-  else yield();
-  return 1;
- } break;
-
- { /* Configure TPP extensions from usercode. */
-  struct TPPConst extname;
- case KWD_extension:
-pragma_extension:
+  /* Parse constant:
+   * >> #pragma warning("-Wno-comments") // Same as `#pragma warning(disable: "comments")'
+   * >> #pragma warning("-Wcomments")    // Same as `#pragma warning(default: "comments")'
+   * The old TPP also allowed an integral ID for a new warning mode:
+   * >> #pragma warning(-1: 42) // Same as `#pragma warning(error: 42)'
+   * >> #pragma warning(0: 42) // Same as `#pragma warning(enable: 42)'
+   * >> #pragma warning(1: 42) // Same as `#pragma warning(disable: 42)'
+   * >> #pragma warning(2: 42) // Same as `#pragma warning(suppress: 42)'
+   * Both of these idea are merged here!
+   */
+  if unlikely(!TPPLexer_Eval(&val)) goto err;
+  if (val.c_kind == TPP_CONST_INTEGRAL) {
+   /* NOTE: Technically, the old TPP allowed numbers `x' greater than 2 to
+    *       be specified here, which would in return suppress the warning
+    *       an additional `x-1' times.
+    *       This behavior is not supported by the new TPP!
+    */
+        if (val.c_data.c_int < 0) newstate = WSTATE_FATAL;
+   else if (val.c_data.c_int == 0) newstate = WSTATE_WARN;
+   else if (val.c_data.c_int == 1) newstate = WSTATE_DISABLED;
+   else newstate = WSTATE_SUPPRESS;
+   goto set_warning_newstate;
+  } else if (val.c_kind == TPP_CONST_STRING) {
+   /* Very nice-looking warning directives:
+    * >> #pragma warning(push,"-Wno-syntax")
+    * >> ... // Do something ~nasty~.
+    * >> #pragma warning(pop)
+    */
+   newstate = WSTATE_FATAL;
+   warning_text = val.c_data.c_string->s_text;
+   if (*warning_text == '-') ++warning_text;
+   if (*warning_text == 'W') ++warning_text;
+        if (!memcmp(warning_text,"no-",3*sizeof(char))) warning_text += 3,newstate = WSTATE_DISABLED;
+   else if (!memcmp(warning_text,"def-",4*sizeof(char))) warning_text += 4,newstate = WSTATE_DEFAULT;
+   else if (!memcmp(warning_text,"sup-",4*sizeof(char))) warning_text += 4,newstate = WSTATE_SUPPRESS;
+   else if (!memcmp(warning_text,"suppress-",9*sizeof(char))) warning_text += 9,newstate = WSTATE_SUPPRESS;
+   wset_error = TPPLexer_SetWarnings(warning_text,newstate);
+   if (wset_error == 2) wset_error = WARN(W_INVALID_WARNING,&val);
+   TPPString_Decref(val.c_data.c_string);
+   if unlikely(!wset_error) goto seterr;
+  } else {
+   if unlikely(!WARN(W_EXPECTED_WARNING_NAMEORID,&val)) goto err;
+  }
+next_command:
+  if (tok != ',') break;
   yield();
-  if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
-  else yield();
-  for (;;) {
-   if (tok == KWD_push) {
+ }
+ if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
+ else yield();
+ return 1;
+seterr:
+ TPPLexer_SetErr();
+err:
+ return 0;
+}
+
+PRIVATE int TPPCALL parse_pragma_extension(void) {
+ /* Configure TPP extensions from usercode. */
+ struct TPPConst extname;
+ yield();
+ if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
+ else yield();
+ for (;;) {
+  if (TPP_ISKEYWORD(tok)) {
+   if (CURRENT_KEYWORD_IS_PUSH) {
     if unlikely(!TPPLexer_PushExtensions()) goto seterr;
     goto yield_after_extension;
-   } else if (tok == KWD_pop) {
+   }
+   if (CURRENT_KEYWORD_IS_POP) {
     if unlikely(!TPPLexer_PopExtensions() &&
                 !WARN(W_CANT_POP_EXTENSIONS)) goto err;
-yield_after_extension:
+ yield_after_extension:
     yield();
-   } else {
-    if unlikely(!TPPLexer_Eval(&extname)) goto err;
-    if (extname.c_kind != TPP_CONST_STRING) {
-     if unlikely(!WARN(W_EXPECTED_STRING_AFTER_EXTENSION,&extname)) goto err;
-    } else {
-     int ext_error,mode = 1;
-     char const *name = extname.c_data.c_string->s_text;
-     if (*name == '-') ++name;
-     if (*name == 'f') ++name;
-     if (!memcmp(name,"no-",3*sizeof(char))) name += 3,mode = 0;
-     ext_error = TPPLexer_SetExtension(name,mode);
-     if unlikely(!ext_error) ext_error = WARN(W_UNKNOWN_EXTENSION,name);
-     TPPString_Decref(extname.c_data.c_string);
-     if unlikely(!ext_error) goto err;
-    }
+    goto next_command;
    }
-   if (tok != ',') break;
-   yield();
   }
-  if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
-  else yield();
-  return 1;
- } break;
-
- { /* TPP-specific pragma namespace. */
- case KWD_TPP:
+  if unlikely(!TPPLexer_Eval(&extname)) goto err;
+  if (extname.c_kind != TPP_CONST_STRING) {
+   if unlikely(!WARN(W_EXPECTED_STRING_AFTER_EXTENSION,&extname)) goto err;
+  } else {
+   int ext_error,mode = 1;
+   char const *name = extname.c_data.c_string->s_text;
+   if (*name == '-') ++name;
+   if (*name == 'f') ++name;
+   if (!memcmp(name,"no-",3*sizeof(char))) name += 3,mode = 0;
+   ext_error = TPPLexer_SetExtension(name,mode);
+   if unlikely(!ext_error) ext_error = WARN(W_UNKNOWN_EXTENSION,name);
+   TPPString_Decref(extname.c_data.c_string);
+   if unlikely(!ext_error) goto err;
+  }
+next_command:
+  if (tok != ',') break;
   yield();
-  switch (tok) {
+ }
+ if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
+ else yield();
+ return 1;
+seterr:
+ TPPLexer_SetErr();
+err:
+ return 0;
+}
 
-  case KWD_warning              : goto pragma_warning;
-  case KWD_extension            : goto pragma_extension;
-  case KWD_tpp_exec             : goto pragma_tpp_exec;
-  case KWD_tpp_set_keyword_flags: goto pragma_tpp_set_keyword_flags;
-
-  { /* Configure system #include-paths. */
-  case KWD_include_path:
-   yield();
-   if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
-   else yield();
-   while (tok != ')') {
-    struct TPPConst path_string; int mode,error;
-    if (TPP_ISKEYWORD(tok)) {
-     /* Special include-path commands:
-      * >> #pragma TPP include_path(push)
-      * >> #pragma TPP include_path(clear)
-      * >> #pragma TPP include_path(pop) */
-     struct TPPKeyword *kwd = token.t_kwd;
-     if (TPPKeyword_EQUALS(kwd,"clear")) {
-      TPPLexer_ClearInclude();
-      goto yield_after_include_path;
-     }
-     /* push/pop the system #include-path. */
-     if (TPPKeyword_EQUALS(kwd,"push")) {
-      if unlikely(!TPPLexer_PushInclude())
-         goto seterr;
-      goto yield_after_include_path;
-     }
-     if (TPPKeyword_EQUALS(kwd,"pop")) {
-      if unlikely(!TPPLexer_PopInclude() &&
-                  !WARN(W_CANT_POP_INCLUDE_PATH))
-         goto err;
-yield_after_include_path:
-      yield();
-      goto next_include_path_arg;
-     }
-    }
-    mode = 1;
-    /**/ if (tok == '+') yield();
-    else if (tok == '-') mode = 0,yield();
-    if unlikely(!TPPLexer_Eval(&path_string)) goto err;
-    if (path_string.c_kind != TPP_CONST_STRING) {
-     WARN(W_EXPECTED_STRING_AFTER_TPP_INCPTH,&path_string);
-    } else {
-     char *path; size_t size = path_string.c_data.c_string->s_size;
-     if (path_string.c_data.c_string->s_refcnt == 1) {
-      path = path_string.c_data.c_string->s_text;
-     } else {
-      path = (char *)API_MALLOC((size+1)*sizeof(char));
-      if unlikely(!path) goto seterr;
-      memcpy(path,path_string.c_data.c_string->s_text,
-            (size+1)*sizeof(char));
-     }
-     error = mode ? TPPLexer_AddIncludePath(path,size)
-                  : TPPLexer_DelIncludePath(path,size);
-     if unlikely(mode && !error) goto seterr;
-     if unlikely(error == 2) error = 0;
-     if unlikely(!error) {
-      WARN(mode ? W_INCLUDE_PATH_ALREADY_EXISTS
-                         : W_UNKNOWN_INCLUDE_PATH,
-                    path,size);
-     }
-     if (path != path_string.c_data.c_string->s_text)
-         free(path);
-     TPPString_Decref(path_string.c_data.c_string);
-    }
-next_include_path_arg:
-    if (tok != ',') break;
-    yield();
+PRIVATE int TPPCALL parse_pragma_TPP_include_path(void) {
+ /* pragma capable of adding/deleting/pushing/popping system #include-paths:
+  * >> #include <stdlib.h> // FILE NOT FOUND
+  * >> #pragma TPP include_path(push,+ "/usr/include")
+  * >> #include <stdlib.h>
+  * >> #pragma TPP include_path(pop)
+  * >> #include <stdlib.h> // FILE NOT FOUND
+  */
+ yield();
+ if unlikely(tok != '(') WARN(W_EXPECTED_LPAREN);
+ else yield();
+ while (tok != ')') {
+  struct TPPConst path_string; int mode,error;
+  if (TPP_ISKEYWORD(tok)) {
+   /* Special include-path commands:
+    * >> #pragma TPP include_path(push)
+    * >> #pragma TPP include_path(clear)
+    * >> #pragma TPP include_path(pop) */
+   struct TPPKeyword *kwd = token.t_kwd;
+   if (TPPKeyword_EQUALS(kwd,"clear")) {
+    TPPLexer_ClearInclude();
+    goto yield_after_include_path;
    }
-   if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
-   else yield();
-   return 1;
-  } break;
-
-  default: break; /* Reserved for future use (don't warn about unknown tpp-pragma). */
-  }
- } break;
-
- { /* Emulate some GCC pragmas. */
-#ifndef TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC
-  char *tok_gcc_begin,*tok_gcc_end;
-  struct TPPFile *tok_gcc_file;
-  unsigned long tok_gcc_toknum;
-#endif
-  struct TPPKeyword *kwd;
- case KWD_GCC:
-#ifndef TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC
-  tok_gcc_toknum = token.t_num;
-  tok_gcc_file   = token.t_file;
-  tok_gcc_begin  = token.t_begin;
-  tok_gcc_end    = token.t_end;
-#endif
-  yield();
-  if (!TPP_ISKEYWORD(tok))
-       goto process_default_gcc_pragma;
-  kwd = token.t_kwd;
-  if (TPPKeyword_EQUALS(kwd,"diagnostic")) {
-   struct TPPConst group_name; wstate_t newmode;
-   yield();
-   if (!TPP_ISKEYWORD(tok)) return 0;
-   kwd = token.t_kwd;
-   /* Push/Pop warnings */
+   /* push/pop the system #include-path. */
    if (TPPKeyword_EQUALS(kwd,"push")) {
-    if unlikely(!TPPLexer_PushWarnings())
+    if unlikely(!TPPLexer_PushInclude())
        goto seterr;
-    goto yield_after_gcc_warning;
+    goto yield_after_include_path;
    }
    if (TPPKeyword_EQUALS(kwd,"pop")) {
-    if (!TPPLexer_PopWarnings() &&
-        !WARN(W_CANT_POP_WARNINGS))
-         goto err;
+    if unlikely(!TPPLexer_PopInclude() &&
+                !WARN(W_CANT_POP_INCLUDE_PATH))
+       goto err;
+yield_after_include_path:
+    yield();
+    goto next_include_path_arg;
+   }
+  }
+  mode = 1;
+  /**/ if (tok == '+') yield();
+  else if (tok == '-') mode = 0,yield();
+  if unlikely(!TPPLexer_Eval(&path_string)) goto err;
+  if (path_string.c_kind != TPP_CONST_STRING) {
+   WARN(W_EXPECTED_STRING_AFTER_TPP_INCPTH,&path_string);
+  } else {
+   char *path; size_t size = path_string.c_data.c_string->s_size;
+   if (path_string.c_data.c_string->s_refcnt == 1) {
+    path = path_string.c_data.c_string->s_text;
+   } else {
+    path = (char *)API_MALLOC((size+1)*sizeof(char));
+    if unlikely(!path) goto seterr;
+    memcpy(path,path_string.c_data.c_string->s_text,
+          (size+1)*sizeof(char));
+   }
+   error = mode ? TPPLexer_AddIncludePath(path,size)
+                : TPPLexer_DelIncludePath(path,size);
+   if unlikely(mode && !error) goto seterr;
+   if unlikely(error == 2) error = 0;
+   if unlikely(!error) {
+    WARN(mode ? W_INCLUDE_PATH_ALREADY_EXISTS
+                       : W_UNKNOWN_INCLUDE_PATH,
+                  path,size);
+   }
+   if (path != path_string.c_data.c_string->s_text)
+       free(path);
+   TPPString_Decref(path_string.c_data.c_string);
+  }
+next_include_path_arg:
+  if (tok != ',') break;
+  yield();
+ }
+ if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
+ else yield();
+ return 1;
+seterr:
+ TPPLexer_SetErr();
+err:
+ return 0;
+}
+
+PRIVATE int TPPCALL parse_pragma_TPP(void) {
+ /* Explicit namespace for TPP pragma extensions.
+  * Can be used with the following pragmas:
+  * >> #pragma TPP warning(...)
+  * >> #pragma TPP extension(...)
+  * >> #pragma TPP tpp_exec(...)
+  * >> #pragma TPP tpp_set_keyword_flags(...)
+  * >> #pragma TPP include_path(...)
+  */
+ yield();
+ if (!TPP_ISKEYWORD(tok)) goto err;
+ if (tok == KWD_warning)
+     return parse_pragma_warning();
+ if (TPPKeyword_EQUALS(token.t_kwd,"extension"))
+     return parse_pragma_extension();
+ if (TPPKeyword_EQUALS(token.t_kwd,"tpp_exec"))
+     return parse_pragma_tpp_exec();
+ if (TPPKeyword_EQUALS(token.t_kwd,"tpp_set_keyword_flags"))
+     return parse_pragma_tpp_set_keyword_flags();
+ if (TPPKeyword_EQUALS(token.t_kwd,"include_path"))
+     return parse_pragma_TPP_include_path();
+ /* Reserved for future use (don't warn about unknown tpp-pragma). */
+err:
+ return 0;
+}
+
+PRIVATE int TPPCALL parse_pragma_GCC(void) {
+#ifndef TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC
+ char *tok_gcc_begin,*tok_gcc_end;
+ struct TPPFile *tok_gcc_file;
+ unsigned long tok_gcc_toknum;
+#endif
+ struct TPPKeyword *kwd;
+#ifndef TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC
+ tok_gcc_toknum = token.t_num;
+ tok_gcc_file   = token.t_file;
+ tok_gcc_begin  = token.t_begin;
+ tok_gcc_end    = token.t_end;
+#endif
+ yield();
+ if (!TPP_ISKEYWORD(tok))
+      goto process_default_gcc_pragma;
+ kwd = token.t_kwd;
+ if (TPPKeyword_EQUALS(kwd,"diagnostic")) {
+  struct TPPConst group_name; wstate_t newmode;
+  yield();
+  if (!TPP_ISKEYWORD(tok)) return 0;
+  kwd = token.t_kwd;
+  /* Push/Pop warnings */
+  if (TPPKeyword_EQUALS(kwd,"push")) {
+   if unlikely(!TPPLexer_PushWarnings())
+      goto seterr;
+   goto yield_after_gcc_warning;
+  }
+  if (TPPKeyword_EQUALS(kwd,"pop")) {
+   if (!TPPLexer_PopWarnings() &&
+       !WARN(W_CANT_POP_WARNINGS))
+        goto err;
 yield_after_gcc_warning:
-    yield();
-    return 1;
-   }
-   /* Configure the mode for a GCC diagnostic. */
-   /**/ if (tok == KWD_warning) newmode = WSTATE_WARN;
-   else if (tok == KWD_error)   newmode = WSTATE_FATAL;
-   else if (TPPKeyword_EQUALS(kwd,"ignored")) newmode = WSTATE_DISABLED;
-   else return 0;
    yield();
-   if unlikely(!TPPLexer_Eval(&group_name)) goto err;
-   if (group_name.c_kind != TPP_CONST_STRING) {
-    if unlikely(!WARN(W_EXPECTED_STRING_AFTER_GCC_DIAG,&group_name)) goto err;
-   } else {
-    int wset_error;
-    char const *warning_name = group_name.c_data.c_string->s_text;
-    if (*warning_name == '-') ++warning_name;
-    if (*warning_name == 'W') ++warning_name;
-    wset_error = TPPLexer_SetWarnings(warning_name,newmode);
-    if (wset_error == 2) wset_error = WARN(W_INVALID_WARNING,&group_name);
-    TPPString_Decref(group_name.c_data.c_string);
-    if unlikely(!wset_error) goto seterr;
-   }
    return 1;
   }
-  if (TPPKeyword_EQUALS(kwd,"system_header")) {
-   struct TPPFile *textfile;
+  /* Configure the mode for a GCC diagnostic. */
+  /**/ if (tok == KWD_warning) newmode = WSTATE_WARN;
+  else if (tok == KWD_error)   newmode = WSTATE_FATAL;
+  else if (TPPKeyword_EQUALS(kwd,"ignored")) newmode = WSTATE_DISABLED;
+  else return 0;
+  yield();
+  if unlikely(!TPPLexer_Eval(&group_name)) goto err;
+  if (group_name.c_kind != TPP_CONST_STRING) {
+   if unlikely(!WARN(W_EXPECTED_STRING_AFTER_GCC_DIAG,&group_name)) goto err;
+  } else {
+   int wset_error;
+   char const *warning_name = group_name.c_data.c_string->s_text;
+   if (*warning_name == '-') ++warning_name;
+   if (*warning_name == 'W') ++warning_name;
+   wset_error = TPPLexer_SetWarnings(warning_name,newmode);
+   if (wset_error == 2) wset_error = WARN(W_INVALID_WARNING,&group_name);
+   TPPString_Decref(group_name.c_data.c_string);
+   if unlikely(!wset_error) goto seterr;
+  }
+  return 1;
+ }
+ if (TPPKeyword_EQUALS(kwd,"system_header")) {
+  struct TPPFile *textfile;
+  yield();
+  textfile = TPPLexer_Textfile();
+  /* Set the system-header flag in the current file (thus suppressing warnings) */
+  textfile->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_SYSHEADER;
+  return 1;
+ }
+ if (TPPKeyword_EQUALS(kwd,"poison")) {
+  /* `#pragma GCC poison <...>' */
+  pushf();
+  CURRENT.l_flags |= TPPLEXER_FLAG_NO_DEPRECATED;
+  yield();
+  while (TPP_ISKEYWORD(tok)) {
+   if (!TPPKeyword_API_MAKERARE(token.t_kwd)) { breakf(); goto err; }
+   /* Setup all specified keywords as deprecated+poisoned.
+    * Poisoned identifiers differ from regular ones, in that they
+    * will not cause warning to be emit for identifiers located in
+    * macros that were already been defined at the time that the
+    * `#pragma GCC poison' was encountered. This is leads to greatly
+    * improved semantics when compared to the `#pragma deprecated'
+    * as implemented as MSVC (which is also supported by TPP), as
+    * it doesn't affect macros from system headers which may use
+    * the keyword to implement some functionality that's not supposed
+    * to be made deprecated. */
+   token.t_kwd->k_rare->kr_flags |= (TPP_KEYWORDFLAG_IS_DEPRECATED|
+                                     TPP_KEYWORDFLAG_IS_POISONED);
    yield();
-   textfile = TPPLexer_Textfile();
-   /* Set the system-header flag in the current file (thus suppressing warnings) */
-   textfile->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_SYSHEADER;
+  }
+  popf();
+  return 1;
+ }
+ if (TPPKeyword_EQUALS(kwd,"dependency")) {
+  /* `#pragma GCC dependency <file> [<message>]'. */
+  char *include_begin,*include_end; int mode = 0;
+  /*ref*/struct TPPFile *depfile;
+  if unlikely(!parse_include_string(&include_begin,&include_end))
+     return 0;
+  assert(include_end > include_begin);
+  assert(include_begin[0] == '\"' || include_begin[0] == '<');
+  if (include_begin[0] == '\"') {
+   mode |= TPPLEXER_OPENFILE_MODE_RELATIVE; /* #include "foo.h" */
+  } else {
+   mode |= TPPLEXER_OPENFILE_MODE_SYSTEM; /* #include <stdlib.h> */
+  }
+  ++include_begin;
+  assert(include_begin >= token.t_file->f_begin);
+  assert(include_end   <= token.t_file->f_end);
+  /* When the filename originates from something
+   * other than a textfile, we must not modify it. */
+  if (token.t_file->f_kind != TPPFILE_KIND_TEXT)
+      mode |= TPPLEXER_OPENFILE_FLAG_CONSTNAME;
+  depfile = TPPLexer_OpenFile(mode,include_begin,
+                             (size_t)(include_end-include_begin),
+                              NULL);
+  assert(!depfile || !(mode&TPPLEXER_OPENFILE_FLAG_NEXT) ||
+                     !(depfile->f_prev));
+  if (!depfile) {
+   WARN(W_FILE_NOT_FOUND,include_begin,
+       (size_t)(include_end-include_begin));
    return 1;
   }
-  if (TPPKeyword_EQUALS(kwd,"poison")) {
-   /* `#pragma GCC poison <...>' */
-   pushf();
-   CURRENT.l_flags |= TPPLEXER_FLAG_NO_DEPRECATED;
-   yield();
-   while (TPP_ISKEYWORD(tok)) {
-    if (!TPPKeyword_API_MAKERARE(token.t_kwd)) { breakf(); goto err; }
-    /* Setup all specified keywords as deprecated+poisoned.
-     * Poisoned identifiers differ from regular ones, in that they
-     * will not cause warning to be emit for identifiers located in
-     * macros that were already been defined at the time that the
-     * `#pragma GCC poison' was encountered. This is leads to greatly
-     * improved semantics when compared to the `#pragma deprecated'
-     * as implemented as MSVC (which is also supported by TPP), as
-     * it doesn't affect macros from system headers which may use
-     * the keyword to implement some functionality that's not supposed
-     * to be made deprecated. */
-    token.t_kwd->k_rare->kr_flags |= (TPP_KEYWORDFLAG_IS_DEPRECATED|
-                                      TPP_KEYWORDFLAG_IS_POISONED);
-    yield();
-   }
-   popf();
-   return 1;
-  }
-  if (TPPKeyword_EQUALS(kwd,"dependency")) {
-   /* `#pragma GCC dependency <file> [<message>]'. */
-   char *include_begin,*include_end; int mode = 0;
-   /*ref*/struct TPPFile *depfile;
-   if unlikely(!parse_include_string(&include_begin,&include_end))
-      return 0;
-   assert(include_end > include_begin);
-   assert(include_begin[0] == '\"' || include_begin[0] == '<');
-   if (include_begin[0] == '\"') {
-    mode |= TPPLEXER_OPENFILE_MODE_RELATIVE; /* #include "foo.h" */
-   } else {
-    mode |= TPPLEXER_OPENFILE_MODE_SYSTEM; /* #include <stdlib.h> */
-   }
-   ++include_begin;
-   assert(include_begin >= token.t_file->f_begin);
-   assert(include_end   <= token.t_file->f_end);
-   /* When the filename originates from something
-    * other than a textfile, we must not modify it. */
-   if (token.t_file->f_kind != TPPFILE_KIND_TEXT)
-       mode |= TPPLEXER_OPENFILE_FLAG_CONSTNAME;
-   depfile = TPPLexer_OpenFile(mode,include_begin,
-                              (size_t)(include_end-include_begin),
-                               NULL);
-   assert(!depfile || !(mode&TPPLEXER_OPENFILE_FLAG_NEXT) ||
-                      !(depfile->f_prev));
-   if (!depfile) {
-    WARN(W_FILE_NOT_FOUND,include_begin,
-        (size_t)(include_end-include_begin));
-    return 1;
-   }
-   return check_file_dependency(depfile);
-  }
+  return check_file_dependency(depfile);
+ }
 process_default_gcc_pragma:
 #ifdef HAVE_CALLBACK_PARSE_PRAGMA_GCC
-  if (HAVE_CALLBACK_PARSE_PRAGMA_GCC) {
-   /* Call the user-provided GCC pragma hook. */
-   return CALLBACK_PARSE_PRAGMA_GCC();
-  }
+ if (HAVE_CALLBACK_PARSE_PRAGMA_GCC) {
+  /* Call the user-provided GCC pragma hook. */
+  return CALLBACK_PARSE_PRAGMA_GCC();
+ }
 #endif
 #ifndef TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC
-  if (HAVE_CALLBACK_PARSE_PRAGMA) {
-   /* Parse the token following the `GCC' again. */
-   if (token.t_file  == tok_gcc_file &&
-       token.t_num   == tok_gcc_toknum-1 &&
-       tok_gcc_begin >= tok_gcc_file->f_begin &&
-       tok_gcc_end   <= tok_gcc_file->f_end) {
-    /* We can simply rewind to re-emit the `GCC' token. */
-    token.t_begin       = tok_gcc_begin;
-    token.t_end         = tok_gcc_end;
-    tok_gcc_file->f_pos = tok_gcc_end;
-   } else {
-    /* Must insert a fake file to-be parsed before returning. */
-    struct TPPFile *insfile;
-    struct TPPString *insstr = TPPString_New("GCC ",4);
-    if unlikely(!insstr) goto seterr;
-    insfile = TPPFile_NewExplicitInherited(insstr);
-    if unlikely(!insfile) { TPPString_Decref(insstr); goto seterr; }
-    token.t_file->f_pos = token.t_begin; /* Re-parse the next token. */
-    /* Push the new file onto the include-stack. */
-    TPPLexer_PushFileInherited(insfile);
-    /* Do a raw-yield on the `GCC' token in the pushed file. */
-    TPPLexer_YieldRaw();
-   }
+ if (HAVE_CALLBACK_PARSE_PRAGMA) {
+  /* Parse the token following the `GCC' again. */
+  if (token.t_file  == tok_gcc_file &&
+      token.t_num   == tok_gcc_toknum-1 &&
+      tok_gcc_begin >= tok_gcc_file->f_begin &&
+      tok_gcc_end   <= tok_gcc_file->f_end) {
+   /* We can simply rewind to re-emit the `GCC' token. */
+   token.t_begin       = tok_gcc_begin;
+   token.t_end         = tok_gcc_end;
+   tok_gcc_file->f_pos = tok_gcc_end;
+  } else {
+   /* Must insert a fake file to-be parsed before returning. */
+   struct TPPFile *insfile;
+   struct TPPString *insstr = TPPString_New("GCC ",4);
+   if unlikely(!insstr) goto seterr;
+   insfile = TPPFile_NewExplicitInherited(insstr);
+   if unlikely(!insfile) { TPPString_Decref(insstr); goto seterr; }
+   token.t_file->f_pos = token.t_begin; /* Re-parse the next token. */
+   /* Push the new file onto the include-stack. */
+   TPPLexer_PushFileInherited(insfile);
+   /* Do a raw-yield on the `GCC' token in the pushed file. */
+   TPPLexer_YieldRaw();
   }
-#endif
- } break;
-
- default:
-  LOG(LOG_PRAGMA,("Unknown pragma `%.*s'\n",
-                 (int)(token.t_end-token.t_begin),
-                  token.t_begin));
-  break;
  }
+#endif
+err:
  return 0;
-seterr: TPPLexer_SetErr();
-err:    return 0;
+seterr:
+ TPPLexer_SetErr();
+ goto err;
+}
+
+/* Parse the data block of a pragma.
+ * NOTE: `TPPLexer_ParseBuiltinPragma' behaves similar to
+ *       `TPPLexer_ParsePragma', but will not invoke a
+ *       user-provided pragma handler in the even of an
+ *       unknown one.
+ * @return: 0: Unknown/errorous pragma.
+ * @return: 1: Successfully parsed the given pragma. */
+PUBLIC int TPPCALL
+TPPLexer_ParseBuiltinPragma(void) {
+ if (!TPP_ISKEYWORD(tok)) goto err;
+#define IS_KEYWORD(x) TPPKeyword_EQUALS(token.t_kwd,x)
+ if (IS_KEYWORD("once"))
+     return parse_pragma_once();
+ if (tok == KWD_warning)
+     return parse_pragma_warning();
+ if (IS_KEYWORD("extension"))
+     return parse_pragma_extension();
+ if (IS_KEYWORD("TPP"))
+     return parse_pragma_TPP();
+ if (IS_KEYWORD("GCC"))
+     return parse_pragma_GCC();
+ if (IS_KEYWORD("tpp_exec"))
+     return parse_pragma_tpp_exec();
+ if (IS_KEYWORD("push_macro"))
+     return parse_pragma_pushpop_macro(true);
+ if (IS_KEYWORD("pop_macro"))
+     return parse_pragma_pushpop_macro(false);
+ if (IS_KEYWORD("message"))
+     return parse_pragma_message();
+ if (IS_KEYWORD("deprecated"))
+     return parse_pragma_deprecated();
+ if (tok == KWD_error)
+     return parse_pragma_error();
+ if (IS_KEYWORD("region") || IS_KEYWORD("endregion")) {
+  /* God damn! This was one of the hardest pragmas to add support for!
+   * I still don't know how I did it, but I hope the following line manages to explain it. */
+  return 1; /* It's literally only meant to improve highlighting in IDEs! */
+ }
+ if (IS_KEYWORD("tpp_set_keyword_flags"))
+     return parse_pragma_tpp_set_keyword_flags();
+#undef IS_KEYWORD
+err:
+ LOG(LOG_PRAGMA,("Unknown pragma `%.*s'\n",
+                (int)(token.t_end-token.t_begin),
+                 token.t_begin));
+ return 0;
 }
 
 #undef TPPLexer_SetErr
@@ -12189,9 +12310,7 @@ PRIVATE void TPPVCALL tpp_warnf(char const *fmt, ...) {
  va_end(args);
  bufsiz = strlen(buffer);
  fwrite(buffer,sizeof(char),bufsiz,stderr);
-#ifndef __DCC_VERSION__
  OutputDebugStringA(buffer);
-#endif
 }
 #define WARNF      tpp_warnf
 #else

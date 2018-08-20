@@ -756,23 +756,7 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
  case KWD_unassert:
 #endif
  case KWD_pragma:
- case KWD_once:
- case KWD_push_macro:
- case KWD_pop_macro:
- case KWD_region:
- case KWD_endregion:
- case KWD_message:
- case KWD_deprecated:
- case KWD_tpp_exec:
- case KWD_tpp_set_keyword_flags:
- case KWD_push:
- case KWD_pop:
- case KWD_disable:
- case KWD_enable:
- case KWD_suppress:
- case KWD_TPP:
- case KWD_include_path:
- case KWD_GCC:
+#if !TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
 #if !defined(TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA) || TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA
  case KWD_tpp_dollar_is_alpha:
 #endif
@@ -838,6 +822,7 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
  case KWD_tpp_if_cond_expression:
 #endif
  case KWD_tpp_debug:
+#endif /* !TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS */
 
  case KWD_this:
  case KWD_doc:

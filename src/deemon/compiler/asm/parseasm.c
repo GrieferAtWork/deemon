@@ -1563,21 +1563,6 @@ read_mnemonic_name:
  }
 
  switch (name->k_id) {
- case KWD_push:
-do_push_prefix:
-  /* Special case: either the push prefix, or the push instruction itself. */
-  if (TPP_ISKEYWORD(tok)) {
-   mnemonic = asm_mnemonic_lookup(token.t_kwd);
-   if (mnemonic != NULL) {
-    /* It's the push prefix. */
-    name = token.t_kwd;
-    invoc.ai_flags |= INVOKE_FPUSH; /* Set the push-prefix flag. */
-    if unlikely(yield() < 0) goto err;
-    goto got_mnemonic;
-   }
-  }
-  break;
-
  {
   int32_t val;
  case KWD_static:
@@ -1623,6 +1608,25 @@ do_local_prefix:
  }
 
  {
+#if 0
+ case KWD_push:
+#endif
+do_push_prefix:
+  /* Special case: either the push prefix, or the push instruction itself. */
+  if (TPP_ISKEYWORD(tok)) {
+   mnemonic = asm_mnemonic_lookup(token.t_kwd);
+   if (mnemonic != NULL) {
+    /* It's the push prefix. */
+    name = token.t_kwd;
+    invoc.ai_flags |= INVOKE_FPUSH; /* Set the push-prefix flag. */
+    if unlikely(yield() < 0) goto err;
+    goto got_mnemonic;
+   }
+  }
+  break;
+ }
+
+ {
 do_extern_prefix:
   if (invoc.ai_flags&INVOKE_FPREFIX)
       break;
@@ -1650,13 +1654,13 @@ do_stack_prefix:
   (name->k_size == COMPILER_STRLEN(x) && \
    MEMCASEEQ(name->k_name,x,sizeof(x)-sizeof(char)))
  default:
+  if (NAMEISKWD("push"))   goto do_push_prefix;
   if (NAMEISKWD("stack"))  goto do_stack_prefix;
   if (NAMEISKWD("extern")) goto do_extern_prefix;
   /* NOTE: Since we must remain case-insensitive, we must re-check all prefixes. */
   if (NAMEISKWD("static")) goto do_static_prefix;
   if (NAMEISKWD("global")) goto do_global_prefix;
   if (NAMEISKWD("local"))  goto do_local_prefix;
-  if (NAMEISKWD("push"))   goto do_push_prefix;
   if (NAMEISKWD("const")) { invoc.ai_flags |= INVOKE_FPREFIX_RO; goto do_static_prefix; }
   break;
 #undef NAMEISKWD

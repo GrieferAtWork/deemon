@@ -71,9 +71,15 @@
 #define DEF_M_IF(name,expr) KWD(KWD_##name,#name) MACRO(KWD_##name,expr)
 #define DEF_WARNING(name,groups,default,expr) WARNING(name,groups,default) WARNING_MESSAGE(name,expr)
 
+#if TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
+#define HAS_BUILTIN_IF(name,if)   KWD_FLAGS(name,(if) ? TPP_KEYWORDFLAG_HAS_BUILTIN : 0u)
+#define HAS_FEATURE_IF(name,if)   KWD_FLAGS(name,(if) ? TPP_KEYWORDFLAG_HAS_FEATURE : 0u)
+#define HAS_EXTENSION_IF(name,if) KWD_FLAGS(name,(if) ? TPP_KEYWORDFLAG_HAS_EXTENSION : 0u)
+#else
 #define HAS_BUILTIN_IF(name,if)   KWD(KWD_##name,#name) KWD_FLAGS(KWD_##name,(if) ? TPP_KEYWORDFLAG_HAS_BUILTIN : 0u)
 #define HAS_FEATURE_IF(name,if)   KWD(KWD_##name,#name) KWD_FLAGS(KWD_##name,(if) ? TPP_KEYWORDFLAG_HAS_FEATURE : 0u)
 #define HAS_EXTENSION_IF(name,if) KWD(KWD_##name,#name) KWD_FLAGS(KWD_##name,(if) ? TPP_KEYWORDFLAG_HAS_EXTENSION : 0u)
+#endif
 
 #define PREDEFINED_KWDMACRO_IF(name,str,if,value)                 KWD(name,str) MACRO(name,if) BUILTIN_MACRO(name,value)
 #define PREDEFINED_KWDMACRO(name,str,value)                       KWD(name,str) MACRO(name,1) BUILTIN_MACRO(name,value)
@@ -101,39 +107,83 @@
 #define TPP_PP_STR(x)  TPP_PP_STR2(x)
 
 /* Keywords for known preprocessor directives. */
+#ifndef TPP_CONFIG_USERDEFINED_KWD_IF
 DEF_K(if)           /* #if defined(FOO) && FOO == 10. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_IFDEF
 DEF_K(ifdef)        /* #ifdef FOOBAR. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_IFNDEF
 DEF_K(ifndef)       /* #ifndef FOOBAR. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_ELIF
 DEF_K(elif)         /* #elif defined(BAR) && BAR == 20. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_ELSE
 DEF_K(else)         /* #else. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_ENDIF
 DEF_K(endif)        /* #endif. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_DEFINE
 DEF_K(define)       /* #define FOO 42. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_DEFINED
 DEF_K(defined)      /* #if defined(FOO). */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_UNDEF
 DEF_K(undef)        /* #undef FOO. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_INCLUDE
 DEF_K(include)      /* #include "header.h". */
+#endif
 #if !defined(TPP_CONFIG_EXTENSION_INCLUDE_NEXT) || TPP_CONFIG_EXTENSION_INCLUDE_NEXT
+#ifndef TPP_CONFIG_USERDEFINED_KWD_INCLUDE_NEXT
 DEF_K(include_next) /* #include_next <stdlib.h>. */
 #endif
-#if !defined(TPP_CONFIG_EXTENSION_IMPORT) || TPP_CONFIG_EXTENSION_IMPORT
-DEF_K(import)       /* #import "header.h". */
 #endif
+#if !defined(TPP_CONFIG_EXTENSION_IMPORT) || TPP_CONFIG_EXTENSION_IMPORT
+#ifndef TPP_CONFIG_USERDEFINED_KWD_IMPORT
+DEF_K(import)       /* #import "header.h". */
+#endif /* !TPP_CONFIG_USERDEFINED_KWD_IMPORT */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_LINE
 DEF_K(line)         /* #line 42 "foo.h". */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_ERROR
 DEF_K(error)        /* #error C5A9. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_WARNING
 DEF_K(warning)      /* #warning $H17. */
+#endif
 #if !defined(TPP_CONFIG_EXTENSION_IDENT_SCCS) || TPP_CONFIG_EXTENSION_IDENT_SCCS
+#ifndef TPP_CONFIG_USERDEFINED_KWD_IDENT
 DEF_K(ident)        /* #ident "text". */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD_SCCS
 DEF_K(sccs)         /* #sccs "text". */
 #endif
+#endif
 #if !defined(TPP_CONFIG_EXTENSION_ASSERTIONS) || TPP_CONFIG_EXTENSION_ASSERTIONS
+#ifndef TPP_CONFIG_USERDEFINED_KWD_ASSERT
 DEF_K(assert)       /* #assert machine(i386). */
+#endif /* !TPP_CONFIG_USERDEFINED_KWD_ASSERT */
+#ifndef TPP_CONFIG_USERDEFINED_KWD_UNASSERT
 DEF_K(unassert)     /* #unassert machine. */
+#endif
 #endif
 
 /* Various names for #pragma-directives (TPP supports everything) */
+#ifndef TPP_CONFIG_USERDEFINED_KWD_PRAGMA
 DEF_K(pragma)   /* #pragma once. */
+#endif
+#ifndef TPP_CONFIG_USERDEFINED_KWD__PRAGMA
 DEF_M(_Pragma)  /* GCC defines _Pragma as a macro... So I'll just do that as well! */
+#endif
 #if !defined(TPP_CONFIG_EXTENSION_MSVC_PRAGMA) || TPP_CONFIG_EXTENSION_MSVC_PRAGMA
+#ifndef TPP_CONFIG_USERDEFINED_KWD___PRAGMA
 DEF_M(__pragma) /* I promised this would be defined as a macro... */
+#endif
 #endif
 
 /* STD-C predefined macros. */
@@ -202,54 +252,6 @@ KWD(KWD___VA_COMMA__,"__VA_COMMA__")
 #if !defined(TPP_CONFIG_EXTENSION_VA_NARGS) || TPP_CONFIG_EXTENSION_VA_NARGS
 KWD(KWD___VA_NARGS__,"__VA_NARGS__")
 #endif
-
-/* Builtin pragmas. */
-DEF_K(once)
-DEF_K(push_macro)
-DEF_K(pop_macro)
-DEF_K(region)
-DEF_K(endregion)
-DEF_K(message)
-DEF_K(deprecated)
-DEF_K(tpp_exec)
-DEF_K(tpp_set_keyword_flags)
-DEF_K(extension)
-
-/* Argument keywords for #pragma warning. */
-#ifndef TPP_CONFIG_USERDEFINED_KWD_PUSH
-DEF_K(push)
-#endif
-#ifndef TPP_CONFIG_USERDEFINED_KWD_POP
-DEF_K(pop)
-#endif
-DEF_K(disable)
-DEF_K(enable)
-DEF_K(suppress)
-DEF_K(default)
-
-/* Explicit namespace for TPP pragma extensions.
- * Can be used with the following pragmas:
- * >> #pragma TPP warning(...)
- * >> #pragma TPP extension(...)
- * >> #pragma TPP tpp_exec(...)
- * >> #pragma TPP tpp_set_keyword_flags(...)
- * >> #pragma TPP include_path(...)
- */
-DEF_K(TPP)
-
-/* Additional keywords used for pragmas capable of
- * adding/deleting/pushing/popping system #include-paths:
- * >> #include <stdlib.h> // FILE NOT FOUND
- * >> #pragma TPP include_path(push,+ "/usr/include")
- * >> #include <stdlib.h>
- * >> #pragma TPP include_path(pop)
- * >> #include <stdlib.h> // FILE NOT FOUND
- */
-DEF_K(include_path)
-
-/* Additional keywords required to implement some GCC stuff. */
-DEF_K(GCC)
-
 
 /* TPP extension macros. */
 #if !defined(TPP_CONFIG_EXTENSION_TPP_EVAL) || TPP_CONFIG_EXTENSION_TPP_EVAL

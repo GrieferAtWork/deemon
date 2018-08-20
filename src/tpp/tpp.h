@@ -33,6 +33,7 @@
 /* #define TPP_CONFIG_USERSTREAMS */
 /* #define TPP_CONFIG_LOCKED_KEYWORDS 0/1 */
 /* #define TPP_CONFIG_RAW_STRING_LITERALS 0/1 */
+/* #define TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS 0/1 */
 /* #define TPP_CONFIG_NONBLOCKING_IO */
 /* #   define TPP_USERSTREAM_TYPE                               <type> // typedef ... stream_t; */
 /* #   define TPP_USERSTREAM_INVALID                            <expr> // static stream_t const TPP_STREAM_INVALID = ...; */
@@ -148,6 +149,14 @@
 #ifndef TPP_CONFIG_MINGCCFUNC
 #   define TPP_CONFIG_MINGCCFUNC 0
 #endif
+
+/* Don't define dedicated keywords for keyword flags, but compare
+ * keyword names at runtime, thus decreasing memory overhead and
+ * reducing startup time, however slowing down `TPPKeyword_GetFlags()'. */
+#ifndef TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
+#define TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS 1
+#endif
+
 
 #define TPP_PREPROCESSOR_VERSION 200 /* Preprocessor version. */
 #define TPP_API_VERSION          200 /* Api version (Version of this api). */

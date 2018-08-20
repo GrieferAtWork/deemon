@@ -103,6 +103,11 @@ INTDEF struct TPPFile *DCALL tpp_unknown_file(int mode, char *__restrict filenam
 #define TPP_CONFIG_NO_CALLBACK_NEW_TEXTFILE     1
 #define TPP_CONFIG_CALLBACK_UNKNOWN_FILE        tpp_unknown_file /* Statically link our unknown-file callback. */
 #define TPP_CONFIG_CALLBACK_WARNING(...)       (parser_warnf(__VA_ARGS__) == 0)
+#define TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS    1
+#define TPP_CONFIG_USERDEFINED_KWD_DEFAULT      1
+#define TPP_CONFIG_USERDEFINED_KWD_ASSERT       1
+#define TPP_CONFIG_USERDEFINED_KWD_IMPORT       1
+#define TPP_CONFIG_USERDEFINED_KWD_IF           1
 
 /* Configure non-variable TPP options. */
 #if 1

@@ -23,22 +23,23 @@ DEF_K(true)
 DEF_K(false)
 DEF_K(copy)
 DEF_K(deepcopy)
+DEF_K(assert)
+DEF_K(import)
 DEF_K(str)
 DEF_K(repr)
 DEF_K(type)
 DEF_K(function)
 DEF_K(with)
 DEF_K(pack)
+DEF_K(if)
 DEF_K(do)
 DEF_K(while)
 DEF_K(for)
 DEF_K(foreach)
 DEF_K(__nth)
-DEF_K(from) /* Used in import statements, `x from y' and `from y import x' expressions. */
 DEF_K(operator)
 #define KWD_ISUNARY(x) \
-     (((x) >= KWD_none && (x) <= KWD_operator) || \
-       (x) == KWD_if || (x) == KWD_import || (x) == KWD_assert)
+    ((x) >= KWD_none && (x) <= KWD_operator)
 
 DEF_K(final)
 DEF_K(class)
@@ -69,6 +70,7 @@ DEF_K(as)
 DEF_K(bound)
 
 /* Statement keywords. */
+DEF_K(from)
 DEF_K(break) /* WARNING: Next token number be `continue' (keep these together) */
 DEF_K(continue)
 DEF_K(return)
@@ -84,6 +86,7 @@ DEF_K(__asm__)
 DEF_K(goto)
 DEF_K(switch)
 DEF_K(case)
+DEF_K(default)
 /* Reserved for future use (intended for loading compiler extensions):
  * >> import extension C from compiler; // Enable support for C compatibility
  * >> // The C compiler extension makes heavy use of the `ctypes' module.
