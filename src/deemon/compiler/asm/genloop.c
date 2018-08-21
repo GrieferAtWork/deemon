@@ -40,10 +40,10 @@ DECL_BEGIN
  */
 INTERN struct asm_sym *
 (DCALL asm_genloop)(uint16_t loop_flags,
-                    DeeAstObject *elem_or_cond,
-                    DeeAstObject *iter_or_next,
-                    DeeAstObject *block,
-                    DeeAstObject *__restrict ddi_ast) {
+                    struct ast *elem_or_cond,
+                    struct ast *iter_or_next,
+                    struct ast *block,
+                    struct ast *__restrict ddi_ast) {
  struct asm_sym *old_break;
  struct asm_sym *old_continue;
  struct asm_sym *loop_break,*loop_continue;
@@ -68,13 +68,13 @@ INTERN struct asm_sym *
   struct asm_sec *prev_section;
   /* >> foreach()-style loop. */
   /* Start out by evaluating the loop iterator. */
-  ASSERT_OBJECT_TYPE_EXACT(iter_or_next,&DeeAst_Type);
-  if (iter_or_next->ast_type == AST_OPERATOR &&
-      iter_or_next->ast_flag == OPERATOR_ITERSELF &&
-    !(iter_or_next->ast_operator.ast_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS)) &&
-      iter_or_next->ast_operator.ast_opa) {
+  ASSERT_AST(iter_or_next);
+  if (iter_or_next->a_type == AST_OPERATOR &&
+      iter_or_next->a_flag == OPERATOR_ITERSELF &&
+    !(iter_or_next->a_operator.o_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS)) &&
+      iter_or_next->a_operator.o_op0) {
    /* Generate a sequence as an ASP, thus optimizing away unnecessary casts. */
-   if (ast_genasm_asp(iter_or_next->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_asp(iter_or_next->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(iter_or_next)) goto err;
    if (asm_giterself()) goto err;
   } else {

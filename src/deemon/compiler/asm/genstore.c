@@ -35,9 +35,9 @@ DECL_BEGIN
 #define PUSH_RESULT  (gflags & ASM_G_FPUSHRES)
 
 PRIVATE int DCALL
-asm_gpush2_duplast(DeeAstObject *__restrict a,
-                   DeeAstObject *__restrict b,
-                   DeeAstObject *__restrict ddi_ast,
+asm_gpush2_duplast(struct ast *__restrict a,
+                   struct ast *__restrict b,
+                   struct ast *__restrict ddi_ast,
                    unsigned int gflags) {
  if (PUSH_RESULT) {
   if (ast_can_exchange(b,a)) {
@@ -71,10 +71,10 @@ err:
 }
 
 PRIVATE int DCALL
-asm_gpush3_duplast(DeeAstObject *__restrict a,
-                   DeeAstObject *__restrict b,
-                   DeeAstObject *__restrict c,
-                   DeeAstObject *__restrict ddi_ast,
+asm_gpush3_duplast(struct ast *__restrict a,
+                   struct ast *__restrict b,
+                   struct ast *__restrict c,
+                   struct ast *__restrict ddi_ast,
                    unsigned int gflags) {
  if (PUSH_RESULT) {
   if (ast_can_exchange(c,b) && ast_can_exchange(c,a)) {
@@ -112,11 +112,11 @@ err:
 }
 
 PRIVATE int DCALL
-asm_gpush4_duplast(DeeAstObject *__restrict a,
-                   DeeAstObject *__restrict b,
-                   DeeAstObject *__restrict c,
-                   DeeAstObject *__restrict d,
-                   DeeAstObject *__restrict ddi_ast,
+asm_gpush4_duplast(struct ast *__restrict a,
+                   struct ast *__restrict b,
+                   struct ast *__restrict c,
+                   struct ast *__restrict d,
+                   struct ast *__restrict ddi_ast,
                    unsigned int gflags) {
  if (PUSH_RESULT) {
   if (ast_can_exchange(d,c) &&
@@ -164,16 +164,16 @@ get_module_symbol(DeeModuleObject *__restrict module,
                   DeeStringObject *__restrict name);
 
 INTERN int DCALL
-ast_gen_setattr(DeeAstObject *__restrict base,
-                DeeAstObject *__restrict name,
-                DeeAstObject *__restrict value,
-                DeeAstObject *__restrict ddi_ast,
+ast_gen_setattr(struct ast *__restrict base,
+                struct ast *__restrict name,
+                struct ast *__restrict value,
+                struct ast *__restrict ddi_ast,
                 unsigned int gflags) {
- if (name->ast_type == AST_CONSTEXPR &&
-     DeeString_Check(name->ast_constexpr)) {
+ if (name->a_type == AST_CONSTEXPR &&
+     DeeString_Check(name->a_constexpr)) {
   int32_t cid;
-  if (base->ast_type == AST_SYM) {
-   struct symbol *sym = base->ast_sym;
+  if (base->a_type == AST_SYM) {
+   struct symbol *sym = base->a_sym;
 check_base_symbol_class:
    if (!SYMBOL_MUST_REFERENCE(sym)) {
     switch (SYMBOL_TYPE(sym)) {
@@ -184,7 +184,7 @@ check_base_symbol_class:
      goto check_base_symbol_class;
 
     case SYMBOL_TYPE_THIS:
-     cid = asm_newconst(name->ast_constexpr);
+     cid = asm_newconst(name->a_constexpr);
      if unlikely(cid < 0) goto err;
      if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
      if (PUSH_RESULT && (asm_putddi(ddi_ast) || asm_gdup())) goto err;
@@ -194,7 +194,7 @@ check_base_symbol_class:
      struct module_symbol *modsym; int32_t module_id;
     case SYMBOL_TYPE_MODULE: /* module.attr --> pop extern ... */
      modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),
-                               (DeeStringObject *)name->ast_constexpr);
+                               (DeeStringObject *)name->a_constexpr);
      if (!modsym) break;
      module_id = asm_msymid(sym);
      if unlikely(module_id < 0) goto err;
@@ -212,7 +212,7 @@ check_base_symbol_class:
   }
   if unlikely(asm_gpush2_duplast(base,value,ddi_ast,gflags))
      goto err;
-  cid = asm_newconst(name->ast_constexpr);
+  cid = asm_newconst(name->a_constexpr);
   if unlikely(cid < 0) goto err;
   if (asm_gsetattr_const((uint16_t)cid)) goto err;
   goto done;
@@ -227,24 +227,24 @@ err:
 }
 
 INTERN int DCALL
-ast_gen_setitem(DeeAstObject *__restrict sequence,
-                DeeAstObject *__restrict index,
-                DeeAstObject *__restrict value,
-                DeeAstObject *__restrict ddi_ast,
+ast_gen_setitem(struct ast *__restrict sequence,
+                struct ast *__restrict index,
+                struct ast *__restrict value,
+                struct ast *__restrict ddi_ast,
                 unsigned int gflags) {
- if (index->ast_type == AST_CONSTEXPR) {
+ if (index->a_type == AST_CONSTEXPR) {
   int32_t int_index;
   /* Special optimizations for constant indices. */
-  if (DeeInt_Check(index->ast_constexpr) &&
-      DeeInt_TryAsS32(index->ast_constexpr,&int_index) &&
+  if (DeeInt_Check(index->a_constexpr) &&
+      DeeInt_TryAsS32(index->a_constexpr,&int_index) &&
       int_index >= INT16_MIN && int_index <= INT16_MAX) {
    if unlikely(asm_gpush2_duplast(sequence,value,ddi_ast,gflags))
       goto err;
    if (asm_gsetitem_index((int16_t)int_index)) goto err;
    goto done;
   }
-  if (asm_allowconst(index->ast_constexpr)) {
-   int_index = asm_newconst(index->ast_constexpr);
+  if (asm_allowconst(index->a_constexpr)) {
+   int_index = asm_newconst(index->a_constexpr);
    if unlikely(int_index < 0) goto err;
    if unlikely(asm_gpush2_duplast(sequence,value,ddi_ast,gflags))
       goto err;
@@ -262,21 +262,21 @@ err:
 }
 
 INTERN int DCALL
-ast_gen_setrange(DeeAstObject *__restrict sequence,
-                 DeeAstObject *__restrict begin,
-                 DeeAstObject *__restrict end,
-                 DeeAstObject *__restrict value,
-                 DeeAstObject *__restrict ddi_ast,
+ast_gen_setrange(struct ast *__restrict sequence,
+                 struct ast *__restrict begin,
+                 struct ast *__restrict end,
+                 struct ast *__restrict value,
+                 struct ast *__restrict ddi_ast,
                  unsigned int gflags) {
  int32_t index;
  /* Special optimizations for certain ranges. */
- if (begin->ast_type == AST_CONSTEXPR) {
-  DeeObject *begin_index = begin->ast_constexpr;
+ if (begin->a_type == AST_CONSTEXPR) {
+  DeeObject *begin_index = begin->a_constexpr;
   if (DeeNone_Check(begin_index)) {
    /* Optimization: `setrange pop, none, [pop | $<Simm16>], pop' */
-   if (end->ast_type == AST_CONSTEXPR &&
-       DeeInt_Check(end->ast_constexpr) &&
-       DeeInt_TryAsS32(end->ast_constexpr,&index) &&
+   if (end->a_type == AST_CONSTEXPR &&
+       DeeInt_Check(end->a_constexpr) &&
+       DeeInt_TryAsS32(end->a_constexpr,&index) &&
        index >= INT16_MIN && index <= INT16_MAX) {
     /* `setrange pop, none, $<Simm16>, pop' */
     if unlikely(asm_gpush2_duplast(sequence,value,ddi_ast,gflags))
@@ -293,9 +293,9 @@ ast_gen_setrange(DeeAstObject *__restrict sequence,
   if (DeeInt_Check(begin_index) &&
       DeeInt_TryAsS32(begin_index,&index) &&
       index >= INT16_MIN && index <= INT16_MAX) {
-   if (end->ast_type == AST_CONSTEXPR) {
+   if (end->a_type == AST_CONSTEXPR) {
     int32_t index2;
-    DeeObject *end_index = end->ast_constexpr;
+    DeeObject *end_index = end->a_constexpr;
     if (DeeNone_Check(end_index)) {
      /* `setrange pop, $<Simm16>, none, pop' */
      if unlikely(asm_gpush2_duplast(sequence,value,ddi_ast,gflags))
@@ -318,9 +318,9 @@ ast_gen_setrange(DeeAstObject *__restrict sequence,
    if (asm_gsetrange_ip((int16_t)index)) goto err;
    goto done;
   }
- } else if (end->ast_type == AST_CONSTEXPR) {
+ } else if (end->a_type == AST_CONSTEXPR) {
   /* Optimization: `setrange pop, pop, [none | $<Simm16>], pop' */
-  DeeObject *end_index = end->ast_constexpr;
+  DeeObject *end_index = end->a_constexpr;
   int32_t index;
   if (DeeNone_Check(end_index)) {
    /* `setrange pop, pop, none, pop' */
@@ -349,9 +349,9 @@ err:
 }
 
 INTERN int DCALL
-asm_gunpack_expr(DeeAstObject *__restrict src,
+asm_gunpack_expr(struct ast *__restrict src,
                  uint16_t num_targets,
-                 DeeAstObject *__restrict ddi_ast) {
+                 struct ast *__restrict ddi_ast) {
  /* Unwind inner sequence-expand expressions.
   * This optimizes:
   * >> `(x,y,z) = [(10,20,30)...];'
@@ -359,16 +359,16 @@ asm_gunpack_expr(DeeAstObject *__restrict src,
   * >> `(x,y,z) = (10,20,30);'
   */
  for (;;) {
-  DeeAstObject *inner;
-  if (src->ast_type != AST_MULTIPLE) break;
-  if (src->ast_flag == AST_FMULTIPLE_KEEPLAST) break;
-  if (src->ast_multiple.ast_exprc != 1) break;
-  inner = src->ast_multiple.ast_exprv[0];
-  if (inner->ast_type != AST_EXPAND) break;
-  src = inner->ast_expandexpr;
+  struct ast *inner;
+  if (src->a_type != AST_MULTIPLE) break;
+  if (src->a_flag == AST_FMULTIPLE_KEEPLAST) break;
+  if (src->a_multiple.m_astc != 1) break;
+  inner = src->a_multiple.m_astv[0];
+  if (inner->a_type != AST_EXPAND) break;
+  src = inner->a_expand;
  }
- if (src->ast_type == AST_SYM) {
-  struct symbol *sym = src->ast_sym;
+ if (src->a_type == AST_SYM) {
+  struct symbol *sym = src->a_sym;
   SYMBOL_INPLACE_UNWIND_ALIAS(sym);
   if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
      (current_basescope->bs_flags & CODE_FVARARGS) &&
@@ -399,8 +399,8 @@ err:
 INTERN int
 (DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
                         struct symbol *__restrict src_sym,
-                        DeeAstObject *__restrict dst_ast,
-                        DeeAstObject *__restrict src_ast) {
+                        struct ast *__restrict dst_ast,
+                        struct ast *__restrict src_ast) {
  int32_t symid;
  ASSERT(asm_can_prefix_symbol(dst_sym));
 check_src_sym_class:
@@ -524,10 +524,10 @@ err:
 
 INTERN int
 (DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
-                         DeeAstObject *__restrict src,
-                         DeeAstObject *__restrict dst_ast) {
+                         struct ast *__restrict src,
+                         struct ast *__restrict dst_ast) {
  ASSERT(asm_can_prefix_symbol(dst_sym));
- switch (src->ast_type) {
+ switch (src->a_type) {
 
   /* The ASM_FUNCTION* instructions can be used with a prefix to
    * construct + store the function using a single instruction. */
@@ -535,12 +535,12 @@ INTERN int
   return asm_gmov_function(dst_sym,src,dst_ast);
 
  case AST_SYM:
-  return asm_gmov_sym_sym(dst_sym,src->ast_sym,dst_ast,src);
+  return asm_gmov_sym_sym(dst_sym,src->a_sym,dst_ast,src);
 
  {
   DeeObject *constval;
  case AST_CONSTEXPR:
-  constval = src->ast_constexpr;
+  constval = src->a_constexpr;
   if (DeeNone_Check(constval)) {
    /* mov PREFIX, none */
    if (asm_putddi(dst_ast)) goto err;
@@ -578,13 +578,13 @@ err:
 }
 
 INTERN int
-(DCALL asm_gmov_ast_sym)(DeeAstObject *__restrict dst,
+(DCALL asm_gmov_ast_sym)(struct ast *__restrict dst,
                          struct symbol *__restrict src_sym,
-                         DeeAstObject *__restrict src_ast) {
- switch (dst->ast_type) {
+                         struct ast *__restrict src_ast) {
+ switch (dst->a_type) {
  case AST_SYM:
-  if (asm_can_prefix_symbol(dst->ast_sym))
-      return asm_gmov_sym_sym(dst->ast_sym,src_sym,dst,src_ast);
+  if (asm_can_prefix_symbol(dst->a_sym))
+      return asm_gmov_sym_sym(dst->a_sym,src_sym,dst,src_ast);
   break;
  default: break;
  }
@@ -597,23 +597,23 @@ err:
  return -1;
 }
 
-INTDEF int (DCALL asm_gmov_ast_constexpr)(DeeAstObject *__restrict dst,
+INTDEF int (DCALL asm_gmov_ast_constexpr)(struct ast *__restrict dst,
                                           DeeObject *__restrict src,
-                                          DeeAstObject *__restrict src_ast);
+                                          struct ast *__restrict src_ast);
 
 
 INTERN int
-(DCALL asm_gstore)(DeeAstObject *__restrict dst,
-                   DeeAstObject *__restrict src,
-                   DeeAstObject *__restrict ddi_ast,
+(DCALL asm_gstore)(struct ast *__restrict dst,
+                   struct ast *__restrict src,
+                   struct ast *__restrict ddi_ast,
                    unsigned int gflags) {
 again:
- switch (dst->ast_type) {
+ switch (dst->a_type) {
 
  {
   struct symbol *dst_sym;
  case AST_SYM:
-  dst_sym = dst->ast_sym;
+  dst_sym = dst->a_sym;
 
   /* Special instructions that allow a symbol prefix to specify the target. */
   if (!PUSH_RESULT && asm_can_prefix_symbol(dst_sym))
@@ -635,12 +635,12 @@ check_dst_sym_class:
     int32_t sid;
     /* Special case: Unallocated static variable
      * > The first assignment is used as the static initializer */
-    if (src->ast_type == AST_CONSTEXPR &&
-        asm_allowconst(src->ast_constexpr)) {
+    if (src->a_type == AST_CONSTEXPR &&
+        asm_allowconst(src->a_constexpr)) {
      /* The simple case: the initializer itself is a constant expression
       * -> In this case, we can simply encode the initializer as the raw
       *    static value and not have to generate any runtime code! */
-     sid = asm_newstatic(src->ast_constexpr);
+     sid = asm_newstatic(src->a_constexpr);
      if unlikely(sid < 0) goto err;
      dst_sym->s_symid = (uint16_t)sid;
      dst_sym->s_flag |= SYMBOL_FALLOC;
@@ -709,8 +709,8 @@ check_dst_sym_class:
 
   default: break;
   }
-  if (src->ast_type == AST_SYM && !PUSH_RESULT &&
-      asm_can_prefix_symbol_for_read(src->ast_sym)) {
+  if (src->a_type == AST_SYM && !PUSH_RESULT &&
+      asm_can_prefix_symbol_for_read(src->a_sym)) {
    int32_t symid;
 check_dst_sym_class_hybrid:
    if (!SYMBOL_MUST_REFERENCE(dst_sym)) {
@@ -726,7 +726,7 @@ check_dst_sym_class_hybrid:
      symid = asm_gsymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
-     if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
      return asm_gpop_global_p((uint16_t)symid);
 
     case SYMBOL_TYPE_LOCAL:
@@ -734,7 +734,7 @@ check_dst_sym_class_hybrid:
      symid = asm_lsymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
-     if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
      return asm_gpop_local_p((uint16_t)symid);
 
     case SYMBOL_TYPE_STATIC:
@@ -742,7 +742,7 @@ check_dst_sym_class_hybrid:
      symid = asm_ssymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
-     if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
      return asm_gpop_static_p((uint16_t)symid);
 
     case SYMBOL_TYPE_EXTERN:
@@ -752,14 +752,14 @@ check_dst_sym_class_hybrid:
      symid = asm_esymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
-     if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
      return asm_gpop_extern_p((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(dst_sym)->ss_index);
 
     case SYMBOL_TYPE_STACK:
      if (!(dst_sym->s_flag & SYMBOL_FALLOC))
            break;
      if (asm_putddi(ddi_ast)) goto err;
-     if (asm_gprefix_symbol(src->ast_sym,src)) goto err;
+     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
      if (SYMBOL_STACK_OFFSET(dst_sym) == current_assembler.a_stackcur-1) {
       /* mov top, PREFIX */
       return asm_gpop_p();
@@ -782,31 +782,31 @@ check_dst_sym_class_hybrid:
  case AST_CONSTEXPR:
   /* Check for special case: store into a constant
    * expression `none' is the same as `pop' */
-  if (!DeeNone_Check(dst->ast_constexpr))
+  if (!DeeNone_Check(dst->a_constexpr))
        break;
   /* Store-to-none is a no-op (so just assembly the source-expression). */
   return ast_genasm(src,gflags);
 
  case AST_OPERATOR:
-  switch (dst->ast_flag) {
+  switch (dst->a_flag) {
 
   case OPERATOR_GETATTR:
-   if unlikely(!dst->ast_operator.ast_opb) break;
-   return ast_gen_setattr(dst->ast_operator.ast_opa,
-                          dst->ast_operator.ast_opb,
+   if unlikely(!dst->a_operator.o_op1) break;
+   return ast_gen_setattr(dst->a_operator.o_op0,
+                          dst->a_operator.o_op1,
                           src,ddi_ast,gflags);
 
   case OPERATOR_GETITEM:
-   if unlikely(!dst->ast_operator.ast_opb) break;
-   return ast_gen_setitem(dst->ast_operator.ast_opa,
-                          dst->ast_operator.ast_opb,
+   if unlikely(!dst->a_operator.o_op1) break;
+   return ast_gen_setitem(dst->a_operator.o_op0,
+                          dst->a_operator.o_op1,
                           src,ddi_ast,gflags);
 
   case OPERATOR_GETRANGE:
-   if unlikely(!dst->ast_operator.ast_opc) break;
-   return ast_gen_setrange(dst->ast_operator.ast_opa,
-                           dst->ast_operator.ast_opb,
-                           dst->ast_operator.ast_opc,
+   if unlikely(!dst->a_operator.o_op2) break;
+   return ast_gen_setrange(dst->a_operator.o_op0,
+                           dst->a_operator.o_op1,
+                           dst->a_operator.o_op2,
                            src,ddi_ast,gflags);
 
   default: break;
@@ -815,32 +815,32 @@ check_dst_sym_class_hybrid:
 
  case AST_MULTIPLE:
   /* Special handling for unpack expressions (i.e. `(a,b,c) = foo()'). */
-  if (dst->ast_flag == AST_FMULTIPLE_KEEPLAST) {
+  if (dst->a_flag == AST_FMULTIPLE_KEEPLAST) {
    size_t i = 0;
-   if (dst->ast_multiple.ast_exprc == 0)
+   if (dst->a_multiple.m_astc == 0)
        return ast_genasm(src,gflags);
    /* Compile all branches except for the last one normally. */
-   if (dst->ast_multiple.ast_exprc > 1) {
-    ASM_PUSH_SCOPE(dst->ast_scope,err);
-    for (; i < dst->ast_multiple.ast_exprc-1; ++i) {
-     if (ast_genasm(dst->ast_multiple.ast_exprv[i],ASM_G_FNORMAL))
+   if (dst->a_multiple.m_astc > 1) {
+    ASM_PUSH_SCOPE(dst->a_scope,err);
+    for (; i < dst->a_multiple.m_astc-1; ++i) {
+     if (ast_genasm(dst->a_multiple.m_astv[i],ASM_G_FNORMAL))
          goto err;
     }
     ASM_POP_SCOPE(0,err);
    }
    /* The last branch is the one we're going to write to. */
-   dst = dst->ast_multiple.ast_exprv[i];
+   dst = dst->a_multiple.m_astv[i];
    goto again;
   }
   /* Optimization for special case: (a,b,c) = (d,e,f); */
-  if (src->ast_type == AST_MULTIPLE &&
-      src->ast_flag != AST_FMULTIPLE_KEEPLAST &&
-      src->ast_multiple.ast_exprc == dst->ast_multiple.ast_exprc &&
+  if (src->a_type == AST_MULTIPLE &&
+      src->a_flag != AST_FMULTIPLE_KEEPLAST &&
+      src->a_multiple.m_astc == dst->a_multiple.m_astc &&
      !ast_multiple_hasexpand(src) && !PUSH_RESULT) {
    size_t i;
-   for (i = 0; i < src->ast_multiple.ast_exprc; ++i) {
-    if (asm_gstore(dst->ast_multiple.ast_exprv[i],
-                   src->ast_multiple.ast_exprv[i],
+   for (i = 0; i < src->a_multiple.m_astc; ++i) {
+    if (asm_gstore(dst->a_multiple.m_astv[i],
+                   src->a_multiple.m_astv[i],
                    ddi_ast,gflags))
         goto err;
    }
@@ -880,7 +880,7 @@ err:
 #undef PUSH_RESULT
 
 INTERN int DCALL
-asm_gpop_expr_multiple(size_t astc, DeeAstObject **__restrict astv) {
+asm_gpop_expr_multiple(size_t astc, struct ast **__restrict astv) {
  size_t i,j;
  /* Optimization: Trailing asts with no side-effects can be handled in reverse order */
  while (astc && !ast_has_sideeffects(astv[astc-1])) {
@@ -905,55 +905,55 @@ err:
 }
 
 INTERN int DCALL
-asm_gpop_expr(DeeAstObject *__restrict ast) {
- switch (ast->ast_type) {
+asm_gpop_expr(struct ast *__restrict ast) {
+ switch (ast->a_type) {
 
  case AST_SYM:
   if (asm_putddi(ast)) goto err;
-  return asm_gpop_symbol(ast->ast_sym,ast);
+  return asm_gpop_symbol(ast->a_sym,ast);
 
  case AST_MULTIPLE:
-  if (ast->ast_flag == AST_FMULTIPLE_KEEPLAST) {
+  if (ast->a_flag == AST_FMULTIPLE_KEEPLAST) {
    size_t i = 0;
    /* Special case: Store to KEEP-last multiple AST:
     *               Evaluate all branches but the last without using them.
     *               Then simply write the value to the last expression.
     */
-   if (ast->ast_multiple.ast_exprc == 0)
+   if (ast->a_multiple.m_astc == 0)
        return asm_gpop();
-   if (ast->ast_multiple.ast_exprc > 1)  {
-    ASM_PUSH_SCOPE(ast->ast_scope,err);
-    for (; i != ast->ast_multiple.ast_exprc-1; ++i) {
-     if (ast_genasm(ast->ast_multiple.ast_exprv[i],ASM_G_FNORMAL))
+   if (ast->a_multiple.m_astc > 1)  {
+    ASM_PUSH_SCOPE(ast->a_scope,err);
+    for (; i != ast->a_multiple.m_astc-1; ++i) {
+     if (ast_genasm(ast->a_multiple.m_astv[i],ASM_G_FNORMAL))
          goto err;
     }
     ASM_POP_SCOPE(0,err);
    }
-   ASSERT(i == ast->ast_multiple.ast_exprc-1);
-   return asm_gpop_expr(ast->ast_multiple.ast_exprv[i]);
+   ASSERT(i == ast->a_multiple.m_astc-1);
+   return asm_gpop_expr(ast->a_multiple.m_astv[i]);
   }
   if (asm_putddi(ast)) goto err;
-  if (asm_gunpack((uint16_t)ast->ast_multiple.ast_exprc)) goto err;
-  if (asm_gpop_expr_multiple(ast->ast_multiple.ast_exprc,
-                             ast->ast_multiple.ast_exprv))
+  if (asm_gunpack((uint16_t)ast->a_multiple.m_astc)) goto err;
+  if (asm_gpop_expr_multiple(ast->a_multiple.m_astc,
+                             ast->a_multiple.m_astv))
       goto err;
   break;
 
  case AST_OPERATOR:
-  switch (ast->ast_flag) {
+  switch (ast->a_flag) {
   {
-   DeeAstObject *attr;
+   struct ast *attr;
   case OPERATOR_GETATTR:
-   if unlikely((attr = ast->ast_operator.ast_opb) == NULL) break;
-   if (attr->ast_type == AST_CONSTEXPR &&
-       DeeString_Check(attr->ast_constexpr)) {
-    int32_t cid = asm_newconst(attr->ast_constexpr);
-    DeeAstObject *base = ast->ast_operator.ast_opa;
+   if unlikely((attr = ast->a_operator.o_op1) == NULL) break;
+   if (attr->a_type == AST_CONSTEXPR &&
+       DeeString_Check(attr->a_constexpr)) {
+    int32_t cid = asm_newconst(attr->a_constexpr);
+    struct ast *base = ast->a_operator.o_op0;
     if unlikely(cid < 0) goto err;
-    if (base->ast_type == AST_SYM) {
-     SYMBOL_INPLACE_UNWIND_ALIAS(base->ast_sym);
-     if (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_THIS &&
-        !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)) {
+    if (base->a_type == AST_SYM) {
+     SYMBOL_INPLACE_UNWIND_ALIAS(base->a_sym);
+     if (SYMBOL_TYPE(base->a_sym) == SYMBOL_TYPE_THIS &&
+        !SYMBOL_MUST_REFERENCE_TYPEMAY(base->a_sym)) {
       if (asm_putddi(ast)) goto err;
       if (asm_gsetattr_this_const((uint16_t)cid)) goto err;
       goto done;
@@ -965,8 +965,8 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
     if (asm_gsetattr_const((uint16_t)cid)) goto err;
     goto done;
    }
-   if (ast_genasm(ast->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(ast->ast_operator.ast_opb,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm(ast->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ast)) goto err;
    if (asm_glrot(3)) goto err;
    if (asm_gsetattr()) goto err;
@@ -975,23 +975,23 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
 
 
   {
-   DeeAstObject *index;
+   struct ast *index;
   case OPERATOR_GETITEM:
-   if unlikely((index = ast->ast_operator.ast_opb) == NULL) break;
-   if (ast_genasm(ast->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
-   if (index->ast_type == AST_CONSTEXPR) {
+   if unlikely((index = ast->a_operator.o_op1) == NULL) break;
+   if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if (index->a_type == AST_CONSTEXPR) {
     int32_t int_index;
     /* Special optimizations for constant indices. */
-    if (DeeInt_Check(index->ast_constexpr) &&
-        DeeInt_TryAsS32(index->ast_constexpr,&int_index) &&
+    if (DeeInt_Check(index->a_constexpr) &&
+        DeeInt_TryAsS32(index->a_constexpr,&int_index) &&
         int_index >= INT16_MIN && int_index <= INT16_MAX) {
      if (asm_putddi(ast)) goto err;
      if (asm_gswap()) goto err;
      if (asm_gsetitem_index((int16_t)int_index)) goto err;
      goto done;
     }
-    if (asm_allowconst(index->ast_constexpr)) {
-     int_index = asm_newconst(index->ast_constexpr);
+    if (asm_allowconst(index->a_constexpr)) {
+     int_index = asm_newconst(index->a_constexpr);
      if unlikely(int_index < 0) goto err;
      if (asm_putddi(ast)) goto err;
      if (asm_gswap()) goto err;
@@ -1007,21 +1007,21 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
   }
 
   {
-   DeeAstObject *begin,*end;
+   struct ast *begin,*end;
    int32_t index;
   case OPERATOR_GETRANGE:
-   if unlikely(!ast->ast_operator.ast_opc) break;
-   if (ast_genasm(ast->ast_operator.ast_opa,ASM_G_FPUSHRES)) goto err;
-   begin = ast->ast_operator.ast_opb;
-   end   = ast->ast_operator.ast_opc;
+   if unlikely(!ast->a_operator.o_op2) break;
+   if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   begin = ast->a_operator.o_op1;
+   end   = ast->a_operator.o_op2;
    /* Special optimizations for certain ranges. */
-   if (begin->ast_type == AST_CONSTEXPR) {
-    DeeObject *begin_index = begin->ast_constexpr;
+   if (begin->a_type == AST_CONSTEXPR) {
+    DeeObject *begin_index = begin->a_constexpr;
     if (DeeNone_Check(begin_index)) {
      /* Optimization: `setrange pop, none, [pop | $<Simm16>], pop' */
-     if (end->ast_type == AST_CONSTEXPR &&
-         DeeInt_Check(end->ast_constexpr) &&
-         DeeInt_TryAsS32(end->ast_constexpr,&index) &&
+     if (end->a_type == AST_CONSTEXPR &&
+         DeeInt_Check(end->a_constexpr) &&
+         DeeInt_TryAsS32(end->a_constexpr,&index) &&
          index >= INT16_MIN && index <= INT16_MAX) {
       /* `setrange pop, none, $<Simm16>, pop' */
       if (asm_putddi(ast)) goto err;
@@ -1039,9 +1039,9 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
     if (DeeInt_Check(begin_index) &&
         DeeInt_TryAsS32(begin_index,&index) &&
         index >= INT16_MIN && index <= INT16_MAX) {
-     if (end->ast_type == AST_CONSTEXPR) {
+     if (end->a_type == AST_CONSTEXPR) {
       int32_t index2;
-      DeeObject *end_index = end->ast_constexpr;
+      DeeObject *end_index = end->a_constexpr;
       if (DeeNone_Check(end_index)) {
        /* `setrange pop, $<Simm16>, none, pop' */
        if (asm_putddi(ast)) goto err;
@@ -1065,9 +1065,9 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
      if (asm_gsetrange_ip((int16_t)index)) goto err; /* STACK: - */
      goto done;
     }
-   } else if (end->ast_type == AST_CONSTEXPR) {
+   } else if (end->a_type == AST_CONSTEXPR) {
     /* Optimization: `setrange pop, pop, [none | $<Simm16>], pop' */
-    DeeObject *end_index = end->ast_constexpr;
+    DeeObject *end_index = end->a_constexpr;
     int32_t index;
     if (DeeNone_Check(end_index)) {
      /* `setrange pop, pop, none, pop' */
@@ -1104,7 +1104,7 @@ asm_gpop_expr(DeeAstObject *__restrict ast) {
  case AST_CONSTEXPR:
   /* Check for special case: store into a constant
    * expression `none' is the same as `pop' */
-  if (!DeeNone_Check(ast->ast_constexpr))
+  if (!DeeNone_Check(ast->a_constexpr))
        goto default_case;
   if (asm_gpop()) goto err;
   break;

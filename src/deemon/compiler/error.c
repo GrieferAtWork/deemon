@@ -678,17 +678,17 @@ INTERN ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...) {
  return result;
 }
 
-INTERN ATTR_COLD int (parser_warnastf)(struct ast_object *__restrict loc_ast, int wnum, ...) {
+INTERN ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...) {
  va_list args; int result;
  va_start(args,wnum);
- result = handle_compiler_warning(&loc_ast->ast_ddi,false,wnum,args);
+ result = handle_compiler_warning(&loc_ast->a_ddi,false,wnum,args);
  va_end(args);
  return result;
 }
-INTERN ATTR_COLD int (parser_errastf)(struct ast_object *__restrict loc_ast, int wnum, ...) {
+INTERN ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...) {
  va_list args; int result;
  va_start(args,wnum);
- result = handle_compiler_warning(&loc_ast->ast_ddi,true,wnum,args);
+ result = handle_compiler_warning(&loc_ast->a_ddi,true,wnum,args);
  va_end(args);
  ASSERT(result != 0);
  return result;

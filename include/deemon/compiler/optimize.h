@@ -138,7 +138,7 @@ ast_assumes_getsymval(struct ast_assumes *__restrict self,
  * @return:  0: OK.
  * @return: -1: An error occurred. */
 INTDEF int (DCALL ast_assumes_gather)(struct ast_assumes *__restrict self,
-                                      DeeAstObject *__restrict ast,
+                                      struct ast *__restrict ast,
                                       bool result_used);
 
 
@@ -219,7 +219,7 @@ INTDEF int (DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
 
 struct ast_optimize_stack {
     struct ast_optimize_stack *os_prev;   /* [0..1] The ast from which the optimization originates. */
-    DeeAstObject              *os_ast;    /* [1..1] The ast being optimized. */
+    struct ast              *os_ast;    /* [1..1] The ast being optimized. */
 #ifdef OPTIMIZE_FASSUME
     struct ast_assumes        *os_assume; /* [1..1] Valid assumptions within the current branch. */
 #endif /* OPTIMIZE_FASSUME */
@@ -238,21 +238,21 @@ struct ast_optimize_stack {
  *       calling this function, and don't call it when it is set.
  * @return:  0: The branch was potentially optimized.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent, DeeAstObject *__restrict self, bool result_used);
-INTDEF int (DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
-INTDEF int (DCALL ast_startoptimize)(DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent, struct ast *__restrict self, bool result_used);
+INTDEF int (DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF int (DCALL ast_startoptimize)(struct ast *__restrict self, bool result_used);
 
 /* Ast optimization sub-functions.
  * @param: self:        == stack->os_ast
  * @param: result_used: == stack->os_used */
-INTDEF int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_action)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_multiple)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_loop)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack, DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_action)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_multiple)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_loop)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
 
 INTDEF uint16_t optimizer_flags;        /* Set of `OPTIMIZE_F*' */
 INTDEF uint16_t optimizer_unwind_limit; /* The max amount of times that a loop may be unwound. */
@@ -260,11 +260,11 @@ INTDEF unsigned int optimizer_count;    /* Incremented each time `ast_optimize' 
 
 /* Similar to `ast_optimize()', but keeps on doing it's thing while `optimizer_count' changes.
  * NOTE: When the `OPTIMIZE_FONEPASS' flag is set, this function behaves identical to `ast_optimize()' */
-INTDEF int (DCALL ast_optimize_all)(DeeAstObject *__restrict self, bool result_used);
+INTDEF int (DCALL ast_optimize_all)(struct ast *__restrict self, bool result_used);
 
 /* Check if `a' and `b' are semantically speaking the same AST.
  * When the `OPTIMIZE_FNOCOMPARE' flag is set, this always returns `false' */
-INTDEF bool DCALL ast_equal(DeeAstObject *__restrict a, DeeAstObject *__restrict b);
+INTDEF bool DCALL ast_equal(struct ast *__restrict a, struct ast *__restrict b);
 
 /* Check if the 2 given ASTs can be exchanged in such a way that
  * the second is executed prior to the first within assembly.
@@ -272,39 +272,39 @@ INTDEF bool DCALL ast_equal(DeeAstObject *__restrict a, DeeAstObject *__restrict
  * on the latter, nor does it invoke any side-effects that could
  * have any influence on the other.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `false'. */
-INTDEF bool DCALL ast_can_exchange(DeeAstObject *__restrict first,
-                                   DeeAstObject *__restrict second);
+INTDEF bool DCALL ast_can_exchange(struct ast *__restrict first,
+                                   struct ast *__restrict second);
 
 /* Check if the given ast `self' makes use of `sym' in any way.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `true'. */
-INTDEF bool DCALL ast_uses_symbol(DeeAstObject *__restrict self,
+INTDEF bool DCALL ast_uses_symbol(struct ast *__restrict self,
                                   struct symbol *__restrict sym);
 
 /* Do a shallow assignment of `other' onto `self' */
-INTDEF int (DCALL ast_assign)(DeeAstObject *__restrict self,
-                              DeeAstObject *__restrict other);
+INTDEF int (DCALL ast_assign)(struct ast *__restrict self,
+                              struct ast *__restrict other);
 
 /* Graft `other' onto `self', assigning it if both branches have the same scope,
  * or converting `self' into a single-expression multiple-ast containing `other.' */
-INTDEF int (DCALL ast_graft_onto)(DeeAstObject *__restrict self,
-                                  DeeAstObject *__restrict other);
+INTDEF int (DCALL ast_graft_onto)(struct ast *__restrict self,
+                                  struct ast *__restrict other);
 
 /* Finalize the contents of `self', but don't destroy the object itself. */
-INTDEF void DCALL ast_fini_contents(DeeAstObject *__restrict self);
+INTDEF void DCALL ast_fini_contents(struct ast *__restrict self);
 
 /* Copy scope and DDI information from `src' and assign them to `ast'.
  * When `ast' is NULL, don't do anything.
  * @return: * : Always re-returns `ast' */
-INTDEF DeeAstObject *DCALL ast_setscope_and_ddi(DeeAstObject *ast,
-                                                DeeAstObject *__restrict src);
+INTDEF struct ast *DCALL ast_setscope_and_ddi(struct ast *ast,
+                                                struct ast *__restrict src);
 
 /* Internal optimization helpers... */
-INTDEF bool DCALL ast_has_sideeffects(DeeAstObject *__restrict self);
-INTDEF bool DCALL ast_is_nothrow(DeeAstObject *__restrict self, bool result_used);
+INTDEF bool DCALL ast_has_sideeffects(struct ast *__restrict self);
+INTDEF bool DCALL ast_is_nothrow(struct ast *__restrict self, bool result_used);
 
 /* Check if a given ast `self' is, or contains a `goto' branch,
  * or a `break' / `continue' branch when `consider_loopctl' is set. */
-INTDEF bool DCALL ast_contains_goto(DeeAstObject *__restrict self, uint16_t consider_loopctl);
+INTDEF bool DCALL ast_contains_goto(struct ast *__restrict self, uint16_t consider_loopctl);
 #define AST_CONTAINS_GOTO_CONSIDER_NONE     0x00
 #define AST_CONTAINS_GOTO_CONSIDER_CONTINUE 0x01
 #define AST_CONTAINS_GOTO_CONSIDER_BREAK    0x02
@@ -317,21 +317,21 @@ INTDEF bool DCALL ast_contains_goto(DeeAstObject *__restrict self, uint16_t cons
  * @return  1: doesn't return
  * @return -1: always reachable / unpredictable
  * @return -2: always reachable / unpredictable & doesn't return */
-INTDEF int (DCALL ast_doesnt_return)(DeeAstObject *__restrict self, unsigned int flags);
+INTDEF int (DCALL ast_doesnt_return)(struct ast *__restrict self, unsigned int flags);
 #define AST_DOESNT_RETURN_FNORMAL     0x0000 /*  */
 #define AST_DOESNT_RETURN_FINLOOP     0x0001
 #define AST_DOESNT_RETURN_FINCATCH    0x0002
 #define AST_DOESNT_RETURN_FINCATCHALL 0x0004
 
 /* 0: false, > 0: true, < 0: unpredictable. */
-INTDEF int (DCALL ast_get_boolean)(DeeAstObject *__restrict self);
+INTDEF int (DCALL ast_get_boolean)(struct ast *__restrict self);
 
 /* Same as `ast_get_boolean()', but return `-1' if the ast has side-effects. */
-INTDEF int (DCALL ast_get_boolean_noeffect)(DeeAstObject *__restrict self);
+INTDEF int (DCALL ast_get_boolean_noeffect)(struct ast *__restrict self);
 
 /* Predict the typing of a given AST, or return NULL when unpredictable.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'. */
-INTDEF DeeTypeObject *DCALL ast_predict_type(DeeAstObject *__restrict self);
+INTDEF DeeTypeObject *DCALL ast_predict_type(struct ast *__restrict self);
 
 
 
@@ -374,7 +374,7 @@ INTDEF bool DCALL has_cast_constructor(DeeObject *__restrict type);
 #define CONFIG_HAVE_OPTIMIZE_VERBOSE 1
 #define OPTIMIZE_VERBOSE(...)       ast_optimize_verbose(self,__VA_ARGS__)
 #define OPTIMIZE_VERBOSEAT(ast,...) ast_optimize_verbose(ast,__VA_ARGS__)
-INTDEF void ast_optimize_verbose(DeeAstObject *__restrict self, char const *format, ...);
+INTDEF void ast_optimize_verbose(struct ast *__restrict self, char const *format, ...);
 #else
 #define OPTIMIZE_VERBOSE(...)       (void)0
 #define OPTIMIZE_VERBOSEAT(ast,...) (void)0

@@ -1159,11 +1159,11 @@ lookup_label(struct TPPKeyword *__restrict name) {
  return result;
 }
 INTERN struct text_label *DCALL
-new_case_label(DeeAstObject *__restrict expr) {
+new_case_label(struct ast *__restrict expr) {
  struct text_label *result;
  ASSERTF(current_basescope->bs_cflags&BASESCOPE_FSWITCH,
          "Not inside a switch statement");
- ASSERT_OBJECT_TYPE(expr,&DeeAst_Type);
+ ASSERT_AST(expr);
  result = lbl_alloc();
  if unlikely(!result) goto done;
  /* Initialize the new label. */

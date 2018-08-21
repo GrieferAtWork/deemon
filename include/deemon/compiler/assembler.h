@@ -782,9 +782,9 @@ INTDEF struct assembler current_assembler;
  *       that it is meant to be describing, and will continue
  *       to describe code until the next checkpoint. */
 #ifdef NDEBUG
-INTDEF int DCALL asm_putddi(DeeAstObject *__restrict ast);
+INTDEF int DCALL asm_putddi(struct ast *__restrict ast);
 #else
-INTDEF int DCALL asm_putddi_dbg(DeeAstObject *__restrict ast, char const *file, int line);
+INTDEF int DCALL asm_putddi_dbg(struct ast *__restrict ast, char const *file, int line);
 #define asm_putddi(ast)      asm_putddi_dbg(ast,__FILE__,__LINE__)
 #endif
 
@@ -1011,9 +1011,9 @@ INTDEF int32_t DCALL asm_msymid(struct symbol *__restrict sym);  /* `SYMBOL_TYPE
 INTDEF int32_t DCALL asm_rsymid(struct symbol *__restrict sym);  /* Reference a symbol for a lower base-scope. */
 
 /* These versions emit read-before-write warnings if the symbol hadn't been allocated, yet. */
-INTDEF int32_t DCALL asm_gsymid_for_read(struct symbol *__restrict sym, DeeAstObject *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
-INTDEF int32_t DCALL asm_lsymid_for_read(struct symbol *__restrict sym, DeeAstObject *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
-INTDEF int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, DeeAstObject *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
+INTDEF int32_t DCALL asm_gsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
+INTDEF int32_t DCALL asm_lsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
+INTDEF int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
 
 
 #ifndef UINT8_MAX
@@ -1053,9 +1053,9 @@ INTDEF int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, DeeAstOb
  * The caller is required to ensure that the given `target' is defined at some point.
  * @param: instr: One of `ASM_JMP', `ASM_JT', `ASM_JF' or `ASM_FOREACH' */
 INTDEF int DCALL asm_gjmp(instruction_t instr, struct asm_sym *__restrict target);
-INTDEF int DCALL asm_gjcc(DeeAstObject *__restrict cond, instruction_t instr,
+INTDEF int DCALL asm_gjcc(struct ast *__restrict cond, instruction_t instr,
                           struct asm_sym *__restrict target,
-                           DeeAstObject *__restrict ddi_ast);
+                           struct ast *__restrict ddi_ast);
 /* Similar to `asm_gjmp(ASM_JMP)', but generate code to adjust adjust the stack beforehand, as well
  * as code to adjust for potential exception handlers, also creating a `R_DMN_DELHAND' relocation. */
 INTDEF int DCALL asm_gjmps(struct asm_sym *__restrict target);
@@ -1399,7 +1399,7 @@ INTDEF int DCALL asm_grrot(uint16_t num_slots);
 INTDEF int DCALL asm_gpush_varg(uint16_t argid);
 /* Store the value of the virtual argument `argid' in `dst' */
 INTDEF int DCALL asm_gmov_varg(struct symbol *__restrict dst, uint16_t argid,
-                               DeeAstObject *__restrict warn_ast,
+                               struct ast *__restrict warn_ast,
                                bool ignore_unbound);
 INTERN int DCALL asm_gcmp_eq_varargs_sz(uint16_t sz);
 INTERN int DCALL asm_gcmp_gr_varargs_sz(uint16_t sz);
@@ -1415,18 +1415,18 @@ INTDEF int DCALL asm_gpush_s32(int32_t value);
  * NOTE: Unlike functions above, there are
  *       allowed to write multiple instructions. */
 INTDEF int DCALL asm_gpush_constexpr(DeeObject *__restrict value);
-INTDEF int DCALL asm_gpush_symbol(struct symbol *__restrict sym, DeeAstObject *__restrict warn_ast);
-INTDEF int DCALL asm_gprefix_symbol(struct symbol *__restrict sym, DeeAstObject *__restrict warn_ast);
+INTDEF int DCALL asm_gpush_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF int DCALL asm_gprefix_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF bool DCALL asm_can_prefix_symbol(struct symbol *__restrict sym);
 INTDEF bool DCALL asm_can_prefix_symbol_for_read(struct symbol *__restrict sym);
-INTDEF int DCALL asm_gpush_bnd_symbol(struct symbol *__restrict sym, DeeAstObject *__restrict warn_ast);
-INTDEF int DCALL asm_gdel_symbol(struct symbol *__restrict sym, DeeAstObject *__restrict warn_ast);
-INTDEF int DCALL asm_gpop_symbol(struct symbol *__restrict sym, DeeAstObject *__restrict warn_ast);
+INTDEF int DCALL asm_gpush_bnd_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF int DCALL asm_gdel_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF int DCALL asm_gpop_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 
 /* Generate code to pop the stack-top value into the given AST. */
-INTDEF int DCALL asm_gpop_expr(DeeAstObject *__restrict ast);
+INTDEF int DCALL asm_gpop_expr(struct ast *__restrict ast);
 /* Same as `asm_gpop_expr()', but pop `astc' values, one in each AST. */
-INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, DeeAstObject **__restrict astv);
+INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, struct ast **__restrict astv);
 
 /* Generate code before and after the source expression in when
  * trying to store an expression in a given destination `ast'
@@ -1438,8 +1438,8 @@ INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, DeeAstObject **__restrict a
  * -> ast_genasm(src,ASM_G_FPUSHRES);  // push c;
  * -> asm_gpop_expr_leave(dst,diff);   // setrange pop, pop, pop;
  */
-INTDEF int DCALL asm_gpop_expr_enter(DeeAstObject *__restrict ast);
-INTDEF int DCALL asm_gpop_expr_leave(DeeAstObject *__restrict ast, unsigned int gflags);
+INTDEF int DCALL asm_gpop_expr_enter(struct ast *__restrict ast);
+INTDEF int DCALL asm_gpop_expr_leave(struct ast *__restrict ast, unsigned int gflags);
 
 
 INTDEF int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
@@ -1472,78 +1472,78 @@ do{ struct ast_loc *_old_loc = current_assembler.a_error; \
 
 
 /* Generate a store expression `dst = src' */
-INTDEF int DCALL asm_gstore(DeeAstObject *__restrict dst,
-                            DeeAstObject *__restrict src,
-                            DeeAstObject *__restrict ddi_ast,
+INTDEF int DCALL asm_gstore(struct ast *__restrict dst,
+                            struct ast *__restrict src,
+                            struct ast *__restrict ddi_ast,
                             unsigned int gflags);
 
 /* Store the given constant expression into `dst'. */
 INTDEF int DCALL
-asm_gstore_constexpr(DeeAstObject *__restrict dst, DeeObject *__restrict src,
-                     DeeAstObject *__restrict ddi_ast,
-                     DeeAstObject *__restrict src_ddi_ast,
+asm_gstore_constexpr(struct ast *__restrict dst, DeeObject *__restrict src,
+                     struct ast *__restrict ddi_ast,
+                     struct ast *__restrict src_ddi_ast,
                      unsigned int gflags);
 
 /* Unpack the given expression into `num_targets' stack slots. */
-INTDEF int DCALL asm_gunpack_expr(DeeAstObject *__restrict src,
+INTDEF int DCALL asm_gunpack_expr(struct ast *__restrict src,
                                   uint16_t num_targets,
-                                  DeeAstObject *__restrict ddi_ast);
+                                  struct ast *__restrict ddi_ast);
 
 /* Generate attribute-, item- and range-store operations. */
 INTDEF int DCALL
-ast_gen_setattr(DeeAstObject *__restrict base,
-                DeeAstObject *__restrict name,
-                DeeAstObject *__restrict value,
-                DeeAstObject *__restrict ddi_ast,
+ast_gen_setattr(struct ast *__restrict base,
+                struct ast *__restrict name,
+                struct ast *__restrict value,
+                struct ast *__restrict ddi_ast,
                 unsigned int gflags);
 INTDEF int DCALL
-ast_gen_setitem(DeeAstObject *__restrict sequence,
-                DeeAstObject *__restrict index,
-                DeeAstObject *__restrict value,
-                DeeAstObject *__restrict ddi_ast,
+ast_gen_setitem(struct ast *__restrict sequence,
+                struct ast *__restrict index,
+                struct ast *__restrict value,
+                struct ast *__restrict ddi_ast,
                 unsigned int gflags);
 INTDEF int DCALL
-ast_gen_setrange(DeeAstObject *__restrict sequence,
-                 DeeAstObject *__restrict begin,
-                 DeeAstObject *__restrict end,
-                 DeeAstObject *__restrict value,
-                 DeeAstObject *__restrict ddi_ast,
+ast_gen_setrange(struct ast *__restrict sequence,
+                 struct ast *__restrict begin,
+                 struct ast *__restrict end,
+                 struct ast *__restrict value,
+                 struct ast *__restrict ddi_ast,
                  unsigned int gflags);
 INTDEF int DCALL
-ast_gen_operator_func(DeeAstObject *binding,
-                      DeeAstObject *ddi_ast,
+ast_gen_operator_func(struct ast *binding,
+                      struct ast *ddi_ast,
                       uint16_t operator_name);
 
 
 INTDEF int DCALL
 ast_gen_symbol_inplace(struct symbol *__restrict sym,
-                       DeeAstObject *operand,
-                       DeeAstObject *__restrict ddi_ast,
+                       struct ast *operand,
+                       struct ast *__restrict ddi_ast,
                        uint16_t inplace_operator_name,
                        bool is_post_operator,
                        unsigned int gflags);
 INTDEF int DCALL
-ast_gen_setattr_inplace(DeeAstObject *__restrict base,
-                        DeeAstObject *__restrict name,
-                        DeeAstObject *operand,
-                        DeeAstObject *__restrict ddi_ast,
+ast_gen_setattr_inplace(struct ast *__restrict base,
+                        struct ast *__restrict name,
+                        struct ast *operand,
+                        struct ast *__restrict ddi_ast,
                         uint16_t inplace_operator_name,
                         bool is_post_operator,
                         unsigned int gflags);
 INTDEF int DCALL
-ast_gen_setitem_inplace(DeeAstObject *__restrict base,
-                        DeeAstObject *__restrict index,
-                        DeeAstObject *operand,
-                        DeeAstObject *__restrict ddi_ast,
+ast_gen_setitem_inplace(struct ast *__restrict base,
+                        struct ast *__restrict index,
+                        struct ast *operand,
+                        struct ast *__restrict ddi_ast,
                         uint16_t inplace_operator_name,
                         bool is_post_operator,
                         unsigned int gflags);
 INTDEF int DCALL
-ast_gen_setrange_inplace(DeeAstObject *__restrict base,
-                         DeeAstObject *__restrict start,
-                         DeeAstObject *__restrict end,
-                         DeeAstObject *operand,
-                         DeeAstObject *__restrict ddi_ast,
+ast_gen_setrange_inplace(struct ast *__restrict base,
+                         struct ast *__restrict start,
+                         struct ast *__restrict end,
+                         struct ast *operand,
+                         struct ast *__restrict ddi_ast,
                          uint16_t inplace_operator_name,
                          bool is_post_operator,
                          unsigned int gflags);
@@ -1551,18 +1551,18 @@ ast_gen_setrange_inplace(DeeAstObject *__restrict base,
 
 /* Generate code to invoke a function `func' using arguments from `args'. */
 INTDEF int DCALL
-asm_gcall_expr(DeeAstObject *__restrict func,
-               DeeAstObject *__restrict args,
-               DeeAstObject *__restrict ddi_ast,
+asm_gcall_expr(struct ast *__restrict func,
+               struct ast *__restrict args,
+               struct ast *__restrict ddi_ast,
                unsigned int gflags);
 
 /* Generate code to invoke a function `func' using
  * arguments from `args', and keywords from `kwds'. */
 INTDEF int DCALL
-asm_gcall_kw_expr(DeeAstObject *__restrict func,
-                  DeeAstObject *__restrict args,
-                  DeeAstObject *__restrict kwds,
-                  DeeAstObject *__restrict ddi_ast,
+asm_gcall_kw_expr(struct ast *__restrict func,
+                  struct ast *__restrict args,
+                  struct ast *__restrict kwds,
+                  struct ast *__restrict ddi_ast,
                   unsigned int gflags);
 
 
@@ -1694,7 +1694,7 @@ DeeInstruction_Decode(instruction_t const *__restrict ip,
 
 
 /* Generate assembly for the given AST. */
-INTDEF int DCALL ast_genasm(DeeAstObject *__restrict ast, unsigned int gflags);
+INTDEF int DCALL ast_genasm(struct ast *__restrict ast, unsigned int gflags);
 
 /* Variants of `ast_genasm()' that will attempt to emit the expression
  * as either an AbstractSequeceProxy, or as a Set. In either case, if
@@ -1712,18 +1712,18 @@ INTDEF int DCALL ast_genasm(DeeAstObject *__restrict ast, unsigned int gflags);
  *    performance.
  *    Additionally, ast_genasm_set() will try to strip unnecessary sequence
  *    casts from the expression, the same way `ast_genasm_asp()' would. */
-INTDEF int DCALL ast_genasm_asp(DeeAstObject *__restrict ast, unsigned int gflags);
-INTDEF int DCALL ast_genasm_set(DeeAstObject *__restrict ast, unsigned int gflags);
+INTDEF int DCALL ast_genasm_asp(struct ast *__restrict ast, unsigned int gflags);
+INTDEF int DCALL ast_genasm_set(struct ast *__restrict ast, unsigned int gflags);
 
 /* Strip sequence-style cast expressions from `ast' and return an inner sequence.
  * If `ast' is no sequence expression, re-return it directly. */
-INTDEF DeeAstObject *DCALL ast_strip_seqcast(DeeAstObject *__restrict ast);
+INTDEF struct ast *DCALL ast_strip_seqcast(struct ast *__restrict ast);
 
 /* Generate text for a given `AST_SWITCH' branch. */
-INTDEF int DCALL ast_genasm_switch(DeeAstObject *__restrict ast);
+INTDEF int DCALL ast_genasm_switch(struct ast *__restrict ast);
 
 /* Generate user-assembly for a given `AST_ASSEMBLY' branch. */
-INTDEF int DCALL ast_genasm_userasm(DeeAstObject *__restrict ast);
+INTDEF int DCALL ast_genasm_userasm(struct ast *__restrict ast);
 
 /* Compile a DDI object for use by generated code. */
 INTDEF DREF DeeDDIObject *DCALL ddi_compile(void);
@@ -1735,10 +1735,10 @@ INTDEF DREF DeeDDIObject *DCALL ddi_compile(void);
  * @param: prefv: Upon success, a vector of symbols that must passed to the
  *                code object when a function is being created. */
 INTDEF DREF DeeCodeObject *DCALL
-code_compile(DeeAstObject *__restrict code_ast, uint16_t flags,
+code_compile(struct ast *__restrict code_ast, uint16_t flags,
              uint16_t *__restrict prefc,
              /*out:inherit*/struct asm_symbol_ref **__restrict prefv);
-INTDEF DREF DeeCodeObject *DCALL code_docompile(DeeAstObject *__restrict code_ast);
+INTDEF DREF DeeCodeObject *DCALL code_docompile(struct ast *__restrict code_ast);
 
 /* Compile a new module, using `current_rootscope' for module information,
  * and the given code object as root code executed when the module is loaded.
@@ -1751,28 +1751,28 @@ INTDEF int DCALL module_compile(DREF struct module_object *__restrict module,
                                 uint16_t flags);
 
 
-INTDEF int DCALL asm_gpush_function(DeeAstObject *__restrict function_ast);
+INTDEF int DCALL asm_gpush_function(struct ast *__restrict function_ast);
 INTDEF int DCALL asm_gmov_function(struct symbol *__restrict dst,
-                                   DeeAstObject *__restrict function_ast,
-                                   DeeAstObject *__restrict dst_warn_ast);
+                                   struct ast *__restrict function_ast,
+                                   struct ast *__restrict dst_warn_ast);
 
 /* Move the given symbol `src_sym' into `dst_sym'.
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
 INTDEF int (DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
                                     struct symbol *__restrict src_sym,
-                                    DeeAstObject *__restrict dst_ast,
-                                    DeeAstObject *__restrict src_ast);
+                                    struct ast *__restrict dst_ast,
+                                    struct ast *__restrict src_ast);
 
 /* Store the expression in `src' into `dst'.
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
 INTDEF int (DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
-                                    DeeAstObject *__restrict src,
-                                    DeeAstObject *__restrict dst_ast);
+                                    struct ast *__restrict src,
+                                    struct ast *__restrict dst_ast);
 
 /* Store the symbol `src_sym' into the expression `dst'. */
-INTDEF int (DCALL asm_gmov_ast_sym)(DeeAstObject *__restrict dst,
+INTDEF int (DCALL asm_gmov_ast_sym)(struct ast *__restrict dst,
                                     struct symbol *__restrict src_sym,
-                                    DeeAstObject *__restrict src_ast);
+                                    struct ast *__restrict src_ast);
 
 /* @param: loop_flags:   Set of `AST_FLOOP_*'
  * @param: elem_or_cond: The loop element target ([0..1] in a foreach loop),
@@ -1787,10 +1787,10 @@ INTDEF int (DCALL asm_gmov_ast_sym)(DeeAstObject *__restrict dst,
  *                       the scope have been disposed of. */
 INTDEF struct asm_sym *
 (DCALL asm_genloop)(uint16_t loop_flags,
-                    DeeAstObject *elem_or_cond,
-                    DeeAstObject *iter_or_next,
-                    DeeAstObject *block,
-                    DeeAstObject *__restrict ddi_ast);
+                    struct ast *elem_or_cond,
+                    struct ast *iter_or_next,
+                    struct ast *block,
+                    struct ast *__restrict ddi_ast);
 
 
 

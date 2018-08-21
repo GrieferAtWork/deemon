@@ -26,14 +26,14 @@
 
 DECL_BEGIN
 
-INTERN DREF DeeAstObject *DCALL ast_parse_catchmask(void) {
+INTERN DREF struct ast *DCALL ast_parse_catchmask(void) {
  size_t exprc,expra;
- DREF DeeAstObject **exprv,*result;
+ DREF struct ast **exprv,*result;
  result = ast_parse_unary(LOOKUP_SYM_NORMAL);
  if (tok == '|' && result) {
   struct ast_loc multi_loc;
   exprc = 1,expra = 2;
-  exprv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+  exprv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
   if unlikely(!exprv) goto err_r;
   exprv[0] = result; /* Inherit */
   /* Multiple masks.
@@ -64,14 +64,14 @@ INTERN DREF DeeAstObject *DCALL ast_parse_catchmask(void) {
    if unlikely(yield() < 0) goto err_exprv;
    if (exprc == expra) {
     /* Must allocate more memory. */
-    DREF DeeAstObject **new_exprv;
+    DREF struct ast **new_exprv;
     size_t new_expra = expra*2;
 do_realloc:
-    new_exprv = (DREF DeeAstObject **)Dee_TryRealloc(exprv,new_expra*
-                                                     sizeof(DREF DeeAstObject *));
+    new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv,new_expra*
+                                                     sizeof(DREF struct ast *));
     if unlikely(!new_exprv) {
      if (new_expra != exprc+1) { new_expra = exprc+1; goto do_realloc; }
-     if (Dee_CollectMemory(new_expra*sizeof(DREF DeeAstObject *))) goto do_realloc;
+     if (Dee_CollectMemory(new_expra*sizeof(DREF struct ast *))) goto do_realloc;
      goto err_exprv;
     }
     expra = new_expra;
@@ -99,9 +99,9 @@ err_r:
 }
 
 
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_parse_try(bool is_statement) {
- DREF DeeAstObject *result,*merge;
+ DREF struct ast *result,*merge;
  struct ast_loc loc; size_t catcha,catchc;
  struct catch_expr *catchv,*handler;
  uint32_t old_flags;
@@ -266,9 +266,9 @@ err:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_try_hybrid(unsigned int *pwas_expression) {
- DREF DeeAstObject *result,*merge;
+ DREF struct ast *result,*merge;
  struct ast_loc loc; size_t catcha,catchc;
  struct catch_expr *catchv,*handler;
  uint32_t old_flags; unsigned int was_expression;

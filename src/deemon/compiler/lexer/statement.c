@@ -59,13 +59,13 @@ err:
 
 
 INTERN int32_t DCALL
-ast_parse_for_head(DREF DeeAstObject **__restrict pinit,
-                   DREF DeeAstObject **__restrict pelem_or_cond,
-                   DREF DeeAstObject **__restrict piter_or_next) {
+ast_parse_for_head(DREF struct ast **__restrict pinit,
+                   DREF struct ast **__restrict pelem_or_cond,
+                   DREF struct ast **__restrict piter_or_next) {
  int32_t result = AST_FLOOP_NORMAL;
- DREF DeeAstObject *init = NULL;
- DREF DeeAstObject *elem_or_cond = NULL;
- DREF DeeAstObject *iter_or_next = NULL;
+ DREF struct ast *init = NULL;
+ DREF struct ast *elem_or_cond = NULL;
+ DREF struct ast *iter_or_next = NULL;
  if (tok != ';') {
   init = ast_parse_comma(AST_COMMA_ALLOWVARDECLS,
                          AST_FMULTIPLE_TUPLE,
@@ -112,10 +112,10 @@ err:
 
 
 
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_parse_statements_until(uint16_t flags, tok_t end_token) {
- size_t exprc,expra; DREF DeeAstObject **exprv;
- DREF DeeAstObject *new_expression;
+ size_t exprc,expra; DREF struct ast **exprv;
+ DREF struct ast *new_expression;
  unsigned long token_num;
  exprc = expra = 0,exprv = NULL;
  for (;;) {
@@ -126,15 +126,15 @@ ast_parse_statements_until(uint16_t flags, tok_t end_token) {
   if unlikely(!new_expression) goto err;
   ASSERT(exprc <= expra);
   if (exprc == expra) {
-   DREF DeeAstObject **new_exprv;
+   DREF struct ast **new_exprv;
    size_t new_expra = expra * 2;
    if (!new_expra) new_expra = 8;
 do_realloc:
-   new_exprv = (DREF DeeAstObject **)Dee_TryRealloc(exprv,new_expra*
-                                                    sizeof(DREF DeeAstObject *));
+   new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv,new_expra*
+                                                    sizeof(DREF struct ast *));
    if unlikely(!new_exprv) {
     if (new_expra != exprc+1) { new_expra = exprc+1; goto do_realloc; }
-    if (Dee_CollectMemory(new_expra*sizeof(DREF DeeAstObject *))) goto do_realloc;
+    if (Dee_CollectMemory(new_expra*sizeof(DREF struct ast *))) goto do_realloc;
     goto err;
    }
    exprv = new_exprv;
@@ -148,8 +148,8 @@ do_realloc:
  }
  /* Truncate the expression buffer to what is actually being used. */
  if (exprc != expra) {
-  DREF DeeAstObject **new_exprv;
-  new_exprv = (DREF DeeAstObject **)Dee_TryRealloc(exprv,exprc*sizeof(DREF DeeAstObject *));
+  DREF struct ast **new_exprv;
+  new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv,exprc*sizeof(DREF struct ast *));
   if (new_exprv) exprv = new_exprv;
  }
  /* Pack all parsed statements into a multi-ast.
@@ -169,9 +169,9 @@ INTDEF void DCALL
 cleanup_switch_cases(struct text_label *switch_cases,
                      struct text_label *switch_default);
 
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_parse_statement(bool allow_nonblock) {
- DREF DeeAstObject *result,*merge;
+ DREF struct ast *result,*merge;
  struct ast_loc loc;
  uint32_t old_flags;
 again:
@@ -207,8 +207,8 @@ again:
   break;
 
  {
-  DREF DeeAstObject *tt_branch;
-  DREF DeeAstObject *ff_branch;
+  DREF struct ast *tt_branch;
+  DREF struct ast *ff_branch;
   uint16_t expect;
  case KWD_if:
   /* If-statement. */
@@ -373,13 +373,13 @@ do_else_branch:
                             NULL);
    if unlikely(!result) goto err;
    if (tok == ':') {
-    DREF DeeAstObject *text;
+    DREF struct ast *text;
     /* This is actually an fprint-style statement: `print foo: "bar";' */
     if unlikely(yield() < 0) goto err_r;
     /* Since we've forced a multiple-parse above, we must now extract the target file. */
-    if (result->ast_type == AST_MULTIPLE &&
-        result->ast_multiple.ast_exprc == 1) {
-     merge = result->ast_multiple.ast_exprv[0];
+    if (result->a_type == AST_MULTIPLE &&
+        result->a_multiple.m_astc == 1) {
+     merge = result->a_multiple.m_astv[0];
      Dee_Incref(merge);
      Dee_Decref(result);
      result = merge;
@@ -421,10 +421,10 @@ do_else_branch:
   break;
 
  {
-  DREF DeeAstObject *init;
-  DREF DeeAstObject *elem_or_cond;
-  DREF DeeAstObject *iter_or_next;
-  DREF DeeAstObject *loop;
+  DREF struct ast *init;
+  DREF struct ast *elem_or_cond;
+  DREF struct ast *iter_or_next;
+  DREF struct ast *loop;
   int32_t type; bool has_scope;
  case KWD_for:
   loc_here(&loc);
@@ -470,7 +470,7 @@ do_else_branch:
   Dee_XDecref(iter_or_next);
   Dee_XDecref(elem_or_cond);
   if (init) {
-   DREF DeeAstObject **exprv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+   DREF struct ast **exprv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
    if unlikely(!exprv) { err_loop_init: Dee_Decref(init); goto err_r; }
    /* A loop initializer was given. - Pack it into the resulting AST. */
    exprv[0] = init;   /* Inherit reference. */
@@ -492,9 +492,9 @@ err_loop:
  } break;
 
  {
-  DREF DeeAstObject *foreach_elem;
-  DREF DeeAstObject *foreach_iter;
-  DREF DeeAstObject *foreach_loop;
+  DREF struct ast *foreach_elem;
+  DREF struct ast *foreach_iter;
+  DREF struct ast *foreach_loop;
  case KWD_foreach:
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
@@ -546,7 +546,7 @@ err_foreach_elem:
   break;
 
  {
-  DREF DeeAstObject *cond;
+  DREF struct ast *cond;
  case KWD_do:
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
@@ -581,7 +581,7 @@ err_foreach_elem:
  } break;
 
  {
-  DREF DeeAstObject *loop;
+  DREF struct ast *loop;
  case KWD_while:
   loc_here(&loc);
   if unlikely(scope_push() < 0) goto err;
@@ -709,7 +709,7 @@ err_foreach_elem:
   struct text_label *old_default;
   struct text_label *switch_cases;
   struct text_label *switch_default;
-  DREF DeeAstObject *switch_block;
+  DREF struct ast *switch_block;
  case KWD_switch:
   /* Load the flags that are going to be used for the switch-statement. */
   switch_flags = current_tags.at_switch;
@@ -798,7 +798,7 @@ err_r_switch:
        *next_token != ':' && *next_token != '=')) {
     /* Define a label. */
     struct text_label *def_label;
-    DREF DeeAstObject *label_ast; uint16_t label_flags;
+    DREF struct ast *label_ast; uint16_t label_flags;
     loc_here(&loc);
     def_label = lookup_label(token.t_kwd);
     label_flags = AST_FLABEL_NORMAL;
@@ -824,22 +824,22 @@ handle_post_label:
      if unlikely(!result) { Dee_Decref(label_ast); goto err; }
     }
     if (!DeeObject_IsShared(result) &&
-         result->ast_type == AST_MULTIPLE &&
-         result->ast_flag == AST_FMULTIPLE_KEEPLAST) {
+         result->a_type == AST_MULTIPLE &&
+         result->a_flag == AST_FMULTIPLE_KEEPLAST) {
      /* Prepend the label AST before all the others in the MULTIPLE-ast. */
-     DREF DeeAstObject **elemv;
-     elemv = (DREF DeeAstObject **)Dee_Realloc(result->ast_multiple.ast_exprv,
-                                              (result->ast_multiple.ast_exprc+1)*
-                                               sizeof(DREF DeeAstObject *));
+     DREF struct ast **elemv;
+     elemv = (DREF struct ast **)Dee_Realloc(result->a_multiple.m_astv,
+                                              (result->a_multiple.m_astc+1)*
+                                               sizeof(DREF struct ast *));
      if unlikely(!elemv) goto err_label_ast;
-     MEMMOVE_PTR(elemv+1,elemv,result->ast_multiple.ast_exprc);
-     result->ast_multiple.ast_exprc += 1;
-     result->ast_multiple.ast_exprv  = elemv;
+     MEMMOVE_PTR(elemv+1,elemv,result->a_multiple.m_astc);
+     result->a_multiple.m_astc += 1;
+     result->a_multiple.m_astv  = elemv;
      elemv[0] = label_ast; /* Inherit reference. */
     } else {
      /* Create a new MULTIPLE-ast */
-     DREF DeeAstObject **elemv;
-     elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+     DREF struct ast **elemv;
+     elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
      if unlikely(!elemv) { err_label_ast: Dee_Decref(label_ast); goto err_r; }
      elemv[0] = label_ast; /* Inherit reference. */
      elemv[1] = result;    /* Inherit reference. */

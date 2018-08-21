@@ -120,29 +120,29 @@ emulate_member_call(DeeObject *__restrict base,
 
 
 INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack,
-                                         DeeAstObject *__restrict self, bool result_used) {
+                                         struct ast *__restrict self, bool result_used) {
  unsigned int opcount; int temp;
  DREF DeeObject *operator_result;
- ASSERT(self->ast_type == AST_OPERATOR);
+ ASSERT(self->a_type == AST_OPERATOR);
  /* Only optimize sub-branches, but don't propagate constants
   * if the branch has already been optimized before. */
- if (self->ast_operator.ast_exflag & AST_OPERATOR_FDONTOPT) {
-  if (ast_optimize(stack,self->ast_operator.ast_opa,true)) goto err;
-  if (self->ast_operator.ast_opb) {
-   if (ast_optimize(stack,self->ast_operator.ast_opb,true)) goto err;
-   if (self->ast_operator.ast_opc) {
-    if (ast_optimize(stack,self->ast_operator.ast_opc,true)) goto err;
-    if (self->ast_operator.ast_opd &&
-        ast_optimize(stack,self->ast_operator.ast_opd,true)) goto err;
+ if (self->a_operator.o_exflag & AST_OPERATOR_FDONTOPT) {
+  if (ast_optimize(stack,self->a_operator.o_op0,true)) goto err;
+  if (self->a_operator.o_op1) {
+   if (ast_optimize(stack,self->a_operator.o_op1,true)) goto err;
+   if (self->a_operator.o_op2) {
+    if (ast_optimize(stack,self->a_operator.o_op2,true)) goto err;
+    if (self->a_operator.o_op3 &&
+        ast_optimize(stack,self->a_operator.o_op3,true)) goto err;
    }
   }
   return 0;
  }
- self->ast_operator.ast_exflag |= AST_OPERATOR_FDONTOPT;
+ self->a_operator.o_exflag |= AST_OPERATOR_FDONTOPT;
  /* If the result isn't used, then we can delete the postop flag. */
  if (!result_used)
-      self->ast_operator.ast_exflag &= ~(AST_OPERATOR_FPOSTOP);
- if (self->ast_operator.ast_exflag & AST_OPERATOR_FVARARGS) {
+      self->a_operator.o_exflag &= ~(AST_OPERATOR_FPOSTOP);
+ if (self->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
   /* TODO: Unknown varargs when their number can now be predicted. */
   return 0;
  }
@@ -151,20 +151,20 @@ INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict s
   * such as `"foo".upper()' --> `"FOO"', as a special case we try
   * to bridge across the GETATTR operator invocation and try to
   * directly invoke the function when possible. */
- if (self->ast_flag == OPERATOR_CALL &&
-     self->ast_operator.ast_opa &&  self->ast_operator.ast_opb &&
-    !self->ast_operator.ast_opc && !self->ast_operator.ast_opd &&
-     self->ast_operator.ast_opa->ast_type == AST_OPERATOR &&
-     self->ast_operator.ast_opa->ast_flag == OPERATOR_GETATTR &&
-     self->ast_operator.ast_opa->ast_operator.ast_opa &&
-     self->ast_operator.ast_opa->ast_operator.ast_opb &&
-    !self->ast_operator.ast_opa->ast_operator.ast_opc &&
-    !self->ast_operator.ast_opa->ast_operator.ast_opd) {
-  DeeAstObject *base = self->ast_operator.ast_opa->ast_operator.ast_opa;
-  DeeAstObject *name = self->ast_operator.ast_opa->ast_operator.ast_opb;
-  DeeAstObject *args = self->ast_operator.ast_opb;
+ if (self->a_flag == OPERATOR_CALL &&
+     self->a_operator.o_op0 &&  self->a_operator.o_op1 &&
+    !self->a_operator.o_op2 && !self->a_operator.o_op3 &&
+     self->a_operator.o_op0->a_type == AST_OPERATOR &&
+     self->a_operator.o_op0->a_flag == OPERATOR_GETATTR &&
+     self->a_operator.o_op0->a_operator.o_op0 &&
+     self->a_operator.o_op0->a_operator.o_op1 &&
+    !self->a_operator.o_op0->a_operator.o_op2 &&
+    !self->a_operator.o_op0->a_operator.o_op3) {
+  struct ast *base = self->a_operator.o_op0->a_operator.o_op0;
+  struct ast *name = self->a_operator.o_op0->a_operator.o_op1;
+  struct ast *args = self->a_operator.o_op1;
   struct ast_optimize_stack function_base;
-  function_base.os_ast  = self->ast_operator.ast_opa;
+  function_base.os_ast  = self->a_operator.o_op0;
   function_base.os_prev = stack;
   function_base.os_used = true;
 #ifdef OPTIMIZE_FASSUME
@@ -172,27 +172,27 @@ INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict s
 #endif /* OPTIMIZE_FASSUME */
   /* Optimize the attribute name and make sure it's a constant string. */
   if (ast_optimize(&function_base,name,true)) goto err;
-  if (name->ast_type == AST_CONSTEXPR && DeeString_Check(name->ast_constexpr)) {
+  if (name->a_type == AST_CONSTEXPR && DeeString_Check(name->a_constexpr)) {
    /* Optimize the base-expression and make sure it's constant. */
    if (ast_optimize(&function_base,base,true)) goto err;
-   if (base->ast_type == AST_CONSTEXPR) {
+   if (base->a_type == AST_CONSTEXPR) {
     /* Optimize the argument list and make sure it's a constant tuple. */
     if (ast_optimize(stack,args,true)) goto err;
-    if (args->ast_type == AST_CONSTEXPR && DeeTuple_Check(args->ast_constexpr)) {
+    if (args->a_type == AST_CONSTEXPR && DeeTuple_Check(args->a_constexpr)) {
      /* All right! everything has fallen into place, and this is
       * a valid candidate for <getattr> -> <call> optimization. */
-     operator_result = emulate_member_call(base->ast_constexpr,
-                                           name->ast_constexpr,
-                                           DeeTuple_SIZE(args->ast_constexpr),
-                                           DeeTuple_ELEM(args->ast_constexpr));
+     operator_result = emulate_member_call(base->a_constexpr,
+                                           name->a_constexpr,
+                                           DeeTuple_SIZE(args->a_constexpr),
+                                           DeeTuple_ELEM(args->a_constexpr));
      if (operator_result == ITER_DONE)
          goto done; /* Call wasn't allowed. */
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
      if (operator_result &&
          allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
       OPTIMIZE_VERBOSE("Reduce constant expression `%r.%k%r -> %r'\n",
-                       base->ast_constexpr,name->ast_constexpr,
-                       args->ast_constexpr,operator_result);
+                       base->a_constexpr,name->a_constexpr,
+                       args->a_constexpr,operator_result);
      }
 #endif
      opcount = 2;
@@ -203,16 +203,16 @@ INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict s
  }
 
  opcount = 1;
- if (ast_optimize(stack,self->ast_operator.ast_opa,true)) goto err;
- if (self->ast_operator.ast_opb) {
+ if (ast_optimize(stack,self->a_operator.o_op0,true)) goto err;
+ if (self->a_operator.o_op1) {
   ++opcount;
-  if (ast_optimize(stack,self->ast_operator.ast_opb,true)) goto err;
-  if (self->ast_operator.ast_opc) {
+  if (ast_optimize(stack,self->a_operator.o_op1,true)) goto err;
+  if (self->a_operator.o_op2) {
    ++opcount;
-   if (ast_optimize(stack,self->ast_operator.ast_opc,true)) goto err;
-   if (self->ast_operator.ast_opd) {
+   if (ast_optimize(stack,self->a_operator.o_op2,true)) goto err;
+   if (self->a_operator.o_op3) {
     ++opcount;
-    if (ast_optimize(stack,self->ast_operator.ast_opd,true)) goto err;
+    if (ast_optimize(stack,self->a_operator.o_op3,true)) goto err;
    }
   }
  }
@@ -224,9 +224,9 @@ INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict s
   /* Check if we can do some constant propagation. */
   while (i--) {
    DeeObject *operand;
-   if (self->ast_operator_ops[i]->ast_type != AST_CONSTEXPR)
+   if (self->a_operator_ops[i]->a_type != AST_CONSTEXPR)
        goto cleanup_operands;
-   operand = self->ast_operator_ops[i]->ast_constexpr;
+   operand = self->a_operator_ops[i]->a_constexpr;
    /* Check if the operand can appear in constant expression. */
    temp = allow_constexpr(operand);
    if (temp == CONSTEXPR_ILLEGAL) {
@@ -246,10 +246,10 @@ cleanup_operands:
    argv[i] = operand;
   }
   /* Special handling when performing a call operation. */
-  if (self->ast_flag == OPERATOR_CALL) {
+  if (self->a_flag == OPERATOR_CALL) {
    if (opcount != 2) goto not_allowed;
    if (!DeeTuple_Check(argv[1])) goto not_allowed;
-   if unlikely(self->ast_operator.ast_exflag & AST_OPERATOR_FPOSTOP) {
+   if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP) {
     operator_result = DeeObject_Copy(argv[0]);
     if likely(operator_result) {
      DREF DeeObject *real_result;
@@ -273,12 +273,12 @@ not_allowed:
          Dee_Decref(argv[i]);
     goto done;
    }
-  } else if (self->ast_operator.ast_exflag & AST_OPERATOR_FPOSTOP) {
+  } else if (self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP) {
    /* Return a copy of the original operand. */
    operator_result = DeeObject_Copy(argv[0]);
    if likely(operator_result) {
     DREF DeeObject *real_result;
-    real_result = DeeObject_InvokeOperator(argv[0],self->ast_flag,opcount-1,argv+1);
+    real_result = DeeObject_InvokeOperator(argv[0],self->a_flag,opcount-1,argv+1);
     if likely(real_result)
        Dee_Decref(real_result);
     else {
@@ -286,16 +286,16 @@ not_allowed:
     }
    }
   } else {
-   operator_result = DeeObject_InvokeOperator(argv[0],self->ast_flag,opcount-1,argv+1);
+   operator_result = DeeObject_InvokeOperator(argv[0],self->a_flag,opcount-1,argv+1);
   }
 #ifdef HAVE_VERBOSE
   if (operator_result &&
       allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
    struct opinfo *info;
-   info = Dee_OperatorInfo(Dee_TYPE(argv[0]),self->ast_flag);
+   info = Dee_OperatorInfo(Dee_TYPE(argv[0]),self->a_flag);
    OPTIMIZE_VERBOSE("Reduce constant expression `%r.operator %s %R -> %r'\n",
                      argv[0],info ? info->oi_uname : "?",
-                     self->ast_flag == OPERATOR_CALL && opcount == 2
+                     self->a_flag == OPERATOR_CALL && opcount == 2
                    ? DeeObject_NewRef(argv[1])
                    : DeeTuple_NewVector(opcount-1,argv+1),
                      operator_result);
@@ -326,21 +326,21 @@ dont_optimize_operator:
  }
 
  /* Override this branch with a constant expression `operator_result' */
- while (opcount--) Dee_Decref(self->ast_operator_ops[opcount]);
- self->ast_type      = AST_CONSTEXPR;
- self->ast_flag      = AST_FNORMAL;
- self->ast_constexpr = operator_result;
+ while (opcount--) Dee_Decref(self->a_operator_ops[opcount]);
+ self->a_type      = AST_CONSTEXPR;
+ self->a_flag      = AST_FNORMAL;
+ self->a_constexpr = operator_result;
  goto did_optimize;
 generic_operator_optimizations:
- if (self->ast_flag == OPERATOR_CALL &&
-     self->ast_operator.ast_opb &&
-     self->ast_operator.ast_opb->ast_type == AST_MULTIPLE &&
-     self->ast_operator.ast_opb->ast_multiple.ast_exprc == 1 &&
-     self->ast_operator.ast_opa->ast_type == AST_CONSTEXPR) {
+ if (self->a_flag == OPERATOR_CALL &&
+     self->a_operator.o_op1 &&
+     self->a_operator.o_op1->a_type == AST_MULTIPLE &&
+     self->a_operator.o_op1->a_multiple.m_astc == 1 &&
+     self->a_operator.o_op0->a_type == AST_CONSTEXPR) {
   /* Certain types of calls can be optimized away:
    * >> local x = list([10,20,30]); // Optimize to `x = [10,20,30]' */
-  DeeObject *function = self->ast_operator.ast_opa->ast_constexpr;
-  DeeAstObject *cast_expr = self->ast_operator.ast_opb->ast_multiple.ast_exprv[0];
+  DeeObject *function = self->a_operator.o_op0->a_constexpr;
+  struct ast *cast_expr = self->a_operator.o_op1->a_multiple.m_astv[0];
   if (has_cast_constructor(function) &&
       ast_predict_type(cast_expr) == (DeeTypeObject *)function) {
    OPTIMIZE_VERBOSE("Discard no-op cast-style function call to %k\n",function);

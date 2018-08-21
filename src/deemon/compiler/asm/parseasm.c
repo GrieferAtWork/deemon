@@ -884,7 +884,7 @@ err:
  return -1;
 }
 PRIVATE int32_t FCALL do_parse_constexpr(void) {
- DREF DeeAstObject *imm_const;
+ DREF struct ast *imm_const;
  DREF DeeObject *const_val;
  int32_t cid;
  if unlikely(scope_push()) goto err;
@@ -897,9 +897,9 @@ err_imm_const:
   Dee_Decref(imm_const);
   goto err;
  }
- if (imm_const->ast_type == AST_CONSTEXPR &&
-     asm_allowconst(imm_const->ast_constexpr)) {
-  const_val = imm_const->ast_constexpr;
+ if (imm_const->a_type == AST_CONSTEXPR &&
+     asm_allowconst(imm_const->a_constexpr)) {
+  const_val = imm_const->a_constexpr;
  } else {
   if (WARN(W_UASM_EXPECTED_CONSTANT_EXPRESSION_AFTER_AT_CONST))
       goto err_imm_const;
@@ -1086,16 +1086,16 @@ asm_invoke_operand_determine_intclass(struct asm_invoke_operand *__restrict self
 
 PRIVATE int FCALL
 do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
-                         DeeAstObject *__restrict expr) {
- switch (expr->ast_type) {
+                         struct ast *__restrict expr) {
+ switch (expr->a_type) {
 
  case AST_MULTIPLE:
   /* Unwind single-expression multi-branch ASTs, regardless of scope visibility. */
-  if (expr->ast_multiple.ast_exprc == 1)
-      return do_translate_operand_ast(result,expr->ast_multiple.ast_exprv[0]);
+  if (expr->a_multiple.m_astc == 1)
+      return do_translate_operand_ast(result,expr->a_multiple.m_astv[0]);
   goto unsupported_expression;
  case AST_EXPAND:
-  if unlikely(do_translate_operand_ast(result,expr->ast_expandexpr))
+  if unlikely(do_translate_operand_ast(result,expr->a_expand))
      goto err;
   if (result->io_class&OPERAND_CLASS_FDOTSFLAG &&
       WARN(W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND))
@@ -1108,7 +1108,7 @@ do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
   DeeObject *constval;
   int32_t symid;
  case AST_CONSTEXPR:
-  constval = expr->ast_constexpr;
+  constval = expr->a_constexpr;
   if unlikely(!asm_allowconst(constval))
      goto unsupported_expression;
 #if 0 /* Don't do this. - Otherwise something like `print @20, nl' wouldn't work because
@@ -1137,7 +1137,7 @@ allocate_constant:
   int32_t symid;
  case AST_SYM:
   /* Symbol expression. */
-  sym = expr->ast_sym;
+  sym = expr->a_sym;
 check_sym_class:
   if (SYMBOL_MUST_REFERENCE(sym)) {
    symid = asm_rsymid(sym);
@@ -1247,7 +1247,7 @@ err:
  * In order words: accept pretty much all symbols, as well as constants. */
 PRIVATE int FCALL
 do_parse_atoperand(struct asm_invoke_operand *__restrict result) {
- DREF DeeAstObject *imm_expr;
+ DREF struct ast *imm_expr;
  if unlikely(scope_push()) goto err;
  imm_expr = ast_parse_expression(LOOKUP_SYM_NORMAL);
  scope_pop();

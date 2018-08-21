@@ -52,20 +52,20 @@ astlist_fini(struct astlist *__restrict self) {
 INTERN int DCALL
 astlist_upsize(struct astlist *__restrict self,
                size_t min_add) {
- DREF DeeAstObject **new_vector;
+ DREF struct ast **new_vector;
  size_t new_alloc = self->ast_a*2;
  ASSERT(min_add != 0);
  if (!new_alloc) new_alloc = min_add;
  while ((new_alloc-self->ast_c) < min_add) new_alloc *= 2;
 do_realloc:
- new_vector = (DREF DeeAstObject **)Dee_TryRealloc(self->ast_v,new_alloc*
-                                                   sizeof(DREF DeeAstObject *));
+ new_vector = (DREF struct ast **)Dee_TryRealloc(self->ast_v,new_alloc*
+                                                   sizeof(DREF struct ast *));
  if unlikely(!new_vector) {
   if (new_alloc != self->ast_c+min_add) {
    new_alloc = self->ast_c+min_add;
    goto do_realloc;
   }
-  if (Dee_CollectMemory(new_alloc*sizeof(DREF DeeAstObject *)))
+  if (Dee_CollectMemory(new_alloc*sizeof(DREF struct ast *)))
       goto do_realloc;
   return -1;
  }
@@ -78,15 +78,15 @@ do_realloc:
 
 INTERN void DCALL
 astlist_trunc(struct astlist *__restrict self) {
- DREF DeeAstObject **new_vector;
+ DREF struct ast **new_vector;
  if (self->ast_c == self->ast_a) return;
- new_vector = (DREF DeeAstObject **)Dee_TryRealloc(self->ast_v,self->ast_c*
-                                                   sizeof(DREF DeeAstObject *));
+ new_vector = (DREF struct ast **)Dee_TryRealloc(self->ast_v,self->ast_c*
+                                                   sizeof(DREF struct ast *));
  if likely(new_vector) self->ast_v = new_vector;
 }
 INTERN int DCALL
 astlist_append(struct astlist *__restrict self,
-               DeeAstObject *__restrict ast) {
+               struct ast *__restrict ast) {
  if (self->ast_c == self->ast_a &&
      astlist_upsize(self,1)) return -1;
  self->ast_v[self->ast_c++] = ast;
@@ -187,9 +187,9 @@ err:
 }
 
 
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *pout_mode) {
- DREF DeeAstObject *current; bool need_semi; int error;
+ DREF struct ast *current; bool need_semi; int error;
  unsigned int lookup_mode; struct ast_loc loc;
  /* In: "foo,bar = 10,x,y = getvalue()...,7"
   *              |     |                 |
@@ -289,7 +289,7 @@ next_expr:
   if unlikely(!current) goto err;
   clear_current_tags();
   if (function_symbol) {
-   DREF DeeAstObject *function_name_ast,*merge;
+   DREF struct ast *function_name_ast,*merge;
    /* Store the function in the parsed symbol. */
    function_name_ast = ast_setddi(ast_sym(function_symbol),&function_name_loc);
    if unlikely(!function_name_ast) goto err_current;
@@ -330,7 +330,7 @@ next_expr:
   if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) && TPP_ISKEYWORD(tok) &&
     (!(mode & AST_COMMA_NOSUFFIXKWD) || !is_reserved_symbol_name(token.t_kwd))) {
    struct symbol *var_symbol;
-   DREF DeeAstObject *args,*merge;
+   DREF struct ast *args,*merge;
    struct ast_loc symbol_name_loc;
    loc_here(&symbol_name_loc);
    var_symbol = get_local_symbol(token.t_kwd);
@@ -376,7 +376,7 @@ next_expr:
     */
    if (tok == '=' || tok == '{') {
     /* Single-operand argument list. */
-    DREF DeeAstObject **exprv;
+    DREF struct ast **exprv;
     struct ast_loc equal_loc;
     loc_here(&equal_loc);
     if (tok == '=' && unlikely(yield() < 0)) goto err_current;
@@ -384,7 +384,7 @@ next_expr:
     args = ast_parse_expression(LOOKUP_SYM_NORMAL);
     if unlikely(!args) goto err_current;
     /* Wrap the returned ast in a 1-element tuple (for the argument list) */
-    exprv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+    exprv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
     if unlikely(!exprv) goto err_args;
     exprv[0] = args; /* Inherit */
     /* Create a multi-branch AST for the assigned expression. */
@@ -478,7 +478,7 @@ continue_at_comma:
   goto next_expr;
  }
  if (tok == '=') {
-  DREF DeeAstObject *store_source;
+  DREF struct ast *store_source;
   /* This is where the magic happens and where we
    * assign to expression in the active comma-list. */
   loc_here(&loc);
@@ -493,8 +493,8 @@ continue_at_comma:
    * we've just parsed is an expand-expression:
    * >> a,b,c = get_value()...; // >> (((a,b,c) = get_value())...);
    * >> a,b,c = get_value();    // >> (a,b,(c = get_value())); */
-  if (store_source->ast_type == AST_EXPAND) {
-   DREF DeeAstObject *store_target,*store_branch;
+  if (store_source->a_type == AST_EXPAND) {
+   DREF struct ast *store_target,*store_branch;
    /* Append the last expression (in the example above, that is `c') */
    error = astlist_append(&expr_comma,current);
    Dee_Decref(current);
@@ -516,7 +516,7 @@ err_store_source:
    /* Now store the expand's underlying expression within this tuple. */
    store_branch = ast_setddi(ast_action2(AST_FACTION_STORE,
                                          store_target,
-                                         store_source->ast_expandexpr),
+                                         store_source->a_expand),
                             &loc);
    Dee_Decref(store_target);
    Dee_Decref(store_source);
@@ -526,7 +526,7 @@ err_store_source:
    Dee_Decref(store_branch);
    if unlikely(!current) goto err;
   } else {
-   DREF DeeAstObject *store_branch;
+   DREF struct ast *store_branch;
    /* Second case: assign `store_source' to `current' after
     *              flushing everything from the comma-list. */
    error = astlist_appendall(&expr_batch,&expr_comma);
@@ -588,8 +588,8 @@ done_expression:
   if (mode&AST_COMMA_FORCEMULTIPLE) {
    /* If the caller wants to force us to package
     * everything in a multi-branch, grant that wish. */
-   DREF DeeAstObject **astv,*result;
-   astv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+   DREF struct ast **astv,*result;
+   astv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
    if unlikely(!astv) goto err_current;
    astv[0] = current;
    result = ast_multiple(flags,1,astv);

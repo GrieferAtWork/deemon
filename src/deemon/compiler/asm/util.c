@@ -579,7 +579,7 @@ PRIVATE int DCALL check_thiscall(struct symbol *__restrict sym) {
 
 /* Pushes the `this' argument as a super-wrapper for `class_type'. */
 PRIVATE int (DCALL asm_gpush_thisas)(struct symbol *__restrict class_type,
-                                     DeeAstObject *__restrict warn_ast) {
+                                     struct ast *__restrict warn_ast) {
  int32_t symid;
  /* Special instructions exist to push `this' as a
   * specific class type when the type is a certain symbol. */
@@ -625,7 +625,7 @@ err:
  * then pushes its return value back onto the stack. */
 PRIVATE int (DCALL asm_gcall_symbol)(struct symbol *__restrict function,
                                      uint16_t num_args,
-                                     DeeAstObject *__restrict warn_ast) {
+                                     struct ast *__restrict warn_ast) {
  int32_t symid;
  /* Attempt a direct call to the symbol. */
 check_function_class:
@@ -674,7 +674,7 @@ PRIVATE ATTR_COLD int (DCALL asm_warn_ambiguous_symbol)(struct symbol *__restric
 
 
 INTERN int (DCALL asm_gpush_symbol)(struct symbol *__restrict sym,
-                                    DeeAstObject *__restrict warn_ast) {
+                                    struct ast *__restrict warn_ast) {
  int32_t symid;
  ASSERT(sym);
 check_sym_class:
@@ -888,7 +888,7 @@ check_sym_class:
 
 
 INTERN int (DCALL asm_gprefix_symbol)(struct symbol *__restrict sym,
-                                      DeeAstObject *__restrict warn_ast) {
+                                      struct ast *__restrict warn_ast) {
  int32_t symid;
  ASSERT(sym);
  (void)warn_ast;
@@ -950,7 +950,7 @@ err:
 }
 
 INTERN int (DCALL asm_gpush_bnd_symbol)(struct symbol *__restrict sym,
-                                        DeeAstObject *__restrict warn_ast) {
+                                        struct ast *__restrict warn_ast) {
  int32_t symid;
  ASSERT(sym);
 check_sym_class:
@@ -1047,7 +1047,7 @@ err:
 }
 
 INTERN int (DCALL asm_gdel_symbol)(struct symbol *__restrict sym,
-                                   DeeAstObject *__restrict warn_ast) {
+                                   struct ast *__restrict warn_ast) {
  int32_t symid;
  ASSERT(sym);
 check_sym_class:
@@ -1180,7 +1180,7 @@ err:
 }
 
 INTERN int (DCALL asm_gpop_symbol)(struct symbol *__restrict sym,
-                                   DeeAstObject *__restrict warn_ast) {
+                                   struct ast *__restrict warn_ast) {
  int32_t symid;
  ASSERT(sym);
 check_sym_class:
@@ -1434,7 +1434,7 @@ err:
 /* Store the value of the virtual argument `argid' in `dst' */
 INTERN int
 (DCALL asm_gmov_varg)(struct symbol *__restrict dst, uint16_t argid,
-                      DeeAstObject *__restrict warn_ast,
+                      struct ast *__restrict warn_ast,
                       bool ignore_unbound) {
  if (ignore_unbound &&
      DeeBaseScope_IsArgOptional(current_basescope,argid)) {

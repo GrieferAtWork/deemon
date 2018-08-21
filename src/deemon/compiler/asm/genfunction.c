@@ -29,26 +29,26 @@
 DECL_BEGIN
 
 PRIVATE DREF DeeCodeObject *DCALL
-ast_assemble_function(DeeAstObject *__restrict function_ast,
+ast_assemble_function(struct ast *__restrict function_ast,
                       uint16_t *__restrict prefc,
                       struct asm_symbol_ref **__restrict prefv) {
  DREF DeeCodeObject *result;
  DeeScopeObject *prev_scope;
- ASSERT(function_ast->ast_type == AST_FUNCTION);
+ ASSERT(function_ast->a_type == AST_FUNCTION);
  /* This is where it gets interesting, because this will
   * create a temporary sub-assembler, allowing for recursion! */
  ASSERT_OBJECT_TYPE((DeeObject *)current_scope,&DeeScope_Type);
  ASSERT_OBJECT_TYPE((DeeObject *)current_basescope,&DeeBaseScope_Type);
- ASSERT_OBJECT_TYPE((DeeObject *)function_ast->ast_function.ast_scope,&DeeBaseScope_Type);
- ASSERT(function_ast->ast_function.ast_scope->bs_root == current_rootscope);
+ ASSERT_OBJECT_TYPE((DeeObject *)function_ast->a_function.f_scope,&DeeBaseScope_Type);
+ ASSERT(function_ast->a_function.f_scope->bs_root == current_rootscope);
  ASSERT(current_basescope == current_scope->s_base);
  prev_scope        = current_scope;
  /* Temporarily override the active scope + base-scope. */
- current_scope     = (DREF DeeScopeObject *)function_ast->ast_function.ast_scope;
- current_basescope = function_ast->ast_function.ast_scope;
+ current_scope     = (DREF DeeScopeObject *)function_ast->a_function.f_scope;
+ current_basescope = function_ast->a_function.f_scope;
 
  /* HINT: `code_compile' will safe and restore our own assembler context. */
- result = code_compile(function_ast->ast_function.ast_code,
+ result = code_compile(function_ast->a_function.f_code,
                        /* Don't propagate `ASM_FBIGCODE' */
                       (current_assembler.a_flag&~(ASM_FBIGCODE)) |
                       (DeeCompiler_Current->cp_options ?
@@ -60,14 +60,14 @@ ast_assemble_function(DeeAstObject *__restrict function_ast,
  current_scope     = prev_scope;
  if unlikely(!result) goto err;
  /* Save the restore-code-object for the event of the linker having to be reset. */
- function_ast->ast_function.ast_scope->bs_restore = result;
+ function_ast->a_function.f_scope->bs_restore = result;
  return result;
 err:
  return NULL;
 }
 
 INTERN int DCALL
-asm_gpush_function(DeeAstObject *__restrict function_ast) {
+asm_gpush_function(struct ast *__restrict function_ast) {
  DREF DeeCodeObject *code; int32_t cid;
  uint16_t i,refc; struct asm_symbol_ref *refv;
  code = ast_assemble_function(function_ast,&refc,&refv);
@@ -114,8 +114,8 @@ err:
 
 INTERN int DCALL
 asm_gmov_function(struct symbol *__restrict dst,
-                  DeeAstObject *__restrict function_ast,
-                  DeeAstObject *__restrict dst_warn_ast) {
+                  struct ast *__restrict function_ast,
+                  struct ast *__restrict dst_warn_ast) {
  DREF DeeCodeObject *code; int32_t cid;
  uint16_t i,refc; struct asm_symbol_ref *refv;
  code = ast_assemble_function(function_ast,&refc,&refv);

@@ -30,10 +30,10 @@ DECL_BEGIN
 
 INTERN int
 (DCALL ast_optimize_loop)(struct ast_optimize_stack *__restrict stack,
-                          DeeAstObject *__restrict self, bool result_used) {
+                          struct ast *__restrict self, bool result_used) {
  (void)result_used;
  if (optimizer_unwind_limit != 0) {
-  /* TODO: Loop unwinding when `self->ast_loop.ast_iter'
+  /* TODO: Loop unwinding when `self->a_loop.l_iter'
    *       evaluates to a constant expression.
    * >> for (local x: [:3])
    * >>      print x;
@@ -63,39 +63,39 @@ INTERN int
   if unlikely(ast_assumes_initcond(&lookahead_assumptions,stack->os_assume))
      goto err;
   /* Build up assumptions as they will appear after the loop. */
-  if (self->ast_flag & AST_FLOOP_FOREACH) {
+  if (self->a_flag & AST_FLOOP_FOREACH) {
    /* foreach-style loop. */
-   if (ast_assumes_gather(&lookahead_assumptions,self->ast_loop.ast_iter,true)) {
+   if (ast_assumes_gather(&lookahead_assumptions,self->a_loop.l_iter,true)) {
 err_lookahead_assumptions:
     ast_assumes_fini(&lookahead_assumptions);
     goto err;
    }
-   if (self->ast_loop.ast_elem &&
-       ast_assumes_gather(&lookahead_assumptions,self->ast_loop.ast_elem,true))
+   if (self->a_loop.l_elem &&
+       ast_assumes_gather(&lookahead_assumptions,self->a_loop.l_elem,true))
        goto err_lookahead_assumptions;
-   if (self->ast_loop.ast_loop &&
-       ast_assumes_gather(&lookahead_assumptions,self->ast_loop.ast_loop,false))
+   if (self->a_loop.l_loop &&
+       ast_assumes_gather(&lookahead_assumptions,self->a_loop.l_loop,false))
        goto err_lookahead_assumptions;
   } else {
-   if (!(self->ast_flag & AST_FLOOP_POSTCOND)) {
-    if (self->ast_loop.ast_cond &&
-        ast_assumes_gather(&lookahead_assumptions,self->ast_loop.ast_cond,true))
+   if (!(self->a_flag & AST_FLOOP_POSTCOND)) {
+    if (self->a_loop.l_cond &&
+        ast_assumes_gather(&lookahead_assumptions,self->a_loop.l_cond,true))
         goto err_lookahead_assumptions;
    }
-   if (self->ast_loop.ast_loop &&
-       ast_assumes_gather(&lookahead_assumptions,self->ast_loop.ast_loop,false))
+   if (self->a_loop.l_loop &&
+       ast_assumes_gather(&lookahead_assumptions,self->a_loop.l_loop,false))
        goto err_lookahead_assumptions;
-   if (self->ast_loop.ast_next &&
-       ast_assumes_gather(&lookahead_assumptions,self->ast_loop.ast_next,false))
+   if (self->a_loop.l_next &&
+       ast_assumes_gather(&lookahead_assumptions,self->a_loop.l_next,false))
        goto err_lookahead_assumptions;
-   if (self->ast_flag & AST_FLOOP_POSTCOND) {
-    if (self->ast_loop.ast_cond &&
-        ast_assumes_gather(&lookahead_assumptions,self->ast_loop.ast_cond,true))
+   if (self->a_flag & AST_FLOOP_POSTCOND) {
+    if (self->a_loop.l_cond &&
+        ast_assumes_gather(&lookahead_assumptions,self->a_loop.l_cond,true))
         goto err_lookahead_assumptions;
    }
   }
   /* Delete any assumptions that wouldn't have been made if the loop isn't run at all. */
-  if ((self->ast_flag & (AST_FLOOP_FOREACH|AST_FLOOP_POSTCOND)) != AST_FLOOP_POSTCOND &&
+  if ((self->a_flag & (AST_FLOOP_FOREACH|AST_FLOOP_POSTCOND)) != AST_FLOOP_POSTCOND &&
        ast_assumes_mergecond(&lookahead_assumptions,NULL))
        goto err_lookahead_assumptions;
   if unlikely(ast_assumes_initcond(&entry_assumptions,stack->os_assume))
@@ -111,35 +111,35 @@ err_lookahead_assumptions:
 
   child_stack.os_prev   = stack;
   child_stack.os_assume = &entry_assumptions;
-  if (self->ast_flag & AST_FLOOP_FOREACH) {
-   child_stack.os_ast  = self->ast_loop.ast_iter;
+  if (self->a_flag & AST_FLOOP_FOREACH) {
+   child_stack.os_ast  = self->a_loop.l_iter;
    child_stack.os_used = true;
-   if (ast_optimize(&child_stack,self->ast_loop.ast_iter,true)) {
+   if (ast_optimize(&child_stack,self->a_loop.l_iter,true)) {
 err_entry_assumptions:
     ast_assumes_fini(&entry_assumptions);
     goto err;
    }
-   if (self->ast_loop.ast_elem &&
-       ast_optimize(&child_stack,self->ast_loop.ast_elem,true))
+   if (self->a_loop.l_elem &&
+       ast_optimize(&child_stack,self->a_loop.l_elem,true))
        goto err_entry_assumptions;
-   if (self->ast_loop.ast_loop &&
-       ast_optimize(&child_stack,self->ast_loop.ast_loop,false))
+   if (self->a_loop.l_loop &&
+       ast_optimize(&child_stack,self->a_loop.l_loop,false))
        goto err_entry_assumptions;
   } else {
-   if (!(self->ast_flag & AST_FLOOP_POSTCOND)) {
-    if (self->ast_loop.ast_cond &&
-        ast_optimize(&child_stack,self->ast_loop.ast_cond,true))
+   if (!(self->a_flag & AST_FLOOP_POSTCOND)) {
+    if (self->a_loop.l_cond &&
+        ast_optimize(&child_stack,self->a_loop.l_cond,true))
         goto err_entry_assumptions;
    }
-   if (self->ast_loop.ast_loop &&
-       ast_optimize(&child_stack,self->ast_loop.ast_loop,false))
+   if (self->a_loop.l_loop &&
+       ast_optimize(&child_stack,self->a_loop.l_loop,false))
        goto err_entry_assumptions;
-   if (self->ast_loop.ast_next &&
-       ast_optimize(&child_stack,self->ast_loop.ast_next,false))
+   if (self->a_loop.l_next &&
+       ast_optimize(&child_stack,self->a_loop.l_next,false))
        goto err_entry_assumptions;
-   if (self->ast_flag & AST_FLOOP_POSTCOND) {
-    if (self->ast_loop.ast_cond &&
-        ast_optimize(&child_stack,self->ast_loop.ast_cond,true))
+   if (self->a_flag & AST_FLOOP_POSTCOND) {
+    if (self->a_loop.l_cond &&
+        ast_optimize(&child_stack,self->a_loop.l_cond,true))
         goto err_entry_assumptions;
    }
   }
@@ -150,44 +150,44 @@ err_entry_assumptions:
  } else
 #endif
  {
-  if (self->ast_loop.ast_cond &&
-      ast_optimize(stack,self->ast_loop.ast_cond,true)) goto err;
-  if (self->ast_loop.ast_next &&
-      ast_optimize(stack,self->ast_loop.ast_next,(self->ast_flag & AST_FLOOP_FOREACH) != 0)) goto err;
-  if (self->ast_loop.ast_loop &&
-      ast_optimize(stack,self->ast_loop.ast_loop,false)) goto err;
+  if (self->a_loop.l_cond &&
+      ast_optimize(stack,self->a_loop.l_cond,true)) goto err;
+  if (self->a_loop.l_next &&
+      ast_optimize(stack,self->a_loop.l_next,(self->a_flag & AST_FLOOP_FOREACH) != 0)) goto err;
+  if (self->a_loop.l_loop &&
+      ast_optimize(stack,self->a_loop.l_loop,false)) goto err;
  }
 
 
- if (self->ast_flag & AST_FLOOP_FOREACH) {
+ if (self->a_flag & AST_FLOOP_FOREACH) {
   /* foreach-style loop. */
- } else if (!(self->ast_flag & AST_FLOOP_POSTCOND)) {
-  if (self->ast_loop.ast_cond) {
+ } else if (!(self->a_flag & AST_FLOOP_POSTCOND)) {
+  if (self->a_loop.l_cond) {
    /* TODO: Do this optimization in regards to the current, known state of variables. */
    int condition_value;
    /* Optimize constant conditions. */
-   condition_value = ast_get_boolean(self->ast_loop.ast_cond);
+   condition_value = ast_get_boolean(self->a_loop.l_cond);
    if (condition_value > 0) {
     /* Forever-loop (Discard the condition). */
-    Dee_Clear(self->ast_loop.ast_cond);
+    Dee_Clear(self->a_loop.l_cond);
     OPTIMIZE_VERBOSE("Removing constant-true loop condition\n");
     ++optimizer_count;
    } else if (condition_value == 0) {
 #if 0 /* TODO: This doesn't properly handle labels! */
     /* Unused loop:
      * >> while (0) { ... } */
-    DREF DeeAstObject **elemv,*none_ast;
-    elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+    DREF struct ast **elemv,*none_ast;
+    elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
     if unlikely(!elemv) goto err;
     none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None),self);
     if unlikely(!none_ast) { Dee_Free(elemv); goto err; }
-    elemv[0] = self->ast_loop.ast_cond; /* Inherit */
+    elemv[0] = self->a_loop.l_cond; /* Inherit */
     elemv[1] = none_ast; /* Inherit */
     /* Convert into a multiple-ast. */
-    self->ast_multiple.ast_exprc = 2;
-    self->ast_type               = AST_MULTIPLE;
-    self->ast_flag               = AST_FMULTIPLE_KEEPLAST;
-    self->ast_multiple.ast_exprv = elemv; /* Inherit */
+    self->ast_multiple.m_astc = 2;
+    self->a_type               = AST_MULTIPLE;
+    self->a_flag               = AST_FMULTIPLE_KEEPLAST;
+    self->ast_multiple.m_astv = elemv; /* Inherit */
     OPTIMIZE_VERBOSE("Deleting loop never executed\n");
     goto did_optimize;
 #endif
@@ -223,14 +223,14 @@ err_entry_assumptions:
    * >>     print i;
    */
  } else {
-  if (self->ast_loop.ast_cond) {
+  if (self->a_loop.l_cond) {
    /* TODO: Do this optimization in regards to the current, known state of variables. */
    int condition_value;
    /* Optimize constant conditions. */
-   condition_value = ast_get_boolean(self->ast_loop.ast_cond);
+   condition_value = ast_get_boolean(self->a_loop.l_cond);
    if (condition_value > 0) {
     /* Forever-loop (Discard the condition). */
-    Dee_Clear(self->ast_loop.ast_cond);
+    Dee_Clear(self->a_loop.l_cond);
     OPTIMIZE_VERBOSE("Removing constant-true loop condition\n");
     ++optimizer_count;
    } else if (condition_value == 0) {
@@ -239,22 +239,22 @@ err_entry_assumptions:
     /* Unused loop:
      * >> do { ... } while (0); */
     /* Convert to `{ <loop>; <next>; <cond>; none; }' */
-    DREF DeeAstObject **elemv,*none_ast,**iter;
-    elemv = (DREF DeeAstObject **)Dee_Malloc(4*sizeof(DREF DeeAstObject *));
+    DREF struct ast **elemv,*none_ast,**iter;
+    elemv = (DREF struct ast **)Dee_Malloc(4*sizeof(DREF struct ast *));
     if unlikely(!elemv) goto err;
     none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None),self);
     if unlikely(!none_ast) { Dee_Free(elemv); goto err; }
     iter = elemv;
-    *iter++ = self->ast_loop.ast_loop; /* Inherit */
-    if (self->ast_loop.ast_next)
-       *iter++ = self->ast_loop.ast_next; /* Inherit */
-    *iter++ = self->ast_loop.ast_cond; /* Inherit */
+    *iter++ = self->a_loop.l_loop; /* Inherit */
+    if (self->a_loop.l_next)
+       *iter++ = self->a_loop.l_next; /* Inherit */
+    *iter++ = self->a_loop.l_cond; /* Inherit */
     *iter++ = none_ast; /* Inherit */
     /* Convert into a multiple-ast. */
-    self->ast_multiple.ast_exprc = (size_t)(iter-elemv);
-    self->ast_type               = AST_MULTIPLE;
-    self->ast_flag               = AST_FMULTIPLE_KEEPLAST;
-    self->ast_multiple.ast_exprv = elemv; /* Inherit */
+    self->ast_multiple.m_astc = (size_t)(iter-elemv);
+    self->a_type               = AST_MULTIPLE;
+    self->a_flag               = AST_FMULTIPLE_KEEPLAST;
+    self->ast_multiple.m_astv = elemv; /* Inherit */
     OPTIMIZE_VERBOSE("Unwinding loop only iterated once\n");
     goto did_optimize;
 #endif

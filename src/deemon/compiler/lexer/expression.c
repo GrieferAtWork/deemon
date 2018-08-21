@@ -271,21 +271,21 @@ maybe_expression_begin_c(char peek) {
 }
 
 
-PRIVATE DREF DeeAstObject *FCALL
-make_bound_expression(DeeAstObject *__restrict base_expr,
+PRIVATE DREF struct ast *FCALL
+make_bound_expression(struct ast *__restrict base_expr,
                       struct ast_loc *__restrict loc) {
- DREF DeeAstObject *result;
- if (base_expr->ast_type == AST_SYM) {
+ DREF struct ast *result;
+ if (base_expr->a_type == AST_SYM) {
   /* Check if a given symbol is bound. */
-  result = ast_setddi(ast_bound(base_expr->ast_sym),&base_expr->ast_ddi);
- } else if (base_expr->ast_type == AST_OPERATOR &&
-            base_expr->ast_flag == OPERATOR_GETATTR &&
-            base_expr->ast_operator.ast_opb) {
+  result = ast_setddi(ast_bound(base_expr->a_sym),&base_expr->a_ddi);
+ } else if (base_expr->a_type == AST_OPERATOR &&
+            base_expr->a_flag == OPERATOR_GETATTR &&
+            base_expr->a_operator.o_op1) {
   /* Check if a given attribute is bound. */
   result = ast_action2(AST_FACTION_BOUNDATTR,
-                       base_expr->ast_operator.ast_opa,
-                       base_expr->ast_operator.ast_opb);
- } else if (WARNAT(&base_expr->ast_ddi,W_CANNOT_TEST_EXPRESSION_BINDING)) {
+                       base_expr->a_operator.o_op0,
+                       base_expr->a_operator.o_op1);
+ } else if (WARNAT(&base_expr->a_ddi,W_CANNOT_TEST_EXPRESSION_BINDING)) {
   result = NULL;
  } else {
   /* Fallback-after-warning: Return `true' */
@@ -378,7 +378,7 @@ err:
  return NULL;
 }
 
-INTERN DREF DeeAstObject *FCALL ast_sym_import_from_deemon(void) {
+INTERN DREF struct ast *FCALL ast_sym_import_from_deemon(void) {
  struct symbol *import_symbol;
  import_symbol = new_unnamed_symbol();
  if unlikely(!import_symbol) goto err;
@@ -396,10 +396,10 @@ err:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_unary_base(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
- DREF DeeAstObject *merge;
+ DREF struct ast *result;
+ DREF struct ast *merge;
  struct ast_loc loc;
  uint32_t old_flags;
  switch (tok) {
@@ -626,8 +626,8 @@ do_empty_cell:
 
 
  {
-  DREF DeeAstObject *tt_branch;
-  DREF DeeAstObject *ff_branch;
+  DREF struct ast *tt_branch;
+  DREF struct ast *ff_branch;
   uint16_t expect;
  case KWD_if: /* if-in-expressions. */
   expect = current_tags.at_expect;
@@ -740,12 +740,12 @@ do_create_class:
                             AST_FMULTIPLE_TUPLE,
                             NULL);
    if likely(result &&
-             result->ast_type == AST_EXPAND) {
+             result->a_type == AST_EXPAND) {
     /* Wrap into a single-item tuple multiple-branch:
      * >> print pack get_items()...; // Convert to tuple. */
-    DREF DeeAstObject **exprv;
+    DREF struct ast **exprv;
     ast_setddi(result,&loc);
-    exprv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+    exprv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
     if unlikely(!exprv) goto err_r_flags;
     exprv[0] = result; /* Inherit */
     merge = ast_multiple(AST_FMULTIPLE_TUPLE,1,exprv);
@@ -763,7 +763,7 @@ do_create_class:
                WARN(W_EXPECTED_RPAREN_AFTER_PACK))
       goto err_r;
    if (has_paren == 1 &&
-       result->ast_type != AST_MULTIPLE) {
+       result->a_type != AST_MULTIPLE) {
     /* C-style cast expression (only for single-parenthesis expressions) */
     merge = ast_parse_cast(result);
     Dee_Decref(result);
@@ -814,19 +814,19 @@ do_create_class:
                             AST_FMULTIPLE_TUPLE,
                             NULL);
    if likely(result &&
-             result->ast_type == AST_EXPAND) {
+             result->a_type == AST_EXPAND) {
     /* Wrap into a single-item tuple multiple-branch:
      * >> print (get_items()...); // Convert to tuple. */
-    DREF DeeAstObject **exprv;
+    DREF struct ast **exprv;
     ast_setddi(result,&loc);
-    exprv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+    exprv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
     if unlikely(!exprv) goto err_r_flags;
     exprv[0] = result; /* Inherit */
     merge = ast_multiple(AST_FMULTIPLE_TUPLE,1,exprv);
     if unlikely(!merge) { Dee_Free(exprv); goto err_r_flags; }
     result = merge; /* Inherit */
    }
-   if (result->ast_type == AST_MULTIPLE)
+   if (result->a_type == AST_MULTIPLE)
        allow_cast = false; /* Don't allow comma-lists for cast expressions. */
   }
   ast_putddi(result,&loc);
@@ -837,7 +837,7 @@ do_create_class:
               WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
      goto err;
   if (allow_cast &&
-      result->ast_type != AST_MULTIPLE) {
+      result->a_type != AST_MULTIPLE) {
    /* C-style cast expression (only for single-parenthesis expressions) */
    merge = ast_parse_cast(result);
    Dee_Decref(result);
@@ -896,7 +896,7 @@ do_create_class:
    /* Bound-operator expression. */
    merge = ast_operator_func((uint16_t)name,NULL);
   } else {
-   DREF DeeAstObject *other;
+   DREF struct ast *other;
    old_flags = TPPLexer_Current->l_flags;
    TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
    if unlikely(yield() < 0) goto err_flags;
@@ -954,8 +954,8 @@ do_lambda:
    result = ast_multiple(AST_FMULTIPLE_LIST,0,NULL);
   } else {
    if (tok == ':') {
-    DREF DeeAstObject *begin_expression;
-    DREF DeeAstObject *step_expression;
+    DREF struct ast *begin_expression;
+    DREF struct ast *step_expression;
     result = ast_constexpr(Dee_None);
     if unlikely(!result) goto err_flags;
     /* Range without begin index. */
@@ -990,9 +990,9 @@ do_range_expression:
                              NULL);
     if unlikely(!result) goto err_flags;
     if (tok == ':' &&
-        result->ast_type == AST_MULTIPLE &&
-        result->ast_multiple.ast_exprc == 1) {
-     merge = result->ast_multiple.ast_exprv[0];
+        result->a_type == AST_MULTIPLE &&
+        result->a_multiple.m_astc == 1) {
+     merge = result->a_multiple.m_astv[0];
      Dee_Incref(merge);
      Dee_Decref(result);
      result = merge;
@@ -1010,7 +1010,7 @@ do_range_expression:
 
  {
   struct symbol *this_sym;
-  DREF DeeAstObject *this_ast;
+  DREF struct ast *this_ast;
  case KWD_super:
   if (!current_basescope->bs_super)
        goto default_case;
@@ -1042,7 +1042,7 @@ do_range_expression:
    * allowing the use of `__nth(2+3)' instead of forcing the
    * user to write `__nth(5)' or `__nth(__TPP_EVAL(2+3))' */
   if (ast_optimize_all(result,true)) goto err_r;
-  if (result->ast_type != AST_CONSTEXPR &&
+  if (result->a_type != AST_CONSTEXPR &&
       WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
       goto err_r;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -1051,8 +1051,8 @@ do_range_expression:
   if (TPP_ISKEYWORD(tok)) {
    unsigned int nth_symbol = 0;
    struct symbol *sym;
-   if (result->ast_type == AST_CONSTEXPR &&
-       DeeObject_AsUInt(result->ast_constexpr,&nth_symbol)) {
+   if (result->a_type == AST_CONSTEXPR &&
+       DeeObject_AsUInt(result->a_constexpr,&nth_symbol)) {
     DeeError_Handled(ERROR_HANDLED_RESTORE);
     if (WARN(W_EXPECTED_CONSTANT_AFTER_NTH)) goto err_r;
    }
@@ -1091,7 +1091,7 @@ do_warn_deprecated_modifier:
 
  case TOK_DOTS:
   if (current_basescope->bs_varargs) {
-   DREF DeeAstObject *new_result;
+   DREF struct ast *new_result;
    /* Reference the varargs portion of the argument list. */
    result = ast_sethere(ast_sym(current_basescope->bs_varargs));
    if unlikely(!result) goto err;
@@ -1150,10 +1150,10 @@ err_r:
 err:
  return NULL;
 }
-INTERN DREF DeeAstObject *FCALL
-ast_parse_unary_suffix(/*inherit(always)*/DREF DeeAstObject *__restrict result) {
- DREF DeeAstObject *merge;
- DREF DeeAstObject *other;
+INTERN DREF struct ast *FCALL
+ast_parse_unary_suffix(/*inherit(always)*/DREF struct ast *__restrict result) {
+ DREF struct ast *merge;
+ DREF struct ast *other;
  struct ast_loc loc;
  uint32_t old_flags;
  do {
@@ -1256,7 +1256,7 @@ got_attr2:;
    other = ast_parse_expression(LOOKUP_SYM_SECONDARY);
    if unlikely(!other) goto err_r_flags;
    if (tok == ':') {
-    DREF DeeAstObject *third;
+    DREF struct ast *third;
 do_range:
     /* range operator. */
     if unlikely(yield() < 0) goto err_2_flags;
@@ -1291,8 +1291,8 @@ do_range:
 #endif
    {
     /* Use the brace AST in a single-argument call to `result' */
-    DREF DeeAstObject **elemv;
-    elemv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+    DREF struct ast **elemv;
+    elemv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
     if unlikely(!elemv) { err_other: Dee_Decref(other); goto err_r; }
     elemv[0] = other;
     merge = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,elemv),&loc);
@@ -1306,7 +1306,7 @@ do_range:
    break;
 
   {
-   DREF DeeAstObject *kw_labels;
+   DREF struct ast *kw_labels;
   case KWD_pack: /* Call expression without parenthesis. */
    loc_here(&loc);
    if unlikely(yield() < 0) goto err_r;
@@ -1351,7 +1351,7 @@ do_range:
   } break;
 
   {
-   DREF DeeAstObject *kw_labels;
+   DREF struct ast *kw_labels;
   case '(': /* Call expression. */
    loc_here(&loc);
    old_flags = TPPLexer_Current->l_flags;
@@ -1423,9 +1423,9 @@ err_r:
 err:
  return NULL;
 }
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_unary(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_unary_base(lookup_mode);
  if likely(result)
     result = ast_parse_unary_suffix(result);
@@ -1433,9 +1433,9 @@ ast_parse_unary(unsigned int lookup_mode) {
 }
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_prod_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_prod_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_PROD(cmd));
  for (;;) {
@@ -1459,9 +1459,9 @@ err_r:
  Dee_Decref(lhs);
  return NULL;
 }
-INTERN DREF DeeAstObject *FCALL
-ast_parse_sum_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_sum_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_SUM(cmd));
  for (;;) {
@@ -1489,9 +1489,9 @@ err_r:
  return NULL;
 }
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_shift_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_shift_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_SHIFT(cmd));
  for (;;) {
@@ -1518,9 +1518,9 @@ err_r:
  return NULL;
 }
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_cmp_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_cmp_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_CMP(cmd));
  for (;;) {
@@ -1554,9 +1554,9 @@ err_r:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_cmpeq_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_cmpeq_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_CMPEQ(cmd));
  for (;;) {
@@ -1625,9 +1625,9 @@ err_r:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_and_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_and_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_AND(tok));
  for (;;) {
@@ -1650,9 +1650,9 @@ err_r:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_xor_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_xor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_XOR(tok));
  for (;;) {
@@ -1675,9 +1675,9 @@ err_r:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_or_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_or_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_OR(tok));
  for (;;) {
@@ -1700,9 +1700,9 @@ err_r:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_as_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_as_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_AS(tok));
  for (;;) {
@@ -1725,9 +1725,9 @@ err_r:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_land_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_land_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_LAND(tok));
  for (;;) {
@@ -1759,9 +1759,9 @@ err:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_lor_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_lor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_LOR(tok));
  for (;;) {
@@ -1798,9 +1798,9 @@ err_r:
 err:
  return NULL;
 }
-INTERN DREF DeeAstObject *FCALL
-ast_parse_cond_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *merge,*tt,*ff;
+INTERN DREF struct ast *FCALL
+ast_parse_cond_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *merge,*tt,*ff;
  struct ast_loc loc;
  /* >>  x ? y : z // >> x ? y : z
   * >>  x ?: z    // >> x ? x : z
@@ -1886,9 +1886,9 @@ PRIVATE uint16_t const inplace_fops[] = {
     /* [TOK_POW_EQUAL - TOK_INPLACE_MIN] = */OPERATOR_INPLACE_POW
 };
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_assign_operand(/*inherit(always)*/DREF DeeAstObject *__restrict lhs) {
- DREF DeeAstObject *rhs,*merge;
+INTERN DREF struct ast *FCALL
+ast_parse_assign_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_ASSIGN(cmd));
  for (;;) {
@@ -1920,108 +1920,108 @@ err_r:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_prod(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_unary(lookup_mode);
  if (likely(result) && TOKEN_IS_PROD(tok))
      result = ast_parse_prod_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_sum(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_prod(lookup_mode);
  if (likely(result) && TOKEN_IS_SUM(tok))
      result = ast_parse_sum_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_shift(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_sum(lookup_mode);
  if (likely(result) && TOKEN_IS_SHIFT(tok))
      result = ast_parse_shift_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_cmp(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_shift(lookup_mode);
  if (likely(result) && TOKEN_IS_CMP(tok))
      result = ast_parse_cmp_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_cmpeq(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_cmp(lookup_mode);
  if (likely(result) && TOKEN_IS_CMPEQ(tok))
      result = ast_parse_cmpeq_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_and(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_cmpeq(lookup_mode);
  if (likely(result) && TOKEN_IS_AND(tok))
      result = ast_parse_and_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_xor(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_and(lookup_mode);
  if (likely(result) && TOKEN_IS_XOR(tok))
      result = ast_parse_xor_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_or(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_xor(lookup_mode);
  if (likely(result) && TOKEN_IS_OR(tok))
      result = ast_parse_or_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_as(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_or(lookup_mode);
  if (likely(result) && TOKEN_IS_AS(tok))
      result = ast_parse_as_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_land(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_as(lookup_mode);
  if (likely(result) && TOKEN_IS_LAND(tok))
      result = ast_parse_land_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_lor(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_land(lookup_mode);
  if (likely(result) && TOKEN_IS_LOR(tok))
      result = ast_parse_lor_operand(result);
  return result;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_cond(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_lor(lookup_mode);
  if (likely(result) && TOKEN_IS_COND(tok))
      result = ast_parse_cond_operand(result);
@@ -2029,16 +2029,16 @@ ast_parse_cond(unsigned int lookup_mode) {
 }
 
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_assign(unsigned int lookup_mode) {
 #ifdef __OPTIMIZE_SIZE__
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_cond(lookup_mode);
  if (likely(result) && TOKEN_IS_ASSIGN(tok))
      result = ast_parse_assign_operand(result);
  return result;
 #elif 1
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_unary(lookup_mode);
  if unlikely(!result) goto done;
  switch (tok) {
@@ -2123,7 +2123,7 @@ ast_parse_assign(unsigned int lookup_mode) {
 done:
  return result;
 #elif 1
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_unary(lookup_mode);
  if unlikely(!result) goto done;
  /* parse binary operators */
@@ -2143,7 +2143,7 @@ done:
 done:
  return result;
 #else
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  result = ast_parse_cond(lookup_mode);
  if (likely(result) && TOKEN_IS_ASSIGN(tok))
      result = ast_parse_assign_operand(result);
@@ -2153,8 +2153,8 @@ done:
 
 
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_unary_postexpr(/*inherit(always)*/DREF DeeAstObject *__restrict ast) {
+INTERN DREF struct ast *FCALL
+ast_parse_unary_postexpr(/*inherit(always)*/DREF struct ast *__restrict ast) {
  ast = ast_parse_unary_suffix(ast);
  if unlikely(!ast) goto done;
  /* parse binary operators */

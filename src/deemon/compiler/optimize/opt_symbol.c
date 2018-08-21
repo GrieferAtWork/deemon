@@ -32,30 +32,30 @@
 DECL_BEGIN
 
 INTERN int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack,
-                                       DeeAstObject *__restrict self, bool result_used) {
+                                       struct ast *__restrict self, bool result_used) {
  struct symbol *sym;
  DREF DeeObject *symval;
- ASSERT(self->ast_type == AST_SYM);
+ ASSERT(self->a_type == AST_SYM);
  (void)stack;
  /* If the symbol is being written to, then we can't optimize for external constants. */
- if (self->ast_flag) {
+ if (self->a_flag) {
 #ifdef OPTIMIZE_FASSUME
   /* Generic write with unknown value.
    * -> Remove assumptions made on the symbol. */
   if (optimizer_flags & OPTIMIZE_FASSUME) {
    return ast_assumes_setsymval(stack->os_assume,
-                                self->ast_sym,
+                                self->a_sym,
                                 NULL);
   }
 #endif
   return 0;
  }
- sym = self->ast_sym;
+ sym = self->a_sym;
  if (!result_used) {
   OPTIMIZE_VERBOSE("Remove unused symbol ast\n");
   SYMBOL_DEC_NREAD(sym);
-  self->ast_type = AST_CONSTEXPR;
-  self->ast_constexpr = Dee_None;
+  self->a_type = AST_CONSTEXPR;
+  self->a_constexpr = Dee_None;
   Dee_Incref(Dee_None);
   goto did_optimize;
  }
@@ -97,8 +97,8 @@ set_constant_expression:
      goto done_set_constexpr;
     }
     /* Set the value as a constant expression. */
-    self->ast_constexpr = symval; /* Inherit */
-    self->ast_type      = AST_CONSTEXPR;
+    self->a_constexpr = symval; /* Inherit */
+    self->a_type      = AST_CONSTEXPR;
     SYMBOL_DEC_NREAD(sym); /* Trace read references. */
     OPTIMIZE_VERBOSE("Inline constant symbol expression %r\n",symval);
     goto did_optimize;

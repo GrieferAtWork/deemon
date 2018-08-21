@@ -29,10 +29,10 @@
 DECL_BEGIN
 
 INTERN int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack,
-                                    DeeAstObject *__restrict self, bool result_used) {
+                                    struct ast *__restrict self, bool result_used) {
  struct catch_expr *iter,*end;
- ASSERT(self->ast_type == AST_TRY);
- end = (iter = self->ast_try.ast_catchv)+self->ast_try.ast_catchc;
+ ASSERT(self->a_type == AST_TRY);
+ end = (iter = self->a_try.t_catchv)+self->a_try.t_catchc;
 #ifdef OPTIMIZE_FASSUME
  if (optimizer_flags & OPTIMIZE_FASSUME) {
   /* Since at any point within the guarded expression, execution may jump
@@ -44,7 +44,7 @@ INTERN int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack,
   if (ast_assumes_initcond(&guard_assumes,stack->os_assume))
       goto err;
   child_stack.os_assume = &guard_assumes;
-  child_stack.os_ast    = self->ast_try.ast_guard;
+  child_stack.os_ast    = self->a_try.t_guard;
   child_stack.os_prev   = stack;
   child_stack.os_used   = result_used;
   if (ast_optimize(&child_stack,child_stack.os_ast,result_used)) {
@@ -116,7 +116,7 @@ err_guard_assumes:
  } else
 #endif /* OPTIMIZE_FASSUME */
  {
-  if (ast_optimize(stack,self->ast_try.ast_guard,result_used))
+  if (ast_optimize(stack,self->a_try.t_guard,result_used))
       goto err;
   for (; iter != end; ++iter) {
    if (iter->ce_mask &&
@@ -126,14 +126,14 @@ err_guard_assumes:
    if (ast_optimize(stack,iter->ce_code,result_used)) goto err;
   }
  }
- iter = self->ast_try.ast_catchv;
+ iter = self->a_try.t_catchv;
  for (; iter != end; ++iter) {
   if (iter->ce_flags & EXCEPTION_HANDLER_FFINALLY)
       continue;
   /* `catch (object)' --> `catch (...)' */
   if (iter->ce_mask &&
-      iter->ce_mask->ast_type == AST_CONSTEXPR &&
-      iter->ce_mask->ast_constexpr == (DeeObject *)&DeeObject_Type) {
+      iter->ce_mask->a_type == AST_CONSTEXPR &&
+      iter->ce_mask->a_constexpr == (DeeObject *)&DeeObject_Type) {
    OPTIMIZE_VERBOSE("Optimize object-mask to catch-all\n");
    ++optimizer_count;
    Dee_Clear(iter->ce_mask);
@@ -147,7 +147,7 @@ err_guard_assumes:
    ++optimizer_count;
   }
  }
- if (ast_is_nothrow(self->ast_try.ast_guard,result_used)) {
+ if (ast_is_nothrow(self->a_try.t_guard,result_used)) {
   /* TODO: `try { foo; } finally { bar; }' -> `({ __stack local _r = foo; bar; _r; })'
    * TODO: `try { foo; } catch (...) { bar; }' -> `(foo)' */
  }

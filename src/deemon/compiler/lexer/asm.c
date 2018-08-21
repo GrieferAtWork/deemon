@@ -97,7 +97,7 @@ PRIVATE int DCALL
 asm_parse_operands(struct operand_list *__restrict list,
                    unsigned int type) {
  /*ref*/struct TPPString *operand_type;
- DREF DeeAstObject *operand_value;
+ DREF struct ast *operand_value;
  struct asm_operand *operand;
  while ((type == OPERAND_TYPE_LABEL ? TPP_ISKEYWORD(tok)
                                     : tok == TOK_STRING) ||
@@ -462,12 +462,12 @@ ok:
 
 
 
-INTERN DREF DeeAstObject *DCALL ast_parse_asm(void) {
+INTERN DREF struct ast *DCALL ast_parse_asm(void) {
  struct ast_loc loc; bool is_asm_goto = false;
  uint16_t ast_flags = AST_FASSEMBLY_NORMAL;
  /*REF*/struct TPPString *text;
  struct operand_list operands;
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  uint32_t old_flags; bool has_paren;
  memset(&operands,0,sizeof(struct operand_list));
  /*ASSERT(tok == KWD___asm__);*/
@@ -608,7 +608,7 @@ with_paren:
                        operands.ol_v);
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
  if unlikely(!result) goto err_ops;
- /* NOTE: `ast_assembly' has inherited the operand vector upon success. */
+ /* NOTE: `a_assembly' has inherited the operand vector upon success. */
  TPPString_Decref(text);
  return ast_setddi(result,&loc);
 err_ops:

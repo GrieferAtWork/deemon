@@ -27,65 +27,65 @@
 
 DECL_BEGIN
 
-PRIVATE DREF DeeAstObject *DCALL
+PRIVATE DREF struct ast *DCALL
 ast_parse_del_single(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
- DREF DeeAstObject *new_result;
+ DREF struct ast *result;
+ DREF struct ast *new_result;
  result = ast_parse_unary(lookup_mode);
  if unlikely(!result) goto err;
- switch (result->ast_type) {
+ switch (result->a_type) {
  case AST_SYM:
   /* Create an unbind AST. */
-  new_result = ast_setddi(ast_unbind(result->ast_sym),
-                         &result->ast_ddi);
+  new_result = ast_setddi(ast_unbind(result->a_sym),
+                         &result->a_ddi);
   if unlikely(!new_result) goto err_r;
   Dee_Decref(result);
   result = new_result;
   if ((lookup_mode&LOOKUP_SYM_ALLOWDECL) &&
-       SYMBOL_SCOPE(result->ast_unbind) == current_scope) {
+       SYMBOL_SCOPE(result->a_unbind) == current_scope) {
    /* Delete the actual symbol (don't just unbind it). */
-   del_local_symbol(result->ast_unbind);
+   del_local_symbol(result->a_unbind);
   }
   break;
 
  {
   uint16_t new_operator;
  case AST_OPERATOR:
-  switch (result->ast_flag) {
+  switch (result->a_flag) {
   case OPERATOR_GETATTR:  new_operator = OPERATOR_DELATTR; break;
   case OPERATOR_GETITEM:  new_operator = OPERATOR_DELITEM; break;
   case OPERATOR_GETRANGE: new_operator = OPERATOR_DELRANGE; break;
   default: goto default_case;
   }
   /* Create a new operator branch. */
-  if unlikely(result->ast_operator.ast_exflag&AST_OPERATOR_FVARARGS)
+  if unlikely(result->a_operator.o_exflag&AST_OPERATOR_FVARARGS)
      goto create_2;
-  if unlikely(!result->ast_operator.ast_opb) {
+  if unlikely(!result->a_operator.o_op1) {
    new_result = ast_operator1(new_operator,
-                              result->ast_operator.ast_exflag,
-                              result->ast_operator.ast_opa);
-  } else if unlikely(result->ast_operator.ast_opd) {
+                              result->a_operator.o_exflag,
+                              result->a_operator.o_op0);
+  } else if unlikely(result->a_operator.o_op3) {
    new_result = ast_operator4(new_operator,
-                              result->ast_operator.ast_exflag,
-                              result->ast_operator.ast_opa,
-                              result->ast_operator.ast_opb,
-                              result->ast_operator.ast_opc,
-                              result->ast_operator.ast_opd);
-  } else if (result->ast_operator.ast_opc) {
+                              result->a_operator.o_exflag,
+                              result->a_operator.o_op0,
+                              result->a_operator.o_op1,
+                              result->a_operator.o_op2,
+                              result->a_operator.o_op3);
+  } else if (result->a_operator.o_op2) {
    new_result = ast_operator3(new_operator,
-                              result->ast_operator.ast_exflag,
-                              result->ast_operator.ast_opa,
-                              result->ast_operator.ast_opb,
-                              result->ast_operator.ast_opc);
+                              result->a_operator.o_exflag,
+                              result->a_operator.o_op0,
+                              result->a_operator.o_op1,
+                              result->a_operator.o_op2);
   } else {
 create_2:
    new_result = ast_operator2(new_operator,
-                              result->ast_operator.ast_exflag,
-                              result->ast_operator.ast_opa,
-                              result->ast_operator.ast_opb);
+                              result->a_operator.o_exflag,
+                              result->a_operator.o_op0,
+                              result->a_operator.o_op1);
   }
   if unlikely(!new_result) goto err_r;
-  ast_setddi(new_result,&result->ast_ddi);
+  ast_setddi(new_result,&result->a_ddi);
   Dee_Decref(result);
   result = new_result;
  } break;
@@ -104,10 +104,10 @@ err:
 }
 
 
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_parse_del(unsigned int lookup_mode) {
- DREF DeeAstObject *result;
- size_t delc,dela; DREF DeeAstObject **delv;
+ DREF struct ast *result;
+ size_t delc,dela; DREF struct ast **delv;
  /* Parse additional lookup modifiers. */
  if (ast_parse_lookup_mode(&lookup_mode))
      goto err;
@@ -118,7 +118,7 @@ ast_parse_del(unsigned int lookup_mode) {
   if unlikely(yield() < 0) goto err_r;
   /* Check for relaxed comma-rules. */
   if (!maybe_expression_begin()) goto done;
-  delv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+  delv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
   if unlikely(!delv) goto err_r;
   dela = 2,delc = 1;
   delv[0] = result; /* Inherit */
@@ -126,14 +126,14 @@ ast_parse_del(unsigned int lookup_mode) {
    result = ast_parse_del_single(lookup_mode);
    if unlikely(!result) goto err_delv;
    if (delc == dela) {
-    DREF DeeAstObject **new_delv;
+    DREF struct ast **new_delv;
     size_t new_dela = dela*2;
 do_realloc_delv:
-    new_delv = (DREF DeeAstObject **)Dee_TryRealloc(delv,new_dela*
-                                                    sizeof(DREF DeeAstObject *));
+    new_delv = (DREF struct ast **)Dee_TryRealloc(delv,new_dela*
+                                                    sizeof(DREF struct ast *));
     if unlikely(!new_delv) {
      if (new_dela != delc+1) { new_dela = delc+1; goto do_realloc_delv; }
-     if (Dee_CollectMemory(new_dela*sizeof(DREF DeeAstObject *))) goto do_realloc_delv;
+     if (Dee_CollectMemory(new_dela*sizeof(DREF struct ast *))) goto do_realloc_delv;
      goto err_delv_r;
     }
     delv = new_delv;
@@ -145,9 +145,9 @@ do_realloc_delv:
   } while (maybe_expression_begin());
   /* Pack all delete expression together into a multiple-branch. */
   if (delc != dela) {
-   DREF DeeAstObject **new_delv;
-   new_delv = (DREF DeeAstObject **)Dee_TryRealloc(delv,delc*
-                                                   sizeof(DREF DeeAstObject *));
+   DREF struct ast **new_delv;
+   new_delv = (DREF struct ast **)Dee_TryRealloc(delv,delc*
+                                                   sizeof(DREF struct ast *));
    if likely(new_delv) delv = new_delv;
   }
   result = ast_multiple(AST_FMULTIPLE_KEEPLAST,delc,delv);

@@ -101,8 +101,8 @@ PRIVATE instruction_t const operator_instr_table[] = {
 
 INTDEF int DCALL
 ast_gen_symbol_inplace(struct symbol *__restrict sym,
-                       DeeAstObject *operand,
-                       DeeAstObject *__restrict ddi_ast,
+                       struct ast *operand,
+                       struct ast *__restrict ddi_ast,
                        uint16_t inplace_operator_name,
                        bool is_post_operator,
                        unsigned int gflags) {
@@ -157,24 +157,24 @@ err:
 
 
 INTERN int DCALL
-ast_gen_setattr_inplace(DeeAstObject *__restrict base,
-                        DeeAstObject *__restrict name,
-                        DeeAstObject *operand,
-                        DeeAstObject *__restrict ddi_ast,
+ast_gen_setattr_inplace(struct ast *__restrict base,
+                        struct ast *__restrict name,
+                        struct ast *operand,
+                        struct ast *__restrict ddi_ast,
                         uint16_t inplace_operator_name,
                         bool is_post_operator,
                         unsigned int gflags) {
  /* <base>.<name> += operand; */
  ASSERT(OPERATOR_ISINPLACE(inplace_operator_name));
- if (name->ast_type == AST_CONSTEXPR &&
-     DeeString_Check(name->ast_constexpr)) {
+ if (name->a_type == AST_CONSTEXPR &&
+     DeeString_Check(name->a_constexpr)) {
   /* Special case: Name is a constant string. */
-  int32_t cid = asm_newconst(name->ast_constexpr);
+  int32_t cid = asm_newconst(name->a_constexpr);
   if unlikely(cid < 0) goto err;
-  if (base->ast_type == AST_SYM) {
-   SYMBOL_INPLACE_UNWIND_ALIAS(base->ast_sym);
-   if (SYMBOL_TYPE(base->ast_sym) == SYMBOL_TYPE_THIS &&
-      !SYMBOL_MUST_REFERENCE_TYPEMAY(base->ast_sym)) {
+  if (base->a_type == AST_SYM) {
+   SYMBOL_INPLACE_UNWIND_ALIAS(base->a_sym);
+   if (SYMBOL_TYPE(base->a_sym) == SYMBOL_TYPE_THIS &&
+      !SYMBOL_MUST_REFERENCE_TYPEMAY(base->a_sym)) {
     if (asm_ggetattr_this_const((uint16_t)cid)) goto err; /* this.name */
     if ((gflags & ASM_G_FPUSHRES) && is_post_operator) {
      if (asm_gdup()) goto err;   /* this.name, this.name */
@@ -262,20 +262,20 @@ err:
 }
 
 INTERN int DCALL
-ast_gen_setitem_inplace(DeeAstObject *__restrict base,
-                        DeeAstObject *__restrict index,
-                        DeeAstObject *operand,
-                        DeeAstObject *__restrict ddi_ast,
+ast_gen_setitem_inplace(struct ast *__restrict base,
+                        struct ast *__restrict index,
+                        struct ast *operand,
+                        struct ast *__restrict ddi_ast,
                         uint16_t inplace_operator_name,
                         bool is_post_operator,
                         unsigned int gflags) {
  /* <base>[<index>] += operand; */
  ASSERT(OPERATOR_ISINPLACE(inplace_operator_name));
- if (index->ast_type == AST_CONSTEXPR) {
+ if (index->a_type == AST_CONSTEXPR) {
   /* Special case: The index is constant. */
-  if (DeeInt_Check(index->ast_constexpr)) {
+  if (DeeInt_Check(index->a_constexpr)) {
    int32_t int_index;
-   if (DeeInt_TryAsS32(index->ast_constexpr,&int_index) &&
+   if (DeeInt_TryAsS32(index->a_constexpr,&int_index) &&
        int_index >= INT16_MIN && int_index <= INT16_MAX) {
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;   /* base */
     if (asm_putddi(ddi_ast)) goto err;
@@ -305,8 +305,8 @@ ast_gen_setitem_inplace(DeeAstObject *__restrict base,
     goto done;
    }
   }
-  if (asm_allowconst(index->ast_constexpr)) {
-   int32_t cid = asm_newconst(index->ast_constexpr);
+  if (asm_allowconst(index->a_constexpr)) {
+   int32_t cid = asm_newconst(index->a_constexpr);
    if unlikely(cid < 0) goto err;
    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;   /* base */
    if (asm_putddi(ddi_ast)) goto err;
@@ -371,23 +371,23 @@ err:
  return -1;
 }
 INTERN int DCALL
-ast_gen_setrange_inplace(DeeAstObject *__restrict base,
-                         DeeAstObject *__restrict start,
-                         DeeAstObject *__restrict end,
-                         DeeAstObject *operand,
-                         DeeAstObject *__restrict ddi_ast,
+ast_gen_setrange_inplace(struct ast *__restrict base,
+                         struct ast *__restrict start,
+                         struct ast *__restrict end,
+                         struct ast *operand,
+                         struct ast *__restrict ddi_ast,
                          uint16_t inplace_operator_name,
                          bool is_post_operator,
                          unsigned int gflags) {
  /* <base>[<start>:<end>] += operand; */
  ASSERT(OPERATOR_ISINPLACE(inplace_operator_name));
  /* Special case: The start or end index is constant. */
- if (start->ast_type == AST_CONSTEXPR) {
-  if (DeeNone_Check(start->ast_constexpr)) {
-   if (end->ast_type == AST_CONSTEXPR) {
+ if (start->a_type == AST_CONSTEXPR) {
+  if (DeeNone_Check(start->a_constexpr)) {
+   if (end->a_type == AST_CONSTEXPR) {
     int32_t end_index;
-    if (DeeInt_Check(end->ast_constexpr) &&
-        DeeInt_TryAsS32(end->ast_constexpr,&end_index) &&
+    if (DeeInt_Check(end->a_constexpr) &&
+        DeeInt_TryAsS32(end->a_constexpr,&end_index) &&
         end_index >= INT16_MIN && end_index <= INT16_MAX) {
      /* <base>[none:43] += operand; (Uses `asm_ggetrange_ni') */
      if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;   /* base */
@@ -449,13 +449,13 @@ ast_gen_setrange_inplace(DeeAstObject *__restrict base,
    }
    if (asm_gsetrange_np()) goto err; /* . */
    goto done;
-  } else if (DeeInt_Check(start->ast_constexpr)) {
+  } else if (DeeInt_Check(start->a_constexpr)) {
    int32_t start_index;
-   if (DeeInt_TryAsS32(start->ast_constexpr,&start_index) &&
+   if (DeeInt_TryAsS32(start->a_constexpr,&start_index) &&
        start_index >= INT16_MIN && start_index <= INT16_MAX) {
-    if (end->ast_type == AST_CONSTEXPR) {
+    if (end->a_type == AST_CONSTEXPR) {
      int32_t end_index;
-     if (DeeNone_Check(end->ast_constexpr)) {
+     if (DeeNone_Check(end->a_constexpr)) {
       /* <base>[42:none] += operand; (Uses `asm_ggetrange_in') */
       if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;   /* base */
       if (asm_putddi(ddi_ast)) goto err;
@@ -483,8 +483,8 @@ ast_gen_setrange_inplace(DeeAstObject *__restrict base,
       }
       if (asm_gsetrange_in((int16_t)start_index)) goto err; /* . */
       goto done;
-     } else if (DeeInt_Check(end->ast_constexpr) &&
-                DeeInt_TryAsS32(end->ast_constexpr,&end_index) &&
+     } else if (DeeInt_Check(end->a_constexpr) &&
+                DeeInt_TryAsS32(end->a_constexpr,&end_index) &&
                 end_index >= INT16_MIN && end_index <= INT16_MAX) {
       /* <base>[42:43] += operand; (Uses `asm_ggetrange_ii') */
       if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;   /* base */
@@ -549,9 +549,9 @@ ast_gen_setrange_inplace(DeeAstObject *__restrict base,
    }
   }
  }
- if (end->ast_type == AST_CONSTEXPR) {
+ if (end->a_type == AST_CONSTEXPR) {
   int32_t end_index;
-  if (DeeNone_Check(end->ast_constexpr)) {
+  if (DeeNone_Check(end->a_constexpr)) {
    /* <base>[start:none] += operand; (Uses `asm_ggetrange_pn') */
    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
@@ -583,8 +583,8 @@ ast_gen_setrange_inplace(DeeAstObject *__restrict base,
    }
    if (asm_gsetrange_pn()) goto err; /* . */
    goto done;
-  } else if (DeeInt_Check(end->ast_constexpr) &&
-             DeeInt_TryAsS32(end->ast_constexpr,&end_index) &&
+  } else if (DeeInt_Check(end->a_constexpr) &&
+             DeeInt_TryAsS32(end->a_constexpr,&end_index) &&
              end_index >= INT16_MIN && end_index <= INT16_MAX) {
    /* <base>[start:42] += operand; (Uses `asm_ggetrange_pi') */
    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;

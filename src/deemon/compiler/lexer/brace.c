@@ -34,16 +34,16 @@
 
 DECL_BEGIN
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_mapping(DeeAstObject *__restrict initial_key) {
+INTERN DREF struct ast *FCALL
+ast_parse_mapping(struct ast *__restrict initial_key) {
  size_t elema,elemc;
- DREF DeeAstObject *result;
- DREF DeeAstObject **elemv,*item;
+ DREF struct ast *result;
+ DREF struct ast **elemv,*item;
  /* Parse the associated item. */
  item = ast_parse_expression(LOOKUP_SYM_NORMAL);
  if unlikely(!item) goto err;
  elema = 1,elemc = 0;
- elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+ elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
  if unlikely(!elemv) { Dee_Decref(item); goto err; }
  Dee_Incref(initial_key);
  elemv[0] = initial_key;
@@ -85,15 +85,15 @@ ast_parse_mapping(DeeAstObject *__restrict initial_key) {
   if unlikely(!item) goto err_dict_elemv_r;
   /* Extend the element vector if needed. */
   if (elemc == elema) {
-   DREF DeeAstObject **new_elemv;
+   DREF struct ast **new_elemv;
    size_t new_elema = elema*2;
    ASSERT(new_elema);
 do_realloc_dict:
-   new_elemv = (DREF DeeAstObject **)Dee_TryRealloc(elemv,(new_elema*2)*
-                                                    sizeof(DREF DeeAstObject *));
+   new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,(new_elema*2)*
+                                                    sizeof(DREF struct ast *));
    if unlikely(!new_elemv) {
     if (new_elema != elemc+1) { new_elema = elemc+1; goto do_realloc_dict; }
-    if (Dee_CollectMemory((new_elema*2)*sizeof(DREF DeeAstObject *))) goto do_realloc_dict;
+    if (Dee_CollectMemory((new_elema*2)*sizeof(DREF struct ast *))) goto do_realloc_dict;
     goto err_dict_keyitem;
    }
    elemv = new_elemv;
@@ -104,9 +104,9 @@ do_realloc_dict:
   ++elemc;
  }
  if (elemc != elema) {
-  DREF DeeAstObject **new_elemv;
-  new_elemv = (DREF DeeAstObject **)Dee_TryRealloc(elemv,(elemc*2)*
-                                                   sizeof(DREF DeeAstObject *));
+  DREF struct ast **new_elemv;
+  new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,(elemc*2)*
+                                                   sizeof(DREF struct ast *));
   if likely(new_elemv) elemv = new_elemv;
  }
  result = ast_multiple(AST_FMULTIPLE_GENERIC_KEYS,elemc*2,elemv);
@@ -129,12 +129,12 @@ err:
  goto done;
 }
 
-INTERN DREF DeeAstObject *FCALL
-ast_parse_brace_list(DeeAstObject *__restrict initial_item) {
- DREF DeeAstObject *result;
- DREF DeeAstObject **elemv;
+INTERN DREF struct ast *FCALL
+ast_parse_brace_list(struct ast *__restrict initial_item) {
+ DREF struct ast *result;
+ DREF struct ast **elemv;
  size_t elema = 1,elemc = 1;
- elemv = (DREF DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+ elemv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
  if unlikely(!elemv) goto err;
  Dee_Incref(initial_item);
  elemv[0] = initial_item;
@@ -154,15 +154,15 @@ parse_list_item:
   result = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!result) goto err_list_elemv;
   if (elemc == elema) {
-   DREF DeeAstObject **new_elemv;
+   DREF struct ast **new_elemv;
    size_t new_elema = elema*2;
    ASSERT(new_elema);
 do_realloc_list:
-   new_elemv = (DREF DeeAstObject **)Dee_TryRealloc(elemv,new_elema*
-                                                    sizeof(DREF DeeAstObject *));
+   new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,new_elema*
+                                                    sizeof(DREF struct ast *));
    if unlikely(!new_elemv) {
     if (new_elema != elemc+1) { new_elema = elemc+1; goto do_realloc_list; }
-    if (Dee_CollectMemory(new_elema*sizeof(DREF DeeAstObject *))) goto do_realloc_list;
+    if (Dee_CollectMemory(new_elema*sizeof(DREF struct ast *))) goto do_realloc_list;
     goto err_list_elemv_result;
    }
    elemv = new_elemv;
@@ -171,9 +171,9 @@ do_realloc_list:
   elemv[elemc++] = result; /* Inherit. */
  }
  if (elemc != elema) {
-  DREF DeeAstObject **new_elemv;
-  new_elemv = (DREF DeeAstObject **)Dee_TryRealloc(elemv,elemc*
-                                                   sizeof(DREF DeeAstObject *));
+  DREF struct ast **new_elemv;
+  new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,elemc*
+                                                   sizeof(DREF struct ast *));
   if likely(new_elemv) elemv = new_elemv;
  }
  result = ast_multiple(AST_FMULTIPLE_GENERIC,elemc,elemv);
@@ -191,8 +191,8 @@ err:
 }
 
 
-INTERN DREF DeeAstObject *FCALL ast_parse_brace_items(void) {
- DREF DeeAstObject *result,*new_result;
+INTERN DREF struct ast *FCALL ast_parse_brace_items(void) {
+ DREF struct ast *result,*new_result;
  /* Parse the initial item. */
  if (tok == '.') {
   if unlikely(yield() < 0) goto err;

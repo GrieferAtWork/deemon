@@ -239,7 +239,7 @@ err:
  return NULL;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
  DREF DeeModuleObject *module;
  struct symbol *extern_symbol;
@@ -689,7 +689,7 @@ err:
 }
 
 
-INTDEF DREF DeeAstObject *FCALL ast_sym_import_from_deemon(void);
+INTDEF DREF struct ast *FCALL ast_sym_import_from_deemon(void);
 
 INTERN int FCALL ast_parse_post_import(void) {
 /* - import deemon;
@@ -888,9 +888,9 @@ err:
  return -1;
 }
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_import_hybrid(unsigned int *pwas_expression) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  struct ast_loc import_loc;
  ASSERT(tok == KWD_import);
  loc_here(&import_loc);
@@ -920,9 +920,9 @@ err:
 }
 
 
-INTERN DREF DeeAstObject *FCALL ast_parse_import(void) {
+INTERN DREF struct ast *FCALL ast_parse_import(void) {
  DREF DeeModuleObject *module;
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  struct ast_loc import_loc;
  /* There are many valid ways of writing import statements:
   *  - import("deemon");

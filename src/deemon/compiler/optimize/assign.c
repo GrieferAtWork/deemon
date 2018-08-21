@@ -27,51 +27,51 @@
 
 DECL_BEGIN
 
-INTDEF void DCALL ast_incwrite(DeeAstObject *__restrict self);
-INTDEF void DCALL ast_decwrite(DeeAstObject *__restrict self);
+INTDEF void DCALL ast_incwrite(struct ast *__restrict self);
+INTDEF void DCALL ast_decwrite(struct ast *__restrict self);
 
-INTERN int (DCALL ast_assign)(DeeAstObject *__restrict self,
-                              DeeAstObject *__restrict other) {
- uint8_t buffer[(sizeof(DeeAstObject)-
-                 COMPILER_OFFSETOF(DeeAstObject,ast_type))];
+INTERN int (DCALL ast_assign)(struct ast *__restrict self,
+                              struct ast *__restrict other) {
+ uint8_t buffer[(sizeof(struct ast)-
+                 COMPILER_OFFSETOF(struct ast,a_type))];
  /* Use a temporary buffer for the variable portion of the AST.
   * Until we actually assign `other' to `self', we initialize it as a shallow copy of `other'. */
 #if defined(__INTELLISENSE__) || 1
- DeeAstObject *temp = COMPILER_CONTAINER_OF(buffer,DeeAstObject,ast_type);
+ struct ast *temp = COMPILER_CONTAINER_OF(buffer,struct ast,a_type);
 #else
-#define temp   COMPILER_CONTAINER_OF(buffer,DeeAstObject,ast_type)
+#define temp   COMPILER_CONTAINER_OF(buffer,struct ast,a_type)
 #endif
- temp->ast_type = other->ast_type;
- temp->ast_flag = other->ast_flag;
- switch (other->ast_type) {
+ temp->a_type = other->a_type;
+ temp->a_flag = other->a_flag;
+ switch (other->a_type) {
  case AST_LOOP:
-  if (other->ast_flag&AST_FLOOP_FOREACH &&
-      other->ast_loop.ast_elem) {
+  if (other->a_flag&AST_FLOOP_FOREACH &&
+      other->a_loop.l_elem) {
    /* For an explanation, see AST_ACTION:AST_FACTION_STORE */
-   ast_incwrite(other->ast_loop.ast_elem);
+   ast_incwrite(other->a_loop.l_elem);
   }
-  temp->ast_loop.ast_cond = other->ast_loop.ast_cond;
-  temp->ast_loop.ast_iter = other->ast_loop.ast_iter;
-  temp->ast_loop.ast_loop = other->ast_loop.ast_loop;
-  Dee_XIncref(other->ast_loop.ast_cond);
-  Dee_XIncref(other->ast_loop.ast_iter);
-  Dee_XIncref(other->ast_loop.ast_loop);
+  temp->a_loop.l_cond = other->a_loop.l_cond;
+  temp->a_loop.l_iter = other->a_loop.l_iter;
+  temp->a_loop.l_loop = other->a_loop.l_loop;
+  Dee_XIncref(other->a_loop.l_cond);
+  Dee_XIncref(other->a_loop.l_iter);
+  Dee_XIncref(other->a_loop.l_loop);
   break;
 
  case AST_OPERATOR:
-  temp->ast_operator.ast_exflag = other->ast_operator.ast_exflag;
+  temp->a_operator.o_exflag = other->a_operator.o_exflag;
   goto do_subast_x4;
 
  {
   struct class_member *iter,*end,*dst;
  case AST_CLASS:
-  end = (iter = other->ast_class.ast_memberv)+
-                other->ast_class.ast_memberc;
-  temp->ast_class.ast_memberc = other->ast_class.ast_memberc;
-  dst = (struct class_member *)Dee_Malloc(temp->ast_class.ast_memberc*
+  end = (iter = other->a_class.c_memberv)+
+                other->a_class.c_memberc;
+  temp->a_class.c_memberc = other->a_class.c_memberc;
+  dst = (struct class_member *)Dee_Malloc(temp->a_class.c_memberc*
                                           sizeof(struct class_member));
   if unlikely(!dst) goto err;
-  temp->ast_class.ast_memberv = dst;
+  temp->a_class.c_memberv = dst;
   /* Copy the member descriptor table. */
   for (; iter != end; ++iter,++dst) {
    *dst = *iter;
@@ -79,17 +79,17 @@ INTERN int (DCALL ast_assign)(DeeAstObject *__restrict self,
   }
  }
 do_subast_x4:
-  temp->ast_operator.ast_opd = other->ast_operator.ast_opd;
-  Dee_XIncref(temp->ast_operator.ast_opd);
+  temp->a_operator.o_op3 = other->a_operator.o_op3;
+  Dee_XIncref(temp->a_operator.o_op3);
   ATTR_FALLTHROUGH
  case AST_CONDITIONAL:
 do_xcopy_3:
-  temp->ast_operator.ast_opc = other->ast_operator.ast_opc;
-  Dee_XIncref(temp->ast_operator.ast_opc);
+  temp->a_operator.o_op2 = other->a_operator.o_op2;
+  Dee_XIncref(temp->a_operator.o_op2);
   ATTR_FALLTHROUGH
  case AST_FUNCTION:
-  temp->ast_operator.ast_opb = other->ast_operator.ast_opb;
-  Dee_XIncref(temp->ast_operator.ast_opb);
+  temp->a_operator.o_op1 = other->a_operator.o_op1;
+  Dee_XIncref(temp->a_operator.o_op1);
   ATTR_FALLTHROUGH
  case AST_CONSTEXPR:
  case AST_RETURN:
@@ -97,8 +97,8 @@ do_xcopy_3:
  case AST_THROW:
  case AST_BOOL:
  case AST_EXPAND:
-  temp->ast_constexpr = other->ast_constexpr;
-  Dee_XIncref(temp->ast_constexpr);
+  temp->a_constexpr = other->a_constexpr;
+  Dee_XIncref(temp->a_constexpr);
   break;
 
  case AST_ACTION:
@@ -107,22 +107,22 @@ do_xcopy_3:
    *       This _MUST_ always happen unless the caller uses this function
    *       improperly in order to duplicate a branch without the intent of
    *       eventually destroying the source branch. */
-  if ((other->ast_flag&AST_FACTION_KINDMASK) ==
+  if ((other->a_flag&AST_FACTION_KINDMASK) ==
       (AST_FACTION_STORE&AST_FACTION_KINDMASK)) {
-   ast_incwrite(other->ast_action.ast_act0);
+   ast_incwrite(other->a_action.a_act0);
   }
   goto do_xcopy_3;
 
  {
-  DREF DeeAstObject **iter,**end,**dst;
+  DREF struct ast **iter,**end,**dst;
  case AST_MULTIPLE:
-  temp->ast_multiple.ast_exprc = other->ast_multiple.ast_exprc;
-  end = (iter = other->ast_multiple.ast_exprv)+
-                other->ast_multiple.ast_exprc;
-  dst = (DREF DeeAstObject **)Dee_Malloc(temp->ast_multiple.ast_exprc*
-                                         sizeof(DREF DeeAstObject *));
+  temp->a_multiple.m_astc = other->a_multiple.m_astc;
+  end = (iter = other->a_multiple.m_astv)+
+                other->a_multiple.m_astc;
+  dst = (DREF struct ast **)Dee_Malloc(temp->a_multiple.m_astc*
+                                         sizeof(DREF struct ast *));
   if unlikely(!dst) goto err;
-  temp->ast_multiple.ast_exprv = dst;
+  temp->a_multiple.m_astv = dst;
   for (; iter != end; ++iter,++dst) {
    *dst = *iter;
    Dee_Incref(*dst);
@@ -132,15 +132,15 @@ do_xcopy_3:
  {
   struct catch_expr *iter,*end,*dst;
  case AST_TRY:
-  temp->ast_try.ast_guard = other->ast_try.ast_guard;
-  temp->ast_try.ast_catchc = other->ast_try.ast_catchc;
-  Dee_Incref(temp->ast_try.ast_guard);
-  end = (iter = other->ast_try.ast_catchv)+
-                other->ast_try.ast_catchc;
-  dst = (struct catch_expr *)Dee_Malloc(temp->ast_try.ast_catchc*
+  temp->a_try.t_guard = other->a_try.t_guard;
+  temp->a_try.t_catchc = other->a_try.t_catchc;
+  Dee_Incref(temp->a_try.t_guard);
+  end = (iter = other->a_try.t_catchv)+
+                other->a_try.t_catchc;
+  dst = (struct catch_expr *)Dee_Malloc(temp->a_try.t_catchc*
                                         sizeof(struct catch_expr));
   if unlikely(!dst) goto err;
-  temp->ast_try.ast_catchv = dst;
+  temp->a_try.t_catchv = dst;
   for (; iter != end; ++iter,++dst) {
    *dst = *iter;
    Dee_XIncref(dst->ce_mask);
@@ -149,37 +149,37 @@ do_xcopy_3:
  } break;
 
  case AST_SYM:
-  ASSERT(other->ast_sym);
-  temp->ast_sym = other->ast_sym;
-  if (temp->ast_flag) {
-   ASSERT(SYMBOL_NWRITE(other->ast_sym));
-   SYMBOL_INC_NWRITE(temp->ast_sym);
+  ASSERT(other->a_sym);
+  temp->a_sym = other->a_sym;
+  if (temp->a_flag) {
+   ASSERT(SYMBOL_NWRITE(other->a_sym));
+   SYMBOL_INC_NWRITE(temp->a_sym);
   } else {
-   ASSERT(SYMBOL_NREAD(other->ast_sym));
-   SYMBOL_INC_NREAD(temp->ast_sym);
+   ASSERT(SYMBOL_NREAD(other->a_sym));
+   SYMBOL_INC_NREAD(temp->a_sym);
   }
   break;
 
  case AST_BOUND:
-  ASSERT(other->ast_sym);
-  temp->ast_sym = other->ast_sym;
-  ASSERT(SYMBOL_NBOUND(other->ast_sym));
-  SYMBOL_INC_NBOUND(temp->ast_sym);
+  ASSERT(other->a_sym);
+  temp->a_sym = other->a_sym;
+  ASSERT(SYMBOL_NBOUND(other->a_sym));
+  SYMBOL_INC_NBOUND(temp->a_sym);
   break;
 
  case AST_GOTO:
-  ASSERT(other->ast_goto.ast_label);
-  ASSERT(other->ast_goto.ast_label->tl_goto);
-  temp->ast_goto.ast_label = other->ast_goto.ast_label;
-  ++other->ast_goto.ast_label->tl_goto;
-  temp->ast_goto.ast_base = other->ast_goto.ast_base;
-  Dee_Incref((DeeObject *)temp->ast_goto.ast_base);
+  ASSERT(other->a_goto.g_label);
+  ASSERT(other->a_goto.g_label->tl_goto);
+  temp->a_goto.g_label = other->a_goto.g_label;
+  ++other->a_goto.g_label->tl_goto;
+  temp->a_goto.g_base = other->a_goto.g_base;
+  Dee_Incref((DeeObject *)temp->a_goto.g_base);
   break;
  case AST_LABEL:
-  ASSERT(other->ast_label.ast_label);
-  temp->ast_label.ast_label = other->ast_label.ast_label;
-  temp->ast_label.ast_base  = other->ast_label.ast_base;
-  Dee_Incref((DeeObject *)temp->ast_label.ast_base);
+  ASSERT(other->a_label.l_label);
+  temp->a_label.l_label = other->a_label.l_label;
+  temp->a_label.l_base  = other->a_label.l_base;
+  Dee_Incref((DeeObject *)temp->a_label.l_base);
   break;
 
 // case AST_SWITCH: /* Use the default case... */
@@ -187,65 +187,65 @@ do_xcopy_3:
 
  default:
   /* XXX: Couldn't we must always do a move-construction like this? */
-  memcpy(buffer,&other->ast_type,sizeof(buffer));
-  memset(&other->ast_type,0,sizeof(buffer));
+  memcpy(buffer,&other->a_type,sizeof(buffer));
+  memset(&other->a_type,0,sizeof(buffer));
   break;
  }
  if (self != other) {
   /* Copy over DDI information. */
-  if (other->ast_ddi.l_file)
-      TPPFile_Incref(other->ast_ddi.l_file);
-  if (self->ast_ddi.l_file)
-      TPPFile_Decref(self->ast_ddi.l_file);
-  memcpy(&self->ast_ddi,&other->ast_ddi,sizeof(struct ast_loc));
+  if (other->a_ddi.l_file)
+      TPPFile_Incref(other->a_ddi.l_file);
+  if (self->a_ddi.l_file)
+      TPPFile_Decref(self->a_ddi.l_file);
+  memcpy(&self->a_ddi,&other->a_ddi,sizeof(struct ast_loc));
  }
  /* Finalize the contents of the AST that's being assigned to. */
  ast_fini_contents(self);
  /* Copy our temporary buffer into the actual, new AST. */
- memcpy(&self->ast_type,buffer,sizeof(buffer));
+ memcpy(&self->a_type,buffer,sizeof(buffer));
  return 0;
 err:
  return -1;
 #undef temp
 }
-INTERN int (DCALL ast_graft_onto)(DeeAstObject *__restrict self,
-                                  DeeAstObject *__restrict other) {
- DREF DeeAstObject **elemv;
- if (self->ast_scope == other->ast_scope)
+INTERN int (DCALL ast_graft_onto)(struct ast *__restrict self,
+                                  struct ast *__restrict other) {
+ DREF struct ast **elemv;
+ if (self->a_scope == other->a_scope)
      return ast_assign(self,other);
- elemv = (DeeAstObject **)Dee_Malloc(1*sizeof(DREF DeeAstObject *));
+ elemv = (struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
  if unlikely(!elemv) return -1;
  elemv[0] = other;
  Dee_Incref(other);
  if (self != other) {
   /* Copy over DDI information. */
-  if (other->ast_ddi.l_file)
-      TPPFile_Incref(other->ast_ddi.l_file);
-  if (self->ast_ddi.l_file)
-      TPPFile_Decref(self->ast_ddi.l_file);
-  memcpy(&self->ast_ddi,&other->ast_ddi,sizeof(struct ast_loc));
+  if (other->a_ddi.l_file)
+      TPPFile_Incref(other->a_ddi.l_file);
+  if (self->a_ddi.l_file)
+      TPPFile_Decref(self->a_ddi.l_file);
+  memcpy(&self->a_ddi,&other->a_ddi,sizeof(struct ast_loc));
  }
  ast_fini_contents(self);
  /* Override the (currently) invalid ast `self'. */
- self->ast_type               = AST_MULTIPLE;
- self->ast_flag               = AST_FMULTIPLE_KEEPLAST;
- self->ast_multiple.ast_exprc = 1;
- self->ast_multiple.ast_exprv = elemv;
+ self->a_type               = AST_MULTIPLE;
+ self->a_flag               = AST_FMULTIPLE_KEEPLAST;
+ self->a_multiple.m_astc = 1;
+ self->a_multiple.m_astv = elemv;
  return 0;
 }
 
-INTERN DeeAstObject *DCALL
-ast_setscope_and_ddi(DeeAstObject *ast,
-                     DeeAstObject *__restrict src) {
+INTERN struct ast *DCALL
+ast_setscope_and_ddi(struct ast *ast,
+                     struct ast *__restrict src) {
  if unlikely(!ast) return NULL;
- Dee_Incref(src->ast_scope);
- Dee_Decref(ast->ast_scope);
+ Dee_Incref(src->a_scope);
+ Dee_Decref(ast->a_scope);
  /* Override the effective scope of the AST. */
- ast->ast_scope = src->ast_scope;
+ ast->a_scope = src->a_scope;
  /* Override the DDI information. */
- if (src->ast_ddi.l_file) TPPFile_Incref(src->ast_ddi.l_file);
- if (ast->ast_ddi.l_file) TPPFile_Decref(ast->ast_ddi.l_file);
- ast->ast_ddi = src->ast_ddi;
+ if (src->a_ddi.l_file) TPPFile_Incref(src->a_ddi.l_file);
+ if (ast->a_ddi.l_file) TPPFile_Decref(ast->a_ddi.l_file);
+ ast->a_ddi = src->a_ddi;
  return ast;
 }
 

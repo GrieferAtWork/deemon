@@ -97,7 +97,7 @@ LOCAL bool dee_strcaseeq(char *a, char *b) {
                                                                          
 
 PRIVATE DREF DeeObject *FCALL do_parse_constant(void) {
- DREF DeeAstObject *const_ast;
+ DREF struct ast *const_ast;
  DREF DeeObject *result;
  if unlikely(scope_push()) goto err;
  const_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
@@ -106,9 +106,9 @@ PRIVATE DREF DeeObject *FCALL do_parse_constant(void) {
  /* Optimize the constant branch to allow for constant propagation. */
  if unlikely(ast_optimize_all(const_ast,true))
     goto err_const_ast;
- if (const_ast->ast_type == AST_CONSTEXPR &&
-     asm_allowconst(const_ast->ast_constexpr)) {
-  result = const_ast->ast_constexpr;
+ if (const_ast->a_type == AST_CONSTEXPR &&
+     asm_allowconst(const_ast->a_constexpr)) {
+  result = const_ast->a_constexpr;
  } else {
   if (WARN(W_UASM_EXPECTED_CONSTANT_EXPRESSION_FOR_PSEUDO_INSTRUCTION))
       goto err_const_ast;

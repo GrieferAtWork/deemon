@@ -150,7 +150,7 @@ done_dots:
   ++current_basescope->bs_argc_max;
   if (tok == '=') {
    uint16_t defaultc;
-   DREF DeeAstObject *initializer;
+   DREF struct ast *initializer;
    if (in_optional_args) {
     if (WARN(W_DEFAULT_ARGUMENT_AFTER_NONDEFAULT_OPTIONAL))
         goto err;
@@ -181,12 +181,12 @@ err_initializer:
    }
    /* Extract the value of a constant expression,
     * which is required for a default initializer. */
-   if unlikely(initializer->ast_type != AST_CONSTEXPR) {
+   if unlikely(initializer->a_type != AST_CONSTEXPR) {
     if (WARN(W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT))
         goto err_initializer;
     defl_value = Dee_None;
    } else {
-    defl_value = initializer->ast_constexpr;
+    defl_value = initializer->a_constexpr;
    }
    Dee_Incref(defl_value);
    Dee_Decref(initializer);
@@ -272,11 +272,11 @@ err:
  return -1;
 }
 
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
                    bool allow_missing_params,
                    struct ast_loc *name_loc) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  if unlikely(basescope_push()) return NULL;
  current_basescope->bs_flags |= current_tags.at_code_flags;
  current_basescope->bs_class  = current_tags.at_class;
@@ -285,13 +285,13 @@ ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
  basescope_pop();
  return result;
 }
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_parse_function_noscope(struct TPPKeyword *name,
                            bool *pneed_semi,
                            bool allow_missing_params,
                            struct ast_loc *name_loc) {
  uint32_t old_flags;
- DREF DeeAstObject *result,*code;
+ DREF struct ast *result,*code;
  /* Add information from tags. */
  if (name) {
   struct symbol *funcself_symbol;
@@ -323,7 +323,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   /* Expression function. */
   code = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!code) goto err;
-  result = code->ast_type == AST_EXPAND
+  result = code->a_type == AST_EXPAND
          ? (current_basescope->bs_flags |= CODE_FYIELDING,ast_yield(code))
          : (ast_return(code));
   Dee_Decref(code);
@@ -351,11 +351,11 @@ ast_parse_function_noscope(struct TPPKeyword *name,
  Dee_Decref(code);
  if unlikely(!result) goto err;
  /* Hack: The function AST itself must be located in the caller's scope. */
- Dee_Decref(result->ast_scope);
+ Dee_Decref(result->a_scope);
  ASSERT(current_basescope);
  ASSERT(current_basescope->bs_scope.s_prev);
- result->ast_scope = current_basescope->bs_scope.s_prev;
- Dee_Incref(result->ast_scope);
+ result->a_scope = current_basescope->bs_scope.s_prev;
+ Dee_Incref(result->a_scope);
  return ast_setddi(result,name_loc);
 err_flags:
  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -366,10 +366,10 @@ err_xcode:
 err:
  return NULL;
 }
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_parse_function_noscope_noargs(bool *pneed_semi) {
  uint32_t old_flags;
- DREF DeeAstObject *result,*code;
+ DREF struct ast *result,*code;
  if (tok == TOK_ARROW) {
   struct ast_loc arrow_loc;
   loc_here(&arrow_loc);
@@ -377,7 +377,7 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
   /* Expression function. */
   code = ast_parse_expression(LOOKUP_SYM_NORMAL);
   if unlikely(!code) goto err;
-  result = code->ast_type == AST_EXPAND
+  result = code->a_type == AST_EXPAND
          ? (current_basescope->bs_flags |= CODE_FYIELDING,ast_yield(code))
          : (ast_return(code));
   Dee_Decref(code);
@@ -405,11 +405,11 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
  Dee_Decref(code);
  if unlikely(!result) goto err;
  /* Hack: The function AST itself must be located in the caller's scope. */
- Dee_Decref(result->ast_scope);
+ Dee_Decref(result->a_scope);
  ASSERT(current_basescope);
  ASSERT(current_basescope->bs_scope.s_prev);
- result->ast_scope = current_basescope->bs_scope.s_prev;
- Dee_Incref(result->ast_scope);
+ result->a_scope = current_basescope->bs_scope.s_prev;
+ Dee_Incref(result->a_scope);
  return result;
 err_flags:
  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;

@@ -79,7 +79,7 @@ PRIVATE struct tag_flag tag_flags[] = {
 
 
 INTERN int (DCALL parse_tags)(void) {
- DREF DeeAstObject *args_ast;
+ DREF struct ast *args_ast;
  DREF DeeObject *tag_args;
  size_t i; uint32_t old_flags;
 again:
@@ -137,8 +137,8 @@ again:
   __IF0 {
 need_constexpr:
    ASSERT(!tag_args);
-   if (args_ast->ast_type == AST_CONSTEXPR) {
-    tag_args = args_ast->ast_constexpr;
+   if (args_ast->a_type == AST_CONSTEXPR) {
+    tag_args = args_ast->a_constexpr;
     ASSERT(DeeTuple_Check(tag_args));
     Dee_Incref(tag_args);
    } else {
@@ -151,14 +151,14 @@ need_constexpr:
    /* Define the class/super symbols. */
   case KWD_class:
   case KWD_super:
-   if (args_ast->ast_type != AST_MULTIPLE ||
-       args_ast->ast_multiple.ast_exprc != 1 ||
-       args_ast->ast_multiple.ast_exprv[0]->ast_type != AST_SYM) {
+   if (args_ast->a_type != AST_MULTIPLE ||
+       args_ast->a_multiple.m_astc != 1 ||
+       args_ast->a_multiple.m_astv[0]->a_type != AST_SYM) {
     if unlikely(WARN(W_EXPECTED_SYMBOL_FOR_CLASS_SUPER_TAG))
        goto err;
    } else {
     struct symbol *sym;
-    sym = args_ast->ast_multiple.ast_exprv[0]->ast_sym;
+    sym = args_ast->a_multiple.m_astv[0]->a_sym;
     ASSERT(sym);
     /* TODO: Check if `sym->sym_scope' is reachable from `current_scope' */
     if (tag_id == KWD_class) {

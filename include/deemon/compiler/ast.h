@@ -32,29 +32,34 @@
 
 DECL_BEGIN
 
-typedef struct ast_object DeeAstObject;
+struct ast;
+
+
+#undef CONFIG_AST_IS_STRUCT
+//#define CONFIG_AST_IS_STRUCT 1
+
 
 struct catch_expr {
-    DREF DeeAstObject   *ce_mask;    /* [0..1] An optional expression evaluated before entry to check.
+    DREF struct ast   *ce_mask;    /* [0..1] An optional expression evaluated before entry to check.
                                       *        This expression should evaluate to a type that describes
                                       *        a mask which should be used to determine if an error
                                       *        should be handled by this exception handler.
                                       *  NOTE: When this is an AST_MULTIPLE:AST_FMULTIPLE_TUPLE,
                                       *        or a constant tuple, then its elements are used as
                                       *        catch-masks instead. */
-    DREF DeeAstObject   *ce_code;    /* [1..1] The expression evaluated to handle the exception.
+    DREF struct ast   *ce_code;    /* [1..1] The expression evaluated to handle the exception.
                                       *        When and how this block is evaluated depends on
                                       *        the `EXCEPTION_HANDLER_FFINALLY' flag in `ce_flags':
                                       * When set this expression is evaluated:
-                                      *    - during regular code-flow when `:ast_guard' returns normally
-                                      *    - when `:ast_guard' invoked a `return' statement, or
+                                      *    - during regular code-flow when `:t_guard' returns normally
+                                      *    - when `:t_guard' invoked a `return' statement, or
                                       *      before destruction of a yield-iterator that stopped
-                                      *      execution within `:ast_guard'.
-                                      *    - when `:ast_guard' threw an exception, regardless of
+                                      *      execution within `:t_guard'.
+                                      *    - when `:t_guard' threw an exception, regardless of
                                       *      whether or not that exception had already been handled
                                       *      by other catch expressions.
                                       * When the flag is not set, the expression is evaluated:   
-                                      *    - When `:ast_guard' threw an exception that had not
+                                      *    - When `:t_guard' threw an exception that had not
                                       *      been handled by another catch expression, and
                                       *      `ce_mask' is either `NULL', or contains an expression
                                       *      for which the following code evaluates to true:
@@ -86,13 +91,13 @@ struct catch_expr {
 };
 
 struct class_member {
-    DREF DeeAstObject *cm_ast;     /* [1..1] The AST that is evaluated and assigned to the member. */
-#define CLASS_MEMBER_MEMBER   0    /* A class or instance-to-class member. */
-#define CLASS_MEMBER_OPERATOR 1    /* An operator implemented by the class. */
-    uint16_t           cm_type;    /* Class member type (One of `CLASS_MEMBER_*') */
-    uint16_t           cm_index;   /* The member index/operator id of the member. */
+    DREF struct ast *cm_ast;     /* [1..1] The AST that is evaluated and assigned to the member. */
+#define CLASS_MEMBER_MEMBER   0  /* A class or instance-to-class member. */
+#define CLASS_MEMBER_OPERATOR 1  /* An operator implemented by the class. */
+    uint16_t         cm_type;    /* Class member type (One of `CLASS_MEMBER_*') */
+    uint16_t         cm_index;   /* The member index/operator id of the member. */
 #if __SIZEOF_POINTER__ > 4
-    uint32_t           cm_padding; /* ... */
+    uint32_t         cm_padding; /* ... */
 #endif
 };
 
@@ -109,48 +114,50 @@ struct asm_text {
 
 struct asm_operand {
 #ifndef CONFIG_LANGUAGE_NO_ASM
-    struct TPPKeyword          *ao_name;  /* [0..1] User-defined name for this operand. */
+    struct TPPKeyword        *ao_name;  /* [0..1] User-defined name for this operand. */
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
-    /*REF*/ struct TPPString   *ao_type;  /* [0..1][if((self - :ast_opv) <  :ast_num_o+:ast_num_i,[1..1])]
-                                           *       [if((self - :ast_opv) >= :ast_num_o+:ast_num_i,[0..0])]
-                                           * Allowed operand types (A string of `ASM_OP_*' from `genasm-userasm.c').
-                                           * NOTE: Only, and always `NULL' for label operands. */
+    /*REF*/ struct TPPString *ao_type;  /* [0..1][if((self - :as_opv) <  :as_num_o+:as_num_i,[1..1])]
+                                         *       [if((self - :as_opv) >= :as_num_o+:as_num_i,[0..0])]
+                                         * Allowed operand types (A string of `ASM_OP_*' from `genasm-userasm.c').
+                                         * NOTE: Only, and always `NULL' for label operands. */
     union {
-        DREF DeeAstObject      *ao_expr;  /* [1..1][valid_if((self - :ast_opv) < :ast_num_o+:ast_num_i)] Input/output operand expression. */
-        struct text_label      *ao_label; /* [1..1][valid_if((self - :ast_opv) >= :ast_num_o+:ast_num_i)] Label operand.
-                                           * NOTE: Also holds a reference to `tl_goto' */
+        DREF struct ast      *ao_expr;  /* [1..1][valid_if((self - :as_opv) < :as_num_o+:as_num_i)] Input/output operand expression. */
+        struct text_label    *ao_label; /* [1..1][valid_if((self - :as_opv) >= :as_num_o+:as_num_i)] Label operand.
+                                         * NOTE: Also holds a reference to `tl_goto' */
     };
 };
 #define ASM_OPERAND_IS_INOUT(x) ((x)->ao_type->s_text[0] == '+')
 
 
-struct ast_object {
+struct ast {
+#ifndef CONFIG_AST_IS_STRUCT
     OBJECT_HEAD
+#endif /* !CONFIG_AST_IS_STRUCT */
     /* XXX: Maybe not use an object for this, but rather a raw struct? */
-    DREF DeeScopeObject *ast_scope; /* [1..1] The scope in which this AST exists. */
-    struct ast_loc       ast_ddi;   /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
+    DREF DeeScopeObject *a_scope; /* [1..1] The scope in which this AST exists. */
+    struct ast_loc       a_ddi;   /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
                                      * Debug information describing the location of this AST. */
-    uint16_t             ast_type;  /* AST Type (One of `AST_*') */
+    uint16_t             a_type;  /* AST Type (One of `AST_*') */
 #define AST_FNORMAL      0x0000     /* Normal AST flags. */
-    uint16_t             ast_flag;  /* AST Flags (Set of `AST_F*', dependent on `ast_type') */
-    uint16_t             ast_temp;  /* Temporary value used during assembly. */
-    uint16_t             ast_pad;   /* ... */
+    uint16_t             a_flag;  /* AST Flags (Set of `AST_F*', dependent on `a_type') */
+    uint16_t             a_temp;  /* Temporary value used during assembly. */
+    uint16_t             a_pad;   /* ... */
     union {
 
         /* Base expressions (symbol / constant) */
 #define AST_CONSTEXPR        0x0000          /* `42' */
-        DREF DeeObject      *ast_constexpr;  /* [1..1] Constant (aka. compile-time) expression.
+        DREF DeeObject      *a_constexpr;  /* [1..1] Constant (aka. compile-time) expression.
                                               * NOTE: When set to `none', this AST can be used as a noop expression. */
 
 #define AST_SYM              0x0001          /* `foo' */
-        struct symbol       *ast_sym;        /* [1..1][REF(->s_nread) | REF(->s_wread)] Symbol referenced by this AST.
-                                              * NOTE: When ast_flag is non-zero, then the symbol is being written to. */
+        struct symbol       *a_sym;        /* [1..1][REF(->s_nread) | REF(->s_wread)] Symbol referenced by this AST.
+                                              * NOTE: When a_flag is non-zero, then the symbol is being written to. */
 
 #define AST_UNBIND           0x0002          /* `del foo' */
-        struct symbol       *ast_unbind;     /* [1..1][REF(->s_nwrite)] The symbol that should be unbound. */
+        struct symbol       *a_unbind;     /* [1..1][REF(->s_nwrite)] The symbol that should be unbound. */
 
 #define AST_BOUND            0x0003          /* `bound(foo)' */
-        struct symbol       *ast_bound;      /* [1..1][REF(->s_nbound)] The symbol that should be checked for being bound. */
+        struct symbol       *a_bound;      /* [1..1][REF(->s_nbound)] The symbol that should be checked for being bound. */
 
         /* Statement expressions. */
 #define AST_MULTIPLE                    0x0004  /* Multiple, consecutive statements/expressions.
@@ -161,7 +168,7 @@ struct ast_object {
                                                  * ... in which case they will cause the compiler to
                                                  * generate code for unpacking yielded values and
                                                  * individually assigning them to `a', `b' and `c'.
-                                                 * NOTE: You may use `ast_flag' to specify how
+                                                 * NOTE: You may use `a_flag' to specify how
                                                  *       multiple expressions should be packed together. */
 #   define AST_FMULTIPLE_KEEPLAST       0x0000  /* Default: Evaluate, but discard all but the last expression, which is then propagated as value.
                                                  *          If an `AST_EXPAND' expression appears in the sequence,  */
@@ -169,7 +176,7 @@ struct ast_object {
 #   define AST_FMULTIPLE_LIST           0x1001  /* Pack all elements into a list, correctly handling `AST_EXPAND' elements. */
 #   define AST_FMULTIPLE_SET            0x1002  /* Pack all elements into a set, correctly handling `AST_EXPAND' elements. */
 #   define AST_FMULTIPLE_DICT           0x1003  /* Pack all elements into a dict, correctly handling `AST_EXPAND' elements.
-                                                 * NOTE: This sequence class requires that `ast_exprc' is aligned
+                                                 * NOTE: This sequence class requires that `m_astc' is aligned
                                                  *       by 2, with every first used as key, and every second as item.
                                                  *       If it isn't aligned by 2, the last expression is ignored and not compiled. */
 #   define AST_FMULTIPLE_GENERIC        0x1009  /* Pack elements into a sequence of unspecified typing (used to encode
@@ -179,37 +186,37 @@ struct ast_object {
 #   define AST_FMULTIPLE_ISGENERIC(x) (((x)&0x1008) == 0x1008)
 #   define AST_FMULTIPLE_ISDICT(x)    (((x)&0x1003) == 0x1003)
         struct {
-            size_t              ast_exprc;      /* Amount of expressions. */
-            DREF DeeAstObject **ast_exprv;      /* [1..1][0..ast_exprc][owned] Vector of expressions. */
-        }                       ast_multiple;   /* Multiple, consecutive statements/expressions. */
+            size_t            m_astc;      /* Amount of expressions. */
+            DREF struct ast **m_astv;      /* [1..1][0..m_astc][owned] Vector of expressions. */
+        }                     a_multiple;  /* Multiple, consecutive statements/expressions. */
 
-#define AST_RETURN           0x0005             /* `return' / `return foo' */
-        DREF DeeAstObject   *ast_returnexpr;    /* [0..1] Return expression (If `NULL', `none' is returned). */
+#define AST_RETURN         0x0005    /* `return' / `return foo' */
+        DREF struct ast   *a_return; /* [0..1] Return expression (If `NULL', `none' is returned). */
 
-#define AST_YIELD            0x0006             /* `yield foo' */
-        DREF DeeAstObject   *ast_yieldexpr;     /* [1..1] Yield expression. */
+#define AST_YIELD          0x0006    /* `yield foo' */
+        DREF struct ast   *a_yield;  /* [1..1] Yield expression. */
 
-#define AST_THROW            0x0007             /* `throw foo' */
-        DREF DeeAstObject   *ast_throwexpr;     /* [0..1] The expression being thrown. NOTE: When NULL, this is a `rethrow' statement. */
+#define AST_THROW          0x0007    /* `throw foo' */
+        DREF struct ast   *a_throw;  /* [0..1] The expression being thrown. NOTE: When NULL, this is a `rethrow' statement. */
 
-#define AST_TRY              0x0008             /* `try' statement. */
+#define AST_TRY              0x0008  /* `try' statement. */
         struct {
-            DREF DeeAstObject  *ast_guard;      /* [1..1] The expression that is being guarded. */
-            size_t              ast_catchc;     /* Amount of catch/finally expression. */
-            struct catch_expr  *ast_catchv;     /* [0..ast_catchc][owned] Vector of catch/finally expressions.
-                                                 * NOTE: Multiple handlers are executed in order, lower-indexed
-                                                 *       handlers being evaluated before greater-index ones. */
-        }                    ast_try;           /* `try' statement. */
+            DREF struct ast    *t_guard;  /* [1..1] The expression that is being guarded. */
+            size_t              t_catchc; /* Amount of catch/finally expression. */
+            struct catch_expr  *t_catchv; /* [0..t_catchc][owned] Vector of catch/finally expressions.
+                                           * NOTE: Multiple handlers are executed in order, lower-indexed
+                                           *       handlers being evaluated before greater-index ones. */
+        }                    a_try;       /* `try' statement. */
 
 #define AST_LOOP             0x0009          /* Some type of loop statement. (for, while, do..while)
                                               * NOTE: As far as return values go, `AST_LOOP' always evaluates to `none'.
                                               * HINT: The initializer of a for() statement is encoded as an `AST_MULTIPLE'
                                               *       ast containing the initializer first, followed by the loop.
-                                              * NOTE: If any of the expressions (`ast_cond', `ast_next' or `ast_loop') contain
-                                              *       a `continue' statement, control will always continue at `ast_cond'.
-                                              *       If any of them contain a `break' statement, control will continue after `ast_loop'. */
+                                              * NOTE: If any of the expressions (`l_cond', `l_next' or `a_loop') contain
+                                              *       a `continue' statement, control will always continue at `l_cond'.
+                                              *       If any of them contain a `break' statement, control will continue after `a_loop'. */
 #   define AST_FLOOP_NORMAL         0x0000   /* Normal loop flags. */
-#   define AST_FLOOP_POSTCOND       0x0001   /* `ast_cond' (when non-`NULL') is evaluated after `ast_loop',
+#   define AST_FLOOP_POSTCOND       0x0001   /* `l_cond' (when non-`NULL') is evaluated after `a_loop',
                                               *  rather than before, essentially resulting in `do..while' behavior. */
 #   define AST_FLOOP_FOREACH        0x0002   /* This is a foreach loop:
                                               * `__foreach(x: y) foo(x)' statement.
@@ -217,27 +224,27 @@ struct ast_object {
                                               *       this AST after applying the `__iterself__()' operator to `y'
                                               * NOTE: This flag supersedes `AST_FLOOP_POSTCOND' when both are set.
                                               * NOTE: As far as return values go, `AST_FOREACH' always returns `none'.
-                                              * NOTE: If any expression (`ast_elem', `ast_iter' or `ast_loop') contains a
+                                              * NOTE: If any expression (`l_elem', `l_iter' or `a_loop') contains a
                                               *       `continue' statement, control will jump to yield the next element
                                               *       from the iterator, meaning that `y' will be evaluated immediately after.
                                               *       If any of the expression contain a `break' statement,
-                                              *       control will jump forward to continue after `ast_loop'. */
-#   define AST_FLOOP_UNLIKELY       0x8000   /* The loop is unlikely to be run and `ast_loop.ast_loop' should be written to the cold section. */
+                                              *       control will jump forward to continue after `a_loop'. */
+#   define AST_FLOOP_UNLIKELY       0x8000   /* The loop is unlikely to be run and `a_loop.l_loop' should be written to the cold section. */
         struct {
             union {
-                DREF DeeAstObject  *ast_elem; /* [0..1][valid_if(AST_FLOOP_FOREACH)]
-                                               * The element expression (`x' in the example above).
-                                               * NOTE: Just like AST_ACTION:AST_FACTION_STORE, this pointer also holds a write-reference to symbols. */
-                DREF DeeAstObject  *ast_cond; /* [0..1][valid_if(!AST_FLOOP_FOREACH)] Loop condition. (Either evaluated before, or after the main loop)
-                                               * NOTE: Setting this to `NULL' is the same as a constant true. */
+                DREF struct ast  *l_elem; /* [0..1][valid_if(AST_FLOOP_FOREACH)]
+                                           * The element expression (`x' in the example above).
+                                           * NOTE: Just like AST_ACTION:AST_FACTION_STORE, this pointer also holds a write-reference to symbols. */
+                DREF struct ast  *l_cond; /* [0..1][valid_if(!AST_FLOOP_FOREACH)] Loop condition. (Either evaluated before, or after the main loop)
+                                           * NOTE: Setting this to `NULL' is the same as a constant true. */
             };
             union {
-                DREF DeeAstObject  *ast_iter; /* [1..1][valid_if(AST_FLOOP_FOREACH)] The iterator expression (`y' in the example above).
-                                               *                               NOTE: This expression is only evaluated once! */
-                DREF DeeAstObject  *ast_next; /* [0..1][valid_if(!AST_FLOOP_FOREACH)] Loop advance expression (Executed after `ast_loop', unless `break' was used) */
+                DREF struct ast  *l_iter; /* [1..1][valid_if(AST_FLOOP_FOREACH)] The iterator expression (`y' in the example above).
+                                           *                               NOTE: This expression is only evaluated once! */
+                DREF struct ast  *l_next; /* [0..1][valid_if(!AST_FLOOP_FOREACH)] Loop advance expression (Executed after `a_loop', unless `break' was used) */
             };
-            DREF DeeAstObject      *ast_loop; /* [0..1] Loop block. */
-        }                           ast_loop; /* Loop statement. */
+            DREF struct ast      *l_loop; /* [0..1] Loop block. */
+        }                         a_loop; /* Loop statement. */
 
 #define AST_LOOPCTL    0x000a          /* Special loop statement. */
 #   define AST_FLOOPCTL_BRK 0x0000     /* `break' statement. */
@@ -250,92 +257,90 @@ struct ast_object {
                                         * logical and (`&&') and or (`||') as follows:
                                         * >> a && b; // (a ? b : ) // With `AST_FCOND_BOOL' set
                                         * >> a || b; // (a ?  : b) // With `AST_FCOND_BOOL' set */
-#   define AST_FCOND_LIKELY   0x4000   /* When set, place text for `ast_ff' in the cold text-section (at the end of the function). */
-#   define AST_FCOND_UNLIKELY 0x8000   /* When set, place text for `ast_tt' in the cold text-section (at the end of the function). */
+#   define AST_FCOND_LIKELY   0x4000   /* When set, place text for `c_ff' in the cold text-section (at the end of the function). */
+#   define AST_FCOND_UNLIKELY 0x8000   /* When set, place text for `c_tt' in the cold text-section (at the end of the function). */
         struct {
-            DREF DeeAstObject  *ast_cond;       /* [1..1] Conditional expression. */
-            DREF DeeAstObject  *ast_tt;         /* [0..1][(!= NULL) != (ast_ff != NULL)]
-                                                 * Expression evaluated when the condition is met.
-                                                 * NOTE: In the event that the same object is assigned
-                                                 *       to this field, as is for `ast_cond', the expression
-                                                 *       is only evaluated once at runtime, with the uncast
-                                                 *       condition then returned as true value:
-                                                 *    >> `print get_string() ?: "The string was empty";'
-                                                 *       In the above example, `ast_tt == ast_cond', which
-                                                 *       share the same object internally.
-                                                 *       With that in mind, the generated assembly will
-                                                 *       invoke `get_string', duplicate the result, then
-                                                 *       check if that value evaluates to true, and if it
-                                                 *       does, returns the original return value of `get_string',
-                                                 *       or otherwise the fallback text.
-                                                 * NOTE: When the `AST_FCOND_BOOL' flag is set, the expression
-                                                 *       will evaluate to the boolean representation of the
-                                                 *       result expression. */
-            DREF DeeAstObject  *ast_ff;         /* [0..1][(!= NULL) != (ast_tt != NULL)]
-                                                 * Expression evaluated when the condition isn't met.
-                                                 * NOTE: This branch may also be set to `ast_cond', in which
-                                                 *       case the result of a condition evaluating to false
-                                                 *       will be the uncasted condition. */
-        }                    ast_conditional;
+            DREF struct ast  *c_cond;  /* [1..1] Conditional expression. */
+            DREF struct ast  *c_tt;    /* [0..1][(!= NULL) != (c_ff != NULL)]
+                                        * Expression evaluated when the condition is met.
+                                        * NOTE: In the event that the same object is assigned
+                                        *       to this field, as is for `c_cond', the expression
+                                        *       is only evaluated once at runtime, with the uncast
+                                        *       condition then returned as true value:
+                                        *    >> `print get_string() ?: "The string was empty";'
+                                        *       In the above example, `c_tt == c_cond', which
+                                        *       share the same object internally.
+                                        *       With that in mind, the generated assembly will
+                                        *       invoke `get_string', duplicate the result, then
+                                        *       check if that value evaluates to true, and if it
+                                        *       does, returns the original return value of `get_string',
+                                        *       or otherwise the fallback text.
+                                        * NOTE: When the `AST_FCOND_BOOL' flag is set, the expression
+                                        *       will evaluate to the boolean representation of the
+                                        *       result expression. */
+            DREF struct ast  *c_ff;    /* [0..1][(!= NULL) != (c_tt != NULL)]
+                                        * Expression evaluated when the condition isn't met.
+                                        * NOTE: This branch may also be set to `c_cond', in which
+                                        *       case the result of a condition evaluating to false
+                                        *       will be the uncasted condition. */
+        }                    a_conditional;
 
         /* Unary/Binary/etc. Expressions. */
-#define AST_BOOL             0x000c          /* `!foo' / `!!foo' */
-#   define AST_FBOOL_NORMAL  0x0000          /* Directly convert to a boolean. */
-#   define AST_FBOOL_NEGATE  0x0001          /* FLAG: Negate the boolean value. (`!' prefix) */
-        DREF DeeAstObject   *ast_boolexpr;   /* [1..1] The ast to which the bool operator should be applied. */
+#define AST_BOOL             0x000c  /* `!foo' / `!!foo' */
+#   define AST_FBOOL_NORMAL  0x0000  /* Directly convert to a boolean. */
+#   define AST_FBOOL_NEGATE  0x0001  /* FLAG: Negate the boolean value. (`!' prefix) */
+        DREF struct ast     *a_bool; /* [1..1] The ast to which the bool operator should be applied. */
 
-#define AST_EXPAND           0x000d          /* `foo...' */
-        DREF DeeAstObject   *ast_expandexpr; /* [1..1] The ast affected by the expand expression. */
+#define AST_EXPAND           0x000d    /* `foo...' */
+        DREF struct ast     *a_expand; /* [1..1] The ast affected by the expand expression. */
 
 #define AST_FUNCTION         0x000e          /* A new function definition. */
         struct {
-            DREF DeeAstObject  *ast_code;    /* [1..1] The code expression that is executed within this function. */
-            DREF DeeBaseScopeObject
-                               *ast_scope;   /* The base scope of this function. */
-        }                       ast_function;/* A new function definition. */
+            DREF struct ast         *f_code;  /* [1..1] The code expression that is executed within this function. */
+            DREF DeeBaseScopeObject *f_scope; /* The base scope of this function. */
+        }                    a_function; /* A new function definition. */
 
-#define AST_OPERATOR_FUNC    0x000f          /* An operator-function (either bound, or unbound)
-                                              * >> x = operator +;   // AST_OPERATOR_POS_OR_ADD (unbound)
-                                              * >> x = y.operator +; // AST_OPERATOR_POS_OR_ADD (bound)
-                                              * `ast_flag' is one of `OPERATOR_*', or one of `AST_OPERATOR_*'
-                                              * When used as function-operand of call-expression, this type
-                                              * of AST is transformed into an `AST_OPERATOR' branch.
-                                              * Otherwise, it is replaced with an external binding to one
-                                              * of the symbols found in the `operators' module:
-                                              * >> x = operator +;   // compiles (in this implementation) as `x = __pooad from operators;'
-                                              * >> x = y.operator +; // compiles (in this implementation) as `x = (instancemethod from deemon)(y,__pooad from operators);'
-                                              */
+#define AST_OPERATOR_FUNC    0x000f       /* An operator-function (either bound, or unbound)
+                                           * >> x = operator +;   // AST_OPERATOR_POS_OR_ADD (unbound)
+                                           * >> x = y.operator +; // AST_OPERATOR_POS_OR_ADD (bound)
+                                           * `a_flag' is one of `OPERATOR_*', or one of `AST_OPERATOR_*'
+                                           * When used as function-operand of call-expression, this type
+                                           * of AST is transformed into an `AST_OPERATOR' branch.
+                                           * Otherwise, it is replaced with an external binding to one
+                                           * of the symbols found in the `operators' module:
+                                           * >> x = operator +;   // compiles (in this implementation) as `x = __pooad from operators;'
+                                           * >> x = y.operator +; // compiles (in this implementation) as `x = (instancemethod from deemon)(y,__pooad from operators);' */
         struct {
-            DREF DeeAstObject  *ast_binding; /* [0..1] The first argument of the operator (if it is bound).
-                                              * When set, construct an instancemethod object that is bound to this expression. */
-        } ast_operator_func;
+            DREF struct ast  *of_binding; /* [0..1] The first argument of the operator (if it is bound).
+                                           * When set, construct an instancemethod object that is bound to this expression. */
+        } a_operator_func;
 
 
-#define AST_OPERATOR         0x0010          /* Invocation of some kind of operator.
-                                              * Which one specifically is encoded in `ast_flag' as one of `OPERATOR_*'. */
+#define AST_OPERATOR         0x0010      /* Invocation of some kind of operator.
+                                          * Which one specifically is encoded in `a_flag' as one of `OPERATOR_*'. */
         struct {
-            DREF DeeAstObject  *ast_opa;     /* [1..1] First (aka. self) operand. */
-            DREF DeeAstObject  *ast_opb;     /* [0..1] Second operand. */
-            DREF DeeAstObject  *ast_opc;     /* [0..1] Third operand. */
-            DREF DeeAstObject  *ast_opd;     /* [0..1] Fourth operand. */
-#define AST_OPERATOR_FNORMAL    0x0000       /* Normal operator flags. */
-#define AST_OPERATOR_FPOSTOP    0x0001       /* FLAG: Before the operation, create a copy of the self-operator
-                                              *       and discard the return value of the operator, instead opting
-                                              *       to exit with the self-copy ontop of the stack.
-                                              * NOTE: No copy is created if the value of the expression itself isn't used.
-                                              * HINT: This flag is used to implement `a++' as `({ __stack local temp = copy a; ++a; temp; })'  */
-#define AST_OPERATOR_FVARARGS   0x0002       /* FLAG: The operator always has 2 arguments, the first of which
-                                              *       is the self-operand and the second a tuple of arguments
-                                              *       to pass to the operator callback. */
-#define AST_OPERATOR_FMAYBEPFX  0x0004       /* FLAG: If the operator is an inplace operation, always generate code and don't
-                                              *       cause a compiler error if the operation will cause an error at runtime.
-                                              *       This flag is usually set for explicit operator invocations. */
-#define AST_OPERATOR_FDONTOPT   0x8000       /* Don't perform constant propagation optimization on this branch.
-                                              * Usually just set by the optimizer itself, so-as not to re-attempt
-                                              * constant propagation after doing so failed before. */
-            uint16_t            ast_exflag;  /* Set of `AST_OPERATOR_F*' */
-        }                       ast_operator; /* General purpose operator AST. */
-        DREF DeeAstObject      *ast_operator_ops[4];
+            DREF struct ast    *o_op0;   /* [1..1] First (aka. self) operand. */
+            DREF struct ast    *o_op1;   /* [0..1] Second operand. */
+            DREF struct ast    *o_op2;   /* [0..1] Third operand. */
+            DREF struct ast    *o_op3;   /* [0..1] Fourth operand. */
+#define AST_OPERATOR_FNORMAL    0x0000   /* Normal operator flags. */
+#define AST_OPERATOR_FPOSTOP    0x0001   /* FLAG: Before the operation, create a copy of the self-operator
+                                          *       and discard the return value of the operator, instead opting
+                                          *       to exit with the self-copy ontop of the stack.
+                                          * NOTE: No copy is created if the value of the expression itself isn't used.
+                                          * HINT: This flag is used to implement `a++' as `({ __stack local temp = copy a; ++a; temp; })'  */
+#define AST_OPERATOR_FVARARGS   0x0002   /* FLAG: The operator always has 2 arguments, the first of which
+                                          *       is the self-operand and the second a tuple of arguments
+                                          *       to pass to the operator callback. */
+#define AST_OPERATOR_FMAYBEPFX  0x0004   /* FLAG: If the operator is an inplace operation, always generate code and don't
+                                          *       cause a compiler error if the operation will cause an error at runtime.
+                                          *       This flag is usually set for explicit operator invocations. */
+#define AST_OPERATOR_FDONTOPT   0x8000   /* Don't perform constant propagation optimization on this branch.
+                                          * Usually just set by the optimizer itself, so-as not to re-attempt
+                                          * constant propagation after doing so failed before. */
+            uint16_t            o_exflag;/* Set of `AST_OPERATOR_F*' */
+        }                       a_operator; /* General purpose operator AST. */
+        DREF struct ast        *a_operator_ops[4];
 
 #define AST_ACTION              0x0011 /* Perform some special action using expressions. */
 #   define AST_FACTION_KINDMASK 0x0fff /* MASK: The kind of action (unique). */
@@ -381,46 +386,46 @@ struct ast_object {
 #   define AST_FACTION_DIFFOBJ  0x2017 /* `<act0> !== <act1>'         - Check if <act0> and <act1> are the different objects */
 #   define AST_FACTION_CALL_KW  0x3018 /* `<act0>(<act1>...,**<act2>)' - Call `act0' with `act1', while also passing keywords from `act2' */
         struct {
-            DREF DeeAstObject  *ast_act0; /* [0..1] Primary action operand or NULL when not used. */
-            DREF DeeAstObject  *ast_act1; /* [0..1] Secondary action operand or NULL when not used. */
-            DREF DeeAstObject  *ast_act2; /* [0..1] Third action operand or NULL when not used. */
-        }                       ast_action;
+            DREF struct ast    *a_act0; /* [0..1] Primary action operand or NULL when not used. */
+            DREF struct ast    *a_act1; /* [0..1] Secondary action operand or NULL when not used. */
+            DREF struct ast    *a_act2; /* [0..1] Third action operand or NULL when not used. */
+        }                       a_action;
 
 #define AST_CLASS               0x0012          /* Create a new class object.
-                                                 * NOTE: The runtime class flags are stored on `ast_flag & 0xf' */
+                                                 * NOTE: The runtime class flags are stored on `a_flag & 0xf' */
         struct {
-            DREF DeeAstObject  *ast_base;       /* [0..1] Base/super type. */
-            DREF DeeAstObject  *ast_name;       /* [0..1] Class name. */
-            DREF DeeAstObject  *ast_doc;        /* [0..1] Class documentation string. */
-            DREF DeeAstObject  *ast_imem;       /* [0..1] Instance member table. */
-            DREF DeeAstObject  *ast_cmem;       /* [0..1] Class member table. */
-            struct symbol      *ast_classsym;   /* [0..1] The symbol to which to assign the class before initializing members. */
-            struct symbol      *ast_supersym;   /* [0..1] The symbol to which to assign the base before initializing members. */
-            size_t              ast_memberc;    /* Amount of member descriptors. */
-            struct class_member*ast_memberv;    /* [0..ast_memberc][owned] Vector of member descriptors. */
-            size_t              ast_anonc;      /* Amount of anonymous class members. */
-            struct member_entry*ast_anonv;      /* [OVERRIDE([*].cme_name,[NOT(DREF)][1..1][== Dee_EmptyString])]
-                                                 * [OVERRIDE([*].cme_doc,[NOT(DREF)][0..0])]
-                                                 * [0..ast_anonc][owned] Vector of anonymous class members. */
-        }                    ast_class;
+            DREF struct ast    *c_base;       /* [0..1] Base/super type. */
+            DREF struct ast    *c_name;       /* [0..1] Class name. */
+            DREF struct ast    *c_doc;        /* [0..1] Class documentation string. */
+            DREF struct ast    *c_imem;       /* [0..1] Instance member table. */
+            DREF struct ast    *c_cmem;       /* [0..1] Class member table. */
+            struct symbol      *c_classsym;   /* [0..1] The symbol to which to assign the class before initializing members. */
+            struct symbol      *c_supersym;   /* [0..1] The symbol to which to assign the base before initializing members. */
+            size_t              c_memberc;    /* Amount of member descriptors. */
+            struct class_member*c_memberv;    /* [0..c_memberc][owned] Vector of member descriptors. */
+            size_t              c_anonc;      /* Amount of anonymous class members. */
+            struct member_entry*c_anonv;      /* [OVERRIDE([*].cme_name,[NOT(DREF)][1..1][== Dee_EmptyString])]
+                                               * [OVERRIDE([*].cme_doc,[NOT(DREF)][0..0])]
+                                               * [0..c_anonc][owned] Vector of anonymous class members. */
+        }                       a_class;
 
 #define AST_LABEL               0x0013       /* Define a text/case label at the current address.
                                               * HINT: This AST type usually appears inside of another AST_MULTIPLE,
                                               *       followed by the actual expression that is being addressed. */
 #define AST_FLABEL_NORMAL       0x0000       /* Normal label flags. */
 #define AST_FLABEL_CASE         0x0001       /* FLAG: This is actually a case label.
-                                              * -> `ast_label->tl_expr' is valid, but `ast_label->tl_name' isn't. */
+                                              * -> `a_label->tl_expr' is valid, but `a_label->tl_name' isn't. */
         struct {
-            struct text_label  *ast_label;      /* [1..1] The text/case label that is being defined. */
-            DREF DeeBaseScopeObject *ast_base;  /* [1..1] A reference to the base-scope that owns the label. */
-        }                       ast_label;
+            struct text_label  *l_label;      /* [1..1] The text/case label that is being defined. */
+            DREF DeeBaseScopeObject *l_base;  /* [1..1] A reference to the base-scope that owns the label. */
+        }                       a_label;
 
 #define AST_GOTO                0x0014       /* Jump to a given label. */
         struct {
-            struct text_label       *ast_label; /* [1..1] The text label to which to jump.
-                                                 * NOTE: This field holds a reference to `->tl_goto' */
-            DREF DeeBaseScopeObject *ast_base;  /* [1..1] A reference to the base-scope that owns the label. */
-        }                    ast_goto;
+            struct text_label       *g_label; /* [1..1] The text label to which to jump.
+                                               * NOTE: This field holds a reference to `->tl_goto' */
+            DREF DeeBaseScopeObject *g_base;  /* [1..1] A reference to the base-scope that owns the label. */
+        }                    a_goto;
 
 #define AST_SWITCH              0x0015 /* A switch statement. */
 #   define AST_FSWITCH_NORMAL   0x0000 /* Normal switch flags (automatically determine mode) */
@@ -436,7 +441,7 @@ struct ast_object {
                                         * >>#else
                                         * >>     push     const @{ "foo": (1f.SP,1f.IP), "bar": (2f.SP,2f.IP) }
                                         * >>#endif
-                                        * >>     push     <ast_expr>
+                                        * >>     push     <s_expr>
                                         * >>     push     @(3f.SP,3f.IP) // Default case
                                         * >>     callattr top, @"get", #2
                                         * >>#if IDENTICAL_STACK_DEPTHS
@@ -454,7 +459,7 @@ struct ast_object {
                                         * >>.done:
                                         * Or when all constant case labels are integer
                                         * expressions (non-matching stack code excluded):
-                                        * >>     push     <ast_expr>
+                                        * >>     push     <s_expr>
                                         * >>     dup
                                         * >>     push     $3
                                         * >>     cmp      gr, top, pop
@@ -474,14 +479,14 @@ struct ast_object {
                                         * >>.done:
                                         */
         struct {
-            DREF DeeAstObject *ast_expr;    /* [1..1] The expression on which the switch is enacted. */
-            DREF DeeAstObject *ast_block;   /* [1..1] The expression containing all of the labels. */
-            struct text_label *ast_cases;   /* [0..1][CHAIN(->tl_next)][owned] Chain of case labels.
-                                             * NOTE: Also holds a reference to `tl_goto' of every entry.
-                                             * NOTE: This chain links cases in order of first -> last appearance. */
-            struct text_label *ast_default; /* [0..1][owned] The default label of the switch statement.
-                                             * NOTE: Also holds a reference to `tl_goto'. */
-        }                      ast_switch;
+            DREF struct ast   *s_expr;    /* [1..1] The expression on which the switch is enacted. */
+            DREF struct ast   *s_block;   /* [1..1] The expression containing all of the labels. */
+            struct text_label *s_cases;   /* [0..1][CHAIN(->tl_next)][owned] Chain of case labels.
+                                           * NOTE: Also holds a reference to `tl_goto' of every entry.
+                                           * NOTE: This chain links cases in order of first -> last appearance. */
+            struct text_label *s_default; /* [0..1][owned] The default label of the switch statement.
+                                           * NOTE: Also holds a reference to `tl_goto'. */
+        }                      a_switch;
 
 
 #define AST_ASSEMBLY          0x0016   /* User-defined inline assembly (following GCC's __asm__ keyword).
@@ -525,17 +530,17 @@ struct ast_object {
                                         *       there at all. */
         struct {
 #ifndef CONFIG_LANGUAGE_NO_ASM
-            struct asm_text     ast_text;  /* The assembly text (not formatted yet). */
+            struct asm_text    as_text;  /* The assembly text (not formatted yet). */
 #endif
-            size_t              ast_num_o; /* Amount of output operands. */
-            size_t              ast_num_i; /* Amount of input operands. */
-            size_t              ast_num_l; /* Amount of input operands. */
-            size_t              ast_opc;   /* [== ast_num_o+ast_num_i+ast_num_l] Total number of operands. */
-            struct asm_operand *ast_opv;   /* [0..ast_opc][owned] Vector of assembly operands.
-                                            *   - 0..ast_num_o-1 are output operands.
-                                            *   - ast_num_o..ast_num_o+ast_num_i-1 are input operands.
-                                            *   - ast_num_o+ast_num_i..ast_opc-1 are label operands. */
-        }                    ast_assembly;
+            size_t             as_num_o; /* Amount of output operands. */
+            size_t             as_num_i; /* Amount of input operands. */
+            size_t             as_num_l; /* Amount of input operands. */
+            size_t             as_opc;   /* [== as_num_o+as_num_i+as_num_l] Total number of operands. */
+            struct asm_operand*as_opv;   /* [0..as_opc][owned] Vector of assembly operands.
+                                          *   - 0..as_num_o-1 are output operands.
+                                          *   - as_num_o..as_num_o+as_num_i-1 are input operands.
+                                          *   - as_num_o+as_num_i..as_opc-1 are label operands. */
+        }                      a_assembly;
 
     };
 };
@@ -544,23 +549,28 @@ struct ast_object {
 /* Automatically generate moveassign operations when the
  * right-hand-size has been modulated using a copy/deepcopy operator. */
 #define AST_SHOULD_MOVEASSIGN(x) \
-  ((x)->ast_type == AST_OPERATOR && \
-  ((x)->ast_flag == OPERATOR_COPY || \
-   (x)->ast_flag == OPERATOR_DEEPCOPY))
+  ((x)->a_type == AST_OPERATOR && \
+  ((x)->a_flag == OPERATOR_COPY || \
+   (x)->a_flag == OPERATOR_DEEPCOPY))
 
 #define AST_ISNONE(x) \
- ((x)->ast_type == AST_CONSTEXPR && DeeNone_Check((x)->ast_constexpr))
+ ((x)->a_type == AST_CONSTEXPR && DeeNone_Check((x)->a_constexpr))
 #define AST_HASDDI(x) ((x)->ast_ddi.l_file != NULL)
 
 
-DDATDEF DeeTypeObject DeeAst_Type;
-#define DeeAst_Check(ob)      DeeObject_InstanceOf(ob,&DeeAst_Type)
-#define DeeAst_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeAst_Type)
-
-
-
-
 #ifdef CONFIG_BUILDING_DEEMON
+
+
+#ifdef CONFIG_AST_IS_STRUCT
+#define ASSERT_AST(ob)     ASSERT(ob)
+#define ASSERT_AST_OPT(ob) (void)0
+#else
+INTDEF DeeTypeObject DeeAst_Type;
+#define ASSERT_AST(ob)     ASSERT_OBJECT_TYPE_EXACT(ob,&DeeAst_Type)
+#define ASSERT_AST_OPT(ob) ASSERT_OBJECT_TYPE_EXACT_OPT(ob,&DeeAst_Type)
+#endif
+
+
 /* Set debug information for a given AST.
  * NOTE: This function does not expect the caller to be holding
  *       an actual reference to the file pointed to in `info'.
@@ -570,11 +580,11 @@ DDATDEF DeeTypeObject DeeAst_Type;
  *       the current LC location in the active source file.
  * HINT: This function behaves as a noop when `ast' is NULL
  * @return: * : == ast */
-INTDEF DeeAstObject *FCALL ast_setddi(DeeAstObject *ast, struct ast_loc *__restrict info);
-INTDEF DeeAstObject *FCALL ast_sethere(DeeAstObject *ast);
+INTDEF struct ast *FCALL ast_setddi(struct ast *ast, struct ast_loc *__restrict info);
+INTDEF struct ast *FCALL ast_sethere(struct ast *ast);
 /* Same as the set functions above, but don't override existing debug information. */
-INTDEF DeeAstObject *FCALL ast_putddi(DeeAstObject *ast, struct ast_loc *__restrict info);
-INTDEF DeeAstObject *FCALL ast_puthere(DeeAstObject *ast);
+INTDEF struct ast *FCALL ast_putddi(struct ast *ast, struct ast_loc *__restrict info);
+INTDEF struct ast *FCALL ast_puthere(struct ast *ast);
 /* Fill the given AST location with the current source position. */
 INTDEF void FCALL loc_here(struct ast_loc *__restrict info);
 
@@ -585,11 +595,11 @@ INTDEF void FCALL loc_here(struct ast_loc *__restrict info);
 #if defined(NDEBUG) || defined(__INTELLISENSE__)
 #define CONFIG_NO_AST_DEBUG 1
 #define DEFINE_AST_GENERATOR(name,args) \
-   INTDEF DREF DeeAstObject *DCALL name args
+   INTDEF DREF struct ast *DCALL name args
 #else
 #define PRIVATE_AST_GENERATOR_UNPACK_ARGS(...) (char const *file, int line, __VA_ARGS__)
 #define DEFINE_AST_GENERATOR(name,args) \
-   INTDEF DREF DeeAstObject *DCALL name##_d PRIVATE_AST_GENERATOR_UNPACK_ARGS args
+   INTDEF DREF struct ast *DCALL name##_d PRIVATE_AST_GENERATOR_UNPACK_ARGS args
 #endif
 
 
@@ -602,50 +612,50 @@ DEFINE_AST_GENERATOR(ast_unbind,(struct symbol *__restrict sym));
 /* [AST_BOUND] */
 DEFINE_AST_GENERATOR(ast_bound,(struct symbol *__restrict sym));
 /* [AST_MULTIPLE] WARNING: Inherits a heap-allocated vector `exprv' upon success; @param: flags: Set of `AST_FMULTIPLE_*' */
-DEFINE_AST_GENERATOR(ast_multiple,(uint16_t flags, size_t exprc, /*inherit*/DREF DeeAstObject **__restrict exprv));
+DEFINE_AST_GENERATOR(ast_multiple,(uint16_t flags, size_t exprc, /*inherit*/DREF struct ast **__restrict exprv));
 /* [AST_RETURN] NOTE: `return_expr' may be `NULL' */
-DEFINE_AST_GENERATOR(ast_return,(DeeAstObject *return_expr));
+DEFINE_AST_GENERATOR(ast_return,(struct ast *return_expr));
 /* [AST_YIELD] */
-DEFINE_AST_GENERATOR(ast_yield,(DeeAstObject *__restrict yield_expr));
+DEFINE_AST_GENERATOR(ast_yield,(struct ast *__restrict yield_expr));
 /* [AST_THROW] NOTE: `throw_expr' may be `NULL' */
-DEFINE_AST_GENERATOR(ast_throw,(DeeAstObject *throw_expr));
+DEFINE_AST_GENERATOR(ast_throw,(struct ast *throw_expr));
 /* [AST_TRY] WARNING: Inherits a heap-allocated vector `catchv' upon success */
-DEFINE_AST_GENERATOR(ast_try,(DeeAstObject *__restrict guarded_expression, size_t catchc,
+DEFINE_AST_GENERATOR(ast_try,(struct ast *__restrict guarded_expression, size_t catchc,
                               /*inherit*/struct catch_expr *__restrict catchv));
-/* [AST_TRY] Helper function to create a simple try-finally expression using `ast_try' */
-DEFINE_AST_GENERATOR(ast_tryfinally,(DeeAstObject *__restrict guarded_expression,
-                                     DeeAstObject *__restrict finally_expression));
+/* [AST_TRY] Helper function to create a simple try-finally expression using `a_try' */
+DEFINE_AST_GENERATOR(ast_tryfinally,(struct ast *__restrict guarded_expression,
+                                     struct ast *__restrict finally_expression));
 /* [AST_LOOP] @parma: flags: Set of `AST_FLOOP_*' */
-DEFINE_AST_GENERATOR(ast_loop,(uint16_t flags, DeeAstObject *elem_or_cond, DeeAstObject *iter_or_next, DeeAstObject *loop));
+DEFINE_AST_GENERATOR(ast_loop,(uint16_t flags, struct ast *elem_or_cond, struct ast *iter_or_next, struct ast *loop));
 /* [AST_LOOPCTL] @parma: flags: Set of `AST_FLOOPCTL_**' */
 DEFINE_AST_GENERATOR(ast_loopctl,(uint16_t flags));
 /* [AST_CONDITIONAL] @parma: flags: Set of `AST_FCOND_**' */
-DEFINE_AST_GENERATOR(ast_conditional,(uint16_t flags, DeeAstObject *__restrict cond,
-                                      DeeAstObject *tt_expr, DeeAstObject *ff_expr));
+DEFINE_AST_GENERATOR(ast_conditional,(uint16_t flags, struct ast *__restrict cond,
+                                      struct ast *tt_expr, struct ast *ff_expr));
 /* [AST_BOOL] @param: flags: Set of `AST_FBOOL_*' */
-DEFINE_AST_GENERATOR(ast_bool,(uint16_t flags, DeeAstObject *__restrict expr));
+DEFINE_AST_GENERATOR(ast_bool,(uint16_t flags, struct ast *__restrict expr));
 /* [AST_EXPAND] */
-DEFINE_AST_GENERATOR(ast_expand,(DeeAstObject *__restrict expr));
+DEFINE_AST_GENERATOR(ast_expand,(struct ast *__restrict expr));
 /* [AST_FUNCTION] */
-DEFINE_AST_GENERATOR(ast_function,(DeeAstObject *__restrict function_code, DeeBaseScopeObject *__restrict scope));
+DEFINE_AST_GENERATOR(ast_function,(struct ast *__restrict function_code, DeeBaseScopeObject *__restrict scope));
 /* [AST_OPERATOR_FUNC] */
-DEFINE_AST_GENERATOR(ast_operator_func,(uint16_t operator_name, DeeAstObject *binding));
+DEFINE_AST_GENERATOR(ast_operator_func,(uint16_t operator_name, struct ast *binding));
 /* [AST_OPERATOR] @param: operator_name: One of `OPERATOR_*'.
  *                @param: flags: Set of `AST_OPERATOR_F*' */
-DEFINE_AST_GENERATOR(ast_operator1,(uint16_t operator_name, uint16_t flags, DeeAstObject *__restrict opa));
-DEFINE_AST_GENERATOR(ast_operator2,(uint16_t operator_name, uint16_t flags, DeeAstObject *__restrict opa, DeeAstObject *__restrict opb));
-DEFINE_AST_GENERATOR(ast_operator3,(uint16_t operator_name, uint16_t flags, DeeAstObject *__restrict opa, DeeAstObject *__restrict opb, DeeAstObject *__restrict opc));
-DEFINE_AST_GENERATOR(ast_operator4,(uint16_t operator_name, uint16_t flags, DeeAstObject *__restrict opa, DeeAstObject *__restrict opb, DeeAstObject *__restrict opc, DeeAstObject *__restrict opd));
+DEFINE_AST_GENERATOR(ast_operator1,(uint16_t operator_name, uint16_t flags, struct ast *__restrict opa));
+DEFINE_AST_GENERATOR(ast_operator2,(uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb));
+DEFINE_AST_GENERATOR(ast_operator3,(uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc));
+DEFINE_AST_GENERATOR(ast_operator4,(uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc, struct ast *__restrict opd));
 /* [AST_ACTION]  @param: action_flags: One of `AST_FACTION_*' (see above). */
 DEFINE_AST_GENERATOR(ast_action0,(uint16_t action_flags));
-DEFINE_AST_GENERATOR(ast_action1,(uint16_t action_flags, DeeAstObject *__restrict act0));
-DEFINE_AST_GENERATOR(ast_action2,(uint16_t action_flags, DeeAstObject *__restrict act0, DeeAstObject *__restrict act1));
-DEFINE_AST_GENERATOR(ast_action3,(uint16_t action_flags, DeeAstObject *__restrict act0, DeeAstObject *__restrict act1, DeeAstObject *__restrict act2));
+DEFINE_AST_GENERATOR(ast_action1,(uint16_t action_flags, struct ast *__restrict act0));
+DEFINE_AST_GENERATOR(ast_action2,(uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1));
+DEFINE_AST_GENERATOR(ast_action3,(uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1, struct ast *__restrict act2));
 /* [AST_CLASS]   @param: class_flags: Set of `TP_F* & 0xf'.
  * WARNING: Inherits a heap-allocated vector `memberv' upon success. */
 DEFINE_AST_GENERATOR(ast_class,(uint16_t class_flags,
-                                DeeAstObject *base, DeeAstObject *name, DeeAstObject *doc,
-                                DeeAstObject *imem, DeeAstObject *cmem,
+                                struct ast *base, struct ast *name, struct ast *doc,
+                                struct ast *imem, struct ast *cmem,
                                 struct symbol *class_symbol, struct symbol *super_symbol,
                                 size_t memberc, struct class_member *__restrict memberv,
                                 size_t anonc, struct member_entry *anonv));
@@ -655,7 +665,7 @@ DEFINE_AST_GENERATOR(ast_label,(uint16_t flags, struct text_label *__restrict lb
 DEFINE_AST_GENERATOR(ast_goto,(struct text_label *__restrict lbl, DeeBaseScopeObject *__restrict base_scope));
 /* [AST_SWITCH] @param: flags: Set of `AST_FSWITCH_*'.
  * WARNING: Inherits both `cases' and `default_case' upon success. */
-DEFINE_AST_GENERATOR(ast_switch,(uint16_t flags, DeeAstObject *__restrict expr, DeeAstObject *__restrict block,
+DEFINE_AST_GENERATOR(ast_switch,(uint16_t flags, struct ast *__restrict expr, struct ast *__restrict block,
                                  struct text_label *cases, struct text_label *default_case));
 /* [AST_ASSEMBLY] WARNING: Inherits a heap-allocated vector `opv' upon success; @param: flags: Set of `AST_FASSEMBLY_*' */
 #ifdef CONFIG_LANGUAGE_NO_ASM
@@ -712,7 +722,7 @@ DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict 
 #define ast_lor(a,b)    ast_conditional(AST_FCOND_BOOL,a,a,b) /* `a || b' */
 
 /* Return true if a given `AST_MULTIPLE' contains expand ASTs. */
-INTDEF bool (DCALL ast_multiple_hasexpand)(DeeAstObject *__restrict self);
+INTDEF bool (DCALL ast_multiple_hasexpand)(struct ast *__restrict self);
 
 
 #endif /* !CONFIG_BUILDING_DEEMON */

@@ -64,13 +64,13 @@ INTERN uint16_t optimizer_unwind_limit = 0;
 INTERN unsigned int optimizer_count    = 0;
 
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
-INTERN void ast_optimize_verbose(DeeAstObject *__restrict self, char const *format, ...) {
+INTERN void ast_optimize_verbose(struct ast *__restrict self, char const *format, ...) {
  va_list args; va_start(args,format);
- if (self->ast_ddi.l_file) {
+ if (self->a_ddi.l_file) {
   DEE_DPRINTF("%s(%d,%d) : ",
-              TPPFile_Filename(self->ast_ddi.l_file,NULL),
-              self->ast_ddi.l_line+1,
-              self->ast_ddi.l_col+1);
+              TPPFile_Filename(self->a_ddi.l_file,NULL),
+              self->a_ddi.l_line+1,
+              self->a_ddi.l_col+1);
  }
  DEE_VDPRINTF(format,args);
  va_end(args);
@@ -81,7 +81,7 @@ INTERN void ast_optimize_verbose(DeeAstObject *__restrict self, char const *form
 
 
 INTERN int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent,
-                                DeeAstObject *__restrict self, bool result_used) {
+                                struct ast *__restrict self, bool result_used) {
  struct ast_optimize_stack stack;
  stack.os_prev   = parent;
  stack.os_ast    = self;
@@ -91,7 +91,7 @@ INTERN int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent,
 #endif /* OPTIMIZE_FASSUME */
  return ast_dooptimize(&stack,self,result_used);
 }
-INTERN int (DCALL ast_startoptimize)(DeeAstObject *__restrict self, bool result_used) {
+INTERN int (DCALL ast_startoptimize)(struct ast *__restrict self, bool result_used) {
  struct ast_optimize_stack stack;
  int result;
 #ifdef OPTIMIZE_FASSUME
@@ -111,23 +111,23 @@ INTERN int (DCALL ast_startoptimize)(DeeAstObject *__restrict self, bool result_
  return result;
 }
 INTERN int (DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack,
-                                  DeeAstObject *__restrict self, bool result_used) {
- ASSERT_OBJECT_TYPE(self,&DeeAst_Type);
+                                  struct ast *__restrict self, bool result_used) {
+ ASSERT_AST(self);
 again:
  /* Check for interrupts to allow the user to stop optimization */
  if (DeeThread_CheckInterrupt()) goto err;
- while (self->ast_scope->s_prev &&                    /* Has parent scope */
-        self->ast_scope->s_prev->ob_type ==           /* Parent scope has the same type */
-        self->ast_scope->ob_type &&                   /* ... */
-        self->ast_scope->ob_type == &DeeScope_Type && /* It's a regular scope */
-       !self->ast_scope->s_mapc &&                    /* Current scope has no symbols */
-       !self->ast_scope->s_del) {                     /* Current scope has no deleted symbol */
+ while (self->a_scope->s_prev &&                    /* Has parent scope */
+        self->a_scope->s_prev->ob_type ==           /* Parent scope has the same type */
+        self->a_scope->ob_type &&                   /* ... */
+        self->a_scope->ob_type == &DeeScope_Type && /* It's a regular scope */
+       !self->a_scope->s_mapc &&                    /* Current scope has no symbols */
+       !self->a_scope->s_del) {                     /* Current scope has no deleted symbol */
   /* Use the parent's scope. */
   DeeScopeObject *new_scope;
-  new_scope = self->ast_scope->s_prev;
+  new_scope = self->a_scope->s_prev;
   Dee_Incref(new_scope);
-  Dee_Decref(self->ast_scope);
-  self->ast_scope = new_scope;
+  Dee_Decref(self->a_scope);
+  self->a_scope = new_scope;
   ++optimizer_count;
 #if 0 /* This happens so often, logging it would just be spam... */
   OPTIMIZE_VERBOSEAT(self,"Inherit parent scope above empty child scope\n");
@@ -138,7 +138,7 @@ again:
  /* TODO: Move variables declared in outer scopes, but only used in inner ones
   *       into those inner scopes, thus improving local-variable-reuse optimizations
   *       later done the line. */
- switch (self->ast_type) {
+ switch (self->a_type) {
 
  case AST_SYM:
   return ast_optimize_symbol(stack,self,result_used);
@@ -150,7 +150,7 @@ again:
 #ifdef OPTIMIZE_FASSUME
   /* Delete assumptions made about the symbol. */
   if (optimizer_flags & OPTIMIZE_FASSUME)
-      return ast_assumes_setsymval(stack->os_assume,self->ast_unbind,NULL);
+      return ast_assumes_setsymval(stack->os_assume,self->a_unbind,NULL);
 #endif
   break;
 
@@ -162,8 +162,8 @@ again:
  case AST_RETURN:
  case AST_YIELD:
  case AST_THROW:
-  if (self->ast_returnexpr &&
-      ast_optimize(stack,self->ast_returnexpr,true))
+  if (self->a_return &&
+      ast_optimize(stack,self->a_return,true))
       goto err;
   break;
 
@@ -178,50 +178,50 @@ again:
 
  {
   int ast_value;
-  DREF DeeAstObject **elemv;
+  DREF struct ast **elemv;
  case AST_BOOL:
   /* TODO: Optimize the inner expression in regards to
    *       it only being used as a boolean expression */
-  if (ast_optimize(stack,self->ast_boolexpr,result_used)) goto err;
+  if (ast_optimize(stack,self->a_bool,result_used)) goto err;
   /* If the result doesn't matter, don't perform a negation. */
-  if (!result_used) self->ast_flag &= ~AST_FBOOL_NEGATE;
+  if (!result_used) self->a_flag &= ~AST_FBOOL_NEGATE;
 
   /* Figure out if the branch's value is known at compile-time. */
-  ast_value = ast_get_boolean(self->ast_boolexpr);
+  ast_value = ast_get_boolean(self->a_bool);
   if (ast_value >= 0) {
-   if (self->ast_flag&AST_FBOOL_NEGATE)
+   if (self->a_flag&AST_FBOOL_NEGATE)
        ast_value = !ast_value;
-   if (ast_has_sideeffects(self->ast_boolexpr)) {
+   if (ast_has_sideeffects(self->a_bool)) {
     /* Replace this branch with `{ ...; true/false; }' */
-    elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+    elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
     if unlikely(!elemv) goto err;
-    elemv[0] = self->ast_boolexpr;
+    elemv[0] = self->a_bool;
     elemv[1] = ast_setscope_and_ddi(ast_constexpr(DeeBool_For(ast_value)),self);
     if unlikely(!elemv[1]) { Dee_Free(elemv); goto err; }
-    self->ast_type               = AST_MULTIPLE;
-    self->ast_flag               = AST_FMULTIPLE_KEEPLAST;
-    self->ast_multiple.ast_exprc = 2;
-    self->ast_multiple.ast_exprv = elemv;
+    self->a_type               = AST_MULTIPLE;
+    self->a_flag               = AST_FMULTIPLE_KEEPLAST;
+    self->a_multiple.m_astc = 2;
+    self->a_multiple.m_astv = elemv;
    } else {
     /* Without side-effects, there is no need to keep the expression around. */
-    Dee_Decref_likely(self->ast_boolexpr);
-    self->ast_constexpr = DeeBool_For(ast_value);
-    Dee_Incref(self->ast_constexpr);
-    self->ast_type = AST_CONSTEXPR;
-    self->ast_flag = AST_FNORMAL;
+    Dee_Decref_likely(self->a_bool);
+    self->a_constexpr = DeeBool_For(ast_value);
+    Dee_Incref(self->a_constexpr);
+    self->a_type = AST_CONSTEXPR;
+    self->a_flag = AST_FNORMAL;
    }
    OPTIMIZE_VERBOSE("Propagating constant boolean expression\n");
    goto did_optimize;
   }
-  if (ast_predict_type(self->ast_boolexpr) == &DeeBool_Type) {
-   if (self->ast_flag & AST_FBOOL_NEGATE) {
+  if (ast_predict_type(self->a_bool) == &DeeBool_Type) {
+   if (self->a_flag & AST_FBOOL_NEGATE) {
     /* TODO: Search for what is making the inner expression
      *       a boolean and try to apply our negation to it:
      * >> x = !({ !foo(); }); // Apply our negation to the inner expression.
      */
    } else {
     /* Optimize away the unnecessary bool-cast */
-    if (ast_graft_onto(self,self->ast_boolexpr))
+    if (ast_graft_onto(self,self->a_bool))
         goto err;
     OPTIMIZE_VERBOSE("Remove unused bool cast\n");
     goto did_optimize;
@@ -230,7 +230,7 @@ again:
  } break;
 
  case AST_EXPAND:
-  if (ast_optimize(stack,self->ast_expandexpr,result_used))
+  if (ast_optimize(stack,self->a_expand,result_used))
       goto err;
   break;
  case AST_FUNCTION:
@@ -243,7 +243,7 @@ again:
    if (ast_assumes_initfunction(&child_assumes,stack->os_assume))
        goto err;
    child_stack.os_assume = &child_assumes;
-   child_stack.os_ast    = self->ast_function.ast_code;
+   child_stack.os_ast    = self->a_function.f_code;
    child_stack.os_prev   = stack;
    child_stack.os_used   = false;
    if (ast_optimize(&child_stack,child_stack.os_ast,false)) {
@@ -256,7 +256,7 @@ again:
   } else
 #endif
   {
-   if (ast_optimize(stack,self->ast_function.ast_code,false))
+   if (ast_optimize(stack,self->a_function.f_code,false))
        goto err;
   }
   if (!DeeCompiler_Current->cp_options ||
@@ -273,19 +273,19 @@ again:
 
  case AST_LABEL:
   /* Special label-branch. */
-  ASSERT(self->ast_label.ast_label);
-  if (!self->ast_label.ast_label->tl_goto) {
+  ASSERT(self->a_label.l_label);
+  if (!self->a_label.l_label->tl_goto) {
    /* The label was never used. - Ergo: it should not exist.
     * To signify this, we simply convert this branch to `none'. */
    if (WARNAST(self,W_ASM_LABEL_NEVER_USED,
-               self->ast_flag&AST_FLABEL_CASE ?
-              (self->ast_label.ast_label->tl_expr ? "case" : "default") :
-               self->ast_label.ast_label->tl_name->k_name))
+               self->a_flag&AST_FLABEL_CASE ?
+              (self->a_label.l_label->tl_expr ? "case" : "default") :
+               self->a_label.l_label->tl_name->k_name))
        goto err;
-   Dee_Decref((DeeObject *)self->ast_label.ast_base);
-   self->ast_type      = AST_CONSTEXPR;
-   self->ast_flag      = AST_FNORMAL;
-   self->ast_constexpr = Dee_None;
+   Dee_Decref((DeeObject *)self->a_label.l_base);
+   self->a_type      = AST_CONSTEXPR;
+   self->a_flag      = AST_FNORMAL;
+   self->a_constexpr = Dee_None;
    Dee_Incref(Dee_None);
    OPTIMIZE_VERBOSE("Removing unused label\n");
    goto did_optimize;
@@ -311,8 +311,8 @@ again:
  case AST_ASSEMBLY:
 #ifdef OPTIMIZE_FASSUME
   if (optimizer_flags & OPTIMIZE_FASSUME) {
-   end = (iter = self->ast_assembly.ast_opv + self->ast_assembly.ast_num_o) +
-                                              self->ast_assembly.ast_num_i;
+   end = (iter = self->a_assembly.as_opv + self->a_assembly.as_num_o) +
+                                              self->a_assembly.as_num_i;
    for (; iter < end; ++iter) {
     if (ast_optimize(stack,iter->ao_expr,true))
         goto err;
@@ -320,12 +320,12 @@ again:
    /* If the assembly branch is marked as reachable from the outside,
     * then we must act the same as we do for label assumptions, and
     * delete all assumptions already made. */
-   if ((self->ast_flag & AST_FASSEMBLY_REACH) &&
+   if ((self->a_flag & AST_FASSEMBLY_REACH) &&
         ast_assumes_undefined_all(stack->os_assume))
         goto err;
    /* Optimize output operands in respect to new assumptions,
     * as those are executed _after_ input operands. */
-   end = (iter = self->ast_assembly.ast_opv) + self->ast_assembly.ast_num_o;
+   end = (iter = self->a_assembly.as_opv) + self->a_assembly.as_num_o;
    for (; iter < end; ++iter) {
     if (ast_optimize(stack,iter->ao_expr,true))
         goto err;
@@ -333,9 +333,9 @@ again:
   } else
 #endif
   {
-   end = (iter = self->ast_assembly.ast_opv)+
-                (self->ast_assembly.ast_num_i+
-                 self->ast_assembly.ast_num_o);
+   end = (iter = self->a_assembly.as_opv)+
+                (self->a_assembly.as_num_i+
+                 self->a_assembly.as_num_o);
    for (; iter < end; ++iter) {
     if (ast_optimize(stack,iter->ao_expr,true))
         goto err;
@@ -353,7 +353,7 @@ err:
  return -1;
 }
 
-INTERN int (DCALL ast_optimize_all)(DeeAstObject *__restrict self, bool result_used) {
+INTERN int (DCALL ast_optimize_all)(struct ast *__restrict self, bool result_used) {
  int result;
  unsigned int old_value;
  do {

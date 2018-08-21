@@ -29,10 +29,10 @@
 DECL_BEGIN
 
 INTERN int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack,
-                                       DeeAstObject *__restrict self, bool result_used) {
- ASSERT(self->ast_type == AST_SWITCH);
+                                       struct ast *__restrict self, bool result_used) {
+ ASSERT(self->a_type == AST_SWITCH);
  (void)result_used;
- if (ast_optimize(stack,self->ast_switch.ast_expr,true)) goto err;
+ if (ast_optimize(stack,self->a_switch.s_expr,true)) goto err;
 #ifdef OPTIMIZE_FASSUME
  if (optimizer_flags & OPTIMIZE_FASSUME) {
   /* Since execution may enter the switch block at any location,
@@ -65,7 +65,7 @@ INTERN int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict sta
   if (ast_assumes_initcond(&child_assumes,stack->os_assume))
       goto err;
   child_stack.os_prev   = stack;
-  child_stack.os_ast    = self->ast_switch.ast_block;
+  child_stack.os_ast    = self->a_switch.s_block;
   child_stack.os_assume = &child_assumes;
   child_stack.os_used   = false;
   if (ast_optimize(&child_stack,child_stack.os_ast,false)) {
@@ -82,7 +82,7 @@ err_child_assumes:
  } else
 #endif
  {
-  if (ast_optimize(stack,self->ast_switch.ast_block,false)) goto err;
+  if (ast_optimize(stack,self->a_switch.s_block,false)) goto err;
  }
  /* TODO: Delete constant cases shared with the default-case. */
  /* TODO: Looking at the type of the switch-expression, check if we can delete

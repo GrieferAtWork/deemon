@@ -29,11 +29,11 @@
 DECL_BEGIN
 
 
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_parse_argument_list(uint16_t mode,
-                        DREF DeeAstObject **__restrict pkeyword_labels) {
- DREF DeeAstObject *result;
- DREF DeeAstObject *kwdlist_ast;
+                        DREF struct ast **__restrict pkeyword_labels) {
+ DREF struct ast *result;
+ DREF struct ast *kwdlist_ast;
  DeeObject *kwdlist;
  *pkeyword_labels = NULL;
  ASSERT(mode & AST_COMMA_FORCEMULTIPLE);
@@ -56,13 +56,13 @@ ast_parse_argument_list(uint16_t mode,
   if unlikely(!next) goto err_r;
   if (*next == ':') {
    size_t multiple_a;
-   if (result->ast_type == AST_CONSTEXPR) {
-    ASSERT(result->ast_constexpr == Dee_EmptyTuple);
+   if (result->a_type == AST_CONSTEXPR) {
+    ASSERT(result->a_constexpr == Dee_EmptyTuple);
     Dee_Decref(Dee_EmptyTuple);
-    result->ast_type = AST_MULTIPLE;
-    result->ast_flag = AST_FMULTIPLE_TUPLE;
-    result->ast_multiple.ast_exprc = 0;
-    result->ast_multiple.ast_exprv = NULL;
+    result->a_type = AST_MULTIPLE;
+    result->a_flag = AST_FMULTIPLE_TUPLE;
+    result->a_multiple.m_astc = 0;
+    result->a_multiple.m_astv = NULL;
    }
    kwdlist = DeeKwds_NewWithHint(1);
    if unlikely(!kwdlist) goto err_r;
@@ -70,10 +70,10 @@ ast_parse_argument_list(uint16_t mode,
    Dee_Decref(kwdlist);
    if unlikely(!kwdlist_ast) goto err_r;
    *pkeyword_labels = kwdlist_ast; /* Inherit reference (on success) */
-   multiple_a = result->ast_multiple.ast_exprc;
+   multiple_a = result->a_multiple.m_astc;
    /* Parse a keyword label list! */
    for (;;) {
-    DREF DeeAstObject *argument_value;
+    DREF struct ast *argument_value;
     /* Append the argument label. */
     if (DeeKwds_Append(&kwdlist,
                         token.t_kwd->k_name,
@@ -85,26 +85,26 @@ ast_parse_argument_list(uint16_t mode,
                 WARN(W_EXPECTED_COLLON_AFTER_KEYWORD_LABEL))
        goto err_r_kwdlist;
     /* Make sure that we have allocated sufficient memory for the keyword list. */
-    ASSERT(result->ast_multiple.ast_exprc <= multiple_a);
-    if (result->ast_multiple.ast_exprc >= multiple_a) {
-     DREF DeeAstObject **new_astv;
+    ASSERT(result->a_multiple.m_astc <= multiple_a);
+    if (result->a_multiple.m_astc >= multiple_a) {
+     DREF struct ast **new_astv;
      size_t new_alloc = multiple_a * 2;
      if unlikely(!new_alloc) new_alloc = 2;
-     new_astv = (DREF DeeAstObject **)Dee_TryRealloc(result->ast_multiple.ast_exprv,
-                                                     new_alloc*sizeof(DREF DeeAstObject *));
+     new_astv = (DREF struct ast **)Dee_TryRealloc(result->a_multiple.m_astv,
+                                                     new_alloc*sizeof(DREF struct ast *));
      if unlikely(!new_astv) {
-      new_alloc = result->ast_multiple.ast_exprc + 1;
-      new_astv = (DREF DeeAstObject **)Dee_Realloc(result->ast_multiple.ast_exprv,
-                                                   new_alloc*sizeof(DREF DeeAstObject *));
+      new_alloc = result->a_multiple.m_astc + 1;
+      new_astv = (DREF struct ast **)Dee_Realloc(result->a_multiple.m_astv,
+                                                   new_alloc*sizeof(DREF struct ast *));
       if unlikely(!new_astv) goto err_r_kwdlist;
      }
-     result->ast_multiple.ast_exprv = new_astv;
+     result->a_multiple.m_astv = new_astv;
      multiple_a = new_alloc;
     }
     /* Parse the expression that is bound to the keyword. */
     argument_value = ast_parse_expression(LOOKUP_SYM_NORMAL);
     if unlikely(!argument_value) goto err_r_kwdlist;
-    result->ast_multiple.ast_exprv[result->ast_multiple.ast_exprc++] = argument_value; /* Inherit reference. */
+    result->a_multiple.m_astv[result->a_multiple.m_astc++] = argument_value; /* Inherit reference. */
     if (tok != ',') break;
     if (mode & AST_COMMA_STRICTCOMMA) {
      char *next_token = peek_next_token(NULL);
@@ -116,15 +116,15 @@ ast_parse_argument_list(uint16_t mode,
     if (!TPP_ISKEYWORD(tok))
          break; /* End of argument list. */
    }
-   ASSERT(result->ast_multiple.ast_exprc <= multiple_a);
+   ASSERT(result->a_multiple.m_astc <= multiple_a);
    /* Flush unused memory from keyword-bound arguments. */
-   if (multiple_a > result->ast_multiple.ast_exprc) {
-    DREF DeeAstObject **new_astv;
-    new_astv = (DREF DeeAstObject **)Dee_TryRealloc(result->ast_multiple.ast_exprv,
-                                                    result->ast_multiple.ast_exprc*
-                                                    sizeof(DREF DeeAstObject *));
+   if (multiple_a > result->a_multiple.m_astc) {
+    DREF struct ast **new_astv;
+    new_astv = (DREF struct ast **)Dee_TryRealloc(result->a_multiple.m_astv,
+                                                    result->a_multiple.m_astc*
+                                                    sizeof(DREF struct ast *));
     if likely(new_astv)
-       result->ast_multiple.ast_exprv = new_astv;
+       result->a_multiple.m_astv = new_astv;
    }
    /* The constant-branch for the keyword-list was already
     * constructed above, so we're already finished here! */

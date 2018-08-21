@@ -36,7 +36,7 @@ typedef struct base_scope_object DeeBaseScopeObject;
 typedef struct root_scope_object DeeRootScopeObject;
 
 struct TPPKeyword;
-struct ast_object;
+struct ast;
 struct string_object;
 struct module_object;
 struct asm_sym;
@@ -65,13 +65,13 @@ struct text_label {
                                           *               the same modulated `s_name->k_id' */
     union {
 #ifdef __INTELLISENSE__
-             struct ast_object *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|ast_cases))][const]
+             struct ast *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
                                           *  Expression of a case-label. NOTE: NULL for the default case.
-                                          *  NOTE: Always NULL in `bs_swdefl|ast_default' labels. */
+                                          *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
 #else
-        DREF struct ast_object *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|ast_cases))][const]
+        DREF struct ast *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
                                           *  Expression of a case-label. NOTE: NULL for the default case.
-                                          *  NOTE: Always NULL in `bs_swdefl|ast_default' labels. */
+                                          *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
 #endif
         struct TPPKeyword      *tl_name; /* [1..1][valid_if(CHAIN(bs_lbl[*]))][const] Name of this label. */
     };
@@ -426,7 +426,7 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name);
 INTDEF struct text_label *DCALL lookup_label(struct TPPKeyword *__restrict name);
 /* Create a new case label for `expr'.
  * NOTE: The caller is responsible to ensure that the `BASESCOPE_FSWITCH' flag is set. */
-INTDEF struct text_label *DCALL new_case_label(struct ast_object *__restrict expr);
+INTDEF struct text_label *DCALL new_case_label(struct ast *__restrict expr);
 /* Ensure existence and return the default label of a switch-statement.
  * NOTE: The caller is responsible to ensure that the `BASESCOPE_FSWITCH' flag is set.
  *       Additionally (if this is desired), it is the caller's task to warn if the

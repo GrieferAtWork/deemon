@@ -89,36 +89,36 @@ ok:
 }
 
 
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_build_operator(uint16_t name, uint16_t flags,
-                   DeeAstObject *__restrict args) {
+                   struct ast *__restrict args) {
  ASSERT(!(flags&AST_OPERATOR_FVARARGS));
- if (args->ast_type == AST_MULTIPLE &&
-     args->ast_flag == AST_FMULTIPLE_TUPLE) {
+ if (args->a_type == AST_MULTIPLE &&
+     args->a_flag == AST_FMULTIPLE_TUPLE) {
   /* Simple case: the amount of arguments are know at compile-time. */
-  size_t argc = args->ast_multiple.ast_exprc;
+  size_t argc = args->a_multiple.m_astc;
   if (!convert_operator_name(&name,argc)) goto do_generic;
   switch (argc) {
-  case 1: return ast_operator1(name,flags,args->ast_multiple.ast_exprv[0]);
-  case 2: return ast_operator2(name,flags,args->ast_multiple.ast_exprv[0],
-                                          args->ast_multiple.ast_exprv[1]);
-  case 3: return ast_operator3(name,flags,args->ast_multiple.ast_exprv[0],
-                                          args->ast_multiple.ast_exprv[1],
-                                          args->ast_multiple.ast_exprv[2]);
-  case 4: return ast_operator4(name,flags,args->ast_multiple.ast_exprv[0],
-                                          args->ast_multiple.ast_exprv[1],
-                                          args->ast_multiple.ast_exprv[2],
-                                          args->ast_multiple.ast_exprv[3]);
+  case 1: return ast_operator1(name,flags,args->a_multiple.m_astv[0]);
+  case 2: return ast_operator2(name,flags,args->a_multiple.m_astv[0],
+                                          args->a_multiple.m_astv[1]);
+  case 3: return ast_operator3(name,flags,args->a_multiple.m_astv[0],
+                                          args->a_multiple.m_astv[1],
+                                          args->a_multiple.m_astv[2]);
+  case 4: return ast_operator4(name,flags,args->a_multiple.m_astv[0],
+                                          args->a_multiple.m_astv[1],
+                                          args->a_multiple.m_astv[2],
+                                          args->a_multiple.m_astv[3]);
   default: break;
   }
  }
- if (args->ast_type == AST_CONSTEXPR &&
-     DeeTuple_Check(args->ast_constexpr)) {
+ if (args->a_type == AST_CONSTEXPR &&
+     DeeTuple_Check(args->a_constexpr)) {
   /* Another special case: The argument AST is a constant-expression tuple. */
-  size_t argc = DeeTuple_SIZE(args->ast_constexpr);
+  size_t argc = DeeTuple_SIZE(args->a_constexpr);
   if likely(argc < 4 && argc != 0) {
-   DeeObject *tuple = args->ast_constexpr;
-   DREF DeeAstObject *result = NULL,*argv[4] = { NULL, NULL, NULL, NULL };
+   DeeObject *tuple = args->a_constexpr;
+   DREF struct ast *result = NULL,*argv[4] = { NULL, NULL, NULL, NULL };
    if (!convert_operator_name(&name,argc)) goto do_generic;
    if (argc >= 4 && (argv[3] = ast_constexpr(DeeTuple_GET(tuple,3))) == NULL) goto end_argv;
    if (argc >= 3 && (argv[2] = ast_constexpr(DeeTuple_GET(tuple,2))) == NULL) goto end_argv;
@@ -144,7 +144,7 @@ do_generic:
   * Instead, generate a call to an external function. */
  if (name >= AST_OPERATOR_MIN &&
      name <= AST_OPERATOR_MAX) {
-  DREF DeeAstObject *function_ast;
+  DREF struct ast *function_ast;
   struct symbol *function_symbol;
   DeeObject *function_name = rt_operator_names[name-AST_OPERATOR_MIN];
   function_symbol = new_unnamed_symbol();
@@ -169,34 +169,34 @@ err:
  /* Encode a regular, old varargs operator. */
  return ast_operator1(name,flags|AST_OPERATOR_FVARARGS,args);
 }
-INTERN DREF DeeAstObject *DCALL
+INTERN DREF struct ast *DCALL
 ast_build_bound_operator(uint16_t name, uint16_t flags,
-                         DeeAstObject *__restrict self,
-                         DeeAstObject *__restrict args) {
+                         struct ast *__restrict self,
+                         struct ast *__restrict args) {
  ASSERT(!(flags&AST_OPERATOR_FVARARGS));
- if (args->ast_type == AST_MULTIPLE &&
-     args->ast_flag == AST_FMULTIPLE_TUPLE) {
+ if (args->a_type == AST_MULTIPLE &&
+     args->a_flag == AST_FMULTIPLE_TUPLE) {
   /* Simple case: the amount of arguments are know at compile-time. */
-  size_t argc = args->ast_multiple.ast_exprc;
+  size_t argc = args->a_multiple.m_astc;
   if (!convert_operator_name(&name,1+argc)) goto do_generic;
   switch (argc) {
   case 0: return ast_operator1(name,flags,self);
-  case 1: return ast_operator2(name,flags,self,args->ast_multiple.ast_exprv[0]);
-  case 2: return ast_operator3(name,flags,self,args->ast_multiple.ast_exprv[0],
-                                               args->ast_multiple.ast_exprv[1]);
-  case 3: return ast_operator4(name,flags,self,args->ast_multiple.ast_exprv[0],
-                                               args->ast_multiple.ast_exprv[1],
-                                               args->ast_multiple.ast_exprv[2]);
+  case 1: return ast_operator2(name,flags,self,args->a_multiple.m_astv[0]);
+  case 2: return ast_operator3(name,flags,self,args->a_multiple.m_astv[0],
+                                               args->a_multiple.m_astv[1]);
+  case 3: return ast_operator4(name,flags,self,args->a_multiple.m_astv[0],
+                                               args->a_multiple.m_astv[1],
+                                               args->a_multiple.m_astv[2]);
   default: break;
   }
  }
- if (args->ast_type == AST_CONSTEXPR &&
-     DeeTuple_Check(args->ast_constexpr)) {
+ if (args->a_type == AST_CONSTEXPR &&
+     DeeTuple_Check(args->a_constexpr)) {
   /* Another special case: The argument AST is a constant-expression tuple. */
-  size_t argc = DeeTuple_SIZE(args->ast_constexpr);
+  size_t argc = DeeTuple_SIZE(args->a_constexpr);
   if likely(argc < 4) {
-   DeeObject *tuple = args->ast_constexpr;
-   DREF DeeAstObject *result = NULL,*argv[3] = { NULL, NULL, NULL };
+   DeeObject *tuple = args->a_constexpr;
+   DREF struct ast *result = NULL,*argv[3] = { NULL, NULL, NULL };
    if (!convert_operator_name(&name,1+argc)) goto do_generic;
    if (argc >= 3 && (argv[2] = ast_constexpr(DeeTuple_GET(tuple,2))) == NULL) goto end_argv;
    if (argc >= 2 && (argv[1] = ast_constexpr(DeeTuple_GET(tuple,1))) == NULL) goto end_argv;
@@ -220,13 +220,13 @@ do_generic:
   * Instead, generate a call to an external function. */
  if (name >= AST_OPERATOR_MIN &&
      name <= AST_OPERATOR_MAX) {
-  DREF DeeAstObject **argv,*new_args;
-  DREF DeeAstObject *function_ast;
+  DREF struct ast **argv,*new_args;
+  DREF struct ast *function_ast;
   struct symbol *function_symbol;
   DeeObject *function_name = rt_operator_names[name-AST_OPERATOR_MIN];
   /* Pack together the argument list. */
   if unlikely((args = ast_expand(args)) == NULL) goto err;
-  argv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+  argv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
   if unlikely(!argv) goto err_args;
   argv[0] = self;
   argv[1] = args;

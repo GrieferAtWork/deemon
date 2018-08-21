@@ -29,8 +29,8 @@
 
 DECL_BEGIN
 
-PRIVATE DREF DeeAstObject *FCALL ast_do_parse_brace_items(void) {
- DREF DeeAstObject *result;
+PRIVATE DREF struct ast *FCALL ast_do_parse_brace_items(void) {
+ DREF struct ast *result;
  uint32_t old_flags = TPPLexer_Current->l_flags;
  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
  if (tok == '\n' && yield() < 0) goto err_flags;
@@ -45,10 +45,10 @@ err_flags:
 
 
 /* @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_statement_or_expression(uint16_t mode,
                                   unsigned int *pwas_expression) {
- DREF DeeAstObject *result;
+ DREF struct ast *result;
  unsigned int was_expression;
  switch (tok) {
 
@@ -150,11 +150,11 @@ err:
 
 
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_if_hybrid(unsigned int *pwas_expression) {
- DREF DeeAstObject *tt_branch;
- DREF DeeAstObject *ff_branch;
- DREF DeeAstObject *result,*merge;
+ DREF struct ast *tt_branch;
+ DREF struct ast *ff_branch;
+ DREF struct ast *result,*merge;
  uint16_t expect; struct ast_loc loc;
  uint32_t old_flags; unsigned int was_expression;
  expect = current_tags.at_expect;
@@ -212,10 +212,10 @@ err:
 
 
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_statement_or_braces(unsigned int *pwas_expression) {
- DREF DeeAstObject *result,**new_elemv;
- DREF DeeAstObject *remainder;
+ DREF struct ast *result,**new_elemv;
+ DREF struct ast *remainder;
  struct ast_loc loc;
  unsigned int was_expression;
  ASSERT(tok == '{');
@@ -247,8 +247,8 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
   if unlikely(scope_push() < 0) goto err;
   result = ast_parse_statement_or_braces(&was_expression);
   ASSERT(!result ||
-          result->ast_type == AST_MULTIPLE ||
-          result->ast_type == AST_CONSTEXPR);
+          result->a_type == AST_MULTIPLE ||
+          result->a_type == AST_CONSTEXPR);
 parse_remainder_after_hybrid_popscope:
   if unlikely(!result) goto err;
 parse_remainder_after_hybrid_popscope_resok:
@@ -287,7 +287,7 @@ parse_remainder_before_rbrace_popscope_wrap:
        goto err_r;
    }
    /* Wrap the result as a single sequence. */
-   new_elemv = (DREF DeeAstObject **)Dee_Malloc(1 * sizeof(DREF DeeAstObject *));
+   new_elemv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
    if unlikely(!new_elemv) goto err_r;
    new_elemv[0] = result; /* Inherit reference. */
    remainder = ast_multiple(AST_FMULTIPLE_GENERIC,1,new_elemv);
@@ -310,8 +310,8 @@ parse_remainder_before_rbrace_popscope_wrap:
        goto check_recursion_after_expression_suffix;
   }
 #if 0
-  if (result->ast_type == AST_MULTIPLE)
-      result->ast_flag = AST_FMULTIPLE_KEEPLAST;
+  if (result->a_type == AST_MULTIPLE)
+      result->a_flag = AST_FMULTIPLE_KEEPLAST;
 #endif
   goto parse_remainder_after_statement;
 
@@ -417,8 +417,8 @@ is_a_statement:
                            AST_FMULTIPLE_GENERIC,
                           &comma_mode);
   if unlikely(!result) goto err;
-  ASSERT(result->ast_type == AST_MULTIPLE);
-  ASSERT(result->ast_flag == AST_FMULTIPLE_GENERIC);
+  ASSERT(result->a_type == AST_MULTIPLE);
+  ASSERT(result->a_flag == AST_FMULTIPLE_GENERIC);
   if (!current_scope->s_mapc) {
    if (tok == '}') {
 /*parse_remainder_before_rbrace_popscope:*/
@@ -430,9 +430,9 @@ parse_remainder_after_rbrace_popscope:
        *pwas_expression = AST_PARSE_WASEXPR_YES;
     break;
    }
-   if (tok == ':' && result->ast_multiple.ast_exprc == 1) {
+   if (tok == ':' && result->a_multiple.m_astc == 1) {
     /* Use the first expression from the multi-branch. */
-    remainder = result->ast_multiple.ast_exprv[0];
+    remainder = result->a_multiple.m_astv[0];
     Dee_Incref(remainder);
     Dee_Decref(result);
     result = remainder;
@@ -458,13 +458,13 @@ parse_remainder_after_colon_popscope:
                WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
       goto err_r;
   }
-  if (result->ast_multiple.ast_exprc == 1) {
-   remainder = result->ast_multiple.ast_exprv[0];
+  if (result->a_multiple.m_astc == 1) {
+   remainder = result->a_multiple.m_astv[0];
    Dee_Incref(remainder);
    Dee_Decref(result);
    result = remainder;
   } else {
-   result->ast_flag = AST_FMULTIPLE_KEEPLAST;
+   result->a_flag = AST_FMULTIPLE_KEEPLAST;
   }
 parse_remainder_after_statement:
   if (tok == '}') {
@@ -474,19 +474,19 @@ parse_remainder_after_statement:
   } else {
    remainder = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&loc);
    if unlikely(!remainder) goto err_r;
-   if (remainder->ast_type == AST_MULTIPLE &&
-       remainder->ast_flag == AST_FMULTIPLE_KEEPLAST &&
-       remainder->ast_scope == current_scope) {
-    new_elemv = (DREF DeeAstObject **)Dee_Realloc(remainder->ast_multiple.ast_exprv,
-                                                 (remainder->ast_multiple.ast_exprc+1)*
-                                                  sizeof(DREF DeeAstObject *));
+   if (remainder->a_type == AST_MULTIPLE &&
+       remainder->a_flag == AST_FMULTIPLE_KEEPLAST &&
+       remainder->a_scope == current_scope) {
+    new_elemv = (DREF struct ast **)Dee_Realloc(remainder->a_multiple.m_astv,
+                                                 (remainder->a_multiple.m_astc+1)*
+                                                  sizeof(DREF struct ast *));
     if unlikely(!new_elemv) goto err_r_remainder;
-    MEMMOVE_PTR(new_elemv+1,new_elemv,remainder->ast_multiple.ast_exprc);
-    remainder->ast_multiple.ast_exprv = new_elemv;
+    MEMMOVE_PTR(new_elemv+1,new_elemv,remainder->a_multiple.m_astc);
+    remainder->a_multiple.m_astv = new_elemv;
     new_elemv[0] = result; /* Inherit reference. */
-    ++remainder->ast_multiple.ast_exprc;
+    ++remainder->a_multiple.m_astc;
    } else {
-    new_elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+    new_elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
     if unlikely(!new_elemv) goto err_r_remainder;
     new_elemv[0] = result;    /* Inherit reference. */
     new_elemv[1] = remainder; /* Inherit reference. */

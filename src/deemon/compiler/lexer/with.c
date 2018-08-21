@@ -51,12 +51,12 @@ DECL_BEGIN
  * >>     // `fp.operator leave()' here will invoke `fp.close()'
  * >> }
  */
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_with(bool is_statement, bool allow_nonblock) {
  struct ast_loc loc;
  struct symbol *expression_sym;
- DREF DeeAstObject *result,*other,*merge;
- DREF DeeAstObject **result_v;
+ DREF struct ast *result,*other,*merge;
+ DREF struct ast **result_v;
  uint32_t old_flags;
  ASSERT(tok == KWD_with);
  loc_here(&loc);
@@ -98,7 +98,7 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
   * [0] -- __hidden_symbol = with_expression;
   * [1] -- __hidden_symbol.operator enter();
   * [2] -- try ... finally { __hidden_symbol.operator leave(); } */
- result_v = (DREF DeeAstObject **)Dee_Malloc(3*sizeof(DREF DeeAstObject *));
+ result_v = (DREF struct ast **)Dee_Malloc(3*sizeof(DREF struct ast *));
  if unlikely(!result_v) goto err_scope_r;
  result_v[0] = result; /* Inherit */
  result = ast_setddi(ast_sym(expression_sym),&loc);
@@ -163,12 +163,12 @@ err_scope_r:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_with_hybrid(unsigned int *pwas_expression) {
  struct ast_loc loc;
  struct symbol *expression_sym;
- DREF DeeAstObject *result,*other,*merge;
- DREF DeeAstObject **result_v;
+ DREF struct ast *result,*other,*merge;
+ DREF struct ast **result_v;
  uint32_t old_flags;
  ASSERT(tok == KWD_with);
  loc_here(&loc);
@@ -210,7 +210,7 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
   * [0] -- __hidden_symbol = with_expression;
   * [1] -- __hidden_symbol.operator enter();
   * [2] -- try ... finally { __hidden_symbol.operator leave(); } */
- result_v = (DREF DeeAstObject **)Dee_Malloc(3*sizeof(DREF DeeAstObject *));
+ result_v = (DREF struct ast **)Dee_Malloc(3*sizeof(DREF struct ast *));
  if unlikely(!result_v) goto err_scope_r;
  result_v[0] = result; /* Inherit */
  result = ast_setddi(ast_sym(expression_sym),&loc);

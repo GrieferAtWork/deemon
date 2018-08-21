@@ -46,7 +46,7 @@ DECL_BEGIN
 
 
 struct ast_loc;
-struct ast_object;
+struct ast;
 
 /* Emit a compiler warning/error, given its TPP warning number.
  * The passed var-args are interpreted based on `wnum',
@@ -59,14 +59,14 @@ struct ast_object;
  *              max number of compiler errors has yet to be reached. */
 INTDEF ATTR_COLD int (parser_warnf)(int wnum, ...);
 INTDEF ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...);
-INTDEF ATTR_COLD int (parser_warnastf)(struct ast_object *__restrict loc_ast, int wnum, ...);
+INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...);
 
 /* Similar to `parser_warnf()', but force the warning
  * to be fatal, regardless of its user-defined state.
  * @return: -1: Always returns -1. */
 INTDEF ATTR_COLD int (parser_errf)(int wnum, ...);
 INTDEF ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...);
-INTDEF ATTR_COLD int (parser_errastf)(struct ast_object *__restrict loc_ast, int wnum, ...);
+INTDEF ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...);
 
 DFUNDEF ATTR_COLD int DCALL Dee_BadAlloc(size_t req_bytes);
 

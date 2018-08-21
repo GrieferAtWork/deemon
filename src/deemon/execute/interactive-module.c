@@ -244,10 +244,10 @@ PRIVATE bool DCALL is_statement(void) {
 }
 
 
-PRIVATE DREF DeeAstObject *DCALL
+PRIVATE DREF struct ast *DCALL
 imod_parse_statement(InteractiveModule *__restrict self,
                      unsigned int mode) {
- DREF DeeAstObject *result,*merge;
+ DREF struct ast *result,*merge;
  bool should_yield = false;
  if ((mode & MODULE_INTERACTIVE_MODE_FONLYBASEFILE) &&
       token.t_file != self->im_basefile);
@@ -280,7 +280,7 @@ INTDEF int DCALL skip_lf(void);
 PRIVATE DREF DeeObject *DCALL
 imod_next(InteractiveModule *__restrict self) {
  DREF DeeObject *result; struct code_frame *top_frame;
- DREF DeeAstObject *statement_ast;
+ DREF struct ast *statement_ast;
  DeeCodeObject *current_code;
  struct traceback_object *current_traceback;
  size_t preexisting_codesize;

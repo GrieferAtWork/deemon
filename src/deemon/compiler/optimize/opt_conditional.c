@@ -31,28 +31,28 @@
 DECL_BEGIN
 
 INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restrict stack,
-                                            DeeAstObject *__restrict self, bool result_used) {
+                                            struct ast *__restrict self, bool result_used) {
  int constant_condition;
  int tt_value,ff_value;
- ASSERT(self->ast_type == AST_CONDITIONAL);
+ ASSERT(self->a_type == AST_CONDITIONAL);
  /* Obviously: optimize sub-branches and do dead-branch elimination. */
  /* TODO: Optimize the inner expressions in regards to
   *       them only being used as a boolean expression. */
- if (ast_optimize(stack,self->ast_conditional.ast_cond,true)) goto err;
- if (self->ast_conditional.ast_tt == self->ast_conditional.ast_cond &&
-     self->ast_conditional.ast_ff == self->ast_conditional.ast_cond) {
+ if (ast_optimize(stack,self->a_conditional.c_cond,true)) goto err;
+ if (self->a_conditional.c_tt == self->a_conditional.c_cond &&
+     self->a_conditional.c_ff == self->a_conditional.c_cond) {
   /* ??? Why though? */
   if (result_used) {
-   Dee_DecrefNokill(self->ast_conditional.ast_tt);
-   Dee_DecrefNokill(self->ast_conditional.ast_ff);
-   __STATIC_IF(COMPILER_OFFSETOF(DeeAstObject,ast_boolexpr) !=
-               COMPILER_OFFSETOF(DeeAstObject,ast_conditional.ast_cond)) {
-    self->ast_boolexpr = self->ast_conditional.ast_cond;
+   Dee_DecrefNokill(self->a_conditional.c_tt);
+   Dee_DecrefNokill(self->a_conditional.c_ff);
+   __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
+               COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
+    self->a_bool = self->a_conditional.c_cond;
    }
-   self->ast_type = AST_BOOL;
-   self->ast_flag = AST_FBOOL_NORMAL;
+   self->a_type = AST_BOOL;
+   self->a_flag = AST_FBOOL_NORMAL;
   } else {
-   if (ast_graft_onto(self,self->ast_conditional.ast_cond))
+   if (ast_graft_onto(self,self->a_conditional.c_cond))
        goto err;
   }
   OPTIMIZE_VERBOSE("Remove no-op conditional branch\n");
@@ -61,8 +61,8 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
 #ifdef OPTIMIZE_FASSUME
  if (optimizer_flags & OPTIMIZE_FASSUME) {
   /* we're supposed to be making assumptions. */
-  bool has_tt = self->ast_conditional.ast_tt && self->ast_conditional.ast_tt != self->ast_conditional.ast_cond;
-  bool has_ff = self->ast_conditional.ast_ff && self->ast_conditional.ast_ff != self->ast_conditional.ast_cond;
+  bool has_tt = self->a_conditional.c_tt && self->a_conditional.c_tt != self->a_conditional.c_cond;
+  bool has_ff = self->a_conditional.c_ff && self->a_conditional.c_ff != self->a_conditional.c_cond;
   struct ast_assumes tt_assumes;
   struct ast_assumes ff_assumes;
   struct ast_optimize_stack child_stack;
@@ -71,7 +71,7 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
       goto err;
    child_stack.os_prev   = stack;
    child_stack.os_assume = &tt_assumes;
-   child_stack.os_ast    = self->ast_conditional.ast_tt;
+   child_stack.os_ast    = self->a_conditional.c_tt;
    child_stack.os_used   = result_used;
    if unlikely(ast_optimize(&child_stack,child_stack.os_ast,result_used)) {
 err_tt_assumes:
@@ -82,7 +82,7 @@ err_tt_assumes:
       goto err_tt_assumes;
    child_stack.os_prev   = stack;
    child_stack.os_assume = &ff_assumes;
-   child_stack.os_ast    = self->ast_conditional.ast_ff;
+   child_stack.os_ast    = self->a_conditional.c_ff;
    child_stack.os_used   = result_used;
    if unlikely(ast_optimize(&child_stack,child_stack.os_ast,result_used)) {
 err_ff_tt_assumes:
@@ -100,8 +100,8 @@ err_ff_tt_assumes:
    child_stack.os_prev   = stack;
    child_stack.os_assume = &tt_assumes;
    child_stack.os_ast    = has_tt
-                         ? self->ast_conditional.ast_tt
-                         : self->ast_conditional.ast_ff
+                         ? self->a_conditional.c_tt
+                         : self->a_conditional.c_ff
                          ;
    child_stack.os_used   = result_used;
    if unlikely(ast_optimize(&child_stack,child_stack.os_ast,result_used))
@@ -118,26 +118,26 @@ err_ff_tt_assumes:
  } else
 #endif
  {
-  if (self->ast_conditional.ast_tt &&
-      self->ast_conditional.ast_tt != self->ast_conditional.ast_cond &&
-      ast_optimize(stack,self->ast_conditional.ast_tt,result_used))
+  if (self->a_conditional.c_tt &&
+      self->a_conditional.c_tt != self->a_conditional.c_cond &&
+      ast_optimize(stack,self->a_conditional.c_tt,result_used))
       goto err;
-  if (self->ast_conditional.ast_ff &&
-      self->ast_conditional.ast_ff != self->ast_conditional.ast_cond &&
-      ast_optimize(stack,self->ast_conditional.ast_ff,result_used))
+  if (self->a_conditional.c_ff &&
+      self->a_conditional.c_ff != self->a_conditional.c_cond &&
+      ast_optimize(stack,self->a_conditional.c_ff,result_used))
       goto err;
  }
  /* Load the constant value of the condition as a boolean. */
- constant_condition = ast_get_boolean(self->ast_conditional.ast_cond);
+ constant_condition = ast_get_boolean(self->a_conditional.c_cond);
  if (constant_condition >= 0) {
-  DeeAstObject *eval_branch,*other_branch;
+  struct ast *eval_branch,*other_branch;
   /* Only evaluate the tt/ff-branch. */
   if (constant_condition) {
-   eval_branch  = self->ast_conditional.ast_tt;
-   other_branch = self->ast_conditional.ast_ff;
+   eval_branch  = self->a_conditional.c_tt;
+   other_branch = self->a_conditional.c_ff;
   } else {
-   eval_branch  = self->ast_conditional.ast_ff;
-   other_branch = self->ast_conditional.ast_tt;
+   eval_branch  = self->a_conditional.c_ff;
+   other_branch = self->a_conditional.c_tt;
   }
   /* We can't optimize away the dead branch when it contains a label.
    * TODO: That's not true. - Just could do an unreachable-pass on the
@@ -150,18 +150,18 @@ err_ff_tt_assumes:
     *       `{ <everything_after_label_in(other_branch)>; none; }' instead,
     *       if `other_branch' contains a `label'. */
    ast_fini_contents(self);
-   self->ast_type = AST_CONSTEXPR;
-   self->ast_constexpr = Dee_None;
+   self->a_type = AST_CONSTEXPR;
+   self->a_constexpr = Dee_None;
    Dee_Incref(Dee_None);
-  } else if (eval_branch == self->ast_conditional.ast_cond) {
+  } else if (eval_branch == self->a_conditional.c_cond) {
    /* Special case: The branch that is getting evaluated
     *               is referencing the condition. */
    /* TODO: In relation to the `TODO: That's not true...': we'd have to assign
     *       `{ __stack local _temp = <eval_branch>; <everything_after_label_in(other_branch)>; _temp; }'
     *       instead, if `other_branch' contains a `label'. */
-   if (self->ast_flag&AST_FCOND_BOOL) {
+   if (self->a_flag&AST_FCOND_BOOL) {
     /* Must also convert `eval_branch' to a boolean. */
-    DREF DeeAstObject *graft; int temp;
+    DREF struct ast *graft; int temp;
     graft = ast_setscope_and_ddi(ast_bool(AST_FBOOL_NORMAL,eval_branch),self);
     if unlikely(!graft) goto err;
     temp = ast_graft_onto(self,graft);
@@ -171,7 +171,7 @@ err_ff_tt_assumes:
     if (ast_graft_onto(self,eval_branch)) goto err;
    }
   } else {
-   DREF DeeAstObject **elemv;
+   DREF struct ast **elemv;
    /* Merge the eval-branch and the condition:
     * >> if (true) {
     * >>     print "Here";
@@ -183,15 +183,15 @@ err_ff_tt_assumes:
     * >> }
     */
    /* TODO: In relation to the `TODO: That's not true...': we'd have to assign
-    *       `{ <ast_cond>; __stack local _temp = <eval_branch>;
+    *       `{ <l_cond>; __stack local _temp = <eval_branch>;
     *          <everything_after_label_in(other_branch)>; _temp; }'
     *       instead, if `other_branch' contains a `label'. */
-   elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+   elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
    if unlikely(!elemv) goto err;
-   elemv[0] = self->ast_conditional.ast_cond;
+   elemv[0] = self->a_conditional.c_cond;
    /* Cast the branch being evaluated to a boolean if required. */
-   if (self->ast_flag&AST_FCOND_BOOL) {
-    DREF DeeAstObject *merge;
+   if (self->a_flag&AST_FCOND_BOOL) {
+    DREF struct ast *merge;
     merge = ast_setscope_and_ddi(ast_bool(AST_FBOOL_NORMAL,eval_branch),self);
     if unlikely(!merge) { Dee_Free(elemv); goto err; }
     Dee_Decref(eval_branch);
@@ -199,87 +199,87 @@ err_ff_tt_assumes:
    }
    elemv[1] = eval_branch; /* Inherit reference */
    /* Override (and inherit) this AST. */
-   self->ast_type               = AST_MULTIPLE;
-   self->ast_flag               = AST_FMULTIPLE_KEEPLAST;
-   self->ast_multiple.ast_exprc = 2;
-   self->ast_multiple.ast_exprv = elemv;
+   self->a_type               = AST_MULTIPLE;
+   self->a_flag               = AST_FMULTIPLE_KEEPLAST;
+   self->a_multiple.m_astc = 2;
+   self->a_multiple.m_astv = elemv;
    Dee_XDecref(other_branch);
   }
   OPTIMIZE_VERBOSE("Expanding conditional branch with constant condition\n");
   goto did_optimize;
  }
 after_constant_condition:
- if (self->ast_flag & AST_FCOND_BOOL) {
+ if (self->a_flag & AST_FCOND_BOOL) {
   tt_value = -2;
   ff_value = -2;
-  if (self->ast_conditional.ast_tt == self->ast_conditional.ast_cond) {
-   ff_value = self->ast_conditional.ast_ff
-            ? ast_get_boolean_noeffect(self->ast_conditional.ast_ff)
+  if (self->a_conditional.c_tt == self->a_conditional.c_cond) {
+   ff_value = self->a_conditional.c_ff
+            ? ast_get_boolean_noeffect(self->a_conditional.c_ff)
             : 0;
    if (ff_value >= 0) {
     if (ff_value && result_used) {
      /* Optimize: `!!foo() ? : true' --> `({ foo(); true; })' */
-     DREF DeeAstObject **elemv;
-     ASSERT(self->ast_conditional.ast_ff);
-     elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+     DREF struct ast **elemv;
+     ASSERT(self->a_conditional.c_ff);
+     elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
      if unlikely(!elemv) goto err;
-     elemv[0] = self->ast_conditional.ast_cond; /* Inherit reference. */
-     elemv[1] = self->ast_conditional.ast_ff;   /* Inherit reference. */
-     Dee_DecrefNokill(self->ast_conditional.ast_tt);
-     self->ast_multiple.ast_exprc = 2;
-     self->ast_multiple.ast_exprv = elemv;
-     self->ast_type = AST_MULTIPLE;
-     self->ast_flag = AST_FMULTIPLE_KEEPLAST;
+     elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
+     elemv[1] = self->a_conditional.c_ff;   /* Inherit reference. */
+     Dee_DecrefNokill(self->a_conditional.c_tt);
+     self->a_multiple.m_astc = 2;
+     self->a_multiple.m_astv = elemv;
+     self->a_type = AST_MULTIPLE;
+     self->a_flag = AST_FMULTIPLE_KEEPLAST;
     } else if (result_used) {
      /* Optimize: `!!foo() ? : false' --> `!!foo();' */
-     Dee_DecrefNokill(self->ast_conditional.ast_tt);
-     Dee_XDecref(self->ast_conditional.ast_ff);
-     __STATIC_IF(COMPILER_OFFSETOF(DeeAstObject,ast_boolexpr) !=
-                 COMPILER_OFFSETOF(DeeAstObject,ast_conditional.ast_cond)) {
-      self->ast_boolexpr = self->ast_conditional.ast_cond;
+     Dee_DecrefNokill(self->a_conditional.c_tt);
+     Dee_XDecref(self->a_conditional.c_ff);
+     __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
+                 COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
+      self->a_bool = self->a_conditional.c_cond;
      }
-     self->ast_type = AST_BOOL;
-     self->ast_flag = AST_FBOOL_NORMAL;
+     self->a_type = AST_BOOL;
+     self->a_flag = AST_FBOOL_NORMAL;
     } else {
      /* Optimize: `!!foo() ? : false' --> `foo();' */
-     if (ast_graft_onto(self,self->ast_conditional.ast_cond))
+     if (ast_graft_onto(self,self->a_conditional.c_cond))
          goto err;
     }
     OPTIMIZE_VERBOSE("Flatten constant false-branch of boolean conditional tt-is-cond expression\n");
     goto did_optimize;
    }
   }
-  if (self->ast_conditional.ast_ff == self->ast_conditional.ast_cond) {
-   tt_value = self->ast_conditional.ast_tt
-            ? ast_get_boolean_noeffect(self->ast_conditional.ast_tt)
+  if (self->a_conditional.c_ff == self->a_conditional.c_cond) {
+   tt_value = self->a_conditional.c_tt
+            ? ast_get_boolean_noeffect(self->a_conditional.c_tt)
             : 0;
    if (tt_value >= 0) {
     if (!tt_value && result_used) {
      /* Optimize: `!!foo() ? false : ' --> `({ foo(); false; })' */
-     DREF DeeAstObject **elemv;
-     ASSERT(self->ast_conditional.ast_tt);
-     elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+     DREF struct ast **elemv;
+     ASSERT(self->a_conditional.c_tt);
+     elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
      if unlikely(!elemv) goto err;
-     elemv[0] = self->ast_conditional.ast_cond; /* Inherit reference. */
-     elemv[1] = self->ast_conditional.ast_tt;   /* Inherit reference. */
-     Dee_DecrefNokill(self->ast_conditional.ast_ff);
-     self->ast_multiple.ast_exprc = 2;
-     self->ast_multiple.ast_exprv = elemv;
-     self->ast_type = AST_MULTIPLE;
-     self->ast_flag = AST_FMULTIPLE_KEEPLAST;
+     elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
+     elemv[1] = self->a_conditional.c_tt;   /* Inherit reference. */
+     Dee_DecrefNokill(self->a_conditional.c_ff);
+     self->a_multiple.m_astc = 2;
+     self->a_multiple.m_astv = elemv;
+     self->a_type = AST_MULTIPLE;
+     self->a_flag = AST_FMULTIPLE_KEEPLAST;
     } else if (result_used) {
      /* Optimize: `!!foo() ? true : ' --> `!!foo();' */
-     Dee_DecrefNokill(self->ast_conditional.ast_ff);
-     Dee_XDecref(self->ast_conditional.ast_tt);
-     __STATIC_IF(COMPILER_OFFSETOF(DeeAstObject,ast_boolexpr) !=
-                 COMPILER_OFFSETOF(DeeAstObject,ast_conditional.ast_cond)) {
-      self->ast_boolexpr = self->ast_conditional.ast_cond;
+     Dee_DecrefNokill(self->a_conditional.c_ff);
+     Dee_XDecref(self->a_conditional.c_tt);
+     __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
+                 COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
+      self->a_bool = self->a_conditional.c_cond;
      }
-     self->ast_type = AST_BOOL;
-     self->ast_flag = AST_FBOOL_NORMAL;
+     self->a_type = AST_BOOL;
+     self->a_flag = AST_FBOOL_NORMAL;
     } else {
      /* Optimize: `!!foo() ? true : ' --> `foo();' */
-     if (ast_graft_onto(self,self->ast_conditional.ast_cond))
+     if (ast_graft_onto(self,self->a_conditional.c_cond))
          goto err;
     }
     OPTIMIZE_VERBOSE("Flatten constant true-branch of boolean conditional ff-is-cond expression\n");
@@ -287,13 +287,13 @@ after_constant_condition:
    }
   }
   if (tt_value == -2) {
-   tt_value = self->ast_conditional.ast_tt
-            ? ast_get_boolean_noeffect(self->ast_conditional.ast_tt)
+   tt_value = self->a_conditional.c_tt
+            ? ast_get_boolean_noeffect(self->a_conditional.c_tt)
             : 0;
   }
   if (ff_value == -2) {
-   ff_value = self->ast_conditional.ast_ff
-            ? ast_get_boolean_noeffect(self->ast_conditional.ast_ff)
+   ff_value = self->a_conditional.c_ff
+            ? ast_get_boolean_noeffect(self->a_conditional.c_ff)
             : 0;
   }
   if (tt_value >= 0 && ff_value >= 0) {
@@ -308,27 +308,27 @@ apply_bool_matrix_transformation:
    if (tt_value) {
     if (ff_value) {
      /* cond ? true : true  --> ({ cond; true; }) */
-     DREF DeeAstObject **elemv;
+     DREF struct ast **elemv;
 optimize_conditional_bool_predictable_inherit_multiple:
-     elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+     elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
      if unlikely(!elemv) goto err;
-     elemv[0] = self->ast_conditional.ast_cond; /* Inherit reference. */
-     elemv[1] = self->ast_conditional.ast_tt;   /* Inherit reference. */
-     Dee_Decref(self->ast_conditional.ast_ff);
-     self->ast_multiple.ast_exprc = 2;
-     self->ast_multiple.ast_exprv = elemv;
-     self->ast_type = AST_MULTIPLE;
-     self->ast_flag = AST_FMULTIPLE_KEEPLAST;
+     elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
+     elemv[1] = self->a_conditional.c_tt;   /* Inherit reference. */
+     Dee_Decref(self->a_conditional.c_ff);
+     self->a_multiple.m_astc = 2;
+     self->a_multiple.m_astv = elemv;
+     self->a_type = AST_MULTIPLE;
+     self->a_flag = AST_FMULTIPLE_KEEPLAST;
     } else {
      /* cond ? true : false  --> !!cond */
-     Dee_Decref(self->ast_conditional.ast_tt);
-     Dee_Decref(self->ast_conditional.ast_ff);
-     __STATIC_IF(COMPILER_OFFSETOF(DeeAstObject,ast_boolexpr) !=
-                 COMPILER_OFFSETOF(DeeAstObject,ast_conditional.ast_cond)) {
-      self->ast_boolexpr = self->ast_conditional.ast_cond;
+     Dee_Decref(self->a_conditional.c_tt);
+     Dee_Decref(self->a_conditional.c_ff);
+     __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
+                 COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
+      self->a_bool = self->a_conditional.c_cond;
      }
-     self->ast_type = AST_BOOL;
-     self->ast_flag = AST_FBOOL_NORMAL;
+     self->a_type = AST_BOOL;
+     self->a_flag = AST_FBOOL_NORMAL;
     }
    } else {
     if (!ff_value) {
@@ -336,14 +336,14 @@ optimize_conditional_bool_predictable_inherit_multiple:
      goto optimize_conditional_bool_predictable_inherit_multiple;
     } else {
      /* cond ? false : true  --> !cond */
-     Dee_Decref(self->ast_conditional.ast_tt);
-     Dee_Decref(self->ast_conditional.ast_ff);
-     __STATIC_IF(COMPILER_OFFSETOF(DeeAstObject,ast_boolexpr) !=
-                 COMPILER_OFFSETOF(DeeAstObject,ast_conditional.ast_cond)) {
-      self->ast_boolexpr = self->ast_conditional.ast_cond;
+     Dee_Decref(self->a_conditional.c_tt);
+     Dee_Decref(self->a_conditional.c_ff);
+     __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
+                 COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
+      self->a_bool = self->a_conditional.c_cond;
      }
-     self->ast_type = AST_BOOL;
-     self->ast_flag = AST_FBOOL_NEGATE;
+     self->a_type = AST_BOOL;
+     self->a_flag = AST_FBOOL_NEGATE;
     }
    }
    OPTIMIZE_VERBOSE("Apply matrix to constant tt/ff branches of boolean conditional expression\n");
@@ -352,25 +352,25 @@ optimize_conditional_bool_predictable_inherit_multiple:
  }
  if (!result_used) {
   /* Remove branches without any side-effects. */
-  if (self->ast_conditional.ast_tt &&
-      self->ast_conditional.ast_tt != self->ast_conditional.ast_cond &&
-     !ast_has_sideeffects(self->ast_conditional.ast_tt)) {
-   if (self->ast_conditional.ast_ff) {
-    Dee_Clear(self->ast_conditional.ast_tt);
+  if (self->a_conditional.c_tt &&
+      self->a_conditional.c_tt != self->a_conditional.c_cond &&
+     !ast_has_sideeffects(self->a_conditional.c_tt)) {
+   if (self->a_conditional.c_ff) {
+    Dee_Clear(self->a_conditional.c_tt);
    } else {
-    if (ast_graft_onto(self,self->ast_conditional.ast_cond))
+    if (ast_graft_onto(self,self->a_conditional.c_cond))
         goto err;
    }
    OPTIMIZE_VERBOSE("Remove conditional tt-branch without any side-effects\n");
    goto did_optimize;
   }
-  if (self->ast_conditional.ast_ff &&
-      self->ast_conditional.ast_ff != self->ast_conditional.ast_cond &&
-     !ast_has_sideeffects(self->ast_conditional.ast_ff)) {
-   if (self->ast_conditional.ast_tt) {
-    Dee_Clear(self->ast_conditional.ast_ff);
+  if (self->a_conditional.c_ff &&
+      self->a_conditional.c_ff != self->a_conditional.c_cond &&
+     !ast_has_sideeffects(self->a_conditional.c_ff)) {
+   if (self->a_conditional.c_tt) {
+    Dee_Clear(self->a_conditional.c_ff);
    } else {
-    if (ast_graft_onto(self,self->ast_conditional.ast_cond))
+    if (ast_graft_onto(self,self->a_conditional.c_cond))
         goto err;
    }
    OPTIMIZE_VERBOSE("Remove conditional ff-branch without any side-effects\n");
@@ -378,64 +378,64 @@ optimize_conditional_bool_predictable_inherit_multiple:
   }
  }
 
- if (self->ast_conditional.ast_tt && self->ast_conditional.ast_ff) {
-  DeeAstObject *tt = self->ast_conditional.ast_tt;
-  DeeAstObject *ff = self->ast_conditional.ast_ff;
+ if (self->a_conditional.c_tt && self->a_conditional.c_ff) {
+  struct ast *tt = self->a_conditional.c_tt;
+  struct ast *ff = self->a_conditional.c_ff;
   /* TODO: if the current context only needs a boolean value,
    *       optimize constant expressions into Dee_True / Dee_False */
-  if (tt->ast_type == AST_CONSTEXPR && ff->ast_type == AST_CONSTEXPR) {
+  if (tt->a_type == AST_CONSTEXPR && ff->a_type == AST_CONSTEXPR) {
    /* Optimize when both branches are in use and both are constant expressions:
     * >> get_cond() ? 10 : 20;
     * Optimize to:
     * >> pack(10,20)[!!get_cond()]; */
    DREF DeeObject *argument_packet;
    /* Special case: If both values are boolean, we can apply a bool-matrix. */
-   if (DeeBool_Check(tt->ast_constexpr) &&
-       DeeBool_Check(ff->ast_constexpr)) {
+   if (DeeBool_Check(tt->a_constexpr) &&
+       DeeBool_Check(ff->a_constexpr)) {
     /* TODO: Even without this special case, the optimization
      *       for `operator []' should be also be able to get
      *       rid of this! */
-    tt_value = DeeBool_IsTrue(tt->ast_constexpr);
-    ff_value = DeeBool_IsTrue(ff->ast_constexpr);
+    tt_value = DeeBool_IsTrue(tt->a_constexpr);
+    ff_value = DeeBool_IsTrue(ff->a_constexpr);
     goto apply_bool_matrix_transformation;
    }
    argument_packet = DeeTuple_Pack(2,
-                                   ff->ast_constexpr,
-                                   tt->ast_constexpr);
+                                   ff->a_constexpr,
+                                   tt->a_constexpr);
    if unlikely(!argument_packet) goto err;
-   Dee_Decref(tt->ast_constexpr);
-   Dee_Decref(ff->ast_constexpr);
-   tt->ast_constexpr = argument_packet; /* Inherit reference. */
-   ff->ast_type      = AST_BOOL;
-   ff->ast_flag      = AST_FBOOL_NORMAL;
-   ff->ast_boolexpr  = self->ast_conditional.ast_cond; /* Inherit reference. */
-   self->ast_operator.ast_opa    = tt; /* Inherit reference. */
-   self->ast_operator.ast_opb    = ast_setddi(ff,&self->ast_ddi); /* Inherit reference. */
-   self->ast_operator.ast_opc    = NULL;
-   self->ast_operator.ast_opd    = NULL;
-   self->ast_operator.ast_exflag = AST_OPERATOR_FNORMAL;
-   self->ast_flag = OPERATOR_GETITEM;
-   self->ast_type = AST_OPERATOR;
+   Dee_Decref(tt->a_constexpr);
+   Dee_Decref(ff->a_constexpr);
+   tt->a_constexpr = argument_packet; /* Inherit reference. */
+   ff->a_type      = AST_BOOL;
+   ff->a_flag      = AST_FBOOL_NORMAL;
+   ff->a_bool  = self->a_conditional.c_cond; /* Inherit reference. */
+   self->a_operator.o_op0    = tt; /* Inherit reference. */
+   self->a_operator.o_op1    = ast_setddi(ff,&self->a_ddi); /* Inherit reference. */
+   self->a_operator.o_op2    = NULL;
+   self->a_operator.o_op3    = NULL;
+   self->a_operator.o_exflag = AST_OPERATOR_FNORMAL;
+   self->a_flag = OPERATOR_GETITEM;
+   self->a_type = AST_OPERATOR;
    OPTIMIZE_VERBOSE("Use result-vectoring to reduce constant tt/ff branches of conditional expression\n");
    goto did_optimize;
   }
   if (optimizer_flags & OPTIMIZE_FCSE) {
    if (ast_equal(tt,ff)) {
     /* The true and false branches are identical. */
-    DREF DeeAstObject **elemv;
+    DREF struct ast **elemv;
 if_statement_branches_identical:
-    elemv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+    elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
     if unlikely(!elemv) goto err;
     ast_fini_contents(tt);
-    tt->ast_type = AST_BOOL;
-    tt->ast_flag = AST_FBOOL_NORMAL;
-    tt->ast_boolexpr = self->ast_conditional.ast_cond; /* Inherit reference. */
+    tt->a_type = AST_BOOL;
+    tt->a_flag = AST_FBOOL_NORMAL;
+    tt->a_bool = self->a_conditional.c_cond; /* Inherit reference. */
     elemv[0] = tt; /* Inherit reference. */
     elemv[1] = ff; /* Inherit reference. */
-    self->ast_multiple.ast_exprc = 2;
-    self->ast_multiple.ast_exprv = elemv;
-    self->ast_type = AST_MULTIPLE;
-    self->ast_flag = AST_FMULTIPLE_KEEPLAST;
+    self->a_multiple.m_astc = 2;
+    self->a_multiple.m_astv = elemv;
+    self->a_type = AST_MULTIPLE;
+    self->a_flag = AST_FMULTIPLE_KEEPLAST;
     OPTIMIZE_VERBOSE("Flatten identical true/false branches\n");
     goto did_optimize;
    }
@@ -459,20 +459,20 @@ if_statement_branches_identical:
     * >> print "End";
     */
    {
-    DeeAstObject **tt_astv; size_t tt_astc;
-    DeeAstObject **ff_astv; size_t ff_astc;
-    if (tt->ast_type == AST_MULTIPLE &&
-        tt->ast_flag == AST_FMULTIPLE_KEEPLAST)
-     tt_astv = tt->ast_multiple.ast_exprv,
-     tt_astc = tt->ast_multiple.ast_exprc;
+    struct ast **tt_astv; size_t tt_astc;
+    struct ast **ff_astv; size_t ff_astc;
+    if (tt->a_type == AST_MULTIPLE &&
+        tt->a_flag == AST_FMULTIPLE_KEEPLAST)
+     tt_astv = tt->a_multiple.m_astv,
+     tt_astc = tt->a_multiple.m_astc;
     else {
      tt_astv = &tt;
      tt_astc = 1;
     }
-    if (ff->ast_type == AST_MULTIPLE &&
-        ff->ast_flag == AST_FMULTIPLE_KEEPLAST)
-     ff_astv = ff->ast_multiple.ast_exprv,
-     ff_astc = ff->ast_multiple.ast_exprc;
+    if (ff->a_type == AST_MULTIPLE &&
+        ff->a_flag == AST_FMULTIPLE_KEEPLAST)
+     ff_astv = ff->a_multiple.m_astv,
+     ff_astc = ff->a_multiple.m_astc;
     else {
      ff_astv = &ff;
      ff_astc = 1;
@@ -480,8 +480,8 @@ if_statement_branches_identical:
     size_t move_count = 0;
     while (move_count < tt_astc &&
            move_count < ff_astc) {
-     DeeAstObject *tt_last = tt_astv[tt_astc-(move_count+1)];
-     DeeAstObject *ff_last = ff_astv[ff_astc-(move_count+1)];
+     struct ast *tt_last = tt_astv[tt_astc-(move_count+1)];
+     struct ast *ff_last = ff_astv[ff_astc-(move_count+1)];
      if (!ast_equal(tt_last,ff_last)) break;
      ++move_count;
     }

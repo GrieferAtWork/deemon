@@ -427,7 +427,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
                              int start_line, int start_col,
                              struct string_object *input_pathname) {
  DREF DeeCompilerObject *compiler; struct TPPFile *base_file;
- DREF DeeAstObject *ast; DREF DeeCodeObject *root_code; int result;
+ DREF struct ast *ast; DREF DeeCodeObject *root_code; int result;
  uint16_t assembler_flags; uint16_t compiler_flags;
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
  ASSERT_OBJECT_TYPE(input_file,(DeeTypeObject *)&DeeFile_Type);

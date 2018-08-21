@@ -201,9 +201,9 @@ done:
  * @return: -1: An error occurred. */
 INTERN int
 (DCALL ast_assumes_gather)(struct ast_assumes *__restrict self,
-                           DeeAstObject *__restrict ast,
+                           struct ast *__restrict ast,
                            bool result_used) {
- switch (ast->ast_type) {
+ switch (ast->a_type) {
 
  case AST_CONSTEXPR: /* Doesn't affect any symbols. */
  case AST_GOTO:      /* We don't care about jumps, or behavior after no-return. */
@@ -212,20 +212,20 @@ INTERN int
   break;
 
  case AST_SYM:
-  if (ast->ast_flag) /* Untracked write to symbol -> Symbol now has an undefined value. */
-      return ast_assumes_setsymval(self,ast->ast_sym,NULL);
+  if (ast->a_flag) /* Untracked write to symbol -> Symbol now has an undefined value. */
+      return ast_assumes_setsymval(self,ast->a_sym,NULL);
   break;
 
  case AST_UNBIND:    /* Symbol gets unbound (XXX: maybe track this as `ITER_DONE'?) */
-  return ast_assumes_setsymval(self,ast->ast_sym,NULL);
+  return ast_assumes_setsymval(self,ast->a_sym,NULL);
 
  {
   size_t i;
  case AST_MULTIPLE:
-  for (i = 0; i < ast->ast_multiple.ast_exprc; ++i) {
-   if (ast_assumes_gather(self,ast->ast_multiple.ast_exprv[i],
+  for (i = 0; i < ast->a_multiple.m_astc; ++i) {
+   if (ast_assumes_gather(self,ast->a_multiple.m_astv[i],
                           result_used &&
-                          i == ast->ast_multiple.ast_exprc - 1))
+                          i == ast->a_multiple.m_astc - 1))
        goto err;
   }
  } break;
@@ -233,8 +233,8 @@ INTERN int
  case AST_RETURN:
  case AST_YIELD:
  case AST_THROW:
-  if (ast->ast_returnexpr)
-      return ast_assumes_gather(self,ast->ast_returnexpr,true);
+  if (ast->a_return)
+      return ast_assumes_gather(self,ast->a_return,true);
   break;
 
   /* TODO: All the other branch types. */

@@ -251,20 +251,20 @@ err:
 
 
 #ifdef NDEBUG
-INTERN int (DCALL asm_putddi)(DeeAstObject *__restrict ast)
+INTERN int (DCALL asm_putddi)(struct ast *__restrict ast)
 #else
-INTERN int (DCALL asm_putddi_dbg)(DeeAstObject *__restrict ast,
+INTERN int (DCALL asm_putddi_dbg)(struct ast *__restrict ast,
                                   char const *file, int line)
 #endif
 {
  struct asm_sym *sym;
  struct ddi_checkpoint *ddi;
- ASSERT_OBJECT_TYPE(ast,&DeeAst_Type);
+ ASSERT_AST(ast);
  /* Check for simple case: DDI is disabled. */
  if (current_assembler.a_flag & ASM_FNODDI)
      goto done;
  /* Check if there even is DDI information to save. */
- if (!ast->ast_ddi.l_file)
+ if (!ast->a_ddi.l_file)
      goto done;
  /* Discard redundant debug information early on to save on memory. */
  if (current_assembler.a_ddi.da_slast == current_assembler.a_curr &&
@@ -285,7 +285,7 @@ INTERN int (DCALL asm_putddi_dbg)(DeeAstObject *__restrict ast,
  asm_defsym(sym);
  ddi->dc_sym = sym;
  ++sym->as_used; /* Track use of this symbol by DDI information. */
- ddi->dc_loc = ast->ast_ddi;
+ ddi->dc_loc = ast->a_ddi;
  ddi->dc_sp  = current_assembler.a_stackcur;
  /* Save the current text position to discard early uses of the same checkpoint. */
  current_assembler.a_ddi.da_last  = sym->as_used;
@@ -1956,14 +1956,14 @@ err:
 
 #ifdef CONFIG_ASM_ENABLE_JCC_SYMBOLS
 PRIVATE int DCALL
-asm_do_gjcc(DeeAstObject *__restrict cond,
+asm_do_gjcc(struct ast *__restrict cond,
             instruction_t instr,
             struct asm_sym *__restrict target,
-            DeeAstObject *__restrict ddi_ast) {
+            struct ast *__restrict ddi_ast) {
  instruction_t *data;
  struct asm_rel *rel;
  ASSERT(instr == ASM_JT || instr == ASM_JF);
- if (cond->ast_type != AST_SYM || !asm_can_prefix_symbol(cond->ast_sym)) {
+ if (cond->a_type != AST_SYM || !asm_can_prefix_symbol(cond->a_sym)) {
   if (ast_genasm(cond,ASM_G_FPUSHRES|ASM_G_FLAZYBOOL))
       goto err;
   if (asm_putddi(ddi_ast)) goto err;
@@ -1975,7 +1975,7 @@ asm_do_gjcc(DeeAstObject *__restrict cond,
  if unlikely((rel = asm_allocrel()) == NULL) goto err;
  /* Emit the symbol prefix. */
  if (asm_putddi(ddi_ast)) goto err;
- if (asm_gprefix_symbol(cond->ast_sym,cond)) goto err;
+ if (asm_gprefix_symbol(cond->a_sym,cond)) goto err;
  rel->ar_sym = target,++target->as_used;
  /* Let's get big-code assembly mode out of the way! */
  if unlikely(current_assembler.a_flag&ASM_FBIGCODE) {
@@ -2100,17 +2100,17 @@ INTERN int (DCALL asm_gjmps)(struct asm_sym *__restrict target) {
 err:
  return -1;
 }
-INTERN int (DCALL asm_gjcc)(DeeAstObject *__restrict cond,
+INTERN int (DCALL asm_gjcc)(struct ast *__restrict cond,
                             instruction_t instr,
                             struct asm_sym *__restrict target,
-                            DeeAstObject *__restrict ddi_ast) {
+                            struct ast *__restrict ddi_ast) {
 #ifdef CONFIG_ASM_ENABLE_JCC_SYMBOLS
  struct asm_sym *temp;
  ASSERT(instr == ASM_JT || instr == ASM_JF);
- while (cond->ast_type == AST_BOOL) {
-  if (cond->ast_flag & AST_FBOOL_NEGATE)
+ while (cond->a_type == AST_BOOL) {
+  if (cond->a_flag & AST_FBOOL_NEGATE)
       instr = ASM_JX_NOT(instr);
-  cond = cond->ast_boolexpr;
+  cond = cond->a_bool;
  }
  if (!(current_assembler.a_flag&ASM_FSTACKDISP))
      return asm_do_gjcc(cond,instr,target,ddi_ast);
@@ -2130,10 +2130,10 @@ err:
  return -1;
 #else /* CONFIG_ASM_ENABLE_JCC_SYMBOLS */
  ASSERT(instr == ASM_JT || instr == ASM_JF);
- if (cond->ast_type == AST_BOOL) {
-  if (cond->ast_flag&AST_FBOOL_NEGATE)
+ if (cond->a_type == AST_BOOL) {
+  if (cond->a_flag&AST_FBOOL_NEGATE)
       instr = ASM_JX_NOT(instr);
-  cond = cond->ast_boolexpr;
+  cond = cond->a_bool;
  }
  if (ast_genasm(cond,ASM_G_FPUSHRES|ASM_G_FLAZYBOOL)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
@@ -2543,7 +2543,7 @@ end:
 
 INTERN int32_t DCALL
 asm_gsymid_for_read(struct symbol *__restrict sym,
-                    DeeAstObject *__restrict warn_ast) {
+                    struct ast *__restrict warn_ast) {
  ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_GLOBAL);
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
@@ -2556,7 +2556,7 @@ err:
 }
 INTERN int32_t DCALL
 asm_lsymid_for_read(struct symbol *__restrict sym,
-                    DeeAstObject *__restrict warn_ast) {
+                    struct ast *__restrict warn_ast) {
  ASSERT(!SYMBOL_MUST_REFERENCE(sym));
  ASSERT(sym->s_type == SYMBOL_TYPE_LOCAL);
  if (sym->s_flag & SYMBOL_FALLOC)
@@ -2570,7 +2570,7 @@ err:
 }
 INTERN int32_t DCALL
 asm_ssymid_for_read(struct symbol *__restrict sym,
-                    DeeAstObject *__restrict warn_ast) {
+                    struct ast *__restrict warn_ast) {
  ASSERT(!SYMBOL_MUST_REFERENCE(sym));
  ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_STATIC);
  if (sym->s_flag & SYMBOL_FALLOC)
@@ -2755,10 +2755,9 @@ INTERN int DCALL asm_check_user_labels_defined(void) {
 
 
 INTERN DREF DeeCodeObject *DCALL
-code_docompile(DeeAstObject *__restrict code_ast) {
+code_docompile(struct ast *__restrict code_ast) {
  int link_error; unsigned int i;
- ASSERT_OBJECT(code_ast);
- ASSERT(DeeAst_Check(code_ast));
+ ASSERT_AST(code_ast);
  ASSERT_OBJECT_TYPE((DeeObject *)current_basescope,&DeeBaseScope_Type);
 
 restart:
@@ -2979,7 +2978,7 @@ err:
 }
 
 INTERN DREF DeeCodeObject *DCALL
-code_compile(DeeAstObject *__restrict code_ast, uint16_t flags,
+code_compile(struct ast *__restrict code_ast, uint16_t flags,
              uint16_t *__restrict prefc,
              /*out:inherit*/struct asm_symbol_ref **__restrict prefv) {
  struct assembler old_assembler;

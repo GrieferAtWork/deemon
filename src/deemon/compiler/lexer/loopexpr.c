@@ -39,18 +39,18 @@
  */
 DECL_BEGIN
 
-PRIVATE DREF DeeAstObject *FCALL
-wrap_yield(DREF DeeAstObject *ast, struct ast_loc *__restrict loc) {
- DREF DeeAstObject *result;
+PRIVATE DREF struct ast *FCALL
+wrap_yield(DREF struct ast *ast, struct ast_loc *__restrict loc) {
+ DREF struct ast *result;
  result = ast_setddi(ast_yield(ast_setddi(ast,loc)),loc);
  if likely(result) Dee_Decref(ast);
  return result;
 }
 
-PRIVATE DREF DeeAstObject *FCALL
+PRIVATE DREF struct ast *FCALL
 parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
  struct ast_loc loc; uint32_t old_flags;
- DREF DeeAstObject *result,*other,*merge;
+ DREF struct ast *result,*other,*merge;
  /* Special handling for recursive loops and conditional statements:
   * >> print (for (local x: items) if (x > 10) x)...; // Print all items > 10
   * >> print (for (local x: items) for (local y: x) y)...; // Print all items or each item of `items'
@@ -58,7 +58,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
  switch (tok) {
 
  {
-  DREF DeeAstObject *ff_branch;
+  DREF struct ast *ff_branch;
  case KWD_if:
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
@@ -160,9 +160,9 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   break;
 
  {
-  DREF DeeAstObject *init;
-  DREF DeeAstObject *elem_or_cond;
-  DREF DeeAstObject *iter_or_next;
+  DREF struct ast *init;
+  DREF struct ast *elem_or_cond;
+  DREF struct ast *iter_or_next;
   int32_t type;
  case KWD_for:
   loc_here(&loc);
@@ -203,7 +203,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   /* Check if a loop initializer was parsed.
    * If one was, then simply wrap everything in a multi-branch AST. */
   if (init) {
-   DREF DeeAstObject **exprv = (DREF DeeAstObject **)Dee_Malloc(2*sizeof(DREF DeeAstObject *));
+   DREF struct ast **exprv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
    if unlikely(!exprv) { err_loop_init: Dee_Decref(init); goto err_r; }
    /* A loop initializer was given. - Pack it into the resulting AST. */
    exprv[0] = init;   /* Inherit reference. */
@@ -221,9 +221,9 @@ err_for_loop:
  } break;
 
  {
-  DREF DeeAstObject *foreach_elem;
-  DREF DeeAstObject *foreach_iter;
-  DREF DeeAstObject *foreach_loop;
+  DREF struct ast *foreach_elem;
+  DREF struct ast *foreach_iter;
+  DREF struct ast *foreach_loop;
  case KWD_foreach:
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
@@ -288,9 +288,9 @@ err:
  return NULL;
 }
 
-INTERN DREF DeeAstObject *FCALL ast_parse_loopexpr(void) {
+INTERN DREF struct ast *FCALL ast_parse_loopexpr(void) {
  struct ast_loc loc; tok_t mode = tok;
- DREF DeeAstObject *result,*other,*merge;
+ DREF struct ast *result,*other,*merge;
  ASSERT(mode == KWD_do || mode == KWD_while ||
         mode == KWD_for || mode == KWD_foreach);
  loc_here(&loc);
@@ -308,11 +308,11 @@ INTERN DREF DeeAstObject *FCALL ast_parse_loopexpr(void) {
  result = merge;
  /* Hack: The function AST itself must be located in the caller's scope. */
  ASSERT(current_scope);
- ASSERT(result->ast_scope);
- ASSERT(result->ast_scope != current_scope);
+ ASSERT(result->a_scope);
+ ASSERT(result->a_scope != current_scope);
  Dee_Incref(current_scope);
- Dee_Decref(result->ast_scope);
- result->ast_scope = current_scope;
+ Dee_Decref(result->a_scope);
+ result->a_scope = current_scope;
  /* With the lambda function now created, we must still wrap it in a call-expression. */
  other = ast_setddi(ast_constexpr(Dee_EmptyTuple),&loc);
  if unlikely(!other) goto err_r;
@@ -331,7 +331,7 @@ err:
 }
 
 
-INTERN DREF DeeAstObject *FCALL
+INTERN DREF struct ast *FCALL
 ast_parse_loopexpr_hybrid(unsigned int *pwas_expression) {
  /* TODO */
  *pwas_expression = AST_PARSE_WASEXPR_NO;

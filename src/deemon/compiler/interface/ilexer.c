@@ -1128,6 +1128,13 @@ PRIVATE struct type_getset lexer_getsets[] = {
       DOC("->bool\n"
           "Configure if space-tokens should, or shouldn't be emit\n"
           "Note: This field is preserved by #flags") },
+    { "wantlf",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_wantlf,
+      (int(DCALL *)(DeeObject *__restrict))&lexer_del_wantlf,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_wantlf,
+      DOC("->bool\n"
+          "Configure if line-feed-tokens should, or shouldn't be emit\n"
+          "Note: This field is preserved by #flags") },
     { "noseek_on_eob",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_noseek_on_eob,
       (int(DCALL *)(DeeObject *__restrict))&lexer_del_noseek_on_eob,

@@ -38,8 +38,8 @@ DECL_BEGIN
  * when if equals `case_expr'. However if it doesn't, leave the stack
  * as it was upon entry. */
 PRIVATE int DCALL
-emit_runtime_check(DeeAstObject *__restrict ddi_ast,
-                   DeeAstObject *__restrict case_expr,
+emit_runtime_check(struct ast *__restrict ddi_ast,
+                   struct ast *__restrict case_expr,
                    struct asm_sym *__restrict target) {
  struct asm_sym *temp,*guard_begin,*guard_end;
  struct asm_exc *exc_hand;
@@ -151,7 +151,7 @@ nope:
 
 
 INTERN int DCALL
-ast_genasm_switch(DeeAstObject *__restrict ast) {
+ast_genasm_switch(struct ast *__restrict ast) {
  struct asm_sym *old_break,*switch_break;
  struct text_label *constant_cases,**pcases,*cases;
  struct asm_sym *default_sym; size_t i,num_constants;
@@ -160,8 +160,8 @@ ast_genasm_switch(DeeAstObject *__restrict ast) {
  uint16_t stack_size_after_jump = 0;
  code_addr_t case_unpack_addr = 0;
  bool has_expression = false;
- ASSERT_OBJECT_TYPE(ast,&DeeAst_Type);
- ASSERT(ast->ast_type == AST_SWITCH);
+ ASSERT_AST(ast);
+ ASSERT(ast->a_type == AST_SWITCH);
 
  /* Allocate a new symbol for `break' being used
   * inside of a switch and set up contextual flags. */
@@ -172,16 +172,16 @@ ast_genasm_switch(DeeAstObject *__restrict ast) {
  old_finflag = current_assembler.a_finflag;
  current_assembler.a_finflag |= ASM_FINFLAG_NOLOOP;
 
- if (ast->ast_switch.ast_default) {
+ if (ast->a_switch.s_default) {
   /* The default label shouldn't be allocated yet, but
    * the specs don't state that a goto-AST can't jump
    * to a case label, meaning that we must allow a
    * pre-allocated symbol. */
-  default_sym = ast->ast_switch.ast_default->tl_asym;
+  default_sym = ast->a_switch.s_default->tl_asym;
   if likely(!default_sym) {
    default_sym = asm_newsym();
    /* Save the default symbol to that the switch-block may initialize it. */
-   ast->ast_switch.ast_default->tl_asym = default_sym;
+   ast->a_switch.s_default->tl_asym = default_sym;
   }
  } else {
   default_sym = asm_newsym();
@@ -194,11 +194,11 @@ ast_genasm_switch(DeeAstObject *__restrict ast) {
   * text to compare cases that cannot be determined at compile-time
   * at runtime. */
  constant_cases = NULL,num_constants = 0;
- pcases = &ast->ast_switch.ast_cases;
+ pcases = &ast->a_switch.s_cases;
  temp = 0;
  while ((cases = *pcases) != NULL) {
   struct asm_sym *case_sym;
-  ASSERT_OBJECT_TYPE(cases->tl_expr,&DeeAst_Type);
+  ASSERT_AST(cases->tl_expr);
   /* Allocate the symbol for every case (We'll need them all
    * eventually and this is a good spot to allocate them). */
   case_sym = cases->tl_asym;
@@ -210,9 +210,9 @@ ast_genasm_switch(DeeAstObject *__restrict ast) {
 
   /* NOTE: When the no-jmptab flag is set, act as though
    *       no constants at all were being allowed. */
-  if (cases->tl_expr->ast_type == AST_CONSTEXPR &&
-    !(ast->ast_flag&AST_FSWITCH_NOJMPTAB) &&
-      asm_allowconst(cases->tl_expr->ast_constexpr)) {
+  if (cases->tl_expr->a_type == AST_CONSTEXPR &&
+    !(ast->a_flag&AST_FSWITCH_NOJMPTAB) &&
+      asm_allowconst(cases->tl_expr->a_constexpr)) {
    /* Constant case (collect these and handle them individually).
     * NOTE: Technically, we're reversing the order of constant expressions
     *       here, but that's OK, considering they don't actually have any
@@ -227,7 +227,7 @@ ast_genasm_switch(DeeAstObject *__restrict ast) {
   if likely(!temp) {
    if (!has_expression) {
     /* Assemble text for the switch expression. */
-    if (ast_genasm(ast->ast_switch.ast_expr,ASM_G_FPUSHRES))
+    if (ast_genasm(ast->a_switch.s_expr,ASM_G_FPUSHRES))
         goto err_cases;
     has_expression = true;
    }
@@ -258,7 +258,7 @@ err_cases:
 /*use_runtime_checks:*/
   if (!has_expression) {
    /* Assemble text for the switch expression. */
-   if (ast_genasm(ast->ast_switch.ast_expr,ASM_G_FPUSHRES))
+   if (ast_genasm(ast->a_switch.s_expr,ASM_G_FPUSHRES))
        goto err;
    has_expression = true;
   }
@@ -288,8 +288,8 @@ err_cases:
   if unlikely(!jump_table) goto err;
   for (i = 0; i < num_constants; ++i) {
    DREF DeeObject *case_target;
-   ASSERT_OBJECT_TYPE(constant_cases->tl_expr,&DeeAst_Type);
-   ASSERT(constant_cases->tl_expr->ast_type == AST_CONSTEXPR);
+   ASSERT_AST(constant_cases->tl_expr);
+   ASSERT(constant_cases->tl_expr->a_type == AST_CONSTEXPR);
    ASSERT(constant_cases->tl_asym);
    case_target = pack_target_tuple(constant_cases->tl_asym);
    if unlikely(!case_target) {
@@ -298,7 +298,7 @@ err_jump_table:
     goto err;
    }
    temp = DeeRoDict_Insert(&jump_table,
-                            constant_cases->tl_expr->ast_constexpr,
+                            constant_cases->tl_expr->a_constexpr,
                             case_target);
    Dee_Decref_unlikely(case_target);
    if unlikely(temp) goto err_jump_table;
@@ -322,7 +322,7 @@ err_jump_table:
   Dee_Decref_unlikely(jump_table);
   if (!has_expression) {
    /* Assemble text for the switch expression. */
-   if (ast_genasm(ast->ast_switch.ast_expr,ASM_G_FPUSHRES))
+   if (ast_genasm(ast->a_switch.s_expr,ASM_G_FPUSHRES))
        goto err_cases;
    has_expression = true;
   } else {
@@ -349,7 +349,7 @@ err_jump_table:
 
 do_generate_block:
  /* With all the jump-code out of the way, generate the switch block. */
- if (ast_genasm(ast->ast_switch.ast_block,ASM_G_FNORMAL))
+ if (ast_genasm(ast->a_switch.s_block,ASM_G_FNORMAL))
      goto err;
 
  /* If the user didn't define a default symbol,
