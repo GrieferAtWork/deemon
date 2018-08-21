@@ -46,7 +46,6 @@ DECL_BEGIN
 DECLARE_OBJECT_CACHE(compiler_item,DeeCompilerItemObject)
 DECLARE_OBJECT_CACHE(compiler_wrap,DeeCompilerWrapperObject)
 
-
 PRIVATE DREF DeeObject *DCALL
 keyword_str(DeeCompilerItemObject *__restrict self) {
  DREF DeeObject *result = NULL;

@@ -121,8 +121,11 @@
     <ClCompile Include="..\src\deemon\compiler\gendec.c" />
     <ClCompile Include="..\src\deemon\compiler\instrlen.c" />
     <ClCompile Include="..\src\deemon\compiler\interface\core.c" />
+    <ClCompile Include="..\src\deemon\compiler\interface\iast.c" />
     <ClCompile Include="..\src\deemon\compiler\interface\icompiler.c" />
     <ClCompile Include="..\src\deemon\compiler\interface\ilexer.c" />
+    <ClCompile Include="..\src\deemon\compiler\interface\iscope.c" />
+    <ClCompile Include="..\src\deemon\compiler\interface\isymbol.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\asm.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\assert.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\brace.c" />

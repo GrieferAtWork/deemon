@@ -44,8 +44,8 @@ INTERN struct opinfo basic_opinfo[OPERATOR_USERCOUNT] = {
     /* [OPERATOR_COPY]         = */{ OPTYPE_SPECIAL,                               OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_alloc.tp_copy_ctor), "copy",         "copy",        "tp_copy_ctor" },
     /* [OPERATOR_DEEPCOPY]     = */{ OPTYPE_SPECIAL,                               OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_alloc.tp_deep_ctor), "deepcopy",     "deepcopy",    "tp_deep_ctor" },
     /* [OPERATOR_DESTRUCTOR]   = */{ OPTYPE_RVOID|OPTYPE_UNARY,                    OPCLASS_TYPE, 1, offsetof(Type,tp_init.tp_dtor),               "~this",        "destructor",  "tp_dtor" },
-    /* [OPERATOR_ASSIGN]       = */{ OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_assign),             "=",            "assign",      "tp_assign" },
-    /* [OPERATOR_MOVEASSIGN]   = */{ OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_move_assign),        "move =",       "moveassign",  "tp_move_assign" },
+    /* [OPERATOR_ASSIGN]       = */{ OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_assign),             ":=",           "assign",      "tp_assign" },
+    /* [OPERATOR_MOVEASSIGN]   = */{ OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_move_assign),        "move:=",       "moveassign",  "tp_move_assign" },
     /* [OPERATOR_STR]          = */{ OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_TYPE, 0, offsetof(Type,tp_cast.tp_str),                "str",          "str",         "tp_str" },
     /* [OPERATOR_REPR]         = */{ OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_TYPE, 0, offsetof(Type,tp_cast.tp_repr),               "repr",         "repr",        "tp_repr" },
     /* [OPERATOR_BOOL]         = */{ OPTYPE_RINT|OPTYPE_UNARY,                     OPCLASS_TYPE, 0, offsetof(Type,tp_cast.tp_bool),               "bool",         "bool",        "tp_bool" },
@@ -91,14 +91,14 @@ INTERN struct opinfo basic_opinfo[OPERATOR_USERCOUNT] = {
     /* [OPERATOR_SIZE]         = */{ OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_size),            "#",            "size",        "tp_size" },
     /* [OPERATOR_CONTAINS]     = */{ OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_contains),        "contains",     "contains",    "tp_contains" },
     /* [OPERATOR_GETITEM]      = */{ OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_get),             "[]",           "getitem",     "tp_get" },
-    /* [OPERATOR_DELITEM]      = */{ OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_del),             "del []",       "delitem",     "tp_del" },
-    /* [OPERATOR_SETITEM]      = */{ OPTYPE_RINT|OPTYPE_TRINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_set),             "[] =",         "setitem",     "tp_set" },
+    /* [OPERATOR_DELITEM]      = */{ OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_del),             "del[]",        "delitem",     "tp_del" },
+    /* [OPERATOR_SETITEM]      = */{ OPTYPE_RINT|OPTYPE_TRINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_set),             "[]=",          "setitem",     "tp_set" },
     /* [OPERATOR_GETRANGE]     = */{ OPTYPE_ROBJECT|OPTYPE_TRINARY,                OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_get),       "[:]",          "getrange",    "tp_range_get" },
-    /* [OPERATOR_DELRANGE]     = */{ OPTYPE_RINT|OPTYPE_TRINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_del),       "del [:]",      "delrange",    "tp_range_del" },
-    /* [OPERATOR_SETRANGE]     = */{ OPTYPE_RINT|OPTYPE_QUAD,                      OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_set),       "[:] =",        "setrange",    "tp_range_set" },
+    /* [OPERATOR_DELRANGE]     = */{ OPTYPE_RINT|OPTYPE_TRINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_del),       "del[:]",       "delrange",    "tp_range_del" },
+    /* [OPERATOR_SETRANGE]     = */{ OPTYPE_RINT|OPTYPE_QUAD,                      OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_set),       "[:]=",         "setrange",    "tp_range_set" },
     /* [OPERATOR_GETATTR]      = */{ OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_getattr),        ".",            "getattr",     "tp_getattr" },
-    /* [OPERATOR_DELATTR]      = */{ OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_delattr),        "del .",        "delattr",     "tp_delattr" },
-    /* [OPERATOR_SETATTR]      = */{ OPTYPE_RINT|OPTYPE_TRINARY,                   OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_setattr),        ". =",          "setattr",     "tp_setattr" },
+    /* [OPERATOR_DELATTR]      = */{ OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_delattr),        "del.",         "delattr",     "tp_delattr" },
+    /* [OPERATOR_SETATTR]      = */{ OPTYPE_RINT|OPTYPE_TRINARY,                   OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_setattr),        ".=",           "setattr",     "tp_setattr" },
     /* [OPERATOR_ENUMATTR]     = */{ OPTYPE_ENUMATTR,                              OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_enumattr),       "...",          "enumattr",    "tp_enumattr" },
     /* [OPERATOR_ENTER]        = */{ OPTYPE_RINT|OPTYPE_UNARY,                     OPCLASS_WITH, 0, offsetof(struct type_with,tp_enter),          "enter",        "enter",       "tp_enter" },
     /* [OPERATOR_LEAVE]        = */{ OPTYPE_RINT|OPTYPE_UNARY,                     OPCLASS_WITH, 0, offsetof(struct type_with,tp_leave),          "leave",        "leave",       "tp_leave" }
@@ -123,6 +123,376 @@ INTERN struct opinfo file_opinfo[FILE_OPERATOR_COUNT] = {
     /* [FILE_OPERATOR_UNGETC - OPERATOR_EXTENDED(0)] = */{ OPTYPE_UNGETPUT,          OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_ungetc), "ungetc", "ungetc", "ft_ungetc", },
     /* [FILE_OPERATOR_PUTC   - OPERATOR_EXTENDED(0)] = */{ OPTYPE_UNGETPUT,          OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_putc),   "putc",   "putc",   "ft_putc",   }
 };
+
+PUBLIC uint16_t DCALL
+Dee_OperatorFromName(DeeTypeObject *typetype,
+                     char const *__restrict name) {
+#define EQAT(ptr,str) (memcmp(ptr,str,sizeof(str)) == 0)
+#define RETURN(id)   do{ result = (id); goto done; }__WHILE0
+ uint16_t result = (uint16_t)-1;
+ switch (*name) {
+
+ case '.':
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_SETATTR);
+  goto done;
+
+ case '[':
+  if (name[1] == ']' && name[2] == '=' && !name[3])
+      RETURN(OPERATOR_SETITEM);
+  if (name[1] == ':' && name[2] == ']' && name[3] == '=' && !name[4])
+      RETURN(OPERATOR_SETITEM);
+  goto done;
+
+ case '+':
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_INPLACE_ADD);
+  if (name[1] == '+' && !name[2])
+      RETURN(OPERATOR_INC);
+  goto done;
+
+ case '-':
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_INPLACE_SUB);
+  if (name[1] == '-' && !name[2])
+      RETURN(OPERATOR_DEC);
+  goto done;
+
+ case '~':
+  if (!name[1])
+      RETURN(OPERATOR_INV);
+  break;
+ case '*':
+  if (!name[1])
+      RETURN(OPERATOR_MUL);
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_INPLACE_MUL);
+  if (name[1] == '*') {
+   if (!name[2])
+       RETURN(OPERATOR_POW);
+   if (name[2] == '=' && !name[3])
+       RETURN(OPERATOR_INPLACE_POW);
+  }
+  break;
+ case '/':
+  if (!name[1])
+      RETURN(OPERATOR_DIV);
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_INPLACE_DIV);
+  break;
+ case '%':
+  if (!name[1])
+      RETURN(OPERATOR_MOD);
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_INPLACE_MOD);
+  break;
+ case '&':
+  if (!name[1])
+      RETURN(OPERATOR_AND);
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_INPLACE_AND);
+  break;
+ case '|':
+  if (!name[1])
+      RETURN(OPERATOR_OR);
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_INPLACE_OR);
+  break;
+ case '^':
+  if (!name[1])
+      RETURN(OPERATOR_XOR);
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_INPLACE_XOR);
+  break;
+ case ':':
+  if (name[1] != '=') break;
+  if (!name[2])
+      RETURN(OPERATOR_ASSIGN);
+  if (EQAT(name + 2,"move"))
+      RETURN(OPERATOR_MOVEASSIGN);
+  break;
+ case '<':
+  if (!name[1])
+      RETURN(OPERATOR_LO);
+  if (name[1] == '<') {
+   if (!name[2])
+        RETURN(OPERATOR_SHL);
+   if (name[2] == '=' && !name[3])
+        RETURN(OPERATOR_INPLACE_SHL);
+  } else {
+   if (name[1] == '=' && !name[2])
+       RETURN(OPERATOR_LE);
+  }
+  break;
+ case '>':
+  if (!name[1])
+      RETURN(OPERATOR_GR);
+  if (name[1] == '>') {
+   if (!name[2])
+       RETURN(OPERATOR_SHR);
+   if (name[2] == '=' && !name[3])
+       RETURN(OPERATOR_INPLACE_SHR);
+  } else {
+   if (name[1] == '=' && !name[2])
+       RETURN(OPERATOR_GE);
+  }
+  break;
+ case '=':
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_EQ);
+  break;
+ case '!':
+  if (name[1] == '=' && !name[2])
+      RETURN(OPERATOR_NE);
+  break;
+ case '#':
+  if (!name[1])
+      RETURN(OPERATOR_SIZE);
+  break;
+
+ case 'a':
+  if (EQAT(name + 1,"ssign"))
+      RETURN(OPERATOR_ASSIGN);
+  if (EQAT(name + 1,"dd"))
+      RETURN(OPERATOR_ADD);
+  if (EQAT(name + 1,"nd"))
+      RETURN(OPERATOR_AND);
+  break;
+ case 'b':
+  if (EQAT(name + 1,"ool"))
+      RETURN(OPERATOR_BOOL);
+  break;
+ case 'c':
+  if (EQAT(name + 1,"opy"))
+      RETURN(OPERATOR_COPY);
+  if (EQAT(name + 1,"all"))
+      RETURN(OPERATOR_CALL);
+  if (EQAT(name + 1,"ontains"))
+      RETURN(OPERATOR_CONTAINS);
+  break;
+ case 'd':
+  if (EQAT(name + 1,"iv"))
+      RETURN(OPERATOR_DIV);
+  if (name[1] == 'e') {
+   if (EQAT(name + 2,"epcopy"))
+       RETURN(OPERATOR_DEEPCOPY);
+   if (EQAT(name + 2,"structor"))
+       RETURN(OPERATOR_DESTRUCTOR);
+   if (name[2] == 'c' && !name[3])
+       RETURN(OPERATOR_DEC);
+   if (name[2] == 'l') {
+    if (name[3] == '[') {
+     if (name[4] == ']' && !name[5])
+         RETURN(OPERATOR_DELITEM);
+     if (name[4] == ':' && name[5] == ']' && !name[6])
+         RETURN(OPERATOR_DELRANGE);
+    }
+    if (name[3] == '.' && !name[4])
+        RETURN(OPERATOR_DELATTR);
+    if (EQAT(name + 3,"item"))
+        RETURN(OPERATOR_DELITEM);
+    if (EQAT(name + 3,"range"))
+        RETURN(OPERATOR_DELRANGE);
+    if (EQAT(name + 3,"attr"))
+        RETURN(OPERATOR_DELATTR);
+   }
+  }
+  break;
+ case 'e':
+  if (name[1] == 'q' && !name[2])
+      RETURN(OPERATOR_EQ);
+  if (EQAT(name + 1,"numattr"))
+      RETURN(OPERATOR_ENUMATTR);
+  if (EQAT(name + 1,"nter"))
+      RETURN(OPERATOR_ENTER);
+  break;
+ case 'f':
+  if (EQAT(name + 1,"loat"))
+      RETURN(OPERATOR_FLOAT);
+  break;
+ case 'g':
+  if (name[1] == 'r' && !name[2])
+      RETURN(OPERATOR_GR);
+  if (name[1] == 'e') {
+   if (!name[2])
+       RETURN(OPERATOR_GE);
+   if (name[2] == 't') {
+    if (EQAT(name + 3,"item"))
+        RETURN(OPERATOR_GETITEM);
+    if (EQAT(name + 3,"range"))
+        RETURN(OPERATOR_GETRANGE);
+    if (EQAT(name + 3,"attr"))
+        RETURN(OPERATOR_GETATTR);
+   }
+  }
+  break;
+ case 'h':
+  if (EQAT(name + 1,"ash"))
+      RETURN(OPERATOR_HASH);
+  break;
+ case 'i':
+  if (name[1] == 't' && name[2] == 'e' && name[3] == 'r') {
+   if (!name[4])
+       RETURN(OPERATOR_ITERSELF);
+   if (EQAT(name + 4,"self"))
+       RETURN(OPERATOR_ITERSELF);
+   if (EQAT(name + 4,"next"))
+       RETURN(OPERATOR_ITERNEXT);
+  } else {
+   char const *iter;
+   if (name[1] == 'n') {
+    if (name[2] == 't' && !name[3])
+        RETURN(OPERATOR_INT);
+    if (name[2] == 'v' && !name[3])
+        RETURN(OPERATOR_INV);
+    if (name[2] == 'c' && !name[3])
+        RETURN(OPERATOR_INC);
+   }
+   iter = name;
+   ++iter;
+   if (iter[0] == 'n' && iter[1] == 'p' &&
+       iter[2] == 'l' && iter[3] == 'a' &&
+       iter[4] == 'c' && iter[5] == 'e') {
+    iter += 6;
+    if (iter[0] == '_') ++iter;
+   }
+   switch (iter[0]) {
+   case 'a':
+    if (iter[2] != 'd') break;
+    if (iter[1] == 'd' && !iter[3])
+        RETURN(OPERATOR_INPLACE_ADD);
+    if (iter[1] == 'n' && !iter[3])
+        RETURN(OPERATOR_INPLACE_AND);
+    break;
+   case 's':
+    if (iter[1] == 'u' && iter[2] == 'b' && !iter[3])
+        RETURN(OPERATOR_INPLACE_SUB);
+    if (iter[1] == 'h') {
+     if (iter[2] == 'l' && !iter[3])
+         RETURN(OPERATOR_INPLACE_SHL);
+     if (iter[2] == 'r' && !iter[3])
+         RETURN(OPERATOR_INPLACE_SHR);
+    }
+    break;
+   case 'm':
+    if (iter[1] == 'u' && iter[2] == 'l' && !iter[3])
+        RETURN(OPERATOR_INPLACE_MUL);
+    if (iter[1] == 'o' && iter[2] == 'd' && !iter[3])
+        RETURN(OPERATOR_INPLACE_MOD);
+    break;
+   case 'd':
+    if (iter[1] == 'i' && iter[2] == 'v' && !iter[3])
+        RETURN(OPERATOR_INPLACE_DIV);
+    break;
+   case 'o':
+    if (iter[1] == 'r' && !iter[2])
+        RETURN(OPERATOR_INPLACE_OR);
+    break;
+   case 'x':
+    if (iter[1] == 'o' && iter[2] == 'r' && !iter[3])
+        RETURN(OPERATOR_INPLACE_XOR);
+    break;
+   case 'p':
+    if (iter[1] == 'o' && iter[2] == 'w' && !iter[3])
+        RETURN(OPERATOR_INPLACE_POW);
+    break;
+   default: break;
+   }
+  }
+  break;
+ case 'l':
+  if (name[1] == 'o' && !name[2])
+      RETURN(OPERATOR_LO);
+  if (name[1] == 'e') {
+   if (!name[2])
+       RETURN(OPERATOR_LE);
+   if (EQAT(name + 2,"ave"))
+       RETURN(OPERATOR_LEAVE);
+  }
+  break;
+ case 'm':
+  if (EQAT(name + 1,"oveassign"))
+      RETURN(OPERATOR_MOVEASSIGN);
+  if (EQAT(name + 1,"ul"))
+      RETURN(OPERATOR_MUL);
+  if (EQAT(name + 1,"od"))
+      RETURN(OPERATOR_MOD);
+  break;
+ case 'n':
+  if (name[1] == 'e') {
+   if (!name[2])
+       RETURN(OPERATOR_NE);
+   if (name[2] == 'g' && !name[3])
+       RETURN(OPERATOR_NEG);
+   if (name[2] == 'x' && name[3] == 't' && !name[4])
+       RETURN(OPERATOR_ITERNEXT);
+  }
+  break;
+ case 'o':
+  if (name[1] == 'r' && !name[2])
+      RETURN(OPERATOR_OR);
+  break;
+ case 'p':
+  if (name[1] == 'o' && !name[3]) {
+   if (name[2] == 's')
+       RETURN(OPERATOR_POS);
+   if (name[2] == 'w')
+       RETURN(OPERATOR_POW);
+  }
+  break;
+ case 'r':
+  if (EQAT(name + 1,"epr"))
+      RETURN(OPERATOR_REPR);
+  break;
+ case 's':
+  if (EQAT(name + 1,"tr"))
+      RETURN(OPERATOR_STR);
+  if (EQAT(name + 1,"ub"))
+      RETURN(OPERATOR_SUB);
+  if (EQAT(name + 1,"hl"))
+      RETURN(OPERATOR_SHL);
+  if (EQAT(name + 1,"hr"))
+      RETURN(OPERATOR_SHR);
+  if (EQAT(name + 1,"ize"))
+      RETURN(OPERATOR_SIZE);
+  if (name[1] == 'e' && name[2] == 't') {
+   if (EQAT(name + 3,"item"))
+       RETURN(OPERATOR_SETITEM);
+   if (EQAT(name + 3,"range"))
+       RETURN(OPERATOR_SETRANGE);
+   if (EQAT(name + 3,"attr"))
+       RETURN(OPERATOR_SETATTR);
+  }
+  break;
+ case 'x':
+  if (EQAT(name + 1,"or"))
+      RETURN(OPERATOR_XOR);
+  break;
+
+
+ default: break;
+ }
+ /* Fallback: manually resolve names. */
+ for (result = 0; result < OPERATOR_USERCOUNT; ++result) {
+  if (!strcmp(basic_opinfo[result].oi_sname,name)) goto done;
+  if (!strcmp(basic_opinfo[result].oi_uname,name)) goto done;
+ }
+ if (typetype == &DeeFileType_Type) {
+  for (result = 0; result < OPERATOR_USERCOUNT; ++result) {
+   if (!strcmp(file_opinfo[result].oi_sname,name)) goto done_extended;
+   if (!strcmp(file_opinfo[result].oi_uname,name)) goto done_extended;
+  }
+ }
+ result = (uint16_t)-1; /* Not found! */
+done:
+ return result;
+done_extended:
+ result += OPERATOR_EXTENDED(0);
+ goto done;
+#undef EQAT
+#undef RETURN
+}
+
 
 PUBLIC struct opinfo *DCALL
 Dee_OperatorInfo(DeeTypeObject *typetype,

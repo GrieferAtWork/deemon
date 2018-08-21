@@ -28,10 +28,18 @@
 DECL_BEGIN
 
 #ifdef CONFIG_BUILDING_DEEMON
+struct ast;
+struct scope_object;
+struct base_scope_object;
+struct root_scope_object;
 typedef struct compiler_keyword_object DeeCompilerKeywordObject;
 typedef struct compiler_symbol_object DeeCompilerSymbolObject;
+typedef struct compiler_ast_object DeeCompilerAstObject;
+typedef struct compiler_scope_object DeeCompilerScopeObject;
 struct compiler_keyword_object { COMPILER_ITEM_OBJECT_HEAD(struct TPPKeyword) };
 struct compiler_symbol_object { COMPILER_ITEM_OBJECT_HEAD(struct symbol) };
+struct compiler_ast_object { COMPILER_ITEM_OBJECT_HEAD(DREF struct ast) };
+struct compiler_scope_object { COMPILER_ITEM_OBJECT_HEAD(DREF struct scope_object) };
 
 INTDEF DeeTypeObject DeeCompilerKeyword_Type;         /* item */
 INTDEF DeeTypeObject DeeCompilerSymbol_Type;          /* item */
@@ -43,8 +51,13 @@ INTDEF DeeTypeObject DeeCompilerLexerWarnings_Type;   /* wrapper */
 INTDEF DeeTypeObject DeeCompilerLexerSyspaths_Type;   /* wrapper */
 INTDEF DeeTypeObject DeeCompilerLexerIfdef_Type;      /* wrapper */
 INTDEF DeeTypeObject DeeCompilerLexerToken_Type;      /* wrapper */
+INTDEF DeeTypeObject DeeCompilerAst_Type;             /* objitem */
+INTDEF DeeTypeObject DeeCompilerScope_Type;           /* objitem */
+INTDEF DeeTypeObject DeeCompilerBaseScope_Type;       /* objitem (extends `DeeCompilerScope_Type') */
+INTDEF DeeTypeObject DeeCompilerRootScope_Type;       /* objitem (extends `DeeCompilerBaseScope_Type') */
 
 
+INTDEF DREF DeeObject *DCALL DeeCompiler_GetScope(struct scope_object *__restrict scope);
 #ifdef __INTELLISENSE__
 INTDEF DREF DeeObject *DCALL DeeCompiler_GetKeyword(struct TPPKeyword *__restrict kwd);
 INTDEF DREF DeeObject *DCALL DeeCompiler_GetSymbol(struct symbol *__restrict sym);
@@ -56,6 +69,7 @@ INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerWarnings(DeeCompilerObject *__r
 INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerSyspaths(DeeCompilerObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerIfdef(DeeCompilerObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerToken(DeeCompilerObject *__restrict self);
+INTDEF DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast *__restrict branch);
 #else
 #define DeeCompiler_GetKeyword(kwd)          DeeCompiler_GetItem(&DeeCompilerKeyword_Type,kwd)
 #define DeeCompiler_GetSymbol(sym)           DeeCompiler_GetItem(&DeeCompilerSymbol_Type,sym)
@@ -67,16 +81,30 @@ INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerToken(DeeCompilerObject *__rest
 #define DeeCompiler_GetLexerSyspaths(self)   DeeCompiler_GetWrapper(self,&DeeCompilerLexerSyspaths_Type)
 #define DeeCompiler_GetLexerIfdef(self)      DeeCompiler_GetWrapper(self,&DeeCompilerLexerIfdef_Type)
 #define DeeCompiler_GetLexerToken(self)      DeeCompiler_GetWrapper(self,&DeeCompilerLexerToken_Type)
+#define DeeCompiler_GetAst(branch)           DeeCompiler_GetObjItem(&DeeCompilerAst_Type,(DeeObject *)(branch))
 #endif
 
 /* Type fields of DeeCompilerItem_Type and DeeCompilerWrapper_Type */
 INTDEF struct type_member DeeCompilerItem_Members[];
 INTERN void DCALL DeeCompilerItem_Fini(DeeCompilerItemObject *__restrict self);
 INTERN void DCALL DeeCompilerItem_Visit(DeeCompilerItemObject *__restrict self, dvisit_t proc, void *arg);
+INTERN void DCALL DeeCompilerObjItem_Fini(DeeCompilerItemObject *__restrict self);
+INTERN void DCALL DeeCompilerObjItem_Visit(DeeCompilerItemObject *__restrict self, dvisit_t proc, void *arg);
 
 INTDEF void DCALL DeeCompilerWrapper_Fini(DeeCompilerWrapperObject *__restrict self);
 #define DeeCompilerWrapper_Visit    DeeCompilerItem_Visit
 #define DeeCompilerWrapper_Members  DeeCompilerItem_Members
+
+struct symbol;
+INTDEF ATTR_COLD int DCALL err_invalid_ast_basescope(DeeCompilerAstObject *__restrict obj, struct base_scope_object *__restrict base_scope);
+INTDEF ATTR_COLD int DCALL err_invalid_ast_compiler(DeeCompilerAstObject *__restrict obj);
+INTDEF ATTR_COLD int DCALL err_invalid_scope_compiler(DeeCompilerScopeObject *__restrict obj);
+INTDEF ATTR_COLD int DCALL err_invalid_symbol_compiler(DeeCompilerSymbolObject *__restrict obj);
+INTDEF ATTR_COLD int DCALL err_different_base_scope(void);
+INTDEF ATTR_COLD int DCALL err_different_root_scope(void);
+INTDEF ATTR_COLD int DCALL err_compiler_item_deleted(DeeCompilerItemObject *__restrict item);
+INTDEF ATTR_COLD int DCALL err_symbol_not_reachable(struct scope_object *__restrict scope, struct symbol *__restrict sym);
+INTDEF bool DCALL scope_reaches_symbol(struct scope_object *__restrict scope, struct symbol *__restrict sym);
 
 #endif /* CONFIG_BUILDING_DEEMON */
 

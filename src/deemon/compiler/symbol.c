@@ -210,19 +210,14 @@ scope_visit(DeeScopeObject *__restrict self, dvisit_t proc, void *arg) {
  recursive_rwlock_endread(&DeeCompiler_Lock);
 }
 
-PRIVATE struct type_member scope_members[] = {
-    TYPE_MEMBER_FIELD("base",STRUCT_OBJECT,offsetof(DeeScopeObject,s_base)),
-    TYPE_MEMBER_END
-};
-
-PUBLIC DeeTypeObject DeeScope_Type = {
+INTERN DeeTypeObject DeeScope_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"scope",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeObject_Type,
+    /* .tp_base     = */NULL, /*&DeeObject_Type,*/
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
@@ -257,7 +252,7 @@ PUBLIC DeeTypeObject DeeScope_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */scope_members,
+    /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -309,11 +304,6 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
  Dee_Free(self->bs_argv);
 }
 
-PRIVATE struct type_member base_scope_members[] = {
-    TYPE_MEMBER_FIELD("root",STRUCT_OBJECT,offsetof(DeeBaseScopeObject,bs_root)),
-    TYPE_MEMBER_END
-};
-
 PRIVATE void DCALL
 base_scope_visit(DeeBaseScopeObject *__restrict self,
                  dvisit_t proc, void *arg) {
@@ -329,7 +319,7 @@ base_scope_visit(DeeBaseScopeObject *__restrict self,
  recursive_rwlock_endread(&DeeCompiler_Lock);
 }
 
-PUBLIC DeeTypeObject DeeBaseScope_Type = {
+INTERN DeeTypeObject DeeBaseScope_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"base_scope",
     /* .tp_doc      = */NULL,
@@ -371,7 +361,7 @@ PUBLIC DeeTypeObject DeeBaseScope_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */base_scope_members,
+    /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -445,12 +435,7 @@ root_scope_visit(DeeRootScopeObject *__restrict self,
  recursive_rwlock_endread(&DeeCompiler_Lock);
 }
 
-PRIVATE struct type_member root_scope_members[] = {
-    TYPE_MEMBER_FIELD("module",STRUCT_OBJECT,offsetof(DeeRootScopeObject,rs_module)),
-    TYPE_MEMBER_END
-};
-
-PUBLIC DeeTypeObject DeeRootScope_Type = {
+INTERN DeeTypeObject DeeRootScope_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"root_scope",
     /* .tp_doc      = */NULL,
@@ -492,7 +477,7 @@ PUBLIC DeeTypeObject DeeRootScope_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */root_scope_members,
+    /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL

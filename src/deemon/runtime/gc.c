@@ -367,9 +367,9 @@ visit_object(DeeObject *__restrict self,
  struct gc_dep_chain *link;
  DeeTypeObject *tp_self;
  /* Optimization: An object that cannot be visited can be skipped. */
- for (tp_self = Dee_TYPE(self); tp_self; tp_self = tp_self->tp_base) {
-  if (tp_self->tp_visit)
-      goto do_the_visit;
+ for (tp_self = Dee_TYPE(self); likely(tp_self); tp_self = tp_self->tp_base) {
+  if likely(tp_self->tp_visit)
+     goto do_the_visit;
  }
  return;
 do_the_visit:

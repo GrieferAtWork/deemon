@@ -1332,6 +1332,15 @@ struct opinfo {
  *                   can be queried. */
 DFUNDEF struct opinfo *DCALL Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t id);
 
+/* Lookup an operator, given its name, and returning its id.
+ * The given `name' is compared against both the `oi_sname' field
+ * of all operators, as well as the `oi_uname' field, however only
+ * for operators where `oi_uname' isn't ambiguous (aka. `+' is intentionally
+ * not resolved by this function, and causes `(uint16_t)-1' to be returned,
+ * though `*' is resolved and causes `OPERATOR_MUL' to be returned)
+ * @return: (uint16_t)-1: No operator matching `name' exists. */
+DFUNDEF uint16_t DCALL Dee_OperatorFromName(DeeTypeObject *typetype, char const *__restrict name);
+
 
 /* Invoke an operator on a given object, given its ID and arguments.
  * NOTE: Using these function, any operator can be invoked, including

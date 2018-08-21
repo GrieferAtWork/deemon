@@ -366,12 +366,11 @@ struct root_scope_object {
     uint16_t                   rs_importa; /* The allocated amount of memory for the imported module vector. */
 };
 
-DDATDEF DeeTypeObject DeeScope_Type;
-DDATDEF DeeTypeObject DeeBaseScope_Type;
-DDATDEF DeeTypeObject DeeRootScope_Type;
-
-
 #ifdef CONFIG_BUILDING_DEEMON
+INTDEF DeeTypeObject DeeScope_Type;
+INTDEF DeeTypeObject DeeBaseScope_Type;
+INTDEF DeeTypeObject DeeRootScope_Type;
+
 INTDEF DREF DeeScopeObject *current_scope;     /* [lock(DeeCompiler_Lock)][1..1] The current scope. */
 INTDEF DeeBaseScopeObject  *current_basescope; /* [lock(DeeCompiler_Lock)][1..1][== current_scope->s_base] The current base scope. */
 INTDEF DeeRootScopeObject  *current_rootscope; /* [lock(DeeCompiler_Lock)][1..1][== current_basescope->bs_root] The current root scope. */

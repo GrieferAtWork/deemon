@@ -719,6 +719,15 @@
     <ClCompile Include="..\src\deemon\compiler\interface\ilexer.c">
       <Filter>src\deemon\compiler\interface</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\iast.c">
+      <Filter>src\deemon\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\iscope.c">
+      <Filter>src\deemon\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\isymbol.c">
+      <Filter>src\deemon\compiler\interface</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">

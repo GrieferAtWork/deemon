@@ -47,7 +47,9 @@ struct compiler_options;
         DeeCompilerItemObject **ci_pself;    /* [1..1][== self][1..1][lock(co_compiler->cp_item_lock)] Compiler item self-pointer. */ \
         DeeCompilerItemObject  *ci_next;     /* [0..1][lock(co_compiler->cp_item_lock)] Next compiler item. */ \
         T                      *ci_value;    /* [0..1][lock(DeeCompiler_Lock)] Pointer to the associated object. \
-                                              * What exactly is pointed to depends on the compiler item type. */
+                                              * What exactly is pointed to depends on the compiler item type. \
+                                              * NOTE: For compiler items implemented as `DeeCompilerObjItem_Type', \
+                                              *       this field is [DREF][1..1][const] */
 
 typedef struct compiler_item_object DeeCompilerItemObject;
 typedef struct compiler_wrapper_object DeeCompilerWrapperObject;
@@ -58,6 +60,7 @@ struct compiler_wrapper_object {
 };
 #define COMPILER_ITEM_HASH(x) Dee_HashPointer((x)->ci_value)
 INTDEF DeeTypeObject DeeCompilerItem_Type;
+INTDEF DeeTypeObject DeeCompilerObjItem_Type;
 INTDEF DeeTypeObject DeeCompilerWrapper_Type;
 
 /* Construct and return a wrapper for a sub-component of the current compiler. */
@@ -67,6 +70,8 @@ INTDEF DREF DeeObject *DCALL DeeCompiler_GetWrapper(DeeCompilerObject *__restric
 /* Lookup or create a new compiler item for `value' */
 INTDEF DREF DeeObject *DCALL DeeCompiler_GetItem(DeeTypeObject *__restrict type,
                                                  void *__restrict value);
+INTDEF DREF DeeObject *DCALL DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
+                                                    DeeObject *__restrict value);
 
 /* Delete (clear) the compiler item associated with `value'. */
 INTDEF bool DCALL DeeCompiler_DelItem(void *value);
@@ -77,7 +82,7 @@ INTDEF size_t DCALL DeeCompiler_DelItemType(DeeTypeObject *__restrict type);
 /* Returns the value of a given compiler item.
  * @return: * :   A pointer to the item's value.
  * @return: NULL: The item got deleted (a ReferenceError was thrown) */
-INTDEF void *DCALL DeeCompilerItem_GetValue(DeeObject *__restrict self);
+INTDEF void *(DCALL DeeCompilerItem_GetValue)(DeeObject *__restrict self);
 #define DeeCompilerItem_VALUE(self,T) \
    ((T *)DeeCompilerItem_GetValue((DeeObject *)REQUIRES_OBJECT(self)))
 

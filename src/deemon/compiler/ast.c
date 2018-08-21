@@ -84,7 +84,7 @@ ast_dbgnew(char const *file, int line) {
  return result;
 }
 #else
-PRIVATE DREF struct ast *DCALL ast_new(void) {
+INTERN DREF struct ast *DCALL ast_new(void) {
  DREF struct ast *result = ast_alloc();
 #ifndef CONFIG_NO_THREADS
  ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
@@ -935,7 +935,7 @@ visit_switch_cases(struct text_label *switch_cases,
                    dvisit_t proc, void *arg) {
  while (switch_cases) {
   ASSERT_AST(switch_cases->tl_expr);
-  ast_visit(switch_cases->tl_expr,proc,arg);
+  ast_visit(switch_cases->tl_expr);
   switch_cases = switch_cases->tl_next;
  }
 }
@@ -1089,8 +1089,8 @@ do_xdecref_3:
 }
 
 INTERN void DCALL
-ast_visit(struct ast *__restrict self,
-          dvisit_t proc, void *arg) {
+ast_visit_impl(struct ast *__restrict self,
+               dvisit_t proc, void *arg) {
  switch (self->a_type) {
 
  {
@@ -1100,24 +1100,24 @@ ast_visit(struct ast *__restrict self,
                 self->a_class.c_memberc;
   /* Cleanup the member descriptor table. */
   for (; iter != end; ++iter)
-      ast_visit(iter->cm_ast,proc,arg);
+      ast_visit(iter->cm_ast);
   if (self->a_class.c_cmem)
-      ast_visit(self->a_class.c_cmem,proc,arg);
+      ast_visit(self->a_class.c_cmem);
  }
   ATTR_FALLTHROUGH
  case AST_OPERATOR:
   if (self->a_operator.o_op3)
-      ast_visit(self->a_operator.o_op3,proc,arg);
+      ast_visit(self->a_operator.o_op3);
   ATTR_FALLTHROUGH
  case AST_CONDITIONAL:
  case AST_LOOP:
 do_xvisit_3:
   if (self->a_operator.o_op2)
-      ast_visit(self->a_operator.o_op2,proc,arg);
+      ast_visit(self->a_operator.o_op2);
   ATTR_FALLTHROUGH
  case AST_FUNCTION:
   if (self->a_operator.o_op1)
-      ast_visit(self->a_operator.o_op1,proc,arg);
+      ast_visit(self->a_operator.o_op1);
   ATTR_FALLTHROUGH
  case AST_RETURN:
  case AST_YIELD:
@@ -1126,7 +1126,7 @@ do_xvisit_3:
  case AST_EXPAND:
  case AST_OPERATOR_FUNC:
   if (self->a_return)
-      ast_visit(self->a_return,proc,arg);
+      ast_visit(self->a_return);
   break;
  case AST_CONSTEXPR:
   Dee_Visit(self->a_constexpr);
@@ -1145,19 +1145,19 @@ do_xvisit_3:
   end = (iter = self->a_multiple.m_astv)+
                 self->a_multiple.m_astc;
   for (; iter != end; ++iter)
-         ast_visit(*iter,proc,arg);
+         ast_visit(*iter);
  } break;
 
  {
   struct catch_expr *iter,*end;
  case AST_TRY:
-  ast_visit(self->a_try.t_guard,proc,arg);
+  ast_visit(self->a_try.t_guard);
   end = (iter = self->a_try.t_catchv)+
                 self->a_try.t_catchc;
   for (; iter != end; ++iter) {
    if (iter->ce_mask)
-       ast_visit(iter->ce_mask,proc,arg);
-   ast_visit(iter->ce_code,proc,arg);
+       ast_visit(iter->ce_mask);
+   ast_visit(iter->ce_code);
   }
  } break;
 
@@ -1168,8 +1168,8 @@ do_xvisit_3:
 
  case AST_SWITCH:
   visit_switch_cases(self->a_switch.s_cases,proc,arg);
-  ast_visit(self->a_switch.s_expr,proc,arg);
-  ast_visit(self->a_switch.s_block,proc,arg);
+  ast_visit(self->a_switch.s_expr);
+  ast_visit(self->a_switch.s_block);
   break;
 
  {
@@ -1179,7 +1179,7 @@ do_xvisit_3:
                (self->a_assembly.as_num_o+
                 self->a_assembly.as_num_i);
   for (; iter != end; ++iter)
-      ast_visit(iter->ao_expr,proc,arg);
+      ast_visit(iter->ao_expr);
  } break;
 
  default: break;
@@ -1222,7 +1222,7 @@ INTERN DeeTypeObject DeeAst_Type = {
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeObject_Type,
+    /* .tp_base     = */NULL, /*&DeeObject_Type,*/
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
@@ -1243,7 +1243,7 @@ INTERN DeeTypeObject DeeAst_Type = {
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */NULL,
-    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&ast_visit,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&ast_visit_impl,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
     /* .tp_cmp           = */NULL,

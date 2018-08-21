@@ -128,6 +128,33 @@ STRING(d200)
 STRING2(str_nomemory,"allocation failed")
 STRING2(str_dots,"...")
 
+
+/* Strings used for internal AST branches */
+STRING(constexpr)
+STRING(sym)
+STRING(unbind)
+STRING(bound)
+STRING(multiple)
+STRING(return)
+STRING(yield)
+STRING(throw)
+STRING(try)
+STRING(loop)
+STRING(loopctl)
+STRING(conditional)
+/*STRING(bool)*/
+STRING(expand)
+/*STRING(function)*/
+STRING(operatorfunc)
+STRING(operator)
+STRING(action)
+STRING(class)
+STRING(label)
+STRING(goto)
+STRING(switch)
+STRING(assembly)
+
+
 DECL_END
 
 #undef STRING2

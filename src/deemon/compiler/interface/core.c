@@ -48,12 +48,47 @@ DeeCompilerItem_Fini(CompilerItem *__restrict self) {
   --com->cp_items.ci_size;
  }
  rwlock_endwrite(&com->cp_items.ci_lock);
- Dee_Decref_unlikely(com);
+#ifdef CONFIG_NO_THREADS
+ Dee_Decref(com);
+#else
+ if unlikely(!Dee_DecrefIfNotOne(com)) {
+  recursive_rwlock_write(&DeeCompiler_Lock);
+  Dee_Decref(com);
+  recursive_rwlock_endwrite(&DeeCompiler_Lock);
+ }
+#endif
 }
 
 INTERN void DCALL
 DeeCompilerItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg) {
  Dee_Visit(self->ci_compiler);
+}
+
+INTERN void DCALL
+DeeCompilerObjItem_Fini(CompilerItem *__restrict self) {
+ DeeCompilerObject *com = self->ci_compiler;
+ rwlock_write(&com->cp_items.ci_lock);
+ ASSERT(com->cp_items.ci_size);
+ ASSERTF(self->ci_pself != NULL,
+         "Compiler object-items must not be deleted externally");
+ if ((*self->ci_pself = self->ci_next) != NULL)
+       self->ci_next->ci_pself = self->ci_pself;
+ --com->cp_items.ci_size;
+ rwlock_endwrite(&com->cp_items.ci_lock);
+ COMPILER_BEGIN(com);
+ ASSERT_OBJECT((DeeObject *)self->ci_value);
+ Dee_Decref((DeeObject *)self->ci_value);
+ DeeCompiler_End();
+ Dee_Decref_unlikely(com);
+ recursive_rwlock_endwrite(&DeeCompiler_Lock);
+}
+
+INTERN void DCALL
+DeeCompilerObjItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg) {
+ COMPILER_BEGIN(self->ci_compiler);
+ Dee_Visit(self->ci_compiler);
+ Dee_Visit((DeeObject *)self->ci_value);
+ COMPILER_END();
 }
 
 INTERN struct type_member DeeCompilerItem_Members[] = {
@@ -90,6 +125,51 @@ INTERN DeeTypeObject DeeCompilerItem_Type = {
     },
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&DeeCompilerItem_Visit,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */DeeCompilerItem_Members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+INTERN DeeTypeObject DeeCompilerObjItem_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"compilerobjitem",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeObject_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                TYPE_ALLOCATOR(compiler_item_tp_alloc,compiler_item_tp_free)
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&DeeCompilerObjItem_Visit,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
     /* .tp_cmp           = */NULL,
@@ -176,10 +256,13 @@ done:
  return (DREF DeeObject *)result;
 }
 
+
+
 /* Lookup or create a new compiler item for `value' */
-INTERN DREF DeeObject *DCALL
-DeeCompiler_GetItem(DeeTypeObject *__restrict type,
-                    void *__restrict value) {
+LOCAL DREF DeeObject *DCALL
+get_compiler_item_impl(DeeTypeObject *__restrict type,
+                       void *__restrict value,
+                       bool is_an_object) {
  DREF CompilerItem *result,*new_result;
  DeeCompilerObject *self = DeeCompiler_Current;
  ASSERT_OBJECT_TYPE(type,&DeeType_Type);
@@ -261,9 +344,41 @@ again:
  result->ci_value    = value;
  DeeObject_Init(result,type);
  Dee_Incref(self);
+ if (is_an_object)
+     Dee_Incref((DeeObject *)value);
  rwlock_endwrite(&self->cp_items.ci_lock);
 done:
  return (DREF DeeObject *)result;
+}
+
+
+INTERN DREF DeeObject *DCALL
+DeeCompiler_GetItem(DeeTypeObject *__restrict type,
+                    void *__restrict value) {
+#ifndef NDEBUG
+ DeeTypeObject *tp = type;
+ for (;; tp = tp->tp_base) {
+  if (!tp->tp_init.tp_dtor) continue;
+  ASSERTF(tp->tp_init.tp_dtor == (void(DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,
+          "Expected an weakly linked compiler item type");
+  break;
+ }
+#endif
+ return get_compiler_item_impl(type,value,false);
+}
+INTERN DREF DeeObject *DCALL
+DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
+                       DeeObject *__restrict value) {
+#ifndef NDEBUG
+ DeeTypeObject *tp = type;
+ for (;; tp = tp->tp_base) {
+  if (!tp->tp_init.tp_dtor) continue;
+  ASSERTF(tp->tp_init.tp_dtor == (void(DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
+          "Expected an object-like compiler item type");
+  break;
+ }
+#endif
+ return get_compiler_item_impl(type,value,true);
 }
 
 /* Delete (clear) the compiler item associated with `value'. */
@@ -280,6 +395,18 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
  item = com->cp_items.ci_list[Dee_HashPointer(value) & com->cp_items.ci_mask];
  for (; item; item = item->ci_next) {
   if (item->ci_value != value) continue;
+#ifndef NDEBUG
+  {
+   DeeTypeObject *tp = Dee_TYPE(item);
+   for (;; tp = tp->tp_base) {
+    if (!tp->tp_init.tp_dtor) continue;
+    ASSERTF(tp->tp_init.tp_dtor == (void(DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,
+            "Cannot delete compiler item of type %k, which has a custom, or object-finalizer",
+            tp);
+    break;
+   }
+  }
+#endif
   ASSERT(item->ci_pself != NULL);
   if ((*item->ci_pself = item->ci_next) != NULL)
         item->ci_next->ci_pself = item->ci_pself;
@@ -297,6 +424,16 @@ INTERN size_t DCALL
 DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
  size_t i,result = 0; CompilerItem *iter,*next;
  DeeCompilerObject *com = DeeCompiler_Current;
+#ifndef NDEBUG
+ DeeTypeObject *tp = type;
+ for (;; tp = tp->tp_base) {
+  if (!tp->tp_init.tp_dtor) continue;
+  ASSERTF(tp->tp_init.tp_dtor == (void(DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,
+          "Cannot delete compiler items of type %k, which has a custom, or object-finalizer",
+          tp);
+  break;
+ }
+#endif
  ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
  if (!com) return false;
  rwlock_write(&com->cp_items.ci_lock);
@@ -324,17 +461,20 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
  return result;
 }
 
+INTERN ATTR_COLD int DCALL
+err_compiler_item_deleted(DeeCompilerItemObject *__restrict item) {
+ return DeeError_Throwf(&DeeError_ReferenceError,
+                        "Compiler item of type %k was deleted",
+                        item->ob_type);
+}
+
 INTERN void *DCALL
 DeeCompilerItem_GetValue(DeeObject *__restrict self) {
  void *result;
  ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
  ASSERT(DeeCompiler_Current == ((DeeCompilerItemObject *)self)->ci_compiler);
  result = ((DeeCompilerItemObject *)self)->ci_value;
- if unlikely(!result) {
-  DeeError_Throwf(&DeeError_ReferenceError,
-                  "Compiler item of type %k was deleted",
-                  self->ob_type);
- }
+ if unlikely(!result) err_compiler_item_deleted((DeeCompilerItemObject *)self);
  return result;
 }
 

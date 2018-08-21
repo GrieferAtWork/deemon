@@ -36,58 +36,58 @@ struct ast;
 
 
 #undef CONFIG_AST_IS_STRUCT
-#define CONFIG_AST_IS_STRUCT 1
+//#define CONFIG_AST_IS_STRUCT 1 /* Can't be done. - Otherwise, the GC visiting ASTs wouldn't work! */
 
 
 struct catch_expr {
     DREF struct ast   *ce_mask;    /* [0..1] An optional expression evaluated before entry to check.
-                                      *        This expression should evaluate to a type that describes
-                                      *        a mask which should be used to determine if an error
-                                      *        should be handled by this exception handler.
-                                      *  NOTE: When this is an AST_MULTIPLE:AST_FMULTIPLE_TUPLE,
-                                      *        or a constant tuple, then its elements are used as
-                                      *        catch-masks instead. */
+                                    *        This expression should evaluate to a type that describes
+                                    *        a mask which should be used to determine if an error
+                                    *        should be handled by this exception handler.
+                                    *  NOTE: When this is an AST_MULTIPLE:AST_FMULTIPLE_TUPLE,
+                                    *        or a constant tuple, then its elements are used as
+                                    *        catch-masks instead. */
     DREF struct ast   *ce_code;    /* [1..1] The expression evaluated to handle the exception.
-                                      *        When and how this block is evaluated depends on
-                                      *        the `EXCEPTION_HANDLER_FFINALLY' flag in `ce_flags':
-                                      * When set this expression is evaluated:
-                                      *    - during regular code-flow when `:t_guard' returns normally
-                                      *    - when `:t_guard' invoked a `return' statement, or
-                                      *      before destruction of a yield-iterator that stopped
-                                      *      execution within `:t_guard'.
-                                      *    - when `:t_guard' threw an exception, regardless of
-                                      *      whether or not that exception had already been handled
-                                      *      by other catch expressions.
-                                      * When the flag is not set, the expression is evaluated:   
-                                      *    - When `:t_guard' threw an exception that had not
-                                      *      been handled by another catch expression, and
-                                      *      `ce_mask' is either `NULL', or contains an expression
-                                      *      for which the following code evaluates to true:
-                                      *      `CURRENT_EXCEPTION() is ce_mask'.
-                                      */
-    uint16_t             ce_flags;   /* Catch block flags (Set of `EXCEPTION_HANDLER_F*'). */
-#define CATCH_EXPR_FNORMAL 0x0000    /* Normal catch processing. */
-#define CATCH_EXPR_FSECOND 0x0001    /* If the catch-expression is a catch-handler (as opposed to being a finally-handler),
-                                      * do not generate code to discard secondary exceptions if the handler throws an
-                                      * additional primary exception:
-                                      * >> try {
-                                      * >>     throw "foo";
-                                      * >> } catch (...) {
-                                      * >>     throw "bar";
-                                      * >> }
-                                      * With this flag set, any exception thrown in the catch-handler (`"bar"'),
-                                      * will cause the previous primary (then secondary) exception (`"foo"') to
-                                      * be discarded before exception handling is continued normally.
-                                      * However if this flag isn't set, both `"foo"' and `"bar"' remain active
-                                      * exception, leaving `"bar"' to be discarded once the associated function
-                                      * frame ends.
-                                      * This flag is usually set by the AST optimizer if it is detected that
-                                      * the handler branch never throws an exception, or is itself protected with
-                                      * another handler capable of handling at least all non-interrupt exceptions.
-                                      * Note however that if this flag is set and `ce_code' still manages to throw
-                                      * an exception, both exceptions will remain active, with all but the one
-                                      * thrown first then being discarded during stackframe cleanup. */
-    uint16_t             ce_mode;    /* Catch mode flags (Set of `CATCH_EXPR_F*'). */
+                                    *        When and how this block is evaluated depends on
+                                    *        the `EXCEPTION_HANDLER_FFINALLY' flag in `ce_flags':
+                                    * When set this expression is evaluated:
+                                    *    - during regular code-flow when `:t_guard' returns normally
+                                    *    - when `:t_guard' invoked a `return' statement, or
+                                    *      before destruction of a yield-iterator that stopped
+                                    *      execution within `:t_guard'.
+                                    *    - when `:t_guard' threw an exception, regardless of
+                                    *      whether or not that exception had already been handled
+                                    *      by other catch expressions.
+                                    * When the flag is not set, the expression is evaluated:   
+                                    *    - When `:t_guard' threw an exception that had not
+                                    *      been handled by another catch expression, and
+                                    *      `ce_mask' is either `NULL', or contains an expression
+                                    *      for which the following code evaluates to true:
+                                    *      `CURRENT_EXCEPTION() is ce_mask'.
+                                    */
+    uint16_t             ce_flags; /* Catch block flags (Set of `EXCEPTION_HANDLER_F*'). */
+#define CATCH_EXPR_FNORMAL 0x0000  /* Normal catch processing. */
+#define CATCH_EXPR_FSECOND 0x0001  /* If the catch-expression is a catch-handler (as opposed to being a finally-handler),
+                                    * do not generate code to discard secondary exceptions if the handler throws an
+                                    * additional primary exception:
+                                    * >> try {
+                                    * >>     throw "foo";
+                                    * >> } catch (...) {
+                                    * >>     throw "bar";
+                                    * >> }
+                                    * With this flag set, any exception thrown in the catch-handler (`"bar"'),
+                                    * will cause the previous primary (then secondary) exception (`"foo"') to
+                                    * be discarded before exception handling is continued normally.
+                                    * However if this flag isn't set, both `"foo"' and `"bar"' remain active
+                                    * exception, leaving `"bar"' to be discarded once the associated function
+                                    * frame ends.
+                                    * This flag is usually set by the AST optimizer if it is detected that
+                                    * the handler branch never throws an exception, or is itself protected with
+                                    * another handler capable of handling at least all non-interrupt exceptions.
+                                    * Note however that if this flag is set and `ce_code' still manages to throw
+                                    * an exception, both exceptions will remain active, with all but the one
+                                    * thrown first then being discarded during stackframe cleanup. */
+    uint16_t             ce_mode;  /* Catch mode flags (Set of `CATCH_EXPR_F*'). */
 };
 
 struct class_member {
@@ -360,7 +360,7 @@ struct ast {
                                         *       and `.class'. */
 #   define AST_FACTION_CELL0    0x0000 /* `<>'                        - Create an empty cell. */
 #   define AST_FACTION_CELL1    0x1001 /* `< <act0> >'                - Create an cell for `<act0>'. */
-#   define AST_FACTION_TYPEOF   0x1002 /* `typeof(<act0>)'            - Return the actual type of `<act0>' */
+#   define AST_FACTION_TYPEOF   0x1002 /* `type(<act0>)'              - Return the actual type of `<act0>' */
 #   define AST_FACTION_CLASSOF  0x1003 /* `<act0>.class'              - Return the effective class of `<act0>' (Dereference super objects) */
 #   define AST_FACTION_SUPEROF  0x1004 /* `<act0>.super'              - Return the super-object of `<act0>' */
 #   define AST_FACTION_PRINT    0x1005 /* `print <act0>...,;'         - Print the elements of a sequence in `<act0>' (without linefeed) */
@@ -566,26 +566,31 @@ struct ast {
 
 #ifdef CONFIG_AST_IS_STRUCT
 INTDEF void DCALL ast_destroy(struct ast *__restrict self);
-INTDEF void DCALL ast_visit(struct ast *__restrict self, dvisit_t proc, void *arg);
-#define ast_shared(x)        ((x)->a_refcnt > 1)
-#define ast_incref(x)        (ASSERT((x)->a_refcnt),++(x)->a_refcnt)
-#define ast_decref(x)        (ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x))
-#define ast_decref_likely(x) (ASSERT((x)->a_refcnt),unlikely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
-#define ast_decref_nokill(x) (ASSERT((x)->a_refcnt >= 2),--(x)->a_refcnt)
-#define ast_xincref(x)       ((x) ? (void)(ASSERT((x)->a_refcnt),++(x)->a_refcnt) : (void)0)
-#define ast_xdecref(x)       ((x) ? (ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
-#define ASSERT_AST(ob)        ASSERT(ob)
-#define ASSERT_AST_OPT(ob)   (void)0
+INTDEF void DCALL ast_visit_impl(struct ast *__restrict self, dvisit_t proc, void *arg);
+#define ast_visit(x)            ast_visit_impl(x,proc,arg)
+#define ast_shared(x)          ((x)->a_refcnt > 1)
+#define ast_incref(x)          (ASSERT((x)->a_refcnt),++(x)->a_refcnt)
+#define ast_decref(x)          (ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x))
+#define ast_decref_likely(x)   (ASSERT((x)->a_refcnt),unlikely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
+#define ast_decref_unlikely(x) (ASSERT((x)->a_refcnt),likely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
+#define ast_decref_nokill(x)   (ASSERT((x)->a_refcnt >= 2),--(x)->a_refcnt)
+#define ast_xincref(x)         ((x) ? (void)(ASSERT((x)->a_refcnt),++(x)->a_refcnt) : (void)0)
+#define ast_xdecref(x)         ((x) ? (ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
+#define ASSERT_AST(ob)          ASSERT((ob) && ((ob)->a_refcnt >= 1))
+#define ASSERT_AST_OPT(ob)      ASSERT(!(ob) || ((ob)->a_refcnt >= 1))
 #else /* CONFIG_AST_IS_STRUCT */
-#define ast_shared(x)         DeeObject_IsShared(x)
-#define ast_incref(x)         Dee_Incref(x)
-#define ast_decref(x)         Dee_Decref(x)
-#define ast_decref_likely(x)  Dee_Decref_likely(x)
-#define ast_decref_nokill(x)  Dee_DecrefNokill(x)
-#define ast_xincref(x)        Dee_XIncref(x)
-#define ast_xdecref(x)        Dee_XDecref(x)
-#define ASSERT_AST(ob)        ASSERT_OBJECT_TYPE_EXACT(ob,&DeeAst_Type)
-#define ASSERT_AST_OPT(ob)    ASSERT_OBJECT_TYPE_EXACT_OPT(ob,&DeeAst_Type)
+#define ast_visit(x)           Dee_Visit(x)
+#define ast_shared(x)          DeeObject_IsShared(x)
+/* XXX: I don't think we need to use atomic instructions in reference counters for asts! */
+#define ast_incref(x)          Dee_Incref(x)
+#define ast_decref(x)          Dee_Decref(x)
+#define ast_decref_likely(x)   Dee_Decref_likely(x)
+#define ast_decref_unlikely(x) Dee_Decref_unlikely(x)
+#define ast_decref_nokill(x)   Dee_DecrefNokill(x)
+#define ast_xincref(x)         Dee_XIncref(x)
+#define ast_xdecref(x)         Dee_XDecref(x)
+#define ASSERT_AST(ob)         ASSERT_OBJECT_TYPE_EXACT(ob,&DeeAst_Type)
+#define ASSERT_AST_OPT(ob)     ASSERT_OBJECT_TYPE_EXACT_OPT(ob,&DeeAst_Type)
 INTDEF DeeTypeObject DeeAst_Type;
 #endif /* !CONFIG_AST_IS_STRUCT */
 
