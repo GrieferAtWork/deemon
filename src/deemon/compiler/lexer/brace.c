@@ -44,8 +44,8 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
  if unlikely(!item) goto err;
  elema = 1,elemc = 0;
  elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
- if unlikely(!elemv) { Dee_Decref(item); goto err; }
- Dee_Incref(initial_key);
+ if unlikely(!elemv) { ast_decref(item); goto err; }
+ ast_incref(initial_key);
  elemv[0] = initial_key;
  elemv[1] = item;        /* Inherit */
  ++elemc;
@@ -115,13 +115,13 @@ do_realloc_dict:
 done:
  return result;
 err_dict_keyitem:
- Dee_Decref(item);
+ ast_decref(item);
 err_dict_elemv_r:
- Dee_Decref(result);
+ ast_decref(result);
 err_dict_elemv:
  while (elemc--) {
-  Dee_Decref(elemv[(elemc/2) + 0]);
-  Dee_Decref(elemv[(elemc/2) + 1]);
+  ast_decref(elemv[(elemc/2) + 0]);
+  ast_decref(elemv[(elemc/2) + 1]);
  }
  Dee_Free(elemv);
 err:
@@ -136,7 +136,7 @@ ast_parse_brace_list(struct ast *__restrict initial_item) {
  size_t elema = 1,elemc = 1;
  elemv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
  if unlikely(!elemv) goto err;
- Dee_Incref(initial_item);
+ ast_incref(initial_item);
  elemv[0] = initial_item;
  for (;;) {
   if (tok != ',') {
@@ -181,9 +181,9 @@ do_realloc_list:
  /* Upon success, `ast_multiple' inherits the element vector. */
  return result;
 err_list_elemv_result:
- Dee_Decref(result);
+ ast_decref(result);
 err_list_elemv:
- while (elemc--) Dee_Decref(elemv[elemc]);
+ while (elemc--) ast_decref(elemv[elemc]);
  Dee_Free(elemv);
  goto err;
 err:
@@ -224,17 +224,17 @@ INTERN DREF struct ast *FCALL ast_parse_brace_items(void) {
   if unlikely(yield() < 0) goto err_r;
 parse_dict:
   new_result = ast_parse_mapping(result);
-  Dee_Decref(result);
+  ast_decref(result);
   result = new_result;
  } else {
   /* Parse an list initializer. */
   new_result = ast_parse_brace_list(result);
-  Dee_Decref(result);
+  ast_decref(result);
   result = new_result;
  }
  return result;
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }

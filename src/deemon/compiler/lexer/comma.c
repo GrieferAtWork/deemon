@@ -46,7 +46,7 @@ INTERN void DCALL
 astlist_fini(struct astlist *__restrict self) {
  size_t i;
  for (i = 0; i < self->ast_c; ++i)
-     Dee_Decref(self->ast_v[i]);
+     ast_decref(self->ast_v[i]);
  Dee_Free(self->ast_v);
 }
 INTERN int DCALL
@@ -90,7 +90,7 @@ astlist_append(struct astlist *__restrict self,
  if (self->ast_c == self->ast_a &&
      astlist_upsize(self,1)) return -1;
  self->ast_v[self->ast_c++] = ast;
- Dee_Incref(ast);
+ ast_incref(ast);
  return 0;
 }
 INTERN int DCALL
@@ -294,9 +294,9 @@ next_expr:
    function_name_ast = ast_setddi(ast_sym(function_symbol),&function_name_loc);
    if unlikely(!function_name_ast) goto err_current;
    merge = ast_setddi(ast_action2(AST_FACTION_STORE,function_name_ast,current),&loc);
-   Dee_Decref(function_name_ast);
+   ast_decref(function_name_ast);
    if unlikely(!merge) goto err_current;
-   Dee_Decref(current);
+   ast_decref(current);
    current = merge;
   }
  } else {
@@ -389,7 +389,7 @@ next_expr:
     exprv[0] = args; /* Inherit */
     /* Create a multi-branch AST for the assigned expression. */
     args = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,exprv),&equal_loc);
-    if unlikely(!args) { Dee_Decref(exprv[0]); Dee_Free(exprv); goto err_current; }
+    if unlikely(!args) { ast_decref(exprv[0]); Dee_Free(exprv); goto err_current; }
    } else if (tok == '(' || tok == KWD_pack) {
     /* Comma-separated argument list. */
     uint32_t old_flags;
@@ -414,7 +414,7 @@ next_expr:
      if unlikely(likely(tok == ')') ? (yield() < 0) :
                  WARN(W_EXPECTED_RPAREN_AFTER_CALL)) {
 err_args:
-      Dee_Decref(args);
+      ast_decref(args);
       goto err_current;
      }
     }
@@ -426,8 +426,8 @@ err_args:
    merge = ast_setddi(ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,
                                     current,args),
                      &symbol_name_loc);
-   Dee_Decref(args);
-   Dee_Decref(current);
+   ast_decref(args);
+   ast_decref(current);
    if unlikely(!merge) goto err;
    current = merge;
    /* Now generate a branch to store the expression in the branch. */
@@ -436,8 +436,8 @@ err_args:
    merge = ast_setddi(ast_action2(AST_FACTION_STORE,
                                   args,current),
                      &symbol_name_loc);
-   Dee_Decref(args);
-   Dee_Decref(current);
+   ast_decref(args);
+   ast_decref(current);
    if unlikely(!merge) goto err;
    current = merge;
   }
@@ -454,7 +454,7 @@ err_args:
   /* Append to the current comma-sequence. */
   error = astlist_append(&expr_comma,current);
   if unlikely(error) goto err_current;
-  Dee_Decref(current);
+  ast_decref(current);
   /* Yield the ',' token. */
 continue_at_comma:
   if unlikely(yield() < 0) goto err;
@@ -497,10 +497,10 @@ continue_at_comma:
    DREF struct ast *store_target,*store_branch;
    /* Append the last expression (in the example above, that is `c') */
    error = astlist_append(&expr_comma,current);
-   Dee_Decref(current);
+   ast_decref(current);
    if unlikely(error) {
 err_store_source:
-    Dee_Decref(store_source);
+    ast_decref(store_source);
     goto err;
    }
    astlist_trunc(&expr_comma);
@@ -518,27 +518,27 @@ err_store_source:
                                          store_target,
                                          store_source->a_expand),
                             &loc);
-   Dee_Decref(store_target);
-   Dee_Decref(store_source);
+   ast_decref(store_target);
+   ast_decref(store_source);
    if unlikely(!store_branch) goto err;
    /* Now wrap the store-branch in another expand expression. */
    current = ast_setddi(ast_expand(store_branch),&loc);
-   Dee_Decref(store_branch);
+   ast_decref(store_branch);
    if unlikely(!current) goto err;
   } else {
    DREF struct ast *store_branch;
    /* Second case: assign `store_source' to `current' after
     *              flushing everything from the comma-list. */
    error = astlist_appendall(&expr_batch,&expr_comma);
-   if unlikely(error) { Dee_Decref(store_source); goto err_current; }
+   if unlikely(error) { ast_decref(store_source); goto err_current; }
    /* With the comma-list now empty, generate the
     * store as described in the previous comment. */
    store_branch = ast_setddi(ast_action2(AST_FACTION_STORE,
                                          current,
                                          store_source),
                             &loc);
-   Dee_Decref(store_source);
-   Dee_Decref(current);
+   ast_decref(store_source);
+   ast_decref(current);
    if unlikely(!store_branch) goto err;
    current = store_branch;
   }
@@ -550,7 +550,7 @@ do_append_gen_to_batch:
     /* Append the generated expression to the batch. */
     error = astlist_append(&expr_batch,current);
     if unlikely(error) goto err_current;
-    Dee_Decref(current);
+    ast_decref(current);
     goto continue_at_comma;
    } else {
     char *next_token;
@@ -571,7 +571,7 @@ done_expression:
   /* Append the remaining expression to the batch. */
   error = astlist_append(&expr_batch,current);
   if unlikely(error) goto err_current;
-  Dee_Decref(current);
+  ast_decref(current);
   /* Pack the branch together to form a multi-branch AST. */
   astlist_trunc(&expr_batch);
   current = ast_multiple(flags,expr_batch.ast_c,expr_batch.ast_v);
@@ -611,7 +611,8 @@ done_expression_nomerge:
   } else {
    if unlikely(WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION)) {
 err_clear_current_only:
-    Dee_Clear(current);
+    ast_decref(current);
+    current = NULL;
    }
   }
  }
@@ -641,7 +642,7 @@ done_expression_nocurrent:
  }
  goto done_expression_nomerge;
 err_current:
- Dee_Decref(current);
+ ast_decref(current);
 err:
  astlist_fini(&expr_comma);
  astlist_fini(&expr_batch);

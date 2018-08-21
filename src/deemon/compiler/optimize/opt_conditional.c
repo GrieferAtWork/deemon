@@ -43,8 +43,8 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
      self->a_conditional.c_ff == self->a_conditional.c_cond) {
   /* ??? Why though? */
   if (result_used) {
-   Dee_DecrefNokill(self->a_conditional.c_tt);
-   Dee_DecrefNokill(self->a_conditional.c_ff);
+   ast_decref_nokill(self->a_conditional.c_tt);
+   ast_decref_nokill(self->a_conditional.c_ff);
    __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
                COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
     self->a_bool = self->a_conditional.c_cond;
@@ -165,7 +165,7 @@ err_ff_tt_assumes:
     graft = ast_setscope_and_ddi(ast_bool(AST_FBOOL_NORMAL,eval_branch),self);
     if unlikely(!graft) goto err;
     temp = ast_graft_onto(self,graft);
-    Dee_Decref(graft);
+    ast_decref(graft);
     if unlikely(temp) goto err;
    } else {
     if (ast_graft_onto(self,eval_branch)) goto err;
@@ -194,7 +194,7 @@ err_ff_tt_assumes:
     DREF struct ast *merge;
     merge = ast_setscope_and_ddi(ast_bool(AST_FBOOL_NORMAL,eval_branch),self);
     if unlikely(!merge) { Dee_Free(elemv); goto err; }
-    Dee_Decref(eval_branch);
+    ast_decref(eval_branch);
     eval_branch = merge;
    }
    elemv[1] = eval_branch; /* Inherit reference */
@@ -203,7 +203,7 @@ err_ff_tt_assumes:
    self->a_flag               = AST_FMULTIPLE_KEEPLAST;
    self->a_multiple.m_astc = 2;
    self->a_multiple.m_astv = elemv;
-   Dee_XDecref(other_branch);
+   ast_xdecref(other_branch);
   }
   OPTIMIZE_VERBOSE("Expanding conditional branch with constant condition\n");
   goto did_optimize;
@@ -225,15 +225,15 @@ after_constant_condition:
      if unlikely(!elemv) goto err;
      elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
      elemv[1] = self->a_conditional.c_ff;   /* Inherit reference. */
-     Dee_DecrefNokill(self->a_conditional.c_tt);
+     ast_decref_nokill(self->a_conditional.c_tt);
      self->a_multiple.m_astc = 2;
      self->a_multiple.m_astv = elemv;
      self->a_type = AST_MULTIPLE;
      self->a_flag = AST_FMULTIPLE_KEEPLAST;
     } else if (result_used) {
      /* Optimize: `!!foo() ? : false' --> `!!foo();' */
-     Dee_DecrefNokill(self->a_conditional.c_tt);
-     Dee_XDecref(self->a_conditional.c_ff);
+     ast_decref_nokill(self->a_conditional.c_tt);
+     ast_xdecref(self->a_conditional.c_ff);
      __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
                  COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
       self->a_bool = self->a_conditional.c_cond;
@@ -262,15 +262,15 @@ after_constant_condition:
      if unlikely(!elemv) goto err;
      elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
      elemv[1] = self->a_conditional.c_tt;   /* Inherit reference. */
-     Dee_DecrefNokill(self->a_conditional.c_ff);
+     ast_decref_nokill(self->a_conditional.c_ff);
      self->a_multiple.m_astc = 2;
      self->a_multiple.m_astv = elemv;
      self->a_type = AST_MULTIPLE;
      self->a_flag = AST_FMULTIPLE_KEEPLAST;
     } else if (result_used) {
      /* Optimize: `!!foo() ? true : ' --> `!!foo();' */
-     Dee_DecrefNokill(self->a_conditional.c_ff);
-     Dee_XDecref(self->a_conditional.c_tt);
+     ast_decref_nokill(self->a_conditional.c_ff);
+     ast_xdecref(self->a_conditional.c_tt);
      __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
                  COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
       self->a_bool = self->a_conditional.c_cond;
@@ -314,15 +314,15 @@ optimize_conditional_bool_predictable_inherit_multiple:
      if unlikely(!elemv) goto err;
      elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
      elemv[1] = self->a_conditional.c_tt;   /* Inherit reference. */
-     Dee_Decref(self->a_conditional.c_ff);
+     ast_decref(self->a_conditional.c_ff);
      self->a_multiple.m_astc = 2;
      self->a_multiple.m_astv = elemv;
      self->a_type = AST_MULTIPLE;
      self->a_flag = AST_FMULTIPLE_KEEPLAST;
     } else {
      /* cond ? true : false  --> !!cond */
-     Dee_Decref(self->a_conditional.c_tt);
-     Dee_Decref(self->a_conditional.c_ff);
+     ast_decref(self->a_conditional.c_tt);
+     ast_decref(self->a_conditional.c_ff);
      __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
                  COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
       self->a_bool = self->a_conditional.c_cond;
@@ -336,8 +336,8 @@ optimize_conditional_bool_predictable_inherit_multiple:
      goto optimize_conditional_bool_predictable_inherit_multiple;
     } else {
      /* cond ? false : true  --> !cond */
-     Dee_Decref(self->a_conditional.c_tt);
-     Dee_Decref(self->a_conditional.c_ff);
+     ast_decref(self->a_conditional.c_tt);
+     ast_decref(self->a_conditional.c_ff);
      __STATIC_IF(COMPILER_OFFSETOF(struct ast,a_bool) !=
                  COMPILER_OFFSETOF(struct ast,a_conditional.c_cond)) {
       self->a_bool = self->a_conditional.c_cond;
@@ -356,7 +356,8 @@ optimize_conditional_bool_predictable_inherit_multiple:
       self->a_conditional.c_tt != self->a_conditional.c_cond &&
      !ast_has_sideeffects(self->a_conditional.c_tt)) {
    if (self->a_conditional.c_ff) {
-    Dee_Clear(self->a_conditional.c_tt);
+    ast_decref(self->a_conditional.c_tt);
+    self->a_conditional.c_tt = NULL;
    } else {
     if (ast_graft_onto(self,self->a_conditional.c_cond))
         goto err;
@@ -368,7 +369,8 @@ optimize_conditional_bool_predictable_inherit_multiple:
       self->a_conditional.c_ff != self->a_conditional.c_cond &&
      !ast_has_sideeffects(self->a_conditional.c_ff)) {
    if (self->a_conditional.c_tt) {
-    Dee_Clear(self->a_conditional.c_ff);
+    ast_decref(self->a_conditional.c_ff);
+    self->a_conditional.c_ff = NULL;
    } else {
     if (ast_graft_onto(self,self->a_conditional.c_cond))
         goto err;

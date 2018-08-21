@@ -846,7 +846,7 @@ check_dst_sym_class_hybrid:
    }
    goto done;
   }
-  if (src->ob_type == AST_CONSTEXPR) {
+  if (src->a_type == AST_CONSTEXPR) {
    /* TODO: Optimizations for `none'. */
    /* TODO: Optimizations for sequence constants. */
   }

@@ -115,10 +115,10 @@ PRIVATE DREF DeeObject *FCALL do_parse_constant(void) {
   result = Dee_None;
  }
  Dee_Incref(result);
- Dee_Decref(const_ast);
+ ast_decref(const_ast);
  return result;
 err_const_ast:
- Dee_Decref(const_ast);
+ ast_decref(const_ast);
 err:
  return NULL;
 }

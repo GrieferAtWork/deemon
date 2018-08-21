@@ -43,7 +43,7 @@ PRIVATE DREF struct ast *FCALL
 wrap_yield(DREF struct ast *ast, struct ast_loc *__restrict loc) {
  DREF struct ast *result;
  result = ast_setddi(ast_yield(ast_setddi(ast,loc)),loc);
- if likely(result) Dee_Decref(ast);
+ if likely(result) ast_decref(ast);
  return result;
 }
 
@@ -95,9 +95,9 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
                                      result,other,
                                      ff_branch),
                     &loc);
-  Dee_XDecref(ff_branch);
-  Dee_Decref(other);
-  Dee_Decref(result);
+  ast_xdecref(ff_branch);
+  ast_decref(other);
+  ast_decref(result);
   result = merge;
  } break;
 
@@ -124,8 +124,8 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   /* Pack together the loop expression. */
   merge = ast_setddi(ast_loop(AST_FLOOP_POSTCOND,other,NULL,result),&loc);
   if unlikely(!merge) goto err_r_other;
-  Dee_Decref(other);
-  Dee_Decref(result);
+  ast_decref(other);
+  ast_decref(result);
   result = merge;
   break;
 
@@ -154,8 +154,8 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   if unlikely(!other) goto err_r;
   merge = ast_loop(AST_FLOOP_NORMAL,result,NULL,other);
   if unlikely(!merge) goto err_r_other;
-  Dee_Decref(result);
-  Dee_Decref(other);
+  ast_decref(result);
+  ast_decref(other);
   result = merge;
   break;
 
@@ -184,7 +184,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
                                     iter_or_next),
                      &loc);
    if unlikely(!merge) goto err_for_loop;
-   Dee_Decref(iter_or_next);
+   ast_decref(iter_or_next);
    iter_or_next = merge;
   }
   if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -195,16 +195,16 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   if unlikely(!result) goto err_for_loop;
   /* Pack together the loop ast. */
   merge = ast_loop((uint16_t)type,elem_or_cond,iter_or_next,result);
-  Dee_Decref(result);
+  ast_decref(result);
   if unlikely(!merge) goto err_for_loop;
-  Dee_Decref(iter_or_next);
-  Dee_Decref(elem_or_cond);
+  ast_decref(iter_or_next);
+  ast_decref(elem_or_cond);
   result = merge;
   /* Check if a loop initializer was parsed.
    * If one was, then simply wrap everything in a multi-branch AST. */
   if (init) {
    DREF struct ast **exprv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
-   if unlikely(!exprv) { err_loop_init: Dee_Decref(init); goto err_r; }
+   if unlikely(!exprv) { err_loop_init: ast_decref(init); goto err_r; }
    /* A loop initializer was given. - Pack it into the resulting AST. */
    exprv[0] = init;   /* Inherit reference. */
    exprv[1] = result; /* Inherit reference. */
@@ -214,9 +214,9 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   }
   break;
 err_for_loop:
-  Dee_XDecref(iter_or_next);
-  Dee_XDecref(elem_or_cond);
-  Dee_XDecref(init);
+  ast_xdecref(iter_or_next);
+  ast_xdecref(elem_or_cond);
+  ast_xdecref(init);
   goto err;
  } break;
 
@@ -254,14 +254,14 @@ err_for_loop:
                                foreach_iter,
                                foreach_loop),
                      &loc);
-  Dee_Decref(foreach_loop);
-  Dee_Decref(foreach_iter);
-  Dee_Decref(foreach_elem);
+  ast_decref(foreach_loop);
+  ast_decref(foreach_iter);
+  ast_decref(foreach_elem);
   break;
 err_foreach_iter:
-  Dee_Decref(foreach_iter);
+  ast_decref(foreach_iter);
 err_foreach_elem:
-  Dee_Decref(foreach_elem);
+  ast_decref(foreach_elem);
   goto err;
 err_foreach_elem_flags:
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -281,9 +281,9 @@ err_r_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err_r;
 err_r_other:
- Dee_Decref(other);
+ ast_decref(other);
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }
@@ -302,7 +302,7 @@ INTERN DREF struct ast *FCALL ast_parse_loopexpr(void) {
  if unlikely(!result) goto err_scope;
  /* Wrap the generator loop in a function ast. */
  merge = ast_setddi(ast_function(result,current_basescope),&loc);
- Dee_Decref(result);
+ ast_decref(result);
  basescope_pop();
  if unlikely(!merge) goto err;
  result = merge;
@@ -317,15 +317,15 @@ INTERN DREF struct ast *FCALL ast_parse_loopexpr(void) {
  other = ast_setddi(ast_constexpr(Dee_EmptyTuple),&loc);
  if unlikely(!other) goto err_r;
  merge = ast_setddi(ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,result,other),&loc);
- Dee_Decref(other);
- Dee_Decref(result);
+ ast_decref(other);
+ ast_decref(result);
  /* if unlikely(!merge) goto err; */
  return merge;
 err_scope:
  basescope_pop();
  goto err;
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }

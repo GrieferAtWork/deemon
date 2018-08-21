@@ -266,7 +266,7 @@ imod_parse_statement(InteractiveModule *__restrict self,
  if unlikely(!merge) goto err;
  if (should_yield) {
   result = ast_yield(merge);
-  Dee_Decref(merge);
+  ast_decref(merge);
  } else {
   result = merge;
  }
@@ -384,8 +384,10 @@ do_exec_code:
  }
 
  /* Rethrow all errors that may have occurred during parsing. */
- if (parser_rethrow(statement_ast == NULL))
-     Dee_XClear(statement_ast);
+ if (parser_rethrow(statement_ast == NULL)) {
+  ast_xdecref(statement_ast);
+  statement_ast = NULL;
+ }
 
  if unlikely(!statement_ast)
     goto done_compiler_end;
@@ -718,7 +720,8 @@ recover_old_code_object:
 do_assembler_fini:
  assembler_fini();
 done_statement_ast:
- Dee_Decref(statement_ast);
+ ast_decref(statement_ast);
+ statement_ast = NULL;
 done_compiler_end:
  COMPILER_END();
 done_compiler:

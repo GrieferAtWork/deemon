@@ -53,9 +53,9 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
   temp->a_loop.l_cond = other->a_loop.l_cond;
   temp->a_loop.l_iter = other->a_loop.l_iter;
   temp->a_loop.l_loop = other->a_loop.l_loop;
-  Dee_XIncref(other->a_loop.l_cond);
-  Dee_XIncref(other->a_loop.l_iter);
-  Dee_XIncref(other->a_loop.l_loop);
+  ast_xincref(other->a_loop.l_cond);
+  ast_xincref(other->a_loop.l_iter);
+  ast_xincref(other->a_loop.l_loop);
   break;
 
  case AST_OPERATOR:
@@ -75,30 +75,34 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
   /* Copy the member descriptor table. */
   for (; iter != end; ++iter,++dst) {
    *dst = *iter;
-   Dee_Incref(dst->cm_ast);
+   ast_incref(dst->cm_ast);
   }
  }
 do_subast_x4:
   temp->a_operator.o_op3 = other->a_operator.o_op3;
-  Dee_XIncref(temp->a_operator.o_op3);
+  ast_xincref(temp->a_operator.o_op3);
   ATTR_FALLTHROUGH
  case AST_CONDITIONAL:
 do_xcopy_3:
   temp->a_operator.o_op2 = other->a_operator.o_op2;
-  Dee_XIncref(temp->a_operator.o_op2);
+  ast_xincref(temp->a_operator.o_op2);
   ATTR_FALLTHROUGH
  case AST_FUNCTION:
   temp->a_operator.o_op1 = other->a_operator.o_op1;
-  Dee_XIncref(temp->a_operator.o_op1);
+  ast_xincref(temp->a_operator.o_op1);
   ATTR_FALLTHROUGH
- case AST_CONSTEXPR:
  case AST_RETURN:
  case AST_YIELD:
  case AST_THROW:
  case AST_BOOL:
  case AST_EXPAND:
+  temp->a_return = other->a_return;
+  ast_xincref(temp->a_return);
+  break;
+
+ case AST_CONSTEXPR:
   temp->a_constexpr = other->a_constexpr;
-  Dee_XIncref(temp->a_constexpr);
+  Dee_Incref(temp->a_constexpr);
   break;
 
  case AST_ACTION:
@@ -125,7 +129,7 @@ do_xcopy_3:
   temp->a_multiple.m_astv = dst;
   for (; iter != end; ++iter,++dst) {
    *dst = *iter;
-   Dee_Incref(*dst);
+   ast_incref(*dst);
   }
  } break;
 
@@ -134,7 +138,7 @@ do_xcopy_3:
  case AST_TRY:
   temp->a_try.t_guard = other->a_try.t_guard;
   temp->a_try.t_catchc = other->a_try.t_catchc;
-  Dee_Incref(temp->a_try.t_guard);
+  ast_incref(temp->a_try.t_guard);
   end = (iter = other->a_try.t_catchv)+
                 other->a_try.t_catchc;
   dst = (struct catch_expr *)Dee_Malloc(temp->a_try.t_catchc*
@@ -143,8 +147,8 @@ do_xcopy_3:
   temp->a_try.t_catchv = dst;
   for (; iter != end; ++iter,++dst) {
    *dst = *iter;
-   Dee_XIncref(dst->ce_mask);
-   Dee_Incref(dst->ce_code);
+   ast_xincref(dst->ce_mask);
+   ast_incref(dst->ce_code);
   }
  } break;
 
@@ -216,7 +220,7 @@ INTERN int (DCALL ast_graft_onto)(struct ast *__restrict self,
  elemv = (struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
  if unlikely(!elemv) return -1;
  elemv[0] = other;
- Dee_Incref(other);
+ ast_incref(other);
  if (self != other) {
   /* Copy over DDI information. */
   if (other->a_ddi.l_file)

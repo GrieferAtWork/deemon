@@ -66,7 +66,7 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 not_a_cast:
   /* Not a cast expression. */
   result = typeexpr;
-  Dee_Incref(result);
+  ast_incref(result);
   break;
 
 #if 1
@@ -94,7 +94,7 @@ not_a_cast:
    result = ast_setddi(ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,
                                      typeexpr,merge),
                       &typeexpr->a_ddi);
-   Dee_Decref(merge);
+   ast_decref(merge);
    if unlikely(!result) goto err;
    if unlikely(yield() < 0) goto err_r;
    goto done;
@@ -125,11 +125,11 @@ not_a_cast:
    if unlikely(!result) goto err_merge;
    if (result == merge->a_multiple.m_astv[0]) {
     /* Same argument expression. */
-    Dee_Decref(result);
+    ast_decref(result);
    } else {
     /* New argument expression. */
-    if likely(!DeeObject_IsShared(merge)) {
-     Dee_Decref(merge->a_multiple.m_astv[0]);
+    if likely(!ast_shared(merge)) {
+     ast_decref(merge->a_multiple.m_astv[0]);
      merge->a_multiple.m_astv[0] = result; /* Inherit reference. */
     } else {
      DREF struct ast *other;
@@ -138,7 +138,7 @@ not_a_cast:
      exprv[0] = result; /* Inherit */
      other = ast_multiple(AST_FMULTIPLE_TUPLE,1,exprv);
      if unlikely(!other) { Dee_Free(exprv); goto err_merge_r; }
-     Dee_Decref(merge);
+     ast_decref(merge);
      merge = other; /* Inherit */
     }
    }
@@ -147,7 +147,7 @@ not_a_cast:
   result = ast_setddi(ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,
                                     typeexpr,merge),
                      &typeexpr->a_ddi);
-  Dee_Decref(merge);
+  ast_decref(merge);
   if unlikely(!result) goto err;
  } break;
 #endif
@@ -174,7 +174,7 @@ do_a_cast:
   result = ast_setddi(ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,
                                     typeexpr,merge),
                      &typeexpr->a_ddi);
-  Dee_Decref(merge);
+  ast_decref(merge);
   break;
  }
 done:
@@ -182,10 +182,10 @@ done:
 err_flags:   
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err;
-err_merge_r: Dee_Decref(result);
-err_merge:   Dee_Decref(merge); goto err;
+err_merge_r: ast_decref(result);
+err_merge:   ast_decref(merge); goto err;
 err_r_exprv: Dee_Free(exprv);
-err_r:       Dee_Decref(result);
+err_r:       ast_decref(result);
 err:         return NULL;
 }
 

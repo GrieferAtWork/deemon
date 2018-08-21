@@ -143,7 +143,7 @@ ast_parse_statement_or_expression(uint16_t mode,
 done:
  return result;
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }
@@ -193,16 +193,16 @@ do_else_branch:
                                     tt_branch,
                                     ff_branch),
                    &loc);
- Dee_XDecref(ff_branch);
- Dee_XDecref(tt_branch);
- Dee_XDecref(result);
+ ast_xdecref(ff_branch);
+ ast_xdecref(tt_branch);
+ ast_xdecref(result);
  if (pwas_expression)
     *pwas_expression = was_expression;
  return merge;
 err_tt:
- Dee_XDecref(tt_branch);
+ ast_xdecref(tt_branch);
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
  goto err;
 err_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -269,7 +269,7 @@ parse_remainder_after_comma_popscope:
     scope_pop();
     remainder = ast_parse_brace_list(result);
     if unlikely(!remainder) goto err_r;
-    Dee_Decref(result);
+    ast_decref(result);
     result = ast_setddi(remainder,&loc);
     if unlikely(likely(tok == '}') ? (yield() < 0) : 
                 WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
@@ -433,14 +433,14 @@ parse_remainder_after_rbrace_popscope:
    if (tok == ':' && result->a_multiple.m_astc == 1) {
     /* Use the first expression from the multi-branch. */
     remainder = result->a_multiple.m_astv[0];
-    Dee_Incref(remainder);
-    Dee_Decref(result);
+    ast_incref(remainder);
+    ast_decref(result);
     result = remainder;
 parse_remainder_after_colon_popscope:
     scope_pop();
     /* mapping-like brace expression. */
     remainder = ast_parse_mapping(result);
-    Dee_Decref(result);
+    ast_decref(result);
     if unlikely(!remainder) goto err;
     result = ast_setddi(remainder,&loc);
     if unlikely(likely(tok == '}') ? (yield() < 0) : 
@@ -460,8 +460,8 @@ parse_remainder_after_colon_popscope:
   }
   if (result->a_multiple.m_astc == 1) {
    remainder = result->a_multiple.m_astv[0];
-   Dee_Incref(remainder);
-   Dee_Decref(result);
+   ast_incref(remainder);
+   ast_decref(result);
    result = remainder;
   } else {
    result->a_flag = AST_FMULTIPLE_KEEPLAST;
@@ -492,8 +492,8 @@ parse_remainder_after_statement:
     new_elemv[1] = remainder; /* Inherit reference. */
     remainder = ast_multiple(AST_FMULTIPLE_KEEPLAST,2,new_elemv);
     if unlikely(!remainder) {
-     Dee_Decref(new_elemv[1]);
-     Dee_Decref(new_elemv[0]);
+     ast_decref(new_elemv[1]);
+     ast_decref(new_elemv[0]);
      Dee_Free(new_elemv);
      goto err;
     }
@@ -512,9 +512,9 @@ parse_remainder_after_statement:
  }
  return result;
 err_r_remainder:
- Dee_Decref(remainder);
+ ast_decref(remainder);
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }

@@ -894,7 +894,7 @@ PRIVATE int32_t FCALL do_parse_constexpr(void) {
  /* Optimize the constant branch to allow for constant propagation. */
  if unlikely(ast_optimize_all(imm_const,true)) {
 err_imm_const:
-  Dee_Decref(imm_const);
+  ast_decref(imm_const);
   goto err;
  }
  if (imm_const->a_type == AST_CONSTEXPR &&
@@ -906,7 +906,7 @@ err_imm_const:
   const_val = Dee_None;
  }
  cid = asm_newconst(const_val);
- Dee_Decref(imm_const);
+ ast_decref(imm_const);
  return cid;
 err:
  return -1;
@@ -1257,10 +1257,10 @@ do_parse_atoperand(struct asm_invoke_operand *__restrict result) {
     goto err_imm_expr;
  if unlikely(do_translate_operand_ast(result,imm_expr))
     goto err_imm_expr;
- Dee_Decref(imm_expr);
+ ast_decref(imm_expr);
  return 0;
 err_imm_expr:
- Dee_Decref(imm_expr);
+ ast_decref(imm_expr);
 err:
  return -1;
 }

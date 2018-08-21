@@ -204,7 +204,7 @@ again:
     self->a_multiple.m_astv = elemv;
    } else {
     /* Without side-effects, there is no need to keep the expression around. */
-    Dee_Decref_likely(self->a_bool);
+    ast_decref_likely(self->a_bool);
     self->a_constexpr = DeeBool_For(ast_value);
     Dee_Incref(self->a_constexpr);
     self->a_type = AST_CONSTEXPR;

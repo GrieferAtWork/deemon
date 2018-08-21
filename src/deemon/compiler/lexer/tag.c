@@ -217,7 +217,7 @@ need_constexpr:
    break;
   }
 found_tag:
-  Dee_XDecref(args_ast);
+  ast_xdecref(args_ast);
   Dee_XDecref(tag_args);
  } else {
   goto done;
@@ -234,7 +234,7 @@ err_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err;
 err_args:
- Dee_XDecref(args_ast);
+ ast_xdecref(args_ast);
  Dee_XDecref(tag_args);
 err:
  return -1;

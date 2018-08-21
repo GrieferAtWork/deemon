@@ -914,7 +914,7 @@ ast_parse_import_hybrid(unsigned int *pwas_expression) {
  }
  return result;
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }
@@ -1083,7 +1083,7 @@ done:
 err_r_module:
  Dee_Decref(module);
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }

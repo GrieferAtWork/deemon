@@ -136,7 +136,8 @@ err_guard_assumes:
       iter->ce_mask->a_constexpr == (DeeObject *)&DeeObject_Type) {
    OPTIMIZE_VERBOSE("Optimize object-mask to catch-all\n");
    ++optimizer_count;
-   Dee_Clear(iter->ce_mask);
+   ast_decref(iter->ce_mask);
+   iter->ce_mask = NULL;
   }
   /* Set the `CATCH_EXPR_FSECOND' flag for all noexcept catch-handlers. */
   if (!(iter->ce_mode & CATCH_EXPR_FSECOND) &&

@@ -37,7 +37,11 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_AST_IS_STRUCT
+DEFINE_STRUCT_CACHE(ast,struct ast,512)
+#else
 DEFINE_OBJECT_CACHE(ast,struct ast,512)
+#endif
 DECLARE_STRUCT_CACHE(sym,struct symbol)
 
 #ifndef NDEBUG
@@ -68,7 +72,11 @@ ast_dbgnew(char const *file, int line) {
  ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 #endif
  if likely(result) {
+#ifdef CONFIG_AST_IS_STRUCT
+  result->a_refcnt = 1;
+#else
   DeeObject_Init(result,&DeeAst_Type);
+#endif
   result->a_scope = current_scope;
   result->a_ddi.l_file = NULL;
   Dee_Incref(result->a_scope);
@@ -317,7 +325,7 @@ DEFINE_AST_GENERATOR(ast_operator_func,
   result->a_type = AST_OPERATOR_FUNC;
   result->a_flag = operator_name;
   result->a_operator_func.of_binding = binding;
-  Dee_XIncref(binding);
+  ast_xincref(binding);
   INIT_REF(result);
  }
  return result;
@@ -370,7 +378,7 @@ DEFINE_AST_GENERATOR(ast_return,
  if likely((result = ast_new()) != NULL) {
   result->a_type   = AST_RETURN;
   result->a_return = return_expr;
-  Dee_XIncref(return_expr);
+  ast_xincref(return_expr);
   INIT_REF(result);
  }
  return result;
@@ -383,7 +391,7 @@ DEFINE_AST_GENERATOR(ast_yield,
  if likely((result = ast_new()) != NULL) {
   result->a_type   = AST_YIELD;
   result->a_return = yield_expr;
-  Dee_Incref(yield_expr);
+  ast_incref(yield_expr);
   INIT_REF(result);
  }
  return result;
@@ -396,7 +404,7 @@ DEFINE_AST_GENERATOR(ast_throw,
  if likely((result = ast_new()) != NULL) {
   result->a_type   = AST_THROW;
   result->a_return = throw_expr;
-  Dee_XIncref(throw_expr);
+  ast_xincref(throw_expr);
   INIT_REF(result);
  }
  return result;
@@ -409,7 +417,7 @@ DEFINE_AST_GENERATOR(ast_try,(struct ast *__restrict guarded_expression, size_t 
  if unlikely(!catchc) {
   /* Prevent ambiguity when no handlers are defined. */
   Dee_Free(catchv); /* May still be a non-NULL buffer. */
-  Dee_Incref(guarded_expression);
+  ast_incref(guarded_expression);
   return guarded_expression;
  }
  if likely((result = ast_new()) != NULL) {
@@ -417,7 +425,7 @@ DEFINE_AST_GENERATOR(ast_try,(struct ast *__restrict guarded_expression, size_t 
   result->a_try.t_guard  = guarded_expression;
   result->a_try.t_catchc = catchc;
   result->a_try.t_catchv = catchv;
-  Dee_Incref(guarded_expression);
+  ast_incref(guarded_expression);
   INIT_REF(result);
  }
  return result;
@@ -439,7 +447,7 @@ DEFINE_AST_GENERATOR(ast_tryfinally,
  result = ast_try_d(file,line,guarded_expression,1,catchv);
 #endif
  if unlikely(!result) Dee_Free(catchv);
- else Dee_Incref(finally_expression);
+ else ast_incref(finally_expression);
  return result;
 }
 
@@ -466,9 +474,9 @@ DEFINE_AST_GENERATOR(ast_loop,
   result->a_loop.l_cond = elem_or_cond;
   result->a_loop.l_next = iter_or_next;
   result->a_loop.l_loop = loop;
-  Dee_XIncref(elem_or_cond);
-  Dee_XIncref(iter_or_next);
-  Dee_XIncref(loop);
+  ast_xincref(elem_or_cond);
+  ast_xincref(iter_or_next);
+  ast_xincref(loop);
   if (elem_or_cond && (flags&AST_FLOOP_FOREACH))
       ast_incwrite(elem_or_cond);
   INIT_REF(result);
@@ -503,9 +511,9 @@ DEFINE_AST_GENERATOR(ast_conditional,
   result->a_conditional.c_cond = cond;
   result->a_conditional.c_tt   = tt_expr;
   result->a_conditional.c_ff   = ff_expr;
-  Dee_Incref(cond);
-  Dee_XIncref(tt_expr);
-  Dee_XIncref(ff_expr);
+  ast_incref(cond);
+  ast_xincref(tt_expr);
+  ast_xincref(ff_expr);
   INIT_REF(result);
  }
  return result;
@@ -519,7 +527,7 @@ DEFINE_AST_GENERATOR(ast_bool,
   result->a_type     = AST_BOOL;
   result->a_flag     = flags;
   result->a_bool = expr;
-  Dee_Incref(expr);
+  ast_incref(expr);
   INIT_REF(result);
  }
  return result;
@@ -535,13 +543,13 @@ DEFINE_AST_GENERATOR(ast_expand,
      expr->a_flag != AST_FMULTIPLE_KEEPLAST &&
      expr->a_multiple.m_astc == 1) {
   result = expr->a_multiple.m_astv[0];
-  Dee_Incref(result);
+  ast_incref(result);
   return result;
  }
  if likely((result = ast_new()) != NULL) {
   result->a_type       = AST_EXPAND;
   result->a_expand = expr;
-  Dee_Incref(expr);
+  ast_incref(expr);
   INIT_REF(result);
  }
  return result;
@@ -557,7 +565,7 @@ DEFINE_AST_GENERATOR(ast_function,
   result->a_type = AST_FUNCTION;
   result->a_function.f_code  = function_code;
   result->a_function.f_scope = scope;
-  Dee_Incref(function_code);
+  ast_incref(function_code);
   Dee_Incref((DeeObject *)scope);
   INIT_REF(result);
  }
@@ -579,7 +587,7 @@ DEFINE_AST_GENERATOR(ast_operator1,
   result->a_operator.o_op2    = NULL;
   result->a_operator.o_op3    = NULL;
   result->a_operator.o_exflag = flags;
-  Dee_Incref(opa);
+  ast_incref(opa);
   INIT_REF(result);
  }
  return result;
@@ -602,8 +610,8 @@ DEFINE_AST_GENERATOR(ast_operator2,
   result->a_operator.o_op2    = NULL;
   result->a_operator.o_op3    = NULL;
   result->a_operator.o_exflag = flags;
-  Dee_Incref(opa);
-  Dee_Incref(opb);
+  ast_incref(opa);
+  ast_incref(opb);
   INIT_REF(result);
  }
  return result;
@@ -627,9 +635,9 @@ DEFINE_AST_GENERATOR(ast_operator3,
   result->a_operator.o_op2    = opc;
   result->a_operator.o_op3    = NULL;
   result->a_operator.o_exflag = flags;
-  Dee_Incref(opa);
-  Dee_Incref(opb);
-  Dee_Incref(opc);
+  ast_incref(opa);
+  ast_incref(opb);
+  ast_incref(opc);
   INIT_REF(result);
  }
  return result;
@@ -656,10 +664,10 @@ DEFINE_AST_GENERATOR(ast_operator4,
   result->a_operator.o_op2    = opc;
   result->a_operator.o_op3    = opd;
   result->a_operator.o_exflag = flags;
-  Dee_Incref(opa);
-  Dee_Incref(opb);
-  Dee_Incref(opc);
-  Dee_Incref(opd);
+  ast_incref(opa);
+  ast_incref(opb);
+  ast_incref(opc);
+  ast_incref(opd);
   INIT_REF(result);
  }
  return result;
@@ -692,7 +700,7 @@ DEFINE_AST_GENERATOR(ast_action1,
   result->a_action.a_act0 = act0;
   result->a_action.a_act1 = NULL;
   result->a_action.a_act2 = NULL;
-  Dee_Incref(act0);
+  ast_incref(act0);
   INIT_REF(result);
  }
  return result;
@@ -712,8 +720,8 @@ DEFINE_AST_GENERATOR(ast_action2,
   result->a_action.a_act0 = act0;
   result->a_action.a_act1 = act1;
   result->a_action.a_act2 = NULL;
-  Dee_Incref(act0);
-  Dee_Incref(act1);
+  ast_incref(act0);
+  ast_incref(act1);
   if ((action_flags&AST_FACTION_KINDMASK) ==
       (AST_FACTION_STORE&AST_FACTION_KINDMASK))
        ast_incwrite(act0);
@@ -738,9 +746,9 @@ DEFINE_AST_GENERATOR(ast_action3,
   result->a_action.a_act0 = act0;
   result->a_action.a_act1 = act1;
   result->a_action.a_act2 = act2;
-  Dee_Incref(act0);
-  Dee_Incref(act1);
-  Dee_Incref(act2);
+  ast_incref(act0);
+  ast_incref(act1);
+  ast_incref(act2);
   INIT_REF(result);
  }
  return result;
@@ -776,11 +784,11 @@ DEFINE_AST_GENERATOR(ast_class,
   result->a_class.c_anonv    = anonv;
   if (class_symbol) SYMBOL_INC_NWRITE(class_symbol);
   if (super_symbol) SYMBOL_INC_NWRITE(super_symbol);
-  Dee_XIncref(base);
-  Dee_XIncref(name);
-  Dee_XIncref(doc);
-  Dee_XIncref(imem);
-  Dee_XIncref(cmem);
+  ast_xincref(base);
+  ast_xincref(name);
+  ast_xincref(doc);
+  ast_xincref(imem);
+  ast_xincref(cmem);
   INIT_REF(result);
  }
  return result;
@@ -832,8 +840,8 @@ DEFINE_AST_GENERATOR(ast_switch,
   result->a_switch.s_block   = block;
   result->a_switch.s_cases   = cases;
   result->a_switch.s_default = default_case;
-  Dee_Incref(expr);
-  Dee_Incref(block);
+  ast_incref(expr);
+  ast_incref(block);
   /* Increment the counter of the default-case. */
   if (default_case)
     ++default_case->tl_goto;
@@ -917,7 +925,7 @@ cleanup_switch_cases(struct text_label *switch_cases,
   struct text_label *next;
   next = switch_cases->tl_next;
   ASSERT_AST(switch_cases->tl_expr);
-  Dee_Decref(switch_cases->tl_expr);
+  ast_decref(switch_cases->tl_expr);
   lbl_free(switch_cases);
   switch_cases = next;
  }
@@ -927,7 +935,7 @@ visit_switch_cases(struct text_label *switch_cases,
                    dvisit_t proc, void *arg) {
  while (switch_cases) {
   ASSERT_AST(switch_cases->tl_expr);
-  Dee_Visit(switch_cases->tl_expr);
+  ast_visit(switch_cases->tl_expr,proc,arg);
   switch_cases = switch_cases->tl_next;
  }
 }
@@ -949,10 +957,10 @@ ast_fini_contents(struct ast *__restrict self) {
                 self->a_class.c_memberc;
   /* Cleanup the member descriptor table. */
   for (; iter != end; ++iter)
-      Dee_Decref(iter->cm_ast);
+      ast_decref(iter->cm_ast);
   Dee_Free(self->a_class.c_memberv);
   Dee_Free(self->a_class.c_anonv);
-  Dee_XDecref(self->a_class.c_cmem);
+  ast_xdecref(self->a_class.c_cmem);
   if (self->a_class.c_classsym)
       SYMBOL_DEC_NWRITE(self->a_class.c_classsym);
   if (self->a_class.c_supersym)
@@ -962,23 +970,25 @@ ast_fini_contents(struct ast *__restrict self) {
  case AST_OPERATOR:
   if (OPERATOR_ISINPLACE(self->a_flag))
       ast_decwriteonly(self->a_operator.o_op0);
-  Dee_XDecref(self->a_operator.o_op3);
+  ast_xdecref(self->a_operator.o_op3);
   ATTR_FALLTHROUGH
  case AST_CONDITIONAL:
 do_xdecref_3:
-  Dee_XDecref(self->a_operator.o_op2);
+  ast_xdecref(self->a_operator.o_op2);
   ATTR_FALLTHROUGH
  case AST_FUNCTION:
-  Dee_XDecref(self->a_operator.o_op1);
+  ast_xdecref(self->a_operator.o_op1);
   ATTR_FALLTHROUGH
- case AST_CONSTEXPR:
  case AST_RETURN:
  case AST_YIELD:
  case AST_THROW:
  case AST_BOOL:
  case AST_EXPAND:
  case AST_OPERATOR_FUNC:
-  Dee_XDecref(self->a_constexpr);
+  ast_xdecref(self->a_return);
+  break;
+ case AST_CONSTEXPR:
+  Dee_Decref(self->a_constexpr);
   break;
 
  case AST_ACTION:
@@ -994,19 +1004,19 @@ do_xdecref_3:
   end = (iter = self->a_multiple.m_astv)+
                 self->a_multiple.m_astc;
   for (; iter != end; ++iter)
-         Dee_Decref(*iter);
+         ast_decref(*iter);
   Dee_Free(self->a_multiple.m_astv);
  } break;
 
  {
   struct catch_expr *iter,*end;
  case AST_TRY:
-  Dee_Decref(self->a_try.t_guard);
+  ast_decref(self->a_try.t_guard);
   end = (iter = self->a_try.t_catchv)+
                 self->a_try.t_catchc;
   for (; iter != end; ++iter) {
-   Dee_XDecref(iter->ce_mask);
-   Dee_Decref(iter->ce_code);
+   ast_xdecref(iter->ce_mask);
+   ast_decref(iter->ce_code);
   }
   Dee_Free(self->a_try.t_catchv);
  } break;
@@ -1034,8 +1044,8 @@ do_xdecref_3:
  case AST_SWITCH:
   cleanup_switch_cases(self->a_switch.s_cases,
                        self->a_switch.s_default);
-  Dee_Decref(self->a_switch.s_expr);
-  Dee_Decref(self->a_switch.s_block);
+  ast_decref(self->a_switch.s_expr);
+  ast_decref(self->a_switch.s_block);
   break;
 
  {
@@ -1058,7 +1068,7 @@ do_xdecref_3:
    ASSERT(iter->ao_type);
    ASSERT(iter->ao_expr);
    TPPString_Decref(iter->ao_type);
-   Dee_Decref(iter->ao_expr);
+   ast_decref(iter->ao_expr);
   }
   end += self->a_assembly.as_num_l;
   for (; iter != end; ++iter) {
@@ -1078,8 +1088,116 @@ do_xdecref_3:
  }
 }
 
-PRIVATE void DCALL
-ast_fini(struct ast *__restrict self) {
+INTERN void DCALL
+ast_visit(struct ast *__restrict self,
+          dvisit_t proc, void *arg) {
+ switch (self->a_type) {
+
+ {
+  struct class_member *iter,*end;
+ case AST_CLASS:
+  end = (iter = self->a_class.c_memberv)+
+                self->a_class.c_memberc;
+  /* Cleanup the member descriptor table. */
+  for (; iter != end; ++iter)
+      ast_visit(iter->cm_ast,proc,arg);
+  if (self->a_class.c_cmem)
+      ast_visit(self->a_class.c_cmem,proc,arg);
+ }
+  ATTR_FALLTHROUGH
+ case AST_OPERATOR:
+  if (self->a_operator.o_op3)
+      ast_visit(self->a_operator.o_op3,proc,arg);
+  ATTR_FALLTHROUGH
+ case AST_CONDITIONAL:
+ case AST_LOOP:
+do_xvisit_3:
+  if (self->a_operator.o_op2)
+      ast_visit(self->a_operator.o_op2,proc,arg);
+  ATTR_FALLTHROUGH
+ case AST_FUNCTION:
+  if (self->a_operator.o_op1)
+      ast_visit(self->a_operator.o_op1,proc,arg);
+  ATTR_FALLTHROUGH
+ case AST_RETURN:
+ case AST_YIELD:
+ case AST_THROW:
+ case AST_BOOL:
+ case AST_EXPAND:
+ case AST_OPERATOR_FUNC:
+  if (self->a_return)
+      ast_visit(self->a_return,proc,arg);
+  break;
+ case AST_CONSTEXPR:
+  Dee_Visit(self->a_constexpr);
+  break;
+
+ case AST_ACTION:
+  if ((self->a_flag&AST_FACTION_KINDMASK) ==
+      (AST_FACTION_STORE&AST_FACTION_KINDMASK)) {
+   ast_decwrite(self->a_action.a_act0);
+  }
+  goto do_xvisit_3;
+
+ {
+  DREF struct ast **iter,**end;
+ case AST_MULTIPLE:
+  end = (iter = self->a_multiple.m_astv)+
+                self->a_multiple.m_astc;
+  for (; iter != end; ++iter)
+         ast_visit(*iter,proc,arg);
+ } break;
+
+ {
+  struct catch_expr *iter,*end;
+ case AST_TRY:
+  ast_visit(self->a_try.t_guard,proc,arg);
+  end = (iter = self->a_try.t_catchv)+
+                self->a_try.t_catchc;
+  for (; iter != end; ++iter) {
+   if (iter->ce_mask)
+       ast_visit(iter->ce_mask,proc,arg);
+   ast_visit(iter->ce_code,proc,arg);
+  }
+ } break;
+
+ case AST_GOTO:
+ case AST_LABEL:
+  Dee_Visit((DeeObject *)self->a_label.l_base);
+  break;
+
+ case AST_SWITCH:
+  visit_switch_cases(self->a_switch.s_cases,proc,arg);
+  ast_visit(self->a_switch.s_expr,proc,arg);
+  ast_visit(self->a_switch.s_block,proc,arg);
+  break;
+
+ {
+  struct asm_operand *iter,*end;
+ case AST_ASSEMBLY:
+  end = (iter = self->a_assembly.as_opv)+
+               (self->a_assembly.as_num_o+
+                self->a_assembly.as_num_i);
+  for (; iter != end; ++iter)
+      ast_visit(iter->ao_expr,proc,arg);
+ } break;
+
+ default: break;
+ }
+#if 0 /* ??? */
+ if (self->a_ddi.l_file)
+     TPPFile_Visit(self->a_ddi.l_file,proc,arg);
+#endif
+ Dee_Visit(self->a_scope);
+}
+
+
+#ifdef CONFIG_AST_IS_STRUCT
+INTERN void DCALL ast_destroy(struct ast *__restrict self)
+#else
+PRIVATE void DCALL ast_fini(struct ast *__restrict self)
+#endif
+{
  ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
  DeeCompiler_DelItem(self);
  if (self->a_ddi.l_file)
@@ -1088,11 +1206,15 @@ ast_fini(struct ast *__restrict self) {
  /* NOTE: Must destroy the scope _AFTER_ the AST contents, in case the
   *       ast itself references some symbol that is owned by this scope. */
  Dee_Decref(self->a_scope);
+#ifdef CONFIG_AST_IS_STRUCT
+ ast_free(self);
+#endif
 }
 
 
 
 
+#ifndef CONFIG_AST_IS_STRUCT
 INTERN DeeTypeObject DeeAst_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"ast",
@@ -1121,7 +1243,7 @@ INTERN DeeTypeObject DeeAst_Type = {
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */NULL,
-    /* .tp_visit         = */NULL,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&ast_visit,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
     /* .tp_cmp           = */NULL,
@@ -1137,6 +1259,7 @@ INTERN DeeTypeObject DeeAst_Type = {
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
 };
+#endif /* !CONFIG_AST_IS_STRUCT */
 
 DECL_END
 

@@ -64,8 +64,8 @@ ast_parse_assert(bool needs_parenthesis) {
    message = result->a_multiple.m_astv[--result->a_multiple.m_astc];
    if (result->a_multiple.m_astc == 1) {
     merge = result->a_multiple.m_astv[0];
-    Dee_Incref(merge);
-    Dee_Decref(result);
+    ast_incref(merge);
+    ast_decref(result);
     result = merge;
    }
   }
@@ -90,10 +90,10 @@ ast_parse_assert(bool needs_parenthesis) {
                    &loc
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
                    );
- Dee_XDecref(message);
- Dee_Decref(result);
+ ast_xdecref(message);
+ ast_decref(result);
  return merge;
-err_r: Dee_Decref(result);
+err_r: ast_decref(result);
 err:   return NULL;
 }
 
@@ -124,8 +124,8 @@ ast_parse_assert_hybrid(unsigned int *pwas_expression) {
    message = result->a_multiple.m_astv[--result->a_multiple.m_astc];
    if (result->a_multiple.m_astc == 1) {
     merge = result->a_multiple.m_astv[0];
-    Dee_Incref(merge);
-    Dee_Decref(result);
+    ast_incref(merge);
+    ast_decref(result);
     result = merge;
    }
   }
@@ -151,10 +151,10 @@ ast_parse_assert_hybrid(unsigned int *pwas_expression) {
                    &loc
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
                    );
- Dee_XDecref(message);
- Dee_Decref(result);
+ ast_xdecref(message);
+ ast_decref(result);
  return merge;
-err_r: Dee_Decref(result);
+err_r: ast_decref(result);
 err:   return NULL;
 }
 

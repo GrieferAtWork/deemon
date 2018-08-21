@@ -1167,7 +1167,7 @@ new_case_label(struct ast *__restrict expr) {
  result = lbl_alloc();
  if unlikely(!result) goto done;
  /* Initialize the new label. */
- Dee_Incref(expr);
+ ast_incref(expr);
  result->tl_expr = expr;
  result->tl_asym = NULL;
  result->tl_goto = 0;

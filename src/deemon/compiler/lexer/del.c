@@ -39,7 +39,7 @@ ast_parse_del_single(unsigned int lookup_mode) {
   new_result = ast_setddi(ast_unbind(result->a_sym),
                          &result->a_ddi);
   if unlikely(!new_result) goto err_r;
-  Dee_Decref(result);
+  ast_decref(result);
   result = new_result;
   if ((lookup_mode&LOOKUP_SYM_ALLOWDECL) &&
        SYMBOL_SCOPE(result->a_unbind) == current_scope) {
@@ -86,7 +86,7 @@ create_2:
   }
   if unlikely(!new_result) goto err_r;
   ast_setddi(new_result,&result->a_ddi);
-  Dee_Decref(result);
+  ast_decref(result);
   result = new_result;
  } break;
 
@@ -98,7 +98,7 @@ default_case:
  }
  return result;
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }
@@ -157,13 +157,13 @@ do_realloc_delv:
 done:
  return result;
 err_delv_r:
- Dee_Decref(result);
+ ast_decref(result);
 err_delv:
- while (delc--) Dee_Decref(delv[delc]);
+ while (delc--) ast_decref(delv[delc]);
  Dee_Free(delv);
  goto err;
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }

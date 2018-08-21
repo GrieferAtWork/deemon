@@ -104,9 +104,9 @@ done:
  *piter_or_next = iter_or_next;
  return result;
 err:
- Dee_XDecref(init);
- Dee_XDecref(elem_or_cond);
- Dee_XDecref(iter_or_next);
+ ast_xdecref(init);
+ ast_xdecref(elem_or_cond);
+ ast_xdecref(iter_or_next);
  return -1;
 }
 
@@ -159,7 +159,7 @@ do_realloc:
  return new_expression;
 err:
  /* Cleanup. */
- while (exprc--) Dee_Decref(exprv[exprc]);
+ while (exprc--) ast_decref(exprv[exprc]);
  Dee_Free(exprv);
  return NULL;
 }
@@ -241,7 +241,7 @@ again:
   if unlikely(skip_lf()) goto err_tt_branch;
   if unlikely(parse_tags_block()) {
 err_tt_branch:
-   Dee_Decref(tt_branch);
+   ast_decref(tt_branch);
    goto err_r;
   }
   if unlikely(skip_lf()) goto err_tt_branch;
@@ -261,9 +261,9 @@ do_else_branch:
                                      ff_branch),
                     &loc);
   scope_pop();
-  Dee_XDecref(ff_branch);
-  Dee_Decref(tt_branch);
-  Dee_Decref(result);
+  ast_xdecref(ff_branch);
+  ast_decref(tt_branch);
+  ast_decref(result);
   result = merge;
   /* We've already parsed tags, so don't reset them before parsing the next statement. */
   goto done_no_tag_reset;
@@ -285,7 +285,7 @@ do_else_branch:
                             NULL);
    if unlikely(!result) goto err;
    merge = ast_return(result);
-   Dee_Decref(result);
+   ast_decref(result);
    result = merge;
   }
   ast_setddi(result,&loc);
@@ -305,10 +305,10 @@ do_else_branch:
                            NULL);
   if unlikely(!result) goto err;
   merge = ast_setddi(ast_expand(result),&loc);
-  Dee_Decref(result);
+  ast_decref(result);
   if unlikely(!merge) goto err;
   result = ast_setddi(ast_yield(merge),&loc);
-  Dee_Decref(merge);
+  ast_decref(merge);
   if unlikely(!result) goto err;
   current_basescope->bs_flags |= CODE_FYIELDING;
   if (current_basescope->bs_cflags&BASESCOPE_FRETURN &&
@@ -338,7 +338,7 @@ do_else_branch:
                             NULL);
    if unlikely(!result) goto err;
    merge = ast_throw(result);
-   Dee_Decref(result);
+   ast_decref(result);
    result = merge;
   }
   ast_setddi(result,&loc);
@@ -361,7 +361,7 @@ do_else_branch:
    result = ast_constexpr(Dee_EmptyTuple);
    if unlikely(!result) goto err;
    merge = ast_action1(AST_FACTION_PRINTLN,result);
-   Dee_Decref(result);
+   ast_decref(result);
    if unlikely(!merge) goto err;
    result = merge;
   } else {
@@ -380,8 +380,8 @@ do_else_branch:
     if (result->a_type == AST_MULTIPLE &&
         result->a_multiple.m_astc == 1) {
      merge = result->a_multiple.m_astv[0];
-     Dee_Incref(merge);
-     Dee_Decref(result);
+     ast_incref(merge);
+     ast_decref(result);
      result = merge;
     }
     if (is_semicollon()) {
@@ -397,8 +397,8 @@ do_else_branch:
                       ? AST_FACTION_FPRINT
                       : AST_FACTION_FPRINTLN,
                         result,text);
-    Dee_Decref(text);
-    Dee_Decref(result);
+    ast_decref(text);
+    ast_decref(result);
     if unlikely(!merge) goto err;
     result = merge;
     if (tok == ',' && yield() < 0) goto err_r;
@@ -408,7 +408,7 @@ do_else_branch:
                       ? AST_FACTION_PRINT
                       : AST_FACTION_PRINTLN,
                         result);
-    Dee_Decref(result);
+    ast_decref(result);
     if unlikely(!merge) goto err;
     result = merge;
     if (tok == ',' && yield() < 0) goto err_r;
@@ -450,7 +450,7 @@ do_else_branch:
                                     iter_or_next),
                      &loc);
    if unlikely(!merge) goto err_loop;
-   Dee_Decref(iter_or_next);
+   ast_decref(iter_or_next);
    iter_or_next = merge;
   }
   if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -466,12 +466,12 @@ do_else_branch:
                                 loop),
                      &loc);
   if unlikely(!result) goto err_loop2;
-  Dee_Decref(loop);
-  Dee_XDecref(iter_or_next);
-  Dee_XDecref(elem_or_cond);
+  ast_decref(loop);
+  ast_xdecref(iter_or_next);
+  ast_xdecref(elem_or_cond);
   if (init) {
    DREF struct ast **exprv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
-   if unlikely(!exprv) { err_loop_init: Dee_Decref(init); goto err_r; }
+   if unlikely(!exprv) { err_loop_init: ast_decref(init); goto err_r; }
    /* A loop initializer was given. - Pack it into the resulting AST. */
    exprv[0] = init;   /* Inherit reference. */
    exprv[1] = result; /* Inherit reference. */
@@ -483,11 +483,11 @@ do_else_branch:
   if (has_scope) scope_pop();
   break;
 err_loop2:
-  Dee_Decref(loop);
+  ast_decref(loop);
 err_loop:
-  Dee_XDecref(init);
-  Dee_XDecref(elem_or_cond);
-  Dee_XDecref(iter_or_next);
+  ast_xdecref(init);
+  ast_xdecref(elem_or_cond);
+  ast_xdecref(iter_or_next);
   goto err;
  } break;
 
@@ -525,15 +525,15 @@ err_loop:
                                foreach_iter,
                                foreach_loop),
                      &loc);
-  Dee_Decref(foreach_loop);
-  Dee_Decref(foreach_iter);
-  Dee_Decref(foreach_elem);
+  ast_decref(foreach_loop);
+  ast_decref(foreach_iter);
+  ast_decref(foreach_elem);
   scope_pop();
   break;
 err_foreach_iter:
-  Dee_Decref(foreach_iter);
+  ast_decref(foreach_iter);
 err_foreach_elem:
-  Dee_Decref(foreach_elem);
+  ast_decref(foreach_elem);
   goto err_flags;
  } break;
 
@@ -571,8 +571,8 @@ err_foreach_elem:
               WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
      goto err_r;
   merge = ast_setddi(ast_loop(AST_FLOOP_POSTCOND,cond,NULL,result),&loc);
-  Dee_Decref(result);
-  Dee_Decref(cond);
+  ast_decref(result);
+  ast_decref(cond);
   if unlikely(!merge) goto err;
   result = merge;
   if unlikely(likely(is_semicollon()) ? (yield_semicollonnbif(allow_nonblock) < 0) :
@@ -603,8 +603,8 @@ err_foreach_elem:
   loop = ast_parse_statement(allow_nonblock);
   if unlikely(!loop) goto err_r;
   merge = ast_setddi(ast_loop(AST_FNORMAL,result,NULL,loop),&loc);
-  Dee_Decref(loop);
-  Dee_Decref(result);
+  ast_decref(loop);
+  ast_decref(result);
   if unlikely(!merge) goto err;
   scope_pop();
   result = merge;
@@ -775,12 +775,12 @@ err_foreach_elem:
                     &loc);
   if unlikely(!merge) goto err_r_switch_block;
   /* Cleanup + assign the new switch statement to the return value. */
-  Dee_Decref(switch_block);
-  Dee_Decref(result);
+  ast_decref(switch_block);
+  ast_decref(result);
   result = merge;
   break;
 err_r_switch_block:
-  Dee_Decref(switch_block);
+  ast_decref(switch_block);
 err_r_switch:
   /* Cleanup switch cases + default. */
   cleanup_switch_cases(switch_cases,
@@ -821,9 +821,9 @@ handle_post_label:
      if unlikely(!label_ast) goto err;
      /* Parse the statement that is prefixed by the label. */
      result = ast_parse_statement(allow_nonblock);
-     if unlikely(!result) { Dee_Decref(label_ast); goto err; }
+     if unlikely(!result) { ast_decref(label_ast); goto err; }
     }
-    if (!DeeObject_IsShared(result) &&
+    if (!ast_shared(result) &&
          result->a_type == AST_MULTIPLE &&
          result->a_flag == AST_FMULTIPLE_KEEPLAST) {
      /* Prepend the label AST before all the others in the MULTIPLE-ast. */
@@ -840,7 +840,7 @@ handle_post_label:
      /* Create a new MULTIPLE-ast */
      DREF struct ast **elemv;
      elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
-     if unlikely(!elemv) { err_label_ast: Dee_Decref(label_ast); goto err_r; }
+     if unlikely(!elemv) { err_label_ast: ast_decref(label_ast); goto err_r; }
      elemv[0] = label_ast; /* Inherit reference. */
      elemv[1] = result;    /* Inherit reference. */
      merge = ast_multiple(AST_FMULTIPLE_KEEPLAST,2,elemv);
@@ -862,12 +862,12 @@ handle_post_label:
                 WARN(W_EXPECTED_COLLON_AFTER_CASE))
        goto err_r;
     if unlikely(!(current_basescope->bs_cflags&BASESCOPE_FSWITCH)) {
-     Dee_Decref(result);
+     ast_decref(result);
      goto again;
     }
     /* Create the new text label that will be used as case. */
     def_label = new_case_label(result);
-    Dee_Decref(result);
+    ast_decref(result);
     if unlikely(!def_label) goto err;
     label_flags = AST_FLABEL_CASE;
     goto handle_post_label;
@@ -914,7 +914,7 @@ err_flags:
 err_r_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }

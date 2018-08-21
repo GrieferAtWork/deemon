@@ -487,7 +487,7 @@ mkconst:
   }
   if unlikely(!result) goto err;
   merge = make_bound_expression(result,&loc);
-  Dee_Decref(result);
+  ast_decref(result);
   if unlikely(!merge) goto err;
   result = merge;
   break;
@@ -523,7 +523,7 @@ do_unary_operator_kwd:
   }
   if unlikely(!result) goto err;
   merge = ast_setddi(ast_operator1(opid,0,result),&loc);
-  Dee_Decref(result);
+  ast_decref(result);
   if unlikely(!merge) goto err;
   result = merge;
   break;
@@ -539,7 +539,7 @@ do_unary_operator:
   result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
   if unlikely(!result) goto err;
   merge = ast_setddi(ast_operator1(opid,0,result),&loc);
-  Dee_Decref(result);
+  ast_decref(result);
   if unlikely(!merge) goto err;
   result = merge;
   break;
@@ -567,7 +567,7 @@ do_unary_operator:
   }
   if unlikely(!result) goto err;
   merge = ast_setddi(ast_action1(AST_FACTION_TYPEOF,result),&loc);
-  Dee_Decref(result);
+  ast_decref(result);
   if unlikely(!merge) goto err;
   result = merge;
   break;
@@ -579,7 +579,7 @@ do_unary_operator:
   result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
   if unlikely(!result) goto err;
   merge = ast_setddi(ast_bool(AST_FBOOL_NEGATE,result),&loc);
-  Dee_Decref(result);
+  ast_decref(result);
   result = merge;
   break;
 
@@ -616,7 +616,7 @@ do_empty_cell:
    if unlikely(!result) goto err;
    if (tok != '>' && WARN(W_EXPECTED_RANGLE_AFTER_LANGLE)) goto err_r;
    merge = ast_action1(AST_FACTION_CELL1,result);
-   Dee_Decref(result);
+   ast_decref(result);
    result = merge;
   }
   ast_setddi(result,&loc);
@@ -653,15 +653,15 @@ do_empty_cell:
    goto do_else_branch;
   }
   if (tok == KWD_else) {
-   if unlikely(yield() < 0) {err_tt: Dee_XDecref(tt_branch); goto err_r; }
+   if unlikely(yield() < 0) {err_tt: ast_xdecref(tt_branch); goto err_r; }
 do_else_branch:
    ff_branch = ast_parse_expression(LOOKUP_SYM_SECONDARY);
    if unlikely(!ff_branch) goto err_tt;
   }
   merge = ast_setddi(ast_conditional(AST_FCOND_EVAL|expect,result,tt_branch,ff_branch),&loc);
-  Dee_XDecref(ff_branch);
-  Dee_XDecref(tt_branch);
-  Dee_XDecref(result);
+  ast_xdecref(ff_branch);
+  ast_xdecref(tt_branch);
+  ast_xdecref(result);
   result = merge;
  } break;
 
@@ -766,7 +766,7 @@ do_create_class:
        result->a_type != AST_MULTIPLE) {
     /* C-style cast expression (only for single-parenthesis expressions) */
     merge = ast_parse_cast(result);
-    Dee_Decref(result);
+    ast_decref(result);
     result = merge;
    }
   }
@@ -840,7 +840,7 @@ do_create_class:
       result->a_type != AST_MULTIPLE) {
    /* C-style cast expression (only for single-parenthesis expressions) */
    merge = ast_parse_cast(result);
-   Dee_Decref(result);
+   ast_decref(result);
    result = merge;
   }
  } break;
@@ -918,7 +918,7 @@ do_create_class:
                                 * non-inplace symbol. */
                                AST_OPERATOR_FMAYBEPFX,
                                other);
-   Dee_Decref(other);
+   ast_decref(other);
   }
   if unlikely(!merge) goto err;
   result = ast_setddi(merge,&loc);
@@ -969,9 +969,9 @@ do_range_expression:
     } else {
      result = ast_parse_expression(LOOKUP_SYM_SECONDARY);
     }
-    if unlikely(!result) { Dee_Decref(begin_expression); goto err_flags; }
+    if unlikely(!result) { ast_decref(begin_expression); goto err_flags; }
     if (tok == ',') {
-     if unlikely(yield() < 0) {err_begin_expr: Dee_Decref(begin_expression); goto err_r_flags; }
+     if unlikely(yield() < 0) {err_begin_expr: ast_decref(begin_expression); goto err_r_flags; }
      step_expression = ast_parse_expression(LOOKUP_SYM_SECONDARY);
     } else {
      step_expression = ast_constexpr(Dee_None);
@@ -979,9 +979,9 @@ do_range_expression:
     if unlikely(!step_expression) goto err_begin_expr;
     /* Create the range expression. */
     merge = ast_action3(AST_FACTION_RANGE,begin_expression,result,step_expression);
-    Dee_Decref(begin_expression);
-    Dee_Decref(result);
-    Dee_Decref(step_expression);
+    ast_decref(begin_expression);
+    ast_decref(result);
+    ast_decref(step_expression);
     if unlikely(!merge) goto err_flags;
     result = merge;
    } else {
@@ -993,8 +993,8 @@ do_range_expression:
         result->a_type == AST_MULTIPLE &&
         result->a_multiple.m_astc == 1) {
      merge = result->a_multiple.m_astv[0];
-     Dee_Incref(merge);
-     Dee_Decref(result);
+     ast_incref(merge);
+     ast_decref(result);
      result = merge;
      /* Range with custom start index. */
      goto do_range_expression;
@@ -1020,10 +1020,10 @@ do_range_expression:
   this_ast = ast_sethere(ast_sym(this_sym));
   if unlikely(!this_ast) goto err;
   merge = ast_sethere(ast_sym(current_basescope->bs_super));
-  if unlikely(!merge) { Dee_Decref(this_ast); goto err; }
+  if unlikely(!merge) { ast_decref(this_ast); goto err; }
   result = ast_sethere(ast_action2(AST_FACTION_AS,this_ast,merge));
-  Dee_Decref(merge);
-  Dee_Decref(this_ast);
+  ast_decref(merge);
+  ast_decref(this_ast);
   if unlikely(!result) goto err;
   if unlikely(yield() < 0) goto err_r;
  } break;
@@ -1056,7 +1056,7 @@ do_range_expression:
     DeeError_Handled(ERROR_HANDLED_RESTORE);
     if (WARN(W_EXPECTED_CONSTANT_AFTER_NTH)) goto err_r;
    }
-   Dee_Decref(result);
+   ast_decref(result);
    sym = lookup_nth(nth_symbol,token.t_kwd);
    if likely(sym) {
     result = ast_sym(sym);
@@ -1107,7 +1107,7 @@ do_warn_deprecated_modifier:
     * >> }
     */
    new_result = ast_sethere(ast_expand(result));
-   Dee_Decref(result);
+   ast_decref(result);
    if unlikely(!new_result) goto err;
    result = new_result;
    if unlikely(yield() < 0) goto err_r;
@@ -1146,7 +1146,7 @@ err_flags:
 err_r_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }
@@ -1207,9 +1207,9 @@ ast_parse_unary_suffix(/*inherit(always)*/DREF struct ast *__restrict result) {
                                          * non-inplace symbol. */
                                         AST_OPERATOR_FMAYBEPFX,
                                         result,other);
-      Dee_Decref(other);
+      ast_decref(other);
      }
-     Dee_Decref(result);
+     ast_decref(result);
      if unlikely(!merge) goto err;
      result = ast_setddi(merge,&loc);
      goto got_attr2;
@@ -1224,14 +1224,14 @@ ast_parse_unary_suffix(/*inherit(always)*/DREF struct ast *__restrict result) {
      Dee_Decref(attr_name);
      if unlikely(!other) goto err_r;
      merge = ast_setddi(ast_operator2(OPERATOR_GETATTR,0,result,other),&loc);
-     Dee_Decref(other);
-     Dee_Decref(result);
+     ast_decref(other);
+     ast_decref(result);
      if unlikely(!merge) goto err;
      result = merge;
      if unlikely(yield() < 0) goto err_r;
      goto got_attr2;
     }
-    Dee_Decref(result);
+    ast_decref(result);
     if unlikely(!merge) goto err;
     result = merge;
 got_attr:
@@ -1267,12 +1267,12 @@ do_range:
     }
     if unlikely(!third) goto err_2_flags;
     merge = ast_operator3(OPERATOR_GETRANGE,0,result,other,third);
-    Dee_Decref(third);
+    ast_decref(third);
    } else {
     merge = ast_operator2(OPERATOR_GETITEM,0,result,other);
    }
-   Dee_Decref(other);
-   Dee_Decref(result);
+   ast_decref(other);
+   ast_decref(result);
    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
    if unlikely(!merge) goto err;
    result = merge;
@@ -1293,15 +1293,15 @@ do_range:
     /* Use the brace AST in a single-argument call to `result' */
     DREF struct ast **elemv;
     elemv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
-    if unlikely(!elemv) { err_other: Dee_Decref(other); goto err_r; }
+    if unlikely(!elemv) { err_other: ast_decref(other); goto err_r; }
     elemv[0] = other;
     merge = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,elemv),&loc);
     if unlikely(!merge) { Dee_Free(elemv); goto err_other; }
     other = ast_setddi(ast_operator2(OPERATOR_CALL,0,result,merge),&loc);
-    Dee_Decref(merge);
+    ast_decref(merge);
    }
    /* Override the result AST when a special type-initialization was performed. */
-   Dee_Decref(result);
+   ast_decref(result);
    result = other;
    break;
 
@@ -1339,13 +1339,13 @@ do_range:
                         result,
                         other,
                         kw_labels);
-    Dee_Decref(kw_labels);
+    ast_decref(kw_labels);
    } else {
     merge = ast_operator2(OPERATOR_CALL,0,result,other);
    }
    merge = ast_setddi(merge,&loc);
-   Dee_Decref(other);
-   Dee_Decref(result);
+   ast_decref(other);
+   ast_decref(result);
    if unlikely(!merge) goto err;
    result = merge;
   } break;
@@ -1369,13 +1369,13 @@ do_range:
                         result,
                         other,
                         kw_labels);
-    Dee_Decref(kw_labels);
+    ast_decref(kw_labels);
    } else {
     merge = ast_operator2(OPERATOR_CALL,0,result,other);
    }
    merge = ast_setddi(merge,&loc);
-   Dee_Decref(other);
-   Dee_Decref(result);
+   ast_decref(other);
+   ast_decref(result);
    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
    if unlikely(!merge) goto err;
    result = merge;
@@ -1390,7 +1390,7 @@ do_range:
   case TOK_DEC: opid = OPERATOR_DEC;
 do_inplace_op:
    merge = ast_sethere(ast_operator1(opid,AST_OPERATOR_FPOSTOP,result));
-   Dee_Decref(result);
+   ast_decref(result);
    if unlikely(!merge) goto err;
    result = merge;
    if unlikely(yield() < 0) goto err_r;
@@ -1398,7 +1398,7 @@ do_inplace_op:
 
   case TOK_DOTS: /* Expand expression. */
    merge = ast_sethere(ast_expand(result));
-   Dee_Decref(result);
+   ast_decref(result);
    if unlikely(!merge) goto err;
    result = merge;
    if unlikely(yield() < 0) goto err_r;
@@ -1417,9 +1417,9 @@ err_r_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err_r;
 err_2:
- Dee_Decref(other);
+ ast_decref(other);
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }
@@ -1446,8 +1446,8 @@ ast_parse_prod_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
   merge = ast_setddi(ast_operator2(cmd == TOK_POW ? OPERATOR_POW :
                                    GET_CHOP(cmd),0,lhs,rhs),
                      &loc);
-  Dee_Decref(rhs);
-  Dee_Decref(lhs);
+  ast_decref(rhs);
+  ast_decref(lhs);
   lhs = merge;
   if unlikely(!lhs) break;
   cmd = tok;
@@ -1456,7 +1456,7 @@ ast_parse_prod_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 INTERN DREF struct ast *FCALL
@@ -1474,9 +1474,9 @@ ast_parse_sum_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
    rhs = ast_parse_prod(LOOKUP_SYM_SECONDARY);
    if unlikely(!rhs) goto err_r;
    merge = ast_operator2(GET_CHOP(cmd),0,lhs,rhs);
-   Dee_Decref(rhs);
+   ast_decref(rhs);
   }
-  Dee_Decref(lhs);
+  ast_decref(lhs);
   lhs = ast_setddi(merge,&loc);
   if unlikely(!lhs) break;
   cmd = tok;
@@ -1485,7 +1485,7 @@ ast_parse_sum_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 
@@ -1504,8 +1504,8 @@ ast_parse_shift_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
                                  : OPERATOR_SHR,
                                    0,lhs,rhs),
                      &loc);
-  Dee_Decref(rhs);
-  Dee_Decref(lhs);
+  ast_decref(rhs);
+  ast_decref(lhs);
   lhs = merge;
   if unlikely(!lhs) break;
   cmd = tok;
@@ -1514,7 +1514,7 @@ ast_parse_shift_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 
@@ -1538,9 +1538,9 @@ ast_parse_cmp_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
    merge = ast_operator2(cmd == TOK_LOWER_EQUAL ? OPERATOR_LE :
                          cmd == TOK_GREATER_EQUAL ? OPERATOR_GE :
                          GET_CHOP(cmd),0,lhs,rhs);
-   Dee_Decref(rhs);
+   ast_decref(rhs);
   }
-  Dee_Decref(lhs);
+  ast_decref(lhs);
   lhs = ast_setddi(merge,&loc);
   if unlikely(!lhs) break;
   cmd = tok;
@@ -1549,7 +1549,7 @@ ast_parse_cmp_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 
@@ -1602,15 +1602,15 @@ yield_again:
                         lhs,rhs);
    }
    ast_setddi(merge,&loc);
-   Dee_Decref(rhs);
+   ast_decref(rhs);
   }
-  Dee_Decref(lhs);
+  ast_decref(lhs);
   lhs = merge;
   if unlikely(!lhs) break;
   /* Invert the result, if required. */
   if (invert) {
    merge = ast_setddi(ast_bool(AST_FBOOL_NEGATE,lhs),&loc);
-   Dee_Decref(lhs);
+   ast_decref(lhs);
    lhs = merge;
    if unlikely(!lhs) break;
   }
@@ -1620,7 +1620,7 @@ yield_again:
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 
@@ -1636,8 +1636,8 @@ ast_parse_and_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
   rhs = ast_parse_cmpeq(LOOKUP_SYM_SECONDARY);
   if unlikely(!rhs) goto err_r;
   merge = ast_setddi(ast_operator2(OPERATOR_AND,0,lhs,rhs),&loc);
-  Dee_Decref(rhs);
-  Dee_Decref(lhs);
+  ast_decref(rhs);
+  ast_decref(lhs);
   lhs = merge;
   if unlikely(!lhs) break;
   if (!TOKEN_IS_AND(tok))
@@ -1645,7 +1645,7 @@ ast_parse_and_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 
@@ -1661,8 +1661,8 @@ ast_parse_xor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
   rhs = ast_parse_and(LOOKUP_SYM_SECONDARY);
   if unlikely(!rhs) goto err_r;
   merge = ast_setddi(ast_operator2(OPERATOR_XOR,0,lhs,rhs),&loc);
-  Dee_Decref(rhs);
-  Dee_Decref(lhs);
+  ast_decref(rhs);
+  ast_decref(lhs);
   lhs = merge;
   if unlikely(!lhs) break;
   if (!TOKEN_IS_XOR(tok))
@@ -1670,7 +1670,7 @@ ast_parse_xor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 
@@ -1686,8 +1686,8 @@ ast_parse_or_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
   rhs = ast_parse_xor(LOOKUP_SYM_SECONDARY);
   if unlikely(!rhs) goto err_r;
   merge = ast_setddi(ast_operator2(OPERATOR_OR,0,lhs,rhs),&loc);
-  Dee_Decref(rhs);
-  Dee_Decref(lhs);
+  ast_decref(rhs);
+  ast_decref(lhs);
   lhs = merge;
   if unlikely(!lhs) break;
   if (!TOKEN_IS_OR(tok))
@@ -1695,7 +1695,7 @@ ast_parse_or_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 
@@ -1711,8 +1711,8 @@ ast_parse_as_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
   rhs = ast_parse_or(LOOKUP_SYM_SECONDARY);
   if unlikely(!rhs) goto err_r;
   merge = ast_setddi(ast_action2(AST_FACTION_AS,lhs,rhs),&loc);
-  Dee_Decref(rhs);
-  Dee_Decref(lhs);
+  ast_decref(rhs);
+  ast_decref(lhs);
   lhs = merge;
   if unlikely(!lhs) break;
   if (!TOKEN_IS_AS(tok))
@@ -1720,7 +1720,7 @@ ast_parse_as_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 
@@ -1740,9 +1740,9 @@ ast_parse_land_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
    rhs = ast_parse_as(LOOKUP_SYM_SECONDARY);
    if unlikely(!rhs) goto err_r;
    merge = ast_land(lhs,rhs);
-   Dee_Decref(rhs);
+   ast_decref(rhs);
   }
-  Dee_Decref(lhs);
+  ast_decref(lhs);
   lhs = ast_setddi(merge,&loc);
   if unlikely(!lhs) goto err;
   if (!TOKEN_IS_LAND(tok))
@@ -1753,7 +1753,7 @@ ast_parse_land_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
      goto err_r;
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
 err:
  return NULL;
 }
@@ -1782,9 +1782,9 @@ ast_parse_lor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
    }
 
    merge = ast_lor(lhs,rhs);
-   Dee_Decref(rhs);
+   ast_decref(rhs);
   }
-  Dee_Decref(lhs);
+  ast_decref(lhs);
   lhs = ast_setddi(merge,&loc);
   if unlikely(!lhs) goto err;
   if (!TOKEN_IS_LOR(tok))
@@ -1792,9 +1792,9 @@ ast_parse_lor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r_rhs:
- Dee_Decref(rhs);
+ ast_decref(rhs);
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
 err:
  return NULL;
 }
@@ -1816,7 +1816,7 @@ ast_parse_cond_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
   if (tok == ':') {
    /* Missing true-branch. (Reuse the condition branch!) */
    tt = lhs;
-   Dee_Incref(lhs);
+   ast_incref(lhs);
   } else {
    tt = ast_parse_cond(LOOKUP_SYM_SECONDARY);
    if unlikely(!tt) goto err_r;
@@ -1831,7 +1831,7 @@ ast_parse_cond_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
      *    by specifying the syntax `(foo() ? bar() :)'
      */
     ff = lhs;
-    Dee_Incref(lhs);
+    ast_incref(lhs);
    } else {
     ff = ast_parse_cond(LOOKUP_SYM_SECONDARY);
     if unlikely(!ff) goto err_tt;
@@ -1841,18 +1841,18 @@ ast_parse_cond_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
    ff = NULL;
   }
   merge = ast_setddi(ast_conditional(AST_FCOND_EVAL|expect,lhs,tt,ff),&loc);
-  Dee_XDecref(ff);
-  Dee_Decref(tt);
-  Dee_Decref(lhs);
+  ast_xdecref(ff);
+  ast_decref(tt);
+  ast_decref(lhs);
   lhs = merge;
   if (!TOKEN_IS_COND(tok))
        break;
  }
  return lhs;
 err_tt:
- Dee_Decref(tt);
+ ast_decref(tt);
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 
@@ -1905,8 +1905,8 @@ ast_parse_assign_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
    /* Inplace operation. */
    merge = ast_operator2(inplace_fops[cmd-TOK_ADD_EQUAL],0,lhs,rhs);
   }
-  Dee_Decref(rhs);
-  Dee_Decref(lhs);
+  ast_decref(rhs);
+  ast_decref(lhs);
   lhs = ast_setddi(merge,&loc);
   if unlikely(!lhs) break;
   cmd = tok;
@@ -1915,7 +1915,7 @@ ast_parse_assign_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
  }
  return lhs;
 err_r:
- Dee_Decref(lhs);
+ ast_decref(lhs);
  return NULL;
 }
 

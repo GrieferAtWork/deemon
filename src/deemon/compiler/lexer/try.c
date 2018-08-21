@@ -90,11 +90,11 @@ do_realloc:
  }
  return result;
 err_exprv:
- while (exprc--) Dee_Decref(exprv[exprc]);
+ while (exprc--) ast_decref(exprv[exprc]);
  Dee_Free(exprv);
  return NULL;
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
  return NULL;
 }
 
@@ -243,7 +243,7 @@ end_catch_handler:
  /* Create the new try-AST. */
  merge = ast_setddi(ast_try(result,catchc,catchv),&loc);
  if unlikely(!merge) goto err_try;
- Dee_Decref(result);
+ ast_decref(result);
  result = merge;
  /* Warn if we didn't parse any handlers. */
  if unlikely(unlikely(!catchc) &&
@@ -254,13 +254,13 @@ err_try_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err_try:
  while (catchc--) {
-  Dee_XDecref(catchv[catchc].ce_mask);
-  Dee_Decref(catchv[catchc].ce_code);
+  ast_xdecref(catchv[catchc].ce_mask);
+  ast_decref(catchv[catchc].ce_code);
  }
  Dee_Free(catchv);
  /*goto err_r;*/
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }
@@ -404,7 +404,7 @@ end_catch_handler:
  /* Create the new try-AST. */
  merge = ast_setddi(ast_try(result,catchc,catchv),&loc);
  if unlikely(!merge) goto err_try;
- Dee_Decref(result);
+ ast_decref(result);
  result = merge;
  /* Warn if we didn't parse any handlers. */
  if unlikely(unlikely(!catchc) &&
@@ -417,13 +417,13 @@ err_try_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err_try:
  while (catchc--) {
-  Dee_XDecref(catchv[catchc].ce_mask);
-  Dee_Decref(catchv[catchc].ce_code);
+  ast_xdecref(catchv[catchc].ce_mask);
+  ast_decref(catchv[catchc].ce_code);
  }
  Dee_Free(catchv);
  /*goto err_r;*/
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }

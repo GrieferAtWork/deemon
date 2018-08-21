@@ -36,7 +36,7 @@ struct ast;
 
 
 #undef CONFIG_AST_IS_STRUCT
-//#define CONFIG_AST_IS_STRUCT 1
+#define CONFIG_AST_IS_STRUCT 1
 
 
 struct catch_expr {
@@ -130,34 +130,39 @@ struct asm_operand {
 
 
 struct ast {
-#ifndef CONFIG_AST_IS_STRUCT
+#ifdef CONFIG_AST_IS_STRUCT
+    dref_t               a_refcnt; /* [lock(DeeCompiler_Lock)] Reference counter. */
+#else /* CONFIG_AST_IS_STRUCT */
     OBJECT_HEAD
 #endif /* !CONFIG_AST_IS_STRUCT */
     /* XXX: Maybe not use an object for this, but rather a raw struct? */
     DREF DeeScopeObject *a_scope; /* [1..1] The scope in which this AST exists. */
     struct ast_loc       a_ddi;   /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
-                                     * Debug information describing the location of this AST. */
+                                   * Debug information describing the location of this AST. */
     uint16_t             a_type;  /* AST Type (One of `AST_*') */
-#define AST_FNORMAL      0x0000     /* Normal AST flags. */
+#define AST_FNORMAL      0x0000   /* Normal AST flags. */
     uint16_t             a_flag;  /* AST Flags (Set of `AST_F*', dependent on `a_type') */
     uint16_t             a_temp;  /* Temporary value used during assembly. */
     uint16_t             a_pad;   /* ... */
     union {
 
         /* Base expressions (symbol / constant) */
-#define AST_CONSTEXPR        0x0000          /* `42' */
+#define AST_CONSTEXPR        0x0000        /* `42' */
         DREF DeeObject      *a_constexpr;  /* [1..1] Constant (aka. compile-time) expression.
-                                              * NOTE: When set to `none', this AST can be used as a noop expression. */
+                                            * NOTE: When set to `none', this AST can be used as a noop expression. */
 
-#define AST_SYM              0x0001          /* `foo' */
+#define AST_SYM              0x0001        /* `foo' */
         struct symbol       *a_sym;        /* [1..1][REF(->s_nread) | REF(->s_wread)] Symbol referenced by this AST.
-                                              * NOTE: When a_flag is non-zero, then the symbol is being written to. */
+                                            * NOTE: When a_flag is non-zero, then the symbol is being written to.
+                                            * NOTE: This symbol is guarantied to be reachable from `a_scope' */
 
-#define AST_UNBIND           0x0002          /* `del foo' */
-        struct symbol       *a_unbind;     /* [1..1][REF(->s_nwrite)] The symbol that should be unbound. */
+#define AST_UNBIND           0x0002        /* `del foo' */
+        struct symbol       *a_unbind;     /* [1..1][REF(->s_nwrite)] The symbol that should be unbound.
+                                            * NOTE: This symbol is guarantied to be reachable from `a_scope' */
 
-#define AST_BOUND            0x0003          /* `bound(foo)' */
-        struct symbol       *a_bound;      /* [1..1][REF(->s_nbound)] The symbol that should be checked for being bound. */
+#define AST_BOUND            0x0003        /* `bound(foo)' */
+        struct symbol       *a_bound;      /* [1..1][REF(->s_nbound)] The symbol that should be checked for being bound.
+                                            * NOTE: This symbol is guarantied to be reachable from `a_scope' */
 
         /* Statement expressions. */
 #define AST_MULTIPLE                    0x0004  /* Multiple, consecutive statements/expressions.
@@ -381,7 +386,7 @@ struct ast {
 #   define AST_FACTION_ASSERT_M 0x2014 /* `assert <act0>, <act1>'     - Assert that <act0> evaluates to true at runtime,
                                         *                               <act1> is a message that is evaluated and added
                                         *                               to the error message when the assertion fails. */
-#   define AST_FACTION_BOUNDATTR 0x2015 /* `<act0>.operator . (<act1>) is bound' - Check if the attribute `<act1>' of `<act0>' is currently bound. */
+#   define AST_FACTION_BOUNDATTR 0x2015/* `<act0>.operator . (<act1>) is bound' - Check if the attribute `<act1>' of `<act0>' is currently bound. */
 #   define AST_FACTION_SAMEOBJ  0x2016 /* `<act0> === <act1>'         - Check if <act0> and <act1> are the same object */
 #   define AST_FACTION_DIFFOBJ  0x2017 /* `<act0> !== <act1>'         - Check if <act0> and <act1> are the different objects */
 #   define AST_FACTION_CALL_KW  0x3018 /* `<act0>(<act1>...,**<act2>)' - Call `act0' with `act1', while also passing keywords from `act2' */
@@ -399,8 +404,10 @@ struct ast {
             DREF struct ast    *c_doc;        /* [0..1] Class documentation string. */
             DREF struct ast    *c_imem;       /* [0..1] Instance member table. */
             DREF struct ast    *c_cmem;       /* [0..1] Class member table. */
-            struct symbol      *c_classsym;   /* [0..1] The symbol to which to assign the class before initializing members. */
-            struct symbol      *c_supersym;   /* [0..1] The symbol to which to assign the base before initializing members. */
+            struct symbol      *c_classsym;   /* [0..1] The symbol to which to assign the class before initializing members.
+                                               * NOTE: This symbol is guarantied to be reachable from `a_scope' */
+            struct symbol      *c_supersym;   /* [0..1] The symbol to which to assign the base before initializing members.
+                                               * NOTE: This symbol is guarantied to be reachable from `a_scope' */
             size_t              c_memberc;    /* Amount of member descriptors. */
             struct class_member*c_memberv;    /* [0..c_memberc][owned] Vector of member descriptors. */
             size_t              c_anonc;      /* Amount of anonymous class members. */
@@ -552,23 +559,35 @@ struct ast {
   ((x)->a_type == AST_OPERATOR && \
   ((x)->a_flag == OPERATOR_COPY || \
    (x)->a_flag == OPERATOR_DEEPCOPY))
-
-#define AST_ISNONE(x) \
- ((x)->a_type == AST_CONSTEXPR && DeeNone_Check((x)->a_constexpr))
+#define AST_ISNONE(x) ((x)->a_type == AST_CONSTEXPR && DeeNone_Check((x)->a_constexpr))
 #define AST_HASDDI(x) ((x)->ast_ddi.l_file != NULL)
-
 
 #ifdef CONFIG_BUILDING_DEEMON
 
-
 #ifdef CONFIG_AST_IS_STRUCT
-#define ASSERT_AST(ob)     ASSERT(ob)
-#define ASSERT_AST_OPT(ob) (void)0
-#else
+INTDEF void DCALL ast_destroy(struct ast *__restrict self);
+INTDEF void DCALL ast_visit(struct ast *__restrict self, dvisit_t proc, void *arg);
+#define ast_shared(x)        ((x)->a_refcnt > 1)
+#define ast_incref(x)        (ASSERT((x)->a_refcnt),++(x)->a_refcnt)
+#define ast_decref(x)        (ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x))
+#define ast_decref_likely(x) (ASSERT((x)->a_refcnt),unlikely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
+#define ast_decref_nokill(x) (ASSERT((x)->a_refcnt >= 2),--(x)->a_refcnt)
+#define ast_xincref(x)       ((x) ? (void)(ASSERT((x)->a_refcnt),++(x)->a_refcnt) : (void)0)
+#define ast_xdecref(x)       ((x) ? (ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
+#define ASSERT_AST(ob)        ASSERT(ob)
+#define ASSERT_AST_OPT(ob)   (void)0
+#else /* CONFIG_AST_IS_STRUCT */
+#define ast_shared(x)         DeeObject_IsShared(x)
+#define ast_incref(x)         Dee_Incref(x)
+#define ast_decref(x)         Dee_Decref(x)
+#define ast_decref_likely(x)  Dee_Decref_likely(x)
+#define ast_decref_nokill(x)  Dee_DecrefNokill(x)
+#define ast_xincref(x)        Dee_XIncref(x)
+#define ast_xdecref(x)        Dee_XDecref(x)
+#define ASSERT_AST(ob)        ASSERT_OBJECT_TYPE_EXACT(ob,&DeeAst_Type)
+#define ASSERT_AST_OPT(ob)    ASSERT_OBJECT_TYPE_EXACT_OPT(ob,&DeeAst_Type)
 INTDEF DeeTypeObject DeeAst_Type;
-#define ASSERT_AST(ob)     ASSERT_OBJECT_TYPE_EXACT(ob,&DeeAst_Type)
-#define ASSERT_AST_OPT(ob) ASSERT_OBJECT_TYPE_EXACT_OPT(ob,&DeeAst_Type)
-#endif
+#endif /* !CONFIG_AST_IS_STRUCT */
 
 
 /* Set debug information for a given AST.

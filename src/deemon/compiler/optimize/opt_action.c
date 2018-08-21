@@ -322,9 +322,9 @@ action_set_expr_result:
       Dee_Decref(expr_result);
       DeeError_Handled(ERROR_HANDLED_RESTORE);
      } else {
-      Dee_XDecref(self->a_action.a_act2);
-      Dee_XDecref(self->a_action.a_act1);
-      Dee_XDecref(self->a_action.a_act0);
+      ast_xdecref(self->a_action.a_act2);
+      ast_xdecref(self->a_action.a_act1);
+      ast_xdecref(self->a_action.a_act0);
       self->a_constexpr = expr_result; /* Inherit reference. */
       self->a_type      = AST_CONSTEXPR;
       OPTIMIZE_VERBOSE("Propagate constant result of action-expression\n");
@@ -510,8 +510,8 @@ action_set_expr_result:
                                             self->a_action.a_act0),
                                 self);
     if unlikely(!temp) goto err;
-    Dee_DecrefNokill(self->a_action.a_act1);
-    Dee_DecrefNokill(self->a_action.a_act0);
+    ast_decref_nokill(self->a_action.a_act1);
+    ast_decref_nokill(self->a_action.a_act0);
     self->a_bool = temp; /* Inherit reference. */
     self->a_type     = AST_BOOL;
     self->a_flag     = AST_FBOOL_NEGATE;
@@ -532,8 +532,8 @@ action_set_expr_result:
                                             self->a_action.a_act1),
                                 self);
     if unlikely(!temp) goto err;
-    Dee_DecrefNokill(self->a_action.a_act0);
-    Dee_DecrefNokill(self->a_action.a_act1);
+    ast_decref_nokill(self->a_action.a_act0);
+    ast_decref_nokill(self->a_action.a_act1);
     self->a_bool = temp; /* Inherit reference. */
     self->a_type     = AST_BOOL;
     self->a_flag     = AST_FBOOL_NEGATE;

@@ -132,9 +132,9 @@ ast_parse_argument_list(uint16_t mode,
  }
  return result;
 err_r_kwdlist:
- Dee_Decref(kwdlist_ast);
+ ast_decref(kwdlist_ast);
 err_r:
- Dee_Decref(result);
+ ast_decref(result);
 err:
  return NULL;
 }

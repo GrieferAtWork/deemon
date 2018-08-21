@@ -21,7 +21,11 @@ Cs(asym)
 Cs(sym)
 Cs(ef)
 Cs(utf)
+#ifdef CONFIG_AST_IS_STRUCT
+Cs(ast)
+#else
 Co(ast)
+#endif
 Co(super)
 Co(float)
 Co(compiler_item)

@@ -539,7 +539,7 @@ class_maker_addinit(struct class_maker *__restrict self,
   ast = ast_setddi(ast_action2(AST_FACTION_STORE,symbol_ast,
                                ast_putddi(ast,loc)),
                    loc);
-  Dee_Decref(symbol_ast);
+  ast_decref(symbol_ast);
   if unlikely(!ast) goto err;
   /* Override the store-ast's scope with our constructor scope. */
   Dee_Incref((DeeObject *)self->cm_ctor_scope);
@@ -558,7 +558,7 @@ class_maker_addinit(struct class_maker *__restrict self,
  member->cm_type  = CLASS_MEMBER_MEMBER;
  member->cm_index = entry->cme_addr;
  member->cm_ast   = ast;
- Dee_Incref(ast);
+ ast_incref(ast);
 done:
  return 0;
 err:
@@ -576,7 +576,7 @@ class_maker_addoperator(struct class_maker *__restrict self,
  member->cm_type  = CLASS_MEMBER_OPERATOR;
  member->cm_index = operator_name;
  member->cm_ast   = ast;
- Dee_Incref(ast);
+ ast_incref(ast);
  return 0;
 }
 
@@ -588,19 +588,19 @@ class_maker_addoperator(struct class_maker *__restrict self,
 PRIVATE void DCALL
 class_maker_fini(struct class_maker *__restrict self) {
  size_t i;
- Dee_XDecref(self->cm_base);
- Dee_XDecref(self->cm_name);
+ ast_xdecref(self->cm_base);
+ ast_xdecref(self->cm_name);
  for (i = 0; i < COMPILER_LENOF(self->cm_tables); ++i) {
   Dee_XDecref(self->cm_tables[i].td_field);
  }
- Dee_XDecref(self->cm_ctor);
+ ast_xdecref(self->cm_ctor);
  Dee_XDecref((DeeObject *)self->cm_ctor_scope);
  unicode_printer_fini(&self->cm_doc);
  for (i = 0; i < self->cm_initc; ++i)
-      Dee_Decref(self->cm_initv[i]);
+      ast_decref(self->cm_initv[i]);
  Dee_Free(self->cm_initv);
  for (i = 0; i < self->cm_class_initc; ++i)
-      Dee_Decref(self->cm_class_initv[i].cm_ast);
+      ast_decref(self->cm_class_initv[i].cm_ast);
  Dee_Free(self->cm_class_initv);
  Dee_Free(self->cm_anonv);
 }
@@ -623,7 +623,7 @@ class_maker_pack(struct class_maker *__restrict self) {
    if unlikely(priv_reserve_instance_init(self)) goto err;
    ASSERT(self->cm_ctor->a_type == AST_FUNCTION);
    self->cm_initv[self->cm_initc++] = self->cm_ctor->a_function.f_code;
-   Dee_Incref(self->cm_ctor->a_function.f_code);
+   ast_incref(self->cm_ctor->a_function.f_code);
    constructor_function = self->cm_ctor;
   }
   if (self->cm_initc != self->cm_inita) {
@@ -648,13 +648,13 @@ class_maker_pack(struct class_maker *__restrict self) {
    ASSERT(constructor_function == self->cm_ctor);
    ASSERT(constructor_function->a_type               == AST_FUNCTION);
    ASSERT(constructor_function->a_function.f_scope == self->cm_ctor_scope);
-   Dee_Decref(constructor_function->a_function.f_code);
+   ast_decref(constructor_function->a_function.f_code);
    constructor_function->a_function.f_code = constructor_text; /* Inherit */
    self->cm_ctor = NULL;
   } else {
    constructor_function = ast_function(constructor_text,
                                        self->cm_ctor_scope);
-   Dee_Decref(constructor_text);
+   ast_decref(constructor_text);
    if unlikely(!constructor_function) goto err;
   }
   /* The constructor has inherited this vector. */
@@ -663,7 +663,7 @@ class_maker_pack(struct class_maker *__restrict self) {
   self->cm_initv = NULL;
   /* Add the constructor as an operator to the class initializer list. */
   ctor_member = priv_alloc_class_member(self);
-  if unlikely(!ctor_member) { Dee_Decref(constructor_function); goto err; }
+  if unlikely(!ctor_member) { ast_decref(constructor_function); goto err; }
   ctor_member->cm_type  = CLASS_MEMBER_OPERATOR;
   ctor_member->cm_index = OPERATOR_CONSTRUCTOR;
   ctor_member->cm_ast   = constructor_function; /* Inherit */
@@ -744,9 +744,9 @@ class_maker_pack(struct class_maker *__restrict self) {
  Dee_XDecref((DeeObject *)doc_ast);
  return result;
 err:
- Dee_XDecref(imem_ast);
- Dee_XDecref(cmem_ast);
- Dee_XDecref(doc_ast);
+ ast_xdecref(imem_ast);
+ ast_xdecref(cmem_ast);
+ ast_xdecref(doc_ast);
  return NULL;
 }
 
@@ -813,17 +813,17 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
    if unlikely(!superargs) goto err_flags;
    /* With the argument-tuple at hand, wrap it in a return + function ast. */
    merge = ast_setddi(ast_return(superargs),&loc);
-   Dee_Decref(superargs);
+   ast_decref(superargs);
    if unlikely(!merge) goto err_flags;
    ASSERT(current_scope == (DeeScopeObject *)current_basescope);
    /* Pop the super-args scope. (create the function in the class-scope context) */
    basescope_pop();
    superargs = ast_setddi(ast_function(merge,(DeeBaseScopeObject *)merge->a_scope),&loc);
-   Dee_Decref(merge);
+   ast_decref(merge);
    if unlikely(!superargs) goto err_flags;
    /* All right! now just register the super-args callback as a new class operator. */
    temp = class_maker_addoperator(self,CLASS_OPERATOR_SUPERARGS,superargs);
-   Dee_Decref(superargs);
+   ast_decref(superargs);
    if unlikely(temp) goto err_flags;
    /* And we're done. - Just a little bit more cleanup to be done. */
    if unlikely(class_maker_push_ctorscope(self)) goto err_flags;
@@ -861,7 +861,7 @@ done_superargs:
     TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
     if unlikely(likely(tok == ')') ? (yield() < 0) :
                 WARN(W_EXPECTED_RPAREN_CONSTRUCTOR_INIT)) {
-     Dee_Decref(initializer_ast);
+     ast_decref(initializer_ast);
      goto err;
     }
    }
@@ -869,10 +869,10 @@ done_superargs:
    symbol_ast = ast_setddi(ast_sym(init_symbol),&loc);
    if unlikely(!symbol_ast) goto err;
    store_ast = ast_setddi(ast_action2(AST_FACTION_STORE,symbol_ast,initializer_ast),&loc);
-   Dee_Decref(symbol_ast);
-   Dee_Decref(initializer_ast);
+   ast_decref(symbol_ast);
+   ast_decref(initializer_ast);
    if unlikely(!store_ast) goto err;
-   if unlikely(priv_reserve_instance_init(self)) { Dee_Decref(store_ast); goto err; }
+   if unlikely(priv_reserve_instance_init(self)) { ast_decref(store_ast); goto err; }
    /* Add a new pre-construction initializer. */
    self->cm_initv[self->cm_initc++] = store_ast; /* Inherit reference. */
   }
@@ -1025,7 +1025,8 @@ got_callback_id:
   if (WARN(W_PROPERTY_CALLBACK_ALREADY_DEFINED))
       goto err;
   /* Clear the callback. */
-  Dee_Clear(callbacks[callback_id]);
+  ast_decref(callbacks[callback_id]);
+  callbacks[callback_id] = NULL;
  }
 
  need_semi = false;
@@ -1051,7 +1052,7 @@ done:
  return 0;
 err:
  for (callback_id = 0; callback_id < CLASS_PROPERTY_CALLBACK_COUNT; ++callback_id)
-     Dee_XDecref(callbacks[callback_id]);
+     ast_xdecref(callbacks[callback_id]);
  return -1;
 }
 
@@ -1322,9 +1323,9 @@ define_operator:
     if unlikely(!yield_function) { err_operator_ast_ddi: operator_ast = NULL; goto got_operator_ast; }
     AST_FMULTIPLE_TUPLE;
     temp = ast_setddi(ast_sym(this_sym),&loc);
-    if unlikely(!temp) { err_yield_function: Dee_Decref(yield_function); goto err_operator_ast_ddi; }
+    if unlikely(!temp) { err_yield_function: ast_decref(yield_function); goto err_operator_ast_ddi; }
     argv = (DREF struct ast **)DeeObject_Malloc(1*sizeof(DREF struct ast *));
-    if unlikely(!argv) { err_yield_function_temp: Dee_Decref(temp); goto err_yield_function; }
+    if unlikely(!argv) { err_yield_function_temp: ast_decref(temp); goto err_yield_function; }
     argv[0] = temp; /* Inherit reference */
     operator_ast = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,argv),&loc);
     if unlikely(!operator_ast) { Dee_Free(argv); goto err_yield_function_temp; }
@@ -1333,21 +1334,21 @@ define_operator:
                                     yield_function,
                                     operator_ast),
                      &loc);
-    Dee_Decref(operator_ast);
-    Dee_Decref(yield_function);
+    ast_decref(operator_ast);
+    ast_decref(yield_function);
     if unlikely(!temp) goto err_operator_ast_ddi;
     operator_ast = ast_setddi(ast_operator1(OPERATOR_ITERSELF,
                                             AST_OPERATOR_FNORMAL,
                                             temp),
                              &loc);
-    Dee_Decref(temp);
+    ast_decref(temp);
     if unlikely(!operator_ast) goto err_operator_ast_ddi;
     temp = ast_setddi(ast_return(operator_ast),&loc);
-    Dee_Decref(operator_ast);
+    ast_decref(operator_ast);
     if unlikely(!temp) goto err_operator_ast_ddi;
     /* And finally: the surrounding function. */
     operator_ast = ast_setddi(ast_function(temp,current_basescope),&loc);
-    Dee_Decref(temp);
+    ast_decref(temp);
     if unlikely(!operator_ast) goto err_operator_ast_ddi;
     assert(operator_ast->a_scope == current_scope);
     Dee_Incref(current_scope->s_prev);
@@ -1393,7 +1394,7 @@ got_operator_ast:
    /* XXX: Add operator documentation? */
    /* Add the new operator to the class. */
    error = class_maker_addoperator(&maker,operator_name,operator_ast);
-   Dee_Decref(operator_ast);
+   ast_decref(operator_ast);
    if unlikely(error) goto err;
    /* Parse a trailing ';' if required to. */
    if (need_semi) {
@@ -1439,7 +1440,8 @@ define_constructor:
     if unlikely(maker.cm_ctor) {
      if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED))
          goto err;
-     Dee_Clear(maker.cm_ctor);
+     ast_decref(maker.cm_ctor);
+     maker.cm_ctor = NULL;
     }
     /* Explicitly push the constructor-scope when parsing the constructor. */
     if unlikely(class_maker_push_ctorscope(&maker)) goto err;
@@ -1566,11 +1568,11 @@ define_constructor:
      }
      /* Clear out property callbacks. */
      for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i)
-         Dee_XDecref(prop_callbacks[i]);
+         ast_xdecref(prop_callbacks[i]);
      break;
 err_property:
      for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i)
-         Dee_XDecref(prop_callbacks[i]);
+         ast_xdecref(prop_callbacks[i]);
      goto err;
     }
     if (member_class != MEMBER_CLASS_AUTO &&
@@ -1593,7 +1595,7 @@ err_property:
     if unlikely(!init_ast) goto err;
     /* Add an initializer for this symbol. */
     error = class_maker_addinit(&maker,member_symbol,init_ast,&loc);
-    Dee_Decref(init_ast);
+    ast_decref(init_ast);
     if unlikely(error) goto err;
     /* Increment the usage-counter to consume the member slot. */
     ++*pusage_counter;
@@ -1626,7 +1628,7 @@ err_property:
    if unlikely(!init_ast) goto err;
    /* Add the given AST as an initialization branch to the class. */
    error = class_maker_addinit(&maker,member_symbol,init_ast,&loc);
-   Dee_Decref(init_ast);
+   ast_decref(init_ast);
    if unlikely(error) goto err;
    ++*pusage_counter;
 check_need_semi:

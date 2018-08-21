@@ -168,7 +168,7 @@ done_dots:
    initializer = ast_parse_expression(LOOKUP_SYM_NORMAL);
    if unlikely(!initializer) goto err;
    if (in_optional_args) {
-    Dee_Decref(initializer);
+    ast_decref(initializer);
     goto got_optional_arg;
    }
    /* Do optimizations on the AST to allow for a bit for complex
@@ -176,7 +176,7 @@ done_dots:
     * (`ast_optimize_all()' is where constant propagation happens) */
    if (ast_optimize_all(initializer,true)) {
 err_initializer:
-    Dee_Decref(initializer);
+    ast_decref(initializer);
     goto err;
    }
    /* Extract the value of a constant expression,
@@ -189,7 +189,7 @@ err_initializer:
     defl_value = initializer->a_constexpr;
    }
    Dee_Incref(defl_value);
-   Dee_Decref(initializer);
+   ast_decref(initializer);
 set_default_value:
    defaultc = (uint16_t)(current_basescope->bs_argc_max-
                          current_basescope->bs_argc_min);
@@ -326,7 +326,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   result = code->a_type == AST_EXPAND
          ? (current_basescope->bs_flags |= CODE_FYIELDING,ast_yield(code))
          : (ast_return(code));
-  Dee_Decref(code);
+  ast_decref(code);
   code = ast_setddi(result,&arrow_loc);
   if (pneed_semi) *pneed_semi = true;
  } else {
@@ -348,7 +348,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
  }
  if unlikely(!code) goto err;
  result = ast_function(code,current_basescope);
- Dee_Decref(code);
+ ast_decref(code);
  if unlikely(!result) goto err;
  /* Hack: The function AST itself must be located in the caller's scope. */
  Dee_Decref(result->a_scope);
@@ -362,7 +362,7 @@ err_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err;
 err_xcode:
- Dee_XDecref(code);
+ ast_xdecref(code);
 err:
  return NULL;
 }
@@ -380,7 +380,7 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
   result = code->a_type == AST_EXPAND
          ? (current_basescope->bs_flags |= CODE_FYIELDING,ast_yield(code))
          : (ast_return(code));
-  Dee_Decref(code);
+  ast_decref(code);
   code = ast_setddi(result,&arrow_loc);
   if (pneed_semi) *pneed_semi = true;
  } else {
@@ -402,7 +402,7 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
  }
  if unlikely(!code) goto err;
  result = ast_function(code,current_basescope);
- Dee_Decref(code);
+ ast_decref(code);
  if unlikely(!result) goto err;
  /* Hack: The function AST itself must be located in the caller's scope. */
  Dee_Decref(result->a_scope);
@@ -416,7 +416,7 @@ err_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err;
 err_xcode:
- Dee_XDecref(code);
+ ast_xdecref(code);
 err:
  return NULL;
 }

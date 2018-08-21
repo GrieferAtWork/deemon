@@ -53,7 +53,7 @@ operand_list_fini(struct operand_list *__restrict self) {
   ASSERT(iter->ao_type);
   ASSERT(iter->ao_expr);
   TPPString_Decref(iter->ao_type);
-  Dee_Decref(iter->ao_expr);
+  ast_decref(iter->ao_expr);
  }
  end = self->ol_v+self->ol_c;
  for (; iter != end; ++iter) {
@@ -177,7 +177,7 @@ with_paren:
   if unlikely(yield() < 0) goto err;
  }
  return 0;
-err_value: Dee_Decref(operand_value);
+err_value: ast_decref(operand_value);
 err_type:  TPPString_Decref(operand_type);
 err:       return -1;
 }

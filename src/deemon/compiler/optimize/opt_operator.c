@@ -326,7 +326,7 @@ dont_optimize_operator:
  }
 
  /* Override this branch with a constant expression `operator_result' */
- while (opcount--) Dee_Decref(self->a_operator_ops[opcount]);
+ while (opcount--) ast_decref(self->a_operator_ops[opcount]);
  self->a_type      = AST_CONSTEXPR;
  self->a_flag      = AST_FNORMAL;
  self->a_constexpr = operator_result;

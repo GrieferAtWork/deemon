@@ -556,8 +556,10 @@ do_create_base_name:
        TPPLexer_ClearIfdefStack();
 
  /* Rethrow all errors that may have occurred during parsing. */
- if (parser_rethrow(ast == NULL))
-     Dee_XClear(ast);
+ if (parser_rethrow(ast == NULL)) {
+  ast_xdecref(ast);
+  ast = NULL;
+ }
 
  if unlikely(!ast)
     goto err_compiler;
@@ -579,7 +581,7 @@ do_create_base_name:
   ASSERT(!root_code || !refc);
   ASSERT(!root_code || !refv);
  }
- Dee_Decref(ast);
+ ast_decref(ast);
 
  /* Rethrow all errors that may have occurred during text assembly. */
  if (parser_rethrow(root_code == NULL))
@@ -601,7 +603,7 @@ do_create_base_name:
  recursive_rwlock_endwrite(&DeeCompiler_Lock);
  return result;
 err_compiler_ast:
- Dee_Decref(ast);
+ ast_decref(ast);
 err_compiler:
  DeeCompiler_End();
  Dee_Decref(compiler);

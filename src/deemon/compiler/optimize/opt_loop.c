@@ -169,7 +169,8 @@ err_entry_assumptions:
    condition_value = ast_get_boolean(self->a_loop.l_cond);
    if (condition_value > 0) {
     /* Forever-loop (Discard the condition). */
-    Dee_Clear(self->a_loop.l_cond);
+    ast_decref(self->a_loop.l_cond);
+    self->a_loop.l_cond = NULL;
     OPTIMIZE_VERBOSE("Removing constant-true loop condition\n");
     ++optimizer_count;
    } else if (condition_value == 0) {
@@ -230,7 +231,8 @@ err_entry_assumptions:
    condition_value = ast_get_boolean(self->a_loop.l_cond);
    if (condition_value > 0) {
     /* Forever-loop (Discard the condition). */
-    Dee_Clear(self->a_loop.l_cond);
+    ast_decref(self->a_loop.l_cond);
+    self->a_loop.l_cond = NULL;
     OPTIMIZE_VERBOSE("Removing constant-true loop condition\n");
     ++optimizer_count;
    } else if (condition_value == 0) {

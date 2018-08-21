@@ -131,10 +131,10 @@ ast_build_operator(uint16_t name, uint16_t flags,
    default: result = ast_operator4(name,flags,argv[0],argv[1],argv[2],argv[3]); break;
    }
 end_argv:
-   Dee_XDecref(argv[3]);
-   Dee_XDecref(argv[2]);
-   Dee_XDecref(argv[1]);
-   Dee_XDecref(argv[0]);
+   ast_xdecref(argv[3]);
+   ast_xdecref(argv[2]);
+   ast_xdecref(argv[1]);
+   ast_xdecref(argv[0]);
    return result;
   }
  }
@@ -161,7 +161,7 @@ do_generic:
   function_ast = ast_sym(function_symbol);
   if unlikely(!function_ast) goto err;
   args = ast_operator2(OPERATOR_CALL,0,function_ast,args);
-  Dee_Decref(function_ast);
+  ast_decref(function_ast);
   return args;
 err:
   return NULL;
@@ -208,9 +208,9 @@ ast_build_bound_operator(uint16_t name, uint16_t flags,
    default: result = ast_operator4(name,flags,self,argv[0],argv[1],argv[2]); break;
    }
 end_argv:
-   Dee_XDecref(argv[2]);
-   Dee_XDecref(argv[1]);
-   Dee_XDecref(argv[0]);
+   ast_xdecref(argv[2]);
+   ast_xdecref(argv[1]);
+   ast_xdecref(argv[0]);
    return result;
   }
  }
@@ -230,9 +230,9 @@ do_generic:
   if unlikely(!argv) goto err_args;
   argv[0] = self;
   argv[1] = args;
-  Dee_Incref(self);
+  ast_incref(self);
   new_args = ast_multiple(AST_FMULTIPLE_TUPLE,2,argv);
-  if unlikely(!new_args) { Dee_Decref(self); Dee_Free(argv); goto err_args; }
+  if unlikely(!new_args) { ast_decref(self); Dee_Free(argv); goto err_args; }
   args = new_args; /* This is now the argument tuple for the builtin function call. */
   function_symbol = new_unnamed_symbol();
   if unlikely(!function_symbol) goto err_args;
@@ -248,11 +248,11 @@ do_generic:
   function_ast = ast_sym(function_symbol);
   if unlikely(!function_ast) goto err_args;
   new_args = ast_operator2(OPERATOR_CALL,0,function_ast,args);
-  Dee_Decref(function_ast);
-  Dee_Decref(args);
+  ast_decref(function_ast);
+  ast_decref(args);
   return new_args;
 err_args:
-  Dee_Decref(args);
+  ast_decref(args);
 err:
   return NULL;
  }

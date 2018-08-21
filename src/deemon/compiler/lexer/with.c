@@ -88,8 +88,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
  other = ast_setddi(ast_sym(expression_sym),&loc);
  if unlikely(!other) goto err_scope_r;
  merge = ast_setddi(ast_action2(AST_FACTION_STORE,other,result),&loc);
- Dee_Decref(other);
- Dee_Decref(result);
+ ast_decref(other);
+ ast_decref(result);
  if unlikely(!merge) goto err_scope;
  result = merge;
  /* At this point, we've written the expression into a
@@ -104,7 +104,7 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
  result = ast_setddi(ast_sym(expression_sym),&loc);
  if unlikely(!result) goto err_result_v_0;
  merge = ast_operator1(OPERATOR_ENTER,AST_OPERATOR_FNORMAL,result);
- Dee_Decref(result);
+ ast_decref(result);
  if unlikely(!merge) goto err_result_v_0;
  result_v[1] = merge; /* Inherit. */
 
@@ -118,15 +118,15 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
  if unlikely(!merge) goto err_result_v_1_r;
  /* Invoke the leave operator on the symbol. */
  other = ast_operator1(OPERATOR_LEAVE,AST_OPERATOR_FNORMAL,merge);
- Dee_Decref(merge);
+ ast_decref(merge);
  if unlikely(!other) goto err_result_v_1_r;
 
  /* Wrap the with-block in a try-finally AST with the leave-statement. */
  merge = ast_setddi(ast_tryfinally(result,
                                    other),
                    &loc);
- Dee_Decref(other);
- Dee_Decref(result);
+ ast_decref(other);
+ ast_decref(result);
  if unlikely(!merge) goto err_result_v_1;
  result_v[2] = merge; /* Inherit */
 
@@ -141,11 +141,11 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
  scope_pop();
  return result;
 err_result_v_2:
- Dee_Decref(result_v[2]);
+ ast_decref(result_v[2]);
 err_result_v_1:
- Dee_Decref(result_v[1]);
+ ast_decref(result_v[1]);
 err_result_v_0:
- Dee_Decref(result_v[0]);
+ ast_decref(result_v[0]);
  Dee_Free(result_v);
 err_scope:
  scope_pop();
@@ -155,10 +155,10 @@ err_scope_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err_scope;
 err_result_v_1_r:
- Dee_Decref(result);
+ ast_decref(result);
  goto err_result_v_1;
 err_scope_r:
- Dee_Decref(result);
+ ast_decref(result);
  goto err_scope;
 }
 
@@ -200,8 +200,8 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
  other = ast_setddi(ast_sym(expression_sym),&loc);
  if unlikely(!other) goto err_scope_r;
  merge = ast_setddi(ast_action2(AST_FACTION_STORE,other,result),&loc);
- Dee_Decref(other);
- Dee_Decref(result);
+ ast_decref(other);
+ ast_decref(result);
  if unlikely(!merge) goto err_scope;
  result = merge;
  /* At this point, we've written the expression into a
@@ -216,7 +216,7 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
  result = ast_setddi(ast_sym(expression_sym),&loc);
  if unlikely(!result) goto err_result_v_0;
  merge = ast_operator1(OPERATOR_ENTER,AST_OPERATOR_FNORMAL,result);
- Dee_Decref(result);
+ ast_decref(result);
  if unlikely(!merge) goto err_result_v_0;
  result_v[1] = merge; /* Inherit. */
 
@@ -230,15 +230,15 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
  if unlikely(!merge) goto err_result_v_1_r;
  /* Invoke the leave operator on the symbol. */
  other = ast_operator1(OPERATOR_LEAVE,AST_OPERATOR_FNORMAL,merge);
- Dee_Decref(merge);
+ ast_decref(merge);
  if unlikely(!other) goto err_result_v_1_r;
 
  /* Wrap the with-block in a try-finally AST with the leave-statement. */
  merge = ast_setddi(ast_tryfinally(result,
                                    other),
                    &loc);
- Dee_Decref(other);
- Dee_Decref(result);
+ ast_decref(other);
+ ast_decref(result);
  if unlikely(!merge) goto err_result_v_1;
  result_v[2] = merge; /* Inherit */
 
@@ -253,11 +253,11 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
  scope_pop();
  return result;
 err_result_v_2:
- Dee_Decref(result_v[2]);
+ ast_decref(result_v[2]);
 err_result_v_1:
- Dee_Decref(result_v[1]);
+ ast_decref(result_v[1]);
 err_result_v_0:
- Dee_Decref(result_v[0]);
+ ast_decref(result_v[0]);
  Dee_Free(result_v);
 err_scope:
  scope_pop();
@@ -267,10 +267,10 @@ err_scope_flags:
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err_scope;
 err_result_v_1_r:
- Dee_Decref(result);
+ ast_decref(result);
  goto err_result_v_1;
 err_scope_r:
- Dee_Decref(result);
+ ast_decref(result);
  goto err_scope;
 }
 

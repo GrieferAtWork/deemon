@@ -76,7 +76,7 @@ multiple_continue_at_iter:
    /* Get rid of this one. */
    OPTIMIZE_VERBOSEAT(*iter,is_unreachable ? "Delete unreachable AST\n"
                                            : "Delete AST without side-effects\n");
-   Dee_Decref(*iter);
+   ast_decref(*iter);
    --end;
    --self->a_multiple.m_astc;
    MEMMOVE_PTR(iter,iter+1,(size_t)(end-iter));
@@ -136,7 +136,7 @@ multiple_continue_at_iter:
     DeeObject *value = ast->a_constexpr;
     DeeTuple_SET(new_tuple,i,value);
     Dee_Incref(value);
-    Dee_Decref(ast);
+    ast_decref(ast);
    }
    Dee_Free(self->a_multiple.m_astv);
    self->a_constexpr = new_tuple; /* Inherit reference. */
@@ -149,7 +149,7 @@ multiple_continue_at_iter:
     DeeObject *value = ast->a_constexpr;
     DeeList_SET(new_list,i,value);
     Dee_Incref(value);
-    Dee_Decref(ast);
+    ast_decref(ast);
    }
    DeeGC_Track((DeeObject *)new_list);
    Dee_Free(self->a_multiple.m_astv);
@@ -165,7 +165,7 @@ multiple_continue_at_iter:
     }
    }
    for (i = 0; i < self->a_multiple.m_astc; ++i)
-        Dee_Decref(self->a_multiple.m_astv[i]);
+        ast_decref(self->a_multiple.m_astv[i]);
    Dee_Free(self->a_multiple.m_astv);
    self->a_constexpr = new_set;
   } else if (self->a_flag == AST_FMULTIPLE_DICT) {
@@ -181,7 +181,7 @@ multiple_continue_at_iter:
     }
    }
    for (i = 0; i < self->a_multiple.m_astc; ++i)
-        Dee_Decref(self->a_multiple.m_astv[i]);
+        ast_decref(self->a_multiple.m_astv[i]);
    Dee_Free(self->a_multiple.m_astv);
    self->a_constexpr = new_dict; /* Inherit reference. */
   } else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
@@ -198,7 +198,7 @@ multiple_continue_at_iter:
     }
    }
    for (i = 0; i < self->a_multiple.m_astc; ++i)
-        Dee_Decref(self->a_multiple.m_astv[i]);
+        ast_decref(self->a_multiple.m_astv[i]);
    Dee_Free(self->a_multiple.m_astv);
    self->a_constexpr = new_dict; /* Inherit reference. */
   } else {
