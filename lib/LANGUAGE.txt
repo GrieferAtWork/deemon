@@ -853,7 +853,7 @@ ast_parse_statement_or_braces ::= (
 	ast_parse_brace_items
 );
 
-ast_parse_unary_base ::= (
+parse_unaryhead ::= (
 	/* Constant expressions. */
 	DDI(<TOK_INT>) |       /* int */
 	DDI(<TOK_CHAR>) |      /* int TODO: This should become deprecated */
@@ -865,28 +865,28 @@ ast_parse_unary_base ::= (
 	DDI('false') |
 
 	/* Unary keyword-operators.
-	 * NOTE: When `ast_parse_unary' starts with parenthesis, the associated
-	 *       expression is only parsed as `ast_parse_unary_base'.
+	 * NOTE: When `parse_unary' starts with parenthesis, the associated
+	 *       expression is only parsed as `parse_unaryhead'.
 	 *       This means that `str(foo).bar' is parsed as `(str foo).bar',
 	 *       rather than `str(foo.bar)', which would be done without this
 	 *       special rule.
 	 *       However, this is only done when parenthesis is found, meaning
 	 *       that `str foo.bar' is still parsed as `str(foo.bar)'
 	 */
-	(DDI('str') ast_parse_unary) |      /* __str__ */
-	(DDI('repr') ast_parse_unary) |     /* __repr__ */
-	(DDI('copy') ast_parse_unary) |     /* __copy__ */
-	(DDI('deepcopy') ast_parse_unary) | /* __deepcopy__ */
-	(DDI('type') ast_parse_unary) |     /* ACTION: typeof */
+	(DDI('str') parse_unary) |      /* __str__ */
+	(DDI('repr') parse_unary) |     /* __repr__ */
+	(DDI('copy') parse_unary) |     /* __copy__ */
+	(DDI('deepcopy') parse_unary) | /* __deepcopy__ */
+	(DDI('type') parse_unary) |     /* ACTION: typeof */
 
 	/* Unary operators. */
-	(DDI('!') ast_parse_unary) |  /* ACTION: not */
-	(DDI('#') ast_parse_unary) |  /* __size__ */
-	(DDI('~') ast_parse_unary) |  /* __inv__ */
-	(DDI('+') ast_parse_unary) |  /* __pos__ */
-	(DDI('-') ast_parse_unary) |  /* __neg__ */
-	(DDI('++') ast_parse_unary) | /* __inc__ */
-	(DDI('--') ast_parse_unary) | /* __dec__ */
+	(DDI('!') parse_unary) |  /* ACTION: not */
+	(DDI('#') parse_unary) |  /* __size__ */
+	(DDI('~') parse_unary) |  /* __inv__ */
+	(DDI('+') parse_unary) |  /* __pos__ */
+	(DDI('-') parse_unary) |  /* __neg__ */
+	(DDI('++') parse_unary) | /* __inc__ */
+	(DDI('--') parse_unary) | /* __dec__ */
 
 #if BACKWARDS_COMPATIBILITY_DEEMON_100
 	/* NOTE: An implementation is not required to support
@@ -901,7 +901,7 @@ ast_parse_unary_base ::= (
 	 * If backwards-compatibility is required, user-code may choose to do this:
 	 * >>
 	 */
-	(DDI('<') [ast_parse_unary] '>') | /* ACTION: cell/cell0 */
+	(DDI('<') [parse_unary] '>') | /* ACTION: cell/cell0 */
 #endif
 
 	(DDI('if') '(' ast_parse_expression ')' (
@@ -920,7 +920,7 @@ ast_parse_unary_base ::= (
 	 *          An implementation is also allowed to replace this
 	 *          kind of use with a call to said function.
 	 */
-	(DDI('bound') (('(' ast_parse_expression ')') | ast_parse_unary)) |
+	(DDI('bound') (('(' ast_parse_expression ')') | parse_unary)) |
 
 	/* Operator function access (see detailed explaination in `x.operator ...' below) */
 	('operator' DDI(ast_parse_operator_name(false))) |
@@ -1059,8 +1059,7 @@ ast_parse_unary_base ::= (
 	)
 );
 
-ast_parse_unary ::= (
-	ast_parse_unary_base
+parse_unarytail ::= (
 	[(
 
 		(DDI(
@@ -1167,6 +1166,11 @@ ast_parse_unary ::= (
 	)...]
 );
 
+parse_unary ::= (
+	parse_unaryhead
+	parse_unarytail
+);
+
 
 ast_parse_argument_list ::= (
 	(
@@ -1184,10 +1188,10 @@ ast_parse_argument_list ::= (
 
 
 ast_parse_prod ::= (
-	ast_parse_unary
+	parse_unary
 	[(
 		DDI('*' | '/' | '%' | '**')
-		ast_parse_unary
+		parse_unary
 	)...]
 );
 
@@ -1868,7 +1872,7 @@ ast_parse_catchmask ::= (
 	 *    >> catch (int | string as foo)
 	 *    >> catch ((int, string) as foo)
 	 */
-	'|' ~~ ast_parse_unary...
+	'|' ~~ parse_unary...
 );
 
 ast_parse_try(is_statement) ::= (
@@ -1896,7 +1900,7 @@ ast_parse_try(is_statement) ::= (
 					 * Additionally, a symbol name that can be used to address
 					 * the generated exception may be specified after 'as' or '->',
 					 * where the arrow is deprecated and a reminant from the old deemon. */
-					('|' ~~ ast_parse_unary... [('->' | 'as') _keyword])
+					('|' ~~ parse_unary... [('->' | 'as') _keyword])
 				) ')'
 #if is_statement
 					ast_parse_statement
@@ -1910,7 +1914,7 @@ ast_parse_try(is_statement) ::= (
 
 ast_parse_class ::= (
 	/* Optional base expression. */
-	[	((':' | 'extends') ast_parse_unary_base) |
+	[	((':' | 'extends') parse_unaryhead) |
 		('(' ast_parse_expression ')')
 	]
 

@@ -888,7 +888,7 @@ PRIVATE int32_t FCALL do_parse_constexpr(void) {
  DREF DeeObject *const_val;
  int32_t cid;
  if unlikely(scope_push()) goto err;
- imm_const = ast_parse_expression(LOOKUP_SYM_NORMAL);
+ imm_const = ast_parse_expr(LOOKUP_SYM_NORMAL);
  scope_pop();
  if unlikely(!imm_const) goto err;
  /* Optimize the constant branch to allow for constant propagation. */
@@ -1249,7 +1249,7 @@ PRIVATE int FCALL
 do_parse_atoperand(struct asm_invoke_operand *__restrict result) {
  DREF struct ast *imm_expr;
  if unlikely(scope_push()) goto err;
- imm_expr = ast_parse_expression(LOOKUP_SYM_NORMAL);
+ imm_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
  scope_pop();
  if unlikely(!imm_expr) goto err;
  /* Optimize the constant branch to allow for constant propagation. */

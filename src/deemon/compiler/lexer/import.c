@@ -899,9 +899,9 @@ ast_parse_import_hybrid(unsigned int *pwas_expression) {
   /* `import', as seen in expressions. */
   result = ast_setddi(ast_sym_import_from_deemon(),&import_loc);
   if unlikely(!result) goto err;
-  result = ast_parse_unary_suffix(result);
+  result = ast_parse_unary_operand(result);
   if unlikely(!result) goto err;
-  result = ast_parse_unary_postexpr(result);
+  result = ast_parse_postexpr(result);
   if (pwas_expression)
      *pwas_expression = AST_PARSE_WASEXPR_YES;
  } else {
@@ -1068,9 +1068,9 @@ INTERN DREF struct ast *FCALL ast_parse_import(void) {
    /* `import', as seen in expressions. */
    result = ast_setddi(ast_sym_import_from_deemon(),&import_loc);
    if unlikely(!result) goto err;
-   result = ast_parse_unary_suffix(result);
+   result = ast_parse_unary_operand(result);
    if unlikely(!result) goto err;
-   result = ast_parse_unary_postexpr(result);
+   result = ast_parse_postexpr(result);
    goto done;
   }
   result = ast_setddi(ast_constexpr(Dee_None),&import_loc);

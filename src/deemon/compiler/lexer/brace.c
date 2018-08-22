@@ -40,7 +40,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
  DREF struct ast *result;
  DREF struct ast **elemv,*item;
  /* Parse the associated item. */
- item = ast_parse_expression(LOOKUP_SYM_NORMAL);
+ item = ast_parse_expr(LOOKUP_SYM_NORMAL);
  if unlikely(!item) goto err;
  elema = 1,elemc = 0;
  elemv = (DREF struct ast **)Dee_Malloc(2*sizeof(DREF struct ast *));
@@ -74,14 +74,14 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
       goto err_dict_elemv_r;
   } else {
    if (!maybe_expression_begin()) break; /* Allow (and ignore) trailing comma. */
-   result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+   result = ast_parse_expr(LOOKUP_SYM_NORMAL);
    if unlikely(!result) goto err_dict_elemv;
    if unlikely(likely(tok == ':') ? (yield() < 0) :
                WARN(W_EXPECTED_COLLON_AFTER_DICT_KEY))
       goto err_dict_elemv_r;
   }
   /* Now parse the associated item. */
-  item = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  item = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!item) goto err_dict_elemv_r;
   /* Extend the element vector if needed. */
   if (elemc == elema) {
@@ -151,7 +151,7 @@ ast_parse_brace_list(struct ast *__restrict initial_item) {
 parse_list_item:
   if unlikely(yield() < 0) goto err_list_elemv;
   if (!maybe_expression_begin()) break; /* Allow (and ignore) trailing comma. */
-  result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  result = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!result) goto err_list_elemv;
   if (elemc == elema) {
    DREF struct ast **new_elemv;
@@ -218,7 +218,7 @@ INTERN DREF struct ast *FCALL ast_parse_brace_items(void) {
  /* Check for special case: Empty brace initializer. */
  if (!maybe_expression_begin())
       return ast_multiple(AST_FMULTIPLE_GENERIC,0,NULL);
- result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+ result = ast_parse_expr(LOOKUP_SYM_NORMAL);
  if unlikely(!result) goto err;
  if (tok == ':') {
   if unlikely(yield() < 0) goto err_r;

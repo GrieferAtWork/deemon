@@ -143,7 +143,15 @@ struct compiler_object {
 #endif /* CONFIG_BUILDING_DEEMON */
 };
 
-DDATDEF DeeTypeObject DeeCompiler_Type;
+
+/* NOTE: Because of how large the user-code interface for the compiler is,
+ *       combined with the fact that the internal implementation of the
+ *       compiler is completely implementation-defined, the actual compiler
+ *       type is not exported from `deemon', but rather exported from `rt',
+ *       thus providing code that wishes to stick to our deemon implementation
+ *       the ability to tinker around with the compiler, while still not having
+ *       to standardize any aspect about its inner working what-so-ever. */
+DDATDEF DeeTypeObject DeeCompiler_Type; /* compiler from rt */
 #define DeeCompiler_Check(ob)      DeeObject_InstanceOf(ob,&DeeCompiler_Type)
 #define DeeCompiler_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeCompiler_Type)
 
@@ -157,7 +165,7 @@ DeeCompiler_New(DeeObject *__restrict module,
 
 
 #ifndef CONFIG_NO_THREADS
-/* Lock held whenever the compiler.
+/* Lock held whenever the compiler is being used.
  * TODO: Use some blocking lock for this. - Don't use a spinlock. */
 DDATDEF recursive_rwlock_t DeeCompiler_Lock;
 #endif

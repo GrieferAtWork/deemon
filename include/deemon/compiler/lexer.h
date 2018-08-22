@@ -34,7 +34,7 @@ DECL_BEGIN
 
 struct unicode_printer;
 
-/* Parser flags (Set of `PARSE_F*'). - Currently unused... */
+/* Parser flags (Set of `PARSE_F*') */
 INTDEF uint16_t parser_flags;
 INTDEF struct compiler_options *inner_compiler_options;
 
@@ -46,7 +46,7 @@ INTDEF DREF DeeObject *FCALL ast_parse_string(void);
 INTDEF int DCALL ast_decode_unicode_string(struct unicode_printer *__restrict printer);
 
 /* @param: lookup_mode: Set of `LOOKUP_SYM_*' */
-INTDEF DREF struct ast *FCALL ast_parse_unary_base(unsigned int lookup_mode);
+INTDEF DREF struct ast *FCALL ast_parse_unaryhead(unsigned int lookup_mode);
 INTDEF DREF struct ast *FCALL ast_parse_unary(unsigned int lookup_mode);
 INTDEF DREF struct ast *FCALL ast_parse_prod(unsigned int lookup_mode);
 INTDEF DREF struct ast *FCALL ast_parse_sum(unsigned int lookup_mode);
@@ -110,15 +110,15 @@ INTDEF DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/DREF s
                              
 
 /* Parse a top-level expression. */
-#define ast_parse_expression(lookup_mode) ast_parse_assign(lookup_mode)
+#define ast_parse_expr(lookup_mode) ast_parse_assign(lookup_mode)
 
 /* Given a basic unary expression `ast', parse its unary
  * suffix (including attribute, call, range & item operators). */
-INTDEF DREF struct ast *FCALL ast_parse_unary_suffix(/*inherit(always)*/DREF struct ast *__restrict ast);
+INTDEF DREF struct ast *FCALL ast_parse_unary_operand(/*inherit(always)*/DREF struct ast *__restrict ast);
 
 /* Given a unary expression `ast', parse anything that may
  * follow it before it could be considered a full expression. */
-INTDEF DREF struct ast *FCALL ast_parse_unary_postexpr(/*inherit(always)*/DREF struct ast *__restrict ast);
+INTDEF DREF struct ast *FCALL ast_parse_postexpr(/*inherit(always)*/DREF struct ast *__restrict ast);
 
 
 /* Given an `key'-expression in `{ key : foo }', parse the remainder
@@ -229,8 +229,7 @@ INTDEF DREF struct ast *DCALL ast_parse_statement(bool allow_nonblock);
  *          the inner expression is automatically
  *          returned instead.
  * NOTE: If desired, the caller is responsible to setup
- *       or teardown a new scope before/after this function.
- */
+ *       or teardown a new scope before/after this function. */
 INTDEF DREF struct ast *DCALL
 ast_parse_statements_until(uint16_t flags, tok_t end_token);
 
@@ -390,7 +389,7 @@ ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
   result = ast_parse_statement(false);
   break;
  case AST_PARSE_WASEXPR_YES:
-  result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  result = ast_parse_expr(LOOKUP_SYM_NORMAL);
   break;
  case AST_PARSE_WASEXPR_MAYBE:
   result = ast_parse_statement_or_expression(AST_COMMA_MODE_HYBRID_SINGLE,

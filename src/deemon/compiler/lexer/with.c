@@ -110,7 +110,7 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 
  /* Finally, parse the content of the wrapped try-statement. */
  result = is_statement ? ast_parse_statement(allow_nonblock)
-                       : ast_parse_expression(LOOKUP_SYM_NORMAL);
+                       : ast_parse_expr(LOOKUP_SYM_NORMAL);
  if unlikely(!result) goto err_result_v_1;
 
  /* Create the leave-expression for the finally block. */

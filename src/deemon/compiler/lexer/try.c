@@ -110,7 +110,7 @@ ast_parse_try(bool is_statement) {
  if unlikely(yield() < 0) goto err;
  result = is_statement
         ? ast_parse_statement(false)
-        : ast_parse_expression(LOOKUP_SYM_NORMAL);
+        : ast_parse_expr(LOOKUP_SYM_NORMAL);
  if unlikely(!result) goto err;
  catcha = catchc = 0,catchv = NULL;
  for (;;) {
@@ -147,7 +147,7 @@ do_realloc_catchv:
    handler->ce_flags |= EXCEPTION_HANDLER_FFINALLY;
    handler->ce_code = is_statement
                     ? ast_parse_statement(false)
-                    : ast_parse_expression(LOOKUP_SYM_NORMAL);
+                    : ast_parse_expr(LOOKUP_SYM_NORMAL);
    if unlikely(!handler->ce_code) goto err_try;
   } else {
    bool is_new_scope = false;
@@ -228,7 +228,7 @@ end_catch_handler:
       goto err_try;
    handler->ce_code = is_statement
                     ? ast_parse_statement(false)
-                    : ast_parse_expression(LOOKUP_SYM_NORMAL);
+                    : ast_parse_expr(LOOKUP_SYM_NORMAL);
    if unlikely(!handler->ce_code) goto err_try;
    if (is_new_scope) scope_pop();
   }

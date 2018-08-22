@@ -60,7 +60,7 @@ ast_parse_statement_or_expression(uint16_t mode,
    /* Try to parse a suffix expression.
     * If there was one, then we know that it actually was an expression. */
    unsigned long token_num = token.t_num;
-   result = ast_parse_unary_postexpr(result);
+   result = ast_parse_postexpr(result);
    if (token_num != token.t_num)
        was_expression = AST_PARSE_WASEXPR_YES;
   }
@@ -164,7 +164,7 @@ ast_parse_if_hybrid(unsigned int *pwas_expression) {
  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
  if unlikely(likely(tok == '(') ? (yield() < 0) :
              WARN(W_EXPECTED_LPAREN_AFTER_IF)) goto err_flags;
- result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+ result = ast_parse_expr(LOOKUP_SYM_NORMAL);
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  if unlikely(!result) goto err;
  if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -255,7 +255,7 @@ parse_remainder_after_hybrid_popscope_resok:
   if (was_expression == AST_PARSE_WASEXPR_NO)
       goto parse_remainder_after_statement;
   if (was_expression == AST_PARSE_WASEXPR_YES) {
-   result = ast_parse_unary_postexpr(result);
+   result = ast_parse_postexpr(result);
    if unlikely(!result) goto err;
 check_recursion_after_expression_suffix:
    if (tok == ';') {
@@ -304,7 +304,7 @@ parse_remainder_before_rbrace_popscope_wrap:
       goto parse_remainder_before_rbrace_popscope_wrap;
   {
    unsigned long token_num = token.t_num;
-   result = ast_parse_unary_postexpr(result);
+   result = ast_parse_postexpr(result);
    if unlikely(!result) goto err;
    if (token_num != token.t_num)
        goto check_recursion_after_expression_suffix;

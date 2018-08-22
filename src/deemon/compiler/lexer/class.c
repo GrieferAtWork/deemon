@@ -843,7 +843,7 @@ done_superargs:
    /* Member initializer (c++ style). */
    if (tok == '=' || tok == KWD_pack) {
     if unlikely(yield() < 0) goto err;
-    initializer_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
+    initializer_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
     if unlikely(!initializer_ast) goto err;
    } else {
     old_flags = TPPLexer_Current->l_flags;
@@ -855,7 +855,7 @@ done_superargs:
      /* Special case: Same as `= none' (aka: initializer to `none') */
      initializer_ast = ast_setddi(ast_constexpr(Dee_None),&loc);
     } else {
-     initializer_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
+     initializer_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
     }
     if unlikely(!initializer_ast) goto err_flags;
     TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -1076,7 +1076,7 @@ do_parse_class_base:
   /* Parse the class's base expression.
    * NOTE: We parse it as a unary-base expression, so-as to not
    *       parse the `{' token that follows as a brace-initializer. */
-  maker.cm_base = ast_parse_unary_base(LOOKUP_SYM_NORMAL);
+  maker.cm_base = ast_parse_unaryhead(LOOKUP_SYM_NORMAL);
   if unlikely(!maker.cm_base) goto err;
  } else if (tok == '(') {
   /* Just another syntax for class bases that the old
@@ -1084,7 +1084,7 @@ do_parse_class_base:
    * Though I should note that the intended syntax is `class foo: bar { ... }' */
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
   if unlikely(yield() < 0) goto err;
-  maker.cm_base = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  maker.cm_base = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!maker.cm_base) goto err;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -1585,11 +1585,11 @@ err_property:
     /* Member assignment. (part of the initialization) */
     if (SYM_ISCLASSMEMBER(member_symbol)) {
      /* Class member. */
-     init_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
+     init_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
     } else {
      /* Instance member. */
      if (class_maker_push_ctorscope(&maker)) goto err;
-     init_ast = ast_parse_expression(LOOKUP_SYM_NORMAL);
+     init_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
      basescope_pop();
     }
     if unlikely(!init_ast) goto err;

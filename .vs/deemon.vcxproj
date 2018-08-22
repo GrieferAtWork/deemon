@@ -124,6 +124,7 @@
     <ClCompile Include="..\src\deemon\compiler\interface\iast.c" />
     <ClCompile Include="..\src\deemon\compiler\interface\icompiler.c" />
     <ClCompile Include="..\src\deemon\compiler\interface\ilexer.c" />
+    <ClCompile Include="..\src\deemon\compiler\interface\iparser.c" />
     <ClCompile Include="..\src\deemon\compiler\interface\iscope.c" />
     <ClCompile Include="..\src\deemon\compiler\interface\isymbol.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\asm.c" />

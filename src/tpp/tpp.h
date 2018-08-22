@@ -918,7 +918,7 @@ enum {
 
     /* Double(or more)-character tokens. */
     TPP(TOK_TWOCHAR_BEGIN) = 256,
-    TPP(TOK_SHL),           /* "<<". */
+    TPP(TOK_SHL) = TPP(TOK_TWOCHAR_BEGIN), /* "<<". */
     TPP(TOK_SHR),           /* ">>". */
     TPP(TOK_EQUAL),         /* "==". */
     TPP(TOK_NOT_EQUAL),     /* "!=". */
@@ -958,8 +958,9 @@ enum {
     TPP(TOK_RANGLE3_EQUAL), /* ">>>=". */
     TPP(TOK_EQUAL3),        /* "===". */
     TPP(TOK_NOT_EQUAL3),    /* "!==". */
-
     TPP(TOK_KEYWORD_BEGIN), /* KEEP THIS THE LAST TOKEN! */
+
+    TPP(TOK_TWOCHAR_END) = TPP(TOK_KEYWORD_BEGIN),
 
     /* Name aliases */
     TPP(TOK_POS)           = TPP(TOK_ADD),

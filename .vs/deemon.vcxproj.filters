@@ -728,6 +728,9 @@
     <ClCompile Include="..\src\deemon\compiler\interface\isymbol.c">
       <Filter>src\deemon\compiler\interface</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\iparser.c">
+      <Filter>src\deemon\compiler\interface</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">

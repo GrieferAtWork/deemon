@@ -77,7 +77,7 @@ ast_parse_for_head(DREF struct ast **__restrict pinit,
    elem_or_cond = init;
    init         = NULL;
    result      |= AST_FLOOP_FOREACH;
-   iter_or_next = ast_parse_expression(LOOKUP_SYM_NORMAL);
+   iter_or_next = ast_parse_expr(LOOKUP_SYM_NORMAL);
    if unlikely(!iter_or_next) goto err;
    goto done;
   }
@@ -86,7 +86,7 @@ ast_parse_for_head(DREF struct ast **__restrict pinit,
              WARN(W_EXPECTED_SEMICOLLON1_AFTER_FOR))
     goto err;
  if (tok != ';') {
-  elem_or_cond = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  elem_or_cond = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!elem_or_cond) goto err;
  }
  if unlikely(likely(tok == ';') ? (yield() < 0) :
@@ -95,7 +95,7 @@ ast_parse_for_head(DREF struct ast **__restrict pinit,
  if (tok == ')') {
   iter_or_next = NULL;
  } else {
-  iter_or_next = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  iter_or_next = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!iter_or_next) goto err;
  }
 done:
@@ -511,7 +511,7 @@ err_loop:
   if unlikely(likely(tok == ':') ? (yield() < 0) :
               WARN(W_EXPECTED_COLLON_AFTER_FOREACH))
      goto err_foreach_elem;
-  foreach_iter = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  foreach_iter = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!foreach_iter)
      goto err_foreach_elem;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -565,7 +565,7 @@ err_foreach_elem:
   if unlikely(likely(tok == '(') ? (yield() < 0) :
               WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
      goto err_r_flags;
-  cond = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  cond = ast_parse_expr(LOOKUP_SYM_NORMAL);
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
               WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
@@ -856,7 +856,7 @@ handle_post_label:
     loc_here(&loc);
     if unlikely(yield() < 0) goto err;
     /* Parse the case expression. */
-    result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+    result = ast_parse_expr(LOOKUP_SYM_NORMAL);
     if unlikely(!result) goto err;
     if unlikely(likely(tok == ':') ? (yield() < 0) :
                 WARN(W_EXPECTED_COLLON_AFTER_CASE))

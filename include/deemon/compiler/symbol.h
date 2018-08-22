@@ -66,12 +66,12 @@ struct text_label {
     union {
 #ifdef __INTELLISENSE__
              struct ast *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
-                                          *  Expression of a case-label. NOTE: NULL for the default case.
-                                          *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
+                                   *  Expression of a case-label. NOTE: NULL for the default case.
+                                   *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
 #else
         DREF struct ast *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
-                                          *  Expression of a case-label. NOTE: NULL for the default case.
-                                          *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
+                                   *  Expression of a case-label. NOTE: NULL for the default case.
+                                   *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
 #endif
         struct TPPKeyword      *tl_name; /* [1..1][valid_if(CHAIN(bs_lbl[*]))][const] Name of this label. */
     };
@@ -329,7 +329,7 @@ struct base_scope_object {
 #define DeeBaseScope_IsArgRequired(self,x)   ((x) < (self)->bs_argc_min)
 #define DeeBaseScope_IsArgDefault(self,x)    ((x) >= (self)->bs_argc_min && (x) < (self)->bs_argc_max)
 #define DeeBaseScope_IsArgReqOrDefl(self,x)  ((x) < (self)->bs_argc_max)
-#define DeeBaseScope_IsArgOptional(self,x)   ((x) >= (self)->bs_argc_max && (x) < (self)->bs_argc_max+(self)->bs_argc_opt)
+#define DeeBaseScope_IsArgOptional(self,x)   ((x) >= (self)->bs_argc_max && (x) < (uint16_t)((self)->bs_argc_max+(self)->bs_argc_opt))
 #define DeeBaseScope_IsArgVarArgs(self,x)    ((self)->bs_varargs && (x) == (uint16_t)(self)->bs_argc-1)
 #define DeeBaseScope_HasOptional(self)       ((self)->bs_argc_opt != 0)
     uint16_t            bs_argc_min;   /* Min amount of argument symbols defined for this scope. */

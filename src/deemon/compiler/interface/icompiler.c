@@ -30,6 +30,7 @@
 #include <deemon/list.h>
 #include <deemon/set.h>
 #include <deemon/hashset.h>
+#include <deemon/format.h>
 #include <deemon/seq.h>
 #include <deemon/map.h>
 #include <deemon/module.h>
@@ -114,6 +115,11 @@ compiler_get_lexer(DeeCompilerObject *__restrict self) {
 }
 
 INTERN DREF DeeObject *DCALL
+compiler_get_parser(DeeCompilerObject *__restrict self) {
+ return DeeCompiler_GetParser(self);
+}
+
+INTERN DREF DeeObject *DCALL
 compiler_get_scope(DeeCompilerObject *__restrict self) {
  DREF DeeObject *result;
  COMPILER_BEGIN(self);
@@ -182,7 +188,9 @@ compiler_get_rootscope(DeeCompilerObject *__restrict self) {
 
 INTERN struct type_getset compiler_getsets[] = {
     { "lexer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_lexer, NULL, NULL,
-      DOC("->lexer") },
+      DOC("->lexer\nReturns the lexer (tokenizer) of @this compiler") },
+    { "parser", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_parser, NULL, NULL,
+      DOC("->parser\nReturns the parser (token to ast converter) of @this compiler") },
     { "scope",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_scope, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&compiler_set_scope,
@@ -1230,7 +1238,7 @@ ast_makeoperator(DeeCompilerObject *__restrict self,
  DeeScopeObject *ast_scope; DREF struct ast *result_ast;
  PRIVATE struct keyword kwlist[] = { K(name), K(a), K(b), K(c), K(d), K(flags), K(scope), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"oo|ooooo:makeoperator",&name,&a,&b,&c,&d,&flags_str,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo|ooooo:makeoperator",&name,&a,&b,&c,&d,&flags_str,&scope))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -1327,9 +1335,19 @@ get_action_by_name(char const *__restrict name) {
   if (EQAT(name + 1,"ssert"))
       RETURN(AST_FACTION_ASSERT);
   break;
+ case 'b':
+  if (EQAT(name + 1,"oundattr"))
+      RETURN(AST_FACTION_BOUNDATTR);
+  break;
  case 'c':
-  if (EQAT(name + 1,"lassoff"))
+  if (EQAT(name + 1,"lassof"))
       RETURN(AST_FACTION_CLASSOF);
+  if (EQAT(name + 1,"allkw"))
+      RETURN(AST_FACTION_CALL_KW);
+  break;
+ case 'd':
+  if (EQAT(name + 1,"iffobj"))
+      RETURN(AST_FACTION_DIFFOBJ);
   break;
  case 'i':
   if (name[1] == 'n' && !name[2])
@@ -1373,12 +1391,13 @@ get_action_by_name(char const *__restrict name) {
       RETURN(AST_FACTION_SUM);
   if (EQAT(name + 1,"tore"))
       RETURN(AST_FACTION_STORE);
+  if (EQAT(name + 1,"ameobj"))
+      RETURN(AST_FACTION_SAMEOBJ);
   break;
  case 't':
   if (EQAT(name + 1,"ypeof"))
       RETURN(AST_FACTION_TYPEOF);
   break;
-
  default: break;
  }
  result = DeeError_Throwf(&DeeError_ValueError,
@@ -1402,7 +1421,7 @@ ast_makeaction(DeeCompilerObject *__restrict self,
  DeeScopeObject *ast_scope; DREF struct ast *result_ast; uint8_t opc;
  PRIVATE struct keyword kwlist[] = { K(name), K(a), K(b), K(c), K(mustrun), K(scope), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"o|ooobo:makeaction",&name,&a,&b,&c,&mustrun,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|ooobo:makeaction",&name,&a,&b,&c,&mustrun,&scope))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -1477,12 +1496,13 @@ PRIVATE DREF DeeObject *DCALL ast_makeassembly(DeeCompilerObject *__restrict sel
 INTERN struct type_method compiler_methods[] = {
     { "makeconstexpr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeconstexpr,
       DOC("(object value,scope scope=none)->ast\n"
-          "@param scope The scope to-be used for the branch. When :none, use #scope instead\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @scope doesn't match @this\n"
           "Construct a new constant-expression ast referring to @value"),
       TYPE_METHOD_FKWDS },
     { "makesym", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makesym,
       DOC("(symbol sym,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @sym or @scope doesn't match @this\n"
           "@throw ReferenceError The given @sym is not reachable from the effectively used @scope\n"
           "Construct a new branch that is using a symbol @sym\n"
@@ -1493,18 +1513,21 @@ INTERN struct type_method compiler_methods[] = {
       TYPE_METHOD_FKWDS },
     { "makeunbind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeunbind,
       DOC("(symbol sym,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @sym or @scope doesn't match @this\n"
           "@throw ReferenceError The given @sym is not reachable from the effectively used @scope\n"
           "Construct a branch for unbinding the value of @sym at runtime"),
       TYPE_METHOD_FKWDS },
     { "makebound", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makebound,
       DOC("(symbol sym,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @sym or @scope doesn't match @this\n"
           "@throw ReferenceError The given @sym is not reachable from the effectively used @scope\n"
           "Construct a branch for checking if a given symbol @sym is bound"),
       TYPE_METHOD_FKWDS },
     { "makemultiple", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makemultiple,
       DOC("({ast...} branches,type typing=none,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of one of the given @branches or @scope doesn't match @this\n"
           "@throw TypeError The given @typing is neither :none, nor one of the type listed below\n"
           "@throw ReferenceError One of the given @branches is not part of the basescope of the effective @scope\n"
@@ -1524,18 +1547,21 @@ INTERN struct type_method compiler_methods[] = {
       TYPE_METHOD_FKWDS },
     { "makereturn", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makereturn,
       DOC("(ast expr=none,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct a return-branch that either returns @expr, or :none when @expr is :none"),
       TYPE_METHOD_FKWDS },
     { "makeyield", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeyield,
       DOC("(ast expr,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct a yield-branch that either returns @expr, or :none when @expr is :none"),
       TYPE_METHOD_FKWDS },
     { "makethrow", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makethrow,
       DOC("(ast expr=none,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct a throw-branch that either throws @expr, or re-throws the last exception when @expr is :none"),
@@ -1543,6 +1569,7 @@ INTERN struct type_method compiler_methods[] = {
     { "maketry", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_maketry,
       DOC("(ast guard,{(string,ast,ast)...} handlers,scope scope=none)->ast\n"
           "(ast guard,{(int,ast,ast)...} handlers,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw ValueError One of the flags-strings contains an unknown flag\n"
           "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
@@ -1560,6 +1587,7 @@ INTERN struct type_method compiler_methods[] = {
           "(string flags,ast cond=none,ast next=none,ast loop=none,scope scope=none)->ast\n"
           "(int flags,ast elem=none,ast iter,ast loop=none,scope scope=none)->ast\n"
           "(int flags,ast cond=none,ast next=none,ast loop=none,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw ValueError The given @flags contains an unknown flag\n"
           "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
@@ -1578,6 +1606,7 @@ INTERN struct type_method compiler_methods[] = {
       TYPE_METHOD_FKWDS },
     { "makeloopctl", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeloopctl,
       DOC("(bool isbreak,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @scope doesn't match @this\n"
           "Construct a loop control branch, that is either a $continue (when "
           "@isbreak is :false), or a $break statement (when @isbreak is :true)"),
@@ -1585,6 +1614,7 @@ INTERN struct type_method compiler_methods[] = {
     { "makeconditional", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeconditional,
       DOC("(ast cond,ast tt=none,ast ff=none,string flags=\"\",scope scope=none)->ast\n"
           "(ast cond,ast tt=none,ast ff=none,int flags=0,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw TypeError Both @tt and @ff have been passed as :none\n"
           "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
@@ -1609,6 +1639,7 @@ INTERN struct type_method compiler_methods[] = {
       TYPE_METHOD_FKWDS },
     { "makebool", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makebool,
       DOC("(ast expr,bool negate=false,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct a branch for casting @expr to a boolean, optionally inverting the "
@@ -1617,12 +1648,14 @@ INTERN struct type_method compiler_methods[] = {
       TYPE_METHOD_FKWDS },
     { "makeexpand", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeexpand,
       DOC("(ast expr,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct an expand-branch that will unpack a sequence expression @expr at runtime"),
       TYPE_METHOD_FKWDS },
     { "makefunction", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makefunction,
       DOC("(ast code,scope scope=none)->ast\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The compiler of @code or @scope doesn't match @this\n"
           "@throw ReferenceError The effective @scope is not reachable from ${code.scope}\n"
           "@throw ReferenceError The effective ${scope.base} is identical to ${code.scope.base}\n"
@@ -1635,6 +1668,7 @@ INTERN struct type_method compiler_methods[] = {
           "(int name,ast binding=none,scope scope=none)->ast\n"
           "@param name The name of the operator, or one of ${[\"+\",\"-\",\"[]\",\"[:]\",\".\"]} "
                       "for ambiguous operators resolved at runtime\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The given @name is not recognized as a valid operator\n"
           "@throw ValueError The compiler of @binding or @scope doesn't match @this\n"
           "@throw ReferenceError The given @binding is not part of the same base-scope as the effective @scope\n"
@@ -1650,6 +1684,7 @@ INTERN struct type_method compiler_methods[] = {
           "(int name,ast a,ast b=none,ast c=none,ast d=none,int flags=0,scope=none)->ast\n"
           "@param name The name of the operator, or one of ${[\"+\",\"-\",\"[]\",\"[:]\",\".\"]} "
                       "for ambiguous operators resolved based on argument count\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The given @name is not recognized as a valid operator\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw ReferenceError One of the given branches is not part of the same base-scope as the effective @scope\n"
@@ -1674,6 +1709,7 @@ INTERN struct type_method compiler_methods[] = {
           "@param name The name of the action (see table below)\n"
           "@param mustrun When :false, ast-optimization may optimize away side-effects caused by action operands. "
                          "Otherwise, all operands are required to execute as required by the action (which usually means executed-in-order)\n"
+          "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@throw ValueError The given @name is not recognized as a valid action\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw ReferenceError One of the given branches is not part of the same base-scope as the effective @scope\n"
@@ -1700,7 +1736,11 @@ INTERN struct type_method compiler_methods[] = {
           "$\"all\"|${a && ...}|1|Evaluate to :true if all elements from @a evaluate to :true or when @a is empty, or :false otherwise, with the side-effect of enumerating @a\n"
           "$\"store\"|${a = b}|2|Store the expression in @b into the branch @a (@a may be a #makesym, #makemultiple, or a $\"getitem\", $\"getrange\", or $\"getattr\" #makeoperator branch)\n"
           "$\"assert\"|${assert(a)} or ${assert(a,b)}|1 or 2|Assert that @a evaluates to :true when cast to a boolean, otherwise throwing an :AssertionError at runtime, alongside an optional message @b. "
-                      "When :true and used in an expression, evaluate to the propagated value of @a, such that ${print assert(42);} will output $42 to :file.stdout}"),
+                      "When :true and used in an expression, evaluate to the propagated value of @a, such that ${print assert(42);} would output $42 to :file.stdout\n"
+          "$\"boundattr\"|${a.operator . (b) is bound}|2|Evaluate to :true / :false when attribute @b of @a is bound at runtime\n"
+          "$\"sameobj\"|${a === b is bound}|2|Evaluate to :true when @a and @b are the same object at runtime, or :false otherwise\n"
+          "$\"diffobj\"|${a !== b is bound}|2|Evaluate to :true when @a and @b are different objects at runtime, or :false otherwise\n"
+          "$\"callkw\"|${a(b...,**c)}|3|Perform a call to @a, using positional arguments from @b, and a keyword list from @c}"),
       TYPE_METHOD_FKWDS },
     { "makeclass", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeclass,
       DOC("TODO"),
@@ -1722,6 +1762,7 @@ INTERN struct type_method compiler_methods[] = {
 
 INTERN struct type_member compiler_class_members[] = {
     TYPE_MEMBER_CONST("lexer",&DeeCompilerLexer_Type),
+    TYPE_MEMBER_CONST("parser",&DeeCompilerParser_Type),
     TYPE_MEMBER_CONST("symbol",&DeeCompilerSymbol_Type),
     TYPE_MEMBER_CONST("ast",&DeeCompilerAst_Type),
     TYPE_MEMBER_CONST("scope",&DeeCompilerScope_Type),

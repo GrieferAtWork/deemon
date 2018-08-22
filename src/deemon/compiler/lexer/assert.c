@@ -49,13 +49,13 @@ ast_parse_assert(bool needs_parenthesis) {
   result = ast_parse_unary(LOOKUP_SYM_NORMAL);
   if unlikely(!result) goto err;
   if (!needs_parenthesis) {
-   result = ast_parse_unary_postexpr(result);
+   result = ast_parse_postexpr(result);
    if unlikely(!result) goto err;
   }
   if (!needs_parenthesis && tok == ',') {
    /* The message was passed individually. */
    if unlikely(yield() < 0) goto err_r;
-   message = ast_parse_expression(LOOKUP_SYM_NORMAL);
+   message = ast_parse_expr(LOOKUP_SYM_NORMAL);
    if unlikely(!message) goto err_r;
   } else if (result->a_type == AST_MULTIPLE &&
              result->a_flag == AST_FMULTIPLE_TUPLE &&
@@ -73,11 +73,11 @@ ast_parse_assert(bool needs_parenthesis) {
   if (needs_parenthesis &&
       WARN(W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
       goto err;
-  result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  result = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!result) goto err;
   if (tok == ',') {
    if unlikely(yield() < 0) goto err_r;
-   message = ast_parse_expression(LOOKUP_SYM_NORMAL);
+   message = ast_parse_expr(LOOKUP_SYM_NORMAL);
    if unlikely(!message) goto err_r;
   }
  }
@@ -132,11 +132,11 @@ ast_parse_assert_hybrid(unsigned int *pwas_expression) {
   if (pwas_expression)
      *pwas_expression = AST_PARSE_WASEXPR_MAYBE;
  } else {
-  result = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  result = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!result) goto err;
   if (tok == ',') {
    if unlikely(yield() < 0) goto err_r;
-   message = ast_parse_expression(LOOKUP_SYM_NORMAL);
+   message = ast_parse_expr(LOOKUP_SYM_NORMAL);
    if unlikely(!message) goto err_r;
   }
   if (pwas_expression)

@@ -397,7 +397,7 @@ err:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_unary_base(unsigned int lookup_mode) {
+ast_parse_unaryhead(unsigned int lookup_mode) {
  DREF struct ast *result;
  DREF struct ast *merge;
  struct ast_loc loc;
@@ -477,7 +477,7 @@ mkconst:
    old_flags = TPPLexer_Current->l_flags;
    TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
    if unlikely(yield() < 0) goto err_flags;
-   result = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+   result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
    if unlikely(likely(tok == ')') ? (yield() < 0) :
                WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
@@ -507,7 +507,7 @@ do_unary_operator_kwd:
    old_flags = TPPLexer_Current->l_flags;
    TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
    if unlikely(yield() < 0) goto err_flags;
-   result = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+   result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
    if unlikely(likely(tok == ')') ? (yield() < 0) :
                WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
@@ -515,7 +515,7 @@ do_unary_operator_kwd:
   } else
 #elif defined(CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS)
   if (tok == '(') {
-   result = ast_parse_unary_base(LOOKUP_SYM_SECONDARY);
+   result = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY);
   } else
 #endif
   {
@@ -551,7 +551,7 @@ do_unary_operator:
    old_flags = TPPLexer_Current->l_flags;
    TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
    if unlikely(yield() < 0) goto err_flags;
-   result = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+   result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
    if unlikely(likely(tok == ')') ? (yield() < 0) :
                WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
@@ -559,7 +559,7 @@ do_unary_operator:
   } else
 #elif defined(CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS)
   if (tok == '(') {
-   result = ast_parse_unary_base(LOOKUP_SYM_SECONDARY);
+   result = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY);
   } else
 #endif
   {
@@ -637,14 +637,14 @@ do_empty_cell:
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == '(') ? (yield() < 0) :
               WARN(W_EXPECTED_LPAREN_AFTER_IF)) goto err_flags;
-  result = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+  result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(!result) goto err;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
               WARN(W_EXPECTED_RPAREN_AFTER_IF)) goto err;
   tt_branch = NULL;
   if (tok != KWD_else && tok != KWD_elif) {
-   tt_branch = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+   tt_branch = ast_parse_expr(LOOKUP_SYM_SECONDARY);
    if unlikely(!tt_branch) goto err_r;
   }
   ff_branch = NULL;
@@ -655,7 +655,7 @@ do_empty_cell:
   if (tok == KWD_else) {
    if unlikely(yield() < 0) {err_tt: ast_xdecref(tt_branch); goto err_r; }
 do_else_branch:
-   ff_branch = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+   ff_branch = ast_parse_expr(LOOKUP_SYM_SECONDARY);
    if unlikely(!ff_branch) goto err_tt;
   }
   merge = ast_setddi(ast_conditional(AST_FCOND_EVAL|expect,result,tt_branch,ff_branch),&loc);
@@ -967,12 +967,12 @@ do_range_expression:
      /* No end index given. */
      result = ast_constexpr(Dee_None);
     } else {
-     result = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+     result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
     }
     if unlikely(!result) { ast_decref(begin_expression); goto err_flags; }
     if (tok == ',') {
      if unlikely(yield() < 0) {err_begin_expr: ast_decref(begin_expression); goto err_r_flags; }
-     step_expression = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+     step_expression = ast_parse_expr(LOOKUP_SYM_SECONDARY);
     } else {
      step_expression = ast_constexpr(Dee_None);
     }
@@ -1035,7 +1035,7 @@ do_range_expression:
   if unlikely(likely(tok == '(') ? (yield() < 0) :
               WARN(W_EXPECTED_LPAREN_AFTER_NTH))
      goto err_flags;
-  result = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+  result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
   if unlikely(!result) goto err_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   /* Optimize the ast-expression to propagate constant, thus
@@ -1151,7 +1151,7 @@ err:
  return NULL;
 }
 INTERN DREF struct ast *FCALL
-ast_parse_unary_suffix(/*inherit(always)*/DREF struct ast *__restrict result) {
+ast_parse_unary_operand(/*inherit(always)*/DREF struct ast *__restrict result) {
  DREF struct ast *merge;
  DREF struct ast *other;
  struct ast_loc loc;
@@ -1253,7 +1253,7 @@ got_attr2:;
     if unlikely(!other) goto err_r_flags;
     goto do_range;
    }
-   other = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+   other = ast_parse_expr(LOOKUP_SYM_SECONDARY);
    if unlikely(!other) goto err_r_flags;
    if (tok == ':') {
     DREF struct ast *third;
@@ -1263,7 +1263,7 @@ do_range:
     if (tok == ']') {
      third = ast_constexpr(Dee_None);
     } else {
-     third = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+     third = ast_parse_expr(LOOKUP_SYM_SECONDARY);
     }
     if unlikely(!third) goto err_2_flags;
     merge = ast_operator3(OPERATOR_GETRANGE,0,result,other,third);
@@ -1284,7 +1284,7 @@ do_range:
 
   case '{': /* Brace initializers. */
    loc_here(&loc);
-   other = ast_parse_expression(LOOKUP_SYM_SECONDARY);
+   other = ast_parse_expr(LOOKUP_SYM_SECONDARY);
    if unlikely(!other) goto err_r;
 #if 0 /* It's only the preferred type. - Nothing stopping the parser from using a different sequence type! */
    if (!preferred_type)
@@ -1426,9 +1426,9 @@ err:
 INTERN DREF struct ast *FCALL
 ast_parse_unary(unsigned int lookup_mode) {
  DREF struct ast *result;
- result = ast_parse_unary_base(lookup_mode);
+ result = ast_parse_unaryhead(lookup_mode);
  if likely(result)
-    result = ast_parse_unary_suffix(result);
+    result = ast_parse_unary_operand(result);
  return result;
 }
 
@@ -2154,8 +2154,8 @@ done:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_unary_postexpr(/*inherit(always)*/DREF struct ast *__restrict ast) {
- ast = ast_parse_unary_suffix(ast);
+ast_parse_postexpr(/*inherit(always)*/DREF struct ast *__restrict ast) {
+ ast = ast_parse_unary_operand(ast);
  if unlikely(!ast) goto done;
  /* parse binary operators */
  if (TOKEN_IS_PROD(tok)   && unlikely((ast = ast_parse_prod_operand(ast)) == NULL)) goto done;

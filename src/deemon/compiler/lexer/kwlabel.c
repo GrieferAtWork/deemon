@@ -49,7 +49,7 @@ ast_parse_argument_list(uint16_t mode,
    */
   if unlikely(yield() < 0) goto err_r;
   /* Parse the keyword invocation AST. */
-  *pkeyword_labels = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  *pkeyword_labels = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!*pkeyword_labels) goto err_r;
  } else if (TPP_ISKEYWORD(tok)) {
   char *next = peek_next_token(NULL);
@@ -67,7 +67,7 @@ ast_parse_argument_list(uint16_t mode,
    kwdlist = DeeKwds_NewWithHint(1);
    if unlikely(!kwdlist) goto err_r;
    kwdlist_ast = ast_sethere(ast_constexpr(kwdlist));
-   Dee_Decref(kwdlist);
+   Dee_Decref_unlikely(kwdlist);
    if unlikely(!kwdlist_ast) goto err_r;
    *pkeyword_labels = kwdlist_ast; /* Inherit reference (on success) */
    multiple_a = result->a_multiple.m_astc;
@@ -75,7 +75,7 @@ ast_parse_argument_list(uint16_t mode,
    for (;;) {
     DREF struct ast *argument_value;
     /* Append the argument label. */
-    if (DeeKwds_Append(&kwdlist,
+    if (DeeKwds_Append(&kwdlist_ast->a_constexpr,
                         token.t_kwd->k_name,
                         token.t_kwd->k_size,
                         hash_str(token.t_kwd->k_name)))
@@ -91,18 +91,18 @@ ast_parse_argument_list(uint16_t mode,
      size_t new_alloc = multiple_a * 2;
      if unlikely(!new_alloc) new_alloc = 2;
      new_astv = (DREF struct ast **)Dee_TryRealloc(result->a_multiple.m_astv,
-                                                     new_alloc*sizeof(DREF struct ast *));
+                                                   new_alloc*sizeof(DREF struct ast *));
      if unlikely(!new_astv) {
       new_alloc = result->a_multiple.m_astc + 1;
       new_astv = (DREF struct ast **)Dee_Realloc(result->a_multiple.m_astv,
-                                                   new_alloc*sizeof(DREF struct ast *));
+                                                 new_alloc*sizeof(DREF struct ast *));
       if unlikely(!new_astv) goto err_r_kwdlist;
      }
      result->a_multiple.m_astv = new_astv;
      multiple_a = new_alloc;
     }
     /* Parse the expression that is bound to the keyword. */
-    argument_value = ast_parse_expression(LOOKUP_SYM_NORMAL);
+    argument_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
     if unlikely(!argument_value) goto err_r_kwdlist;
     result->a_multiple.m_astv[result->a_multiple.m_astc++] = argument_value; /* Inherit reference. */
     if (tok != ',') break;
@@ -121,8 +121,8 @@ ast_parse_argument_list(uint16_t mode,
    if (multiple_a > result->a_multiple.m_astc) {
     DREF struct ast **new_astv;
     new_astv = (DREF struct ast **)Dee_TryRealloc(result->a_multiple.m_astv,
-                                                    result->a_multiple.m_astc*
-                                                    sizeof(DREF struct ast *));
+                                                  result->a_multiple.m_astc*
+                                                  sizeof(DREF struct ast *));
     if likely(new_astv)
        result->a_multiple.m_astv = new_astv;
    }

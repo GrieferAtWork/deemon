@@ -323,7 +323,7 @@ next_expr:
    if (WARN(W_EXPECTED_VARIABLE_AFTER_VISIBILITY))
        goto err;
   }
-  current = ast_parse_expression(lookup_mode);
+  current = ast_parse_expr(lookup_mode);
   /* Check for errors. */
   if unlikely(!current)
      goto err;
@@ -381,7 +381,7 @@ next_expr:
     loc_here(&equal_loc);
     if (tok == '=' && unlikely(yield() < 0)) goto err_current;
     /* Parse a preferred-type brace expression. */
-    args = ast_parse_expression(LOOKUP_SYM_NORMAL);
+    args = ast_parse_expr(LOOKUP_SYM_NORMAL);
     if unlikely(!args) goto err_current;
     /* Wrap the returned ast in a 1-element tuple (for the argument list) */
     exprv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));

@@ -316,6 +316,7 @@ INTERN DREF Kwds *DCALL kwds_rehash(DREF Kwds *__restrict self) {
    break;
   }
  }
+ memcpy(result,self,COMPILER_OFFSETAFTER(Kwds,kw_size));
  DeeObject_Free(self);
 done:
  return result;

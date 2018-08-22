@@ -114,7 +114,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   if unlikely(likely(tok == '(') ? (yield() < 0) :
               WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
      goto err_r_flags;
-  other = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  other = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!other)
      goto err_r_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -239,7 +239,7 @@ err_for_loop:
   if unlikely(likely(tok == ':') ? (yield() < 0) :
               WARN(W_EXPECTED_COLLON_AFTER_FOREACH))
      goto err_foreach_elem_flags;
-  foreach_iter = ast_parse_expression(LOOKUP_SYM_NORMAL);
+  foreach_iter = ast_parse_expr(LOOKUP_SYM_NORMAL);
   if unlikely(!foreach_iter)
      goto err_foreach_elem_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -270,7 +270,7 @@ err_foreach_elem_flags:
 
  default:
   /* Fallback: parse a brace expression and wrap it inside a yield-statement. */
-  result = wrap_yield(ast_parse_expression(LOOKUP_SYM_NORMAL),ddi_loc);
+  result = wrap_yield(ast_parse_expr(LOOKUP_SYM_NORMAL),ddi_loc);
   break;
  }
  return result;

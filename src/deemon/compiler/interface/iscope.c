@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
+#include <deemon/format.h>
 #include <deemon/error.h>
 #include <deemon/util/cache.h>
 #include <deemon/compiler/ast.h>
@@ -54,6 +55,19 @@ PRIVATE struct type_getset scope_getsets[] = {
     { NULL }
 };
 
+INTERN int DCALL
+print_scope_repr(DeeScopeObject *__restrict self,
+                 struct unicode_printer *__restrict printer) {
+ dssize_t error;
+ error = unicode_printer_printf(printer,"<scope at %p>",self);
+ return unlikely(error < 0) ? -1 : 0;
+}
+
+PRIVATE DREF DeeObject *DCALL
+scope_repr(DeeCompilerScopeObject *__restrict self) {
+ return DeeString_Newf("<scope at %p>",self->ci_value);
+}
+
 
 INTERN DeeTypeObject DeeCompilerScope_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -79,7 +93,7 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
     },
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
-        /* .tp_repr = */NULL,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_repr,
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */NULL,

@@ -46,6 +46,307 @@ DECL_BEGIN
 DECLARE_OBJECT_CACHE(compiler_item,DeeCompilerItemObject)
 DECLARE_OBJECT_CACHE(compiler_wrap,DeeCompilerWrapperObject)
 
+
+INTERN tok_t DCALL
+get_token_from_str(char const *__restrict name, bool create_missing) {
+ switch (name[0]) {
+ case 0: return TOK_EOF; /* End-of-file token. */
+ /* Tokens containing 2 or more characters. */
+
+ case '<':
+  if (name[1] == '<') {
+   if (!name[2]) return TOK_SHL;
+   if (name[2] == '=' && !name[3]) return TOK_SHL_EQUAL;
+   if (name[2] == '<') {
+    if (!name[3]) return TOK_LANGLE3;
+    if (name[3] == '=' && !name[4]) return TOK_LANGLE3_EQUAL;
+   }
+  } else if (name[1] == '=') {
+   if (!name[2]) return TOK_LOWER_EQUAL;
+  } else if (name[1] == '>') {
+   if (!name[2]) return TOK_LOGT;
+  }
+  break;
+
+ case '>':
+  if (name[1] == '>') {
+   if (!name[2]) return TOK_SHR;
+   if (name[2] == '=' && !name[3]) return TOK_SHR_EQUAL;
+   if (name[2] == '>') {
+    if (!name[3]) return TOK_RANGLE3;
+    if (name[3] == '=' && !name[4]) return TOK_RANGLE3_EQUAL;
+   }
+  } else if (name[1] == '=') {
+   if (!name[2]) return TOK_GREATER_EQUAL;
+  }
+  break;
+
+ case '=':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_EQUAL;
+   if (name[2] == '=' && !name[3])
+       return TOK_EQUAL3;
+  }
+  break;
+ case '!':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_NOT_EQUAL;
+   if (name[2] == '=' && !name[3])
+       return TOK_NOT_EQUAL3;
+  }
+  break;
+
+ case '.':
+  if (name[1] == '*') {
+   if (!name[2])
+       return TOK_DOT_STAR;
+  } else if (name[1] == '.') {
+   if (!name[2])
+       return TOK_DOTDOT;
+   if (name[2] == '.' && !name[3])
+       return TOK_DOTS;
+  }
+  break;
+
+ case ':':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_COLLON_EQUAL;
+  } else if (name[1] == ':') {
+   if (!name[2])
+       return TOK_NAMESPACE;
+  }
+  break;
+
+ case '+':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_ADD_EQUAL;
+  } else if (name[1] == '+') {
+   if (!name[2])
+       return TOK_INC;
+  }
+  break;
+
+ case '-':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_SUB_EQUAL;
+  } else if (name[1] == '-') {
+   if (!name[2])
+       return TOK_DEC;
+  } else if (name[1] == '>') {
+   if (!name[2])
+       return TOK_ARROW;
+   if (name[2] == '*' && !name[3])
+       return TOK_ARROW_STAR;
+  }
+  break;
+
+ case '*':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_MUL_EQUAL;
+  } else if (name[1] == '*') {
+   if (!name[2])
+       return TOK_POW;
+   if (name[2] == '=' && !name[3])
+       return TOK_POW_EQUAL;
+  }
+  break;
+
+ case '/':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_DIV_EQUAL;
+  }
+  break;
+
+ case '%':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_MOD_EQUAL;
+  }
+  break;
+
+ case '&':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_AND_EQUAL;
+  } else if (name[1] == '&') {
+   if (!name[2])
+       return TOK_LAND;
+  }
+  break;
+
+ case '|':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_OR_EQUAL;
+  } else if (name[1] == '|') {
+   if (!name[2])
+       return TOK_LOR;
+  }
+  break;
+
+ case '^':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_XOR_EQUAL;
+  } else if (name[1] == '^') {
+   if (!name[2])
+       return TOK_LXOR;
+  }
+  break;
+
+ case '@':
+  if (name[1] == '=') {
+   if (!name[2])
+       return TOK_AT_EQUAL;
+  }
+  break;
+
+ case '#':
+  if (name[1] == '#') {
+   if (!name[2])
+       return TOK_GLUE;
+  }
+  break;
+
+ case '~':
+  if (name[1] == '~') {
+   if (!name[2])
+       return TOK_TILDE_TILDE;
+  }
+  break;
+
+ default: break;
+ }
+ /* Simple case: single-character token. */
+ if (!name[1])
+      return (tok_t)name[0];
+ /* Fallback: lookup a keyword for the token. */
+ {
+  struct TPPKeyword *keyword;
+  keyword = TPPLexer_LookupKeyword(name,strlen(name),create_missing);
+  if (keyword) return keyword->k_id;
+  return create_missing ? TOK_ERR : -2;
+ }
+}
+
+INTERN tok_t DCALL
+get_token_from_obj(DeeObject *__restrict obj, bool create_missing) {
+ unsigned int result;
+ if (DeeString_Check(obj))
+     return get_token_from_str(DeeString_STR(obj),create_missing);
+ if (DeeObject_AsUInt(obj,&result))
+     return TOK_ERR;
+ if unlikely((tok_t)result < 0) {
+  err_integer_overflow(obj,sizeof(tok_t) * 8,false);
+  result = (unsigned int)TOK_ERR;
+ }
+ return (tok_t)result;
+}
+
+PRIVATE char const largetok_names[][4] = {
+    /* [TOK_SHL           - TOK_TWOCHAR_BEGIN] = */{ '<','<' },
+    /* [TOK_SHR           - TOK_TWOCHAR_BEGIN] = */{ '>','>' },
+    /* [TOK_EQUAL         - TOK_TWOCHAR_BEGIN] = */{ '=','=' },
+    /* [TOK_NOT_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '!','=' },
+    /* [TOK_GREATER_EQUAL - TOK_TWOCHAR_BEGIN] = */{ '>','=' },
+    /* [TOK_LOWER_EQUAL   - TOK_TWOCHAR_BEGIN] = */{ '<','=' },
+    /* [TOK_DOTS          - TOK_TWOCHAR_BEGIN] = */{ '.','.','.' },
+    /* [TOK_ADD_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '+','=' },
+    /* [TOK_SUB_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '-','=' },
+    /* [TOK_MUL_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '*','=' },
+    /* [TOK_DIV_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '/','=' },
+    /* [TOK_MOD_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '%','=' },
+    /* [TOK_SHL_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '<','<','=' },
+    /* [TOK_SHR_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '>','>','=' },
+    /* [TOK_AND_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '&','=' },
+    /* [TOK_OR_EQUAL      - TOK_TWOCHAR_BEGIN] = */{ '|','=' },
+    /* [TOK_XOR_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '^','=' },
+    /* [TOK_POW_EQUAL     - TOK_TWOCHAR_BEGIN] = */{ '*','*','=' },
+    /* [TOK_AT_EQUAL      - TOK_TWOCHAR_BEGIN] = */{ '@','=' },
+    /* [TOK_GLUE          - TOK_TWOCHAR_BEGIN] = */{ '#','#' },
+    /* [TOK_LAND          - TOK_TWOCHAR_BEGIN] = */{ '&','&' },
+    /* [TOK_LOR           - TOK_TWOCHAR_BEGIN] = */{ '|','|' },
+    /* [TOK_LXOR          - TOK_TWOCHAR_BEGIN] = */{ '^','^' },
+    /* [TOK_INC           - TOK_TWOCHAR_BEGIN] = */{ '+','+' },
+    /* [TOK_DEC           - TOK_TWOCHAR_BEGIN] = */{ '-','-' },
+    /* [TOK_POW           - TOK_TWOCHAR_BEGIN] = */{ '*','*' },
+    /* [TOK_TILDE_TILDE   - TOK_TWOCHAR_BEGIN] = */{ '~','~' },
+    /* [TOK_ARROW         - TOK_TWOCHAR_BEGIN] = */{ '-','>' },
+    /* [TOK_COLLON_EQUAL  - TOK_TWOCHAR_BEGIN] = */{ ':','=' },
+    /* [TOK_NAMESPACE     - TOK_TWOCHAR_BEGIN] = */{ ':',':' },
+    /* [TOK_ARROW_STAR    - TOK_TWOCHAR_BEGIN] = */{ '-','>','*' },
+    /* [TOK_DOT_STAR      - TOK_TWOCHAR_BEGIN] = */{ '.','*' },
+    /* [TOK_DOTDOT        - TOK_TWOCHAR_BEGIN] = */{ '.','.' },
+    /* [TOK_LOGT          - TOK_TWOCHAR_BEGIN] = */{ '<','>' },
+    /* [TOK_LANGLE3       - TOK_TWOCHAR_BEGIN] = */{ '<','<','<' },
+    /* [TOK_RANGLE3       - TOK_TWOCHAR_BEGIN] = */{ '>','>','>' },
+    /* [TOK_LANGLE3_EQUAL - TOK_TWOCHAR_BEGIN] = */{ '<','<','<','=' },
+    /* [TOK_RANGLE3_EQUAL - TOK_TWOCHAR_BEGIN] = */{ '>','>','>','=' },
+    /* [TOK_EQUAL3        - TOK_TWOCHAR_BEGIN] = */{ '=','=','=' },
+    /* [TOK_NOT_EQUAL3    - TOK_TWOCHAR_BEGIN] = */{ '!','=','=' },
+};
+
+STATIC_ASSERT(COMPILER_LENOF(largetok_names) ==
+             (TOK_TWOCHAR_END - TOK_TWOCHAR_BEGIN));
+
+
+INTERN DREF DeeObject *DCALL
+get_token_name(tok_t id, struct TPPKeyword *kwd) {
+ if ((unsigned int)id <= 255) {
+  switch (id) {
+  case TOK_EOF:     return_empty_string;
+  case TOK_FLOAT:   return DeeString_NewSized(".0",2);
+  case TOK_COMMENT: return DeeString_NewSized("//",2);
+  default: break;
+  }
+  return DeeString_Chr((uint8_t)id);
+ }
+ if (id >= TOK_TWOCHAR_BEGIN &&
+     id <  TOK_TWOCHAR_END) {
+  char const *result = largetok_names[id - TOK_TWOCHAR_BEGIN];
+  return DeeString_NewSized(result,result[2] ? (result[3] ? 4 : 3) : 2);
+ }
+ if (!kwd)
+      kwd = TPPLexer_LookupKeywordID(id);
+ if unlikely(!kwd) return ITER_DONE;
+ return DeeString_NewUtf8(kwd->k_name,
+                          kwd->k_size,
+                          STRING_ERROR_FIGNORE);
+}
+
+INTERN dhash_t DCALL
+get_token_namehash(tok_t id, struct TPPKeyword *kwd) {
+ if ((unsigned int)id <= 255) {
+  char name[2];
+  switch (id) {
+  case TOK_EOF:     return hash_ptr(name,0);
+  case TOK_FLOAT:   return hash_ptr(".0",2);
+  case TOK_COMMENT: return hash_ptr("//",2);
+  default: break;
+  }
+  name[0] = (char)id;
+  return hash_ptr(name,1);
+ }
+ if (id >= TOK_TWOCHAR_BEGIN &&
+     id <  TOK_TWOCHAR_END) {
+  char const *result = largetok_names[id - TOK_TWOCHAR_BEGIN];
+  return hash_ptr(result,result[2] ? (result[3] ? 4 : 3) : 2);
+ }
+ if (!kwd)
+      kwd = TPPLexer_LookupKeywordID(id);
+ if unlikely(!kwd) return (dhash_t)-1;
+ return hash_ptr(kwd->k_name,kwd->k_size); /* XXX: hash_utf8? */
+}
+
+
+
 PRIVATE DREF DeeObject *DCALL
 keyword_str(DeeCompilerItemObject *__restrict self) {
  DREF DeeObject *result = NULL;
@@ -1819,7 +2120,19 @@ err:
 PRIVATE struct type_method lexer_methods[] = {
     { "include", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_include,
       DOC("(file stream,string filename=none)->none\n"
-          "(string filename,string filename=none)->none\n") },
+          "(string filename,string filename=none)->none\n"
+          "Include a new file, pushing its contents onto the ${#include}-stack\n"
+          "Note that when including a file with the current token being $0 (as indicate of EOF), "
+          "you must call one of the #next-functions in order to load the first token of the newly "
+          "pushed file. - Failing to do so will cause the compiler to not function properly, as it "
+          "will think that no input data is available, causing compiler error to be produced:\n"
+          ">import compiler from rt;\n"
+          ">import file from deemon;\n"
+          ">local com = compiler();\n"
+          ">com.lexer.include(file.open(\"input.dee\"));\n"
+          ">com.lexer.next(); /* Don't forget to always load the first token */\n"
+          ">local ast = com.parser.parse_allstmt();\n"
+          ">print ast;") },
     { "nextraw", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_nextraw,
       DOC("->int\nLoad the next token and return its id (no macros, or preprocessor directives are processed)") },
     { "nextpp", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_nextpp,
@@ -2332,20 +2645,6 @@ INTERN DeeTypeObject DeeCompilerLexerIfdef_Type = {
     /* .tp_class_members = */NULL
 };
 
-PRIVATE DREF DeeObject *DCALL
-token_str(DeeCompilerWrapperObject *__restrict self) {
- DREF DeeObject *result = NULL;
- COMPILER_BEGIN(self->cw_compiler);
- result = DeeString_Newf("<token #%lu (%u): %$q>",
-                         TPPLexer_Current->l_token.t_num,
-                         TPPLexer_Current->l_token.t_id,
-                        (size_t)(TPPLexer_Current->l_token.t_end -
-                                 TPPLexer_Current->l_token.t_begin),
-                         TPPLexer_Current->l_token.t_begin);
- COMPILER_END();
- return result;
-}
-
 PRIVATE int DCALL
 token_bool(DeeCompilerWrapperObject *__restrict self) {
  int result;
@@ -2375,6 +2674,44 @@ err:
  unicode_printer_fini(&printer);
  return NULL;
 }
+
+PRIVATE int
+(TPPCALL unicode_printer_tppappend_escape)(char const *__restrict buf, size_t bufsize, void *arg) {
+ dssize_t result;
+ result = Dee_FormatQuote((dformatprinter)&unicode_printer_print,
+                           arg,buf,bufsize,FORMAT_QUOTE_FPRINTRAW);
+ return unlikely(result < 0) ? -1 : 0;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+token_str(DeeCompilerWrapperObject *__restrict self) {
+ DREF DeeObject *result;
+ COMPILER_BEGIN(self->cw_compiler);
+ result = get_token_name(tok,token.t_kwd);
+ if unlikely(result == ITER_DONE)
+    result = DeeString_Chr((uint32_t)tok); /* Shouldn't normally happen (but may after a partial reset) */
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+token_repr(DeeCompilerWrapperObject *__restrict self) {
+ int error;
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ COMPILER_BEGIN(self->cw_compiler);
+ if unlikely(unicode_printer_putc(&printer,'\"')) goto err;
+ error = TPP_PrintToken(&unicode_printer_tppappend_escape,&printer);
+ COMPILER_END();
+ if unlikely(error) goto err;
+ if unlikely(unicode_printer_putc(&printer,'\"')) goto err;
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_fini(&printer);
+ return NULL;
+}
+
+
 PRIVATE DREF DeeObject *DCALL
 token_rawtext(DeeCompilerWrapperObject *__restrict self) {
  DREF DeeObject *result;
@@ -2595,14 +2932,110 @@ PRIVATE struct type_method lexer_token_methods[] = {
 };
 
 
+PRIVATE dhash_t DCALL
+token_hash(DeeCompilerWrapperObject *__restrict self) {
+ dhash_t result;
+ COMPILER_BEGIN(self->cw_compiler);
+ result = get_token_namehash(tok,token.t_kwd);
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+token_eq(DeeCompilerWrapperObject *__restrict self,
+         DeeObject *__restrict other) {
+ bool result; char const *other_utf8; tok_t other_id;
+ if (DeeObject_AssertTypeExact(other,&DeeString_Type) ||
+    (other_utf8 = DeeString_AsUtf8(other)) == NULL)
+     return NULL;
+ COMPILER_BEGIN(self->cw_compiler);
+ other_id = get_token_from_str(other_utf8,false);
+ result   = tok == other_id;
+ COMPILER_END();
+ return_bool_(result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+token_ne(DeeCompilerWrapperObject *__restrict self,
+         DeeObject *__restrict other) {
+ bool result; char const *other_utf8; tok_t other_id;
+ if (DeeObject_AssertTypeExact(other,&DeeString_Type) ||
+    (other_utf8 = DeeString_AsUtf8(other)) == NULL)
+     return NULL;
+ COMPILER_BEGIN(self->cw_compiler);
+ other_id = get_token_from_str(other_utf8,false);
+ result   = tok != other_id;
+ COMPILER_END();
+ return_bool_(result);
+}
+
+PRIVATE struct type_cmp token_cmp = {
+    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&token_hash,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&token_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&token_ne
+};
+
+
 INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"lexer_token",
+    /* .tp_name     = */"token",
     /* .tp_doc      = */DOC("str->\n"
-                            "Returns a string representation for the contents of @this token\n"
+                            "Returns a string representation for the #id of @this token\n"
+                            "For most tokens, this is equivalent to #text, with the exception of the following:\n"
+                            "%{table Str-value|Token|Description\n"
+                            "$\"\"|${<EOF>}|End-of-file is encoded as an empty string\n"
+                            "$\"\\\'\"|$\'x\'|Character tokens have a single-quote as str-id\n"
+                            "$\"\\\"\"|$\"foo\"|String tokens have a double-quote as str-id (including raw string literals)\n"
+                            "$\"0\"|$42|Integer tokens have use the digit 0 as str-id\n"
+                            "$\".0\"|${1.5}|Floating point tokens are encoded as `.0' as str-id\n"
+                            "$\"\n\"|${<LF>}|Any kind of line-feed token is encoded as an LF-character\n"
+                            "$\" \"|${<SPACE>}|A space-sequence of any sort of length is encoded as a single space character\n"
+                            "$\"//\"|${<COMMENT>}|Any kind of comment token is encoded as 2 forward slashes `//'\n"
+                            "}\n"
+                            "\n"
+                            "repr->\n"
+                            "Same as ${repr this.text}\n"
                             "\n"
                             "bool->\n"
-                            "Returns :true if @this token has a non-negative and non-zero #id"),
+                            "Returns :true if @this token has a non-negative and non-zero #id\n"
+                            "\n"
+                            "hash->\n"
+                            "Returns the hash value of ${str this}\n"
+                            "\n"
+                            "==(string name)\n"
+                            "!=(string name)\n"
+                            "Compare ${str this} with the given @name\n"
+                            "This operator, alongside #op:hash allows tokens to be used in switch-statements\n"
+                            ">switch (com.lexer.token) {\n"
+                            ">case \"foobar\":\n"
+                            "> print \"keyword: foobar\";\n"
+                            "> break;\n"
+                            ">case \"(\":\n"
+                            "> print \"token: lparen\";\n"
+                            "> break;\n"
+                            ">case \"++\":\n"
+                            "> print \"token: increment\";\n"
+                            "> break;\n"
+                            ">case \"\":\n"
+                            "> print \"Special token: end-of-file\";\n"
+                            "> break;\n"
+                            ">case \"//\":\n"
+                            "> print \"Special token: comment\";\n"
+                            "> break;\n"
+                            ">case \"\\\"\":\n"
+                            "> print \"Special token: string\",com.lexer.token.decodestring();\n"
+                            "> break;\n"
+                            ">case \"\\\"\':\n"
+                            "> print \"Special token: character\",com.lexer.token.decodeinteger();\n"
+                            "> break;\n"
+                            ">case \"0\":\n"
+                            "> print \"Special token: integer\",com.lexer.token.decodeinteger();\n"
+                            "> break;\n"
+                            ">default:\n"
+                            "> print \"Other: \",repr com.lexer.token;\n"
+                            "> break;\n"
+                            ">}\n"
+                            ),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -2623,14 +3056,14 @@ INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
     },
     /* .tp_cast = */{
         /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_str,
-        /* .tp_repr = */NULL,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_repr,
         /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&token_bool
     },
     /* .tp_call          = */NULL,
     /* .tp_visit         = */NULL,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */&token_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */NULL,
