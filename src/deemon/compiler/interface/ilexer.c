@@ -868,6 +868,7 @@ lexer_get_basefile(DeeCompilerWrapperObject *__restrict self) {
 INTERN DREF DeeObject *DCALL
 lexer_get_textposition(DeeCompilerWrapperObject *__restrict self) {
  DREF DeeObject *result;
+ DREF DeeObject *file_ob;
  struct TPPFile *file;
  COMPILER_BEGIN(self->cw_compiler);
  file = TPPLexer_Current->l_token.t_file;
@@ -876,7 +877,7 @@ is_empty_file:
   result = Dee_None;
   Dee_Incref(Dee_None);
  } else {
-  char *pointer,*filename; size_t filename_length;
+  char *pointer;
   struct TPPLCInfo lc;
   if (file->f_kind == TPPFILE_KIND_TEXT) {
    pointer = TPPLexer_Current->l_token.t_begin;
@@ -886,11 +887,14 @@ is_empty_file:
        goto is_empty_file;
    pointer = file->f_pos;
   }
-  filename = (char *)TPPFile_Filename(file,&filename_length);
-  TPPFile_LCAt(file,&lc,pointer);
-  result = DeeTuple_Newf("$sdd",
-                         filename_length,filename,
-                         lc.lc_line,lc.lc_col);
+  file_ob = DeeCompiler_GetFile(file);
+  if unlikely(!file_ob) {
+   result = NULL;
+  } else {
+   TPPFile_LCAt(file,&lc,pointer);
+   result = DeeTuple_Newf("odd",file_ob,lc.lc_line,lc.lc_col);
+   Dee_Decref_unlikely(file_ob);
+  }
  }
  COMPILER_END();
  return result;
@@ -898,6 +902,7 @@ is_empty_file:
 INTERN DREF DeeObject *DCALL
 lexer_get_textendposition(DeeCompilerWrapperObject *__restrict self) {
  DREF DeeObject *result;
+ DREF DeeObject *file_ob;
  struct TPPFile *file;
  COMPILER_BEGIN(self->cw_compiler);
  file = TPPLexer_Current->l_token.t_file;
@@ -906,7 +911,7 @@ is_empty_file:
   result = Dee_None;
   Dee_Incref(Dee_None);
  } else {
-  char *pointer,*filename; size_t filename_length;
+  char *pointer;
   struct TPPLCInfo lc;
   if (file->f_kind == TPPFILE_KIND_TEXT) {
    pointer = TPPLexer_Current->l_token.t_end;
@@ -916,11 +921,14 @@ is_empty_file:
        goto is_empty_file;
    pointer = file->f_pos;
   }
-  filename = (char *)TPPFile_Filename(file,&filename_length);
-  TPPFile_LCAt(file,&lc,pointer);
-  result = DeeTuple_Newf("$sdd",
-                         filename_length,filename,
-                         lc.lc_line,lc.lc_col);
+  file_ob = DeeCompiler_GetFile(file);
+  if unlikely(!file_ob) {
+   result = NULL;
+  } else {
+   TPPFile_LCAt(file,&lc,pointer);
+   result = DeeTuple_Newf("odd",file_ob,lc.lc_line,lc.lc_col);
+   Dee_Decref_unlikely(file_ob);
+  }
  }
  COMPILER_END();
  return result;
@@ -928,6 +936,7 @@ is_empty_file:
 INTERN DREF DeeObject *DCALL
 lexer_get_tokenposition(DeeCompilerWrapperObject *__restrict self) {
  DREF DeeObject *result;
+ DREF DeeObject *file_ob;
  struct TPPFile *file;
  COMPILER_BEGIN(self->cw_compiler);
  file = TPPLexer_Current->l_token.t_file;
@@ -935,13 +944,15 @@ lexer_get_tokenposition(DeeCompilerWrapperObject *__restrict self) {
   result = Dee_None;
   Dee_Incref(Dee_None);
  } else {
-  char *filename; size_t filename_length;
   struct TPPLCInfo lc;
-  filename = (char *)TPPFile_Filename(file,&filename_length);
   TPPFile_LCAt(file,&lc,TPPLexer_Current->l_token.t_begin);
-  result = DeeTuple_Newf("$sdd",
-                         filename_length,filename,
-                         lc.lc_line,lc.lc_col);
+  file_ob = DeeCompiler_GetFile(file);
+  if unlikely(!file_ob) {
+   result = NULL;
+  } else {
+   result = DeeTuple_Newf("odd",file_ob,lc.lc_line,lc.lc_col);
+   Dee_Decref(file_ob);
+  }
  }
  COMPILER_END();
  return result;
@@ -949,6 +960,7 @@ lexer_get_tokenposition(DeeCompilerWrapperObject *__restrict self) {
 INTERN DREF DeeObject *DCALL
 lexer_get_tokenendposition(DeeCompilerWrapperObject *__restrict self) {
  DREF DeeObject *result;
+ DREF DeeObject *file_ob;
  struct TPPFile *file;
  COMPILER_BEGIN(self->cw_compiler);
  file = TPPLexer_Current->l_token.t_file;
@@ -956,13 +968,15 @@ lexer_get_tokenendposition(DeeCompilerWrapperObject *__restrict self) {
   result = Dee_None;
   Dee_Incref(Dee_None);
  } else {
-  char *filename; size_t filename_length;
   struct TPPLCInfo lc;
-  filename = (char *)TPPFile_Filename(file,&filename_length);
   TPPFile_LCAt(file,&lc,TPPLexer_Current->l_token.t_end);
-  result = DeeTuple_Newf("$sdd",
-                         filename_length,filename,
-                         lc.lc_line,lc.lc_col);
+  file_ob = DeeCompiler_GetFile(file);
+  if unlikely(!file_ob) {
+   result = NULL;
+  } else {
+   result = DeeTuple_Newf("odd",file_ob,lc.lc_line,lc.lc_col);
+   Dee_Decref(file_ob);
+  }
  }
  COMPILER_END();
  return result;
@@ -1104,6 +1118,14 @@ lexer_del_eobfile(DeeCompilerWrapperObject *__restrict self) {
  COMPILER_END();
  return 0;
 }
+
+INTERN ATTR_COLD int DCALL
+err_invalid_file_compiler(DeeCompilerItemObject *__restrict obj) {
+ (void)obj;
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "File is associated with a different compiler");
+}
+
 INTERN int DCALL
 lexer_set_eobfile(DeeCompilerWrapperObject *__restrict self,
                    DeeObject *__restrict value) {
@@ -1115,8 +1137,7 @@ lexer_set_eobfile(DeeCompilerWrapperObject *__restrict self,
  if (!DeeObject_InstanceOf(value,&DeeCompilerFile_Type)) {
   DeeObject_TypeAssertFailed(value,&DeeCompilerFile_Type);
  } else if (((DeeCompilerItemObject *)value)->ci_compiler != self->cw_compiler) {
-  DeeError_Throwf(&DeeError_ValueError,
-                  "File is associated with a different compiler");
+  err_invalid_file_compiler((DeeCompilerItemObject *)value);
  } else {
   file = DeeCompilerItem_VALUE(value,struct TPPFile);
   if likely(file) {
@@ -1154,8 +1175,7 @@ lexer_set_eoffile(DeeCompilerWrapperObject *__restrict self,
  if (!DeeObject_InstanceOf(value,&DeeCompilerFile_Type)) {
   DeeObject_TypeAssertFailed(value,&DeeCompilerFile_Type);
  } else if (((DeeCompilerItemObject *)value)->ci_compiler != self->cw_compiler) {
-  DeeError_Throwf(&DeeError_ValueError,
-                  "File is associated with a different compiler");
+  err_invalid_file_compiler((DeeCompilerItemObject *)value);
  } else {
   file = DeeCompilerItem_VALUE(value,struct TPPFile);
   if likely(file) {
@@ -1378,27 +1398,27 @@ PRIVATE struct type_getset lexer_getsets[] = {
           "->none\n"
           "Similar to #file, but return the base-file (that is the first included file) instead") },
     { "textposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textposition, NULL, NULL,
-      DOC("->(string,int,int)\n"
+      DOC("->(file,int,int)\n"
           "->none\n"
-          "Returns a tuple (filename,line,column) for the text-position of the current token\n"
+          "Returns a tuple (file,line,column) for the text-position of the current token\n"
           "In the event that the current file is the result of an expanded macro, the source "
           "location of the macro invocation site is returned\n"
           "In the event that no text file is currently loaded, :none is returned instead") },
     { "textendposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textendposition, NULL, NULL,
-      DOC("->(string,int,int)\n"
+      DOC("->(file,int,int)\n"
           "->none\n"
           "Same as #textposition, however when the current file isn't the result of an expanded macro, "
           "the returned values refer to the end of the current token, rather than its beginning\n"
           "In the event that no text file is currently loaded, :none is returned instead") },
     { "tokenposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenposition, NULL, NULL,
-      DOC("->(string,int,int)\n"
+      DOC("->(file,int,int)\n"
           "->none\n"
           "Similar to #textposition, however in the event of the current token originating "
           "from a macro, return the source position of that token within the macro, rather "
           "than the source position of the macro being invoked\n"
           "Same as #token.position") },
     { "tokenendposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenendposition, NULL, NULL,
-      DOC("->(string,int,int)\n"
+      DOC("->(file,int,int)\n"
           "->none\n"
           "Same as #tokenposition, however return the end position of the current token\n"
           "Same as #token.endposition") },
@@ -2132,7 +2152,8 @@ PRIVATE struct type_method lexer_methods[] = {
           ">com.lexer.include(file.open(\"input.dee\"));\n"
           ">com.lexer.next(); /* Don't forget to always load the first token */\n"
           ">local ast = com.parser.parse_allstmt();\n"
-          ">print ast;") },
+          ">print ast;\n"
+          "Hint: In order to tokenize source code from a string, use :file.reader") },
     { "nextraw", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_nextraw,
       DOC("->int\nLoad the next token and return its id (no macros, or preprocessor directives are processed)") },
     { "nextpp", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_nextpp,
@@ -2852,11 +2873,11 @@ PRIVATE struct type_getset lexer_token_getsets[] = {
           "->none\n"
           "Returns the currently active file, or :none if no file is currently active") },
     { "position", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenposition, NULL, NULL,
-      DOC("->(string,int,int)\n"
+      DOC("->(file,int,int)\n"
           "->none\n"
           "Return the exact source position of @this token within a macro definition, or text source") },
     { "endposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenendposition, NULL, NULL,
-      DOC("->(string,int,int)\n"
+      DOC("->(file,int,int)\n"
           "->none\n"
           "Same as #position, however return the end position of the current token") },
     { "atstartofline", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_atstartofline, NULL, NULL,
@@ -4404,7 +4425,7 @@ INTERN DeeTypeObject DeeCompilerFile_Type = {
     },
     /* .tp_cast = */{
         /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_str,
-        /* .tp_repr = */NULL,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_str,
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */NULL,

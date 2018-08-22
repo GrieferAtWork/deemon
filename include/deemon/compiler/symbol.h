@@ -83,7 +83,7 @@ struct text_label {
 struct symbol {
     struct symbol       *s_next;   /* [0..1][owned] Next symbol with the same modulated `s_name->k_id' */
     struct TPPKeyword   *s_name;   /* [1..1][const] Name of this symbol. */
-    DeeScopeObject      *s_scope;  /* [1..1] The scope declaring this symbol. */
+    DeeScopeObject      *s_scope;  /* [1..1][const] The scope declaring this symbol. */
 #define SYMBOL_TYPE_NONE   0x0000  /* Undefined symbol type. */
 #define SYMBOL_TYPE_GLOBAL 0x0001  /* A global symbol. */
 #define SYMBOL_TYPE_EXTERN 0x0002  /* An external symbol. */
@@ -126,7 +126,8 @@ struct symbol {
                                     * The effective reference ID (RID) of the symbol within the current assembler,
                                     * when the symbol is declared in a different base-scope, and must be
                                     * used in order to construct an inner function making use of it. */
-    struct ast_loc       s_decl;   /* [const] The source location first referencing where the symbol. */
+    struct ast_loc       s_decl;   /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
+                                    * The source location first referencing where the symbol. */
     uint32_t             s_nread;  /* [valid_if(s_type != SYMBOL_TYPE_ALIAS)] Number of times the symbol is read */
     uint32_t             s_nwrite; /* [valid_if(s_type != SYMBOL_TYPE_ALIAS)] Number of times the symbol is written */
     uint32_t             s_nbound; /* [valid_if(s_type != SYMBOL_TYPE_ALIAS)] Number of times the symbol is checking for being bound */
@@ -151,9 +152,11 @@ struct symbol {
         struct symbol   *s_alias;  /* [SYMBOL_TYPE_ALIAS][->s_type != SYMBOL_TYPE_ALIAS]
                                     * [1..1] The symbol being aliased. */
         struct {
-            struct ast_loc             a_decl2;  /* [const] The second declaration location. */
+            struct ast_loc             a_decl2;  /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
+                                                  * The second declaration location. */
             size_t                     a_declc;  /* Number of additional declaration locations. */
-            struct ast_loc            *a_declv;  /* [0..a_declc][owned] Additional declaration locations. */
+            struct ast_loc            *a_declv;  /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
+                                                  * [0..a_declc][owned] Additional declaration locations. */
         }                s_ambig;  /* [SYMBOL_TYPE_AMBIG] */
         DREF DeeObject  *s_const;  /* [SYMBOL_TYPE_CONST] The constant that the symbol evaluates to. */
 
@@ -438,6 +441,10 @@ INTDEF struct text_label *DCALL new_default_label(void);
 INTDEF struct symbol *DCALL
 scope_lookup(DeeScopeObject *__restrict scope,
              struct TPPKeyword *__restrict name);
+INTDEF struct symbol *DCALL
+scope_lookup_str(DeeScopeObject *__restrict scope,
+                 char const *__restrict name,
+                 size_t name_length);
 
 
 /* Copy argument symbols from the given `other' base-scope into the current,
@@ -458,11 +465,15 @@ INTDEF int DCALL link_forward_symbols(void);
 INTDEF struct symbol *DCALL new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc);
 INTDEF struct symbol *DCALL get_local_symbol(struct TPPKeyword *__restrict name);
 #define has_local_symbol(name) (get_local_symbol(name) != NULL)
-/* Delete a given local symbol, making it anonymous. */
+/* Delete a given local symbol, making it anonymous.
+ * NOTE: The given `sym' doesn't necessarily need to be apart of the current scope. */
 INTDEF void DCALL del_local_symbol(struct symbol *__restrict sym);
 /* Create a new unnamed (aka. deleted) symbol. */
-INTDEF struct symbol *DCALL new_unnamed_symbol();
+INTDEF struct symbol *DCALL new_unnamed_symbol(void);
 
+INTDEF struct symbol *DCALL new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope);
+INTDEF struct symbol *DCALL new_local_symbol_in_scope(DeeScopeObject *__restrict scope, struct TPPKeyword *__restrict name, struct ast_loc *loc);
+INTDEF struct symbol *DCALL get_local_symbol_in_scope(DeeScopeObject *__restrict scope, struct TPPKeyword *__restrict name);
 
 
 #ifndef __INTELLISENSE__

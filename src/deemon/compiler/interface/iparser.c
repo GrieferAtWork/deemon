@@ -38,15 +38,9 @@ DECLARE_OBJECT_CACHE(compiler_wrap,DeeCompilerWrapperObject)
 
 
 
-PRIVATE int DCALL
-get_lookupmode(DeeObject *__restrict value,
-               unsigned int *__restrict presult) {
- if (value == Dee_EmptyString) { *presult = 0; return 0; }
- if (DeeString_Check(value)) {
-  /* TODO */
- }
- return DeeObject_AsUInt(value,presult);
-}
+INTDEF int DCALL
+get_scope_lookupmode(DeeObject *__restrict value,
+                     unsigned int *__restrict presult);
 
 
 PRIVATE struct keyword suffix_kwlist[] = { K(head), KEND };
@@ -92,7 +86,7 @@ parser_##name(DeeCompilerWrapperObject *__restrict self, \
  COMPILER_BEGIN(self->cw_compiler); \
  if (DeeArg_UnpackKw(argc,argv,kw,lookupmode_kwlist,"|o:" #name,&lookup_mode_ob)) \
      goto done; \
- if unlikely(get_lookupmode(lookup_mode_ob,&lookup_mode)) \
+ if unlikely(get_scope_lookupmode(lookup_mode_ob,&lookup_mode)) \
     goto done; \
  result_ast = func(lookup_mode); \
  if unlikely(!result_ast) goto done; \

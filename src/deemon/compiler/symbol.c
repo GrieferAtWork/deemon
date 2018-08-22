@@ -107,6 +107,8 @@ symbol_addambig(struct symbol *__restrict self,
  } else {
   loc_here(new_vec);
  }
+ if (new_vec->l_file)
+     TPPFile_Incref(new_vec->l_file);
 }
 
 INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
@@ -130,9 +132,17 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
   if (self->s_getset.gs_set)
       SYMBOL_DEC_NREAD(self->s_getset.gs_set);
   break;
+ {
+  size_t i;
  case SYMBOL_TYPE_AMBIG:
+  if (self->s_ambig.a_decl2.l_file)
+      TPPFile_Decref(self->s_ambig.a_decl2.l_file);
+  for (i = 0; i < self->s_ambig.a_declc; ++i) {
+   if (self->s_ambig.a_declv[i].l_file)
+       TPPFile_Decref(self->s_ambig.a_declv[i].l_file);
+  }
   Dee_Free(self->s_ambig.a_declv);
-  break;
+ } break;
  case SYMBOL_TYPE_CONST:
   Dee_Decref(self->s_const);
   break;
@@ -147,6 +157,8 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
 PRIVATE void DCALL
 delsym(struct symbol *__restrict self) {
  DeeCompiler_DelItem(self);
+ if (self->s_decl.l_file)
+     TPPFile_Decref(self->s_decl.l_file);
  symbol_fini(self);
  sym_free(self);
 }
@@ -966,6 +978,8 @@ add_result_to_iter:
  else {
   loc_here(&result->s_decl);
  }
+ if (result->s_decl.l_file)
+     TPPFile_Incref(result->s_decl.l_file);
  return result;
 err_r:
  --iter->s_mapc;
@@ -1010,7 +1024,8 @@ new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
 #endif
  result->s_name = name;
  if (++current_scope->s_mapc > current_scope->s_mapa) {
-  if (rehash_scope(current_scope)) goto err_r;
+  if unlikely(rehash_scope(current_scope))
+     goto err_r;
  }
  ASSERT(current_scope->s_mapa != 0);
  bucket            = &current_scope->s_map[name->k_id % current_scope->s_mapa];
@@ -1026,14 +1041,15 @@ new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
  } else {
   loc_here(&result->s_decl);
  }
+ if (result->s_decl.l_file)
+     TPPFile_Incref(result->s_decl.l_file);
  return result;
 err_r:
  --current_scope->s_mapc;
  sym_free(result);
  return NULL;
 }
-INTERN struct symbol *DCALL
-new_unnamed_symbol() {
+INTERN struct symbol *DCALL new_unnamed_symbol(void) {
  struct symbol *result;
  if unlikely((result = sym_alloc()) == NULL) return NULL;
 #ifndef NDEBUG
@@ -1051,9 +1067,76 @@ new_unnamed_symbol() {
  return result;
 }
 INTERN struct symbol *DCALL
+new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope){
+ struct symbol *result;
+ if unlikely((result = sym_alloc()) == NULL) return NULL;
+#ifndef NDEBUG
+ memset(result,0xcc,sizeof(struct symbol));
+#endif
+ result->s_name        = &TPPKeyword_Empty;
+ result->s_next        = scope->s_del;
+ scope->s_del          = result;
+ result->s_flag        = SYMBOL_FNORMAL;
+ result->s_nread       = 0;
+ result->s_nwrite      = 0;
+ result->s_nbound      = 0;
+ result->s_scope       = scope;
+ result->s_decl.l_file = NULL;
+ return result;
+}
+INTERN struct symbol *DCALL
+new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
+                          struct TPPKeyword *__restrict name,
+                          struct ast_loc *loc) {
+ struct symbol *result,**bucket;
+ ASSERT(name);
+ if unlikely((result = sym_alloc()) == NULL) return NULL;
+#ifndef NDEBUG
+ memset(result,0xcc,sizeof(struct symbol));
+#endif
+ result->s_name = name;
+ if (++scope->s_mapc > scope->s_mapa) {
+  if unlikely(rehash_scope(scope))
+     goto err_r;
+ }
+ ASSERT(scope->s_mapa != 0);
+ bucket            = &scope->s_map[name->k_id % scope->s_mapa];
+ result->s_next  = *bucket;
+ *bucket           = result;
+ result->s_flag    = SYMBOL_FNORMAL;
+ result->s_nread   = 0;
+ result->s_nwrite  = 0;
+ result->s_nbound  = 0;
+ result->s_scope   = scope;
+ if (loc) {
+  memcpy(&result->s_decl,loc,sizeof(struct ast_loc));
+ } else {
+  loc_here(&result->s_decl);
+ }
+ if (result->s_decl.l_file)
+     TPPFile_Incref(result->s_decl.l_file);
+ return result;
+err_r:
+ --scope->s_mapc;
+ sym_free(result);
+ return NULL;
+}
+INTERN struct symbol *DCALL
+get_local_symbol_in_scope(DeeScopeObject *__restrict scope,
+                          struct TPPKeyword *__restrict name) {
+ struct symbol *bucket;
+ if (!scope->s_mapc) return false;
+ ASSERT(scope->s_mapa != 0);
+ bucket = scope->s_map[name->k_id % scope->s_mapa];
+ while (bucket && bucket->s_name != name) bucket = bucket->s_next;
+ return bucket;
+}
+
+INTERN struct symbol *DCALL
 get_local_symbol(struct TPPKeyword *__restrict name) {
  struct symbol *bucket;
- if (!current_scope->s_mapa) return false;
+ if (!current_scope->s_mapc) return false;
+ ASSERT(current_scope->s_mapa != 0);
  bucket = current_scope->s_map[name->k_id % current_scope->s_mapa];
  while (bucket && bucket->s_name != name) bucket = bucket->s_next;
  return bucket;
@@ -1062,18 +1145,17 @@ INTERN void DCALL
 del_local_symbol(struct symbol *__restrict sym) {
  struct symbol **pbucket,*bucket;
  ASSERT(sym);
- ASSERT(sym->s_scope == current_scope);
  ASSERT(sym->s_name != &TPPKeyword_Empty);
- ASSERT(current_scope->s_mapa != 0);
- pbucket = &current_scope->s_map[sym->s_name->k_id % current_scope->s_mapa];
+ ASSERT(sym->s_scope->s_mapa != 0);
+ pbucket = &sym->s_scope->s_map[sym->s_name->k_id % sym->s_scope->s_mapa];
  while ((bucket = *pbucket,bucket && bucket != sym))
          pbucket = &bucket->s_next;
  if (!bucket) return; /* Shouldn't happen, but ignore (could happen if the symbol is deleted twice) */
  /* Unlink the symbol from the bucket list. */
  *pbucket = sym->s_next;
  /* Add the symbol to the chain of deleted (anonymous) symbols. */
- sym->s_next = current_scope->s_del;
- current_scope->s_del = sym;
+ sym->s_next = sym->s_scope->s_del;
+ sym->s_scope->s_del = sym;
 }
 
 INTERN struct symbol *DCALL
@@ -1083,6 +1165,20 @@ scope_lookup(DeeScopeObject *__restrict scope,
  if (!scope->s_mapa) goto done;
  result = scope->s_map[name->k_id % scope->s_mapa];
  while (result && result->s_name != name) result = result->s_next;
+done:
+ return result;
+}
+INTERN struct symbol *DCALL
+scope_lookup_str(DeeScopeObject *__restrict scope,
+                 char const *__restrict name,
+                 size_t name_length) {
+ struct symbol *result = NULL;
+ struct TPPKeyword *keyword;
+ if (!scope->s_mapa) goto done;
+ keyword = TPPLexer_LookupKeyword(name,name_length,0);
+ if (!keyword) goto done;
+ result = scope->s_map[keyword->k_id % scope->s_mapa];
+ while (result && result->s_name != keyword) result = result->s_next;
 done:
  return result;
 }

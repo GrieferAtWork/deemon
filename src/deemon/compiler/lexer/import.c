@@ -547,6 +547,8 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
     } else {
      loc_here(&sym->s_ambig.a_decl2);
     }
+    if (sym->s_ambig.a_decl2.l_file)
+        TPPFile_Incref(sym->s_ambig.a_decl2.l_file);
     sym->s_ambig.a_declc = 0;
     sym->s_ambig.a_declv = NULL;
    } else {

@@ -216,36 +216,48 @@ INTERN struct type_getset compiler_getsets[] = {
 
 
 #ifndef NDEBUG
-#define ast_new(scope)    ast_dbgnew(scope,__FILE__,__LINE__)
+#define ast_new(scope,loc)    ast_dbgnew(scope,loc,__FILE__,__LINE__)
 PRIVATE DREF struct ast *DCALL
-ast_dbgnew(DeeScopeObject *__restrict scope, char const *file, int line) {
+ast_dbgnew(DeeScopeObject *__restrict scope,
+           DeeObject *loc, char const *file, int line) {
  DREF struct ast *result = ast_dbgalloc(file,line);
 #ifndef CONFIG_NO_THREADS
  ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 #endif
  if likely(result) {
+  if unlikely(set_astloc_from_obj(loc,result)) {
+   ast_free(result);
+   result = NULL;
+  } else {
 #ifdef CONFIG_AST_IS_STRUCT
-  result->a_refcnt = 1;
+   result->a_refcnt = 1;
 #else
-  DeeObject_Init(result,&DeeAst_Type);
+   DeeObject_Init(result,&DeeAst_Type);
 #endif
-  result->a_scope = scope;
-  result->a_ddi.l_file = NULL;
-  Dee_Incref(scope);
+   result->a_scope = scope;
+   result->a_ddi.l_file = NULL;
+   Dee_Incref(scope);
+  }
  }
  return result;
 }
 #else
-PRIVATE DREF struct ast *DCALL ast_new(DeeScopeObject *__restrict scope) {
+PRIVATE DREF struct ast *DCALL
+ast_new(DeeScopeObject *__restrict scope, DeeObject *loc) {
  DREF struct ast *result = ast_alloc();
 #ifndef CONFIG_NO_THREADS
  ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 #endif
  if likely(result) {
-  DeeObject_Init(result,&DeeAst_Type);
-  result->a_scope = current_scope;
-  result->a_ddi.l_file = NULL;
-  Dee_Incref(result->a_scope);
+  if unlikely(set_astloc_from_obj(loc,result)) {
+   ast_free(result);
+   result = NULL;
+  } else {
+   DeeObject_Init(result,&DeeAst_Type);
+   result->a_scope = current_scope;
+   result->a_ddi.l_file = NULL;
+   Dee_Incref(result->a_scope);
+  }
  }
  return result;
 }
@@ -272,13 +284,13 @@ ast_makeconstexpr(DeeCompilerObject *__restrict self,
                   DeeObject *kw) {
  DREF DeeObject *result = NULL; DeeObject *value;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
- PRIVATE struct keyword kwlist[] = { K(value), K(scope), KEND };
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
+ PRIVATE struct keyword kwlist[] = { K(value), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:makeconstexpr",&value,&scope) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:makeconstexpr",&value,&scope,&loc) ||
      unlikely((ast_scope = get_scope(scope)) == NULL))
      goto done;
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type      = AST_CONSTEXPR;
  result_ast->a_constexpr = value;
@@ -290,7 +302,7 @@ done:
  return result;
 }
 
-PRIVATE struct keyword makesym_kwlist[] = { K(sym), K(scope), KEND };
+PRIVATE struct keyword makesym_kwlist[] = { K(sym), K(scope), K(loc), KEND };
 
 PRIVATE DREF DeeObject *DCALL
 ast_makesym(DeeCompilerObject *__restrict self,
@@ -299,9 +311,9 @@ ast_makesym(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerSymbolObject *sym;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makesym_kwlist,"o|o:makesym",&sym,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,makesym_kwlist,"o|oo:makesym",&sym,&scope,&loc))
      goto done;
  if (DeeObject_AssertTypeExact((DeeObject *)sym,&DeeCompilerSymbol_Type))
      goto done;
@@ -313,7 +325,7 @@ ast_makesym(DeeCompilerObject *__restrict self,
   err_symbol_not_reachable(ast_scope,sym->ci_value);
   goto done;
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type = AST_SYM;
  result_ast->a_flag = AST_FNORMAL;
@@ -333,9 +345,9 @@ ast_makeunbind(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerSymbolObject *sym;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makesym_kwlist,"o|o:makeunbind",&sym,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,makesym_kwlist,"o|oo:makeunbind",&sym,&scope,&loc))
      goto done;
  if (DeeObject_AssertTypeExact((DeeObject *)sym,&DeeCompilerSymbol_Type))
      goto done;
@@ -347,7 +359,7 @@ ast_makeunbind(DeeCompilerObject *__restrict self,
   err_symbol_not_reachable(ast_scope,sym->ci_value);
   goto done;
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type   = AST_UNBIND;
  result_ast->a_unbind = sym->ci_value;
@@ -366,9 +378,9 @@ ast_makebound(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerSymbolObject *sym;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makesym_kwlist,"o|o:makebound",&sym,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,makesym_kwlist,"o|oo:makebound",&sym,&scope,&loc))
      goto done;
  if (DeeObject_AssertTypeExact((DeeObject *)sym,&DeeCompilerSymbol_Type))
      goto done;
@@ -380,7 +392,7 @@ ast_makebound(DeeCompilerObject *__restrict self,
   err_symbol_not_reachable(ast_scope,sym->ci_value);
   goto done;
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type   = AST_BOUND;
  result_ast->a_unbind = sym->ci_value;
@@ -398,12 +410,12 @@ ast_makemultiple(DeeCompilerObject *__restrict self,
                  DeeObject *kw) {
  DREF DeeObject *result = NULL; uint16_t flags;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  DeeObject *branches; DeeTypeObject *typing = (DeeTypeObject *)Dee_None;
  DREF DeeCompilerAstObject **branch_v; size_t i,branch_c;
- PRIVATE struct keyword kwlist[] = { K(branches), K(typing), K(scope), KEND };
+ PRIVATE struct keyword kwlist[] = { K(branches), K(typing), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makesym_kwlist,"o|o:makemultiple",&branches,&typing,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,makesym_kwlist,"o|ooo:makemultiple",&branches,&typing,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -451,7 +463,7 @@ ast_makemultiple(DeeCompilerObject *__restrict self,
   Dee_Decref(branch_v[i]);
   branch_v[i] = (DREF DeeCompilerAstObject *)branch_ast;
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto err_branch_v;
  result_ast->a_type            = AST_MULTIPLE;
  result_ast->a_flag            = flags;
@@ -470,7 +482,7 @@ done:
  return result;
 }
 
-PRIVATE struct keyword makeexpr_kwlist[] = { K(expr), K(scope), KEND };
+PRIVATE struct keyword makeexpr_kwlist[] = { K(expr), K(scope), K(loc), KEND };
 
 PRIVATE DREF DeeObject *DCALL
 ast_makereturn(DeeCompilerObject *__restrict self,
@@ -479,9 +491,9 @@ ast_makereturn(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerAstObject *expr = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"|oo:makereturn",&expr,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"|ooo:makereturn",&expr,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -491,7 +503,7 @@ ast_makereturn(DeeCompilerObject *__restrict self,
   if unlikely(expr->ci_compiler != self) { err_invalid_ast_compiler(expr); goto done; }
   if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(expr,ast_scope->s_base); goto done; }
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type   = AST_RETURN;
  result_ast->a_return = NULL;
@@ -513,9 +525,9 @@ ast_makeyield(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerAstObject *expr = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"o|o:makeyield",&expr,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"o|oo:makeyield",&expr,&scope,&loc))
      goto done;
  if (DeeObject_AssertTypeExact((DeeObject *)expr,&DeeCompilerSymbol_Type))
      goto done;
@@ -523,7 +535,7 @@ ast_makeyield(DeeCompilerObject *__restrict self,
     goto done;
  if unlikely(expr->ci_compiler != self) { err_invalid_ast_compiler(expr); goto done; }
  if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(expr,ast_scope->s_base); goto done; }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type  = AST_YIELD;
  result_ast->a_throw = expr->ci_value;
@@ -542,9 +554,9 @@ ast_makethrow(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerAstObject *expr = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"|oo:makethrow",&expr,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"|ooo:makethrow",&expr,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -554,7 +566,7 @@ ast_makethrow(DeeCompilerObject *__restrict self,
   if unlikely(expr->ci_compiler != self) { err_invalid_ast_compiler(expr); goto done; }
   if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(expr,ast_scope->s_base); goto done; }
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type  = AST_THROW;
  result_ast->a_throw = NULL;
@@ -725,10 +737,10 @@ ast_maketry(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerAstObject *guard; DeeObject *handlers;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
- PRIVATE struct keyword kwlist[] = { K(guard), K(handlers), K(scope), KEND };
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
+ PRIVATE struct keyword kwlist[] = { K(guard), K(handlers), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo|o:maketry",&guard,&handlers,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo|oo:maketry",&guard,&handlers,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -736,7 +748,7 @@ ast_maketry(DeeCompilerObject *__restrict self,
      goto done;
  if unlikely(guard->ci_compiler != self) { err_invalid_ast_compiler(guard); goto done; }
  if unlikely(guard->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(guard,ast_scope->s_base); goto done; }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  /* Unpack the given handler expressions vector. */
  result_ast->a_try.t_catchv = unpack_catch_expressions(handlers,
@@ -798,7 +810,7 @@ ast_makeloop(DeeCompilerObject *__restrict self,
              DeeObject *kw) {
  DREF DeeObject *result = NULL; uint16_t flags = 0;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  DeeCompilerAstObject *cond = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerAstObject *next = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerAstObject *loop = (DeeCompilerAstObject *)Dee_None;
@@ -817,8 +829,8 @@ ast_makeloop(DeeCompilerObject *__restrict self,
  --argc,++argv;
  COMPILER_BEGIN(self);
  if (flags & AST_FLOOP_FOREACH) {
-  PRIVATE struct keyword kwlist[] = { K(elem), K(iter), K(loop), K(scope), KEND };
-  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|oooo:makeloop",&cond,&next,&loop,&scope))
+  PRIVATE struct keyword kwlist[] = { K(elem), K(iter), K(loop), K(scope), K(loc), KEND };
+  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|ooooo:makeloop",&cond,&next,&loop,&scope,&loc))
       goto done;
   if unlikely((ast_scope = get_scope(scope)) == NULL)
      goto done;
@@ -828,8 +840,8 @@ check_next:
   if unlikely(next->ci_compiler != DeeCompiler_Current) { err_invalid_ast_compiler(next); goto done; }
   if unlikely(next->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(next,ast_scope->s_base); goto done; }
  } else {
-  PRIVATE struct keyword kwlist[] = { K(cond), K(next), K(loop), K(scope), KEND };
-  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|oooo:makeloop",&cond,&next,&loop,&scope))
+  PRIVATE struct keyword kwlist[] = { K(cond), K(next), K(loop), K(scope), K(loc), KEND };
+  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|ooooo:makeloop",&cond,&next,&loop,&scope,&loc))
       goto done;
   if unlikely((ast_scope = get_scope(scope)) == NULL)
      goto done;
@@ -845,7 +857,7 @@ check_next:
   if unlikely(loop->ci_compiler != DeeCompiler_Current) { err_invalid_ast_compiler(loop); goto done; }
   if unlikely(loop->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(loop,ast_scope->s_base); goto done; }
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type        = AST_LOOP;
  result_ast->a_flag        = flags;
@@ -879,14 +891,14 @@ ast_makeloopctl(DeeCompilerObject *__restrict self,
                 DeeObject *kw) {
  DREF DeeObject *result = NULL; bool isbreak;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
- PRIVATE struct keyword kwlist[] = { K(isbreak), K(scope), KEND };
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
+ PRIVATE struct keyword kwlist[] = { K(isbreak), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"b|o:makeloopctl",&isbreak,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"b|oo:makeloopctl",&isbreak,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type = AST_LOOPCTL;
  result_ast->a_flag = isbreak ? AST_FLOOPCTL_BRK : AST_FLOOPCTL_CON;
@@ -939,10 +951,10 @@ ast_makeconditional(DeeCompilerObject *__restrict self,
  DeeCompilerAstObject *ff = (DeeCompilerAstObject *)Dee_None;
  DeeStringObject *flags_str = (DeeStringObject *)Dee_EmptyString;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
- PRIVATE struct keyword kwlist[] = { K(cond), K(tt), K(ff), K(flags), K(scope), KEND };
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
+ PRIVATE struct keyword kwlist[] = { K(cond), K(tt), K(ff), K(flags), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oooo:makeconditional",&cond,&tt,&ff,&flags_str,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|ooooo:makeconditional",&cond,&tt,&ff,&flags_str,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -972,7 +984,7 @@ ast_makeconditional(DeeCompilerObject *__restrict self,
   if unlikely(ff->ci_compiler != self) { err_invalid_ast_compiler(ff); goto done; }
   if unlikely(ff->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(ff,ast_scope->s_base); goto done; }
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type = AST_CONDITIONAL;
  result_ast->a_flag = flags;
@@ -1003,17 +1015,17 @@ ast_makebool(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerAstObject *expr; bool negate = false;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
- PRIVATE struct keyword kwlist[] = { K(expr), K(negate), K(scope), KEND };
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
+ PRIVATE struct keyword kwlist[] = { K(expr), K(negate), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|bo:makebool",&expr,&negate,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|boo:makebool",&expr,&negate,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
  if unlikely(DeeObject_AssertTypeExact((DeeObject *)expr,&DeeCompilerAst_Type)) goto done;
  if unlikely(expr->ci_compiler != self) { err_invalid_ast_compiler(expr); goto done; }
  if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(expr,ast_scope->s_base); goto done; }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type = AST_BOOL;
  result_ast->a_flag = negate ? AST_FBOOL_NEGATE : AST_FBOOL_NORMAL;
@@ -1033,16 +1045,16 @@ ast_makeexpand(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerAstObject *expr;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"o|o:makeexpand",&expr,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,makeexpr_kwlist,"o|oo:makeexpand",&expr,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
  if unlikely(DeeObject_AssertTypeExact((DeeObject *)expr,&DeeCompilerAst_Type)) goto done;
  if unlikely(expr->ci_compiler != self) { err_invalid_ast_compiler(expr); goto done; }
  if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(expr,ast_scope->s_base); goto done; }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type = AST_EXPAND;
  result_ast->a_bool = expr->ci_value;
@@ -1062,11 +1074,11 @@ ast_makefunction(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL;
  DeeCompilerAstObject *code;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
  DeeBaseScopeObject *code_scope,*ast_base_scope,*scope_iter;
- PRIVATE struct keyword kwlist[] = { K(code), K(scope), KEND };
+ PRIVATE struct keyword kwlist[] = { K(code), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:makeexpand",&code,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:makeexpand",&code,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -1095,7 +1107,7 @@ ast_makefunction(DeeCompilerObject *__restrict self,
   }
  }
  /* Setup a new function branch. */
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type             = AST_FUNCTION;
  result_ast->a_function.f_code  = code->ci_value;
@@ -1161,10 +1173,10 @@ ast_makeoperatorfunc(DeeCompilerObject *__restrict self,
  DREF DeeObject *result = NULL; DeeObject *name; uint16_t id;
  DeeCompilerAstObject *binding = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
- PRIVATE struct keyword kwlist[] = { K(name), K(binding), K(scope), KEND };
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
+ PRIVATE struct keyword kwlist[] = { K(name), K(binding), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:makeoperatorfunc",&name,&binding,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|ooo:makeoperatorfunc",&name,&binding,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -1175,7 +1187,7 @@ ast_makeoperatorfunc(DeeCompilerObject *__restrict self,
   if unlikely(binding->ci_compiler != self) { err_invalid_ast_compiler(binding); goto done; }
   if unlikely(binding->ci_value->a_scope->s_base != ast_scope->s_base) { err_invalid_ast_basescope(binding,ast_scope->s_base); goto done; }
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type = AST_OPERATOR_FUNC;
  result_ast->a_flag = id;
@@ -1235,10 +1247,10 @@ ast_makeoperator(DeeCompilerObject *__restrict self,
  DeeCompilerAstObject *d = (DeeCompilerAstObject *)Dee_None;
  DeeStringObject *flags_str = (DeeStringObject *)Dee_EmptyString;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast;
- PRIVATE struct keyword kwlist[] = { K(name), K(a), K(b), K(c), K(d), K(flags), K(scope), KEND };
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
+ PRIVATE struct keyword kwlist[] = { K(name), K(a), K(b), K(c), K(d), K(flags), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo|ooooo:makeoperator",&name,&a,&b,&c,&d,&flags_str,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo|oooooo:makeoperator",&name,&a,&b,&c,&d,&flags_str,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -1289,7 +1301,7 @@ ast_makeoperator(DeeCompilerObject *__restrict self,
   break;
  default: break;
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type              = AST_OPERATOR;
  result_ast->a_flag              = id;
@@ -1418,10 +1430,10 @@ ast_makeaction(DeeCompilerObject *__restrict self,
  DeeCompilerAstObject *b = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerAstObject *c = (DeeCompilerAstObject *)Dee_None; bool mustrun = true;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
- DeeScopeObject *ast_scope; DREF struct ast *result_ast; uint8_t opc;
- PRIVATE struct keyword kwlist[] = { K(name), K(a), K(b), K(c), K(mustrun), K(scope), KEND };
+ DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast; uint8_t opc;
+ PRIVATE struct keyword kwlist[] = { K(name), K(a), K(b), K(c), K(mustrun), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|ooobo:makeaction",&name,&a,&b,&c,&mustrun,&scope))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oooboo:makeaction",&name,&a,&b,&c,&mustrun,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
@@ -1460,7 +1472,7 @@ ast_makeaction(DeeCompilerObject *__restrict self,
    goto done;
   }
  }
- result_ast = ast_new(ast_scope);
+ result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
  result_ast->a_type = AST_ACTION;
  result_ast->a_flag = (uint16_t)id;
@@ -1495,14 +1507,16 @@ PRIVATE DREF DeeObject *DCALL ast_makeassembly(DeeCompilerObject *__restrict sel
 
 INTERN struct type_method compiler_methods[] = {
     { "makeconstexpr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeconstexpr,
-      DOC("(object value,scope scope=none)->ast\n"
+      DOC("(object value,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @scope doesn't match @this\n"
           "Construct a new constant-expression ast referring to @value"),
       TYPE_METHOD_FKWDS },
     { "makesym", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makesym,
-      DOC("(symbol sym,scope scope=none)->ast\n"
+      DOC("(symbol sym,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @sym or @scope doesn't match @this\n"
           "@throw ReferenceError The given @sym is not reachable from the effectively used @scope\n"
           "Construct a new branch that is using a symbol @sym\n"
@@ -1512,22 +1526,25 @@ INTERN struct type_method compiler_methods[] = {
           "branch is used in an assembly output operand"),
       TYPE_METHOD_FKWDS },
     { "makeunbind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeunbind,
-      DOC("(symbol sym,scope scope=none)->ast\n"
+      DOC("(symbol sym,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @sym or @scope doesn't match @this\n"
           "@throw ReferenceError The given @sym is not reachable from the effectively used @scope\n"
           "Construct a branch for unbinding the value of @sym at runtime"),
       TYPE_METHOD_FKWDS },
     { "makebound", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makebound,
-      DOC("(symbol sym,scope scope=none)->ast\n"
+      DOC("(symbol sym,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @sym or @scope doesn't match @this\n"
           "@throw ReferenceError The given @sym is not reachable from the effectively used @scope\n"
           "Construct a branch for checking if a given symbol @sym is bound"),
       TYPE_METHOD_FKWDS },
     { "makemultiple", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makemultiple,
-      DOC("({ast...} branches,type typing=none,scope scope=none)->ast\n"
+      DOC("({ast...} branches,type typing=none,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of one of the given @branches or @scope doesn't match @this\n"
           "@throw TypeError The given @typing is neither :none, nor one of the type listed below\n"
           "@throw ReferenceError One of the given @branches is not part of the basescope of the effective @scope\n"
@@ -1546,30 +1563,34 @@ INTERN struct type_method compiler_methods[] = {
           "appear, and will be inlined as part of the greater whole expression"),
       TYPE_METHOD_FKWDS },
     { "makereturn", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makereturn,
-      DOC("(ast expr=none,scope scope=none)->ast\n"
+      DOC("(ast expr=none,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct a return-branch that either returns @expr, or :none when @expr is :none"),
       TYPE_METHOD_FKWDS },
     { "makeyield", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeyield,
-      DOC("(ast expr,scope scope=none)->ast\n"
+      DOC("(ast expr,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct a yield-branch that either returns @expr, or :none when @expr is :none"),
       TYPE_METHOD_FKWDS },
     { "makethrow", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makethrow,
-      DOC("(ast expr=none,scope scope=none)->ast\n"
+      DOC("(ast expr=none,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct a throw-branch that either throws @expr, or re-throws the last exception when @expr is :none"),
       TYPE_METHOD_FKWDS },
     { "maketry", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_maketry,
-      DOC("(ast guard,{(string,ast,ast)...} handlers,scope scope=none)->ast\n"
-          "(ast guard,{(int,ast,ast)...} handlers,scope scope=none)->ast\n"
+      DOC("(ast guard,{(string,ast,ast)...} handlers,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
+          "(ast guard,{(int,ast,ast)...} handlers,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw ValueError One of the flags-strings contains an unknown flag\n"
           "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
@@ -1583,11 +1604,12 @@ INTERN struct type_method compiler_methods[] = {
           "$\"interrupt\"|The handler is capable of catching interrupt-exceptions (ignored when $\"finally\" is given)}"),
       TYPE_METHOD_FKWDS },
     { "makeloop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeloop,
-      DOC("(string flags,ast elem=none,ast iter,ast loop=none,scope scope=none)->ast\n"
-          "(string flags,ast cond=none,ast next=none,ast loop=none,scope scope=none)->ast\n"
-          "(int flags,ast elem=none,ast iter,ast loop=none,scope scope=none)->ast\n"
-          "(int flags,ast cond=none,ast next=none,ast loop=none,scope scope=none)->ast\n"
+      DOC("(string flags,ast elem=none,ast iter,ast loop=none,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
+          "(string flags,ast cond=none,ast next=none,ast loop=none,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
+          "(int flags,ast elem=none,ast iter,ast loop=none,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
+          "(int flags,ast cond=none,ast next=none,ast loop=none,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw ValueError The given @flags contains an unknown flag\n"
           "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
@@ -1605,16 +1627,18 @@ INTERN struct type_method compiler_methods[] = {
                         "should be placed in a section of code that is rarely used}"),
       TYPE_METHOD_FKWDS },
     { "makeloopctl", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeloopctl,
-      DOC("(bool isbreak,scope scope=none)->ast\n"
+      DOC("(bool isbreak,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @scope doesn't match @this\n"
           "Construct a loop control branch, that is either a $continue (when "
           "@isbreak is :false), or a $break statement (when @isbreak is :true)"),
       TYPE_METHOD_FKWDS },
     { "makeconditional", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeconditional,
-      DOC("(ast cond,ast tt=none,ast ff=none,string flags=\"\",scope scope=none)->ast\n"
-          "(ast cond,ast tt=none,ast ff=none,int flags=0,scope scope=none)->ast\n"
+      DOC("(ast cond,ast tt=none,ast ff=none,string flags=\"\",scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
+          "(ast cond,ast tt=none,ast ff=none,int flags=0,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw TypeError Both @tt and @ff have been passed as :none\n"
           "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
@@ -1638,8 +1662,9 @@ INTERN struct type_method compiler_methods[] = {
           "$\"unlikely\"|When given, assembly for @tt is placed in a section of code that is rarely used}"),
       TYPE_METHOD_FKWDS },
     { "makebool", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makebool,
-      DOC("(ast expr,bool negate=false,scope scope=none)->ast\n"
+      DOC("(ast expr,bool negate=false,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct a branch for casting @expr to a boolean, optionally inverting the "
@@ -1647,15 +1672,17 @@ INTERN struct type_method compiler_methods[] = {
           "The expression ${!!a} results in ${makebool(a,false)}, while ${!a} results in ${makebool(a,true)}"),
       TYPE_METHOD_FKWDS },
     { "makeexpand", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeexpand,
-      DOC("(ast expr,scope scope=none)->ast\n"
+      DOC("(ast expr,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
           "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
           "Construct an expand-branch that will unpack a sequence expression @expr at runtime"),
       TYPE_METHOD_FKWDS },
     { "makefunction", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makefunction,
-      DOC("(ast code,scope scope=none)->ast\n"
+      DOC("(ast code,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @code or @scope doesn't match @this\n"
           "@throw ReferenceError The effective @scope is not reachable from ${code.scope}\n"
           "@throw ReferenceError The effective ${scope.base} is identical to ${code.scope.base}\n"
@@ -1664,11 +1691,12 @@ INTERN struct type_method compiler_methods[] = {
           "branch will be executed in the context of @scope, or the current scope when :none"),
       TYPE_METHOD_FKWDS },
     { "makeoperatorfunc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeoperatorfunc,
-      DOC("(string name,ast binding=none,scope scope=none)->ast\n"
-          "(int name,ast binding=none,scope scope=none)->ast\n"
+      DOC("(string name,ast binding=none,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
+          "(int name,ast binding=none,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param name The name of the operator, or one of ${[\"+\",\"-\",\"[]\",\"[:]\",\".\"]} "
                       "for ambiguous operators resolved at runtime\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The given @name is not recognized as a valid operator\n"
           "@throw ValueError The compiler of @binding or @scope doesn't match @this\n"
           "@throw ReferenceError The given @binding is not part of the same base-scope as the effective @scope\n"
@@ -1678,13 +1706,14 @@ INTERN struct type_method compiler_methods[] = {
           "${binding.operator add} results in ${makeoperatorfunc(\"add\",binding)}"),
       TYPE_METHOD_FKWDS },
     { "makeoperator", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeoperator,
-      DOC("(string name,ast a,ast b=none,ast c=none,ast d=none,string flags=\"\",scope=none)->ast\n"
-          "(int name,ast a,ast b=none,ast c=none,ast d=none,string flags=\"\",scope=none)->ast\n"
-          "(string name,ast a,ast b=none,ast c=none,ast d=none,int flags=0,scope=none)->ast\n"
-          "(int name,ast a,ast b=none,ast c=none,ast d=none,int flags=0,scope=none)->ast\n"
+      DOC("(string name,ast a,ast b=none,ast c=none,ast d=none,string flags=\"\",scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
+          "(int name,ast a,ast b=none,ast c=none,ast d=none,string flags=\"\",scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
+          "(string name,ast a,ast b=none,ast c=none,ast d=none,int flags=0,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
+          "(int name,ast a,ast b=none,ast c=none,ast d=none,int flags=0,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param name The name of the operator, or one of ${[\"+\",\"-\",\"[]\",\"[:]\",\".\"]} "
                       "for ambiguous operators resolved based on argument count\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The given @name is not recognized as a valid operator\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw ReferenceError One of the given branches is not part of the same base-scope as the effective @scope\n"
@@ -1710,6 +1739,7 @@ INTERN struct type_method compiler_methods[] = {
           "@param mustrun When :false, ast-optimization may optimize away side-effects caused by action operands. "
                          "Otherwise, all operands are required to execute as required by the action (which usually means executed-in-order)\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
+          "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The given @name is not recognized as a valid action\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw ReferenceError One of the given branches is not part of the same base-scope as the effective @scope\n"

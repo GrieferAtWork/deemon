@@ -101,6 +101,7 @@ INTDEF void DCALL DeeCompilerWrapper_Fini(DeeCompilerWrapperObject *__restrict s
 struct symbol;
 INTDEF ATTR_COLD int DCALL err_invalid_ast_basescope(DeeCompilerAstObject *__restrict obj, struct base_scope_object *__restrict base_scope);
 INTDEF ATTR_COLD int DCALL err_invalid_ast_compiler(DeeCompilerAstObject *__restrict obj);
+INTDEF ATTR_COLD int DCALL err_invalid_file_compiler(DeeCompilerItemObject *__restrict obj);
 INTDEF ATTR_COLD int DCALL err_invalid_scope_compiler(DeeCompilerScopeObject *__restrict obj);
 INTDEF ATTR_COLD int DCALL err_invalid_symbol_compiler(DeeCompilerSymbolObject *__restrict obj);
 INTDEF ATTR_COLD int DCALL err_different_base_scope(void);
@@ -108,6 +109,19 @@ INTDEF ATTR_COLD int DCALL err_different_root_scope(void);
 INTDEF ATTR_COLD int DCALL err_compiler_item_deleted(DeeCompilerItemObject *__restrict item);
 INTDEF ATTR_COLD int DCALL err_symbol_not_reachable(struct scope_object *__restrict scope, struct symbol *__restrict sym);
 INTDEF bool DCALL scope_reaches_symbol(struct scope_object *__restrict scope, struct symbol *__restrict sym);
+
+struct unicode_printer;
+
+/* @return: 0:  OK
+ * @return: -1: Error. */
+INTDEF int DCALL get_astloc_from_obj(DeeObject *obj, struct ast_loc *__restrict result);
+/* Helper functions for setting the DDI location of a given ast `dst'
+ * WARNING: Previously set DDI information is overwritten,
+ *          and the old DDI file will _NOT_ be decref'ed! */
+INTDEF int DCALL set_astloc_from_obj(DeeObject *obj, struct ast *__restrict result);
+
+/* Print the repr-form of the given ast-location to the given unicode printer `(filename,line,col)' */
+INTDEF int DCALL print_ast_loc_repr(struct ast_loc *__restrict self, struct unicode_printer *__restrict printer);
 
 /* @return: TOK_ERR: An error occurred (and was thrown)
  * @return: -2:      A keyword wasn't found (and `create_missing' was false) */

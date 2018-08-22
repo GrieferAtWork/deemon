@@ -480,8 +480,11 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict ast,
   if (asm_putddi(ast)) goto err;
   SYMBOL_INPLACE_UNWIND_ALIAS(ast->a_unbind);
   if (asm_gdel_symbol(ast->a_unbind,ast)) goto err;
+  /* NOTE: Only make the symbol ID be available again, when
+   *       the symbol itself was declared in the same scope,
+   *       as the one it is being deleted from. */
   if (ast->a_unbind->s_type == SYMBOL_TYPE_LOCAL &&
-      ast->a_unbind->s_scope->s_base == current_basescope) {
+      ast->a_unbind->s_scope == ast->a_scope) {
    asm_dellocal(ast->a_unbind->s_symid);
    ast->a_unbind->s_flag &= ~SYMBOL_FALLOC;
   }

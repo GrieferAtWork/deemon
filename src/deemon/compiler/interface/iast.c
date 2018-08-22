@@ -1749,6 +1749,15 @@ print_single_expr:
  }
  PRINT(", scope: ");
  DO(print_scope_repr(self->a_scope,printer));
+ if (self->a_ddi.l_file) {
+  PRINT(", loc: (");
+  printf("<file %$q>,%d,%d",
+         self->a_ddi.l_file->f_namesize,
+         self->a_ddi.l_file->f_name,
+         self->a_ddi.l_line,
+         self->a_ddi.l_col);
+  PRINT(")");
+ }
  PUTC(')');
  return 0;
 err:
