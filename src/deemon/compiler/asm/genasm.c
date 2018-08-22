@@ -1908,7 +1908,6 @@ pop_unused:
 check_getattr_sym:
      switch (SYMBOL_TYPE(sym)) {
      case SYMBOL_TYPE_ALIAS:
-      ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
       sym = SYMBOL_ALIAS(sym);
       goto check_getattr_sym;
 
@@ -2596,7 +2595,6 @@ cast_this_as_symbol:
      }
      switch (SYMBOL_TYPE(typesym)) {
      case SYMBOL_TYPE_ALIAS:
-      ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(typesym)) != SYMBOL_TYPE_ALIAS);
       typesym = SYMBOL_ALIAS(typesym);
       goto cast_this_as_symbol;
 

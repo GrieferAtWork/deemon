@@ -204,7 +204,6 @@ check_function_symbol_class:
       if (!SYMBOL_MUST_REFERENCE(sym)) {
        switch (SYMBOL_TYPE(sym)) {
        case SYMBOL_TYPE_ALIAS:
-        ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
         sym = SYMBOL_ALIAS(sym);
         goto check_function_symbol_class;
 
@@ -471,7 +470,6 @@ check_getattr_base_symbol_class:
      switch (SYMBOL_TYPE(sym)) {
 
      case SYMBOL_TYPE_ALIAS:
-      ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
       sym = SYMBOL_ALIAS(sym);
       goto check_getattr_base_symbol_class;
 

@@ -179,7 +179,6 @@ check_base_symbol_class:
     switch (SYMBOL_TYPE(sym)) {
 
     case SYMBOL_TYPE_ALIAS:
-     ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
      sym = SYMBOL_ALIAS(sym);
      goto check_base_symbol_class;
 
@@ -415,7 +414,6 @@ check_src_sym_class:
  switch (SYMBOL_TYPE(src_sym)) {
 
  case SYMBOL_TYPE_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(src_sym)) != SYMBOL_TYPE_ALIAS);
   src_sym = SYMBOL_ALIAS(src_sym);
   goto check_src_sym_class;
 
@@ -623,7 +621,6 @@ check_dst_sym_class:
   switch (SYMBOL_TYPE(dst_sym)) {
 
   case SYMBOL_TYPE_ALIAS:
-   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(dst_sym)) != SYMBOL_TYPE_ALIAS);
    dst_sym = SYMBOL_ALIAS(dst_sym);
    goto check_dst_sym_class;
 
@@ -717,7 +714,6 @@ check_dst_sym_class_hybrid:
     switch (SYMBOL_TYPE(dst_sym)) {
 
     case SYMBOL_TYPE_ALIAS:
-     ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(dst_sym)) != SYMBOL_TYPE_ALIAS);
      dst_sym = SYMBOL_ALIAS(dst_sym);
      goto check_dst_sym_class_hybrid;
 

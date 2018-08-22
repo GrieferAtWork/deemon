@@ -250,6 +250,7 @@ DeeCompiler_New(DeeObject *__restrict module,
  result->cp_prev            = NULL;
  result->cp_recursion       = 0;
  result->cp_options         = NULL;
+ result->cp_inner_options   = NULL;
  result->cp_parser_flags    = PARSE_FNORMAL;
  result->cp_optimizer_flags = OPTIMIZE_FNORMAL;
  result->cp_unwind_limit    = 0;
@@ -318,6 +319,13 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"compiler",
     /* .tp_doc      = */NULL,
+    /* TODO: This must be a GC object, because user-code may create const-symbols
+     *       that re-reference the compiler, creating a reference loop:
+     * >> import compiler from rt;
+     * >> local com = compiler();
+     * >> local sym = com.rootscope.newlocal("foo",loc: none);
+     * >> sym.setconst(com); // Reference loop
+     */
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(DeeCompilerObject),
     /* .tp_features = */TF_NONE,

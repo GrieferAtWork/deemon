@@ -128,9 +128,9 @@ struct symbol {
                                     * used in order to construct an inner function making use of it. */
     struct ast_loc       s_decl;   /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
                                     * The source location first referencing where the symbol. */
-    uint32_t             s_nread;  /* [valid_if(s_type != SYMBOL_TYPE_ALIAS)] Number of times the symbol is read */
-    uint32_t             s_nwrite; /* [valid_if(s_type != SYMBOL_TYPE_ALIAS)] Number of times the symbol is written */
-    uint32_t             s_nbound; /* [valid_if(s_type != SYMBOL_TYPE_ALIAS)] Number of times the symbol is checking for being bound */
+    uint32_t             s_nread;  /* Number of times the symbol is read */
+    uint32_t             s_nwrite; /* Number of times the symbol is written */
+    uint32_t             s_nbound; /* Number of times the symbol is checking for being bound */
     union {                        /* Type-specific symbol data. */
         struct {
             DREF struct module_object *e_module; /* [1..1] The module from which the symbol is imported. */
@@ -149,8 +149,8 @@ struct symbol {
             struct symbol             *gs_del;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as delete. */
             struct symbol             *gs_set;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as setter. */
         }                s_getset; /* [SYMBOL_TYPE_GETSET] */
-        struct symbol   *s_alias;  /* [SYMBOL_TYPE_ALIAS][->s_type != SYMBOL_TYPE_ALIAS]
-                                    * [1..1] The symbol being aliased. */
+        struct symbol   *s_alias;  /* [SYMBOL_TYPE_ALIAS][1..1] The symbol being aliased.
+                                    * NOTE: This symbol may be another alias, however is not allowed to produce a loop */
         struct {
             struct ast_loc             a_decl2;  /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
                                                   * The second declaration location. */
@@ -166,29 +166,63 @@ struct symbol {
 
 /* Return the alias of a `SYMBOL_TYPE_ALIAS'-typed symbol
  * `x', or `x' itself if it's some other kind of type. */
-#define SYMBOL_UNWIND_ALIAS(x) \
-   ((x)->s_type == SYMBOL_TYPE_ALIAS ? \
-   (ASSERT((x)->s_alias->s_type != SYMBOL_TYPE_ALIAS),(x)->s_alias) : (x))
+FORCELOCAL struct symbol *DCALL
+SYMBOL_UNWIND_ALIAS(struct symbol *__restrict x) {
+ while (x->s_type == SYMBOL_TYPE_ALIAS) {
+  ASSERT(x != x->s_alias);
+  x = x->s_alias;
+ }
+ return x;
+}
 
 /* Inplace-unwind alias symbol references.
  * -> Same as `x = SYMBOL_UNWIND_ALIAS(x)' */
 #define SYMBOL_INPLACE_UNWIND_ALIAS(x) \
-   ((x)->s_type == SYMBOL_TYPE_ALIAS ? \
-   ((x) = (x)->s_alias,ASSERT((x)->s_type != SYMBOL_TYPE_ALIAS),(void)0) : (void)0)
+do{ \
+ if ((x)->s_type == SYMBOL_TYPE_ALIAS) \
+     (x) = _priv_symbol_dounwind_alias(x); \
+}__WHILE0
+FORCELOCAL struct symbol *DCALL
+_priv_symbol_dounwind_alias(struct symbol *__restrict x) {
+ do {
+  ASSERT(x != x->s_alias);
+  x = x->s_alias;
+ } while (x->s_type == SYMBOL_TYPE_ALIAS);
+ return x;
+}
+FORCELOCAL void DCALL _priv_symbol_incread(struct symbol *__restrict x) { for (;;) { ++x->s_nread; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_incwrite(struct symbol *__restrict x) { for (;;) { ++x->s_nwrite; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_incbound(struct symbol *__restrict x) { for (;;) { ++x->s_nbound; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_decread(struct symbol *__restrict x) { for (;;) { ASSERT(x->s_nread); --x->s_nread; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_decwrite(struct symbol *__restrict x) { for (;;) { ASSERT(x->s_nwrite); --x->s_nwrite; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_decbound(struct symbol *__restrict x) { for (;;) { ASSERT(x->s_nbound); --x->s_nbound; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_addread(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { x->s_nread += n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_addwrite(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { x->s_nwrite += n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_addbound(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { x->s_nbound += n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_subread(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { ASSERT(x->s_nread >= n); x->s_nread -= n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_subwrite(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { ASSERT(x->s_nwrite >= n); x->s_nwrite -= n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { ASSERT(x->s_nbound >= n); x->s_nbound -= n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+
 
 /* Return the name of a given symbol `x' as a `char *' pointer. */
 #define SYMBOL_NAME(x)             ((x)->s_name->k_name)
 
 /* Get/inc/dec the read-, write- and bound- access counters. */
-#define SYMBOL_NREAD(x)            ((x)->s_type == SYMBOL_TYPE_ALIAS ? (x)->s_alias->s_nread : (x)->s_nread)
-#define SYMBOL_NWRITE(x)           ((x)->s_type == SYMBOL_TYPE_ALIAS ? (x)->s_alias->s_nwrite : (x)->s_nwrite)
-#define SYMBOL_NBOUND(x)           ((x)->s_type == SYMBOL_TYPE_ALIAS ? (x)->s_alias->s_nbound : (x)->s_nbound)
-#define SYMBOL_INC_NREAD(x)        ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)++(x)->s_alias->s_nread : (void)++(x)->s_nread)
-#define SYMBOL_INC_NWRITE(x)       ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)++(x)->s_alias->s_nwrite : (void)++(x)->s_nwrite)
-#define SYMBOL_INC_NBOUND(x)       ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)++(x)->s_alias->s_nbound : (void)++(x)->s_nbound)
-#define SYMBOL_DEC_NREAD(x)        ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)(ASSERT((x)->s_alias->s_nread != 0),--(x)->s_alias->s_nread) : (void)(ASSERT((x)->s_nread != 0),--(x)->s_nread))
-#define SYMBOL_DEC_NWRITE(x)       ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)(ASSERT((x)->s_alias->s_nwrite != 0),--(x)->s_alias->s_nwrite) : (void)(ASSERT((x)->s_nwrite != 0),--(x)->s_nwrite))
-#define SYMBOL_DEC_NBOUND(x)       ((x)->s_type == SYMBOL_TYPE_ALIAS ? (void)(ASSERT((x)->s_alias->s_nbound != 0),--(x)->s_alias->s_nbound) : (void)(ASSERT((x)->s_nbound != 0),--(x)->s_nbound))
+#define SYMBOL_NREAD(x)            ((uint32_t const)(x)->s_nread)
+#define SYMBOL_NWRITE(x)           ((uint32_t const)(x)->s_nwrite)
+#define SYMBOL_NBOUND(x)           ((uint32_t const)(x)->s_nbound)
+#define SYMBOL_INC_NREAD(x)         _priv_symbol_incread(x)
+#define SYMBOL_INC_NWRITE(x)        _priv_symbol_incwrite(x)
+#define SYMBOL_INC_NBOUND(x)        _priv_symbol_incbound(x)
+#define SYMBOL_DEC_NREAD(x)         _priv_symbol_decread(x)
+#define SYMBOL_DEC_NWRITE(x)        _priv_symbol_decwrite(x)
+#define SYMBOL_DEC_NBOUND(x)        _priv_symbol_decbound(x)
+#define SYMBOL_ADD_NREAD(x,n)       _priv_symbol_addread(x,n)
+#define SYMBOL_ADD_NWRITE(x,n)      _priv_symbol_addwrite(x,n)
+#define SYMBOL_ADD_NBOUND(x,n)      _priv_symbol_addbound(x,n)
+#define SYMBOL_SUB_NREAD(x,n)       _priv_symbol_subread(x,n)
+#define SYMBOL_SUB_NWRITE(x,n)      _priv_symbol_subwrite(x,n)
+#define SYMBOL_SUB_NBOUND(x,n)      _priv_symbol_subbound(x,n)
 
 /* Mark the given symbol `x' as in-use, turning a weakly
  * linked symbol into one that is strongly linked.

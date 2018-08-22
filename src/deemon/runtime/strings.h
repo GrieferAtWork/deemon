@@ -154,6 +154,27 @@ STRING(goto)
 STRING(switch)
 STRING(assembly)
 
+/* Strings used for internal symbol classes */
+/*STRING(none)*/
+STRING(global)
+STRING(extern)
+/*STRING(module)*/
+STRING(mymod)
+STRING(getset)
+STRING(ifield)
+STRING(cfield)
+STRING(alias)
+STRING(arg)
+STRING(local)
+STRING(stack)
+STRING(static)
+/*STRING(except)*/
+STRING(myfunc)
+/*STRING(this)*/
+STRING(ambig)
+STRING(fwd)
+STRING(const)
+
 
 DECL_END
 

@@ -142,10 +142,37 @@ parser_parse_stmt(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *kw) {
  DREF DeeObject *result = NULL; bool nonblocking = false;
  DREF struct ast *result_ast;
+ PRIVATE struct keyword kwlist[] = { K(nonblocking), KEND };
  COMPILER_BEGIN(self->cw_compiler);
- if (DeeArg_UnpackKw(argc,argv,kw,lookupmode_kwlist,"|o:parse_stmt",&nonblocking))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|b:parse_stmt",&nonblocking))
      goto done;
  result_ast = ast_parse_statement(nonblocking);
+ if unlikely(!result_ast) goto done;
+ result = DeeCompiler_GetAst(result_ast);
+ ast_decref_unlikely(result_ast);
+done:
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+parser_parse_allstmt(DeeCompilerWrapperObject *__restrict self,
+                     size_t argc, DeeObject **__restrict argv,
+                     DeeObject *kw) {
+ DREF DeeObject *result = NULL;
+ DeeObject *end = Dee_EmptyString;
+ DREF struct ast *result_ast;
+ tok_t end_token = TOK_EOF;
+ PRIVATE struct keyword kwlist[] = { K(end), KEND };
+ COMPILER_BEGIN(self->cw_compiler);
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|o:parse_allstmt",&end))
+     goto done;
+ if (end != Dee_EmptyString) {
+  end_token = get_token_from_obj(end,true);
+  if unlikely(end_token == TOK_ERR) goto done;
+ }
+ result_ast = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,
+                                         end_token);
  if unlikely(!result_ast) goto done;
  result = DeeCompiler_GetAst(result_ast);
  ast_decref_unlikely(result_ast);
@@ -246,6 +273,12 @@ PRIVATE struct type_method parser_methods[] = {
           "(int lookupmode=0)->ast\n"
           "Parse an assignment (not store), or inplace expression"),
       TYPE_METHOD_FKWDS },
+    { "parse_expr",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&parser_parse_assign,
+      DOC("(string lookupmode=\"\")->ast\n"
+          "(int lookupmode=0)->ast\n"
+          "Alias for #parse_assign"),
+      TYPE_METHOD_FKWDS },
     { "parse_unarytail",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&parser_parse_unarytail,
       DOC("(ast head)->ast\n"
@@ -335,6 +368,15 @@ PRIVATE struct type_method parser_methods[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&parser_parse_stmt,
       DOC("(bool nonblocking=false)->ast\n"
           "Parse a statement or #parse_comma expression"),
+      TYPE_METHOD_FKWDS },
+    { "parse_allstmt",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&parser_parse_allstmt,
+      DOC("(string end=\"\")->ast\n"
+          "(int end=0)->ast\n"
+          "Parse statements (#parse_stmt) and pack them togerther into "
+          "a multiple/keep-last branch, until the input file ends, or "
+          "a token equal to @end (s.a. :compiler.lexer.token.op:eq) is "
+          "encountered at the start of a statement"),
       TYPE_METHOD_FKWDS },
     { NULL }
 };

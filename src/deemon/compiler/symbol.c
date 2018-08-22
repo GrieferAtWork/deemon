@@ -120,6 +120,11 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
  case SYMBOL_TYPE_GLOBAL:
   Dee_XDecref(self->s_global.g_doc);
   break;
+ case SYMBOL_TYPE_ALIAS:
+  SYMBOL_SUB_NREAD(self->s_alias,self->s_nread);
+  SYMBOL_SUB_NWRITE(self->s_alias,self->s_nwrite);
+  SYMBOL_SUB_NBOUND(self->s_alias,self->s_nbound);
+  break;
  case SYMBOL_TYPE_CFIELD:
  case SYMBOL_TYPE_IFIELD:
   SYMBOL_DEC_NREAD(self->s_field.f_class);
@@ -654,14 +659,9 @@ link_forward_symbol(struct symbol *__restrict self) {
   ASSERT(!(self->s_flag & (SYMBOL_FALLOCREF|SYMBOL_FALLOC)));
   self->s_type  = SYMBOL_TYPE_ALIAS;
   self->s_alias = outer_match;
-  outer_match->s_nread  += self->s_nread;
-  outer_match->s_nwrite += self->s_nwrite;
-  outer_match->s_nbound += self->s_nbound;
-#ifndef NDEBUG
-  self->s_nread  = 0xcccc;
-  self->s_nwrite = 0xcccc;
-  self->s_nbound = 0xcccc;
-#endif
+  SYMBOL_ADD_NREAD(outer_match,self->s_nread);
+  SYMBOL_ADD_NWRITE(outer_match,self->s_nwrite);
+  SYMBOL_ADD_NBOUND(outer_match,self->s_nbound);
   return 0;
  }
  if (WARNAT(&self->s_decl,W_UNKNOWN_VARIABLE,SYMBOL_NAME(self)))

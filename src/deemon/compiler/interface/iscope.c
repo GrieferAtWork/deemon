@@ -122,9 +122,70 @@ get_scope_lookupmode(DeeObject *__restrict value,
 
 
 
+PRIVATE DREF DeeObject *DCALL
+scope_getbase(DeeCompilerScopeObject *__restrict self) {
+ DREF DeeObject *result;
+ COMPILER_BEGIN(self->ci_compiler);
+ result = DeeCompiler_GetScope((DeeScopeObject *)self->ci_value->s_base);
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+scope_getprev(DeeCompilerScopeObject *__restrict self) {
+ DREF DeeObject *result;
+ COMPILER_BEGIN(self->ci_compiler);
+ if (!self->ci_value->s_prev) {
+  result = Dee_None;
+  Dee_Incref(result);
+ } else {
+  result = DeeCompiler_GetScope(self->ci_value->s_prev);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
+ return_bool((ATOMIC_READ(self->ci_value->s_flags) & SCOPE_FCLASS) != 0);
+}
+PRIVATE int DCALL
+scope_set_isclassscope(DeeCompilerScopeObject *__restrict self,
+                       DeeObject *__restrict value) {
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ if (newval) {
+  self->ci_value->s_flags |= SCOPE_FCLASS;
+ } else {
+  self->ci_value->s_flags &= ~SCOPE_FCLASS;
+ }
+ COMPILER_END();
+ return 0;
+}
 
 
 PRIVATE struct type_getset scope_getsets[] = {
+    { "base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getbase, NULL, NULL,
+      DOC("->basescope\n"
+          "Returns the nearest base-scope that @this scope is apart of") },
+    { "prev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getprev, NULL, NULL,
+      DOC("->scope\n"
+          "->none\n"
+          "Returns a the parent of @this scope, or :none if @this scope is the root-scope") },
+    { "isclassscope",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_get_isclassscope, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&scope_set_isclassscope,
+      DOC("->bool\n"
+          "Get or set if @this scope is a class-scope\n"
+          "Class scopes are somewhat special, in that they prolong the full linkage of "
+          "symbol lookup going beyond their range, up to the point where the scope is "
+          "removed from the scope-stack\n"
+          "This in turn allows for so-called `fwd' (forward; s.a.: #symbol.kind) symbols "
+          "to be used like any other general-purpose symbol, but only be fully linked once "
+          "it is known if the surrounding class defines a symbol of the same name, thus "
+          "allowing member functions that havn't actually been declared, to already be used "
+          "ahead of time") },
     { NULL }
 };
 
@@ -247,11 +308,11 @@ PRIVATE struct type_member scope_class_members[] = {
 };
 
 PRIVATE DREF DeeObject *DCALL
-scope_addanon(DeeCompilerScopeObject *__restrict self,
+scope_newanon(DeeCompilerScopeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result = NULL; struct symbol *sym;
  COMPILER_BEGIN(self->ci_compiler);
- if (DeeArg_Unpack(argc,argv,":addanon"))
+ if (DeeArg_Unpack(argc,argv,":newanon"))
      goto done;
  sym = new_unnamed_symbol_in_scope(self->ci_value);
  if unlikely(!sym) goto done;
@@ -264,14 +325,14 @@ done:
 
 
 PRIVATE DREF DeeObject *DCALL
-scope_addlocal(DeeCompilerScopeObject *__restrict self,
+scope_newlocal(DeeCompilerScopeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv,
                DeeObject *kw) {
  DREF DeeObject *result = NULL; struct symbol *sym; struct TPPKeyword *kwd;
  DeeObject *name,*loc = NULL; bool requirenew = true; char *name_utf8;
  PRIVATE struct keyword kwlist[] = { K(name), K(requirenew), K(loc), KEND };
  COMPILER_BEGIN(self->ci_compiler);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|bo:addlocal",&name,&requirenew,&loc) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|bo:newlocal",&name,&requirenew,&loc) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
     (name_utf8 = DeeString_AsUtf8(name)) == NULL)
      goto done;
@@ -298,7 +359,7 @@ done:
 }
 
 PRIVATE struct type_method scope_methods[] = {
-    { "addanon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&scope_addanon,
+    { "newanon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&scope_newanon,
       DOC("->symbol\n"
           "Construct a new anonymous symbol, and add it as part of @this scope\n"
           "The symbol isn't given a name (when queried it will have an empty name), and "
@@ -307,7 +368,7 @@ PRIVATE struct type_method scope_methods[] = {
           "meaning that this is the type of symbol that should be used to hold hidden "
           "values, as used by $with-statements\n"
           "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)") },
-    { "addlocal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&scope_addlocal,
+    { "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&scope_newlocal,
       DOC("(string name,bool requirenew=true,(:compiler.lexer.file,int,int) loc?)->symbol\n"
           "@param loc The declaration position of the symbol, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"

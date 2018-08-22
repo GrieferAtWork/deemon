@@ -592,7 +592,6 @@ check_ct_class:
  switch (SYMBOL_TYPE(class_type)) {
  
  case SYMBOL_TYPE_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(class_type)) != SYMBOL_TYPE_ALIAS);
   class_type = SYMBOL_ALIAS(class_type);
   goto check_ct_class;
 
@@ -633,7 +632,6 @@ check_function_class:
   switch (SYMBOL_TYPE(function)) {
 
   case SYMBOL_TYPE_ALIAS:
-   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(function)) != SYMBOL_TYPE_ALIAS);
    function = SYMBOL_ALIAS(function);
    goto check_function_class;
 
@@ -673,8 +671,9 @@ PRIVATE ATTR_COLD int (DCALL asm_warn_ambiguous_symbol)(struct symbol *__restric
 }
 
 
-INTERN int (DCALL asm_gpush_symbol)(struct symbol *__restrict sym,
-                                    struct ast *__restrict warn_ast) {
+INTERN int
+(DCALL asm_gpush_symbol)(struct symbol *__restrict sym,
+                         struct ast *__restrict warn_ast) {
  int32_t symid;
  ASSERT(sym);
 check_sym_class:
@@ -689,7 +688,6 @@ check_sym_class:
   return asm_gpush_none();
 
  case SYMBOL_TYPE_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
@@ -811,6 +809,12 @@ check_sym_class:
       goto err;
   return asm_gpush_none();
 
+ case SYMBOL_TYPE_FWD:
+  return DeeError_Throwf(&DeeError_SymbolError,
+                         "Unresolved forward symbol %$q",
+                         sym->s_name->k_size,
+                         sym->s_name->k_name);
+
  case SYMBOL_TYPE_CONST:
   return asm_gpush_constexpr(sym->s_const);
 
@@ -831,7 +835,6 @@ check_sym_class:
  switch (SYMBOL_TYPE(sym)) {
 
  case SYMBOL_TYPE_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
@@ -863,7 +866,6 @@ check_sym_class:
  switch (SYMBOL_TYPE(sym)) {
 
  case SYMBOL_TYPE_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
@@ -897,7 +899,6 @@ check_sym_class:
  switch (SYMBOL_TYPE(sym)) {
 
  case SYMBOL_TYPE_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
@@ -959,7 +960,6 @@ check_sym_class:
  switch (SYMBOL_TYPE(sym)) {
 
  case SYMBOL_TYPE_ALIAS:
-  ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
   sym = SYMBOL_ALIAS(sym);
   goto check_sym_class;
 
@@ -1055,7 +1055,6 @@ check_sym_class:
   switch (SYMBOL_TYPE(sym)) {
 
   case SYMBOL_TYPE_ALIAS:
-   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
    sym = SYMBOL_ALIAS(sym);
    goto check_sym_class;
 
@@ -1188,7 +1187,6 @@ check_sym_class:
   switch (SYMBOL_TYPE(sym)) {
 
   case SYMBOL_TYPE_ALIAS:
-   ASSERT(SYMBOL_TYPE(SYMBOL_ALIAS(sym)) != SYMBOL_TYPE_ALIAS);
    sym = SYMBOL_ALIAS(sym);
    goto check_sym_class;
 

@@ -87,6 +87,7 @@ compiler_init(DeeCompilerObject *__restrict self,
  self->cp_prev            = NULL;
  self->cp_recursion       = 0;
  self->cp_options         = NULL;
+ self->cp_inner_options   = NULL;
  self->cp_parser_flags    = PARSE_FNORMAL;
  self->cp_optimizer_flags = OPTIMIZE_FNORMAL;
  self->cp_unwind_limit    = 0;
@@ -185,6 +186,16 @@ compiler_get_rootscope(DeeCompilerObject *__restrict self) {
  return result;
 }
 
+INTERN DREF DeeObject *DCALL
+compiler_get_module(DeeCompilerObject *__restrict self) {
+ DREF DeeModuleObject *result;
+ COMPILER_BEGIN(self);
+ result = current_rootscope->rs_module;
+ Dee_Incref(result);
+ COMPILER_END();
+ return (DREF DeeObject *)result;
+}
+
 
 INTERN struct type_getset compiler_getsets[] = {
     { "lexer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_lexer, NULL, NULL,
@@ -211,6 +222,12 @@ INTERN struct type_getset compiler_getsets[] = {
       DOC("->rootscope\n"
           "Get the root-scope active within @this compiler\n"
           "Note that this scope is fixed and cannot be changed") },
+    { "module",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_module, NULL, NULL,
+      DOC("->module\n"
+          "Returns the module being constructed by @this compiler\n"
+          "Warning: The returned module is incomplete and uninitialized, "
+                   "and can't actually be used, yet") },
     { NULL }
 };
 

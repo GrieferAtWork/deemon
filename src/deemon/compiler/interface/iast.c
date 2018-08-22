@@ -209,7 +209,7 @@ ast_gettype(Ast *__restrict self) {
 #define printf(...)   DO(Dee_FormatPrintf(printer,arg,__VA_ARGS__))
 
 PRIVATE int DCALL
-print_enter_scope(DeeScopeObject *__restrict caller_scope,
+print_enter_scope(DeeScopeObject *caller_scope,
                   DeeScopeObject *__restrict child_scope,
                   dformatprinter printer, void *arg,
                   bool is_expression, size_t *__restrict pindent,
@@ -237,17 +237,31 @@ print_enter_scope(DeeScopeObject *__restrict caller_scope,
         continue;
     switch (sym->s_type) {
     case SYMBOL_TYPE_EXTERN:
-     printf("import %$s = %k from %k",
-            sym->s_name->k_size,
-            sym->s_name->k_name,
-            sym->s_extern.e_symbol->ss_name,
-            sym->s_extern.e_module->mo_name);
+     if (sym->s_name->k_size == DeeString_SIZE(sym->s_extern.e_symbol->ss_name) &&
+         memcmp(sym->s_name->k_name,DeeString_STR(sym->s_extern.e_symbol->ss_name),
+                sym->s_name->k_size * sizeof(char)) == 0) {
+      printf("import %k from %k",
+             sym->s_extern.e_symbol->ss_name,
+             sym->s_extern.e_module->mo_name);
+     } else {
+      printf("import %$s = %k from %k",
+             sym->s_name->k_size,
+             sym->s_name->k_name,
+             sym->s_extern.e_symbol->ss_name,
+             sym->s_extern.e_module->mo_name);
+     }
      break;
     case SYMBOL_TYPE_MODULE:
-     printf("import %$s = %k",
-            sym->s_name->k_size,
-            sym->s_name->k_name,
-            sym->s_module->mo_name);
+     if (sym->s_name->k_size == DeeString_SIZE(sym->s_module->mo_name) &&
+         memcmp(sym->s_name->k_name,DeeString_STR(sym->s_module->mo_name),
+                sym->s_name->k_size * sizeof(char)) == 0) {
+      printf("import %k",sym->s_module->mo_name);
+     } else {
+      printf("import %$s = %k",
+             sym->s_name->k_size,
+             sym->s_name->k_name,
+             sym->s_module->mo_name);
+     }
      break;
     case SYMBOL_TYPE_MYMOD:
      printf("import %$s = .",
@@ -293,7 +307,10 @@ print_leave_scope(dformatprinter printer, void *arg,
   DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
   PRINT("}");
   if (is_expression) PRINT(")");
+ } else if (!is_expression && need_semicolon) {
+  PRINT(";");
  }
+
  return 0;
 err:
  return -1;
@@ -313,12 +330,12 @@ DeeString_IsSymbol(DeeObject *__restrict self,
 PRIVATE int DCALL
 print_ast_code(struct ast *__restrict self,
                dformatprinter printer, void *arg, bool is_expression,
-               DeeScopeObject *__restrict caller_scope, size_t indent);
+               DeeScopeObject *caller_scope, size_t indent);
 
 PRIVATE int DCALL
 print_asm_operator(struct asm_operand *__restrict operand,
                    dformatprinter printer, void *arg,
-                   DeeScopeObject *__restrict caller_scope,
+                   DeeScopeObject *caller_scope,
                    size_t indent) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
  if (operand->ao_name)
@@ -353,7 +370,7 @@ err:
 PRIVATE int DCALL
 print_ast_code(struct ast *__restrict self,
                dformatprinter printer, void *arg, bool is_expression,
-               DeeScopeObject *__restrict caller_scope, size_t indent) {
+               DeeScopeObject *caller_scope, size_t indent) {
  bool need_semicolon = true;
  ENTER_SCOPE(caller_scope,self->a_scope,is_expression);
  __IF0 {
@@ -651,26 +668,65 @@ got_except_symbol:
   if (is_expression ||
       self->a_conditional.c_tt == self->a_conditional.c_cond ||
       self->a_conditional.c_ff == self->a_conditional.c_cond) {
+   /* Special handling for logical and / or. */
+   if (self->a_flag & AST_FCOND_BOOL) {
+    if (self->a_conditional.c_tt == self->a_conditional.c_cond &&
+        self->a_conditional.c_ff != self->a_conditional.c_cond) {
+     /* c_cond || c_ff */
+     PRINT("(");
+     DO(print_ast_code(self->a_conditional.c_cond,printer,arg,true,self->a_scope,indent));
+     PRINT(" || ");
+     DO(print_ast_code(self->a_conditional.c_ff,printer,arg,true,self->a_scope,indent));
+     PRINT(")");
+     break;
+    }
+    if (self->a_conditional.c_ff == self->a_conditional.c_cond &&
+        self->a_conditional.c_tt != self->a_conditional.c_cond) {
+     /* c_cond && c_tt */
+     PRINT("(");
+     DO(print_ast_code(self->a_conditional.c_cond,printer,arg,true,self->a_scope,indent));
+     PRINT(" && ");
+     DO(print_ast_code(self->a_conditional.c_tt,printer,arg,true,self->a_scope,indent));
+     PRINT(")");
+     break;
+    }
+   }
    PRINT("(");
+   if (self->a_flag & AST_FCOND_BOOL)
+       PRINT("!!(");
    DO(print_ast_code(self->a_conditional.c_cond,printer,arg,true,self->a_scope,indent));
+   if (self->a_flag & AST_FCOND_BOOL)
+       PRINT(")");
    PRINT(" ? ");
    if (self->a_conditional.c_tt == self->a_conditional.c_cond) {
    } else if (!self->a_conditional.c_tt) {
     PRINT("none");
    } else {
+    if (self->a_flag & AST_FCOND_BOOL)
+        PRINT("!!(");
     DO(print_ast_code(self->a_conditional.c_tt,printer,arg,true,self->a_scope,indent));
+    if (self->a_flag & AST_FCOND_BOOL)
+        PRINT(")");
    }
    if (self->a_conditional.c_ff == self->a_conditional.c_cond) {
     PRINT(" : ");
    } else if (!self->a_conditional.c_ff) {
     PRINT(" : none");
    } else {
+    if (self->a_flag & AST_FCOND_BOOL)
+        PRINT("!!(");
     DO(print_ast_code(self->a_conditional.c_ff,printer,arg,true,self->a_scope,indent));
+    if (self->a_flag & AST_FCOND_BOOL)
+        PRINT(")");
    }
    PRINT(")");
   } else {
    PRINT("if (");
+   if (self->a_flag & AST_FCOND_BOOL)
+       PRINT("!!(");
    DO(print_ast_code(self->a_conditional.c_cond,printer,arg,true,self->a_scope,indent));
+   if (self->a_flag & AST_FCOND_BOOL)
+       PRINT(")");
    PRINT(") ");
    if (self->a_conditional.c_tt) {
     DO(print_ast_code(self->a_conditional.c_tt,printer,arg,false,self->a_scope,indent));
@@ -686,7 +742,7 @@ got_except_symbol:
 
  case AST_BOOL:
   PRINT("(");
-  print("!!",self->a_flag & AST_FBOOL_NEGATE ? 2 : 1);
+  print("!!",self->a_flag & AST_FBOOL_NEGATE ? 1 : 2);
   DO(print_ast_code(self->a_bool,printer,arg,true,self->a_scope,indent));
   PRINT(")");
   break;
@@ -790,11 +846,30 @@ do_unary_operator:
   case OPERATOR_CALL:
    if (!self->a_operator.o_op1) goto operator_fallback;
    DO(print_ast_code(self->a_operator.o_op0,printer,arg,true,self->a_scope,indent));
-   if ((self->a_operator.o_op1->a_type == AST_MULTIPLE &&
-        self->a_operator.o_op1->a_flag == AST_FMULTIPLE_TUPLE) ||
-       (self->a_operator.o_op1->a_type == AST_CONSTEXPR &&
-        DeeTuple_Check(self->a_operator.o_op1->a_constexpr))) {
-    DO(print_ast_code(self->a_operator.o_op1,printer,arg,true,self->a_scope,indent));
+   if (self->a_operator.o_op1->a_type == AST_MULTIPLE &&
+       self->a_operator.o_op1->a_flag == AST_FMULTIPLE_TUPLE &&
+       self->a_operator.o_op1->a_scope == self->a_scope) {
+    struct ast *args = self->a_operator.o_op1;
+    size_t i;
+    PRINT("(");
+    for (i = 0; i < args->a_multiple.m_astc; ++i) {
+     if (i != 0) PRINT(",");
+     DO(print_ast_code(args->a_multiple.m_astv[i],
+                       printer,arg,true,
+                       self->a_scope,indent));
+    }
+    PRINT(")");
+   } else if (self->a_operator.o_op1->a_type == AST_CONSTEXPR &&
+              DeeTuple_Check(self->a_operator.o_op1->a_constexpr) &&
+              self->a_operator.o_op1->a_scope == self->a_scope) {
+    DeeObject *args = self->a_operator.o_op1->a_constexpr;
+    size_t i;
+    PRINT("(");
+    for (i = 0; i < DeeTuple_SIZE(args); ++i) {
+     if (i != 0) PRINT(",");
+     DO(DeeObject_PrintRepr(DeeTuple_GET(args,i),printer,arg));
+    }
+    PRINT(")");
    } else {
     PRINT("((");
     DO(print_ast_code(self->a_operator.o_op1,printer,arg,true,self->a_scope,indent));
@@ -936,7 +1011,6 @@ do_binary:
    break;
   case OPERATOR_GETRANGE:
    if (!self->a_operator.o_op2) goto operator_fallback;
-   PRINT("[");
    DO(print_ast_code(self->a_operator.o_op0,printer,arg,true,self->a_scope,indent));
    PRINT("[");
    DO(print_ast_code(self->a_operator.o_op1,printer,arg,true,self->a_scope,indent));
@@ -1203,9 +1277,10 @@ operator_fallback:
  case AST_LABEL:
   if (self->a_flag & AST_FLABEL_CASE) {
    if (self->a_label.l_label->tl_expr) {
-    PRINT("default");
+    PRINT("case ");
+    DO(print_ast_code(self->a_label.l_label->tl_expr,printer,arg,true,self->a_scope,indent));
    } else {
-    printf("case %r",self->a_label.l_label->tl_expr);
+    PRINT("default");
    }
   } else {
    print(self->a_label.l_label->tl_name->k_name,
@@ -1348,7 +1423,7 @@ ast_str(DeeCompilerAstObject *__restrict self) {
  COMPILER_BEGIN(self->ci_compiler);
  if unlikely(print_ast_code(self->ci_value,
                            (dformatprinter)&unicode_printer_print,
-                           &printer,true,self->ci_value->a_scope,0))
+                           &printer,true,NULL,0))
     goto err;
  COMPILER_END();
  return unicode_printer_pack(&printer);
@@ -1428,19 +1503,19 @@ print_ast_repr(struct ast *__restrict self,
   break;
 
  case AST_SYM:
-  printf("makesym(sym: symbol(%$q)",
+  printf("makesym(sym: <symbol %$q>",
          self->a_sym->s_name->k_size,
          self->a_sym->s_name->k_name);
   break;
 
  case AST_UNBIND:
-  printf("makeunbind(sym: symbol(%$q)",
+  printf("makeunbind(sym: <symbol %$q>",
          self->a_sym->s_name->k_size,
          self->a_sym->s_name->k_name);
   break;
 
  case AST_BOUND:
-  printf("makebound(sym: symbol(%$q)",
+  printf("makebound(sym: <symbol %$q>",
          self->a_sym->s_name->k_size,
          self->a_sym->s_name->k_name);
   break;
