@@ -1819,12 +1819,15 @@ INTERN DREF DeeObject *DCALL
 lexer_nextraw(DeeCompilerWrapperObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  tok_t result;
+ uint16_t old_exceptsz;
  if (DeeArg_Unpack(argc,argv,":nextraw"))
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_YieldRaw();
  COMPILER_END();
- if unlikely(result < 0) goto err;
+ if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return DeeInt_NewUInt(result);
 err:
  return NULL;
@@ -1834,12 +1837,15 @@ INTERN DREF DeeObject *DCALL
 lexer_nextpp(DeeCompilerWrapperObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  tok_t result;
+ uint16_t old_exceptsz;
  if (DeeArg_Unpack(argc,argv,":nextpp"))
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_YieldPP();
  COMPILER_END();
- if unlikely(result < 0) goto err;
+ if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return DeeInt_NewUInt(result);
 err:
  return NULL;
@@ -1849,12 +1855,15 @@ INTERN DREF DeeObject *DCALL
 lexer_next(DeeCompilerWrapperObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  tok_t result;
+ uint16_t old_exceptsz;
  if (DeeArg_Unpack(argc,argv,":next"))
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_Yield();
  COMPILER_END();
- if unlikely(result < 0) goto err;
+ if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return DeeInt_NewUInt(result);
 err:
  return NULL;
@@ -1864,12 +1873,15 @@ INTERN DREF DeeObject *DCALL
 lexer_nextraw_nb(DeeCompilerWrapperObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  tok_t result;
+ uint16_t old_exceptsz;
  if (DeeArg_Unpack(argc,argv,":nextraw_nb"))
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_YieldRawNB();
  COMPILER_END();
- if unlikely(result < 0) goto err;
+ if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return DeeInt_NewUInt(result);
 err:
  return NULL;
@@ -1879,12 +1891,15 @@ INTERN DREF DeeObject *DCALL
 lexer_nextpp_nb(DeeCompilerWrapperObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  tok_t result;
+ uint16_t old_exceptsz;
  if (DeeArg_Unpack(argc,argv,":nextpp_nb"))
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_YieldPPNB();
  COMPILER_END();
- if unlikely(result < 0) goto err;
+ if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return DeeInt_NewUInt(result);
 err:
  return NULL;
@@ -1894,12 +1909,15 @@ INTERN DREF DeeObject *DCALL
 lexer_next_nb(DeeCompilerWrapperObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  tok_t result;
+ uint16_t old_exceptsz;
  if (DeeArg_Unpack(argc,argv,":next_nb"))
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_YieldNB();
  COMPILER_END();
- if unlikely(result < 0) goto err;
+ if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return DeeInt_NewUInt(result);
 err:
  return NULL;
@@ -2056,13 +2074,17 @@ INTERN DREF DeeObject *DCALL
 lexer_undef(DeeCompilerWrapperObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *name; int error; char *utf8_name;
+ uint16_t old_exceptsz;
  if (DeeArg_Unpack(argc,argv,"o:undef",&name) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
     (utf8_name = DeeString_AsUtf8(name)) == NULL)
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  error = TPPLexer_Undef(utf8_name,WSTR_LENGTH(utf8_name));
  COMPILER_END();
+ if unlikely(old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return_bool(error != 0);
 err:
  return NULL;
@@ -2074,6 +2096,7 @@ lexer_define(DeeCompilerWrapperObject *__restrict self,
              DeeObject *kw) {
  DeeObject *name,*value; int error;
  char *utf8_name,*utf8_value; bool builtin = false;
+ uint16_t old_exceptsz;
  PRIVATE struct keyword kwlist[] = { K(name), K(value), K(builtin), KEND };
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo|b:define",&name,&value,&builtin) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
@@ -2081,12 +2104,14 @@ lexer_define(DeeCompilerWrapperObject *__restrict self,
     (utf8_name = DeeString_AsUtf8(name)) == NULL ||
     (utf8_value = DeeString_AsUtf8(value)) == NULL)
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  error = TPPLexer_Define(utf8_name,WSTR_LENGTH(utf8_name),
                          utf8_value,WSTR_LENGTH(utf8_value),
                          builtin ? TPPLEXER_DEFINE_FLAG_BUILTIN : TPPLEXER_DEFINE_FLAG_NONE);
  COMPILER_END();
- if unlikely(!error) goto err;
+ if unlikely(!error && old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return_none;
 err:
  return NULL;
@@ -2099,17 +2124,20 @@ lexer_addassert(DeeCompilerWrapperObject *__restrict self,
                 DeeObject *kw) {
  DeeObject *name,*value; int error;
  char *utf8_name,*utf8_value;
+ uint16_t old_exceptsz;
  if (DeeArg_UnpackKw(argc,argv,kw,assertion_kwlist,"oo:addassert",&name,&value) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
      DeeObject_AssertTypeExact(value,&DeeString_Type) ||
     (utf8_name = DeeString_AsUtf8(name)) == NULL ||
     (utf8_value = DeeString_AsUtf8(value)) == NULL)
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  error = TPPLexer_AddAssert(utf8_name,WSTR_LENGTH(utf8_name),
                             utf8_value,WSTR_LENGTH(utf8_value));
  COMPILER_END();
- if unlikely(!error) goto err;
+ if unlikely(!error && old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return_none;
 err:
  return NULL;
@@ -2121,16 +2149,20 @@ lexer_delassert(DeeCompilerWrapperObject *__restrict self,
                 DeeObject *kw) {
  DeeObject *name,*value = NULL; int error;
  char *utf8_name,*utf8_value = NULL;
+ uint16_t old_exceptsz;
  if (DeeArg_UnpackKw(argc,argv,kw,assertion_kwlist,"o|o:delassert",&name,&value) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
     (value && DeeObject_AssertTypeExact(value,&DeeString_Type)) ||
     (utf8_name = DeeString_AsUtf8(name)) == NULL ||
     (value && (utf8_value = DeeString_AsUtf8(value)) == NULL))
      goto err;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
  error = TPPLexer_DelAssert(utf8_name,WSTR_LENGTH(utf8_name),
                             utf8_value,utf8_value ? WSTR_LENGTH(utf8_value) : 0);
  COMPILER_END();
+ if unlikely(old_exceptsz != DeeThread_Self()->t_exceptsz)
+    goto err;
  return_bool_(error != 0);
 err:
  return NULL;

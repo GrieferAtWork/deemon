@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/error.h>
+#include <deemon/class.h>
 #include <deemon/string.h>
 #include <deemon/int.h>
 #include <deemon/format.h>
@@ -35,6 +36,7 @@
 #include <deemon/module.h>
 
 #include "../../runtime/strings.h"
+#include "../../runtime/builtin.h"
 
 DECL_BEGIN
 
@@ -216,11 +218,16 @@ print_enter_scope(DeeScopeObject *caller_scope,
                   bool *__restrict pis_scope) {
  if (child_scope == caller_scope)
      return 0;
- if (is_expression) PRINT("(");
- PRINT("{\n");
- ++*pindent;
+ if (is_expression) {
+  PRINT("({\n");
+  ++*pindent;
+  *pis_scope = true;
+ } else if (caller_scope) {
+  PRINT("{\n");
+  ++*pindent;
+  *pis_scope = true;
+ }
  DO(Dee_FormatRepeat(printer,arg,'\t',*pindent));
- *pis_scope = true;
  for (; child_scope && child_scope != caller_scope; child_scope = child_scope->s_prev) {
   size_t i; struct symbol *sym;
   if (!child_scope->s_mapc) continue;
@@ -333,6 +340,123 @@ print_ast_code(struct ast *__restrict self,
                DeeScopeObject *caller_scope, size_t indent);
 
 PRIVATE int DCALL
+print_symbol(struct symbol *__restrict sym,
+             DeeScopeObject *__restrict ref_scope,
+             dformatprinter printer, void *arg) {
+ if (sym->s_name == &TPPKeyword_Empty) {
+  if (sym->s_type == SYMBOL_TYPE_EXTERN) {
+   if (sym->s_extern.e_module == &deemon_module &&
+       sym->s_extern.e_symbol->ss_index == id_import) {
+    PRINT("import");
+   } else {
+    PRINT("(");
+    DO(DeeObject_Print((DeeObject *)sym->s_extern.e_symbol->ss_name,printer,arg));
+    PRINT(" from ");
+    DO(DeeObject_Print((DeeObject *)sym->s_extern.e_module->mo_name,printer,arg));
+    PRINT(")");
+   }
+   goto done;
+  }
+  if (sym->s_type == SYMBOL_TYPE_MODULE) {
+   printf("({ import _sym = %k; _sym; })",
+          sym->s_module->mo_name);
+   goto done;
+  }
+  if (sym->s_type == SYMBOL_TYPE_MYMOD) {
+   PRINT("({ import _sym = .; _sym; })");
+   goto done;
+  }
+ }
+ (void)ref_scope; /* TODO: __nth symbols? */
+ if (sym->s_name == &TPPKeyword_Empty) {
+  PRINT("__TPP_IDENTIFIER(\"\")"); /* ??? */
+ } else {
+  print(sym->s_name->k_name,sym->s_name->k_size);
+ }
+done:
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+print_code_tags(DeeBaseScopeObject *__restrict function_scope,
+                DeeScopeObject *__restrict tag_scope,
+                dformatprinter printer, void *arg) {
+ if (function_scope->bs_flags & CODE_FCOPYABLE)
+     PRINT("@copyable ");
+ if (function_scope->bs_flags & CODE_FTHISCALL)
+     PRINT("@thiscall ");
+ if (function_scope->bs_flags & CODE_FASSEMBLY)
+     PRINT("@assembly ");
+ if (function_scope->bs_super
+#if 1 /* The super-symbols of classes are stored on the stack... */
+     &&
+     function_scope->bs_super->s_name != &TPPKeyword_Empty
+#endif
+     ) {
+  PRINT("@super(");
+  DO(print_symbol(function_scope->bs_super,tag_scope,printer,arg));
+  PRINT(")");
+ }
+ if (function_scope->bs_class) {
+  PRINT("@class(");
+  DO(print_symbol(function_scope->bs_class,tag_scope,printer,arg));
+  PRINT(")");
+ }
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE bool DCALL
+is_instance_method(DeeBaseScopeObject *__restrict self,
+                   struct symbol *myclass,
+                   struct symbol *mysuper) {
+ if (!(self->bs_flags & CODE_FTHISCALL))
+     return false;
+ if (self->bs_class != myclass)
+     return false;
+ if (self->bs_super != mysuper)
+     return false;
+ return true;
+}
+
+PRIVATE int DCALL
+print_function_atargs(struct ast *__restrict self,
+                      dformatprinter printer, void *arg,
+                      size_t indent, bool print_tags) {
+ DeeBaseScopeObject *function_scope; size_t i;
+ function_scope = self->a_function.f_scope;
+ if (print_tags)
+     DO(print_code_tags(function_scope,self->a_scope,printer,arg));
+ PRINT("(");
+ for (i = 0; i < function_scope->bs_argc; ++i) {
+  if (i != 0) PRINT(", ");
+  print(function_scope->bs_argv[i]->s_name->k_name,
+        function_scope->bs_argv[i]->s_name->k_size);
+  if (DeeBaseScope_IsArgOptional(function_scope,i)) {
+   PRINT("?");
+  } else if (DeeBaseScope_IsArgDefault(function_scope,i)) {
+   printf(" = %r",function_scope->bs_default[i - function_scope->bs_argc_min]);
+  }
+ }
+ if (function_scope->bs_flags & CODE_FVARARGS) {
+  if (function_scope->bs_argc) PRINT(", ");
+  if (function_scope->bs_varargs) {
+   print(function_scope->bs_varargs->s_name->k_name,
+         function_scope->bs_varargs->s_name->k_size);
+  }
+  PRINT("...");
+ }
+ PRINT(") ");
+ DO(print_ast_code(self->a_function.f_code,printer,arg,false,self->a_scope,indent));
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
 print_asm_operator(struct asm_operand *__restrict operand,
                    dformatprinter printer, void *arg,
                    DeeScopeObject *caller_scope,
@@ -366,6 +490,20 @@ err:
  return -1;
 }
 
+PRIVATE struct class_member *DCALL
+find_class_member(struct ast *__restrict self, uint16_t index) {
+ size_t i;
+ for (i = 0; i < self->a_class.c_memberc; ++i) {
+  if (self->a_class.c_memberv[i].cm_type != CLASS_MEMBER_MEMBER)
+      continue;
+  if (self->a_class.c_memberv[i].cm_index != index)
+      continue;
+  return &self->a_class.c_memberv[i];
+ }
+ return NULL;
+}
+PRIVATE char const property_names[3][4] = { "get", "del", "set" };
+
 
 PRIVATE int DCALL
 print_ast_code(struct ast *__restrict self,
@@ -388,20 +526,19 @@ force_scope:
   break;
 
  case AST_SYM:
-  print(self->a_sym->s_name->k_name,
-        self->a_sym->s_name->k_size);
+  DO(print_symbol(self->a_sym,self->a_scope,printer,arg));
   break;
 
  case AST_UNBIND:
-  printf("del(%$s)",
-         self->a_unbind->s_name->k_size,
-         self->a_unbind->s_name->k_name);
+  PRINT("del(");
+  DO(print_symbol(self->a_sym,self->a_scope,printer,arg));
+  PRINT(")");
   break;
 
  case AST_BOUND:
-  printf("%$s is bound",
-         self->a_bound->s_name->k_size,
-         self->a_bound->s_name->k_name);
+  PRINT("(");
+  DO(print_symbol(self->a_sym,self->a_scope,printer,arg));
+  PRINT(" is bound)");
   break;
 
  {
@@ -459,14 +596,15 @@ force_scope:
   default:
    if (!is_scope && is_expression) goto force_scope;
    if (!self->a_multiple.m_astc) {
-    PRINT("none");
+    PRINT("none;");
    } else for (i = 0; i < self->a_multiple.m_astc; ++i) {
     DO(print_ast_code(self->a_multiple.m_astv[i],printer,arg,false,self->a_scope,indent));
     if (i < self->a_multiple.m_astc-1) {
-     PRINT(";\n");
+     PRINT("\n");
      DO(Dee_FormatRepeat(printer,arg,'\t',indent));
     }
    }
+   need_semicolon = false;
    break;
   }
  } break;
@@ -708,10 +846,10 @@ got_except_symbol:
     if (self->a_flag & AST_FCOND_BOOL)
         PRINT(")");
    }
+   PRINT(" : ");
    if (self->a_conditional.c_ff == self->a_conditional.c_cond) {
-    PRINT(" : ");
    } else if (!self->a_conditional.c_ff) {
-    PRINT(" : none");
+    PRINT("none");
    } else {
     if (self->a_flag & AST_FCOND_BOOL)
         PRINT("!!(");
@@ -721,6 +859,7 @@ got_except_symbol:
    }
    PRINT(")");
   } else {
+   need_semicolon = false;
    PRINT("if (");
    if (self->a_flag & AST_FCOND_BOOL)
        PRINT("!!(");
@@ -741,8 +880,8 @@ got_except_symbol:
   break;
 
  case AST_BOOL:
-  PRINT("(");
   print("!!",self->a_flag & AST_FBOOL_NEGATE ? 1 : 2);
+  PRINT("(");
   DO(print_ast_code(self->a_bool,printer,arg,true,self->a_scope,indent));
   PRINT(")");
   break;
@@ -752,33 +891,10 @@ got_except_symbol:
   PRINT("...");
   break;
 
- {
-  size_t i;
-  DeeBaseScopeObject *function_scope;
  case AST_FUNCTION:
-  PRINT("[](");
-  function_scope = self->a_function.f_scope;
-  for (i = 0; i < function_scope->bs_argc; ++i) {
-   if (i != 0) PRINT(", ");
-   print(function_scope->bs_argv[i]->s_name->k_name,
-         function_scope->bs_argv[i]->s_name->k_size);
-   if (DeeBaseScope_IsArgOptional(function_scope,i)) {
-    PRINT("?");
-   } else if (DeeBaseScope_IsArgDefault(function_scope,i)) {
-    printf(" = %r",function_scope->bs_default[i - function_scope->bs_argc_min]);
-   }
-  }
-  if (function_scope->bs_flags & CODE_FVARARGS) {
-   if (function_scope->bs_argc) PRINT(", ");
-   if (function_scope->bs_varargs) {
-    print(function_scope->bs_varargs->s_name->k_name,
-          function_scope->bs_varargs->s_name->k_size);
-   }
-   PRINT("...");
-  }
-  PRINT(") ");
-  DO(print_ast_code(self->a_function.f_code,printer,arg,false,self->a_scope,indent));
- } break;
+  PRINT("[]");
+  DO(print_function_atargs(self,printer,arg,indent,true));
+  break;
 
  {
   struct opinfo *info;
@@ -1272,7 +1388,230 @@ operator_fallback:
   }
   break;
 
- //case AST_CLASS: /* TODO */
+ {
+  size_t i;
+ case AST_CLASS:
+  if (!is_scope && is_expression) goto force_scope;
+  need_semicolon = false;
+  PRINT("class");
+  if (self->a_class.c_name) {
+   PRINT(" ");
+   if (self->a_class.c_name->a_type == AST_CONSTEXPR &&
+       DeeString_Check(self->a_class.c_name->a_constexpr)) {
+    DO(DeeObject_Print(self->a_class.c_name->a_constexpr,printer,arg));
+   } else {
+    PRINT("<name: ");
+    DO(print_ast_code(self->a_class.c_name,printer,arg,true,self->a_scope,indent));
+    PRINT(">");
+   }
+  }
+  if (self->a_class.c_base) {
+   PRINT(": ");
+   DO(print_ast_code(self->a_class.c_base,printer,arg,true,self->a_scope,indent));
+  }
+  PRINT(" {\n");
+  ++indent;
+  /* Print the contents of the instance member table. */
+  if (self->a_class.c_imem) {
+   if (self->a_class.c_imem->a_type == AST_CONSTEXPR &&
+       DeeMemberTable_Check(self->a_class.c_imem->a_constexpr)) {
+    struct member_table *table; size_t i;
+    table = (struct member_table *)self->a_class.c_imem->a_constexpr;
+    if (table->mt_size) {
+     for (i = 0; i <= table->mt_mask; ++i) {
+      struct member_entry *entry;
+      entry = &table->mt_list[i];
+      if (!entry->cme_name) continue;
+      DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+      if (entry->cme_flag & CLASS_MEMBER_FPRIVATE)
+          PRINT("private ");
+      if (!(entry->cme_flag & CLASS_MEMBER_FCLASSMEM)) {
+       if (entry->cme_flag & CLASS_MEMBER_FREADONLY)
+           PRINT("@readonly ");
+       if (entry->cme_flag & CLASS_MEMBER_FMETHOD)
+           PRINT("@method ");
+       printf("member %k;\n",entry->cme_name);
+      } else if (entry->cme_flag & CLASS_MEMBER_FPROPERTY) {
+       struct class_member *functions[3]; size_t i;
+       /* Instance-property (with its callbacks saved as part of the class) */
+       functions[1] = functions[2] = NULL;
+       functions[0] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_GET);
+       if (!(entry->cme_flag & CLASS_MEMBER_FREADONLY)) {
+        functions[1] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_DEL);
+        functions[2] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_SET);
+       }
+       printf("property %k = {\n",entry->cme_name);
+       ++indent;
+       for (i = 0; i < 3; ++i) {
+        if (!functions[i]) continue;
+        DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+        print(property_names[i],3);
+        if (functions[i]->cm_ast->a_type == AST_FUNCTION &&
+            is_instance_method(functions[i]->cm_ast->a_function.f_scope,
+                               self->a_class.c_classsym,
+                               self->a_class.c_supersym)) {
+         DO(print_function_atargs(functions[i]->cm_ast,printer,arg,indent,false));
+        } else {
+         PRINT(" = ");
+         DO(print_ast_code(functions[i]->cm_ast,printer,arg,true,self->a_scope,indent));
+         PRINT(";");
+        }
+        PRINT("\n");
+       }
+       --indent;
+       DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+       PRINT("}\n");
+      } else if (entry->cme_flag & CLASS_MEMBER_FMETHOD) {
+       struct class_member *method;
+       /* Instance-method (that is saved within the class) */
+       method = find_class_member(self,entry->cme_addr);
+       if unlikely(!method) goto instane_member_in_class;
+       if unlikely(method->cm_ast->a_type != AST_FUNCTION) goto instane_member_in_class;
+       if (!is_instance_method(method->cm_ast->a_function.f_scope,
+                               self->a_class.c_classsym,
+                               self->a_class.c_supersym))
+           goto instane_member_in_class;
+       printf("function %k",entry->cme_name);
+       DO(print_function_atargs(method->cm_ast,printer,arg,indent,false));
+       PRINT("\n");
+      } else {
+       struct class_member *member;
+       /* An instance-member that is saved within the class??? */
+instane_member_in_class:
+       if (entry->cme_flag & CLASS_MEMBER_FMETHOD)
+           PRINT("@method ");
+       if (entry->cme_flag & CLASS_MEMBER_FREADONLY)
+           PRINT("@readonly ");
+       printf("<instance-memory-in-class-table %k",entry->cme_name);
+       member = find_class_member(self,entry->cme_addr);
+       if (member) {
+        PRINT(" = ");
+        DO(print_ast_code(member->cm_ast,printer,arg,true,self->a_scope,indent));
+       }
+       PRINT(">\n");
+      }
+     }
+    }
+   } else {
+    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    PRINT("<instance-member-table: ");
+    DO(print_ast_code(self->a_class.c_imem,printer,arg,true,self->a_scope,indent));
+    PRINT(">\n");
+   }
+  }
+  /* Print the contents of the class member table. */
+  if (self->a_class.c_cmem) {
+   if (self->a_class.c_cmem->a_type == AST_CONSTEXPR &&
+       DeeMemberTable_Check(self->a_class.c_cmem->a_constexpr)) {
+    struct member_table *table; size_t i;
+    table = (struct member_table *)self->a_class.c_cmem->a_constexpr;
+    if (table->mt_size) {
+     for (i = 0; i <= table->mt_mask; ++i) {
+      struct member_entry *entry;
+      entry = &table->mt_list[i];
+      if (!entry->cme_name) continue;
+      DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+      if (entry->cme_flag & CLASS_MEMBER_FPRIVATE)
+          PRINT("private ");
+      if (entry->cme_flag & CLASS_MEMBER_FPROPERTY) {
+       struct class_member *functions[3]; size_t i;
+       /* Instance-property (with its callbacks saved as part of the class) */
+       functions[1] = functions[2] = NULL;
+       functions[0] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_GET);
+       if (!(entry->cme_flag & CLASS_MEMBER_FREADONLY)) {
+        functions[1] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_DEL);
+        functions[2] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_SET);
+       }
+       printf("class property %k = {\n",entry->cme_name);
+       ++indent;
+       for (i = 0; i < 3; ++i) {
+        if (!functions[i]) continue;
+        DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+        print(property_names[i],3);
+        if (functions[i]->cm_ast->a_type == AST_FUNCTION) {
+         DO(print_function_atargs(functions[i]->cm_ast,printer,arg,indent,true));
+        } else {
+         PRINT(" = ");
+         DO(print_ast_code(functions[i]->cm_ast,printer,arg,true,self->a_scope,indent));
+         PRINT(";");
+        }
+        PRINT("\n");
+       }
+       --indent;
+       DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+       PRINT("}\n");
+      } else if (entry->cme_flag & CLASS_MEMBER_FMETHOD) {
+       struct class_member *method;
+       /* Instance-method (that is saved within the class) */
+       method = find_class_member(self,entry->cme_addr);
+       if unlikely(!method) goto class_member_in_class;
+       if unlikely(method->cm_ast->a_type != AST_FUNCTION) goto class_member_in_class;
+       printf("class function %k",entry->cme_name);
+       DO(print_function_atargs(method->cm_ast,printer,arg,indent,true));
+       PRINT("\n");
+      } else {
+       struct class_member *member;
+       /* An instance-member that is saved within the class??? */
+class_member_in_class:
+       if (entry->cme_flag & CLASS_MEMBER_FMETHOD)
+           PRINT("@method ");
+       if (entry->cme_flag & CLASS_MEMBER_FREADONLY)
+           PRINT("@readonly ");
+       printf("class member %k",entry->cme_name);
+       member = find_class_member(self,entry->cme_addr);
+       if (member) {
+        PRINT(" = ");
+        DO(print_ast_code(member->cm_ast,printer,arg,true,self->a_scope,indent));
+       }
+       PRINT(";\n");
+      }
+     }
+    }
+   } else {
+    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    PRINT("<class-member-table: ");
+    DO(print_ast_code(self->a_class.c_imem,printer,arg,true,self->a_scope,indent));
+    PRINT(">\n");
+   }
+  }
+
+  /* Print class operators. */
+  for (i = 0; i < self->a_class.c_memberc; ++i) {
+   struct class_member *member; struct opinfo *info;
+   member = &self->a_class.c_memberv[i];
+   if (member->cm_type != CLASS_MEMBER_OPERATOR)
+       continue;
+   DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+   if (member->cm_index == OPERATOR_CONSTRUCTOR &&
+       member->cm_ast->a_type == AST_FUNCTION) {
+    PRINT("this");
+   } else if (member->cm_index == OPERATOR_DESTRUCTOR &&
+              member->cm_ast->a_type == AST_FUNCTION) {
+    PRINT("~this");
+   } else {
+    PRINT("operator ");
+    info = Dee_OperatorInfo(NULL,member->cm_index);
+    if (info) {
+     printf("%s",info->oi_sname);
+    } else {
+     printf("%I16u",member->cm_index);
+    }
+   }
+   if (member->cm_ast->a_type == AST_FUNCTION &&
+       is_instance_method(member->cm_ast->a_function.f_scope,
+                          self->a_class.c_classsym,
+                          self->a_class.c_supersym)) {
+    DO(print_function_atargs(member->cm_ast,printer,arg,indent,false));
+   } else {
+    PRINT(" = ");
+    DO(print_ast_code(member->cm_ast,printer,arg,true,self->a_scope,indent));
+    PRINT(";");
+   }
+   PRINT("\n");
+  }
+  DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
+  PRINT("}");
+ } break;
 
  case AST_LABEL:
   if (self->a_flag & AST_FLABEL_CASE) {
@@ -1423,7 +1762,7 @@ ast_str(DeeCompilerAstObject *__restrict self) {
  COMPILER_BEGIN(self->ci_compiler);
  if unlikely(print_ast_code(self->ci_value,
                            (dformatprinter)&unicode_printer_print,
-                           &printer,true,NULL,0))
+                           &printer,false,NULL,0))
     goto err;
  COMPILER_END();
  return unicode_printer_pack(&printer);

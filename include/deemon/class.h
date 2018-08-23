@@ -41,7 +41,7 @@ typedef struct instancemember_object DeeInstanceMemberObject;
 
 struct member_entry {
     DREF struct string_object *cme_name; /* [0..1] Name of this member.
-                                          *   NOTE: NULL indicates a sentinel/unused entry. */
+                                          * NOTE: NULL indicates a sentinel/unused entry. */
     dhash_t                    cme_hash; /* [== cme_name->s_hash] */
     DREF struct string_object *cme_doc;  /* [0..1] A Documentation string for this member. */
     uint16_t                   cme_addr; /* Index within an `:ih_vtab' vector in which this member is located. */
@@ -51,60 +51,60 @@ struct member_entry {
 #define CLASS_MEMBER_FVISIBILITY (CLASS_MEMBER_FPUBLIC|CLASS_MEMBER_FPRIVATE)
 #define CLASS_MEMBER_FMASK     0xf001    /* Mask of known `CLASS_MEMBER_F*' flags. */
 #define CLASS_MEMBER_FCLASSMEM 0x1000    /* FLAG: Used by members apart to `c_mem'.
-                                          *        When set, the variable is stored in the `ih_vtab' vector
-                                          *        of the class, rather than that of the instance.
-                                          *        This flag is usually set for member functions.
-                                          *        When used in class members this flag is ignored.
-                                          *       (NOTE: If you look at the implementation you may beg to differ,
-                                          *              but when a class member is accessed,
-                                          *             `self == DeeClass_DESC(class_type)->c_class' upon entry,
-                                          *              meaning that we only re-write `self' itself again)
-                                          *  NOTE: Instance-table members with this flag set can be
-                                          *        accessed from as unbound class members. */
+                                          *       When set, the variable is stored in the `ih_vtab' vector
+                                          *       of the class, rather than that of the instance.
+                                          *       This flag is usually set for member functions.
+                                          *       When used in class members this flag is ignored.
+                                          *      (NOTE: If you look at the implementation you may beg to differ,
+                                          *             but when a class member is accessed,
+                                          *            `self == DeeClass_DESC(class_type)->c_class' upon entry,
+                                          *             meaning that we only re-write `self' itself again)
+                                          * NOTE: Instance-table members with this flag set can be
+                                          *       accessed from as unbound class members. */
 #define CLASS_MEMBER_FREADONLY 0x2000    /* FLAG: Attempting to set this member after a non-NULL
-                                          *        value has already been assigned is an error.
-                                          *        Since all class/instance fields start out as
-                                          *        `NULL' (aka. unbound), we must still allow
-                                          *        writing values to unbound fields.
-                                          *        With that in mind, `FWRITEONCE' would be a better name.
-                                          *  NOTE: Despite the possibility of write-once synchronization
-                                          *        being possible for this type of member, the fact that
-                                          *        user-code is allowed to directly access class/instance
-                                          *        members by their index (as those are already known at
-                                          *        compile-time for same-module classes), it is quite easy
-                                          *        to write assembly that can simply bypass this flag and
-                                          *        overwrite or delete a readonly field.
-                                          *        In other words: You must still acquire locks normally
-                                          *        whenever accessing a readonly field.
-                                          *  NOTE: When this flag is used alongside `CLASS_MEMBER_FPROPERTY',
-                                          *        the behavior is the same as though `:ih_vtab[cme_addr + CLASS_PROPERTY_GET]'
-                                          *        and `:ih_vtab[cme_addr + CLASS_PROPERTY_SET]' were set to `NULL'.
-                                          *  HINT: The compiler will automatically set this flag for member function in
-                                          *        order to protect them from accidentally being overwritten once assigned.
-                                          *  HINT: Since DEL/SET property callbacks are ignored for this flag,
-                                          *        you can also use to to generate optimized read-only properties
-                                          *        that only require a single slot in the instance table.
-                                          *        In relation to this, it is guarantied that `cme_addr + CLASS_PROPERTY_DEL'
-                                          *        and `cme_addr + CLASS_PROPERTY_SET' are never so much as looked at when
-                                          *        this flag is set, meaning that only `cme_addr + CLASS_PROPERTY_GET' will
-                                          *        actually be used. */
+                                          *       value has already been assigned is an error.
+                                          *       Since all class/instance fields start out as
+                                          *       `NULL' (aka. unbound), we must still allow
+                                          *       writing values to unbound fields.
+                                          *       With that in mind, `FWRITEONCE' would be a better name.
+                                          * NOTE: Despite the possibility of write-once synchronization
+                                          *       being possible for this type of member, the fact that
+                                          *       user-code is allowed to directly access class/instance
+                                          *       members by their index (as those are already known at
+                                          *       compile-time for same-module classes), it is quite easy
+                                          *       to write assembly that can simply bypass this flag and
+                                          *       overwrite or delete a readonly field.
+                                          *       In other words: You must still acquire locks normally
+                                          *       whenever accessing a readonly field.
+                                          * NOTE: When this flag is used alongside `CLASS_MEMBER_FPROPERTY',
+                                          *       the behavior is the same as though `:ih_vtab[cme_addr + CLASS_PROPERTY_GET]'
+                                          *       and `:ih_vtab[cme_addr + CLASS_PROPERTY_SET]' were set to `NULL'.
+                                          * HINT: The compiler will automatically set this flag for member function in
+                                          *       order to protect them from accidentally being overwritten once assigned.
+                                          * HINT: Since DEL/SET property callbacks are ignored for this flag,
+                                          *       you can also use to to generate optimized read-only properties
+                                          *       that only require a single slot in the instance table.
+                                          *       In relation to this, it is guarantied that `cme_addr + CLASS_PROPERTY_DEL'
+                                          *       and `cme_addr + CLASS_PROPERTY_SET' are never so much as looked at when
+                                          *       this flag is set, meaning that only `cme_addr + CLASS_PROPERTY_GET' will
+                                          *       actually be used. */
 #define CLASS_MEMBER_FPROPERTY 0x4000    /* FLAG: This member behaves as a special property member:
-                                          *        get: `:ih_vtab[cme_addr + CLASS_PROPERTY_GET]' (Invoke with `tp_call')
-                                          *        del: `:ih_vtab[cme_addr + CLASS_PROPERTY_DEL]' (Invoke with `tp_call')
-                                          *        set: `:ih_vtab[cme_addr + CLASS_PROPERTY_SET]' (Invoke with `tp_call')
-                                          *  NOTE: When the `CLASS_MEMBER_FMETHOD' flag is also set, the operator is invoked as a this-call.
-                                          *        Otherwise, it is invoked directly (aka. without the associated `this_arg' being passed)
-                                          *  HINT: Since property callbacks (just as any other member function)
-                                          *        are stored as part of the runtime field vector, you can simply
-                                          *        leave any unimplemented callback set to `NULL' at runtime.
-                                          *        Attempting to access it will then cause an `Error.AttributeError' to be thrown,
-                                          *        indicating that the specified field cannot be accessed in the manner requested.
-                                          *  NOTE: Property callbacks can _only_ be assigned using index-based member assignment,
-                                          *        meaning that custom assembly _must_ be generated for user-code to make use of them. */
+                                          *       get: `:ih_vtab[cme_addr + CLASS_PROPERTY_GET]' (Invoke with `tp_call')
+                                          *       del: `:ih_vtab[cme_addr + CLASS_PROPERTY_DEL]' (Invoke with `tp_call')
+                                          *       set: `:ih_vtab[cme_addr + CLASS_PROPERTY_SET]' (Invoke with `tp_call')
+                                          * NOTE: When the `CLASS_MEMBER_FMETHOD' flag is also set, the operator is invoked as a this-call.
+                                          *       Otherwise, it is invoked directly (aka. without the associated `this_arg' being passed)
+                                          * HINT: Since property callbacks (just as any other member function)
+                                          *       are stored as part of the runtime field vector, you can simply
+                                          *       leave any unimplemented callback set to `NULL' at runtime.
+                                          *       Attempting to access it will then cause an `Error.AttributeError' to be thrown,
+                                          *       indicating that the specified field cannot be accessed in the manner requested.
+                                          * NOTE: Property callbacks can _only_ be assigned using index-based member assignment,
+                                          *       meaning that custom assembly _must_ be generated for user-code to make use of them. */
 #define CLASS_MEMBER_FMETHOD   0x8000    /* FLAG: When accessed, the object found in the instance vector
-                                          *        is wrapped as a `DeeInstanceMethodObject' object that
-                                          *        is used to implement a this-call to a member function.
-                                          *  HINT: This flag is usually combined with the `CLASS_MEMBER_FCLASSMEM' flag. */
+                                          *       is wrapped as a `DeeInstanceMethodObject' object that
+                                          *       is used to implement a this-call to a member function.
+                                          * HINT: This flag is usually combined with the `CLASS_MEMBER_FCLASSMEM' flag. */
     uint16_t                   cme_flag; /* Class member flags (Set of `CLASS_MEMBER_F*') */
 #if __SIZEOF_POINTER__ >= 8
     uint32_t                   cme_padding; /* ... */
@@ -115,11 +115,13 @@ struct member_table {
      *       stored in the constant object vector of code objects. */
     OBJECT_HEAD
     size_t               mt_size; /* [const] Amount of instance variables. (NOTE: doesn't necessarily match the number of members)
-                                   *  XXX: This should really be a `uint16_t', and no code using
+                                   * TODO: This should really be a `uint16_t', and no code using
                                    *       this field even accesses any bits beyond that! */
-    size_t               mt_mask; /* [const] Mask applied when accessing the dict-style `mt_list' table. */
+    size_t               mt_mask; /* [const] Mask applied when accessing the dict-style `mt_list' table.
+                                   * TODO: This should also be a `uint16_t' */
     struct member_entry *mt_list; /* [1..mt_mask+1][const][owned_if(!= empty_class_members)][const]
-                                   *  Hash-vector of member descriptors. */
+                                   * Hash-vector of member descriptors.
+                                   * TODO: This vector should be inlined! */
 };
 
 #define DeeMemberTable_HASHST(self,hash)  ((hash) & ((DeeMemberTableObject *)REQUIRES_OBJECT(self))->mt_mask)
@@ -134,7 +136,7 @@ DDATDEF DeeMemberTableObject DeeMemberTable_Empty;
 DDATDEF DeeObject DeeMemberTable_Empty;
 #endif
 DDATDEF DeeTypeObject DeeMemberTable_Type;
-#define DeeMemberTable_Check(ob)      DeeObject_InstanceOf(ob,&DeeMemberTable_Type)
+#define DeeMemberTable_Check(ob)      DeeObject_InstanceOf(ob,&DeeMemberTable_Type) /* TODO: `DeeMemberTable_Type' should be variable-size+final */
 #define DeeMemberTable_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeMemberTable_Type)
 
 

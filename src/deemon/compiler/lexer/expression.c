@@ -826,7 +826,7 @@ do_create_class:
     if unlikely(!merge) { Dee_Free(exprv); goto err_r_flags; }
     result = merge; /* Inherit */
    }
-   if (result->a_type == AST_MULTIPLE)
+   if (result && result->a_type == AST_MULTIPLE)
        allow_cast = false; /* Don't allow comma-lists for cast expressions. */
   }
   ast_putddi(result,&loc);
@@ -943,10 +943,11 @@ do_create_class:
   if (tok == ']') {
    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
    if unlikely(yield() < 0) goto err;
-   if (tok == '(' || tok == '{' || tok == TOK_ARROW) {
+   if (tok == '(' || tok == '{' || tok == TOK_ARROW || tok == '@') {
 do_lambda:
     old_flags = TPPLexer_Current->l_flags;
     TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+    if unlikely(parse_tags_block()) goto err_flags;
     result = ast_parse_function(NULL,NULL,true,&loc);
     TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
     break;

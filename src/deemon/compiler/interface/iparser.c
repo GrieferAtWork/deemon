@@ -23,6 +23,8 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/arg.h>
+#include <deemon/none.h>
+#include <deemon/thread.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/util/cache.h>
@@ -65,8 +67,15 @@ parser_##name(DeeCompilerWrapperObject *__restrict self, \
   result_ast = head->ci_value; \
  } else) \
  { \
+  uint16_t old_exceptsz = DeeThread_Self()->t_exceptsz; \
   result_ast = func(head->ci_value); \
-  if unlikely(!result_ast) goto done; \
+  if unlikely(!result_ast) { \
+   if (old_exceptsz == DeeThread_Self()->t_exceptsz) { \
+    result = Dee_None; \
+    Dee_Incref(result); \
+   } \
+   goto done; \
+  } \
  } \
  result = DeeCompiler_GetAst(result_ast); \
  ast_decref_unlikely(result_ast); \
@@ -83,13 +92,21 @@ parser_##name(DeeCompilerWrapperObject *__restrict self, \
  DREF DeeObject *result = NULL; \
  DREF struct ast *result_ast; unsigned int lookup_mode; \
  DeeObject *lookup_mode_ob = Dee_EmptyString; \
+ uint16_t old_exceptsz; \
  COMPILER_BEGIN(self->cw_compiler); \
  if (DeeArg_UnpackKw(argc,argv,kw,lookupmode_kwlist,"|o:" #name,&lookup_mode_ob)) \
      goto done; \
  if unlikely(get_scope_lookupmode(lookup_mode_ob,&lookup_mode)) \
     goto done; \
  result_ast = func(lookup_mode); \
- if unlikely(!result_ast) goto done; \
+ old_exceptsz = DeeThread_Self()->t_exceptsz; \
+ if unlikely(!result_ast) { \
+  if (old_exceptsz == DeeThread_Self()->t_exceptsz) { \
+   result = Dee_None; \
+   Dee_Incref(result); \
+  } \
+  goto done; \
+ } \
  result = DeeCompiler_GetAst(result_ast); \
  ast_decref_unlikely(result_ast); \
 done: \
@@ -142,12 +159,20 @@ parser_parse_stmt(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *kw) {
  DREF DeeObject *result = NULL; bool nonblocking = false;
  DREF struct ast *result_ast;
+ uint16_t old_exceptsz;
  PRIVATE struct keyword kwlist[] = { K(nonblocking), KEND };
  COMPILER_BEGIN(self->cw_compiler);
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|b:parse_stmt",&nonblocking))
      goto done;
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  result_ast = ast_parse_statement(nonblocking);
- if unlikely(!result_ast) goto done;
+ if unlikely(!result_ast) {
+  if (old_exceptsz == DeeThread_Self()->t_exceptsz) {
+   result = Dee_None;
+   Dee_Incref(result);
+  }
+  goto done;
+ }
  result = DeeCompiler_GetAst(result_ast);
  ast_decref_unlikely(result_ast);
 done:
@@ -163,6 +188,7 @@ parser_parse_allstmt(DeeCompilerWrapperObject *__restrict self,
  DeeObject *end = Dee_EmptyString;
  DREF struct ast *result_ast;
  tok_t end_token = TOK_EOF;
+ uint16_t old_exceptsz;
  PRIVATE struct keyword kwlist[] = { K(end), KEND };
  COMPILER_BEGIN(self->cw_compiler);
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|o:parse_allstmt",&end))
@@ -171,9 +197,16 @@ parser_parse_allstmt(DeeCompilerWrapperObject *__restrict self,
   end_token = get_token_from_obj(end,true);
   if unlikely(end_token == TOK_ERR) goto done;
  }
+ old_exceptsz = DeeThread_Self()->t_exceptsz;
  result_ast = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,
                                          end_token);
- if unlikely(!result_ast) goto done;
+ if unlikely(!result_ast) {
+  if (old_exceptsz == DeeThread_Self()->t_exceptsz) {
+   result = Dee_None;
+   Dee_Incref(result);
+  }
+  goto done;
+ }
  result = DeeCompiler_GetAst(result_ast);
  ast_decref_unlikely(result_ast);
 done:
