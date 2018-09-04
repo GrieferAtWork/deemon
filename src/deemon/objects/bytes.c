@@ -905,8 +905,11 @@ bytes_getrange(Bytes *__restrict self,
   if ((size_t)end_index > DeeBytes_SIZE(self))
       end_index = (dssize_t)DeeBytes_SIZE(self);
  }
- if unlikely((size_t)start_index >= (size_t)end_index)
-    start_index = end_index = 0;
+ if ((size_t)start_index >= (size_t)end_index)
+     return_reference_((Bytes *)Dee_EmptyBytes);
+ if ((size_t)start_index == 0 &&
+     (size_t)end_index == DeeBytes_SIZE(self))
+     return_reference_(self);
  return (DREF Bytes *)DeeBytes_NewView(self->b_orig,
                                        self->b_base + (size_t)start_index,
                                       (size_t)(end_index - start_index),
@@ -1187,7 +1190,7 @@ PRIVATE struct type_cmp bytes_cmp = {
     /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_lo,
     /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_le,
     /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_gr,
-    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_ge,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_ge
 };
 
 
@@ -1212,24 +1215,169 @@ bytes_nsi_getitem_fast(Bytes *__restrict self, size_t index) {
  return DeeInt_NewU8(DeeBytes_DATA(self)[index]);
 }
 
+PRIVATE int DCALL
+bytes_nsi_delitem(Bytes *__restrict self,
+                  size_t index) {
+ if unlikely(index >= DeeBytes_SIZE(self)) {
+  err_index_out_of_bounds((DeeObject *)self,index,DeeBytes_SIZE(self));
+  goto err;
+ }
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
+ DeeBytes_DATA(self)[index] = 0;
+ return 0;
+err:
+ return -1;
+}
+PRIVATE int DCALL
+bytes_nsi_setitem(Bytes *__restrict self,
+                  size_t index,
+                  DeeObject *__restrict value) {
+ uint8_t val;
+ if (DeeObject_AsUInt8(value,&val))
+     goto err;
+ if unlikely(index >= DeeBytes_SIZE(self)) {
+  err_index_out_of_bounds((DeeObject *)self,index,DeeBytes_SIZE(self));
+  goto err;
+ }
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
+ DeeBytes_DATA(self)[index] = val;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE DREF Bytes *DCALL
+bytes_nsi_getrange_i(Bytes *__restrict self,
+                     dssize_t start_index,
+                     dssize_t end_index) {
+ if unlikely(start_index < 0)
+    start_index += DeeBytes_SIZE(self);
+ if unlikely(end_index < 0)
+    end_index += DeeBytes_SIZE(self);
+ if ((size_t)end_index > DeeBytes_SIZE(self))
+     end_index = (dssize_t)DeeBytes_SIZE(self);
+ if ((size_t)start_index >= (size_t)end_index)
+     return_reference_((Bytes *)Dee_EmptyBytes);
+ if ((size_t)start_index == 0 &&
+     (size_t)end_index == DeeBytes_SIZE(self))
+     return_reference_(self);
+ return (DREF Bytes *)DeeBytes_NewView(self->b_orig,
+                                       self->b_base + (size_t)start_index,
+                                      (size_t)(end_index - start_index),
+                                       self->b_flags);
+}
+
+PRIVATE DREF Bytes *DCALL
+bytes_nsi_getrange_in(Bytes *__restrict self,
+                      dssize_t start_index) {
+ if unlikely(start_index < 0)
+    start_index += DeeBytes_SIZE(self);
+ if ((size_t)start_index >= DeeBytes_SIZE(self))
+     return_reference_((Bytes *)Dee_EmptyBytes);
+ if (start_index == 0)
+     return_reference_(self);
+ return (DREF Bytes *)DeeBytes_NewView(self->b_orig,
+                                       self->b_base + (size_t)start_index,
+                                      (size_t)(DeeBytes_SIZE(self) - start_index),
+                                       self->b_flags);
+}
+
+
+
+PRIVATE int DCALL
+bytes_nsi_setrange_i(Bytes *__restrict self,
+                     dssize_t start_index,
+                     dssize_t end_index,
+                     DeeObject *__restrict value) {
+ uint8_t *dst; size_t size;
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
+ if unlikely(start_index < 0) start_index += DeeBytes_SIZE(self);
+ if unlikely(end_index < 0) end_index += DeeBytes_SIZE(self);
+ if unlikely((size_t)start_index >= DeeBytes_SIZE(self) ||
+             (size_t)start_index >= (size_t)end_index)
+    start_index = end_index = 0;
+ else if unlikely((size_t)end_index > DeeBytes_SIZE(self))
+  end_index = (dssize_t)DeeBytes_SIZE(self);
+ size = (size_t)(end_index-start_index);
+ dst = DeeBytes_DATA(self) + (size_t)start_index;
+ return DeeSeq_ItemsToBytes(dst,size,value);
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+bytes_nsi_setrange_in(Bytes *__restrict self,
+                      dssize_t start_index,
+                      DeeObject *__restrict value) {
+ uint8_t *dst; size_t size;
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
+ if unlikely(start_index < 0) start_index += DeeBytes_SIZE(self);
+ if unlikely((size_t)start_index >= DeeBytes_SIZE(self))
+    start_index = DeeBytes_SIZE(self);
+ size = (size_t)(DeeBytes_SIZE(self) - start_index);
+ dst = DeeBytes_DATA(self) + (size_t)start_index;
+ return DeeSeq_ItemsToBytes(dst,size,value);
+err:
+ return -1;
+}
+
+PRIVATE DREF DeeObject *DCALL
+bytes_nsi_xch(Bytes *__restrict self,
+              size_t index,
+              DeeObject *__restrict value) {
+ uint8_t val,result;
+ if (DeeObject_AsUInt8(value,&val))
+     goto err;
+ if unlikely(index >= DeeBytes_SIZE(self)) {
+  err_index_out_of_bounds((DeeObject *)self,index,DeeBytes_SIZE(self));
+  goto err;
+ }
+ if unlikely(!DeeBytes_WRITABLE(self)) {
+  err_bytes_not_writable((DeeObject *)self);
+  goto err;
+ }
+#ifdef CONFIG_NO_THREADS
+ result = DeeBytes_DATA(self)[index];
+ DeeBytes_DATA(self)[index] = val;
+#else
+ result = ATOMIC_XCH(DeeBytes_DATA(self)[index],val);
+#endif
+ return DeeInt_NewU8(result);
+err:
+ return NULL;
+}
+
+
 PRIVATE struct type_nsi bytes_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
-    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
+    /* .nsi_flags   = */TYPE_SEQX_FMUTABLE,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&bytes_nsi_getsize,
             /* .nsi_getsize_fast = */(void *)&bytes_nsi_getsize,
             /* .nsi_getitem      = */(void *)&bytes_nsi_getitem,
-            /* .nsi_delitem      = */(void *)NULL, /* TODO */
-            /* .nsi_setitem      = */(void *)NULL, /* TODO */
+            /* .nsi_delitem      = */(void *)&bytes_nsi_delitem,
+            /* .nsi_setitem      = */(void *)&bytes_nsi_setitem,
             /* .nsi_getitem_fast = */(void *)&bytes_nsi_getitem_fast,
-            /* .nsi_getrange     = */(void *)NULL, /* TODO */
-            /* .nsi_getrange_n   = */(void *)NULL, /* TODO */
-            /* .nsi_setrange     = */(void *)NULL, /* TODO */
-            /* .nsi_setrange_n   = */(void *)NULL, /* TODO */
-            /* .nsi_find         = */(void *)NULL, /* TODO */
-            /* .nsi_rfind        = */(void *)NULL, /* TODO */
-            /* .nsi_xch          = */(void *)NULL, /* TODO */
+            /* .nsi_getrange     = */(void *)&bytes_nsi_getrange_i,
+            /* .nsi_getrange_n   = */(void *)&bytes_nsi_getrange_in,
+            /* .nsi_setrange     = */(void *)&bytes_nsi_setrange_i,
+            /* .nsi_setrange_n   = */(void *)&bytes_nsi_setrange_in,
+            /* .nsi_find         = */(void *)NULL,
+            /* .nsi_rfind        = */(void *)NULL,
+            /* .nsi_xch          = */(void *)&bytes_nsi_xch,
             /* .nsi_insert       = */(void *)NULL,
             /* .nsi_insertall    = */(void *)NULL,
             /* .nsi_insertvec    = */(void *)NULL,
@@ -1324,6 +1472,8 @@ PRIVATE struct type_getset bytes_getsets[] = {
       DOC("->bool\nEvaluates to :true if @this bytes object cannot be written to") },
     { "iswritable", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
       DOC("->bool\nEvaluates to :true if @this bytes object not be written to (the inverse of #isreadonly)") },
+    { "ismutable", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
+      DOC("->bool\nAlias for #iswritable, overriding :sequence.ismutable") },
     { "first",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getfirst,
       (int(DCALL *)(DeeObject *__restrict))&bytes_delfirst,
