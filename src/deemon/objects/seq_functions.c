@@ -680,15 +680,15 @@ err_r_iter:
  Dee_Decref(iterator);
  return NULL;
 }
-INTERN dssize_t DCALL
+INTERN size_t DCALL
 DeeSeq_Count(DeeObject *__restrict self,
              DeeObject *__restrict search_item,
              DeeObject *pred_eq) {
- dssize_t result = 0;
+ size_t result = 0;
  DREF DeeObject *elem,*iterator;
  /* TODO: NSI Variant + index-based sequence optimizations */
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
-    return -1;
+    goto err;
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
   int temp;
   if (pred_eq) {
@@ -711,13 +711,15 @@ DeeSeq_Count(DeeObject *__restrict self,
       goto err_iter;
  }
  Dee_Decref(iterator);
- if unlikely(!elem) return -1;
+ if unlikely(!elem)
+    goto err;
  return result;
 err_elem:
  Dee_Decref(elem);
 err_iter:
  Dee_Decref(iterator);
- return -1;
+err:
+ return (size_t)-1;
 }
 INTERN DREF DeeObject *DCALL
 DeeSeq_Locate(DeeObject *__restrict self,
@@ -1004,7 +1006,7 @@ err_temp:
  goto err;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 iterator_find(DeeObject *__restrict iterator,
               DeeObject *__restrict search_item,
               size_t start, size_t end,
@@ -1016,7 +1018,7 @@ iterator_find(DeeObject *__restrict iterator,
   elem = DeeObject_IterNext(iterator);
   if (!ITER_ISOK(elem)) {
    if unlikely(!elem) goto err;
-   return -1;
+   return (size_t)-1;
   }
   Dee_Decref(elem);
   --start;
@@ -1037,7 +1039,7 @@ iterator_find(DeeObject *__restrict iterator,
   if (temp != 0) {
    if unlikely(temp < 0) goto err;
    /* Found it! */
-   return (dssize_t)index;
+   return index;
   }
   ++index;
   if unlikely(index == (size_t)-2) {
@@ -1051,12 +1053,12 @@ iterator_find(DeeObject *__restrict iterator,
  }
  if unlikely(!elem) goto err;
 not_found:
- return -1; /* Not found. */
+ return (size_t)-1; /* Not found. */
 err:
- return -2;
+ return (size_t)-2;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 iterator_rfind(DeeObject *__restrict iterator,
                DeeObject *__restrict search_item,
                size_t start, size_t end,
@@ -1064,12 +1066,12 @@ iterator_rfind(DeeObject *__restrict iterator,
  DREF DeeObject *elem;
  size_t index = 0; int temp;
  size_t search_size = end - start;
- dssize_t result = -1;
+ size_t result = (size_t)-1;
  while (start) {
   elem = DeeObject_IterNext(iterator);
   if (!ITER_ISOK(elem)) {
    if unlikely(!elem) goto err;
-   return -1;
+   return (size_t)-1;
   }
   Dee_Decref(elem);
   --start;
@@ -1090,7 +1092,7 @@ iterator_rfind(DeeObject *__restrict iterator,
   if (temp != 0) {
    if unlikely(temp < 0) goto err;
    /* Found it! */
-   result = (dssize_t)index;
+   result = index;
   }
   ++index;
   if unlikely(index == (size_t)-2) {
@@ -1105,20 +1107,20 @@ iterator_rfind(DeeObject *__restrict iterator,
  if unlikely(!elem) goto err;
  return result;
 err:
- return -2;
+ return (size_t)-2;
 }
 
 
-INTERN dssize_t DCALL
+INTERN size_t DCALL
 DeeSeq_Find(DeeObject *__restrict self,
             size_t start, size_t end,
             DeeObject *__restrict search_item,
             DeeObject *pred_eq) {
- DREF DeeObject *iterator; dssize_t result;
+ DREF DeeObject *iterator; size_t result;
  DeeTypeObject *tp_self; size_t i,seq_length;
  DREF DeeObject *temp; int error;
  ASSERT_OBJECT(self);
- if unlikely(start >= end) return -1;
+ if unlikely(start >= end) return (size_t)-1;
  tp_self = Dee_TYPE(self);
  while (tp_self != &DeeSeq_Type) {
   struct type_seq *seq = tp_self->tp_seq;
@@ -1131,7 +1133,7 @@ DeeSeq_Find(DeeObject *__restrict self,
     if (nsi->nsi_seqlike.nsi_getitem_fast) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
-     if (start >= seq_length) return -1;
+     if (start >= seq_length) return (size_t)-1;
      if (end > seq_length) end = seq_length;
      for (i = start; i < end; ++i) {
       temp = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,i);
@@ -1154,14 +1156,14 @@ DeeSeq_Find(DeeObject *__restrict self,
         err_integer_overflow_i(sizeof(size_t)*8,true);
         goto err;
        }
-       return (dssize_t)i;
+       return i;
       }
      }
-     return -1;
+     return (size_t)-1;
     } else if (nsi->nsi_seqlike.nsi_getitem) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
-     if (start >= seq_length) return -1;
+     if (start >= seq_length) return (size_t)-1;
      if (end > seq_length) end = seq_length;
      for (i = start; i < end; ++i) {
       temp = (*nsi->nsi_seqlike.nsi_getitem)(self,i);
@@ -1188,16 +1190,16 @@ DeeSeq_Find(DeeObject *__restrict self,
         err_integer_overflow_i(sizeof(size_t)*8,true);
         goto err;
        }
-       return (dssize_t)i;
+       return i;
       }
      }
-     return -1;
+     return (size_t)-1;
     }
     if (has_noninherited_getitem(tp_self,seq)) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
 do_lookup_tpget:
-     if (start >= seq_length) return -1;
+     if (start >= seq_length) return (size_t)-1;
      if (end > seq_length) end = seq_length;
      for (i = start; i < end; ++i) {
       DREF DeeObject *index_ob;
@@ -1228,10 +1230,10 @@ do_lookup_tpget:
         err_integer_overflow_i(sizeof(size_t)*8,true);
         goto err;
        }
-       return (dssize_t)i;
+       return i;
       }
      }
-     return -1;
+     return (size_t)-1;
     }
    }
    if (has_noninherited_getitem(tp_self,seq) &&
@@ -1256,21 +1258,21 @@ do_lookup_tpget:
  }
  err_no_generic_sequence(self);
 err:
- return -2;
+ return (size_t)-2;
 err_temp:
  Dee_Decref(temp);
  goto err;
 }
-INTERN dssize_t DCALL
+INTERN size_t DCALL
 DeeSeq_RFind(DeeObject *__restrict self,
              size_t start, size_t end,
              DeeObject *__restrict search_item,
              DeeObject *pred_eq) {
- DREF DeeObject *iterator; dssize_t result;
+ DREF DeeObject *iterator; size_t result;
  DeeTypeObject *tp_self; size_t i,seq_length;
  DREF DeeObject *temp; int error;
  ASSERT_OBJECT(self);
- if unlikely(start >= end) return -1;
+ if unlikely(start >= end) return (size_t)-1;
  tp_self = Dee_TYPE(self);
  while (tp_self != &DeeSeq_Type) {
   struct type_seq *seq = tp_self->tp_seq;
@@ -1278,8 +1280,8 @@ DeeSeq_RFind(DeeObject *__restrict self,
    struct type_nsi *nsi = seq->tp_nsi;
    if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
        is_noninherited_nsi(tp_self,seq,nsi)) {
-    if (nsi->nsi_seqlike.nsi_find)
-        return (*nsi->nsi_seqlike.nsi_find)(self,start,end,search_item,pred_eq);
+    if (nsi->nsi_seqlike.nsi_rfind)
+        return (*nsi->nsi_seqlike.nsi_rfind)(self,start,end,search_item,pred_eq);
     if (nsi->nsi_seqlike.nsi_getitem_fast) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
@@ -1307,10 +1309,10 @@ DeeSeq_RFind(DeeObject *__restrict self,
         err_integer_overflow_i(sizeof(size_t)*8,true);
         goto err;
        }
-       return (dssize_t)i;
+       return i;
       }
      } while (i-- > start);
-     return -1;
+     return (size_t)-1;
     } else if (nsi->nsi_seqlike.nsi_getitem) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
@@ -1342,10 +1344,10 @@ DeeSeq_RFind(DeeObject *__restrict self,
         err_integer_overflow_i(sizeof(size_t)*8,true);
         goto err;
        }
-       return (dssize_t)i;
+       return i;
       }
      } while (i-- > start);
-     return -1;
+     return (size_t)-1;
     }
     if (has_noninherited_getitem(tp_self,seq)) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
@@ -1383,10 +1385,10 @@ do_lookup_tpget:
         err_integer_overflow_i(sizeof(size_t)*8,true);
         goto err;
        }
-       return (dssize_t)i;
+       return i;
       }
      } while (i-- > start);
-     return -1;
+     return (size_t)-1;
     }
    }
    if (has_noninherited_getitem(tp_self,seq) &&
@@ -1411,7 +1413,7 @@ do_lookup_tpget:
  }
  err_no_generic_sequence(self);
 err:
- return -2;
+ return (size_t)-2;
 err_temp:
  Dee_Decref(temp);
  goto err;
@@ -1457,16 +1459,14 @@ INTERN DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeOb
 INTERN DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTERN int DCALL DeeSeq_StartsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTERN int DCALL DeeSeq_EndsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN dssize_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN dssize_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN dssize_t DCALL DeeSeq_IndexSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN dssize_t DCALL DeeSeq_RIndexSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
+INTERN size_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
+INTERN size_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTERN DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTERN DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTERN DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTERN DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *__restrict self, DeeObject *__restrict sep_seq, DeeObject *pred_eq);
 
-INTERN dssize_t DCALL
+INTERN size_t DCALL
 DeeSeq_CountSeq(DeeObject *__restrict self,
                 DeeObject *__restrict seq,
                 DeeObject *pred_eq) {
@@ -1519,7 +1519,7 @@ DeeSeq_CountSeq(DeeObject *__restrict self,
   * >> return result;
   */
  DERROR_NOTIMPLEMENTED();
- return -1;
+ return (size_t)-1;
 }
 
 

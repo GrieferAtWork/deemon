@@ -432,6 +432,65 @@ cat_contains(Cat *__restrict self, DeeObject *__restrict elem) {
  }
  return_false;
 }
+PRIVATE DREF DeeObject *DCALL
+cat_nsi_getitem(Cat *__restrict self, size_t index) {
+ size_t i,temp,sub_index = index,total_length = 0;
+ for (i = 0; i < DeeTuple_SIZE(self); ++i) {
+  temp = DeeObject_Size(DeeTuple_GET(self,i));
+  if (sub_index >= temp) {
+   sub_index    -= temp;
+   total_length += temp;
+   continue;
+  }
+  return DeeObject_GetItemIndex(DeeTuple_GET(self,i),sub_index);
+ }
+ err_index_out_of_bounds((DeeObject *)self,index,total_length);
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+cat_getitem(Cat *__restrict self,
+            DeeObject *__restrict index_ob) {
+ size_t index;
+ if (DeeObject_AsSize(index_ob,&index))
+     return NULL;
+ return cat_nsi_getitem(self,index);
+}
+
+PRIVATE size_t DCALL
+cat_nsi_find(Cat *__restrict self,
+             size_t start, size_t end,
+             DeeObject *__restrict elem,
+             DeeObject *pred_eq) {
+ size_t temp,i,offset = 0;
+ for (i = 0; i < DeeTuple_SIZE(self); ++i) {
+  temp = DeeSeq_Find(DeeTuple_GET(self,i),start,end,elem,pred_eq);
+  if ((dssize_t)temp < 0) {
+   if unlikely(temp == (size_t)-2)
+      goto err;
+   if (temp != (size_t)-1) {
+    if unlikely((offset + temp) < offset ||
+                (offset + temp) < temp)
+       goto index_overflow;
+    offset += temp;
+    if unlikely(offset == (size_t)-1 ||
+                offset == (size_t)-2)
+       goto index_overflow;
+    return offset;
+   }
+  }
+  temp = DeeObject_Size(DeeTuple_GET(self,i));
+  if unlikely(temp == (size_t)-1) goto err;
+  if (temp >= end) break;
+  start   = 0;
+  end    -= temp;
+  offset += temp;
+ } 
+ return (size_t)-1;
+index_overflow:
+ err_integer_overflow_i(sizeof(size_t)*8,true);
+err:
+ return (size_t)-2;
+}
 
 
 PRIVATE struct type_nsi cat_nsi = {
@@ -440,7 +499,7 @@ PRIVATE struct type_nsi cat_nsi = {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&cat_nsi_getsize,
             /* .nsi_getsize_fast = */(void *)NULL,
-            /* .nsi_getitem      = */(void *)NULL, /* TODO */
+            /* .nsi_getitem      = */(void *)&cat_nsi_getitem,
             /* .nsi_delitem      = */(void *)NULL,
             /* .nsi_setitem      = */(void *)NULL,
             /* .nsi_getitem_fast = */(void *)NULL,
@@ -448,7 +507,7 @@ PRIVATE struct type_nsi cat_nsi = {
             /* .nsi_getrange_n   = */(void *)NULL,
             /* .nsi_setrange     = */(void *)NULL,
             /* .nsi_setrange_n   = */(void *)NULL,
-            /* .nsi_find         = */(void *)NULL, /* TODO */
+            /* .nsi_find         = */(void *)&cat_nsi_find,
             /* .nsi_rfind        = */(void *)NULL, /* TODO */
             /* .nsi_xch          = */(void *)NULL,
             /* .nsi_insert       = */(void *)NULL,
@@ -468,7 +527,7 @@ PRIVATE struct type_seq cat_seq = {
     /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
     /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_size,
     /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&cat_contains,
-    /* .tp_get       = */NULL, /* TODO */
+    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&cat_getitem,
     /* .tp_del       = */NULL,
     /* .tp_set       = */NULL,
     /* .tp_range_get = */NULL,

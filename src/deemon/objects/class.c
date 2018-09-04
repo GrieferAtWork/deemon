@@ -21,8 +21,10 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
-#include <deemon/object.h>
 #include <deemon/class.h>
+
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
+#include <deemon/object.h>
 #include <deemon/code.h>
 #include <deemon/none.h>
 #include <deemon/attribute.h>
@@ -3679,8 +3681,7 @@ err:
  return -1;
 }
 
-
-
 DECL_END
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 #endif /* !GUARD_DEEMON_OBJECTS_CLASS_C */

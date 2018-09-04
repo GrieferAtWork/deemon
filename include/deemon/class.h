@@ -19,6 +19,12 @@
 #ifndef GUARD_DEEMON_CLASS_H
 #define GUARD_DEEMON_CLASS_H 1
 
+#undef CONFIG_USE_NEW_CLASS_SYSTEM
+//#define CONFIG_USE_NEW_CLASS_SYSTEM 1
+
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+#include "class2.h"
+#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
 #include "api.h"
 #include "object.h"
 #ifndef CONFIG_NO_THREADS
@@ -26,6 +32,7 @@
 #endif
 #include <stddef.h>
 #include <stdint.h>
+
 
 DECL_BEGIN
 
@@ -542,5 +549,6 @@ INTDEF void DCALL DeeClass_InheritOperator(DeeTypeObject *__restrict self, uint1
 #endif
 
 DECL_END
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 #endif /* !GUARD_DEEMON_CLASS_H */

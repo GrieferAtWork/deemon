@@ -427,7 +427,6 @@ repeat_nsi_rfind(Repeat *__restrict self,
       err_integer_overflow_i(sizeof(size_t)*8,true);
   }
  }
-
  return result;
 }
 

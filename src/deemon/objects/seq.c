@@ -1038,12 +1038,15 @@ seq_max(DeeObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 seq_count(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq = NULL; dssize_t result;
+ DeeObject *elem,*pred_eq = NULL; size_t result;
  if (DeeArg_Unpack(argc,argv,"o|o:count",&elem,&pred_eq))
-     return NULL;
+     goto err;
  if (DeeNone_Check(pred_eq)) pred_eq = NULL;
  result = DeeSeq_Count(self,elem,pred_eq);
- return unlikely(result < 0) ? NULL : DeeInt_NewSize((size_t)result);
+ if (result == (size_t)-1) goto err;
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_locate(DeeObject *__restrict self,
@@ -1180,13 +1183,16 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_find(DeeObject *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq;
- dssize_t result; size_t start,end;
+ DeeObject *elem,*pred_eq; size_t result,start,end;
  if (get_sequence_find_args("find",argc,argv,&elem,&pred_eq,&start,&end))
      goto err;
  result = DeeSeq_Find(self,start,end,elem,pred_eq);
- if unlikely(result == -2) goto err;
- return DeeInt_NewSSize(result);
+ if unlikely((dssize_t)result < 0) {
+  if unlikely(result == (size_t)-2) goto err;
+  if unlikely(result == (size_t)-1)
+     return_reference_(&DeeInt_MinusOne);
+ }
+ return DeeInt_NewSize(result);
 err:
  return NULL;
 }
@@ -1194,50 +1200,50 @@ PRIVATE DREF DeeObject *DCALL
 seq_rfind(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq;
- dssize_t result; size_t start,end;
+ size_t result,start,end;
  if (get_sequence_find_args("rfind",argc,argv,&elem,&pred_eq,&start,&end))
      goto err;
  result = DeeSeq_RFind(self,start,end,elem,pred_eq);
- if unlikely(result == -2) goto err;
- return DeeInt_NewSSize(result);
+ if unlikely((dssize_t)result < 0) {
+  if unlikely(result == (size_t)-2) goto err;
+  if unlikely(result == (size_t)-1)
+     return_reference_(&DeeInt_MinusOne);
+ }
+ return DeeInt_NewSize(result);
 err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_index(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq;
- dssize_t result; size_t start,end;
+ DeeObject *elem,*pred_eq; size_t result,start,end;
  if (get_sequence_find_args("index",argc,argv,&elem,&pred_eq,&start,&end))
      goto err;
  result = DeeSeq_Find(self,start,end,elem,pred_eq);
- if unlikely(result < 0) {
-  if unlikely(result == -2) goto err;
-  if unlikely(result == -1) {
-   err_item_not_found(self,elem);
-   goto err;
-  }
+ if unlikely((dssize_t)result < 0) {
+  if unlikely(result == (size_t)-2) goto err;
+  if unlikely(result == (size_t)-1) goto err_not_found;
  }
- return DeeInt_NewSize((size_t)result);
+ return DeeInt_NewSize(result);
+err_not_found:
+ err_item_not_found(self,elem);
 err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_rindex(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq;
- dssize_t result; size_t start,end;
+ DeeObject *elem,*pred_eq; size_t result,start,end;
  if (get_sequence_find_args("rindex",argc,argv,&elem,&pred_eq,&start,&end))
      goto err;
  result = DeeSeq_RFind(self,start,end,elem,pred_eq);
- if unlikely(result < 0) {
-  if unlikely(result == -2) goto err;
-  if unlikely(result == -1) {
-   err_item_not_found(self,elem);
-   goto err;
-  }
+ if unlikely((dssize_t)result < 0) {
+  if unlikely(result == (size_t)-2) goto err;
+  if unlikely(result == (size_t)-1) goto err_not_found;
  }
- return DeeInt_NewSize((size_t)result);
+ return DeeInt_NewSize(result);
+err_not_found:
+ err_item_not_found(self,elem);
 err:
  return NULL;
 }

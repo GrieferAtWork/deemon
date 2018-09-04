@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NotepadPlus>
+	<AutoComplete>
+		<Environment ignoreCase="no" startFunc="(" stopFunc=")" paramSeparator="," terminal=";" />
+		<KeyWord name="#if" />
+		<KeyWord name="#ifndef" />
+		<KeyWord name="#ifdef" />
+		<KeyWord name="#elif" />
+		<KeyWord name="#else" />
+		<KeyWord name="#endif" />
+		<KeyWord name="#define" />
+		<KeyWord name="#undef" />
+		<KeyWord name="#error" />
+		<KeyWord name="#warning" />
+		<KeyWord name="#include" />
+		<KeyWord name="#include_next" />
+		<KeyWord name="#import" />
+		<KeyWord name="#line" />
+		<KeyWord name="#pragma" />
+		<KeyWord name="pack" func="yes">
+			<Overload retVal="tuple">
+				<Param name="object... args" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="str" func="yes">
+			<Overload retVal="string">
+				<Param name="object ob" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="repr" func="yes">
+			<Overload retVal="string">
+				<Param name="object ob" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="copy" func="yes">
+			<Overload retVal="object">
+				<Param name="object ob" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="deepcopy" func="yes">
+			<Overload retVal="object">
+				<Param name="object ob" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="type" func="yes">
+			<Overload retVal="type">
+				<Param name="object ob" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="try" />
+		<KeyWord name="catch" />
+		<KeyWord name="throw" />
+		<KeyWord name="finally" />
+		<KeyWord name="in" />
+		<KeyWord name="is" />
+		<KeyWord name="as" />
+		<KeyWord name="from" />
+		<KeyWord name="import" />
+		<KeyWord name="print" />
+		<KeyWord name="del" />
+		<KeyWord name="return" />
+		<KeyWord name="yield" />
+		<KeyWord name="break" />
+		<KeyWord name="continue" />
+		<KeyWord name="goto" />
+		<KeyWord name="for" />
+		<KeyWord name="foreach" />
+		<KeyWord name="while" />
+		<KeyWord name="do" />
+		<KeyWord name="switch" />
+		<KeyWord name="case" />
+		<KeyWord name="default" />
+		<KeyWord name="assert" />
+		<KeyWord name="with" />
+		<KeyWord name="if" />
+		<KeyWord name="else" />
+		<KeyWord name="elif" />
+		<KeyWord name="function" />
+		<KeyWord name="global" />
+		<KeyWord name="local" />
+		<KeyWord name="static" />
+		<KeyWord name="__nth" />
+		<KeyWord name="__stack" />
+		<KeyWord name="final" />
+		<KeyWord name="class" />
+		<KeyWord name="extends" />
+		<KeyWord name="private" />
+		<KeyWord name="public" />
+		<KeyWord name="operator" />
+		<KeyWord name="property" />
+		<KeyWord name="member" />
+		<KeyWord name="true" />
+		<KeyWord name="false" />
+		<KeyWord name="none" />
+		<KeyWord name="this" />
+		<KeyWord name="super" />
+		<KeyWord name="bound" func="yes">
+			<Overload retVal="bool">
+				<Param name="object ob" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="_Pragma" func="yes">
+			<Overload retVal="">
+				<Param name="string directive" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__BASE_FILE__" />
+		<KeyWord name="__has_include" func="yes">
+			<Overload retVal="bool">
+				<Param name="string filename" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_include_next" func="yes">
+			<Overload retVal="bool">
+				<Param name="string filename" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__TPP_LOAD_FILE" func="yes">
+			<Overload retVal="string">
+				<Param name="string filename" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__TPP_COUNTER" func="yes">
+			<Overload retVal="int">
+				<Param name="KEYWORD id" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__TPP_RANDOM" func="yes">
+			<Overload retVal="int">
+				<Param name="int max_value" />
+			</Overload>
+			<Overload retVal="int">
+				<Param name="int min_value" />
+				<Param name="int max_value" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__TPP_EVAL" func="yes">
+			<Overload retVal="int">
+				<Param name="TOKENS... expr" />
+			</Overload>
+			<Overload retVal="string">
+				<Param name="TOKENS... expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__TPP_STR_DECOMPILE" func="yes">
+			<Overload retVal="TOKENS...">
+				<Param name="string text" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__TPP_STR_AT" func="yes">
+			<Overload retVal="char">
+				<Param name="string text" />
+				<Param name="int index" />
+			</Overload>
+			<Overload retVal="char">
+				<Param name="string text" />
+				<Param name="int index" />
+				<Param name="int length" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__TPP_STR_SUBSTR" func="yes">
+			<Overload retVal="string">
+				<Param name="string text" />
+				<Param name="int index" />
+			</Overload>
+			<Overload retVal="string">
+				<Param name="string text" />
+				<Param name="int index" />
+				<Param name="int length" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__TPP_STR_PACK" func="yes">
+			<Overload retVal="string">
+				<Param name="int... ordinals" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__TPP_STR_SIZE" func="yes">
+			<Overload retVal="int">
+				<Param name="string str" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__FILE__" />
+		<KeyWord name="__LINE__" />
+		<KeyWord name="__DATE__" />
+		<KeyWord name="__TIME__" />
+		<KeyWord name="__TIMESTAMP__" />
+		<KeyWord name="__INCLUDE_LEVEL__" />
+		<KeyWord name="__INCLUDE_DEPTH__" />
+		<KeyWord name="__TIME_SEC__" />
+		<KeyWord name="__TIME_MIN__" />
+		<KeyWord name="__TIME_HOUR__" />
+		<KeyWord name="__DATE_DAY__" />
+		<KeyWord name="__DATE_WDAY__" />
+		<KeyWord name="__DATE_YDAY__" />
+		<KeyWord name="__DATE_MONTH__" />
+		<KeyWord name="__DATE_YEAR__" />
+		<KeyWord name="__COUNTER__" />
+		<KeyWord name="__is_identifier" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD keyword" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__is_builtin_identifier" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD keyword" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__is_deprecated" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD keyword" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_attribute" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_builtin" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_declspec_attribute" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_extension" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD name" />
+			</Overload>
+			<Overload retVal="bool">
+				<Param name="string name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_feature" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_tpp_builtin" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_cpp_attribute" func="yes">
+			<Overload retVal="bool">
+				<Param name="KEYWORD name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_warning" func="yes">
+			<Overload retVal="bool">
+				<Param name="string name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_known_extension" func="yes">
+			<Overload retVal="bool">
+				<Param name="string name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="__has_known_warning" func="yes">
+			<Overload retVal="bool">
+				<Param name="string name" />
+			</Overload>
+		</KeyWord>
+	</AutoComplete>
+</NotepadPlus>

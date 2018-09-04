@@ -25,7 +25,7 @@
 #include "../string.h"
 
 #ifdef GUARD_TPP_H
-#error "Don't #include `tpp.h' directly. - Deemon much configure it for itself!"
+#error "Don't #include `tpp.h' directly. - Deemon must configure it for itself!"
 #endif
 
 DECL_BEGIN

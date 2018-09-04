@@ -980,6 +980,7 @@ ast_can_exchange(struct ast *__restrict first,
   *       still be exchanged!
   */
  switch (first->a_type) {
+  /* TODO: Handling for AST_MULTIPLE */
  case AST_SYM:
  case AST_BOUND:
  case AST_UNBIND:
@@ -989,6 +990,7 @@ ast_can_exchange(struct ast *__restrict first,
  default: break;
  }
  switch (second->a_type) {
+  /* TODO: Handling for AST_MULTIPLE */
  case AST_SYM:
  case AST_BOUND:
  case AST_UNBIND:

@@ -860,13 +860,12 @@ seach_single:
    if (result) {
     if (mode & LOOKUP_SYM_STACK) {
      if (result->s_type != SYMBOL_TYPE_STACK &&
-         WARNAT(warn_loc,W_EXPECTED_STACK_VARIABLE,name))
+         WARNAT(warn_loc,W_EXPECTED_STACK_VARIABLE,result))
          goto err;
     }
     if (mode & LOOKUP_SYM_STATIC) {
-     /* TODO: Add a reference to the declaration of the selected variable in the message */
      if (result->s_type != SYMBOL_TYPE_STATIC &&
-         WARNAT(warn_loc,W_EXPECTED_STATIC_VARIABLE,name))
+         WARNAT(warn_loc,W_EXPECTED_STATIC_VARIABLE,result))
          goto err;
     }
     if ((mode&LOOKUP_SYM_ALLOWDECL) && SYMBOL_IS_WEAK(result)) {

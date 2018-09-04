@@ -28,6 +28,7 @@
     <ClInclude Include="..\include\deemon\callable.h" />
     <ClInclude Include="..\include\deemon\cell.h" />
     <ClInclude Include="..\include\deemon\class.h" />
+    <ClInclude Include="..\include\deemon\class2.h" />
     <ClInclude Include="..\include\deemon\code.h" />
     <ClInclude Include="..\include\deemon\compiler\assembler.h" />
     <ClInclude Include="..\include\deemon\compiler\ast.h" />
@@ -178,6 +179,7 @@
     <ClCompile Include="..\src\deemon\objects\callable.c" />
     <ClCompile Include="..\src\deemon\objects\cell.c" />
     <ClCompile Include="..\src\deemon\objects\class.c" />
+    <ClCompile Include="..\src\deemon\objects\class2.c" />
     <ClCompile Include="..\src\deemon\objects\dict.c" />
     <ClCompile Include="..\src\deemon\objects\dictproxy.c" />
     <ClCompile Include="..\src\deemon\objects\error_types.c" />

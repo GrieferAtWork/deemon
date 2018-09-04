@@ -409,7 +409,8 @@ struct ast {
             struct symbol      *c_supersym;   /* [0..1] The symbol to which to assign the base before initializing members.
                                                * NOTE: This symbol is guarantied to be reachable from `a_scope' */
             size_t              c_memberc;    /* Amount of member descriptors. */
-            struct class_member*c_memberv;    /* [0..c_memberc][owned] Vector of member descriptors. */
+            struct class_member
+                               *c_memberv;    /* [0..c_memberc][owned] Vector of member descriptors. */
             size_t              c_anonc;      /* Amount of anonymous class members. */
             struct member_entry*c_anonv;      /* [OVERRIDE([*].cme_name,[NOT(DREF)][1..1][== Dee_EmptyString])]
                                                * [OVERRIDE([*].cme_doc,[NOT(DREF)][0..0])]

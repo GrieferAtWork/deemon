@@ -151,7 +151,7 @@ l1 = LinkedList();
 l1.pushfront(21);
 l1.pushfront(42);
 l1.pushfront(84);
-for (x: [0:20])
+for (local x: [0:20])
 	l1.pushback(copy x);
 print repr l1;
 

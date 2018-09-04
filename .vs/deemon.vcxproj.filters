@@ -279,6 +279,9 @@
     <ClInclude Include="..\include\deemon\compiler\interface.h">
       <Filter>include\deemon\compiler</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\class2.h">
+      <Filter>include\deemon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -730,6 +733,9 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\compiler\interface\iparser.c">
       <Filter>src\deemon\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\class2.c">
+      <Filter>src\deemon\objects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -245,8 +245,8 @@ struct type_nsi {
              * @return: * : Index of the matching item
              * @return: (size_t)-1: Index not found.
              * @return: (size_t)-2: Error. */
-            size_t          (DCALL *nsi_find)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict value, DeeObject *pred_eq);
-            size_t          (DCALL *nsi_rfind)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict value, DeeObject *pred_eq);
+            size_t          (DCALL *nsi_find)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
+            size_t          (DCALL *nsi_rfind)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
             DREF DeeObject *(DCALL *nsi_xch)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
             int             (DCALL *nsi_insert)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
             int             (DCALL *nsi_insertall)(DeeObject *__restrict self, size_t index, DeeObject *__restrict values);
@@ -405,7 +405,7 @@ INTDEF int DCALL DeeSeq_All(DeeObject *__restrict self);
 INTDEF int DCALL DeeSeq_Parity(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeSeq_Min(DeeObject *__restrict self, DeeObject *pred_lo);
 INTDEF DREF DeeObject *DCALL DeeSeq_Max(DeeObject *__restrict self, DeeObject *pred_lo);
-INTDEF dssize_t DCALL DeeSeq_Count(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
+INTDEF size_t DCALL DeeSeq_Count(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF DREF DeeObject *DCALL DeeSeq_Locate(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF DREF DeeObject *DCALL DeeSeq_RLocate(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF DREF DeeObject *DCALL DeeSeq_LocateAll(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
@@ -413,8 +413,8 @@ INTDEF DREF DeeObject *DCALL DeeSeq_Transform(DeeObject *__restrict self, DeeObj
 INTDEF int DCALL DeeSeq_Contains(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF int DCALL DeeSeq_StartsWith(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF int DCALL DeeSeq_EndsWith(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF dssize_t DCALL DeeSeq_Find(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
-INTDEF dssize_t DCALL DeeSeq_RFind(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF size_t DCALL DeeSeq_Find(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF size_t DCALL DeeSeq_RFind(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
 INTDEF DREF DeeObject *DCALL DeeSeq_Join(DeeObject *__restrict self, DeeObject *__restrict items);
 INTDEF DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
@@ -426,7 +426,7 @@ INTDEF DREF DeeObject *DCALL DeeSeq_Sorted(DeeObject *__restrict self, DeeObject
 INTDEF DREF DeeObject *DCALL DeeSeq_Segments(DeeObject *__restrict self, size_t segsize);
 
 /* Sequence functions. */
-INTDEF dssize_t DCALL DeeSeq_CountSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
+INTDEF size_t DCALL DeeSeq_CountSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq); /* @return: -1: Error. */
 INTDEF int DCALL DeeSeq_ContainsSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTDEF DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
@@ -434,10 +434,8 @@ INTDEF DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, Dee
 INTDEF DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTDEF int DCALL DeeSeq_StartsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTDEF int DCALL DeeSeq_EndsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF dssize_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF dssize_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF dssize_t DCALL DeeSeq_IndexSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF dssize_t DCALL DeeSeq_RIndexSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
+INTDEF size_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF size_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
 INTDEF DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTDEF DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
 INTDEF DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
