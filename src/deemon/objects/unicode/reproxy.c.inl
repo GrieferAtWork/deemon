@@ -658,6 +658,7 @@ refa_size(ReSequence *__restrict self) {
 
 PRIVATE struct type_nsi refa_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&refa_nsi_getsize,
@@ -911,6 +912,7 @@ resp_size(ReSequence *__restrict self) {
 
 PRIVATE struct type_nsi resp_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&resp_nsi_getsize,

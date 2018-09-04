@@ -697,6 +697,7 @@ intrange_getrange(IntRange *__restrict self,
 
 PRIVATE struct type_nsi intrange_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&intrange_nsi_getsize,

@@ -313,6 +313,7 @@ subrange_nsi_rfind(SubRange *__restrict self, size_t start, size_t end,
 
 PRIVATE struct type_nsi subrange_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&subrange_nsi_getsize,
@@ -550,6 +551,7 @@ subrangen_nsi_rfind(SubRangeN *__restrict self, size_t start, size_t end,
 
 PRIVATE struct type_nsi subrangen_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&subrangen_nsi_getsize,

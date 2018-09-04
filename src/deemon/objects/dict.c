@@ -1143,6 +1143,7 @@ dict_nsi_insertnew(Dict *__restrict self,
 
 PRIVATE struct type_nsi dict_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_MAP,
+    /* .nsi_flags   = */TYPE_SEQX_FMUTABLE|TYPE_SEQX_FRESIZABLE,
     {
         /* .nsi_maplike = */{
                 /* .nsi_getsize    = */(void *)&dict_nsi_getsize,
@@ -1455,11 +1456,11 @@ PRIVATE struct type_method dict_methods[] = {
            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
            "Same as #setnew but return the previously assigned object on failure") },
     { "update", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
-      DOC("(sequence items)\n"
+      DOC("({(object,object)...} items)\n"
           "Iterate @items and unpack each element into 2 others, using them as key and item to insert into @this dict") },
     /* Old function names. */
     { "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
-      DOC("(sequence items)\n"
+      DOC("({(object,object)...} items)\n"
           "A deprecated alias for #update")  },
     { NULL }
 };

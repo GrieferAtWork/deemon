@@ -1179,6 +1179,7 @@ string_nsi_getitem_fast(String *__restrict self, size_t index) {
 
 PRIVATE struct type_nsi string_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&string_nsi_getsize,

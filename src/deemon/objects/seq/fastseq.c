@@ -220,6 +220,74 @@ err:
  return NULL;
 }
 
+PUBLIC /*owned(Dee_Free)*/DREF DeeObject **DCALL
+DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
+                             size_t *__restrict plength,
+                             size_t *__restrict pallocated) {
+ size_t i,fastsize,alloc_size;
+ DREF DeeObject **result,*iter,*elem,**new_result;
+ fastsize = DeeFastSeq_GetSize(self);
+ if (fastsize != DEE_FASTSEQ_NOTFAST) {
+  /* Optimization for fast-sequence-compatible objects. */
+  *plength = *pallocated = fastsize;
+  result = (DREF DeeObject **)Dee_Malloc(fastsize*sizeof(DREF DeeObject *));
+  if unlikely(!result) goto err;
+  for (i = 0; i < fastsize; ++i) {
+   elem = DeeFastSeq_GetItem(self,i);
+   if unlikely(!elem) goto err_r_i;
+   result[i] = elem;
+  }
+  goto done;
+ }
+ /* Must use iterators. */
+ iter = DeeObject_IterSelf(self);
+ if unlikely(!iter) goto err;
+ alloc_size = 16,i = 0;
+ result = (DREF DeeObject **)Dee_TryMalloc(alloc_size*sizeof(DREF DeeObject *));
+ if unlikely(!result) {
+  alloc_size = 1;
+  result = (DREF DeeObject **)Dee_Malloc(alloc_size*sizeof(DREF DeeObject *));
+  goto err_r_iter;
+ }
+ /* Iterate items. */
+ while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+  ASSERT(i <= alloc_size);
+  if unlikely(i >= alloc_size) {
+   /* Must allocate more memory. */
+   size_t new_alloc_size = alloc_size * 2;
+   new_result = (DREF DeeObject **)Dee_TryRealloc(result,new_alloc_size*sizeof(DREF DeeObject *));
+   if unlikely(!new_result) {
+    new_alloc_size = i+1;
+    new_result = (DREF DeeObject **)Dee_Realloc(result,new_alloc_size*sizeof(DREF DeeObject *));
+    if unlikely(!new_result) goto err_r_iter_elem;
+   }
+   result     = new_result;
+   alloc_size = new_alloc_size;
+  }
+  result[i++] = elem; /* Inherit reference. */
+  if (DeeThread_CheckInterrupt())
+      goto err_r_iter;
+ }
+ if unlikely(!elem) goto err_r_iter;
+ Dee_Decref(iter);
+ ASSERT(i <= alloc_size);
+ /* Save the resulting length, and allocation. */
+ *pallocated = alloc_size;
+ *plength    = i;
+done:
+ return result;
+err_r_iter_elem:
+ Dee_Decref(elem);
+err_r_iter:
+ Dee_Decref(iter);
+err_r_i:
+ while (i--)
+     Dee_Decref(result[i]);
+ Dee_Free(result);
+err:
+ return NULL;
+}
+
 
 
 

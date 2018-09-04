@@ -114,12 +114,17 @@ DeeList_Erase(DeeObject *__restrict self,
 
 /* @return: 0 : The given `elem' count not found found.
  * @return: 1 : The given `elem' was deleted once.
- * @return: -1: An error occurred.
- * NOTE: Pass `Dee_None' for `pred_eq' to use `operator ==' */
+ * @return: -1: An error occurred. */
 DFUNDEF int DCALL
 DeeList_Remove(DeeObject *__restrict self,
+               size_t start, size_t end,
                DeeObject *__restrict elem,
-               DeeObject *__restrict pred_eq);
+               DeeObject *pred_eq);
+DFUNDEF int DCALL
+DeeList_RRemove(DeeObject *__restrict self,
+                size_t start, size_t end,
+                DeeObject *__restrict elem,
+                DeeObject *pred_eq);
 
 /* @return: * :   The popped element.
  * @return: NULL: The given index was out-of-bounds and an IndexError was thrown. */
@@ -148,14 +153,6 @@ DFUNDEF int DCALL DeeList_InsertIterator(DeeObject *__restrict self, size_t inde
 DFUNDEF int DCALL DeeList_InsertSequence(DeeObject *__restrict self, size_t index, DeeObject *__restrict sequence);
 DFUNDEF int DCALL DeeList_InsertVector(DeeObject *__restrict self, size_t index, size_t objc, DeeObject *const *__restrict objv);
 
-#ifdef CONFIG_BUILDING_DEEMON
-/* Remove all items matching `!!pred(item)'
- * @return: * : The number of removed items.
- * @return: -1: An error occurred. */
-INTDEF dssize_t DCALL
-DeeList_RemoveIf(DeeObject *__restrict self,
-                 DeeObject *__restrict pred);
-#endif
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

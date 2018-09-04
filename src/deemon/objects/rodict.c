@@ -696,6 +696,7 @@ rodict_nsi_getsize(Dict *__restrict self) {
 
 PRIVATE struct type_nsi rodict_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_MAP,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_maplike = */{
                 /* .nsi_getsize    = */(void *)&rodict_nsi_getsize,

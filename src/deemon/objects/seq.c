@@ -688,6 +688,7 @@ seq_nsi_insert_vec(DeeObject *__restrict self, size_t index,
 
 PRIVATE struct type_nsi seq_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&DeeSeq_Size,
@@ -944,9 +945,10 @@ seq_nonempty(DeeObject *__restrict self,
 err:
  return NULL;
 }
+
 PRIVATE DREF DeeObject *DCALL
-seq_old_nonempty(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+seq_nonempty_deprecated(DeeObject *__restrict self,
+                        size_t argc, DeeObject **__restrict argv) {
  /* Simply forward the call to the new name.
   * We don't simply alias this function to `seq_nonempty' to allow
   * sub-classes to provide their own `nonempty' function, which we
@@ -1278,90 +1280,117 @@ seq_distribute(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  size_t segsize;
  if (DeeArg_Unpack(argc,argv,"Iu:distribute",&segsize))
-     return NULL;
+     goto err;
  (void)self; /* TODO */
  DERROR_NOTIMPLEMENTED();
+err:
  return NULL;
 }
 
 
 /* Mutable-sequence functions */
+INTERN struct keyword seq_insert_kwlist[] = { K(index), K(item), KEND };
 PRIVATE DREF DeeObject *DCALL
-seq_insert(DeeObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
- size_t index; DeeObject *obj;
- if (DeeArg_Unpack(argc,argv,"Iuo:insert",&index,&obj) ||
-     DeeSeq_Insert(self,index,obj))
-     return NULL;
+seq_insert(DeeObject *__restrict self, size_t argc,
+           DeeObject **__restrict argv, DeeObject *kw) {
+ size_t index; DeeObject *item;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_insert_kwlist,"Iuo:insert",&index,&item) ||
+     DeeSeq_Insert(self,index,item))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
+
+INTERN struct keyword seq_insertall_kwlist[] = { K(index), K(items), KEND };
 PRIVATE DREF DeeObject *DCALL
-seq_insertall(DeeObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
- size_t index; DeeObject *obj;
- if (DeeArg_Unpack(argc,argv,"Iuo:insertall",&index,&obj) ||
-     DeeSeq_InsertAll(self,index,obj))
-     return NULL;
+seq_insertall(DeeObject *__restrict self, size_t argc,
+              DeeObject **__restrict argv, DeeObject *kw) {
+ size_t index; DeeObject *items;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_insertall_kwlist,"Iuo:insertall",&index,&items) ||
+     DeeSeq_InsertAll(self,index,items))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
+
+INTERN struct keyword seq_erase_kwlist[] = { K(index), K(count), KEND };
 PRIVATE DREF DeeObject *DCALL
-seq_erase(DeeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+seq_erase(DeeObject *__restrict self, size_t argc,
+          DeeObject **__restrict argv, DeeObject *kw) {
  size_t index,count = 1,result;
- if (DeeArg_Unpack(argc,argv,"Iu|Iu:erase",&index,&count))
-     return NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,"Iu|Iu:erase",&index,&count))
+     goto err;
  result = DeeSeq_Erase(self,index,count);
- if unlikely(result == (size_t)-1) return NULL;
+ if unlikely(result == (size_t)-1)
+    goto err;
  return DeeInt_NewSize(result);
+err:
+ return NULL;
 }
+
+INTERN struct keyword seq_xch_kwlist[] = { K(index), K(value), KEND };
 PRIVATE DREF DeeObject *DCALL
-seq_xch(DeeObject *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+seq_xch(DeeObject *__restrict self, size_t argc,
+        DeeObject **__restrict argv, DeeObject *kw) {
  size_t index; DeeObject *value;
- if (DeeArg_Unpack(argc,argv,"Iuo:xch",&index,&value))
-     return NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_xch_kwlist,"Iuo:xch",&index,&value))
+     goto err;
  return DeeSeq_XchItem(self,index,value);
+err:
+ return NULL;
 }
+
+INTERN struct keyword seq_pop_kwlist[] = { K(index), KEND };
 PRIVATE DREF DeeObject *DCALL
-seq_pop(DeeObject *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+seq_pop(DeeObject *__restrict self, size_t argc,
+        DeeObject **__restrict argv, DeeObject *kw) {
  dssize_t index = -1;
- if (DeeArg_Unpack(argc,argv,"|Id:pop",&index))
-     return NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_pop_kwlist,"|Id:pop",&index))
+     goto err;
  return DeeSeq_PopItem(self,index);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_popfront(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  DeeObject *args[1],*result;
  if (DeeArg_Unpack(argc,argv,":popfront"))
-     return NULL;
+     goto err;
  args[0] = &DeeInt_Zero;
  result = DeeObject_CallAttr(self,&str_pop,1,args);
  if unlikely(!result && DeeError_Catch(&DeeError_IndexError))
     err_empty_sequence(self);
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_popback(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *args[1],*result;
  if (DeeArg_Unpack(argc,argv,":popback"))
-     return NULL;
+     goto err;
  args[0] = &DeeInt_MinusOne;
  result = DeeObject_CallAttr(self,&str_pop,1,args);
  if unlikely(!result && DeeError_Catch(&DeeError_IndexError))
     err_empty_sequence(self);
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_pushfront(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *args[2];
  if (DeeArg_Unpack(argc,argv,"o:pushfront",&args[1]))
-     return NULL;
+     goto err;
  args[0] = &DeeInt_Zero;
  return DeeObject_CallAttr(self,&str_insert,2,args);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_append(DeeObject *__restrict self,
@@ -1369,8 +1398,10 @@ seq_append(DeeObject *__restrict self,
  DeeObject *obj;
  if (DeeArg_Unpack(argc,argv,"o:append",&obj) ||
      DeeSeq_Append(self,obj))
-     return NULL;
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_extend(DeeObject *__restrict self,
@@ -1378,8 +1409,10 @@ seq_extend(DeeObject *__restrict self,
  DeeObject *values;
  if (DeeArg_Unpack(argc,argv,"o:extend",&values) ||
      DeeSeq_Extend(self,values))
-     return NULL;
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_pushback(DeeObject *__restrict self,
@@ -1391,42 +1424,54 @@ seq_remove(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq; int result; size_t start,end;
  if (get_sequence_find_args("remove",argc,argv,&elem,&pred_eq,&start,&end))
-     return NULL;
+     goto err;
  result = DeeSeq_Remove(self,start,end,elem,pred_eq);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0) goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_rremove(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq; int result; size_t start,end;
  if (get_sequence_find_args("rremove",argc,argv,&elem,&pred_eq,&start,&end))
-     return NULL;
+     goto err;
  result = DeeSeq_RRemove(self,start,end,elem,pred_eq);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0) goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_removeall(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*pred_eq; size_t result; size_t start,end;
  if (get_sequence_find_args("removeall",argc,argv,&elem,&pred_eq,&start,&end))
-     return NULL;
+     goto err;
  result = DeeSeq_RemoveAll(self,start,end,elem,pred_eq);
- if unlikely(result == (size_t)-1) return NULL;
+ if unlikely(result == (size_t)-1) goto err;
  return DeeInt_NewSize(result);
+err:
+ return NULL;
 }
+
+INTERN struct keyword seq_removeif_kwlist[] = { K(should), K(start), K(end), KEND };
 PRIVATE DREF DeeObject *DCALL
-seq_removeif(DeeObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
- DeeObject *should_remove;
+seq_removeif(DeeObject *__restrict self, size_t argc,
+             DeeObject **__restrict argv, DeeObject *kw) {
+ DeeObject *should;
  size_t result,start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|IdId",&should_remove,&start,&end))
-     return NULL;
- result = DeeSeq_RemoveIf(self,should_remove,start,end);
- if unlikely(result == (size_t)-1) return NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_removeif_kwlist,"o|IdId:removeif",&should,&start,&end))
+     goto err;
+ result = DeeSeq_RemoveIf(self,should,start,end);
+ if unlikely(result == (size_t)-1)
+    goto err;
  return DeeInt_NewSize(result);
+err:
+ return NULL;
 }
+
 PRIVATE DREF DeeObject *DCALL
 seq_clear(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
@@ -1435,6 +1480,57 @@ seq_clear(DeeObject *__restrict self,
      return NULL;
  return_none;
 }
+
+INTERN struct keyword seq_resize_kwlist[] = { K(newsize), K(filler), KEND };
+PRIVATE DREF DeeObject *DCALL
+seq_resize(DeeObject *__restrict self, size_t argc,
+           DeeObject **__restrict argv, DeeObject *kw) {
+ DREF DeeObject *result;
+ size_t newsize,oldsize; DeeObject *filler = Dee_None;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_resize_kwlist,"Iu|o:resize",&newsize,&filler))
+     goto err;
+ if (!newsize) {
+  result = DeeObject_CallAttr(self,&str_clear,0,NULL);
+ } else {
+  oldsize = DeeObject_Size(self);
+  if unlikely(oldsize == (size_t)-1) goto err;
+  if (newsize < oldsize) {
+   result = DeeObject_CallAttrf(self,&str_erase,"Iuo",newsize,&DeeInt_MinusOne);
+  } else if (newsize > oldsize) {
+   DREF DeeObject *seq_extension;
+   seq_extension = DeeSeq_RepeatItem(filler,newsize - oldsize);
+   if unlikely(!seq_extension) goto err;
+   result = DeeObject_CallAttr(self,&str_extend,1,&seq_extension);
+   Dee_Decref(seq_extension);
+  } else {
+   goto do_return_none;
+  }
+ }
+ if unlikely(result != Dee_None) {
+  if unlikely(!result) goto err;
+  Dee_Decref(result);
+do_return_none:
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+ }
+ return result;
+err:
+ return NULL;
+}
+
+/*
+          ">function resize(newsize,filler=none) {\n"
+          "> import int, sequence from deemon;\n"
+          "> newsize = (int)newsize;\n"
+          "> local oldsize = (int)#this;\n"
+          "> if (newsize < oldsize) {\n"
+          ">  this.erase(newsize,-1);\n"
+          "> } else if (newsize > oldsize) {\n"
+          ">  this.extend(sequence.repeat(filler,newsize-oldsize));\n"
+          "> }\n"
+          ">}\n"
+*/
+
 
 
 INTERN struct type_method seq_methods[] = {
@@ -1912,14 +2008,14 @@ INTERN struct type_method seq_methods[] = {
           "This is similar to #segments, however rather than having the caller specify the "
           "size of the a bucket, the number of buckets is specified instead.") },
     /* TODO: join(sequence items) -> sequence */
-    /* TODO: strip(object ob, callable pred_eq = none) -> sequence */
-    /* TODO: lstrip(object ob, callable pred_eq = none) -> sequence */
-    /* TODO: rstrip(object ob, callable pred_eq = none) -> sequence */
+    /* TODO: strip(object item, callable pred_eq = none) -> sequence */
+    /* TODO: lstrip(object item, callable pred_eq = none) -> sequence */
+    /* TODO: rstrip(object item, callable pred_eq = none) -> sequence */
     /* TODO: split(object sep, callable pred_eq = none) -> sequence */
 
     /* TODO: countseq(sequence seq, callable pred_eq = none) -> int */
-    /* TODO: partition(object ob, callable pred_eq = none) -> (sequence,(ob),sequence) */
-    /* TODO: rpartition(object ob, callable pred_eq = none) -> (sequence,(ob),sequence) */
+    /* TODO: partition(object item, callable pred_eq = none) -> (sequence,(item),sequence) */
+    /* TODO: rpartition(object item, callable pred_eq = none) -> (sequence,(item),sequence) */
     /* TODO: partitionseq(sequence seq, callable pred_eq = none) -> (sequence,seq,sequence) */
     /* TODO: rpartitionseq(sequence seq, callable pred_eq = none) -> (sequence,seq,sequence) */
     /* TODO: startswithseq(sequence seq, callable pred_eq = none) -> bool */
@@ -1935,48 +2031,51 @@ INTERN struct type_method seq_methods[] = {
 
 
     /* Functions for mutable sequences. */
-    { DeeString_STR(&str_insert), &seq_insert,
-      DOC("(int index,obj)\n"
+    { DeeString_STR(&str_insert),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_insert,
+      DOC("(int index,item)\n"
           "@throw IntegerOverflow The given @index is negative, or too large\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "When @index is negative, it will referr to the end of the sequence\n"
-          "For mutable sequences only: Insert the given @obj under @index\n"
+          "For mutable sequences only: Insert the given @item under @index\n"
           "When this function isn't defined by a sub-class, the following "
           "default-implementation is provided by :{sequence}:\n"
-          ">function insert(index,obj) {\n"
+          ">function insert(index,item) {\n"
           "> import int, Error, sequence from deemon;\n"
           "> index = (int)index;\n"
           "> for (local tp = type(this); tp !is none && tp !== sequence; tp = tp.__base__) {\n"
           ">  if (index < 0) {\n"
           ">   if (tp.hasattribute(\"append\")) */ {\n"
-          ">    this.append(obj);\n"
+          ">    this.append(item);\n"
           ">    return;\n"
           ">   }\n"
           ">   if (tp.hasattribute(\"extend\")) {\n"
-          ">    this.extend({ obj });\n"
+          ">    this.extend({ item });\n"
           ">    return;\n"
           ">   }\n"
           ">  }\n"
           ">  if (tp.hasattribute(\"insertall\")) {\n"
-          ">   this.insertall(index,{ obj });\n"
+          ">   this.insertall(index,{ item });\n"
           ">   return;\n"
           ">  }\n"
           ">  if (tp.hasoperator(\"setrange\")) {\n"
           ">   if (index < 0) index = int.SIZE_MAX;\n"
-          ">   this[index:index] = { obj };\n"
+          ">   this[index:index] = { item };\n"
           ">   return;\n"
           ">  }\n"
           ">  if (index < 0) {\n"
           ">   if (tp.hasoperator(\"assign\")) {\n"
-          ">    local addend = { obj };\n"
+          ">    local addend = { item };\n"
           ">    this := (this as sequence) + addend;\n"
           ">    return;\n"
           ">   }\n"
           ">  }\n"
           "> }\n"
           "> throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
-          ">}") },
-    { DeeString_STR(&str_insertall), &seq_insertall,
+          ">}"),
+      TYPE_METHOD_FKWDS },
+    { DeeString_STR(&str_insertall),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_insertall,
       DOC("(int index,sequence items)\n"
           "@throw IntegerOverflow The given @index is negative, or too large\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2020,35 +2119,36 @@ INTERN struct type_method seq_methods[] = {
           ">  }\n"
           "> }\n"
           "> throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
-          ">}") },
+          ">}"),
+      TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_append), &seq_append,
-      DOC("(ob)\n"
+      DOC("(item)\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
-          "For mutable sequences only: Append the given @ob at the end of @this sequence\n"
+          "For mutable sequences only: Append the given @item at the end of @this sequence\n"
           "When this function isn't defined by a sub-class, the following "
           "default-implementation is provided by :{sequence}:\n"
-          ">function append(obj) {\n"
+          ">function append(item) {\n"
           "> import int, Error, sequence from deemon;\n"
           "> for (local tp = type(this); tp !is none && tp !== sequence; tp = tp.__base__) {\n"
           ">  if (tp.hasattribute(\"extend\")) {\n"
-          ">   this.extend({ obj });\n"
+          ">   this.extend({ item });\n"
           ">   return;\n"
           ">  }\n"
           ">  if (tp.hasattribute(\"insert\")) {\n"
-          ">   this.insert(-1,obj);\n"
+          ">   this.insert(-1,item);\n"
           ">   return;\n"
           ">  }\n"
           ">  if (tp.hasattribute(\"insertall\")) {\n"
-          ">   this.insertall(-1,{ obj });\n"
+          ">   this.insertall(-1,{ item });\n"
           ">   return;\n"
           ">  }\n"
           ">  if (tp.hasoperator(\"setrange\")) {\n"
-          ">   this[int.SIZE_MAX:int.SIZE_MAX] = { obj };\n"
+          ">   this[int.SIZE_MAX:int.SIZE_MAX] = { item };\n"
           ">   return;\n"
           ">  }\n"
           ">  if (tp.hasoperator(\"assign\":=)) {\n"
-          ">   local addend = { obj };\n"
+          ">   local addend = { item };\n"
           ">   this := (this as sequence) + addend;\n"
           ">   return;\n"
           ">  }\n"
@@ -2089,7 +2189,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
           ">}") },
-    { DeeString_STR(&str_erase), &seq_erase,
+    { DeeString_STR(&str_erase),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_erase,
       DOC("(int index,int count=1)\n"
           "@throw IntegerOverflow The given @index is negative, or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
@@ -2129,9 +2230,11 @@ INTERN struct type_method seq_methods[] = {
           ">  }\n"
           "> }\n"
           "> throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
-          ">}") },
-    { "xch", &seq_xch,
-      DOC("(int index,value)\n"
+          ">}"),
+      TYPE_METHOD_FKWDS },
+    { DeeString_STR(&str_xch),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_xch,
+      DOC("(int index,value)->object\n"
           "@throw IntegerOverflow The given @index is negative, or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2155,8 +2258,10 @@ INTERN struct type_method seq_methods[] = {
           ">  }\n"
           "> }\n"
           "> throw Error.ValueError.SequenceError(\"Sequence not mutable\");\n"
-          ">}") },
-    { DeeString_STR(&str_pop), &seq_pop,
+          ">}"),
+      TYPE_METHOD_FKWDS },
+    { DeeString_STR(&str_pop),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_pop,
       DOC("(int index=-1)->object\n"
           "@throw IntegerOverflow The given @index is too large\n"
           "@throw IndexError The given @index is out of bounds\n"
@@ -2188,8 +2293,9 @@ INTERN struct type_method seq_methods[] = {
           ">  }\n"
           "> }\n"
           "> throw Error.ValueError.SequenceError(\"Sequence not mutable\");\n"
-          ">}") },
-    { "popfront", &seq_popfront,
+          ">}"),
+      TYPE_METHOD_FKWDS },
+    { DeeString_STR(&str_popfront), &seq_popfront,
       DOC("->object\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2202,7 +2308,7 @@ INTERN struct type_method seq_methods[] = {
           ">  throw Error.ValueError(\"Empty sequence...\");\n"
           "> }\n"
           ">}") },
-    { "popback", &seq_popback,
+    { DeeString_STR(&str_popback), &seq_popback,
       DOC("->object\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2215,21 +2321,21 @@ INTERN struct type_method seq_methods[] = {
           ">  throw Error.ValueError(\"Empty sequence...\");\n"
           "> }\n"
           ">}") },
-    { "pushfront", &seq_pushfront,
-      DOC("(ob)\n"
+    { DeeString_STR(&str_pushfront), &seq_pushfront,
+      DOC("(item)\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "For mutable sequences only: Convenience wrapper for #insert at position $0\n"
-          ">function pushfront(ob) {\n"
-          "> return this.insert(0,ob);\n"
+          ">function pushfront(item) {\n"
+          "> return this.insert(0,item);\n"
           ">}") },
-    { "pushback", &seq_pushback,
-      DOC("(ob)\n"
+    { DeeString_STR(&str_pushback), &seq_pushback,
+      DOC("(item)\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "For mutable sequences only: Convenience wrapper for #append\n"
-          ">function pushback(ob) {\n"
-          "> return this.append(ob);\n"
+          ">function pushback(item) {\n"
+          "> return this.append(item);\n"
           ">}") },
     { DeeString_STR(&str_remove), &seq_remove,
       DOC("(elem,callable pred_eq=none)->bool\n"
@@ -2371,7 +2477,7 @@ INTERN struct type_method seq_methods[] = {
           "> return false;\n"
           ">}\n"
           ) },
-    { "removeall", &seq_removeall,
+    { DeeString_STR(&str_removeall), &seq_removeall,
       DOC("(elem,callable pred_eq=none)->int\n"
           "(elem,int start,callable pred_eq=none)->int\n"
           "(elem,int start,int end,callable pred_eq=none)->int\n"
@@ -2380,7 +2486,7 @@ INTERN struct type_method seq_methods[] = {
           "them, returning the number of instances found (and consequently removed)\n"
           "Depending on the nearest implemented group of operators, "
           "one of the following implementations is chosen\n"
-          "For ${removeif(should_remove,start,end)}:\n"
+          "For ${removeif(should,start,end)}:\n"
           ">function removeall(elem,start,end,pred_eq) {\n"
           "> local count = 0;\n"
           "> if (end > start)\n"
@@ -2479,26 +2585,27 @@ INTERN struct type_method seq_methods[] = {
           "> return count;\n"
           ">}\n"
           ) },
-    { "removeif", &seq_removeif,
-      DOC("(callable should_remove,int start=0,int end=-1)->int\n"
+    { DeeString_STR(&str_removeif),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_removeif,
+      DOC("(callable should,int start=0,int end=-1)->int\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Remove all elements within the given sub-range, "
-          "for which ${should_remove(elem)} evaluates to :true, and return the number "
+          "for which ${should(elem)} evaluates to :true, and return the number "
           "of elements found (and consequently removed)\n"
           "Depending on the nearest implemented group of operators, "
           "one of the following implementations is chosen\n"
-          "For ${removeif(should_remove,start,end)}:\n"
-          ">function removeif(should_remove,start,end) {\n"
+          "For ${removeif(should,start,end)}:\n"
+          ">function removeif(should,start,end) {\n"
           "> local count = 0;\n"
           "> if (end > start)\n"
-          ">  count = (int)this.removeall(none,start,end,[](x,y) -> should_remove(x));\n"
+          ">  count = (int)this.removeall(none,start,end,[](x,y) -> should(x));\n"
           "> return count;\n"
           ">}\n"
           "For ${rremove(elem,start,end,pred_eq)}:\n"
-          ">function removeif(should_remove,start,end) {\n"
+          ">function removeif(should,start,end) {\n"
           "> local count = 0;\n"
           "> while (end > start) {\n"
-          ">  if (!this.rremove(none,start,end,[](x,y) -> should_remove(x)))\n"
+          ">  if (!this.rremove(none,start,end,[](x,y) -> should(x)))\n"
           ">   break;\n"
           ">  ++count;\n"
           ">  --end;\n"
@@ -2506,10 +2613,10 @@ INTERN struct type_method seq_methods[] = {
           "> return count;\n"
           ">}\n"
           "For ${remove(elem,start,end,pred_eq)}:\n"
-          ">function removeif(should_remove,start,end) {\n"
+          ">function removeif(should,start,end) {\n"
           "> local count = 0;\n"
           "> while (end > start) {\n"
-          ">  if (!this.remove(none,start,end,[](x,y) -> should_remove(x)))\n"
+          ">  if (!this.remove(none,start,end,[](x,y) -> should(x)))\n"
           ">   break;\n"
           ">  ++count;\n"
           ">  --end;\n"
@@ -2517,7 +2624,7 @@ INTERN struct type_method seq_methods[] = {
           "> return count;\n"
           ">}\n"
           "For ${operator del[]}:\n"
-          ">function removeif(should_remove,start,end) {\n"
+          ">function removeif(should,start,end) {\n"
           "> local count = 0;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
@@ -2526,7 +2633,7 @@ INTERN struct type_method seq_methods[] = {
           ">  do {\n"
           ">   --i;\n"
           ">   local item = this[i];\n"
-          ">   if (!should_remove(item))\n"
+          ">   if (!should(item))\n"
           ">    continue;\n"
           ">   del this[i];\n"
           ">   ++count;\n"
@@ -2535,7 +2642,7 @@ INTERN struct type_method seq_methods[] = {
           "> return count;\n"
           ">}\n"
           "For ${erase(index,count)}:\n"
-          ">function removeif(should_remove,start,end) {\n"
+          ">function removeif(should,start,end) {\n"
           "> local count = 0;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
@@ -2544,7 +2651,7 @@ INTERN struct type_method seq_methods[] = {
           ">  do {\n"
           ">   --i;\n"
           ">   local item = this[i];\n"
-          ">   if (!should_remove(item))\n"
+          ">   if (!should(item))\n"
           ">    continue;\n"
           ">   this.erase(i,1);\n"
           ">   ++count;\n"
@@ -2553,7 +2660,7 @@ INTERN struct type_method seq_methods[] = {
           "> return count;\n"
           ">}\n"
           "For ${operator del[:]}:\n"
-          ">function removeif(should_remove,start,end) {\n"
+          ">function removeif(should,start,end) {\n"
           "> local count = 0;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
@@ -2562,16 +2669,17 @@ INTERN struct type_method seq_methods[] = {
           ">  do {\n"
           ">   --i;\n"
           ">   local item = this[i];\n"
-          ">   if (!should_remove(item))\n"
+          ">   if (!should(item))\n"
           ">    continue;\n"
           ">   del this[i:i+1];\n"
           ">   ++count;\n"
           ">  } while (i > start);\n"
           "> }\n"
           "> return count;\n"
-          ">}\n"
-          ) },
-    { "clear", &seq_clear,
+          ">}\n"),
+      TYPE_METHOD_FKWDS },
+    { DeeString_STR(&str_clear),
+     &seq_clear,
       DOC("()\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Clear all elements from the sequence\n"
@@ -2581,6 +2689,30 @@ INTERN struct type_method seq_methods[] = {
           "> this[:] = none;\n"
           ">}\n"
           ) },
+    { DeeString_STR(&str_resize),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_resize,
+      DOC("(int newsize,filler=none)\n"
+          "@throw SequenceError @this sequence isn't resizable\n"
+          "Resize @this sequence to have a new length of @newsize "
+          "items, using @filler to initialize newly added entries\n"
+          "When not implemented by a sub-class, :sequence "
+          "implements this function as follows:\n"
+          ">function resize(newsize,filler=none) {\n"
+          "> import int, sequence from deemon;\n"
+          "> newsize = (int)newsize;\n"
+          "> if (!newsize) {\n"
+          ">  this.clear();\n"
+          "> } else {\n"
+          ">  local oldsize = (int)#this;\n"
+          ">  if (newsize < oldsize) {\n"
+          ">   this.erase(newsize,-1);\n"
+          ">  } else if (newsize > oldsize) {\n"
+          ">   this.extend(sequence.repeat(filler,newsize-oldsize));\n"
+          ">  }\n"
+          "> }\n"
+          ">}\n"
+          ),
+      TYPE_METHOD_FKWDS },
 
 
     /* Old function names/deprecated functions. */
@@ -2588,7 +2720,7 @@ INTERN struct type_method seq_methods[] = {
       DOC("->object\nDeprecated alias for #first") },
     { "back", &seq_back,
       DOC("->object\nDeprecated alias for #last") },
-    { "non_empty", &seq_old_nonempty,
+    { "non_empty", &seq_nonempty_deprecated,
        DOC("->bool\nDeprecated alias for #nonempty") },
     { "at", &seq_at,
        DOC("(int index)->object\n"
@@ -2639,6 +2771,20 @@ seq_set_last(DeeObject *__restrict self, DeeObject *__restrict value) {
  if unlikely(mylen == (size_t)-1) return -1;
  if unlikely(!mylen) return err_empty_sequence(self);
  return DeeObject_SetItemIndex(self,mylen-1,value);
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+seq_get_ismutable(DeeObject *__restrict self) {
+ int result = DeeSeq_IsMutable(self);
+ if unlikely(result < 0) return NULL;
+ return_bool_(result);
+}
+PRIVATE DREF DeeObject *DCALL
+seq_get_isresizable(DeeObject *__restrict self) {
+ int result = DeeSeq_IsResizable(self);
+ if unlikely(result < 0) return NULL;
+ return_bool_(result);
 }
 
 
@@ -2724,7 +2870,7 @@ PRIVATE struct type_getset seq_getsets[] = {
           "> }\n"
           ">}\n"
           "For ${operator iter}:\n"
-          ">property first = {\n"
+          ">property last = {\n"
           "> get() {\n"
           ">  import Error, Signal from deemon;\n"
           ">  local it = this.operator iter();\n"
@@ -2740,6 +2886,24 @@ PRIVATE struct type_getset seq_getsets[] = {
           "> }\n"
           ">}\n"
           ) },
+    { "ismutable", &seq_get_ismutable, NULL, NULL,
+      DOC("->bool\n"
+          "Try to determine if @this sequence is mutable by looking at operators and "
+          "member functions implemented by sub-classes. Note however that this property "
+          "indicating :true does not necessarily guaranty that elements of the sequence "
+          "can actually be manipulated, only that a sub-class provides special behavior "
+          "for at least one of the following: #op:setitem, #op:delitem, #op:setrange, "
+          "#op:delrange, #append, #extend, #insert, #insertall, #erase, #remove, "
+          "#rremove, #removeall, #removeif, #pop, #xch, #resize, #clear, #pushfront, "
+          "#pushback, #popfront or #popback") },
+    { "isresizable", &seq_get_isresizable, NULL, NULL,
+      DOC("->bool\n"
+          "Similar to #ismutable, but tries to determine if @this sequence is resizable by "
+          "looking at member functions implemented by sub-classes. Note however that this "
+          "property indicating :true does not necessarily guaranty that elements of the "
+          "sequence can actually be manipulated, only that a sub-class provides special "
+          "behavior for at least one of the following: #append, #extend, #insert, #insertall, "
+          "#erase, #pop, #resize, #pushfront, #pushback, #popfront or #popback") },
     { NULL }
 };
 
@@ -3282,7 +3446,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "When this operator is lacking, the following default-implementation is "
                             "provided by :{sequence} when the required operators and members are present.\n"
                             "Also note that in order to properly function in resizable sequences, 2 member functions "
-                            "${insert(int index, object ob)} and ${erase(int index, int count = 1)} must be defined "
+                            "${insert(int index, object item)} and ${erase(int index, int count = 1)} must be defined "
                             "by a sub-class\n"
                             ">operator [:]= (start,end,values) {\n"
                             "> import int, Error, Signal, iterator, sequence from deemon;\n"
@@ -3507,6 +3671,15 @@ iterator_add(DeeObject *__restrict self,
      Dee_Clear(result);
  return result;
 }
+PRIVATE DREF DeeObject *DCALL
+iterator_call(DeeObject *__restrict self, size_t argc,
+              DeeObject **__restrict UNUSED(argv)) {
+ if (argc != 0) {
+  err_invalid_argc(Dee_TYPE(self)->tp_name,argc,0,0);
+  return NULL;
+ }
+ return DeeObject_IterNext(self);
+}
 
 PRIVATE struct type_math iterator_math = {
     /* .tp_int32       = */NULL,
@@ -3715,6 +3888,13 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
                             "++()\n"
                             "Advance @this iterator by one. No-op if the iterator has been exhausted\n"
                             "\n"
+                            "call()->object\n"
+                            "Calling an operator as a function will invoke ${operator next}, and return "
+                            "that value, allowing iterators to be used as function-like producers\n"
+                            ">operator call() {\n"
+                            "> return this.operator next();\n"
+                            ">}\n"
+                            "\n"
                             "<->\n"
                             "<=->\n"
                             "==->\n"
@@ -3755,7 +3935,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
         /* .tp_repr = */&iterator_repr,
         /* .tp_bool = */&iterator_bool
     },
-    /* .tp_call          = */NULL,
+    /* .tp_call          = */&iterator_call,
     /* .tp_visit         = */NULL,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */&iterator_math,

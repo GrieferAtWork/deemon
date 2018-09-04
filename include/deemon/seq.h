@@ -206,10 +206,21 @@ DDATDEF DeeObject      DeeSeq_EmptyInstance;
 
 struct type_nsi {
     /* Native Sequence Interface for types. */
-#define TYPE_SEQX_CLASS_SEQ 0x0000 /* Sequence-like */
-#define TYPE_SEQX_CLASS_MAP 0x0001 /* Mapping-like */
-#define TYPE_SEQX_CLASS_SET 0x0002 /* Set-like */
-    uintptr_t               nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
+#define TYPE_SEQX_CLASS_SEQ  0x0000 /* Sequence-like */
+#define TYPE_SEQX_CLASS_MAP  0x0001 /* Mapping-like */
+#define TYPE_SEQX_CLASS_SET  0x0002 /* Set-like */
+#define TYPE_SEQX_FNORMAL    0x0000 /* Normal sequence flags. */
+#define TYPE_SEQX_FMUTABLE   0x0001 /* The sequence is mutable. */
+#define TYPE_SEQX_FRESIZABLE 0x0002 /* The sequence is resizable. */
+#if __SIZEOF_POINTER__ == 4
+    uint16_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
+    uint16_t                nsi_flags; /* Sequence flags (Set of `TYPE_SEQX_F*') */
+#elif __SIZEOF_POINTER__ == 8
+    uint32_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
+    uint32_t                nsi_flags; /* Sequence class (Set of `TYPE_SEQX_F*') */
+#else
+#error "Unsupported __SIZEOF_POINTER__"
+#endif
     union {
         void              *_nsi_class_functions[22];
         struct {
@@ -268,7 +279,7 @@ struct type_nsi {
             /* @return: * : The number of removed items.
              * @return: (size_t)-1: Error. */
             size_t          (DCALL *nsi_removeall)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
-            size_t          (DCALL *nsi_removeif)(DeeObject *__restrict self, DeeObject *__restrict should_remove, size_t start, size_t end);
+            size_t          (DCALL *nsi_removeif)(DeeObject *__restrict self, DeeObject *__restrict should, size_t start, size_t end);
         }                   nsi_seqlike;
         struct { /* TYPE_SEQX_CLASS_MAP */
             size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
@@ -339,7 +350,14 @@ INTDEF DREF DeeObject *DCALL DeeSeq_PopItem(DeeObject *__restrict self, dssize_t
 INTDEF int DCALL DeeSeq_Remove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF int DCALL DeeSeq_RRemove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF size_t DCALL DeeSeq_RemoveAll(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF size_t DCALL DeeSeq_RemoveIf(DeeObject *__restrict self, DeeObject *__restrict should_remove, size_t start, size_t end);
+INTDEF size_t DCALL DeeSeq_RemoveIf(DeeObject *__restrict self, DeeObject *__restrict should, size_t start, size_t end);
+
+/* Determine if a given sequence is mutable or resizable.
+ * @return: 1:  The sequence is mutable or resizable.
+ * @return: 0:  The sequence isn't mutable or resizable.
+ * @return: -1: An error occurred. */
+INTDEF int DCALL DeeSeq_IsMutable(DeeObject *__restrict self);
+INTDEF int DCALL DeeSeq_IsResizable(DeeObject *__restrict self);
 
 
 /* Create new range sequence objects. */
@@ -548,6 +566,23 @@ DFUNDEF /*owned(Dee_Free)*/DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     size_t *__restrict plength);
 
+DFUNDEF /*owned(Dee_Free)*/DREF DeeObject **DCALL
+DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
+                             size_t *__restrict plength,
+                             size_t *__restrict pallocated);
+
+
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF struct keyword seq_insert_kwlist[];
+INTDEF struct keyword seq_insertall_kwlist[];
+INTDEF struct keyword seq_erase_kwlist[];
+INTDEF struct keyword seq_xch_kwlist[];
+INTDEF struct keyword seq_removeif_kwlist[];
+INTDEF struct keyword seq_pop_kwlist[];
+INTDEF struct keyword seq_resize_kwlist[];
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 DECL_END

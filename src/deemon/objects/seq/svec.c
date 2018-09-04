@@ -478,6 +478,7 @@ rvec_nsi_getitem_fast(RefVector *__restrict self, size_t index) {
 
 PRIVATE struct type_nsi rvec_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FMUTABLE,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&rvec_nsi_getsize,
@@ -972,6 +973,7 @@ svec_nsi_getitem(SharedVector *__restrict self, size_t index) {
 
 PRIVATE struct type_nsi svec_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&svec_nsi_getsize,

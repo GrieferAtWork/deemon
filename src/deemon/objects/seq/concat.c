@@ -495,6 +495,7 @@ err:
 
 PRIVATE struct type_nsi cat_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&cat_nsi_getsize,

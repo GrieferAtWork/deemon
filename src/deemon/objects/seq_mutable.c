@@ -31,6 +31,7 @@
 #include <deemon/tuple.h>
 #include <deemon/error.h>
 #include <deemon/callable.h>
+#include <deemon/super.h>
 
 #include "seq_functions.h"
 
@@ -48,6 +49,51 @@ DECL_BEGIN
 INTDEF DREF DeeObject *DCALL class_getattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict attr);
 INTDEF DREF DeeObject *DCALL class_wrap_getattr(DeeObject *__restrict self, DeeObject *__restrict attr);
 
+
+
+PRIVATE int DCALL
+has_generic_attribute(DeeTypeObject *__restrict tp_self,
+                      DeeObject *__restrict self,
+                      DeeObject *__restrict attr) {
+ struct membercache *cache;
+ if (tp_self->tp_attr) {
+  if (tp_self->tp_attr->tp_getattr) {
+   DREF DeeObject *obj;
+   if (tp_self->tp_attr->tp_getattr == &class_wrap_getattr)
+    obj = class_getattr(tp_self,self,attr);
+   else {
+    obj = (*tp_self->tp_attr->tp_getattr)(self,attr);
+   }
+   if (obj) { Dee_Decref(obj); return 1; }
+   if (DeeError_Catch(&DeeError_NotImplemented) ||
+       DeeError_Catch(&DeeError_AttributeError))
+       return 0;
+   return -1;
+  }
+ } else {
+  char *name = DeeString_STR(attr);
+  dhash_t hash = DeeString_Hash(attr);
+  if (DeeType_IsClass(tp_self))
+      return membertable_lookup_string(DeeClass_DESC(tp_self)->c_mem,name,hash) != NULL ? 1 : 0;
+  cache = &tp_self->tp_cache;
+#if 0 /* Don't use the cache, which may contain members from lower-level types! */
+  if (membercache_hasattr(cache,name,hash))
+      goto yes;
+#endif
+  if (tp_self->tp_methods &&
+      type_method_hasattr(cache,tp_self->tp_methods,name,hash))
+      goto yes;
+  if (tp_self->tp_getsets &&
+      type_getset_hasattr(cache,tp_self->tp_getsets,name,hash))
+      goto yes;
+  if (tp_self->tp_members &&
+      type_member_hasattr(cache,tp_self->tp_members,name,hash))
+      goto yes;
+ }
+ return 0;
+yes:
+ return 1;
+}
 
 /* @return:  0: Call was OK.
  * @return:  1: No such attribute.
@@ -3187,14 +3233,14 @@ PRIVATE DeeTypeObject RemoveAllIfWrapper_Type = {
 };
 
 PRIVATE DREF DeeObject *DCALL
-make_removeall_if_wrapper(DeeObject *__restrict should_remove) {
- /* >> return [](x,y) -> should_remove(x);
+make_removeall_if_wrapper(DeeObject *__restrict should) {
+ /* >> return [](x,y) -> should(x);
   * So simple, yet sooo complex to implement in C... */
  DREF RemoveAllIfWrapper *result;
  result = DeeObject_MALLOC(RemoveAllIfWrapper);
  if unlikely(!result) goto done;
- result->rai_should = should_remove;
- Dee_Incref(should_remove);
+ result->rai_should = should;
+ Dee_Incref(should);
  DeeObject_Init(result,&RemoveAllIfWrapper_Type);
 done:
  return (DREF DeeObject *)result;
@@ -3203,7 +3249,7 @@ done:
 
 INTERN size_t DCALL
 DeeSeq_RemoveIf(DeeObject *__restrict self,
-                DeeObject *__restrict should_remove,
+                DeeObject *__restrict should,
                 size_t start, size_t end) {
  DREF DeeObject *item,*callback_result,*erase_func,*wrapper;
  int error; size_t count = 0; DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -3216,7 +3262,7 @@ DeeSeq_RemoveIf(DeeObject *__restrict self,
    /* Forward the call to the `removeall()' function. */
    DREF DeeObject *remove_argv[4];
    if unlikely(!erase_func) goto err_attr;
-   wrapper = make_removeall_if_wrapper(should_remove);
+   wrapper = make_removeall_if_wrapper(should);
    if unlikely(!wrapper) goto err_erase_func;
    remove_argv[0] = Dee_None;
    remove_argv[1] = DeeInt_NewSize(start);
@@ -3241,16 +3287,16 @@ DeeSeq_RemoveIf(DeeObject *__restrict self,
    if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
        is_noninherited_nsi(tp_self,seq,nsi)) {
     if (nsi->nsi_seqlike.nsi_removeif)
-        return (*nsi->nsi_seqlike.nsi_removeif)(self,should_remove,start,end);
+        return (*nsi->nsi_seqlike.nsi_removeif)(self,should,start,end);
     if (nsi->nsi_seqlike.nsi_removeall) {
-     wrapper = make_removeall_if_wrapper(should_remove);
+     wrapper = make_removeall_if_wrapper(should);
      if unlikely(!wrapper) goto err;
      count = (*nsi->nsi_seqlike.nsi_removeall)(self,start,end,Dee_None,wrapper);
      Dee_Decref(wrapper);
      return count;
     }
     if (nsi->nsi_seqlike.nsi_remove) {
-     wrapper = make_removeall_if_wrapper(should_remove);
+     wrapper = make_removeall_if_wrapper(should);
      if unlikely(!wrapper) goto err;
      while (end > start) {
       error = (*nsi->nsi_seqlike.nsi_remove)(self,start,end,Dee_None,wrapper);
@@ -3267,7 +3313,7 @@ DeeSeq_RemoveIf(DeeObject *__restrict self,
      return count;
     }
     if (nsi->nsi_seqlike.nsi_rremove) {
-     wrapper = make_removeall_if_wrapper(should_remove);
+     wrapper = make_removeall_if_wrapper(should);
      if unlikely(!wrapper) goto err;
      while (end > start) {
       error = (*nsi->nsi_seqlike.nsi_rremove)(self,start,end,Dee_None,wrapper);
@@ -3295,7 +3341,7 @@ DeeSeq_RemoveIf(DeeObject *__restrict self,
        --i;
        item = (*nsi->nsi_seqlike.nsi_getitem)(self,i);
        if unlikely(!item) goto err;
-       callback_result = DeeObject_Call(should_remove,1,&item);
+       callback_result = DeeObject_Call(should,1,&item);
        if unlikely(!callback_result) goto err_item;
        error = DeeObject_Bool(callback_result);
        Dee_Decref(callback_result);
@@ -3335,7 +3381,7 @@ DeeSeq_RemoveIf(DeeObject *__restrict self,
    if unlikely(!erase_func) goto err_attr;
    if (end > start) {
     DREF DeeObject *remove_argv[4];
-    wrapper = make_removeall_if_wrapper(should_remove);
+    wrapper = make_removeall_if_wrapper(should);
     if unlikely(!wrapper) goto err;
     remove_argv[0] = Dee_None;
     remove_argv[3] = wrapper;
@@ -3380,7 +3426,7 @@ DeeSeq_RemoveIf(DeeObject *__restrict self,
      if unlikely(!index_ob) goto err;
      item = DeeObject_GetItem(self,index_ob);
      if unlikely(!item) { err_index_ob_del: Dee_Decref(index_ob); goto err; }
-     callback_result = DeeObject_Call(should_remove,1,&item);
+     callback_result = DeeObject_Call(should,1,&item);
      if unlikely(!callback_result) { Dee_Decref(item); goto err_index_ob_del; }
      error = DeeObject_Bool(callback_result);
      Dee_Decref(callback_result);
@@ -3418,7 +3464,7 @@ DeeSeq_RemoveIf(DeeObject *__restrict self,
      if unlikely(!index_ob) goto err_erase_func;
      item = DeeObject_GetItem(self,index_ob);
      if unlikely(!item) { err_index_ob: Dee_Decref(index_ob); goto err_erase_func; }
-     callback_result = DeeObject_Call(should_remove,1,&item);
+     callback_result = DeeObject_Call(should,1,&item);
      if unlikely(!callback_result) { Dee_Decref(item); goto err_index_ob; }
      error = DeeObject_Bool(callback_result);
      Dee_Decref(callback_result);
@@ -3454,7 +3500,7 @@ DeeSeq_RemoveIf(DeeObject *__restrict self,
      if unlikely(!index_ob) goto err;
      item = DeeObject_GetItem(self,index_ob);
      if unlikely(!item) { err_index_ob_delrange: Dee_Decref(index_ob); goto err; }
-     callback_result = DeeObject_Call(should_remove,1,&item);
+     callback_result = DeeObject_Call(should,1,&item);
      if unlikely(!callback_result) { Dee_Decref(item); goto err_index_ob_delrange; }
      error = DeeObject_Bool(callback_result);
      Dee_Decref(callback_result);
@@ -3508,6 +3554,79 @@ err_overflow_wrapper:
 err_overflow:
  err_integer_overflow_i(sizeof(size_t)*8,true);
  goto err;
+}
+
+
+PRIVATE DeeObject *mutable_sequence_attributes[] = {
+    &str_remove,
+    &str_rremove,
+    &str_removeall,
+    &str_removeif,
+    &str_xch,
+    &str_clear,
+#define resizable_sequence_attributes \
+       (mutable_sequence_attributes + 6)
+#define resizable_sequence_attributes_count \
+       (COMPILER_LENOF(mutable_sequence_attributes) - 6)
+
+    &str_pop,
+    &str_append,
+    &str_extend,
+    &str_insert,
+    &str_insertall,
+    &str_erase,
+    &str_resize,
+    &str_pushfront,
+    &str_pushback,
+    &str_popfront,
+    &str_popback
+};
+
+
+INTERN int DCALL
+DeeSeq_IsMutable(DeeObject *__restrict self) {
+ DeeTypeObject *tp_self;
+ tp_self = Dee_TYPE(self);
+ if (tp_self == &DeeSuper_Type) {
+  tp_self = DeeSuper_TYPE(self);
+  self    = DeeSuper_SELF(self);
+ }
+ while (tp_self != &DeeSeq_Type) {
+  struct type_seq *seq; size_t i;
+  if ((seq = tp_self->tp_seq) != NULL) {
+   if (seq->tp_nsi)
+       return (seq->tp_nsi->nsi_flags & TYPE_SEQX_FMUTABLE) ? 1 : 0;
+   if (seq->tp_del || seq->tp_set ||
+       seq->tp_range_del || seq->tp_range_set)
+       return 1;
+  }
+  for (i = 0; i < COMPILER_LENOF(mutable_sequence_attributes); ++i) {
+   int temp = has_generic_attribute(tp_self,self,mutable_sequence_attributes[i]);
+   if (temp != 0) return temp;
+  }
+  if ((tp_self = DeeType_Base(tp_self)) == NULL) break;
+ }
+ return 0;
+}
+INTERN int DCALL
+DeeSeq_IsResizable(DeeObject *__restrict self) {
+ DeeTypeObject *tp_self;
+ tp_self = Dee_TYPE(self);
+ if (tp_self == &DeeSuper_Type) {
+  tp_self = DeeSuper_TYPE(self);
+  self    = DeeSuper_SELF(self);
+ }
+ while (tp_self != &DeeSeq_Type) {
+  struct type_seq *seq; size_t i;
+  if ((seq = tp_self->tp_seq) != NULL && seq->tp_nsi)
+      return (seq->tp_nsi->nsi_flags & TYPE_SEQX_FRESIZABLE) ? 1 : 0;
+  for (i = 0; i < resizable_sequence_attributes_count; ++i) {
+   int temp = has_generic_attribute(tp_self,self,resizable_sequence_attributes[i]);
+   if (temp != 0) return temp;
+  }
+  if ((tp_self = DeeType_Base(tp_self)) == NULL) break;
+ }
+ return 0;
 }
 
 

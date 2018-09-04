@@ -1074,6 +1074,7 @@ err:
 
 PRIVATE struct type_nsi tuple_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_seqlike = */{
             /* .nsi_getsize      = */(void *)&tuple_nsi_getsize,

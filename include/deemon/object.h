@@ -2234,8 +2234,8 @@ DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttr)(DeeObject *__restrict self, /*
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
 DFUNDEF int (DCALL DeeObject_HasAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
-DFUNDEF int (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
-DFUNDEF int (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+DFUNDEF int (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self, char const *__restrict attr_name); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
+DFUNDEF int (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
 DFUNDEF int (DCALL DeeObject_DelAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
 DFUNDEF int (DCALL DeeObject_SetAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict value);
 DFUNDEF int (DCALL DeeObject_DelAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);

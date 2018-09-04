@@ -496,6 +496,7 @@ kwds_get(Kwds *__restrict self,
 
 PRIVATE struct type_nsi kwds_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_MAP,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_maplike = */{
                 /* .nsi_getsize    = */(void *)&kwds_nsi_getsize,
@@ -966,6 +967,7 @@ kmap_get(KwdsMapping *__restrict self,
 
 PRIVATE struct type_nsi kmap_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_MAP,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_maplike = */{
                 /* .nsi_getsize    = */(void *)&kmap_nsi_getsize,
