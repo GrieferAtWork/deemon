@@ -217,6 +217,44 @@ __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(128,128)
 
 
 
+#define __IMPL_HYBRID_DEFINE_PROMOTION_MATH(opn,n,opn_x2) \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_uadd##opn##_##n \
+(__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
+ __UINT##opn_x2##_TYPE__ __true_res = (__UINT##opn_x2##_TYPE__)((__UINT##opn_x2##_TYPE__)__x + (__UINT##opn_x2##_TYPE__)__y); \
+ __UINT##n##_TYPE__ __false_res = *__res = (__UINT##n##_TYPE__)__true_res; \
+ return (__UINT##opn_x2##_TYPE__)__false_res != __true_res; \
+} \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_sadd##opn##_##n \
+(__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
+ __INT##opn_x2##_TYPE__ __true_res = (__INT##opn_x2##_TYPE__)((__INT##opn_x2##_TYPE__)__x + (__INT##opn_x2##_TYPE__)__y); \
+ __INT##n##_TYPE__ __false_res = *__res = (__INT##n##_TYPE__)__true_res; \
+ return (__INT##opn_x2##_TYPE__)__false_res != __true_res; \
+} \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_usub##opn##_##n \
+(__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
+ *__res = (__UINT##n##_TYPE__)(__x - __y); \
+ return !(__x >= __y); \
+} \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_ssub##opn##_##n \
+(__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
+ __INT##opn_x2##_TYPE__ __true_res = (__INT##opn_x2##_TYPE__)((__INT##opn_x2##_TYPE__)__x - (__INT##opn_x2##_TYPE__)__y); \
+ __INT##n##_TYPE__ __false_res = *__res = (__INT##n##_TYPE__)__true_res; \
+ return (__INT##opn_x2##_TYPE__)__false_res != __true_res; \
+} \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_umul##opn##_##n \
+(__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
+ __UINT##opn_x2##_TYPE__ __true_res = (__UINT##opn_x2##_TYPE__)((__UINT##opn_x2##_TYPE__)__x * (__UINT##opn_x2##_TYPE__)__y); \
+ __UINT##n##_TYPE__ __false_res = *__res = (__UINT##n##_TYPE__)__true_res; \
+ return (__UINT##opn_x2##_TYPE__)__false_res != __true_res; \
+} \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_smul##opn##_##n \
+(__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
+ __INT##opn_x2##_TYPE__ __true_res = (__INT##opn_x2##_TYPE__)((__INT##opn_x2##_TYPE__)__x * (__INT##opn_x2##_TYPE__)__y); \
+ __INT##n##_TYPE__ __false_res = *__res = (__INT##n##_TYPE__)__true_res; \
+ return (__INT##opn_x2##_TYPE__)__false_res != __true_res; \
+} \
+/**/
+
 #define __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(opn,n) \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_uadd##opn##_##n \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
@@ -273,17 +311,39 @@ __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_over
 /**/
 
 
+#if __SIZEOF_REGISTER__ >= 2
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(8,8,16)
+#else
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(8,8)
+#endif
+#if __SIZEOF_REGISTER__ >= 4
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(16,8,32)
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(16,16,32)
+#else
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(16,8)
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(16,16)
+#endif
+#if __SIZEOF_REGISTER__ >= 8 && defined(__INT64_TYPE__)
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(32,8,64)
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(32,16,64)
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(32,32,64)
+#else
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(32,8)
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(32,16)
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(32,32)
+#endif
 #ifdef __INT64_TYPE__
+#if __SIZEOF_REGISTER__ >= 16 && defined(__INT128_TYPE__)
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(64,8,128)
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(64,16,128)
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(64,32,128)
+__IMPL_HYBRID_DEFINE_PROMOTION_MATH(64,64,128)
+#else
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(64,8)
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(64,16)
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(64,32)
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(64,64)
+#endif
 #ifdef __INT128_TYPE__
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(128,8)
 __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(128,16)
@@ -293,6 +353,7 @@ __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(128,128)
 #endif
 #endif
 #undef __IMPL_HYBRID_DEFINE_OVERFLOW_MATH
+#undef __IMPL_HYBRID_DEFINE_PROMOTION_MATH
 
 
 /* @return: true:  Overflow occurred (unlikely; `*res' is undefined)
