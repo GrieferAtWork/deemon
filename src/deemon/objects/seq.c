@@ -1153,7 +1153,6 @@ get_sequence_find_args(char const *__restrict name,
    if (DeeObject_AsSSize(argv[2],(dssize_t *)pend))
        goto err;
    *ppred_eq = NULL;
-   *pend     = (size_t)-1;
   } else {
    *ppred_eq = argv[2];
    *pend     = (size_t)-1;

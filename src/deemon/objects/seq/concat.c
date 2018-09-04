@@ -464,19 +464,16 @@ cat_nsi_find(Cat *__restrict self,
  size_t temp,i,offset = 0;
  for (i = 0; i < DeeTuple_SIZE(self); ++i) {
   temp = DeeSeq_Find(DeeTuple_GET(self,i),start,end,elem,pred_eq);
-  if ((dssize_t)temp < 0) {
-   if unlikely(temp == (size_t)-2)
-      goto err;
-   if (temp != (size_t)-1) {
-    if unlikely((offset + temp) < offset ||
-                (offset + temp) < temp)
-       goto index_overflow;
-    offset += temp;
-    if unlikely(offset == (size_t)-1 ||
-                offset == (size_t)-2)
-       goto index_overflow;
-    return offset;
-   }
+  if unlikely(temp == (size_t)-2) goto err;
+  if (temp != (size_t)-1) {
+   if unlikely((offset + temp) < offset ||
+               (offset + temp) < temp)
+      goto index_overflow;
+   offset += temp;
+   if unlikely(offset == (size_t)-1 ||
+               offset == (size_t)-2)
+      goto index_overflow;
+   return offset;
   }
   temp = DeeObject_Size(DeeTuple_GET(self,i));
   if unlikely(temp == (size_t)-1) goto err;
@@ -488,6 +485,114 @@ cat_nsi_find(Cat *__restrict self,
  return (size_t)-1;
 index_overflow:
  err_integer_overflow_i(sizeof(size_t)*8,true);
+err:
+ return (size_t)-2;
+}
+
+PRIVATE size_t DCALL
+cat_nsi_rfind(Cat *__restrict self,
+              size_t start, size_t end,
+              DeeObject *__restrict elem,
+              DeeObject *pred_eq) {
+ size_t seq_min = 0,seq_max;
+ size_t start_offset = 0,temp;
+ size_t *seq_lengths,i;
+ size_t effective_length;
+ if unlikely(end <= start)
+    goto done;
+ seq_max = DeeTuple_SIZE(self);
+ if (start != 0) {
+  /* Find the first sequence which `start' is apart of. */
+  for (;;) {
+   if (seq_min >= seq_max)
+       goto done;
+   temp = DeeObject_Size(DeeTuple_GET(self,seq_min));
+   if unlikely(temp == (size_t)-1) goto err;
+   if (temp > start) break;
+   start        -= temp;
+   end          -= temp;
+   start_offset += temp;
+   ++seq_min;
+  }
+  /* The first used sequence contains `temp' items! */
+  if (end <= temp) {
+   /* All items that should be searched for are located within a single sub-sequence! */
+   temp = DeeSeq_RFind(DeeTuple_GET(self,seq_min),start,end,elem,pred_eq);
+   goto check_final_temp_from_first;
+  }
+  seq_lengths = (size_t *)Dee_AMalloc((seq_max - seq_min) * sizeof(size_t));
+  if unlikely(!seq_lengths) goto err;
+  seq_lengths[0] = temp; /* Remember the length of the first sequence. */
+  i = seq_min + 1;
+  effective_length = temp;
+ } else {
+  seq_lengths = (size_t *)Dee_AMalloc(seq_max * sizeof(size_t));
+  if unlikely(!seq_lengths) goto err;
+  i = seq_min;
+  effective_length = 0;
+ }
+ /* Figure out the lengths of all sequences we're supposed to search */
+ for (; i < seq_max; ++i) {
+  if (effective_length >= end) { seq_max = i + 1; break; }
+  temp = DeeObject_Size(DeeTuple_GET(self,i));
+  if unlikely(temp == (size_t)-1) goto err_seqlen;
+  effective_length        += temp;
+  seq_lengths[i - seq_min] = effective_length;
+ }
+ ASSERT((seq_max - seq_min) >= 2);
+ /* Search the last sequence. */
+ if (effective_length >= end) {
+  temp = DeeSeq_RFind(DeeTuple_GET(self,seq_max - 1),
+                      0,end - seq_lengths[(seq_max - seq_min) - 2],
+                      elem,pred_eq);
+ } else {
+  temp = DeeSeq_RFind(DeeTuple_GET(self,seq_max - 1),0,(size_t)-1,elem,pred_eq);
+ }
+check_temp_for_errors:
+ if unlikely(temp == (size_t)-2) goto err;
+ if (temp != (size_t)-1) {
+  Dee_AFree(seq_lengths);
+  if unlikely((temp + start_offset) < temp ||
+              (temp + start_offset) < start_offset)
+     goto index_overflow;
+  temp += start_offset;
+  if ((seq_max - seq_min) >= 2) {
+   start_offset = seq_lengths[(seq_max - seq_min) - 2];
+   goto add_start_offset;
+  }
+  return temp;
+ }
+ /* Not apart of the last sequence. -> Search all full sequences before then. */
+ --seq_max;
+ if (seq_max > seq_min + 1) {
+  temp = DeeSeq_RFind(DeeTuple_GET(self,seq_max - 1),
+                      0,(size_t)-1,
+                      elem,pred_eq);
+  goto check_temp_for_errors;
+ }
+ ASSERT(seq_min + 1 == seq_max);
+ Dee_AFree(seq_lengths);
+ /* Search the first sequence. */
+ temp = DeeSeq_RFind(DeeTuple_GET(self,seq_min),
+                     start,(size_t)-1,elem,pred_eq);
+check_final_temp_from_first:
+ if likely(temp != (size_t)-2) {
+  if (temp != (size_t)-1) {
+add_start_offset:
+   if unlikely((temp + start_offset) < temp ||
+               (temp + start_offset) < start_offset)
+      goto index_overflow;
+   temp += start_offset;
+  }
+ }
+ return temp;
+done:
+ return (size_t)-1;
+index_overflow:
+ err_integer_overflow_i(sizeof(size_t)*8,true);
+ goto err;
+err_seqlen:
+ Dee_AFree(seq_lengths);
 err:
  return (size_t)-2;
 }
@@ -509,7 +614,7 @@ PRIVATE struct type_nsi cat_nsi = {
             /* .nsi_setrange     = */(void *)NULL,
             /* .nsi_setrange_n   = */(void *)NULL,
             /* .nsi_find         = */(void *)&cat_nsi_find,
-            /* .nsi_rfind        = */(void *)NULL, /* TODO */
+            /* .nsi_rfind        = */(void *)&cat_nsi_rfind,
             /* .nsi_xch          = */(void *)NULL,
             /* .nsi_insert       = */(void *)NULL,
             /* .nsi_insertall    = */(void *)NULL,

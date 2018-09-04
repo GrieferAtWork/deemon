@@ -1020,8 +1020,8 @@ PRIVATE size_t DCALL
 tuple_nsi_find(Tuple *__restrict self, size_t start, size_t end,
                DeeObject *__restrict value, DeeObject *pred_eq) {
  size_t i;
- if (start > self->t_size) start = self->t_size;
- if (end > self->t_size) end = self->t_size;
+ if (end > self->t_size)
+     end = self->t_size;
  for (i = start; i < end; ++i) {
   int temp;
   if (pred_eq) {
@@ -1046,8 +1046,8 @@ PRIVATE size_t DCALL
 tuple_nsi_rfind(Tuple *__restrict self, size_t start, size_t end,
                 DeeObject *__restrict value, DeeObject *pred_eq) {
  size_t i;
- if (start > self->t_size) start = self->t_size;
- if (end > self->t_size) end = self->t_size;
+ if (end > self->t_size)
+     end = self->t_size;
  i = end;
  while (i > start) {
   int temp;
