@@ -366,13 +366,20 @@ visit_object(DeeObject *__restrict self,
  struct gc_dep_chain node;
  struct gc_dep_chain *link;
  DeeTypeObject *tp_self;
+again:
  /* Optimization: An object that cannot be visited can be skipped. */
  for (tp_self = Dee_TYPE(self); likely(tp_self); tp_self = tp_self->tp_base) {
   if likely(tp_self->tp_visit)
      goto do_the_visit;
  }
- return;
+ /* In case of a user-defined type, we must still check for visiting that type itself! */
+ tp_self = Dee_TYPE(self);
+ if ((DeeObject *)tp_self == self)
+     return;
+ self = (DeeObject *)tp_self;
+ goto again;
 do_the_visit:
+ /*DEE_DPRINTF("VISIT: %k at %p (%u refs)\n",tp_self,self,self->ob_refcnt);*/
  perturb = i = Dee_HashPointer(self) & data->vd_deps.gd_msk;
  for (;; i = VD_HASHNX(i,perturb),VD_HASHPT(perturb)) {
   struct gc_dep *dep;
