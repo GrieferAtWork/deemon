@@ -37,6 +37,7 @@
 
 #include "../../runtime/strings.h"
 #include "../../runtime/builtin.h"
+#include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
 
@@ -48,7 +49,7 @@ err_invalid_ast_basescope(DeeCompilerAstObject *__restrict obj,
                           struct base_scope_object *__restrict base_scope) {
  (void)obj;
  (void)base_scope;
- return DeeError_Throwf(&DeeError_ValueError,
+ return DeeError_Throwf(&DeeError_ReferenceError,
                         "base-scope of ast differs from the effective base-scope");
 }
 INTERN ATTR_COLD int DCALL
@@ -197,12 +198,2557 @@ ast_gettypeid(Ast *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-ast_gettype(Ast *__restrict self) {
+ast_getkind(Ast *__restrict self) {
  uint16_t result;
  do result = ATOMIC_READ(self->ci_value->a_type);
  while unlikely(result >= COMPILER_LENOF(ast_names));
  return_reference(ast_names[result]);
 }
+
+PRIVATE ATTR_COLD int DCALL
+err_invalid_ast_type(Ast *__restrict self,
+                     uint16_t expected_type) {
+ ASSERT(expected_type < COMPILER_LENOF(ast_names));
+ return DeeError_Throwf(&DeeError_TypeError,
+                        "Expected a %s ast, but got %K instead",
+                        ast_names[expected_type],
+                        ast_getkind(self));
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getconstexpr(Ast *__restrict self) {
+ DREF DeeObject *result;
+ COMPILER_BEGIN(self->ci_compiler);
+ if (self->ci_value->a_type != AST_CONSTEXPR) {
+  err_invalid_ast_type(self,AST_CONSTEXPR);
+  result = NULL;
+ } else {
+  result = self->ci_value->a_constexpr;
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setconstexpr(Ast *__restrict self,
+                 DeeObject *__restrict value) {
+ int result = 0;
+ COMPILER_BEGIN(self->ci_compiler);
+ if (self->ci_value->a_type != AST_CONSTEXPR) {
+  result = err_invalid_ast_type(self,AST_CONSTEXPR);
+ } else {
+  DREF DeeObject *old_value;
+  Dee_Incref(value);
+  old_value = self->ci_value->a_constexpr;
+  self->ci_value->a_constexpr = value;
+  Dee_Decref(old_value);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getsym(Ast *__restrict self) {
+ DREF DeeObject *result;
+ COMPILER_BEGIN(self->ci_compiler);
+ if (self->ci_value->a_type != AST_SYM &&
+     self->ci_value->a_type != AST_UNBIND &&
+     self->ci_value->a_type != AST_BOUND) {
+  err_invalid_ast_type(self,AST_SYM);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetSymbol(self->ci_value->a_sym);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setsym(Ast *__restrict self,
+           DeeCompilerSymbolObject *__restrict value) {
+ int result = 0;
+ COMPILER_BEGIN(self->ci_compiler);
+ if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_symbol_compiler(value);
+ } else {
+  struct symbol *sym;
+  sym = DeeCompilerItem_VALUE(value,struct symbol);
+  if unlikely(!sym)
+   result = -1;
+  else {
+   struct ast *me = self->ci_value;
+   switch (me->a_type) {
+   case AST_SYM:
+    if (me->a_flag) {
+   case AST_UNBIND:
+     SYMBOL_DEC_NWRITE(me->a_sym);
+     SYMBOL_INC_NWRITE(sym);
+    } else {
+     SYMBOL_DEC_NREAD(me->a_sym);
+     SYMBOL_INC_NREAD(sym);
+    }
+    break;
+   case AST_BOUND:
+    SYMBOL_DEC_NBOUND(me->a_sym);
+    SYMBOL_INC_NBOUND(sym);
+    break;
+   default:
+    err_invalid_ast_type(self,AST_SYM);
+    result = -1;
+    goto done;
+   }
+   me->a_sym = sym;
+  }
+ }
+done:
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getmultiple(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_MULTIPLE) {
+  err_invalid_ast_type(self,AST_MULTIPLE);
+  result = NULL;
+ } else {
+  size_t i; DREF DeeObject *temp;
+  /* No proxy-sequence for this one. This function just isn't used that much! */
+  result = DeeTuple_NewUninitialized(me->a_multiple.m_astc);
+  for (i = 0; i < me->a_multiple.m_astc; ++i) {
+   temp = DeeCompiler_GetAst(me->a_multiple.m_astv[i]);
+   if unlikely(!temp) {
+    while (i--) Dee_Decref(DeeTuple_GET(result,i));
+    DeeTuple_FreeUninitialized(result);
+    result = NULL;
+    goto done;
+   }
+   DeeTuple_SET(result,i,temp); /* Inherit reference. */
+  }
+ }
+done:
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delmultiple(Ast *__restrict self) {
+ int result = 0; struct ast *me; size_t i;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_MULTIPLE) {
+  result = err_invalid_ast_type(self,AST_MULTIPLE);
+ } else {
+  /* Assign the new branch vector. */
+  for (i = 0; i < me->a_multiple.m_astc; ++i)
+      Dee_Decref(me->a_multiple.m_astv[i]);
+  Dee_Free(me->a_multiple.m_astv);
+  me->a_multiple.m_astc = 0;
+  me->a_multiple.m_astv = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setmultiple(Ast *__restrict self, DeeObject *__restrict value) {
+ int result = 0; struct ast *me; size_t i,new_astc,old_astc;
+ DREF DeeCompilerAstObject **new_astv; DREF struct ast **old_astv;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_MULTIPLE) {
+  result = err_invalid_ast_type(self,AST_MULTIPLE);
+ } else {
+  new_astv = (DREF DeeCompilerAstObject **)DeeSeq_AsHeapVector(value,&new_astc);
+  if unlikely(!new_astv) {
+err:
+   result = -1;
+  } else {
+#ifdef CONFIG_AST_IS_STRUCT
+#error "This loop doesn't work when asts are structs"
+#endif
+   for (i = 0; i < new_astc; ++i) {
+    struct ast *branch_ast;
+    if (DeeObject_AssertTypeExact((DeeObject *)new_astv[i],&DeeCompilerAst_Type)) {
+err_branch_v:
+     for (i = 0; i < new_astc; ++i)
+         Dee_Decref(new_astv[i]);
+     Dee_Free(new_astv);
+     goto err;
+    }
+    if unlikely(new_astv[i]->ci_compiler != DeeCompiler_Current) {
+     err_invalid_ast_compiler(new_astv[i]);
+     goto err_branch_v;
+    }
+    if unlikely(new_astv[i]->ci_value->a_scope->s_base != me->a_scope->s_base) {
+     err_invalid_ast_basescope(new_astv[i],me->a_scope->s_base);
+     goto err_branch_v;
+    }
+    branch_ast = new_astv[i]->ci_value;
+    ast_incref(branch_ast);
+    Dee_Decref(new_astv[i]);
+    new_astv[i] = (DREF DeeCompilerAstObject *)branch_ast;
+   }
+   /* Assign the new branch vector. */
+   old_astc = me->a_multiple.m_astc;
+   old_astv = me->a_multiple.m_astv;
+   me->a_multiple.m_astc = new_astc;
+   me->a_multiple.m_astv = (DREF struct ast **)new_astv;
+   for (i = 0; i < old_astc; ++i)
+       Dee_Decref(old_astv[i]);
+   Dee_Free(old_astv);
+  }
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getmultiple_typing(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_MULTIPLE) {
+  err_invalid_ast_type(self,AST_MULTIPLE);
+  result = NULL;
+ } else {
+  switch (me->a_flag) {
+
+  case AST_FMULTIPLE_TUPLE:
+   result = (DeeObject *)&DeeTuple_Type;
+   break;
+  case AST_FMULTIPLE_LIST:
+   result = (DeeObject *)&DeeList_Type;
+   break;
+  case AST_FMULTIPLE_SET:
+   result = (DeeObject *)&DeeHashSet_Type;
+   break;
+  case AST_FMULTIPLE_DICT:
+   result = (DeeObject *)&DeeDict_Type;
+   break;
+  case AST_FMULTIPLE_GENERIC:
+   result = (DeeObject *)&DeeSeq_Type;
+   break;
+  case AST_FMULTIPLE_GENERIC_KEYS:
+   result = (DeeObject *)&DeeMapping_Type;
+   break;
+
+  default:
+   result = Dee_None;
+   break;
+  }
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setmultiple_typing(Ast *__restrict self,
+                       DeeTypeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_MULTIPLE) {
+  result = err_invalid_ast_type(self,AST_MULTIPLE);
+ } else {
+  uint16_t new_flags;
+  new_flags = get_ast_multiple_typing(value);
+  if (new_flags == (uint16_t)-1)
+      result = -1;
+  else {
+   me->a_flag = new_flags;
+  }
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getreturnast(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_RETURN) {
+  err_invalid_ast_type(self,AST_RETURN);
+  result = NULL;
+ } else if (!me->a_return) {
+  err_unbound_attribute(Dee_TYPE(self),"returnast");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_return);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delreturnast(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_RETURN) {
+  result = err_invalid_ast_type(self,AST_RETURN);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_return) {
+  result = err_unbound_attribute(Dee_TYPE(self),"returnast");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_return);
+  me->a_return = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setreturnast(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_delreturnast(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_RETURN) {
+  result = err_invalid_ast_type(self,AST_RETURN);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast      = me->a_return;
+  me->a_return = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getyieldast(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_YIELD) {
+  err_invalid_ast_type(self,AST_YIELD);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_yield);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setyieldast(Ast *__restrict self,
+                DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_YIELD) {
+  result = err_invalid_ast_type(self,AST_YIELD);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast     = me->a_yield;
+  me->a_yield = value->ci_value;
+  ast_decref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getthrowast(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_THROW) {
+  err_invalid_ast_type(self,AST_THROW);
+  result = NULL;
+ } else if (!me->a_throw) {
+  err_unbound_attribute(Dee_TYPE(self),"throwast");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_throw);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delthrowast(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_THROW) {
+  result = err_invalid_ast_type(self,AST_THROW);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_throw) {
+  result = err_unbound_attribute(Dee_TYPE(self),"throwast");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_throw);
+  me->a_throw = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setthrowast(Ast *__restrict self,
+                DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_delthrowast(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_THROW) {
+  result = err_invalid_ast_type(self,AST_THROW);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast     = me->a_throw;
+  me->a_throw = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_gettryguard(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_TRY) {
+  err_invalid_ast_type(self,AST_TRY);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_try.t_guard);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_settryguard(Ast *__restrict self,
+                DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_TRY) {
+  result = err_invalid_ast_type(self,AST_TRY);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast           = me->a_try.t_guard;
+  me->a_try.t_guard = value->ci_value;
+  ast_decref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_gettryhandlers(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_TRY) {
+  err_invalid_ast_type(self,AST_TRY);
+  result = NULL;
+ } else {
+  size_t i;
+  result = DeeTuple_NewUninitialized(me->a_try.t_catchc);
+  if unlikely(!result) goto done;
+  for (i = 0; i < me->a_try.t_catchc; ++i) {
+   DREF DeeObject *triple,*temp;
+   triple = DeeTuple_NewUninitialized(3);
+   if unlikely(!triple) goto err_r_i;
+   switch (me->a_try.t_catchv[i].ce_flags &
+          (EXCEPTION_HANDLER_FFINALLY | EXCEPTION_HANDLER_FINTERPT)) {
+   case EXCEPTION_HANDLER_FFINALLY | EXCEPTION_HANDLER_FINTERPT:
+    temp = DeeString_New("finally,interrupt");
+    break;
+   case EXCEPTION_HANDLER_FFINALLY:
+    temp = DeeString_New("finally");
+    break;
+   case EXCEPTION_HANDLER_FINTERPT:
+    temp = DeeString_New("interrupt");
+    break;
+   default:
+    temp = Dee_EmptyString;
+    Dee_Incref(temp);
+    break;
+   }
+   if unlikely(!temp) {
+err_r_i_triple_0:
+    DeeTuple_FreeUninitialized(triple);
+    goto err_r_i;
+   }
+   DeeTuple_SET(triple,0,temp);   /* Inherit reference. */
+   if (me->a_try.t_catchv[i].ce_mask) {
+    temp = DeeCompiler_GetAst(me->a_try.t_catchv[i].ce_mask);
+    if unlikely(!temp) {
+err_r_i_triple_1:
+     Dee_Decref(DeeTuple_GET(triple,0));
+     goto err_r_i_triple_0;
+    }
+   } else {
+    temp = Dee_None;
+    Dee_Incref(temp);
+   }
+   DeeTuple_SET(triple,1,temp);   /* Inherit reference. */
+   temp = DeeCompiler_GetAst(me->a_try.t_catchv[i].ce_code);
+   if unlikely(!temp) {
+/*err_r_i_triple_2:*/
+    Dee_Decref(DeeTuple_GET(triple,1));
+    goto err_r_i_triple_1;
+   }
+   DeeTuple_SET(triple,2,temp);   /* Inherit reference. */
+   DeeTuple_SET(result,i,triple); /* Inherit reference. */
+  }
+  goto done;
+err_r_i:
+  while (i--)
+      Dee_Decref(DeeTuple_GET(result,i));
+  DeeTuple_FreeUninitialized(result);
+  result = NULL;
+ }
+done:
+ COMPILER_END();
+ return result;
+}
+
+
+PRIVATE int DCALL
+ast_settryhandlers(Ast *__restrict self,
+                   DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_TRY) {
+  result = err_invalid_ast_type(self,AST_TRY);
+ } else {
+  struct catch_expr *new_handv; size_t new_handc;
+  struct catch_expr *old_handv; size_t old_handc,i;
+  new_handv = unpack_catch_expressions(value,&new_handc,me->a_scope->s_base);
+  if unlikely(!new_handv)
+     result = -1;
+  else {
+   old_handv = me->a_try.t_catchv;
+   old_handc = me->a_try.t_catchc;
+   me->a_try.t_catchv = new_handv;
+   me->a_try.t_catchc = new_handc;
+   for (i = 0; i < old_handc; ++i) {
+    ast_decref(old_handv[i].ce_code);
+    ast_xdecref(old_handv[i].ce_mask);
+   }
+   Dee_Free(old_handv);
+  }
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopisforeach(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_flag & AST_FLOOP_FOREACH);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopisforeach(Ast *__restrict self,
+                     DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (newval) {
+  if (!me->a_loop.l_iter) {
+   result = err_unbound_attribute(Dee_TYPE(self),"loopiter");
+  } else {
+   me->a_flag |= AST_FLOOP_FOREACH;
+  }
+ } else {
+  me->a_flag &= ~AST_FLOOP_FOREACH;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopispostcond(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_flag & AST_FLOOP_POSTCOND);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopispostcond(Ast *__restrict self,
+                      DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (newval) {
+  me->a_flag |= AST_FLOOP_POSTCOND;
+ } else {
+  me->a_flag &= ~AST_FLOOP_POSTCOND;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopisunlikely(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_flag & AST_FLOOP_POSTCOND);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopisunlikely(Ast *__restrict self,
+                      DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (newval) {
+  me->a_flag |= AST_FLOOP_UNLIKELY;
+ } else {
+  me->a_flag &= ~AST_FLOOP_UNLIKELY;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopflags(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else {
+  bool is_first = true;
+  struct unicode_printer printer = UNICODE_PRINTER_INIT;
+  if (me->a_flag & AST_FLOOP_FOREACH) {
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"foreach") < 0)
+      goto err_printer;
+   is_first = false;
+  }
+  if (me->a_flag & AST_FLOOP_POSTCOND) {
+   if (!is_first &&
+       unlikely(unicode_printer_put8(&printer,',')))
+      goto err_printer;
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"postcond") < 0)
+      goto err_printer;
+   is_first = false;
+  }
+  if (me->a_flag & AST_FLOOP_UNLIKELY) {
+   if (!is_first &&
+       unlikely(unicode_printer_put8(&printer,',')))
+      goto err_printer;
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"unlikely") < 0)
+      goto err_printer;
+  }
+  result = unicode_printer_pack(&printer);
+  goto done;
+err_printer:
+  unicode_printer_fini(&printer);
+  result = NULL;
+ }
+done:
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopflags(Ast *__restrict self,
+                 DeeObject *__restrict value) {
+ int result = 0; struct ast *me; uint16_t new_flags;
+ if (DeeString_Check(value)) {
+  if unlikely(parse_loop_flags(DeeString_STR(value),&new_flags))
+     goto err;
+ } else {
+  if unlikely(DeeObject_AsUInt16(value,&new_flags))
+     goto err;
+ }
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else {
+  if ((new_flags & AST_FLOOP_FOREACH) && !me->a_loop.l_iter) {
+   result = err_unbound_attribute(Dee_TYPE(self),"loopiter");
+  } else {
+   me->a_flag = new_flags;
+  }
+ }
+ COMPILER_END();
+ return result;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+err_is_a_foreach_loop(Ast *__restrict self) {
+ (void)self;
+ return DeeError_Throwf(&DeeError_TypeError,
+                        "Ast is a foreach-loop");
+}
+
+PRIVATE int DCALL
+err_not_a_foreach_loop(Ast *__restrict self) {
+ (void)self;
+ return DeeError_Throwf(&DeeError_TypeError,
+                        "Ast isn't a foreach-loop");
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopcond(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else if (me->a_flag & AST_FLOOP_FOREACH) {
+  err_is_a_foreach_loop(self);
+  result = NULL;
+ } else if (!me->a_loop.l_cond) {
+  err_unbound_attribute(Dee_TYPE(self),"loopcond");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_loop.l_cond);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delloopcond(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (me->a_flag & AST_FLOOP_FOREACH) {
+  result = err_is_a_foreach_loop(self);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_loop.l_cond) {
+  result = err_unbound_attribute(Dee_TYPE(self),"loopcond");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_loop.l_cond);
+  me->a_loop.l_cond = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopcond(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_delloopcond(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (me->a_flag & AST_FLOOP_FOREACH) {
+  result = err_is_a_foreach_loop(self);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast           = me->a_loop.l_cond;
+  me->a_loop.l_cond = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopnext(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else if (me->a_flag & AST_FLOOP_FOREACH) {
+  err_is_a_foreach_loop(self);
+  result = NULL;
+ } else if (!me->a_loop.l_next) {
+  err_unbound_attribute(Dee_TYPE(self),"loopnext");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_loop.l_next);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delloopnext(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (me->a_flag & AST_FLOOP_FOREACH) {
+  result = err_is_a_foreach_loop(self);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_loop.l_next) {
+  result = err_unbound_attribute(Dee_TYPE(self),"loopnext");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_loop.l_next);
+  me->a_loop.l_next = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopnext(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_delloopnext(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (me->a_flag & AST_FLOOP_FOREACH) {
+  result = err_is_a_foreach_loop(self);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast           = me->a_loop.l_next;
+  me->a_loop.l_next = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopelem(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+  err_not_a_foreach_loop(self);
+  result = NULL;
+ } else if (!me->a_loop.l_elem) {
+  err_unbound_attribute(Dee_TYPE(self),"loopelem");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_loop.l_elem);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delloopelem(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+  result = err_not_a_foreach_loop(self);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_loop.l_elem) {
+  result = err_unbound_attribute(Dee_TYPE(self),"loopelem");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_loop.l_elem);
+  me->a_loop.l_elem = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopelem(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_delloopelem(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+  result = err_not_a_foreach_loop(self);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast           = me->a_loop.l_elem;
+  me->a_loop.l_elem = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopiter(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+  err_not_a_foreach_loop(self);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_loop.l_iter);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopiter(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+  result = err_not_a_foreach_loop(self);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast           = me->a_loop.l_iter;
+  me->a_loop.l_iter = value->ci_value;
+  ast_decref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_getlooploop(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else if (!me->a_loop.l_loop) {
+  err_unbound_attribute(Dee_TYPE(self),"looploop");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_loop.l_loop);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_dellooploop(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_loop.l_loop) {
+  result = err_unbound_attribute(Dee_TYPE(self),"looploop");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_loop.l_loop);
+  me->a_loop.l_loop = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setlooploop(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_dellooploop(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast           = me->a_loop.l_loop;
+  me->a_loop.l_loop = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopelemcond(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else if (!me->a_loop.l_elem) {
+  err_unbound_attribute(Dee_TYPE(self),"loopelemcond");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_loop.l_elem);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delloopelemcond(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_loop.l_elem) {
+  result = err_unbound_attribute(Dee_TYPE(self),"loopelemcond");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_loop.l_elem);
+  me->a_loop.l_elem = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopelemcond(Ast *__restrict self,
+                    DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_delloopelemcond(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast           = me->a_loop.l_elem;
+  me->a_loop.l_elem = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopiternext(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  err_invalid_ast_type(self,AST_LOOP);
+  result = NULL;
+ } else if (!me->a_loop.l_iter) {
+  err_unbound_attribute(Dee_TYPE(self),"loopiternext");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_loop.l_iter);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delloopiternext(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (me->a_flag & AST_FLOOP_FOREACH) {
+  result = err_cant_access_attribute(Dee_TYPE(self),"loopiternext",ATTR_ACCESS_DEL);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_loop.l_iter) {
+  result = err_unbound_attribute(Dee_TYPE(self),"loopiternext");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_loop.l_iter);
+  me->a_loop.l_iter = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopiternext(Ast *__restrict self,
+                    DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_delloopiternext(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast           = me->a_loop.l_iter;
+  me->a_loop.l_iter = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getloopctlisbreak(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOPCTL) {
+  err_invalid_ast_type(self,AST_LOOPCTL);
+  result = NULL;
+ } else {
+  result = DeeBool_For(!(me->a_flag & AST_FLOOPCTL_CON));
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setloopctlisbreak(Ast *__restrict self,
+                      DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_LOOP) {
+  result = err_invalid_ast_type(self,AST_LOOP);
+ } else if (newval) {
+  me->a_flag &= ~AST_FLOOPCTL_CON;
+ } else {
+  me->a_flag |= AST_FLOOPCTL_CON;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getconditionalcond(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  err_invalid_ast_type(self,AST_CONDITIONAL);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_conditional.c_cond);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setconditionalcond(Ast *__restrict self,
+                       DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  result = err_invalid_ast_type(self,AST_CONDITIONAL);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast                  = me->a_conditional.c_cond;
+  me->a_conditional.c_cond = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getconditionaltt(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  err_invalid_ast_type(self,AST_CONDITIONAL);
+  result = NULL;
+ } else if (!me->a_conditional.c_tt) {
+  err_unbound_attribute(Dee_TYPE(self),"conditionaltt");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_conditional.c_tt);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delconditionaltt(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  result = err_invalid_ast_type(self,AST_CONDITIONAL);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_conditional.c_tt) {
+  result = err_unbound_attribute(Dee_TYPE(self),"conditionaltt");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_conditional.c_tt);
+  me->a_conditional.c_tt = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setconditionaltt(Ast *__restrict self,
+                     DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_delconditionaltt(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  result = err_invalid_ast_type(self,AST_CONDITIONAL);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast                = me->a_conditional.c_tt;
+  me->a_conditional.c_tt = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getconditionalff(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  err_invalid_ast_type(self,AST_CONDITIONAL);
+  result = NULL;
+ } else if (!me->a_conditional.c_ff) {
+  err_unbound_attribute(Dee_TYPE(self),"conditionalff");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_conditional.c_ff);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_delconditionalff(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  result = err_invalid_ast_type(self,AST_CONDITIONAL);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_conditional.c_ff) {
+  result = err_unbound_attribute(Dee_TYPE(self),"conditionalff");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_conditional.c_ff);
+  me->a_conditional.c_ff = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setconditionalff(Ast *__restrict self,
+                     DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_delconditionalff(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  result = err_invalid_ast_type(self,AST_CONDITIONAL);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast                = me->a_conditional.c_ff;
+  me->a_conditional.c_ff = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_getconditionalflags(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  err_invalid_ast_type(self,AST_CONDITIONAL);
+  result = NULL;
+ } else {
+  bool is_first = true;
+  struct unicode_printer printer = UNICODE_PRINTER_INIT;
+  if (me->a_flag & AST_FCOND_BOOL) {
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"bool") < 0)
+      goto err_printer;
+   is_first = false;
+  }
+  if (me->a_flag & AST_FCOND_LIKELY) {
+   if (!is_first &&
+       unlikely(unicode_printer_put8(&printer,',')))
+      goto err_printer;
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"likely") < 0)
+      goto err_printer;
+   is_first = false;
+  }
+  if (me->a_flag & AST_FCOND_UNLIKELY) {
+   if (!is_first &&
+       unlikely(unicode_printer_put8(&printer,',')))
+      goto err_printer;
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"unlikely") < 0)
+      goto err_printer;
+  }
+  result = unicode_printer_pack(&printer);
+  goto done;
+err_printer:
+  unicode_printer_fini(&printer);
+  result = NULL;
+ }
+done:
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setconditionalflags(Ast *__restrict self,
+                        DeeObject *__restrict value) {
+ int result = 0; struct ast *me; uint16_t new_flags;
+ if (DeeString_Check(value)) {
+  if unlikely(parse_conditional_flags(DeeString_STR(value),&new_flags))
+     goto err;
+ } else {
+  if unlikely(DeeObject_AsUInt16(value,&new_flags))
+     goto err;
+ }
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  result = err_invalid_ast_type(self,AST_CONDITIONAL);
+ } else {
+  me->a_flag = new_flags;
+ }
+ COMPILER_END();
+ return result;
+err:
+ return -1;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_getconditionalisbool(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  err_invalid_ast_type(self,AST_CONDITIONAL);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_flag & AST_FCOND_BOOL);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setconditionalisbool(Ast *__restrict self,
+                         DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  result = err_invalid_ast_type(self,AST_CONDITIONAL);
+ } else if (newval) {
+  me->a_flag |= AST_FCOND_BOOL;
+ } else {
+  me->a_flag &= ~AST_FCOND_BOOL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getconditionalislikely(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  err_invalid_ast_type(self,AST_CONDITIONAL);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_flag & AST_FCOND_LIKELY);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setconditionalislikely(Ast *__restrict self,
+                           DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  result = err_invalid_ast_type(self,AST_CONDITIONAL);
+ } else if (newval) {
+  me->a_flag |= AST_FCOND_LIKELY;
+ } else {
+  me->a_flag &= ~AST_FCOND_LIKELY;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getconditionalisunlikely(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  err_invalid_ast_type(self,AST_CONDITIONAL);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_flag & AST_FCOND_UNLIKELY);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setconditionalisunlikely(Ast *__restrict self,
+                           DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_CONDITIONAL) {
+  result = err_invalid_ast_type(self,AST_CONDITIONAL);
+ } else if (newval) {
+  me->a_flag |= AST_FCOND_UNLIKELY;
+ } else {
+  me->a_flag &= ~AST_FCOND_UNLIKELY;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getboolast(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_BOOL) {
+  err_invalid_ast_type(self,AST_BOOL);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_bool);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setboolast(Ast *__restrict self,
+               DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_BOOL) {
+  result = err_invalid_ast_type(self,AST_BOOL);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast    = me->a_bool;
+  me->a_bool = value->ci_value;
+  ast_decref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getboolisnegated(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_BOOL) {
+  err_invalid_ast_type(self,AST_BOOL);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_flag & AST_FBOOL_NEGATE);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setboolisnegated(Ast *__restrict self,
+                     DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_BOOL) {
+  result = err_invalid_ast_type(self,AST_BOOL);
+ } else if (newval) {
+  me->a_flag |= AST_FBOOL_NEGATE;
+ } else {
+  me->a_flag &= ~AST_FBOOL_NEGATE;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getexpandast(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_EXPAND) {
+  err_invalid_ast_type(self,AST_EXPAND);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_expand);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setexpandast(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_EXPAND) {
+  result = err_invalid_ast_type(self,AST_EXPAND);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast      = me->a_expand;
+  me->a_expand = value->ci_value;
+  ast_decref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getfunctioncode(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_FUNCTION) {
+  err_invalid_ast_type(self,AST_FUNCTION);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_function.f_code);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setfunctioncode(Ast *__restrict self,
+                    DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_EXPAND) {
+  result = err_invalid_ast_type(self,AST_EXPAND);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else {
+  DeeBaseScopeObject *code_scope;
+  code_scope = value->ci_value->a_scope->s_base;
+  if unlikely(check_function_code_scope(code_scope,me->a_scope->s_base))
+     result = -1;
+  else {
+   DREF DeeBaseScopeObject *old_scope;
+   DREF struct ast *old_code;
+   ast_incref(value->ci_value);
+   Dee_Incref((DeeObject *)code_scope);
+   old_code               = me->a_function.f_code;
+   old_scope              = me->a_function.f_scope;
+   me->a_function.f_code  = value->ci_value;
+   me->a_function.f_scope = code_scope;
+   ast_decref(old_code);
+   Dee_Decref((DeeObject *)old_scope);
+  }
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+get_operator_name(uint16_t opid) {
+ struct opinfo *info;
+ switch (opid) {
+ case AST_OPERATOR_POS_OR_ADD:
+  return DeeString_Chr((uint8_t)'+');
+ case AST_OPERATOR_NEG_OR_SUB:
+  return DeeString_Chr((uint8_t)'-');
+ case AST_OPERATOR_GETITEM_OR_SETITEM:
+  return DeeString_NewSized("[]",2);
+ case AST_OPERATOR_GETRANGE_OR_SETRANGE:
+  return DeeString_NewSized("[:]",3);
+ case AST_OPERATOR_GETATTR_OR_SETATTR:
+  return DeeString_Chr((uint8_t)'.');
+ default: break;
+ }
+ info = Dee_OperatorInfo(NULL,opid);
+ if unlikely(!info) return DeeInt_NewU16(opid);
+ return DeeString_New(info->oi_sname);
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorfuncname(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR_FUNC) {
+  err_invalid_ast_type(self,AST_OPERATOR_FUNC);
+  result = NULL;
+ } else {
+  result = get_operator_name(me->a_flag);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorfuncname(Ast *__restrict self,
+                        DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR_FUNC) {
+  result = err_invalid_ast_type(self,AST_OPERATOR_FUNC);
+ } else {
+  uint16_t new_id;
+  result = get_operator_id(value,&new_id);
+  if likely(!result) me->a_flag = new_id;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorfuncbinding(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR_FUNC) {
+  err_invalid_ast_type(self,AST_OPERATOR_FUNC);
+  result = NULL;
+ } else if (!me->a_operator_func.of_binding) {
+  err_unbound_attribute(Dee_TYPE(self),"operatorfuncbinding");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_operator_func.of_binding);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_deloperatorfuncbinding(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR_FUNC) {
+  result = err_invalid_ast_type(self,AST_OPERATOR_FUNC);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_operator_func.of_binding) {
+  result = err_unbound_attribute(Dee_TYPE(self),"operatorfuncbinding");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_operator_func.of_binding);
+  me->a_operator_func.of_binding = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorfuncbinding(Ast *__restrict self,
+                           DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_deloperatorfuncbinding(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR_FUNC) {
+  result = err_invalid_ast_type(self,AST_OPERATOR_FUNC);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast                        = me->a_operator_func.of_binding;
+  me->a_operator_func.of_binding = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorname(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else {
+  result = get_operator_name(me->a_flag);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorname(Ast *__restrict self,
+                    DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else {
+  uint16_t new_id;
+  result = get_operator_id(value,&new_id);
+  if likely(!result) me->a_flag = new_id;
+ }
+ COMPILER_END();
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatora(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_operator.o_op0);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatora(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast              = me->a_operator.o_op0;
+  me->a_operator.o_op0 = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorb(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else if (!me->a_operator.o_op1) {
+  err_unbound_attribute(Dee_TYPE(self),"operatorb");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_operator.o_op1);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_deloperatorb(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR_FUNC) {
+  result = err_invalid_ast_type(self,AST_OPERATOR_FUNC);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_operator.o_op1) {
+  result = err_unbound_attribute(Dee_TYPE(self),"operatorb");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_operator.o_op1);
+  me->a_operator.o_op1 = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorb(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_deloperatorb(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast              = me->a_operator.o_op1;
+  me->a_operator.o_op1 = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorc(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else if (!me->a_operator.o_op2) {
+  err_unbound_attribute(Dee_TYPE(self),"operatorc");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_operator.o_op2);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_deloperatorc(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR_FUNC) {
+  result = err_invalid_ast_type(self,AST_OPERATOR_FUNC);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_operator.o_op2) {
+  result = err_unbound_attribute(Dee_TYPE(self),"operatorc");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_operator.o_op2);
+  me->a_operator.o_op2 = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorc(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_deloperatorc(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast              = me->a_operator.o_op2;
+  me->a_operator.o_op2 = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatord(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else if (!me->a_operator.o_op3) {
+  err_unbound_attribute(Dee_TYPE(self),"operatord");
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_operator.o_op3);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_deloperatord(Ast *__restrict self) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR_FUNC) {
+  result = err_invalid_ast_type(self,AST_OPERATOR_FUNC);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ } else if (!me->a_operator.o_op3) {
+  result = err_unbound_attribute(Dee_TYPE(self),"operatord");
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+ } else {
+  ast_decref(me->a_operator.o_op3);
+  me->a_operator.o_op3 = NULL;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatord(Ast *__restrict self,
+                 DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ if (DeeNone_Check(value))
+     return ast_deloperatord(self);
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast              = me->a_operator.o_op3;
+  me->a_operator.o_op3 = value->ci_value;
+  ast_xdecref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorflags(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else {
+  bool is_first = true;
+  struct unicode_printer printer = UNICODE_PRINTER_INIT;
+  if (me->a_operator.o_exflag & AST_OPERATOR_FPOSTOP) {
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"post") < 0)
+      goto err_printer;
+   is_first = false;
+  }
+  if (me->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
+   if (!is_first &&
+       unlikely(unicode_printer_put8(&printer,',')))
+      goto err_printer;
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"varargs") < 0)
+      goto err_printer;
+   is_first = false;
+  }
+  if (me->a_operator.o_exflag & AST_OPERATOR_FMAYBEPFX) {
+   if (!is_first &&
+       unlikely(unicode_printer_put8(&printer,',')))
+      goto err_printer;
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"maybeprefix") < 0)
+      goto err_printer;
+  }
+  if (me->a_operator.o_exflag & AST_OPERATOR_FDONTOPT) {
+   if (!is_first &&
+       unlikely(unicode_printer_put8(&printer,',')))
+      goto err_printer;
+   if unlikely(UNICODE_PRINTER_PRINT(&printer,"dontoptimize") < 0)
+      goto err_printer;
+  }
+  result = unicode_printer_pack(&printer);
+  goto done;
+err_printer:
+  unicode_printer_fini(&printer);
+  result = NULL;
+ }
+done:
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorflags(Ast *__restrict self,
+                     DeeObject *__restrict value) {
+ int result = 0; struct ast *me; uint16_t new_flags;
+ if (DeeString_Check(value)) {
+  if unlikely(parse_operator_flags(DeeString_STR(value),&new_flags))
+     goto err;
+ } else {
+  if unlikely(DeeObject_AsUInt16(value,&new_flags))
+     goto err;
+ }
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else {
+  me->a_operator.o_exflag = new_flags;
+ }
+ COMPILER_END();
+ return result;
+err:
+ return -1;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorispost(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_operator.o_exflag & AST_OPERATOR_FPOSTOP);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorispost(Ast *__restrict self,
+                      DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else if (newval) {
+  me->a_operator.o_exflag |= AST_OPERATOR_FPOSTOP;
+ } else {
+  me->a_operator.o_exflag &= ~AST_OPERATOR_FPOSTOP;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorisvarargs(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_operator.o_exflag & AST_OPERATOR_FVARARGS);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorisvarargs(Ast *__restrict self,
+                         DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else if (newval) {
+  me->a_operator.o_exflag |= AST_OPERATOR_FVARARGS;
+ } else {
+  me->a_operator.o_exflag &= ~AST_OPERATOR_FVARARGS;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorismaybeprefix(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_operator.o_exflag & AST_OPERATOR_FMAYBEPFX);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorismaybeprefix(Ast *__restrict self,
+                             DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else if (newval) {
+  me->a_operator.o_exflag |= AST_OPERATOR_FMAYBEPFX;
+ } else {
+  me->a_operator.o_exflag &= ~AST_OPERATOR_FMAYBEPFX;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getoperatorisdontoptimize(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  err_invalid_ast_type(self,AST_OPERATOR);
+  result = NULL;
+ } else {
+  result = DeeBool_For(me->a_operator.o_exflag & AST_OPERATOR_FDONTOPT);
+  Dee_Incref(result);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setoperatorisdontoptimize(Ast *__restrict self,
+                              DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return -1;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_OPERATOR) {
+  result = err_invalid_ast_type(self,AST_OPERATOR);
+ } else if (newval) {
+  me->a_operator.o_exflag |= AST_OPERATOR_FDONTOPT;
+ } else {
+  me->a_operator.o_exflag &= ~AST_OPERATOR_FDONTOPT;
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getactionname(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_ACTION) {
+  err_invalid_ast_type(self,AST_ACTION);
+  result = NULL;
+ } else {
+  char const *name = get_action_name(me->a_flag);
+  result = name ? DeeString_New(name) : DeeInt_NewU16(me->a_flag);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setactionname(Ast *__restrict self,
+                  DeeObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_ACTION) {
+  result = err_invalid_ast_type(self,AST_ACTION);
+ } else if (DeeObject_AssertType(value,&DeeString_Type)) {
+  result = -1;
+ } else {
+  int32_t new_id;
+  new_id = get_action_by_name(DeeString_STR(value));
+  if unlikely(new_id < 0)
+   result = -1;
+  else if (AST_FACTION_ARGC_GT(new_id) ==
+           AST_FACTION_ARGC_GT(me->a_flag)) {
+   me->a_flag = (uint16_t)new_id;
+  } else if ((uint16_t)new_id == AST_FACTION_ASSERT &&
+              AST_FACTION_ARGC_GT(me->a_flag) == 2) {
+   me->a_flag = AST_FACTION_ASSERT_M;
+  } else {
+   result = DeeError_Throwf(&DeeError_ValueError,
+                            "Attempted to set a new action %q taking %u "
+                            "arguments, when the old action only uses %u",
+                            DeeString_STR(value),
+                           (unsigned int)AST_FACTION_ARGC_GT(new_id),
+                           (unsigned int)AST_FACTION_ARGC_GT(me->a_flag));
+  }
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getactiona(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_ACTION) {
+  err_invalid_ast_type(self,AST_ACTION);
+  result = NULL;
+ } else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
+  err_unknown_attribute(Dee_TYPE(self),"actiona",ATTR_ACCESS_GET);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_action.a_act0);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setactiona(Ast *__restrict self,
+               DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_ACTION) {
+  result = err_invalid_ast_type(self,AST_ACTION);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
+  result = err_unknown_attribute(Dee_TYPE(self),"actiona",ATTR_ACCESS_SET);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast             = me->a_action.a_act0;
+  me->a_action.a_act0 = value->ci_value;
+  ast_decref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getactionb(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_ACTION) {
+  err_invalid_ast_type(self,AST_ACTION);
+  result = NULL;
+ } else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
+  err_unknown_attribute(Dee_TYPE(self),"actionb",ATTR_ACCESS_GET);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_action.a_act1);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setactionb(Ast *__restrict self,
+               DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_ACTION) {
+  result = err_invalid_ast_type(self,AST_ACTION);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
+  result = err_unknown_attribute(Dee_TYPE(self),"actionb",ATTR_ACCESS_SET);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast             = me->a_action.a_act1;
+  me->a_action.a_act1 = value->ci_value;
+  ast_decref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ast_getactionc(Ast *__restrict self) {
+ DREF DeeObject *result; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_ACTION) {
+  err_invalid_ast_type(self,AST_ACTION);
+  result = NULL;
+ } else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
+  err_unknown_attribute(Dee_TYPE(self),"actionc",ATTR_ACCESS_GET);
+  result = NULL;
+ } else {
+  result = DeeCompiler_GetAst(me->a_action.a_act2);
+ }
+ COMPILER_END();
+ return result;
+}
+
+PRIVATE int DCALL
+ast_setactionc(Ast *__restrict self,
+               DeeCompilerAstObject *__restrict value) {
+ int result = 0; struct ast *me;
+ COMPILER_BEGIN(self->ci_compiler);
+ me = self->ci_value;
+ if unlikely(me->a_type != AST_ACTION) {
+  result = err_invalid_ast_type(self,AST_ACTION);
+ } else if (DeeObject_AssertTypeExact(value,&DeeCompilerAst_Type)) {
+  result = -1;
+ } else if (value->ci_compiler != DeeCompiler_Current) {
+  result = err_invalid_ast_compiler(value);
+ } else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+  result = err_invalid_ast_basescope(value,me->a_scope->s_base);
+ } else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
+  result = err_unknown_attribute(Dee_TYPE(self),"actionc",ATTR_ACCESS_SET);
+ } else {
+  DREF struct ast *old_ast;
+  ast_incref(value->ci_value);
+  old_ast             = me->a_action.a_act2;
+  me->a_action.a_act2 = value->ci_value;
+  ast_decref(old_ast);
+ }
+ COMPILER_END();
+ return result;
+}
+
 
 
 #define DO(x)         do if unlikely((x) < 0) goto err; __WHILE0
@@ -2209,14 +4755,429 @@ PRIVATE struct type_getset ast_getsets[] = {
           "@throw ReferenceError Attempted to set a scope not apart of the same base-scope (s.a. :compiler.scope.base)\n"
           "@throw ReferenceError Attempted to set the scope of a branch containing symbols that would no longer be reachable\n"
           "Get or set the scope with which this branch is assocated") },
-    { "type",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettype, NULL, NULL,
+    { "kind",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getkind, NULL, NULL,
       DOC("->string\n"
-          "Get the name of the ast type (same as the `make*' methods of :compiler)") },
+          "Get the name of the ast kind (same as the `make*' methods of :compiler)") },
     { "typeid",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettypeid, NULL, NULL,
       DOC("->int\n"
           "Get the internal type-id of ast") },
+    { "constexpr",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconstexpr, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconstexpr,
+      DOC("->object\n"
+          "@throw TypeError #kind isn't $\"constexpr\"\n"
+          "Get or set the constant expression value of a $\"constexpr\" (s.a. #kind) ast") },
+    { "sym",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getsym, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setsym,
+      DOC("->:compiler.symbol\n"
+          "@throw TypeError #kind isn't $\"sym\", $\"unbind\" or $\"bound\"\n"
+          "@throw ValueError Attempted to set a :compiler.symbol associated with a different compiler\n"
+          "Get or set the symbol associated with a symbol-related AST") },
+    { "multiple",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getmultiple,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delmultiple,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setmultiple,
+      DOC("->{ast...}\n"
+          "@throw TypeError #kind isn't $\"multiple\"\n"
+          "@throw ValueError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the sequence of sub-branches associated with @this multi-branch ast") },
+    { "multiple_typing",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getmultiple_typing, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setmultiple_typing,
+      DOC("->type\n"
+          "@throw TypeError #kind isn't $\"multiple\"\n"
+          "@throw TypeError Attempted to set a typing that is neither :none, nor one of the type listed in :compiler.makemultiple\n"
+          "Get or set the typing of a @ multi-branch ast") },
+    { "returnast",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getreturnast,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delreturnast,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setreturnast,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"return\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No return expression has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the ast describing the expression returned by @this branch\n"
+          "Additionally, you may assign :none to delete the throw expression and have the branch return :none") },
+    { "yieldast",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getyieldast, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setyieldast,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"yield\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the ast describing the expression yielded by @this branch") },
+    { "throwast",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getthrowast,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delthrowast,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setthrowast,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"throw\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No throw expression has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the ast describing the expression thrown by @this branch\n"
+          "Additionally, you may assign :none to delete the throw expression and turn the branch into a re-throw") },
+    { "tryguard",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettryguard, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_settryguard,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"try\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No throw expression has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the ast guarded by the #tryhandlers of @this try-branch") },
+    { "tryhandlers",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettryhandlers, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_settryhandlers,
+      DOC("->{(string,ast,ast)...}\n"
+          "@throw TypeError #kind isn't $\"try\"\n"
+          "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
+          "@throw ValueError One of the flags-strings contains an unknown flag\n"
+          "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
+          "Get or set the ast guarded by the #tryhandlers of @this try-branch (s.a. :compiler.maketry)") },
+    { "loopflags",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopflags, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopflags,
+      DOC("->string\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "@throw ValueError Attempted to set an invalid flags string\n"
+          "@throw UnboundAttribute Attempted to enable $\"foreach\" mode with #loopnext being unbound\n"
+          "Get or set the flags controlling how a loop is evaluated\n"
+          "When enabling/disabling $\"foreach\" mode, #loopcond becomes #loopelem and "
+          "#loopnext becomes #loopiter, though regardless of foreach-mode, #loopcond and "
+          "#loopelem can be addressed as #loopelemcond, and #loopnext and #loopiter as #loopiternext") },
+    { "loopisforeach",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopisforeach, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopisforeach,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "@throw UnboundAttribute Attempted to enable $\"foreach\" mode with #loopnext being unbound\n"
+          "Get or set if @this ast is a foreach-loop, controlling the $\"foreach\" flag of #loopflags") },
+    { "loopispostcond",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopispostcond, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopispostcond,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "Get or set if #loopcond is evaluated after #looploop or before, controlling the $\"postcond\" flag of #loopflags") },
+    { "loopisunlikely",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopisunlikely, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopisunlikely,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "Get or set if #looploop is unlikely to be executed, controlling the $\"unlikely\" flag of #loopflags") },
+    { "loopcond",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopcond,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delloopcond,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopcond,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "@throw TypeError #loopflags contains $\"foreach\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No condition expression has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the continue-condition of @this loop (${for (; loopcond; loopnext) looploop})\n"
+          "Additionally, you may assign :none to delete the condition, causing it to always be true") },
+    { "loopnext",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopnext,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delloopnext,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopnext,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "@throw TypeError #loopflags contains $\"foreach\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No advance expression expression has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the optional advance expression of @this loop (${for (; loopcond; loopnext) looploop})\n"
+          "Additionally, you may assign :none to delete the expression") },
+    { "looploop",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getlooploop,
+      (int(DCALL *)(DeeObject *__restrict))&ast_dellooploop,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setlooploop,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No loop block expression has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the block executed by @this loop (${for (; loopcond; loopnext) looploop})\n"
+          "Additionally, you may assign :none to delete the block") },
+    { "loopelem",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopelem,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delloopelem,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopelem,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "@throw TypeError #loopflags doesn't contain $\"foreach\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No loop element has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the foreach element of @this loop (${foreach (loopelem: loopiter) looploop})\n"
+          "Additionally, you may assign :none to delete the element, causing its value to be discarded immediatly") },
+    { "loopiter",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopiter, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopiter,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "@throw TypeError #loopflags doesn't contain $\"foreach\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the foreach iterator expression of @this loop (${foreach (loopelem: loopiter) looploop})") },
+    { "loopelemcond",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopelemcond,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delloopelemcond,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopelemcond,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No condition or element expression has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Alias for accessing either the condition of a regular loop (#loopcond), or the element of foreach-loop (#loopelem)") },
+    { "loopiternext",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopiternext,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delloopiternext,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopiternext,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"loop\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No loop advance expression has been bound\n"
+          "@throw AttributeError Attempted to unbind or assign :none to #loopiter\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Alias for accessing either the advance expression of a regular loop (#loopnext), or the iterator of foreach-loop (#loopiter)") },
+    { "loopctlisbreak",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopctlisbreak, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopctlisbreak,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"loopctl\"\n"
+          "Get or set if @this loop control branch behaves as a $break, or as a $continue") },
+    { "conditionalcond",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalcond, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalcond,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"conditional\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the condition used to determine the the path taken by a conditional branch") },
+    { "conditionaltt",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionaltt,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delconditionaltt,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionaltt,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"conditional\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No true-branch has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the branch taken when #conditionalcond evaluates to :true\n"
+          "Additionally, you may assign :none to unbind the branch, or #conditionalcond to re-use "
+          "the value resulting from the conditiona branch as result of the true-branch") },
+    { "conditionalff",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalff,
+      (int(DCALL *)(DeeObject *__restrict))&ast_delconditionalff,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalff,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"conditional\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute No false-branch has been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the branch taken when #conditionalcond evaluates to :false\n"
+          "Additionally, you may assign :none to unbind the branch, or #conditionalcond to re-use "
+          "the value resulting from the conditiona branch as result of the false-branch") },
+    { "conditionalflags",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalflags, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalflags,
+      DOC("->string\n"
+          "@throw TypeError #kind isn't $\"conditional\"\n"
+          "@throw ValueError Attempted to set an invalid set of flags\n"
+          "Get or set the flags used for evaluating @this conditional branch (s.a. :compiler.makeconditional)") },
+    { "conditionalisbool",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalisbool, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalisbool,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"conditional\"\n"
+          "Control the $\"bool\"-flag of #conditionalflags (s.a. :compiler.makeconditional)") },
+    { "conditionalislikely",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalislikely, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalislikely,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"conditional\"\n"
+          "Control the $\"likely\"-flag of #conditionalflags (s.a. :compiler.makeconditional)") },
+    { "conditionalisunlikely",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalisunlikely, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalisunlikely,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"conditional\"\n"
+          "Control the $\"unlikely\"-flag of #conditionalflags (s.a. :compiler.makeconditional)") },
+    { "boolast",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getboolast, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setboolast,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"bool\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the ast describing the expression turned into a boolean by @this branch") },
+    { "boolisnegated",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getboolisnegated, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setboolisnegated,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"bool\"\n"
+          "Get or set if the boolean value of #boolast should be negated") },
+    { "expandast",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getexpandast, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setexpandast,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"expand\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the ast being expanded by @this one") },
+    { "functioncode",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getfunctioncode, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setfunctioncode,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"function\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw ReferenceError ${this.scope} is not reachable from ${VALUE.scope}\n"
+          "@throw ReferenceError ${this.scope.base} is identical to ${VALUE.scope.base}\n"
+          "Get or set the code bound to the function of @this ast") },
+    { "operatorfuncname",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorfuncname, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorfuncname,
+      DOC("->string\n"
+          "->int\n"
+          "@throw TypeError #kind isn't $\"operatorfunc\"\n"
+          "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
+          "Get or set the name of the operator that is loaded as a function by this branch") },
+    { "operatorfuncbinding",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorfuncbinding,
+      (int(DCALL *)(DeeObject *__restrict))&ast_deloperatorfuncbinding,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorfuncbinding,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"operatorfunc\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute The operator function hasn't been bound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the binding of the operator function loaded by this branch\n"
+          "Additionally, you may assign :none to unbind the binding, causing the operator "
+          "to be loaded as an unbound function") },
+    { "operatorname",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorname, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorname,
+      DOC("->string\n"
+          "->int\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
+          "Get or set the name of the operator executed by @this ast") },
+    { "operatora",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatora, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatora,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the first operand used for invoking #operatorname") },
+    { "operatorb",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorb,
+      (int(DCALL *)(DeeObject *__restrict))&ast_deloperatorb,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorb,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute The second operand has been unbound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the second operand used for invoking #operatorname\n"
+          "Additionally, you may assign :none to unbind the operand") },
+    { "operatorc",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorc,
+      (int(DCALL *)(DeeObject *__restrict))&ast_deloperatorc,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorc,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute The third operand has been unbound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the second third used for invoking #operatorname\n"
+          "Additionally, you may assign :none to unbind the operand") },
+    { "operatord",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatord,
+      (int(DCALL *)(DeeObject *__restrict))&ast_deloperatord,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatord,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw UnboundAttribute The fourth operand has been unbound\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get, del or set the second fourth used for invoking #operatorname\n"
+          "Additionally, you may assign :none to unbind the operand") },
+    { "operatorflags",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorflags, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorflags,
+      DOC("->string\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw ValueError Attempted to set invalid flags\n"
+          "Get or set the flags used to describe special behavior for executing an operator (s.a. :compiler.makeoperator)") },
+    { "operatorispost",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorispost, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorispost,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "Get or set the $\"post\"-flag of #operatorflags (s.a. :compiler.makeoperator)") },
+    { "operatorisvarargs",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorisvarargs, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorisvarargs,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "Get or set the $\"varargs\"-flag of #operatorflags (s.a. :compiler.makeoperator)") },
+    { "operatorismaybeprefix",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorismaybeprefix, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorismaybeprefix,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "Get or set the $\"maybeprefix\"-flag of #operatorflags (s.a. :compiler.makeoperator)") },
+    { "operatorisdontoptimize",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorisdontoptimize, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorisdontoptimize,
+      DOC("->bool\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "Get or set the $\"dontoptimize\"-flag of #operatorflags (s.a. :compiler.makeoperator)") },
+    { "actionname",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactionname, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setactionname,
+      DOC("->string\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw ValueError Attempted to set an invalid action\n"
+          "@throw ValueError Attempted to set an action taking a different number of operands than "
+                            "the old. To work around this restriction, use #setaction instead\n"
+          "Get or set the name of the action performed by @this ast") },
+    { "actiona",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactiona, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setactiona,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw AttributeError The currently set action takes $0 arguments\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the first operand used by the action performed by @this ast") },
+    { "actionb",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactionb, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setactionb,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw AttributeError The currently set action takes $0, or $1 argument\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the second operand used by the action performed by @this ast") },
+    { "actionc",
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactionc, NULL,
+      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setactionc,
+      DOC("->ast\n"
+          "@throw TypeError #kind isn't $\"operator\"\n"
+          "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
+          "@throw AttributeError The currently set action takes $0, $1 or $2 arguments\n"
+          "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+          "Get or set the third operand used by the action performed by @this ast") },
+
     /* TODO: Access to all the different ast fields. */
     { NULL }
 };

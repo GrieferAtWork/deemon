@@ -350,12 +350,15 @@ module_delattr_symbol(DeeModuleObject *__restrict self,
 #ifndef CONFIG_NO_THREADS
  rwlock_endwrite(&self->mo_lock);
 #endif
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
  if unlikely(!old_value) {
-  /* XXX: Should we really throw an error here? */
   err_unbound_global(self,symbol->ss_index);
   return -1;
  }
  Dee_Decref(old_value);
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
+ Dee_XDecref(old_value);
+#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
  return 0;
 }
 

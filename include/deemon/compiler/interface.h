@@ -89,10 +89,10 @@ INTDEF DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast *__restrict branch);
 
 /* Type fields of DeeCompilerItem_Type and DeeCompilerWrapper_Type */
 INTDEF struct type_member DeeCompilerItem_Members[];
-INTERN void DCALL DeeCompilerItem_Fini(DeeCompilerItemObject *__restrict self);
-INTERN void DCALL DeeCompilerItem_Visit(DeeCompilerItemObject *__restrict self, dvisit_t proc, void *arg);
-INTERN void DCALL DeeCompilerObjItem_Fini(DeeCompilerItemObject *__restrict self);
-INTERN void DCALL DeeCompilerObjItem_Visit(DeeCompilerItemObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF void DCALL DeeCompilerItem_Fini(DeeCompilerItemObject *__restrict self);
+INTDEF void DCALL DeeCompilerItem_Visit(DeeCompilerItemObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF void DCALL DeeCompilerObjItem_Fini(DeeCompilerItemObject *__restrict self);
+INTDEF void DCALL DeeCompilerObjItem_Visit(DeeCompilerItemObject *__restrict self, dvisit_t proc, void *arg);
 
 INTDEF void DCALL DeeCompilerWrapper_Fini(DeeCompilerWrapperObject *__restrict self);
 #define DeeCompilerWrapper_Visit    DeeCompilerItem_Visit
@@ -132,6 +132,47 @@ INTDEF tok_t DCALL get_token_from_obj(DeeObject *__restrict obj, bool create_mis
 INTDEF DREF /*String*/DeeObject *DCALL get_token_name(tok_t id, struct TPPKeyword *kwd);
 INTDEF dhash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
 
+/* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing'
+ * NOTE: `typing' doesn't necessarily need to be a type object!
+ * @return: (uint16_t)-1: Error. */
+INTDEF uint16_t DCALL get_ast_multiple_typing(DeeTypeObject *__restrict typing);
+
+struct catch_expr;
+struct base_scope_object;
+
+/* Unpack and validate a sequence `{(string,ast,ast)...} handlers' */
+INTDEF struct catch_expr *DCALL
+unpack_catch_expressions(DeeObject *__restrict handlers,
+                         size_t *__restrict pcatch_c,
+                         struct base_scope_object *__restrict base_scope);
+
+/* Parse the flags for a loop-ast from a string (:rt:compiler.makeloop) */
+INTDEF int DCALL
+parse_loop_flags(char const *__restrict flags,
+                 uint16_t *__restrict presult);
+
+/* Parse the flags for a conditional-ast from a string (:rt:compiler.makeconditional) */
+INTDEF int DCALL
+parse_conditional_flags(char const *__restrict flags,
+                        uint16_t *__restrict presult);
+
+/* Parse the flags for an operator-ast from a string (:rt:compiler.makeoperator) */
+INTDEF int DCALL
+parse_operator_flags(char const *__restrict flags,
+                     uint16_t *__restrict presult);
+
+/* Parse the operator name and determine its ID. */
+INTDEF int DCALL get_operator_id(DeeObject *__restrict opid,
+                                 uint16_t *__restrict presult);
+
+INTDEF int32_t DCALL get_action_by_name(char const *__restrict name);
+INTDEF char const *DCALL get_action_name(uint16_t action);
+
+
+
+INTDEF int DCALL
+check_function_code_scope(DeeBaseScopeObject *code_scope,
+                          DeeBaseScopeObject *ast_base_scope);
 
 #endif /* CONFIG_BUILDING_DEEMON */
 

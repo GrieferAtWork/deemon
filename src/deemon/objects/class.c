@@ -673,13 +673,19 @@ member_del(DeeTypeObject *__restrict class_type,
   old_value = self->ih_vtab[member->cme_addr];
   self->ih_vtab[member->cme_addr] = NULL;
   INSTANCE_DESC_ENDWRITE(self);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
   if unlikely(!old_value) goto unbound;
   Dee_Decref(old_value);
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
+  Dee_XDecref(old_value);
+#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
  }
  return 0;
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
 unbound:
  err_unbound_attribute(class_type,member->cme_name->s_str);
  return -1;
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 illegal:
  err_cant_access_attribute(class_type,member->cme_name->s_str,
                            ATTR_ACCESS_DEL);
@@ -1283,8 +1289,12 @@ class_member_del(DeeTypeObject *__restrict class_type,
   old_value = self->ih_vtab[member->cme_addr];
   self->ih_vtab[member->cme_addr] = NULL;
   INSTANCE_DESC_ENDREAD(self);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
   if unlikely(!old_value) goto unbound;
   Dee_Decref(old_value);
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
+  Dee_XDecref(old_value);
+#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
  } else {
   /* Property callbacks (delete 3 bindings, rather than 1) */
   DREF DeeObject *old_value[3];
@@ -1296,16 +1306,20 @@ class_member_del(DeeTypeObject *__restrict class_type,
   self->ih_vtab[member->cme_addr + CLASS_PROPERTY_DEL] = NULL;
   self->ih_vtab[member->cme_addr + CLASS_PROPERTY_SET] = NULL;
   INSTANCE_DESC_ENDWRITE(self);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
   /* Only thrown an unbound-error when none of the callbacks were assigned. */
   if unlikely(!old_value[0] && !old_value[1] && !old_value[2]) goto unbound;
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
   Dee_XDecref(old_value[2]);
   Dee_XDecref(old_value[1]);
   Dee_XDecref(old_value[0]);
  }
  return 0;
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
 unbound:
  err_unbound_attribute(class_type,member->cme_name->s_str);
  return -1;
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 }
 INTERN int DCALL
 class_member_set(DeeTypeObject *__restrict class_type,

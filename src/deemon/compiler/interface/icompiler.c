@@ -421,6 +421,32 @@ done:
  return result;
 }
 
+INTERN uint16_t DCALL
+get_ast_multiple_typing(DeeTypeObject *__restrict typing) {
+ uint16_t result;
+ if (DeeNone_Check(typing)) {
+  result = AST_FMULTIPLE_KEEPLAST;
+ } else if (typing == &DeeTuple_Type) {
+  result = AST_FMULTIPLE_TUPLE;
+ } else if (typing == &DeeList_Type) {
+  result = AST_FMULTIPLE_LIST;
+ } else if (typing == &DeeHashSet_Type) {
+  result = AST_FMULTIPLE_SET;
+ } else if (typing == &DeeDict_Type) {
+  result = AST_FMULTIPLE_DICT;
+ } else if (typing == &DeeSeq_Type) {
+  result = AST_FMULTIPLE_GENERIC;
+ } else if (typing == &DeeMapping_Type) {
+  result = AST_FMULTIPLE_GENERIC_KEYS;
+ } else {
+  DeeError_Throwf(&DeeError_TypeError,
+                  "Invalid multi-branch typing: %k",
+                  typing);
+  result = (uint16_t)-1;
+ }
+ return result;
+}
+
 PRIVATE DREF DeeObject *DCALL
 ast_makemultiple(DeeCompilerObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv,
@@ -436,26 +462,8 @@ ast_makemultiple(DeeCompilerObject *__restrict self,
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;
- if (DeeNone_Check(typing)) {
-  flags = AST_FMULTIPLE_KEEPLAST;
- } else if (typing == &DeeTuple_Type) {
-  flags = AST_FMULTIPLE_TUPLE;
- } else if (typing == &DeeList_Type) {
-  flags = AST_FMULTIPLE_LIST;
- } else if (typing == &DeeHashSet_Type) {
-  flags = AST_FMULTIPLE_SET;
- } else if (typing == &DeeDict_Type) {
-  flags = AST_FMULTIPLE_DICT;
- } else if (typing == &DeeSeq_Type) {
-  flags = AST_FMULTIPLE_GENERIC;
- } else if (typing == &DeeMapping_Type) {
-  flags = AST_FMULTIPLE_GENERIC_KEYS;
- } else {
-  DeeError_Throwf(&DeeError_TypeError,
-                  "Invalid multi-branch typing: %k",
-                  typing);
-  goto done;
- }
+ flags = get_ast_multiple_typing(typing);
+ if unlikely(flags == (uint16_t)-1) goto done;
  branch_v = (DREF DeeCompilerAstObject **)DeeSeq_AsHeapVector(branches,&branch_c);
  if unlikely(!branch_v) goto done;
 #ifdef CONFIG_AST_IS_STRUCT
@@ -671,7 +679,7 @@ err:
 }
 
 
-LOCAL struct catch_expr *DCALL
+INTERN struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,
                          size_t *__restrict pcatch_c,
                          DeeBaseScopeObject *__restrict base_scope) {
@@ -788,7 +796,7 @@ done:
 }
 
 
-LOCAL int DCALL
+INTERN int DCALL
 parse_loop_flags(char const *__restrict flags,
                  uint16_t *__restrict presult) {
  char const *next_flag; size_t flag_length;
@@ -927,7 +935,7 @@ done:
 }
 
 
-LOCAL int DCALL
+INTERN int DCALL
 parse_conditional_flags(char const *__restrict flags,
                         uint16_t *__restrict presult) {
  char const *next_flag; size_t flag_length;
@@ -1083,6 +1091,29 @@ done:
  return result;
 }
 
+INTERN int DCALL
+check_function_code_scope(DeeBaseScopeObject *code_scope,
+                          DeeBaseScopeObject *ast_base_scope) {
+ if unlikely(code_scope == ast_base_scope) {
+  return DeeError_Throwf(&DeeError_ReferenceError,
+                         "Function code cannot be located in the same "
+                         "base-scope as the function initializer");
+ }
+ /* Make sure that the base-scope of the function
+  * initializer can be reached from the function itself. */
+ for (;;) {
+  code_scope = code_scope->bs_prev;
+  if (code_scope == ast_base_scope)
+      break;
+  if unlikely(!code_scope) {
+   return DeeError_Throwf(&DeeError_ReferenceError,
+                          "Function initializer scope is not "
+                          "reachable from function code");
+  }
+ }
+ return 0;
+}
+
 PRIVATE DREF DeeObject *DCALL
 ast_makefunction(DeeCompilerObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv,
@@ -1092,7 +1123,7 @@ ast_makefunction(DeeCompilerObject *__restrict self,
  DeeCompilerAstObject *code;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
  DeeScopeObject *ast_scope; DeeObject *loc = NULL; DREF struct ast *result_ast;
- DeeBaseScopeObject *code_scope,*ast_base_scope,*scope_iter;
+ DeeBaseScopeObject *code_scope;
  PRIVATE struct keyword kwlist[] = { K(code), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:makeexpand",&code,&scope,&loc))
@@ -1102,27 +1133,8 @@ ast_makefunction(DeeCompilerObject *__restrict self,
  if unlikely(DeeObject_AssertTypeExact((DeeObject *)code,&DeeCompilerAst_Type)) goto done;
  if unlikely(code->ci_compiler != self) { err_invalid_ast_compiler(code); goto done; }
  code_scope = code->ci_value->a_scope->s_base;
- ast_base_scope = ast_scope->s_base;
- if unlikely(code_scope == ast_base_scope) {
-  DeeError_Throwf(&DeeError_ReferenceError,
-                  "Function code cannot be located in the same "
-                  "base-scope as the function initializer");
-  goto done;
- }
- /* Make sure that the base-scope of the function
-  * initializer can be reached from the function itself. */
- scope_iter = code_scope;
- for (;;) {
-  scope_iter = scope_iter->bs_prev;
-  if (scope_iter == ast_base_scope)
-      break;
-  if unlikely(!scope_iter) {
-   DeeError_Throwf(&DeeError_ReferenceError,
-                   "Function initializer scope is not "
-                   "reachable from function code");
-   goto done;
-  }
- }
+ if unlikely(check_function_code_scope(code_scope,ast_scope->s_base))
+    goto done;
  /* Setup a new function branch. */
  result_ast = ast_new(ast_scope,loc);
  if unlikely(!result_ast) goto done;
@@ -1138,7 +1150,7 @@ done:
  return result;
 }
 
-PRIVATE int DCALL
+INTERN int DCALL
 get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict presult) {
  if (DeeString_Check(opid)) {
   char *name = DeeString_STR(opid);
@@ -1219,7 +1231,7 @@ done:
  return result;
 }
 
-LOCAL int DCALL
+INTERN int DCALL
 parse_operator_flags(char const *__restrict flags,
                      uint16_t *__restrict presult) {
  char const *next_flag; size_t flag_length;
@@ -1348,7 +1360,7 @@ done:
 }
 
 
-LOCAL int32_t DCALL
+INTERN int32_t DCALL
 get_action_by_name(char const *__restrict name) {
 #define EQAT(ptr,str) (memcmp(ptr,str,sizeof(str)) == 0)
 #define RETURN(id)   do{ result = (id); goto done; }__WHILE0
@@ -1436,6 +1448,40 @@ done:
 #undef EQAT
 #undef RETURN
 }
+
+INTERN char const *DCALL
+get_action_name(uint16_t action) {
+ char const *result;
+ switch (action & AST_FACTION_KINDMASK) {
+#define ACTION(x) case (x) & AST_FACTION_KINDMASK
+ ACTION(AST_FACTION_TYPEOF):    result = "typeof"; break;
+ ACTION(AST_FACTION_CLASSOF):   result = "classof"; break;
+ ACTION(AST_FACTION_SUPEROF):   result = "superof"; break;
+ ACTION(AST_FACTION_PRINT):     result = "print"; break;
+ ACTION(AST_FACTION_PRINTLN):   result = "println"; break;
+ ACTION(AST_FACTION_FPRINT):    result = "fprint"; break;
+ ACTION(AST_FACTION_FPRINTLN):  result = "fprintln"; break;
+ ACTION(AST_FACTION_RANGE):     result = "range"; break;
+ ACTION(AST_FACTION_IS):        result = "is"; break;
+ ACTION(AST_FACTION_IN):        result = "in"; break;
+ ACTION(AST_FACTION_AS):        result = "as"; break;
+ ACTION(AST_FACTION_MIN):       result = "min"; break;
+ ACTION(AST_FACTION_MAX):       result = "max"; break;
+ ACTION(AST_FACTION_SUM):       result = "sum"; break;
+ ACTION(AST_FACTION_ANY):       result = "any"; break;
+ ACTION(AST_FACTION_ALL):       result = "all"; break;
+ ACTION(AST_FACTION_STORE):     result = "store"; break;
+ ACTION(AST_FACTION_ASSERT):
+ ACTION(AST_FACTION_ASSERT_M):  result = "assert"; break;
+ ACTION(AST_FACTION_BOUNDATTR): result = "boundattr"; break;
+ ACTION(AST_FACTION_SAMEOBJ):   result = "sameobj"; break;
+ ACTION(AST_FACTION_DIFFOBJ):   result = "diffobj"; break;
+ ACTION(AST_FACTION_CALL_KW):   result = "callkw"; break;
+ default: result = NULL; break;
+ }
+ return result;
+}
+
 
 PRIVATE DREF DeeObject *DCALL
 ast_makeaction(DeeCompilerObject *__restrict self,
@@ -1563,7 +1609,7 @@ INTERN struct type_method compiler_methods[] = {
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of one of the given @branches or @scope doesn't match @this\n"
-          "@throw TypeError The given @typing is neither :none, nor one of the type listed below\n"
+          "@throw TypeError The given @typing is neither :none, nor one of the types listed below\n"
           "@throw ReferenceError One of the given @branches is not part of the basescope of the effective @scope\n"
           "Construct a multi-branch, which either behaves as keep-last (only the last ast from @branches "
           "is used as expression value of the returned branch, while all others are evaluated before then), "
@@ -1656,6 +1702,7 @@ INTERN struct type_method compiler_methods[] = {
           "(ast cond,ast tt=none,ast ff=none,int flags=0,scope scope=none,(:compiler.lexer.file,int,int) loc?)->ast\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
+          "@throw ValueError The given @flags contains an unrecognized, or invalid flag\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw TypeError Both @tt and @ff have been passed as :none\n"
           "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
