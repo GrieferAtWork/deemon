@@ -28,6 +28,8 @@
 #include <deemon/int.h>
 #include <deemon/error.h>
 
+#include <hybrid/overflow.h>
+
 #include "../../runtime/runtime_error.h"
 #include "repeat.h"
 
@@ -315,17 +317,11 @@ done:
 PRIVATE DREF DeeObject *DCALL
 repeat_size(Repeat *__restrict self) {
  size_t base_size; size_t result;
- DREF DeeObject *result_ob;
  base_size = DeeObject_Size(self->r_seq);
  if unlikely(base_size == (size_t)-1)
     return NULL;
- result = base_size * self->r_num;
- if unlikely(result < base_size ||
-             result < self->r_num) {
-  result_ob = DeeInt_NewSize(base_size);
-  if unlikely(!result_ob) return NULL;
-  err_integer_overflow(result_ob,sizeof(size_t)*8,true);
-  Dee_Decref(result_ob);
+ if (OVERFLOW_UMUL(base_size,self->r_num,&result)) {
+  err_integer_overflow_i(sizeof(size_t)*8,true);
   return NULL;
  }
  return DeeInt_NewSize(result);
@@ -360,9 +356,7 @@ repeat_nsi_getsize(Repeat *__restrict self) {
  base_size = DeeObject_Size(self->r_seq);
  if unlikely(base_size == (size_t)-1)
     return (size_t)-1;
- result = base_size * self->r_num;
- if unlikely(result < base_size ||
-             result < self->r_num) {
+ if (OVERFLOW_UMUL(base_size,self->r_num,&result)) {
   err_integer_overflow_i(sizeof(size_t)*8,true);
   return (size_t)-1;
  }
@@ -375,10 +369,8 @@ repeat_nsi_getsize_fast(Repeat *__restrict self) {
  base_size = DeeFastSeq_GetSize(self->r_seq);
  if unlikely(base_size == (size_t)-1)
     return (size_t)-1;
- result = base_size * self->r_num;
- if unlikely(result < base_size ||
-             result < self->r_num)
-    result = (size_t)-1;
+ if (OVERFLOW_UMUL(base_size,self->r_num,&result))
+     result = (size_t)-1;
  return result;
 }
 
@@ -416,13 +408,10 @@ repeat_nsi_rfind(Repeat *__restrict self,
   if unlikely(inner_size == (size_t)-1)
      return (size_t)-2;
   if (self->r_num > 1 && inner_size != 0) {
-   addend = (self->r_num-1) * inner_size;
-   if unlikely(addend < inner_size ||
-               addend < (self->r_num-1)) {
+   if (OVERFLOW_UMUL(self->r_num - 1,inner_size,&addend)) {
     err_integer_overflow_i(sizeof(size_t)*8,true);
     return (size_t)-2;
    }
-   result += addend;
    if unlikely(result == (size_t)-2)
       err_integer_overflow_i(sizeof(size_t)*8,true);
   }

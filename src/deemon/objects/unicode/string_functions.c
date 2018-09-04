@@ -32,6 +32,8 @@
 #include <deemon/bytes.h>
 #include <deemon/stringutils.h>
 
+#include <hybrid/overflow.h>
+
 DECL_BEGIN
 
 INTERN DREF DeeObject *DCALL
@@ -9835,10 +9837,8 @@ string_mul(String *__restrict self, DeeObject *__restrict other) {
   uint8_t *dst,*src;
  CASE_WIDTH_1BYTE:
   my_length = DeeString_SIZE(self);
-  total_length = my_length*repeat;
-  if unlikely(total_length < my_length ||
-              total_length < repeat)
-     goto err_overflow;
+  if (OVERFLOW_UMUL(my_length,repeat,&total_length))
+      goto err_overflow;
   result = DeeString_NewBuffer(total_length);
   if unlikely(!result) goto err;
   src = (uint8_t *)DeeString_STR(self);
@@ -9854,10 +9854,8 @@ string_mul(String *__restrict self, DeeObject *__restrict other) {
  CASE_WIDTH_2BYTE:
   src = DeeString_Get2Byte((DeeObject *)self);
   my_length = WSTR_LENGTH(src);
-  total_length = my_length*repeat;
-  if unlikely(total_length < my_length ||
-              total_length < repeat)
-     goto err_overflow;
+  if (OVERFLOW_UMUL(my_length,repeat,&total_length))
+      goto err_overflow;
   dst = str = DeeString_NewBuffer16(total_length);
   if unlikely(!str) goto err;
   while (repeat--) {
@@ -9871,10 +9869,8 @@ string_mul(String *__restrict self, DeeObject *__restrict other) {
  CASE_WIDTH_4BYTE:
   src = DeeString_Get4Byte((DeeObject *)self);
   my_length = WSTR_LENGTH(src);
-  total_length = my_length*repeat;
-  if unlikely(total_length < my_length ||
-              total_length < repeat)
-     goto err_overflow;
+  if (OVERFLOW_UMUL(my_length,repeat,&total_length))
+      goto err_overflow;
   dst = str = DeeString_NewBuffer32(total_length);
   if unlikely(!str) goto err;
   while (repeat--) {

@@ -1383,11 +1383,11 @@ got_operator_ast:
      *               the argument count of the function. */
     uint16_t argc = operator_ast->a_function.f_scope->bs_argc_min;
     switch (operator_name) {
-    case AST_OPERATOR_POS_OR_ADD:           operator_name = argc == 0 ? OPERATOR_POS:  OPERATOR_ADD; break;
-    case AST_OPERATOR_NEG_OR_SUB:           operator_name = argc == 0 ? OPERATOR_SUB:  OPERATOR_NEG; break;
-    case AST_OPERATOR_GETITEM_OR_SETITEM:   operator_name = argc == 1 ? OPERATOR_GETITEM:  OPERATOR_SETITEM; break;
-    case AST_OPERATOR_GETRANGE_OR_SETRANGE: operator_name = argc == 2 ? OPERATOR_GETRANGE:  OPERATOR_SETRANGE; break;
-    case AST_OPERATOR_GETATTR_OR_SETATTR:   operator_name = argc == 1 ? OPERATOR_GETATTR:  OPERATOR_SETATTR; break;
+    case AST_OPERATOR_POS_OR_ADD:           operator_name = argc == 0 ? OPERATOR_POS : OPERATOR_ADD; break;
+    case AST_OPERATOR_NEG_OR_SUB:           operator_name = argc == 0 ? OPERATOR_NEG : OPERATOR_SUB; break;
+    case AST_OPERATOR_GETITEM_OR_SETITEM:   operator_name = argc == 1 ? OPERATOR_GETITEM : OPERATOR_SETITEM; break;
+    case AST_OPERATOR_GETRANGE_OR_SETRANGE: operator_name = argc == 2 ? OPERATOR_GETRANGE : OPERATOR_SETRANGE; break;
+    case AST_OPERATOR_GETATTR_OR_SETATTR:   operator_name = argc == 1 ? OPERATOR_GETATTR : OPERATOR_SETATTR; break;
     default: break;
     }
    }

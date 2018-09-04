@@ -950,4 +950,32 @@
 #endif
 
 
+/* Improve syntax highlighting wherever these macros are used! */
+#ifdef __INTELLISENSE__
+#undef __INT8_TYPE__
+#undef __INT16_TYPE__
+#undef __INT32_TYPE__
+#undef __INT64_TYPE__
+#undef __UINT8_TYPE__
+#undef __UINT16_TYPE__
+#undef __UINT32_TYPE__
+#undef __UINT64_TYPE__
+typedef signed __int8  __INT8_TYPE__;
+typedef signed __int16 __INT16_TYPE__;
+typedef signed __int32 __INT32_TYPE__;
+typedef signed __int64 __INT64_TYPE__;
+typedef unsigned __int8  __UINT8_TYPE__;
+typedef unsigned __int16 __UINT16_TYPE__;
+typedef unsigned __int32 __UINT32_TYPE__;
+typedef unsigned __int64 __UINT64_TYPE__;
+#define __INT8_TYPE__   __INT8_TYPE__
+#define __INT16_TYPE__  __INT16_TYPE__
+#define __INT32_TYPE__  __INT32_TYPE__
+#define __INT64_TYPE__  __INT64_TYPE__
+#define __UINT8_TYPE__  __UINT8_TYPE__
+#define __UINT16_TYPE__ __UINT16_TYPE__
+#define __UINT32_TYPE__ __UINT32_TYPE__
+#define __UINT64_TYPE__ __UINT64_TYPE__
+#endif
+
 #endif /* !__GUARD_HYBRID_TYPECORE_H */

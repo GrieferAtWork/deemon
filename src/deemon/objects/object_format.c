@@ -26,6 +26,7 @@
 #include <deemon/super.h>
 #include <deemon/format.h>
 #include <deemon/error.h>
+#include <hybrid/overflow.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -48,7 +49,7 @@ object_format_generic(DeeObject *__restrict self,
 #define ALIGN_ZFILL  3
  unsigned int alignment_mode;
  char const *format_end; char ch;
- size_t alignment_width,new_alignment_width;
+ size_t alignment_width;
  char const *filler_str; size_t filler_len;
  DREF DeeObject *self_str;
  dssize_t result,temp; size_t self_len;
@@ -97,12 +98,9 @@ object_format_generic(DeeObject *__restrict self,
       goto err_bad_format_str;
    break;
   }
-  new_alignment_width = alignment_width;
-  new_alignment_width *= 10;
-  new_alignment_width += DeeUni_AsDigit(ch);
-  if unlikely(new_alignment_width < alignment_width)
-     return err_integer_overflow_i(sizeof(size_t)*8,true);
-  alignment_width = new_alignment_width;
+  if (OVERFLOW_UMUL(alignment_width,10,&alignment_width) ||
+      OVERFLOW_UADD(alignment_width,DeeUni_AsDigit(ch),&alignment_width))
+      return err_integer_overflow_i(sizeof(size_t)*8,true);
  }
 
  /* Special case: With an alignment width of ZERO(0), we already

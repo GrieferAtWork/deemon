@@ -32,6 +32,8 @@
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
 
+#include <hybrid/overflow.h>
+
 #include "svec.h"
 #include "../../runtime/runtime_error.h"
 
@@ -401,7 +403,7 @@ cat_nsi_getsize(Cat *__restrict self) {
  for (i = 0; i < DeeTuple_SIZE(self); ++i) {
   size_t temp = DeeObject_Size(DeeTuple_GET(self,i));
   if unlikely(temp == (size_t)-1) return (size_t)-1;
-  if unlikely((result + temp) < result) {
+  if (OVERFLOW_UADD(result,temp,&result)) {
    err_integer_overflow_i(sizeof(size_t)*8,true);
    return (size_t)-1;
   }
@@ -466,10 +468,8 @@ cat_nsi_find(Cat *__restrict self,
   temp = DeeSeq_Find(DeeTuple_GET(self,i),start,end,elem,pred_eq);
   if unlikely(temp == (size_t)-2) goto err;
   if (temp != (size_t)-1) {
-   if unlikely((offset + temp) < offset ||
-               (offset + temp) < temp)
-      goto index_overflow;
-   offset += temp;
+   if (OVERFLOW_UADD(offset,temp,&offset))
+       goto index_overflow;
    if unlikely(offset == (size_t)-1 ||
                offset == (size_t)-2)
       goto index_overflow;
@@ -552,10 +552,8 @@ check_temp_for_errors:
  if unlikely(temp == (size_t)-2) goto err;
  if (temp != (size_t)-1) {
   Dee_AFree(seq_lengths);
-  if unlikely((temp + start_offset) < temp ||
-              (temp + start_offset) < start_offset)
-     goto index_overflow;
-  temp += start_offset;
+  if (OVERFLOW_UADD(temp,start_offset,&temp))
+      goto index_overflow;
   if ((seq_max - seq_min) >= 2) {
    start_offset = seq_lengths[(seq_max - seq_min) - 2];
    goto add_start_offset;
@@ -579,10 +577,8 @@ check_final_temp_from_first:
  if likely(temp != (size_t)-2) {
   if (temp != (size_t)-1) {
 add_start_offset:
-   if unlikely((temp + start_offset) < temp ||
-               (temp + start_offset) < start_offset)
-      goto index_overflow;
-   temp += start_offset;
+   if (OVERFLOW_UADD(temp,start_offset,&temp))
+       goto index_overflow;
   }
  }
  return temp;

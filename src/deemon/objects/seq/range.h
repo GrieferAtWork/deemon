@@ -38,7 +38,7 @@ typedef struct {
     DREF DeeObject *r_end;   /* [1..1][const] Ending index. */
     DREF DeeObject *r_step;  /* [0..1][const] Step size (or NULL when `tp_inc()' should be used). */
     bool            r_rev;   /* [const] True if iteration should happen in reverse (use `tp_dec' when `r_step' is
-                              *          NULL, but still use `tp_inplace_add' if not. - Used to handle negative steps). */
+                              *         NULL, but still use `tp_inplace_add' if not. - Used to handle negative steps). */
 } Range;
 
 typedef struct {

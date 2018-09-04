@@ -40,6 +40,7 @@
 #ifdef __KOS_SYSTEM_HEADERS__
 #include <hybrid/minmax.h>
 #endif
+#include <hybrid/overflow.h>
 
 #include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
@@ -1387,10 +1388,8 @@ tuple_repeat(Tuple *__restrict self,
  /* Repeat `self' `count' number of times. */
  my_length = DeeTuple_SIZE(self);
  if (my_length == 0) goto return_empty;
- total_length = my_length * count;
- if unlikely(total_length < count ||
-             total_length < my_length)
-    goto err_overflow;
+ if (OVERFLOW_UMUL(my_length,count,&total_length))
+     goto err_overflow;
  result = DeeTuple_NewUninitialized(total_length);
  if unlikely(!result) goto err;
  /* Create all the new references that will be contained in the new tuple. */

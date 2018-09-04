@@ -42,8 +42,8 @@ INTDEF ATTR_COLD int DCALL err_shift_negative(DeeObject *__restrict a, DeeObject
 INTDEF ATTR_COLD int DCALL err_cannot_weak_reference(DeeObject *__restrict ob);
 INTDEF ATTR_COLD int DCALL err_cannot_lock_weakref(void);
 INTDEF ATTR_COLD int DCALL err_bytes_not_writable(DeeObject *__restrict bytes_ob);
-INTDEF ATTR_COLD int DCALL err_index_out_of_bounds(DeeObject *__restrict self,
-                                                   size_t index, size_t size);
+INTDEF ATTR_COLD int DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);
+INTDEF ATTR_COLD int DCALL err_index_out_of_bounds_ob(DeeObject *__restrict self, DeeObject *__restrict index);
 INTDEF ATTR_COLD int DCALL err_va_index_out_of_bounds(size_t index, size_t size);
 INTDEF ATTR_COLD int DCALL err_index_unbound(DeeObject *__restrict self, size_t index);
 INTDEF ATTR_COLD int DCALL err_expected_single_character_string(DeeObject *__restrict str);

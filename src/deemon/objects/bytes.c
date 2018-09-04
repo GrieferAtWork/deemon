@@ -37,6 +37,7 @@
 #include "../runtime/runtime_error.h"
 
 #include <hybrid/minmax.h>
+#include <hybrid/overflow.h>
 
 #include <string.h>
 
@@ -1062,10 +1063,8 @@ bytes_mul(Bytes *__restrict self,
  if (repeat == 1)
      return bytes_copy(self);
  my_length = DeeString_SIZE(self);
- total_length = my_length*repeat;
- if unlikely(total_length < my_length ||
-             total_length < repeat)
-    goto err_overflow;
+ if (OVERFLOW_UMUL(my_length,repeat,&total_length))
+     goto err_overflow;
  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(total_length);
  if unlikely(!result) goto err;
  src = DeeBytes_DATA(self);

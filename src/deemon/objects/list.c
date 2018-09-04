@@ -39,6 +39,7 @@
 #include <stdlib.h>
 
 #include <hybrid/minmax.h>
+#include <hybrid/overflow.h>
 
 #include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
@@ -2794,9 +2795,7 @@ list_mul(List *__restrict self,
 again:
  DeeList_LockRead(self);
  my_length = self->l_size;
- result_length = my_length * multiplier;
- if (result_length < my_length ||
-     result_length < multiplier) {
+ if (OVERFLOW_UMUL(my_length,multiplier,&result_length)) {
   DeeList_LockEndRead(self);
   err_integer_overflow_i(sizeof(size_t)*8,true);
   goto err;
@@ -2851,9 +2850,7 @@ list_inplace_mul(List **__restrict pself,
 again:
  DeeList_LockWrite(self);
  my_length = self->l_size;
- result_length = my_length * multiplier;
- if (result_length < my_length ||
-     result_length < multiplier) {
+ if (OVERFLOW_UMUL(my_length,multiplier,&result_length)) {
   DeeList_LockEndWrite(self);
   err_integer_overflow_i(sizeof(size_t)*8,true);
   goto err;

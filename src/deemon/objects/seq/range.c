@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_RANGE_C 1
 
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -30,11 +31,49 @@
 #include "../../runtime/runtime_error.h"
 #include "range.h"
 
+
+#include <hybrid/overflow.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
 #endif
 
 DECL_BEGIN
+
+PRIVATE int DCALL
+ri_ctor(RangeIterator *__restrict self) {
+ self->ri_range = (DREF Range *)DeeRange_New(Dee_None,Dee_None,NULL);
+ if unlikely(!self->ri_range) return -1;
+ self->ri_index = Dee_None;
+ self->ri_end   = Dee_None;
+ self->ri_step  = NULL;
+ self->ri_first = true;
+ Dee_Incref_n(Dee_None,2);
+ rwlock_init(&self->ri_lock);
+ return 0;
+}
+
+INTDEF DeeTypeObject Range_Type;
+
+PRIVATE int DCALL
+ri_init(RangeIterator *__restrict self,
+        size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,"o:_rangeiterator",&self->ri_range) ||
+     DeeObject_AssertTypeExact(self->ri_range,&Range_Type))
+     return -1;
+ self->ri_index = self->ri_range->r_begin;
+ self->ri_end   = self->ri_range->r_end;
+ self->ri_step  = self->ri_range->r_step;
+ Dee_Incref(self->ri_index);
+ Dee_Incref(self->ri_range);
+ Dee_Incref(self->ri_end);
+ Dee_XIncref(self->ri_step);
+ self->ri_first = true;
+#ifndef CONFIG_NO_THREADS
+ rwlock_init(&self->ri_lock);
+#endif
+ return 0;
+}
 
 PRIVATE int DCALL
 ri_copy(RangeIterator *__restrict self,
@@ -127,11 +166,11 @@ ri_next(RangeIterator *__restrict self) {
      goto err_result;
  }
  if unlikely(self->ri_range->r_rev) {
-  temp = DeeObject_CompareGr(result,self->ri_end);
- } else {
   temp = DeeObject_CompareLo(result,self->ri_end);
+ } else {
+  temp = DeeObject_CompareGe(result,self->ri_end);
  }
- if (temp != 1) {
+ if (temp != 0) {
   /* Error, or done. */
   Dee_Decref(result);
   if unlikely(temp < 0) return NULL;
@@ -152,6 +191,47 @@ ri_next(RangeIterator *__restrict self) {
 err_result:
  Dee_Decref(result);
  return NULL;
+}
+
+PRIVATE int DCALL
+ri_bool(RangeIterator *__restrict self) {
+ DREF DeeObject *next_value;
+ int temp; bool is_first;
+#ifndef CONFIG_NO_THREADS
+ rwlock_read(&self->ri_lock);
+#endif
+ next_value = self->ri_index;
+ is_first = self->ri_first;
+ self->ri_first = false;
+ Dee_Incref(next_value);
+#ifndef CONFIG_NO_THREADS
+ rwlock_endread(&self->ri_lock);
+#endif
+ /* Skip the index modification on the first loop. */
+ if (!is_first) {
+  if (self->ri_step) {
+   temp = DeeObject_InplaceAdd(&next_value,self->ri_step);
+  } else if (self->ri_range->r_rev) {
+   temp = DeeObject_Dec(&next_value);
+  } else {
+   temp = DeeObject_Inc(&next_value);
+  }
+  if unlikely(temp)
+     goto err_result;
+ }
+ if unlikely(self->ri_range->r_rev) {
+  temp = DeeObject_CompareLo(next_value,self->ri_end);
+ } else {
+  temp = DeeObject_CompareGe(next_value,self->ri_end);
+ }
+ Dee_Decref(next_value);
+ if unlikely(temp < 0)
+    goto err;
+ return !temp;
+err_result:
+ Dee_Decref(next_value);
+err:
+ return -1;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -263,7 +343,7 @@ PRIVATE struct type_cmp ri_cmp = {
 
 INTERN DeeTypeObject RangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_range.iterator",
+    /* .tp_name     = */"_rangeiterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -272,10 +352,10 @@ INTERN DeeTypeObject RangeIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL, /* TODO */
+                /* .tp_ctor      = */&ri_ctor,
                 /* .tp_copy_ctor = */&ri_copy,
                 /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL, /* TODO */
+                /* .tp_any_ctor  = */&ri_init,
                 /* .tp_free      = */NULL,
                 {
                     /* .tp_instance_size = */sizeof(RangeIterator)
@@ -289,7 +369,7 @@ INTERN DeeTypeObject RangeIterator_Type = {
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
         /* .tp_repr = */NULL,
-        /* .tp_bool = */NULL /* TODO */
+        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&ri_bool
     },
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&ri_visit,
@@ -344,11 +424,132 @@ range_iter(Range *__restrict self) {
  return result;
 }
 
+PRIVATE DREF DeeObject *DCALL
+range_size(Range *__restrict self) {
+ DREF DeeObject *result,*temp; int cmp;
+ result = DeeObject_Sub(self->r_end,self->r_begin);
+ if (self->r_step && likely(result)) {
+  cmp = DeeObject_CompareGe(self->r_step,&DeeInt_Zero);
+  if unlikely(cmp < 0) goto err_r;
+  if (cmp) {
+   /* Do a ceil-division. */
+   temp = DeeObject_Add(result,self->r_step);
+   Dee_Decref(result);
+   if unlikely(!temp) goto err;
+   if unlikely(DeeObject_Dec(&temp)) goto err_temp;
+   result = DeeObject_Div(temp,self->r_step);
+   Dee_Decref(temp);
+  } else {
+   DREF DeeObject *neg_step;
+   neg_step = DeeObject_Neg(self->r_step);
+   if unlikely(!neg_step) goto err_r;
+   temp = DeeObject_Div(result,neg_step);
+   Dee_Decref(result);
+   result = temp;
+  }
+  if unlikely(!result) goto err;
+ }
+ /* Make sure not to return a negative value. */
+ cmp = DeeObject_CompareLo(result,&DeeInt_Zero);
+ if (cmp != 0) {
+  if unlikely(cmp < 0) goto err_r;
+  temp = DeeObject_NewDefault(Dee_TYPE(result));
+  Dee_Decref(result);
+  result = temp;
+ }
+ return result;
+err_temp:
+ Dee_Decref(temp);
+ goto err;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+range_contains(Range *__restrict self,
+               DeeObject *__restrict index) {
+ int temp; DREF DeeObject *relative_value,*tempres;
+ temp = DeeObject_CompareLo(index,self->r_begin);
+ if (temp != 0) goto err_or_false; /* if (INDEX < BEGIN) return false; */
+ temp = DeeObject_CompareGe(index,self->r_end);
+ if (temp != 0) goto err_or_false; /* if (INDEX >= END) return false; */
+ if (self->r_step) {
+  temp = DeeObject_CompareGe(self->r_step,&DeeInt_Zero);
+  if unlikely(temp < 0) goto err;
+  if (temp) {
+   /* ((index - self->ir_begin) % self->ir_step) == 0 */
+   relative_value = DeeObject_Sub(index,self->r_begin);
+   if unlikely(!relative_value) goto err;
+   tempres = DeeObject_Mod(relative_value,self->r_step);
+  } else {
+   /* ((self->ir_end - index) % -self->ir_step) == 0 */
+   DREF DeeObject *neg_step;
+   relative_value = DeeObject_Sub(self->r_end,index);
+   neg_step = DeeObject_Neg(self->r_step);
+   if unlikely(!neg_step) { Dee_Decref(relative_value); goto err; }
+   tempres = DeeObject_Mod(relative_value,neg_step);
+   Dee_Decref(neg_step);
+  }
+  Dee_Decref(relative_value);
+  if unlikely(!tempres) goto err;
+  temp = DeeObject_CompareEq(tempres,&DeeInt_Zero);
+  Dee_Decref(tempres);
+  if (temp <= 0) goto err_or_false;
+ }
+ return_true;
+err_or_false:
+ if unlikely(temp < 0) goto err;
+ return_false;
+err:
+ return NULL;
+}
+
+#if 0 /* TODO: Fix this */
+PRIVATE DREF DeeObject *DCALL
+range_get(Range *__restrict self,
+          DeeObject *__restrict index) {
+ DREF DeeObject *result,*temp; int cmp;
+ if (self->r_step) {
+  cmp = DeeObject_CompareLo(self->r_step,&DeeInt_Zero);
+  if unlikely(cmp < 0) goto err;
+  temp   = DeeObject_Mul(self->r_step,index);
+  if unlikely(!temp) goto err;
+  result = DeeObject_Add(self->r_begin,temp);
+  Dee_Decref(temp);
+  if (cmp) {
+   cmp = DeeObject_CompareLe(result,self->r_end);
+  } else {
+   cmp = DeeObject_CompareGe(result,self->r_end);
+  }
+ } else if (self->r_rev) {
+  result = DeeObject_Sub(self->r_begin,index);
+  if unlikely(!result) goto err;
+  cmp = DeeObject_CompareLe(result,self->r_end);
+ } else {
+  result = DeeObject_Add(self->r_begin,index);
+  if unlikely(!result) goto err;
+  cmp = DeeObject_CompareGe(result,self->r_end);
+ }
+ if unlikely(cmp != 0) {
+  Dee_Decref(result);
+  if (cmp > 0)
+      err_index_out_of_bounds_ob((DeeObject *)self,index);
+  goto err;
+ }
+ return result;
+err:
+ return NULL;
+}
+#endif
+
+
 PRIVATE struct type_seq range_seq = {
     /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&range_iter,
-    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL, /* TODO */
-    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))NULL, /* TODO */
-    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))NULL, /* TODO */
+    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&range_size,
+    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&range_contains,
+    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))NULL, // &range_get,
     /* .tp_del       = */NULL,
     /* .tp_set       = */NULL,
     /* .tp_range_get = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))NULL, /* TODO (return another `range' as sub-range type) */
@@ -473,13 +674,13 @@ iri_next(IntRangeIterator *__restrict self) {
 #else
   result_index = ATOMIC_READ(self->iri_index);
 #endif
-  new_index    = result_index+self->iri_step;
+  new_index = result_index + self->iri_step;
   /* Test for overflow/iteration done. */
   if likely(self->iri_step >= 0) {
-   if (result_index >= self->iri_end || new_index < result_index)
+   if (result_index >= self->iri_end || new_index <= result_index)
        return ITER_DONE;
   } else {
-   if (result_index <= self->iri_end || new_index > result_index)
+   if (result_index < self->iri_end || new_index >= result_index)
        return ITER_DONE;
   }
 #ifdef CONFIG_NO_THREADS
@@ -508,7 +709,7 @@ PRIVATE struct type_member iri_members[] = {
 
 INTERN DeeTypeObject IntRangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_intrange.iterator",
+    /* .tp_name     = */"_intrangeiterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -560,10 +761,15 @@ intrange_iter(IntRange *__restrict self) {
  result = (DREF IntRangeIterator *)DeeObject_Malloc(sizeof(IntRangeIterator));
  if unlikely(!result) return NULL;
  DeeObject_Init(result,&IntRangeIterator_Type);
- result->iri_index = self->ir_begin;
  result->iri_range = self;
- result->iri_end   = self->ir_end;
  result->iri_step  = self->ir_step;
+ if (self->ir_step >= 0) {
+  result->iri_end   = self->ir_end;
+  result->iri_index = self->ir_begin;
+ } else {
+  result->iri_end   = self->ir_begin;
+  result->iri_index = self->ir_end + self->ir_step;
+ }
  Dee_Incref(self);
  return result;
 }
@@ -577,75 +783,99 @@ intrange_contains(IntRange *__restrict self,
  if (self->ir_step >= 0) {
   return_bool(index >= self->ir_begin &&
               index <  self->ir_end &&
-            ((index-self->ir_begin) % self->ir_step) == 0);
+            ((index - self->ir_begin) % self->ir_step) == 0);
  } else {
-  return_bool(index <= self->ir_begin &&
-              index >  self->ir_end &&
-            ((self->ir_begin - index) % -self->ir_step) == 0);
+  return_bool(index >= self->ir_begin &&
+              index <  self->ir_end &&
+            ((self->ir_end - index) % -self->ir_step) == 0);
  }
 }
 
 PRIVATE DREF DeeObject *DCALL
 intrange_size(IntRange *__restrict self) {
- dssize_t result = self->ir_end-self->ir_begin;
+ dssize_t result;
+ result = self->ir_end - self->ir_begin;
  if unlikely(!self->ir_step) {
   err_divide_by_zero_i(result);
   return NULL;
  }
- /* Do a ceil-division. */
- result += self->ir_step;
- /* Round towards ZERO. */
- if (self->ir_step > 0)
-      --result;
- else ++result;
- result /= self->ir_step;
+ if (self->ir_step > 0) {
+  /* Do a ceil-division. */
+  result += self->ir_step;
+  --result;
+  result /= self->ir_step;
+ } else {
+  /* Do a trunc-division. */
+  result /= -self->ir_step;
+ }
  if (result < 0) result = 0;
  return DeeInt_NewSize((size_t)result);
 }
 
 PRIVATE size_t DCALL
 intrange_nsi_getsize(IntRange *__restrict self) {
- dssize_t result = self->ir_end - self->ir_begin;
- /* Do a ceil-division. */
- result += self->ir_step;
- /* Round towards ZERO. */
- if (self->ir_step > 0)
-      --result;
- else ++result;
+ dssize_t result;
+ result = self->ir_end - self->ir_begin;
  if unlikely(!self->ir_step) {
   err_divide_by_zero_i(result);
   return (size_t)-1;
  }
- result /= self->ir_step;
+ if (self->ir_step > 0) {
+  /* Do a ceil-division. */
+  result += self->ir_step;
+  --result;
+  result /= self->ir_step;
+ } else {
+  /* Do a trunc-division. */
+  result /= -self->ir_step;
+ }
  if (result < 0) result = 0;
  return (size_t)result;
 }
 PRIVATE size_t DCALL
 intrange_nsi_getsize_fast(IntRange *__restrict self) {
  dssize_t result;
+ result = self->ir_end - self->ir_begin;
  if unlikely(!self->ir_step)
     return (size_t)-1;
- result = self->ir_end - self->ir_begin;
- /* Do a ceil-division. */
- result += self->ir_step;
- /* Round towards ZERO. */
- if (self->ir_step > 0)
-      --result;
- else ++result;
- result /= self->ir_step;
+ if (self->ir_step > 0) {
+  /* Do a ceil-division. */
+  result += self->ir_step;
+  --result;
+  result /= self->ir_step;
+ } else {
+  /* Do a trunc-division. */
+  result /= -self->ir_step;
+ }
  if (result < 0) result = 0;
  return (size_t)result;
 }
+
 PRIVATE DREF DeeObject *DCALL
 intrange_nsi_getitem(IntRange *__restrict self, size_t index) {
- dssize_t result = self->ir_begin + self->ir_step * index;
- if (self->ir_step > 0 ? (result >= self->ir_end)
-                       : (result <= self->ir_end)) {
-  err_index_out_of_bounds((DeeObject *)self,index,intrange_nsi_getsize(self));
-  return NULL;
+ dssize_t result;
+ if (self->ir_step >= 0) {
+  if unlikely(!self->ir_step)
+     return DeeInt_NewSSize(self->ir_begin);
+  /* Check for overflows in this arithmetic */
+  if (OVERFLOW_SMUL(self->ir_step,index,&result) ||
+      OVERFLOW_SADD(self->ir_begin,result,&result))
+      goto oob;
+  if (result >= self->ir_end) goto oob;
+ } else {
+  /* Check for overflows in this arithmetic */
+  if (OVERFLOW_UADD(index,1,&index) ||
+      OVERFLOW_SMUL(self->ir_step,index,&result) ||
+      OVERFLOW_SADD(self->ir_end,result,&result))
+      goto oob;
+  if (result < self->ir_begin) goto oob;
  }
  return DeeInt_NewSSize(result);
+oob:
+ err_index_out_of_bounds((DeeObject *)self,index,intrange_nsi_getsize(self));
+ return NULL;
 }
+
 PRIVATE DREF DeeObject *DCALL
 intrange_getitem(IntRange *__restrict self,
                  DeeObject *__restrict index_ob) {
@@ -654,6 +884,8 @@ intrange_getitem(IntRange *__restrict self,
      return NULL;
  return intrange_nsi_getitem(self,index);
 }
+
+#if 0 /* TODO: Fix these */
 PRIVATE DREF DeeObject *DCALL
 intrange_nsi_getrange(IntRange *__restrict self,
                       dssize_t start, dssize_t end) {
@@ -693,6 +925,7 @@ intrange_getrange(IntRange *__restrict self,
      return NULL;
  return intrange_nsi_getrange(self,start_index,end_index);
 }
+#endif
 
 
 PRIVATE struct type_nsi intrange_nsi = {
@@ -706,8 +939,8 @@ PRIVATE struct type_nsi intrange_nsi = {
             /* .nsi_delitem      = */(void *)NULL,
             /* .nsi_setitem      = */(void *)NULL,
             /* .nsi_getitem_fast = */(void *)NULL,
-            /* .nsi_getrange     = */(void *)&intrange_nsi_getrange,
-            /* .nsi_getrange_n   = */(void *)&intrange_nsi_getrange_n,
+            /* .nsi_getrange     = */(void *)NULL, // &intrange_nsi_getrange,
+            /* .nsi_getrange_n   = */(void *)NULL, // &intrange_nsi_getrange_n,
             /* .nsi_setrange     = */(void *)NULL,
             /* .nsi_setrange_n   = */(void *)NULL,
             /* .nsi_find         = */(void *)NULL,
@@ -733,7 +966,7 @@ PRIVATE struct type_seq intrange_seq = {
     /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&intrange_getitem,
     /* .tp_del       = */NULL,
     /* .tp_set       = */NULL,
-    /* .tp_range_get = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&intrange_getrange,
+    /* .tp_range_get = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))NULL, // &intrange_getrange,
     /* .tp_range_del = */NULL,
     /* .tp_range_set = */NULL,
     /* .tp_nsi       = */&intrange_nsi

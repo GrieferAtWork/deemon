@@ -180,10 +180,16 @@ INTERN ATTR_COLD int DCALL
 err_index_out_of_bounds(DeeObject *__restrict self,
                         size_t index, size_t size) {
  ASSERT_OBJECT(self);
- ASSERT(index >= size);
  return DeeError_Throwf(&DeeError_IndexError,
                         "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
                         index,size,Dee_TYPE(self));
+}
+INTERN ATTR_COLD int DCALL
+err_index_out_of_bounds_ob(DeeObject *__restrict self,
+                           DeeObject *__restrict index) {
+ return DeeError_Throwf(&DeeError_IndexError,
+                        "Index `%r' lies outside the valid bounds `0...%R' of sequence of type `%k'",
+                        index,DeeObject_SizeObject(self),Dee_TYPE(self));
 }
 INTERN ATTR_COLD int DCALL
 err_va_index_out_of_bounds(size_t index, size_t size) {
