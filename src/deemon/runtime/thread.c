@@ -160,12 +160,14 @@ DECL_BEGIN
 
 #ifdef CONFIG_THREADS_WINDOWS
 PRIVATE HANDLE DCALL os_getcurrenthread(void) {
- HANDLE hResult;
- HANDLE hThread = GetCurrentThread();
- HANDLE hProcess = GetCurrentProcess();
+ HANDLE hResult,hThread,hProcess;
+ DBG_ALIGNMENT_DISABLE();
+ hThread  = GetCurrentThread();
+ hProcess = GetCurrentProcess();
  if (!DuplicateHandle(hProcess,hThread,hProcess,&hResult,
                       0,TRUE,DUPLICATE_SAME_ACCESS))
       hResult = hThread;
+ DBG_ALIGNMENT_ENABLE();
  return hResult;
 }
 //#define os_getcurrenthread() GetCurrentThread()
@@ -233,6 +235,7 @@ sys_setthreadname(char const *__restrict name) {
      DWORD  dwFlags;    // Reserved for future use, must be zero.
  } THREADNAME_INFO;
  THREADNAME_INFO info;
+ DBG_ALIGNMENT_DISABLE();
  info.dwType     = 0x1000;
  info.szName     = name;
  info.dwThreadID = GetCurrentThreadId();
@@ -243,6 +246,7 @@ sys_setthreadname(char const *__restrict name) {
                 (ULONG_PTR const *)&info);
  } __except(1) {
  }
+ DBG_ALIGNMENT_ENABLE();
 }
 #pragma pack(pop)
 #ifdef _PREFAST_
@@ -457,8 +461,10 @@ PUBLIC uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void) {
  uint64_t result;
  if (!performance_freq) {
   uint64_t new_freq;
+  DBG_ALIGNMENT_DISABLE();
   if unlikely(!QueryPerformanceFrequency((LARGE_INTEGER *)&new_freq))
      goto do_tickcount;
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(!new_freq) new_freq = 1;
   performance_freq             = new_freq;
   performance_freq_div_1000000 = new_freq/1000000;
@@ -470,20 +476,30 @@ PUBLIC uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void) {
  if (performance_freq < FILETIME_PER_SECONDS) {
   /* The performance counter is slower than `GetSystemTimePreciseAsFileTime()',
    * so we can just use the later to get more precision. */
+  DBG_ALIGNMENT_DISABLE();
   GetSystemTimePreciseAsFileTime((LPFILETIME)&result);
+  DBG_ALIGNMENT_ENABLE();
   result /= (FILETIME_PER_SECONDS/MICROSECONDS_PER_SECOND);
   return result;
  }
 #endif
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(!QueryPerformanceCounter((LARGE_INTEGER *)&result)) {
+  uint64_t result;
 do_tickcount:
   if (!lp_GetTickCount64) {
    *(void **)&lp_GetTickCount64 = GetProcAddress(GetModuleHandleW(kernel32),"GetTickCount64");
-   if (!lp_GetTickCount64)
-        return (uint64_t)GetTickCount()*1000;
+   if (!lp_GetTickCount64) {
+    result = (uint64_t)GetTickCount();
+    DBG_ALIGNMENT_ENABLE();
+    return result * 1000;
+   }
   }
-  return (*lp_GetTickCount64)()*1000;
+  result = (*lp_GetTickCount64)();
+  DBG_ALIGNMENT_ENABLE();
+  return result * 1000;
  }
+ DBG_ALIGNMENT_ENABLE();
  if (performance_freq >= 1000000) {
   result /= performance_freq_div_1000000;
  } else {
@@ -492,10 +508,12 @@ do_tickcount:
  return result;
 #else
  struct timespec now;
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(clock_gettime(CLOCK_MONOTONIC,&now)) {
   now.tv_sec  = time(NULL);
   now.tv_nsec = 0;
  }
+ DBG_ALIGNMENT_ENABLE();
  return ((uint64_t)now.tv_sec * 1000000) + (now.tv_nsec / 1000);
 #endif
 }
@@ -517,19 +535,25 @@ PRIVATE void DCALL sys_threadstartup(DeeThreadObject *__restrict self) {
  action.sa_handler = &suspend_signal_handler;
  action.sa_flags   = SA_NODEFER;
  /* Install the custom signal handler. */
+ DBG_ALIGNMENT_DISABLE();
  if (sigaction(PTHREAD_INTERRUPT_SIGNAL,&action,NULL))
      BREAKPOINT();
+ DBG_ALIGNMENT_ENABLE();
 #else /* CONFIG_NEED_SUSPEND_SIGNALS */
  /* Even when we don't need it for suspension
   * signals, we still need it for interrupts. */
+ DBG_ALIGNMENT_DISABLE();
  signal(PTHREAD_INTERRUPT_SIGNAL,&suspend_signal_handler);
+ DBG_ALIGNMENT_ENABLE();
 #endif /* !CONFIG_NEED_SUSPEND_SIGNALS */
  /*printf("thread_startup\n");*/
 }
 #ifdef CONFIG_NEED_SUSPEND_SIGNALS
 #define sys_threadshutdown sys_threadshutdown
 PRIVATE void DCALL sys_threadshutdown(DeeThreadObject *__restrict self) {
+ DBG_ALIGNMENT_DISABLE();
  signal(PTHREAD_INTERRUPT_SIGNAL,SIG_IGN);
+ DBG_ALIGNMENT_ENABLE();
  /*printf("thread_shutdown\n");*/
 }
 #endif
@@ -552,7 +576,9 @@ do_suspend_thread(DeeThreadObject *__restrict self) {
   if (self->t_state&THREAD_STATE_STARTED) {
 #ifdef CONFIG_THREADS_WINDOWS
    CONTEXT ignored_context;
+   DBG_ALIGNMENT_DISABLE();
    SuspendThread(self->t_thread);
+   DBG_ALIGNMENT_ENABLE();
    /* _FORCE_ the scheduler to wait for the thread to acknowledge the
     * suspension request when its being hosted by a different CPU that
     * still hasn't gotten around to handling the associated IPC interrupt. */
@@ -563,9 +589,13 @@ do_suspend_thread(DeeThreadObject *__restrict self) {
 #else
    ignored_context.ContextFlags = 0;
 #endif
+   DBG_ALIGNMENT_DISABLE();
    GetThreadContext(self->t_thread,&ignored_context);
+   DBG_ALIGNMENT_ENABLE();
 #elif defined(CONFIG_HAVE_PTHREAD_SUSPEND)
+   DBG_ALIGNMENT_DISABLE();
    pthread_suspend(self->t_thread);
+   DBG_ALIGNMENT_ENABLE();
 #else
 #ifndef CONFIG_NEED_SUSPEND_SIGNALS
 #error "Invalid configuration"
@@ -575,7 +605,9 @@ do_suspend_thread(DeeThreadObject *__restrict self) {
 restart:
    timeout = 10;
    /* Send the signal to the thread. */
+   DBG_ALIGNMENT_DISABLE();
    error = pthread_kill(self->t_thread,PTHREAD_INTERRUPT_SIGNAL);
+   DBG_ALIGNMENT_ENABLE();
    if (error) BREAKPOINT();
    /* Since signal delivery happens asynchronously, we need to
     * wait for the thread to acknowledge the suspend request. */
@@ -597,14 +629,20 @@ do_resume_thread(DeeThreadObject *__restrict self) {
  if (ATOMIC_DECFETCH(self->t_suspended) == 0) {
   if (self->t_state&THREAD_STATE_STARTED) {
 #ifdef CONFIG_THREADS_WINDOWS
+   DBG_ALIGNMENT_DISABLE();
    ResumeThread(self->t_thread);
+   DBG_ALIGNMENT_ENABLE();
 #elif defined(CONFIG_HAVE_PTHREAD_SUSPEND)
+   DBG_ALIGNMENT_DISABLE();
    pthread_continue(self->t_thread);
+   DBG_ALIGNMENT_ENABLE();
 #else
 #ifndef CONFIG_NEED_SUSPEND_SIGNALS
 #error "Invalid configuration"
 #endif
+   DBG_ALIGNMENT_DISABLE();
    pthread_kill(self->t_thread,PTHREAD_INTERRUPT_SIGNAL);
+   DBG_ALIGNMENT_ENABLE();
 #endif
   }
  }
@@ -745,13 +783,19 @@ handle_iter:
    DeeThread_SleepNoInterrupt(1000);
   }
 #ifdef CONFIG_THREADS_WINDOWS
+  DBG_ALIGNMENT_DISABLE();
   WaitForSingleObject(iter->t_thread,INFINITE);
+  DBG_ALIGNMENT_ENABLE();
 #else
 #ifdef EINTR
   /* Ignore attempts to interrupt us. */
+  DBG_ALIGNMENT_DISABLE();
   while (pthread_join(iter->t_thread,NULL) == EINTR);
+  DBG_ALIGNMENT_ENABLE();
 #else
+  DBG_ALIGNMENT_DISABLE();
   pthread_join(iter->t_thread,NULL);
+  DBG_ALIGNMENT_ENABLE();
 #endif
 #endif
   do state = ATOMIC_READ(iter->t_state);
@@ -789,15 +833,21 @@ again:
  /* Lookup descriptor numbers for the calling thread. */
  result->t_thread   = os_getcurrenthread();
 #ifndef CONFIG_NO_THREADID
+ DBG_ALIGNMENT_DISABLE();
  result->t_threadid = os_gettid();
+ DBG_ALIGNMENT_ENABLE();
 #endif /* !CONFIG_NO_THREADID */
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
  /* Construct the join-semaphore.
   * XXX: Error handling? - But then again: the handling would mean to just give up and `abort()' */
 #ifdef CONFIG_HOST_WINDOWS
+ DBG_ALIGNMENT_DISABLE();
  result->t_join = CreateSemaphoreW(NULL,0,0x7fffffff,NULL);
+ DBG_ALIGNMENT_ENABLE();
 #elif !defined(CONFIG_NO_SEMAPHORE_H)
+ DBG_ALIGNMENT_DISABLE();
  sem_init(&result->t_join,0,0);
+ DBG_ALIGNMENT_ENABLE();
 #endif
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
  return result;
@@ -813,9 +863,13 @@ destroy_thread_self(DREF DeeThreadObject *__restrict self) {
 #ifdef CONFIG_THREADS_PTHREAD
  /* Signify thread termination. */
 #ifdef CONFIG_HOST_WINDOWS
+ DBG_ALIGNMENT_DISABLE();
  ReleaseSemaphore(self->t_join,1,NULL);
+ DBG_ALIGNMENT_ENABLE();
 #elif !defined(CONFIG_NO_SEMAPHORE_H)
+ DBG_ALIGNMENT_DISABLE();
  sem_post(&self->t_join);
+ DBG_ALIGNMENT_ENABLE();
 #else
  /* The fallback implements this is an atomic flag. */
  ATOMIC_WRITE(self->t_join,1);
@@ -918,13 +972,19 @@ PRIVATE void DCALL DeeThread_InitMain(void) {
  /* Collect information on the main thread. */
  DeeThread_Main.t_thread = os_getcurrenthread();
 #ifndef CONFIG_NO_THREADID
+ DBG_ALIGNMENT_DISABLE();
  DeeThread_Main.t_threadid = os_gettid();
+ DBG_ALIGNMENT_ENABLE();
 #endif
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
 #ifdef CONFIG_HOST_WINDOWS
+ DBG_ALIGNMENT_DISABLE();
  DeeThread_Main.t_join = CreateSemaphoreW(NULL,0,0x7fffffff,NULL);
+ DBG_ALIGNMENT_ENABLE();
 #elif !defined(CONFIG_NO_SEMAPHORE_H)
+ DBG_ALIGNMENT_DISABLE();
  sem_init(&DeeThread_Main.t_join,0,0);
+ DBG_ALIGNMENT_ENABLE();
 #endif
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
 }
@@ -932,7 +992,9 @@ PRIVATE void DCALL DeeThread_InitMain(void) {
 #ifdef CONFIG_HOST_WINDOWS
 PRIVATE void DCALL DeeThread_FiniMain(void) {
  /* This one we've duplicated before. */
+ DBG_ALIGNMENT_DISABLE();
  CloseHandle(DeeThread_Main.t_thread);
+ DBG_ALIGNMENT_ENABLE();
 }
 #else
 #define DeeThread_FiniMain() (void)0
@@ -999,6 +1061,7 @@ FORCELOCAL void (thread_tls_set)(void *value) {
 
 PUBLIC void DCALL DeeThread_Init(void) {
  ASSERT(thread_self_tls == TLS_OUT_OF_INDEXES);
+ DBG_ALIGNMENT_DISABLE();
  thread_self_tls = TlsAlloc();
  if unlikely(thread_self_tls == TLS_OUT_OF_INDEXES) {
 #ifndef CONFIG_NO_STDIO
@@ -1010,6 +1073,7 @@ PUBLIC void DCALL DeeThread_Init(void) {
  }
  /* Set the thread-self TLS value of the main thread. */
  thread_tls_set(&DeeThread_Main);
+ DBG_ALIGNMENT_ENABLE();
  DeeThread_InitMain();
 }
 
@@ -1018,7 +1082,9 @@ PUBLIC void DCALL DeeThread_Fini(void) {
  ASSERT(thread_self_tls != TLS_OUT_OF_INDEXES);
 #endif
  DeeThread_FiniMain();
+ DBG_ALIGNMENT_DISABLE();
  TlsFree(thread_self_tls);
+ DBG_ALIGNMENT_ENABLE();
 #ifndef NDEBUG
  thread_self_tls = TLS_OUT_OF_INDEXES;
 #endif
@@ -1032,11 +1098,15 @@ PUBLIC void DCALL DeeThread_Fini(void) {
 
 PUBLIC void DCALL DeeThread_Shutdown(void) {
  DREF DeeThreadObject *self;
+ DBG_ALIGNMENT_DISABLE();
  self = (DeeThreadObject *)thread_tls_get();
+ DBG_ALIGNMENT_ENABLE();
  if (!self) return;
  ASSERT(self != &DeeThread_Main);
  destroy_thread_self(self);
+ DBG_ALIGNMENT_DISABLE();
  thread_tls_set(NULL);
+ DBG_ALIGNMENT_ENABLE();
 }
 #else
 
@@ -1054,6 +1124,7 @@ PRIVATE ATTR_THREAD DREF DeeThreadObject *thread_self_tls = NULL;
 PUBLIC void DCALL DeeThread_Init(void) {
 #ifdef THREAD_SELF_TLS_USE_PTHREAD_KEY
  int error;
+ DBG_ALIGNMENT_DISABLE();
  error = pthread_key_create(&thread_self_tls,NULL);
  if unlikely(error) {
 #ifndef CONFIG_NO_STDIO
@@ -1065,7 +1136,9 @@ PUBLIC void DCALL DeeThread_Init(void) {
  }
 #endif /* THREAD_SELF_TLS_USE_PTHREAD_KEY */
  /* Set the thread-self TLS value of the main thread. */
+ DBG_ALIGNMENT_DISABLE();
  thread_tls_set(&DeeThread_Main);
+ DBG_ALIGNMENT_ENABLE();
  /* Initialize the join-semaphore for the main thread. */
  DeeThread_InitMain();
 }
@@ -1077,18 +1150,24 @@ PUBLIC void DCALL DeeThread_Fini(void) {
  DeeThread_Main.t_deepassoc.da_mask = 0;
  DeeThread_Main.t_deepassoc.da_list = empty_deep_assoc;
 #ifdef THREAD_SELF_TLS_USE_PTHREAD_KEY
+ DBG_ALIGNMENT_DISABLE();
  pthread_key_delete(thread_self_tls);
+ DBG_ALIGNMENT_ENABLE();
 #endif
 }
 #endif
 
 PUBLIC void DCALL DeeThread_Shutdown(void) {
  DREF DeeThreadObject *self;
+ DBG_ALIGNMENT_DISABLE();
  self = (DeeThreadObject *)thread_tls_get();
+ DBG_ALIGNMENT_ENABLE();
  if (!self) return;
  ASSERT(self != &DeeThread_Main);
  destroy_thread_self(self);
+ DBG_ALIGNMENT_DISABLE();
  thread_tls_set(NULL);
+ DBG_ALIGNMENT_ENABLE();
 }
 PUBLIC ATTR_CONST ATTR_RETNONNULL
 DeeThreadObject *DCALL DeeThread_Self(void) {
@@ -1096,7 +1175,9 @@ DeeThreadObject *DCALL DeeThread_Self(void) {
 #ifdef THREAD_SELF_TLS_USE_TLS_ALLOC
  ASSERT(thread_self_tls != TLS_OUT_OF_INDEXES);
 #endif
+ DBG_ALIGNMENT_DISABLE();
  result = (DeeThreadObject *)thread_tls_get();
+ DBG_ALIGNMENT_ENABLE();
  if likely(result) return result;
  /* Lazily create the thread-self descriptor. */
  result = allocate_thread_self();
@@ -1113,7 +1194,9 @@ DeeThreadObject *DCALL DeeThread_Self(void) {
   abort();
  }
  /* Save the generated thread object in the TLS slot. */
+ DBG_ALIGNMENT_DISABLE();
  thread_tls_set(result);
+ DBG_ALIGNMENT_ENABLE();
  add_running_thread(result);
  sys_threadstartup(result);
  return result;
@@ -1125,7 +1208,9 @@ PRIVATE void suspend_signal_handler(int UNUSED(signo)) {
 #ifdef CONFIG_NEED_SUSPEND_SIGNALS
  DeeThreadObject *caller;
  /* Read out the calling thread. */
+ DBG_ALIGNMENT_DISABLE();
  caller = (DeeThreadObject *)thread_tls_get();
+ DBG_ALIGNMENT_ENABLE();
  ASSERT(caller);
  /* Clear the suspension-requested flag for the calling thread,
   * indicating that the thread is now being suspended. */
@@ -1134,7 +1219,9 @@ PRIVATE void suspend_signal_handler(int UNUSED(signo)) {
  while (caller->t_suspended) {
   /* Must preserve errno for the caller. */
   int old_error = errno;
+  DBG_ALIGNMENT_DISABLE();
   pause();
+  DBG_ALIGNMENT_ENABLE();
   errno = old_error;
  }
 #endif
@@ -1142,7 +1229,15 @@ PRIVATE void suspend_signal_handler(int UNUSED(signo)) {
 #endif /* CONFIG_THREADS_PTHREAD || CONFIG_NEED_SUSPEND_SIGNALS */
 #ifndef CONFIG_NO_THREADID
 PUBLIC dthreadid_t (DCALL DeeThread_SelfId)(void) {
+#ifdef NO_DBG_ALIGNMENT
  return os_gettid();
+#else
+ dthreadid_t result;
+ DBG_ALIGNMENT_DISABLE();
+ result = os_gettid();
+ DBG_ALIGNMENT_ENABLE();
+ return result;
+#endif
 }
 #endif /* !CONFIG_NO_THREADID */
 
@@ -1278,6 +1373,7 @@ PRIVATE void *thread_entry(DREF DeeThreadObject *__restrict self)
  ASSERT(!self->t_threadres);
  ASSERT_OBJECT_TYPE_EXACT(self->t_threadargs,&DeeTuple_Type);
 
+ DBG_ALIGNMENT_DISABLE();
 #ifndef CONFIG_NO_THREADID
 #ifdef CONFIG_THREADS_PTHREAD
  /* On non-windows hosts, a thread must save its own thread-id. */
@@ -1288,6 +1384,7 @@ PRIVATE void *thread_entry(DREF DeeThreadObject *__restrict self)
  /* Save the thread-self object in the TLS descriptor,
   * letting that descriptor inherit its value. */
  thread_tls_set(self);
+ DBG_ALIGNMENT_ENABLE();
  COMPILER_WRITE_BARRIER();
 
  sys_threadstartup(self);
@@ -1450,6 +1547,7 @@ DeeThread_Start(/*Thread*/DeeObject *__restrict self) {
  Dee_Incref(me);
  add_running_thread(me);
 #ifdef CONFIG_THREADS_WINDOWS
+ DBG_ALIGNMENT_DISABLE();
  me->t_thread = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)&thread_entry,
                              self,0,
 #ifndef CONFIG_NO_THREADID
@@ -1458,12 +1556,17 @@ DeeThread_Start(/*Thread*/DeeObject *__restrict self) {
                              NULL
 #endif
                              );
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(me->t_thread == NULL) {
+  DWORD error;
   ATOMIC_FETCHAND(me->t_state,~THREAD_STATE_STARTING);
   /* Drop the reference that never came to be... */
   del_running_thread(me);
   Dee_DecrefNokill(self);
-  DeeError_SysThrowf(&DeeError_SystemError,GetLastError(),
+  DBG_ALIGNMENT_DISABLE();
+  error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  DeeError_SysThrowf(&DeeError_SystemError,error,
                      "Failed to start thread %k",self);
   return -1;
  }
@@ -1471,6 +1574,7 @@ DeeThread_Start(/*Thread*/DeeObject *__restrict self) {
  {
   int error;
   /* Construct the semaphore that's going to be used to join the thread. */
+  DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
 #ifdef CONFIG_HOST_WINDOWS
   me->t_join = CreateSemaphoreW(NULL,0,0x7fffffff,NULL);
@@ -1492,6 +1596,7 @@ DeeThread_Start(/*Thread*/DeeObject *__restrict self) {
     pthread_attr_destroy(&attr);
    }
   }
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(error != 0) {
    ATOMIC_FETCHAND(me->t_state,~THREAD_STATE_STARTING);
    /* Drop the reference that never came to be... */
@@ -1535,6 +1640,7 @@ DeeThread_Wake(/*Thread*/DeeObject *__restrict self) {
 
 #ifndef CONFIG_THREADS_PTHREAD
 #ifdef CONFIG_HOST_WINDOWS
+ DBG_ALIGNMENT_DISABLE();
  QueueUserAPC(&dummy_apc_func,me->t_thread,0);
  /* Also try to interrupt synchronous I/O, meaning calls like `ReadFile()'.
   * Sadly, we must manually check if that functionality is even available... */
@@ -1548,11 +1654,14 @@ DeeThread_Wake(/*Thread*/DeeObject *__restrict self) {
   if (ptr != (void *)ITER_DONE)
     (*ptr)(me->t_thread);
  }
+ DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_THREADS_PTHREAD */
 
 #ifdef CONFIG_THREADS_PTHREAD
+ DBG_ALIGNMENT_DISABLE();
  pthread_kill(me->t_thread,PTHREAD_INTERRUPT_SIGNAL);
+ DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_THREADS_PTHREAD */
 }
 
@@ -1773,9 +1882,11 @@ again:
 #ifdef CONFIG_THREADS_WINDOWS
    /* Wait for the thread to complete. */
    DWORD wait_state;
+   DBG_ALIGNMENT_DISABLE();
    wait_state = WaitForMultipleObjectsEx(1,(HANDLE *)&me->t_thread,FALSE,
                                          timeout_microseconds == (uint64_t)-1 ? INFINITE :
                                         (DWORD)(timeout_microseconds/1000),TRUE);
+   DBG_ALIGNMENT_ENABLE();
    switch (wait_state) {
    case WAIT_IO_COMPLETION:
     /* Interrupt. */
@@ -1787,7 +1898,10 @@ again:
    case WAIT_FAILED:
     /* Error */
     ATOMIC_FETCHAND(me->t_state,~THREAD_STATE_DETACHING);
-    DeeError_SysThrowf(&DeeError_SystemError,GetLastError(),
+    DBG_ALIGNMENT_DISABLE();
+    wait_state = GetLastError();
+    DBG_ALIGNMENT_ENABLE();
+    DeeError_SysThrowf(&DeeError_SystemError,wait_state,
                        "Failed to join thread %k",self);
     goto err;
 #if 0
@@ -1804,9 +1918,11 @@ again:
    /* XXX: Deal with external threads? */
 #ifdef CONFIG_HOST_WINDOWS
    DWORD wait_state;
+   DBG_ALIGNMENT_DISABLE();
    wait_state = WaitForMultipleObjectsEx(1,&me->t_join,TRUE,
                                          timeout_microseconds == (uint64_t)-1 ? INFINITE :
                                         (DWORD)(timeout_microseconds/1000),TRUE);
+   DBG_ALIGNMENT_ENABLE();
    switch (wait_state) {
    case WAIT_IO_COMPLETION:
     /* Interrupt. */
@@ -1818,7 +1934,10 @@ again:
    case WAIT_FAILED:
     /* Error */
     ATOMIC_FETCHAND(me->t_state,~THREAD_STATE_DETACHING);
-    DeeError_SysThrowf(&DeeError_SystemError,GetLastError(),
+    DBG_ALIGNMENT_DISABLE();
+    wait_state = GetLastError();
+    DBG_ALIGNMENT_ENABLE();
+    DeeError_SysThrowf(&DeeError_SystemError,wait_state,
                        "Failed to join thread %k",self);
     goto err;
 #if 0
@@ -1831,18 +1950,26 @@ again:
 #elif !defined(CONFIG_NO_SEMAPHORE_H)
    int error;
    if (timeout_microseconds == (uint64_t)-1) {
+    DBG_ALIGNMENT_DISABLE();
     error = sem_wait(&me->t_join);
+    DBG_ALIGNMENT_ENABLE();
    } else if (timeout_microseconds == 0) {
+    DBG_ALIGNMENT_DISABLE();
     error = sem_trywait(&me->t_join);
+    DBG_ALIGNMENT_ENABLE();
    } else {
     struct timespec join_time;
+    DBG_ALIGNMENT_DISABLE();
     error = clock_gettime(CLOCK_REALTIME,&join_time);
+    DBG_ALIGNMENT_ENABLE();
     if (!error) {
      join_time.tv_sec  += (time_t)(timeout_microseconds / 1000000);
      join_time.tv_nsec += (long)(timeout_microseconds % 1000000) * 1000;
      join_time.tv_sec  += join_time.tv_nsec / 1000000000;
      join_time.tv_nsec %= 1000000000;
+     DBG_ALIGNMENT_DISABLE();
      error = sem_timedwait(&me->t_join,&join_time);
+     DBG_ALIGNMENT_ENABLE();
     }
    }
    if unlikely(error != 0) {
@@ -2022,7 +2149,9 @@ DeeThread_GetTid(/*Thread*/DeeObject *__restrict self,
 
 PUBLIC bool (DCALL DeeThread_ClearTls)(void) {
  DeeThreadObject *caller; bool result = false;
+ DBG_ALIGNMENT_DISABLE();
  caller = (DeeThreadObject *)thread_tls_get();
+ DBG_ALIGNMENT_ENABLE();
  if likely(caller) {
   void *data = caller->t_tlsdata;
   if likely(data) {
@@ -2173,10 +2302,12 @@ thread_fini(DeeThreadObject *__restrict self) {
  ASSERT(!self->t_execsz);
  ASSERT(!self->t_str_curr);
  ASSERT(!self->t_repr_curr);
+ DBG_ALIGNMENT_DISABLE();
  ASSERT(!(self->t_state&THREAD_STATE_STARTED) ||
          (self->t_state&THREAD_STATE_TERMINATED) ||
          (self->t_state&THREAD_STATE_EXTERNAL) ||
           self == (DeeThreadObject *)thread_tls_get());
+ DBG_ALIGNMENT_ENABLE();
  ASSERT(!self->t_globlpself);
 
  if (self->t_state&(THREAD_STATE_STARTED|THREAD_STATE_TERMINATED)) {
@@ -2189,16 +2320,23 @@ thread_fini(DeeThreadObject *__restrict self) {
 #endif
 #ifdef CONFIG_THREADS_PTHREAD
   /* detach the thread descriptor. */
-  if (!(self->t_state & THREAD_STATE_EXTERNAL))
-        pthread_detach(self->t_thread);
+  if (!(self->t_state & THREAD_STATE_EXTERNAL)) {
+   DBG_ALIGNMENT_DISABLE();
+   pthread_detach(self->t_thread);
+   DBG_ALIGNMENT_ENABLE();
+  }
 #endif /* CONFIG_THREADS_PTHREAD */
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
   if (!(self->t_state & THREAD_STATE_EXTERNAL)) {
    /* Destroy the join-semaphore. */
 #ifdef CONFIG_HOST_WINDOWS
+   DBG_ALIGNMENT_DISABLE();
    CloseHandle(self->t_join);
+   DBG_ALIGNMENT_ENABLE();
 #elif !defined(CONFIG_NO_SEMAPHORE_H)
+   DBG_ALIGNMENT_DISABLE();
    sem_destroy(&self->t_join);
+   DBG_ALIGNMENT_ENABLE();
 #endif
   }
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
@@ -2391,33 +2529,29 @@ PUBLIC void DCALL DeeThread_Fini(void) {
   DeeThread_Main.t_deepassoc.da_mask = 0;
  }
 }
-PRIVATE void DCALL err_no_thread_api(void) {
- DeeError_Throwf(&DeeError_NotImplemented,
-                 "Threading support has been disabled");
+PRIVATE ATTR_COLD int DCALL err_no_thread_api(void) {
+ return DeeError_Throwf(&DeeError_NotImplemented,
+                        "Threading support has been disabled");
 }
 
 PUBLIC int DCALL
 DeeThread_Start(/*Thread*/DeeObject *__restrict UNUSED(self)) {
- err_no_thread_api();
- return -1;
+ return err_no_thread_api();
 }
 PUBLIC int DCALL
 DeeThread_Interrupt(/*Thread*/DeeObject *__restrict UNUSED(self),
                     DeeObject *__restrict UNUSED(interrupt_ob)) {
- err_no_thread_api();
- return -1;
+ return err_no_thread_api();
 }
 PUBLIC int DCALL
 DeeThread_Detach(/*Thread*/DeeObject *__restrict UNUSED(self)) {
- err_no_thread_api();
- return -1;
+ return err_no_thread_api();
 }
 PUBLIC int DCALL
 DeeThread_Join(/*Thread*/DeeObject *__restrict UNUSED(self),
                DeeObject **__restrict UNUSED(pthread_result),
                uint64_t UNUSED(timeout_microseconds)) {
- err_no_thread_api();
- return -1;
+ return err_no_thread_api();
 }
 #endif /* CONFIG_NO_THREADS */
 
@@ -2750,7 +2884,17 @@ thread_selfid(DeeObject *__restrict UNUSED(self),
      return NULL;
  return DeeInt_Newu(SIZEOF_DTHREADID_T,result);
 #else /* CONFIG_NO_THREADID_INTERNAL */
+#ifdef NO_DBG_ALIGNMENT
  return DeeInt_Newu(SIZEOF_DTHREADID_T,os_gettid());
+#else
+ {
+  dthreadid_t result;
+  DBG_ALIGNMENT_DISABLE();
+  result = os_gettid();
+  DBG_ALIGNMENT_ENABLE();
+  return DeeInt_Newu(SIZEOF_DTHREADID_T,result);
+ }
+#endif
 #endif /* !CONFIG_NO_THREADID_INTERNAL */
 }
 
@@ -2862,12 +3006,12 @@ thread_callback_get(DeeThreadObject *__restrict self) {
 }
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_cannot_set_thread_subclass_callback(DeeThreadObject *__restrict self,
                                         char const *__restrict attr_name) {
- DeeError_Throwf(&DeeError_AttributeError,
-                 "Cannot set the %s of %k being a subclass %k of thread",
-                 attr_name,self,Dee_TYPE(self));
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot set the %s of %k being a subclass %k of thread",
+                        attr_name,self,Dee_TYPE(self));
 }
 #endif
 
@@ -2877,23 +3021,19 @@ thread_callback_set(DeeThreadObject *__restrict self,
 #ifdef CONFIG_NO_THREADS
  (void)self;
  (void)value;
- err_no_thread_api();
- return -1;
+ return err_no_thread_api();
 #else
  DREF DeeObject *old_callback;
  uint16_t state;
- if (!DeeThread_CheckExact(self)) {
-  err_cannot_set_thread_subclass_callback(self,"callback");
-  return -1;
- }
+ if (!DeeThread_CheckExact(self))
+     return err_cannot_set_thread_subclass_callback(self,"callback");
 restart:
  do {
   state = ATOMIC_READ(self->t_state);
   if (state&(THREAD_STATE_STARTED|THREAD_STATE_TERMINATED)) {
-   DeeError_Throwf(&DeeError_ValueError,
-                   "Cannot set the callback of thread %k that has already been started",
-                   self);
-   return -1;
+   return DeeError_Throwf(&DeeError_ValueError,
+                          "Cannot set the callback of thread %k that has already been started",
+                          self);
   }
   if (state&THREAD_STATE_STARTING) {
    SCHED_YIELD();
@@ -2919,8 +3059,7 @@ PRIVATE DREF DeeObject *DCALL
 thread_callargs_get(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
  (void)self;
- err_no_thread_api();
- return NULL;
+ return err_no_thread_api();
 #else
  DREF DeeObject *result;
  while (ATOMIC_FETCHOR(self->t_state,THREAD_STATE_STARTING) &
@@ -2939,8 +3078,7 @@ thread_callargs_set(DeeThreadObject *__restrict self,
 #ifdef CONFIG_NO_THREADS
  (void)self;
  (void)value;
- err_no_thread_api();
- return -1;
+ return err_no_thread_api();
 #else
  DREF DeeObject *old_callargs;
  uint16_t state;
@@ -2951,18 +3089,15 @@ thread_callargs_set(DeeThreadObject *__restrict self,
  if (DeeObject_AssertTypeExact(value,&DeeTuple_Type))
      return -1;
  /* Don't allow this to be overwritten for sub-classes of `thread' */
- if (!DeeThread_CheckExact(self)) {
-  err_cannot_set_thread_subclass_callback(self,"callargs");
-  return -1;
- }
+ if (!DeeThread_CheckExact(self))
+     return err_cannot_set_thread_subclass_callback(self,"callargs");
 restart:
  do {
   state = ATOMIC_READ(self->t_state);
   if (state&(THREAD_STATE_STARTED|THREAD_STATE_TERMINATED)) {
-   DeeError_Throwf(&DeeError_ValueError,
-                   "Cannot set the callback arguments of thread %k that has already been started",
-                   self);
-   return -1;
+   return DeeError_Throwf(&DeeError_ValueError,
+                          "Cannot set the callback arguments of thread %k that has already been started",
+                          self);
   }
   if (state&THREAD_STATE_STARTING) {
    SCHED_YIELD();
@@ -3224,8 +3359,11 @@ PUBLIC int (DCALL DeeThread_Sleep)(uint64_t microseconds) {
      goto err;
 again:
  /* XXX: More precision? */
+ DBG_ALIGNMENT_DISABLE();
  if (SleepEx((DWORD)(microseconds/1000),TRUE)) {
-  uint64_t now = DeeThread_GetTimeMicroSeconds();
+  uint64_t now;
+  DBG_ALIGNMENT_ENABLE();
+  now = DeeThread_GetTimeMicroSeconds();
   if (DeeThread_CheckInterrupt())
       goto err;
   /* Continue sleeping for the remainder of the given time. */
@@ -3234,6 +3372,7 @@ again:
    goto again;
   }
  }
+ DBG_ALIGNMENT_ENABLE();
  return 0;
 #elif defined(CONFIG_HOST_UNIX)
  struct timespec sleep_time,rem;
@@ -3242,7 +3381,9 @@ again:
  if (DeeThread_CheckInterrupt())
      goto err;
 again:
+ DBG_ALIGNMENT_DISABLE();
  if (nanosleep(&sleep_time,&rem)) {
+  DBG_ALIGNMENT_ENABLE();
   if (DeeThread_CheckInterrupt())
       goto err;
   if (errno == EINTR) {
@@ -3250,6 +3391,7 @@ again:
    goto again;
   }
  }
+ DBG_ALIGNMENT_ENABLE();
  return 0;
 #else
  if (DeeThread_CheckInterrupt())
@@ -3264,12 +3406,16 @@ PUBLIC void DCALL
 DeeThread_SleepNoInterrupt(uint64_t microseconds) {
 #ifdef CONFIG_HOST_WINDOWS
  /* XXX: More precision? */
+ DBG_ALIGNMENT_DISABLE();
  SleepEx((DWORD)(microseconds/1000),TRUE);
+ DBG_ALIGNMENT_ENABLE();
 #else
  struct timespec sleep_time;
  sleep_time.tv_sec  = (time_t)(microseconds / 1000000);
  sleep_time.tv_nsec = (long)(microseconds % 1000000) * 1000;
+ DBG_ALIGNMENT_DISABLE();
  nanosleep(&sleep_time,NULL);
+ DBG_ALIGNMENT_ENABLE();
 #endif
 }
 
@@ -3431,7 +3577,7 @@ localheap_malloc(struct localheap *__restrict self,
  * reference counter is equal to ZERO(0).
  * Technically, the interpreter would also be allowed to write
  * random, illegal pointers to locals during execution of some
- * instruction so long as locals are once again value when
+ * instruction so long as locals are once again valid when
  * execution continues, but we need to assume that never happens.
  *
  * >> DeeObject *old_object;

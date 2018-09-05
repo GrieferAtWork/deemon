@@ -425,7 +425,10 @@
 #endif
 #endif
 #ifndef __SIZEOF_SIZE_T__
-#   define __SIZEOF_SIZE_T__ __SIZEOF_POINTER__
+#define __SIZEOF_SIZE_T__ __SIZEOF_POINTER__
+#endif
+#ifndef __SIZEOF_INT__
+#define __SIZEOF_INT__    4
 #endif
 
 #ifdef __cplusplus
@@ -1358,6 +1361,9 @@ struct TPPKeyword {
         tok_t                 k_id;       /* [const] Unique token ID associated with this keyword. */
 #else
     TPP(tok_t)                k_id;       /* [const] Unique token ID associated with this keyword. */
+#endif
+#if __SIZEOF_POINTER__ > __SIZEOF_INT__
+    uint8_t                   k_pad[sizeof(void *) - sizeof(int)];
 #endif
     size_t                    k_size;     /* [const] Size of the keyword (in characters). */
     TPP(hash_t)               k_hash;     /* [const] The hash-value of the keyword. */

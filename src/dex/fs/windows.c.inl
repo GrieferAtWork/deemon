@@ -159,7 +159,9 @@ typedef struct {
 PRIVATE int DCALL
 env_init(Env *__restrict self) {
 again:
+ DBG_ALIGNMENT_DISABLE();
  self->e_strings = GetEnvironmentStringsW();
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(!self->e_strings) {
   if (Dee_CollectMemory(42)) /* ??? */
       goto again;
@@ -171,7 +173,9 @@ again:
 
 PRIVATE void DCALL
 env_fini(Env *__restrict self) {
+ DBG_ALIGNMENT_DISABLE();
  FreeEnvironmentStringsW(self->e_strings);
+ DBG_ALIGNMENT_ENABLE();
 }
 
 PRIVATE int DCALL
@@ -284,9 +288,16 @@ err_unknown_env_var(DeeObject *__restrict name) {
 
 INTERN bool DCALL
 fs_hasenv(/*String*/DeeObject *__restrict name) {
- LPWSTR wname;
+ LPWSTR wname; bool result;
  wname = (LPWSTR)DeeString_AsWide(name);
- return GetEnvironmentVariableW(wname,NULL,0) != 0;
+ if unlikely(!wname) {
+  DeeError_Handled(ERROR_HANDLED_RESTORE);
+  return false;
+ }
+ DBG_ALIGNMENT_DISABLE();
+ result = GetEnvironmentVariableW(wname,NULL,0) != 0;
+ DBG_ALIGNMENT_ENABLE();
+ return result;
 }
 INTERN DREF DeeObject *DCALL
 fs_getenv(DeeObject *__restrict name, bool try_get) {
@@ -297,7 +308,9 @@ fs_getenv(DeeObject *__restrict name, bool try_get) {
  buffer = DeeString_NewWideBuffer(bufsize);
  if unlikely(!buffer) goto err_consume;
  for (;;) {
+  DBG_ALIGNMENT_DISABLE();
   error = GetEnvironmentVariableW(wname,buffer,bufsize+1);
+  DBG_ALIGNMENT_ENABLE();
   if (!error) {
    /* Error. */
    if (!try_get)
@@ -333,7 +346,9 @@ fs_printenv(char const *__restrict name,
  buffer = ascii_printer_alloc(printer,bufsize);
  if unlikely(!buffer) goto err;
 again:
+ DBG_ALIGNMENT_DISABLE();
  new_bufsize = GetEnvironmentVariableA(name,buffer,bufsize+1);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(!new_bufsize) {
   if (!try_get) {
    DeeError_Throwf(&DeeError_ValueError,
@@ -366,10 +381,13 @@ fs_delenv(DeeObject *__restrict name) {
  LPWSTR wname;
  wname = (LPWSTR)DeeString_AsWide(name);
  if unlikely(!wname) goto err;
+ DBG_ALIGNMENT_DISABLE();
  if (!SetEnvironmentVariableW(wname,NULL)) {
+  DBG_ALIGNMENT_ENABLE();
   err_unknown_env_var(name);
   goto err;
  }
+ DBG_ALIGNMENT_ENABLE();
  return DeeNotify_Broadcast(NOTIFICATION_CLASS_ENVIRON,name);
 err:
  return -1;
@@ -383,12 +401,17 @@ fs_setenv(DeeObject *__restrict name,
  if unlikely(!wname) goto err;
  wvalue = (LPWSTR)DeeString_AsWide(value);
  if unlikely(!wvalue) goto err;
+ DBG_ALIGNMENT_DISABLE();
  if (!SetEnvironmentVariableW(wname,wvalue)) {
-  DeeError_SysThrowf(&DeeError_SystemError,GetLastError(),
+  DWORD dwError;
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  DeeError_SysThrowf(&DeeError_SystemError,dwError,
                      "Failed to set environment variable `%k' to `%k'",
                      name,value);
   goto err;
  }
+ DBG_ALIGNMENT_ENABLE();
  /* Broadcast an environ-changed notification. */
  return DeeNotify_Broadcast(NOTIFICATION_CLASS_ENVIRON,name);
 err:
@@ -403,8 +426,10 @@ DCALL fs_gethostname(void) {
  buffer = DeeString_NewWideBuffer(bufsize-1);
  if unlikely(!buffer) goto err;
 again:
+ DBG_ALIGNMENT_DISABLE();
  if (!GetComputerNameW(buffer,&bufsize)) {
   DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if (error == ERROR_BUFFER_OVERFLOW && bufsize &&
       bufsize-1 > WSTR_LENGTH(buffer)) {
    new_buffer = DeeString_ResizeWideBuffer(buffer,bufsize-1);
@@ -413,6 +438,7 @@ again:
    goto again;
   }
  }
+ DBG_ALIGNMENT_ENABLE();
  /* Truncate the buffer and return it. */
  new_buffer = DeeString_TryResizeWideBuffer(buffer,bufsize);
  if likely(new_buffer) buffer = new_buffer;
@@ -456,7 +482,9 @@ fs_printcwd(struct ascii_printer *__restrict printer) {
  buffer = ascii_printer_alloc(printer,bufsize);
  if unlikely(!buffer) goto err;
 again:
+ DBG_ALIGNMENT_DISABLE();
  new_bufsize = GetCurrentDirectoryA(bufsize+1,buffer);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(!new_bufsize) { nt_ThrowLastError(); goto err_release; }
  if (new_bufsize > bufsize) {
   /* Increase the buffer and try again. */
@@ -481,13 +509,17 @@ INTERN DREF DeeObject *DCALL fs_getcwd(void) {
  buffer = DeeString_NewWideBuffer(bufsize);
  if unlikely(!buffer) goto err;
  for (;;) {
+  DBG_ALIGNMENT_DISABLE();
   error = GetCurrentDirectoryW(bufsize+1,buffer);
   if (!error) {
+   error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
    /* Error. */
-   DeeError_SysThrowf(&DeeError_SystemError,GetLastError(),
+   DeeError_SysThrowf(&DeeError_SystemError,error,
                       "Failed to lookup pwd");
    goto err_result;
   }
+  DBG_ALIGNMENT_ENABLE();
   if (error <= bufsize) break;
   /* Resize to fit. */
   new_buffer = DeeString_ResizeWideBuffer(buffer,error);
@@ -525,23 +557,27 @@ INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
  }
  wpath = (LPWSTR)DeeString_AsWide(path);
  if unlikely(!wpath) goto err;
- if ((*wpath || WSTR_LENGTH(wpath)) &&
-     !SetCurrentDirectoryW(wpath)) {
-  DWORD dwError = GetLastError();
-  if (nt_IsFileNotFound(dwError)) {
-   DeeError_SysThrowf(&DeeError_FileNotFound,dwError,
-                      "Cannot chdir because to non-existant path %r",
-                      path);
-  } else if (nt_IsAccessDenied(dwError)) {
-   DeeError_SysThrowf(&DeeError_AccessError,dwError,
-                      "Cannot chdir because access to %r has been denied",
-                      path);
-  } else {
-   DeeError_SysThrowf(&DeeError_SystemError,dwError,
-                      "Failed to set pwd to %r",
-                      path);
+ if ((*wpath || WSTR_LENGTH(wpath))) {
+  DBG_ALIGNMENT_DISABLE();
+  if (!SetCurrentDirectoryW(wpath)) {
+   DWORD dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (nt_IsFileNotFound(dwError)) {
+    DeeError_SysThrowf(&DeeError_FileNotFound,dwError,
+                       "Cannot chdir because to non-existant path %r",
+                       path);
+   } else if (nt_IsAccessDenied(dwError)) {
+    DeeError_SysThrowf(&DeeError_AccessError,dwError,
+                       "Cannot chdir because access to %r has been denied",
+                       path);
+   } else {
+    DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                       "Failed to set pwd to %r",
+                       path);
+   }
+   goto err;
   }
-  goto err;
+  DBG_ALIGNMENT_ENABLE();
  }
  return 0;
 err:
@@ -627,43 +663,43 @@ INTERN DeeTypeObject DeeUser_Type = {
 
 
 typedef struct {
- BY_HANDLE_FILE_INFORMATION s_info;  /* Windows-specific stat information. */
- DWORD                      s_ftype; /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not determined. */
-#define STAT_FNORMAL        0x0000   /* Normal information. */
-#define STAT_FNOTIME        0x0001   /* Time stamps are unknown. */
-#define STAT_FNOVOLSERIAL   0x0002   /* `dwVolumeSerialNumber' is unknown. */
-#define STAT_FNOSIZE        0x0004   /* `nFileSize' is unknown. */
-#define STAT_FNONLINK       0x0008   /* `nNumberOfLinks' is unknown. */
-#define STAT_FNOFILEID      0x0010   /* `nFileIndex' is unknown. */
-#define STAT_FNONTTYPE      0x0020   /* `s_ftype' is unknown. */
- uint16_t                   s_valid; /* Set of `STAT_F*' */
- HANDLE                     s_hand;  /* [0..1|NULL(INVALID_HANDLE_VALUE)]
-                                      *  Optional handle that may be used to load
-                                      *  additional information upon request. */
+    BY_HANDLE_FILE_INFORMATION s_info;  /* Windows-specific stat information. */
+    DWORD                      s_ftype; /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not determined. */
+#define STAT_FNORMAL           0x0000   /* Normal information. */
+#define STAT_FNOTIME           0x0001   /* Time stamps are unknown. */
+#define STAT_FNOVOLSERIAL      0x0002   /* `dwVolumeSerialNumber' is unknown. */
+#define STAT_FNOSIZE           0x0004   /* `nFileSize' is unknown. */
+#define STAT_FNONLINK          0x0008   /* `nNumberOfLinks' is unknown. */
+#define STAT_FNOFILEID         0x0010   /* `nFileIndex' is unknown. */
+#define STAT_FNONTTYPE         0x0020   /* `s_ftype' is unknown. */
+    uint16_t                   s_valid; /* Set of `STAT_F*' */
+    HANDLE                     s_hand;  /* [0..1|NULL(INVALID_HANDLE_VALUE)]
+                                         *  Optional handle that may be used to load
+                                         *  additional information upon request. */
 } Stat;
 #define Stat_Fini(x) ((x)->s_hand == INVALID_HANDLE_VALUE || (CloseHandle((x)->s_hand),0))
 
 
 /* STAT implementation. */
 struct stat_object {
- OBJECT_HEAD
- Stat   st_stat;
+    OBJECT_HEAD
+    Stat   st_stat;
 };
 
 
 /* Missing stat information errors. */
-PRIVATE ATTR_NOINLINE ATTR_COLD
-void DCALL err_no_info(char const *__restrict level) {
- DeeError_Throwf(&DeeError_ValueError,
-                 "The stat object does not contain any %s information",
-                 level);
+PRIVATE ATTR_NOINLINE ATTR_COLD int
+DCALL err_no_info(char const *__restrict level) {
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "The stat object does not contain any %s information",
+                        level);
 }
-PRIVATE ATTR_NOINLINE ATTR_COLD void DCALL err_no_dev_info(void) { err_no_info("device"); }
-PRIVATE ATTR_NOINLINE ATTR_COLD void DCALL err_no_ino_info(void) { err_no_info("inode"); }
-PRIVATE ATTR_NOINLINE ATTR_COLD void DCALL err_no_link_info(void) { err_no_info("nlink"); }
-PRIVATE ATTR_NOINLINE ATTR_COLD void DCALL err_no_size_info(void) { err_no_info("size"); }
-PRIVATE ATTR_NOINLINE ATTR_COLD void DCALL err_no_time_info(void) { err_no_info("time"); }
-PRIVATE ATTR_NOINLINE ATTR_COLD void DCALL err_no_nttype_info(void) { err_no_info("NT Type"); }
+PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_dev_info(void) { return err_no_info("device"); }
+PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_ino_info(void) { return err_no_info("inode"); }
+PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_link_info(void) { return err_no_info("nlink"); }
+PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_size_info(void) { return err_no_info("size"); }
+PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_time_info(void) { return err_no_info("time"); }
+PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_nttype_info(void) { return err_no_info("NT Type"); }
 
 #define DOSTAT_FNORMAL   0x00
 #define DOSTAT_FTRY      0x01
@@ -694,8 +730,14 @@ Stat_Init(Stat *__restrict self,
   if (fd == NULL) goto err;
   if (fd != INVALID_HANDLE_VALUE) {
    BOOL error;
+   DBG_ALIGNMENT_DISABLE();
    error = GetFileInformationByHandle(fd,&self->s_info);
-   if (!error) { CloseHandle(fd); goto err_nt; }
+   if (!error) {
+    CloseHandle(fd);
+    DBG_ALIGNMENT_ENABLE();
+    goto err_nt;
+   }
+   DBG_ALIGNMENT_ENABLE();
    self->s_valid = STAT_FNORMAL;
    self->s_hand  = fd; /* Inherit */
 done:
@@ -708,7 +750,9 @@ done:
 
   /* CreateFile() failed. - Try a more direct approach. */
   memset(&self->s_info,0,sizeof(BY_HANDLE_FILE_INFORMATION));
+  DBG_ALIGNMENT_DISABLE();
   error = nt_GetFileAttributesEx(path,GetFileExInfoStandard,&attrib);
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(error < 0) goto err;
   if (!error) {
    /* It worked! */
@@ -739,8 +783,10 @@ done:
    goto err;
   }
   /* Retrieve information by handle. */
+  DBG_ALIGNMENT_DISABLE();
   if (GetFileInformationByHandle(fd,&self->s_info))
       goto ok_user_fd;
+  DBG_ALIGNMENT_ENABLE();
   /* Didn't work... (Try the filename) */
 try_filename:
   path = DeeFile_Filename(path);
@@ -752,13 +798,17 @@ try_filename:
  if (DeeObject_AsUIntptr(path,(uintptr_t *)&fd))
      goto err;
  /* Retrieve information by handle. */
+ DBG_ALIGNMENT_DISABLE();
  if (GetFileInformationByHandle(fd,&self->s_info)) {
 ok_user_fd:
+  DBG_ALIGNMENT_ENABLE();
   /* Immediately load the file type if the descriptor was given by the user. */
   if (flags&DOSTAT_FNOEXINFO) {
    self->s_valid |= STAT_FNONTTYPE;
   } else {
+   DBG_ALIGNMENT_DISABLE();
    self->s_ftype = GetFileType(fd);
+   DBG_ALIGNMENT_ENABLE();
    self->s_valid = STAT_FNORMAL;
    if unlikely(self->s_ftype == FILE_TYPE_UNKNOWN)
       self->s_valid |= STAT_FNONTTYPE;
@@ -766,7 +816,9 @@ ok_user_fd:
   goto done;
  }
 err_nt:
+ DBG_ALIGNMENT_DISABLE();
  error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
  if ((flags&DOSTAT_FTRY) && ERROR_IS_FILE_NOT_FOUND(error))
       return 1; /* File not found. */
  nt_ThrowError((DWORD)error);
@@ -788,7 +840,9 @@ stat_get_nttype(Stat *__restrict self, bool try_get) {
    goto err_noinfo;
   }
   if (DeeThread_CheckInterrupt()) goto err;
+  DBG_ALIGNMENT_DISABLE();
   result = GetFileType(self->s_hand);
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(result == FILE_TYPE_UNKNOWN)
      goto err_noinfo;
   new_type = ATOMIC_CMPXCH_VAL(self->s_ftype,FILE_TYPE_UNKNOWN,result);
@@ -1496,11 +1550,13 @@ fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
  if (!DeeNone_Check(atime) && unlikely(ob_GetFileTime(atime,&ftAtime))) goto err;
  if (!DeeNone_Check(mtime) && unlikely(ob_GetFileTime(mtime,&ftMtime))) goto err;
  if (!DeeNone_Check(ctime) && unlikely(ob_GetFileTime(ctime,&ftCtime))) goto err;
+ DBG_ALIGNMENT_DISABLE();
  error = SetFileTime(hnd,
                      DeeNone_Check(ctime) ? NULL : &ftCtime,
                      DeeNone_Check(atime) ? NULL : &ftAtime,
                      DeeNone_Check(mtime) ? NULL : &ftMtime);
  if (result) CloseHandle(hnd);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(!error) { nt_ThrowLastError(); goto err; }
  return 0;
 err:
@@ -1693,7 +1749,9 @@ fs_rename(DeeObject *__restrict existing_path,
  if unlikely(error > 0) goto err_nt;
  return error;
 err_nt:
+ DBG_ALIGNMENT_DISABLE();
  error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
  if (error == ERROR_NOT_SAME_DEVICE) {
   DeeError_SysThrowf(&DeeError_CrossDevice,error,
                      "Cannot move file `%k' to a different device `%k'",
@@ -1719,7 +1777,9 @@ fs_link(DeeObject *__restrict existing_path,
  if unlikely(error > 0) goto err_nt;
  return error;
 err_nt:
+ DBG_ALIGNMENT_DISABLE();
  error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
  if (error == ERROR_NOT_SAME_DEVICE) {
   DeeError_SysThrowf(&DeeError_CrossDevice,error,
                      "Cannot create a hardlink to file `%k' from a different device `%k'",
@@ -1748,7 +1808,8 @@ PRIVATE BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
  tok_priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
  if unlikely(!AdjustTokenPrivileges(tok,FALSE,&tok_priv,0,NULL,NULL))
     return FALSE;
- error = GetLastError(); SetLastError(0);
+ error = GetLastError();
+ SetLastError(0);
  return unlikely(error == ERROR_NOT_ALL_ASSIGNED) ? 0 : 1;
 fail:
  return FALSE;
@@ -1778,7 +1839,9 @@ again:
  if unlikely(error > 0) goto err_nt;
  return error;
 err_nt:
+ DBG_ALIGNMENT_DISABLE();
  error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
  if (error == ERROR_INVALID_PARAMETER &&
     (flags&SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE)) {
   /* Older versions of windows didn't accept this flag. */
@@ -1788,10 +1851,14 @@ err_nt:
  }
  /* Try to acquire the ~privilege~ to create symbolic links. */
  if (error == ERROR_PRIVILEGE_NOT_HELD) {
-  if (!holding_symlink_priv &&
-       nt_AcquirePrivilege(str_SeCreateSymbolicLinkPrivilege)) {
-   holding_symlink_priv = TRUE;
-   goto again;
+  if (!holding_symlink_priv) {
+   DBG_ALIGNMENT_DISABLE();
+   if (nt_AcquirePrivilege(str_SeCreateSymbolicLinkPrivilege)) {
+    DBG_ALIGNMENT_ENABLE();
+    holding_symlink_priv = TRUE;
+    goto again;
+   }
+   DBG_ALIGNMENT_ENABLE();
   }
   /* May as well not exist at all... */
   DeeError_SysThrowf(&DeeError_AccessError,error,
@@ -1805,29 +1872,29 @@ err:
 }
 
 typedef struct _REPARSE_DATA_BUFFER {
-  ULONG  ReparseTag;
-  USHORT ReparseDataLength;
-  USHORT Reserved;
-  union {
-    struct {
-      USHORT SubstituteNameOffset;
-      USHORT SubstituteNameLength;
-      USHORT PrintNameOffset;
-      USHORT PrintNameLength;
-      ULONG  Flags;
-      WCHAR  PathBuffer[1];
-    } SymbolicLinkReparseBuffer;
-    struct {
-      USHORT SubstituteNameOffset;
-      USHORT SubstituteNameLength;
-      USHORT PrintNameOffset;
-      USHORT PrintNameLength;
-      WCHAR  PathBuffer[1];
-    } MountPointReparseBuffer;
-    struct {
-      UCHAR DataBuffer[1];
-    } GenericReparseBuffer;
-  };
+    ULONG  ReparseTag;
+    USHORT ReparseDataLength;
+    USHORT Reserved;
+    union {
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            ULONG  Flags;
+            WCHAR  PathBuffer[1];
+        } SymbolicLinkReparseBuffer;
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            WCHAR  PathBuffer[1];
+        } MountPointReparseBuffer;
+        struct {
+            UCHAR DataBuffer[1];
+        } GenericReparseBuffer;
+    };
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 
 
@@ -1865,21 +1932,25 @@ fs_readlink(DeeObject *__restrict path) {
  buffer = (PREPARSE_DATA_BUFFER)Dee_Malloc(bufsiz);
  if unlikely(!buffer) goto err_fd;
  /* Read symbolic link data. */
+ DBG_ALIGNMENT_DISABLE();
  while (!DeviceIoControl(link_fd,FSCTL_GET_REPARSE_POINT,
                          NULL,0,buffer,bufsiz,&buflen,NULL)) {
   error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if (error == ERROR_INSUFFICIENT_BUFFER ||
       error == ERROR_MORE_DATA) {
    PREPARSE_DATA_BUFFER new_buffer;
    bufsiz *= 2;
    new_buffer = (PREPARSE_DATA_BUFFER)Dee_Realloc(buffer,bufsiz);
    if unlikely(!new_buffer) goto err_buffer;
+   DBG_ALIGNMENT_DISABLE();
    continue;
   }
   nt_ThrowLastError();
   goto err_buffer;
  }
  if (owns_linkfd) CloseHandle(link_fd);
+ DBG_ALIGNMENT_ENABLE();
  /* Interpret the read data. */
  switch (buffer->ReparseTag) {
  case IO_REPARSE_TAG_SYMLINK:
@@ -1918,31 +1989,37 @@ err:
 err_buffer:
  Dee_Free(buffer);
 err_fd:
- if (owns_linkfd) CloseHandle(link_fd);
+ if (owns_linkfd) {
+  DBG_ALIGNMENT_DISABLE();
+  CloseHandle(link_fd);
+  DBG_ALIGNMENT_ENABLE();
+ }
  goto err;
 }
 
 
 
 typedef struct {
- OBJECT_HEAD
- DREF DeeStringObject *d_path; /* [1..1] The path describing this directory. */
+    OBJECT_HEAD
+    DREF DeeStringObject *d_path; /* [1..1] The path describing this directory. */
 } Dir;
 
 typedef struct {
- OBJECT_HEAD
- DREF Dir        *d_dir;  /* [1..1][const] The associated directory. */
- HANDLE           d_hnd;  /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(d_lock)]
-                           *   The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
- WIN32_FIND_DATAW d_data; /* [lock(d_lock)] The file data for the next matching entry. */
+    OBJECT_HEAD
+    DREF Dir        *d_dir;  /* [1..1][const] The associated directory. */
+    HANDLE           d_hnd;  /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(d_lock)]
+                              * The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
+    WIN32_FIND_DATAW d_data; /* [lock(d_lock)] The file data for the next matching entry. */
 #ifndef CONFIG_NO_THREADS
- rwlock_t         d_lock;
+    rwlock_t         d_lock;
 #endif
 } DirIterator;
 
 PRIVATE void DCALL
 diriter_fini(DirIterator *__restrict self) {
- CloseHandle(self->d_hnd);
+ DBG_ALIGNMENT_DISABLE();
+ FindClose(self->d_hnd);
+ DBG_ALIGNMENT_ENABLE();
  Dee_Decref(self->d_dir);
 }
 
@@ -1963,15 +2040,18 @@ diriter_copy(DirIterator *__restrict self,
   /* The other directory has been exhausted. */
   self->d_hnd = INVALID_HANDLE_VALUE;
  } else {
+  DBG_ALIGNMENT_DISABLE();
   if (!DuplicateHandle(prochnd,other->d_hnd,
                        prochnd,&self->d_hnd,
                        0,TRUE,DUPLICATE_SAME_ACCESS)) {
+   DBG_ALIGNMENT_ENABLE();
 #ifndef CONFIG_NO_THREADS
    rwlock_endread(&other->d_lock);
 #endif
    nt_ThrowLastError();
    return -1;
   }
+  DBG_ALIGNMENT_ENABLE();
   memcpy(&self->d_data,&other->d_data,sizeof(WIN32_FIND_DATAW));
  }
  self->d_dir = other->d_dir;
@@ -2005,15 +2085,19 @@ read_filename:
  if (length <= 2 && begin[0] == '.' &&
     (length == 1 || begin[1] == '.')) {
   /* Skip self/parent directories. */
+  DBG_ALIGNMENT_DISABLE();
   if (!FindNextFileW(self->d_hnd,&self->d_data)) {
    DWORD error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
    if (error == ERROR_NO_MORE_FILES) {
     HANDLE hnd = self->d_hnd;
     self->d_hnd = INVALID_HANDLE_VALUE;
 #ifndef CONFIG_NO_THREADS
     rwlock_endwrite(&self->d_lock);
 #endif
+    DBG_ALIGNMENT_DISABLE();
     FindClose(hnd);
+    DBG_ALIGNMENT_ENABLE();
     goto iter_done;
    }
 #ifndef CONFIG_NO_THREADS
@@ -2022,6 +2106,7 @@ read_filename:
    nt_ThrowError(error);
    goto err;
   }
+  DBG_ALIGNMENT_ENABLE();
   goto read_filename;
  }
  result_string = (WCHAR *)Dee_TryMalloc(sizeof(size_t)+4+length*2);
@@ -2038,8 +2123,10 @@ read_filename:
  memcpy(result_string,self->d_data.cFileName,length*2);
  result_string[length] = 0;
  /* Advance the directory by one. */
+ DBG_ALIGNMENT_DISABLE();
  if (!FindNextFileW(self->d_hnd,&self->d_data)) {
   HANDLE hnd; DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(error != ERROR_NO_MORE_FILES) {
 #ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&self->d_lock);
@@ -2052,8 +2139,11 @@ read_filename:
 #ifndef CONFIG_NO_THREADS
   rwlock_endwrite(&self->d_lock);
 #endif
+  DBG_ALIGNMENT_DISABLE();
   FindClose(hnd);
+  DBG_ALIGNMENT_ENABLE();
  } else {
+  DBG_ALIGNMENT_ENABLE();
 #ifndef CONFIG_NO_THREADS
   rwlock_endwrite(&self->d_lock);
 #endif
@@ -2096,13 +2186,18 @@ dir_iter(Dir *__restrict self) {
  /* Append a match-all wildcard. */
  wpattern[wname_length++] = '*';
  wpattern[wname_length]   = 0;
+ DBG_ALIGNMENT_DISABLE();
  result->d_hnd = FindFirstFileExW(wpattern,FindExInfoBasic,&result->d_data,
                                   FindExSearchNameMatch,NULL,0);
+ DBG_ALIGNMENT_ENABLE();
  Dee_AFree(wpattern);
  if unlikely(result->d_hnd == INVALID_HANDLE_VALUE) {
-  int error = GetLastError();
-  if (error != ERROR_NO_MORE_FILES) {
-   nt_ThrowError(error);
+  DWORD dwError;
+  DBG_ALIGNMENT_DISABLE();
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError != ERROR_NO_MORE_FILES) {
+   nt_ThrowError(dwError);
    goto err_r;
   }
   /* Empty directory? ok... */
@@ -2115,8 +2210,10 @@ dir_iter(Dir *__restrict self) {
 #endif
  DeeObject_Init(result,&DeeDirIterator_Type);
  return result;
-err_r: DeeObject_Free(result);
-err:   return NULL;
+err_r:
+ DeeObject_Free(result);
+err:
+ return NULL;
 }
 
 PRIVATE struct type_member diriter_members[] = {
@@ -2316,8 +2413,8 @@ next: ++string,++pattern;
 
 /* query() types. */
 typedef struct {
- DirIterator q_iter; /* The underlying iterator. */
- LPWSTR      q_wild; /* The wildcard pattern string with which to match filenames. */
+    DirIterator q_iter; /* The underlying iterator. */
+    LPWSTR      q_wild; /* The wildcard pattern string with which to match filenames. */
 } QueryIterator;
 
 PRIVATE DREF DeeStringObject *DCALL
@@ -2345,8 +2442,10 @@ read_filename:
      (length == 1 || begin[1] == '.')) ||
       wild_match(begin,self->q_wild) != 0) {
   /* Skip self/parent directories. */
+  DBG_ALIGNMENT_DISABLE();
   if (!FindNextFileW(self->q_iter.d_hnd,&self->q_iter.d_data)) {
    DWORD error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
    if (error == ERROR_NO_MORE_FILES) {
     HANDLE hnd = self->q_iter.d_hnd;
     self->q_iter.d_hnd = INVALID_HANDLE_VALUE;
@@ -2362,6 +2461,7 @@ read_filename:
    nt_ThrowError(error);
    goto err;
   }
+  DBG_ALIGNMENT_ENABLE();
   goto read_filename;
  }
  result_string = (WCHAR *)Dee_TryMalloc(sizeof(size_t)+4+length*2);
@@ -2378,8 +2478,10 @@ read_filename:
  memcpy(result_string,self->q_iter.d_data.cFileName,length*2);
  result_string[length] = 0;
  /* Advance the directory by one. */
+ DBG_ALIGNMENT_DISABLE();
  if (!FindNextFileW(self->q_iter.d_hnd,&self->q_iter.d_data)) {
   HANDLE hnd; DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(error != ERROR_NO_MORE_FILES) {
 #ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&self->q_iter.d_lock);
@@ -2392,8 +2494,11 @@ read_filename:
 #ifndef CONFIG_NO_THREADS
   rwlock_endwrite(&self->q_iter.d_lock);
 #endif
+  DBG_ALIGNMENT_DISABLE();
   FindClose(hnd);
+  DBG_ALIGNMENT_ENABLE();
  } else {
+  DBG_ALIGNMENT_ENABLE();
 #ifndef CONFIG_NO_THREADS
   rwlock_endwrite(&self->q_iter.d_lock);
 #endif
@@ -2498,14 +2603,19 @@ query_iter(Dir *__restrict self) {
  /* Append a match-all wildcard. */
  wpattern[wname_length++] = '*';
  wpattern[wname_length]   = 0;
+ DBG_ALIGNMENT_DISABLE();
  result->q_iter.d_hnd = FindFirstFileExW(wpattern,FindExInfoBasic,
                                         &result->q_iter.d_data,
                                          FindExSearchNameMatch,NULL,0);
+ DBG_ALIGNMENT_ENABLE();
  Dee_AFree(wpattern);
  if unlikely(result->q_iter.d_hnd == INVALID_HANDLE_VALUE) {
-  int error = GetLastError();
-  if (error != ERROR_NO_MORE_FILES) {
-   nt_ThrowError(error);
+  DWORD dwError;
+  DBG_ALIGNMENT_DISABLE();
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError != ERROR_NO_MORE_FILES) {
+   nt_ThrowError(dwError);
    goto err_r;
   }
   /* Empty directory? ok... */
@@ -2518,8 +2628,10 @@ query_iter(Dir *__restrict self) {
 #endif
  DeeObject_Init(&result->q_iter,&DeeQueryIterator_Type);
  return result;
-err_r: DeeObject_Free(result);
-err:   return NULL;
+err_r:
+ DeeObject_Free(result);
+err:
+ return NULL;
 }
 
 PRIVATE struct type_seq query_seq = {

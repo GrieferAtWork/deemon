@@ -747,20 +747,13 @@ LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
 PRIVATE dssize_t DCALL \
 name(T const *__restrict a, size_t alen, \
      T const *__restrict b, size_t blen) { \
- size_t *v0,*v1,i,j,cost,temp; bool isheap; \
+ size_t *v0,*v1,i,j,cost,temp; \
  if unlikely(!alen) return blen; \
  if unlikely(!blen) return alen; \
- if (blen > (128+1)*sizeof(size_t)) { \
-  v0 = (size_t *)Dee_Malloc((blen+1)*sizeof(size_t)); \
-  if unlikely(!v0) return -1; \
-  v1 = (size_t *)Dee_Malloc((blen+1)*sizeof(size_t)); \
-  if unlikely(!v1) { Dee_Free(v0); return -1; } \
-  isheap = true; \
- } else { \
-  v0 = (size_t *)alloca((blen+1)*sizeof(size_t)); \
-  v1 = (size_t *)alloca((blen+1)*sizeof(size_t)); \
-  isheap = false; \
- } \
+ v0 = (size_t *)Dee_AMalloc((blen+1)*sizeof(size_t)); \
+ if unlikely(!v0) return -1; \
+ v1 = (size_t *)Dee_AMalloc((blen+1)*sizeof(size_t)); \
+ if unlikely(!v1) { Dee_AFree(v0); return -1; } \
  for (i = 0; i < blen; ++i) v0[i] = i; \
  for (i = 0; i < alen; ++i) { \
   T a_value = transform(a[i]); \
@@ -777,7 +770,8 @@ name(T const *__restrict a, size_t alen, \
   memcpy(v0,v1,blen*sizeof(size_t)); \
  } \
  temp = v1[blen]; \
- if (isheap) Dee_Free(v0),Dee_Free(v1); \
+ Dee_AFree(v0); \
+ Dee_AFree(v1); \
  if (temp > SSIZE_MAX) temp = SSIZE_MAX; \
  return temp; \
 }
@@ -791,7 +785,7 @@ DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_asciicasecompareb,uint8_t,(uint8_t)DeeUni_To
 PRIVATE dssize_t DCALL \
 name(T const *__restrict a, size_t alen, \
      T const *__restrict b, size_t blen) { \
- size_t *v0,*v1,i,j,cost,temp; bool isheap; \
+ size_t *v0,*v1,i,j,cost,temp; \
  unicode_foldreader(T) a_reader; \
  unicode_foldreader(T) b_reader; \
  size_t folded_alen,folded_blen; \
@@ -799,17 +793,10 @@ name(T const *__restrict a, size_t alen, \
  folded_blen = DeeUni_FoldedLength(b,blen); \
  if unlikely(!folded_alen) return folded_blen; \
  if unlikely(!folded_blen) return folded_alen; \
- if (folded_blen > (128+1)*sizeof(size_t)) { \
-  v0 = (size_t *)Dee_Malloc((folded_blen+1)*sizeof(size_t)); \
-  if unlikely(!v0) return -1; \
-  v1 = (size_t *)Dee_Malloc((folded_blen+1)*sizeof(size_t)); \
-  if unlikely(!v1) { Dee_Free(v0); return -1; } \
-  isheap = true; \
- } else { \
-  v0 = (size_t *)alloca((folded_blen+1)*sizeof(size_t)); \
-  v1 = (size_t *)alloca((folded_blen+1)*sizeof(size_t)); \
-  isheap = false; \
- } \
+ v0 = (size_t *)Dee_AMalloc((folded_blen+1)*sizeof(size_t)); \
+ if unlikely(!v0) return -1; \
+ v1 = (size_t *)Dee_AMalloc((folded_blen+1)*sizeof(size_t)); \
+ if unlikely(!v1) { Dee_AFree(v0); return -1; } \
  for (i = 0; i < folded_blen; ++i) v0[i] = i; \
  unicode_foldreader_init(a_reader,a,alen); \
  for (i = 0; i < folded_alen; ++i) { \
@@ -830,7 +817,8 @@ name(T const *__restrict a, size_t alen, \
  } \
  ASSERT(unicode_foldreader_empty(a_reader)); \
  temp = v1[folded_blen]; \
- if (isheap) Dee_Free(v0),Dee_Free(v1); \
+ Dee_AFree(v0); \
+ Dee_AFree(v1); \
  if (temp > SSIZE_MAX) temp = SSIZE_MAX; \
  return temp; \
 }

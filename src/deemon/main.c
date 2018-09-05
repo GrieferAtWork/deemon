@@ -816,8 +816,9 @@ display_help_single(dformatprinter printer, void *arg,
                     char const *__restrict prefix) {
  if (option->co_flags & CMD_FGROUP) {
   size_t prefix_length = strlen(prefix);
-  char *buf,*dst;
-  buf = (char *)alloca(prefix_length + COMPILER_LENOF(option->co_shortnam) + 3);
+  char *buf,*dst; int result;
+  buf = (char *)Dee_AMalloc(prefix_length + COMPILER_LENOF(option->co_shortnam) + 3);
+  if unlikely(!buf) return -1;
   memcpy(buf,prefix,prefix_length);
   dst = buf + prefix_length;
   *dst++ = '-';
@@ -825,7 +826,9 @@ display_help_single(dformatprinter printer, void *arg,
   dst += strlen(option->co_shortnam);
   *dst++ = ',';
   *dst++ = '\0';
-  return display_help_group(printer,arg,option->co_group,buf);
+  result = display_help_group(printer,arg,option->co_group,buf);
+  Dee_AFree(buf);
+  return result;
  }
  return display_help(printer,arg,option,
                      display_help_namewidth(option,prefix) + 1,
@@ -847,8 +850,9 @@ display_help_query(dformatprinter printer, void *arg,
    /* Found the option in question. */
    if (!comma) return display_help_single(printer,arg,group,prefix);
    if (group->co_flags & CMD_FGROUP) {
-    char *buf,*dst; size_t prefix_length = strlen(prefix);
-    buf = (char *)alloca(prefix_length + COMPILER_LENOF(group->co_shortnam) + 3);
+    char *buf,*dst; size_t prefix_length = strlen(prefix); int result;
+    buf = (char *)Dee_AMalloc(prefix_length + COMPILER_LENOF(group->co_shortnam) + 3);
+    if unlikely(!buf) return -1;
     memcpy(buf,prefix,prefix_length);
     dst = buf + prefix_length;
     *dst++ = '-';
@@ -856,7 +860,9 @@ display_help_query(dformatprinter printer, void *arg,
     dst += strlen(group->co_shortnam);
     *dst++ = ',';
     *dst++ = '\0';
-    return display_help_query(printer,arg,group->co_group,comma + 1,buf);
+    result = display_help_query(printer,arg,group->co_group,comma + 1,buf);
+    Dee_AFree(buf);
+    return result;
    }
   }
  }
@@ -928,9 +934,6 @@ error_handler(struct compiler_error_object *__restrict error,
 PRIVATE int DCALL operation_mode_printpp(int argc, char **argv);
 PRIVATE int DCALL operation_mode_format(int argc, char **argv);
 
-
-
-
 /* ==================================================================== *
  * --- MAIN()                                                           *
  * ==================================================================== */
@@ -953,6 +956,7 @@ int main(int argc, char *argv[]) {
   * for why this needs to be done in order to get proper UTF-8 support. */
  SetConsoleOutputCP(GetOEMCP());
 #endif
+ DBG_ALIGNMENT_ENABLE();
 
  /*_CrtSetBreakAlloc(280169);*/
 
@@ -1221,6 +1225,7 @@ done:
 #ifdef CONFIG_TRACE_REFCHANGES
  Dee_DumpReferenceLeaks();
 #endif
+ DBG_ALIGNMENT_DISABLE();
 #ifndef NDEBUG
 #if defined(_MSC_VER) || defined(__CRT_DOS)
  {

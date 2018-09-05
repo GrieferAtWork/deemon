@@ -382,6 +382,7 @@ fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
   pwd = fs_getcwd();
   if unlikely(!pwd) goto err;
  }
+ /* TODO: Unicode support */
  pth_end = (pth_iter = DeeString_STR(path))+DeeString_SIZE(path);
  pwd_end = (pwd_iter = DeeString_STR(pwd)) +DeeString_SIZE(pwd);
 #ifdef CONFIG_HOST_WINDOWS
@@ -521,6 +522,7 @@ err:
 INTERN DREF DeeObject *DCALL
 fs_pathjoin(size_t pathc, DeeObject **__restrict pathv) {
  size_t i; char nextsep = SEP;
+ /* TODO: Unicode support */
  struct ascii_printer printer;
  /* Special case: Return `.' when no paths are given. */
  if unlikely(!pathc)
@@ -562,11 +564,11 @@ err:
 INTERN DREF DeeObject *DCALL
 fs_pathexpand(DeeObject *__restrict path, uint16_t options,
               DeeObject *__restrict environ_mapping) {
+ /* TODO: Unicode support */
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  char *iter,*begin,*end,*flush_start,*flush_end,ch;
  ASSERT_OBJECT(environ_mapping);
  ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
- /* TODO: Unicode support */
  end = (begin = DeeString_STR(path))+DeeString_SIZE(path);
  ASSERT(*end == '\0');
  if (options & FS_EXPAND_FABS) {

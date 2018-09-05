@@ -119,10 +119,9 @@ sock_getmsgflagsof(DeeObject *__restrict name,
    }
    /* Throw a NoSupport error, just like we do for the API
     * functions when they don't recognize the passed flags. */
-   DeeError_Throwf(&DeeError_NoSupport,
-                   "MSG flag %$q is not recognized by this host",
-                   part_length,iter);
-   return -1;
+   return DeeError_Throwf(&DeeError_NoSupport,
+                          "MSG flag %$q is not recognized by this host",
+                          part_length,iter);
 next_part:
    iter += part_length;
    if (*iter) ++iter;
@@ -374,7 +373,9 @@ sock_getprotoname(int value) {
  size_t name_length;
 again:
  rwlock_write(&sysdb_lock);
+ DBG_ALIGNMENT_DISABLE();
  ent = getprotobynumber(value);
+ DBG_ALIGNMENT_ENABLE();
  if (ent && (name = ent->p_name) != NULL) {
   name_length = strlen(name);
   result = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject,s_str)+
@@ -433,10 +434,9 @@ sock_getafof(DeeObject *__restrict name, int *__restrict presult) {
  }
  if (DeeString_Check(name)) {
   if unlikely(!sock_getafvalue(DeeString_STR(name),presult)) {
-   DeeError_Throwf(&DeeError_NoSupport,
-                   "Unknown address family %r",
-                   name);
-   return -1;
+   return DeeError_Throwf(&DeeError_NoSupport,
+                          "Unknown address family %r",
+                          name);
   }
   return 0;
  }
@@ -450,10 +450,9 @@ sock_gettypeof(DeeObject *__restrict name, int *__restrict presult) {
  }
  if (DeeString_Check(name)) {
   if unlikely(!sock_gettypevalue(DeeString_STR(name),presult)) {
-   DeeError_Throwf(&DeeError_NoSupport,
-                   "Unknown socket type %r",
-                   name);
-   return -1;
+   return DeeError_Throwf(&DeeError_NoSupport,
+                          "Unknown socket type %r",
+                          name);
   }
   return 0;
  }
@@ -469,10 +468,9 @@ sock_getprotoof(DeeObject *__restrict name, int *__restrict presult) {
 #endif
  if (DeeString_Check(name)) {
   if unlikely(!sock_getprotovalue(DeeString_STR(name),presult)) {
-   DeeError_Throwf(&DeeError_NoSupport,
-                   "Unknown protocol name %r",
-                   name);
-   return -1;
+   return DeeError_Throwf(&DeeError_NoSupport,
+                          "Unknown protocol name %r",
+                          name);
   }
   return 0;
  }
@@ -542,10 +540,9 @@ get_shutdown_mode(char const *__restrict mode,
   *presult = iter->so_opt;
   return 0;
  }
- DeeError_Throwf(&DeeError_ValueError,
-                 "Invalid shutdown mode `%s'",
-                 mode);
- return -1;
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "Invalid shutdown mode `%s'",
+                        mode);
 }
 INTERN int DCALL
 get_shutdown_modeof(DeeObject *__restrict mode,
@@ -615,30 +612,30 @@ SockAddr_Sizeof(sa_family_t family, int protocol) {
  return result;
 }
 
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_no_host(char const *__restrict host,
             char const *port, int error) {
  if (port) {
-  DeeError_SysThrowf(&DeeError_HostNotFound,error,
-                     "Host %q with port %q could not be found",
-                     host,port);
+  return DeeError_SysThrowf(&DeeError_HostNotFound,error,
+                            "Host %q with port %q could not be found",
+                            host,port);
  } else {
-  DeeError_SysThrowf(&DeeError_HostNotFound,error,
-                     "Host %q could not be found",
-                     host);
+  return DeeError_SysThrowf(&DeeError_HostNotFound,error,
+                            "Host %q could not be found",
+                            host);
  }
 }
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_no_host_data(char const *__restrict host,
                  char const *port, int family, int error) {
  if (port) {
-  DeeError_SysThrowf(&DeeError_NoHostAddress,error,
-                     "Host %q with port %q is valid but has no addresses for family %K associated with it",
-                     host,port,sock_getafnameorid(family));
+  return DeeError_SysThrowf(&DeeError_NoHostAddress,error,
+                            "Host %q with port %q is valid but has no addresses for family %K associated with it",
+                            host,port,sock_getafnameorid(family));
  } else {
-  DeeError_SysThrowf(&DeeError_NoHostAddress,error,
-                     "Host %q is valid but has no addresses for family %K associated with it",
-                     host,sock_getafnameorid(family));
+  return DeeError_SysThrowf(&DeeError_NoHostAddress,error,
+                            "Host %q is valid but has no addresses for family %K associated with it",
+                            host,sock_getafnameorid(family));
  }
 }
 
@@ -654,9 +651,13 @@ sock_gethostbyaddr(void const *__restrict data, socklen_t datalen,
 restart:
  if (flags&SOCKADDR_STR_FNODNS) goto nodns;
  rwlock_write(&sysdb_lock);
+ DBG_ALIGNMENT_DISABLE();
  hp = (struct hostent *)gethostbyaddr((char const *)data,datalen,family);
+ DBG_ALIGNMENT_ENABLE();
  if (!hp) {
+  DBG_ALIGNMENT_DISABLE();
   error = h_errno;
+  DBG_ALIGNMENT_ENABLE();
   rwlock_endwrite(&sysdb_lock);
   if (flags&SOCKADDR_STR_FNOFAIL)
       goto nodns;
@@ -798,10 +799,9 @@ get_port_name(char const *__restrict port, size_t port_length,
  *presult = result;
  return 0;
 invalid_port:
- DeeError_Throwf(&DeeError_ValueError,
-                 "Invalid port string %q",
-                 port);
- return -1;
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "Invalid port string %q",
+                        port);
 }
 
 
@@ -913,7 +913,9 @@ retry_addrinfo:
    hints.ai_socktype = type;
   }
   rwlock_read(&sysdb_lock);
+  DBG_ALIGNMENT_DISABLE();
   error = getaddrinfo(host,port,family == AF_AUTO ? NULL : &hints,&info);
+  DBG_ALIGNMENT_ENABLE();
   if (error != 0) {
    rwlock_endread(&sysdb_lock);
 #ifdef EAI_AGAIN
@@ -949,7 +951,9 @@ retry_addrinfo:
     || family == AF_RDS
 #endif
     ) {
+    DBG_ALIGNMENT_DISABLE();
     freeaddrinfo(info);
+    DBG_ALIGNMENT_ENABLE();
     goto do_gethostbyname;
    }
 #ifdef EAI_NONAME
@@ -989,7 +993,9 @@ retry_addrinfo:
           info = info->ai_next;
 #endif
   if unlikely(!info->ai_addr) {
+   DBG_ALIGNMENT_DISABLE();
    freeaddrinfo(info);
+   DBG_ALIGNMENT_ENABLE();
    rwlock_endread(&sysdb_lock);
    DeeError_Throwf(&DeeError_NetError,
                    "Count not find any address for %q using port %q",
@@ -999,7 +1005,9 @@ retry_addrinfo:
              protocol != info->ai_protocol) {
    /* If an explicit protocol was specified, ensure that it is being used. */
    int real_proto = info->ai_protocol;
+   DBG_ALIGNMENT_DISABLE();
    freeaddrinfo(info);
+   DBG_ALIGNMENT_ENABLE();
    rwlock_endread(&sysdb_lock);
    DeeError_Throwf(&DeeError_NotImplemented,
                    "Host %q on port %q uses a different protocol %K than %K",
@@ -1010,7 +1018,9 @@ retry_addrinfo:
    sa_family_t info_family = info->ai_addr->sa_family;
    socklen_t   info_len = (socklen_t)info->ai_addrlen;
    COMPILER_READ_BARRIER();
+   DBG_ALIGNMENT_DISABLE();
    freeaddrinfo(info);
+   DBG_ALIGNMENT_ENABLE();
    rwlock_endread(&sysdb_lock);
    DeeError_Throwf(&DeeError_NotImplemented,
                    "Address family %K for %q on port %q is too "
@@ -1021,7 +1031,9 @@ retry_addrinfo:
   } else {
    memset(self,0,sizeof(SockAddr));
    memcpy(self,info->ai_addr,info->ai_addrlen);
+   DBG_ALIGNMENT_DISABLE();
    freeaddrinfo(info);
+   DBG_ALIGNMENT_ENABLE();
    rwlock_endread(&sysdb_lock);
    error = 0;
   }
@@ -1112,9 +1124,13 @@ no_special_hostname:
 do_gethostbyname_again:
 #endif
   rwlock_read(&sysdb_lock);
+  DBG_ALIGNMENT_DISABLE();
   hp = (struct hostent *)gethostbyname(host);
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(!hp) {
+   DBG_ALIGNMENT_DISABLE();
    error = h_errno;
+   DBG_ALIGNMENT_ENABLE();
    rwlock_endread(&sysdb_lock);
    if (error == HOST_NOT_FOUND) {
     err_no_host(host,NULL,error);
@@ -1199,10 +1215,9 @@ SockAddr_FromString(SockAddr *__restrict self,
                                   port_begin,(size_t)(port_end-port_begin));
   }
  }
- DeeError_Throwf(&DeeError_ValueError,
-                 "Address string %$q does not contain a port",
-                 string_length,string);
- return -1;
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "Address string %$q does not contain a port",
+                        string_length,string);
 }
 
 
@@ -1219,10 +1234,9 @@ PRIVATE int DCALL priv_stobdaddr(char *name, bdaddr_t *bdaddr) {
   bdaddr->b[5] = b5;
   return 0;
  }
- DeeError_Throwf(&DeeError_ValueError,
-                 "Invalid bluetooth address %q",
-                 name);
- return -1;
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "Invalid bluetooth address %q",
+                        name);
 }
 #endif
 
@@ -1502,8 +1516,10 @@ do_generic_string_2:
   goto err;
  }
 done:
+ DBG_ALIGNMENT_DISABLE();
  return 0;
 err:
+ DBG_ALIGNMENT_DISABLE();
  return -1;
 }
 
@@ -1514,13 +1530,15 @@ sockaddr_str(DeeSockAddrObject *__restrict self) {
 }
 PRIVATE DREF DeeObject *DCALL
 sockaddr_repr(DeeSockAddrObject *__restrict self) {
- return DeeString_Newf("sockaddr(%R)",SockAddr_ToString(&self->sa_addr,0,SOCKADDR_STR_FNOFAIL));
+ return DeeString_Newf("sockaddr(%R)",
+                       SockAddr_ToString(&self->sa_addr,0,
+                                          SOCKADDR_STR_FNOFAIL));
 }
 
 PRIVATE int DCALL
 sockaddr_ctor(DeeSockAddrObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- int af_type;
+ int af_type,result;
  if (!argc) {
   DeeError_Throwf(&DeeError_TypeError,
                   "Expected at least one argument for construction of `sockaddr'");
@@ -1528,7 +1546,9 @@ sockaddr_ctor(DeeSockAddrObject *__restrict self,
  }
  if (sock_getafof(argv[0],&af_type))
      goto err;
- return SockAddr_FromArgv(&self->sa_addr,af_type,0,0,argc-1,argv+1);
+ result = SockAddr_FromArgv(&self->sa_addr,af_type,0,0,argc-1,argv+1);
+ DBG_ALIGNMENT_ENABLE();
+ return result;
 err:
  return -1;
 }
@@ -1763,7 +1783,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+    /* .tp_buffer        = */NULL, /* XXX: Buffer interface to access the raw sockaddr data? */
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */sockaddr_getsets,
     /* .tp_members       = */sockaddr_members,

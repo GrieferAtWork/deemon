@@ -222,13 +222,17 @@ INTERN DREF DeeObject *DCALL nt_GetModuleFileName(HMODULE hModule) {
  buffer = DeeString_NewWideBuffer(bufsize);
  if unlikely(!buffer) goto err;
  for (;;) {
+  DBG_ALIGNMENT_DISABLE();
   error = GetModuleFileNameW(hModule,buffer,bufsize+1);
   if (!error) {
+   error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
    /* Error. */
-   DeeError_SysThrowf(&DeeError_SystemError,GetLastError(),
+   DeeError_SysThrowf(&DeeError_SystemError,error,
                       "Failed to lookup module name");
    goto err_result;
   }
+  DBG_ALIGNMENT_ENABLE();
   if (error <= bufsize) break;
   /* Increase buffer size. */
   bufsize   *= 2;
@@ -256,8 +260,10 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
  LPQUERYFULLPROCESSIMAGENAMEW func;
  func = pQueryFullProcessImageNameW;
  if (!func) {
+  DBG_ALIGNMENT_DISABLE();
   *(FARPROC *)&func = GetProcAddress(GetModuleHandleW(str_KERNEL32),
                                      "QueryFullProcessImageNameW");
+  DBG_ALIGNMENT_ENABLE();
   if (!func) *(void **)&func = (void *)-1;
   ATOMIC_CMPXCH(pQueryFullProcessImageNameW,NULL,func);
  }
@@ -266,8 +272,10 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
      return ITER_DONE;
  buffer = DeeString_NewWideBuffer(bufsize);
  if unlikely(!buffer) goto err;
+ DBG_ALIGNMENT_DISABLE();
  while (!(*func)(hProcess,dwFlags,buffer,&bufsize)) {
   DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   switch (error) {
 
   case ERROR_GEN_FAILURE:
@@ -288,7 +296,9 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
    nt_ThrowError(error);
    goto err_r;
   }
+  DBG_ALIGNMENT_DISABLE();
  }
+ DBG_ALIGNMENT_ENABLE();
  new_buffer = DeeString_TryResizeWideBuffer(buffer,bufsize);
  if likely(new_buffer) buffer = new_buffer;
  return DeeString_PackWideBuffer(buffer,STRING_ERROR_FREPLAC);
@@ -302,13 +312,18 @@ INTERN BOOL DCALL
 nt_GetExitCodeProcess(DWORD dwProcessId,
                       HANDLE hProcess,
                       LPDWORD lpExitCode) {
- BOOL result = GetExitCodeProcess(hProcess,lpExitCode);
+ BOOL result;
+ DBG_ALIGNMENT_DISABLE();
+ result = GetExitCodeProcess(hProcess,lpExitCode);
+ DBG_ALIGNMENT_ENABLE();
  if (result) goto done;
+ DBG_ALIGNMENT_DISABLE();
  if (GetLastError() == ERROR_ACCESS_DENIED &&
     (hProcess = OpenProcess(dwProcessId,FALSE,PROCESS_QUERY_LIMITED_INFORMATION)) != NULL) {
   result = GetExitCodeProcess(hProcess,lpExitCode);
   CloseHandle(hProcess);
  }
+ DBG_ALIGNMENT_ENABLE();
 done:
  return result;
 }

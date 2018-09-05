@@ -136,7 +136,9 @@ print_pwd(struct unicode_printer *__restrict printer) {
  buffer = unicode_printer_alloc_wchar(printer,bufsize);
  if unlikely(!buffer) goto err;
 again:
+ DBG_ALIGNMENT_DISABLE();
  new_bufsize = GetCurrentDirectoryW(bufsize+1,buffer);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(!new_bufsize) { nt_ThrowLastError(); goto err_release; }
  if (new_bufsize > bufsize) {
   LPWSTR new_buffer;
@@ -161,7 +163,9 @@ err:
  char *buffer,*new_buffer; size_t bufsize = 256;
  buffer = unicode_printer_alloc_utf8(printer,bufsize);
  if unlikely(!buffer) goto err;
+ DBG_ALIGNMENT_DISABLE();
  while (!getcwd(buffer,bufsize+1)) {
+  DBG_ALIGNMENT_ENABLE();
   /* Increase the buffer and try again. */
   if (errno != ERANGE) {
    DeeError_Throwf(&DeeError_SystemError,
@@ -171,7 +175,9 @@ err:
   bufsize *= 2;
   new_buffer = unicode_printer_resize_utf8(printer,buffer,bufsize);
   if unlikely(!new_buffer) goto err_release;
+  DBG_ALIGNMENT_DISABLE();
  }
+ DBG_ALIGNMENT_ENABLE();
  bufsize = strlen(buffer);
  if unlikely(unicode_printer_confirm_utf8(printer,buffer,bufsize) < 0)
     goto err;
@@ -372,7 +378,9 @@ begin_loading:
        return 2;
 #ifdef CONFIG_HOST_WINDOWS
    /* Sleep a bit longer than usually. */
+   DBG_ALIGNMENT_DISABLE();
    __NAMESPACE_INT_SYM SleepEx(1000,0);
+   DBG_ALIGNMENT_ENABLE();
 #else
    SCHED_YIELD();
 #endif
@@ -1394,18 +1402,18 @@ PRIVATE struct ext_def const extensions[] = {
 #endif
 };
 
-PRIVATE ATTR_COLD void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_invalid_module_name(DeeObject *__restrict module_name) {
- DeeError_Throwf(&DeeError_ValueError,
-                 "%r is not a valid module name",
-                 module_name);
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "%r is not a valid module name",
+                        module_name);
 }
 
-PRIVATE ATTR_COLD void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_module_not_found(DeeObject *__restrict module_name) {
- DeeError_Throwf(&DeeError_FileNotFound,
-                 "Module %r could not be found",
-                 module_name);
+ return DeeError_Throwf(&DeeError_FileNotFound,
+                        "Module %r could not be found",
+                        module_name);
 }
 
 #ifdef CONFIG_LITTLE_ENDIAN
@@ -1960,24 +1968,30 @@ INTERN DREF DeeObject *DCALL
 unix_readlink(char const *__restrict path) {
  DREF DeeObject *result; char *buffer; int error;
  size_t bufsize,new_size; dssize_t req_size;
+ /* TODO: Use a UTF-8 enabled unicode printer here! */
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  bufsize = PATH_MAX;
  buffer  = ascii_printer_alloc(&printer,bufsize);
  if unlikely(!buffer) goto err;
  for (;;) {
   struct stat st;
+  DBG_ALIGNMENT_DISABLE();
   req_size = readlink(path,buffer,bufsize+1);
   if unlikely(req_size < 0) {
 handle_error:
+   DBG_ALIGNMENT_ENABLE();
    error = errno;
    DeeError_SysThrowf(&DeeError_FSError,error,
                       "Failed to read symbolic link %q",
                       path);
    goto err;
   }
+  DBG_ALIGNMENT_ENABLE();
   if ((size_t)req_size <= bufsize) break;
+  DBG_ALIGNMENT_DISABLE();
   if (lstat(path,&st))
       goto handle_error;
+  DBG_ALIGNMENT_ENABLE();
   /* Ensure that this is still a symbolic link. */
   if (!S_ISLNK(st.st_mode)) { error = EINVAL; goto handle_error; }
   new_size = (size_t)st.st_size;
@@ -2002,7 +2016,10 @@ err:
 PRIVATE DREF /*String*/DeeObject *
 DCALL get_default_home(void) {
  DREF DeeObject *result,*new_result;
- char *env = getenv("DEEMON_HOME");
+ char *env;
+ DBG_ALIGNMENT_DISABLE();
+ env = getenv("DEEMON_HOME");
+ DBG_ALIGNMENT_ENABLE();
  if (env && *env) {
   result = DeeString_New(env);
   if unlikely(!result) goto err;
@@ -2022,7 +2039,9 @@ DCALL get_default_home(void) {
   WCHAR *heap_buffer = NULL,*path_start;
   DWORD buffer_size = COMPILER_LENOF(stack_buffer)-1,size;
 again:
+  DBG_ALIGNMENT_DISABLE();
   size = GetModuleFileNameW(NULL,buffer,buffer_size);
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(!size) {
    err_system_error("GetModuleFileName");
 err_heap_buffer:
@@ -2147,7 +2166,10 @@ DeeExec_SetHome(/*String*/DeeObject *new_home) {
 
 PRIVATE void DCALL do_init_module_path(void) {
  DREF DeeObject *path_part; int error;
- char *path = getenv("DEEMON_PATH");
+ char *path;
+ DBG_ALIGNMENT_DISABLE();
+ path = getenv("DEEMON_PATH");
+ DBG_ALIGNMENT_ENABLE();
  if (path) while (*path) {
   /* Split the module path. */
   char *next_path = strchr(path,DELIM);

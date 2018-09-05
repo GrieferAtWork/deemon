@@ -39,6 +39,7 @@
 #include <deemon/stringutils.h>
 #include <deemon/module.h>
 #include <hybrid/byteswap.h>
+#include <hybrid/unaligned.h>
 
 #include "../../runtime/strings.h"
 
@@ -309,15 +310,15 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 
  /* Match context flags (aka. flags set by a prefix such as `$' or `{...}') */
  if ((iop->io_class&OPERAND_CLASS_FFLAGMASK) !=
-     (oop->aoo_class&OPERAND_CLASS_FFLAGMASK)) {
-  if (((oop->aoo_class&OPERAND_CLASS_FFLAGMASK) == OPERAND_CLASS_TOP ||
-       (oop->aoo_class&OPERAND_CLASS_FFLAGMASK) == OPERAND_CLASS_POP) &&
+     (UNALIGNED_GET16(&oop->aoo_class)&OPERAND_CLASS_FFLAGMASK)) {
+  if (((UNALIGNED_GET16(&oop->aoo_class)&OPERAND_CLASS_FFLAGMASK) == OPERAND_CLASS_TOP ||
+       (UNALIGNED_GET16(&oop->aoo_class)&OPERAND_CLASS_FFLAGMASK) == OPERAND_CLASS_POP) &&
        (iop->io_class&OPERAND_CLASS_FFLAGMASK) == OPERAND_CLASS_POP_OR_TOP)
        ;
-  else if (oop->aoo_class == OPERAND_CLASS_PREFIX)
+  else if (UNALIGNED_GET16(&oop->aoo_class) == OPERAND_CLASS_PREFIX)
            ;
 #if 0
-  else if (OPERAND_CLASS_ISDISP(oop->aoo_class) &&
+  else if (OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&oop->aoo_class)) &&
            OPERAND_CLASS_ISDISP(iop->io_class))
            ;
 #endif
@@ -332,7 +333,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
   imm_rel ^= ASM_OVERLOAD_FREL_DSPBIT;
  }
  /* The stack-prefix instruction uses absolute addressing. */
- switch (oop->aoo_class&(OPERAND_CLASS_FSPADD|OPERAND_CLASS_FSPSUB)) {
+ switch (UNALIGNED_GET16(&oop->aoo_class)&(OPERAND_CLASS_FSPADD|OPERAND_CLASS_FSPSUB)) {
  case OPERAND_CLASS_FSPADD: /* `SP + imm' */
   imm_val -= current_assembler.a_stackcur;
   break;
@@ -351,7 +352,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
  if (imm_rel == ASM_OVERLOAD_FSTKDSP)
      imm_val = -imm_val;
 #endif
- switch (oop->aoo_class & OPERAND_CLASS_FMASK) {
+ switch (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) {
 
  case OPERAND_CLASS_VARARGS:
   if ((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_VARARGS) break;
@@ -446,7 +447,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
  case OPERAND_CLASS_DISP_EQ_N2:
   if (!OPERAND_CLASS_ISDISP(iop->io_class)) goto nope;
   if (iop->io_intexpr.ie_sym) goto nope;
-  if (OPERAND_CLASS_DISP_EQ_VALUE(oop->aoo_class) != imm_val)
+  if (OPERAND_CLASS_DISP_EQ_VALUE(UNALIGNED_GET16(&oop->aoo_class)) != imm_val)
       goto nope;
   break;
 
@@ -516,7 +517,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
   /* Fallback: confirm exact classification match. */
 do_default_class_check:
   if ((iop->io_class & OPERAND_CLASS_FMASK) !=
-      (oop->aoo_class & OPERAND_CLASS_FMASK))
+      (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK))
        goto nope;
   break;
  }
@@ -682,7 +683,7 @@ got_overload:
   } else {
    /* Emit prefix operands. */
    for (i = 0; i < iter->ao_opcount; ++i) {
-    if ((iter->ao_ops[i].aoo_class & OPERAND_CLASS_FMASK) != OPERAND_CLASS_PREFIX)
+    if ((UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) != OPERAND_CLASS_PREFIX)
          continue;
     switch (invoc->ai_ops[i].io_class & OPERAND_CLASS_FMASK) {
     case OPERAND_CLASS_POP:
@@ -763,7 +764,7 @@ got_overload:
 
   /* Check if the instruction must be prefixed by F0 */
   for (i = 0; i < iter->ao_opcount; ++i) {
-   switch (iter->ao_ops[i].aoo_class & OPERAND_CLASS_FMASK) {
+   switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) {
    case OPERAND_CLASS_EXTERN: /* `extern <io_modid>:<io_symid>' */
     if (invoc->ai_ops[i].io_extern.io_modid > UINT8_MAX)
         goto do_emit_f0_prefix;
@@ -787,7 +788,7 @@ do_emit_f0_prefix:
     /* Check if a constant-encoded immediate operand needs extension. */
     if (current_assembler.a_constc > UINT8_MAX &&
        (iter->ao_flags&ASM_OVERLOAD_FCONSTIMM) &&
-        OPERAND_CLASS_ISDISP(iter->ao_ops[i].aoo_class))
+        OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&iter->ao_ops[i].aoo_class)))
         goto do_emit_f0_prefix;
     break;
    }
@@ -825,7 +826,7 @@ do_emit_instruction:
     /* Toggle the relative displacement bit. */
     imm_rel ^= ASM_OVERLOAD_FREL_DSPBIT;
    }
-   switch (iter->ao_ops[i].aoo_class&(OPERAND_CLASS_FSPADD|OPERAND_CLASS_FSPSUB)) {
+   switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class)&(OPERAND_CLASS_FSPADD|OPERAND_CLASS_FSPSUB)) {
    case OPERAND_CLASS_FSPADD: /* `SP + imm' */
     imm_val -= current_assembler.a_stackcur;
     break;
@@ -844,7 +845,7 @@ do_emit_instruction:
        imm_val = -imm_val;
 #endif
    if ((iter->ao_flags&ASM_OVERLOAD_FCONSTIMM) &&
-        OPERAND_CLASS_ISDISP(iter->ao_ops[i].aoo_class)) {
+        OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&iter->ao_ops[i].aoo_class))) {
     int32_t cid;
     /* Encode as a relocation-enabled integer constant. */
     switch (imm_rel & ASM_OVERLOAD_FRELMSK) {
@@ -862,7 +863,7 @@ do_emit_instruction:
     if (emit_sym16 ? asm_put_data16((uint16_t)cid)
                    : asm_put_data8 ((uint8_t)cid))
         goto err;
-   } else switch (iter->ao_ops[i].aoo_class & OPERAND_CLASS_FMASK) {
+   } else switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) {
     /* Symbol operands. */
    case OPERAND_CLASS_EXTERN:
     if (emit_sym16 ? asm_put_data16((uint16_t)invoc->ai_ops[i].io_extern.io_modid)

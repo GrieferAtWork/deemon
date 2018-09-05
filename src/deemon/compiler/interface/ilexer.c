@@ -1080,7 +1080,7 @@ INTERN DREF DeeObject *DCALL
 lexer_get_eofparen(DeeCompilerWrapperObject *__restrict self) {
  DREF DeeObject *result;
  COMPILER_BEGIN(self->cw_compiler);
- result = DeeInt_NewU32(TPPLexer_Current->l_eof_paren);
+ result = DeeInt_NewSize(TPPLexer_Current->l_eof_paren);
  COMPILER_END();
  return result;
 }

@@ -1186,7 +1186,7 @@ DeeInt_TryAs128(DeeObject *__restrict self, dint128_t *__restrict value) {
   DUINT128_GET64(*value)[DEE_INT128_MS64] = 0;
   return INT_UNSIGNED;
  case -1:
-  DUINT128_GETS64(*value)[DEE_INT128_LS64] = -DeeInt_DIGIT(self)[0];
+  DUINT128_GETS64(*value)[DEE_INT128_LS64] = -(sdigit)DeeInt_DIGIT(self)[0];
   DUINT128_GETS64(*value)[DEE_INT128_MS64] = 0;
   return INT_SIGNED;
  default: break;

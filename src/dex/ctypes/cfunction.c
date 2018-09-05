@@ -170,7 +170,7 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
             /* .tp_iter_next     = */NULL,
             /* .tp_attr          = */NULL,
             /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+            /* .tp_buffer        = */NULL,
             /* .tp_methods       = */NULL,
             /* .tp_getsets       = */NULL,
             /* .tp_members       = */NULL,
@@ -248,12 +248,12 @@ err:
 }
 
 union argument {
- int i; float f; double d; long double ld;
- unsigned int u;
- int8_t  s8;  uint8_t  u8;
- int16_t s16; uint16_t u16;
- int32_t s32; uint32_t u32;
- int64_t s64; uint64_t u64; void *p;
+    int i; float f; double d; long double ld;
+    unsigned int u;
+    int8_t  s8;  uint8_t  u8;
+    int16_t s16; uint16_t u16;
+    int32_t s32; uint32_t u32;
+    int64_t s64; uint64_t u64; void *p;
 };
 
 
@@ -326,12 +326,14 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
  {
   /* Initialize the FFI closure controller. */
   ffi_status error;
+  DBG_ALIGNMENT_DISABLE();
   error = ffi_prep_cif(&result->ft_ffi_cif,
                       (ffi_abi)((unsigned int)calling_convention &
                                 (unsigned int)CC_MTYPE),
                       (unsigned int)argc,
                        result->ft_ffi_return_type,
                        result->ft_ffi_arg_type_v);
+  DBG_ALIGNMENT_ENABLE();
   if (error != FFI_OK) {
    DeeError_Throwf(&DeeError_RuntimeError,
                    "Failed to create function closure (%d)",

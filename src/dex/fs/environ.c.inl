@@ -238,7 +238,9 @@ INTERN bool DCALL
 fs_hasenv(/*String*/DeeObject *__restrict name) {
  bool result;
  rwlock_read(&env_lock);
+ DBG_ALIGNMENT_DISABLE();
  result = getenv(DeeString_STR(name)) != NULL;
+ DBG_ALIGNMENT_ENABLE();
  rwlock_endread(&env_lock);
  return result;
 }
@@ -248,7 +250,9 @@ fs_getenv(DeeObject *__restrict name, bool try_get) {
  char *strval; size_t valsiz;
 again:
  rwlock_read(&env_lock);
+ DBG_ALIGNMENT_DISABLE();
  strval = getenv(DeeString_STR(name));
+ DBG_ALIGNMENT_ENABLE();
  if (!strval) {
   rwlock_endread(&env_lock);
   if (!try_get) {
@@ -280,7 +284,9 @@ fs_printenv(char const *__restrict name,
 again:
  rwlock_read(&env_lock);
  env_ver = env_version;
+ DBG_ALIGNMENT_DISABLE();
  envval  = getenv(name);
+ DBG_ALIGNMENT_ENABLE();
  if (!envval) {
   rwlock_endread(&env_lock);
   if (!try_get) { err_unknown_env_var_s(name); goto err; }

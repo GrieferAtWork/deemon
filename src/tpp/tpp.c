@@ -229,6 +229,12 @@
 #endif
 
 
+#ifndef DBG_ALIGNMENT_DISABLE
+#define NO_DBG_ALIGNMENT 1
+#define DBG_ALIGNMENT_DISABLE() (void)0
+#define DBG_ALIGNMENT_ENABLE()  (void)0
+#endif
+
 
 #ifndef __KOS_SYSTEM_HEADERS__
 #ifndef isascii
@@ -269,10 +275,10 @@ extern void __debugbreak(void);
 #define TPP_BREAKPOINT  __builtin_breakpoint
 #elif (defined(__i386__) || defined(__i386) || defined(i386) || \
        defined(__x86_64__)) && (defined(__GNUC__) || defined(__DCC_VERSION__))
-#ifdef __KOS_SYSTEM_HEADERS__
-#define TPP_BREAKPOINT() __XBLOCK({ __asm__ __volatile__("int $3\n"); (void)0; })
+#ifdef __XBLOCK
+#define TPP_BREAKPOINT() __XBLOCK({ __asm__ __volatile__("int {$}3\n"); (void)0; })
 #else
-#define TPP_BREAKPOINT()         ({ __asm__ __volatile__("int $3\n"); (void)0; })
+#define TPP_BREAKPOINT()         ({ __asm__ __volatile__("int {$}3\n"); (void)0; })
 #endif
 #endif
 
@@ -283,12 +289,14 @@ PRIVATE void TPPCALL tpp_vlogerrf(char const *format, va_list args) {
 #ifdef _WIN32
  char buffer[4096];
  vsprintf(buffer,format,args);
-#ifndef __DCC_VERSION__
+ DBG_ALIGNMENT_DISABLE();
  OutputDebugStringA(buffer);
-#endif
  fwrite(buffer,sizeof(char),strlen(buffer),stderr);
+ DBG_ALIGNMENT_ENABLE();
 #else
+ DBG_ALIGNMENT_DISABLE();
  vfprintf(stderr,format,args);
+ DBG_ALIGNMENT_ENABLE();
 #endif
 }
 PRIVATE void tpp_logerrf(char const *format, ...) {
@@ -2341,12 +2349,16 @@ TPPFile_Open(char const *__restrict filename) {
  stream = TPP_USERSTREAM_FOPEN(filename);
  if (stream == TPP_STREAM_INVALID) { errno = ENOENT; return NULL; }
 #elif defined(_WIN32)
+ DBG_ALIGNMENT_DISABLE();
  stream = CreateFileA(filename,GENERIC_READ,FILE_SHARE_READ|
                       FILE_SHARE_WRITE|FILE_SHARE_DELETE,NULL,
                       OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+ DBG_ALIGNMENT_ENABLE();
  if (stream == INVALID_HANDLE_VALUE) { errno = ENOENT; return NULL; }
 #else
+ DBG_ALIGNMENT_DISABLE();
  stream = open(filename,O_RDONLY);
+ DBG_ALIGNMENT_ENABLE();
  if (stream == -1) { errno = ENOENT; return NULL; }
 #endif
  result = TPPFile_OpenStream(stream,filename);
@@ -2720,6 +2732,7 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
                                        STREAM_BUFSIZE);
   }
 #elif defined(_WIN32)
+  DBG_ALIGNMENT_DISABLE();
 #ifdef TPP_CONFIG_NONBLOCKING_IO
   if ((self->f_textfile.f_flags & TPP_TEXTFILE_FLAG_NONBLOCK) &&
       (flags & TPPFILE_NEXTCHUNK_FLAG_NOBLCK) &&
@@ -2733,7 +2746,9 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
                  STREAM_BUFSIZE,&read_bufsize,NULL))
         read_bufsize = 0;
   }
+  DBG_ALIGNMENT_ENABLE();
 #else
+  DBG_ALIGNMENT_DISABLE();
 #ifdef TPP_CONFIG_NONBLOCKING_IO
   if ((self->f_textfile.f_flags & TPP_TEXTFILE_FLAG_NONBLOCK) &&
       (flags & TPPFILE_NEXTCHUNK_FLAG_NOBLCK)) {
@@ -2756,6 +2771,7 @@ unix_do_read:
                        STREAM_BUFSIZE);
    if (read_bufsize < 0) read_bufsize = 0;
   }
+  DBG_ALIGNMENT_ENABLE();
 #endif
   assert(read_bufsize <= STREAM_BUFSIZE);
   /* Clamp the chunk size to what was actually read. */
@@ -5161,19 +5177,33 @@ PUBLIC int TPPCALL TPPLexer_Init(struct TPPLexer *__restrict self) {
  assert(TPPFile_Empty.f_namehash ==
         hashof(TPPFile_Empty.f_name,
                TPPFile_Empty.f_namesize));
-#if !TPP_CONFIG_MINMACRO
+#ifdef __SIZEOF_POINTER__
  assert(sizeof(void *) == __SIZEOF_POINTER__);
+#endif
+#ifdef __SIZEOF_WCHAR_T__
  assert(sizeof(wchar_t) == __SIZEOF_WCHAR_T__);
+#endif
+#ifdef __SIZEOF_SHORT__
  assert(sizeof(short) == __SIZEOF_SHORT__);
+#endif
+#ifdef __SIZEOF_INT__
  assert(sizeof(int) == __SIZEOF_INT__);
+#endif
+#ifdef __SIZEOF_LONG__
  assert(sizeof(long) == __SIZEOF_LONG__);
-#if TPP_HAVE_LONGLONG
+#endif
+#if TPP_HAVE_LONGLONG && defined(__SIZEOF_LONG_LONG__)
  assert(sizeof(long long) == __SIZEOF_LONG_LONG__);
-#endif /* TPP_HAVE_LONGLONG */
+#endif /* TPP_HAVE_LONGLONG && ... */
+#ifdef __SIZEOF_FLOAT__
  assert(sizeof(float) == __SIZEOF_FLOAT__);
+#endif
+#ifdef __SIZEOF_DOUBLE__
  assert(sizeof(double) == __SIZEOF_DOUBLE__);
+#endif
+#ifdef __SIZEOF_LONG_DOUBLE__
  assert(sizeof(long double) == __SIZEOF_LONG_DOUBLE__);
-#endif /* !TPP_CONFIG_MINMACRO */
+#endif
  return 1;
 }
 
@@ -6035,7 +6065,9 @@ check_path_spelling(char *filename, size_t filename_size) {
      (part_begin[1] == '.' && !part_begin[2]))) goto next_part;
   /* Skip drive letters. */
   if (next_sep[-1] == ':') goto next_part;
+  DBG_ALIGNMENT_DISABLE();
   find_handle = FindFirstFileA(filename,&filename_data);
+  DBG_ALIGNMENT_ENABLE();
   if (find_handle && find_handle != INVALID_HANDLE_VALUE) {
    if (strcmp(filename_data.cFileName,part_begin)) {
     *next_sep = backup; /* This part of the path is cased differently. */
@@ -6044,7 +6076,9 @@ check_path_spelling(char *filename, size_t filename_size) {
    } else {
     error = 1;
    }
+   DBG_ALIGNMENT_DISABLE();
    FindClose(find_handle);
+   DBG_ALIGNMENT_ENABLE();
   }
 next_part:
   *next_sep = backup;
@@ -11484,6 +11518,7 @@ PRIVATE uint_least64_t TPPCALL
 get_last_modified_time(struct TPPFile *__restrict fp) {
 #ifdef _WIN32
  HANDLE hFile; FILETIME ftLastModified;
+ DBG_ALIGNMENT_DISABLE();
 #ifndef TPP_CONFIG_USERSTREAMS
  if (fp->f_textfile.f_stream != TPP_STREAM_INVALID &&
      GetFileTime(hFile,NULL,NULL,&ftLastModified))
@@ -11494,18 +11529,24 @@ get_last_modified_time(struct TPPFile *__restrict fp) {
   hFile = CreateFileA(fp->f_name,GENERIC_READ,FILE_SHARE_READ|
                       FILE_SHARE_WRITE|FILE_SHARE_DELETE,NULL,
                       OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+  DBG_ALIGNMENT_ENABLE();
   if (!hFile || hFile == INVALID_HANDLE_VALUE)
        return 0;
-  if (!GetFileTime(hFile,NULL,NULL,&ftLastModified))
-       return 0;
+  DBG_ALIGNMENT_DISABLE();
+  if (!GetFileTime(hFile,NULL,NULL,&ftLastModified)) {
+   DBG_ALIGNMENT_ENABLE();
+   return 0;
+  }
   CloseHandle(hFile);
  }
+ DBG_ALIGNMENT_ENABLE();
  return ((uint_least64_t)ftLastModified.dwLowDateTime |
          (uint_least64_t)ftLastModified.dwHighDateTime << 32);
 #elif defined(NO_INCLUDE_SYS_STAT_H)
  return 0;
 #else
  struct stat st;
+ DBG_ALIGNMENT_DISABLE();
 #if !defined(TPP_CONFIG_USERSTREAMS) && !defined(NO_FSTAT)
  if (fp->f_textfile.f_stream != TPP_STREAM_INVALID &&
      fstat(fp->f_textfile.f_stream,&st))
@@ -11513,9 +11554,12 @@ get_last_modified_time(struct TPPFile *__restrict fp) {
  else
 #endif /* !TPP_CONFIG_USERSTREAMS */
  {
-  if (stat(fp->f_name,&st))
-      return 0;
+  if (stat(fp->f_name,&st)) {
+   DBG_ALIGNMENT_ENABLE();
+   return 0;
+  }
  }
+ DBG_ALIGNMENT_ENABLE();
  return st.st_mtime;
 #endif
 }

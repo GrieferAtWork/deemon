@@ -49,12 +49,12 @@ thread_tls_get(size_t index) {
   size_t old_size = desc ? desc->td_size : 0;
   desc = (struct tls_descriptor *)Dee_Realloc(desc,
                                               offsetof(struct tls_descriptor,td_elem)+
-                                             (index+1)*sizeof(DREF DeeObject *));
+                                             (index + 1)*sizeof(DREF DeeObject *));
   if unlikely(!desc) return NULL;
   /* Save the new descriptor length. */
   desc->td_size = index+1;
   /* ZERO-initialize all newly allocated indices. */
-  memset(desc->td_elem+old_size,0,((index+1)-old_size)*sizeof(DREF DeeObject *));
+  memset(desc->td_elem + old_size,0,((index + 1) - old_size)*sizeof(DREF DeeObject *));
   /* Save the new descriptor. */
   caller->t_tlsdata = (void *)desc;
  }
@@ -224,9 +224,9 @@ tls_visit(Tls *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE ATTR_COLD void DCALL err_tls_unbound(void) {
- DeeError_Throwf(&DeeError_AttributeError,
-                 "The TLS variable has been unbound");
+PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "The TLS variable has been unbound");
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -329,7 +329,7 @@ err:
 PRIVATE int DCALL
 tls_delitem(Tls *__restrict self) {
  int result = tls_dodelitem(self);
- if (result > 0) err_tls_unbound(),result = -1;
+ if (result > 0) result = err_tls_unbound();
  return result;
 }
 
@@ -440,9 +440,9 @@ tls_visit(Tls *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE ATTR_COLD void DCALL err_tls_unbound(void) {
- DeeError_Throwf(&DeeError_AttributeError,
-                 "The TLS variable has been unbound");
+PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "The TLS variable has been unbound");
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -536,7 +536,7 @@ err:
 PRIVATE int DCALL
 tls_delitem(Tls *__restrict self) {
  int result = tls_dodelitem(self);
- if (result > 0) err_tls_unbound(),result = -1;
+ if (result > 0) result = err_tls_unbound();
  return result;
 }
 

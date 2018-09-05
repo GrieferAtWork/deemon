@@ -77,8 +77,10 @@ dex_load_file(DeeDexObject *__restrict self,
 #ifdef USE_LOADLIBRARY
  LPWSTR name = (LPWSTR)DeeString_AsWide(input_file);
  if unlikely(!name) return -1;
+ DBG_ALIGNMENT_DISABLE();
  handle = LoadLibraryW((LPCWSTR)name);
 #else
+ DBG_ALIGNMENT_DISABLE();
  handle = dlopen(DeeString_STR(input_file),
                  RTLD_LOCAL|
 #ifdef RTLD_LAZY
@@ -91,7 +93,9 @@ dex_load_file(DeeDexObject *__restrict self,
  if (!handle) {
 #ifdef USE_LOADLIBRARY
   /* TODO: Check against GetLastError() for the reason why. */
-  DWORD error = GetLastError();
+  DWORD error;
+  error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   DEE_DPRINTF("error = %u (%r)\n",error,input_file);
 #endif
   return 1;
@@ -103,6 +107,7 @@ dex_load_file(DeeDexObject *__restrict self,
  descriptor = (struct dex *)dlsym(handle,"DEX");
  if (!descriptor) descriptor = (struct dex *)dlsym(handle,"_DEX");
 #endif
+ DBG_ALIGNMENT_ENABLE();
  if (!descriptor) {
   DeeError_Throwf(&DeeError_RuntimeError,
                   "Dex extension %r does not export a descriptor table",
@@ -226,11 +231,13 @@ err_imp_elem:
 err_imp:
  Dee_Free(imports);
 err:
+ DBG_ALIGNMENT_DISABLE();
 #ifdef USE_LOADLIBRARY
  FreeLibrary(handle);
 #else
  dlclose(handle);
 #endif
+ DBG_ALIGNMENT_ENABLE();
  return -1;
 }
 
@@ -243,36 +250,55 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
  if (!DeeDex_Check(self) || !(me->d_module.mo_flags&MODULE_FDIDLOAD))
       return NULL;
 #ifdef USE_LOADLIBRARY
+ DBG_ALIGNMENT_DISABLE();
  result = GetProcAddress((HMODULE)me->d_handle,name);
+ DBG_ALIGNMENT_ENABLE();
  if (!result) {
   /* Try again after prepending an underscore. */
   if (((uintptr_t)(name  )&~(PAGESIZE-1)) ==
       ((uintptr_t)(name-1)&~(PAGESIZE-1)) &&
         name[-1] == '_') {
+   DBG_ALIGNMENT_DISABLE();
    result = GetProcAddress((HMODULE)me->d_handle,name-1);
+   DBG_ALIGNMENT_ENABLE();
   } else {
    char *temp_name; size_t namelen = strlen(name);
+#ifdef Dee_AMallocNoFail
    Dee_AMallocNoFail(temp_name,(namelen+2)*sizeof(char));
+#else
+   temp_name = (char *)Dee_AMalloc((namelen+2)*sizeof(char));
+   if unlikely(!temp_name)
+      return NULL; /* ... Technically not correct, but if memory has gotten
+                    *     this low, that's the last or the user's problems. */
+#endif
    memcpy(temp_name+1,name,(namelen+1)*sizeof(char));
    temp_name[0] = '_';
+   DBG_ALIGNMENT_DISABLE();
    result = GetProcAddress((HMODULE)me->d_handle,temp_name);
+   DBG_ALIGNMENT_ENABLE();
    Dee_AFree(temp_name);
   }
  }
 #else
+ DBG_ALIGNMENT_DISABLE();
  result = dlsym(me->d_handle,name);
+ DBG_ALIGNMENT_ENABLE();
  if (!result) {
   /* Try again after prepending an underscore. */
   if (((uintptr_t)(name  )&~(PAGESIZE-1)) ==
       ((uintptr_t)(name-1)&~(PAGESIZE-1)) &&
         name[-1] == '_') {
+   DBG_ALIGNMENT_DISABLE();
    result = dlsym(me->d_handle,name-1);
+   DBG_ALIGNMENT_ENABLE();
   } else {
    char *temp_name; size_t namelen = strlen(name);
    Dee_AMallocNoFail(temp_name,(namelen+2)*sizeof(char));
    memcpy(temp_name+1,name,(namelen+1)*sizeof(char));
    temp_name[0] = '_';
+   DBG_ALIGNMENT_DISABLE();
    result = dlsym(me->d_handle,temp_name);
+   DBG_ALIGNMENT_ENABLE();
    Dee_AFree(temp_name);
   }
  }
@@ -402,11 +428,13 @@ dex_fini(DeeDexObject *__restrict self) {
    * in the global chain of active membercaches.
    * XXX: Only do this for caches apart of this module's static binary image? */
   membercache_clear((size_t)-1);
+  DBG_ALIGNMENT_DISABLE();
 #ifdef USE_LOADLIBRARY
   FreeLibrary((HMODULE)self->d_handle);
 #else
   dlclose(self->d_handle);
 #endif
+  DBG_ALIGNMENT_ENABLE();
  }
 }
 PRIVATE void DCALL

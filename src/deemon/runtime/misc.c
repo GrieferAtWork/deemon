@@ -46,6 +46,7 @@
 
 #include <hybrid/byteswap.h>
 #include <hybrid/byteorder.h>
+#include <hybrid/unaligned.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -341,7 +342,7 @@ hash_ptr(void const *__restrict ptr, size_t n_bytes) {
  dhash_t h = seed ^ (n_bytes * m);
  size_t len8 = n_bytes / 8;
  while (len8--) {
-  dhash_t k = LESWAP64(*(*(dhash_t **)&ptr)++);
+  dhash_t k = UNALIGNED_GETLE64((*(dhash_t **)&ptr)++);
   k *= m;
   k ^= k >> r;
   k *= m;
@@ -448,7 +449,7 @@ hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
       char    ch[8];
       dhash_t x;
   } k;
-  k.x     = LESWAP64(*(*(dhash_t **)&ptr)++);
+  k.x     = UNALIGNED_GETLE64((*(dhash_t **)&ptr)++);
   k.ch[0] = (char)DeeUni_ToLower(k.ch[0]);
   k.ch[1] = (char)DeeUni_ToLower(k.ch[1]);
   k.ch[2] = (char)DeeUni_ToLower(k.ch[2]);
@@ -561,13 +562,13 @@ hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
 #endif
 
 #if 0
-#define BEGIN_ALLOC()     DeeMem_ClearCaches((size_t)-1)
+#define BEGIN_ALLOC()    (DBG_ALIGNMENT_DISABLE(),DeeMem_ClearCaches((size_t)-1))
 #else
-#define BEGIN_ALLOC()    (void)0
+#define BEGIN_ALLOC()     DBG_ALIGNMENT_DISABLE()
 #endif
-#define END_ALLOC()       (void)0
-#define BEGIN_TRYALLOC()  (void)0
-#define END_TRYALLOC()    (void)0
+#define END_ALLOC()       DBG_ALIGNMENT_ENABLE()
+#define BEGIN_TRYALLOC()  DBG_ALIGNMENT_DISABLE()
+#define END_TRYALLOC()    DBG_ALIGNMENT_ENABLE()
 
 PUBLIC dhash_t DCALL
 hash_str(char const *__restrict str) {
@@ -676,7 +677,9 @@ PUBLIC void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes) {
 }
 
 PUBLIC void (DCALL Dee_Free)(void *ptr) {
+ DBG_ALIGNMENT_DISABLE();
  (free)(ptr);
+ DBG_ALIGNMENT_ENABLE();
 }
 
 
@@ -826,11 +829,13 @@ again:
 }
 PUBLIC void
 (DCALL DeeDbg_Free)(void *ptr, char const *file, int line) {
+ DBG_ALIGNMENT_DISABLE();
 #ifdef __KERNEL__
  _free_d(ptr,file,line,NULL,NULL);
 #else
  _free_d(ptr,file,line,NULL);
 #endif
+ DBG_ALIGNMENT_ENABLE();
 }
 #elif defined(_MSC_VER)
 #define HAVE_DEEDBG_MALLOC 1
@@ -936,7 +941,9 @@ again:
 }
 PUBLIC void
 (DCALL DeeDbg_Free)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
+ DBG_ALIGNMENT_DISABLE();
  _free_dbg(ptr,_NORMAL_BLOCK);
+ DBG_ALIGNMENT_ENABLE();
 }
 #endif
 #endif /* !NDEBUG */
@@ -1073,7 +1080,9 @@ debug_printer(void *UNUSED(closure),
      (((uintptr_t)buffer + bufsize)     & ~(uintptr_t)(PAGESIZE-1)) ==
      (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE-1)) &&
      (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
+  DBG_ALIGNMENT_DISABLE();
   OutputDebugStringA((char *)buffer);
+  DBG_ALIGNMENT_ENABLE();
  } else
 #endif
  {
@@ -1082,7 +1091,9 @@ debug_printer(void *UNUSED(closure),
    size_t part = MIN(bufsize,sizeof(temp)-sizeof(char));
    memcpy(temp,buffer,part);
    temp[part] = '\0';
+   DBG_ALIGNMENT_DISABLE();
    OutputDebugStringA(temp);
+   DBG_ALIGNMENT_ENABLE();
    *(uintptr_t *)&buffer += part;
    bufsize -= part;
   }

@@ -205,20 +205,25 @@ nt_CreateFile(DeeObject *__restrict lpFileName, DWORD dwDesiredAccess, DWORD dwS
  HANDLE result; LPWSTR wname;
  wname = (LPWSTR)DeeString_AsWide(lpFileName);
  if unlikely(!wname) goto err;
+ DBG_ALIGNMENT_DISABLE();
  result = CreateFileW(wname,dwDesiredAccess,dwShareMode,lpSecurityAttributes,
                       dwCreationDisposition,dwFlagsAndAttributes,hTemplateFile);
  if (result == INVALID_HANDLE_VALUE) {
   if (nt_IsUncError(GetLastError())) {
    /* Fix the filename and try again. */
+   DBG_ALIGNMENT_ENABLE();
    lpFileName = nt_FixUncPath(lpFileName);
    if unlikely(!lpFileName) goto err;
    wname = (LPWSTR)DeeString_AsWide(lpFileName);
    if unlikely(!wname) { Dee_Decref(lpFileName); goto err; }
+   DBG_ALIGNMENT_DISABLE();
    result = CreateFileW(wname,dwDesiredAccess,dwShareMode,lpSecurityAttributes,
                         dwCreationDisposition,dwFlagsAndAttributes,hTemplateFile);
+   DBG_ALIGNMENT_ENABLE();
    Dee_Decref(lpFileName);
   }
  }
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(result == NULL)
     result = INVALID_HANDLE_VALUE; /* Shouldn't happen... */
  return result;
@@ -232,7 +237,11 @@ PUBLIC int DCALL nt_ThrowError(DWORD dwError) {
                            "System call failed");
 }
 PUBLIC int DCALL nt_ThrowLastError(void) {
- return nt_ThrowError(GetLastError());
+ DWORD dwError;
+ DBG_ALIGNMENT_DISABLE();
+ dwError = GetLastError();
+ DBG_ALIGNMENT_ENABLE();
+ return nt_ThrowError(dwError);
 }
 
 
@@ -258,7 +267,9 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
      (((uintptr_t)buffer + bufsize)     & ~(uintptr_t)(PAGESIZE-1)) ==
      (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE-1)) &&
      (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
+  DBG_ALIGNMENT_DISABLE();
   OutputDebugStringA((char *)buffer);
+  DBG_ALIGNMENT_ENABLE();
  } else
 #endif
  {
@@ -267,7 +278,9 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
    size_t part = MIN(bufsize,sizeof(temp)-sizeof(char));
    memcpy(temp,buffer,part);
    temp[part] = '\0';
+   DBG_ALIGNMENT_DISABLE();
    OutputDebugStringA(temp);
+   DBG_ALIGNMENT_ENABLE();
    *(uintptr_t *)&buffer += part;
    bufsize -= part;
   }
@@ -495,8 +508,10 @@ DeeFile_Open(/*String*/DeeObject *__restrict filename, int oflags, int mode) {
  if (!((DeeStringObject *)filename)->s_data ||
      !((DeeStringObject *)filename)->s_data->u_data[STRING_WIDTH_WCHAR]) {
   /* No unicode cache has been pre-allocated. Try to open using ANSI APIs. */
+  DBG_ALIGNMENT_DISABLE();
   fp = CreateFileA(DeeString_STR(filename),dwDesiredAccess,dwShareMode,
                    NULL,dwCreationDisposition,dwFlagsAndAttributes,NULL);
+  DBG_ALIGNMENT_ENABLE();
   if (fp != INVALID_HANDLE_VALUE)
       goto early_got_fp;
   /* NOTE: The ANSI version is limited to MAX_PATH characters.
@@ -508,8 +523,10 @@ DeeFile_Open(/*String*/DeeObject *__restrict filename, int oflags, int mode) {
 #endif
  wname = (LPWSTR)DeeString_AsWide(filename);
  if unlikely(!wname) goto err;
+ DBG_ALIGNMENT_DISABLE();
  fp = CreateFileW(wname,dwDesiredAccess,dwShareMode,NULL,
                   dwCreationDisposition,dwFlagsAndAttributes,NULL);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(!fp) goto err;
  if (fp != INVALID_HANDLE_VALUE) {
   /* Simple case: The open was successful. */
@@ -522,19 +539,25 @@ early_got_fp:
 #ifdef QUICK_ATTEMPT_ANSI_API
 check_unc_path:
 #endif
+  DBG_ALIGNMENT_DISABLE();
   error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if (nt_IsUncError(error)) {
    /* Fix UNC and try again. */
    filename = nt_FixUncPath(filename);
    if unlikely(!filename) goto err;
    wname = (LPWSTR)DeeString_AsWide(filename);
    if unlikely(!wname) goto err_filename;
+   DBG_ALIGNMENT_DISABLE();
    fp = CreateFileW(wname,dwDesiredAccess,dwShareMode,NULL,
                     dwCreationDisposition,dwFlagsAndAttributes,NULL);;
+   DBG_ALIGNMENT_ENABLE();
    if (fp != INVALID_HANDLE_VALUE)
        goto got_file_name;
    Dee_Decref(filename);
+   DBG_ALIGNMENT_DISABLE();
    error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
   }
 /*check_nt_error:*/
   if (nt_IsFileNotFound(error) &&
@@ -552,13 +575,17 @@ got_file_name:
 
 #if 0 /* XXX: Only if `fp' is a pipe */
  { DWORD new_mode = oflags&OPEN_FNONBLOCK ? PIPE_NOWAIT : PIPE_WAIT;
+   DBG_ALIGNMENT_DISABLE();
    SetNamedPipeHandleState(fp,&new_mode,NULL,NULL);
+   DBG_ALIGNMENT_ENABLE();
  }
 #endif
 #if 0 /* Technically we'd need to do this, but then again:
        * Windows doesn't even have fork (natively...) */
  if (!(oflags&OPEN_FCLOEXEC)) {
+  DBG_ALIGNMENT_DISABLE();
   SetHandleInformation(fp,HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+  DBG_ALIGNMENT_ENABLE();
  }
 #endif
  result = (DREF SystemFile *)DeeObject_Malloc(sizeof(SystemFile));
@@ -609,7 +636,9 @@ DeeFile_DefaultStd(unsigned int id) {
   case DEE_STDOUT: std_id = STD_OUTPUT_HANDLE; break;
   default:         std_id = STD_ERROR_HANDLE; break;
   }
+  DBG_ALIGNMENT_DISABLE();
   std_handle = GetStdHandle(std_id);
+  DBG_ALIGNMENT_ENABLE();
   DeeFile_LockWrite(result);
   /* Make sure not to re-open an std-file that was already closed. */
 #ifndef CONFIG_NO_THREADS
@@ -635,7 +664,10 @@ DeeFile_DefaultStd(unsigned int id) {
 PRIVATE DWORD DCALL
 nt_sysfile_gettype(SystemFile *__restrict self) {
  if (self->sf_filetype == (uint32_t)FILE_TYPE_UNKNOWN) {
-  DWORD type = GetFileType(self->sf_handle);
+  DWORD type;
+  DBG_ALIGNMENT_DISABLE();
+  type = GetFileType(self->sf_handle);
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(type == FILE_TYPE_UNKNOWN) {
    error_file_io(self);
    return FILE_TYPE_UNKNOWN;
@@ -649,7 +681,10 @@ nt_sysfile_gettype(SystemFile *__restrict self) {
 PRIVATE DWORD DCALL
 nt_sysfile_trygettype(SystemFile *__restrict self) {
  if (self->sf_filetype == (uint32_t)FILE_TYPE_UNKNOWN) {
-  DWORD type = GetFileType(self->sf_handle);
+  DWORD type;
+  DBG_ALIGNMENT_DISABLE();
+  type = GetFileType(self->sf_handle);
+  DBG_ALIGNMENT_ENABLE();
   if likely(type != FILE_TYPE_UNKNOWN) {
    ATOMIC_CMPXCH(self->sf_filetype,
                 (uint32_t)FILE_TYPE_UNKNOWN,
@@ -683,15 +718,29 @@ again:
    BYTE temp_buffer[1];
    /* `WaitForSingleObject()' doesn't work on pipes (for some reason...) */
    result = 0;
-   if (PeekNamedPipe(self->sf_handle,temp_buffer,sizeof(temp_buffer),&result,NULL,NULL) &&
-       result == 0) return 0;
+   DBG_ALIGNMENT_DISABLE();
+   if (PeekNamedPipe(self->sf_handle,
+                     temp_buffer,
+                     sizeof(temp_buffer),
+                    &result,
+                     NULL,
+                     NULL) &&
+       result == 0) {
+    DBG_ALIGNMENT_ENABLE();
+    return 0;
+   }
+   DBG_ALIGNMENT_ENABLE();
   } else {
+   DBG_ALIGNMENT_DISABLE();
    result = WaitForSingleObject(self->sf_handle,0);
+   DBG_ALIGNMENT_ENABLE();
    if (result == WAIT_TIMEOUT) return 0;
   }
  }
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(!ReadFile(self->sf_handle,buffer,(DWORD)bufsize,&result,NULL)) {
   DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if (error == ERROR_OPERATION_ABORTED) {
    if (DeeThread_CheckInterrupt())
        return -1;
@@ -702,6 +751,7 @@ again:
   /* Handle pipe-disconnect as EOF (like it should be...). */
   result = 0;
  }
+ DBG_ALIGNMENT_ENABLE();
  return (dssize_t)result;
 err_io:
  return error_file_io(self);
@@ -717,19 +767,23 @@ write_all_console_w(HANDLE hConsoleOutput,
  for (;;) {
 #if __SIZEOF_SIZE_T__ > 4
   DWORD max_write = nNumberOfCharsToWrite > UINT32_MAX ? UINT32_MAX : (DWORD)nNumberOfCharsToWrite;
+  DBG_ALIGNMENT_DISABLE();
   if (!WriteConsoleW(hConsoleOutput,lpBuffer,max_write,&temp,NULL))
        goto err;
 #else
+  DBG_ALIGNMENT_DISABLE();
   if (!WriteConsoleW(hConsoleOutput,lpBuffer,nNumberOfCharsToWrite,&temp,NULL))
        goto err;
 #endif
   if (!temp) goto err;
+  DBG_ALIGNMENT_ENABLE();
   nNumberOfCharsToWrite -= temp;
   if (!nNumberOfCharsToWrite) break;
   lpBuffer              += temp;
  }
  return TRUE;
 err:
+ DBG_ALIGNMENT_ENABLE();
  return FALSE;
 }
 
@@ -741,19 +795,23 @@ write_all_file(HANDLE hFileHandle,
  for (;;) {
 #if __SIZEOF_SIZE_T__ > 4
   DWORD max_write = nNumberOfBytesToWrite > UINT32_MAX ? UINT32_MAX : (DWORD)nNumberOfBytesToWrite;
+  DBG_ALIGNMENT_DISABLE();
   if (!WriteFile(hFileHandle,lpBuffer,max_write,&temp,NULL))
        goto err;
 #else
+  DBG_ALIGNMENT_DISABLE();
   if (!WriteFile(hFileHandle,lpBuffer,nNumberOfBytesToWrite,&temp,NULL))
        goto err;
 #endif
   if (!temp) goto err;
+  DBG_ALIGNMENT_ENABLE();
   nNumberOfBytesToWrite -= temp;
   if (!nNumberOfBytesToWrite) break;
   lpBuffer              += temp;
  }
  return TRUE;
 err:
+ DBG_ALIGNMENT_ENABLE();
  return FALSE;
 }
 
@@ -766,13 +824,16 @@ os_write_utf8_to_console(SystemFile *__restrict self,
  DWORD num_widechars;
  ASSERT(bufsize != 0);
 again:
+ DBG_ALIGNMENT_DISABLE();
  num_widechars = (DWORD)MultiByteToWideChar(CP_UTF8,
                                             0,
                                            (LPCCH)buffer,
                                            (int)(DWORD)bufsize,
                                             stackBuffer,
                                            (int)(DWORD)COMPILER_LENOF(stackBuffer));
+ DBG_ALIGNMENT_ENABLE();
  if (!num_widechars) {
+  DBG_ALIGNMENT_DISABLE();
   if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
    LPWSTR tempbuf;
    num_widechars = (DWORD)MultiByteToWideChar(CP_UTF8,
@@ -781,38 +842,48 @@ again:
                                              (int)(DWORD)bufsize,
                                               NULL,
                                               0);
+   DBG_ALIGNMENT_ENABLE();
    if unlikely(!num_widechars) goto fallback;
    tempbuf = (LPWSTR)Dee_Malloc(num_widechars*sizeof(WCHAR));
    if unlikely(!tempbuf) goto err;
+   DBG_ALIGNMENT_DISABLE();
    num_widechars = MultiByteToWideChar(CP_UTF8,
                                        0,
                                       (LPCCH)buffer,
                                       (int)(DWORD)bufsize,
                                        tempbuf,
                                        num_widechars);
+   DBG_ALIGNMENT_ENABLE();
    if unlikely(!num_widechars) { Dee_Free(tempbuf); goto fallback; }
    if unlikely(!write_all_console_w(self->sf_handle,tempbuf,num_widechars)) { Dee_Free(tempbuf); goto fallback; }
    Dee_Free(tempbuf);
    return 0;
   }
+  DBG_ALIGNMENT_ENABLE();
   goto fallback;
  }
  if (!write_all_console_w(self->sf_handle,stackBuffer,num_widechars))
       goto fallback;
  return 0;
 fallback:
+ DBG_ALIGNMENT_DISABLE();
  if (GetLastError() == ERROR_OPERATION_ABORTED) {
+  DBG_ALIGNMENT_ENABLE();
   if (DeeThread_CheckInterrupt())
       return -1;
   goto again;
  }
+ DBG_ALIGNMENT_ENABLE();
  /* Write as ASCII data. */
  if (!write_all_file(self->sf_handle,buffer,bufsize)) {
+  DBG_ALIGNMENT_DISABLE();
   if (GetLastError() == ERROR_OPERATION_ABORTED) {
+   DBG_ALIGNMENT_ENABLE();
    if (DeeThread_CheckInterrupt())
        return -1;
    goto again;
   }
+  DBG_ALIGNMENT_ENABLE();
   goto err;
  }
  return 0;
@@ -972,10 +1043,12 @@ sysfile_write(SystemFile *__restrict self,
   return (dssize_t)bufsize;
  }
 again:
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(!WriteFile(self->sf_handle,buffer,
                        (DWORD)bufsize,
                        &bytes_written,NULL)) {
   DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if (error == ERROR_OPERATION_ABORTED) {
    if (DeeThread_CheckInterrupt())
        return -1;
@@ -983,6 +1056,7 @@ again:
   }
   return error_file_io(self);
  }
+ DBG_ALIGNMENT_ENABLE();
  return (dssize_t)bytes_written;
 }
 
@@ -1023,11 +1097,13 @@ again:
  overlapped.me.Offset     = (uint32_t)pos;
  overlapped.me.OffsetHigh = (uint32_t)(pos >> 32);
 #endif
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(!ReadFile(self->sf_handle,buffer,
                       (DWORD)bufsize,
                       &bytes_written,
                       (LPOVERLAPPED)&overlapped)) {
   DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if (error == ERROR_OPERATION_ABORTED) {
    if (DeeThread_CheckInterrupt())
        return -1;
@@ -1035,6 +1111,7 @@ again:
   }
   return error_file_io(self);
  }
+ DBG_ALIGNMENT_ENABLE();
  return (dssize_t)bytes_written;
 }
 
@@ -1057,11 +1134,13 @@ again:
  overlapped.me.Offset     = (uint32_t)pos;
  overlapped.me.OffsetHigh = (uint32_t)(pos >> 32);
 #endif
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(!WriteFile(self->sf_handle,buffer,
                        (DWORD)bufsize,
                        &bytes_written,
                        (LPOVERLAPPED)&overlapped)) {
   DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if (error == ERROR_OPERATION_ABORTED) {
    if (DeeThread_CheckInterrupt())
        return -1;
@@ -1069,6 +1148,7 @@ again:
   }
   return error_file_io(self);
  }
+ DBG_ALIGNMENT_ENABLE();
  return (dssize_t)bytes_written;
 }
 
@@ -1077,9 +1157,11 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
  DWORD result; LONG high;
 again:
  high = (DWORD)((uint64_t)off >> 32);
+ DBG_ALIGNMENT_DISABLE();
  result = SetFilePointer(self->sf_handle,(LONG)(off & 0xffffffff),&high,whence);
  if unlikely(result == INVALID_SET_FILE_POINTER) {
   DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if (error != NO_ERROR) {
    if (error == ERROR_OPERATION_ABORTED) {
     if (DeeThread_CheckInterrupt())
@@ -1089,6 +1171,7 @@ again:
    return error_file_io(self);
   }
  }
+ DBG_ALIGNMENT_ENABLE();
  return (doff_t)result | ((doff_t)high << 32);
 }
 
@@ -1096,8 +1179,10 @@ PRIVATE int DCALL sysfile_sync(SystemFile *__restrict self) {
  /* Attempting to flush a console handle bickers about the handle being invalid... */
  if (self->sf_filetype == (uint32_t)FILE_TYPE_CHAR)
      goto done;
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(!FlushFileBuffers(self->sf_handle)) {
   DWORD error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   /* If the error is ERROR_INVALID_HANDLE but our handle isn't
    * set to be invalid, this can be because our handle is that
    * of a console:
@@ -1107,10 +1192,13 @@ PRIVATE int DCALL sysfile_sync(SystemFile *__restrict self) {
    DWORD temp = nt_sysfile_gettype(self);
    if unlikely(temp == FILE_TYPE_UNKNOWN) goto err;
    if (temp == FILE_TYPE_CHAR) goto done;
+   DBG_ALIGNMENT_DISABLE();
    SetLastError(error);
+   DBG_ALIGNMENT_ENABLE();
   }
   return error_file_io(self);
  }
+ DBG_ALIGNMENT_ENABLE();
 done:
  return 0;
 err:
@@ -1122,15 +1210,24 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
  doff_t old_pos = sysfile_seek(self,0,SEEK_CUR);
  if unlikely(old_pos < 0) return -1;
  if unlikely((dpos_t)old_pos != size && sysfile_seek(self,(doff_t)size,SEEK_SET) < 0) return -1;
- if unlikely(!SetEndOfFile(self->sf_handle)) return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if unlikely(!SetEndOfFile(self->sf_handle)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
  if unlikely((dpos_t)old_pos != size && sysfile_seek(self,old_pos,SEEK_SET) < 0) return -1;
  return 0;
 }
 
 PRIVATE int DCALL
 sysfile_close(SystemFile *__restrict self) {
- if unlikely(!CloseHandle(self->sf_ownhandle))
-    return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if unlikely(!CloseHandle(self->sf_ownhandle)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
  self->sf_handle    = INVALID_HANDLE_VALUE;
  self->sf_ownhandle = INVALID_HANDLE_VALUE;
  return 0;
@@ -1174,8 +1271,11 @@ PRIVATE struct type_getset sysfile_getsets[] = {
 PRIVATE void DCALL
 sysfile_fini(SystemFile *__restrict self) {
  if (self->sf_ownhandle &&
-     self->sf_ownhandle != INVALID_HANDLE_VALUE)
-     CloseHandle(self->sf_ownhandle);
+     self->sf_ownhandle != INVALID_HANDLE_VALUE) {
+  DBG_ALIGNMENT_DISABLE();
+  CloseHandle(self->sf_ownhandle);
+  DBG_ALIGNMENT_ENABLE();
+ }
  Dee_XDecref(self->sf_filename);
 }
 

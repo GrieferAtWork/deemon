@@ -23,8 +23,17 @@
 #include "generic.c.inl"
 #endif
 
-INTERN DREF DeeObject *DCALL fs_gethome(bool try_get) { if (!try_get) fs_unsupported(); return NULL; }
-INTERN int DCALL fs_printhome(struct ascii_printer *__restrict printer, bool try_get) { if (try_get) return 1; return fs_unsupported(); }
+INTERN DREF DeeObject *DCALL
+fs_gethome(bool try_get) {
+ if (!try_get) fs_unsupported();
+ return NULL;
+}
+INTERN int DCALL
+fs_printhome(struct ascii_printer *__restrict UNUSED(printer),
+             bool try_get) {
+ if (try_get) return 1;
+ return fs_unsupported();
+}
 INTERN DeeTypeObject DeeUser_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"user",

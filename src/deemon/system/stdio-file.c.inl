@@ -78,7 +78,9 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
      (((uintptr_t)buffer + bufsize)     & ~(uintptr_t)(PAGESIZE-1)) ==
      (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE-1)) &&
      (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
+  DBG_ALIGNMENT_DISABLE();
   OutputDebugStringA((char *)buffer);
+  DBG_ALIGNMENT_ENABLE();
  } else
 #endif
  {
@@ -87,7 +89,9 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
    size_t part = MIN(bufsize,sizeof(temp)-sizeof(char));
    memcpy(temp,buffer,part);
    temp[part] = '\0';
+   DBG_ALIGNMENT_DISABLE();
    OutputDebugStringA(temp);
+   DBG_ALIGNMENT_ENABLE();
    *(uintptr_t *)&buffer += part;
    bufsize -= part;
   }
@@ -152,7 +156,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
         /* .tp_iter_next     = */NULL,
         /* .tp_attr          = */NULL,
         /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+        /* .tp_buffer        = */NULL,
         /* .tp_methods       = */debug_file_methods,
         /* .tp_getsets       = */NULL,
         /* .tp_members       = */NULL,
@@ -189,13 +193,11 @@ DeeFile_OpenFd(dsysfd_t fd, /*String*/DeeObject *filename,
 }
 PRIVATE int DCALL error_file_closed(SystemFile *__restrict self) {
  (void)self;
- DeeError_Throwf(&DeeError_HandleClosed,"File was closed");
- return -1;
+ return DeeError_Throwf(&DeeError_HandleClosed,"File was closed");
 }
 PRIVATE int DCALL error_file_io(SystemFile *__restrict self) {
  (void)self;
- DeeError_Throwf(&DeeError_FSError,"I/O Operation failed");
- return -1;
+ return DeeError_Throwf(&DeeError_FSError,"I/O Operation failed");
 }
 
 PUBLIC DREF DeeObject *DCALL
@@ -224,7 +226,9 @@ DeeFile_OpenString(char const *__restrict filename,
   goto err_unsupported_mode;
  }
  *iter = '\0';
+ DBG_ALIGNMENT_DISABLE();
  fp = fopen(filename,modbuf);
+ DBG_ALIGNMENT_ENABLE();
  if (!fp) {
   /* Handle file-not-found / already exists cases. */
   if ((oflags&OPEN_FEXCL) || !(oflags&OPEN_FCREAT))
@@ -236,9 +240,9 @@ DeeFile_OpenString(char const *__restrict filename,
  }
  result = (DREF SystemFile *)DeeObject_Malloc(sizeof(SystemFile));
  if unlikely(!result) goto err_fp;
- result->sf_handle     = fp;
- result->sf_ownhandle  = fp; /* Inherit stream. */
- result->sf_filename = DeeString_New(filename);
+ result->sf_handle    = fp;
+ result->sf_ownhandle = fp; /* Inherit stream. */
+ result->sf_filename  = DeeString_New(filename);
  if unlikely(!result->sf_filename) goto err_fp_result;
  DeeLFileObject_Init(result,&DeeFSFile_Type);
  return (DREF DeeObject *)result;
@@ -353,9 +357,13 @@ sysfile_read(SystemFile *__restrict self, void *__restrict buffer,
              size_t bufsize, dioflag_t UNUSED(flags)) {
  size_t result;
  if (!self->sf_handle) return error_file_closed(self);
+ DBG_ALIGNMENT_DISABLE();
  result = (size_t)fread(buffer,1,bufsize,(FILE *)self->sf_handle);
- if (!result && ferror((FILE *)self->sf_handle))
-      return error_file_io(self);
+ if (!result && ferror((FILE *)self->sf_handle)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
  return (dssize_t)result;
 }
 PRIVATE dssize_t DCALL
@@ -364,9 +372,13 @@ sysfile_write(SystemFile *__restrict self,
               size_t bufsize, dioflag_t UNUSED(flags)) {
  size_t result;
  if (!self->sf_handle) return error_file_closed(self);
+ DBG_ALIGNMENT_DISABLE();
  result = (size_t)fwrite(buffer,1,bufsize,(FILE *)self->sf_handle);
- if (!result && ferror((FILE *)self->sf_handle))
-      return error_file_io(self);
+ if (!result && ferror((FILE *)self->sf_handle)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
  return (dssize_t)result;
 }
 
@@ -375,27 +387,43 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
  doff_t result;
  if (!self->sf_handle) return error_file_closed(self);
 #ifdef _MSC_VER
- if (_fseeki64((FILE *)self->sf_handle,(long long)off,whence))
-     return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if (_fseeki64((FILE *)self->sf_handle,(long long)off,whence)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
  result = _ftelli64((FILE *)self->sf_handle);
+ DBG_ALIGNMENT_ENABLE();
  if (result == -1)
      return error_file_io(self);
 #elif defined(__USE_LARGEFILE64) && !defined(__CYGWIN__)
- if (fseeko64((FILE *)self->sf_handle,(off64_t)off,whence))
-     return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if (fseeko64((FILE *)self->sf_handle,(off64_t)off,whence)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
  result = (doff_t)ftello64((FILE *)self->sf_handle);
+ DBG_ALIGNMENT_ENABLE();
  if (result == -1)
      return error_file_io(self);
 #elif defined(__USE_LARGEFILE) || defined(__USE_XOPEN2K)
- if (fseeko((FILE *)self->sf_handle,(off64_t)off,whence))
-     return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if (fseeko((FILE *)self->sf_handle,(off64_t)off,whence)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
  result = (doff_t)ftello((FILE *)self->sf_handle);
+ DBG_ALIGNMENT_ENABLE();
  if (result == -1)
      return error_file_io(self);
 #else
- if (fseek((FILE *)self->sf_handle,(long)off,whence))
-     return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if (fseek((FILE *)self->sf_handle,(long)off,whence)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
  result = (doff_t)ftello((FILE *)self->sf_handle);
+ DBG_ALIGNMENT_ENABLE();
  if ((long)result == -1L)
      return error_file_io(self);
 #endif
@@ -404,9 +432,13 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 
 PRIVATE int DCALL sysfile_sync(SystemFile *__restrict self) {
  if (!self->sf_handle) return error_file_closed(self);
+ DBG_ALIGNMENT_DISABLE();
  if (fflush((FILE *)self->sf_handle) &&
-     ferror((FILE *)self->sf_handle))
-     return error_file_io(self);
+     ferror((FILE *)self->sf_handle)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
  return 0;
 }
 
@@ -415,16 +447,28 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
  if (!self->sf_handle)
       return error_file_closed(self);
 #ifdef _MSC_VER
- if (_chsize_s(fileno((FILE *)self->sf_handle),(long long)size))
-     return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if (_chsize_s(fileno((FILE *)self->sf_handle),(long long)size)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
  return 0;
 #elif defined(__unix__) && defined(__USE_LARGEFILE64) && !defined(__CYGWIN__)
- if (ftruncate64(fileno((FILE *)self->sf_handle),(off64_t)size))
-     return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if (ftruncate64(fileno((FILE *)self->sf_handle),(off64_t)size)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
  return 0;
 #elif defined(__unix__)
- if (ftruncate(fileno((FILE *)self->sf_handle),(off_t)size))
-     return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if (ftruncate(fileno((FILE *)self->sf_handle),(off_t)size)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
  return 0;
 #else
  err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
@@ -436,9 +480,13 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 PRIVATE int DCALL
 sysfile_close(SystemFile *__restrict self) {
  if (!self->sf_handle) return error_file_closed(self);
+ DBG_ALIGNMENT_DISABLE();
  if (self->sf_ownhandle &&
-     fclose((FILE *)self->sf_ownhandle))
-     return error_file_io(self);
+     fclose((FILE *)self->sf_ownhandle)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
 #ifndef CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD
  if (self >= sysf_std && self < COMPILER_ENDOF(sysf_std)) {
   /* Make sure not to re-open this file later. */
@@ -457,14 +505,18 @@ sysfile_getc(SystemFile *__restrict self, dioflag_t UNUSED(flags)) {
   error_file_closed(self);
   return GETC_ERR;
  }
+ DBG_ALIGNMENT_DISABLE();
  result = getc((FILE *)self->sf_handle);
  if (result == EOF) {
   if (ferror((FILE *)self->sf_handle)) {
+   DBG_ALIGNMENT_ENABLE();
    error_file_io(self);
    return GETC_ERR;
   }
+  DBG_ALIGNMENT_ENABLE();
   return GETC_EOF;
  }
+ DBG_ALIGNMENT_ENABLE();
  return result;
 }
 
@@ -476,12 +528,16 @@ sysfile_ungetc(SystemFile *__restrict self, int ch) {
   return GETC_ERR;
  }
 #if EOF == GETC_EOF
+ DBG_ALIGNMENT_DISABLE();
  result = ungetc(ch,(FILE *)self->sf_handle);
+ DBG_ALIGNMENT_ENABLE();
  if (result != EOF)
      result = 0;
  return result;
 #else
+ DBG_ALIGNMENT_DISABLE();
  result = ungetc(ch,(FILE *)self->sf_handle);
+ DBG_ALIGNMENT_ENABLE();
  return result == EOF ? GETC_EOF : 0;
 #endif
 }
@@ -493,11 +549,14 @@ sysfile_putc(SystemFile *__restrict self, int ch,
   error_file_closed(self);
   return GETC_ERR;
  }
+ DBG_ALIGNMENT_DISABLE();
  if (putc(ch,(FILE *)self->sf_handle) == EOF &&
      ferror((FILE *)self->sf_handle)) {
+  DBG_ALIGNMENT_ENABLE();
   error_file_io(self);
   return GETC_ERR;
  }
+ DBG_ALIGNMENT_ENABLE();
  return 0;
 }
 
@@ -645,12 +704,15 @@ again_setbuf:
   return NULL;
  }
  /* Apply the buffer */
+ DBG_ALIGNMENT_DISABLE();
  if (setvbuf((FILE *)self->sf_handle,NULL,mode,size)) {
+  DBG_ALIGNMENT_ENABLE();
   DeeFile_LockEndWrite(self);
   if (Dee_CollectMemory(size))
       goto again_setbuf;
   goto err;
  }
+ DBG_ALIGNMENT_ENABLE();
  DeeFile_LockEndWrite(self);
 done:
  return_none;
@@ -690,8 +752,11 @@ PRIVATE struct type_member sysfile_members[] = {
 
 PRIVATE void DCALL
 sysfile_fini(SystemFile *__restrict self) {
- if (self->sf_ownhandle)
-     fclose((FILE *)self->sf_ownhandle);
+ if (self->sf_ownhandle) {
+  DBG_ALIGNMENT_DISABLE();
+  fclose((FILE *)self->sf_ownhandle);
+  DBG_ALIGNMENT_ENABLE();
+ }
  Dee_XDecref(self->sf_filename);
 }
 
@@ -701,7 +766,9 @@ sysfile_class_sync(DeeObject *__restrict UNUSED(self),
  if (DeeArg_Unpack(argc,argv,":sync"))
      return NULL;
  /* Flush all streams. */
+ DBG_ALIGNMENT_DISABLE();
  fflush(NULL);
+ DBG_ALIGNMENT_ENABLE();
  return_none;
 }
 
@@ -753,7 +820,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
         /* .tp_iter_next     = */NULL,
         /* .tp_attr          = */NULL,
         /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+        /* .tp_buffer        = */NULL,
         /* .tp_methods       = */sysfile_methods,
         /* .tp_getsets       = */sysfile_getsets,
         /* .tp_members       = */sysfile_members,
@@ -814,7 +881,7 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
         /* .tp_iter_next     = */NULL,
         /* .tp_attr          = */NULL,
         /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+        /* .tp_buffer        = */NULL,
         /* .tp_methods       = */NULL,
         /* .tp_getsets       = */NULL,
         /* .tp_members       = */NULL,

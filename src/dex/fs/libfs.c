@@ -72,7 +72,7 @@ fs_copyfile(DeeObject *__restrict existing_file,
             DeeObject *__restrict new_file,
             DeeObject *__restrict progress_callback) {
  DREF DeeObject *src,*dst; uint8_t *buffer;
- dpos_t file_size,total = 0;
+ dpos_t file_size = 0,total = 0;
  /* Open a source and a destination stream. */
  src = open_file_for_copy(existing_file,OPEN_FRDONLY,0);
  if unlikely(!src) goto err;
@@ -80,15 +80,17 @@ fs_copyfile(DeeObject *__restrict existing_file,
  if unlikely(!dst) goto err_src;
  buffer = (uint8_t *)Dee_Malloc(COPYFILE_BUFSIZE);
  if unlikely(!buffer) goto err_dst;
- /* Determine the full size of the source data stream. */
- file_size = (dpos_t)DeeFile_GetSize(src);
- if unlikely((doff_t)file_size < 0) {
-  /* Failed to determine stream size.
-   * If this is because the source stream doesn't implement
-   * seeking, ignore the error and proceed to copy file data. */
-  if (!DeeError_Catch(&DeeError_NotImplemented))
-       goto err_dst;
-  file_size = (dpos_t)-1;
+ if (!DeeNone_Check(progress_callback)) {
+  /* Determine the full size of the source data stream. */
+  file_size = (dpos_t)DeeFile_GetSize(src);
+  if unlikely((doff_t)file_size < 0) {
+   /* Failed to determine stream size.
+    * If this is because the source stream doesn't implement
+    * seeking, ignore the error and proceed to copy file data. */
+   if (!DeeError_Catch(&DeeError_NotImplemented))
+        goto err_dst;
+   file_size = (dpos_t)-1;
+  }
  }
  for (;;) {
   dssize_t read_size;
@@ -244,6 +246,9 @@ INTERN DeeTypeObject DeeEnv_Type = {
 
 INTERN DeeObject DeeEnv_Singleton = { OBJECT_HEAD_INIT(&DeeEnv_Type) };
 
+PRIVATE struct keyword path_kwlist[] = { K(path), KEND };
+PRIVATE struct keyword path_pwd_kwlist[] = { K(path), K(pwd), KEND };
+
 
 PRIVATE DREF DeeObject *DCALL
 f_libfs_gettmp(size_t argc, DeeObject **__restrict argv) {
@@ -258,9 +263,10 @@ f_libfs_getcwd(size_t argc, DeeObject **__restrict argv) {
  return fs_getcwd();
 }
 PRIVATE DREF DeeObject *DCALL
-f_libfs_chdir(size_t argc, DeeObject **__restrict argv) {
+
+f_libfs_chdir(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:chdir",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:chdir",&path) ||
      fs_chdir(path))
      return NULL;
  return_none;
@@ -273,91 +279,91 @@ f_libfs_gethostname(size_t argc, DeeObject **__restrict argv) {
 }
 
 INTERN DREF DeeObject *DCALL
-f_libfs_headof(size_t argc, DeeObject **__restrict argv) {
+f_libfs_headof(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:headof",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:headof",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
  return fs_pathhead(path);
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_tailof(size_t argc, DeeObject **__restrict argv) {
+f_libfs_tailof(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:tailof",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:tailof",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
  return fs_pathtail(path);
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_fileof(size_t argc, DeeObject **__restrict argv) {
+f_libfs_fileof(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:fileof",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:fileof",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
  return fs_pathfile(path);
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_extof(size_t argc, DeeObject **__restrict argv) {
+f_libfs_extof(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:extof",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:extof",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
  return fs_pathext(path);
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_driveof(size_t argc, DeeObject **__restrict argv) {
+f_libfs_driveof(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:driveof",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:driveof",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
  return fs_pathdrive(path);
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_inctrail(size_t argc, DeeObject **__restrict argv) {
+f_libfs_inctrail(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:inctrail",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:inctrail",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
  return fs_pathinctrail(path);
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_exctrail(size_t argc, DeeObject **__restrict argv) {
+f_libfs_exctrail(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:exctrail",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:exctrail",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
  return fs_pathinctrail(path);
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_abspath(size_t argc, DeeObject **__restrict argv) {
+f_libfs_abspath(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path,*pwd = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:abspath",&path,&pwd) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_pwd_kwlist,"o|o:abspath",&path,&pwd) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type) ||
     (pwd && DeeObject_AssertTypeExact(pwd,&DeeString_Type)))
      return NULL;
  return fs_pathabs(path,pwd);
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_relpath(size_t argc, DeeObject **__restrict argv) {
+f_libfs_relpath(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path,*pwd = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:relpath",&path,&pwd) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_pwd_kwlist,"o|o:relpath",&path,&pwd) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type) ||
     (pwd && DeeObject_AssertTypeExact(pwd,&DeeString_Type)))
      return NULL;
  return fs_pathrel(path,pwd);
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_isabs(size_t argc, DeeObject **__restrict argv) {
+f_libfs_isabs(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:isabs",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:isabs",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
  return_bool(fs_pathisabs(path));
 }
 INTERN DREF DeeObject *DCALL
-f_libfs_isrel(size_t argc, DeeObject **__restrict argv) {
+f_libfs_isrel(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:isrel",&path) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:isrel",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
  return_bool(!fs_pathisabs(path));
@@ -483,19 +489,19 @@ err:
 
 #ifdef CONFIG_HOST_WINDOWS
 PRIVATE DREF DeeObject *DCALL
-f_libfs_nt_fixunc(size_t argc, DeeObject **__restrict argv) {
- DeeObject *arg;
- if (DeeArg_Unpack(argc,argv,"o:fixunc_np",&arg) ||
-     DeeObject_AssertTypeExact(arg,&DeeString_Type))
+f_libfs_nt_fixunc(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+ DeeObject *path;
+ if (DeeArg_UnpackKw(argc,argv,kw,path_kwlist,"o:fixunc_np",&path) ||
+     DeeObject_AssertTypeExact(path,&DeeString_Type))
      return NULL;
- return nt_FixUncPath(arg);
+ return nt_FixUncPath(path);
 }
-PRIVATE DEFINE_CMETHOD(libfs_fixunc_np,&f_libfs_nt_fixunc);
+PRIVATE DEFINE_KWCMETHOD(libfs_fixunc_np,&f_libfs_nt_fixunc);
 PRIVATE DREF DeeObject *DCALL
 f_libfs_chattr_np(size_t argc, DeeObject **__restrict argv) {
- DeeObject *arg,*new_attr;
- if (DeeArg_Unpack(argc,argv,"oo:chattr_np",&arg,&new_attr) ||
-     fs_chattr_np(arg,new_attr))
+ DeeObject *arg,*mode;
+ if (DeeArg_Unpack(argc,argv,"oo:chattr_np",&arg,&mode) ||
+     fs_chattr_np(arg,mode))
      return NULL;
  return_none;
 }
@@ -504,19 +510,19 @@ PRIVATE DEFINE_CMETHOD(libfs_chattr_np,&f_libfs_chattr_np);
 
 PRIVATE DEFINE_CMETHOD(libfs_gettmp,&f_libfs_gettmp);
 PRIVATE DEFINE_CMETHOD(libfs_getcwd,&f_libfs_getcwd);
-PRIVATE DEFINE_CMETHOD(libfs_chdir,&f_libfs_chdir);
+PRIVATE DEFINE_KWCMETHOD(libfs_chdir,&f_libfs_chdir);
 PRIVATE DEFINE_CMETHOD(libfs_gethostname,&f_libfs_gethostname);
-PRIVATE DEFINE_CMETHOD(libfs_headof,&f_libfs_headof);
-PRIVATE DEFINE_CMETHOD(libfs_tailof,&f_libfs_tailof);
-PRIVATE DEFINE_CMETHOD(libfs_fileof,&f_libfs_fileof);
-PRIVATE DEFINE_CMETHOD(libfs_extof,&f_libfs_extof);
-PRIVATE DEFINE_CMETHOD(libfs_driveof,&f_libfs_driveof);
-PRIVATE DEFINE_CMETHOD(libfs_inctrail,&f_libfs_inctrail);
-PRIVATE DEFINE_CMETHOD(libfs_exctrail,&f_libfs_exctrail);
-PRIVATE DEFINE_CMETHOD(libfs_abspath,&f_libfs_abspath);
-PRIVATE DEFINE_CMETHOD(libfs_relpath,&f_libfs_relpath);
-PRIVATE DEFINE_CMETHOD(libfs_isabs,&f_libfs_isabs);
-PRIVATE DEFINE_CMETHOD(libfs_isrel,&f_libfs_isrel);
+PRIVATE DEFINE_KWCMETHOD(libfs_headof,&f_libfs_headof);
+PRIVATE DEFINE_KWCMETHOD(libfs_tailof,&f_libfs_tailof);
+PRIVATE DEFINE_KWCMETHOD(libfs_fileof,&f_libfs_fileof);
+PRIVATE DEFINE_KWCMETHOD(libfs_extof,&f_libfs_extof);
+PRIVATE DEFINE_KWCMETHOD(libfs_driveof,&f_libfs_driveof);
+PRIVATE DEFINE_KWCMETHOD(libfs_inctrail,&f_libfs_inctrail);
+PRIVATE DEFINE_KWCMETHOD(libfs_exctrail,&f_libfs_exctrail);
+PRIVATE DEFINE_KWCMETHOD(libfs_abspath,&f_libfs_abspath);
+PRIVATE DEFINE_KWCMETHOD(libfs_relpath,&f_libfs_relpath);
+PRIVATE DEFINE_KWCMETHOD(libfs_isabs,&f_libfs_isabs);
+PRIVATE DEFINE_KWCMETHOD(libfs_isrel,&f_libfs_isrel);
 PRIVATE DEFINE_CMETHOD(libfs_issep,&f_libfs_issep);
 PRIVATE DEFINE_CMETHOD(libfs_joinpath,&f_libfs_joinpath);
 PRIVATE DEFINE_CMETHOD(libfs_expand,&f_libfs_expand);
@@ -1312,19 +1318,19 @@ PRIVATE struct dex_symbol symbols[] = {
           "For this purpose, all path elements are joined with #SEP, "
           "after removal of additional slashes and spaces surrounding the given @paths")  },
     { "expand", (DeeObject *)&libfs_expand, MODSYM_FNORMAL,
-      DOC("(string path,mapping environ_map=environ)->string\n"
-          "(string path,string options=\"hvpf\",mapping environ_map=environ)->string\n"
-          "(string path,int options,mapping environ_map=environ)->string\n"
+      DOC("(string path,mapping env=environ)->string\n"
+          "(string path,string options=\"hvpf\",mapping env=environ)->string\n"
+          "(string path,int options,mapping env=environ)->string\n"
           "@interrupt\n"
-          "@param environ_map A dict-style mapping used to resolve variable names. Defaults to :environ\n"
+          "@param env A dict-style mapping used to resolve variable names. Defaults to :environ\n"
           "@throw ValueError The given @options string contains unrecognized options\n"
           "@throw ValueError An unknown environment variable was accessed and ${\"f\"} isn't part of @options\n"
           "Expand parts of the given @path, according to @options which is either an "
           "implementation-specific bitset, or a sequence of the following option characters:\n"
           "%{table Name|Behavior\n"
           "-${\"h\"}|Expand ${\"~\"} and ${\"~<nam>\"} to the return value of ${user([<nam>]).home()}\n"
-          "-${\"v\"}|Expand ${\"$<nam>\"} and ${\"${<nam>}\"} to ${environ_map[nam]}\n"
-          "-${\"V\"}|Expand ${\"%<nam>%\"} to ${environ_map[nam]}\n"
+          "-${\"v\"}|Expand ${\"$<nam>\"} and ${\"${<nam>}\"} to ${env[nam]}\n"
+          "-${\"V\"}|Expand ${\"%<nam>%\"} to ${env[nam]}\n"
           "-${\"p\"}|Expand ${\".\"} and ${\"..\"} folders names while also deleting multiple consecutive "
                     "slashes, as well as all whitespace surrounding them. On hosts with an #ALTSEP differing "
                     "from #SEP, all occurrances of #ALTSEP are also replaced with #SEP. "
@@ -1338,7 +1344,7 @@ PRIVATE struct dex_symbol symbols[] = {
                     "uniform casing. If the host's filesystem isn't case-sensitive, this flag is ignored\n"
           "-${\"f\"}|When used with ${\"h\"}, ${\"v\"} or ${\"V\"}, handle errors "
                     "for unknown environment variables or :{KeyError}s when accessing "
-                    "@environ_map, or a failure to determine the user's home directory "
+                    "@env, or a failure to determine the user's home directory "
                     "by not expanding that part of the path}\n"
           "Passing the same option more than once is allowed and simply ignored")  },
     { "SEP", (DeeObject *)&libfs_sep, MODSYM_FNORMAL,

@@ -59,7 +59,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
  }
 #endif
 #ifdef VARARGS
- n_varargs = argc-tp_self->ft_argc;
+ n_varargs = argc - tp_self->ft_argc;
 #define va_data_size (argc*(sizeof(union argument)+ /* Storage for argument value. */ \
                             sizeof(void *)+         /* Pointer to argument data. */ \
                             sizeof(ffi_type *)      /* Pointer to argument types. */))

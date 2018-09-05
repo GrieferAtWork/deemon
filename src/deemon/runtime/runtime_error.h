@@ -48,9 +48,8 @@ INTDEF ATTR_COLD int DCALL err_va_index_out_of_bounds(size_t index, size_t size)
 INTDEF ATTR_COLD int DCALL err_index_unbound(DeeObject *__restrict self, size_t index);
 INTDEF ATTR_COLD int DCALL err_expected_single_character_string(DeeObject *__restrict str);
 INTDEF ATTR_COLD int DCALL err_expected_string_for_attribute(DeeObject *__restrict but_instead_got);
-INTDEF ATTR_COLD int DCALL err_integer_overflow(DeeObject *__restrict overflowing_object,
-                                                unsigned int cutoff_bits, bool positive_overflow);
-INTDEF ATTR_COLD int DCALL err_integer_overflow_i(unsigned int cutoff_bits, bool positive_overflow);
+INTDEF ATTR_COLD int DCALL err_integer_overflow(DeeObject *__restrict overflowing_object, size_t cutoff_bits, bool positive_overflow);
+INTDEF ATTR_COLD int DCALL err_integer_overflow_i(size_t cutoff_bits, bool positive_overflow);
 INTDEF ATTR_COLD int DCALL err_keywords_not_accepted(DeeTypeObject *__restrict tp_self, DeeObject *__restrict kw);
 INTDEF ATTR_COLD int DCALL err_keywords_func_not_accepted(char const *__restrict name, DeeObject *__restrict kw);
 INTDEF ATTR_COLD int DCALL err_keywords_ctor_not_accepted(DeeTypeObject *__restrict tp_self, DeeObject *__restrict kw);

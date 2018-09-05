@@ -43,7 +43,9 @@ nt_WaitForSemaphore(HANDLE hSemaphore, uint64_t uTimeoutInMicroseconds) {
  if (uTimeoutInMicroseconds == (uint64_t)-1) {
 again_infinite:
   if (DeeThread_CheckInterrupt()) goto err;
+  DBG_ALIGNMENT_DISABLE();
   wait_state = WaitForMultipleObjectsEx(1,&hSemaphore,FALSE,INFINITE,TRUE);
+  DBG_ALIGNMENT_ENABLE();
   switch (wait_state) {
   case WAIT_IO_COMPLETION:
   case WAIT_TIMEOUT:
@@ -53,12 +55,14 @@ again_infinite:
   }
  } else if (uTimeoutInMicroseconds) {
   uint64_t timeout_end,now;
-  timeout_end = DeeThread_GetTimeMicroSeconds()+uTimeoutInMicroseconds;
+  timeout_end = DeeThread_GetTimeMicroSeconds() + uTimeoutInMicroseconds;
 again_timed:
   if (DeeThread_CheckInterrupt()) goto err;
+  DBG_ALIGNMENT_DISABLE();
   wait_state = WaitForMultipleObjectsEx(1,&hSemaphore,FALSE,
                                        (DWORD)(uTimeoutInMicroseconds/1000),
                                         TRUE);
+  DBG_ALIGNMENT_ENABLE();
   switch (wait_state) {
   case WAIT_IO_COMPLETION:
    goto again_timed;
@@ -72,7 +76,9 @@ again_timed:
   default: break;
   }
  } else {
+  DBG_ALIGNMENT_DISABLE();
   wait_state = WaitForMultipleObjectsEx(1,&hSemaphore,FALSE,0,TRUE);
+  DBG_ALIGNMENT_ENABLE();
   switch (wait_state) {
   case WAIT_IO_COMPLETION:
   case WAIT_TIMEOUT:
@@ -101,7 +107,9 @@ sema_init(Semaphore *__restrict self,
  LONG init_value = 0;
  if (DeeArg_Unpack(argc,argv,"|I32u:semaphore",&init_value))
      goto err;
+ DBG_ALIGNMENT_DISABLE();
  self->sem_handle = CreateSemaphoreW(NULL,init_value,0x7fffffff,NULL);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(!self->sem_handle) goto err_nt;
  return 0;
 err_nt:
@@ -112,13 +120,15 @@ err:
 }
 PRIVATE void DCALL
 sema_fini(Semaphore *__restrict self) {
+ DBG_ALIGNMENT_DISABLE();
  CloseHandle(self->sem_handle);
+ DBG_ALIGNMENT_ENABLE();
 }
 
 
-PRIVATE ATTR_COLD void DCALL err_post_failed(void) {
- DeeError_Throwf(&DeeError_SystemError,
-                 "Failed to post to semaphore");
+PRIVATE ATTR_COLD int DCALL err_post_failed(void) {
+ return DeeError_Throwf(&DeeError_SystemError,
+                        "Failed to post to semaphore");
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -127,10 +137,13 @@ sema_post(Semaphore *__restrict self, size_t argc,
  LONG count = 1;
  if (DeeArg_Unpack(argc,argv,"|I32u:post",&count))
      goto err;
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(!ReleaseSemaphore(self->sem_handle,count,NULL))
     goto err_nt;
+ DBG_ALIGNMENT_ENABLE();
  return_none;
 err_nt:
+ DBG_ALIGNMENT_ENABLE();
  err_post_failed();
 err:
  return NULL;
@@ -206,12 +219,14 @@ sema_enter(Semaphore *__restrict self) {
 }
 PRIVATE int DCALL
 sema_leave(Semaphore *__restrict self) {
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(!ReleaseSemaphore(self->sem_handle,1,NULL))
     goto err;
+ DBG_ALIGNMENT_ENABLE();
  return 0;
 err:
- err_post_failed();
- return -1;
+ DBG_ALIGNMENT_ENABLE();
+ return err_post_failed();
 }
 
 PRIVATE struct type_with sema_with = {
@@ -292,7 +307,10 @@ typedef struct {
 
 PRIVATE int DCALL
 mutex_timedenter(Mutex *__restrict self, uint64_t timeout) {
- DWORD owner,caller = GetCurrentThreadId();
+ DWORD owner,caller;
+ DBG_ALIGNMENT_DISABLE();
+ caller = GetCurrentThreadId();
+ DBG_ALIGNMENT_ENABLE();
 again:
  /* Try to acquire the semaphore and figure out who owns it. */
  owner = ATOMIC_CMPXCH_VAL(self->m_owner,(DWORD)-1,caller);
@@ -314,7 +332,10 @@ again:
 
 PRIVATE int DCALL
 mutex_leave(Mutex *__restrict self) {
- DWORD caller = GetCurrentThreadId();
+ DWORD caller;
+ DBG_ALIGNMENT_DISABLE();
+ caller = GetCurrentThreadId();
+ DBG_ALIGNMENT_ENABLE();
  /* Check if the caller is actually the owner. */
  if unlikely(caller != self->m_owner) {
   DeeError_Throwf(&DeeError_RuntimeError,
@@ -324,10 +345,13 @@ mutex_leave(Mutex *__restrict self) {
  if (!self->m_recursion) {
   /* Last lock (must clear the owner-field and post the semaphore) */
   self->m_owner = (DWORD)-1;
+  DBG_ALIGNMENT_DISABLE();
   if unlikely(!ReleaseSemaphore(self->m_sema,1,NULL)) {
+   DBG_ALIGNMENT_ENABLE();
    err_post_failed();
    goto err;
   }
+  DBG_ALIGNMENT_ENABLE();
  } else {
   /* Decrement the recursion counter, but keep the lock. */
   --self->m_recursion;
@@ -340,7 +364,9 @@ err:
 
 PRIVATE int DCALL
 mutex_ctor(Mutex *__restrict self) {
+ DBG_ALIGNMENT_DISABLE();
  self->m_sema = CreateSemaphoreW(NULL,0,0x7fffffff,NULL);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(!self->m_sema) goto err_nt;
  self->m_owner = (DWORD)-1;
  return 0;
@@ -352,7 +378,9 @@ err_nt:
 
 PRIVATE void DCALL
 mutex_fini(Mutex *__restrict self) {
+ DBG_ALIGNMENT_DISABLE();
  CloseHandle(self->m_sema);
+ DBG_ALIGNMENT_ENABLE();
 }
 
 PRIVATE int DCALL
@@ -408,10 +436,10 @@ mutex_release(Mutex *__restrict self,
 
 PRIVATE struct type_method mutex_methods[] = {
     { "acquire", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&mutex_acquire,
-      DOC("()->none\n"
+      DOC("()\n"
           "Wait for the mutex to becomes available and recursive acquires an exclusive lock") },
     { "tryacquire", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&mutex_tryacquire,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Try to recursive acquire an exclusive lock but fail and "
           "return :false if this is not possible without blocking") },
     { "timedacquire", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&mutex_timedacquire,
@@ -419,7 +447,7 @@ PRIVATE struct type_method mutex_methods[] = {
           "Try to recursive acquire an exclusive lock but fail and "
           "return :false if the given @timeout_microseconds has passed") },
     { "release", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&mutex_release,
-      DOC("()->none\n"
+      DOC("()\n"
           "@throw RuntimeError The calling thread has not acquired the mutex\n"
           "Recursively release a lock to @this mutex") },
     { NULL }

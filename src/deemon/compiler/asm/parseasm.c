@@ -1770,6 +1770,8 @@ asm_mnemonic_lookup(struct TPPKeyword *__restrict name) {
  result = asm_mnemonic_lookup_str(name->k_name);
  if unlikely(!result) goto done;
  /* Try to cache the mnemonic in the keyword. */
+#undef calloc
+#define calloc(n,s) Dee_Calloc((n)*(s))
  if (TPPKeyword_MAKERARE(name) &&
     !name->k_rare->kr_user)
      name->k_rare->kr_user = (void *)result;

@@ -830,8 +830,8 @@ DeeString_IsObject(/*unsigned*/char const *__restrict str) {
   * as the string pointer we were given. - Only if it is, we can
   * safely access the supposed string object to check if it matches
   * what we'd expect of a string instance. */
- if (((uintptr_t)base & ~(PAGESIZE-1)) ==
-     ((uintptr_t)str & ~(PAGESIZE-1))) {
+ if (((uintptr_t)base & ~(PAGESIZE-1)) == ((uintptr_t)str & ~(PAGESIZE-1)) &&
+     ((uintptr_t)base & (sizeof(void *)-1)) == 0) {
   /* Most important check: Does the object type indicate that it's a string. */
   if (base->ob_type == &DeeString_Type) {
    /* Check that the object's reference counter is non-zero.

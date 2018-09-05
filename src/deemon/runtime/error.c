@@ -42,6 +42,7 @@
 DECL_BEGIN
 
 DEFINE_STRUCT_CACHE(ef,struct except_frame,8)
+DEFINE_STRUCT_CACHE_TRYALLOC(ef,struct except_frame,sizeof(struct except_frame))
 
 PUBLIC bool DCALL
 DeeError_Catch(DeeTypeObject *__restrict type) {
@@ -88,8 +89,10 @@ DeeError_Display(char const *reason,
  error_str = (DeeStringObject *)DeeObject_Str(error);
  if unlikely(!error_str) goto handle_error;
  if (!reason) reason = "Unhandled exception\n";
+ DBG_ALIGNMENT_DISABLE();
  fwrite(reason,sizeof(char),strlen(reason),stderr);
  fprintf(stderr,">> %s: %s\n",Dee_TYPE(error)->tp_name,DeeString_STR(error_str));
+ DBG_ALIGNMENT_ENABLE();
  DEE_DPRINT(reason);
  DEE_DPRINT(">> ");
  DEE_DPRINT(Dee_TYPE(error)->tp_name);
@@ -101,10 +104,14 @@ DeeError_Display(char const *reason,
   error_str = (DeeStringObject *)DeeObject_Repr(traceback);
   if unlikely(!error_str) {
    DEE_DPRINT("Failed to print traceback\n");
+   DBG_ALIGNMENT_DISABLE();
    fprintf(stderr,"Failed to print traceback\n");
+   DBG_ALIGNMENT_ENABLE();
    goto handle_error;
   }
+  DBG_ALIGNMENT_DISABLE();
   fprintf(stderr,"%s\n",DeeString_STR(error_str));
+  DBG_ALIGNMENT_ENABLE();
   DEE_DPRINT(DeeString_STR(error_str));
   DEE_DPRINT("\n");
   Dee_Decref(error_str);
@@ -121,12 +128,15 @@ DeeError_Throw(DeeObject *__restrict ob) {
  DeeThreadObject *ts = DeeThread_Self();
  ASSERT_OBJECT(ob);
  if (ob == (DeeObject *)&DeeError_NoMemory_instance) {
-  /* TODO: Special handling for throwing a bad-allocation error.
-   *    >> Required to prevent infinite recursion when allocating
-   *       the exception frame for an out-of-memory error. */
+  /* Special handling for throwing a bad-allocation error.
+   * >> Required to prevent infinite recursion when allocating
+   *    the exception frame for an out-of-memory error. */
+  if unlikely((frame = ef_tryalloc()) == NULL)
+     goto done;
+ } else {
+  if unlikely((frame = ef_alloc()) == NULL)
+     goto done;
  }
- if unlikely((frame = ef_alloc()) == NULL)
-    goto done;
  frame->ef_prev  = ts->t_except;
  frame->ef_error = ob;
  frame->ef_trace = (DREF DeeTracebackObject *)ITER_DONE;

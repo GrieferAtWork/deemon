@@ -71,10 +71,11 @@ DECL_BEGIN
 #define DEFINE_FLOAT_FUNCTIONS 1
 #endif
 
+/* TODO: Unaligned memory access */
 
 typedef struct {
- OBJECT_HEAD
- T      f_value; /* The floating point value. */
+    OBJECT_HEAD
+    T      f_value; /* The floating point value. */
 } X(Float);
 
 

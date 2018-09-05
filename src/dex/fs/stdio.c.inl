@@ -56,9 +56,15 @@ INTERN int DCALL fs_chdir(DeeObject *__restrict UNUSED(path)) { return fs_unsupp
 
 PRIVATE int DCALL
 file_exists_str(char const *__restrict filename) {
- FILE *fp = fopen(filename,"r");
- if (!fp) return 0;
+ FILE *fp;
+ DBG_ALIGNMENT_DISABLE();
+ fp = fopen(filename,"r");
+ if (!fp) {
+  DBG_ALIGNMENT_ENABLE();
+  return 0;
+ }
  fclose(fp);
+ DBG_ALIGNMENT_ENABLE();
  return 1;
 }
 
@@ -80,25 +86,35 @@ file_exists(DeeObject *__restrict filename) {
 
 PRIVATE FILE *DCALL
 file_open(DeeObject *__restrict filename, char const *mode) {
- FILE *result;
- if (DeeString_Check(filename))
-     return fopen(DeeString_STR(filename),mode);
- filename = DeeFile_Filename(filename);
- if unlikely(!filename) return NULL;
- result = fopen(DeeString_STR(filename),mode);
- Dee_Decref(filename);
+ FILE *result; char const *name;
+ if (DeeString_Check(filename)) {
+  Dee_Incref(filename);
+ } else {
+  filename = DeeFile_Filename(filename);
+  if unlikely(!filename) goto err;
+ }
+ name = DeeString_AsUtf8(filename);
+ if unlikely(!name) goto err_filename;
+ DBG_ALIGNMENT_DISABLE();
+ result = fopen(name,mode);
+ DBG_ALIGNMENT_ENABLE();
  if (!result) {
   DeeError_Throwf(&DeeError_FileNotFound,
                   "File %r could not be found",
                   filename);
  }
+ Dee_Decref(filename);
  return result;
+err_filename:
+ Dee_Decref(filename);
+err:
+ return NULL;
 }
 
 
 typedef struct {
- OBJECT_HEAD
- FILE *st_file; /* [1..1][const][owned] File file that is being stat-ed. */
+    OBJECT_HEAD
+    FILE *st_file; /* [1..1][const][owned] File file that is being stat-ed. */
 } Stat;
 
 PRIVATE int DCALL
@@ -115,7 +131,9 @@ err:
 }
 PRIVATE void DCALL
 stat_fini(Stat *__restrict self) {
+ DBG_ALIGNMENT_DISABLE();
  fclose(self->st_file);
+ DBG_ALIGNMENT_ENABLE();
 }
 PRIVATE DREF DeeObject *DCALL
 stat_getxxx(DeeObject *__restrict UNUSED(self)) {
@@ -124,11 +142,14 @@ stat_getxxx(DeeObject *__restrict UNUSED(self)) {
 PRIVATE DREF DeeObject *DCALL
 stat_getsize(Stat *__restrict self) {
  long result;
+ DBG_ALIGNMENT_DISABLE();
  if (fseek(self->st_file,0,SEEK_END)) goto err;
  result = ftell(self->st_file);
  if (result < 0) goto err;
+ DBG_ALIGNMENT_ENABLE();
  return DeeInt_NewULong((unsigned long)result);
 err:
+ DBG_ALIGNMENT_ENABLE();
  DeeError_Throwf(&DeeError_FSError,
                  "Failed to query file size");
  return NULL;
@@ -369,6 +390,7 @@ fs_unlink(DeeObject *__restrict path) {
 }
 INTERN int DCALL
 fs_remove(DeeObject *__restrict path) {
+ char *name;
  if (!DeeString_Check(path)) {
   int result;
   path = DeeFile_Filename(path);
@@ -378,18 +400,25 @@ fs_remove(DeeObject *__restrict path) {
   return result;
  }
  if (DeeThread_CheckInterrupt()) goto err;
- if (remove(DeeString_STR(path))) {
+ name = DeeString_AsUtf8(path);
+ if unlikely(!name) goto err;
+ DBG_ALIGNMENT_DISABLE();
+ if (remove(name)) {
+  DBG_ALIGNMENT_ENABLE();
   DeeError_Throwf(&DeeError_FileNotFound,
                   "File %r could not be found",
                   path);
-err:
-  return -1;
+  goto err;
  }
+ DBG_ALIGNMENT_ENABLE();
  return 0;
+err:
+ return -1;
 }
 INTERN int DCALL
 fs_rename(DeeObject *__restrict existing_path,
           DeeObject *__restrict new_path) {
+ char *old_name,*new_name;
  if (!DeeString_Check(existing_path)) {
   int result;
   existing_path = DeeFile_Filename(existing_path);
@@ -400,13 +429,19 @@ fs_rename(DeeObject *__restrict existing_path,
  }
  if (DeeObject_AssertTypeExact(new_path,&DeeString_Type))
      goto err;
- if (rename(DeeString_STR(existing_path),
-            DeeString_STR(new_path))) {
+ old_name = DeeString_AsUtf8(existing_path);
+ if unlikely(!old_name) goto err;
+ new_name = DeeString_AsUtf8(new_path);
+ if unlikely(!new_name) goto err;
+ DBG_ALIGNMENT_DISABLE();
+ if (rename(old_name,new_name)) {
+  DBG_ALIGNMENT_ENABLE();
   DeeError_Throwf(&DeeError_FileNotFound,
                   "File %r could not be found or the path of %r does not exist",
                   existing_path,new_path);
   goto err;
  }
+ DBG_ALIGNMENT_ENABLE();
  return 0;
 err:
  return -1;

@@ -67,6 +67,24 @@ OBJECT_CACHE_IFDBG( \
 INTDEF alloc_type *DCALL name##_dbgalloc(char const *file, int line);) \
 INTDEF void DCALL name##_tp_free(void *__restrict ob); \
 INTDEF void *DCALL name##_tp_alloc(void);
+
+#define DEFINE_STRUCT_CACHE_TRYALLOC(name,alloc_type,object_size) \
+INTERN alloc_type *(DCALL name##_tryalloc)(void) \
+{ \
+    alloc_type *result; \
+    rwlock_write(&structcache_##name##_lock); \
+    ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
+    result = (alloc_type *)structcache_##name##_list; \
+    if (result) { \
+        structcache_##name##_list = ((struct cache_struct *)result)->cs_next; \
+      --structcache_##name##_size; \
+    } \
+    rwlock_endwrite(&structcache_##name##_lock); \
+    if (!result) \
+         result = (alloc_type *)(Dee_TryMalloc)(object_size); \
+    OBJECT_CACHE_IFDBG(else memset(result,0xcc,object_size);) \
+    return result; \
+}
 #define DEFINE_STRUCT_CACHE_EX(name,alloc_type,object_size,limit) \
 INTERN rwlock_t             structcache_##name##_lock = RWLOCK_INIT; \
 INTERN struct cache_struct *structcache_##name##_list = NULL; \

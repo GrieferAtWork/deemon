@@ -376,16 +376,20 @@ DeeFile_Open(/*String*/DeeObject *__restrict filename, int oflags, int mode) {
  utf8_filename = DeeString_AsUtf8(filename);
  if unlikely(!utf8_filename) goto err;
 
+ DBG_ALIGNMENT_DISABLE();
 #ifdef __USE_LARGEFILE64
  fd = open64(utf8_filename,used_oflags,mode);
 #else
  fd = open(utf8_filename,used_oflags,mode);
 #endif
+ DBG_ALIGNMENT_ENABLE();
 #ifdef _WIO_DEFINED
  if (fd < 0) { /* Re-try in wide-character mode if supported by the host. */
   wchar_t *str = (wchar_t *)DeeString_AsWide(filename);
   if unlikely(!str) goto err;
+  DBG_ALIGNMENT_DISABLE();
   fd = _wopen(str,used_oflags,mode);
+  DBG_ALIGNMENT_ENABLE();
  }
 #endif
  if (fd < 0) {
@@ -400,7 +404,6 @@ DeeFile_Open(/*String*/DeeObject *__restrict filename, int oflags, int mode) {
                      "Failed to open %r",filename);
   goto err;
  }
-
  result = (DREF SystemFile *)DeeObject_Malloc(sizeof(SystemFile));
  if unlikely(!result) goto err_fd;
  DeeLFileObject_Init(result,&DeeFSFile_Type);
@@ -443,7 +446,10 @@ sysfile_read(SystemFile *__restrict self,
              void *__restrict buffer, size_t bufsize,
              dioflag_t flags) {
  /* TODO: Use `select()' to check if reading will block for `DEE_FILEIO_FNONBLOCKING' */
- ssize_t result = read((int)self->sf_handle,buffer,bufsize);
+ ssize_t result;
+ DBG_ALIGNMENT_DISABLE();
+ result = read((int)self->sf_handle,buffer,bufsize);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(result < 0) error_file_io(self),result = -1;
  return (dssize_t)result;
 }
@@ -452,18 +458,24 @@ sysfile_write(SystemFile *__restrict self,
               void const *__restrict buffer, size_t bufsize,
               dioflag_t flags) {
  /* TODO: Use `select()' to check if writing will block for `DEE_FILEIO_FNONBLOCKING' */
- ssize_t result = write((int)self->sf_handle,buffer,bufsize);
+ ssize_t result;
+ DBG_ALIGNMENT_DISABLE();
+ result = write((int)self->sf_handle,buffer,bufsize);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(result < 0) error_file_io(self),result = -1;
  return (dssize_t)result;
 }
 
 PRIVATE doff_t DCALL
 sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
+ doff_t result;
+ DBG_ALIGNMENT_DISABLE();
 #ifdef __USE_LARGEFILE64
- doff_t result = lseek64((int)self->sf_handle,(off64_t)off,whence);
+ result = lseek64((int)self->sf_handle,(off64_t)off,whence);
 #else
- doff_t result = lseek((int)self->sf_handle,(off_t)off,whence);
+ result = lseek((int)self->sf_handle,(off_t)off,whence);
 #endif
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(result < 0) error_file_io(self),result = -1;
  return result;
 }
@@ -472,13 +484,21 @@ PRIVATE int DCALL sysfile_sync(SystemFile *__restrict self) {
 #if !defined(CONFIG_NO_FDATASYNC) && \
     (defined(CONFIG_HAVE_FDATASYNC) || defined(fdatasync) || \
      defined(__USE_POSIX199309) || defined(__USE_UNIX98))
- if unlikely(fdatasync((int)self->sf_handle) < 0)
-    return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if unlikely(fdatasync((int)self->sf_handle) < 0) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
 #elif !defined(CONFIG_NO_FSYNC) && \
       (defined(CONFIG_HAVE_FSYNC) || defined(fsync) || \
        defined(_POSIX_FSYNC))
- if unlikely(fsync((int)self->sf_handle) < 0)
-    return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if unlikely(fsync((int)self->sf_handle) < 0) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
 #else
  (void)self;
 #endif
@@ -493,11 +513,13 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
      defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || \
      defined(__USE_XOPEN2K))
  /* Use ftruncate() */
+ DBG_ALIGNMENT_DISABLE();
 #if defined(__USE_LARGEFILE64) || defined(ftruncate64)
  result = ftruncate64((int)self->sf_handle,(off64_t)size);
 #else
  result = ftruncate((int)self->sf_handle,(off_t)size);
 #endif
+ DBG_ALIGNMENT_ENABLE();
  if (result) error_file_io(self);
 #elif !defined(CONFIG_NO_TRUNCATE) && \
       (defined(CONFIG_HAVE_TRUNCATE) || defined(truncate) || defined(truncate64) || \
@@ -508,11 +530,13 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
  if unlikely(!filename) return -1;
  utf8_filename = DeeString_AsUtf8(filename);
  if unlikely(!utf8_filename) { Dee_Decref(filename); return -1; }
+ DBG_ALIGNMENT_DISABLE();
 #if defined(__USE_LARGEFILE64) || defined(truncate64)
  result = truncate64(utf8_filename,(off64_t)size);
 #else
  result = truncate(utf8_filename,(off64_t)size);
 #endif
+ DBG_ALIGNMENT_ENABLE();
  Dee_Decref(filename);
  if (result) error_file_io(self);
 #else
@@ -525,8 +549,12 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 
 PRIVATE int DCALL
 sysfile_close(SystemFile *__restrict self) {
- if unlikely(close((int)self->sf_ownhandle))
-    return error_file_io(self);
+ DBG_ALIGNMENT_DISABLE();
+ if unlikely(close((int)self->sf_ownhandle)) {
+  DBG_ALIGNMENT_ENABLE();
+  return error_file_io(self);
+ }
+ DBG_ALIGNMENT_ENABLE();
  self->sf_handle    = DSYSFD_INVALID;
  self->sf_ownhandle = DSYSFD_INVALID;
  return 0;
@@ -550,7 +578,9 @@ sysfile_isatty(SystemFile *__restrict self,
  int result;
  if (DeeArg_Unpack(argc,argv,":isatty"))
      goto err;
+ DBG_ALIGNMENT_DISABLE();
  result = isatty((int)self->sf_handle);
+ DBG_ALIGNMENT_ENABLE();
  if (result) return_true;
  /* Check our whitelist of errors that indicate not-a-tty. */
  result = errno;
@@ -581,8 +611,11 @@ PRIVATE struct type_getset sysfile_getsets[] = {
 
 PRIVATE void DCALL
 sysfile_fini(SystemFile *__restrict self) {
- if ((int)self->sf_ownhandle >= 0)
-     close((int)self->sf_ownhandle);
+ if ((int)self->sf_ownhandle >= 0) {
+  DBG_ALIGNMENT_DISABLE();
+  close((int)self->sf_ownhandle);
+  DBG_ALIGNMENT_ENABLE();
+ }
  Dee_XDecref(self->sf_filename);
 }
 
@@ -594,7 +627,9 @@ sysfile_class_sync(DeeObject *__restrict UNUSED(self),
 #if !defined(CONFIG_NO_SYNC) && \
     (defined(CONFIG_HAVE_SYNC) || defined(sync) || \
      defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))
+ DBG_ALIGNMENT_DISABLE();
  sync();
+ DBG_ALIGNMENT_ENABLE();
 #endif
  return_none;
 }
@@ -707,7 +742,7 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
         /* .tp_iter_next     = */NULL,
         /* .tp_attr          = */NULL,
         /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+        /* .tp_buffer        = */NULL,
         /* .tp_methods       = */NULL,
         /* .tp_getsets       = */NULL,
         /* .tp_members       = */NULL,

@@ -24,6 +24,7 @@
 #ifdef __KOS_SYSTEM_HEADERS__
 #include <features.h>
 #endif
+#include "../__debug-alignment.h"
 
 DECL_BEGIN
 
@@ -67,25 +68,25 @@ FUNDEF void (KCALL task_yield)(void);
        defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
        defined(_WIN32_WCE) || defined(WIN32_WCE))
 __NAMESPACE_INT_BEGIN
-__IMPDEF __ULONG32_TYPE__ __ATTR_STDCALL SleepEx(__ULONG32_TYPE__ __msec, __INT32_TYPE__ __alertable);
+__IMPDEF __ULONG32_TYPE__ (__ATTR_STDCALL SleepEx)(__ULONG32_TYPE__ __msec, __INT32_TYPE__ __alertable);
 __NAMESPACE_INT_END
-#   define SCHED_YIELD() (__NAMESPACE_INT_SYM SleepEx(20,0))
+#   define SCHED_YIELD() (__hybrid_dbg_alignment_disable(),__NAMESPACE_INT_SYM SleepEx(20,0),__hybrid_dbg_alignment_enable())
 #elif defined(__linux__) || defined(__linux) || defined(linux) || \
       defined(__LINUX__) || defined(__LINUX) || defined(LINUX) || \
      !defined(__KOS_SYSTEM_HEADERS__)
 #include <sched.h>
-#define SCHED_YIELD() sched_yield()
+#define SCHED_YIELD() (__hybrid_dbg_alignment_disable(),sched_yield(),__hybrid_dbg_alignment_enable())
 #elif defined(__CRT_GLC)
 #ifdef __BUILDING_LIBC
 __INTDEF int (LIBCCALL libc_sched_yield)(void);
-#define SCHED_YIELD() libc_sched_yield()
+#define SCHED_YIELD() (__hybrid_dbg_alignment_disable(),libc_sched_yield(),__hybrid_dbg_alignment_enable())
 #else
 __LIBC int (LIBCCALL sched_yield)(void);
-#define SCHED_YIELD() sched_yield()
+#define SCHED_YIELD() (__hybrid_dbg_alignment_disable(),sched_yield(),__hybrid_dbg_alignment_enable())
 #endif
 #elif defined(__unix__)
 __LIBC int (LIBCCALL pthread_yield)(void);
-#define SCHED_YIELD() pthread_yield()
+#define SCHED_YIELD() (__hybrid_dbg_alignment_disable(),pthread_yield(),__hybrid_dbg_alignment_enable())
 #else
 #define SCHED_YIELD() (void)0
 #endif

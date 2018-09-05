@@ -524,7 +524,7 @@ err:
 PRIVATE int DCALL
 dec_putkwds(DeeKwdsObject *__restrict self) {
  if (dec_putb(DTYPE_KWDS)) goto err;
- if (dec_putptr(self->kw_size)) goto err; /* Dec_Kwds.kw_siz */
+ if (dec_putptr((uint32_t)self->kw_size)) goto err; /* Dec_Kwds.kw_siz */
  if (self->kw_size) {
   size_t i,j;
   for (i = 0; i < self->kw_size; ++i) {
@@ -1028,6 +1028,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
  descr.co_refc       = self->co_refc;
  descr.co_argc_min   = self->co_argc_min;
  descr.co_stackmax   = (uint16_t)(self->co_framesize/sizeof(DeeObject *))-self->co_localc;
+ descr.co_pad        = 0;
  descr.co_staticoff  = 0;
  descr.co_exceptoff  = 0;
  descr.co_defaultoff = 0;

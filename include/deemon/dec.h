@@ -222,6 +222,7 @@ typedef struct PACKED {
     uint16_t   co_refc;       /* Amount of reference variables used by this code. */
     uint16_t   co_argc_min;   /* Min amount of arguments required to execute this code. */
     uint16_t   co_stackmax;   /* The greatest allowed stack depth of the assembly associated with this code. */
+    uint16_t   co_pad;        /* ... */
     uint32_t   co_staticoff;  /* Absolute file offset to a static/constant variable descriptor table (`Dec_Objects').
                                * NOTE: `DTYPE_NULL' is not allowed. */
     uint32_t   co_exceptoff;  /* Absolute file offset to an exception handler descriptor table (`Dec_CodeExceptions'). */

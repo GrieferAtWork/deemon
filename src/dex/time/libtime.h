@@ -55,49 +55,16 @@ typedef uint32_t dutime_half_t;
 /* NOTE: Everything >= day can be represented using `dtime_half_t' */
 
 
-typedef struct time_object DeeTimeObject;
-struct time_object {
- OBJECT_HEAD
- union{
-  /* Microseconds (1000*1000 / sec) since 0:0:0 1.1.0000 (Gregorian calender).
-   * NOTE: 0 was chosen due to the fact that this way time-offsets/timeouts
-   *       and exact points in time can use the same type internally,
-   *       making it quite strait-forward to do time-based calculation such
-   *       as `print (now()+days(5)).wday; // The week day 5 days into the future'
-   *       Also note that this implementation assumes a flat time-scale which
-   *       doesn't take leap seconds or daylight-savings into account, meaning
-   *       that as far as this timer is concerned, it'll just jump back and
-   *       forth twice a year by one hour.
-   *       The implementation does however take leap years into account!
-   */
-  dtime_t      t_time;   /* TIME_MICROSECONDS */
-#ifdef HAVE_128BIT_TIME
-  dtime_half_t t_time_half[2];
-#endif
-  /* Because months can have differing lengths dependent on
-   * which which they refer to, the time type needs to be able
-   * to represent months and years just as well as microseconds.
-   * For that reason, they are represented individually here, but are
-   * converted into microseconds adjusted for some other time-object.
-   * Arithmetic rules are as follows:
-   *   - MICROSECONDS + MICROSECONDS --> MICROSECONDS
-   *   - MICROSECONDS + MONTHS       --> MICROSECONDS
-   *   - MONTHS + MICROSECONDS       --> MICROSECONDS
-   *   - MONTHS + MONTHS             --> MONTHS
-   * As far as time representation goes, the representation
-   * of the left-hand-side is always inherited by the result.
-   */
-  dtime_half_t t_months; /* TIME_MONTHS */
- };
- /* Time encoding */
+
+/* Time encoding */
 #define TIME_MICROSECONDS  0
 #define TIME_MONTHS        1
- /* Preferred representation.
-  * >> print days(2);            // `2 days'
-  * >> print days(2).hours;      // `48 hours'
-  * >> print int(days(2));       // 2*24*60*60*1000*1000
-  * >> print int(days(2).hours); // 2*24*60*60*1000*1000
-  */
+/* Preferred representation.
+ * >> print days(2);            // `2 days'
+ * >> print days(2).hours;      // `48 hours'
+ * >> print int(days(2));       // 2*24*60*60*1000*1000
+ * >> print int(days(2).hours); // 2*24*60*60*1000*1000
+ */
 #define TIME_REPR_NONE     0 /* No specific representation.
                               * When this is set, an `Error.TypeError'
                               * is thrown when `intval' is invoked. */
@@ -132,13 +99,48 @@ struct time_object {
 #else
 #define TIME_KIND(type,repr) ((type) << 8 | (repr))
 #endif
- union{
- struct{
-  uint8_t  t_type; /* Time encoding (One of `TIME_*') */
-  uint8_t  t_repr; /* Time representation (One of `TIME_REPR_*') */
- };
-  uint16_t t_kind; /* Encoded using TIME_KIND(type,repr) */
- };
+
+typedef struct time_object DeeTimeObject;
+struct time_object {
+    OBJECT_HEAD
+    union {
+        /* Microseconds (1000*1000 / sec) since 0:0:0 1.1.0000 (Gregorian calender).
+         * NOTE: 0 was chosen due to the fact that this way time-offsets/timeouts
+         *       and exact points in time can use the same type internally,
+         *       making it quite strait-forward to do time-based calculation such
+         *       as `print (now()+days(5)).wday; // The week day 5 days into the future'
+         *       Also note that this implementation assumes a flat time-scale which
+         *       doesn't take leap seconds or daylight-savings into account, meaning
+         *       that as far as this timer is concerned, it'll just jump back and
+         *       forth twice a year by one hour.
+         *       The implementation does however take leap years into account!
+         */
+        dtime_t      t_time;   /* TIME_MICROSECONDS */
+#ifdef HAVE_128BIT_TIME
+        dtime_half_t t_time_half[2];
+#endif
+        /* Because months can have differing lengths dependent on
+         * which which they refer to, the time type needs to be able
+         * to represent months and years just as well as microseconds.
+         * For that reason, they are represented individually here, but are
+         * converted into microseconds adjusted for some other time-object.
+         * Arithmetic rules are as follows:
+         *   - MICROSECONDS + MICROSECONDS --> MICROSECONDS
+         *   - MICROSECONDS + MONTHS       --> MICROSECONDS
+         *   - MONTHS + MICROSECONDS       --> MICROSECONDS
+         *   - MONTHS + MONTHS             --> MONTHS
+         * As far as time representation goes, the representation
+         * of the left-hand-side is always inherited by the result.
+         */
+        dtime_half_t t_months; /* TIME_MONTHS */
+    };
+    union {
+        struct {
+            uint8_t  t_type; /* Time encoding (One of `TIME_*') */
+            uint8_t  t_repr; /* Time representation (One of `TIME_REPR_*') */
+        };
+        uint16_t     t_kind; /* Encoded using TIME_KIND(type,repr) */
+    };
 };
 
 #ifdef HAVE_128BIT_TIME

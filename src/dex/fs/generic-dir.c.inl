@@ -91,15 +91,13 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 PRIVATE int DCALL
 dir_copy(DeeObject *__restrict UNUSED(self),
          DeeObject *__restrict UNUSED(other)) {
- fs_unsupported();
- return -1;
+ return fs_unsupported();
 }
 PRIVATE int DCALL
 dir_ctor(DeeObject *__restrict UNUSED(self),
          size_t UNUSED(argc),
          DeeObject **__restrict UNUSED(argv)) {
- fs_unsupported();
- return -1;
+ return fs_unsupported();
 }
 
 PRIVATE struct type_seq dir_seq = {

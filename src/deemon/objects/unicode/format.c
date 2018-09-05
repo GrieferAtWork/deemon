@@ -751,9 +751,9 @@ check_print_error:
   self->f_flush_start = self->f_iter;
  }
  /* Flush the remainder. */
- return (*printer)(arg,self->f_flush_start,
-                  (size_t)(self->f_iter -
-                           self->f_flush_start));
+ return (int)(*printer)(arg,self->f_flush_start,
+                       (size_t)(self->f_iter -
+                                self->f_flush_start));
 #undef print
 err_arg:
  Dee_Decref(in_arg);

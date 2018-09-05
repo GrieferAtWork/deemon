@@ -439,7 +439,7 @@ INTERN uint8_t (DCALL dec_link)(void) {
    case DECREL_SIZE32:
     UNALIGNED_SETLE32((uint32_t *)target,
                       UNALIGNED_GETLE32((uint32_t *)target) +
-                     (relsym->ds_sect->ds_iter - relsym->ds_sect->ds_begin));
+                     (uint32_t)(relsym->ds_sect->ds_iter - relsym->ds_sect->ds_begin));
     break;
  //case DECREL_NONE: /* Always skip empty relocations. */
    default: break;
@@ -671,7 +671,7 @@ INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
    pathlen = (size_t)((dec_filestr+dec_filelen)-dec_filestart);
    memcpy(dst,dec_filestart,pathlen*sizeof(char));
    dst += pathlen;
-   *(uint32_t *)dst = ENCODE4('d','e','c',0);
+   UNALIGNED_SET32((uint32_t *)dst,ENCODE4('d','e','c',0));
   }
  } else {
   Dee_Incref(dec_filename);

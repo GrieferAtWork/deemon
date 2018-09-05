@@ -494,6 +494,9 @@ struct __ATTR_PACKED asm_overload {
     uint8_t                      ao_opcount; /* The exact number of operands accepted by this overload. */
     struct asm_overload_operand  ao_ops[ASM_MAX_INSTRUCTION_OPERANDS];
                                              /* Operands accepted by this overload. */
+#if (ASM_MAX_INSTRUCTION_OPERANDS % 2) == 0
+    uint8_t                      ao_pad;     /* Ensure 2-byte alignment. */
+#endif
 };
 
 #define ASM_MNEMONIC_MAXNAME 14

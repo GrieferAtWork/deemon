@@ -2392,7 +2392,8 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
  *       pointer previously allocated using 'Dee_AMalloc()' and
  *       friends. */
 #if defined(CONFIG_NO_AMALLOC) || defined(CONFIG_NO_ALLOCA) || \
-  (!defined(alloca) && !defined(CONFIG_HAVE_ALLOCA))
+  (!defined(alloca) && !defined(CONFIG_HAVE_ALLOCA)) || \
+   !defined(NO_DBG_ALIGNMENT)
 #define Dee_AMalloc(s)    Dee_Malloc(s)
 #define Dee_ACalloc(s)    Dee_Calloc(s)
 #define Dee_ATryMalloc(s) Dee_TryMalloc(s)
@@ -2401,7 +2402,12 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 #define Dee_XAFree(p)     Dee_Free(p)
 #else /* !alloca */
 #ifndef Dee_Alloca
+#ifdef NO_DBG_ALIGNMENT
 #define Dee_Alloca(x)     alloca(x)
+#else
+FORCELOCAL void *DCALL DeeDbg_AllocaCleanup(void *ptr) { DBG_ALIGNMENT_ENABLE(); return ptr; }
+#define Dee_Alloca(x) (DBG_ALIGNMENT_DISABLE(),DeeDbg_AllocaCleanup(alloca(x)))
+#endif
 #endif
 
 
@@ -2575,7 +2581,7 @@ LOCAL void *(__LIBCCALL DeeDbg_ATryCallocHeap)(size_t s, char const *file, int l
  return (void *)res;
 }
 #endif /* !NDEBUG */
-#define Dee_AMallocStack(s) Dee_AMallocStack_init(Dee_Alloca((s)+DEE_AMALLOC_ALIGN),(s))
+#define Dee_AMallocStack(s)  Dee_AMallocStack_init(Dee_Alloca((s)+DEE_AMALLOC_ALIGN),(s))
 #define Dee_AMalloc(s)    ((s) > DEE_AMALLOC_MAX-DEE_AMALLOC_ALIGN ? Dee_AMallocHeap(s) : Dee_AMallocStack(s))
 #define Dee_ATryMalloc(s) ((s) > DEE_AMALLOC_MAX-DEE_AMALLOC_ALIGN ? Dee_ATryMallocHeap(s) : Dee_AMallocStack(s))
 LOCAL void *(__LIBCCALL Dee_AMallocStack_init)(void *p, size_t s) {

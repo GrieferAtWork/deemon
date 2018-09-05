@@ -268,10 +268,9 @@ object_call_vec2(DeeObject *__restrict func,
  size_t argc = argc1 + argc2;
  ASSERT(argc1 != 0);
  ASSERT(argc2 != 0);
-#if !defined(CONFIG_NO_ALLOCA) && \
-    (defined(alloca) || defined(CONFIG_HAVE_ALLOCA))
+#ifdef Dee_Alloca
  if (argc < DEE_AMALLOC_MAX/sizeof(DREF DeeObject *)) {
-  argv = (DREF DeeObject **)alloca(argc*sizeof(DREF DeeObject *));
+  argv = (DREF DeeObject **)Dee_Alloca(argc*sizeof(DREF DeeObject *));
   if unlikely(!argv) return NULL;
   MEMCPY_PTR(argv,vec1,argc1);
   MEMCPY_PTR(argv+argc1,vec2,argc2);
@@ -733,11 +732,14 @@ function_call(DeeFunctionObject *__restrict self,
   frame.cf_argv = argv;
   frame.cf_kw   = Dee_EmptyMapping;
   frame.cf_result = NULL;
-  if (code->co_flags&CODE_FHEAPFRAME) {
+#ifdef Dee_Alloca
+  if (!(code->co_flags&CODE_FHEAPFRAME)) {
+   frame.cf_frame = (DeeObject **)Dee_Alloca(code->co_framesize);
+  } else
+#endif /* Dee_Alloca */
+  {
    frame.cf_frame = (DeeObject **)Dee_Malloc(code->co_framesize);
    if unlikely(!frame.cf_frame) return NULL;
-  } else {
-   frame.cf_frame = (DeeObject **)alloca(code->co_framesize);
   }
   /* Per-initialize local variable memory to ZERO. */
   MEMSET_PTR(frame.cf_frame,0,code->co_localc);
@@ -778,8 +780,12 @@ function_call(DeeFunctionObject *__restrict self,
   while (frame.cf_sp != frame.cf_frame)
        --frame.cf_sp,Dee_XDecref(*frame.cf_sp);
 
+#ifdef Dee_Alloca
   if (code->co_flags&CODE_FHEAPFRAME)
-      Dee_Free(frame.cf_frame);
+#endif /* Dee_Alloca */
+  {
+   Dee_Free(frame.cf_frame);
+  }
   Dee_XDecref(frame.cf_vargs);
   return result;
  }
@@ -874,11 +880,14 @@ DeeFunction_ThisCall(DeeObject *__restrict self,
   frame.cf_argv = argv;
   frame.cf_kw   = Dee_EmptyMapping;
   frame.cf_result = NULL;
-  if (code->co_flags&CODE_FHEAPFRAME) {
+#ifdef Dee_Alloca
+  if (!(code->co_flags&CODE_FHEAPFRAME)) {
+   frame.cf_frame = (DeeObject **)Dee_Alloca(code->co_framesize);
+  } else
+#endif /* Dee_Alloca */
+  {
    frame.cf_frame = (DeeObject **)Dee_Malloc(code->co_framesize);
    if unlikely(!frame.cf_frame) return NULL;
-  } else {
-   frame.cf_frame = (DeeObject **)alloca(code->co_framesize);
   }
   /* Per-initialize local variable memory to ZERO. */
   MEMSET_PTR(frame.cf_frame,0,code->co_localc);
@@ -911,8 +920,12 @@ DeeFunction_ThisCall(DeeObject *__restrict self,
   while (frame.cf_sp != frame.cf_frame)
        --frame.cf_sp,Dee_XDecref(*frame.cf_sp);
 
+#ifdef Dee_Alloca
   if (code->co_flags&CODE_FHEAPFRAME)
-      Dee_Free(frame.cf_frame);
+#endif /* Dee_Alloca */
+  {
+   Dee_Free(frame.cf_frame);
+  }
   Dee_XDecref(frame.cf_vargs);
   return result;
  }

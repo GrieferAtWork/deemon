@@ -33,6 +33,7 @@
 #include <deemon/arg.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <hybrid/unaligned.h>
 
 #include <stdint.h>
 
@@ -230,6 +231,45 @@ DECL_BEGIN
 #define F_NOSIGN(x) X(x##ns)
 #endif
 
+#ifndef GET
+#ifdef SIGNED
+#if SIZEOF == 1
+#define GET(ptr)    (*(int8_t *)(ptr))
+#define SET(ptr,v)  (void)(*(int8_t *)(ptr)=(v))
+#elif SIZEOF == 2
+#define GET(ptr)    ((int16_t)UNALIGNED_GET16(ptr))
+#define SET(ptr,v)  UNALIGNED_SET16(ptr,(uint16_t)(v))
+#elif SIZEOF == 4
+#define GET(ptr)    ((int32_t)UNALIGNED_GET32(ptr))
+#define SET(ptr,v)  UNALIGNED_SET32(ptr,(uint32_t)(v))
+#elif SIZEOF == 8
+#define GET(ptr)    ((int64_t)UNALIGNED_GET64(ptr))
+#define SET(ptr,v)  UNALIGNED_SET64(ptr,(uint64_t)(v))
+#elif SIZEOF == 16
+#define GET(ptr)    ((__INT128_TYPE__)UNALIGNED_GET128(ptr))
+#define SET(ptr,v)  UNALIGNED_SET128(ptr,(__UINT128_TYPE__)(v))
+#endif
+#else /* SIGNED */
+#if SIZEOF == 1
+#define GET(ptr)    (*(uint8_t *)(ptr))
+#define SET(ptr,v)  (void)(*(uint8_t *)(ptr)=(v))
+#elif SIZEOF == 2
+#define GET(ptr)     UNALIGNED_GET16(ptr)
+#define SET(ptr,v)   UNALIGNED_SET16(ptr,v)
+#elif SIZEOF == 4
+#define GET(ptr)     UNALIGNED_GET32(ptr)
+#define SET(ptr,v)   UNALIGNED_SET32(ptr,v)
+#elif SIZEOF == 8
+#define GET(ptr)     UNALIGNED_GET64(ptr)
+#define SET(ptr,v)   UNALIGNED_SET64(ptr,v)
+#elif SIZEOF == 16
+#define GET(ptr)     UNALIGNED_GET128(ptr)
+#define SET(ptr,v)   UNALIGNED_SET128(ptr,v)
+#endif
+#endif /* !SIGNED */
+#endif /* !GET */
+
+
 
 typedef struct {
     OBJECT_HEAD
@@ -299,8 +339,8 @@ typedef struct {
 #ifndef INT_NEWINT_DEFINED
 #define INT_NEWINT_DEFINED 1
 typedef struct {
- OBJECT_HEAD
- CTYPES_INT i_value; /* The integer value. */
+    OBJECT_HEAD
+    CTYPES_INT i_value; /* The integer value. */
 } Integer_int_object;
 INTERN DREF DeeObject *DCALL int_newint(CTYPES_INT val) {
  Integer_int_object *result;
@@ -348,7 +388,7 @@ F(intinit)(DeeSTypeObject *__restrict UNUSED(tp_self),
 #endif
  if (OBJECT_AS_T(arg,&value))
      goto err;
- CTYPES_FAULTPROTECT(*self = value,goto err);
+ CTYPES_FAULTPROTECT(SET(self,value),goto err);
  return 0;
 err:
  return -1;
@@ -359,7 +399,7 @@ F(intass)(DeeSTypeObject *__restrict UNUSED(tp_self),
  T value;
  if (OBJECT_AS_T(arg,&value))
      goto err;
- CTYPES_FAULTPROTECT(*self = value,goto err);
+ CTYPES_FAULTPROTECT(SET(self,value),goto err);
  return 0;
 err:
  return -1;
@@ -378,8 +418,7 @@ PRIVATE DREF DeeObject *DCALL
 F(intstr)(DeeSTypeObject *__restrict UNUSED(tp_self),
           T *self) {
  T value;
- CTYPES_FAULTPROTECT(value = *self,
-                     return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
 #ifdef CONFIG_BOOL_STRING
  return_reference_(value ? (DeeObject *)&str_true : (DeeObject *)&str_false);
 #else
@@ -392,7 +431,7 @@ PRIVATE int DCALL
 F_NOSIGN(intbool)(DeeSTypeObject *__restrict UNUSED(tp_self),
                   T *self) {
  T value;
- CTYPES_FAULTPROTECT(value = *self,
+ CTYPES_FAULTPROTECT(value = GET(self),
                      return -1);
  return value != 0;
 }
@@ -402,7 +441,7 @@ PRIVATE int DCALL
 F(int_int32)(DeeSTypeObject *__restrict UNUSED(tp_self),
              T *self, int32_t *__restrict result) {
  T value;
- CTYPES_FAULTPROTECT(value = *self,return -1);
+ CTYPES_FAULTPROTECT(value = GET(self),return -1);
 #ifdef SIGNED
  *result = (int32_t)value;
  return INT_SIGNED;
@@ -415,7 +454,7 @@ PRIVATE int DCALL
 F(int_int64)(DeeSTypeObject *__restrict UNUSED(tp_self),
              T *self, int64_t *__restrict result) {
  T value;
- CTYPES_FAULTPROTECT(value = *self,return -1);
+ CTYPES_FAULTPROTECT(value = GET(self),return -1);
 #ifdef SIGNED
  *result = (int64_t)value;
  return INT_SIGNED;
@@ -428,14 +467,14 @@ PRIVATE int DCALL
 F(int_double)(DeeSTypeObject *__restrict UNUSED(tp_self),
               T *self, double *__restrict result) {
  T value;
- CTYPES_FAULTPROTECT(value = *self,return -1);
+ CTYPES_FAULTPROTECT(value = GET(self),return -1);
  *result = (double)value;
  return 0;
 }
 PRIVATE DREF DeeObject *DCALL
 F(int_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
  T value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
 #ifdef SIGNED
  return DeeInt_New(SIZEOF,value);
 #else
@@ -445,20 +484,20 @@ F(int_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 PRIVATE DREF DeeObject *DCALL
 F(int_inv)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
  T value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  return NEW_INTEGER(~value);
 }
 PRIVATE DREF DeeObject *DCALL
 F(int_pos)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
  T value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  return NEW_INTEGER(+value);
 }
 #ifdef SIGNED
 PRIVATE DREF DeeObject *DCALL
 F(int_neg)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
  T value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  return NEW_INTEGER(-value);
 }
 #endif
@@ -466,28 +505,28 @@ PRIVATE DREF DeeObject *DCALL
 F(int_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
  T value,other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (OBJECT_AS_T(some_object,&other_value))
      return NULL;
- return NEW_INTEGER(value+other_value);
+ return NEW_INTEGER(value + other_value);
 }
 PRIVATE DREF DeeObject *DCALL
 F(int_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
  T value,other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (OBJECT_AS_T(some_object,&other_value))
      return NULL;
- return NEW_INTEGER(value-other_value);
+ return NEW_INTEGER(value - other_value);
 }
 PRIVATE DREF DeeObject *DCALL
 F(int_mul)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
  T value,other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (OBJECT_AS_T(some_object,&other_value))
      return NULL;
- return NEW_INTEGER(value*other_value);
+ return NEW_INTEGER(value * other_value);
 }
 
 PRIVATE ATTR_COLD void DCALL
@@ -501,27 +540,27 @@ PRIVATE DREF DeeObject *DCALL
 F(int_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
  T value,other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (OBJECT_AS_T(some_object,&other_value))
      return NULL;
  if unlikely(!other_value) { F(int_divzero)(value,some_object); return NULL; }
- return NEW_INTEGER(value/other_value);
+ return NEW_INTEGER(value / other_value);
 }
 PRIVATE DREF DeeObject *DCALL
 F(int_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
  T value,other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (OBJECT_AS_T(some_object,&other_value))
      return NULL;
  if unlikely(!other_value) { F(int_divzero)(value,some_object); return NULL; }
- return NEW_INTEGER(value%other_value);
+ return NEW_INTEGER(value % other_value);
 }
 PRIVATE DREF DeeObject *DCALL
 F(int_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
  T value; unsigned int other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (DeeObject_AsUInt(some_object,&other_value))
      return NULL;
  return NEW_INTEGER(value << other_value);
@@ -530,7 +569,7 @@ PRIVATE DREF DeeObject *DCALL
 F(int_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
  T value; unsigned int other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (DeeObject_AsUInt(some_object,&other_value))
      return NULL;
  return NEW_INTEGER(value >> other_value);
@@ -539,7 +578,7 @@ PRIVATE DREF DeeObject *DCALL
 F(int_and)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
  T value,other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (OBJECT_AS_T(some_object,&other_value))
      return NULL;
  return NEW_INTEGER(value & other_value);
@@ -548,7 +587,7 @@ PRIVATE DREF DeeObject *DCALL
 F(int_or)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
           DeeObject *__restrict some_object) {
  T value,other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (OBJECT_AS_T(some_object,&other_value))
      return NULL;
  return NEW_INTEGER(value | other_value);
@@ -557,19 +596,19 @@ PRIVATE DREF DeeObject *DCALL
 F(int_xor)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
  T value,other_value;
- CTYPES_FAULTPROTECT(value = *self,return NULL);
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL);
  if (OBJECT_AS_T(some_object,&other_value))
      return NULL;
  return NEW_INTEGER(value ^ other_value);
 }
 PRIVATE int DCALL
 F(int_inc)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
- CTYPES_FAULTPROTECT(++*self,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) + 1)),return -1);
  return 0;
 }
 PRIVATE int DCALL
 F(int_dec)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
- CTYPES_FAULTPROTECT(--*self,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) - 1)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -578,7 +617,7 @@ F(int_inplace_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
  T other_value;
  if (OBJECT_AS_T(some_object,&other_value))
      return -1;
- CTYPES_FAULTPROTECT(*self += other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) + other_value)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -587,7 +626,7 @@ F(int_inplace_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
  T other_value;
  if (OBJECT_AS_T(some_object,&other_value))
      return -1;
- CTYPES_FAULTPROTECT(*self -= other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) - other_value)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -596,7 +635,7 @@ F(int_inplace_mul)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
  T other_value;
  if (OBJECT_AS_T(some_object,&other_value))
      return -1;
- CTYPES_FAULTPROTECT(*self *= other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) * other_value)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -607,11 +646,11 @@ F(int_inplace_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
      return -1;
  if unlikely(!other_value) {
   T value;
-  CTYPES_FAULTPROTECT(value = *self,return -1);
+  CTYPES_FAULTPROTECT(value = GET(self),return -1);
   F(int_divzero)(value,some_object);
   return -1;
  }
- CTYPES_FAULTPROTECT(*self /= other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) / other_value)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -622,11 +661,11 @@ F(int_inplace_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
      return -1;
  if unlikely(!other_value) {
   T value;
-  CTYPES_FAULTPROTECT(value = *self,return -1);
+  CTYPES_FAULTPROTECT(value = GET(self),return -1);
   F(int_divzero)(value,some_object);
   return -1;
  }
- CTYPES_FAULTPROTECT(*self %= other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) % other_value)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -635,7 +674,7 @@ F(int_inplace_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
  unsigned int other_value;
  if (DeeObject_AsUInt(some_object,&other_value))
      return -1;
- CTYPES_FAULTPROTECT(*self <<= other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) << other_value)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -644,7 +683,7 @@ F(int_inplace_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
  unsigned int other_value;
  if (DeeObject_AsUInt(some_object,&other_value))
      return -1;
- CTYPES_FAULTPROTECT(*self >>= other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) >> other_value)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -653,7 +692,7 @@ F(int_inplace_and)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
  unsigned int other_value;
  if (DeeObject_AsUInt(some_object,&other_value))
      return -1;
- CTYPES_FAULTPROTECT(*self &= other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) & other_value)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -662,7 +701,7 @@ F(int_inplace_or)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
  unsigned int other_value;
  if (DeeObject_AsUInt(some_object,&other_value))
      return -1;
- CTYPES_FAULTPROTECT(*self |= other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) | other_value)),return -1);
  return 0;
 }
 PRIVATE int DCALL
@@ -671,7 +710,7 @@ F(int_inplace_xor)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
  unsigned int other_value;
  if (DeeObject_AsUInt(some_object,&other_value))
      return -1;
- CTYPES_FAULTPROTECT(*self ^= other_value,return -1);
+ CTYPES_FAULTPROTECT(SET(self,(T)(GET(self) ^ other_value)),return -1);
  return 0;
 }
 
@@ -739,7 +778,7 @@ name(DeeSTypeObject *__restrict UNUSED(tp_self), \
      T *self, \
      DeeObject *__restrict some_object) { \
  T value,other_value; \
- CTYPES_FAULTPROTECT(value = *self,return NULL); \
+ CTYPES_FAULTPROTECT(value = GET(self),return NULL); \
  if (OBJECT_AS_T(some_object,&other_value)) \
      return NULL; \
  return_bool(value op other_value); \
@@ -935,6 +974,9 @@ INTERN DeeSTypeObject TYPE_NAME = {
     /* .st_seq      = */NULL,
     /* .st_attr     = */NULL
 };
+
+#undef GET
+#undef SET
 
 #undef FFI_TYPE
 #undef F_NOSIGN

@@ -60,10 +60,13 @@ pipe_class_new(DeeObject *__restrict UNUSED(self),
  DREF DeeObject *result;
  if (DeeArg_Unpack(argc,argv,"|I32u:new",&pipe_size))
      goto err;
+ DBG_ALIGNMENT_DISABLE();
  if (!CreatePipe(&hReader,&hWriter,NULL,pipe_size)) {
+  DBG_ALIGNMENT_ENABLE();
   nt_ThrowLastError();
   goto err;
  }
+ DBG_ALIGNMENT_ENABLE();
  /* Create file objects for the pipe handles. */
  fReader = open_fd(&DeePipeReader_Type,hReader);
  if unlikely(!fReader) goto err_hreadwrite;
@@ -73,13 +76,22 @@ pipe_class_new(DeeObject *__restrict UNUSED(self),
  result = DeeTuple_PackSymbolic(2,fReader,fWriter);
  if unlikely(!result) goto err_freadwrite;
  return result;
-err_freadwrite: Dee_Decref(fReader);
-                Dee_Decref(fWriter);
-                goto err;
-err_hreadwrite: CloseHandle(hReader);
-err_hwriter:    CloseHandle(hWriter);
-err:            return NULL;
-err_fread_hwrite: Dee_Decref(fReader); goto err_hwriter;
+err_freadwrite:
+ Dee_Decref(fReader);
+ Dee_Decref(fWriter);
+ goto err;
+err_hreadwrite:
+ DBG_ALIGNMENT_DISABLE();
+ CloseHandle(hReader);
+err_hwriter:
+ DBG_ALIGNMENT_DISABLE();
+ CloseHandle(hWriter);
+ DBG_ALIGNMENT_ENABLE();
+err:
+ return NULL;
+err_fread_hwrite:
+ Dee_Decref(fReader);
+ goto err_hwriter;
 }
 
 
@@ -136,7 +148,7 @@ INTERN DeeFileTypeObject DeePipe_Type = {
         /* .tp_iter_next     = */NULL,
         /* .tp_attr          = */NULL,
         /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+        /* .tp_buffer        = */NULL,
         /* .tp_methods       = */NULL,
         /* .tp_getsets       = */NULL,
         /* .tp_members       = */NULL,
@@ -196,7 +208,7 @@ INTERN DeeFileTypeObject DeePipeReader_Type = {
         /* .tp_iter_next     = */NULL,
         /* .tp_attr          = */NULL,
         /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+        /* .tp_buffer        = */NULL,
         /* .tp_methods       = */NULL,
         /* .tp_getsets       = */NULL,
         /* .tp_members       = */NULL,
@@ -256,7 +268,7 @@ INTERN DeeFileTypeObject DeePipeWriter_Type = {
         /* .tp_iter_next     = */NULL,
         /* .tp_attr          = */NULL,
         /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+        /* .tp_buffer        = */NULL,
         /* .tp_methods       = */NULL,
         /* .tp_getsets       = */NULL,
         /* .tp_members       = */NULL,

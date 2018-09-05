@@ -157,8 +157,11 @@ PRIVATE Process this_process = {
 PRIVATE void DCALL
 process_fini(Process *__restrict self) {
  if ((self->p_state&PROCESS_FSTARTED) &&
-      self->p_handle != NULL)
-      CloseHandle(self->p_handle);
+      self->p_handle != NULL) {
+  DBG_ALIGNMENT_DISABLE();
+  CloseHandle(self->p_handle);
+  DBG_ALIGNMENT_ENABLE();
+ }
  Dee_XDecref(self->p_std[0]);
  Dee_XDecref(self->p_std[1]);
  Dee_XDecref(self->p_std[2]);
@@ -205,9 +208,11 @@ get_stdhandle_for_process(DeeObject *procfd, int stdnum) {
         ((DeeSystemFileObject *)DeeFile_DefaultStd(stdnum))->sf_handle;
  if (result != INVALID_HANDLE_VALUE) {
   /* Make the handle inheritable. */
+  DBG_ALIGNMENT_DISABLE();
   SetHandleInformation(result,
                        HANDLE_FLAG_INHERIT,
                        HANDLE_FLAG_INHERIT);
+  DBG_ALIGNMENT_ENABLE();
  }
  return result;
 }
@@ -219,7 +224,9 @@ nt_GetEnvironmentVariable(LPCWSTR lpName) {
  buffer = DeeString_NewWideBuffer(bufsize);
  if unlikely(!buffer) goto err;
  for (;;) {
+  DBG_ALIGNMENT_DISABLE();
   error = GetEnvironmentVariableW(lpName,buffer,bufsize+1);
+  DBG_ALIGNMENT_ENABLE();
   if (!error) {
    /* Error. */
    DeeString_FreeWideBuffer(buffer);
@@ -288,15 +295,18 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
    pathname = (LPWSTR)DeeString_AsWide((DeeObject *)fixed_result);
    if unlikely(!pathname) { Dee_Decref(fixed_result); goto err_result; }
    /* Create the process using a UNC pathname. */
+   DBG_ALIGNMENT_DISABLE();
    if (CreateProcessW(pathname,lpCommandLine,lpProcessAttributes,
                       lpThreadAttributes,bInheritHandles,dwCreationFlags,lpEnvironment,
                       lpCurrentDirectory,lpStartupInfo,lpProcessInformation)) {
+    DBG_ALIGNMENT_ENABLE();
     /* If we managed to create the process using a UNC pathname,
      * return that path instead of the regular buffer. */
     Dee_DecrefDokill(result);
     return fixed_result;
    }
    error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
    Dee_DecrefNokill(&DeeString_Type);
    if (result->s_data) {
     string_utf_fini(result->s_data,result);
@@ -306,11 +316,13 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
    DeeObject_Free((DeeObject *)result);
   } else {
    /* All right. Let's do this! */
+   DBG_ALIGNMENT_DISABLE();
    if (CreateProcessW(buffer,lpCommandLine,lpProcessAttributes,
                       lpThreadAttributes,bInheritHandles,dwCreationFlags,lpEnvironment,
                       lpCurrentDirectory,lpStartupInfo,lpProcessInformation)) {
     /* Process was successfully created. */
     DREF DeeStringObject *result;
+    DBG_ALIGNMENT_ENABLE();
     new_buffer = DeeString_TryResizeWideBuffer(buffer,pathlen);
     if (new_buffer) buffer = new_buffer;
     result = (DREF DeeStringObject *)DeeString_PackWideBuffer(new_buffer,STRING_ERROR_FREPLAC);
@@ -318,6 +330,7 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
     return result;
    }
    error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
   }
   /* The creation failed. - Check if this is due to a file-
    * not-found error, or because because of some other error. */
@@ -370,10 +383,12 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
   bufiter[(size_t)(next-iter)] = 0; /* Ensure zero-termination */
   ASSERT(bufiter+(size_t)(next-iter) <= buffer+WSTR_LENGTH(buffer));
   /* All right. Let's do this! */
+  DBG_ALIGNMENT_DISABLE();
   if (CreateProcessW(buffer,lpCommandLine,lpProcessAttributes,
                      lpThreadAttributes,bInheritHandles,dwCreationFlags,lpEnvironment,
                      lpCurrentDirectory,lpStartupInfo,lpProcessInformation)) {
    DREF DeeStringObject *result;
+   DBG_ALIGNMENT_ENABLE();
    /* Process was successfully created. */
    new_buffer = DeeString_TryResizeWideBuffer(buffer,pathlen);
    if (new_buffer) buffer = new_buffer;
@@ -382,6 +397,7 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
    return result;
   }
   error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   /* The creation failed. - Check if this is due to a file-
    * not-found error, or because because of some other error. */
   if (!nt_IsFileNotFound(error) && !nt_IsAccessDenied(error)) {
@@ -492,9 +508,14 @@ done:
  Dee_Decref(path);
 done_nopath:
  return result;
-err_pathext: Dee_Decref(pathext);
-err: result = NULL; goto done;
-err_nopath: result = NULL; goto done_nopath;
+err_pathext:
+ Dee_Decref(pathext);
+err:
+ result = NULL;
+ goto done;
+err_nopath:
+ result = NULL;
+ goto done_nopath;
 }
 
 
@@ -670,6 +691,7 @@ again:
   if (final_exe != (DREF DeeStringObject *)ITER_DONE) {
    /* Saved the new (fixed) executable name. */
 save_final_exe:
+   DBG_ALIGNMENT_ENABLE();
    rwlock_write(&self->p_lock);
    ASSERT(self->p_exe == exe); /* Inherit reference (from `self->p_exe' into `exe') */
    Dee_Incref(final_exe);
@@ -688,22 +710,26 @@ save_final_exe:
   *       application names to their absolute file names. */
 
  /* Create a new process, given its absolute path. */
+ DBG_ALIGNMENT_DISABLE();
  if (!CreateProcessW(wExe,wCmdLineCopy,NULL,NULL,TRUE,
                      CREATE_UNICODE_ENVIRONMENT,wEnviron,
                      wPwd,&startupInfo,&procInfo)) {
   DWORD error = GetLastError();
   DREF DeeStringObject *fixed_exe = NULL;
+  DBG_ALIGNMENT_ENABLE();
   if (nt_IsUncError(error)) {
    final_exe = (DREF DeeStringObject *)nt_FixUncPath((DeeObject *)exe);
    if unlikely(!final_exe) goto done_cmdline_copy;
    wExe = (LPWSTR)DeeString_AsWide((DeeObject *)final_exe);
    if unlikely(!wExe) { Dee_Decref(final_exe); goto done_cmdline_copy; }
    /* Try again after fixing UNC. */
+   DBG_ALIGNMENT_DISABLE();
    if (CreateProcessW(wExe,wCmdLineCopy,NULL,NULL,TRUE,
                       CREATE_UNICODE_ENVIRONMENT,wEnviron,
                       wPwd,&startupInfo,&procInfo))
        goto save_final_exe;
    error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
    fixed_exe = final_exe;
   }
   if (nt_IsFileNotFound(error) || nt_IsAccessDenied(error)) {
@@ -717,7 +743,9 @@ save_final_exe:
     if (!final_exe) goto done_cmdline_copy;
     goto save_final_exe;
    }
+   DBG_ALIGNMENT_DISABLE();
    error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
    DeeError_SysThrowf(&DeeError_FileNotFound,error,
                       "Application %r could not be found",
                       exe);
@@ -727,6 +755,7 @@ save_final_exe:
   }
   goto done_cmdline_copy;
  }
+ DBG_ALIGNMENT_ENABLE();
 create_ok:
 
  rwlock_write(&self->p_lock);
@@ -741,7 +770,9 @@ create_ok:
  rwlock_endwrite(&self->p_lock);
 
  /* Close our handle to the process's main thread. */
+ DBG_ALIGNMENT_DISABLE();
  CloseHandle(procInfo.hThread);
+ DBG_ALIGNMENT_ENABLE();
 
  /* Return true on success. */
  result = Dee_True;
@@ -768,11 +799,13 @@ PRIVATE int DCALL
 process_ensure_handle(Process *__restrict self, DWORD dwDesiredAccess) {
  if (self->p_handle == NULL) {
   HANDLE hProcess;
+  DBG_ALIGNMENT_DISABLE();
   if (self == &this_process) {
    hProcess = GetCurrentProcess();
   } else {
    hProcess = OpenProcess(dwDesiredAccess,TRUE,self->p_id);
   }
+  DBG_ALIGNMENT_ENABLE();
   if (!hProcess) goto err;
   rwlock_write(&self->p_lock);
   if (self->p_handle == NULL) {
@@ -780,15 +813,23 @@ process_ensure_handle(Process *__restrict self, DWORD dwDesiredAccess) {
    rwlock_endwrite(&self->p_lock);
   } else {
    rwlock_endwrite(&self->p_lock);
-   if (self != &this_process)
-       CloseHandle(hProcess);
+   if (self != &this_process) {
+    DBG_ALIGNMENT_DISABLE();
+    CloseHandle(hProcess);
+    DBG_ALIGNMENT_ENABLE();
+   }
   }
  }
  return 0;
 err:
- DeeError_SysThrowf(&DeeError_SystemError,GetLastError(),
-                    "Failed to access process %k",self);
- return -1;
+ {
+  DWORD dwError;
+  DBG_ALIGNMENT_DISABLE();
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  return DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                            "Failed to access process %k",self);
+ }
 }
 
 
@@ -843,9 +884,11 @@ again:
   {
    /* Wait for the process to complete. */
    DWORD wait_state;
+   DBG_ALIGNMENT_DISABLE();
    wait_state = WaitForMultipleObjectsEx(1,(HANDLE *)&self->p_handle,FALSE,
                                          timeout_microseconds == (uint64_t)-1 ? INFINITE :
                                         (DWORD)(timeout_microseconds/1000),TRUE);
+   DBG_ALIGNMENT_ENABLE();
    switch (wait_state) {
    case WAIT_IO_COMPLETION:
     /* Interrupt. */
@@ -901,8 +944,7 @@ process_detach(Process *__restrict self,
   DeeError_Throwf(&DeeError_ValueError,
                   "Cannot detach process %k that hasn't been started",
                   self);
-err:
-  return NULL;
+  goto err;
  }
  if (!(self->p_state&PROCESS_FCHILD)) {
   /* Process isn't one of our children. */
@@ -910,7 +952,7 @@ err:
   DeeError_Throwf(&DeeError_ValueError,
                   "Cannot detach process %k that hasn't been started",
                   self);
-  return NULL;
+  goto err;
  }
  if (self->p_state&THREAD_STATE_DETACHED) {
   /* Process was already detached. */
@@ -924,6 +966,8 @@ err:
                            (state&~PROCESS_FDETACHING)
                            |PROCESS_FDETACHED));
  return_true;
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -943,7 +987,9 @@ process_id(Process *__restrict self,
  pid = self->p_id;
  if (pid == (DWORD)-1 && self == &this_process) {
   /* Lazily load the PID of the current process. */
+  DBG_ALIGNMENT_DISABLE();
   pid = GetCurrentProcessId();
+  DBG_ALIGNMENT_ENABLE();
   rwlock_upgrade(&self->p_lock);
   COMPILER_READ_BARRIER();
   if (self->p_id == (DWORD)-1)
@@ -981,13 +1027,17 @@ process_terminate(Process *__restrict self,
  }
  if (process_ensure_handle(self,PROCESS_TERMINATE))
      goto err;
+ DBG_ALIGNMENT_DISABLE();
  if (!TerminateProcess(self->p_handle,exit_code)) {
-  DWORD error,pid = self->p_id;
+  DWORD error,pid;
+  pid = self->p_id;
   rwlock_endwrite(&self->p_lock);
   error = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
   if (error == ERROR_ACCESS_DENIED) {
    HANDLE hProcess;
    /* Try to acquire the terminate-permission. */
+   DBG_ALIGNMENT_DISABLE();
    hProcess = OpenProcess(PROCESS_TERMINATE,FALSE,pid);
    if (!hProcess)
     error = GetLastError();
@@ -1006,11 +1056,13 @@ process_terminate(Process *__restrict self,
     }
     CloseHandle(hProcess);
    }
+   DBG_ALIGNMENT_ENABLE();
   }
   nt_ThrowError(error);
   goto err;
  }
 term_ok:
+ DBG_ALIGNMENT_ENABLE();
  /* Set the did-terminate flag on success. */
  self->p_state |= PROCESS_FTERMINATED;
  rwlock_endwrite(&self->p_lock);
@@ -1042,8 +1094,8 @@ process_tryjoin(Process *__restrict self, size_t argc,
  error = process_dojoin(self,&result,0);
  if unlikely(error < 0) goto err;
  if (error == 0)
-     return Dee_Packf("(bI32u)",1,result);
- return Dee_Packf("(bd)",0,0);
+     return DeeInt_NewU32(result);
+ return_none;
 err:
  return NULL;
 }
@@ -1057,8 +1109,8 @@ process_timedjoin(Process *__restrict self, size_t argc,
  error = process_dojoin(self,&result,timeout);
  if unlikely(error < 0) goto err;
  if (error == 0)
-     return Dee_Packf("(bI32u)",1,result);
- return Dee_Packf("(bd)",0,0);
+     return DeeInt_NewU32(result);
+ return_none;
 err:
  return NULL;
 }
@@ -1124,7 +1176,7 @@ err:
 
 PRIVATE struct type_method process_methods[] = {
     { "start", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_start,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "@interrupt\n"
           "@throw FileNotFound The specified executable could not be found\n"
           "@throw AccessError The current user does not have permissions to access the "
@@ -1132,7 +1184,7 @@ PRIVATE struct type_method process_methods[] = {
           "@throw SystemError Failed to start the process for some reason\n"
           "Begin execution of the process") },
     { "join", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_join,
-      DOC("()->int\n"
+      DOC("->int\n"
           "@interrupt\n"
           "@throw ValueError @this process was never started\n"
           "@throw SystemError Failed to join @this process for some reason\n"
@@ -1140,17 +1192,19 @@ PRIVATE struct type_method process_methods[] = {
           "Joins @this process and returns the return value of its main function\n"
           "In the event") },
     { "tryjoin", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_tryjoin,
-      DOC("()->(bool,int)\n"
+      DOC("->int\n"
+          "->none\n"
           "@throw ValueError @this process was never started\n"
           "@throw SystemError Failed to join @this process for some reason\n"
           "Same as #join, but don't check for interrupts and fail immediately") },
     { "timedjoin", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_timedjoin,
-      DOC("(int timeout_in_microseconds)->(bool,int)\n"
+      DOC("(int timeout_in_microseconds)->int\n"
+          "(int timeout_in_microseconds)->none\n"
           "@throw ValueError @this process was never started\n"
           "@throw SystemError Failed to join @this process for some reason\n"
           "Same as #join, but only attempt to join for a given @timeout_in_microseconds") },
     { "detach", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_detach,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "@throw ValueError @this process was never started\n"
           "@throw ValueError @this process is not a child of the calling process\n"
           "@throw SystemError Failed to detach @this process for some reason\n"
@@ -1165,19 +1219,19 @@ PRIVATE struct type_method process_methods[] = {
           "@return false: The :process was already terminated\n"
           "Terminate @this process with the given @exitcode") },
     { "started", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_started,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Returns :true if @this process was started") },
     { "detached", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_detached,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Returns :true if @this process has been detached") },
     { "terminated", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_terminated,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Returns :true if @this process has terminated") },
     { "isachild", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_isachild,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Returns :true if @this process is a child of the calling process") },
     { "id", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_id,
-      DOC("()->int\n"
+      DOC("->int\n"
           "@throw ValueError The process hasn't been started yet\n"
           "@throw SystemError The system does not provide a way to query process ids\n"
           "Returns an operating-system specific id of @this process") },
@@ -1217,13 +1271,16 @@ pt_iter(ProcessThreads *__restrict self) {
  DREF ProcessThreadsIterator *result;
  result = DeeObject_MALLOC(ProcessThreadsIterator);
  if unlikely(!result) goto done; 
+ DBG_ALIGNMENT_DISABLE();
  result->pti_handle = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD,self->pt_id);
+ DBG_ALIGNMENT_ENABLE();
  if (!result->pti_handle ||
       result->pti_handle == INVALID_HANDLE_VALUE) {
   nt_ThrowLastError();
   goto err_r;
  }
  result->pti_entry.dwSize = sizeof(result->pti_entry);
+ DBG_ALIGNMENT_DISABLE();
  if (!Thread32First(result->pti_handle,&result->pti_entry))
       result->pti_entry.dwSize = 0;
  else while (!result->pti_entry.dwSize) {
@@ -1232,6 +1289,7 @@ pt_iter(ProcessThreads *__restrict self) {
    break;
   }
  }
+ DBG_ALIGNMENT_ENABLE();
  result->pti_id = self->pt_id;
  rwlock_init(&result->pti_lock);
  DeeObject_Init(result,&ProcessThreadsIterator_Type);
@@ -1303,7 +1361,9 @@ INTERN DeeTypeObject ProcessThreads_Type = {
 
 PRIVATE void DCALL
 pti_fini(ProcessThreadsIterator *__restrict self) {
+ DBG_ALIGNMENT_DISABLE();
  CloseHandle(self->pti_handle);
+ DBG_ALIGNMENT_ENABLE();
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1314,6 +1374,7 @@ again:
  rwlock_write(&self->pti_lock);
  if (!self->pti_entry.dwSize) {
 done:
+  DBG_ALIGNMENT_ENABLE();
   rwlock_endwrite(&self->pti_lock);
   return ITER_DONE;
  }
@@ -1323,21 +1384,28 @@ done:
       break;
   do {
    self->pti_entry.dwSize = sizeof(self->pti_entry);
+   DBG_ALIGNMENT_DISABLE();
    if (!Thread32Next(self->pti_handle,&self->pti_entry))
         goto done;
+   DBG_ALIGNMENT_ENABLE();
   } while (!self->pti_entry.dwSize);
  }
  /*pid = self->pti_entry.th32OwnerProcessID;*/
  tid = self->pti_entry.th32ThreadID;
  do {
   self->pti_entry.dwSize = sizeof(self->pti_entry);
+  DBG_ALIGNMENT_DISABLE();
   if (!Thread32Next(self->pti_handle,&self->pti_entry)) {
+   DBG_ALIGNMENT_ENABLE();
    self->pti_entry.dwSize = 0;
    break;
   }
+  DBG_ALIGNMENT_ENABLE();
  } while (!self->pti_entry.dwSize);
  rwlock_endwrite(&self->pti_lock);
+ DBG_ALIGNMENT_DISABLE();
  thread_handle = OpenThread(SYNCHRONIZE,FALSE,tid);
+ DBG_ALIGNMENT_ENABLE();
  if (thread_handle == NULL)
      goto again;
 #ifndef CONFIG_NO_THREADID
@@ -1450,8 +1518,11 @@ process_get_attribute_and_unlock(Process *__restrict self,
  final_handle = orig_handle;
  result = nt_GetProcessAttribute(&final_handle,self->p_id,dwAttributeId);
  /* Close the new handle if it changed. */
- if (final_handle != orig_handle)
-     CloseHandle(final_handle);
+ if (final_handle != orig_handle) {
+  DBG_ALIGNMENT_DISABLE();
+  CloseHandle(final_handle);
+  DBG_ALIGNMENT_ENABLE();
+ }
  return result;
 }
 
@@ -1607,10 +1678,9 @@ process_set_environ(Process *__restrict self, DeeObject *value) {
   return 0;
  }
  rwlock_endwrite(&self->p_lock);
- DeeError_Throwf(&DeeError_ValueError,
-                 "Cannot %s environ of running process %k",
-                 value ? "change" : "delete",self);
- return -1;
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "Cannot %s environ of running process %k",
+                        value ? "change" : "delete",self);
 }
 PRIVATE int DCALL
 process_del_environ(Process *__restrict self) {

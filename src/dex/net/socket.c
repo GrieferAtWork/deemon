@@ -39,10 +39,11 @@ DECL_BEGIN
 
 typedef DeeSocketObject Socket;
 
-PRIVATE void DCALL err_no_af_support(neterrno_t error, sa_family_t af) {
- DeeError_SysThrowf(&DeeError_NoSupport,error,
-                    "Address family %R is not supported",
-                    sock_getafnameorid(af));
+PRIVATE ATTR_COLD int DCALL
+err_no_af_support(neterrno_t error, sa_family_t af) {
+ return DeeError_SysThrowf(&DeeError_NoSupport,error,
+                           "Address family %R is not supported",
+                           sock_getafnameorid(af));
 }
 
 PRIVATE int DCALL
@@ -69,10 +70,15 @@ socket_ctor(Socket *__restrict self,
  self->s_type                  = type;
  self->s_proto                 = proto;
  /* Create the socket descriptor. */
+ DBG_ALIGNMENT_DISABLE();
  self->s_socket = socket(af,type,proto);
+ DBG_ALIGNMENT_ENABLE();
  if (self->s_socket == INVALID_SOCKET) {
   /* Check for errors. */
-  neterrno_t err = GET_NET_ERROR();
+  neterrno_t err;
+  DBG_ALIGNMENT_DISABLE();
+  err = GET_NET_ERROR();
+  DBG_ALIGNMENT_ENABLE();
   if (err == EAFNOSUPPORT) {
    err_no_af_support(err,(sa_family_t)af);
   } else if (err == EPROTONOSUPPORT) {
@@ -97,11 +103,13 @@ socket_ctor(Socket *__restrict self,
 #if defined(AF_INET6) && defined(IPPROTO_IPV6) && defined(IPV6_V6ONLY)
  if (af == AF_INET6) {
   int value = 0;
+  DBG_ALIGNMENT_DISABLE();
   setsockopt(self->s_socket,
              IPPROTO_IPV6,
              IPV6_V6ONLY,
             (char const *)&value,
              sizeof(value));
+  DBG_ALIGNMENT_ENABLE();
  }
 #endif
  return 0;
@@ -111,8 +119,11 @@ err:
 
 PRIVATE void DCALL
 socket_fini(Socket *__restrict self) {
- if (self->s_state & SOCKET_FOPENED)
-     closesocket(self->s_socket);
+ if (self->s_state & SOCKET_FOPENED) {
+  DBG_ALIGNMENT_DISABLE();
+  closesocket(self->s_socket);
+  DBG_ALIGNMENT_ENABLE();
+ }
 }
 
 PRIVATE int DCALL
@@ -149,12 +160,17 @@ again:
  }
  if (!(state&SOCKET_FHASSOCKADDR)) {
   /* Load the socket's name on first access. */
-  socklen_t addrlen = SockAddr_Sizeof(self->s_sockaddr.sa.sa_family,self->s_proto);
-  int error = getsockname(self->s_socket,&result->sa,&addrlen);
+  socklen_t addrlen; int error;
+  addrlen = SockAddr_Sizeof(self->s_sockaddr.sa.sa_family,self->s_proto);
+  DBG_ALIGNMENT_DISABLE();
+  error = getsockname(self->s_socket,&result->sa,&addrlen);
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(error < 0) {
    socket_endread(self);
    if (throw_error) {
+    DBG_ALIGNMENT_DISABLE();
     error = GET_NET_ERROR();
+    DBG_ALIGNMENT_ENABLE();
     if (error == EBADF || error == ENOTSOCK || error == EINVAL) {
      err_socket_closed(error,self);
     } else if (error == EOPNOTSUPP) {
@@ -194,15 +210,20 @@ DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
  socklen = (socklen_t)SockAddr_Sizeof(self->s_sockaddr.sa.sa_family,
                                       self->s_proto);
  socket_read(self);
+ DBG_ALIGNMENT_DISABLE();
  if unlikely(getpeername(self->s_socket,&result->sa,&socklen) < 0)
     ok = -1;
  else if (!(self->s_state&SOCKET_FHASPEERADDR)) {
   memcpy(&self->s_peeraddr,result,sizeof(SockAddr));
   self->s_state |= SOCKET_FHASPEERADDR;
  }
+ DBG_ALIGNMENT_ENABLE();
  socket_endread(self);
  if unlikely(ok && throw_error) {
-  neterrno_t err = GET_NET_ERROR();
+  neterrno_t err;
+  DBG_ALIGNMENT_DISABLE();
+  err = GET_NET_ERROR();
+  DBG_ALIGNMENT_ENABLE();
   if (err == ENOTCONN) {
    DeeError_SysThrowf(&DeeError_NotConnected,err,
                       "Socket %k is not connected",self);
@@ -258,22 +279,25 @@ PRIVATE DEFINE_STRING(shutdown_all,"rw");
 PRIVATE int DCALL
 socket_do_shutdown(Socket *__restrict self, int how) {
  int error;
+ DBG_ALIGNMENT_DISABLE();
  error = shutdown(self->s_socket,how);
  if (error < 0 && GET_NET_ERROR() == ENOTCONN)
      error = 0;
+ DBG_ALIGNMENT_ENABLE();
  return error;
 }
 
 
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_invalid_shutdown_how(int how) {
- DeeError_Throwf(&DeeError_ValueError,
-                 "Invalid shutdown mode %x",how);
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "Invalid shutdown mode %x",how);
 }
-PRIVATE void DCALL err_shutdown_failed(Socket *__restrict self, int error) {
- DeeError_SysThrowf(&DeeError_NetError,error,
-                    "Failed to shutdown socket %k",
-                    self);
+PRIVATE ATTR_COLD int DCALL
+err_shutdown_failed(Socket *__restrict self, int error) {
+ return DeeError_SysThrowf(&DeeError_NetError,error,
+                           "Failed to shutdown socket %k",
+                           self);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -311,7 +335,9 @@ again_shutdown:
   /* We'll have to do the shutdown. */
   error = socket_do_shutdown(self,mode);
   if unlikely(error < 0) {
+   DBG_ALIGNMENT_DISABLE();
    error = GET_NET_ERROR();
+   DBG_ALIGNMENT_ENABLE();
    ATOMIC_FETCHAND(self->s_state,~SOCKET_FSHUTTINGDOWN);
    socket_endread(self);
    if (error == EINVAL)
@@ -376,7 +402,9 @@ again_shutdown:
   /* Actually do the shutdown. */
   error = socket_do_shutdown(self,mode);
   if unlikely(error < 0) {
+   DBG_ALIGNMENT_DISABLE();
    error = GET_NET_ERROR();
+   DBG_ALIGNMENT_ENABLE();
    if (error == ENOTCONN) {
     /* Ignore not-connected errors. */
    } else {
@@ -402,12 +430,12 @@ err:
  return NULL;
 }
 
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_addr_not_available(neterrno_t error, SockAddr const *__restrict addr,
                        int prototype) {
- DeeError_SysThrowf(&DeeError_AddrNotAvail,error,
-                    "The specified address %K is not available from the local machine",
-                    SockAddr_ToString(addr,prototype,SOCKADDR_STR_FNOFAIL|SOCKADDR_STR_FNODNS));
+ return DeeError_SysThrowf(&DeeError_AddrNotAvail,error,
+                           "The specified address %K is not available from the local machine",
+                           SockAddr_ToString(addr,prototype,SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 }
 
 INTERN int DCALL
@@ -428,12 +456,14 @@ again:
   DeeThread_SleepNoInterrupt(1000);
   goto again;
  }
+ DBG_ALIGNMENT_DISABLE();
 #if defined(SOL_SOCKET) && defined(SO_REUSEADDR) /* Enable local address reuse */
  { int yes = 1; setsockopt(self->s_socket,SOL_SOCKET,SO_REUSEADDR,(char*)&yes,sizeof(yes)); }
 #endif
  /* Do the bind system call. */
  error = bind(self->s_socket,(struct sockaddr *)addr,(socklen_t)
               SockAddr_Sizeof(addr->sa.sa_family,self->s_proto));
+ DBG_ALIGNMENT_ENABLE();
  if likely(error >= 0) {
   /* Save the (now) active socket address. */
   memcpy(&self->s_sockaddr,addr,sizeof(SockAddr));
@@ -445,7 +475,9 @@ again:
  socket_endread(self);
  if likely(error >= 0)
     return 0;
+ DBG_ALIGNMENT_DISABLE();
  error_code = GET_NET_ERROR();
+ DBG_ALIGNMENT_ENABLE();
  /* Handle errors. */
  if (error_code == EADDRINUSE) {
   DeeError_SysThrowf(&DeeError_AddrInUse,error_code,
@@ -492,12 +524,14 @@ select_interruptible(SOCKET sock, DWORD lNetworkEvents, DWORD timeout) {
  DWORD result; HANDLE sockevent;
  /* NOTE: No need to do further error checking.
   *       These API functions will propagate errors for us automatically. */
+ DBG_ALIGNMENT_DISABLE();
  sockevent = WSACreateEvent();
  WSAEventSelect(sock,sockevent,lNetworkEvents);
  result = WSAWaitForMultipleEvents(1,&sockevent,FALSE,timeout,TRUE);
  /* Apparently this is required to prevent the event also closing the socket??? */
  WSAEventSelect(sock,sockevent,0);
  WSACloseEvent(sockevent);
+ DBG_ALIGNMENT_ENABLE();
  return result;
 }
 #endif
@@ -505,10 +539,13 @@ select_interruptible(SOCKET sock, DWORD lNetworkEvents, DWORD timeout) {
 #define SELECT_TIMEOUT  100000 /* In microseconds. */
 
 
-PRIVATE void DCALL err_network_down(int error, Socket *__restrict socket, SockAddr const *__restrict addr) {
- DeeError_SysThrowf(&DeeError_NetUnreachable,error,
-                    "No route to network of %K can be established",
-                    SockAddr_ToString(addr,socket->s_proto,SOCKADDR_STR_FNOFAIL|SOCKADDR_STR_FNODNS));
+PRIVATE ATTR_COLD int DCALL
+err_network_down(int error, Socket *__restrict socket, SockAddr const *__restrict addr) {
+ return DeeError_SysThrowf(&DeeError_NetUnreachable,error,
+                           "No route to network of %K can be established",
+                           SockAddr_ToString(addr,socket->s_proto,
+                                             SOCKADDR_STR_FNOFAIL |
+                                             SOCKADDR_STR_FNODNS));
 }
 
 #ifdef _MSC_VER
@@ -537,9 +574,13 @@ again:
  }
  /* Do the connect system call. */
  addrlen = SockAddr_Sizeof(addr->sa.sa_family,self->s_proto);
+ DBG_ALIGNMENT_DISABLE();
  error = connect(self->s_socket,(struct sockaddr *)addr,addrlen);
+ DBG_ALIGNMENT_ENABLE();
  if (error < 0) {
+  DBG_ALIGNMENT_DISABLE();
   error = (int)GET_NET_ERROR();
+  DBG_ALIGNMENT_ENABLE();
   if (error == EINPROGRESS
 #ifdef EINTR
    || error == EINTR
@@ -570,11 +611,15 @@ restart_select:
     timeout.tv_usec = (long)(SELECT_TIMEOUT % 1000000);
     FD_ZERO(&wfds);
     FD_SET(self->s_socket,&wfds);
+    DBG_ALIGNMENT_DISABLE();
     error = select(self->s_socket+1,NULL,&wfds,NULL,&timeout);
+    DBG_ALIGNMENT_ENABLE();
     if unlikely(error <= 0) {
      if (error == 0)
          goto restart_select;
+     DBG_ALIGNMENT_DISABLE();
      error = (int)GET_NET_ERROR();
+     DBG_ALIGNMENT_ENABLE();
 #ifdef EINTR
      if (error == EINTR)
          goto restart_select;
@@ -585,9 +630,11 @@ restart_select:
 #endif
    errlen = sizeof(error);
    /* Check for an error in the connect operation */
+   DBG_ALIGNMENT_DISABLE();
    if (getsockopt(self->s_socket,SOL_SOCKET,SO_ERROR,
                  (char *)&error,&errlen))
        error = 0;
+   DBG_ALIGNMENT_ENABLE();
    if unlikely(error)
       goto err_connect_failure;
   }
@@ -676,7 +723,9 @@ again:
   goto again;
  }
  /* Do the listen system call. */
+ DBG_ALIGNMENT_DISABLE();
  error = listen(self->s_socket,max_backlog);
+ DBG_ALIGNMENT_ENABLE();
  if likely(error >= 0)
     ATOMIC_FETCHOR(self->s_state,SOCKET_FLISTENING);
  /* Unset the binding-flag. */
@@ -684,7 +733,9 @@ again:
  socket_endread(self);
  if likely(error >= 0)
     return 0;
+ DBG_ALIGNMENT_DISABLE();
  error_code = GET_NET_ERROR();
+ DBG_ALIGNMENT_ENABLE();
  /* Handle errors. */
  if (error_code == EDESTADDRREQ) {
   DeeError_SysThrowf(&DeeError_NotBound,error_code,
@@ -761,16 +812,22 @@ restart:
   }
   if (error <= 0) { /* Timeout or error */
    socket_endread(self);
+   DBG_ALIGNMENT_DISABLE();
    if (error < 0
 #ifdef EINTR
     && GET_NET_ERROR() != EINTR
 #endif
-       )
-       goto handle_accept_error_neterror;
+       ) {
+    DBG_ALIGNMENT_ENABLE();
+    goto handle_accept_error_neterror;
+   }
+   DBG_ALIGNMENT_ENABLE();
    goto do_timed_select;
   }
 #endif
+  DBG_ALIGNMENT_DISABLE();
   client_socket = accept(self->s_socket,&addr->sa,&socklen);
+  DBG_ALIGNMENT_ENABLE();
   socket_endread(self);
  } else if (timeout_microseconds == 0) {
   /* Try-accept. */
@@ -798,13 +855,19 @@ do_try_select:
    timeout.tv_usec = 1; /* Prevent the OS from discarding this request. */
    FD_ZERO(&rfds);
    FD_SET(self->s_socket,&rfds);
+   DBG_ALIGNMENT_DISABLE();
    error = select(self->s_socket+1,&rfds,NULL,NULL,&timeout);
+   DBG_ALIGNMENT_ENABLE();
    if (error <= 0) { /* Timeout or error */
     socket_endread(self);
     if (error < 0) {
 #ifdef EINTR
-     if (GET_NET_ERROR() == EINTR)
-         goto do_try_select;
+     DBG_ALIGNMENT_DISABLE();
+     if (GET_NET_ERROR() == EINTR) {
+      DBG_ALIGNMENT_ENABLE();
+      goto do_try_select;
+     }
+     DBG_ALIGNMENT_ENABLE();
 #endif
      goto handle_accept_error_neterror;
     }
@@ -818,7 +881,9 @@ do_try_select:
    DeeThread_SleepNoInterrupt(1000);
    goto do_try_select;
   }
+  DBG_ALIGNMENT_DISABLE();
   client_socket = accept(self->s_socket,&addr->sa,&socklen);
+  DBG_ALIGNMENT_ENABLE();
   socket_endwrite(self);
  } else {
   uint64_t end_time;
@@ -869,17 +934,23 @@ do_timed_select:
    }
    FD_ZERO(&rfds);
    FD_SET(self->s_socket,&rfds);
+   DBG_ALIGNMENT_DISABLE();
    error = select(self->s_socket+1,&rfds,NULL,NULL,&timeout);
+   DBG_ALIGNMENT_ENABLE();
   }
   if (error <= 0) { /* Timeout or error */
    uint64_t now;
    socket_endread(self);
+   DBG_ALIGNMENT_DISABLE();
    if (error < 0
 #ifdef EINTR
     && GET_NET_ERROR() != EINTR
 #endif
-       )
-       goto handle_accept_error_neterror;
+       ) {
+    DBG_ALIGNMENT_ENABLE();
+    goto handle_accept_error_neterror;
+   }
+   DBG_ALIGNMENT_ENABLE();
    now = DeeThread_GetTimeMicroSeconds();
    if (now >= end_time) return 1; /* Timeout */
    /* Update the remaining time.
@@ -895,11 +966,13 @@ do_timed_select:
    DeeThread_SleepNoInterrupt(1000);
    now = DeeThread_GetTimeMicroSeconds();
    if (now >= end_time) goto do_try_select;
-   timeout_microseconds = end_time-now;
+   timeout_microseconds = end_time - now;
    goto do_timed_select;
   }
   /* Accept the client. */
+  DBG_ALIGNMENT_DISABLE();
   client_socket = accept(self->s_socket,&addr->sa,&socklen);
+  DBG_ALIGNMENT_ENABLE();
   socket_endwrite(self);
  }
  /* Check for errors and save the new socket in the caller-given pointer. */
@@ -908,7 +981,9 @@ do_timed_select:
  *sock_fd = client_socket;
  return 0;
 handle_accept_error_neterror:
+ DBG_ALIGNMENT_DISABLE();
  error = GET_NET_ERROR();
+ DBG_ALIGNMENT_ENABLE();
 /*handle_accept_error:*/
  /* Start over on timeout. */
  if (error == EWOULDBLOCK) goto restart_after_timeout;
@@ -963,21 +1038,21 @@ restart_after_timeout:
 #endif
 
 
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_message_too_large(int error, Socket *__restrict self, size_t bufsize) {
- DeeError_SysThrowf(&DeeError_MessageSize,error,
-                    "socket %k cannot send a message of %Iu bytes at once",
-                    self,bufsize);
+ return DeeError_SysThrowf(&DeeError_MessageSize,error,
+                           "Message consisting of %Iu bytes is too large for socket %k",
+                           bufsize,self);
 }
 
 PRIVATE char const transfer_context_send[] = "transfer";
 PRIVATE char const transfer_context_recv[] = "receive";
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_invalid_transfer_mode(int error, Socket *__restrict self,
                           char const *__restrict context, int mode) {
- DeeError_SysThrowf(&DeeError_NoSupport,error,
-                    "Socket %k does not support %s mode %K",
-                    self,context,sock_getmsgflagsnameorid(mode));
+ return DeeError_SysThrowf(&DeeError_NoSupport,error,
+                           "Socket %k does not support %s mode %K",
+                           self,context,sock_getmsgflagsnameorid(mode));
 }
 
 
@@ -992,21 +1067,27 @@ socket_configure_send(Socket *__restrict self) {
  (void)self;
  return 0;
 }
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_configure_recv(Socket *__restrict self) {
  /* Handle errors that may have occurred during `socket_configure_recv()' */
- int error = GET_NET_ERROR();
- DeeError_SysThrowf(&DeeError_NetError,error,
-                    "Failed to configure socket %k for receiving",
-                    self);
+ int error;
+ DBG_ALIGNMENT_DISABLE();
+ error = GET_NET_ERROR();
+ DBG_ALIGNMENT_ENABLE();
+ return DeeError_SysThrowf(&DeeError_NetError,error,
+                           "Failed to configure socket %k for receiving",
+                           self);
 }
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_configure_send(Socket *__restrict self) {
  /* Handle errors that may have occurred during `socket_configure_send()' */
- int error = GET_NET_ERROR();
- DeeError_SysThrowf(&DeeError_NetError,error,
-                    "Failed to configure socket %k for sending",
-                    self);
+ int error;
+ DBG_ALIGNMENT_DISABLE();
+ error = GET_NET_ERROR();
+ DBG_ALIGNMENT_ENABLE();
+ return DeeError_SysThrowf(&DeeError_NetError,error,
+                           "Failed to configure socket %k for sending",
+                           self);
 }
 #endif
 
@@ -1051,10 +1132,12 @@ retry_infinite:
    timeout.tv_usec = (long)(SELECT_TIMEOUT % 1000000);
    FD_ZERO(&fds);
    FD_SET(self->s_socket,&fds);
+   DBG_ALIGNMENT_DISABLE();
    error = select(self->s_socket+1,
                   mode == WAITFORDATA_RECV ? &fds : NULL,
                   mode == WAITFORDATA_SEND ? &fds : NULL,
                   NULL,&timeout);
+   DBG_ALIGNMENT_ENABLE();
    if (error <= 0) { /* Timeout or error */
     if (error < 0) goto err_select;
     goto retry_infinite;
@@ -1078,10 +1161,12 @@ retry_infinite:
    timeout.tv_usec = 1;
    FD_ZERO(&fds);
    FD_SET(self->s_socket,&fds);
+   DBG_ALIGNMENT_DISABLE();
    error = select(self->s_socket+1,
                   mode == WAITFORDATA_RECV ? &fds : NULL,
                   mode == WAITFORDATA_SEND ? &fds : NULL,
                   NULL,&timeout);
+   DBG_ALIGNMENT_ENABLE();
    if (error <= 0) { /* Timeout or error */
     if (error < 0) goto err_select;
     goto send_timeout;
@@ -1124,10 +1209,12 @@ retry_timeout:
    }
    FD_ZERO(&fds);
    FD_SET(self->s_socket,&fds);
+   DBG_ALIGNMENT_DISABLE();
    error = select(self->s_socket+1,
                   mode == WAITFORDATA_RECV ? &fds : NULL,
                   mode == WAITFORDATA_SEND ? &fds : NULL,
                   NULL,&timeout);
+   DBG_ALIGNMENT_ENABLE();
    if (error <= 0) { /* Timeout or error */
     if (error < 0) goto err_select;
     goto retry_timeout;
@@ -1137,9 +1224,11 @@ retry_timeout:
  }
  return 0;
 err_select:
+ DBG_ALIGNMENT_DISABLE();
  error = GET_NET_ERROR();
+ DBG_ALIGNMENT_ENABLE();
 #ifdef EINTR
- if (GET_NET_ERROR() != EINTR)
+ if (error == EINTR)
      goto restart;
 #endif
  socket_endread(self);
@@ -1165,20 +1254,23 @@ send_timeout_nounlock:
 
 
 
-PRIVATE void DCALL err_receive_not_connected(int error, Socket *__restrict socket) {
- DeeError_SysThrowf(&DeeError_NotConnected,error,
-                    "Cannot receive data from socket %k that isn't connected",
-                    socket);
+PRIVATE ATTR_COLD int DCALL
+err_receive_not_connected(int error, Socket *__restrict socket) {
+ return DeeError_SysThrowf(&DeeError_NotConnected,error,
+                           "Cannot receive data from socket %k that isn't connected",
+                           socket);
 }
-PRIVATE void DCALL err_receive_timed_out(int error, Socket *__restrict socket) {
- DeeError_SysThrowf(&DeeError_TimedOut,error,
-                    "Timed out while receiving data through socket %k",
-                    socket);
+PRIVATE ATTR_COLD int DCALL
+err_receive_timed_out(int error, Socket *__restrict socket) {
+ return DeeError_SysThrowf(&DeeError_TimedOut,error,
+                           "Timed out while receiving data through socket %k",
+                           socket);
 }
-PRIVATE void DCALL err_connect_reset(int error, Socket *__restrict socket) {
- DeeError_SysThrowf(&DeeError_ConnectReset,error,
-                    "The connection of socket %k was reset by its peer",
-                    socket);
+PRIVATE ATTR_COLD int DCALL
+err_connect_reset(int error, Socket *__restrict socket) {
+ return DeeError_SysThrowf(&DeeError_ConnectReset,error,
+                           "The connection of socket %k was reset by its peer",
+                           socket);
 }
 
 
@@ -1190,7 +1282,7 @@ DeeSocket_Send(DeeSocketObject *__restrict self,
  dssize_t result;
  uint64_t end_time = timeout_microseconds;
  if (timeout_microseconds && timeout_microseconds != (uint64_t)-1)
-     end_time = DeeThread_GetTimeMicroSeconds()+timeout_microseconds;
+     end_time = DeeThread_GetTimeMicroSeconds() + timeout_microseconds;
 again:
  if (timeout_microseconds && DeeThread_CheckInterrupt())
      goto err;
@@ -1218,10 +1310,15 @@ again:
   *      `wait_for_send()' will have unlocked the socket. */
  if unlikely(result)
     goto done;
+ DBG_ALIGNMENT_DISABLE();
  result = send(self->s_socket,buf,bufsize,flags);
+ DBG_ALIGNMENT_ENABLE();
  socket_endread(self);
  if unlikely(result < 0) {
-  neterrno_t error = GET_NET_ERROR();
+  neterrno_t error;
+  DBG_ALIGNMENT_DISABLE();
+  error = GET_NET_ERROR();
+  DBG_ALIGNMENT_ENABLE();
   if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
    || error == EAGAIN
@@ -1286,7 +1383,7 @@ DeeSocket_Recv(DeeSocketObject *__restrict self,
  dssize_t result;
  uint64_t end_time = timeout_microseconds;
  if (timeout_microseconds && timeout_microseconds != (uint64_t)-1)
-     end_time = DeeThread_GetTimeMicroSeconds()+timeout_microseconds;
+     end_time = DeeThread_GetTimeMicroSeconds() + timeout_microseconds;
 again:
  if (timeout_microseconds && DeeThread_CheckInterrupt())
      goto err;
@@ -1314,10 +1411,15 @@ again:
   *      `wait_for_recv()' will have unlocked the socket. */
  if unlikely(result)
     goto done;
+ DBG_ALIGNMENT_DISABLE();
  result = recv(self->s_socket,buf,bufsize,flags);
+ DBG_ALIGNMENT_ENABLE();
  socket_endread(self);
  if unlikely(result < 0) {
-  neterrno_t error = GET_NET_ERROR();
+  neterrno_t error;
+  DBG_ALIGNMENT_DISABLE();
+  error = GET_NET_ERROR();
+  DBG_ALIGNMENT_ENABLE();
   if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
    || error == EAGAIN
@@ -1370,11 +1472,14 @@ err:
 }
 
 
-PRIVATE void DCALL err_host_unreachable(int error, Socket *__restrict socket,
-                                        SockAddr const *__restrict target) {
- DeeError_SysThrowf(&DeeError_HostUnreachable,error,
-                    "The host specified by %K cannot be reached",
-                    SockAddr_ToString(target,socket->s_proto,SOCKADDR_STR_FNOFAIL|SOCKADDR_STR_FNODNS));
+PRIVATE ATTR_COLD int DCALL
+err_host_unreachable(int error, Socket *__restrict socket,
+                     SockAddr const *__restrict target) {
+ return DeeError_SysThrowf(&DeeError_HostUnreachable,error,
+                           "The host specified by %K cannot be reached",
+                           SockAddr_ToString(target,socket->s_proto,
+                                             SOCKADDR_STR_FNOFAIL |
+                                             SOCKADDR_STR_FNODNS));
 }
 
 INTERN dssize_t DCALL
@@ -1414,11 +1519,16 @@ again:
   *      `wait_for_send()' will have unlocked the socket. */
  if unlikely(result)
     goto done;
+ DBG_ALIGNMENT_DISABLE();
  result = sendto(self->s_socket,buf,bufsize,flags,&target->sa,
                  SockAddr_Sizeof(target->sa.sa_family,self->s_proto));
+ DBG_ALIGNMENT_ENABLE();
  socket_endread(self);
  if unlikely(result < 0) {
-  neterrno_t error = GET_NET_ERROR();
+  neterrno_t error;
+  DBG_ALIGNMENT_DISABLE();
+  error = GET_NET_ERROR();
+  DBG_ALIGNMENT_ENABLE();
   if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
    || error == EAGAIN
@@ -1504,7 +1614,7 @@ DeeSocket_RecvFrom(DeeSocketObject *__restrict self,
  uint64_t end_time = timeout_microseconds;
  ASSERT(source);
  if (timeout_microseconds && timeout_microseconds != (uint64_t)-1)
-     end_time = DeeThread_GetTimeMicroSeconds()+timeout_microseconds;
+     end_time = DeeThread_GetTimeMicroSeconds() + timeout_microseconds;
 again:
  if (timeout_microseconds && DeeThread_CheckInterrupt())
      goto err;
@@ -1534,10 +1644,15 @@ again:
   *      `wait_for_recv()' will have unlocked the socket. */
  if unlikely(result)
     goto done;
+ DBG_ALIGNMENT_DISABLE();
  result = recvfrom(self->s_socket,buf,bufsize,flags,&source->sa,&length);
+ DBG_ALIGNMENT_ENABLE();
  socket_endread(self);
  if unlikely(result < 0) {
-  neterrno_t error = GET_NET_ERROR();
+  neterrno_t error;
+  DBG_ALIGNMENT_DISABLE();
+  error = GET_NET_ERROR();
+  DBG_ALIGNMENT_ENABLE();
   if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
    || error == EAGAIN
@@ -1594,7 +1709,7 @@ err:
 
 PRIVATE size_t DCALL get_recv_chunksize(void) {
  /* XXX: Consult an environment variable? */
-#if 1
+#if 0
  return 1;
 #else
  return 2048;
@@ -1687,10 +1802,12 @@ socket_bind(Socket *__restrict self, size_t argc,
                                 argc,
                                 argv))
     goto err;
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(DeeSocket_Bind(self,&addr))
     goto err;
  return_none;
 err:
+ DBG_ALIGNMENT_ENABLE();
  return NULL;
 }
 
@@ -1705,10 +1822,12 @@ socket_connect(Socket *__restrict self, size_t argc,
                                 argc,
                                 argv))
     goto err;
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(DeeSocket_Connect(self,&addr))
     goto err;
  return_none;
 err:
+ DBG_ALIGNMENT_ENABLE();
  return NULL;
 }
 
@@ -2092,6 +2211,7 @@ socket_sendto(Socket *__restrict self, size_t argc,
                          1,
                         &target)) goto err;
  }
+ DBG_ALIGNMENT_ENABLE();
  if (!arg_0) {
   /* "(buffer data,int timeout_microseconds=-1,int flags=0)->int\n" */
   timeout = (uint64_t)-1;
@@ -2131,6 +2251,7 @@ socket_sendto(Socket *__restrict self, size_t argc,
  }
  return DeeInt_NewSize((size_t)result);
 err:
+ DBG_ALIGNMENT_ENABLE();
  return NULL;
 }
 
@@ -2206,8 +2327,8 @@ socket_fileno(Socket *__restrict self,
 
 PRIVATE struct type_method socket_methods[] = {
     { "close", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_close,
-      DOC("(int shutdown_mode)->none\n"
-          "(string shutdown_mode=\"rw\")->none\n"
+      DOC("(int shutdown_mode)\n"
+          "(string shutdown_mode=\"rw\")\n"
           "@interrupt\n"
           "@throw ValueError Invalid shutdown mode\n"
           "@throw NetError Failed to shutdown @this socket\n"
@@ -2216,15 +2337,15 @@ PRIVATE struct type_method socket_methods[] = {
           "#shutdown will automatically be invoked on @this socket if it hasn't before\n"
           "Note that in the event that #shutdown has already been called, ") },
     { "shutdown", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_shutdown,
-      DOC("(int how)->none\n"
-          "(string how=\"rw\")->none\n"
+      DOC("(int how)\n"
+          "(string how=\"rw\")\n"
           "@interrupt\n"
           "@throw ValueError Invalid shutdown mode\n"
           "@throw NetError Failed to shutdown @this socket\n"
           "@throw HandleClosed @this socket has already been closed\n"
           "Shuts down @this socket either for reading, for writing or for both") },
     { "bind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_bind,
-      DOC("(...)->none\n"
+      DOC("(...)\n"
           "@interrupt\n"
           "@throw NetError.AddrInUse The address specified for binding is already in use\n"
           "@throw NetError.NoSupport The protocol of @this socket does not support binding\n"
@@ -2236,7 +2357,7 @@ PRIVATE struct type_method socket_methods[] = {
           "Binds @this socket to a given address.\n"
           "Accepted arguments are the same as ${sockaddr(this.sock_af,...)} when creating :sockaddr") },
     { "connect", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_connect,
-      DOC("(...)->none\n"
+      DOC("(...)\n"
           "@interrupt\n"
           "@throw NetError.AddrNotAvail The speficied address is not reachable from this machine\n"
           "@throw NetError.NoSupport @this socket is currently listening and cannot be connected\n"
@@ -2253,7 +2374,7 @@ PRIVATE struct type_method socket_methods[] = {
           "Connect @this socket with a given address.\n"
           "Accepted arguments are the same as ${sockaddr(this.sock_af,...)} when creating :sockaddr") },
     { "listen", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_listen,
-      DOC("(int max_backlog=-1)->none\n"
+      DOC("(int max_backlog=-1)\n"
           "@interrupt\n"
           "@throw NetError.NotBound @this socket has not been bound and the protocol does not allow listening on an unbound address\n"
           "@throw NetError.NoSupport The protocol of @this socket does not allow listening\n"
@@ -2266,7 +2387,7 @@ PRIVATE struct type_method socket_methods[] = {
           "Note that calling this function may require the user to whitelist deemon in their firewall") },
     { "accept", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_accept,
       DOC("(int timeout_microseconds=-1)->socket\n"
-          "(int timeout_microseconds=-1)->none\n"
+          "(int timeout_microseconds=-1)\n"
           "@interrupt\n"
           "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
           "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
@@ -2277,8 +2398,8 @@ PRIVATE struct type_method socket_methods[] = {
           "@return A new socket object describing the connection to the new client, or :none when @timeout_microseconds has passed\n"
           "Accept new incoming connections on a listening socket") },
     { "tryaccept", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_tryaccept,
-      DOC("()->socket\n"
-          "()->none\n"
+      DOC("->socket\n"
+          "->none\n"
           "@interrupt\n"
           "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
           "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
@@ -2395,13 +2516,13 @@ PRIVATE struct type_method socket_methods[] = {
           "@return The total number of bytes that was sent\n"
           "Same as #send, but used to transmit data to a specific network target, rather than one that is already connected.") },
     { "isbound", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_isbound,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Returns :true if @this socket has been bound (s.a. #bind)") },
     { "isconnected", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_isconnected,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Returns :true if @this socket has been #{connect}ed") },
     { "islistening", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_islistening,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Returns :true if @this socket is #{listen}ing for incoming connections") },
     { "wasshutdown", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_wasshutdown,
       DOC("(int how)->bool\n"
@@ -2409,10 +2530,10 @@ PRIVATE struct type_method socket_methods[] = {
           "Returns :true if @this socket has been #shutdown according to @how (inclusive when multiple modes are specified)\n"
           "See #shutdown for possible values that may be passed to @how") },
     { "wasclosed", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_wasclosed,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Returns :true if @this socket has been #{close}ed") },
     { "fileno", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_fileno,
-      DOC("()->int\n"
+      DOC("->int\n"
           "Returns the underlying file descriptor/handle associated @this socket") },
     { NULL }
 };

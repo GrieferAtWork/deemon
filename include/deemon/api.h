@@ -40,6 +40,7 @@
 #include <hybrid/compiler.h>
 #include <hybrid/typecore.h>
 #include <hybrid/host.h>
+#include <hybrid/debug-alignment.h>
 #include <hybrid/__byteorder.h>
 
 #ifdef __CC__
@@ -218,20 +219,20 @@ extern void (__debugbreak)(void);
                   *       of NULL indicates a newly raised exception. */
 
 #ifdef _MSC_VER
+#pragma warning(disable: 4201)
 #pragma warning(disable: 4510)
 #pragma warning(disable: 4512)
 #pragma warning(disable: 4565)
 #pragma warning(disable: 4610)
-#pragma warning(disable: 4324)
 #endif
 
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && 1
 #ifdef CONFIG_HOST_WINDOWS
 #define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
 extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
-#define DEE_DPRINT(str) OutputDebugStringA(str)
+#define DEE_DPRINT(str)    (DBG_ALIGNMENT_DISABLE(),OutputDebugStringA(str),DBG_ALIGNMENT_ENABLE())
 #ifdef _MSC_VER
-#define DEE_CHECKMEMORY()  _CrtCheckMemory()
+#define DEE_CHECKMEMORY()  (DBG_ALIGNMENT_DISABLE(),_CrtCheckMemory(),DBG_ALIGNMENT_ENABLE())
 #if !defined(_MSC_VER) || defined(_DLL)
 extern ATTR_DLLIMPORT int ATTR_CDECL _CrtCheckMemory(void);
 #else
@@ -286,13 +287,6 @@ DFUNDEF void (DeeAssert_Failf)(char const *expr, char const *file, int line, cha
 #ifndef DEE_CHECKMEMORY
 #define DEE_NO_CHECKMEMORY         1
 #define DEE_CHECKMEMORY()         (void)0
-#endif
-
-
-#ifdef _MSC_VER
-#pragma warning(disable: 4201)
-#pragma warning(disable: 4310)
-#pragma warning(disable: 4152)
 #endif
 
 #endif /* __CC__ */

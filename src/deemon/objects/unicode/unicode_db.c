@@ -32,7 +32,7 @@ DECL_BEGIN
 #endif
 
 static struct unitraits const default_traits = { 0x0, 0, 0, 0, 0, 0 };
-PUBLIC struct unitraits *DCALL
+PUBLIC ATTR_CONST struct unitraits *DCALL
 DeeUni_Descriptor(uint32_t ch) {
  if likely(ch < UNICODE_COUNT_VALID)
     return (struct unitraits *)&UNICODE_DESCRIPTOR(ch);

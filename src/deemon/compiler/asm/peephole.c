@@ -28,6 +28,7 @@
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
+#include <hybrid/unaligned.h>
 
 DECL_BEGIN
 
@@ -139,12 +140,12 @@ follow_jmp(instruction_t *__restrict jmp,
  if (JMP_IS32(jmp)) { /* 32-bit jump */
   jmp        += 2;
   rel_addr    = (code_addr_t)(jmp - sc_main.sec_begin);
-  result_addr = (code_addr_t)((code_saddr_t)(int32_t)LESWAP32(*(int32_t *)jmp));
+  result_addr = (code_addr_t)((code_saddr_t)(int32_t)UNALIGNED_GETLE32((int32_t *)jmp));
   jmp        += 4;
  } else if (JMP_IS16(jmp)) { /* 16-bit jump */
   jmp        += 1;
   rel_addr    = (code_addr_t)(jmp - sc_main.sec_begin);
-  result_addr = (code_addr_t)((code_saddr_t)(int16_t)LESWAP16(*(int16_t *)jmp));
+  result_addr = (code_addr_t)((code_saddr_t)(int16_t)UNALIGNED_GETLE16((int16_t *)jmp));
   jmp        += 2;
  } else { /* 8-bit jump */
   jmp        += 1;
@@ -449,7 +450,7 @@ PRIVATE char const mnemonic_names[256][29] = {
 PRIVATE ATTR_NOINLINE void DCALL
 print_ddi_file_and_line(instruction_t *addr_ptr) {
  struct ddi_checkpoint *iter,*end;
- code_addr_t addr = addr_ptr - sc_main.sec_begin;
+ code_addr_t addr = (code_addr_t)(addr_ptr - sc_main.sec_begin);
  iter = current_assembler.a_ddi.da_checkv;
  end = iter + current_assembler.a_ddi.da_checkc;
  for (; iter < end; ++iter) {
@@ -549,8 +550,8 @@ peephole_optf(char const *file, int line, instruction_t *addr_ptr,
 PRIVATE ATTR_NOINLINE void DCALL
 peephole_opt2(char const *file, int line, instruction_t *addr_ptr, instruction_t *addr_ptr2) {
  DEE_DPRINTF("%s(%d) : Peephole at +%.4I32x and +%.4I32x\n",file,line,
-            (code_addr_t)(addr_ptr-sc_main.sec_begin),
-            (code_addr_t)(addr_ptr2-sc_main.sec_begin));
+            (code_addr_t)(addr_ptr - sc_main.sec_begin),
+            (code_addr_t)(addr_ptr2 - sc_main.sec_begin));
 }
 #endif
 
@@ -578,9 +579,9 @@ switch_on_opcode:
    goto read_opcode;
 
   case ASM16_STACK:
-   abs_stackaddr = *(uint16_t *)(iiter + 0);
+   abs_stackaddr = UNALIGNED_GETLE16((uint16_t *)(iiter + 0));
    if (abs_stackaddr >= old_stacksz-1)
-       *(uint16_t *)(iiter + 0) = (uint16_t)(abs_stackaddr-1);
+       UNALIGNED_SETLE16((uint16_t *)(iiter + 0),(uint16_t)(abs_stackaddr-1));
    iiter += 2;
    goto read_opcode;
 
@@ -598,9 +599,12 @@ switch_on_opcode:
    break;
 
   case ASM16_POP_N:
-   abs_stackaddr = (stacksz - (*(uint16_t *)(iiter + 0) + 2));
+   abs_stackaddr = (stacksz - UNALIGNED_GETLE16((uint16_t *)(iiter + 0) + 2));
    if (abs_stackaddr <= old_stacksz) {
-    if ((*(uint16_t *)(iiter + 0))-- == 0) {
+    uint16_t old_val;
+    old_val = UNALIGNED_GETLE16((uint16_t *)(iiter + 0));
+    UNALIGNED_SETLE16((uint16_t *)(iiter + 0),old_val - 1);
+    if (old_val == 0) {
      /* Replace with a regular `pop' instruction */
      memset(iter,ASM_DELOP,(size_t)(iiter-iter)+2);
      iter[0] = ASM_POP;
@@ -624,9 +628,12 @@ switch_on_opcode:
    break;
 
   case ASM16_DUP_N:
-   abs_stackaddr = (stacksz - (*(uint16_t *)(iiter + 0) + 2));
+   abs_stackaddr = (stacksz - UNALIGNED_GETLE16((uint16_t *)(iiter + 0) + 2));
    if (abs_stackaddr <= old_stacksz) {
-    if ((*(uint16_t *)(iiter + 0))-- == 0) {
+    uint16_t old_val;
+    old_val = UNALIGNED_GETLE16((uint16_t *)(iiter + 0));
+    UNALIGNED_SETLE16((uint16_t *)(iiter + 0),old_val - 1);
+    if (old_val == 0) {
      /* Replace with a regular `dup' instruction */
      memset(iter,ASM_DELOP,(size_t)(iiter-iter)+2);
      iter[0] = ASM_DUP;
@@ -830,7 +837,7 @@ do_adjstack_optimization:
    case ASM16_ADJSTACK & 0xff:
     if (!(current_assembler.a_flag&ASM_FOPTIMIZE)) break;
     /* See above: It's our job to try and truncate this instruction. */
-    adjust = (int16_t)LESWAP16(*(int16_t *)(iter + 2));
+    adjust = (int16_t)UNALIGNED_GETLE16((int16_t *)(iter + 2));
     if (adjust >= INT8_MIN && adjust <= INT8_MAX) {
      /* Convert to an 8-bit instruction. */
      *iter++               = ASM_DELOP; /* F0 prefix. */
@@ -977,11 +984,11 @@ do_jmpf:
       }
       relative_target = (code_addr_t)target_rel->ar_sym->as_addr;
       if (JMP_IS32(jmp_target)) {
-       inplace_disp = (code_saddr_t)*(int32_t *)(jmp_target+2) + 4;
+       inplace_disp = (code_saddr_t)(int32_t)UNALIGNED_GETLE32((int32_t *)(jmp_target + 2)) + 4;
       } else if (JMP_IS16(jmp_target)) {
-       inplace_disp = (code_saddr_t)*(int16_t *)(jmp_target+1) + 2;
+       inplace_disp = (code_saddr_t)(int16_t)UNALIGNED_GETLE16((int16_t *)(jmp_target + 1)) + 2;
       } else {
-       inplace_disp = (code_saddr_t)*(int8_t *)(jmp_target+1) + 1;
+       inplace_disp = (code_saddr_t)*(int8_t *)(jmp_target + 1) + 1;
       }
       relative_target += inplace_disp;
       relative_target -= (code_saddr_t)(asm_nextinstr(after_prefix) - sc_main.sec_begin);
@@ -993,9 +1000,11 @@ do_jmpf:
           (inplace_disp >= rel_min && inplace_disp <= rel_max)) {
        /* Clear the jump offset of the original jump by writing the offsets */
        if (JMP_IS32(after_prefix)) {
-        *(int32_t *)(after_prefix + 2) = (int32_t)inplace_disp - 4;
+        UNALIGNED_SETLE32((uint32_t *)(after_prefix + 2),
+                          (uint32_t)((int32_t)inplace_disp - 4));
        } else if (JMP_IS16(after_prefix)) {
-        *(int16_t *)(after_prefix + 1) = (int16_t)inplace_disp - 2;
+        UNALIGNED_SETLE16((uint16_t *)(after_prefix + 1),
+                          (uint16_t)((int16_t)inplace_disp - 2));
        } else {
         *(int8_t *)(after_prefix + 1)  = (int8_t)inplace_disp -1;
        }
@@ -1014,7 +1023,7 @@ do_jmpf:
      }
     }
 #endif
-#if 0 /* Seems to produce less optimized code? */
+#if 0 /* Seems to produce less efficient code? */
     /* Optimization:
      * >>    push ...
      * >>    jf   pop, 1f
@@ -1063,7 +1072,7 @@ do_jmpf:
   }
   __IF0 {
   case ASM_RET:
-   if (current_basescope->bs_flags&CODE_FYIELDING)
+   if (current_basescope->bs_flags & CODE_FYIELDING)
        break; /* In yielding code, this instruction behaves differently. */
   }
    ATTR_FALLTHROUGH
@@ -1081,7 +1090,7 @@ do_noreturn_optimization:
    code_addr_t     nearest_symbol_addr = (code_addr_t)-1;
    code_size_t     text_size; instruction_t *new_ip;
    iter = asm_nextinstr_sp(iter,&stacksz);
-   current_symbol_addr = (code_addr_t)(iter-sc_main.sec_begin);
+   current_symbol_addr = (code_addr_t)(iter - sc_main.sec_begin);
    struct asm_sym *sym_iter = current_assembler.a_syms;
    for (; sym_iter; sym_iter = sym_iter->as_next) {
     if (!ASM_SYM_DEFINED(sym_iter)) continue;
@@ -1123,7 +1132,7 @@ do_noreturn_optimization:
    if (new_ip != iter) {
     /* Now delete everything that is in-between. */
     struct asm_rel *rel_iter = sc_main.sec_relv;
-    struct asm_rel *rel_end = rel_iter+sc_main.sec_relc;
+    struct asm_rel *rel_end = rel_iter + sc_main.sec_relc;
     code_addr_t start_ip = (code_addr_t)(iter - sc_main.sec_begin);
     /* Delete all relocations within the area we're about to delete. */
     while (rel_iter != rel_end && rel_iter->ar_addr < start_ip) ++rel_iter;
@@ -1241,7 +1250,7 @@ do_conditional_forward_optimization:
        ((*(instr_pop + 0) == ASM_ADJSTACK) && *(int8_t *)(instr_pop + 1) < 0) ||
        ((*(instr_pop + 0) == (ASM16_ADJSTACK & 0xff00) >> 8) && 
         (*(instr_pop + 1) == (ASM16_ADJSTACK & 0xff)) &&
-           (int16_t)LESWAP16(*(int16_t *)(instr_pop + 2)) < 0))) {
+           (int16_t)UNALIGNED_GETLE16((int16_t *)(instr_pop + 2)) < 0))) {
       /* Found sequence:
        * >>   bool  top
        * >>   dup
@@ -1267,7 +1276,7 @@ do_conditional_forward_optimization:
         uint8_t target_size = JMP_IS16(jmp_target) ? 3 : 2;
         if (JMP_IS16(instr_jmp)) {
          int32_t new_disp;
-         new_disp  = (int16_t)LESWAP16(*(int16_t *)(instr_jmp + 1));
+         new_disp  = (int16_t)UNALIGNED_GETLE16((int16_t *)(instr_jmp + 1));
          new_disp += target_size;
          if (new_disp >= INT16_MIN && new_disp <= INT16_MIN) {
           if (jmp_reloc) {
@@ -1290,7 +1299,8 @@ do_conditional_forward_optimization:
             jmp_reloc->ar_sym = newsym;
            }
           } else {
-           *(int16_t *)(instr_jmp + 1) = (int16_t)LESWAP16((int16_t)new_disp);
+           UNALIGNED_SETLE16((uint16_t *)(instr_jmp + 1),
+                             (uint16_t)(int16_t)new_disp);
           }
 conditional_jump_forwarding_ok:
           delete_assembly((code_addr_t)(iter-sc_main.sec_begin),
@@ -1304,11 +1314,8 @@ conditional_jump_forwarding_ok:
           else if (*instr_pop == ASM_ADJSTACK) {
            --*(int8_t *)(instr_pop + 1);
           } else {
-#ifdef CONFIG_LITTLE_ENDIAN
-           --*(int16_t *)(instr_pop + 2);
-#else
-           *(int16_t *)(instr_pop + 2) = (int16_t)LESWAP16((int16_t)LESWAP16(*(int16_t *)(instr_pop + 2))-1);
-#endif
+           UNALIGNED_SETLE16((uint16_t *)(instr_pop + 2),
+                             (uint16_t)((int16_t)UNALIGNED_GETLE16((uint16_t *)(instr_pop + 2)) - 1));
           }
           SET_RESULTF(iter,"Flatten repeated conditional jump at %.4I32X to %.4I32X",
                      (code_addr_t)(instr_jmp - sc_main.sec_begin),
@@ -1376,8 +1383,8 @@ conditional_jump_forwarding_ok:
     if (num_instruction != 0) {
 delete_bool_before_jft:
      /* Merge the bool/not instructions into the conditional-jump instruction. */
-     delete_assembly((code_addr_t)(iter-sc_main.sec_begin),
-                     (code_size_t)(iiter-iter));
+     delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
+                     (code_size_t)(iiter - iter));
      /* Invert the jump condition if the bool inverted the test. */
      if (must_invert) *iiter ^= ASM_JX_NOTBIT;
      SET_RESULTF(iter,"Remove bool-cast(s) preceding to conditional jump at +%.4I32X",
@@ -1395,8 +1402,8 @@ delete_bool_before_jft:
      * Into:
      * >> not  top
      */
-    delete_assembly((code_addr_t)(iter-sc_main.sec_begin),
-                    (code_size_t)(iiter-iter));
+    delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
+                    (code_size_t)(iiter - iter));
     *iter = ASM_BOOL ^ (must_invert ? 1 : 0);
     SET_RESULTF(iter,"Flatten boolean logic repetition to a single `%s'",
                 must_invert ? "not" : "bool");
@@ -1520,7 +1527,7 @@ do_switch_after_prefix_opcode:
        goto do_unused_operand_optimization;
    goto do_pop_merge_optimization;
   case ASM16_ADJSTACK:
-   if (*(int16_t *)(iiter + 0) > 0)
+   if ((int16_t)UNALIGNED_GETLE16((int16_t *)(iiter + 0)) > 0)
        goto do_unused_operand_optimization;
    goto do_pop_merge_optimization;
   case ASM_PUSH_NONE:
@@ -1630,7 +1637,7 @@ do_optimize_popmov_16bit:
      {
       uint16_t abs_sp;
      case ASM16_POP_N & 0xff:
-      abs_sp = (stacksz + 1) - (*(uint16_t *)(next_instruction + 1) + 2);
+      abs_sp = (stacksz + 1) - (UNALIGNED_GETLE16((uint16_t *)(next_instruction + 1)) + 2);
       temp[0] = (ASM16_STACK & 0xff00) >> 8;
       temp[1] = ASM16_STACK && 0xff;
       temp[2] = abs_sp & 0xff;
@@ -1706,9 +1713,9 @@ do_unused_operand_optimization:
    iiter_sp = stacksz;
    /* Figure out the absolute stack-address of the
     * greatest operand created by this instruction. */
-   validate_stack_depth((code_addr_t)(iter-sc_main.sec_begin),stacksz);
+   validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin),stacksz);
    next_instruction     = asm_nextinstr_sp(iter,&stacksz);
-   validate_stack_depth((code_addr_t)(next_instruction-sc_main.sec_begin),stacksz);
+   validate_stack_depth((code_addr_t)(next_instruction - sc_main.sec_begin),stacksz);
    /* The address of the last operand.
     * If the stack argument associated with this address is popped
     * in a way that discards its value, then we can optimize it away
@@ -1718,27 +1725,27 @@ do_unused_operand_optimization:
     *       We could theoretically handle branching instructions
     *       and check if both branches discard the value as unused,
     *       but that would be too complicated for right now... */
-   last_operand_address = stacksz-1;
+   last_operand_address = stacksz - 1;
    __IF0 {
     /* Special handling for DUP instructions.
      * For these, we already know an origin offset. */
   case ASM_DUP:
-    next_instruction = iter+1;
+    next_instruction = iter + 1;
     ASSERT(stacksz >= 1);
     iiter_sp             = stacksz;
-    last_operand_address = stacksz-1;
+    last_operand_address = stacksz - 1;
     goto do_check_dup_into;
   case ASM_DUP_N:
-    next_instruction     = iter+2;
-    ASSERT(stacksz >= (*(uint8_t *)(iter + 1)+2));
+    next_instruction     = iter + 2;
+    ASSERT(stacksz >= (*(uint8_t *)(iter + 1) + 2));
     iiter_sp             = stacksz;
-    last_operand_address = stacksz-(*(uint8_t *)(iter + 1)+2);
+    last_operand_address = stacksz - (*(uint8_t *)(iter + 1) + 2);
     goto do_check_dup_into;
   case ASM16_DUP_N:
-    next_instruction     = iter+4;
-    ASSERT(stacksz >= (LESWAP16(*(uint16_t *)(iter + 2))+2));
+    next_instruction     = iter + 4;
+    ASSERT(stacksz >= (UNALIGNED_GETLE16((uint16_t *)(iter + 2)) + 2));
     iiter_sp             = stacksz;
-    last_operand_address = stacksz-(LESWAP16(*(uint16_t *)(iter + 2))+2);
+    last_operand_address = stacksz - (UNALIGNED_GETLE16((uint16_t *)(iter + 2)) + 2);
 do_check_dup_into:
     /* Optimize:
      * >> dup
@@ -1808,8 +1815,8 @@ do_optimize_dupmov_16bit:
        temp[0] = (ASM16_STATIC & 0xff00) >> 8;
        temp[2] = next_instruction[2];
        temp[3] = next_instruction[3];
-       memcpy(temp+4,iter,next_instruction-iter);
-       memcpy(iter,temp,4+(next_instruction-iter));
+       memcpy(temp + 4,iter,next_instruction - iter);
+       memcpy(iter,temp,4 + (next_instruction - iter));
        SET_RESULTF(iter,"Construct 16-bit mov-instruction from dup+pop");
        goto continue_at_iter;
 
@@ -1820,8 +1827,8 @@ do_optimize_dupmov_16bit:
        temp[3] = next_instruction[3];
        temp[4] = next_instruction[4];
        temp[5] = next_instruction[5];
-       memcpy(temp+6,iter,next_instruction-iter);
-       memcpy(iter,temp,6+(next_instruction-iter));
+       memcpy(temp + 6,iter,next_instruction - iter);
+       memcpy(iter,temp,6 + (next_instruction - iter));
        SET_RESULTF(iter,"Construct 16-bit mov-instruction from dup+pop extern");
        goto continue_at_iter;
 
@@ -1838,8 +1845,8 @@ do_optimize_dupmov_16bit:
         temp[1] = ASM16_STACK & 0xff;
         temp[2] = abs_sp & 0xff;
         temp[3] = (abs_sp & 0xff00) >> 8;
-        memcpy(temp+4,iter,next_instruction-iter);
-        memcpy(iter,temp,4+(next_instruction-iter));
+        memcpy(temp + 4,iter,next_instruction - iter);
+        memcpy(iter,temp,4 + (next_instruction - iter));
         SET_RESULTF(iter,"Construct 16-bit mov-instruction from dup+pop stack");
        }
        goto continue_at_iter;
@@ -1856,7 +1863,7 @@ do_optimize_dupmov_16bit:
     goto do_unused_operand_optimization_ex;
    }
 do_unused_operand_optimization_ex:
-   validate_stack_depth((code_addr_t)(next_instruction-sc_main.sec_begin),stacksz);
+   validate_stack_depth((code_addr_t)(next_instruction - sc_main.sec_begin),stacksz);
    /* TODO: Optimize:
     * >>    push $42
     * >>    mov  #SP - 1, $15
@@ -1870,7 +1877,7 @@ do_unused_operand_optimization_ex:
        (next_instruction[0] == ASM_ADJSTACK && *(int8_t *)(next_instruction + 1) < 0) ||
        (next_instruction[0] == ASM_EXTENDED1 &&
         next_instruction[1] == ASM_ADJSTACK &&
-        (int16_t)LESWAP16(*(int16_t *)(next_instruction + 2)) < 0)) &&
+       (int16_t)UNALIGNED_GETLE16((int16_t *)(next_instruction + 2)) < 0)) &&
        !IS_PROTECTED(next_instruction)) {
     /* Optimize stuff like `dup; pop' */
     int16_t total_adjustment = stacksz-iiter_sp;
@@ -1879,7 +1886,7 @@ do_unused_operand_optimization_ex:
          total_adjustment -= 1;
     else if (next_instruction[0] == ASM_ADJSTACK)
          total_adjustment += *(int8_t *)(next_instruction + 1);
-    else total_adjustment += (int16_t)LESWAP16(*(int16_t *)(next_instruction + 2));
+    else total_adjustment += (int16_t)UNALIGNED_GETLE16((int16_t *)(next_instruction + 2));
     /* Delete existing assembly. */
     continue_after = asm_nextinstr(next_instruction);
     delete_assembly((code_addr_t)(iter-sc_main.sec_begin),
@@ -1898,9 +1905,10 @@ do_unused_operand_optimization_ex:
       iter[0]               = ASM_ADJSTACK;
       *(int8_t *)(iter + 1) = (int8_t)total_adjustment;
      } else {
-      iter[0]                = (ASM16_ADJSTACK & 0xff00) >> 8;
-      iter[1]                = (ASM16_ADJSTACK & 0xff);
-      *(int16_t *)(iter + 2) = (int16_t)LESWAP16((int16_t)total_adjustment);
+      iter[0] = (ASM16_ADJSTACK & 0xff00) >> 8;
+      iter[1] = (ASM16_ADJSTACK & 0xff);
+      UNALIGNED_SETLE16((uint16_t *)(iter + 2),
+                        (uint16_t)(int16_t)total_adjustment);
      }
      break;
     }
@@ -1913,7 +1921,7 @@ do_unused_operand_optimization_ex:
 
    continue_ip = next_instruction;
    continue_sp = stacksz;
-   validate_stack_depth((code_addr_t)(continue_ip-sc_main.sec_begin),continue_sp);
+   validate_stack_depth((code_addr_t)(continue_ip - sc_main.sec_begin),continue_sp);
    ASSERT(stacksz != 0);
    iiter = positive_instruction = iter;
    positive_instruction_sp = stacksz;
@@ -1943,7 +1951,7 @@ do_unused_operand_optimization_ex:
     if (opcode == ASM_RET_NONE || opcode == ASM_THROW ||
         opcode == ASM_UD || opcode == ASM_RETHROW ||
        (opcode == ASM_RET &&
-      !(current_basescope->bs_flags&CODE_FYIELDING)))
+      !(current_basescope->bs_flags & CODE_FYIELDING)))
         break;
     if (opcode == ASM_EXTENDED1) {
      opcode = iter[1];
@@ -1976,10 +1984,10 @@ do_unused_operand_optimization_ex:
       * and delete it, as well as the `pop' when going to perform the optimization.
       */
      if (opcode == ASM_EXTENDED1) opcode = iter[1];
-     if ((opcode == ASM_DUP && (old_stacksz-1) == last_operand_address)
+     if ((opcode == ASM_DUP && (old_stacksz - 1) == last_operand_address)
 #if 0 /* This optimization only works for immediate-level operands */
          ||
-         (opcode == ASM_DUP_N && (old_stacksz-sp_sub) == last_operand_address)
+         (opcode == ASM_DUP_N && (old_stacksz - sp_sub) == last_operand_address)
 #endif
          ) {
       /* Inner recursion of symbol aliasing. */
@@ -1992,7 +2000,7 @@ do_unused_operand_optimization_ex:
        * that use operands beneath our own, so that we can re-adjust their offsets
        * in the event that code is going to be deleted.
        * Yet since we don't do that, we can't handle this case. */
-     if (opcode == ASM_DUP_N && (old_stacksz-sp_sub) != last_operand_address) {
+     if (opcode == ASM_DUP_N && (old_stacksz - sp_sub) != last_operand_address) {
       /* An operand further down the stack got copied.
        * We do not need to care about this in particular,
        * because it didn't affect our operand! */
@@ -2006,7 +2014,9 @@ do_unused_operand_optimization_ex:
       * without side-effects, and if we can re-write it to where
       * it simply ignores the operand. */
      if (opcode == ASM_POP_N && last_operand_address == stacksz-1 &&
-        (iter[0] == ASM_EXTENDED1 ? *(uint16_t *)(iter + 2) == 0 : *(uint8_t *)(iter + 1) == 0)) {
+        (iter[0] == ASM_EXTENDED1 ?
+         UNALIGNED_GETLE16((uint16_t *)(iter + 2)) == 0 :
+                          (*(uint8_t *)(iter + 1)) == 0)) {
       /* Optimize something like this by deleting it:
        * >> dup
        * >> pop #1 // Replace the second entry (source operand of dup) with the same value (aka. a noop)
@@ -2045,14 +2055,10 @@ delete_asm_after_pop:
                       (code_size_t)(next_instruction - positive_instruction));
       /* Add +1 to the stack adjustment (which must be negative) to subtract one less stack object */
       if (iter[0] == ASM_EXTENDED1) {
-#ifdef CONFIG_LITTLE_ENDIAN
-       if ((*(int16_t *)(iter + 2) += 1) == 0)
-#else
-       int16_t new_val = (int16_t)LESWAP16(*(int16_t *)(iter + 2))+1;
-       *(int16_t *)(iter + 2) = (int16_t)LESWAP16(new_val);
-       if (new_val == 0)
-#endif
-       {
+       int16_t offset;
+       offset = (int16_t)UNALIGNED_GETLE16((int16_t *)(iter + 2)) + 1;
+       UNALIGNED_SETLE16((uint16_t *)(iter + 2),(uint16_t)offset);
+       if (offset == 0) {
         iter[0] = ASM_DELOP;
         iter[1] = ASM_DELOP;
         iter[2] = ASM_DELOP;
@@ -2086,7 +2092,7 @@ continue_unused_operand:
     * following the `push' we've failed to optimize away. */
    iter    = continue_ip;
    stacksz = continue_sp;
-   validate_stack_depth((code_addr_t)(iter-sc_main.sec_begin),stacksz);
+   validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin),stacksz);
    if (*iiter == ASM_PUSH_NONE) {
     iter = iiter;
     --stacksz;
@@ -2143,7 +2149,7 @@ do_pop_merge_optimization:
     }
     if (opcode == ASM_EXTENDED1 &&
         iter[0] == (ASM16_ADJSTACK & 0xff)) {
-     int16_t effect = (int16_t)LESWAP16(*(int16_t *)(iter + 1));
+     int16_t effect = (int16_t)UNALIGNED_GETLE16((int16_t *)(iter + 1));
      if (effect > 0 && effect_sum < 0) break;
      effect_sum += effect;
      iter += 3;
@@ -2157,8 +2163,8 @@ do_pop_merge_optimization:
     /* With more than one instruction at hand, we can do some merging!
      * First off: Delete all existing code detailing
      *            multiple consecutive alignment instructions. */
-    delete_assembly((code_addr_t)(effect_start-sc_main.sec_begin),
-                    (code_size_t)(iter-effect_start));
+    delete_assembly((code_addr_t)(effect_start - sc_main.sec_begin),
+                    (code_size_t)(iter - effect_start));
     /* Now just write some new code using only
      * a single instruction to do the same job. */
     switch (effect_sum) {
@@ -2176,7 +2182,8 @@ do_pop_merge_optimization:
       /* 16-bit stack alignment. */
       *(effect_start + 0) = (instruction_t)((ASM16_ADJSTACK & 0xff00) >> 8);
       *(effect_start + 1) = (instruction_t)(ASM16_ADJSTACK & 0xff);
-      *(int16_t *)(effect_start + 2) = (int16_t)LESWAP16((int16_t)effect_sum);
+      UNALIGNED_SETLE16((uint16_t *)(effect_start + 2),
+                        (uint16_t)effect_sum);
      }
      break;
     }
@@ -2199,7 +2206,7 @@ do_pop_merge_optimization:
      --stacksz;
     }
     iter = next;
-    validate_stack_depth((code_addr_t)(iter-sc_main.sec_begin),stacksz);
+    validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin),stacksz);
     goto continue_at_iter;
    }
   } break;
@@ -2243,8 +2250,8 @@ do_pop_merge_optimization:
    pop_immb = *(uint8_t *)(iter + 2);
    goto do_pop_push_optimization2;
   case ASM16_POP_EXTERN:
-   pop_imma = LESWAP16(*(uint16_t *)(iter + 2));
-   pop_immb = LESWAP16(*(uint16_t *)(iter + 4));
+   pop_imma = UNALIGNED_GETLE16((uint16_t *)(iter + 2));
+   pop_immb = UNALIGNED_GETLE16((uint16_t *)(iter + 4));
    goto do_pop_push_optimization2;
   case ASM_POP_STATIC:
   case ASM_POP_GLOBAL:
@@ -2254,14 +2261,14 @@ do_pop_merge_optimization:
   case ASM16_POP_STATIC:
   case ASM16_POP_GLOBAL:
   case ASM16_POP_LOCAL:
-   pop_imma = LESWAP16(*(uint16_t *)(iter + 2));
+   pop_imma = UNALIGNED_GETLE16((uint16_t *)(iter + 2));
 do_pop_push_optimization:
    pop_immb = 0;
 do_pop_push_optimization2:
-   validate_stack_depth((code_addr_t)(iter-sc_main.sec_begin),stacksz);
+   validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin),stacksz);
    next_stacksz = stacksz;
    next = next_instr_sp(iter,&next_stacksz);
-   validate_stack_depth((code_addr_t)(next-sc_main.sec_begin),next_stacksz);
+   validate_stack_depth((code_addr_t)(next - sc_main.sec_begin),next_stacksz);
    /* If the next instruction is protected, then we can't do anything. */
    if (/*IS_PROTECTED(iter) || */IS_PROTECTED(next))
        goto do_writeonly_symbol_optimization;
@@ -2271,13 +2278,13 @@ do_pop_push_optimization2:
    if (next_op == opcode + 0x10) {
     uint16_t next_op_imma,next_op_immb = 0;
     if (next_op == ASM16_PUSH_GLOBAL) {
-     next_op_imma = LESWAP16(*(uint16_t *)(next + 2));
-     next_op_immb = LESWAP16(*(uint16_t *)(next + 4));
+     next_op_imma = UNALIGNED_GETLE16((uint16_t *)(next + 2));
+     next_op_immb = UNALIGNED_GETLE16((uint16_t *)(next + 4));
     } else if (next_op == ASM_PUSH_GLOBAL) {
      next_op_imma = *(uint8_t *)(next + 1);
      next_op_immb = *(uint8_t *)(next + 2);
     } else if (next_op&0xff00) {
-     next_op_imma = LESWAP16(*(uint16_t *)(next + 2));
+     next_op_imma = UNALIGNED_GETLE16((uint16_t *)(next + 2));
     } else {
      next_op_imma = *(uint8_t *)(next + 1);
     }
@@ -2299,9 +2306,9 @@ do_pop_push_optimization2:
      if (opcode & 0xff00) {
       *(iter + 0) = (instruction_t)(opcode >> 8);
       *(iter + 1) = (instruction_t)opcode;
-      *(uint16_t *)(iter + 2) = LESWAP16(pop_imma);
+      UNALIGNED_SETLE16((uint16_t *)(iter + 2),pop_imma);
       if ((opcode & 0xff) == ASM16_POP_EXTERN)
-        *(uint16_t *)(iter + 4) = LESWAP16(pop_immb);
+          UNALIGNED_SETLE16((uint16_t *)(iter + 4),pop_immb);
      } else {
       *(iter + 0) = (instruction_t)opcode;
       *(uint8_t *)(iter + 1) = (uint8_t)pop_imma;
@@ -2331,11 +2338,11 @@ do_pop_push_optimization2:
      * This might seem slower because it's +1 more instruction, however this will
      * actually run faster, because `jt pop' can operate faster than `jt PREFIX' */
     if (next_op == ASM16_GLOBAL) {
-     next_op_imma = LESWAP16(*(uint16_t *)(next + 2));
+     next_op_imma = UNALIGNED_GETLE16((uint16_t *)(next + 2));
      next_after_prefix = next + 4;
     } else if (next_op == ASM16_EXTERN) {
-     next_op_imma = LESWAP16(*(uint16_t *)(next + 2));
-     next_op_immb = LESWAP16(*(uint16_t *)(next + 4));
+     next_op_imma = UNALIGNED_GETLE16((uint16_t *)(next + 2));
+     next_op_immb = UNALIGNED_GETLE16((uint16_t *)(next + 4));
      next_after_prefix = next + 6;
     } else if (next_op == ASM_EXTERN) {
      next_op_imma = *(uint8_t *)(next + 1);
@@ -2533,16 +2540,16 @@ check_scanner_after_prefix:
     }
 delete_symbol_store:
     /* Yes, we can optimize away this use case. */
-    delete_assembly((code_addr_t)(iter-sc_main.sec_begin),
-                    (code_size_t)(next-iter));
+    delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
+                    (code_size_t)(next - iter));
     ASSERT(next_stacksz == stacksz-1);
     iter[0] = ASM_POP;
     SET_RESULTF(iter,"Remove unused store to %s %I16X",
                (opcode & 0xff) == ASM_POP_LOCAL ? "local" : "static",
                 pop_imma);
-    validate_stack_depth((code_addr_t)(iter-sc_main.sec_begin),stacksz);
-    validate_stack_depth((code_addr_t)((iter+1)-sc_main.sec_begin),stacksz-1);
-    validate_stack_depth((code_addr_t)(next-sc_main.sec_begin),next_stacksz);
+    validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin),stacksz);
+    validate_stack_depth((code_addr_t)((iter + 1) - sc_main.sec_begin),stacksz - 1);
+    validate_stack_depth((code_addr_t)(next - sc_main.sec_begin),next_stacksz);
     iter    = next;
     stacksz = next_stacksz;
     goto continue_at_iter;
@@ -2552,7 +2559,7 @@ delete_symbol_store:
      *     >> pop */
     instruction_t *scanner = sc_main.sec_begin;
     for (; scanner < end; scanner = asm_nextinstr(scanner)) {
-     if (asm_uses_static(scanner,pop_imma)&ASM_USING_READ)
+     if (asm_uses_static(scanner,pop_imma) & ASM_USING_READ)
          goto done_pop_optimization;
     }
     /* Yes, we can optimize away this use case. */
@@ -2562,7 +2569,7 @@ delete_symbol_store:
 done_pop_optimization:
    iter    = next;
    stacksz = next_stacksz;
-   validate_stack_depth((code_addr_t)(iter-sc_main.sec_begin),stacksz);
+   validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin),stacksz);
    goto continue_at_iter;
   } break;
 
@@ -2583,7 +2590,7 @@ done_pop_optimization:
   default: break;
   }
 /*next_opt:;*/
-  validate_stack_depth((code_addr_t)(iter-sc_main.sec_begin),stacksz);
+  validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin),stacksz);
  }
 #undef IS_PROTECTED
 #undef IS_PROTECTED_ADDR

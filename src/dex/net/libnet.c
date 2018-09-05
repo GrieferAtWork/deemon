@@ -259,7 +259,9 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
  /* Start up the the windows networking subsystem. */
  neterrno_t error; WSADATA wsaData;
  /* Use 1.1, for maximum backwards compatibility. */
+ DBG_ALIGNMENT_DISABLE();
  error = (neterrno_t)WSAStartup(MAKEWORD(1,1),&wsaData);
+ DBG_ALIGNMENT_ENABLE();
  if unlikely(error != 0) {
   DeeError_Throwf(&DeeError_NetError,"WSAStartup() : %lu",error);
   return -1;
@@ -267,10 +269,12 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 #else
  /* SIGPIPE is generated when a remote socket is closed. */
  void (*handler)(int);
+ DBG_ALIGNMENT_DISABLE();
  /* Try to ignore this signal. */
  handler = signal(SIGPIPE,SIG_IGN);
  /* Make sure we don't override a custom handler */
  if (handler != SIG_DFL) signal(SIGPIPE,handler);
+ DBG_ALIGNMENT_ENABLE();
 #endif
  return 0;
 }
@@ -278,7 +282,9 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 #ifdef CONFIG_HOST_WINDOWS
 PRIVATE void DCALL
 libnet_fini(DeeDexObject *__restrict UNUSED(self)) {
+ DBG_ALIGNMENT_DISABLE();
  WSACleanup();
+ DBG_ALIGNMENT_ENABLE();
 }
 #endif
 

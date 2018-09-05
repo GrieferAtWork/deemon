@@ -54,6 +54,7 @@ INTERN dtime_t DCALL time_now(void) {
 #ifdef CONFIG_HOST_WINDOWS
 #define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
  dtime_t result; uint64_t filetime; SYSTEMTIME systime;
+ DBG_ALIGNMENT_DISABLE();
  GetSystemTimePreciseAsFileTime((LPFILETIME)&filetime);
  /* System-time only has millisecond-precision, so we copy over that part. */
  result = (FILETIME_GET64(filetime)/(FILETIME_PER_SECONDS/MICROSECONDS_PER_SECOND)) %
@@ -61,6 +62,7 @@ INTERN dtime_t DCALL time_now(void) {
  FileTimeToSystemTime((LPFILETIME)&filetime,&systime);
  SystemTimeToTzSpecificLocalTime(NULL,&systime,&systime);
  SystemTimeToFileTime(&systime,(LPFILETIME)&filetime);
+ DBG_ALIGNMENT_ENABLE();
  /* Copy over millisecond information and everything above. */
  result += (FILETIME_GET64(filetime)/(FILETIME_PER_SECONDS/MICROSECONDS_PER_SECOND));
  /* Window's filetime started counting on 01.01.1601, but we've started on 01.01.0000 */
@@ -68,7 +70,10 @@ INTERN dtime_t DCALL time_now(void) {
 #else
  /* TODO: clock_gettime() */
  /* TODO: gettimeofday() */
- time_t now = time(NULL);
+ time_t now;
+ DBG_ALIGNMENT_DISABLE();
+ now = time(NULL);
+ DBG_ALIGNMENT_ENABLE();
  return ((dtime_t)now*MICROSECONDS_PER_SECOND +
           time_yer2day(1970)*MICROSECONDS_PER_DAY);
 #endif

@@ -22,6 +22,7 @@
 #include <__stdinc.h>
 #include "typecore.h"
 #include "host.h"
+#include "__debug-alignment.h"
 
 __DECL_BEGIN
 
@@ -55,7 +56,68 @@ __NOTHROW(__hybrid_unaligned_set_swap(__UINT8_TYPE__ *__restrict __ptr, __UINT8_
 #endif /* !__cplusplus */
 
 #if (defined(__i386__) || defined(__x86_64__)) && 1
-#ifdef __cplusplus
+#ifndef __NO_hybrid_dbg_alignment
+__LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT16_TYPE__
+__NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(16)(__UINT16_TYPE__ const *__restrict __ptr)) {
+ __UINT16_TYPE__ __res;
+ __hybrid_dbg_alignment_disable();
+ __res = *__ptr;
+ __hybrid_dbg_alignment_enable();
+ return __res;
+}
+__LOCAL __ATTR_PURE __NONNULL((1)) void
+__NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(16)(__UINT16_TYPE__ *__restrict __ptr, __UINT16_TYPE__ __val)) {
+ __hybrid_dbg_alignment_disable();
+ *__ptr = __val;
+ __hybrid_dbg_alignment_enable();
+}
+__LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT32_TYPE__
+__NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(32)(__UINT32_TYPE__ const *__restrict __ptr)) {
+ __UINT32_TYPE__ __res;
+ __hybrid_dbg_alignment_disable();
+ __res = *__ptr;
+ __hybrid_dbg_alignment_enable();
+ return __res;
+}
+__LOCAL __ATTR_PURE __NONNULL((1)) void
+__NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(32)(__UINT32_TYPE__ *__restrict __ptr, __UINT32_TYPE__ __val)) {
+ __hybrid_dbg_alignment_disable();
+ *__ptr = __val;
+ __hybrid_dbg_alignment_enable();
+}
+#ifdef __UINT64_TYPE__
+__LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT64_TYPE__
+__NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(64)(__UINT64_TYPE__ const *__restrict __ptr)) {
+ __UINT64_TYPE__ __res;
+ __hybrid_dbg_alignment_disable();
+ __res = *__ptr;
+ __hybrid_dbg_alignment_enable();
+ return __res;
+}
+__LOCAL __ATTR_PURE __NONNULL((1)) void
+__NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(64)(__UINT64_TYPE__ *__restrict __ptr, __UINT64_TYPE__ __val)) {
+ __hybrid_dbg_alignment_disable();
+ *__ptr = __val;
+ __hybrid_dbg_alignment_enable();
+}
+#ifdef __UINT128_TYPE__
+__LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT128_TYPE__
+__NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(128)(__UINT128_TYPE__ const *__restrict __ptr)) {
+ __UINT128_TYPE__ __res;
+ __hybrid_dbg_alignment_disable();
+ __res = *__ptr;
+ __hybrid_dbg_alignment_enable();
+ return __res;
+}
+__LOCAL __ATTR_PURE __NONNULL((1)) void
+__NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(128)(__UINT128_TYPE__ *__restrict __ptr, __UINT128_TYPE__ __val)) {
+ __hybrid_dbg_alignment_disable();
+ *__ptr = __val;
+ __hybrid_dbg_alignment_enable();
+}
+#endif /* __UINT128_TYPE__ */
+#endif /* __UINT64_TYPE__ */
+#elif defined(__cplusplus)
 __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT16_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(16)(__UINT16_TYPE__ const *__restrict __ptr)) {
  return *__ptr;

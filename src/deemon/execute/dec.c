@@ -828,7 +828,7 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
   pathlen = (size_t)((module_pathstr+module_pathlen)-dec_filestart);
   memcpy(dst,dec_filestart,pathlen*sizeof(char));
   dst += pathlen,*dst++ = '.';
-  *(uint32_t *)dst = ENCODE4('d','e','e',0);
+  UNALIGNED_SET32((uint32_t *)dst,ENCODE4('d','e','e',0));
  }
  other = DecTime_Lookup(filename);
  Dee_Decref(filename);
@@ -911,7 +911,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
  importc = UNALIGNED_GETLE16(&impmap->i_len);
  importv = (DREF DeeModuleObject **)Dee_Malloc(importc*sizeof(DREF DeeModuleObject *));
  if unlikely(!importv) goto err;
- modend = (moditer = importv)+importc;
+ modend = (moditer = importv) + importc;
  reader = impmap->i_map;
  for (; moditer != modend; ++moditer) {
   uint32_t off; DREF DeeStringObject *module_name;
@@ -1529,7 +1529,7 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
                          bool allow_dtype_null) {
  DREF DeeObject **result; uint16_t i,count; void *new_result;
  uint8_t *end = self->df_base+self->df_size;
- *pcount = count = *(*(uint16_t **)preader)++;
+ *pcount = count = UNALIGNED_GETLE16((*(uint16_t **)preader)++);
  result = (DREF DeeObject **)Dee_Malloc(count*sizeof(DREF DeeObject *));
  if unlikely(!result) return NULL;
  for (i = 0; i < count; ++i) {
@@ -2147,14 +2147,16 @@ done:
 #ifdef CONFIG_HOST_WINDOWS
 #define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
 PRIVATE uint64_t DCALL
-nt_getunixfilename(uint64_t filetime) {
+nt_getunixfiletime(uint64_t filetime) {
  uint64_t result; SYSTEMTIME systime;
  /* System-time only has millisecond-precision, so we copy over that part. */
  result = (FILETIME_GET64(filetime)/(FILETIME_PER_SECONDS/MICROSECONDS_PER_SECOND)) %
            MICROSECONDS_PER_MILLISECOND;
+ DBG_ALIGNMENT_DISABLE();
  FileTimeToSystemTime((LPFILETIME)&filetime,&systime);
  SystemTimeToTzSpecificLocalTime(NULL,&systime,&systime);
  SystemTimeToFileTime(&systime,(LPFILETIME)&filetime);
+ DBG_ALIGNMENT_ENABLE();
  /* Copy over millisecond information and everything above. */
  result += (FILETIME_GET64(filetime)/(FILETIME_PER_SECONDS/MICROSECONDS_PER_SECOND));
  /* Window's filetime started counting on 01.01.1601. */
@@ -2168,25 +2170,34 @@ os_mtime_for(DeeObject *__restrict filename) {
  WIN32_FILE_ATTRIBUTE_DATA attrib; LPWSTR wname;
  wname = (LPWSTR)DeeString_AsWide(filename);
  if unlikely(!wname) return (uint64_t)-1;
- if (!GetFileAttributesExW(wname,GetFileExInfoStandard,&attrib))
-      return 0;
- return nt_getunixfilename(*(uint64_t *)&attrib.ftLastWriteTime);
+ DBG_ALIGNMENT_DISABLE();
+ if (!GetFileAttributesExW(wname,GetFileExInfoStandard,&attrib)) {
+  DBG_ALIGNMENT_ENABLE();
+  return 0;
+ }
+ DBG_ALIGNMENT_ENABLE();
+ return nt_getunixfiletime((uint64_t)attrib.ftLastWriteTime.dwLowDateTime |
+                           (uint64_t)attrib.ftLastWriteTime.dwHighDateTime << 32);
 #else
  struct stat st;
- if (stat(DeeString_STR(filename),&st))
-     return 0;
+ DBG_ALIGNMENT_DISABLE();
+ if (stat(DeeString_STR(filename),&st)) {
+  DBG_ALIGNMENT_ENABLE();
+  return 0;
+ }
+ DBG_ALIGNMENT_ENABLE();
  return (uint64_t)st.st_mtime*MICROSECONDS_PER_SECOND;
 #endif
 }
 
 
 struct mtime_entry {
- DREF DeeStringObject *me_file; /* [0..1] Absolute, normalized filename.
-                                 *  NOTE: When NULL, then this entry is unused. */
+    DREF DeeStringObject *me_file; /* [0..1] Absolute, normalized filename.
+                                    *  NOTE: When NULL, then this entry is unused. */
 #ifdef CONFIG_HOST_WINDOWS
- dhash_t               me_casehash; /* Case-insensitive hash for `me_file' */
+    dhash_t               me_casehash; /* Case-insensitive hash for `me_file' */
 #endif
- uint64_t              me_mtim; /* Last-modified time of `me_file' */
+    uint64_t              me_mtim; /* Last-modified time of `me_file' */
 };
 #ifdef CONFIG_HOST_WINDOWS
 #define MTIME_ENTRY_HASH(x) ((x)->me_casehash)
@@ -2195,13 +2206,13 @@ struct mtime_entry {
 #endif
 
 struct mtime_cache {
- size_t              mc_size; /* [lock(mc_lock)] Amount of cache entires currently in use. */
- size_t              mc_mask; /* [lock(d_lock)] Allocated hash-vector size -1 / hash-mask. */
- struct mtime_entry *mc_list; /* [1..mc_mask+1][lock(mc_lock)]
-                               *  [owned_if(!= empty_mtime_items)]
-                               *   Filename -> last-modified mappings. */
+    size_t              mc_size; /* [lock(mc_lock)] Amount of cache entires currently in use. */
+    size_t              mc_mask; /* [lock(d_lock)] Allocated hash-vector size -1 / hash-mask. */
+    struct mtime_entry *mc_list; /* [1..mc_mask+1][lock(mc_lock)]
+                                  *  [owned_if(!= empty_mtime_items)]
+                                  *   Filename -> last-modified mappings. */
 #ifndef CONFIG_NO_THREADS
- rwlock_t            mc_lock; /* Lock for synchronizing access to the cache. */
+    rwlock_t            mc_lock; /* Lock for synchronizing access to the cache. */
 #endif
 };
 
@@ -2425,13 +2436,18 @@ DecTime_Lookup(DeeObject *__restrict filename) {
 INTERN uint64_t DCALL DecTime_Now(void) {
 #ifdef CONFIG_HOST_WINDOWS
  uint64_t filetime;
+ DBG_ALIGNMENT_DISABLE();
  GetSystemTimePreciseAsFileTime((LPFILETIME)&filetime);
- return nt_getunixfilename(filetime);
+ DBG_ALIGNMENT_ENABLE();
+ return nt_getunixfiletime(filetime);
 #else
  /* TODO: clock_gettime() */
  /* TODO: gettimeofday() */
- time_t now = time(NULL);
- return (uint64_t)now*MICROSECONDS_PER_SECOND;
+ time_t now;
+ DBG_ALIGNMENT_DISABLE();
+ now = time(NULL);
+ DBG_ALIGNMENT_ENABLE();
+ return (uint64_t)now * MICROSECONDS_PER_SECOND;
 #endif
 }
 

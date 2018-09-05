@@ -225,7 +225,7 @@ err_expected_string_for_attribute(DeeObject *__restrict but_instead_got) {
 }
 INTERN ATTR_COLD int DCALL
 err_integer_overflow(DeeObject *__restrict overflowing_object,
-                     unsigned int cutoff_bits, bool positive_overflow) {
+                     size_t cutoff_bits, bool positive_overflow) {
  ASSERT_OBJECT(overflowing_object);
  if (!cutoff_bits) {
   return DeeError_Throwf(&DeeError_IntegerOverflow,
@@ -234,19 +234,19 @@ err_integer_overflow(DeeObject *__restrict overflowing_object,
                          overflowing_object);
  }
  return DeeError_Throwf(&DeeError_IntegerOverflow,
-                        "%s integer overflow after %u bits in %k",
+                        "%s integer overflow after %Iu bits in %k",
                         positive_overflow ? "positive" : "negative",
                         cutoff_bits,overflowing_object);
 }
 INTERN ATTR_COLD int DCALL
-err_integer_overflow_i(unsigned int cutoff_bits, bool positive_overflow) {
+err_integer_overflow_i(size_t cutoff_bits, bool positive_overflow) {
  if (!cutoff_bits) {
   return DeeError_Throwf(&DeeError_IntegerOverflow,
                          "%s integer overflow",
                          positive_overflow ? "positive" : "negative");
  }
  return DeeError_Throwf(&DeeError_IntegerOverflow,
-                        "%s integer overflow after %u bits",
+                        "%s integer overflow after %Iu bits",
                         positive_overflow ? "positive" : "negative",
                         cutoff_bits);
 }
