@@ -62,15 +62,11 @@ __SYSDECL_END
 #endif /* !__hybrid_dbg_alignment_enable */
 
 
-#if !defined(__KOS_SYSTEM_HEADERS__) && \
-    !defined(__NO_hybrid_dbg_alignment) && \
+#if !defined(__NO_hybrid_dbg_alignment) && \
+    !defined(__KOS_SYSTEM_HEADERS__) && \
     (defined(__CRT_DOS) || defined(_MSC_VER))
 /* msvcrt's string functions aren't alignment-safe, so we override them here! */
 #include <string.h>
-#undef memcpy
-#undef memmove
-#undef memset
-#undef memcmp
 __SYSDECL_BEGIN
 __LOCAL void *
 (__LIBCCALL __impl_dbg_alignment_memcpy)(void *__restrict __dst, void const *__restrict __src, __SIZE_TYPE__ __num_bytes) {
@@ -107,6 +103,10 @@ __LOCAL int
  return __res;
 }
 __SYSDECL_END
+#undef memcpy
+#undef memmove
+#undef memset
+#undef memcmp
 #define memcpy   __impl_dbg_alignment_memcpy
 #define memmove  __impl_dbg_alignment_memmove
 #define memset   __impl_dbg_alignment_memset

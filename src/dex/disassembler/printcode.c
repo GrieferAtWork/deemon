@@ -257,35 +257,36 @@ err:
 #define CORNER_BOTTOM 0x6d
 #define LINE_HORI     0x71
 #define HAVE_PRINT_BOX 1
+
+PRIVATE unsigned char const corner_top[] = { 0xe2, 0x94, 0x8c };
+PRIVATE unsigned char const line_vert[] = { 0xe2, 0x94, 0x82 };
+PRIVATE unsigned char const corner_bottom[] = { 0xe2, 0x94, 0x94 };
+PRIVATE unsigned char const line_hori[] = { 0xe2, 0x94, 0x80 };
+
 PRIVATE dssize_t DCALL
 print_box(dformatprinter printer, void *arg,
           unsigned char *__restrict text, size_t length) {
  size_t i;
  dssize_t temp,result = 0;
  for (i = 0; i < length; ++i) {
-  unsigned char ch = text[i];
-  switch (ch) {
+  switch (text[i]) {
 
 
   case CORNER_TOP: {
-   PRIVATE unsigned char const utf8[] = { 0xe2, 0x94, 0x8c };
-   temp = (*printer)(arg,(char *)utf8,COMPILER_LENOF(utf8));
+   temp = (*printer)(arg,(char *)corner_top,COMPILER_LENOF(corner_top));
   } break;
   case LINE_VERT: {
-   PRIVATE unsigned char const utf8[] = { 0xe2, 0x94, 0x82 };
-   temp = (*printer)(arg,(char *)utf8,COMPILER_LENOF(utf8));
+   temp = (*printer)(arg,(char *)line_vert,COMPILER_LENOF(line_vert));
   } break;
   case CORNER_BOTTOM: {
-   PRIVATE unsigned char const utf8[] = { 0xe2, 0x94, 0x94 };
-   temp = (*printer)(arg,(char *)utf8,COMPILER_LENOF(utf8));
+   temp = (*printer)(arg,(char *)corner_bottom,COMPILER_LENOF(corner_bottom));
   } break;
   case LINE_HORI: {
-   PRIVATE unsigned char const utf8[] = { 0xe2, 0x94, 0x80 };
-   temp = (*printer)(arg,(char *)utf8,COMPILER_LENOF(utf8));
+   temp = (*printer)(arg,(char *)line_hori,COMPILER_LENOF(line_hori));
   } break;
 
   default:
-   temp = (*printer)(arg,(char *)&ch,1);
+   temp = (*printer)(arg,(char *)&text[i],1);
    break;
   }
   if unlikely(temp < 0) goto err;
@@ -733,6 +734,7 @@ prefix_except_prefix:
                                 inner_code,
                                 inner_prefix,
                                 flags);
+     DBG_ALIGNMENT_ENABLE();
      if likely(temp >= 0) {
       temp = Dee_FormatPrintf(printer,arg,"%s}\n",line_prefix ? line_prefix : "");
       if likely(temp >= 0)
@@ -750,6 +752,7 @@ prefix_except_prefix:
 done:
  if (code) ddi_state_fini(&ddi);
  Dee_Free(jumps.tj_vec);
+ DBG_ALIGNMENT_DISABLE();
  return result;
 err:
  result = temp;

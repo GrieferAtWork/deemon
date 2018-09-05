@@ -3,12 +3,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>input.dee</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>input.dee</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'">
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
