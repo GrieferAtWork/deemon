@@ -59,6 +59,10 @@
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
 
+#include <hybrid/unaligned.h>
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
+
 #include <string.h>
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
@@ -699,28 +703,28 @@ err_seek_failed:
  if unlikely(hdr->e_ident[DI_MAG1] != DECMAG1)  goto end_not_a_dec_data;
  if unlikely(hdr->e_ident[DI_MAG2] != DECMAG2)  goto end_not_a_dec_data;
  if unlikely(hdr->e_ident[DI_MAG3] != DECMAG3)  goto end_not_a_dec_data;
- if unlikely(hdr->e_version != DEE_LESWAP16_C(DVERSION_CUR)) goto end_not_a_dec_data;
+ if unlikely(hdr->e_version != LESWAP16_C(DVERSION_CUR)) goto end_not_a_dec_data;
  if unlikely(hdr->e_size < sizeof(Dec_Ehdr))    goto end_not_a_dec_data;
  if unlikely(hdr->e_builtinset > DBUILTINS_MAX) goto end_not_a_dec_data;
  /* Validate pointers from the header. */
- if unlikely(DEE_LESWAP32(hdr->e_impoff) > total_size)
+ if unlikely(LESWAP32(hdr->e_impoff) > total_size)
     goto end_not_a_dec_data;
- if unlikely(DEE_LESWAP32(hdr->e_depoff) > total_size)
+ if unlikely(LESWAP32(hdr->e_depoff) > total_size)
     goto end_not_a_dec_data;
- if unlikely(DEE_LESWAP32(hdr->e_globoff) > total_size)
+ if unlikely(LESWAP32(hdr->e_globoff) > total_size)
     goto end_not_a_dec_data;
- if unlikely(DEE_LESWAP32(hdr->e_rootoff) > total_size)
+ if unlikely(LESWAP32(hdr->e_rootoff) > total_size)
     goto end_not_a_dec_data;
- if unlikely(DEE_LESWAP32(hdr->e_stroff) < hdr->e_size)
+ if unlikely(LESWAP32(hdr->e_stroff) < hdr->e_size)
     goto end_not_a_dec_data; /* Missing string table. */
- if unlikely(DEE_LESWAP32(hdr->e_rootoff) < hdr->e_size)
+ if unlikely(LESWAP32(hdr->e_rootoff) < hdr->e_size)
     goto end_not_a_dec_data; /* Validate the root-code pointer. */
- if unlikely(DEE_LESWAP32(hdr->e_stroff)+
-             DEE_LESWAP32(hdr->e_strsiz) <
-             DEE_LESWAP32(hdr->e_stroff))
+ if unlikely(LESWAP32(hdr->e_stroff)+
+             LESWAP32(hdr->e_strsiz) <
+             LESWAP32(hdr->e_stroff))
     goto end_not_a_dec_data; /* Check for overflow */
- if unlikely(DEE_LESWAP32(hdr->e_stroff)+
-             DEE_LESWAP32(hdr->e_strsiz) >
+ if unlikely(LESWAP32(hdr->e_stroff)+
+             LESWAP32(hdr->e_strsiz) >
              total_size)
     goto end_not_a_dec_data;
 
@@ -759,9 +763,9 @@ DecFile_Strtab(DecFile *__restrict self) {
  DeeStringObject *result;
  if ((result = self->df_strtab) == NULL) {
   result = (DeeStringObject *)DeeString_NewSized((char const *)
-                                                 (self->df_base+
-                                     DEE_LESWAP32(self->df_ehdr->e_stroff)),
-                                     DEE_LESWAP32(self->df_ehdr->e_strsiz));
+                                                 (self->df_base +
+                                                  LESWAP32(self->df_ehdr->e_stroff)),
+                                                  LESWAP32(self->df_ehdr->e_strsiz));
   self->df_strtab = result; /* Inherit reference. */
  }
  return (DeeObject *)result;
@@ -829,15 +833,15 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
  other = DecTime_Lookup(filename);
  Dee_Decref(filename);
  if unlikely(other == (uint64_t)-1) goto err;
- timestamp = (((uint64_t)DEE_LESWAP32(hdr->e_timestamp_hi) << 32) |
-              ((uint64_t)DEE_LESWAP32(hdr->e_timestamp_lo)));
+ timestamp = (((uint64_t)LESWAP32(hdr->e_timestamp_hi) << 32) |
+              ((uint64_t)LESWAP32(hdr->e_timestamp_lo)));
  if (other > timestamp) goto changed; /* Base source file has changed. */
  /* Check additional dependencies. */
  if (hdr->e_depoff != 0) {
   Dec_Strmap *depmap; char *strtab,*filend;
   uint16_t count; uint8_t *reader;
-  depmap = (Dec_Strmap *)(self->df_base+DEE_LESWAP32(hdr->e_depoff));
-  if unlikely((count = DEE_LESWAP16(depmap->i_len)) == 0)
+  depmap = (Dec_Strmap *)(self->df_base+LESWAP32(hdr->e_depoff));
+  if unlikely((count = UNALIGNED_GETLE16(&depmap->i_len)) == 0)
      goto done; /* Unlikely, but allowed. */
   reader = depmap->i_map;
   while (module_pathlen &&
@@ -847,7 +851,7 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 #endif
          )
          --module_pathlen;
-  strtab = (char *)(self->df_base+DEE_LESWAP32(hdr->e_stroff));
+  strtab = (char *)(self->df_base+LESWAP32(hdr->e_stroff));
   filend = (char *)(self->df_base+self->df_size);
   while (count--) {
    size_t name_len;
@@ -889,11 +893,11 @@ DecFile_LoadImports(DecFile *__restrict self) {
  char *strtab,*module_pathstr; size_t module_pathlen;
  /* Quick check: Without an import table, nothing needs to be loaded. */
  if (!hdr->e_impoff) return 0;
- timestamp = (((uint64_t)DEE_LESWAP32(hdr->e_timestamp_hi) << 32) |
-              ((uint64_t)DEE_LESWAP32(hdr->e_timestamp_lo)));
+ timestamp = (((uint64_t)LESWAP32(hdr->e_timestamp_hi) << 32) |
+              ((uint64_t)LESWAP32(hdr->e_timestamp_lo)));
 
  /* Load the import table. */
- strtab = (char *)(self->df_base+DEE_LESWAP32(hdr->e_stroff));
+ strtab = (char *)(self->df_base+LESWAP32(hdr->e_stroff));
  module_pathstr = DeeString_STR(self->df_name);
  module_pathlen = DeeString_SIZE(self->df_name);
  while (module_pathlen &&
@@ -903,8 +907,8 @@ DecFile_LoadImports(DecFile *__restrict self) {
 #endif
         )
         --module_pathlen;
- impmap  = (Dec_Strmap *)(self->df_base+DEE_LESWAP32(hdr->e_impoff));
- importc = DEE_LESWAP16(impmap->i_len);
+ impmap  = (Dec_Strmap *)(self->df_base + LESWAP32(hdr->e_impoff));
+ importc = UNALIGNED_GETLE16(&impmap->i_len);
  importv = (DREF DeeModuleObject **)Dee_Malloc(importc*sizeof(DREF DeeModuleObject *));
  if unlikely(!importv) goto err;
  modend = (moditer = importv)+importc;
@@ -913,7 +917,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
   uint32_t off; DREF DeeStringObject *module_name;
   if unlikely(reader >= end) GOTO_CORRUPTED(stop_imports);
   off = Dec_DecodePointer(&reader);
-  if unlikely(off >= DEE_LESWAP32(hdr->e_strsiz)) GOTO_CORRUPTED(stop_imports);
+  if unlikely(off >= LESWAP32(hdr->e_strsiz)) GOTO_CORRUPTED(stop_imports);
   module_name = (DREF DeeStringObject *)DeeString_New(strtab+off);
   if unlikely(!module_name) goto err_imports;
   /* Load the imported module. */
@@ -964,12 +968,12 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
  if (!hdr->e_globoff) return 0;
 
  /* Load the global object table. */
- glbmap  = (Dec_Glbmap *)(self->df_base+DEE_LESWAP32(hdr->e_globoff));
- globalc = DEE_LESWAP16(glbmap->g_cnt);
- symbolc = DEE_LESWAP16(glbmap->g_len);
+ glbmap  = (Dec_Glbmap *)(self->df_base+LESWAP32(hdr->e_globoff));
+ globalc = UNALIGNED_GETLE16(&glbmap->g_cnt);
+ symbolc = UNALIGNED_GETLE16(&glbmap->g_len);
  if unlikely(globalc > symbolc) GOTO_CORRUPTED(stop);
  if unlikely(!symbolc) return 0; /* Unlikely, but allowed. */
- strtab = (char *)(self->df_base+DEE_LESWAP32(hdr->e_stroff));
+ strtab = (char *)(self->df_base + LESWAP32(hdr->e_stroff));
  reader = (uint8_t *)glbmap + 4;
 
  /* Figure out how large the hash-mask should be. */
@@ -990,16 +994,16 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
   dhash_t name_hash,hash_i,perturb;
   if unlikely(reader >= end)
      GOTO_CORRUPTED(stop_symbolv); /* Validate bounds. */
-  flags = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
+  flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
   if (flags&~MODSYM_FMASK)
       GOTO_CORRUPTED(stop_symbolv); /* Unknown flags are being used. */
   /* The first `globalc' descriptors lack the `s_addr' field. */
   addr2 = (uint16_t)-1;
   if (i < globalc) addr = i;
   else {
-   addr = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
+   addr = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
    if (flags & MODSYM_FEXTERN) {
-    addr2 = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
+    addr2 = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
     if (!(flags & MODSYM_FPROPERTY) && addr2 >= self->df_module->mo_importc)
           GOTO_CORRUPTED(stop_symbolv); /* Validate module index. */
    } else {
@@ -1132,7 +1136,7 @@ set_none_result:
    uint64_t data;
   } buffer;
  case DTYPE_IEEE754:
-  buffer.data = *(uint64_t *)reader,reader += 8;
+  buffer.data = UNALIGNED_GET64((uint64_t *)reader),reader += 8;
   /* XXX: Special decoding when `double' doesn't conform to ieee754 */
   result = DeeFloat_New(buffer.value);
  } break;
@@ -1153,7 +1157,7 @@ set_none_result:
   else {
    char *str; uint32_t ptr;
    ptr = Dec_DecodePointer(&reader);
-   str = (char *)(self->df_base+DEE_LESWAP32(self->df_ehdr->e_stroff)+ptr);
+   str = (char *)(self->df_base+LESWAP32(self->df_ehdr->e_stroff)+ptr);
    if unlikely(ptr+len < ptr) GOTO_CORRUPTED(done); /* Check for overflow. */
    if unlikely(str+len > (char *)(self->df_base+self->df_size)) GOTO_CORRUPTED(done); /* Validate bounds. */
    /* Create the new string. */
@@ -1261,12 +1265,12 @@ err_function_code:
   result = DeeMemberTable_NewSized(size,length);
   if unlikely(!result) goto done;
   end    = self->df_base+self->df_size;
-  strtab = (char *)(self->df_base+DEE_LESWAP32(self->df_ehdr->e_stroff));
+  strtab = (char *)(self->df_base+LESWAP32(self->df_ehdr->e_stroff));
   while (length--) {
    uint16_t flags; uint8_t addr; char *name;
    DREF DeeObject *name_ob; struct member_entry *member;
    if unlikely(reader >= end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
-   flags = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
+   flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
    addr  = *(uint8_t *)reader,reader += 1;
    if unlikely(flags&~CLASS_MEMBER_FMASK) GOTO_CORRUPTED(corrupt_r); /* Check for unknown flags. */
    name  = strtab+Dec_DecodePointer(&reader);
@@ -1288,7 +1292,7 @@ err_function_code:
   count  = Dec_DecodePointer(&reader);
   result = DeeKwds_NewWithHint(count);
   if unlikely(!result) goto done;
-  strtab = (char *)(self->df_base + DEE_LESWAP32(self->df_ehdr->e_stroff));
+  strtab = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
   end    = self->df_base + self->df_size;
   for (i = 0; i < count; ++i) {
    uint32_t addr; char *name; size_t name_len;
@@ -1427,13 +1431,13 @@ err_function_code:
    result = DeeMemberTable_NewSized(size,length);
    if unlikely(!result) goto done;
    end    = self->df_base+self->df_size;
-   strtab = (char *)(self->df_base+DEE_LESWAP32(self->df_ehdr->e_stroff));
+   strtab = (char *)(self->df_base+LESWAP32(self->df_ehdr->e_stroff));
    while (length--) {
     uint16_t flags,addr; char *name; uint32_t doclen;
     DREF DeeObject *name_ob; struct member_entry *member;
     if unlikely(reader >= end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
-    flags = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
-    addr  = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
+    flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+    addr  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
     if unlikely(flags&~CLASS_MEMBER_FMASK) GOTO_CORRUPTED(corrupt_r); /* Check for unknown flags. */
     name  = strtab+Dec_DecodePointer(&reader);
     if unlikely(name >= (char *)end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
@@ -1584,7 +1588,7 @@ load_strmap(DecFile *__restrict self,
  if unlikely(map_addr+2 >= self->df_size)
     GOTO_CORRUPTED(err_currupt); /* Map is out-of-bounds. */
  reader = self->df_base + map_addr;
- map_length = GET_UNALIGNED_16_LE(reader),reader += 2;
+ map_length = UNALIGNED_GETLE16(reader),reader += 2;
  if unlikely(!map_length) return 0; /* Empty map (same as undefined). */
  if unlikely(map_length > (self->df_size-(map_addr+2)))
     GOTO_CORRUPTED(err_currupt); /* Map items are out-of-bounds. */
@@ -1592,7 +1596,7 @@ load_strmap(DecFile *__restrict self,
  vector = (uintptr_t *)Dee_Malloc(map_length*sizeof(uintptr_t));
  if unlikely(!vector) return -1;
 
- string_size = DEE_LESWAP32(self->df_ehdr->e_strsiz);
+ string_size = LESWAP32(self->df_ehdr->e_strsiz);
  /* Read vector contents. */
  for (i = 0; i < map_length; ++i) {
   uint32_t pointer;
@@ -1631,23 +1635,23 @@ DecFile_LoadDDI(DecFile *__restrict self,
  uint32_t ddi_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
  /* Read generic DDI fields. */
  if (is_8bit_ddi) {
-  ddi_static  = GET_UNALIGNED_16_LE(reader),reader += 2;
-  ddi_refs    = GET_UNALIGNED_16_LE(reader),reader += 2;
-  ddi_args    = GET_UNALIGNED_16_LE(reader),reader += 2;
-  ddi_paths   = GET_UNALIGNED_16_LE(reader),reader += 2;
-  ddi_files   = GET_UNALIGNED_16_LE(reader),reader += 2;
-  ddi_symbols = GET_UNALIGNED_16_LE(reader),reader += 2;
-  ddi_ddiaddr = GET_UNALIGNED_16_LE(reader),reader += 2;
-  ddi_ddisize = GET_UNALIGNED_16_LE(reader),reader += 2;
+  ddi_static  = UNALIGNED_GETLE16(reader),reader += 2;
+  ddi_refs    = UNALIGNED_GETLE16(reader),reader += 2;
+  ddi_args    = UNALIGNED_GETLE16(reader),reader += 2;
+  ddi_paths   = UNALIGNED_GETLE16(reader),reader += 2;
+  ddi_files   = UNALIGNED_GETLE16(reader),reader += 2;
+  ddi_symbols = UNALIGNED_GETLE16(reader),reader += 2;
+  ddi_ddiaddr = UNALIGNED_GETLE16(reader),reader += 2;
+  ddi_ddisize = UNALIGNED_GETLE16(reader),reader += 2;
  } else {
-  ddi_static  = GET_UNALIGNED_32_LE(reader),reader += 4;
-  ddi_refs    = GET_UNALIGNED_32_LE(reader),reader += 4;
-  ddi_args    = GET_UNALIGNED_32_LE(reader),reader += 4;
-  ddi_paths   = GET_UNALIGNED_32_LE(reader),reader += 4;
-  ddi_files   = GET_UNALIGNED_32_LE(reader),reader += 4;
-  ddi_symbols = GET_UNALIGNED_32_LE(reader),reader += 4;
-  ddi_ddiaddr = GET_UNALIGNED_32_LE(reader),reader += 4;
-  ddi_ddisize = GET_UNALIGNED_32_LE(reader),reader += 4;
+  ddi_static  = UNALIGNED_GETLE32(reader),reader += 4;
+  ddi_refs    = UNALIGNED_GETLE32(reader),reader += 4;
+  ddi_args    = UNALIGNED_GETLE32(reader),reader += 4;
+  ddi_paths   = UNALIGNED_GETLE32(reader),reader += 4;
+  ddi_files   = UNALIGNED_GETLE32(reader),reader += 4;
+  ddi_symbols = UNALIGNED_GETLE32(reader),reader += 4;
+  ddi_ddiaddr = UNALIGNED_GETLE32(reader),reader += 4;
+  ddi_ddisize = UNALIGNED_GETLE32(reader),reader += 4;
  }
  ddi_text = self->df_base + ddi_ddiaddr;
  /* Make sure that DDI text is contained entirely within the DEC object file. */
@@ -1665,7 +1669,7 @@ DecFile_LoadDDI(DecFile *__restrict self,
  result->d_ddi_size = ddi_ddisize;
 
  /* Parse the initial DDI register state. */
- result->d_start.dr_flags = GET_UNALIGNED_16_LE(reader),reader += 2;
+ result->d_start.dr_flags = UNALIGNED_GETLE16(reader),reader += 2;
  if (result->d_start.dr_flags & ~DDI_REGS_FMASK)
      GOTO_CORRUPTED(err_currupted_r);
  result->d_start.dr_uip  = (code_addr_t)decode_uleb((uint8_t **)&reader);
@@ -1732,7 +1736,7 @@ DecFile_LoadCode(DecFile *__restrict self,
  uint8_t *reader = *preader,*end;
  result = (DREF DeeCodeObject *)ITER_DONE;
  end    = self->df_base+self->df_size;
- header.co_flags = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
+ header.co_flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
  /* Validate known flags. */
  if (header.co_flags&~(CODE_FMASK|DEC_CODE_F8BIT))
      GOTO_CORRUPTED(corrupt);
@@ -1744,28 +1748,28 @@ DecFile_LoadCode(DecFile *__restrict self,
   header.co_refc       = *(uint8_t *)reader,reader  += 1;
   header.co_argc_min   = *(uint8_t *)reader,reader  += 1;
   header.co_stackmax   = *(uint8_t *)reader,reader  += 1;
-  header.co_staticoff  = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
-  header.co_exceptoff  = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
-  header.co_defaultoff = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
-  header.co_ddioff     = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
-  header.co_textsiz    = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
-  header.co_textoff    = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
+  header.co_staticoff  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+  header.co_exceptoff  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+  header.co_defaultoff = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+  header.co_ddioff     = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+  header.co_textsiz    = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+  header.co_textoff    = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
  } else {
   if unlikely(reader+sizeof(Dec_Code)-2 >= end)
      GOTO_CORRUPTED(done); /* Validate bounds. */
   memcpy(&header.co_flags+1,reader,sizeof(Dec_Code)-2);
   reader += sizeof(Dec_Code)-2;
 #ifdef CONFIG_BIG_ENDIAN
-  header.co_localc     = DEE_LESWAP16(header.co_localc);
-  header.co_refc       = DEE_LESWAP16(header.co_refc);
-  header.co_argc_min   = DEE_LESWAP16(header.co_argc_min);
-  header.co_stackmax   = DEE_LESWAP16(header.co_stackmax);
-  header.co_staticoff  = DEE_LESWAP32(header.co_staticoff);
-  header.co_exceptoff  = DEE_LESWAP32(header.co_exceptoff);
-  header.co_defaultoff = DEE_LESWAP32(header.co_defaultoff);
-  header.co_ddioff     = DEE_LESWAP32(header.co_ddioff);
-  header.co_textsiz    = DEE_LESWAP32(header.co_textsiz);
-  header.co_textoff    = DEE_LESWAP32(header.co_textoff);
+  header.co_localc     = LESWAP16(header.co_localc);
+  header.co_refc       = LESWAP16(header.co_refc);
+  header.co_argc_min   = LESWAP16(header.co_argc_min);
+  header.co_stackmax   = LESWAP16(header.co_stackmax);
+  header.co_staticoff  = LESWAP32(header.co_staticoff);
+  header.co_exceptoff  = LESWAP32(header.co_exceptoff);
+  header.co_defaultoff = LESWAP32(header.co_defaultoff);
+  header.co_ddioff     = LESWAP32(header.co_ddioff);
+  header.co_textsiz    = LESWAP32(header.co_textsiz);
+  header.co_textoff    = LESWAP32(header.co_textoff);
 #endif
  }
 
@@ -1848,7 +1852,7 @@ DecFile_LoadCode(DecFile *__restrict self,
   if (is8bit) {
    count = *(uint8_t *)reader,reader += 1;
   } else {
-   count = DEE_LESWAP16(*(uint16_t *)reader),reader += 2;
+   count = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
   }
   /* Allocate the exception vector. */
   exceptv = (struct except_handler *)Dee_Malloc(count*sizeof(struct except_handler));
@@ -1863,17 +1867,17 @@ DecFile_LoadCode(DecFile *__restrict self,
    hand = exceptv+result->co_exceptc;
    if unlikely(reader >= end) /* Validate bounds */
       GOTO_CORRUPTED(corrupt_r_except);
-   hand->eh_flags = DEE_LESWAP16(*(uint16_t *)reader),reader += 2; /* Dec_8BitCodeExcept.ce_flags / Dec_CodeExcept.ce_flags */
+   hand->eh_flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_8BitCodeExcept.ce_flags / Dec_CodeExcept.ce_flags */
    if (is8bit) {
-    hand->eh_start = DEE_LESWAP16(*(uint16_t *)reader),reader += 2; /* Dec_8BitCodeExcept.ce_begin */
-    hand->eh_end   = DEE_LESWAP16(*(uint16_t *)reader),reader += 2; /* Dec_8BitCodeExcept.ce_end */
-    hand->eh_addr  = DEE_LESWAP16(*(uint16_t *)reader),reader += 2; /* Dec_8BitCodeExcept.ce_addr */
+    hand->eh_start = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_8BitCodeExcept.ce_begin */
+    hand->eh_end   = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_8BitCodeExcept.ce_end */
+    hand->eh_addr  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_8BitCodeExcept.ce_addr */
     hand->eh_stack = *(uint8_t  *)reader,reader += 1;               /* Dec_8BitCodeExcept.ce_stack */
    } else {
-    hand->eh_start = DEE_LESWAP32(*(uint32_t *)reader),reader += 4; /* Dec_CodeExcept.ce_begin */
-    hand->eh_end   = DEE_LESWAP32(*(uint32_t *)reader),reader += 4; /* Dec_CodeExcept.ce_end */
-    hand->eh_addr  = DEE_LESWAP32(*(uint32_t *)reader),reader += 4; /* Dec_CodeExcept.ce_addr */
-    hand->eh_stack = DEE_LESWAP16(*(uint16_t *)reader),reader += 2; /* Dec_CodeExcept.ce_stack */
+    hand->eh_start = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4; /* Dec_CodeExcept.ce_begin */
+    hand->eh_end   = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4; /* Dec_CodeExcept.ce_end */
+    hand->eh_addr  = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4; /* Dec_CodeExcept.ce_addr */
+    hand->eh_stack = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_CodeExcept.ce_stack */
    }
    /* Do some quick validation on the exception descriptor. */
    if (hand->eh_flags&~EXCEPTION_HANDLER_FMASK) GOTO_CORRUPTED(corrupt_r_except);

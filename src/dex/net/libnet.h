@@ -96,6 +96,8 @@
 #endif
 #include <stdint.h>
 
+#include <hybrid/byteswap.h>
+
 #ifdef CONFIG_HOST_WINDOWS
 #undef EWOULDBLOCK
 #undef EINPROGRESS
@@ -519,12 +521,12 @@ DECL_BEGIN
 #define INET_HOSTNAME_C(x) (((x)&0x00ff0000)>>16)
 #define INET_HOSTNAME_D(x) (((x)&0xff000000)>>24)
 #define LOCALHOST 0x0100007F // 127.0.0.1 (in network endian)
-#define HTON16    DEE_BSWAP16
-#define HTON16_C  DEE_BSWAP16_C
-#define HTON32    DEE_BSWAP32
-#define HTON32_C  DEE_BSWAP32_C
-#define HTON64    DEE_BSWAP64
-#define HTON64_C  DEE_BSWAP64_C
+#define HTON16    BSWAP16
+#define HTON16_C  BSWAP16_C
+#define HTON32    BSWAP32
+#define HTON32_C  BSWAP32_C
+#define HTON64    BSWAP64
+#define HTON64_C  BSWAP64_C
 #endif
 #define NTOH16    HTON16
 #define NTOH16_C  HTON16_C

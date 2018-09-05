@@ -45,6 +45,11 @@
 #include <deemon/module.h>
 #include <deemon/compiler/dec.h>
 
+#include <hybrid/byteswap.h>
+#include <hybrid/byteorder.h>
+#include <hybrid/unaligned.h>
+
+
 DECL_BEGIN
 
 #define SC_HEADER     (&current_dec.dw_sec_defl[DEC_SECTION_HEADER])
@@ -1185,17 +1190,17 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
   /* Allocate and copy descriptor data. */
   pdesc8 = (Dec_8BitCode *)dec_alloc(sizeof(Dec_8BitCode));
   if unlikely(!pdesc8) goto err;
-  pdesc8->co_flags      = DEE_LESWAP16(descr.co_flags);                /* Dec_Code.co_flags */
-  pdesc8->co_localc     = (uint8_t)descr.co_localc;                    /* Dec_Code.co_localc */
-  pdesc8->co_refc       = (uint8_t)descr.co_refc;                      /* Dec_Code.co_refc */
-  pdesc8->co_argc_min   = (uint8_t)descr.co_argc_min;                  /* Dec_Code.co_argc_min */
-  pdesc8->co_stackmax   = (uint8_t)descr.co_stackmax;                  /* Dec_Code.co_stackmax */
-  pdesc8->co_staticoff  = DEE_LESWAP16((uint16_t)descr.co_staticoff);  /* Dec_Code.co_staticoff */
-  pdesc8->co_exceptoff  = DEE_LESWAP16((uint16_t)descr.co_exceptoff);  /* Dec_Code.co_exceptoff */
-  pdesc8->co_defaultoff = DEE_LESWAP16((uint16_t)descr.co_defaultoff); /* Dec_Code.co_defaultoff */
-  pdesc8->co_ddioff     = DEE_LESWAP16((uint16_t)descr.co_ddioff);     /* Dec_Code.co_ddioff */
-  pdesc8->co_textsiz    = DEE_LESWAP16((uint16_t)descr.co_textsiz);    /* Dec_Code.co_textsiz */
-  pdesc8->co_textoff    = DEE_LESWAP16((uint16_t)descr.co_textoff);    /* Dec_Code.co_textoff */
+  UNALIGNED_SETLE16(&pdesc8->co_flags,descr.co_flags);                     /* Dec_Code.co_flags */
+  pdesc8->co_localc     = (uint8_t)descr.co_localc;                        /* Dec_Code.co_localc */
+  pdesc8->co_refc       = (uint8_t)descr.co_refc;                          /* Dec_Code.co_refc */
+  pdesc8->co_argc_min   = (uint8_t)descr.co_argc_min;                      /* Dec_Code.co_argc_min */
+  pdesc8->co_stackmax   = (uint8_t)descr.co_stackmax;                      /* Dec_Code.co_stackmax */
+  UNALIGNED_SETLE16(&pdesc8->co_staticoff, (uint16_t)descr.co_staticoff);  /* Dec_Code.co_staticoff */
+  UNALIGNED_SETLE16(&pdesc8->co_exceptoff, (uint16_t)descr.co_exceptoff);  /* Dec_Code.co_exceptoff */
+  UNALIGNED_SETLE16(&pdesc8->co_defaultoff,(uint16_t)descr.co_defaultoff); /* Dec_Code.co_defaultoff */
+  UNALIGNED_SETLE16(&pdesc8->co_ddioff,    (uint16_t)descr.co_ddioff);     /* Dec_Code.co_ddioff */
+  UNALIGNED_SETLE16(&pdesc8->co_textsiz,   (uint16_t)descr.co_textsiz);    /* Dec_Code.co_textsiz */
+  UNALIGNED_SETLE16(&pdesc8->co_textoff,   (uint16_t)descr.co_textoff);    /* Dec_Code.co_textoff */
 
   /* Create relocations. */
   if (static_sym &&
@@ -1211,17 +1216,17 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
   Dec_Code *pdesc; uint32_t code_addr = dec_addr;
 #ifndef CONFIG_LITTLE_ENDIAN
   /* Convert endian before writing data. */
-  descr.co_flags      = DEE_LESWAP16(descr.co_flags);      /* Dec_Code.co_flags */
-  descr.co_localc     = DEE_LESWAP16(descr.co_localc);     /* Dec_Code.co_localc */
-  descr.co_refc       = DEE_LESWAP16(descr.co_refc);       /* Dec_Code.co_refc */
-  descr.co_argc_min   = DEE_LESWAP16(descr.co_argc_min);   /* Dec_Code.co_argc_min */
-  descr.co_stackmax   = DEE_LESWAP16(descr.co_stackmax);   /* Dec_Code.co_stackmax */
-  descr.co_staticoff  = DEE_LESWAP32(descr.co_staticoff);  /* Dec_Code.co_staticoff */
-  descr.co_exceptoff  = DEE_LESWAP32(descr.co_exceptoff);  /* Dec_Code.co_exceptoff */
-  descr.co_defaultoff = DEE_LESWAP32(descr.co_defaultoff); /* Dec_Code.co_defaultoff */
-  descr.co_ddioff     = DEE_LESWAP32(descr.co_ddioff);     /* Dec_Code.co_ddioff */
-  descr.co_textsiz    = DEE_LESWAP32(descr.co_textsiz);    /* Dec_Code.co_textsiz */
-  descr.co_textoff    = DEE_LESWAP32(descr.co_textoff);    /* Dec_Code.co_textoff */
+  descr.co_flags      = LESWAP16(descr.co_flags);      /* Dec_Code.co_flags */
+  descr.co_localc     = LESWAP16(descr.co_localc);     /* Dec_Code.co_localc */
+  descr.co_refc       = LESWAP16(descr.co_refc);       /* Dec_Code.co_refc */
+  descr.co_argc_min   = LESWAP16(descr.co_argc_min);   /* Dec_Code.co_argc_min */
+  descr.co_stackmax   = LESWAP16(descr.co_stackmax);   /* Dec_Code.co_stackmax */
+  descr.co_staticoff  = LESWAP32(descr.co_staticoff);  /* Dec_Code.co_staticoff */
+  descr.co_exceptoff  = LESWAP32(descr.co_exceptoff);  /* Dec_Code.co_exceptoff */
+  descr.co_defaultoff = LESWAP32(descr.co_defaultoff); /* Dec_Code.co_defaultoff */
+  descr.co_ddioff     = LESWAP32(descr.co_ddioff);     /* Dec_Code.co_ddioff */
+  descr.co_textsiz    = LESWAP32(descr.co_textsiz);    /* Dec_Code.co_textsiz */
+  descr.co_textoff    = LESWAP32(descr.co_textoff);    /* Dec_Code.co_textoff */
 #endif
   /* Allocate and copy descriptor data. */
   pdesc = (Dec_Code *)dec_alloc(sizeof(Dec_Code));
@@ -1276,8 +1281,8 @@ INTERN int (DCALL dec_generate)(DeeModuleObject *__restrict self) {
   comtm = DeeModule_GetCTime((DeeObject *)self);
   if unlikely(comtm == (uint64_t)-1) goto err;
   /* Fill in the original timestamp of when the module was compiled. */
-  header->e_timestamp_lo = DEE_LESWAP32((uint32_t)comtm);
-  header->e_timestamp_hi = DEE_LESWAP32((uint32_t)(comtm >> 32));
+  header->e_timestamp_lo = LESWAP32((uint32_t)comtm);
+  header->e_timestamp_hi = LESWAP32((uint32_t)(comtm >> 32));
  }
 
  /* Create initial relocations against other sections. */

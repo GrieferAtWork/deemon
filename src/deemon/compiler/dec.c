@@ -33,6 +33,10 @@
 #include <deemon/compiler/dec.h>
 #include <deemon/compiler/compiler.h>
 
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
+#include <hybrid/unaligned.h>
+
 #include <string.h>
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -229,13 +233,13 @@ INTERN int (DCALL dec_putb)(uint8_t byte) {
 INTERN int (DCALL dec_putw)(uint16_t host_endian_word) {
  uint8_t *buf = dec_alloc(2);
  if unlikely(!buf) return -1;
- *(uint16_t *)buf = DEE_LESWAP16(host_endian_word);
+ UNALIGNED_SETLE16((uint16_t *)buf,host_endian_word);
  return 0;
 }
 INTERN int (DCALL dec_putl)(uint32_t host_endian_dword) {
  uint8_t *buf = dec_alloc(4);
  if unlikely(!buf) return -1;
- *(uint32_t *)buf = DEE_LESWAP32(host_endian_dword);
+ UNALIGNED_SETLE32((uint32_t *)buf,host_endian_dword);
  return 0;
 }
 
@@ -411,40 +415,31 @@ INTERN uint8_t (DCALL dec_link)(void) {
    switch (iter->dr_type) {
    case DECREL_ABS16_NULL:
     if (dec_section_empty(relsym->ds_sect)) {
-     *(uint16_t *)target = 0;
+     UNALIGNED_SET16((uint16_t *)target,0);
      break;
     }
     ATTR_FALLTHROUGH
    case DECREL_ABS16:
-    relval = DEE_LESWAP16(*(uint16_t *)target)+(relsym->ds_addr+
-                                                relsym->ds_sect->ds_base);
+    relval = UNALIGNED_GETLE16((uint16_t *)target) + (relsym->ds_addr +
+                                                      relsym->ds_sect->ds_base);
     if unlikely(relval > UINT16_MAX) goto rel_trunc;
-    *(uint16_t *)target = DEE_LESWAP16((uint16_t)relval);
+    UNALIGNED_SETLE16((uint16_t *)target,(uint16_t)relval);
     break;
    case DECREL_ABS32_NULL:
     if (dec_section_empty(relsym->ds_sect)) {
-     *(uint32_t *)target = 0;
+     UNALIGNED_SET32((uint32_t *)target,0);
      break;
     }
     ATTR_FALLTHROUGH
    case DECREL_ABS32:
-#ifdef CONFIG_LITTLE_ENDIAN
-    *(uint32_t *)target += (relsym->ds_addr+
-                            relsym->ds_sect->ds_base);
-#else
-    *(uint32_t *)target = DEE_LESWAP32(DEE_LESWAP32(*(uint32_t *)target)+
-                                      (relsym->ds_addr+relsym->ds_sect->ds_base));
-#endif
+    UNALIGNED_SETLE32((uint32_t *)target,
+                      UNALIGNED_GETLE32((uint32_t *)target) +
+                     (relsym->ds_addr + relsym->ds_sect->ds_base));
     break;
    case DECREL_SIZE32:
-#ifdef CONFIG_LITTLE_ENDIAN
-    *(uint32_t *)target += (uint32_t)(relsym->ds_sect->ds_iter-
-                                      relsym->ds_sect->ds_begin);
-#else
-    *(uint32_t *)target = DEE_LESWAP32(DEE_LESWAP32(*(uint32_t *)target)+
-                                      (uint32_t)(relsym->ds_sect->ds_iter-
-                                                 relsym->ds_sect->ds_begin));
-#endif
+    UNALIGNED_SETLE32((uint32_t *)target,
+                      UNALIGNED_GETLE32((uint32_t *)target) +
+                     (relsym->ds_sect->ds_iter - relsym->ds_sect->ds_begin));
     break;
  //case DECREL_NONE: /* Always skip empty relocations. */
    default: break;
@@ -466,7 +461,7 @@ INTERN void DCALL dec_setbases(void) {
   /* Set the section's base address. */
   sec->ds_base = base;
   /* Simply advance the base address by the size of the section. */
-  base += (uint32_t)(sec->ds_iter-sec->ds_begin);
+  base += (uint32_t)(sec->ds_iter - sec->ds_begin);
  }
 }
 
@@ -482,7 +477,7 @@ INTERN int (DCALL dec_write)(DeeObject *__restrict file_stream) {
  DEC_FOREACH_SECTION(sec) {
   dssize_t temp;
   temp = DeeFile_WriteAll(file_stream,sec->ds_begin,
-                         (size_t)(sec->ds_iter-sec->ds_begin));
+                         (size_t)(sec->ds_iter - sec->ds_begin));
   if unlikely(temp < 0) goto err;
  }
  return 0;

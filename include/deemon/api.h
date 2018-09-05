@@ -38,8 +38,11 @@
 
 
 #include <hybrid/compiler.h>
-#ifdef __CC__
 #include <hybrid/typecore.h>
+#include <hybrid/host.h>
+#include <hybrid/__byteorder.h>
+
+#ifdef __CC__
 #include <stddef.h>
 #include <stdarg.h>
 
@@ -48,42 +51,6 @@
 #include <crtdbg.h>
 #endif
 #endif /* __CC__ */
-
-#ifdef __KOS_SYSTEM_HEADERS__
-#include <hybrid/host.h>
-#else /* __KOS_SYSTEM_HEADERS__ */
-
-#if !defined(__x86_64__) && \
-    (defined(__amd64__) || defined(__amd64) || \
-     defined(__x86_64) || defined(_M_X64) || \
-     defined(_M_AMD64) || defined(_WIN64) || \
-     defined(WIN64))
-#define __x86_64__ 1
-#endif
-
-#if !defined(__i386__) && \
-    (defined(__i386) || defined(i386) || \
-     defined(__I86__) || defined(_M_IX86) || \
-     defined(__X86__) || defined(_X86_) || \
-     defined(__THW_INTEL__) || defined(__INTEL__))
-#define __i386__   1
-#endif
-
-#ifdef _M_IX86
-#if !defined(__i486__) && _M_IX86 >= 400
-#define __i486__ 1
-#endif
-#if !defined(__i586__) && _M_IX86 >= 500
-#define __i586__ 1
-#endif
-#endif
-
-#if !defined(__arm__) && \
-    (defined(_M_ARM) || defined(_M_ARMT) || defined(_M_ARM_NT))
-#define __arm__ 1
-#endif
-
-#endif /* !__KOS_SYSTEM_HEADERS__ */
 
 DECL_BEGIN
 
@@ -148,27 +115,6 @@ DECL_BEGIN
 #if defined(__unix__) || defined(__unix) || defined(unix)
 #define CONFIG_HOST_UNIX 1
 #endif
-#ifdef __BYTE_ORDER__
-#   define CONFIG_HOST_ENDIAN __BYTE_ORDER__
-#elif defined(__BYTEORDER__)
-#   define CONFIG_HOST_ENDIAN __BYTEORDER__
-#elif defined(__hppa__) || defined(__m68k__) || \
-      defined(mc68000) ||  defined(_M_M68K) || \
-     (defined(__MIPS__) && defined(__MISPEB__)) || \
-      defined(__ppc__) || defined(__powerpc__) || \
-      defined(_M_PPC) || defined(__ARMEB__) || \
-      defined(__sparc__)
-#   define CONFIG_HOST_ENDIAN 4321
-#else
-#   define CONFIG_HOST_ENDIAN 1234
-#endif
-#ifdef __FLOAT_WORD_ORDER__
-#   define CONFIG_HOST_FLOAT_ENDIAN __FLOAT_WORD_ORDER__
-#elif defined(__FLOAT_WORD_ORDER)
-#   define CONFIG_HOST_FLOAT_ENDIAN __FLOAT_WORD_ORDER
-#else
-#   define CONFIG_HOST_FLOAT_ENDIAN CONFIG_HOST_ENDIAN
-#endif
 
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -179,9 +125,10 @@ DECL_BEGIN
 #endif
 
 
-#if CONFIG_HOST_ENDIAN == 1234
+#define CONFIG_HOST_ENDIAN  __BYTE_ORDER__
+#if CONFIG_HOST_ENDIAN == __ORDER_LITTLE_ENDIAN__
 #   define CONFIG_LITTLE_ENDIAN 1
-#elif CONFIG_HOST_ENDIAN == 4321
+#elif CONFIG_HOST_ENDIAN == __ORDER_BIG_ENDIAN__
 #   define CONFIG_BIG_ENDIAN 1
 #endif
 
@@ -278,97 +225,6 @@ extern void (__debugbreak)(void);
 #pragma warning(disable: 4324)
 #endif
 
-#ifdef _MSC_VER
-extern unsigned short (_byteswap_ushort)(unsigned short x);
-extern unsigned long (_byteswap_ulong)(unsigned long x);
-extern unsigned __int64 (_byteswap_uint64)(unsigned __int64 x);
-#pragma intrinsic(_byteswap_ushort)
-#pragma intrinsic(_byteswap_ulong)
-#pragma intrinsic(_byteswap_uint64)
-#define DEE_BSWAP16(x)   _byteswap_ushort(x)
-#define DEE_BSWAP32(x)   _byteswap_ulong(x)
-#define DEE_BSWAP64(x)   _byteswap_uint64(x)
-#else
-#include <hybrid/typecore.h>
-#if defined(__GNUC__) || __has_builtin(__builtin_bswap16)
-#   define DEE_BSWAP16(x)  __builtin_bswap16(x)
-#else
-LOCAL __UINT16_TYPE__ dee_bswap16(__UINT16_TYPE__ x) { return ((x & 0xffu) << 8) | ((x >> 8) & 0xffu); }
-#   define DEE_BSWAP16(x)  dee_bswap16(x)
-#endif
-#if defined(__GNUC__) || __has_builtin(__builtin_bswap32)
-#   define DEE_BSWAP32(x)  __builtin_bswap32(x)
-#else
-LOCAL __UINT32_TYPE__ dee_bswap32(__UINT32_TYPE__ x) {
- return ((DEE_BSWAP16((__UINT16_TYPE__)(x)) << 16) |
-          DEE_BSWAP16((__UINT16_TYPE__)((x) >> 16)));
-}
-#   define DEE_BSWAP32(x)  dee_bswap32(x)
-#endif
-#if defined(__GNUC__) || __has_builtin(__builtin_bswap64)
-#   define DEE_BSWAP64(x)  __builtin_bswap64(x)
-#elif defined(__UINT64_TYPE__)
-LOCAL __UINT64_TYPE__ dee_bswap64(__UINT64_TYPE__ x) {
- return ((DEE_BSWAP32((__UINT16_TYPE__)(x)) << 16) |
-          DEE_BSWAP32((__UINT16_TYPE__)((x) >> 16)));
-}
-#   define DEE_BSWAP64(x)  dee_bswap64(x)
-#endif
-#endif
-#define DEE_BSWAP16_C(x)  ((((x)&0xffu) << 8)|(((x) >> 8)&0xffu))
-#define DEE_BSWAP32_C(x)  ((DEE_BSWAP16_C(x) << 16)|DEE_BSWAP16_C((x) >> 16))
-#ifdef DEE_BSWAP64
-#define DEE_BSWAP64_C(x)  ((DEE_BSWAP32_C(x) << 32)|DEE_BSWAP32_C((x) >> 32))
-#endif
-
-#ifdef CONFIG_LITTLE_ENDIAN
-/* Byte-swap host <---> little-endian. */
-#define DEE_LESWAP16(x)   (x)
-#define DEE_LESWAP32(x)   (x)
-#define DEE_LESWAP64(x)   (x)
-#define DEE_LESWAP16_C(x) (x)
-#define DEE_LESWAP32_C(x) (x)
-#define DEE_LESWAP64_C(x) (x)
-/* Byte-swap host <---> big-endian. */
-#define DEE_BESWAP16(x)   DEE_BSWAP16(x)
-#define DEE_BESWAP32(x)   DEE_BSWAP32(x)
-#define DEE_BESWAP64(x)   DEE_BSWAP64(x)
-#define DEE_BESWAP16_C(x) DEE_BSWAP16_C(x)
-#define DEE_BESWAP32_C(x) DEE_BSWAP32_C(x)
-#define DEE_BESWAP64_C(x) DEE_BSWAP64_C(x)
-#else
-/* Byte-swap host <---> little-endian. */
-#define DEE_LESWAP16(x)   DEE_BSWAP16(x)
-#define DEE_LESWAP32(x)   DEE_BSWAP32(x)
-#define DEE_LESWAP64(x)   DEE_BSWAP64(x)
-#define DEE_LESWAP16_C(x) DEE_BSWAP16_C(x)
-#define DEE_LESWAP32_C(x) DEE_BSWAP32_C(x)
-#define DEE_LESWAP64_C(x) DEE_BSWAP64_C(x)
-/* Byte-swap host <---> big-endian. */
-#define DEE_BESWAP16(x)   (x)
-#define DEE_BESWAP32(x)   (x)
-#define DEE_BESWAP64(x)   (x)
-#define DEE_BESWAP16_C(x) (x)
-#define DEE_BESWAP32_C(x) (x)
-#define DEE_BESWAP64_C(x) (x)
-#endif
-
-
-/* Assembly operands are encoded in little-endian.
- * Use these macros to convert immediate values to/from host endian. */
-#ifdef CONFIG_LITTLE_ENDIAN
-#   define CONFIG_ASM_BSWAP_NOOP 1
-#   define ASM_BSWAPIMM16(x)  (x)
-#   define ASM_BSWAPIMM32(x)  (x)
-#   define ASM_BSWAPSIMM16(x) (x)
-#   define ASM_BSWAPSIMM32(x) (x)
-#else
-#   define ASM_BSWAPIMM16(x)   DEE_BSWAP16(x)
-#   define ASM_BSWAPIMM32(x)   DEE_BSWAP32(x)
-#   define ASM_BSWAPSIMM16(x) ((__INT16_TYPE__)DEE_BSWAP16((__UINT16_TYPE__)(x)))
-#   define ASM_BSWAPSIMM32(x) ((__INT32_TYPE__)DEE_BSWAP32((__UINT32_TYPE__)(x)))
-#endif
-
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && 1
 #ifdef CONFIG_HOST_WINDOWS
 #define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
@@ -437,89 +293,6 @@ DFUNDEF void (DeeAssert_Failf)(char const *expr, char const *file, int line, cha
 #pragma warning(disable: 4201)
 #pragma warning(disable: 4310)
 #pragma warning(disable: 4152)
-#endif
-
-
-/* Access unaligned pointers:
- * >> void *unaligned_pointer;
- * >> uint32_t value;
- * >> unaligned_pointer = get_pointer_to_unaligned_int32();
- * >> value = GET_UNALIGNED_32(unaligned_pointer);
- * >> SET_UNALIGNED_32(unaligned_pointer,value+1);
- */
-#if defined(__i386__) || defined(__x86_64__)
-#define PTR_UNALIGNED_16(p) ((__UINT16_TYPE__ *)(p))
-#define PTR_UNALIGNED_32(p) ((__UINT32_TYPE__ *)(p))
-#elif defined(_MSC_VER)
-#define PTR_UNALIGNED_16(p) ((__UINT16_TYPE__ __unaligned *)(p))
-#define PTR_UNALIGNED_32(p) ((__UINT32_TYPE__ __unaligned *)(p))
-#elif defined(__ARMCC_VERSION)
-#define PTR_UNALIGNED_16(p) ((__packed __UINT16_TYPE__ *)(p))
-#define PTR_UNALIGNED_32(p) ((__packed __UINT32_TYPE__ *)(p))
-#elif !defined(__NO_ATTR_PACKED)
-struct __ATTR_PACKED unaligned_16_struct { __UINT16_TYPE__ val; };
-struct __ATTR_PACKED unaligned_32_struct { __UINT32_TYPE__ val; };
-#define PTR_UNALIGNED_16(p) (&((struct unaligned_16_struct *)(p))->val)
-#define PTR_UNALIGNED_32(p) (&((struct unaligned_32_struct *)(p))->val)
-#else
-#define GET_UNALIGNED_16_LE(p)  \
-    ((__UINT16_TYPE__)((__UINT8_TYPE__ *)(p))[0] | \
-     (__UINT16_TYPE__)((__UINT8_TYPE__ *)(p))[1] << 8)
-#define GET_UNALIGNED_32_LE(p)  \
-    ((__UINT32_TYPE__)((__UINT8_TYPE__ *)(p))[0] | \
-     (__UINT32_TYPE__)((__UINT8_TYPE__ *)(p))[1] << 8 | \
-     (__UINT32_TYPE__)((__UINT8_TYPE__ *)(p))[2] << 16 | \
-     (__UINT32_TYPE__)((__UINT8_TYPE__ *)(p))[3] << 24)
-#define SET_UNALIGNED_16_LE(p,val) \
-    (void)(((__UINT8_TYPE__ *)(p))[0] = (__UINT8_TYPE__)(val), \
-           ((__UINT8_TYPE__ *)(p))[1] = (__UINT8_TYPE__)((val) >> 8))
-#define SET_UNALIGNED_32_LE(p,val) \
-    (void)(((__UINT8_TYPE__ *)(p))[0] = (__UINT8_TYPE__)(val), \
-           ((__UINT8_TYPE__ *)(p))[1] = (__UINT8_TYPE__)((val) >> 8), \
-           ((__UINT8_TYPE__ *)(p))[2] = (__UINT8_TYPE__)((val) >> 16), \
-           ((__UINT8_TYPE__ *)(p))[3] = (__UINT8_TYPE__)((val) >> 24))
-#define GET_UNALIGNED_16_BE(p)  \
-    ((__UINT16_TYPE__)((__UINT8_TYPE__ *)(p))[0] << 8 | \
-     (__UINT16_TYPE__)((__UINT8_TYPE__ *)(p))[1])
-#define GET_UNALIGNED_U32_BE(p)  \
-    ((__UINT32_TYPE__)((__UINT8_TYPE__ *)(p))[0] << 24 | \
-     (__UINT32_TYPE__)((__UINT8_TYPE__ *)(p))[1] << 16 | \
-     (__UINT32_TYPE__)((__UINT8_TYPE__ *)(p))[2] << 8 | \
-     (__UINT32_TYPE__)((__UINT8_TYPE__ *)(p))[3])
-#define SET_UNALIGNED_16_BE(p,val) \
-    (void)(((__UINT8_TYPE__ *)(p))[0] = (__UINT8_TYPE__)((val) >> 8), \
-           ((__UINT8_TYPE__ *)(p))[1] = (__UINT8_TYPE__)(val))
-#define SET_UNALIGNED_32_BE(p,val) \
-    (void)(((__UINT8_TYPE__ *)(p))[0] = (__UINT8_TYPE__)((val) >> 24), \
-           ((__UINT8_TYPE__ *)(p))[1] = (__UINT8_TYPE__)((val) >> 16), \
-           ((__UINT8_TYPE__ *)(p))[2] = (__UINT8_TYPE__)((val) >> 8), \
-           ((__UINT8_TYPE__ *)(p))[3] = (__UINT8_TYPE__)(val))
-#ifdef CONFIG_LITTLE_ENDIAN
-#define GET_UNALIGNED_16(p)      GET_UNALIGNED_16_LE(p)
-#define GET_UNALIGNED_32(p)      GET_UNALIGNED_32_LE(p)
-#define SET_UNALIGNED_16(p,val)  SET_UNALIGNED_16_LE(p,val)
-#define SET_UNALIGNED_32(p,val)  SET_UNALIGNED_32_LE(p,val)
-#else
-#define GET_UNALIGNED_16(p)      GET_UNALIGNED_16_BE(p)
-#define GET_UNALIGNED_32(p)      GET_UNALIGNED_32_BE(p)
-#define SET_UNALIGNED_16(p,val)  SET_UNALIGNED_16_BE(p,val)
-#define SET_UNALIGNED_32(p,val)  SET_UNALIGNED_32_BE(p,val)
-#endif
-#endif
-
-#ifdef PTR_UNALIGNED_16
-#define GET_UNALIGNED_16(p)              (*PTR_UNALIGNED_16(p))
-#define GET_UNALIGNED_32(p)              (*PTR_UNALIGNED_32(p))
-#define SET_UNALIGNED_16(p,val)    (void)(*PTR_UNALIGNED_16(p)=(val))
-#define SET_UNALIGNED_32(p,val)    (void)(*PTR_UNALIGNED_32(p)=(val))
-#define GET_UNALIGNED_16_LE(p)             DEE_LESWAP16(GET_UNALIGNED_16(p))
-#define GET_UNALIGNED_32_LE(p)             DEE_LESWAP32(GET_UNALIGNED_32(p))
-#define SET_UNALIGNED_16_LE(p,val)         SET_UNALIGNED_16(p,DEE_LESWAP16(val))
-#define SET_UNALIGNED_32_LE(p,val)         SET_UNALIGNED_32(p,DEE_LESWAP32(val))
-#define GET_UNALIGNED_16_BE(p)             DEE_BESWAP16(GET_UNALIGNED_16(p))
-#define GET_UNALIGNED_32_BE(p)             DEE_BESWAP32(GET_UNALIGNED_32(p))
-#define SET_UNALIGNED_16_BE(p,val)         SET_UNALIGNED_16(p,DEE_BESWAP16(val))
-#define SET_UNALIGNED_32_BE(p,val)         SET_UNALIGNED_32(p,DEE_BESWAP32(val))
 #endif
 
 #endif /* __CC__ */

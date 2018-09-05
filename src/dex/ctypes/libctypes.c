@@ -38,6 +38,8 @@
 #include <deemon/int.h>
 #include <deemon/objmethod.h>
 #include <hybrid/typecore.h>
+#include <hybrid/byteswap.h>
+#include <hybrid/byteorder.h>
 
 DECL_BEGIN
 
@@ -207,21 +209,21 @@ f_ctypes_bswap16(size_t argc, DeeObject **__restrict argv) {
  uint16_t i;
  if (DeeArg_Unpack(argc,argv,"I16u:bswap16",&i))
      return NULL;
- return int_newu16(DEE_BSWAP16(i));
+ return int_newu16(BSWAP16(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_bswap32(size_t argc, DeeObject **__restrict argv) {
  uint32_t i;
  if (DeeArg_Unpack(argc,argv,"I32u:bswap32",&i))
      return NULL;
- return int_newu32(DEE_BSWAP32(i));
+ return int_newu32(BSWAP32(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_bswap64(size_t argc, DeeObject **__restrict argv) {
  uint64_t i;
  if (DeeArg_Unpack(argc,argv,"I64u:bswap64",&i))
      return NULL;
- return int_newu64(DEE_BSWAP64(i));
+ return int_newu64(BSWAP64(i));
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -229,21 +231,21 @@ f_ctypes_leswap16(size_t argc, DeeObject **__restrict argv) {
  uint16_t i;
  if (DeeArg_Unpack(argc,argv,"I16u:leswap16",&i))
      return NULL;
- return int_newu16(DEE_LESWAP16(i));
+ return int_newu16(LESWAP16(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_leswap32(size_t argc, DeeObject **__restrict argv) {
  uint32_t i;
  if (DeeArg_Unpack(argc,argv,"I32u:leswap32",&i))
      return NULL;
- return int_newu32(DEE_LESWAP32(i));
+ return int_newu32(LESWAP32(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_leswap64(size_t argc, DeeObject **__restrict argv) {
  uint64_t i;
  if (DeeArg_Unpack(argc,argv,"I64u:leswap64",&i))
      return NULL;
- return int_newu64(DEE_LESWAP64(i));
+ return int_newu64(LESWAP64(i));
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -251,21 +253,21 @@ f_ctypes_beswap16(size_t argc, DeeObject **__restrict argv) {
  uint16_t i;
  if (DeeArg_Unpack(argc,argv,"I16u:beswap16",&i))
      return NULL;
- return int_newu16(DEE_BESWAP16(i));
+ return int_newu16(BESWAP16(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_beswap32(size_t argc, DeeObject **__restrict argv) {
  uint32_t i;
  if (DeeArg_Unpack(argc,argv,"I32u:beswap32",&i))
      return NULL;
- return int_newu32(DEE_BESWAP32(i));
+ return int_newu32(BESWAP32(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_beswap64(size_t argc, DeeObject **__restrict argv) {
  uint64_t i;
  if (DeeArg_Unpack(argc,argv,"I64u:beswap64",&i))
      return NULL;
- return int_newu64(DEE_BESWAP64(i));
+ return int_newu64(BESWAP64(i));
 }
 
 PRIVATE DEFINE_CMETHOD(ctypes_sizeof,f_ctypes_sizeof);

@@ -33,6 +33,7 @@
 
 
 #include <hybrid/overflow.h>
+#include <hybrid/__unaligned.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>

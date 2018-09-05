@@ -38,6 +38,9 @@
 
 #include <string.h>
 
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
+
 #include "../../runtime/builtin.h"
 
 #ifdef __KOS_SYSTEM_HEADERS__
@@ -631,7 +634,7 @@ INTERN bool DCALL asm_rmdelop(void) {
     }
    } else if (*(iter + 0) == (ASM16_ADJSTACK & 0xff00) >> 8 &&
               *(iter + 1) == (ASM16_ADJSTACK & 0xff)) {
-    int16_t offset = ASM_BSWAPSIMM16(*(int16_t *)(iter + 2));
+    int16_t offset = (int16_t)LESWAP16(*(int16_t *)(iter + 2));
     switch (offset) {
     case -2: *(iter + 0) = ASM_POP;       *(iter + 1) = ASM_POP;       goto common_adj16_delop;
     case -1: *(iter + 0) = ASM_POP;       *(iter + 1) = ASM_DELOP;     goto common_adj16_delop;
@@ -841,7 +844,7 @@ INTERN bool DCALL asm_minjmp(void) {
   case R_DMN_DISP16:
    ASSERT(iter->ar_sym);
    ASSERT(ASM_SYM_DEFINED(iter->ar_sym));
-   target  = ASM_BSWAPSIMM16(*(int16_t *)(sc_main.sec_begin + iter->ar_addr));
+   target  = (int16_t)LESWAP16(*(int16_t *)(sc_main.sec_begin + iter->ar_addr));
    target += iter->ar_sym->as_addr;
    target -= iter->ar_addr;
    if (target >= INT8_MIN && target <= INT8_MAX) {
@@ -910,7 +913,7 @@ INTERN bool DCALL asm_minjmp(void) {
   case R_DMN_STCK16:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
    stack_offset = (iter->ar_sym->as_stck -
-                   ASM_BSWAPSIMM16(*(int16_t *)(sc_main.sec_begin + iter->ar_addr)));
+                   (int16_t)LESWAP16(*(int16_t *)(sc_main.sec_begin + iter->ar_addr)));
    if (stack_offset < INT8_MIN || stack_offset > INT8_MAX) break;
    /* Convert this into a `R_DMN_STCK8' relocation. */
    instr = (uint8_t *)(sc_main.sec_begin + iter->ar_addr - 1);
@@ -1056,11 +1059,11 @@ INTERN int DCALL asm_mergestatic(void) {
   uint16_t static_id;
   if ((iter->ar_type & ~R_DMN_FUSER) != R_DMN_STATIC16) continue;
   imm_addr  = (uint16_t *)(sc_main.sec_begin + iter->ar_addr);
-  static_id = (uint16_t)(ASM_BSWAPIMM16(*imm_addr) + static_offset);
+  static_id = (uint16_t)(LESWAP16(*imm_addr) + static_offset);
   /* Make sure that the addition did not overflow.
    * It shouldn't, because we've already checked if the total
    * number of constant variables could have overflowed. */
-  ASSERT((uint32_t)static_id == (uint32_t)ASM_BSWAPIMM16(*imm_addr) + (uint32_t)static_offset);
+  ASSERT((uint32_t)static_id == (uint32_t)LESWAP16(*imm_addr) + (uint32_t)static_offset);
   if (static_id <= UINT8_MAX && !(iter->ar_type & R_DMN_FUSER)) {
    instruction_t *static_instr;
    /* We can encode this instruction using its 8-bit variant.
@@ -1087,7 +1090,7 @@ INTERN int DCALL asm_mergestatic(void) {
    }
   } else {
    /* Simply override the operand. */
-   *imm_addr = ASM_BSWAPIMM16(static_id);
+   *imm_addr = LESWAP16(static_id);
   }
   /* Delete this relocation. */
   asm_reldel(iter);
@@ -1119,7 +1122,7 @@ INTERN int DCALL asm_linkstack(void) {
    break;
   case R_DMN_STCK16:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-   rel_value = iter->ar_sym->as_stck - ASM_BSWAPSIMM16(*(int16_t *)target);
+   rel_value = iter->ar_sym->as_stck - (int16_t)LESWAP16(*(int16_t *)target);
    if unlikely(rel_value < INT16_MIN ||
                rel_value > INT16_MAX)
       goto trunc;
@@ -1132,7 +1135,7 @@ INTERN int DCALL asm_linkstack(void) {
     target[-2] = ASM_DELOP;
     target[1]  = ASM_DELOP;
    } else {
-    *(int16_t *)target = ASM_BSWAPSIMM16((int16_t)rel_value);
+    *(int16_t *)target = (int16_t)LESWAP16((int16_t)rel_value);
    }
    break;
   case R_DMN_STCKAS8:
@@ -1144,7 +1147,7 @@ INTERN int DCALL asm_linkstack(void) {
    break;
   case R_DMN_STCKA16:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-   rel_value = ASM_BSWAPIMM16(*(uint16_t *)target) + iter->ar_sym->as_stck;
+   rel_value = LESWAP16(*(uint16_t *)target) + iter->ar_sym->as_stck;
    if unlikely((uint16_t)rel_value > UINT16_MAX)
       goto trunc;
    if (current_assembler.a_flag&ASM_FOPTIMIZE &&
@@ -1155,7 +1158,7 @@ INTERN int DCALL asm_linkstack(void) {
     target[-2] = ASM_DELOP;
     target[1]  = ASM_DELOP;
    } else {
-    *(uint16_t *)target = ASM_BSWAPIMM16((uint16_t)rel_value);
+    *(uint16_t *)target = LESWAP16((uint16_t)rel_value);
    }
    break;
 
@@ -1199,15 +1202,15 @@ INTERN int DCALL asm_linktext(void) {
   switch (iter->ar_type & ~(R_DMN_FUSER)) {
   case R_DMN_ABS16:
    rel_value += iter->ar_addr;
-   rel_value += ASM_BSWAPIMM16(*(uint16_t *)target);
+   rel_value += LESWAP16(*(uint16_t *)target);
    if unlikely((uint32_t)rel_value > UINT16_MAX)
       goto trunc;
-   *(uint16_t *)target = ASM_BSWAPIMM16((uint16_t)rel_value);
+   *(uint16_t *)target = LESWAP16((uint16_t)rel_value);
    break;
   case R_DMN_ABS32:
    rel_value += iter->ar_addr;
-   rel_value += ASM_BSWAPIMM32(*(uint32_t *)target);
-   *(uint32_t *)target = ASM_BSWAPIMM32((uint32_t)rel_value);
+   rel_value += LESWAP32(*(uint32_t *)target);
+   *(uint32_t *)target = LESWAP32((uint32_t)rel_value);
    break;
   case R_DMN_ABSS8:
    rel_value += iter->ar_addr;
@@ -1220,18 +1223,18 @@ INTERN int DCALL asm_linktext(void) {
    *(int8_t *)target = (int8_t)rel_value;
    break;
   case R_DMN_DISP16:
-   rel_value += ASM_BSWAPSIMM16(*(int16_t *)target);
+   rel_value += (int16_t)LESWAP16(*(int16_t *)target);
    if unlikely(rel_value < INT16_MIN ||
                rel_value > INT16_MAX)
       goto trunc;
-   *(int16_t *)target = ASM_BSWAPSIMM16((int16_t)rel_value);
+   *(int16_t *)target = (int16_t)LESWAP16((int16_t)rel_value);
    break;
   case R_DMN_DISP32:
-   rel_value += ASM_BSWAPSIMM32(*(int32_t *)target);
+   rel_value += (int32_t)LESWAP32(*(int32_t *)target);
    if unlikely(rel_value < INT32_MIN ||
                rel_value > INT32_MAX)
       goto trunc;
-   *(int32_t *)target = ASM_BSWAPSIMM32((int32_t)rel_value);
+   *(int32_t *)target = (int32_t)LESWAP32((int32_t)rel_value);
    break;
   case R_DMN_STCK8:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
@@ -1243,11 +1246,11 @@ INTERN int DCALL asm_linktext(void) {
    break;
   case R_DMN_STCK16:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-   rel_value = iter->ar_sym->as_stck - ASM_BSWAPSIMM16(*(int16_t *)target);
+   rel_value = iter->ar_sym->as_stck - (int16_t)LESWAP16(*(int16_t *)target);
    if unlikely(rel_value < INT16_MIN ||
                rel_value > INT16_MAX)
       goto trunc;
-   *(int16_t *)target = ASM_BSWAPSIMM16((int16_t)rel_value);
+   *(int16_t *)target = (int16_t)LESWAP16((int16_t)rel_value);
    break;
   case R_DMN_STCKAS8:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
@@ -1258,10 +1261,10 @@ INTERN int DCALL asm_linktext(void) {
    break;
   case R_DMN_STCKA16:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-   rel_value = ASM_BSWAPIMM16(*(uint16_t *)target) + iter->ar_sym->as_stck;
+   rel_value = LESWAP16(*(uint16_t *)target) + iter->ar_sym->as_stck;
    if unlikely((uint16_t)rel_value > UINT16_MAX)
       goto trunc;
-   *(uint16_t *)target = ASM_BSWAPIMM16((uint16_t)rel_value);
+   *(uint16_t *)target = LESWAP16((uint16_t)rel_value);
    break;
 
   {
@@ -1555,7 +1558,7 @@ INTERN int (DCALL asm_put_data16)(uint16_t data) {
  uint16_t *result;
  result = (uint16_t *)asm_alloc(sizeof(uint16_t));
  if unlikely(!result) goto err;
- *result = ASM_BSWAPIMM16(data);
+ *result = LESWAP16(data);
  return 0;
 err:
  return -1;
@@ -1565,7 +1568,7 @@ INTERN int (DCALL asm_put_data32)(uint32_t data) {
  uint32_t *result;
  result = (uint32_t *)asm_alloc(sizeof(uint32_t));
  if unlikely(!result) goto err;
- *result = ASM_BSWAPIMM32(data);
+ *result = LESWAP32(data);
  return 0;
 err:
  return -1;
@@ -1577,7 +1580,7 @@ INTERN int (DCALL asm_put_data64)(uint64_t data) {
 #ifdef CONFIG_LITTLE_ENDIAN
  *result = data;
 #else
- *result = DEE_BSWAP64(data);
+ *result = BSWAP64(data);
 #endif
  return 0;
 err:
@@ -1620,7 +1623,7 @@ INTERN int (DCALL asm_putimm8_16)(instruction_t instr, uint8_t imm8_1, uint16_t 
  if likely(result) {
   *            (result + 0) = instr;
   *(uint8_t  *)(result + 1) = imm8_1;
-  *(uint16_t *)(result + 2) = ASM_BSWAPIMM16(imm16_2);
+  *(uint16_t *)(result + 2) = LESWAP16(imm16_2);
   return 0;
  }
  return -1;
@@ -1629,7 +1632,7 @@ INTERN int (DCALL asm_putimm16)(instruction_t instr, uint16_t imm16) {
  instruction_t *result = asm_alloc(sizeof(instruction_t)+2);
  if likely(result) {
   *            (result + 0) = instr;
-  *(uint16_t *)(result + 1) = ASM_BSWAPIMM16(imm16);
+  *(uint16_t *)(result + 1) = LESWAP16(imm16);
   return 0;
  }
  return -1;
@@ -1638,7 +1641,7 @@ INTERN int (DCALL asm_putimm16_8)(instruction_t instr, uint16_t imm16_1, uint8_t
  instruction_t *result = asm_alloc(sizeof(instruction_t)+3);
  if likely(result) {
   *            (result + 0) = instr;
-  *(uint16_t *)(result + 1) = ASM_BSWAPIMM16(imm16_1);
+  *(uint16_t *)(result + 1) = LESWAP16(imm16_1);
   *(uint8_t  *)(result + 3) = imm8_2;
   return 0;
  }
@@ -1648,8 +1651,8 @@ INTERN int (DCALL asm_putimm16_16)(instruction_t instr, uint16_t imm16_1, uint16
  instruction_t *result = asm_alloc(sizeof(instruction_t)+4);
  if likely(result) {
   *            (result + 0) = instr;
-  *(uint16_t *)(result + 1) = ASM_BSWAPIMM16(imm16_1);
-  *(uint16_t *)(result + 3) = ASM_BSWAPIMM16(imm16_2);
+  *(uint16_t *)(result + 1) = LESWAP16(imm16_1);
+  *(uint16_t *)(result + 3) = LESWAP16(imm16_2);
   return 0;
  }
  return -1;
@@ -1658,9 +1661,9 @@ INTERN int (DCALL asm_putimm16_8_16)(instruction_t instr, uint16_t imm16_1, uint
  instruction_t *result = asm_alloc(sizeof(instruction_t)+5);
  if likely(result) {
   *            (result + 0) = instr;
-  *(uint16_t *)(result + 1) = ASM_BSWAPIMM16(imm16_1);
+  *(uint16_t *)(result + 1) = LESWAP16(imm16_1);
   *(uint8_t  *)(result + 3) = imm8_2;
-  *(uint16_t *)(result + 4) = ASM_BSWAPIMM16(imm16_3);
+  *(uint16_t *)(result + 4) = LESWAP16(imm16_3);
   return 0;
  }
  return -1;
@@ -1669,8 +1672,8 @@ INTERN int (DCALL asm_putimm16_16_8)(instruction_t instr, uint16_t imm16_1, uint
  instruction_t *result = asm_alloc(sizeof(instruction_t)+5);
  if likely(result) {
   *            (result + 0) = instr;
-  *(uint16_t *)(result + 1) = ASM_BSWAPIMM16(imm16_1);
-  *(uint16_t *)(result + 3) = ASM_BSWAPIMM16(imm16_2);
+  *(uint16_t *)(result + 1) = LESWAP16(imm16_1);
+  *(uint16_t *)(result + 3) = LESWAP16(imm16_2);
   *(uint8_t  *)(result + 5) = imm8_3;
   return 0;
  }
@@ -1680,7 +1683,7 @@ INTERN int (DCALL asm_putimm32)(instruction_t instr, uint32_t imm32) {
  instruction_t *result = asm_alloc(sizeof(instruction_t)+4);
  if likely(result) {
   *            (result + 0) = instr;
-  *(uint32_t *)(result + 1) = ASM_BSWAPIMM32(imm32);
+  *(uint32_t *)(result + 1) = LESWAP32(imm32);
   return 0;
  }
  return -1;
@@ -1692,7 +1695,7 @@ INTERN int (DCALL asm_putsid16)(uint16_t instr, uint16_t sid) {
   if unlikely(!rel) return -1;
   *(uint8_t  *)(result + 0) = (uint8_t)((instr & 0xff00) >> 8);
   *(uint8_t  *)(result + 1) = (uint8_t)(instr & 0xff);
-  *(uint16_t *)(result + 2) = ASM_BSWAPIMM16(sid);
+  *(uint16_t *)(result + 2) = LESWAP16(sid);
   rel->ar_addr = asm_ip() - 2;
   rel->ar_type = R_DMN_STATIC16;
   return 0;
@@ -1905,7 +1908,7 @@ asm_do_gjmp(instruction_t instr,
    if unlikely((data = asm_alloc(6)) == NULL) goto err;
    *           (data + 0) = (instruction_t)((ASM32_JMP & 0xff00) >> 8);
    *           (data + 1) = instr;
-   *(int32_t *)(data + 2) = ASM_BSWAPSIMM32(-4); /* -4 to adjust for the ip offset of the immediate value itself. */
+   *(int32_t *)(data + 2) = (int32_t)LESWAP32(-4); /* -4 to adjust for the ip offset of the immediate value itself. */
   } else if (instr == ASM_FOREACH) {
    /* foreach top, <Simm32>:
     * >>     foreach top, 1f  (8-bit)
@@ -1920,7 +1923,7 @@ asm_do_gjmp(instruction_t instr,
    *(int8_t  *)(data + 3) = 6; /* `sizeof(ASM32_JMP) == 6' */
    *           (data + 4) = (instruction_t)((ASM32_JMP & 0xff00) >> 8);
    *           (data + 5) = (instruction_t)((ASM32_JMP & 0xff));
-   *(int32_t *)(data + 6) = ASM_BSWAPSIMM32(-4); /* -4 to adjust for the ip offset of the immediate value itself. */
+   *(int32_t *)(data + 6) = (int32_t)LESWAP32(-4); /* -4 to adjust for the ip offset of the immediate value itself. */
   } else {
    /* >>    jnX   1f     // 2
     * >>    jmp32 target // 6
@@ -1931,7 +1934,7 @@ asm_do_gjmp(instruction_t instr,
    *(int8_t  *)(data + 1) = 6; /* sizeof(jmp32) */
    *           (data + 2) = (instruction_t)((ASM32_JMP & 0xff00) >> 8);
    *           (data + 3) = (instruction_t)((ASM32_JMP & 0xff));
-   *(int32_t *)(data + 4) = ASM_BSWAPSIMM32(-4); /* -4 to adjust for the ip offset of the immediate value itself. */
+   *(int32_t *)(data + 4) = (int32_t)LESWAP32(-4); /* -4 to adjust for the ip offset of the immediate value itself. */
   }
   rel->ar_type = R_DMN_DISP32;
   rel->ar_addr = asm_ip()-4;
@@ -1941,7 +1944,7 @@ asm_do_gjmp(instruction_t instr,
   * If possible, these will be optimized to 8-bit ones later. */
  if unlikely((data = asm_alloc(3)) == NULL) goto err;
  *(data + 0) = (instruction_t)(instr|1); /* |1 to indicate a 16-bit immediate value. */
- *(int16_t *)(data + 1) = ASM_BSWAPSIMM16(-2); /* -2 to adjust for the ip offset of the immediate value itself. */
+ *(int16_t *)(data + 1) = (int16_t)LESWAP16(-2); /* -2 to adjust for the ip offset of the immediate value itself. */
  /* Setup the relocation. */
  rel->ar_type = R_DMN_DISP16;
  rel->ar_addr = asm_ip()-2;
@@ -1988,7 +1991,7 @@ asm_do_gjcc(struct ast *__restrict cond,
   *(int8_t  *)(data + 1) = 6; /* sizeof(jmp32) */
   *           (data + 2) = (instruction_t)((ASM32_JMP & 0xff00) >> 8);
   *           (data + 3) = (instruction_t)((ASM32_JMP & 0xff));
-  *(int32_t *)(data + 4) = ASM_BSWAPSIMM32(-4); /* -4 to adjust for the ip offset of the immediate value itself. */
+  *(int32_t *)(data + 4) = (int32_t)LESWAP32(-4); /* -4 to adjust for the ip offset of the immediate value itself. */
   rel->ar_type = R_DMN_DISP32;
   rel->ar_addr = asm_ip()-4;
   goto done;
@@ -1997,7 +2000,7 @@ asm_do_gjcc(struct ast *__restrict cond,
   * If possible, these will be optimized to 8-bit ones later. */
  if unlikely((data = asm_alloc(3)) == NULL) goto err;
  *(data + 0) = (instruction_t)(instr|1); /* |1 to indicate a 16-bit immediate value. */
- *(int16_t *)(data + 1) = ASM_BSWAPSIMM16(-2); /* -2 to adjust for the ip offset of the immediate value itself. */
+ *(int16_t *)(data + 1) = (int16_t)LESWAP16(-2); /* -2 to adjust for the ip offset of the immediate value itself. */
  /* Setup the relocation. */
  rel->ar_type = R_DMN_DISP16;
  rel->ar_addr = asm_ip()-2;
@@ -2018,7 +2021,7 @@ asm_gsetstack_s(struct asm_sym *__restrict target) {
  if unlikely((data = asm_alloc(4)) == NULL) return -1;
  *            (data + 0) = (ASM16_ADJSTACK & 0xff00) >> 8;
  *            (data + 1) = (ASM16_ADJSTACK & 0xff);
- *(uint16_t *)(data + 2) = ASM_BSWAPIMM16(current_assembler.a_stackcur);
+ *(uint16_t *)(data + 2) = LESWAP16(current_assembler.a_stackcur);
  rel->ar_addr = asm_ip()-2;
  rel->ar_type = R_DMN_STCK16;
  return 0;

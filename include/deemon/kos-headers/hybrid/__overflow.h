@@ -86,9 +86,10 @@ __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(128,128)
 #define __hybrid_overflow_smul(x,y,res) __builtin_expect(__builtin_mul_overflow(x,y,res),0)
 #endif
 #else
-#define __IMPL_HYBRID_OVERFLOW_INVOKE(name,Tpfx,opn,resn,x,y,res) \
-        name##opn##_##resn((Tpfx##opn##_TYPE__)(x),(Tpfx##opn##_TYPE__)(y),(Tpfx##resn##_TYPE__ *)(res))
 
+#ifndef __cplusplus
+#define __IMPL_HYBRID_OVERFLOW_INVOKE(name,Tpfx,opn,resn,x,y,res) \
+        __IMPL_HYBRID_OVERFLOW_NAME(name,opn,resn)((Tpfx##opn##_TYPE__)(x),(Tpfx##opn##_TYPE__)(y),(Tpfx##resn##_TYPE__ *)(res))
 #ifdef __NO_builtin_choose_expr
 #ifndef __INT64_TYPE__
 #define __IMPL_HYBRID_OVERFLOW_SELECT_8(name,Tpfx,x,y,res) \
@@ -214,40 +215,44 @@ __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(128,128)
                                            __IMPL_HYBRID_OVERFLOW_SELECT_128(name,Tpfx,x,y,res)))))
 #endif
 #endif
-
-
+#define __IMPL_HYBRID_OVERFLOW_NAME(name,opn,resn)  name##opn##_##resn
+#else /* !__cplusplus */
+#define __IMPL_HYBRID_OVERFLOW_SELECT(name,Tpfx,x,y,res) name(x,y,res)
+#define __IMPL_HYBRID_OVERFLOW_NAME(name,opn,resn)  name
+extern "C++" {
+#endif /* __cplusplus */
 
 #define __IMPL_HYBRID_DEFINE_PROMOTION_MATH(opn,n,opn_x2) \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_uadd##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_uadd,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
  __UINT##opn_x2##_TYPE__ __true_res = (__UINT##opn_x2##_TYPE__)((__UINT##opn_x2##_TYPE__)__x + (__UINT##opn_x2##_TYPE__)__y); \
  __UINT##n##_TYPE__ __false_res = *__res = (__UINT##n##_TYPE__)__true_res; \
  return (__UINT##opn_x2##_TYPE__)__false_res != __true_res; \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_sadd##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_sadd,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  __INT##opn_x2##_TYPE__ __true_res = (__INT##opn_x2##_TYPE__)((__INT##opn_x2##_TYPE__)__x + (__INT##opn_x2##_TYPE__)__y); \
  __INT##n##_TYPE__ __false_res = *__res = (__INT##n##_TYPE__)__true_res; \
  return (__INT##opn_x2##_TYPE__)__false_res != __true_res; \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_usub##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_usub,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
  *__res = (__UINT##n##_TYPE__)(__x - __y); \
  return !(__x >= __y); \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_ssub##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_ssub,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  __INT##opn_x2##_TYPE__ __true_res = (__INT##opn_x2##_TYPE__)((__INT##opn_x2##_TYPE__)__x - (__INT##opn_x2##_TYPE__)__y); \
  __INT##n##_TYPE__ __false_res = *__res = (__INT##n##_TYPE__)__true_res; \
  return (__INT##opn_x2##_TYPE__)__false_res != __true_res; \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_umul##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_umul,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
  __UINT##opn_x2##_TYPE__ __true_res = (__UINT##opn_x2##_TYPE__)((__UINT##opn_x2##_TYPE__)__x * (__UINT##opn_x2##_TYPE__)__y); \
  __UINT##n##_TYPE__ __false_res = *__res = (__UINT##n##_TYPE__)__true_res; \
  return (__UINT##opn_x2##_TYPE__)__false_res != __true_res; \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_smul##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_smul,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  __INT##opn_x2##_TYPE__ __true_res = (__INT##opn_x2##_TYPE__)((__INT##opn_x2##_TYPE__)__x * (__INT##opn_x2##_TYPE__)__y); \
  __INT##n##_TYPE__ __false_res = *__res = (__INT##n##_TYPE__)__true_res; \
@@ -256,34 +261,34 @@ __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_over
 /**/
 
 #define __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(opn,n) \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_uadd##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_uadd,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
  *__res = (__UINT##n##_TYPE__)(__x + __y); \
  return __x > (__UINT##opn##_MAX__ - __y); \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_sadd##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_sadd,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  *__res = (__INT##n##_TYPE__)(__x + __y); \
  return (__y > 0 && __x > (__INT##opn##_MAX__ - __y)) || \
         (__y < 0 && __x < (__INT##opn##_MIN__ - __y)); \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_usub##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_usub,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
  *__res = (__UINT##n##_TYPE__)(__x - __y); \
  return !(__x >= __y); \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_ssub##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_ssub,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  *__res = (__INT##n##_TYPE__)(__x + __y); \
  return (__y > 0 && __x < (__INT##opn##_MIN__ + __y)) || \
         (__y < 0 && __x > (__INT##opn##_MAX__ + __y)); \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_umul##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_umul,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
  *__res = (__UINT##n##_TYPE__)(__x * __y); \
  return __x && __y && (__x > (__UINT##opn##_MAX__ / __y)); \
 } \
-__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__impl_hybrid_overflow_smul##opn##_##n \
+__LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_smul,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  __BOOL __did_overflow = 0;  \
  *__res = (__INT##n##_TYPE__)(__x * __y); \
@@ -354,6 +359,11 @@ __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(128,128)
 #endif
 #undef __IMPL_HYBRID_DEFINE_OVERFLOW_MATH
 #undef __IMPL_HYBRID_DEFINE_PROMOTION_MATH
+
+#undef __IMPL_HYBRID_OVERFLOW_NAME
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 
 /* @return: true:  Overflow occurred (unlikely; `*res' is undefined)

@@ -47,6 +47,9 @@
 #include <deemon/util/cache.h>
 
 #include <hybrid/atomic.h>
+#include <hybrid/unaligned.h>
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
 #include <hybrid/sched/yield.h>
 
 #include "../objects/seq/svec.h"
@@ -240,36 +243,36 @@ do_get_local:
   switch (*ip++) {
 
   case ASM16_STACK & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)ip);
+   imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
    goto do_get_stack;
   case ASM16_STATIC & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)ip);
+   imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
    goto do_get_static;
   case ASM16_EXTERN & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 0));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
 #ifdef EXEC_SAFE
    if unlikely(imm_val >= code->co_module->mo_importc) {
 err_invalid_extern16:
     frame->cf_sp = sp;
-    err_srt_invalid_extern(frame,ASM_BSWAPIMM16(*(uint16_t *)(ip + 0)),imm_val);
+    err_srt_invalid_extern(frame,UNALIGNED_GETLE16((uint16_t *)(ip + 0)),imm_val);
     return NULL;
    }
    module = code->co_module->mo_importv[imm_val];
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    if unlikely(imm_val >= module->mo_globalc)
       goto err_invalid_extern16;
 #else
    ASSERT(imm_val < code->co_module->mo_importc);
    module = code->co_module->mo_importv[imm_val];
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    ASSERT(imm_val < module->mo_globalc);
 #endif
    goto do_get_module_object;
   case ASM16_GLOBAL & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 0));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
    goto do_get_global;
   case ASM16_LOCAL & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 0));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
    goto do_get_local;
 
   default:
@@ -432,36 +435,36 @@ do_get_local:
   switch (*ip++) {
 
   case ASM16_STACK & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)ip);
+   imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
    goto do_get_stack;
   case ASM16_STATIC & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)ip);
+   imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
    goto do_get_static;
   case ASM16_EXTERN & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 0));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
 #ifdef EXEC_SAFE
    if unlikely(imm_val >= code->co_module->mo_importc) {
 err_invalid_extern16:
     frame->cf_sp = sp;
-    err_srt_invalid_extern(frame,ASM_BSWAPIMM16(*(uint16_t *)(ip + 0)),imm_val);
+    err_srt_invalid_extern(frame,UNALIGNED_GETLE16((uint16_t *)(ip + 0)),imm_val);
     return NULL;
    }
    module = code->co_module->mo_importv[imm_val];
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    if unlikely(imm_val >= module->mo_globalc)
       goto err_invalid_extern16;
 #else
    ASSERT(imm_val < code->co_module->mo_importc);
    module = code->co_module->mo_importv[imm_val];
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    ASSERT(imm_val < module->mo_globalc);
 #endif
    goto do_get_module_object;
   case ASM16_GLOBAL & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 0));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
    goto do_get_global;
   case ASM16_LOCAL & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 0));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
    goto do_get_local;
 
   default:
@@ -621,37 +624,37 @@ do_set_local:
   switch (*ip++) {
 
   case ASM16_STACK & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)ip);
+   imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
    goto do_set_stack;
   case ASM16_STATIC & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)ip);
+   imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
    goto do_set_static;
   case ASM16_EXTERN & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 0));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
 #ifdef EXEC_SAFE
    if unlikely(imm_val >= code->co_module->mo_importc) {
 err_invalid_extern16:
     frame->cf_sp = sp;
-    err_srt_invalid_extern(frame,ASM_BSWAPIMM16(*(uint16_t *)(ip + 0)),imm_val);
+    err_srt_invalid_extern(frame,UNALIGNED_GETLE16((uint16_t *)(ip + 0)),imm_val);
     Dee_Decref(value);
     return -1;
    }
    module = code->co_module->mo_importv[imm_val];
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    if unlikely(imm_val >= module->mo_globalc)
       goto err_invalid_extern16;
 #else
    ASSERT(imm_val < code->co_module->mo_importc);
    module = code->co_module->mo_importv[imm_val];
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    ASSERT(imm_val < module->mo_globalc);
 #endif
    goto do_set_module_object;
   case ASM16_GLOBAL & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 0));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
    goto do_set_global;
   case ASM16_LOCAL & 0xff:
-   imm_val = ASM_BSWAPIMM16(*(uint16_t *)(ip + 0));
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
    goto do_set_local;
 
 #ifdef EXEC_SAFE
@@ -696,59 +699,21 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 #include "code-exec-targets.c.inl"
 #endif
 #endif
- register union
-#ifndef __NO_ATTR_PACKED
-     __ATTR_PACKED
-#endif
- {
+ register union {
      instruction_t *ptr;
      uint8_t  *u8;
      int8_t   *s8;
-#define READ_imm8()   (*ip.u8++)
-#define READ_Simm8()  (*ip.s8++)
-#if defined(__i386__) || defined(__x86_64__)
      uint16_t *u16;
      uint32_t *u32;
      int16_t  *s16;
      int32_t  *s32;
-#define READ_imm16()  ASM_BSWAPIMM16(*ip.u16++)
-#define READ_Simm16() ASM_BSWAPSIMM16(*ip.s16++)
-#define READ_imm32()  ASM_BSWAPIMM32(*ip.u32++)
-#define READ_Simm32() ASM_BSWAPSIMM32(*ip.s32++)
-#elif defined(_MSC_VER)
-     uint16_t __unaligned *u16;
-     uint32_t __unaligned *u32;
-     int16_t  __unaligned *s16;
-     int32_t  __unaligned *s32;
-#define READ_imm16()  ASM_BSWAPIMM16(*ip.u16++)
-#define READ_Simm16() ASM_BSWAPSIMM16(*ip.s16++)
-#define READ_imm32()  ASM_BSWAPIMM32(*ip.u32++)
-#define READ_Simm32() ASM_BSWAPSIMM32(*ip.s32++)
-#elif defined(__ARMCC_VERSION)
-     __packed uint16_t *u16;
-     __packed uint32_t *u32;
-     __packed int16_t  *s16;
-     __packed int32_t  *s32;
-#define READ_imm16()  ASM_BSWAPIMM16(*ip.u16++)
-#define READ_Simm16() ASM_BSWAPSIMM16(*ip.s16++)
-#define READ_imm32()  ASM_BSWAPIMM32(*ip.u32++)
-#define READ_Simm32() ASM_BSWAPSIMM32(*ip.s32++)
-#elif !defined(__NO_ATTR_PACKED)
-     struct __ATTR_PACKED { __UINT16_TYPE__ val; } u16;
-     struct __ATTR_PACKED { __UINT32_TYPE__ val; } u32;
-     struct __ATTR_PACKED { __INT16_TYPE__  val; } s16;
-     struct __ATTR_PACKED { __INT32_TYPE__  val; } s32;
-#define READ_imm16()  ASM_BSWAPIMM16((ip.u16++)->val)
-#define READ_Simm16() ASM_BSWAPSIMM16((ip.s16++)->val)
-#define READ_imm32()  ASM_BSWAPIMM32((ip.u32++)->val)
-#define READ_Simm32() ASM_BSWAPSIMM32((ip.s32++)->val)
-#else
-#define READ_imm16()  (ip.ptr+=2,GET_UNALIGNED_16_LE(ip.ptr-2))
-#define READ_Simm16() (ip.ptr+=2,(__INT16_TYPE__)GET_UNALIGNED_16_LE(ip.ptr-2))
-#define READ_imm32()  (ip.ptr+=4,GET_UNALIGNED_32_LE(ip.ptr-4))
-#define READ_Simm32() (ip.ptr+=4,(__INT32_TYPE__)GET_UNALIGNED_32_LE(ip.ptr-4))
-#endif
  } ip;
+#define READ_imm8()   (*ip.u8++)
+#define READ_Simm8()  (*ip.s8++)
+#define READ_imm16()            UNALIGNED_GETLE16(ip.u16++)
+#define READ_Simm16() ((int16_t)UNALIGNED_GETLE16(ip.u16++))
+#define READ_imm32()            UNALIGNED_GETLE32(ip.u32++)
+#define READ_Simm32() ((int32_t)UNALIGNED_GETLE32(ip.u32++))
  register DeeObject    **sp;
  register DeeCodeObject *code;
  register uint16_t imm_val;

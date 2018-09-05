@@ -33,6 +33,7 @@
 #include <deemon/stringutils.h>
 
 #include <hybrid/overflow.h>
+#include <hybrid/byteswap.h>
 
 DECL_BEGIN
 
@@ -1701,7 +1702,7 @@ DeeString_NewUtf16AltEndian(uint16_t const *__restrict str,
  buffer = DeeString_NewBuffer16(length);
  if unlikely(!buffer) return NULL;
  for (i = 0; i < length; ++i)
-     buffer[i] = DEE_BSWAP16(str[i]);
+     buffer[i] = BSWAP16(str[i]);
  return DeeString_PackUtf16Buffer(buffer,error_mode);
 }
 PUBLIC DREF DeeObject *DCALL
@@ -1712,7 +1713,7 @@ DeeString_NewUtf32AltEndian(uint32_t const *__restrict str,
  buffer = DeeString_NewBuffer32(length);
  if unlikely(!buffer) return NULL;
  for (i = 0; i < length; ++i)
-     buffer[i] = DEE_BSWAP32(str[i]);
+     buffer[i] = BSWAP32(str[i]);
  return DeeString_PackUtf32Buffer(buffer,error_mode);
 }
 

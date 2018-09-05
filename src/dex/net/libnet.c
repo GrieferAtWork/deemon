@@ -28,6 +28,7 @@
 #include <deemon/arg.h>
 #include <deemon/int.h>
 #include <deemon/objmethod.h>
+#include <hybrid/byteswap.h>
 
 DECL_BEGIN
 
@@ -112,7 +113,7 @@ lib_ntoh16_f(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"I16u:ntoh16",&i))
      return NULL;
 #ifdef CONFIG_LITTLE_ENDIAN
- return DeeInt_NewU16(DEE_BSWAP16(i));
+ return DeeInt_NewU16(BSWAP16(i));
 #else
  return DeeInt_NewU16(i);
 #endif
@@ -123,7 +124,7 @@ lib_ntoh32_f(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"I32u:ntoh32",&i))
      return NULL;
 #ifdef CONFIG_LITTLE_ENDIAN
- return DeeInt_NewU32(DEE_BSWAP32(i));
+ return DeeInt_NewU32(BSWAP32(i));
 #else
  return DeeInt_NewU32(i);
 #endif
@@ -134,7 +135,7 @@ lib_ntoh64_f(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"I64u:ntoh64",&i))
      return NULL;
 #ifdef CONFIG_LITTLE_ENDIAN
- return DeeInt_NewU64(DEE_BSWAP64(i));
+ return DeeInt_NewU64(BSWAP64(i));
 #else
  return DeeInt_NewU64(i);
 #endif
@@ -146,7 +147,7 @@ lib_hton16_f(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"I16u:hton16",&i))
      return NULL;
 #ifdef CONFIG_LITTLE_ENDIAN
- return DeeInt_NewU16(DEE_BSWAP16(i));
+ return DeeInt_NewU16(BSWAP16(i));
 #else
  return DeeInt_NewU16(i);
 #endif
@@ -157,7 +158,7 @@ lib_hton32_f(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"I32u:hton32",&i))
      return NULL;
 #ifdef CONFIG_LITTLE_ENDIAN
- return DeeInt_NewU32(DEE_BSWAP32(i));
+ return DeeInt_NewU32(BSWAP32(i));
 #else
  return DeeInt_NewU32(i);
 #endif
@@ -168,7 +169,7 @@ lib_hton64_f(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"I64u:hton64",&i))
      return NULL;
 #ifdef CONFIG_LITTLE_ENDIAN
- return DeeInt_NewU64(DEE_BSWAP64(i));
+ return DeeInt_NewU64(BSWAP64(i));
 #else
  return DeeInt_NewU64(i);
 #endif

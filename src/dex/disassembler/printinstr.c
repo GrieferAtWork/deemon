@@ -32,6 +32,11 @@
 #include "libdisasm.h"
 
 #include <hybrid/minmax.h>
+
+#include <hybrid/unaligned.h>
+#include <hybrid/byteswap.h>
+#include <hybrid/byteorder.h>
+
 #include <string.h>
 
 DECL_BEGIN
@@ -990,6 +995,23 @@ PRIVATE char const class_flag_names[4][10] = {
 };
 
 
+typedef union {
+     instruction_t *ptr;
+     uint8_t       *u8;
+     int8_t        *s8;
+     uint16_t      *u16;
+     uint32_t      *u32;
+     int16_t       *s16;
+     int32_t       *s32;
+#define READ_imm8(ip)   (*ip.u8++)
+#define READ_Simm8(ip)  (*ip.s8++)
+#define READ_imm16(ip)            UNALIGNED_GETLE16(ip.u16++)
+#define READ_Simm16(ip) ((int16_t)UNALIGNED_GETLE16(ip.u16++))
+#define READ_imm32(ip)            UNALIGNED_GETLE32(ip.u32++)
+#define READ_Simm32(ip) ((int32_t)UNALIGNED_GETLE32(ip.u32++))
+} ip_t;
+
+
 INTERN dssize_t DCALL
 libdisasm_printinstr(dformatprinter printer, void *arg,
                      instruction_t *__restrict instr_start, uint16_t stacksz,
@@ -999,22 +1021,15 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
 #define print(p,s)                INVOKE((*printer)(arg,p,s))
 #define PRINT(s)                  print(s,COMPILER_STRLEN(s))
 #define printf(...)               INVOKE(Dee_FormatPrintf(printer,arg,__VA_ARGS__))
-
-#define READ_IMM(T) (*(*(T **)&iter)++)
-#define READ_imm8()                   READ_IMM(uint8_t)
-#define READ_imm16()   ASM_BSWAPIMM16(READ_IMM(uint16_t))
-#define READ_imm32()   ASM_BSWAPIMM32(READ_IMM(uint32_t))
-#define READ_Simm8()                  READ_IMM(int8_t)
-#define READ_Simm16() ASM_BSWAPSIMM16(READ_IMM(int16_t))
-#define READ_Simm32() ASM_BSWAPSIMM32(READ_IMM(int32_t))
- instruction_t *iter = instr_start;
+ ip_t iter;
  dssize_t temp,result = 0;
  uint16_t opcode,imm,imm2;
  char const *mnemonic;
  int32_t jump_offset;
- opcode = *iter++;
+ iter.ptr = instr_start;
+ opcode = *iter.ptr++;
  if (opcode == ASM_EXTENDED1)
-     opcode = (ASM_EXTENDED1 << 8) | *iter++;
+     opcode = (ASM_EXTENDED1 << 8) | *iter.ptr++;
  if (opcode <= UINT8_MAX) {
   mnemonic = mnemonic_names[opcode];
  } else {
@@ -1029,23 +1044,23 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
   case ASM_STATIC:
   case ASM_GLOBAL:
   case ASM_LOCAL:
-   iter += 1;
+   iter.ptr += 1;
    break;
   case ASM_EXTERN:
   case ASM16_STACK:
   case ASM16_STATIC:
   case ASM16_GLOBAL:
   case ASM16_LOCAL:
-   iter += 2;
+   iter.ptr += 2;
    break;
   case ASM16_EXTERN:
-   iter += 4;
+   iter.ptr += 4;
    break;
   default: break;
   }
-  opcode = *iter++;
+  opcode = *iter.ptr++;
   if (opcode == ASM_EXTENDED1)
-      opcode = (ASM_EXTENDED1 << 8) | *iter++;
+      opcode = (ASM_EXTENDED1 << 8) | *iter.ptr++;
   if (opcode <= UINT8_MAX) {
    mnemonic = mnemonic_names[opcode];
   } else {
@@ -1083,12 +1098,12 @@ do_mnemonic_prefix:
   case ASM_JF16:
   case ASM_JT16:
   case ASM_FOREACH16:
-   jump_offset = READ_Simm16();
+   jump_offset = READ_Simm16(iter);
    goto prefix_do_jmp_target;
   case ASM_JF:
   case ASM_JT:
   case ASM_FOREACH:
-   jump_offset = READ_Simm8();
+   jump_offset = READ_Simm8(iter);
 prefix_do_jmp_target:
    switch (opcode & 0xff) {
    case ASM_JT:
@@ -1110,10 +1125,10 @@ prefix_do_jmp_target:
    goto do_jmp_target;
 
   case ASM16_POP_N:
-   imm = READ_imm16()+2;
+   imm = READ_imm16(iter)+2;
    goto do_pop_as_mov;
   case ASM_POP_N:
-   imm = READ_imm8()+2;
+   imm = READ_imm8(iter)+2;
 do_pop_as_mov:
    PRINT("mov    ");
    INVOKE(libdisasm_printrelstack(printer,arg,stacksz,imm,ddi,code,flags));
@@ -1123,10 +1138,10 @@ do_print_prefix:
 
 
   case ASM16_DUP_N:
-   imm = READ_imm16()+2;
+   imm = READ_imm16(iter)+2;
    goto do_dup_as_mov;
   case ASM_DUP_N:
-   imm = READ_imm8()+2;
+   imm = READ_imm8(iter)+2;
 do_dup_as_mov:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
@@ -1142,20 +1157,20 @@ do_dup_as_mov:
 
   case ASM16_LROT:
   case ASM16_RROT:
-   imm = READ_imm16()+2;
+   imm = READ_imm16(iter)+2;
    goto do_lr_rot;
   case ASM_LROT:
   case ASM_RROT:
-   imm = READ_imm8()+2;
+   imm = READ_imm8(iter)+2;
 do_lr_rot:
    printf("%crot   #%u, ",(opcode & 0xff) == ASM_LROT ? 'l' : 'r',imm);
    goto do_print_prefix;
 
   case ASM16_POP_STATIC:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_pop_static;
   case ASM_POP_STATIC:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_pop_static:
    PRINT("mov    ");
    INVOKE(libdisasm_printstatic(printer,arg,imm,false,code,flags));
@@ -1164,42 +1179,42 @@ do_print_comma_then_prefix:
    goto do_print_prefix;
 
   case ASM16_POP_EXTERN:
-   imm  = READ_imm16();
-   imm2 = READ_imm16();
+   imm  = READ_imm16(iter);
+   imm2 = READ_imm16(iter);
    goto do_prefix_pop_extern;
   case ASM_POP_EXTERN:
-   imm  = READ_imm8();
-   imm2 = READ_imm8();
+   imm  = READ_imm8(iter);
+   imm2 = READ_imm8(iter);
 do_prefix_pop_extern:
    PRINT("mov    ");
    INVOKE(libdisasm_printextern(printer,arg,imm,imm2,code,flags));
    goto do_print_comma_then_prefix;
 
   case ASM16_POP_GLOBAL:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_pop_global;
   case ASM_POP_GLOBAL:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_pop_global:
    PRINT("mov    ");
    INVOKE(libdisasm_printglobal(printer,arg,imm,code,flags));
    goto do_print_comma_then_prefix;
 
   case ASM16_POP_LOCAL:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_pop_local;
   case ASM_POP_LOCAL:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_pop_local:
    PRINT("mov    ");
    INVOKE(libdisasm_printlocal(printer,arg,imm,ddi,code,flags));
    goto do_print_comma_then_prefix;
 
   case ASM16_PUSH_MODULE:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_push_module;
   case ASM_PUSH_MODULE:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_push_module:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
@@ -1208,10 +1223,10 @@ do_prefix_push_module:
    goto done;
 
   case ASM16_PUSH_REF:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_push_ref;
   case ASM_PUSH_REF:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_push_ref:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
@@ -1220,10 +1235,10 @@ do_prefix_push_ref:
    goto done;
 
   case ASM16_PUSH_ARG:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_push_arg;
   case ASM_PUSH_ARG:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_push_arg:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
@@ -1232,10 +1247,10 @@ do_prefix_push_arg:
    goto done;
 
   case ASM16_PUSH_CONST:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_push_const;
   case ASM_PUSH_CONST:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_push_const:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
@@ -1244,10 +1259,10 @@ do_prefix_push_const:
    goto done;
 
   case ASM16_PUSH_STATIC:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_push_static;
   case ASM_PUSH_STATIC:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_push_static:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
@@ -1256,12 +1271,12 @@ do_prefix_push_static:
    goto done;
 
   case ASM16_PUSH_EXTERN:
-   imm  = READ_imm16();
-   imm2 = READ_imm16();
+   imm  = READ_imm16(iter);
+   imm2 = READ_imm16(iter);
    goto do_prefix_push_extern;
   case ASM_PUSH_EXTERN:
-   imm  = READ_imm8();
-   imm2 = READ_imm8();
+   imm  = READ_imm8(iter);
+   imm2 = READ_imm8(iter);
 do_prefix_push_extern:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
@@ -1270,10 +1285,10 @@ do_prefix_push_extern:
    goto done;
 
   case ASM16_PUSH_GLOBAL:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_push_global;
   case ASM_PUSH_GLOBAL:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_push_global:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
@@ -1282,10 +1297,10 @@ do_prefix_push_global:
    goto done;
 
   case ASM16_PUSH_LOCAL:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_push_local;
   case ASM_PUSH_LOCAL:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_push_local:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
@@ -1294,10 +1309,10 @@ do_prefix_push_local:
    goto done;
 
   case ASM16_UNPACK:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_prefix_unpack;
   case ASM_UNPACK:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_prefix_unpack:
    PRINT("unpack ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,true,ddi,code,flags));;
@@ -1359,7 +1374,7 @@ do_prefix_mnemonic_pop:
 do_prefix_mnemonic_simm8:
    print(mnemonic,strlen(mnemonic));
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
-   printf(", $%d",(int)READ_Simm8());
+   printf(", $%d",(int)READ_Simm8(iter));
    goto done;
 
   case ASM_ADD_IMM32:
@@ -1367,7 +1382,7 @@ do_prefix_mnemonic_simm8:
 do_prefix_mnemonic_imm32:
    print(mnemonic,strlen(mnemonic));
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
-   printf(", $%#I32x",(int)READ_imm32());
+   printf(", $%#I32x",READ_imm32(iter));
    goto done;
 
   case ASM_SUB_SIMM8:
@@ -1390,7 +1405,7 @@ do_prefix_mnemonic_imm32:
 do_prefix_mnemonic_imm8:
    print(mnemonic,strlen(mnemonic));
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
-   printf(", $%u",(unsigned int)READ_imm8());
+   printf(", $%u",(unsigned int)READ_imm8(iter));
    goto done;
   case ASM_SHR_IMM8:
    mnemonic = "shr    ";
@@ -1463,16 +1478,16 @@ do_mov_prefix_mnemonic:
 
  /* Special opcodes taking stack arguments. */
  if (stacksz != (uint16_t)-1) {
-  instruction_t *old_iter = iter;
+  instruction_t *old_iter = iter.ptr;
   switch (opcode) {
 
   case ASM_DUP_N:
   case ASM_POP_N:
-   imm = READ_imm8()+2;
+   imm = READ_imm8(iter)+2;
    goto print_duppop_stack;
   case ASM16_DUP_N:
   case ASM16_POP_N:
-   imm = READ_imm16()+2;
+   imm = READ_imm16(iter)+2;
 print_duppop_stack:
    print(opcode == ASM_DUP_N ||
          opcode == ASM16_DUP_N
@@ -1483,7 +1498,7 @@ print_duppop_stack:
 
   default: break;
   }
-  iter = old_iter;
+  iter.ptr = old_iter;
  }
 
  if (opcode == ASM_RET && code &&
@@ -1503,24 +1518,24 @@ do_instruction_specific:
   break;
 
  case ASM32_JMP:
-  jump_offset = READ_Simm32();
+  jump_offset = READ_Simm32(iter);
   goto do_jmp_target;
  case ASM_JF16:
  case ASM_JT16:
  case ASM_JMP16:
  case ASM_FOREACH16:
-  jump_offset = READ_Simm16();
+  jump_offset = READ_Simm16(iter);
   goto do_jmp_target;
  case ASM_JF:
  case ASM_JT:
  case ASM_JMP:
  case ASM_FOREACH:
-  jump_offset = READ_Simm8();
+  jump_offset = READ_Simm8(iter);
 do_jmp_target:
   /* TODO: Make use of disassembler label names. */
   if (code) {
    code_addr_t target_ip;
-   target_ip = (code_addr_t)(iter - code->co_code) + jump_offset;
+   target_ip = (code_addr_t)(iter.ptr - code->co_code) + jump_offset;
    printf("%.4I32X",target_ip);
    if (target_ip >= code->co_codebytes)
        PRINT(" /* invalid ip */");
@@ -1538,7 +1553,7 @@ do_jmp_target:
  case ASM_CLASS_C:
  case ASM_CLASS_CBL:
  case ASM_CLASS_CBG:
-  class_imm = READ_imm8();
+  class_imm = READ_imm8(iter);
   flags     = class_imm&0xf;
   is_first  = true;
   for (index = 0; flags; flags >>= 1,++index) {
@@ -1557,10 +1572,10 @@ do_jmp_target:
    if (class_imm&CLASSGEN_FHASIMEM) PRINT(", i:pop");
    if (class_imm&CLASSGEN_FHASCMEM) PRINT(", c:pop");
   } else {
-   uint8_t b_id = READ_imm8();
-   uint8_t n_id = READ_imm8();
-   uint8_t i_id = READ_imm8();
-   uint8_t c_id = READ_imm8();
+   uint8_t b_id = READ_imm8(iter);
+   uint8_t n_id = READ_imm8(iter);
+   uint8_t i_id = READ_imm8(iter);
+   uint8_t c_id = READ_imm8(iter);
    if (class_imm&CLASSGEN_FHASBASE) {
     PRINT(", b:");
     if (opcode == ASM_CLASS_C)
@@ -1588,23 +1603,23 @@ do_jmp_target:
 
  case ASM_DUP_N:
  case ASM_POP_N:
-  imm = READ_imm8()+2;
+  imm = READ_imm8(iter)+2;
   goto print_imm;
  case ASM16_DUP_N:
  case ASM16_POP_N:
-  imm = READ_imm16()+2;
+  imm = READ_imm16(iter)+2;
   goto print_imm;
  case ASM_LROT:
  case ASM_RROT:
-  imm = READ_imm8()+3;
+  imm = READ_imm8(iter)+3;
   goto print_imm;
  case ASM16_LROT:
  case ASM16_RROT:
-  imm = READ_imm16()+3;
+  imm = READ_imm16(iter)+3;
   goto print_imm;
  case ASM_ENDCATCH_N:
  case ASM_ENDFINALLY_N:
-  imm = READ_imm8()+1;
+  imm = READ_imm8(iter)+1;
   goto print_imm;
  case ASM_CALL:
  case ASM_EXTEND:
@@ -1622,48 +1637,48 @@ do_jmp_target:
  case ASM_VARARGS_GETITEM_I:
  case ASM_VARARGS_CMP_EQ_SZ:
  case ASM_VARARGS_CMP_GR_SZ:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 print_imm:
   printf("%I16u",imm);
   break;
 
  case ASM16_CALL_KW:
-  imm  = READ_imm8();
-  imm2 = READ_imm16();
+  imm  = READ_imm8(iter);
+  imm2 = READ_imm16(iter);
   goto print_imm_const;
  case ASM_CALL_KW:
-  imm  = READ_imm8();
-  imm2 = READ_imm8();
+  imm  = READ_imm8(iter);
+  imm2 = READ_imm8(iter);
 print_imm_const:
   printf("%I16u, ",imm);
   INVOKE(libdisasm_printconst(printer,arg,imm2,code,flags,false));
   break;
 
  case ASM_CALLATTR_C_KW:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
   printf(", #%I8u, ",imm);
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
   break;
 
  case ASM16_CALLATTR_C_KW:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
   printf(", #%I8u, ",imm);
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
   break;
 
  case ASM16_CALLATTR_TUPLE_C_KW:
-  imm  = READ_imm16();
-  imm2 = READ_imm16();
+  imm  = READ_imm16(iter);
+  imm2 = READ_imm16(iter);
   goto print_const_popdots_const;
  case ASM_CALLATTR_TUPLE_C_KW:
-  imm  = READ_imm8();
-  imm2 = READ_imm8();
+  imm  = READ_imm8(iter);
+  imm2 = READ_imm8(iter);
 print_const_popdots_const:
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
   PRINT(", pop..., ");
@@ -1671,19 +1686,19 @@ print_const_popdots_const:
   break;
 
  case ASM_PACK_DICT:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
   goto print_pack_dict;
  case ASM16_PACK_DICT:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
 print_pack_dict:
   printf("%I32u",(uint32_t)imm*2);
   break;
 
  case ASM_CALL_SEQ:
-  printf("%I8u]",READ_imm8());
+  printf("%I8u]",READ_imm8(iter));
   break;
  case ASM_CALL_MAP:
-  printf("%I16u}",(uint16_t)((uint16_t)READ_imm8() * 2));
+  printf("%I16u}",(uint16_t)((uint16_t)READ_imm8(iter) * 2));
   break;
 
  case ASM16_PACK_TUPLE:
@@ -1694,7 +1709,7 @@ print_pack_dict:
  case ASM16_GETMEMBER:
  case ASM16_DELMEMBER:
  case ASM16_BOUNDMEMBER:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto print_imm;
 
  case ASM_ADD_SIMM8:
@@ -1702,16 +1717,16 @@ print_pack_dict:
  case ASM_MUL_SIMM8:
  case ASM_DIV_SIMM8:
  case ASM_MOD_SIMM8:
-  printf("%I8d",READ_Simm8());
+  printf("%I8d",READ_Simm8(iter));
   break;
 
  {
   int16_t val;
  case ASM16_ADJSTACK:
-  val = READ_Simm16();
+  val = READ_Simm16(iter);
   goto do_print_adjstack;
  case ASM_ADJSTACK:
-  val = READ_Simm8();
+  val = READ_Simm8(iter);
 do_print_adjstack:
   printf("%c %I32d",
          val < 0 ? '-' : '+',
@@ -1721,10 +1736,10 @@ do_print_adjstack:
  {
   struct opinfo *info;
  case ASM16_DEFOP:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto do_print_op;
  case ASM_DEFOP:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 do_print_op:
   /* Special case: Try to print the name of the operator, rather than its ID. */
   info = Dee_OperatorInfo(NULL,(uint16_t)imm);
@@ -1738,28 +1753,28 @@ do_print_op:
  {
   struct opinfo *info;
  case ASM16_OPERATOR:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto do_print_operator;
  case ASM_OPERATOR:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 do_print_operator:
   info = Dee_OperatorInfo(NULL,(uint16_t)imm);
   if (info) {
    printf("__%s__, " PREFIX_STACKEFFECT "%I8u",
-          info->oi_sname,READ_imm8());
+          info->oi_sname,READ_imm8(iter));
   } else {
    printf("%I16u, " PREFIX_STACKEFFECT "%I8u",
-          imm,READ_imm8());
+          imm,READ_imm8(iter));
   }
  } break;
 
  {
   struct opinfo *info;
  case ASM16_OPERATOR_TUPLE:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto do_print_operator_tuple;
  case ASM_OPERATOR_TUPLE:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 do_print_operator_tuple:
   info = Dee_OperatorInfo(NULL,(uint16_t)imm);
   if (info) {
@@ -1772,49 +1787,49 @@ do_print_operator_tuple:
  case ASM_DEFMEMBER:
  case ASM_SETMEMBER:
  case ASM_CALLATTR_KWDS:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
   goto print_imm_pop;
  case ASM16_DEFMEMBER:
  case ASM16_SETMEMBER:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
 print_imm_pop:
   printf("%I16u, pop",imm);
   break;
 
  case ASM_RANGE_0_I32:
-  printf("%I32u",READ_imm32());
+  printf("%I32u",READ_imm32(iter));
   break;
 
  case ASM_SETITEM_I:
  case ASM_GETRANGE_IP:
  case ASM_SETRANGE_PI:
  case ASM_SETRANGE_NI:
-  printf("%I16d, pop",READ_Simm16());
+  printf("%I16d, pop",READ_Simm16(iter));
   break;
 
  case ASM_GETRANGE_PI:
  case ASM_GETRANGE_NI:
  case ASM_GETITEM_I:
-  printf("%I16d",READ_Simm16());
+  printf("%I16d",READ_Simm16(iter));
   break;
 
  case ASM_GETRANGE_IN:
-  printf("%I16d, none",READ_Simm16());
+  printf("%I16d, none",READ_Simm16(iter));
   break;
 
  case ASM_SETRANGE_IP:
-  printf("%I16d, pop, pop",READ_Simm16());
+  printf("%I16d, pop, pop",READ_Simm16(iter));
   break;
 
  case ASM_SETRANGE_IN:
-  printf("%I16d, none, pop",READ_Simm16());
+  printf("%I16d, none, pop",READ_Simm16(iter));
   break;
 
  case ASM_GETRANGE_II:
  case ASM_SETRANGE_II:
-  imm = (uint32_t)(uint16_t)READ_Simm16();
+  imm = (uint32_t)(uint16_t)READ_Simm16(iter);
   printf("%I16d, " PREFIX_INTEGERAL "%I16d",
-        (int16_t)(uint16_t)imm,READ_Simm16());
+        (int16_t)(uint16_t)imm,READ_Simm16(iter));
   if (opcode == ASM_SETRANGE_II) PRINT(", pop");
   break;
 
@@ -1823,7 +1838,7 @@ print_imm_pop:
  case ASM_AND_IMM32:
  case ASM_OR_IMM32:
  case ASM_XOR_IMM32:
-  printf("%#I32x",READ_imm32());
+  printf("%#I32x",READ_imm32(iter));
   break;
 
 
@@ -1834,29 +1849,29 @@ print_imm_pop:
  case ASM16_PUSH_EXTERN:
  case ASM16_CALL_EXTERN:
  case ASM16_SUPER_THIS_E:
-  imm  = READ_imm16();
-  imm2 = READ_imm16();
+  imm  = READ_imm16(iter);
+  imm2 = READ_imm16(iter);
   goto print_extern;
  case ASM_PUSH_BND_EXTERN:
  case ASM_POP_EXTERN:
  case ASM_PUSH_EXTERN:
  case ASM_CALL_EXTERN:
  case ASM_SUPER_THIS_E:
-  imm  = READ_imm8();
-  imm2 = READ_imm8();
+  imm  = READ_imm8(iter);
+  imm2 = READ_imm8(iter);
 print_extern:
   INVOKE(libdisasm_printextern(printer,arg,imm,imm2,code,flags));
   if (opcode == ASM_CALL_EXTERN || opcode == ASM16_CALL_EXTERN)
-      printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8());
+      printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));
   if (opcode == ASM_SUPER_THIS_E || opcode == ASM16_SUPER_THIS_E)
       PRINT(", this");
  } break;
 
  case ASM16_PUSH_MODULE:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto print_module;
  case ASM_PUSH_MODULE:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 print_module:
   INVOKE(libdisasm_printmodule(printer,arg,imm,code,flags));
   break;
@@ -1867,7 +1882,7 @@ print_module:
  case ASM16_PUSH_GLOBAL:
  case ASM16_CALL_GLOBAL:
  case ASM16_SUPER_THIS_G:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto print_global;
  case ASM_PUSH_BND_GLOBAL:
  case ASM_DEL_GLOBAL:
@@ -1875,11 +1890,11 @@ print_module:
  case ASM_PUSH_GLOBAL:
  case ASM_CALL_GLOBAL:
  case ASM_SUPER_THIS_G:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 print_global:
   INVOKE(libdisasm_printglobal(printer,arg,imm,code,flags));
   if (opcode == ASM_CALL_GLOBAL || opcode == ASM16_CALL_GLOBAL)
-      printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8());
+      printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));
   if (opcode == ASM_SUPER_THIS_G || opcode == ASM16_SUPER_THIS_G)
       PRINT(", this");
   break;
@@ -1889,18 +1904,18 @@ print_global:
  case ASM16_POP_LOCAL:
  case ASM16_PUSH_LOCAL:
  case ASM16_CALL_LOCAL:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto print_local;
  case ASM_PUSH_BND_LOCAL:
  case ASM_DEL_LOCAL:
  case ASM_POP_LOCAL:
  case ASM_PUSH_LOCAL:
  case ASM_CALL_LOCAL:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 print_local:
   INVOKE(libdisasm_printlocal(printer,arg,imm,ddi,code,flags));
   if (opcode == ASM_CALL_LOCAL || opcode == ASM16_CALL_LOCAL)
-      printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8());
+      printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));
   break;
 
  case ASM16_PUSH_REF:
@@ -1909,7 +1924,7 @@ print_local:
  case ASM16_BOUNDMEMBER_R:
  case ASM16_DELMEMBER_R:
  case ASM16_SETMEMBER_R:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto print_ref;
  case ASM_PUSH_REF:
  case ASM_SUPER_THIS_R:
@@ -1917,7 +1932,7 @@ print_local:
  case ASM_BOUNDMEMBER_R:
  case ASM_DELMEMBER_R:
  case ASM_SETMEMBER_R:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 print_ref:
   INVOKE(libdisasm_printref(printer,arg,imm,code,flags));
   switch (opcode) {
@@ -1929,14 +1944,14 @@ print_ref:
   case ASM_BOUNDMEMBER_R:
   case ASM_DELMEMBER_R:
   case ASM_SETMEMBER_R:
-   printf(", " PREFIX_INTEGERAL "%I8u",READ_imm8());
+   printf(", " PREFIX_INTEGERAL "%I8u",READ_imm8(iter));
    if (opcode == ASM_SETMEMBER_R) PRINT(", pop");
    break;
   case ASM16_GETMEMBER_R:
   case ASM16_BOUNDMEMBER_R:
   case ASM16_DELMEMBER_R:
   case ASM16_SETMEMBER_R:
-   printf(", " PREFIX_INTEGERAL "%I16u",READ_imm16());
+   printf(", " PREFIX_INTEGERAL "%I16u",READ_imm16(iter));
    if (opcode == ASM16_SETMEMBER_R) PRINT(", pop");
    break;
   default: break;
@@ -1944,12 +1959,12 @@ print_ref:
   break;
 
  case ASM16_PUSH_ARG:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto print_arg;
  case ASM_PUSH_ARG:
  case ASM_CALL_ARGSFWD:
 do_read_and_print_arg:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 print_arg:
   INVOKE(libdisasm_printarg(printer,arg,imm,code,flags));
   if (opcode == ASM_CALL_ARGSFWD) {
@@ -1962,11 +1977,11 @@ print_arg:
 
  case ASM16_POP_STATIC:
  case ASM16_PUSH_STATIC:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto print_static;
  case ASM_POP_STATIC:
  case ASM_PUSH_STATIC:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 print_static:
   INVOKE(libdisasm_printstatic(printer,arg,imm,
                                opcode == ASM_PUSH_STATIC ||
@@ -1975,13 +1990,11 @@ print_static:
   break;
 
 
-
-
  case ASM16_PUSH_CONST:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto print_const_int;
  case ASM_PUSH_CONST:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 print_const_int:
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,true));
   break;
@@ -2009,7 +2022,7 @@ print_const_int:
  case ASM16_FUNCTION_C:
  case ASM16_FUNCTION_C_16:
  case ASM16_CALL_TUPLE_KW:
-  imm = READ_imm16();
+  imm = READ_imm16(iter);
   goto print_const;
  case ASM_PRINT_C:
  case ASM_FPRINT_C:
@@ -2034,7 +2047,7 @@ print_const_int:
  case ASM_FUNCTION_C:
  case ASM_FUNCTION_C_16:
  case ASM_CALL_TUPLE_KW:
-  imm = READ_imm8();
+  imm = READ_imm8(iter);
 print_const:
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
   switch (opcode) {
@@ -2066,23 +2079,23 @@ print_const:
   case ASM16_CALLATTR_C:
   case ASM_CALLATTR_THIS_C:
   case ASM16_CALLATTR_THIS_C:
-   printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8());
+   printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));
    break;
   case ASM_CALLATTR_C_SEQ:
   case ASM16_CALLATTR_C_SEQ:
-   printf(", [" PREFIX_STACKEFFECT "%I8u]",READ_imm8());
+   printf(", [" PREFIX_STACKEFFECT "%I8u]",READ_imm8(iter));
    break;
   case ASM_CALLATTR_C_MAP:
   case ASM16_CALLATTR_C_MAP:
-   printf(", {" PREFIX_STACKEFFECT "%I16u}",(uint16_t)((uint16_t)READ_imm8() * 2));
+   printf(", {" PREFIX_STACKEFFECT "%I16u}",(uint16_t)((uint16_t)READ_imm8(iter) * 2));
    break;
   case ASM_FUNCTION_C_16:
   case ASM16_FUNCTION_C_16:
-   imm = READ_imm16();
+   imm = READ_imm16(iter);
    goto do_print_stackeffect_after_const;
   case ASM_FUNCTION_C:
   case ASM16_FUNCTION_C:
-   imm = READ_imm8();
+   imm = READ_imm8(iter);
 do_print_stackeffect_after_const:
    printf(", " PREFIX_STACKEFFECT "%I32u",(uint32_t)imm+1);
    break;

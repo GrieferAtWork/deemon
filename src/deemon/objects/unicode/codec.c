@@ -26,6 +26,8 @@
 #include <deemon/format.h>
 #include <deemon/module.h>
 
+#include <hybrid/byteswap.h>
+
 #include "codec.h"
 #include "../../runtime/strings.h"
 
@@ -515,7 +517,7 @@ encode_utf16_alt(DeeObject *__restrict self,
   result = DeeBytes_NewBufferUninitialized(size * 2);
   if unlikely(!result) goto err;
   dst = (uint16_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = DEE_BSWAP16((uint16_t)*data++);
+  while (size--) *dst++ = BSWAP16((uint16_t)*data++);
   return result;
  }
  if (DeeString_Check(self)) {
@@ -528,7 +530,7 @@ encode_utf16_alt(DeeObject *__restrict self,
   result = DeeBytes_NewBufferUninitialized(size * 2);
   if unlikely(!result) goto err;
   dst = (uint16_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = DEE_BSWAP16((uint16_t)*data++);
+  while (size--) *dst++ = BSWAP16((uint16_t)*data++);
   return result;
  }
  err_expected_string_or_bytes(self);
@@ -546,7 +548,7 @@ encode_utf32_alt(DeeObject *__restrict self) {
   result = DeeBytes_NewBufferUninitialized(size * 4);
   if unlikely(!result) goto err;
   dst = (uint32_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = DEE_BSWAP32((uint32_t)*data++);
+  while (size--) *dst++ = BSWAP32((uint32_t)*data++);
   return result;
  }
  if (DeeString_Check(self)) {
@@ -559,7 +561,7 @@ encode_utf32_alt(DeeObject *__restrict self) {
   result = DeeBytes_NewBufferUninitialized(size * 4);
   if unlikely(!result) goto err;
   dst = (uint32_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = DEE_BSWAP32((uint32_t)*data++);
+  while (size--) *dst++ = BSWAP32((uint32_t)*data++);
   return result;
  }
  err_expected_string_or_bytes(self);

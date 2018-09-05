@@ -24,6 +24,10 @@
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
+#include <hybrid/unaligned.h>
+
 DECL_BEGIN
 
 #if 1
@@ -1308,13 +1312,13 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 
  case ASM_FUNCTION_C_16:
   *psp_add   = 1;
-  *psp_sub   = 1+ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
-  *pstacksz -= (*psp_sub-1);
+  *psp_sub   = 1 + UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+  *pstacksz -= (*psp_sub - 1);
   break;
  case ASM_CALLATTR:
   *psp_add   = 1;
-  *psp_sub   = 2+*(uint8_t *)(ip + 1);
-  *pstacksz -= 1+*(uint8_t *)(ip + 1);
+  *psp_sub   = 2 + *(uint8_t *)(ip + 1);
+  *pstacksz -= 1 + *(uint8_t *)(ip + 1);
   break;
 
  case ASM_CALLATTR_C_KW:
@@ -1323,7 +1327,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
  case ASM_CALLATTR_C_SEQ:
  case ASM_CALLATTR_C_MAP:
   *psp_add   = 1;
-  *psp_sub   = 1+*(uint8_t *)(ip + 2);
+  *psp_sub   = 1 + *(uint8_t *)(ip + 2);
   *pstacksz -= (*psp_sub-1);
   break;
  case ASM_CALLATTR_THIS_C:
@@ -1342,7 +1346,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   break;
  case ASM_OPERATOR:
   *psp_add   = 1;
-  *psp_sub   = 1+*(uint8_t *)(ip + 2);
+  *psp_sub   = 1 + *(uint8_t *)(ip + 2);
   *pstacksz -= *(uint8_t *)(ip + 2);
   break;
 
@@ -1353,7 +1357,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   {
    int16_t effect;
   case ASM16_ADJSTACK & 0xff:
-   effect = ASM_BSWAPSIMM16(*(int16_t *)(ip + 2));
+   effect = (int16_t)UNALIGNED_GETLE16((int16_t *)(ip + 2));
    *pstacksz += effect;
    if (effect >= 0) {
     *psp_add = (uint16_t)effect;
@@ -1366,15 +1370,15 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 
   case ASM16_LROT & 0xff:
   case ASM16_RROT & 0xff:
-   *psp_add = *psp_sub = (uint16_t)(ASM_BSWAPIMM16(*(uint16_t *)(ip + 2)) + 3);
+   *psp_add = *psp_sub = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(ip + 2)) + 3);
    break;
   case ASM16_DUP_N & 0xff:
-   *psp_sub   = (uint16_t)(ASM_BSWAPIMM16(*(uint16_t *)(ip + 2)) + 2);
+   *psp_sub   = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(ip + 2)) + 2);
    *psp_add   = *psp_sub+1;
    *pstacksz += 1;
    break;
   case ASM16_POP_N & 0xff:
-   *psp_add   = (uint16_t)(ASM_BSWAPIMM16(*(uint16_t *)(ip + 2)) + 1);
+   *psp_add   = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(ip + 2)) + 1);
    *psp_sub   = *psp_add+1;
    *pstacksz -= 1;
    break;
@@ -1383,32 +1387,32 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   case ASM16_PACK_LIST & 0xff:
   case ASM16_PACK_HASHSET & 0xff:
    *psp_add   = 1;
-   *psp_sub   = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
+   *psp_sub   = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    *pstacksz -= *psp_sub;
    *pstacksz += 1;
    break;
   case ASM16_UNPACK & 0xff:
    *psp_sub   = 1;
-   *psp_add   = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
+   *psp_add   = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    *pstacksz += *psp_add;
    *pstacksz -= 1;
    break;
 
   case ASM16_FUNCTION_C & 0xff:
    *psp_add   = 1;
-   *psp_sub   = 1+*(uint8_t *)(ip + 4);
+   *psp_sub   = 1 + *(uint8_t *)(ip + 4);
    *pstacksz -= *(uint8_t *)(ip + 4);
    break;
   case ASM16_FUNCTION_C_16 & 0xff:
    *psp_add   = 1;
-   *psp_sub   = 1+ASM_BSWAPIMM16(*(uint16_t *)(ip + 4));
+   *psp_sub   = 1 + UNALIGNED_GETLE16((uint16_t *)(ip + 4));
    *pstacksz -= (*psp_sub-1);
    break;
 
   case ASM_CALLATTR_KWDS & 0xff:
    *psp_add   = 1;
-   *psp_sub   = 3+*(uint8_t *)(ip + 2);
-   *pstacksz -= 2+*(uint8_t *)(ip + 2);
+   *psp_sub   = 3 + *(uint8_t *)(ip + 2);
+   *pstacksz -= 2 + *(uint8_t *)(ip + 2);
    break;
 
   case ASM16_CALLATTR_C_KW & 0xff:
@@ -1416,7 +1420,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   case ASM16_CALLATTR_C_SEQ & 0xff:
   case ASM16_CALLATTR_C_MAP & 0xff:
    *psp_add   = 1;
-   *psp_sub   = 1+*(uint8_t *)(ip + 4);
+   *psp_sub   = 1 + *(uint8_t *)(ip + 4);
    *pstacksz -= *(uint8_t *)(ip + 4);
    break;
   case ASM16_CALLATTR_THIS_C & 0xff:
@@ -1436,17 +1440,17 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   case ASM16_CALL_KW & 0xff:
   case ASM_CALL_SEQ & 0xff:
    *psp_add   = 1;
-   *psp_sub   = 1+*(uint8_t *)(ip + 2);
+   *psp_sub   = 1 + *(uint8_t *)(ip + 2);
    *pstacksz -= *(uint8_t *)(ip + 2);
    break;
   case ASM_CALL_MAP & 0xff:
    *psp_add   = 1;
-   *psp_sub   = 1+((uint16_t)*(uint8_t *)(ip + 2) * 2);
+   *psp_sub   = 1 + ((uint16_t)*(uint8_t *)(ip + 2) * 2);
    *pstacksz -= ((uint16_t)*(uint8_t *)(ip + 2) * 2);
    break;
   case ASM16_OPERATOR & 0xff:
    *psp_add   = 1;
-   *psp_sub   = 1+*(uint8_t *)(ip + 4);
+   *psp_sub   = 1 + *(uint8_t *)(ip + 4);
    *pstacksz -= *(uint8_t *)(ip + 4);
    break;
   case ASM_PACK_HASHSET & 0xff:
@@ -1463,7 +1467,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
    break;
   case ASM16_PACK_DICT & 0xff:
    *psp_add   = 1;
-   *psp_sub   = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2))*2;
+   *psp_sub   = UNALIGNED_GETLE16((uint16_t *)(ip + 2))*2;
    *pstacksz -= *psp_sub;
    *pstacksz += 1;
    break;
@@ -1478,7 +1482,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
    uint16_t sp_addr;
   case ASM16_STACK & 0xff:
    prefix_ip = ip+4;
-   sp_addr   = ASM_BSWAPIMM16(*(uint16_t *)(ip + 2));
+   sp_addr   = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    /* Calculate the relative stack effect for addressing this stack slot. */
    prefix_stack_sub = (*pstacksz - sp_addr);
    goto do_prefix;
@@ -1578,7 +1582,7 @@ do_prefix:
    break;
   case ASM_FUNCTION_C_16:
    *psp_add   = 0;
-   *psp_sub   = 1+ASM_BSWAPIMM16(*(uint16_t *)(prefix_ip + 2));
+   *psp_sub   = 1 + UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 2));
    *pstacksz -= *psp_sub;
    break;
 
@@ -1593,17 +1597,17 @@ do_prefix:
    switch (op) {
    case ASM16_OPERATOR & 0xff:
     ++*psp_add;
-    *psp_sub  += 1+*(uint8_t *)(prefix_ip + 4);
+    *psp_sub  += 1 + *(uint8_t *)(prefix_ip + 4);
     *pstacksz -= *(uint8_t *)(prefix_ip + 4);
     break;
    case ASM16_FUNCTION_C & 0xff:
     *psp_add   = 0;
-    *psp_sub   = 1+*(uint8_t *)(prefix_ip + 4);
-    *pstacksz -= 1+*(uint8_t *)(prefix_ip + 4);
+    *psp_sub   = 1 + *(uint8_t *)(prefix_ip + 4);
+    *pstacksz -= 1 + *(uint8_t *)(prefix_ip + 4);
     break;
    case ASM16_FUNCTION_C_16 & 0xff:
     *psp_add   = 0;
-    *psp_sub   = 1+ASM_BSWAPIMM16(*(uint16_t *)(prefix_ip + 4));
+    *psp_sub   = 1 + UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 4));
     *pstacksz -= *psp_sub;
     break;
    case ASM_INCPOST & 0xff:
@@ -1614,16 +1618,16 @@ do_prefix:
     break;
    case ASM16_LROT & 0xff:
    case ASM16_RROT & 0xff:
-    *psp_add = ASM_BSWAPIMM16(*(uint16_t *)(prefix_ip + 2));
+    *psp_add = UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 2));
     *psp_sub = *psp_add;
     break;
    case ASM16_DUP_N & 0xff:
    case ASM16_POP_N & 0xff:
-    *psp_add = ASM_BSWAPIMM16(*(uint16_t *)(prefix_ip + 2));
+    *psp_add = UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 2));
     *psp_sub = *psp_add;
     break;
    case ASM16_UNPACK & 0xff:
-    *psp_add   = ASM_BSWAPIMM16(*(uint16_t *)(prefix_ip + 2));
+    *psp_add   = UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 2));
     *psp_sub   = 0;
     *pstacksz += *psp_add;
     break;
@@ -1808,16 +1812,16 @@ asm_uses_local(instruction_t const *__restrict ip, uint16_t lid) {
   case ASM16_PUSH_BND_LOCAL & 0xff:
   case ASM16_PUSH_LOCAL & 0xff:
   case ASM16_CALL_LOCAL & 0xff:
-   if (ASM_BSWAPIMM16(*(uint16_t *)(ip + 2)) != lid) break;
+   if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != lid) break;
    result = ASM_USING_READ;
    break;
   case ASM16_DEL_LOCAL & 0xff:
   case ASM16_POP_LOCAL & 0xff:
-   if (ASM_BSWAPIMM16(*(uint16_t *)(ip + 2)) != lid) break;
+   if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != lid) break;
    result = ASM_USING_WRITE;
    break;
   case ASM16_LOCAL & 0xff:
-   if (ASM_BSWAPIMM16(*(uint16_t *)(ip + 2)) == lid)
+   if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == lid)
        result = prefix_symbol_usage(ip + 4);
    ip += 4;
    goto check_prefix_core_usage;
@@ -1851,11 +1855,11 @@ check_prefix_core_usage:
    switch (ip[1]) {
 
    case ASM16_PUSH_LOCAL & 0xff: /* mov PREFIX, local */
-    if (*(uint16_t *)(ip + 2) == lid)
+    if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == lid)
         result |= ASM_USING_READ;
     break;
    case ASM16_POP_LOCAL & 0xff:  /* mov local, PREFIX */
-    if (*(uint16_t *)(ip + 2) == lid)
+    if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == lid)
         result |= ASM_USING_WRITE;
     break;
 
@@ -1938,13 +1942,13 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
  case ASM_EXTENDED1:
   switch (ip[1]) {
   case ASM16_STATIC & 0xff:
-   if (ASM_BSWAPIMM16(*(uint16_t *)(ip + 2)) != sid) break;
+   if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != sid) break;
    result  = prefix_symbol_usage(ip+4);
    result |= asm_uses_static(ip+4,sid);
    ip += 4;
    goto check_prefix_core_usage;
   case ASM16_POP_STATIC & 0xff:
-   if (ASM_BSWAPIMM16(*(uint16_t *)(ip + 2)) != sid) break;
+   if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != sid) break;
    result = ASM_USING_WRITE;
    break;
   case ASM16_PUSH_STATIC & 0xff:
@@ -1971,7 +1975,7 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
   case ASM16_CALLATTR_TUPLE_C & 0xff:
   case ASM16_CALLATTR_THIS_C & 0xff:
   case ASM16_CALLATTR_THIS_TUPLE_C & 0xff:
-   if (ASM_BSWAPIMM16(*(uint16_t *)(ip + 2)) != sid) break;
+   if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != sid) break;
    result = ASM_USING_READ;
    break;
 
@@ -2008,11 +2012,11 @@ check_prefix_core_usage:
 
    case ASM16_PUSH_STATIC & 0xff: /* mov PREFIX, static */
    case ASM16_PUSH_CONST & 0xff:  /* mov PREFIX, const */
-    if (*(uint16_t *)(ip + 2) == sid)
+    if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == sid)
         result |= ASM_USING_READ;
     break;
    case ASM16_POP_STATIC & 0xff:  /* mov local, PREFIX */
-    if (*(uint16_t *)(ip + 2) == sid)
+    if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == sid)
         result |= ASM_USING_WRITE;
     break;
 
@@ -2028,393 +2032,6 @@ check_prefix_core_usage:
  }
  return result;
 }
-
-
-#if 0
-PRIVATE ATTR_NOINLINE ATTR_RETNONNULL instruction_t *DCALL
-instruction_decode_fixup(instruction_t const *__restrict ip,
-                         uint16_t *__restrict pstacksz,
-                         uint16_t code_flags) {
- struct instruction_effect temp;
- return DeeInstruction_Decode(ip,pstacksz,code_flags,&temp);
-}
-
-
-
-
-typedef union
-#ifndef __NO_ATTR_PACKED
-     __ATTR_PACKED
-#endif
- {
-     instruction_t *ptr;
-     uint8_t  *u8;
-     int8_t   *s8;
-#define READ_imm8(ip)   (*ip.u8++)
-#define READ_Simm8(ip)  (*ip.s8++)
-#if defined(__i386__) || defined(__x86_64__)
-     uint16_t *u16;
-     uint32_t *u32;
-     int16_t  *s16;
-     int32_t  *s32;
-#define READ_imm16(ip)  ASM_BSWAPIMM16(*ip.u16++)
-#define READ_Simm16(ip) ASM_BSWAPSIMM16(*ip.s16++)
-#define READ_imm32(ip)  ASM_BSWAPIMM32(*ip.u32++)
-#define READ_Simm32(ip) ASM_BSWAPSIMM32(*ip.s32++)
-#elif defined(_MSC_VER)
-     uint16_t __unaligned *u16;
-     uint32_t __unaligned *u32;
-     int16_t  __unaligned *s16;
-     int32_t  __unaligned *s32;
-#define READ_imm16(ip)  ASM_BSWAPIMM16(*ip.u16++)
-#define READ_Simm16(ip) ASM_BSWAPSIMM16(*ip.s16++)
-#define READ_imm32(ip)  ASM_BSWAPIMM32(*ip.u32++)
-#define READ_Simm32(ip) ASM_BSWAPSIMM32(*ip.s32++)
-#elif defined(__ARMCC_VERSION)
-     __packed uint16_t *u16;
-     __packed uint32_t *u32;
-     __packed int16_t  *s16;
-     __packed int32_t  *s32;
-#define READ_imm16(ip)  ASM_BSWAPIMM16(*ip.u16++)
-#define READ_Simm16(ip) ASM_BSWAPSIMM16(*ip.s16++)
-#define READ_imm32(ip)  ASM_BSWAPIMM32(*ip.u32++)
-#define READ_Simm32(ip) ASM_BSWAPSIMM32(*ip.s32++)
-#elif !defined(__NO_ATTR_PACKED)
-     struct __ATTR_PACKED { __UINT16_TYPE__ val; } u16;
-     struct __ATTR_PACKED { __UINT32_TYPE__ val; } u32;
-     struct __ATTR_PACKED { __INT16_TYPE__  val; } s16;
-     struct __ATTR_PACKED { __INT32_TYPE__  val; } s32;
-#define READ_imm16(ip)  ASM_BSWAPIMM16((ip.u16++)->val)
-#define READ_Simm16(ip) ASM_BSWAPSIMM16((ip.s16++)->val)
-#define READ_imm32(ip)  ASM_BSWAPIMM32((ip.u32++)->val)
-#define READ_Simm32(ip) ASM_BSWAPSIMM32((ip.s32++)->val)
-#else
-#define READ_imm16(ip)  (ip.ptr+=2,GET_UNALIGNED_16_LE(ip.ptr-2))
-#define READ_Simm16(ip) (ip.ptr+=2,(__INT16_TYPE__)GET_UNALIGNED_16_LE(ip.ptr-2))
-#define READ_imm32(ip)  (ip.ptr+=4,GET_UNALIGNED_32_LE(ip.ptr-4))
-#define READ_Simm32(ip) (ip.ptr+=4,(__INT32_TYPE__)GET_UNALIGNED_32_LE(ip.ptr-4))
-#endif
-} ip_t;
-
-
-
-PRIVATE uint16_t DCALL
-decode_prefixed_instr(instruction_t *__restrict ip_,
-                      uint16_t code_flags,
-                      struct instruction_effect *__restrict effect) {
- ip_t ip,start;
- uint16_t result,opcode;
- struct register_effect *regs;
- ip.ptr = start.ptr = ip_;
- result = REGISTER_EFFECT_FREAD|REGISTER_EFFECT_FWRITE;
- regs   = effect->ie_regs;
- opcode = *ip.ptr++;
-again_opcode:
- switch (opcode) {
- case ASM_EXTENDED1:
-  opcode <<= 8;
-  opcode  |= *ip.ptr++;
-  goto again_opcode;
-
- case ASM_RET:
-  if (code_flags & CODE_FYIELDING) {
-   effect->ie_flags |= INSTRUCTION_EFFECT_FYLD;
-  } else {
-   effect->ie_flags |= INSTRUCTION_EFFECT_FRET;
-  }
-  ATTR_FALLTHROUGH
- case ASM_THROW:
-  result = REGISTER_EFFECT_FREAD;
-  break;
-
- case ASM_YIELDALL:
-  if (code_flags & CODE_FYIELDING) {
-   effect->ie_flags |= INSTRUCTION_EFFECT_FYLD;
-   result = REGISTER_EFFECT_FREAD;
-   break;
-  }
-  ATTR_FALLTHROUGH
- default:
-  effect->ie_flags = INSTRUCTION_EFFECT_FUD;
-  break;
- }
- ASSERT(regs <= COMPILER_ENDOF(effect->ie_regs));
- if (regs < COMPILER_ENDOF(effect->ie_regs))
-     regs->re_class = REGISTER_EFFECT_CLASS_NONE;
- effect->ie_size = (uint16_t)(ip.ptr - start.ptr);
- return result;
-}
-
-
-
-#if 1
-#define OPCODE_IS_EXTENDED1(opcode) ((opcode) >= (ASM_EXTENDED1 << 8))
-#else
-#define OPCODE_IS_EXTENDED1(opcode) (((opcode)&0xff00) >> 8 == ASM_EXTENDED1)
-#endif
-#define READ_imm8_16(ip) (OPCODE_IS_EXTENDED1(opcode) ? READ_imm16(ip) : READ_imm8(ip))
-
-PUBLIC ATTR_RETNONNULL instruction_t *DCALL
-DeeInstruction_Decode(instruction_t const *__restrict ip_,
-                      uint16_t *__restrict pstacksz,
-                      uint16_t code_flags,
-                      struct instruction_effect *effect) {
- uint16_t opcode,stacksz;
- struct register_effect *regs;
- ip_t ip,start;
- if (!effect)
-      return instruction_decode_fixup(ip_,pstacksz,code_flags);
- ip.ptr = start.ptr = (instruction_t *)ip_;
- stacksz          = *pstacksz;
- start            = ip;
- effect->ie_flags = INSTRUCTION_EFFECT_FNORMAL;
- effect->ie_spadd = 0;
- effect->ie_spsub = 0;
- regs             = effect->ie_regs;
- opcode = *ip.ptr++;
-again_opcode:
- switch (opcode) {
- case ASM_EXTENDED1:
-  opcode <<= 8;
-  opcode  |= *ip.ptr++;
-  goto again_opcode;
-
- {
-  uint16_t usage,symid;
- case ASM16_LOCAL:
- case ASM16_GLOBAL:
- case ASM16_STATIC:
-  symid = READ_imm16(ip);
-  goto do_symbol_prefix;
- case ASM_LOCAL:
- case ASM_GLOBAL:
- case ASM_STATIC:
-  symid = READ_imm8(ip);
-do_symbol_prefix:
-  usage = decode_prefixed_instr(ip.ptr,
-                                code_flags,
-                                effect);
-  /*ASSERT(stacksz >= effect->ie_spsub);*/
-  stacksz -= effect->ie_spsub;
-  stacksz += effect->ie_spadd;
-  *pstacksz = stacksz;
-  memmove(effect->ie_regs+1,
-          effect->ie_regs,
-         (INSTRUCTION_EFFECT_MAXREGS - 1) *
-          sizeof(struct register_effect));
-  effect->ie_regs[0].re_class = (opcode & 0xff) == ASM_LOCAL 
-                              ? REGISTER_EFFECT_CLASS_LOCAL
-                              : (opcode & 0xff) == ASM_GLOBAL
-                              ? REGISTER_EFFECT_CLASS_GLOBAL
-                              : REGISTER_EFFECT_CLASS_STATIC
-                              ;
-  effect->ie_regs[0].re_kind  = usage;
-  effect->ie_regs[0].re_index = symid;
-  effect->ie_size += (uint16_t)(ip.ptr - start.ptr);
-  return (instruction_t *)start.ptr + effect->ie_size;
- }
-
- {
-  uint16_t usage,mid,gid;
- case ASM16_EXTERN:
-  mid = READ_imm16(ip);
-  gid = READ_imm16(ip);
-  goto do_extern_prefix;
- case ASM_EXTERN:
-  mid = READ_imm8(ip);
-  gid = READ_imm8(ip);
-do_extern_prefix:
-  usage = decode_prefixed_instr(ip.ptr,
-                                code_flags,
-                                effect);
-  /*ASSERT(stacksz >= effect->ie_spsub);*/
-  stacksz -= effect->ie_spsub;
-  stacksz += effect->ie_spadd;
-  *pstacksz = stacksz;
-  memmove(effect->ie_regs+1,
-          effect->ie_regs,
-         (INSTRUCTION_EFFECT_MAXREGS - 1) *
-          sizeof(struct register_effect));
-  effect->ie_regs[0].re_class = REGISTER_EFFECT_CLASS_EXTERN;
-  effect->ie_regs[0].re_kind  = usage;
-  effect->ie_regs[0].re_extern.e_mid = gid;
-  effect->ie_regs[0].re_extern.e_gid = gid;
-  effect->ie_size += (uint16_t)(ip.ptr - start.ptr);
-  return (instruction_t *)start.ptr + effect->ie_size;
- }
-
- {
-  uint16_t usage,abs_sp,sp_sub;
- case ASM16_STACK:
-  abs_sp = READ_imm16(ip);
-  goto do_stack_prefix;
- case ASM_STACK:
-  abs_sp = READ_imm8(ip);
-do_stack_prefix:
-  usage = decode_prefixed_instr(ip.ptr,
-                                code_flags,
-                                effect);
-  /*ASSERT(abs_sp < stacksz);*/
-  /* Calculate the sum for the total stack-effect. */
-  sp_sub = stacksz - abs_sp;
-  if (sp_sub > effect->ie_spsub) {
-   effect->ie_spadd += sp_sub - effect->ie_spsub;
-   effect->ie_spsub  = sp_sub;
-  }
-  /*ASSERT(stacksz >= effect->ie_spsub);*/
-  stacksz -= effect->ie_spsub;
-  stacksz += effect->ie_spadd;
-  *pstacksz = stacksz;
-  memmove(effect->ie_regs+1,
-          effect->ie_regs,
-         (INSTRUCTION_EFFECT_MAXREGS - 1) *
-          sizeof(struct register_effect));
-  effect->ie_regs[0].re_class         = REGISTER_EFFECT_CLASS_STACK;
-  effect->ie_regs[0].re_kind          = usage;
-  effect->ie_regs[0].re_stack.s_begin = abs_sp;
-  effect->ie_regs[0].re_stack.s_end   = abs_sp+1;
-  effect->ie_size += (uint16_t)(ip.ptr - start.ptr);
-  return (instruction_t *)start.ptr + effect->ie_size;
- }
-
- case ASM_RET_NONE:
-  effect->ie_flags |= INSTRUCTION_EFFECT_FRET;
-  break;
-
- case ASM_RET:
-  if (code_flags & CODE_FYIELDING) {
-   effect->ie_flags |= INSTRUCTION_EFFECT_FYLD;
-  } else {
-   effect->ie_flags |= INSTRUCTION_EFFECT_FRET;
-  }
-  ATTR_FALLTHROUGH
-set_basic_stack_one:
-  effect->ie_spsub = 1;
-set_basic_stack:
-  if (effect->ie_spsub) {
-   regs->re_class         = REGISTER_EFFECT_CLASS_STACK;
-   regs->re_kind          = REGISTER_EFFECT_FREAD;
-   regs->re_stack.s_begin = stacksz - effect->ie_spsub;
-   regs->re_stack.s_end   = stacksz;
-   ++regs;
-  }
-  if (effect->ie_spadd) {
-   regs->re_class         = REGISTER_EFFECT_CLASS_STACK;
-   regs->re_kind          = REGISTER_EFFECT_FWRITE;
-   regs->re_stack.s_begin = stacksz - effect->ie_spsub;
-   regs->re_stack.s_end   = (stacksz - effect->ie_spsub) + effect->ie_spadd;
-   ++regs;
-  }
-  break;
-
- case ASM_THROW:
-  effect->ie_flags |= INSTRUCTION_EFFECT_FTHROW;
-  goto set_basic_stack_one;
- case ASM_RETHROW:
-  effect->ie_flags |= INSTRUCTION_EFFECT_FTHROW;
-  regs->re_class    = REGISTER_EFFECT_CLASS_MISC;
-  regs->re_kind     = REGISTER_EFFECT_FREAD;
-  regs->re_misc     = REGISTER_MISC_EXCEPT;
-  ++regs;
-  break;
-
- case ASM_ENDCATCH:
- case ASM_ENDFINALLY:
-  break;
- case ASM_ENDCATCH_N:
- case ASM_ENDFINALLY_N:
-  ip.ptr += 1;
-  break;
-
- case ASM_PUSH_BND_EXTERN:
- case ASM16_PUSH_BND_EXTERN:
-  regs->re_class        = REGISTER_EFFECT_CLASS_EXTERN;
-  regs->re_kind         = REGISTER_EFFECT_FREAD;
-  regs->re_extern.e_mid = READ_imm8_16(ip);
-  regs->re_extern.e_gid = READ_imm8_16(ip);
-  ++regs;
-  effect->ie_spadd = 1;
-  goto set_basic_stack;
- case ASM_PUSH_BND_GLOBAL:
- case ASM16_PUSH_BND_GLOBAL:
-  regs->re_class = REGISTER_EFFECT_CLASS_GLOBAL;
-  regs->re_kind  = REGISTER_EFFECT_FREAD;
-  regs->re_index = READ_imm8_16(ip);
-  ++regs;
-  effect->ie_spadd = 1;
-  goto set_basic_stack;
- case ASM_PUSH_BND_LOCAL:
- case ASM16_PUSH_BND_LOCAL:
-  regs->re_class = REGISTER_EFFECT_CLASS_LOCAL;
-  regs->re_kind  = REGISTER_EFFECT_FREAD;
-  regs->re_index = READ_imm8_16(ip);
-  ++regs;
-  effect->ie_spadd = 1;
-  goto set_basic_stack;
-
- {
-  int16_t offset;
- case ASM_JF:
- case ASM_JF16:
- case ASM_JT:
- case ASM_JT16:
- case ASM_FOREACH:
- case ASM_FOREACH16:
-  effect->ie_flags |= INSTRUCTION_EFFECT_FCOND;
-  effect->ie_spsub  = 1;
-  ATTR_FALLTHROUGH
- case ASM_JMP:
- case ASM_JMP16:
-  effect->ie_flags |= INSTRUCTION_EFFECT_FJMP;
-  if (opcode & 1) {
-   offset = READ_Simm16(ip);
-  } else {
-   offset = READ_Simm8(ip);
-  }
-  effect->ie_jump = ip.ptr + offset;
-  goto set_basic_stack;
- }
- {
-  int32_t offset;
- case ASM32_JMP:
-  effect->ie_flags |= INSTRUCTION_EFFECT_FJMP;
-  offset = READ_Simm32(ip);
-  effect->ie_jump = ip.ptr + offset;
- } break;
-
- case ASM_JMP_POP_POP:
-  ++effect->ie_spsub;
-  ATTR_FALLTHROUGH
- case ASM_JMP_POP:
-  ++effect->ie_spsub;
-  effect->ie_flags |= INSTRUCTION_EFFECT_FJMP;
-  goto set_basic_stack;
-
-
-
- case ASM_YIELDALL:
-  if (code_flags & CODE_FYIELDING) {
-   effect->ie_flags |= INSTRUCTION_EFFECT_FYLD;
-   effect->ie_spsub = 1;
-   goto set_basic_stack;
-  }
-  ATTR_FALLTHROUGH
- default:
-  effect->ie_flags = INSTRUCTION_EFFECT_FUD;
-  break;
- }
- ASSERT(regs <= COMPILER_ENDOF(effect->ie_regs));
- if (regs < COMPILER_ENDOF(effect->ie_regs))
-     regs->re_class = REGISTER_EFFECT_CLASS_NONE;
- effect->ie_size = (uint16_t)(ip.ptr - start.ptr);
- /*ASSERT(stacksz >= effect->ie_spsub);*/
- ASSERT(stacksz == *pstacksz);
- stacksz  -= effect->ie_spsub;
- stacksz  += effect->ie_spadd;
- *pstacksz = stacksz;
- return (instruction_t *)ip.ptr;
-}
-#endif
 
 
 DECL_END

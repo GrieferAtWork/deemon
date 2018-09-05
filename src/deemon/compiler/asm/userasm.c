@@ -38,6 +38,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/module.h>
+#include <hybrid/byteswap.h>
 
 #include "../../runtime/strings.h"
 
@@ -1051,9 +1052,9 @@ PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
  else if (name&0x0000ff00) name = name << 16;
  else                      name = name << 24;
 #else
- /* */if (name&0xff000000) name = DEE_BSWAP32(name);
- else if (name&0x00ff0000) name = DEE_BSWAP32(name) >> 8;
- else if (name&0x0000ff00) name = (uint32_t)DEE_BSWAP16((uint16_t)name);
+ /* */if (name&0xff000000) name = BSWAP32(name);
+ else if (name&0x00ff0000) name = BSWAP32(name) >> 8;
+ else if (name&0x0000ff00) name = (uint32_t)BSWAP16((uint16_t)name);
 #endif
  return name;
 }

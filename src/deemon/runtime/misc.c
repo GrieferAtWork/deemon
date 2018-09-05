@@ -44,6 +44,9 @@
 #endif
 #endif
 
+#include <hybrid/byteswap.h>
+#include <hybrid/byteorder.h>
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -88,7 +91,7 @@ hash_ptr(void const *__restrict ptr, size_t n_bytes) {
  uint32_t hash = 0;
  uint32_t k;
  for (i = 0; i < nblocks; ++i) {
-  k  = DEE_LESWAP32(blocks[i]);
+  k  = LESWAP32(blocks[i]);
   k *= c1;
   k  = ROT32(k,r1);
   k *= c2;
@@ -208,7 +211,7 @@ hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
    uint32_t block;
    char     part[4];
   } b;
-  b.block   = DEE_LESWAP32(blocks[i]);
+  b.block   = LESWAP32(blocks[i]);
   b.part[0] = (char)DeeUni_ToLower(b.part[0]);
   b.part[1] = (char)DeeUni_ToLower(b.part[1]);
   b.part[2] = (char)DeeUni_ToLower(b.part[2]);
@@ -338,7 +341,7 @@ hash_ptr(void const *__restrict ptr, size_t n_bytes) {
  dhash_t h = seed ^ (n_bytes * m);
  size_t len8 = n_bytes / 8;
  while (len8--) {
-  dhash_t k = DEE_LESWAP64(*(*(dhash_t **)&ptr)++);
+  dhash_t k = LESWAP64(*(*(dhash_t **)&ptr)++);
   k *= m;
   k ^= k >> r;
   k *= m;
@@ -445,7 +448,7 @@ hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
       char    ch[8];
       dhash_t x;
   } k;
-  k.x     = DEE_LESWAP64(*(*(dhash_t **)&ptr)++);
+  k.x     = LESWAP64(*(*(dhash_t **)&ptr)++);
   k.ch[0] = (char)DeeUni_ToLower(k.ch[0]);
   k.ch[1] = (char)DeeUni_ToLower(k.ch[1]);
   k.ch[2] = (char)DeeUni_ToLower(k.ch[2]);

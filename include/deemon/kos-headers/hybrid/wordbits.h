@@ -20,12 +20,12 @@
 #define __GUARD_HYBRID_WORDBITS_H 1
 
 #include "compiler.h"
-#include "byteorder.h"
+#include "__byteorder.h"
 
 DECL_BEGIN
 
 /* Return the ith byte/word/dword of a given 16/32/64-bit integer. */
-#if __BYTE_ORDER__ == __LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define INT16_I8(x,i)                 (((x) >> (i)*8) & 0xff)
 #define INT32_I8(x,i)                 (((x) >> (i)*8) & 0xff)
 #define INT64_I8(x,i)                 (((x) >> (i)*8) & 0xff)
@@ -35,7 +35,7 @@ DECL_BEGIN
 #define ENCODE_INT16(a,b)              ((b)<<8|(a))
 #define ENCODE_INT32(a,b,c,d)          ((d)<<24|(c)<<16|(b)<<8|(a))
 #define ENCODE_INT64(a,b,c,d,e,f,g,h)  ((h)<<56|(g)<<48|(f)<<40|(e)<<32|(d)<<24|(c)<<16|(b)<<8|(a))
-#elif __BYTE_ORDER__ == __BIG_ENDIAN
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define INT16_I8(x,i)                 (((x) >> (8-(i)*8)) & 0xff)
 #define INT32_I8(x,i)                 (((x) >> (24-(i)*8)) & 0xff)
 #define INT64_I8(x,i)                 (((x) >> (56-(i)*8)) & 0xff)
