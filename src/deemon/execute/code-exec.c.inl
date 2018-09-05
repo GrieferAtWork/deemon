@@ -2222,8 +2222,8 @@ do_function_c:
        Dee_Decref(code_object);
        HANDLE_EXCEPT();
       }
-      if (((DeeCodeObject *)code_object)->co_refc != 0) {
-       err_invalid_refs_size(code_object,0);
+      if (((DeeCodeObject *)code_object)->co_refc != imm_val2 + 1) {
+       err_invalid_refs_size(code_object,imm_val2 + 1);
        Dee_Decref(code_object);
        HANDLE_EXCEPT();
       }
@@ -5233,8 +5233,8 @@ prefix_do_function_c:
         Dee_Decref(code_object);
         HANDLE_EXCEPT();
        }
-       if (((DeeCodeObject *)code_object)->co_refc != 0) {
-        err_invalid_refs_size(code_object,0);
+       if (((DeeCodeObject *)code_object)->co_refc != imm_val2+1) {
+        err_invalid_refs_size(code_object,imm_val2+1);
         Dee_Decref(code_object);
         HANDLE_EXCEPT();
        }
