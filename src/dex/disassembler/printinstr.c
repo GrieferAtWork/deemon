@@ -198,9 +198,9 @@ PRIVATE char const mnemonic_names[256][31] = {
     /* 0x26 */ "pop    #SP - ", /* `ASM_POP_N' */
     /* 0x27 */ "adjstack #SP ", /* `ASM_ADJSTACK' */
     /* 0x28 */ "super  top, pop", /* `ASM_SUPER' */
-    /* 0x29 */ "push   super ", /* `ASM_SUPER_THIS_R' */
-    /* 0x2a */ "push   super ", /* `ASM_SUPER_THIS_G' */
-    /* 0x2b */ "push   super ", /* `ASM_SUPER_THIS_E' */
+    /* 0x29 */ "push   super this, ", /* `ASM_SUPER_THIS_R' */
+    /* 0x2a */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0x2b */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x2c */ "pop    ", /* `ASM_POP_STATIC' */
     /* 0x2d */ "pop    ", /* `ASM_POP_EXTERN' */
     /* 0x2e */ "pop    ", /* `ASM_POP_GLOBAL' */
@@ -214,9 +214,9 @@ PRIVATE char const mnemonic_names[256][31] = {
     /* 0x36 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x37 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x38 */ "push   ", /* `ASM_PUSH_MODULE' */
-    /* 0x39 */ "push   ", /* `ASM_PUSH_REF' */
-    /* 0x3a */ "push   ", /* `ASM_PUSH_ARG' */
-    /* 0x3b */ "push   ", /* `ASM_PUSH_CONST' */
+    /* 0x39 */ "push   ", /* `ASM_PUSH_ARG' */
+    /* 0x3a */ "push   ", /* `ASM_PUSH_CONST' */
+    /* 0x3b */ "push   ", /* `ASM_PUSH_REF' */
     /* 0x3c */ "push   ", /* `ASM_PUSH_STATIC' */
     /* 0x3d */ "push   ", /* `ASM_PUSH_EXTERN' */
     /* 0x3e */ "push   ", /* `ASM_PUSH_GLOBAL' */
@@ -456,9 +456,9 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf026 */ "pop    #SP - ", /* `ASM16_POP_N' */
     /* 0xf027 */ "adjstack #SP ", /* `ASM16_ADJSTACK' */
     /* 0xf028 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf029 */ "push   super ", /* `ASM16_SUPER_THIS_R' */
-    /* 0xf02a */ "push   super ", /* `ASM16_SUPER_THIS_G' */
-    /* 0xf02b */ "push   super ", /* `ASM16_SUPER_THIS_E' */
+    /* 0xf029 */ "push   super this, ", /* `ASM16_SUPER_THIS_R' */
+    /* 0xf02a */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0xf02b */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf02c */ "pop    ", /* `ASM16_POP_STATIC' */
     /* 0xf02d */ "pop    ", /* `ASM16_POP_EXTERN' */
     /* 0xf02e */ "pop    ", /* `ASM16_POP_GLOBAL' */
@@ -472,9 +472,9 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf036 */ "push   this_module", /* `ASM_PUSH_THIS_MODULE' */
     /* 0xf037 */ "push   this_function", /* `ASM_PUSH_THIS_FUNCTION' */
     /* 0xf038 */ "push   ", /* `ASM16_PUSH_MODULE' */
-    /* 0xf039 */ "push   ", /* `ASM16_PUSH_REF' */
-    /* 0xf03a */ "push   ", /* `ASM16_PUSH_ARG' */
-    /* 0xf03b */ "push   ", /* `ASM16_PUSH_CONST' */
+    /* 0xf039 */ "push   ", /* `ASM16_PUSH_ARG' */
+    /* 0xf03a */ "push   ", /* `ASM16_PUSH_CONST' */
+    /* 0xf03b */ "push   ", /* `ASM16_PUSH_REF' */
     /* 0xf03c */ "push   ", /* `ASM16_PUSH_STATIC' */
     /* 0xf03d */ "push   ", /* `ASM16_PUSH_EXTERN' */
     /* 0xf03e */ "push   ", /* `ASM16_PUSH_GLOBAL' */
@@ -1928,10 +1928,6 @@ print_local:
 print_ref:
   INVOKE(libdisasm_printref(printer,arg,imm,code,flags));
   switch (opcode) {
-  case ASM_SUPER_THIS_R:
-  case ASM16_SUPER_THIS_R:
-   PRINT(", this");
-   break;
   case ASM_GETMEMBER_R:
   case ASM_BOUNDMEMBER_R:
   case ASM_DELMEMBER_R:

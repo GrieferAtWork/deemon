@@ -418,10 +418,10 @@
                                     * >>     offset = offset + 1;
                                     * >> DONE
                                     */
-#define ASM_SUPER             0x28 /* [1][-2,+1]   `super top, pop'                     - Create a new super-wrapper using a type from `top' and the associated object from `pop'.
+#define ASM_SUPER             0x28 /* [1][-2,+1]   `super top, pop'                     - Create a new super-wrapper using a type from `pop' and the associated object from `top'.
                                     * >> object ob = POP();
                                     * >> PUSH(ob as POP()); */
-#define ASM_SUPER_THIS_R      0x29 /* [2][-0,+1]   `push super ref <imm8>, this'        - Similar to `ASM_SUPER', but use a referenced variable `<imm8>' as type and the this-argument as object.
+#define ASM_SUPER_THIS_R      0x29 /* [2][-0,+1]   `push super this, ref <imm8>'        - Similar to `ASM_SUPER', but use a referenced variable `<imm8>' as type and the this-argument as object.
                                     * >> PUSH(THIS as REF(IMM8)); */
 /*      ASM_                  0x2a  *               --------                            - ------------------ */
 /*      ASM_                  0x2b  *               --------                            - ------------------ */
@@ -986,7 +986,7 @@
                                       * [4][-n-1,+n+1] `mov #SP - <imm16> - 2, PREFIX'    - `PREFIX: pop #SP - <imm16> - 2' */
 #define ASM16_ADJSTACK        0xf027 /* [4][-?,+?]   `adjstack #SP +/- <Simm16>'          - Same as `ASM_ADJSTACK', but using a 16-bit stack-offset. */
 /*      ASM_                  0xf028  *               --------                            - ------------------ */
-#define ASM16_SUPER_THIS_R    0xf029 /* [4][-0,+1]   `push super ref <imm16>, this'       - Similar to `ASM_SUPER', but use a referenced variable `<imm16>' as type and the this-argument as object. */
+#define ASM16_SUPER_THIS_R    0xf029 /* [4][-0,+1]   `push super this, ref <imm16>'       - Similar to `ASM_SUPER', but use a referenced variable `<imm16>' as type and the this-argument as object. */
 /*      ASM_                  0xf02a  *               --------                            - ------------------ */
 /*      ASM_                  0xf02b  *               --------                            - ------------------ */
 #define ASM16_POP_STATIC      0xf02c /* [4][-1,+0]   `pop static <imm16>'                 - Pop the top stack value into the static variable indexed by `<imm16>', overwriting the previous value.

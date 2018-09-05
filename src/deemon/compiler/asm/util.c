@@ -222,8 +222,8 @@ INTERN int (DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
      return asm_gpush_none();
  if (DeeSuper_Check(value)) {
   /* Construct a super-wrapper. */
-  if (asm_gpush_constexpr((DeeObject *)DeeSuper_TYPE(value))) goto err;
   if (asm_gpush_constexpr((DeeObject *)DeeSuper_SELF(value))) goto err;
+  if (asm_gpush_constexpr((DeeObject *)DeeSuper_TYPE(value))) goto err;
   return asm_gsuper();
  }
  if (DeeTuple_Check(value)) {
@@ -583,9 +583,8 @@ PRIVATE int (DCALL asm_gpush_thisas)(struct symbol *__restrict class_type,
  int32_t symid;
  /* Special instructions exist to push `this' as a
   * specific class type when the type is a certain symbol. */
-check_ct_class:
  SYMBOL_INPLACE_UNWIND_ALIAS(class_type);
- if (SYMBOL_MUST_REFERENCE(class_type)) {
+ if (SYMBOL_MAY_REFERENCE(class_type)) {
   symid = asm_rsymid(class_type);
   if unlikely(symid < 0) goto err;
   return asm_gsuper_this_r((uint16_t)symid);

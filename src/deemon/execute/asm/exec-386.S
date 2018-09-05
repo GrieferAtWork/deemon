@@ -8859,7 +8859,7 @@ inst_table:
 	.long target_pop_n                   /* `pop #SP - <imm8> - 2' */
 	.long target_adjstack                /* `adjstack #SP +/- <Simm8>' */
 	.long target_super                   /* `super top, pop' */
-	.long target_super_this_r            /* `push super ref <imm8>, this' */
+	.long target_super_this_r            /* `push super this, ref <imm8>' */
 	.long invop
 	.long invop
 	.long target_pop_static              /* `pop static <imm8>' */
@@ -9117,7 +9117,7 @@ inst_table_f0:
 	.long target16_pop_n                 /* `pop #SP - <imm16> - 2' */
 	.long target16_adjstack              /* `adjstack #SP +/- <Simm16>' */
 	.long invop
-	.long target16_super_this_r          /* `push super ref <imm16>, this' */
+	.long target16_super_this_r          /* `push super this, ref <imm16>' */
 	.long invop
 	.long invop
 	.long target16_pop_static            /* `pop static <imm16>' */
@@ -9375,7 +9375,7 @@ prefix_inst_table:
 	.long prefix_target_pop_n                   /* `pop #SP - <imm8> - 2' */
 	.long prefix_target_adjstack                /* `adjstack #SP +/- <Simm8>' */
 	.long prefix_target_super                   /* `super top, pop' */
-	.long prefix_target_super_this_r            /* `push super ref <imm8>, this' */
+	.long prefix_target_super_this_r            /* `push super this, ref <imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target_pop_static              /* `pop static <imm8>' */
@@ -9633,7 +9633,7 @@ prefix_inst_table_f0:
 	.long prefix_target16_pop_n                 /* `pop #SP - <imm16> - 2' */
 	.long prefix_target16_adjstack              /* `adjstack #SP +/- <Simm16>' */
 	.long prefix_invop
-	.long prefix_target16_super_this_r          /* `push super ref <imm16>, this' */
+	.long prefix_target16_super_this_r          /* `push super this, ref <imm16>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target16_pop_static            /* `pop static <imm16>' */

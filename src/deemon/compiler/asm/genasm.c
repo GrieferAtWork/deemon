@@ -2587,7 +2587,7 @@ operator_without_prefix:
      int32_t symid;
      struct symbol *typesym = ast->a_action.a_act1->a_sym;
      SYMBOL_INPLACE_UNWIND_ALIAS(typesym);
-     if (SYMBOL_MUST_REFERENCE(typesym)) {
+     if (SYMBOL_MAY_REFERENCE(typesym)) {
       symid = asm_rsymid(typesym);
       if unlikely(symid < 0) goto err;
       if (asm_gsuper_this_r(symid)) goto err;
@@ -2595,18 +2595,9 @@ operator_without_prefix:
      }
     }
    }
-   if (PUSH_RESULT &&
-       ast_can_exchange(ast->a_action.a_act0,
-                        ast->a_action.a_act1)) {
-    /* Optimization when `ACT0' and `ACT1' can be exchanged. */
-    if (ast_genasm(ast->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm(ast->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
-    if (asm_putddi(ast) || asm_gsuper()) goto err;
-   } else {
-    if (ast_genasm(ast->a_action.a_act0,PUSH_RESULT)) goto err;
-    if (ast_genasm(ast->a_action.a_act1,PUSH_RESULT)) goto err;
-    if (PUSH_RESULT && (asm_putddi(ast) || asm_gswap() || asm_gsuper())) goto err;
-   }
+   if (ast_genasm(ast->a_action.a_act0,PUSH_RESULT)) goto err;
+   if (ast_genasm(ast->a_action.a_act1,PUSH_RESULT)) goto err;
+   if (PUSH_RESULT && (asm_putddi(ast) || asm_gsuper())) goto err;
    break;
   ACTION(AST_FACTION_PRINT)
    if unlikely(ast_genprint(PRINT_MODE_NORMAL+PRINT_MODE_ALL,

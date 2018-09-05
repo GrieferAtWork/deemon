@@ -1457,7 +1457,7 @@ do_stack_adjust:
 
  TARGET(ASM_SUPER,-2,+1) {
      DREF DeeObject *super_wrapper;
-     super_wrapper = DeeSuper_New((DeeTypeObject *)SECOND,FIRST);
+     super_wrapper = DeeSuper_New((DeeTypeObject *)FIRST,SECOND);
      if unlikely(!super_wrapper)
         HANDLE_EXCEPT();
      POPREF();
