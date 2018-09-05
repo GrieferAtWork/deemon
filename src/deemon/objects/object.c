@@ -1559,7 +1559,7 @@ INTDEF void DCALL class_fini(DeeTypeObject *__restrict self);
 INTERN void DCALL class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg);
 INTERN void DCALL class_clear(DeeTypeObject *__restrict self);
 
-PRIVATE void DCALL type_dtor(DeeTypeObject *__restrict self) {
+PRIVATE void DCALL type_fini(DeeTypeObject *__restrict self) {
 #ifdef __GNUC__
  if (!(self->tp_flags&TP_FHEAP)) {
   printf("type: %s\n",self->tp_name);
@@ -2100,7 +2100,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
                 }
             }
         },
-        /* .tp_dtor        = */(void (DCALL *)(DeeObject *__restrict))&type_dtor,
+        /* .tp_dtor        = */(void (DCALL *)(DeeObject *__restrict))&type_fini,
         /* .tp_assign      = */NULL,
         /* .tp_move_assign = */NULL
     },

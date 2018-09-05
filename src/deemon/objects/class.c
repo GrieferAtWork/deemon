@@ -1588,11 +1588,16 @@ class_fini(DeeTypeObject *__restrict self) {
   * WARNING: Because we can't do this in `tp_gc' (because of the
   *          WRITE_ONCE locking mechanism), all operator glue functions
   *          must be able to deal with their operator having been deleted. */
- Dee_Free(self->tp_math);
- Dee_Free(self->tp_cmp);
- Dee_Free(self->tp_seq);
- Dee_Free(self->tp_attr);
- Dee_Free(self->tp_with);
+ if (!self->tp_base || self->tp_math != self->tp_base->tp_math)
+      Dee_Free(self->tp_math);
+ if (!self->tp_base || self->tp_cmp != self->tp_base->tp_cmp)
+      Dee_Free(self->tp_cmp);
+ if (!self->tp_base || self->tp_seq != self->tp_base->tp_seq)
+      Dee_Free(self->tp_seq);
+ if (!self->tp_base || self->tp_attr != self->tp_base->tp_attr)
+      Dee_Free(self->tp_attr);
+ if (!self->tp_base || self->tp_with != self->tp_base->tp_with)
+      Dee_Free(self->tp_with);
 }
 
 INTERN void DCALL

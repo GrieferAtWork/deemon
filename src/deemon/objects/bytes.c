@@ -1208,12 +1208,6 @@ bytes_nsi_getitem(Bytes *__restrict self, size_t index) {
  return DeeInt_NewU8(DeeBytes_DATA(self)[index]);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_nsi_getitem_fast(Bytes *__restrict self, size_t index) {
- ASSERT(index < DeeBytes_SIZE(self));
- return DeeInt_NewU8(DeeBytes_DATA(self)[index]);
-}
-
 PRIVATE int DCALL
 bytes_nsi_delitem(Bytes *__restrict self,
                   size_t index) {
@@ -1369,7 +1363,7 @@ PRIVATE struct type_nsi bytes_nsi = {
             /* .nsi_getitem      = */(void *)&bytes_nsi_getitem,
             /* .nsi_delitem      = */(void *)&bytes_nsi_delitem,
             /* .nsi_setitem      = */(void *)&bytes_nsi_setitem,
-            /* .nsi_getitem_fast = */(void *)&bytes_nsi_getitem_fast,
+            /* .nsi_getitem_fast = */(void *)NULL,
             /* .nsi_getrange     = */(void *)&bytes_nsi_getrange_i,
             /* .nsi_getrange_n   = */(void *)&bytes_nsi_getrange_in,
             /* .nsi_setrange     = */(void *)&bytes_nsi_setrange_i,

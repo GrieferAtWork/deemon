@@ -420,7 +420,7 @@
                                     */
 #define ASM_SUPER             0x28 /* [1][-2,+1]   `super top, pop'                     - Create a new super-wrapper using a type from `pop' and the associated object from `top'.
                                     * >> object ob = POP();
-                                    * >> PUSH(ob as POP()); */
+                                    * >> PUSH(POP() as ob); */
 #define ASM_SUPER_THIS_R      0x29 /* [2][-0,+1]   `push super this, ref <imm8>'        - Similar to `ASM_SUPER', but use a referenced variable `<imm8>' as type and the this-argument as object.
                                     * >> PUSH(THIS as REF(IMM8)); */
 /*      ASM_                  0x2a  *               --------                            - ------------------ */

@@ -541,7 +541,7 @@ DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafe(struct code_frame *_
  * on a new, heap-allocated stack, before switching back
  * to the caller's original stack before returning.
  * These functions are highly platform- and arch-specific, and are meant
- * to provide some way of prevent a true stack overflow when user-code
+ * to provide some way of preventing a true stack overflow when user-code
  * has increased `DeeExec_StackLimit' to unreasonable heights. */
 DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame);
 DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame);

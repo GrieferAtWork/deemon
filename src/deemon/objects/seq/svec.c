@@ -969,6 +969,19 @@ svec_nsi_getitem(SharedVector *__restrict self, size_t index) {
  rwlock_endread(&self->sv_lock);
  return result;
 }
+PRIVATE DREF DeeObject *DCALL
+svec_nsi_getitem_fast(SharedVector *__restrict self, size_t index) {
+ DREF DeeObject *result;
+ rwlock_read(&self->sv_lock);
+ if unlikely(index >= self->sv_length) {
+  rwlock_endread(&self->sv_lock);
+  return NULL;
+ }
+ result = self->sv_vector[index];
+ Dee_Incref(result);
+ rwlock_endread(&self->sv_lock);
+ return result;
+}
 
 
 PRIVATE struct type_nsi svec_nsi = {
@@ -981,7 +994,7 @@ PRIVATE struct type_nsi svec_nsi = {
             /* .nsi_getitem      = */(void *)&svec_nsi_getitem,
             /* .nsi_delitem      = */(void *)NULL,
             /* .nsi_setitem      = */(void *)NULL,
-            /* .nsi_getitem_fast = */(void *)NULL,
+            /* .nsi_getitem_fast = */(void *)&svec_nsi_getitem_fast,
             /* .nsi_getrange     = */(void *)NULL,
             /* .nsi_getrange_n   = */(void *)NULL,
             /* .nsi_setrange     = */(void *)NULL,
@@ -1003,10 +1016,10 @@ PRIVATE struct type_nsi svec_nsi = {
 };
 
 PRIVATE struct type_seq svec_seq = {
-    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self))&svec_iter,
-    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self))&svec_size,
-    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&svec_contains,
-    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict index))&svec_getitem,
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&svec_iter,
+    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&svec_size,
+    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&svec_contains,
+    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&svec_getitem,
     /* .tp_del       = */NULL,
     /* .tp_set       = */NULL,
     /* .tp_range_get = */NULL,

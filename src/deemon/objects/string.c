@@ -1171,12 +1171,6 @@ string_nsi_getitem(String *__restrict self, size_t index) {
  return DeeString_Chr(DeeString_GetChar(self,index));
 }
 
-PRIVATE DREF DeeObject *DCALL
-string_nsi_getitem_fast(String *__restrict self, size_t index) {
- ASSERT(index < DeeString_WLEN(self));
- return DeeString_Chr(DeeString_GetChar(self,index));
-}
-
 PRIVATE struct type_nsi string_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
     /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
@@ -1187,7 +1181,7 @@ PRIVATE struct type_nsi string_nsi = {
             /* .nsi_getitem      = */(void *)&string_nsi_getitem,
             /* .nsi_delitem      = */(void *)NULL,
             /* .nsi_setitem      = */(void *)NULL,
-            /* .nsi_getitem_fast = */(void *)&string_nsi_getitem_fast,
+            /* .nsi_getitem_fast = */(void *)NULL,
             /* .nsi_getrange     = */(void *)NULL,
             /* .nsi_getrange_n   = */(void *)NULL,
             /* .nsi_setrange     = */(void *)NULL,
