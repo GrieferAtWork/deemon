@@ -101,7 +101,7 @@ DeeInt_NewSleb(uint8_t **__restrict preader) {
   while (num_bits < DIGIT_BITS &&
         (reader[-1]&0x80)) {
    /* Set the top-most 7 bits. */
-   temp     |= (*reader & 0x7f) << num_bits;
+   temp     |= (twodigits)(*reader & 0x7f) << num_bits;
    num_bits += 7;
    if (!(*reader++ & 0x80)) break;
   }
@@ -110,7 +110,18 @@ DeeInt_NewSleb(uint8_t **__restrict preader) {
    num_bits -= DIGIT_BITS;
    temp    >>= DIGIT_BITS;
   } else {
-   if (!num_bits) { ++dst; break; } /* Simple case: unused. */
+   if (!num_bits) {
+    if (dst == result->ob_digit) {
+     /* Special case: INT(0) */
+     DeeObject_Free(result);
+     result = &DeeInt_Zero;
+     Dee_Incref(result);
+     goto done2;
+    }
+    /* Simple case: unused. */
+    ++dst;
+    break;
+   }
    /* Less than one digit. */
    *dst = (digit)temp;
    if (*dst) ++dst;
@@ -121,6 +132,7 @@ DeeInt_NewSleb(uint8_t **__restrict preader) {
  /* Check the sign bit. */
  if (**preader & 0x40)
      result->ob_size = -result->ob_size;
+done2:
  /* Save the new read position. */
  *preader = reader;
 done:
@@ -145,16 +157,32 @@ DeeInt_NewUleb(uint8_t **__restrict preader) {
   while (num_bits < DIGIT_BITS &&
         (reader == *preader || (reader[-1]&0x80))) {
    /* Set the top-most 7 bits. */
-   temp     |= (*reader & 0x7f) << num_bits;
+   temp     |= (twodigits)(*reader & 0x7f) << num_bits;
    num_bits += 7;
-   if (!(*reader++ & 0x80)) break;
+   if (!(*reader++ & 0x80)) {
+    while (num_bits &&
+        !((temp >> (num_bits-1))&1))
+         --num_bits;
+    break;
+   }
   }
   if (num_bits >= DIGIT_BITS) {
    *dst++    = temp&DIGIT_MASK;
    num_bits -= DIGIT_BITS;
    temp    >>= DIGIT_BITS;
   } else {
-   if (!num_bits) { ++dst; break; } /* Simple case: unused. */
+   if (!num_bits) {
+    if (dst == result->ob_digit) {
+     /* Special case: INT(0) */
+     DeeObject_Free(result);
+     result = &DeeInt_Zero;
+     Dee_Incref(result);
+     goto done2;
+    }
+    /* Simple case: unused. */
+    ++dst;
+    break;
+   }
    /* Less than one digit. */
    *dst = (digit)temp;
    if (*dst) ++dst;
@@ -162,6 +190,7 @@ DeeInt_NewUleb(uint8_t **__restrict preader) {
   }
  }
  result->ob_size = (size_t)(dst-result->ob_digit);
+done2:
  /* Save the new read position. */
  *preader = reader;
 done:
