@@ -2620,7 +2620,7 @@ utf8_readchar_rev(char const **__restrict pend,
  char const *end = *pend;
  uint8_t seqlen = 1;
  while (end > begin &&
-       (*--end & 0xc0) == 0x80 &&
+       ((unsigned char)*--end & 0xc0) == 0x80 &&
         seqlen < 8) ++seqlen;
  result = utf8_getchar((uint8_t *)end,seqlen);
  *pend = end;
@@ -3235,7 +3235,7 @@ unicode_printer_print(struct unicode_printer *__restrict self,
  }
 again_flush:
  flush_start = (char *)text;
- while (textlen && *text < 0xc0) ++text,--textlen;
+ while (textlen && (unsigned char)*text < 0xc0) ++text,--textlen;
  /* Print ASCII text. */
  if (flush_start != text) {
   if unlikely(unicode_printer_print8(self,
@@ -3246,7 +3246,7 @@ again_flush:
  if (textlen) {
   uint8_t seqlen;
   uint32_t ch32;
-  ASSERT(*text >= 0xc0);
+  ASSERT((unsigned char)*text >= 0xc0);
   seqlen = utf8_sequence_len[(uint8_t)*text];
   if (seqlen > textlen) {
    /* Incomplete sequence! (safe as pending UTF-8) */
@@ -4934,7 +4934,7 @@ bytes_printer_print(struct bytes_printer *__restrict self,
  }
 again_flush:
  flush_start = (char *)text;
- while (textlen && *text < 0xc0) ++text,--textlen;
+ while (textlen && (unsigned char)*text < 0xc0) ++text,--textlen;
  /* Print ASCII text. */
  if (flush_start != text) {
   if unlikely(bytes_printer_append(self,
@@ -4944,7 +4944,7 @@ again_flush:
  }
  if (textlen) {
   uint8_t seqlen;
-  ASSERT(*text >= 0xc0);
+  ASSERT((unsigned char)*text >= 0xc0);
   seqlen = utf8_sequence_len[(uint8_t)*text];
   if (seqlen > textlen) {
    /* Incomplete sequence! (safe as pending UTF-8) */
