@@ -1665,10 +1665,6 @@ do_optimize_popmov_16bit:
   case ASM16_PUSH_BND_LOCAL:
   case ASM_SUPER_THIS_R:
   case ASM16_SUPER_THIS_R:
-  case ASM_SUPER_THIS_G:
-  case ASM16_SUPER_THIS_G:
-  case ASM_SUPER_THIS_E:
-  case ASM16_SUPER_THIS_E:
   case ASM_CLASS_C:
   case ASM_CLASS_CBL:
   case ASM_CLASS_CBG:

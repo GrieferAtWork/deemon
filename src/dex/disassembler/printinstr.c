@@ -1848,7 +1848,6 @@ print_imm_pop:
  case ASM16_POP_EXTERN:
  case ASM16_PUSH_EXTERN:
  case ASM16_CALL_EXTERN:
- case ASM16_SUPER_THIS_E:
   imm  = READ_imm16(iter);
   imm2 = READ_imm16(iter);
   goto print_extern;
@@ -1856,15 +1855,12 @@ print_imm_pop:
  case ASM_POP_EXTERN:
  case ASM_PUSH_EXTERN:
  case ASM_CALL_EXTERN:
- case ASM_SUPER_THIS_E:
   imm  = READ_imm8(iter);
   imm2 = READ_imm8(iter);
 print_extern:
   INVOKE(libdisasm_printextern(printer,arg,imm,imm2,code,flags));
   if (opcode == ASM_CALL_EXTERN || opcode == ASM16_CALL_EXTERN)
       printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));
-  if (opcode == ASM_SUPER_THIS_E || opcode == ASM16_SUPER_THIS_E)
-      PRINT(", this");
  } break;
 
  case ASM16_PUSH_MODULE:
@@ -1881,7 +1877,6 @@ print_module:
  case ASM16_POP_GLOBAL:
  case ASM16_PUSH_GLOBAL:
  case ASM16_CALL_GLOBAL:
- case ASM16_SUPER_THIS_G:
   imm = READ_imm16(iter);
   goto print_global;
  case ASM_PUSH_BND_GLOBAL:
@@ -1889,14 +1884,11 @@ print_module:
  case ASM_POP_GLOBAL:
  case ASM_PUSH_GLOBAL:
  case ASM_CALL_GLOBAL:
- case ASM_SUPER_THIS_G:
   imm = READ_imm8(iter);
 print_global:
   INVOKE(libdisasm_printglobal(printer,arg,imm,code,flags));
   if (opcode == ASM_CALL_GLOBAL || opcode == ASM16_CALL_GLOBAL)
       printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));
-  if (opcode == ASM_SUPER_THIS_G || opcode == ASM16_SUPER_THIS_G)
-      PRINT(", this");
   break;
 
  case ASM16_PUSH_BND_LOCAL:

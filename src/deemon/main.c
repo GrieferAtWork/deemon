@@ -2226,18 +2226,25 @@ err_nofin:
 PRIVATE bool DCALL os_trychdir(char *__restrict path) {
  DREF DeeObject *pathob; LPWSTR wpath;
  DWORD dwError;
- if (SetCurrentDirectoryA(path))
-     return true;
+ DBG_ALIGNMENT_DISABLE();
+ if (SetCurrentDirectoryA(path)) {
+  DBG_ALIGNMENT_ENABLE();
+  return true;
+ }
+ DBG_ALIGNMENT_ENABLE();
  /* Try the wide-character version. */
  pathob = DeeString_New(path);
  if unlikely(!pathob) goto err;
  wpath = (LPWSTR)DeeString_AsWide(pathob);
  if unlikely(!wpath) goto err_pathob;
+ DBG_ALIGNMENT_DISABLE();
  if (SetCurrentDirectoryW(wpath)) {
+  DBG_ALIGNMENT_ENABLE();
   Dee_Decref(pathob);
   return true;
  }
  dwError = GetLastError();
+ DBG_ALIGNMENT_ENABLE();
  if (nt_IsUncError(dwError)) {
   /* Try one last time after fixing the path to be UNC-compliant. */
   DREF DeeObject *new_path;
@@ -2247,10 +2254,13 @@ PRIVATE bool DCALL os_trychdir(char *__restrict path) {
   pathob = new_path;
   wpath = (LPWSTR)DeeString_AsWide(pathob);
   if unlikely(!wpath) goto err_pathob;
+  DBG_ALIGNMENT_DISABLE();
   if (SetCurrentDirectoryW(wpath)) {
+   DBG_ALIGNMENT_ENABLE();
    Dee_Decref(pathob);
    return true;
   }
+  DBG_ALIGNMENT_ENABLE();
  }
  Dee_Decref(pathob);
  return false;

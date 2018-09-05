@@ -39,22 +39,18 @@
  *  >> Pop/dup/etc. when the stack is empty or not large enough:
  *       throw an `Error.RuntimeError.SegFault'
  *  >> Attempting to access an out-of-bounds variable:
- *       throw an `Error.RuntimeError.UnboundLocal'
+ *       throw an `Error.RuntimeError.IllegalInstruction'
  *  >> Attempting to access an out-of-bounds constant:
- *       throw an `Error.RuntimeError.UnboundLocal'
+ *       throw an `Error.RuntimeError.IllegalInstruction'
  *  >> Attempting to access an out-of-bounds argument:
- *       throw an `Error.RuntimeError.UnboundLocal'
+ *       throw an `Error.RuntimeError.IllegalInstruction'
  *  >> Attempting to jump outside the active code object:
  *       throw an `Error.RuntimeError.IllegalInstruction'
  *  >> Attempting to yield from a non-yielding function:
  *       throw an `Error.RuntimeError.IllegalInstruction'
  *  >> Attempting to execute `ASM_PUSH_THIS' without `CODE_FTHISCALL' being set:
  *       throw an `Error.RuntimeError.IllegalInstruction'
- *  >> Attempting to use `ASM_CALL_TUPLE' without a tuple:
- *       throw an `Error.TypeError'
- *  >> Attempting to use `ASM_UNPACK_TUPLE' or `ASM_UNPACK_LIST' without the proper object:
- *       throw an `Error.TypeError'
- *  >> Attempting to use `ASM_CONCAT' or `ASM_CONCAT_LIST' without the proper object:
+ *  >> Attempting to use `ASM_CALL_TUPLE' (& related instruction) without a tuple:
  *       throw an `Error.TypeError'
  *  >> Attempting to use `ASM_PUSH_EXCEPT' when no exception has been thrown:
  *       throw an `Error.RuntimeError.IllegalInstruction'
@@ -427,10 +423,8 @@
                                     * >> PUSH(ob as POP()); */
 #define ASM_SUPER_THIS_R      0x29 /* [2][-0,+1]   `push super ref <imm8>, this'        - Similar to `ASM_SUPER', but use a referenced variable `<imm8>' as type and the this-argument as object.
                                     * >> PUSH(THIS as REF(IMM8)); */
-#define ASM_SUPER_THIS_G      0x2a /* [2][-0,+1]   `push super global <imm8>, this'     - Similar to `ASM_SUPER', but use a global variable `<imm8>' as type and the this-argument as object.
-                                    * >> PUSH(THIS as GLOBAL(IMM8)); */
-#define ASM_SUPER_THIS_E      0x2b /* [3][-0,+1]   `push super extern <imm8>:<imm8>, this'   - Similar to `ASM_SUPER', but use an extern variable `<imm8>:<imm8>' as type and the this-argument as object.
-                                    * >> PUSH(THIS as EXTERN(IMM8,IMM8)); */
+/*      ASM_                  0x2a  *               --------                            - ------------------ */
+/*      ASM_                  0x2b  *               --------                            - ------------------ */
 #define ASM_POP_STATIC        0x2c /* [2][-1,+0]   `pop static <imm8>'                  - Pop the top stack value into the static variable indexed by `<imm8>', overwriting the previous value.
                                     * [2][-0,+0]   `mov static <imm8>, PREFIX'          - `PREFIX: pop static <imm8>'
                                     * >> STATIC(IMM8) = SOURCE; */
@@ -467,15 +461,15 @@
 #define ASM_PUSH_MODULE       0x38 /* [2][-0,+1]   `push module <imm8>'                 - Push an imported module indexed by <imm8> from the current module.
                                     * [1][-0,+0]   `mov  PREFIX, module <imm8>'         - `PREFIX: push module <imm8>'
                                     * >> DESTINATION = MODULE(IMM8); */
-#define ASM_PUSH_REF          0x39 /* [2][-0,+1]   `push ref <imm8>'                    - Push a referenced variable indexed by `<imm8>'.
-                                    * [1][-0,+0]   `mov  PREFIX, ref <imm8>'            - `PREFIX: push ref <imm8>'
-                                    * >> DESTINATION = REF(IMM8); */
-#define ASM_PUSH_ARG          0x3a /* [2][-0,+1]   `push arg <imm8>'                    - Push the argument indexed by `<imm8>'.
+#define ASM_PUSH_ARG          0x39 /* [2][-0,+1]   `push arg <imm8>'                    - Push the argument indexed by `<imm8>'.
                                     * [1][-0,+0]   `mov  PREFIX, arg <imm8>'            - `PREFIX: push arg <imm8>'
                                     * >> DESTINATION = ARG(IMM8); */
-#define ASM_PUSH_CONST        0x3b /* [2][-0,+1]   `push const <imm8>'                  - Same as `ASM_PUSH_STATIC', but doesn't require a lock as the slot should acts as an immutable constant.
+#define ASM_PUSH_CONST        0x3a /* [2][-0,+1]   `push const <imm8>'                  - Same as `ASM_PUSH_STATIC', but doesn't require a lock as the slot should acts as an immutable constant.
                                     * [1][-0,+0]   `mov  PREFIX, const <imm8>'          - `PREFIX: push const <imm8>'
                                     * >> DESTINATION = CONSTANT(IMM8); */
+#define ASM_PUSH_REF          0x3b /* [2][-0,+1]   `push ref <imm8>'                    - Push a referenced variable indexed by `<imm8>'.
+                                    * [1][-0,+0]   `mov  PREFIX, ref <imm8>'            - `PREFIX: push ref <imm8>'
+                                    * >> DESTINATION = REF(IMM8); */
 #define ASM_PUSH_STATIC       0x3c /* [2][-0,+1]   `push static <imm8>'                 - Push the static variable indexed by `<imm8>'.
                                     * [1][-0,+0]   `mov  PREFIX, static <imm8>'         - `PREFIX: push static <imm8>'
                                     * >> DESTINATION = STATIC(IMM8); */
@@ -840,9 +834,8 @@
 /* Working storage class modifiers. */
 /*      ASM_                  0xf8  *  --------                            - ------------------ */
 /*      ASM_                  0xf9  *  --------                            - ------------------ */
+/* XXX: Prefix: ASM_MEMBER `member this, ref <imm8>, <imm8>' - Use a member of `this' */
 /*      ASM_                  0xfa  *  --------                            - ------------------ */
-/*      ASM_                  0xfb  *  --------                            - ------------------ */
-/* XXX: Prefix: ASM_PMEMBER `member this, ref <imm8>, <imm8>' - Use a member of `this' */
 #define ASM_STACK             0xfb /* `stack #<imm8>'                      - Use an object located on the stack as storage class.
                                     *                                        The associated operand is an absolute offset from the stack's base. */
 #define ASM_STATIC            0xfc /* `static <imm8>'                      - Same as `ASM_LOCAL', but used to write to static variables. */
@@ -994,8 +987,8 @@
 #define ASM16_ADJSTACK        0xf027 /* [4][-?,+?]   `adjstack #SP +/- <Simm16>'          - Same as `ASM_ADJSTACK', but using a 16-bit stack-offset. */
 /*      ASM_                  0xf028  *               --------                            - ------------------ */
 #define ASM16_SUPER_THIS_R    0xf029 /* [4][-0,+1]   `push super ref <imm16>, this'       - Similar to `ASM_SUPER', but use a referenced variable `<imm16>' as type and the this-argument as object. */
-#define ASM16_SUPER_THIS_G    0xf02a /* [4][-0,+1]   `push super global <imm16>, this'    - Similar to `ASM_SUPER', but use a global variable `<imm16>' as type and the this-argument as object. */
-#define ASM16_SUPER_THIS_E    0xf02b /* [6][-0,+1]   `push super extern <imm16>:<imm16>, this' - Similar to `ASM_SUPER', but use an extern variable `<imm16>:<imm16>' as type and the this-argument as object. */
+/*      ASM_                  0xf02a  *               --------                            - ------------------ */
+/*      ASM_                  0xf02b  *               --------                            - ------------------ */
 #define ASM16_POP_STATIC      0xf02c /* [4][-1,+0]   `pop static <imm16>'                 - Pop the top stack value into the static variable indexed by `<imm16>', overwriting the previous value.
                                       * [4][-0,+0]   `mov static <imm16>, PREFIX'         - `PREFIX: pop static <imm16>' */
 #define ASM16_POP_EXTERN      0xf02d /* [6][-1,+0]   `pop extern <imm16>:<imm16>'         - Pop the top stack value into the extern variable indexed by `<imm16>:<imm16>', overwriting the previous value.
@@ -1018,12 +1011,12 @@
                                       * [2][-0,+0]   `mov  PREFIX, this_function'         - `PREFIX: push this_function' */
 #define ASM16_PUSH_MODULE     0xf038 /* [4][-0,+1]   `push module <imm16>'                - Push an imported module indexed by <imm16> from the current module.
                                       * [4][-0,+0]   `mov  PREFIX, module <imm16>'        - `PREFIX: push module <imm16>' */
-#define ASM16_PUSH_REF        0xf039 /* [4][-0,+1]   `push ref <imm16>'                   - Push a referenced variable indexed by `<imm16>'.
-                                      * [4][-0,+0]   `mov  PREFIX, ref <imm16>'           - `PREFIX: push ref <imm16>' */
-#define ASM16_PUSH_ARG        0xf03a /* [4][-0,+1]   `push arg <imm16>'                   - Push the argument indexed by `<imm16>'.
+#define ASM16_PUSH_ARG        0xf039 /* [4][-0,+1]   `push arg <imm16>'                   - Push the argument indexed by `<imm16>'.
                                       * [4][-0,+0]   `mov  PREFIX, arg <imm16>'           - `PREFIX: push arg <imm16>' */
-#define ASM16_PUSH_CONST      0xf03b /* [4][-0,+1]   `push const <imm16>'                 - Same as `ASM_PUSH_STATIC16', but doesn't require a lock as the slot should acts as an immutable constant.
+#define ASM16_PUSH_CONST      0xf03a /* [4][-0,+1]   `push const <imm16>'                 - Same as `ASM_PUSH_STATIC16', but doesn't require a lock as the slot should acts as an immutable constant.
                                       * [4][-0,+0]   `mov  PREFIX, const <imm16>'         - `PREFIX: push const <imm16>' */
+#define ASM16_PUSH_REF        0xf03b /* [4][-0,+1]   `push ref <imm16>'                   - Push a referenced variable indexed by `<imm16>'.
+                                      * [4][-0,+0]   `mov  PREFIX, ref <imm16>'           - `PREFIX: push ref <imm16>' */
 #define ASM16_PUSH_STATIC     0xf03c /* [4][-0,+1]   `push static <imm16>'                - Push the static variable indexed by `<imm16>'.
                                       * [4][-0,+0]   `mov  PREFIX, static <imm16>'        - `PREFIX: push static <imm16>' */
 #define ASM16_PUSH_EXTERN     0xf03d /* [6][-0,+0]   `push extern <imm16>:<imm16>'        - Push the extern variable indexed by `<imm16>:<imm16>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'

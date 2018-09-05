@@ -487,12 +487,10 @@ INSTR("adjstack",(
 ))
 
 /* CONSTRAINTS: `super <s>, <s>' */
-/* CONSTRAINTS: `super <rge>, <Tis>' */
+/* CONSTRAINTS: `super <r>, <Ti>' */
 INSTR("super",(
     O2(ASM_SUPER,       FNORMAL,  (TOP)(POP))
     O2(ASM_SUPER_THIS_R,FPUSH|FF0,(REF)(THIS))
-    O2(ASM_SUPER_THIS_G,FPUSH|FF0,(GLOBAL)(THIS))
-    O2(ASM_SUPER_THIS_E,FPUSH|FF0,(EXTERN)(THIS))
 ))
 
 /* CONSTRAINTS: `cast <s>, ...' */

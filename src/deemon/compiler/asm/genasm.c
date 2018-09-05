@@ -2586,33 +2586,12 @@ operator_without_prefix:
      /* Special optimizations for `this as ...' */
      int32_t symid;
      struct symbol *typesym = ast->a_action.a_act1->a_sym;
-cast_this_as_symbol:
+     SYMBOL_INPLACE_UNWIND_ALIAS(typesym);
      if (SYMBOL_MUST_REFERENCE(typesym)) {
       symid = asm_rsymid(typesym);
       if unlikely(symid < 0) goto err;
       if (asm_gsuper_this_r(symid)) goto err;
       goto done;
-     }
-     switch (SYMBOL_TYPE(typesym)) {
-     case SYMBOL_TYPE_ALIAS:
-      typesym = SYMBOL_ALIAS(typesym);
-      goto cast_this_as_symbol;
-
-     case SYMBOL_TYPE_GLOBAL:
-      symid = asm_gsymid_for_read(typesym,ast->a_action.a_act1);
-      if unlikely(symid < 0) goto err;
-      if (asm_gsuper_this_g(symid)) goto err;
-      goto done;
-
-     case SYMBOL_TYPE_EXTERN:
-      if (SYMBOL_EXTERN_SYMBOL(typesym)->ss_flags & MODSYM_FPROPERTY)
-          break;
-      symid = asm_esymid(typesym);
-      if unlikely(symid < 0) goto err;
-      if (asm_gsuper_this_e(symid,SYMBOL_EXTERN_SYMBOL(typesym)->ss_index)) goto err;
-      goto done;
-
-     default: break;
      }
     }
    }

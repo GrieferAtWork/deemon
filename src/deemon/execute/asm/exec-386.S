@@ -7938,12 +7938,6 @@ prefix_target_super = prefix_invop
 .ifndef prefix_target_super_this_r
 prefix_target_super_this_r = prefix_invop
 .endif
-.ifndef prefix_target_super_this_g
-prefix_target_super_this_g = prefix_invop
-.endif
-.ifndef prefix_target_super_this_e
-prefix_target_super_this_e = prefix_invop
-.endif
 .ifndef prefix_target_pop_static
 prefix_target_pop_static = prefix_invop
 .endif
@@ -7962,14 +7956,14 @@ prefix_target_push_none = prefix_invop
 .ifndef prefix_target_push_module
 prefix_target_push_module = prefix_invop
 .endif
-.ifndef prefix_target_push_ref
-prefix_target_push_ref = prefix_invop
-.endif
 .ifndef prefix_target_push_arg
 prefix_target_push_arg = prefix_invop
 .endif
 .ifndef prefix_target_push_const
 prefix_target_push_const = prefix_invop
+.endif
+.ifndef prefix_target_push_ref
+prefix_target_push_ref = prefix_invop
 .endif
 .ifndef prefix_target_push_static
 prefix_target_push_static = prefix_invop
@@ -8535,12 +8529,6 @@ prefix_target16_adjstack = prefix_invop
 .ifndef prefix_target16_super_this_r
 prefix_target16_super_this_r = prefix_invop
 .endif
-.ifndef prefix_target16_super_this_g
-prefix_target16_super_this_g = prefix_invop
-.endif
-.ifndef prefix_target16_super_this_e
-prefix_target16_super_this_e = prefix_invop
-.endif
 .ifndef prefix_target16_pop_static
 prefix_target16_pop_static = prefix_invop
 .endif
@@ -8568,14 +8556,14 @@ prefix_target_push_this_function = prefix_invop
 .ifndef prefix_target16_push_module
 prefix_target16_push_module = prefix_invop
 .endif
-.ifndef prefix_target16_push_ref
-prefix_target16_push_ref = prefix_invop
-.endif
 .ifndef prefix_target16_push_arg
 prefix_target16_push_arg = prefix_invop
 .endif
 .ifndef prefix_target16_push_const
 prefix_target16_push_const = prefix_invop
+.endif
+.ifndef prefix_target16_push_ref
+prefix_target16_push_ref = prefix_invop
 .endif
 .ifndef prefix_target16_push_static
 prefix_target16_push_static = prefix_invop
@@ -8872,8 +8860,8 @@ inst_table:
 	.long target_adjstack                /* `adjstack #SP +/- <Simm8>' */
 	.long target_super                   /* `super top, pop' */
 	.long target_super_this_r            /* `push super ref <imm8>, this' */
-	.long target_super_this_g            /* `push super global <imm8>, this' */
-	.long target_super_this_e            /* `push super extern <imm8>:<imm8>, this' */
+	.long invop
+	.long invop
 	.long target_pop_static              /* `pop static <imm8>' */
 	.long target_pop_extern              /* `pop extern <imm8>:<imm8>' */
 	.long target_pop_global              /* `pop global <imm8>' */
@@ -8887,9 +8875,9 @@ inst_table:
 	.long invop
 	.long invop
 	.long target_push_module             /* `push module <imm8>' */
-	.long target_push_ref                /* `push ref <imm8>' */
 	.long target_push_arg                /* `push arg <imm8>' */
 	.long target_push_const              /* `push const <imm8>' */
+	.long target_push_ref                /* `push ref <imm8>' */
 	.long target_push_static             /* `push static <imm8>' */
 	.long target_push_extern             /* `push extern <imm8>:<imm8>' */
 	.long target_push_global             /* `push global <imm8>' */
@@ -9130,8 +9118,8 @@ inst_table_f0:
 	.long target16_adjstack              /* `adjstack #SP +/- <Simm16>' */
 	.long invop
 	.long target16_super_this_r          /* `push super ref <imm16>, this' */
-	.long target16_super_this_g          /* `push super global <imm16>, this' */
-	.long target16_super_this_e          /* `push super extern <imm16>:<imm16>, this' */
+	.long invop
+	.long invop
 	.long target16_pop_static            /* `pop static <imm16>' */
 	.long target16_pop_extern            /* `pop extern <imm16>:<imm16>' */
 	.long target16_pop_global            /* `pop global <imm16>' */
@@ -9145,9 +9133,9 @@ inst_table_f0:
 	.long target_push_this_module        /* `push this_module' */
 	.long target_push_this_function      /* `push this_function' */
 	.long target16_push_module           /* `push module <imm16>' */
-	.long target16_push_ref              /* `push ref <imm16>' */
 	.long target16_push_arg              /* `push arg <imm16>' */
 	.long target16_push_const            /* `push const <imm16>' */
+	.long target16_push_ref              /* `push ref <imm16>' */
 	.long target16_push_static           /* `push static <imm16>' */
 	.long target16_push_extern           /* `push extern <imm16>:<imm16>' */
 	.long target16_push_global           /* `push global <imm16>' */
@@ -9388,8 +9376,8 @@ prefix_inst_table:
 	.long prefix_target_adjstack                /* `adjstack #SP +/- <Simm8>' */
 	.long prefix_target_super                   /* `super top, pop' */
 	.long prefix_target_super_this_r            /* `push super ref <imm8>, this' */
-	.long prefix_target_super_this_g            /* `push super global <imm8>, this' */
-	.long prefix_target_super_this_e            /* `push super extern <imm8>:<imm8>, this' */
+	.long prefix_invop
+	.long prefix_invop
 	.long prefix_target_pop_static              /* `pop static <imm8>' */
 	.long prefix_target_pop_extern              /* `pop extern <imm8>:<imm8>' */
 	.long prefix_target_pop_global              /* `pop global <imm8>' */
@@ -9403,9 +9391,9 @@ prefix_inst_table:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target_push_module             /* `push module <imm8>' */
-	.long prefix_target_push_ref                /* `push ref <imm8>' */
 	.long prefix_target_push_arg                /* `push arg <imm8>' */
 	.long prefix_target_push_const              /* `push const <imm8>' */
+	.long prefix_target_push_ref                /* `push ref <imm8>' */
 	.long prefix_target_push_static             /* `push static <imm8>' */
 	.long prefix_target_push_extern             /* `push extern <imm8>:<imm8>' */
 	.long prefix_target_push_global             /* `push global <imm8>' */
@@ -9646,8 +9634,8 @@ prefix_inst_table_f0:
 	.long prefix_target16_adjstack              /* `adjstack #SP +/- <Simm16>' */
 	.long prefix_invop
 	.long prefix_target16_super_this_r          /* `push super ref <imm16>, this' */
-	.long prefix_target16_super_this_g          /* `push super global <imm16>, this' */
-	.long prefix_target16_super_this_e          /* `push super extern <imm16>:<imm16>, this' */
+	.long prefix_invop
+	.long prefix_invop
 	.long prefix_target16_pop_static            /* `pop static <imm16>' */
 	.long prefix_target16_pop_extern            /* `pop extern <imm16>:<imm16>' */
 	.long prefix_target16_pop_global            /* `pop global <imm16>' */
@@ -9661,9 +9649,9 @@ prefix_inst_table_f0:
 	.long prefix_target_push_this_module        /* `push this_module' */
 	.long prefix_target_push_this_function      /* `push this_function' */
 	.long prefix_target16_push_module           /* `push module <imm16>' */
-	.long prefix_target16_push_ref              /* `push ref <imm16>' */
 	.long prefix_target16_push_arg              /* `push arg <imm16>' */
 	.long prefix_target16_push_const            /* `push const <imm16>' */
+	.long prefix_target16_push_ref              /* `push ref <imm16>' */
 	.long prefix_target16_push_static           /* `push static <imm16>' */
 	.long prefix_target16_push_extern           /* `push extern <imm16>:<imm16>' */
 	.long prefix_target16_push_global           /* `push global <imm16>' */

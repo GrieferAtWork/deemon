@@ -289,7 +289,7 @@ INTERN int (DCALL dec_putieee754)(double value) {
  buffer.value = value;
  dst = dec_alloc(8);
  if unlikely(!dst) return -1;
- *(uint64_t *)dst = buffer.data;
+ UNALIGNED_SETLE64((uint64_t *)dst,buffer.data);
  return 0;
 }
 

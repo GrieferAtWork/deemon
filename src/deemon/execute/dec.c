@@ -1136,7 +1136,7 @@ set_none_result:
    uint64_t data;
   } buffer;
  case DTYPE_IEEE754:
-  buffer.data = UNALIGNED_GET64((uint64_t *)reader),reader += 8;
+  buffer.data = UNALIGNED_GETLE64((uint64_t *)reader),reader += 8;
   /* XXX: Special decoding when `double' doesn't conform to ieee754 */
   result = DeeFloat_New(buffer.value);
  } break;

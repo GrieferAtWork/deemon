@@ -584,33 +584,12 @@ PRIVATE int (DCALL asm_gpush_thisas)(struct symbol *__restrict class_type,
  /* Special instructions exist to push `this' as a
   * specific class type when the type is a certain symbol. */
 check_ct_class:
+ SYMBOL_INPLACE_UNWIND_ALIAS(class_type);
  if (SYMBOL_MUST_REFERENCE(class_type)) {
   symid = asm_rsymid(class_type);
   if unlikely(symid < 0) goto err;
   return asm_gsuper_this_r((uint16_t)symid);
  }
- switch (SYMBOL_TYPE(class_type)) {
- 
- case SYMBOL_TYPE_ALIAS:
-  class_type = SYMBOL_ALIAS(class_type);
-  goto check_ct_class;
-
- case SYMBOL_TYPE_GLOBAL:
-  symid = asm_gsymid_for_read(class_type,warn_ast);
-  if unlikely(symid < 0) goto err;
-  return asm_gsuper_this_g((uint16_t)symid);
-
- case SYMBOL_TYPE_EXTERN:
-  ASSERT(SYMBOL_EXTERN_SYMBOL(class_type));
-  if (SYMBOL_EXTERN_SYMBOL(class_type)->ss_flags & MODSYM_FPROPERTY)
-      break;
-  symid = asm_esymid(class_type);
-  if unlikely(symid < 0) goto err;
-  return asm_gsuper_this_e((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(class_type)->ss_index);
-
- default: break;
- }
-
  /* Fallback: push `this' and the class-type individually. */
  if (asm_gpush_this()) goto err;
  if (asm_gpush_symbol(class_type,warn_ast)) goto err;

@@ -1193,8 +1193,6 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gsuperof()                (asm_dicsp(),asm_put(ASM_SUPEROF))
 #define asm_gsuper()                  (asm_ddicsp(),asm_put(ASM_SUPER))
 #define asm_gsuper_this_r(rid)        (asm_incsp(),asm_put816(ASM_SUPER_THIS_R,rid))
-#define asm_gsuper_this_g(gid)        (asm_incsp(),asm_put816(ASM_SUPER_THIS_G,gid))
-#define asm_gsuper_this_e(mid,gid)    (asm_incsp(),asm_put881616(ASM_SUPER_THIS_E,mid,gid))
 #define asm_ginstanceof()             (asm_ddicsp(),asm_put(ASM_INSTANCEOF))
 #define asm_gisnone()                 (asm_dicsp(),asm_put(ASM_ISNONE))
 #define asm_gstr()                    (asm_dicsp(),asm_put(ASM_STR))

@@ -595,7 +595,7 @@ err_srt_invalid_sp(struct code_frame *__restrict frame, size_t access_sp) {
 PRIVATE ATTR_COLD int DCALL
 err_srt_invalid_symid(struct code_frame *__restrict UNUSED(frame),
                       char category, uint16_t id) {
- return DeeError_Throwf(&DeeError_SegFault,
+ return DeeError_Throwf(&DeeError_IllegalInstruction,
                         "Attempted to access invalid %cID %I16u",
                         category,id);
 }

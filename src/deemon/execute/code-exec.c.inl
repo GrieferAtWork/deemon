@@ -1477,47 +1477,6 @@ do_super_this_r:
      PUSH(super_wrapper); /* Inherit reference. */
      DISPATCH();
  }
- TARGET(ASM_SUPER_THIS_G,-0,+1) {
-     DREF DeeObject *super_wrapper;
-     DREF DeeTypeObject *wrapper_type;
-     imm_val = READ_imm8();
-do_super_this_g:
-     ASSERT_THISCALL();
-     ASSERT_GLOBALimm();
-     GLOBAL_LOCKREAD();
-     wrapper_type = (DREF DeeTypeObject *)GLOBALimm;
-     Dee_XIncref(wrapper_type);
-     GLOBAL_LOCKENDREAD();
-     if unlikely(!wrapper_type)
-        goto err_unbound_global;
-     super_wrapper = DeeSuper_New(wrapper_type,THIS);
-     Dee_Decref(wrapper_type);
-     if unlikely(!super_wrapper)
-        HANDLE_EXCEPT();
-     PUSH(super_wrapper); /* Inherit reference. */
-     DISPATCH();
- }
- TARGET(ASM_SUPER_THIS_E,-0,+1) {
-     DREF DeeObject *super_wrapper;
-     DREF DeeTypeObject *wrapper_type;
-     imm_val  = READ_imm8();
-     imm_val2 = READ_imm8();
-do_super_this_e:
-     ASSERT_THISCALL();
-     ASSERT_EXTERNimm();
-     EXTERN_LOCKREAD();
-     wrapper_type = (DREF DeeTypeObject *)EXTERNimm;
-     Dee_XIncref(wrapper_type);
-     EXTERN_LOCKENDREAD();
-     if unlikely(!wrapper_type)
-        goto err_unbound_extern;
-     super_wrapper = DeeSuper_New(wrapper_type,THIS);
-     Dee_Decref(wrapper_type);
-     if unlikely(!super_wrapper)
-        HANDLE_EXCEPT();
-     PUSH(super_wrapper); /* Inherit reference. */
-     DISPATCH();
- }
 
  TARGET(ASM_ISNONE,-1,+1) {
      Dee_Decref(TOP); /* Can already decref() because we only need to check the pointer. */
@@ -4239,15 +4198,6 @@ do_setattr_this_c:
      TARGET(ASM16_SUPER_THIS_R,-0,+1) {
          imm_val = READ_imm16();
          goto do_super_this_r;
-     }
-     TARGET(ASM16_SUPER_THIS_G,-0,+1) {
-         imm_val = READ_imm16();
-         goto do_super_this_g;
-     }
-     TARGET(ASM16_SUPER_THIS_E,-0,+1) {
-         imm_val  = READ_imm16();
-         imm_val2 = READ_imm16();
-         goto do_super_this_e;
      }
      TARGET(ASM16_POP_STATIC,-1,+0) {
          imm_val = READ_imm16();
