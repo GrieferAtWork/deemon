@@ -1211,8 +1211,8 @@ INTDEF void DCALL membercache_fini(struct membercache *__restrict self);
 #define OPERATOR_STR          0x0006 /* `operator str() -> string'                                        - `__str__'         - `tp_str'. */
 #define OPERATOR_REPR         0x0007 /* `operator repr() -> string'                                       - `__repr__'        - `tp_repr'. */
 #define OPERATOR_BOOL         0x0008 /* `operator bool() -> bool'                                         - `__bool__'        - `tp_bool'. */
-#define OPERATOR_CALL         0x0009 /* `operator ()(args...) -> object'                                  - `__call__'        - `tp_call'. */
-#define OPERATOR_ITERNEXT     0x000a /* `operator next() -> object'                                       - `__next__'        - `tp_iter_next'. */
+#define OPERATOR_ITERNEXT     0x0009 /* `operator next() -> object'                                       - `__next__'        - `tp_iter_next'. */
+#define OPERATOR_CALL         0x000a /* `operator ()(args...) -> object'                                  - `__call__'        - `tp_call'. */
 #define OPERATOR_INT          0x000b /* `operator int() -> int'                                           - `__int__'         - `tp_int'. */
 #define OPERATOR_FLOAT        0x000c /* `operator float() -> float'                                       - `__float__'       - `tp_double'. */
 #define OPERATOR_INV          0x000d /* `operator ~ () -> object'                                         - `__inv__'         - `tp_inv'. */
@@ -1270,7 +1270,7 @@ INTDEF void DCALL membercache_fini(struct membercache *__restrict self);
 
 /* Operator association ranges. */
 #define OPERATOR_TYPEMIN    OPERATOR_CONSTRUCTOR
-#define OPERATOR_TYPEMAX    OPERATOR_ITERNEXT
+#define OPERATOR_TYPEMAX    OPERATOR_CALL
 #define OPERATOR_MATHMIN    OPERATOR_INT
 #define OPERATOR_MATHMAX    OPERATOR_INPLACE_POW
 #define OPERATOR_CMPMIN     OPERATOR_HASH
@@ -1290,7 +1290,6 @@ INTDEF void DCALL membercache_fini(struct membercache *__restrict self);
 #define OPERATOR_PCLEAR       0x8002 /* `tp_pclear'. */
 #define OPERATOR_GETBUF       0x8003 /* `tp_getbuf'. */
 
-#define OPERATOR_CONSTRUCTOR  0x0000 /* `constructor' - `__constructor__' - `tp_ctor'. */
 
 struct opinfo {
 #define OPTYPE_SPECIAL        0xfff  /* VALUE: A special operator that cannot be invoked directly (e.g.: `__constructor__'). */

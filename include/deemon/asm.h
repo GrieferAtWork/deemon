@@ -19,6 +19,8 @@
 #ifndef GUARD_DEEMON_ASM_H
 #define GUARD_DEEMON_ASM_H 1
 
+#include "api.h"    /* TODO: Remove me */
+
 /* Deemon assembly definitions and instruction codes.
  * Starting in v200, deemon uses an entirely new assembly design that is
  * no longer restricted by rules on the length of individual instructions.
@@ -581,6 +583,14 @@
 #define ASM_CMP_GE            0x65 /* [1][-2,+1]   `cmp ge, top, pop'                   - Compare the two top-most objects on the stack and push the result.
                                     * >> PUSH(POP() >= POP()); */
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+#define ASM_CLASS_C           0x66 /* [2][-1,+1]   `class top, const <imm8>'            - Construct a new class type, using `pop' as base, and `const <imm8>' as class's descriptor. */
+#define ASM_CLASS_GC          0x67 /* [3][-0,+1]   `push class global <imm8>, const <imm8>' - Same as `ASM_CLASS_C', however use `global <imm8>' as base. */
+#define ASM_CLASS_EC          0x68 /* [4][-0,+1]   `push class extern <imm8>:<imm8>, const <imm8>' - Same as `ASM_CLASS_C', however use `extern <imm8>:<imm8>' as base. */
+#define ASM_DEFMEMBER         0x69 /* [2][-2,+1]   `defmember top, $<imm8>, pop'        - Initialize a class member variable `<imm8>', using a value from the stack. */
+/*      ASM_                  0x6a  *               --------                            - ------------------ */
+/*      ASM_                  0x6b  *               --------                            - ------------------ */
+#else
 #define CLASSGEN_FHASBASE     0x10 /* Class feature flag: the class has a base/super class (type; if unset, use `DeeObject_Type'). */
 #define CLASSGEN_FHASNAME     0x20 /* Class feature flag: the class has a name (string; if unset, use `Dee_EmptyString'). */
 #define CLASSGEN_FHASIMEM     0x40 /* Class feature flag: the class has instance members (member_table; if unset, use `DeeMemberTable_Empty'). */
@@ -620,6 +630,7 @@
                                     * Same as `ASM_CLASS_CBL', but use a global variable, rather than a local. */
 #define ASM_DEFMEMBER         0x6a /* [2][-2,+1]   `defmember top, $<imm8>, pop'        - Initialize a class member variable `<imm8>' using a value from the stack. */
 #define ASM_DEFOP             0x6b /* [2][-2,+1]   `defop top, $<imm8>, pop'            - Similar to `ASM_DEFMEMBER', but define an operator instead. */
+#endif
 /*      ASM_                  0x6c  *               --------                            - ------------------ */
 /*      ASM_                  0x6d  *               --------                            - ------------------ */
 #define ASM_FUNCTION_C        0x6e /* [3][-n,+1]   `push function const <imm8>, #<imm8>+1' - Create a new function object, using constant slot <imm8> as code and popping $<imm8>+1 objects for use by references.
@@ -1063,6 +1074,16 @@
 #define ASM_CMP_DO            0xf061 /* [2][-2,+1]   `cmp do, top, pop'                   - Compare for DifferentObject and push the result (`object.id(a) != object.id(b)' / `a !== b'). */
 #define ASM16_PACK_HASHSET    0xf062 /* [4][-n,+1]   `push pack hashset, #<imm16>'        - Pop <imm16> elements and pack them into a hashset. */
 #define ASM16_PACK_DICT       0xf063 /* [4][-n,+1]   `push pack dict, #<imm16>*2'         - Pop <imm16>*2 elements and pack them into a dict, using every first as key and every second as item. */
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+/*      ASM_                  0xf064  *               --------                            - ------------------ */
+#define ASM_CLASS             0xf065 /* [2][-2,+1]   `class top, pop'                     - Same as `ASM_CLASS_C', however the class descriptor is popped from the stack. */
+#define ASM16_CLASS_C         0xf066 /* [4][-1,+1]   `class top, const <imm16>'           - Same as `ASM_CLASS_C', however operands are is extended to 16 bits. */
+#define ASM16_CLASS_GC        0xf067 /* [6][-0,+1]   `push class global <imm16>, const <imm16>' - Same as `ASM_CLASS_GC', however operands are is extended to 16 bits. */
+#define ASM16_CLASS_EC        0xf068 /* [8][-0,+1]   `push class extern <imm16>:<imm16>, const <imm16>' - Same as `ASM_CLASS_EC', however operands are extended to 16 bits. */
+#define ASM16_DEFMEMBER       0xf069 /* [4][-2,+1]   `defmember top, $<imm16>, pop'       - Initialize a class member variable `<imm16>' using a value from the stack. */
+/*      ASM_                  0xf06a  *               --------                            - ------------------ */
+/*      ASM_                  0xf06b  *               --------                            - ------------------ */
+#else
 /*      ASM_                  0xf064  *               --------                            - ------------------ */
 /*      ASM_                  0xf065  *               --------                            - ------------------ */
 /*      ASM_                  0xf066  *               --------                            - ------------------ */
@@ -1071,6 +1092,7 @@
 /*      ASM_                  0xf069  *               --------                            - ------------------ */
 #define ASM16_DEFMEMBER       0xf06a /* [4][-2,+1]   `defmember top, $<imm16>, pop'         - Initialize a class member variable `<imm16>' using a value from the stack. */
 #define ASM16_DEFOP           0xf06b /* [4][-2,+1]   `defop top, $<imm16>, pop'             - Similar to `ASM16_DEFMEMBER', but define an operator instead. */
+#endif
 /*      ASM_                  0xf06c  *               --------                            - ------------------ */
 /*      ASM_                  0xf06d  *               --------                            - ------------------ */
 #define ASM16_FUNCTION_C      0xf06e /* [5][-n,+1]   `push function const <imm16>, #<imm8>+1' - Create a new function object, using constant slot <imm16> as code and popping $<imm8>+1 objects for use by references.

@@ -738,7 +738,7 @@ check_sym_class:
   } else {
    if unlikely(check_thiscall(sym)) goto err;
    /* Generate special assembly for accessing different kinds of members. */
-   if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
+   if (!(member->ca_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
     /* Regular, old member variable. (this one has its own instruction) */
     SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
     if (SYMBOL_MAY_REFERENCE(class_sym)) {
@@ -989,7 +989,7 @@ check_sym_class:
   } else {
    if unlikely(check_thiscall(sym)) goto err;
    /* Generate special assembly for accessing different kinds of members. */
-   if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
+   if (!(member->ca_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
     SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
     if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
@@ -1115,7 +1115,7 @@ check_sym_class:
    } else {
     if unlikely(check_thiscall(sym)) goto err;
     /* Generate special assembly for accessing different kinds of members. */
-    if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
+    if (!(member->ca_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
      /* Regular, old member variable. (this one has its own instruction) */
      SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
      if (SYMBOL_MAY_REFERENCE(class_sym)) {
@@ -1283,7 +1283,7 @@ check_sym_class:
    } else {
     if unlikely(check_thiscall(sym)) goto err;
     /* Generate special assembly for accessing different kinds of members. */
-    if (!(member->cme_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
+    if (!(member->ca_flag&(CLASS_MEMBER_FMETHOD|CLASS_MEMBER_FPROPERTY))) {
      /* Regular, old member variable. (this one has its own instruction) */
      SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
      if (SYMBOL_MAY_REFERENCE(class_sym)) {

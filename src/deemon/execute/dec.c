@@ -1280,7 +1280,7 @@ err_function_code:
    member = DeeMemberTable_AddSym(result,name_ob); /* NOTE: Inherits `name_ob' */
    /* Fill in additional members. */
    member->cme_addr = addr;
-   member->cme_flag = flags;
+   member->ca_flag = flags;
   }
  } break;
 
@@ -1446,7 +1446,7 @@ err_function_code:
     member = DeeMemberTable_AddSym(result,name_ob); /* NOTE: Inherits `name_ob' */
     /* Fill in additional members. */
     member->cme_addr = addr;
-    member->cme_flag = flags;
+    member->ca_flag = flags;
     /* Read the documentation string. */
     if ((doclen = Dec_DecodePointer(&reader)) != 0) {
      char *doc = strtab+Dec_DecodePointer(&reader);

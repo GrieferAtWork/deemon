@@ -332,6 +332,17 @@ typedef union PACKED {
 } Dec_ieee754_double;
 
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+typedef struct PACKED {
+    /* TODO */
+    int placeholder;
+} Dec_ClassDescriptor;
+
+typedef struct PACKED {
+    /* TODO */
+    int placeholder;
+} Dec_8BitClassDescriptor;
+#else
 typedef struct PACKED {
     uint16_t        mt_flag;       /* Set of `CLASS_MEMBER_F*' */
     uint16_t        mt_addr;       /* Address of the member (NOTE: May not necessarily be `< :mt_siz' when
@@ -364,6 +375,7 @@ typedef struct PACKED {
     uint8_t             mt_len[1];     /* The amount of member symbols defined (decode using `Dec_DecodePointer'). */
     Dec_8BitMemberEntry mt_members[1]; /* [mt_len] One entry for each member. */
 } Dec_8BitMemberTable;
+#endif
 
 
 typedef struct PACKED {
@@ -416,7 +428,11 @@ Dec_DecodePointer(uint8_t **__restrict pptr) {
                                  *                                with string objects is encoded as UTF-8 (allowing for full unicode) */
 #define DTYPE_TUPLE      0x05   /* +n   `DeeTuple_Type'  -- Followed by `Dec_DecodePointer()' describing the length, then length more `DTYPE_*' codes for each element. */
 #define DTYPE_LIST       0x06   /* +n   `DeeList_Type'   -- Followed by `Dec_DecodePointer()' describing the length, then length more `DTYPE_*' codes for each element. */
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+#define DTYPE_CLASSDESC  0x07   /* +n   `DeeClassDescriptor_Type' -- Followed by an immediate `Dec_8BitClassDescriptor' structure. */
+#else
 #define DTYPE_MEMTAB     0x07   /* +n   `DeeMemberTable_Type' -- Followed by an immediate `Dec_8BitMemberTable' structure. */
+#endif
 #define DTYPE_FUNCTION   0x08   /* +n   `DeeFunction_Type' -- An immediate `Dec_Code' data structure defining a new code object, packed within a function object. - Following this, referenced objects are stored in-line. */
 #define DTYPE_KWDS       0x09   /* +n   `DeeKwds_Type'   -- An immediate `Dec_Kwds' data structure defining a new keywords object. */
 /*      DTYPE_           0x0a    */
@@ -442,7 +458,11 @@ Dec_DecodePointer(uint8_t **__restrict pptr) {
 /*      DTYPE16_            0x0f04  */
 #define DTYPE16_HASHSET     0x0f05 /* +n     `DeeHashSet_Type'     -- Followed by `Dec_DecodePointer()' describing the length, then length more `DTYPE_*' codes for each element. */
 #define DTYPE16_DICT        0x0f06 /* +n     `DeeDict_Type'        -- Followed by `Dec_DecodePointer()' describing the length, then length*2 more `DTYPE_*' codes for each key/item pair (the key appearing first). */
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+#define DTYPE16_CLASSDESC   0x0f07 /* +n     `DeeClassDescriptor_Type' -- Followed by an immediate `Dec_ClassDescriptor' structure. */
+#else
 #define DTYPE16_MEMTAB      0x0f07 /* +n     `DeeMemberTable_Type' -- Followed by an immediate `Dec_MemberTable' structure. */
+#endif
 #define DTYPE16_ROSET       0x0f08 /* +n     `DeeRoSet_Type'       -- Encoded the same way as `DTYPE16_HASHSET' */
 #define DTYPE16_RODICT      0x0f09 /* +n     `DeeRoDict_Type'      -- Encoded the same way as `DTYPE16_DICT' */
 /*      DTYPE16_            0x0f0a  */

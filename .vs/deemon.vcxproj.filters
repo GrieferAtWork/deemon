@@ -282,6 +282,12 @@
     <ClInclude Include="..\include\deemon\class2.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\instancemethod.h">
+      <Filter>include\deemon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\property.h">
+      <Filter>include\deemon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -735,6 +741,15 @@
       <Filter>src\deemon\compiler\interface</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\class2.c">
+      <Filter>src\deemon\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\instancemethod.c">
+      <Filter>src\deemon\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\property.c">
+      <Filter>src\deemon\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\class2_desc.c">
       <Filter>src\deemon\objects</Filter>
     </ClCompile>
   </ItemGroup>

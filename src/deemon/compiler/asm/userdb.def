@@ -621,6 +621,16 @@ INSTR("cmp",(
     O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,(LO)(IMM8)(FSTACKFLAG|VARARGS)) /* push cmp lo, <imm8>, #varargs */
 ))
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+/* CONSTRAINTS: `class <s>, <cs>' */
+/* CONSTRAINTS: `class <ge>, <c>' */
+INSTR("class",(
+    O2(ASM_CLASS,   FNORMAL,  (TOP)(POP))               /* class top, pop */
+    O2(ASM_CLASS_C, FF0,      (TOP)(CONST))             /* class top, const <imm8/16> */
+    O2(ASM_CLASS_GC,FF0|FPUSH,(GLOBAL)(CONST))          /* push class global <imm8/16>, const <imm8/16> */
+    O2(ASM_CLASS_EC,FF0|FPUSH,(EXTERN)(CONST))          /* push class extern <imm8/16>:<imm8/16>, const <imm8/16> */
+))
+#else
 /* CONSTRAINTS: `class ...' */
 /* CONSTRAINTS: `class ..., <s>' */
 /* CONSTRAINTS: `class ..., <s>, <s>' */
@@ -649,6 +659,7 @@ INSTR("class",(
     O4(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL)(CONST)(CONST))        /* push class $<imm8>, global <imm8>, pop, pop */
     O5(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL)(CONST)(CONST)(CONST)) /* push class $<imm8>, global <imm8>, pop, pop, pop */
 ))
+#endif
 
 /* CONSTRAINTS: `defmember <s>, ..., <s>' */
 INSTR("defmember",(

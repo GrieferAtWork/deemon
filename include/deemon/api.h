@@ -107,6 +107,11 @@ DECL_BEGIN
 #endif
 
 
+#undef CONFIG_USE_NEW_CLASS_SYSTEM
+//#define CONFIG_USE_NEW_CLASS_SYSTEM 1
+
+
+
 #if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) || \
     defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
     defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \

@@ -551,7 +551,7 @@ err_protected_member(DeeTypeObject *__restrict class_type,
  ASSERT(member);
  return DeeError_Throwf(&DeeError_AttributeError,
                         "Cannot access %s member `%k' of class `%k'",
-                       (member->cme_flag&CLASS_MEMBER_FPRIVATE) ? "private" : "public",
+                       (member->ca_flag&CLASS_MEMBER_FPRIVATE) ? "private" : "public",
                         member->cme_name,class_type);
 }
 INTERN ATTR_COLD int DCALL

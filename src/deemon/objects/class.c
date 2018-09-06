@@ -39,6 +39,8 @@
 #include <deemon/error.h>
 #include <deemon/gc.h>
 #include <deemon/super.h>
+#include <deemon/instancemethod.h>
+#include <deemon/property.h>
 #include <deemon/thread.h>
 #include <deemon/util/string.h>
 
@@ -53,7 +55,6 @@ DECL_BEGIN
 
 typedef DeeTypeObject           Type;
 typedef DeeMemberTableObject    MemberTable;
-typedef DeeInstanceMethodObject InstanceMethod;
 
 
 #define CLASS_DESC(x) DeeClass_DESC(x)
@@ -64,7 +65,7 @@ member_mayaccess(DeeTypeObject *__restrict class_type,
  ASSERT_OBJECT_TYPE(class_type,&DeeType_Type);
  ASSERT(DeeType_IsClass(class_type));
  ASSERT(member);
- if (member->cme_flag&CLASS_MEMBER_FPRIVATE) {
+ if (member->ca_flag&CLASS_MEMBER_FPRIVATE) {
   struct code_frame *caller_frame;
   /* Only allow access if the calling code-frame originates from
    * a this-call who's this-argument derives from `class_type'. */
@@ -82,7 +83,7 @@ INTERN struct member_entry empty_class_members[] = {
         /* .cme_name    = */NULL,
         /* .cme_hash    = */0,
         /* .cme_addr    = */0,
-        /* .cme_flag    = */0
+        /* .ca_flag    = */0
 #if __SIZEOF_POINTER__ >= 8
         ,
         /* .cme_padding = */0
@@ -123,7 +124,7 @@ member_table_eq(MemberTable *__restrict self,
  iter2 = other->mt_list;
  for (; iter != end; ++iter,++iter2) {
   if (iter->cme_addr != iter2->cme_addr) goto ne;
-  if (iter->cme_flag != iter2->cme_flag) goto ne;
+  if (iter->ca_flag != iter2->ca_flag) goto ne;
   if (iter->cme_hash != iter2->cme_hash) goto ne;
   if ((iter->cme_name != NULL) != (iter2->cme_name != NULL)) goto ne;
   if (!iter->cme_name) continue;
@@ -142,7 +143,7 @@ member_table_hash(MemberTable *__restrict self) {
  end = (iter = self->mt_list)+(self->mt_mask+1);
  for (; iter != end; ++iter) {
   result ^= iter->cme_addr;
-  result ^= iter->cme_flag;
+  result ^= iter->ca_flag;
   result ^= iter->cme_hash;
  }
  return result;
@@ -231,14 +232,14 @@ membertable_enum(DeeTypeObject *__restrict tp_self, DeeObject *ob_self,
   inst = NULL,attr_type = NULL;
   perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_ACCESS_GET|ATTR_NAMEOBJ|ATTR_DOCOBJ;
   /* Figure out which instance descriptor the property is connected to. */
-  if (iter->cme_flag&CLASS_MEMBER_FCLASSMEM) {
+  if (iter->ca_flag&CLASS_MEMBER_FCLASSMEM) {
    inst = &desc->c_class;
   } else if (ob_self) {
    ASSERT(DeeObject_InstanceOf(ob_self,tp_self));
    inst = DeeInstance_DESC(desc,ob_self);
   }
   if (inst) INSTANCE_DESC_READ(inst);
-  if (inst && !(iter->cme_flag&CLASS_MEMBER_FPROPERTY)) {
+  if (inst && !(iter->ca_flag&CLASS_MEMBER_FPROPERTY)) {
    /* Actually figure out the type of the member. */
    perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_NAMEOBJ|ATTR_DOCOBJ;
    attr_type = (DREF DeeTypeObject *)inst->ih_vtab[iter->cme_addr];
@@ -247,9 +248,9 @@ membertable_enum(DeeTypeObject *__restrict tp_self, DeeObject *ob_self,
     Dee_Incref(attr_type);
    }
   }
-  if (!(iter->cme_flag&CLASS_MEMBER_FREADONLY)) {
+  if (!(iter->ca_flag&CLASS_MEMBER_FREADONLY)) {
    perm |= (ATTR_ACCESS_DEL|ATTR_ACCESS_SET);
-   if (inst && iter->cme_flag&CLASS_MEMBER_FPROPERTY) {
+   if (inst && iter->ca_flag&CLASS_MEMBER_FPROPERTY) {
     perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_NAMEOBJ|ATTR_DOCOBJ;
     /* Actually figure out what callbacks are assigned. */
     if (inst->ih_vtab[iter->cme_addr + CLASS_PROPERTY_GET]) perm |= ATTR_PERMGET;
@@ -258,12 +259,12 @@ membertable_enum(DeeTypeObject *__restrict tp_self, DeeObject *ob_self,
    }
   }
   if (inst) INSTANCE_DESC_ENDREAD(inst);
-  if (iter->cme_flag&CLASS_MEMBER_FPROPERTY)
+  if (iter->ca_flag&CLASS_MEMBER_FPROPERTY)
    perm |= ATTR_PROPERTY;
-  else if (iter->cme_flag&CLASS_MEMBER_FMETHOD) {
+  else if (iter->ca_flag&CLASS_MEMBER_FMETHOD) {
    perm |= ATTR_PERMCALL;
   }
-  if (iter->cme_flag&CLASS_MEMBER_FPRIVATE)
+  if (iter->ca_flag&CLASS_MEMBER_FPRIVATE)
       perm |= ATTR_PRIVATE;
   temp = (*proc)((DeeObject *)tp_self,iter->cme_name->s_str,
                   iter->cme_doc ? iter->cme_doc->s_str : NULL,
@@ -288,21 +289,21 @@ membertable_enum_class(DeeTypeObject *__restrict tp_self,
   if (!iter->cme_name) continue;
   attr_type = NULL;
   perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_WRAPPER|ATTR_ACCESS_GET|ATTR_NAMEOBJ|ATTR_DOCOBJ;
-  if (iter->cme_flag & CLASS_MEMBER_FPROPERTY)
+  if (iter->ca_flag & CLASS_MEMBER_FPROPERTY)
    perm |= ATTR_PROPERTY;
-  else if (iter->cme_flag & CLASS_MEMBER_FMETHOD) {
+  else if (iter->ca_flag & CLASS_MEMBER_FMETHOD) {
    perm |= ATTR_PERMCALL;
   }
-  if (iter->cme_flag & CLASS_MEMBER_FPRIVATE)
+  if (iter->ca_flag & CLASS_MEMBER_FPRIVATE)
       perm |= ATTR_PRIVATE;
-  if (iter->cme_flag & CLASS_MEMBER_FCLASSMEM) {
+  if (iter->ca_flag & CLASS_MEMBER_FCLASSMEM) {
    INSTANCE_DESC_READ(&desc->c_class);
-   if (iter->cme_flag & CLASS_MEMBER_FPROPERTY) {
+   if (iter->ca_flag & CLASS_MEMBER_FPROPERTY) {
     /* Special case: Figure out what property callbacks have been assigned. */
     perm &= ~ATTR_ACCESS_GET;
     if (desc->c_class.ih_vtab[iter->cme_addr + CLASS_PROPERTY_GET])
         perm |= ATTR_ACCESS_GET;
-    if (!(iter->cme_flag & CLASS_MEMBER_FREADONLY)) {
+    if (!(iter->ca_flag & CLASS_MEMBER_FREADONLY)) {
      if (desc->c_class.ih_vtab[iter->cme_addr + CLASS_PROPERTY_DEL])
          perm |= ATTR_ACCESS_DEL;
      if (desc->c_class.ih_vtab[iter->cme_addr + CLASS_PROPERTY_SET])
@@ -343,21 +344,21 @@ membertable_find_class(DeeTypeObject *__restrict tp_self,
  if (!symbol) return 1;
  attr_type = NULL;
  perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_WRAPPER|ATTR_ACCESS_GET|ATTR_NAMEOBJ|ATTR_DOCOBJ;
- if (symbol->cme_flag & CLASS_MEMBER_FPROPERTY)
+ if (symbol->ca_flag & CLASS_MEMBER_FPROPERTY)
   perm |= ATTR_PROPERTY;
- else if (symbol->cme_flag & CLASS_MEMBER_FMETHOD) {
+ else if (symbol->ca_flag & CLASS_MEMBER_FMETHOD) {
   perm |= ATTR_PERMCALL;
  }
- if (symbol->cme_flag & CLASS_MEMBER_FPRIVATE)
+ if (symbol->ca_flag & CLASS_MEMBER_FPRIVATE)
      perm |= ATTR_PRIVATE;
- if (symbol->cme_flag & CLASS_MEMBER_FCLASSMEM) {
+ if (symbol->ca_flag & CLASS_MEMBER_FCLASSMEM) {
   INSTANCE_DESC_READ(&desc->c_class);
-  if (symbol->cme_flag & CLASS_MEMBER_FPROPERTY) {
+  if (symbol->ca_flag & CLASS_MEMBER_FPROPERTY) {
    /* Special case: Figure out what property callbacks have been assigned. */
    perm &= ~ATTR_ACCESS_GET;
    if (desc->c_class.ih_vtab[symbol->cme_addr + CLASS_PROPERTY_GET])
        perm |= ATTR_ACCESS_GET;
-   if (!(symbol->cme_flag & CLASS_MEMBER_FREADONLY)) {
+   if (!(symbol->ca_flag & CLASS_MEMBER_FREADONLY)) {
     if (desc->c_class.ih_vtab[symbol->cme_addr + CLASS_PROPERTY_DEL])
         perm |= ATTR_ACCESS_DEL;
     if (desc->c_class.ih_vtab[symbol->cme_addr + CLASS_PROPERTY_SET])
@@ -403,7 +404,7 @@ membertable_find(DeeTypeObject *__restrict tp_self, DeeObject *ob_self,
  attr_type = NULL;
  perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_ACCESS_GET|ATTR_NAMEOBJ|ATTR_DOCOBJ;
  /* Figure out which instance descriptor the property is connected to. */
- if (symbol->cme_flag&CLASS_MEMBER_FCLASSMEM) {
+ if (symbol->ca_flag&CLASS_MEMBER_FCLASSMEM) {
   inst = &desc->c_class;
  } else if (ob_self) {
   inst = DeeInstance_DESC(desc,ob_self);
@@ -411,7 +412,7 @@ membertable_find(DeeTypeObject *__restrict tp_self, DeeObject *ob_self,
   inst = NULL;
  }
  if (inst) INSTANCE_DESC_READ(inst);
- if (inst && !(symbol->cme_flag&CLASS_MEMBER_FPROPERTY)) {
+ if (inst && !(symbol->ca_flag&CLASS_MEMBER_FPROPERTY)) {
   /* Actually figure out the type of the member. */
   perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_NAMEOBJ|ATTR_DOCOBJ;
   attr_type = (DREF DeeTypeObject *)inst->ih_vtab[symbol->cme_addr];
@@ -420,9 +421,9 @@ membertable_find(DeeTypeObject *__restrict tp_self, DeeObject *ob_self,
    Dee_Incref(attr_type);
   }
  }
- if (!(symbol->cme_flag&CLASS_MEMBER_FREADONLY)) {
+ if (!(symbol->ca_flag&CLASS_MEMBER_FREADONLY)) {
   perm |= (ATTR_ACCESS_DEL|ATTR_ACCESS_SET);
-  if (inst && symbol->cme_flag&CLASS_MEMBER_FPROPERTY) {
+  if (inst && symbol->ca_flag&CLASS_MEMBER_FPROPERTY) {
    perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_NAMEOBJ|ATTR_DOCOBJ;
    /* Actually figure out what callbacks are assigned. */
    if (inst->ih_vtab[symbol->cme_addr + CLASS_PROPERTY_GET]) perm |= ATTR_PERMGET;
@@ -431,12 +432,12 @@ membertable_find(DeeTypeObject *__restrict tp_self, DeeObject *ob_self,
   }
  }
  if (inst) INSTANCE_DESC_ENDREAD(inst);
- if (symbol->cme_flag&CLASS_MEMBER_FPROPERTY)
+ if (symbol->ca_flag&CLASS_MEMBER_FPROPERTY)
   perm |= ATTR_PROPERTY;
- else if (symbol->cme_flag&CLASS_MEMBER_FMETHOD) {
+ else if (symbol->ca_flag&CLASS_MEMBER_FMETHOD) {
   perm |= ATTR_PERMCALL;
  }
- if (symbol->cme_flag&CLASS_MEMBER_FPRIVATE)
+ if (symbol->ca_flag&CLASS_MEMBER_FPRIVATE)
      perm |= ATTR_PRIVATE;
  if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
   Dee_XDecref(attr_type);
@@ -461,9 +462,9 @@ member_get(DeeTypeObject *__restrict class_type,
  ASSERT(self);
  ASSERT(member);
  ASSERT_OBJECT(this_arg);
- if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
+ if (member->ca_flag&CLASS_MEMBER_FCLASSMEM)
      self = &DeeClass_DESC(class_type)->c_class;
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   DREF DeeObject *getter;
   INSTANCE_DESC_READ(self);
   getter = self->ih_vtab[member->cme_addr+CLASS_PROPERTY_GET];
@@ -471,11 +472,11 @@ member_get(DeeTypeObject *__restrict class_type,
   INSTANCE_DESC_ENDREAD(self);
   if unlikely(!getter) goto illegal;
   /* Invoke the getter. */
-  result = (member->cme_flag&CLASS_MEMBER_FMETHOD)
+  result = (member->ca_flag&CLASS_MEMBER_FMETHOD)
          ? DeeObject_ThisCall(getter,this_arg,0,NULL)
          : DeeObject_Call(getter,0,NULL);
   Dee_Decref(getter);
- } else if (member->cme_flag&CLASS_MEMBER_FMETHOD) {
+ } else if (member->ca_flag&CLASS_MEMBER_FMETHOD) {
   /* Construct a thiscall function. */
   DREF DeeObject *callback;
   INSTANCE_DESC_READ(self);
@@ -511,9 +512,9 @@ member_bound(DeeTypeObject *__restrict class_type,
  ASSERT(self);
  ASSERT(member);
  ASSERT_OBJECT(this_arg);
- if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
+ if (member->ca_flag&CLASS_MEMBER_FCLASSMEM)
      self = &DeeClass_DESC(class_type)->c_class;
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   DREF DeeObject *getter;
   INSTANCE_DESC_READ(self);
   getter = self->ih_vtab[member->cme_addr+CLASS_PROPERTY_GET];
@@ -521,7 +522,7 @@ member_bound(DeeTypeObject *__restrict class_type,
   INSTANCE_DESC_ENDREAD(self);
   if unlikely(!getter) goto unbound;
   /* Invoke the getter. */
-  result = (member->cme_flag&CLASS_MEMBER_FMETHOD)
+  result = (member->ca_flag&CLASS_MEMBER_FMETHOD)
          ? DeeObject_ThisCall(getter,this_arg,0,NULL)
          : DeeObject_Call(getter,0,NULL);
   Dee_Decref(getter);
@@ -550,9 +551,9 @@ member_call(DeeTypeObject *__restrict class_type,
  ASSERT(self);
  ASSERT(member);
  ASSERT_OBJECT(this_arg);
- if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
+ if (member->ca_flag&CLASS_MEMBER_FCLASSMEM)
      self = &DeeClass_DESC(class_type)->c_class;
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   DREF DeeObject *getter;
   INSTANCE_DESC_READ(self);
   getter = self->ih_vtab[member->cme_addr+CLASS_PROPERTY_GET];
@@ -560,7 +561,7 @@ member_call(DeeTypeObject *__restrict class_type,
   INSTANCE_DESC_ENDREAD(self);
   if unlikely(!getter) goto illegal;
   /* Invoke the getter. */
-  callback = (member->cme_flag&CLASS_MEMBER_FMETHOD)
+  callback = (member->ca_flag&CLASS_MEMBER_FMETHOD)
    ? DeeObject_ThisCall(getter,this_arg,0,NULL)
    : DeeObject_Call(getter,0,NULL);
   Dee_Decref(getter);
@@ -575,7 +576,7 @@ member_call(DeeTypeObject *__restrict class_type,
   Dee_XIncref(callback);
   INSTANCE_DESC_ENDREAD(self);
   if unlikely(!callback) goto unbound;
-  result = (member->cme_flag&CLASS_MEMBER_FMETHOD)
+  result = (member->ca_flag&CLASS_MEMBER_FMETHOD)
    ? DeeObject_ThisCall(callback,this_arg,argc,argv)
    : DeeObject_Call(callback,argc,argv);
   Dee_Decref(callback);
@@ -600,9 +601,9 @@ member_call_kw(DeeTypeObject *__restrict class_type,
  ASSERT(self);
  ASSERT(member);
  ASSERT_OBJECT(this_arg);
- if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
+ if (member->ca_flag&CLASS_MEMBER_FCLASSMEM)
      self = &DeeClass_DESC(class_type)->c_class;
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   DREF DeeObject *getter;
   INSTANCE_DESC_READ(self);
   getter = self->ih_vtab[member->cme_addr+CLASS_PROPERTY_GET];
@@ -610,7 +611,7 @@ member_call_kw(DeeTypeObject *__restrict class_type,
   INSTANCE_DESC_ENDREAD(self);
   if unlikely(!getter) goto illegal;
   /* Invoke the getter. */
-  callback = (member->cme_flag&CLASS_MEMBER_FMETHOD)
+  callback = (member->ca_flag&CLASS_MEMBER_FMETHOD)
    ? DeeObject_ThisCall(getter,this_arg,0,NULL)
    : DeeObject_Call(getter,0,NULL);
   Dee_Decref(getter);
@@ -625,7 +626,7 @@ member_call_kw(DeeTypeObject *__restrict class_type,
   Dee_XIncref(callback);
   INSTANCE_DESC_ENDREAD(self);
   if unlikely(!callback) goto unbound;
-  result = (member->cme_flag&CLASS_MEMBER_FMETHOD)
+  result = (member->ca_flag&CLASS_MEMBER_FMETHOD)
    ? DeeObject_ThisCallKw(callback,this_arg,argc,argv,kw)
    : DeeObject_CallKw(callback,argc,argv,kw);
   Dee_Decref(callback);
@@ -648,11 +649,11 @@ member_del(DeeTypeObject *__restrict class_type,
  ASSERT(member);
  ASSERT_OBJECT(this_arg);
  /* Make sure that the access is allowed. */
- if (member->cme_flag&CLASS_MEMBER_FREADONLY)
+ if (member->ca_flag&CLASS_MEMBER_FREADONLY)
      goto illegal;
- if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
+ if (member->ca_flag&CLASS_MEMBER_FCLASSMEM)
      self = &DeeClass_DESC(class_type)->c_class;
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   DREF DeeObject *delfun,*temp;
   INSTANCE_DESC_READ(self);
   delfun = self->ih_vtab[member->cme_addr+CLASS_PROPERTY_DEL];
@@ -660,7 +661,7 @@ member_del(DeeTypeObject *__restrict class_type,
   INSTANCE_DESC_ENDREAD(self);
   if unlikely(!delfun) goto illegal;
   /* Invoke the getter. */
-  temp = (member->cme_flag&CLASS_MEMBER_FMETHOD)
+  temp = (member->ca_flag&CLASS_MEMBER_FMETHOD)
    ? DeeObject_ThisCall(delfun,this_arg,0,NULL)
    : DeeObject_Call(delfun,0,NULL);
   Dee_Decref(delfun);
@@ -700,12 +701,12 @@ member_set(DeeTypeObject *__restrict class_type,
  ASSERT(self);
  ASSERT(member);
  ASSERT_OBJECT(this_arg);
- if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
+ if (member->ca_flag&CLASS_MEMBER_FCLASSMEM)
      self = &DeeClass_DESC(class_type)->c_class;
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   DREF DeeObject *setter,*temp;
   /* Make sure that the access is allowed. */
-  if (member->cme_flag&CLASS_MEMBER_FREADONLY)
+  if (member->ca_flag&CLASS_MEMBER_FREADONLY)
       goto illegal;
   INSTANCE_DESC_READ(self);
   setter = self->ih_vtab[member->cme_addr+CLASS_PROPERTY_SET];
@@ -713,7 +714,7 @@ member_set(DeeTypeObject *__restrict class_type,
   INSTANCE_DESC_ENDREAD(self);
   if unlikely(!setter) goto illegal;
   /* Invoke the getter. */
-  temp = (member->cme_flag&CLASS_MEMBER_FMETHOD)
+  temp = (member->ca_flag&CLASS_MEMBER_FMETHOD)
    ? DeeObject_ThisCall(setter,this_arg,1,(DeeObject **)&value)
    : DeeObject_Call(setter,1,(DeeObject **)&value);
   Dee_Decref(setter);
@@ -724,7 +725,7 @@ member_set(DeeTypeObject *__restrict class_type,
   /* Simply override the field in the member table. */
   INSTANCE_DESC_WRITE(self);
   old_value = self->ih_vtab[member->cme_addr];
-  if (old_value && (member->cme_flag&CLASS_MEMBER_FREADONLY)) {
+  if (old_value && (member->ca_flag&CLASS_MEMBER_FREADONLY)) {
    INSTANCE_DESC_ENDWRITE(self);
    goto illegal; /* readonly fields can only be set once. */
   } else {
@@ -743,193 +744,6 @@ illegal:
 }
 
 
-PRIVATE int DCALL
-property_init(DeePropertyObject *__restrict self) {
- self->p_get = NULL;
- self->p_del = NULL;
- self->p_set = NULL;
- return 0;
-}
-PRIVATE int DCALL
-property_copy(DeePropertyObject *__restrict self,
-              DeePropertyObject *__restrict other) {
- self->p_get = other->p_get;
- self->p_del = other->p_del;
- self->p_set = other->p_set;
- Dee_XIncref(self->p_get);
- Dee_XIncref(self->p_del);
- Dee_XIncref(self->p_set);
- return 0;
-}
-PRIVATE int DCALL
-property_deep(DeePropertyObject *__restrict self,
-              DeePropertyObject *__restrict other) {
- self->p_get = NULL;
- self->p_del = NULL;
- self->p_set = NULL;
- if (other->p_get && unlikely((self->p_get = DeeObject_DeepCopy(other->p_get)) == NULL)) goto err;
- if (other->p_del && unlikely((self->p_del = DeeObject_DeepCopy(other->p_del)) == NULL)) goto err;
- if (other->p_set && unlikely((self->p_set = DeeObject_DeepCopy(other->p_set)) == NULL)) goto err;
- return 0;
-err:
- /*Dee_XDecref(self->p_set);*/ /* Never set at this point. */
- Dee_XDecref(self->p_del);
- Dee_XDecref(self->p_get);
- return -1;
-}
-PRIVATE int DCALL
-property_ctor(DeePropertyObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
- self->p_get = NULL;
- self->p_del = NULL;
- self->p_set = NULL;
- if (DeeArg_Unpack(argc,argv,"|ooo:property",
-                  &self->p_get,
-                  &self->p_del,
-                  &self->p_set))
-     return -1;
- if (DeeNone_Check(self->p_get)) self->p_get = NULL;
- if (DeeNone_Check(self->p_del)) self->p_del = NULL;
- if (DeeNone_Check(self->p_set)) self->p_set = NULL;
- Dee_XIncref(self->p_get);
- Dee_XIncref(self->p_del);
- Dee_XIncref(self->p_set);
- return 0;
-}
-PRIVATE void DCALL
-property_fini(DeePropertyObject *__restrict self) {
- Dee_XDecref(self->p_get);
- Dee_XDecref(self->p_del);
- Dee_XDecref(self->p_set);
-}
-PRIVATE void DCALL
-property_visit(DeePropertyObject *__restrict self, dvisit_t proc, void *arg) {
- Dee_XVisit(self->p_get);
- Dee_XVisit(self->p_del);
- Dee_XVisit(self->p_set);
-}
-PRIVATE dhash_t DCALL
-property_hash(DeePropertyObject *__restrict self) {
- return ((self->p_get ? DeeObject_Hash(self->p_get) : 0) ^
-         (self->p_del ? DeeObject_Hash(self->p_del) : 0) ^
-         (self->p_set ? DeeObject_Hash(self->p_set) : 0));
-}
-PRIVATE DREF DeeObject *DCALL
-property_repr(DeePropertyObject *__restrict self) {
- struct unicode_printer printer = UNICODE_PRINTER_INIT;
- if (UNICODE_PRINTER_PRINT(&printer,"property { ") < 0) goto err;
- if (self->p_get && unicode_printer_printf(&printer,"get = %r%s",self->p_get,
-                                            self->p_del || self->p_set ? ", " : "") < 0)
-     goto err;
- if (self->p_del && unicode_printer_printf(&printer,"del = %r%s",self->p_del,
-                                            self->p_set ? ", " : "") < 0)
-     goto err;
- if (self->p_set && unicode_printer_printf(&printer,"set = %r",self->p_set) < 0)
-     goto err;
- if (UNICODE_PRINTER_PRINT(&printer," }") < 0) goto err;
- return unicode_printer_pack(&printer);
-err:
- unicode_printer_fini(&printer);
- return NULL;
-}
-
-PRIVATE DREF DeeObject *DCALL
-property_eq(DeePropertyObject *__restrict self,
-            DeePropertyObject *__restrict other) {
- int temp;
- if (DeeObject_AssertType((DeeObject *)other,&DeeProperty_Type))
-     return NULL;
- if (((self->p_get != NULL) != (other->p_get != NULL)) ||
-     ((self->p_del != NULL) != (other->p_del != NULL)) ||
-     ((self->p_set != NULL) != (other->p_set != NULL)))
-       return_false;
- if (self->p_get && (temp = DeeObject_CompareEq(self->p_get,other->p_get)) <= 0) goto handle_temp;
- if (self->p_del && (temp = DeeObject_CompareEq(self->p_del,other->p_del)) <= 0) goto handle_temp;
- if (self->p_set && (temp = DeeObject_CompareEq(self->p_set,other->p_set)) <= 0) goto handle_temp;
- return_true;
-handle_temp:
- return unlikely(temp < 0) ? NULL : (Dee_Incref(Dee_False),Dee_False);
-}
-
-PRIVATE struct type_cmp property_cmp = {
-    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&property_hash,
-    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&property_eq
-};
-
-PRIVATE struct type_member property_members[] = {
-    TYPE_MEMBER_FIELD_DOC("get",STRUCT_OBJECT,offsetof(DeePropertyObject,p_get),"->callable\nThe getter callback"),
-    TYPE_MEMBER_FIELD_DOC("del",STRUCT_OBJECT,offsetof(DeePropertyObject,p_del),"->callable\nThe delete callback"),
-    TYPE_MEMBER_FIELD_DOC("set",STRUCT_OBJECT,offsetof(DeePropertyObject,p_set),"->callable\nThe setter callback"),
-    TYPE_MEMBER_END
-};
-
-PRIVATE DREF DeeObject *DCALL
-property_call(DeePropertyObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
- if likely(self->p_get)
-    return DeeObject_Call(self->p_get,argc,argv);
- err_unbound_attribute(&DeeProperty_Type,"get");
- return NULL;
-}
-
-
-PUBLIC DeeTypeObject DeeProperty_Type = {
-    OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_property),
-    /* .tp_doc      = */DOC("()\n"
-                            "(callable get)\n"
-                            "(callable get,callable del)\n"
-                            "(callable get,callable del,callable set)\n"
-                            "\n"
-                            "call(args...)\n"
-                            "Same as ${this.get(args...)}"),
-    /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
-    /* .tp_weakrefs = */0,
-    /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeObject_Type,
-    /* .tp_init = */{
-        {
-            /* .tp_alloc = */{
-                /* .tp_ctor      = */&property_init,
-                /* .tp_copy_ctor = */&property_copy,
-                /* .tp_deep_ctor = */&property_deep,
-                /* .tp_any_ctor  = */&property_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeePropertyObject),
-                }
-            }
-        },
-        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&property_fini,
-        /* .tp_assign      = */NULL,
-        /* .tp_move_assign = */NULL
-    },
-    /* .tp_cast = */{
-        /* .tp_str  = */NULL,
-        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_repr,
-        /* .tp_bool = */NULL
-    },
-    /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&property_call,
-    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&property_visit,
-    /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
-    /* .tp_cmp           = */&property_cmp,
-    /* .tp_seq           = */NULL,
-    /* .tp_iter_next     = */NULL,
-    /* .tp_attr          = */NULL,
-    /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
-    /* .tp_members       = */property_members,
-    /* .tp_class_methods = */NULL,
-    /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */NULL
-};
-
-
-
-
 INTERN DREF DeeObject *DCALL
 instancemember_wrapper(DeeTypeObject *__restrict class_type,
                        struct member_entry *__restrict member) {
@@ -938,7 +752,7 @@ instancemember_wrapper(DeeTypeObject *__restrict class_type,
  ASSERT_OBJECT_TYPE(class_type,&DeeType_Type);
  ASSERTF(DeeType_IsClass(class_type),
          "Not actually a class type");
- ASSERTF(!(member->cme_flag&CLASS_MEMBER_FCLASSMEM),
+ ASSERTF(!(member->ca_flag&CLASS_MEMBER_FCLASSMEM),
          "Not actually an instance member");
  result = DeeObject_MALLOC(DeeInstanceMemberObject);
  if unlikely(!result) goto done;
@@ -1111,11 +925,11 @@ class_member_get(DeeTypeObject *__restrict class_type,
                  struct instance_desc *__restrict self,
                  struct member_entry *__restrict member) {
  DREF DeePropertyObject *result;
- if (!(member->cme_flag&CLASS_MEMBER_FCLASSMEM)) {
+ if (!(member->ca_flag&CLASS_MEMBER_FCLASSMEM)) {
   /* Return an instance-wrapper for instance-members. */
   return instancemember_wrapper(class_type,member);
  }
- if (!(member->cme_flag&CLASS_MEMBER_FPROPERTY)) {
+ if (!(member->ca_flag&CLASS_MEMBER_FPROPERTY)) {
   DREF DeeObject *member_value;
   /* Simple case: direct access to unbound class-based member. */
   INSTANCE_DESC_READ(self);
@@ -1135,7 +949,7 @@ class_member_get(DeeTypeObject *__restrict class_type,
  /* Only non-readonly property members have callbacks other than a getter.
   * In this case, the readonly flag both protects the property from being
   * overwritten, as well as being invoked using something other than read-access. */
- if (!(member->cme_flag&CLASS_MEMBER_FREADONLY)) {
+ if (!(member->ca_flag&CLASS_MEMBER_FREADONLY)) {
   result->p_del = self->ih_vtab[member->cme_addr + CLASS_PROPERTY_DEL];
   Dee_XIncref(result->p_del);
   result->p_set = self->ih_vtab[member->cme_addr + CLASS_PROPERTY_SET];
@@ -1161,7 +975,7 @@ class_member_call(DeeTypeObject *__restrict class_type,
                   struct member_entry *__restrict member,
                   size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *callback,*result;
- if (!(member->cme_flag&CLASS_MEMBER_FCLASSMEM)) {
+ if (!(member->ca_flag&CLASS_MEMBER_FCLASSMEM)) {
   /* Simulate `operator ()' for wrappers generated by `instancemember_wrapper()'. */
   if (argc != 1) {
    DeeError_Throwf(&DeeError_TypeError,
@@ -1179,7 +993,7 @@ class_member_call(DeeTypeObject *__restrict class_type,
  }
  /* Simple case: direct access to unbound class-based member. */
 #if 0
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   /* Calling an instance property using the class as base
    * will simply invoke the getter associated with that property.
    * Technically, we could assert that `argc == 1' at this point,
@@ -1192,7 +1006,7 @@ class_member_call(DeeTypeObject *__restrict class_type,
 #endif
  INSTANCE_DESC_READ(self);
 #if CLASS_PROPERTY_GET != 0
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   callback = self->ih_vtab[member->cme_addr + CLASS_PROPERTY_GET];
  } else {
   callback = self->ih_vtab[member->cme_addr];
@@ -1223,7 +1037,7 @@ class_member_call_kw(DeeTypeObject *__restrict class_type,
                      size_t argc, DeeObject **__restrict argv,
                      DeeObject *kw) {
  DREF DeeObject *callback,*result;
- if (!(member->cme_flag&CLASS_MEMBER_FCLASSMEM)) {
+ if (!(member->ca_flag&CLASS_MEMBER_FCLASSMEM)) {
   /* Simulate `operator ()' for wrappers generated by `instancemember_wrapper()'. */
   DeeObject *thisarg;
   if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg) ||
@@ -1237,7 +1051,7 @@ class_member_call_kw(DeeTypeObject *__restrict class_type,
  }
  /* Simple case: direct access to unbound class-based member. */
 #if 0
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   /* Calling an instance property using the class as base
    * will simply invoke the getter associated with that property.
    * Technically, we could assert that `argc == 1' at this point,
@@ -1250,7 +1064,7 @@ class_member_call_kw(DeeTypeObject *__restrict class_type,
 #endif
  INSTANCE_DESC_READ(self);
 #if CLASS_PROPERTY_GET != 0
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   callback = self->ih_vtab[member->cme_addr + CLASS_PROPERTY_GET];
  } else {
   callback = self->ih_vtab[member->cme_addr];
@@ -1275,14 +1089,14 @@ INTERN int DCALL
 class_member_del(DeeTypeObject *__restrict class_type,
                  struct instance_desc *__restrict self,
                  struct member_entry *__restrict member) {
- ASSERT(member->cme_flag&CLASS_MEMBER_FCLASSMEM);
+ ASSERT(member->ca_flag&CLASS_MEMBER_FCLASSMEM);
  /* Make sure not to re-write readonly attributes. */
- if (member->cme_flag&CLASS_MEMBER_FREADONLY) {
+ if (member->ca_flag&CLASS_MEMBER_FREADONLY) {
   err_cant_access_attribute(class_type,member->cme_name->s_str,
                             ATTR_ACCESS_DEL);
   return -1;
  }
- if (!(member->cme_flag&CLASS_MEMBER_FPROPERTY)) {
+ if (!(member->ca_flag&CLASS_MEMBER_FPROPERTY)) {
   DREF DeeObject *old_value;
   /* Simple case: directly delete a class-based member. */
   INSTANCE_DESC_READ(self);
@@ -1326,14 +1140,14 @@ class_member_set(DeeTypeObject *__restrict class_type,
                  struct instance_desc *__restrict self,
                  struct member_entry *__restrict member,
                  DeeObject *__restrict value) {
- ASSERT(member->cme_flag&CLASS_MEMBER_FCLASSMEM);
+ ASSERT(member->ca_flag&CLASS_MEMBER_FCLASSMEM);
  /* Make sure not to re-write readonly attributes. */
- if (member->cme_flag&CLASS_MEMBER_FREADONLY) {
+ if (member->ca_flag&CLASS_MEMBER_FREADONLY) {
   err_cant_access_attribute(class_type,member->cme_name->s_str,
                             ATTR_ACCESS_SET);
   return -1;
  }
- if (member->cme_flag&CLASS_MEMBER_FPROPERTY) {
+ if (member->ca_flag&CLASS_MEMBER_FPROPERTY) {
   DREF DeeObject *old_value[3];
   if (DeeObject_AssertType(value,&DeeProperty_Type))
       return -1;
@@ -1368,196 +1182,6 @@ class_member_set(DeeTypeObject *__restrict class_type,
  }
  return 0;
 }
-
-
-
-/* Since `super' and `instancemethod' objects share the same
- * size, we also let them share a pool of pre-allocated objects. */
-STATIC_ASSERT(sizeof(DeeSuperObject) == sizeof(InstanceMethod));
-DECLARE_OBJECT_CACHE(super,DeeSuperObject);
-#ifndef NDEBUG
-#define super_alloc()  super_dbgalloc(__FILE__,__LINE__)
-#endif
-#define instance_method_alloc     (InstanceMethod *)super_alloc
-#define instance_method_free(p)   super_free((DeeSuperObject *)(p))
-#define instance_method_tp_alloc  super_tp_alloc
-#define instance_method_tp_free   super_tp_free
-
-
-
-PUBLIC DREF DeeObject *DCALL
-DeeInstanceMethod_New(DeeObject *__restrict func,
-                      DeeObject *__restrict this_arg) {
- DREF InstanceMethod *result;
- ASSERT_OBJECT(func);
- ASSERT_OBJECT(this_arg);
- result = instance_method_alloc();
- if unlikely(!result) return NULL;
- DeeObject_Init(result,&DeeInstanceMethod_Type);
- result->im_func = func;
- result->im_this = this_arg;
- Dee_Incref(func);
- Dee_Incref(this_arg);
- return (DREF DeeObject *)result;
-}
-
-PRIVATE int DCALL
-im_init(InstanceMethod *__restrict self) {
- /* Initialize a stub instance-method. */
- self->im_func = Dee_None;
- self->im_this = Dee_None;
-#ifdef CONFIG_NO_THREADS
- Dee_None->ob_refcnt += 2;
-#else
- ATOMIC_FETCHADD(Dee_None->ob_refcnt,2);
-#endif
- return 0;
-}
-
-PRIVATE int DCALL
-im_copy(InstanceMethod *__restrict self,
-        InstanceMethod *__restrict other) {
- self->im_this = other->im_this;
- self->im_func = other->im_func;
- Dee_Incref(self->im_this);
- Dee_Incref(self->im_func);
- return 0;
-}
-
-PRIVATE int DCALL
-im_deepcopy(InstanceMethod *__restrict self,
-            InstanceMethod *__restrict other) {
- self->im_this = DeeObject_DeepCopy(other->im_this);
- if unlikely(!self->im_this) return -1;
- self->im_func = DeeObject_DeepCopy(other->im_func);
- if unlikely(!self->im_func) { Dee_Decref(self->im_this); return -1; }
- return 0;
-}
-
-PRIVATE int DCALL
-im_ctor(InstanceMethod *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
- DeeObject *this_arg,*func;
- if (DeeArg_Unpack(argc,argv,"oo:instancemethod",&func,&this_arg))
-     return -1;
- self->im_this = this_arg;
- self->im_func = func;
- Dee_Incref(this_arg);
- Dee_Incref(func);
- return 0;
-}
-
-PRIVATE DREF DeeObject *DCALL
-im_repr(InstanceMethod *__restrict self) {
- return DeeString_Newf("instancemethod(%r,%r)",self->im_func,self->im_this);
-}
-
-PRIVATE DREF DeeObject *DCALL
-im_call(InstanceMethod *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
- return DeeObject_ThisCall(self->im_func,self->im_this,argc,argv);
-}
-PRIVATE dhash_t DCALL
-im_hash(InstanceMethod *__restrict self) {
- return DeeObject_Hash(self->im_func) ^ DeeObject_Hash(self->im_this);
-}
-
-PRIVATE DREF DeeObject *DCALL
-im_eq(InstanceMethod *__restrict self,
-      InstanceMethod *__restrict other) {
- int temp;
- if (DeeObject_AssertType((DeeObject *)other,&DeeInstanceMethod_Type))
-     return NULL;
- temp = DeeObject_CompareEq(self->im_func,other->im_func);
- if (temp <= 0) return unlikely(temp < 0) ? NULL : (Dee_Incref(Dee_False),Dee_False);
- temp = DeeObject_CompareEq(self->im_this,other->im_this);
- if unlikely(temp < 0) return NULL;
- return_bool_(temp);
-}
-PRIVATE DREF DeeObject *DCALL
-im_ne(InstanceMethod *__restrict self,
-      InstanceMethod *__restrict other) {
- int temp;
- if (DeeObject_AssertType((DeeObject *)other,&DeeInstanceMethod_Type))
-     return NULL;
- temp = DeeObject_CompareNe(self->im_func,other->im_func);
- if (temp != 0) return unlikely(temp < 0) ? NULL : (Dee_Incref(Dee_True),Dee_True);
- temp = DeeObject_CompareNe(self->im_this,other->im_this);
- if unlikely(temp < 0) return NULL;
- return_bool_(temp);
-}
-
-PRIVATE struct type_cmp im_cmp = {
-    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&im_hash,
-    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&im_eq,
-    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&im_ne,
-};
-
-
-/* Since `super' and `instancemethod' share an identical
- * layout, we can re-use some operators here... */
-INTDEF void DCALL super_fini(DeeSuperObject *__restrict self);
-INTDEF void DCALL super_visit(DeeSuperObject *__restrict self, dvisit_t proc, void *arg);
-#define im_fini   super_fini
-#define im_visit  super_visit
-
-PRIVATE struct type_member im_members[] = {
-    TYPE_MEMBER_FIELD("__this__",STRUCT_OBJECT,offsetof(InstanceMethod,im_this)),
-    TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(InstanceMethod,im_func),"->callable"),
-    TYPE_MEMBER_END
-};
-
-
-PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
-    OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_instancemethod),
-    /* .tp_doc      = */DOC("(callable func,object this_arg)\n"
-                            "Construct an object-bound instance method that can be used to invoke @func\n"
-                            "\n"
-                            "()(object args...)\n"
-                            "Invoke the $func used to construct @this "
-                            "instancemethod as ${func(this_arg,args...)}"),
-    /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
-    /* .tp_weakrefs = */0,
-    /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeCallable_Type,
-    /* .tp_init = */{
-        {
-            /* .tp_alloc = */{
-                /* .tp_ctor      = */&im_init,
-                /* .tp_copy_ctor = */&im_copy,
-                /* .tp_deep_ctor = */&im_deepcopy,
-                /* .tp_any_ctor  = */&im_ctor,
-                TYPE_ALLOCATOR(&instance_method_tp_alloc,
-                               &instance_method_tp_free)
-            }
-        },
-        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&im_fini,
-        /* .tp_assign      = */NULL,
-        /* .tp_move_assign = */NULL
-    },
-    /* .tp_cast = */{
-        /* .tp_str  = */NULL,
-        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&im_repr,
-        /* .tp_bool = */NULL
-    },
-    /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&im_call,
-    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&im_visit,
-    /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
-    /* .tp_cmp           = */&im_cmp,
-    /* .tp_seq           = */NULL,
-    /* .tp_iter_next     = */NULL,
-    /* .tp_attr          = */NULL,
-    /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
-    /* .tp_members       = */im_members,
-    /* .tp_class_methods = */NULL,
-    /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */NULL
-};
 
 
 
@@ -2934,10 +2558,10 @@ INTERN UNARY_WRAPPER(int,leave)
 
 
 struct opwrapper {
- uintptr_t offset;  /* Offset from the containing operator table to where `wrapper' must be written. */
- void     *wrapper; /* [0..1] The C wrapper function that should be assigned to
-                     *         the operator to have it invoke user-callbacks.
-                     *   NOTE: A value of NULL in this field acts as a sentinel. */
+    uintptr_t offset;  /* Offset from the containing operator table to where `wrapper' must be written. */
+    void     *wrapper; /* [0..1] The C wrapper function that should be assigned to
+                        *         the operator to have it invoke user-callbacks.
+                        *   NOTE: A value of NULL in this field acts as a sentinel. */
 };
 
 /* Operator wrapper descriptor tables. */
@@ -3521,7 +3145,7 @@ PRIVATE void
  for (; iter != end; ++iter) {
   if (!iter->cme_name) continue;
   if (iter->cme_addr != index) continue;
-  if (iter->cme_flag&CLASS_MEMBER_FCLASSMEM) continue;
+  if (iter->ca_flag&CLASS_MEMBER_FCLASSMEM) continue;
   name = iter->cme_name->s_str;
   break;
  }

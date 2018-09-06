@@ -113,7 +113,7 @@ vcall_generic_attribute(DeeTypeObject *__restrict tp_self,
  if (DeeType_IsClass(tp_self)) {
   struct member_entry *member;
   struct class_desc *desc = DeeClass_DESC(tp_self);
-  if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
+  if ((member = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
    DREF DeeObject *args_tuple;
    args_tuple = DeeTuple_VNewf(format,args);
    if unlikely(!args_tuple) goto err;
@@ -174,7 +174,7 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
  if (DeeType_IsClass(tp_self)) {
   struct member_entry *member;
   struct class_desc *desc = DeeClass_DESC(tp_self);
-  if ((member = membertable_lookup_string(desc->c_mem,
+  if ((member = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
                                           DeeString_STR(name),
                                           hash)) != NULL) {
    return member_get(tp_self,

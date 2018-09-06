@@ -73,8 +73,12 @@ DeeObject_EnumAttr(DeeTypeObject *__restrict tp_self,
    break;
   }
   if (DeeType_IsClass(iter)) {
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+   temp = DeeClass_EnumInstanceAttributes(iter,self,proc,arg);
+#else
    struct class_desc *desc = DeeClass_DESC(iter);
    temp = membertable_enum(iter,self,desc->c_mem,proc,arg);
+#endif
    if unlikely(temp < 0) goto err;
    result += temp;
   } else {
@@ -433,10 +437,17 @@ DeeType_FindAttrString(DeeTypeObject *__restrict self,
       goto find_generic;
   if (DeeType_IsClass(iter)) {
    struct class_desc *desc = DeeClass_DESC(iter);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+   if ((error = DeeClass_FindClassAttribute(iter,result,rules)) <= 0)
+        goto done;
+   if ((error = DeeClass_FindClassInstanceAttribute(iter,result,rules)) <= 0)
+        goto done;
+#else
    if ((error = membertable_find(iter,NULL,desc->c_cmem,result,rules)) <= 0)
         goto done;
    if ((error = membertable_find_class(iter,desc->c_mem,result,rules)) <= 0)
         goto done;
+#endif
   } else {
    if ((error = membercache_find(&iter->tp_class_cache,(DeeObject *)iter,
                                   ATTR_CMEMBER,result,rules)) <= 0)
@@ -502,22 +513,30 @@ DeeType_GetAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_cmem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_GetClassAttribute(iter,attr);
+#else
     return member_get((DeeTypeObject *)iter,&desc->c_class,
-                      (DeeObject *)iter,member);
+                      (DeeObject *)iter,attr);
+#endif
    }
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
-    return class_member_get((DeeTypeObject *)iter,&desc->c_class,member);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_GetInstanceAttribute(iter,attr);
+#else
+    return class_member_get((DeeTypeObject *)iter,&desc->c_class,attr);
+#endif
    }
   } else {
    if ((result = membercache_getattr(&iter->tp_class_cache,(DeeObject *)iter,name,hash)) != ITER_DONE)
@@ -568,19 +587,23 @@ DeeType_BoundAttrString(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_cmem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return -1;
     }
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_BoundClassAttribute(iter,attr);
+#else
     return member_bound((DeeTypeObject *)iter,&desc->c_class,
-                        (DeeObject *)iter,member);
+                        (DeeObject *)iter,attr);
+#endif
    }
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return -1;
     }
     goto is_bound; /* Wrapper objects are always bound. */
@@ -636,12 +659,17 @@ DeeType_DocAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_cmem,name,hash)) != NULL ||
-       (member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (member->cme_doc)
-        return_reference_((DeeObject *)member->cme_doc);
+   if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL ||
+       (attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    if (attr->ca_doc)
+        return_reference_((DeeObject *)attr->ca_doc);
+#else
+    if (attr->cme_doc)
+        return_reference_((DeeObject *)attr->cme_doc);
+#endif
     err_nodoc_attribute(iter->tp_name,name);
     goto err;
    }
@@ -701,22 +729,30 @@ DeeType_CallAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_cmem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_CallClassAttribute(iter,attr,argc,argv);
+#else
     return member_call(iter,&desc->c_class,
-                      (DeeObject *)iter,member,argc,argv);
+                      (DeeObject *)iter,attr,argc,argv);
+#endif
    }
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    return class_member_call(iter,&desc->c_class,member,argc,argv);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_CallInstanceAttribute(iter,attr,argc,argv);
+#else
+    return class_member_call(iter,&desc->c_class,attr,argc,argv);
+#endif
    }
   } else {
    if ((result = membercache_callattr(&self->tp_class_cache,(DeeObject *)self,name,hash,argc,argv)) != ITER_DONE)
@@ -779,24 +815,32 @@ DeeType_CallAttrStringKw(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_cmem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_CallClassAttributeKw(iter,attr,argc,argv,kw);
+#else
     return member_call_kw(iter,&desc->c_class,
-                         (DeeObject *)iter,member,
+                         (DeeObject *)iter,attr,
                           argc,argv,kw);
+#endif
    }
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_CallInstanceAttributeKw(iter,attr,argc,argv,kw);
+#else
     return class_member_call_kw(iter,&desc->c_class,
-                                member,argc,argv,kw);
+                                attr,argc,argv,kw);
+#endif
    }
   } else {
    if ((result = membercache_callattr_kw(&self->tp_class_cache,(DeeObject *)self,name,hash,argc,argv,kw)) != ITER_DONE)
@@ -857,8 +901,8 @@ DeeType_HasAttrString(DeeTypeObject *__restrict self,
  do {
   if (DeeType_IsClass(iter)) {
    struct class_desc *desc = DeeClass_DESC(iter);
-   if (membertable_lookup_string(desc->c_cmem,name,hash) ||
-       membertable_lookup_string(desc->c_mem,name,hash))
+   if (DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash) ||
+       DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash))
        return true;
   } else {
    if (membercache_hasattr(&iter->tp_class_cache,name,hash) ||
@@ -904,24 +948,32 @@ INTERN int (DCALL DeeType_DelAttrString)(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int error;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_cmem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    return member_del(iter,&desc->c_class,(DeeObject *)iter,member);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_DelClassAttribute(iter,attr);
+#else
+    return member_del(iter,&desc->c_class,(DeeObject *)iter,attr);
+#endif
    }
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
-        return class_member_del(iter,&desc->c_class,member);
-    /* Instance member attributes cannot be deleted without an instance operand. */
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_DelInstanceAttribute(iter,attr);
+#else
+    if (attr->ca_flag & CLASS_MEMBER_FCLASSMEM)
+        return class_member_del(iter,&desc->c_class,attr);
+    /* Instance attr attributes cannot be deleted without an instance operand. */
     goto noaccess;
+#endif
    }
   } else {
    if ((error = membercache_delattr(&self->tp_class_cache,(DeeObject *)self,name,hash)) <= 0)
@@ -972,24 +1024,32 @@ INTERN int (DCALL DeeType_SetAttrString)(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int error;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_cmem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    return member_set(iter,&desc->c_class,(DeeObject *)iter,member,value);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_SetClassAttribute(iter,attr,value);
+#else
+    return member_set(iter,&desc->c_class,(DeeObject *)iter,attr,value);
+#endif
    }
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
-        return class_member_set(iter,&desc->c_class,member,value);
-    /* Instance member attributes cannot be set without an instance operand. */
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_SetInstanceAttribute(iter,attr,value);
+#else
+    if (attr->ca_flag & CLASS_MEMBER_FCLASSMEM)
+        return class_member_set(iter,&desc->c_class,attr,value);
+    /* Instance attr attributes cannot be set without an instance operand. */
     goto noaccess;
+#endif
    }
   } else {
    if ((error = membercache_setattr(&self->tp_class_cache,(DeeObject *)self,name,hash,value)) <= 0)
@@ -1131,10 +1191,18 @@ DeeType_EnumAttr(DeeTypeObject *__restrict self,
 #endif
   if (DeeType_IsClass(iter)) {
    struct class_desc *desc = DeeClass_DESC(iter);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+   temp = DeeClass_EnumClassAttributes(iter,proc,arg);
+#else
    temp = membertable_enum(iter,NULL,desc->c_cmem,proc,arg);
+#endif
    if unlikely(temp < 0) goto err;
    result += temp;
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+   temp = DeeClass_EnumClassInstanceAttributes(iter,proc,arg);
+#else
    temp = membertable_enum_class(iter,desc->c_mem,proc,arg);
+#endif
    if unlikely(temp < 0) goto err;
    result += temp;
   } else {
@@ -1221,14 +1289,18 @@ DeeType_GetInstanceAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
-    return class_member_get((DeeTypeObject *)iter,&desc->c_class,member);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_GetInstanceAttribute(iter,attr);
+#else
+    return class_member_get((DeeTypeObject *)iter,&desc->c_class,attr);
+#endif
    }
   } else {
    if ((result = membercache_getinstanceattr(iter,name,hash)) != ITER_DONE)
@@ -1256,11 +1328,16 @@ DeeType_DocInstanceAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (member->cme_doc)
-        return_reference_((DeeObject *)member->cme_doc);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    if (attr->ca_doc)
+        return_reference_((DeeObject *)attr->ca_doc);
+#else
+    if (attr->cme_doc)
+        return_reference_((DeeObject *)attr->cme_doc);
+#endif
     err_nodoc_attribute(iter->tp_name,name);
     goto err;
    }
@@ -1294,14 +1371,18 @@ DeeType_CallInstanceAttrStringKw(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    return class_member_call_kw(iter,&desc->c_class,member,argc,argv,kw);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_CallInstanceAttributeKw(iter,attr,argc,argv,kw);
+#else
+    return class_member_call_kw(iter,&desc->c_class,attr,argc,argv,kw);
+#endif
    }
   } else {
    if ((result = membercache_callinstanceattr_kw(self,name,hash,argc,argv,kw)) != ITER_DONE)
@@ -1330,7 +1411,7 @@ DeeType_HasInstanceAttrString(DeeTypeObject *__restrict self,
  do {
   if (DeeType_IsClass(self)) {
    struct class_desc *desc = DeeClass_DESC(self);
-   if (membertable_lookup_string(desc->c_mem,name,hash))
+   if (DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash))
        return true;
   } else {
    if (membercache_hasinstanceattr(self,name,hash))
@@ -1355,17 +1436,21 @@ INTERN int (DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int error;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
-        return class_member_del(iter,&desc->c_class,member);
-    /* Instance member attributes cannot be deleted without an instance operand. */
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_DelInstanceAttribute(iter,attr);
+#else
+    if (attr->ca_flag & CLASS_MEMBER_FCLASSMEM)
+        return class_member_del(iter,&desc->c_class,attr);
+    /* Instance attr attributes cannot be deleted without an instance operand. */
     goto noaccess;
+#endif
    }
   } else {
    if ((error = membercache_delinstanceattr(self,name,hash)) <= 0)
@@ -1392,17 +1477,21 @@ INTERN int (DCALL DeeType_SetInstanceAttrString)(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int error;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,name,hash)) != NULL) {
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    if (member->cme_flag&CLASS_MEMBER_FCLASSMEM)
-        return class_member_set(iter,&desc->c_class,member,value);
-    /* Instance member attributes cannot be set without an instance operand. */
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeClass_SetInstanceAttribute(iter,attr,value);
+#else
+    if (attr->ca_flag & CLASS_MEMBER_FCLASSMEM)
+        return class_member_set(iter,&desc->c_class,attr,value);
+    /* Instance attr attributes cannot be set without an instance operand. */
     goto noaccess;
+#endif
    }
   } else {
    if ((error = membercache_setinstanceattr(self,name,hash,value)) <= 0)
@@ -1462,11 +1551,11 @@ PUBLIC int
  iter = iter;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup(desc->c_mem,attr_name,hash)) != NULL)
-        return member_mayaccess(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL)
+        return member_mayaccess(iter,attr);
   } else {
    if (iter->tp_methods &&
        type_method_hasattr(cache,iter->tp_methods,
@@ -1504,7 +1593,7 @@ do_iter_attr:
     }
     return CATCH_ATTRIBUTE_ERROR() ? 0 : -1;
    }
-   /* Don't consider attributes from lower levels for custom member access. */
+   /* Don't consider attributes from lower levels for custom attr access. */
    break;
   }
  }
@@ -1531,11 +1620,11 @@ PUBLIC int
  iter = iter;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,attr_name,hash)) != NULL)
-        return member_mayaccess(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL)
+        return member_mayaccess(iter,attr);
   } else {
    if (iter->tp_methods &&
        type_method_hasattr(cache,iter->tp_methods,
@@ -1576,7 +1665,7 @@ do_iter_attr:
     }
     return CATCH_ATTRIBUTE_ERROR() ? 0 : -1;
    }
-   /* Don't consider attributes from lower levels for custom member access. */
+   /* Don't consider attributes from lower levels for custom attr access. */
    break;
   }
  }
@@ -1608,16 +1697,24 @@ PUBLIC int
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup(desc->c_mem,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return -1;
     }
-    return member_bound(iter,DeeInstance_DESC(desc,self),self,member);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeInstance_BoundAttribute(iter,
+                                      DeeInstance_DESC(desc,
+                                                       self),
+                                      self,
+                                      attr);
+#else
+    return member_bound(iter,DeeInstance_DESC(desc,self),self,attr);
+#endif
    }
   } else {
    if (iter->tp_methods &&
@@ -1660,7 +1757,7 @@ do_iter_attr:
         return 0;
     return -1;
    }
-   /* Don't consider attributes from lower levels for custom member access. */
+   /* Don't consider attributes from lower levels for custom attr access. */
    break;
   }
  }
@@ -1690,16 +1787,24 @@ PUBLIC int
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return -1;
     }
-    return member_bound(iter,DeeInstance_DESC(desc,self),self,member);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeInstance_BoundAttribute(iter,
+                                      DeeInstance_DESC(desc,
+                                                       self),
+                                      self,
+                                      attr);
+#else
+    return member_bound(iter,DeeInstance_DESC(desc,self),self,attr);
+#endif
    }
   } else {
    if (iter->tp_methods &&
@@ -1745,7 +1850,7 @@ do_iter_attr:
         return 0;
     return -1;
    }
-   /* Don't consider attributes from lower levels for custom member access. */
+   /* Don't consider attributes from lower levels for custom attr access. */
    break;
   }
  }
@@ -1802,11 +1907,16 @@ DeeObject_DocAttr(DeeObject *__restrict self,
  for (;;) {
 continue_search:
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup(desc->c_mem,attr_name,hash)) != NULL) {
-    if (member->cme_doc)
-        return_reference_((DeeObject *)member->cme_doc);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    if (attr->ca_doc)
+        return_reference_((DeeObject *)attr->ca_doc);
+#else
+    if (attr->cme_doc)
+        return_reference_((DeeObject *)attr->cme_doc);
+#endif
     break;
    }
   }
@@ -1873,15 +1983,22 @@ DeeObject_CallAttr(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup(desc->c_mem,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
-    return member_call(iter,DeeInstance_DESC(desc,self),self,member,argc,argv);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeInstance_CallAttribute(iter,
+                                     DeeInstance_DESC(desc,
+                                                      self),
+                                     self,attr,argc,argv);
+#else
+    return member_call(iter,DeeInstance_DESC(desc,self),self,attr,argc,argv);
+#endif
    }
   }
   if (iter->tp_methods &&
@@ -1942,15 +2059,22 @@ DeeObject_CallAttrKw(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup(desc->c_mem,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
-    return member_call_kw(iter,DeeInstance_DESC(desc,self),self,member,argc,argv,kw);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeInstance_CallAttributeKw(iter,
+                                       DeeInstance_DESC(desc,
+                                                        self),
+                                       self,attr,argc,argv,kw);
+#else
+    return member_call_kw(iter,DeeInstance_DESC(desc,self),self,attr,argc,argv,kw);
+#endif
    }
   }
   if (iter->tp_methods &&
@@ -2007,15 +2131,22 @@ DeeObject_GetAttrStringHash(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
-    return member_get(iter,DeeInstance_DESC(desc,self),self,member);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeInstance_GetAttribute(iter,
+                                    DeeInstance_DESC(desc,
+                                                     self),
+                                    self,attr);
+#else
+    return member_get(iter,DeeInstance_DESC(desc,self),self,attr);
+#endif
    }
   }
   if (iter->tp_methods &&
@@ -2075,15 +2206,22 @@ PUBLIC int (DCALL DeeObject_DelAttrStringHash)(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    return member_del(iter,DeeInstance_DESC(desc,self),self,member);
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeInstance_DelAttribute(iter,
+                                    DeeInstance_DESC(desc,
+                                                     self),
+                                    self,attr);
+#else
+    return member_del(iter,DeeInstance_DESC(desc,self),self,attr);
+#endif
    }
   }
   if (iter->tp_methods &&
@@ -2147,12 +2285,22 @@ PUBLIC int (DCALL DeeObject_SetAttrStringHash)(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) { err_protected_member(iter,member); goto err; }
-    return member_set(iter,DeeInstance_DESC(desc,self),self,member,value);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
+     goto err;
+    }
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeInstance_SetAttribute(iter,
+                                    DeeInstance_DESC(desc,
+                                                     self),
+                                    self,attr,value);
+#else
+    return member_set(iter,DeeInstance_DESC(desc,self),self,attr,value);
+#endif
    }
   }
   if (iter->tp_methods &&
@@ -2215,16 +2363,23 @@ DeeObject_CallAttrStringHash(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((member = membertable_lookup_string(desc->c_mem,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    return DeeInstance_CallAttribute(iter,
+                                     DeeInstance_DESC(desc,
+                                                      self),
+                                     self,attr,argc,argv);
+#else
     return member_call(iter,DeeInstance_DESC(desc,self),
-                       self,member,argc,argv);
+                       self,attr,argc,argv);
+#endif
    }
   }
   if (iter->tp_methods &&

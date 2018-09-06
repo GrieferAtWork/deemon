@@ -318,7 +318,7 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
  * context of the constructor scope (false) or the outside class scope (true) */
 #define SYM_ISCLASSMEMBER(x) \
   ((x)->s_type == SYMBOL_TYPE_CFIELD || \
-  ((x)->s_field.f_member->cme_flag&CLASS_MEMBER_FCLASSMEM))
+  ((x)->s_field.f_member->ca_flag&CLASS_MEMBER_FCLASSMEM))
 
 /* Allocate a new class member, automatically assigning the next VTABLE
  * id, as well as creating symbols in the associated member tables and
@@ -359,7 +359,7 @@ class_maker_addmember(struct class_maker *__restrict self,
  entry = DeeMemberTable_Add(desc->td_field,name_str);
  Dee_Decref(name_str);
  if unlikely(!entry) goto err;
- entry->cme_flag = flags;
+ entry->ca_flag = flags;
  /* NOTE: Members apart of the instance member vector, but stored
   *       in the class member vector must obvious count to its usage,
   *       rather than their own. */
@@ -443,7 +443,7 @@ do_realloc_anonv:
  }
  /* Reserve one item from the anonymous member vector. */
  entry += self->cm_anonc++;
- entry->cme_flag = flags;
+ entry->ca_flag = flags;
  entry->cme_addr = index;
  entry->cme_name = (DeeStringObject *)Dee_EmptyString; /* NOTE: Not a reference in this context! */
  entry->cme_hash = 0;
@@ -523,7 +523,7 @@ class_maker_addinit(struct class_maker *__restrict self,
  ASSERT(self->cm_class_initc <= self->cm_class_inita);
  entry = SYMBOL_FIELD_MEMBER(sym);
  if (sym->s_type == SYMBOL_TYPE_IFIELD &&
-   !(entry->cme_flag&CLASS_MEMBER_FCLASSMEM)) {
+   !(entry->ca_flag&CLASS_MEMBER_FCLASSMEM)) {
   DREF struct ast *symbol_ast;
   /* Run the given AST during construction of instances. */
   /* Handle instance member initializers. */
@@ -1542,7 +1542,7 @@ define_constructor:
          !prop_callbacks[CLASS_PROPERTY_SET]) {
       /* Optimization: when no delete or setting callback
        *               was given, mark the symbol as read-only. */
-      member_symbol->s_field.f_member->cme_flag |= CLASS_MEMBER_FREADONLY;
+      member_symbol->s_field.f_member->ca_flag |= CLASS_MEMBER_FREADONLY;
       *pusage_counter += 1;
      } else {
       *pusage_counter += CLASS_PROPERTY_CALLBACK_COUNT;

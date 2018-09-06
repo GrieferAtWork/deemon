@@ -3969,20 +3969,20 @@ operator_fallback:
       entry = &table->mt_list[i];
       if (!entry->cme_name) continue;
       DO(Dee_FormatRepeat(printer,arg,'\t',indent));
-      if (entry->cme_flag & CLASS_MEMBER_FPRIVATE)
+      if (entry->ca_flag & CLASS_MEMBER_FPRIVATE)
           PRINT("private ");
-      if (!(entry->cme_flag & CLASS_MEMBER_FCLASSMEM)) {
-       if (entry->cme_flag & CLASS_MEMBER_FREADONLY)
+      if (!(entry->ca_flag & CLASS_MEMBER_FCLASSMEM)) {
+       if (entry->ca_flag & CLASS_MEMBER_FREADONLY)
            PRINT("@readonly ");
-       if (entry->cme_flag & CLASS_MEMBER_FMETHOD)
+       if (entry->ca_flag & CLASS_MEMBER_FMETHOD)
            PRINT("@method ");
        printf("member %k;\n",entry->cme_name);
-      } else if (entry->cme_flag & CLASS_MEMBER_FPROPERTY) {
+      } else if (entry->ca_flag & CLASS_MEMBER_FPROPERTY) {
        struct class_member *functions[3]; size_t i;
        /* Instance-property (with its callbacks saved as part of the class) */
        functions[1] = functions[2] = NULL;
        functions[0] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_GET);
-       if (!(entry->cme_flag & CLASS_MEMBER_FREADONLY)) {
+       if (!(entry->ca_flag & CLASS_MEMBER_FREADONLY)) {
         functions[1] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_DEL);
         functions[2] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_SET);
        }
@@ -4007,7 +4007,7 @@ operator_fallback:
        --indent;
        DO(Dee_FormatRepeat(printer,arg,'\t',indent));
        PRINT("}\n");
-      } else if (entry->cme_flag & CLASS_MEMBER_FMETHOD) {
+      } else if (entry->ca_flag & CLASS_MEMBER_FMETHOD) {
        struct class_member *method;
        /* Instance-method (that is saved within the class) */
        method = find_class_member(self,entry->cme_addr);
@@ -4024,9 +4024,9 @@ operator_fallback:
        struct class_member *member;
        /* An instance-member that is saved within the class??? */
 instane_member_in_class:
-       if (entry->cme_flag & CLASS_MEMBER_FMETHOD)
+       if (entry->ca_flag & CLASS_MEMBER_FMETHOD)
            PRINT("@method ");
-       if (entry->cme_flag & CLASS_MEMBER_FREADONLY)
+       if (entry->ca_flag & CLASS_MEMBER_FREADONLY)
            PRINT("@readonly ");
        printf("<instance-memory-in-class-table %k",entry->cme_name);
        member = find_class_member(self,entry->cme_addr);
@@ -4057,14 +4057,14 @@ instane_member_in_class:
       entry = &table->mt_list[i];
       if (!entry->cme_name) continue;
       DO(Dee_FormatRepeat(printer,arg,'\t',indent));
-      if (entry->cme_flag & CLASS_MEMBER_FPRIVATE)
+      if (entry->ca_flag & CLASS_MEMBER_FPRIVATE)
           PRINT("private ");
-      if (entry->cme_flag & CLASS_MEMBER_FPROPERTY) {
+      if (entry->ca_flag & CLASS_MEMBER_FPROPERTY) {
        struct class_member *functions[3]; size_t i;
        /* Instance-property (with its callbacks saved as part of the class) */
        functions[1] = functions[2] = NULL;
        functions[0] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_GET);
-       if (!(entry->cme_flag & CLASS_MEMBER_FREADONLY)) {
+       if (!(entry->ca_flag & CLASS_MEMBER_FREADONLY)) {
         functions[1] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_DEL);
         functions[2] = find_class_member(self,entry->cme_addr + CLASS_PROPERTY_SET);
        }
@@ -4086,7 +4086,7 @@ instane_member_in_class:
        --indent;
        DO(Dee_FormatRepeat(printer,arg,'\t',indent));
        PRINT("}\n");
-      } else if (entry->cme_flag & CLASS_MEMBER_FMETHOD) {
+      } else if (entry->ca_flag & CLASS_MEMBER_FMETHOD) {
        struct class_member *method;
        /* Instance-method (that is saved within the class) */
        method = find_class_member(self,entry->cme_addr);
@@ -4099,9 +4099,9 @@ instane_member_in_class:
        struct class_member *member;
        /* An instance-member that is saved within the class??? */
 class_member_in_class:
-       if (entry->cme_flag & CLASS_MEMBER_FMETHOD)
+       if (entry->ca_flag & CLASS_MEMBER_FMETHOD)
            PRINT("@method ");
-       if (entry->cme_flag & CLASS_MEMBER_FREADONLY)
+       if (entry->ca_flag & CLASS_MEMBER_FREADONLY)
            PRINT("@readonly ");
        printf("class member %k",entry->cme_name);
        member = find_class_member(self,entry->cme_addr);

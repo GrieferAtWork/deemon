@@ -19,13 +19,11 @@
 #ifndef GUARD_DEEMON_CLASS_H
 #define GUARD_DEEMON_CLASS_H 1
 
-#undef CONFIG_USE_NEW_CLASS_SYSTEM
-//#define CONFIG_USE_NEW_CLASS_SYSTEM 1
+#include "api.h"
 
 #ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 #include "class2.h"
 #else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-#include "api.h"
 #include "object.h"
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
@@ -38,8 +36,6 @@ DECL_BEGIN
 
 struct string_object;
 typedef struct member_table DeeMemberTableObject;
-typedef struct instance_method DeeInstanceMethodObject;
-typedef struct property_object DeePropertyObject; /* XXX: Should be called `DeeInstancePropertyObject' */
 typedef struct instancemember_object DeeInstanceMemberObject;
 
 #define CLASS_PROPERTY_GET 0 /* Index offset for property get callbacks. */
@@ -112,7 +108,7 @@ struct member_entry {
                                           *       is wrapped as a `DeeInstanceMethodObject' object that
                                           *       is used to implement a this-call to a member function.
                                           * HINT: This flag is usually combined with the `CLASS_MEMBER_FCLASSMEM' flag. */
-    uint16_t                   cme_flag; /* Class member flags (Set of `CLASS_MEMBER_F*') */
+    uint16_t                   ca_flag; /* Class member flags (Set of `CLASS_MEMBER_F*') */
 #if __SIZEOF_POINTER__ >= 8
     uint32_t                   cme_padding; /* ... */
 #endif
@@ -145,66 +141,6 @@ DDATDEF DeeObject DeeMemberTable_Empty;
 DDATDEF DeeTypeObject DeeMemberTable_Type;
 #define DeeMemberTable_Check(ob)      DeeObject_InstanceOf(ob,&DeeMemberTable_Type) /* TODO: `DeeMemberTable_Type' should be variable-size+final */
 #define DeeMemberTable_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeMemberTable_Type)
-
-
-
-struct instance_method {
-    OBJECT_HEAD
-    DREF DeeObject *im_func; /* [1..1] The function to-be called. */
-    DREF DeeObject *im_this; /* [1..1] The this argument. */
-};
-
-DDATDEF DeeTypeObject DeeInstanceMethod_Type;
-
-/* Create a new instance method.
- * This is a simple wrapper object that simply invokes a thiscall on
- * `im_func', using `this_arg' as the this-argument when called normally.
- * In user-code, it is used to implement the temporary/split type when
- * an instance attribute with the `CLASS_MEMBER_FMETHOD' flag is loaded
- * as an object, rather than being called directly. */
-DFUNDEF DREF DeeObject *DCALL
-DeeInstanceMethod_New(DeeObject *__restrict func,
-                      DeeObject *__restrict this_arg);
-
-
-struct property_object {
-    /* A wrapper object describing an instance
-     * property when accessed through the class:
-     * >> class my_class {
-     * >>     private foo_value = 42;
-     * >>     
-     * >>     foo = {
-     * >>         get() {
-     * >>             print "In getter";
-     * >>             return foo_value;
-     * >>         }
-     * >>         set(v) {
-     * >>             print "In setter";
-     * >>             foo_value = v;
-     * >>         }
-     * >>     }
-     * >> }
-     * >>
-     * >> local prop = my_class.foo; // This is a `struct property_object'
-     * >> print repr prop;         // `property { get = @thiscall function(), set = @thiscall function(v) }'
-     * >> local inst = my_class();
-     * >> print inst.foo;          // `In getter' `42'
-     * >> print prop.get(inst);    // `In getter' `42'
-     * Note that property wrappers are always unbound and not actually
-     * used when accessing instance members through normal means.
-     * They are merely used as syntactical sugar to allow access to
-     * public instance properties when only given the class that
-     * implements that property.
-     */
-    OBJECT_HEAD
-    DREF DeeObject *p_get; /* [0..1][const] Getter callback. */
-    DREF DeeObject *p_del; /* [0..1][const] Delete callback. */
-    DREF DeeObject *p_set; /* [0..1][const] Setter callback. */
-};
-
-DDATDEF DeeTypeObject DeeProperty_Type;
-
-
 
 
 
@@ -421,6 +357,25 @@ DeeInstance_SetMemberSafe(DeeTypeObject *__restrict tp_self,
 INTDEF struct member_entry *DCALL
 membertable_lookup_string(DeeMemberTableObject *__restrict self,
                           char const *__restrict attr, dhash_t hash);
+
+#define DeeClassDesc_QueryClassAttribute(self,name)                       membertable_lookup((self)->c_cmem,name,DeeString_Hash(name))
+#define DeeClassDesc_QueryClassAttributeWithHash(self,name,hash)          membertable_lookup((self)->c_cmem,name,hash)
+#define DeeClassDesc_QueryClassAttributeStringWithHash(self,name,hash)    membertable_lookup_string((self)->c_cmem,name,hash)
+#define DeeClassDesc_QueryClassAttributeString(self,name)                 membertable_lookup_string((self)->c_cmem,name,hash_str(name))
+#define DeeClassDesc_QueryInstanceAttribute(self,name)                    membertable_lookup((self)->c_mem,name,DeeString_Hash(name))
+#define DeeClassDesc_QueryInstanceAttributeWithHash(self,name,hash)       membertable_lookup((self)->c_mem,name,hash)
+#define DeeClassDesc_QueryInstanceAttributeStringWithHash(self,name,hash) membertable_lookup_string((self)->c_mem,name,hash)
+#define DeeClassDesc_QueryInstanceAttributeString(self,name)              membertable_lookup_string((self)->c_mem,name,hash_str(name))
+
+#define DeeClass_QueryClassAttribute(self,name)                       DeeClassDesc_QueryClassAttribute(DeeClass_DESC(self),name)
+#define DeeClass_QueryClassAttributeWithHash(self,name,hash)          DeeClassDesc_QueryClassAttributeWithHash(DeeClass_DESC(self),name,hash)
+#define DeeClass_QueryClassAttributeStringWithHash(self,name,hash)    DeeClassDesc_QueryClassAttributeStringWithHash(DeeClass_DESC(self),name,hash)
+#define DeeClass_QueryClassAttributeString(self,name)                 DeeClassDesc_QueryClassAttributeString(DeeClass_DESC(self),name) 
+#define DeeClass_QueryInstanceAttribute(self,name)                    DeeClassDesc_QueryInstanceAttribute(DeeClass_DESC(self),name)
+#define DeeClass_QueryInstanceAttributeWithHash(self,name,hash)       DeeClassDesc_QueryInstanceAttributeWithHash(DeeClass_DESC(self),name,hash)
+#define DeeClass_QueryInstanceAttributeStringWithHash(self,name,hash) DeeClassDesc_QueryInstanceAttributeStringWithHash(DeeClass_DESC(self),name,hash)
+#define DeeClass_QueryInstanceAttributeString(self,name)              DeeClassDesc_QueryInstanceAttributeString(DeeClass_DESC(self),name) 
+
 INTDEF dssize_t DCALL
 membertable_enum(DeeTypeObject *__restrict tp_self, DeeObject *ob_self,
                  DeeMemberTableObject *__restrict self, denum_t proc, void *arg);

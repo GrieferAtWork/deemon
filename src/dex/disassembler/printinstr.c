@@ -716,7 +716,12 @@ libdisasm_printconst(dformatprinter printer, void *arg,
   }
   if (!DeeCode_CheckExact(constval) &&
       !DeeFunction_CheckExact(constval) &&
-      !DeeMemberTable_CheckExact(constval))
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+      !DeeClassDescriptor_Check(constval)
+#else
+      !DeeMemberTable_CheckExact(constval)
+#endif
+      )
        return Dee_FormatPrintf(printer,arg,PREFIX_CONSTANT "%R",constval);
   Dee_Decref(constval);
  }
@@ -1545,6 +1550,36 @@ do_jmp_target:
   break;
 
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ case ASM_CLASS_GC:
+  imm  = READ_imm8(iter);
+  imm2 = READ_imm8(iter);
+  goto print_global_const;
+ case ASM16_CLASS_GC:
+  imm  = READ_imm16(iter);
+  imm2 = READ_imm16(iter);
+print_global_const:
+  INVOKE(libdisasm_printglobal(printer,arg,imm,code,flags));
+  PRINT(", ");
+  INVOKE(libdisasm_printconst(printer,arg,imm2,code,flags,false));
+  break;
+ case ASM_CLASS_EC:
+  imm  = READ_imm8(iter);
+  imm2 = READ_imm8(iter);
+  INVOKE(libdisasm_printextern(printer,arg,imm,imm2,code,flags));
+  PRINT(", ");
+  imm  = READ_imm8(iter);
+  INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
+  break;
+ case ASM16_CLASS_EC:
+  imm  = READ_imm16(iter);
+  imm2 = READ_imm16(iter);
+  INVOKE(libdisasm_printextern(printer,arg,imm,imm2,code,flags));
+  PRINT(", ");
+  imm  = READ_imm16(iter);
+  INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
+  break;
+#else
  {
   uint8_t flags,class_imm;
   uint8_t index;
@@ -1600,6 +1635,7 @@ do_jmp_target:
    }
   }
  } break;
+#endif
 
  case ASM_DUP_N:
  case ASM_POP_N:
@@ -1733,6 +1769,7 @@ do_print_adjstack:
          val < 0 ? (int32_t)-val : (int32_t)val);
  } break;
 
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
  {
   struct opinfo *info;
  case ASM16_DEFOP:
@@ -1749,6 +1786,7 @@ do_print_op:
    printf("%I16u, pop",(uint16_t)imm);
   }
  } break;
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  {
   struct opinfo *info;
@@ -2010,6 +2048,9 @@ print_const_int:
  case ASM16_FUNCTION_C:
  case ASM16_FUNCTION_C_16:
  case ASM16_CALL_TUPLE_KW:
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ case ASM16_CLASS_C:
+#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
   imm = READ_imm16(iter);
   goto print_const;
  case ASM_PRINT_C:
@@ -2035,6 +2076,9 @@ print_const_int:
  case ASM_FUNCTION_C:
  case ASM_FUNCTION_C_16:
  case ASM_CALL_TUPLE_KW:
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ case ASM_CLASS_C:
+#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
   imm = READ_imm8(iter);
 print_const:
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));

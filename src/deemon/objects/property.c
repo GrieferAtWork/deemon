@@ -1,0 +1,236 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_OBJECTS_PROPERTY_C
+#define GUARD_DEEMON_OBJECTS_PROPERTY_C 1
+
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/class.h>
+#include <deemon/object.h>
+#include <deemon/property.h>
+#include <deemon/super.h>
+#include <deemon/format.h>
+#include <deemon/none.h>
+#include <deemon/string.h>
+#include <deemon/bool.h>
+#include <deemon/util/cache.h>
+
+#include "../runtime/runtime_error.h"
+#include "../runtime/strings.h"
+
+DECL_BEGIN
+
+typedef DeePropertyObject Property;
+
+PRIVATE int DCALL
+property_ctor(Property *__restrict self) {
+ self->p_get = NULL;
+ self->p_del = NULL;
+ self->p_set = NULL;
+ return 0;
+}
+PRIVATE int DCALL
+property_copy(Property *__restrict self,
+              Property *__restrict other) {
+ self->p_get = other->p_get;
+ self->p_del = other->p_del;
+ self->p_set = other->p_set;
+ Dee_XIncref(self->p_get);
+ Dee_XIncref(self->p_del);
+ Dee_XIncref(self->p_set);
+ return 0;
+}
+PRIVATE int DCALL
+property_deep(Property *__restrict self,
+              Property *__restrict other) {
+ self->p_get = NULL;
+ self->p_del = NULL;
+ self->p_set = NULL;
+ if (other->p_get &&
+     unlikely((self->p_get = DeeObject_DeepCopy(other->p_get)) == NULL))
+     goto err;
+ if (other->p_del &&
+     unlikely((self->p_del = DeeObject_DeepCopy(other->p_del)) == NULL))
+     goto err_get;
+ if (other->p_set &&
+     unlikely((self->p_set = DeeObject_DeepCopy(other->p_set)) == NULL))
+     goto err_del;
+ return 0;
+err_del:
+ Dee_XDecref(self->p_del);
+err_get:
+ Dee_XDecref(self->p_get);
+err:
+ return -1;
+}
+PRIVATE int DCALL
+property_init(Property *__restrict self, size_t argc,
+              DeeObject **__restrict argv, DeeObject *kw) {
+ PRIVATE struct keyword kwlist[] = { K(getter), K(delete), K(setter), KEND };
+ self->p_get = NULL;
+ self->p_del = NULL;
+ self->p_set = NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|ooo:property",
+                    &self->p_get,&self->p_del,&self->p_set))
+     return -1;
+ if (DeeNone_Check(self->p_get)) self->p_get = NULL;
+ if (DeeNone_Check(self->p_del)) self->p_del = NULL;
+ if (DeeNone_Check(self->p_set)) self->p_set = NULL;
+ Dee_XIncref(self->p_get);
+ Dee_XIncref(self->p_del);
+ Dee_XIncref(self->p_set);
+ return 0;
+}
+PRIVATE void DCALL
+property_fini(Property *__restrict self) {
+ Dee_XDecref(self->p_get);
+ Dee_XDecref(self->p_del);
+ Dee_XDecref(self->p_set);
+}
+PRIVATE void DCALL
+property_visit(Property *__restrict self, dvisit_t proc, void *arg) {
+ Dee_XVisit(self->p_get);
+ Dee_XVisit(self->p_del);
+ Dee_XVisit(self->p_set);
+}
+PRIVATE dhash_t DCALL
+property_hash(Property *__restrict self) {
+ return ((self->p_get ? DeeObject_Hash(self->p_get) : 0) ^
+         (self->p_del ? DeeObject_Hash(self->p_del) : 0) ^
+         (self->p_set ? DeeObject_Hash(self->p_set) : 0));
+}
+PRIVATE DREF DeeObject *DCALL
+property_repr(Property *__restrict self) {
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ if unlikely(UNICODE_PRINTER_PRINT(&printer,"property(") < 0)
+    goto err;
+ if (self->p_get &&
+     unlikely(unicode_printer_printf(&printer,"getter: %r%s",self->p_get,
+                                      self->p_del || self->p_set ? ", " : "") < 0))
+     goto err;
+ if (self->p_del &&
+     unlikely(unicode_printer_printf(&printer,"delete: %r%s",self->p_del,
+                                      self->p_set ? ", " : "") < 0))
+     goto err;
+ if (self->p_set &&
+     unlikely(unicode_printer_printf(&printer,"setter: %r",self->p_set) < 0))
+     goto err;
+ if (unicode_printer_putascii(&printer,')')) goto err;
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_fini(&printer);
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+property_eq(Property *__restrict self,
+            Property *__restrict other) {
+ int temp;
+ if (DeeObject_AssertType((DeeObject *)other,&DeeProperty_Type))
+     return NULL;
+ if (((self->p_get != NULL) != (other->p_get != NULL)) ||
+     ((self->p_del != NULL) != (other->p_del != NULL)) ||
+     ((self->p_set != NULL) != (other->p_set != NULL)))
+       return_false;
+ if (self->p_get && (temp = DeeObject_CompareEq(self->p_get,other->p_get)) <= 0) goto handle_temp;
+ if (self->p_del && (temp = DeeObject_CompareEq(self->p_del,other->p_del)) <= 0) goto handle_temp;
+ if (self->p_set && (temp = DeeObject_CompareEq(self->p_set,other->p_set)) <= 0) goto handle_temp;
+ return_true;
+handle_temp:
+ return unlikely(temp < 0) ? NULL : (Dee_Incref(Dee_False),Dee_False);
+}
+
+PRIVATE struct type_cmp property_cmp = {
+    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&property_hash,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&property_eq
+};
+
+PRIVATE struct type_member property_members[] = {
+    TYPE_MEMBER_FIELD_DOC("getter",STRUCT_OBJECT,offsetof(Property,p_get),"->callable\nThe getter callback"),
+    TYPE_MEMBER_FIELD_DOC("delete",STRUCT_OBJECT,offsetof(Property,p_del),"->callable\nThe delete callback"),
+    TYPE_MEMBER_FIELD_DOC("setter",STRUCT_OBJECT,offsetof(Property,p_set),"->callable\nThe setter callback"),
+    TYPE_MEMBER_END
+};
+
+PRIVATE DREF DeeObject *DCALL
+property_call(Property *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ if likely(self->p_get)
+    return DeeObject_Call(self->p_get,argc,argv);
+ err_unbound_attribute(&DeeProperty_Type,"get");
+ return NULL;
+}
+
+
+PUBLIC DeeTypeObject DeeProperty_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */DeeString_STR(&str_property),
+    /* .tp_doc      = */DOC("()\n"
+                            "(callable getter=none,callable delete=none,callable setter=none)\n"
+                            "\n"
+                            "call(args...)\n"
+                            "Same as ${this.get(args...)}"),
+    /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeObject_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor        = */&property_ctor,
+                /* .tp_copy_ctor   = */&property_copy,
+                /* .tp_deep_ctor   = */&property_deep,
+                /* .tp_any_ctor    = */NULL,
+                /* .tp_free        = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(Property),
+                },
+                /* .tp_any_ctor_kw = */&property_init,
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&property_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_repr,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&property_call,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&property_visit,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */&property_cmp,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */property_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_OBJECTS_PROPERTY_C */

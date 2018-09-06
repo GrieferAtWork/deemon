@@ -1718,7 +1718,7 @@ type_hasattribute(DeeTypeObject *__restrict self,
  name_hash = DeeString_Hash(name);
  if (DeeType_IsClass(self)) {
   struct class_desc *desc = DeeClass_DESC(self);
-  return_bool(membertable_lookup_string(desc->c_mem,name_str,name_hash) != NULL);
+  return_bool(DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name_str,name_hash) != NULL);
  }
  if (self->tp_methods &&
      type_method_hasattr(&self->tp_cache,self->tp_methods,name_str,name_hash))
@@ -1758,6 +1758,19 @@ err:
 }
 
 PRIVATE struct type_method type_methods[] = {
+    /* TODO: Add some way of creating custom instances of user-defined classes:
+     *    >> class MyClass {
+     *    >>     private foo = 42;
+     *    >>     this() {
+     *    >>         print "Constructor",foo;
+     *    >>     }
+     *    >> }
+     *    >> // This will not invoke the constructor!
+     *    >> x = MyClass.newinstance({ "foo" : 7 });
+     *    >> print x is MyClass; // true
+     *    >> print x.foo;        // 7
+     *
+     */
     { "baseof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_baseof,
       DOC("(type other)->bool\n"
           "Returns :true if @this type is equal to, or a base of @other\n"

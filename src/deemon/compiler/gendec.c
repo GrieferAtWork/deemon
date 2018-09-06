@@ -491,7 +491,7 @@ dec_putmemtab(DeeMemberTableObject *__restrict self) {
   straddr  = dec_ptr2addr(strptr);
   dec_curr = oldsec;
 
-  if (dec_putw(iter->cme_flag)) goto err; /* Dec_MemberEntry.mt_flag / Dec_8BitMemberEntry.mt_flag */
+  if (dec_putw(iter->ca_flag)) goto err; /* Dec_MemberEntry.mt_flag / Dec_8BitMemberEntry.mt_flag */
   if (use_8bit) {
    if (dec_putb((uint8_t)iter->cme_addr)) goto err; /* Dec_8BitMemberEntry.mt_addr */
    if (dec_putptr(straddr)) goto err;               /* Dec_8BitMemberEntry.mt_nam */

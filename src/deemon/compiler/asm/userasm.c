@@ -802,6 +802,7 @@ do_emit_instruction:
   if (asm_put((instruction_t)iter->ao_instr))
       goto err;
 
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
   switch ((instruction_t)iter->ao_instr) {
   case ASM_CLASS:
   case ASM_CLASS_C:
@@ -813,6 +814,7 @@ do_emit_instruction:
    goto done_instruction;
   default: break;
   }
+#endif
 
   /* Now emit operands in ascending order. */
   for (i = 0; i < iter->ao_opcount; ++i) {

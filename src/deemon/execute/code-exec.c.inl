@@ -1925,6 +1925,113 @@ do_push_module:
  DEFINE_COMPARE_INSTR(GE,Ge)
 #undef DEFINE_COMPARE_INSTR
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ TARGET(ASM_CLASS_C,-1,+1) {
+     DREF DeeTypeObject *new_class;
+     imm_val = READ_imm8();
+do_class_c:
+     ASSERT_CONSTimm();
+#ifdef EXEC_SAFE
+     {
+      DeeObject *descriptor;
+      CONST_LOCKREAD();
+      descriptor = CONSTimm;
+      Dee_Incref(descriptor);
+      CONST_LOCKENDREAD();
+      if unlikely(DeeObject_AssertTypeExact(descriptor,&DeeClassDescriptor_Type))
+         new_class = NULL;
+      else {
+       new_class = DeeClass_New((DeeTypeObject *)TOP,descriptor);
+      }
+      Dee_Decref(descriptor);
+     }
+#else
+     new_class = DeeClass_New((DeeTypeObject *)TOP,CONSTimm);
+#endif
+     if unlikely(!new_class)
+        HANDLE_EXCEPT();
+     Dee_Decref(TOP);
+     TOP = (DREF DeeObject *)new_class; /* Inherit reference. */
+     DISPATCH();
+ }
+ TARGET(ASM_CLASS_GC,-0,+1) {
+     DREF DeeTypeObject *new_class;
+     DREF DeeObject *base;
+     imm_val  = READ_imm8();
+     imm_val2 = READ_imm8();
+do_class_gc:
+     ASSERT_GLOBALimm();
+     ASSERT_CONSTimm2();
+     GLOBAL_LOCKREAD();
+     base = GLOBALimm;
+     Dee_XIncref(base);
+     GLOBAL_LOCKENDREAD();
+     if unlikely(!base)
+        goto err_unbound_global;
+#ifdef EXEC_SAFE
+     {
+      DeeObject *descriptor;
+      CONST_LOCKREAD();
+      descriptor = CONSTimm2;
+      Dee_Incref(descriptor);
+      CONST_LOCKENDREAD();
+      if unlikely(DeeObject_AssertTypeExact(descriptor,&DeeClassDescriptor_Type))
+         new_class = NULL;
+      else {
+       new_class = DeeClass_New((DeeTypeObject *)base,descriptor);
+      }
+      Dee_Decref(descriptor);
+     }
+#else
+     new_class = DeeClass_New((DeeTypeObject *)base,CONSTimm);
+#endif
+     Dee_Decref(base);
+     if unlikely(!new_class)
+        HANDLE_EXCEPT();
+     PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
+     DISPATCH();
+ }
+ TARGET(ASM_CLASS_EC,-0,+1) {
+     DREF DeeTypeObject *new_class;
+     DREF DeeObject *base;
+     imm_val  = READ_imm8();
+     imm_val2 = READ_imm8();
+     ASSERT_EXTERNimm();
+     EXTERN_LOCKREAD();
+     base = EXTERNimm;
+     Dee_XIncref(base);
+     EXTERN_LOCKENDREAD();
+     if unlikely(!base)
+        goto err_unbound_extern;
+#undef EXCEPTION_CLEANUP
+#define EXCEPTION_CLEANUP Dee_Decref(base);
+     imm_val = READ_imm8();
+     ASSERT_CONSTimm();
+#define EXCEPTION_CLEANUP /* nothing */
+#ifdef EXEC_SAFE
+     {
+      DeeObject *descriptor;
+      CONST_LOCKREAD();
+      descriptor = CONSTimm;
+      Dee_Incref(descriptor);
+      CONST_LOCKENDREAD();
+      if unlikely(DeeObject_AssertTypeExact(descriptor,&DeeClassDescriptor_Type))
+         new_class = NULL;
+      else {
+       new_class = DeeClass_New((DeeTypeObject *)base,descriptor);
+      }
+      Dee_Decref(descriptor);
+     }
+#else
+     new_class = DeeClass_New((DeeTypeObject *)base,CONSTimm);
+#endif
+     Dee_Decref(base);
+     if unlikely(!new_class)
+        HANDLE_EXCEPT();
+     PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
+     DISPATCH();
+ }
+#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
  RAW_TARGET(ASM_CLASS) {
      DREF DeeObject *cmem,*imem,*name,*base;
      DREF DeeTypeObject *new_class;
@@ -2125,11 +2232,16 @@ do_push_module:
      ip.ptr += 4; /* Skip arguments */
      DISPATCH();
  }
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  TARGET(ASM_DEFMEMBER,-2,+1) {
      imm_val = READ_imm8();
 do_defmember:
 #ifdef EXEC_SAFE
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+     if (DeeClass_SetMemberSafe((DeeTypeObject *)SECOND,imm_val,FIRST))
+         HANDLE_EXCEPT();
+#else
      if (!DeeClass_Check(SECOND)) {
       if (!DeeObject_AssertType(SECOND,&DeeType_Type))
            err_requires_class((DeeTypeObject *)SECOND);
@@ -2137,12 +2249,16 @@ do_defmember:
      }
      if (imm_val >= DeeClass_DESC(SECOND)->c_cmem->mt_size)
          goto err_invalid_class_index;
-#endif
      DeeClass_SetMember((DeeTypeObject *)SECOND,imm_val,FIRST);
+#endif
+#else
+     DeeClass_SetMember((DeeTypeObject *)SECOND,imm_val,FIRST);
+#endif
      POPREF();
      DISPATCH();
  }
 
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
  TARGET(ASM_DEFOP,-2,+1) {
      imm_val = READ_imm8();
 do_defop:
@@ -2158,6 +2274,7 @@ do_defop:
      POPREF();
      DISPATCH();
  }
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  RAW_TARGET(ASM_FUNCTION_C_16)
      imm_val  = READ_imm8();
@@ -3494,46 +3611,35 @@ do_callattr_this_tuple_c:
 do_getmember_r:
      ASSERT_THISCALL();
 #ifdef EXEC_SAFE
-     if (DeeObject_AssertType(REFimm,&DeeType_Type))
-         HANDLE_EXCEPT();
-     if (DeeObject_AssertType(THIS,(DeeTypeObject *)REFimm))
-         HANDLE_EXCEPT();
-     if (!DeeType_IsClass(REFimm)) {
-      err_requires_class((DeeTypeObject *)REFimm);
-      HANDLE_EXCEPT();
-     }
-     if (imm_val2 >= DeeClass_DESC(REFimm)->c_mem->mt_size)
-         goto err_invalid_instance_index;
+     result = DeeInstance_GetMemberSafe((DeeTypeObject *)REFimm,THIS,imm_val2);
+#else
+     result = DeeInstance_GetMember((DeeTypeObject *)REFimm,THIS,imm_val2);
 #endif
-     result = DeeInstance_GetMember((DeeTypeObject *)REFimm,THIS,
-                                    (unsigned int)imm_val2);
      if unlikely(!result) HANDLE_EXCEPT();
      PUSH(result);
      DISPATCH();
  }
 
  TARGET(ASM_BOUNDMEMBER_R,-0,+1) {
+#ifdef EXEC_SAFE
+     int temp;
+#else
      bool temp;
+#endif
      imm_val  = READ_imm8();
      imm_val2 = READ_imm8();
 do_boundmember_r:
      ASSERT_THISCALL();
      ASSERT_REFimm();
 #ifdef EXEC_SAFE
-     if (DeeObject_AssertType(REFimm,&DeeType_Type))
-         HANDLE_EXCEPT();
-     if (DeeObject_AssertType(THIS,(DeeTypeObject *)REFimm))
-         HANDLE_EXCEPT();
-     if (!DeeType_IsClass(REFimm)) {
-      err_requires_class((DeeTypeObject *)REFimm);
-      HANDLE_EXCEPT();
-     }
-     if (imm_val2 >= DeeClass_DESC(REFimm)->c_mem->mt_size)
-         goto err_invalid_instance_index;
-#endif
-     temp = DeeInstance_BoundMember((DeeTypeObject *)REFimm,THIS,
-                                    (unsigned int)imm_val2);
+     temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)REFimm,THIS,imm_val2);
+     if unlikely(temp < 0)
+        HANDLE_EXCEPT();
+     PUSHREF(DeeBool_For(temp != 0));
+#else
+     temp = DeeInstance_BoundMember((DeeTypeObject *)REFimm,THIS,imm_val2);
      PUSHREF(DeeBool_For(temp));
+#endif
      DISPATCH();
  }
 
@@ -3544,20 +3650,12 @@ do_delmember_r:
      ASSERT_THISCALL();
      ASSERT_REFimm();
 #ifdef EXEC_SAFE
-     if (DeeObject_AssertType(REFimm,&DeeType_Type))
+     if (DeeInstance_DelMemberSafe((DeeTypeObject *)REFimm,THIS,imm_val2))
          HANDLE_EXCEPT();
-     if (DeeObject_AssertType(THIS,(DeeTypeObject *)REFimm))
+#else
+     if (DeeInstance_DelMember((DeeTypeObject *)REFimm,THIS,imm_val2))
          HANDLE_EXCEPT();
-     if (!DeeType_IsClass(REFimm)) {
-      err_requires_class((DeeTypeObject *)REFimm);
-      HANDLE_EXCEPT();
-     }
-     if (imm_val2 >= DeeClass_DESC(REFimm)->c_mem->mt_size)
-         goto err_invalid_instance_index;
 #endif
-     if (DeeInstance_DelMember((DeeTypeObject *)REFimm,THIS,
-                               (unsigned int)imm_val2))
-         HANDLE_EXCEPT();
      DISPATCH();
  }
 
@@ -3568,19 +3666,12 @@ do_setmember_r:
      ASSERT_THISCALL();
      ASSERT_REFimm();
 #ifdef EXEC_SAFE
-     if (DeeObject_AssertType(REFimm,&DeeType_Type))
-         HANDLE_EXCEPT();
-     if (DeeObject_AssertType(THIS,(DeeTypeObject *)REFimm))
-         HANDLE_EXCEPT();
-     if (!DeeType_IsClass(REFimm)) {
-      err_requires_class((DeeTypeObject *)REFimm);
-      HANDLE_EXCEPT();
-     }
-     if (imm_val2 >= DeeClass_DESC(REFimm)->c_mem->mt_size)
-         goto err_invalid_instance_index;
-#endif
+     if unlikely(DeeInstance_SetMemberSafe((DeeTypeObject *)REFimm,THIS,imm_val2,TOP))
+        HANDLE_EXCEPT();
+#else
      DeeInstance_SetMember((DeeTypeObject *)REFimm,THIS,
-                           (unsigned int)imm_val2,TOP);
+                           imm_val2,TOP);
+#endif
      POPREF();
      DISPATCH();
  }
@@ -4261,14 +4352,69 @@ do_setattr_this_c:
          imm_val = READ_imm16();
          goto do_push_module;
      }
+
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+     TARGET(ASM16_CLASS_C,-1,+1) {
+         imm_val = READ_imm16();
+         goto do_class_c;
+     }
+     TARGET(ASM16_CLASS_GC,-0,+1) {
+         imm_val  = READ_imm16();
+         imm_val2 = READ_imm16();
+         goto do_class_gc;
+     }
+     TARGET(ASM16_CLASS_EC,-0,+1) {
+         DREF DeeTypeObject *new_class;
+         DREF DeeObject *base;
+         imm_val  = READ_imm16();
+         imm_val2 = READ_imm16();
+         ASSERT_EXTERNimm();
+         EXTERN_LOCKREAD();
+         base = EXTERNimm;
+         Dee_XIncref(base);
+         EXTERN_LOCKENDREAD();
+         if unlikely(!base)
+            goto err_unbound_extern;
+#undef EXCEPTION_CLEANUP
+#define EXCEPTION_CLEANUP Dee_Decref(base);
+         imm_val = READ_imm16();
+         ASSERT_CONSTimm();
+#define EXCEPTION_CLEANUP /* nothing */
+#ifdef EXEC_SAFE
+         {
+          DeeObject *descriptor;
+          CONST_LOCKREAD();
+          descriptor = CONSTimm;
+          Dee_Incref(descriptor);
+          CONST_LOCKENDREAD();
+          if unlikely(DeeObject_AssertTypeExact(descriptor,&DeeClassDescriptor_Type))
+             new_class = NULL;
+          else {
+           new_class = DeeClass_New((DeeTypeObject *)base,descriptor);
+          }
+          Dee_Decref(descriptor);
+         }
+#else
+         new_class = DeeClass_New((DeeTypeObject *)base,CONSTimm);
+#endif
+         Dee_Decref(base);
+         if unlikely(!new_class)
+            HANDLE_EXCEPT();
+         PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
+         DISPATCH();
+     }
+#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
+
      TARGET(ASM16_DEFMEMBER,-2,+1) {
          imm_val = READ_imm16();
          goto do_defmember;
      }
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
      TARGET(ASM16_DEFOP,-2,+1) {
          imm_val = READ_imm16();
          goto do_defop;
      }
+#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
      RAW_TARGET(ASM16_FUNCTION_C) {
          imm_val  = READ_imm16();
          imm_val2 = READ_imm8();

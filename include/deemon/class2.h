@@ -20,10 +20,32 @@
 #define GUARD_DEEMON_CLASS2_H 1
 
 #include "api.h"
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 #include "object.h"
 #include "util/rwlock.h"
 #include <stddef.h>
 #include <stdint.h>
+
+ /* DEPRECATED NAMES */
+#define member_entry              class_attribute
+#define CLASS_MEMBER_FPUBLIC      CLASS_ATTRIBUTE_FNORMAL
+#define CLASS_MEMBER_FPRIVATE     CLASS_ATTRIBUTE_FPRIVATE
+#define CLASS_MEMBER_FVISIBILITY (CLASS_ATTRIBUTE_FNORMAL|CLASS_ATTRIBUTE_FPRIVATE)
+#define CLASS_MEMBER_FMASK        CLASS_ATTRIBUTE_FMASK
+#define CLASS_MEMBER_FCLASSMEM    CLASS_ATTRIBUTE_FCLASSMEM
+#define CLASS_MEMBER_FREADONLY    CLASS_ATTRIBUTE_FREADONLY
+#define CLASS_MEMBER_FPROPERTY    CLASS_ATTRIBUTE_FGETSET
+#define CLASS_MEMBER_FMETHOD      CLASS_ATTRIBUTE_FMETHOD
+#define member_mayaccess(class_type,member) class_attribute_mayaccess(member,class_type)
+#define member_get                DeeInstance_GetAttribute
+#define member_bound              DeeInstance_BoundAttribute
+#define member_call               DeeInstance_CallAttribute
+#define member_call_kw            DeeInstance_CallAttributeKw
+#define member_del                DeeInstance_DelAttribute
+#define member_set                DeeInstance_SetAttribute
+#define CLASS_PROPERTY_GET        CLASS_GETSET_GET
+#define CLASS_PROPERTY_DEL        CLASS_GETSET_DEL
+#define CLASS_PROPERTY_SET        CLASS_GETSET_SET
 
 DECL_BEGIN
 
@@ -58,6 +80,15 @@ struct class_attribute {
     uint16_t                   ca_pad[(sizeof(void *)/2)-2];
 #endif
 };
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Check if the current execution context allows access to `member',
+ * which is either an instance or class member of `class_type' */
+INTDEF WUNUSED bool DCALL
+class_attribute_mayaccess(struct class_attribute *__restrict self,
+                          DeeTypeObject *__restrict impl_class);
+#endif
+
 
 /* A special operator invoked using the same
  * arguments as passed to the class constructor.
@@ -186,23 +217,37 @@ struct class_descriptor_object {
     uint16_t                   cd_cmemb_size;    /* [const] The allocation size of the class member table. */
     uint16_t                   cd_imemb_size;    /* [const] The allocation size of the instance member table. */
     uint16_t                   cd_clsop_mask;    /* [const][!0] Mask for the `cd_clsop_list' hash-vector. */
-    uint16_t                   cd_cattr_mask;    /* [const][!0] Mask for the `cd_cattr_list' hash-vector. */
-    uint16_t                   cd_iattr_mask;    /* [const][!0] Mask for the `cd_cattr_list' hash-vector. */
-#if __SIZEOF_POINTER__ > 4
-    uint16_t                   cd_pad[sizeof(void *)/2]; /* ... */
-#endif
+    size_t                     cd_cattr_mask;    /* [const][!0] Mask for the `cd_cattr_list' hash-vector. */
+    size_t                     cd_iattr_mask;    /* [const][!0] Mask for the `cd_cattr_list' hash-vector. */
     struct class_operator     *cd_clsop_list;    /* [1..cd_clsop_mask+1][owned_if(!= INTERNAL(empty-class-operator-table))]
                                                   * [const] The class operator address hash-vector. */
     struct class_attribute    *cd_cattr_list;    /* [1..cd_cattr_mask+1][owned_if(!= INTERNAL(empty-class-attribute-table))]
                                                   * [const] The class attribute hash-vector. */
     struct class_attribute     cd_iattr_list[1]; /* [cd_cattr_mask+1] The instance attribute hash-vector. */
 };
+#define DeeClassDescriptor_CLSOPNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
+#define DeeClassDescriptor_CATTRNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
+#define DeeClassDescriptor_IATTRNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
 
 
 DDATDEF DeeTypeObject DeeClassDescriptor_Type;
 #define DeeClassDescriptor_Check(x)      DeeObject_InstanceOfExact(x,&DeeClassDescriptor_Type) /* DeeClassDescriptor_Type is final */
 #define DeeClassDescriptor_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeClassDescriptor_Type)
 
+
+/* Lookup class / instance attributes within the given class descriptor.
+ * @return: * :   A pointer to attribute that was found.
+ * @return: NULL: Attribute could not be found (no error is thrown) */
+DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryClassAttribute(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name);
+DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name, dhash_t hash);
+DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryClassAttributeStringWithHash(DeeClassDescriptorObject *__restrict self, char const *__restrict name, dhash_t hash);
+DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryInstanceAttribute(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name);
+DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name, dhash_t hash);
+DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryInstanceAttributeStringWithHash(DeeClassDescriptorObject *__restrict self, char const *__restrict name, dhash_t hash);
+#define DeeClassDescriptor_QueryClassAttributeString(self,name) \
+        DeeClassDescriptor_QueryClassAttributeStringWithHash(self,name,hash_str(name))
+#define DeeClassDescriptor_QueryInstanceAttributeString(self,name) \
+        DeeClassDescriptor_QueryInstanceAttributeStringWithHash(self,name,hash_str(name))
 
 
 
@@ -214,7 +259,7 @@ DDATDEF DeeTypeObject DeeClassDescriptor_Type;
 #endif
 
 struct class_optable {
-    /* [0..1][lock(:cd_lock,WRITE_ONCE)][*] Table of operators.
+    /* [0..1][lock(READ(:cd_lock),SET_TO_NULL(:cd_lock),WRITE_ONCE)][*] Table of operators.
      * NOTE: Individual callback objects may be `ITER_DONE',
      *       indicative of that operator having been deleted
      *       explicitly. */
@@ -227,16 +272,23 @@ struct class_desc {
     DREF DeeClassDescriptorObject *cd_desc;   /* [1..1][const] The associated class descriptor.
                                                * This in turn contains all the relevant fields
                                                * required to accessing user-defined attributes. */
+    uintptr_t                      cd_offset; /* [const] Offset to the `struct instance_desc' of instances. */
+    struct class_optable          *cd_ops[CLASS_HEADER_OPC1];
+                                              /* [0..1][owned][lock(WRITE_ONCE)][*]
+                                               * Table of cached operator callbacks. */
 #ifndef CONFIG_NO_THREADS
     rwlock_t                       cd_lock;   /* Lock for accessing the class member table. */
 #endif
-    struct class_optable          *cd_ops[CLASS_HEADER_OPC1];
-                                              /* [0..1][owned][lock(cd_lock,WRITE_ONCE)][*]
-                                               * Table of cached operator callbacks. */
     DREF DeeObject                *cd_members[1024]; /* [0..1][lock(cd_lock)][cd_desc->cd_cmemb_size]
                                                       * The class member table (also contains
                                                       * instance-methods and operator callbacks). */
 };
+
+#ifndef CONFIG_NO_THREADS
+#define class_desc_as_instance(x) ((struct instance_desc *)&(x)->cd_lock)
+#else
+#define class_desc_as_instance(x) ((struct instance_desc *)&(x)->cd_members[0])
+#endif
 
 #define DeeClass_Check(self)    (DeeType_Check(self) && DeeType_IsClass(self))
 #define DeeInstance_Check(self)  DeeType_IsClass(Dee_TYPE(self))
@@ -246,6 +298,24 @@ struct class_desc {
      (ASSERT_OBJECT_TYPE(self,&DeeType_Type),ASSERT(DeeType_IsClass(self)), \
     ((DeeTypeObject *)REQUIRES_OBJECT(self))->tp_class)
 
+
+#define DeeClassDesc_QueryClassAttribute(self,name)                       DeeClassDescriptor_QueryClassAttribute((self)->cd_desc,name)
+#define DeeClassDesc_QueryClassAttributeWithHash(self,name,hash)          DeeClassDescriptor_QueryClassAttributeWithHash((self)->cd_desc,name,hash)
+#define DeeClassDesc_QueryClassAttributeStringWithHash(self,name,hash)    DeeClassDescriptor_QueryClassAttributeStringWithHash((self)->cd_desc,name,hash)
+#define DeeClassDesc_QueryClassAttributeString(self,name)                 DeeClassDescriptor_QueryClassAttributeString((self)->cd_desc,name) 
+#define DeeClassDesc_QueryInstanceAttribute(self,name)                    DeeClassDescriptor_QueryInstanceAttribute((self)->cd_desc,name)
+#define DeeClassDesc_QueryInstanceAttributeWithHash(self,name,hash)       DeeClassDescriptor_QueryInstanceAttributeWithHash((self)->cd_desc,name,hash)
+#define DeeClassDesc_QueryInstanceAttributeStringWithHash(self,name,hash) DeeClassDescriptor_QueryInstanceAttributeStringWithHash((self)->cd_desc,name,hash)
+#define DeeClassDesc_QueryInstanceAttributeString(self,name)              DeeClassDescriptor_QueryInstanceAttributeString((self)->cd_desc,name) 
+
+#define DeeClass_QueryClassAttribute(self,name)                       DeeClassDesc_QueryClassAttribute(DeeClass_DESC(self),name)
+#define DeeClass_QueryClassAttributeWithHash(self,name,hash)          DeeClassDesc_QueryClassAttributeWithHash(DeeClass_DESC(self),name,hash)
+#define DeeClass_QueryClassAttributeStringWithHash(self,name,hash)    DeeClassDesc_QueryClassAttributeStringWithHash(DeeClass_DESC(self),name,hash)
+#define DeeClass_QueryClassAttributeString(self,name)                 DeeClassDesc_QueryClassAttributeString(DeeClass_DESC(self),name) 
+#define DeeClass_QueryInstanceAttribute(self,name)                    DeeClassDesc_QueryInstanceAttribute(DeeClass_DESC(self),name)
+#define DeeClass_QueryInstanceAttributeWithHash(self,name,hash)       DeeClassDesc_QueryInstanceAttributeWithHash(DeeClass_DESC(self),name,hash)
+#define DeeClass_QueryInstanceAttributeStringWithHash(self,name,hash) DeeClassDesc_QueryInstanceAttributeStringWithHash(DeeClass_DESC(self),name,hash)
+#define DeeClass_QueryInstanceAttributeString(self,name)              DeeClassDesc_QueryInstanceAttributeString(DeeClass_DESC(self),name) 
 
 
 struct instance_desc {
@@ -258,7 +328,97 @@ struct instance_desc {
 };
 
 #define DeeInstance_DESC(class_descriptor,self) \
-  ((struct instance_desc *)((uintptr_t)REQUIRES_OBJECT(self)+(class_descriptor)->c_addr))
+      ((struct instance_desc *)((uintptr_t)REQUIRES_OBJECT(self)+(class_descriptor)->cd_offset))
+
+#ifdef CONFIG_BUILDING_DEEMON
+struct attribute_info;
+struct attribute_lookup_rules;
+
+/* Instance member access (by index) */
+INTDEF DREF DeeObject *DCALL DeeInstance_GetMember(/*Class*/DeeTypeObject *__restrict tp_self, /*Instance*/DeeObject *__restrict self, uint16_t index);
+INTDEF bool DCALL DeeInstance_BoundMember(/*Class*/DeeTypeObject *__restrict tp_self, /*Instance*/DeeObject *__restrict self, uint16_t index);
+INTDEF int DCALL DeeInstance_DelMember(/*Class*/DeeTypeObject *__restrict tp_self, /*Instance*/DeeObject *__restrict self, uint16_t index);
+INTDEF void DCALL DeeInstance_SetMember(/*Class*/DeeTypeObject *__restrict tp_self, /*Instance*/DeeObject *__restrict self, uint16_t index, DeeObject *__restrict value);
+INTDEF DREF DeeObject *DCALL DeeInstance_GetMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t index);
+INTDEF int DCALL DeeInstance_BoundMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t index);
+INTDEF int DCALL DeeInstance_DelMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t index);
+INTDEF int DCALL DeeInstance_SetMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t index, DeeObject *__restrict value);
+
+/* Class member access (by index) */
+INTDEF void DCALL DeeClass_SetMember(DeeTypeObject *__restrict self, uint16_t index, DeeObject *__restrict value);
+INTDEF int DCALL DeeClass_SetMemberSafe(DeeTypeObject *__restrict self, uint16_t index, DeeObject *__restrict value);
+
+
+/* Enumerate user-defined class or instance attributes. */
+INTDEF dssize_t DCALL DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self, denum_t proc, void *arg);
+INTDEF dssize_t DCALL DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self, DeeObject *instance, denum_t proc, void *arg);
+
+/* Enumerate user-defined instance attributes, as
+ * accessed by `DeeClass_GetInstanceAttribute()'. */
+INTDEF dssize_t DCALL DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self, denum_t proc, void *arg);
+
+/* Find a specific class-, instance- or
+ * instance-through-class-attribute, matching the given lookup rules.
+ * @return:  0: Attribute found (*result was filled with data).
+ * @return:  1: No attribute matching the given requirements was found.
+ * @return: -1: An error occurred. */
+INTDEF int DCALL DeeClass_FindClassAttribute(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+INTDEF int DCALL DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+INTDEF int DCALL DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+
+/* Get/Call/Del/Set an instance attribute, as acquired
+ * through `DeeClassDescriptor_QueryInstanceAttribute()'. */
+INTDEF DREF DeeObject *DCALL DeeInstance_GetAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
+INTDEF int DCALL DeeInstance_BoundAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeKw(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL DeeInstance_DelAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
+INTDEF int DCALL DeeInstance_SetAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+
+/* Get/Call/Del/Set a class attribute, as acquired
+ * through `DeeClassDescriptor_QueryClassAttribute()'. */
+#ifdef __INTELLISENSE__
+INTDEF DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
+INTDEF int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
+INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
+INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+#else
+#define DeeClass_GetClassAttribute(class_type,attr)                 DeeInstance_GetAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
+#define DeeClass_BoundClassAttribute(class_type,attr)               DeeInstance_BoundAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
+#define DeeClass_CallClassAttribute(class_type,attr,argc,argv)      DeeInstance_CallAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,argc,argv)
+#define DeeClass_CallClassAttributeKw(class_type,attr,argc,argv,kw) DeeInstance_CallAttributeKw(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,argc,argv,kw)
+#define DeeClass_DelClassAttribute(class_type,attr)                 DeeInstance_DelAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
+#define DeeClass_SetClassAttribute(class_type,attr,value)           DeeInstance_SetAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,value)
+#endif
+
+/* Get/Call/Del/Set a class attribute, as acquired
+ * through `DeeClassDescriptor_QueryInstanceAttribute()'.
+ * These functions produce and interact with with proxy
+ * objects constructed when accessing instance attributes
+ * through their defining class:
+ * >> class MyClass {
+ * >>     public class member class_field = 84;
+ * >>     public field = 42;
+ * >>     function foo() {
+ * >>         print "foo():",field;
+ * >>     }
+ * >> }
+ * >> local x = MyClass();
+ * >> print x.field;                 // DeeInstance_GetAttribute("field")
+ * >> x.foo();                       // DeeInstance_CallAttribute("foo")
+ * >> print MyClass.class_field;     // DeeClass_GetClassAttribute("class_field")
+ * >> myclass_field = MyClass.field; // DeeClass_GetInstanceAttribute("field")
+ */
+INTDEF DREF DeeObject *DCALL DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
+INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
+INTDEF int DCALL DeeClass_SetInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+#define DeeClass_BoundInstanceAttribute(class_type,attr) 1 /* Instance wrappers are always bound! (though checking for this doesn't really make any sense...) */
+
+#endif
 
 
 
@@ -267,37 +427,30 @@ struct instance_desc {
  * @param: base: The base of the resulting class.
  *               You may pass `Dee_None' to have the resulting
  *               class not be derived from anything (be base-less).
+ * @param: descriptor: A `DeeClassDescriptor_Type'-object, detailing the class's prototype.
  * @throw: TypeError: The given `base' is neither `none', nor a type-object.
  * @throw: TypeError: The given `base' is a final or variable type. */
 DFUNDEF DREF DeeTypeObject *DCALL
 DeeClass_New(DeeTypeObject *__restrict base,
              DeeObject *__restrict descriptor);
 
-/* Initialize a class member of `self' as `value'
- * @param: index: A index into `cd_members' of `self' */
-DFUNDEF void DCALL
-DeeClass_SetMember(DeeTypeObject *__restrict self,
-                   uint16_t index,
-                   DeeObject *__restrict value);
-
-
 /* Return the nearest operator function for `name',
  * implemented by `self', which must be a class type.
  * If the operator doesn't exist, return NULL and throw
  * a NotImplemented error, or return NULL and don't throw
  * an error when `DeeClass_TryGetOperator()' was used. */
-DFUNDEF DeeObject *DCALL
+DFUNDEF DREF DeeObject *DCALL
 DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 /* Same as `DeeClass_GetOperator()', but don't simply return `NULL'
  * if the operator hasn't been implemented, and `ITER_DONE' when it
  * has been, but wasn't assigned anything. */
-DFUNDEF DeeObject *DCALL
+DFUNDEF DREF DeeObject *DCALL
 DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 /* Same as `DeeClass_TryGetOperator()', but don't return an operator
  * that has been inherited from a base-class, but return `NULL' instead. */
-DFUNDEF DeeObject *DCALL
+DFUNDEF DREF DeeObject *DCALL
 DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 
@@ -309,13 +462,7 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
  * `instance_t*' function, which the proceeds to load (and
  * potentially cache) the operator, before invoking it. */
 
-/* Constructor hooks when the user-class defines a `CLASS_OPERATOR_SUPERARGS' operator. */
-INTDEF int DCALL instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_super_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_super_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_super_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_super_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_super_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+/* `OPERATOR_CONSTRUCTOR' + `CLASS_OPERATOR_SUPERARGS' */
 INTDEF int DCALL instance_super_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF int DCALL instance_super_ctor(DeeObject *__restrict self);
 INTDEF int DCALL instance_super_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
@@ -323,19 +470,29 @@ INTDEF int DCALL instance_super_init(DeeObject *__restrict self, size_t argc, De
 INTDEF int DCALL instance_super_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF int DCALL instance_super_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
-/* Constructor hooks when the user-class doesn't define a `CLASS_OPERATOR_SUPERARGS' operator. */
-INTDEF int DCALL instance_builtin_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+/* `CLASS_OPERATOR_SUPERARGS' */
+INTDEF int DCALL instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_super_ctor(DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_super_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_super_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_super_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_builtin_super_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+
+/* `OPERATOR_CONSTRUCTOR' */
 INTDEF int DCALL instance_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF int DCALL instance_ctor(DeeObject *__restrict self);
 INTDEF int DCALL instance_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
 INTDEF int DCALL instance_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
 INTDEF int DCALL instance_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF int DCALL instance_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+
+/* No predefined construction operators. */
+INTDEF int DCALL instance_builtin_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_ctor(DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_builtin_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
 /* Builtin (pre-defined) hooks that are used when the user-class doesn't override these operators. */
 INTDEF int DCALL instance_builtin_tcopy(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
@@ -359,6 +516,31 @@ INTDEF int DCALL instance_assign(DeeObject *__restrict self, DeeObject *__restri
 INTDEF int DCALL instance_tmoveassign(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF int DCALL instance_moveassign(DeeObject *__restrict self, DeeObject *__restrict other);
 
+/* GC support for class objects. */
+INTDEF void DCALL instance_tvisit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF void DCALL instance_visit(DeeObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF void DCALL instance_tclear(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF void DCALL instance_clear(DeeObject *__restrict self);
+INTDEF void DCALL instance_tpclear(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, unsigned int gc_priority);
+INTDEF void DCALL instance_pclear(DeeObject *__restrict self, unsigned int gc_priority);
+
+/* Builtin (standard) operators for hashing and comparing class objects. */
+INTDEF dhash_t DCALL instance_builtin_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF dhash_t DCALL instance_builtin_hash(DeeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL instance_builtin_teq(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_eq(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_tne(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_ne(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_tlo(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_lo(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_tle(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_le(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_tgr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_gr(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_tge(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_builtin_ge(DeeObject *__restrict self, DeeObject *__restrict other);
+
+/* Hooks for user-defined operators. */
 INTDEF DREF DeeObject *DCALL instance_tstr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL instance_str(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL instance_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
@@ -375,10 +557,10 @@ INTDEF int DCALL instance_tint32(DeeTypeObject *__restrict tp_self, DeeObject *_
 INTDEF int DCALL instance_int32(DeeObject *__restrict self, int32_t *__restrict result);
 INTDEF int DCALL instance_tint64(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, int64_t *__restrict result);
 INTDEF int DCALL instance_int64(DeeObject *__restrict self, int64_t *__restrict result);
-INTDEF int DCALL instance_tdouble(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, double *__restrict result);
-INTDEF int DCALL instance_double(DeeObject *__restrict self, double *__restrict result);
 INTDEF DREF DeeObject *DCALL instance_tint(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL instance_int(DeeObject *__restrict self);
+INTDEF int DCALL instance_tdouble(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, double *__restrict result);
+INTDEF int DCALL instance_double(DeeObject *__restrict self, double *__restrict result);
 INTDEF DREF DeeObject *DCALL instance_tinv(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL instance_inv(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL instance_tpos(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
@@ -387,10 +569,125 @@ INTDEF DREF DeeObject *DCALL instance_tneg(DeeTypeObject *__restrict tp_self, De
 INTDEF DREF DeeObject *DCALL instance_neg(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL instance_tadd(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF DREF DeeObject *DCALL instance_add(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tsub(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_sub(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tmul(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_mul(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tdiv(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_div(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tmod(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_mod(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tshl(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_shl(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tshr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_shr(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tand(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_and(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_or(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_txor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_xor(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tpow(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_pow(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF int DCALL instance_tinc(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself);
+INTDEF int DCALL instance_inc(DeeObject **__restrict pself);
+INTDEF int DCALL instance_tdec(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself);
+INTDEF int DCALL instance_dec(DeeObject **__restrict pself);
+INTDEF int DCALL instance_tiadd(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_iadd(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_tisub(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_isub(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_timul(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_imul(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_tidiv(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_idiv(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_timod(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_imod(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_tishl(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_ishl(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_tishr(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_ishr(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_tiand(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_iand(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_tior(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_ior(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_tixor(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_ixor(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_tipow(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF int DCALL instance_ipow(DeeObject **__restrict pself, DeeObject *__restrict other);
+INTDEF dhash_t DCALL instance_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF dhash_t DCALL instance_hash(DeeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL instance_teq(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_eq(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tne(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_ne(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tlo(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_lo(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tle(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_le(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tgr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_gr(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tge(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_ge(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_titer(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL instance_iter(DeeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL instance_tsize(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL instance_size(DeeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL instance_tcontains(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_contains(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_tgetitem(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL instance_getitem(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF int DCALL instance_tdelitem(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF int DCALL instance_delitem(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF int DCALL instance_tsetitem(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other, DeeObject *__restrict value);
+INTDEF int DCALL instance_setitem(DeeObject *__restrict self, DeeObject *__restrict other, DeeObject *__restrict value);
+INTDEF DREF DeeObject *DCALL instance_tgetrange(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end);
+INTDEF DREF DeeObject *DCALL instance_getrange(DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end);
+INTDEF int DCALL instance_tdelrange(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end);
+INTDEF int DCALL instance_delrange(DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end);
+INTDEF int DCALL instance_tsetrange(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end, DeeObject *__restrict value);
+INTDEF int DCALL instance_setrange(DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end, DeeObject *__restrict value);
+INTDEF int DCALL instance_tenter(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF int DCALL instance_enter(DeeObject *__restrict self);
+INTDEF int DCALL instance_tleave(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF int DCALL instance_leave(DeeObject *__restrict self);
+
+INTDEF DREF DeeObject *DCALL instance_tgetattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict name);
+INTDEF DREF DeeObject *DCALL instance_getattr(DeeObject *__restrict self, /*String*/DeeObject *__restrict name);
+INTDEF int DCALL instance_tdelattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict name);
+INTDEF int DCALL instance_delattr(DeeObject *__restrict self, /*String*/DeeObject *__restrict name);
+INTDEF int DCALL instance_tsetattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict name, DeeObject *__restrict value);
+INTDEF int DCALL instance_setattr(DeeObject *__restrict self, /*String*/DeeObject *__restrict name, DeeObject *__restrict value);
+INTDEF dssize_t DCALL instance_enumattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, denum_t proc, void *arg);
 
 #endif
 
 
+/* Instance-member wrapper objects
+ * >> class MyClass {
+ * >>     member foo = 42;
+ * >> }
+ * >> print type MyClass.foo; // DeeInstanceMember_Type
+ */
+typedef struct instancemember_object DeeInstanceMemberObject;
+struct instancemember_object {
+    OBJECT_HEAD
+    DREF DeeTypeObject     *im_type;      /* [1..1][const] The user-class type, instances of which implement this member. */
+    struct class_attribute *im_attribute; /* [1..1][const] The instance attribute (`CLASS_ATTRIBUTE_FCLASSMEM' shouldn't
+                                           * be set, though this isn't asserted) that should be accessed. */
+};
+
+DDATDEF DeeTypeObject DeeInstanceMember_Type;
+#define DeeInstanceMember_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeInstanceMember_Type) /* `_instancemember' is final */
+#define DeeInstanceMember_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeInstanceMember_Type)
+
+/* Construct a new instance member for the given `attribute' */
+DFUNDEF DREF DeeObject *DCALL
+DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
+                      struct class_attribute *__restrict attribute);
+
+
 DECL_END
+#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
 
 #endif /* !GUARD_DEEMON_CLASS2_H */
