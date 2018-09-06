@@ -129,6 +129,22 @@ set_new_scope:
       iter->s_flag &= ~SYMBOL_FALLOC;
      }
     }
+    for (iter = scope->s_del; iter; iter = iter->s_next)
+    if (iter->s_type == SYMBOL_TYPE_STACK) {
+     /* Allocate memory for stack-variables when stack displacement is disabled. */
+     if (iter->s_nwrite) {
+      /* Allocate this stack variable. */
+      iter->s_flag |= SYMBOL_FALLOC;
+      SYMBOL_STACK_OFFSET(iter)  = current_assembler.a_stackcur;
+      SYMBOL_STACK_OFFSET(iter) += num_stack_vars;
+      if (asm_putddi_sbind(SYMBOL_STACK_OFFSET(iter),
+                           iter->s_name))
+          goto err;
+      ++num_stack_vars;
+     } else {
+      iter->s_flag &= ~SYMBOL_FALLOC;
+     }
+    }
    }
    if (transpose_modified_symbols(scope))
        goto err;
@@ -177,6 +193,15 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve) {
   bucket_end = (bucket_iter = scope->s_map) + scope->s_mapa;
   for (; bucket_iter < bucket_end; ++bucket_iter)
   for (iter = *bucket_iter; iter; iter = iter->s_next)
+  if (iter->s_type == SYMBOL_TYPE_STACK) {
+   if (iter->s_flag & SYMBOL_FALLOC) {
+    if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
+        goto err;
+    ++num_stack_vars;
+    iter->s_flag &= ~SYMBOL_FALLOC;
+   }
+  }
+  for (iter = scope->s_del; iter; iter = iter->s_next)
   if (iter->s_type == SYMBOL_TYPE_STACK) {
    if (iter->s_flag & SYMBOL_FALLOC) {
     if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
