@@ -136,7 +136,7 @@ type_obmemb_enum(DeeTypeObject *__restrict tp_self,
  chain = tp_self->tp_members;
  ASSERT(chain);
  for (; chain->m_name; ++chain) {
-  uint16_t perm = ATTR_PERMGET|ATTR_IMEMBER|ATTR_CMEMBER|ATTR_WRAPPER;
+  uint16_t perm = ATTR_IMEMBER|ATTR_CMEMBER|ATTR_PERMGET|ATTR_WRAPPER;
   if (!(chain->m_field.m_type&STRUCT_CONST))
         perm |= ATTR_PERMDEL|ATTR_PERMSET;
   temp = (*proc)((DeeObject *)tp_self,chain->m_name,chain->m_doc,

@@ -541,7 +541,7 @@ class_maker_push_methscope(struct class_maker *__restrict self,
  struct symbol *this_sym;
  if (basescope_push()) goto err;
  /* Set the appropriate flags to turn this one into a class-scope. */
- current_basescope->bs_flags |= CODE_FTHISCALL|current_tags.at_code_flags;
+ current_basescope->bs_flags |= CODE_FTHISCALL | current_tags.at_code_flags;
  current_basescope->bs_class  = self->cm_classsym;
  current_basescope->bs_super  = self->cm_supersym;
  /* Define a symbol `this' that can be used to access the this-argument. */
@@ -646,6 +646,14 @@ class_maker_addmember(struct class_maker *__restrict self,
 #endif
  Dee_Decref(name_str);
  if unlikely(!attr) goto err;
+
+ /* Add a documentation string to the member. */
+ if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
+  attr->ca_doc = (DREF DeeStringObject *)unicode_printer_pack(&current_tags.at_doc);
+  unicode_printer_init(&current_tags.at_doc);
+  if unlikely(!attr->ca_doc) goto err;
+ }
+
  attr->ca_flag = flags;
  /* NOTE: Members apart of the instance member vector, but stored
   *       in the class member vector must obvious count to its usage,
@@ -2013,13 +2021,16 @@ define_constructor:
          goto err;
     }
     /* Uninitialized instance/class member. */
-    if (!class_maker_addmember(&maker,member_name,
+    if (!class_maker_addmember(&maker,
+                                member_name,
 #ifdef CONFIG_USE_NEW_CLASS_SYSTEM
                                 is_class_member,
 #else
                                 member_table,
 #endif
-                                member_flags,&pusage_counter,&loc))
+                                member_flags,
+                               &pusage_counter,
+                               &loc))
          goto err;
     ++*pusage_counter;
     if unlikely(yield_semicollon() < 0) goto err;

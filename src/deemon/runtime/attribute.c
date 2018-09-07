@@ -85,14 +85,14 @@ DeeObject_EnumAttr(DeeTypeObject *__restrict tp_self,
    if (iter->tp_methods) {
     /* Methods can be access from instances & classes! */
     temp = type_method_enum(iter,iter->tp_methods,
-                            ATTR_IMEMBER|ATTR_CMEMBER,proc,arg);
+                            ATTR_IMEMBER,proc,arg);
     if unlikely(temp < 0) goto err;
     result += temp;
    }
    if (iter->tp_getsets) {
     /* Getsets can be access from instances & classes! */
     temp = type_getset_enum(iter,iter->tp_getsets,
-                            ATTR_IMEMBER|ATTR_CMEMBER|ATTR_PROPERTY,
+                            ATTR_IMEMBER|ATTR_PROPERTY,
                             proc,arg);
     if unlikely(temp < 0) goto err;
     result += temp;
@@ -100,7 +100,7 @@ DeeObject_EnumAttr(DeeTypeObject *__restrict tp_self,
    if (iter->tp_members) {
     /* Members can be access from instances & classes! */
     temp = type_member_enum(iter,iter->tp_members,
-                            ATTR_IMEMBER|ATTR_CMEMBER,proc,arg);
+                            ATTR_IMEMBER,proc,arg);
     if unlikely(temp < 0) goto err;
     result += temp;
    }
@@ -362,20 +362,20 @@ DeeObject_GenericEnumAttr(DeeTypeObject *__restrict tp_self,
  do {
   if (tp_self->tp_methods) {
    temp = type_method_enum(tp_self,tp_self->tp_methods,
-                           ATTR_IMEMBER|ATTR_CMEMBER,proc,arg);
+                           ATTR_IMEMBER,proc,arg);
    if unlikely(temp < 0) goto err;
    result += temp;
   }
   if (tp_self->tp_getsets) {
    temp = type_getset_enum(tp_self,tp_self->tp_getsets,
-                           ATTR_IMEMBER|ATTR_CMEMBER|ATTR_PROPERTY,
+                           ATTR_IMEMBER|ATTR_PROPERTY,
                            proc,arg);
    if unlikely(temp < 0) goto err;
    result += temp;
   }
   if (tp_self->tp_members) {
    temp = type_member_enum(tp_self,tp_self->tp_members,
-                           ATTR_IMEMBER|ATTR_CMEMBER,proc,arg);
+                           ATTR_IMEMBER,proc,arg);
    if unlikely(temp < 0) goto err;
    result += temp;
   }
@@ -395,28 +395,28 @@ DeeObject_GenericFindAttrString(DeeTypeObject *__restrict tp_self,
  ASSERT(DeeType_Check(tp_self));
  cache = &tp_self->tp_cache;
  if ((error = membercache_find(cache,(DeeObject *)tp_self,
-                               ATTR_IMEMBER|ATTR_CMEMBER,
+                               ATTR_IMEMBER,
                                result,rules)) > 0) {
   do {
    if (tp_self->tp_methods &&
       (error = type_method_find(cache,
                                (DeeObject *)tp_self,
                                 tp_self->tp_methods,
-                                ATTR_IMEMBER|ATTR_CMEMBER,
+                                ATTR_IMEMBER,
                                 result,rules)) <= 0)
        goto done;
    if (tp_self->tp_getsets &&
       (error = type_getset_find(cache,
                                (DeeObject *)tp_self,
                                 tp_self->tp_getsets,
-                                ATTR_IMEMBER|ATTR_CMEMBER|ATTR_PROPERTY,
+                                ATTR_IMEMBER|ATTR_PROPERTY,
                                 result,rules)) <= 0)
        goto done;
    if (tp_self->tp_members &&
       (error = type_member_find(cache,
                                (DeeObject *)tp_self,
                                 tp_self->tp_members,
-                                ATTR_IMEMBER|ATTR_CMEMBER,
+                                ATTR_IMEMBER,
                                 result,rules)) <= 0)
        goto done;
   } while ((tp_self = DeeType_Base(tp_self)) != NULL);
