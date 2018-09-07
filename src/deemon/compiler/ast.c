@@ -754,6 +754,33 @@ DEFINE_AST_GENERATOR(ast_action3,
  return result;
 }
 
+
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+DEFINE_AST_GENERATOR(ast_class,
+                    (struct ast *base, struct ast *__restrict descriptor,
+                     struct symbol *class_symbol, struct symbol *super_symbol,
+                     size_t memberc, struct class_member *__restrict memberv)) {
+ DREF struct ast *result;
+ ASSERT_AST_OPT(base);
+ ASSERT_AST(descriptor);
+ ASSERT(!memberc || memberv);
+ if likely((result = ast_new()) != NULL) {
+  result->a_type             = AST_CLASS;
+  result->a_class.c_base     = base;
+  result->a_class.c_desc     = descriptor;
+  result->a_class.c_memberc  = memberc;
+  result->a_class.c_memberv  = memberv;
+  result->a_class.c_classsym = class_symbol;
+  result->a_class.c_supersym = super_symbol;
+  if (class_symbol) SYMBOL_INC_NWRITE(class_symbol);
+  if (super_symbol) SYMBOL_INC_NWRITE(super_symbol);
+  ast_xincref(base);
+  ast_xincref(descriptor);
+  INIT_REF(result);
+ }
+ return result;
+}
+#else
 DEFINE_AST_GENERATOR(ast_class,
                     (uint16_t class_flags, struct ast *base, struct ast *name,
                      struct ast *doc, struct ast *imem, struct ast *cmem,
@@ -793,6 +820,7 @@ DEFINE_AST_GENERATOR(ast_class,
  }
  return result;
 }
+#endif
 
 DEFINE_AST_GENERATOR(ast_label,
                     (uint16_t flags, struct text_label *__restrict lbl,
@@ -950,6 +978,23 @@ ast_fini_contents(struct ast *__restrict self) {
    ast_decwrite(self->a_loop.l_elem);
   }
   goto do_xdecref_3;
+
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ {
+  size_t i;
+ case AST_CLASS:
+  /* Cleanup the member descriptor table. */
+  for (i = 0; i < self->a_class.c_memberc; ++i)
+      ast_decref(self->a_class.c_memberv[i].cm_ast);
+  Dee_Free(self->a_class.c_memberv);
+  ast_xdecref(self->a_class.c_base);
+  ast_decref(self->a_class.c_desc);
+  if (self->a_class.c_classsym)
+      SYMBOL_DEC_NWRITE(self->a_class.c_classsym);
+  if (self->a_class.c_supersym)
+      SYMBOL_DEC_NWRITE(self->a_class.c_supersym);
+ } break;
+#else
  {
   struct class_member *iter,*end;
  case AST_CLASS:
@@ -967,6 +1012,7 @@ ast_fini_contents(struct ast *__restrict self) {
       SYMBOL_DEC_NWRITE(self->a_class.c_supersym);
  }
   ATTR_FALLTHROUGH
+#endif
  case AST_OPERATOR:
   if (OPERATOR_ISINPLACE(self->a_flag))
       ast_decwriteonly(self->a_operator.o_op0);
@@ -1093,6 +1139,18 @@ ast_visit_impl(struct ast *__restrict self,
                dvisit_t proc, void *arg) {
  switch (self->a_type) {
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ {
+  size_t i;
+ case AST_CLASS:
+  /* Visit the member descriptor table. */
+  for (i = 0; i < self->a_class.c_memberc; ++i)
+      ast_visit(self->a_class.c_memberv[i].cm_ast);
+  if (self->a_class.c_base)
+      ast_visit(self->a_class.c_base);
+  ast_visit(self->a_class.c_desc);
+ } break;
+#else
  {
   struct class_member *iter,*end;
  case AST_CLASS:
@@ -1105,6 +1163,7 @@ ast_visit_impl(struct ast *__restrict self,
       ast_visit(self->a_class.c_cmem);
  }
   ATTR_FALLTHROUGH
+#endif
  case AST_OPERATOR:
   if (self->a_operator.o_op3)
       ast_visit(self->a_operator.o_op3);

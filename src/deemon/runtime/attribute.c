@@ -436,13 +436,13 @@ DeeType_FindAttrString(DeeTypeObject *__restrict self,
   if (rules->alr_decl && rules->alr_decl != (DeeObject *)iter)
       goto find_generic;
   if (DeeType_IsClass(iter)) {
-   struct class_desc *desc = DeeClass_DESC(iter);
 #ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    if ((error = DeeClass_FindClassAttribute(iter,result,rules)) <= 0)
         goto done;
    if ((error = DeeClass_FindClassInstanceAttribute(iter,result,rules)) <= 0)
         goto done;
 #else
+   struct class_desc *desc = DeeClass_DESC(iter);
    if ((error = membertable_find(iter,NULL,desc->c_cmem,result,rules)) <= 0)
         goto done;
    if ((error = membertable_find_class(iter,desc->c_mem,result,rules)) <= 0)
@@ -1190,10 +1190,10 @@ DeeType_EnumAttr(DeeTypeObject *__restrict self,
      goto err_m1;
 #endif
   if (DeeType_IsClass(iter)) {
-   struct class_desc *desc = DeeClass_DESC(iter);
 #ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    temp = DeeClass_EnumClassAttributes(iter,proc,arg);
 #else
+   struct class_desc *desc = DeeClass_DESC(iter);
    temp = membertable_enum(iter,NULL,desc->c_cmem,proc,arg);
 #endif
    if unlikely(temp < 0) goto err;
@@ -1514,8 +1514,13 @@ done:     return error;
 }
 
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+#define class_getattr      instance_tgetattr
+#define class_wrap_getattr instance_getattr
+#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
 INTDEF DREF DeeObject *DCALL class_getattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict attr);
 INTDEF DREF DeeObject *DCALL class_wrap_getattr(DeeObject *__restrict self, DeeObject *__restrict attr);
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 
 INTDEF DREF DeeObject *DCALL

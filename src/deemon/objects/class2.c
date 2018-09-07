@@ -25,9 +25,11 @@
 #include <deemon/class.h>
 #ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 #include <deemon/none.h>
+#include <deemon/int.h>
 #include <deemon/gc.h>
 #include <deemon/bool.h>
 #include <deemon/string.h>
+#include <deemon/float.h>
 #include <deemon/error.h>
 #include <deemon/util/string.h>
 #include <deemon/tuple.h>
@@ -35,6 +37,251 @@
 #include "../runtime/runtime_error.h"
 
 DECL_BEGIN
+
+/* Class callbacks for inside of `type' */
+INTERN void DCALL
+class_fini(DeeTypeObject *__restrict self) {
+ struct class_desc *my_class;
+ DREF DeeObject *buffer[64];
+ size_t buflen; uint16_t i,size;
+ my_class = self->tp_class;
+ //my_class = DeeClass_DESC(self); /* This fails, because `self' may no longer be a valid object */
+ /* Clear all class members (including cached operators). */
+ buflen = 0;
+ size = my_class->cd_desc->cd_cmemb_size;
+again:
+ rwlock_write(&my_class->cd_lock);
+ for (i = 0; i < size; ++i) {
+  DeeObject *ob;
+  ob = my_class->cd_members[i];
+  if (!ob) continue;
+  my_class->cd_members[i] = NULL;
+  if (Dee_DecrefIfNotOne(ob)) continue;
+  /* We're responsible for destroying this member! */
+  if (buflen == COMPILER_LENOF(buffer)) {
+   rwlock_endwrite(&my_class->cd_lock);
+   Dee_Decref(ob);
+   while (buflen) {
+    --buflen;
+    Dee_Decref(buffer[buflen]);
+   }
+   rwlock_write(&my_class->cd_lock);
+   goto again;
+  }
+  buffer[buflen++] = ob; /* Inherit reference. */
+ }
+ /* Also clear all cached operators. */
+ for (i = 0; i < CLASS_HEADER_OPC1; ++i) {
+  struct class_optable *table; uint16_t j;
+  table = my_class->cd_ops[i];
+  if (!table) continue;
+  for (j = 0; j < CLASS_HEADER_OPC2; ++j) {
+   DeeObject *ob = table->co_operators[j];
+   if (!ob) continue;
+   table->co_operators[j] = NULL;
+   if (Dee_DecrefIfNotOne(ob)) continue;
+   /* We're responsible for destroying this member! */
+   if (buflen == COMPILER_LENOF(buffer)) {
+    rwlock_endwrite(&my_class->cd_lock);
+    Dee_Decref(ob);
+    while (buflen) {
+     --buflen;
+     Dee_Decref(buffer[buflen]);
+    }
+    rwlock_write(&my_class->cd_lock);
+    goto again;
+   }
+   buffer[buflen++] = ob; /* Inherit reference. */
+  }
+ }
+ rwlock_endwrite(&my_class->cd_lock);
+ if (buflen) {
+  /* Clear the buffer. */
+  while (buflen) {
+   --buflen;
+   Dee_Decref(buffer[buflen]);
+  }
+  /* Since custom destructors may have been able to
+   * re-assign new members, we must keep clearing them
+   * all until none are left! */
+  goto again;
+ }
+ /* With all references objects who's destruction could potentially
+  * have side-effects now gone, we can move on to free heap-allocated
+  * data structures. */
+ for (i = 0; i < CLASS_HEADER_OPC1; ++i)
+     Dee_Free(my_class->cd_ops[i]);
+ Dee_Decref(my_class->cd_desc);
+ if (!self->tp_base || self->tp_math != self->tp_base->tp_math)
+      Dee_Free(self->tp_math);
+ if ((self->tp_cmp != &instance_builtin_cmp) &&
+    (!self->tp_base || self->tp_cmp != self->tp_base->tp_cmp))
+      Dee_Free(self->tp_cmp);
+ if (!self->tp_base || self->tp_seq != self->tp_base->tp_seq)
+      Dee_Free(self->tp_seq);
+ if (!self->tp_base || self->tp_attr != self->tp_base->tp_attr)
+      Dee_Free(self->tp_attr);
+ if (!self->tp_base || self->tp_with != self->tp_base->tp_with)
+      Dee_Free(self->tp_with);
+}
+INTERN void DCALL
+class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg) {
+ struct class_desc *my_class; uint16_t i,size;
+ my_class = DeeClass_DESC(self);
+ size = my_class->cd_desc->cd_cmemb_size;
+ rwlock_read(&my_class->cd_lock);
+ for (i = 0; i < size; ++i)
+     Dee_XVisit(my_class->cd_members[i]);
+ /* Also free all cached operators. */
+ for (i = 0; i < CLASS_HEADER_OPC1; ++i) {
+  struct class_optable *table; uint16_t j;
+  table = my_class->cd_ops[i];
+  if (!table) continue;
+  for (j = 0; j < CLASS_HEADER_OPC2; ++j)
+      Dee_XVisit(table->co_operators[j]);
+ }
+ rwlock_endread(&my_class->cd_lock);
+ /* Only ever references strings itself, so no point in visiting this one! */
+ /*Dee_Visit(my_class->cd_desc);*/
+}
+
+INTERN void DCALL
+class_clear(DeeTypeObject *__restrict self) {
+ struct class_desc *my_class;
+ DREF DeeObject *buffer[64];
+ size_t buflen; uint16_t i,size;
+ my_class = DeeClass_DESC(self);
+ /* Clear all class members (including cached operators). */
+ buflen = 0;
+ size = my_class->cd_desc->cd_cmemb_size;
+again:
+ rwlock_write(&my_class->cd_lock);
+ for (i = 0; i < size; ++i) {
+  DeeObject *ob;
+  ob = my_class->cd_members[i];
+  if (!ob) continue;
+  my_class->cd_members[i] = NULL;
+  if (Dee_DecrefIfNotOne(ob)) continue;
+  /* We're responsible for destroying this member! */
+  if (buflen == COMPILER_LENOF(buffer)) {
+   rwlock_endwrite(&my_class->cd_lock);
+   Dee_Decref(ob);
+   while (buflen) {
+    --buflen;
+    Dee_Decref(buffer[buflen]);
+   }
+   rwlock_write(&my_class->cd_lock);
+   goto again;
+  }
+  buffer[buflen++] = ob; /* Inherit reference. */
+ }
+ /* Also clear all cached operators. */
+ for (i = 0; i < CLASS_HEADER_OPC1; ++i) {
+  struct class_optable *table; uint16_t j;
+  table = my_class->cd_ops[i];
+  if (!table) continue;
+  for (j = 0; j < CLASS_HEADER_OPC2; ++j) {
+   DeeObject *ob = table->co_operators[j];
+   if (!ob) continue;
+   table->co_operators[j] = NULL;
+   if (Dee_DecrefIfNotOne(ob)) continue;
+   /* We're responsible for destroying this member! */
+   if (buflen == COMPILER_LENOF(buffer)) {
+    rwlock_endwrite(&my_class->cd_lock);
+    Dee_Decref(ob);
+    while (buflen) {
+     --buflen;
+     Dee_Decref(buffer[buflen]);
+    }
+    rwlock_write(&my_class->cd_lock);
+    goto again;
+   }
+   buffer[buflen++] = ob; /* Inherit reference. */
+  }
+ }
+ rwlock_endwrite(&my_class->cd_lock);
+ if (buflen) {
+  /* Clear the buffer. */
+  while (buflen) {
+   --buflen;
+   Dee_Decref(buffer[buflen]);
+  }
+  /* Since custom destructors may have been able to
+   * re-assign new members, we must keep clearing them
+   * all until none are left! */
+  goto again;
+ }
+}
+
+INTERN void DCALL
+class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
+ struct class_desc *my_class;
+ DREF DeeObject *buffer[64];
+ size_t buflen; uint16_t i,size;
+ my_class = DeeClass_DESC(self);
+ /* Clear all class members (including cached operators). */
+ buflen = 0;
+ size = my_class->cd_desc->cd_cmemb_size;
+again:
+ rwlock_write(&my_class->cd_lock);
+ for (i = 0; i < size; ++i) {
+  DeeObject *ob;
+  ob = my_class->cd_members[i];
+  if (!ob) continue;
+  if (DeeObject_GCPriority(ob) < gc_priority) continue;
+  my_class->cd_members[i] = NULL;
+  if (Dee_DecrefIfNotOne(ob)) continue;
+  /* We're responsible for destroying this member! */
+  if (buflen == COMPILER_LENOF(buffer)) {
+   rwlock_endwrite(&my_class->cd_lock);
+   Dee_Decref(ob);
+   while (buflen) {
+    --buflen;
+    Dee_Decref(buffer[buflen]);
+   }
+   rwlock_write(&my_class->cd_lock);
+   goto again;
+  }
+  buffer[buflen++] = ob; /* Inherit reference. */
+ }
+ /* Also clear all cached operators. */
+ for (i = 0; i < CLASS_HEADER_OPC1; ++i) {
+  struct class_optable *table; uint16_t j;
+  table = my_class->cd_ops[i];
+  if (!table) continue;
+  for (j = 0; j < CLASS_HEADER_OPC2; ++j) {
+   DeeObject *ob = table->co_operators[j];
+   if (!ob) continue;
+   if (DeeObject_GCPriority(ob) < gc_priority) continue;
+   table->co_operators[j] = NULL;
+   if (Dee_DecrefIfNotOne(ob)) continue;
+   /* We're responsible for destroying this member! */
+   if (buflen == COMPILER_LENOF(buffer)) {
+    rwlock_endwrite(&my_class->cd_lock);
+    Dee_Decref(ob);
+    while (buflen) {
+     --buflen;
+     Dee_Decref(buffer[buflen]);
+    }
+    rwlock_write(&my_class->cd_lock);
+    goto again;
+   }
+   buffer[buflen++] = ob; /* Inherit reference. */
+  }
+ }
+ rwlock_endwrite(&my_class->cd_lock);
+ if (buflen) {
+  /* Clear the buffer. */
+  while (buflen) {
+   --buflen;
+   Dee_Decref(buffer[buflen]);
+  }
+  /* Since custom destructors may have been able to
+   * re-assign new members, we must keep clearing them
+   * all until none are left! */
+  goto again;
+ }
+}
 
 
 PRIVATE void DCALL
@@ -69,52 +316,6 @@ PRIVATE DREF DeeObject *DCALL
 class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
                               struct class_desc *__restrict self,
                               uint16_t name) {
- DREF DeeObject *result;
- DeeClassDescriptorObject *desc; uint16_t i,perturb;
- if (name < CLASS_OPERATOR_USERCOUNT) {
-  struct class_optable *table;
-  table = self->cd_ops[name / CLASS_HEADER_OPC2];
-  if likely(table) {
-   rwlock_read(&self->cd_lock);
-   result = table->co_operators[name % CLASS_HEADER_OPC2];
-   if likely(result) {
-    Dee_Incref(result);
-    rwlock_endread(&self->cd_lock);
-    return result;
-   }
-   rwlock_endread(&self->cd_lock);
-  }
- }
- /* Lookup extended, or un-cached operators. */
- desc = self->cd_desc;
- i = perturb = name & desc->cd_clsop_mask;
- for (;; DeeClassDescriptor_CLSOPNEXT(i,perturb)) {
-  struct class_operator *entry;
-  entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
-  ASSERTF(entry->co_name != (uint16_t)-1,"Operator %#I16x not implemented",name);
-  if (entry->co_name != name) continue;
-  /* Found the entry! */
-  ASSERT(entry->co_addr < desc->cd_cmemb_size);
-  rwlock_read(&self->cd_lock);
-  result = self->cd_members[entry->co_addr];
-  if unlikely(!result) {
-   rwlock_endread(&self->cd_lock);
-   err_unimplemented_operator(tp_self,name);
-   return NULL;
-  }
-  Dee_Incref(result);
-  rwlock_endread(&self->cd_lock);
-  /* Try to cache the associated operator (if possible) */
-  if (name < CLASS_OPERATOR_USERCOUNT)
-      calls_desc_cache_operator(self,name,result);
-  return result;
- }
-}
-
-PRIVATE DREF DeeObject *DCALL
-class_desc_get_known_ctor_operator(DeeTypeObject *__restrict tp_self,
-                                   struct class_desc *__restrict self,
-                                   uint16_t name) {
  DREF DeeObject *result;
  DeeClassDescriptorObject *desc; uint16_t i,perturb;
  if (name < CLASS_OPERATOR_USERCOUNT) {
@@ -483,7 +684,7 @@ instance_tcopy(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   if (instance_initsuper_as_copy(tp_super,self,other,false))
       goto err_members;
@@ -519,7 +720,7 @@ instance_tdeepcopy(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   if (instance_initsuper_as_copy(tp_super,self,other,true))
       goto err_members;
@@ -575,7 +776,7 @@ instance_builtin_tcopy(DeeTypeObject *__restrict tp_self,
      Dee_XIncref(instance->id_vtab[i]);
  rwlock_endread(&other_instance->id_lock);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   if (instance_initsuper_as_copy(tp_super,self,other,false))
       goto err_members;
@@ -947,7 +1148,7 @@ instance_super_tctor(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_init(tp_super,self,
@@ -979,7 +1180,6 @@ err_members:
  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
 err_args:
  Dee_Decref(args);
-err_func:
  Dee_Decref(func);
 err:
  return -1;
@@ -1011,7 +1211,7 @@ instance_super_tinit(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_init(tp_super,self,
@@ -1043,7 +1243,6 @@ err_members:
  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
 err_args:
  Dee_Decref(args);
-err_func:
  Dee_Decref(func);
 err:
  return -1;
@@ -1075,7 +1274,7 @@ instance_super_tinitkw(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_init(tp_super,self,
@@ -1107,7 +1306,6 @@ err_members:
  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
 err_args:
  Dee_Decref(args);
-err_func:
  Dee_Decref(func);
 err:
  return -1;
@@ -1136,7 +1334,7 @@ instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_init(tp_super,self,
@@ -1179,7 +1377,7 @@ instance_builtin_super_tinit(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_init(tp_super,self,
@@ -1222,7 +1420,7 @@ instance_builtin_super_tinitkw(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_init(tp_super,self,
@@ -1260,7 +1458,7 @@ instance_tctor(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_ctor(tp_super,self))
@@ -1280,7 +1478,6 @@ err_super:
  }
 err_members:
  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
-err_func:
  Dee_Decref(func);
 err:
  return -1;
@@ -1300,7 +1497,7 @@ instance_tinit(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_ctor(tp_super,self))
@@ -1320,7 +1517,6 @@ err_super:
  }
 err_members:
  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
-err_func:
  Dee_Decref(func);
 err:
  return -1;
@@ -1339,7 +1535,7 @@ instance_tinitkw(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_ctor(tp_super,self))
@@ -1359,7 +1555,6 @@ err_super:
  }
 err_members:
  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
-err_func:
  Dee_Decref(func);
 err:
  return -1;
@@ -1376,7 +1571,7 @@ instance_builtin_tctor(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_ctor(tp_super,self))
@@ -1385,7 +1580,6 @@ instance_builtin_tctor(DeeTypeObject *__restrict tp_self,
  return 0;
 err_members:
  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
-err:
  return -1;
 }
 INTERN int DCALL
@@ -1399,7 +1593,7 @@ instance_builtin_tinit(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_init(tp_super,self,argc,argv))
@@ -1426,7 +1620,7 @@ instance_builtin_tinitkw(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Initialize the super-classes. */
- tp_super = DeeType_Base(self);
+ tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
   /* XXX: Keyword arguments in super-constructor calls? */
   if (instance_initsuper_as_initkw(tp_super,self,argc,argv,kw))
@@ -1922,7 +2116,7 @@ INTERN DREF DeeObject *DCALL
 instance_builtin_ge(DeeObject *__restrict self, DeeObject *__restrict other) {
  return instance_builtin_tge(Dee_TYPE(self),self,other);
 }
-PRIVATE struct type_cmp instance_builtin_cmp = {
+INTERN struct type_cmp instance_builtin_cmp = {
     /* .tp_hash = */&instance_builtin_hash,
     /* .tp_eq   = */&instance_builtin_eq,
     /* .tp_ne   = */&instance_builtin_ne,
@@ -1972,6 +2166,10 @@ instance_enumattr(DeeTypeObject *__restrict tp_self,
                   DeeObject *__restrict self,
                   denum_t proc, void *arg) {
  /* Hook function for user-defined enumattr() callbacks! */
+ (void)tp_self;
+ (void)self;
+ (void)proc;
+ (void)arg;
  DERROR_NOTIMPLEMENTED();
  return -1;
 }
@@ -2026,6 +2224,12 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tand,instance_and,OPERATOR_AND)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tor, instance_or, OPERATOR_OR)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_txor,instance_xor,OPERATOR_XOR)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tpow,instance_pow,OPERATOR_POW)
+DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_teq, instance_eq, OPERATOR_EQ)
+DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tne, instance_ne, OPERATOR_NE)
+DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tlo, instance_lo, OPERATOR_LO)
+DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tle, instance_le, OPERATOR_LE)
+DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgr, instance_gr, OPERATOR_GR)
+DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tge, instance_ge, OPERATOR_GE)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tcontains,instance_contains,OPERATOR_CONTAINS)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetitem,instance_getitem,OPERATOR_GETITEM)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetattr,instance_getattr,OPERATOR_GETATTR)
@@ -2227,10 +2431,11 @@ DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tipow,instance_ipow,OPE
 INTERN DREF DeeObject *DCALL
 instance_tstr(DeeTypeObject *__restrict tp_self,
               DeeObject *__restrict self) {
- DeeObject *func,*result;
+ DREF DeeObject *func,*result;
  func = DeeClass_GetOperator(tp_self,OPERATOR_STR);
  if unlikely(!func) goto err;
  result = DeeObject_ThisCall(func,self,0,NULL);
+ Dee_Decref(func);
  if (likely(result) &&
      DeeObject_AssertTypeExact(result,&DeeString_Type))
      goto err_r;
@@ -2247,10 +2452,11 @@ instance_str(DeeObject *__restrict self) {
 INTERN DREF DeeObject *DCALL
 instance_trepr(DeeTypeObject *__restrict tp_self,
                DeeObject *__restrict self) {
- DeeObject *func,*result;
+ DREF DeeObject *func,*result;
  func = DeeClass_GetOperator(tp_self,OPERATOR_REPR);
  if unlikely(!func) goto err;
  result = DeeObject_ThisCall(func,self,0,NULL);
+ Dee_Decref(func);
  if (likely(result) &&
      DeeObject_AssertTypeExact(result,&DeeString_Type))
      goto err_r;
@@ -2265,22 +2471,129 @@ instance_repr(DeeObject *__restrict self) {
  return instance_trepr(Dee_TYPE(self),self);
 }
 
+INTERN DREF DeeObject *DCALL
+instance_tint(DeeTypeObject *__restrict tp_self,
+              DeeObject *__restrict self) {
+ DREF DeeObject *func,*result;
+ func = DeeClass_GetOperator(tp_self,OPERATOR_INT);
+ if unlikely(!func) goto err;
+ result = DeeObject_ThisCall(func,self,0,NULL);
+ Dee_Decref(func);
+ if (likely(result) && DeeObject_AssertTypeExact(result,&DeeInt_Type))
+     goto err_r;
+ return result;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+INTERN DREF DeeObject *DCALL
+instance_int(DeeObject *__restrict self) {
+ return instance_tint(Dee_TYPE(self),self);
+}
 
 INTERN int DCALL
 instance_tbool(DeeTypeObject *__restrict tp_self,
                DeeObject *__restrict self) {
- DeeObject *func,*result; int retval;
+ DREF DeeObject *func,*result; int retval;
  func = DeeClass_GetOperator(tp_self,OPERATOR_BOOL);
- if unlikely(!func) return -1;
+ if unlikely(!func) goto err;
  result = DeeObject_ThisCall(func,self,0,NULL);
- /* XXX: Invocation loop? */
- retval = DeeObject_Bool(result);
+ Dee_Decref(func);
+ if unlikely(!result) goto err;
+ if (DeeObject_AssertTypeExact(result,&DeeBool_Type))
+     goto err;
+ retval = DeeBool_IsTrue(result);
  Dee_Decref(result);
  return retval;
+err:
+ return -1;
 }
 INTERN int DCALL
 instance_bool(DeeObject *__restrict self) {
  return instance_tbool(Dee_TYPE(self),self);
+}
+
+
+INTERN int DCALL
+instance_tint32(DeeTypeObject *__restrict tp_self,
+                DeeObject *__restrict self,
+                int32_t *__restrict result) {
+ DREF DeeObject *intval; int error;
+ intval = instance_tint(tp_self,self);
+ if unlikely(!intval) return -1;
+ error = DeeInt_As32(intval,result);
+ Dee_Decref(intval);
+ return error;
+}
+INTERN int DCALL
+instance_tint64(DeeTypeObject *__restrict tp_self,
+                DeeObject *__restrict self,
+                int64_t *__restrict result) {
+ DREF DeeObject *intval; int error;
+ intval = instance_tint(tp_self,self);
+ if unlikely(!intval) return -1;
+ error = DeeInt_As64(intval,result);
+ Dee_Decref(intval);
+ return error;
+}
+INTERN int DCALL
+instance_tdouble(DeeTypeObject *__restrict tp_self,
+                 DeeObject *__restrict self,
+                 double *__restrict result) {
+ DREF DeeObject *func,*value;
+ func = DeeClass_GetOperator(tp_self,OPERATOR_FLOAT);
+ if unlikely(!func) goto err;
+ value = DeeObject_ThisCall(func,self,0,NULL);
+ if (likely(value) && DeeObject_AssertTypeExact(value,&DeeFloat_Type))
+     goto err_r;
+ *result = DeeFloat_VALUE(value);
+ Dee_Decref(value);
+ return 0;
+err_r:
+ Dee_Decref(value);
+err:
+ return -1;
+}
+INTERN int DCALL
+instance_int32(DeeObject *__restrict self,
+               int32_t *__restrict result) {
+ return instance_tint32(Dee_TYPE(self),self,result);
+}
+INTERN int DCALL
+instance_int64(DeeObject *__restrict self,
+               int64_t *__restrict result) {
+ return instance_tint64(Dee_TYPE(self),self,result);
+}
+INTERN int DCALL
+instance_double(DeeObject *__restrict self,
+                double *__restrict result) {
+ return instance_tdouble(Dee_TYPE(self),self,result);
+}
+
+INTERN dhash_t DCALL
+instance_thash(DeeTypeObject *__restrict tp_self,
+               DeeObject *__restrict self) {
+ DREF DeeObject *func,*result;
+ dhash_t result_value; int temp;
+ func = DeeClass_TryGetOperator(tp_self,OPERATOR_HASH);
+ if unlikely(!func) goto fallback;
+ result = DeeObject_ThisCall(func,self,0,NULL);
+ Dee_Decref(func);
+ if unlikely(!result) goto fallback_handled;
+ temp = DeeObject_AsUIntptr(result,&result_value);
+ Dee_Decref(result);
+ if unlikely(temp) goto fallback_handled;
+ return result_value;
+fallback_handled:
+ DeeError_Print("Unhandled error in `operator hash'\n",
+                ERROR_PRINT_DOHANDLE);
+fallback:
+ return DeeObject_HashGeneric(self);
+}
+INTERN dhash_t DCALL
+instance_hash(DeeObject *__restrict self) {
+ return instance_thash(Dee_TYPE(self),self);
 }
 
 
@@ -2402,7 +2715,7 @@ instance_pclear(DeeObject *__restrict self,
            DeeType_IsClass(tp_self));
 }
 
-PRIVATE struct type_gc instance_gc = {
+INTERN struct type_gc instance_gc = {
     /* .tp_clear  = */&instance_clear,
     /* .tp_pclear = */&instance_pclear,
     /* .tp_gcprio = */GC_PRIORITY_INSTANCE
@@ -2642,9 +2955,6 @@ DeeClass_New(DeeTypeObject *__restrict base,
   result->tp_flags |= TP_FDOCOBJECT;
   Dee_Incref(desc->cd_doc);
  }
- ASSERT(desc->cd_clsop_mask != 0);
- ASSERT(desc->cd_cattr_mask != 0);
- ASSERT(desc->cd_iattr_mask != 0);
 
  /* Determine the memory data size of instances for this class. */
  result->tp_init.tp_alloc.tp_instance_size  = result_class->cd_offset; /* Memory used by base-classes. */
@@ -2680,13 +2990,13 @@ DeeClass_New(DeeTypeObject *__restrict base,
      * of automatically generated operators for the other. */
    case OPERATOR_ASSIGN:
     result->tp_init.tp_assign = &instance_assign;
-    if (result->tp_init.tp_move_assign = &instance_builtin_moveassign)
+    if (result->tp_init.tp_move_assign == &instance_builtin_moveassign)
         result->tp_init.tp_move_assign = NULL;
     break;
 
    case OPERATOR_MOVEASSIGN:
     result->tp_init.tp_move_assign = &instance_moveassign;
-    if (result->tp_init.tp_assign = &instance_builtin_assign)
+    if (result->tp_init.tp_assign == &instance_builtin_assign)
         result->tp_init.tp_assign = NULL;
     break;
 
@@ -2713,7 +3023,7 @@ DeeClass_New(DeeTypeObject *__restrict base,
         goto err_r_base;
     break;
    }
-  } while (++i < desc->cd_clsop_mask);
+  } while (++i <= desc->cd_clsop_mask);
   switch (constructor_features) {
   case FEATURE_CONSTRUCTOR | FEATURE_SUPERARGS:
    result->tp_init.tp_alloc.tp_ctor        = &instance_super_ctor;
@@ -2752,7 +3062,7 @@ delete_on_custom_ctor:
  if (result->tp_init.tp_move_assign == &instance_builtin_moveassign)
      result->tp_flags &= ~TP_FMOVEANY;
  /* Class types automatically inherit constructors from base classes! */
- result->tp_flags &= ~TP_FINHERITCTOR;
+ result->tp_flags &= ~(TP_FINHERITCTOR | TP_FABSTRACT);
  if (result_type_type != &DeeType_Type) {
   /* Initialize custom fields of the underlying type. */
   int error = 0;
@@ -2780,7 +3090,7 @@ err_r_base:
  Dee_XDecref_unlikely(desc->cd_name);
  Dee_XDecref_unlikely(desc->cd_doc);
  Dee_Decref_unlikely(desc);
-err_r:
+/*err_r:*/
  DeeObject_Free(result);
 err:
  return NULL;

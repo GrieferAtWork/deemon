@@ -427,6 +427,7 @@ err:
 }
 
 
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
 PRIVATE bool DCALL
 allow_8bit_memtab(DeeMemberTableObject *__restrict self) {
  struct member_entry *iter,*end;
@@ -519,6 +520,7 @@ dec_putmemtab(DeeMemberTableObject *__restrict self) {
 err:
  return -1;
 }
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 /* Emit a `DTYPE_KWDS', followed by a keywords descriptor. */
 PRIVATE int DCALL
@@ -858,10 +860,12 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
   Dee_XDecref(cell_item);
   return error;
  }
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
  if (tp_self == &DeeMemberTable_Type) {
   /* Emit a member table. */
   return dec_putmemtab((DeeMemberTableObject *)self);
  }
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
  if (tp_self == &DeeKwds_Type) {
   /* Emit a keywords descriptor. */
   return dec_putkwds((DeeKwdsObject *)self);

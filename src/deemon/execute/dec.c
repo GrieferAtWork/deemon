@@ -1068,6 +1068,8 @@ stop_symbolv:
 err: result = -1; goto stop;
 }
 
+
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
 PRIVATE DREF DeeObject *DCALL
 DeeMemberTable_NewSized(size_t vtab_size, uint32_t num_symbols) {
  DREF DeeMemberTableObject *result;
@@ -1110,6 +1112,7 @@ DeeMemberTable_AddSym(DeeObject *__restrict self,
   return item;
  }
 }
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 
 /* @return: * :        A reference to the object that got loaded.
@@ -1255,6 +1258,7 @@ err_function_code:
   DeeGC_Track((DeeObject *)result);
  } break;
 
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
  {
   uint8_t size,*end;
   uint32_t length; char *strtab;
@@ -1283,6 +1287,7 @@ err_function_code:
    member->ca_flag = flags;
   }
  } break;
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  {
   uint32_t i,count;
@@ -1421,6 +1426,7 @@ err_function_code:
    }
   } break;
 
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
   {
    uint8_t *end; char *strtab;
    uint32_t size,length;
@@ -1458,6 +1464,7 @@ err_function_code:
     }
    }
   } break;
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
   case DTYPE16_CELL & 0xff:
    if (*reader == DTYPE_NULL) {
@@ -2331,7 +2338,7 @@ mtime_cache_rehash(void) {
    /* Skip NULL entires. */
    if (!iter->me_file) continue;
    perturb = i = MTIME_ENTRY_HASH(iter) & new_mask;
-   for (;; i = DeeMemberTable_HASHNX(i,perturb),DeeMemberTable_HASHPT(perturb)) {
+   for (;; i = MCACHE_HASHNX(i,perturb),MCACHE_HASHPT(perturb)) {
     item = &new_vector[i & new_mask];
     if (!item->me_file) break; /* Empty slot found. */
    }

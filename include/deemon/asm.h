@@ -591,45 +591,45 @@
 /*      ASM_                  0x6a  *               --------                            - ------------------ */
 /*      ASM_                  0x6b  *               --------                            - ------------------ */
 #else
-#define CLASSGEN_FHASBASE     0x10 /* Class feature flag: the class has a base/super class (type; if unset, use `DeeObject_Type'). */
-#define CLASSGEN_FHASNAME     0x20 /* Class feature flag: the class has a name (string; if unset, use `Dee_EmptyString'). */
-#define CLASSGEN_FHASIMEM     0x40 /* Class feature flag: the class has instance members (member_table; if unset, use `DeeMemberTable_Empty'). */
-#define CLASSGEN_FHASCMEM     0x80 /* Class feature flag: the class has class members (member_table; if unset, use `DeeMemberTable_Empty'). */
-#define CLASSGEN_FMASK        0xf0 /* Mask for class feature flags found in the second byte after one of the `ASM_CLASS*' instructions. */
-/* TODO: Re-work all of the ASM_CLASS* opcodes to better fit their purpose.
- *       e.g.: There should only really be 1 opcode to create a class using
- *             Instance/class table from stack. In normal code, those are
- *             always found as constant variables! */
-#define ASM_CLASS             0x66 /* [2][-n,+1]   `push class $<imm8>, b:pop, n:pop, i:pop, c:pop' - Create a new class and push it onto the stack.
-                                    *                              |       |      |      |      |
-                                    *                              |       |      |      |      +- Class members (Only popped when `CLASSGEN_FHASCMEM' is set)
-                                    *                              |       |      |      +-------- Instance members (Only popped when `CLASSGEN_FHASIMEM' is set)
-                                    *                              |       |      +--------------- Class name (Only popped when `CLASSGEN_FHASCMEM' is set)
-                                    *                              |       +---------------------- Class base (Only popped when `CLASSGEN_FHASBASE' is set)
-                                    *                              +------------------------------ Class features & flags (Set of `(TP_F* & 0xf) | CLASSGEN_F*').
-                                    * Disassembly should automatically hide constructor attributes that are not supported by the class itself.
-                                    * NOTE: Types required for different arguments are always checked
-                                    *       for validity throwing `Error.TypeError' for invalid types. */
-#define ASM_CLASS_C           0x67 /* [6][-0,+1]   `push class $<imm8>, b:const <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>'
-                                    * Similar to `ASM_CLASS', but take arguments (in the same order) from 8-bit immediate constants.
-                                    * Note that this opcode does not provide a 16-bit variant, although an assembler can simply
-                                    * push 16-bit constants onto the stack and make use of the `ASM_CLASS' instruction.
-                                    * It should be noted that immediate arguments are read regardless of the class feature flags
-                                    * used by `ASM_CLASS' to determine if arguments should be popped from the stack. With that in
-                                    * mind, arguments not present in the leading `CLASSGEN_F*' set will not be loaded from constants,
-                                    * and the associated text bytes are simply ignored (and not validated in `CODE_FASSEMBLY' mode).
-                                    * This is done to prevent the rise of variable-length instructions who's actual length cannot
-                                    * easily be determined through use of a lookup table. (NOTE: prefix instructions work
-                                    * differently, which is why they allow for variable-length code to follow) */
-#define ASM_CLASS_CBL         0x68 /* [6][-0,+1]   `push class $<imm8>, b:local <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>'
-                                    * Highly similar to `ASM_CLASS_C', but instead of loading the base-field (should it be present)
-                                    * from a constant variable, it is instead loaded from a local variable.
-                                    * With that in mind, this opcode is here to optimize for the common case
-                                    * of defining multiple related classes consecutively in user-code. */
-#define ASM_CLASS_CBG         0x69 /* [6][-0,+1]   `push class $<imm8>, b:global <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>'
-                                    * Same as `ASM_CLASS_CBL', but use a global variable, rather than a local. */
-#define ASM_DEFMEMBER         0x6a /* [2][-2,+1]   `defmember top, $<imm8>, pop'        - Initialize a class member variable `<imm8>' using a value from the stack. */
-#define ASM_DEFOP             0x6b /* [2][-2,+1]   `defop top, $<imm8>, pop'            - Similar to `ASM_DEFMEMBER', but define an operator instead. */
+// #define CLASSGEN_FHASBASE     0x10 /* Class feature flag: the class has a base/super class (type; if unset, use `DeeObject_Type'). */
+// #define CLASSGEN_FHASNAME     0x20 /* Class feature flag: the class has a name (string; if unset, use `Dee_EmptyString'). */
+// #define CLASSGEN_FHASIMEM     0x40 /* Class feature flag: the class has instance members (member_table; if unset, use `DeeMemberTable_Empty'). */
+// #define CLASSGEN_FHASCMEM     0x80 /* Class feature flag: the class has class members (member_table; if unset, use `DeeMemberTable_Empty'). */
+// #define CLASSGEN_FMASK        0xf0 /* Mask for class feature flags found in the second byte after one of the `ASM_CLASS*' instructions. */
+// /* TODO: Re-work all of the ASM_CLASS* opcodes to better fit their purpose.
+//  *       e.g.: There should only really be 1 opcode to create a class using
+//  *             Instance/class table from stack. In normal code, those are
+//  *             always found as constant variables! */
+// #define ASM_CLASS             0x66 /* [2][-n,+1]   `push class $<imm8>, b:pop, n:pop, i:pop, c:pop' - Create a new class and push it onto the stack.
+//                                     *                              |       |      |      |      |
+//                                     *                              |       |      |      |      +- Class members (Only popped when `CLASSGEN_FHASCMEM' is set)
+//                                     *                              |       |      |      +-------- Instance members (Only popped when `CLASSGEN_FHASIMEM' is set)
+//                                     *                              |       |      +--------------- Class name (Only popped when `CLASSGEN_FHASCMEM' is set)
+//                                     *                              |       +---------------------- Class base (Only popped when `CLASSGEN_FHASBASE' is set)
+//                                     *                              +------------------------------ Class features & flags (Set of `(TP_F* & 0xf) | CLASSGEN_F*').
+//                                     * Disassembly should automatically hide constructor attributes that are not supported by the class itself.
+//                                     * NOTE: Types required for different arguments are always checked
+//                                     *       for validity throwing `Error.TypeError' for invalid types. */
+// #define ASM_CLASS_C           0x67 /* [6][-0,+1]   `push class $<imm8>, b:const <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>'
+//                                     * Similar to `ASM_CLASS', but take arguments (in the same order) from 8-bit immediate constants.
+//                                     * Note that this opcode does not provide a 16-bit variant, although an assembler can simply
+//                                     * push 16-bit constants onto the stack and make use of the `ASM_CLASS' instruction.
+//                                     * It should be noted that immediate arguments are read regardless of the class feature flags
+//                                     * used by `ASM_CLASS' to determine if arguments should be popped from the stack. With that in
+//                                     * mind, arguments not present in the leading `CLASSGEN_F*' set will not be loaded from constants,
+//                                     * and the associated text bytes are simply ignored (and not validated in `CODE_FASSEMBLY' mode).
+//                                     * This is done to prevent the rise of variable-length instructions who's actual length cannot
+//                                     * easily be determined through use of a lookup table. (NOTE: prefix instructions work
+//                                     * differently, which is why they allow for variable-length code to follow) */
+// #define ASM_CLASS_CBL         0x68 /* [6][-0,+1]   `push class $<imm8>, b:local <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>'
+//                                     * Highly similar to `ASM_CLASS_C', but instead of loading the base-field (should it be present)
+//                                     * from a constant variable, it is instead loaded from a local variable.
+//                                     * With that in mind, this opcode is here to optimize for the common case
+//                                     * of defining multiple related classes consecutively in user-code. */
+// #define ASM_CLASS_CBG         0x69 /* [6][-0,+1]   `push class $<imm8>, b:global <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>'
+//                                     * Same as `ASM_CLASS_CBL', but use a global variable, rather than a local. */
+// #define ASM_DEFMEMBER         0x6a /* [2][-2,+1]   `defmember top, $<imm8>, pop'        - Initialize a class member variable `<imm8>' using a value from the stack. */
+// #define ASM_DEFOP             0x6b /* [2][-2,+1]   `defop top, $<imm8>, pop'            - Similar to `ASM_DEFMEMBER', but define an operator instead. */
 #endif
 /*      ASM_                  0x6c  *               --------                            - ------------------ */
 /*      ASM_                  0x6d  *               --------                            - ------------------ */
@@ -1084,14 +1084,14 @@
 /*      ASM_                  0xf06a  *               --------                            - ------------------ */
 /*      ASM_                  0xf06b  *               --------                            - ------------------ */
 #else
-/*      ASM_                  0xf064  *               --------                            - ------------------ */
-/*      ASM_                  0xf065  *               --------                            - ------------------ */
-/*      ASM_                  0xf066  *               --------                            - ------------------ */
-/*      ASM_                  0xf067  *               --------                            - ------------------ */
-/*      ASM_                  0xf068  *               --------                            - ------------------ */
-/*      ASM_                  0xf069  *               --------                            - ------------------ */
-#define ASM16_DEFMEMBER       0xf06a /* [4][-2,+1]   `defmember top, $<imm16>, pop'         - Initialize a class member variable `<imm16>' using a value from the stack. */
-#define ASM16_DEFOP           0xf06b /* [4][-2,+1]   `defop top, $<imm16>, pop'             - Similar to `ASM16_DEFMEMBER', but define an operator instead. */
+// /*      ASM_                  0xf064  *               --------                            - ------------------ */
+// /*      ASM_                  0xf065  *               --------                            - ------------------ */
+// /*      ASM_                  0xf066  *               --------                            - ------------------ */
+// /*      ASM_                  0xf067  *               --------                            - ------------------ */
+// /*      ASM_                  0xf068  *               --------                            - ------------------ */
+// /*      ASM_                  0xf069  *               --------                            - ------------------ */
+// #define ASM16_DEFMEMBER       0xf06a /* [4][-2,+1]   `defmember top, $<imm16>, pop'         - Initialize a class member variable `<imm16>' using a value from the stack. */
+// #define ASM16_DEFOP           0xf06b /* [4][-2,+1]   `defop top, $<imm16>, pop'             - Similar to `ASM16_DEFMEMBER', but define an operator instead. */
 #endif
 /*      ASM_                  0xf06c  *               --------                            - ------------------ */
 /*      ASM_                  0xf06d  *               --------                            - ------------------ */

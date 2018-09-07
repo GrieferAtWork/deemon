@@ -53,7 +53,11 @@ PRIVATE DeeTypeObject *constant_types[] = {
     &DeeString_Type,
     &DeeNone_Type,
     &DeeBool_Type,
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+    &DeeClassDescriptor_Type, /* Required for class declarations. */
+#else
     &DeeMemberTable_Type, /* Required for class declarations. */
+#endif
     &DeeKwds_Type,        /* Required for functions calls with keywords. */
     &DeeCode_Type,        /* Not really, but must count because code objects live in constant slots. */
     &DeeRelInt_Type       /* Required so-as to support constant relocations.

@@ -56,11 +56,13 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
                          struct ascii_printer *__restrict printer) {
  dssize_t temp,result = 0;
  char const *raw_operand_string = NULL;
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
  if (self->io_tag) {
   temp = ascii_printer_printf(printer,"%s:",self->io_tag->k_name);
   if unlikely(temp < 0) goto err;
   result += temp;
  }
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
  if (self->io_class & OPERAND_CLASS_FBRACKETFLAG) {
   if unlikely(ascii_printer_putc(printer,'['))
      goto err_m1;
@@ -567,6 +569,21 @@ retry:
   /* Search for a suitable overload. */
   if (iter->ao_opcount != invoc->ai_opcount) continue;
   /* Match behavioral flags. */
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+#if (INVOKE_FPUSH == ASM_OVERLOAD_FPUSH) && \
+    (INVOKE_FPREFIX == ASM_OVERLOAD_FPREFIX)
+  if ((invoc->ai_flags&(INVOKE_FPUSH|INVOKE_FPREFIX)) !=
+      (iter->ao_flags&(ASM_OVERLOAD_FPUSH|ASM_OVERLOAD_FPREFIX)))
+       continue;
+#else
+  if (!!(invoc->ai_flags&INVOKE_FPUSH) !=
+      !!(iter->ao_flags&ASM_OVERLOAD_FPUSH))
+         continue;
+  if (!!(invoc->ai_flags&INVOKE_FPREFIX) !=
+      !!(iter->ao_flags&ASM_OVERLOAD_FPREFIX))
+         continue;
+#endif
+#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
 #if (INVOKE_FPUSH == ASM_OVERLOAD_FPUSH) && \
     (INVOKE_FPREFIX == ASM_OVERLOAD_FPREFIX) && \
     (INVOKE_FOPTAGS == ASM_OVERLOAD_FTAGS)
@@ -584,6 +601,7 @@ retry:
       !!(iter->ao_flags&ASM_OVERLOAD_FTAGS))
          continue;
 #endif
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
   /* Make sure that read-only prefix operands can only
    * be used with read-only prefix instructions. */
   if (!(iter->ao_flags&ASM_OVERLOAD_FPREFIX_RO) &&
@@ -935,7 +953,9 @@ do_emit_symid_816:
    default: break;
    }
   }
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
 done_instruction:
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
   /* Save the last-written instruction. */
   current_userasm.ua_lasti = iter->ao_instr;
 

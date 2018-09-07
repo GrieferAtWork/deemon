@@ -8082,23 +8082,17 @@ prefix_target_cmp_gr = prefix_invop
 .ifndef prefix_target_cmp_ge
 prefix_target_cmp_ge = prefix_invop
 .endif
-.ifndef prefix_target_class
-prefix_target_class = prefix_invop
-.endif
 .ifndef prefix_target_class_c
 prefix_target_class_c = prefix_invop
 .endif
-.ifndef prefix_target_class_cbl
-prefix_target_class_cbl = prefix_invop
+.ifndef prefix_target_class_gc
+prefix_target_class_gc = prefix_invop
 .endif
-.ifndef prefix_target_class_cbg
-prefix_target_class_cbg = prefix_invop
+.ifndef prefix_target_class_ec
+prefix_target_class_ec = prefix_invop
 .endif
 .ifndef prefix_target_defmember
 prefix_target_defmember = prefix_invop
-.endif
-.ifndef prefix_target_defop
-prefix_target_defop = prefix_invop
 .endif
 .ifndef prefix_target_function_c
 prefix_target_function_c = prefix_invop
@@ -8634,11 +8628,20 @@ prefix_target16_pack_hashset = prefix_invop
 .ifndef prefix_target16_pack_dict
 prefix_target16_pack_dict = prefix_invop
 .endif
+.ifndef prefix_target_class
+prefix_target_class = prefix_invop
+.endif
+.ifndef prefix_target16_class_c
+prefix_target16_class_c = prefix_invop
+.endif
+.ifndef prefix_target16_class_gc
+prefix_target16_class_gc = prefix_invop
+.endif
+.ifndef prefix_target16_class_ec
+prefix_target16_class_ec = prefix_invop
+.endif
 .ifndef prefix_target16_defmember
 prefix_target16_defmember = prefix_invop
-.endif
-.ifndef prefix_target16_defop
-prefix_target16_defop = prefix_invop
 .endif
 .ifndef prefix_target16_function_c
 prefix_target16_function_c = prefix_invop
@@ -8920,12 +8923,12 @@ inst_table:
 	.long target_cmp_le                  /* `cmp le, top, pop' */
 	.long target_cmp_gr                  /* `cmp gr, top, pop' */
 	.long target_cmp_ge                  /* `cmp ge, top, pop' */
-	.long target_class                   /* `push class $<imm8>, b:pop, n:pop, i:pop, c:pop' */
-	.long target_class_c                 /* `push class $<imm8>, b:const <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-	.long target_class_cbl               /* `push class $<imm8>, b:local <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-	.long target_class_cbg               /* `push class $<imm8>, b:global <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
+	.long target_class_c                 /* `class top, const <imm8>' */
+	.long target_class_gc                /* `push class global <imm8>, const <imm8>' */
+	.long target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */
 	.long target_defmember               /* `defmember top, $<imm8>, pop' */
-	.long target_defop                   /* `defop top, $<imm8>, pop' */
+	.long invop
+	.long invop
 	.long invop
 	.long invop
 	.long target_function_c              /* `push function const <imm8>, #<imm8>+1' */
@@ -9177,13 +9180,13 @@ inst_table_f0:
 	.long target16_pack_hashset          /* `push pack hashset, #<imm16>' */
 	.long target16_pack_dict             /* `push pack dict, #<imm16>*2' */
 	.long invop
-	.long invop
-	.long invop
-	.long invop
-	.long invop
-	.long invop
+	.long target_class                   /* `class top, pop' */
+	.long target16_class_c               /* `class top, const <imm16>' */
+	.long target16_class_gc              /* `push class global <imm16>, const <imm16>' */
+	.long target16_class_ec              /* `push class extern <imm16>:<imm16>, const <imm16>' */
 	.long target16_defmember             /* `defmember top, $<imm16>, pop' */
-	.long target16_defop                 /* `defop top, $<imm16>, pop' */
+	.long invop
+	.long invop
 	.long invop
 	.long invop
 	.long target16_function_c            /* `push function const <imm16>, #<imm8>+1' */
@@ -9436,12 +9439,12 @@ prefix_inst_table:
 	.long prefix_target_cmp_le                  /* `cmp le, top, pop' */
 	.long prefix_target_cmp_gr                  /* `cmp gr, top, pop' */
 	.long prefix_target_cmp_ge                  /* `cmp ge, top, pop' */
-	.long prefix_target_class                   /* `push class $<imm8>, b:pop, n:pop, i:pop, c:pop' */
-	.long prefix_target_class_c                 /* `push class $<imm8>, b:const <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-	.long prefix_target_class_cbl               /* `push class $<imm8>, b:local <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-	.long prefix_target_class_cbg               /* `push class $<imm8>, b:global <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
+	.long prefix_target_class_c                 /* `class top, const <imm8>' */
+	.long prefix_target_class_gc                /* `push class global <imm8>, const <imm8>' */
+	.long prefix_target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */
 	.long prefix_target_defmember               /* `defmember top, $<imm8>, pop' */
-	.long prefix_target_defop                   /* `defop top, $<imm8>, pop' */
+	.long prefix_invop
+	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target_function_c              /* `push function const <imm8>, #<imm8>+1' */
@@ -9693,13 +9696,13 @@ prefix_inst_table_f0:
 	.long prefix_target16_pack_hashset          /* `push pack hashset, #<imm16>' */
 	.long prefix_target16_pack_dict             /* `push pack dict, #<imm16>*2' */
 	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
+	.long prefix_target_class                   /* `class top, pop' */
+	.long prefix_target16_class_c               /* `class top, const <imm16>' */
+	.long prefix_target16_class_gc              /* `push class global <imm16>, const <imm16>' */
+	.long prefix_target16_class_ec              /* `push class extern <imm16>:<imm16>, const <imm16>' */
 	.long prefix_target16_defmember             /* `defmember top, $<imm16>, pop' */
-	.long prefix_target16_defop                 /* `defop top, $<imm16>, pop' */
+	.long prefix_invop
+	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target16_function_c            /* `push function const <imm16>, #<imm8>+1' */

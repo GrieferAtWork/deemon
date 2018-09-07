@@ -752,6 +752,9 @@
     <ClCompile Include="..\src\deemon\objects\class2_desc.c">
       <Filter>src\deemon\objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genclass.c">
+      <Filter>src\deemon\compiler\asm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">

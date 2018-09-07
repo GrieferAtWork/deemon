@@ -24,6 +24,7 @@
 #include <deemon/dex.h>
 #include <deemon/object.h>
 #include <deemon/code.h>
+#include <deemon/class.h>
 #include <deemon/string.h>
 #include <deemon/format.h>
 #include <hybrid/minmax.h>
@@ -430,6 +431,146 @@ err:
 }
 
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+struct typeflag {
+    char     name[14];
+    uint16_t mask;
+};
+
+PRIVATE struct typeflag const typeflags[] = {
+    { "final", TP_FFINAL },
+    { "truncate", TP_FTRUNCATE },
+    { "interrupt", TP_FINTERRUPT },
+    { "moveany", TP_FMOVEANY },
+};
+
+struct attributeflag {
+    char     name[14];
+    uint16_t mask;
+};
+
+PRIVATE struct attributeflag const attributeflags[] = {
+    { "private", CLASS_ATTRIBUTE_FPRIVATE },
+    { "readonly", CLASS_ATTRIBUTE_FREADONLY },
+    { "method", CLASS_ATTRIBUTE_FMETHOD },
+    { "getset", CLASS_ATTRIBUTE_FGETSET },
+    { "classmem", CLASS_ATTRIBUTE_FCLASSMEM },
+};
+
+INTERN dssize_t DCALL
+libdisasm_printclassattribute(dformatprinter printer, void *arg,
+                              struct class_attribute *__restrict self,
+                              char const *line_prefix, uint16_t addr_size) {
+ dssize_t temp,result; unsigned int i;
+#define DO(x) do{if((temp=(x))<0)goto err;result+=temp;}__WHILE0
+ result = Dee_FormatPrintf(printer,arg,
+                           "%s        attribute %k, %I16u",
+                           line_prefix,self->ca_name,
+                           self->ca_addr);
+ if unlikely(result < 0) goto done;
+ for (i = 0; i < COMPILER_LENOF(attributeflags); ++i) {
+  if (!(self->ca_flag & attributeflags[i].mask)) continue;
+  DO(Dee_FormatPrintf(printer,arg,", @%s",attributeflags[i].name));
+ }
+ if (self->ca_addr >= addr_size)
+     DO(Dee_FormatPRINT(printer,arg," /* Invalid address */"));
+ if (self->ca_flag & ~CLASS_ATTRIBUTE_FMASK)
+  DO(Dee_FormatPrintf(printer,arg," /* Invalid flags %#I16x */",self->ca_flag));
+ DO((*printer)(arg,"\n",1));
+done:
+ return result;
+err:
+ return temp;
+#undef DO
+}
+INTERN dssize_t DCALL
+libdisasm_printclass(dformatprinter printer, void *arg,
+                     DeeClassDescriptorObject *__restrict self,
+                     size_t const_index, char const *line_prefix) {
+ dssize_t temp,result; size_t i;
+#define DO(x) do{if((temp=(x))<0)goto err;result+=temp;}__WHILE0
+ if (!line_prefix) line_prefix = "";
+ result = Dee_FormatPrintf(printer,arg,
+                           "%s.const %Iu = class %k%s{\n"
+                           "%s    /* INSTANCESIZE = %I16u */\n"
+                           "%s    /* CLASSSIZE    = %I16u */\n",
+                           line_prefix,const_index,
+                           self->cd_name ? self->cd_name : (DeeStringObject *)Dee_EmptyString,
+                           self->cd_name ? " " : "",
+                           line_prefix,self->cd_imemb_size,
+                           line_prefix,self->cd_cmemb_size);
+ if unlikely(result < 0) goto done;
+ for (i = 0; i < COMPILER_LENOF(typeflags); ++i) {
+  if (!(self->cd_flags & typeflags[i].mask)) continue;
+  DO(Dee_FormatPrintf(printer,arg,
+                      "%s    @%s\n",
+                      line_prefix,
+                      typeflags[i].name));
+ }
+ {
+  bool has_operators = false;
+  for (i = 0; i <= self->cd_clsop_mask; ++i) {
+   struct opinfo *info;
+   if (self->cd_clsop_list[i].co_name == (uint16_t)-1)
+       continue;
+   if (!has_operators) {
+    DO(Dee_FormatPrintf(printer,arg,"%s    operators = {\n",line_prefix));
+    has_operators = true;
+   }
+   info = Dee_OperatorInfo(NULL,self->cd_clsop_list[i].co_name);
+   if (info) {
+    DO(Dee_FormatPrintf(printer,arg,"%s        %s = %I16u\n",
+                        line_prefix,info->oi_sname,
+                        self->cd_clsop_list[i].co_addr));
+   } else {
+    DO(Dee_FormatPrintf(printer,arg,"%s        %#I16x = %I16u\n",
+                        line_prefix,
+                        self->cd_clsop_list[i].co_name,
+                        self->cd_clsop_list[i].co_addr));
+   }
+  }
+  if (has_operators)
+      DO(Dee_FormatPrintf(printer,arg,"%s    }\n",line_prefix));
+ }
+ {
+  bool has_class_attributes = false;
+  for (i = 0; i <= self->cd_cattr_mask; ++i) {
+   struct class_attribute *attr;
+   attr = &self->cd_cattr_list[i];
+   if (!attr->ca_name) continue;
+   if (!has_class_attributes) {
+    DO(Dee_FormatPrintf(printer,arg,"%s    class_attributes = {\n",line_prefix));
+    has_class_attributes = true;
+   }
+   DO(libdisasm_printclassattribute(printer,arg,attr,line_prefix,self->cd_cmemb_size));
+  }
+  if (has_class_attributes)
+      DO(Dee_FormatPrintf(printer,arg,"%s    }\n",line_prefix));
+ }
+ {
+  bool has_instance_attributes = false;
+  for (i = 0; i <= self->cd_iattr_mask; ++i) {
+   struct class_attribute *attr;
+   attr = &self->cd_iattr_list[i];
+   if (!attr->ca_name) continue;
+   if (!has_instance_attributes) {
+    DO(Dee_FormatPrintf(printer,arg,"%s    instance_attributes = {\n",line_prefix));
+    has_instance_attributes = true;
+   }
+   DO(libdisasm_printclassattribute(printer,arg,attr,line_prefix,self->cd_imemb_size));
+  }
+  if (has_instance_attributes)
+      DO(Dee_FormatPrintf(printer,arg,"%s    }\n",line_prefix));
+ }
+ DO(Dee_FormatPrintf(printer,arg,"%s}\n",line_prefix));
+done:
+ return result;
+err:
+ return temp;
+#undef DO
+}
+#endif
+
 
 INTERN dssize_t DCALL
 libdisasm_printcode(dformatprinter printer, void *arg,
@@ -708,8 +849,22 @@ prefix_except_prefix:
    char const *kind = "code";
    inner_code = (DREF DeeCodeObject *)code->co_staticv[i];
    if (!DeeCode_Check(inner_code)) {
-    if (!DeeFunction_Check(inner_code))
-         continue;
+    if (!DeeFunction_Check(inner_code)) {
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+     if (DeeClassDescriptor_Check(inner_code)) {
+      Dee_Incref(inner_code);
+      rwlock_endread(&code->co_static_lock);
+      temp = libdisasm_printclass(printer,arg,
+                                 (DeeClassDescriptorObject *)inner_code,
+                                  i,line_prefix);
+      Dee_Decref(inner_code);
+      if unlikely(temp < 0) goto err;
+      result += temp;
+      rwlock_read(&code->co_static_lock);
+     }
+#endif
+     continue;
+    }
     inner_code = ((DREF DeeFunctionObject *)inner_code)->fo_code;
     kind = "function";
    }

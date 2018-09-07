@@ -3040,8 +3040,10 @@ PRIVATE struct class_member *DCALL
 find_class_member(struct ast *__restrict self, uint16_t index) {
  size_t i;
  for (i = 0; i < self->a_class.c_memberc; ++i) {
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
   if (self->a_class.c_memberv[i].cm_type != CLASS_MEMBER_MEMBER)
       continue;
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
   if (self->a_class.c_memberv[i].cm_index != index)
       continue;
   return &self->a_class.c_memberv[i];
@@ -3934,6 +3936,241 @@ operator_fallback:
   }
   break;
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ {
+  size_t i;
+  DeeClassDescriptorObject *desc;
+ case AST_CLASS:
+  if (!is_scope && is_expression) goto force_scope;
+  need_semicolon = false;
+  if (self->a_class.c_desc->a_type != AST_CONSTEXPR ||
+     !DeeClassDescriptor_Check(self->a_class.c_desc->a_constexpr)) {
+   PRINT("class <");
+   DO(print_ast_code(self->a_class.c_desc,printer,arg,true,self->a_scope,indent));
+   PRINT(">");
+   if (self->a_class.c_base) {
+    PRINT(": ");
+    DO(print_ast_code(self->a_class.c_base,printer,arg,true,self->a_scope,indent));
+   }
+   PRINT(" {\n");
+   ++indent;
+   for (i = 0; i < self->a_class.c_memberc; ++i) {
+    DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
+    printf("<member(%I16u)> = ",self->a_class.c_memberv[i].cm_index);
+    DO(print_ast_code(self->a_class.c_memberv[i].cm_ast,printer,arg,true,self->a_scope,indent));
+    PRINT("\n");
+   }
+   DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
+   PRINT("}");
+   break;
+  }
+  desc = (DeeClassDescriptorObject *)self->a_class.c_desc->a_constexpr;
+  if (desc->cd_doc) {
+   PRINT("@");
+   DO(DeeObject_PrintRepr((DeeObject *)desc->cd_doc,printer,arg));
+   PRINT("\n");
+  }
+  PRINT("class ");
+  if (desc->cd_name) {
+   PRINT(" ");
+   DO(DeeObject_Print((DeeObject *)desc->cd_name,printer,arg));
+  }
+  if (self->a_class.c_base) {
+   PRINT(": ");
+   DO(print_ast_code(self->a_class.c_base,printer,arg,true,self->a_scope,indent));
+  }
+  PRINT(" {\n");
+  ++indent;
+  /* Print the contents of the instance member table. */
+  for (i = 0; i <= desc->cd_iattr_mask; ++i) {
+   struct class_attribute *attr;
+   attr = &desc->cd_iattr_list[i];
+   if (!attr->ca_name) continue;
+   if (attr->ca_doc) {
+    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    PRINT("@");
+    DO(DeeObject_PrintRepr((DeeObject *)attr->ca_doc,printer,arg));
+    PRINT("\n");
+   }
+   DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+   if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+       PRINT("private ");
+   if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+        PRINT("@readonly ");
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+        PRINT("@method ");
+    printf("member %k;\n",attr->ca_name);
+   } else if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+    struct class_member *functions[3]; size_t i;
+    /* Instance-property (with its callbacks saved as part of the class) */
+    functions[1] = functions[2] = NULL;
+    functions[0] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_GET);
+    if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+     functions[1] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_DEL);
+     functions[2] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_SET);
+    }
+    printf("property %k = {\n",attr->ca_name);
+    ++indent;
+    for (i = 0; i < 3; ++i) {
+     if (!functions[i]) continue;
+     DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+     print(property_names[i],3);
+     if (functions[i]->cm_ast->a_type == AST_FUNCTION &&
+         is_instance_method(functions[i]->cm_ast->a_function.f_scope,
+                            self->a_class.c_classsym,
+                            self->a_class.c_supersym)) {
+      DO(print_function_atargs(functions[i]->cm_ast,printer,arg,indent,false));
+     } else {
+      PRINT(" = ");
+      DO(print_ast_code(functions[i]->cm_ast,printer,arg,true,self->a_scope,indent));
+      PRINT(";");
+     }
+     PRINT("\n");
+    }
+    --indent;
+    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    PRINT("}\n");
+   } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+    struct class_member *method;
+    /* Instance-method (that is saved within the class) */
+    method = find_class_member(self,attr->ca_addr);
+    if unlikely(!method) goto instance_member_in_class;
+    if unlikely(method->cm_ast->a_type != AST_FUNCTION) goto instance_member_in_class;
+    if (!is_instance_method(method->cm_ast->a_function.f_scope,
+                            self->a_class.c_classsym,
+                            self->a_class.c_supersym))
+        goto instance_member_in_class;
+    printf("function %k",attr->ca_name);
+    DO(print_function_atargs(method->cm_ast,printer,arg,indent,false));
+    PRINT("\n");
+   } else {
+    struct class_member *member;
+    /* An instance-member that is saved within the class??? */
+instance_member_in_class:
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+        PRINT("@method ");
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+        PRINT("@readonly ");
+    printf("<instance-memory-in-class-table %k",attr->ca_name);
+    member = find_class_member(self,attr->ca_addr);
+    if (member) {
+     PRINT(" = ");
+     DO(print_ast_code(member->cm_ast,printer,arg,true,self->a_scope,indent));
+    }
+    PRINT(">\n");
+   }
+  }
+  /* Print the contents of the class member table. */
+  for (i = 0; i <= desc->cd_cattr_mask; ++i) {
+   struct class_attribute *attr;
+   attr = &desc->cd_cattr_list[i];
+   if (!attr->ca_name) continue;
+   if (attr->ca_doc) {
+    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    PRINT("@");
+    DO(DeeObject_PrintRepr((DeeObject *)attr->ca_doc,printer,arg));
+    PRINT("\n");
+   }
+   DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+   if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+       PRINT("private ");
+   if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+    struct class_member *functions[3]; size_t i;
+    /* Instance-property (with its callbacks saved as part of the class) */
+    functions[1] = functions[2] = NULL;
+    functions[0] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_GET);
+    if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+     functions[1] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_DEL);
+     functions[2] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_SET);
+    }
+    printf("class property %k = {\n",attr->ca_name);
+    ++indent;
+    for (i = 0; i < 3; ++i) {
+     if (!functions[i]) continue;
+     DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+     print(property_names[i],3);
+     if (functions[i]->cm_ast->a_type == AST_FUNCTION) {
+      DO(print_function_atargs(functions[i]->cm_ast,printer,arg,indent,true));
+     } else {
+      PRINT(" = ");
+      DO(print_ast_code(functions[i]->cm_ast,printer,arg,true,self->a_scope,indent));
+      PRINT(";");
+     }
+     PRINT("\n");
+    }
+    --indent;
+    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    PRINT("}\n");
+   } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+    struct class_member *method;
+    /* Instance-method (that is saved within the class) */
+    method = find_class_member(self,attr->ca_addr);
+    if unlikely(!method) goto class_member_in_class;
+    if unlikely(method->cm_ast->a_type != AST_FUNCTION) goto class_member_in_class;
+    printf("class function %k",attr->ca_name);
+    DO(print_function_atargs(method->cm_ast,printer,arg,indent,true));
+    PRINT("\n");
+   } else {
+    struct class_member *member;
+    /* An instance-member that is saved within the class??? */
+class_member_in_class:
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+        PRINT("@method ");
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+        PRINT("@readonly ");
+    printf("class member %k",attr->ca_name);
+    member = find_class_member(self,attr->ca_addr);
+    if (member) {
+     PRINT(" = ");
+     DO(print_ast_code(member->cm_ast,printer,arg,true,self->a_scope,indent));
+    }
+    PRINT(";\n");
+   }
+  }
+
+  /* Print class operators. */
+  for (i = 0; i <= desc->cd_clsop_mask; ++i) {
+   struct class_member *member; struct opinfo *info;
+   struct class_operator *op = &desc->cd_clsop_list[i];
+   if (op->co_name == (uint16_t)-1) continue;
+   member = find_class_member(self,op->co_addr);
+   DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+   if (op->co_name == OPERATOR_CONSTRUCTOR &&
+       member && member->cm_ast->a_type == AST_FUNCTION) {
+    PRINT("this");
+   } else if (op->co_name == OPERATOR_DESTRUCTOR &&
+              member && member->cm_ast->a_type == AST_FUNCTION) {
+    PRINT("~this");
+   } else {
+    PRINT("operator ");
+    info = Dee_OperatorInfo(NULL,op->co_name);
+    if (info) {
+     printf("%s",info->oi_sname);
+    } else {
+     printf("%I16u",op->co_name);
+    }
+   }
+   if (member) {
+    if (member->cm_ast->a_type == AST_FUNCTION &&
+        is_instance_method(member->cm_ast->a_function.f_scope,
+                           self->a_class.c_classsym,
+                           self->a_class.c_supersym)) {
+     DO(print_function_atargs(member->cm_ast,printer,arg,indent,false));
+    } else {
+     PRINT(" = ");
+     DO(print_ast_code(member->cm_ast,printer,arg,true,self->a_scope,indent));
+     PRINT(";");
+    }
+   } else {
+    PRINT(";");
+   }
+   PRINT("\n");
+  }
+  DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
+  PRINT("}");
+ } break;
+#else
  {
   size_t i;
  case AST_CLASS:
@@ -4011,19 +4248,19 @@ operator_fallback:
        struct class_member *method;
        /* Instance-method (that is saved within the class) */
        method = find_class_member(self,entry->cme_addr);
-       if unlikely(!method) goto instane_member_in_class;
-       if unlikely(method->cm_ast->a_type != AST_FUNCTION) goto instane_member_in_class;
+       if unlikely(!method) goto instance_member_in_class;
+       if unlikely(method->cm_ast->a_type != AST_FUNCTION) goto instance_member_in_class;
        if (!is_instance_method(method->cm_ast->a_function.f_scope,
                                self->a_class.c_classsym,
                                self->a_class.c_supersym))
-           goto instane_member_in_class;
+           goto instance_member_in_class;
        printf("function %k",entry->cme_name);
        DO(print_function_atargs(method->cm_ast,printer,arg,indent,false));
        PRINT("\n");
       } else {
        struct class_member *member;
        /* An instance-member that is saved within the class??? */
-instane_member_in_class:
+instance_member_in_class:
        if (entry->ca_flag & CLASS_MEMBER_FMETHOD)
            PRINT("@method ");
        if (entry->ca_flag & CLASS_MEMBER_FREADONLY)
@@ -4158,6 +4395,7 @@ class_member_in_class:
   DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
   PRINT("}");
  } break;
+#endif
 
  case AST_LABEL:
   if (self->a_flag & AST_FLABEL_CASE) {

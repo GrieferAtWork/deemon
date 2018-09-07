@@ -46,8 +46,14 @@
 
 DECL_BEGIN
 
+
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+#define class_getattr      instance_tgetattr
+#define class_wrap_getattr instance_getattr
+#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
 INTDEF DREF DeeObject *DCALL class_getattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict attr);
 INTDEF DREF DeeObject *DCALL class_wrap_getattr(DeeObject *__restrict self, DeeObject *__restrict attr);
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 
 
@@ -73,8 +79,13 @@ has_generic_attribute(DeeTypeObject *__restrict tp_self,
  } else {
   char *name = DeeString_STR(attr);
   dhash_t hash = DeeString_Hash(attr);
-  if (DeeType_IsClass(tp_self))
-      return membertable_lookup_string(DeeClass_DESC(tp_self)->c_mem,name,hash) != NULL ? 1 : 0;
+  if (DeeType_IsClass(tp_self)) {
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+   return DeeClass_QueryInstanceAttributeStringWithHash(tp_self,name,hash) != NULL ? 1 : 0;
+#else
+   return membertable_lookup_string(DeeClass_DESC(tp_self)->c_mem,name,hash) != NULL ? 1 : 0;
+#endif
+  }
   cache = &tp_self->tp_cache;
 #if 0 /* Don't use the cache, which may contain members from lower-level types! */
   if (membercache_hasattr(cache,name,hash))
@@ -117,12 +128,22 @@ vcall_generic_attribute(DeeTypeObject *__restrict tp_self,
    DREF DeeObject *args_tuple;
    args_tuple = DeeTuple_VNewf(format,args);
    if unlikely(!args_tuple) goto err;
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+   result = DeeInstance_CallAttribute(tp_self,
+                                      DeeInstance_DESC(desc,
+                                                       self),
+                                      self,
+                                      member,
+                                      DeeTuple_SIZE(args_tuple),
+                                      DeeTuple_ELEM(args_tuple));
+#else
    result = member_call(tp_self,
                         DeeInstance_DESC(desc,self),
                         self,
                         member,
                         DeeTuple_SIZE(args_tuple),
                         DeeTuple_ELEM(args_tuple));
+#endif
    Dee_Decref(args_tuple);
    return result;
   }
@@ -175,12 +196,20 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
   struct member_entry *member;
   struct class_desc *desc = DeeClass_DESC(tp_self);
   if ((member = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
-                                          DeeString_STR(name),
-                                          hash)) != NULL) {
+                                                                  DeeString_STR(name),
+                                                                  hash)) != NULL) {
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+   return DeeInstance_GetAttribute(tp_self,
+                                   DeeInstance_DESC(desc,
+                                                    self),
+                                   self,
+                                   member);
+#else
    return member_get(tp_self,
                      DeeInstance_DESC(desc,self),
                      self,
                      member);
+#endif
   }
   result = ITER_DONE;
  } else {

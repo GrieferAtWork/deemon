@@ -225,12 +225,12 @@ PRIVATE uint8_t const intr_len[256] = {
     /* 0x63 */ 1, /* `ASM_CMP_LE':                  `cmp le, top, pop' */
     /* 0x64 */ 1, /* `ASM_CMP_GR':                  `cmp gr, top, pop' */
     /* 0x65 */ 1, /* `ASM_CMP_GE':                  `cmp ge, top, pop' */
-    /* 0x66 */ 2, /* `ASM_CLASS':                   `push class $<imm8>, b:pop, n:pop, i:pop, c:pop' */
-    /* 0x67 */ 6, /* `ASM_CLASS_C':                 `push class $<imm8>, b:const <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-    /* 0x68 */ 6, /* `ASM_CLASS_CBL':               `push class $<imm8>, b:local <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-    /* 0x69 */ 6, /* `ASM_CLASS_CBG':               `push class $<imm8>, b:global <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-    /* 0x6a */ 2, /* `ASM_DEFMEMBER':               `defmember top, $<imm8>, pop' */
-    /* 0x6b */ 2, /* `ASM_DEFOP':                   `defop top, $<imm8>, pop' */
+    /* 0x66 */ 2, /* `ASM_CLASS_C':                 `class top, const <imm8>' */
+    /* 0x67 */ 3, /* `ASM_CLASS_GC':                `push class global <imm8>, const <imm8>' */
+    /* 0x68 */ 4, /* `ASM_CLASS_EC':                `push class extern <imm8>:<imm8>, const <imm8>' */
+    /* 0x69 */ 2, /* `ASM_DEFMEMBER':               `defmember top, $<imm8>, pop' */
+    /* 0x6a */ 1, /* --- */
+    /* 0x6b */ 1, /* --- */
     /* 0x6c */ 1, /* --- */
     /* 0x6d */ 1, /* --- */
     /* 0x6e */ 3, /* `ASM_FUNCTION_C':              `push function const <imm8>, #<imm8>+1' */
@@ -482,13 +482,13 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0x62 */ 4, /* `ASM16_PACK_HASHSET':          `push pack hashset, #<imm16>' */
     /* 0x63 */ 4, /* `ASM16_PACK_DICT':             `push pack dict, #<imm16>*2' */
     /* 0x64 */ 2, /* --- */
-    /* 0x65 */ 2, /* --- */
-    /* 0x66 */ 2, /* --- */
-    /* 0x67 */ 2, /* --- */
-    /* 0x68 */ 2, /* --- */
-    /* 0x69 */ 2, /* --- */
-    /* 0x6a */ 4, /* `ASM16_DEFMEMBER':             `defmember top, $<imm16>, pop' */
-    /* 0x6b */ 4, /* `ASM16_DEFOP':                 `defop top, $<imm16>, pop' */
+    /* 0x65 */ 2, /* `ASM_CLASS':                   `class top, pop' */
+    /* 0x66 */ 4, /* `ASM16_CLASS_C':               `class top, const <imm16>' */
+    /* 0x67 */ 6, /* `ASM16_CLASS_GC':              `push class global <imm16>, const <imm16>' */
+    /* 0x68 */ 8, /* `ASM16_CLASS_EC':              `push class extern <imm16>:<imm16>, const <imm16>' */
+    /* 0x69 */ 4, /* `ASM16_DEFMEMBER':             `defmember top, $<imm16>, pop' */
+    /* 0x6a */ 2, /* --- */
+    /* 0x6b */ 2, /* --- */
     /* 0x6c */ 2, /* --- */
     /* 0x6d */ 2, /* --- */
     /* 0x6e */ 5, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>+1' */
@@ -741,12 +741,12 @@ PRIVATE uint8_t const stack_effect[256] = {
     /* 0x63 */ STACK_EFFECT(2,1),  /* `ASM_CMP_LE':                  `cmp le, top, pop' */
     /* 0x64 */ STACK_EFFECT(2,1),  /* `ASM_CMP_GR':                  `cmp gr, top, pop' */
     /* 0x65 */ STACK_EFFECT(2,1),  /* `ASM_CMP_GE':                  `cmp ge, top, pop' */
-    /* 0x66 */ STACK_EFFECT_UNDEF, /* `ASM_CLASS':                   `push class $<imm8>, b:pop, n:pop, i:pop, c:pop' */
-    /* 0x67 */ STACK_EFFECT(0,1),  /* `ASM_CLASS_C':                 `push class $<imm8>, b:const <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-    /* 0x68 */ STACK_EFFECT(0,1),  /* `ASM_CLASS_CBL':               `push class $<imm8>, b:local <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-    /* 0x69 */ STACK_EFFECT(0,1),  /* `ASM_CLASS_CBG':               `push class $<imm8>, b:global <imm8>, n:const <imm8>, i:const <imm8>, c:const <imm8>' */
-    /* 0x6a */ STACK_EFFECT(2,1),  /* `ASM_DEFMEMBER':               `defmember top, $<imm8>, pop' */
-    /* 0x6b */ STACK_EFFECT(2,1),  /* `ASM_DEFOP':                   `defop top, $<imm8>, pop' */
+    /* 0x66 */ STACK_EFFECT(1,1),  /* `ASM_CLASS_C':                 `class top, const <imm8>' */
+    /* 0x67 */ STACK_EFFECT(0,1),  /* `ASM_CLASS_GC':                `push class global <imm8>, const <imm8>' */
+    /* 0x68 */ STACK_EFFECT(0,1),  /* `ASM_CLASS_EC':                `push class extern <imm8>:<imm8>, const <imm8>' */
+    /* 0x69 */ STACK_EFFECT(2,1),  /* `ASM_DEFMEMBER':               `defmember top, $<imm8>, pop' */
+    /* 0x6a */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x6b */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6c */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6d */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6e */ STACK_EFFECT_UNDEF, /* `ASM_FUNCTION_C':              `push function const <imm8>, #<imm8>+1' */
@@ -998,13 +998,13 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0x62 */ STACK_EFFECT_UNDEF, /* `ASM16_PACK_HASHSET':          `push pack hashset, #<imm16>' */
     /* 0x63 */ STACK_EFFECT_UNDEF, /* `ASM16_PACK_DICT':             `push pack dict, #<imm16>*2' */
     /* 0x64 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x65 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x66 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x67 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x68 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x69 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x6a */ STACK_EFFECT(2,1),  /* `ASM16_DEFMEMBER':             `defmember top, $<imm16>, pop' */
-    /* 0x6b */ STACK_EFFECT(2,1),  /* `ASM16_DEFOP':                 `defop top, $<imm16>, pop' */
+    /* 0x65 */ STACK_EFFECT(2,1),  /* `ASM_CLASS':                   `class top, pop' */
+    /* 0x66 */ STACK_EFFECT(1,1),  /* `ASM16_CLASS_C':               `class top, const <imm16>' */
+    /* 0x67 */ STACK_EFFECT(0,1),  /* `ASM16_CLASS_GC':              `push class global <imm16>, const <imm16>' */
+    /* 0x68 */ STACK_EFFECT(0,1),  /* `ASM16_CLASS_EC':              `push class extern <imm16>:<imm16>, const <imm16>' */
+    /* 0x69 */ STACK_EFFECT(2,1),  /* `ASM16_DEFMEMBER':             `defmember top, $<imm16>, pop' */
+    /* 0x6a */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x6b */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6c */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6d */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6e */ STACK_EFFECT_UNDEF, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>+1' */
@@ -1281,6 +1281,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   *pstacksz -= 1;
   break;
 
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
  case ASM_CLASS:
   ++*pstacksz,*psp_add = 1,*psp_sub = 0;
   if (*(uint8_t *)(ip + 1) & CLASSGEN_FHASBASE) --*pstacksz,++*psp_sub;
@@ -1288,6 +1289,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   if (*(uint8_t *)(ip + 1) & CLASSGEN_FHASIMEM) --*pstacksz,++*psp_sub;
   if (*(uint8_t *)(ip + 1) & CLASSGEN_FHASCMEM) --*pstacksz,++*psp_sub;
   break;
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  case ASM_PACK_TUPLE:
  case ASM_PACK_LIST:
@@ -1802,11 +1804,14 @@ asm_uses_local(instruction_t const *__restrict ip, uint16_t lid) {
   result = ASM_USING_WRITE;
   break;
 
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
  case ASM_CLASS_CBL:
   if (!(*(uint8_t *)(ip + 1)&CLASSGEN_FHASBASE)) break;
   if (*(uint8_t *)(ip + 2) != lid) break;
   result = ASM_USING_READ;
   break;
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
+
  case ASM_EXTENDED1:
   switch (ip[1]) {
   case ASM16_PUSH_BND_LOCAL & 0xff:
@@ -1923,6 +1928,26 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
   result = ASM_USING_READ;
   break;
 
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ case ASM_CLASS_C:
+  if (*(uint8_t *)(ip + 1) == sid) {
+   result = ASM_USING_READ;
+   break;
+  }
+  break;
+ case ASM_CLASS_GC:
+  if (*(uint8_t *)(ip + 2) == sid) {
+   result = ASM_USING_READ;
+   break;
+  }
+  break;
+ case ASM_CLASS_EC:
+  if (*(uint8_t *)(ip + 3) == sid) {
+   result = ASM_USING_READ;
+   break;
+  }
+  break;
+#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
  case ASM_CLASS_C:
   if (*(uint8_t *)(ip + 1) & CLASSGEN_FHASBASE &&
       *(uint8_t *)(ip + 2) == sid) {
@@ -1938,9 +1963,31 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
    result = ASM_USING_READ;
   }
   break;
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  case ASM_EXTENDED1:
   switch (ip[1]) {
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+  case ASM16_CLASS_C & 0xff:
+   if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == sid) {
+    result = ASM_USING_READ;
+    break;
+   }
+   break;
+  case ASM16_CLASS_GC & 0xff:
+   if (UNALIGNED_GETLE16((uint16_t *)(ip + 4)) == sid) {
+    result = ASM_USING_READ;
+    break;
+   }
+   break;
+  case ASM16_CLASS_EC & 0xff:
+   if (UNALIGNED_GETLE16((uint16_t *)(ip + 6)) == sid) {
+    result = ASM_USING_READ;
+    break;
+   }
+   break;
+#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
+
   case ASM16_STATIC & 0xff:
    if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != sid) break;
    result  = prefix_symbol_usage(ip+4);

@@ -3255,7 +3255,7 @@ INTERN DREF DeeObject *
      goto err_bad_index;
  return DeeInstance_GetMember(tp_self,self,index);
 err_bad_index:
- err_invalid_class_index(tp_self,self,index);
+ err_invalid_instance_addr(tp_self,self,index);
  goto err;
 err_req_class:
  err_requires_class(tp_self);
@@ -3276,7 +3276,7 @@ INTERN int
      goto err_bad_index;
  return DeeInstance_BoundMember(tp_self,self,index);
 err_bad_index:
- return err_invalid_class_index(tp_self,self,index);
+ return err_invalid_instance_addr(tp_self,self,index);
 err_req_class:
  return err_requires_class(tp_self);
 err:
@@ -3296,7 +3296,7 @@ INTERN int
      goto err_bad_index;
  return DeeInstance_DelMember(tp_self,self,index);
 err_bad_index:
- return err_invalid_class_index(tp_self,self,index);
+ return err_invalid_instance_addr(tp_self,self,index);
 err_req_class:
  return err_requires_class(tp_self);
 err:
@@ -3317,7 +3317,7 @@ INTERN int
  DeeInstance_SetMember(tp_self,self,index,value);
  return 0;
 err_bad_index:
- return err_invalid_class_index(tp_self,self,index);
+ return err_invalid_instance_addr(tp_self,self,index);
 err_req_class:
  return err_requires_class(tp_self);
 err:

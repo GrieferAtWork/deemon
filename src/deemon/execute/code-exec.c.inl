@@ -2007,6 +2007,7 @@ do_class_gc:
 #define EXCEPTION_CLEANUP Dee_Decref(base);
      imm_val = READ_imm8();
      ASSERT_CONSTimm();
+#undef EXCEPTION_CLEANUP
 #define EXCEPTION_CLEANUP /* nothing */
 #ifdef EXEC_SAFE
      {
@@ -2248,7 +2249,7 @@ do_defmember:
       HANDLE_EXCEPT();
      }
      if (imm_val >= DeeClass_DESC(SECOND)->c_cmem->mt_size)
-         goto err_invalid_class_index;
+         goto err_invalid_instance_addr;
      DeeClass_SetMember((DeeTypeObject *)SECOND,imm_val,FIRST);
 #endif
 #else
@@ -4379,6 +4380,7 @@ do_setattr_this_c:
 #define EXCEPTION_CLEANUP Dee_Decref(base);
          imm_val = READ_imm16();
          ASSERT_CONSTimm();
+#undef EXCEPTION_CLEANUP
 #define EXCEPTION_CLEANUP /* nothing */
 #ifdef EXEC_SAFE
          {
@@ -6315,8 +6317,7 @@ err_invalid_global: frame->cf_sp = sp; err_srt_invalid_global(frame,imm_val); HA
 err_invalid_locale: frame->cf_sp = sp; err_srt_invalid_locale(frame,imm_val); HANDLE_EXCEPT();
 err_invalid_const:  frame->cf_sp = sp; err_srt_invalid_const(frame,imm_val); HANDLE_EXCEPT();
 err_invalid_static: frame->cf_sp = sp; err_srt_invalid_static(frame,imm_val); HANDLE_EXCEPT();
-err_invalid_instance_index:
-err_invalid_class_index:
+err_invalid_instance_addr:
 err_invalid_ip:
 err_invalid_operands:
 err_requires_varargs_code:

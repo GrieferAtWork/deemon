@@ -259,12 +259,12 @@ PRIVATE char const mnemonic_names[256][31] = {
     /* 0x63 */ "cmp    le, top, pop", /* `ASM_CMP_LE' */
     /* 0x64 */ "cmp    gr, top, pop", /* `ASM_CMP_GR' */
     /* 0x65 */ "cmp    ge, top, pop", /* `ASM_CMP_GE' */
-    /* 0x66 */ "push   class " PREFIX_INTEGERAL, /* `ASM_CLASS' */
-    /* 0x67 */ "push   class " PREFIX_INTEGERAL, /* `ASM_CLASS_C' */
-    /* 0x68 */ "push   class " PREFIX_INTEGERAL, /* `ASM_CLASS_CBL' */
-    /* 0x69 */ "push   class " PREFIX_INTEGERAL, /* `ASM_CLASS_CBG' */
-    /* 0x6a */ "defmember top, " PREFIX_INTEGERAL, /* `ASM_DEFMEMBER' */
-    /* 0x6b */ "defop  top, " PREFIX_INTEGERAL, /* `ASM_DEFOP' */
+    /* 0x66 */ "class  top, ", /* `ASM_CLASS_C' */
+    /* 0x67 */ "push   class ", /* `ASM_CLASS_GC' */
+    /* 0x68 */ "push   class ", /* `ASM_CLASS_EC' */
+    /* 0x69 */ "defmember top, " PREFIX_INTEGERAL, /* `ASM_DEFMEMBER' */
+    /* 0x6a */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0x6b */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x6c */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x6d */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x6e */ "push   function ", /* `ASM_FUNCTION_C' */
@@ -516,13 +516,13 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf062 */ "push   pack hashset, " PREFIX_STACKEFFECT, /* `ASM16_PACK_HASHSET' */
     /* 0xf063 */ "push   pack dict, " PREFIX_STACKEFFECT, /* `ASM16_PACK_DICT' */
     /* 0xf064 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf065 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf066 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf067 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf068 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf069 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf06a */ "defmember top, " PREFIX_INTEGERAL, /* `ASM16_DEFMEMBER' */
-    /* 0xf06b */ "defop  top, " PREFIX_INTEGERAL, /* `ASM16_DEFOP' */
+    /* 0xf065 */ "class  top, pop", /* `ASM_CLASS' */
+    /* 0xf066 */ "class  top, ", /* `ASM16_CLASS_C' */
+    /* 0xf067 */ "push   class ", /* `ASM16_CLASS_GC' */
+    /* 0xf068 */ "push   class ", /* `ASM16_CLASS_EC' */
+    /* 0xf069 */ "defmember top, " PREFIX_INTEGERAL, /* `ASM16_DEFMEMBER' */
+    /* 0xf06a */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0xf06b */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf06c */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf06d */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf06e */ "push   function ", /* `ASM16_FUNCTION_C' */

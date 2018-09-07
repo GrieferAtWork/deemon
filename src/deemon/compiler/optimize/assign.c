@@ -58,10 +58,42 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
   ast_xincref(other->a_loop.l_loop);
   break;
 
+
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ {
+  struct class_member *dst; size_t i;
+ case AST_CLASS:
+  temp->a_class.c_memberc = other->a_class.c_memberc;
+  dst = (struct class_member *)Dee_Malloc(temp->a_class.c_memberc *
+                                          sizeof(struct class_member));
+  if unlikely(!dst) goto err;
+  temp->a_class.c_base = other->a_class.c_base;
+  temp->a_class.c_desc = other->a_class.c_desc;
+  ast_xincref(temp->a_class.c_base);
+  ast_incref(temp->a_class.c_desc);
+  temp->a_class.c_classsym = other->a_class.c_classsym;
+  temp->a_class.c_supersym = other->a_class.c_supersym;
+  if (temp->a_class.c_classsym)
+      SYMBOL_INC_NWRITE(temp->a_class.c_classsym);
+  if (temp->a_class.c_supersym)
+      SYMBOL_INC_NWRITE(temp->a_class.c_supersym);
+  temp->a_class.c_memberv = dst;
+  /* Copy the member descriptor table. */
+  for (i = 0; i < temp->a_class.c_memberc; ++i) {
+   memcpy(&dst[i],&other->a_class.c_memberv[i],
+           sizeof(struct class_member));
+   ast_incref(dst[i].cm_ast);
+  }
+ } break;
+ case AST_OPERATOR:
+  temp->a_operator.o_exflag = other->a_operator.o_exflag;
+  temp->a_operator.o_op3    = other->a_operator.o_op3;
+  ast_xincref(temp->a_operator.o_op3);
+  ATTR_FALLTHROUGH
+#else
  case AST_OPERATOR:
   temp->a_operator.o_exflag = other->a_operator.o_exflag;
   goto do_subast_x4;
-
  {
   struct class_member *iter,*end,*dst;
  case AST_CLASS:
@@ -82,6 +114,7 @@ do_subast_x4:
   temp->a_operator.o_op3 = other->a_operator.o_op3;
   ast_xincref(temp->a_operator.o_op3);
   ATTR_FALLTHROUGH
+#endif
  case AST_CONDITIONAL:
 do_xcopy_3:
   temp->a_operator.o_op2 = other->a_operator.o_op2;

@@ -183,7 +183,6 @@ for (local x: names) {
 #define FPUSH      ASM_OVERLOAD_FPUSH
 #define FPREFIX    ASM_OVERLOAD_FPREFIX
 #define FPREFIX_RO ASM_OVERLOAD_FPREFIX_RO
-#define FTAGS      ASM_OVERLOAD_FTAGS
 #define FF0        ASM_OVERLOAD_FF0
 #define FF0_IMM    ASM_OVERLOAD_FF0_IMM
 #define FRET       ASM_OVERLOAD_FRET
@@ -667,11 +666,13 @@ INSTR("defmember",(
     O3(ASM16_DEFMEMBER,FRELABS,(TOP)(IMM16)(POP))            /* defmember top, $<imm16>, pop */
 ))
 
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
 /* CONSTRAINTS: `defop <s>, ..., <s>' */
 INSTR("defop",(
     O3(ASM_DEFOP,  FRELABS,(TOP)(IMM8)(POP))                 /* defop top, $<imm8>, pop */
     O3(ASM16_DEFOP,FRELABS,(TOP)(IMM16)(POP))                /* defop top, $<imm16>, pop */
 ))
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 /* CONSTRAINTS: `function <c>, ...' */
 INSTR("function",(
@@ -1232,7 +1233,6 @@ for (local x: names) {
 #undef FRET
 #undef FF0_IMM
 #undef FF0
-#undef FTAGS
 #undef FPREFIX_RO
 #undef FPREFIX
 #undef FPUSH

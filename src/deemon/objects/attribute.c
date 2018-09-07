@@ -1123,11 +1123,11 @@ DeeAttribute_Lookup(DeeTypeObject *__restrict tp_self,
   if (rules->alr_decl && iter != (DeeTypeObject *)rules->alr_decl)
       goto next_iter;
   if (DeeType_IsClass(iter)) {
-   struct class_desc *desc = DeeClass_DESC(iter);
 #ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    if ((error = DeeClass_FindInstanceAttribute(iter,self,result,rules)) <= 0)
         goto done;
 #else
+   struct class_desc *desc = DeeClass_DESC(iter);
    if ((error = membertable_find(iter,self,desc->c_mem,result,rules)) <= 0)
         goto done;
 #endif

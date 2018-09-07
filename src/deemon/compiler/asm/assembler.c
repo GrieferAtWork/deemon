@@ -1672,6 +1672,17 @@ INTERN int (DCALL asm_putimm16_16_8)(instruction_t instr, uint16_t imm16_1, uint
  }
  return -1;
 }
+INTERN int (DCALL asm_putimm16_16_16)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint16_t imm16_3) {
+ instruction_t *result = asm_alloc(sizeof(instruction_t)+6);
+ if likely(result) {
+  *(result + 0) = instr;
+  UNALIGNED_SETLE16((uint16_t *)(result + 1),imm16_1);
+  UNALIGNED_SETLE16((uint16_t *)(result + 3),imm16_2);
+  UNALIGNED_SETLE16((uint16_t *)(result + 5),imm16_3);
+  return 0;
+ }
+ return -1;
+}
 INTERN int (DCALL asm_putimm32)(instruction_t instr, uint32_t imm32) {
  instruction_t *result = asm_alloc(sizeof(instruction_t)+4);
  if likely(result) {

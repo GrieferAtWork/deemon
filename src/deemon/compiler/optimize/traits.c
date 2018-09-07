@@ -434,7 +434,12 @@ ast_doesnt_return(struct ast *__restrict self,
   bool has_noreturn;
  case AST_CLASS:
   has_noreturn = false;
-  for (i = 0; i < 5; ++i) {
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+  for (i = 0; i < 2; ++i)
+#else
+  for (i = 0; i < 5; ++i)
+#endif
+  {
    if (!(&self->a_class.c_base)[i]) continue;
    temp = ast_doesnt_return(self->a_operator_ops[i],flags);
    if (temp != 0) { /* doesn't return, or is unpredictable. */
@@ -901,6 +906,31 @@ ast_uses_symbol(struct ast *__restrict self,
       ast_uses_symbol(self->a_return,sym))
       goto yup;
   break;
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ {
+  size_t i;
+ case AST_CLASS:
+  SYMBOL_INPLACE_UNWIND_ALIAS(self->a_class.c_classsym);
+  SYMBOL_INPLACE_UNWIND_ALIAS(self->a_class.c_supersym);
+  if (self->a_class.c_base &&
+      ast_uses_symbol(self->a_class.c_base,sym))
+      goto yup;
+  if (ast_uses_symbol(self->a_class.c_desc,sym))
+      goto yup;
+  if (self->a_class.c_classsym == sym ||
+      self->a_class.c_supersym == sym)
+      goto yup;
+  if ((SYMBOL_TYPE(sym) == SYMBOL_TYPE_IFIELD ||
+       SYMBOL_TYPE(sym) == SYMBOL_TYPE_CFIELD) &&
+      (SYMBOL_FIELD_CLASS(sym) == self->a_class.c_classsym ||
+       SYMBOL_FIELD_CLASS(sym) == self->a_class.c_supersym))
+       goto yup;
+  for (i = 0; i < self->a_class.c_memberc; ++i) {
+   if (ast_uses_symbol(self->a_class.c_memberv[i].cm_ast,sym))
+       goto yup;
+  }
+ } break;
+#else
  {
   struct class_member *iter,*end;
  case AST_CLASS:
@@ -923,6 +953,7 @@ ast_uses_symbol(struct ast *__restrict self,
       ast_uses_symbol(self->a_class.c_cmem,sym)) goto yup;
  }
   ATTR_FALLTHROUGH
+#endif
  case AST_OPERATOR:
   if (self->a_operator.o_op3 &&
       ast_uses_symbol(self->a_operator.o_op3,sym))
@@ -1233,6 +1264,10 @@ no:
   if (self->a_class.c_base &&
       ast_contains_goto(self->a_class.c_base,consider_loopctl))
       goto yes;
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+  if (ast_contains_goto(self->a_class.c_desc,consider_loopctl))
+      goto yes;
+#else
   if (self->a_class.c_name &&
       ast_contains_goto(self->a_class.c_name,consider_loopctl))
       goto yes;
@@ -1245,6 +1280,7 @@ no:
   if (self->a_class.c_cmem &&
       ast_contains_goto(self->a_class.c_cmem,consider_loopctl))
       goto yes;
+#endif
   for (i = 0; i < self->a_class.c_memberc; ++i) {
    if (ast_contains_goto(self->a_class.c_memberv[i].cm_ast,consider_loopctl))
        goto yes;

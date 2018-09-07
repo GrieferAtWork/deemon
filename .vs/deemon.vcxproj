@@ -102,6 +102,7 @@
     <ClCompile Include="..\src\deemon\compiler\asm\directives.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genasm.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\gencall.c" />
+    <ClCompile Include="..\src\deemon\compiler\asm\genclass.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genfaster.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genfunction.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\geninplace.c" />

@@ -72,7 +72,8 @@ INTDEF ATTR_COLD int DCALL err_unbound_global(struct module_object *__restrict m
 INTDEF ATTR_COLD int DCALL err_unbound_local(struct code_object *__restrict code, void *__restrict ip, uint16_t local_index);
 INTDEF ATTR_COLD int DCALL err_illegal_instruction(struct code_object *__restrict code, void *__restrict ip);
 INTDEF ATTR_COLD int DCALL err_requires_class(DeeTypeObject *__restrict tp_self);
-INTDEF ATTR_COLD int DCALL err_invalid_class_index(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, unsigned int index);
+INTDEF ATTR_COLD int DCALL err_invalid_class_addr(DeeTypeObject *__restrict tp_self, uint16_t addr);
+INTDEF ATTR_COLD int DCALL err_invalid_instance_addr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t addr);
 INTDEF ATTR_COLD int DCALL err_invalid_refs_size(DeeObject *__restrict code, size_t num_refs);
 INTDEF ATTR_COLD int DCALL err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key);
 INTDEF ATTR_COLD int DCALL err_unknown_key_str(DeeObject *__restrict map, char const *__restrict key);

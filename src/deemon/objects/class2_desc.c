@@ -42,14 +42,14 @@ DECL_BEGIN
 
 typedef DeeClassDescriptorObject ClassDescriptor;
 
-PRIVATE struct class_operator empty_class_operators[] = {
+INTERN struct class_operator empty_class_operators[] = {
     {
         /* .co_name = */(uint16_t)-1,
         /* .co_addr = */0
     }
 };
 
-PRIVATE struct class_attribute empty_class_attributes[] = {
+INTERN struct class_attribute empty_class_attributes[] = {
     {
         /* .ca_name = */NULL,
         /* .ca_hash = */0,
@@ -1449,11 +1449,11 @@ err_unbound_member(/*Class*/DeeTypeObject *__restrict class_type,
 }
 
 
-/* Instance member access (by index) */
-PUBLIC DREF DeeObject *
+/* Instance member access (by addr) */
+INTERN DREF DeeObject *
 (DCALL DeeInstance_GetMember)(/*Class*/DeeTypeObject *__restrict tp_self,
                               /*Instance*/DeeObject *__restrict self,
-                              unsigned int index) {
+                              uint16_t addr) {
  struct class_desc *desc;
  struct instance_desc *inst;
  DREF DeeObject *result;
@@ -1461,39 +1461,39 @@ PUBLIC DREF DeeObject *
  ASSERT(DeeType_IsClass(tp_self));
  ASSERT_OBJECT_TYPE(self,tp_self);
  desc = DeeClass_DESC(tp_self);
- ASSERT(index <= desc->cd_desc->cd_imemb_size);
+ ASSERT(addr <= desc->cd_desc->cd_imemb_size);
  inst = DeeInstance_DESC(desc,self);
  /* Lock and extract the member. */
  rwlock_read(&inst->id_lock);
- result = inst->id_vtab[index];
+ result = inst->id_vtab[addr];
  Dee_XIncref(result);
  rwlock_endread(&inst->id_lock);
  if (!result)
-      err_unbound_member(tp_self,desc,index);
+      err_unbound_member(tp_self,desc,addr);
  return result;
 }
-PUBLIC bool
+INTERN bool
 (DCALL DeeInstance_BoundMember)(/*Class*/DeeTypeObject *__restrict tp_self,
                                 /*Instance*/DeeObject *__restrict self,
-                                unsigned int index) {
+                                uint16_t addr) {
  struct class_desc *desc;
  struct instance_desc *inst;
  ASSERT_OBJECT_TYPE(tp_self,&DeeType_Type);
  ASSERT(DeeType_IsClass(tp_self));
  ASSERT_OBJECT_TYPE(self,tp_self);
  desc = DeeClass_DESC(tp_self);
- ASSERT(index <= desc->cd_desc->cd_imemb_size);
+ ASSERT(addr <= desc->cd_desc->cd_imemb_size);
  inst = DeeInstance_DESC(desc,self);
 #ifdef CONFIG_NO_THREADS
- return inst->id_vtab[index] != NULL;
+ return inst->id_vtab[addr] != NULL;
 #else
- return ATOMIC_READ(inst->id_vtab[index]) != NULL;
+ return ATOMIC_READ(inst->id_vtab[addr]) != NULL;
 #endif
 }
-PUBLIC int
+INTERN int
 (DCALL DeeInstance_DelMember)(/*Class*/DeeTypeObject *__restrict tp_self,
                               /*Instance*/DeeObject *__restrict self,
-                              unsigned int index) {
+                              uint16_t addr) {
  struct class_desc *desc;
  struct instance_desc *inst;
  DREF DeeObject *old_value;
@@ -1501,26 +1501,26 @@ PUBLIC int
  ASSERT(DeeType_IsClass(tp_self));
  ASSERT_OBJECT_TYPE(self,tp_self);
  desc = DeeClass_DESC(tp_self);
- ASSERT(index <= desc->cd_desc->cd_imemb_size);
+ ASSERT(addr <= desc->cd_desc->cd_imemb_size);
  inst = DeeInstance_DESC(desc,self);
  /* Lock and extract the member. */
  rwlock_write(&inst->id_lock);
- old_value = inst->id_vtab[index];
- inst->id_vtab[index] = NULL;
+ old_value = inst->id_vtab[addr];
+ inst->id_vtab[addr] = NULL;
  rwlock_endwrite(&inst->id_lock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
  if unlikely(!old_value)
-    return err_unbound_member(tp_self,desc,index);
+    return err_unbound_member(tp_self,desc,addr);
  Dee_Decref(old_value);
 #else
  Dee_XDecref(old_value);
 #endif
  return 0;
 }
-PUBLIC void
+INTERN void
 (DCALL DeeInstance_SetMember)(/*Class*/DeeTypeObject *__restrict tp_self,
                               /*Instance*/DeeObject *__restrict self,
-                              unsigned int index, DeeObject *__restrict value) {
+                              uint16_t addr, DeeObject *__restrict value) {
  struct class_desc *desc;
  struct instance_desc *inst;
  DREF DeeObject *old_value;
@@ -1528,13 +1528,13 @@ PUBLIC void
  ASSERT(DeeType_IsClass(tp_self));
  ASSERT_OBJECT_TYPE(self,tp_self);
  desc = DeeClass_DESC(tp_self);
- ASSERT(index <= desc->cd_desc->cd_imemb_size);
+ ASSERT(addr <= desc->cd_desc->cd_imemb_size);
  inst = DeeInstance_DESC(desc,self);
  /* Lock and extract the member. */
  Dee_Incref(value);
  rwlock_write(&inst->id_lock);
- old_value = inst->id_vtab[index];
- inst->id_vtab[index] = value;
+ old_value = inst->id_vtab[addr];
+ inst->id_vtab[addr] = value;
  rwlock_endwrite(&inst->id_lock);
  Dee_XDecref(old_value);
 }
@@ -1543,18 +1543,18 @@ PUBLIC void
 INTERN DREF DeeObject *
 (DCALL DeeInstance_GetMemberSafe)(DeeTypeObject *__restrict tp_self,
                                   DeeObject *__restrict self,
-                                  unsigned int index) {
+                                  uint16_t addr) {
  if (DeeObject_AssertType((DeeObject *)tp_self,&DeeType_Type))
      goto err;
  if (DeeObject_AssertType(self,tp_self))
      goto err;
  if (!DeeType_IsClass(tp_self))
      goto err_req_class;
- if (index >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
+ if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
      goto err_bad_index;
- return DeeInstance_GetMember(tp_self,self,index);
+ return DeeInstance_GetMember(tp_self,self,addr);
 err_bad_index:
- err_invalid_class_index(tp_self,self,index);
+ err_invalid_instance_addr(tp_self,self,addr);
  goto err;
 err_req_class:
  err_requires_class(tp_self);
@@ -1564,18 +1564,18 @@ err:
 INTERN int
 (DCALL DeeInstance_BoundMemberSafe)(DeeTypeObject *__restrict tp_self,
                                     DeeObject *__restrict self,
-                                    unsigned int index) {
+                                    uint16_t addr) {
  if (DeeObject_AssertType((DeeObject *)tp_self,&DeeType_Type))
      goto err;
  if (DeeObject_AssertType(self,tp_self))
      goto err;
  if (!DeeType_IsClass(tp_self))
      goto err_req_class;
- if (index >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
+ if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
      goto err_bad_index;
- return DeeInstance_BoundMember(tp_self,self,index);
+ return DeeInstance_BoundMember(tp_self,self,addr);
 err_bad_index:
- return err_invalid_class_index(tp_self,self,index);
+ return err_invalid_instance_addr(tp_self,self,addr);
 err_req_class:
  return err_requires_class(tp_self);
 err:
@@ -1584,18 +1584,18 @@ err:
 INTERN int
 (DCALL DeeInstance_DelMemberSafe)(DeeTypeObject *__restrict tp_self,
                                   DeeObject *__restrict self,
-                                  unsigned int index) {
+                                  uint16_t addr) {
  if (DeeObject_AssertType((DeeObject *)tp_self,&DeeType_Type))
      goto err;
  if (DeeObject_AssertType(self,tp_self))
      goto err;
  if (!DeeType_IsClass(tp_self))
      goto err_req_class;
- if (index >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
+ if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
      goto err_bad_index;
- return DeeInstance_DelMember(tp_self,self,index);
+ return DeeInstance_DelMember(tp_self,self,addr);
 err_bad_index:
- return err_invalid_class_index(tp_self,self,index);
+ return err_invalid_instance_addr(tp_self,self,addr);
 err_req_class:
  return err_requires_class(tp_self);
 err:
@@ -1604,28 +1604,61 @@ err:
 INTERN int
 (DCALL DeeInstance_SetMemberSafe)(DeeTypeObject *__restrict tp_self,
                                   DeeObject *__restrict self,
-                                  unsigned int index, DeeObject *__restrict value) {
+                                  uint16_t addr, DeeObject *__restrict value) {
  if (DeeObject_AssertType((DeeObject *)tp_self,&DeeType_Type))
      goto err;
  if (DeeObject_AssertType(self,tp_self))
      goto err;
  if (!DeeType_IsClass(tp_self))
      goto err_req_class;
- if (index >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
+ if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
      goto err_bad_index;
- DeeInstance_SetMember(tp_self,self,index,value);
+ DeeInstance_SetMember(tp_self,self,addr,value);
  return 0;
 err_bad_index:
- return err_invalid_class_index(tp_self,self,index);
+ return err_invalid_instance_addr(tp_self,self,addr);
 err_req_class:
  return err_requires_class(tp_self);
 err:
  return -1;
 }
 
-/* Class member access (by index) */
-INTDEF void DCALL DeeClass_SetMember(DeeTypeObject *__restrict self, uint16_t index, DeeObject *__restrict value);
-INTDEF int DCALL DeeClass_SetMemberSafe(DeeTypeObject *__restrict self, uint16_t index, DeeObject *__restrict value);
+/* Class member access (by addr) */
+INTERN void
+(DCALL DeeClass_SetMember)(DeeTypeObject *__restrict self,
+                           uint16_t addr, DeeObject *__restrict value) {
+ struct class_desc *desc;
+ DREF DeeObject *old_value;
+ ASSERT_OBJECT_TYPE(self,&DeeType_Type);
+ ASSERT(DeeType_IsClass(self));
+ desc = DeeClass_DESC(self);
+ ASSERT(addr <= desc->cd_desc->cd_cmemb_size);
+ /* Lock and extract the member. */
+ Dee_Incref(value);
+ rwlock_write(&desc->cd_lock);
+ old_value = desc->cd_members[addr];
+ desc->cd_members[addr] = value;
+ rwlock_endwrite(&desc->cd_lock);
+ Dee_XDecref(old_value);
+}
+INTERN int
+(DCALL DeeClass_SetMemberSafe)(DeeTypeObject *__restrict self,
+                               uint16_t addr, DeeObject *__restrict value) {
+ if (DeeObject_AssertType((DeeObject *)self,&DeeType_Type))
+     goto err;
+ if (!DeeType_IsClass(self))
+     goto err_req_class;
+ if (addr >= DeeClass_DESC(self)->cd_desc->cd_cmemb_size)
+     goto err_bad_index;
+ DeeClass_SetMember(self,addr,value);
+ return 0;
+err_bad_index:
+ return err_invalid_class_addr(self,addr);
+err_req_class:
+ return err_requires_class(self);
+err:
+ return -1;
+}
 
 
 DECL_END

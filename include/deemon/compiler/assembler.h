@@ -287,10 +287,16 @@ struct asm_intexpr {
 
 
 /* The max number of operands during mnemonic invocation. */
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+#define ASM_MAX_INSTRUCTION_OPERANDS 4 /* ASM_SETRANGE has 4 operands. */
+#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
 #define ASM_MAX_INSTRUCTION_OPERANDS 5 /* ASM_CLASS has 5 operands. */
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 struct asm_invoke_operand {
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
     struct TPPKeyword                 *io_tag;    /* [0..1] Operand tag (Used by `ASM_CLASS') */
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 #define OPERAND_CLASS_FMASK            0x00ff     /* MASK: Mask of the effective operand class. */
 #define OPERAND_CLASS_FIMMVAL          0x0100     /* FLAG: The operand is prefixed by dollar `$' */
 #define OPERAND_CLASS_FBRACKETFLAG     0x0200     /* FLAG: The operand is surrounded by `[...]' */
@@ -438,7 +444,9 @@ struct asm_invocation {
                                        *       prefixed by another `push'. */
 #define INVOKE_FPREFIX    0x0020      /* The instruction is prefixed by a symbol. */
 #define INVOKE_FPREFIX_RO 0x0040      /* For use with the `ASM_STATIC' prefix: Only allow instructions using the prefix as read-only. */
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
 #define INVOKE_FOPTAGS    0x0080      /* At least one operand of the invocation has a tagged name (used by `ASM_CLASS' instructions). */
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
     uint16_t           ai_flags;      /* Invocation flags (Set of `INVOKE_F*') */
     uint8_t            ai_opcount;    /* [<= ASM_MAX_INSTRUCTION_OPERANDS] The total number of operands. */
     uint8_t            ai_prefix;     /* [valid_if(INVOKE_FPREFIX)] The type of prefix (One of `ASM_*'; aka. the prefixed instruction id without F0 prefix). */
@@ -483,7 +491,9 @@ struct __ATTR_PACKED asm_overload {
 #define ASM_OVERLOAD_FPUSH       0x0010      /* The instruction must be prefixed by `push'  */
 #define ASM_OVERLOAD_FPREFIX     0x0020      /* The overload must be used with a prefix. */
 #define ASM_OVERLOAD_FPREFIX_RO  0x0040      /* The overload must be used with a prefix, which is allowed to be read-only. */
+#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
 #define ASM_OVERLOAD_FTAGS       0x0080      /* The instruction accepts operand tags. */
+#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 #define ASM_OVERLOAD_FF0         0x0100      /* When set, `ao_instr' may be prefixed by `0xf0' to
                                               * double the bit-limits of io_symid-related operands. */
 #define ASM_OVERLOAD_FF0_IMM     0x0200      /* An extension to `ASM_OVERLOAD_FF0': Immediate operands are also extended. */
@@ -946,6 +956,7 @@ INTDEF int DCALL asm_putimm16(instruction_t instr, uint16_t imm16);
 INTDEF int DCALL asm_putimm16_8(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2);
 INTDEF int DCALL asm_putimm16_16(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2);
 INTDEF int DCALL asm_putimm16_16_8(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint8_t imm8_3);
+INTDEF int DCALL asm_putimm16_16_16(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint16_t imm16_3);
 INTDEF int DCALL asm_putimm16_8_16(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2, uint16_t imm16_3);
 INTDEF int DCALL asm_putimm32(instruction_t instr, uint32_t imm32);
 /* Encode an instruction followed by a 16-bit static variable id (including the required relocation). */
@@ -1046,6 +1057,10 @@ INTDEF int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, struct a
  (((imma) <= UINT8_MAX && (immb) <= UINT8_MAX) \
    ?  asm_putimm8_8(op,(uint8_t)(imma),(uint8_t)(immb)) \
    : (asm_put(ASM_EXTENDED1) || asm_putimm16_16(op,(uint16_t)(imma),(uint16_t)(immb))))
+#define asm_put888161616(op,imma,immb,immc) \
+ (((imma) <= UINT8_MAX && (immb) <= UINT8_MAX && (immc) <= UINT8_MAX) \
+   ?  asm_putimm8_8_8(op,(uint8_t)(imma),(uint8_t)(immb),(uint8_t)(immc)) \
+   : (asm_put(ASM_EXTENDED1) || asm_putimm16_16_16(op,(uint16_t)(imma),(uint16_t)(immb),(uint16_t)(immc))))
 #define asm_put881616_8(op,imma,immb,immc) \
  (((imma) <= UINT8_MAX && (immb) <= UINT8_MAX) \
    ?  asm_putimm8_8_8(op,(uint8_t)(imma),(uint8_t)(immb),(uint8_t)(immc)) \
@@ -1343,6 +1358,13 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_greduce_sum()             (asm_dicsp(),asm_put((ASM_REDUCE_SUM & 0xff00) >> 8) || asm_put((ASM_REDUCE_SUM & 0xff)))
 #define asm_greduce_any()             (asm_dicsp(),asm_put((ASM_REDUCE_ANY & 0xff00) >> 8) || asm_put((ASM_REDUCE_ANY & 0xff)))
 #define asm_greduce_all()             (asm_dicsp(),asm_put((ASM_REDUCE_ALL & 0xff00) >> 8) || asm_put((ASM_REDUCE_ALL & 0xff)))
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+#define asm_gclass()                  (asm_ddicsp(),asm_put((ASM_CLASS & 0xff00) >> 8) || asm_put((ASM_CLASS & 0xff)))
+#define asm_gclass_c(cid)             (asm_dicsp(),asm_put816(ASM_CLASS_C,cid))
+#define asm_gclass_gc(gid,cid)        (asm_incsp(),asm_put881616(ASM_CLASS_GC,gid,cid))
+#define asm_gclass_ec(mid,gid,cid)    (asm_incsp(),asm_put888161616(ASM_CLASS_EC,mid,gid,cid))
+#define asm_gdefmember(id)            (asm_ddicsp(),asm_put816(ASM_DEFMEMBER,id))
+#endif
 
 /* Call with keyword list instructions. */
 #define asm_gcall_kw(n,kwd_cid)                       (asm_subsp((n)+1),asm_incsp(),ASSERT((n)<=UINT8_MAX),asm_put8_816(ASM_CALL_KW,n,kwd_cid))
@@ -1793,6 +1815,9 @@ INTDEF struct asm_sym *
                     struct ast *block,
                     struct ast *__restrict ddi_ast);
 
+/* Sub-routine for `ast_genasm' for `AST_CLASS' */
+INTDEF int (DCALL asm_genclass)(struct ast *__restrict class_ast,
+                                unsigned int gflags);
 
 
 #ifndef __INTELLISENSE__
