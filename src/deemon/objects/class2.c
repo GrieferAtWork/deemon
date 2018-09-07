@@ -33,6 +33,7 @@
 #include <deemon/error.h>
 #include <deemon/util/string.h>
 #include <deemon/tuple.h>
+#include <deemon/thread.h>
 
 #include "../runtime/runtime_error.h"
 
@@ -608,7 +609,8 @@ instance_destructor(DeeObject *__restrict self) {
             (func) == &instance_copy ? instance_tcopy(tp_self,self,other) : \
           (*(func))(self,other))
 #define DeeType_INVOKE_DEEPCOPY(func,tp_self,self,other) \
-        DeeType_INVOKE_COPY(func,tp_self,self,other)
+           ((func) == &instance_deepcopy ? instance_tdeepcopy(tp_self,self,other) : \
+          (*(func))(self,other))
 #define DeeType_INVOKE_CTOR(func,tp_self,self) \
            ((func) == &instance_builtin_ctor ? instance_builtin_tctor(tp_self,self) : \
   IF_NOBASE((func) == &instance_builtin_nobase_ctor ? instance_builtin_nobase_tctor(tp_self,self) :) \
@@ -737,6 +739,10 @@ instance_tdeepcopy(DeeTypeObject *__restrict tp_self,
   if (instance_initsuper_as_copy(tp_super,self,other,true))
       goto err_members;
  }
+ ASSERT(!tp_self->tp_init.tp_deepload);
+ /* Add a deepcopy association for `self' replacing `other' */
+ if (Dee_DeepCopyAddAssoc(self,other))
+     goto err_super;
  result = DeeObject_ThisCall(func,self,1,(DeeObject **)&other);
  if unlikely(!result) goto err_super;
  Dee_Decref(result);
@@ -3289,7 +3295,6 @@ DeeClass_New(DeeTypeObject *__restrict base,
 
  /* Assign default / mandatory operators. */
  result->tp_init.tp_alloc.tp_copy_ctor = &instance_builtin_copy;
- result->tp_init.tp_alloc.tp_deep_ctor = &instance_builtin_copy;
  result->tp_init.tp_assign             = &instance_builtin_assign;
  result->tp_init.tp_move_assign        = &instance_builtin_moveassign;
  result->tp_init.tp_deepload           = &instance_builtin_deepload;
@@ -3299,7 +3304,6 @@ DeeClass_New(DeeTypeObject *__restrict base,
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
  if (DeeNone_Check(base) || base == &DeeObject_Type) {
   result->tp_init.tp_alloc.tp_copy_ctor = &instance_builtin_nobase_copy;
-  result->tp_init.tp_alloc.tp_deep_ctor = &instance_builtin_nobase_copy;
   result->tp_init.tp_deepload           = &instance_builtin_nobase_deepload;
  }
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
@@ -3351,6 +3355,12 @@ DeeClass_New(DeeTypeObject *__restrict base,
     result->tp_math->tp_int   = &instance_int;
     break;
 
+   case OPERATOR_DEEPCOPY:
+    /* A user-defined deepcopy callback must not invoke the deepload
+     * operator, which would normally replace all members with deep
+     * copies of themself. */
+    result->tp_init.tp_deepload = NULL;
+    ATTR_FALLTHROUGH
    default:
     /* Bind the C-wrapper-function for this operator. */
     if (bind_class_operator(result_type_type,result,op->co_name))
@@ -3363,7 +3373,7 @@ DeeClass_New(DeeTypeObject *__restrict base,
    result->tp_init.tp_alloc.tp_ctor        = &instance_super_ctor;
    result->tp_init.tp_alloc.tp_any_ctor    = &instance_super_init;
    result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_super_initkw;
-   goto delete_on_custom_ctor;
+   break;
   case FEATURE_CONSTRUCTOR:
    if (desc->cd_flags & TP_FINHERITCTOR) {
     result->tp_init.tp_alloc.tp_ctor        = &instance_inherited_ctor;
@@ -3380,31 +3390,11 @@ DeeClass_New(DeeTypeObject *__restrict base,
     result->tp_init.tp_alloc.tp_any_ctor    = &instance_init;
     result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_initkw;
    }
-   goto delete_on_custom_ctor;
+   break;
   case FEATURE_SUPERARGS:
    result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_super_ctor;
    result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_super_init;
    result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_super_initkw;
-delete_on_custom_ctor:
-   /* Delete default copy/deepcopy when user-defined constructors were defined. */
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
-   if (result->tp_init.tp_alloc.tp_copy_ctor == &instance_builtin_copy ||
-       result->tp_init.tp_alloc.tp_copy_ctor == &instance_builtin_nobase_copy)
-       result->tp_init.tp_alloc.tp_copy_ctor = NULL;
-   if (result->tp_init.tp_alloc.tp_deep_ctor == &instance_builtin_copy ||
-       result->tp_init.tp_alloc.tp_deep_ctor == &instance_builtin_nobase_copy)
-       result->tp_init.tp_alloc.tp_deep_ctor = NULL;
-   if (result->tp_init.tp_deepload == &instance_builtin_deepload ||
-       result->tp_init.tp_deepload == &instance_builtin_nobase_deepload)
-       result->tp_init.tp_deepload = NULL;
-#else /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-   if (result->tp_init.tp_alloc.tp_copy_ctor == &instance_builtin_copy)
-       result->tp_init.tp_alloc.tp_copy_ctor = NULL;
-   if (result->tp_init.tp_alloc.tp_deep_ctor == &instance_builtin_copy)
-       result->tp_init.tp_alloc.tp_deep_ctor = NULL;
-   if (result->tp_init.tp_deepload == &instance_builtin_deepload)
-       result->tp_init.tp_deepload = NULL;
-#endif /* !CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
    break;
   default:
    if (desc->cd_flags & TP_FINHERITCTOR) {
