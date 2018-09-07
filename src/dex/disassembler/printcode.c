@@ -442,6 +442,7 @@ PRIVATE struct typeflag const typeflags[] = {
     { "truncate", TP_FTRUNCATE },
     { "interrupt", TP_FINTERRUPT },
     { "moveany", TP_FMOVEANY },
+    { "inheritctor", TP_FINHERITCTOR },
 };
 
 struct attributeflag {

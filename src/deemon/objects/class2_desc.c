@@ -132,6 +132,28 @@ cd_eq(ClassDescriptor *__restrict self,
  if (self->cd_clsop_mask != other->cd_clsop_mask) goto nope;
  if (self->cd_cattr_mask != other->cd_cattr_mask) goto nope;
  if (self->cd_iattr_mask != other->cd_iattr_mask) goto nope;
+ if (self->cd_name) {
+  if (!other->cd_name) goto nope;
+  if (DeeString_SIZE(self->cd_name) != DeeString_SIZE(other->cd_name))
+      goto nope;
+  if (memcmp(DeeString_STR(self->cd_name),
+             DeeString_STR(other->cd_name),
+             DeeString_SIZE(other->cd_name) * sizeof(char)) != 0)
+      goto nope;
+ } else {
+  if (other->cd_name) goto nope;
+ }
+ if (self->cd_doc) {
+  if (!other->cd_doc) goto nope;
+  if (DeeString_SIZE(self->cd_doc) != DeeString_SIZE(other->cd_doc))
+      goto nope;
+  if (memcmp(DeeString_STR(self->cd_doc),
+             DeeString_STR(other->cd_doc),
+             DeeString_SIZE(other->cd_doc) * sizeof(char)) != 0)
+      goto nope;
+ } else {
+  if (other->cd_doc) goto nope;
+ }
  if (memcmp(self->cd_clsop_list,
             other->cd_clsop_list,
            (self->cd_clsop_mask + 1) *

@@ -1415,7 +1415,8 @@ struct type_object {
 #define TP_FMOVEANY         0x0008       /* The type accepts any other object as second operator to `tp_move_assign' */
 /*      TP_F                0x0010        * ... */
 /*      TP_F                0x0020        * ... */
-/*      TP_F                0x0040        * ... */
+#define TP_FINHERITCTOR     0x0040       /* This type inherits its constructor from `tp_base'.
+                                          * Additionally, if no assign/move-assign operator is defined, those are inherited as well. */
 #define TP_FABSTRACT        0x0080       /* Member functions and getsets of this type are type-generic and may
                                           * even be invoked when being passed objects that do not fulfill the
                                           * requirement of `DeeObject_InstanceOf(ob,self)' (where `self' is this type).
@@ -1426,12 +1427,11 @@ struct type_object {
 /*      TP_F                0x0080        * ... */
 /*      TP_F                0x0100        * ... */
 /*      TP_F                0x0200        * ... */
-#define TP_FVARIABLE        0x0400       /* Variable-length object type. (`tp_new' is used, rather than `tp_init') */
-#define TP_FGC              0x0800       /* Instance of this type can be harvested by the Garbage Collector. */
-#define TP_FINHERITCTOR     0x1000       /* This type inherits its constructor from `tp_base'.
-                                          * Additionally, if no assign/move-assign operator is defined, those are inherited as well. */
-#define TP_FNAMEOBJECT      0x2000       /* `tp_name' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
-#define TP_FDOCOBJECT       0x4000       /* `tp_doc' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
+#define TP_FNAMEOBJECT      0x0400       /* `tp_name' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
+#define TP_FDOCOBJECT       0x0800       /* `tp_doc' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
+/*      TP_F                0x1000        * ... */
+#define TP_FVARIABLE        0x2000       /* Variable-length object type. (`tp_new' is used, rather than `tp_init') */
+#define TP_FGC              0x4000       /* Instance of this type can be harvested by the Garbage Collector. */
 #define TP_FHEAP            0x8000       /* This type was allocated on the heap. */
 #define TP_FINTERHITABLE   (TP_FINTERRUPT|TP_FVARIABLE|TP_FGC) /* Set of special flags that is inherited by sub-classes. */
     uint16_t                tp_flags;    /* Type flags (Set of `TP_F*'). */

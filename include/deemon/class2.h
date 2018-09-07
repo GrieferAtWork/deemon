@@ -121,30 +121,7 @@ struct class_operator {
                        * HINT: When the pointed-to class member is `NULL' (unbound), operator
                        *       search won't continue, but rather cause a not-implemented error
                        *       to be thrown, thus allowing you to explicitly delete an operator
-                       *       by simply declaring it, but not assigning a callback.
-                       * TODO: Implement deleted operators once the new class system reaches user-code:
-                       *       >> class MyClass1 {
-                       *       >> }
-                       *       >> class MyClass2 {
-                       *       >>     operator str = del;
-                       *       >> }
-                       *       >> print MyClass1(); // `MyClass1' (inherited)
-                       * TODO: Change the syntax for defining classes without bases from simply
-                       *       omitting a base class, to writing `class MyClass: none { }'
-                       *       With that in mind, use `object from deemon' as default-base
-                       *       for user-defined classes.
-                       * TODO: Also add a syntax `this = super;', which has a similar meaning as
-                       *      `this(...): super(...) {}', meaning that during construction,
-                       *       all arguments are simply forwarded to the super-class.
-                       *       NOTE: We can't use `TP_FINHERITCTOR' for this, because additional
-                       *             instance fields may require initialization in a custom
-                       *             constructor:
-                       *          >> class MyClass: foo {
-                       *          >>     this = super;
-                       *          >>     my_field = 42; // Results in a hidden constructor to assign this value.
-                       *          >> }
-                       *       
-                       */
+                       *       by simply declaring it, but not assigning a callback. */
 };
 
 
@@ -213,7 +190,19 @@ struct class_descriptor_object {
     OBJECT_HEAD
     DREF struct string_object *cd_name;          /* [0..1][const] Name of the class. */
     DREF struct string_object *cd_doc;           /* [0..1][const] Documentation strings for the class itself, and its operators. */
-    uint16_t                   cd_flags;         /* [const] Additional flags to set for the resulting type (set of `TP_F*'). */
+    uint16_t                   cd_flags;         /* [const] Additional flags to set for the resulting type (set of `TP_F*').
+                                                  * NOTE: The `TP_FINHERITCTOR' flag has special meaning here,
+                                                  *       in that its presence causes `CLASS_OPERATOR_SUPERARGS'
+                                                  *       to be implemented such that it forwards all arguments
+                                                  *       to the underlying base-type, while also implementing
+                                                  *      `OPERATOR_CONSTRUCTOR' as a no-op for any number of
+                                                  *       arguments.
+                                                  *       If the user overrides `CLASS_OPERATOR_SUPERARGS',
+                                                  *       the `TP_FINHERITCTOR' flag is simply ignored.
+                                                  *       If the user overrides `OPERATOR_CONSTRUCTOR',
+                                                  *       the user's constructor will be invoked, though
+                                                  *       no arguments will be passed to it.
+                                                  */
     uint16_t                   cd_cmemb_size;    /* [const] The allocation size of the class member table. */
     uint16_t                   cd_imemb_size;    /* [const] The allocation size of the instance member table. */
     uint16_t                   cd_clsop_mask;    /* [const] Mask for the `cd_clsop_list' hash-vector. */
@@ -486,6 +475,15 @@ INTDEF int DCALL instance_init(DeeObject *__restrict self, size_t argc, DeeObjec
 INTDEF int DCALL instance_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF int DCALL instance_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
+/* `OPERATOR_CONSTRUCTOR', with the `TP_FINHERITCTOR' flag set.
+ * NOTE: These functions always invoke the user-defined constructor without any arguments! */
+#define instance_inherited_tctor instance_tctor
+#define instance_inherited_ctor  instance_ctor
+INTDEF int DCALL instance_inherited_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_inherited_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_inherited_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_inherited_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+
 /* No predefined construction operators. */
 INTDEF int DCALL instance_builtin_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF int DCALL instance_builtin_ctor(DeeObject *__restrict self);
@@ -493,6 +491,14 @@ INTDEF int DCALL instance_builtin_tinit(DeeTypeObject *__restrict tp_self, DeeOb
 INTDEF int DCALL instance_builtin_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
 INTDEF int DCALL instance_builtin_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF int DCALL instance_builtin_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+
+/* No predefined construction operators, but the `TP_FINHERITCTOR' flag is set. */
+INTDEF int DCALL instance_builtin_inherited_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_inherited_ctor(DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_inherited_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_inherited_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_inherited_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_builtin_inherited_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
 /* Builtin (pre-defined) hooks that are used when the user-class doesn't override these operators. */
 INTDEF int DCALL instance_builtin_tcopy(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);

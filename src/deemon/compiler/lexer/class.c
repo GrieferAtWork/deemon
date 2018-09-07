@@ -239,7 +239,14 @@ struct class_maker {
     size_t                     cm_iattr_size;  /* Number of used slots in `cm_desc->cd_clsop_list' */
     size_t                     cm_cattr_size;  /* Number of used slots in `cm_desc->cd_cattr_list' */
     uint16_t                   cm_clsop_size;  /* Number of used slots in `cm_desc->cd_iattr_list' */
-    uint16_t                   cm_padding[(sizeof(void *)-2)/2]; /* ... */
+    uint16_t                   cm_null_member; /* The address of a class member that is always unbound (used for
+                                                * deleted operator), or `(uint16_t)-1' when no such address has
+                                                * yet to be designated. */
+#define CLASS_MAKER_CTOR_FNORMAL  0x0000       /* Normal constructor flags. */
+#define CLASS_MAKER_CTOR_FDELETED 0x0001       /* The constructor has been deleted. */
+#define CLASS_MAKER_CTOR_FSUPER   0x0002       /* The constructor has explicitly been inherited from the super-type. */
+    uint16_t                   cm_ctor_flags;  /* Special flags concerning the constructor (Set of `CLASS_MAKER_CTOR_F*') */
+    uint16_t                   cm_pad;         /* ... */
 #else /* CONFIG_USE_NEW_CLASS_SYSTEM */
     uint16_t                   cm_flags;       /* Class flags (Set of `TP_F*'). */
     uint16_t                   cm_padding[(sizeof(void *)-2)/2]; /* ... */
@@ -503,7 +510,8 @@ err:
  * in the class member table under `addr' */
 PRIVATE int DCALL
 class_maker_bindoperator(struct class_maker *__restrict self,
-                         uint16_t name, uint16_t addr) {
+                         uint16_t name, uint16_t addr,
+                         struct ast_loc *loc) {
  uint16_t i,perturb; struct class_operator *result;
  DeeClassDescriptorObject *desc = self->cm_desc;
  if ((desc->cd_clsop_mask == 0 ||
@@ -516,8 +524,13 @@ class_maker_bindoperator(struct class_maker *__restrict self,
   result = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
   if (result->co_name == (uint16_t)-1) break; /* Unused entry. */
   if (result->co_name != name) continue;
-  /* Duplicate operator */
-  /* TODO: Warning */
+  if (result->co_addr != addr) {
+   /* Warn about a duplicate operator */
+   struct opinfo *info = Dee_OperatorInfo(NULL,name);
+   if (WARNAT(loc,W_OPERATOR_WAS_ALREADY_DEFINED,
+              info ? info->oi_sname : "?"))
+       goto err;
+  }
   result->co_addr = addr; /* Overwrite the old binding. */
   return 0;
  }
@@ -848,6 +861,9 @@ class_maker_addinit(struct class_maker *__restrict self,
                               "couldn't have been parsed in its context");
   ASSERTF(self->cm_ctor_scope == ast->a_scope->s_base,
           "Initializer ASTs must be parsed in the context of the CTOR scope");
+  if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED)
+      return WARNAT(loc,W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED);
+
   /* Check if we need to allocate more memory for the initializer vector. */
   if unlikely(priv_reserve_instance_init(self)) goto err;
   /* Create a new AST to store to the given symbol. */
@@ -923,7 +939,7 @@ class_maker_addoperator(struct class_maker *__restrict self,
  }
  ++self->cm_desc->cd_cmemb_size;
  /* Bind the specified operator to the given address. */
- if unlikely(class_maker_bindoperator(self,operator_name,addr))
+ if unlikely(class_maker_bindoperator(self,operator_name,addr,&ast->a_ddi))
     goto err;
  /* Allocate an initializer for the operator-bound class member. */
  member = priv_alloc_class_member(self);
@@ -944,6 +960,25 @@ err:
  ast_incref(ast);
  return 0;
 #endif
+}
+
+PRIVATE int DCALL
+class_maker_deloperator(struct class_maker *__restrict self,
+                        uint16_t operator_name, struct ast_loc *loc) {
+ /* Deleted operator (e.g. `operator str = del;') */
+ if (self->cm_null_member == (uint16_t)-1) {
+  self->cm_null_member = self->cm_desc->cd_cmemb_size;
+  if unlikely(self->cm_null_member == (uint16_t)-1) {
+   return PERRAT(loc,W_TOO_MANY_CLASS_MEMBER,
+                 self->cm_classsym->s_name->k_name);
+  }
+  ++self->cm_desc->cd_cmemb_size;
+ }
+ /* Operators are deleted by binding them to a class member
+  * lacking an associated attribute, while always being unbound. */
+ return class_maker_bindoperator(self,operator_name,
+                                 self->cm_null_member,
+                                 loc);
 }
 
 
@@ -1008,7 +1043,7 @@ class_maker_pack(struct class_maker *__restrict self) {
   if (self->cm_initc != self->cm_inita) {
    DREF struct ast **new_vector;
    new_vector = (DREF struct ast **)Dee_TryRealloc(self->cm_initv,self->cm_initc*
-                                                     sizeof(DREF struct ast *));
+                                                   sizeof(DREF struct ast *));
    if likely(new_vector) {
     self->cm_initv = new_vector;
     self->cm_inita = self->cm_initc;
@@ -1025,7 +1060,7 @@ class_maker_pack(struct class_maker *__restrict self) {
   constructor_text->a_scope = (DREF DeeScopeObject *)self->cm_ctor_scope;
   if (constructor_function) {
    ASSERT(constructor_function == self->cm_ctor);
-   ASSERT(constructor_function->a_type               == AST_FUNCTION);
+   ASSERT(constructor_function->a_type             == AST_FUNCTION);
    ASSERT(constructor_function->a_function.f_scope == self->cm_ctor_scope);
    ast_decref(constructor_function->a_function.f_code);
    constructor_function->a_function.f_code = constructor_text; /* Inherit */
@@ -1057,6 +1092,10 @@ class_maker_pack(struct class_maker *__restrict self) {
   ctor_member->cm_ast   = constructor_function; /* Inherit */
 #endif
  }
+ /* Set the constructor-inherited flag for the resulting descriptor. */
+ if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER)
+     self->cm_desc->cd_flags |= TP_FINHERITCTOR;
+
  /* With all class members/operators out of the
   * way, truncate the class operator table. */
  if (self->cm_class_initc != self->cm_class_inita) {
@@ -1530,6 +1569,7 @@ ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
  maker.cm_desc->cd_cattr_list = empty_class_attributes;
  maker.cm_desc->cd_clsop_list = empty_class_operators;
  maker.cm_desc->cd_iattr_mask = 7;
+ maker.cm_null_member = (uint16_t)-1;
 #else
  maker.cm_flags = class_flags;
 #endif
@@ -1767,6 +1807,10 @@ set_visibility:
    temp = ast_parse_operator_name(P_OPERATOR_FCLASS);
    if unlikely(temp < 0) goto err;
    operator_name = (uint16_t)temp;
+define_operator:
+   /* Special case: The constructor operator. */
+   if (operator_name == OPERATOR_CONSTRUCTOR)
+       goto define_constructor;
    if (tok == '=') {
     if ((operator_name >= AST_OPERATOR_MIN &&
          operator_name <= AST_OPERATOR_MAX) &&
@@ -1774,14 +1818,17 @@ set_visibility:
          goto err;
     /* Operator callback assignment. */
     if unlikely(yield() < 0) goto err;
-    need_semi    = true;
+    need_semi = true;
+    if (tok == KWD_del) {
+     /* Deleted operator (e.g. `operator str = del;') */
+     if unlikely(class_maker_deloperator(&maker,operator_name,&loc))
+        goto err;
+     if unlikely(yield() < 0) goto err;
+     goto yield_semi_after_operator;
+    }
     operator_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
     goto set_operator_ast;
    }
-define_operator:
-   /* Special case: The constructor operator. */
-   if (operator_name == OPERATOR_CONSTRUCTOR)
-       goto define_constructor;
    if (operator_name == AST_OPERATOR_FOR) {
     /* Special case: `operator for()' is a wrapper around `operator iter()' */
     DREF struct ast *yield_function,*temp,**argv;
@@ -1908,6 +1955,7 @@ set_operator_ast:
    if unlikely(error) goto err;
    /* Parse a trailing ';' if required to. */
    if (need_semi) {
+yield_semi_after_operator:
     if unlikely(likely(is_semicollon()) ? (yield_semicollon() < 0) :
                 WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
        goto err;
@@ -1952,14 +2000,122 @@ set_operator_ast:
     /* Special case: Constructor. */
 define_constructor:
     if unlikely(maker.cm_ctor) {
-     if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED))
+     if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
+              maker.cm_classsym->s_name->k_name))
          goto err;
      ast_decref(maker.cm_ctor);
      maker.cm_ctor = NULL;
     }
+    if unlikely(yield() < 0) goto err;
+    if (tok == '=') {
+     /* Special cases:
+      *   - `this = del' (delete the constructor)
+      *   - `this = super' (inherit the constructor from a super-class)
+      *   - `this = ...' (Assign a custom callback that is invoked as the constructor) */
+     if unlikely(yield() < 0) goto err;
+     if (tok == KWD_del) {
+      if (!(maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED)) {
+       if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER) {
+        if (WARN(W_CANNOT_DELETE_INHERITED_CONSTRUCTOR,
+                 maker.cm_classsym->s_name->k_name))
+            goto err;
+        maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FSUPER;
+       }
+       /* Warn about instance member initializers being used,
+        * as well as set a flag that will warn about future
+        * use of instance member initializers. */
+       maker.cm_ctor_flags |= CLASS_MAKER_CTOR_FDELETED;
+       /* Warn about, and delete all member initializers. */
+       while (maker.cm_initc) {
+        DREF struct ast *init;
+        init = maker.cm_initv[maker.cm_initc - 1];
+        if (WARNAST(init,W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED))
+            goto err;
+        --maker.cm_initc;
+        ast_decref(init);
+       }
+       if unlikely(class_maker_deloperator(&maker,OPERATOR_CONSTRUCTOR,&loc))
+          goto err;
+      }
+      if unlikely(yield() < 0) goto err;
+      goto do_yield_semicollon;
+     }
+     if (tok == KWD_super) {
+      /* Inherit constructors.
+       * - Set the `TP_FINHERITCTOR' flag, which will instruct the
+       *   class runtime to implement `CLASS_OPERATOR_SUPERARGS' in
+       *   such a way that arguments are forwarded exactly. */
+      if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED) {
+       if (WARNAT(&loc,W_CANNOT_INHERIT_DELETED_CONSTRUCTOR,
+                  maker.cm_classsym->s_name->k_name))
+           goto err;
+       maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FDELETED;
+      }
+      maker.cm_ctor_flags |= CLASS_MAKER_CTOR_FSUPER;
+      if unlikely(yield() < 0) goto err;
+      goto do_yield_semicollon;
+     }
+     if (maker.cm_ctor_flags & (CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER)) {
+      if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
+               maker.cm_classsym->s_name->k_name))
+          goto err;
+      maker.cm_ctor_flags &= ~(CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER);
+     }
+     /* Parse an expression that is invoked at the end of the constructor. */
+     if unlikely(class_maker_push_ctorscope(&maker)) goto err;
+     /* Compile the actual constructor in a sub-scope so any local
+      * variables that it may define will not interfere with the
+      * lookup rules in member initializers that may still follow. */
+     if (scope_push()) goto err;
+     /* NOTE: Don't parse a second argument list here. */
+     {
+      DREF struct ast *call_branch,*call_args;
+      DREF struct ast *ctor_expr;
+      ctor_expr = ast_putddi(ast_parse_expr(LOOKUP_SYM_NORMAL),&loc);
+      if unlikely(!ctor_expr) goto err;
+      if (!current_basescope->bs_argc) {
+       /* TODO: Create anonymous varargs. */
+       struct symbol *dots = new_unnamed_symbol_in_scope(&current_basescope->bs_scope);
+       if unlikely(!dots) goto err_ctor_expr;
+       Dee_Free(current_basescope->bs_argv);
+       current_basescope->bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
+       if unlikely(!current_basescope->bs_argv) goto err_ctor_expr;
+       dots->s_type  = SYMBOL_TYPE_ARG;
+       dots->s_symid = 0;
+       dots->s_flag |= SYMBOL_FALLOC;
+       current_basescope->bs_argc    = 1;
+       current_basescope->bs_argv[0] = dots;
+       current_basescope->bs_varargs = dots;
+       current_basescope->bs_flags  |= CODE_FVARARGS;
+      }
+      /* Wrap the constructor expression in a call-branch (so-as to invoke it when the time comes) */
+      if (current_basescope->bs_varargs) {
+       call_args = ast_setddi(ast_sym(current_basescope->bs_varargs),&loc);
+      } else {
+       call_args = ast_setddi(ast_constexpr(Dee_EmptyTuple),&loc);
+      }
+      if unlikely(!call_args) { err_ctor_expr: Dee_Decref(ctor_expr); goto err; }
+      call_branch = ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,
+                                  ctor_expr,call_args);
+      ast_decref(call_args);
+      ast_decref(ctor_expr);
+      if unlikely(!call_branch) goto err;
+      if unlikely(priv_reserve_instance_init(&maker))
+         goto err;
+      maker.cm_initv[maker.cm_initc++] = call_branch; /* Inherit reference. */
+     }
+     scope_pop();
+     basescope_pop();
+     goto do_yield_semicollon;
+    }
+    if (maker.cm_ctor_flags & (CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER)) {
+     if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
+              maker.cm_classsym->s_name->k_name))
+         goto err;
+     maker.cm_ctor_flags &= ~(CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER);
+    }
     /* Explicitly push the constructor-scope when parsing the constructor. */
     if unlikely(class_maker_push_ctorscope(&maker)) goto err;
-    if unlikely(yield() < 0) goto err;
     /* NOTE: We do the function processing manually so we can
      *       correctly handle super-initializer statements. */
     if (tok == '(') {
@@ -2215,6 +2371,7 @@ err_property:
    ++*pusage_counter;
 check_need_semi:
    if (need_semi) {
+do_yield_semicollon:
     if unlikely(likely(is_semicollon()) ? (yield_semicollon() < 0) :
                 WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
        goto err;
