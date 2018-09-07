@@ -336,6 +336,11 @@ typedef void (DCALL *dvisit_t)(DeeObject *__restrict self, void *arg);
 DFUNDEF bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
                            DeeObject *__restrict self);
+/* Same as `DeeObject_UndoConstruction()', however optimize for the
+ * case of `undo_start' known to either be `NULL' or `DeeObject_Type' */
+#define DeeObject_UndoConstructionNoBase(self) \
+        ATOMIC_CMPXCH((self)->ob_refcnt,1,0)
+
 
 /* incref() + return `self' */
 DFUNDEF DREF DeeObject *DCALL DeeObject_NewRef(DeeObject *__restrict self);

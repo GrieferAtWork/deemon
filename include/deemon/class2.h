@@ -26,6 +26,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
+
  /* DEPRECATED NAMES */
 #define member_entry              class_attribute
 #define CLASS_MEMBER_FPUBLIC      CLASS_ATTRIBUTE_FNORMAL
@@ -475,6 +477,16 @@ INTDEF int DCALL instance_init(DeeObject *__restrict self, size_t argc, DeeObjec
 INTDEF int DCALL instance_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF int DCALL instance_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
+#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+/* `OPERATOR_CONSTRUCTOR' (but the type doesn't have a base) */
+INTDEF int DCALL instance_nobase_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF int DCALL instance_nobase_ctor(DeeObject *__restrict self);
+INTDEF int DCALL instance_nobase_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_nobase_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+
 /* `OPERATOR_CONSTRUCTOR', with the `TP_FINHERITCTOR' flag set.
  * NOTE: These functions always invoke the user-defined constructor without any arguments! */
 #define instance_inherited_tctor instance_tctor
@@ -492,6 +504,16 @@ INTDEF int DCALL instance_builtin_init(DeeObject *__restrict self, size_t argc, 
 INTDEF int DCALL instance_builtin_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF int DCALL instance_builtin_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
+#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+/* No predefined construction operators. (but the type doesn't have a base) */
+INTDEF int DCALL instance_builtin_nobase_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_nobase_ctor(DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_nobase_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_nobase_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_builtin_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+
 /* No predefined construction operators, but the `TP_FINHERITCTOR' flag is set. */
 INTDEF int DCALL instance_builtin_inherited_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF int DCALL instance_builtin_inherited_ctor(DeeObject *__restrict self);
@@ -505,6 +527,11 @@ INTDEF int DCALL instance_builtin_tcopy(DeeTypeObject *__restrict tp_self, DeeOb
 INTDEF int DCALL instance_builtin_copy(DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF int DCALL instance_builtin_tdeepload(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF int DCALL instance_builtin_deepload(DeeObject *__restrict self);
+#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+INTDEF int DCALL instance_builtin_nobase_tcopy(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF int DCALL instance_builtin_nobase_copy(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF int DCALL instance_builtin_nobase_deepload(DeeObject *__restrict self);
+#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTDEF void DCALL instance_builtin_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
 INTDEF int DCALL instance_builtin_tassign(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF int DCALL instance_builtin_assign(DeeObject *__restrict self, DeeObject *__restrict other);
