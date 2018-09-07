@@ -64,10 +64,10 @@ struct string_object;
                                           * When `CLASS_ATTRIBUTE_FMETHOD' is set, callbacks are invoked as this-calls.
                                           * When `CLASS_ATTRIBUTE_FREADONLY' is set, only `CLASS_GETSET_GET' is ever accessed,
                                           * and all other callbacks behave as though they were unbound. */
-#define CLASS_ATTRIBUTE_FCLASSMEM 0x1000 /* An instance-attribute is stored in class memory (usually set for instance member functions).
+#define CLASS_ATTRIBUTE_FCLASSMEM 0x0010 /* An instance-attribute is stored in class memory (usually set for instance member functions).
                                           * NOTE: Ignored when used by attributes in `cd_cattr_list', where
                                           *       operation is always done like it would be when it was set. */
-#define CLASS_ATTRIBUTE_FMASK     0x100f /* Mask of known flag bits. */
+#define CLASS_ATTRIBUTE_FMASK     0x001f /* Mask of known flag bits. */
 
 struct class_attribute {
     DREF struct string_object *ca_name; /* [0..1][const] Name of this member.
@@ -213,7 +213,7 @@ struct class_descriptor_object {
     OBJECT_HEAD
     DREF struct string_object *cd_name;          /* [0..1][const] Name of the class. */
     DREF struct string_object *cd_doc;           /* [0..1][const] Documentation strings for the class itself, and its operators. */
-    uint16_t                   cd_flags;         /* [const] Additional flags to set for the resulting type. */
+    uint16_t                   cd_flags;         /* [const] Additional flags to set for the resulting type (set of `TP_F*'). */
     uint16_t                   cd_cmemb_size;    /* [const] The allocation size of the class member table. */
     uint16_t                   cd_imemb_size;    /* [const] The allocation size of the instance member table. */
     uint16_t                   cd_clsop_mask;    /* [const] Mask for the `cd_clsop_list' hash-vector. */

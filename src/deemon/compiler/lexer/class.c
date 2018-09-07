@@ -421,7 +421,8 @@ class_maker_newcattr(struct class_maker *__restrict self,
                      DeeStringObject *__restrict name) {
  dhash_t i,perturb,hash; struct class_attribute *result;
  DeeClassDescriptorObject *desc = self->cm_desc;
- if ((self->cm_cattr_size >= (desc->cd_cattr_mask/3)*2) &&
+ if ((desc->cd_cattr_mask == 0 ||
+     (self->cm_cattr_size > (desc->cd_cattr_mask/3)*2)) &&
       unlikely(rehash_class_attributes(desc)))
       goto err;
  hash = DeeString_Hash((DeeObject *)name);
@@ -457,7 +458,8 @@ class_maker_newiattr(struct class_maker *__restrict self,
                      DeeStringObject *__restrict name) {
  dhash_t i,perturb,hash; struct class_attribute *result;
  DeeClassDescriptorObject *desc = self->cm_desc;
- if ((self->cm_iattr_size >= (desc->cd_iattr_mask/3)*2)) {
+ if ((desc->cd_iattr_mask == 0) ||
+     (self->cm_iattr_size > (desc->cd_iattr_mask/3)*2)) {
   desc = rehash_instance_attributes(desc);
   if unlikely(!desc) goto err;
   self->cm_desc = desc; /* Replace reference. */
@@ -498,7 +500,8 @@ class_maker_bindoperator(struct class_maker *__restrict self,
                          uint16_t name, uint16_t addr) {
  uint16_t i,perturb; struct class_operator *result;
  DeeClassDescriptorObject *desc = self->cm_desc;
- if ((self->cm_clsop_size >= (desc->cd_clsop_mask/3)*2) &&
+ if ((desc->cd_clsop_mask == 0 ||
+     (self->cm_clsop_size > (desc->cd_clsop_mask/3)*2)) &&
       unlikely(rehash_operator_bindings(desc)))
       goto err;
  i = perturb = name & desc->cd_iattr_mask;

@@ -1069,7 +1069,10 @@ err: result = -1; goto stop;
 }
 
 
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+INTDEF struct class_operator empty_class_operators[];
+INTDEF struct class_attribute empty_class_attributes[];
+#else
 PRIVATE DREF DeeObject *DCALL
 DeeMemberTable_NewSized(size_t vtab_size, uint32_t num_symbols) {
  DREF DeeMemberTableObject *result;
@@ -1258,7 +1261,184 @@ err_function_code:
   DeeGC_Track((DeeObject *)result);
  } break;
 
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ {
+  uint8_t flags,cmemb_size,imemb_size,i;
+  uint8_t op_count,cattr_count,iattr_count;
+  uint16_t opbind_mask;
+  size_t cattr_mask,iattr_mask;
+  char *strtab,*fileend;
+  char *name,*doc; size_t doclen;
+#ifdef __INTELLISENSE__
+  DeeClassDescriptorObject *descriptor;
+#else
+#define descriptor ((DeeClassDescriptorObject *)result)
+#endif
+ case DTYPE_CLASSDESC:
+  /* 8-bit class descriptor. */
+  flags   = *(uint8_t *)reader,reader += 1;
+  fileend = (char *)(self->df_base + self->df_size);
+  strtab  = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
+  name    = strtab + Dec_DecodePointer(&reader);
+  if unlikely(name < strtab || name >= fileend)
+     GOTO_CORRUPTED(corrupt);
+  doclen  = Dec_DecodePointer(&reader);
+  doc     = NULL;
+  if (doclen) {
+   doc = strtab + Dec_DecodePointer(&reader);
+   if unlikely(doc < strtab || doc >= fileend)
+      GOTO_CORRUPTED(corrupt);
+  }
+  cmemb_size  = *(uint8_t *)reader,reader += 1;
+  imemb_size  = *(uint8_t *)reader,reader += 1;
+  op_count    = *(uint8_t *)reader,reader += 1;
+  cattr_count = *(uint8_t *)reader,reader += 1;
+  iattr_count = *(uint8_t *)reader,reader += 1;
+  iattr_mask = 0;
+  if (iattr_count) {
+   while (iattr_count > (iattr_mask / 3) * 2)
+          iattr_mask = (iattr_mask << 1) | 1;
+  }
+  result = (DREF DeeObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject,cd_iattr_list)+
+                                             (iattr_mask + 1) * sizeof(struct class_attribute));
+  if unlikely(!result) goto err;
+  DeeObject_Init(result,&DeeClassDescriptor_Type);
+  descriptor->cd_cattr_list = empty_class_attributes;
+  descriptor->cd_clsop_list = empty_class_operators;
+  descriptor->cd_iattr_mask = iattr_mask;
+  descriptor->cd_cmemb_size = cmemb_size;
+  descriptor->cd_imemb_size = imemb_size;
+  /* Load the class's name and documentation string from the string table. */
+  if (*name && (descriptor->cd_name = (DREF DeeStringObject *)DeeString_New(name)) == NULL)
+      goto err_r;
+  if (doclen && (descriptor->cd_doc = (DREF DeeStringObject *)
+                 DeeString_NewUtf8(doc,doclen,STRING_ERROR_FSTRICT)) == NULL)
+      goto err_r;
+  if (op_count) {
+   struct class_operator *opbind_list;
+   /* Load the operator descriptor table. */
+   if (reader + op_count * 2 > (uint8_t *)fileend)
+       GOTO_CORRUPTED(corrupt_r);
+   opbind_mask = 0;
+   while (op_count > (opbind_mask/3)*2)
+       opbind_mask = (opbind_mask << 1) | 1;
+   opbind_list = (struct class_operator *)Dee_Malloc((opbind_mask + 1) *
+                                                      sizeof(struct class_operator));
+   if unlikely(!opbind_list) goto err_r;
+   memset(opbind_list,0xff,(opbind_mask + 1) * sizeof(struct class_operator));
+   descriptor->cd_clsop_mask = opbind_mask;
+   descriptor->cd_clsop_list = opbind_list;
+   for (i = 0; i < op_count; ++i) {
+    struct class_operator *entry;
+    uint8_t name,addr; uint16_t j,perturb;
+    name = *(uint8_t *)reader,reader += 1;
+    addr = *(uint8_t *)reader,reader += 1;
+    if (addr >= cmemb_size)
+        GOTO_CORRUPTED(corrupt_r);
+    j = perturb = name & opbind_mask;
+    for (;; DeeClassDescriptor_CLSOPNEXT(j,perturb)) {
+     entry = &opbind_list[j & opbind_mask];
+     if (entry->co_name == (uint16_t)-1) break;
+    }
+    entry->co_name = name;
+    entry->co_addr = addr;
+   }
+  }
+  if (cattr_count) {
+   struct class_attribute *cattr_list;
+   /* Load the class attribute descriptor table. */
+   cattr_mask = 0;
+   while (cattr_count > (cattr_mask/3)*2)
+       cattr_mask = (cattr_mask << 1) | 1;
+   cattr_list = (struct class_attribute *)Dee_Calloc((cattr_mask + 1) *
+                                                      sizeof(struct class_attribute));
+   if unlikely(!cattr_list) goto err_r;
+   descriptor->cd_cattr_list = cattr_list;
+   descriptor->cd_cattr_mask = cattr_mask;
+   for (i = 0; i < cattr_count; ++i) {
+    struct class_attribute *entry;
+    dhash_t j,perturb,hash; uint8_t addr,flags;
+    DREF DeeStringObject *name_ob;
+    if unlikely(reader >= (uint8_t *)fileend)
+       GOTO_CORRUPTED(corrupt_r);
+    addr  = *(uint8_t *)reader,reader += 1;
+    flags = *(uint8_t *)reader,reader += 1;
+    if unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
+       GOTO_CORRUPTED(corrupt_r);
+    if unlikely(addr >= cmemb_size)
+       GOTO_CORRUPTED(corrupt_r);
+    name = strtab + Dec_DecodePointer(&reader);
+    if unlikely(name < strtab || name >= fileend)
+       GOTO_CORRUPTED(corrupt_r);
+    doclen  = Dec_DecodePointer(&reader);
+    doc     = NULL;
+    if (doclen) {
+     doc = strtab + Dec_DecodePointer(&reader);
+     if unlikely(doc < strtab || doc >= fileend)
+        GOTO_CORRUPTED(corrupt_r);
+    }
+    name_ob = (DREF DeeStringObject *)DeeString_New(name);
+    if unlikely(!name_ob) goto err_r;
+    hash = DeeString_Hash((DeeObject *)name_ob);
+    j = perturb = hash & cattr_mask;
+    for (;; DeeClassDescriptor_CATTRNEXT(j,perturb)) {
+     entry = &cattr_list[j & cattr_mask];
+     if (!entry->ca_name) break;
+    }
+    entry->ca_name = name_ob; /* Inherit reference. */
+    entry->ca_hash = hash;
+    if (doclen) {
+     entry->ca_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,doclen,STRING_ERROR_FSTRICT);
+     if unlikely(!entry->ca_doc) goto err_r;
+    }
+    entry->ca_addr = addr;
+    entry->ca_flag = flags;
+   }
+  }
+  /* Load the instance attribute descriptor table. */
+  for (i = 0; i < iattr_count; ++i) {
+   struct class_attribute *entry;
+   dhash_t j,perturb,hash; uint8_t addr,flags;
+   DREF DeeStringObject *name_ob;
+   if unlikely(reader >= (uint8_t *)fileend)
+      GOTO_CORRUPTED(corrupt_r);
+   addr  = *(uint8_t *)reader,reader += 1;
+   flags = *(uint8_t *)reader,reader += 1;
+   if unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
+      GOTO_CORRUPTED(corrupt_r);
+   if unlikely(addr >= ((flags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
+      GOTO_CORRUPTED(corrupt_r);
+   name = strtab + Dec_DecodePointer(&reader);
+   if unlikely(name < strtab || name >= fileend)
+      GOTO_CORRUPTED(corrupt_r);
+   doclen  = Dec_DecodePointer(&reader);
+   doc     = NULL;
+   if (doclen) {
+    doc = strtab + Dec_DecodePointer(&reader);
+    if unlikely(doc < strtab || doc >= fileend)
+       GOTO_CORRUPTED(corrupt_r);
+   }
+   name_ob = (DREF DeeStringObject *)DeeString_New(name);
+   if unlikely(!name_ob) goto err_r;
+   hash = DeeString_Hash((DeeObject *)name_ob);
+   j = perturb = hash & iattr_mask;
+   for (;; DeeClassDescriptor_IATTRNEXT(j,perturb)) {
+    entry = &descriptor->cd_iattr_list[j & iattr_mask];
+    if (!entry->ca_name) break;
+   }
+   entry->ca_name = name_ob; /* Inherit reference. */
+   entry->ca_hash = hash;
+   if (doclen) {
+    entry->ca_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,doclen,STRING_ERROR_FSTRICT);
+    if unlikely(!entry->ca_doc) goto err_r;
+   }
+   entry->ca_addr = addr;
+   entry->ca_flag = flags;
+  }
+#undef descriptor
+ } break;
+
+#else
  {
   uint8_t size,*end;
   uint32_t length; char *strtab;
@@ -1426,7 +1606,194 @@ err_function_code:
    }
   } break;
 
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+  {
+   uint16_t flags,op_count,opbind_mask;
+   uint16_t cmemb_size,imemb_size;
+   uint32_t cattr_count,iattr_count,i;
+   size_t cattr_mask,iattr_mask;
+   char *strtab,*fileend;
+   char *name,*doc; size_t doclen;
+#ifdef __INTELLISENSE__
+   DeeClassDescriptorObject *descriptor;
+#else
+#define descriptor ((DeeClassDescriptorObject *)result)
+#endif
+  case DTYPE16_CLASSDESC & 0xff:
+   /* 16-bit class descriptor. */
+   flags   = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+   fileend = (char *)(self->df_base + self->df_size);
+   strtab  = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
+   name    = strtab + Dec_DecodePointer(&reader);
+   if unlikely(name < strtab || name >= fileend)
+      GOTO_CORRUPTED(corrupt);
+   doclen  = Dec_DecodePointer(&reader);
+   doc     = NULL;
+   if (doclen) {
+    doc = strtab + Dec_DecodePointer(&reader);
+    if unlikely(doc < strtab || doc >= fileend)
+       GOTO_CORRUPTED(corrupt);
+   }
+   cmemb_size  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 1;
+   imemb_size  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 1;
+   op_count    = UNALIGNED_GETLE16((uint16_t *)reader),reader += 1;
+   cattr_count = Dec_DecodePointer(&reader);
+   iattr_count = Dec_DecodePointer(&reader);
+   iattr_mask  = 0;
+   if (iattr_count) {
+#if __SIZEOF_POINTER__ < 8
+    if unlikely(iattr_count > (((size_t)-1) / 3) * 2)
+       GOTO_CORRUPTED(corrupt);
+#endif
+    while (iattr_count > (iattr_mask / 3) * 2)
+        iattr_mask = (iattr_mask << 1) | 1;
+   }
+   result = (DREF DeeObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject,cd_iattr_list)+
+                                              (iattr_mask + 1) * sizeof(struct class_attribute));
+   if unlikely(!result) goto err;
+   DeeObject_Init(result,&DeeClassDescriptor_Type);
+   descriptor->cd_cattr_list = empty_class_attributes;
+   descriptor->cd_clsop_list = empty_class_operators;
+   descriptor->cd_iattr_mask = iattr_mask;
+   descriptor->cd_cmemb_size = cmemb_size;
+   descriptor->cd_imemb_size = imemb_size;
+   /* Load the class's name and documentation string from the string table. */
+   if (*name && (descriptor->cd_name = (DREF DeeStringObject *)DeeString_New(name)) == NULL)
+       goto err_r;
+   if (doclen && (descriptor->cd_doc = (DREF DeeStringObject *)
+                  DeeString_NewUtf8(doc,doclen,STRING_ERROR_FSTRICT)) == NULL)
+       goto err_r;
+   if (op_count) {
+    struct class_operator *opbind_list;
+    /* Load the operator descriptor table. */
+    if (reader + op_count * 4 > (uint8_t *)fileend)
+        GOTO_CORRUPTED(corrupt_r);
+    opbind_mask = 0;
+    while (op_count > (opbind_mask/3)*2)
+        opbind_mask = (opbind_mask << 1) | 1;
+    opbind_list = (struct class_operator *)Dee_Malloc((opbind_mask + 1) *
+                                                       sizeof(struct class_operator));
+    if unlikely(!opbind_list) goto err_r;
+    memset(opbind_list,0xff,(opbind_mask + 1) * sizeof(struct class_operator));
+    descriptor->cd_clsop_mask = opbind_mask;
+    descriptor->cd_clsop_list = opbind_list;
+    for (i = 0; i < op_count; ++i) {
+     struct class_operator *entry;
+     uint16_t name,addr; uint16_t j,perturb;
+     name = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+     addr = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+     if unlikely(addr == (uint16_t)-1)
+        GOTO_CORRUPTED(corrupt_r);
+     if (addr >= cmemb_size)
+         GOTO_CORRUPTED(corrupt_r);
+     j = perturb = name & opbind_mask;
+     for (;; DeeClassDescriptor_CLSOPNEXT(j,perturb)) {
+      entry = &opbind_list[j & opbind_mask];
+      if (entry->co_name == (uint16_t)-1) break;
+     }
+     entry->co_name = name;
+     entry->co_addr = addr;
+    }
+   }
+   if (cattr_count) {
+    struct class_attribute *cattr_list;
+    /* Load the class attribute descriptor table. */
+    cattr_mask = 0;
+#if __SIZEOF_POINTER__ < 8
+    if unlikely(cattr_count > (((size_t)-1) / 3) * 2)
+       GOTO_CORRUPTED(corrupt_r);
+#endif
+    while (cattr_count > (cattr_mask/3)*2)
+        cattr_mask = (cattr_mask << 1) | 1;
+    cattr_list = (struct class_attribute *)Dee_Calloc((cattr_mask + 1) *
+                                                       sizeof(struct class_attribute));
+    if unlikely(!cattr_list) goto err_r;
+    descriptor->cd_cattr_list = cattr_list;
+    descriptor->cd_cattr_mask = cattr_mask;
+    for (i = 0; i < cattr_count; ++i) {
+     struct class_attribute *entry;
+     dhash_t j,perturb,hash; uint16_t addr,flags;
+     DREF DeeStringObject *name_ob;
+     if unlikely(reader >= (uint8_t *)fileend)
+        GOTO_CORRUPTED(corrupt_r);
+     addr  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+     flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+     if unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
+        GOTO_CORRUPTED(corrupt_r);
+     if unlikely(addr >= cmemb_size)
+        GOTO_CORRUPTED(corrupt_r);
+     name = strtab + Dec_DecodePointer(&reader);
+     if unlikely(name < strtab || name >= fileend)
+        GOTO_CORRUPTED(corrupt_r);
+     doclen  = Dec_DecodePointer(&reader);
+     doc     = NULL;
+     if (doclen) {
+      doc = strtab + Dec_DecodePointer(&reader);
+      if unlikely(doc < strtab || doc >= fileend)
+         GOTO_CORRUPTED(corrupt_r);
+     }
+     name_ob = (DREF DeeStringObject *)DeeString_New(name);
+     if unlikely(!name_ob) goto err_r;
+     hash = DeeString_Hash((DeeObject *)name_ob);
+     j = perturb = hash & cattr_mask;
+     for (;; DeeClassDescriptor_CATTRNEXT(j,perturb)) {
+      entry = &cattr_list[j & cattr_mask];
+      if (!entry->ca_name) break;
+     }
+     entry->ca_name = name_ob; /* Inherit reference. */
+     entry->ca_hash = hash;
+     if (doclen) {
+      entry->ca_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,doclen,STRING_ERROR_FSTRICT);
+      if unlikely(!entry->ca_doc) goto err_r;
+     }
+     entry->ca_addr = addr;
+     entry->ca_flag = flags;
+    }
+   }
+   /* Load the instance attribute descriptor table. */
+   for (i = 0; i < iattr_count; ++i) {
+    struct class_attribute *entry;
+    dhash_t j,perturb,hash; uint16_t addr,flags;
+    DREF DeeStringObject *name_ob;
+    if unlikely(reader >= (uint8_t *)fileend)
+       GOTO_CORRUPTED(corrupt_r);
+    addr  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+    flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+    if unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
+       GOTO_CORRUPTED(corrupt_r);
+    if unlikely(addr >= ((flags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
+       GOTO_CORRUPTED(corrupt_r);
+    name = strtab + Dec_DecodePointer(&reader);
+    if unlikely(name < strtab || name >= fileend)
+       GOTO_CORRUPTED(corrupt_r);
+    doclen  = Dec_DecodePointer(&reader);
+    doc     = NULL;
+    if (doclen) {
+     doc = strtab + Dec_DecodePointer(&reader);
+     if unlikely(doc < strtab || doc >= fileend)
+        GOTO_CORRUPTED(corrupt_r);
+    }
+    name_ob = (DREF DeeStringObject *)DeeString_New(name);
+    if unlikely(!name_ob) goto err_r;
+    hash = DeeString_Hash((DeeObject *)name_ob);
+    j = perturb = hash & iattr_mask;
+    for (;; DeeClassDescriptor_IATTRNEXT(j,perturb)) {
+     entry = &descriptor->cd_iattr_list[j & iattr_mask];
+     if (!entry->ca_name) break;
+    }
+    entry->ca_name = name_ob; /* Inherit reference. */
+    entry->ca_hash = hash;
+    if (doclen) {
+     entry->ca_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,doclen,STRING_ERROR_FSTRICT);
+     if unlikely(!entry->ca_doc) goto err_r;
+    }
+    entry->ca_addr = addr;
+    entry->ca_flag = flags;
+   }
+#undef descriptor
+  } break;
+
+#else
   {
    uint8_t *end; char *strtab;
    uint32_t size,length;

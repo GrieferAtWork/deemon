@@ -2939,6 +2939,7 @@ DeeClass_New(DeeTypeObject *__restrict base,
   result_class->cd_offset +=  (sizeof(void *)-1);
   result_class->cd_offset &= ~(sizeof(void *)-1);
   result->tp_base = base;
+  result->tp_flags |= base->tp_flags & TP_FINTERHITABLE;
   Dee_Incref(base);
  }
  result_class->cd_desc = desc;

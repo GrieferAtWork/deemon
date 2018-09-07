@@ -334,13 +334,77 @@ typedef union PACKED {
 
 #ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 typedef struct PACKED {
-    /* TODO */
-    int placeholder;
+    uint16_t           co_name; /* Name of the operator (one of `OPERATOR_*') */
+    uint16_t           co_addr; /* [<= :cd_cmemb_size] Index into the class member
+                                 * table, to where the operator callback can be bound. */
+} Dec_ClassOperator;
+
+typedef struct PACKED {
+    uint16_t           ca_addr;          /* Address of the attribute (behavior depends on flags) */
+    uint16_t           ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
+    uint8_t            ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+                                          * NOTE: Decode using `Dec_DecodePointer()' */
+    uint8_t            ca_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
+                                          * NOTE: Decode using `Dec_DecodePointer()' */
+    uint8_t            ca_doc[1];        /* Only exists when `ca_doclen' evaluates to non-zero:
+                                          * The offset into `e_stroff' of the documentation string's start.
+                                          * NOTE: Decode using `Dec_DecodePointer()' */
+} Dec_ClassAttribute;
+
+typedef struct PACKED {
+    uint16_t           cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
+    uint8_t            cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+                                          * NOTE: Decode using `Dec_DecodePointer()' */
+    uint8_t            cd_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
+                                          * NOTE: Decode using `Dec_DecodePointer()' */
+    uint8_t            cd_doc[1];        /* Only exists when `cd_doclen' evaluates to non-zero:
+                                          * The offset into `e_stroff' of the documentation string's start.
+                                          * NOTE: Decode using `Dec_DecodePointer()' */
+    uint16_t           cd_cmemb_size;    /* The allocation size of the class member table. */
+    uint16_t           cd_imemb_size;    /* The allocation size of the instance member table. */
+    uint16_t           cd_op_count;      /* Amount of user-defined operator bindings. */
+    uint8_t            cd_cattr_count[1];/* Amount of class attributes (Decode using `Dec_DecodePointer()'). */
+    uint8_t            cd_iattr_count[1];/* Amount of instance attributes (Decode using `Dec_DecodePointer()'). */
+    Dec_ClassOperator  cd_op_list[1];    /* [cd_op_count] List of operator bindings. */
+    Dec_ClassAttribute cd_cattr_list[1]; /* [cd_cattr_count] List of class attributes. */
+    Dec_ClassAttribute cd_iattr_list[1]; /* [cd_iattr_count] List of instance attributes. */
 } Dec_ClassDescriptor;
 
 typedef struct PACKED {
-    /* TODO */
-    int placeholder;
+    uint8_t                co_name; /* Name of the operator (one of `OPERATOR_*') */
+    uint8_t                co_addr; /* [<= :cd_cmemb_size] Index into the class member
+                                     * table, to where the operator callback can be bound. */
+} Dec_8BitClassOperator;
+
+typedef struct PACKED {
+    uint8_t                ca_addr;          /* Address of the attribute (behavior depends on flags) */
+    uint8_t                ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
+    uint8_t                ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+                                              * NOTE: Decode using `Dec_DecodePointer()' */
+    uint8_t                ca_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
+                                              * NOTE: Decode using `Dec_DecodePointer()' */
+    uint8_t                ca_doc[1];        /* Only exists when `ca_doclen' evaluates to non-zero:
+                                              * The offset into `e_stroff' of the documentation string's start.
+                                              * NOTE: Decode using `Dec_DecodePointer()' */
+} Dec_8BitClassAttribute;
+
+typedef struct PACKED {
+    uint8_t                cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
+    uint8_t                cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+                                              * NOTE: Decode using `Dec_DecodePointer()' */
+    uint8_t                cd_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
+                                              * NOTE: Decode using `Dec_DecodePointer()' */
+    uint8_t                cd_doc[1];        /* Only exists when `cd_doclen' evaluates to non-zero:
+                                              * The offset into `e_stroff' of the documentation string's start.
+                                              * NOTE: Decode using `Dec_DecodePointer()' */
+    uint8_t                cd_cmemb_size;    /* The allocation size of the class member table. */
+    uint8_t                cd_imemb_size;    /* The allocation size of the instance member table. */
+    uint8_t                cd_op_count;      /* Amount of user-defined operator bindings. */
+    uint8_t                cd_cattr_count;   /* Amount of class attributes. */
+    uint8_t                cd_iattr_count;   /* Amount of instance attributes. */
+    Dec_8BitClassOperator  cd_op_list[1];    /* [cd_op_count] List of operator bindings. */
+    Dec_8BitClassAttribute cd_cattr_list[1]; /* [cd_cattr_count] List of class attributes. */
+    Dec_8BitClassAttribute cd_iattr_list[1]; /* [cd_iattr_count] List of instance attributes. */
 } Dec_8BitClassDescriptor;
 #else
 typedef struct PACKED {

@@ -1412,27 +1412,28 @@ struct type_object {
                                           * are thrown in a context where errors are normally discarded (such as destructions
                                           * or secondary exceptions in user-code functions)
                                           * WARNING: This flag must be inherited explicitly by sub-classes! */
-/*      TP_F                0x0008        * ... */
-#define TP_FVARIABLE        0x0010       /* Variable-length object type. (`tp_new' is used, rather than `tp_init') */
-#define TP_FGC              0x0020       /* Instance of this type can be harvested by the Garbage Collector. */
-#define TP_FINTERHITABLE   (TP_FINTERRUPT|TP_FVARIABLE|TP_FGC) /* Set of special flags that is inherited by sub-classes. */
-#define TP_FMOVEANY         0x0040       /* The type accepts any other object as second operator to `tp_move_assign' */
-/*      TP_F                0x0080        * ... */
-#define TP_FABSTRACT        0x0100       /* Member functions and getsets of this type are type-generic and may
+#define TP_FMOVEANY         0x0008       /* The type accepts any other object as second operator to `tp_move_assign' */
+/*      TP_F                0x0010        * ... */
+/*      TP_F                0x0020        * ... */
+/*      TP_F                0x0040        * ... */
+#define TP_FABSTRACT        0x0080       /* Member functions and getsets of this type are type-generic and may
                                           * even be invoked when being passed objects that do not fulfill the
                                           * requirement of `DeeObject_InstanceOf(ob,self)' (where `self' is this type).
                                           * For example: Abstract base classes have this flag set, such as `object', `sequence' or `iterator'
                                           * NOTE: This flag is not inherited.
                                           * When this flag is set, the type may also be used to construct super-wrappers
                                           * for any other kind of object, even if that object isn't derived from the type. */
+/*      TP_F                0x0080        * ... */
+/*      TP_F                0x0100        * ... */
 /*      TP_F                0x0200        * ... */
-/*      TP_F                0x0400        * ... */
-/*      TP_F                0x0800        * ... */
+#define TP_FVARIABLE        0x0400       /* Variable-length object type. (`tp_new' is used, rather than `tp_init') */
+#define TP_FGC              0x0800       /* Instance of this type can be harvested by the Garbage Collector. */
 #define TP_FINHERITCTOR     0x1000       /* This type inherits its constructor from `tp_base'.
                                           * Additionally, if no assign/move-assign operator is defined, those are inherited as well. */
 #define TP_FNAMEOBJECT      0x2000       /* `tp_name' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
 #define TP_FDOCOBJECT       0x4000       /* `tp_doc' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
 #define TP_FHEAP            0x8000       /* This type was allocated on the heap. */
+#define TP_FINTERHITABLE   (TP_FINTERRUPT|TP_FVARIABLE|TP_FGC) /* Set of special flags that is inherited by sub-classes. */
     uint16_t                tp_flags;    /* Type flags (Set of `TP_F*'). */
     uint16_t                tp_weakrefs; /* Offset to `offsetof(Dee?Object *,ob_weakrefs)', or 0 when not supported.
                                           * NOTE: Must be explicitly inherited for multiple-inheritance. */

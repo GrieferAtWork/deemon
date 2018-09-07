@@ -427,7 +427,207 @@ err:
 }
 
 
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+PRIVATE int DCALL
+dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
+ uint32_t straddr; uint8_t *strptr;
+ struct dec_section *oldsec;
+ bool use_8bit = true;
+ size_t i;
+ uint16_t op_count = 0;
+ size_t cattr_count = 0;
+ size_t iattr_count = 0;
+ /* Count the number of operators, class- and instance-attributes. */
+ for (i = 0; i <= self->cd_clsop_mask; ++i) {
+  if (self->cd_clsop_list[i].co_name == (uint16_t)-1)
+      continue;
+  if (self->cd_clsop_list[i].co_name > UINT8_MAX)
+      use_8bit = false;
+  ASSERT(self->cd_clsop_list[i].co_addr < self->cd_cmemb_size);
+  ++op_count;
+ }
+ for (i = 0; i <= self->cd_cattr_mask; ++i) {
+  if (self->cd_cattr_list[i].ca_name == NULL)
+      continue;
+  ASSERT(self->cd_cattr_list[i].ca_addr < self->cd_cmemb_size);
+  ASSERT(!(self->cd_cattr_list[i].ca_flag & ~CLASS_ATTRIBUTE_FMASK));
+#if CLASS_ATTRIBUTE_FMASK > UINT8_MAX
+  if (self->cd_cattr_list[i].ca_flag > UINT8_MAX)
+      use_8bit = false;
+#endif
+  ++cattr_count;
+ }
+ for (i = 0; i <= self->cd_iattr_mask; ++i) {
+  if (self->cd_iattr_list[i].ca_name == NULL)
+      continue;
+  ASSERT((self->cd_iattr_list[i].ca_addr) <
+        ((self->cd_iattr_list[i].ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+        ? self->cd_cmemb_size : self->cd_imemb_size));
+  ASSERT(!(self->cd_iattr_list[i].ca_flag & ~CLASS_ATTRIBUTE_FMASK));
+#if CLASS_ATTRIBUTE_FMASK > UINT8_MAX
+  if (self->cd_iattr_list[i].ca_flag > UINT8_MAX)
+      use_8bit = false;
+#endif
+  ++iattr_count;
+ }
+ /* Check control sizes to see if we can still use the 8-bit encoding. */
+ if (self->cd_flags > UINT8_MAX || self->cd_cmemb_size > UINT8_MAX ||
+     self->cd_imemb_size > UINT8_MAX || op_count > UINT8_MAX ||
+     cattr_count > UINT8_MAX || iattr_count > UINT8_MAX)
+     use_8bit = false;
+ if (!use_8bit && dec_putb((DTYPE16_CLASSDESC & 0xff00) >> 8))
+      goto err;
+ if (dec_putb(DTYPE_CLASSDESC)) goto err;
+ if (use_8bit ? dec_putb((uint8_t)self->cd_flags) : dec_putw(self->cd_flags)) /* Dec_ClassDescriptor::cd_flags */
+     goto err;
+ oldsec   = dec_curr;
+ dec_curr = SC_STRING;
+ if (self->cd_name) {
+  strptr = dec_allocstr(DeeString_STR(self->cd_name),
+                       (DeeString_SIZE(self->cd_name) + 1) * sizeof(char));
+ } else {
+  strptr = dec_allocstr("",sizeof(char));
+ }
+ if unlikely(!strptr) goto err;
+ straddr  = dec_ptr2addr(strptr);
+ dec_curr = oldsec;
+ if (dec_putptr(straddr)) goto err;  /* Dec_ClassDescriptor::cd_nam */
+ if (self->cd_doc) {
+  char *doc_str = DeeString_AsUtf8((DeeObject *)self->cd_doc);
+  if unlikely(!doc_str) goto err;
+  if (WSTR_LENGTH(doc_str) == 0)
+      goto empty_doc;
+  if (dec_putptr((uint32_t)WSTR_LENGTH(doc_str))) goto err; /* Dec_ClassDescriptor::cd_doclen */
+  oldsec   = dec_curr;
+  dec_curr = SC_STRING;
+  strptr = dec_allocstr(doc_str,WSTR_LENGTH(doc_str) * sizeof(char));
+  if unlikely(!strptr) goto err;
+  straddr  = dec_ptr2addr(strptr);
+  dec_curr = oldsec;
+  if (dec_putptr(straddr)) goto err; /* Dec_ClassDescriptor::cd_doc */
+ } else {
+empty_doc:
+  if (dec_putptr(0)) goto err;       /* Dec_ClassDescriptor::cd_doclen */
+ }
+ if (use_8bit) {
+  if (dec_putb((uint8_t)self->cd_cmemb_size)) goto err; /* Dec_8BitClassDescriptor::cd_cmemb_size */
+  if (dec_putb((uint8_t)self->cd_imemb_size)) goto err; /* Dec_8BitClassDescriptor::cd_imemb_size */
+  if (dec_putb((uint8_t)op_count)) goto err;            /* Dec_8BitClassDescriptor::cd_op_count */
+  if (dec_putb((uint8_t)cattr_count)) goto err;         /* Dec_8BitClassDescriptor::cd_cattr_count */
+  if (dec_putb((uint8_t)iattr_count)) goto err;         /* Dec_8BitClassDescriptor::cd_iattr_count */
+ } else {
+  if (dec_putw(self->cd_cmemb_size)) goto err;          /* Dec_ClassDescriptor::cd_cmemb_size */
+  if (dec_putw(self->cd_imemb_size)) goto err;          /* Dec_ClassDescriptor::cd_imemb_size */
+  if (dec_putw(op_count)) goto err;                     /* Dec_ClassDescriptor::cd_op_count */
+  if (dec_putptr((uint32_t)cattr_count)) goto err;      /* Dec_ClassDescriptor::cd_cattr_count */
+  if (dec_putptr((uint32_t)iattr_count)) goto err;      /* Dec_ClassDescriptor::cd_iattr_count */
+ }
+ /* Emit data for all the operators. */
+ for (i = 0; i <= self->cd_clsop_mask; ++i) {
+  uint16_t name,addr;
+  name = self->cd_clsop_list[i].co_name;
+  if (name == (uint16_t)-1)
+      continue;
+  addr = self->cd_clsop_list[i].co_addr;
+  ASSERT(addr < self->cd_cmemb_size);
+  if (use_8bit) {
+   if (dec_putb((uint8_t)name)) goto err;               /* Dec_8BitClassOperator::co_name */
+   if (dec_putb((uint8_t)addr)) goto err;               /* Dec_8BitClassOperator::co_addr */
+  } else {
+   if (dec_putw(name)) goto err;                        /* Dec_ClassOperator::co_name */
+   if (dec_putw(addr)) goto err;                        /* Dec_ClassOperator::co_addr */
+  }
+ }
+ /* Emit data for class attributes. */
+ for (i = 0; i <= self->cd_cattr_mask; ++i) {
+  struct class_attribute *attr;
+  attr = &self->cd_cattr_list[i];
+  if (attr->ca_name == NULL)
+      continue;
+  ASSERT(attr->ca_addr < self->cd_cmemb_size);
+  ASSERT(!(attr->ca_flag & ~CLASS_ATTRIBUTE_FMASK));
+  if (use_8bit) {
+   if (dec_putb((uint8_t)attr->ca_addr)) goto err;      /* Dec_8BitClassAttribute::ca_addr */
+   if (dec_putb((uint8_t)attr->ca_flag)) goto err;      /* Dec_8BitClassAttribute::ca_flags */
+  } else {
+   if (dec_putw(attr->ca_addr)) goto err;               /* Dec_ClassAttribute::ca_addr */
+   if (dec_putw(attr->ca_flag)) goto err;               /* Dec_ClassAttribute::ca_flags */
+  }
+  oldsec   = dec_curr;
+  dec_curr = SC_STRING;
+  strptr = dec_allocstr(DeeString_STR(attr->ca_name),
+                       (DeeString_SIZE(attr->ca_name) + 1) * sizeof(char));
+  if unlikely(!strptr) goto err;
+  straddr  = dec_ptr2addr(strptr);
+  dec_curr = oldsec;
+  if (dec_putptr(straddr)) goto err;                   /* Dec_ClassAttribute::ca_nam */
+  if (attr->ca_doc) {
+   char *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
+   if unlikely(!doc_str) goto err;
+   if (WSTR_LENGTH(doc_str) == 0)
+       goto empty_cattr_doc;
+   if (dec_putptr((uint32_t)WSTR_LENGTH(doc_str))) goto err;     /* Dec_ClassAttribute::ca_doclen */
+   oldsec   = dec_curr;
+   dec_curr = SC_STRING;
+   strptr = dec_allocstr(doc_str,WSTR_LENGTH(doc_str) * sizeof(char));
+   if unlikely(!strptr) goto err;
+   straddr  = dec_ptr2addr(strptr);
+   dec_curr = oldsec;
+   if (dec_putptr(straddr)) goto err;                  /* Dec_ClassAttribute::ca_doc */
+  } else {
+empty_cattr_doc:
+   if (dec_putptr(0)) goto err;                        /* Dec_ClassAttribute::ca_doclen */
+  }
+ }
+ /* Emit data for instance attributes. */
+ for (i = 0; i <= self->cd_iattr_mask; ++i) {
+  struct class_attribute *attr;
+  attr = &self->cd_iattr_list[i];
+  if (attr->ca_name == NULL)
+      continue;
+  ASSERT((attr->ca_addr) <
+        ((attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+        ? self->cd_cmemb_size : self->cd_imemb_size));
+  ASSERT(!(attr->ca_flag & ~CLASS_ATTRIBUTE_FMASK));
+  if (use_8bit) {
+   if (dec_putb((uint8_t)attr->ca_addr)) goto err;      /* Dec_8BitClassAttribute::ca_addr */
+   if (dec_putb((uint8_t)attr->ca_flag)) goto err;      /* Dec_8BitClassAttribute::ca_flags */
+  } else {
+   if (dec_putw(attr->ca_addr)) goto err;               /* Dec_ClassAttribute::ca_addr */
+   if (dec_putw(attr->ca_flag)) goto err;               /* Dec_ClassAttribute::ca_flags */
+  }
+  oldsec   = dec_curr;
+  dec_curr = SC_STRING;
+  strptr = dec_allocstr(DeeString_STR(attr->ca_name),
+                       (DeeString_SIZE(attr->ca_name) + 1) * sizeof(char));
+  if unlikely(!strptr) goto err;
+  straddr  = dec_ptr2addr(strptr);
+  dec_curr = oldsec;
+  if (dec_putptr(straddr)) goto err;                   /* Dec_ClassAttribute::ca_nam */
+  if (attr->ca_doc) {
+   char *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
+   if unlikely(!doc_str) goto err;
+   if (WSTR_LENGTH(doc_str) == 0)
+       goto empty_iattr_doc;
+   if (dec_putptr((uint32_t)WSTR_LENGTH(doc_str))) goto err;     /* Dec_ClassAttribute::ca_doclen */
+   oldsec   = dec_curr;
+   dec_curr = SC_STRING;
+   strptr = dec_allocstr(doc_str,WSTR_LENGTH(doc_str) * sizeof(char));
+   if unlikely(!strptr) goto err;
+   straddr  = dec_ptr2addr(strptr);
+   dec_curr = oldsec;
+   if (dec_putptr(straddr)) goto err;                  /* Dec_ClassAttribute::ca_doc */
+  } else {
+empty_iattr_doc:
+   if (dec_putptr(0)) goto err;                        /* Dec_ClassAttribute::ca_doclen */
+  }
+ }
+ return 0;
+err:
+ return -1;
+}
+
+#else
 PRIVATE bool DCALL
 allow_8bit_memtab(DeeMemberTableObject *__restrict self) {
  struct member_entry *iter,*end;
@@ -860,7 +1060,12 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
   Dee_XDecref(cell_item);
   return error;
  }
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
+#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+ if (tp_self == &DeeClassDescriptor_Type) {
+  /* Emit a member table. */
+  return dec_putclassdesc((DeeClassDescriptorObject *)self);
+ }
+#else
  if (tp_self == &DeeMemberTable_Type) {
   /* Emit a member table. */
   return dec_putmemtab((DeeMemberTableObject *)self);
