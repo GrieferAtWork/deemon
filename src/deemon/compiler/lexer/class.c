@@ -1753,6 +1753,17 @@ set_visibility:
    temp = ast_parse_operator_name(P_OPERATOR_FCLASS);
    if unlikely(temp < 0) goto err;
    operator_name = (uint16_t)temp;
+   if (tok == '=') {
+    if ((operator_name >= AST_OPERATOR_MIN &&
+         operator_name <= AST_OPERATOR_MAX) &&
+         WARN(W_AMBIGUOUS_OPERATOR_ASSIGNMENT))
+         goto err;
+    /* Operator callback assignment. */
+    if unlikely(yield() < 0) goto err;
+    need_semi    = true;
+    operator_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
+    goto set_operator_ast;
+   }
 define_operator:
    /* Special case: The constructor operator. */
    if (operator_name == OPERATOR_CONSTRUCTOR)
@@ -1854,7 +1865,8 @@ got_operator_ast:
    if unlikely(!operator_ast) goto err;
    ASSERT(operator_ast->a_type == AST_FUNCTION);
    ASSERT(operator_ast->a_function.f_scope);
-   if (operator_name >= AST_OPERATOR_MIN) {
+   if (operator_name >= AST_OPERATOR_MIN &&
+       operator_name <= AST_OPERATOR_MAX) {
     /* Special case: determine the actual operator from
      *               the argument count of the function. */
     uint16_t argc = operator_ast->a_function.f_scope->bs_argc_min;
@@ -1867,6 +1879,7 @@ got_operator_ast:
     default: break;
     }
    }
+set_operator_ast:
    /* XXX: Add operator documentation? */
    /* Add the new operator to the class. */
    error = class_maker_addoperator(&maker,operator_name,operator_ast);

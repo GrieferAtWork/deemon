@@ -359,6 +359,7 @@ DEF_WARNING(W_EXPECTED_LPAREN_AFTER_SUPER_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("E
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_SUPER_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `super(...' in constructor initializer list, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' or `=' after member name in constructor initializer list, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_RPAREN_CONSTRUCTOR_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after initializer expression in constructor initializer list, but got " TOK_S,TOK_A))
+DEF_WARNING(W_AMBIGUOUS_OPERATOR_ASSIGNMENT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Cannot assign callback to ambiguous operator"))
 
 /* Tags */
 WARNING_NAMESPACE(WN_TAGS,2600)
