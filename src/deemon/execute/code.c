@@ -709,7 +709,7 @@ function_call(DeeFunctionObject *__restrict self,
                    (size_t)-1 : ((size_t)code->co_argc_max+1));
    return NULL;
   }
-  return DeeFunction_ThisCall((DeeObject *)self,argv[0],argc-1,argv+1);
+  return DeeFunction_ThisCall(self,argv[0],argc-1,argv+1);
  }
 
  if unlikely(argc < code->co_argc_min ||
@@ -727,10 +727,10 @@ function_call(DeeFunctionObject *__restrict self,
   /* Default scenario: Perform a regular function call. */
   DeeObject *result;
   struct code_frame frame;
-  frame.cf_func = self;
-  frame.cf_argc = argc;
-  frame.cf_argv = argv;
-  frame.cf_kw   = Dee_EmptyMapping;
+  frame.cf_func   = self;
+  frame.cf_argc   = argc;
+  frame.cf_argv   = argv;
+  frame.cf_kw     = Dee_EmptyMapping;
   frame.cf_result = NULL;
 #ifdef Dee_Alloca
   if (!(code->co_flags&CODE_FHEAPFRAME)) {
@@ -791,27 +791,152 @@ function_call(DeeFunctionObject *__restrict self,
  }
 
  /* Special case: Create a yield-function callback. */
- { DREF DeeYieldFunctionObject *result;
-   result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
-   if unlikely(!result) return NULL;
-   result->yf_func = (DREF DeeFunctionObject *)self;
-   /* Pack together an argument tuple for the yield-function. */
-   result->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(argc,argv);
-   if unlikely(!result->yf_args) { DeeGCObject_Free(result); return NULL; }
-   DeeObject_Init(result,&DeeYieldFunction_Type);
-   result->yf_this = NULL;
+ {
+  DREF DeeYieldFunctionObject *result;
+  result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
+  if unlikely(!result) return NULL;
+  result->yf_func = (DREF DeeFunctionObject *)self;
+  /* Pack together an argument tuple for the yield-function. */
+  result->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(argc,argv);
+  if unlikely(!result->yf_args) { DeeGCObject_Free(result); return NULL; }
+  DeeObject_Init(result,&DeeYieldFunction_Type);
+  result->yf_this = NULL;
 #ifndef CONFIG_NO_THREADS
-   rwlock_init(&result->yf_lock);
+  rwlock_init(&result->yf_lock);
 #endif
-   Dee_Incref(self);
-   DeeGC_Track((DeeObject *)result);
-   return (DREF DeeObject *)result;
+  Dee_Incref(self);
+  DeeGC_Track((DeeObject *)result);
+  return (DREF DeeObject *)result;
  }
 }
 
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+INTERN DREF DeeObject *DCALL
+DeeFunction_CallTuple(DeeFunctionObject *__restrict self,
+                      DeeObject *__restrict args) {
+ DeeCodeObject *code;
+ ASSERT_OBJECT(self);
+ ASSERT(DeeFunction_Check(self));
+ code = self->fo_code;
+ if unlikely(code->co_flags & CODE_FTHISCALL) {
+  /* Special case: Invoke the function as a this-call. */
+  if unlikely(!DeeTuple_SIZE(args)) {
+   char *name = DeeDDI_NAME(code->co_ddi);
+   err_invalid_argc(*name ? name : NULL,0,code->co_argc_min+1,
+                     code->co_flags&CODE_FVARARGS ?
+                   (size_t)-1 : ((size_t)code->co_argc_max+1));
+   return NULL;
+  }
+  return DeeFunction_ThisCall(self,
+                              DeeTuple_GET(args,0),
+                              DeeTuple_SIZE(args) - 1,
+                              DeeTuple_ELEM(args) + 1);
+ }
+ if unlikely(DeeTuple_SIZE(args) < code->co_argc_min ||
+            (DeeTuple_SIZE(args) > code->co_argc_max &&
+           !(code->co_flags&CODE_FVARARGS))) {
+  /* ERROR: Invalid argument count! */
+  char *name = DeeDDI_NAME(code->co_ddi);
+  err_invalid_argc(*name ? name : NULL,
+                    DeeTuple_SIZE(args),code->co_argc_min,
+                    code->co_flags&CODE_FVARARGS ?
+                  (size_t)-1 : ((size_t)code->co_argc_max));
+  return NULL;
+ }
+
+ if (!(code->co_flags&CODE_FYIELDING)) {
+  /* Default scenario: Perform a regular function call. */
+  DeeObject *result;
+  struct code_frame frame;
+  frame.cf_func   = self;
+  frame.cf_argc   = DeeTuple_SIZE(args);
+  frame.cf_argv   = DeeTuple_ELEM(args);
+  frame.cf_kw     = Dee_EmptyMapping;
+  frame.cf_result = NULL;
+#ifdef Dee_Alloca
+  if (!(code->co_flags&CODE_FHEAPFRAME)) {
+   frame.cf_frame = (DeeObject **)Dee_Alloca(code->co_framesize);
+  } else
+#endif /* Dee_Alloca */
+  {
+   frame.cf_frame = (DeeObject **)Dee_Malloc(code->co_framesize);
+   if unlikely(!frame.cf_frame) return NULL;
+  }
+  /* Per-initialize local variable memory to ZERO. */
+  MEMSET_PTR(frame.cf_frame,0,code->co_localc);
+#ifndef NDEBUG
+  frame.cf_prev    = CODE_FRAME_NOT_EXECUTING;
+#endif
+  frame.cf_stack   = frame.cf_frame+code->co_localc;
+  frame.cf_sp      = frame.cf_stack;
+  frame.cf_ip      = code->co_code;
+  frame.cf_vargs   = NULL;
+#ifdef NDEBUG
+  /*frame.cf_this  = NULL;*/ /* Can be left uninitialized. */
+#elif defined(UINT32_C) && defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 4
+  frame.cf_this = (DeeObject *)UINT32_C(0xcccccccc);
+#elif defined(UINT64_C) && defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8
+  frame.cf_this = (DeeObject *)UINT64_C(0xcccccccccccccccc);
+#else
+  memset(&frame.cf_this,0xcc,sizeof(DeeObject *));
+#endif
+  if (code->co_argc_min == 0)
+      frame.cf_vargs = (DREF DeeTupleObject *)args;
+  /* With the frame now set up, actually invoke the code. */
+  if unlikely(code->co_flags&CODE_FASSEMBLY) {
+   frame.cf_stacksz = 0;
+   result = DeeCode_ExecFrameSafe(&frame);
+   /* Delete remaining stack objects. */
+   while (frame.cf_sp != frame.cf_stack)
+        --frame.cf_sp,Dee_Decref(*frame.cf_sp);
+   /* Safe code execution allows for stack-space extension into heap memory.
+    * >> Free that memory now that `DeeCode_ExecFrameSafe()' has finished. */
+   if (frame.cf_stacksz) Dee_Free(frame.cf_stack);
+   frame.cf_sp = frame.cf_frame+code->co_localc;
+  } else {
+   result = DeeCode_ExecFrameFast(&frame);
+   /* Delete remaining stack objects. */
+   while (frame.cf_sp != frame.cf_stack)
+        --frame.cf_sp,Dee_Decref(*frame.cf_sp);
+  }
+  /* Delete remaining local variables. */
+  while (frame.cf_sp != frame.cf_frame)
+       --frame.cf_sp,Dee_XDecref(*frame.cf_sp);
+
+#ifdef Dee_Alloca
+  if (code->co_flags&CODE_FHEAPFRAME)
+#endif /* Dee_Alloca */
+  {
+   Dee_Free(frame.cf_frame);
+  }
+  if (code->co_argc_min != 0)
+      Dee_XDecref(frame.cf_vargs);
+  return result;
+ }
+
+ /* Special case: Create a yield-function callback. */
+ {
+  DREF DeeYieldFunctionObject *result;
+  result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
+  if unlikely(!result) return NULL;
+  result->yf_func = (DREF DeeFunctionObject *)self;
+  result->yf_args = (DREF DeeTupleObject *)args;
+  DeeObject_Init(result,&DeeYieldFunction_Type);
+  result->yf_this = NULL;
+#ifndef CONFIG_NO_THREADS
+  rwlock_init(&result->yf_lock);
+#endif
+  Dee_Incref(self);
+  Dee_Incref(args);
+  DeeGC_Track((DeeObject *)result);
+  return (DREF DeeObject *)result;
+ }
+}
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+
 
 INTERN DREF DeeObject *DCALL
-DeeFunction_ThisCallKw(DeeObject *__restrict self,
+DeeFunction_ThisCallKw(DeeFunctionObject *__restrict self,
                        DeeObject *__restrict this_arg,
                        size_t argc, DeeObject **__restrict argv,
                        DeeObject *kw) {
@@ -828,23 +953,20 @@ DeeFunction_ThisCallKw(DeeObject *__restrict self,
  }
  return DeeFunction_ThisCall(self,this_arg,argc,argv);
 err_no_keywords:
- {
-  DeeCodeObject *code = ((DeeFunctionObject *)self)->fo_code;
-  err_keywords_func_not_accepted(DeeDDI_NAME(code->co_ddi),kw);
- }
+ err_keywords_func_not_accepted(DeeDDI_NAME(self->fo_code->co_ddi),kw);
  return NULL;
 }
 
 
 INTERN DREF DeeObject *DCALL
-DeeFunction_ThisCall(DeeObject *__restrict self,
+DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
                      DeeObject *__restrict this_arg,
                      size_t argc, DeeObject **__restrict argv) {
  DeeCodeObject *code;
  ASSERT_OBJECT(self);
  ASSERT_OBJECT(this_arg);
  ASSERT(DeeFunction_Check(self));
- code = ((DeeFunctionObject *)self)->fo_code;
+ code = self->fo_code;
  if unlikely(!(code->co_flags&CODE_FTHISCALL)) {
   DREF DeeObject *result,*packed_args;
   /* Re-package the argument tuple and perform a regular call. */
@@ -853,9 +975,9 @@ DeeFunction_ThisCall(DeeObject *__restrict self,
   DeeTuple_SET(packed_args,0,this_arg);
   MEMCPY_PTR(DeeTuple_ELEM(packed_args)+1,argv,argc);
   /* Perform a regular callback. */
-  result = function_call((DeeFunctionObject *)self,
-                          DeeTuple_SIZE(packed_args),
-                          DeeTuple_ELEM(packed_args));
+  result = function_call(self,
+                         DeeTuple_SIZE(packed_args),
+                         DeeTuple_ELEM(packed_args));
   /* The tuple we've created above only contained symbolic references. */
   DeeTuple_DecrefSymbolic(packed_args);
   return result;
@@ -875,7 +997,7 @@ DeeFunction_ThisCall(DeeObject *__restrict self,
   /* Default scenario: Perform a this-call. */
   DeeObject *result;
   struct code_frame frame;
-  frame.cf_func = (DeeFunctionObject *)self;
+  frame.cf_func = self;
   frame.cf_argc = argc;
   frame.cf_argv = argv;
   frame.cf_kw   = Dee_EmptyMapping;
@@ -930,24 +1052,193 @@ DeeFunction_ThisCall(DeeObject *__restrict self,
   return result;
  }
  /* Special case: Create a yield-function callback. */
- { DREF DeeYieldFunctionObject *result;
-   result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
-   if unlikely(!result) return NULL;
-   result->yf_func = (DREF DeeFunctionObject *)self;
-   /* Pack together an argument tuple for the yield-function. */
-   result->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(argc,argv);
-   if unlikely(!result->yf_args) { DeeGCObject_Free(result); return NULL; }
-   DeeObject_Init(result,&DeeYieldFunction_Type);
-   result->yf_this = this_arg;
+ {
+  DREF DeeYieldFunctionObject *result;
+  result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
+  if unlikely(!result) return NULL;
+  result->yf_func = self;
+  /* Pack together an argument tuple for the yield-function. */
+  result->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(argc,argv);
+  if unlikely(!result->yf_args) { DeeGCObject_Free(result); return NULL; }
+  DeeObject_Init(result,&DeeYieldFunction_Type);
+  result->yf_this = this_arg;
 #ifndef CONFIG_NO_THREADS
-   rwlock_init(&result->yf_lock);
+  rwlock_init(&result->yf_lock);
 #endif
-   Dee_Incref(self);
-   Dee_Incref(this_arg);
-   DeeGC_Track((DeeObject *)result);
-   return (DREF DeeObject *)result;
+  Dee_Incref(self);
+  Dee_Incref(this_arg);
+  DeeGC_Track((DeeObject *)result);
+  return (DREF DeeObject *)result;
  }
 }
+
+
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+INTERN DREF DeeObject *DCALL
+DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
+                          DeeObject *__restrict this_arg,
+                          DeeObject *__restrict args) {
+ DeeCodeObject *code;
+ ASSERT_OBJECT(self);
+ ASSERT_OBJECT(this_arg);
+ ASSERT(DeeFunction_Check(self));
+ code = self->fo_code;
+ if unlikely(!(code->co_flags&CODE_FTHISCALL)) {
+  DREF DeeObject *result,*packed_args;
+  /* Re-package the argument tuple and perform a regular call. */
+  packed_args = DeeTuple_NewUninitialized(1+DeeTuple_SIZE(args));
+  if unlikely(!packed_args) return NULL;
+  DeeTuple_SET(packed_args,0,this_arg);
+  MEMCPY_PTR(DeeTuple_ELEM(packed_args)+1,
+             DeeTuple_ELEM(args),
+             DeeTuple_SIZE(args));
+  /* Perform a regular callback. */
+  result = function_call(self,
+                         DeeTuple_SIZE(packed_args),
+                         DeeTuple_ELEM(packed_args));
+  /* The tuple we've created above only contained symbolic references. */
+  DeeTuple_DecrefSymbolic(packed_args);
+  return result;
+ }
+ if unlikely(DeeTuple_SIZE(args) < code->co_argc_min ||
+            (DeeTuple_SIZE(args) > code->co_argc_max &&
+           !(code->co_flags&CODE_FVARARGS))) {
+  /* ERROR: Invalid argument count! */
+  char *name = DeeDDI_NAME(code->co_ddi);
+  err_invalid_argc(*name ? name : NULL,
+                    DeeTuple_SIZE(args),code->co_argc_min,
+                    code->co_flags&CODE_FVARARGS ? (size_t)-1 :
+                  (size_t)code->co_argc_max);
+  return NULL;
+ }
+
+ if (!(code->co_flags&CODE_FYIELDING)) {
+  /* Default scenario: Perform a this-call. */
+  DeeObject *result;
+  struct code_frame frame;
+  frame.cf_func = self;
+  frame.cf_argc = DeeTuple_SIZE(args);
+  frame.cf_argv = DeeTuple_ELEM(args);
+  frame.cf_kw   = Dee_EmptyMapping;
+  frame.cf_result = NULL;
+#ifdef Dee_Alloca
+  if (!(code->co_flags&CODE_FHEAPFRAME)) {
+   frame.cf_frame = (DeeObject **)Dee_Alloca(code->co_framesize);
+  } else
+#endif /* Dee_Alloca */
+  {
+   frame.cf_frame = (DeeObject **)Dee_Malloc(code->co_framesize);
+   if unlikely(!frame.cf_frame) return NULL;
+  }
+  /* Per-initialize local variable memory to ZERO. */
+  MEMSET_PTR(frame.cf_frame,0,code->co_localc);
+#ifndef NDEBUG
+  frame.cf_prev   = CODE_FRAME_NOT_EXECUTING;
+#endif
+  frame.cf_stack  = frame.cf_frame+code->co_localc;
+  frame.cf_sp     = frame.cf_stack;
+  frame.cf_ip     = code->co_code;
+  frame.cf_vargs  = NULL;
+  frame.cf_this   = this_arg;
+  if (code->co_argc_min == 0)
+      frame.cf_vargs = (DREF DeeTupleObject *)args;
+  /* With the frame now set up, actually invoke the code. */
+  if unlikely(code->co_flags&CODE_FASSEMBLY) {
+   frame.cf_stacksz = 0;
+   result = DeeCode_ExecFrameSafe(&frame);
+   /* Delete remaining stack objects. */
+   while (frame.cf_sp != frame.cf_stack)
+        --frame.cf_sp,Dee_Decref(*frame.cf_sp);
+   /* Safe code execution allows for stack-space extension into heap memory.
+    * >> Free that memory now that `DeeCode_ExecFrameSafe()' has finished. */
+   if (frame.cf_stacksz) Dee_Free(frame.cf_stack);
+   frame.cf_sp = frame.cf_frame+code->co_localc;
+  } else {
+   result = DeeCode_ExecFrameFast(&frame);
+   /* Delete remaining stack objects. */
+   while (frame.cf_sp != frame.cf_stack)
+        --frame.cf_sp,Dee_Decref(*frame.cf_sp);
+  }
+  /* Delete remaining local variables. */
+  while (frame.cf_sp != frame.cf_frame)
+       --frame.cf_sp,Dee_XDecref(*frame.cf_sp);
+
+#ifdef Dee_Alloca
+  if (code->co_flags&CODE_FHEAPFRAME)
+#endif /* Dee_Alloca */
+  {
+   Dee_Free(frame.cf_frame);
+  }
+  if (code->co_argc_min != 0)
+      Dee_XDecref(frame.cf_vargs);
+  return result;
+ }
+ /* Special case: Create a yield-function callback. */
+ {
+  DREF DeeYieldFunctionObject *result;
+  result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
+  if unlikely(!result) return NULL;
+  result->yf_func = self;
+  /* Pack together an argument tuple for the yield-function. */
+  result->yf_args = (DREF DeeTupleObject *)args;
+  DeeObject_Init(result,&DeeYieldFunction_Type);
+  result->yf_this = this_arg;
+#ifndef CONFIG_NO_THREADS
+  rwlock_init(&result->yf_lock);
+#endif
+  Dee_Incref(self);
+  Dee_Incref(this_arg);
+  Dee_Incref(args);
+  DeeGC_Track((DeeObject *)result);
+  return (DREF DeeObject *)result;
+ }
+}
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+
+
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+INTERN DREF DeeObject *DCALL
+DeeFunction_CallTupleKw(DeeFunctionObject *__restrict self,
+                        DeeObject *__restrict args,
+                        DeeObject *kw) {
+ if (kw) {
+  /* TODO: Keyword support for user-code functions */
+  if (DeeKwds_Check(kw)) {
+   if (DeeKwds_SIZE(kw) != 0)
+       goto err_no_keywords;
+  } else {
+   size_t temp = DeeObject_Size(kw);
+   if unlikely(temp == (size_t)-1) return NULL;
+   if (temp != 0) goto err_no_keywords;
+  }
+ }
+ return DeeFunction_CallTuple(self,args);
+err_no_keywords:
+ err_keywords_func_not_accepted(DeeDDI_NAME(self->fo_code->co_ddi),kw);
+ return NULL;
+}
+INTERN DREF DeeObject *DCALL
+DeeFunction_ThisCallTupleKw(DeeFunctionObject *__restrict self,
+                            DeeObject *__restrict this_arg,
+                            DeeObject *__restrict args,
+                            DeeObject *kw) {
+ if (kw) {
+  /* TODO: Keyword support for user-code functions */
+  if (DeeKwds_Check(kw)) {
+   if (DeeKwds_SIZE(kw) != 0)
+       goto err_no_keywords;
+  } else {
+   size_t temp = DeeObject_Size(kw);
+   if unlikely(temp == (size_t)-1) return NULL;
+   if (temp != 0) goto err_no_keywords;
+  }
+ }
+ return DeeFunction_ThisCallTuple(self,this_arg,args);
+err_no_keywords:
+ err_keywords_func_not_accepted(DeeDDI_NAME(self->fo_code->co_ddi),kw);
+ return NULL;
+}
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 DECL_END
 

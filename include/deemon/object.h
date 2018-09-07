@@ -1586,6 +1586,12 @@ membercache_callattr_kw(struct membercache *__restrict cache,
                         char const *__restrict name, dhash_t hash,
                         size_t argc, DeeObject **__restrict argv,
                         DeeObject *kw);
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#define membercache_callattr_tuple(cache,self,name,hash,args) \
+        membercache_callattr(cache,self,name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define membercache_callattr_tuple_kw(cache,self,name,hash,args,kw) \
+        membercache_callattr_kw(cache,self,name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 INTDEF DREF DeeObject *DCALL
 membercache_vcallattrf(struct membercache *__restrict cache,
                        DeeObject *__restrict self,
@@ -1660,6 +1666,12 @@ type_method_callattr_kw(struct membercache *__restrict cache,
                         struct type_method *__restrict chain, DeeObject *__restrict self,
                         char const *__restrict attr_name, dhash_t hash,
                         size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#define type_method_callattr_tuple(cache,chain,self,attr_name,hash,args) \
+        type_method_callattr(cache,chain,self,attr_name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define type_method_callattr_tuple_kw(cache,chain,self,attr_name,hash,args,kw) \
+        type_method_callattr_kw(cache,chain,self,attr_name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 INTDEF DREF DeeObject *DCALL
 type_method_vcallattrf(struct membercache *__restrict cache,
                        struct type_method *__restrict chain, DeeObject *__restrict self,
@@ -1990,6 +2002,28 @@ DFUNDEF DREF DeeObject *DeeObject_ThisCallf(DeeObject *__restrict self, DeeObjec
 DFUNDEF DREF DeeObject *DCALL DeeObject_VCallf(DeeObject *__restrict self, char const *__restrict format, va_list args);
 DFUNDEF DREF DeeObject *DCALL DeeObject_VThisCallf(DeeObject *__restrict self, DeeObject *__restrict this_arg, char const *__restrict format, va_list args);
 
+/* Same as the regular call functions, however also include special
+ * optimizations to re-use `args' as the varargs tuple in calls to
+ * pure user-code varargs functions:
+ * >> function foo(args...) {
+ * >>     import object from deemon;
+ * >>     print object.id(args);
+ * >> }
+ * // `my_tuple' will be re-used as `args',
+ * // without the need to creating a new tuple
+ * DeeObject_CallTuple(foo,my_tuple); */
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+DFUNDEF DREF DeeObject *DCALL DeeObject_CallTuple(DeeObject *__restrict self, /*Tuple*/DeeObject *__restrict args);
+DFUNDEF DREF DeeObject *DCALL DeeObject_CallTupleKw(DeeObject *__restrict self, /*Tuple*/DeeObject *__restrict args, DeeObject *kw);
+DFUNDEF DREF DeeObject *DCALL DeeObject_ThisCallTuple(DeeObject *__restrict self, DeeObject *__restrict this_arg, /*Tuple*/DeeObject *__restrict args);
+DFUNDEF DREF DeeObject *DCALL DeeObject_ThisCallTupleKw(DeeObject *__restrict self, DeeObject *__restrict this_arg, /*Tuple*/DeeObject *__restrict args, DeeObject *kw);
+#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#define DeeObject_CallTuple(self,args)                    DeeObject_Call(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeObject_CallTupleKw(self,args,kw)               DeeObject_CallKw(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#define DeeObject_ThisCallTuple(self,this_arg,args)       DeeObject_ThisCall(self,this_arg,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeObject_ThisCallTupleKw(self,this_arg,args,kw)  DeeObject_ThisCallKw(self,this_arg,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+
 /* Generate and return the hash of a given object. */
 DFUNDEF dhash_t DCALL DeeObject_Hash(DeeObject *__restrict self);
 
@@ -2264,6 +2298,13 @@ DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringPackHash)(DeeObject *__restrict
 DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringHashPack)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, size_t argc, va_list args);
 DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringHashf)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, ...);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringHashf)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, va_list args);
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict args);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict args, DeeObject *kw);
+#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#define DeeObject_CallAttrTuple(self,attr_name,args)      DeeObject_CallAttr(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeObject_CallAttrTupleKw(self,attr_name,args,kw) DeeObject_CallAttrKw(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 /* @return: 1 : Attribute is bound.
  * @return: 0 : Attribute isn't bound.

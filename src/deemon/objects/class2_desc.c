@@ -1247,6 +1247,114 @@ illegal:
                            ATTR_ACCESS_GET);
  return NULL;
 }
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+INTERN DREF DeeObject *DCALL
+DeeInstance_CallAttributeTuple(DeeTypeObject *__restrict class_type,
+                               struct instance_desc *__restrict self,
+                               DeeObject *__restrict this_arg,
+                               struct class_attribute *__restrict attr,
+                               DeeObject *__restrict args) {
+ DREF DeeObject *result,*callback;
+ ASSERT(self);
+ ASSERT(attr);
+ ASSERT_OBJECT(this_arg);
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+     self = class_desc_as_instance(DeeClass_DESC(class_type));
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  DREF DeeObject *getter;
+  rwlock_read(&self->id_lock);
+  getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+  Dee_XIncref(getter);
+  rwlock_endread(&self->id_lock);
+  if unlikely(!getter) goto illegal;
+  /* Invoke the getter. */
+  callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+   ? DeeObject_ThisCall(getter,this_arg,0,NULL)
+   : DeeObject_Call(getter,0,NULL);
+  Dee_Decref(getter);
+  /* Invoke the return value of the getter. */
+  if unlikely(!callback) return NULL;
+  result = DeeObject_CallTuple(callback,args);
+  Dee_Decref(callback);
+ } else {
+  /* Call the attr as-is. */
+  rwlock_read(&self->id_lock);
+  callback = self->id_vtab[attr->ca_addr];
+  Dee_XIncref(callback);
+  rwlock_endread(&self->id_lock);
+  if unlikely(!callback) goto unbound;
+  result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+   ? DeeObject_ThisCallTuple(callback,this_arg,args)
+   : DeeObject_CallTuple(callback,args);
+  Dee_Decref(callback);
+ }
+ return result;
+unbound:
+ err_unbound_attribute(class_type,
+                       DeeString_STR(attr->ca_name));
+ return NULL;
+illegal:
+ err_cant_access_attribute(class_type,
+                           DeeString_STR(attr->ca_name),
+                           ATTR_ACCESS_GET);
+ return NULL;
+}
+INTERN DREF DeeObject *DCALL
+DeeInstance_CallAttributeTupleKw(DeeTypeObject *__restrict class_type,
+                                 struct instance_desc *__restrict self,
+                                 DeeObject *__restrict this_arg,
+                                 struct class_attribute *__restrict attr,
+                                 DeeObject *__restrict args, DeeObject *kw) {
+ DREF DeeObject *result,*callback;
+ ASSERT(self);
+ ASSERT(attr);
+ ASSERT_OBJECT(this_arg);
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+     self = class_desc_as_instance(DeeClass_DESC(class_type));
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  DREF DeeObject *getter;
+  rwlock_read(&self->id_lock);
+  getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+  Dee_XIncref(getter);
+  rwlock_endread(&self->id_lock);
+  if unlikely(!getter) goto illegal;
+  /* Invoke the getter. */
+  callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+           ? DeeObject_ThisCall(getter,this_arg,0,NULL)
+           : DeeObject_Call(getter,0,NULL)
+           ;
+  Dee_Decref(getter);
+  /* Invoke the return value of the getter. */
+  if unlikely(!callback) return NULL;
+  result = DeeObject_CallTupleKw(callback,args,kw);
+  Dee_Decref(callback);
+ } else {
+  /* Call the attr as-is. */
+  rwlock_read(&self->id_lock);
+  callback = self->id_vtab[attr->ca_addr];
+  Dee_XIncref(callback);
+  rwlock_endread(&self->id_lock);
+  if unlikely(!callback) goto unbound;
+  result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+         ? DeeObject_ThisCallTupleKw(callback,this_arg,args,kw)
+         : DeeObject_CallTupleKw(callback,args,kw)
+         ;
+  Dee_Decref(callback);
+ }
+ return result;
+unbound:
+ err_unbound_attribute(class_type,
+                       DeeString_STR(attr->ca_name));
+ return NULL;
+illegal:
+ err_cant_access_attribute(class_type,
+                           DeeString_STR(attr->ca_name),
+                           ATTR_ACCESS_GET);
+ return NULL;
+}
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+
+
 INTERN int DCALL
 DeeInstance_DelAttribute(DeeTypeObject *__restrict class_type,
                          struct instance_desc *__restrict self,

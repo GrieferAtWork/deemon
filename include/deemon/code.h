@@ -620,6 +620,8 @@ struct function_object {
 
 struct yield_function_object {
     OBJECT_HEAD /* GC Object. */
+    /* TODO: Turn this object into a variable-length one,
+     *       with elements of `yf_args' being stored in-line. */
     DREF DeeFunctionObject   *yf_func; /* [0..1][(!= NULL) == (yf_args != NULL)][const] The function we are derived from.
                                         * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
     DREF struct tuple_object *yf_args; /* [0..1][(!= NULL) == (yf_func != NULL)][const] Arguments that we are called with.
@@ -679,14 +681,34 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code);
 /* Optimized operator for calling a `function' object using the `thiscall' calling convention.
  * NOTE: Potentially required conversions are performed by this function automatically! */
 INTDEF DREF DeeObject *DCALL
-DeeFunction_ThisCall(DeeObject *__restrict self,
+DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
                      DeeObject *__restrict this_arg,
                      size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL
-DeeFunction_ThisCallKw(DeeObject *__restrict self,
+DeeFunction_ThisCallKw(DeeFunctionObject *__restrict self,
                        DeeObject *__restrict this_arg,
                        size_t argc, DeeObject **__restrict argv,
                        DeeObject *kw);
+
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+INTDEF DREF DeeObject *DCALL
+DeeFunction_CallTuple(DeeFunctionObject *__restrict self,
+                      DeeObject *__restrict args);
+INTDEF DREF DeeObject *DCALL
+DeeFunction_CallTupleKw(DeeFunctionObject *__restrict self,
+                        DeeObject *__restrict args,
+                        DeeObject *kw);
+INTDEF DREF DeeObject *DCALL
+DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
+                          DeeObject *__restrict this_arg,
+                          DeeObject *__restrict args);
+INTDEF DREF DeeObject *DCALL
+DeeFunction_ThisCallTupleKw(DeeFunctionObject *__restrict self,
+                            DeeObject *__restrict this_arg,
+                            DeeObject *__restrict args,
+                            DeeObject *kw);
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+
 #endif
 
 

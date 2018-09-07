@@ -42,6 +42,10 @@ DECL_BEGIN
 INTDEF DREF DeeObject *DCALL type_getattr(DeeObject *__restrict self, DeeObject *__restrict name);
 INTDEF DREF DeeObject *DCALL type_callattr(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL type_callattr_kw(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#define type_callattr_tuple(self,name,args)       type_callattr(self,name,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define type_callattr_tuple_kw(self,name,args,kw) type_callattr_kw(self,name,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#endif
 INTDEF int DCALL type_delattr(DeeObject *__restrict self, DeeObject *__restrict name);
 INTDEF int DCALL type_setattr(DeeObject *__restrict self, DeeObject *__restrict name, DeeObject *__restrict value);
 
@@ -1966,6 +1970,7 @@ done:
  return result;
 }
 
+
 PUBLIC DREF DeeObject *DCALL
 DeeObject_CallAttr(DeeObject *__restrict self,
                    /*String*/DeeObject *__restrict attr_name,
@@ -2116,6 +2121,152 @@ done_invoke:
 done:
  return result;
 }
+
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+PUBLIC DREF DeeObject *DCALL
+DeeObject_CallAttrTuple(DeeObject *__restrict self,
+                        /*String*/DeeObject *__restrict attr_name,
+                        DeeObject *__restrict args) {
+ DREF DeeObject *result; struct membercache *cache;
+ DeeTypeObject *iter; dhash_t hash;
+ ASSERT_OBJECT(self);
+ ASSERT_OBJECT(attr_name);
+ ASSERT(DeeString_Check(attr_name));
+ iter = Dee_TYPE(self);
+ if (iter == &DeeSuper_Type) {
+  /* Optimization... */
+  iter = DeeSuper_TYPE(self);
+  self = DeeSuper_SELF(self);
+ }
+ if (iter->tp_attr) goto do_iter_attr;
+ hash = DeeString_Hash(attr_name);
+ cache = &iter->tp_cache;
+ if ((result = membercache_callattr_tuple(cache,self,DeeString_STR(attr_name),hash,args)) != ITER_DONE)
+      goto done;
+ for (;;) {
+  if (DeeType_IsClass(iter)) {
+   struct member_entry *attr;
+   struct class_desc *desc = DeeClass_DESC(iter);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
+     return NULL;
+    }
+    return DeeInstance_CallAttributeTuple(iter,
+                                          DeeInstance_DESC(desc,
+                                                           self),
+                                          self,attr,args);
+   }
+  }
+  if (iter->tp_methods &&
+     (result = type_method_callattr_tuple(cache,iter->tp_methods,self,DeeString_STR(attr_name),hash,args)) != ITER_DONE)
+      goto done;
+  if (iter->tp_getsets &&
+     (result = type_getset_getattr(cache,iter->tp_getsets,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+      goto done_invoke;
+  if (iter->tp_members &&
+     (result = type_member_getattr(cache,iter->tp_members,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+      goto done_invoke;
+  iter = DeeType_Base(iter);
+  if (!iter) break;
+  if (iter->tp_attr) {
+do_iter_attr:
+   if (iter->tp_attr->tp_getattr == &type_getattr)
+       return type_callattr_tuple(self,attr_name,args);
+   if (!iter->tp_attr->tp_getattr) break;
+   result = (*iter->tp_attr->tp_getattr)(self,attr_name);
+   goto done_invoke;
+  }
+ }
+ err_unknown_attribute(DeeObject_Class(self),
+                       DeeString_STR(attr_name),
+                       ATTR_ACCESS_GET);
+ return NULL;
+done_invoke:
+ if likely(result) {
+  DREF DeeObject *callback_result;
+  callback_result = DeeObject_CallTuple(result,args);
+  Dee_Decref(result);
+  result = callback_result;
+ }
+done:
+ return result;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeObject_CallAttrTupleKw(DeeObject *__restrict self,
+                          /*String*/DeeObject *__restrict attr_name,
+                          DeeObject *__restrict args,
+                          DeeObject *kw) {
+ DREF DeeObject *result; struct membercache *cache;
+ DeeTypeObject *iter; dhash_t hash;
+ ASSERT_OBJECT(self);
+ ASSERT_OBJECT(attr_name);
+ ASSERT(DeeString_Check(attr_name));
+ iter = Dee_TYPE(self);
+ if (iter == &DeeSuper_Type) {
+  /* Optimization... */
+  iter = DeeSuper_TYPE(self);
+  self = DeeSuper_SELF(self);
+ }
+ if (iter->tp_attr) goto do_iter_attr;
+ hash = DeeString_Hash(attr_name);
+ cache = &iter->tp_cache;
+ if ((result = membercache_callattr_tuple_kw(cache,self,DeeString_STR(attr_name),hash,args,kw)) != ITER_DONE)
+      goto done;
+ for (;;) {
+  if (DeeType_IsClass(iter)) {
+   struct member_entry *attr;
+   struct class_desc *desc = DeeClass_DESC(iter);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
+     return NULL;
+    }
+    return DeeInstance_CallAttributeTupleKw(iter,
+                                            DeeInstance_DESC(desc,
+                                                             self),
+                                            self,attr,args,kw);
+   }
+  }
+  if (iter->tp_methods &&
+     (result = type_method_callattr_tuple_kw(cache,iter->tp_methods,self,DeeString_STR(attr_name),hash,args,kw)) != ITER_DONE)
+      goto done;
+  if (iter->tp_getsets &&
+     (result = type_getset_getattr(cache,iter->tp_getsets,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+      goto done_invoke;
+  if (iter->tp_members &&
+     (result = type_member_getattr(cache,iter->tp_members,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+      goto done_invoke;
+  iter = DeeType_Base(iter);
+  if (!iter) break;
+  if (iter->tp_attr) {
+do_iter_attr:
+   if (iter->tp_attr->tp_getattr == &type_getattr)
+       return type_callattr_tuple_kw(self,attr_name,args,kw);
+   if (!iter->tp_attr->tp_getattr) break;
+   result = (*iter->tp_attr->tp_getattr)(self,attr_name);
+   goto done_invoke;
+  }
+ }
+ err_unknown_attribute(DeeObject_Class(self),
+                       DeeString_STR(attr_name),
+                       ATTR_ACCESS_GET);
+ return NULL;
+done_invoke:
+ if likely(result) {
+  DREF DeeObject *callback_result;
+  callback_result = DeeObject_CallTupleKw(result,args,kw);
+  Dee_Decref(result);
+  result = callback_result;
+ }
+done:
+ return result;
+}
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+
 
 PUBLIC DREF DeeObject *DCALL
 DeeObject_GetAttrStringHash(DeeObject *__restrict self,

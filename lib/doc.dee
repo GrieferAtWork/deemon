@@ -1763,6 +1763,7 @@ unknown_attribute:
 	istype = { get() -> object is bound && object is deemon.type_; }
 
 
+	@"->string"
 	@"Returns a real name of the node (that is the decoded operator name)"
 	realname = {
 		get() {

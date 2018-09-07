@@ -166,9 +166,8 @@
  */
 
 
-#define CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
 
- /* DEPRECATED NAMES */
+/* DEPRECATED NAMES */
 #define member_entry              class_attribute
 #define CLASS_MEMBER_FPUBLIC      CLASS_ATTRIBUTE_FNORMAL
 #define CLASS_MEMBER_FPRIVATE     CLASS_ATTRIBUTE_FPRIVATE
@@ -503,6 +502,10 @@ INTDEF DREF DeeObject *DCALL DeeInstance_GetAttribute(DeeTypeObject *__restrict 
 INTDEF int DCALL DeeInstance_BoundAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
 INTDEF DREF DeeObject *DCALL DeeInstance_CallAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeKw(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTuple(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict args);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTupleKw(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 INTDEF int DCALL DeeInstance_DelAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
 INTDEF int DCALL DeeInstance_SetAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict value);
 
@@ -513,6 +516,10 @@ INTDEF DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restric
 INTDEF int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
 INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeTuple(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict args);
+INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeTupleKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 INTDEF int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
 INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict value);
 #else
@@ -520,6 +527,10 @@ INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type
 #define DeeClass_BoundClassAttribute(class_type,attr)               DeeInstance_BoundAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
 #define DeeClass_CallClassAttribute(class_type,attr,argc,argv)      DeeInstance_CallAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,argc,argv)
 #define DeeClass_CallClassAttributeKw(class_type,attr,argc,argv,kw) DeeInstance_CallAttributeKw(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,argc,argv,kw)
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#define DeeClass_CallClassAttributeTuple(class_type,attr,args)      DeeInstance_CallAttributeTuple(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,args)
+#define DeeClass_CallClassAttributeTupleKw(class_type,attr,args,kw) DeeInstance_CallAttributeTupleKw(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,args,kw)
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 #define DeeClass_DelClassAttribute(class_type,attr)                 DeeInstance_DelAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
 #define DeeClass_SetClassAttribute(class_type,attr,value)           DeeInstance_SetAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,value)
 #endif

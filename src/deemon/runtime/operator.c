@@ -2406,6 +2406,70 @@ DEFINE_OPERATOR(DREF DeeObject *,Call,
 #endif
 }
 
+#ifndef DEFINE_TYPE_OPERATORS
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+DEFINE_OPERATOR(DREF DeeObject *,CallTuple,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict args)) {
+ LOAD_TP_SELF;
+ ASSERT_OBJECT_TYPE_EXACT(args,&DeeTuple_Type);
+ if (tp_self == &DeeFunction_Type)
+     return DeeFunction_CallTuple((DeeFunctionObject *)self,args);
+ do {
+  if (tp_self->tp_call)
+      return DeeType_INVOKE_CALL(tp_self,self,
+                                 DeeTuple_SIZE(args),
+                                 DeeTuple_ELEM(args));
+  if (tp_self->tp_call_kw)
+      return DeeType_INVOKE_CALLKW(tp_self,self,
+                                   DeeTuple_SIZE(args),
+                                   DeeTuple_ELEM(args),
+                                   NULL);
+ } while (type_inherit_call(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_CALL);
+ return NULL;
+}
+DEFINE_OPERATOR(DREF DeeObject *,CallTupleKw,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict args,
+                DeeObject *kw)) {
+ LOAD_TP_SELF;
+ ASSERT_OBJECT_TYPE_EXACT(args,&DeeTuple_Type);
+ if (tp_self == &DeeFunction_Type)
+     return DeeFunction_CallTupleKw((DeeFunctionObject *)self,args,kw);
+ do {
+  if (tp_self->tp_call_kw)
+      return DeeType_INVOKE_CALLKW(tp_self,self,
+                                   DeeTuple_SIZE(args),
+                                   DeeTuple_ELEM(args),
+                                   kw);
+  if (tp_self->tp_call) {
+   /* Object doesn't support keyword arguments. */
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto err_no_keywords;
+    } else {
+     size_t kw_length;
+     kw_length = DeeObject_Size(kw);
+     if unlikely(kw_length == (size_t)-1) return NULL;
+     if (kw_length != 0) goto err_no_keywords;
+    }
+   }
+   return DeeType_INVOKE_CALL(tp_self,self,
+                              DeeTuple_SIZE(args),
+                              DeeTuple_ELEM(args));
+  }
+ } while (type_inherit_call(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_CALL);
+ return NULL;
+err_no_keywords:
+ err_keywords_not_accepted(tp_self,kw);
+ return NULL;
+}
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* !DEFINE_TYPE_OPERATORS */
+
 DEFINE_OPERATOR(DREF DeeObject *,CallKw,
                (DeeObject *__restrict self, size_t argc,
                 DeeObject **__restrict argv, DeeObject *kw)) {
@@ -2490,7 +2554,6 @@ DeeObject_TThisCallKw(DeeTypeObject *__restrict tp_self,
                       DeeObject *__restrict this_arg,
                       size_t argc, DeeObject **__restrict argv,
                       DeeObject *kw);
-
 #endif
 
 DEFINE_OPERATOR(DREF DeeObject *,ThisCall,
@@ -2509,7 +2572,7 @@ DEFINE_OPERATOR(DREF DeeObject *,ThisCall,
 
  /* Check for special callback optimizations. */
  if (GET_TP_SELF() == &DeeFunction_Type)
-     return DeeFunction_ThisCall(self,this_arg,argc,argv);
+     return DeeFunction_ThisCall((DeeFunctionObject *)self,this_arg,argc,argv);
  if (GET_TP_SELF() == &DeeClsMethod_Type) {
   /* Must ensure proper typing of the this-argument. */
   if (DeeObject_AssertType(this_arg,((DeeClsMethodObject *)self)->cm_type))
@@ -2558,7 +2621,7 @@ DEFINE_OPERATOR(DREF DeeObject *,ThisCallKw,
 
  /* Check for special callback optimizations. */
  if (GET_TP_SELF() == &DeeFunction_Type)
-     return DeeFunction_ThisCallKw(self,this_arg,argc,argv,kw);
+     return DeeFunction_ThisCallKw((DeeFunctionObject *)self,this_arg,argc,argv,kw);
  if (GET_TP_SELF() == &DeeKwClsMethod_Type) {
   /* Must ensure proper typing of the this-argument. */
   if (DeeObject_AssertType(this_arg,((DeeKwClsMethodObject *)self)->cm_type))
@@ -2605,6 +2668,39 @@ err_no_keywords:
  err_keywords_not_accepted(GET_TP_SELF(),kw);
  return NULL;
 }
+
+
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifndef DEFINE_TYPE_OPERATORS
+DEFINE_OPERATOR(DREF DeeObject *,ThisCallTuple,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict this_arg,
+                DeeObject *__restrict args)) {
+ /* Check for special callback optimizations. */
+ if (GET_TP_SELF() == &DeeFunction_Type)
+     return DeeFunction_ThisCallTuple((DeeFunctionObject *)self,this_arg,args);
+ return DeeObject_ThisCall(self,
+                           this_arg,
+                           DeeTuple_SIZE(args),
+                           DeeTuple_ELEM(args));
+}
+
+DEFINE_OPERATOR(DREF DeeObject *,ThisCallTupleKw,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict this_arg,
+                DeeObject *__restrict args,
+                DeeObject *kw)) {
+ /* Check for special callback optimizations. */
+ if (GET_TP_SELF() == &DeeFunction_Type)
+     return DeeFunction_ThisCallTupleKw((DeeFunctionObject *)self,this_arg,args,kw);
+ return DeeObject_ThisCallKw(self,
+                             this_arg,
+                             DeeTuple_SIZE(args),
+                             DeeTuple_ELEM(args),
+                             kw);
+}
+#endif /* !DEFINE_TYPE_OPERATORS */
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 
 #ifndef DEFINE_TYPE_OPERATORS

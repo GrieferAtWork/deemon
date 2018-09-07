@@ -1274,17 +1274,11 @@ do_call_tuple_kw:
       kwds = CONSTimm;
       Dee_Incref(kwds);
       CONST_LOCKENDREAD();
-      call_result = DeeObject_CallKw(SECOND,
-                                     DeeTuple_SIZE(FIRST),
-                                     DeeTuple_ELEM(FIRST),
-                                     kwds);
+      call_result = DeeObject_CallTupleKw(SECOND,FIRST,kwds);
       Dee_Decref(kwds);
      }
 #else
-     call_result = DeeObject_CallKw(SECOND,
-                                    DeeTuple_SIZE(FIRST),
-                                    DeeTuple_ELEM(FIRST),
-                                    CONSTimm);
+     call_result = DeeObject_CallTupleKw(SECOND,FIRST,CONSTimm);
 #endif
      if unlikely(!call_result) HANDLE_EXCEPT();
      POPREF();          /* Pop the argument tuple. */
@@ -1296,9 +1290,7 @@ do_call_tuple_kw:
  TARGET(ASM_CALL_TUPLE,-2,+1) {
      DREF DeeObject *temp;
      ASSERT_TUPLE(FIRST);
-     temp = DeeObject_Call(SECOND,
-                           DeeTuple_SIZE(FIRST),
-                           DeeTuple_ELEM(FIRST));
+     temp = DeeObject_CallTuple(SECOND,FIRST);
      if unlikely(!temp) HANDLE_EXCEPT();
      POPREF();
      Dee_Decref(TOP);
@@ -1313,8 +1305,9 @@ do_call_tuple_kw:
 do_operator:
      ASSERT_USAGE(-1-(int)imm_val2,+1);
      /* NOTE: Inherit references. */
-     call_result = DeeObject_InvokeOperator(TOP,(unsigned int)imm_val,
-                                           (size_t)imm_val2,sp-imm_val2);
+     call_result = DeeObject_InvokeOperator(TOP,imm_val,
+                                           (size_t)imm_val2,
+                                            sp - imm_val2);
      if unlikely(!call_result) HANDLE_EXCEPT();
      while (imm_val2--) POPREF();
      Dee_Decref(TOP); /* Drop a reference from the operator self-argument. */
@@ -3283,9 +3276,7 @@ do_setitem_c:
       err_expected_string_for_attribute(SECOND);
       HANDLE_EXCEPT();
      }
-     call_result = DeeObject_CallAttr(THIRD,SECOND,
-                                      DeeTuple_SIZE(FIRST),
-                                      DeeTuple_ELEM(FIRST));
+     call_result = DeeObject_CallAttrTuple(THIRD,SECOND,FIRST);
      if unlikely(!call_result) HANDLE_EXCEPT();
      POPREF();
      POPREF();
@@ -3366,21 +3357,13 @@ do_callattr_tuple_c_kw:
        Dee_Decref_unlikely(kwds_map);
        goto err_requires_string;
       }
-      call_result = DeeObject_CallAttrKw(SECOND,
-                                         attr_name,
-                                         DeeTuple_SIZE(FIRST),
-                                         DeeTuple_ELEM(FIRST),
-                                         kwds_map);
+      call_result = DeeObject_CallAttrTupleKw(SECOND,attr_name,FIRST,kwds_map);
       Dee_Decref_unlikely(attr_name);
       Dee_Decref_unlikely(kwds_map);
      }
 #else
      ASSERT_STRING(CONSTimm);
-     call_result = DeeObject_CallAttrKw(SECOND,
-                                        CONSTimm,
-                                        DeeTuple_SIZE(FIRST),
-                                        DeeTuple_ELEM(FIRST),
-                                        CONSTimm2);
+     call_result = DeeObject_CallAttrTupleKw(SECOND,CONSTimm,FIRST,CONSTimm2);
 #endif
      if unlikely(!call_result) HANDLE_EXCEPT();
      POPREF();
@@ -3553,16 +3536,12 @@ do_callattr_tuple_c:
         Dee_Decref(imm_name);
         goto err_requires_string;
        }
-       callback_result = DeeObject_CallAttr(SECOND,imm_name,
-                                            DeeTuple_SIZE(FIRST),
-                                            DeeTuple_ELEM(FIRST));
+       callback_result = DeeObject_CallAttrTuple(SECOND,imm_name,FIRST);
        Dee_Decref(imm_name);
      }
 #else
      ASSERT_STRING(CONSTimm);
-     callback_result = DeeObject_CallAttr(SECOND,CONSTimm,
-                                          DeeTuple_SIZE(FIRST),
-                                          DeeTuple_ELEM(FIRST));
+     callback_result = DeeObject_CallAttrTuple(SECOND,CONSTimm,FIRST);
 #endif
      if unlikely(!callback_result) HANDLE_EXCEPT();
      POPREF();
@@ -3588,16 +3567,12 @@ do_callattr_this_tuple_c:
         Dee_Decref(imm_name);
         goto err_requires_string;
        }
-       callback_result = DeeObject_CallAttr(THIS,imm_name,
-                                            DeeTuple_SIZE(TOP),
-                                            DeeTuple_ELEM(TOP));
+       callback_result = DeeObject_CallAttrTuple(THIS,imm_name,TOP);
        Dee_Decref(imm_name);
      }
 #else
      ASSERT_STRING(CONSTimm);
-     callback_result = DeeObject_CallAttr(THIS,CONSTimm,
-                                          DeeTuple_SIZE(TOP),
-                                          DeeTuple_ELEM(TOP));
+     callback_result = DeeObject_CallAttrTuple(THIS,CONSTimm,TOP);
 #endif
      if unlikely(!callback_result) HANDLE_EXCEPT();
      Dee_Decref(TOP);
@@ -4086,10 +4061,7 @@ do_setattr_this_c:
          DREF DeeObject *call_result;
          ASSERT_USAGE(-3,+1);
          ASSERT_TUPLE(SECOND);
-         call_result = DeeObject_CallKw(THIRD,
-                                        DeeTuple_SIZE(SECOND),
-                                        DeeTuple_ELEM(SECOND),
-                                        FIRST);
+         call_result = DeeObject_CallTupleKw(THIRD,SECOND,FIRST);
          if unlikely(!call_result) HANDLE_EXCEPT();
          POPREF();
          POPREF();
@@ -4629,11 +4601,7 @@ do_setattr_this_c:
           HANDLE_EXCEPT();
          }
          ASSERT_TUPLE(SECOND);
-         call_result = DeeObject_CallAttrKw(FOURTH,
-                                            THIRD,
-                                            DeeTuple_SIZE(SECOND),
-                                            DeeTuple_ELEM(SECOND),
-                                            FIRST);
+         call_result = DeeObject_CallAttrTupleKw(FOURTH,THIRD,SECOND,FIRST);
          POPREF(); /* kwds */
          POPREF(); /* args */
          POPREF(); /* name */
@@ -5406,8 +5374,10 @@ do_prefix_operator_tuple:
       ASSERT_TUPLE(TOP);
       prefix_ob = get_prefix_object();
       if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      call_result = DeeObject_PInvokeOperator(&prefix_ob,(unsigned int)imm_val,
-                                               DeeTuple_SIZE(TOP),DeeTuple_ELEM(TOP));
+      call_result = DeeObject_PInvokeOperator(&prefix_ob,
+                                               imm_val,
+                                               DeeTuple_SIZE(TOP),
+                                               DeeTuple_ELEM(TOP));
       if unlikely(!call_result) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
       Dee_Decref(TOP);
       TOP = call_result; /* Inherit reference. */
