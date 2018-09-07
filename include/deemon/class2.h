@@ -26,6 +26,146 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/*
+ * Automatically generated operators / constructors:
+ * NOTE: For this purpose, code on right-hand-side does not contain any hidden super-calls,
+ *       which is something that is impossible to achieve in user-code.
+ *
+ * CONSTRUCTORS:
+ * >> class MyClass: Base {                >> class MyClass: Base {
+ * >> }                                    >>     this(): super() { }
+ *                                         >> }
+ * 
+ * >> class MyClass: Base {                >> class MyClass: Base {
+ * >>     this = super;                    >>     this(args...): super(args...) { }
+ * >> }                                    >> }
+ * 
+ * >> class MyClass: Base {                >> class MyClass: Base {
+ * >>     this = del;                      >>     this(args...) {
+ * >> }                                    >>         import Error from deemon;
+ *                                         >>         throw Error.RuntimeError.NotImplemented("...");
+ *                                         >>     }
+ * 
+ * >> class MyClass: Base {                >> class MyClass: Base {
+ * >>     member foo = 42;                 >>     member foo;
+ * >> }                                    >>     this(): super() {
+ *                                         >>         foo = 42;
+ *                                         >>     }
+ *                                         >>     ~this() {
+ *                                         >>         del foo;
+ *                                         >>     }
+ *                                         >> }
+ *
+ * >> class MyClass: Base {                >> class MyClass: Base {
+ * >>     member foo = 42;                 >>     member foo;
+ * >>     this = super;                    >>     this(args...): super(args...) {
+ * >> }                                    >>         foo = 42;
+ *                                         >>     }
+ *                                         >>     ~this() {
+ *                                         >>         del foo;
+ *                                         >>     }
+ *                                         >> }
+ *
+ * >> class MyClass: Base {                >> class MyClass: Base {
+ * >>     member foo = 42;                 >>     member foo;
+ * >>     this() {                         >>     this(): super() {
+ * >>         print "foo =",foo;           >>         foo = 42;
+ * >>     }                                >>         {
+ * >> }                                    >>             print "foo =",foo;
+ *                                         >>         }
+ *                                         >>     }
+ *                                         >>     ~this() {
+ *                                         >>         del foo;
+ *                                         >>     }
+ *                                         >> }
+ *
+ * OPERATORS:
+ * >> class MyClass: Base {                >> class MyClass: Base {
+ * >>     member foo;                      >>     member foo;   
+ * >>     member bar;                      >>     member bar;   
+ * >>     member foobar;                   >>     member foobar;
+ * >> }                                    >>     this(): super() { }
+ * Automatic operators are provided in     >>     ~this() {
+ * groups, where the user explicitly       >>         del foo;   
+ * implementing any of them will result    >>         del bar;   
+ * in all other operators from that        >>         del foobar;
+ * group to no longer be automatically     >>     }
+ * generated.                              >>     operator copy(other) {
+ * For this purpose, the following groups  >>         // super.copy(other);
+ * exist:                                  >>         if (other !is MyClass)
+ *  - copy                                 >>             throw Error.TypeError("...");
+ *  - constructor                          >>         foo    = (other as MyClass).foo;
+ *  - destructor                           >>         bar    = (other as MyClass).bar;
+ *  - assign, moveassign                   >>         foobar = (other as MyClass).foobar;
+ *  - hash, eq, ne, lo, le, gr, ge         >>     }
+ * Also note that when providing a `copy'  >>     operator deepcopy(other) {
+ * operator, is will also be invoke when   >>         // super.deepcopy(other);
+ * `deepcopy' is called, after with each   >>         if (other !is MyClass)
+ * of the instance's bound members will be >>             throw Error.TypeError("...");
+ * replace with a deep copy of itself.     >>         foo    = deepcopy((other as MyClass).foo);
+ *                                         >>         bar    = deepcopy((other as MyClass).bar);
+ * Note that attribute accesses made on    >>         foobar = deepcopy((other as MyClass).foobar);
+ * `other' in automatic operators will not >>     }
+ * invoke a potential `operator getattr',  >>     operator hash() {
+ * but will always access the native       >>         return foo.operator hash() ^
+ * attribute.                              >>                bar.operator hash() ^
+ *                                         >>                foobar.operator hash();
+ * During member access, only `member'-    >>     }
+ * like fields are accessed, meaning that  >>     operator == (other) {
+ * instance-properties will not be invoked >>         if (other !is MyClass)
+ *                                         >>             return false;
+ * Fields are compared lexicographically,  >>         return foo == (other as MyClass).foo &&
+ * following the same order in which they  >>                bar == (other as MyClass).bar &&
+ * were orignally defined.                 >>                foobar == (other as MyClass).foobar;
+ *                                         >>     }
+ *                                         >>     operator != (other) {
+ *                                         >>         if (other !is MyClass)
+ *                                         >>             return true;
+ *                                         >>         return foo != (other as MyClass).foo &&
+ *                                         >>                bar != (other as MyClass).bar &&
+ *                                         >>                foobar != (other as MyClass).foobar;
+ *                                         >>     }
+ *                                         >>     operator < (other) {
+ *                                         >>         import Error from deemon;
+ *                                         >>         if (other !is MyClass)
+ *                                         >>             throw Error.TypeError("...");
+ *                                         >>         return foo < (other as MyClass).foo || (foo == (other as MyClass).foo &&
+ *                                         >>                bar < (other as MyClass).bar || (bar == (other as MyClass).bar &&
+ *                                         >>                foobar < (other as MyClass).foobar));
+ *                                         >>     }
+ *                                         >>     operator <= (other) {
+ *                                         >>         import Error from deemon;
+ *                                         >>         if (other !is MyClass)
+ *                                         >>             throw Error.TypeError("...");
+ *                                         >>         return foo < (other as MyClass).foo || (foo == (other as MyClass).foo &&
+ *                                         >>                bar < (other as MyClass).bar || (bar == (other as MyClass).bar &&
+ *                                         >>                foobar <= (other as MyClass).foobar));
+ *                                         >>     }
+ *                                         >>     operator > (other) {
+ *                                         >>         import Error from deemon;
+ *                                         >>         if (other !is MyClass)
+ *                                         >>             throw Error.TypeError("...");
+ *                                         >>         return foo > (other as MyClass).foo || (foo == (other as MyClass).foo &&
+ *                                         >>                bar > (other as MyClass).bar || (bar == (other as MyClass).bar &&
+ *                                         >>                foobar > (other as MyClass).foobar));
+ *                                         >>     }
+ *                                         >>     operator >= (other) {
+ *                                         >>         import Error from deemon;
+ *                                         >>         if (other !is MyClass)
+ *                                         >>             throw Error.TypeError("...");
+ *                                         >>         return foo > (other as MyClass).foo || (foo == (other as MyClass).foo &&
+ *                                         >>                bar > (other as MyClass).bar || (bar == (other as MyClass).bar &&
+ *                                         >>                foobar >= (other as MyClass).foobar));
+ *                                         >>     }
+ *                                         >> }
+ *
+ * NOTE: Please don't define destructors like those seen above.
+ *       The runtime will automatically unbind all instance members
+ *       during destruction of a class instance, and it can do so
+ *       must more efficiently that your destructor ever could.
+ */
+
+
 #define CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
 
  /* DEPRECATED NAMES */
