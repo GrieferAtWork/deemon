@@ -165,6 +165,8 @@ PRIVATE struct type_member property_members[] = {
     TYPE_MEMBER_FIELD_DOC("getter",STRUCT_OBJECT,offsetof(Property,p_get),"->callable\nThe getter callback"),
     TYPE_MEMBER_FIELD_DOC("delete",STRUCT_OBJECT,offsetof(Property,p_del),"->callable\nThe delete callback"),
     TYPE_MEMBER_FIELD_DOC("setter",STRUCT_OBJECT,offsetof(Property,p_set),"->callable\nThe setter callback"),
+    TYPE_MEMBER_FIELD_DOC("get",STRUCT_OBJECT,offsetof(Property,p_get),"->callable\nAlias for #getter"),
+    TYPE_MEMBER_FIELD_DOC("set",STRUCT_OBJECT,offsetof(Property,p_set),"->callable\nAlias for #setter"),
     TYPE_MEMBER_END
 };
 

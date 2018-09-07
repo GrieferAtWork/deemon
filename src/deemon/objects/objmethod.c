@@ -644,15 +644,15 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
  return (*self->cp_get)(thisarg);
 }
 PRIVATE DREF DeeObject *DCALL
-clsproperty_del(DeeClsPropertyObject *__restrict self,
-                size_t argc, DREF DeeObject **__restrict argv,
-                DeeObject *kw) {
+clsproperty_delete(DeeClsPropertyObject *__restrict self,
+                   size_t argc, DREF DeeObject **__restrict argv,
+                   DeeObject *kw) {
  DeeObject *thisarg;
  if (!self->cp_del) {
-  err_cant_access_attribute(&DeeClsProperty_Type,"del",ATTR_ACCESS_GET);
+  err_cant_access_attribute(&DeeClsProperty_Type,"delete",ATTR_ACCESS_GET);
   return NULL;
  }
- if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:del",&thisarg) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:delete",&thisarg) ||
        /* Allow non-instance objects for generic types. */
     (!(self->cp_type->tp_flags&TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cp_type)))
@@ -683,10 +683,14 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
 PRIVATE struct type_method clsproperty_methods[] = {
     { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
        DOC("(thisarg)"), TYPE_METHOD_FKWDS },
-    { "del", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_del,
+    { "delete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_delete,
        DOC("(thisarg)->none"), TYPE_METHOD_FKWDS },
     { "set", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
        DOC("(thisarg,value)->none"), TYPE_METHOD_FKWDS },
+    { "getter", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
+       DOC("(thisarg)\nAlias for #get"), TYPE_METHOD_FKWDS },
+    { "setter", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
+       DOC("(thisarg,value)->none\nAlias for #set"), TYPE_METHOD_FKWDS },
     { NULL }
 };
 
@@ -790,11 +794,11 @@ clsmember_get(DeeClsMemberObject *__restrict self,
  return type_member_get(&self->cm_memb,thisarg);
 }
 PRIVATE DREF DeeObject *DCALL
-clsmember_del(DeeClsMemberObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv,
-              DeeObject *kw) {
+clsmember_delete(DeeClsMemberObject *__restrict self,
+                 size_t argc, DeeObject **__restrict argv,
+                 DeeObject *kw) {
  DeeObject *thisarg;
- if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:del",&thisarg) ||
+ if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:delete",&thisarg) ||
        /* Allow non-instance objects for generic types. */
     (!(self->cm_type->tp_flags&TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cm_type)) ||
@@ -819,10 +823,10 @@ clsmember_set(DeeClsMemberObject *__restrict self,
 PRIVATE struct type_method clsmember_methods[] = {
     { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_get,
        DOC("(thisarg)"), TYPE_METHOD_FKWDS },
-    { "del", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_del,
-       DOC("(thisarg)->none"), TYPE_METHOD_FKWDS },
+    { "delete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_delete,
+       DOC("(thisarg)"), TYPE_METHOD_FKWDS },
     { "set", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_set,
-       DOC("(thisarg,value)->none"), TYPE_METHOD_FKWDS },
+       DOC("(thisarg,value)"), TYPE_METHOD_FKWDS },
     { NULL }
 };
 
