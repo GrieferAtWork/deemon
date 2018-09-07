@@ -454,7 +454,7 @@ INTDEF int DCALL astlist_appendall(struct astlist *__restrict self, struct astli
 
 
 struct ast_tags {
-    struct unicode_printer at_doc;          /* [0..1] The documentation string that should be applied to the following declaration. */
+    struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
     struct symbol         *at_class;        /* [0..1] The this-class symbol. */
     struct symbol         *at_super;        /* [0..1] The super-class symbol. */
     uint16_t               at_code_flags;   /* Set of `CODE_F*' or'd to the next function being created. */

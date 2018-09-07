@@ -1522,11 +1522,11 @@ global lookup_object_path;
 @"These attributes can optionally be prefixed with one of the following"
 @"modifiers in order to address different attributes namespaces:"
 @"%{table Prefix|Description"
-@"-${\"\"}|The attribute is either a class-attribute, or an instance-attribute (may lead "
-          "to ambiguity when a name is re-used, such as by :dict/c:keys and :dict/i:keys)"
-@"-${\"c:\"}|The attribute is a class-attribute (i.e. ${string.chr})"
-@"-${\"i:\"}|The attribute is a instance-attribute (i.e. ${string.find})"
-@"-${\"op:\"}|The attribute is a real operator name (i.e. ${\"eq\"} instead of ${\"==\"})}"
+@"$\"\"|The attribute is either a class-attribute, or an instance-attribute (may lead "
+       "to ambiguity when a name is re-used, such as by :dict.c:keys and :dict.i:keys)"
+@"$\"c:\"|The attribute is a class-attribute (e.g. ${string.chr})"
+@"$\"i:\"|The attribute is a instance-attribute (e.g. ${string.find})"
+@"$\"op:\"|The attribute is a real operator name (e.g. ${\"eq\"} instead of ${\"==\"})}"
 @"Furthermore, child-nodes (attributes) can be reached using #child, and all existing "
 @"child nodes can be enumerated by using the doc-node as a sequence-like object."
 @"Some restrictions apply to Doc-nodes, most notably the restriction that the object"
@@ -1805,16 +1805,16 @@ unknown_attribute:
 	@"->none"
 	@"Returns the kind of node, which is one of the following"
 	@"%{table Name|Description"
-	@"-${\"module\"}|The node refers to a module"
-	@"-${\"type\"}|The node refers to a type"
-	@"-${\"function\"}|The node refers to a function"
-	@"-${\"class_function\"}|The node refers to a class-function"
-	@"-${\"member\"}|The node refers to a member or global module-variable"
-	@"-${\"class_member\"}|The node refers to a class-member"
-	@"-${\"property\"}|The node refers to a property"
-	@"-${\"class_property\"}|The node refers to a class-property"
-	@"-${\"operator\"}|The node refers to an operator"
-	@"-${none}|The node kind could not be determined}"
+	@"$\"module\"|The node refers to a module"
+	@"$\"type\"|The node refers to a type"
+	@"$\"function\"|The node refers to a function"
+	@"$\"class_function\"|The node refers to a class-function"
+	@"$\"member\"|The node refers to a member or global module-variable"
+	@"$\"class_member\"|The node refers to a class-member"
+	@"$\"property\"|The node refers to a property"
+	@"$\"class_property\"|The node refers to a class-property"
+	@"$\"operator\"|The node refers to an operator"
+	@"$none|The node kind could not be determined}"
 	kind = {
 		get() {
 			if (object !is bound) {
@@ -1850,13 +1850,6 @@ unknown_attribute:
 				if (object is deemon.type_)
 					return true;
 			}
-			//if (attr is bound && attr !is none) {
-			//	if (attr.cancall || callable.baseof(attr.attrtype)) {
-			//		return attr.isinstance ? "function" : "class_function";
-			//	} else {
-			//		return attr.isinstance ? "member" : "class_member";
-			//	}
-			//}
 			return false;
 		}
 	}
