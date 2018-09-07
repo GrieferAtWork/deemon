@@ -440,10 +440,13 @@ class_maker_newcattr(struct class_maker *__restrict self,
              DeeString_SIZE(name) * sizeof(char)) != 0)
       continue;
   /* Duplicate name */
-  PERR(W_CLASS_MEMBER_ALREADY_DEFINED,
-       DeeString_SIZE(name),
-       DeeString_STR(name));
-  goto err;
+  if (WARN(W_CLASS_MEMBER_ALREADY_DEFINED,
+           DeeString_SIZE(name),
+           DeeString_STR(name)))
+      goto err;
+  Dee_Decref(result->ca_name);
+  Dee_XClear(result->ca_doc);
+  break;
  }
  ++self->cm_cattr_size;
  result->ca_name = name;
@@ -479,10 +482,13 @@ class_maker_newiattr(struct class_maker *__restrict self,
              DeeString_SIZE(name) * sizeof(char)) != 0)
       continue;
   /* Duplicate name */
-  PERR(W_CLASS_MEMBER_ALREADY_DEFINED,
-       DeeString_SIZE(name),
-       DeeString_STR(name));
-  goto err;
+  if (WARN(W_CLASS_MEMBER_ALREADY_DEFINED,
+           DeeString_SIZE(name),
+           DeeString_STR(name)))
+      goto err;
+  Dee_Decref(result->ca_name);
+  Dee_XClear(result->ca_doc);
+  break;
  }
  ++self->cm_iattr_size;
  result->ca_name = name;
@@ -1881,6 +1887,13 @@ got_operator_ast:
    }
 set_operator_ast:
    /* XXX: Add operator documentation? */
+
+   /* Warn when attempting to declare an operator as private. */
+   if (member_flags & CLASS_MEMBER_FPRIVATE) {
+    struct opinfo *info = Dee_OperatorInfo(NULL,operator_name);
+    if (WARN(W_PRIVATE_OPERATOR_IS_PUBLIC,info ? info->oi_sname : "?"))
+        goto err;
+   }
    /* Add the new operator to the class. */
    error = class_maker_addoperator(&maker,operator_name,operator_ast);
    ast_decref(operator_ast);
@@ -1992,10 +2005,13 @@ define_constructor:
     * >> }; */
    if unlikely(yield() < 0) goto err;
    if (is_semicollon()) {
-    if (member_class != MEMBER_CLASS_AUTO &&
-        member_class != MEMBER_CLASS_MEMBER &&
-        WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_ASSIGNED))
-        goto err;
+    if (member_class == MEMBER_CLASS_AUTO) {
+     if (WARNAT(&loc,W_IMPLICIT_MEMBER_DECLARATION,member_name))
+         goto err;
+    } else if (member_class != MEMBER_CLASS_MEMBER) {
+     if (WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_ASSIGNED,member_name))
+         goto err;
+    }
     /* Uninitialized instance/class member. */
     if (!class_maker_addmember(&maker,member_name,
 #ifdef CONFIG_USE_NEW_CLASS_SYSTEM
@@ -2017,7 +2033,7 @@ define_constructor:
      uint16_t i,prop_addr;
      if (member_class != MEMBER_CLASS_AUTO &&
          member_class != MEMBER_CLASS_GETSET &&
-         WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED))
+         WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED,member_name))
          goto err;
      if unlikely(yield() < 0) goto err;
      /* Properties are always allocated in class memory and have the FPROPERTY flag set. */
@@ -2106,7 +2122,7 @@ err_property:
     }
     if (member_class != MEMBER_CLASS_AUTO &&
         member_class != MEMBER_CLASS_MEMBER &&
-        WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED))
+        WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED,member_name))
         goto err;
     member_symbol = class_maker_addmember(&maker,
                                            member_name,
@@ -2143,7 +2159,7 @@ err_property:
    }
    if (member_class != MEMBER_CLASS_AUTO &&
        member_class != MEMBER_CLASS_METHOD &&
-       WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED))
+       WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED,member_name))
        goto err;
    /* Everything else is parsed as a member function.
     * NOTE: We mark such members are read-only because the intention is to never overwrite them. */
