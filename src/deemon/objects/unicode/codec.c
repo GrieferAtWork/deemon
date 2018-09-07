@@ -27,6 +27,7 @@
 #include <deemon/module.h>
 
 #include <hybrid/byteswap.h>
+#include <hybrid/unaligned.h>
 
 #include "codec.h"
 #include "../../runtime/strings.h"
@@ -68,14 +69,14 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
    }
    ASSERT(dst == DeeString_STR(result) + DeeString_SIZE(result));
    if (length >= 4 &&
-     *(uint32_t *)DeeString_STR(result) == ENCODE4('i','s','o','-')) {
+       UNALIGNED_GET32((uint32_t *)DeeString_STR(result)) == ENCODE4('i','s','o','-')) {
     --DeeString_SIZE(result);
     memmove(DeeString_STR(result)+3,
             DeeString_STR(result)+4,
            (length - 4)*sizeof(char));
     DeeString_STR(result)[length-2] = '\0';
    } else if (length >= 3 &&
-            *(uint16_t *)DeeString_STR(result) == ENCODE2('c','p') &&
+              UNALIGNED_GET16((uint16_t *)DeeString_STR(result)) == ENCODE2('c','p') &&
               DeeString_STR(result)[2] == '-') {
     --DeeString_SIZE(result);
     memmove(DeeString_STR(result)+2,
@@ -86,18 +87,19 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
    return result;
   }
  }
- if (length >= 4 && *(uint32_t *)str == ENCODE4('i','s','o','-')) {
+ if (length >= 4 && UNALIGNED_GET32((uint32_t *)str) == ENCODE4('i','s','o','-')) {
   result = DeeString_NewBuffer(length - 1);
   if unlikely(!result) goto err;
-  *(uint16_t *)DeeString_STR(result) = ENCODE2('i','s');
+  UNALIGNED_SET16((uint16_t *)DeeString_STR(result),ENCODE2('i','s'));
   DeeString_STR(result)[3] = 'o';
   memcpy(DeeString_STR(result) + 3,str + 4,(length - 4)*sizeof(char));
   return result;
  }
- if (length >= 3 && *(uint16_t *)str == ENCODE2('c','p') && str[2] == '-') {
+ if (length >= 3 &&
+     UNALIGNED_GET16((uint16_t *)str) == ENCODE2('c','p') && str[2] == '-') {
   result = DeeString_NewBuffer(length - 1);
   if unlikely(!result) goto err;
-  *(uint16_t *)DeeString_STR(result) = ENCODE2('c','p');
+  UNALIGNED_SET16((uint16_t *)DeeString_STR(result),ENCODE2('c','p'));
   memcpy(DeeString_STR(result) + 2,str + 3,(length - 3)*sizeof(char));
   return result;
  }
@@ -461,7 +463,7 @@ encode_utf16(DeeObject *__restrict self,
   result = DeeBytes_NewBufferUninitialized(size * 2);
   if unlikely(!result) goto err;
   dst = (uint16_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = (uint16_t)*data++;
+  while (size--) UNALIGNED_SET16(dst++,(uint16_t)*data++);
   return result;
  }
  if (DeeString_Check(self)) {
@@ -489,7 +491,7 @@ encode_utf32(DeeObject *__restrict self) {
   result = DeeBytes_NewBufferUninitialized(size * 4);
   if unlikely(!result) goto err;
   dst = (uint32_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = (uint32_t)*data++;
+  while (size--) UNALIGNED_SET32(dst++,(uint32_t)*data++);;
   return result;
  }
  if (DeeString_Check(self)) {
@@ -517,7 +519,7 @@ encode_utf16_alt(DeeObject *__restrict self,
   result = DeeBytes_NewBufferUninitialized(size * 2);
   if unlikely(!result) goto err;
   dst = (uint16_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = BSWAP16((uint16_t)*data++);
+  while (size--) UNALIGNED_SET16_SWAP(dst++,(uint16_t)*data++);
   return result;
  }
  if (DeeString_Check(self)) {
@@ -530,7 +532,7 @@ encode_utf16_alt(DeeObject *__restrict self,
   result = DeeBytes_NewBufferUninitialized(size * 2);
   if unlikely(!result) goto err;
   dst = (uint16_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = BSWAP16((uint16_t)*data++);
+  while (size--) UNALIGNED_SET16_SWAP(dst++,UNALIGNED_GET16(data++));
   return result;
  }
  err_expected_string_or_bytes(self);
@@ -548,7 +550,7 @@ encode_utf32_alt(DeeObject *__restrict self) {
   result = DeeBytes_NewBufferUninitialized(size * 4);
   if unlikely(!result) goto err;
   dst = (uint32_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = BSWAP32((uint32_t)*data++);
+  while (size--) UNALIGNED_SET32_SWAP(dst++,(uint32_t)*data++);
   return result;
  }
  if (DeeString_Check(self)) {
@@ -561,7 +563,7 @@ encode_utf32_alt(DeeObject *__restrict self) {
   result = DeeBytes_NewBufferUninitialized(size * 4);
   if unlikely(!result) goto err;
   dst = (uint32_t *)DeeBytes_DATA(result);
-  while (size--) *dst++ = BSWAP32((uint32_t)*data++);
+  while (size--) UNALIGNED_SET32_SWAP(dst++,UNALIGNED_GET32(data++));
   return result;
  }
  err_expected_string_or_bytes(self);

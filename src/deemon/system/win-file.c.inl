@@ -36,6 +36,7 @@
 
 #include <hybrid/minmax.h>
 #include <hybrid/limits.h>
+#include <hybrid/unaligned.h>
 
 #include <string.h>
 #include <limits.h>
@@ -70,7 +71,7 @@ nt_FixUncPath(DeeObject *__restrict filename) {
  /* TODO: Make this function unicode-compatible. */
  filename_size = DeeString_SIZE(filename);
  if (filename_size < 4 ||
-    (*(uint32_t *)DeeString_STR(filename)) != ENCODE4('\\','\\','.','\\')) {
+     UNALIGNED_GET32((uint32_t *)DeeString_STR(filename)) != ENCODE4('\\','\\','.','\\')) {
   /* Prepend "\\.\". */
   if (!DeeObject_IsShared(filename)) {
    DeeString_FreeWidth(filename);
@@ -89,7 +90,8 @@ nt_FixUncPath(DeeObject *__restrict filename) {
    Dee_Decref(filename);
   }
   /* Set the prefix. */
-  *(uint32_t *)DeeString_STR(result) = ENCODE4('\\','\\','.','\\');
+  UNALIGNED_SET32((uint32_t *)DeeString_STR(result),
+                   ENCODE4('\\','\\','.','\\'));
   return result;
  }
  return filename;

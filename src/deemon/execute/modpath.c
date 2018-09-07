@@ -1416,13 +1416,6 @@ err_module_not_found(DeeObject *__restrict module_name) {
                         module_name);
 }
 
-#ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE4(a,b,c,d) ((d)<<24|(c)<<16|(b)<<8|(a))
-#else
-#define ENCODE4(a,b,c,d) ((d)|(c)<<8|(b)<<16|(a)<<24)
-#endif
-
-
 PRIVATE DREF DeeObject *DCALL
 DeeModule_DoGet(char const *__restrict name,
                 size_t size, dhash_t hash) {

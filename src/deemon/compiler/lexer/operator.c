@@ -30,6 +30,7 @@
 #include <deemon/class.h>
 #include <deemon/file.h>
 #include <deemon/module.h>
+#include <hybrid/unaligned.h>
 
 #include "../../runtime/strings.h"
 
@@ -336,7 +337,7 @@ ast_parse_operator_name(uint16_t features) {
   result = OPERATOR_ASSIGN;
   if unlikely(yield() < 0) goto err;
   if (TPP_ISKEYWORD(tok) && token.t_kwd->k_size == 4 &&
-    *(uint32_t *)token.t_kwd->k_name == ENCODE4('m','o','v','e')) {
+      UNALIGNED_GET32((uint32_t *)token.t_kwd->k_name) == ENCODE4('m','o','v','e')) {
    /* `= move' move-assign operator. */
    result = OPERATOR_MOVEASSIGN;
    goto done_y1;
@@ -442,7 +443,7 @@ default_case:
   switch (name_size) {
   case 3:
   case 4:
-   name = *(uint32_t *)name_begin;
+   name = UNALIGNED_GET32((uint32_t *)name_begin);
 #ifndef __OPTIMIZE_SIZE__
    if (name == ENCODE4('h','a','s','h')) { result = OPERATOR_HASH; goto done_y1; }
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -462,25 +463,25 @@ default_case:
    break;
 #ifndef __OPTIMIZE_SIZE__
   case 5:
-   name = *(uint32_t *)name_begin;
+   name = UNALIGNED_GET32((uint32_t *)name_begin);
    if (name == ENCODE4('e','n','t','e') && *((uint8_t *)(name_begin + 4)) == 'r') { result = OPERATOR_ENTER; goto done_y1; }
    if (name == ENCODE4('l','e','a','v') && *((uint8_t *)(name_begin + 4)) == 'e') { result = OPERATOR_LEAVE; goto done_y1; }
    break;
   case 8:
-   if (*((uint32_t *)(name_begin + 0)) == ENCODE4('c','o','n','t') &&
-       *((uint32_t *)(name_begin + 4)) == ENCODE4('a','i','n','s'))
+   if (UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('c','o','n','t') &&
+       UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE4('a','i','n','s'))
    { result = OPERATOR_CONTAINS; goto done_y1; }
    break;
   case 10:
-   if (*((uint32_t *)(name_begin + 0)) == ENCODE4('d','e','s','t') &&
-       *((uint32_t *)(name_begin + 4)) == ENCODE4('r','u','c','t') &&
-       *((uint16_t *)(name_begin + 8)) == ENCODE2('o','r'))
+   if (UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('d','e','s','t') &&
+       UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE4('r','u','c','t') &&
+       UNALIGNED_GET16((uint16_t *)(name_begin + 8)) == ENCODE2('o','r'))
    { result = OPERATOR_DESTRUCTOR; goto done_y1; }
    break;
   case 11:
-   if (*((uint32_t *)(name_begin + 0)) == ENCODE4('c','o','n','s') &&
-       *((uint32_t *)(name_begin + 4)) == ENCODE4('t','r','u','c') &&
-       *((uint32_t *)(name_begin + 8)) == ENCODE4('t','o','r',0))
+   if (UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('c','o','n','s') &&
+       UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE4('t','r','u','c') &&
+       UNALIGNED_GET32((uint32_t *)(name_begin + 8)) == ENCODE4('t','o','r',0))
    { result = OPERATOR_CONSTRUCTOR; goto done_y1; }
    break;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -492,14 +493,14 @@ default_case:
 #if 0 /* Already handled by generic opinfo searches. */
   /* Some special operators that didn't merit their own keyword. */
   if (name_size == 4 &&
-    *(uint32_t *)(name_begin + 0) == ENCODE4('b','o','o','l'))
+      UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('b','o','o','l'))
   { result = OPERATOR_BOOL; goto done_y1; }
   if (name_size == 3 &&
-    *(uint32_t *)(name_begin + 0) == ENCODE4('i','n','t',0))
+      UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('i','n','t',0))
   { result = OPERATOR_INT; goto done_y1; }
   if (name_size == 5 &&
-    *(uint32_t *)(name_begin + 0) == ENCODE4('f','l','o','a') &&
-    *(uint8_t  *)(name_begin + 4) == 't')
+      UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('f','l','o','a') &&
+      *(uint8_t *)(name_begin + 4) == 't')
   { result = OPERATOR_FLOAT; goto done_y1; }
 #endif
 
@@ -515,33 +516,33 @@ default_case:
     }
     /* Even more backwards compatibility. */
     if (name_size == 2) {
-     if (*(uint16_t *)(name_begin + 0) == ENCODE2('l','t'))
+     if (UNALIGNED_GET16((uint16_t *)(name_begin + 0)) == ENCODE2('l','t'))
          goto do_operator_lo;
-     if (*(uint16_t *)(name_begin + 0) == ENCODE2('g','t'))
+     if (UNALIGNED_GET16((uint16_t *)(name_begin + 0)) == ENCODE2('g','t'))
          goto do_operator_gr;
     }
     if (name_size == 6 &&
-      *(uint32_t *)(name_begin + 0) == ENCODE4('r','e','a','d') &&
-      *(uint16_t *)(name_begin + 4) == ENCODE2('n','p'))
+        UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('r','e','a','d') &&
+        UNALIGNED_GET16((uint16_t *)(name_begin + 4)) == ENCODE2('n','p'))
     { result = FILE_OPERATOR_READ; goto done_y1; }
     if (name_size == 7 &&
-      *(uint32_t *)(name_begin + 0) == ENCODE4('w','r','i','t') &&
-      *(uint32_t *)(name_begin + 4) == ENCODE4('e','n','p',0))
+        UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('w','r','i','t') &&
+        UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE4('e','n','p',0))
     { result = FILE_OPERATOR_WRITE; goto done_y1; }
     if (name_size == 9 &&
-      *(uint32_t *)(name_begin + 0) == ENCODE4('s','u','p','e') &&
-      *(uint32_t *)(name_begin + 4) == ENCODE4('r','a','r','g') &&
-      *(uint8_t  *)(name_begin + 8) == 's' && (features&P_OPERATOR_FCLASS))
+        UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('s','u','p','e') &&
+        UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE4('r','a','r','g') &&
+                       *(uint8_t  *)(name_begin + 8) == 's' && (features&P_OPERATOR_FCLASS))
     { result = CLASS_OPERATOR_SUPERARGS; goto done_y1; }
     if (name_size == 6 &&
-      *(uint32_t *)(name_begin + 0) == ENCODE4('d','o','u','b') &&
-      *(uint16_t *)(name_begin + 4) == ENCODE2('l','e'))
+        UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('d','o','u','b') &&
+        UNALIGNED_GET16((uint16_t *)(name_begin + 4)) == ENCODE2('l','e'))
     { result = OPERATOR_FLOAT; goto done_y1; }
     if (name_size == 5 &&
-       ((*(uint32_t *)(name_begin + 0) == ENCODE4('i','n','t','3') &&
-         *(uint8_t  *)(name_begin + 4) == '2') ||
-        (*(uint32_t *)(name_begin + 0) == ENCODE4('i','n','t','6') &&
-         *(uint8_t  *)(name_begin + 4) == '4')))
+       ((UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('i','n','t','3') &&
+                        *(uint8_t  *)(name_begin + 4) == '2') ||
+        (UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE4('i','n','t','6') &&
+                        *(uint8_t  *)(name_begin + 4) == '4')))
     { result = OPERATOR_INT; goto done_y1; }
   }
 unknown:

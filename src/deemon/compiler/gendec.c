@@ -1061,24 +1061,23 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
   return error;
  }
 #ifdef CONFIG_USE_NEW_CLASS_SYSTEM
- if (tp_self == &DeeClassDescriptor_Type) {
-  /* Emit a member table. */
-  return dec_putclassdesc((DeeClassDescriptorObject *)self);
- }
+ /* Emit a class descriptor. */
+ if (tp_self == &DeeClassDescriptor_Type)
+     return dec_putclassdesc((DeeClassDescriptorObject *)self);
 #else
- if (tp_self == &DeeMemberTable_Type) {
-  /* Emit a member table. */
-  return dec_putmemtab((DeeMemberTableObject *)self);
- }
+ /* Emit a member table. */
+ if (tp_self == &DeeMemberTable_Type)
+     return dec_putmemtab((DeeMemberTableObject *)self);
 #endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
- if (tp_self == &DeeKwds_Type) {
-  /* Emit a keywords descriptor. */
-  return dec_putkwds((DeeKwdsObject *)self);
- }
+ /* Emit a keywords descriptor. */
+ if (tp_self == &DeeKwds_Type)
+     return dec_putkwds((DeeKwdsObject *)self);
+ /* Emit a code object. */
  if (tp_self == &DeeCode_Type) {
   if (dec_putb(DTYPE_CODE)) goto err;
   return dec_putcode((DeeCodeObject *)self);
  }
+ /* Emit a function object. */
  if (tp_self == &DeeFunction_Type) {
   uint16_t i,refc;
   if (dec_putb(DTYPE_FUNCTION)) goto err;

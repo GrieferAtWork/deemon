@@ -629,15 +629,18 @@ sysfile_flush(SystemFile *__restrict self,
 }
 
 struct mode_name {
-    char name[4]; /* Mode name. */
-    int  flag;    /* Mode flags. */
+    union {
+        char     name[4]; /* Mode name. */
+        uint32_t nameid;
+    };
+    int          flag;    /* Mode flags. */
 };
 
 PRIVATE struct mode_name const mode_names[] = {
-    { { 'n', 'o', 'n', 'e' }, _IONBF },
-    { { 'f', 'u', 'l', 'l' }, _IOFBF },
-    { { 'l', 'i', 'n', 'e' }, _IOLBF },
-    { { 'a', 'u', 't', 'o' }, _IOLBF } /* There is no such thing in STD-C */
+    { { { 'n', 'o', 'n', 'e' } }, _IONBF },
+    { { { 'f', 'u', 'l', 'l' } }, _IOFBF },
+    { { { 'l', 'i', 'n', 'e' } }, _IOLBF },
+    { { { 'a', 'u', 't', 'o' } }, _IOLBF } /* There is no such thing in STD-C */
 };
 
 #ifdef CONFIG_LITTLE_ENDIAN
@@ -691,7 +694,7 @@ sysfile_setbuf(SystemFile *__restrict self,
  for (i = 0;; ++i) {
   if (i == COMPILER_LENOF(mode_names))
       goto err_invalid_mode;
-  if (*(uint32_t *)mode_names[i].name != buf.id)
+  if (mode_names[i].nameid != buf.id)
       continue;
   mode = mode_names[i].flag; /* Found it! */
   break;
