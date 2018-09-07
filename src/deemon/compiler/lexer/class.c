@@ -1922,6 +1922,10 @@ set_operator_ast:
    }
    loc_here(&loc);
    member_name = token.t_kwd;
+   if (is_reserved_symbol_name(member_name) &&
+       WARN(W_RESERVED_MEMBER_NAME,member_name))
+       goto err;
+
    if (member_name == name) {
   case KWD_this:
     /* Special case: Constructor. */
