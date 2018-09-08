@@ -586,7 +586,7 @@
 #define ASM_CLASS_EC          0x68 /* [4][-0,+1]   `push class extern <imm8>:<imm8>, const <imm8>' - Same as `ASM_CLASS_C', however use `extern <imm8>:<imm8>' as base. */
 #define ASM_DEFCMEMBER        0x69 /* [2][-2,+1]   `defcmember top, $<imm8>, pop'       - Initialize a class member variable `<imm8>', using a value from the stack. */
 #define ASM_GETCMEMBER_R      0x6a /* [3][-0,+1]   `push getcmember ref <imm8>, $<imm8>'- Lookup a class member of `ref <imm8>', given its index. */
-/*      ASM_                  0x6b  *               --------                            - ------------------ */
+#define ASM_CALLCMEMBER_THIS_R 0x6b/* [4][-n,+1]   `push callcmember this, ref <imm8>, $<imm8>, #<imm8>'- Lookup a class member of `ref <imm8>', given its index, then call that attribute as a this-call by popping #<imm8> arguments. */
 /*      ASM_                  0x6c  *               --------                            - ------------------ */
 /*      ASM_                  0x6d  *               --------                            - ------------------ */
 #define ASM_FUNCTION_C        0x6e /* [3][-n,+1]   `push function const <imm8>, #<imm8>+1' - Create a new function object, using constant slot <imm8> as code and popping $<imm8>+1 objects for use by references.
@@ -1038,8 +1038,8 @@
 #define ASM16_CLASS_GC        0xf067 /* [6][-0,+1]   `push class global <imm16>, const <imm16>' - Same as `ASM_CLASS_GC', however operands are is extended to 16 bits. */
 #define ASM16_CLASS_EC        0xf068 /* [8][-0,+1]   `push class extern <imm16>:<imm16>, const <imm16>' - Same as `ASM_CLASS_EC', however operands are extended to 16 bits. */
 #define ASM16_DEFCMEMBER      0xf069 /* [4][-2,+1]   `defcmember top, $<imm16>, pop'      - Initialize a class member variable `<imm16>' using a value from the stack. */
-#define ASM16_GETCMEMBER_R    0xf06a /* [6][-0,+1]   `push getcmember ref <imm16>, $<imm8>'- Lookup a class member of `ref <imm16>', given its index. */
-/*      ASM_                  0xf06b  *               --------                            - ------------------ */
+#define ASM16_GETCMEMBER_R    0xf06a /* [6][-0,+1]   `push getcmember ref <imm16>, $<imm16>'- Lookup a class member of `ref <imm16>', given its index. */
+#define ASM16_CALLCMEMBER_THIS_R 0xf06b/*[7][-n,+1]  `push callcmember this, ref <imm16>, $<imm16>, #<imm8>'- Lookup a class member of `ref <imm16>', given its index, then call that attribute as a this-call by popping #<imm8> arguments. */
 /*      ASM_                  0xf06c  *               --------                            - ------------------ */
 /*      ASM_                  0xf06d  *               --------                            - ------------------ */
 #define ASM16_FUNCTION_C      0xf06e /* [5][-n,+1]   `push function const <imm16>, #<imm8>+1' - Create a new function object, using constant slot <imm16> as code and popping $<imm8>+1 objects for use by references.

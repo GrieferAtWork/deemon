@@ -387,8 +387,8 @@ class TextSplitter {
 					preferred_length = preferred_line_length / dim_x;
 				}
 				local cell = list(
-					this.tostring(row[i],preferred_length,closure).
-					rstrip().splitlines());
+					tostring(row[i],preferred_length,closure).
+						rstrip().splitlines());
 				local max_line_width = 0;
 				for (local x: cell) {
 					if (max_line_width < #x)
@@ -456,7 +456,7 @@ class TextSplitter {
 		case "link":
 			local target;
 			target,none,text = text.partition(" ")...;
-			this.decode_link(fp,target,text.lstrip(),preferred_line_length,closure);
+			decode_link(fp,target,text.lstrip(),preferred_line_length,closure);
 		}	break;
 
 		{
@@ -472,7 +472,7 @@ class TextSplitter {
 					break;
 				del table[0];
 			}
-			this.decode_table(fp,table,preferred_line_length,closure);
+			decode_table(fp,table,preferred_line_length,closure);
 		}	break;
 
 		default:
@@ -487,15 +487,15 @@ class TextSplitter {
 	decode_tag(fp,kind,content,preferred_line_length,closure) {
 		switch (kind) {
 		case "@": /* Parameter / this-reference. */
-			return this.decode_at(fp,content,preferred_line_length,closure);
+			return decode_at(fp,content,preferred_line_length,closure);
 		case "$": /* Inline code. */
-			return this.decode_dollar(fp,content,preferred_line_length,closure);
+			return decode_dollar(fp,content,preferred_line_length,closure);
 		case ":": /* Global reference. */
-			return this.decode_collon(fp,content,preferred_line_length,closure);
+			return decode_collon(fp,content,preferred_line_length,closure);
 		case "#": /* Member reference. */
-			return this.decode_hash(fp,content,preferred_line_length,closure);
+			return decode_hash(fp,content,preferred_line_length,closure);
 		case "%": /* Special formatting. */
-			return this.decode_percent(fp,content,preferred_line_length,closure);
+			return decode_percent(fp,content,preferred_line_length,closure);
 		default:
 			fp << "TAG({!r},{!r})".format({ kind, content });
 			break;
@@ -529,14 +529,14 @@ class TextSplitter {
 		for (i = 0; i < scan_end; ++i) {
 			local ch = fixed_text[i];
 			if (ch == "\\") {
-				this.print_text(fp,fixed_text[flush_start:i],preferred_line_length,closure);
+				print_text(fp,fixed_text[flush_start:i],preferred_line_length,closure);
 				++i;
 				flush_start = i;
 			} else if (ch in ["@","$",":","%","#"] && i < scan_end-1) {
 				local tag_start = i+1;
 				local tag_end;
 				local tag_start_ch = fixed_text[tag_start];
-				this.print_text(fp,fixed_text[flush_start:i],preferred_line_length,closure);
+				print_text(fp,fixed_text[flush_start:i],preferred_line_length,closure);
 				if (tag_start_ch == "{") {
 					++tag_start;
 					tag_end = fixed_text.findmatch("{","}",tag_start);
@@ -582,14 +582,14 @@ class TextSplitter {
 				}
 				flush_start = i;
 				/* Decode the content of the tag (virtual call!). */
-				this.decode_tag(fp,ch,
+				decode_tag(fp,ch,
 					fixed_text[tag_start:tag_end],
 					preferred_line_length,closure);
 			}
 		}
 		if (flush_start < #fixed_text)
-			this.print_text(fp,fixed_text[flush_start:],preferred_line_length,closure);
-		this.print_text(fp,"\n",preferred_line_length,closure);
+			print_text(fp,fixed_text[flush_start:],preferred_line_length,closure);
+		print_text(fp,"\n",preferred_line_length,closure);
 	}
 
 	tostring(text,preferred_line_length = 80,closure = none) {
@@ -628,7 +628,7 @@ class Text {
 
 	@"->string"
 	@"The raw text string"
-	public member text;
+	public final member text;
 
 	@"(string text)"
 	this(text_) {
@@ -867,7 +867,7 @@ class Prototype {
 	@"->string"
 	@"The raw text of the prototype, uniformly formatted to include an"
 	@"argument list, as well as a return type, and a prefixed name."
-	public member text;
+	public final member text;
 
 	@"(string text)"
 	this(text_) {
@@ -1541,24 +1541,24 @@ global class Doc: sequence {
 
 	@"->string"
 	@"A universally, unique path that can be used to address this Doc item"
-	public member path;
+	public final member path;
 
 	@"->string"
 	@"The name of this documentation object (last component of #path, stripped of its namespace prefix)"
-	public member name;
+	public final member name;
 
 	@"->object"
 	@"The object represented by @this Doc node"
 	@"May be unbound"
-	public member object;
+	public final member object;
 
 	@"->attribute"
 	@"->none"
-	public member attr;
+	public final member attr;
 
 	@"->Doc"
 	@"May be unbound"
-	public member parent;
+	public final member parent;
 
 	@"->string"
 	@"->none"

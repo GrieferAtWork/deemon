@@ -634,11 +634,19 @@ INSTR("defcmember",(
     O3(ASM_DEFCMEMBER,  FRELABS,(TOP)(IMM8)(POP))               /* defcmember top, $<imm8>, pop */
     O3(ASM16_DEFCMEMBER,FRELABS,(TOP)(IMM16)(POP))              /* defcmember top, $<imm16>, pop */
 ))
+
+/* CONSTRAINTS: `getcmember <r>, ...' */
 /* CONSTRAINTS: `getcmember <s>, ...' */
 INSTR("getcmember",(
     O3(ASM_GETCMEMBER,  FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM8))  /* push getcmember ref <imm8/16>, $<imm8> */
     O3(ASM_GETCMEMBER,  FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM16)) /* push getcmember ref <imm8/16>, $<imm16> */
     O3(ASM16_GETCMEMBER,FRELABS,                  (TOP)(IMM16)) /* getcmember top, $<imm16> */
+))
+
+/* CONSTRAINTS: `callcmember <Ti>, <r>, ...' */
+INSTR("callcmember",(
+    O4(ASM_CALLCMEMBER_THIS_R,FRELABS|FPUSH|FF0|FF0_IMM,(THIS)(REF)(IMM8)(SPIMM8))  /* push callcmember this, ref <imm8/16>, $<imm8>, #<imm8> */
+    O4(ASM_CALLCMEMBER_THIS_R,FRELABS|FPUSH|FF0|FF0_IMM,(THIS)(REF)(IMM16)(SPIMM8)) /* push callcmember this, ref <imm8/16>, $<imm8>, #<imm8> */
 ))
 
 /* CONSTRAINTS: `function <c>, ...' */

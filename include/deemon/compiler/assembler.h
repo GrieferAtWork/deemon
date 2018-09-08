@@ -1357,6 +1357,7 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gdefcmember(id)           (asm_ddicsp(),asm_put816(ASM_DEFCMEMBER,id))
 #define asm_ggetcmember(id)           (asm_dicsp(),asm_put((ASM16_GETCMEMBER & 0xff00) >> 8) || asm_putimm16(ASM16_GETCMEMBER & 0xff,id))
 #define asm_ggetcmember_r(rid,id)     (asm_incsp(),asm_put881616(ASM_GETCMEMBER_R,rid,id))
+#define asm_gcallcmember_this_r(rid,id,n)  (asm_subsp(n),asm_incsp(),asm_put881616_8(ASM_CALLCMEMBER_THIS_R,rid,id,n))
 
 /* Call with keyword list instructions. */
 #define asm_gcall_kw(n,kwd_cid)                       (asm_subsp((n)+1),asm_incsp(),ASSERT((n)<=UINT8_MAX),asm_put8_816(ASM_CALL_KW,n,kwd_cid))

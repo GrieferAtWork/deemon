@@ -230,7 +230,7 @@ PRIVATE uint8_t const intr_len[256] = {
     /* 0x68 */ 4, /* `ASM_CLASS_EC':                `push class extern <imm8>:<imm8>, const <imm8>' */
     /* 0x69 */ 2, /* `ASM_DEFCMEMBER':              `defcmember top, $<imm8>, pop' */
     /* 0x6a */ 3, /* `ASM_GETCMEMBER_R':            `push getcmember ref <imm8>, $<imm8>' */
-    /* 0x6b */ 1, /* --- */
+    /* 0x6b */ 4, /* `ASM_CALLCMEMBER_THIS_R':      `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
     /* 0x6c */ 1, /* --- */
     /* 0x6d */ 1, /* --- */
     /* 0x6e */ 3, /* `ASM_FUNCTION_C':              `push function const <imm8>, #<imm8>+1' */
@@ -487,8 +487,8 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0x67 */ 6, /* `ASM16_CLASS_GC':              `push class global <imm16>, const <imm16>' */
     /* 0x68 */ 8, /* `ASM16_CLASS_EC':              `push class extern <imm16>:<imm16>, const <imm16>' */
     /* 0x69 */ 4, /* `ASM16_DEFCMEMBER':            `defcmember top, $<imm16>, pop' */
-    /* 0x6a */ 6, /* `ASM16_GETCMEMBER_R':          `push getcmember ref <imm16>, $<imm8>' */
-    /* 0x6b */ 2, /* --- */
+    /* 0x6a */ 6, /* `ASM16_GETCMEMBER_R':          `push getcmember ref <imm16>, $<imm16>' */
+    /* 0x6b */ 7, /* `ASM16_CALLCMEMBER_THIS_R':    `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
     /* 0x6c */ 2, /* --- */
     /* 0x6d */ 2, /* --- */
     /* 0x6e */ 5, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>+1' */
@@ -746,7 +746,7 @@ PRIVATE uint8_t const stack_effect[256] = {
     /* 0x68 */ STACK_EFFECT(0,1),  /* `ASM_CLASS_EC':                `push class extern <imm8>:<imm8>, const <imm8>' */
     /* 0x69 */ STACK_EFFECT(2,1),  /* `ASM_DEFCMEMBER':              `defcmember top, $<imm8>, pop' */
     /* 0x6a */ STACK_EFFECT(0,1),  /* `ASM_GETCMEMBER_R':            `push getcmember ref <imm8>, $<imm8>' */
-    /* 0x6b */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x6b */ STACK_EFFECT_UNDEF, /* `ASM_CALLCMEMBER_THIS_R':      `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
     /* 0x6c */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6d */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6e */ STACK_EFFECT_UNDEF, /* `ASM_FUNCTION_C':              `push function const <imm8>, #<imm8>+1' */
@@ -1003,8 +1003,8 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0x67 */ STACK_EFFECT(0,1),  /* `ASM16_CLASS_GC':              `push class global <imm16>, const <imm16>' */
     /* 0x68 */ STACK_EFFECT(0,1),  /* `ASM16_CLASS_EC':              `push class extern <imm16>:<imm16>, const <imm16>' */
     /* 0x69 */ STACK_EFFECT(2,1),  /* `ASM16_DEFCMEMBER':            `defcmember top, $<imm16>, pop' */
-    /* 0x6a */ STACK_EFFECT(0,1),  /* `ASM16_GETCMEMBER_R':          `push getcmember ref <imm16>, $<imm8>' */
-    /* 0x6b */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x6a */ STACK_EFFECT(0,1),  /* `ASM16_GETCMEMBER_R':          `push getcmember ref <imm16>, $<imm16>' */
+    /* 0x6b */ STACK_EFFECT_UNDEF, /* `ASM16_CALLCMEMBER_THIS_R':    `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
     /* 0x6c */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6d */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6e */ STACK_EFFECT_UNDEF, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>+1' */
@@ -1295,6 +1295,12 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   *psp_sub   = 1+*(uint8_t *)(ip + 1);
   *pstacksz -= *(uint8_t *)(ip + 1);
   break;
+ case ASM_CALLCMEMBER_THIS_R:
+  *psp_add   = 1;
+  *psp_sub   = *(uint8_t *)(ip + 3);
+  *pstacksz -= *(uint8_t *)(ip + 3);
+  ++*pstacksz;
+  break;
  case ASM_UNPACK:
   *psp_sub   = 1;
   *psp_add   = *(uint8_t *)(ip + 1);
@@ -1434,6 +1440,12 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
    *psp_add   = 1;
    *psp_sub   = 1 + *(uint8_t *)(ip + 2);
    *pstacksz -= *(uint8_t *)(ip + 2);
+   break;
+  case ASM16_CALLCMEMBER_THIS_R & 0xff:
+   *psp_add   = 1;
+   *psp_sub   = *(uint8_t *)(ip + 6);
+   *pstacksz -= *(uint8_t *)(ip + 6);
+   ++*pstacksz;
    break;
   case ASM_CALL_MAP & 0xff:
    *psp_add   = 1;

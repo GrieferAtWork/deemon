@@ -8097,6 +8097,9 @@ prefix_target_defcmember = prefix_invop
 .ifndef prefix_target_getcmember_r
 prefix_target_getcmember_r = prefix_invop
 .endif
+.ifndef prefix_target_callcmember_this_r
+prefix_target_callcmember_this_r = prefix_invop
+.endif
 .ifndef prefix_target_function_c
 prefix_target_function_c = prefix_invop
 .endif
@@ -8652,6 +8655,9 @@ prefix_target16_defcmember = prefix_invop
 .ifndef prefix_target16_getcmember_r
 prefix_target16_getcmember_r = prefix_invop
 .endif
+.ifndef prefix_target16_callcmember_this_r
+prefix_target16_callcmember_this_r = prefix_invop
+.endif
 .ifndef prefix_target16_function_c
 prefix_target16_function_c = prefix_invop
 .endif
@@ -8961,7 +8967,7 @@ inst_table:
 	.long target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */
 	.long target_defcmember              /* `defcmember top, $<imm8>, pop' */
 	.long target_getcmember_r            /* `push getcmember ref <imm8>, $<imm8>' */
-	.long invop
+	.long target_callcmember_this_r      /* `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
 	.long invop
 	.long invop
 	.long target_function_c              /* `push function const <imm8>, #<imm8>+1' */
@@ -9218,8 +9224,8 @@ inst_table_f0:
 	.long target16_class_gc              /* `push class global <imm16>, const <imm16>' */
 	.long target16_class_ec              /* `push class extern <imm16>:<imm16>, const <imm16>' */
 	.long target16_defcmember            /* `defcmember top, $<imm16>, pop' */
-	.long target16_getcmember_r          /* `push getcmember ref <imm16>, $<imm8>' */
-	.long invop
+	.long target16_getcmember_r          /* `push getcmember ref <imm16>, $<imm16>' */
+	.long target16_callcmember_this_r    /* `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
 	.long invop
 	.long invop
 	.long target16_function_c            /* `push function const <imm16>, #<imm8>+1' */
@@ -9477,7 +9483,7 @@ prefix_inst_table:
 	.long prefix_target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */
 	.long prefix_target_defcmember              /* `defcmember top, $<imm8>, pop' */
 	.long prefix_target_getcmember_r            /* `push getcmember ref <imm8>, $<imm8>' */
-	.long prefix_invop
+	.long prefix_target_callcmember_this_r      /* `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target_function_c              /* `push function const <imm8>, #<imm8>+1' */
@@ -9734,8 +9740,8 @@ prefix_inst_table_f0:
 	.long prefix_target16_class_gc              /* `push class global <imm16>, const <imm16>' */
 	.long prefix_target16_class_ec              /* `push class extern <imm16>:<imm16>, const <imm16>' */
 	.long prefix_target16_defcmember            /* `defcmember top, $<imm16>, pop' */
-	.long prefix_target16_getcmember_r          /* `push getcmember ref <imm16>, $<imm8>' */
-	.long prefix_invop
+	.long prefix_target16_getcmember_r          /* `push getcmember ref <imm16>, $<imm16>' */
+	.long prefix_target16_callcmember_this_r    /* `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target16_function_c            /* `push function const <imm16>, #<imm8>+1' */

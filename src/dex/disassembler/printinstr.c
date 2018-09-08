@@ -264,7 +264,7 @@ PRIVATE char const mnemonic_names[256][31] = {
     /* 0x68 */ "push   class ", /* `ASM_CLASS_EC' */
     /* 0x69 */ "defcmember top, " PREFIX_INTEGERAL, /* `ASM_DEFCMEMBER' */
     /* 0x6a */ "push   getcmember ", /* `ASM_GETCMEMBER_R' */
-    /* 0x6b */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0x6b */ "push   callcmember this, ", /* `ASM_CALLCMEMBER_THIS_R' */
     /* 0x6c */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x6d */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x6e */ "push   function ", /* `ASM_FUNCTION_C' */
@@ -522,7 +522,7 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf068 */ "push   class ", /* `ASM16_CLASS_EC' */
     /* 0xf069 */ "defcmember top, " PREFIX_INTEGERAL, /* `ASM16_DEFCMEMBER' */
     /* 0xf06a */ "push   getcmember ", /* `ASM16_GETCMEMBER_R' */
-    /* 0xf06b */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0xf06b */ "push   callcmember this, ", /* `ASM16_CALLCMEMBER_THIS_R' */
     /* 0xf06c */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf06d */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf06e */ "push   function ", /* `ASM16_FUNCTION_C' */
@@ -1883,6 +1883,7 @@ print_local:
  case ASM16_DELMEMBER_THIS_R:
  case ASM16_SETMEMBER_THIS_R:
  case ASM16_GETCMEMBER_R:
+ case ASM16_CALLCMEMBER_THIS_R:
   imm = READ_imm16(iter);
   goto print_ref;
  case ASM_PUSH_REF:
@@ -1892,6 +1893,7 @@ print_local:
  case ASM_DELMEMBER_THIS_R:
  case ASM_SETMEMBER_THIS_R:
  case ASM_GETCMEMBER_R:
+ case ASM_CALLCMEMBER_THIS_R:
   imm = READ_imm8(iter);
 print_ref:
   INVOKE(libdisasm_printref(printer,arg,imm,code,flags));
@@ -1901,16 +1903,22 @@ print_ref:
   case ASM_DELMEMBER_THIS_R:
   case ASM_SETMEMBER_THIS_R:
   case ASM_GETCMEMBER_R:
+  case ASM_CALLCMEMBER_THIS_R:
    printf(", " PREFIX_INTEGERAL "%I8u",READ_imm8(iter));
    if (opcode == ASM_SETMEMBER_THIS_R) PRINT(", pop");
+   if (opcode == ASM_CALLCMEMBER_THIS_R)
+       printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));
    break;
   case ASM16_GETMEMBER_THIS_R:
   case ASM16_BOUNDMEMBER_THIS_R:
   case ASM16_DELMEMBER_THIS_R:
   case ASM16_SETMEMBER_THIS_R:
   case ASM16_GETCMEMBER_R:
+  case ASM16_CALLCMEMBER_THIS_R:
    printf(", " PREFIX_INTEGERAL "%I16u",READ_imm16(iter));
    if (opcode == ASM16_SETMEMBER_THIS_R) PRINT(", pop");
+   if (opcode == ASM16_CALLCMEMBER_THIS_R)
+       printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));
    break;
   default: break;
   }

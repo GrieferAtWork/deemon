@@ -503,41 +503,59 @@ check_funsym_class:
     if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
      symid2 = asm_newconst((DeeObject *)attr->ca_name);
      if unlikely(symid2 < 0) goto err;
-     if (!SYMBOL_MUST_REFERENCE(this_sym)) {
+     if (this_sym->s_type == SYMBOL_TYPE_THIS && !SYMBOL_MUST_REFERENCE(this_sym)) {
       for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
       if (asm_putddi(ddi_ast)) goto err;                        /* args... */
       if (asm_gcallattr_this_const((uint16_t)symid2,argc)) goto err;
       goto pop_unused;
      }
-     symid = asm_rsymid(this_sym);
-     if unlikely(symid < 0) goto err;
      if (asm_putddi(func)) goto err;
-     if (asm_gpush_ref((uint16_t)symid)) goto err;              /* this */
+     if (asm_gpush_symbol(this_sym,func)) goto err;             /* this */
      for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ddi_ast)) goto err;                         /* this, args... */
      if (asm_gcallattr_const((uint16_t)symid2,argc)) goto err;  /* result */
      goto pop_unused;
     }
     /* Regular, old member variable. */
-    if (asm_putddi(func)) goto err;
     if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
      if (SYMBOL_MAY_REFERENCE(class_sym)) {
       symid = asm_rsymid(class_sym);
       if unlikely(symid < 0) goto err;
+#if 1
+      if ((attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) &&
+           this_sym->s_type == SYMBOL_TYPE_THIS &&
+          !SYMBOL_MUST_REFERENCE(this_sym)) {
+       //if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+       // /* Invoke the getter callback. */
+       // if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_GET,0)) goto err;
+       // goto got_method;
+       //}
+       for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+       if (asm_putddi(ddi_ast)) goto err;
+       if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr,argc)) goto err;
+       goto pop_unused;
+      }
+#endif
+      if (asm_putddi(func)) goto err;
       if (asm_ggetcmember_r((uint16_t)symid,attr->ca_addr)) goto err;
      } else {
       if (asm_gpush_symbol(class_sym,func)) goto err;
+      if (asm_putddi(func)) goto err;
       if (asm_ggetcmember(attr->ca_addr)) goto err;
      }
-    } else if (SYMBOL_MUST_REFERENCE(this_sym)) {
+    } else if (SYMBOL_MUST_REFERENCE(this_sym) ||
+               this_sym->s_type != SYMBOL_TYPE_THIS) {
+     if (asm_putddi(func)) goto err;
      if (asm_gpush_symbol(this_sym,func)) goto err;
      if (asm_gpush_symbol(class_sym,func)) goto err;
      if (asm_ggetmember(attr->ca_addr)) goto err;
     } else if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
      if unlikely(symid < 0) goto err;
+     if (asm_putddi(func)) goto err;
      if (asm_ggetmember_this_r((uint16_t)symid,attr->ca_addr)) goto err;
     } else {
+     if (asm_putddi(func)) goto err;
      if (asm_gpush_symbol(class_sym,func)) goto err;
      if (asm_ggetmember_this(attr->ca_addr)) goto err;
     }
@@ -563,6 +581,7 @@ check_funsym_class:
      if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err;
      /* Fallthrough to invoke the instancemethod normally. */
     }
+got_method:
     for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err; /* func, args... */
     if (asm_gcall(argc)) goto err;     /* result */

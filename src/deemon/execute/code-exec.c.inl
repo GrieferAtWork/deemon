@@ -2055,6 +2055,32 @@ do_getcmember_r:
      DISPATCH();
  }
 
+ RAW_TARGET(ASM_CALLCMEMBER_THIS_R) {
+     DREF DeeObject *callback,*result;
+     uint8_t argc;
+     imm_val  = READ_imm8();
+     imm_val2 = READ_imm8();
+do_callcmember_this_r:
+     argc     = READ_imm8();
+     ASSERT_REFimm();
+     ASSERT_THISCALL();
+     ASSERT_USAGE(-(int)argc,+1);
+#ifdef EXEC_SAFE
+     callback = DeeClass_GetMemberSafe((DeeTypeObject *)REFimm,imm_val2);
+#else
+     callback = DeeClass_GetMember((DeeTypeObject *)REFimm,imm_val2);
+#endif
+     if unlikely(!callback)
+        HANDLE_EXCEPT();
+     result = DeeObject_ThisCall(callback,THIS,argc,sp - argc);
+     Dee_Decref(callback);
+     if unlikely(!result)
+        HANDLE_EXCEPT();
+     while (argc--) POPREF();
+     PUSH(result); /* Inherit reference. */
+     DISPATCH();
+ }
+
  RAW_TARGET(ASM_FUNCTION_C_16)
      imm_val  = READ_imm8();
      imm_val2 = READ_imm16();
@@ -4180,6 +4206,11 @@ do_setattr_this_c:
          imm_val  = READ_imm16();
          imm_val2 = READ_imm16();
          goto do_getcmember_r;
+     }
+     RAW_TARGET(ASM16_CALLCMEMBER_THIS_R) {
+         imm_val  = READ_imm16();
+         imm_val2 = READ_imm16();
+         goto do_callcmember_this_r;
      }
      RAW_TARGET(ASM16_FUNCTION_C) {
          imm_val  = READ_imm16();
