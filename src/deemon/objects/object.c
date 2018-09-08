@@ -1608,6 +1608,18 @@ type_baseof(DeeTypeObject *__restrict self, size_t argc,
  return_bool(DeeType_IsInherited(other,self));
 }
 
+PRIVATE DREF DeeObject *DCALL
+type_newinstance(DeeTypeObject *__restrict self, size_t argc,
+                 DeeObject **__restrict argv, DeeObject *kw) {
+ (void)self;
+ (void)argc;
+ (void)argv;
+ (void)kw;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
 PRIVATE char const meth_getinstanceattr[]   = "o:getinstanceattr";
 PRIVATE char const meth_callinstanceattr[]  = "callinstanceattr";
 PRIVATE char const meth_hasinstanceattr[]   = "o:hasinstanceattr";
@@ -1779,6 +1791,45 @@ PRIVATE struct type_method type_methods[] = {
           "If @other isn't a type, :false is returned\n"
           "Using baseof, the behavior of ${x is y} can be approximated as:\n"
           ">print y.baseof(type(x)); // print x is y;"),
+      TYPE_METHOD_FKWDS },
+    { "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_newinstance,
+      DOC("(**fields)->object\n"
+          "Allocate a new instance of @this type and initialize members in accordance ot @fields\n"
+          ">class MyClass {\n"
+          "> member foo;\n"
+          "> this = del; /* Delete the regular constructor. */\n"
+          ">}\n"
+          ">local x = MyClass.newinstance(foo: 42);\n"
+          ">print x.foo;\n"
+          "\n"
+          "({(type,({(string,object)...},none))...} initializer=none)->object\n"
+          "({(type,({(string,object)...},tuple))...} initializer=none)->object\n"
+          "({(type,({(string,object)...},tuple,mapping))...} initializer=none)->object\n"
+          "@throw TypeError No superargs tuple was provided for one of the type's bases, when that base "
+                           "has a mandatory constructor that can't be invoked without any arguments. "
+                           "Note that a user-defined class never has a mandatory constructor, with this "
+                           "only affecting builtin types such as :instancemethod or :property\n"
+          "A extended way of constructing and initializing a type, that involves providing explicit "
+          "member initializers on a per-type bases, as well as argument tuples and optional keyword "
+          "mappings to-be used for construction of one of the type's sub-classes (allowing to provide "
+          "for explicit argument lists when one of the type's bases has a mandatory constructor)\n"
+          ">import list from deemon;\n"
+          ">class MyList: list {\n"
+          "> this = del;\n"
+          "> member mylist_member;\n"
+          "> appendmember() {\n"
+          ">  this.append(mylist_member);\n"
+          "> }\n"
+          ">}\n"
+          ">local x = MyList.newinstance({\n"
+          "> MyList: ({ \"mylist_member\" : \"abc\" },none),\n"
+          "> list:   ({ },pack([10,20,30])),\n"
+          ">});\n"
+          ">print repr x;          /* [10,20,30] */\n"
+          ">print x.mylist_member; /* \"abc\" */\n"
+          ">x.appendmember();\n"
+          ">print repr x;          /* [10,20,30,\"abc\"] */\n"
+          ),
       TYPE_METHOD_FKWDS },
     { meth_getinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_getinstanceattr,
       DOC("(string name)->object\n"

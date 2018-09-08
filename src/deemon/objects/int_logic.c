@@ -571,6 +571,43 @@ do_reverse:
  return int_normalize(z);
 }
 
+INTERN int DCALL
+int_inc(DREF DeeIntObject **__restrict pself) {
+ DREF DeeIntObject *z,*a = *pself;
+ if (ABS(a->ob_size) <= 1) {
+  z = (DREF DeeIntObject *)DeeInt_NewMedian(MEDIUM_VALUE(a) + 1);
+  goto done;
+ }
+ if (a->ob_size < 0) {
+  z = x_sub_revint((digit)1,a);
+ } else {
+  z = x_add_int(a,(digit)1);
+ }
+done:
+ *pself = z; /* Inherit reference. */
+ Dee_Decref(a);
+ return 0;
+}
+INTERN int DCALL
+int_dec(DREF DeeIntObject **__restrict pself) {
+ DREF DeeIntObject *z,*a = *pself;
+ if (ABS(a->ob_size) <= 1) {
+  z = (DREF DeeIntObject *)DeeInt_NewMedian(MEDIUM_VALUE(a) - 1);
+  goto done;
+ }
+ if (a->ob_size < 0) {
+  z = x_add_int(a,(digit)1);
+  if (z != NULL/* && z->ob_size != 0*/)
+      z->ob_size = -z->ob_size;
+ } else {
+  z = x_sub_int(a,(digit)1);
+ }
+done:
+ *pself = z; /* Inherit reference. */
+ Dee_Decref(a);
+ return 0;
+}
+
 INTERN DREF DeeObject *DCALL
 DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b) {
  DeeIntObject *z;

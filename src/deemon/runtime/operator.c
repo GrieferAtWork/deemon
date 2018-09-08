@@ -2830,7 +2830,6 @@ err:
 
 DEFINE_OPERATOR(int,Inc,(DeeObject **__restrict pself)) {
  LOAD_TP_SELFP;
- /* TODO: Optimization for `int' */
  do {
   struct type_math *math;
   if ((math = tp_self->tp_math) != NULL) {
@@ -2867,7 +2866,6 @@ err:
 
 DEFINE_OPERATOR(int,Dec,(DeeObject **__restrict pself)) {
  LOAD_TP_SELFP;
- /* TODO: Optimization for `int' */
  do {
   struct type_math *math;
   if ((math = tp_self->tp_math) != NULL) {
