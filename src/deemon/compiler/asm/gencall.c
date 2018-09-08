@@ -525,11 +525,11 @@ check_funsym_class:
       if ((attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) &&
            this_sym->s_type == SYMBOL_TYPE_THIS &&
           !SYMBOL_MUST_REFERENCE(this_sym)) {
-       //if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-       // /* Invoke the getter callback. */
-       // if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_GET,0)) goto err;
-       // goto got_method;
-       //}
+       if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+        /* Invoke the getter callback. */
+        if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_GET,0)) goto err;
+        goto got_method;
+       }
        for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
        if (asm_putddi(ddi_ast)) goto err;
        if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr,argc)) goto err;

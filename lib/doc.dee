@@ -1684,7 +1684,7 @@ unknown_attribute:
 						if (my_attr.isinstance) {
 							/* Use `type.getinstanceattr' to prevent ambiguity
 							 * between stuff like `dict.c:keys' and `dict.i:keys' */
-							object = parob.getinstanceattr(fixed_attribute_name);
+							object = deemon.type_.getinstanceattr(parob,fixed_attribute_name);
 						} else {
 							object = parob.operator . (fixed_attribute_name);
 						}
