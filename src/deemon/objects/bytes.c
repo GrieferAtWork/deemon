@@ -665,7 +665,6 @@ err_args:
    tp_iter = DeeSuper_TYPE(ob);
    ob      = DeeSuper_SELF(ob);
   }
-#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
   do {
    struct type_buffer *buf = tp_iter->tp_buffer;
    if (buf && buf->tp_getbuf) {
@@ -690,32 +689,6 @@ err_args:
     return result;
    }
   } while (type_inherit_buffer(tp_iter));
-#else
-  do {
-   struct type_buffer *buf = tp_iter->tp_buffer;
-   if (buf && buf->tp_getbuf) {
-    result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data));
-    if unlikely(!result) goto err;
-    /* Construct a bytes object using the buffer interface provided by `ob' */
-#ifndef __INTELLISENSE__
-    result->b_buffer.bb_put = buf->tp_putbuf;
-#endif
-    if unlikely((*buf->tp_getbuf)(ob,&result->b_buffer,DEE_BUFFER_FREADONLY))
-       goto err_r;
-    if (start > result->b_buffer.bb_size)
-        start = result->b_buffer.bb_size;
-    if (end > result->b_buffer.bb_size)
-        end = result->b_buffer.bb_size;
-    result->b_base  = (uint8_t *)result->b_buffer.bb_base + start;
-    result->b_size  = (size_t)(end - start);
-    result->b_orig  = ob;
-    result->b_flags = DEE_BUFFER_FREADONLY;
-    Dee_Incref(ob);
-    DeeObject_Init(result,&DeeBytes_Type);
-    return result;
-   }
-  } while ((tp_iter = DeeType_Base(tp_iter)) != NULL);
-#endif
   /* The object does not implement the buffer interface.
    * -> Instead, construct the bytes object as a sequence. */
   result = (DREF Bytes *)DeeBytes_FromSequence(ob);

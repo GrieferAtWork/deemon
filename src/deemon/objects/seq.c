@@ -53,17 +53,10 @@ DECL_BEGIN
 PUBLIC struct type_nsi *DCALL
 DeeType_NSI(DeeTypeObject *__restrict tp) {
  ASSERT_OBJECT_TYPE(tp,&DeeType_Type);
-#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
  do {
   if (tp->tp_seq)
       return tp->tp_seq->tp_nsi;
  } while (type_inherit_nsi(tp));
-#else
- do {
-  if (tp->tp_seq)
-      return tp->tp_seq->tp_nsi;
- } while ((tp = DeeType_Base(tp)) != NULL);
-#endif
  return NULL;
 }
 
@@ -314,24 +307,12 @@ seqiterator_init(SeqIterator *__restrict self,
      DeeObject_AssertTypeExact(self->si_index,&DeeInt_Type))
      return -1;
  tp_iter = Dee_TYPE(self->si_seq);
-#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
  if ((!tp_iter->tp_seq || !tp_iter->tp_seq->tp_get) &&
       !type_inherit_getitem(tp_iter)) {
   return err_unimplemented_operator(tp_iter,OPERATOR_GETITEM);
  }
  ASSERT(tp_iter->tp_seq);
  ASSERT(tp_iter->tp_seq->tp_get);
-#else
- for (;;) {
-  if (tp_iter->tp_seq && tp_iter->tp_seq->tp_get)
-      break;
-  if ((tp_iter = DeeType_Base(tp_iter)) == NULL) {
-   err_unimplemented_operator(Dee_TYPE(self->si_seq),
-                              OPERATOR_GETITEM);
-   return -1;
-  }
- } 
-#endif
  self->si_getitem = tp_iter->tp_seq->tp_get;
  self->si_size    = DeeObject_SizeObject(self->si_seq);
  if unlikely(!self->si_size) return -1;

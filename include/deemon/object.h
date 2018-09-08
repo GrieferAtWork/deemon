@@ -1500,10 +1500,6 @@ struct type_object {
 #define DeeObject_IsInterrupt(x)     DeeType_IsInterrupt(Dee_TYPE(x))
 
 
-#undef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
-#define CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE 1
-
-
 /* Check if `name' is being implemented by the given path, or has been inherited by a base-type. */
 DFUNDEF bool DCALL DeeType_HasInheritedOperator(DeeTypeObject *__restrict self, uint16_t name);
 
@@ -1511,7 +1507,6 @@ DFUNDEF bool DCALL DeeType_HasInheritedOperator(DeeTypeObject *__restrict self, 
  * operator has been inherited implicitly through caching mechanisms. */
 DFUNDEF bool DCALL DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name);
 
-#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF bool DCALL type_inherit_constructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
 INTDEF bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str */
@@ -1547,7 +1542,6 @@ INTDEF bool DCALL type_inherit_setrange(DeeTypeObject *__restrict self);      /*
 INTDEF bool DCALL type_inherit_nsi(DeeTypeObject *__restrict self);           /* tp_nsi (only succeeds if `self' has no `tp_seq' field) */
 INTDEF bool DCALL type_inherit_with(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
 INTDEF bool DCALL type_inherit_buffer(DeeTypeObject *__restrict self);        /* tp_getbuf, tp_putbuf, tp_buffer_flags */
-#endif
 #endif
 
 

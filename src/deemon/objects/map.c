@@ -919,12 +919,7 @@ mapiter_next_key(DeeObject *__restrict self,
        return (*nsi->nsi_maplike.nsi_nextkey)(iter);
    break;
   }
- }
-#ifdef CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE
- while (type_inherit_nsi(tp_self));
-#else
- while ((tp_self = DeeType_Base(tp_self)) != NULL);
-#endif
+ } while (type_inherit_nsi(tp_self));
  result = DeeObject_IterNext(iter);
  if (!ITER_ISOK(result)) {
   if unlikely(!result) goto err;

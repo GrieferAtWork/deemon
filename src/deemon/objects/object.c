@@ -95,7 +95,7 @@ DeeType_IsInherited(DeeTypeObject *__restrict test_type,
  * it slows down object destruction more than it speeds up
  * weakref usage, so we don't actually use it!. */
 #undef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
-#if defined(CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE) && 0
+#if 0
 #define CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS 1
 #endif
 

@@ -24,11 +24,6 @@
 
 DECL_BEGIN
 
-#if !defined(CONFIG_TYPE_ALLOW_OPERATOR_CACHE_INHERITANCE)
-#define is_noninherited_nsi(tp,seq,nsi)           1
-#define has_noninherited_seqfield(tp,seq,field) ((seq)->field != NULL)
-#define has_noninherited_field(tp,field)        ((tp)->field != NULL)
-#else
 #define has_noninherited_seqfield(tp,seq,field) ((seq)->field != NULL && (!DeeType_Base(tp) || !DeeType_Base(tp)->tp_seq || DeeType_Base(tp)->tp_seq->field != (seq)->field))
 #define has_noninherited_field(tp,field)        ((tp)->field != NULL && (!DeeType_Base(tp) || DeeType_Base(tp)->field != (tp)->field))
 #if 1
@@ -37,7 +32,6 @@ DECL_BEGIN
 #else
 #define is_noninherited_nsi(tp,seq,nsi) \
       (!DeeType_Base(tp) || !DeeType_Base(tp)->tp_seq || !DeeType_Base(tp)->tp_seq->tp_nsi != (nsi))
-#endif
 #endif
 
 #define has_noninherited_getrange(tp,seq) has_noninherited_seqfield(tp,seq,tp_range_get)
