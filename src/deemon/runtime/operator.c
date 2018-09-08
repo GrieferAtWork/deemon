@@ -65,21 +65,6 @@ DECL_BEGIN
 #endif /* !DEFINE_OPERATOR */
 
 
-/* TODO: Get rid of these macros: */
-#define DeeType_INVOKE_ALLOC_CTOR(tp_self,init_type,self)                (*(tp_self)->tp_init.tp_alloc.tp_ctor)(self)
-#define DeeType_INVOKE_ALLOC_COPY(tp_self,init_type,self,other)          (*(tp_self)->tp_init.tp_alloc.tp_copy_ctor)(self,other)
-#define DeeType_INVOKE_ALLOC_DEEP(tp_self,init_type,self,other)          (*(tp_self)->tp_init.tp_alloc.tp_deep_ctor)(self,other)
-#define DeeType_INVOKE_ALLOC_ANY(tp_self,init_type,self,argc,argv)       (*(tp_self)->tp_init.tp_alloc.tp_any_ctor)(self,argc,argv)
-#define DeeType_INVOKE_ALLOC_ANY_KW(tp_self,init_type,self,argc,argv,kw) (*(tp_self)->tp_init.tp_alloc.tp_any_ctor_kw)(self,argc,argv,kw)
-#define DeeType_INVOKE_ALLOC_FREE(tp_self,init_type,ob)                  (*(tp_self)->tp_init.tp_alloc.tp_free)(ob)
-#define DeeType_INVOKE_ALLOC_ALLOC(tp_self,init_type)                    (*(tp_self)->tp_init.tp_alloc.tp_alloc)()
-#define DeeType_INVOKE_VAR_CTOR(tp_self,init_type)                       (*(tp_self)->tp_init.tp_var.tp_ctor)()
-#define DeeType_INVOKE_VAR_COPY(tp_self,init_type,other)                 (*(tp_self)->tp_init.tp_var.tp_copy_ctor)(other)
-#define DeeType_INVOKE_VAR_DEEP(tp_self,init_type,other)                 (*(tp_self)->tp_init.tp_var.tp_deep_ctor)(other)
-#define DeeType_INVOKE_VAR_ANY(tp_self,init_type,argc,argv)              (*(tp_self)->tp_init.tp_var.tp_any_ctor)(argc,argv)
-#define DeeType_INVOKE_VAR_ANY_KW(tp_self,init_type,argc,argv,kw)        (*(tp_self)->tp_init.tp_var.tp_any_ctor_kw)(argc,argv,kw)
-#define DeeType_INVOKE_VAR_FREE(tp_self,init_type,ob)                    (*(tp_self)->tp_init.tp_var.tp_free)(ob)
-
 /* Setup how operator callbacks are invoked.
  * NOTE: When executing operators in a super-context, we must be
  *       careful when invoking class operators, because otherwise
@@ -332,15 +317,15 @@ DeeObject_NewDefault(DeeTypeObject *__restrict object_type) {
  if (object_type->tp_flags&TP_FVARIABLE) {
   if (object_type->tp_init.tp_var.tp_ctor) {
 do_invoke_var_ctor:
-   return DeeType_INVOKE_VAR_CTOR(object_type,object_type);
+   return (*object_type->tp_init.tp_var.tp_ctor)();
   }
   if (object_type->tp_init.tp_var.tp_any_ctor) {
 do_invoke_var_any_ctor:
-   return DeeType_INVOKE_VAR_ANY(object_type,object_type,0,NULL);
+   return (*object_type->tp_init.tp_var.tp_any_ctor)(0,NULL);
   }
   if (object_type->tp_init.tp_var.tp_any_ctor_kw) {
 do_invoke_var_any_ctor_kw:
-   return DeeType_INVOKE_VAR_ANY_KW(object_type,object_type,0,NULL,NULL);
+   return (*object_type->tp_init.tp_var.tp_any_ctor_kw)(0,NULL,NULL);
   }
   if (type_inherit_constructors(object_type)) {
    if (object_type->tp_init.tp_var.tp_ctor)
@@ -354,7 +339,7 @@ do_invoke_var_any_ctor_kw:
   int error;
   ASSERT(!(object_type->tp_flags&TP_FVARIABLE));
   if (object_type->tp_init.tp_alloc.tp_free)
-   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+   result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
   else if (object_type->tp_flags&TP_FGC)
    result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
   else {
@@ -364,17 +349,17 @@ do_invoke_var_any_ctor_kw:
   DeeObject_Init(result,object_type);
   if (object_type->tp_init.tp_alloc.tp_ctor) {
 do_invoke_alloc_ctor:
-   error = DeeType_INVOKE_ALLOC_CTOR(object_type,object_type,result);
+   error = (*object_type->tp_init.tp_alloc.tp_ctor)(result);
   } else if (object_type->tp_init.tp_alloc.tp_any_ctor) {
 do_invoke_alloc_any_ctor:
-   error = DeeType_INVOKE_ALLOC_ANY(object_type,object_type,result,0,NULL);
+   error = (*object_type->tp_init.tp_alloc.tp_any_ctor)(result,0,NULL);
   } else if (object_type->tp_init.tp_alloc.tp_any_ctor_kw) {
 do_invoke_alloc_any_ctor_kw:
-   error = DeeType_INVOKE_ALLOC_ANY_KW(object_type,object_type,result,0,NULL,NULL);
+   error = (*object_type->tp_init.tp_alloc.tp_any_ctor_kw)(result,0,NULL,NULL);
   } else {
    DeeObject_FreeTracker(result);
    if (object_type->tp_init.tp_alloc.tp_free)
-    DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+    (*object_type->tp_init.tp_alloc.tp_free)(result);
    else if (object_type->tp_flags & TP_FGC)
     DeeGCObject_Free(result);
    else {
@@ -383,7 +368,7 @@ do_invoke_alloc_any_ctor_kw:
    if (!type_inherit_constructors(object_type))
         goto err_not_implemented_r;
    if (object_type->tp_init.tp_alloc.tp_free)
-    result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+    result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
    else if (object_type->tp_flags & TP_FGC)
     result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
    else {
@@ -413,7 +398,7 @@ err_not_implemented_r:
 err_r:
  DeeObject_FreeTracker(result);
  if (object_type->tp_init.tp_alloc.tp_free)
-  DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+  (*object_type->tp_init.tp_alloc.tp_free)(result);
  else if (object_type->tp_flags & TP_FGC)
   DeeGCObject_Free(result);
  else {
@@ -433,20 +418,20 @@ DeeObject_New(DeeTypeObject *__restrict object_type,
  if (object_type->tp_flags&TP_FVARIABLE) {
   if (object_type->tp_init.tp_var.tp_ctor && !argc) {
 do_invoke_var_ctor:
-   return DeeType_INVOKE_VAR_CTOR(object_type,object_type);
+   return (*object_type->tp_init.tp_var.tp_ctor)();
   }
   if (object_type->tp_init.tp_var.tp_any_ctor) {
 do_invoke_var_any_ctor:
-   return DeeType_INVOKE_VAR_ANY(object_type,object_type,argc,argv);
+   return (*object_type->tp_init.tp_var.tp_any_ctor)(argc,argv);
   }
   if (object_type->tp_init.tp_var.tp_any_ctor_kw) {
 do_invoke_var_any_ctor_kw:
-   return DeeType_INVOKE_VAR_ANY_KW(object_type,object_type,argc,argv,NULL);
+   return (*object_type->tp_init.tp_var.tp_any_ctor_kw)(argc,argv,NULL);
   }
   if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
       DeeObject_InstanceOf(argv[0],object_type)) {
 do_invoke_var_copy:
-   return DeeType_INVOKE_VAR_COPY(object_type,object_type,argv[0]);
+   return (*object_type->tp_init.tp_var.tp_copy_ctor)(argv[0]);
   }
   if (type_inherit_constructors(object_type)) {
    if (object_type->tp_init.tp_var.tp_ctor && !argc)
@@ -463,7 +448,7 @@ do_invoke_var_copy:
   int error;
   ASSERT(!(object_type->tp_flags&TP_FVARIABLE));
   if (object_type->tp_init.tp_alloc.tp_free)
-   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+   result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
   else if (object_type->tp_flags&TP_FGC)
    result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
   else {
@@ -473,21 +458,21 @@ do_invoke_var_copy:
   DeeObject_Init(result,object_type);
   if (object_type->tp_init.tp_alloc.tp_ctor && !argc) {
 do_invoke_alloc_ctor:
-   error = DeeType_INVOKE_ALLOC_CTOR(object_type,object_type,result);
+   error = (*object_type->tp_init.tp_alloc.tp_ctor)(result);
   } else if (object_type->tp_init.tp_alloc.tp_any_ctor) {
 do_invoke_alloc_any_ctor:
-   error = DeeType_INVOKE_ALLOC_ANY(object_type,object_type,result,argc,argv);
+   error = (*object_type->tp_init.tp_alloc.tp_any_ctor)(result,argc,argv);
   } else if (object_type->tp_init.tp_alloc.tp_any_ctor_kw) {
 do_invoke_alloc_any_ctor_kw:
-   error = DeeType_INVOKE_ALLOC_ANY_KW(object_type,object_type,result,argc,argv,NULL);
+   error = (*object_type->tp_init.tp_alloc.tp_any_ctor_kw)(result,argc,argv,NULL);
   } else if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
              DeeObject_InstanceOf(argv[0],object_type)) {
 do_invoke_alloc_copy:
-   error = DeeType_INVOKE_ALLOC_COPY(object_type,object_type,result,argv[0]);
+   error = (*object_type->tp_init.tp_alloc.tp_copy_ctor)(result,argv[0]);
   } else {
    DeeObject_FreeTracker(result);
    if (object_type->tp_init.tp_alloc.tp_free)
-    DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+    (*object_type->tp_init.tp_alloc.tp_free)(result);
    else if (object_type->tp_flags & TP_FGC)
     DeeGCObject_Free(result);
    else {
@@ -496,7 +481,7 @@ do_invoke_alloc_copy:
    if (!type_inherit_constructors(object_type))
         goto err_not_implemented_r;
    if (object_type->tp_init.tp_alloc.tp_free)
-    result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+    result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
    else if (object_type->tp_flags & TP_FGC)
     result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
    else {
@@ -529,7 +514,7 @@ err_not_implemented_r:
 err_r:
  DeeObject_FreeTracker(result);
  if (object_type->tp_init.tp_alloc.tp_free)
-  DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+  (*object_type->tp_init.tp_alloc.tp_free)(result);
  else if (object_type->tp_flags & TP_FGC)
   DeeGCObject_Free(result);
  else {
@@ -548,25 +533,9 @@ DeeObject_NewKw(DeeTypeObject *__restrict object_type,
  ASSERT_OBJECT(object_type);
  ASSERT(DeeType_Check(object_type));
  if (object_type->tp_flags&TP_FVARIABLE) {
-  if (object_type->tp_init.tp_var.tp_ctor && !argc) {
-   if (kw) {
-    if (DeeKwds_Check(kw)) {
-     if (DeeKwds_SIZE(kw) != 0)
-         goto check_nonunary_var_constructors;
-    } else {
-     size_t kw_size = DeeObject_Size(kw);
-     if unlikely(kw_size == (size_t)-1) goto err;
-     if (kw_size != 0)
-         goto check_nonunary_var_constructors;
-    }
-   }
-do_invoke_var_ctor:
-   return DeeType_INVOKE_VAR_CTOR(object_type,object_type);
-  }
-check_nonunary_var_constructors:
   if (object_type->tp_init.tp_var.tp_any_ctor_kw) {
 do_invoke_var_any_ctor_kw:
-   return DeeType_INVOKE_VAR_ANY_KW(object_type,object_type,argc,argv,kw);
+   return (*object_type->tp_init.tp_var.tp_any_ctor_kw)(argc,argv,kw);
   }
   if (object_type->tp_init.tp_var.tp_any_ctor) {
 do_invoke_var_any_ctor:
@@ -581,7 +550,22 @@ do_invoke_var_any_ctor:
          goto err_no_keywords;
     }
    }
-   return DeeType_INVOKE_VAR_ANY(object_type,object_type,argc,argv);
+   return (*object_type->tp_init.tp_var.tp_any_ctor)(argc,argv);
+  }
+  if (object_type->tp_init.tp_var.tp_ctor && !argc) {
+do_invoke_var_ctor:
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto err_no_keywords;
+    } else {
+     size_t kw_size = DeeObject_Size(kw);
+     if unlikely(kw_size == (size_t)-1) goto err;
+     if (kw_size != 0)
+         goto err_no_keywords;
+    }
+   }
+   return (*object_type->tp_init.tp_var.tp_ctor)();
   }
   if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
       DeeObject_InstanceOf(argv[0],object_type)) {
@@ -597,28 +581,15 @@ do_invoke_var_copy:
          goto err_no_keywords;
     }
    }
-   return DeeType_INVOKE_VAR_COPY(object_type,object_type,argv[0]);
+   return (*object_type->tp_init.tp_var.tp_copy_ctor)(argv[0]);
   }
   if (type_inherit_constructors(object_type)) {
-   if (object_type->tp_init.tp_var.tp_ctor && !argc) {
-    if (kw) {
-     if (DeeKwds_Check(kw)) {
-      if (DeeKwds_SIZE(kw) != 0)
-          goto check_nonunary_var_constructors_ex;
-     } else {
-      size_t kw_size = DeeObject_Size(kw);
-      if unlikely(kw_size == (size_t)-1) goto err;
-      if (kw_size != 0)
-          goto check_nonunary_var_constructors_ex;
-     }
-    }
-    goto do_invoke_var_ctor;
-   }
-check_nonunary_var_constructors_ex:
-   if (object_type->tp_init.tp_var.tp_any_ctor)
-       goto do_invoke_var_any_ctor;
    if (object_type->tp_init.tp_var.tp_any_ctor_kw)
        goto do_invoke_var_any_ctor_kw;
+   if (object_type->tp_init.tp_var.tp_any_ctor)
+       goto do_invoke_var_any_ctor;
+   if (object_type->tp_init.tp_var.tp_ctor && !argc)
+       goto do_invoke_var_ctor;
    if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
        DeeObject_InstanceOf(argv[0],object_type))
        goto do_invoke_var_copy;
@@ -627,7 +598,7 @@ check_nonunary_var_constructors_ex:
   int error;
   ASSERT(!(object_type->tp_flags&TP_FVARIABLE));
   if (object_type->tp_init.tp_alloc.tp_free)
-   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+   result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
   else if (object_type->tp_flags&TP_FGC)
    result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
   else {
@@ -635,23 +606,9 @@ check_nonunary_var_constructors_ex:
   }
   if unlikely(!result) goto err;
   DeeObject_Init(result,object_type);
-  if (object_type->tp_init.tp_alloc.tp_ctor && !argc) {
-   if (kw) {
-    if (DeeKwds_Check(kw)) {
-     if (DeeKwds_SIZE(kw) != 0)
-         goto check_nonunary_constructors;
-    } else {
-     size_t kw_size = DeeObject_Size(kw);
-     if unlikely(kw_size == (size_t)-1) goto err_r;
-     if (kw_size != 0)
-         goto check_nonunary_constructors;
-    }
-   }
-do_invoke_alloc_ctor:
-   error = DeeType_INVOKE_ALLOC_CTOR(object_type,object_type,result);
-  } else check_nonunary_constructors: if (object_type->tp_init.tp_alloc.tp_any_ctor_kw) {
+  if (object_type->tp_init.tp_alloc.tp_any_ctor_kw) {
 do_invoke_alloc_any_ctor_kw:
-   error = DeeType_INVOKE_ALLOC_ANY_KW(object_type,object_type,result,argc,argv,kw);
+   error = (*object_type->tp_init.tp_alloc.tp_any_ctor_kw)(result,argc,argv,kw);
   } else if (object_type->tp_init.tp_alloc.tp_any_ctor) {
 do_invoke_alloc_any_ctor:
    if (kw) {
@@ -665,7 +622,21 @@ do_invoke_alloc_any_ctor:
          goto err_no_keywords_r;
     }
    }
-   error = DeeType_INVOKE_ALLOC_ANY(object_type,object_type,result,argc,argv);
+   error = (*object_type->tp_init.tp_alloc.tp_any_ctor)(result,argc,argv);
+  } else if (object_type->tp_init.tp_alloc.tp_ctor && !argc) {
+do_invoke_alloc_ctor:
+   if (kw) {
+    if (DeeKwds_Check(kw)) {
+     if (DeeKwds_SIZE(kw) != 0)
+         goto err_no_keywords_r;
+    } else {
+     size_t kw_size = DeeObject_Size(kw);
+     if unlikely(kw_size == (size_t)-1) goto err_r;
+     if (kw_size != 0)
+         goto err_no_keywords_r;
+    }
+   }
+   error = (*object_type->tp_init.tp_alloc.tp_ctor)(result);
   } else if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
              DeeObject_InstanceOf(argv[0],object_type)) {
 do_invoke_alloc_copy:
@@ -680,11 +651,11 @@ do_invoke_alloc_copy:
          goto err_no_keywords_r;
     }
    }
-   error = DeeType_INVOKE_ALLOC_COPY(object_type,object_type,result,argv[0]);
+   error = (*object_type->tp_init.tp_alloc.tp_copy_ctor)(result,argv[0]);
   } else {
    DeeObject_FreeTracker(result);
    if (object_type->tp_init.tp_alloc.tp_free)
-    DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+    (*object_type->tp_init.tp_alloc.tp_free)(result);
    else if (object_type->tp_flags & TP_FGC)
     DeeGCObject_Free(result);
    else {
@@ -693,7 +664,7 @@ do_invoke_alloc_copy:
    if (!type_inherit_constructors(object_type))
         goto err_not_implemented_r;
    if (object_type->tp_init.tp_alloc.tp_free)
-    result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(object_type,object_type);
+    result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
    else if (object_type->tp_flags & TP_FGC)
     result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
    else {
@@ -701,25 +672,12 @@ do_invoke_alloc_copy:
    }
    if unlikely(!result) goto err_object_type;
    DeeObject_InitNoref(result,object_type);
-   if (object_type->tp_init.tp_alloc.tp_ctor && argc == 0) {
-    if (kw) {
-     if (DeeKwds_Check(kw)) {
-      if (DeeKwds_SIZE(kw) != 0)
-          goto check_nonunary_constructors_ex;
-     } else {
-      size_t kw_size = DeeObject_Size(kw);
-      if unlikely(kw_size == (size_t)-1) goto err_r;
-      if (kw_size != 0)
-          goto check_nonunary_constructors_ex;
-     }
-    }
-    goto do_invoke_alloc_ctor;
-   }
-check_nonunary_constructors_ex:
    if (object_type->tp_init.tp_alloc.tp_any_ctor_kw)
        goto do_invoke_alloc_any_ctor_kw;
    if (object_type->tp_init.tp_alloc.tp_any_ctor)
        goto do_invoke_alloc_any_ctor;
+   if (object_type->tp_init.tp_alloc.tp_ctor && argc == 0)
+       goto do_invoke_alloc_ctor;
    if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
        DeeObject_InstanceOf(argv[0],object_type))
        goto do_invoke_alloc_copy;
@@ -742,7 +700,7 @@ err_not_implemented_r:
 err_r:
  DeeObject_FreeTracker(result);
  if (object_type->tp_init.tp_alloc.tp_free)
-  DeeType_INVOKE_ALLOC_FREE(object_type,object_type,result);
+  (*object_type->tp_init.tp_alloc.tp_free)(result);
  else if (object_type->tp_flags & TP_FGC)
   DeeGCObject_Free(result);
  else {
@@ -868,7 +826,7 @@ DEFINE_OPERATOR(DREF DeeObject *,DeepCopy,(DeeObject *__restrict self)) {
 got_normal_copy:
   /* There isn't a deepcopy operator, but there is a copy operator.
    * Now, if there also is a deepload operator, then we can invoke that one! */
-  if (!tp_self->tp_init.tp_deepload) {
+  if unlikely(!tp_self->tp_init.tp_deepload) {
    err_unimplemented_operator(tp_self,OPERATOR_DEEPCOPY);
    return NULL;
   }
@@ -881,30 +839,17 @@ got_deep_copy:
  deepcopy_begin(thread_self);
  /* Allocate an to basic construction of the deepcopy object. */
  if (tp_self->tp_flags & TP_FVARIABLE) {
-  ASSERT(tp_self->tp_flags&TP_FVARIABLE);
-#ifndef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
-  ASSERT((tp_self->tp_flags&TP_FGC) == (tp_self->tp_flags&TP_FGC));
-#else /* !CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
-  ASSERTF(!(tp_self->tp_flags&TP_FGC) || (tp_self->tp_flags&TP_FGC),
-          "Non-GC object is inheriting its constructors for a GC-enabled object");
-#endif /* CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
   /* Variable-length object. */
   result = tp_self->tp_init.tp_var.tp_deep_ctor
-         ? DeeType_INVOKE_VAR_DEEP(tp_self,tp_self,self)
-         : DeeType_INVOKE_VAR_COPY(tp_self,tp_self,self)
+         ? (*tp_self->tp_init.tp_var.tp_deep_ctor)(self)
+         : (*tp_self->tp_init.tp_var.tp_copy_ctor)(self)
          ;
   if unlikely(!result) goto done_endcopy;
  } else {
   ASSERT(!(tp_self->tp_flags&TP_FVARIABLE));
   /* Static-length object. */
   if (tp_self->tp_init.tp_alloc.tp_free)
-#ifndef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
-   ASSERT((tp_self->tp_flags&TP_FGC) == (tp_self->tp_flags&TP_FGC)),
-#else /* !CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
-   ASSERTF(!(tp_self->tp_flags&TP_FGC) || (tp_self->tp_flags&TP_FGC),
-           "Non-GC object is inheriting its constructors for a GC-enabled object"),
-#endif /* CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
-   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(tp_self,tp_self);
+   result = (DREF DeeObject *)(*tp_self->tp_init.tp_alloc.tp_alloc)();
   else if (tp_self->tp_flags&TP_FGC)
    result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
   else {
@@ -914,13 +859,13 @@ got_deep_copy:
   /* Perform basic object initialization. */
   DeeObject_Init(result,tp_self);
   /* Invoke the deepcopy constructor first. */
-  if unlikely(tp_self->tp_init.tp_alloc.tp_copy_ctor
-            ? DeeType_INVOKE_ALLOC_DEEP(tp_self,tp_self,result,self)
-            : DeeType_INVOKE_ALLOC_COPY(tp_self,tp_self,result,self)) {
+  if unlikely(tp_self->tp_init.tp_alloc.tp_deep_ctor
+          ? (*tp_self->tp_init.tp_alloc.tp_deep_ctor)(result,self)
+          : (*tp_self->tp_init.tp_alloc.tp_copy_ctor)(result,self)) {
    /* Undo allocating and base-initializing the new object. */
    DeeObject_FreeTracker(result);
    if (tp_self->tp_init.tp_alloc.tp_free)
-    DeeType_INVOKE_ALLOC_FREE(tp_self,tp_self,result);
+    (*tp_self->tp_init.tp_alloc.tp_free)(result);
    else if (tp_self->tp_flags&TP_FGC)
     DeeGCObject_Free(result);
    else {
@@ -982,7 +927,7 @@ DEFINE_OPERATOR(DREF DeeObject *,Copy,(DeeObject *__restrict self)) {
  if (tp_self->tp_flags&TP_FVARIABLE) {
   if (tp_self->tp_init.tp_var.tp_copy_ctor) {
 do_invoke_var_copy:
-   return DeeType_INVOKE_VAR_COPY(tp_self,tp_self,self);
+   return (*tp_self->tp_init.tp_var.tp_copy_ctor)(self);
   }
   if (tp_self->tp_init.tp_var.tp_deep_ctor) {
 do_invoke_var_deep:
@@ -994,11 +939,11 @@ do_invoke_var_deep:
   }
   if (tp_self->tp_init.tp_var.tp_any_ctor) {
 do_invoke_var_any_ctor:
-   return DeeType_INVOKE_VAR_ANY(tp_self,tp_self,1,(DeeObject **)&self);
+   return (*tp_self->tp_init.tp_var.tp_any_ctor)(1,(DeeObject **)&self);
   }
   if (tp_self->tp_init.tp_var.tp_any_ctor_kw) {
 do_invoke_var_any_ctor_kw:
-   return DeeType_INVOKE_VAR_ANY_KW(tp_self,tp_self,1,(DeeObject **)&self,NULL);
+   return (*tp_self->tp_init.tp_var.tp_any_ctor_kw)(1,(DeeObject **)&self,NULL);
   }
   if (type_inherit_constructors(tp_self)) {
    if (tp_self->tp_init.tp_var.tp_copy_ctor)
@@ -1014,7 +959,7 @@ do_invoke_var_any_ctor_kw:
   int error;
 do_invoke_alloc_copy:
   if (tp_self->tp_init.tp_alloc.tp_free)
-   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(tp_self,tp_self);
+   result = (DREF DeeObject *)(*tp_self->tp_init.tp_alloc.tp_alloc)();
   else if (tp_self->tp_flags&TP_FGC)
    result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
   else {
@@ -1022,7 +967,7 @@ do_invoke_alloc_copy:
   }
   if unlikely(!result) goto err;
   DeeObject_Init(result,tp_self);
-  error = DeeType_INVOKE_ALLOC_COPY(tp_self,tp_self,result,self);
+  error = (*tp_self->tp_init.tp_alloc.tp_copy_ctor)(result,self);
   if unlikely(error) goto err_r;
   /* Begin tracking the returned object. */
   if (tp_self->tp_flags & TP_FGC)
@@ -1034,7 +979,7 @@ do_invoke_alloc_copy:
   int error;
   ASSERT(!(tp_self->tp_flags&TP_FVARIABLE));
   if (tp_self->tp_init.tp_alloc.tp_free)
-   result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(tp_self,tp_self);
+   result = (DREF DeeObject *)(*tp_self->tp_init.tp_alloc.tp_alloc)();
   else if (tp_self->tp_flags&TP_FGC)
    result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
   else {
@@ -1044,14 +989,14 @@ do_invoke_alloc_copy:
   DeeObject_Init(result,tp_self);
   if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
 do_invoke_alloc_any_ctor:
-   error = DeeType_INVOKE_ALLOC_ANY(tp_self,tp_self,result,1,(DeeObject **)&self);
+   error = (*tp_self->tp_init.tp_alloc.tp_any_ctor)(result,1,(DeeObject **)&self);
   } else if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
 do_invoke_alloc_any_ctor_kw:
-   error = DeeType_INVOKE_ALLOC_ANY_KW(tp_self,tp_self,result,1,(DeeObject **)&self,NULL);
+   error = (*tp_self->tp_init.tp_alloc.tp_any_ctor_kw)(result,1,(DeeObject **)&self,NULL);
   } else {
    DeeObject_FreeTracker(result);
    if (tp_self->tp_init.tp_alloc.tp_free)
-    DeeType_INVOKE_ALLOC_FREE(tp_self,tp_self,result);
+    (*tp_self->tp_init.tp_alloc.tp_free)(result);
    else if (tp_self->tp_flags & TP_FGC)
     DeeGCObject_Free(result);
    else {
@@ -1068,7 +1013,7 @@ do_invoke_alloc_any_ctor_kw:
     goto do_invoke_var_deep;
    }
    if (tp_self->tp_init.tp_alloc.tp_free)
-    result = (DREF DeeObject *)DeeType_INVOKE_ALLOC_ALLOC(tp_self,tp_self);
+    result = (DREF DeeObject *)(*tp_self->tp_init.tp_alloc.tp_alloc)();
    else if (tp_self->tp_flags & TP_FGC)
     result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
    else {
@@ -1096,7 +1041,7 @@ err_not_implemented_r:
 err_r:
  DeeObject_FreeTracker(result);
  if (tp_self->tp_init.tp_alloc.tp_free)
-  DeeType_INVOKE_ALLOC_FREE(tp_self,tp_self,result);
+  (*tp_self->tp_init.tp_alloc.tp_free)(result);
  else if (tp_self->tp_flags & TP_FGC)
   DeeGCObject_Free(result);
  else {

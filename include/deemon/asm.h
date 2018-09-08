@@ -19,8 +19,6 @@
 #ifndef GUARD_DEEMON_ASM_H
 #define GUARD_DEEMON_ASM_H 1
 
-#include "api.h"    /* TODO: Remove me */
-
 /* Deemon assembly definitions and instruction codes.
  * Starting in v200, deemon uses an entirely new assembly design that is
  * no longer restricted by rules on the length of individual instructions.
