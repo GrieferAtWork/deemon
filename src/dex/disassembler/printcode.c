@@ -557,7 +557,10 @@ libdisasm_printclass(dformatprinter printer, void *arg,
     DO(Dee_FormatPrintf(printer,arg,"%s    instance_attributes = {\n",line_prefix));
     has_instance_attributes = true;
    }
-   DO(libdisasm_printclassattribute(printer,arg,attr,line_prefix,self->cd_imemb_size));
+   DO(libdisasm_printclassattribute(printer,arg,attr,line_prefix,
+                                    attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM
+                                  ? self->cd_cmemb_size
+                                  : self->cd_imemb_size));
   }
   if (has_instance_attributes)
       DO(Dee_FormatPrintf(printer,arg,"%s    }\n",line_prefix));

@@ -285,7 +285,7 @@ PRIVATE char const mnemonic_names[256][29] = {
     /* 0x67 */ "push class " PREFIX_INTEGERAL, /* `ASM_CLASS_C' */
     /* 0x68 */ "push class " PREFIX_INTEGERAL, /* `ASM_CLASS_CBL' */
     /* 0x69 */ "push class " PREFIX_INTEGERAL, /* `ASM_CLASS_CBG' */
-    /* 0x6a */ "defmember top, " PREFIX_INTEGERAL, /* `ASM_DEFMEMBER' */
+    /* 0x6a */ "defcmember top, " PREFIX_INTEGERAL, /* `ASM_DEFCMEMBER' */
     /* 0x6b */ "defop top, " PREFIX_INTEGERAL, /* `ASM_DEFOP' */
     /* 0x6c */ "push function pop, pop", /* `ASM_FUNCTION' */
     /* 0x6d */ "push function const ", /* `ASM_FUNCTION_C_0' */
@@ -393,12 +393,12 @@ PRIVATE char const mnemonic_names[256][29] = {
     /* 0xd3 */ "callattr top, const ", /* `ASM_CALLATTR_TUPLE_C' */
     /* 0xd4 */ "callattr this, const ", /* `ASM_CALLATTR_THIS_C' */
     /* 0xd5 */ "callattr this, const ", /* `ASM_CALLATTR_THIS_TUPLE_C' */
-    /* 0xd6 */ "getmember this, pop, " PREFIX_INTEGERAL, /* `ASM_GETMEMBER' */
-    /* 0xd7 */ "getmember this, ref ", /* `ASM_GETMEMBER_R' */
-    /* 0xd8 */ "delmember this, pop, " PREFIX_INTEGERAL, /* `ASM_DELMEMBER' */
-    /* 0xd9 */ "delmember this, ref ", /* `ASM_DELMEMBER_R' */
-    /* 0xda */ "setmember this, pop, " PREFIX_INTEGERAL, /* `ASM_SETMEMBER' */
-    /* 0xdb */ "setmember this, ref ", /* `ASM_SETMEMBER_R' */
+    /* 0xd6 */ "getmember this, pop, " PREFIX_INTEGERAL, /* `ASM_GETMEMBER_THIS' */
+    /* 0xd7 */ "getmember this, ref ", /* `ASM_GETMEMBER_THIS_R' */
+    /* 0xd8 */ "delmember this, pop, " PREFIX_INTEGERAL, /* `ASM_DELMEMBER_THIS' */
+    /* 0xd9 */ "delmember this, ref ", /* `ASM_DELMEMBER_THIS_R' */
+    /* 0xda */ "setmember this, pop, " PREFIX_INTEGERAL, /* `ASM_SETMEMBER_THIS' */
+    /* 0xdb */ "setmember this, ref ", /* `ASM_SETMEMBER_THIS_R' */
     /* 0xdc */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xdd */ "call extern ", /* `ASM_CALL_EXTERN' */
     /* 0xde */ "call global ", /* `ASM_CALL_GLOBAL' */
@@ -1679,10 +1679,10 @@ do_optimize_popmov_16bit:
   case ASM_RANGE_DEF:
   case ASM_RANGE_STEP:
   case ASM_RANGE_STEP_DEF:
-  case ASM_GETMEMBER:
-  case ASM16_GETMEMBER:
-  case ASM_GETMEMBER_R:
-  case ASM16_GETMEMBER_R:
+  case ASM_GETMEMBER_THIS:
+  case ASM16_GETMEMBER_THIS:
+  case ASM_GETMEMBER_THIS_R:
+  case ASM16_GETMEMBER_THIS_R:
    /* Optimize the following: 
     *   >> dup
     *   >> *    // Any sequence of code that doesn't make use of absolute

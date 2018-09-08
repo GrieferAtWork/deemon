@@ -3834,7 +3834,7 @@ DEFINE_OPERATOR(DREF DeeObject *,GetAttr,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct class_attribute *member;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
    if ((member = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
@@ -3893,7 +3893,7 @@ DEFINE_OPERATOR(int,DelAttr,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct class_attribute *member;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
    if ((member = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
@@ -3958,7 +3958,7 @@ DEFINE_OPERATOR(int,SetAttr,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *member;
+   struct class_attribute *member;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
    if ((member = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {

@@ -1917,6 +1917,7 @@ check_getattr_sym:
       if (asm_putddi(ast)) goto err;
       if (asm_ggetattr_this_const((uint16_t)attrid)) goto err;
       goto pop_unused;
+
      {
       struct module_symbol *modsym; int32_t module_id;
      case SYMBOL_TYPE_MODULE: /* module.attr --> push extern ... */

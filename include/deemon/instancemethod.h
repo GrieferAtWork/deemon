@@ -38,7 +38,7 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
  * This is a simple wrapper object that simply invokes a thiscall on
  * `im_func', using `this_arg' as the this-argument when called normally.
  * In user-code, it is used to implement the temporary/split type when
- * an instance attribute with the `CLASS_MEMBER_FMETHOD' flag is loaded
+ * an instance attribute with the `CLASS_ATTRIBUTE_FMETHOD' flag is loaded
  * as an object, rather than being called directly. */
 DFUNDEF DREF DeeObject *DCALL
 DeeInstanceMethod_New(DeeObject *__restrict func,

@@ -69,9 +69,9 @@ PRIVATE struct tag_flag tag_flags[] = {
     { "final",       COMPILER_OFFSETOF(struct ast_tags,at_class_flags),  TP_FFINAL },
     { "truncate",    COMPILER_OFFSETOF(struct ast_tags,at_class_flags),  TP_FTRUNCATE },
     { "interrupt",   COMPILER_OFFSETOF(struct ast_tags,at_class_flags),  TP_FINTERRUPT },
-    { "private",     COMPILER_OFFSETOF(struct ast_tags,at_member_flags), CLASS_MEMBER_FPRIVATE },
-    { "readonly",    COMPILER_OFFSETOF(struct ast_tags,at_member_flags), CLASS_MEMBER_FREADONLY },
-    { "method",      COMPILER_OFFSETOF(struct ast_tags,at_member_flags), CLASS_MEMBER_FMETHOD },
+    { "private",     COMPILER_OFFSETOF(struct ast_tags,at_member_flags), CLASS_ATTRIBUTE_FPRIVATE },
+    { "readonly",    COMPILER_OFFSETOF(struct ast_tags,at_member_flags), CLASS_ATTRIBUTE_FREADONLY },
+    { "method",      COMPILER_OFFSETOF(struct ast_tags,at_member_flags), CLASS_ATTRIBUTE_FMETHOD },
     { "likely",      COMPILER_OFFSETOF(struct ast_tags,at_expect),       AST_FCOND_LIKELY },
     { "unlikely",    COMPILER_OFFSETOF(struct ast_tags,at_expect),       AST_FCOND_UNLIKELY }
 };

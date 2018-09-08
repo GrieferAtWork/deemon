@@ -26,7 +26,7 @@ DECL_BEGIN
 
 struct module_object;
 struct code_object;
-struct member_entry;
+struct class_attribute;
 
 #define CATCH_ATTRIBUTE_ERROR() \
  (DeeError_Catch(&DeeError_AttributeError) || \
@@ -81,7 +81,7 @@ INTDEF ATTR_COLD int DCALL err_empty_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD int DCALL err_changed_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD int DCALL err_item_not_found(DeeObject *__restrict seq, DeeObject *__restrict item);
 INTDEF ATTR_COLD int DCALL err_index_not_found(DeeObject *__restrict seq, DeeObject *__restrict item);
-INTDEF ATTR_COLD int DCALL err_protected_member(DeeTypeObject *__restrict class_type, struct member_entry *__restrict member);
+INTDEF ATTR_COLD int DCALL err_protected_member(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict member);
 INTDEF ATTR_COLD int DCALL err_no_super_class(DeeTypeObject *__restrict type);
 INTDEF ATTR_COLD int DCALL err_immutable_sequence(DeeObject *__restrict self);
 INTDEF ATTR_COLD int DCALL err_fixedlength_sequence(DeeObject *__restrict self);

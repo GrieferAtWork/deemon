@@ -8091,8 +8091,11 @@ prefix_target_class_gc = prefix_invop
 .ifndef prefix_target_class_ec
 prefix_target_class_ec = prefix_invop
 .endif
-.ifndef prefix_target_defmember
-prefix_target_defmember = prefix_invop
+.ifndef prefix_target_defcmember
+prefix_target_defcmember = prefix_invop
+.endif
+.ifndef prefix_target_getcmember_r
+prefix_target_getcmember_r = prefix_invop
 .endif
 .ifndef prefix_target_function_c
 prefix_target_function_c = prefix_invop
@@ -8397,17 +8400,17 @@ prefix_target_callattr_c_seq = prefix_invop
 .ifndef prefix_target_callattr_c_map
 prefix_target_callattr_c_map = prefix_invop
 .endif
-.ifndef prefix_target_getmember_r
-prefix_target_getmember_r = prefix_invop
+.ifndef prefix_target_getmember_this_r
+prefix_target_getmember_this_r = prefix_invop
 .endif
-.ifndef prefix_target_delmember_r
-prefix_target_delmember_r = prefix_invop
+.ifndef prefix_target_delmember_this_r
+prefix_target_delmember_this_r = prefix_invop
 .endif
-.ifndef prefix_target_setmember_r
-prefix_target_setmember_r = prefix_invop
+.ifndef prefix_target_setmember_this_r
+prefix_target_setmember_this_r = prefix_invop
 .endif
-.ifndef prefix_target_boundmember_r
-prefix_target_boundmember_r = prefix_invop
+.ifndef prefix_target_boundmember_this_r
+prefix_target_boundmember_this_r = prefix_invop
 .endif
 .ifndef prefix_target_call_extern
 prefix_target_call_extern = prefix_invop
@@ -8628,6 +8631,9 @@ prefix_target16_pack_hashset = prefix_invop
 .ifndef prefix_target16_pack_dict
 prefix_target16_pack_dict = prefix_invop
 .endif
+.ifndef prefix_target16_getcmember
+prefix_target16_getcmember = prefix_invop
+.endif
 .ifndef prefix_target_class
 prefix_target_class = prefix_invop
 .endif
@@ -8640,8 +8646,11 @@ prefix_target16_class_gc = prefix_invop
 .ifndef prefix_target16_class_ec
 prefix_target16_class_ec = prefix_invop
 .endif
-.ifndef prefix_target16_defmember
-prefix_target16_defmember = prefix_invop
+.ifndef prefix_target16_defcmember
+prefix_target16_defcmember = prefix_invop
+.endif
+.ifndef prefix_target16_getcmember_r
+prefix_target16_getcmember_r = prefix_invop
 .endif
 .ifndef prefix_target16_function_c
 prefix_target16_function_c = prefix_invop
@@ -8754,6 +8763,30 @@ prefix_target_boundmember = prefix_invop
 .ifndef prefix_target16_boundmember
 prefix_target16_boundmember = prefix_invop
 .endif
+.ifndef prefix_target_getmember_this
+prefix_target_getmember_this = prefix_invop
+.endif
+.ifndef prefix_target16_getmember_this
+prefix_target16_getmember_this = prefix_invop
+.endif
+.ifndef prefix_target_delmember_this
+prefix_target_delmember_this = prefix_invop
+.endif
+.ifndef prefix_target16_delmember_this
+prefix_target16_delmember_this = prefix_invop
+.endif
+.ifndef prefix_target_setmember_this
+prefix_target_setmember_this = prefix_invop
+.endif
+.ifndef prefix_target16_setmember_this
+prefix_target16_setmember_this = prefix_invop
+.endif
+.ifndef prefix_target_boundmember_this
+prefix_target_boundmember_this = prefix_invop
+.endif
+.ifndef prefix_target16_boundmember_this
+prefix_target16_boundmember_this = prefix_invop
+.endif
 .ifndef prefix_target16_callattr_c_kw
 prefix_target16_callattr_c_kw = prefix_invop
 .endif
@@ -8784,17 +8817,17 @@ prefix_target16_callattr_c_seq = prefix_invop
 .ifndef prefix_target16_callattr_c_map
 prefix_target16_callattr_c_map = prefix_invop
 .endif
-.ifndef prefix_target16_getmember_r
-prefix_target16_getmember_r = prefix_invop
+.ifndef prefix_target16_getmember_this_r
+prefix_target16_getmember_this_r = prefix_invop
 .endif
-.ifndef prefix_target16_delmember_r
-prefix_target16_delmember_r = prefix_invop
+.ifndef prefix_target16_delmember_this_r
+prefix_target16_delmember_this_r = prefix_invop
 .endif
-.ifndef prefix_target16_setmember_r
-prefix_target16_setmember_r = prefix_invop
+.ifndef prefix_target16_setmember_this_r
+prefix_target16_setmember_this_r = prefix_invop
 .endif
-.ifndef prefix_target16_boundmember_r
-prefix_target16_boundmember_r = prefix_invop
+.ifndef prefix_target16_boundmember_this_r
+prefix_target16_boundmember_this_r = prefix_invop
 .endif
 .ifndef prefix_target16_call_extern
 prefix_target16_call_extern = prefix_invop
@@ -8926,8 +8959,8 @@ inst_table:
 	.long target_class_c                 /* `class top, const <imm8>' */
 	.long target_class_gc                /* `push class global <imm8>, const <imm8>' */
 	.long target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */
-	.long target_defmember               /* `defmember top, $<imm8>, pop' */
-	.long invop
+	.long target_defcmember              /* `defcmember top, $<imm8>, pop' */
+	.long target_getcmember_r            /* `push getcmember ref <imm8>, $<imm8>' */
 	.long invop
 	.long invop
 	.long invop
@@ -9038,10 +9071,10 @@ inst_table:
 	.long target_callattr_c_seq          /* `callattr top, const <imm8>, [#<imm8>]' */
 	.long target_callattr_c_map          /* `callattr top, const <imm8>, {#<imm8>*2}' */
 	.long invop
-	.long target_getmember_r             /* `push getmember this, ref <imm8>, $<imm8>' */
-	.long target_delmember_r             /* `delmember this, ref <imm8>, $<imm8>' */
-	.long target_setmember_r             /* `setmember this, ref <imm8>, $<imm8>, pop' */
-	.long target_boundmember_r           /* `push boundmember this, ref <imm8>, $<imm8>' */
+	.long target_getmember_this_r        /* `push getmember this, ref <imm8>, $<imm8>' */
+	.long target_delmember_this_r        /* `delmember this, ref <imm8>, $<imm8>' */
+	.long target_setmember_this_r        /* `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long target_boundmember_this_r      /* `push boundmember this, ref <imm8>, $<imm8>' */
 	.long target_call_extern             /* `push call extern <imm8>:<imm8>, #<imm8>' */
 	.long target_call_global             /* `push call global <imm8>, #<imm8>' */
 	.long target_call_local              /* `push call local <imm8>, #<imm8>' */
@@ -9179,13 +9212,13 @@ inst_table_f0:
 	.long target_cmp_do                  /* `cmp do, top, pop' */
 	.long target16_pack_hashset          /* `push pack hashset, #<imm16>' */
 	.long target16_pack_dict             /* `push pack dict, #<imm16>*2' */
-	.long invop
+	.long target16_getcmember            /* `getcmember top, $<imm16>' */
 	.long target_class                   /* `class top, pop' */
 	.long target16_class_c               /* `class top, const <imm16>' */
 	.long target16_class_gc              /* `push class global <imm16>, const <imm16>' */
 	.long target16_class_ec              /* `push class extern <imm16>:<imm16>, const <imm16>' */
-	.long target16_defmember             /* `defmember top, $<imm16>, pop' */
-	.long invop
+	.long target16_defcmember            /* `defcmember top, $<imm16>, pop' */
+	.long target16_getcmember_r          /* `push getcmember ref <imm16>, $<imm8>' */
 	.long invop
 	.long invop
 	.long invop
@@ -9269,22 +9302,22 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long invop
-	.long invop
-	.long invop
-	.long invop
-	.long invop
-	.long invop
-	.long invop
-	.long invop
-	.long invop
-	.long target_getmember               /* `push getmember this, pop, $<imm8>' */
-	.long target16_getmember             /* `push getmember this, pop, $<imm16>' */
-	.long target_delmember               /* `delmember this, pop, $<imm8>' */
-	.long target16_delmember             /* `delmember this, pop, $<imm16>' */
-	.long target_setmember               /* `setmember this, pop, $<imm8>, pop' */
-	.long target16_setmember             /* `setmember this, pop, $<imm16>, pop' */
-	.long target_boundmember             /* `push boundmember this, pop, $<imm8>' */
-	.long target16_boundmember           /* `push boundmember this, pop, $<imm16>' */
+	.long target_getmember               /* `getmember top, pop, $<imm8>' */
+	.long target16_getmember             /* `getmember top, pop, $<imm16>' */
+	.long target_delmember               /* `delmember pop, pop, $<imm8>' */
+	.long target16_delmember             /* `delmember pop, pop, $<imm16>' */
+	.long target_setmember               /* `setmember pop, pop, $<imm8>, pop' */
+	.long target16_setmember             /* `setmember pop, pop, $<imm16>, pop' */
+	.long target_boundmember             /* `boundmember top, pop, $<imm8>' */
+	.long target16_boundmember           /* `boundmember top, pop, $<imm16>' */
+	.long target_getmember_this          /* `push getmember this, pop, $<imm8>' */
+	.long target16_getmember_this        /* `push getmember this, pop, $<imm16>' */
+	.long target_delmember_this          /* `delmember this, pop, $<imm8>' */
+	.long target16_delmember_this        /* `delmember this, pop, $<imm16>' */
+	.long target_setmember_this          /* `setmember this, pop, $<imm8>, pop' */
+	.long target16_setmember_this        /* `setmember this, pop, $<imm16>, pop' */
+	.long target_boundmember_this        /* `push boundmember this, pop, $<imm8>' */
+	.long target16_boundmember_this      /* `push boundmember this, pop, $<imm16>' */
 	.long target16_callattr_c_kw         /* `callattr top, const <imm16>, #<imm8>, const <imm16>' */
 	.long target16_callattr_tuple_c_kw   /* `callattr top, const <imm16>, pop..., const <imm16>' */
 	.long target_callattr_kwds           /* `callattr top, pop, #<imm8>, pop' */
@@ -9296,10 +9329,10 @@ inst_table_f0:
 	.long target16_callattr_c_seq        /* `callattr top, const <imm16>, [#<imm8>]' */
 	.long target16_callattr_c_map        /* `callattr top, const <imm16>, {#<imm8>*2}' */
 	.long invop
-	.long target16_getmember_r           /* `push getmember this, ref <imm16>, $<imm16>' */
-	.long target16_delmember_r           /* `delmember this, ref <imm16>, $<imm16>' */
-	.long target16_setmember_r           /* `setmember this, ref <imm16>, $<imm16>, pop' */
-	.long target16_boundmember_r         /* `push boundmember this, ref <imm16>, $<imm16>' */
+	.long target16_getmember_this_r      /* `push getmember this, ref <imm16>, $<imm16>' */
+	.long target16_delmember_this_r      /* `delmember this, ref <imm16>, $<imm16>' */
+	.long target16_setmember_this_r      /* `setmember this, ref <imm16>, $<imm16>, pop' */
+	.long target16_boundmember_this_r    /* `push boundmember this, ref <imm16>, $<imm16>' */
 	.long target16_call_extern           /* `push call extern <imm16>:<imm16>, #<imm8>' */
 	.long target16_call_global           /* `push call global <imm16>, #<imm8>' */
 	.long target16_call_local            /* `push call local <imm16>, #<imm8>' */
@@ -9442,8 +9475,8 @@ prefix_inst_table:
 	.long prefix_target_class_c                 /* `class top, const <imm8>' */
 	.long prefix_target_class_gc                /* `push class global <imm8>, const <imm8>' */
 	.long prefix_target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */
-	.long prefix_target_defmember               /* `defmember top, $<imm8>, pop' */
-	.long prefix_invop
+	.long prefix_target_defcmember              /* `defcmember top, $<imm8>, pop' */
+	.long prefix_target_getcmember_r            /* `push getcmember ref <imm8>, $<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -9554,10 +9587,10 @@ prefix_inst_table:
 	.long prefix_target_callattr_c_seq          /* `callattr top, const <imm8>, [#<imm8>]' */
 	.long prefix_target_callattr_c_map          /* `callattr top, const <imm8>, {#<imm8>*2}' */
 	.long prefix_invop
-	.long prefix_target_getmember_r             /* `push getmember this, ref <imm8>, $<imm8>' */
-	.long prefix_target_delmember_r             /* `delmember this, ref <imm8>, $<imm8>' */
-	.long prefix_target_setmember_r             /* `setmember this, ref <imm8>, $<imm8>, pop' */
-	.long prefix_target_boundmember_r           /* `push boundmember this, ref <imm8>, $<imm8>' */
+	.long prefix_target_getmember_this_r        /* `push getmember this, ref <imm8>, $<imm8>' */
+	.long prefix_target_delmember_this_r        /* `delmember this, ref <imm8>, $<imm8>' */
+	.long prefix_target_setmember_this_r        /* `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long prefix_target_boundmember_this_r      /* `push boundmember this, ref <imm8>, $<imm8>' */
 	.long prefix_target_call_extern             /* `push call extern <imm8>:<imm8>, #<imm8>' */
 	.long prefix_target_call_global             /* `push call global <imm8>, #<imm8>' */
 	.long prefix_target_call_local              /* `push call local <imm8>, #<imm8>' */
@@ -9695,13 +9728,13 @@ prefix_inst_table_f0:
 	.long prefix_target_cmp_do                  /* `cmp do, top, pop' */
 	.long prefix_target16_pack_hashset          /* `push pack hashset, #<imm16>' */
 	.long prefix_target16_pack_dict             /* `push pack dict, #<imm16>*2' */
-	.long prefix_invop
+	.long prefix_target16_getcmember            /* `getcmember top, $<imm16>' */
 	.long prefix_target_class                   /* `class top, pop' */
 	.long prefix_target16_class_c               /* `class top, const <imm16>' */
 	.long prefix_target16_class_gc              /* `push class global <imm16>, const <imm16>' */
 	.long prefix_target16_class_ec              /* `push class extern <imm16>:<imm16>, const <imm16>' */
-	.long prefix_target16_defmember             /* `defmember top, $<imm16>, pop' */
-	.long prefix_invop
+	.long prefix_target16_defcmember            /* `defcmember top, $<imm16>, pop' */
+	.long prefix_target16_getcmember_r          /* `push getcmember ref <imm16>, $<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -9785,22 +9818,22 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_target_getmember               /* `push getmember this, pop, $<imm8>' */
-	.long prefix_target16_getmember             /* `push getmember this, pop, $<imm16>' */
-	.long prefix_target_delmember               /* `delmember this, pop, $<imm8>' */
-	.long prefix_target16_delmember             /* `delmember this, pop, $<imm16>' */
-	.long prefix_target_setmember               /* `setmember this, pop, $<imm8>, pop' */
-	.long prefix_target16_setmember             /* `setmember this, pop, $<imm16>, pop' */
-	.long prefix_target_boundmember             /* `push boundmember this, pop, $<imm8>' */
-	.long prefix_target16_boundmember           /* `push boundmember this, pop, $<imm16>' */
+	.long prefix_target_getmember               /* `getmember top, pop, $<imm8>' */
+	.long prefix_target16_getmember             /* `getmember top, pop, $<imm16>' */
+	.long prefix_target_delmember               /* `delmember pop, pop, $<imm8>' */
+	.long prefix_target16_delmember             /* `delmember pop, pop, $<imm16>' */
+	.long prefix_target_setmember               /* `setmember pop, pop, $<imm8>, pop' */
+	.long prefix_target16_setmember             /* `setmember pop, pop, $<imm16>, pop' */
+	.long prefix_target_boundmember             /* `boundmember top, pop, $<imm8>' */
+	.long prefix_target16_boundmember           /* `boundmember top, pop, $<imm16>' */
+	.long prefix_target_getmember_this          /* `push getmember this, pop, $<imm8>' */
+	.long prefix_target16_getmember_this        /* `push getmember this, pop, $<imm16>' */
+	.long prefix_target_delmember_this          /* `delmember this, pop, $<imm8>' */
+	.long prefix_target16_delmember_this        /* `delmember this, pop, $<imm16>' */
+	.long prefix_target_setmember_this          /* `setmember this, pop, $<imm8>, pop' */
+	.long prefix_target16_setmember_this        /* `setmember this, pop, $<imm16>, pop' */
+	.long prefix_target_boundmember_this        /* `push boundmember this, pop, $<imm8>' */
+	.long prefix_target16_boundmember_this      /* `push boundmember this, pop, $<imm16>' */
 	.long prefix_target16_callattr_c_kw         /* `callattr top, const <imm16>, #<imm8>, const <imm16>' */
 	.long prefix_target16_callattr_tuple_c_kw   /* `callattr top, const <imm16>, pop..., const <imm16>' */
 	.long prefix_target_callattr_kwds           /* `callattr top, pop, #<imm8>, pop' */
@@ -9812,10 +9845,10 @@ prefix_inst_table_f0:
 	.long prefix_target16_callattr_c_seq        /* `callattr top, const <imm16>, [#<imm8>]' */
 	.long prefix_target16_callattr_c_map        /* `callattr top, const <imm16>, {#<imm8>*2}' */
 	.long prefix_invop
-	.long prefix_target16_getmember_r           /* `push getmember this, ref <imm16>, $<imm16>' */
-	.long prefix_target16_delmember_r           /* `delmember this, ref <imm16>, $<imm16>' */
-	.long prefix_target16_setmember_r           /* `setmember this, ref <imm16>, $<imm16>, pop' */
-	.long prefix_target16_boundmember_r         /* `push boundmember this, ref <imm16>, $<imm16>' */
+	.long prefix_target16_getmember_this_r      /* `push getmember this, ref <imm16>, $<imm16>' */
+	.long prefix_target16_delmember_this_r      /* `delmember this, ref <imm16>, $<imm16>' */
+	.long prefix_target16_setmember_this_r      /* `setmember this, ref <imm16>, $<imm16>, pop' */
+	.long prefix_target16_boundmember_this_r    /* `push boundmember this, ref <imm16>, $<imm16>' */
 	.long prefix_target16_call_extern           /* `push call extern <imm16>:<imm16>, #<imm8>' */
 	.long prefix_target16_call_global           /* `push call global <imm16>, #<imm8>' */
 	.long prefix_target16_call_local            /* `push call local <imm16>, #<imm8>' */

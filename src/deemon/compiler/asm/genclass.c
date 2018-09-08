@@ -100,7 +100,7 @@ INTERN int
   if (ast_genasm(member->cm_ast,ASM_G_FPUSHRES))
       goto err;
   if (asm_putddi(class_ast)) goto err;
-  if (asm_gdefmember(member->cm_index)) goto err;
+  if (asm_gdefcmember(member->cm_index)) goto err;
  }
  /* And that's already it! - The new class is complete. */
  if (!(gflags & ASM_G_FPUSHRES) && asm_gpop())

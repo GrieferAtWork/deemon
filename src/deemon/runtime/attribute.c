@@ -504,7 +504,7 @@ DeeType_GetAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -569,7 +569,7 @@ DeeType_BoundAttrString(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -636,7 +636,7 @@ DeeType_DocAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL ||
        (attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
@@ -701,7 +701,7 @@ DeeType_CallAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -778,7 +778,7 @@ DeeType_CallAttrStringKw(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -900,7 +900,7 @@ INTERN int (DCALL DeeType_DelAttrString)(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int error;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -965,7 +965,7 @@ INTERN int (DCALL DeeType_SetAttrString)(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int error;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -1210,7 +1210,7 @@ DeeType_GetInstanceAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -1245,7 +1245,7 @@ DeeType_DocInstanceAttrString(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (attr->ca_doc)
@@ -1283,7 +1283,7 @@ DeeType_CallInstanceAttrStringKw(DeeTypeObject *__restrict self,
  DREF DeeObject *result;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -1344,7 +1344,7 @@ INTERN int (DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int error;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -1378,7 +1378,7 @@ INTERN int (DCALL DeeType_SetInstanceAttrString)(DeeTypeObject *__restrict self,
  DeeTypeObject *iter = self; int error;
  do {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -1441,7 +1441,7 @@ PUBLIC int
  iter = iter;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL)
@@ -1510,7 +1510,7 @@ PUBLIC int
  iter = iter;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL)
@@ -1587,7 +1587,7 @@ PUBLIC int
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
@@ -1673,7 +1673,7 @@ PUBLIC int
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc;
    desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
@@ -1789,7 +1789,7 @@ DeeObject_DocAttr(DeeObject *__restrict self,
  for (;;) {
 continue_search:
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
     if (attr->ca_doc)
@@ -1861,7 +1861,7 @@ DeeObject_CallAttr(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
     /* Check if we're allowed to access this attr. */
@@ -1933,7 +1933,7 @@ DeeObject_CallAttrKw(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
     /* Check if we're allowed to access this attr. */
@@ -2005,7 +2005,7 @@ DeeObject_CallAttrTuple(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
     /* Check if we're allowed to access this attr. */
@@ -2077,7 +2077,7 @@ DeeObject_CallAttrTupleKw(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
     /* Check if we're allowed to access this attr. */
@@ -2147,7 +2147,7 @@ DeeObject_GetAttrStringHash(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
     /* Check if we're allowed to access this attr. */
@@ -2218,7 +2218,7 @@ PUBLIC int (DCALL DeeObject_DelAttrStringHash)(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
     /* Check if we're allowed to access this attr. */
@@ -2293,7 +2293,7 @@ PUBLIC int (DCALL DeeObject_SetAttrStringHash)(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
     /* Check if we're allowed to access this attr. */
@@ -2367,7 +2367,7 @@ DeeObject_CallAttrStringHash(DeeObject *__restrict self,
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct member_entry *attr;
+   struct class_attribute *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,attr_name,hash)) != NULL) {
     /* Check if we're allowed to access this attr. */

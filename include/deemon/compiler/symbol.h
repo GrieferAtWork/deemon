@@ -90,19 +90,18 @@ struct symbol {
 #define SYMBOL_TYPE_MODULE 0x0003  /* An import module. */
 #define SYMBOL_TYPE_MYMOD  0x0004  /* The current module. */
 #define SYMBOL_TYPE_GETSET 0x0005  /* A get/set property symbol. */
-#define SYMBOL_TYPE_IFIELD 0x0006  /* An instance member symbol. */
-#define SYMBOL_TYPE_CFIELD 0x0007  /* An class member symbol. */
-#define SYMBOL_TYPE_ALIAS  0x0008  /* An alias for a different symbol. */
-#define SYMBOL_TYPE_ARG    0x0009  /* An argument passed to a function. */
-#define SYMBOL_TYPE_LOCAL  0x000a  /* A local symbol. */
-#define SYMBOL_TYPE_STACK  0x000b  /* A stack symbol. */
-#define SYMBOL_TYPE_STATIC 0x000c  /* A static symbol. */
-#define SYMBOL_TYPE_EXCEPT 0x000d  /* The current exception. */
-#define SYMBOL_TYPE_MYFUNC 0x000e  /* The current function. */
-#define SYMBOL_TYPE_THIS   0x000f  /* The this-argument of a function. */
-#define SYMBOL_TYPE_AMBIG  0x0010  /* An ambiguous symbol (caused by `import *' when an overlap occurrs). */
-#define SYMBOL_TYPE_FWD    0x0011  /* A forward-defined symbol. */
-#define SYMBOL_TYPE_CONST  0x0012  /* A symbol that evaluates to a constant expression. */
+#define SYMBOL_TYPE_CATTR  0x0006  /* Class attribute. */
+#define SYMBOL_TYPE_ALIAS  0x0007  /* An alias for a different symbol. */
+#define SYMBOL_TYPE_ARG    0x0008  /* An argument passed to a function. */
+#define SYMBOL_TYPE_LOCAL  0x0009  /* A local symbol. */
+#define SYMBOL_TYPE_STACK  0x000a  /* A stack symbol. */
+#define SYMBOL_TYPE_STATIC 0x000b  /* A static symbol. */
+#define SYMBOL_TYPE_EXCEPT 0x000c  /* The current exception. */
+#define SYMBOL_TYPE_MYFUNC 0x000d  /* The current function. */
+#define SYMBOL_TYPE_THIS   0x000e  /* The this-argument of a function. */
+#define SYMBOL_TYPE_AMBIG  0x000f  /* An ambiguous symbol (caused by `import *' when an overlap occurrs). */
+#define SYMBOL_TYPE_FWD    0x0010  /* A forward-defined symbol. */
+#define SYMBOL_TYPE_CONST  0x0011  /* A symbol that evaluates to a constant expression. */
 #define SYMBOL_TYPE_MAYREF(x) ((x) >= SYMBOL_TYPE_ARG)
     uint16_t             s_type;   /* Symbol class. (One of `SYMBOL_TYPE_*')
                                     * This describes how is the variable addressed, and where does it live. */
@@ -141,9 +140,10 @@ struct symbol {
             DREF struct string_object *g_doc;    /* [0..1] An optional documentation string of this global symbol. */
         }                s_global; /* [SYMBOL_TYPE_GLOBAL] */
         struct {
-            struct symbol             *f_class;  /* [1..1][REF(SYMBOL_NREAD(.))] The class that is defining the symbol. */
-            struct class_attribute    *f_attr;   /* [1..1] The member that is being described. */
-        }                s_field;  /* [SYMBOL_TYPE_CFIELD | SYMBOL_TYPE_IFIELD] */
+            struct class_attribute    *a_attr;   /* [1..1] The attribute that is being described. */
+            struct symbol             *a_class;  /* [1..1][REF(SYMBOL_NREAD(.))] The class that is defining the symbol. */
+            struct symbol             *a_this;   /* [0..1][REF(SYMBOL_NREAD(.))] The instance to which the attribute is bound (NULL when this is a class attribute). */
+        }                s_attr;   /* [SYMBOL_TYPE_CATTR] Class / instance attribute */
         struct {
             struct symbol             *gs_get;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as getter. */
             struct symbol             *gs_del;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as delete. */
@@ -239,26 +239,35 @@ FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_
        (symbol_fini(x),(x)->s_flag &= ~SYMBOL_FWEAK)
 
 /* Check if a given symbol `x' must be addressed as a reference */
-#define SYMBOL_MUST_REFERENCE(x)   (SYMBOL_TYPE_MAYREF((x)->s_type) && (x)->s_scope->s_base != current_basescope)
+#define SYMBOL_MUST_REFERENCE(x) \
+   (SYMBOL_TYPE_MAYREF((x)->s_type) && \
+   ((x)->s_type == SYMBOL_TYPE_THIS ? \
+    (x) != current_basescope->bs_this : \
+    (x)->s_scope->s_base != current_basescope))
 
 /* Same as `SYMBOL_MUST_REFERENCE()', but the caller already knows
  * that the symbol's type may be referenced (`SYMBOL_TYPE_MAYREF(x->s_type) == true') */
-#define SYMBOL_MUST_REFERENCE_TYPEMAY(x) (ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type)),(x)->s_scope->s_base != current_basescope)
+#define SYMBOL_MUST_REFERENCE_TYPEMAY(x) \
+   (ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type)), \
+   (x)->s_type == SYMBOL_TYPE_THIS ? \
+   (x) != current_basescope->bs_this : \
+   (x)->s_scope->s_base != current_basescope)
 
 /* Check if a given symbol `x' can be addressed as a reference */
-#define SYMBOL_MAY_REFERENCE(x)    ((x)->s_scope->s_base != current_basescope)
+#define SYMBOL_MAY_REFERENCE(x) \
+   ((x)->s_type == SYMBOL_TYPE_THIS ? \
+    (x) != current_basescope->bs_this : \
+    (x)->s_scope->s_base != current_basescope)
 
 #define SYMBOL_ALIAS(x)            ((x)->s_alias)           /* XXX: Remove me? */
 #define SYMBOL_SCOPE(x)            ((x)->s_scope)           /* XXX: Remove me? */
 #define SYMBOL_TYPE(x)             ((x)->s_type)            /* XXX: Remove me? */
-#define SYMBOL_FIELD_CLASS(x)      ((x)->s_field.f_class)   /* XXX: Remove me? */
-#define SYMBOL_FIELD_ATTR(x)       ((x)->s_field.f_attr)    /* XXX: Remove me? */
+#define SYMBOL_FIELD_CLASS(x)      ((x)->s_attr.a_class)    /* XXX: Remove me? */
+#define SYMBOL_FIELD_ATTR(x)       ((x)->s_attr.a_attr)     /* XXX: Remove me? */
 #define SYMBOL_EXTERN_MODULE(x)    ((x)->s_extern.e_module) /* XXX: Remove me? */
 #define SYMBOL_EXTERN_SYMBOL(x)    ((x)->s_extern.e_symbol) /* XXX: Remove me? */
 #define SYMBOL_MODULE_MODULE(x)    ((x)->s_module)          /* XXX: Remove me? */
 #define SYMBOL_STACK_OFFSET(x)     ((x)->s_symid)           /* XXX: Remove me? */
-
-
 
 /* Finalize the given symbol. */
 INTDEF void DCALL symbol_fini(struct symbol *__restrict self);
@@ -321,9 +330,10 @@ struct base_scope_object {
     struct text_label  *bs_swcase;     /* [0..1][CHAIN(->tl_next)][owned] Chain of switch labels.
                                         * NOTE: This chain links cases in the reverse order of their appearance. */
     struct text_label  *bs_swdefl;     /* [0..1][owned] Default label in a switch statement. */
-    struct symbol      *bs_super;      /* [0..1] A symbol describing the super-identifier in thiscall functions. */
     struct symbol      *bs_class;      /* [0..1] Same as `bs_super', but instead used to refer to a class's own
                                         *        type, which is required for accessing instance members by index. */
+    struct symbol      *bs_super;      /* [0..1] A symbol describing the super-identifier in thiscall functions. */
+    struct symbol      *bs_this;       /* [0..1] The this-symbol describing the instance associated with `bs_class'. */
     DeeCodeObject      *bs_restore;    /* [0..1] Pointer to the generated code object (once that code object has been generated)
                                         * In the event that assembler must be reset due to a linker truncation,
                                         * this code object will be used to restore inherited (stolen) data. */

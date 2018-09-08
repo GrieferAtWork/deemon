@@ -865,7 +865,9 @@ ast_uses_symbol(struct ast *__restrict self,
  case AST_SYM:
  case AST_UNBIND:
  case AST_BOUND:
+  /* TODO: Add a function `SYMBOL_USES_SYMBOL()' */
   return self->a_sym == sym;
+
  {
   DREF struct ast **iter,**end;
  case AST_MULTIPLE:
@@ -914,11 +916,12 @@ ast_uses_symbol(struct ast *__restrict self,
   if (self->a_class.c_classsym == sym ||
       self->a_class.c_supersym == sym)
       goto yup;
-  if ((SYMBOL_TYPE(sym) == SYMBOL_TYPE_IFIELD ||
-       SYMBOL_TYPE(sym) == SYMBOL_TYPE_CFIELD) &&
-      (SYMBOL_FIELD_CLASS(sym) == self->a_class.c_classsym ||
-       SYMBOL_FIELD_CLASS(sym) == self->a_class.c_supersym))
-       goto yup;
+  if (sym->s_type == SYMBOL_TYPE_CATTR &&
+     (SYMBOL_FIELD_CLASS(sym) == self->a_class.c_classsym ||
+      SYMBOL_FIELD_CLASS(sym) == self->a_class.c_supersym ||
+      sym->s_attr.a_this == self->a_class.c_classsym ||
+      sym->s_attr.a_this == self->a_class.c_supersym))
+      goto yup;
   for (i = 0; i < self->a_class.c_memberc; ++i) {
    if (ast_uses_symbol(self->a_class.c_memberv[i].cm_ast,sym))
        goto yup;

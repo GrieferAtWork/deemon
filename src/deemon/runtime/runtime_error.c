@@ -552,13 +552,13 @@ err_index_not_found(DeeObject *__restrict seq, DeeObject *__restrict item) {
 }
 INTERN ATTR_COLD int DCALL
 err_protected_member(DeeTypeObject *__restrict class_type,
-                     struct member_entry *__restrict member) {
+                     struct class_attribute *__restrict member) {
  ASSERT_OBJECT_TYPE(class_type,&DeeType_Type);
  ASSERT(DeeType_IsClass(class_type));
  ASSERT(member);
  return DeeError_Throwf(&DeeError_AttributeError,
                         "Cannot access %s member `%k' of class `%k'",
-                       (member->ca_flag&CLASS_MEMBER_FPRIVATE) ? "private" : "public",
+                       (member->ca_flag&CLASS_ATTRIBUTE_FPRIVATE) ? "private" : "public",
                         member->ca_name,class_type);
 }
 INTERN ATTR_COLD int DCALL

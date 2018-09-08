@@ -167,15 +167,6 @@
 
 
 /* DEPRECATED NAMES */
-#define member_entry              class_attribute
-#define CLASS_MEMBER_FPUBLIC      CLASS_ATTRIBUTE_FNORMAL
-#define CLASS_MEMBER_FPRIVATE     CLASS_ATTRIBUTE_FPRIVATE
-#define CLASS_MEMBER_FVISIBILITY (CLASS_ATTRIBUTE_FNORMAL|CLASS_ATTRIBUTE_FPRIVATE)
-#define CLASS_MEMBER_FMASK        CLASS_ATTRIBUTE_FMASK
-#define CLASS_MEMBER_FCLASSMEM    CLASS_ATTRIBUTE_FCLASSMEM
-#define CLASS_MEMBER_FREADONLY    CLASS_ATTRIBUTE_FREADONLY
-#define CLASS_MEMBER_FPROPERTY    CLASS_ATTRIBUTE_FGETSET
-#define CLASS_MEMBER_FMETHOD      CLASS_ATTRIBUTE_FMETHOD
 #define member_mayaccess(class_type,member) class_attribute_mayaccess(member,class_type)
 #define member_get                DeeInstance_GetAttribute
 #define member_bound              DeeInstance_BoundAttribute
@@ -197,17 +188,24 @@ struct string_object;
 #define CLASS_GETSET_SET 2 /* Offset to the setter of a user-defined getset in a class. */
 
 #define CLASS_ATTRIBUTE_FNORMAL   0x0000 /* Normal class attribute flags. */
-#define CLASS_ATTRIBUTE_FPRIVATE  0x0001 /* This attribute is only accessible from this-call functions with an instance of the class as this-argument. */
-#define CLASS_ATTRIBUTE_FREADONLY 0x0002 /* The attribute can only ever be when not already bound (and it cannot be unbound). */
-#define CLASS_ATTRIBUTE_FMETHOD   0x0004 /* When accessed as get in `foo.bar', return an `instancemethod(MEMBER_TABLE[ca_addr],foo)' (calling `foo.bar()' will similarly perform a this-call). */
-#define CLASS_ATTRIBUTE_FGETSET   0x0008 /* Access to the attribute is done via get/set, with the callbacks being `CLASS_GETSET_*' offsets from `ca_addr'.
+#define CLASS_ATTRIBUTE_FPUBLIC   0x0000 /* The attribute is publicly available. */
+#define CLASS_ATTRIBUTE_FPRIVATE  0x0001 /* The attribute is only accessible from this-call functions with an instance of the class as this-argument. */
+#define CLASS_ATTRIBUTE_FVISIBILITY (CLASS_ATTRIBUTE_FPRIVATE) /* Mask of flags affecting symbol visibility. */
+#define CLASS_ATTRIBUTE_FFINAL    0x0002 /* The attribute is accessed directly, and cannot be overwritten by sub-classes. */
+#define CLASS_ATTRIBUTE_FREADONLY 0x0004 /* The attribute can only ever be when not already bound (and it cannot be unbound). */
+/*      CLASS_ATTRIBUTE_F         0x0008  * ... */
+#define CLASS_ATTRIBUTE_FMETHOD   0x0010 /* When accessed as get in `foo.bar', return an `instancemethod(MEMBER_TABLE[ca_addr],foo)' (calling `foo.bar()' will similarly perform a this-call). */
+#define CLASS_ATTRIBUTE_FGETSET   0x0020 /* Access to the attribute is done via get/set, with the callbacks being `CLASS_GETSET_*' offsets from `ca_addr'.
                                           * When `CLASS_ATTRIBUTE_FMETHOD' is set, callbacks are invoked as this-calls.
                                           * When `CLASS_ATTRIBUTE_FREADONLY' is set, only `CLASS_GETSET_GET' is ever accessed,
                                           * and all other callbacks behave as though they were unbound. */
-#define CLASS_ATTRIBUTE_FCLASSMEM 0x0010 /* An instance-attribute is stored in class memory (usually set for instance member functions).
+/*      CLASS_ATTRIBUTE_F         0x0040  * ... */
+#define CLASS_ATTRIBUTE_FCLASSMEM 0x0080 /* An instance-attribute is stored in class memory (usually set for instance member functions).
                                           * NOTE: Ignored when used by attributes in `cd_cattr_list', where
                                           *       operation is always done like it would be when it was set. */
-#define CLASS_ATTRIBUTE_FMASK     0x001f /* Mask of known flag bits. */
+/*      CLASS_ATTRIBUTE_F         0x0100  * ... */
+/*      CLASS_ATTRIBUTE_F         0x8000  * ... */
+#define CLASS_ATTRIBUTE_FMASK     0x00b7 /* Mask of known flag bits. */
 
 struct class_attribute {
     DREF struct string_object *ca_name; /* [0..1][const] Name of this member.
@@ -476,6 +474,8 @@ INTDEF int DCALL DeeInstance_SetMemberSafe(DeeTypeObject *__restrict tp_self, De
 /* Class member access (by addr) */
 INTDEF void DCALL DeeClass_SetMember(DeeTypeObject *__restrict self, uint16_t addr, DeeObject *__restrict value);
 INTDEF int DCALL DeeClass_SetMemberSafe(DeeTypeObject *__restrict self, uint16_t addr, DeeObject *__restrict value);
+INTDEF DREF DeeObject *DCALL DeeClass_GetMember(DeeTypeObject *__restrict self, uint16_t addr);
+INTDEF DREF DeeObject *DCALL DeeClass_GetMemberSafe(DeeTypeObject *__restrict self, uint16_t addr);
 
 
 /* Enumerate user-defined class or instance attributes. */

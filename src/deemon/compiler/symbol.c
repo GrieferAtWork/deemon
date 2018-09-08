@@ -72,8 +72,7 @@ INTERN char const symclass_names[0x1f + 1][8] = {
     /* [SYMBOL_TYPE_MODULE] = */"module",
     /* [SYMBOL_TYPE_MYMOD ] = */"mymod",
     /* [SYMBOL_TYPE_GETSET] = */"getset",
-    /* [SYMBOL_TYPE_CFIELD] = */"cfield",
-    /* [SYMBOL_TYPE_IFIELD] = */"ifield",
+    /* [SYMBOL_TYPE_CATTR ] = */"cattr",
     /* [SYMBOL_TYPE_ALIAS ] = */"alias",
     /* [SYMBOL_TYPE_ARG   ] = */"arg",
     /* [SYMBOL_TYPE_LOCAL ] = */"local",
@@ -125,9 +124,10 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
   SYMBOL_SUB_NWRITE(self->s_alias,self->s_nwrite);
   SYMBOL_SUB_NBOUND(self->s_alias,self->s_nbound);
   break;
- case SYMBOL_TYPE_CFIELD:
- case SYMBOL_TYPE_IFIELD:
-  SYMBOL_DEC_NREAD(self->s_field.f_class);
+ case SYMBOL_TYPE_CATTR:
+  SYMBOL_DEC_NREAD(self->s_attr.a_class);
+  //if (self->s_attr.a_this) /* TODO: This fails when `self->s_attr.a_this' was already deleted. */
+  //    SYMBOL_DEC_NREAD(self->s_attr.a_this);
   break;
  case SYMBOL_TYPE_GETSET:
   if (self->s_getset.gs_get)
@@ -969,7 +969,7 @@ add_result_to_iter:
  bucket = &iter->s_map[name->k_id % iter->s_mapa];
  result->s_next = *bucket;
  *bucket = result;
- result->s_scope = current_scope;
+ result->s_scope = iter;
  if (warn_loc)
   memcpy(&result->s_decl,
           warn_loc,

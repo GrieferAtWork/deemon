@@ -228,8 +228,8 @@ PRIVATE uint8_t const intr_len[256] = {
     /* 0x66 */ 2, /* `ASM_CLASS_C':                 `class top, const <imm8>' */
     /* 0x67 */ 3, /* `ASM_CLASS_GC':                `push class global <imm8>, const <imm8>' */
     /* 0x68 */ 4, /* `ASM_CLASS_EC':                `push class extern <imm8>:<imm8>, const <imm8>' */
-    /* 0x69 */ 2, /* `ASM_DEFMEMBER':               `defmember top, $<imm8>, pop' */
-    /* 0x6a */ 1, /* --- */
+    /* 0x69 */ 2, /* `ASM_DEFCMEMBER':              `defcmember top, $<imm8>, pop' */
+    /* 0x6a */ 3, /* `ASM_GETCMEMBER_R':            `push getcmember ref <imm8>, $<imm8>' */
     /* 0x6b */ 1, /* --- */
     /* 0x6c */ 1, /* --- */
     /* 0x6d */ 1, /* --- */
@@ -340,10 +340,10 @@ PRIVATE uint8_t const intr_len[256] = {
     /* 0xd6 */ 3, /* `ASM_CALLATTR_C_SEQ':          `callattr top, const <imm8>, [#<imm8>]' */
     /* 0xd7 */ 3, /* `ASM_CALLATTR_C_MAP':          `callattr top, const <imm8>, {#<imm8>*2}' */
     /* 0xd8 */ 1, /* --- */
-    /* 0xd9 */ 3, /* `ASM_GETMEMBER_R':             `push getmember this, ref <imm8>, $<imm8>' */
-    /* 0xda */ 3, /* `ASM_DELMEMBER_R':             `delmember this, ref <imm8>, $<imm8>' */
-    /* 0xdb */ 3, /* `ASM_SETMEMBER_R':             `setmember this, ref <imm8>, $<imm8>, pop' */
-    /* 0xdc */ 3, /* `ASM_BOUNDMEMBER_R':           `push boundmember this, ref <imm8>, $<imm8>' */
+    /* 0xd9 */ 3, /* `ASM_GETMEMBER_THIS_R':        `push getmember this, ref <imm8>, $<imm8>' */
+    /* 0xda */ 3, /* `ASM_DELMEMBER_THIS_R':        `delmember this, ref <imm8>, $<imm8>' */
+    /* 0xdb */ 3, /* `ASM_SETMEMBER_THIS_R':        `setmember this, ref <imm8>, $<imm8>, pop' */
+    /* 0xdc */ 3, /* `ASM_BOUNDMEMBER_THIS_R':      `push boundmember this, ref <imm8>, $<imm8>' */
     /* 0xdd */ 4, /* `ASM_CALL_EXTERN':             `push call extern <imm8>:<imm8>, #<imm8>' */
     /* 0xde */ 3, /* `ASM_CALL_GLOBAL':             `push call global <imm8>, #<imm8>' */
     /* 0xdf */ 3, /* `ASM_CALL_LOCAL':              `push call local <imm8>, #<imm8>' */
@@ -481,13 +481,13 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0x61 */ 2, /* `ASM_CMP_DO':                  `cmp do, top, pop' */
     /* 0x62 */ 4, /* `ASM16_PACK_HASHSET':          `push pack hashset, #<imm16>' */
     /* 0x63 */ 4, /* `ASM16_PACK_DICT':             `push pack dict, #<imm16>*2' */
-    /* 0x64 */ 2, /* --- */
+    /* 0x64 */ 4, /* `ASM16_GETCMEMBER':            `getcmember top, $<imm16>' */
     /* 0x65 */ 2, /* `ASM_CLASS':                   `class top, pop' */
     /* 0x66 */ 4, /* `ASM16_CLASS_C':               `class top, const <imm16>' */
     /* 0x67 */ 6, /* `ASM16_CLASS_GC':              `push class global <imm16>, const <imm16>' */
     /* 0x68 */ 8, /* `ASM16_CLASS_EC':              `push class extern <imm16>:<imm16>, const <imm16>' */
-    /* 0x69 */ 4, /* `ASM16_DEFMEMBER':             `defmember top, $<imm16>, pop' */
-    /* 0x6a */ 2, /* --- */
+    /* 0x69 */ 4, /* `ASM16_DEFCMEMBER':            `defcmember top, $<imm16>, pop' */
+    /* 0x6a */ 6, /* `ASM16_GETCMEMBER_R':          `push getcmember ref <imm16>, $<imm8>' */
     /* 0x6b */ 2, /* --- */
     /* 0x6c */ 2, /* --- */
     /* 0x6d */ 2, /* --- */
@@ -571,22 +571,22 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0xbb */ 2, /* --- */
     /* 0xbc */ 2, /* --- */
     /* 0xbd */ 2, /* --- */
-    /* 0xbe */ 2, /* --- */
-    /* 0xbf */ 2, /* --- */
-    /* 0xc0 */ 2, /* --- */
-    /* 0xc1 */ 2, /* --- */
-    /* 0xc2 */ 2, /* --- */
-    /* 0xc3 */ 2, /* --- */
-    /* 0xc4 */ 2, /* --- */
-    /* 0xc5 */ 2, /* --- */
-    /* 0xc6 */ 3, /* `ASM_GETMEMBER':               `push getmember this, pop, $<imm8>' */
-    /* 0xc7 */ 4, /* `ASM16_GETMEMBER':             `push getmember this, pop, $<imm16>' */
-    /* 0xc8 */ 3, /* `ASM_DELMEMBER':               `delmember this, pop, $<imm8>' */
-    /* 0xc9 */ 4, /* `ASM16_DELMEMBER':             `delmember this, pop, $<imm16>' */
-    /* 0xca */ 3, /* `ASM_SETMEMBER':               `setmember this, pop, $<imm8>, pop' */
-    /* 0xcb */ 4, /* `ASM16_SETMEMBER':             `setmember this, pop, $<imm16>, pop' */
-    /* 0xcc */ 3, /* `ASM_BOUNDMEMBER':             `push boundmember this, pop, $<imm8>' */
-    /* 0xcd */ 4, /* `ASM16_BOUNDMEMBER':           `push boundmember this, pop, $<imm16>' */
+    /* 0xbe */ 3, /* `ASM_GETMEMBER':               `getmember top, pop, $<imm8>' */
+    /* 0xbf */ 4, /* `ASM16_GETMEMBER':             `getmember top, pop, $<imm16>' */
+    /* 0xc0 */ 3, /* `ASM_DELMEMBER':               `delmember pop, pop, $<imm8>' */
+    /* 0xc1 */ 4, /* `ASM16_DELMEMBER':             `delmember pop, pop, $<imm16>' */
+    /* 0xc2 */ 3, /* `ASM_SETMEMBER':               `setmember pop, pop, $<imm8>, pop' */
+    /* 0xc3 */ 4, /* `ASM16_SETMEMBER':             `setmember pop, pop, $<imm16>, pop' */
+    /* 0xc4 */ 3, /* `ASM_BOUNDMEMBER':             `boundmember top, pop, $<imm8>' */
+    /* 0xc5 */ 4, /* `ASM16_BOUNDMEMBER':           `boundmember top, pop, $<imm16>' */
+    /* 0xc6 */ 3, /* `ASM_GETMEMBER_THIS':          `push getmember this, pop, $<imm8>' */
+    /* 0xc7 */ 4, /* `ASM16_GETMEMBER_THIS':        `push getmember this, pop, $<imm16>' */
+    /* 0xc8 */ 3, /* `ASM_DELMEMBER_THIS':          `delmember this, pop, $<imm8>' */
+    /* 0xc9 */ 4, /* `ASM16_DELMEMBER_THIS':        `delmember this, pop, $<imm16>' */
+    /* 0xca */ 3, /* `ASM_SETMEMBER_THIS':          `setmember this, pop, $<imm8>, pop' */
+    /* 0xcb */ 4, /* `ASM16_SETMEMBER_THIS':        `setmember this, pop, $<imm16>, pop' */
+    /* 0xcc */ 3, /* `ASM_BOUNDMEMBER_THIS':        `push boundmember this, pop, $<imm8>' */
+    /* 0xcd */ 4, /* `ASM16_BOUNDMEMBER_THIS':      `push boundmember this, pop, $<imm16>' */
     /* 0xce */ 7, /* `ASM16_CALLATTR_C_KW':         `callattr top, const <imm16>, #<imm8>, const <imm16>' */
     /* 0xcf */ 6, /* `ASM16_CALLATTR_TUPLE_C_KW':   `callattr top, const <imm16>, pop..., const <imm16>' */
     /* 0xd0 */ 2, /* `ASM_CALLATTR_KWDS':           `callattr top, pop, #<imm8>, pop' */
@@ -598,10 +598,10 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0xd6 */ 4, /* `ASM16_CALLATTR_C_SEQ':        `callattr top, const <imm16>, [#<imm8>]' */
     /* 0xd7 */ 4, /* `ASM16_CALLATTR_C_MAP':        `callattr top, const <imm16>, {#<imm8>*2}' */
     /* 0xd8 */ 2, /* --- */
-    /* 0xd9 */ 6, /* `ASM16_GETMEMBER_R':           `push getmember this, ref <imm16>, $<imm16>' */
-    /* 0xda */ 6, /* `ASM16_DELMEMBER_R':           `delmember this, ref <imm16>, $<imm16>' */
-    /* 0xdb */ 6, /* `ASM16_SETMEMBER_R':           `setmember this, ref <imm16>, $<imm16>, pop' */
-    /* 0xdc */ 6, /* `ASM16_BOUNDMEMBER_R':         `push boundmember this, ref <imm16>, $<imm16>' */
+    /* 0xd9 */ 6, /* `ASM16_GETMEMBER_THIS_R':      `push getmember this, ref <imm16>, $<imm16>' */
+    /* 0xda */ 6, /* `ASM16_DELMEMBER_THIS_R':      `delmember this, ref <imm16>, $<imm16>' */
+    /* 0xdb */ 6, /* `ASM16_SETMEMBER_THIS_R':      `setmember this, ref <imm16>, $<imm16>, pop' */
+    /* 0xdc */ 6, /* `ASM16_BOUNDMEMBER_THIS_R':    `push boundmember this, ref <imm16>, $<imm16>' */
     /* 0xdd */ 7, /* `ASM16_CALL_EXTERN':           `push call extern <imm16>:<imm16>, #<imm8>' */
     /* 0xde */ 5, /* `ASM16_CALL_GLOBAL':           `push call global <imm16>, #<imm8>' */
     /* 0xdf */ 5, /* `ASM16_CALL_LOCAL':            `push call local <imm16>, #<imm8>' */
@@ -744,8 +744,8 @@ PRIVATE uint8_t const stack_effect[256] = {
     /* 0x66 */ STACK_EFFECT(1,1),  /* `ASM_CLASS_C':                 `class top, const <imm8>' */
     /* 0x67 */ STACK_EFFECT(0,1),  /* `ASM_CLASS_GC':                `push class global <imm8>, const <imm8>' */
     /* 0x68 */ STACK_EFFECT(0,1),  /* `ASM_CLASS_EC':                `push class extern <imm8>:<imm8>, const <imm8>' */
-    /* 0x69 */ STACK_EFFECT(2,1),  /* `ASM_DEFMEMBER':               `defmember top, $<imm8>, pop' */
-    /* 0x6a */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x69 */ STACK_EFFECT(2,1),  /* `ASM_DEFCMEMBER':              `defcmember top, $<imm8>, pop' */
+    /* 0x6a */ STACK_EFFECT(0,1),  /* `ASM_GETCMEMBER_R':            `push getcmember ref <imm8>, $<imm8>' */
     /* 0x6b */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6c */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6d */ STACK_EFFECT_UNDEF, /* --- */
@@ -856,10 +856,10 @@ PRIVATE uint8_t const stack_effect[256] = {
     /* 0xd6 */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR_C_SEQ':          `callattr top, const <imm8>, [#<imm8>]' */
     /* 0xd7 */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR_C_MAP':          `callattr top, const <imm8>, {#<imm8>*2}' */
     /* 0xd8 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xd9 */ STACK_EFFECT(0,1),  /* `ASM_GETMEMBER_R':             `push getmember this, ref <imm8>, $<imm8>' */
-    /* 0xda */ STACK_EFFECT(0,0),  /* `ASM_DELMEMBER_R':             `delmember this, ref <imm8>, $<imm8>' */
-    /* 0xdb */ STACK_EFFECT(1,0),  /* `ASM_SETMEMBER_R':             `setmember this, ref <imm8>, $<imm8>, pop' */
-    /* 0xdc */ STACK_EFFECT(0,1),  /* `ASM_BOUNDMEMBER_R':           `push boundmember this, ref <imm8>, $<imm8>' */
+    /* 0xd9 */ STACK_EFFECT(0,1),  /* `ASM_GETMEMBER_THIS_R':        `push getmember this, ref <imm8>, $<imm8>' */
+    /* 0xda */ STACK_EFFECT(0,0),  /* `ASM_DELMEMBER_THIS_R':        `delmember this, ref <imm8>, $<imm8>' */
+    /* 0xdb */ STACK_EFFECT(1,0),  /* `ASM_SETMEMBER_THIS_R':        `setmember this, ref <imm8>, $<imm8>, pop' */
+    /* 0xdc */ STACK_EFFECT(0,1),  /* `ASM_BOUNDMEMBER_THIS_R':      `push boundmember this, ref <imm8>, $<imm8>' */
     /* 0xdd */ STACK_EFFECT_UNDEF, /* `ASM_CALL_EXTERN':             `push call extern <imm8>:<imm8>, #<imm8>' */
     /* 0xde */ STACK_EFFECT_UNDEF, /* `ASM_CALL_GLOBAL':             `push call global <imm8>, #<imm8>' */
     /* 0xdf */ STACK_EFFECT_UNDEF, /* `ASM_CALL_LOCAL':              `push call local <imm8>, #<imm8>' */
@@ -997,13 +997,13 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0x61 */ STACK_EFFECT(2,1),  /* `ASM_CMP_DO':                  `cmp do, top, pop' */
     /* 0x62 */ STACK_EFFECT_UNDEF, /* `ASM16_PACK_HASHSET':          `push pack hashset, #<imm16>' */
     /* 0x63 */ STACK_EFFECT_UNDEF, /* `ASM16_PACK_DICT':             `push pack dict, #<imm16>*2' */
-    /* 0x64 */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x64 */ STACK_EFFECT(1,1),  /* `ASM16_GETCMEMBER':            `getcmember top, $<imm16>' */
     /* 0x65 */ STACK_EFFECT(2,1),  /* `ASM_CLASS':                   `class top, pop' */
     /* 0x66 */ STACK_EFFECT(1,1),  /* `ASM16_CLASS_C':               `class top, const <imm16>' */
     /* 0x67 */ STACK_EFFECT(0,1),  /* `ASM16_CLASS_GC':              `push class global <imm16>, const <imm16>' */
     /* 0x68 */ STACK_EFFECT(0,1),  /* `ASM16_CLASS_EC':              `push class extern <imm16>:<imm16>, const <imm16>' */
-    /* 0x69 */ STACK_EFFECT(2,1),  /* `ASM16_DEFMEMBER':             `defmember top, $<imm16>, pop' */
-    /* 0x6a */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x69 */ STACK_EFFECT(2,1),  /* `ASM16_DEFCMEMBER':            `defcmember top, $<imm16>, pop' */
+    /* 0x6a */ STACK_EFFECT(0,1),  /* `ASM16_GETCMEMBER_R':          `push getcmember ref <imm16>, $<imm8>' */
     /* 0x6b */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6c */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6d */ STACK_EFFECT_UNDEF, /* --- */
@@ -1087,22 +1087,22 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0xbb */ STACK_EFFECT_UNDEF, /* --- */
     /* 0xbc */ STACK_EFFECT_UNDEF, /* --- */
     /* 0xbd */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xbe */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xbf */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xc0 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xc1 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xc2 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xc3 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xc4 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xc5 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xc6 */ STACK_EFFECT(1,1),  /* `ASM_GETMEMBER':               `push getmember this, pop, $<imm8>' */
-    /* 0xc7 */ STACK_EFFECT(1,1),  /* `ASM16_GETMEMBER':             `push getmember this, pop, $<imm16>' */
-    /* 0xc8 */ STACK_EFFECT(1,0),  /* `ASM_DELMEMBER':               `delmember this, pop, $<imm8>' */
-    /* 0xc9 */ STACK_EFFECT(1,0),  /* `ASM16_DELMEMBER':             `delmember this, pop, $<imm16>' */
-    /* 0xca */ STACK_EFFECT(2,0),  /* `ASM_SETMEMBER':               `setmember this, pop, $<imm8>, pop' */
-    /* 0xcb */ STACK_EFFECT(2,0),  /* `ASM16_SETMEMBER':             `setmember this, pop, $<imm16>, pop' */
-    /* 0xcc */ STACK_EFFECT(1,1),  /* `ASM_BOUNDMEMBER':             `push boundmember this, pop, $<imm8>' */
-    /* 0xcd */ STACK_EFFECT(1,1),  /* `ASM16_BOUNDMEMBER':           `push boundmember this, pop, $<imm16>' */
+    /* 0xbe */ STACK_EFFECT(2,1),  /* `ASM_GETMEMBER':               `getmember top, pop, $<imm8>' */
+    /* 0xbf */ STACK_EFFECT(2,1),  /* `ASM16_GETMEMBER':             `getmember top, pop, $<imm16>' */
+    /* 0xc0 */ STACK_EFFECT(2,0),  /* `ASM_DELMEMBER':               `delmember pop, pop, $<imm8>' */
+    /* 0xc1 */ STACK_EFFECT(2,0),  /* `ASM16_DELMEMBER':             `delmember pop, pop, $<imm16>' */
+    /* 0xc2 */ STACK_EFFECT(3,0),  /* `ASM_SETMEMBER':               `setmember pop, pop, $<imm8>, pop' */
+    /* 0xc3 */ STACK_EFFECT(3,0),  /* `ASM16_SETMEMBER':             `setmember pop, pop, $<imm16>, pop' */
+    /* 0xc4 */ STACK_EFFECT(2,1),  /* `ASM_BOUNDMEMBER':             `boundmember top, pop, $<imm8>' */
+    /* 0xc5 */ STACK_EFFECT(2,1),  /* `ASM16_BOUNDMEMBER':           `boundmember top, pop, $<imm16>' */
+    /* 0xc6 */ STACK_EFFECT(1,1),  /* `ASM_GETMEMBER_THIS':          `push getmember this, pop, $<imm8>' */
+    /* 0xc7 */ STACK_EFFECT(1,1),  /* `ASM16_GETMEMBER_THIS':        `push getmember this, pop, $<imm16>' */
+    /* 0xc8 */ STACK_EFFECT(1,0),  /* `ASM_DELMEMBER_THIS':          `delmember this, pop, $<imm8>' */
+    /* 0xc9 */ STACK_EFFECT(1,0),  /* `ASM16_DELMEMBER_THIS':        `delmember this, pop, $<imm16>' */
+    /* 0xca */ STACK_EFFECT(2,0),  /* `ASM_SETMEMBER_THIS':          `setmember this, pop, $<imm8>, pop' */
+    /* 0xcb */ STACK_EFFECT(2,0),  /* `ASM16_SETMEMBER_THIS':        `setmember this, pop, $<imm16>, pop' */
+    /* 0xcc */ STACK_EFFECT(1,1),  /* `ASM_BOUNDMEMBER_THIS':        `push boundmember this, pop, $<imm8>' */
+    /* 0xcd */ STACK_EFFECT(1,1),  /* `ASM16_BOUNDMEMBER_THIS':      `push boundmember this, pop, $<imm16>' */
     /* 0xce */ STACK_EFFECT_UNDEF, /* `ASM16_CALLATTR_C_KW':         `callattr top, const <imm16>, #<imm8>, const <imm16>' */
     /* 0xcf */ STACK_EFFECT(2,1),  /* `ASM16_CALLATTR_TUPLE_C_KW':   `callattr top, const <imm16>, pop..., const <imm16>' */
     /* 0xd0 */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR_KWDS':           `callattr top, pop, #<imm8>, pop' */
@@ -1114,10 +1114,10 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0xd6 */ STACK_EFFECT_UNDEF, /* `ASM16_CALLATTR_C_SEQ':        `callattr top, const <imm16>, [#<imm8>]' */
     /* 0xd7 */ STACK_EFFECT_UNDEF, /* `ASM16_CALLATTR_C_MAP':        `callattr top, const <imm16>, {#<imm8>*2}' */
     /* 0xd8 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0xd9 */ STACK_EFFECT(0,1),  /* `ASM16_GETMEMBER_R':           `push getmember this, ref <imm16>, $<imm16>' */
-    /* 0xda */ STACK_EFFECT(0,0),  /* `ASM16_DELMEMBER_R':           `delmember this, ref <imm16>, $<imm16>' */
-    /* 0xdb */ STACK_EFFECT(1,0),  /* `ASM16_SETMEMBER_R':           `setmember this, ref <imm16>, $<imm16>, pop' */
-    /* 0xdc */ STACK_EFFECT(0,1),  /* `ASM16_BOUNDMEMBER_R':         `push boundmember this, ref <imm16>, $<imm16>' */
+    /* 0xd9 */ STACK_EFFECT(0,1),  /* `ASM16_GETMEMBER_THIS_R':      `push getmember this, ref <imm16>, $<imm16>' */
+    /* 0xda */ STACK_EFFECT(0,0),  /* `ASM16_DELMEMBER_THIS_R':      `delmember this, ref <imm16>, $<imm16>' */
+    /* 0xdb */ STACK_EFFECT(1,0),  /* `ASM16_SETMEMBER_THIS_R':      `setmember this, ref <imm16>, $<imm16>, pop' */
+    /* 0xdc */ STACK_EFFECT(0,1),  /* `ASM16_BOUNDMEMBER_THIS_R':    `push boundmember this, ref <imm16>, $<imm16>' */
     /* 0xdd */ STACK_EFFECT_UNDEF, /* `ASM16_CALL_EXTERN':           `push call extern <imm16>:<imm16>, #<imm8>' */
     /* 0xde */ STACK_EFFECT_UNDEF, /* `ASM16_CALL_GLOBAL':           `push call global <imm16>, #<imm8>' */
     /* 0xdf */ STACK_EFFECT_UNDEF, /* `ASM16_CALL_LOCAL':            `push call local <imm16>, #<imm8>' */

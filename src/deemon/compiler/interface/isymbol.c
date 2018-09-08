@@ -131,8 +131,7 @@ symbol_setkind(DeeCompilerSymbolObject *__restrict self,
 
  case SYMBOL_TYPE_EXTERN:
  case SYMBOL_TYPE_MODULE:
- case SYMBOL_TYPE_IFIELD:
- case SYMBOL_TYPE_CFIELD:
+ case SYMBOL_TYPE_CATTR:
  case SYMBOL_TYPE_ALIAS:
  case SYMBOL_TYPE_ARG:
   break;

@@ -262,8 +262,8 @@ PRIVATE char const mnemonic_names[256][31] = {
     /* 0x66 */ "class  top, ", /* `ASM_CLASS_C' */
     /* 0x67 */ "push   class ", /* `ASM_CLASS_GC' */
     /* 0x68 */ "push   class ", /* `ASM_CLASS_EC' */
-    /* 0x69 */ "defmember top, " PREFIX_INTEGERAL, /* `ASM_DEFMEMBER' */
-    /* 0x6a */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0x69 */ "defcmember top, " PREFIX_INTEGERAL, /* `ASM_DEFCMEMBER' */
+    /* 0x6a */ "push   getcmember ", /* `ASM_GETCMEMBER_R' */
     /* 0x6b */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x6c */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x6d */ UNKNOWN_MNEMONIC, /* --- */
@@ -374,10 +374,10 @@ PRIVATE char const mnemonic_names[256][31] = {
     /* 0xd6 */ "callattr top, ", /* `ASM_CALLATTR_C_SEQ' */
     /* 0xd7 */ "callattr top, ", /* `ASM_CALLATTR_C_MAP' */
     /* 0xd8 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xd9 */ "push   getmember this, ", /* `ASM_GETMEMBER_R' */
-    /* 0xda */ "delmember this, ", /* `ASM_DELMEMBER_R' */
-    /* 0xdb */ "setmember this, ", /* `ASM_SETMEMBER_R' */
-    /* 0xdc */ "push   boundmember this, ", /* `ASM_BOUNDMEMBER_R' */
+    /* 0xd9 */ "push   getmember this, ", /* `ASM_GETMEMBER_THIS_R' */
+    /* 0xda */ "delmember this, ", /* `ASM_DELMEMBER_THIS_R' */
+    /* 0xdb */ "setmember this, ", /* `ASM_SETMEMBER_THIS_R' */
+    /* 0xdc */ "push   boundmember this, ", /* `ASM_BOUNDMEMBER_THIS_R' */
     /* 0xdd */ "push   call ", /* `ASM_CALL_EXTERN' */
     /* 0xde */ "push   call ", /* `ASM_CALL_GLOBAL' */
     /* 0xdf */ "push   call ", /* `ASM_CALL_LOCAL' */
@@ -515,13 +515,13 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf061 */ "cmp    do, top, pop", /* `ASM_CMP_DO' */
     /* 0xf062 */ "push   pack hashset, " PREFIX_STACKEFFECT, /* `ASM16_PACK_HASHSET' */
     /* 0xf063 */ "push   pack dict, " PREFIX_STACKEFFECT, /* `ASM16_PACK_DICT' */
-    /* 0xf064 */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0xf064 */ "getcmember top, " PREFIX_INTEGERAL, /* `ASM16_GETCMEMBER' */
     /* 0xf065 */ "class  top, pop", /* `ASM_CLASS' */
     /* 0xf066 */ "class  top, ", /* `ASM16_CLASS_C' */
     /* 0xf067 */ "push   class ", /* `ASM16_CLASS_GC' */
     /* 0xf068 */ "push   class ", /* `ASM16_CLASS_EC' */
-    /* 0xf069 */ "defmember top, " PREFIX_INTEGERAL, /* `ASM16_DEFMEMBER' */
-    /* 0xf06a */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0xf069 */ "defcmember top, " PREFIX_INTEGERAL, /* `ASM16_DEFCMEMBER' */
+    /* 0xf06a */ "push   getcmember ", /* `ASM16_GETCMEMBER_R' */
     /* 0xf06b */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf06c */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf06d */ UNKNOWN_MNEMONIC, /* --- */
@@ -605,22 +605,22 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf0bb */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf0bc */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf0bd */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0be */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0bf */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0c0 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0c1 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0c2 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0c3 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0c4 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0c5 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0c6 */ "push   getmember this, pop, " PREFIX_INTEGERAL, /* `ASM_GETMEMBER' */
-    /* 0xf0c7 */ "push   getmember this, pop, " PREFIX_INTEGERAL, /* `ASM16_GETMEMBER' */
-    /* 0xf0c8 */ "delmember this, pop, " PREFIX_INTEGERAL, /* `ASM_DELMEMBER' */
-    /* 0xf0c9 */ "delmember this, pop, " PREFIX_INTEGERAL, /* `ASM16_DELMEMBER' */
-    /* 0xf0ca */ "setmember this, pop, " PREFIX_INTEGERAL, /* `ASM_SETMEMBER' */
-    /* 0xf0cb */ "setmember this, pop, " PREFIX_INTEGERAL, /* `ASM16_SETMEMBER' */
-    /* 0xf0cc */ "push   boundmember this, pop, " PREFIX_INTEGERAL, /* `ASM_BOUNDMEMBER' */
-    /* 0xf0cd */ "push   boundmember this, pop, " PREFIX_INTEGERAL, /* `ASM16_BOUNDMEMBER' */
+    /* 0xf0be */ "getmember top, pop, " PREFIX_INTEGERAL, /* `ASM_GETMEMBER' */
+    /* 0xf0bf */ "getmember top, pop, " PREFIX_INTEGERAL, /* `ASM16_GETMEMBER' */
+    /* 0xf0c0 */ "delmember pop, pop, " PREFIX_INTEGERAL, /* `ASM_DELMEMBER' */
+    /* 0xf0c1 */ "delmember pop, pop, " PREFIX_INTEGERAL, /* `ASM16_DELMEMBER' */
+    /* 0xf0c2 */ "setmember pop, pop, " PREFIX_INTEGERAL, /* `ASM_SETMEMBER' */
+    /* 0xf0c3 */ "setmember pop, pop, " PREFIX_INTEGERAL, /* `ASM16_SETMEMBER' */
+    /* 0xf0c4 */ "boundmember top, pop, " PREFIX_INTEGERAL, /* `ASM_BOUNDMEMBER' */
+    /* 0xf0c5 */ "boundmember top, pop, " PREFIX_INTEGERAL, /* `ASM16_BOUNDMEMBER' */
+    /* 0xf0c6 */ "push   getmember this, pop, " PREFIX_INTEGERAL, /* `ASM_GETMEMBER_THIS' */
+    /* 0xf0c7 */ "push   getmember this, pop, " PREFIX_INTEGERAL, /* `ASM16_GETMEMBER_THIS' */
+    /* 0xf0c8 */ "delmember this, pop, " PREFIX_INTEGERAL, /* `ASM_DELMEMBER_THIS' */
+    /* 0xf0c9 */ "delmember this, pop, " PREFIX_INTEGERAL, /* `ASM16_DELMEMBER_THIS' */
+    /* 0xf0ca */ "setmember this, pop, " PREFIX_INTEGERAL, /* `ASM_SETMEMBER_THIS' */
+    /* 0xf0cb */ "setmember this, pop, " PREFIX_INTEGERAL, /* `ASM16_SETMEMBER_THIS' */
+    /* 0xf0cc */ "push   boundmember this, pop, " PREFIX_INTEGERAL, /* `ASM_BOUNDMEMBER_THIS' */
+    /* 0xf0cd */ "push   boundmember this, pop, " PREFIX_INTEGERAL, /* `ASM16_BOUNDMEMBER_THIS' */
     /* 0xf0ce */ "callattr top, ", /* `ASM16_CALLATTR_C_KW' */
     /* 0xf0cf */ "callattr top, ", /* `ASM16_CALLATTR_TUPLE_C_KW' */
     /* 0xf0d0 */ "callattr top, pop, " PREFIX_STACKEFFECT, /* `ASM_CALLATTR_KWDS' */
@@ -632,10 +632,10 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf0d6 */ "callattr top, ", /* `ASM16_CALLATTR_C_SEQ' */
     /* 0xf0d7 */ "callattr top, ", /* `ASM16_CALLATTR_C_MAP' */
     /* 0xf0d8 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf0d9 */ "push   getmember this, ", /* `ASM16_GETMEMBER_R' */
-    /* 0xf0da */ "delmember this, ", /* `ASM16_DELMEMBER_R' */
-    /* 0xf0db */ "setmember this, ", /* `ASM16_SETMEMBER_R' */
-    /* 0xf0dc */ "push   boundmember this, ", /* `ASM16_BOUNDMEMBER_R' */
+    /* 0xf0d9 */ "push   getmember this, ", /* `ASM16_GETMEMBER_THIS_R' */
+    /* 0xf0da */ "delmember this, ", /* `ASM16_DELMEMBER_THIS_R' */
+    /* 0xf0db */ "setmember this, ", /* `ASM16_SETMEMBER_THIS_R' */
+    /* 0xf0dc */ "push   boundmember this, ", /* `ASM16_BOUNDMEMBER_THIS_R' */
     /* 0xf0dd */ "push   call ", /* `ASM16_CALL_EXTERN' */
     /* 0xf0de */ "push   call ", /* `ASM16_CALL_GLOBAL' */
     /* 0xf0df */ "push   call ", /* `ASM16_CALL_LOCAL' */
@@ -1605,8 +1605,11 @@ print_global_const:
  case ASM_CALLATTR:
  case ASM_PACK_HASHSET:
  case ASM_DELMEMBER:
+ case ASM_DELMEMBER_THIS:
  case ASM_GETMEMBER:
+ case ASM_GETMEMBER_THIS:
  case ASM_BOUNDMEMBER:
+ case ASM_BOUNDMEMBER_THIS:
  case ASM_VARARGS_UNPACK:
  case ASM_VARARGS_GETITEM_I:
  case ASM_VARARGS_CMP_EQ_SZ:
@@ -1680,9 +1683,13 @@ print_pack_dict:
  case ASM16_UNPACK:
  case ASM16_PACK_HASHSET:
  case ASM_RANGE_0_I16:
+ case ASM16_GETCMEMBER:
  case ASM16_GETMEMBER:
+ case ASM16_GETMEMBER_THIS:
  case ASM16_DELMEMBER:
+ case ASM16_DELMEMBER_THIS:
  case ASM16_BOUNDMEMBER:
+ case ASM16_BOUNDMEMBER_THIS:
   imm = READ_imm16(iter);
   goto print_imm;
 
@@ -1741,13 +1748,15 @@ do_print_operator_tuple:
   }
  } break;
 
- case ASM_DEFMEMBER:
+ case ASM_DEFCMEMBER:
  case ASM_SETMEMBER:
+ case ASM_SETMEMBER_THIS:
  case ASM_CALLATTR_KWDS:
   imm = READ_imm8(iter);
   goto print_imm_pop;
- case ASM16_DEFMEMBER:
+ case ASM16_DEFCMEMBER:
  case ASM16_SETMEMBER:
+ case ASM16_SETMEMBER_THIS:
   imm = READ_imm16(iter);
 print_imm_pop:
   printf("%I16u, pop",imm);
@@ -1869,35 +1878,39 @@ print_local:
 
  case ASM16_PUSH_REF:
  case ASM16_SUPER_THIS_R:
- case ASM16_GETMEMBER_R:
- case ASM16_BOUNDMEMBER_R:
- case ASM16_DELMEMBER_R:
- case ASM16_SETMEMBER_R:
+ case ASM16_GETMEMBER_THIS_R:
+ case ASM16_BOUNDMEMBER_THIS_R:
+ case ASM16_DELMEMBER_THIS_R:
+ case ASM16_SETMEMBER_THIS_R:
+ case ASM16_GETCMEMBER_R:
   imm = READ_imm16(iter);
   goto print_ref;
  case ASM_PUSH_REF:
  case ASM_SUPER_THIS_R:
- case ASM_GETMEMBER_R:
- case ASM_BOUNDMEMBER_R:
- case ASM_DELMEMBER_R:
- case ASM_SETMEMBER_R:
+ case ASM_GETMEMBER_THIS_R:
+ case ASM_BOUNDMEMBER_THIS_R:
+ case ASM_DELMEMBER_THIS_R:
+ case ASM_SETMEMBER_THIS_R:
+ case ASM_GETCMEMBER_R:
   imm = READ_imm8(iter);
 print_ref:
   INVOKE(libdisasm_printref(printer,arg,imm,code,flags));
   switch (opcode) {
-  case ASM_GETMEMBER_R:
-  case ASM_BOUNDMEMBER_R:
-  case ASM_DELMEMBER_R:
-  case ASM_SETMEMBER_R:
+  case ASM_GETMEMBER_THIS_R:
+  case ASM_BOUNDMEMBER_THIS_R:
+  case ASM_DELMEMBER_THIS_R:
+  case ASM_SETMEMBER_THIS_R:
+  case ASM_GETCMEMBER_R:
    printf(", " PREFIX_INTEGERAL "%I8u",READ_imm8(iter));
-   if (opcode == ASM_SETMEMBER_R) PRINT(", pop");
+   if (opcode == ASM_SETMEMBER_THIS_R) PRINT(", pop");
    break;
-  case ASM16_GETMEMBER_R:
-  case ASM16_BOUNDMEMBER_R:
-  case ASM16_DELMEMBER_R:
-  case ASM16_SETMEMBER_R:
+  case ASM16_GETMEMBER_THIS_R:
+  case ASM16_BOUNDMEMBER_THIS_R:
+  case ASM16_DELMEMBER_THIS_R:
+  case ASM16_SETMEMBER_THIS_R:
+  case ASM16_GETCMEMBER_R:
    printf(", " PREFIX_INTEGERAL "%I16u",READ_imm16(iter));
-   if (opcode == ASM16_SETMEMBER_R) PRINT(", pop");
+   if (opcode == ASM16_SETMEMBER_THIS_R) PRINT(", pop");
    break;
   default: break;
   }

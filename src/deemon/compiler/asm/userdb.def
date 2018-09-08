@@ -629,10 +629,16 @@ INSTR("class",(
     O2(ASM_CLASS_EC,FF0|FPUSH,(EXTERN)(CONST))          /* push class extern <imm8/16>:<imm8/16>, const <imm8/16> */
 ))
 
-/* CONSTRAINTS: `defmember <s>, ..., <s>' */
-INSTR("defmember",(
-    O3(ASM_DEFMEMBER,  FRELABS,(TOP)(IMM8)(POP))             /* defmember top, $<imm8>, pop */
-    O3(ASM16_DEFMEMBER,FRELABS,(TOP)(IMM16)(POP))            /* defmember top, $<imm16>, pop */
+/* CONSTRAINTS: `defcmember <s>, ..., <s>' */
+INSTR("defcmember",(
+    O3(ASM_DEFCMEMBER,  FRELABS,(TOP)(IMM8)(POP))               /* defcmember top, $<imm8>, pop */
+    O3(ASM16_DEFCMEMBER,FRELABS,(TOP)(IMM16)(POP))              /* defcmember top, $<imm16>, pop */
+))
+/* CONSTRAINTS: `getcmember <s>, ...' */
+INSTR("getcmember",(
+    O3(ASM_GETCMEMBER,  FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM8))  /* push getcmember ref <imm8/16>, $<imm8> */
+    O3(ASM_GETCMEMBER,  FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM16)) /* push getcmember ref <imm8/16>, $<imm16> */
+    O3(ASM16_GETCMEMBER,FRELABS,                  (TOP)(IMM16)) /* getcmember top, $<imm16> */
 ))
 
 /* CONSTRAINTS: `function <c>, ...' */
@@ -985,26 +991,26 @@ INSTR("callattr",(
 
 /* CONSTRAINTS: `push getmember <Ti>, <rs>, ...' */
 INSTR("getmember",(
-    O3(ASM_GETMEMBER,  FPUSH|FRELABS,            (THIS)(POP)(IMM8))  /* push getmember this, pop, $<imm8> */
-    O3(ASM16_GETMEMBER,FPUSH|FRELABS,            (THIS)(POP)(IMM16)) /* push getmember this, pop, $<imm16> */
-    O3(ASM_GETMEMBER_R,FPUSH|FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM8))  /* push getmember this, ref <imm8/16>, $<imm8> */
-    O3(ASM_GETMEMBER_R,FPUSH|FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM16)) /* push getmember this, ref <imm8/16>, $<imm16> */
+    O3(ASM_GETMEMBER_THIS,  FPUSH|FRELABS,            (THIS)(POP)(IMM8))  /* push getmember this, pop, $<imm8> */
+    O3(ASM16_GETMEMBER_THIS,FPUSH|FRELABS,            (THIS)(POP)(IMM16)) /* push getmember this, pop, $<imm16> */
+    O3(ASM_GETMEMBER_THIS_R,FPUSH|FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM8))  /* push getmember this, ref <imm8/16>, $<imm8> */
+    O3(ASM_GETMEMBER_THIS_R,FPUSH|FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM16)) /* push getmember this, ref <imm8/16>, $<imm16> */
 ))
 
 /* CONSTRAINTS: `delmember <Ti>, <rs>, ...' */
 INSTR("delmember",(
-    O3(ASM_DELMEMBER,  FRELABS,            (THIS)(POP)(IMM8))       /* delmember this, pop, $<imm8> */
-    O3(ASM16_DELMEMBER,FRELABS,            (THIS)(POP)(IMM16))      /* delmember this, pop, $<imm16> */
-    O3(ASM_DELMEMBER_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM8))       /* delmember this, ref <imm8/16>, $<imm8> */
-    O3(ASM_DELMEMBER_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM16))      /* delmember this, ref <imm8/16>, $<imm16> */
+    O3(ASM_DELMEMBER_THIS,  FRELABS,            (THIS)(POP)(IMM8))       /* delmember this, pop, $<imm8> */
+    O3(ASM16_DELMEMBER_THIS,FRELABS,            (THIS)(POP)(IMM16))      /* delmember this, pop, $<imm16> */
+    O3(ASM_DELMEMBER_THIS_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM8))       /* delmember this, ref <imm8/16>, $<imm8> */
+    O3(ASM_DELMEMBER_THIS_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM16))      /* delmember this, ref <imm8/16>, $<imm16> */
 ))
 
 /* CONSTRAINTS: `setmember <Ti>, <rs>, ..., <s>' */
 INSTR("setmember",(
-    O4(ASM_SETMEMBER,  FRELABS,            (THIS)(POP)(IMM8)(POP))  /* setmember this, pop, $<imm8>, pop */
-    O4(ASM16_SETMEMBER,FRELABS,            (THIS)(POP)(IMM16)(POP)) /* setmember this, pop, $<imm16>, pop */
-    O4(ASM_SETMEMBER_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM8)(POP))  /* setmember this, ref <imm8/16>, $<imm8>, pop */
-    O4(ASM_SETMEMBER_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM16)(POP)) /* setmember this, ref <imm8/16>, $<imm16>, pop */
+    O4(ASM_SETMEMBER_THIS,  FRELABS,            (THIS)(POP)(IMM8)(POP))  /* setmember this, pop, $<imm8>, pop */
+    O4(ASM16_SETMEMBER_THIS,FRELABS,            (THIS)(POP)(IMM16)(POP)) /* setmember this, pop, $<imm16>, pop */
+    O4(ASM_SETMEMBER_THIS_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM8)(POP))  /* setmember this, ref <imm8/16>, $<imm8>, pop */
+    O4(ASM_SETMEMBER_THIS_R,FRELABS|FF0|FF0_IMM,(THIS)(REF)(IMM16)(POP)) /* setmember this, ref <imm8/16>, $<imm16>, pop */
 ))
 
 /* CONSTRAINTS: `reduce <s>, ...' */

@@ -83,11 +83,12 @@ struct class_maker {
     struct class_member       *cm_class_initv; /* [0..cm_class_initc|ALLOC(cm_class_inita)][owned]
                                                 * Vector of class member initializers.
                                                 * This contains stuff like creation of operator callbacks and
-                                                * instance methods using the `CLASS_MEMBER_FCLASSMEM' flag. */
+                                                * instance methods using the `CLASS_ATTRIBUTE_FCLASSMEM' flag. */
     struct symbol             *cm_classsym;    /* [1..1] The symbol describing the class in the scope it is defined in.
                                                 * This symbol is assigned in the base scope of every member
                                                 * function/operator that is parsed. */
     struct symbol             *cm_supersym;    /* [0..1] Same as `cm_classsym', but instead describes the class's super-class. */
+    struct symbol             *cm_thissym;     /* [1..1] The this-symbol associated with `cm_classsym'. */
 };
 
 
@@ -99,17 +100,15 @@ relocate_attribute(struct class_attribute *__restrict old_attr,
  bend = (biter = current_scope->s_map)+current_scope->s_mapa;
  for (; biter != bend; ++biter) {
   for (iter = *biter; iter; iter = iter->s_next) {
-   if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
-        iter->s_type == SYMBOL_TYPE_CFIELD) &&
-        iter->s_field.f_attr == old_attr)
-        iter->s_field.f_attr = new_attr;
+   if (iter->s_type == SYMBOL_TYPE_CATTR &&
+       iter->s_attr.a_attr == old_attr)
+       iter->s_attr.a_attr = new_attr;
   }
  }
  for (iter = current_scope->s_del; iter; iter = iter->s_next) {
-  if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
-       iter->s_type == SYMBOL_TYPE_CFIELD) &&
-       iter->s_field.f_attr == old_attr)
-       iter->s_field.f_attr = new_attr;
+  if (iter->s_type == SYMBOL_TYPE_CATTR &&
+      iter->s_attr.a_attr == old_attr)
+      iter->s_attr.a_attr = new_attr;
  }
 }
 
@@ -342,19 +341,13 @@ err:
  * than the constructor.
  * Upon success (0), the scope can later be popped using `basescope_pop()'. */
 PRIVATE int DCALL
-class_maker_push_methscope(struct class_maker *__restrict self,
-                           struct symbol **pthis_sym) {
- struct symbol *this_sym;
+class_maker_push_methscope(struct class_maker *__restrict self) {
  if (basescope_push()) goto err;
  /* Set the appropriate flags to turn this one into a class-scope. */
  current_basescope->bs_flags |= CODE_FTHISCALL | current_tags.at_code_flags;
  current_basescope->bs_class  = self->cm_classsym;
  current_basescope->bs_super  = self->cm_supersym;
- /* Define a symbol `this' that can be used to access the this-argument. */
- this_sym = new_local_symbol(TPPLexer_LookupKeyword("this",4,0),NULL);
- if unlikely(!this_sym) goto err;
- SYMBOL_TYPE(this_sym) = SYMBOL_TYPE_THIS; /* As simple as that! */
- if (pthis_sym) *pthis_sym = this_sym;
+ current_basescope->bs_this   = self->cm_thissym;
  return 0;
 err:
  return -1;
@@ -372,7 +365,7 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
   return 0;
  }
  /* Must create a new constructor-scope. */
- if unlikely(class_maker_push_methscope(self,NULL))
+ if unlikely(class_maker_push_methscope(self))
     return -1;
  /* Now just set the constructor-flag in the scope. */
  current_basescope->bs_flags |= CODE_FCONSTRUCTOR;
@@ -384,8 +377,8 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
 /* Check if an initializer for a given symbol must be processed in the
  * context of the constructor scope (false) or the outside class scope (true) */
 #define SYM_ISCLASSMEMBER(x) \
-  ((x)->s_type == SYMBOL_TYPE_CFIELD || \
-  ((x)->s_field.f_attr->ca_flag&CLASS_MEMBER_FCLASSMEM))
+  ((x)->s_attr.a_this == NULL || \
+  ((x)->s_attr.a_attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
 
 /* Allocate a new class member, automatically assigning the next VTABLE
  * id, as well as creating symbols in the associated member tables and
@@ -395,7 +388,7 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
  *          by the number of slots that are then being used by the member.
  * @param: name:            The name of the member that should be added.
  * @param: is_class_member: `true', if the member should be added as a class-member.
- * @param: flags:           Set of `CLASS_MEMBER_F*'.
+ * @param: flags:           Set of `CLASS_ATTRIBUTE_F*'.
  * @param: ppusage_counter: Filled with a pointer to the usage-counter which must be increment
  *                          by however-many consecutive VTABLE slots will be used by the member.
  * @return: * :             A new symbol classified as `SYM_CLASS_MEMBER' that is now stored in the caller's scope.
@@ -437,7 +430,7 @@ class_maker_addmember(struct class_maker *__restrict self,
  /* NOTE: Members apart of the instance member vector, but stored
   *       in the class member vector must obvious count to its usage,
   *       rather than their own. */
- if ((flags & CLASS_MEMBER_FCLASSMEM) || is_class_member) {
+ if ((flags & CLASS_ATTRIBUTE_FCLASSMEM) || is_class_member) {
   *ppusage_counter = &self->cm_desc->cd_cmemb_size;
  } else {
   *ppusage_counter = &self->cm_desc->cd_imemb_size;
@@ -472,12 +465,19 @@ class_maker_addmember(struct class_maker *__restrict self,
   if unlikely(!result) goto err;
  }
  /* Initialize that symbol to be a member symbol. */
+#if 1
+ result->s_type         = SYMBOL_TYPE_CATTR;
+ result->s_attr.a_class = self->cm_classsym;
+ result->s_attr.a_attr  = attr;
+ result->s_attr.a_this  = is_class_member ? NULL : self->cm_thissym;
+#else
  result->s_type = is_class_member
                 ? SYMBOL_TYPE_CFIELD
                 : SYMBOL_TYPE_IFIELD
                 ;
  result->s_field.f_class = self->cm_classsym;
- result->s_field.f_attr = attr;
+ result->s_field.f_attr  = attr;
+#endif
  SYMBOL_INC_NREAD(self->cm_classsym);
  return result;
 err:
@@ -534,19 +534,18 @@ class_maker_addinit(struct class_maker *__restrict self,
                     struct symbol *__restrict sym,
                     struct ast *__restrict ast,
                     struct ast_loc *__restrict loc) {
- struct member_entry *entry;
+ struct class_attribute *entry;
  struct class_member *member;
  ASSERT(self);
  ASSERT(sym);
- ASSERT(SYMBOL_FIELD_CLASS(sym) == self->cm_classsym);
- ASSERT(sym->s_type == SYMBOL_TYPE_CFIELD ||
-        sym->s_type == SYMBOL_TYPE_IFIELD);
+ ASSERT(sym->s_type == SYMBOL_TYPE_CATTR);
+ ASSERT(sym->s_attr.a_class == self->cm_classsym);
  ASSERT_AST(ast);
  ASSERT(self->cm_initc <= self->cm_inita);
  ASSERT(self->cm_class_initc <= self->cm_class_inita);
- entry = SYMBOL_FIELD_ATTR(sym);
- if (sym->s_type == SYMBOL_TYPE_IFIELD &&
-   !(entry->ca_flag&CLASS_MEMBER_FCLASSMEM)) {
+ entry = sym->s_attr.a_attr;
+ if (sym->s_attr.a_this != NULL &&
+   !(entry->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
   DREF struct ast *symbol_ast;
   /* Run the given AST during construction of instances. */
   /* Handle instance member initializers. */
@@ -1089,7 +1088,7 @@ got_callback_id:
   /* Parse a new function in the class scope. */
   callback = ast_parse_function(NULL,&need_semi,false,&loc);
  } else {
-  if unlikely(class_maker_push_methscope(maker,NULL)) goto err;
+  if unlikely(class_maker_push_methscope(maker)) goto err;
   /* Parse a new function in its own member-method scope. */
   callback = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
   basescope_pop();
@@ -1116,7 +1115,7 @@ ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
                 bool create_symbol, unsigned int symbol_mode) {
  DREF struct ast *result;
  struct class_maker maker;
- uint16_t default_member_flags; /* Set of `CLASS_MEMBER_F*' */
+ uint16_t default_member_flags; /* Set of `CLASS_ATTRIBUTE_F*' */
  uint32_t old_flags = TPPLexer_Current->l_flags;
  class_maker_init(&maker);
  /* Inherit the documentation string printer. */
@@ -1217,6 +1216,10 @@ use_object_base:
   SYMBOL_TYPE(maker.cm_classsym) = SYMBOL_TYPE_STACK;
  }
  current_scope->s_flags |= SCOPE_FCLASS;
+ /* Define a symbol `this' that can be used to access the this-argument. */
+ maker.cm_thissym = new_local_symbol(TPPLexer_LookupKeyword("this",4,0),NULL);
+ if unlikely(!maker.cm_thissym) goto err;
+ maker.cm_thissym->s_type = SYMBOL_TYPE_THIS; /* As simple as that! */
 
  /* Create a symbol for the class's super type. */
  if (maker.cm_base) {
@@ -1225,7 +1228,9 @@ use_object_base:
   SYMBOL_TYPE(maker.cm_supersym) = SYMBOL_TYPE_STACK;
  }
 
- default_member_flags = CLASS_MEMBER_FPUBLIC;
+ default_member_flags = CLASS_ATTRIBUTE_FPUBLIC;
+ if (class_flags & TP_FFINAL)
+     default_member_flags |= CLASS_ATTRIBUTE_FFINAL;
  for (;;) {
 #define MEMBER_CLASS_AUTO    0
 #define MEMBER_CLASS_MEMBER  1
@@ -1274,23 +1279,29 @@ next_modifier:
   {
    uint16_t new_visibility;
   case KWD_private:
-   new_visibility = CLASS_MEMBER_FPRIVATE;
+   new_visibility = CLASS_ATTRIBUTE_FPRIVATE;
    goto set_visibility;
   case KWD_public:
-   new_visibility = CLASS_MEMBER_FPUBLIC;
+   new_visibility = CLASS_ATTRIBUTE_FPUBLIC;
 set_visibility:
    if unlikely(yield() < 0) goto err;
    if (tok == ':') {
     /* Default visibility override (rather than member-specific visibility). */
-    default_member_flags &= ~CLASS_MEMBER_FVISIBILITY;
+    default_member_flags &= ~CLASS_ATTRIBUTE_FVISIBILITY;
     default_member_flags |= new_visibility;
     if unlikely(yield() < 0) goto err;
    }
-   member_flags &= ~CLASS_MEMBER_FVISIBILITY;
+   member_flags &= ~CLASS_ATTRIBUTE_FVISIBILITY;
    member_flags |= new_visibility;
    modifiers_encountered = true;
    goto next_modifier;
   }
+
+  case KWD_final:
+   if unlikely(yield() < 0) goto err;
+   member_flags |= CLASS_ATTRIBUTE_FFINAL;
+   modifiers_encountered = true;
+   goto next_modifier;
 
   case KWD_class:
    /* Class field. */
@@ -1365,7 +1376,6 @@ define_operator:
    if (operator_name == AST_OPERATOR_FOR) {
     /* Special case: `operator for()' is a wrapper around `operator iter()' */
     DREF struct ast *yield_function,*temp,**argv;
-    struct symbol *this_sym;
     /* Not actually an operator (shares a slot with `OPERATOR_ITERSELF')
      * This operator can be used by `DeeClass_SetOperator()' to wrap the
      * given callback using an internal wrapper type that behaves as follows:
@@ -1388,7 +1398,7 @@ define_operator:
      * >> }; */
     operator_name_kwd = TPPLexer_LookupKeyword("for",3,0);
     assert(operator_name_kwd);
-    if unlikely(class_maker_push_methscope(&maker,&this_sym)) goto err;
+    if unlikely(class_maker_push_methscope(&maker)) goto err;
     /* Parse a new function in its own member-method scope. */
     current_basescope->bs_name = operator_name_kwd;
     operator_name = OPERATOR_ITERSELF;
@@ -1398,12 +1408,11 @@ define_operator:
      *                                             ...,  // The inner function
      *                                             AST_MULTIPLE(AST_FMULTIPLE_TUPLE,[
      *                                                          AST_SYM(this)]))))' */
-    if unlikely(class_maker_push_methscope(&maker,NULL)) return NULL;
+    if unlikely(class_maker_push_methscope(&maker)) return NULL;
     yield_function = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
     basescope_pop();
     if unlikely(!yield_function) { err_operator_ast_ddi: operator_ast = NULL; goto got_operator_ast; }
-    AST_FMULTIPLE_TUPLE;
-    temp = ast_setddi(ast_sym(this_sym),&loc);
+    temp = ast_setddi(ast_sym(maker.cm_thissym),&loc);
     if unlikely(!temp) { err_yield_function: ast_decref(yield_function); goto err_operator_ast_ddi; }
     argv = (DREF struct ast **)DeeObject_Malloc(1*sizeof(DREF struct ast *));
     if unlikely(!argv) { err_yield_function_temp: ast_decref(temp); goto err_yield_function; }
@@ -1449,7 +1458,7 @@ define_operator:
      operator_name_kwd = TPPLexer_LookupKeyword(name,namelen+4,1);
      if unlikely(!operator_name_kwd) goto err;
     }
-    if unlikely(class_maker_push_methscope(&maker,NULL)) goto err;
+    if unlikely(class_maker_push_methscope(&maker)) goto err;
     /* Parse a new function in its own member-method scope. */
     current_basescope->bs_name = operator_name_kwd;
     operator_ast = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
@@ -1477,7 +1486,7 @@ set_operator_ast:
    /* XXX: Add operator documentation? */
 
    /* Warn when attempting to declare an operator as private. */
-   if (member_flags & CLASS_MEMBER_FPRIVATE) {
+   if (member_flags & CLASS_ATTRIBUTE_FPRIVATE) {
     struct opinfo *info = Dee_OperatorInfo(NULL,operator_name);
     if (WARN(W_PRIVATE_OPERATOR_IS_PUBLIC,info ? info->oi_sname : "?"))
         goto err;
@@ -1600,14 +1609,13 @@ define_constructor:
       * variables that it may define will not interfere with the
       * lookup rules in member initializers that may still follow. */
      if (scope_push()) goto err;
-     /* NOTE: Don't parse a second argument list here. */
      {
       DREF struct ast *call_branch,*call_args;
       DREF struct ast *ctor_expr;
       ctor_expr = ast_putddi(ast_parse_expr(LOOKUP_SYM_NORMAL),&loc);
       if unlikely(!ctor_expr) goto err;
       if (!current_basescope->bs_argc) {
-       /* TODO: Create anonymous varargs. */
+       /* Create anonymous varargs. */
        struct symbol *dots = new_unnamed_symbol_in_scope(&current_basescope->bs_scope);
        if unlikely(!dots) goto err_ctor_expr;
        Dee_Free(current_basescope->bs_argv);
@@ -1733,10 +1741,10 @@ define_constructor:
          goto err;
      if unlikely(yield() < 0) goto err;
      /* Properties are always allocated in class memory and have the FPROPERTY flag set. */
-     member_flags |= (CLASS_MEMBER_FCLASSMEM|CLASS_MEMBER_FPROPERTY);
+     member_flags |= (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FGETSET);
      /* Set the method flag to invoke property callbacks as this-call functions. */
      if (!is_class_member)
-         member_flags |= CLASS_MEMBER_FMETHOD;
+         member_flags |= CLASS_ATTRIBUTE_FMETHOD;
      /* Define the property symbol. */
      member_symbol = class_maker_addmember(&maker,
                                             member_name,
@@ -1756,19 +1764,19 @@ define_constructor:
          !prop_callbacks[CLASS_PROPERTY_SET]) {
       /* Optimization: when no delete or setting callback
        *               was given, mark the symbol as read-only. */
-      member_symbol->s_field.f_attr->ca_flag |= CLASS_MEMBER_FREADONLY;
+      member_symbol->s_attr.a_attr->ca_flag |= CLASS_ATTRIBUTE_FREADONLY;
       *pusage_counter += 1;
      } else {
       *pusage_counter += CLASS_PROPERTY_CALLBACK_COUNT;
      }
      /* Load the base address of the property. */
-     prop_addr = member_symbol->s_field.f_attr->ca_addr;
+     prop_addr = member_symbol->s_attr.a_attr->ca_addr;
      for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i) {
       /* Skip callbacks that have not been defined. */
       if (!prop_callbacks[i]) continue;
-      member_flags &= (CLASS_MEMBER_FVISIBILITY|
-                       CLASS_MEMBER_FCLASSMEM|
-                       CLASS_MEMBER_FMETHOD);
+      member_flags &= (CLASS_ATTRIBUTE_FVISIBILITY|
+                       CLASS_ATTRIBUTE_FCLASSMEM|
+                       CLASS_ATTRIBUTE_FMETHOD);
       /* Add an initializer for the address. */
       error = class_maker_addanon(&maker,
                                    prop_addr + i,
@@ -1822,9 +1830,9 @@ err_property:
        goto err;
    /* Everything else is parsed as a member function.
     * NOTE: We mark such members are read-only because the intention is to never overwrite them. */
-   member_flags |= (CLASS_MEMBER_FCLASSMEM|CLASS_MEMBER_FREADONLY);
+   member_flags |= (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FREADONLY);
    if (!is_class_member)
-       member_flags |= CLASS_MEMBER_FMETHOD;
+       member_flags |= CLASS_ATTRIBUTE_FMETHOD;
    member_symbol = class_maker_addmember(&maker,
                                           member_name,
                                           is_class_member,
@@ -1836,7 +1844,7 @@ err_property:
     /* Parse a new function in the class scope. */
     init_ast = ast_parse_function(member_name,&need_semi,false,&loc);
    } else {
-    if unlikely(class_maker_push_methscope(&maker,NULL)) goto err;
+    if unlikely(class_maker_push_methscope(&maker)) goto err;
     /* Parse a new function in its own member-method scope. */
     init_ast = ast_parse_function_noscope(member_name,&need_semi,false,&loc);
     basescope_pop();

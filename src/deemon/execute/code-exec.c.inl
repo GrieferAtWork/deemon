@@ -1320,7 +1320,7 @@ do_operator:
      imm_val = READ_imm8();
 do_operator_tuple:
      ASSERT_TUPLE(FIRST);
-     call_result = DeeObject_InvokeOperator(SECOND,(unsigned int)imm_val,
+     call_result = DeeObject_InvokeOperator(SECOND,imm_val,
                                             DeeTuple_SIZE(FIRST),
                                             DeeTuple_ELEM(FIRST));
      if unlikely(!call_result) HANDLE_EXCEPT();
@@ -2025,9 +2025,9 @@ do_class_gc:
      DISPATCH();
  }
 
- TARGET(ASM_DEFMEMBER,-2,+1) {
+ TARGET(ASM_DEFCMEMBER,-2,+1) {
      imm_val = READ_imm8();
-do_defmember:
+do_defcmember:
 #ifdef EXEC_SAFE
      if (DeeClass_SetMemberSafe((DeeTypeObject *)SECOND,imm_val,FIRST))
          HANDLE_EXCEPT();
@@ -2035,6 +2035,23 @@ do_defmember:
      DeeClass_SetMember((DeeTypeObject *)SECOND,imm_val,FIRST);
 #endif
      POPREF();
+     DISPATCH();
+ }
+
+ TARGET(ASM_GETCMEMBER_R,-0,+1) {
+     DREF DeeObject *member_value;
+     imm_val  = READ_imm8();
+     imm_val2 = READ_imm8();
+do_getcmember_r:
+     ASSERT_REFimm();
+#ifdef EXEC_SAFE
+     member_value = DeeClass_GetMemberSafe((DeeTypeObject *)REFimm,imm_val2);
+#else
+     member_value = DeeClass_GetMember((DeeTypeObject *)REFimm,imm_val2);
+#endif
+     if unlikely(!member_value)
+        HANDLE_EXCEPT();
+     PUSH(member_value); /* Inherit reference. */
      DISPATCH();
  }
 
@@ -3348,7 +3365,7 @@ do_callattr_this_tuple_c:
      DISPATCH();
  }
 
- TARGET(ASM_GETMEMBER_R,-0,+1) {
+ TARGET(ASM_GETMEMBER_THIS_R,-0,+1) {
      DREF DeeObject *result;
      imm_val  = READ_imm8();
      imm_val2 = READ_imm8();
@@ -3364,7 +3381,7 @@ do_getmember_r:
      DISPATCH();
  }
 
- TARGET(ASM_BOUNDMEMBER_R,-0,+1) {
+ TARGET(ASM_BOUNDMEMBER_THIS_R,-0,+1) {
 #ifdef EXEC_SAFE
      int temp;
 #else
@@ -3387,7 +3404,7 @@ do_boundmember_r:
      DISPATCH();
  }
 
- TARGET(ASM_DELMEMBER_R,-0,+0) {
+ TARGET(ASM_DELMEMBER_THIS_R,-0,+0) {
      imm_val  = READ_imm8();
      imm_val2 = READ_imm8();
 do_delmember_r:
@@ -3403,7 +3420,7 @@ do_delmember_r:
      DISPATCH();
  }
 
- TARGET(ASM_SETMEMBER_R,-1,+0) {
+ TARGET(ASM_SETMEMBER_THIS_R,-1,+0) {
      imm_val  = READ_imm8();
      imm_val2 = READ_imm8();
 do_setmember_r:
@@ -4145,9 +4162,24 @@ do_setattr_this_c:
          DISPATCH();
      }
 
-     TARGET(ASM16_DEFMEMBER,-2,+1) {
+     TARGET(ASM16_DEFCMEMBER,-2,+1) {
          imm_val = READ_imm16();
-         goto do_defmember;
+         goto do_defcmember;
+     }
+     TARGET(ASM16_GETCMEMBER,-1,+1) {
+         DREF DeeObject *member_value;
+         imm_val = READ_imm16();
+         member_value = DeeClass_GetMemberSafe((DeeTypeObject *)TOP,imm_val);
+         if unlikely(!member_value)
+            HANDLE_EXCEPT();
+         Dee_Decref(TOP);
+         TOP = member_value; /* Inherit reference. */
+         DISPATCH();
+     }
+     TARGET(ASM16_GETCMEMBER_R,-0,+1) {
+         imm_val  = READ_imm16();
+         imm_val2 = READ_imm16();
+         goto do_getcmember_r;
      }
      RAW_TARGET(ASM16_FUNCTION_C) {
          imm_val  = READ_imm16();
@@ -4394,85 +4426,140 @@ do_setattr_this_c:
          imm_val = READ_imm16();
          goto do_callattr_c_map;
      }
-     TARGET(ASM_GETMEMBER,-1,+1) {
+     TARGET(ASM_GETMEMBER,-2,+1) {
          DREF DeeObject *result;
          imm_val = READ_imm8();
 do_getmember:
+         result = DeeInstance_GetMemberSafe((DeeTypeObject *)SECOND,FIRST,imm_val);
+         if unlikely(!result) HANDLE_EXCEPT();
+         POPREF();
+         Dee_Decref(TOP);
+         TOP = result; /* Inherit reference. */
+         DISPATCH();
+     }
+     TARGET(ASM_BOUNDMEMBER,-2,+1) {
+         int temp;
+         imm_val = READ_imm8();
+do_hasmember:
+         temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)SECOND,FIRST,imm_val);
+         if unlikely(temp < 0) HANDLE_EXCEPT();
+         POPREF();
+         Dee_Decref(TOP);
+         TOP = DeeBool_For(temp);
+         Dee_Incref(TOP);
+         DISPATCH();
+     }
+     TARGET(ASM_DELMEMBER,-2,+0) {
+         imm_val = READ_imm8();
+do_delmember:
+         if (DeeInstance_DelMemberSafe((DeeTypeObject *)SECOND,FIRST,imm_val))
+             HANDLE_EXCEPT();
+         POPREF();
+         POPREF();
+         DISPATCH();
+     }
+     TARGET(ASM_SETMEMBER,-3,+0) {
+         imm_val = READ_imm8();
+do_setmember:
+         if (DeeInstance_SetMemberSafe((DeeTypeObject *)THIRD,SECOND,imm_val,FIRST))
+             HANDLE_EXCEPT();
+         POPREF();
+         POPREF();
+         POPREF();
+         DISPATCH();
+     }
+     TARGET(ASM16_GETMEMBER,-2,+1) {
+         imm_val = READ_imm16();
+         goto do_getmember;
+     }
+     TARGET(ASM16_BOUNDMEMBER,-2,+1) {
+         imm_val = READ_imm16();
+         goto do_hasmember;
+     }
+     TARGET(ASM16_DELMEMBER,-2,+0) {
+         imm_val = READ_imm16();
+         goto do_delmember;
+     }
+     TARGET(ASM16_SETMEMBER,-3,+0) {
+         imm_val = READ_imm16();
+         goto do_setmember;
+     }
+
+     TARGET(ASM_GETMEMBER_THIS,-1,+1) {
+         DREF DeeObject *result;
+         imm_val = READ_imm8();
+do_getmember_this:
          ASSERT_THISCALL();
-         result = DeeInstance_GetMemberSafe((DeeTypeObject *)TOP,THIS,
-                                            (unsigned int)imm_val);
+         result = DeeInstance_GetMemberSafe((DeeTypeObject *)TOP,THIS,imm_val);
          if unlikely(!result) HANDLE_EXCEPT();
          Dee_Decref(TOP);
          TOP = result; /* Inherit reference. */
          DISPATCH();
      }
-     TARGET(ASM_BOUNDMEMBER,-1,+1) {
+     TARGET(ASM_BOUNDMEMBER_THIS,-1,+1) {
          int temp;
          imm_val = READ_imm8();
-do_hasmember:
+do_hasmember_this:
          ASSERT_THISCALL();
-         temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)TOP,THIS,
-                                            (unsigned int)imm_val);
+         temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)TOP,THIS,imm_val);
          if unlikely(temp < 0) HANDLE_EXCEPT();
          Dee_Decref(TOP);
          TOP = DeeBool_For(temp);
          Dee_Incref(TOP);
          DISPATCH();
      }
-     TARGET(ASM_DELMEMBER,-1,+0) {
+     TARGET(ASM_DELMEMBER_THIS,-1,+0) {
          imm_val = READ_imm8();
-do_delmember:
+do_delmember_this:
          ASSERT_THISCALL();
-         if (DeeInstance_DelMemberSafe((DeeTypeObject *)TOP,THIS,
-                                       (unsigned int)imm_val))
+         if (DeeInstance_DelMemberSafe((DeeTypeObject *)TOP,THIS,imm_val))
              HANDLE_EXCEPT();
          POPREF();
          DISPATCH();
      }
-     TARGET(ASM_SETMEMBER,-2,+0) {
+     TARGET(ASM_SETMEMBER_THIS,-2,+0) {
          imm_val = READ_imm8();
-do_setmember:
+do_setmember_this:
          ASSERT_THISCALL();
-         if (DeeInstance_SetMemberSafe((DeeTypeObject *)SECOND,THIS,
-                                       (unsigned int)imm_val,FIRST))
+         if (DeeInstance_SetMemberSafe((DeeTypeObject *)SECOND,THIS,imm_val,FIRST))
              HANDLE_EXCEPT();
          POPREF();
          POPREF();
          DISPATCH();
      }
-     TARGET(ASM16_GETMEMBER,-1,+1) {
+     TARGET(ASM16_GETMEMBER_THIS,-1,+1) {
          imm_val = READ_imm16();
-         goto do_getmember;
+         goto do_getmember_this;
      }
-     TARGET(ASM16_BOUNDMEMBER,-1,+1) {
+     TARGET(ASM16_BOUNDMEMBER_THIS,-1,+1) {
          imm_val = READ_imm16();
-         goto do_hasmember;
+         goto do_hasmember_this;
      }
-     TARGET(ASM16_DELMEMBER,-1,+0) {
+     TARGET(ASM16_DELMEMBER_THIS,-1,+0) {
          imm_val = READ_imm16();
-         goto do_delmember;
+         goto do_delmember_this;
      }
-     TARGET(ASM16_SETMEMBER,-2,+0) {
+     TARGET(ASM16_SETMEMBER_THIS,-2,+0) {
          imm_val = READ_imm16();
-         goto do_setmember;
+         goto do_setmember_this;
      }
 
-     TARGET(ASM16_GETMEMBER_R,-0,+1) {
+     TARGET(ASM16_GETMEMBER_THIS_R,-0,+1) {
          imm_val  = READ_imm16();
          imm_val2 = READ_imm16();
          goto do_getmember_r;
      }
-     TARGET(ASM16_DELMEMBER_R,-0,+0) {
+     TARGET(ASM16_DELMEMBER_THIS_R,-0,+0) {
          imm_val  = READ_imm16();
          imm_val2 = READ_imm16();
          goto do_delmember_r;
      }
-     TARGET(ASM16_SETMEMBER_R,-1,+0) {
+     TARGET(ASM16_SETMEMBER_THIS_R,-1,+0) {
          imm_val  = READ_imm16();
          imm_val2 = READ_imm16();
          goto do_setmember_r;
      }
-     TARGET(ASM16_BOUNDMEMBER_R,-1,+0) {
+     TARGET(ASM16_BOUNDMEMBER_THIS_R,-1,+0) {
          imm_val  = READ_imm16();
          imm_val2 = READ_imm16();
          goto do_boundmember_r;
@@ -4653,9 +4740,17 @@ do_pack_dict:
           ASSERTF(arg_hi == code->co_argc_max,
                   "out-of-bounds argument index");
 #endif
-          temp = DeeObject_Call(TOP,
-                                frame->cf_argc-arg_lo,
-                                frame->cf_argv+arg_lo);
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+          if (frame->cf_vargs != NULL &&
+             !arg_lo && !code->co_argc_min) {
+           temp = DeeObject_CallTuple(TOP,(DeeObject *)frame->cf_vargs);
+          } else
+#endif
+          {
+           temp = DeeObject_Call(TOP,
+                                 frame->cf_argc - arg_lo,
+                                 frame->cf_argv + arg_lo);
+          }
          }
          if unlikely(!temp) HANDLE_EXCEPT();
          Dee_Decref(TOP);

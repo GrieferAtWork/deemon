@@ -421,6 +421,7 @@
 #define ASM_SUPER             0x28 /* [1][-2,+1]   `super top, pop'                     - Create a new super-wrapper using a type from `pop' and the associated object from `top'.
                                     * >> object ob = POP();
                                     * >> PUSH(POP() as ob); */
+/* TODO: Remove `ASM_SUPER_THIS_R' */
 #define ASM_SUPER_THIS_R      0x29 /* [2][-0,+1]   `push super this, ref <imm8>'        - Similar to `ASM_SUPER', but use a referenced variable `<imm8>' as type and the this-argument as object.
                                     * >> PUSH(THIS as REF(IMM8)); */
 /*      ASM_                  0x2a  *               --------                            - ------------------ */
@@ -583,8 +584,8 @@
 #define ASM_CLASS_C           0x66 /* [2][-1,+1]   `class top, const <imm8>'            - Construct a new class type, using `pop' as base, and `const <imm8>' as class's descriptor. */
 #define ASM_CLASS_GC          0x67 /* [3][-0,+1]   `push class global <imm8>, const <imm8>' - Same as `ASM_CLASS_C', however use `global <imm8>' as base. */
 #define ASM_CLASS_EC          0x68 /* [4][-0,+1]   `push class extern <imm8>:<imm8>, const <imm8>' - Same as `ASM_CLASS_C', however use `extern <imm8>:<imm8>' as base. */
-#define ASM_DEFMEMBER         0x69 /* [2][-2,+1]   `defmember top, $<imm8>, pop'        - Initialize a class member variable `<imm8>', using a value from the stack. */
-/*      ASM_                  0x6a  *               --------                            - ------------------ */
+#define ASM_DEFCMEMBER        0x69 /* [2][-2,+1]   `defcmember top, $<imm8>, pop'       - Initialize a class member variable `<imm8>', using a value from the stack. */
+#define ASM_GETCMEMBER_R      0x6a /* [3][-0,+1]   `push getcmember ref <imm8>, $<imm8>'- Lookup a class member of `ref <imm8>', given its index. */
 /*      ASM_                  0x6b  *               --------                            - ------------------ */
 /*      ASM_                  0x6c  *               --------                            - ------------------ */
 /*      ASM_                  0x6d  *               --------                            - ------------------ */
@@ -743,13 +744,15 @@
 #define ASM_CALLATTR_C_SEQ    0xd6 /* [3][-1-n,+1] `callattr top, const <imm8>, [#<imm8>]' - Call an attribute <imm8> with a single sequence-like argument packed from the top #<imm8> stack-items. */
 #define ASM_CALLATTR_C_MAP    0xd7 /* [3][-1-n,+1] `callattr top, const <imm8>, {#<imm8>*2}' - Call an attribute <imm8> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
 /*      ASM_                  0xd8  *               --------                            - ------------------ */
-#define ASM_GETMEMBER_R       0xd9 /* [3][-0,+1]   `push getmember this, ref <imm8>, $<imm8>' - Same as `ASM_GETMEMBER', but use a referenced variable `<imm8>' as class type. */
-#define ASM_DELMEMBER_R       0xda /* [3][-0,+0]   `delmember this, ref <imm8>, $<imm8>' - Same as `ASM_DELMEMBER', but use a referenced variable `<imm8>' as class type. */
-#define ASM_SETMEMBER_R       0xdb /* [3][-1,+0]   `setmember this, ref <imm8>, $<imm8>, pop' - Same as `ASM_SETMEMBER', but use a referenced variable `<imm8>' as class type. */
-#define ASM_BOUNDMEMBER_R     0xdc /* [3][-0,+1]   `push boundmember this, ref <imm8>, $<imm8>' - Same as `ASM_BOUNDMEMBER', but use a referenced variable `<imm8>' as class type. */
+#define ASM_GETMEMBER_THIS_R  0xd9 /* [3][-0,+1]   `push getmember this, ref <imm8>, $<imm8>' - Same as `ASM_GETMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
+#define ASM_DELMEMBER_THIS_R  0xda /* [3][-0,+0]   `delmember this, ref <imm8>, $<imm8>' - Same as `ASM_DELMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
+#define ASM_SETMEMBER_THIS_R  0xdb /* [3][-1,+0]   `setmember this, ref <imm8>, $<imm8>, pop' - Same as `ASM_SETMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
+#define ASM_BOUNDMEMBER_THIS_R 0xdc/* [3][-0,+1]   `push boundmember this, ref <imm8>, $<imm8>' - Same as `ASM_BOUNDMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
 #define ASM_CALL_EXTERN       0xdd /* [4][-n,+1]   `push call extern <imm8>:<imm8>, #<imm8>' - Pop #<imm8> (second) values from the stack, pack then into a tuple, then call an external function referenced by <imm8>:<imm8> (first). */
 #define ASM_CALL_GLOBAL       0xde /* [3][-n,+1]   `push call global <imm8>, #<imm8>'   - Pop #<imm8> (second) values from the stack, pack then into a tuple, then call a function in global slot <imm8> (first). */
 #define ASM_CALL_LOCAL        0xdf /* [3][-n,+1]   `push call local <imm8>, #<imm8>'    - Pop #<imm8> (second) values from the stack, pack then into a tuple, then call a function in local slot <imm8> (first). */
+
+/* TODO: Remove `ASM_BOUNDMEMBER_THIS_R' and `ASM_BOUNDMEMBER_THIS' */
 
 
 /*      ASM_                  0xe0  *               --------                            - ------------------ */
@@ -1029,13 +1032,13 @@
 #define ASM_CMP_DO            0xf061 /* [2][-2,+1]   `cmp do, top, pop'                   - Compare for DifferentObject and push the result (`object.id(a) != object.id(b)' / `a !== b'). */
 #define ASM16_PACK_HASHSET    0xf062 /* [4][-n,+1]   `push pack hashset, #<imm16>'        - Pop <imm16> elements and pack them into a hashset. */
 #define ASM16_PACK_DICT       0xf063 /* [4][-n,+1]   `push pack dict, #<imm16>*2'         - Pop <imm16>*2 elements and pack them into a dict, using every first as key and every second as item. */
-/*      ASM_                  0xf064  *               --------                            - ------------------ */
+#define ASM16_GETCMEMBER      0xf064 /* [4][-1,+1]   `getcmember top, $<imm16>'           - Lookup a class member of `top', given its index. */
 #define ASM_CLASS             0xf065 /* [2][-2,+1]   `class top, pop'                     - Same as `ASM_CLASS_C', however the class descriptor is popped from the stack. */
 #define ASM16_CLASS_C         0xf066 /* [4][-1,+1]   `class top, const <imm16>'           - Same as `ASM_CLASS_C', however operands are is extended to 16 bits. */
 #define ASM16_CLASS_GC        0xf067 /* [6][-0,+1]   `push class global <imm16>, const <imm16>' - Same as `ASM_CLASS_GC', however operands are is extended to 16 bits. */
 #define ASM16_CLASS_EC        0xf068 /* [8][-0,+1]   `push class extern <imm16>:<imm16>, const <imm16>' - Same as `ASM_CLASS_EC', however operands are extended to 16 bits. */
-#define ASM16_DEFMEMBER       0xf069 /* [4][-2,+1]   `defmember top, $<imm16>, pop'       - Initialize a class member variable `<imm16>' using a value from the stack. */
-/*      ASM_                  0xf06a  *               --------                            - ------------------ */
+#define ASM16_DEFCMEMBER      0xf069 /* [4][-2,+1]   `defcmember top, $<imm16>, pop'      - Initialize a class member variable `<imm16>' using a value from the stack. */
+#define ASM16_GETCMEMBER_R    0xf06a /* [6][-0,+1]   `push getcmember ref <imm16>, $<imm8>'- Lookup a class member of `ref <imm16>', given its index. */
 /*      ASM_                  0xf06b  *               --------                            - ------------------ */
 /*      ASM_                  0xf06c  *               --------                            - ------------------ */
 /*      ASM_                  0xf06d  *               --------                            - ------------------ */
@@ -1126,22 +1129,22 @@
 /*      ASM_                  0xf0bb  *               --------                            - ------------------ */
 /*      ASM_                  0xf0bc  *               --------                            - ------------------ */
 /*      ASM_                  0xf0bd  *               --------                            - ------------------ */
-/*      ASM_                  0xf0be  *               --------                            - ------------------ */
-/*      ASM_                  0xf0bf  *               --------                            - ------------------ */
-/*      ASM_                  0xf0c0  *               --------                            - ------------------ */
-/*      ASM_                  0xf0c1  *               --------                            - ------------------ */
-/*      ASM_                  0xf0c2  *               --------                            - ------------------ */
-/*      ASM_                  0xf0c3  *               --------                            - ------------------ */
-/*      ASM_                  0xf0c4  *               --------                            - ------------------ */
-/*      ASM_                  0xf0c5  *               --------                            - ------------------ */
-#define ASM_GETMEMBER         0xf0c6 /* [3][-1,+1]   `push getmember this, pop, $<imm8>'  - Pop a class type describing one of the bases of `this' and push a member at index `$<imm8>' onto the stack. */
-#define ASM16_GETMEMBER       0xf0c7 /* [4][-1,+1]   `push getmember this, pop, $<imm16>' - Pop a class type describing one of the bases of `this' and push a member at index `$<imm16>' onto the stack. */
-#define ASM_DELMEMBER         0xf0c8 /* [3][-1,+0]   `delmember this, pop, $<imm8>'       - Pop a class type describing one of the bases of `this' and delete a member at index `$<imm8>'. */
-#define ASM16_DELMEMBER       0xf0c9 /* [4][-1,+0]   `delmember this, pop, $<imm16>'      - Pop a class type describing one of the bases of `this' and delete a member at index `$<imm16>'. */
-#define ASM_SETMEMBER         0xf0ca /* [3][-2,+0]   `setmember this, pop, $<imm8>, pop'  - Pop a value and class type, assigning the value to the member at instance index `$<imm8>' onto the stack. */
-#define ASM16_SETMEMBER       0xf0cb /* [4][-2,+0]   `setmember this, pop, $<imm16>, pop' - Pop a value and class type, assigning the value to the member at instance index `$<imm16>' onto the stack. */
-#define ASM_BOUNDMEMBER       0xf0cc /* [3][-1,+1]   `push boundmember this, pop, $<imm8>' - Pop a class type describing one of the bases of `this' and push Dee_True/Dee_False if member at index `$<imm8>' is bound. */
-#define ASM16_BOUNDMEMBER     0xf0cd /* [4][-1,+1]   `push boundmember this, pop, $<imm16>' - Pop a class type describing one of the bases of `this' and push Dee_True/Dee_False if member at index `$<imm16>' is bound. */
+#define ASM_GETMEMBER         0xf0be /* [3][-2,+1]   `getmember top, pop, $<imm8>'        - Pop a class type, then an instance describing of that class and push a member at index `$<imm8>' onto the stack. */
+#define ASM16_GETMEMBER       0xf0bf /* [4][-2,+1]   `getmember top, pop, $<imm16>'       - Pop a class type, then an instance describing of that class and push a member at index `$<imm16>' onto the stack. */
+#define ASM_DELMEMBER         0xf0c0 /* [3][-2,+0]   `delmember pop, pop, $<imm8>'        - Pop a class type, then an instance describing of that class and delete a member at index `$<imm8>'. */
+#define ASM16_DELMEMBER       0xf0c1 /* [4][-2,+0]   `delmember pop, pop, $<imm16>'       - Pop a class type, then an instance describing of that class and delete a member at index `$<imm16>'. */
+#define ASM_SETMEMBER         0xf0c2 /* [3][-3,+0]   `setmember pop, pop, $<imm8>, pop'   - Pop a value, a class type, and an instance, assigning the value to the member at instance index `$<imm8>' of the instance onto the stack. */
+#define ASM16_SETMEMBER       0xf0c3 /* [4][-3,+0]   `setmember pop, pop, $<imm16>, pop'  - Pop a value, a class type, and an instance, assigning the value to the member at instance index `$<imm16>' of the instance onto the stack. */
+#define ASM_BOUNDMEMBER       0xf0c4 /* [3][-2,+1]   `boundmember top, pop, $<imm8>'      - Pop an instance, a class type describing one of the bases of the instance  and push Dee_True/Dee_False if member at index `$<imm8>' is bound. */
+#define ASM16_BOUNDMEMBER     0xf0c5 /* [4][-2,+1]   `boundmember top, pop, $<imm16>'     - Pop an instance, a class type describing one of the bases of the instance  and push Dee_True/Dee_False if member at index `$<imm16>' is bound. */
+#define ASM_GETMEMBER_THIS    0xf0c6 /* [3][-1,+1]   `push getmember this, pop, $<imm8>'  - Pop a class type describing one of the bases of `this' and push a member at index `$<imm8>' onto the stack. */
+#define ASM16_GETMEMBER_THIS  0xf0c7 /* [4][-1,+1]   `push getmember this, pop, $<imm16>' - Pop a class type describing one of the bases of `this' and push a member at index `$<imm16>' onto the stack. */
+#define ASM_DELMEMBER_THIS    0xf0c8 /* [3][-1,+0]   `delmember this, pop, $<imm8>'       - Pop a class type describing one of the bases of `this' and delete a member at index `$<imm8>'. */
+#define ASM16_DELMEMBER_THIS  0xf0c9 /* [4][-1,+0]   `delmember this, pop, $<imm16>'      - Pop a class type describing one of the bases of `this' and delete a member at index `$<imm16>'. */
+#define ASM_SETMEMBER_THIS    0xf0ca /* [3][-2,+0]   `setmember this, pop, $<imm8>, pop'  - Pop a value and class type, assigning the value to the member at instance index `$<imm8>' onto the stack. */
+#define ASM16_SETMEMBER_THIS  0xf0cb /* [4][-2,+0]   `setmember this, pop, $<imm16>, pop' - Pop a value and class type, assigning the value to the member at instance index `$<imm16>' onto the stack. */
+#define ASM_BOUNDMEMBER_THIS  0xf0cc /* [3][-1,+1]   `push boundmember this, pop, $<imm8>' - Pop a class type describing one of the bases of `this' and push Dee_True/Dee_False if member at index `$<imm8>' is bound. */
+#define ASM16_BOUNDMEMBER_THIS 0xf0cd/* [4][-1,+1]   `push boundmember this, pop, $<imm16>' - Pop a class type describing one of the bases of `this' and push Dee_True/Dee_False if member at index `$<imm16>' is bound. */
 #define ASM16_CALLATTR_C_KW   0xf0ce /* [7][-1-n,+1] `callattr top, const <imm16>, #<imm8>, const <imm16>' - Similar to `ASM_CALLATTR_C', but also pass a keywords mapping from `<imm8>' */
 #define ASM16_CALLATTR_TUPLE_C_KW 0xf0cf/*[6][-2,+1] `callattr top, const <imm16>, pop..., const <imm16>'  - Similar to `ASM_CALLATTR_TUPLE_C', but also pass a keywords mapping from `<imm8>' */
 #define ASM_CALLATTR_KWDS     0xf0d0 /* [2][-3-n,+1] `callattr top, pop, #<imm8>, pop'    - Similar to `ASM_CALLATTR_TUPLE_KWDS', but take arguments from the stack */
@@ -1153,10 +1156,10 @@
 #define ASM16_CALLATTR_C_SEQ  0xf0d6 /* [4][-1-n,+1] `callattr top, const <imm16>, [#<imm8>]' - Call an attribute <imm16> with a single sequence-like argument packed from the top #<imm8> stack-items. */
 #define ASM16_CALLATTR_C_MAP  0xf0d7 /* [4][-1-n,+1] `callattr top, const <imm16>, {#<imm8>*2}' - Call an attribute <imm16> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
 /*      ASM_                  0xf0d8  *               --------                            - ------------------ */
-#define ASM16_GETMEMBER_R     0xf0d9 /* [6][-0,+1]   `push getmember this, ref <imm16>, $<imm16>' - Same as `ASM16_GETMEMBER', but use a referenced variable `<imm16>' as class type. */
-#define ASM16_DELMEMBER_R     0xf0da /* [6][-0,+0]   `delmember this, ref <imm16>, $<imm16>' - Same as `ASM16_DELMEMBER', but use a referenced variable `<imm16>' as class type. */
-#define ASM16_SETMEMBER_R     0xf0db /* [6][-1,+0]   `setmember this, ref <imm16>, $<imm16>, pop' - Same as `ASM16_SETMEMBER', but use a referenced variable `<imm16>' as class type. */
-#define ASM16_BOUNDMEMBER_R   0xf0dc /* [6][-0,+1]   `push boundmember this, ref <imm16>, $<imm16>' - Same as `ASM16_BOUNDMEMBER', but use a referenced variable `<imm16>' as class type. */
+#define ASM16_GETMEMBER_THIS_R 0xf0d9/* [6][-0,+1]   `push getmember this, ref <imm16>, $<imm16>' - Same as `ASM16_GETMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
+#define ASM16_DELMEMBER_THIS_R 0xf0da/* [6][-0,+0]   `delmember this, ref <imm16>, $<imm16>' - Same as `ASM16_DELMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
+#define ASM16_SETMEMBER_THIS_R 0xf0db/* [6][-1,+0]   `setmember this, ref <imm16>, $<imm16>, pop' - Same as `ASM16_SETMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
+#define ASM16_BOUNDMEMBER_THIS_R 0xf0dc/*[6][-0,+1]  `push boundmember this, ref <imm16>, $<imm16>' - Same as `ASM16_BOUNDMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
 #define ASM16_CALL_EXTERN     0xf0dd /* [7][-n,+1]   `push call extern <imm16>:<imm16>, #<imm8>' - Pop #<imm8> values from the stack, pack then into a tuple, then call an external function referenced by <imm16>:<imm16>. */
 #define ASM16_CALL_GLOBAL     0xf0de /* [5][-n,+1]   `push call global <imm16>, #<imm8>'  - Pop #<imm8> values from the stack, pack then into a tuple, then call a function in global slot <imm16>. */
 #define ASM16_CALL_LOCAL      0xf0df /* [5][-n,+1]   `push call local <imm16>, #<imm8>'   - Pop #<imm8> values from the stack, pack then into a tuple, then call a function in local slot <imm16>. */

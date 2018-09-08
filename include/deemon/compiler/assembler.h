@@ -133,7 +133,7 @@ struct asm_exc {
 #endif
     uint16_t            ex_flags; /* s.a.: `struct except_handler::eh_flags'. (Set of `EXCEPTION_HANDLER_F*') */
 #if __SIZEOF_POINTER__ > 4
-    uint32_t            ex_pad;
+    uint32_t            ex_pad2;
 #endif
 };
 
@@ -1324,14 +1324,18 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_ggetattr_this_const(cid)  (asm_incsp(),asm_put816(ASM_GETATTR_THIS_C,cid))
 #define asm_gdelattr_this_const(cid)  (asm_put816(ASM_DELATTR_THIS_C,cid))
 #define asm_gsetattr_this_const(cid)  (asm_decsp(),asm_put816(ASM_SETATTR_THIS_C,cid))
-#define asm_ggetmember(iid)           (asm_dicsp(),asm_put((ASM_GETMEMBER & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_GETMEMBER & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_GETMEMBER & 0xff,(uint16_t)(iid))))
-#define asm_gdelmember(iid)           (asm_decsp(),asm_put((ASM_DELMEMBER & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_DELMEMBER & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_DELMEMBER & 0xff,(uint16_t)(iid))))
-#define asm_gsetmember(iid)           (asm_ddcsp(),asm_put((ASM_SETMEMBER & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_SETMEMBER & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_SETMEMBER & 0xff,(uint16_t)(iid))))
-#define asm_gboundmember(iid)         (asm_dicsp(),asm_put((ASM_BOUNDMEMBER & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_BOUNDMEMBER & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_BOUNDMEMBER & 0xff,(uint16_t)(iid))))
-#define asm_ggetmember_r(rid,iid)     (asm_incsp(),asm_put881616(ASM_GETMEMBER_R,rid,iid))
-#define asm_gdelmember_r(rid,iid)     (asm_put881616(ASM_DELMEMBER_R,rid,iid))
-#define asm_gsetmember_r(rid,iid)     (asm_decsp(),asm_put881616(ASM_SETMEMBER_R,rid,iid))
-#define asm_gboundmember_r(rid,iid)   (asm_incsp(),asm_put881616(ASM_BOUNDMEMBER_R,rid,iid))
+#define asm_ggetmember(iid)           (asm_ddicsp(),asm_put((ASM_GETMEMBER & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_GETMEMBER & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_GETMEMBER_THIS & 0xff,(uint16_t)(iid))))
+#define asm_gdelmember(iid)           (asm_ddcsp(),asm_put((ASM_DELMEMBER & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_DELMEMBER & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_DELMEMBER_THIS & 0xff,(uint16_t)(iid))))
+#define asm_gsetmember(iid)           (asm_dddcsp(),asm_put((ASM_SETMEMBER & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_SETMEMBER & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_SETMEMBER_THIS & 0xff,(uint16_t)(iid))))
+#define asm_gboundmember(iid)         (asm_ddicsp(),asm_put((ASM_BOUNDMEMBER & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_BOUNDMEMBER & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_BOUNDMEMBER_THIS & 0xff,(uint16_t)(iid))))
+#define asm_ggetmember_this(iid)      (asm_dicsp(),asm_put((ASM_GETMEMBER_THIS & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_GETMEMBER_THIS & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_GETMEMBER_THIS & 0xff,(uint16_t)(iid))))
+#define asm_gdelmember_this(iid)      (asm_decsp(),asm_put((ASM_DELMEMBER_THIS & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_DELMEMBER_THIS & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_DELMEMBER_THIS & 0xff,(uint16_t)(iid))))
+#define asm_gsetmember_this(iid)      (asm_ddcsp(),asm_put((ASM_SETMEMBER_THIS & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_SETMEMBER_THIS & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_SETMEMBER_THIS & 0xff,(uint16_t)(iid))))
+#define asm_gboundmember_this(iid)    (asm_dicsp(),asm_put((ASM_BOUNDMEMBER_THIS & 0xff00) >> 8) || ((iid) <= UINT8_MAX ? asm_putimm8(ASM_BOUNDMEMBER_THIS & 0xff,(uint8_t)(iid)) : asm_putimm16(ASM16_BOUNDMEMBER_THIS & 0xff,(uint16_t)(iid))))
+#define asm_ggetmember_this_r(rid,iid)   (asm_incsp(),asm_put881616(ASM_GETMEMBER_THIS_R,rid,iid))
+#define asm_gdelmember_this_r(rid,iid)   (asm_put881616(ASM_DELMEMBER_THIS_R,rid,iid))
+#define asm_gsetmember_this_r(rid,iid)   (asm_decsp(),asm_put881616(ASM_SETMEMBER_THIS_R,rid,iid))
+#define asm_gboundmember_this_r(rid,iid) (asm_incsp(),asm_put881616(ASM_BOUNDMEMBER_THIS_R,rid,iid))
 #define asm_goperator(oid,n)          (ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),(oid) <= UINT8_MAX ? asm_putimm8_8(ASM_OPERATOR,(uint8_t)(oid),(uint8_t)(n)) : (asm_put((ASM16_OPERATOR & 0xff00) >> 8) || asm_putimm16_8((ASM16_OPERATOR & 0xff),(uint16_t)(oid),(uint8_t)(n))))
 #define asm_goperator_tuple(oid)      (asm_ddicsp(),(oid) <= UINT8_MAX ? asm_putimm8(ASM_OPERATOR_TUPLE,(uint8_t)(oid)) : (asm_put((ASM16_OPERATOR & 0xff00) >> 8) || asm_putimm16((ASM16_OPERATOR & 0xff),(uint16_t)(oid))))
 #define asm_genter()                  (asm_dicsp(),asm_put(ASM_ENTER))
@@ -1350,7 +1354,9 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gclass_c(cid)             (asm_dicsp(),asm_put816(ASM_CLASS_C,cid))
 #define asm_gclass_gc(gid,cid)        (asm_incsp(),asm_put881616(ASM_CLASS_GC,gid,cid))
 #define asm_gclass_ec(mid,gid,cid)    (asm_incsp(),asm_put888161616(ASM_CLASS_EC,mid,gid,cid))
-#define asm_gdefmember(id)            (asm_ddicsp(),asm_put816(ASM_DEFMEMBER,id))
+#define asm_gdefcmember(id)           (asm_ddicsp(),asm_put816(ASM_DEFCMEMBER,id))
+#define asm_ggetcmember(id)           (asm_dicsp(),asm_put((ASM16_GETCMEMBER & 0xff00) >> 8) || asm_putimm16(ASM16_GETCMEMBER & 0xff,id))
+#define asm_ggetcmember_r(rid,id)     (asm_incsp(),asm_put881616(ASM_GETCMEMBER_R,rid,id))
 
 /* Call with keyword list instructions. */
 #define asm_gcall_kw(n,kwd_cid)                       (asm_subsp((n)+1),asm_incsp(),ASSERT((n)<=UINT8_MAX),asm_put8_816(ASM_CALL_KW,n,kwd_cid))
@@ -1425,12 +1431,15 @@ INTDEF int DCALL asm_gpush_s32(int32_t value);
  *       allowed to write multiple instructions. */
 INTDEF int DCALL asm_gpush_constexpr(DeeObject *__restrict value);
 INTDEF int DCALL asm_gpush_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF int DCALL asm_gcall_symbol_n(struct symbol *__restrict function, uint8_t argc, struct ast *__restrict warn_ast);
 INTDEF int DCALL asm_gprefix_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF bool DCALL asm_can_prefix_symbol(struct symbol *__restrict sym);
 INTDEF bool DCALL asm_can_prefix_symbol_for_read(struct symbol *__restrict sym);
 INTDEF int DCALL asm_gpush_bnd_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF int DCALL asm_gdel_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF int DCALL asm_gpop_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+/* Returns `true' if pushing `sym' is more expensive  */
+INTDEF bool DCALL asm_gpush_symbol_is_expensive(struct symbol *__restrict sym);
 
 /* Generate code to pop the stack-top value into the given AST. */
 INTDEF int DCALL asm_gpop_expr(struct ast *__restrict ast);

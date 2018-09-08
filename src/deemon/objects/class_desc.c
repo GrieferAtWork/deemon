@@ -1566,16 +1566,47 @@ DeeClassDescriptor_QueryInstanceAttribute(DeeClassDescriptorObject *__restrict s
 }
 
 PRIVATE ATTR_COLD int DCALL
+err_unbound_class_member(/*Class*/DeeTypeObject *__restrict class_type,
+                         struct class_desc *__restrict desc,
+                         uint16_t addr) {
+ /* Check if we can find the proper member so we can pass its name. */
+ size_t i; char const *name = "??" "?";
+ for (i = 0; i <= desc->cd_desc->cd_cattr_mask; ++i) {
+  struct class_attribute *attr;
+  attr = &desc->cd_desc->cd_cattr_list[i];
+  if (!attr->ca_name) continue;
+  if (addr < attr->ca_addr) continue;
+  if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1))) continue;
+  name = DeeString_STR(attr->ca_name);
+  goto got_it;
+ }
+ for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
+  struct class_attribute *attr;
+  attr = &desc->cd_desc->cd_iattr_list[i];
+  if (!attr->ca_name) continue;
+  if (addr < attr->ca_addr) continue;
+  if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1))) continue;
+  if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) continue;
+  name = DeeString_STR(attr->ca_name);
+  goto got_it;
+ }
+ /* Throw the error. */
+got_it:
+ return err_unbound_attribute(class_type,name);
+}
+
+PRIVATE ATTR_COLD int DCALL
 err_unbound_member(/*Class*/DeeTypeObject *__restrict class_type,
                    struct class_desc *__restrict desc,
-                   uint16_t index) {
+                   uint16_t addr) {
  /* Check if we can find the proper member so we can pass its name. */
  size_t i; char const *name = "??" "?";
  for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
   struct class_attribute *attr;
   attr = &desc->cd_desc->cd_iattr_list[i];
   if (!attr->ca_name) continue;
-  if (attr->ca_addr != index) continue;
+  if (addr < attr->ca_addr) continue;
+  if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1))) continue;
   if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) continue;
   name = DeeString_STR(attr->ca_name);
   break;
@@ -1794,6 +1825,43 @@ err_req_class:
  return err_requires_class(self);
 err:
  return -1;
+}
+
+INTERN DREF DeeObject *
+(DCALL DeeClass_GetMember)(DeeTypeObject *__restrict self,
+                           uint16_t addr) {
+ struct class_desc *desc;
+ DREF DeeObject *result;
+ ASSERT_OBJECT_TYPE(self,&DeeType_Type);
+ ASSERT(DeeType_IsClass(self));
+ desc = DeeClass_DESC(self);
+ ASSERT(addr <= desc->cd_desc->cd_cmemb_size);
+ /* Lock and extract the member. */
+ rwlock_write(&desc->cd_lock);
+ result = desc->cd_members[addr];
+ Dee_XIncref(result);
+ rwlock_endwrite(&desc->cd_lock);
+ if unlikely(!result)
+    err_unbound_class_member(self,desc,addr);
+ return result;
+}
+INTERN DREF DeeObject *
+(DCALL DeeClass_GetMemberSafe)(DeeTypeObject *__restrict self,
+                               uint16_t addr) {
+ if (DeeObject_AssertType((DeeObject *)self,&DeeType_Type))
+     goto err;
+ if (!DeeType_IsClass(self))
+     goto err_req_class;
+ if (addr >= DeeClass_DESC(self)->cd_desc->cd_cmemb_size)
+     goto err_bad_index;
+ return DeeClass_GetMember(self,addr);
+err_bad_index:
+ err_invalid_class_addr(self,addr);
+ goto err;
+err_req_class:
+ err_requires_class(self);
+err:
+ return NULL;
 }
 
 
