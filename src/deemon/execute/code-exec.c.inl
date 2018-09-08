@@ -1305,7 +1305,7 @@ do_call_tuple_kw:
 do_operator:
      ASSERT_USAGE(-1-(int)imm_val2,+1);
      /* NOTE: Inherit references. */
-     call_result = DeeObject_InvokeOperator(TOP,imm_val,
+     call_result = DeeObject_InvokeOperator((sp - imm_val2)[-1],imm_val,
                                            (size_t)imm_val2,
                                             sp - imm_val2);
      if unlikely(!call_result) HANDLE_EXCEPT();
@@ -5357,7 +5357,8 @@ do_prefix_operator:
       ASSERT_USAGE(-(int)imm_val2,+1);
       prefix_ob = get_prefix_object();
       if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      call_result = DeeObject_PInvokeOperator(&prefix_ob,(unsigned int)imm_val,imm_val2,sp-imm_val2);
+      call_result = DeeObject_PInvokeOperator(&prefix_ob,imm_val,
+                                               imm_val2,sp-imm_val2);
       if unlikely(!call_result) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
       while (imm_val2--) POPREF();
       PUSH(call_result);

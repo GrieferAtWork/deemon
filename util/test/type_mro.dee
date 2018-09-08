@@ -19,10 +19,9 @@
  */
 
 import type_, file from deemon;
-/* Assert that MRO of `type' itself sees `type' as an instance of `typetype',
- * rather than `typetype' itself. - Sounds complicated? - Well, it kind-of is,
- * but you may look at `print Doc from doc("/deemon/type/getinstanceattr");' which
- * documents the finer aspects of this rather important detail. */
-assert type_.baseof(type_);
-assert type_.baseof(type(file));
+
+/* Instance-attributes of `type_' are unbound (aka. instance-wrappers)
+ * when accessed as attributes of `type_' itself. */
+assert type_.baseof(type_,type_);
+assert type_.baseof(type_,type(file));
 

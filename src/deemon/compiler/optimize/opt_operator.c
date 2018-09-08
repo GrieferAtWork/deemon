@@ -96,6 +96,7 @@ emulate_method_call(DeeObject *__restrict self,
   if (method == &string_decode)
       return emulate_object_decode(((DeeObjMethodObject *)self)->om_self,argc,argv);
  }
+ /* TODO: `object.id()' should not be evaluated at compile-time! */
  return DeeObject_Call(self,argc,argv);
 }
 
@@ -115,6 +116,7 @@ emulate_member_call(DeeObject *__restrict base,
   if (NAME_EQ("decode"))
       return emulate_object_decode(base,argc,argv);
  }
+ /* TODO: `object.id()' should not be evaluated at compile-time! */
  return DeeObject_CallAttr(base,name,argc,argv);
 }
 

@@ -2575,8 +2575,8 @@ PRIVATE struct opwrapper type_wrappers[] = {
     /* [OPERATOR_STR - OPERATOR_TYPEMIN]         = */{ offsetof(Type,tp_cast.tp_str), (void *)&class_wrap_str },
     /* [OPERATOR_REPR - OPERATOR_TYPEMIN]        = */{ offsetof(Type,tp_cast.tp_repr), (void *)&class_wrap_repr },
     /* [OPERATOR_BOOL - OPERATOR_TYPEMIN]        = */{ offsetof(Type,tp_cast.tp_bool), (void *)&class_wrap_bool },
-    /* [OPERATOR_CALL - OPERATOR_TYPEMIN]        = */{ offsetof(Type,tp_call), (void *)&class_wrap_call },
-    /* [OPERATOR_ITERNEXT - OPERATOR_TYPEMIN]    = */{ offsetof(Type,tp_iter_next), (void *)&class_wrap_iter_next }
+    /* [OPERATOR_ITERNEXT - OPERATOR_TYPEMIN]    = */{ offsetof(Type,tp_iter_next), (void *)&class_wrap_iter_next },
+    /* [OPERATOR_CALL - OPERATOR_TYPEMIN]        = */{ offsetof(Type,tp_call), (void *)&class_wrap_call }
 };
 PRIVATE struct opwrapper math_wrappers[] = {
     /* [OPERATOR_INT - OPERATOR_MATHMIN]         = */{ offsetof(struct type_math,tp_int), (void *)&class_wrap_int },

@@ -1714,8 +1714,8 @@ unknown_attribute:
 					if (my_attr.cancall || (attr_type !is none && callable.baseof(attr_type))) {
 						m_raw_doc = "({})->{}".format(
 							get_default_prototype(fixed_attribute_name,false));
-//				} else if (deemon.type_.baseof(attr_type)) {
-//					m_raw_doc = "";
+//					} else if (deemon.type_.baseof(attr_type)) {
+//						m_raw_doc = "";
 					} else if (attr_type !is none) {
 						m_raw_doc = "->{}".format({ attr_type });
 					} else {
