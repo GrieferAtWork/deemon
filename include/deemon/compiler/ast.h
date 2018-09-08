@@ -92,18 +92,8 @@ struct catch_expr {
 
 struct class_member {
     DREF struct ast *cm_ast;     /* [1..1] The AST that is evaluated and assigned to the member. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     uint16_t         cm_index;   /* The member index/operator id of the member. */
     uint16_t         cm_pad[(sizeof(void *)/2)-1]; /* ... */
-#else
-#define CLASS_MEMBER_MEMBER   0  /* A class or instance-to-class member. */
-#define CLASS_MEMBER_OPERATOR 1  /* An operator implemented by the class. */
-    uint16_t         cm_type;    /* Class member type (One of `CLASS_MEMBER_*') */
-    uint16_t         cm_index;   /* The member index/operator id of the member. */
-#if __SIZEOF_POINTER__ > 4
-    uint32_t         cm_padding; /* ... */
-#endif
-#endif
 };
 
 struct TPPFile;
@@ -401,34 +391,16 @@ struct ast {
             DREF struct ast    *a_act2; /* [0..1] Third action operand or NULL when not used. */
         }                       a_action;
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 #define AST_CLASS               0x0012          /* Create a new class object. */
-#else
-#define AST_CLASS               0x0012          /* Create a new class object.
-                                                 * NOTE: The runtime class flags are stored on `a_flag & 0xf' */
-#endif
         struct {
             DREF struct ast    *c_base;       /* [0..1] Base/super type. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
             DREF struct ast    *c_desc;       /* [1..1] Class descriptor (usually a constant branch). */
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-            DREF struct ast    *c_name;       /* [0..1] Class name. */
-            DREF struct ast    *c_doc;        /* [0..1] Class documentation string. */
-            DREF struct ast    *c_imem;       /* [0..1] Instance member table. */
-            DREF struct ast    *c_cmem;       /* [0..1] Class member table. */
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
             struct symbol      *c_classsym;   /* [0..1] The symbol to which to assign the class before initializing members.
                                                * NOTE: This symbol is guarantied to be reachable from `a_scope' */
             struct symbol      *c_supersym;   /* [0..1] The symbol to which to assign the base before initializing members.
                                                * NOTE: This symbol is guarantied to be reachable from `a_scope' */
             size_t              c_memberc;    /* Amount of member descriptors. */
             struct class_member*c_memberv;    /* [0..c_memberc][owned] Vector of member descriptors. */
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
-            size_t              c_anonc;      /* Amount of anonymous class members. */
-            struct member_entry*c_anonv;      /* [OVERRIDE([*].cme_name,[NOT(DREF)][1..1][== Dee_EmptyString])]
-                                               * [OVERRIDE([*].cme_doc,[NOT(DREF)][0..0])]
-                                               * [0..c_anonc][owned] Vector of anonymous class members. */
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
         }                       a_class;
 
 #define AST_LABEL               0x0013       /* Define a text/case label at the current address.
@@ -694,18 +666,9 @@ DEFINE_AST_GENERATOR(ast_action2,(uint16_t action_flags, struct ast *__restrict 
 DEFINE_AST_GENERATOR(ast_action3,(uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1, struct ast *__restrict act2));
 /* [AST_CLASS]   @param: class_flags: Set of `TP_F* & 0xf'.
  * WARNING: Inherits a heap-allocated vector `memberv' upon success. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 DEFINE_AST_GENERATOR(ast_class,(struct ast *base, struct ast *__restrict descriptor,
                                 struct symbol *class_symbol, struct symbol *super_symbol,
                                 size_t memberc, struct class_member *__restrict memberv));
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-DEFINE_AST_GENERATOR(ast_class,(uint16_t class_flags,
-                                struct ast *base, struct ast *name, struct ast *doc,
-                                struct ast *imem, struct ast *cmem,
-                                struct symbol *class_symbol, struct symbol *super_symbol,
-                                size_t memberc, struct class_member *__restrict memberv,
-                                size_t anonc, struct member_entry *anonv));
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 /* [AST_LABEL] @param: flags: Set of `AST_FLABEL_*'. */
 DEFINE_AST_GENERATOR(ast_label,(uint16_t flags, struct text_label *__restrict lbl, DeeBaseScopeObject *__restrict base_scope));
 /* [AST_GOTO] */
@@ -749,13 +712,8 @@ DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict 
 #define ast_action1(action_flags,act0)                         ast_action1_d(__FILE__,__LINE__,action_flags,act0)
 #define ast_action2(action_flags,act0,act1)                    ast_action2_d(__FILE__,__LINE__,action_flags,act0,act1)
 #define ast_action3(action_flags,act0,act1,act2)               ast_action3_d(__FILE__,__LINE__,action_flags,act0,act1,act2)
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 #define ast_class(base,descriptor,class_symbol,super_symbol,memberc,memberv) \
         ast_class_d(__FILE__,__LINE__,base,descriptor,class_symbol,super_symbol,memberc,memberv)
-#else
-#define ast_class(class_flags,base,name,doc,imem,cmem,class_symbol,super_symbol,memberc,memberv,anonc,anonv) \
-        ast_class_d(__FILE__,__LINE__,class_flags,base,name,doc,imem,cmem,class_symbol,super_symbol,memberc,memberv,anonc,anonv)
-#endif
 #define ast_label(flags,lbl,base_scope)                        ast_label_d(__FILE__,__LINE__,flags,lbl,base_scope)
 #define ast_goto(lbl,base_scope)                               ast_goto_d(__FILE__,__LINE__,lbl,base_scope)
 #define ast_switch(flags,expr,block,cases,default_case)        ast_switch_d(__FILE__,__LINE__,flags,expr,block,cases,default_case)

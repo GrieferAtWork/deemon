@@ -427,7 +427,8 @@ err:
 }
 
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
+STATIC_ASSERT((DTYPE16_CLASSDESC & 0xff) == DTYPE_CLASSDESC);
+
 PRIVATE int DCALL
 dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
  uint32_t straddr; uint8_t *strptr;
@@ -627,100 +628,6 @@ err:
  return -1;
 }
 
-#else
-PRIVATE bool DCALL
-allow_8bit_memtab(DeeMemberTableObject *__restrict self) {
- struct member_entry *iter,*end;
- if (self->mt_size > UINT8_MAX) goto nope;
- /* Validate the actual member entries of the table. */
- end = (iter = self->mt_list)+(self->mt_mask+1);
- for (; iter != end; ++iter) {
-  if (!iter->cme_name) continue; /* Skip unused entries. */
-  /* Doc strings cannot appear in 8-bit member tables. */
-  if (iter->cme_doc && !(current_dec.dw_flags&DEC_WRITE_FNODOC)) goto nope;
-  /* Only 8-bit member addresses can appear in 8-bit tables. */
-  if (iter->cme_addr > UINT8_MAX) goto nope;
- }
- return true;
-nope:
- return false;
-}
-
-STATIC_ASSERT((DTYPE16_MEMTAB & 0xff) == DTYPE_MEMTAB);
-
-/* Emit a `DTYPE_MEMTAB' or `DTYPE16_MEMTAB' type
- * code, followed by a member table descriptor. */
-PRIVATE int DCALL
-dec_putmemtab(DeeMemberTableObject *__restrict self) {
- struct member_entry *iter,*end;
- uint32_t symcount = 0;
- bool use_8bit = allow_8bit_memtab(self);
-
- /* Emit the member table type code. */
- if (!use_8bit && dec_putb((DTYPE16_MEMTAB & 0xff00) >> 8))
-      goto err;
- if (dec_putb(DTYPE_MEMTAB)) goto err;
-
- /* Emit the size of the member table. */
- if (use_8bit) {
-  if (dec_putb((uint8_t)self->mt_size))
-      goto err;
- } else {
-  if (dec_putptr((uint32_t)self->mt_size))
-      goto err;
- }
-
- /* Count the number of used entires. */
- end = (iter = self->mt_list)+(self->mt_mask+1);
- for (; iter != end; ++iter)
-     if (iter->cme_name)
-         ++symcount;
- /* Encode the number of symbols that will follow. */
- if (dec_putptr(symcount)) goto err;
- iter = self->mt_list;
- /* Emit the individual member descriptor symbols. */
- for (; iter != end; ++iter) {
-  uint32_t straddr; uint8_t *strptr;
-  struct dec_section *oldsec;
-  if (!iter->cme_name) continue;
-  /* Allocate the name within the string section. */
-  oldsec   = dec_curr;
-  dec_curr = SC_STRING;
-  strptr   = dec_allocstr(DeeString_STR(iter->cme_name),
-                         (DeeString_SIZE(iter->cme_name)+1)*sizeof(char));
-  if unlikely(!strptr) goto err;
-  straddr  = dec_ptr2addr(strptr);
-  dec_curr = oldsec;
-
-  if (dec_putw(iter->ca_flag)) goto err; /* Dec_MemberEntry.mt_flag / Dec_8BitMemberEntry.mt_flag */
-  if (use_8bit) {
-   if (dec_putb((uint8_t)iter->cme_addr)) goto err; /* Dec_8BitMemberEntry.mt_addr */
-   if (dec_putptr(straddr)) goto err;               /* Dec_8BitMemberEntry.mt_nam */
-  } else {
-   DeeStringObject *docstr = iter->cme_doc;
-   if (!docstr || (current_dec.dw_flags&DEC_WRITE_FNODOC))
-        docstr = (DeeStringObject *)Dee_EmptyString;
-   if (dec_putw(iter->cme_addr)) goto err;                     /* Dec_MemberEntry.mt_addr */
-   if (dec_putptr(straddr)) goto err;                          /* Dec_MemberEntry.mt_nam */
-   if (dec_putptr((uint32_t)DeeString_SIZE(docstr))) goto err; /* Dec_MemberEntry.mt_doclen */
-   if (DeeString_SIZE(docstr)) {
-    /* Encode a pointer to the documentation string. */
-    oldsec   = dec_curr;
-    dec_curr = SC_STRING;
-    strptr   = dec_allocstr(DeeString_STR(docstr),
-                           (DeeString_SIZE(docstr)+1)*sizeof(char));
-    if unlikely(!strptr) goto err;
-    straddr  = dec_ptr2addr(strptr);
-    dec_curr = oldsec;
-    if (dec_putptr(straddr)) goto err;               /* Dec_MemberEntry.mt_doc */
-   }
-  }
- }
- return 0;
-err:
- return -1;
-}
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 /* Emit a `DTYPE_KWDS', followed by a keywords descriptor. */
 PRIVATE int DCALL
@@ -1060,15 +967,9 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
   Dee_XDecref(cell_item);
   return error;
  }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  /* Emit a class descriptor. */
  if (tp_self == &DeeClassDescriptor_Type)
      return dec_putclassdesc((DeeClassDescriptorObject *)self);
-#else
- /* Emit a member table. */
- if (tp_self == &DeeMemberTable_Type)
-     return dec_putmemtab((DeeMemberTableObject *)self);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
  /* Emit a keywords descriptor. */
  if (tp_self == &DeeKwds_Type)
      return dec_putkwds((DeeKwdsObject *)self);

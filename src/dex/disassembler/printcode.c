@@ -431,7 +431,6 @@ err:
 }
 
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 struct typeflag {
     char     name[14];
     uint16_t mask;
@@ -570,7 +569,6 @@ err:
  return temp;
 #undef DO
 }
-#endif
 
 
 INTERN dssize_t DCALL
@@ -851,7 +849,6 @@ prefix_except_prefix:
    inner_code = (DREF DeeCodeObject *)code->co_staticv[i];
    if (!DeeCode_Check(inner_code)) {
     if (!DeeFunction_Check(inner_code)) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      if (DeeClassDescriptor_Check(inner_code)) {
       Dee_Incref(inner_code);
       rwlock_endread(&code->co_static_lock);
@@ -863,7 +860,6 @@ prefix_except_prefix:
       result += temp;
       rwlock_read(&code->co_static_lock);
      }
-#endif
      continue;
     }
     inner_code = ((DREF DeeFunctionObject *)inner_code)->fo_code;

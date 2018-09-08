@@ -279,9 +279,6 @@
     <ClInclude Include="..\include\deemon\compiler\interface.h">
       <Filter>include\deemon\compiler</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\deemon\class2.h">
-      <Filter>include\deemon</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\deemon\instancemethod.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
@@ -424,9 +421,6 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\unicode\unicode_db.c">
       <Filter>src\deemon\objects\unicode</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\deemon\objects\class.c">
-      <Filter>src\deemon\objects</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\runtime\builtin.c">
       <Filter>src\deemon\runtime</Filter>
@@ -740,20 +734,20 @@
     <ClCompile Include="..\src\deemon\compiler\interface\iparser.c">
       <Filter>src\deemon\compiler\interface</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\deemon\objects\class2.c">
-      <Filter>src\deemon\objects</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\deemon\objects\instancemethod.c">
       <Filter>src\deemon\objects</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\property.c">
       <Filter>src\deemon\objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\deemon\objects\class2_desc.c">
-      <Filter>src\deemon\objects</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\deemon\compiler\asm\genclass.c">
       <Filter>src\deemon\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\class_desc.c">
+      <Filter>src\deemon\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\class.c">
+      <Filter>src\deemon\objects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

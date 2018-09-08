@@ -142,11 +142,7 @@ struct symbol {
         }                s_global; /* [SYMBOL_TYPE_GLOBAL] */
         struct {
             struct symbol             *f_class;  /* [1..1][REF(SYMBOL_NREAD(.))] The class that is defining the symbol. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
             struct class_attribute    *f_attr;   /* [1..1] The member that is being described. */
-#else
-            struct member_entry       *f_attr;   /* [1..1] The member that is being described. */
-#endif
         }                s_field;  /* [SYMBOL_TYPE_CFIELD | SYMBOL_TYPE_IFIELD] */
         struct {
             struct symbol             *gs_get;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as getter. */

@@ -77,12 +77,7 @@ DeeObject_EnumAttr(DeeTypeObject *__restrict tp_self,
    break;
   }
   if (DeeType_IsClass(iter)) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    temp = DeeClass_EnumInstanceAttributes(iter,self,proc,arg);
-#else
-   struct class_desc *desc = DeeClass_DESC(iter);
-   temp = membertable_enum(iter,self,desc->c_mem,proc,arg);
-#endif
    if unlikely(temp < 0) goto err;
    result += temp;
   } else {
@@ -440,18 +435,10 @@ DeeType_FindAttrString(DeeTypeObject *__restrict self,
   if (rules->alr_decl && rules->alr_decl != (DeeObject *)iter)
       goto find_generic;
   if (DeeType_IsClass(iter)) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    if ((error = DeeClass_FindClassAttribute(iter,result,rules)) <= 0)
         goto done;
    if ((error = DeeClass_FindClassInstanceAttribute(iter,result,rules)) <= 0)
         goto done;
-#else
-   struct class_desc *desc = DeeClass_DESC(iter);
-   if ((error = membertable_find(iter,NULL,desc->c_cmem,result,rules)) <= 0)
-        goto done;
-   if ((error = membertable_find_class(iter,desc->c_mem,result,rules)) <= 0)
-        goto done;
-#endif
   } else {
    if ((error = membercache_find(&iter->tp_class_cache,(DeeObject *)iter,
                                   ATTR_CMEMBER,result,rules)) <= 0)
@@ -524,23 +511,14 @@ DeeType_GetAttrString(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      return NULL;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_GetClassAttribute(iter,attr);
-#else
-    return member_get((DeeTypeObject *)iter,&desc->c_class,
-                      (DeeObject *)iter,attr);
-#endif
    }
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
      err_protected_member(iter,attr);
      return NULL;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_GetInstanceAttribute(iter,attr);
-#else
-    return class_member_get((DeeTypeObject *)iter,&desc->c_class,attr);
-#endif
    }
   } else {
    if ((result = membercache_getattr(&iter->tp_class_cache,(DeeObject *)iter,name,hash)) != ITER_DONE)
@@ -598,12 +576,7 @@ DeeType_BoundAttrString(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      return -1;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_BoundClassAttribute(iter,attr);
-#else
-    return member_bound((DeeTypeObject *)iter,&desc->c_class,
-                        (DeeObject *)iter,attr);
-#endif
    }
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
@@ -667,13 +640,8 @@ DeeType_DocAttrString(DeeTypeObject *__restrict self,
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryClassAttributeStringWithHash(desc,name,hash)) != NULL ||
        (attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     if (attr->ca_doc)
         return_reference_((DeeObject *)attr->ca_doc);
-#else
-    if (attr->cme_doc)
-        return_reference_((DeeObject *)attr->cme_doc);
-#endif
     err_nodoc_attribute(iter->tp_name,name);
     goto err;
    }
@@ -740,23 +708,14 @@ DeeType_CallAttrString(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      return NULL;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_CallClassAttribute(iter,attr,argc,argv);
-#else
-    return member_call(iter,&desc->c_class,
-                      (DeeObject *)iter,attr,argc,argv);
-#endif
    }
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_CallInstanceAttribute(iter,attr,argc,argv);
-#else
-    return class_member_call(iter,&desc->c_class,attr,argc,argv);
-#endif
    }
   } else {
    if ((result = membercache_callattr(&self->tp_class_cache,(DeeObject *)self,name,hash,argc,argv)) != ITER_DONE)
@@ -826,25 +785,14 @@ DeeType_CallAttrStringKw(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      return NULL;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_CallClassAttributeKw(iter,attr,argc,argv,kw);
-#else
-    return member_call_kw(iter,&desc->c_class,
-                         (DeeObject *)iter,attr,
-                          argc,argv,kw);
-#endif
    }
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_CallInstanceAttributeKw(iter,attr,argc,argv,kw);
-#else
-    return class_member_call_kw(iter,&desc->c_class,
-                                attr,argc,argv,kw);
-#endif
    }
   } else {
    if ((result = membercache_callattr_kw(&self->tp_class_cache,(DeeObject *)self,name,hash,argc,argv,kw)) != ITER_DONE)
@@ -959,25 +907,14 @@ INTERN int (DCALL DeeType_DelAttrString)(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_DelClassAttribute(iter,attr);
-#else
-    return member_del(iter,&desc->c_class,(DeeObject *)iter,attr);
-#endif
    }
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_DelInstanceAttribute(iter,attr);
-#else
-    if (attr->ca_flag & CLASS_MEMBER_FCLASSMEM)
-        return class_member_del(iter,&desc->c_class,attr);
-    /* Instance attr attributes cannot be deleted without an instance operand. */
-    goto noaccess;
-#endif
    }
   } else {
    if ((error = membercache_delattr(&self->tp_class_cache,(DeeObject *)self,name,hash)) <= 0)
@@ -1035,25 +972,14 @@ INTERN int (DCALL DeeType_SetAttrString)(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_SetClassAttribute(iter,attr,value);
-#else
-    return member_set(iter,&desc->c_class,(DeeObject *)iter,attr,value);
-#endif
    }
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
     if (!member_mayaccess(iter,attr)) {
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_SetInstanceAttribute(iter,attr,value);
-#else
-    if (attr->ca_flag & CLASS_MEMBER_FCLASSMEM)
-        return class_member_set(iter,&desc->c_class,attr,value);
-    /* Instance attr attributes cannot be set without an instance operand. */
-    goto noaccess;
-#endif
    }
   } else {
    if ((error = membercache_setattr(&self->tp_class_cache,(DeeObject *)self,name,hash,value)) <= 0)
@@ -1194,19 +1120,10 @@ DeeType_EnumAttr(DeeTypeObject *__restrict self,
      goto err_m1;
 #endif
   if (DeeType_IsClass(iter)) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    temp = DeeClass_EnumClassAttributes(iter,proc,arg);
-#else
-   struct class_desc *desc = DeeClass_DESC(iter);
-   temp = membertable_enum(iter,NULL,desc->c_cmem,proc,arg);
-#endif
    if unlikely(temp < 0) goto err;
    result += temp;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    temp = DeeClass_EnumClassInstanceAttributes(iter,proc,arg);
-#else
-   temp = membertable_enum_class(iter,desc->c_mem,proc,arg);
-#endif
    if unlikely(temp < 0) goto err;
    result += temp;
   } else {
@@ -1300,11 +1217,7 @@ DeeType_GetInstanceAttrString(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      return NULL;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_GetInstanceAttribute(iter,attr);
-#else
-    return class_member_get((DeeTypeObject *)iter,&desc->c_class,attr);
-#endif
    }
   } else {
    if ((result = membercache_getinstanceattr(iter,name,hash)) != ITER_DONE)
@@ -1335,13 +1248,8 @@ DeeType_DocInstanceAttrString(DeeTypeObject *__restrict self,
    struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     if (attr->ca_doc)
         return_reference_((DeeObject *)attr->ca_doc);
-#else
-    if (attr->cme_doc)
-        return_reference_((DeeObject *)attr->cme_doc);
-#endif
     err_nodoc_attribute(iter->tp_name,name);
     goto err;
    }
@@ -1382,11 +1290,7 @@ DeeType_CallInstanceAttrStringKw(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_CallInstanceAttributeKw(iter,attr,argc,argv,kw);
-#else
-    return class_member_call_kw(iter,&desc->c_class,attr,argc,argv,kw);
-#endif
    }
   } else {
    if ((result = membercache_callinstanceattr_kw(self,name,hash,argc,argv,kw)) != ITER_DONE)
@@ -1447,14 +1351,7 @@ INTERN int (DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_DelInstanceAttribute(iter,attr);
-#else
-    if (attr->ca_flag & CLASS_MEMBER_FCLASSMEM)
-        return class_member_del(iter,&desc->c_class,attr);
-    /* Instance attr attributes cannot be deleted without an instance operand. */
-    goto noaccess;
-#endif
    }
   } else {
    if ((error = membercache_delinstanceattr(self,name,hash)) <= 0)
@@ -1488,14 +1385,7 @@ INTERN int (DCALL DeeType_SetInstanceAttrString)(DeeTypeObject *__restrict self,
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeClass_SetInstanceAttribute(iter,attr,value);
-#else
-    if (attr->ca_flag & CLASS_MEMBER_FCLASSMEM)
-        return class_member_set(iter,&desc->c_class,attr,value);
-    /* Instance attr attributes cannot be set without an instance operand. */
-    goto noaccess;
-#endif
    }
   } else {
    if ((error = membercache_setinstanceattr(self,name,hash,value)) <= 0)
@@ -1516,15 +1406,6 @@ err:      return -1;
 noaccess: err_cant_access_attribute(iter,name,ATTR_ACCESS_SET); goto err;
 done:     return error;
 }
-
-
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
-#define class_getattr      instance_tgetattr
-#define class_wrap_getattr instance_getattr
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-INTDEF DREF DeeObject *DCALL class_getattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict attr);
-INTDEF DREF DeeObject *DCALL class_wrap_getattr(DeeObject *__restrict self, DeeObject *__restrict attr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 
 INTDEF DREF DeeObject *DCALL
@@ -1591,8 +1472,8 @@ do_iter_attr:
         return DeeModule_HasAttrString((DeeModuleObject *)self,DeeString_STR(attr_name),hash);
     if (getattr == &type_getattr)
         return DeeType_HasAttrString((DeeTypeObject *)self,DeeString_STR(attr_name),hash);
-    if (getattr == &class_wrap_getattr)
-     found_object = class_getattr(iter,self,attr_name);
+    if (getattr == &instance_getattr)
+     found_object = instance_tgetattr(iter,self,attr_name);
     else {
      found_object = (*getattr)(self,attr_name);
     }
@@ -1662,8 +1543,8 @@ do_iter_attr:
         return DeeType_HasAttrString((DeeTypeObject *)self,attr_name,hash);
     attr_obj = DeeString_NewWithHash(attr_name,hash);
     if unlikely(!attr_obj) return -1;
-    if (getattr == &class_wrap_getattr)
-     found_object = class_getattr(iter,self,attr_obj);
+    if (getattr == &instance_getattr)
+     found_object = instance_tgetattr(iter,self,attr_obj);
     else {
      found_object = (*getattr)(self,attr_obj);
     }
@@ -1715,15 +1596,11 @@ PUBLIC int
      err_protected_member(iter,attr);
      return -1;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeInstance_BoundAttribute(iter,
                                       DeeInstance_DESC(desc,
                                                        self),
                                       self,
                                       attr);
-#else
-    return member_bound(iter,DeeInstance_DESC(desc,self),self,attr);
-#endif
    }
   } else {
    if (iter->tp_methods &&
@@ -1751,8 +1628,8 @@ do_iter_attr:
         return DeeModule_BoundAttrString((DeeModuleObject *)self,DeeString_STR(attr_name),hash);
     if (getattr == &type_getattr)
         return DeeType_BoundAttrString((DeeTypeObject *)self,DeeString_STR(attr_name),hash);
-    if (iter->tp_attr->tp_getattr == &class_wrap_getattr) {
-     found_object = class_getattr(iter,self,attr_name);
+    if (iter->tp_attr->tp_getattr == &instance_getattr) {
+     found_object = instance_tgetattr(iter,self,attr_name);
     } else {
      found_object = (*iter->tp_attr->tp_getattr)(self,attr_name);
     }
@@ -1805,15 +1682,11 @@ PUBLIC int
      err_protected_member(iter,attr);
      return -1;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeInstance_BoundAttribute(iter,
                                       DeeInstance_DESC(desc,
                                                        self),
                                       self,
                                       attr);
-#else
-    return member_bound(iter,DeeInstance_DESC(desc,self),self,attr);
-#endif
    }
   } else {
    if (iter->tp_methods &&
@@ -1843,8 +1716,8 @@ do_iter_attr:
         return DeeModule_BoundAttrString((DeeModuleObject *)self,attr_name,hash);
     if (getattr == &type_getattr)
         return DeeType_BoundAttrString((DeeTypeObject *)self,attr_name,hash);
-    if (getattr == &class_wrap_getattr)
-     found_object = class_getattr(iter,self,attr_obj);
+    if (getattr == &instance_getattr)
+     found_object = instance_tgetattr(iter,self,attr_obj);
     else {
      found_object = (*getattr)(self,attr_obj);
     }
@@ -1919,13 +1792,8 @@ continue_search:
    struct member_entry *attr;
    struct class_desc *desc = DeeClass_DESC(iter);
    if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     if (attr->ca_doc)
         return_reference_((DeeObject *)attr->ca_doc);
-#else
-    if (attr->cme_doc)
-        return_reference_((DeeObject *)attr->cme_doc);
-#endif
     break;
    }
   }
@@ -2001,14 +1869,10 @@ DeeObject_CallAttr(DeeObject *__restrict self,
      err_protected_member(iter,attr);
      return NULL;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeInstance_CallAttribute(iter,
                                      DeeInstance_DESC(desc,
                                                       self),
                                      self,attr,argc,argv);
-#else
-    return member_call(iter,DeeInstance_DESC(desc,self),self,attr,argc,argv);
-#endif
    }
   }
   if (iter->tp_methods &&
@@ -2077,14 +1941,10 @@ DeeObject_CallAttrKw(DeeObject *__restrict self,
      err_protected_member(iter,attr);
      return NULL;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeInstance_CallAttributeKw(iter,
                                        DeeInstance_DESC(desc,
                                                         self),
                                        self,attr,argc,argv,kw);
-#else
-    return member_call_kw(iter,DeeInstance_DESC(desc,self),self,attr,argc,argv,kw);
-#endif
    }
   }
   if (iter->tp_methods &&
@@ -2295,14 +2155,10 @@ DeeObject_GetAttrStringHash(DeeObject *__restrict self,
      err_protected_member(iter,attr);
      return NULL;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeInstance_GetAttribute(iter,
                                     DeeInstance_DESC(desc,
                                                      self),
                                     self,attr);
-#else
-    return member_get(iter,DeeInstance_DESC(desc,self),self,attr);
-#endif
    }
   }
   if (iter->tp_methods &&
@@ -2370,14 +2226,10 @@ PUBLIC int (DCALL DeeObject_DelAttrStringHash)(DeeObject *__restrict self,
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeInstance_DelAttribute(iter,
                                     DeeInstance_DESC(desc,
                                                      self),
                                     self,attr);
-#else
-    return member_del(iter,DeeInstance_DESC(desc,self),self,attr);
-#endif
    }
   }
   if (iter->tp_methods &&
@@ -2449,14 +2301,10 @@ PUBLIC int (DCALL DeeObject_SetAttrStringHash)(DeeObject *__restrict self,
      err_protected_member(iter,attr);
      goto err;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeInstance_SetAttribute(iter,
                                     DeeInstance_DESC(desc,
                                                      self),
                                     self,attr,value);
-#else
-    return member_set(iter,DeeInstance_DESC(desc,self),self,attr,value);
-#endif
    }
   }
   if (iter->tp_methods &&
@@ -2527,15 +2375,10 @@ DeeObject_CallAttrStringHash(DeeObject *__restrict self,
      err_protected_member(iter,attr);
      return NULL;
     }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return DeeInstance_CallAttribute(iter,
                                      DeeInstance_DESC(desc,
                                                       self),
                                      self,attr,argc,argv);
-#else
-    return member_call(iter,DeeInstance_DESC(desc,self),
-                       self,attr,argc,argv);
-#endif
    }
   }
   if (iter->tp_methods &&

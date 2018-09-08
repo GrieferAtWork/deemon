@@ -31,14 +31,14 @@ local function recv_all(socket) {
 
 
 @"An object-oriented interface for working with the FTP protocol"
-@">local session = FTPClient()\n"
-@"> .CONNECT(\"ftp.unicode.org\")\n"
-@"> .USER()\n"
-@"> .PASS()\n"
-@"> .CWD(\"/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS\")\n"
-@">;\n"
-@">for (local line: session.LIST())\n"
-@"> print repr line;\n"
+@">local session = FTPClient()"
+@"> .CONNECT(\"ftp.unicode.org\")"
+@"> .USER()"
+@"> .PASS()"
+@"> .CWD(\"/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS\")"
+@">;"
+@">for (local line: session.LIST())"
+@"> print repr line;"
 class FTPClient {
 
 	private m_socket;

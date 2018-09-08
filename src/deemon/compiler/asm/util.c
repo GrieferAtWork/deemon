@@ -744,28 +744,16 @@ check_sym_class:
     if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
      if unlikely(symid < 0) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      return asm_ggetmember_r((uint16_t)symid,member->ca_addr);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-     return asm_ggetmember_r((uint16_t)symid,member->cme_addr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
     }
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return asm_ggetmember(member->ca_addr);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-    return asm_ggetmember(member->cme_addr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
    }
    /* Fallback: Access the member at runtime.
     * XXX: When the surrounding class is final, then we could use `ASM_GETATTR_THIS_C'! */
    if (asm_gpush_thisas(class_sym,warn_ast)) goto err;
   }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   symid = asm_newconst((DeeObject *)member->ca_name);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-  symid = asm_newconst((DeeObject *)member->cme_name);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
   if unlikely(symid < 0) goto err;
   return asm_ggetattr_const((uint16_t)symid);
  } break;
@@ -1006,29 +994,17 @@ check_sym_class:
     if (SYMBOL_MAY_REFERENCE(class_sym)) {
      symid = asm_rsymid(class_sym);
      if unlikely(symid < 0) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      return asm_gboundmember_r((uint16_t)symid,member->ca_addr);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-     return asm_gboundmember_r((uint16_t)symid,member->cme_addr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
     }
     /* Regular, old member variable. (this one has its own instruction) */
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     return asm_gboundmember(member->ca_addr);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-    return asm_gboundmember(member->cme_addr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
    }
    /* Fallback: Access the member at runtime.
     * XXX: When the surrounding class is final, then we could use `ASM_GETATTR_THIS_C'! */
    if (asm_gpush_thisas(class_sym,warn_ast)) goto err;
   }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   symid = asm_newconst((DeeObject *)member->ca_name);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-  symid = asm_newconst((DeeObject *)member->cme_name);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
   if unlikely(symid < 0) goto err;
   if (asm_gpush_const((uint16_t)symid)) goto err;
   return asm_gboundattr();
@@ -1145,28 +1121,16 @@ check_sym_class:
      if (SYMBOL_MAY_REFERENCE(class_sym)) {
       symid = asm_rsymid(class_sym);
       if unlikely(symid < 0) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
       return asm_gdelmember_r((uint16_t)symid,member->ca_addr);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-      return asm_gdelmember_r((uint16_t)symid,member->cme_addr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
      }
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      return asm_gdelmember(member->ca_addr);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-     return asm_gdelmember(member->cme_addr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
     }
     /* Fallback: Access the member at runtime.
      * XXX: When the surrounding class is final, then we could use `ASM_GETATTR_THIS_C'! */
     if (asm_gpush_thisas(class_sym,warn_ast)) goto err;
    }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    symid = asm_newconst((DeeObject *)member->ca_name);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-   symid = asm_newconst((DeeObject *)member->cme_name);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
    if unlikely(symid < 0) goto err;
    return asm_gdelattr_const((uint16_t)symid);
   } break;
@@ -1325,29 +1289,17 @@ check_sym_class:
      if (SYMBOL_MAY_REFERENCE(class_sym)) {
       symid = asm_rsymid(class_sym);
       if unlikely(symid < 0) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
       return asm_gsetmember_r((uint16_t)symid,member->ca_addr);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-      return asm_gsetmember_r((uint16_t)symid,member->cme_addr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
      }
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
      if (asm_gswap()) goto err; /* Swap value and self-operand to fix the ordering. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      return asm_gsetmember(member->ca_addr);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-     return asm_gsetmember(member->cme_addr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
     }
     /* Fallback: Access the member at runtime.
      * XXX: When the surrounding class is final, then we could use `ASM_GETATTR_THIS_C'! */
     if (asm_gpush_thisas(class_sym,warn_ast)) goto err;
    }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    symid = asm_newconst((DeeObject *)member->ca_name);
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-   symid = asm_newconst((DeeObject *)member->cme_name);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
    if unlikely(symid < 0) goto err;
    if (asm_gswap()) goto err; /* Swap value and self-operand to fix the ordering. */
    return asm_gsetattr_const((uint16_t)symid);

@@ -1489,19 +1489,6 @@ err:
 INTERN int FCALL
 uasm_parse_operand(struct asm_invoke_operand *__restrict result) {
  ASSERT(!result->io_class);
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- ASSERT(!result->io_tag);
- if (TPP_ISKEYWORD(tok)) {
-  char *next = peek_next_token(NULL);
-  if unlikely(!next) goto err;
-  if (*next == ':') {
-   /* Operand tag. */
-   result->io_tag = token.t_kwd;
-   if unlikely(yield() < 0) goto err; /* The tag name. */
-   if unlikely(yield() < 0) goto err; /* The `:' token. */
-  }
- }
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
  /* Parse the actual operand. */
  if unlikely(do_parse_operand(result,true))
     goto err;
@@ -1686,11 +1673,6 @@ got_mnemonic:
   /* Parse an operand. */
   if unlikely(uasm_parse_operand(&invoc.ai_ops[invoc.ai_opcount]))
      goto err;
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
-  /* Set the optags flag if any operand uses a tag. */
-  if (invoc.ai_ops[invoc.ai_opcount].io_tag)
-      invoc.ai_flags |= INVOKE_FOPTAGS;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
   ++invoc.ai_opcount;
   if (tok != ',') break;
   if unlikely(yield() < 0) goto err;

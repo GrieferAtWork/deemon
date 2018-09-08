@@ -1281,16 +1281,6 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   *pstacksz -= 1;
   break;
 
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- case ASM_CLASS:
-  ++*pstacksz,*psp_add = 1,*psp_sub = 0;
-  if (*(uint8_t *)(ip + 1) & CLASSGEN_FHASBASE) --*pstacksz,++*psp_sub;
-  if (*(uint8_t *)(ip + 1) & CLASSGEN_FHASNAME) --*pstacksz,++*psp_sub;
-  if (*(uint8_t *)(ip + 1) & CLASSGEN_FHASIMEM) --*pstacksz,++*psp_sub;
-  if (*(uint8_t *)(ip + 1) & CLASSGEN_FHASCMEM) --*pstacksz,++*psp_sub;
-  break;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
-
  case ASM_PACK_TUPLE:
  case ASM_PACK_LIST:
   *psp_add   = 1;
@@ -1804,14 +1794,6 @@ asm_uses_local(instruction_t const *__restrict ip, uint16_t lid) {
   result = ASM_USING_WRITE;
   break;
 
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- case ASM_CLASS_CBL:
-  if (!(*(uint8_t *)(ip + 1)&CLASSGEN_FHASBASE)) break;
-  if (*(uint8_t *)(ip + 2) != lid) break;
-  result = ASM_USING_READ;
-  break;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
-
  case ASM_EXTENDED1:
   switch (ip[1]) {
   case ASM16_PUSH_BND_LOCAL & 0xff:
@@ -1928,7 +1910,6 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
   result = ASM_USING_READ;
   break;
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  case ASM_CLASS_C:
   if (*(uint8_t *)(ip + 1) == sid) {
    result = ASM_USING_READ;
@@ -1947,27 +1928,9 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
    break;
   }
   break;
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
- case ASM_CLASS_C:
-  if (*(uint8_t *)(ip + 1) & CLASSGEN_FHASBASE &&
-      *(uint8_t *)(ip + 2) == sid) {
-   result = ASM_USING_READ;
-   break;
-  }
-  ATTR_FALLTHROUGH
- case ASM_CLASS_CBL:
- case ASM_CLASS_CBG:
-  if ((*(uint8_t *)(ip + 1) & CLASSGEN_FHASNAME && *(uint8_t *)(ip + 3) == sid) ||
-      (*(uint8_t *)(ip + 1) & CLASSGEN_FHASIMEM && *(uint8_t *)(ip + 4) == sid) ||
-      (*(uint8_t *)(ip + 1) & CLASSGEN_FHASCMEM && *(uint8_t *)(ip + 5) == sid)) {
-   result = ASM_USING_READ;
-  }
-  break;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  case ASM_EXTENDED1:
   switch (ip[1]) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   case ASM16_CLASS_C & 0xff:
    if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == sid) {
     result = ASM_USING_READ;
@@ -1986,7 +1949,6 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
     break;
    }
    break;
-#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
 
   case ASM16_STATIC & 0xff:
    if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != sid) break;

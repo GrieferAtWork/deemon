@@ -16,15 +16,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_CLASS2_DESC_C
-#define GUARD_DEEMON_OBJECTS_CLASS2_DESC_C 1
+#ifndef GUARD_DEEMON_OBJECTS_CLASS_DESC_C
+#define GUARD_DEEMON_OBJECTS_CLASS_DESC_C 1
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 #include <deemon/arg.h>
 #include <deemon/class.h>
-#include <deemon/class2.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/string.h>
@@ -1800,6 +1798,5 @@ err:
 
 
 DECL_END
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
-#endif /* !GUARD_DEEMON_OBJECTS_CLASS2_DESC_C */
+#endif /* !GUARD_DEEMON_OBJECTS_CLASS_DESC_C */

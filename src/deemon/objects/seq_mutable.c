@@ -47,16 +47,6 @@
 DECL_BEGIN
 
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
-#define class_getattr      instance_tgetattr
-#define class_wrap_getattr instance_getattr
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-INTDEF DREF DeeObject *DCALL class_getattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict attr);
-INTDEF DREF DeeObject *DCALL class_wrap_getattr(DeeObject *__restrict self, DeeObject *__restrict attr);
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
-
-
-
 PRIVATE int DCALL
 has_generic_attribute(DeeTypeObject *__restrict tp_self,
                       DeeObject *__restrict self,
@@ -65,8 +55,8 @@ has_generic_attribute(DeeTypeObject *__restrict tp_self,
  if (tp_self->tp_attr) {
   if (tp_self->tp_attr->tp_getattr) {
    DREF DeeObject *obj;
-   if (tp_self->tp_attr->tp_getattr == &class_wrap_getattr)
-    obj = class_getattr(tp_self,self,attr);
+   if (tp_self->tp_attr->tp_getattr == &instance_getattr)
+    obj = instance_tgetattr(tp_self,self,attr);
    else {
     obj = (*tp_self->tp_attr->tp_getattr)(self,attr);
    }
@@ -79,13 +69,8 @@ has_generic_attribute(DeeTypeObject *__restrict tp_self,
  } else {
   char *name = DeeString_STR(attr);
   dhash_t hash = DeeString_Hash(attr);
-  if (DeeType_IsClass(tp_self)) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
-   return DeeClass_QueryInstanceAttributeStringWithHash(tp_self,name,hash) != NULL ? 1 : 0;
-#else
-   return membertable_lookup_string(DeeClass_DESC(tp_self)->c_mem,name,hash) != NULL ? 1 : 0;
-#endif
-  }
+  if (DeeType_IsClass(tp_self))
+      return DeeClass_QueryInstanceAttributeStringWithHash(tp_self,name,hash) != NULL ? 1 : 0;
   cache = &tp_self->tp_cache;
 #if 0 /* Don't use the cache, which may contain members from lower-level types! */
   if (membercache_hasattr(cache,name,hash))
@@ -128,7 +113,6 @@ vcall_generic_attribute(DeeTypeObject *__restrict tp_self,
    DREF DeeObject *args_tuple;
    args_tuple = DeeTuple_VNewf(format,args);
    if unlikely(!args_tuple) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    result = DeeInstance_CallAttribute(tp_self,
                                       DeeInstance_DESC(desc,
                                                        self),
@@ -136,14 +120,6 @@ vcall_generic_attribute(DeeTypeObject *__restrict tp_self,
                                       member,
                                       DeeTuple_SIZE(args_tuple),
                                       DeeTuple_ELEM(args_tuple));
-#else
-   result = member_call(tp_self,
-                        DeeInstance_DESC(desc,self),
-                        self,
-                        member,
-                        DeeTuple_SIZE(args_tuple),
-                        DeeTuple_ELEM(args_tuple));
-#endif
    Dee_Decref(args_tuple);
    return result;
   }
@@ -198,18 +174,11 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
   if ((member = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
                                                                   DeeString_STR(name),
                                                                   hash)) != NULL) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    return DeeInstance_GetAttribute(tp_self,
                                    DeeInstance_DESC(desc,
                                                     self),
                                    self,
                                    member);
-#else
-   return member_get(tp_self,
-                     DeeInstance_DESC(desc,self),
-                     self,
-                     member);
-#endif
   }
   result = ITER_DONE;
  } else {
@@ -263,8 +232,8 @@ call_generic_attribute_in_range(DeeTypeObject *__restrict tp_limit,
   if (iter->tp_attr) {
    if (iter->tp_attr->tp_getattr) {
     DREF DeeObject *func;
-    if (iter->tp_attr->tp_getattr == &class_wrap_getattr)
-     func = class_getattr(iter,self,name);
+    if (iter->tp_attr->tp_getattr == &instance_getattr)
+     func = instance_tgetattr(iter,self,name);
     else {
      func = (*iter->tp_attr->tp_getattr)(self,name);
     }
@@ -311,8 +280,8 @@ call_generic_attribute_anywhere(DeeObject *__restrict self,
   if (iter->tp_attr) {
    if (iter->tp_attr->tp_getattr) {
     DREF DeeObject *func;
-    if (iter->tp_attr->tp_getattr == &class_wrap_getattr)
-     func = class_getattr(iter,self,name);
+    if (iter->tp_attr->tp_getattr == &instance_getattr)
+     func = instance_tgetattr(iter,self,name);
     else {
      func = (*iter->tp_attr->tp_getattr)(self,name);
     }
@@ -401,8 +370,8 @@ DeeSeq_DelItem(DeeObject *__restrict self, size_t index) {
    if (tp_self->tp_attr) {
     if (tp_self->tp_attr->tp_getattr) {
      DREF DeeObject *erase_function,*erase_result;
-     if (tp_self->tp_attr->tp_getattr == &class_wrap_getattr)
-      erase_function = class_getattr(tp_self,self,&str_erase);
+     if (tp_self->tp_attr->tp_getattr == &instance_getattr)
+      erase_function = instance_tgetattr(tp_self,self,&str_erase);
      else {
       erase_function = (*tp_self->tp_attr->tp_getattr)(self,&str_erase);
      }

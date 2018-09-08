@@ -714,14 +714,10 @@ libdisasm_printconst(dformatprinter printer, void *arg,
    Dee_Decref(constval);
    return result;
   }
+  /* TODO: Add the names of code/function/class objects as comments. */
   if (!DeeCode_CheckExact(constval) &&
       !DeeFunction_CheckExact(constval) &&
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
-      !DeeClassDescriptor_Check(constval)
-#else
-      !DeeMemberTable_CheckExact(constval)
-#endif
-      )
+      !DeeClassDescriptor_Check(constval))
        return Dee_FormatPrintf(printer,arg,PREFIX_CONSTANT "%R",constval);
   Dee_Decref(constval);
  }
@@ -1550,7 +1546,6 @@ do_jmp_target:
   break;
 
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  case ASM_CLASS_GC:
   imm  = READ_imm8(iter);
   imm2 = READ_imm8(iter);
@@ -1579,63 +1574,6 @@ print_global_const:
   imm  = READ_imm16(iter);
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
   break;
-#else
- {
-  uint8_t flags,class_imm;
-  uint8_t index;
-  bool is_first;
- case ASM_CLASS:
- case ASM_CLASS_C:
- case ASM_CLASS_CBL:
- case ASM_CLASS_CBG:
-  class_imm = READ_imm8(iter);
-  flags     = class_imm&0xf;
-  is_first  = true;
-  for (index = 0; flags; flags >>= 1,++index) {
-   char const *name;
-   if (!(flags&1)) continue;
-   name = class_flag_names[index];
-   if (!is_first) PRINT("|");
-   is_first = false;
-   if (*name) printf("TP_F%s",name);
-   else printf("%#x",(unsigned int)(1 << index));
-  }
-  if (is_first) PRINT("0");
-  if (opcode == ASM_CLASS) {
-   if (class_imm&CLASSGEN_FHASBASE) PRINT(", b:pop");
-   if (class_imm&CLASSGEN_FHASNAME) PRINT(", n:pop");
-   if (class_imm&CLASSGEN_FHASIMEM) PRINT(", i:pop");
-   if (class_imm&CLASSGEN_FHASCMEM) PRINT(", c:pop");
-  } else {
-   uint8_t b_id = READ_imm8(iter);
-   uint8_t n_id = READ_imm8(iter);
-   uint8_t i_id = READ_imm8(iter);
-   uint8_t c_id = READ_imm8(iter);
-   if (class_imm&CLASSGEN_FHASBASE) {
-    PRINT(", b:");
-    if (opcode == ASM_CLASS_C)
-     INVOKE(libdisasm_printconst(printer,arg,b_id,code,flags,false));
-    else if (opcode == ASM_CLASS_CBL)
-     INVOKE(libdisasm_printlocal(printer,arg,b_id,ddi,code,flags));
-    else {
-     INVOKE(libdisasm_printglobal(printer,arg,b_id,code,flags));
-    }
-   }
-   if (class_imm&CLASSGEN_FHASNAME) {
-    PRINT(", n:");
-    INVOKE(libdisasm_printconst(printer,arg,n_id,code,flags,false));
-   }
-   if (class_imm&CLASSGEN_FHASIMEM) {
-    PRINT(", i:");
-    INVOKE(libdisasm_printconst(printer,arg,i_id,code,flags,false));
-   }
-   if (class_imm&CLASSGEN_FHASCMEM) {
-    PRINT(", c:");
-    INVOKE(libdisasm_printconst(printer,arg,c_id,code,flags,false));
-   }
-  }
- } break;
-#endif
 
  case ASM_DUP_N:
  case ASM_POP_N:
@@ -1768,25 +1706,6 @@ do_print_adjstack:
          val < 0 ? '-' : '+',
          val < 0 ? (int32_t)-val : (int32_t)val);
  } break;
-
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- {
-  struct opinfo *info;
- case ASM16_DEFOP:
-  imm = READ_imm16(iter);
-  goto do_print_op;
- case ASM_DEFOP:
-  imm = READ_imm8(iter);
-do_print_op:
-  /* Special case: Try to print the name of the operator, rather than its ID. */
-  info = Dee_OperatorInfo(NULL,(uint16_t)imm);
-  if (info) {
-   printf("__%s__, pop",info->oi_sname);
-  } else {
-   printf("%I16u, pop",(uint16_t)imm);
-  }
- } break;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  {
   struct opinfo *info;
@@ -2048,9 +1967,7 @@ print_const_int:
  case ASM16_FUNCTION_C:
  case ASM16_FUNCTION_C_16:
  case ASM16_CALL_TUPLE_KW:
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  case ASM16_CLASS_C:
-#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
   imm = READ_imm16(iter);
   goto print_const;
  case ASM_PRINT_C:
@@ -2076,9 +1993,7 @@ print_const_int:
  case ASM_FUNCTION_C:
  case ASM_FUNCTION_C_16:
  case ASM_CALL_TUPLE_KW:
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  case ASM_CLASS_C:
-#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
   imm = READ_imm8(iter);
 print_const:
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));

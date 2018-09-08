@@ -50,190 +50,10 @@ PRIVATE tok_t DCALL yield_semicollon(void) {
 }
 
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 INTDEF struct class_operator empty_class_operators[];
 INTDEF struct class_attribute empty_class_attributes[];
-#else
-INTDEF struct member_entry empty_class_members[];
-
-/* Create a new, empty member table for internal
- * use and non-threadsafe modification. */
-PRIVATE DREF DeeMemberTableObject *
-DCALL DeeMemberTable_New(void) {
- DeeMemberTableObject *result;
- result = DeeObject_MALLOC(DeeMemberTableObject);
- if unlikely(!result) goto done;
- DeeObject_Init(result,&DeeMemberTable_Type);
- result->mt_size = 0;
- result->mt_mask = 0;
- result->mt_list = empty_class_members;
-done:
- return result;
-}
-
-PRIVATE void DCALL
-relocate_member_table(struct member_entry *__restrict entry,
-                      struct member_entry *__restrict new_entry) {
- struct symbol **biter,**bend,*iter;
- bend = (biter = current_scope->s_map)+current_scope->s_mapa;
- for (; biter != bend; ++biter) {
-  for (iter = *biter; iter; iter = iter->s_next) {
-   if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
-        iter->s_type == SYMBOL_TYPE_CFIELD) &&
-        iter->s_field.f_attr == entry)
-        iter->s_field.f_attr = new_entry;
-  }
- }
- for (iter = current_scope->s_del; iter; iter = iter->s_next) {
-  if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
-       iter->s_type == SYMBOL_TYPE_CFIELD) &&
-       iter->s_field.f_attr == entry)
-       iter->s_field.f_attr = new_entry;
- }
-}
-
-PRIVATE void DCALL
-relocate_member_vector(struct member_entry *__restrict old_base,
-                       struct member_entry *__restrict old_end,
-                       uintptr_t offset_to_new_base) {
- struct symbol **biter,**bend,*iter;
- /* Simple case: If there is no offset, we don't need to do anything! */
- if (!offset_to_new_base) return;
- bend = (biter = current_scope->s_map)+current_scope->s_mapa;
- for (; biter != bend; ++biter) {
-  for (iter = *biter; iter; iter = iter->s_next) {
-   if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
-        iter->s_type == SYMBOL_TYPE_CFIELD) &&
-        iter->s_field.f_attr >= old_base &&
-        iter->s_field.f_attr < old_end)
-      *(uintptr_t *)&iter->s_field.f_attr += offset_to_new_base;
-  }
- }
- for (iter = current_scope->s_del; iter; iter = iter->s_next) {
-  if ((iter->s_type == SYMBOL_TYPE_IFIELD ||
-       iter->s_type == SYMBOL_TYPE_CFIELD) &&
-       iter->s_field.f_attr >= old_base &&
-       iter->s_field.f_attr < old_end)
-     *(uintptr_t *)&iter->s_field.f_attr += offset_to_new_base;
- }
-}
-
-PRIVATE bool DCALL
-memtab_rehash(DeeMemberTableObject *__restrict self,
-              struct member_entry **pitem) {
- struct member_entry *new_vector,*iter,*end;
- size_t new_mask = self->mt_mask;
- new_mask = (new_mask << 1)|1;
-#if 0
- if unlikely(new_mask == 1)
-    new_mask = 3;
-#else
- if unlikely(new_mask == 1)
-    new_mask = 64-1; /* Start out bigger than 2. */
-#endif
- ASSERT(self->mt_size < new_mask);
- new_vector = (struct member_entry *)Dee_TryCalloc((new_mask+1)*sizeof(struct member_entry));
- if unlikely(!new_vector) return false;
- ASSERT((self->mt_list == empty_class_members) == (self->mt_size == 0));
- ASSERT((self->mt_list == empty_class_members) == (self->mt_mask == 0));
- if (self->mt_list != empty_class_members) {
-  /* Re-insert all existing items into the new table vector. */
-  end = (iter = self->mt_list)+(self->mt_mask+1);
-  for (; iter != end; ++iter) {
-   struct member_entry *item;
-   dhash_t i,perturb;
-   /* Skip NULL entires. */
-   if (!iter->cme_name) continue;
-   perturb = i = iter->cme_hash & new_mask;
-   for (;; i = DeeMemberTable_HASHNX(i,perturb),DeeMemberTable_HASHPT(perturb)) {
-    item = &new_vector[i & new_mask];
-    if (!item->cme_name) break; /* Empty slot found. */
-   }
-   /* Transfer this object. */
-   memcpy(item,iter,sizeof(struct member_entry));
-   /* Relocate this slot. */
-   relocate_member_table(iter,item);
-   if (pitem && *pitem == iter) *pitem = item;
-  }
-  Dee_Free(self->mt_list);
- }
- self->mt_mask = new_mask;
- self->mt_list = new_vector;
- return true;
-}
-
-/* Add a new entry to the given member table, using `name'.
- * In the event that the member already exists, throw an `Error.CompilerError'.
- * NOTE: The caller is responsible for initializing
- *       all fields except for `cme_name' and `cme_hash'.
- * NOTE: At this point (and contrary to the documentation in `DeeMemberTableObject'),
- *       the amount of existing members is stored in `mt_size', rather than the max
- *       index of actually associated member space.
- *       Additionally, this function modifies that counter to keep
- *       track of when a member table needs to be rehashed. */
-PRIVATE struct member_entry *DCALL
-DeeMemberTable_Add(DeeMemberTableObject *__restrict self,
-                   DeeStringObject *__restrict name) {
- size_t mask; dhash_t i,perturb,hash;
- ASSERT_OBJECT_TYPE(self,&DeeMemberTable_Type);
- ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
- hash = DeeString_Hash((DeeObject *)name);
-again:
- mask = self->mt_mask;
- perturb = i = hash & mask;
- for (;; i = DeeMemberTable_HASHNX(i,perturb),DeeMemberTable_HASHPT(perturb)) {
-  struct member_entry *item = &self->mt_list[i & mask];
-  if (!item->cme_name) {
-   if (self->mt_size+1 >= self->mt_mask)
-       break; /* Rehash the table and try again. */
-   /* Not found. - Use this empty slot. */
-   item->cme_name = name;
-   item->cme_hash = hash;
-   Dee_Incref(name);
-   ++self->mt_size;
-   /* Try to keep the table vector big at least twice as big as the element count. */
-   if (self->mt_size*2 > self->mt_mask)
-       memtab_rehash(self,&item);
-   return item;
-  }
-  if (item->cme_hash != hash) continue; /* Non-matching hash */
-  ASSERT_OBJECT_TYPE_EXACT(item->cme_name,&DeeString_Type);
-  if (item->cme_name->s_len != name->s_len) continue; /* Differing lengths. */
-  if (memcmp(item->cme_name->s_str,name->s_str,name->s_len*sizeof(char)) != 0)
-      continue; /* Differing strings. */
-  /* Error: The item already exists. (duplicate class member) */
-  PERR(W_CLASS_MEMBER_ALREADY_DEFINED,
-       name->s_len,name->s_str);
-  return NULL;
- }
- /* Rehash the table and try again. */
- if (memtab_rehash(self,NULL))
-     goto again;
- if (Dee_CollectMemory(1))
-     goto again;
- return NULL;
-}
-
-
-#define SYM_FMEMBER_INST  0x0000 /* SYMBOL_TYPE_IFIELD */
-#define SYM_FMEMBER_CLASS 0x0001 /* SYMBOL_TYPE_CFIELD */
-#define SYMBOL_TYPE_FROM_FMEMBER(x) (SYMBOL_TYPE_IFIELD+(x))
-STATIC_ASSERT(SYMBOL_TYPE_FROM_FMEMBER(SYM_FMEMBER_INST)  == SYMBOL_TYPE_IFIELD);
-STATIC_ASSERT(SYMBOL_TYPE_FROM_FMEMBER(SYM_FMEMBER_CLASS) == SYMBOL_TYPE_CFIELD);
-
-
-/* Make sure that we can use these as indices in a 2-element array. */
-STATIC_ASSERT(SYM_FMEMBER_INST  < 2);
-STATIC_ASSERT(SYM_FMEMBER_CLASS < 2);
-struct table_descriptor {
-    DREF DeeMemberTableObject *td_field; /* [0..1] The member table (mutable; lazy-alloc) */
-    size_t                     td_usage; /* Required size of the `ih_vtab' vector at runtime.
-                                          * (Later written into `td_field->mt_size', which currently contains the amount of members). */
-};
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 struct class_maker {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     DREF struct ast           *cm_base;        /* [0..1] An AST evaluating to the base of the class. */
     DREF DeeClassDescriptorObject *cm_desc;    /* [1..1] The descriptor for the class. */
     size_t                     cm_iattr_size;  /* Number of used slots in `cm_desc->cd_clsop_list' */
@@ -247,19 +67,6 @@ struct class_maker {
 #define CLASS_MAKER_CTOR_FSUPER   0x0002       /* The constructor has explicitly been inherited from the super-type. */
     uint16_t                   cm_ctor_flags;  /* Special flags concerning the constructor (Set of `CLASS_MAKER_CTOR_F*') */
     uint16_t                   cm_pad;         /* ... */
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-    uint16_t                   cm_flags;       /* Class flags (Set of `TP_F*'). */
-    uint16_t                   cm_padding[(sizeof(void *)-2)/2]; /* ... */
-#ifdef __INTELLISENSE__
-    struct ast                *cm_base;        /* [0..1] An AST evaluating to the base of the class. */
-    struct ast                *cm_name;        /* [0..1] An AST evaluating to the name of the class. */
-#else
-    DREF struct ast           *cm_base;        /* [0..1] An AST evaluating to the base of the class. */
-    DREF struct ast           *cm_name;        /* [0..1] An AST evaluating to the name of the class. */
-#endif
-    struct table_descriptor    cm_tables[2];   /* SYM_FMEMBER_INST:  The instance member table.
-                                                * SYM_FMEMBER_CLASS: The class member table. */
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
     DREF struct ast           *cm_ctor;        /* [0..1][(!= NULL) == (cm_ctor_scope != NULL) == (cm_initc != 0)]
                                                 * The class's constructor function AST (AST_FUNCTION) */
     DREF DeeBaseScopeObject   *cm_ctor_scope;  /* [0..1][(!= NULL) == (cm_ctor != NULL) == (cm_initc != 0)] (lazy-alloc)
@@ -281,21 +88,8 @@ struct class_maker {
                                                 * This symbol is assigned in the base scope of every member
                                                 * function/operator that is parsed. */
     struct symbol             *cm_supersym;    /* [0..1] Same as `cm_classsym', but instead describes the class's super-class. */
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
-    size_t                     cm_anonc;       /* Amount of anonymous class members. */
-    size_t                     cm_anona;       /* Allocated amount of anonymous class members. */
-    struct member_entry       *cm_anonv;       /* [OVERRIDE([*].cme_name,[NOT(DREF)][1..1][== Dee_EmptyString])]
-                                                * [OVERRIDE([*].cme_doc,[NOT(DREF)][0..0])]
-                                                * [0..c_anonc][owned] Vector of anonymous class members.
-                                                * These members are used for generating symbols in order to
-                                                * access the callbacks of properties themself, rather than
-                                                * invoking the property and are therefor required during
-                                                * assembly of class/instance construction text. */
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 };
 
-
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 
 PRIVATE void DCALL
 relocate_attribute(struct class_attribute *__restrict old_attr,
@@ -541,7 +335,6 @@ class_maker_bindoperator(struct class_maker *__restrict self,
 err:
  return -1;
 }
-#endif
 
 
 /* Similar to `class_maker_push_ctorscope()', but pushes a basescope
@@ -601,11 +394,7 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
  * WARNING: Once done, the caller is required to increment `**ppusage_counter'
  *          by the number of slots that are then being used by the member.
  * @param: name:            The name of the member that should be added.
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  * @param: is_class_member: `true', if the member should be added as a class-member.
-#else
- * @param: table_id:        Either `SYM_FMEMBER_INST' (for an instance member) or `SYM_FMEMBER_CLASS' (for a class member)
-#endif
  * @param: flags:           Set of `CLASS_MEMBER_F*'.
  * @param: ppusage_counter: Filled with a pointer to the usage-counter which must be increment
  *                          by however-many consecutive VTABLE slots will be used by the member.
@@ -615,48 +404,25 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
 PRIVATE struct symbol *DCALL
 class_maker_addmember(struct class_maker *__restrict self,
                       struct TPPKeyword *__restrict name,
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
                       bool is_class_member,
-#else
-                      uint16_t table_id,
-#endif
                       uint16_t flags,
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
                       uint16_t **__restrict ppusage_counter,
-#else
-                      size_t **__restrict ppusage_counter,
-#endif
                       struct ast_loc *loc) {
  struct symbol *result;
  DREF DeeStringObject *name_str;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  struct class_attribute *attr;
-#else
- struct member_entry *attr;
- struct table_descriptor *desc;
- ASSERT(table_id == SYM_FMEMBER_INST || table_id == SYM_FMEMBER_CLASS);
-#endif
  ASSERT(ppusage_counter);
  ASSERT(self);
  ASSERT(self->cm_classsym);
  ASSERT(self->cm_classsym->s_name);
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- desc = &self->cm_tables[table_id];
- if (!desc->td_field &&
-     (desc->td_field = DeeMemberTable_New()) == NULL) goto err;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
  name_str = (DREF DeeStringObject *)DeeString_NewSized(name->k_name,
                                                        name->k_size);
  if unlikely(!name_str) goto err;
  /* Add a new member entry to the specified table. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  attr = is_class_member
       ? class_maker_newcattr(self,name_str)
       : class_maker_newiattr(self,name_str)
       ;
-#else
- attr = DeeMemberTable_Add(desc->td_field,name_str);
-#endif
  Dee_Decref(name_str);
  if unlikely(!attr) goto err;
 
@@ -671,19 +437,11 @@ class_maker_addmember(struct class_maker *__restrict self,
  /* NOTE: Members apart of the instance member vector, but stored
   *       in the class member vector must obvious count to its usage,
   *       rather than their own. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  if ((flags & CLASS_MEMBER_FCLASSMEM) || is_class_member) {
   *ppusage_counter = &self->cm_desc->cd_cmemb_size;
  } else {
   *ppusage_counter = &self->cm_desc->cd_imemb_size;
  }
-#else
- if (flags & CLASS_MEMBER_FCLASSMEM) {
-  *ppusage_counter = &self->cm_tables[SYM_FMEMBER_CLASS].td_usage;
- } else {
-  *ppusage_counter = &desc->td_usage; /* Pass the effective usage counter to the caller. */
- }
-#endif
  {
   size_t addr = **ppusage_counter;
   /* -2 because 2 == 3-1 and 3 is the max number of slots required for a property */
@@ -693,11 +451,7 @@ class_maker_addmember(struct class_maker *__restrict self,
    goto err;
   }
   /* Save the starting VTABLE address of this member. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   attr->ca_addr  = (uint16_t)addr;
-#else
-  attr->cme_addr = (uint16_t)addr;
-#endif
  }
  /* Make sure that no local symbol exists with the given name.
   * >> This is the compile-time portion of addressing symbols. */
@@ -718,14 +472,10 @@ class_maker_addmember(struct class_maker *__restrict self,
   if unlikely(!result) goto err;
  }
  /* Initialize that symbol to be a member symbol. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  result->s_type = is_class_member
                 ? SYMBOL_TYPE_CFIELD
                 : SYMBOL_TYPE_IFIELD
                 ;
-#else
- result->s_type = SYMBOL_TYPE_FROM_FMEMBER(table_id);
-#endif
  result->s_field.f_class = self->cm_classsym;
  result->s_field.f_attr = attr;
  SYMBOL_INC_NREAD(self->cm_classsym);
@@ -733,63 +483,6 @@ class_maker_addmember(struct class_maker *__restrict self,
 err:
  return NULL;
 }
-
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
-/* Add an anonymous symbol referring to `index' in `table_id', using `flags'.
- * @param: table_id: Either `SYM_FMEMBER_INST' (for an instance member) or `SYM_FMEMBER_CLASS' (for a class member)
- * @param: flags:    Set of `CLASS_MEMBER_F*'.
- * @param: index:    The VTABLE index in `table_id' that should be used as member address. */
-PRIVATE struct symbol *DCALL
-class_maker_addanon(struct class_maker *__restrict self,
-                    uint16_t table_id, uint16_t flags, uint16_t index) {
- struct symbol *result;
- struct member_entry *entry;
- ASSERT(self);
- ASSERT(self->cm_classsym);
- ASSERT(self->cm_classsym->s_name);
- ASSERTF(self->cm_tables[table_id].td_field,
-         "How did you get an index %u if the associated table %u doesn't exist",
-        (unsigned int)index,(unsigned int)table_id);
- entry = self->cm_anonv;
- if (self->cm_anonc == self->cm_anona) {
-  size_t new_alloc = self->cm_anona*2;
-  if (!new_alloc) new_alloc = 8;
-do_realloc_anonv:
-  entry = (struct member_entry *)Dee_TryRealloc(self->cm_anonv,new_alloc*
-                                                sizeof(struct member_entry));
-  if unlikely(!entry) {
-   if (new_alloc != self->cm_anonc+1) { new_alloc = self->cm_anonc+1; goto do_realloc_anonv; }
-   if (Dee_CollectMemory(new_alloc*sizeof(struct member_entry))) goto do_realloc_anonv;
-   goto err;
-  }
-  /* Relocate uses of items from this  */
-  relocate_member_vector(self->cm_anonv,
-                         self->cm_anonv+self->cm_anonc,
-                        (uintptr_t)entry-
-                        (uintptr_t)self->cm_anonv);
-  self->cm_anonv = entry;
-  self->cm_anona = new_alloc;
- }
- /* Reserve one item from the anonymous member vector. */
- entry += self->cm_anonc++;
- entry->ca_flag = flags;
- entry->cme_addr = index;
- entry->cme_name = (DeeStringObject *)Dee_EmptyString; /* NOTE: Not a reference in this context! */
- entry->cme_hash = 0;
- entry->cme_doc  = NULL;
- /* Wrap the entry within an anonymous symbol. */
- result = new_unnamed_symbol();
- if unlikely(!result) goto err;
- /* Initialize that symbol to be a member symbol. */
- result->s_type           = SYMBOL_TYPE_FROM_FMEMBER(table_id);
- result->s_field.f_class  = self->cm_classsym;
- result->s_field.f_attr = entry;
- SYMBOL_INC_NREAD(self->cm_classsym);
- return result;
-err:
- return NULL;
-}
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 PRIVATE struct class_member *DCALL
 priv_alloc_class_member(struct class_maker *__restrict self) {
@@ -888,12 +581,7 @@ class_maker_addinit(struct class_maker *__restrict self,
  member = priv_alloc_class_member(self);
  if unlikely(!member) goto err;
  /* Add a class member initializer for the slot pointed to by the symbol's entry. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  member->cm_index = entry->ca_addr;
-#else
- member->cm_type  = CLASS_MEMBER_MEMBER;
- member->cm_index = entry->cme_addr;
-#endif
  member->cm_ast   = ast;
  ast_incref(ast);
 done:
@@ -902,7 +590,6 @@ err:
  return -1;
 }
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 PRIVATE int DCALL
 class_maker_addanon(struct class_maker *__restrict self,
                     uint16_t addr,
@@ -921,14 +608,12 @@ class_maker_addanon(struct class_maker *__restrict self,
 err:
  return -1;
 }
-#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
 
 /* Add a new operator function to a given class. */
 PRIVATE int DCALL
 class_maker_addoperator(struct class_maker *__restrict self,
                         uint16_t operator_name,
                         struct ast *__restrict ast) {
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  struct class_member *member; uint16_t addr;
  /* Allocate a new class member address for the operator. */
  addr = self->cm_desc->cd_cmemb_size;
@@ -950,16 +635,6 @@ class_maker_addoperator(struct class_maker *__restrict self,
  return 0;
 err:
  return -1;
-#else
- struct class_member *member;
- member = priv_alloc_class_member(self);
- if unlikely(!member) return -1;
- member->cm_type  = CLASS_MEMBER_OPERATOR;
- member->cm_index = operator_name;
- member->cm_ast   = ast;
- ast_incref(ast);
- return 0;
-#endif
 }
 
 PRIVATE int DCALL
@@ -989,18 +664,9 @@ class_maker_deloperator(struct class_maker *__restrict self,
 PRIVATE void DCALL
 class_maker_fini(struct class_maker *__restrict self) {
  size_t i;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  /* May be `NULL' following an init-failure. */
  Dee_XDecref_unlikely(self->cm_desc);
-#else
- ast_xdecref_unlikely(self->cm_name);
-#endif
  ast_xdecref_unlikely(self->cm_base);
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- for (i = 0; i < COMPILER_LENOF(self->cm_tables); ++i) {
-  Dee_XDecref(self->cm_tables[i].td_field);
- }
-#endif
  ast_xdecref_unlikely(self->cm_ctor);
  Dee_XDecref_unlikely((DeeObject *)self->cm_ctor_scope);
  unicode_printer_fini(&self->cm_doc);
@@ -1010,28 +676,16 @@ class_maker_fini(struct class_maker *__restrict self) {
  for (i = 0; i < self->cm_class_initc; ++i)
       ast_decref(self->cm_class_initv[i].cm_ast);
  Dee_Free(self->cm_class_initv);
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- Dee_Free(self->cm_anonv);
-#endif
 }
 
 /* Pack together an AST to create the class described by `self'. */
 PRIVATE DREF struct ast *DCALL
 class_maker_pack(struct class_maker *__restrict self) {
  DREF struct ast *result;
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- unsigned int i;
- DREF struct ast *doc_ast = NULL;
- DREF struct ast *imem_ast = NULL;
- DREF struct ast *cmem_ast = NULL;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
  /* If required, create a class member initializer for the constructor. */
  if (self->cm_initc || self->cm_ctor) {
   DREF struct ast *constructor_text;
   DREF struct ast *constructor_function = NULL;
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
-  struct class_member *ctor_member;
-#endif
   /* Add the actual constructor when it was defined. */
   if (self->cm_ctor) {
    if unlikely(priv_reserve_instance_init(self)) goto err;
@@ -1076,7 +730,6 @@ class_maker_pack(struct class_maker *__restrict self) {
   self->cm_initc = 0;
   self->cm_initv = NULL;
   /* Add the constructor as an operator to the class initializer list. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   if unlikely(class_maker_addoperator(self,
                                       OPERATOR_CONSTRUCTOR,
                                       constructor_function)) {
@@ -1084,13 +737,6 @@ class_maker_pack(struct class_maker *__restrict self) {
    goto err;
   }
   ast_decref(constructor_function);
-#else
-  ctor_member = priv_alloc_class_member(self);
-  if unlikely(!ctor_member) { ast_decref(constructor_function); goto err; }
-  ctor_member->cm_type  = CLASS_MEMBER_OPERATOR;
-  ctor_member->cm_index = OPERATOR_CONSTRUCTOR;
-  ctor_member->cm_ast   = constructor_function; /* Inherit */
-#endif
  }
  /* Set the constructor-inherited flag for the resulting descriptor. */
  if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER)
@@ -1108,24 +754,7 @@ class_maker_pack(struct class_maker *__restrict self) {
    self->cm_class_inita = self->cm_class_initc;
   }
  }
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- /* Also truncate the anonymous member table. */
- if (self->cm_anonc != self->cm_anona) {
-  struct member_entry *new_vector;
-  new_vector = (struct member_entry *)Dee_TryRealloc(self->cm_anonv,
-                                                     self->cm_anonc*
-                                                     sizeof(struct member_entry));
-  if likely(new_vector) {
-   relocate_member_vector(self->cm_anonv,
-                          self->cm_anonv+self->cm_anonc,
-                         (uintptr_t)new_vector-(uintptr_t)self->cm_anonv);
-   self->cm_anonv = new_vector;
-   self->cm_anona = self->cm_anonc;
-  }
- }
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  /* Truncate the descriptor's instance-attribute vector to
   * its minimal length, if no instance attributes were ever
   * defined.
@@ -1140,25 +769,6 @@ class_maker_pack(struct class_maker *__restrict self) {
   self->cm_desc->cd_iattr_mask = 0;
   ASSERT(!self->cm_desc->cd_iattr_list[0].ca_name);
  }
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
- /* Apply usage stats to all member tables,
-  * overwriting the size values contained until this point. */
- for (i = 0; i < COMPILER_LENOF(self->cm_tables); ++i) {
-  if (!self->cm_tables[i].td_usage) continue;
-  if (!self->cm_tables[i].td_field &&
-      (self->cm_tables[i].td_field = DeeMemberTable_New()) == NULL)
-       goto err;
-  self->cm_tables[i].td_field->mt_size = self->cm_tables[i].td_usage;
- }
-
- /* Create branches for the class and instance member tables. */
- if (self->cm_tables[SYM_FMEMBER_INST].td_field &&
-    (imem_ast = ast_constexpr((DeeObject *)self->cm_tables[SYM_FMEMBER_INST].td_field)) == NULL)
-     goto err;
- if (self->cm_tables[SYM_FMEMBER_CLASS].td_field &&
-    (cmem_ast = ast_constexpr((DeeObject *)self->cm_tables[SYM_FMEMBER_CLASS].td_field)) == NULL)
-     goto err;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  /* Create a new branch for the documentation string (if it exists). */
  if (UNICODE_PRINTER_LENGTH(&self->cm_doc) != 0) {
@@ -1166,18 +776,11 @@ class_maker_pack(struct class_maker *__restrict self) {
   doc_str = (DREF DeeStringObject *)unicode_printer_pack(&self->cm_doc);
   unicode_printer_init(&self->cm_doc);
   if unlikely(!doc_str) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   ASSERT(!self->cm_desc->cd_doc);
   self->cm_desc->cd_doc = doc_str; /* Inherit reference. */
-#else
-  doc_ast = ast_constexpr((DeeObject *)doc_str);
-  Dee_Decref(doc_str);
-  if unlikely(!doc_ast) goto err;
-#endif
  }
 
  /* Finally, create the actual class AST */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  {
   DREF struct ast *descr_ast;
   descr_ast = ast_constexpr((DeeObject *)self->cm_desc);
@@ -1190,44 +793,14 @@ class_maker_pack(struct class_maker *__restrict self) {
                      self->cm_class_initv);
   ast_decref(descr_ast);
  }
-#else
- result = ast_class(self->cm_flags,
-                    self->cm_base,
-                    self->cm_name,
-                    doc_ast,
-                    imem_ast,
-                    cmem_ast,
-                    self->cm_classsym,
-                    self->cm_supersym,
-                    self->cm_class_initc,
-                    self->cm_class_initv,
-                    self->cm_anonc,
-                    self->cm_anonv);
-#endif
-
  if likely(result) {
   /* The new ast will have inherit this stuff upon success. */
   self->cm_class_initc = 0;
   self->cm_class_inita = 0;
   self->cm_class_initv = NULL;
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
-  self->cm_anonc       = 0;
-  self->cm_anona       = 0;
-  self->cm_anonv       = NULL;
-#endif
  }
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- Dee_XDecref((DeeObject *)imem_ast);
- Dee_XDecref((DeeObject *)cmem_ast);
- Dee_XDecref((DeeObject *)doc_ast);
-#endif
  return result;
 err:
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- ast_xdecref(imem_ast);
- ast_xdecref(cmem_ast);
- ast_xdecref(doc_ast);
-#endif
  return NULL;
 }
 
@@ -1408,12 +981,7 @@ PRIVATE struct callback_name const callback_names[] = {
 PRIVATE int DCALL
 parse_property(DREF struct ast *callbacks[CLASS_PROPERTY_CALLBACK_COUNT],
                struct class_maker *__restrict maker,
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
-               bool is_class_property
-#else
-               uint16_t table_id
-#endif
-               ) {
+               bool is_class_property) {
  uint16_t callback_id; struct ast_loc loc;
  DREF struct ast *callback;
  bool has_name_prefix,need_semi;
@@ -1517,12 +1085,7 @@ got_callback_id:
  }
 
  need_semi = false;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
- if (is_class_property)
-#else
- if (table_id == SYM_FMEMBER_CLASS)
-#endif
- {
+ if (is_class_property) {
   /* Parse a new function in the class scope. */
   callback = ast_parse_function(NULL,&need_semi,false,&loc);
  } else {
@@ -1559,7 +1122,6 @@ ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
  /* Inherit the documentation string printer. */
  memcpy(&maker.cm_doc,&current_tags.at_doc,sizeof(struct unicode_printer));
  unicode_printer_init(&current_tags.at_doc);
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  /* Allocate the initial descriptor for the class. */
  maker.cm_desc = (DREF DeeClassDescriptorObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject,cd_iattr_list)+
                                                                   (7 + 1) * sizeof(struct class_attribute));
@@ -1570,10 +1132,6 @@ ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
  maker.cm_desc->cd_clsop_list = empty_class_operators;
  maker.cm_desc->cd_iattr_mask = 7;
  maker.cm_null_member = (uint16_t)-1;
-#else
- maker.cm_flags = class_flags;
-#endif
-
 
  ASSERT(name || !create_symbol);
  if (tok == ':') {
@@ -1640,13 +1198,7 @@ use_object_base:
   name_str = (DREF DeeStringObject *)DeeString_NewSized(name->k_name,
                                                         name->k_size);
   if unlikely(!name_str) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   maker.cm_desc->cd_name = name_str; /* Inherit reference. */
-#else
-  maker.cm_name = ast_constexpr(name_str);
-  Dee_Decref(name_str);
-  if unlikely(!maker.cm_name) goto err;
-#endif
  }
  if (parser_flags & PARSE_FLFSTMT)
      TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
@@ -1681,23 +1233,14 @@ use_object_base:
 #define MEMBER_CLASS_GETSET  3
   int member_class;
   uint16_t member_flags;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   bool is_class_member;
   uint16_t *pusage_counter;
-#else
-  uint16_t member_table;
-  size_t *pusage_counter;
-#endif
   struct ast_loc loc;
   bool modifiers_encountered;
 next_member:
   member_class = MEMBER_CLASS_AUTO;
   member_flags = default_member_flags;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   is_class_member = false;
-#else
-  member_table = SYM_FMEMBER_INST;
-#endif
   modifiers_encountered = false;
   /* Reset member tags. */
   clear_current_tags();
@@ -1751,15 +1294,9 @@ set_visibility:
 
   case KWD_class:
    /* Class field. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    if (is_class_member &&
        WARN(W_CLASS_FIELD_ALREADY_SPECIFIED))
        goto err;
-#else
-   if (member_table == SYM_FMEMBER_CLASS &&
-       WARN(W_CLASS_FIELD_ALREADY_SPECIFIED))
-       goto err;
-#endif
    if unlikely(yield() < 0) goto err;
    if (tok == '(' || tok == '{' ||
        tok == ':' || tok == TOK_ARROW || tok == KWD_pack) {
@@ -1771,11 +1308,7 @@ set_visibility:
         goto err;
     goto define_constructor;
    }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    is_class_member = true;
-#else
-   member_table = SYM_FMEMBER_CLASS;
-#endif
    modifiers_encountered = true;
    goto next_modifier;
 
@@ -2179,11 +1712,7 @@ define_constructor:
     /* Uninitialized instance/class member. */
     if (!class_maker_addmember(&maker,
                                 member_name,
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
                                 is_class_member,
-#else
-                                member_table,
-#endif
                                 member_flags,
                                &pusage_counter,
                                &loc))
@@ -2206,33 +1735,19 @@ define_constructor:
      /* Properties are always allocated in class memory and have the FPROPERTY flag set. */
      member_flags |= (CLASS_MEMBER_FCLASSMEM|CLASS_MEMBER_FPROPERTY);
      /* Set the method flag to invoke property callbacks as this-call functions. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      if (!is_class_member)
          member_flags |= CLASS_MEMBER_FMETHOD;
-#else
-     if (member_table != SYM_FMEMBER_CLASS)
-         member_flags |= CLASS_MEMBER_FMETHOD;
-#endif
      /* Define the property symbol. */
      member_symbol = class_maker_addmember(&maker,
                                             member_name,
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
                                             is_class_member,
-#else
-                                            member_table,
-#endif
                                             member_flags,
                                            &pusage_counter,
                                            &loc);
      if unlikely(!member_symbol) goto err;
      /* Parse the property declaration. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      if unlikely(parse_property(prop_callbacks,&maker,is_class_member))
         goto err;
-#else
-     if unlikely(parse_property(prop_callbacks,&maker,member_table))
-        goto err;
-#endif
      if unlikely(likely(tok == '}') ? (yield() < 0) :
                  WARN(W_EXPECTED_RBRACE_AFTER_PROPERTY))
         goto err_property;
@@ -2247,36 +1762,17 @@ define_constructor:
       *pusage_counter += CLASS_PROPERTY_CALLBACK_COUNT;
      }
      /* Load the base address of the property. */
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      prop_addr = member_symbol->s_field.f_attr->ca_addr;
-#else
-     prop_addr = member_symbol->s_field.f_attr->cme_addr;
-#endif
      for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i) {
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
-      struct symbol *callback_symbol;
-#endif
       /* Skip callbacks that have not been defined. */
       if (!prop_callbacks[i]) continue;
       member_flags &= (CLASS_MEMBER_FVISIBILITY|
                        CLASS_MEMBER_FCLASSMEM|
                        CLASS_MEMBER_FMETHOD);
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
       /* Add an initializer for the address. */
       error = class_maker_addanon(&maker,
                                    prop_addr + i,
                                    prop_callbacks[i]);
-#else
-      /* Allocate an anonymous symbol for the callback member. */
-      callback_symbol = class_maker_addanon(&maker,
-                                             member_table,
-                                             member_flags,
-                                            (prop_addr+i));
-      if unlikely(!callback_symbol) goto err_property;
-      /* Add an initializer for the symbol. */
-      error = class_maker_addinit(&maker,callback_symbol,
-                                  prop_callbacks[i],&loc);
-#endif
      }
      /* Clear out property callbacks. */
      for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i)
@@ -2293,11 +1789,7 @@ err_property:
         goto err;
     member_symbol = class_maker_addmember(&maker,
                                            member_name,
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
                                            is_class_member,
-#else
-                                           member_table,
-#endif
                                            member_flags,
                                           &pusage_counter,
                                           &loc);
@@ -2331,30 +1823,16 @@ err_property:
    /* Everything else is parsed as a member function.
     * NOTE: We mark such members are read-only because the intention is to never overwrite them. */
    member_flags |= (CLASS_MEMBER_FCLASSMEM|CLASS_MEMBER_FREADONLY);
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
    if (!is_class_member)
        member_flags |= CLASS_MEMBER_FMETHOD;
-#else
-   if (member_table != SYM_FMEMBER_CLASS)
-       member_flags |= CLASS_MEMBER_FMETHOD;
-#endif
    member_symbol = class_maker_addmember(&maker,
                                           member_name,
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
                                           is_class_member,
-#else
-                                          member_table,
-#endif
                                           member_flags,
                                          &pusage_counter,
                                          &loc);
    if unlikely(!member_symbol) goto err;
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
-   if (is_class_member)
-#else
-   if (member_table == SYM_FMEMBER_CLASS)
-#endif
-   {
+   if (is_class_member) {
     /* Parse a new function in the class scope. */
     init_ast = ast_parse_function(member_name,&need_semi,false,&loc);
    } else {

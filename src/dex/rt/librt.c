@@ -119,12 +119,8 @@ PRIVATE struct dex_symbol symbols[] = {
     { "dexmodule", (DeeObject *)&DeeDex_Type },
 #endif
     { "compiler", (DeeObject *)&DeeCompiler_Type },
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     { "classdescriptor", (DeeObject *)&DeeClassDescriptor_Type },
     { "instancemember", (DeeObject *)&DeeInstanceMember_Type },
-#else
-    { "membertable", (DeeObject *)&DeeMemberTable_Type },
-#endif
     { "cmethod", (DeeObject *)&DeeCMethod_Type },
     { "objmethod", (DeeObject *)&DeeObjMethod_Type },
     { "classmethod", (DeeObject *)&DeeClsMethod_Type },

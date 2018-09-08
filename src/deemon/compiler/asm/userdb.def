@@ -620,7 +620,6 @@ INSTR("cmp",(
     O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,(LO)(IMM8)(FSTACKFLAG|VARARGS)) /* push cmp lo, <imm8>, #varargs */
 ))
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 /* CONSTRAINTS: `class <s>, <cs>' */
 /* CONSTRAINTS: `class <ge>, <c>' */
 INSTR("class",(
@@ -629,50 +628,12 @@ INSTR("class",(
     O2(ASM_CLASS_GC,FF0|FPUSH,(GLOBAL)(CONST))          /* push class global <imm8/16>, const <imm8/16> */
     O2(ASM_CLASS_EC,FF0|FPUSH,(EXTERN)(CONST))          /* push class extern <imm8/16>:<imm8/16>, const <imm8/16> */
 ))
-#else
-/* CONSTRAINTS: `class ...' */
-/* CONSTRAINTS: `class ..., <s>' */
-/* CONSTRAINTS: `class ..., <s>, <s>' */
-/* CONSTRAINTS: `class ..., <s>, <s>, <s>' */
-/* CONSTRAINTS: `class ..., <s>, <s>, <s>, <s>' */
-/* CONSTRAINTS: `class ..., <lg>' */
-/* CONSTRAINTS: `class ..., <lg>, <c>' */
-/* CONSTRAINTS: `class ..., <lg>, <c>, <c>' */
-/* CONSTRAINTS: `class ..., <lg>, <c>, <c>, <c>' */
-INSTR("class",(
-    O1(ASM_CLASS,    FPUSH|FRELABS,(IMM8))                              /* push class $<imm8> */
-    O2(ASM_CLASS,    FPUSH|FRELABS,(IMM8)(POP))                         /* push class $<imm8>, pop */
-    O3(ASM_CLASS,    FPUSH|FRELABS,(IMM8)(POP)(POP))                    /* push class $<imm8>, pop, pop */
-    O4(ASM_CLASS,    FPUSH|FRELABS,(IMM8)(POP)(POP)(POP))               /* push class $<imm8>, pop, pop, pop */
-    O5(ASM_CLASS,    FPUSH|FRELABS,(IMM8)(POP)(POP)(POP)(POP))          /* push class $<imm8>, pop, pop, pop, pop */
-    O2(ASM_CLASS_C,  FPUSH|FRELABS,(IMM8)(CONST))                       /* push class $<imm8>, const <imm8> */
-    O3(ASM_CLASS_C,  FPUSH|FRELABS,(IMM8)(CONST)(CONST))                /* push class $<imm8>, const <imm8>, pop */
-    O4(ASM_CLASS_C,  FPUSH|FRELABS,(IMM8)(CONST)(CONST)(CONST))         /* push class $<imm8>, const <imm8>, pop, pop */
-    O5(ASM_CLASS_C,  FPUSH|FRELABS,(IMM8)(CONST)(CONST)(CONST)(CONST))  /* push class $<imm8>, const <imm8>, pop, pop, pop */
-    O2(ASM_CLASS_CBL,FPUSH|FRELABS,(IMM8)(LOCAL))                       /* push class $<imm8>, local <imm8> */
-    O3(ASM_CLASS_CBL,FPUSH|FRELABS,(IMM8)(LOCAL)(CONST))                /* push class $<imm8>, local <imm8>, pop */
-    O4(ASM_CLASS_CBL,FPUSH|FRELABS,(IMM8)(LOCAL)(CONST)(CONST))         /* push class $<imm8>, local <imm8>, pop, pop */
-    O5(ASM_CLASS_CBL,FPUSH|FRELABS,(IMM8)(LOCAL)(CONST)(CONST)(CONST))  /* push class $<imm8>, local <imm8>, pop, pop, pop */
-    O2(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL))                      /* push class $<imm8>, global <imm8> */
-    O3(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL)(CONST))               /* push class $<imm8>, global <imm8>, pop */
-    O4(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL)(CONST)(CONST))        /* push class $<imm8>, global <imm8>, pop, pop */
-    O5(ASM_CLASS_CBG,FPUSH|FRELABS,(IMM8)(GLOBAL)(CONST)(CONST)(CONST)) /* push class $<imm8>, global <imm8>, pop, pop, pop */
-))
-#endif
 
 /* CONSTRAINTS: `defmember <s>, ..., <s>' */
 INSTR("defmember",(
     O3(ASM_DEFMEMBER,  FRELABS,(TOP)(IMM8)(POP))             /* defmember top, $<imm8>, pop */
     O3(ASM16_DEFMEMBER,FRELABS,(TOP)(IMM16)(POP))            /* defmember top, $<imm16>, pop */
 ))
-
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
-/* CONSTRAINTS: `defop <s>, ..., <s>' */
-INSTR("defop",(
-    O3(ASM_DEFOP,  FRELABS,(TOP)(IMM8)(POP))                 /* defop top, $<imm8>, pop */
-    O3(ASM16_DEFOP,FRELABS,(TOP)(IMM16)(POP))                /* defop top, $<imm16>, pop */
-))
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 /* CONSTRAINTS: `function <c>, ...' */
 INSTR("function",(

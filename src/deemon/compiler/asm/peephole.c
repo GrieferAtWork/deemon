@@ -1665,16 +1665,10 @@ do_optimize_popmov_16bit:
   case ASM16_PUSH_BND_LOCAL:
   case ASM_SUPER_THIS_R:
   case ASM16_SUPER_THIS_R:
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   case ASM_CLASS_GC:
   case ASM16_CLASS_GC:
   case ASM_CLASS_EC:
   case ASM16_CLASS_EC:
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
-  case ASM_CLASS_C:
-  case ASM_CLASS_CBL:
-  case ASM_CLASS_CBG:
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
   case ASM_FUNCTION_C:
   case ASM16_FUNCTION_C:
   case ASM_FUNCTION_C_16:

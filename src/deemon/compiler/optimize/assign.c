@@ -59,7 +59,6 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
   break;
 
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  {
   struct class_member *dst; size_t i;
  case AST_CLASS:
@@ -90,31 +89,6 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
   temp->a_operator.o_op3    = other->a_operator.o_op3;
   ast_xincref(temp->a_operator.o_op3);
   ATTR_FALLTHROUGH
-#else
- case AST_OPERATOR:
-  temp->a_operator.o_exflag = other->a_operator.o_exflag;
-  goto do_subast_x4;
- {
-  struct class_member *iter,*end,*dst;
- case AST_CLASS:
-  end = (iter = other->a_class.c_memberv)+
-                other->a_class.c_memberc;
-  temp->a_class.c_memberc = other->a_class.c_memberc;
-  dst = (struct class_member *)Dee_Malloc(temp->a_class.c_memberc*
-                                          sizeof(struct class_member));
-  if unlikely(!dst) goto err;
-  temp->a_class.c_memberv = dst;
-  /* Copy the member descriptor table. */
-  for (; iter != end; ++iter,++dst) {
-   *dst = *iter;
-   ast_incref(dst->cm_ast);
-  }
- }
-do_subast_x4:
-  temp->a_operator.o_op3 = other->a_operator.o_op3;
-  ast_xincref(temp->a_operator.o_op3);
-  ATTR_FALLTHROUGH
-#endif
  case AST_CONDITIONAL:
 do_xcopy_3:
   temp->a_operator.o_op2 = other->a_operator.o_op2;

@@ -1918,7 +1918,6 @@ do_push_module:
  DEFINE_COMPARE_INSTR(GE,Ge)
 #undef DEFINE_COMPARE_INSTR
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  TARGET(ASM_CLASS_C,-1,+1) {
      DREF DeeTypeObject *new_class;
      imm_val = READ_imm8();
@@ -2025,250 +2024,19 @@ do_class_gc:
      PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
      DISPATCH();
  }
-#else /* CONFIG_USE_NEW_CLASS_SYSTEM */
- RAW_TARGET(ASM_CLASS) {
-     DREF DeeObject *cmem,*imem,*name,*base;
-     DREF DeeTypeObject *new_class;
-     uint8_t features = READ_imm8();
-#if defined(EXEC_SAFE) || !defined(NDEBUG)
-     unsigned int num_args = 0;
-     if (features&CLASSGEN_FHASCMEM) ++num_args;
-     if (features&CLASSGEN_FHASIMEM) ++num_args;
-     if (features&CLASSGEN_FHASNAME) ++num_args;
-     if (features&CLASSGEN_FHASBASE) ++num_args;
-     ASSERT_USAGE(-(int)num_args,+1);
-#endif
-     cmem = (features&CLASSGEN_FHASCMEM) ? POP() : NULL;
-     imem = (features&CLASSGEN_FHASIMEM) ? POP() : NULL;
-     name = (features&CLASSGEN_FHASNAME) ? POP() : NULL;
-     base = (features&CLASSGEN_FHASBASE) ? POP() : NULL;
-     if unlikely((base && DeeObject_AssertType(base,&DeeType_Type)) ||
-                 (name && DeeObject_AssertTypeExact(name,&DeeString_Type)) ||
-                 (imem && DeeObject_AssertType(imem,&DeeMemberTable_Type)) ||
-                 (cmem && DeeObject_AssertType(cmem,&DeeMemberTable_Type))) {
-      new_class = NULL;
-     } else {
-      new_class = DeeClass_New(NULL,(DeeTypeObject *)base,name,
-                               NULL,imem,cmem,features);
-     }
-     Dee_XDecref(base);
-     Dee_XDecref(name);
-     Dee_XDecref(imem);
-     Dee_XDecref(cmem);
-     if unlikely(!new_class)
-        HANDLE_EXCEPT();
-     PUSH((DeeObject *)new_class);
-     DISPATCH();
- }
-
- RAW_TARGET(ASM_CLASS_C) {
-     DREF DeeTypeObject *new_class;
-     uint8_t features = READ_imm8();
-     DeeObject *cmem = NULL;
-     DeeObject *imem = NULL;
-     DeeObject *name = NULL;
-     DeeObject *base = NULL;
-     ASSERT_USAGE(-0,+1);
-#ifdef EXEC_SAFE
-#define GET_CONST(x,i) \
-     { if unlikely((i) >= code->co_staticc) { STATIC_LOCKENDREAD(); imm_val = (i); goto err_invalid_static; } \
-       (x) = code->co_staticv[i]; }
-     STATIC_LOCKREAD();
-#else
-#define GET_CONST(x,i) \
-     { ASSERT((i) < code->co_staticc); \
-       (x) = code->co_staticv[i]; }
-#endif
-     if (features&CLASSGEN_FHASBASE) GET_CONST(base,ip.u8[0])
-     if (features&CLASSGEN_FHASNAME) GET_CONST(name,ip.u8[1])
-     if (features&CLASSGEN_FHASIMEM) GET_CONST(imem,ip.u8[2])
-     if (features&CLASSGEN_FHASCMEM) GET_CONST(cmem,ip.u8[3])
-#undef GET_CONST
-#ifdef EXEC_SAFE
-     Dee_XIncref(base);
-     Dee_XIncref(name);
-     Dee_XIncref(imem);
-     Dee_XIncref(cmem);
-     STATIC_LOCKENDREAD();
-     if ((base && DeeObject_AssertType(base,&DeeType_Type)) ||
-         (name && DeeObject_AssertTypeExact(name,&DeeString_Type)) ||
-         (imem && DeeObject_AssertType(imem,&DeeMemberTable_Type)) ||
-         (cmem && DeeObject_AssertType(cmem,&DeeMemberTable_Type)))
-          new_class = NULL;
-     else
-#endif
-     new_class = DeeClass_New(NULL,(DeeTypeObject *)base,name,NULL,imem,cmem,features);
-#ifdef EXEC_SAFE
-     Dee_XDecref(base);
-     Dee_XDecref(name);
-     Dee_XDecref(imem);
-     Dee_XDecref(cmem);
-#endif
-     if unlikely(!new_class)
-        HANDLE_EXCEPT();
-     PUSH((DeeObject *)new_class);
-     ip.ptr += 4; /* Skip arguments */
-     DISPATCH();
- }
-
- RAW_TARGET(ASM_CLASS_CBL) {
-     DREF DeeTypeObject *new_class;
-     uint8_t features = READ_imm8();
-     DeeObject *cmem = NULL;
-     DeeObject *imem = NULL;
-     DeeObject *name = NULL;
-     DeeObject *base = NULL;
-     ASSERT_USAGE(-0,+1);
-     if (features&CLASSGEN_FHASBASE) {
-#ifdef EXEC_SAFE
-      if unlikely(ip.u8[0] >= code->co_localc) {
-       imm_val = ip.u8[0];
-       goto err_invalid_locale;
-      }
-#else
-      ASSERT(ip.u8[0] < code->co_localc);
-#endif
-      base = frame->cf_frame[ip.u8[0]];
-      if unlikely(!base) { imm_val = ip.u8[0]; goto err_unbound_local; }
-     }
-#ifdef EXEC_SAFE
-#define GET_CONST(x,i) \
-     { if unlikely((i) >= code->co_staticc) { STATIC_LOCKENDREAD(); imm_val = (i); goto err_invalid_static; } \
-       (x) = code->co_staticv[i]; }
-     STATIC_LOCKREAD();
-#else
-#define GET_CONST(x,i) \
-     { ASSERT((i) < code->co_staticc); \
-       (x) = code->co_staticv[i]; }
-#endif
-     if (features&CLASSGEN_FHASNAME) GET_CONST(name,ip.u8[1])
-     if (features&CLASSGEN_FHASIMEM) GET_CONST(imem,ip.u8[2])
-     if (features&CLASSGEN_FHASCMEM) GET_CONST(cmem,ip.u8[3])
-#undef GET_CONST
-#ifdef EXEC_SAFE
-     Dee_XIncref(name);
-     Dee_XIncref(imem);
-     Dee_XIncref(cmem);
-     STATIC_LOCKENDREAD();
-     if ((base && DeeObject_AssertType(base,&DeeType_Type)) ||
-         (name && DeeObject_AssertTypeExact(name,&DeeString_Type)) ||
-         (imem && DeeObject_AssertType(imem,&DeeMemberTable_Type)) ||
-         (cmem && DeeObject_AssertType(cmem,&DeeMemberTable_Type)))
-          new_class = NULL;
-     else
-#endif
-     new_class = DeeClass_New(NULL,(DeeTypeObject *)base,name,NULL,imem,cmem,features);
-#ifdef EXEC_SAFE
-     Dee_XDecref(name);
-     Dee_XDecref(imem);
-     Dee_XDecref(cmem);
-#endif
-     if unlikely(!new_class)
-        HANDLE_EXCEPT();
-     PUSH((DeeObject *)new_class);
-     ip.ptr += 4; /* Skip arguments */
-     DISPATCH();
- }
-
- RAW_TARGET(ASM_CLASS_CBG) {
-     DREF DeeTypeObject *new_class;
-     uint8_t features = READ_imm8();
-     DeeObject *cmem = NULL;
-     DeeObject *imem = NULL;
-     DeeObject *name = NULL;
-     DeeObject *base = NULL;
-     ASSERT_USAGE(-0,+1);
-     if (features&CLASSGEN_FHASBASE) {
-      imm_val = ip.u8[0];
-      ASSERT_GLOBALimm();
-      GLOBAL_LOCKREAD();
-      base = GLOBALimm;
-      Dee_XIncref(base);
-      GLOBAL_LOCKENDREAD();
-      if unlikely(!base) goto err_unbound_global;
-     }
-#ifdef EXEC_SAFE
-#define GET_CONST(x,i) \
-     { if unlikely((i) >= code->co_staticc) { STATIC_LOCKENDREAD(); Dee_XDecref(base); imm_val = (i); goto err_invalid_static; } \
-       (x) = code->co_staticv[i]; }
-     STATIC_LOCKREAD();
-#else
-#define GET_CONST(x,i) \
-     { ASSERT((i) < code->co_staticc); \
-       (x) = code->co_staticv[i]; }
-#endif
-     if (features&CLASSGEN_FHASNAME) GET_CONST(name,ip.u8[1])
-     if (features&CLASSGEN_FHASIMEM) GET_CONST(imem,ip.u8[2])
-     if (features&CLASSGEN_FHASCMEM) GET_CONST(cmem,ip.u8[3])
-#undef GET_CONST
-#ifdef EXEC_SAFE
-     Dee_XIncref(name);
-     Dee_XIncref(imem);
-     Dee_XIncref(cmem);
-     STATIC_LOCKENDREAD();
-     if ((base && DeeObject_AssertType(base,&DeeType_Type)) ||
-         (name && DeeObject_AssertTypeExact(name,&DeeString_Type)) ||
-         (imem && DeeObject_AssertType(imem,&DeeMemberTable_Type)) ||
-         (cmem && DeeObject_AssertType(cmem,&DeeMemberTable_Type)))
-          new_class = NULL;
-     else
-#endif
-     new_class = DeeClass_New(NULL,(DeeTypeObject *)base,name,NULL,imem,cmem,features);
-     Dee_XDecref(base);
-#ifdef EXEC_SAFE
-     Dee_XDecref(name);
-     Dee_XDecref(imem);
-     Dee_XDecref(cmem);
-#endif
-     if unlikely(!new_class)
-        HANDLE_EXCEPT();
-     PUSH((DeeObject *)new_class);
-     ip.ptr += 4; /* Skip arguments */
-     DISPATCH();
- }
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  TARGET(ASM_DEFMEMBER,-2,+1) {
      imm_val = READ_imm8();
 do_defmember:
 #ifdef EXEC_SAFE
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      if (DeeClass_SetMemberSafe((DeeTypeObject *)SECOND,imm_val,FIRST))
          HANDLE_EXCEPT();
 #else
-     if (!DeeClass_Check(SECOND)) {
-      if (!DeeObject_AssertType(SECOND,&DeeType_Type))
-           err_requires_class((DeeTypeObject *)SECOND);
-      HANDLE_EXCEPT();
-     }
-     if (imm_val >= DeeClass_DESC(SECOND)->c_cmem->mt_size)
-         goto err_invalid_instance_addr;
-     DeeClass_SetMember((DeeTypeObject *)SECOND,imm_val,FIRST);
-#endif
-#else
      DeeClass_SetMember((DeeTypeObject *)SECOND,imm_val,FIRST);
 #endif
      POPREF();
      DISPATCH();
  }
-
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
- TARGET(ASM_DEFOP,-2,+1) {
-     imm_val = READ_imm8();
-do_defop:
-#ifdef EXEC_SAFE
-     if (!DeeClass_Check(SECOND)) {
-      if (!DeeObject_AssertType(SECOND,&DeeType_Type))
-           err_requires_class((DeeTypeObject *)SECOND);
-      HANDLE_EXCEPT();
-     }
-#endif
-     if (DeeClass_SetOperator((DeeTypeObject *)SECOND,imm_val,FIRST))
-         HANDLE_EXCEPT();
-     POPREF();
-     DISPATCH();
- }
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
  RAW_TARGET(ASM_FUNCTION_C_16)
      imm_val  = READ_imm8();
@@ -4326,7 +4094,6 @@ do_setattr_this_c:
          goto do_push_module;
      }
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
      TARGET(ASM16_CLASS_C,-1,+1) {
          imm_val = READ_imm16();
          goto do_class_c;
@@ -4377,18 +4144,11 @@ do_setattr_this_c:
          PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
          DISPATCH();
      }
-#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
 
      TARGET(ASM16_DEFMEMBER,-2,+1) {
          imm_val = READ_imm16();
          goto do_defmember;
      }
-#ifndef CONFIG_USE_NEW_CLASS_SYSTEM
-     TARGET(ASM16_DEFOP,-2,+1) {
-         imm_val = READ_imm16();
-         goto do_defop;
-     }
-#endif /* CONFIG_USE_NEW_CLASS_SYSTEM */
      RAW_TARGET(ASM16_FUNCTION_C) {
          imm_val  = READ_imm16();
          imm_val2 = READ_imm8();

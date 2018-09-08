@@ -510,11 +510,7 @@ DEF_WARNING(W_ASM_AMBIGUOUS_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{
         WARNF("See reference to %lu%s declaration",(unsigned long)i + 3,i == 0 ? "rd" : "th");
     }
 })
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,(WG_SYMBOL),WSTATE_FATAL,{ struct symbol *sym = ARG(struct symbol *); WARNF("Instance member `%k' cannot be accessed from class method `%s'",SYMBOL_FIELD_ATTR(sym)->ca_name,ARG(char *)); PRINT_SYMBOL_DECLARATION(sym); })
-#else
-DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,(WG_SYMBOL),WSTATE_FATAL,{ struct symbol *sym = ARG(struct symbol *); WARNF("Instance member `%k' cannot be accessed from class method `%s'",SYMBOL_FIELD_ATTR(sym)->cme_name,ARG(char *)); PRINT_SYMBOL_DECLARATION(sym); })
-#endif
 DEF_WARNING(W_ASM_CANNOT_UNBIND_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind symbol `%s' of class `%s'",SYMBOL_NAME(sym),SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind undesignated stack variable `%s' at this time",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,(WG_SYMBOL),WSTATE_WARN,{ struct symbol *sym = ARG(struct symbol *); WARNF("Deleting stack variable `%s' will not cause the symbol to become unbound",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })

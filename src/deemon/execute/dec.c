@@ -1069,53 +1069,8 @@ err: result = -1; goto stop;
 }
 
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 INTDEF struct class_operator empty_class_operators[];
 INTDEF struct class_attribute empty_class_attributes[];
-#else
-PRIVATE DREF DeeObject *DCALL
-DeeMemberTable_NewSized(size_t vtab_size, uint32_t num_symbols) {
- DREF DeeMemberTableObject *result;
- struct member_entry *member_vector;
- size_t hashmask = 1;
- /* Determine a suitable hash-mask. */
- while (hashmask < num_symbols) hashmask <<= 1;
- if ((hashmask-num_symbols) < 16) hashmask <<= 1;
- --hashmask;
- member_vector = (struct member_entry *)Dee_Calloc((hashmask+1)*
-                                                    sizeof(struct member_entry));
- if unlikely(!member_vector) return NULL;
- result = DeeObject_MALLOC(DeeMemberTableObject);
- if unlikely(!result) { Dee_Free(member_vector); goto done; }
- DeeObject_Init(result,&DeeMemberTable_Type);
- /* Initialize the new member table descriptor. */
- result->mt_size = vtab_size;
- result->mt_mask = hashmask;
- result->mt_list = member_vector;
-done:
- return (DREF DeeObject *)result;
-}
-
-
-PRIVATE ATTR_RETNONNULL struct member_entry *DCALL
-DeeMemberTable_AddSym(DeeObject *__restrict self,
-                 DREF DeeObject *__restrict name) {
- DeeMemberTableObject *me = (DeeMemberTableObject *)self;
- size_t mask; dhash_t i,perturb,hash;
- ASSERT_OBJECT_TYPE(self,&DeeMemberTable_Type);
- ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
- hash = DeeString_Hash(name);
- mask = me->mt_mask;
- perturb = i = hash & mask;
- for (;; i = DeeMemberTable_HASHNX(i,perturb),DeeMemberTable_HASHPT(perturb)) {
-  struct member_entry *item = &me->mt_list[i & mask];
-  if (item->cme_name) continue;
-  item->cme_name = (DREF DeeStringObject *)name; /* Inherit */
-  item->cme_hash = hash;
-  return item;
- }
-}
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
 
 /* @return: * :        A reference to the object that got loaded.
@@ -1261,7 +1216,6 @@ err_function_code:
   DeeGC_Track((DeeObject *)result);
  } break;
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
  {
   uint8_t flags,cmemb_size,imemb_size,i;
   uint8_t op_count,cattr_count,iattr_count;
@@ -1438,37 +1392,6 @@ err_function_code:
 #undef descriptor
  } break;
 
-#else
- {
-  uint8_t size,*end;
-  uint32_t length; char *strtab;
- case DTYPE_MEMTAB:
-  /* Small member table object descriptor. */
-  size   = *reader,reader += 1;
-  length = Dec_DecodePointer(&reader);
-  result = DeeMemberTable_NewSized(size,length);
-  if unlikely(!result) goto done;
-  end    = self->df_base+self->df_size;
-  strtab = (char *)(self->df_base+LESWAP32(self->df_ehdr->e_stroff));
-  while (length--) {
-   uint16_t flags; uint8_t addr; char *name;
-   DREF DeeObject *name_ob; struct member_entry *member;
-   if unlikely(reader >= end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
-   flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-   addr  = *(uint8_t *)reader,reader += 1;
-   if unlikely(flags&~CLASS_MEMBER_FMASK) GOTO_CORRUPTED(corrupt_r); /* Check for unknown flags. */
-   name  = strtab+Dec_DecodePointer(&reader);
-   if unlikely(name >= (char *)end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
-   name_ob = DeeString_New(name);
-   if unlikely(!name_ob) goto err_r;
-   member = DeeMemberTable_AddSym(result,name_ob); /* NOTE: Inherits `name_ob' */
-   /* Fill in additional members. */
-   member->cme_addr = addr;
-   member->ca_flag = flags;
-  }
- } break;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
-
  {
   uint32_t i,count;
   char *strtab; uint8_t *end;
@@ -1606,7 +1529,6 @@ err_function_code:
    }
   } break;
 
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
   {
    uint16_t flags,op_count,opbind_mask;
    uint16_t cmemb_size,imemb_size;
@@ -1792,46 +1714,6 @@ err_function_code:
    }
 #undef descriptor
   } break;
-
-#else
-  {
-   uint8_t *end; char *strtab;
-   uint32_t size,length;
-  case DTYPE16_MEMTAB & 0xff:
-   /* Big member table object descriptor. */
-   size   = Dec_DecodePointer(&reader);
-   length = Dec_DecodePointer(&reader);
-   result = DeeMemberTable_NewSized(size,length);
-   if unlikely(!result) goto done;
-   end    = self->df_base+self->df_size;
-   strtab = (char *)(self->df_base+LESWAP32(self->df_ehdr->e_stroff));
-   while (length--) {
-    uint16_t flags,addr; char *name; uint32_t doclen;
-    DREF DeeObject *name_ob; struct member_entry *member;
-    if unlikely(reader >= end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
-    flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-    addr  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-    if unlikely(flags&~CLASS_MEMBER_FMASK) GOTO_CORRUPTED(corrupt_r); /* Check for unknown flags. */
-    name  = strtab+Dec_DecodePointer(&reader);
-    if unlikely(name >= (char *)end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
-    name_ob = DeeString_New(name);
-    if unlikely(!name_ob) goto err_r;
-    member = DeeMemberTable_AddSym(result,name_ob); /* NOTE: Inherits `name_ob' */
-    /* Fill in additional members. */
-    member->cme_addr = addr;
-    member->ca_flag = flags;
-    /* Read the documentation string. */
-    if ((doclen = Dec_DecodePointer(&reader)) != 0) {
-     char *doc = strtab+Dec_DecodePointer(&reader);
-     if unlikely(doc+doclen < doc) GOTO_CORRUPTED(corrupt_r); /* Check overflow. */
-     if unlikely(doc+doclen >= (char *)end) GOTO_CORRUPTED(corrupt_r); /* Validate bounds. */
-     /* Create the documentation string. */
-     member->cme_doc = (DREF DeeStringObject *)DeeString_NewSized(doc,doclen);
-     if unlikely(!member->cme_doc) goto err_r;
-    }
-   }
-  } break;
-#endif /* !CONFIG_USE_NEW_CLASS_SYSTEM */
 
   case DTYPE16_CELL & 0xff:
    if (*reader == DTYPE_NULL) {

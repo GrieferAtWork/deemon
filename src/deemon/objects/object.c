@@ -1558,9 +1558,7 @@ PRIVATE DREF DeeObject *DCALL type_str(DeeTypeObject *__restrict self) {
 INTDEF void DCALL class_fini(DeeTypeObject *__restrict self);
 INTDEF void DCALL class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg);
 INTDEF void DCALL class_clear(DeeTypeObject *__restrict self);
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 INTDEF void DCALL class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority);
-#endif
 
 PRIVATE void DCALL type_fini(DeeTypeObject *__restrict self) {
  ASSERTF(self->tp_flags & TP_FHEAP,
@@ -1592,13 +1590,11 @@ type_clear(DeeTypeObject *__restrict self) {
  if (DeeType_IsClass(self))
      class_clear(self);
 }
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
 PRIVATE void DCALL
 type_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
  if (DeeType_IsClass(self))
      class_pclear(self,gc_priority);
 }
-#endif
 
 PRIVATE DREF DeeObject *DCALL
 type_baseof(DeeTypeObject *__restrict self, size_t argc,
@@ -2093,11 +2089,7 @@ PRIVATE struct type_attr type_attr = {
 
 PRIVATE struct type_gc type_gc = {
     /* .tp_clear  = */(void(DCALL *)(DeeObject *__restrict))&type_clear,
-#ifdef CONFIG_USE_NEW_CLASS_SYSTEM
     /* .tp_pclear = */(void(DCALL *)(DeeObject *__restrict,unsigned int))&type_pclear,
-#else
-    /* .tp_pclear = */NULL,
-#endif
     /* .tp_gcprio = */GC_PRIORITY_CLASS
 };
 
