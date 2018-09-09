@@ -1898,53 +1898,6 @@ pop_unused:
    }
   } break;
 
-  case OPERATOR_GETATTR:
-   /* Special optimizations when the attribute name is known at compile-time. */
-   if unlikely(!ast->a_operator.o_op1) goto generic_operator;
-   if (ast->a_operator.o_op1->a_type == AST_CONSTEXPR &&
-       DeeString_Check(ast->a_operator.o_op1->a_constexpr)) {
-    DeeStringObject *name; int32_t attrid;
-    name = (DeeStringObject *)ast->a_operator.o_op1->a_constexpr;
-    if (ast->a_operator.o_op0->a_type == AST_SYM) {
-     struct symbol *sym = ast->a_operator.o_op0->a_sym;
-check_getattr_sym:
-     switch (SYMBOL_TYPE(sym)) {
-     case SYMBOL_TYPE_ALIAS:
-      sym = SYMBOL_ALIAS(sym);
-      goto check_getattr_sym;
-
-     case SYMBOL_TYPE_THIS:
-      attrid = asm_newconst((DeeObject *)name);
-      if unlikely(attrid < 0) goto err;
-      if (asm_putddi(ast)) goto err;
-      if (asm_ggetattr_this_const((uint16_t)attrid)) goto err;
-      goto pop_unused;
-
-     {
-      struct module_symbol *modsym; int32_t module_id;
-     case SYMBOL_TYPE_MODULE: /* module.attr --> push extern ... */
-      modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),name);
-      if (!modsym) break;
-      if (!PUSH_RESULT) goto done;
-      module_id = asm_msymid(sym);
-      if unlikely(module_id < 0) goto err;
-      /* Push an external symbol accessed through its module. */
-      if (asm_putddi(ast)) goto err;
-      if (asm_gpush_extern((uint16_t)module_id,modsym->ss_index)) goto err;
-      goto done;
-     } break;
-     default: break;
-     }
-    }
-    if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-    attrid = asm_newconst((DeeObject *)name);
-    if unlikely(attrid < 0) goto err;
-    if (asm_putddi(ast)) goto err;
-    if (asm_ggetattr_const((uint16_t)attrid)) goto err;
-    goto pop_unused;
-   }
-   break;
-
   {
    struct ast *begin,*end; int32_t intval;
   case OPERATOR_GETRANGE:
@@ -2020,28 +1973,6 @@ check_getattr_sym:
   }
 
 
-  case OPERATOR_DELATTR:
-   /* Special optimizations when the attribute name is known at compile-time. */
-   if unlikely(!ast->a_operator.o_op1) goto generic_operator;
-   if (ast->a_operator.o_op1->a_type == AST_CONSTEXPR &&
-       DeeString_Check(ast->a_operator.o_op1->a_constexpr)) {
-    int32_t attrid = asm_newconst(ast->a_operator.o_op1->a_constexpr);
-    if unlikely(attrid < 0) goto err;
-    if (ast->a_operator.o_op0->a_type == AST_SYM) {
-     struct symbol *sym = ast->a_operator.o_op0->a_sym;
-     SYMBOL_INPLACE_UNWIND_ALIAS(sym);
-     if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
-        !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
-      if (asm_gdelattr_this_const(attrid)) goto err;
-      goto done_push_none;
-     }
-    }
-    if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-    if (asm_gdelattr_const(attrid)) goto err;
-    goto done_push_none;
-   }
-   break;
-
   case OPERATOR_SETITEM:
    if unlikely(!ast->a_operator.o_op2) goto generic_operator;
    if (ast_gen_setitem(ast->a_operator.o_op0,
@@ -2049,6 +1980,19 @@ check_getattr_sym:
                        ast->a_operator.o_op2,
                        ast,gflags)) goto err;
    goto done;
+
+  case OPERATOR_GETATTR:
+   if unlikely(!ast->a_operator.o_op2) goto generic_operator;
+   if (ast_gen_getattr(ast->a_operator.o_op0,
+                       ast->a_operator.o_op1,
+                       ast,gflags)) goto err;
+   goto done;
+  case OPERATOR_DELATTR:
+   if unlikely(!ast->a_operator.o_op2) goto generic_operator;
+   if (ast_gen_delattr(ast->a_operator.o_op0,
+                       ast->a_operator.o_op1,
+                       ast)) goto err;
+   goto done_push_none;
   case OPERATOR_SETATTR:
    if unlikely(!ast->a_operator.o_op2) goto generic_operator;
    if (ast_gen_setattr(ast->a_operator.o_op0,

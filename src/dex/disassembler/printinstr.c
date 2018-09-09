@@ -444,7 +444,7 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf01a */ "op     top, " PREFIX_INTEGERAL, /* `ASM16_OPERATOR_TUPLE' */
     /* 0xf01b */ "call   top, [" PREFIX_STACKEFFECT, /* `ASM_CALL_SEQ' */
     /* 0xf01c */ "call   top, {" PREFIX_STACKEFFECT, /* `ASM_CALL_MAP' */
-    /* 0xf01d */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0xf01d */ "call   top, pop, pop...", /* `ASM_THISCALL_TUPLE' */
     /* 0xf01e */ "del    ", /* `ASM16_DEL_GLOBAL' */
     /* 0xf01f */ "del    ", /* `ASM16_DEL_LOCAL' */
     /* 0xf020 */ "call   top, pop..., pop", /* `ASM_CALL_TUPLE_KWDS' */

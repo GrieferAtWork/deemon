@@ -25,6 +25,7 @@
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/module.h>
+#include <deemon/class.h>
 #include <deemon/string.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/assembler.h>
@@ -163,6 +164,368 @@ INTDEF struct module_symbol *DCALL
 get_module_symbol(DeeModuleObject *__restrict module,
                   DeeStringObject *__restrict name);
 
+
+INTERN int DCALL
+ast_gen_getattr(struct ast *__restrict base,
+                struct ast *__restrict name,
+                struct ast *__restrict ddi_ast,
+                unsigned int gflags) {
+ /* Special optimizations when the attribute name is known at compile-time. */
+ if (name->a_type == AST_CONSTEXPR &&
+     DeeString_Check(name->a_constexpr)) {
+  DeeStringObject *attrname; int32_t attrid;
+  attrname = (DeeStringObject *)name->a_constexpr;
+  if (base->a_type == AST_SYM) {
+   struct symbol *sym = base->a_sym;
+   DeeClassScopeObject *class_scope;
+check_getattr_sym:
+   for (class_scope = base->a_scope->s_class; class_scope;
+        class_scope = DeeClassScope_Prev(class_scope)) {
+    /* Try to statically access known class members! */
+    if (sym == class_scope->cs_class ||
+        sym == class_scope->cs_this) {
+     struct symbol *funsym;
+     funsym = scope_lookup_str(&class_scope->cs_scope,
+                                DeeString_STR(attrname),
+                                DeeString_SIZE(attrname));
+     /* Generate a regular attribute access. */
+     if (funsym &&
+         funsym->s_type == SYMBOL_TYPE_CATTR &&
+         funsym->s_attr.a_class == class_scope->cs_class) {
+      if (sym == funsym->s_attr.a_this ||                             /* Regular access to a dynamic attribute. */
+         (sym == funsym->s_attr.a_class && !funsym->s_attr.a_this)) { /* Regular access to a static-attribute. */
+       if (asm_putddi(ddi_ast)) goto err;
+       if (asm_gpush_symbol(funsym,ddi_ast)) goto err;
+       goto pop_unused;
+      }
+     }
+     break;
+    }
+   }
+   switch (SYMBOL_TYPE(sym)) {
+   case SYMBOL_TYPE_ALIAS:
+    sym = SYMBOL_ALIAS(sym);
+    goto check_getattr_sym;
+
+   case SYMBOL_TYPE_THIS:
+    attrid = asm_newconst((DeeObject *)attrname);
+    if unlikely(attrid < 0) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    if (asm_ggetattr_this_const((uint16_t)attrid)) goto err;
+    goto pop_unused;
+
+   {
+    struct module_symbol *modsym; int32_t module_id;
+   case SYMBOL_TYPE_MODULE: /* module.attr --> push extern ... */
+    modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),attrname);
+    if (!modsym) break;
+    if (!PUSH_RESULT) goto done;
+    module_id = asm_msymid(sym);
+    if unlikely(module_id < 0) goto err;
+    /* Push an external symbol accessed through its module. */
+    if (asm_putddi(ddi_ast)) goto err;
+    if (asm_gpush_extern((uint16_t)module_id,modsym->ss_index)) goto err;
+    goto done;
+   } break;
+   default: break;
+   }
+  }
+  if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
+  attrid = asm_newconst((DeeObject *)attrname);
+  if unlikely(attrid < 0) goto err;
+  if (asm_putddi(ddi_ast)) goto err;
+  if (asm_ggetattr_const((uint16_t)attrid)) goto err;
+  goto pop_unused;
+ }
+ if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
+ if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
+ if (asm_putddi(ddi_ast)) goto err;
+ if (asm_ggetattr()) goto err;
+pop_unused:
+ if (!(gflags & ASM_G_FPUSHRES))
+     return asm_gpop();
+done:
+ return 0;
+err:
+ return -1;
+}
+INTERN int DCALL
+ast_gen_delattr(struct ast *__restrict base,
+                struct ast *__restrict name,
+                struct ast *__restrict ddi_ast) {
+ /* Special optimizations when the attribute name is known at compile-time. */
+ if (name->a_type == AST_CONSTEXPR &&
+     DeeString_Check(name->a_constexpr)) {
+  int32_t attrid;
+  if (base->a_type == AST_SYM) {
+   struct symbol *sym = base->a_sym;
+   DeeClassScopeObject *class_scope;
+check_delattr_sym:
+   for (class_scope = base->a_scope->s_class; class_scope;
+        class_scope = DeeClassScope_Prev(class_scope)) {
+    /* Try to statically access known class members! */
+    if (sym == class_scope->cs_class ||
+        sym == class_scope->cs_this) {
+     struct symbol *funsym;
+     funsym = scope_lookup_str(&class_scope->cs_scope,
+                                DeeString_STR(name->a_constexpr),
+                                DeeString_SIZE(name->a_constexpr));
+     /* Generate a regular attribute access. */
+     if (funsym &&
+         funsym->s_type == SYMBOL_TYPE_CATTR &&
+         funsym->s_attr.a_class == class_scope->cs_class) {
+      if (sym == funsym->s_attr.a_this ||                             /* Regular access to a dynamic attribute. */
+         (sym == funsym->s_attr.a_class && !funsym->s_attr.a_this)) { /* Regular access to a static-attribute. */
+       if (asm_putddi(ddi_ast)) goto err;
+       return asm_gdel_symbol(funsym,ddi_ast);
+      }
+     }
+     break;
+    }
+   }
+   switch (sym->s_type) {
+
+   case SYMBOL_TYPE_ALIAS:
+    sym = SYMBOL_ALIAS(sym);
+    goto check_delattr_sym;
+
+   case SYMBOL_TYPE_THIS:
+    if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
+        break;
+    attrid = asm_newconst(name->a_constexpr);
+    if unlikely(attrid < 0) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    return asm_gdelattr_this_const(attrid);
+   
+   default: break;
+   }
+  }
+  attrid = asm_newconst(name->a_constexpr);
+  if unlikely(attrid < 0) goto err;
+  if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
+  if (asm_putddi(ddi_ast)) goto err;
+  return asm_gdelattr_const(attrid);
+ }
+ if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
+ if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
+ if (asm_putddi(ddi_ast)) goto err;
+ return asm_gdelattr();
+err:
+ return -1;
+}
+
+
+INTDEF int DCALL asm_check_thiscall(struct symbol *__restrict sym,
+                                    struct ast *__restrict warn_ast);
+
+PRIVATE int DCALL
+asm_set_cattr_symbol(struct symbol *__restrict sym,
+                     struct ast *__restrict value,
+                     struct ast *__restrict ddi_ast,
+                     unsigned int gflags) {
+#if 1
+ struct symbol *class_sym,*this_sym;
+ struct class_attribute *attr; int32_t symid;
+ ASSERT(sym->s_type == SYMBOL_TYPE_CATTR);
+ class_sym = sym->s_attr.a_class;
+ this_sym  = sym->s_attr.a_this;
+ attr      = sym->s_attr.a_attr;
+ SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
+  /* TODO: Dedicated warning. */
+  if (ASM_WARN(W_ASM_CANNOT_WRITE_SYMBOL,sym))
+      goto err;
+  return ast_genasm(value,gflags & ASM_G_FPUSHRES);
+ }
+ if (!this_sym) {
+set_class_attribute:
+  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+   /* Must invoke the getter callback. */
+   if (PUSH_RESULT && ast_genasm(value,ASM_G_FPUSHRES)) goto err;
+   if (asm_putddi(ddi_ast)) goto err;
+   if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
+    symid = asm_rsymid(class_sym);
+    if (asm_ggetcmember_r(symid,attr->ca_addr + CLASS_GETSET_SET)) goto err; /* [result], func */
+   } else {
+    if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;                       /* [result], class_sym */
+    if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_SET)) goto err;         /* [result], func */
+   }
+   if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+    if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;   /* [result], setter, class */
+    if (PUSH_RESULT) {
+     if (asm_gdup_n(1)) goto err;                        /* result, setter, class, value */
+    } else {
+     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;     /* setter, class, value */
+     if (asm_putddi(ddi_ast)) goto err;
+    }
+    if (asm_gcall(2)) goto err;                          /* [result], discard */
+   } else {
+    if (PUSH_RESULT) {
+     if (asm_gdup_n(0)) goto err;                        /* result, setter, value */
+    } else {
+     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;     /* setter, value */
+     if (asm_putddi(ddi_ast)) goto err;
+    }
+    if (asm_gcall(1)) goto err;                          /* [result], discard */
+   }
+   return asm_gpop();
+  }
+  if (PUSH_RESULT) {
+   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;         /* result */
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;      /* result, class */
+   if (asm_gdup_n(0)) goto err;                            /* result, class, value */
+  } else {
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;      /* class */
+   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;         /* class, value */
+   if (asm_putddi(ddi_ast)) goto err;
+  }
+  if (asm_gdefcmember(attr->ca_addr)) goto err;            /* [result], class */
+  return asm_gpop();                                       /* [result] */
+ }
+ /* The attribute must be accessed as virtual. */
+ if unlikely(asm_check_thiscall(sym,ddi_ast)) goto err;
+ SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
+ if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+  symid = asm_newconst((DeeObject *)attr->ca_name);
+  if unlikely(symid < 0) goto err;
+  if (this_sym->s_type == SYMBOL_TYPE_THIS &&
+     !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
+   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;   /* value */
+   if (asm_putddi(ddi_ast)) goto err;
+   if (PUSH_RESULT && asm_gdup()) goto err;          /* [result], value */
+   return asm_gsetattr_this_const((uint16_t)symid);  /* [result] */
+  }
+  if (PUSH_RESULT) {
+   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;   /* result */
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err; /* result, this_sym */
+   if (asm_gdup_n(0)) goto err;                      /* result, this_sym, value */
+  } else {
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err; /* this_sym */
+   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;   /* this_sym, value */
+   if (asm_putddi(ddi_ast)) goto err;
+  }
+  return asm_gsetattr_const((uint16_t)symid);        /* [result] */
+ }
+ /* Regular, old member variable. */
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  /* Call the delete function of the attribute. */
+  if (PUSH_RESULT && ast_genasm(value,ASM_G_FPUSHRES)) goto err;  /* setter, value */
+  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+   if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
+    symid = asm_rsymid(class_sym);
+    if unlikely(symid < 0) goto err;
+    if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
+                         (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
+         this_sym->s_type == SYMBOL_TYPE_THIS &&
+        !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
+     /* Invoke the delete callback. */
+     if (!PUSH_RESULT && ast_genasm(value,ASM_G_FPUSHRES)) goto err;  /* value */
+     if (asm_putddi(ddi_ast)) goto err;
+     if (PUSH_RESULT && asm_gdup()) goto err;          /* [result], value */
+     if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_SET,0)) goto err;
+     goto pop_unused_result;
+    }
+    if (asm_putddi(ddi_ast)) goto err;
+    if (asm_ggetcmember_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_SET)) goto err; /* [result], setter */
+   } else {
+    if (asm_putddi(ddi_ast)) goto err;
+    if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;               /* [result], class_sym */
+    if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_SET)) goto err; /* [result], setter */
+   }
+  } else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+             SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err;                 /* [result], this_sym */
+   if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;                /* [result], this_sym, class_sym */
+   if (asm_ggetmember(attr->ca_addr + CLASS_GETSET_SET)) goto err;   /* [result], setter */
+  } else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
+   symid = asm_rsymid(class_sym);
+   if unlikely(symid < 0) goto err;
+   if (asm_ggetmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_SET)) goto err; /* [result], setter */
+  } else {
+   if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;                   /* [result], class_sym */
+   if (asm_ggetmember_this(attr->ca_addr + CLASS_GETSET_SET)) goto err; /* [result], setter */
+  }
+  /* [result], setter */
+  if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+   if (PUSH_RESULT) {
+    if (asm_gdup_n(0)) goto err;                    /* result, setter, value */
+   } else {
+    if (ast_genasm(value,ASM_G_FPUSHRES)) goto err; /* setter, value */
+    if (asm_putddi(ddi_ast)) goto err;
+   }
+   if (asm_gcall(1)) goto err;                      /* [result], discard */
+  } else {
+   /* Invoke as a this-call. */
+   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err; /* [result], setter, this */
+   if (PUSH_RESULT) {
+    if (asm_gdup_n(1)) goto err;                    /* result, setter, this, value */
+   } else {
+    if (ast_genasm(value,ASM_G_FPUSHRES)) goto err; /* setter, this, value */
+    if (asm_putddi(ddi_ast)) goto err;
+   }
+   if (asm_gcall(2)) goto err;                      /* [result], discard */
+  }
+pop_unused_result:
+  return asm_gpop();
+ }
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+     goto set_class_attribute;
+ if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+     SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
+  if (PUSH_RESULT) {
+   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;    /* result */
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err;  /* result, this */
+   if (asm_gpush_symbol(class_sym,ddi_ast)) goto err; /* result, this, class */
+   if (asm_gdup_n(1)) goto err;                       /* result, this, class, value */
+  } else {
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err;  /* this */
+   if (asm_gpush_symbol(class_sym,ddi_ast)) goto err; /* this, class */
+   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;    /* this, class, value */
+   if (asm_putddi(ddi_ast)) goto err;
+  }
+  if (asm_gsetmember(attr->ca_addr)) goto err;        /* [result] */
+ } else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
+  symid = asm_rsymid(class_sym);
+  if unlikely(symid < 0) goto err;
+  if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;     /* value */
+  if (asm_putddi(ddi_ast)) goto err;
+  if (PUSH_RESULT && asm_gdup()) goto err;            /* [result], value */
+  if (asm_gsetmember_this_r((uint16_t)symid,attr->ca_addr)) goto err; /* [result] */
+ } else {
+  if (PUSH_RESULT) {
+   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;     /* result */
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;  /* result, class */
+   if (asm_gdup_n(0)) goto err;                        /* result, class, value */
+  } else {
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;  /* class */
+   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;     /* class, value */
+   if (asm_putddi(ddi_ast)) goto err;
+  }
+  if (asm_gsetmember_this(attr->ca_addr)) goto err;   /* [result] */
+ }
+ return 0;
+err:
+ return -1;
+#else
+ if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
+ if (asm_putddi(ddi_ast)) goto err;
+ if ((gflags & ASM_G_FPUSHRES) && asm_gdup()) goto err;
+ return asm_gpop_symbol(sym,ddi_ast);
+err:
+ return -1;
+#endif
+}
+
+
 INTERN int DCALL
 ast_gen_setattr(struct ast *__restrict base,
                 struct ast *__restrict name,
@@ -174,39 +537,61 @@ ast_gen_setattr(struct ast *__restrict base,
   int32_t cid;
   if (base->a_type == AST_SYM) {
    struct symbol *sym = base->a_sym;
+   DeeClassScopeObject *class_scope;
 check_base_symbol_class:
-   if (!SYMBOL_MUST_REFERENCE(sym)) {
-    switch (SYMBOL_TYPE(sym)) {
-
-    case SYMBOL_TYPE_ALIAS:
-     sym = SYMBOL_ALIAS(sym);
-     goto check_base_symbol_class;
-
-    case SYMBOL_TYPE_THIS:
-     cid = asm_newconst(name->a_constexpr);
-     if unlikely(cid < 0) goto err;
-     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
-     if (PUSH_RESULT && (asm_putddi(ddi_ast) || asm_gdup())) goto err;
-     if (asm_gsetattr_this_const((uint16_t)cid)) goto err;
-     goto done;
-    {
-     struct module_symbol *modsym; int32_t module_id;
-    case SYMBOL_TYPE_MODULE: /* module.attr --> pop extern ... */
-     modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),
-                               (DeeStringObject *)name->a_constexpr);
-     if (!modsym) break;
-     module_id = asm_msymid(sym);
-     if unlikely(module_id < 0) goto err;
-     /* Push an external symbol accessed through its module. */
-     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
-     if (asm_putddi(ddi_ast)) goto err;
-     if (PUSH_RESULT && asm_gdup()) goto err;
-     if (asm_gpop_extern((uint16_t)module_id,modsym->ss_index)) goto err;
-     goto done;
-    } break;
-    default:
+   for (class_scope = base->a_scope->s_class; class_scope;
+        class_scope = DeeClassScope_Prev(class_scope)) {
+    /* Try to statically access known class members! */
+    if (sym == class_scope->cs_class ||
+        sym == class_scope->cs_this) {
+     struct symbol *funsym;
+     funsym = scope_lookup_str(&class_scope->cs_scope,
+                                DeeString_STR(name->a_constexpr),
+                                DeeString_SIZE(name->a_constexpr));
+     /* Generate a regular attribute access. */
+     if (funsym &&
+         funsym->s_type == SYMBOL_TYPE_CATTR &&
+         funsym->s_attr.a_class == class_scope->cs_class) {
+      if (sym == funsym->s_attr.a_this ||                           /* Regular access to a dynamic attribute. */
+         (sym == funsym->s_attr.a_class && !funsym->s_attr.a_this)) /* Regular access to a static-attribute. */
+          return asm_set_cattr_symbol(funsym,value,ddi_ast,gflags);
+     }
      break;
     }
+   }
+
+   switch (SYMBOL_TYPE(sym)) {
+
+   case SYMBOL_TYPE_ALIAS:
+    sym = SYMBOL_ALIAS(sym);
+    goto check_base_symbol_class;
+
+   case SYMBOL_TYPE_THIS:
+    if (SYMBOL_MUST_REFERENCE_THIS(sym)) break;
+    cid = asm_newconst(name->a_constexpr);
+    if unlikely(cid < 0) goto err;
+    if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
+    if (PUSH_RESULT && (asm_putddi(ddi_ast) || asm_gdup())) goto err;
+    if (asm_gsetattr_this_const((uint16_t)cid)) goto err;
+    goto done;
+   {
+    struct module_symbol *modsym; int32_t module_id;
+   case SYMBOL_TYPE_MODULE: /* module.attr --> pop extern ... */
+    modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),
+                              (DeeStringObject *)name->a_constexpr);
+    if (!modsym) break;
+    module_id = asm_msymid(sym);
+    if unlikely(module_id < 0) goto err;
+    /* Push an external symbol accessed through its module. */
+    if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    if (PUSH_RESULT && asm_gdup()) goto err;
+    if (asm_gpop_extern((uint16_t)module_id,modsym->ss_index)) goto err;
+    goto done;
+   } break;
+
+   default:
+    break;
    }
   }
   if unlikely(asm_gpush2_duplast(base,value,ddi_ast,gflags))
@@ -623,6 +1008,9 @@ check_dst_sym_class:
   case SYMBOL_TYPE_ALIAS:
    dst_sym = SYMBOL_ALIAS(dst_sym);
    goto check_dst_sym_class;
+
+  case SYMBOL_TYPE_CATTR:
+   return asm_set_cattr_symbol(dst_sym,src,ddi_ast,gflags);
 
   case SYMBOL_TYPE_GLOBAL:
   case SYMBOL_TYPE_LOCAL:

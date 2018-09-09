@@ -227,6 +227,7 @@ check_small_constargs_symbol:
      struct symbol *class_sym,*this_sym;
      struct class_attribute *attr;
     case SYMBOL_TYPE_CATTR:
+invoke_cattr_funsym_small:
      class_sym = funsym->s_attr.a_class;
      this_sym  = funsym->s_attr.a_this;
      attr      = funsym->s_attr.a_attr;
@@ -362,12 +363,33 @@ got_small_method:
      int32_t attrid;
      /* (very) likely case: call to an attribute with a constant name. */
      if (function_self->a_type == AST_SYM) {
+      DeeClassScopeObject *class_scope;
       struct symbol *sym = function_self->a_sym;
-check_function_symbol_class:
+check_getattr_base_symbol_class_small:
+      for (class_scope = function_self->a_scope->s_class; class_scope;
+           class_scope = DeeClassScope_Prev(class_scope)) {
+       /* Try to statically access known class members! */
+       if (sym == class_scope->cs_class ||
+           sym == class_scope->cs_this) {
+        funsym = scope_lookup_str(&class_scope->cs_scope,
+                                   DeeString_STR(function_attr->a_constexpr),
+                                   DeeString_SIZE(function_attr->a_constexpr));
+        /* Generate a regular attribute access. */
+        if (funsym &&
+            funsym->s_type == SYMBOL_TYPE_CATTR &&
+            funsym->s_attr.a_class == class_scope->cs_class) {
+         if (sym == funsym->s_attr.a_this)
+             goto invoke_cattr_funsym_small; /* Regular access to a dynamic attribute. */
+         if (sym == funsym->s_attr.a_class && !funsym->s_attr.a_this)
+             goto invoke_cattr_funsym_small; /* Regular access to a static-attribute. */
+        }
+        break;
+       }
+      }
       switch (SYMBOL_TYPE(sym)) {
       case SYMBOL_TYPE_ALIAS:
        sym = SYMBOL_ALIAS(sym);
-       goto check_function_symbol_class;
+       goto check_getattr_base_symbol_class_small;
 
       case SYMBOL_TYPE_THIS:
        if (SYMBOL_MUST_REFERENCE_THIS(sym)) break;
@@ -439,6 +461,118 @@ check_function_symbol_class:
     }
    }
   }
+  if (func->a_type == AST_SYM) {
+   funsym = SYMBOL_UNWIND_ALIAS(func->a_sym);
+   if (funsym->s_type == SYMBOL_TYPE_CATTR) {
+    struct symbol *class_sym,*this_sym;
+    struct class_attribute *attr;
+invoke_cattr_funsym_tuple:
+    class_sym = funsym->s_attr.a_class;
+    this_sym  = funsym->s_attr.a_this;
+    attr      = funsym->s_attr.a_attr;
+    SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
+    if (!this_sym) {
+     if (asm_putddi(func)) goto err;
+     if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
+      symid = asm_rsymid(class_sym);
+      if (asm_ggetcmember_r(symid,attr->ca_addr)) goto err;
+     } else {
+      if (asm_gpush_symbol(class_sym,func)) goto err;
+      if (asm_ggetcmember(attr->ca_addr)) goto err;
+     }
+     if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+      /* Must invoke the getter callback. */
+      if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+       if (asm_gpush_symbol(class_sym,func)) goto err; /* getter, class */
+       if (asm_gcall(1)) goto err;                     /* func */
+      } else {
+       if (asm_gcall(0)) goto err;
+      }
+     } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+      if (asm_gpush_symbol(class_sym,func)) goto err; /* func, class_sym */
+      if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;  /* func, class_sym, args */
+      if (asm_putddi(ddi_ast)) goto err;
+      if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
+      if (asm_gthiscall_tuple()) goto err; /* result */
+      goto pop_unused;
+     }
+     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;  /* func, args */
+     if (asm_putddi(ddi_ast)) goto err;
+     if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
+     if (asm_gcall_tuple()) goto err; /* result */
+     goto pop_unused;
+    }
+    /* The attribute must be accessed as virtual. */
+    if unlikely(asm_check_thiscall(funsym,func)) goto err;
+    SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
+    if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+     symid = asm_newconst((DeeObject *)attr->ca_name);
+     if unlikely(symid < 0) goto err;
+     if (this_sym->s_type == SYMBOL_TYPE_THIS &&
+        !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
+      if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;            /* args */
+      if (asm_putddi(ddi_ast)) goto err;
+      if (asm_gcallattr_this_const_tuple((uint16_t)symid)) goto err;
+      goto pop_unused;
+     }
+     if (asm_putddi(func)) goto err;
+     if (asm_gpush_symbol(this_sym,func)) goto err;             /* this */
+     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;             /* this, args */
+     if (asm_putddi(ddi_ast)) goto err;
+     if (asm_gcallattr_const_tuple((uint16_t)symid)) goto err;  /* result */
+     goto pop_unused;
+    }
+    /* Regular, old member variable. */
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+     if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
+      symid = asm_rsymid(class_sym);
+      if unlikely(symid < 0) goto err;
+      if (asm_putddi(func)) goto err;
+      if (asm_ggetcmember_r((uint16_t)symid,attr->ca_addr)) goto err;
+     } else {
+      if (asm_gpush_symbol(class_sym,func)) goto err;
+      if (asm_putddi(func)) goto err;
+      if (asm_ggetcmember(attr->ca_addr)) goto err;
+     }
+    } else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+               SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
+     if (asm_putddi(func)) goto err;
+     if (asm_gpush_symbol(this_sym,func)) goto err;
+     if (asm_gpush_symbol(class_sym,func)) goto err;
+     if (asm_ggetmember(attr->ca_addr)) goto err;
+    } else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
+     symid = asm_rsymid(class_sym);
+     if unlikely(symid < 0) goto err;
+     if (asm_putddi(func)) goto err;
+     if (asm_ggetmember_this_r((uint16_t)symid,attr->ca_addr)) goto err;
+    } else {
+     if (asm_putddi(func)) goto err;
+     if (asm_gpush_symbol(class_sym,func)) goto err;
+     if (asm_ggetmember_this(attr->ca_addr)) goto err;
+    }
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+     /* Call the getter of the attribute. */
+     if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+      /* Invoke as a this-call. */
+      if (asm_gpush_symbol(this_sym,func)) goto err;
+      if (asm_gcall(1)) goto err;
+     } else {
+      if (asm_gcall(0)) goto err; /* Directly invoke. */
+     }
+    } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+     /* Access to an instance member function (must produce a bound method). */
+     if (asm_gpush_symbol(this_sym,func)) goto err; /* func, this */
+     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err; /* func, this, args */
+     if (asm_putddi(ddi_ast)) goto err;
+     if (asm_gthiscall_tuple()) goto err;           /* result */
+     goto pop_unused;
+    }
+    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;  /* func, args */
+    if (asm_putddi(ddi_ast)) goto err;
+    if (asm_gcall_tuple()) goto err;                /* result */
+    goto pop_unused;
+   }
+  }
   if (func->a_type == AST_OPERATOR &&
       func->a_flag == OPERATOR_GETATTR &&
     !(func->a_operator.o_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS))) {
@@ -452,17 +586,45 @@ check_function_symbol_class:
     int32_t attrid = asm_newconst(function_attr->a_constexpr);
     if unlikely(attrid < 0) goto err;
     if (function_self->a_type == AST_SYM) {
-     funsym = function_self->a_sym;
-     SYMBOL_INPLACE_UNWIND_ALIAS(funsym);
-     if (funsym->s_type == SYMBOL_TYPE_THIS &&
-        !SYMBOL_MUST_REFERENCE_THIS(funsym)) {
+     DeeClassScopeObject *class_scope;
+     struct symbol *sym = function_self->a_sym;
+check_getattr_base_symbol_class_tuple:
+     for (class_scope = function_self->a_scope->s_class; class_scope;
+          class_scope = DeeClassScope_Prev(class_scope)) {
+      /* Try to statically access known class members! */
+      if (sym == class_scope->cs_class ||
+          sym == class_scope->cs_this) {
+       funsym = scope_lookup_str(&class_scope->cs_scope,
+                                  DeeString_STR(function_attr->a_constexpr),
+                                  DeeString_SIZE(function_attr->a_constexpr));
+       /* Generate a regular attribute access. */
+       if (funsym &&
+           funsym->s_type == SYMBOL_TYPE_CATTR &&
+           funsym->s_attr.a_class == class_scope->cs_class) {
+        if (sym == funsym->s_attr.a_this)
+            goto invoke_cattr_funsym_tuple; /* Regular access to a dynamic attribute. */
+        if (sym == funsym->s_attr.a_class && !funsym->s_attr.a_this)
+            goto invoke_cattr_funsym_tuple; /* Regular access to a static-attribute. */
+       }
+       break;
+      }
+     }
+     switch (sym->s_type) {
+     case SYMBOL_TYPE_ALIAS:
+      sym = SYMBOL_ALIAS(sym);
+      goto check_getattr_base_symbol_class_tuple;
+
+     case SYMBOL_TYPE_THIS:
+      if (SYMBOL_MUST_REFERENCE_THIS(sym))
+          break;
       if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
       if (asm_putddi(ddi_ast)) goto err;
       if (ast_predict_type(args) != &DeeTuple_Type &&
           asm_gcast_tuple()) goto err;
-      /* TODO: Try to statically access known class members! */
       if (asm_gcallattr_this_const_tuple((uint16_t)attrid)) goto err;
       goto pop_unused;
+
+     default: break;
      }
     }
     if (ast_genasm(function_self,ASM_G_FPUSHRES)) goto err;
@@ -649,6 +811,7 @@ check_funsym_class:
    struct symbol *class_sym,*this_sym;
    struct class_attribute *attr;
   case SYMBOL_TYPE_CATTR:
+invoke_cattr_funsym_argv:
    class_sym = funsym->s_attr.a_class;
    this_sym  = funsym->s_attr.a_this;
    attr      = funsym->s_attr.a_attr;
@@ -796,12 +959,33 @@ got_method:
    /* (very) likely case: call to an attribute with a constant name. */
    if (function_self->a_type == AST_SYM) {
     struct symbol *sym = function_self->a_sym;
-check_getattr_base_symbol_class:
+    DeeClassScopeObject *class_scope;
+check_getattr_base_symbol_class_argv:
+    for (class_scope = function_self->a_scope->s_class; class_scope;
+         class_scope = DeeClassScope_Prev(class_scope)) {
+     /* Try to statically access known class members! */
+     if (sym == class_scope->cs_class ||
+         sym == class_scope->cs_this) {
+      funsym = scope_lookup_str(&class_scope->cs_scope,
+                                 DeeString_STR(function_attr->a_constexpr),
+                                 DeeString_SIZE(function_attr->a_constexpr));
+      /* Generate a regular attribute access. */
+      if (funsym &&
+          funsym->s_type == SYMBOL_TYPE_CATTR &&
+          funsym->s_attr.a_class == class_scope->cs_class) {
+       if (sym == funsym->s_attr.a_this)
+           goto invoke_cattr_funsym_argv; /* Regular access to a dynamic attribute. */
+       if (sym == funsym->s_attr.a_class && !funsym->s_attr.a_this)
+           goto invoke_cattr_funsym_argv; /* Regular access to a static-attribute. */
+      }
+      break;
+     }
+    }
     switch (SYMBOL_TYPE(sym)) {
 
     case SYMBOL_TYPE_ALIAS:
      sym = SYMBOL_ALIAS(sym);
-     goto check_getattr_base_symbol_class;
+     goto check_getattr_base_symbol_class_argv;
 
     case SYMBOL_TYPE_THIS:
      if (SYMBOL_MUST_REFERENCE_THIS(sym)) break;

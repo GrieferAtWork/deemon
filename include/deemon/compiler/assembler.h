@@ -1119,6 +1119,7 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gcallattr_const_seq(cid,n) (ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),asm_put816_8(ASM_CALLATTR_C_SEQ,cid,n))
 #define asm_gcallattr_const_map(cid,n) (ASSERT((n) <= UINT8_MAX),asm_subsp(((n)*2)+1),asm_incsp(),asm_put816_8(ASM_CALLATTR_C_MAP,cid,n))
 #define asm_gcall_tuple()             (asm_ddicsp(),asm_put(ASM_CALL_TUPLE))
+#define asm_gthiscall_tuple()         (asm_dddicsp(),asm_put16(ASM_THISCALL_TUPLE))
 #define asm_gcall_argsfwd(lo,hi)      (asm_dicsp(),asm_put((ASM_CALL_ARGSFWD & 0xff00) >> 8) || asm_putimm8_8(ASM_CALL_ARGSFWD & 0xff,(uint8_t)(lo),(uint8_t)(hi)))
 #define asm_gjmp_pop()                (asm_decsp(),asm_put(ASM_JMP_POP))
 #define asm_gjmp_pop_pop()            (asm_ddcsp(),asm_put((ASM_JMP_POP_POP & 0xff00) >> 8) || asm_put(ASM_JMP_POP_POP & 0xff))
@@ -1525,6 +1526,15 @@ INTDEF int DCALL asm_gunpack_expr(struct ast *__restrict src,
                                   struct ast *__restrict ddi_ast);
 
 /* Generate attribute-, item- and range-store operations. */
+INTDEF int DCALL
+ast_gen_getattr(struct ast *__restrict base,
+                struct ast *__restrict name,
+                struct ast *__restrict ddi_ast,
+                unsigned int gflags);
+INTDEF int DCALL
+ast_gen_delattr(struct ast *__restrict base,
+                struct ast *__restrict name,
+                struct ast *__restrict ddi_ast);
 INTDEF int DCALL
 ast_gen_setattr(struct ast *__restrict base,
                 struct ast *__restrict name,

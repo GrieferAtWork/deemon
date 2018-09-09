@@ -1754,13 +1754,13 @@ set_class_attribute:
     }
     /* value, callback */
     if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
-     if (asm_gswap()) goto err; /* callback, value */
-     if (asm_gcall(0)) goto err; /* Directly invoke. */
+     if (asm_gswap()) goto err;  /* callback, value */
+     if (asm_gcall(1)) goto err; /* discard */
     } else {
      /* Invoke as a this-call. */
      if (asm_gpush_symbol(this_sym,warn_ast)) goto err; /* value, callback, this */
      if (asm_glrot(3)) goto err;                        /* callback, this, value */
-     if (asm_gcall(2)) goto err;
+     if (asm_gcall(2)) goto err;                        /* discard */
     }
 pop_unused_result:
     return asm_gpop();

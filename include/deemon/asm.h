@@ -939,7 +939,16 @@
                                       * [4][-1,+1]   `PREFIX: push op $<imm16>, pop' */
 #define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement range-initializers. */
 #define ASM_CALL_MAP          0xf01c /* [3][-1-n,+1] `call top, {#<imm8>*2}'              - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific dict-style sequence type as a single argument. Used to implement range-initializers. */
-/*      ASM_                  0xf01d  *               --------                            - ------------------ */
+#define ASM_THISCALL_TUPLE    0xf01d /* [2][-3,+1]   `call top, pop, pop...'              - Perform a this-call (which is the equivalent of prepending `pop' before `pop...', then using the result as argument list).
+                                      * >> object args    = POP();
+                                      * >> object thisarg = POP();
+                                      * >> object func    = POP();
+                                      * >> IF args !is tuple THEN
+                                      * >>     THROW_OR_UNDEFINED_BEHAVIOR(Error.TypeError());
+                                      * >>     EXCEPT();
+                                      * >> FI
+                                      * >> PUSH(func(thisarg,args...));
+                                      */
 #define ASM16_DEL_GLOBAL      0xf01e /* [4][-0,+0]   `del global <imm16>'                 - Unlink the global variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
 #define ASM16_DEL_LOCAL       0xf01f /* [4][-0,+0]   `del local <imm16>'                  - Unlink the local variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
 #define ASM_CALL_TUPLE_KWDS   0xf020 /* [2][-3,+1]   `call top, pop..., pop'              - The universal call-with-keywords instruction that also takes keywords from the stack. */

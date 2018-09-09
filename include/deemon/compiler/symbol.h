@@ -43,6 +43,7 @@ struct ast;
 struct string_object;
 struct module_object;
 struct asm_sym;
+struct class_attribute;
 
 struct ast_loc {
     struct TPPFile      *l_file; /* [0..1] Location file. */

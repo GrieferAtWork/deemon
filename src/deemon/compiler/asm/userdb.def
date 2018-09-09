@@ -292,6 +292,7 @@ INSTR("foreach",(
 INSTR("call",(
     O2(ASM_CALL,           FSTKABS,          (TOP)(SPIMM8))				  /* call top, #imm8 */
     O2(ASM_CALL_TUPLE,     FNORMAL,          (TOP)(POP|FDOTSFLAG))		  /* call top, pop... */
+    O3(ASM_THISCALL_TUPLE, FNORMAL,          (TOP)(POP)(POP|FDOTSFLAG))	  /* call top, pop, pop... */
     O2(ASM_CALL_SEQ,       FNORMAL,          (TOP)(BRSPIMM8))			  /* call top, [#imm8] */
     O2(ASM_CALL_MAP,       FNORMAL,          (TOP)(BCSPIMM8|DISP8_HALF))  /* call top, {#imm8*2} */
     O2(ASM_CALL_EXTERN,    FPUSH|FF0|FSTKABS,(EXTERN)(SPIMM8))			  /* call extern <imm8/16>:<imm8/16>, #imm8 */

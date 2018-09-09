@@ -8502,6 +8502,9 @@ prefix_target_call_seq = prefix_invop
 .ifndef prefix_target_call_map
 prefix_target_call_map = prefix_invop
 .endif
+.ifndef prefix_target_thiscall_tuple
+prefix_target_thiscall_tuple = prefix_invop
+.endif
 .ifndef prefix_target16_del_global
 prefix_target16_del_global = prefix_invop
 .endif
@@ -9147,7 +9150,7 @@ inst_table_f0:
 	.long target16_operator_tuple        /* `op top, $<imm16>, pop' */
 	.long target_call_seq                /* `call top, [#<imm8>]' */
 	.long target_call_map                /* `call top, {#<imm8>*2}' */
-	.long invop
+	.long target_thiscall_tuple          /* `call top, pop, pop...' */
 	.long target16_del_global            /* `del global <imm16>' */
 	.long target16_del_local             /* `del local <imm16>' */
 	.long target_call_tuple_kwds         /* `call top, pop..., pop' */
@@ -9663,7 +9666,7 @@ prefix_inst_table_f0:
 	.long prefix_target16_operator_tuple        /* `op top, $<imm16>, pop' */
 	.long prefix_target_call_seq                /* `call top, [#<imm8>]' */
 	.long prefix_target_call_map                /* `call top, {#<imm8>*2}' */
-	.long prefix_invop
+	.long prefix_target_thiscall_tuple          /* `call top, pop, pop...' */
 	.long prefix_target16_del_global            /* `del global <imm16>' */
 	.long prefix_target16_del_local             /* `del local <imm16>' */
 	.long prefix_target_call_tuple_kwds         /* `call top, pop..., pop' */

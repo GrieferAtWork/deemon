@@ -3941,6 +3941,19 @@ do_setattr_this_c:
 #endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
      }
 
+     TARGET(ASM_THISCALL_TUPLE,-3,+1) {
+         DREF DeeObject *callback_result;
+         ASSERT_TUPLE(FIRST);
+         callback_result = DeeObject_ThisCallTuple(THIRD,SECOND,FIRST);
+         if unlikely(!callback_result)
+            HANDLE_EXCEPT();
+         POPREF();
+         POPREF();
+         Dee_Decref(TOP);
+         TOP = callback_result; /* Inherit reference. */
+         DISPATCH();
+     }
+
      TARGET(ASM_PUSH_TRUE,-0,+1) {
          PUSHREF(Dee_True);
          DISPATCH();

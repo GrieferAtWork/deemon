@@ -347,7 +347,7 @@ static void *const f0_targets[256] = {
     /* 0x1a */ &&target_ASM16_OPERATOR_TUPLE,
     /* 0x1b */ &&target_ASM_CALL_SEQ,
     /* 0x1c */ &&target_ASM_CALL_MAP,
-    /* 0x1d */ &&unknown_instruction,
+    /* 0x1d */ &&target_ASM_THISCALL_TUPLE,
     /* 0x1e */ &&target_ASM16_DEL_GLOBAL,
     /* 0x1f */ &&target_ASM16_DEL_LOCAL,
     /* 0x20 */ &&target_ASM_CALL_TUPLE_KWDS,

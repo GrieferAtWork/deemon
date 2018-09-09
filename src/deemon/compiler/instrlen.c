@@ -410,7 +410,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0x1a */ 4, /* `ASM16_OPERATOR_TUPLE':        `op top, $<imm16>, pop' */
     /* 0x1b */ 3, /* `ASM_CALL_SEQ':                `call top, [#<imm8>]' */
     /* 0x1c */ 3, /* `ASM_CALL_MAP':                `call top, {#<imm8>*2}' */
-    /* 0x1d */ 2, /* --- */
+    /* 0x1d */ 2, /* `ASM_THISCALL_TUPLE':          `call top, pop, pop...' */
     /* 0x1e */ 4, /* `ASM16_DEL_GLOBAL':            `del global <imm16>' */
     /* 0x1f */ 4, /* `ASM16_DEL_LOCAL':             `del local <imm16>' */
     /* 0x20 */ 2, /* `ASM_CALL_TUPLE_KWDS':         `call top, pop..., pop' */
@@ -926,7 +926,7 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0x1a */ STACK_EFFECT(2,1),  /* `ASM16_OPERATOR_TUPLE':        `op top, $<imm16>, pop' */
     /* 0x1b */ STACK_EFFECT_UNDEF, /* `ASM_CALL_SEQ':                `call top, [#<imm8>]' */
     /* 0x1c */ STACK_EFFECT_UNDEF, /* `ASM_CALL_MAP':                `call top, {#<imm8>*2}' */
-    /* 0x1d */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x1d */ STACK_EFFECT(3,1),  /* `ASM_THISCALL_TUPLE':          `call top, pop, pop...' */
     /* 0x1e */ STACK_EFFECT(0,0),  /* `ASM16_DEL_GLOBAL':            `del global <imm16>' */
     /* 0x1f */ STACK_EFFECT(0,0),  /* `ASM16_DEL_LOCAL':             `del local <imm16>' */
     /* 0x20 */ STACK_EFFECT(3,1),  /* `ASM_CALL_TUPLE_KWDS':         `call top, pop..., pop' */
