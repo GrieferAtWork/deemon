@@ -32,56 +32,71 @@ DECL_BEGIN
  * being written to in local variable.
  * This includes symbols such as module references, or exception-variables. */
 LOCAL int DCALL
+transpose_modified_symbol(struct symbol *__restrict sym) {
+ if (!SYMBOL_NWRITE(sym))
+      goto done; /* Symbol is never actually being written to! */
+check_symbol:
+ switch (SYMBOL_TYPE(sym)) {
+
+ case SYMBOL_TYPE_ALIAS:
+  sym = SYMBOL_ALIAS(sym);
+  goto check_symbol;
+
+
+ {
+  int32_t lid;
+ case SYMBOL_TYPE_MODULE:
+ case SYMBOL_TYPE_EXCEPT:
+  /* Don't transpose these types of symbols.
+   * Doing so would not reflect the user-expectation. */
+ //case SYM_CLASS_REF:
+ //case SYMBOL_TYPE_MYMOD:
+ //case SYMBOL_TYPE_MYFUNC:
+ //case SYMBOL_TYPE_THIS:
+  lid = asm_newlocal();
+  if unlikely(lid < 0) goto err;
+#if 1
+  if (asm_plocal((uint16_t)lid)) goto err;
+  if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_MODULE) {
+   int32_t mid = asm_msymid(sym);
+   if unlikely(mid < 0) goto err;
+   if (asm_gpush_module_p((uint16_t)mid)) goto err;
+   Dee_Decref(SYMBOL_MODULE_MODULE(sym));
+  } else {
+   ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_EXCEPT);
+   if (asm_gpush_except_p()) goto err;
+  }
+#else
+  if (asm_gpush_symbol(sym,warn_ast)) goto err;
+  if (asm_gpop_local((uint16_t)lid)) goto err;
+#endif
+  sym->s_type  = SYMBOL_TYPE_LOCAL;
+  sym->s_flag |= SYMBOL_FALLOC;
+  sym->s_symid = (uint16_t)lid;
+ } break;
+
+ default: break;
+ }
+done:
+ return 0;
+err:
+ return -1;
+}
+LOCAL int DCALL
 transpose_modified_symbols(DeeScopeObject *__restrict scope) {
  size_t i;
+ struct symbol *sym;
  for (i = 0; i < scope->s_mapa; ++i) {
-  struct symbol *sym = scope->s_map[i];
+  sym = scope->s_map[i];
   for (; sym; sym = sym->s_next) {
-   if (!SYMBOL_NWRITE(sym))
-        continue; /* Symbol is never actually being written to! */
-check_symbol:
-   switch (SYMBOL_TYPE(sym)) {
-
-   case SYMBOL_TYPE_ALIAS:
-    sym = SYMBOL_ALIAS(sym);
-    goto check_symbol;
-
-
-   {
-    int32_t lid;
-   case SYMBOL_TYPE_MODULE:
-   case SYMBOL_TYPE_EXCEPT:
-    /* Don't transpose these types of symbols.
-     * Doing so would not reflect the user-expectation. */
-   //case SYM_CLASS_REF:
-   //case SYMBOL_TYPE_MYMOD:
-   //case SYMBOL_TYPE_MYFUNC:
-   //case SYMBOL_TYPE_THIS:
-    lid = asm_newlocal();
-    if unlikely(lid < 0) goto err;
-#if 1
-    if (asm_plocal((uint16_t)lid)) goto err;
-    if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_MODULE) {
-     int32_t mid = asm_msymid(sym);
-     if unlikely(mid < 0) goto err;
-     if (asm_gpush_module_p((uint16_t)mid)) goto err;
-     Dee_Decref(SYMBOL_MODULE_MODULE(sym));
-    } else {
-     ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_EXCEPT);
-     if (asm_gpush_except_p()) goto err;
-    }
-#else
-    if (asm_gpush_symbol(sym,warn_ast)) goto err;
-    if (asm_gpop_local((uint16_t)lid)) goto err;
-#endif
-    sym->s_type  = SYMBOL_TYPE_LOCAL;
-    sym->s_flag |= SYMBOL_FALLOC;
-    sym->s_symid = (uint16_t)lid;
-   } break;
-
-   default: break;
-   }
+   if (transpose_modified_symbol(sym))
+       goto err;
   }
+ }
+ sym = scope->s_del;
+ for (; sym; sym = sym->s_next) {
+  if (transpose_modified_symbol(sym))
+      goto err;
  }
  return 0;
 err:
