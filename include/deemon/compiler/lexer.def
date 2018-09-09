@@ -414,7 +414,7 @@ DEF_WARNING(W_IMPLICIT_MEMBER_DECLARATION,(WG_SYMBOL),WSTATE_WARN,WARNF("Implici
 DEF_WARNING(W_TOO_MANY_CLASS_MEMBER,(WG_SYMBOL),WSTATE_ERROR,WARNF("Class `%s' has too many members",ARG(char *)))
 DEF_WARNING(W_MODULE_NOT_FOUND,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `%k' could not be found",ARG(DeeObject *)))
 DEF_WARNING(W_RECURSIVE_MODULE_DEPENDENCY,(WG_SYMBOL),WSTATE_ERROR,{ DeeObject *a = ARG(DeeObject *); WARNF("Recursive dependency between modules `%k' and `%k'",a,ARG(DeeObject *)); })
-DEF_WARNING(W_VARIABLE_READ_NEVER_WRITTEN,(WG_SYMBOL),WSTATE_ERROR,WARNF("Read from variable `%s' that is never written",KWDNAME()))
+DEF_WARNING(W_VARIABLE_READ_NEVER_WRITTEN,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Read from variable `%s' that is never written",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_NO_OPERATOR_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `operators' is not exporting a dedicated symbol for `operator %s'",ARG(char *)))
 DEF_WARNING(W_NO_OPERATOR_FALLBACK_FUNCTION,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `operators' is not exporting the fallback `operator' function required to implement generic operator support"))
 DEF_WARNING(W_NO_D200_OLD_USER_CLASS,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `d200' is not exporting `OldUserClass' required to implement legacy user-classes"))

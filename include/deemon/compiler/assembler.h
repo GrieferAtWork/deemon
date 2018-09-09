@@ -760,8 +760,18 @@ struct assembler {
 #define ASM_FNOASSERT      0x0040      /* Replace all assert statements with a compile-time constant `true'. */
 #define ASM_FNODEC         0x0080      /* Do not create a `*.dec' file once the module has been compiled. */
 #define ASM_FNOREUSECONST  0x0100      /* Do not re-use constants. */
+#define ASM_FREDUCEREFS    0x0200      /* Try to minimize use of references when accessing class/instance members.
+                                        * Enabling this isn't a good idea, as it slows down access to members inside
+                                        * of classes, while only speeding up construction of said class.
+                                        * Additionally, problems may ensue when the class's symbol is overwritten,
+                                        * as member function may not be holding their own references to the class,
+                                        * but be using global symbols instead. */
     uint16_t               a_flag;     /* Assembler operation flags (Set of `ASM_F*') */
 };
+
+#define ASM_SYMBOL_MAY_REFERENCE(x) \
+       ((current_assembler.a_flag & ASM_FREDUCEREFS) ? \
+         SYMBOL_MUST_REFERENCE(x) : SYMBOL_MAY_REFERENCE(x))
 
 /* Initialize/Finalize the given assembler. */
 INTDEF int  DCALL assembler_init(void);
@@ -1439,6 +1449,12 @@ INTDEF bool DCALL asm_can_prefix_symbol_for_read(struct symbol *__restrict sym);
 INTDEF int DCALL asm_gpush_bnd_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF int DCALL asm_gdel_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF int DCALL asm_gpop_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+
+/* Check if `sym' is accessible from the current
+ * source location, returning `false' if it isn't. */
+INTDEF bool DCALL asm_symbol_accessible(struct symbol *__restrict sym);
+
+
 /* Returns `true' if pushing `sym' is more expensive  */
 INTDEF bool DCALL asm_gpush_symbol_is_expensive(struct symbol *__restrict sym);
 

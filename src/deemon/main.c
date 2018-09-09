@@ -493,6 +493,7 @@ PRIVATE struct compiler_flag const compiler_flags[] = {
     { "assert",        1, FIELD(co_assembler), ASM_FNOASSERT },
     { "gendec",        1, FIELD(co_assembler), ASM_FNODEC },
     { "reuse-consts",  1, FIELD(co_assembler), ASM_FNOREUSECONST },
+    { "reduce-refs",   0, FIELD(co_assembler), ASM_FREDUCEREFS },
     { "imp-dec",       1, FIELD(co_decloader), DEC_FDISABLE },
     { "imp-outdated",  0, FIELD(co_decloader), DEC_FLOADOUTDATED },
     { "imp-trusted",   1, FIELD(co_decloader), DEC_FUNTRUSTED },

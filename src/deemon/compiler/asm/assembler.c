@@ -2561,7 +2561,7 @@ asm_gsymid_for_read(struct symbol *__restrict sym,
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
  if (!sym->s_nwrite &&
-      WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym->s_name))
+      WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym))
       goto err;
  return asm_gsymid(sym);
 err:
@@ -2575,7 +2575,7 @@ asm_lsymid_for_read(struct symbol *__restrict sym,
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
  if (!sym->s_nwrite &&
-      WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym->s_name))
+      WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym))
       goto err;
  return asm_lsymid(sym);
 err:
@@ -2589,7 +2589,7 @@ asm_ssymid_for_read(struct symbol *__restrict sym,
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
  if (!sym->s_nwrite &&
-      WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym->s_name))
+      WARNAST(warn_ast,W_VARIABLE_READ_NEVER_WRITTEN,sym))
       goto err;
  return asm_ssymid(sym);
 err:

@@ -447,7 +447,7 @@
  *       when there are finally-blocks defined, but _ONLY_ enable the automatic
  *       unwinding of them as part of returning from a function.
  *       That way we can get rid of the slow O(N) cleanup of finally-handlers,
- *       while still maintaining the option to having the runtime deal with them
+ *       while still maintaining the option of having the runtime deal with them
  *       in smaller functions! */
 /*      ASM_                  0x30  *               --------                            - ------------------ */
 /*      ASM_                  0x31  *               --------                            - ------------------ */

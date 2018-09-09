@@ -2588,7 +2588,7 @@ operator_without_prefix:
      int32_t symid;
      struct symbol *typesym = ast->a_action.a_act1->a_sym;
      SYMBOL_INPLACE_UNWIND_ALIAS(typesym);
-     if (SYMBOL_MAY_REFERENCE(typesym)) {
+     if (ASM_SYMBOL_MAY_REFERENCE(typesym)) {
       symid = asm_rsymid(typesym);
       if unlikely(symid < 0) goto err;
       if (asm_gsuper_this_r(symid)) goto err;
