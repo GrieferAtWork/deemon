@@ -728,9 +728,9 @@ check_function_class:
    if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
     symid2 = asm_newconst((DeeObject *)attr->ca_name);
     if unlikely(symid2 < 0) goto err;
-    if (!SYMBOL_MUST_REFERENCE(this_sym) &&
-         this_sym->s_type == SYMBOL_TYPE_THIS)
-         return asm_gcallattr_this_const((uint16_t)symid2,argc);
+    if (this_sym->s_type == SYMBOL_TYPE_THIS &&
+       !SYMBOL_MUST_REFERENCE_THIS(this_sym))
+        return asm_gcallattr_this_const((uint16_t)symid2,argc);
     if (asm_gpush_symbol(this_sym,warn_ast)) goto err;  /* args..., this */
     if (asm_grrot(argc)) goto err;                      /* this, args... */
     return asm_gcallattr_const((uint16_t)symid2,argc);  /* result */
@@ -742,7 +742,7 @@ check_function_class:
      if unlikely(symid < 0) goto err;
      if ((attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) &&
           this_sym->s_type == SYMBOL_TYPE_THIS &&
-         !SYMBOL_MUST_REFERENCE(this_sym)) {
+         !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
       if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
        /* Invoke the getter callback. */
        if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_GET,0)) goto err;
@@ -755,8 +755,8 @@ check_function_class:
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
      if (asm_ggetcmember(attr->ca_addr)) goto err;
     }
-   } else if (SYMBOL_MUST_REFERENCE(this_sym) ||
-              this_sym->s_type != SYMBOL_TYPE_THIS) {
+   } else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+              SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
     if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
     if (asm_ggetmember(attr->ca_addr)) goto err;
@@ -933,9 +933,9 @@ check_sym_class:
   if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
    symid2 = asm_newconst((DeeObject *)attr->ca_name);
    if unlikely(symid2 < 0) goto err;
-   if (!SYMBOL_MUST_REFERENCE(this_sym) &&
-        this_sym->s_type == SYMBOL_TYPE_THIS)
-        return asm_ggetattr_this_const((uint16_t)symid2);
+   if (this_sym->s_type == SYMBOL_TYPE_THIS &&
+      !SYMBOL_MUST_REFERENCE_THIS(this_sym))
+       return asm_ggetattr_this_const((uint16_t)symid2);
    if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
    return asm_ggetattr_const((uint16_t)symid2);
   }
@@ -946,7 +946,8 @@ check_sym_class:
     if unlikely(symid < 0) goto err;
     if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
                          (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
-         this_sym->s_type == SYMBOL_TYPE_THIS && !SYMBOL_MUST_REFERENCE(this_sym)) {
+         this_sym->s_type == SYMBOL_TYPE_THIS &&
+        !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
      /* Invoke the getter callback. */
      return asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_GET,0);
     }
@@ -955,8 +956,8 @@ check_sym_class:
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
     if (asm_ggetcmember(attr->ca_addr)) goto err;
    }
-  } else if (SYMBOL_MUST_REFERENCE(this_sym) ||
-             this_sym->s_type != SYMBOL_TYPE_THIS) {
+  } else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+             SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
    if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
    if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
    if (asm_ggetmember(attr->ca_addr)) goto err;
@@ -1241,7 +1242,8 @@ test_class_attribute:
      if unlikely(symid < 0) goto err;
      if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
                           (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
-          this_sym->s_type == SYMBOL_TYPE_THIS && !SYMBOL_MUST_REFERENCE(this_sym)) {
+          this_sym->s_type == SYMBOL_TYPE_THIS &&
+         !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
       /* Invoke the getter callback. */
       if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_GET,0))
           goto err;
@@ -1252,8 +1254,8 @@ test_class_attribute:
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
      if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_GET)) goto err;
     }
-   } else if (SYMBOL_MUST_REFERENCE(this_sym) ||
-              this_sym->s_type != SYMBOL_TYPE_THIS) {
+   } else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+              SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
     if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
     if (asm_ggetmember(attr->ca_addr + CLASS_GETSET_GET)) goto err;
@@ -1315,8 +1317,8 @@ got_attribute_value:
   }
   if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
       goto test_class_attribute;
-  if (SYMBOL_MUST_REFERENCE(this_sym) ||
-      this_sym->s_type != SYMBOL_TYPE_THIS) {
+  if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+      SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
    if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
    if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
    if (asm_gboundmember(attr->ca_addr)) goto err;
@@ -1466,9 +1468,9 @@ del_class_attribute:
     int32_t symid2;
     symid2 = asm_newconst((DeeObject *)attr->ca_name);
     if unlikely(symid2 < 0) goto err;
-    if (!SYMBOL_MUST_REFERENCE(this_sym) &&
-         this_sym->s_type == SYMBOL_TYPE_THIS)
-         return asm_gdelattr_this_const((uint16_t)symid2);
+    if (this_sym->s_type == SYMBOL_TYPE_THIS &&
+       !SYMBOL_MUST_REFERENCE_THIS(this_sym))
+        return asm_gdelattr_this_const((uint16_t)symid2);
     if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
     return asm_gdelattr_const((uint16_t)symid2);
    }
@@ -1481,7 +1483,8 @@ del_class_attribute:
       if unlikely(symid < 0) goto err;
       if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
                            (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
-           this_sym->s_type == SYMBOL_TYPE_THIS && !SYMBOL_MUST_REFERENCE(this_sym)) {
+           this_sym->s_type == SYMBOL_TYPE_THIS &&
+          !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
        /* Invoke the delete callback. */
        if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_DEL,0)) goto err;
        goto pop_unused_result;
@@ -1491,8 +1494,8 @@ del_class_attribute:
       if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
       if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_DEL)) goto err;
      }
-    } else if (SYMBOL_MUST_REFERENCE(this_sym) ||
-               this_sym->s_type != SYMBOL_TYPE_THIS) {
+    } else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+               SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
      if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
      if (asm_ggetmember(attr->ca_addr + CLASS_GETSET_DEL)) goto err;
@@ -1516,8 +1519,8 @@ pop_unused_result:
    }
    if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
        goto del_class_attribute;
-   if (SYMBOL_MUST_REFERENCE(this_sym) ||
-       this_sym->s_type != SYMBOL_TYPE_THIS) {
+   if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+       SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
     if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
     if (asm_gdelmember(attr->ca_addr)) goto err;
@@ -1709,9 +1712,9 @@ set_class_attribute:
    if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
     symid = asm_newconst((DeeObject *)attr->ca_name);
     if unlikely(symid < 0) goto err;
-    if (!SYMBOL_MUST_REFERENCE(this_sym) &&
-         this_sym->s_type == SYMBOL_TYPE_THIS)
-         return asm_gsetattr_this_const((uint16_t)symid);
+    if (this_sym->s_type == SYMBOL_TYPE_THIS &&
+       !SYMBOL_MUST_REFERENCE_THIS(this_sym))
+        return asm_gsetattr_this_const((uint16_t)symid);
     if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
     if (asm_gswap()) goto err; /* this, value */
     return asm_gsetattr_const((uint16_t)symid);
@@ -1725,7 +1728,8 @@ set_class_attribute:
       if unlikely(symid < 0) goto err;
       if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
                            (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
-           this_sym->s_type == SYMBOL_TYPE_THIS && !SYMBOL_MUST_REFERENCE(this_sym)) {
+           this_sym->s_type == SYMBOL_TYPE_THIS &&
+          !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
        /* Invoke the delete callback. */
        if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_SET,0)) goto err;
        goto pop_unused_result;
@@ -1735,8 +1739,8 @@ set_class_attribute:
       if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
       if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_SET)) goto err;
      }
-    } else if (SYMBOL_MUST_REFERENCE(this_sym) ||
-               this_sym->s_type != SYMBOL_TYPE_THIS) {
+    } else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+               SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
      if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;
      if (asm_ggetmember(attr->ca_addr + CLASS_GETSET_SET)) goto err;
@@ -1763,8 +1767,8 @@ pop_unused_result:
    }
    if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
        goto set_class_attribute;
-   if (SYMBOL_MUST_REFERENCE(this_sym) ||
-       this_sym->s_type != SYMBOL_TYPE_THIS) {
+   if (this_sym->s_type != SYMBOL_TYPE_THIS ||
+       SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
     if (asm_gpush_symbol(this_sym,warn_ast)) goto err;  /* value, this */
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err; /* value, this, class */
     if (asm_glrot(3)) goto err;                         /* this, class, value */

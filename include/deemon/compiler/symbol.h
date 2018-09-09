@@ -245,12 +245,20 @@ FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_
     (x) != current_basescope->bs_this : \
     (x)->s_scope->s_base != current_basescope))
 
+#define SYMBOL_MUST_REFERENCE_THIS(x) \
+   (ASSERT((x)->s_type == SYMBOL_TYPE_THIS), \
+    (x) != current_basescope->bs_this)
+
 /* Same as `SYMBOL_MUST_REFERENCE()', but the caller already knows
  * that the symbol's type may be referenced (`SYMBOL_TYPE_MAYREF(x->s_type) == true') */
 #define SYMBOL_MUST_REFERENCE_TYPEMAY(x) \
    (ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type)), \
    (x)->s_type == SYMBOL_TYPE_THIS ? \
    (x) != current_basescope->bs_this : \
+   (x)->s_scope->s_base != current_basescope)
+
+#define SYMBOL_MUST_REFERENCE_NOTTHIS(x) \
+   (ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type) && (x)->s_type != SYMBOL_TYPE_THIS), \
    (x)->s_scope->s_base != current_basescope)
 
 /* Check if a given symbol `x' can be addressed as a reference */
