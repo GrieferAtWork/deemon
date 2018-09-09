@@ -113,7 +113,10 @@ INTERN int (DCALL ast_startoptimize)(struct ast *__restrict self, bool result_us
 INTERN int (DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack,
                                   struct ast *__restrict self, bool result_used) {
  ASSERT_AST(self);
+ ASSERT(self->a_scope->s_del != (struct symbol *)1);
 again:
+ ASSERT(self->a_scope->s_del != (struct symbol *)1);
+
  /* Check for interrupts to allow the user to stop optimization */
  if (DeeThread_CheckInterrupt()) goto err;
  while (self->a_scope->s_prev &&                    /* Has parent scope */
@@ -152,6 +155,8 @@ again:
   if (optimizer_flags & OPTIMIZE_FASSUME)
       return ast_assumes_setsymval(stack->os_assume,self->a_unbind,NULL);
 #endif
+  /* TODO: Remove this branch if the symbol is never read from, or checking for being bound
+   *       NOTE: Only do so when `symbol_del_haseffect()' is false */
   break;
 
  case AST_BOUND:

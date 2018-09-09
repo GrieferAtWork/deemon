@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
+#include <deemon/class.h>
 #include <deemon/string.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/symbol.h>
@@ -258,6 +259,106 @@ again:
  }
  return false;
 }
+
+
+INTERN bool DCALL
+symbol_reachable(struct symbol *__restrict self,
+                 DeeScopeObject *__restrict caller_scope) {
+again:
+ switch (self->s_type) {
+
+ case SYMBOL_TYPE_ALIAS:
+  self = SYMBOL_ALIAS(self);
+  goto again;
+
+ {
+  DeeBaseScopeObject *this_origin;
+  DeeBaseScopeObject *sym_base;
+ case SYMBOL_TYPE_THIS:
+  sym_base    = self->s_scope->s_base;
+  this_origin = caller_scope->s_base;
+  do {
+   if (this_origin->bs_this == self) /* Bound & reachable this-symbol. */
+       return true;
+   if (this_origin == sym_base) /* Unbound this-symbol (valid in any kind of this-call) */
+       return (this_origin->bs_flags & CODE_FTHISCALL) != 0;
+  } while ((this_origin = this_origin->bs_prev) != NULL);
+ } break;
+
+ case SYMBOL_TYPE_STACK:
+ case SYMBOL_TYPE_EXCEPT:
+  do {
+   /* Only reachable from their declaration scope. */
+   if (caller_scope == self->s_scope)
+       return true;
+  } while ((caller_scope = caller_scope->s_prev) != NULL);
+  break;
+
+ case SYMBOL_TYPE_GETSET:
+  if (!self->s_getset.gs_get) return true;
+  self = self->s_getset.gs_get;
+  goto again;
+
+ case SYMBOL_TYPE_CATTR:
+  /* Make sure that both the this-, as well
+   * as the class-symbols are accessible. */
+  if (self->s_attr.a_this &&
+     !symbol_reachable(self->s_attr.a_this,caller_scope))
+      break;
+  self = self->s_attr.a_class;
+  goto again;
+
+ {
+  DeeBaseScopeObject *this_origin;
+  DeeBaseScopeObject *sym_base;
+ default:
+  sym_base    = self->s_scope->s_base;
+  this_origin = caller_scope->s_base;
+  /* Any other type of symbol: reachable from the same, or a child base-scope. */
+  do {
+   if (this_origin == sym_base)
+       return true;
+  } while ((this_origin = this_origin->bs_prev) != NULL);
+ } break;
+ }
+ return false;
+}
+
+
+INTERN bool DCALL
+symbol_get_haseffect(struct symbol *__restrict self,
+                     DeeScopeObject *__restrict caller_scope) {
+again:
+ switch (self->s_type) {
+
+ case SYMBOL_TYPE_ALIAS:
+  self = SYMBOL_ALIAS(self);
+  goto again;
+
+ case SYMBOL_TYPE_CATTR:
+  if (self->s_attr.a_attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+      return true;
+  if (symbol_get_haseffect(self->s_attr.a_class,caller_scope))
+      return true;
+  if (!self->s_attr.a_this) break;
+  /* The attribute must be accessed as virtual. */
+  if unlikely(!symbol_reachable(self,caller_scope))
+     return true;
+  return symbol_get_haseffect(self->s_attr.a_this,caller_scope);
+
+ case SYMBOL_TYPE_EXTERN:
+  if (self->s_extern.e_symbol->ss_flags & MODSYM_FPROPERTY)
+      return true;
+  break;
+
+ case SYMBOL_TYPE_GETSET:
+  return true;
+
+ default: break;
+ }
+ return false;
+}
+
 
 
 INTERN void DCALL

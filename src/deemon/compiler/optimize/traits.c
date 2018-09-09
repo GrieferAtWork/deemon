@@ -343,9 +343,15 @@ ast_has_sideeffects(struct ast *__restrict self) {
      return true;
  switch (self->a_type) {
  case AST_CONSTEXPR:
- case AST_SYM:       /* `UnboundLocal' errors don't count as valid side-effects. */
- case AST_BOUND:
   return false;
+#ifndef CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
+ case AST_BOUND:
+  return symbol_bnd_haseffect(self->a_sym,self->a_scope);
+#else
+ case AST_BOUND:
+#endif
+ case AST_SYM:
+  return symbol_get_haseffect(self->a_sym,self->a_scope);
 
  {
   struct ast **iter,**end;

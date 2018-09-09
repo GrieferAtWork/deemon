@@ -563,71 +563,6 @@ err:
 }
 
 
-INTERN bool DCALL
-asm_symbol_accessible(struct symbol *__restrict self) {
-again:
- switch (self->s_type) {
-
- case SYMBOL_TYPE_ALIAS:
-  self = SYMBOL_ALIAS(self);
-  goto again;
-
- {
-  DeeBaseScopeObject *this_origin;
-  DeeBaseScopeObject *sym_base;
- case SYMBOL_TYPE_THIS:
-  sym_base    = self->s_scope->s_base;
-  this_origin = current_basescope;
-  for (; this_origin; this_origin = this_origin->bs_prev) {
-   if (this_origin->bs_this == self) /* Bound & reachable this-symbol. */
-       return true;
-   if (this_origin == sym_base) /* Unbound this-symbol (valid in any kind of this-call) */
-       return (this_origin->bs_flags & CODE_FTHISCALL) != 0;
-  }
- } break;
-
- {
-  DeeScopeObject *this_origin;
-  DeeScopeObject *sym_base;
- case SYMBOL_TYPE_STACK:
- case SYMBOL_TYPE_EXCEPT:
-  /* Only reachable from their declaration scope. */
-  sym_base    = self->s_scope;
-  this_origin = current_scope;
-  for (; this_origin; this_origin = this_origin->s_prev) {
-   if (this_origin == sym_base)
-       return true;
-  }
- } break;
-
- case SYMBOL_TYPE_GETSET:
-  return (!self->s_getset.gs_get ||
-           asm_symbol_accessible(self->s_getset.gs_get));
-
- case SYMBOL_TYPE_CATTR:
-  /* Make sure that both the this-, as well
-   * as the class-symbols are accessible. */
-  if (self->s_attr.a_this &&
-     !asm_symbol_accessible(self->s_attr.a_this))
-      break;
-  return asm_symbol_accessible(self->s_attr.a_class);
-
- {
-  DeeBaseScopeObject *this_origin;
-  DeeBaseScopeObject *sym_base;
- default:
-  sym_base    = self->s_scope->s_base;
-  this_origin = current_basescope;
-  /* Any other type of symbol: reachable from the same, or a child base-scope. */
-  for (; this_origin; this_origin = this_origin->bs_prev) {
-   if (this_origin == sym_base)
-       return true;
-  }
- } break;
- }
- return false;
-}
-
 INTERN int DCALL asm_check_thiscall(struct symbol *__restrict sym,
                                     struct ast *__restrict warn_ast) {
  /* Throw a compiler-error when one attempts to
@@ -1157,6 +1092,32 @@ err:
  return -1;
 }
 
+
+/* Define to generate inline code for testing the binding of a class property.
+ * This should be kept disabled, because the generated code is quite excessively
+ * large, as it includes an exception handler for capturing UnboundAttribute errors.
+ * Essentially this switch does the following:
+ * >> class MyClass {
+ * >>     myprop = {
+ * >>         get() {
+ * >>             return 42;
+ * >>         }
+ * >>     }
+ * >>
+ * >>     test() {
+ * >>         print myprop is bound;
+ * >>         // Compiled as the equivalent of:
+ * >>#ifdef CONFIG_INLINE_GETSET_BINDING_CHECKER
+ * >>         print try ({ myprop; true; }) catch ((Error from deemon).AttributeError.UnboundAttribute) false;
+ * >>#else
+ * >>#endif
+ * >>     }
+ * >> }
+ */
+#undef CONFIG_INLINE_GETSET_BINDING_CHECKER
+//#define CONFIG_INLINE_GETSET_BINDING_CHECKER 1
+
+
 INTERN int (DCALL asm_gpush_bnd_symbol)(struct symbol *__restrict sym,
                                         struct ast *__restrict warn_ast) {
  int32_t symid;
@@ -1222,12 +1183,17 @@ test_class_attribute:
   /* The attribute must be accessed as virtual. */
   if unlikely(asm_check_thiscall(sym,warn_ast)) goto err;
   SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-  if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+  if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))
+#ifndef CONFIG_INLINE_GETSET_BINDING_CHECKER
+      || (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+#endif
+      ) {
    if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
    if (asm_gpush_constexpr((DeeObject *)attr->ca_name)) goto err;
    return asm_gboundattr();
   }
   /* Regular, old member variable. */
+#ifdef CONFIG_INLINE_GETSET_BINDING_CHECKER
   if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
    /* Special case: must invoke the attribute as a getter, and make
     * sure that doing so doesn't produce any UnboundAttribute errors. */
@@ -1315,6 +1281,7 @@ got_attribute_value:
    }
    return 0;
   }
+#endif /* CONFIG_INLINE_GETSET_BINDING_CHECKER */
   if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
       goto test_class_attribute;
   if (this_sym->s_type != SYMBOL_TYPE_THIS ||

@@ -559,7 +559,6 @@ check_base_symbol_class:
      break;
     }
    }
-
    switch (SYMBOL_TYPE(sym)) {
 
    case SYMBOL_TYPE_ALIAS:
@@ -1012,11 +1011,8 @@ check_dst_sym_class:
   case SYMBOL_TYPE_CATTR:
    return asm_set_cattr_symbol(dst_sym,src,ddi_ast,gflags);
 
-  case SYMBOL_TYPE_GLOBAL:
-  case SYMBOL_TYPE_LOCAL:
   case SYMBOL_TYPE_STATIC:
-   if (dst_sym->s_type == SYMBOL_TYPE_STATIC &&
-     !(dst_sym->s_flag & SYMBOL_FALLOC)) {
+   if (!(dst_sym->s_flag & SYMBOL_FALLOC)) {
     int32_t sid;
     /* Special case: Unallocated static variable
      * > The first assignment is used as the static initializer */
@@ -1087,6 +1083,12 @@ check_dst_sym_class:
      */
     /* TODO */
    }
+   break;
+
+  case SYMBOL_TYPE_GLOBAL:
+  case SYMBOL_TYPE_EXTERN:
+  case SYMBOL_TYPE_LOCAL:
+  case SYMBOL_TYPE_STACK:
    if (ast_genasm(src,ASM_G_FPUSHRES)) goto err;
    if (PUSH_RESULT && (asm_putddi(ddi_ast) || asm_gdup())) goto err;
    if (asm_putddi(dst)) goto err;

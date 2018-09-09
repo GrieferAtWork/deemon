@@ -106,7 +106,7 @@ struct symbol {
 #define SYMBOL_TYPE_AMBIG  0x000f  /* An ambiguous symbol (caused by `import *' when an overlap occurrs). */
 #define SYMBOL_TYPE_FWD    0x0010  /* A forward-defined symbol. */
 #define SYMBOL_TYPE_CONST  0x0011  /* A symbol that evaluates to a constant expression. */
-#define SYMBOL_TYPE_MAYREF(x) ((x) >= SYMBOL_TYPE_ARG)
+#define SYMBOL_TYPE_MAYREF(x)       ((x) >= SYMBOL_TYPE_ARG)
     uint16_t             s_type;   /* Symbol class. (One of `SYMBOL_TYPE_*')
                                     * This describes how is the variable addressed, and where does it live. */
     uint16_t             s_flag;   /* Symbol flags (Set of `SYMBOL_F*') */
@@ -294,6 +294,19 @@ INTDEF bool DCALL symbol_uses_symbol_on_get(struct symbol *__restrict self, stru
 INTDEF bool DCALL symbol_uses_symbol_on_del(struct symbol *__restrict self, struct symbol *__restrict other);
 INTDEF bool DCALL symbol_uses_symbol_on_set(struct symbol *__restrict self, struct symbol *__restrict other);
 #define symbol_uses_symbol_on_bnd(self,other) symbol_uses_symbol_on_get(self,other)
+
+/* Check if reading from, or checking the given symbol for being bound has side-effects.
+ * Note that UnboundLocal errors (as thrown when accessing an unbound local symbol) are
+ * not considered true side-effects for this purpose. */
+INTDEF bool DCALL symbol_get_haseffect(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
+#define symbol_bnd_haseffect(self,caller_scope) symbol_get_haseffect(self,caller_scope)
+#define symbol_del_haseffect(self,caller_scope) symbol_get_haseffect(self,caller_scope)
+#define symbol_set_haseffect(self,caller_scope) symbol_get_haseffect(self,caller_scope)
+#define CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT 1
+#define CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT 1
+
+/* Check if the given symbol `self' is reachable from the given `caller_scope' */
+INTDEF bool DCALL symbol_reachable(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
 
 
 #ifdef CONFIG_BUILDING_DEEMON

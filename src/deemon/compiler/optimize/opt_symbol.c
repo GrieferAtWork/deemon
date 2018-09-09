@@ -37,8 +37,17 @@ INTERN int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict sta
  DREF DeeObject *symval;
  ASSERT(self->a_type == AST_SYM);
  (void)stack;
+ sym = self->a_sym;
  /* If the symbol is being written to, then we can't optimize for external constants. */
+#ifdef CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
+ if (symbol_get_haseffect(sym,self->a_scope))
+     goto done;
+#endif
  if (self->a_flag) {
+#ifndef CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
+  if (symbol_set_haseffect(sym,self->a_scope))
+      goto done;
+#endif
 #ifdef OPTIMIZE_FASSUME
   /* Generic write with unknown value.
    * -> Remove assumptions made on the symbol. */
@@ -48,11 +57,15 @@ INTERN int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict sta
                                 NULL);
   }
 #endif
-  return 0;
+  goto done;
  }
- sym = self->a_sym;
+#ifndef CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
+ if (symbol_get_haseffect(sym,self->a_scope))
+     goto done;
+#endif
  if (!result_used) {
-  OPTIMIZE_VERBOSE("Remove unused symbol ast\n");
+  OPTIMIZE_VERBOSE("Remove unused read from symbol `%$s'\n",
+                   sym->s_name->k_size,sym->s_name->k_name);
   SYMBOL_DEC_NREAD(sym);
   self->a_type = AST_CONSTEXPR;
   self->a_constexpr = Dee_None;
@@ -121,13 +134,13 @@ done_set_constexpr:
   if (symval) goto set_constant_expression;
  }
 #endif
-
+done:
  return 0;
 err:
  return -1;
 did_optimize:
  ++optimizer_count;
- return 0;
+ goto done;
 }
 
 

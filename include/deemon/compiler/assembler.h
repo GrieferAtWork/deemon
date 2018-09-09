@@ -1453,7 +1453,8 @@ INTDEF int DCALL asm_gpop_symbol(struct symbol *__restrict sym, struct ast *__re
 
 /* Check if `sym' is accessible from the current
  * source location, returning `false' if it isn't. */
-INTDEF bool DCALL asm_symbol_accessible(struct symbol *__restrict sym);
+#define asm_symbol_accessible(sym) \
+        symbol_reachable(sym,current_assembler.a_scope)
 
 
 /* Returns `true' if pushing `sym' is more expensive  */

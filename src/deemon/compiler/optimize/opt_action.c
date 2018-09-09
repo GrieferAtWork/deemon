@@ -103,6 +103,10 @@ INTERN int
     * Check if we can turn this symbol into a constant expression! */
    target_sym = self->a_action.a_act0->a_sym;
    SYMBOL_INPLACE_UNWIND_ALIAS(target_sym);
+   /* If writing to this symbol has side-effects,
+    * don't accidentally optimize away the write. */
+   if (symbol_set_haseffect(target_sym,self->a_scope))
+       goto after_target_symbol_optimization;
    if (!target_sym->s_nread && !target_sym->s_nbound &&
       (optimizer_flags & OPTIMIZE_FNOUSESYMS)) {
     /* Special case: the symbol is never read from, or checked for being bound.
@@ -298,7 +302,7 @@ unset_symbol_assumption:
    }
 #endif
   }
-
+after_target_symbol_optimization:
   break;
 
  case AST_FACTION_IN:

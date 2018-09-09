@@ -455,10 +455,13 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict ast,
  {
   struct symbol *sym;
  case AST_SYM:
-  if (!PUSH_RESULT) break;
-  if (asm_putddi(ast)) goto err;
   sym = ast->a_sym;
   SYMBOL_INPLACE_UNWIND_ALIAS(sym);
+  /* Make sure to still generate code if the symbol access could have side-effects. */
+  if (!PUSH_RESULT &&
+      !symbol_get_haseffect(sym,ast->a_scope))
+       break;
+  if (asm_putddi(ast)) goto err;
   if ((gflags & ASM_G_FLAZYBOOL) &&
        SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
       !SYMBOL_MUST_REFERENCE(sym) &&
@@ -474,6 +477,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict ast,
    goto done;
   }
   if (asm_gpush_symbol(sym,ast)) goto err;
+  goto pop_unused;
  } break;
 
  {
@@ -494,11 +498,18 @@ done_push_none:
   if (PUSH_RESULT && asm_gpush_none()) goto err;
  } break;
 
+ {
+  struct symbol *sym;
  case AST_BOUND:
-  if (!PUSH_RESULT) break;
+  sym = ast->a_sym;
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
+  if (!PUSH_RESULT &&
+      !symbol_bnd_haseffect(sym,ast->a_scope))
+      break;
   if (asm_putddi(ast)) goto err;
-  if (asm_gpush_bnd_symbol(ast->a_sym,ast)) goto err;
-  break;
+  if (asm_gpush_bnd_symbol(sym,ast)) goto err;
+  goto pop_unused;
+ }
 
  {
   unsigned int need_all;
