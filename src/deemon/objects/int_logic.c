@@ -398,7 +398,7 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
   if (a_value < b) {
    b -= a_value;
    if (b <= DIGIT_MASK) {
-    z = DeeInt_Alloc(2);
+    z = DeeInt_Alloc(1);
     if unlikely(!z) return NULL;
     z->ob_digit[0] = (digit)b;
     z->ob_size = -1;
@@ -413,7 +413,7 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
   }
   a_value -= b;
   if (a_value <= DIGIT_MASK) {
-   z = DeeInt_Alloc(2);
+   z = DeeInt_Alloc(1);
    if unlikely(!z) return NULL;
    z->ob_digit[0] = (digit)a_value;
   } else {
@@ -467,7 +467,7 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
   if (a_value < b) {
    b -= (uint32_t)a_value;
    if (b <= DIGIT_MASK) {
-    z = DeeInt_Alloc(2);
+    z = DeeInt_Alloc(1);
     if unlikely(!z) return NULL;
     z->ob_digit[0] = (digit)b;
     z->ob_size = -1;
@@ -489,7 +489,7 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
   }
   a_value -= b;
   if (a_value <= DIGIT_MASK) {
-   z = DeeInt_Alloc(2);
+   z = DeeInt_Alloc(1);
    if unlikely(!z) return NULL;
    z->ob_digit[0] = (digit)a_value;
   } else if (a_value <= ((twodigits)1 << (DIGIT_BITS * 2))-1) {
