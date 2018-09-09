@@ -56,8 +56,8 @@ typedef DeeSystemFileObject SystemFile;
 #ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
 #define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
 extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
-#endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
 extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
+#endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
 
 PRIVATE dssize_t DCALL
 debugfile_write(DeeFileObject *__restrict UNUSED(self),

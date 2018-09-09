@@ -1060,10 +1060,6 @@ PUBLIC bool DCALL Dee_CollectMemory(size_t req_bytes) {
 
 
 #ifndef NDEBUG
-#ifdef CONFIG_HOST_WINDOWS
-extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
-#endif
-
 PRIVATE dssize_t DCALL
 debug_printer(void *UNUSED(closure),
               char const *__restrict buffer, size_t bufsize) {

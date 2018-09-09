@@ -244,7 +244,8 @@ extern void (__debugbreak)(void);
 #ifdef CONFIG_HOST_WINDOWS
 #define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
 extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
-#define DEE_DPRINT(str)    (DBG_ALIGNMENT_DISABLE(),OutputDebugStringA(str),DBG_ALIGNMENT_ENABLE())
+extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
+#define DEE_DPRINT(str)    (DBG_ALIGNMENT_DISABLE(),IsDebuggerPresent() ? OutputDebugStringA(str) : (void)0,DBG_ALIGNMENT_ENABLE())
 #ifdef _MSC_VER
 #define DEE_CHECKMEMORY()  (DBG_ALIGNMENT_DISABLE(),_CrtCheckMemory(),DBG_ALIGNMENT_ENABLE())
 #if !defined(_MSC_VER) || defined(_DLL)
