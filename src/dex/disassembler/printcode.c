@@ -451,6 +451,7 @@ struct attributeflag {
 
 PRIVATE struct attributeflag const attributeflags[] = {
     { "private", CLASS_ATTRIBUTE_FPRIVATE },
+    { "final", CLASS_ATTRIBUTE_FFINAL },
     { "readonly", CLASS_ATTRIBUTE_FREADONLY },
     { "method", CLASS_ATTRIBUTE_FMETHOD },
     { "getset", CLASS_ATTRIBUTE_FGETSET },

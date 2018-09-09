@@ -1773,6 +1773,7 @@ unknown_attribute:
 		}
 	}
 
+	@"->string"
 	@"Returns a pretty variant of @this node's path"
 	prettypath = {
 		get() {

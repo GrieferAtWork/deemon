@@ -572,6 +572,19 @@ INTERN int DCALL asm_check_thiscall(struct symbol *__restrict sym,
   * is encountered, while the safe-mode interpreter throws an error if not.
   * But since we're trying to generate code for fast-mode, we need to check this now. */
  if (asm_symbol_accessible(sym)) return 0;
+ /* TODO: Hint to the user that they may write `MyClass.symbol' instead of
+  *      `symbol', if they to access the attribute in its unbound form:
+  * >> class MyClass {
+  * >>     func() {
+  * >>         print "Hello";
+  * >>     }
+  * >>     static classfun() {
+  * >>         local x = MyClass();
+  * >>         func(x);         // Illegal (this is when we get here)
+  * >>         MyClass.func(x); // Allowed (this is how you access the unbound function)
+  * >>     }
+  * >> }
+  */
  return PERRAST(warn_ast,W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,sym,
                 current_basescope->bs_name ?
                 current_basescope->bs_name->k_name : "?");
