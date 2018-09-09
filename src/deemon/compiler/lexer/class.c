@@ -1306,20 +1306,35 @@ set_visibility:
   case KWD_class:
    /* Class field. */
    if (is_class_member &&
-       WARN(W_CLASS_FIELD_ALREADY_SPECIFIED))
+       WARN(W_STATIC_FIELD_ALREADY_SPECIFIED))
        goto err;
+   loc_here(&loc);
    if unlikely(yield() < 0) goto err;
    if (tok == '(' || tok == '{' ||
        tok == ':' || tok == TOK_ARROW || tok == KWD_pack) {
     /* A deprecated syntax for defining constructors allowed
      * the use of `class' as another alias for `this' and the
-     * actual name of the class.
-     */
-    if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR))
+     * actual name of the class. */
+    if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
+             maker.cm_classsym->s_name->k_name))
         goto err;
     goto define_constructor;
    }
-   is_class_member = true;
+   /* Warn about `class' being used to declare static members being deprecated */
+   if (WARN(W_DEPRECATED_USING_CLASS_FOR_STATIC))
+       goto err;
+   is_class_member       = true;
+   modifiers_encountered = true;
+   goto next_modifier;
+
+
+  case KWD_static:
+   /* Static (aka. class) field. */
+   if (is_class_member &&
+       WARN(W_STATIC_FIELD_ALREADY_SPECIFIED))
+       goto err;
+   if unlikely(yield() < 0) goto err;
+   is_class_member       = true;
    modifiers_encountered = true;
    goto next_modifier;
 
@@ -1507,11 +1522,14 @@ yield_semi_after_operator:
    loc_here(&loc);
    if unlikely(yield() < 0) goto err;
    if unlikely(tok == KWD_class) {
-    if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR)) goto err;
+    if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
+             maker.cm_classsym->s_name->k_name))
+        goto err;
     if unlikely(yield() < 0) goto err;
    } else {
     if unlikely(likely(tok == KWD_this || (TPP_ISKEYWORD(tok) && token.t_kwd == name))
-             ? (yield() < 0) : WARN(W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE)) goto err;
+             ? (yield() < 0) : WARN(W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE,
+                                    maker.cm_classsym->s_name->k_name)) goto err;
    }
    operator_name = OPERATOR_DESTRUCTOR;
    goto define_operator;
@@ -1536,10 +1554,11 @@ yield_semi_after_operator:
    if (is_reserved_symbol_name(member_name) &&
        WARN(W_RESERVED_MEMBER_NAME,member_name))
        goto err;
-
    if (member_name == name) {
   case KWD_this:
     /* Special case: Constructor. */
+    if unlikely(yield() < 0) goto err;
+    loc_here(&loc);
 define_constructor:
     if unlikely(maker.cm_ctor) {
      if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
@@ -1548,7 +1567,6 @@ define_constructor:
      ast_decref(maker.cm_ctor);
      maker.cm_ctor = NULL;
     }
-    if unlikely(yield() < 0) goto err;
     if (tok == '=') {
      /* Special cases:
       *   - `this = del' (delete the constructor)

@@ -338,7 +338,7 @@ DEF_WARNING(W_UNKNOWN_CLOBBER_NAME,(WG_VALUE),WSTATE_WARN,WARNF("Unknown clobber
 
 /* Class */
 WARNING_NAMESPACE(WN_CLASS,2500)
-DEF_WARNING(W_CLASS_FIELD_ALREADY_SPECIFIED,(WG_SYNTAX),WSTATE_ERROR,WARNF("The `class' field modifier has already been specified"))
+DEF_WARNING(W_STATIC_FIELD_ALREADY_SPECIFIED,(WG_SYNTAX),WSTATE_ERROR,WARNF("The `static' field modifier has already been specified"))
 DEF_WARNING(W_UNEXPECTED_TOKEN_IN_CLASS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Unexpected token " TOK_S " inside of a class declaration",TOK_A))
 DEF_WARNING(W_CLASS_MEMBER_TYPE_ALREADY_SPECIFIED,(WG_SYNTAX),WSTATE_ERROR,WARNF("An explicit member type has already been specified"))
 DEF_WARNING(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,(WG_SYMBOL),WSTATE_ERROR,WARNF("A constructor for class `s' has already been defined"))
@@ -346,15 +346,16 @@ DEF_WARNING(W_CLASS_NO_MEMBER_DEFINED,(WG_SYNTAX),WSTATE_WARN,WARNF("No member h
 DEF_WARNING(W_EXPECTED_RBRACE_AFTER_PROPERTY,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' after property, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_CALLBACK_NAME_IN_PROPERTY,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected callback name within property declaration, but got " TOK_S,TOK_A))
 DEF_WARNING(W_PROPERTY_CALLBACK_ALREADY_DEFINED,(WG_SYMBOL),WSTATE_ERROR,WARNF("Property callback `%s' has already been defined",ARG(char *)))
-DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_ASSIGNED,(WG_SYMBOL),WSTATE_WARN,WARNF("Explicitly typed class member `%s' was not initialized",KWDNAME()))
-DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_MATCHED,(WG_SYMBOL),WSTATE_WARN,WARNF("Explicitly typed class member `%s' expectation was not met",KWDNAME()))
+DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_ASSIGNED,(WG_SYMBOL),WSTATE_WARN,WARNF("Explicitly typed member `%s' was not initialized",KWDNAME()))
+DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_MATCHED,(WG_SYMBOL),WSTATE_WARN,WARNF("Explicitly typed member `%s' expectation was not met",KWDNAME()))
 DEF_WARNING(W_DEPRECATED_PROPERTY_MODIFIER,(WG_SYNTAX),WSTATE_ERROR,WARNF("Property modifier " TOK_S " is deprecated and ignored",TOK_A))
 DEF_WARNING(W_DEPRECATED_PROPERTY_NAME,(WG_SYNTAX),WSTATE_ERROR,WARNF("Property name " TOK_S " is deprecated. Use `%s' instead",TOK_A,ARG(char *)))
 DEF_WARNING(W_EXPECTED_PROPERTY_NAME_AFTER_TYPE_PREFIX,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a property callback name, but got " TOK_S,TOK_A))
 DEF_WARNING(W_PROPERTY_TYPE_PREFIX_ALREADY_GIVEN,(WG_SYNTAX),WSTATE_ERROR,WARNF("A property type prefix " TOK_S " had already been given",TOK_A))
-DEF_WARNING(W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `this' or the name of the class after `~', but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `this' or `%s' after `~', but got " TOK_S,ARG(char *),TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword in the constructor initializer list, but got " TOK_S,TOK_A))
-DEF_WARNING(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Use of `class' to introduce a constructor or destructor is deprecated. Use `this' or the name of the surrounding class instead"))
+DEF_WARNING(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Use of `class' to introduce a constructor or destructor is deprecated. Use `this' or `%s' instead",ARG(char *)))
+DEF_WARNING(W_DEPRECATED_USING_CLASS_FOR_STATIC,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Use of `class' to declare static fields is deprecated. Use `static' instead"))
 DEF_WARNING(W_EXPECTED_LPAREN_AFTER_SUPER_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `super' in constructor initializer list, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_SUPER_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `super(...' in constructor initializer list, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' or `=' after member name in constructor initializer list, but got " TOK_S,TOK_A))
@@ -510,7 +511,7 @@ DEF_WARNING(W_ASM_AMBIGUOUS_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{
         WARNF("See reference to %lu%s declaration",(unsigned long)i + 3,i == 0 ? "rd" : "th");
     }
 })
-DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,(WG_SYMBOL),WSTATE_FATAL,{ struct symbol *sym = ARG(struct symbol *); WARNF("Instance member `%k' cannot be accessed from class method `%s'",SYMBOL_FIELD_ATTR(sym)->ca_name,ARG(char *)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,(WG_SYMBOL),WSTATE_FATAL,{ struct symbol *sym = ARG(struct symbol *); WARNF("Instance member `%k' cannot be accessed from static function `%s'",SYMBOL_FIELD_ATTR(sym)->ca_name,ARG(char *)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_CANNOT_UNBIND_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind symbol `%s' of class `%s'",SYMBOL_NAME(sym),SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind undesignated stack variable `%s' at this time",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,(WG_SYMBOL),WSTATE_WARN,{ struct symbol *sym = ARG(struct symbol *); WARNF("Deleting stack variable `%s' will not cause the symbol to become unbound",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })

@@ -57,7 +57,7 @@ typedef DeeSystemFileObject SystemFile;
 #define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
 extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
 #endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
-
+extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 
 PRIVATE dssize_t DCALL
 debugfile_write(DeeFileObject *__restrict UNUSED(self),
@@ -69,31 +69,33 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
  if unlikely(result <= 0) goto done;
  if (bufsize > (size_t)result)
      bufsize = (size_t)result;
+ if (IsDebuggerPresent()) {
 #ifdef PAGESIZE
- /* (ab-)use the fact that the kernel can't keep us from reading
-  *  beyond the end of a buffer so long as that memory location
-  *  is located within the same page as the last byte of said
-  *  buffer (Trust me... I've written by own OS) */
- if ((bufsize <= 1000) && /* There seems to be some kind of limit here... */
-     (((uintptr_t)buffer + bufsize)     & ~(uintptr_t)(PAGESIZE-1)) ==
-     (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE-1)) &&
-     (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
-  DBG_ALIGNMENT_DISABLE();
-  OutputDebugStringA((char *)buffer);
-  DBG_ALIGNMENT_ENABLE();
- } else
-#endif
- {
-  char temp[512];
-  while (bufsize) {
-   size_t part = MIN(bufsize,sizeof(temp)-sizeof(char));
-   memcpy(temp,buffer,part);
-   temp[part] = '\0';
+  /* (ab-)use the fact that the kernel can't keep us from reading
+   *  beyond the end of a buffer so long as that memory location
+   *  is located within the same page as the last byte of said
+   *  buffer (Trust me... I've written by own OS) */
+  if ((bufsize <= 1000) && /* There seems to be some kind of limit here... */
+      (((uintptr_t)buffer + bufsize)     & ~(uintptr_t)(PAGESIZE-1)) ==
+      (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE-1)) &&
+      (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
    DBG_ALIGNMENT_DISABLE();
-   OutputDebugStringA(temp);
+   OutputDebugStringA((char *)buffer);
    DBG_ALIGNMENT_ENABLE();
-   *(uintptr_t *)&buffer += part;
-   bufsize -= part;
+  } else
+#endif
+  {
+   char temp[512];
+   while (bufsize) {
+    size_t part = MIN(bufsize,sizeof(temp)-sizeof(char));
+    memcpy(temp,buffer,part);
+    temp[part] = '\0';
+    DBG_ALIGNMENT_DISABLE();
+    OutputDebugStringA(temp);
+    DBG_ALIGNMENT_ENABLE();
+    *(uintptr_t *)&buffer += part;
+    bufsize -= part;
+   }
   }
  }
 done:

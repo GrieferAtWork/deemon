@@ -155,15 +155,17 @@ DeeError_VThrowf(DeeTypeObject *__restrict tp,
  DREF DeeObject *argv[1],*error_ob;
  /* Create the message string. */
  argv[0] = DeeString_VNewf(format,args);
- if unlikely(!argv[0]) return -1;
+ if unlikely(!argv[0]) goto err;
  /* Pack the constructor argument tuple. */
  error_ob = DeeObject_New(tp,1,argv);
  Dee_Decref(argv[0]);
- if unlikely(!error_ob) return -1;
+ if unlikely(!error_ob) goto err;
  /* Throw the new error object. */
  result = DeeError_Throw(error_ob);
  Dee_Decref(error_ob);
  return result;
+err:
+ return -1;
 }
 PUBLIC int
 DeeError_Throwf(DeeTypeObject *__restrict tp,

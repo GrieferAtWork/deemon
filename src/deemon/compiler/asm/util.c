@@ -64,7 +64,7 @@ asm_gpop_stack(uint16_t absolute_stack_addr) {
  /* XXX: `offset == 0' doesn't ~really~ make sense as that would
   *       mean to pop a stack value into itself, then discard it.
   *       Though we still allow doing this... */
- return offset == 0 ? asm_gpop() : asm_gpop_n(offset-1);
+ return offset == 0 ? asm_gpop() : asm_gpop_n(offset - 1);
 }
 INTERN int DCALL
 asm_gadjstack(int16_t offset) {
@@ -563,7 +563,8 @@ err:
 }
 
 
-INTERN int DCALL asm_check_thiscall(struct symbol *__restrict sym) {
+INTERN int DCALL asm_check_thiscall(struct symbol *__restrict sym,
+                                    struct ast *__restrict warn_ast) {
  ASSERT(sym->s_type == SYMBOL_TYPE_CATTR);
  /* Throw a compiler-error when one attempts to
   * access an instance member from a class method.
@@ -581,7 +582,7 @@ INTERN int DCALL asm_check_thiscall(struct symbol *__restrict sym) {
     (this_origin->bs_flags & CODE_FTHISCALL) &&
     (this_origin->bs_this == sym->s_attr.a_this))
      return 0;
- return ASM_ERR(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,sym,
+ return PERRAST(warn_ast,W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,sym,
                 current_basescope->bs_name ?
                 current_basescope->bs_name->k_name : "?");
 }
@@ -642,7 +643,7 @@ check_function_class:
     return asm_gcallattr_const((uint16_t)symid,argc);   /* result */
    }
    /* The attribute must be accessed as virtual. */
-   if unlikely(asm_check_thiscall(function)) goto err;
+   if unlikely(asm_check_thiscall(function,warn_ast)) goto err;
    SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
    if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
     symid2 = asm_newconst((DeeObject *)attr->ca_name);
@@ -830,7 +831,7 @@ check_sym_class:
    return asm_ggetattr_const((uint16_t)symid);
   }
   /* The attribute must be accessed as virtual. */
-  if unlikely(asm_check_thiscall(sym)) goto err;
+  if unlikely(asm_check_thiscall(sym,warn_ast)) goto err;
   SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
   if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
    symid2 = asm_newconst((DeeObject *)attr->ca_name);
@@ -1121,7 +1122,7 @@ test_class_attribute:
    return asm_gboundattr();
   }
   /* The attribute must be accessed as virtual. */
-  if unlikely(asm_check_thiscall(sym)) goto err;
+  if unlikely(asm_check_thiscall(sym,warn_ast)) goto err;
   SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
   if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
    if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
@@ -1343,7 +1344,7 @@ del_class_attribute:
     return asm_gdelattr_const((uint16_t)symid);
    }
    /* The attribute must be accessed as virtual. */
-   if unlikely(asm_check_thiscall(sym)) goto err;
+   if unlikely(asm_check_thiscall(sym,warn_ast)) goto err;
    SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
    if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
     int32_t symid2;
@@ -1570,7 +1571,7 @@ set_class_attribute:
     return asm_gsetattr_const((uint16_t)symid);
    }
    /* The attribute must be accessed as virtual. */
-   if unlikely(asm_check_thiscall(sym)) goto err;
+   if unlikely(asm_check_thiscall(sym,warn_ast)) goto err;
    SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
    if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
     symid = asm_newconst((DeeObject *)attr->ca_name);

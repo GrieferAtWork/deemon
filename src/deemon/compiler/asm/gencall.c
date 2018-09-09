@@ -52,7 +52,8 @@ INTDEF struct module_symbol *DCALL
 get_module_symbol(DeeModuleObject *__restrict module,
                   DeeStringObject *__restrict name);
 
-INTDEF int DCALL asm_check_thiscall(struct symbol *__restrict sym);
+INTDEF int DCALL asm_check_thiscall(struct symbol *__restrict sym,
+                                    struct ast *__restrict warn_ast);
 
 INTERN int DCALL
 asm_gcall_expr(struct ast *__restrict func,
@@ -498,7 +499,7 @@ check_funsym_class:
      goto pop_unused;
     }
     /* The attribute must be accessed as virtual. */
-    if unlikely(asm_check_thiscall(funsym)) goto err;
+    if unlikely(asm_check_thiscall(funsym,func)) goto err;
     SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
     if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
      symid2 = asm_newconst((DeeObject *)attr->ca_name);
