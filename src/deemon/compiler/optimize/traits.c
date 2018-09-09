@@ -863,10 +863,15 @@ ast_uses_symbol(struct ast *__restrict self,
      goto yup;
  switch (self->a_type) {
  case AST_SYM:
+  if (self->a_flag)
+      return symbol_uses_symbol_on_set(self->a_sym,sym);
+  return symbol_uses_symbol_on_get(self->a_sym,sym);
+
  case AST_UNBIND:
+  return symbol_uses_symbol_on_del(self->a_sym,sym);
+
  case AST_BOUND:
-  /* TODO: Add a function `SYMBOL_USES_SYMBOL()' */
-  return self->a_sym == sym;
+  return symbol_uses_symbol_on_bnd(self->a_sym,sym);
 
  {
   DREF struct ast **iter,**end;
@@ -913,14 +918,11 @@ ast_uses_symbol(struct ast *__restrict self,
       goto yup;
   if (ast_uses_symbol(self->a_class.c_desc,sym))
       goto yup;
-  if (self->a_class.c_classsym == sym ||
-      self->a_class.c_supersym == sym)
+  if (symbol_uses_symbol_on_get(self->a_class.c_classsym,sym) ||
+      symbol_uses_symbol_on_set(self->a_class.c_classsym,sym))
       goto yup;
-  if (sym->s_type == SYMBOL_TYPE_CATTR &&
-     (SYMBOL_FIELD_CLASS(sym) == self->a_class.c_classsym ||
-      SYMBOL_FIELD_CLASS(sym) == self->a_class.c_supersym ||
-      sym->s_attr.a_this == self->a_class.c_classsym ||
-      sym->s_attr.a_this == self->a_class.c_supersym))
+  if (symbol_uses_symbol_on_get(self->a_class.c_supersym,sym) ||
+      symbol_uses_symbol_on_set(self->a_class.c_supersym,sym))
       goto yup;
   for (i = 0; i < self->a_class.c_memberc; ++i) {
    if (ast_uses_symbol(self->a_class.c_memberv[i].cm_ast,sym))

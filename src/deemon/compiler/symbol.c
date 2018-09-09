@@ -89,6 +89,177 @@ INTERN char const symclass_names[0x1f + 1][8] = {
 };
 
 
+INTERN bool DCALL
+symbol_uses_symbol_on_get(struct symbol *__restrict self,
+                          struct symbol *__restrict other) {
+again:
+ if (self == other) return true;
+ switch (self->s_type) {
+
+ case SYMBOL_TYPE_ALIAS:
+  self = SYMBOL_ALIAS(self);
+  goto again;
+
+ case SYMBOL_TYPE_CATTR:
+  if (self->s_attr.a_this &&
+      symbol_uses_symbol_on_get(self->s_attr.a_this,other))
+      return true;
+  self = self->s_attr.a_class;
+  goto again;
+
+ case SYMBOL_TYPE_GETSET:
+  self = self->s_getset.gs_get;
+  if (!self) break;
+  goto again;
+
+  /* TODO: Check for overlap between pre-indexed external symbols */
+
+ default: break;
+ }
+ switch (other->s_type) {
+
+ case SYMBOL_TYPE_ALIAS:
+  other = SYMBOL_ALIAS(other);
+  goto again;
+
+ case SYMBOL_TYPE_CATTR:
+  if (other->s_attr.a_this &&
+      symbol_uses_symbol_on_get(self,other->s_attr.a_this))
+      return true;
+  other = other->s_attr.a_class;
+  goto again;
+
+ case SYMBOL_TYPE_GETSET:
+  if (other->s_getset.gs_get &&
+      symbol_uses_symbol_on_get(self,other->s_getset.gs_get))
+      return true;
+  if (other->s_getset.gs_del &&
+      symbol_uses_symbol_on_get(self,other->s_getset.gs_del))
+      return true;
+  if (other->s_getset.gs_set) {
+   other = other->s_getset.gs_set;
+   goto again;
+  }
+  break;
+
+ default: break;
+ }
+ return false;
+}
+
+INTERN bool DCALL
+symbol_uses_symbol_on_del(struct symbol *__restrict self,
+                          struct symbol *__restrict other) {
+again:
+ if (self == other) return true;
+ switch (self->s_type) {
+
+ case SYMBOL_TYPE_ALIAS:
+  self = SYMBOL_ALIAS(self);
+  goto again;
+
+ case SYMBOL_TYPE_CATTR:
+  if (self->s_attr.a_this &&
+      symbol_uses_symbol_on_get(self->s_attr.a_this,other))
+      return true;
+  return symbol_uses_symbol_on_get(self->s_attr.a_class,other);
+
+ case SYMBOL_TYPE_GETSET:
+  if (!self->s_getset.gs_del) break;
+  return symbol_uses_symbol_on_get(self->s_getset.gs_del,other);
+
+ /* TODO: Check for overlap between pre-indexed external symbols */
+
+ default: break;
+ }
+ switch (other->s_type) {
+
+ case SYMBOL_TYPE_ALIAS:
+  other = SYMBOL_ALIAS(other);
+  goto again;
+
+ case SYMBOL_TYPE_CATTR:
+  if (other->s_attr.a_this &&
+      symbol_uses_symbol_on_del(self,other->s_attr.a_this))
+      return true;
+  other = other->s_attr.a_class;
+  goto again;
+
+ case SYMBOL_TYPE_GETSET:
+  if (other->s_getset.gs_get &&
+      symbol_uses_symbol_on_del(self,other->s_getset.gs_get))
+      return true;
+  if (other->s_getset.gs_del &&
+      symbol_uses_symbol_on_del(self,other->s_getset.gs_del))
+      return true;
+  if (other->s_getset.gs_set) {
+   other = other->s_getset.gs_set;
+   goto again;
+  }
+  break;
+
+ default: break;
+ }
+ return false;
+}
+
+INTERN bool DCALL
+symbol_uses_symbol_on_set(struct symbol *__restrict self,
+                          struct symbol *__restrict other) {
+again:
+ if (self == other) return true;
+ switch (self->s_type) {
+
+ case SYMBOL_TYPE_ALIAS:
+  self = SYMBOL_ALIAS(self);
+  goto again;
+
+ case SYMBOL_TYPE_CATTR:
+  if (self->s_attr.a_this &&
+      symbol_uses_symbol_on_get(self->s_attr.a_this,other))
+      return true;
+  return symbol_uses_symbol_on_get(self->s_attr.a_class,other);
+
+ case SYMBOL_TYPE_GETSET:
+  if (!self->s_getset.gs_set) break;
+  return symbol_uses_symbol_on_get(self->s_getset.gs_set,other);
+
+ /* TODO: Check for overlap between pre-indexed external symbols */
+
+ default: break;
+ }
+ switch (other->s_type) {
+
+ case SYMBOL_TYPE_ALIAS:
+  other = SYMBOL_ALIAS(other);
+  goto again;
+
+ case SYMBOL_TYPE_CATTR:
+  if (other->s_attr.a_this &&
+      symbol_uses_symbol_on_get(self,other->s_attr.a_this))
+      return true;
+  other = other->s_attr.a_class;
+  goto again;
+
+ case SYMBOL_TYPE_GETSET:
+  if (other->s_getset.gs_get &&
+      symbol_uses_symbol_on_set(self,other->s_getset.gs_get))
+      return true;
+  if (other->s_getset.gs_del &&
+      symbol_uses_symbol_on_set(self,other->s_getset.gs_del))
+      return true;
+  if (other->s_getset.gs_set) {
+   other = other->s_getset.gs_set;
+   goto again;
+  }
+  break;
+
+ default: break;
+ }
+ return false;
+}
+
+
 INTERN void DCALL
 symbol_addambig(struct symbol *__restrict self,
                 struct ast_loc *loc) {

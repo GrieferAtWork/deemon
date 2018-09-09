@@ -277,6 +277,12 @@ INTDEF void DCALL symbol_fini(struct symbol *__restrict self);
 INTDEF void DCALL symbol_addambig(struct symbol *__restrict self,
                                   struct ast_loc *loc);
 
+/* Check if `self' uses `other' when the specified operation is performed. */
+INTDEF bool DCALL symbol_uses_symbol_on_get(struct symbol *__restrict self, struct symbol *__restrict other);
+INTDEF bool DCALL symbol_uses_symbol_on_del(struct symbol *__restrict self, struct symbol *__restrict other);
+INTDEF bool DCALL symbol_uses_symbol_on_set(struct symbol *__restrict self, struct symbol *__restrict other);
+#define symbol_uses_symbol_on_bnd(self,other) symbol_uses_symbol_on_get(self,other)
+
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF char const symclass_names[0x1f + 1][8];
