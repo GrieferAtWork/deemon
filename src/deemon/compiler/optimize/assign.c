@@ -166,19 +166,19 @@ do_xcopy_3:
   if (temp->a_flag) {
  case AST_UNBIND:
    ASSERT(SYMBOL_NWRITE(other->a_sym));
-   SYMBOL_INC_NWRITE(temp->a_sym);
+   SYMBOL_INC_NWRITE(other->a_sym);
   } else {
    ASSERT(SYMBOL_NREAD(other->a_sym));
-   SYMBOL_INC_NREAD(temp->a_sym);
+   SYMBOL_INC_NREAD(other->a_sym);
   }
   temp->a_sym = other->a_sym;
   break;
 
  case AST_BOUND:
   ASSERT(other->a_sym);
-  temp->a_sym = other->a_sym;
   ASSERT(SYMBOL_NBOUND(other->a_sym));
-  SYMBOL_INC_NBOUND(temp->a_sym);
+  SYMBOL_INC_NBOUND(other->a_sym);
+  temp->a_sym = other->a_sym;
   break;
 
  case AST_GOTO:
