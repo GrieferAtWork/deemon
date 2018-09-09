@@ -279,8 +279,6 @@ ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
  DREF struct ast *result;
  if unlikely(basescope_push()) return NULL;
  current_basescope->bs_flags |= current_tags.at_code_flags;
- current_basescope->bs_class  = current_tags.at_class;
- current_basescope->bs_super  = current_tags.at_super;
  result = ast_parse_function_noscope(name,pneed_semi,allow_missing_params,name_loc);
  basescope_pop();
  return result;

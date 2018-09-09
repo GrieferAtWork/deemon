@@ -376,7 +376,6 @@ check_function_symbol_class:
        attrid = asm_newconst(function_attr->a_constexpr);
        if unlikely(attrid < 0) goto err;
        if (asm_putddi(ddi_ast)) goto err;
-       /* TODO: Try to statically access known class members! */
        if (asm_gcallattr_this_const((uint16_t)attrid,argc)) goto err;
        goto pop_unused;
 
@@ -459,7 +458,6 @@ check_function_symbol_class:
       if (asm_putddi(ddi_ast)) goto err;
       if (ast_predict_type(args) != &DeeTuple_Type &&
           asm_gcast_tuple()) goto err;
-      /* TODO: Try to statically access known class members! */
       if (asm_gcallattr_this_const_tuple((uint16_t)attrid)) goto err;
       goto pop_unused;
      }
@@ -809,7 +807,6 @@ check_getattr_base_symbol_class:
      attrid = asm_newconst(function_attr->a_constexpr);
      if unlikely(attrid < 0) goto err;
      if (asm_putddi(ddi_ast)) goto err;
-     /* TODO: Try to statically access known class members! */
      if (asm_gcallattr_this_const((uint16_t)attrid,argc)) goto err;
      goto pop_unused;
 

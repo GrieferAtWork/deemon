@@ -2601,6 +2601,9 @@ INTERN int32_t DCALL
 asm_rsymid(struct symbol *__restrict sym) {
  uint16_t result;
  ASSERT(SYMBOL_MAY_REFERENCE(sym));
+ ASSERTF(asm_symbol_accessible(sym),
+         "Unreachable symbol %s",
+         sym->s_name->k_name);
  result = current_assembler.a_refc;
  if ((sym->s_flag & SYMBOL_FALLOCREF) &&
      (sym->s_refid < result) &&
@@ -2608,9 +2611,8 @@ asm_rsymid(struct symbol *__restrict sym) {
       return sym->s_refid;
  ASSERT(result <= current_assembler.a_refa);
  if unlikely(result == UINT16_MAX) {
-  DeeError_Throwf(&DeeError_CompilerError,
-                  "Too many reference variables");
-  return -1;
+  return DeeError_Throwf(&DeeError_CompilerError,
+                         "Too many reference variables");
  }
  if (result == current_assembler.a_refa) {
   /* Must allocate more references. */

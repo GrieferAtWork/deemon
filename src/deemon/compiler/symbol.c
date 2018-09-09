@@ -454,6 +454,66 @@ INTERN DeeTypeObject DeeScope_Type = {
 
 
 
+PRIVATE void DCALL
+class_scope_fini(DeeClassScopeObject *__restrict self) {
+ sym_free(self->cs_this);
+}
+INTERN DeeTypeObject DeeClassScope_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"class_scope",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeScope_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(DeeClassScopeObject)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&class_scope_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */NULL,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+
+
+
+
+
+
+
+
 INTDEF void DCALL
 cleanup_switch_cases(struct text_label *switch_cases,
                      struct text_label *switch_default);
@@ -675,13 +735,15 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 
 INTERN int (DCALL scope_push)(void) {
  DREF DeeScopeObject *new_scope;
- new_scope = (DeeScopeObject *)DeeObject_Calloc(sizeof(DeeScopeObject));
- if unlikely(!new_scope) return -1;
+ new_scope = DeeObject_CALLOC(DeeScopeObject);
+ if unlikely(!new_scope) goto err;
  DeeObject_Init(new_scope,&DeeScope_Type);
  new_scope->s_prev = current_scope; /* Inherit reference */
  new_scope->s_base = current_basescope;
  current_scope     = new_scope; /* Inherit reference */
  return 0;
+err:
+ return -1;
 }
 INTERN void DCALL scope_pop(void) {
  DeeScopeObject *pop_scope;
@@ -696,9 +758,44 @@ INTERN void DCALL scope_pop(void) {
  Dee_Decref(pop_scope); /* Drop the reference previously stored in `current_scope' */
 }
 
+INTERN int (DCALL classscope_push)(void) {
+ DREF DeeClassScopeObject *new_scope;
+ struct symbol *this_sym;
+ new_scope = DeeObject_CALLOC(DeeClassScopeObject);
+ if unlikely(!new_scope) goto err;
+ this_sym = sym_alloc();
+ if unlikely(!this_sym) goto err_new_scope;
+ DeeObject_Init((DeeObject *)new_scope,&DeeClassScope_Type);
+ memset(this_sym,0,sizeof(*this_sym));
+ this_sym->s_type            = SYMBOL_TYPE_THIS;
+ this_sym->s_scope           = &new_scope->cs_scope;
+ this_sym->s_name            = TPPLexer_LookupKeyword("this",4,0);
+ ASSERT(this_sym->s_name);
+ new_scope->cs_scope.s_class = new_scope;
+ new_scope->cs_scope.s_prev  = current_scope; /* Inherit reference */
+ new_scope->cs_scope.s_base  = current_basescope;
+ new_scope->cs_this          = this_sym;
+ new_scope->cs_scope.s_flags = SCOPE_FCLASS; /* TODO: Get rid of this flag. - Use `x->s_class == x' instead! */
+ current_scope = &new_scope->cs_scope; /* Inherit reference */
+ return 0;
+err_new_scope:
+ DeeObject_Free(new_scope);
+err:
+ return -1;
+}
+INTERN struct symbol *(DCALL get_current_this)(void) {
+ DeeBaseScopeObject *base;
+ base = current_basescope;
+ do {
+  if (base->bs_this)
+      return base->bs_this;
+ } while ((base = base->bs_prev) != NULL);
+ return NULL;
+}
+
 INTERN DREF DeeBaseScopeObject *DCALL basescope_new(void) {
  DREF DeeBaseScopeObject *result;
- result = (DeeBaseScopeObject *)DeeObject_Calloc(sizeof(DeeBaseScopeObject));
+ result = DeeObject_CALLOC(DeeBaseScopeObject);
  if unlikely(!result) return NULL;
  DeeObject_Init((DeeObject *)result,&DeeBaseScope_Type);
  ASSERT(current_rootscope == current_basescope->bs_root);
@@ -1352,6 +1449,7 @@ scope_lookup_str(DeeScopeObject *__restrict scope,
 done:
  return result;
 }
+
 
 PRIVATE int DCALL
 rehash_labels(void) {

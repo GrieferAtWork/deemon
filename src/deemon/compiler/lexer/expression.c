@@ -1011,16 +1011,25 @@ do_range_expression:
 
  {
   struct symbol *this_sym;
+ case KWD_this:
+  this_sym = get_current_this();
+  if (!this_sym) goto default_case;
+  result = ast_sethere(ast_sym(this_sym));
+  if unlikely(yield() < 0) goto err_r;
+ } break;
+
+ {
+  struct symbol *this_sym;
   DREF struct ast *this_ast;
  case KWD_super:
-  if (!current_basescope->bs_super)
+  if (!current_scope->s_class ||
+      !current_scope->s_class->cs_super)
        goto default_case;
-  this_sym = scope_lookup(&current_basescope->bs_scope,
-                           TPPLexer_LookupKeyword("this",4,0));
-  if unlikely(!this_sym) goto default_case;
+  this_sym = get_current_this();
+  if (!this_sym) goto default_case;
   this_ast = ast_sethere(ast_sym(this_sym));
   if unlikely(!this_ast) goto err;
-  merge = ast_sethere(ast_sym(current_basescope->bs_super));
+  merge = ast_sethere(ast_sym(current_scope->s_class->cs_super));
   if unlikely(!merge) { ast_decref(this_ast); goto err; }
   result = ast_sethere(ast_action2(AST_FACTION_AS,this_ast,merge));
   ast_decref(merge);

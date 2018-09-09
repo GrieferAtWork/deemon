@@ -2927,7 +2927,6 @@ err:
 
 PRIVATE int DCALL
 print_code_tags(DeeBaseScopeObject *__restrict function_scope,
-                DeeScopeObject *__restrict tag_scope,
                 dformatprinter printer, void *arg) {
  if (function_scope->bs_flags & CODE_FCOPYABLE)
      PRINT("@copyable ");
@@ -2935,36 +2934,16 @@ print_code_tags(DeeBaseScopeObject *__restrict function_scope,
      PRINT("@thiscall ");
  if (function_scope->bs_flags & CODE_FASSEMBLY)
      PRINT("@assembly ");
- if (function_scope->bs_super
-#if 1 /* The super-symbols of classes are stored on the stack... */
-     &&
-     function_scope->bs_super->s_name != &TPPKeyword_Empty
-#endif
-     ) {
-  PRINT("@super(");
-  DO(print_symbol(function_scope->bs_super,tag_scope,printer,arg));
-  PRINT(")");
- }
- if (function_scope->bs_class) {
-  PRINT("@class(");
-  DO(print_symbol(function_scope->bs_class,tag_scope,printer,arg));
-  PRINT(")");
- }
  return 0;
 err:
  return -1;
 }
 
 PRIVATE bool DCALL
-is_instance_method(DeeBaseScopeObject *__restrict self,
-                   struct symbol *myclass,
-                   struct symbol *mysuper) {
+is_instance_method(DeeBaseScopeObject *__restrict self) {
  if (!(self->bs_flags & CODE_FTHISCALL))
      return false;
- if (self->bs_class != myclass)
-     return false;
- if (self->bs_super != mysuper)
-     return false;
+ /* TODO: Use the this-symbol to check for instance methods. */
  return true;
 }
 
@@ -2975,7 +2954,7 @@ print_function_atargs(struct ast *__restrict self,
  DeeBaseScopeObject *function_scope; size_t i;
  function_scope = self->a_function.f_scope;
  if (print_tags)
-     DO(print_code_tags(function_scope,self->a_scope,printer,arg));
+     DO(print_code_tags(function_scope,printer,arg));
  PRINT("(");
  for (i = 0; i < function_scope->bs_argc; ++i) {
   if (i != 0) PRINT(", ");
@@ -4012,9 +3991,7 @@ operator_fallback:
      DO(Dee_FormatRepeat(printer,arg,'\t',indent));
      print(property_names[i],3);
      if (functions[i]->cm_ast->a_type == AST_FUNCTION &&
-         is_instance_method(functions[i]->cm_ast->a_function.f_scope,
-                            self->a_class.c_classsym,
-                            self->a_class.c_supersym)) {
+         is_instance_method(functions[i]->cm_ast->a_function.f_scope)) {
       DO(print_function_atargs(functions[i]->cm_ast,printer,arg,indent,false));
      } else {
       PRINT(" = ");
@@ -4032,9 +4009,7 @@ operator_fallback:
     method = find_class_member(self,attr->ca_addr);
     if unlikely(!method) goto instance_member_in_class;
     if unlikely(method->cm_ast->a_type != AST_FUNCTION) goto instance_member_in_class;
-    if (!is_instance_method(method->cm_ast->a_function.f_scope,
-                            self->a_class.c_classsym,
-                            self->a_class.c_supersym))
+    if (!is_instance_method(method->cm_ast->a_function.f_scope))
         goto instance_member_in_class;
     printf("function %k",attr->ca_name);
     DO(print_function_atargs(method->cm_ast,printer,arg,indent,false));
@@ -4148,9 +4123,7 @@ class_member_in_class:
    }
    if (member) {
     if (member->cm_ast->a_type == AST_FUNCTION &&
-        is_instance_method(member->cm_ast->a_function.f_scope,
-                           self->a_class.c_classsym,
-                           self->a_class.c_supersym)) {
+        is_instance_method(member->cm_ast->a_function.f_scope)) {
      DO(print_function_atargs(member->cm_ast,printer,arg,indent,false));
     } else {
      PRINT(" = ");

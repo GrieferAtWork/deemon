@@ -582,7 +582,7 @@ again:
    if (this_origin->bs_this == self) /* Bound & reachable this-symbol. */
        return true;
    if (this_origin == sym_base) /* Unbound this-symbol (valid in any kind of this-call) */
-       return (current_basescope->bs_flags & CODE_FTHISCALL) != 0;
+       return (this_origin->bs_flags & CODE_FTHISCALL) != 0;
   }
  } break;
 

@@ -31,9 +31,12 @@
 
 DECL_BEGIN
 
-typedef struct scope_object      DeeScopeObject;
-typedef struct base_scope_object DeeBaseScopeObject;
-typedef struct root_scope_object DeeRootScopeObject;
+#define CONFIG_USE_NEW_CLASS_SCOPES 1
+
+typedef struct scope_object       DeeScopeObject;
+typedef struct class_scope_object DeeClassScopeObject;
+typedef struct base_scope_object  DeeBaseScopeObject;
+typedef struct root_scope_object  DeeRootScopeObject;
 
 struct TPPKeyword;
 struct ast;
@@ -307,6 +310,7 @@ struct scope_object {
 #endif                                
     DeeBaseScopeObject      *s_base;  /* [1..1][const] The base scope of the surrounding function.
                                        * HINT: If this is a self-pointer, this scope is actually a `DeeBaseScopeObject'  */
+    DeeClassScopeObject     *s_class; /* [0..1][const] A pointer to the nearest class scope, or NULL if outside of any. */
     struct symbol          **s_map;   /* [0..1][owned][0..s_mapa][owned] Hash-map of symbols defined in this scope.
                                        * HINT: Use the TPP keyword id modulated by `s_mapa' as index. */
     size_t                   s_mapc;  /* Amount of symbols defined within the hash-map `s_map'. */
@@ -324,6 +328,18 @@ struct scope_object {
     uint16_t                 s_pad[(sizeof(void *)/2)-1];
 #endif
 };
+
+
+struct class_scope_object {
+    DeeScopeObject      cs_scope; /* Underlying regular scope.
+                                   * This is also where all of the class's members are defined. */
+    struct symbol      *cs_class; /* [0..1] A symbol describing the class being described. */
+    struct symbol      *cs_super; /* [0..1] A symbol describing the new class's base-class. */
+    struct symbol      *cs_this;  /* [1..1][owned] A symbol describing the this-argument of instances of the class. */
+};
+
+/* Returns a pointer to the previous class scope, or `NULL' if no such scope exists. */
+#define DeeClassScope_Prev(x) ((x)->cs_scope.s_prev ? (x)->cs_scope.s_prev->s_class : NULL)
 
 
 
@@ -344,10 +360,7 @@ struct base_scope_object {
     struct text_label  *bs_swcase;     /* [0..1][CHAIN(->tl_next)][owned] Chain of switch labels.
                                         * NOTE: This chain links cases in the reverse order of their appearance. */
     struct text_label  *bs_swdefl;     /* [0..1][owned] Default label in a switch statement. */
-    struct symbol      *bs_class;      /* [0..1] Same as `bs_super', but instead used to refer to a class's own
-                                        *        type, which is required for accessing instance members by index. */
-    struct symbol      *bs_super;      /* [0..1] A symbol describing the super-identifier in thiscall functions. */
-    struct symbol      *bs_this;       /* [0..1] The this-symbol describing the instance associated with `bs_class'. */
+    struct symbol      *bs_this;       /* [0..1] The `cs_this' of the class which this base-scope's function is implementing a member function for. */
     DeeCodeObject      *bs_restore;    /* [0..1] Pointer to the generated code object (once that code object has been generated)
                                         * In the event that assembler must be reset due to a linker truncation,
                                         * this code object will be used to restore inherited (stolen) data. */
@@ -429,6 +442,7 @@ struct root_scope_object {
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF DeeTypeObject DeeScope_Type;
+INTDEF DeeTypeObject DeeClassScope_Type;
 INTDEF DeeTypeObject DeeBaseScope_Type;
 INTDEF DeeTypeObject DeeRootScope_Type;
 
@@ -440,6 +454,10 @@ INTDEF DeeRootScopeObject  *current_rootscope; /* [lock(DeeCompiler_Lock)][1..1]
  * NOTE: The caller should then fill in special information in `current_scope'. */
 INTDEF int (DCALL scope_push)(void);
 INTDEF void DCALL scope_pop(void);
+
+/* Enter a new class-scope. */
+INTDEF int (DCALL classscope_push)(void);
+INTDEF struct symbol *(DCALL get_current_this)(void);
 
 /* Begin/end a new base-scope.
  * NOTE: The caller should then fill in special information in `current_basescope'. */
@@ -503,7 +521,6 @@ INTDEF struct symbol *DCALL
 scope_lookup_str(DeeScopeObject *__restrict scope,
                  char const *__restrict name,
                  size_t name_length);
-
 
 /* Copy argument symbols from the given `other' base-scope into the current,
  * alongside defining them as symbols while duplicating default-values and the

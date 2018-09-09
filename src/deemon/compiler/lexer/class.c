@@ -345,8 +345,6 @@ class_maker_push_methscope(struct class_maker *__restrict self) {
  if (basescope_push()) goto err;
  /* Set the appropriate flags to turn this one into a class-scope. */
  current_basescope->bs_flags |= CODE_FTHISCALL | current_tags.at_code_flags;
- current_basescope->bs_class  = self->cm_classsym;
- current_basescope->bs_super  = self->cm_supersym;
  current_basescope->bs_this   = self->cm_thissym;
  return 0;
 err:
@@ -1208,18 +1206,14 @@ use_object_base:
  if (create_symbol) {
   maker.cm_classsym = lookup_symbol(symbol_mode,name,NULL);
   if unlikely(!maker.cm_classsym) goto err;
-  if (scope_push()) goto err;
+  if (classscope_push()) goto err;
  } else {
-  if (scope_push()) goto err;
+  if (classscope_push()) goto err;
   maker.cm_classsym = new_unnamed_symbol();
   if unlikely(!maker.cm_classsym) goto err;
   SYMBOL_TYPE(maker.cm_classsym) = SYMBOL_TYPE_STACK;
  }
- current_scope->s_flags |= SCOPE_FCLASS;
- /* Define a symbol `this' that can be used to access the this-argument. */
- maker.cm_thissym = new_local_symbol(TPPLexer_LookupKeyword("this",4,0),NULL);
- if unlikely(!maker.cm_thissym) goto err;
- maker.cm_thissym->s_type = SYMBOL_TYPE_THIS; /* As simple as that! */
+ maker.cm_thissym = ((DeeClassScopeObject *)current_scope)->cs_this;
 
  /* Create a symbol for the class's super type. */
  if (maker.cm_base) {

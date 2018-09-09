@@ -148,6 +148,7 @@ need_constexpr:
   }
   switch (tag_id) {
 
+#if 0
    /* Define the class/super symbols. */
   case KWD_class:
   case KWD_super:
@@ -168,6 +169,7 @@ need_constexpr:
     }
    }
    break;
+#endif
 
   case KWD_doc:
    if (!tag_args) goto need_constexpr;
