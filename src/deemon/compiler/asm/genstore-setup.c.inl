@@ -150,9 +150,9 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
     struct ast *base = ast->a_operator.o_op0;
     if unlikely(cid < 0) goto err;
     if (base->a_type == AST_SYM) {
-     SYMBOL_INPLACE_UNWIND_ALIAS(base->a_sym);
-     if (SYMBOL_TYPE(base->a_sym) == SYMBOL_TYPE_THIS &&
-        !SYMBOL_MUST_REFERENCE_TYPEMAY(base->a_sym)) {
+     struct symbol *sym = SYMBOL_UNWIND_ALIAS(base->a_sym);
+     if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
+        !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 #ifdef LEAVE
       if (asm_putddi(ast)) goto err;
       if (PUSH_RESULT && asm_gdup()) goto err;

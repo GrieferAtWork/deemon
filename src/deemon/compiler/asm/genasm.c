@@ -476,21 +476,23 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict ast,
   if (asm_gpush_symbol(sym,ast)) goto err;
  } break;
 
+ {
+  struct symbol *sym;
  case AST_UNBIND:
   if (asm_putddi(ast)) goto err;
-  SYMBOL_INPLACE_UNWIND_ALIAS(ast->a_unbind);
-  if (asm_gdel_symbol(ast->a_unbind,ast)) goto err;
+  sym = SYMBOL_UNWIND_ALIAS(ast->a_unbind);
+  if (asm_gdel_symbol(sym,ast)) goto err;
   /* NOTE: Only make the symbol ID be available again, when
    *       the symbol itself was declared in the same scope,
    *       as the one it is being deleted from. */
-  if (ast->a_unbind->s_type == SYMBOL_TYPE_LOCAL &&
-      ast->a_unbind->s_scope == ast->a_scope) {
-   asm_dellocal(ast->a_unbind->s_symid);
-   ast->a_unbind->s_flag &= ~SYMBOL_FALLOC;
+  if (sym->s_type == SYMBOL_TYPE_LOCAL &&
+      sym->s_scope == ast->a_scope) {
+   asm_dellocal(sym->s_symid);
+   sym->s_flag &= ~SYMBOL_FALLOC;
   }
 done_push_none:
   if (PUSH_RESULT && asm_gpush_none()) goto err;
-  break;
+ } break;
 
  case AST_BOUND:
   if (!PUSH_RESULT) break;
@@ -2198,11 +2200,11 @@ push_a_if_used:
   case OPERATOR_ENTER:
    enter_expr = ast->a_operator.o_op0;
    if (enter_expr->a_type == AST_SYM) {
-    SYMBOL_INPLACE_UNWIND_ALIAS(enter_expr->a_sym);
-    if (SYMBOL_TYPE(enter_expr->a_sym) == SYMBOL_TYPE_STACK &&
-       !SYMBOL_MUST_REFERENCE_TYPEMAY(enter_expr->a_sym) &&
-       (enter_expr->a_sym->s_flag & SYMBOL_FALLOC) &&
-        SYMBOL_STACK_OFFSET(enter_expr->a_sym) == current_assembler.a_stackcur - 1) {
+    struct symbol *sym = SYMBOL_UNWIND_ALIAS(enter_expr->a_sym);
+    if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_STACK &&
+       !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
+       (sym->s_flag & SYMBOL_FALLOC) &&
+        SYMBOL_STACK_OFFSET(sym) == current_assembler.a_stackcur - 1) {
      /* Special optimization: Since `ASM_ENTER' doesn't modify the top stack item,
       * if the operand _is_ the top stack item, then we can simply generate the enter
       * instruction without the need of any kludge. */

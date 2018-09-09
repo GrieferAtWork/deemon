@@ -464,7 +464,6 @@ INTDEF struct symbol *(DCALL get_current_this)(void);
 INTDEF int (DCALL basescope_push)(void);
 INTDEF void DCALL basescope_pop(void);
 INTDEF void DCALL basescope_push_ob(DeeBaseScopeObject *__restrict scope);
-INTDEF DREF DeeBaseScopeObject *DCALL basescope_new(void);
 
 /* Lookup a symbol for the given `name', following constraints set by `mode'.
  * @param: mode:     Set of `LOOKUP_SYM_*'

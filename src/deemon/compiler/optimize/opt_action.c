@@ -107,11 +107,11 @@ INTERN int
       (optimizer_flags & OPTIMIZE_FNOUSESYMS)) {
     /* Special case: the symbol is never read from, or checked for being bound.
      * -> We can simply get rid of this symbol all-together! */
-   OPTIMIZE_VERBOSE("Removing store to symbol `%s' that is never "
-                    "read from, or checking for being bound\n",
-                    SYMBOL_NAME(target_sym));
-   if unlikely(ast_graft_onto(self,self->a_action.a_act1)) goto err;
-   goto did_optimize;
+    OPTIMIZE_VERBOSE("Removing store to symbol `%s' that is never "
+                     "read from, or checking for being bound\n",
+                     SYMBOL_NAME(target_sym));
+    if unlikely(ast_graft_onto(self,self->a_action.a_act1)) goto err;
+    goto did_optimize;
    }
    /* Check if what's being assigned is a constant expression. */
    if (self->a_action.a_act1->a_type == AST_CONSTEXPR) {

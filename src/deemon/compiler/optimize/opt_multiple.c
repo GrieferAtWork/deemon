@@ -206,7 +206,8 @@ multiple_continue_at_iter:
   }
   self->a_flag = AST_FNORMAL;
   self->a_type = AST_CONSTEXPR;
-  OPTIMIZE_VERBOSE("Reduce constant-expression multi-ast\n");
+  OPTIMIZE_VERBOSE("Reduce constant-expression multi-ast to %r\n",
+                   self->a_constexpr);
   goto did_optimize;
  }
 after_multiple_constexpr:

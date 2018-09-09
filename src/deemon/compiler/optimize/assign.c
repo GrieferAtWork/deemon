@@ -29,6 +29,7 @@ DECL_BEGIN
 
 INTDEF void DCALL ast_incwrite(struct ast *__restrict self);
 INTDEF void DCALL ast_decwrite(struct ast *__restrict self);
+INTDEF void DCALL ast_incwriteonly(struct ast *__restrict self);
 
 INTERN int (DCALL ast_assign)(struct ast *__restrict self,
                               struct ast *__restrict other) {
@@ -58,7 +59,6 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
   ast_xincref(other->a_loop.l_loop);
   break;
 
-
  {
   struct class_member *dst; size_t i;
  case AST_CLASS:
@@ -84,7 +84,10 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
    ast_incref(dst[i].cm_ast);
   }
  } break;
+
  case AST_OPERATOR:
+  if (OPERATOR_ISINPLACE(temp->a_flag))
+      ast_incwriteonly(other->a_operator.o_op0);
   temp->a_operator.o_exflag = other->a_operator.o_exflag;
   temp->a_operator.o_op3    = other->a_operator.o_op3;
   ast_xincref(temp->a_operator.o_op3);
@@ -119,9 +122,8 @@ do_xcopy_3:
    *       improperly in order to duplicate a branch without the intent of
    *       eventually destroying the source branch. */
   if ((other->a_flag&AST_FACTION_KINDMASK) ==
-      (AST_FACTION_STORE&AST_FACTION_KINDMASK)) {
-   ast_incwrite(other->a_action.a_act0);
-  }
+      (AST_FACTION_STORE&AST_FACTION_KINDMASK))
+      ast_incwrite(other->a_action.a_act0);
   goto do_xcopy_3;
 
  {
@@ -161,14 +163,15 @@ do_xcopy_3:
 
  case AST_SYM:
   ASSERT(other->a_sym);
-  temp->a_sym = other->a_sym;
   if (temp->a_flag) {
+ case AST_UNBIND:
    ASSERT(SYMBOL_NWRITE(other->a_sym));
    SYMBOL_INC_NWRITE(temp->a_sym);
   } else {
    ASSERT(SYMBOL_NREAD(other->a_sym));
    SYMBOL_INC_NREAD(temp->a_sym);
   }
+  temp->a_sym = other->a_sym;
   break;
 
  case AST_BOUND:
@@ -192,6 +195,9 @@ do_xcopy_3:
   temp->a_label.l_base  = other->a_label.l_base;
   Dee_Incref((DeeObject *)temp->a_label.l_base);
   break;
+
+// case AST_ASSEMBLY:
+//  break;
 
 // case AST_SWITCH: /* Use the default case... */
 //  break;

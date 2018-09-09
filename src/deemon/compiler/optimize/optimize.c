@@ -307,12 +307,26 @@ again:
   return ast_optimize_switch(stack,self,result_used);
 
  {
+  size_t i;
+ case AST_CLASS:
+  if (self->a_class.c_base &&
+      ast_optimize(stack,self->a_class.c_base,true))
+      goto err;
+  if (ast_optimize(stack,self->a_class.c_desc,true))
+      goto err;
+  for (i = 0; i < self->a_class.c_memberc; ++i) {
+   if (ast_optimize(stack,self->a_class.c_memberv[i].cm_ast,true))
+       goto err;
+  }
+ } break;
+
+ {
   struct asm_operand *iter,*end;
  case AST_ASSEMBLY:
 #ifdef OPTIMIZE_FASSUME
   if (optimizer_flags & OPTIMIZE_FASSUME) {
    end = (iter = self->a_assembly.as_opv + self->a_assembly.as_num_o) +
-                                              self->a_assembly.as_num_i;
+                                           self->a_assembly.as_num_i;
    for (; iter < end; ++iter) {
     if (ast_optimize(stack,iter->ao_expr,true))
         goto err;

@@ -184,84 +184,6 @@ again0:
   }
   return result;
  }
- /* Allow list/dict/set. */
- if (type == &DeeList_Type) {
-  bool must_copy = DeeObject_IsShared(self);
-  /* Recursive GC-type. */
-  if (constexpr_onstack(self)) goto usecopy;
-  CONSTEXPR_FRAME_BEGIN(self) {
-   DeeList_LockRead(self);
-   for (i = 0; i < DeeList_SIZE(self); ++i) {
-    int temp = allow_constexpr(DeeList_GET(self,i));
-    if (temp == CONSTEXPR_ILLEGAL) {
-     DeeList_LockEndRead(self);
-     CONSTEXPR_FRAME_BREAK;
-     goto illegal;
-    }
-    if (temp == CONSTEXPR_USECOPY)
-        must_copy = true;
-   }
-   DeeList_LockEndRead(self);
-  }
-  CONSTEXPR_FRAME_END;
-  if (must_copy)
-      goto usecopy;
-  goto allowed;
- }
- if (type == &DeeHashSet_Type) {
-  bool must_copy = DeeObject_IsShared(self);
-  /* Recursive GC-type. */
-  if (constexpr_onstack(self)) goto usecopy;
-  CONSTEXPR_FRAME_BEGIN(self) {
-   DeeHashSetObject *me = (DeeHashSetObject *)self;
-   DeeHashSet_LockRead(self);
-   for (i = 0; i <= me->s_mask; ++i) {
-    int temp;
-    DeeObject *key = me->s_elem[i].si_key;
-    if (!key) continue;
-    temp = allow_constexpr(key);
-    if (temp == CONSTEXPR_ILLEGAL) {
-     DeeHashSet_LockEndRead(self);
-     CONSTEXPR_FRAME_BREAK;
-     goto illegal;
-    }
-    if (temp == CONSTEXPR_USECOPY)
-        must_copy = true;
-   }
-   DeeHashSet_LockEndRead(self);
-  }
-  CONSTEXPR_FRAME_END;
-  if (must_copy)
-      goto usecopy;
-  goto allowed;
- }
- if (type == &DeeDict_Type) {
-  bool must_copy = DeeObject_IsShared(self);
-  /* Recursive GC-type. */
-  if (constexpr_onstack(self)) goto usecopy;
-  CONSTEXPR_FRAME_BEGIN(self) {
-   DeeDictObject *me = (DeeDictObject *)self;
-   DeeDict_LockRead(self);
-   for (i = 0; i <= me->d_mask; ++i) {
-    int temp;
-    DeeObject *key = me->d_elem[i].di_key;
-    if (!key) continue;
-    temp = allow_constexpr(key);
-    if (temp == CONSTEXPR_USECOPY) must_copy = true;
-    if (temp == CONSTEXPR_ILLEGAL ||
-       (temp = allow_constexpr(me->d_elem[i].di_value)) == CONSTEXPR_ILLEGAL) {
-     DeeDict_LockEndRead(self);
-     CONSTEXPR_FRAME_BREAK;
-     goto illegal;
-    }
-    if (temp == CONSTEXPR_USECOPY) must_copy = true;
-   }
-   DeeDict_LockEndRead(self);
-  }
-  CONSTEXPR_FRAME_END;
-  if (must_copy) goto usecopy;
-  goto allowed;
- }
  if (type == &DeeRoDict_Type) {
   /* Allow read-only dicts consisting only of other allowed types. */
   int temp,result = CONSTEXPR_ALLOWED; size_t i;
@@ -288,6 +210,70 @@ again0:
    if (temp == CONSTEXPR_USECOPY) result = CONSTEXPR_USECOPY;
   }
   return result;
+ }
+ /* Allow list/dict/set, but require them to always be copied. */
+ if (type == &DeeList_Type) {
+  /* Recursive GC-type. */
+  if (constexpr_onstack(self)) goto usecopy;
+  CONSTEXPR_FRAME_BEGIN(self) {
+   DeeList_LockRead(self);
+   for (i = 0; i < DeeList_SIZE(self); ++i) {
+    int temp = allow_constexpr(DeeList_GET(self,i));
+    if (temp == CONSTEXPR_ILLEGAL) {
+     DeeList_LockEndRead(self);
+     CONSTEXPR_FRAME_BREAK;
+     goto illegal;
+    }
+   }
+   DeeList_LockEndRead(self);
+  }
+  CONSTEXPR_FRAME_END;
+  goto usecopy;
+ }
+ if (type == &DeeHashSet_Type) {
+  /* Recursive GC-type. */
+  if (constexpr_onstack(self)) goto usecopy;
+  CONSTEXPR_FRAME_BEGIN(self) {
+   DeeHashSetObject *me = (DeeHashSetObject *)self;
+   DeeHashSet_LockRead(self);
+   for (i = 0; i <= me->s_mask; ++i) {
+    int temp;
+    DeeObject *key = me->s_elem[i].si_key;
+    if (!key) continue;
+    temp = allow_constexpr(key);
+    if (temp == CONSTEXPR_ILLEGAL) {
+     DeeHashSet_LockEndRead(self);
+     CONSTEXPR_FRAME_BREAK;
+     goto illegal;
+    }
+   }
+   DeeHashSet_LockEndRead(self);
+  }
+  CONSTEXPR_FRAME_END;
+  goto usecopy;
+ }
+ if (type == &DeeDict_Type) {
+  /* Recursive GC-type. */
+  if (constexpr_onstack(self)) goto usecopy;
+  CONSTEXPR_FRAME_BEGIN(self) {
+   DeeDictObject *me = (DeeDictObject *)self;
+   DeeDict_LockRead(self);
+   for (i = 0; i <= me->d_mask; ++i) {
+    int temp;
+    DeeObject *key = me->d_elem[i].di_key;
+    if (!key) continue;
+    temp = allow_constexpr(key);
+    if (temp == CONSTEXPR_ILLEGAL ||
+       (temp = allow_constexpr(me->d_elem[i].di_value)) == CONSTEXPR_ILLEGAL) {
+     DeeDict_LockEndRead(self);
+     CONSTEXPR_FRAME_BREAK;
+     goto illegal;
+    }
+   }
+   DeeDict_LockEndRead(self);
+  }
+  CONSTEXPR_FRAME_END;
+  goto usecopy;
  }
  /* Last check: There is a small hand full of constant objects that are always allowed. */
  if (Dec_BuiltinID(self) != DEC_BUILTINID_UNKNOWN)

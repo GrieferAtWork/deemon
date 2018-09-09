@@ -463,20 +463,13 @@ class_maker_addmember(struct class_maker *__restrict self,
   if unlikely(!result) goto err;
  }
  /* Initialize that symbol to be a member symbol. */
-#if 1
  result->s_type         = SYMBOL_TYPE_CATTR;
  result->s_attr.a_class = self->cm_classsym;
  result->s_attr.a_attr  = attr;
  result->s_attr.a_this  = is_class_member ? NULL : self->cm_thissym;
-#else
- result->s_type = is_class_member
-                ? SYMBOL_TYPE_CFIELD
-                : SYMBOL_TYPE_IFIELD
-                ;
- result->s_field.f_class = self->cm_classsym;
- result->s_field.f_attr  = attr;
-#endif
- SYMBOL_INC_NREAD(self->cm_classsym);
+ if (result->s_attr.a_this)
+     SYMBOL_INC_NREAD(result->s_attr.a_this);
+ SYMBOL_INC_NREAD(result->s_attr.a_class);
  return result;
 err:
  return NULL;
@@ -1214,12 +1207,14 @@ use_object_base:
   SYMBOL_TYPE(maker.cm_classsym) = SYMBOL_TYPE_STACK;
  }
  maker.cm_thissym = ((DeeClassScopeObject *)current_scope)->cs_this;
+ ((DeeClassScopeObject *)current_scope)->cs_class = maker.cm_classsym;
 
  /* Create a symbol for the class's super type. */
  if (maker.cm_base) {
   maker.cm_supersym = new_unnamed_symbol();
   if unlikely(!maker.cm_supersym) goto err;
   SYMBOL_TYPE(maker.cm_supersym) = SYMBOL_TYPE_STACK;
+  ((DeeClassScopeObject *)current_scope)->cs_super = maker.cm_supersym;
  }
 
  default_member_flags = CLASS_ATTRIBUTE_FPUBLIC;

@@ -172,9 +172,9 @@ ast_gen_setattr_inplace(struct ast *__restrict base,
   int32_t cid = asm_newconst(name->a_constexpr);
   if unlikely(cid < 0) goto err;
   if (base->a_type == AST_SYM) {
-   SYMBOL_INPLACE_UNWIND_ALIAS(base->a_sym);
-   if (SYMBOL_TYPE(base->a_sym) == SYMBOL_TYPE_THIS &&
-      !SYMBOL_MUST_REFERENCE_TYPEMAY(base->a_sym)) {
+   struct symbol *sym = SYMBOL_UNWIND_ALIAS(base->a_sym);
+   if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
+      !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
     if (asm_ggetattr_this_const((uint16_t)cid)) goto err; /* this.name */
     if ((gflags & ASM_G_FPUSHRES) && is_post_operator) {
      if (asm_gdup()) goto err;   /* this.name, this.name */

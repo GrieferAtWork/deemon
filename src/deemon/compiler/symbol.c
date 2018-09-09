@@ -738,9 +738,10 @@ INTERN int (DCALL scope_push)(void) {
  new_scope = DeeObject_CALLOC(DeeScopeObject);
  if unlikely(!new_scope) goto err;
  DeeObject_Init(new_scope,&DeeScope_Type);
- new_scope->s_prev = current_scope; /* Inherit reference */
- new_scope->s_base = current_basescope;
- current_scope     = new_scope; /* Inherit reference */
+ new_scope->s_prev  = current_scope; /* Inherit reference */
+ new_scope->s_base  = current_basescope;
+ new_scope->s_class = current_scope->s_class;
+ current_scope      = new_scope; /* Inherit reference */
  return 0;
 err:
  return -1;
@@ -793,24 +794,15 @@ INTERN struct symbol *(DCALL get_current_this)(void) {
  return NULL;
 }
 
-INTERN DREF DeeBaseScopeObject *DCALL basescope_new(void) {
- DREF DeeBaseScopeObject *result;
- result = DeeObject_CALLOC(DeeBaseScopeObject);
- if unlikely(!result) return NULL;
- DeeObject_Init((DeeObject *)result,&DeeBaseScope_Type);
- ASSERT(current_rootscope == current_basescope->bs_root);
- result->bs_scope.s_base = result;
- result->bs_root         = current_rootscope;
- return result;
-}
 INTERN void DCALL
 basescope_push_ob(DeeBaseScopeObject *__restrict scope) {
  ASSERT((current_scope != NULL) == (current_basescope != NULL));
  ASSERT(scope->bs_scope.s_prev == current_scope);
+ ASSERT(scope->bs_scope.s_class == (current_scope ? current_scope->s_class : NULL));
  ASSERT(scope->bs_prev == current_basescope);
  Dee_Incref((DeeObject *)scope);
  Dee_Decref(current_scope);
- current_scope = (DREF DeeScopeObject *)scope;
+ current_scope     = (DREF DeeScopeObject *)scope;
  current_basescope = scope;
 }
 INTERN int (DCALL basescope_push)(void) {
@@ -820,10 +812,11 @@ INTERN int (DCALL basescope_push)(void) {
  DeeObject_Init((DeeObject *)new_scope,&DeeBaseScope_Type);
  ASSERT(current_scope);
  ASSERT(current_rootscope == current_basescope->bs_root);
- new_scope->bs_scope.s_prev = current_scope; /* Inherit reference */
- new_scope->bs_scope.s_base = new_scope;
- new_scope->bs_prev         = current_basescope;
- new_scope->bs_root         = current_rootscope;
+ new_scope->bs_scope.s_prev  = current_scope; /* Inherit reference */
+ new_scope->bs_scope.s_base  = new_scope;
+ new_scope->bs_scope.s_class = current_scope->s_class;
+ new_scope->bs_prev          = current_basescope;
+ new_scope->bs_root          = current_rootscope;
  current_basescope = new_scope;
  current_scope     = (DREF DeeScopeObject *)new_scope; /* Inherit reference */
  return 0;

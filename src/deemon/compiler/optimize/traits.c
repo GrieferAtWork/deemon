@@ -115,10 +115,13 @@ ast_predict_type(struct ast *__restrict self) {
   if (tt_type == ff_type) return tt_type;
  } break;
 
+ {
+  struct symbol *sym;
  case AST_SYM:
   /* Certain symbol classes always refer to specific object types. */
-  SYMBOL_INPLACE_UNWIND_ALIAS(self->a_sym);
-  switch (SYMBOL_TYPE(self->a_sym)) {
+  sym = self->a_sym;
+  SYMBOL_INPLACE_UNWIND_ALIAS(sym);
+  switch (SYMBOL_TYPE(sym)) {
   case SYMBOL_TYPE_MODULE:
   case SYMBOL_TYPE_MYMOD:
    return &DeeModule_Type;
@@ -140,12 +143,12 @@ ast_predict_type(struct ast *__restrict self) {
     */
    bscope = self->a_scope->s_base;
    if (bscope->bs_flags & CODE_FVARARGS &&
-       DeeBaseScope_IsArgVarArgs(bscope,self->a_sym->s_symid))
+       DeeBaseScope_IsArgVarArgs(bscope,sym->s_symid))
        return &DeeTuple_Type;
   } break;
   default: break;
   }
-  break;
+ } break;
 
  case AST_BOOL:
   return &DeeBool_Type;
@@ -911,8 +914,6 @@ ast_uses_symbol(struct ast *__restrict self,
  {
   size_t i;
  case AST_CLASS:
-  SYMBOL_INPLACE_UNWIND_ALIAS(self->a_class.c_classsym);
-  SYMBOL_INPLACE_UNWIND_ALIAS(self->a_class.c_supersym);
   if (self->a_class.c_base &&
       ast_uses_symbol(self->a_class.c_base,sym))
       goto yup;

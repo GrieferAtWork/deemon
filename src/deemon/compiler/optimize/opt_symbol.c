@@ -97,18 +97,17 @@ set_constant_expression:
      goto done_set_constexpr;
     }
     /* Set the value as a constant expression. */
+    SYMBOL_DEC_NREAD(self->a_sym); /* Trace read references. */
     self->a_constexpr = symval; /* Inherit */
     self->a_type      = AST_CONSTEXPR;
-    SYMBOL_DEC_NREAD(sym); /* Trace read references. */
-    OPTIMIZE_VERBOSE("Inline constant symbol expression %r\n",symval);
+    OPTIMIZE_VERBOSE("Inline constant symbol expression: `%r'\n",symval);
     goto did_optimize;
    }
 done_set_constexpr:
    Dee_Decref(symval);
   }
- }
- /* Check for symbols that are actually constant expression. */
- if (sym->s_type == SYMBOL_TYPE_CONST) {
+ } else if (sym->s_type == SYMBOL_TYPE_CONST) {
+  /* Check for symbols that are actually constant expression. */
   symval = sym->s_const;
   Dee_Incref(symval);
   goto set_constant_expression;
