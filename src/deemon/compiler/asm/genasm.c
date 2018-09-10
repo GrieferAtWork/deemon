@@ -1993,13 +1993,13 @@ pop_unused:
    goto done;
 
   case OPERATOR_GETATTR:
-   if unlikely(!ast->a_operator.o_op2) goto generic_operator;
+   if unlikely(!ast->a_operator.o_op1) goto generic_operator;
    if (ast_gen_getattr(ast->a_operator.o_op0,
                        ast->a_operator.o_op1,
                        ast,gflags)) goto err;
    goto done;
   case OPERATOR_DELATTR:
-   if unlikely(!ast->a_operator.o_op2) goto generic_operator;
+   if unlikely(!ast->a_operator.o_op1) goto generic_operator;
    if (ast_gen_delattr(ast->a_operator.o_op0,
                        ast->a_operator.o_op1,
                        ast)) goto err;
