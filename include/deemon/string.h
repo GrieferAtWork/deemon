@@ -447,14 +447,6 @@ PUBLIC void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
 DFUNDEF /*latin-1*/uint8_t *DCALL DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid);
 #define DeeString_AsLatin1(self,allow_invalid)  DeeString_AsBytes(self,allow_invalid)
 
-/* Return the characters of the given string `self', encoded with a width of `width'
- * @param: width: One of `STRING_WIDTH_*'
- * @return: * :   A pointer to the first character matching `width'.
- *                The number of characters 
- * @return: NULL: An error occurred. */
-DFUNDEF void *DCALL DeeString_AsWidth(DeeObject *__restrict self, unsigned int width);
-
-
 /* Quickly access the 1,2 or 4-byte variants of a given string, allowing
  * for the assumption that all characters of the string are guarantied to
  * fit the requested amount of bytes. */

@@ -805,7 +805,7 @@ DeeString_PrintRepr(DeeObject *__restrict self,
 
 
 
-
+#if 0
 PRIVATE uint16_t *DCALL
 utf8_to_utf16(uint8_t *__restrict str, size_t length) {
  uint16_t *result,*dst; size_t i;
@@ -1101,6 +1101,7 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 err:
  return NULL;
 }
+#endif
 
 #if defined(CONFIG_HOST_WINDOWS) && 0
 #define mbcs_to_wide(str,length) nt_MultiByteToWideChar(CP_ACP,str,length)
@@ -2072,137 +2073,6 @@ err_buffer16:
  return (DREF DeeObject *)result;
 err_r:
  DeeObject_Free(result);
-err:
- return NULL;
-}
-
-
-PUBLIC void *DCALL
-DeeString_AsWidth(DeeObject *__restrict self, unsigned int width) {
- struct string_utf *utf; size_t *result;
- ASSERT_OBJECT_TYPE_EXACT(self,&DeeString_Type);
- ASSERT(width < STRING_WIDTH_COUNT);
- if (width == STRING_WIDTH_1BYTE)
-     return DeeString_STR(self); /* LATIN-1, or ASCII */
-again:
- utf = ((String *)self)->s_data;
- /* Generate missing width-representations of the string.
-  * NOTE: Remember that for this we must convert WSTR, not STR,
-  *       as STR is just the multi-byte string, while WSTR contains
-  *       the actual characters!
-  * e.g.: The 4-byte variant of a 1-byte string is simply an
-  *       up-cast of all the 1-byte characters, rather than
-  *       needing to use an actual unicode version! */
- if (utf) {
-  result = utf->u_data[width];
-  if (result)
-      return result;
-  if (utf->u_width == STRING_WIDTH_1BYTE)
-      goto cast_from_1byte;
- } else {
-  size_t i,length;
-  if (width == STRING_WIDTH_1BYTE)
-      return DeeString_STR(self); /* LATIN-1, or ASCII */
-  utf = utf_alloc();
-  if unlikely(!utf) goto err;
-  memset(utf,0,sizeof(struct string_utf));
-  utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
-#if STRING_WIDTH_1BYTE != 0
-  utf->u_width = STRING_WIDTH_1BYTE;
-#endif
-  if (!ATOMIC_CMPXCH(((String *)self)->s_data,NULL,utf)) {
-   utf_free(utf);
-   goto again;
-  }
-cast_from_1byte:
-  length = DeeString_SIZE(self);
-  SWITCH_SIZEOF_WIDTH(width) {
-  CASE_WIDTH_2BYTE:
-   result = (size_t *)Dee_Malloc(sizeof(size_t)+
-                                (length+1)*2);
-   if unlikely(!result) goto err;
-   *result++ = length;
-   for (i = 0; i < length; ++i)
-      ((uint16_t *)result)[i] = (uint16_t)(uint8_t)DeeString_STR(self)[i];
-   ((uint16_t *)result)[length] = 0;
-   if (!ATOMIC_CMPXCH(utf->u_data[width],NULL,result)) {
-    Dee_Free(result-1);
-    goto again;
-   }
-   break;
-  CASE_WIDTH_4BYTE:
-   result = (size_t *)Dee_Malloc(sizeof(size_t)+
-                                (length+1)*4);
-   if unlikely(!result) goto err;
-   *result++ = length;
-   for (i = 0; i < length; ++i)
-      ((uint32_t *)result)[i] = (uint32_t)(uint8_t)DeeString_STR(self)[i];
-   ((uint32_t *)result)[length] = 0;
-   if (!ATOMIC_CMPXCH(utf->u_data[width],NULL,result)) {
-    Dee_Free(result-1);
-    goto again;
-   }
-   break;
-  default: __builtin_unreachable();
-  }
-  return result;
- }
-
- ASSERT(utf != NULL);
- ASSERT(utf->u_width != width);
- ASSERT(utf->u_width != STRING_WIDTH_1BYTE);
- ASSERT(width        != STRING_WIDTH_1BYTE);
- switch (width) {
-
- case STRING_WIDTH_2BYTE:
-  ASSERT(utf->u_width == STRING_WIDTH_4BYTE);
-  /* The 1-byte variant is encoded in UTF-8. - So create the
-   * 2-byte variant by doing a `utf8_to_utf16' conversion. */
-  result = (size_t *)utf8_to_utf16((uint8_t *)DeeString_STR(self),
-                                    DeeString_SIZE(self));
-  if unlikely(!result) goto err;
-  if (!ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_2BYTE],NULL,result)) {
-   Dee_Free(result-1);
-   goto again;
-  }
-  break;
-
- case STRING_WIDTH_4BYTE:
-  ASSERT(utf->u_width == STRING_WIDTH_2BYTE);
-  if (utf->u_width == STRING_WIDTH_2BYTE) {
-   uint16_t *str; size_t i,length;
-   /* Can simply up-cast the utf16 string.
-    * The fact that our own string's UTF width is 2 bytes means
-    * that all characters fit into U+0000 ... U+FFFF (excluding surrogates),
-    * which we can directly map onto the utf32 variant. */
-   str = (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE];
-   ASSERT(str);
-   length = ((size_t *)str)[-1];
-   result = (size_t *)Dee_Malloc(sizeof(size_t)+(length+1)*4);
-   if unlikely(!result) goto err;
-   *result++ = length;
-   for (i = 0; i < length; ++i)
-      ((uint32_t *)result)[i] = (uint32_t)str[i];
-   ((uint32_t *)result)[length] = 0;
-   if (!ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_4BYTE],NULL,result)) {
-    Dee_Free(result-1);
-    goto again;
-   }
-  } else {
-   /* Must convert the utf-8 string stored in the 1-byte variant to utf-32 */
-   result = (size_t *)utf8_to_utf32((uint8_t *)DeeString_STR(self),
-                                     DeeString_SIZE(self));
-   if unlikely(!result) goto err;
-   if (!ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_4BYTE],NULL,result)) {
-    Dee_Free(result-1);
-    goto again;
-   }
-  }
-  break;
-
- default: __builtin_unreachable();
- }
- return result;
 err:
  return NULL;
 }
