@@ -714,7 +714,7 @@ PRIVATE struct type_method appexit_class_methods[] = {
           "Terminate execution of deemon after invoking #atexit callbacks when @invoke_atexit is :true\n"
           "Termination is done using the C $exit or $_exit functions, if available. However if these "
           "functions are not provided by the host, an :AppExit error is thrown instead\n"
-          "When no @exitcode is given, the host's default default value of EXIT_FAILURE, or ${1} is used\n"
+          "When no @exitcode is given, the host's default default value of EXIT_FAILURE, or $1 is used\n"
           "This function never returns normally") },
     { "atexit", &appexit_class_atexit,
       DOC("(callable callback, tuple args = ())\n"
@@ -737,7 +737,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
                             "()\n"
                             "(int exitcode)\n"
                             "Construct a new AppExit object using the given @exitcode "
-                            "or the host's default value for EXIT_FAILURE, or ${1}\n"),
+                            "or the host's default value for EXIT_FAILURE, or $1\n"),
     /* .tp_flags    = */TP_FFINAL|TP_FINTERRUPT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

@@ -33,8 +33,8 @@
 
 DECL_BEGIN
 
-INTDEF DREF DeeObject *DCALL string_decode(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL string_encode(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL string_decode(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF DREF DeeObject *DCALL string_encode(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
 INTDEF DREF DeeObject *DCALL DeeCodec_NormalizeName(DeeObject *__restrict name);
 INTDEF unsigned int DCALL DeeCodec_GetErrorMode(char const *__restrict errors);
@@ -91,9 +91,9 @@ emulate_method_call(DeeObject *__restrict self,
    *       function in order to implement `encode' and `decode'! */
   dobjmethod_t method;
   method = ((DeeObjMethodObject *)self)->om_func;
-  if (method == &string_encode)
+  if (method == (dobjmethod_t)&string_encode)
       return emulate_object_encode(((DeeObjMethodObject *)self)->om_self,argc,argv);
-  if (method == &string_decode)
+  if (method == (dobjmethod_t)&string_decode)
       return emulate_object_decode(((DeeObjMethodObject *)self)->om_self,argc,argv);
  }
  /* TODO: `object.id()' should not be evaluated at compile-time! */

@@ -474,24 +474,25 @@ DeeString_HashCase(DeeObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 string_repr(DeeObject *__restrict self) {
+ union dcharptr str;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
- void *str = DeeString_WSTR(self);
+ str.ptr = DeeString_WSTR(self);
  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
  CASE_WIDTH_1BYTE:
   if unlikely(Dee_FormatQuote8((dformatprinter)&ascii_printer_print,&printer,
-                               (uint8_t *)str,WSTR_LENGTH(str),
+                                str.cp8,WSTR_LENGTH(str.cp8),
                                 FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
  CASE_WIDTH_2BYTE:
   if unlikely(Dee_FormatQuote16((dformatprinter)&ascii_printer_print,&printer,
-                                (uint16_t *)str,WSTR_LENGTH(str),
+                                 str.cp16,WSTR_LENGTH(str.cp16),
                                  FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
  CASE_WIDTH_4BYTE:
   if unlikely(Dee_FormatQuote32((dformatprinter)&ascii_printer_print,&printer,
-                                (uint32_t *)str,WSTR_LENGTH(str),
+                                 str.cp32,WSTR_LENGTH(str.cp32),
                                  FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
@@ -895,14 +896,14 @@ stringiter_fini(StringIterator *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 stringiter_next(StringIterator *__restrict self) {
  DREF DeeObject *result;
- union dcharptr pos; uint8_t *new_pos;
+ union dcharptr pos,new_pos;
  /* Consume one character (atomically) */
  do {
   pos.ptr = self->si_iter.ptr;
   if (pos.ptr >= self->si_end.ptr)
       return ITER_DONE;
-  new_pos = (uint8_t *)pos.ptr+STRING_SIZEOF_WIDTH(self->si_width);
- } while (!ATOMIC_CMPXCH(self->si_iter.ptr,pos.ptr,(void *)new_pos));
+  new_pos.cp8 = pos.cp8 + STRING_SIZEOF_WIDTH(self->si_width);
+ } while (!ATOMIC_CMPXCH(self->si_iter.ptr,pos.ptr,new_pos.ptr));
  /* Create the single-character string. */
  SWITCH_SIZEOF_WIDTH(self->si_width) {
  CASE_WIDTH_1BYTE: result = DeeString_Chr(*pos.cp8); break;
@@ -943,12 +944,10 @@ stringiter_init(StringIterator *__restrict self,
      return -1;
  self->si_string = str;
  Dee_Incref(str);
- self->si_width = DeeString_WIDTH(str);
- self->si_iter.ptr = self->si_width == STRING_WIDTH_1BYTE
-                   ? (void *)DeeString_STR(str)
-                   : (void *)str->s_data->u_data[self->si_width];
- self->si_end.ptr  = (void *)((uintptr_t)self->si_iter.ptr+
-                               WSTR_LENGTH(self->si_iter.ptr)*
+ self->si_width    = DeeString_WIDTH(str);
+ self->si_iter.ptr = DeeString_WSTR(str);
+ self->si_end.ptr  = (void *)((uintptr_t)self->si_iter.ptr +
+                               WSTR_LENGTH(self->si_iter.ptr) *
                                STRING_SIZEOF_WIDTH(self->si_width));
  return 0;
 }
@@ -1076,19 +1075,17 @@ INTERN DeeTypeObject StringIterator_Type = {
 
 
 PRIVATE DREF DeeObject *DCALL
-stringiter_self(String *__restrict self) {
+string_iter(String *__restrict self) {
  DREF StringIterator *result;
  result = (DREF StringIterator *)DeeObject_Malloc(sizeof(StringIterator));
  if unlikely(!result) return NULL;
  DeeObject_Init(result,&StringIterator_Type);
  result->si_string = self;
  Dee_Incref(self);
- result->si_width = DeeString_WIDTH(self);
- result->si_iter.ptr = result->si_width == STRING_WIDTH_1BYTE
-                     ? (void *)DeeString_STR(self)
-                     : (void *)self->s_data->u_data[result->si_width];
- result->si_end.ptr  = (void *)((uintptr_t)result->si_iter.ptr+
-                                 WSTR_LENGTH(result->si_iter.ptr)*
+ result->si_width    = DeeString_WIDTH(self);
+ result->si_iter.ptr = DeeString_WSTR(self);
+ result->si_end.ptr  = (void *)((uintptr_t)result->si_iter.ptr +
+                                 WSTR_LENGTH(result->si_iter.ptr) *
                                  STRING_SIZEOF_WIDTH(result->si_width));
  return (DREF DeeObject *)result;
 }
@@ -1203,7 +1200,7 @@ PRIVATE struct type_nsi string_nsi = {
 };
 
 PRIVATE struct type_seq string_seq = {
-    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringiter_self,
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_iter,
     /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_size,
     /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&string_contains,
     /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&string_get,
