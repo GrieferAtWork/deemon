@@ -9977,30 +9977,104 @@ nope:
  return false;
 }
 
+LOCAL uint16_t *DCALL
+memmemwb(uint16_t const *__restrict haystack, size_t haystack_length,
+         uint8_t const *__restrict needle, size_t needle_length) {
+ uint16_t *candidate; uint8_t marker;
+ if unlikely(!needle_length || needle_length > haystack_length)
+    return NULL;
+ haystack_length -= needle_length-1,marker = *(uint8_t *)needle;
+ while ((candidate = memchrw(haystack,marker,haystack_length)) != NULL) {
+  size_t i;
+  for (i = 1; i < needle_length; ++i) {
+   if (candidate[i] != (uint16_t)needle[i])
+       goto next_candidate;
+  }
+  return candidate;
+next_candidate:
+  ++candidate;
+  haystack_length = (haystack + haystack_length) - candidate;
+  haystack        = candidate;
+ }
+ return NULL;
+}
+LOCAL uint32_t *DCALL
+memmemlb(uint32_t const *__restrict haystack, size_t haystack_length,
+         uint8_t const *__restrict needle, size_t needle_length) {
+ uint32_t *candidate; uint8_t marker;
+ if unlikely(!needle_length || needle_length > haystack_length)
+    return NULL;
+ haystack_length -= needle_length-1,marker = *(uint8_t *)needle;
+ while ((candidate = memchrl(haystack,marker,haystack_length)) != NULL) {
+  size_t i;
+  for (i = 1; i < needle_length; ++i) {
+   if (candidate[i] != (uint32_t)needle[i])
+       goto next_candidate;
+  }
+  return candidate;
+next_candidate:
+  ++candidate;
+  haystack_length = (haystack + haystack_length) - candidate;
+  haystack        = candidate;
+ }
+ return NULL;
+}
+
 
 INTERN DREF DeeObject *DCALL
 string_contains(String *__restrict self,
                 DeeObject *__restrict some_object) {
- void *me,*other,*ptr; int width;
- if (DeeObject_AssertTypeExact(some_object,&DeeString_Type))
-     return NULL;
- /* Search for an occurrence of `some_object' */
- width   = DeeString_WIDTH(self);
- me    = DeeString_WSTR(self);
- other = DeeString_AsWidth(some_object,width);
- if unlikely(!other) return NULL;
- SWITCH_SIZEOF_WIDTH(width) {
- default:
-  ptr = memmemb((uint8_t *)me,WSTR_LENGTH(me),(uint8_t *)other,WSTR_LENGTH(other));
-  break;
- CASE_WIDTH_2BYTE:
-  ptr = memmemw((uint16_t *)me,WSTR_LENGTH(me),(uint16_t *)other,WSTR_LENGTH(other));
-  break;
- CASE_WIDTH_4BYTE:
-  ptr = memmeml((uint32_t *)me,WSTR_LENGTH(me),(uint32_t *)other,WSTR_LENGTH(other));
-  break;
+ union dcharptr str,other,ptr;
+ if (DeeBytes_Check(some_object)) {
+  size_t other_len = DeeBytes_SIZE(some_object);
+  other.cp8 = DeeBytes_DATA(some_object);
+  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+  CASE_WIDTH_1BYTE:
+   str.cp8 = DeeString_Get1Byte((DeeObject *)self);
+   ptr.cp8 = memmemb(str.cp16,WSTR_LENGTH(str.cp16),other.cp8,other_len);
+   break;
+  CASE_WIDTH_2BYTE:
+   str.cp16 = DeeString_Get2Byte((DeeObject *)self);
+   ptr.cp16 = memmemwb(str.cp16,WSTR_LENGTH(str.cp16),other.cp8,other_len);
+   break;
+  CASE_WIDTH_4BYTE:
+   str.cp32 = DeeString_Get4Byte((DeeObject *)self);
+   ptr.cp32 = memmemlb(str.cp32,WSTR_LENGTH(str.cp32),other.cp8,other_len);
+   break;
+  }
+ } else {
+  if (DeeObject_AssertTypeExact(some_object,&DeeString_Type))
+      goto err;
+  /* Search for an occurrence of `some_object' */
+  SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
+                                          DeeString_WIDTH(some_object))) {
+  CASE_WIDTH_1BYTE:
+   str.cp8   = DeeString_As1Byte((DeeObject *)self);
+   other.cp8 = DeeString_As1Byte((DeeObject *)some_object);
+   ptr.cp8   = memmemb(str.cp8,WSTR_LENGTH(str.cp8),
+                       other.cp8,WSTR_LENGTH(other.cp8));
+   break;
+  CASE_WIDTH_2BYTE:
+   str.cp16   = DeeString_As2Byte((DeeObject *)self);
+   if unlikely(!str.cp16) goto err;
+   other.cp16 = DeeString_As2Byte((DeeObject *)some_object);
+   if unlikely(!other.cp16) goto err;
+   ptr.cp16   = memmemw(str.cp16,WSTR_LENGTH(str.cp16),
+                        other.cp16,WSTR_LENGTH(other.cp16));
+   break;
+  CASE_WIDTH_4BYTE:
+   str.cp32   = DeeString_As4Byte((DeeObject *)self);
+   if unlikely(!str.cp32) goto err;
+   other.cp32 = DeeString_As4Byte((DeeObject *)some_object);
+   if unlikely(!other.cp32) goto err;
+   ptr.cp32   = memmeml(str.cp32,WSTR_LENGTH(str.cp32),
+                        other.cp32,WSTR_LENGTH(other.cp32));
+   break;
+  }
  }
- return_bool_(ptr != NULL);
+ return_bool_(ptr.ptr != NULL);
+err:
+ return NULL;
 }
 
 

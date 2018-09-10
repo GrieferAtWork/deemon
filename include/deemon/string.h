@@ -441,14 +441,10 @@ PUBLIC void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
 /* Return the given string's character as a byte-array.
  * Characters above 0xFF either cause `NULL' to be returned, alongside a
  * ValueError being thrown, or cause them to be replaced with '?'.
- * NOTE: This function differs from `DeeString_STR()' (or `DeeString_AsWidth(,STRING_WIDTH_1BYTE)'),
- *       which leaves the encoding of its return value undefined (as either LATIN-1, or UTF-8),
- *       and is the LATIN-1 counterpart of `DeeString_AsUtf8()', used to enforce a certain type of
- *       encoding.
  * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
  *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
  * @return: NULL: An error occurred. */
-DFUNDEF uint8_t *DCALL DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid);
+DFUNDEF /*latin-1*/uint8_t *DCALL DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid);
 #define DeeString_AsLatin1(self,allow_invalid)  DeeString_AsBytes(self,allow_invalid)
 
 /* Return the characters of the given string `self', encoded with a width of `width'

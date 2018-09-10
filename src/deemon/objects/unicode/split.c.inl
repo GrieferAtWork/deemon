@@ -320,16 +320,32 @@ split_doiter(StringSplit *__restrict self,
  DREF StringSplitIterator *result;
  result = DeeObject_MALLOC(StringSplitIterator);
  if unlikely(!result) goto done;
- result->s_width = DeeString_WIDTH(self->s_str);
- result->s_begin = (uint8_t *)DeeString_WSTR(self->s_str);
- result->s_next  = result->s_begin;
- result->s_end   = (uint8_t *)DeeString_WEND(self->s_str);
+ result->s_width = STRING_WIDTH_COMMON(DeeString_WIDTH(self->s_str),
+                                       DeeString_WIDTH(self->s_sep));
+ SWITCH_SIZEOF_WIDTH(result->s_width) {
+ CASE_WIDTH_1BYTE:
+  result->s_begin = DeeString_As1Byte((DeeObject *)self->s_str);
+  result->s_end   = result->s_begin + WSTR_LENGTH(result->s_begin);
+  result->s_sep   = DeeString_As1Byte((DeeObject *)self->s_sep);
+  break;
+ CASE_WIDTH_2BYTE:
+  result->s_begin = (uint8_t *)DeeString_As2Byte((DeeObject *)self->s_str);
+  if unlikely(!result->s_begin) goto err_r;
+  result->s_end   = result->s_begin + WSTR_LENGTH(result->s_begin) * 2;
+  result->s_sep   = (uint8_t *)DeeString_As2Byte((DeeObject *)self->s_sep);
+  if unlikely(!result->s_sep) goto err_r;
+  break;
+ CASE_WIDTH_4BYTE:
+  result->s_begin = (uint8_t *)DeeString_As4Byte((DeeObject *)self->s_str);
+  if unlikely(!result->s_begin) goto err_r;
+  result->s_end   = result->s_begin + WSTR_LENGTH(result->s_begin) * 4;
+  result->s_sep   = (uint8_t *)DeeString_As4Byte((DeeObject *)self->s_sep);
+  if unlikely(!result->s_sep) goto err_r;
+  break;
+ }
+ result->s_next = result->s_begin;
  if (result->s_next == result->s_end)
      result->s_next = NULL;
- /* Load the seperator with the same width as the base string. */
- /* TODO: Use common width */
- result->s_sep   = (uint8_t *)DeeString_AsWidth((DeeObject *)self->s_sep,result->s_width);
- if unlikely(!result->s_sep) goto err_r;
  result->s_sepsz = WSTR_LENGTH(result->s_sep);
  /* Finalize the split iterator and return it. */
  Dee_Incref(self);
