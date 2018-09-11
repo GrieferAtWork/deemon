@@ -23,6 +23,7 @@
 #include "libctypes.h"
 #include <deemon/none.h>
 #include <deemon/bool.h>
+#include <deemon/bytes.h>
 #include <deemon/int.h>
 #include <deemon/gc.h>
 #include <deemon/arg.h>
@@ -127,6 +128,10 @@ pointer_init(DeePointerTypeObject *__restrict tp_self,
   }
   /* Default case: interpret the UTF-8/byte representation. */
   value.pchar = DeeString_STR(arg);
+  goto done;
+ }
+ if (DeeBytes_Check(arg)) {
+  value.ptr = DeeBytes_DATA(arg);
   goto done;
  }
  /* Fallback: cast to integer. */

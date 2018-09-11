@@ -25,7 +25,7 @@
 #include <deemon/error.h>
 #include <deemon/gc.h>
 #include <deemon/float.h>
-#include <deemon/string.h>
+#include <deemon/bytes.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>
 #include <deemon/string.h>

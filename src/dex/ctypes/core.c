@@ -24,6 +24,7 @@
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/float.h>
+#include <deemon/bytes.h>
 #include <deemon/int.h>
 #include <deemon/arg.h>
 #include <deemon/gc.h>
@@ -117,6 +118,15 @@ null_pointer:
   if (pointer_base == &DeeCChar32_Type) {
    result->ptr = DeeString_AsUtf32(self);
    if unlikely(!result->ptr) goto err;
+   return 0;
+  }
+ }
+ if (DeeBytes_Check(self)) {
+  if (pointer_base == &DeeCVoid_Type ||
+      pointer_base == &DeeCChar_Type ||
+      pointer_base == &DeeCInt8_Type ||
+      pointer_base == &DeeCUInt8_Type) {
+   result->ptr = DeeBytes_DATA(self);
    return 0;
   }
  }

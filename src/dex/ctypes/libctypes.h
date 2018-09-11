@@ -239,7 +239,7 @@ INTDEF DeeTypeObject DeeSType_Type;
 INTDEF DeeTypeObject DeePointerType_Type;
 INTDEF DeeTypeObject DeeLValueType_Type;
 #define DeePointerType_Check(ob) DeeObject_InstanceOfExact((DeeObject *)(ob),&DeePointerType_Type) /* `pointer_type' is final. */
-#define DeeLValueType_Check(ob)  DeeObject_InstanceOfExact((DeeObject *)(ob),&DeePointerType_Type) /* `lvalue_type' is final. */
+#define DeeLValueType_Check(ob)  DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeLValueType_Type)  /* `lvalue_type' is final. */
 
 /* Return (and create if missing) the pointer/l-value
  * type associated with a given structured type. */
