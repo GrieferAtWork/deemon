@@ -642,6 +642,53 @@ instance_destructor(DeeObject *__restrict self) {
           (*(func))(self,argc,argv,kw))
 
 
+INTERN int DCALL
+type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
+                             DeeObject *__restrict self, size_t argc,
+                             DeeObject **__restrict argv, DeeObject *kw) {
+ ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
+ if (kw) {
+  if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
+   int (DCALL *func)(DeeObject *__restrict,size_t,DeeObject **__restrict,DeeObject *);
+   func = tp_self->tp_init.tp_alloc.tp_any_ctor_kw;
+   return DeeType_INVOKE_ANY_CTOR_KW(func,tp_self,self,argc,argv,kw);
+  }
+  if (DeeKwds_Check(kw)) {
+   if (DeeKwds_SIZE(kw) != 0)
+       goto err_no_keywords;
+  } else {
+   size_t kw_size = DeeObject_Size(kw);
+   if unlikely(kw_size == (size_t)-1)
+      goto err;
+   if (kw_size != 0)
+       goto err_no_keywords;
+  }
+ }
+ if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
+  int (DCALL *func)(DeeObject *__restrict,size_t,DeeObject **__restrict);
+  func = tp_self->tp_init.tp_alloc.tp_any_ctor;
+  return DeeType_INVOKE_ANY_CTOR(func,tp_self,self,argc,argv);
+ }
+ if (tp_self->tp_init.tp_alloc.tp_ctor && !argc) {
+  int (DCALL *func)(DeeObject *__restrict);
+  func = tp_self->tp_init.tp_alloc.tp_ctor;
+  return DeeType_INVOKE_CTOR(func,tp_self,self);
+ }
+ if (tp_self->tp_init.tp_alloc.tp_copy_ctor &&
+    (argc == 1 && DeeObject_InstanceOf(argv[0],tp_self))) {
+  int (DCALL *func)(DeeObject *__restrict,DeeObject *__restrict);
+  func = tp_self->tp_init.tp_alloc.tp_copy_ctor;
+  return DeeType_INVOKE_COPY(func,tp_self,self,argv[0]);
+ }
+ return err_unimplemented_constructor(tp_self,argc,argv);
+err_no_keywords:
+ return err_keywords_ctor_not_accepted(tp_self,kw);
+err:
+ return -1;
+}
+
+
+
 PRIVATE int DCALL
 instance_initsuper_as_copy(DeeTypeObject *__restrict tp_super,
                            DeeObject *__restrict self,

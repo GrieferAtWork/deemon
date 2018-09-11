@@ -24,6 +24,7 @@
 #include <deemon/object.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/seq.h>
 #include <deemon/file.h>
 #include <deemon/arg.h>
 #include <deemon/tuple.h>
@@ -33,6 +34,7 @@
 #include <deemon/bool.h>
 #include <deemon/none.h>
 #include <deemon/super.h>
+#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 #include <hybrid/typecore.h>
@@ -1608,15 +1610,544 @@ type_baseof(DeeTypeObject *__restrict self, size_t argc,
  return_bool(DeeType_IsInherited(other,self));
 }
 
+
+PRIVATE ATTR_COLD int DCALL
+err_init_var_type(DeeTypeObject *__restrict self) {
+ return DeeError_Throwf(&DeeError_TypeError,
+                        "Cannot instantiate variable-length type %k",
+                        self);
+}
+
+PRIVATE ATTR_COLD int DCALL
+err_missing_mandatory_init(DeeTypeObject *__restrict self) {
+ return DeeError_Throwf(&DeeError_TypeError,
+                        "Missing initializer for mandatory base-type %k",
+                        self);
+}
+
+PRIVATE char const str_shared_ctor_failed[] = "Constructor of shared object failed\n";
+INTDEF void DCALL
+instance_clear_members(struct instance_desc *__restrict self, uint16_t size);
+
+PRIVATE DREF DeeObject *DCALL
+type_new_raw(DeeTypeObject *__restrict self) {
+ DREF DeeObject *result;
+ DeeTypeObject *first_base;
+ if unlikely(self->tp_flags & TP_FVARIABLE) {
+  err_init_var_type(self);
+  goto err;
+ }
+ if (self->tp_init.tp_alloc.tp_free) {
+  result = (DREF DeeObject *)(*self->tp_init.tp_alloc.tp_alloc)();
+ } else if (self->tp_flags & TP_FGC) {
+  result = (DREF DeeObject *)DeeGCObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
+ } else {
+  result = (DREF DeeObject *)DeeObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
+ }
+ if unlikely(!result) goto err;
+ DeeObject_Init(result,self);
+ /* Search for the first non-class base. */
+ first_base = self;
+ while (DeeType_IsClass(first_base)) {
+  struct class_desc *desc = DeeClass_DESC(first_base);
+  struct instance_desc *instance = DeeInstance_DESC(desc,result);
+  rwlock_init(&instance->id_lock);
+  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
+  first_base = DeeType_Base(first_base);
+  if (!first_base) break;
+ }
+ /* Instantiate non-base types. */
+ if (!first_base || first_base == &DeeObject_Type) goto done;
+ if (first_base->tp_init.tp_alloc.tp_ctor) {
+  /* Invoke the mandatory base-type constructor. */
+invoke_base_ctor:
+  if unlikely((*first_base->tp_init.tp_alloc.tp_ctor)(result))
+     goto err_r;
+  goto done;
+ }
+ if (first_base->tp_init.tp_alloc.tp_any_ctor) {
+  /* Invoke the mandatory base-type constructor. */
+invoke_base_any_ctor:
+  if unlikely((*first_base->tp_init.tp_alloc.tp_any_ctor)(result,0,NULL))
+     goto err_r;
+  goto done;
+ }
+ if (first_base->tp_init.tp_alloc.tp_any_ctor_kw) {
+  /* Invoke the mandatory base-type constructor. */
+invoke_base_any_ctor_kw:
+  if unlikely((*first_base->tp_init.tp_alloc.tp_any_ctor_kw)(result,0,NULL,NULL))
+     goto err_r;
+  goto done;
+ }
+ if (type_inherit_constructors(first_base)) {
+  if (first_base->tp_init.tp_alloc.tp_ctor)
+      goto invoke_base_ctor;
+  if (first_base->tp_init.tp_alloc.tp_any_ctor)
+      goto invoke_base_any_ctor;
+  if (first_base->tp_init.tp_alloc.tp_any_ctor_kw)
+      goto invoke_base_any_ctor_kw;
+ }
+ err_missing_mandatory_init(first_base);
+ goto err_r;
+done:
+ if (self->tp_flags & TP_FGC)
+     DeeGC_Track(result);
+ return result;
+err_r:
+ if (!DeeObject_UndoConstruction(first_base,result)) {
+  DeeError_Print(str_shared_ctor_failed,ERROR_PRINT_DOHANDLE);
+  return result;
+ }
+ first_base = self;
+ while (DeeType_IsClass(first_base)) {
+  struct class_desc *desc = DeeClass_DESC(first_base);
+  struct instance_desc *instance = DeeInstance_DESC(desc,result);
+  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
+  first_base = DeeType_Base(first_base);
+  if (!first_base) break;
+ }
+ Dee_DecrefNokill(self);
+ if (self->tp_init.tp_alloc.tp_free) {
+  (*self->tp_init.tp_alloc.tp_free)(result);
+ } else if (self->tp_flags & TP_FGC) {
+  DeeGCObject_Free(result);
+ } else {
+  DeeObject_Free(result);
+ }
+err:
+ return NULL;
+}
+
+PRIVATE int DCALL
+set_basic_member(DeeTypeObject *__restrict tp_self,
+                 DeeObject *__restrict self,
+                 DeeStringObject *__restrict member_name,
+                 DeeObject *__restrict value) {
+ int temp; DeeTypeObject *iter = tp_self;
+ char const *attr_name = DeeString_STR(member_name);
+ dhash_t attr_hash = DeeString_Hash((DeeObject *)member_name);
+ temp = membercache_setbasicattr(&tp_self->tp_cache,self,attr_name,attr_hash,value);
+ if (temp <= 0) goto done_temp;
+ do {
+  if (DeeType_IsClass(iter)) {
+   struct class_attribute *attr;
+   struct instance_desc *instance;
+   struct class_desc *desc = DeeClass_DESC(iter);
+   DREF DeeObject *old_value;
+   attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
+                                                            attr_name,
+                                                            attr_hash);
+   if (!attr) goto next_base;
+   if (attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM |
+                        CLASS_ATTRIBUTE_FGETSET))
+       goto next_base;
+   instance = DeeInstance_DESC(desc,self);
+   Dee_Incref(value);
+   rwlock_write(&instance->id_lock);
+   old_value = instance->id_vtab[attr->ca_addr];
+   instance->id_vtab[attr->ca_addr] = value;
+   rwlock_endwrite(&instance->id_lock);
+   if unlikely(old_value)
+      Dee_Decref(old_value);
+   return 0;
+  }
+  if (iter->tp_members &&
+     (temp = type_member_setattr(&tp_self->tp_cache,iter->tp_members,self,attr_name,attr_hash,value)) <= 0)
+      goto done_temp;
+next_base:
+  ;
+ } while ((iter = DeeType_Base(iter)) != NULL);
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Could not find member %k in %k, or its bases",
+                        member_name,tp_self);
+done_temp:
+ return temp;
+}
+
+PRIVATE int DCALL
+set_private_basic_member(DeeTypeObject *__restrict tp_self,
+                         DeeObject *__restrict self,
+                         DeeStringObject *__restrict member_name,
+                         DeeObject *__restrict value) {
+ int temp; DeeTypeObject *iter = tp_self;
+ char const *attr_name = DeeString_STR(member_name);
+ dhash_t attr_hash = DeeString_Hash((DeeObject *)member_name);
+ if (DeeType_IsClass(iter)) {
+  struct class_attribute *attr;
+  struct instance_desc *instance;
+  struct class_desc *desc = DeeClass_DESC(iter);
+  DREF DeeObject *old_value;
+  attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
+                                                           attr_name,
+                                                           attr_hash);
+  if (!attr) goto not_found;
+  if (attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM |
+                       CLASS_ATTRIBUTE_FGETSET))
+      goto not_found;
+  instance = DeeInstance_DESC(desc,self);
+  Dee_Incref(value);
+  rwlock_write(&instance->id_lock);
+  old_value = instance->id_vtab[attr->ca_addr];
+  instance->id_vtab[attr->ca_addr] = value;
+  rwlock_endwrite(&instance->id_lock);
+  if unlikely(old_value)
+     Dee_Decref(old_value);
+  return 0;
+ }
+ if (iter->tp_members &&
+    (temp = type_member_setattr(&tp_self->tp_cache,iter->tp_members,self,attr_name,attr_hash,value)) <= 0)
+     goto done_temp;
+not_found:
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Could not find member %k in %k",
+                        member_name,tp_self);
+done_temp:
+ return temp;
+}
+
+PRIVATE int DCALL
+unpack_init_info(DeeObject *__restrict info,
+                 DREF DeeObject **__restrict pinit_fields,
+                 DREF DeeObject **__restrict pinit_args,
+                 DREF DeeObject **__restrict pinit_kw) {
+ DREF DeeObject *iterator;
+ DREF DeeObject *sentinal;
+ if likely(DeeTuple_Check(info)) {
+  switch (DeeTuple_SIZE(info)) {
+  case 1:
+   *pinit_fields = DeeTuple_GET(info,0);
+   if (DeeNone_Check(*pinit_fields))
+       *pinit_fields = NULL;
+   *pinit_args = Dee_EmptyTuple;
+   *pinit_kw   = NULL;
+   break;
+  case 2:
+   *pinit_fields = DeeTuple_GET(info,0);
+   *pinit_args   = DeeTuple_GET(info,1);
+   if (DeeNone_Check(*pinit_fields))
+       *pinit_fields = NULL;
+   if (DeeNone_Check(*pinit_args))
+       *pinit_args = Dee_EmptyTuple;
+   *pinit_kw   = NULL;
+   break;
+  case 3:
+   *pinit_fields = DeeTuple_GET(info,0);
+   *pinit_args   = DeeTuple_GET(info,1);
+   *pinit_kw     = DeeTuple_GET(info,2);
+   if (DeeNone_Check(*pinit_fields))
+       *pinit_fields = NULL;
+   if (DeeNone_Check(*pinit_args))
+       *pinit_args = Dee_EmptyTuple;
+   if (DeeNone_Check(*pinit_kw))
+       *pinit_kw = NULL;
+   break;
+  default:
+   return err_invalid_unpack_size_minmax(info,1,3,DeeTuple_SIZE(info));
+  }
+  if (DeeObject_AssertTypeExact(*pinit_args,&DeeTuple_Type))
+      goto err;
+  Dee_XIncref(*pinit_fields);
+  Dee_Incref(*pinit_args);
+  Dee_XIncref(*pinit_kw);
+ } else {
+  size_t fast_size;
+  /* Use the fast-sequence iterface. */
+  fast_size = DeeFastSeq_GetSize(info);
+  if (fast_size != DEE_FASTSEQ_NOTFAST) {
+   if (fast_size == 1) {
+    *pinit_fields = DeeFastSeq_GetItem(info,0);
+    if unlikely(!*pinit_fields) goto err;
+    *pinit_args = Dee_EmptyTuple;
+    Dee_Incref(Dee_EmptyTuple);
+    goto done_iterator_data;
+   }
+   if (fast_size == 2) {
+    *pinit_fields = DeeFastSeq_GetItem(info,0);
+    if unlikely(!*pinit_fields) goto err;
+    *pinit_args   = DeeFastSeq_GetItem(info,1);
+    if unlikely(!*pinit_args) goto err_fields;
+    goto done_iterator_data;
+   }
+   if (fast_size == 3) {
+    *pinit_fields = DeeFastSeq_GetItem(info,0);
+    if unlikely(!*pinit_fields) goto err;
+    *pinit_args   = DeeFastSeq_GetItem(info,1);
+    if unlikely(!*pinit_args) goto err_fields;
+    *pinit_kw     = DeeFastSeq_GetItem(info,2);
+    if unlikely(!*pinit_kw) goto err_args;
+    goto done_iterator_data;
+   }
+   return err_invalid_unpack_size_minmax(info,1,3,fast_size);
+  }
+  /* Fallback: use iteartors. */
+  iterator = DeeObject_IterSelf(info);
+  if unlikely(!iterator) goto err;
+  *pinit_fields = DeeObject_IterNext(iterator);
+  if unlikely(!ITER_ISOK(*pinit_fields)) {
+   if (*pinit_fields)
+       err_invalid_unpack_size_minmax(info,1,3,0);
+   Dee_Decref(iterator);
+   goto err;
+  }
+  *pinit_args = DeeObject_IterNext(iterator);
+  if (*pinit_args == ITER_DONE) {
+   *pinit_args = Dee_EmptyTuple;
+   *pinit_kw = NULL;
+   Dee_Incref(Dee_EmptyTuple);
+   goto done_iterator;
+  }
+  if unlikely(!*pinit_args) {
+   Dee_Decref(iterator);
+   goto err_fields;
+  }
+  *pinit_kw = DeeObject_IterNext(iterator);
+  if (*pinit_kw == ITER_DONE)
+      *pinit_kw = NULL;
+  else if (!*pinit_kw) {
+   Dee_Decref(iterator);
+   goto err_args;
+  }
+  sentinal = DeeObject_IterNext(iterator);
+  if unlikely(sentinal != ITER_DONE) {
+   if (sentinal) {
+    Dee_Decref(sentinal);
+    err_invalid_unpack_iter_size_minmax(info,iterator,1,3);
+   }
+   Dee_XDecref(*pinit_kw);
+   Dee_Decref(iterator);
+   goto err_args;
+  }
+done_iterator:
+  Dee_Decref(iterator);
+done_iterator_data:
+  if (DeeNone_Check(*pinit_fields))
+      Dee_Clear(*pinit_fields);
+  if (DeeNone_Check(*pinit_args)) {
+   Dee_Decref(Dee_None);
+   *pinit_args = Dee_EmptyTuple;
+   Dee_Incref(Dee_EmptyTuple);
+  } else {
+   if (DeeObject_AssertTypeExact(*pinit_args,&DeeTuple_Type))
+       goto err_kw;
+  }
+  if (*pinit_kw && DeeNone_Check(*pinit_kw))
+      Dee_Clear(*pinit_kw);
+ }
+ return 0;
+err_kw:
+ Dee_XDecref(*pinit_kw);
+err_args:
+ Dee_Decref(*pinit_args);
+err_fields:
+ Dee_XDecref(*pinit_fields);
+err:
+ return -1;
+}
+
+PRIVATE DREF DeeObject *DCALL
+unpack_init_info1(DeeObject *__restrict info) {
+ DREF DeeObject *init_fields;
+ DREF DeeObject *init_argv;
+ DREF DeeObject *init_kw;
+ if unlikely(unpack_init_info(info,&init_fields,&init_argv,&init_kw))
+    return NULL;
+ Dee_XDecref(init_kw);
+ Dee_Decref(init_argv);
+ if (!init_fields)
+      init_fields = ITER_DONE;
+ return init_fields;
+}
+
+INTDEF int DCALL
+type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
+                             DeeObject *__restrict self, size_t argc,
+                             DeeObject **__restrict argv, DeeObject *kw);
+
+PRIVATE int DCALL
+assign_init_fields(DeeTypeObject *__restrict tp_self,
+                   DeeObject *__restrict self,
+                   DeeObject *__restrict fields) {
+ DREF DeeObject *iterator,*elem; int temp;
+ DREF DeeObject *key_and_value[2];
+ iterator = DeeObject_IterSelf(fields);
+ if unlikely(!iterator) goto err;
+ while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+  temp = DeeObject_Unpack(elem,2,key_and_value);
+  Dee_Decref(elem);
+  if unlikely(temp) goto err_iterator;
+  temp = DeeObject_AssertTypeExact(key_and_value[0],&DeeString_Type);
+  if likely(!temp)
+     temp = set_basic_member(tp_self,self,(DeeStringObject *)key_and_value[0],key_and_value[1]);
+  Dee_Decref(key_and_value[1]);
+  Dee_Decref(key_and_value[0]);
+  if unlikely(temp) goto err_iterator;
+ }
+ if unlikely(!elem) goto err_iterator;
+ Dee_Decref(iterator);
+ return 0;
+err_iterator:
+ Dee_Decref(iterator);
+err:
+ return -1;
+}
+
+PRIVATE DREF DeeObject *DCALL
+type_new_extended(DeeTypeObject *__restrict self,
+                  DeeObject *__restrict initializer) {
+ DREF DeeObject *result,*init_info; int temp;
+ DREF DeeObject *init_fields,*init_args,*init_kw;
+ DeeTypeObject *first_base,*iter;
+ if unlikely(self->tp_flags & TP_FVARIABLE) {
+  err_init_var_type(self);
+  goto err;
+ }
+ if (self->tp_init.tp_alloc.tp_free) {
+  result = (DREF DeeObject *)(*self->tp_init.tp_alloc.tp_alloc)();
+ } else if (self->tp_flags & TP_FGC) {
+  result = (DREF DeeObject *)DeeGCObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
+ } else {
+  result = (DREF DeeObject *)DeeObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
+ }
+ if unlikely(!result) goto err;
+ DeeObject_Init(result,self);
+ /* Search for the first non-class base. */
+ first_base = self;
+ while (DeeType_IsClass(first_base)) {
+  struct class_desc *desc = DeeClass_DESC(first_base);
+  struct instance_desc *instance = DeeInstance_DESC(desc,result);
+  rwlock_init(&instance->id_lock);
+  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
+  first_base = DeeType_Base(first_base);
+  if (!first_base) break;
+ }
+ /* Instantiate non-base types. */
+ if (!first_base || first_base == &DeeObject_Type) goto done_fields;
+ /* {(type,({(string,object)...},tuple))...} */
+ /* {(type,({(string,object)...},tuple,mapping))...} */
+ init_info = DeeObject_GetItemDef(initializer,(DeeObject *)first_base,Dee_None);
+ if unlikely(!init_info) goto err_r;
+ temp = unpack_init_info(init_info,&init_fields,&init_args,&init_kw);
+ Dee_Decref(init_info);
+ if unlikely(temp) goto err_r;
+ /* Invoke the mandatory base-type constructor. */
+ temp = type_invoke_base_constructor(first_base,result,
+                                     DeeTuple_SIZE(init_args),
+                                     DeeTuple_ELEM(init_args),
+                                     init_kw);
+ Dee_XDecref(init_kw);
+ Dee_Decref(init_args);
+ if likely(!temp && init_fields)
+    temp = assign_init_fields(first_base,result,init_fields);
+ Dee_XDecref(init_fields);
+ if unlikely(temp) goto err_r_firstbase;
+done_fields:
+ /* Fill in all of the fields of non-first-base types. */
+ iter = self;
+ do {
+  if (iter == first_base) continue;
+  init_info = DeeObject_GetItemDef(initializer,
+                                  (DeeObject *)iter,
+                                   Dee_None);
+  if unlikely(!init_info) goto err_r_firstbase;
+  if (DeeNone_Check(init_info)) { Dee_DecrefNokill(init_info); continue; }
+  init_fields = unpack_init_info1(init_info);
+  Dee_Decref(init_info);
+  if (init_fields == ITER_DONE) continue;
+  if unlikely(!init_fields) goto err_r_firstbase;
+  temp = assign_init_fields(iter,result,init_fields);
+  Dee_Decref(init_fields);
+  if unlikely(temp) goto err_r_firstbase;
+ } while ((iter = DeeType_Base(iter)) != NULL);
+
+ if (self->tp_flags & TP_FGC)
+     DeeGC_Track(result);
+ return result;
+err_r_firstbase:
+ if (!DeeObject_UndoConstruction(first_base,result)) {
+  DeeError_Print(str_shared_ctor_failed,ERROR_PRINT_DOHANDLE);
+  return result;
+ }
+err_r:
+ first_base = self;
+ while (DeeType_IsClass(first_base)) {
+  struct class_desc *desc = DeeClass_DESC(first_base);
+  struct instance_desc *instance = DeeInstance_DESC(desc,result);
+  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
+  first_base = DeeType_Base(first_base);
+  if (!first_base) break;
+ }
+ Dee_DecrefNokill(self);
+ if (self->tp_init.tp_alloc.tp_free) {
+  (*self->tp_init.tp_alloc.tp_free)(result);
+ } else if (self->tp_flags & TP_FGC) {
+  DeeGCObject_Free(result);
+ } else {
+  DeeObject_Free(result);
+ }
+err:
+ return NULL;
+}
+
 PRIVATE DREF DeeObject *DCALL
 type_newinstance(DeeTypeObject *__restrict self, size_t argc,
                  DeeObject **__restrict argv, DeeObject *kw) {
- (void)self;
- (void)argc;
- (void)argv;
- (void)kw;
- /* TODO */
- DERROR_NOTIMPLEMENTED();
+ DREF DeeObject *result;
+ DREF DeeObject *iterator,*elem;
+ if (self == &DeeNone_Type)
+     return_none; /* Allow `none' to be instantiated with whatever you throw at it! */
+ if (kw && (!DeeKwds_Check(kw) || DeeKwds_SIZE(kw) == argc)) {
+  /* Instantiate using keyword arguments. */
+  result = type_new_raw(self);
+  /* Fill in values for provided fields. */
+  if (DeeKwds_Check(kw)) {
+   size_t i;
+   DeeKwdsObject *kwds = (DeeKwdsObject *)kw;
+   for (i = 0; i <= kwds->kw_mask; ++i) {
+    if (!kwds->kw_map[i].ke_name) continue;
+    ASSERT(kwds->kw_map[i].ke_index <= argc);
+    if unlikely(set_private_basic_member(self,result,
+                                         kwds->kw_map[i].ke_name,
+                                         argv[kwds->kw_map[i].ke_index]))
+       goto err_r;
+   }
+  } else {
+   iterator = DeeObject_IterSelf(kw);
+   if unlikely(!iterator) goto err_r;
+   while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+    DREF DeeObject *name_and_value[2]; int temp;
+    temp = DeeObject_Unpack(elem,2,name_and_value);
+    Dee_Decref(elem);
+    if unlikely(temp) goto err_r_iterator;
+    temp = DeeObject_AssertTypeExact(name_and_value[0],&DeeString_Type);
+    if likely(!temp) {
+     temp = set_private_basic_member(self,result,
+                                    (DeeStringObject *)name_and_value[0],
+                                     name_and_value[1]);
+    }
+    Dee_Decref(name_and_value[1]);
+    Dee_Decref(name_and_value[0]);
+    if unlikely(temp) goto err_r_iterator;
+   }
+   if unlikely(!elem) goto err_r_iterator;
+   Dee_Decref(iterator);
+  }
+  return result;
+ }
+ /* Without any arguments, simply construct an
+  * empty instance (with all members unbound) */
+ if (!argc)
+     return type_new_raw(self);
+ if (argc != 1) {
+  err_invalid_argc("newinstance",argc,0,1);
+  goto err;
+ }
+ /* Extended constructors! */
+ return type_new_extended(self,argv[0]);
+err_r_iterator:
+ Dee_Decref_likely(iterator);
+err_r:
+ Dee_Decref_likely(result);
+err:
  return NULL;
 }
 
@@ -1834,19 +2365,6 @@ err:
 }
 
 PRIVATE struct type_method type_methods[] = {
-    /* TODO: Add some way of creating custom instances of user-defined classes:
-     *    >> class MyClass {
-     *    >>     private foo = 42;
-     *    >>     this() {
-     *    >>         print "Constructor",foo;
-     *    >>     }
-     *    >> }
-     *    >> // This will not invoke the constructor!
-     *    >> x = MyClass.newinstance({ "foo" : 7 });
-     *    >> print x is MyClass; // true
-     *    >> print x.foo;        // 7
-     *
-     */
     { "baseof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_baseof,
       DOC("(type other)->bool\n"
           "Returns :true if @this type is equal to, or a base of @other\n"
@@ -1864,9 +2382,14 @@ PRIVATE struct type_method type_methods[] = {
           ">local x = MyClass.newinstance(foo: 42);\n"
           ">print x.foo;\n"
           "\n"
+          "({(type,({(string,object)...},))...} initializer=none)->object\n"
           "({(type,({(string,object)...},none))...} initializer=none)->object\n"
           "({(type,({(string,object)...},tuple))...} initializer=none)->object\n"
+          "({(type,({(string,object)...},tuple,none))...} initializer=none)->object\n"
           "({(type,({(string,object)...},tuple,mapping))...} initializer=none)->object\n"
+          "({(type,(none,tuple))...} initializer=none)->object\n"
+          "({(type,(none,tuple,none))...} initializer=none)->object\n"
+          "({(type,(none,tuple,mapping))...} initializer=none)->object\n"
           "@throw TypeError No superargs tuple was provided for one of the type's bases, when that base "
                            "has a mandatory constructor that can't be invoked without any arguments. "
                            "Note that a user-defined class never has a mandatory constructor, with this "
@@ -1890,48 +2413,7 @@ PRIVATE struct type_method type_methods[] = {
           ">print repr x;          /* [10,20,30] */\n"
           ">print x.mylist_member; /* \"abc\" */\n"
           ">x.appendmember();\n"
-          ">print repr x;          /* [10,20,30,\"abc\"] */\n"
-          ),
-      TYPE_METHOD_FKWDS },
-    { meth_getinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_getinstanceattr,
-      DOC("(string name)->object\n"
-          "Lookup an attribute @name that is implemented by instances of @this type\n"
-          "Normally, such attributes can also be accessed using regular attribute lookup, "
-          "however in ambiguous cases where both the type, as well as instances implement "
-          "an attribute of the same name (s.a. :dict.c:keys vs. :dict.i:keys), using regular "
-          "attribute lookup on the type (as in ${dict.keys}) will always return the type-attribute, "
-          "rather than a wrapper around the instance attribute.\n"
-          "In such cases, this function may be used to explicitly lookup the instance variant:\n"
-          ">import dict from deemon;\n"
-          ">local dict_keys_function = dict.getinstanceattr(\"keys\");\n"
-          ">local my_dict_instance = dict();\n"
-          ">my_dict_instance[\"foo\"] = \"bar\";\n"
-          ">// Same as `my_dict_instance.keys()' -- { \"foo\" }\n"
-          ">print repr dict_keys_function(my_dict_instance);\n"
-          "Note that one minor exception exists to the default lookup rule, and it relates to how "
-          "attributes of :type itself are queried (such as in the expression ${(type_ from deemon).baseof}).\n"
-          "In this case, access is always made as an instance-bound, meaning that for this purpose, :type "
-          "is considered an instance of :type (typetype), rather than the type of :type (typetype) (I know that sounds complicated, "
-          "but without this rule, ${(type_ from deemon).baseof} would return a class method object taking 2 "
-          "arguments, rather than the intended single argument)\n"
-          "Also note that the `*instanceattr' functions will not check for types that have overwritten "
-          "one of the attribute-operators, but will continue search for matching attribute names, even "
-          "if those attributes would normally have been overshadowed by attribute callbacks"),
-      TYPE_METHOD_FKWDS },
-    { meth_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_callinstanceattr,
-      DOC("(string name,args...)->object\ns.a. #getinstanceattr"),
-      TYPE_METHOD_FKWDS },
-    { meth_hasinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasinstanceattr,
-      DOC("(string name)->bool\ns.a. #getinstanceattr"),
-      TYPE_METHOD_FKWDS },
-    { meth_boundinstanceattr+4, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_boundinstanceattr,
-      DOC("(string name,bool allow_missing=true)->bool\ns.a. #getinstanceattr"),
-      TYPE_METHOD_FKWDS },
-    { meth_delinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_delinstanceattr,
-      DOC("(string name)->none\ns.a. #getinstanceattr"),
-      TYPE_METHOD_FKWDS },
-    { meth_setinstanceattr+3, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_setinstanceattr,
-      DOC("(string name,object value)->object\ns.a. #getinstanceattr"),
+          ">print repr x;          /* [10,20,30,\"abc\"] */"),
       TYPE_METHOD_FKWDS },
     { "hasattribute", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasattribute,
       DOC("(string name)->bool\n"
@@ -1942,6 +2424,8 @@ PRIVATE struct type_method type_methods[] = {
           "> import attribute from deemon;\n"
           "> return attribute.exists(this,name,\"ic\",\"ic\")\n"
           ">}\n"
+          "Note that this function only searches instance-attributes, meaning that class/static "
+          "attributes/members such as :string.iterator are not matched, whereas something like :string.find is\n"
           "Note that this function is quite similar to #hasinstanceattr, however unlike "
           "that function, this function will stop searching the base-classes of @this type "
           "when one of that types implements one of the attribute operators."),
@@ -2043,6 +2527,46 @@ PRIVATE struct type_method type_methods[] = {
           "inherited operators are not included, with the exception of explicitly "
           "inherited constructors\n"
           "For a list of operator names, see #hasoperator"),
+      TYPE_METHOD_FKWDS },
+    { meth_getinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_getinstanceattr,
+      DOC("(string name)->object\n"
+          "Lookup an attribute @name that is implemented by instances of @this type\n"
+          "Normally, such attributes can also be accessed using regular attribute lookup, "
+          "however in ambiguous cases where both the type, as well as instances implement "
+          "an attribute of the same name (s.a. :dict.c:keys vs. :dict.i:keys), using regular "
+          "attribute lookup on the type (as in ${dict.keys}) will always return the type-attribute, "
+          "rather than a wrapper around the instance attribute.\n"
+          "In such cases, this function may be used to explicitly lookup the instance variant:\n"
+          ">import dict from deemon;\n"
+          ">local dict_keys_function = dict.getinstanceattr(\"keys\");\n"
+          ">local my_dict_instance = dict();\n"
+          ">my_dict_instance[\"foo\"] = \"bar\";\n"
+          ">// Same as `my_dict_instance.keys()' -- { \"foo\" }\n"
+          ">print repr dict_keys_function(my_dict_instance);\n"
+          "Note that one minor exception exists to the default lookup rule, and it relates to how "
+          "attributes of :type itself are queried (such as in the expression ${(type_ from deemon).baseof}).\n"
+          "In this case, access is always made as an instance-bound, meaning that for this purpose, :type "
+          "is considered an instance of :type (typetype), rather than the type of :type (typetype) (I know that sounds complicated, "
+          "but without this rule, ${(type_ from deemon).baseof} would return a class method object taking 2 "
+          "arguments, rather than the intended single argument)\n"
+          "Also note that the `*instanceattr' functions will not check for types that have overwritten "
+          "one of the attribute-operators, but will continue search for matching attribute names, even "
+          "if those attributes would normally have been overshadowed by attribute callbacks"),
+      TYPE_METHOD_FKWDS },
+    { meth_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_callinstanceattr,
+      DOC("(string name,args...)->object\ns.a. #getinstanceattr"),
+      TYPE_METHOD_FKWDS },
+    { meth_hasinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasinstanceattr,
+      DOC("(string name)->bool\ns.a. #getinstanceattr"),
+      TYPE_METHOD_FKWDS },
+    { meth_boundinstanceattr+4, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_boundinstanceattr,
+      DOC("(string name,bool allow_missing=true)->bool\ns.a. #getinstanceattr"),
+      TYPE_METHOD_FKWDS },
+    { meth_delinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_delinstanceattr,
+      DOC("(string name)->none\ns.a. #getinstanceattr"),
+      TYPE_METHOD_FKWDS },
+    { meth_setinstanceattr+3, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_setinstanceattr,
+      DOC("(string name,object value)->object\ns.a. #getinstanceattr"),
       TYPE_METHOD_FKWDS },
     { NULL }
 };

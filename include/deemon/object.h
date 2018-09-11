@@ -1607,6 +1607,11 @@ membercache_setattr(struct membercache *__restrict cache,
                     DeeObject *__restrict self,
                     char const *__restrict name, dhash_t hash,
                     DeeObject *__restrict value);
+INTDEF int DCALL
+membercache_setbasicattr(struct membercache *__restrict cache,
+                         DeeObject *__restrict self,
+                         char const *__restrict name, dhash_t hash,
+                         DeeObject *__restrict value);
 
 struct attribute_info;
 struct attribute_lookup_rules;

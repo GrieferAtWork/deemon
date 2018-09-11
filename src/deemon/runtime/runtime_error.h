@@ -64,10 +64,16 @@ INTDEF ATTR_COLD int DCALL err_invalid_argc_unpack(DeeObject *__restrict unpack_
                                                    size_t argc_cur, size_t argc_min, size_t argc_max);
 INTDEF ATTR_COLD int DCALL err_invalid_unpack_size(DeeObject *__restrict unpack_object,
                                                    size_t need_size, size_t real_size);
+INTDEF ATTR_COLD int DCALL err_invalid_unpack_size_minmax(DeeObject *__restrict unpack_object,
+                                                          size_t need_size_min, size_t need_size_max,
+                                                          size_t real_size);
 INTDEF ATTR_COLD int DCALL err_invalid_va_unpack_size(size_t need_size, size_t real_size);
 INTDEF ATTR_COLD int DCALL err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object,
                                                         DeeObject *__restrict unpack_iterator,
                                                         size_t need_size);
+INTDEF ATTR_COLD int DCALL err_invalid_unpack_iter_size_minmax(DeeObject *__restrict unpack_object,
+                                                               DeeObject *__restrict unpack_iterator,
+                                                               size_t need_size_min, size_t need_size_max);
 INTDEF ATTR_COLD int DCALL err_unbound_global(struct module_object *__restrict module, uint16_t global_index);
 INTDEF ATTR_COLD int DCALL err_unbound_local(struct code_object *__restrict code, void *__restrict ip, uint16_t local_index);
 INTDEF ATTR_COLD int DCALL err_illegal_instruction(struct code_object *__restrict code, void *__restrict ip);

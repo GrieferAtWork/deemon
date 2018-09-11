@@ -122,7 +122,7 @@ INTDEF DREF struct ast *FCALL ast_parse_postexpr(/*inherit(always)*/DREF struct 
 
 
 /* Given an `key'-expression in `{ key : foo }', parse the remainder
- * of a brace expression with the current token being a `:' */
+ * of a brace expression with the current token being the one after the `:' */
 INTDEF DREF struct ast *FCALL ast_parse_mapping(struct ast *__restrict initial_key);
 
 /* Given an `item'-expression in `{ item, foo }', parse the remainder

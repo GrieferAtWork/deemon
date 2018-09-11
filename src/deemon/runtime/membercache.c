@@ -696,6 +696,31 @@ done:
  return 1;
 }
 
+INTERN int DCALL
+membercache_setbasicattr(struct membercache *__restrict cache,
+                         DeeObject *__restrict self,
+                         char const *__restrict name, dhash_t hash,
+                         DeeObject *__restrict value) {
+ dhash_t i,perturb;
+ MEMBERCACHE_READ(cache);
+ if unlikely(!cache->mc_table) goto done;
+ perturb = i = MEMBERCACHE_HASHST(cache,hash);
+ for (;; i = MEMBERCACHE_HASHNX(i,perturb),MEMBERCACHE_HASHPT(perturb)) {
+  struct membercache_slot *item = MEMBERCACHE_HASHIT(cache,i);
+  struct buffer { uint8_t dat[COMPILER_OFFSETOF(struct type_member,m_doc)]; } buf;
+  if (item->mcs_type == MEMBERCACHE_UNUSED) break;
+  if (item->mcs_hash != hash) continue;
+  if (strcmp(item->mcs_name,name)) continue;
+  if (item->mcs_type != MEMBERCACHE_MEMBER) goto done;
+  buf = *(struct buffer *)&item->mcs_member;
+  MEMBERCACHE_ENDREAD(cache);
+  return type_member_set((struct type_member *)&buf,self,value);
+ }
+done:
+ MEMBERCACHE_ENDREAD(cache);
+ return 1;
+}
+
 
 INTERN DREF DeeObject *DCALL
 membercache_getinstanceattr(DeeTypeObject *__restrict self,
