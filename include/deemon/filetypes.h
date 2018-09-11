@@ -158,9 +158,9 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
                       uint16_t mode, size_t size);
 
 /* Synchronize unwritten data of all interactive TTY devices.
- * NOTE: The first time a TTY device is changed, this function
- *       is added to the `atexit()' chain unless deemon was
- *       built with the CONFIG_NO_STDLIB option enabled.
+ * NOTE: The first time a buffered TTY device is written to, this
+ *       function is added to the `atexit()' chain unless deemon
+ *       was built with the `CONFIG_NO_STDLIB' option enabled.
  * NOTE: This function can be called as `(file from deemon).buffer.sync()' */
 DFUNDEF int DCALL DeeFileBuffer_SyncTTYs(void);
 

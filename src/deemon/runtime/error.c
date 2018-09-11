@@ -89,6 +89,8 @@ DeeError_Display(char const *reason,
  error_str = (DeeStringObject *)DeeObject_Str(error);
  if unlikely(!error_str) goto handle_error;
  if (!reason) reason = "Unhandled exception\n";
+ /* TODO: Use a `dformatprinter' here, and stop relying on stdio!
+  *       Also: When printing string objects, print them as UTF-8! */
  DBG_ALIGNMENT_DISABLE();
  fwrite(reason,sizeof(char),strlen(reason),stderr);
  fprintf(stderr,">> %s: %s\n",Dee_TYPE(error)->tp_name,DeeString_STR(error_str));
