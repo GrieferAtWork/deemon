@@ -216,7 +216,7 @@ check_small_constargs_symbol:
      goto pop_unused;
 
     case SYMBOL_TYPE_LOCAL:
-     if (!SYMBOL_MUST_REFERENCE_TYPEMAY(funsym)) break;
+     if (SYMBOL_MUST_REFERENCE_TYPEMAY(funsym)) break;
      if unlikely((symid = asm_lsymid_for_read(funsym,func)) < 0) goto err;
      if unlikely(push_tuple_items(args->a_constexpr,args)) goto err;
      if (asm_putddi(ddi_ast)) goto err;
