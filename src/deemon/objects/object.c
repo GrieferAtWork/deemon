@@ -1913,7 +1913,10 @@ PRIVATE struct type_method type_methods[] = {
           "In this case, access is always made as an instance-bound, meaning that for this purpose, :type "
           "is considered an instance of :type (typetype), rather than the type of :type (typetype) (I know that sounds complicated, "
           "but without this rule, ${(type_ from deemon).baseof} would return a class method object taking 2 "
-          "arguments, rather than the intended single argument)"),
+          "arguments, rather than the intended single argument)\n"
+          "Also note that the `*instanceattr' functions will not check for types that have overwritten "
+          "one of the attribute-operators, but will continue search for matching attribute names, even "
+          "if those attributes would normally have been overshadowed by attribute callbacks"),
       TYPE_METHOD_FKWDS },
     { meth_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_callinstanceattr,
       DOC("(string name,args...)->object\ns.a. #getinstanceattr"),
@@ -1938,7 +1941,10 @@ PRIVATE struct type_method type_methods[] = {
           ">function hasattribute(name) {\n"
           "> import attribute from deemon;\n"
           "> return attribute.exists(this,name,\"ic\",\"ic\")\n"
-          ">}"),
+          ">}\n"
+          "Note that this function is quite similar to #hasinstanceattr, however unlike "
+          "that function, this function will stop searching the base-classes of @this type "
+          "when one of that types implements one of the attribute operators."),
       TYPE_METHOD_FKWDS },
     { "hasprivateattribute", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasprivateattribute,
       DOC("(string name)->bool\n"
