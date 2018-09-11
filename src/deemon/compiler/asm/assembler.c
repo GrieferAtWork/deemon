@@ -2235,7 +2235,8 @@ asm_newconst(DeeObject *__restrict constvalue) {
    if (Dee_TYPE(elem) == Dee_TYPE(constvalue)) {
     int error = DeeObject_CompareEq(elem,constvalue);
     if (error != 0) {
-     if unlikely(error < 0) return -1;
+     if unlikely(error < 0)
+        return -1;
      /* Got a match for an existing instance! */
      return (int32_t)(iter - current_assembler.a_constv);
     }

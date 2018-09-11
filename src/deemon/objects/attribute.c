@@ -532,7 +532,7 @@ PRIVATE struct type_method attr_class_methods[] = {
           "(ob,string name,string flagmask=\"\",string flagval=flagmask,decl?)->attribute\n"
           "(ob,string name,string flagmask=\"\",string flagval=flagmask,decl?)->none\n"
           "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
-          "Same as the constructor, but return :none if the attribute doesn't exist\n"
+          "Same as #op:constructor, but return :none if the attribute doesn't exist\n"
           ">static function lookup(ob,name,flagmask = \"\",flagval = \"\", decl?) {\n"
           "> import Error from deemon;\n"
           "> try {\n"

@@ -439,6 +439,7 @@ kwds_iter(Kwds *__restrict self) {
  result->ki_map  = self;
  Dee_Incref(self);
  DeeObject_Init(result,&DeeKwdsIterator_Type);
+ return result;
 done:
  return NULL;
 }
@@ -558,7 +559,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
     /* .tp_visit         = */NULL,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */NULL, /* TODO */
     /* .tp_seq           = */&kwds_seq,
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */NULL,
