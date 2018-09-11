@@ -393,10 +393,14 @@ DeeObject_GenericFindAttrString(DeeTypeObject *__restrict tp_self,
  ASSERT_OBJECT(tp_self);
  ASSERT(DeeType_Check(tp_self));
  cache = &tp_self->tp_cache;
+ if (rules->alr_decl && rules->alr_decl != (DeeObject *)tp_self)
+     goto next_base;
  if ((error = membercache_find(cache,(DeeObject *)tp_self,
                                ATTR_IMEMBER,
                                result,rules)) > 0) {
   do {
+   if (rules->alr_decl && rules->alr_decl != (DeeObject *)tp_self)
+       goto next_base;
    if (tp_self->tp_methods &&
       (error = type_method_find(cache,
                                (DeeObject *)tp_self,
@@ -418,6 +422,8 @@ DeeObject_GenericFindAttrString(DeeTypeObject *__restrict tp_self,
                                 ATTR_IMEMBER,
                                 result,rules)) <= 0)
        goto done;
+next_base:
+   ;
   } while ((tp_self = DeeType_Base(tp_self)) != NULL);
   return 1; /* Not Found */
  }
