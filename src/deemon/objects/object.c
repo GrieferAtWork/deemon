@@ -1719,6 +1719,31 @@ type_setinstanceattr(DeeTypeObject *__restrict self,
 }
 
 
+PRIVATE bool DCALL
+impl_type_hasprivateattribute(DeeTypeObject *__restrict self,
+                              char const *name_str,
+                              dhash_t name_hash) {
+ if (DeeType_IsClass(self)) {
+  struct class_desc *desc = DeeClass_DESC(self);
+  if (DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name_str,name_hash) != NULL)
+      goto found;
+ } else {
+  if (self->tp_methods &&
+      type_method_hasattr(&self->tp_cache,self->tp_methods,name_str,name_hash))
+      goto found;
+  if (self->tp_getsets &&
+      type_getset_hasattr(&self->tp_cache,self->tp_getsets,name_str,name_hash))
+      goto found;
+  if (self->tp_members &&
+      type_member_hasattr(&self->tp_cache,self->tp_members,name_str,name_hash))
+      goto found;
+ }
+ return 0;
+found:
+ return 1;
+}
+
+
 PRIVATE DREF DeeObject *DCALL
 type_hasattribute(DeeTypeObject *__restrict self,
                   size_t argc, DeeObject **__restrict argv,
@@ -1730,19 +1755,17 @@ type_hasattribute(DeeTypeObject *__restrict self,
      goto err;
  name_str  = DeeString_STR(name);
  name_hash = DeeString_Hash(name);
- if (DeeType_IsClass(self)) {
-  struct class_desc *desc = DeeClass_DESC(self);
-  return_bool(DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name_str,name_hash) != NULL);
+ if (!self->tp_attr) {
+  if (membercache_hasattr(&self->tp_cache,name_str,name_hash))
+      goto found;
+  for (;;) {
+   if (impl_type_hasprivateattribute(self,name_str,name_hash))
+       goto found;
+   self = DeeType_Base(self);
+   if (!self) break;
+   if (self->tp_attr) break;
+  }
  }
- if (self->tp_methods &&
-     type_method_hasattr(&self->tp_cache,self->tp_methods,name_str,name_hash))
-     goto found;
- if (self->tp_getsets &&
-     type_getset_hasattr(&self->tp_cache,self->tp_getsets,name_str,name_hash))
-     goto found;
- if (self->tp_members &&
-     type_member_hasattr(&self->tp_cache,self->tp_members,name_str,name_hash))
-     goto found;
  return_false;
 found:
  return_true;
@@ -1751,21 +1774,60 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
+type_hasprivateattribute(DeeTypeObject *__restrict self,
+                         size_t argc, DeeObject **__restrict argv,
+                         DeeObject *kw) {
+ DeeObject *name;
+ if (DeeArg_UnpackKw(argc,argv,kw,getattr_kwdlist,"o:hasprivateattribute",&name) ||
+     DeeObject_AssertTypeExact(name,&DeeString_Type))
+     goto err;
+ return_bool(!self->tp_attr &&
+              impl_type_hasprivateattribute(self,
+                                            DeeString_STR(name),
+                                            DeeString_Hash(name)));
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
 type_hasoperator(DeeTypeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv,
                  DeeObject *kw) {
- DeeObject *name;
- char const *name_str; dhash_t name_hash;
- if (DeeArg_UnpackKw(argc,argv,kw,getattr_kwdlist,"o:hasoperator",&name) ||
-     DeeObject_AssertTypeExact(name,&DeeString_Type))
+ DeeObject *name; uint16_t opid;
+ if (DeeArg_UnpackKw(argc,argv,kw,getattr_kwdlist,"o:hasoperator",&name))
      goto err;
- name_str  = DeeString_STR(name);
- name_hash = DeeString_Hash(name);
- /* TODO */
- (void)self;
- (void)name_str;
- (void)name_hash;
+ if (DeeString_Check(name)) {
+  opid = Dee_OperatorFromName(self,DeeString_STR(name));
+  if (opid == (uint16_t)-1) goto nope;
+ } else {
+  if (DeeObject_AsUInt16(name,&opid))
+      goto err;
+ }
+ if (DeeType_HasOperator(self,opid))
+     return_true;
+nope:
+ return_false;
+err:
+ return NULL;
+}
 
+PRIVATE DREF DeeObject *DCALL
+type_hasprivateoperator(DeeTypeObject *__restrict self,
+                        size_t argc, DeeObject **__restrict argv,
+                        DeeObject *kw) {
+ DeeObject *name; uint16_t opid;
+ if (DeeArg_UnpackKw(argc,argv,kw,getattr_kwdlist,"o:hasprivateoperator",&name))
+     goto err;
+ if (DeeString_Check(name)) {
+  opid = Dee_OperatorFromName(self,DeeString_STR(name));
+  if (opid == (uint16_t)-1) goto nope;
+ } else {
+  if (DeeObject_AsUInt16(name,&opid))
+      goto err;
+ }
+ if (DeeType_HasPrivateOperator(self,opid))
+     return_true;
+nope:
  return_false;
 err:
  return NULL;
@@ -1870,16 +1932,34 @@ PRIVATE struct type_method type_methods[] = {
       TYPE_METHOD_FKWDS },
     { "hasattribute", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasattribute,
       DOC("(string name)->bool\n"
-          "Returns :true if instances of @this type have an attribute @name.\n"
-          "Note that this function intentionally don't look at attributes of "
-          "base-classes, meaning that inherited attributes are not included"),
+          "Returns :true if this type, or one of its sub-classes defines an "
+          "instance-attribute @name, and doesn't define any attribute-operators. "
+          "Otherwise, return :false\n"
+          ">function hasattribute(name) {\n"
+          "> import attribute from deemon;\n"
+          "> return attribute.exists(this,name,\"ic\",\"ic\")\n"
+          ">}"),
+      TYPE_METHOD_FKWDS },
+    { "hasprivateattribute", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasprivateattribute,
+      DOC("(string name)->bool\n"
+          "Similar to #hasattribute, but only looks at attributes declared by "
+          "@this type, excluding any defined by a sub-class.\n"
+          ">function hasattribute(name) {\n"
+          "> import attribute from deemon;\n"
+          "> return attribute.exists(this,name,\"ic\",\"ic\",this)\n"
+          ">}"),
       TYPE_METHOD_FKWDS },
     { "hasoperator", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasoperator,
-      DOC("(string name)->bool\n"
-          "Returns :true if instances of @this type implement an operator @name\n"
-          "Note that this function intentionally don't look at operators of "
-          "base-classes, meaning that inherited operators are not included, "
-          "with the exception of explicitly inherited constructors\n"
+      DOC("(int name)->bool\n"
+          "(string name)->bool\n"
+          "Returns :true if instances of @this type implement an operator @name, "
+          "or :false if not, or if @name is not recognized as an operator provided "
+          "available for the type-type that is ${type this}\n"
+          "Note that this function also looks at the operators of "
+          "base-classes, as well as that a user-defined class that has "
+          "explicitly deleted an operator will cause this function to "
+          "return true, indicative of that operator being implemented "
+          "to cause an error to be thrown when invoked.\n"
           "The given @name is the so-called real operator name, "
           "as listed under Name in the following table:\n"
           "%{table Name|Symbolical name|Prototype\n"
@@ -1945,6 +2025,18 @@ PRIVATE struct type_method type_methods[] = {
           "$\"enter\"|$\"enter\"|${operator enter() -> none}\n"
           "$\"leave\"|$\"leave\"|${operator leave() -> none}\n"
           "}"),
+      TYPE_METHOD_FKWDS },
+    { "hasprivateoperator", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasprivateoperator,
+      DOC("(int name)->bool\n"
+          "(string name)->bool\n"
+          "Returns :true if instances of @this type implement an operator @name, "
+          "or :false if not, or if @name is not recognized as an operator provided "
+          "available for the type-type that is ${type this}\n"
+          "Note that this function intentionally don't look at operators of "
+          "base-classes (which is instead done by #hasoperator), meaning that "
+          "inherited operators are not included, with the exception of explicitly "
+          "inherited constructors\n"
+          "For a list of operator names, see #hasoperator"),
       TYPE_METHOD_FKWDS },
     { NULL }
 };
@@ -2602,27 +2694,6 @@ PUBLIC void DCALL DeeAssert_BadObjectTypeOpt(char const *UNUSED(file), int UNUSE
 PUBLIC void DCALL DeeAssert_BadObjectTypeExact(char const *UNUSED(file), int UNUSED(line), DeeObject *UNUSED(ob), DeeTypeObject *__restrict UNUSED(wanted_type)) {}
 PUBLIC void DCALL DeeAssert_BadObjectTypeExactOpt(char const *UNUSED(file), int UNUSED(line), DeeObject *UNUSED(ob), DeeTypeObject *__restrict UNUSED(wanted_type)) {}
 #endif
-
-
-
-/* Check if `name' is being implemented by the given path, or has been inherited by a base-type. */
-PUBLIC bool DCALL
-DeeType_HasInheritedOperator(DeeTypeObject *__restrict self, uint16_t name) {
- do if (DeeType_HasOperator(self,name)) return true;
- while ((self = DeeType_Base(self)) != NULL);
- return false;
-}
-
-/* Same as `DeeType_HasInheritedOperator()', however don't return `true' if the
- * operator has been inherited implicitly through caching mechanisms. */
-PUBLIC bool DCALL
-DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
- (void)self;
- (void)name;
- /* TODO */
- return false;
-}
-
 
 DECL_END
 

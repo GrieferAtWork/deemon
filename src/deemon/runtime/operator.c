@@ -2311,7 +2311,7 @@ err:
 #ifndef DEFINE_TYPE_OPERATORS
 INTERN DeeTypeObject *DCALL
 type_get_int_caster(DeeTypeObject *__restrict start) {
- while (!DeeType_HasOperator(start,OPERATOR_INT))
+ while (!DeeType_HasPrivateOperator(start,OPERATOR_INT))
          start = DeeType_Base(start);
  return start;
 }

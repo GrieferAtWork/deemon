@@ -1228,6 +1228,64 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 }
 
 
+
+PRIVATE void *DCALL
+DeeType_GetOpPointer(DeeTypeObject *__restrict self,
+                     struct opinfo *__restrict info) {
+ switch (info->oi_class) {
+ case OPCLASS_TYPE:
+  return *(void **)((uintptr_t)self + info->oi_offset);
+ case OPCLASS_GC:
+  if (!self->tp_gc) break;
+  return *(void **)((uintptr_t)self->tp_gc + info->oi_offset);
+ case OPCLASS_MATH:
+  if (!self->tp_math) break;
+  return *(void **)((uintptr_t)self->tp_math + info->oi_offset);
+ case OPCLASS_CMP:
+  if (!self->tp_cmp) break;
+  return *(void **)((uintptr_t)self->tp_cmp + info->oi_offset);
+ case OPCLASS_SEQ:
+  if (!self->tp_seq) break;
+  return *(void **)((uintptr_t)self->tp_seq + info->oi_offset);
+ case OPCLASS_ATTR:
+  if (!self->tp_attr) break;
+  return *(void **)((uintptr_t)self->tp_attr + info->oi_offset);
+ case OPCLASS_WITH:
+  if (!self->tp_with) break;
+  return *(void **)((uintptr_t)self->tp_with + info->oi_offset);
+ case OPCLASS_BUFFER:
+  if (!self->tp_buffer) break;
+  return *(void **)((uintptr_t)self->tp_buffer + info->oi_offset);
+ default: break; /* XXX: Extended operators? */
+ }
+ return NULL;
+}
+
+/* Check if `name' is being implemented by the given path, or has been inherited by a base-type. */
+PUBLIC bool DCALL
+DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
+ struct opinfo *info;
+ info = Dee_OperatorInfo(self,name);
+ if (info) do {
+  if (DeeType_GetOpPointer(self,info))
+      return true;
+ } while ((self = DeeType_Base(self)) != NULL);
+ return false;
+}
+
+/* Same as `DeeType_HasOperator()', however don't return `true' if the
+ * operator has been inherited implicitly through caching mechanisms. */
+PUBLIC bool DCALL
+DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
+ void *my_ptr; struct opinfo *info = Dee_OperatorInfo(self,name);
+ return (info != NULL &&
+        (my_ptr = DeeType_GetOpPointer(self,info)) != NULL &&
+        (!self->tp_base || my_ptr != DeeType_GetOpPointer(self->tp_base,info)));
+}
+
+
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_RUNTIME_OPERATOR_INFO_C */

@@ -1366,7 +1366,7 @@ DFUNDEF struct opinfo *DCALL Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t 
  * for operators where `oi_uname' isn't ambiguous (aka. `+' is intentionally
  * not resolved by this function, and causes `(uint16_t)-1' to be returned,
  * though `*' is resolved and causes `OPERATOR_MUL' to be returned)
- * @return: (uint16_t)-1: No operator matching `name' exists. */
+ * @return: (uint16_t)-1: No operator matching `name' exists (no error was thrown). */
 DFUNDEF uint16_t DCALL Dee_OperatorFromName(DeeTypeObject *typetype, char const *__restrict name);
 
 
@@ -1501,11 +1501,11 @@ struct type_object {
 
 
 /* Check if `name' is being implemented by the given path, or has been inherited by a base-type. */
-DFUNDEF bool DCALL DeeType_HasInheritedOperator(DeeTypeObject *__restrict self, uint16_t name);
-
-/* Same as `DeeType_HasInheritedOperator()', however don't return `true' if the
- * operator has been inherited implicitly through caching mechanisms. */
 DFUNDEF bool DCALL DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name);
+
+/* Same as `DeeType_HasOperator()', however don't return `true' if the
+ * operator has been inherited implicitly through caching mechanisms. */
+DFUNDEF bool DCALL DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF bool DCALL type_inherit_constructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */

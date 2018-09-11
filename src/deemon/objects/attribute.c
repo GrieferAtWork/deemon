@@ -26,6 +26,7 @@
 #include <deemon/object.h>
 #include <deemon/class.h>
 #include <deemon/super.h>
+#include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/arg.h>
@@ -286,60 +287,57 @@ err:
  return -1;
 }
 
+PRIVATE struct keyword attrinit_kwlist[] = { K(ob), K(name), K(flagmask), K(flagval), K(decl), KEND };
 
 PRIVATE int DCALL
-attribute_init(DeeAttributeObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+attribute_init(DeeAttributeObject *__restrict self, size_t argc,
+               DeeObject **__restrict argv, DeeObject *kw) {
  int lookup_error;
- DeeObject *search_self;
+ DeeObject *search_self,*search_name;
+ DeeObject *flagmask = NULL,*flagval = NULL;
  struct attribute_lookup_rules rules;
  rules.alr_decl       = NULL;
  rules.alr_perm_mask  = 0;
  rules.alr_perm_value = 0;
- if (argc < 2) {
-invalid_argc:
-  err_invalid_argc("attribute",argc,2,5);
-  goto err;
- }
- if (DeeObject_AssertTypeExact(argv[1],&DeeString_Type))
+ if (DeeArg_UnpackKw(argc,argv,kw,attrinit_kwlist,"oo|ooo",
+                    &search_self,
+                    &search_name,
+                    &flagmask,
+                    &flagval,
+                    &rules.alr_decl))
      goto err;
- search_self    = argv[0];
- rules.alr_name = DeeString_STR(argv[1]);
- rules.alr_hash = DeeString_Hash(argv[1]);
- switch (argc) {
- case 2:
-  break;
- case 3:
-  if (DeeString_Check(argv[2])) {
-   if unlikely(string_to_attrflags(DeeString_STR(argv[2]),&rules.alr_perm_mask))
+ if (DeeObject_AssertTypeExact(search_name,&DeeString_Type))
+     goto err;
+ rules.alr_name = DeeString_STR(search_name);
+ rules.alr_hash = DeeString_Hash(search_name);
+ if (flagmask) {
+  if (DeeString_Check(flagmask)) {
+   if unlikely(string_to_attrflags(DeeString_STR(flagmask),&rules.alr_perm_mask))
       goto err;
   } else {
-   if (DeeObject_AsUInt16(argv[2],&rules.alr_perm_mask))
+   if (DeeObject_AsUInt16(flagmask,&rules.alr_perm_mask))
        goto err;
   }
-  rules.alr_perm_value = rules.alr_perm_mask;
-  break;
- case 4:
- case 5:
-  if (DeeString_Check(argv[2])) {
-   if unlikely(string_to_attrflags(DeeString_STR(argv[2]),&rules.alr_perm_mask))
+  if (flagval) {
+   if (DeeString_Check(flagval)) {
+    if unlikely(string_to_attrflags(DeeString_STR(flagval),&rules.alr_perm_value))
+       goto err;
+   } else {
+    if (DeeObject_AsUInt16(flagval,&rules.alr_perm_value))
+        goto err;
+   }
+  } else {
+   rules.alr_perm_value = rules.alr_perm_mask;
+  }
+ } else if (flagval) {
+  rules.alr_perm_mask = (uint16_t)-1;
+  if (DeeString_Check(flagval)) {
+   if unlikely(string_to_attrflags(DeeString_STR(flagval),&rules.alr_perm_value))
       goto err;
   } else {
-   if (DeeObject_AsUInt16(argv[2],&rules.alr_perm_mask))
+   if (DeeObject_AsUInt16(flagval,&rules.alr_perm_value))
        goto err;
   }
-  if (DeeString_Check(argv[3])) {
-   if unlikely(string_to_attrflags(DeeString_STR(argv[3]),&rules.alr_perm_value))
-      goto err;
-  } else {
-   if (DeeObject_AsUInt16(argv[3],&rules.alr_perm_value))
-       goto err;
-  }
-  if (argc == 5)
-      rules.alr_decl = argv[4];
-  break;
- default:
-  goto invalid_argc;
  }
  lookup_error = DeeAttribute_Lookup(Dee_TYPE(search_self),
                                     search_self,
@@ -362,6 +360,191 @@ err:
  return -1;
 }
 
+PRIVATE DREF DeeObject *DCALL
+attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
+                 DeeObject **__restrict argv, DeeObject *kw) {
+ int lookup_error; struct attribute_info info;
+ DeeObject *search_self,*search_name;
+ DeeObject *flagmask = NULL,*flagval = NULL;
+ struct attribute_lookup_rules rules;
+ rules.alr_decl       = NULL;
+ rules.alr_perm_mask  = 0;
+ rules.alr_perm_value = 0;
+ if (DeeArg_UnpackKw(argc,argv,kw,attrinit_kwlist,"oo|ooo:exists",
+                    &search_self,
+                    &search_name,
+                    &flagmask,
+                    &flagval,
+                    &rules.alr_decl))
+     goto err;
+ if (DeeObject_AssertTypeExact(search_name,&DeeString_Type))
+     goto err;
+ rules.alr_name = DeeString_STR(search_name);
+ rules.alr_hash = DeeString_Hash(search_name);
+ if (flagmask) {
+  if (DeeString_Check(flagmask)) {
+   if unlikely(string_to_attrflags(DeeString_STR(flagmask),&rules.alr_perm_mask))
+      goto err;
+  } else {
+   if (DeeObject_AsUInt16(flagmask,&rules.alr_perm_mask))
+       goto err;
+  }
+  if (flagval) {
+   if (DeeString_Check(flagval)) {
+    if unlikely(string_to_attrflags(DeeString_STR(flagval),&rules.alr_perm_value))
+       goto err;
+   } else {
+    if (DeeObject_AsUInt16(flagval,&rules.alr_perm_value))
+        goto err;
+   }
+  } else {
+   rules.alr_perm_value = rules.alr_perm_mask;
+  }
+ } else if (flagval) {
+  rules.alr_perm_mask = (uint16_t)-1;
+  if (DeeString_Check(flagval)) {
+   if unlikely(string_to_attrflags(DeeString_STR(flagval),&rules.alr_perm_value))
+      goto err;
+  } else {
+   if (DeeObject_AsUInt16(flagval,&rules.alr_perm_value))
+       goto err;
+  }
+ }
+ lookup_error = DeeAttribute_Lookup(Dee_TYPE(search_self),
+                                    search_self,
+                                   &info,
+                                   &rules);
+ if (lookup_error != 0) {
+  if likely(lookup_error > 0)
+     return_false;
+  goto err;
+ }
+ Dee_Decref(info.a_decl);
+ Dee_XDecref(info.a_doc);
+ Dee_XDecref(info.a_attrtype);
+ return_true;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
+                 DeeObject **__restrict argv, DeeObject *kw) {
+ DREF DeeAttributeObject *result;
+ int lookup_error; struct attribute_info info;
+ DeeObject *search_self,*search_name;
+ DeeObject *flagmask = NULL,*flagval = NULL;
+ struct attribute_lookup_rules rules;
+ rules.alr_decl       = NULL;
+ rules.alr_perm_mask  = 0;
+ rules.alr_perm_value = 0;
+ if (DeeArg_UnpackKw(argc,argv,kw,attrinit_kwlist,"oo|ooo:lookup",
+                    &search_self,
+                    &search_name,
+                    &flagmask,
+                    &flagval,
+                    &rules.alr_decl))
+     goto err;
+ if (DeeObject_AssertTypeExact(search_name,&DeeString_Type))
+     goto err;
+ rules.alr_name = DeeString_STR(search_name);
+ rules.alr_hash = DeeString_Hash(search_name);
+ if (flagmask) {
+  if (DeeString_Check(flagmask)) {
+   if unlikely(string_to_attrflags(DeeString_STR(flagmask),&rules.alr_perm_mask))
+      goto err;
+  } else {
+   if (DeeObject_AsUInt16(flagmask,&rules.alr_perm_mask))
+       goto err;
+  }
+  if (flagval) {
+   if (DeeString_Check(flagval)) {
+    if unlikely(string_to_attrflags(DeeString_STR(flagval),&rules.alr_perm_value))
+       goto err;
+   } else {
+    if (DeeObject_AsUInt16(flagval,&rules.alr_perm_value))
+        goto err;
+   }
+  } else {
+   rules.alr_perm_value = rules.alr_perm_mask;
+  }
+ } else if (flagval) {
+  rules.alr_perm_mask = (uint16_t)-1;
+  if (DeeString_Check(flagval)) {
+   if unlikely(string_to_attrflags(DeeString_STR(flagval),&rules.alr_perm_value))
+      goto err;
+  } else {
+   if (DeeObject_AsUInt16(flagval,&rules.alr_perm_value))
+       goto err;
+  }
+ }
+ lookup_error = DeeAttribute_Lookup(Dee_TYPE(search_self),
+                                    search_self,
+                                   &info,
+                                   &rules);
+ if (lookup_error != 0) {
+  if likely(lookup_error > 0)
+     return_none;
+  goto err;
+ }
+ result = DeeObject_MALLOC(DeeAttributeObject);
+ if unlikely(!result) goto err_info;
+ DeeObject_Init(result,&DeeAttribute_Type);
+ memcpy(&result->a_info,&info,sizeof(struct attribute_info)); /* Inherit references */
+ result->a_name = (DREF DeeStringObject *)search_name;
+ Dee_Incref(search_name);
+ return (DREF DeeObject *)result;
+err_info:
+ Dee_Decref(info.a_decl);
+ Dee_XDecref(info.a_doc);
+ Dee_XDecref(info.a_attrtype);
+err:
+ return NULL;
+}
+
+PRIVATE struct type_method attr_class_methods[] = {
+    { "exists", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&attribute_exists,
+      DOC("(ob,string name,int flagmask=0,int flagval=flagmask,decl?)->bool\n"
+          "(ob,string name,string flagmask=\"\",int flagval=flagmask,decl?)->bool\n"
+          "(ob,string name,int flagmask=0,string flagval=flagmask,decl?)->bool\n"
+          "(ob,string name,string flagmask=\"\",string flagval=flagmask,decl?)->bool\n"
+          "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
+          "Taking the same arguments as #op:constructor, check if the an attribute matching "
+          "the given arguments exists, returning :true/:false indicative of this\n"
+          ">static function exists(ob,name,flagmask = \"\",flagval = \"\", decl?) {\n"
+          "> import Error from deemon;\n"
+          "> try {\n"
+          ">  attribute(ob,name,flagmask,flagval,decl);\n"
+          "> } catch (Error.AttributeError) {\n"
+          ">  return false;\n"
+          "> }\n"
+          "> return true;\n"
+          ">}"
+          ),
+      TYPE_METHOD_FKWDS },
+    { "lookup", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&attribute_lookup,
+      DOC("(ob,string name,int flagmask=0,int flagval=flagmask,decl?)->attribute\n"
+          "(ob,string name,int flagmask=0,int flagval=flagmask,decl?)->none\n"
+          "(ob,string name,string flagmask=\"\",int flagval=flagmask,decl?)->attribute\n"
+          "(ob,string name,string flagmask=\"\",int flagval=flagmask,decl?)->none\n"
+          "(ob,string name,int flagmask=0,string flagval=flagmask,decl?)->attribute\n"
+          "(ob,string name,int flagmask=0,string flagval=flagmask,decl?)->none\n"
+          "(ob,string name,string flagmask=\"\",string flagval=flagmask,decl?)->attribute\n"
+          "(ob,string name,string flagmask=\"\",string flagval=flagmask,decl?)->none\n"
+          "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
+          "Same as the constructor, but return :none if the attribute doesn't exist\n"
+          ">static function lookup(ob,name,flagmask = \"\",flagval = \"\", decl?) {\n"
+          "> import Error from deemon;\n"
+          "> try {\n"
+          ">  return attribute(ob,name,flagmask,flagval,decl);\n"
+          "> } catch (Error.AttributeError) {\n"
+          ">  return none;\n"
+          "> }\n"
+          ">}"),
+      TYPE_METHOD_FKWDS },
+    { NULL }
+};
+
 
 
 PUBLIC DeeTypeObject DeeAttribute_Type = {
@@ -374,7 +557,9 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
                             "(ob,string name,int flagmask=0,string flagval=flagmask,decl?)\n"
                             "(ob,string name,string flagmask=\"\",string flagval=flagmask,decl?)\n"
                             "@param flagmask Set of attribute flags to mask when searching for matches (s.a. #flags)\n"
-                            "@param flagval Set of attribute flags required when searching for matches (s.a. #flags)\n"
+                            "@param flagval Set of attribute flags required when searching for matches (s.a. #flags) "
+                                           "(When only this is given, and @flagmask is omit (as possible when "
+                                           "using keyword arguments), flagmask is set to @flagval)\n"
                             "@throw AttributeError No attribute matching the specified restrictions could be found\n"
                             "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
                             "Lookup an attribute enumerated by ${enumattr(ob)} or ${enumattr(tp)}, matching "
@@ -412,14 +597,15 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&attribute_init,
-                /* .tp_free      = */NULL,
+                /* .tp_ctor        = */NULL,
+                /* .tp_copy_ctor   = */NULL,
+                /* .tp_deep_ctor   = */NULL,
+                /* .tp_any_ctor    = */NULL,
+                /* .tp_free        = */NULL,
                 {
                     /* .tp_instance_size = */sizeof(Attr)
-                }
+                },
+                /* .tp_any_ctor_kw = */&attribute_init
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&attr_fini,
@@ -444,7 +630,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */attr_getsets,
     /* .tp_members       = */attr_members,
-    /* .tp_class_methods = */NULL,
+    /* .tp_class_methods = */attr_class_methods,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
 };
