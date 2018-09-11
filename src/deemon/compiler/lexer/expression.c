@@ -739,6 +739,7 @@ do_create_class:
                           : AST_COMMA_FORCEMULTIPLE|AST_COMMA_STRICTCOMMA,
                             AST_FMULTIPLE_TUPLE,
                             NULL);
+#if 0 /* Because of the `AST_COMMA_FORCEMULTIPLE', this is unnecessary */
    if likely(result &&
              result->a_type == AST_EXPAND) {
     /* Wrap into a single-item tuple multiple-branch:
@@ -752,6 +753,7 @@ do_create_class:
     if unlikely(!merge) { Dee_Free(exprv); goto err_r_flags; }
     result = merge; /* Inherit */
    }
+#endif
   } else {
    result = ast_constexpr(Dee_EmptyTuple);
   }
@@ -808,14 +810,45 @@ do_create_class:
    if (tok == ',' && was_expression != AST_PARSE_WASEXPR_NO) {
     DREF struct ast **tuple_branchv;
     if unlikely(!result) goto err;
-    /* single-element tuple expression, where the single element is a sequence. */
-    tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(struct ast *));
-    if unlikely(!tuple_branchv) goto err_r;
-    tuple_branchv[0] = result; /* Inherit reference. */
-    merge = ast_multiple(AST_FMULTIPLE_TUPLE,1,tuple_branchv);
-    if unlikely(!merge) { Dee_Free(tuple_branchv); goto err_r; }
-    result = merge;
     if unlikely(yield() < 0) goto err_r;
+    if (tok == ')') {
+     /* single-element tuple expression, where the single element is a sequence. */
+     tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+     if unlikely(!tuple_branchv) goto err_r;
+     tuple_branchv[0] = result; /* Inherit reference. */
+     merge = ast_multiple(AST_FMULTIPLE_TUPLE,1,tuple_branchv);
+     if unlikely(!merge) { Dee_Free(tuple_branchv); goto err_r; }
+     result = merge;
+    } else {
+     /* There are more items! */
+     merge = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
+                             AST_FMULTIPLE_TUPLE,
+                             NULL);
+     if unlikely(!merge) goto err_r;
+     ASSERT(merge->a_type == AST_MULTIPLE ||
+           (merge->a_type == AST_CONSTEXPR && 
+            merge->a_constexpr == Dee_EmptyTuple));
+     if (merge->a_constexpr == Dee_EmptyTuple) {
+      tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+      if unlikely(!tuple_branchv) goto err_merge_r;
+      Dee_DecrefNokill(merge->a_constexpr);
+      merge->a_type = AST_MULTIPLE;
+      merge->a_flag = AST_FMULTIPLE_TUPLE;
+      merge->a_multiple.m_astc = 1;
+     } else {
+      tuple_branchv = (struct ast **)Dee_Realloc(merge->a_multiple.m_astv,
+                                                (merge->a_multiple.m_astc + 1) *
+                                                 sizeof(DREF struct ast *));
+      if unlikely(!tuple_branchv) goto err_merge_r;
+      MEMMOVE_PTR(tuple_branchv + 1,
+                  tuple_branchv,
+                  merge->a_multiple.m_astc);
+      ++merge->a_multiple.m_astc;
+     }
+     tuple_branchv[0] = result; /* Inherit reference. */
+     merge->a_multiple.m_astv = tuple_branchv;
+     result = merge; /* Inherit reference. */
+    }
    }
   } else if (tok == ')') {
    /* Empty tuple. */
@@ -1172,6 +1205,9 @@ err_r:
  ast_decref(result);
 err:
  return NULL;
+err_merge_r:
+ Dee_Decref(merge);
+ goto err_r;
 }
 INTERN DREF struct ast *FCALL
 ast_parse_unary_operand(/*inherit(always)*/DREF struct ast *__restrict result) {
