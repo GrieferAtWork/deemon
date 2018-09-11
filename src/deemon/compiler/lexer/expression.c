@@ -801,9 +801,22 @@ do_create_class:
   if unlikely(yield() < 0) goto err_flags;
   allow_cast = tok != '(';
   if (tok == '{') {
+   unsigned int was_expression;
    /* Statements in expressions. */
-   result = ast_parse_statement_or_braces(NULL);
+   result = ast_parse_statement_or_braces(&was_expression);
    allow_cast = false; /* Don't allow braces, or statements as cast expressions. */
+   if (tok == ',' && was_expression != AST_PARSE_WASEXPR_NO) {
+    DREF struct ast **tuple_branchv;
+    if unlikely(!result) goto err;
+    /* single-element tuple expression, where the single element is a sequence. */
+    tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(struct ast *));
+    if unlikely(!tuple_branchv) goto err_r;
+    tuple_branchv[0] = result; /* Inherit reference. */
+    merge = ast_multiple(AST_FMULTIPLE_TUPLE,1,tuple_branchv);
+    if unlikely(!merge) { Dee_Free(tuple_branchv); goto err_r; }
+    result = merge;
+    if unlikely(yield() < 0) goto err_r;
+   }
   } else if (tok == ')') {
    /* Empty tuple. */
    result = ast_constexpr(Dee_EmptyTuple);
