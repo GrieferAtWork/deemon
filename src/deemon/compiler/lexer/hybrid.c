@@ -439,6 +439,7 @@ parse_remainder_after_rbrace_popscope:
 parse_remainder_after_colon_popscope:
     scope_pop();
     /* mapping-like brace expression. */
+    if unlikely(yield() < 0) goto err_r;
     remainder = ast_parse_mapping(result);
     ast_decref(result);
     if unlikely(!remainder) goto err;
