@@ -48,16 +48,35 @@ struct class_attribute;
 struct ast_loc {
     struct TPPFile      *l_file; /* [0..1] Location file. */
 #ifdef CONFIG_BUILDING_DEEMON
-    union{
+    union {
         struct TPPLCInfo l_lc;   /* [valid_if(l_file != NULL)] Line/column information. */
-        struct{
+        struct {
             int          l_line; /* [valid_if(l_file != NULL)] Location line. */
             int          l_col;  /* [valid_if(l_file != NULL)] Location column. */
-        };
-    };
+        }
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+        _l_linecol
+#endif
+        ;
+    }
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+    _l_lc_select
+#define l_lc       _l_lc_select.l_lc
+#ifdef __COMPILER_HAVE_TRANSPARENT_STRUCT
+#define l_line     _l_lc_select.l_line
+#define l_col      _l_lc_select.l_col
+#else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
+#define l_line     _l_lc_select._l_linecol.l_line
+#define l_col      _l_lc_select._l_linecol.l_col
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+#elif !defined(__COMPILER_HAVE_TRANSPARENT_STRUCT)
+#define l_line     _l_linecol.l_line
+#define l_col      _l_linecol.l_col
+#endif
+    ;
 #else
-     int                 l_line; /* [valid_if(l_file != NULL)] Location line. */
-     int                 l_col;  /* [valid_if(l_file != NULL)] Location column. */
+    int                  l_line; /* [valid_if(l_file != NULL)] Location line. */
+    int                  l_col;  /* [valid_if(l_file != NULL)] Location column. */
 #endif
 };
 

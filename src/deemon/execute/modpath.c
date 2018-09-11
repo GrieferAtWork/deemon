@@ -435,7 +435,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
                              int start_line, int start_col,
                              struct string_object *input_pathname) {
  DREF DeeCompilerObject *compiler; struct TPPFile *base_file;
- DREF struct ast *ast; DREF DeeCodeObject *root_code; int result;
+ DREF struct ast *code; DREF DeeCodeObject *root_code; int result;
  uint16_t assembler_flags; uint16_t compiler_flags;
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
  ASSERT_OBJECT_TYPE(input_file,(DeeTypeObject *)&DeeFile_Type);
@@ -554,28 +554,28 @@ do_create_base_name:
 
  /* Yield the initial token. */
  if unlikely(yield() < 0)
-  ast = NULL;
+  code = NULL;
  else {
   /* Parse statements until the end of the source stream. */
-  ast = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,TOK_EOF);
+  code = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,TOK_EOF);
  }
 
  if (!(TPPLexer_Current->l_flags & TPPLEXER_FLAG_ERROR))
        TPPLexer_ClearIfdefStack();
 
  /* Rethrow all errors that may have occurred during parsing. */
- if (parser_rethrow(ast == NULL)) {
-  ast_xdecref(ast);
-  ast = NULL;
+ if (parser_rethrow(code == NULL)) {
+  ast_xdecref(code);
+  code = NULL;
  }
 
- if unlikely(!ast)
+ if unlikely(!code)
     goto err_compiler;
 
  /* Run an additional optimization pass on the
   * AST before passing it off to the assembler. */
  if (optimizer_flags&OPTIMIZE_FENABLED) {
-  result = ast_optimize_all(ast,false);
+  result = ast_optimize_all(code,false);
   /* Rethrow all errors that may have occurred during optimization. */
   if (parser_rethrow(result != 0))
       result = -1;
@@ -585,11 +585,11 @@ do_create_base_name:
 
  {
   uint16_t refc; struct asm_symbol_ref *refv;
-  root_code = code_compile(ast,assembler_flags,&refc,&refv);
+  root_code = code_compile(code,assembler_flags,&refc,&refv);
   ASSERT(!root_code || !refc);
   ASSERT(!root_code || !refv);
  }
- ast_decref(ast);
+ ast_decref(code);
 
  /* Rethrow all errors that may have occurred during text assembly. */
  if (parser_rethrow(root_code == NULL))
@@ -611,7 +611,7 @@ do_create_base_name:
  recursive_rwlock_endwrite(&DeeCompiler_Lock);
  return result;
 err_compiler_ast:
- ast_decref(ast);
+ ast_decref(code);
 err_compiler:
  DeeCompiler_End();
  Dee_Decref(compiler);

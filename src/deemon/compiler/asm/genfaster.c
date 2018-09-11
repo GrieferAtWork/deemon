@@ -49,28 +49,28 @@ yes:
 
 
 INTERN struct ast *DCALL
-ast_strip_seqcast(struct ast *__restrict ast) {
+ast_strip_seqcast(struct ast *__restrict self) {
  for (;;) {
-  if (ast->a_type == AST_MULTIPLE &&
-      ast->a_flag != AST_FMULTIPLE_KEEPLAST &&
-      ast->a_multiple.m_astc == 1 &&
-      ast->a_multiple.m_astv[0]->a_type == AST_EXPAND) {
-   ast = ast->a_multiple.m_astv[0]->a_expand;
+  if (self->a_type == AST_MULTIPLE &&
+      self->a_flag != AST_FMULTIPLE_KEEPLAST &&
+      self->a_multiple.m_astc == 1 &&
+      self->a_multiple.m_astv[0]->a_type == AST_EXPAND) {
+   self = self->a_multiple.m_astv[0]->a_expand;
    continue;
   }
-  if (ast->a_type == AST_OPERATOR &&
-      ast->a_flag == OPERATOR_CALL &&
-      ast->a_operator.o_op1 &&
-    !(ast->a_operator.o_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS)) &&
-      ast->a_operator.o_op0->a_type == AST_CONSTEXPR &&
-      has_sequence_cast_constructor(ast->a_operator.o_op0->a_constexpr)) {
+  if (self->a_type == AST_OPERATOR &&
+      self->a_flag == OPERATOR_CALL &&
+      self->a_operator.o_op1 &&
+    !(self->a_operator.o_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS)) &&
+      self->a_operator.o_op0->a_type == AST_CONSTEXPR &&
+      has_sequence_cast_constructor(self->a_operator.o_op0->a_constexpr)) {
    struct ast *seq_args;
-   seq_args = ast->a_operator.o_op1;
+   seq_args = self->a_operator.o_op1;
    if (seq_args->a_type == AST_MULTIPLE &&
        seq_args->a_flag != AST_FMULTIPLE_KEEPLAST &&
        seq_args->a_multiple.m_astc == 1 &&
        seq_args->a_multiple.m_astv[0]->a_type != AST_EXPAND) {
-    ast = seq_args->a_multiple.m_astv[0];
+    self = seq_args->a_multiple.m_astv[0];
     continue;
    }
 #if 0
@@ -83,29 +83,29 @@ ast_strip_seqcast(struct ast *__restrict ast) {
   }
   break;
  }
- return ast;
+ return self;
 }
 
 INTERN int DCALL
-ast_genasm_asp(struct ast *__restrict ast,
+ast_genasm_asp(struct ast *__restrict self,
                unsigned int gflags) {
  /* Strip away unnecessary sequence casts. */
- ast = ast_strip_seqcast(ast);
+ self = ast_strip_seqcast(self);
  /* Generate the expression. */
  /* TODO: If `ast' is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_GENERIC' */
- return ast_genasm(ast,gflags);
+ return ast_genasm(self,gflags);
 }
 
 INTERN int DCALL
-ast_genasm_set(struct ast *__restrict ast,
+ast_genasm_set(struct ast *__restrict self,
                unsigned int gflags) {
  /* Strip away unnecessary sequence-style expression casts. */
- ast = ast_strip_seqcast(ast);
- if (ast->a_type == AST_CONSTEXPR) {
+ self = ast_strip_seqcast(self);
+ if (self->a_type == AST_CONSTEXPR) {
   /* The inner sequence is a constant expression.
    * -> Compile it as a _roset object. */
   DREF DeeObject *inner_set; int result;
-  inner_set = DeeRoSet_FromSequence(ast->a_constexpr);
+  inner_set = DeeRoSet_FromSequence(self->a_constexpr);
   if unlikely(!inner_set) {
 restore_error:
    DeeError_Handled(ERROR_HANDLED_RESTORE);
@@ -120,7 +120,7 @@ restore_error:
   /* The inner set-expression isn't allowed as a constant.
    * Instead, try to generate it as a regular hash-set. */
   Dee_Decref_likely(inner_set);
-  inner_set = DeeHashSet_FromSequence(ast->a_constexpr);
+  inner_set = DeeHashSet_FromSequence(self->a_constexpr);
   if unlikely(!inner_set) goto restore_error;
   result = asm_gpush_constexpr(inner_set);
   Dee_Decref_unlikely(inner_set);
@@ -129,7 +129,7 @@ restore_error:
  /* Generate the expression. */
 push_generic:
  /* TODO: If `ast' is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_SET' */
- return ast_genasm(ast,gflags);
+ return ast_genasm(self,gflags);
 }
 
 

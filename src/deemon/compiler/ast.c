@@ -108,66 +108,66 @@ loc_here(struct ast_loc *__restrict info) {
               TPPLexer_Global.l_token.t_begin);
 }
 INTERN struct ast *FCALL
-ast_setddi(struct ast *ast,
+ast_setddi(struct ast *self,
            struct ast_loc *__restrict info) {
- if unlikely(!ast) goto done; /* Special case: Ignore `NULL' for `ast'. */
- ASSERT_AST(ast);
+ if unlikely(!self) goto done; /* Special case: Ignore `NULL' for `ast'. */
+ ASSERT_AST(self);
  ASSERT(info);
- if unlikely(ast->a_ddi.l_file)
-    TPPFile_Decref(ast->a_ddi.l_file);
+ if unlikely(self->a_ddi.l_file)
+    TPPFile_Decref(self->a_ddi.l_file);
  if (info->l_file == TPPLexer_Global.l_token.t_file) {
-  ast->a_ddi = *info;
+  self->a_ddi = *info;
  } else {
-  loc_here(&ast->a_ddi);
+  loc_here(&self->a_ddi);
  }
- ASSERT(ast->a_ddi.l_file);
+ ASSERT(self->a_ddi.l_file);
  /* Keep a reference to the associated file (so we can later read its filename). */
- TPPFile_Incref(ast->a_ddi.l_file);
+ TPPFile_Incref(self->a_ddi.l_file);
 done:
- return ast;
+ return self;
 }
 INTERN struct ast *FCALL
-ast_sethere(struct ast *ast) {
- if unlikely(!ast) goto done; /* Special case: Ignore `NULL' for `ast'. */
- ASSERT_AST(ast);
- if unlikely(ast->a_ddi.l_file)
-    TPPFile_Decref(ast->a_ddi.l_file);
- loc_here(&ast->a_ddi);
- ASSERT(ast->a_ddi.l_file);
+ast_sethere(struct ast *self) {
+ if unlikely(!self) goto done; /* Special case: Ignore `NULL' for `ast'. */
+ ASSERT_AST(self);
+ if unlikely(self->a_ddi.l_file)
+    TPPFile_Decref(self->a_ddi.l_file);
+ loc_here(&self->a_ddi);
+ ASSERT(self->a_ddi.l_file);
  /* Keep a reference to the associated file (so we can later read its filename). */
- TPPFile_Incref(ast->a_ddi.l_file);
+ TPPFile_Incref(self->a_ddi.l_file);
 done:
- return ast;
+ return self;
 }
 INTERN struct ast *FCALL
-ast_putddi(struct ast *ast,
+ast_putddi(struct ast *self,
            struct ast_loc *__restrict info) {
- if unlikely(!ast) goto done; /* Special case: Ignore `NULL' for `ast'. */
- ASSERT_AST(ast);
+ if unlikely(!self) goto done; /* Special case: Ignore `NULL' for `ast'. */
+ ASSERT_AST(self);
  ASSERT(info);
- if unlikely(ast->a_ddi.l_file) goto done;
+ if unlikely(self->a_ddi.l_file) goto done;
  if (info->l_file == TPPLexer_Global.l_token.t_file) {
-  ast->a_ddi = *info;
+  self->a_ddi = *info;
  } else {
-  loc_here(&ast->a_ddi);
+  loc_here(&self->a_ddi);
  }
- ASSERT(ast->a_ddi.l_file);
+ ASSERT(self->a_ddi.l_file);
  /* Keep a reference to the associated file (so we can later read its filename). */
- TPPFile_Incref(ast->a_ddi.l_file);
+ TPPFile_Incref(self->a_ddi.l_file);
 done:
- return ast;
+ return self;
 }
 INTERN struct ast *FCALL
-ast_puthere(struct ast *ast) {
- if unlikely(!ast) goto done; /* Special case: Ignore `NULL' for `ast'. */
- ASSERT_AST(ast);
- if unlikely(ast->a_ddi.l_file) goto done;
- loc_here(&ast->a_ddi);
- ASSERT(ast->a_ddi.l_file);
+ast_puthere(struct ast *self) {
+ if unlikely(!self) goto done; /* Special case: Ignore `NULL' for `ast'. */
+ ASSERT_AST(self);
+ if unlikely(self->a_ddi.l_file) goto done;
+ loc_here(&self->a_ddi);
+ ASSERT(self->a_ddi.l_file);
  /* Keep a reference to the associated file (so we can later read its filename). */
- TPPFile_Incref(ast->a_ddi.l_file);
+ TPPFile_Incref(self->a_ddi.l_file);
 done:
- return ast;
+ return self;
 }
 
 INTERN void DCALL

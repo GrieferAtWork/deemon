@@ -995,35 +995,6 @@ class Prototype {
 
 
 
-local function lookup_class_attribute(ob,name) {
-	for (local x: enumattr(ob)) {
-		if (x.isinstance)
-			continue;
-		if (x.name == name)
-			return x;
-	}
-	return none;
-}
-local function lookup_instance_attribute(ob,name) {
-	for (local x: enumattr(ob)) {
-		if (!x.isinstance)
-			continue;
-		if (x.name == name)
-			return x;
-	}
-	return none;
-}
-local function lookup_attribute(ob,name) {
-	for (local x: enumattr(ob)) {
-		if (x.name == name)
-			return x;
-	}
-	return none;
-}
-
-
-
-
 local operator_default_args = {
 	/* none as return type is a placeholder for the name of the type. */
 	"constructor" : { "", none },
@@ -1652,15 +1623,12 @@ err_unknown_operator:
 				if (attribute_name.startswith("i:")) {
 					fixed_attribute_name = attribute_name[2:];
 					my_attr = deemon.attribute(doc_parent_or_path.object,fixed_attribute_name,"i");
-					//my_attr = lookup_instance_attribute(doc_parent_or_path.object,fixed_attribute_name);
 				} else if (attribute_name.startswith("c:")) {
 					fixed_attribute_name = attribute_name[2:];
 					my_attr = deemon.attribute(doc_parent_or_path.object,fixed_attribute_name,"i","");
-					//my_attr = lookup_class_attribute(doc_parent_or_path.object,fixed_attribute_name);
 				} else {
 					fixed_attribute_name = attribute_name;
 					my_attr = deemon.attribute(doc_parent_or_path.object,fixed_attribute_name);
-					//my_attr = lookup_attribute(doc_parent_or_path.object,fixed_attribute_name);
 				}
 			} catch (Error.AttributeError) {
 				goto unknown_attribute;
@@ -1759,7 +1727,7 @@ unknown_attribute:
 	ismodule = { get() -> object is bound && object is deemon.module; }
 
 	@"->bool"
-	@"Evaluates to :true if the object is a byte"
+	@"Evaluates to :true if the object is a type"
 	istype = { get() -> object is bound && object is deemon.type_; }
 
 

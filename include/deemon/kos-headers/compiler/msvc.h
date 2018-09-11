@@ -28,7 +28,9 @@
 #   define __COMPILER_HAVE_LONGLONG 1
 #endif
 #define __COMPILER_HAVE_LONGDOUBLE 1
+#if defined(_MSC_EXTENSIONS)/* || _MSC_VER >= ???? */
 #define __COMPILER_HAVE_TRANSPARENT_STRUCT 1
+#endif
 #define __COMPILER_HAVE_TRANSPARENT_UNION 1
 #define __COMPILER_HAVE_PRAGMA_PUSHMACRO 1
 #define __COMPILER_HAVE_PRAGMA_DEPRECATED 1
@@ -186,7 +188,7 @@
 #   define __WHILE0              while(__LINE__ == -1) /* ... */
 #   define __WHILE1              while(__LINE__ != -1) /* ... */
 #endif
-#ifdef __cplusplus
+#if defined(__cplusplus) && defined(_MSC_EXTENSIONS)
 namespace __int {
 template<bool> struct __static_if {};
 template<> struct __static_if<true> { bool __is_true__(); };
@@ -198,9 +200,9 @@ template<> struct __static_if<true> { bool __is_true__(); };
 /* Use our hacky `static_if' to emulate `__builtin_choose_expr' */
 #define __builtin_choose_expr(c,tt,ff) (__STATIC_IF(c){tt} __STATIC_ELSE(c){ff})
 #else
-#ifdef _M_X64
+#if defined(_M_X64) || 1
 #   define __STATIC_IF(x)           __pragma(warning(suppress: 4127)) if(x)
-#   define __STATIC_ELSE(x)         __pragma(warning(suppress: 4127)) if(x)
+#   define __STATIC_ELSE(x)         __pragma(warning(suppress: 4127)) if(!(x))
 #else
 #   define __STATIC_IF(x)           if((x) != (__LINE__ == -1))
 #   define __STATIC_ELSE(x)         if((x) == (__LINE__ == -1))

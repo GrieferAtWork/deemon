@@ -793,10 +793,10 @@ INTDEF struct assembler current_assembler;
  *       that it is meant to be describing, and will continue
  *       to describe code until the next checkpoint. */
 #ifdef NDEBUG
-INTDEF int DCALL asm_putddi(struct ast *__restrict ast);
+INTDEF int DCALL asm_putddi(struct ast *__restrict self);
 #else
-INTDEF int DCALL asm_putddi_dbg(struct ast *__restrict ast, char const *file, int line);
-#define asm_putddi(ast)      asm_putddi_dbg(ast,__FILE__,__LINE__)
+INTDEF int DCALL asm_putddi_dbg(struct ast *__restrict self, char const *file, int line);
+#define asm_putddi(self)    asm_putddi_dbg(self,__FILE__,__LINE__)
 #endif
 
 /* Generate symbol binding information as part of the next DDI checkpoint. */
@@ -1461,7 +1461,7 @@ INTDEF int DCALL asm_gpop_symbol(struct symbol *__restrict sym, struct ast *__re
 INTDEF bool DCALL asm_gpush_symbol_is_expensive(struct symbol *__restrict sym);
 
 /* Generate code to pop the stack-top value into the given AST. */
-INTDEF int DCALL asm_gpop_expr(struct ast *__restrict ast);
+INTDEF int DCALL asm_gpop_expr(struct ast *__restrict self);
 /* Same as `asm_gpop_expr()', but pop `astc' values, one in each AST. */
 INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, struct ast **__restrict astv);
 
@@ -1475,8 +1475,8 @@ INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, struct ast **__restrict ast
  * -> ast_genasm(src,ASM_G_FPUSHRES);  // push c;
  * -> asm_gpop_expr_leave(dst,diff);   // setrange pop, pop, pop;
  */
-INTDEF int DCALL asm_gpop_expr_enter(struct ast *__restrict ast);
-INTDEF int DCALL asm_gpop_expr_leave(struct ast *__restrict ast, unsigned int gflags);
+INTDEF int DCALL asm_gpop_expr_enter(struct ast *__restrict self);
+INTDEF int DCALL asm_gpop_expr_leave(struct ast *__restrict self, unsigned int gflags);
 
 
 INTDEF int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
@@ -1740,7 +1740,7 @@ DeeInstruction_Decode(instruction_t const *__restrict ip,
 
 
 /* Generate assembly for the given AST. */
-INTDEF int DCALL ast_genasm(struct ast *__restrict ast, unsigned int gflags);
+INTDEF int DCALL ast_genasm(struct ast *__restrict self, unsigned int gflags);
 
 /* Variants of `ast_genasm()' that will attempt to emit the expression
  * as either an AbstractSequeceProxy, or as a Set. In either case, if
@@ -1758,18 +1758,18 @@ INTDEF int DCALL ast_genasm(struct ast *__restrict ast, unsigned int gflags);
  *    performance.
  *    Additionally, ast_genasm_set() will try to strip unnecessary sequence
  *    casts from the expression, the same way `ast_genasm_asp()' would. */
-INTDEF int DCALL ast_genasm_asp(struct ast *__restrict ast, unsigned int gflags);
-INTDEF int DCALL ast_genasm_set(struct ast *__restrict ast, unsigned int gflags);
+INTDEF int DCALL ast_genasm_asp(struct ast *__restrict self, unsigned int gflags);
+INTDEF int DCALL ast_genasm_set(struct ast *__restrict self, unsigned int gflags);
 
 /* Strip sequence-style cast expressions from `ast' and return an inner sequence.
  * If `ast' is no sequence expression, re-return it directly. */
-INTDEF struct ast *DCALL ast_strip_seqcast(struct ast *__restrict ast);
+INTDEF struct ast *DCALL ast_strip_seqcast(struct ast *__restrict self);
 
 /* Generate text for a given `AST_SWITCH' branch. */
-INTDEF int DCALL ast_genasm_switch(struct ast *__restrict ast);
+INTDEF int DCALL ast_genasm_switch(struct ast *__restrict self);
 
 /* Generate user-assembly for a given `AST_ASSEMBLY' branch. */
-INTDEF int DCALL ast_genasm_userasm(struct ast *__restrict ast);
+INTDEF int DCALL ast_genasm_userasm(struct ast *__restrict self);
 
 /* Compile a DDI object for use by generated code. */
 INTDEF DREF DeeDDIObject *DCALL ddi_compile(void);

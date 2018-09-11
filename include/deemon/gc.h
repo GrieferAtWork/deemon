@@ -26,8 +26,12 @@
 
 DECL_BEGIN
 
-struct gc_head {
+struct gc_head_raw {
     /* The structure that is prefixed before every GC-allocated object. */
+    struct gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
+    struct gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
+};
+struct gc_head {
     struct gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
     struct gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
     DeeObject        gc_object; /* The object that is being controlled by the GC. */

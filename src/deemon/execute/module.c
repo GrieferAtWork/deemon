@@ -1196,6 +1196,8 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 INTERN struct static_module_struct empty_module_head = {
     {
         /* ... */
+        NULL,
+        NULL
     },{
         OBJECT_HEAD_INIT(&DeeModule_Type),
         /* .mo_name      = */(DeeStringObject *)Dee_EmptyString,

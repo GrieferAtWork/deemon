@@ -556,28 +556,28 @@ PRIVATE char const doc_cmd_trigraphs[] = "Enable recognition of trigraph charact
 PRIVATE char const doc_cmd_traditional[] = "Enable recognition of traditional tokens & macros (Default: off)";
 
 PRIVATE struct cmd_option preprocessor_options[] = {
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "name", { &cmdpp_name }, " <name>\tSet the name used for `__FILE__' and debug informations by `INFILE'\nUseful when running in interactive mode" },
-    { CMD_FJOINABLE, "E", NULL, { &cmd_E }, doc_cmdE },
-    { CMD_FJOINABLE, "P", NULL, { &cmd_P }, doc_cmdP },
-    { CMD_FARG|CMD_FARGIMM, "o", NULL, { &cmd_o }, doc_cmdo },
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "out", { &cmd_o }, doc_cmdo },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "D", NULL, { &cmd_D }, doc_cmdD },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "U", NULL, { &cmd_U }, doc_cmdU },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "A", NULL, { &cmd_A }, doc_cmdA },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "I", NULL, { &cmd_I }, doc_cmdI },
-    { CMD_FNORMAL/*|CMD_FLONG1DASH*/, "", "tok", { &cmd_tok }, doc_cmdtok },
-    { CMD_FNORMAL|CMD_FRUNLATER, "", "pp", { &cmd_pp }, doc_cmdpp },
-    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "undef", { &cmd_undef }, doc_cmd_undef },
-    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "cpp", { &cmd_cpp }, "Enable preprocessing" },
-    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "nocpp", { &cmd_nocpp }, "Disable preprocessing" },
-    { CMD_FNORMAL|CMD_FRUNLATER, "C", NULL, { &cmd_ppC }, "Do not discard comments" },
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ|CMD_FRUNLATER, "", "message-format", { &cmd_message_format }, doc_cmdmessage_format },
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ|CMD_FLONG1DASH, "", "ftabstop", { &cmd_ftabstop }, doc_cmd_ftabstop },
-    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "trigraphs", { &cmd_trigraphs }, doc_cmd_trigraphs },
-    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional", { &cmd_traditional }, doc_cmd_traditional },
-    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional-cpp", { &cmd_traditional }, doc_cmd_traditional },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "f", NULL, { &cmd_f }, doc_cmdf },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "W", NULL, { &cmd_W }, doc_cmdW },
+    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "name", { (void *)&cmdpp_name }, " <name>\tSet the name used for `__FILE__' and debug informations by `INFILE'\nUseful when running in interactive mode" },
+    { CMD_FJOINABLE, "E", NULL, { (void *)&cmd_E }, doc_cmdE },
+    { CMD_FJOINABLE, "P", NULL, { (void *)&cmd_P }, doc_cmdP },
+    { CMD_FARG|CMD_FARGIMM, "o", NULL, { (void *)&cmd_o }, doc_cmdo },
+    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "out", { (void *)&cmd_o }, doc_cmdo },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "D", NULL, { (void *)&cmd_D }, doc_cmdD },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "U", NULL, { (void *)&cmd_U }, doc_cmdU },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "A", NULL, { (void *)&cmd_A }, doc_cmdA },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "I", NULL, { (void *)&cmd_I }, doc_cmdI },
+    { CMD_FNORMAL/*|CMD_FLONG1DASH*/, "", "tok", { (void *)&cmd_tok }, doc_cmdtok },
+    { CMD_FNORMAL|CMD_FRUNLATER, "", "pp", { (void *)&cmd_pp }, doc_cmdpp },
+    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "undef", { (void *)&cmd_undef }, doc_cmd_undef },
+    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "cpp", { (void *)&cmd_cpp }, "Enable preprocessing" },
+    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "nocpp", { (void *)&cmd_nocpp }, "Disable preprocessing" },
+    { CMD_FNORMAL|CMD_FRUNLATER, "C", NULL, { (void *)&cmd_ppC }, "Do not discard comments" },
+    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ|CMD_FRUNLATER, "", "message-format", { (void *)&cmd_message_format }, doc_cmdmessage_format },
+    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ|CMD_FLONG1DASH, "", "ftabstop", { (void *)&cmd_ftabstop }, doc_cmd_ftabstop },
+    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "trigraphs", { (void *)&cmd_trigraphs }, doc_cmd_trigraphs },
+    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional", { (void *)&cmd_traditional }, doc_cmd_traditional },
+    { CMD_FNORMAL|CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional-cpp", { (void *)&cmd_traditional }, doc_cmd_traditional },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "f", NULL, { (void *)&cmd_f }, doc_cmdf },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "W", NULL, { (void *)&cmd_W }, doc_cmdW },
 /*TODO:
                 INDENT "-M                          Instead of emitting preprocessor output, emit a make-style list of dependencies.\n"
                 INDENT "-MM                         Similar to `-M', but don't include system headers.\n"
@@ -592,62 +592,62 @@ PRIVATE struct cmd_option preprocessor_options[] = {
     CMD_OPTION_SENTINEL
 };
 PRIVATE struct cmd_option assembler_options[] = {
-    { CMD_FARG|CMD_FARGIMM, "O", NULL, { &cmd_O }, doc_cmdO },
-    { CMD_FJOINABLE|CMD_FARG|CMD_FARGIMM|CMD_FARGOPT|CMD_FARGEQ, "S", NULL, { &cmd_S }, doc_cmdS },
+    { CMD_FARG|CMD_FARGIMM, "O", NULL, { (void *)&cmd_O }, doc_cmdO },
+    { CMD_FJOINABLE|CMD_FARG|CMD_FARGIMM|CMD_FARGOPT|CMD_FARGEQ, "S", NULL, { (void *)&cmd_S }, doc_cmdS },
     CMD_OPTION_SENTINEL
 };
 PRIVATE struct cmd_option linker_options[] = {
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "name", { &cmd_name }, doc_cmdname },
-    { CMD_FARG|CMD_FARGIMM, "L", NULL, { &cmd_L }, doc_cmdL },
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "library-path", { &cmd_L }, doc_cmdL },
+    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "name", { (void *)&cmd_name }, doc_cmdname },
+    { CMD_FARG|CMD_FARGIMM, "L", NULL, { (void *)&cmd_L }, doc_cmdL },
+    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "library-path", { (void *)&cmd_L }, doc_cmdL },
     CMD_OPTION_SENTINEL
 };
 
 PRIVATE struct cmd_option cmdline_options[] = {
 
     /* Basic options. */
-    { CMD_FNORMAL, "", "version", { &cmd_version }, "Display version information" },
-    { CMD_FARG|CMD_FARGOPT, "", "help", { &cmd_help },
+    { CMD_FNORMAL, "", "version", { (void *)&cmd_version }, "Display version information" },
+    { CMD_FARG|CMD_FARGOPT, "", "help", { (void *)&cmd_help },
       "\tDisplays this help\n"
       " <subject>\tDisplay help on a specific <subject> (one of `extensions', `warnings')\n"
       " <option>\tDisplay help on a given commandline <option> (e.g. `--help Wp,E')\n"
       " /<path>\tDisplay a formatted documentation string concerning a given <path> (e.g. `--help /deemon/string')" },
-    { CMD_FJOINABLE, "F", NULL, { &cmd_F }, "Enable file formatting" },
-    { CMD_FARG|CMD_FARGIMM, "C", NULL, { &cmd_C }, "[no-]<opt>\tEnable/disable a given compiler option <opt> (s.a. `--help compiler-options')" },
+    { CMD_FJOINABLE, "F", NULL, { (void *)&cmd_F }, "Enable file formatting" },
+    { CMD_FARG|CMD_FARGIMM, "C", NULL, { (void *)&cmd_C }, "[no-]<opt>\tEnable/disable a given compiler option <opt> (s.a. `--help compiler-options')" },
 
     /* Sub-option namespaces. */
-    { CMD_FGROUP, "Wp", NULL, { preprocessor_options }, ",...\tPreprocessor-specific options (s.a. `--help Wp')" },
-    { CMD_FGROUP, "Wa", NULL, { assembler_options }, ",...\tAssembler-specific options (s.a. `--help Wa')" },
-    { CMD_FGROUP, "Wl", NULL, { linker_options }, ",...\tLinker-specific options (s.a. `--help Wl')" },
+    { CMD_FGROUP, "Wp", NULL, { (void *)preprocessor_options }, ",...\tPreprocessor-specific options (s.a. `--help Wp')" },
+    { CMD_FGROUP, "Wa", NULL, { (void *)assembler_options }, ",...\tAssembler-specific options (s.a. `--help Wa')" },
+    { CMD_FGROUP, "Wl", NULL, { (void *)linker_options }, ",...\tLinker-specific options (s.a. `--help Wl')" },
 
     /* Preprocessor-specific options that are promoted into the root commandline namespace. */
-    { CMD_FJOINABLE, "E", NULL, { &cmd_E }, doc_cmdE },
-    { CMD_FJOINABLE, "i", NULL, { &cmd_i }, doc_cmdi },
-    { CMD_FJOINABLE, "P", NULL, { &cmd_P }, doc_cmdP },
-    { CMD_FJOINABLE, "c", NULL, { &cmd_c }, doc_cmdc },
-    { CMD_FARG|CMD_FARGIMM, "o", NULL, { &cmd_o }, doc_cmdo },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "D", NULL, { &cmd_D }, doc_cmdD },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "U", NULL, { &cmd_U }, doc_cmdU },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "A", NULL, { &cmd_A }, doc_cmdA },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "I", NULL, { &cmd_I }, doc_cmdI },
-    { CMD_FLONG1DASH, "", "tok", { &cmd_tok }, doc_cmdtok },
-    { CMD_FRUNLATER, "", "pp", { &cmd_pp }, doc_cmdpp },
-    { CMD_FLONG1DASH, "", "undef", { &cmd_undef }, doc_cmd_undef },
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ|CMD_FRUNLATER, "", "message-format", { &cmd_message_format }, doc_cmdmessage_format },
-    { CMD_FLONG1DASH|CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "ftabstop", { &cmd_ftabstop }, doc_cmd_ftabstop },
-    { CMD_FLONG1DASH|CMD_FRUNLATER, "", "trigraphs", { &cmd_trigraphs }, doc_cmd_trigraphs },
-    { CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional", { &cmd_traditional }, doc_cmd_traditional },
-    { CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional-cpp", { &cmd_traditional }, doc_cmd_traditional },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "f", NULL, { &cmd_f }, doc_cmdf },
-    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "W", NULL, { &cmd_W }, doc_cmdW },
+    { CMD_FJOINABLE, "E", NULL, { (void *)&cmd_E }, doc_cmdE },
+    { CMD_FJOINABLE, "i", NULL, { (void *)&cmd_i }, doc_cmdi },
+    { CMD_FJOINABLE, "P", NULL, { (void *)&cmd_P }, doc_cmdP },
+    { CMD_FJOINABLE, "c", NULL, { (void *)&cmd_c }, doc_cmdc },
+    { CMD_FARG|CMD_FARGIMM, "o", NULL, { (void *)&cmd_o }, doc_cmdo },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "D", NULL, { (void *)&cmd_D }, doc_cmdD },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "U", NULL, { (void *)&cmd_U }, doc_cmdU },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "A", NULL, { (void *)&cmd_A }, doc_cmdA },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "I", NULL, { (void *)&cmd_I }, doc_cmdI },
+    { CMD_FLONG1DASH, "", "tok", { (void *)&cmd_tok }, doc_cmdtok },
+    { CMD_FRUNLATER, "", "pp", { (void *)&cmd_pp }, doc_cmdpp },
+    { CMD_FLONG1DASH, "", "undef", { (void *)&cmd_undef }, doc_cmd_undef },
+    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ|CMD_FRUNLATER, "", "message-format", { (void *)&cmd_message_format }, doc_cmdmessage_format },
+    { CMD_FLONG1DASH|CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "ftabstop", { (void *)&cmd_ftabstop }, doc_cmd_ftabstop },
+    { CMD_FLONG1DASH|CMD_FRUNLATER, "", "trigraphs", { (void *)&cmd_trigraphs }, doc_cmd_trigraphs },
+    { CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional", { (void *)&cmd_traditional }, doc_cmd_traditional },
+    { CMD_FLONG1DASH|CMD_FRUNLATER, "", "traditional-cpp", { (void *)&cmd_traditional }, doc_cmd_traditional },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "f", NULL, { (void *)&cmd_f }, doc_cmdf },
+    { CMD_FARG|CMD_FARGIMM|CMD_FRUNLATER, "W", NULL, { (void *)&cmd_W }, doc_cmdW },
 
     /* Assembler-specific options that are promoted into the root commandline namespace. */
-    { CMD_FJOINABLE|CMD_FARG|CMD_FARGIMM|CMD_FARGOPT|CMD_FARGEQ, "S", NULL, { &cmd_S }, doc_cmdS },
-    { CMD_FARG|CMD_FARGIMM, "O", NULL, { &cmd_O }, doc_cmdO },
+    { CMD_FJOINABLE|CMD_FARG|CMD_FARGIMM|CMD_FARGOPT|CMD_FARGEQ, "S", NULL, { (void *)&cmd_S }, doc_cmdS },
+    { CMD_FARG|CMD_FARGIMM, "O", NULL, { (void *)&cmd_O }, doc_cmdO },
 
     /* Linker-specific options that are promoted into the root commandline namespace. */
-    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "name", { &cmd_name }, doc_cmdname },
-    { CMD_FARG|CMD_FARGIMM, "L", NULL, { &cmd_L }, doc_cmdL },
+    { CMD_FARG|CMD_FARGIMM|CMD_FARGEQ, "", "name", { (void *)&cmd_name }, doc_cmdname },
+    { CMD_FARG|CMD_FARGIMM, "L", NULL, { (void *)&cmd_L }, doc_cmdL },
 
     CMD_OPTION_SENTINEL
 };
@@ -1459,7 +1459,7 @@ PRIVATE void DCALL emitpp_emitraw(void) {
  if ((emitpp_state&EMITPP_MOUTLINE) == EMITPP_FOUTLINE_TOK)
      emitpp_writeout("[",sizeof(char));
  if (!(emitpp_state&EMITPP_FNODECODETOK)) {
-  TPP_PrintToken(&emitpp_printout,NULL);
+  TPP_PrintToken((printer_t)&emitpp_printout,NULL);
   if (TPPLexer_Current->l_token.t_id == '\n')
       ++emitpp_curr_line;
  } else {

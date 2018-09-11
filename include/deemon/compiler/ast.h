@@ -591,13 +591,13 @@ INTDEF DeeTypeObject DeeAst_Type;
  *       current source file and only sets debug info when it is.
  *       Otherwise, the assigned debug information will mirror
  *       the current LC location in the active source file.
- * HINT: This function behaves as a noop when `ast' is NULL
- * @return: * : == ast */
-INTDEF struct ast *FCALL ast_setddi(struct ast *ast, struct ast_loc *__restrict info);
-INTDEF struct ast *FCALL ast_sethere(struct ast *ast);
+ * HINT: This function behaves as a noop when `self' is NULL
+ * @return: * : == self */
+INTDEF struct ast *FCALL ast_setddi(struct ast *self, struct ast_loc *__restrict info);
+INTDEF struct ast *FCALL ast_sethere(struct ast *self);
 /* Same as the set functions above, but don't override existing debug information. */
-INTDEF struct ast *FCALL ast_putddi(struct ast *ast, struct ast_loc *__restrict info);
-INTDEF struct ast *FCALL ast_puthere(struct ast *ast);
+INTDEF struct ast *FCALL ast_putddi(struct ast *self, struct ast_loc *__restrict info);
+INTDEF struct ast *FCALL ast_puthere(struct ast *self);
 /* Fill the given AST location with the current source position. */
 INTDEF void FCALL loc_here(struct ast_loc *__restrict info);
 

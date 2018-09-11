@@ -31,57 +31,57 @@
 DECL_BEGIN
 
 #ifdef ENTER
-INTERN int (DCALL asm_gpop_expr_enter)(struct ast *__restrict ast)
+INTERN int (DCALL asm_gpop_expr_enter)(struct ast *__restrict self)
 #else
-INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int gflags)
+INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict self, unsigned int gflags)
 #define PUSH_RESULT  (gflags & ASM_G_FPUSHRES)
 #endif
 {
- switch (ast->a_type) {
+ switch (self->a_type) {
 
  case AST_SYM:
 #ifdef LEAVE
-  if (asm_putddi(ast)) goto err;
+  if (asm_putddi(self)) goto err;
   if (PUSH_RESULT && asm_gdup()) goto err;
-  return asm_gpop_symbol(ast->a_sym,ast);
+  return asm_gpop_symbol(self->a_sym,self);
 #endif
   break;
 
  case AST_MULTIPLE:
-  if (ast->a_flag == AST_FMULTIPLE_KEEPLAST) {
+  if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
    /* Special case: Store to KEEP-last multiple AST:
     *               Evaluate all branches but the last without using them.
     *               Then simply write the value to the last expression. */
 #ifdef ENTER
    size_t i = 0;
-   if (ast->a_multiple.m_astc == 0)
+   if (self->a_multiple.m_astc == 0)
        goto done;
-   if (ast->a_multiple.m_astc > 1) {
-    ASM_PUSH_SCOPE(ast->a_scope,err);
-    for (; i < ast->a_multiple.m_astc-1; ++i) {
-     if (ast_genasm(ast->a_multiple.m_astv[i],ASM_G_FNORMAL))
+   if (self->a_multiple.m_astc > 1) {
+    ASM_PUSH_SCOPE(self->a_scope,err);
+    for (; i < self->a_multiple.m_astc-1; ++i) {
+     if (ast_genasm(self->a_multiple.m_astv[i],ASM_G_FNORMAL))
          goto err;
     }
     ASM_POP_SCOPE(0,err);
    }
-   ASSERT(i == ast->a_multiple.m_astc-1);
-   if (asm_gpop_expr_enter(ast->a_multiple.m_astv[i])) goto err;
+   ASSERT(i == self->a_multiple.m_astc-1);
+   if (asm_gpop_expr_enter(self->a_multiple.m_astv[i])) goto err;
 #else
-   if (!ast->a_multiple.m_astc) {
+   if (!self->a_multiple.m_astc) {
     if (PUSH_RESULT) goto done;
     return asm_gpop();
    }
-   return asm_gpop_expr_leave(ast->a_multiple.m_astv[
-                              ast->a_multiple.m_astc-1],
+   return asm_gpop_expr_leave(self->a_multiple.m_astv[
+                              self->a_multiple.m_astc-1],
                               gflags);
 #endif
   }
   {
    size_t i;
 #ifdef ENTER
-   for (i = 0; i < ast->a_multiple.m_astc; ++i) {
+   for (i = 0; i < self->a_multiple.m_astc; ++i) {
     uint16_t old_stacksz = current_assembler.a_stackcur;
-    struct ast *inner = ast->a_multiple.m_astv[i];
+    struct ast *inner = self->a_multiple.m_astv[i];
     if (asm_gpop_expr_enter(inner))
         goto err;
     ASSERT(current_assembler.a_stackcur >= old_stacksz);
@@ -93,18 +93,18 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
     uint16_t total_diff = 0;
     size_t count;
     /* Move the result below the block of stack-temporaries used by target-expressions. */
-    count = ast->a_multiple.m_astc;
-    if (asm_putddi(ast)) goto err;
+    count = self->a_multiple.m_astc;
+    if (asm_putddi(self)) goto err;
     if (asm_gunpack((uint16_t)count)) goto err;
     i = count;
-    while (i--) total_diff += ast->a_multiple.m_astv[i]->a_temp;
+    while (i--) total_diff += self->a_multiple.m_astv[i]->a_temp;
     if (PUSH_RESULT) {
      if (asm_gdup()) goto err; /* <temp...>, result, result */
      if (total_diff != 0 && asm_grrot(total_diff + 2)) goto err; /* result, <temp...>, result */
     }
     /* Directly leave expressions that didn't use any stack-temporaries. */
-    while (count && ast->a_multiple.m_astv[count-1]->a_temp == 0) {
-     if (asm_gpop_expr_leave(ast->a_multiple.m_astv[count-1],ASM_G_FNORMAL))
+    while (count && self->a_multiple.m_astv[count-1]->a_temp == 0) {
+     if (asm_gpop_expr_leave(self->a_multiple.m_astv[count-1],ASM_G_FNORMAL))
          goto err;
      --count;
     }
@@ -123,13 +123,13 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
      while (i-- > 1) {
       uint16_t total = (uint16_t)count;
       for (j = i; j < count; ++j)
-          total += ast->a_multiple.m_astv[j]->a_temp;
+          total += self->a_multiple.m_astv[j]->a_temp;
       if (asm_grrot(total)) goto err;
      }
      /* The leave-stack is unwound in reverse order! */
      i = count;
      while (i--) {
-      if (asm_gpop_expr_leave(ast->a_multiple.m_astv[i],ASM_G_FNORMAL))
+      if (asm_gpop_expr_leave(self->a_multiple.m_astv[i],ASM_G_FNORMAL))
           goto err;
      }
     }
@@ -139,22 +139,22 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
   break;
 
  case AST_OPERATOR:
-  switch (ast->a_flag) {
+  switch (self->a_flag) {
   {
    struct ast *attr;
   case OPERATOR_GETATTR:
-   if unlikely((attr = ast->a_operator.o_op1) == NULL) break;
+   if unlikely((attr = self->a_operator.o_op1) == NULL) break;
    if (attr->a_type == AST_CONSTEXPR &&
        DeeString_Check(attr->a_constexpr)) {
     int32_t cid = asm_newconst(attr->a_constexpr);
-    struct ast *base = ast->a_operator.o_op0;
+    struct ast *base = self->a_operator.o_op0;
     if unlikely(cid < 0) goto err;
     if (base->a_type == AST_SYM) {
      struct symbol *sym = SYMBOL_UNWIND_ALIAS(base->a_sym);
      if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 #ifdef LEAVE
-      if (asm_putddi(ast)) goto err;
+      if (asm_putddi(self)) goto err;
       if (PUSH_RESULT && asm_gdup()) goto err;
       if (asm_gsetattr_this_const((uint16_t)cid)) goto err;
 #endif
@@ -164,7 +164,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
 #ifdef ENTER
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
 #else
-    if (asm_putddi(ast)) goto err; /* base, value */
+    if (asm_putddi(self)) goto err; /* base, value */
     if (PUSH_RESULT) {
      if (asm_gdup()) goto err;     /* base, value, value */
      if (asm_grrot(3)) goto err;   /* value, base, value */
@@ -174,10 +174,10 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
     goto done;
    }
 #ifdef ENTER
-   if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(ast->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
 #else
-   if (asm_putddi(ast)) goto err;
+   if (asm_putddi(self)) goto err;
    if (PUSH_RESULT) {
     if (asm_gdup()) goto err;     /* base, attr, value, value */
     if (asm_grrot(4)) goto err;   /* value, base, attr, value */
@@ -191,9 +191,9 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
   {
    struct ast *index;
   case OPERATOR_GETITEM:
-   if unlikely((index = ast->a_operator.o_op1) == NULL) break;
+   if unlikely((index = self->a_operator.o_op1) == NULL) break;
 #ifdef ENTER
-   if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
 #endif
    if (index->a_type == AST_CONSTEXPR) {
     int32_t int_index;
@@ -202,7 +202,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
         DeeInt_TryAsS32(index->a_constexpr,&int_index) &&
         int_index >= INT16_MIN && int_index <= INT16_MAX) {
 #ifdef LEAVE
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (PUSH_RESULT) {
       if (asm_gdup()) goto err;     /* base, value, value */
       if (asm_grrot(3)) goto err;   /* value, base, value */
@@ -215,7 +215,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
      int_index = asm_newconst(index->a_constexpr);
      if unlikely(int_index < 0) goto err;
 #ifdef LEAVE
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (PUSH_RESULT) {
       if (asm_gdup()) goto err;     /* base, value, value */
       if (asm_grrot(3)) goto err;   /* value, base, value */
@@ -228,7 +228,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
 #ifdef ENTER
    if (ast_genasm(index,ASM_G_FPUSHRES)) goto err; /* STACK: base, index */
 #else
-   if (asm_putddi(ast)) goto err;
+   if (asm_putddi(self)) goto err;
    if (PUSH_RESULT) {
     if (asm_gdup()) goto err;     /* base, index, value, value */
     if (asm_grrot(4)) goto err;   /* value, base, index, value */
@@ -242,12 +242,12 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
    struct ast *begin,*end;
    int32_t index;
   case OPERATOR_GETRANGE:
-   if unlikely(!ast->a_operator.o_op2) break;
+   if unlikely(!self->a_operator.o_op2) break;
 #ifdef ENTER
-   if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
 #endif
-   begin = ast->a_operator.o_op1;
-   end   = ast->a_operator.o_op2;
+   begin = self->a_operator.o_op1;
+   end   = self->a_operator.o_op2;
    /* Special optimizations for certain ranges. */
    if (begin->a_type == AST_CONSTEXPR) {
     DeeObject *begin_index = begin->a_constexpr;
@@ -259,7 +259,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
          index >= INT16_MIN && index <= INT16_MAX) {
       /* `setrange pop, none, $<Simm16>, pop' */
 #ifdef LEAVE
-      if (asm_putddi(ast)) goto err;
+      if (asm_putddi(self)) goto err;
       if (PUSH_RESULT) {
        if (asm_gdup()) goto err;     /* base, value, value */
        if (asm_grrot(3)) goto err;   /* value, base, value */
@@ -272,7 +272,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
 #ifdef ENTER
      if (ast_genasm(end,ASM_G_FPUSHRES)) goto err; /* STACK: base, end */
 #else
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (PUSH_RESULT) {
       if (asm_gdup()) goto err;     /* base, end, value, value */
       if (asm_grrot(4)) goto err;   /* value, base, end, value */
@@ -290,7 +290,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
       if (DeeNone_Check(end_index)) {
        /* `setrange pop, $<Simm16>, none, pop' */
 #ifdef LEAVE
-       if (asm_putddi(ast)) goto err;
+       if (asm_putddi(self)) goto err;
        if (PUSH_RESULT) {
         if (asm_gdup()) goto err;     /* base, value, value */
         if (asm_grrot(3)) goto err;   /* value, base, value */
@@ -304,7 +304,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
           index2 >= INT16_MIN && index2 <= INT16_MAX) {
        /* `setrange pop, $<Simm16>, $<Simm16>, pop' */
 #ifdef LEAVE
-       if (asm_putddi(ast)) goto err;
+       if (asm_putddi(self)) goto err;
        if (PUSH_RESULT) {
         if (asm_gdup()) goto err;     /* base, value, value */
         if (asm_grrot(3)) goto err;   /* value, base, value */
@@ -317,7 +317,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
 #ifdef ENTER
      if (ast_genasm(end,ASM_G_FPUSHRES)) goto err; /* STACK: base, end */
 #else
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (PUSH_RESULT) {
       if (asm_gdup()) goto err;     /* base, end, value, value */
       if (asm_grrot(4)) goto err;   /* value, base, end, value */
@@ -335,7 +335,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
 #ifdef ENTER
      if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err; /* STACK: base, begin */
 #else
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (PUSH_RESULT) {
       if (asm_gdup()) goto err;     /* base, begin, value, value */
       if (asm_grrot(4)) goto err;   /* value, base, begin, value */
@@ -351,7 +351,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
 #ifdef ENTER
      if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err; /* STACK: base, begin */
 #else
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (PUSH_RESULT) {
       if (asm_gdup()) goto err;     /* base, begin, value, value */
       if (asm_grrot(4)) goto err;   /* value, base, begin, value */
@@ -365,7 +365,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
    if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;
    if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;
 #else
-   if (asm_putddi(ast)) goto err;
+   if (asm_putddi(self)) goto err;
    if (PUSH_RESULT) {
     if (asm_gdup()) goto err;     /* base, begin, end, value, value */
     if (asm_grrot(5)) goto err;   /* value, base, begin, end, value */
@@ -382,7 +382,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
  case AST_CONSTEXPR:
   /* Check for special case: store into a constant
    * expression `none' is the same as `pop' */
-  if (!DeeNone_Check(ast->a_constexpr))
+  if (!DeeNone_Check(self->a_constexpr))
        goto default_case;
 #ifdef LEAVE
   if (!PUSH_RESULT && asm_gpop()) goto err;
@@ -391,14 +391,14 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict ast, unsigned int 
 
  default:
 default_case:
-  /* Fallback: Generate the ast and store it directly. */
+  /* Fallback: Generate the self and store it directly. */
 #ifdef ENTER
-  if (ast_genasm(ast,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm(self,ASM_G_FPUSHRES)) goto err;
 #else
   /* Emit a warning about an r-value store. */
-  if (WARNAST(ast,W_ASM_STORE_TO_RVALUE))
+  if (WARNAST(self,W_ASM_STORE_TO_RVALUE))
       goto err;
-  if (asm_putddi(ast)) goto err;
+  if (asm_putddi(self)) goto err;
   if (PUSH_RESULT) {
    if (asm_gdup_n(0)) goto err; /* dst, value, dst */
    if (asm_gswap()) goto err;   /* dst, dst, value */

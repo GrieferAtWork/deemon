@@ -1291,69 +1291,69 @@ err:
 }
 
 INTERN int DCALL
-asm_gpop_expr(struct ast *__restrict ast) {
- switch (ast->a_type) {
+asm_gpop_expr(struct ast *__restrict self) {
+ switch (self->a_type) {
 
  case AST_SYM:
-  if (asm_putddi(ast)) goto err;
-  return asm_gpop_symbol(ast->a_sym,ast);
+  if (asm_putddi(self)) goto err;
+  return asm_gpop_symbol(self->a_sym,self);
 
  case AST_MULTIPLE:
-  if (ast->a_flag == AST_FMULTIPLE_KEEPLAST) {
+  if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
    size_t i = 0;
    /* Special case: Store to KEEP-last multiple AST:
     *               Evaluate all branches but the last without using them.
     *               Then simply write the value to the last expression.
     */
-   if (ast->a_multiple.m_astc == 0)
+   if (self->a_multiple.m_astc == 0)
        return asm_gpop();
-   if (ast->a_multiple.m_astc > 1)  {
-    ASM_PUSH_SCOPE(ast->a_scope,err);
-    for (; i != ast->a_multiple.m_astc-1; ++i) {
-     if (ast_genasm(ast->a_multiple.m_astv[i],ASM_G_FNORMAL))
+   if (self->a_multiple.m_astc > 1)  {
+    ASM_PUSH_SCOPE(self->a_scope,err);
+    for (; i != self->a_multiple.m_astc-1; ++i) {
+     if (ast_genasm(self->a_multiple.m_astv[i],ASM_G_FNORMAL))
          goto err;
     }
     ASM_POP_SCOPE(0,err);
    }
-   ASSERT(i == ast->a_multiple.m_astc-1);
-   return asm_gpop_expr(ast->a_multiple.m_astv[i]);
+   ASSERT(i == self->a_multiple.m_astc-1);
+   return asm_gpop_expr(self->a_multiple.m_astv[i]);
   }
-  if (asm_putddi(ast)) goto err;
-  if (asm_gunpack((uint16_t)ast->a_multiple.m_astc)) goto err;
-  if (asm_gpop_expr_multiple(ast->a_multiple.m_astc,
-                             ast->a_multiple.m_astv))
+  if (asm_putddi(self)) goto err;
+  if (asm_gunpack((uint16_t)self->a_multiple.m_astc)) goto err;
+  if (asm_gpop_expr_multiple(self->a_multiple.m_astc,
+                             self->a_multiple.m_astv))
       goto err;
   break;
 
  case AST_OPERATOR:
-  switch (ast->a_flag) {
+  switch (self->a_flag) {
   {
    struct ast *attr;
   case OPERATOR_GETATTR:
-   if unlikely((attr = ast->a_operator.o_op1) == NULL) break;
+   if unlikely((attr = self->a_operator.o_op1) == NULL) break;
    if (attr->a_type == AST_CONSTEXPR &&
        DeeString_Check(attr->a_constexpr)) {
     int32_t cid = asm_newconst(attr->a_constexpr);
-    struct ast *base = ast->a_operator.o_op0;
+    struct ast *base = self->a_operator.o_op0;
     if unlikely(cid < 0) goto err;
     if (base->a_type == AST_SYM) {
      struct symbol *sym = SYMBOL_UNWIND_ALIAS(base->a_sym);
      if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
-      if (asm_putddi(ast)) goto err;
+      if (asm_putddi(self)) goto err;
       if (asm_gsetattr_this_const((uint16_t)cid)) goto err;
       goto done;
      }
     }
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
-    if (asm_putddi(ast)) goto err;
+    if (asm_putddi(self)) goto err;
     if (asm_gswap()) goto err;
     if (asm_gsetattr_const((uint16_t)cid)) goto err;
     goto done;
    }
-   if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(ast->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
-   if (asm_putddi(ast)) goto err;
+   if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+   if (asm_putddi(self)) goto err;
    if (asm_glrot(3)) goto err;
    if (asm_gsetattr()) goto err;
    goto done;
@@ -1363,15 +1363,15 @@ asm_gpop_expr(struct ast *__restrict ast) {
   {
    struct ast *index;
   case OPERATOR_GETITEM:
-   if unlikely((index = ast->a_operator.o_op1) == NULL) break;
-   if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if unlikely((index = self->a_operator.o_op1) == NULL) break;
+   if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
    if (index->a_type == AST_CONSTEXPR) {
     int32_t int_index;
     /* Special optimizations for constant indices. */
     if (DeeInt_Check(index->a_constexpr) &&
         DeeInt_TryAsS32(index->a_constexpr,&int_index) &&
         int_index >= INT16_MIN && int_index <= INT16_MAX) {
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (asm_gswap()) goto err;
      if (asm_gsetitem_index((int16_t)int_index)) goto err;
      goto done;
@@ -1379,14 +1379,14 @@ asm_gpop_expr(struct ast *__restrict ast) {
     if (asm_allowconst(index->a_constexpr)) {
      int_index = asm_newconst(index->a_constexpr);
      if unlikely(int_index < 0) goto err;
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (asm_gswap()) goto err;
      if (asm_gsetitem_const((uint16_t)int_index)) goto err;
      goto done;
     }
    }
    if (ast_genasm(index,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, index */
-   if (asm_putddi(ast)) goto err;
+   if (asm_putddi(self)) goto err;
    if (asm_glrot(3)) goto err;           /* STACK: base, index, item */
    if (asm_gsetitem()) goto err;         /* STACK: - */
    goto done;
@@ -1396,10 +1396,10 @@ asm_gpop_expr(struct ast *__restrict ast) {
    struct ast *begin,*end;
    int32_t index;
   case OPERATOR_GETRANGE:
-   if unlikely(!ast->a_operator.o_op2) break;
-   if (ast_genasm(ast->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-   begin = ast->a_operator.o_op1;
-   end   = ast->a_operator.o_op2;
+   if unlikely(!self->a_operator.o_op2) break;
+   if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   begin = self->a_operator.o_op1;
+   end   = self->a_operator.o_op2;
    /* Special optimizations for certain ranges. */
    if (begin->a_type == AST_CONSTEXPR) {
     DeeObject *begin_index = begin->a_constexpr;
@@ -1410,14 +1410,14 @@ asm_gpop_expr(struct ast *__restrict ast) {
          DeeInt_TryAsS32(end->a_constexpr,&index) &&
          index >= INT16_MIN && index <= INT16_MAX) {
       /* `setrange pop, none, $<Simm16>, pop' */
-      if (asm_putddi(ast)) goto err;
+      if (asm_putddi(self)) goto err;
       if (asm_gswap()) goto err; /* STACK: base, item */
       if (asm_gsetrange_ni((int16_t)index)) goto err;
       goto done;
      }
      /* `setrange pop, none, pop, pop' */
      if (ast_genasm(end,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, end */
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (asm_glrot(3)) goto err;         /* STACK: base, end, item */
      if (asm_gsetrange_np()) goto err;   /* STACK: - */
      goto done;
@@ -1430,7 +1430,7 @@ asm_gpop_expr(struct ast *__restrict ast) {
       DeeObject *end_index = end->a_constexpr;
       if (DeeNone_Check(end_index)) {
        /* `setrange pop, $<Simm16>, none, pop' */
-       if (asm_putddi(ast)) goto err;
+       if (asm_putddi(self)) goto err;
        if (asm_gswap()) goto err;                      /* STACK: base, item */
        if (asm_gsetrange_in((int16_t)index)) goto err; /* STACK: - */
        goto done;
@@ -1439,14 +1439,14 @@ asm_gpop_expr(struct ast *__restrict ast) {
           DeeInt_TryAsS32(end_index,&index2) &&
           index2 >= INT16_MIN && index2 <= INT16_MAX) {
        /* `setrange pop, $<Simm16>, $<Simm16>, pop' */
-       if (asm_putddi(ast)) goto err;
+       if (asm_putddi(self)) goto err;
        if (asm_gswap()) goto err;                                      /* STACK: base, item */
        if (asm_gsetrange_ii((int16_t)index,(int16_t)index2)) goto err; /* STACK: - */
        goto done;
       }
      }
      if (ast_genasm(end,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, end */
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (asm_glrot(3)) goto err;         /* STACK: base, end, item */
      if (asm_gsetrange_ip((int16_t)index)) goto err; /* STACK: - */
      goto done;
@@ -1458,7 +1458,7 @@ asm_gpop_expr(struct ast *__restrict ast) {
     if (DeeNone_Check(end_index)) {
      /* `setrange pop, pop, none, pop' */
      if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, begin */
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (asm_glrot(3)) goto err;           /* STACK: base, begin, item */
      if (asm_gsetrange_pn()) goto err;     /* STACK: - */
      goto done;
@@ -1468,7 +1468,7 @@ asm_gpop_expr(struct ast *__restrict ast) {
         index >= INT16_MIN && index <= INT16_MAX) {
      /* `setrange pop, pop, $<Simm16>, pop' */
      if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;           /* STACK: item, base, begin */
-     if (asm_putddi(ast)) goto err;
+     if (asm_putddi(self)) goto err;
      if (asm_glrot(3)) goto err;                     /* STACK: base, begin, item */
      if (asm_gsetrange_pi((int16_t)index)) goto err; /* STACK: - */
      goto done;
@@ -1476,7 +1476,7 @@ asm_gpop_expr(struct ast *__restrict ast) {
    }
    if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;
    if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;
-   if (asm_putddi(ast)) goto err;
+   if (asm_putddi(self)) goto err;
                                   /* STACK: item, base, begin, end */
    if (asm_glrot(4)) goto err;    /* STACK: base, begin, end, item */
    if (asm_gsetrange()) goto err; /* STACK: - */
@@ -1490,7 +1490,7 @@ asm_gpop_expr(struct ast *__restrict ast) {
  case AST_CONSTEXPR:
   /* Check for special case: store into a constant
    * expression `none' is the same as `pop' */
-  if (!DeeNone_Check(ast->a_constexpr))
+  if (!DeeNone_Check(self->a_constexpr))
        goto default_case;
   if (asm_gpop()) goto err;
   break;
@@ -1498,11 +1498,11 @@ asm_gpop_expr(struct ast *__restrict ast) {
  default:
 default_case:
   /* Emit a warning about an r-value store. */
-  if (WARNAST(ast,W_ASM_STORE_TO_RVALUE))
+  if (WARNAST(self,W_ASM_STORE_TO_RVALUE))
       goto err;
   /* Fallback: Generate the ast and store it directly. */
-  if (ast_genasm(ast,ASM_G_FPUSHRES)) goto err;
-  if (asm_putddi(ast)) goto err;
+  if (ast_genasm(self,ASM_G_FPUSHRES)) goto err;
+  if (asm_putddi(self)) goto err;
   if (asm_gswap()) goto err;
   if (asm_gassign()) goto err;
   break;

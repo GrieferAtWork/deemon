@@ -2164,25 +2164,25 @@ done:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_postexpr(/*inherit(always)*/DREF struct ast *__restrict ast) {
- ast = ast_parse_unary_operand(ast);
- if unlikely(!ast) goto done;
+ast_parse_postexpr(/*inherit(always)*/DREF struct ast *__restrict baseexpr) {
+ baseexpr = ast_parse_unary_operand(baseexpr);
+ if unlikely(!baseexpr) goto done;
  /* parse binary operators */
- if (TOKEN_IS_PROD(tok)   && unlikely((ast = ast_parse_prod_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_SUM(tok)    && unlikely((ast = ast_parse_sum_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_SHIFT(tok)  && unlikely((ast = ast_parse_shift_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_CMP(tok)    && unlikely((ast = ast_parse_cmp_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_CMPEQ(tok)  && unlikely((ast = ast_parse_cmpeq_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_AND(tok)    && unlikely((ast = ast_parse_and_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_XOR(tok)    && unlikely((ast = ast_parse_xor_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_OR(tok)     && unlikely((ast = ast_parse_or_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_AS(tok)     && unlikely((ast = ast_parse_as_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_LAND(tok)   && unlikely((ast = ast_parse_land_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_LOR(tok)    && unlikely((ast = ast_parse_lor_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_COND(tok)   && unlikely((ast = ast_parse_cond_operand(ast)) == NULL)) goto done;
- if (TOKEN_IS_ASSIGN(tok) && unlikely((ast = ast_parse_assign_operand(ast)) == NULL)) goto done;
+ if (TOKEN_IS_PROD(tok)   && unlikely((baseexpr = ast_parse_prod_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_SUM(tok)    && unlikely((baseexpr = ast_parse_sum_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_SHIFT(tok)  && unlikely((baseexpr = ast_parse_shift_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_CMP(tok)    && unlikely((baseexpr = ast_parse_cmp_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_CMPEQ(tok)  && unlikely((baseexpr = ast_parse_cmpeq_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_AND(tok)    && unlikely((baseexpr = ast_parse_and_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_XOR(tok)    && unlikely((baseexpr = ast_parse_xor_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_OR(tok)     && unlikely((baseexpr = ast_parse_or_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_AS(tok)     && unlikely((baseexpr = ast_parse_as_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_LAND(tok)   && unlikely((baseexpr = ast_parse_land_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_LOR(tok)    && unlikely((baseexpr = ast_parse_lor_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_COND(tok)   && unlikely((baseexpr = ast_parse_cond_operand(baseexpr)) == NULL)) goto done;
+ if (TOKEN_IS_ASSIGN(tok) && unlikely((baseexpr = ast_parse_assign_operand(baseexpr)) == NULL)) goto done;
 done:
- return ast;
+ return baseexpr;
 }
 
 

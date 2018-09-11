@@ -123,6 +123,8 @@ struct enumattr_iterator_object {
 DDATDEF DeeTypeObject DeeAttribute_Type;        /* `attribute from deemon' */
 DDATDEF DeeTypeObject DeeEnumAttr_Type;         /* `enumattr from deemon' */
 DDATDEF DeeTypeObject DeeEnumAttrIterator_Type; /* `(enumattr from deemon).iterator' */
+#define DeeEnumAttr_Check(x)      DeeObject_InstanceOfExact(x,&DeeEnumAttr_Type) /* `enumattr' is final */
+#define DeeEnumAttr_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeEnumAttr_Type)
 
 
 struct attribute_lookup_rules {

@@ -252,18 +252,18 @@ INTERN int (DCALL ast_graft_onto)(struct ast *__restrict self,
 }
 
 INTERN struct ast *DCALL
-ast_setscope_and_ddi(struct ast *ast,
+ast_setscope_and_ddi(struct ast *self,
                      struct ast *__restrict src) {
- if unlikely(!ast) return NULL;
+ if unlikely(!self) return NULL;
  Dee_Incref(src->a_scope);
- Dee_Decref(ast->a_scope);
+ Dee_Decref(self->a_scope);
  /* Override the effective scope of the AST. */
- ast->a_scope = src->a_scope;
+ self->a_scope = src->a_scope;
  /* Override the DDI information. */
  if (src->a_ddi.l_file) TPPFile_Incref(src->a_ddi.l_file);
- if (ast->a_ddi.l_file) TPPFile_Decref(ast->a_ddi.l_file);
- ast->a_ddi = src->a_ddi;
- return ast;
+ if (self->a_ddi.l_file) TPPFile_Decref(self->a_ddi.l_file);
+ self->a_ddi = src->a_ddi;
+ return self;
 }
 
 DECL_END

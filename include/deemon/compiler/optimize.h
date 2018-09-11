@@ -111,8 +111,8 @@ ast_assumes_getsymval(struct ast_assumes *__restrict self,
 
 
 /* Update `self' to be the state of assumptions as it would be
- * if `ast' would have been optimized using those assumptions.
- * However, `ast' will not actually be optimized!
+ * if `branch' would have been optimized using those assumptions.
+ * However, `branch' will not actually be optimized!
  * This is used in cases where it is necessary to determine changes
  * in assumptions made ahead of time, in order to determine which
  * assumptions will continue to hold, which have changed, etc, such
@@ -138,7 +138,7 @@ ast_assumes_getsymval(struct ast_assumes *__restrict self,
  * @return:  0: OK.
  * @return: -1: An error occurred. */
 INTDEF int (DCALL ast_assumes_gather)(struct ast_assumes *__restrict self,
-                                      struct ast *__restrict ast,
+                                      struct ast *__restrict branch,
                                       bool result_used);
 
 
@@ -295,8 +295,8 @@ INTDEF void DCALL ast_fini_contents(struct ast *__restrict self);
 /* Copy scope and DDI information from `src' and assign them to `ast'.
  * When `ast' is NULL, don't do anything.
  * @return: * : Always re-returns `ast' */
-INTDEF struct ast *DCALL ast_setscope_and_ddi(struct ast *ast,
-                                                struct ast *__restrict src);
+INTDEF struct ast *DCALL ast_setscope_and_ddi(struct ast *self,
+                                              struct ast *__restrict src);
 
 /* Internal optimization helpers... */
 INTDEF bool DCALL ast_has_sideeffects(struct ast *__restrict self);

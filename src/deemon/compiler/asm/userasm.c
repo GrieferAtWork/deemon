@@ -1074,7 +1074,7 @@ struct cleanup_mode {
 
 
 PRIVATE DREF DeeObject *DCALL
-get_assembly_formatter_oprepr(struct ast *__restrict ast,
+get_assembly_formatter_oprepr(struct ast *__restrict self,
                               char const *__restrict format, int mode,
                               struct cleanup_mode *__restrict cleanup,
                               struct assembler_state const *__restrict init_state) {
@@ -1130,8 +1130,8 @@ unknown_encoding:
 
  case ASM_OP_NONE:
   /* None-operand */
-  if (!AST_ISNONE(ast)) goto next_option;
-  if (ast_genasm(ast,ASM_G_FNORMAL)) goto err;
+  if (!AST_ISNONE(self)) goto next_option;
+  if (ast_genasm(self,ASM_G_FNORMAL)) goto err;
   result = &str_none;
   Dee_Incref(result);
   break;
@@ -1139,8 +1139,8 @@ unknown_encoding:
  case ASM_OP_ABSSTACK:
 abs_stack_any:
   if ((mode == OPTION_MODE_INOUT || mode == OPTION_MODE_INPUT) &&
-       ast->a_type == AST_SYM) {
-   sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+       self->a_type == AST_SYM) {
+   sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
    if (sym->s_type == SYMBOL_TYPE_STACK &&
       !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
       (sym->s_flag & SYMBOL_FALLOC)) {
@@ -1158,7 +1158,7 @@ abs_stack_any:
   if (mode != OPTION_MODE_INPUT)
       cleanup->cm_kind = CLEANUP_MODE_FSTACK;
   if (mode != OPTION_MODE_OUTPUT) {
-   if (ast_genasm(ast,ASM_G_FPUSHRES))
+   if (ast_genasm(self,ASM_G_FPUSHRES))
        goto err;
   } else if (option != ASM_OP_STACK) {
    /* Since this is a stack-operand, we _must_ provide an initial
@@ -1174,8 +1174,8 @@ abs_stack_any:
   break;
 
  case ASM_OP_EXCEPT:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_EXCEPT) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) goto next_option;
   result = &str_except;
@@ -1185,8 +1185,8 @@ abs_stack_any:
  {
   int32_t mid;
  case ASM_OP_MODULE:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_MODULE) goto next_option;
   mid = asm_msymid(sym);
   if unlikely(mid < 0) goto err;
@@ -1194,8 +1194,8 @@ abs_stack_any:
  } break;
 
  case ASM_OP_THIS:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_THIS) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) goto next_option;
   result = &str_this;
@@ -1203,16 +1203,16 @@ abs_stack_any:
   break;
 
  case ASM_OP_THIS_MODULE:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_MYMOD) goto next_option;
   result = &str_this_module;
   Dee_Incref(result);
   break;
 
  case ASM_OP_THIS_FUNCTION:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_MYFUNC) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) goto next_option;
   result = &str_this_function;
@@ -1222,8 +1222,8 @@ abs_stack_any:
  {
   int32_t rid;
  case ASM_OP_REF:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (!SYMBOL_MUST_REFERENCE(sym)) goto next_option;
   rid = asm_rsymid(sym);
   if unlikely(rid < 0) goto err;
@@ -1233,8 +1233,8 @@ abs_stack_any:
  {
   int32_t rid;
  case ASM_OP_REF_GEN:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   /* Check for may-reference, thus allowing anything that ~could~ be referenced. */
   if (!SYMBOL_MAY_REFERENCE(sym)) goto next_option;
   rid = asm_rsymid(sym);
@@ -1243,8 +1243,8 @@ abs_stack_any:
  } break;
 
  case ASM_OP_ARG:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) goto next_option;
   if (DeeBaseScope_IsArgOptional(current_basescope,sym->s_symid) ||
@@ -1257,9 +1257,9 @@ abs_stack_any:
  {
   int32_t cid;
  case ASM_OP_CONST:
-  if (ast->a_type != AST_CONSTEXPR) goto next_option;
-  if (!asm_allowconst(ast->a_constexpr)) goto next_option;
-  cid = asm_newconst(ast->a_constexpr);
+  if (self->a_type != AST_CONSTEXPR) goto next_option;
+  if (!asm_allowconst(self->a_constexpr)) goto next_option;
+  cid = asm_newconst(self->a_constexpr);
   if unlikely(cid < 0) goto err;
   result = DeeString_Newf("const %I16u",(uint16_t)cid);
  } break;
@@ -1267,12 +1267,12 @@ abs_stack_any:
  {
   int32_t sid;
  case ASM_OP_STATIC:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (sym->s_type != SYMBOL_TYPE_STATIC) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) goto next_option;
   if (mode == OPTION_MODE_INPUT)
-       sid = asm_ssymid_for_read(sym,ast);
+       sid = asm_ssymid_for_read(sym,self);
   else sid = asm_ssymid(sym);
   if unlikely(sid < 0) goto err;
   result = DeeString_Newf("static %I16u",(uint16_t)sid);
@@ -1281,8 +1281,8 @@ abs_stack_any:
  {
   int32_t eid;
  case ASM_OP_EXTERN:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_EXTERN) goto next_option;
   if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) goto next_option;
   eid = asm_esymid(sym);
@@ -1294,11 +1294,11 @@ abs_stack_any:
  {
   int32_t gid;
  case ASM_OP_GLOBAL:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (sym->s_type != SYMBOL_TYPE_EXTERN) goto next_option;
   if (mode == OPTION_MODE_INPUT)
-       gid = asm_gsymid_for_read(sym,ast);
+       gid = asm_gsymid_for_read(sym,self);
   else gid = asm_gsymid(sym);
   if unlikely(gid < 0) goto err;
   result = DeeString_Newf("global %I16u",(uint16_t)gid);
@@ -1307,13 +1307,13 @@ abs_stack_any:
  {
   int32_t lid;
  case ASM_OP_LOCAL:
-  if (ast->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (sym->s_type != SYMBOL_TYPE_LOCAL) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) goto next_option;
 write_regular_local:
   if (mode == OPTION_MODE_INPUT)
-       lid = asm_lsymid_for_read(sym,ast);
+       lid = asm_lsymid_for_read(sym,self);
   else lid = asm_lsymid(sym);
   if unlikely(lid < 0) goto err;
   result = DeeString_Newf("local %I16u",(uint16_t)lid);
@@ -1322,8 +1322,8 @@ write_regular_local:
  {
   int32_t lid;
  case ASM_OP_LOCAL_GEN:
-  if (ast->a_type == AST_SYM) {
-   sym = SYMBOL_UNWIND_ALIAS(ast->a_sym);
+  if (self->a_type == AST_SYM) {
+   sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
    if (sym->s_type == SYMBOL_TYPE_LOCAL &&
       !SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
        goto write_regular_local;
@@ -1333,7 +1333,7 @@ write_regular_local:
   if (mode != OPTION_MODE_OUTPUT) {
    struct symbol temp;
    INITIALIZE_FAKE_LOCAL_SYMBOL(&temp,(uint16_t)lid);
-   if (asm_gmov_sym_ast(&temp,ast,ast)) goto err;
+   if (asm_gmov_sym_ast(&temp,self,self)) goto err;
   }
   cleanup->cm_kind = CLEANUP_MODE_FLOCAL;
   if (mode != OPTION_MODE_INPUT)
@@ -1343,15 +1343,15 @@ write_regular_local:
  } break;
 
  case ASM_OP_TRUE:
-  if (ast->a_type != AST_CONSTEXPR) goto next_option;
-  if (ast->a_constexpr != Dee_True) goto next_option;
+  if (self->a_type != AST_CONSTEXPR) goto next_option;
+  if (self->a_constexpr != Dee_True) goto next_option;
   result = &str_true;
   Dee_Incref(result);
   break;
 
  case ASM_OP_FALSE:
-  if (ast->a_type != AST_CONSTEXPR) goto next_option;
-  if (ast->a_constexpr != Dee_False) goto next_option;
+  if (self->a_type != AST_CONSTEXPR) goto next_option;
+  if (self->a_constexpr != Dee_False) goto next_option;
   result = &str_false;
   Dee_Incref(result);
   break;
@@ -1359,30 +1359,30 @@ write_regular_local:
  {
   uint32_t value;
  case ASM_OP_IMMZERO:
-  if (ast->a_type != AST_CONSTEXPR) goto next_option;
-  if (!DeeInt_Check(ast->a_constexpr)) goto next_option;
-  if (!DeeInt_TryAsU32(ast->a_constexpr,&value)) goto next_option;
+  if (self->a_type != AST_CONSTEXPR) goto next_option;
+  if (!DeeInt_Check(self->a_constexpr)) goto next_option;
+  if (!DeeInt_TryAsU32(self->a_constexpr,&value)) goto next_option;
   if (value != 0) goto next_option;
   result = DeeString_New("$0");
  } break;
 
  case ASM_OP_SEQ_MAP:
-  if (ast->a_type == AST_MULTIPLE &&
-      ast->a_flag != AST_FMULTIPLE_KEEPLAST &&
-      AST_FMULTIPLE_ISDICT(ast->a_flag)) {
-   size_t i,length = ast->a_multiple.m_astc & ~1;
+  if (self->a_type == AST_MULTIPLE &&
+      self->a_flag != AST_FMULTIPLE_KEEPLAST &&
+      AST_FMULTIPLE_ISDICT(self->a_flag)) {
+   size_t i,length = self->a_multiple.m_astc & ~1;
    for (i = 0; i < length; ++i) {
-    if (ast_genasm(ast->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+    if (ast_genasm(self->a_multiple.m_astv[i],ASM_G_FPUSHRES))
         goto err;
    }
    result = DeeString_Newf("{#%u}",length);
    break;
   }
-  if (ast->a_type == AST_CONSTEXPR &&
-      DeeDict_Check(ast->a_constexpr)) {
+  if (self->a_type == AST_CONSTEXPR &&
+      DeeDict_Check(self->a_constexpr)) {
    /* Push the key-item pairs of a dict. */
    size_t i,length = 0;
-   DeeDictObject *d = (DeeDictObject *)ast->a_constexpr;
+   DeeDictObject *d = (DeeDictObject *)self->a_constexpr;
    DeeDict_LockRead(d);
    if (d->d_used > UINT8_MAX) {
     DeeDict_LockEndRead(d);
@@ -1420,21 +1420,21 @@ write_regular_local:
   goto next_option;
 
  case ASM_OP_SEQ_SEQ:
-  if (ast->a_type == AST_MULTIPLE &&
-      ast->a_flag != AST_FMULTIPLE_KEEPLAST &&
-     !AST_FMULTIPLE_ISDICT(ast->a_flag)) {
-   size_t i,length = ast->a_multiple.m_astc;
+  if (self->a_type == AST_MULTIPLE &&
+      self->a_flag != AST_FMULTIPLE_KEEPLAST &&
+     !AST_FMULTIPLE_ISDICT(self->a_flag)) {
+   size_t i,length = self->a_multiple.m_astc;
    for (i = 0; i < length; ++i) {
-    if (ast_genasm(ast->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+    if (ast_genasm(self->a_multiple.m_astv[i],ASM_G_FPUSHRES))
         goto err;
    }
    result = DeeString_Newf("[#%u]",length);
    break;
   }
-  if (ast->a_type == AST_CONSTEXPR) {
+  if (self->a_type == AST_CONSTEXPR) {
    DREF DeeObject *iter,*elem; size_t length;
    /* Check the length of the sequence. */
-   length = DeeObject_Size(ast->a_constexpr);
+   length = DeeObject_Size(self->a_constexpr);
    if unlikely(length == (size_t)-1) {
     if (DeeError_Catch(&DeeError_NotImplemented))
         goto next_option;
@@ -1442,7 +1442,7 @@ write_regular_local:
    }
    if (length > UINT8_MAX)
        goto next_option;
-   iter = DeeObject_IterSelf(ast->a_constexpr);
+   iter = DeeObject_IterSelf(self->a_constexpr);
    if unlikely(!iter) {
     if (DeeError_Catch(&DeeError_NotImplemented))
         goto next_option;
@@ -1476,9 +1476,9 @@ write_regular_local:
   __IF0 { case ASM_OP_SIMM16: intmin = INT16_MIN; intmax = INT16_MAX; }
   __IF0 { case ASM_OP_SIMM32: intmin = INT32_MIN; intmax = INT32_MAX; }
   __IF0 { case ASM_OP_SIMM64: intmin = INT64_MIN; intmax = INT64_MAX; }
-  if (ast->a_type != AST_CONSTEXPR) goto next_option;
-  if (!DeeInt_Check(ast->a_constexpr)) goto next_option;
-  if (!DeeInt_TryAsS64(ast->a_constexpr,&intval)) goto next_option;
+  if (self->a_type != AST_CONSTEXPR) goto next_option;
+  if (!DeeInt_Check(self->a_constexpr)) goto next_option;
+  if (!DeeInt_TryAsS64(self->a_constexpr,&intval)) goto next_option;
   if (intval < intmin || intval > intmax) goto next_option;
   result = DeeString_Newf("$%I64d",intval);
   break;
@@ -1490,30 +1490,30 @@ write_regular_local:
   __IF0 { case ASM_OP_IMM16: intmax = UINT16_MAX; }
   __IF0 { case ASM_OP_IMM32: intmax = UINT32_MAX; }
   __IF0 { case ASM_OP_IMM64: intmax = UINT64_MAX; }
-  if (ast->a_type != AST_CONSTEXPR) goto next_option;
-  if (!DeeInt_Check(ast->a_constexpr)) goto next_option;
-  if (!DeeInt_TryAsU64(ast->a_constexpr,&intval)) goto next_option;
+  if (self->a_type != AST_CONSTEXPR) goto next_option;
+  if (!DeeInt_Check(self->a_constexpr)) goto next_option;
+  if (!DeeInt_TryAsU64(self->a_constexpr,&intval)) goto next_option;
   if (intval > intmax) goto next_option;
   result = DeeString_Newf("$%I64u",intval);
   break;
  }
 
  case ASM_OP_CAST:
-  if (ast->a_type != AST_CONSTEXPR) goto next_option;
-  if (ast->a_constexpr == (DeeObject *)&DeeTuple_Type) { result = &str_tuple; Dee_Incref(result); break; }
-  if (ast->a_constexpr == (DeeObject *)&DeeList_Type) { result = &str_list; Dee_Incref(result); break; }
-  if (ast->a_constexpr == (DeeObject *)&DeeDict_Type) { result = &str_dict; Dee_Incref(result); break; }
-  if (ast->a_constexpr == (DeeObject *)&DeeHashSet_Type) { result = &str_hashset; Dee_Incref(result); break; }
-  if (ast->a_constexpr == (DeeObject *)&DeeInt_Type) { result = &str_int; Dee_Incref(result); break; }
-  if (ast->a_constexpr == (DeeObject *)&DeeBool_Type) { result = &str_bool; Dee_Incref(result); break; }
+  if (self->a_type != AST_CONSTEXPR) goto next_option;
+  if (self->a_constexpr == (DeeObject *)&DeeTuple_Type) { result = &str_tuple; Dee_Incref(result); break; }
+  if (self->a_constexpr == (DeeObject *)&DeeList_Type) { result = &str_list; Dee_Incref(result); break; }
+  if (self->a_constexpr == (DeeObject *)&DeeDict_Type) { result = &str_dict; Dee_Incref(result); break; }
+  if (self->a_constexpr == (DeeObject *)&DeeHashSet_Type) { result = &str_hashset; Dee_Incref(result); break; }
+  if (self->a_constexpr == (DeeObject *)&DeeInt_Type) { result = &str_int; Dee_Incref(result); break; }
+  if (self->a_constexpr == (DeeObject *)&DeeBool_Type) { result = &str_bool; Dee_Incref(result); break; }
   goto next_option;
 
  case ASM_OP_PREFIX:
   if (mode == OPTION_MODE_INPUT) {
-   result = get_assembly_formatter_oprepr(ast,"ceglCsS",mode|OPTION_MODE_TRY,
+   result = get_assembly_formatter_oprepr(self,"ceglCsS",mode|OPTION_MODE_TRY,
                                           cleanup,init_state);
   } else {
-   result = get_assembly_formatter_oprepr(ast,"eglCsS",mode|OPTION_MODE_TRY,
+   result = get_assembly_formatter_oprepr(self,"eglCsS",mode|OPTION_MODE_TRY,
                                           cleanup,init_state);
   }
   if (!result) goto err;
@@ -1521,28 +1521,28 @@ write_regular_local:
   goto next_option;
 
  case ASM_OP_INTEGER:
-  result = get_assembly_formatter_oprepr(ast,"I32N32",mode|OPTION_MODE_TRY,
+  result = get_assembly_formatter_oprepr(self,"I32N32",mode|OPTION_MODE_TRY,
                                          cleanup,init_state);
   if (!result) goto err;
   if (result != ITER_DONE) break;
   goto next_option;
 
  case ASM_OP_SYMBOL:
-  result = get_assembly_formatter_oprepr(ast,"racCseglRS",mode|OPTION_MODE_TRY,
+  result = get_assembly_formatter_oprepr(self,"racCseglRS",mode|OPTION_MODE_TRY,
                                          cleanup,init_state);
   if (!result) goto err;
   if (result != ITER_DONE) break;
   goto next_option;
 
  case ASM_OP_VARIABLE:
-  result = get_assembly_formatter_oprepr(ast,"eglS",mode|OPTION_MODE_TRY,
+  result = get_assembly_formatter_oprepr(self,"eglS",mode|OPTION_MODE_TRY,
                                          cleanup,init_state);
   if (!result) goto err;
   if (result != ITER_DONE) break;
   goto next_option;
 
  case ASM_OP_BINDABLE:
-  result = get_assembly_formatter_oprepr(ast,"egl",mode|OPTION_MODE_TRY,
+  result = get_assembly_formatter_oprepr(self,"egl",mode|OPTION_MODE_TRY,
                                          cleanup,init_state);
   if (!result) goto err;
   if (result != ITER_DONE) break;
@@ -1552,11 +1552,11 @@ write_regular_local:
   if (mode == OPTION_MODE_UNDEF)
       goto err_undefined_mode;
   if (mode == OPTION_MODE_INPUT)
-   result = get_assembly_formatter_oprepr(ast,"nEmTiTmTfracCseglTTFFTcI64N64SR",
+   result = get_assembly_formatter_oprepr(self,"nEmTiTmTfracCseglTTFFTcI64N64SR",
                                           mode|OPTION_MODE_TRY,
                                           cleanup,init_state);
   else {
-   result = get_assembly_formatter_oprepr(ast,"eglCsS",
+   result = get_assembly_formatter_oprepr(self,"eglCsS",
                                           mode|OPTION_MODE_TRY,
                                           cleanup,init_state);
   }
@@ -1565,7 +1565,7 @@ write_regular_local:
   goto next_option;
 
  case ASM_OP_ANYTHING:
-  result = get_assembly_formatter_oprepr(ast,"nEMTiTmTfracCseglTTFFI64N64CaQsQm",
+  result = get_assembly_formatter_oprepr(self,"nEMTiTmTfracCseglTTFFI64N64CaQsQm",
                                          mode|OPTION_MODE_TRY,
                                          cleanup,init_state);
   if (!result) goto err;
@@ -1787,7 +1787,7 @@ err:
 
 
 INTERN int DCALL
-ast_genasm_userasm(struct ast *__restrict ast) {
+ast_genasm_userasm(struct ast *__restrict self) {
  struct assembler_state old_state; int result;
  /*ref*/struct TPPString *assembly_text;
  /*ref*/struct TPPFile *assembly_file,*old_eob;
@@ -1797,31 +1797,31 @@ ast_genasm_userasm(struct ast *__restrict ast) {
  /* Save the assembler state before user-assembly is processed. */
  old_state.as_handlerc = current_assembler.a_handlerc;
  old_state.as_stackcur = current_assembler.a_stackcur;
- ASSERT(ast->a_type == AST_ASSEMBLY);
- ASSERT(ast->a_assembly.as_text.at_text);
- ASSERT(ast->a_assembly.as_text.at_text->s_refcnt);
+ ASSERT(self->a_type == AST_ASSEMBLY);
+ ASSERT(self->a_assembly.as_text.at_text);
+ ASSERT(self->a_assembly.as_text.at_text->s_refcnt);
  /* Keep track of operands that must be popped during cleanup. */
- if (ast->a_assembly.as_num_o ||
-     ast->a_assembly.as_num_i) {
-  cleanup_actions = (struct cleanup_mode *)Dee_Calloc((ast->a_assembly.as_num_o+
-                                                       ast->a_assembly.as_num_i)*
+ if (self->a_assembly.as_num_o ||
+     self->a_assembly.as_num_i) {
+  cleanup_actions = (struct cleanup_mode *)Dee_Calloc((self->a_assembly.as_num_o+
+                                                       self->a_assembly.as_num_i)*
                                                        sizeof(struct cleanup_mode));
   if unlikely(!cleanup_actions) goto err;
  }
 
- if (ast->a_flag&AST_FASSEMBLY_FORMAT) {
+ if (self->a_flag&AST_FASSEMBLY_FORMAT) {
   struct assembly_formatter formatter;
   DREF DeeStringObject **dst;
   /* Setup the formatter for user-assembly text. */
-  formatter.af_ast     = ast;
-  formatter.af_opreprv = (DREF DeeStringObject **)Dee_Calloc(ast->a_assembly.as_opc*
+  formatter.af_ast     = self;
+  formatter.af_opreprv = (DREF DeeStringObject **)Dee_Calloc(self->a_assembly.as_opc*
                                                              sizeof(DREF DeeStringObject *));
   if unlikely(!formatter.af_opreprv) goto err;
   ascii_printer_init(&formatter.af_printer);
   /* Generate text representations of assembly operands. */
   dst         = formatter.af_opreprv;
-  iter        = ast->a_assembly.as_opv;
-  count       = ast->a_assembly.as_num_o;
+  iter        = self->a_assembly.as_opv;
+  count       = self->a_assembly.as_num_o;
   cleanup_dst = cleanup_actions;
   /* Format output operands. */
   for (; count; --count,++dst,++iter,++cleanup_dst) {
@@ -1832,7 +1832,7 @@ ast_genasm_userasm(struct ast *__restrict ast) {
    if unlikely(!*dst) goto err_formatter;
   }
   /* Format output operands. */
-  count = ast->a_assembly.as_num_i;
+  count = self->a_assembly.as_num_i;
   for (; count; --count,++dst,++iter,++cleanup_dst) {
    *dst = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
                                                                 iter->ao_type->s_text,
@@ -1841,7 +1841,7 @@ ast_genasm_userasm(struct ast *__restrict ast) {
    if unlikely(!*dst) goto err_formatter;
   }
   /* Format label operands. */
-  count = ast->a_assembly.as_num_l;
+  count = self->a_assembly.as_num_l;
   for (i = 0; i < count; ++i,++dst) {
    *dst = (DREF DeeStringObject *)get_label_repr(i);
    if unlikely(!*dst) goto err_formatter;
@@ -1849,7 +1849,7 @@ ast_genasm_userasm(struct ast *__restrict ast) {
 
   /* Format the input text to what will then be processed. */
   assembly_text = assembly_formatter_format(&formatter,
-                                             ast->a_assembly.as_text.at_text);
+                                             self->a_assembly.as_text.at_text);
   assembly_formatter_fini(&formatter);
   if unlikely(!assembly_text) goto err;
   goto create_assembly_file;
@@ -1863,8 +1863,8 @@ err_formatter:
   *       don't state that this _must_ be the case, so we must still
   *       evaluate all the operands. */
  cleanup_dst = cleanup_actions;
- iter  = ast->a_assembly.as_opv;
- count = ast->a_assembly.as_num_o;
+ iter  = self->a_assembly.as_opv;
+ count = self->a_assembly.as_num_o;
  /* Format output operands. */
  for (; count; --count,++iter,++cleanup_dst) {
   DREF DeeStringObject *temp;
@@ -1875,7 +1875,7 @@ err_formatter:
   if unlikely(!temp) goto err;
   Dee_Decref(temp);
  }
- count = ast->a_assembly.as_num_i;
+ count = self->a_assembly.as_num_i;
  /* Format input operands. */
  for (; count; --count,++iter,++cleanup_dst) {
   DREF DeeStringObject *temp;
@@ -1887,9 +1887,9 @@ err_formatter:
   Dee_Decref(temp);
  }
  /* Emit debug information for user-assembly. */
- if (asm_putddi(ast)) goto err;
+ if (asm_putddi(self)) goto err;
 
- assembly_text = ast->a_assembly.as_text.at_text;
+ assembly_text = self->a_assembly.as_text.at_text;
  TPPString_Incref(assembly_text);
 create_assembly_file:
  assembly_file = TPPFile_NewExplicitInherited(assembly_text);
@@ -1944,20 +1944,20 @@ create_assembly_file:
   uint16_t old_flags = current_userasm.ua_flags;
   DeeScopeObject *old_scope = current_scope;
   /* Re-activate the scope of this branch. */
-  current_scope = ast->a_scope;
+  current_scope = self->a_scope;
   ASSERT(current_basescope == current_scope->s_base);
   ASSERT(current_rootscope == current_basescope->bs_root);
-  current_userasm.ua_flags  = ast->a_flag;
+  current_userasm.ua_flags  = self->a_flag;
   /* Save the old current-section. */
   old_section = current_assembler.a_curr;
   {
    size_t old_user_label_c; struct asm_operand *old_user_label_v;
    old_user_label_c = current_userasm.ua_labelc;
    old_user_label_v = current_userasm.ua_labelv;
-   current_userasm.ua_labelc = ast->a_assembly.as_num_l;
-   current_userasm.ua_labelv = ast->a_assembly.as_opv+
-                              (ast->a_assembly.as_num_i+
-                               ast->a_assembly.as_num_o);
+   current_userasm.ua_labelc = self->a_assembly.as_num_l;
+   current_userasm.ua_labelv = self->a_assembly.as_opv+
+                              (self->a_assembly.as_num_i+
+                               self->a_assembly.as_num_o);
    parser_start();
    if unlikely(yield() < 0)
     result = -1;
@@ -2021,19 +2021,19 @@ create_assembly_file:
  }
 
  /* Pop operands according to `must_pop_ops' */
- count = (ast->a_assembly.as_num_o+
-          ast->a_assembly.as_num_i);
+ count = (self->a_assembly.as_num_o+
+          self->a_assembly.as_num_i);
  while (count--) {
   struct ast *operand;
   switch (cleanup_actions[count].cm_kind) {
 
   case CLEANUP_MODE_FSTACK:
-   operand = ast->a_assembly.as_opv[count].ao_expr;
+   operand = self->a_assembly.as_opv[count].ao_expr;
    if unlikely(current_assembler.a_stackcur <= old_state.as_stackcur) {
     /* The user broke stack alignment (just evaluate the operand). */
-    if (ast->a_assembly.as_opv[count].ao_name) {
+    if (self->a_assembly.as_opv[count].ao_name) {
      if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
-              ast->a_assembly.as_opv[count].ao_name->k_name))
+              self->a_assembly.as_opv[count].ao_name->k_name))
          goto err;
     } else {
      char buffer[32];
@@ -2058,7 +2058,7 @@ create_assembly_file:
   {
    struct symbol temp;
   case CLEANUP_MODE_FLOCAL_POP:
-   operand = ast->a_assembly.as_opv[count].ao_expr;
+   operand = self->a_assembly.as_opv[count].ao_expr;
    INITIALIZE_FAKE_LOCAL_SYMBOL(&temp,cleanup_actions[count].cm_value);
    if (asm_gmov_ast_sym(operand,&temp,operand)) goto err;
   }
@@ -2075,7 +2075,7 @@ create_assembly_file:
  ASSERT(old_state.as_handlerc == current_assembler.a_handlerc);
  if (old_state.as_stackcur != current_assembler.a_stackcur) {
   /* NOTE: Omit any warnings when `SP' was set as a clobber operand. */
-  if (!(ast->a_flag&AST_FASSEMBLY_CLOBSP)) {
+  if (!(self->a_flag&AST_FASSEMBLY_CLOBSP)) {
    if (old_state.as_stackcur < current_assembler.a_stackcur) {
     if (WARN(W_UASM_DOESNT_CLEANUP_STACK,
             (unsigned long)(current_assembler.a_stackcur-old_state.as_stackcur)))
@@ -2100,7 +2100,7 @@ err:
 PRIVATE int DCALL
 compile_operator(struct asm_operand *__restrict op, bool is_output) {
  char const *format;
- struct ast *ast = op->ao_expr;
+ struct ast *expr = op->ao_expr;
  ASSERT(op->ao_type);
  format = op->ao_type->s_text;
  if (is_output) {
@@ -2114,17 +2114,17 @@ compile_operator(struct asm_operand *__restrict op, bool is_output) {
         goto err_undefined_mode;
    goto err_illegal_mode;
   }
-  if (ast->a_type == AST_SYM) {
-   SYMBOL_INPLACE_UNWIND_ALIAS(ast->a_sym);
-   if (ast->a_sym->s_type != SYMBOL_TYPE_GETSET)
+  if (expr->a_type == AST_SYM) {
+   SYMBOL_INPLACE_UNWIND_ALIAS(expr->a_sym);
+   if (expr->a_sym->s_type != SYMBOL_TYPE_GETSET)
        goto done;
   }
-  if (ast_genasm(ast,ASM_G_FPUSHRES)) goto err;
-  if (asm_gpop_expr(ast)) goto err;
+  if (ast_genasm(expr,ASM_G_FPUSHRES)) goto err;
+  if (asm_gpop_expr(expr)) goto err;
  } else {
   if (strcmp(format,"x") != 0)
       goto err_illegal_mode;
-  if (ast_genasm(ast,ASM_G_FNORMAL)) goto err;
+  if (ast_genasm(expr,ASM_G_FNORMAL)) goto err;
  }
 done:
  return 0;
@@ -2141,16 +2141,16 @@ err_undefined_mode:
 }
 
 INTERN int DCALL
-ast_genasm_userasm(struct ast *__restrict ast) {
+ast_genasm_userasm(struct ast *__restrict self) {
  size_t i;
- ASSERT(ast->a_type == AST_ASSEMBLY);
+ ASSERT(self->a_type == AST_ASSEMBLY);
  /* Still compile assembly operands. */
- for (i = 0; i < ast->a_assembly.as_num_o; ++i) {
-  if (compile_operator(&ast->a_assembly.as_opv[i],true))
+ for (i = 0; i < self->a_assembly.as_num_o; ++i) {
+  if (compile_operator(&self->a_assembly.as_opv[i],true))
       goto err;
  }
- for (i = 0; i < ast->a_assembly.as_num_i; ++i) {
-  if (compile_operator(&ast->a_assembly.as_opv[ast->a_assembly.as_num_o + i],false))
+ for (i = 0; i < self->a_assembly.as_num_i; ++i) {
+  if (compile_operator(&self->a_assembly.as_opv[self->a_assembly.as_num_o + i],false))
       goto err;
  }
  return 0;

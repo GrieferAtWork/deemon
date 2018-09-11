@@ -114,11 +114,11 @@ INTDEF DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/DREF s
 
 /* Given a basic unary expression `ast', parse its unary
  * suffix (including attribute, call, range & item operators). */
-INTDEF DREF struct ast *FCALL ast_parse_unary_operand(/*inherit(always)*/DREF struct ast *__restrict ast);
+INTDEF DREF struct ast *FCALL ast_parse_unary_operand(/*inherit(always)*/DREF struct ast *__restrict baseexpr);
 
 /* Given a unary expression `ast', parse anything that may
  * follow it before it could be considered a full expression. */
-INTDEF DREF struct ast *FCALL ast_parse_postexpr(/*inherit(always)*/DREF struct ast *__restrict ast);
+INTDEF DREF struct ast *FCALL ast_parse_postexpr(/*inherit(always)*/DREF struct ast *__restrict baseexpr);
 
 
 /* Given an `key'-expression in `{ key : foo }', parse the remainder
@@ -447,7 +447,7 @@ struct astlist {
 INTDEF void DCALL astlist_fini(struct astlist *__restrict self);
 INTDEF int DCALL astlist_upsize(struct astlist *__restrict self, size_t min_add);
 INTDEF void DCALL astlist_trunc(struct astlist *__restrict self);
-INTDEF int DCALL astlist_append(struct astlist *__restrict self, struct ast *__restrict ast);
+INTDEF int DCALL astlist_append(struct astlist *__restrict self, struct ast *__restrict branch);
 INTDEF int DCALL astlist_appendall(struct astlist *__restrict self, struct astlist *__restrict other);
 
 

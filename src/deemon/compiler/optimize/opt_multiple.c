@@ -132,11 +132,11 @@ multiple_continue_at_iter:
    new_tuple = DeeTuple_NewUninitialized(self->a_multiple.m_astc);
    if unlikely(!new_tuple) goto err;
    for (i = 0; i < self->a_multiple.m_astc; ++i) {
-    struct ast *ast = self->a_multiple.m_astv[i];
-    DeeObject *value = ast->a_constexpr;
+    struct ast *branch = self->a_multiple.m_astv[i];
+    DeeObject *value = branch->a_constexpr;
     DeeTuple_SET(new_tuple,i,value);
     Dee_Incref(value);
-    ast_decref(ast);
+    ast_decref(branch);
    }
    Dee_Free(self->a_multiple.m_astv);
    self->a_constexpr = new_tuple; /* Inherit reference. */
@@ -145,11 +145,11 @@ multiple_continue_at_iter:
    new_list = DeeList_NewUninitialized(self->a_multiple.m_astc);
    if unlikely(!new_list) goto err;
    for (i = 0; i < self->a_multiple.m_astc; ++i) {
-    struct ast *ast = self->a_multiple.m_astv[i];
-    DeeObject *value = ast->a_constexpr;
+    struct ast *branch = self->a_multiple.m_astv[i];
+    DeeObject *value = branch->a_constexpr;
     DeeList_SET(new_list,i,value);
     Dee_Incref(value);
-    ast_decref(ast);
+    ast_decref(branch);
    }
    DeeGC_Track((DeeObject *)new_list);
    Dee_Free(self->a_multiple.m_astv);

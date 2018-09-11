@@ -650,6 +650,8 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 INTERN struct empty_code_struct empty_code_head = {
     {
         /* ... */
+        NULL,
+        NULL
     },{
         OBJECT_HEAD_INIT(&DeeCode_Type),
         /* .co_flags       = */CODE_FCOPYABLE,

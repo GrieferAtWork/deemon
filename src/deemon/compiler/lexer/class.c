@@ -517,13 +517,13 @@ do_realloc:
 
 
 /* Add a member initializer for `sym', previously returned by `class_maker_addmember()'.
- * NOTE: If the symbol describes an instance member, `ast' must have been generated
+ * NOTE: If the symbol describes an instance member, `initializer' must have been generated
  *       in the context of the constructor scope (as it will be run immediately before
  *       the __constructor__ operator) */
 PRIVATE int DCALL
 class_maker_addinit(struct class_maker *__restrict self,
                     struct symbol *__restrict sym,
-                    struct ast *__restrict ast,
+                    struct ast *__restrict initializer,
                     struct ast_loc *__restrict loc) {
  struct class_attribute *entry;
  struct class_member *member;
@@ -531,7 +531,7 @@ class_maker_addinit(struct class_maker *__restrict self,
  ASSERT(sym);
  ASSERT(sym->s_type == SYMBOL_TYPE_CATTR);
  ASSERT(sym->s_attr.a_class == self->cm_classsym);
- ASSERT_AST(ast);
+ ASSERT_AST(initializer);
  ASSERT(self->cm_initc <= self->cm_inita);
  ASSERT(self->cm_class_initc <= self->cm_class_inita);
  entry = sym->s_attr.a_attr;
@@ -542,7 +542,7 @@ class_maker_addinit(struct class_maker *__restrict self,
   /* Handle instance member initializers. */
   ASSERTF(self->cm_ctor_scope,"Without the ctor-scope allocated, this AST "
                               "couldn't have been parsed in its context");
-  ASSERTF(self->cm_ctor_scope == ast->a_scope->s_base,
+  ASSERTF(self->cm_ctor_scope == initializer->a_scope->s_base,
           "Initializer ASTs must be parsed in the context of the CTOR scope");
   if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED)
       return WARNAT(loc,W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED);
@@ -552,28 +552,28 @@ class_maker_addinit(struct class_maker *__restrict self,
   /* Create a new AST to store to the given symbol. */
   symbol_ast = ast_sym(sym);
   if unlikely(!symbol_ast) goto err;
-  ast = ast_setddi(ast_action2(AST_FACTION_STORE,symbol_ast,
-                               ast_putddi(ast,loc)),
+  initializer = ast_setddi(ast_action2(AST_FACTION_STORE,symbol_ast,
+                               ast_putddi(initializer,loc)),
                    loc);
   ast_decref(symbol_ast);
-  if unlikely(!ast) goto err;
+  if unlikely(!initializer) goto err;
   /* Override the store-ast's scope with our constructor scope. */
   Dee_Incref((DeeObject *)self->cm_ctor_scope);
-  Dee_Decref(ast->a_scope);
-  ast->a_scope = (DREF DeeScopeObject *)self->cm_ctor_scope;
+  Dee_Decref(initializer->a_scope);
+  initializer->a_scope = (DREF DeeScopeObject *)self->cm_ctor_scope;
   /* Place the store-ast in the initialization vector. */
-  self->cm_initv[self->cm_initc++] = ast;
+  self->cm_initv[self->cm_initc++] = initializer;
   goto done;
  }
  /* Run the given AST during creation of the class. */
- ASSERTF(self->cm_ctor_scope != ast->a_scope->s_base,
+ ASSERTF(self->cm_ctor_scope != initializer->a_scope->s_base,
          "Class member initializers must not be part of the CTOR scope");
  member = priv_alloc_class_member(self);
  if unlikely(!member) goto err;
  /* Add a class member initializer for the slot pointed to by the symbol's entry. */
  member->cm_index = entry->ca_addr;
- member->cm_ast   = ast;
- ast_incref(ast);
+ member->cm_ast   = initializer;
+ ast_incref(initializer);
 done:
  return 0;
 err:
@@ -581,19 +581,18 @@ err:
 }
 
 PRIVATE int DCALL
-class_maker_addanon(struct class_maker *__restrict self,
-                    uint16_t addr,
-                    struct ast *__restrict ast) {
+class_maker_addanon(struct class_maker *__restrict self, uint16_t addr,
+                    struct ast *__restrict initializer) {
  struct class_member *member;
  /* Run the given AST during creation of the class. */
- ASSERTF(self->cm_ctor_scope != ast->a_scope->s_base,
+ ASSERTF(self->cm_ctor_scope != initializer->a_scope->s_base,
          "Class member initializers must not be part of the CTOR scope");
  member = priv_alloc_class_member(self);
  if unlikely(!member) goto err;
  /* Add a class member initializer for the given address. */
  member->cm_index = addr;
- member->cm_ast   = ast;
- ast_incref(ast);
+ member->cm_ast   = initializer;
+ ast_incref(initializer);
  return 0;
 err:
  return -1;
@@ -603,25 +602,25 @@ err:
 PRIVATE int DCALL
 class_maker_addoperator(struct class_maker *__restrict self,
                         uint16_t operator_name,
-                        struct ast *__restrict ast) {
+                        struct ast *__restrict callback) {
  struct class_member *member; uint16_t addr;
  /* Allocate a new class member address for the operator. */
  addr = self->cm_desc->cd_cmemb_size;
  if unlikely(addr == UINT16_MAX) {
-  PERRAST(ast,W_TOO_MANY_CLASS_MEMBER,
+  PERRAST(callback,W_TOO_MANY_CLASS_MEMBER,
           self->cm_classsym->s_name->k_name);
   goto err;
  }
  ++self->cm_desc->cd_cmemb_size;
  /* Bind the specified operator to the given address. */
- if unlikely(class_maker_bindoperator(self,operator_name,addr,&ast->a_ddi))
+ if unlikely(class_maker_bindoperator(self,operator_name,addr,&callback->a_ddi))
     goto err;
  /* Allocate an initializer for the operator-bound class member. */
  member = priv_alloc_class_member(self);
  if unlikely(!member) goto err;
  member->cm_index = addr;
- member->cm_ast   = ast;
- ast_incref(ast);
+ member->cm_ast   = callback;
+ ast_incref(callback);
  return 0;
 err:
  return -1;

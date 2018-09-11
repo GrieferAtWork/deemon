@@ -262,8 +262,8 @@ DFUNDEF void DCALL DeeModule_UnlockSymbols(DeeObject *__restrict self);
 /* A stub module-object named `' (empty string), and pointing to `empty_code'. */
 struct static_module_struct {
     /* Even though never tracked, static modules still need the GC header for visiting. */
-    struct gc_head  m_head;
-    DeeModuleObject m_module;
+    struct gc_head_raw m_head;
+    DeeModuleObject    m_module;
 };
 /* The module of builtin objects accessible by opening `deemon'. */
 INTDEF DeeModuleObject *DCALL get_deemon_module(void);

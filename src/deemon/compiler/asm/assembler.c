@@ -255,20 +255,20 @@ err:
 
 
 #ifdef NDEBUG
-INTERN int (DCALL asm_putddi)(struct ast *__restrict ast)
+INTERN int (DCALL asm_putddi)(struct ast *__restrict self)
 #else
-INTERN int (DCALL asm_putddi_dbg)(struct ast *__restrict ast,
+INTERN int (DCALL asm_putddi_dbg)(struct ast *__restrict self,
                                   char const *file, int line)
 #endif
 {
  struct asm_sym *sym;
  struct ddi_checkpoint *ddi;
- ASSERT_AST(ast);
+ ASSERT_AST(self);
  /* Check for simple case: DDI is disabled. */
  if (current_assembler.a_flag & ASM_FNODDI)
      goto done;
  /* Check if there even is DDI information to save. */
- if (!ast->a_ddi.l_file)
+ if (!self->a_ddi.l_file)
      goto done;
  /* Discard redundant debug information early on to save on memory. */
  if (current_assembler.a_ddi.da_slast == current_assembler.a_curr &&
@@ -289,7 +289,7 @@ INTERN int (DCALL asm_putddi_dbg)(struct ast *__restrict ast,
  asm_defsym(sym);
  ddi->dc_sym = sym;
  ++sym->as_used; /* Track use of this symbol by DDI information. */
- ddi->dc_loc = ast->a_ddi;
+ ddi->dc_loc = self->a_ddi;
  ddi->dc_sp  = current_assembler.a_stackcur;
  /* Save the current text position to discard early uses of the same checkpoint. */
  current_assembler.a_ddi.da_last  = sym->as_used;

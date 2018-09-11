@@ -621,10 +621,27 @@ enumattr_hash(EnumAttr *__restrict self) {
           Dee_HashPointer(self->ea_type));
 }
 
+PRIVATE DREF DeeObject *DCALL
+enumattr_eq(EnumAttr *__restrict self,
+            EnumAttr *__restrict other) {
+ if (!DeeEnumAttr_Check(other) ||
+      self->ea_type != other->ea_type)
+      return_false;
+ return DeeObject_CompareEqObject(self->ea_obj,other->ea_obj);
+}
+PRIVATE DREF DeeObject *DCALL
+enumattr_ne(EnumAttr *__restrict self,
+            EnumAttr *__restrict other) {
+ if (!DeeEnumAttr_Check(other) ||
+      self->ea_type != other->ea_type)
+      return_true;
+ return DeeObject_CompareNeObject(self->ea_obj,other->ea_obj);
+}
+
 PRIVATE struct type_cmp enumattr_cmp = {
     /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&enumattr_hash,
-    /* .tp_eq   = */NULL, /* TODO */
-    /* .tp_ne   = */NULL  /* TODO */
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&enumattr_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&enumattr_ne
 };
 
 PRIVATE struct type_seq enumattr_seq = {
@@ -651,7 +668,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
                             "one of its bases and those accessible through a superview of @ob using @tp.\n"
                             "Note that iterating this object may be expensive, and that conversion to "
                             "a different sequence before iterating multiple times may be desireable"),
-    /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
+    /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeSeq_Type,

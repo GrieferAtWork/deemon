@@ -53,6 +53,11 @@
 #endif
 #endif /* __CC__ */
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4054) /* Cast from function pointer to `void *' */
+#pragma warning(disable: 4152) /* Literally the same thing as `4054', but emit for static initializers. */
+#endif
+
 DECL_BEGIN
 
 /* #define CONFIG_NO_THREADS 1 */

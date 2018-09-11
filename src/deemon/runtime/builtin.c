@@ -94,6 +94,8 @@ INTDEF struct module_symbol empty_module_buckets[];
 INTERN struct static_module_struct deemon_module_head = {
     {
         /* ... */
+        NULL,
+        NULL
     },{
         OBJECT_HEAD_INIT(&DeeModule_Type),
         /* .mo_name    = */(DREF DeeStringObject *)&str_deemon,

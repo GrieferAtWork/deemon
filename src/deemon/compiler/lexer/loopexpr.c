@@ -40,10 +40,10 @@
 DECL_BEGIN
 
 PRIVATE DREF struct ast *FCALL
-wrap_yield(DREF struct ast *ast, struct ast_loc *__restrict loc) {
+wrap_yield(DREF struct ast *self, struct ast_loc *__restrict loc) {
  DREF struct ast *result;
- result = ast_setddi(ast_yield(ast_setddi(ast,loc)),loc);
- if likely(result) ast_decref(ast);
+ result = ast_setddi(ast_yield(ast_setddi(self,loc)),loc);
+ if likely(result) ast_decref(self);
  return result;
 }
 

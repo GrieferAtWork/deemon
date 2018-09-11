@@ -429,8 +429,8 @@ struct code_object {
 struct empty_code_struct {
     /* Even though never tracked, the empty code
      * object still needs the GC header for visiting. */
-    struct gc_head c_head;
-    DeeCodeObject  c_code;
+    struct gc_head_raw c_head;
+    DeeCodeObject      c_code;
 };
 
 #ifdef __INTELLISENSE__

@@ -86,11 +86,11 @@ astlist_trunc(struct astlist *__restrict self) {
 }
 INTERN int DCALL
 astlist_append(struct astlist *__restrict self,
-               struct ast *__restrict ast) {
+               struct ast *__restrict branch) {
  if (self->ast_c == self->ast_a &&
      astlist_upsize(self,1)) return -1;
- self->ast_v[self->ast_c++] = ast;
- ast_incref(ast);
+ self->ast_v[self->ast_c++] = branch;
+ ast_incref(branch);
  return 0;
 }
 INTERN int DCALL
