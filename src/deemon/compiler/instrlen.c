@@ -1323,9 +1323,13 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
  case ASM_FUNCTION_C:
  case ASM_CALLATTR_C:
  case ASM_CALLATTR_C_SEQ:
- case ASM_CALLATTR_C_MAP:
   *psp_add   = 1;
   *psp_sub   = 1 + *(uint8_t *)(ip + 2);
+  *pstacksz -= (*psp_sub-1);
+  break;
+ case ASM_CALLATTR_C_MAP:
+  *psp_add   = 1;
+  *psp_sub   = 1 + (uint16_t)(*(uint8_t *)(ip + 2) * 2);
   *pstacksz -= (*psp_sub-1);
   break;
  case ASM_CALLATTR_THIS_C:
@@ -1416,9 +1420,13 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   case ASM16_CALLATTR_C_KW & 0xff:
   case ASM16_CALLATTR_C & 0xff:
   case ASM16_CALLATTR_C_SEQ & 0xff:
-  case ASM16_CALLATTR_C_MAP & 0xff:
    *psp_add   = 1;
    *psp_sub   = 1 + *(uint8_t *)(ip + 4);
+   *pstacksz -= *(uint8_t *)(ip + 4);
+   break;
+  case ASM16_CALLATTR_C_MAP & 0xff:
+   *psp_add   = 1;
+   *psp_sub   = 1 + (uint16_t)(*(uint8_t *)(ip + 4) * 2);
    *pstacksz -= *(uint8_t *)(ip + 4);
    break;
   case ASM16_CALLATTR_THIS_C & 0xff:
