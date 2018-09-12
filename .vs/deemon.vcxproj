@@ -205,6 +205,7 @@
     <ClCompile Include="..\src\deemon\objects\rodict.c" />
     <ClCompile Include="..\src\deemon\objects\roset.c" />
     <ClCompile Include="..\src\deemon\objects\seq.c" />
+    <ClCompile Include="..\src\deemon\objects\seq\combinations.c" />
     <ClCompile Include="..\src\deemon\objects\seq\concat.c" />
     <ClCompile Include="..\src\deemon\objects\seq\fastseq.c" />
     <ClCompile Include="..\src\deemon\objects\seq\filter.c" />

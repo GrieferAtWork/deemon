@@ -30,6 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/string.h>
 #include <deemon/set.h>
+#include <deemon/tuple.h>
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
 #endif
@@ -1266,6 +1267,16 @@ seq_distribute(DeeObject *__restrict self,
 err:
  return NULL;
 }
+PRIVATE DREF DeeObject *DCALL
+seq_combinations(DeeObject *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ size_t r;
+ if (DeeArg_Unpack(argc,argv,"Iu:combinations",&r))
+     goto err;
+ return DeeSeq_Combinations(self,r);
+err:
+ return NULL;
+}
 
 
 /* Mutable-sequence functions */
@@ -1987,6 +1998,20 @@ INTERN struct type_method seq_methods[] = {
           "its length a little bit shorter than the other buckets\n"
           "This is similar to #segments, however rather than having the caller specify the "
           "size of the a bucket, the number of buckets is specified instead.") },
+    { "combinations", &seq_combinations,
+      DOC("(int r)->{sequence...}\n"
+          "@throw IntegerOverflow @r is negative, or too large\n"
+          "Returns a sequence of r-long sequences representing all possible (ordered) "
+          "combinations of elements retrieved from @this\n"
+          ">print repr \"ABCD\".combinations(2); /* { (\"A\", \"B\"), (\"A\", \"C\"), "
+                                                     "(\"A\", \"D\"), (\"B\", \"C\"), "
+                                                     "(\"B\", \"D\"), (\"C\", \"D\") } */\n"
+          "Notice that a combination such as $\"BA\" is not produced, as only possible "
+          "combinations with their original element order still in tact may be returned\n"
+          "When @this sequence implements #op:getitem and #op:size, those will be invoked "
+          "as items are retrieved by index. Otherwise, all elements from @this sequence "
+          "are loaded at once when #combinations is called first.\n"
+          "When @r is greater than ${#this}, an empty sequence is returned") },
     /* TODO: join(sequence items) -> sequence */
     /* TODO: strip(object item, callable pred_eq = none) -> sequence */
     /* TODO: lstrip(object item, callable pred_eq = none) -> sequence */
@@ -2926,11 +2951,32 @@ seq_class_repeatseq(DeeObject *__restrict UNUSED(self),
  return DeeSeq_Repeat(seq,count);
 }
 
+INTDEF DeeTypeObject DeeCat_Type;
+
+PRIVATE DREF DeeObject *DCALL
+seq_class_concat(DeeObject *__restrict UNUSED(self),
+                 size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result;
+ if (!argc) return_empty_seq;
+ if (argc == 1) return_reference_(argv[0]);
+ result = DeeTuple_NewVector(argc,argv);
+ if likely(result) {
+  ASSERT(result->ob_type == &DeeTuple_Type);
+  Dee_DecrefNokill(&DeeTuple_Type);
+  Dee_Incref(&DeeCat_Type);
+  result->ob_type = &DeeCat_Type;
+ }
+ return result;
+}
+
 PRIVATE struct type_method seq_class_methods[] = {
     { "range", &seq_class_range,
-       DOC("(object end)->sequence\n"
-           "(object begin, object end)->sequence\n"
-           "(object begin, object end, object step)->sequence\n"
+       DOC("(int end)->sequence\n"
+           "(object end)->sequence\n"
+           "(int begin,int end)->sequence\n"
+           "(object begin,object end)->sequence\n"
+           "(int begin,int end,int step)->sequence\n"
+           "(object begin,object end,object step)->sequence\n"
            "Create a new sequence object for enumeration of indices. "
            "This function is a simple wrapper for the same "
            "functionality available through the following usercode:\n"
@@ -2948,6 +2994,11 @@ PRIVATE struct type_method seq_class_methods[] = {
            "@throw IntegerOverflow @count is negative\n"
            "Repeat all the elements from @seq a total of @count times\n"
            "This is the same as ${(seq as sequence from deemon) * count}") },
+    { "concat", &seq_class_concat,
+       DOC("(sequence seqs...)->sequence\n"
+           "Returns a proxy-sequence describing the concantation of all of the given sequences\n"
+           "When only 1 sequence is given, that sequence is forwarded directly.\n"
+           "When no sequences are given, an empty sequence is returned") },
     { NULL }
 };
 

@@ -749,6 +749,9 @@
     <ClCompile Include="..\src\deemon\objects\class.c">
       <Filter>src\deemon\objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\combinations.c">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">
