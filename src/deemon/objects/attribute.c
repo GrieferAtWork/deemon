@@ -810,17 +810,19 @@ enumattr_hash(EnumAttr *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 enumattr_eq(EnumAttr *__restrict self,
             EnumAttr *__restrict other) {
- if (!DeeEnumAttr_Check(other) ||
-      self->ea_type != other->ea_type)
-      return_false;
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeEnumAttr_Type))
+     return NULL;
+ if (self->ea_type != other->ea_type)
+     return_false;
  return DeeObject_CompareEqObject(self->ea_obj,other->ea_obj);
 }
 PRIVATE DREF DeeObject *DCALL
 enumattr_ne(EnumAttr *__restrict self,
             EnumAttr *__restrict other) {
- if (!DeeEnumAttr_Check(other) ||
-      self->ea_type != other->ea_type)
-      return_true;
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeEnumAttr_Type))
+     return NULL;
+ if (self->ea_type != other->ea_type)
+     return_true;
  return DeeObject_CompareNeObject(self->ea_obj,other->ea_obj);
 }
 

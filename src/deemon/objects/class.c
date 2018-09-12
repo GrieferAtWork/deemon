@@ -2286,8 +2286,8 @@ instance_builtin_teq(DeeTypeObject *__restrict tp_self,
                      DeeObject *__restrict other) {
  DREF DeeObject *result; int temp;
  /* Make sure that `other' is an instance of `self' */
- if (!DeeObject_InstanceOf(other,tp_self))
-     goto nope;
+ if (DeeObject_AssertType(other,tp_self))
+     goto err;
  /* Compare the underlying objects. */
  if (DeeType_Base(tp_self)) {
   result = DeeObject_TCompareEqObject(DeeType_Base(tp_self),self,other);
@@ -2311,8 +2311,8 @@ instance_builtin_tne(DeeTypeObject *__restrict tp_self,
                      DeeObject *__restrict other) {
  DREF DeeObject *result; int temp;
  /* Make sure that `other' is an instance of `self' */
- if (!DeeObject_InstanceOf(other,tp_self))
-     return_true;
+ if (DeeObject_AssertType(other,tp_self))
+     goto err;
  /* Compare the underlying objects. */
  if (DeeType_Base(tp_self)) {
   result = DeeObject_TCompareNeObject(DeeType_Base(tp_self),self,other);

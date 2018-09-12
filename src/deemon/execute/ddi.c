@@ -643,7 +643,6 @@ ddi_hash(DeeDDIObject *__restrict self) {
 PRIVATE bool DCALL
 ddi_eq_impl(DeeDDIObject *__restrict self,
             DeeDDIObject *__restrict other) {
- if (!DeeDDI_Check(other)) goto nope;
  if (self == other) return true;
  if (self->d_ddi_size != other->d_ddi_size) goto nope;
  if (self->d_nstatic != other->d_nstatic) goto nope;
@@ -672,11 +671,15 @@ nope:
 PRIVATE DREF DeeObject *DCALL
 ddi_eq(DeeDDIObject *__restrict self,
        DeeDDIObject *__restrict other) {
+ if (DeeObject_AssertTypeExact(other,&DeeDDI_Type))
+     return NULL;
  return_bool(ddi_eq_impl(self,other));
 }
 PRIVATE DREF DeeObject *DCALL
 ddi_ne(DeeDDIObject *__restrict self,
        DeeDDIObject *__restrict other) {
+ if (DeeObject_AssertTypeExact(other,&DeeDDI_Type))
+     return NULL;
  return_bool(!ddi_eq_impl(self,other));
 }
 

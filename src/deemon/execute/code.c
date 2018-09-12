@@ -658,7 +658,8 @@ PRIVATE int DCALL
 code_eq_impl(DeeCodeObject *__restrict self,
              DeeCodeObject *__restrict other) {
  int temp;
- if (!DeeCode_Check(other)) goto nope;
+ if (DeeObject_AssertTypeExact(other,&DeeCode_Type))
+     return -1;
  if (self == other) return 1;
  if (self->co_flags != other->co_flags) goto nope;
  if (self->co_localc != other->co_localc) goto nope;

@@ -265,8 +265,8 @@ PRIVATE DREF DeeObject *DCALL
 function_eq(DeeFunctionObject *__restrict self,
             DeeFunctionObject *__restrict other) {
  uint16_t i; int result;
- if (!DeeFunction_Check(other))
-      return_false;
+ if (DeeObject_AssertTypeExact(other,&DeeFunction_Type))
+     goto err;
  result = DeeObject_CompareEq((DeeObject *)self->fo_code,
                               (DeeObject *)other->fo_code);
  if unlikely(result <= 0) goto err_or_false;
@@ -280,6 +280,7 @@ function_eq(DeeFunctionObject *__restrict self,
 err_or_false:
  if (!result)
      return_false;
+err:
  return NULL;
 }
 
@@ -287,8 +288,8 @@ PRIVATE DREF DeeObject *DCALL
 function_ne(DeeFunctionObject *__restrict self,
             DeeFunctionObject *__restrict other) {
  uint16_t i; int result;
- if (!DeeFunction_Check(other))
-      return_false;
+ if (DeeObject_AssertTypeExact(other,&DeeFunction_Type))
+     goto err;
  result = DeeObject_CompareNe((DeeObject *)self->fo_code,
                               (DeeObject *)other->fo_code);
  if unlikely(result != 0) goto err_or_true;
@@ -302,6 +303,7 @@ function_ne(DeeFunctionObject *__restrict self,
 err_or_true:
  if (result > 0)
      return_true;
+err:
  return NULL;
 }
 
@@ -591,8 +593,8 @@ PRIVATE int DCALL
 yf_eq_impl(DeeYieldFunctionObject *__restrict self,
            DeeYieldFunctionObject *__restrict other) {
  DREF DeeObject *lhs,*rhs; int error;
- if (!DeeYieldFunction_Check(other))
-      goto nope;
+ if (DeeObject_AssertTypeExact(other,&DeeYieldFunction_Type))
+     return -1;
  if (self == other) return 1;
  if (self->yf_func != other->yf_func) goto nope;
  rwlock_read(&self->yf_lock);

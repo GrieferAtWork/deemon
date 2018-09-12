@@ -1157,11 +1157,15 @@ module_hash(DeeModuleObject *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 module_eq(DeeModuleObject *__restrict self,
           DeeModuleObject *__restrict other) {
+ if (DeeObject_AssertType((DeeObject *)other,&DeeModule_Type))
+     return NULL;
  return_bool_(self == other);
 }
 PRIVATE DREF DeeObject *DCALL
 module_ne(DeeModuleObject *__restrict self,
           DeeModuleObject *__restrict other) {
+ if (DeeObject_AssertType((DeeObject *)other,&DeeModule_Type))
+     return NULL;
  return_bool_(self != other);
 }
 
