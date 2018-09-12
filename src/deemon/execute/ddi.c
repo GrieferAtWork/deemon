@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/code.h>
+#include <deemon/bool.h>
 #include <deemon/string.h>
 #include <deemon/asm.h>
 
@@ -612,6 +613,79 @@ PRIVATE DREF DeeDDIObject *DCALL ddi_ctor(void) {
  return_reference_((DREF DeeDDIObject *)&empty_ddi);
 }
 
+PRIVATE dhash_t DCALL
+ddi_hash(DeeDDIObject *__restrict self) {
+ dhash_t result; uint16_t i;
+ result  = self->d_ddi_size;
+ result ^= self->d_nstatic;
+ result ^= self->d_nrefs;
+ result ^= self->d_nargs;
+ result ^= self->d_paths;
+ result ^= self->d_files;
+ result ^= self->d_symbols;
+ for (i = 0; i < self->d_nstatic; ++i)
+     result ^= self->d_static_names[i];
+ for (i = 0; i < self->d_nrefs; ++i)
+     result ^= self->d_ref_names[i];
+ for (i = 0; i < self->d_nargs; ++i)
+     result ^= self->d_arg_names[i];
+ for (i = 0; i < self->d_paths; ++i)
+     result ^= self->d_path_names[i];
+ for (i = 0; i < self->d_files; ++i)
+     result ^= self->d_file_names[i];
+ for (i = 0; i < self->d_symbols; ++i)
+     result ^= self->d_symbol_names[i];
+ result ^= DeeString_Hash((DeeObject *)self->d_strtab);
+ result ^= hash_ptr(&self->d_start,self->d_ddi_size + sizeof(struct ddi_regs));
+ return result;
+}
+
+PRIVATE bool DCALL
+ddi_eq_impl(DeeDDIObject *__restrict self,
+            DeeDDIObject *__restrict other) {
+ if (!DeeDDI_Check(other)) goto nope;
+ if (self == other) return true;
+ if (self->d_ddi_size != other->d_ddi_size) goto nope;
+ if (self->d_nstatic != other->d_nstatic) goto nope;
+ if (self->d_nrefs != other->d_nrefs) goto nope;
+ if (self->d_nargs != other->d_nargs) goto nope;
+ if (self->d_paths != other->d_paths) goto nope;
+ if (self->d_files != other->d_files) goto nope;
+ if (self->d_symbols != other->d_symbols) goto nope;
+ if (DeeString_SIZE(self->d_strtab) != DeeString_SIZE(other->d_strtab)) goto nope;
+ if (memcmp(DeeString_STR(self->d_strtab),
+            DeeString_STR(other->d_strtab),
+            DeeString_SIZE(self->d_strtab)) != 0)
+     goto nope;
+ if (memcmp(self->d_static_names,other->d_static_names,self->d_nstatic * sizeof(*self->d_static_names)) != 0) goto nope;
+ if (memcmp(self->d_ref_names,other->d_ref_names,self->d_nrefs * sizeof(*self->d_ref_names)) != 0) goto nope;
+ if (memcmp(self->d_arg_names,other->d_arg_names,self->d_nargs * sizeof(*self->d_arg_names)) != 0) goto nope;
+ if (memcmp(self->d_path_names,other->d_path_names,self->d_paths * sizeof(*self->d_path_names)) != 0) goto nope;
+ if (memcmp(self->d_file_names,other->d_file_names,self->d_files * sizeof(*self->d_file_names)) != 0) goto nope;
+ if (memcmp(self->d_symbol_names,other->d_symbol_names,self->d_symbols * sizeof(*self->d_symbol_names)) != 0) goto nope;
+ if (memcmp(&self->d_start,&other->d_start,self->d_ddi_size + sizeof(struct ddi_regs)) != 0) goto nope;
+ return true;
+nope:
+ return false;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ddi_eq(DeeDDIObject *__restrict self,
+       DeeDDIObject *__restrict other) {
+ return_bool(ddi_eq_impl(self,other));
+}
+PRIVATE DREF DeeObject *DCALL
+ddi_ne(DeeDDIObject *__restrict self,
+       DeeDDIObject *__restrict other) {
+ return_bool(!ddi_eq_impl(self,other));
+}
+
+PRIVATE struct type_cmp ddi_cmp = {
+    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&ddi_hash,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ddi_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ddi_ne
+};
+
 PUBLIC DeeTypeObject DeeDDI_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"ddi",
@@ -643,7 +717,7 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
     /* .tp_visit         = */NULL,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */&ddi_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */NULL,

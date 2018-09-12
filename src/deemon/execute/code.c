@@ -601,6 +601,164 @@ PRIVATE DREF DeeObject *DCALL code_ctor(void) {
  return_reference_((DeeObject *)&empty_code);
 }
 
+PRIVATE dhash_t DCALL
+code_hash(DeeCodeObject *__restrict self) {
+ dhash_t result;
+ result  = self->co_flags;
+ result ^= self->co_localc;
+ result ^= self->co_staticc;
+ result ^= self->co_refc;
+ result ^= self->co_exceptc;
+ result ^= self->co_argc_min;
+ result ^= self->co_argc_max;
+ result ^= self->co_framesize;
+ result ^= self->co_codebytes;
+ if (self->co_module)
+     result ^= DeeObject_Hash((DeeObject *)self->co_module);
+ if (self->co_keywords) {
+  uint16_t i;
+  for (i = 0; i < self->co_argc_max; ++i)
+      result ^= DeeString_Hash((DeeObject *)self->co_keywords[i]);
+ }
+ if (self->co_defaultv) {
+  uint16_t i;
+  for (i = 0; i < (self->co_argc_max - self->co_argc_min); ++i)
+      result ^= DeeObject_Hash((DeeObject *)self->co_defaultv[i]);
+ }
+ if (self->co_staticv) {
+  uint16_t i;
+  for (i = 0; i < self->co_staticc; ++i) {
+   DREF DeeObject *ob;
+   rwlock_read(&self->co_static_lock);
+   ob = self->co_staticv[i];
+   Dee_Incref(ob);
+   rwlock_endread(&self->co_static_lock);
+   result ^= DeeObject_Hash(ob);
+   Dee_Decref(ob);
+  }
+ }
+ if (self->co_exceptv) {
+  uint16_t i;
+  for (i = 0; i < self->co_exceptc; ++i) {
+   result ^= self->co_exceptv[i].eh_start;
+   result ^= self->co_exceptv[i].eh_end;
+   result ^= self->co_exceptv[i].eh_addr;
+   result ^= self->co_exceptv[i].eh_stack;
+   result ^= self->co_exceptv[i].eh_flags;
+   if (self->co_exceptv[i].eh_mask)
+       result ^= DeeObject_Hash((DeeObject *)self->co_exceptv[i].eh_mask);
+  }
+ }
+ result ^= DeeObject_Hash((DeeObject *)self->co_ddi);
+ result ^= hash_ptr(self->co_code,self->co_codebytes);
+ return result;
+}
+
+PRIVATE int DCALL
+code_eq_impl(DeeCodeObject *__restrict self,
+             DeeCodeObject *__restrict other) {
+ int temp;
+ if (!DeeCode_Check(other)) goto nope;
+ if (self == other) return 1;
+ if (self->co_flags != other->co_flags) goto nope;
+ if (self->co_localc != other->co_localc) goto nope;
+ if (self->co_staticc != other->co_staticc) goto nope;
+ if (self->co_refc != other->co_refc) goto nope;
+ if (self->co_exceptc != other->co_exceptc) goto nope;
+ if (self->co_argc_min != other->co_argc_min) goto nope;
+ if (self->co_argc_max != other->co_argc_max) goto nope;
+ if (self->co_framesize != other->co_framesize) goto nope;
+ if (self->co_codebytes != other->co_codebytes) goto nope;
+ if (self->co_module != other->co_module) goto nope;
+ if (self->co_keywords) {
+  uint16_t i;
+  if (!other->co_keywords) goto nope;
+  for (i = 0; i < self->co_argc_max; ++i) {
+   if (DeeString_SIZE(self->co_keywords[i]) !=
+       DeeString_SIZE(other->co_keywords[i]))
+       goto nope;
+   if (memcmp(DeeString_STR(self->co_keywords[i]),
+              DeeString_STR(other->co_keywords[i]),
+              DeeString_SIZE(self->co_keywords[i]) * sizeof(char)) != 0)
+       goto nope;
+  }
+ } else if (other->co_keywords) {
+  goto nope;
+ }
+ if (self->co_defaultv) {
+  uint16_t i;
+  for (i = 0; i < (self->co_argc_max - self->co_argc_min); ++i) {
+   temp = DeeObject_CompareEq(self->co_defaultv[i],
+                              other->co_defaultv[i]);
+   if (temp <= 0) goto err_temp;
+  }
+ }
+ if (self->co_staticv) {
+  uint16_t i;
+  for (i = 0; i < self->co_staticc; ++i) {
+   DREF DeeObject *lhs,*rhs;
+   rwlock_read(&self->co_static_lock);
+   lhs = self->co_staticv[i];
+   Dee_Incref(lhs);
+   rwlock_endread(&self->co_static_lock);
+   rwlock_read(&other->co_static_lock);
+   rhs = other->co_staticv[i];
+   Dee_Incref(rhs);
+   rwlock_endread(&other->co_static_lock);
+   temp = DeeObject_CompareEq(lhs,rhs);
+   Dee_Decref(rhs);
+   Dee_Decref(lhs);
+   if (temp <= 0) goto err_temp;
+  }
+ }
+ if (self->co_exceptv) {
+  uint16_t i;
+  for (i = 0; i < self->co_exceptc; ++i) {
+   if (self->co_exceptv[i].eh_start != other->co_exceptv[i].eh_start) goto nope;
+   if (self->co_exceptv[i].eh_end   != other->co_exceptv[i].eh_end) goto nope;
+   if (self->co_exceptv[i].eh_addr  != other->co_exceptv[i].eh_addr) goto nope;
+   if (self->co_exceptv[i].eh_stack != other->co_exceptv[i].eh_stack) goto nope;
+   if (self->co_exceptv[i].eh_flags != other->co_exceptv[i].eh_flags) goto nope;
+   if (self->co_exceptv[i].eh_mask  != other->co_exceptv[i].eh_mask) goto nope;
+  }
+ }
+ temp = DeeObject_CompareEq((DeeObject *)self->co_ddi,
+                            (DeeObject *)other->co_ddi);
+ if (temp <= 0) goto err_temp;
+ if (memcmp(self->co_code,other->co_code,self->co_codebytes) != 0)
+     goto nope;
+ return 1;
+err_temp:
+ return temp;
+nope:
+ return 0;
+}
+
+PRIVATE DREF DeeObject *DCALL
+code_eq(DeeCodeObject *__restrict self,
+        DeeCodeObject *__restrict other) {
+ int result;
+ result = code_eq_impl(self,other);
+ if unlikely(result < 0) return NULL;
+ return_bool_(result != 0);
+}
+
+PRIVATE DREF DeeObject *DCALL
+code_ne(DeeCodeObject *__restrict self,
+        DeeCodeObject *__restrict other) {
+ int result;
+ result = code_eq_impl(self,other);
+ if unlikely(result < 0) return NULL;
+ return_bool_(result == 0);
+}
+
+PRIVATE struct type_cmp code_cmp = {
+    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&code_hash,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&code_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&code_ne
+};
+
+
 PUBLIC DeeTypeObject DeeCode_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_code),
@@ -632,7 +790,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&code_visit,
     /* .tp_gc            = */&code_gc,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */&code_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */NULL,

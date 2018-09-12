@@ -24,6 +24,7 @@
 #include <deemon/object.h>
 #include <deemon/code.h>
 #include <deemon/module.h>
+#include <deemon/bool.h>
 #include <deemon/string.h>
 #include <deemon/exec.h>
 #include <deemon/arg.h>
@@ -1145,6 +1146,31 @@ INTERN struct type_gc module_gc = {
     /* .tp_gcprio = */GC_PRIORITY_MODULE
 };
 
+
+
+/* Single module objects are unique, comparing/hashing
+ * them is as single as comparing their memory locations. */
+PRIVATE dhash_t DCALL
+module_hash(DeeModuleObject *__restrict self) {
+ return DeeObject_HashGeneric(self);
+}
+PRIVATE DREF DeeObject *DCALL
+module_eq(DeeModuleObject *__restrict self,
+          DeeModuleObject *__restrict other) {
+ return_bool_(self == other);
+}
+PRIVATE DREF DeeObject *DCALL
+module_ne(DeeModuleObject *__restrict self,
+          DeeModuleObject *__restrict other) {
+ return_bool_(self != other);
+}
+
+PRIVATE struct type_cmp module_cmp = {
+    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&module_hash,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&module_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&module_ne
+};
+
 PUBLIC DeeTypeObject DeeModule_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_module),
@@ -1179,7 +1205,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&module_visit,
     /* .tp_gc            = */&module_gc,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */&module_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */&module_attr,

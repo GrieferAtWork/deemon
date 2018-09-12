@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
+#include <deemon/bool.h>
 #include <deemon/arg.h>
 #include <deemon/tuple.h>
 #include <deemon/error.h>
@@ -251,6 +252,66 @@ err:
 #endif
 }
 
+PRIVATE dhash_t DCALL
+function_hash(DeeFunctionObject *__restrict self) {
+ uint16_t i; dhash_t result;
+ result = DeeObject_Hash((DeeObject *)self->fo_code);
+ for (i = 0; i < self->fo_code->co_refc; ++i)
+     result ^= DeeObject_Hash(self->fo_refv[i]);
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+function_eq(DeeFunctionObject *__restrict self,
+            DeeFunctionObject *__restrict other) {
+ uint16_t i; int result;
+ if (!DeeFunction_Check(other))
+      return_false;
+ result = DeeObject_CompareEq((DeeObject *)self->fo_code,
+                              (DeeObject *)other->fo_code);
+ if unlikely(result <= 0) goto err_or_false;
+ ASSERT(self->fo_code->co_refc == other->fo_code->co_refc);
+ for (i = 0; i < self->fo_code->co_refc; ++i) {
+  result = DeeObject_CompareEq(self->fo_refv[i],
+                               other->fo_refv[i]);
+  if (result <= 0) goto err_or_false;
+ }
+ return_true;
+err_or_false:
+ if (!result)
+     return_false;
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+function_ne(DeeFunctionObject *__restrict self,
+            DeeFunctionObject *__restrict other) {
+ uint16_t i; int result;
+ if (!DeeFunction_Check(other))
+      return_false;
+ result = DeeObject_CompareNe((DeeObject *)self->fo_code,
+                              (DeeObject *)other->fo_code);
+ if unlikely(result != 0) goto err_or_true;
+ ASSERT(self->fo_code->co_refc == other->fo_code->co_refc);
+ for (i = 0; i < self->fo_code->co_refc; ++i) {
+  result = DeeObject_CompareNe(self->fo_refv[i],
+                               other->fo_refv[i]);
+  if (result != 0) goto err_or_true;
+ }
+ return_false;
+err_or_true:
+ if (result > 0)
+     return_true;
+ return NULL;
+}
+
+PRIVATE struct type_cmp function_cmp = {
+    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&function_hash,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&function_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&function_ne
+};
+
+
 PUBLIC DeeTypeObject DeeFunction_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_function),
@@ -282,7 +343,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&function_visit,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */&function_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */NULL,
@@ -500,6 +561,107 @@ PRIVATE struct type_gc yf_gc = {
     /* .tp_clear = */(void(DCALL *)(DeeObject *__restrict))&yf_clear
 };
 
+
+/* Since yield_function objects are bound to a specific function, comparing
+ * them won't compare the bound function, but rather that function's pointer! */
+PRIVATE dhash_t DCALL
+yf_hash(DeeYieldFunctionObject *__restrict self) {
+ dhash_t result; DREF DeeObject *temp;
+ rwlock_read(&self->yf_lock);
+ result = DeeObject_HashGeneric(self->yf_func);
+ if ((temp = (DREF DeeObject *)self->yf_args) != NULL) {
+  Dee_Incref(temp);
+  rwlock_endread(&self->yf_lock);
+  result ^= DeeObject_Hash(temp);
+  Dee_Decref(temp);
+  rwlock_read(&self->yf_lock);
+ }
+ if ((temp = (DREF DeeObject *)self->yf_this) != NULL) {
+  Dee_Incref(temp);
+  rwlock_endread(&self->yf_lock);
+  result ^= DeeObject_Hash(temp);
+  Dee_Decref(temp);
+ } else {
+  rwlock_endread(&self->yf_lock);
+ }
+ return result;
+}
+
+PRIVATE int DCALL
+yf_eq_impl(DeeYieldFunctionObject *__restrict self,
+           DeeYieldFunctionObject *__restrict other) {
+ DREF DeeObject *lhs,*rhs; int error;
+ if (!DeeYieldFunction_Check(other))
+      goto nope;
+ if (self == other) return 1;
+ if (self->yf_func != other->yf_func) goto nope;
+ rwlock_read(&self->yf_lock);
+ if ((lhs = (DREF DeeObject *)self->yf_args) != NULL) {
+  Dee_Incref(lhs);
+  rwlock_endread(&self->yf_lock);
+  rwlock_read(&other->yf_lock);
+  rhs = (DREF DeeObject *)other->yf_args;
+  Dee_XIncref(rhs);
+  rwlock_endread(&other->yf_lock);
+  if (!rhs) { Dee_Decref(lhs); goto nope; }
+  error = DeeObject_CompareEq(lhs,rhs);
+  Dee_Decref(rhs);
+  Dee_Decref(lhs);
+  if (error <= 0) goto do_return_error;
+  rwlock_read(&self->yf_lock);
+ } else if (other->yf_args != NULL) {
+  goto nope_unlock;
+ }
+ if ((lhs = (DREF DeeObject *)self->yf_this) != NULL) {
+  Dee_Incref(lhs);
+  rwlock_endread(&self->yf_lock);
+  rwlock_read(&other->yf_lock);
+  rhs = (DREF DeeObject *)other->yf_this;
+  Dee_XIncref(rhs);
+  rwlock_endread(&other->yf_lock);
+  if (!rhs) { Dee_Decref(lhs); goto nope; }
+  error = DeeObject_CompareEq(lhs,rhs);
+  Dee_Decref(rhs);
+  Dee_Decref(lhs);
+  return error;
+ } else if (other->yf_this != NULL) {
+  goto nope_unlock;
+ } else {
+  rwlock_endread(&self->yf_lock);
+ }
+ return 1;
+do_return_error:
+ return error;
+nope_unlock:
+ rwlock_endread(&self->yf_lock);
+nope:
+ return 0;
+}
+
+PRIVATE DREF DeeObject *DCALL
+yf_eq(DeeYieldFunctionObject *__restrict self,
+      DeeYieldFunctionObject *__restrict other) {
+ int result;
+ result = yf_eq_impl(self,other);
+ if unlikely(result < 0) return NULL;
+ return_bool_(result);
+}
+PRIVATE DREF DeeObject *DCALL
+yf_ne(DeeYieldFunctionObject *__restrict self,
+      DeeYieldFunctionObject *__restrict other) {
+ int result;
+ result = yf_eq_impl(self,other);
+ if unlikely(result < 0) return NULL;
+ return_bool_(!result);
+}
+
+PRIVATE struct type_cmp yf_cmp = {
+    /* .tp_hash = */(dhash_t(DCALL *)(DeeObject *__restrict))&yf_hash,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&yf_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&yf_ne
+};
+
+
 PUBLIC DeeTypeObject DeeYieldFunction_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"yield_function",
@@ -535,7 +697,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&yf_visit,
     /* .tp_gc            = */&yf_gc,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */&yf_cmp,
     /* .tp_seq           = */&yf_seq,
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */NULL,
@@ -1014,6 +1176,7 @@ PRIVATE struct type_member yfi_members[] = {
 PRIVATE struct type_gc yfi_gc = {
     /* .tp_gc = */(void(DCALL *)(DeeObject *__restrict))&yfi_clear
 };
+
 
 PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
