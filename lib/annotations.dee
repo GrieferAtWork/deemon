@@ -1,0 +1,174 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+@"An annotation that may be used to overload a function by "
+ "its arguments count"
+@">import Overload from annotations;"
+@">"
+@">@Overload"
+@">function foobar(x) {"
+@"> print \"Called with 1 argument:\",x;"
+@">}"
+@">@foobar.register"
+@">function foobar(x,y) {"
+@"> print \"Called with 2 arguments:\",x,y;"
+@">}"
+@">foobar(10);    /* First variant */"
+@">foobar(10,20); /* Second variant */"
+class Overload: callable {
+
+	@"->callable"
+	private member primary;
+	@"->[callable...]"
+	private member overloads = [];
+
+	@"(callable func)"
+	this(func) {
+		primary = func;
+	}
+
+	private function invalid_overload(args...) {
+		throw Error.TypeError(
+			"function {} does not accept {} args"
+			.format({ primary, #args }));
+	}
+
+	operator () (args...) {
+		__stack local argc = #args;
+		if (argc < #overloads)
+			return overloads[argc](args...);
+		return primary(args...);
+	}
+
+	@"(function func)->Overload"
+	@"Register a new overload to-be considered for invocation"
+	register(func) {
+		__stack local code = func.__code__;
+		__stack local min = code.__argc_min__;
+		__stack local max = code.__argc_max__;
+		__stack local count = #overloads;
+		if (max >= count) {
+			overloads.resize(max + 1,invalid_overload);
+			__stack local prim_code = primary.__code__;
+			overloads.fill(prim_code.__argc_min__,prim_code.__argc_max__ + 1,primary);
+		}
+		for (__stack local i: [min:max + 1])
+			overloads[i] = func;
+		return this;
+	}
+
+}
+
+
+
+@"An annotation that may be used to mark a function as deprecated, "
+ "and have a warning be printed to :file.stderr the first time it is "
+ "invoked"
+@">import Deprecated from annotations;"
+@">"
+@">@Deprecated"
+@">function mydepr() {"
+@"> print \"In mydepr()\";"
+@">}"
+@">@Deprecated(\"Don't call me!\")"
+@">function mydepr2() {"
+@"> print \"In mydepr2()\";"
+@">}"
+@">"
+@">mydepr();  /* ... : Deprecated function `mydepr' called */"
+@">mydepr2(); /* ... : Deprecated function `mydepr2' called: Don't call me! */"
+class Deprecated: callable {
+	private member m_func;
+	private member m_message;
+	private member m_didcall = false;
+
+	@"(callable func,string reason=\"\")"
+	this(func, reason = "") {
+		m_func = func;
+		if (reason)
+			m_message = reason;
+	}
+
+	operator () (args...) {
+		if (!m_didcall) {
+			m_didcall = true;
+			local frame = traceback()[1];
+			local errout = file.stderr;
+			errout
+				<< frame.file
+				<< "("
+				<< frame.line + 1
+				<< ","
+				<< frame.col + 1
+				<< ") : Deprecated ";
+			if (m_func is type_) {
+				errout
+					<< "class `"
+					<< m_func
+					<< "' instantiated";
+			} else {
+				errout
+					<< "function `"
+					<< m_func
+					<< "' called";
+			}
+			if (m_message is bound)
+				print file.stderr: ":",m_message,;
+			print file.stderr:;
+		}
+		return m_func(args...);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
