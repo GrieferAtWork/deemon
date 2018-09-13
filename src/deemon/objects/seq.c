@@ -1509,20 +1509,6 @@ err:
  return NULL;
 }
 
-/*
-          ">function resize(newsize,filler=none) {\n"
-          "> import int, sequence from deemon;\n"
-          "> newsize = (int)newsize;\n"
-          "> local oldsize = (int)#this;\n"
-          "> if (newsize < oldsize) {\n"
-          ">  this.erase(newsize,-1);\n"
-          "> } else if (newsize > oldsize) {\n"
-          ">  this.extend(sequence.repeat(filler,newsize-oldsize));\n"
-          "> }\n"
-          ">}\n"
-*/
-
-
 
 INTERN struct type_method seq_methods[] = {
     { "empty", &seq_empty,
@@ -2012,6 +1998,7 @@ INTERN struct type_method seq_methods[] = {
           "as items are retrieved by index. Otherwise, all elements from @this sequence "
           "are loaded at once when #combinations is called first.\n"
           "When @r is greater than ${#this}, an empty sequence is returned") },
+
     /* TODO: join(sequence items) -> sequence */
     /* TODO: strip(object item, callable pred_eq = none) -> sequence */
     /* TODO: lstrip(object item, callable pred_eq = none) -> sequence */
@@ -3877,6 +3864,64 @@ PRIVATE struct type_getset iterator_getsets[] = {
     },
     { NULL }
 };
+
+/* TODO: tee(int n=2)->{sequence...}
+ * Return @n independent sequences, each containing a copy of all elements
+ * that were pending for @this, with @this iterator never needing to be copied,
+ * and elements only read from that iterator as that element is first accessed by
+ * one of the returned iterators, and elements being removed from a pre-cached
+ * set of pending elements once all of the iterators have read that item.
+ * Meant for use in multi-threaded environments, where one thread is set up as
+ * data producer, lazily producing data, and all of the other threads there to
+ * lazily consume that data:
+ * >> function tee(iter,n = 2) {
+ * >>     import deque from collections;
+ * >>     import Signal, Error from deemon;
+ * >>     import mutex from threading;
+ * >>     if (n < 0) throw Error.IntegerOverflow();
+ * >>     if (n == 0) return { };
+ * >>     if (n == 1) return iter.pending;
+ * >>     local pending = deque();
+ * >>     local offsets = [0] * n;
+ * >>     local lock = mutex();
+ * >>     function gen(i) {
+ * >>         for (;;) {
+ * >>             local new_item;
+ * >>             with (lock) {
+ * >>                 local offset = offsets[i];
+ * >>                 assert offset <= #pending;
+ * >>                 if (offset == #pending) {
+ * >>                     try {
+ * >>                         new_item = iter.operator next();
+ * >>                     } catch (Signal.StopIteration) {
+ * >>                         return;
+ * >>                     }
+ * >>                     pending.pushback((n - 1,new_item));
+ * >>                     ++offsets[i]; // offsets[i] = #pending;
+ * >>                 } else {
+ * >>                     local count;
+ * >>                     count,new_item = pending[offset]...;
+ * >>                     if (count == 1) {
+ * >>                         assert offset == 0;
+ * >>                         pending.popfront();
+ * >>                         for (local j: [:i])
+ * >>                             --offsets[j];
+ * >>                         offsets[i] = 0;
+ * >>                     } else {
+ * >>                         pending[offset] = (count - 1,new_item);
+ * >>                         ++offsets[i];
+ * >>                     }
+ * >>                 }
+ * >>             }
+ * >>             yield new_item;
+ * >>         }
+ * >>     }
+ * >>     return tuple(for (local i: [:n]) gen(i));
+ * >> }
+ * Note that tee() should not be used when @this source iterator is copyable,
+ * with reading from a copied iterators not having any unwanted side-effects. */
+
+
 
 /* General-purpose iterator type sub-class. */
 PUBLIC DeeTypeObject DeeIterator_Type = {

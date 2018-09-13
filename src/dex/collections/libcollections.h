@@ -100,7 +100,7 @@ Deque_ItemPointer(Deque *__restrict self, size_t index) {
  DequeBucket *iter = self->d_head;
  ASSERT(index < self->d_size);
  if (index < DEQUE_HEADUSED(self))
-     return &iter->db_items[index - DEQUE_HEADFREE(self)];
+     return &iter->db_items[DEQUE_HEADFREE(self) + index];
  if (index >= self->d_size/2) {
   size_t rindex;
   /* Search for the right. */
@@ -159,9 +159,9 @@ INTDEF ATTR_RETNONNULL DREF DeeObject *DCALL Deque_Pop_unlocked(Deque *__restric
 
 
 /* Insert/delete an item at a given index. */
-INTDEF int DCALL Deque_Insert(Deque *__restrict self, dssize_t index, DeeObject *__restrict item);
-INTDEF dssize_t DCALL Deque_Erase(Deque *__restrict self, dssize_t index, size_t num_items);
-INTDEF DREF DeeObject *DCALL Deque_Pop(Deque *__restrict self, dssize_t index);
+INTDEF int DCALL Deque_Insert(Deque *__restrict self, size_t index, DeeObject *__restrict item);
+INTDEF dssize_t DCALL Deque_Erase(Deque *__restrict self, size_t index, size_t num_items);
+INTDEF DREF DeeObject *DCALL Deque_Pop(Deque *__restrict self, size_t index);
 
 
 INTDEF ATTR_COLD void DCALL err_empty_sequence(DeeObject *__restrict seq);

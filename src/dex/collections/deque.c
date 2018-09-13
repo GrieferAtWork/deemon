@@ -413,18 +413,12 @@ Deque_PopBack(Deque *__restrict self) {
 /* Insert/delete items at a given index. */
 INTERN int DCALL
 Deque_Insert(Deque *__restrict self,
-             dssize_t index,
+             size_t index,
              DeeObject *__restrict item) {
 again:
  Deque_LockWrite(self);
- if (index < 0) index += self->d_size;
- if unlikely((size_t)index > self->d_size) {
-  size_t my_size = self->d_size;
-  COMPILER_READ_BARRIER();
-  Deque_LockEndWrite(self);
-  err_index_out_of_bounds((DeeObject *)self,(size_t)index,my_size);
-  return -1;
- }
+ if (index > self->d_size)
+     index = self->d_size;
  if (!Deque_Insert_unlocked(self,(size_t)index,item)) {
   size_t bucket_size;
   bucket_size = self->d_bucket_sz;
@@ -439,21 +433,13 @@ again:
 
 INTERN dssize_t DCALL
 Deque_Erase(Deque *__restrict self,
-            dssize_t index, size_t num_items) {
+            size_t index, size_t num_items) {
  size_t result; size_t i;
  DREF DeeObject **pop_objv;
 again:
  Deque_LockWrite(self);
- if (index < 0) index += self->d_size;
- if unlikely((size_t)index >= self->d_size) {
-  size_t list_size = self->d_size;
-  COMPILER_READ_BARRIER();
-  Deque_LockEndWrite(self);
-  err_index_out_of_bounds((DeeObject *)self,
-                          (size_t)index,
-                           list_size);
-  return -1;
- }
+ if (index > self->d_size)
+     index = self->d_size;
  result = self->d_size - (size_t)index;
  if (result > num_items)
      result = num_items;
@@ -483,16 +469,16 @@ again:
 
 
 INTERN DREF DeeObject *DCALL
-Deque_Pop(Deque *__restrict self, dssize_t index) {
+Deque_Pop(Deque *__restrict self, size_t index) {
  DREF DeeObject *result;
  Deque_LockWrite(self);
- if (index < 0) index += self->d_size;
- if unlikely((size_t)index >= self->d_size) {
-  size_t my_size = self->d_size;
-  COMPILER_READ_BARRIER();
-  Deque_LockEndWrite(self);
-  err_index_out_of_bounds((DeeObject *)self,(size_t)index,my_size);
-  return NULL;
+ if (index >= self->d_size) {
+  index = self->d_size;
+  if (!index) {
+   Deque_LockEndWrite(self);
+   err_empty_sequence((DeeObject *)self);
+   return NULL;
+  }
  }
  result = Deque_Pop_unlocked(self,(size_t)index);
  Deque_LockEndWrite(self);
@@ -1083,31 +1069,34 @@ deq_popback(Deque *__restrict self,
  return Deque_PopBack(self);
 }
 
+INTERN struct keyword seq_insert_kwlist[] = { K(index), K(item), KEND };
 PRIVATE DREF DeeObject *DCALL
-deq_insert(Deque *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
- dssize_t index; DeeObject *item;
- if (DeeArg_Unpack(argc,argv,"Ido:insert",&index,&item) ||
+deq_insert(Deque *__restrict self, size_t argc,
+           DeeObject **__restrict argv, DeeObject *kw) {
+ size_t index; DeeObject *item;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_insert_kwlist,"Ido:insert",&index,&item) ||
      Deque_Insert(self,index,item))
      return NULL;
  return_none;
 }
 
+INTERN struct keyword seq_erase_kwlist[] = { K(index), K(count), KEND };
 PRIVATE DREF DeeObject *DCALL
-deq_erase(Deque *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
- dssize_t index,result; size_t num_items = 1;
- if (DeeArg_Unpack(argc,argv,"Id|Iu:erase",&index,&num_items) ||
+deq_erase(Deque *__restrict self, size_t argc,
+          DeeObject **__restrict argv, DeeObject *kw) {
+ size_t index,result; size_t num_items = 1;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,"Id|Iu:erase",&index,&num_items) ||
     (result = Deque_Erase(self,index,num_items)) < 0)
      return NULL;
  return DeeInt_NewSize((size_t)result);
 }
 
+INTERN struct keyword seq_pop_kwlist[] = { K(index), KEND };
 PRIVATE DREF DeeObject *DCALL
-deq_pop(Deque *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
- dssize_t index;
- if (DeeArg_Unpack(argc,argv,"Id:pop",&index))
+deq_pop(Deque *__restrict self, size_t argc,
+        DeeObject **__restrict argv, DeeObject *kw) {
+ size_t index;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_pop_kwlist,"Id:pop",&index))
      return NULL;
  return Deque_Pop(self,index);
 }
@@ -1151,37 +1140,38 @@ deq_rrrot(Deque *__restrict self,
 
 PRIVATE struct type_method deq_methods[] = {
     { "insert", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_insert,
-      DOC("(int index,object ob)->none\n"
-          "@throw IndexError The given @index is greater than ${#this}\n"
-          "Insert the given object @ob at @index\n"
-          "If @index is negative, add ${#this} to it before using it as index") },
+      DOC("(int index,object ob)\n"
+          "@throw IntegerOverflow @index is negative or too large\n"
+          "Insert the given object @ob at @index"),
+      TYPE_METHOD_FKWDS },
     { "erase", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_erase,
       DOC("(int index,int num_items=1)->int\n"
-          "@throw IndexError The given @index is greater than, or equal to ${#this}\n"
+          "@throw IntegerOverflow @index is negative or too large\n"
           "@return The actual number of erased items\n"
-          "Erase up to @num_items objects from @this deque, starting at @index\n"
-          "If @index is negative, add ${#this} to it before using it as index") },
+          "Erase up to @num_items objects from @this deque, starting at @index"),
+      TYPE_METHOD_FKWDS },
     { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_pop,
       DOC("(int index=-1)->object\n"
-          "@throw IndexError The given @index is greater than, or equal to ${#this}\n"
+          "@throw IntegerOverflow @index is negative or too large\n"
           "@return The item that got removed\n"
-          "Pop (erase) the item located at @index and return it") },
+          "Pop (erase) the item located at @index and return it"),
+      TYPE_METHOD_FKWDS },
     { "pushfront", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_pushfront,
-      DOC("(object ob)->none\n"
+      DOC("(object ob)\n"
           "Insert the given object @ob at the front of @this deque") },
     { "pushback", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_pushback,
-      DOC("(object ob)->none\n"
+      DOC("(object ob)\n"
           "Insert the given object @ob at the back of @this deque") },
     { "popfront", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_popfront,
-      DOC("()->object\n"
+      DOC("->object\n"
           "@throw ValueError @this deque is empty\n"
           "Pop and return an item from the front of @this deque") },
     { "popback", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_popback,
-      DOC("()->object\n"
+      DOC("->object\n"
           "@throw ValueError @this deque is empty\n"
           "Pop and return an item from the back of @this deque") },
     { "llrot", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_llrot,
-      DOC("(int num_items)->none\n"
+      DOC("(int num_items)\n"
           "@throw IndexError @this deque contain less than @num_items items\n"
           "Rotate the first num_items items left by 1:\n"
           ">import deque from collections;\n"
@@ -1267,17 +1257,17 @@ INTERN DeeTypeObject Deque_Type = {
                             "\n"
                             "[](int index)\n"
                             "@throw IndexError @index is greater that the length of @this deque\n"
-                            "@throw IntegerOverflow @index is negative\n"
+                            "@throw IntegerOverflow @index is negative or too large\n"
                             "Returns the @index'th item of @this deque\n"
                             "\n"
                             "[]=(int index,object ob)\n"
                             "@throw IndexError @index is greater that the length of @this deque\n"
-                            "@throw IntegerOverflow @index is negative\n"
+                            "@throw IntegerOverflow @index is negative or too large\n"
                             "Set the @index'th item of @this deque to @ob\n"
                             "\n"
                             "del[](int index)\n"
                             "@throw IndexError @index is greater that the length of @this deque\n"
-                            "@throw IntegerOverflow @index is negative\n"
+                            "@throw IntegerOverflow @index is negative or too large\n"
                             "Same as ${this.pop(index)} for positive values for @index\n"
                             "\n"
                             "contains(object ob)->bool\n"
