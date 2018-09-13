@@ -3554,6 +3554,81 @@ err_overflow:
  goto err;
 }
 
+INTERN size_t DCALL
+DeeSeq_Fill(DeeObject *__restrict self,
+            size_t start, size_t end,
+            DeeObject *__restrict value) {
+ DREF DeeObject *temp; size_t mylen,result;
+ int error; DeeTypeObject *tp_self = Dee_TYPE(self);
+ if (start >= end) return 0;
+ mylen = DeeObject_Size(self);
+ if unlikely(mylen == (size_t)-1) goto err;
+ if (start >= mylen) return 0;
+ if (end > mylen) end = mylen;
+ ASSERT(start < end);
+ result = end - start;
+ if unlikely(result == (size_t)-1) goto err_overflow;
+ while (tp_self != &DeeSeq_Type) {
+  struct type_seq *seq = tp_self->tp_seq;
+  if (seq) {
+   struct type_nsi *nsi = seq->tp_nsi;
+   if (seq->tp_range_set) {
+    /* >> this[start:end] = sequence.repeat(value,end - start); */
+    DREF DeeObject *repeated_value;
+    repeated_value = DeeSeq_RepeatItem(value,result);
+    if unlikely(!repeated_value) goto err;
+    if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+        nsi->nsi_seqlike.nsi_setrange && end <= SSIZE_MAX) {
+     error = (*nsi->nsi_seqlike.nsi_setrange)(self,(dssize_t)start,(dssize_t)end,repeated_value);
+    } else {
+     DREF DeeObject *start_ob;
+     DREF DeeObject *end_ob;
+     start_ob = DeeInt_NewSize(start);
+     if unlikely(!start_ob) { err_repeated_value: Dee_Decref(repeated_value); goto err; }
+     end_ob = DeeInt_NewSize(end);
+     if unlikely(!end_ob) { Dee_Decref(start_ob); goto err_repeated_value; }
+     error = (*nsi->nsi_seqlike.nsi_setrange)(self,(dssize_t)start,(dssize_t)end,repeated_value);
+     Dee_Decref(end_ob);
+     Dee_Decref(start_ob);
+    }
+    Dee_Decref(repeated_value);
+    if unlikely(error) goto err;
+    return result;
+   }
+   if (seq->tp_set) {
+    /* >> for (local i = start; i < end; ++i)
+     * >>     this[i] = value; */
+    size_t i;
+    if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+        nsi->nsi_seqlike.nsi_setitem) {
+     for (i = start; i < end; ++i) {
+      error = (*nsi->nsi_seqlike.nsi_setitem)(self,i,value);
+      if unlikely(error) goto err;
+     }
+    } else {
+     for (i = start; i < end; ++i) {
+      temp = DeeInt_NewSize(i);
+      if unlikely(!temp) goto err;
+      error = (*seq->tp_set)(self,temp,value);
+      Dee_Decref(temp);
+      if unlikely(error) goto err;
+     }
+    }
+    return result;
+   }
+   break;
+  }
+  if ((tp_self = DeeType_Base(tp_self)) == NULL) break;
+ }
+ err_immutable_sequence(self);
+err:
+ return (size_t)-1;
+err_overflow:
+ err_integer_overflow_i(sizeof(size_t)*8,true);
+ return (size_t)-1;
+}
+
+
 
 PRIVATE DeeObject *mutable_sequence_attributes[] = {
     &str_remove,

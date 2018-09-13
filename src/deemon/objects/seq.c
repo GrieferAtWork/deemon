@@ -1508,6 +1508,21 @@ seq_clear(DeeObject *__restrict self,
  return_none;
 }
 
+PRIVATE DREF DeeObject *DCALL
+seq_fill(DeeObject *__restrict self, size_t argc,
+         DeeObject **__restrict argv, DeeObject *kw) {
+ size_t start = 0,end = (size_t)-1,result;
+ DeeObject *filler = Dee_None;
+ PRIVATE struct keyword kwlist[] = { K(start), K(end), K(filler), KEND };
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|IdIdo:fill",&start,&end,&filler))
+     goto err;
+ result = DeeSeq_Fill(self,start,end,filler);
+ if unlikely(result == (size_t)-1) goto err;
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+
 INTERN struct keyword seq_resize_kwlist[] = { K(newsize), K(filler), KEND };
 PRIVATE DREF DeeObject *DCALL
 seq_resize(DeeObject *__restrict self, size_t argc,
@@ -2773,6 +2788,38 @@ INTERN struct type_method seq_methods[] = {
           ">   this.extend(sequence.repeat(filler,newsize-oldsize));\n"
           ">  }\n"
           "> }\n"
+          ">}\n"
+          ),
+      TYPE_METHOD_FKWDS },
+    { "fill",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_fill,
+      DOC("(int start=0,int end=-1,filler=none)->int\n"
+          "@throw SequenceError @this sequence is immutable\n"
+          "For mutable sequences only: Assign @filler to all elements within "
+          "the given sub-range, and return the number of written indices\n"
+          "Depending on the nearest implemented group of operators, "
+          "one of the following implementations is chosen\n"
+          "For ${operator setrange}:\n"
+          ">function fill(start,end,filler) {\n"
+          "> import sequence from deemon;\n"
+          "> if (start >= end) return 0;\n"
+          "> local mylen = #this;\n"
+          "> if (start >= mylen) return 0\n"
+          "> if (end > mylen) end = mylen\n"
+          "> local result = end - start;\n"
+          "> this[start:end] = sequence.repeat(filler,result);\n"
+          "> return result;\n"
+          ">}\n"
+          "For ${operator setitem}:\n"
+          ">function fill(start,end,filler) {\n"
+          "> import sequence from deemon;\n"
+          "> if (start >= end) return 0;\n"
+          "> local mylen = #this;\n"
+          "> if (start >= mylen) return 0\n"
+          "> if (end > mylen) end = mylen\n"
+          "> for (local i = start; i < end; ++i)\n"
+          ">  this[i] = filler;\n"
+          "> return end - start;\n"
           ">}\n"
           ),
       TYPE_METHOD_FKWDS },
