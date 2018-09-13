@@ -1277,6 +1277,16 @@ seq_combinations(DeeObject *__restrict self,
 err:
  return NULL;
 }
+PRIVATE DREF DeeObject *DCALL
+seq_repeatcombinations(DeeObject *__restrict self,
+                       size_t argc, DeeObject **__restrict argv) {
+ size_t r;
+ if (DeeArg_Unpack(argc,argv,"Iu:repeatcombinations",&r))
+     goto err;
+ return DeeSeq_RepeatCombinations(self,r);
+err:
+ return NULL;
+}
 
 
 /* Mutable-sequence functions */
@@ -1989,15 +1999,31 @@ INTERN struct type_method seq_methods[] = {
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Returns a sequence of r-long sequences representing all possible (ordered) "
           "combinations of elements retrieved from @this\n"
-          ">print repr \"ABCD\".combinations(2); /* { (\"A\", \"B\"), (\"A\", \"C\"), "
-                                                     "(\"A\", \"D\"), (\"B\", \"C\"), "
-                                                     "(\"B\", \"D\"), (\"C\", \"D\") } */\n"
+          ">/* { (\"A\", \"B\"), (\"A\", \"C\"), "
+                "(\"A\", \"D\"), (\"B\", \"C\"), "
+                "(\"B\", \"D\"), (\"C\", \"D\") } */\n"
+          ">print repr \"ABCD\".combinations(2);\n"
           "Notice that a combination such as $\"BA\" is not produced, as only possible "
           "combinations with their original element order still in tact may be returned\n"
           "When @this sequence implements #op:getitem and #op:size, those will be invoked "
           "as items are retrieved by index. Otherwise, all elements from @this sequence "
           "are loaded at once when #combinations is called first.\n"
-          "When @r is greater than ${#this}, an empty sequence is returned") },
+          "When @r is greater than ${#this}, an empty sequence is returned (${{}})\n"
+          "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations itertools.combinations}") },
+    { "repeatcombinations", &seq_repeatcombinations,
+      DOC("(int r)->{sequence...}\n"
+          "@throw IntegerOverflow @r is negative, or too large\n"
+          "Same as #combinations, however elements of @this sequence may be repeated (though element order is still enforced)\n"
+          ">/* { (\"A\", \"A\"), (\"A\", \"B\"), "
+                "(\"A\", \"C\"), (\"B\", \"B\"), "
+                "(\"B\", \"C\"), (\"C\", \"C\") } */\n"
+          ">print repr \"ABC\".repeatcombinations(2);\n"
+          "When @this sequence implements #op:getitem and #op:size, those will be invoked "
+          "as items are retrieved by index. Otherwise, all elements from @this sequence "
+          "are loaded at once when #repeatcombinations is called first.\n"
+          "When @r is $0, a sequence containing a single, empty sequence is returned (${{{}}})\n"
+          "When ${#this} is zero, an empty sequence is returned (${{}})\n"
+          "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations_with_replacement itertools.combinations_with_replacement}") },
 
     /* TODO: join(sequence items) -> sequence */
     /* TODO: strip(object item, callable pred_eq = none) -> sequence */
@@ -2985,7 +3011,8 @@ PRIVATE struct type_method seq_class_methods[] = {
        DOC("(sequence seqs...)->sequence\n"
            "Returns a proxy-sequence describing the concantation of all of the given sequences\n"
            "When only 1 sequence is given, that sequence is forwarded directly.\n"
-           "When no sequences are given, an empty sequence is returned") },
+           "When no sequences are given, an empty sequence is returned\n"
+           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.chain itertools.chain}") },
     { NULL }
 };
 
