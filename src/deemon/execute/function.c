@@ -1162,7 +1162,7 @@ yfi_getframe(YFIterator *__restrict self) {
 
 PRIVATE struct type_getset yfi_getsets[] = {
 #ifndef CONFIG_NO_THREADS
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_seq_get, NULL, NULL },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_seq_get, NULL, NULL },
 #endif /* !CONFIG_NO_THREADS */
     { "__frame__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getframe, NULL, NULL },
     { "__this__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getthis, NULL, NULL },

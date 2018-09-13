@@ -326,12 +326,15 @@ action_set_expr_result:
       Dee_Decref(expr_result);
       DeeError_Handled(ERROR_HANDLED_RESTORE);
      } else {
-      ast_xdecref(self->a_action.a_act2);
-      ast_xdecref(self->a_action.a_act1);
-      ast_xdecref(self->a_action.a_act0);
+      if (AST_FACTION_ARGC_GT(self->a_flag) >= 3)
+          ast_decref(self->a_action.a_act2);
+      if (AST_FACTION_ARGC_GT(self->a_flag) >= 2)
+          ast_decref(self->a_action.a_act1);
+      if (AST_FACTION_ARGC_GT(self->a_flag) >= 1)
+          ast_decref(self->a_action.a_act0);
       self->a_constexpr = expr_result; /* Inherit reference. */
       self->a_type      = AST_CONSTEXPR;
-      OPTIMIZE_VERBOSE("Propagate constant result of action-expression\n");
+      OPTIMIZE_VERBOSE("Propagate constant result of action-expression: %r\n",expr_result);
       goto did_optimize;
      }
     }

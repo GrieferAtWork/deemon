@@ -27,6 +27,7 @@
 #include <deemon/bool.h>
 #include <deemon/thread.h>
 #include <deemon/arg.h>
+#include <deemon/string.h>
 #include <hybrid/minmax.h>
 
 #ifndef CONFIG_NO_THREADS
@@ -179,7 +180,7 @@ locatoriter_seq_get(LocatorIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset locatoriter_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&locatoriter_seq_get, NULL, NULL },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&locatoriter_seq_get, NULL, NULL },
     { NULL }
 };
 

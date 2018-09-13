@@ -24,6 +24,8 @@
 #endif
 
 #include <deemon/seq.h>
+#include <deemon/string.h>
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -802,7 +804,7 @@ blsi_getseq(BytesLineSplitIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset blsi_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blsi_getseq },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blsi_getseq },
     { NULL }
 };
 

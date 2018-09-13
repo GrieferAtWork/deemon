@@ -317,7 +317,7 @@ DeeList_Copy(DREF DeeObject *__restrict self) {
 
 
 INTERN DREF DeeObject *DCALL
-DeeList_Concat(DREF DeeObject *__restrict self,
+DeeList_Concat(/*inherit(on_success)*/DREF DeeObject *__restrict self,
                DeeObject *__restrict sequence) {
  DREF DeeObject *result;
  size_t fast_seqlen;
@@ -344,8 +344,8 @@ err:
 }
 
 INTERN DREF DeeObject *DCALL
-DeeList_ExtendInherited(DREF DeeObject *__restrict self,
-                        size_t argc, DREF DeeObject **__restrict argv) {
+DeeList_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
+                        /*inherit(on_success)*/DREF DeeObject **__restrict argv) {
  DREF List *result;
  if (!DeeObject_IsShared(self)) {
   size_t req_alloc;

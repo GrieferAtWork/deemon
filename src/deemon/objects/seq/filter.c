@@ -24,6 +24,7 @@
 #include <deemon/seq.h>
 #include <deemon/none.h>
 #include <deemon/arg.h>
+#include <deemon/string.h>
 
 #include "filter.h"
 #include "../../runtime/strings.h"
@@ -123,7 +124,7 @@ err:
 
 
 PRIVATE struct type_getset filteriterator_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get, NULL, NULL,
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get, NULL, NULL,
       DOC("->_filter") },
     { NULL }
 };

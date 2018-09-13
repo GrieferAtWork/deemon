@@ -1251,19 +1251,32 @@ seq_segments(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  size_t segsize;
  if (DeeArg_Unpack(argc,argv,"Iu:segments",&segsize))
-     return NULL;
- (void)self; /* TODO */
- DERROR_NOTIMPLEMENTED();
+     goto err;
+ if unlikely(!segsize) {
+  err_invalid_segment_size(segsize);
+  goto err;
+ }
+ return DeeSeq_Segments(self,segsize);
+err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_distribute(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
- size_t segsize;
+ size_t segsize,mylen;
  if (DeeArg_Unpack(argc,argv,"Iu:distribute",&segsize))
      goto err;
- (void)self; /* TODO */
- DERROR_NOTIMPLEMENTED();
+ if unlikely(!segsize) {
+  err_invalid_distribution_count(segsize);
+  goto err;
+ }
+ mylen = DeeObject_Size(self);
+ if unlikely(mylen == (size_t)-1) goto err;
+ mylen += segsize - 1;
+ mylen /= segsize;
+ if unlikely(!mylen)
+    return_empty_seq;
+ return DeeSeq_Segments(self,mylen);
 err:
  return NULL;
 }
@@ -1706,7 +1719,7 @@ INTERN struct type_method seq_methods[] = {
           ">function locate(elem,pred_eq) {\n"
           "> import Error from deemon;\n"
           "> for (local x: this) {\n"
-          ">  if (pred_eq is none) {\n"
+          ">  if (pred_eq !is none) {\n"
           ">   if (pred_eq(x,elem))\n"
           ">    return x;\n"
           ">  } else {\n"
@@ -1726,7 +1739,7 @@ INTERN struct type_method seq_methods[] = {
           "> import Error from deemon;\n"
           "> local result;\n"
           "> for (local x: this) {\n"
-          ">  if (pred_eq is none) {\n"
+          ">  if (pred_eq !is none) {\n"
           ">   if (pred_eq(x,elem))\n"
           ">    result = x;\n"
           ">  } else {\n"
@@ -1748,7 +1761,7 @@ INTERN struct type_method seq_methods[] = {
           ">function locateall(elem,pred_eq) {\n"
           "> import Error from deemon;\n"
           "> for (local x: this) {\n"
-          ">  if (pred_eq is none) {\n"
+          ">  if (pred_eq !is none) {\n"
           ">   if (pred_eq(x,elem))\n"
           ">    yield x;\n"
           ">  } else {\n"
@@ -1765,8 +1778,8 @@ INTERN struct type_method seq_methods[] = {
           ">function transform(transformation) {\n"
           "> for (local x: this)\n"
           ">  yield transformation(x);\n"
-          ">}"
-          ) },
+          ">}\n"
+          "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/functions.html#map map}") },
     { "contains", &seq_contains,
       DOC("(elem,callable pred_eq=none)->bool\n"
           "@param elem The element to search for\n"
@@ -1996,12 +2009,15 @@ INTERN struct type_method seq_methods[] = {
           "The point at which @this sequence is enumerated is implementation-defined") },
     { "segments", &seq_segments,
       DOC("(int segment_size)->sequence\n"
+          "@throw IntegerOverflow @segment_size is negative, or too large\n"
+          "@throw ValueError The given @segment_size is zero\n"
           "Return a sequence of sequences contains all elements from @this sequence, "
           "with the first n sequences all consisting of @segment_size elements, before "
-          "the last one contains the remainder of up to @segment_size elements\n"
-          "The point at which @this sequence is enumerated is implementation-defined") },
+          "the last one contains the remainder of up to @segment_size elements") },
     { "distribute", &seq_distribute,
       DOC("(int bucket_count)->sequence\n"
+          "@throw IntegerOverflow @segment_size is negative, or too large\n"
+          "@throw ValueError The given @segment_size is zero\n"
           "Re-distribute the elements of @this sequence to form @bucket_count similarly-sized "
           "buckets of objects, with the last bucket containing the remaining elements, making "
           "its length a little bit shorter than the other buckets\n"

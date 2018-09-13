@@ -1449,9 +1449,6 @@ done:
  return result;
 }
 
-INTERN DREF DeeObject *DCALL DeeSeq_Segments(DeeObject *__restrict self, size_t segsize);
-
-
 
 INTERN DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTERN DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);

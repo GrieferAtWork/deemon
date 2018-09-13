@@ -62,6 +62,8 @@ DDATDEF DeeTypeObject DeeTuple_Type;
 
 /* Create new tuple objects. */
 DFUNDEF DREF DeeObject *DCALL DeeTuple_NewUninitialized(size_t n);
+DFUNDEF DREF DeeObject *DCALL DeeTuple_ResizeUninitialized(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t n);
+DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeTuple_TruncateUninitialized(/*inherit(always)*/DREF DeeObject *__restrict self, size_t n);
 DFUNDEF void DCALL DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self);
 
 /* Decrement the reference counter of a tuple object filled with symbolic references.
@@ -106,27 +108,22 @@ DFUNDEF DREF DeeObject *DCALL DeeTuple_VNewf(char const *__restrict format, va_l
 /* Concat a tuple and some generic sequence,
  * inheriting a reference from `self' in the process. */
 INTDEF DREF DeeObject *DCALL
-DeeTuple_ConcatInherited(DREF DeeObject *__restrict self,
+DeeTuple_ConcatInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self,
                          DeeObject *__restrict sequence);
 INTDEF DREF DeeObject *DCALL
-DeeTuple_ExtendInherited(DREF DeeObject *__restrict self,
-                         size_t argc, DREF DeeObject **__restrict argv);
+DeeTuple_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
+                         /*inherit(on_success)*/DREF DeeObject **__restrict argv);
 #endif
 
 /* Append all elements from an iterator to a tuple.
  * @assume(DeeTuple_IsEmpty(*pself) || !DeeObject_IsShared(*pself)); */
-DFUNDEF int DCALL
-DeeTuple_AppendIterator(DREF DeeObject **__restrict pself,
+DFUNDEF DREF DeeObject *DCALL
+DeeTuple_AppendIterator(/*inherit(on_success)*/DREF DeeObject *__restrict self,
                         DeeObject *__restrict iterator);
-DFUNDEF int DCALL
-DeeTuple_Append(DREF DeeObject **__restrict pself,
+DFUNDEF DREF DeeObject *DCALL
+DeeTuple_Append(/*inherit(on_success)*/DREF DeeObject *__restrict self,
                 DeeObject *__restrict item);
 
-#ifndef __INTELLISENSE__
-#ifndef __NO_builtin_expect
-#define DeeTuple_AppendIterator(pself,iterator) __builtin_expect(DeeTuple_AppendIterator(pself,iterator),0)
-#endif /* !__NO_builtin_expect */
-#endif
 
 
 DECL_END

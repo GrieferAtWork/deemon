@@ -1984,7 +1984,7 @@ file_return_self(DeeFileObject *__restrict self) {
 
 PRIVATE struct type_getset file_getsets[] = {
     /* Maintain at least a tiny bit of compatibility to the iterator interface... */
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_return_self },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_return_self },
     { NULL }
 };
 

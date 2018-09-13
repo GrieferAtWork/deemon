@@ -3335,12 +3335,14 @@ bytes_segments(Bytes *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  size_t substring_length;
  if (DeeArg_Unpack(argc,argv,"Iu:segments",&substring_length))
-     return NULL;
+     goto err;
  if unlikely(!substring_length) {
   err_invalid_segment_size(substring_length);
-  return NULL;
+  goto err;
  }
  return DeeBytes_Segments(self,substring_length);
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -3349,10 +3351,10 @@ bytes_distribute(Bytes *__restrict self,
  size_t substring_count;
  size_t substring_length;
  if (DeeArg_Unpack(argc,argv,"Iu:distribute",&substring_count))
-     return NULL;
+     goto err;
  if unlikely(!substring_count) {
   err_invalid_distribution_count(substring_count);
-  return NULL;
+  goto err;
  }
  substring_length  = DeeBytes_SIZE(self);
  substring_length += substring_count - 1;
@@ -3360,6 +3362,8 @@ bytes_distribute(Bytes *__restrict self,
  if unlikely(!substring_length)
     return_empty_seq;
  return DeeBytes_Segments(self,substring_length);
+err:
+ return NULL;
 }
 
 

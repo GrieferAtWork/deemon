@@ -26,6 +26,7 @@
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/arg.h>
+#include <deemon/string.h>
 
 #include <hybrid/minmax.h>
 
@@ -81,7 +82,7 @@ transiter_seq_get(TransformationIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset transiter_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&transiter_seq_get, NULL, NULL },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&transiter_seq_get, NULL, NULL },
     { NULL }
 };
 

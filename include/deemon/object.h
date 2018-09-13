@@ -2197,8 +2197,9 @@ DFUNDEF int DCALL DeeObject_SetRangeEndIndex(DeeObject *__restrict self, DeeObje
 DFUNDEF int DCALL DeeObject_SetRangeIndex(DeeObject *__restrict self, dssize_t begin, dssize_t end, DeeObject *__restrict value);
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF DREF DeeObject *DCALL DeeObject_ConcatInherited(DREF DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL DeeObject_ExtendInherited(DREF DeeObject *__restrict self, size_t argc, DREF DeeObject **__restrict argv);
+/* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
+INTDEF DREF DeeObject *DCALL DeeObject_ConcatInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *DCALL DeeObject_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc, /*inherit(on_success)*/DREF DeeObject **__restrict argv);
 #endif
 
 /* Process UTF-8-encoded `data' in whatever way you wish. */

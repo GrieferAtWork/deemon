@@ -28,6 +28,7 @@
 #include <deemon/thread.h>
 #include <deemon/arg.h>
 #include <deemon/int.h>
+#include <deemon/string.h>
 
 #include <hybrid/minmax.h>
 
@@ -113,7 +114,7 @@ subrangeiterator_seq_get(SubRangeIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset subrangeiterator_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangeiterator_seq_get, NULL, NULL },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangeiterator_seq_get, NULL, NULL },
     { NULL }
 };
 

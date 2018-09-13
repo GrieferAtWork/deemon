@@ -25,6 +25,7 @@
 #include <deemon/error.h>
 #include <deemon/bool.h>
 #include <deemon/arg.h>
+#include <deemon/string.h>
 #include <deemon/tuple.h>
 #include <deemon/int.h>
 
@@ -36,6 +37,7 @@
 
 #include "svec.h"
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -292,7 +294,7 @@ catiterator_curr_get(CatIterator *__restrict self) {
  return result;
 }
 PRIVATE struct type_getset catiterator_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_seq_get, NULL, NULL },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_seq_get, NULL, NULL },
     { "__curr__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_curr_get, NULL, NULL },
     { NULL }
 };

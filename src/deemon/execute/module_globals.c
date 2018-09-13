@@ -231,7 +231,7 @@ mei_getseq(ModuleExportsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset mei_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mei_getseq },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mei_getseq },
     { NULL }
 };
 
@@ -691,7 +691,7 @@ mgi_getseq(ModuleGlobalsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset mgi_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mgi_getseq },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mgi_getseq },
     { NULL }
 };
 #undef READ_INDEX

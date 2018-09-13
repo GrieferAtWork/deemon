@@ -752,6 +752,9 @@
     <ClCompile Include="..\src\deemon\objects\seq\combinations.c">
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\segments.c">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">

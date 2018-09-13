@@ -24,6 +24,9 @@
 #endif
 
 #include <deemon/seq.h>
+#include <deemon/string.h>
+
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -141,7 +144,7 @@ stringordinalsiter_seq(StringOrdinalsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset stringordinalsiter_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinalsiter_seq },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinalsiter_seq },
     { NULL }
 };
 

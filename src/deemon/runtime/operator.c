@@ -3350,8 +3350,8 @@ DeeObject_ConcatInherited(DREF DeeObject *__restrict self,
  return result;
 }
 INTERN DREF DeeObject *DCALL
-DeeObject_ExtendInherited(DREF DeeObject *__restrict self,
-                          size_t argc, DeeObject **__restrict argv) {
+DeeObject_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
+                          /*inherit(on_success)*/DREF DeeObject **__restrict argv) {
  DREF DeeObject *result;
  DREF SharedVector *other;
  if (DeeTuple_CheckExact(self))

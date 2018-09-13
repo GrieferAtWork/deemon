@@ -154,14 +154,11 @@ INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict s
   * to bridge across the GETATTR operator invocation and try to
   * directly invoke the function when possible. */
  if (self->a_flag == OPERATOR_CALL &&
-     self->a_operator.o_op0 &&  self->a_operator.o_op1 &&
-    !self->a_operator.o_op2 && !self->a_operator.o_op3 &&
+     self->a_operator.o_op1 &&
      self->a_operator.o_op0->a_type == AST_OPERATOR &&
      self->a_operator.o_op0->a_flag == OPERATOR_GETATTR &&
-     self->a_operator.o_op0->a_operator.o_op0 &&
      self->a_operator.o_op0->a_operator.o_op1 &&
-    !self->a_operator.o_op0->a_operator.o_op2 &&
-    !self->a_operator.o_op0->a_operator.o_op3) {
+   !(self->a_operator.o_op0->a_operator.o_exflag & (AST_OPERATOR_FVARARGS|AST_OPERATOR_FPOSTOP))) {
   struct ast *base = self->a_operator.o_op0->a_operator.o_op0;
   struct ast *name = self->a_operator.o_op0->a_operator.o_op1;
   struct ast *args = self->a_operator.o_op1;

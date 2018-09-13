@@ -24,6 +24,9 @@
 #endif
 
 #include <deemon/seq.h>
+#include <deemon/string.h>
+
+#include "../../runtime/strings.h"
 
 /* Proxy sequence objects for `string.refindall',
  * `string.relocateall' and `string.resplit' */
@@ -213,7 +216,7 @@ PRIVATE struct type_cmp refaiter_cmp = {
 
 
 PRIVATE struct type_getset refaiter_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refaiter_getseq },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refaiter_getseq },
     { NULL }
 };
 
@@ -309,7 +312,7 @@ relaiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset relaiter_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&relaiter_getseq },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&relaiter_getseq },
     { NULL }
 };
 
@@ -441,7 +444,7 @@ respiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset respiter_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&respiter_getseq },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&respiter_getseq },
     { NULL }
 };
 

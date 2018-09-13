@@ -24,6 +24,7 @@
 #include <deemon/seq.h>
 #include <deemon/tuple.h>
 #include <deemon/int.h>
+#include <deemon/thread.h>
 #include <deemon/class.h>
 #include <deemon/util/string.h>
 #ifndef CONFIG_NO_THREADS
@@ -823,6 +824,8 @@ err_elem_v:
      elem_a = new_alloc;
     }
     elem_v[elem_c++] = elem; /* Inherit reference. */
+    if (DeeThread_CheckInterrupt())
+        goto err_elem_v;
    }
    if unlikely(!elem) goto err_elem_v;
    Dee_Decref(iterator);
@@ -983,6 +986,8 @@ err_elem_v:
      elem_a = new_alloc;
     }
     elem_v[elem_c++] = elem; /* Inherit reference. */
+    if (DeeThread_CheckInterrupt())
+        goto err_elem_v;
    }
    if unlikely(!elem) goto err_elem_v;
    Dee_Decref(iterator);
@@ -1134,6 +1139,8 @@ err_elem_v:
      elem_a = new_alloc;
     }
     elem_v[elem_c++] = elem; /* Inherit reference. */
+    if (DeeThread_CheckInterrupt())
+        goto err_elem_v;
    }
    if unlikely(!elem) goto err_elem_v;
    Dee_Decref(iterator);
