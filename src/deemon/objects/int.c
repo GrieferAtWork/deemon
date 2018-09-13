@@ -1896,16 +1896,39 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-int_tostr(DeeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+int_tostr_impl(DeeObject *__restrict self, uint32_t flags) {
+#if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ if unlikely(DeeInt_Print(self,flags,(dformatprinter)&unicode_printer_print,&printer) < 0)
+    goto err_printer;
+ return unicode_printer_pack(&printer);
+err_printer:
+ unicode_printer_fini(&printer);
+#else
+ struct ascii_printer printer = ASCII_PRINTER_INIT;
+ if unlikely(DeeInt_Print(self,flags,
+                         (dformatprinter)&ascii_printer_print,
+                         &printer) < 0)
+    goto err_printer;
+ return ascii_printer_pack(&printer);
+err_printer:
+ ascii_printer_fini(&printer);
+#endif
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+int_tostr(DeeObject *__restrict self, size_t argc,
+          DeeObject **__restrict argv, DeeObject *kw) {
  uint32_t flags = 10 << DEEINT_PRINT_RSHIFT; char *flags_str = NULL;
+ PRIVATE struct keyword kwlist[] = { K(radix), K(mode), KEND };
 #ifdef CONFIG_BIG_ENDIAN
- if (DeeArg_Unpack(argc,argv,"|I16us:tostr",&((uint16_t *)&flags)[0],&flags_str))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|I16us:tostr",
+                  &((uint16_t *)&flags)[0],&flags_str))
      goto err;
 #else
- if (DeeArg_Unpack(argc,argv,"|I16us:tostr",&((uint16_t *)&flags)[1],&flags_str))
-     goto err;
- if (DeeArg_Unpack(argc,argv,"|I16us:tostr",&((uint16_t *)&flags)[1],&flags_str))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|I16us:tostr",
+                  &((uint16_t *)&flags)[1],&flags_str))
      goto err;
 #endif
  if (flags_str) {
@@ -1924,25 +1947,7 @@ int_tostr(DeeObject *__restrict self,
    }
   }
  }
- {
-#if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
-  struct unicode_printer printer = UNICODE_PRINTER_INIT;
-  if unlikely(DeeInt_Print(self,flags,(dformatprinter)&unicode_printer_print,&printer) < 0)
-     goto err_printer;
-  return unicode_printer_pack(&printer);
-err_printer:
-  unicode_printer_fini(&printer);
-#else
-  struct ascii_printer printer = ASCII_PRINTER_INIT;
-  if unlikely(DeeInt_Print(self,flags,
-                          (dformatprinter)&ascii_printer_print,
-                          &printer) < 0)
-     goto err_printer;
-  return ascii_printer_pack(&printer);
-err_printer:
-  ascii_printer_fini(&printer);
-#endif
- }
+ return int_tostr_impl(self,flags);
 err:
  return NULL;
 }
@@ -1952,29 +1957,27 @@ int_hex(DeeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":hex"))
      goto err;
- {
-#if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
-  struct unicode_printer printer = UNICODE_PRINTER_INIT;
-  if unlikely(DeeInt_Print(self,
-                           DEEINT_PRINT(16,DEEINT_PRINT_FNUMSYS),
-                          (dformatprinter)&unicode_printer_print,
-                          &printer) < 0)
-     goto err_printer;
-  return unicode_printer_pack(&printer);
-err_printer:
-  unicode_printer_fini(&printer);
-#else
-  struct ascii_printer printer = ASCII_PRINTER_INIT;
-  if unlikely(DeeInt_Print(self,
-                           DEEINT_PRINT(16,DEEINT_PRINT_FNUMSYS),
-                          (dformatprinter)&ascii_printer_print,
-                          &printer) < 0)
-     goto err_printer;
-  return ascii_printer_pack(&printer);
-err_printer:
-  ascii_printer_fini(&printer);
-#endif
- }
+ return int_tostr_impl(self,DEEINT_PRINT(16,DEEINT_PRINT_FNUMSYS));
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+int_bin(DeeObject *__restrict self,
+        size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":bin"))
+     goto err;
+ return int_tostr_impl(self,DEEINT_PRINT(2,DEEINT_PRINT_FNUMSYS));
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+int_oct(DeeObject *__restrict self,
+        size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":oct"))
+     goto err;
+ return int_tostr_impl(self,DEEINT_PRINT(8,DEEINT_PRINT_FNUMSYS));
 err:
  return NULL;
 }
@@ -2082,7 +2085,7 @@ PRIVATE struct type_method int_class_methods[] = {
 };
 
 PRIVATE struct type_method int_methods[] = {
-    { "tostr", &int_tostr,
+    { "tostr", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_tostr,
       DOC("(int radix=10,string mode=\"\")->string\n"
           "@throw ValueError The given @mode was not recognized\n"
           "@throw NotImplemented The given @radix cannot be represented\n"
@@ -2092,11 +2095,18 @@ PRIVATE struct type_method int_methods[] = {
           "%{table Option|Description\n"
           "-${\"u\"}, ${\"X\"}|Digits above $10 are printed in upper-case\n"
           "-${\"n\"}, ${\"#\"}|Prefix the integers with its number system prefix (e.g.: ${\"0x\"})\n"
-          "-${\"s\"}, ${\"+\"}|Also prepend a sign prefix before positive integers}") },
-    { "hex", &int_hex,
-      DOC("()->string\n"
-          "Short-hand alias for ${this.tostr(16,\"n\")}") },
-    { "tobytes", (dobjmethod_t)&int_tobytes,
+          "-${\"s\"}, ${\"+\"}|Also prepend a sign prefix before positive integers}"),
+      TYPE_METHOD_FKWDS },
+    { "hex", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_hex,
+      DOC("->string\n"
+          "Short-hand alias for ${this.tostr(16,\"n\")} (s.a. #tostr)") },
+    { "bin", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_bin,
+      DOC("->string\n"
+          "Short-hand alias for ${this.tostr(2,\"n\")} (s.a. #tostr)") },
+    { "oct", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_oct,
+      DOC("->string\n"
+          "Short-hand alias for ${this.tostr(8,\"n\")} (s.a. #tostr)") },
+    { "tobytes", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_tobytes,
       DOC("(int length,string byteorder=none,bool signed=false)->bytes\n"
           "@param byteorder The byteorder encoding used by the returned bytes. "
                            "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
