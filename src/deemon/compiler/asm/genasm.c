@@ -609,7 +609,7 @@ done_push_none:
         /* NOTE: Don't optimize `return none' --> `return' in yield functions.
          *       When yielding, the `ASM_RET_NONE' instruction behaves differently
          *       from what a regular `ASM_RET' for `Dee_None' does! */
-     (!(current_basescope->bs_flags&CODE_FYIELDING) &&
+     (!(current_basescope->bs_flags & CODE_FYIELDING) &&
         self->a_return->a_type == AST_CONSTEXPR &&
         DeeNone_Check(self->a_return->a_constexpr))) {
    if (asm_putddi(self)) goto err;

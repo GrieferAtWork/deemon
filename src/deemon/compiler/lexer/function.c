@@ -277,11 +277,16 @@ ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
                    bool allow_missing_params,
                    struct ast_loc *name_loc) {
  DREF struct ast *result;
- if unlikely(basescope_push()) return NULL;
- current_basescope->bs_flags |= current_tags.at_code_flags;
+ struct ast_annotations annotations;
+ ast_annotations_get(&annotations);
+ if unlikely(basescope_push()) goto err_anno;
  result = ast_parse_function_noscope(name,pneed_semi,allow_missing_params,name_loc);
  basescope_pop();
- return result;
+ if unlikely(!result) goto err_anno;
+ return ast_annotations_apply(&annotations,result);
+err_anno:
+ ast_annotations_free(&annotations);
+ return NULL;
 }
 INTERN DREF struct ast *DCALL
 ast_parse_function_noscope(struct TPPKeyword *name,

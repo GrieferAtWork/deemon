@@ -1187,8 +1187,6 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
 #endif /* !TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS */
 
  case KWD_this:
- case KWD_doc:
- case KWD_auto:
   return false;
 
  default: break;

@@ -714,7 +714,11 @@ do_create_class:
    }
   }
   /* Actually do parse the class now. */
-  result = ast_setddi(ast_parse_class(class_flags,class_name,false,LOOKUP_SYM_NORMAL),&loc);
+  result = ast_setddi(ast_parse_class(class_flags,
+                                      class_name,
+                                      false,
+                                      LOOKUP_SYM_NORMAL),
+                     &loc);
  } break;
 
  {

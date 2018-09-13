@@ -237,7 +237,7 @@ again:
   if unlikely(!tt_branch) goto err_r;
   ff_branch = NULL;
   /* Allow tags before the `else' keyword (forward-compatibility...) */
-  clear_current_tags();
+  if unlikely(clear_current_tags()) goto err_tt_branch;
   if unlikely(skip_lf()) goto err_tt_branch;
   if unlikely(parse_tags_block()) {
 err_tt_branch:
@@ -553,7 +553,7 @@ err_foreach_elem:
   result = ast_parse_statement(false);
   if unlikely(!result) goto err;
   /* Allow tags before the `while' keyword (forward-compatibility...) */
-  clear_current_tags();
+  if unlikely(clear_current_tags()) goto err_r;
   if unlikely(skip_lf()) goto err_r;
   if unlikely(parse_tags_block()) goto err_r;
   if unlikely(skip_lf()) goto err_r;
@@ -637,7 +637,7 @@ err_foreach_elem:
    * yet another catch/finally block that never came:
    * >> try {
    * >>     print "Hello";
-   * >> } @interrupt catch (...) {
+   * >> } @:interrupt catch (...) {
    * >>     print "Error";
    * >> }
    * >> 
@@ -704,15 +704,13 @@ err_foreach_elem:
  } break;
 
  {
-  uint16_t old_scope_flags,switch_flags;
+  uint16_t old_scope_flags;
   struct text_label *old_cases;
   struct text_label *old_default;
   struct text_label *switch_cases;
   struct text_label *switch_default;
   DREF struct ast *switch_block;
  case KWD_switch:
-  /* Load the flags that are going to be used for the switch-statement. */
-  switch_flags = current_tags.at_switch;
   /* Switch statement. */
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
@@ -770,7 +768,8 @@ err_foreach_elem:
 
   /* With the switch and associated block parsed,
    * pack them together into a SWITCH-ast. */
-  merge = ast_setddi(ast_switch(switch_flags,result,switch_block,
+  merge = ast_setddi(ast_switch(AST_FSWITCH_NORMAL,
+                                result,switch_block,
                                 switch_cases,switch_default),
                     &loc);
   if unlikely(!merge) goto err_r_switch_block;
@@ -905,7 +904,8 @@ handle_post_label:
   break;
  }
  /* Clear tags at the end of each statement. */
- clear_current_tags();
+ if unlikely(clear_current_tags())
+    goto err_r;
 done_no_tag_reset:
  return result;
 err_flags:

@@ -198,6 +198,9 @@ get_reloc_by_name(char const *__restrict name) {
 /*  ================================  */
 INTERN int FCALL
 uasm_parse_directive(void) {
+#define NAMEISKWD(x) \
+  (name->k_size == COMPILER_STRLEN(x) && \
+   MEMCASEEQ(name->k_name,x,sizeof(x)-sizeof(char)))
  struct TPPKeyword *name;
  name = uasm_parse_symnam();
  if unlikely(!name) goto err;
@@ -223,19 +226,13 @@ uasm_parse_directive(void) {
   }
   goto done_continue;
  }
-
  /* Handle assembly directives. */
-#define NAMEISKWD(x) \
-  (name->k_size == COMPILER_STRLEN(x) && \
-   MEMCASEEQ(name->k_name,x,sizeof(x)-sizeof(char)))
+
  /* Stack alignment opcodes. */
  if (NAMEISKWD("adjstack")) goto do_handle_adjstack;
 
  /* Code execution mode control opcodes. */
- if (NAMEISKWD("lenient")) goto do_handle_lenient;
- if (NAMEISKWD("copyable")) goto do_handle_copyable;
- if (NAMEISKWD("assembly")) goto do_handle_assembly;
- if (NAMEISKWD("heapframe")) goto do_handle_heapframe;
+ if (NAMEISKWD("code")) goto do_handle_code;
 
  /* Debug information control opcodes. */
  if (NAMEISKWD("ddi")) goto do_handle_ddi;
@@ -265,7 +262,6 @@ uasm_parse_directive(void) {
      goto err;
  while (tok > 0 && tok != ';' && tok != '\n')
     if (yield() < 0) goto err;
-#undef NAMEISKWD
 done:
  return 0;
 done_continue:
@@ -273,25 +269,27 @@ done_continue:
 err:
  return -1;
 
-
-do_handle_lenient:
-  /* `.lenient' -- Simply set the FLENIENT bit of the resulting code object. */
-  current_basescope->bs_flags |= CODE_FLENIENT;
-  goto done;
-
-do_handle_copyable:
-  /* `.copyable' -- Simply set the FCOPYABLE bit of the resulting code object. */
-  current_basescope->bs_flags |= CODE_FCOPYABLE;
-  goto done;
-
-do_handle_assembly:
-  /* `.assembly' -- Simply set the FASSEMBLY bit of the resulting code object. */
-  current_basescope->bs_flags |= CODE_FASSEMBLY;
-  goto done;
-
-  /* `.heapframe' -- Simply set the FHEAPFRAME bit of the resulting code object. */
-do_handle_heapframe:
-  current_basescope->bs_flags |= CODE_FHEAPFRAME;
+do_handle_code:
+  /* `.code @yielding, @copyable, @assembly, @lenient, @varargs,
+   *        @varkwds, @thiscall, @heapframe, @finally, @constructor' */
+  for (;;) {
+   if (tok == '@' && unlikely(yield() < 0)) goto err;
+   name = uasm_parse_symnam();
+   if unlikely(!name) goto err;
+   /* */if (NAMEISKWD("yielding")) current_basescope->bs_flags |= CODE_FYIELDING;
+   else if (NAMEISKWD("copyable")) current_basescope->bs_flags |= CODE_FCOPYABLE;
+   else if (NAMEISKWD("assembly")) current_basescope->bs_flags |= CODE_FASSEMBLY;
+   else if (NAMEISKWD("lenient")) current_basescope->bs_flags |= CODE_FLENIENT;
+   else if (NAMEISKWD("varargs")) current_basescope->bs_flags |= CODE_FVARARGS;
+   else if (NAMEISKWD("varkwds")) current_basescope->bs_flags |= CODE_FVARKWDS;
+   else if (NAMEISKWD("thiscall")) current_basescope->bs_flags |= CODE_FTHISCALL;
+   else if (NAMEISKWD("heapframe")) current_basescope->bs_flags |= CODE_FHEAPFRAME;
+   else if (NAMEISKWD("finally")) current_basescope->bs_flags |= CODE_FFINALLY;
+   else if (NAMEISKWD("constructor")) current_basescope->bs_flags |= CODE_FCONSTRUCTOR;
+   else if (WARN(W_UASM_CODE_UNKNOWN_FLAG,name->k_name)) goto err;
+   if (tok != ',') break;
+   if unlikely(yield() < 0) goto err;
+  }
   goto done;
 
  {
@@ -430,7 +428,6 @@ except_unknown_tag:
   ++except_start->as_used;
   ++except_end->as_used;
   ++except_entry->as_used;
-
 
   goto done;
 except_err:
@@ -722,6 +719,7 @@ do_handle_adjstack:
   current_userasm.ua_mode &= ~(USER_ASM_FSTKINV);
   goto done;
  }
+#undef NAMEISKWD
 }
 
 DECL_END

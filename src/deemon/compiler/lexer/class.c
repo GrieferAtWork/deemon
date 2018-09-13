@@ -344,7 +344,7 @@ PRIVATE int DCALL
 class_maker_push_methscope(struct class_maker *__restrict self) {
  if (basescope_push()) goto err;
  /* Set the appropriate flags to turn this one into a class-scope. */
- current_basescope->bs_flags |= CODE_FTHISCALL | current_tags.at_code_flags;
+ current_basescope->bs_flags |= CODE_FTHISCALL;
  current_basescope->bs_this   = self->cm_thissym;
  return 0;
 err:
@@ -973,6 +973,7 @@ parse_property(DREF struct ast *callbacks[CLASS_PROPERTY_CALLBACK_COUNT],
                bool is_class_property) {
  uint16_t callback_id; struct ast_loc loc;
  DREF struct ast *callback;
+ struct ast_annotations annotations;
  bool has_name_prefix,need_semi;
  for (callback_id = 0; callback_id < CLASS_PROPERTY_CALLBACK_COUNT; ++callback_id)
      callbacks[callback_id] = NULL;
@@ -1074,6 +1075,7 @@ got_callback_id:
  }
 
  need_semi = false;
+ ast_annotations_get(&annotations);
  if (is_class_property) {
   /* Parse a new function in the class scope. */
   callback = ast_parse_function(NULL,&need_semi,false,&loc);
@@ -1083,7 +1085,9 @@ got_callback_id:
   callback = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
   basescope_pop();
  }
- if unlikely(!ast_setddi(callback,&loc)) goto err;
+ if unlikely(!ast_setddi(callback,&loc)) goto err_anno;
+ callback = ast_annotations_apply(&annotations,callback);
+ if unlikely(!callback) goto err;
  callbacks[callback_id] = callback; /* Inherit */
  /* Parse a semicolon if one is required. */
  if (need_semi) {
@@ -1094,17 +1098,20 @@ got_callback_id:
  goto next_callback;
 done:
  return 0;
+err_anno:
+ ast_annotations_free(&annotations);
 err:
  for (callback_id = 0; callback_id < CLASS_PROPERTY_CALLBACK_COUNT; ++callback_id)
      ast_xdecref(callbacks[callback_id]);
  return -1;
 }
 
-INTERN DREF struct ast *DCALL
-ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
-                bool create_symbol, unsigned int symbol_mode) {
+PRIVATE DREF struct ast *DCALL
+ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
+                     bool create_symbol, unsigned int symbol_mode) {
  DREF struct ast *result;
  struct class_maker maker;
+ struct ast_annotations annotations;
  uint16_t default_member_flags; /* Set of `CLASS_ATTRIBUTE_F*' */
  uint32_t old_flags = TPPLexer_Current->l_flags;
  class_maker_init(&maker);
@@ -1150,36 +1157,34 @@ do_parse_class_base:
   if (TPP_ISKEYWORD(tok) &&
      (tok == KWD_pack || !strcmp(token.t_kwd->k_name,"extends")))
       goto do_parse_class_base;
-  if (!(current_tags.at_tagflags&AST_TAG_FNOBASE)) {
-   /* Automatically use `object' as base class unless `@nobase' was specified. */
-   if (HAS(EXT_OLD_STYLE_CLASSES)) {
-    DREF DeeModuleObject *d200_module;
-    PRIVATE char const old_base[] = "OldUserClass";
-    struct module_symbol *oldbase_sym;
-    struct symbol *base_symbol;
-    d200_module = (DeeModuleObject *)DeeModule_Open(&str_d200,inner_compiler_options,true);
-    if unlikely(!d200_module) goto err;
-    oldbase_sym = DeeModule_GetSymbolString(d200_module,old_base,hash_str(old_base));
-    if unlikely(!oldbase_sym) {
-     Dee_Decref(d200_module);
-     if (WARN(W_NO_D200_OLD_USER_CLASS))
-         goto err;
-     goto use_object_base;
-    }
-    /* Back the reference to OldUserClass into a symbol. */
-    base_symbol = new_unnamed_symbol();
-    if unlikely(!base_symbol) { Dee_Decref(d200_module); goto err; }
-    SYMBOL_TYPE(base_symbol) = SYMBOL_TYPE_EXTERN;
-    SYMBOL_EXTERN_MODULE(base_symbol) = d200_module; /* Inherit reference. */
-    SYMBOL_EXTERN_SYMBOL(base_symbol) = oldbase_sym;
-    /* Create a symbol-ast for the base expression. */
-    maker.cm_base = ast_sym(base_symbol);
-   } else {
-use_object_base:
-    maker.cm_base = ast_constexpr((DeeObject *)&DeeObject_Type);
+  /* Automatically use `object' as base class unless `@nobase' was specified. */
+  if (HAS(EXT_OLD_STYLE_CLASSES)) {
+   DREF DeeModuleObject *d200_module;
+   PRIVATE char const old_base[] = "OldUserClass";
+   struct module_symbol *oldbase_sym;
+   struct symbol *base_symbol;
+   d200_module = (DeeModuleObject *)DeeModule_Open(&str_d200,inner_compiler_options,true);
+   if unlikely(!d200_module) goto err;
+   oldbase_sym = DeeModule_GetSymbolString(d200_module,old_base,hash_str(old_base));
+   if unlikely(!oldbase_sym) {
+    Dee_Decref(d200_module);
+    if (WARN(W_NO_D200_OLD_USER_CLASS))
+        goto err;
+    goto use_object_base;
    }
-   if unlikely(!maker.cm_base) goto err;
+   /* Back the reference to OldUserClass into a symbol. */
+   base_symbol = new_unnamed_symbol();
+   if unlikely(!base_symbol) { Dee_Decref(d200_module); goto err; }
+   SYMBOL_TYPE(base_symbol) = SYMBOL_TYPE_EXTERN;
+   SYMBOL_EXTERN_MODULE(base_symbol) = d200_module; /* Inherit reference. */
+   SYMBOL_EXTERN_SYMBOL(base_symbol) = oldbase_sym;
+   /* Create a symbol-ast for the base expression. */
+   maker.cm_base = ast_sym(base_symbol);
+  } else {
+use_object_base:
+   maker.cm_base = ast_constexpr((DeeObject *)&DeeObject_Type);
   }
+  if unlikely(!maker.cm_base) goto err;
  }
 
  if (name) {
@@ -1236,7 +1241,7 @@ next_member:
   is_class_member = false;
   modifiers_encountered = false;
   /* Reset member tags. */
-  clear_current_tags();
+  if unlikely(clear_current_tags()) goto err;
 next_modifier:
   switch (tok) {
 
@@ -1358,19 +1363,21 @@ define_operator:
    /* Special case: The constructor operator. */
    if (operator_name == OPERATOR_CONSTRUCTOR)
        goto define_constructor;
+   ast_annotations_get(&annotations);
    if (tok == '=') {
     if ((operator_name >= AST_OPERATOR_MIN &&
          operator_name <= AST_OPERATOR_MAX) &&
          WARN(W_AMBIGUOUS_OPERATOR_ASSIGNMENT))
-         goto err;
+         goto err_anno;
     /* Operator callback assignment. */
-    if unlikely(yield() < 0) goto err;
+    if unlikely(yield() < 0) goto err_anno;
     need_semi = true;
     if (tok == KWD_del) {
      /* Deleted operator (e.g. `operator str = del;') */
      if unlikely(class_maker_deloperator(&maker,operator_name,&loc))
-        goto err;
-     if unlikely(yield() < 0) goto err;
+        goto err_anno;
+     if unlikely(yield() < 0) goto err_anno;
+     if unlikely(ast_annotations_clear(&annotations)) goto err_anno;
      goto yield_semi_after_operator;
     }
     operator_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
@@ -1401,7 +1408,7 @@ define_operator:
      * >> }; */
     operator_name_kwd = TPPLexer_LookupKeyword("for",3,0);
     assert(operator_name_kwd);
-    if unlikely(class_maker_push_methscope(&maker)) goto err;
+    if unlikely(class_maker_push_methscope(&maker)) goto err_anno;
     /* Parse a new function in its own member-method scope. */
     current_basescope->bs_name = operator_name_kwd;
     operator_name = OPERATOR_ITERSELF;
@@ -1411,7 +1418,7 @@ define_operator:
      *                                             ...,  // The inner function
      *                                             AST_MULTIPLE(AST_FMULTIPLE_TUPLE,[
      *                                                          AST_SYM(this)]))))' */
-    if unlikely(class_maker_push_methscope(&maker)) return NULL;
+    if unlikely(class_maker_push_methscope(&maker)) goto err_anno;
     yield_function = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
     basescope_pop();
     if unlikely(!yield_function) { err_operator_ast_ddi: operator_ast = NULL; goto got_operator_ast; }
@@ -1459,16 +1466,16 @@ define_operator:
      name[namelen+3] = '_';
      name[namelen+4] = '\0';
      operator_name_kwd = TPPLexer_LookupKeyword(name,namelen+4,1);
-     if unlikely(!operator_name_kwd) goto err;
+     if unlikely(!operator_name_kwd) goto err_anno;
     }
-    if unlikely(class_maker_push_methscope(&maker)) goto err;
+    if unlikely(class_maker_push_methscope(&maker)) goto err_anno;
     /* Parse a new function in its own member-method scope. */
     current_basescope->bs_name = operator_name_kwd;
     operator_ast = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
    }
 got_operator_ast:
    basescope_pop();
-   if unlikely(!operator_ast) goto err;
+   if unlikely(!operator_ast) goto err_anno;
    ASSERT(operator_ast->a_type == AST_FUNCTION);
    ASSERT(operator_ast->a_function.f_scope);
    if (operator_name >= AST_OPERATOR_MIN &&
@@ -1487,6 +1494,8 @@ got_operator_ast:
    }
 set_operator_ast:
    /* XXX: Add operator documentation? */
+   operator_ast = ast_annotations_apply(&annotations,operator_ast);
+   if unlikely(!operator_ast) goto err;
 
    /* Warn when attempting to declare an operator as private. */
    if (member_flags & CLASS_ATTRIBUTE_FPRIVATE) {
@@ -1610,16 +1619,17 @@ define_constructor:
       maker.cm_ctor_flags &= ~(CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER);
      }
      /* Parse an expression that is invoked at the end of the constructor. */
-     if unlikely(class_maker_push_ctorscope(&maker)) goto err;
+     ast_annotations_get(&annotations);
+     if unlikely(class_maker_push_ctorscope(&maker)) goto err_anno;
      /* Compile the actual constructor in a sub-scope so any local
       * variables that it may define will not interfere with the
       * lookup rules in member initializers that may still follow. */
-     if (scope_push()) goto err;
+     if (scope_push()) goto err_anno;
      {
       DREF struct ast *call_branch,*call_args;
       DREF struct ast *ctor_expr;
       ctor_expr = ast_putddi(ast_parse_expr(LOOKUP_SYM_NORMAL),&loc);
-      if unlikely(!ctor_expr) goto err;
+      if unlikely(!ctor_expr) goto err_anno;
       if (!current_basescope->bs_argc) {
        /* Create anonymous varargs. */
        struct symbol *dots = new_unnamed_symbol_in_scope(&current_basescope->bs_scope);
@@ -1641,18 +1651,20 @@ define_constructor:
       } else {
        call_args = ast_setddi(ast_constexpr(Dee_EmptyTuple),&loc);
       }
-      if unlikely(!call_args) { err_ctor_expr: Dee_Decref(ctor_expr); goto err; }
+      if unlikely(!call_args) { err_ctor_expr: Dee_Decref(ctor_expr); goto err_anno; }
       call_branch = ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,
                                   ctor_expr,call_args);
       ast_decref(call_args);
       ast_decref(ctor_expr);
+      if unlikely(!call_branch) goto err_anno;
+      scope_pop();
+      basescope_pop();
+      call_branch = ast_annotations_apply(&annotations,call_branch);
       if unlikely(!call_branch) goto err;
       if unlikely(priv_reserve_instance_init(&maker))
          goto err;
       maker.cm_initv[maker.cm_initc++] = call_branch; /* Inherit reference. */
      }
-     scope_pop();
-     basescope_pop();
      goto do_yield_semicollon;
     }
     if (maker.cm_ctor_flags & (CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER)) {
@@ -1661,37 +1673,38 @@ define_constructor:
          goto err;
      maker.cm_ctor_flags &= ~(CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER);
     }
+    ast_annotations_get(&annotations);
     /* Explicitly push the constructor-scope when parsing the constructor. */
-    if unlikely(class_maker_push_ctorscope(&maker)) goto err;
+    if unlikely(class_maker_push_ctorscope(&maker)) goto err_anno;
     /* NOTE: We do the function processing manually so we can
      *       correctly handle super-initializer statements. */
     if (tok == '(') {
      /* Argument list. */
      TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-     if unlikely(yield() < 0) goto err;
-     if unlikely(parse_arglist()) goto err;
+     if unlikely(yield() < 0) goto err_anno;
+     if unlikely(parse_arglist()) goto err_anno;
      if (parser_flags & PARSE_FLFSTMT)
          TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
      if unlikely(likely(tok == ')') ? (yield() < 0) :
                  WARN(W_EXPECTED_RPAREN_AFTER_ARGLIST))
-        goto err;
+        goto err_anno;
     } else if (tok == KWD_pack) {
      /* Argument list. */
      TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-     if unlikely(yield() < 0) goto err;
-     if unlikely(parse_arglist()) goto err;
+     if unlikely(yield() < 0) goto err_anno;
+     if unlikely(parse_arglist()) goto err_anno;
      if (parser_flags & PARSE_FLFSTMT)
          TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
     } else {
      if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
-         goto err;
+         goto err_anno;
     }
-    if (skip_lf()) goto err;
+    if (skip_lf()) goto err_anno;
     if (tok == ':') {
      /* Constructor initializers (including super-initializers). */
-     if unlikely(yield() < 0) goto err;
+     if unlikely(yield() < 0) goto err_anno;
      TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-     if unlikely(parse_constructor_initializers(&maker)) goto err;
+     if unlikely(parse_constructor_initializers(&maker)) goto err_anno;
      if (parser_flags & PARSE_FLFSTMT)
          TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
     }
@@ -1699,12 +1712,15 @@ define_constructor:
     /* Compile the actual constructor in a sub-scope so any local
      * variables that it may define will not interfere with the
      * lookup rules in member initializers that may still follow. */
-    if (scope_push()) goto err;
+    if (scope_push()) goto err_anno;
     /* NOTE: Don't parse a second argument list here. */
     maker.cm_ctor = ast_setddi(ast_parse_function_noscope_noargs(&need_semi),&loc);
     scope_pop();
     basescope_pop();
+    if unlikely(!maker.cm_ctor) goto err_anno;
+    maker.cm_ctor = ast_annotations_apply(&annotations,maker.cm_ctor);
     if unlikely(!maker.cm_ctor) goto err;
+
     /* With the constructor parsed and saved, simply check for a ';' */
     goto check_need_semi;
    }
@@ -1737,6 +1753,7 @@ define_constructor:
    }
    if (tok == '=') {
     /* Property or member assign. */
+    if unlikely(clear_current_tags()) goto err;
     if unlikely(yield() < 0) goto err;
     if (tok == '{') {
      DREF struct ast *prop_callbacks[CLASS_PROPERTY_CALLBACK_COUNT];
@@ -1846,6 +1863,7 @@ err_property:
                                          &pusage_counter,
                                          &loc);
    if unlikely(!member_symbol) goto err;
+   ast_annotations_get(&annotations);
    if (is_class_member) {
     /* Parse a new function in the class scope. */
     init_ast = ast_parse_function(member_name,&need_semi,false,&loc);
@@ -1855,6 +1873,8 @@ err_property:
     init_ast = ast_parse_function_noscope(member_name,&need_semi,false,&loc);
     basescope_pop();
    }
+   if unlikely(!init_ast) goto err_anno;
+   init_ast = ast_annotations_apply(&annotations,init_ast);
    if unlikely(!init_ast) goto err;
    /* Add the given AST as an initialization branch to the class. */
    error = class_maker_addinit(&maker,member_symbol,init_ast,&loc);
@@ -1877,10 +1897,41 @@ done_class_modal:
  scope_pop();
  class_maker_fini(&maker);
  return result;
+err_anno:
+ ast_annotations_free(&annotations);
 err:
  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  class_maker_fini(&maker);
+ return NULL;
+}
+
+INTERN DREF struct ast *DCALL
+ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
+                bool create_symbol, unsigned int symbol_mode) {
+ DREF struct ast *result;
+ struct ast_annotations annotations;
+ ast_annotations_get(&annotations);
+ result = ast_parse_class_impl(class_flags,name,create_symbol,symbol_mode);
+ if unlikely(!result) goto err_anno;
+ if (annotations.an_annoc && create_symbol &&
+     result->a_class.c_classsym != NULL) {
+  DREF struct ast *class_sym,*merge;
+  class_sym = ast_setddi(ast_sym(result->a_class.c_classsym),&result->a_ddi);
+  if unlikely(!class_sym) goto err_anon_r;
+  result = ast_annotations_apply(&annotations,result);
+  if unlikely(!result) { ast_decref(class_sym); goto err; }
+  merge = ast_setddi(ast_action2(AST_FACTION_STORE,class_sym,result),&class_sym->a_ddi);
+  ast_decref(class_sym);
+  ast_decref(result);
+  return merge;
+ }
+ return ast_annotations_apply(&annotations,result);
+err_anon_r:
+ ast_decref(result);
+err_anno:
+ ast_annotations_free(&annotations);
+err:
  return NULL;
 }
 

@@ -97,10 +97,15 @@ INTERN int
  for (i = 0; i < class_ast->a_class.c_memberc; ++i) {
   struct class_member *member;
   member = &class_ast->a_class.c_memberv[i];
-  if (ast_genasm(member->cm_ast,ASM_G_FPUSHRES))
-      goto err;
-  if (asm_putddi(class_ast)) goto err;
-  if (asm_gdefcmember(member->cm_index)) goto err;
+  if likely(member->cm_index != (uint16_t)-1) {
+   if (ast_genasm(member->cm_ast,ASM_G_FPUSHRES))
+       goto err;
+   if (asm_putddi(class_ast)) goto err;
+   if (asm_gdefcmember(member->cm_index)) goto err;
+  } else {
+   if (ast_genasm(member->cm_ast,ASM_G_FNORMAL))
+       goto err;
+  }
  }
  /* And that's already it! - The new class is complete. */
  if (!(gflags & ASM_G_FPUSHRES) && asm_gpop())

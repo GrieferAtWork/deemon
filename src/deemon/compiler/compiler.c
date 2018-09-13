@@ -280,8 +280,21 @@ err_r:
 
 PRIVATE void DCALL
 compiler_fini(DeeCompilerObject *__restrict self) {
- /* First: Make sure that the compiler is fully unloaded. */
+ /* Make sure that the compiler is fully unloaded. */
  DeeCompiler_Unload(self);
+
+ if (self->cp_tags.at_anno.an_annov) {
+  if unlikely(self->cp_tags.at_anno.an_annoc) {
+   recursive_rwlock_write(&DeeCompiler_Lock);
+   while (self->cp_tags.at_anno.an_annoc--)
+       ast_decref(self->cp_tags.at_anno.an_annov[self->cp_tags.at_anno.an_annoc].aa_func);
+   recursive_rwlock_endwrite(&DeeCompiler_Lock);
+  }
+  Dee_Free(self->cp_tags.at_anno.an_annov);
+  self->cp_tags.at_anno.an_annoa = 0;
+  self->cp_tags.at_anno.an_annov = NULL;
+ }
+ unicode_printer_fini(&self->cp_tags.at_doc);
 
  /* Always set the error-flag to prevent TPP from attempting
   * to warn about stuff like unclosed if-blocks, because now
@@ -295,7 +308,6 @@ compiler_fini(DeeCompilerObject *__restrict self) {
  if (!(self->cp_flags & COMPILER_FKEEPLEXER))
        TPPLexer_Quit(&self->cp_lexer);
  Dee_Decref(self->cp_scope);
- unicode_printer_fini(&self->cp_tags.at_doc);
  Dee_Free(self->cp_items.ci_list);
 }
 

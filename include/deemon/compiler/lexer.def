@@ -171,10 +171,6 @@ DEF_K(global)
 DEF_K(static)
 DEF_K(__stack)
 
-/* Tag keyword */
-DEF_K(doc)
-DEF_K(auto)
-
 /* Re-implement our own, minimal sub-set of the TPP's builtin
  * system macros. (Since we're configuring to disable those) */
 EXTENSION(EXT_SYSTEM_MACROS,"define-system-macros",1)
@@ -231,7 +227,7 @@ DEF_WARNING(W_DEPRECATED_PREFIX_IN_EXPRESSION,(WG_D200,WG_SYNTAX),WSTATE_WARN,WA
 DEF_WARNING(W_DEPRECATED_NO_PARAMETER_LIST,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("A missing parameter list in a function declaration is deprecated since deemon 200 for non-lambda-functions. Add an empty one by inserting `()'"))
 DEF_WARNING(W_DEPRECATED_CHARACTER_INT,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Writing integers as characters is deprecated since deemon 200. Consider writing `\"%$s\".ord()' instead",(size_t)(token.t_end-token.t_begin)-2,token.t_begin+1))
 DEF_WARNING(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `->' to assign an exception symbol is deprecated since deemon 200. Consider using `as' instead"))
-DEF_WARNING(W_DEPRECATED_FUNCTION_IN_EXPRESSION,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `function' to define lambdas in expressions is deprecafted. Consider using `[]' instead"))
+DEF_WARNING(W_DEPRECATED_FUNCTION_IN_EXPRESSION,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `function' to define lambdas in expressions is deprecated. Consider using `[]' instead"))
 
 DEF_WARNING(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `.', a keyword or a string in a module- or symbol-import list, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword or a string in a symbol-import list, but got " TOK_S,TOK_A))
@@ -367,14 +363,11 @@ DEF_WARNING(W_CANNOT_DELETE_INHERITED_CONSTRUCTOR,(WG_SYNTAX),WSTATE_ERROR,WARNF
 DEF_WARNING(W_CANNOT_INHERIT_DELETED_CONSTRUCTOR,(WG_SYNTAX),WSTATE_ERROR,WARNF("Cannot inherit constructor for `%s', after it had already been deleted",ARG(char *)))
 DEF_WARNING(W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Instance member initializer is deleted"))
 
-/* Tags */
-WARNING_NAMESPACE(WN_TAGS,2600)
-DEF_WARNING(W_UNKNOWN_TAG,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Unknown tag `%$s'",len,ARG(char *)); })
-DEF_WARNING(W_EXPECTED_ARGUMENTS_FOR_TAG,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Tag `%$s' expects arguments",len,ARG(char *)); })
-DEF_WARNING(W_UNEXPECTED_ARGUMENTS_FOR_TAG,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Tag `%$s' does not expects arguments",len,ARG(char *)); })
-DEF_WARNING(W_EXPECTED_SYMBOL_FOR_CLASS_SUPER_TAG,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a single symbol as argument to the class/super tag"))
-DEF_WARNING(W_EXPECTED_CONSTANT_EXPRESSION_FOR_TAG,(WG_CONST,WG_VALUE),WSTATE_ERROR,WARNF("Expected a constant expression for tag arguments"))
-DEF_WARNING(W_EXPECTED_STRING_FOR_DOC_TAG,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a string to follow after a `doc' tag"))
+/* Annotations */
+WARNING_NAMESPACE(WN_ANNOTATIONS,2600)
+DEF_WARNING(W_COMPILER_TAG_UNKNOWN,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Unknown compiler annotation `%$s'",len,ARG(char *)); })
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_KEYWORD,(WG_SYNTAX),WSTATE_WARN,WARNF("Expected a keyword after `@:', but got " TOK_S,TOK_A))
+DEF_WARNING(W_UNUSED_ANNOTATION,(WG_SYNTAX),WSTATE_WARN,WARNF("Unused annotation"))
 
 /* Symbols */
 WARNING_NAMESPACE(WN_SYMBOLS,2700)
@@ -470,6 +463,7 @@ DEF_WARNING(W_UASM_ILLEGAL_STACK_DEPTH,(WG_VALUE),WSTATE_ERROR,WARNF("New stack-
 DEF_WARNING(W_UASM_TRUNCATED_TO_FIT,(WG_VALUE),WSTATE_ERROR,WARNF("Integer argument was truncated to fit"))
 DEF_WARNING(W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL,(WG_VALUE),WSTATE_ERROR,WARNF("The `.except' pseudo op requires absolute symbols operands without offsets"))
 DEF_WARNING(W_UASM_EXCEPT_UNKNOWN_TAG,(WG_VALUE),WSTATE_ERROR,WARNF("Unknown tag is not recognized by the `.except' pseudo op"))
+DEF_WARNING(W_UASM_CODE_UNKNOWN_FLAG,(WG_VALUE),WSTATE_ERROR,WARNF("Unknown code flag `%s'",ARG(char *)))
 DEF_WARNING(W_UASM_RELOC_UNKNOWN_NAME,(WG_VALUE),WSTATE_ERROR,WARNF("Unknown relocation name `%s'",ARG(char *)))
 DEF_WARNING(W_UASM_RELOC_NEED_DOT,(WG_VALUE),WSTATE_ERROR,WARNF("The `.reloc' pseudo op can only be used for the current code location. The first operand must be `.'"))
 DEF_WARNING(W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL,(WG_VALUE),WSTATE_ERROR,WARNF("The `.reloc' pseudo op requires an absolute symbol operand without offset"))

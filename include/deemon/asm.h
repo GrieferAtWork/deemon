@@ -161,7 +161,7 @@
  * >> object &SECOND = NTH(1);
  * >> object &THIRD  = NTH(2);
  * >> object &FOURTH = NTH(3);
- * >> // When `handle_interrupt' is FALSE, `@interrupt'
+ * >> // When `handle_interrupt' is FALSE, `@:interrupt'
  * >> // exceptions are re-scheduled as pending interrupts
  * >> void    POP_EXCEPT(bool handle_interrupt);
  * >> void    PRINT_EXCEPT(string reason);

@@ -115,7 +115,7 @@ ast_parse_try(bool is_statement) {
  catcha = catchc = 0,catchv = NULL;
  for (;;) {
   tok_t mode = tok;
-  clear_current_tags();
+  if unlikely(clear_current_tags()) goto err_try;
   if unlikely(parse_tags_block()) goto err_try;
   if (tok != KWD_finally && tok != KWD_catch) break;
   if unlikely(yield() < 0) goto err_try;
@@ -140,7 +140,7 @@ do_realloc_catchv:
   handler->ce_mask  = NULL;
   handler->ce_flags = EXCEPTION_HANDLER_FNORMAL;
   handler->ce_mode  = CATCH_EXPR_FNORMAL;
-  /* Set the interrupt-flag when an @interrupt tag was used. */
+  /* Set the interrupt-flag when an @:interrupt tag was used. */
   if (current_tags.at_class_flags&TP_FINTERRUPT)
       handler->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
   if (mode == KWD_finally) {
@@ -280,7 +280,7 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
  catcha = catchc = 0,catchv = NULL;
  for (;;) {
   tok_t mode = tok;
-  clear_current_tags();
+  if unlikely(clear_current_tags()) goto err_try;
   if unlikely(parse_tags_block()) goto err_try;
   if (tok != KWD_finally && tok != KWD_catch) break;
   if unlikely(yield() < 0) goto err_try;
@@ -305,7 +305,7 @@ do_realloc_catchv:
   handler->ce_mask  = NULL;
   handler->ce_flags = EXCEPTION_HANDLER_FNORMAL;
   handler->ce_mode  = CATCH_EXPR_FNORMAL;
-  /* Set the interrupt-flag when an @interrupt tag was used. */
+  /* Set the interrupt-flag when an @:interrupt tag was used. */
   if (current_tags.at_class_flags&TP_FINTERRUPT)
       handler->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
   if (mode == KWD_finally) {

@@ -2070,7 +2070,7 @@ INTERN struct type_method seq_methods[] = {
           "When ${#this} is zero, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.permutations itertools.permutations}") },
 
-    /* TODO: join(sequence items) -> sequence */
+    /* TODO: join({sequence...} items) -> sequence */
     /* TODO: strip(object item, callable pred_eq = none) -> sequence */
     /* TODO: lstrip(object item, callable pred_eq = none) -> sequence */
     /* TODO: rstrip(object item, callable pred_eq = none) -> sequence */

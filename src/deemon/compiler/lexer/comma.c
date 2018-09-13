@@ -233,7 +233,7 @@ next_expr:
   }
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
-  if (tok == KWD_class && !(class_flags&TP_FFINAL)) {
+  if (tok == KWD_class && !(class_flags & TP_FFINAL)) {
    class_flags |= TP_FFINAL;
    if unlikely(yield() < 0) goto err;
   }
@@ -287,7 +287,7 @@ next_expr:
   }
   current = ast_parse_function(function_name,&need_semi,false,&loc);
   if unlikely(!current) goto err;
-  clear_current_tags();
+  if unlikely(clear_current_tags()) goto err_current;
   if (function_symbol) {
    DREF struct ast *function_name_ast,*merge;
    /* Store the function in the parsed symbol. */

@@ -34,7 +34,7 @@ DDATDEF DeeTypeObject DeeError_Signal;
 /* Interrupt signal (cannot be caught using a normal catch-guard)
  * NOTE: In order for an exception handler to be able to process this
  *       signal, it must have the `EXCEPTION_HANDLER_FINTERPT' flag set
- *      (which can be added using the `@interrupt' tag):
+ *      (which can be added using the `@:interrupt' tag):
  * >> import Signal from deemon;
  * >> try {
  * >>    try {
@@ -42,7 +42,7 @@ DDATDEF DeeTypeObject DeeError_Signal;
  * >>    } catch (...) {
  * >>        print "Won't get here...";
  * >>    }
- * >> } @interrupt catch (...) {
+ * >> } @:interrupt catch (...) {
  * >>    print "But will get here!";
  * >> }
  * This choice was made because of the fact that error names are usually
@@ -67,14 +67,14 @@ DDATDEF DeeTypeObject DeeError_Signal;
  * NOTE: To keep things as generic as possible, this behavior isn't actually
  *       specific to the `Signal.Interrupt' builtin type, but rather to any
  *       type that has the `TP_FINTERRUPT' flag set.
- * User-code can define their own interrupt-classes using the `@interrupt'
+ * User-code can define their own interrupt-classes using the `@:interrupt'
  * tag (yes: the same tag that's also used to mark interrupt-catch blocks):
- * >> @interrupt
+ * >> @:interrupt
  * >> class MyInterrupt { }
  * >> 
  * >> try {
  * >>     throw MyInterrupt();
- * >> } @interrupt catch (e...) {
+ * >> } @:interrupt catch (e...) {
  * >>     print e; // `MyInterrupt'
  * >> }
  * >> 

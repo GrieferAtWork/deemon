@@ -29,13 +29,180 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/tuple.h>
 #include <deemon/error.h>
+#include <deemon/util/string.h>
 
 DECL_BEGIN
 
 INTERN struct ast_tags current_tags;
-INTERN void DCALL clear_current_tags(void) {
+
+INTERN DREF struct ast *
+(DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
+                              /*inherit(always)*/DREF struct ast *__restrict input) {
+ DREF struct ast *merge,**expr_v,*args;
+ while (self->an_annoc) {
+  struct ast *func = self->an_annov[self->an_annoc - 1].aa_func;
+  if ((self->an_annov[self->an_annoc - 1].aa_flag & AST_ANNOTATION_FNOFUNC) ||
+      (func->a_type != AST_OPERATOR) || (func->a_flag != OPERATOR_CALL) ||
+      (func->a_operator.o_op1 == NULL)) {
+   /* Invoke the annotation function using the current input:
+    * >> input = aa_func(input); */
+   expr_v = (struct ast **)Dee_Malloc(1 * sizeof(struct ast *));
+   if unlikely(!expr_v) goto err_input;
+   expr_v[0] = input; /* Inherit reference. */
+   args = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,expr_v),&func->a_ddi);
+   if unlikely(!args) { Dee_Free(expr_v); goto err_input; }
+   merge = ast_operator2(OPERATOR_CALL,
+                         AST_OPERATOR_FNORMAL,
+                         func,args);
+  } else {
+   /* Invoke the annotation function using the current input:
+    * >> input = aa_func.op0(input,aa_func.op1...); */
+   struct ast *base;
+   base = func->a_operator.o_op0;
+   args = func->a_operator.o_op1;
+#ifdef CONFIG_AST_IS_STRUCT
+   if (args->a_refcnt == 1)
+#else
+   if (!DeeObject_IsShared(args))
+#endif
+   {
+    if (args->a_type == AST_MULTIPLE &&
+        args->a_flag == AST_FMULTIPLE_TUPLE) {
+     expr_v = (DREF struct ast **)Dee_Realloc(args->a_multiple.m_astv,
+                                             (args->a_multiple.m_astc + 1) *
+                                              sizeof(DREF struct ast *));
+     if unlikely(!expr_v) goto err_input;
+     MEMMOVE_PTR(expr_v + 1,expr_v,args->a_multiple.m_astc);
+     expr_v[0] = input; /* inherit reference. */
+     args->a_multiple.m_astv = expr_v;
+     ++args->a_multiple.m_astc;
+     ast_incref(args);
+     goto set_merge_from_inherit_args;
+    }
+   }
+   merge = ast_setddi(ast_expand(args),&func->a_ddi);
+   if unlikely(!merge) goto err_input;
+   expr_v = (struct ast **)Dee_Malloc(2 * sizeof(struct ast *));
+   if unlikely(!expr_v) goto err_input_merge;
+   expr_v[0] = input; /* Inherit reference. */
+   expr_v[1] = merge; /* Inherit reference. */
+   args = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,2,expr_v),&func->a_ddi);
+   if unlikely(!args) { Dee_Free(expr_v); goto err_input_merge; }
+set_merge_from_inherit_args:
+   merge = ast_operator2(OPERATOR_CALL,
+                         AST_OPERATOR_FNORMAL,
+                         base,args);
+  }
+  ast_decref_unlikely(args);
+  if unlikely(!merge) goto err;
+  input = ast_setddi(merge,&func->a_ddi);
+  --self->an_annoc;
+  ast_decref(self->an_annov[self->an_annoc].aa_func);
+ }
+ ast_annotations_free(self);
+ return input;
+err_input_merge:
+ ast_decref(merge);
+err_input:
+ ast_decref(input);
+err:
+ ast_annotations_free(self);
+ return NULL;
+}
+
+
+INTERN void
+(DCALL ast_annotations_get)(struct ast_annotations *__restrict result) {
+ memcpy(result,&current_tags.at_anno,sizeof(struct ast_annotations));
+ memset(&current_tags.at_anno,0,sizeof(struct ast_annotations));
+}
+INTERN void
+(DCALL ast_annotations_free)(struct ast_annotations *__restrict self) {
+ if (!self->an_annov) return;
+ while (self->an_annoc) {
+  --self->an_annoc;
+  ast_decref(self->an_annov[self->an_annoc].aa_func);
+ }
+ if (!current_tags.at_anno.an_annov) {
+  memcpy(&current_tags.at_anno,self,sizeof(struct ast_annotations));
+ } else if (!current_tags.at_anno.an_annoc &&
+             current_tags.at_anno.an_annoa < self->an_annoa) {
+  Dee_Free(current_tags.at_anno.an_annov);
+  memcpy(&current_tags.at_anno,self,sizeof(struct ast_annotations));
+ } else {
+  Dee_Free(self->an_annov);
+ }
+}
+INTERN int
+(DCALL ast_annotations_clear)(struct ast_annotations *__restrict self) {
+ if (!self->an_annov) goto done;
+ while (self->an_annoc) {
+  if (WARNAST(self->an_annov[self->an_annoc].aa_func,W_UNUSED_ANNOTATION))
+      goto err;
+  --self->an_annoc;
+  ast_decref(self->an_annov[self->an_annoc].aa_func);
+ }
+ if (!current_tags.at_anno.an_annov) {
+  memcpy(&current_tags.at_anno,self,sizeof(struct ast_annotations));
+ } else if (!current_tags.at_anno.an_annoc &&
+             current_tags.at_anno.an_annoa < self->an_annoa) {
+  Dee_Free(current_tags.at_anno.an_annov);
+  memcpy(&current_tags.at_anno,self,sizeof(struct ast_annotations));
+ } else {
+  Dee_Free(self->an_annov);
+ }
+done:
+ return 0;
+err:
+ return -1;
+}
+
+INTERN int
+(DCALL ast_annotations_add)(struct ast *__restrict func,
+                            uint16_t flag) {
+ ASSERT(current_tags.at_anno.an_annoc <= current_tags.at_anno.an_annoa);
+ if (current_tags.at_anno.an_annoc >= current_tags.at_anno.an_annoa) {
+  struct ast_annotation *new_anno;
+  size_t new_alloc = current_tags.at_anno.an_annoa * 2;
+  if (!new_alloc) new_alloc = 2;
+  new_anno = (struct ast_annotation *)Dee_TryRealloc(current_tags.at_anno.an_annov,
+                                                     new_alloc *
+                                                     sizeof(struct ast_annotation));
+  if unlikely(!new_anno) {
+   new_alloc = current_tags.at_anno.an_annoc + 1;
+   new_anno = (struct ast_annotation *)Dee_Realloc(current_tags.at_anno.an_annov,
+                                                   new_alloc *
+                                                   sizeof(struct ast_annotation));
+   if unlikely(!new_anno) goto err;
+  }
+  current_tags.at_anno.an_annoa = new_alloc;
+  current_tags.at_anno.an_annov = new_anno;
+ }
+ ast_incref(func);
+ current_tags.at_anno.an_annov[current_tags.at_anno.an_annoc].aa_flag = flag;
+ current_tags.at_anno.an_annov[current_tags.at_anno.an_annoc].aa_func = func;
+ ++current_tags.at_anno.an_annoc;
+ return 0;
+err:
+ return -1;
+}
+
+INTERN int (DCALL clear_current_tags)(void) {
+ while (current_tags.at_anno.an_annoc) {
+  struct ast_annotation *anno;
+  anno = &current_tags.at_anno.an_annov[current_tags.at_anno.an_annoc - 1];
+  if (WARNAST(anno->aa_func,W_UNUSED_ANNOTATION))
+      goto err;
+  ast_decref(anno->aa_func);
+  --current_tags.at_anno.an_annoc;
+ }
  unicode_printer_fini(&current_tags.at_doc);
- memset(&current_tags,0,sizeof(struct ast_tags));
+ unicode_printer_init(&current_tags.at_doc);
+ current_tags.at_expect      = 0;
+ current_tags.at_class_flags = 0;
+ return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL append_doc_string(void) {
@@ -52,192 +219,48 @@ err:
  return -1;
 }
 
-struct tag_flag {
-    char     name[16]; /* Name of the flag tag. */
-    uint16_t addr;     /* The offset into `struct ast_tags' where this flag is located at. */
-    uint16_t flag;     /* The flag set by this tag. */
-};
-
-PRIVATE struct tag_flag tag_flags[] = {
-    { "copyable",    COMPILER_OFFSETOF(struct ast_tags,at_code_flags),   CODE_FCOPYABLE },
-    { "thiscall",    COMPILER_OFFSETOF(struct ast_tags,at_code_flags),   CODE_FTHISCALL },
-    { "assembly",    COMPILER_OFFSETOF(struct ast_tags,at_code_flags),   CODE_FASSEMBLY },
-    { "nobase",      COMPILER_OFFSETOF(struct ast_tags,at_tagflags),     AST_TAG_FNOBASE },
-    { "lenient",     COMPILER_OFFSETOF(struct ast_tags,at_code_flags),   CODE_FLENIENT },
-    { "heapframe",   COMPILER_OFFSETOF(struct ast_tags,at_code_flags),   CODE_FHEAPFRAME },
-    { "constructor", COMPILER_OFFSETOF(struct ast_tags,at_code_flags),   CODE_FCONSTRUCTOR },
-    { "final",       COMPILER_OFFSETOF(struct ast_tags,at_class_flags),  TP_FFINAL },
-    { "truncate",    COMPILER_OFFSETOF(struct ast_tags,at_class_flags),  TP_FTRUNCATE },
-    { "interrupt",   COMPILER_OFFSETOF(struct ast_tags,at_class_flags),  TP_FINTERRUPT },
-    { "private",     COMPILER_OFFSETOF(struct ast_tags,at_member_flags), CLASS_ATTRIBUTE_FPRIVATE },
-    { "readonly",    COMPILER_OFFSETOF(struct ast_tags,at_member_flags), CLASS_ATTRIBUTE_FREADONLY },
-    { "method",      COMPILER_OFFSETOF(struct ast_tags,at_member_flags), CLASS_ATTRIBUTE_FMETHOD },
-    { "likely",      COMPILER_OFFSETOF(struct ast_tags,at_expect),       AST_FCOND_LIKELY },
-    { "unlikely",    COMPILER_OFFSETOF(struct ast_tags,at_expect),       AST_FCOND_UNLIKELY }
-};
-
-
-
 INTERN int (DCALL parse_tags)(void) {
- DREF struct ast *args_ast;
- DREF DeeObject *tag_args;
- size_t i; uint32_t old_flags;
-again:
  if (tok == TOK_STRING) {
   if unlikely(append_doc_string())
      goto err;
- } else if (TPP_ISKEYWORD(tok)) {
-  tok_t tag_id = tok;
-  char const *tag_name_str = token.t_kwd->k_name;
-  size_t      tag_name_len = token.t_kwd->k_size;
-  /* Trim leading/trailing underscores from tag names (prevent ambiguity when macros are used). */
-  while (tag_name_len && *tag_name_str == '_') ++tag_name_str,--tag_name_len;
-  while (tag_name_len && tag_name_str[tag_name_len-1] == '_') --tag_name_len;
-  if unlikely(tag_name_str != token.t_kwd->k_name ||
-              tag_name_len != token.t_kwd->k_size) {
-   struct TPPKeyword *kwd;
-   kwd = TPPLexer_LookupKeyword(tag_name_str,tag_name_len,1);
-   if unlikely(!kwd) goto err;
-   tag_id = kwd->k_id;
-  }
-  if unlikely(yield() < 0) goto err;
-  args_ast = NULL;
-  tag_args = NULL;
-  if (tok == '(') {
-   /* Parse a tag argument list. */
-   old_flags = TPPLexer_Current->l_flags;
-   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-   if unlikely(yield() < 0) goto err_flags;
-   if (tok == KWD_auto && tag_id == KWD_doc) {
-    /* Special case: `@doc(auto)' */
-    if unlikely(unicode_printer_putascii(&current_tags.at_doc,'\n'))
-       goto err_flags;
-    if unlikely(yield() < 0) goto err_flags;
-    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-    if unlikely(likely(tok == ')') ? (yield() < 0) :
-                WARN(W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG))
-       goto err;
-    goto done_tag;
-   }
-   if (tok == ')') {
-    args_ast = ast_sethere(ast_constexpr(Dee_EmptyTuple));
-   } else {
-    args_ast = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
-                               AST_FMULTIPLE_TUPLE,
-                               NULL);
-   }
-   if unlikely(!args_ast) goto err_flags;
-   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-   if unlikely(likely(tok == ')') ? (yield() < 0) :
-               WARN(W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG))
-      goto err_args;
-   /* Optimize the arguments AST to reduce the argument tuple. */
-   if (ast_optimize_all(args_ast,true)) goto err_args;
-  }
-  __IF0 {
-need_constexpr:
-   ASSERT(!tag_args);
-   if (args_ast->a_type == AST_CONSTEXPR) {
-    tag_args = args_ast->a_constexpr;
-    ASSERT(DeeTuple_Check(tag_args));
-    Dee_Incref(tag_args);
-   } else {
-    if unlikely(WARN(W_EXPECTED_CONSTANT_EXPRESSION_FOR_TAG))
-       goto err_args;
-   }
-  }
-  switch (tag_id) {
-
-#if 0
-   /* Define the class/super symbols. */
-  case KWD_class:
-  case KWD_super:
-   if (args_ast->a_type != AST_MULTIPLE ||
-       args_ast->a_multiple.m_astc != 1 ||
-       args_ast->a_multiple.m_astv[0]->a_type != AST_SYM) {
-    if unlikely(WARN(W_EXPECTED_SYMBOL_FOR_CLASS_SUPER_TAG))
-       goto err;
-   } else {
-    struct symbol *sym;
-    sym = args_ast->a_multiple.m_astv[0]->a_sym;
-    ASSERT(sym);
-    /* TODO: Check if `sym->sym_scope' is reachable from `current_scope' */
-    if (tag_id == KWD_class) {
-     current_tags.at_class = sym;
-    } else {
-     current_tags.at_super = sym;
-    }
-   }
-   break;
-#endif
-
-  case KWD_doc:
-   if (!tag_args) goto need_constexpr;
-   if unlikely(!tag_args) {
-    if unlikely(WARN(W_EXPECTED_ARGUMENTS_FOR_TAG))
-       goto err_args;
-    break;
-   }
-   /* Append documentation strings. */
-   for (i = 0; i < DeeTuple_SIZE(tag_args); ++i) {
-    DeeObject *arg = DeeTuple_GET(tag_args,i);
-    if (DeeString_Check(arg)) {
-     if unlikely(unicode_printer_printstring(&current_tags.at_doc,arg) < 0)
-        goto err_args;
-     continue;
-    }
-    if (WARN(W_EXPECTED_STRING_FOR_DOC_TAG))
-        goto err_args;
-   }
-   break;
-
-  default:
+ } else if (tok == ':') {
+  /* Implementation-specific / compile-time tags */
+  char const *tag_name_str;
+  size_t tag_name_len;
 #define IS_TAG(x) \
-  (tag_name_len == COMPILER_STRLEN(x) && \
-   !memcmp(tag_name_str,x,COMPILER_STRLEN(x)))
-   if unlikely(tag_args) {
-    if unlikely(WARN(W_UNEXPECTED_ARGUMENTS_FOR_TAG))
-       goto err_args;
-    break;
-   }
-   /* Misc tags without their own token ID. */
-   {
-    struct tag_flag *iter;
-    for (iter  = tag_flags;
-         iter != COMPILER_ENDOF(tag_flags); ++iter) {
-     if (strlen(iter->name) == tag_name_len &&
-         memcmp(iter->name,tag_name_str,tag_name_len*sizeof(char)) == 0) {
-      /* Set the flag specified by the entry. */
-      *(uint16_t *)((uint8_t *)&current_tags+iter->addr) |= iter->flag;
-      goto found_tag;
-     }
-    }
-   }
-   if unlikely(WARN(W_UNKNOWN_TAG,tag_name_len,tag_name_str))
-      goto err_args;
-#undef IS_TAG
-   break;
-  }
-found_tag:
-  ast_xdecref(args_ast);
-  Dee_XDecref(tag_args);
- } else {
-  goto done;
- }
-done_tag:
- if (tok == ',') {
-  /* Parse more tags. */
+       (tag_name_len == COMPILER_STRLEN(x) && !memcmp(tag_name_str,x,COMPILER_STRLEN(x)))
   if unlikely(yield() < 0) goto err;
-  goto again;
+  if (!TPP_ISKEYWORD(tok)) {
+   if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD))
+       goto err;
+  } else {
+   tag_name_str = token.t_kwd->k_name;
+   tag_name_len = token.t_kwd->k_size;
+   /* Trim leading/trailing underscores from tag names (prevent ambiguity when macros are used). */
+   while (tag_name_len && *tag_name_str == '_') ++tag_name_str,--tag_name_len;
+   while (tag_name_len && tag_name_str[tag_name_len-1] == '_') --tag_name_len;
+   /**/ if (IS_TAG("truncate"))  current_tags.at_class_flags |= TP_FTRUNCATE;
+   else if (IS_TAG("interrupt")) current_tags.at_class_flags |= TP_FINTERRUPT;
+   else if (IS_TAG("likely"))    current_tags.at_expect      |= AST_FCOND_LIKELY;
+   else if (IS_TAG("unlikely"))  current_tags.at_expect      |= AST_FCOND_UNLIKELY;
+   else if (WARN(W_COMPILER_TAG_UNKNOWN,tag_name_len,tag_name_str)) goto err;
+   if unlikely(yield() < 0) goto err;
+  }
+#undef IS_TAG
+ } else {
+  uint16_t flags; int error;
+  DREF struct ast *annotation;
+  flags = AST_ANNOTATION_FNORMAL;
+  if (tok == '(') flags |= AST_ANNOTATION_FNOFUNC;
+  annotation = ast_parse_expr(LOOKUP_SYM_NORMAL);
+  if unlikely(!annotation) goto err;
+  error = ast_annotations_add(annotation,flags);
+  ast_decref_unlikely(annotation);
+  if unlikely(error) goto err;
+  goto done;
  }
 done:
  return 0;
-err_flags:
- TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
- goto err;
-err_args:
- ast_xdecref(args_ast);
- Dee_XDecref(tag_args);
 err:
  return -1;
 }

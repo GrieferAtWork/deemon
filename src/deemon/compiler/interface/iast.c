@@ -3207,7 +3207,7 @@ force_scope:
     }
 got_except_symbol:
     if (handler->ce_flags & EXCEPTION_HANDLER_FINTERPT)
-        PRINT("@interrupt ");
+        PRINT("@:interrupt ");
     PRINT(" catch (");
     if (handler->ce_mask) {
      DO(print_ast_code(handler->ce_mask,printer,arg,true,self->a_scope,indent));

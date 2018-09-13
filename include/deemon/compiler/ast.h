@@ -92,7 +92,10 @@ struct catch_expr {
 
 struct class_member {
     DREF struct ast *cm_ast;     /* [1..1] The AST that is evaluated and assigned to the member. */
-    uint16_t         cm_index;   /* The member index/operator id of the member. */
+    uint16_t         cm_index;   /* The member index/operator id of the member.
+                                  * NOTE: When set to (uint16_t)-1, rather than initializing a
+                                  *       class member, `cm_ast' is evaluated, with its result
+                                  *       simply being discarded. */
     uint16_t         cm_pad[(sizeof(void *)/2)-1]; /* ... */
 };
 
