@@ -252,11 +252,11 @@ class Synchronized: callable {
 @">"
 @">myfunc();"
 @">/* ??? Microseconds */"
-@">print repr myfunc.time.microseconds;"
+@">print repr myfunc.total.microseconds;"
 @">"
 @">myfunc();"
 @">/* ??? Microseconds (about 2x as many; probably less due to CPU caching) */"
-@">print repr myfunc.time.microseconds;"
+@">print repr myfunc.total.microseconds;"
 class Timed: callable {
 
 	@"->module"
@@ -266,14 +266,25 @@ class Timed: callable {
 	private member m_func;
 
 	@"->:time.time"
-	private member m_time_spend;
+	private member m_total_spend;
+
+	@"->int"
+	private member m_num_invocations = 0;
 
 	@"(callable func)"
 	this(func) {
 		m_func = func;
 		if (m_libtime !is bound)
 			m_libtime = import("time");
-		m_time_spend = m_libtime.time(0);
+		m_total_spend = m_libtime.time(0);
+	}
+
+	operator str() {
+		return str m_func;
+	}
+
+	operator repr() {
+		return "Timed({!r})".format({ m_func });
 	}
 
 	operator () (args...) {
@@ -281,30 +292,56 @@ class Timed: callable {
 		try {
 			return m_func(args...);
 		} finally {
-			m_time_spend += m_libtime.tick() - start;
+			m_total_spend += m_libtime.tick() - start;
+			++m_num_invocations;
 		}
+	}
+
+	@"()"
+	@"Reset all timing data"
+	reset() {
+		del total;
 	}
 
 	@"->:time.time"
 	@"Get/del (reset)/set the amount of time that has "
 	 "already been spent while inside of the function."
-	@">print myfunc.time.microseconds;"
-	property time = {
+	@">print myfunc.total.microseconds;"
+	property total = {
 		get() {
-			return m_time_spend;
+			return m_total_spend;
 		}
 		del() {
-			m_time_spend = m_libtime.time(0);
+			m_total_spend = m_libtime.time(0);
+			m_num_invocations = 0;
 		}
 		set(value) {
-			if (value is none)
-				del time;
-			else if (value is int from deemon)
-				value = m_libtime.makeanon(value);
-			else {
+			if (value is none) {
+do_del_total:
+				del total;
+			} else if (value is int from deemon) {
+				if (!value) goto do_del_total;
+				m_total_spend = m_libtime.makeanon(value);
+			} else {
 				if (value !is m_libtime.time)
 					throw Error.TypeError("Expected a time object");
-				m_time_spend = copy value;
+				m_total_spend = copy value;
+			}
+		}
+	}
+
+	@"->:time.time"
+	@"@throw ValueError The function hasn't been called yet"
+	@"Get the average time spent while inside of the function"
+	@">print myfunc.average.microseconds;"
+	property average = {
+		get() {
+			try {
+				return m_total_spend / m_num_invocations;
+			} catch (Error.ValueError.Arithmetic.DivideByZero) {
+				throw Error.ValueError(
+					"No profiling data available for {}"
+					.format({ m_func }));
 			}
 		}
 	}
