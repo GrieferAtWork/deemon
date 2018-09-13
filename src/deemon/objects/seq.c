@@ -1287,6 +1287,19 @@ seq_repeatcombinations(DeeObject *__restrict self,
 err:
  return NULL;
 }
+PRIVATE DREF DeeObject *DCALL
+seq_permutations(DeeObject *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ size_t r; DeeObject *arg = Dee_None;
+ if (DeeArg_Unpack(argc,argv,"|o:permutations",&arg))
+     goto err;
+ if (DeeNone_Check(arg))
+     return DeeSeq_Permutations(self);
+ if (DeeObject_AsSize(arg,&r)) goto err;
+ return DeeSeq_Permutations2(self,r);
+err:
+ return NULL;
+}
 
 
 /* Mutable-sequence functions */
@@ -2024,6 +2037,22 @@ INTERN struct type_method seq_methods[] = {
           "When @r is $0, a sequence containing a single, empty sequence is returned (${{{}}})\n"
           "When ${#this} is zero, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations_with_replacement itertools.combinations_with_replacement}") },
+    { "permutations", &seq_permutations,
+      DOC("(int r=none)->{sequence...}\n"
+          "@throw IntegerOverflow @r is negative, or too large\n"
+          "Same as #combinations, however the order of elements must "
+          "not be enforced, though indices may not be repeated\n"
+          "When @r is :none, ${#this} is used instead\n"
+          ">/* { (\"A\", \"B\"), (\"A\", \"C\"), "
+                "(\"B\", \"A\"), (\"B\", \"C\"), "
+                "(\"C\", \"A\"), (\"C\", \"B\") } */\n"
+          ">print repr \"ABC\".permutations(2);\n"
+          "When @this sequence implements #op:getitem and #op:size, those will be invoked "
+          "as items are retrieved by index. Otherwise, all elements from @this sequence "
+          "are loaded at once when #repeatcombinations is called first.\n"
+          "When @r is $0, a sequence containing a single, empty sequence is returned (${{{}}})\n"
+          "When ${#this} is zero, an empty sequence is returned (${{}})\n"
+          "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.permutations itertools.permutations}") },
 
     /* TODO: join(sequence items) -> sequence */
     /* TODO: strip(object item, callable pred_eq = none) -> sequence */

@@ -444,6 +444,8 @@ INTDEF DREF DeeObject *DCALL DeeSeq_Sorted(DeeObject *__restrict self, DeeObject
 INTDEF DREF DeeObject *DCALL DeeSeq_Segments(DeeObject *__restrict self, size_t segsize);
 INTDEF DREF DeeObject *DCALL DeeSeq_Combinations(DeeObject *__restrict self, size_t r);
 INTDEF DREF DeeObject *DCALL DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r);
+INTDEF DREF DeeObject *DCALL DeeSeq_Permutations(DeeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL DeeSeq_Permutations2(DeeObject *__restrict self, size_t r);
 
 /* Sequence functions. */
 INTDEF size_t DCALL DeeSeq_CountSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq); /* @return: -1: Error. */
