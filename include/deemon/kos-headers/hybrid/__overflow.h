@@ -226,72 +226,87 @@ extern "C++" {
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_uadd,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
  __UINT##opn_x2##_TYPE__ __true_res = (__UINT##opn_x2##_TYPE__)((__UINT##opn_x2##_TYPE__)__x + (__UINT##opn_x2##_TYPE__)__y); \
- __UINT##n##_TYPE__ __false_res = *__res = (__UINT##n##_TYPE__)__true_res; \
- return (__UINT##opn_x2##_TYPE__)__false_res != __true_res; \
+ __UINT##n##_TYPE__ __false_res = (__UINT##n##_TYPE__)__true_res; \
+ if ((__UINT##opn_x2##_TYPE__)__false_res != __true_res) return 1; \
+ *__res = __false_res; \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_sadd,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  __INT##opn_x2##_TYPE__ __true_res = (__INT##opn_x2##_TYPE__)((__INT##opn_x2##_TYPE__)__x + (__INT##opn_x2##_TYPE__)__y); \
- __INT##n##_TYPE__ __false_res = *__res = (__INT##n##_TYPE__)__true_res; \
- return (__INT##opn_x2##_TYPE__)__false_res != __true_res; \
+ __INT##n##_TYPE__ __false_res = (__INT##n##_TYPE__)__true_res; \
+ if ((__INT##opn_x2##_TYPE__)__false_res != __true_res) return 1; \
+ *__res = __false_res; \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_usub,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
+ if (!(__x >= __y)) return 1; \
  *__res = (__UINT##n##_TYPE__)(__x - __y); \
- return !(__x >= __y); \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_ssub,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  __INT##opn_x2##_TYPE__ __true_res = (__INT##opn_x2##_TYPE__)((__INT##opn_x2##_TYPE__)__x - (__INT##opn_x2##_TYPE__)__y); \
- __INT##n##_TYPE__ __false_res = *__res = (__INT##n##_TYPE__)__true_res; \
- return (__INT##opn_x2##_TYPE__)__false_res != __true_res; \
+ __INT##n##_TYPE__ __false_res = (__INT##n##_TYPE__)__true_res; \
+ if ((__INT##opn_x2##_TYPE__)__false_res != __true_res) return 1; \
+ *__res = __false_res; \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_umul,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
  __UINT##opn_x2##_TYPE__ __true_res = (__UINT##opn_x2##_TYPE__)((__UINT##opn_x2##_TYPE__)__x * (__UINT##opn_x2##_TYPE__)__y); \
- __UINT##n##_TYPE__ __false_res = *__res = (__UINT##n##_TYPE__)__true_res; \
- return (__UINT##opn_x2##_TYPE__)__false_res != __true_res; \
+ __UINT##n##_TYPE__ __false_res = (__UINT##n##_TYPE__)__true_res; \
+ if ((__UINT##opn_x2##_TYPE__)__false_res != __true_res) return 1; \
+ *__res = __false_res; \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_smul,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  __INT##opn_x2##_TYPE__ __true_res = (__INT##opn_x2##_TYPE__)((__INT##opn_x2##_TYPE__)__x * (__INT##opn_x2##_TYPE__)__y); \
- __INT##n##_TYPE__ __false_res = *__res = (__INT##n##_TYPE__)__true_res; \
- return (__INT##opn_x2##_TYPE__)__false_res != __true_res; \
+ __INT##n##_TYPE__ __false_res = (__INT##n##_TYPE__)__true_res; \
+ if ((__INT##opn_x2##_TYPE__)__false_res != __true_res) return 1; \
+ *__res = __false_res; \
+ return 0; \
 } \
 /**/
 
 #define __IMPL_HYBRID_DEFINE_OVERFLOW_MATH(opn,n) \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_uadd,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
+ if (__x > (__UINT##opn##_MAX__ - __y)) return 1; \
  *__res = (__UINT##n##_TYPE__)(__x + __y); \
- return __x > (__UINT##opn##_MAX__ - __y); \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_sadd,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
+ if ((__y > 0 && __x > (__INT##opn##_MAX__ - __y)) || \
+     (__y < 0 && __x < (__INT##opn##_MIN__ - __y))) return 1; \
  *__res = (__INT##n##_TYPE__)(__x + __y); \
- return (__y > 0 && __x > (__INT##opn##_MAX__ - __y)) || \
-        (__y < 0 && __x < (__INT##opn##_MIN__ - __y)); \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_usub,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
+ if (!(__x >= __y)) return 1; \
  *__res = (__UINT##n##_TYPE__)(__x - __y); \
- return !(__x >= __y); \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_ssub,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
+ if ((__y > 0 && __x < (__INT##opn##_MIN__ + __y)) || \
+     (__y < 0 && __x > (__INT##opn##_MAX__ + __y))) return 1; \
  *__res = (__INT##n##_TYPE__)(__x + __y); \
- return (__y > 0 && __x < (__INT##opn##_MIN__ + __y)) || \
-        (__y < 0 && __x > (__INT##opn##_MAX__ + __y)); \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_umul,opn,n) \
 (__UINT##opn##_TYPE__ __x, __UINT##opn##_TYPE__ __y, __UINT##n##_TYPE__ *__restrict __res)) { \
+ if (__x && __y && (__x > (__UINT##opn##_MAX__ / __y))) return 1; \
  *__res = (__UINT##n##_TYPE__)(__x * __y); \
- return __x && __y && (__x > (__UINT##opn##_MAX__ / __y)); \
+ return 0; \
 } \
 __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVERFLOW_NAME(__impl_hybrid_overflow_smul,opn,n) \
 (__INT##opn##_TYPE__ __x, __INT##opn##_TYPE__ __y, __INT##n##_TYPE__ *__restrict __res)) { \
  __BOOL __did_overflow = 0;  \
- *__res = (__INT##n##_TYPE__)(__x * __y); \
  if (__x > 0) { \
   if (__y > 0) { \
    /* +x * +y */ \
@@ -311,6 +326,8 @@ __LOCAL __WUNUSED __NONNULL((3)) __ATTR_PURE __BOOL __NOTHROW(__IMPL_HYBRID_OVER
   if (__x && (__y < (__INT##opn##_MAX__ / __x))) \
       __did_overflow = 1; \
  } \
+ if (!__did_overflow) \
+     *__res = (__INT##n##_TYPE__)(__x * __y); \
  return __did_overflow; \
 } \
 /**/

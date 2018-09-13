@@ -108,6 +108,7 @@
 #include <deemon/traceback.h>
 #include <deemon/util/cache.h>
 #include <deemon/util/string.h>
+#include <hybrid/overflow.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <string.h>
@@ -500,6 +501,11 @@ do_tickcount:
   return result * 1000;
  }
  DBG_ALIGNMENT_ENABLE();
+#if 1
+ if (!OVERFLOW_UMUL(result,1000000,&result)) {
+  result /= performance_freq;
+ } else
+#endif
  if (performance_freq >= 1000000) {
   result /= performance_freq_div_1000000;
  } else {
