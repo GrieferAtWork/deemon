@@ -816,6 +816,8 @@ ast_is_nothrow(struct ast *__restrict self, bool result_used) {
  } break;
 
  case AST_RETURN:
+  if (!self->a_return) return true;
+  ATTR_FALLTHROUGH
  case AST_YIELD:
   return ast_is_nothrow(self->a_return,true);
 
