@@ -232,7 +232,7 @@ DeeList_NewUninitialized(size_t n_elem) {
 }
 PUBLIC void DCALL
 DeeList_FreeUninitialized(DeeObject *__restrict self) {
- ASSERT(self->ob_refcnt == 1);
+ ASSERT(!DeeObject_IsShared(self));
  ASSERT(Dee_TYPE(self) == &DeeList_Type);
  Dee_DecrefNokill(&DeeList_Type);
  Dee_Free(DeeList_ELEM(self));
@@ -2530,7 +2530,6 @@ again:
   /* Fill in the new items. */
   num_more = newsize-self->l_size;
   MEMFIL_PTR(self->l_elem+self->l_size,filler,num_more);
-  ATOMIC_FETCHADD(filler->ob_refcnt,num_more);
   Dee_Incref_n(filler,num_more);
   self->l_size = newsize;
   DeeList_LockEndWrite(self);
