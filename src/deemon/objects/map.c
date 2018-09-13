@@ -410,6 +410,9 @@ proxy_iterself(MapProxy *__restrict self, DeeTypeObject *__restrict result_type)
   result = NULL;
   goto done;
  }
+ result->mpi_nsi = DeeType_NSI(Dee_TYPE(self->mp_map));
+ if (result->mpi_nsi && result->mpi_nsi->nsi_class != TYPE_SEQX_CLASS_MAP)
+     result->mpi_nsi = NULL;
  result->mpi_map = self->mp_map;
  Dee_Incref(result->mpi_map);
  DeeObject_Init(result,result_type);
