@@ -1989,10 +1989,10 @@ done:
 }
 
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-PUBLIC DREF DeeObject *DCALL
-DeeObject_CallAttrTuple(DeeObject *__restrict self,
-                        /*String*/DeeObject *__restrict attr_name,
-                        DeeObject *__restrict args) {
+PUBLIC DREF DeeObject *
+(DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self,
+                                /*String*/DeeObject *__restrict attr_name,
+                                DeeObject *__restrict args) {
  DREF DeeObject *result; struct membercache *cache;
  DeeTypeObject *iter; dhash_t hash;
  ASSERT_OBJECT(self);
@@ -2060,11 +2060,11 @@ done:
  return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_CallAttrTupleKw(DeeObject *__restrict self,
-                          /*String*/DeeObject *__restrict attr_name,
-                          DeeObject *__restrict args,
-                          DeeObject *kw) {
+PUBLIC DREF DeeObject *
+(DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict self,
+                                  /*String*/DeeObject *__restrict attr_name,
+                                  DeeObject *__restrict args,
+                                  DeeObject *kw) {
  DREF DeeObject *result; struct membercache *cache;
  DeeTypeObject *iter; dhash_t hash;
  ASSERT_OBJECT(self);
@@ -2130,6 +2130,21 @@ done_invoke:
  }
 done:
  return result;
+}
+#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+PUBLIC DREF DeeObject *
+(DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self,
+                                /*String*/DeeObject *__restrict attr_name,
+                                DeeObject *__restrict args) {
+ return DeeObject_CallAttr(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args));
+}
+
+PUBLIC DREF DeeObject *
+(DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict self,
+                                  /*String*/DeeObject *__restrict attr_name,
+                                  DeeObject *__restrict args,
+                                  DeeObject *kw) {
+ return DeeObject_CallAttrKw(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw);
 }
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 

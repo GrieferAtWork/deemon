@@ -2070,17 +2070,12 @@ target_call_map:
 
 
 target_call_tuple:
-	movl   FIRST, %eax
-	WASSERT_EQUAL(l,ob_type(%eax),$(SYM(DeeTuple_Type)))
-	leal   t_elem(%eax), %ecx
-	pushl  %ecx
-	ADJUST_CFA_OFFSET(4)
-	pushl  t_size(%eax)
+	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
 	pushl  SECOND
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Call,12)
-	ADJUST_CFA_OFFSET(-12)
+	call   fSYM(DeeObject_CallTuple,8)
+	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
 	jz    .except /* Check for error */
 	xchgl  SECOND, %eax /* Push the function return value. */
@@ -2159,22 +2154,17 @@ target16_call_tuple_kw:
 	jmp    1f
 target_call_tuple_kw:
 	lodsb
-1:	movl   FIRST, %edx   /* args_tuple */
-	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeTuple_Type)))
-	LOAD_CODE(%ecx)
+1:	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 	movl   co_staticv(CODE_OR_ECX), %ecx
-	pushl  (%ecx,%eax,4) /* DeeObject_CallKw:kwds */
+	pushl  (%ecx,%eax,4) /* DeeObject_CallTupleKw:kwds */
 	ADJUST_CFA_OFFSET(4)
-	leal   t_elem(%edx), %ecx
-	pushl  %ecx          /* DeeObject_CallKw:argv */
+	pushl  FIRST         /* DeeObject_CallTupleKw:args */
 	ADJUST_CFA_OFFSET(4)
-	pushl  t_size(%edx)  /* DeeObject_CallKw:argc */
+	pushl  SECOND        /* DeeObject_CallTupleKw:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl  SECOND        /* DeeObject_CallKw:self */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_CallKw,16)
-	ADJUST_CFA_OFFSET(-16)
+	call   fSYM(DeeObject_CallTupleKw,12)
+	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
 	jz    .except
 	xchgl  %eax, SECOND  /* Save the result on the stack. */
@@ -2184,19 +2174,14 @@ target_call_tuple_kw:
 
 
 target_call_tuple_kwds:
-	pushl   FIRST        /* DeeObject_CallKw:kw */
+	pushl   FIRST        /* DeeObject_CallTupleKw:kw */
 	ADJUST_CFA_OFFSET(4)
-	movl    SECOND, %edx
-	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeTuple_Type)))
-	leal    t_elem(%edx), %ecx
-	pushl   %ecx         /* DeeObject_CallKw:argv */
+	pushl   SECOND       /* DeeObject_CallTupleKw:args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   t_size(%edx) /* DeeObject_CallKw:argc */
+	pushl   THIRD        /* DeeObject_CallTupleKw:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   THIRD        /* DeeObject_CallKw:self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallKw,16)
-	ADJUST_CFA_OFFSET(-16)
+	call    fSYM(DeeObject_CallTupleKw,12)
+	ADJUST_CFA_OFFSET(-12)
 	testl   %eax, %eax
 	jz     .except
 	xchgl   %eax, THIRD  /* Save the result on the stack. */
@@ -5434,19 +5419,14 @@ target_callattr_tuple:
 	movl    SECOND, %edx
 	cmpl    $(SYM(DeeString_Type)), ob_type(%edx)
 	jne     99f /* Check if the name operand is a string. */
-	movl    FIRST,  %ecx
-	WASSERT_EQUAL(l,ob_type(%ecx),$(SYM(DeeTuple_Type)))
-	leal    t_elem(%ecx), %eax
-	pushl   %eax         /* argv */
-	ADJUST_CFA_OFFSET(4)
-	pushl   t_size(%ecx) /* argc */
+	pushl   FIRST        /* args */
 	ADJUST_CFA_OFFSET(4)
 	pushl   %edx         /* name */
 	ADJUST_CFA_OFFSET(4)
 	pushl   THIRD        /* self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttr,16)
-	ADJUST_CFA_OFFSET(-16)
+	call    fSYM(DeeObject_CallAttrTuple,12)
+	ADJUST_CFA_OFFSET(-12)
 	testl   %eax, %eax
 	jz     .except
 	xchgl   THIRD, %eax  /* Save the result onto the stack. */
@@ -5522,19 +5502,14 @@ target_callattr_tuple_c:
 	movl    co_staticv(CODE_OR_ECX), %ecx
 	movl    (%ecx,%eax,4), %eax
 	WASSERT_EQUAL(l,ob_type(%eax),$(SYM(DeeString_Type)))
-	movl    FIRST, %edx
-	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeTuple_Type)))
-	leal    t_elem(%edx), %ecx
-	pushl   %ecx         /* argv. */
+	pushl   FIRST        /* DeeObject_CallAttrTuple:args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   t_size(%edx) /* argc. */
+	pushl   %eax         /* DeeObject_CallAttrTuple:name */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax         /* name. */
+	pushl   SECOND       /* DeeObject_CallAttrTuple:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND       /* self. */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttr,16)
-	ADJUST_CFA_OFFSET(-16)
+	call    fSYM(DeeObject_CallAttrTuple,12)
+	ADJUST_CFA_OFFSET(-12)
 	testl   %eax, %eax
 	jz     .except /* Check for errors. */
 	xchgl   SECOND, %eax /* Store the result onto the stack. */
@@ -5601,19 +5576,14 @@ target_callattr_this_tuple_c:
 	movl    co_staticv(CODE_OR_ECX), %ecx
 	movl    (%ecx,%eax,4), %eax
 	WASSERT_EQUAL(l,ob_type(%eax),$(SYM(DeeString_Type)))
-	movl    FIRST, %edx
-	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeTuple_Type)))
-	leal    t_elem(%edx), %ecx
-	pushl   %ecx         /* argv. */
+	pushl   FIRST        /* DeeObject_CallAttrTuple:args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   t_size(%edx) /* argc. */
+	pushl   %eax         /* DeeObject_CallAttrTuple:name */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax         /* name. */
+	pushl   FRAME_THIS   /* DeeObject_CallAttrTuple:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS /* base object (Use the this-argument stored in the frame). */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttr,16)
-	ADJUST_CFA_OFFSET(-16)
+	call    fSYM(DeeObject_CallAttrTuple,12)
+	ADJUST_CFA_OFFSET(-12)
 	testl   %eax, %eax
 	jz     .except /* Check for errors. */
 	xchgl   FIRST, %eax /* Store the result onto the stack. */
@@ -5787,21 +5757,16 @@ target_callattr_tuple_c_kw:
 	ASSERT_BELOW(%dx,co_staticc(CODE_OR_ECX))
 	movl    co_staticv(CODE_OR_ECX), %ecx
 	movl    (%ecx,%edx,4), %edx /* edx = STATICV[attr_name_cid] */
-	pushl   (%ecx,%eax,4)      /* DeeObject_CallAttrKw:kw */
+	pushl   (%ecx,%eax,4)      /* DeeObject_CallAttrTupleKw:kw */
 	ADJUST_CFA_OFFSET(4)
-	movl    FIRST, %eax
-	WASSERT_EQUAL(l,ob_type(%eax),$(SYM(DeeTuple_Type)))
-	leal    t_elem(%eax), %ecx
-	pushl   %ecx               /* DeeObject_CallAttrKw:argv */
+	pushl   FIRST              /* DeeObject_CallAttrTupleKw:args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   t_size(%eax)       /* DeeObject_CallAttrKw:argc */
+	pushl   %edx               /* DeeObject_CallAttrTupleKw:attr_name */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx               /* DeeObject_CallAttrKw:attr_name */
+	pushl   SECOND             /* DeeObject_CallAttrTupleKw:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND             /* DeeObject_CallAttrKw:self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttrKw,20)
-	ADJUST_CFA_OFFSET(-20)
+	call    fSYM(DeeObject_CallAttrTupleKw,16)
+	ADJUST_CFA_OFFSET(-16)
 	testl   %eax, %eax
 	jz     .except
 	xchgl   %eax, SECOND
@@ -5856,24 +5821,19 @@ target_callattr_kwds:
 
 
 target_callattr_tuple_kwds:
-	pushl   FIRST              /* DeeObject_CallAttrKw:kw */
+	pushl   FIRST              /* DeeObject_CallAttrTupleKw:kw */
 	ADJUST_CFA_OFFSET(4)
-	movl    SECOND, %edx
-	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeTuple_Type)))
-	leal    t_elem(%edx), %ecx
-	pushl   %ecx               /* DeeObject_CallAttrKw:argv */
-	ADJUST_CFA_OFFSET(4)
-	pushl   t_size(%edx)       /* DeeObject_CallAttrKw:argc */
+	pushl   SECOND             /* DeeObject_CallAttrTupleKw:args */
 	ADJUST_CFA_OFFSET(4)
 	movl    THIRD, %edx
-	pushl   %edx               /* DeeObject_CallAttrKw:attr_name */
+	pushl   %edx               /* DeeObject_CallAttrTupleKw:attr_name */
 	ADJUST_CFA_OFFSET(4)
 	cmpl    $(SYM(DeeString_Type)), ob_type(%edx)
 	jne     99f
-	pushl   FOURTH             /* DeeObject_CallAttrKw:self */
+	pushl   FOURTH             /* DeeObject_CallAttrTupleKw:self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttrKw,20)
-	ADJUST_CFA_OFFSET(-20)
+	call    fSYM(DeeObject_CallAttrTupleKw,16)
+	ADJUST_CFA_OFFSET(-16)
 	testl   %eax, %eax
 	jz     .except
 	xchgl   %eax, FOURTH       /* Save the result */

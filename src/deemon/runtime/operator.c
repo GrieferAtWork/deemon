@@ -1392,7 +1392,19 @@ err_no_keywords:
  err_keywords_not_accepted(tp_self,kw);
  return NULL;
 }
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+DEFINE_OPERATOR(DREF DeeObject *,CallTuple,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict args)) {
+ return DeeObject_Call(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args));
+}
+DEFINE_OPERATOR(DREF DeeObject *,CallTupleKw,
+               (DeeObject *__restrict self,
+                DeeObject *__restrict args,
+                DeeObject *kw)) {
+ return DeeObject_CallKw(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw);
+}
+#endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *,CallKw,
@@ -1553,15 +1565,16 @@ err_no_keywords:
 }
 
 
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 #ifndef DEFINE_TYPE_OPERATORS
 DEFINE_OPERATOR(DREF DeeObject *,ThisCallTuple,
                (DeeObject *__restrict self,
                 DeeObject *__restrict this_arg,
                 DeeObject *__restrict args)) {
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
  /* Check for special callback optimizations. */
  if (GET_TP_SELF() == &DeeFunction_Type)
      return DeeFunction_ThisCallTuple((DeeFunctionObject *)self,this_arg,args);
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
  return DeeObject_ThisCall(self,
                            this_arg,
                            DeeTuple_SIZE(args),
@@ -1573,9 +1586,11 @@ DEFINE_OPERATOR(DREF DeeObject *,ThisCallTupleKw,
                 DeeObject *__restrict this_arg,
                 DeeObject *__restrict args,
                 DeeObject *kw)) {
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
  /* Check for special callback optimizations. */
  if (GET_TP_SELF() == &DeeFunction_Type)
      return DeeFunction_ThisCallTupleKw((DeeFunctionObject *)self,this_arg,args,kw);
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
  return DeeObject_ThisCallKw(self,
                              this_arg,
                              DeeTuple_SIZE(args),
@@ -1583,7 +1598,6 @@ DEFINE_OPERATOR(DREF DeeObject *,ThisCallTupleKw,
                              kw);
 }
 #endif /* !DEFINE_TYPE_OPERATORS */
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 
 #ifndef DEFINE_TYPE_OPERATORS

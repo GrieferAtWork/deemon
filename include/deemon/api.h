@@ -111,10 +111,6 @@ DECL_BEGIN
 #define CONFIG_NO_TRACE_REFCHANGES 1
 #endif
 
-/* TODO: Update changes in the assembly implementation:
- *   - Add support for `CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS'
- */
-
 #undef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 #undef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
 #ifndef __OPTIMIZE_SIZE__
