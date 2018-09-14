@@ -37,6 +37,11 @@
 #ifdef __CC__
 #define __COMPILER_HAVE_PRAGMA_PACK 1
 #endif
+#ifndef __has_feature
+#define __NO_has_feature 1
+#define __has_feature(x) 0
+#endif
+
 
 #if __has_feature(cxx_auto_type) || \
    (defined(__cplusplus) && _MSC_VER >= 1600)
