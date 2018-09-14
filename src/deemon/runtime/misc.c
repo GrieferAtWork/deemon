@@ -1066,29 +1066,27 @@ debug_printer(void *UNUSED(closure),
 #ifdef CONFIG_HOST_WINDOWS
  size_t result = bufsize;
  DBG_ALIGNMENT_DISABLE();
- if (IsDebuggerPresent()) {
 #ifdef PAGESIZE
-  /* (ab-)use the fact that the kernel can't keep us from reading
-   *  beyond the end of a buffer so long as that memory location
-   *  is located within the same page as the last byte of said
-   *  buffer (Trust me... I've written by own OS) */
-  if ((bufsize <= 1000) && /* There seems to be some kind of limitation by `OutputDebugStringA()' here... */
-      (((uintptr_t)buffer + bufsize)     & ~(uintptr_t)(PAGESIZE-1)) ==
-      (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE-1)) &&
-      (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
-   OutputDebugStringA((char *)buffer);
-  } else
+ /* (ab-)use the fact that the kernel can't keep us from reading
+  *  beyond the end of a buffer so long as that memory location
+  *  is located within the same page as the last byte of said
+  *  buffer (Trust me... I've written by own OS) */
+ if ((bufsize <= 1000) && /* There seems to be some kind of limitation by `OutputDebugStringA()' here... */
+     (((uintptr_t)buffer + bufsize)     & ~(uintptr_t)(PAGESIZE-1)) ==
+     (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE-1)) &&
+     (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
+  OutputDebugStringA((char *)buffer);
+ } else
 #endif
-  {
-   char temp[512];
-   while (bufsize) {
-    size_t part = MIN(bufsize,sizeof(temp)-sizeof(char));
-    memcpy(temp,buffer,part);
-    temp[part] = '\0';
-    OutputDebugStringA(temp);
-    *(uintptr_t *)&buffer += part;
-    bufsize -= part;
-   }
+ {
+  char temp[512];
+  while (bufsize) {
+   size_t part = MIN(bufsize,sizeof(temp)-sizeof(char));
+   memcpy(temp,buffer,part);
+   temp[part] = '\0';
+   OutputDebugStringA(temp);
+   *(uintptr_t *)&buffer += part;
+   bufsize -= part;
   }
  }
  DBG_ALIGNMENT_ENABLE();
@@ -1104,6 +1102,14 @@ PUBLIC void (DCALL Dee_vdprintf)(char const *__restrict format, va_list args) {
  (void)format;
  (void)args;
 #else
+#ifdef CONFIG_HOST_WINDOWS
+ DBG_ALIGNMENT_DISABLE();
+ if (!IsDebuggerPresent()) {
+  DBG_ALIGNMENT_ENABLE();
+  return;
+ }
+ DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HOST_WINDOWS */
  if (Dee_VFormatPrintf(&debug_printer,NULL,format,args) < 0)
      DeeError_Handled(ERROR_HANDLED_RESTORE);
 #endif
@@ -1114,6 +1120,14 @@ PUBLIC void (Dee_dprintf)(char const *__restrict format, ...) {
  (void)format;
 #else
  va_list args;
+#ifdef CONFIG_HOST_WINDOWS
+ DBG_ALIGNMENT_DISABLE();
+ if (!IsDebuggerPresent()) {
+  DBG_ALIGNMENT_ENABLE();
+  return;
+ }
+ DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HOST_WINDOWS */
  va_start(args,format);
  if (Dee_VFormatPrintf(&debug_printer,NULL,format,args) < 0)
      DeeError_Handled(ERROR_HANDLED_RESTORE);

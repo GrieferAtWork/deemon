@@ -78,7 +78,12 @@ DeeFunction_NewInherited(DeeObject *__restrict code, size_t refc,
                          DREF DeeObject *const *__restrict refv) {
  DREF DeeFunctionObject *result;
  ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
- ASSERT(((DeeCodeObject *)code)->co_refc == refc);
+ ASSERTF(((DeeCodeObject *)code)->co_refc == refc,
+         "((DeeCodeObject *)code)->co_refc = %I16u\n"
+         "refc                             = %I16u\n"
+         "name                             = %s\n",
+         ((DeeCodeObject *)code)->co_refc,refc,
+         DeeDDI_NAME(((DeeCodeObject *)code)->co_ddi));
  result = (DREF DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject,fo_refv)+
                                                     (refc*sizeof(DREF DeeObject *)));
  if unlikely(!result) goto done;

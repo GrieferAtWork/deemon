@@ -145,6 +145,7 @@ DeeError_Throw(DeeObject *__restrict ob) {
  ts->t_except    = frame;
  Dee_Incref(ob);
  ++ts->t_exceptsz;
+ DEE_DPRINTF("[RT] Throw exception: %r (%I16u)\n",ob,ts->t_exceptsz);
 done:
  return -1;
 }

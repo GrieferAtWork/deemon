@@ -6038,7 +6038,10 @@ handle_except:
    * the base of the current instruction. */
   code_addr_t ip_addr = (code_addr_t)(frame->cf_ip - code->co_code);
   ASSERTF(except_recursion < this_thread->t_exceptsz,
-          "No new exceptions have been thrown");
+          "No new exceptions have been thrown\n"
+          "ip_addr = +%.4I32X\n"
+          "name    = %s\n",
+         (uint32_t)ip_addr,DeeDDI_NAME(code->co_ddi));
   ASSERTF(this_thread->t_except,"No error has been set");
   /* Lazily allocate a missing traceback.
    * TODO: Only include information that would become lost _now_ in the traceback.

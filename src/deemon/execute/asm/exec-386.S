@@ -36,6 +36,19 @@
 #define CODE_IS_REGISTER 1
 #endif
 
+/*
+
+CODE_IP = (ESI - ((*(unsigned int *)(EBP - 16)) + (60)))
+CODE_SIZE = (*(unsigned int *)((*(unsigned int *)(EBP - 16)) + 28))
+CODE = (*(unsigned int *)(EBP - 16))
+CODE_DDI = (*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)))
+CODE_DDI_STRTAB = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (4 * 8))) + (4 * 5))
+CODE_DDI_SYMBOL_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (4 * 8))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[0]
+CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (4 * 8))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[(*(unsigned short *)(*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)) + (4 * 16)))]
+
+*/
+
+
 #ifdef __ELF__
 #define END(x)   .size x, . - x
 #else
@@ -1374,16 +1387,17 @@ target_endcatch:
 	jmp   .disp
 target_endcatch_n:
 	lodsb  /* EAX = nth_except */
+	incl   %eax
 	movzwl L_EXCEPT_RECURSION, %ecx
 	addl   %eax, %ecx /* ECX = except_recursion+nth_except */
 	movl   L_THIS_THREAD, %edx
-	cmpl   %ecx, t_exceptsz(%edx)
-	jng   .disp /* if (!(this_thread->t_exceptsz > except_recursion+nth_except)) goto .disp; */
+	cmpw   %cx, t_exceptsz(%edx)
+	jna   .disp /* if (!(this_thread->t_exceptsz > except_recursion + nth_except + 1)) goto .disp; */
 	/* We're allowed to handle the `nth_except' exception. */
 	decw   t_exceptsz(%edx) /* --this_thread->t_exceptsz; (The except we're going to remove)
 	                         * The C version does this later, but if we do it now, we don't
 	                         * have to reload the L_THIS_THREAD local variable into a register. */
-	leal   1(%eax), %ecx /* ECX = nth_except+1 */
+	movl   %eax, %ecx       /* ECX = nth_except + 1 */
 	leal   t_except(%edx), %eax
 1:	movl   (%eax), %edx        /* frame = *pframe; */
 	ASSERT_NONZERO(%edx)
@@ -1433,8 +1447,8 @@ target_endfinally_n:
 	incl   %eax
 	addl   %eax, %ecx /* ECX = except_recursion+min_except+1 */
 	movl   L_THIS_THREAD, %edx
-	cmpl   %ecx, t_exceptsz(%edx)
-	jng   .disp /* if (!(this_thread->t_exceptsz > except_recursion+min_except+1))
+	cmpw   %cx, t_exceptsz(%edx)
+	jna   .disp /* if (!(this_thread->t_exceptsz > except_recursion+min_except+1))
 	             *       goto .disp; */
 	jmp   .except
 
@@ -1604,6 +1618,100 @@ target_jt:
 
 
 
+prefix_target_jf16:
+	call   get_prefix_object
+	pushl  %edx          /* BACKUP(prefix_ob) */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %edx          /* DeeObject_Bool:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_Bool,4)
+	ADJUST_CFA_OFFSET(-4)
+	xorl   %ecx, %ecx
+	cmpl   $0, %eax
+	je    .Ldo_jmp_prefix_16   /* if (IS_FALSE) goto DO_JUMP; */
+	jl    .except_decref_pop
+	jmp   .Ldont_jmp_prefix_16 /* else goto DONT_JUMP; */
+	ADJUST_CFA_OFFSET(-4)
+prefix_target_jt16:
+	call   get_prefix_object
+	pushl  %edx          /* BACKUP(prefix_ob) */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %edx          /* DeeObject_Bool:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_Bool,4)
+	ADJUST_CFA_OFFSET(-4)
+	xorl   %ecx, %ecx
+	cmpl   $0, %eax
+	je    .Ldont_jmp_prefix_16 /* if (IS_FALSE) goto DONT_JUMP; */
+	jl    .except_decref_pop
+.Ldo_jmp_prefix_16:
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	decref %edx
+	lodsw
+	movswl %ax, %eax
+	addl   %eax, IP /* ip += Simm16 */
+#ifndef NDEBUG
+	jno   .disp_checkip
+	int3   /* ASSERTION_FAILED: `ip += Simm16' did overflow. */
+#endif
+	jmp   .disp
+	ADJUST_CFA_OFFSET(4)
+.Ldont_jmp_prefix_16:
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	decref %edx
+	addl   $2, IP
+	jmp   .disp
+
+prefix_target_jf:
+	call   get_prefix_object
+	pushl  %edx          /* BACKUP(prefix_ob) */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %edx          /* DeeObject_Bool:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_Bool,4)
+	ADJUST_CFA_OFFSET(-4)
+	xorl   %ecx, %ecx
+	cmpl   $0, %eax
+	je    .Ldo_jmp_prefix_8   /* if (IS_FALSE) goto DO_JUMP; */
+	jl    .except_decref_pop
+	jmp   .Ldont_jmp_prefix_8 /* else goto DONT_JUMP; */
+	ADJUST_CFA_OFFSET(-4)
+prefix_target_jt:
+	call   get_prefix_object
+	pushl  %edx          /* BACKUP(prefix_ob) */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %edx          /* DeeObject_Bool:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_Bool,4)
+	ADJUST_CFA_OFFSET(-4)
+	xorl   %ecx, %ecx
+	cmpl   $0, %eax
+	je    .Ldont_jmp_prefix_8 /* if (IS_FALSE) goto DONT_JUMP; */
+	jl    .except_decref_pop
+.Ldo_jmp_prefix_8:
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	decref %edx
+	lodsb
+	movsbl %al, %eax
+	addl   %eax, IP /* ip += Simm8 */
+#ifndef NDEBUG
+	jno   .disp_checkip
+	int3   /* ASSERTION_FAILED: `ip += Simm8' did overflow. */
+#endif
+	jmp   .disp
+	ADJUST_CFA_OFFSET(4)
+.Ldont_jmp_prefix_8:
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	decref %edx
+	incl   IP
+	jmp   .disp
+
+
+
 target32_jmp:
 	lodsl
 #ifndef CONFIG_NO_THREADS
@@ -1626,9 +1734,8 @@ target32_jmp:
 #ifndef NDEBUG
 	jno   .disp_checkip
 	int3   /* ASSERTION_FAILED: `ip += Simm32' did overflow. */
-#else
-	jmp   .disp
 #endif
+	jmp   .disp
 target_jmp16:
 	lodsw
 	movswl %ax, %eax
@@ -1744,7 +1851,7 @@ target_jmp_pop:
 	call   fSYM(DeeObject_AsUInt32,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except_x4 /* Check for exception */
+	jnz   .except_x4 /* Check for exception */
 	sp_popref %eax
 .jmp_abs_pop:
 	popl   %edx /* absip */
@@ -1981,6 +2088,23 @@ target_call_tuple:
 	sp_popref %eax /* Pop the argument tuple */
 	jmp   .disp
 
+
+target_thiscall_tuple:
+	pushl  FIRST   /* DeeObject_ThisCallTuple:args */
+	ADJUST_CFA_OFFSET(4)
+	pushl  SECOND  /* DeeObject_ThisCallTuple:this_arg */
+	ADJUST_CFA_OFFSET(4)
+	pushl  THIRD   /* DeeObject_ThisCallTuple:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_ThisCallTuple,12)
+	ADJUST_CFA_OFFSET(-12)
+	testl  %eax, %eax
+	jz    .except
+	xchgl  THIRD, %eax
+	decref %eax
+	sp_popref %eax
+	sp_popref %eax
+	jmp   .disp
 
 
 
@@ -2466,7 +2590,7 @@ target_super_this_r:
 1:
 #ifndef NDEBUG
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_refc(CODE_OR_ECX))
+	ASSERT_BELOW(%ax,co_refc(CODE_OR_ECX))
 #endif
 	pushl  FRAME_THIS
 	ADJUST_CFA_OFFSET(4)
@@ -2483,7 +2607,7 @@ target16_super_this_e:
 	lodsw
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
-	ASSERT_BELOW(%eax,mo_importc(%ecx))
+	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsw
@@ -2492,7 +2616,7 @@ target_super_this_e:
 	lodsb
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
-	ASSERT_BELOW(%eax,mo_importc(%ecx))
+	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsb
@@ -2504,7 +2628,7 @@ target_super_this_g:
 	lodsb
 2:	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
-1:	ASSERT_BELOW(%eax,mo_globalc(%ecx))
+1:	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
@@ -2559,6 +2683,7 @@ target_isnone:
 	call   fSYM(DeeObject_Destroy,4)
 	ADJUST_CFA_OFFSET(-4)
 	movl   TOP, %ecx
+	xorl   %eax, %eax
 1:	cmpl   $(SYM(DeeNone_Singleton)), %ecx
 	/* NOTE: No need to clear EAX because dispatch will
 	 *       have left all but the lower 8 bits clear,
@@ -2869,7 +2994,7 @@ target_push_local:
 	jmp   .disp
 99:	pushl  %eax        /* LID */
 	ADJUST_CFA_OFFSET(4)
-	pushl  FRAME_IP    /* IP */
+	pushl  FRAME_IP /* IP */
 	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC /* CODE */
 	ADJUST_CFA_OFFSET(4)
@@ -3076,16 +3201,16 @@ target_call_argsfwd:
 1:	/* Partial call using both default, and given arguments. */
 	subl   %edx, %eax                     /* EAX = arg_hi - arg_lo */
 	incl   %eax                           /* EAX = argc = (arg_hi - arg_lo) + 1 */
-	subl   $20, %esp        /* Reserve memory for the call to `object_call_vec2' */
+	subl   $20, %esp                      /* Reserve memory for the call to `object_call_vec2' */
 	ADJUST_CFA_OFFSET(20)
 	movl   FRAME_ARGC, %ecx
 	subl   %edx, %ecx                     /* ECX = fwd_argc = frame->cf_argc - arg_lo */
-	movl   %ecx, 4(%esp)    /* object_call_vec2:argc1 = fwd_argc */
-	subl   %ecx, %eax       /* EAX = argc - fwd_argc */
-	movl   %eax, 12(%esp)   /* object_call_vec2:argc2 = argc - fwd_argc */
+	movl   %ecx, 4(%esp)                  /* object_call_vec2:argc1 = fwd_argc */
+	subl   %ecx, %eax                     /* EAX = argc - fwd_argc */
+	movl   %eax, 12(%esp)                 /* object_call_vec2:argc2 = argc - fwd_argc */
 	movl   FRAME_ARGV, %ecx
 	leal   (%ecx,%edx,4), %ecx /* ECX = frame->cf_argv + arg_lo */
-	movl   %ecx, 8(%esp)    /* object_call_vec2:argv1 = frame->cf_argv + arg_lo */
+	movl   %ecx, 8(%esp)       /* object_call_vec2:argv1 = frame->cf_argv + arg_lo */
 	LOAD_CODE(%ecx)
 	movw   co_argc_max(CODE_OR_ECX), %dx /* EDX = code->co_argc_max */
 	subw   co_argc_min(CODE_OR_ECX), %dx /* EDX = code->co_argc_max - code->co_argc_min */
@@ -3529,391 +3654,155 @@ target_cmp_do:
 	jmp   .disp
 
 
-.class_name_not_a_string_xpop_x3:
-	/* DeeObject_TypeAssertFailed(name,&DeeString_Type) */
-	pushl  $(SYM(DeeString_Type))
+
+/* Class instructions */
+target16_class_c:
+	lodsw
+	jmp    1f
+target_class_c:
+	lodsb
+1:	LOAD_CODE(%ecx)
+	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	pushl  (%ecx,%eax,4) /* DeeClass_New:descriptor */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx /* name */
+	pushl  TOP           /* DeeClass_New:base */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_TypeAssertFailed,8)
-	ADJUST_CFA_OFFSET(-8)
-	jmp   .except_decref_xpop_x3
-target_class:
-	lodsb /* Read class features. */
-	/* Pop class options that have been defined. */
-	pushl  $0   /* cmem (backup) */
-	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASCMEM), %eax
-	jz     1f
-	sp_pop %edx
-	movl   %edx, (%esp)
-	/* DeeObject_AssertType(cmem,&DeeMemberTable_Type) */
-	pushl  %eax
-	ADJUST_CFA_OFFSET(4)
-	pushl  $(SYM(DeeMemberTable_Type))
-	ADJUST_CFA_OFFSET(4)
-	pushl  %edx
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_AssertType,8)
+	call   fSYM(DeeClass_New,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	popl   %eax
-	ADJUST_CFA_OFFSET(-4)
-	/* if (AssertType()...) EXCEPT(); */
-	jnz   .except_decref_pop
-1:	pushl  $0   /* imem (backup) */
+	jz    .except
+	xchgl  TOP, %eax
+	decref %eax
+	jmp   .disp
+
+target16_class_ec:
+	lodsw
+	movl   %eax, %edx
+	lodsw
+	movl   %eax, %ecx
+	lodsw
+	jmp    1f
+target_class_ec:
+	lodsb
+	movl   %eax, %edx
+	lodsb
+	movl   %eax, %ecx
+	lodsb
+1:	subl   $4, %esp       /* Reserve memory for BASE_BACKUP */
 	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASIMEM), %eax
-	jz     1f
-	sp_pop %edx
-	movl   %edx, (%esp)
-	pushl  %eax
+	pushl  %ecx           /* backup GID / reserve `DeeClass_New:descriptor' */
 	ADJUST_CFA_OFFSET(4)
-	/* DeeObject_AssertType(imem,&DeeMemberTable_Type) */
-	pushl  $(SYM(DeeMemberTable_Type))
-	ADJUST_CFA_OFFSET(4)
-	pushl  %edx
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_AssertType,8)
+	LOAD_CODE(%ecx)
+	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   (%ecx,%eax,4), %ecx            /* ECX = descriptor */
+	xchgl  %ecx, 0(%esp)                  /* DeeClass_New:descriptor; ECX = gid */
+	/* Read the class base from `extern %EDX:%ECX' */
+	LOAD_CODE(%eax)
+	movl   co_module(CODE_OR_EAX), %eax   /* EAX = THIS_MODULE */
+	ASSERT_BELOW(%dx,mo_importc(%eax))
+	movl   mo_importv(%eax), %eax
+	movl   (%eax,%edx,4), %edx            /* EDX = IMPORTS[MID] */
+	jmp   .create_class_module_edx
 	ADJUST_CFA_OFFSET(-8)
-	testl  %eax, %eax
-	popl   %eax
-	ADJUST_CFA_OFFSET(-4)
-	/* if (AssertType()...) EXCEPT(); */
-	jnz   .except_decref_xpop_x2
-1:	pushl  $0   /* name (backup) */
+
+target16_class_gc:
+	lodsw
+	movl   %eax, %ecx
+	lodsw
+	jmp    1f
+target_class_gc:
+	lodsb
+	movl   %eax, %ecx
+	lodsb
+1:	subl   $4, %esp       /* Reserve memory for BASE_BACKUP */
 	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASNAME), %eax
-	jz     1f
-	sp_pop %edx
-	movl   %edx, (%esp)
-	/* DeeObject_AssertTypeExact(name,&DeeString_Type) */
-	cmpl   $(SYM(DeeString_Type)), ob_type(%edx)
-	jne   .class_name_not_a_string_xpop_x3
-1:	pushl  $0   /* base (backup) */
+	LOAD_CODE(%edx)
+	ASSERT_BELOW(%ax,co_staticc(CODE_OR_EDX))
+	movl   co_staticv(CODE_OR_EDX), %edx
+	pushl  (%edx,%eax,4) /* DeeClass_New:descriptor */
 	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASBASE), %eax
-	jz     1f
-	sp_pop %edx
-	movl   %edx, (%esp)
-	/* DeeObject_AssertType(base,&DeeType_Type) */
-	pushl  %eax
-	ADJUST_CFA_OFFSET(4)
-	pushl  $(SYM(DeeType_Type))
-	ADJUST_CFA_OFFSET(4)
-	pushl  %edx
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_AssertType,8)
-	ADJUST_CFA_OFFSET(-8)
-	testl  %eax, %eax
-	popl   %eax
-	ADJUST_CFA_OFFSET(-4)
-	/* if (AssertType()...) EXCEPT(); */
-	jnz   .except_decref_xpop_x4
-1:	/* Build the argument list for creating the class.
-	 * Storage locations of input objects:
-	 *    - 12(%esp): DeeMemberTableObject *cmem;
-	 *    -  8(%esp): DeeMemberTableObject *imem;
-	 *    -  4(%esp): DeeStringObject *name;
-	 *    -  0(%esp): DeeTypeObject *base;
+	LOAD_CODE(%edx)
+	movl   co_module(CODE_OR_EDX), %edx
+.create_class_module_edx:
+	/* Read the class base from `global %ECX'; module = EDX
+	 *  >> EAX   -- UNDEFINED
+	 *  >> ECX   -- GID (8/16-bit)
+	 *  >> EDX   -- `DeeModuleObject *'
+	 *  >> STACK -- +8 { 0..3 = `DeeClassDescriptorObject *', 4..7 = RESERVED }
 	 */
-	pushl        %eax   /* (ESP-0)  features */
+	ASSERT_BELOW(%cx,mo_globalc(%edx))
+#ifndef CONFIG_NO_THREADS
+	pushl  %ecx
 	ADJUST_CFA_OFFSET(4)
-	pushl  12+4 (%esp)  /* (ESP-4)  cmem */
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	pushl   8+8 (%esp)  /* (ESP-8)  imem */
-	ADJUST_CFA_OFFSET(4)
-	pushl        $0     /* (ESP-12) doc (unused) */
-	ADJUST_CFA_OFFSET(4)
-	pushl   4+16(%esp)  /* (ESP-16) name */
-	ADJUST_CFA_OFFSET(4)
-	pushl   0+20(%esp)  /* (ESP-20) base */
-	ADJUST_CFA_OFFSET(4)
-	pushl        $0     /* (ESP-24) type (unused) */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeClass_New,28) /* Actually create the new class. */
-	ADJUST_CFA_OFFSET(-28)
-	testl  %eax, %eax
-	jz     .except_decref_xpop_x4
-	sp_push %eax
+	rwlock_read mo_lock(%edx), %ecx
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
-	testl  %edx, %edx
-	jz     1f
-	decref %edx
-1:	popl   %edx
+	popl   %ecx
 	ADJUST_CFA_OFFSET(-4)
-	testl  %edx, %edx
-	jz     1f
-	decref %edx
-1:	popl   %edx
-	ADJUST_CFA_OFFSET(-4)
-	testl  %edx, %edx
-	jz     1f
-	decref %edx
-1:	popl   %edx
-	ADJUST_CFA_OFFSET(-4)
-	testl  %edx, %edx
-	jz     .disp
-	decref %edx
-	jmp    .disp
-
-
-#ifdef NDEBUG
-#define ASSERT_VALID_STATIC_ID_ECX \
-	/* nothing */
-#elif defined(CODE_IS_REGISTER)
-#define ASSERT_VALID_STATIC_ID_ECX \
-	ASSERT_BELOW(%ecx,co_staticc(CODE));
-#else
-#define ASSERT_VALID_STATIC_ID_ECX \
-	pushl  %edx; \
-	LOAD_CODE(%edx); \
-	ASSERT_BELOW(%ecx,co_staticc(CODE_OR_EDX)); \
-	popl   %edx;
 #endif
-
-target_class_c:
-	lodsb /* Read class features. */
-	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	pushl  %eax   /* (ESP+0)  features */
-	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASCMEM), %eax
-	jz     1f
-	movzbl 3(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+4)  cmem */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+4)  cmem */
-	ADJUST_CFA_OFFSET(4)
-2:	testl  $(CLASSGEN_FHASIMEM), %eax
-	jz     1f
-	movzbl 2(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+8)  imem */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+8)  imem */
-	ADJUST_CFA_OFFSET(4)
-2:	pushl  $0     /* (ESP+12) doc (unused) */
-	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASNAME), %eax
-	jz     1f
-	movzbl 1(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+16) name */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+16) name */
-	ADJUST_CFA_OFFSET(4)
-2:	testl  $(CLASSGEN_FHASBASE), %eax
-	jz     1f
-	movzbl 0(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+20) base */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+20) base */
-	ADJUST_CFA_OFFSET(4)
-2:	pushl  $0     /* (ESP+24) type (unused) */
-	ADJUST_CFA_OFFSET(4)
-	addl   $4, IP /* Always advance IP to consume all operands. */
-	call   fSYM(DeeClass_New,28) /* Actually create the new class. */
-	ADJUST_CFA_OFFSET(-28)
-	testl  %eax, %eax
-	jz     .except
-	sp_push %eax
-	jmp    .disp
-
-target_class_cbl:
-	lodsb /* Read class features. */
-	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	pushl  %eax   /* (ESP+0)  features */
-	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASCMEM), %eax
-	jz     1f
-	movzbl 3(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+4)  cmem */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+4)  cmem */
-	ADJUST_CFA_OFFSET(4)
-2:	testl  $(CLASSGEN_FHASIMEM), %eax
-	jz     1f
-	movzbl 2(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+8)  imem */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+8)  imem */
-	ADJUST_CFA_OFFSET(4)
-2:	pushl  $0     /* (ESP+12) doc (unused) */
-	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASNAME), %eax
-	jz     1f
-	movzbl 1(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+16) name */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+16) name */
-	ADJUST_CFA_OFFSET(4)
-2:	testl  $(CLASSGEN_FHASBASE), %eax
-	jz     1f
-	movzbl 0(IP), %ecx
-	/* Special case: the `base' operand is a local variable. */
-#ifndef NDEBUG
-	LOAD_CODE(%edx)
-	ASSERT_BELOW(%ecx,co_localc(CODE_OR_EDX))
-#endif
-	movl   FRAME_FRAME, %edx
-	movl  (%edx,%ecx,4), %edx
-	testl  %edx, %edx
-	jz     99f /* Check if the variable is unbound. */
-	pushl  %edx /* (ESP+20) base */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+20) base */
-	ADJUST_CFA_OFFSET(4)
-2:	pushl  $0     /* (ESP+24) type (unused) */
-	ADJUST_CFA_OFFSET(4)
-	addl   $4, IP /* Always advance IP to consume all operands. */
-	call   fSYM(DeeClass_New,28) /* Actually create the new class. */
-	ADJUST_CFA_OFFSET(-28)
-	testl  %eax, %eax
-	jz     .except
-	sp_push %eax
-	jmp    .disp
-	ADJUST_CFA_OFFSET(20)
-99:	addl   $20, %esp /* Clean up what was already pushed. */
-	ADJUST_CFA_OFFSET(-20)
-	pushl  %ecx        /* LID */
-	ADJUST_CFA_OFFSET(4)
-	pushl  FRAME_IP    /* IP */
-	ADJUST_CFA_OFFSET(4)
-	pushl  CODE_OR_LOC /* CODE */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(err_unbound_local,12)
-	ADJUST_CFA_OFFSET(-12)
-	jmp    .except
-
-target_class_cbg:
-	lodsb /* Read class features. */
-	LOAD_CODE(%ecx)
-	pushl  $0 /* Backup for the base operand (which is referenced here) */
-	ADJUST_CFA_OFFSET(4)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	pushl  %eax   /* (ESP+0)  features */
-	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASCMEM), %eax
-	jz     1f
-	movzbl 3(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+4)  cmem */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+4)  cmem */
-	ADJUST_CFA_OFFSET(4)
-2:	testl  $(CLASSGEN_FHASIMEM), %eax
-	jz     1f
-	movzbl 2(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+8)  imem */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+8)  imem */
-	ADJUST_CFA_OFFSET(4)
-2:	pushl  $0     /* (ESP+12) doc (unused) */
-	ADJUST_CFA_OFFSET(4)
-	testl  $(CLASSGEN_FHASNAME), %eax
-	jz     1f
-	movzbl 1(IP), %ecx
-	ASSERT_VALID_STATIC_ID_ECX
-	pushl  (%edx,%ecx,4) /* (ESP+16) name */
-	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+16) name */
-	ADJUST_CFA_OFFSET(4)
-2:	testl  $(CLASSGEN_FHASBASE), %eax
-	jz     1f
-	movzbl 0(IP), %eax
-	/* Special case: the `base' operand is a global variable. */
-	LOAD_CODE(%ecx)
-	movl   co_module(CODE_OR_ECX), %ecx
-	ASSERT_BELOW(%eax,mo_globalc(%ecx))
+	movl   mo_globalv(%edx), %eax
+	movl   (%eax,%ecx,4), %eax
+	testl  %eax, %eax /* Check if the global variable is unbound. */
+	jz     99f
+	incref %eax
 #ifndef CONFIG_NO_THREADS
-	pushl  %eax
-	ADJUST_CFA_OFFSET(4)
-	rwlock_read mo_lock(%ecx), %edx
-	popl   %eax
-	ADJUST_CFA_OFFSET(-4)
+	rwlock_endread mo_lock(%edx)
 #endif
-	movl   mo_globalv(%ecx), %edx
-	movl   (%edx,%eax,4), %edx /* Load the global that should be used as base. */
-	testl  %edx, %edx
-	jz     99f /* Check if the variable is unbound. */
-	incref %edx
-#ifndef CONFIG_NO_THREADS
-	rwlock_endread mo_lock(%ecx)
-#endif
-	movl   20(%esp), %edx /* Also store the base in our backup further up the stack. */
-	pushl  %edx   /* (ESP+20) base */
+	movl   %eax, 4(%esp)  /* BACKUP(base) = base */
+	pushl  %eax           /* DeeClass_New:base */
 	ADJUST_CFA_OFFSET(4)
-	jmp    2f
-	ADJUST_CFA_OFFSET(-4)
-1:	pushl  $0     /* (ESP+20) base */
-	ADJUST_CFA_OFFSET(4)
-2:	pushl  $0     /* (ESP+24) type (unused) */
-	ADJUST_CFA_OFFSET(4)
-	addl   $4, IP /* Always advance IP to consume all operands. */
-	call   fSYM(DeeClass_New,28) /* Actually create the new class. */
-	ADJUST_CFA_OFFSET(-28)
+	call   fSYM(DeeClass_New,8)
+	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz     .except_decref_xpop
+	jz    .except_decref_pop
 	sp_push %eax
-	popl   %eax
+	popl   %eax  /* BACKUP(base) */
 	ADJUST_CFA_OFFSET(-4)
-	testl  %eax, %eax
-	jz     .disp
-	decref %eax /* decref() our backup of the base operand. */
-	jmp    .disp
-	ADJUST_CFA_OFFSET(24)
-99:
-#ifndef CONFIG_NO_THREADS
-	rwlock_endread mo_lock(%ecx)
-#endif
-	addl   $24, %esp /* Clean up what was already pushed. */
-	ADJUST_CFA_OFFSET(-24)
-	pushl  %ecx        /* LID */
+	decref %eax
+	jmp   .disp
+99:	rwlock_endread mo_lock(%edx)
+	pushl  %eax /* GID */
 	ADJUST_CFA_OFFSET(4)
-	pushl  CODE_OR_LOC /* CODE */
+	pushl  %edx /* MODULE */
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_global,8)
 	ADJUST_CFA_OFFSET(-8)
-	jmp    .except
-#undef ASSERT_VALID_STATIC_ID_ECX
+	jmp   .except
+
+target_class:
+	movl   TOP, %eax
+	cmpl   $SYM(DeeClassDescriptor_Type), ob_type(%eax)
+	jne    99f
+	pushl  %eax   /* DeeClass_New:descriptor */
+	ADJUST_CFA_OFFSET(4)
+	pushl  SECOND /* DeeClass_New:base */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeClass_New,8)
+	ADJUST_CFA_OFFSET(-8)
+	testl  %eax, %eax
+	jz    .except
+	xchgl  SECOND, %eax  /* Save the result onto the stack. */
+	decref %eax          /* Pop the base */
+	sp_popref %eax       /* Pop the descriptor */
+	jmp   .disp
+
+99:	pushl  $SYM(DeeClassDescriptor_Type)
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_TypeAssertFailed,8)
+	ADJUST_CFA_OFFSET(-8)
+	jmp   .except
 
 
-
-target16_defmember:
+target16_defcmember:
 	lodsw
 	jmp    1f
-target_defmember:
+target_defcmember:
 	lodsb
 1:	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -3926,25 +3815,408 @@ target_defmember:
 	sp_popref %eax
 	jmp    .disp
 
-
-
-target16_defop:
+target16_getcmember_r:
+	lodsw
+	movl   %eax, %edx
 	lodsw
 	jmp    1f
-target_defop:
+target_getcmember_r:
 	lodsb
-1:	pushl  FIRST
+	movl   %eax, %edx
+	lodsb
+1:	pushl  %eax                 /* DeeClass_GetMember:addr */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %eax
+	movl   FRAME_FUNC, %ecx
+	pushl  fo_refv(%ecx,%edx,4) /* DeeClass_GetMember:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl  SECOND
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeClass_SetOperator,12)
-	ADJUST_CFA_OFFSET(-12)
+	call   fSYM(DeeClass_GetMember,8)
+	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jnz   .except
-	sp_popref %eax
+	jz     .except
+	sp_push %eax      /* PUSH(member_value) */
+	jmp    .disp
+
+target16_getcmember:
+	lodsw
+	pushl  %eax                 /* DeeClass_GetMemberSafe:addr */
+	ADJUST_CFA_OFFSET(4)
+	pushl  TOP                  /* DeeClass_GetMemberSafe:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeClass_GetMemberSafe,8)
+	ADJUST_CFA_OFFSET(-8)
+	testl  %eax, %eax
+	jz     .except
+	xchgl  TOP, %eax
+	decref %eax
+	jmp    .disp
+
+target16_callcmember_this_r:
+	lodsw
+	movl   %eax, %edx
+	lodsw
+	jmp    1f
+target_callcmember_this_r:
+	lodsb
+	movl   %eax, %edx
+	lodsb
+1:	pushl  %eax                 /* DeeClass_GetMember:addr */
+	ADJUST_CFA_OFFSET(4)
+	movl   FRAME_FUNC, %ecx
+	pushl  fo_refv(%ecx,%edx,4) /* DeeClass_GetMember:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeClass_GetMember,8)
+	ADJUST_CFA_OFFSET(-8)
+	testl  %eax, %eax
+	jz    .except
+	pushl  %eax           /* BACKUP(callback) */
+	ADJUST_CFA_OFFSET(4)
+	subl   $12, %esp      /* Reserve memory for a call to `DeeObject_ThisCall()' + backup for `argc' */
+	ADJUST_CFA_OFFSET(12)
+	pushl  FRAME_THIS     /* DeeObject_ThisCall:this_arg */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax           /* DeeObject_ThisCall:self */
+	ADJUST_CFA_OFFSET(4)
+	xorl   %eax, %eax
+	lodsb                 /* EAX = argc */
+	movl   %eax, 8(%esp)  /* DeeObject_ThisCall:argc */
+	movl   %eax, 16(%esp) /* argc_backup = argc; */
+	leal   (,%eax,4), %ecx
+	movl   SP, %edx
+	subl   %ecx, %edx     /* EDX = SP - argc */
+	movl   %edx, 12(%esp) /* DeeObject_ThisCall:argv */
+	call   fSYM(DeeObject_ThisCall,16)
+	ADJUST_CFA_OFFSET(-16)
+	popl   %ecx           /* ECX = argc_backup */
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz    .except_decref_pop
+	/* Pop all function arguments */
+	testl  %ecx, %ecx
+	jz     1f
+2:	sp_popref %edx, 1, 1, 0
+	loop   2b
+1:	sp_push %eax          /* Save the result of the callback onto the stack. */
+	popl   %eax           /* callback */
+	ADJUST_CFA_OFFSET(-4)
+	decref %eax
 	jmp   .disp
+
+
+
+target16_getmember_this:
+	/* `push getmember this, pop, $<imm16>' */
+	lodsw
+	jmp     1f
+target_getmember_this:
+	/* `push getmember this, pop, $<imm8>' */
+	lodsb
+1:	pushl   %eax               /* DeeInstance_GetMember:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl   TOP                /* DeeInstance_GetMember:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_GetMemberSafe,12)
+	ADJUST_CFA_OFFSET(-12)
+	testl   %eax, %eax
+	jz     .except
+	xchgl   TOP, %eax
+	decref  %eax
+	jmp    .disp
+
+target16_boundmember_this:
+	/* `push boundmember this, pop, $<imm16>' */
+	lodsw
+	jmp     1f
+target_boundmember_this:
+	/* `push boundmember this, pop, $<imm8>' */
+	lodsb
+1:	pushl   %eax               /* DeeInstance_GetMember:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl   TOP                /* DeeInstance_GetMember:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_BoundMemberSafe,12)
+	ADJUST_CFA_OFFSET(-12)
+	xorl    %ecx, %ecx
+	cmpl    $0, %eax
+	jl     .except
+	setg    %cl
+	setnz   %cl
+	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
+	incref  %eax
+	xchgl   TOP, %eax
+	decref  %eax
+	jmp    .disp
+
+target16_delmember_this:
+	/* `delmember this, pop, $<imm16>' */
+	lodsw
+	jmp     1f
+target_delmember_this:
+	/* `delmember this, pop, $<imm8>' */
+	lodsb
+1:	pushl   %eax               /* DeeInstance_GetMember:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl   TOP                /* DeeInstance_GetMember:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_DelMemberSafe,12)
+	ADJUST_CFA_OFFSET(-12)
+	testl   %eax, %eax
+	jnz    .except
+	sp_popref
+	jmp    .disp
+
+target16_setmember_this:
+	/* `setmember this, pop, $<imm16>, pop' */
+	lodsw
+	jmp     1f
+target_setmember_this:
+	/* `setmember this, pop, $<imm8>, pop' */
+	lodsb
+1:	pushl   FIRST              /* DeeInstance_GetMember:value */
+	ADJUST_CFA_OFFSET(4)
+	pushl   %eax               /* DeeInstance_GetMember:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl   SECOND             /* DeeInstance_GetMember:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_SetMemberSafe,16)
+	ADJUST_CFA_OFFSET(-16)
+	testl   %eax, %eax
+	jnz    .except
+	sp_popref
+	sp_popref
+	jmp    .disp
+
+
+
+target16_getmember_this_r:
+	/* `push getmember this, ref <imm16>, $<imm16>' */
+	lodsw
+	movl    %eax, %ecx
+	lodsw
+	jmp     1f
+target_getmember_this_r:
+	/* `push getmember this, ref <imm8>, $<imm8>' */
+	lodsb
+	movl    %eax, %ecx
+	lodsb
+1:
+#ifndef NDEBUG
+	LOAD_CODE(%edx)
+	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
+#endif
+	pushl   %eax                 /* DeeInstance_GetMember:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	ADJUST_CFA_OFFSET(4)
+	movl    FRAME_FUNC, %edx
+	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_GetMember:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_GetMember,12)
+	ADJUST_CFA_OFFSET(-12)
+	testl   %eax, %eax
+	jz     .except
+	sp_push %eax
+	jmp    .disp
+
+target16_boundmember_this_r:
+	/* `push boundmember this, ref <imm16>, $<imm16>' */
+	lodsw
+	movl    %eax, %ecx
+	lodsw
+	jmp     1f
+target_boundmember_this_r:
+	/* `push boundmember this, ref <imm8>, $<imm8>' */
+	lodsb
+	movl    %eax, %ecx
+	lodsb
+1:
+#ifndef NDEBUG
+	LOAD_CODE(%edx)
+	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
+#endif
+	pushl   %eax                 /* DeeInstance_BoundMember:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_THIS /* DeeInstance_BoundMember:self */
+	ADJUST_CFA_OFFSET(4)
+	movl    FRAME_FUNC, %edx
+	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_BoundMember:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_BoundMember,12)
+	ADJUST_CFA_OFFSET(-12)
+	xorl    %ecx, %ecx
+	testl   %eax, %eax
+	setnz   %cl
+	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
+	sp_push %eax, 1
+	jmp    .disp
+
+target16_delmember_this_r:
+	/* `delmember this, ref <imm16>, $<imm16>' */
+	lodsw
+	movl    %eax, %ecx
+	lodsw
+	jmp     1f
+target_delmember_this_r:
+	/* `delmember this, ref <imm8>, $<imm8>' */
+	lodsb
+	movl    %eax, %ecx
+	lodsb
+1:
+#ifndef NDEBUG
+	LOAD_CODE(%edx)
+	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
+#endif
+	pushl   %eax                 /* DeeInstance_DelMember:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_THIS /* DeeInstance_DelMember:self */
+	ADJUST_CFA_OFFSET(4)
+	movl    FRAME_FUNC, %edx
+	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_DelMember:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_DelMember,12)
+	ADJUST_CFA_OFFSET(-12)
+	testl   %eax, %eax
+	jz     .disp
+	jmp    .except
+
+
+target16_setmember_this_r:
+	/* `setmember this, ref <imm16>, $<imm16>, pop' */
+	lodsw
+	movl    %eax, %ecx
+	lodsw
+	jmp     1f
+target_setmember_this_r:
+	/* `setmember this, ref <imm8>, $<imm8>, pop' */
+	lodsb
+	movl    %eax, %ecx
+	lodsb
+1:
+#ifndef NDEBUG
+	LOAD_CODE(%edx)
+	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
+#endif
+	pushl   TOP                  /* DeeInstance_SetMember:value */
+	ADJUST_CFA_OFFSET(4)
+	pushl   %eax                 /* DeeInstance_SetMember:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_THIS           /* DeeInstance_SetMember:self */
+	ADJUST_CFA_OFFSET(4)
+	movl    FRAME_FUNC, %edx
+	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_SetMember:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_SetMember,16)
+	ADJUST_CFA_OFFSET(-16)
+	sp_popref
+	jmp    .disp
+
+
+target16_getmember:
+	/* `getmember top, pop, $<imm16>' */
+	lodsw
+	jmp     1f
+target_getmember:
+	/* `getmember top, pop, $<imm8>' */
+	lodsb
+1:	pushl   %eax   /* DeeInstance_GetMemberSafe:addr */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FIRST  /* DeeInstance_GetMemberSafe:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl   SECOND /* DeeInstance_GetMemberSafe:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_GetMemberSafe,12)
+	ADJUST_CFA_OFFSET(-12)
+	testl   %eax, %eax
+	jz     .except
+	xchgl   SECOND, %eax
+	decref  %eax
+	sp_popref %eax
+	jmp    .disp
+
+
+target16_boundmember:
+	/* `boundmember top, pop, $<imm16>' */
+	lodsw
+	jmp     1f
+target_boundmember:
+	/* `boundmember top, pop, $<imm8>' */
+	lodsb
+1:	pushl   %eax   /* DeeInstance_BoundMemberSafe:addr */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FIRST  /* DeeInstance_BoundMemberSafe:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl   SECOND /* DeeInstance_BoundMemberSafe:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_BoundMemberSafe,12)
+	ADJUST_CFA_OFFSET(-12)
+	xorl    %ecx, %ecx
+	cmpl    $0, %eax
+	jl     .except
+	setne   %cl /* cl = EAX != 0 */
+	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax
+	incref  %eax
+	xchgl   SECOND, %eax /* Save the result onto the stack */
+	decref  %eax
+	sp_popref %eax
+	jmp    .disp
+
+
+target16_delmember:
+	/* `delmember pop, pop, $<imm16>' */
+	lodsw
+	jmp     1f
+target_delmember:
+	/* `delmember pop, pop, $<imm8>' */
+	lodsb
+1:	pushl   %eax   /* DeeInstance_DelMemberSafe:addr */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FIRST  /* DeeInstance_DelMemberSafe:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl   SECOND /* DeeInstance_DelMemberSafe:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_DelMemberSafe,12)
+	ADJUST_CFA_OFFSET(-12)
+	testl   %eax, %eax
+	jnz    .except
+	sp_popref %eax
+	sp_popref %eax
+	jmp    .disp
+
+
+target16_setmember:
+	/* `setmember pop, pop, $<imm16>' */
+	lodsw
+	jmp     1f
+target_setmember:
+	/* `setmember pop, pop, $<imm8>' */
+	lodsb
+1:	pushl   FIRST  /* DeeInstance_SetMemberSafe:value */
+	ADJUST_CFA_OFFSET(4)
+	pushl   %eax   /* DeeInstance_SetMemberSafe:addr */
+	ADJUST_CFA_OFFSET(4)
+	pushl   SECOND /* DeeInstance_SetMemberSafe:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl   THIRD  /* DeeInstance_SetMemberSafe:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeInstance_SetMemberSafe,16)
+	ADJUST_CFA_OFFSET(-16)
+	testl   %eax, %eax
+	jnz    .except
+	sp_popref %eax
+	sp_popref %eax
+	sp_popref %eax
+	jmp    .disp
+
+
+
+
 
 
 
@@ -3952,30 +4224,30 @@ target_defop:
  * for code and immediate values for refs. */
 target16_function_c_16:
 	lodsw
-	movzbl  %al, %ecx
+	movl    %eax, %ecx
 	lodsw
 	jmp    .do_function_c
 target16_function_c:
 	lodsw
-	movzbl  %al, %ecx
+	movl    %eax, %ecx
 	lodsb
 	jmp    .do_function_c
 target_function_c_16:
 	lodsb
-	movzbl  %al, %ecx
+	movl    %eax, %ecx
 	lodsw
 	jmp    .do_function_c
 target_function_c:
 	lodsb
-	movzbl  %al, %ecx
+	movl    %eax, %ecx
 	lodsb
 .do_function_c:
 	LOAD_CODE(%edx)
-	ASSERT_BELOW(%ecx,co_staticc(CODE_OR_EDX))
+	ASSERT_BELOW(%cx,co_staticc(CODE_OR_EDX))
 	movl    co_staticv(CODE_OR_EDX), %edx
 	incl    %eax /* EAX = refc */
 	subl    $8, %esp
-	ADJUST_CFA_OFFSET(4)
+	ADJUST_CFA_OFFSET(8)
 	pushl   %eax            /* DeeFunction_NewInherited:refc */
 	ADJUST_CFA_OFFSET(4)
 	pushl   (%edx,%ecx,4)   /* DeeFunction_NewInherited:code */
@@ -5299,7 +5571,7 @@ target_callattr_this_c:
 	movl    SP, %edx
 	subl    %ecx, %edx
 	movl    %edx, 8(%esp)   /* SP - n_args */
-	pushl   FRAME_THIS      /* self */
+	pushl   FRAME_THIS /* self */
 	ADJUST_CFA_OFFSET(4)
 	call    fSYM(DeeObject_CallAttr,16)
 	ADJUST_CFA_OFFSET(-16)
@@ -5338,7 +5610,7 @@ target_callattr_this_tuple_c:
 	ADJUST_CFA_OFFSET(4)
 	pushl   %eax         /* name. */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS   /* base object (Use the this-argument stored in the frame). */
+	pushl   FRAME_THIS /* base object (Use the this-argument stored in the frame). */
 	ADJUST_CFA_OFFSET(4)
 	call    fSYM(DeeObject_CallAttr,16)
 	ADJUST_CFA_OFFSET(-16)
@@ -5617,219 +5889,6 @@ target_callattr_tuple_kwds:
 	ADJUST_CFA_OFFSET(-12)
 
 
-target16_getmember:
-	lodsw
-	jmp     1f
-target_getmember:
-	lodsb
-1:	pushl   %eax               /* DeeInstance_GetMember:index */
-	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS         /* DeeInstance_GetMember:self */
-	ADJUST_CFA_OFFSET(4)
-	pushl   TOP                /* DeeInstance_GetMember:tp_self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_GetMemberSafe,12)
-	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
-	jz     .except
-	xchgl   TOP, %eax
-	decref  %eax
-	jmp    .disp
-target16_boundmember:
-	lodsw
-	jmp     1f
-target_boundmember:
-	lodsb
-1:	pushl   %eax               /* DeeInstance_GetMember:index */
-	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS         /* DeeInstance_GetMember:self */
-	ADJUST_CFA_OFFSET(4)
-	pushl   TOP                /* DeeInstance_GetMember:tp_self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_BoundMemberSafe,12)
-	ADJUST_CFA_OFFSET(-12)
-	xorl    %ecx, %ecx
-	cmpl    $0, %eax
-	jl     .except
-	setg    %cl
-	setnz   %cl
-	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
-	incref  %eax
-	xchgl   TOP, %eax
-	decref  %eax
-	jmp    .disp
-
-target16_delmember:
-	lodsw
-	jmp     1f
-target_delmember:
-	lodsb
-1:	pushl   %eax               /* DeeInstance_GetMember:index */
-	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS         /* DeeInstance_GetMember:self */
-	ADJUST_CFA_OFFSET(4)
-	pushl   TOP                /* DeeInstance_GetMember:tp_self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_DelMemberSafe,12)
-	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
-	jnz    .except
-	sp_popref
-	jmp    .disp
-
-target16_setmember:
-	lodsw
-	jmp     1f
-target_setmember:
-	lodsb
-1:	pushl   FIRST              /* DeeInstance_GetMember:value */
-	ADJUST_CFA_OFFSET(4)
-	pushl   %eax               /* DeeInstance_GetMember:index */
-	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS         /* DeeInstance_GetMember:self */
-	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND             /* DeeInstance_GetMember:tp_self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_SetMemberSafe,16)
-	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
-	jnz    .except
-	sp_popref
-	sp_popref
-	jmp    .disp
-
-
-
-target16_getmember_r:
-	lodsw
-#ifndef NDEBUG
-	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_refc(CODE_OR_ECX))
-#endif
-	movzwl  %ax, %ecx
-	lodsw
-	jmp     1f
-target_getmember_r:
-	lodsb
-#ifndef NDEBUG
-	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_refc(CODE_OR_ECX))
-#endif
-	movzbl  %al, %ecx
-	lodsb
-1:	pushl   %eax                 /* DeeInstance_GetMember:index */
-	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS           /* DeeInstance_GetMember:self */
-	ADJUST_CFA_OFFSET(4)
-	movl    FRAME_FUNC, %edx
-	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_GetMember:tp_self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_GetMember,12)
-	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
-	jz     .except
-	sp_push %eax
-	jmp    .disp
-
-target16_boundmember_r:
-	lodsw
-#ifndef NDEBUG
-	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_refc(CODE_OR_ECX))
-#endif
-	movzwl  %ax, %ecx
-	lodsw
-	jmp     1f
-target_boundmember_r:
-	lodsb
-#ifndef NDEBUG
-	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_refc(CODE_OR_ECX))
-#endif
-	movzbl  %al, %ecx
-	lodsb
-1:	pushl   %eax                 /* DeeInstance_BoundMember:index */
-	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS           /* DeeInstance_BoundMember:self */
-	ADJUST_CFA_OFFSET(4)
-	movl    FRAME_FUNC, %edx
-	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_BoundMember:tp_self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_BoundMember,12)
-	ADJUST_CFA_OFFSET(-12)
-	xorl    %ecx, %ecx
-	testl   %eax, %eax
-	setnz   %cl
-	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
-	sp_push %eax, 1
-	jmp    .disp
-
-target16_delmember_r:
-	lodsw
-#ifndef NDEBUG
-	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_refc(CODE_OR_ECX))
-#endif
-	movzwl  %ax, %ecx
-	lodsw
-	jmp     1f
-target_delmember_r:
-	lodsb
-#ifndef NDEBUG
-	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_refc(CODE_OR_ECX))
-#endif
-	movzbl  %al, %ecx
-	lodsb
-1:	pushl   %eax                 /* DeeInstance_DelMember:index */
-	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS           /* DeeInstance_DelMember:self */
-	ADJUST_CFA_OFFSET(4)
-	movl    FRAME_FUNC, %edx
-	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_DelMember:tp_self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_DelMember,12)
-	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
-	jz     .disp
-	jmp    .except
-
-
-target16_setmember_r:
-	lodsw
-#ifndef NDEBUG
-	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_refc(CODE_OR_ECX))
-#endif
-	movzwl  %ax, %ecx
-	lodsw
-	jmp     1f
-target_setmember_r:
-	lodsb
-#ifndef NDEBUG
-	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_refc(CODE_OR_ECX))
-#endif
-	movzbl  %al, %ecx
-	lodsb
-1:	pushl   TOP                  /* DeeInstance_SetMember:value */
-	ADJUST_CFA_OFFSET(4)
-	pushl   %eax                 /* DeeInstance_SetMember:index */
-	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS           /* DeeInstance_SetMember:self */
-	ADJUST_CFA_OFFSET(4)
-	movl    FRAME_FUNC, %edx
-	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_SetMember:tp_self */
-	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_SetMember,16)
-	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
-	jnz    .except
-	sp_popref
-	jmp    .disp
-
-
-
 
 /* Call-to-symbol instructions. */
 target16_call_extern:
@@ -5860,7 +5919,7 @@ target_call_extern:
 	movl   mo_globalv(%ecx), %edx
 	movl   (%edx,%eax,4), %edx
 	testl  %edx, %edx
-	jz     99f /* Check if the global variable is unbound. */
+	jz     99f  /* Check if the global variable is unbound. */
 	incref %edx /* Always safe a reference because the function may delete itself. */
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread mo_lock(%ecx)
@@ -5895,6 +5954,16 @@ target_call_extern:
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
 	jmp   .disp
+target16_call_global:
+	lodsw
+	LOAD_CODE(%ecx)
+	movl   co_module(CODE_OR_ECX), %ecx
+	jmp    1b
+target_call_global:
+	lodsb
+	LOAD_CODE(%ecx)
+	movl   co_module(CODE_OR_ECX), %ecx
+	jmp    1b
 99:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread mo_lock(%ecx)
@@ -5906,16 +5975,7 @@ target_call_extern:
 	call   fSYM(err_unbound_global,8)
 	ADJUST_CFA_OFFSET(-4)
 	jmp   .except
-target16_call_global:
-	lodsw
-	LOAD_CODE(%ecx)
-	movl   co_module(CODE_OR_ECX), %ecx
-	jmp    1b
-target_call_global:
-	lodsb
-	LOAD_CODE(%ecx)
-	movl   co_module(CODE_OR_ECX), %ecx
-	jmp    1b
+
 
 /* Local function calls use their own code because here we don't
  * need to keep a reference to the function being called. */
@@ -6478,7 +6538,7 @@ prefix_target_function_c:
 	lodsb
 .prefix_do_function_c:
 	LOAD_CODE(%edx)
-	ASSERT_BELOW(%ecx,co_staticc(CODE_OR_EDX))
+	ASSERT_BELOW(%cx,co_staticc(CODE_OR_EDX))
 	movl    co_staticv(CODE_OR_EDX), %edx
 	incl    %eax /* EAX = refc */
 	subl    $8, %esp
@@ -7030,7 +7090,7 @@ prefix_target_push_local:
 	jmp     set_prefix_object
 99:	pushl   %eax        /* LID */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_IP    /* IP */
+	pushl   FRAME_IP /* IP */
 	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC /* CODE */
 	ADJUST_CFA_OFFSET(4)
@@ -7215,7 +7275,7 @@ impl_set_prefix_static:
 	movl   FRAME_IP, %eax
 #endif
 	movzbl 1(%eax), %eax
-1:	ASSERT_BELOW(%eax,co_staticc(CODE_OR_ECX))
+1:	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 	movl   co_staticv(CODE_OR_ECX), %ecx
 	/* Exchange the static variable. */
 	ASSERT_NONZERO(%edx)
@@ -7231,7 +7291,7 @@ impl_set_prefix16_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
 	movzwl 2(%eax), %eax
-	ASSERT_BELOW(%eax,mo_importc(%ecx))
+	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	movl   FRAME_IP, %eax
@@ -7241,7 +7301,7 @@ impl_set_prefix_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
 	movzbl 1(%eax), %eax
-	ASSERT_BELOW(%eax,mo_importc(%ecx))
+	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	movl   FRAME_IP, %eax
@@ -7254,7 +7314,7 @@ impl_set_prefix_global:
 	movzbl 1(%eax), %eax
 2:	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
-1:	ASSERT_BELOW(%eax,mo_globalc(%ecx))
+1:	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 	/* Prefix with an extern/global variable. */
 #ifndef CONFIG_NO_THREADS
 	pushl  %ecx /* Save the module for below. */
@@ -7288,7 +7348,7 @@ impl_set_prefix_local:
 1:	/* Prefix with a local variable. */
 #ifndef NDEBUG
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_localc(%ecx))
+	ASSERT_BELOW(%ax,co_localc(%ecx))
 #endif
 	movl   FRAME_FRAME, %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the prefixed object. */
@@ -7409,7 +7469,7 @@ impl_xch_prefix_static:
 	movl   FRAME_IP, %eax
 #endif
 	movzbl 1(%eax), %eax
-1:	ASSERT_BELOW(%eax,co_staticc(CODE_OR_ECX))
+1:	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 	movl   co_staticv(CODE_OR_ECX), %ecx
 	/* Exchange the static variable. */
 	ASSERT_NONZERO(%edx)
@@ -7424,7 +7484,7 @@ impl_xch_prefix16_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
 	movzwl 2(%eax), %eax
-	ASSERT_BELOW(%eax,mo_importc(%ecx))
+	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	movl   FRAME_IP, %eax
@@ -7434,7 +7494,7 @@ impl_xch_prefix_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
 	movzbl 1(%eax), %eax
-	ASSERT_BELOW(%eax,mo_importc(%ecx))
+	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	movl   FRAME_IP, %eax
@@ -7447,7 +7507,7 @@ impl_xch_prefix_global:
 	movzbl 1(%eax), %eax
 2:	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
-1:	ASSERT_BELOW(%eax,mo_globalc(%ecx))
+1:	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 	/* Prefix with an extern/global variable. */
 	pushl  %ecx /* Save the module for below. */
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
@@ -7497,7 +7557,7 @@ impl_xch_prefix_local:
 1:	/* Prefix with a local variable. */
 #ifndef NDEBUG
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_localc(%ecx))
+	ASSERT_BELOW(%ax,co_localc(%ecx))
 #endif
 	movl   FRAME_FRAME, %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the prefixed object. */
@@ -7616,7 +7676,7 @@ impl_get_prefix_static:
 	popl   %eax
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 #endif
-	ASSERT_BELOW(%eax,co_staticc(CODE_OR_ECX))
+	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 	movl   co_staticv(CODE_OR_ECX), %edx
 	movl   (%edx,%eax,4), %edx
 	ASSERT_NONZERO(%edx)
@@ -7629,7 +7689,7 @@ impl_get_prefix16_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
 	movzwl 2(%eax), %edx
-	ASSERT_BELOW(%edx,mo_importc(%ecx))
+	ASSERT_BELOW(%dx,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%edx,4), %ecx
 	movzwl 4(%eax), %eax
@@ -7638,7 +7698,7 @@ impl_get_prefix_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
 	movzbl 1(%eax), %edx
-	ASSERT_BELOW(%edx,mo_importc(%ecx))
+	ASSERT_BELOW(%dx,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%edx,4), %ecx
 	movzbl 2(%eax), %eax
@@ -7650,7 +7710,7 @@ impl_get_prefix_global:
 	movzbl 1(%eax), %eax
 2:	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
-1:	ASSERT_BELOW(%eax,mo_globalc(%ecx))
+1:	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 	/* Prefix with an extern/global variable. */
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
@@ -7687,7 +7747,7 @@ impl_get_prefix_local:
 1:	/* Prefix with a local variable. */
 #ifndef NDEBUG
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%eax,co_localc(%ecx))
+	ASSERT_BELOW(%ax,co_localc(%ecx))
 #endif
 	movl   FRAME_FRAME, %edx
 	movl   (%edx,%eax,4), %edx

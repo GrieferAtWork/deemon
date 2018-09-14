@@ -26,6 +26,7 @@
 function get_except_val(err) -> ({
 	try {
 		__stack local inner_stack = 7;
+		__asm__("" : "+x" (inner_stack)); /* Prevent optimizations */
 		try {
 			if (err !is none)
 				throw err;
