@@ -1669,7 +1669,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
     /* .tp_doc      = */"(string family, ...)\n"
                         "(int family, ...)\n"
                         "@param family The family of which this is a socket address. You may pass :none, an empty "
-                                      "string, ${\"AF_AUTO\"}, or ${-1} to determine the proper family automatically\n"
+                                      "string, $\"AF_AUTO\", or ${-1} to determine the proper family automatically\n"
                         "Create a new socket address. @{...} is documented below and depends on @family\n"
                         "Note that many functions from :socket also accept @{...} as arguments to various functions\n"
                         "\n"
@@ -1734,13 +1734,13 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
                         "\n"
 #endif /* AF_INET */
 #ifdef AF_UNIX
-                        "(${\"AF_UNIX\"}, string path)\n"
+                        "($\"AF_UNIX\", string path)\n"
                         "@throw ValueError The given @path is too long\n"
                         "Create a unix-pipe socket address using the given @path\n"
                         "\n"
 #endif /* AF_UNIX */
 #ifdef AF_NETLINK
-                        "(${\"AF_NETLINK\"}, int pid, int grops)\n"
+                        "($\"AF_NETLINK\", int pid, int grops)\n"
                         "\n"
 #endif /* AF_NETLINK */
                         "str()\n"

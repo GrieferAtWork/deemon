@@ -171,13 +171,12 @@ PRIVATE struct dex_symbol symbols[] = {
           "$\"bytes\"|Include raw text bytes in output\n"
           "$\"inner\"|Also print the code of inner assembly recursively\n"
           "$\"\"|Empty options are simply ignored}\n"
-          //"-${\"RAW\"}: Alias for ${\"ddi,except,no-jmparrow,no-depth,no-address,no-bytes\"}. "
-          //             "Used to direct the disassembler to produce output as close to what "
-          //             "user-defined input assembly may have looked like\n"
+          //"$\"RAW\": Alias for $\"ddi,except,no-jmparrow,no-depth,no-address,no-bytes\". "
+          //          "Used to direct the disassembler to produce output as close to what "
+          //          "user-defined input assembly may have looked like\n"
           "Any option may be prefixed with $\"n\" or $\"no-\" to disable that feature.\n"
           "The initial options state is identical to $\"no-ddi,except,jmparrow,"
-          "badcomment,argcomment,no-altcomment,depth,skipdelop,address,bytes,inner\""
-          ) },
+          "badcomment,argcomment,no-altcomment,depth,skipdelop,address,bytes,inner\"") },
     /* TODO: API for enumerate code instructions, analyzing & grouping their effect,
      *       as well as query available instructions by id, and by name. */
     { NULL }

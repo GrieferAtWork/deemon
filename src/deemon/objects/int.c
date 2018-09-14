@@ -2093,9 +2093,9 @@ PRIVATE struct type_method int_methods[] = {
           "character-options set @mode for which the following control "
           "characters are recognized\n"
           "%{table Option|Description\n"
-          "-${\"u\"}, ${\"X\"}|Digits above $10 are printed in upper-case\n"
-          "-${\"n\"}, ${\"#\"}|Prefix the integers with its number system prefix (e.g.: ${\"0x\"})\n"
-          "-${\"s\"}, ${\"+\"}|Also prepend a sign prefix before positive integers}"),
+          "$\"u\", $\"X\"|Digits above $10 are printed in upper-case\n"
+          "$\"n\", $\"#\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")\n"
+          "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
       TYPE_METHOD_FKWDS },
     { "hex", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_hex,
       DOC("->string\n"
@@ -2172,7 +2172,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
                             "@throw ValueError The given string @s is not a valid integer\n"
                             "@throw ValueError The given @radix is invalid\n"
                             "Convert the given :string or :bytes object @s into an integer\n"
-                            "When @radix is $0, automatically detect it based on a prefix such as ${\"0x\"}. "
+                            "When @radix is $0, automatically detect it based on a prefix such as $\"0x\". "
                             "Otherwise, use @radix as it is provided\n"
                             "\n"
                             "str->\n"

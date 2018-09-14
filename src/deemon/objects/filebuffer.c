@@ -1484,15 +1484,16 @@ err:
 
 PRIVATE struct type_method buffer_methods[] = {
     { "size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&buffer_size,
-      DOC("()->int\nForward to the $size function of the file being buffered") },
+      DOC("->int\n"
+          "Forward to the $size function of the file being buffered") },
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
     { "fileno", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&buffer_fileno,
-      DOC("()->int\n"
+      DOC("->int\n"
           "@throw AttributeError The file being buffered does not implement a member function $fileno\n"
           "Forward to the $fileno function of the file being buffered") },
 #endif
     { "isatty", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&buffer_isatty,
-      DOC("()->bool\n"
+      DOC("->bool\n"
           "Forward to the $isatty function of the file being buffered\n"
           "Note that in order to implement auto-buffering, file buffers are allowed to "
           "cache the return value of ${this.file.isatty()}, furthermore allowing this "
@@ -1500,29 +1501,29 @@ PRIVATE struct type_method buffer_methods[] = {
           "any side-effects caused by the underlying $isatty may not come into effect "
           "following repeated calls") },
     { "flush", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&buffer_flush,
-      DOC("()->none\nSimilar to #sync, but never synchronize the underlying file, regardless "
-          "of whether or not ${\"nosync\"} was passed to the constructor, or #setbuf") },
+      DOC("()\n"
+          "Similar to #sync, but never synchronize the underlying file, regardless "
+          "of whether or not $\"nosync\" was passed to the constructor, or #setbuf") },
     { "setbuf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&buffer_setbuf,
-      DOC("(string mode,int size=0)->none\n"
+      DOC("(string mode,int size=0)\n"
           "@throw ValueError The given @mode is malformed, or not recognized\n"
           "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
           "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
-          "the buffering mode is set to ${\"none\"}, otherwise a buffer size of $0 allows "
+          "the buffering mode is set to $\"none\", otherwise a buffer size of $0 allows "
           "the buffer to keep its buffer size implementation-defined, as well as allow it to "
           "dynamically change said size if doing so is deemed useful\n"
           "The given @mode must case-insensitively equal to one of the following:\n"
           "%{table Mode|Description\n"
-          "-${\"auto\"}|Automatically determine buffering, using line-buffering for TTY files, and full buffering for all others\n"
-          "-${\"full\"}|Use full buffering, only synchronizing the buffer when it becomes full\n"
-          "-${\"line\"}|Use line-buffering, automatically synchronizing the buffer whenever a linefeed is written\n"
-          "-${\"none\"}|Use no buffering at all when @size is ${0}, or use a fixed-length buffer of @size bytes. "
-                       "Note that even when the no buffer is allocated, the runtime guaranties "
-                       "that #ungetc can be used to return and re-read at least 1 byte\n"
-          "-${\"keep\"}|Keep using the old buffering model, but allow the buffer size to be changed}\n"
+          "$\"auto\"|Automatically determine buffering, using line-buffering for TTY files, and full buffering for all others\n"
+          "$\"full\"|Use full buffering, only synchronizing the buffer when it becomes full\n"
+          "$\"line\"|Use line-buffering, automatically synchronizing the buffer whenever a linefeed is written\n"
+          "$\"none\"|Use no buffering at all when @size is ${0}, or use a fixed-length buffer of @size bytes. "
+                    "Note that even when the no buffer is allocated, the runtime guaranties "
+                    "that #ungetc can be used to return and re-read at least 1 byte\n"
+          "$\"keep\"|Keep using the old buffering model, but allow the buffer size to be changed}\n"
           "Additionally, @mode may be prefixed with one or more of the following case-insensitive strings:\n"
           "%{table Prefix|Description\n"
-          "-${\"s\"}, ${\"s-\"}, ${\"s,\"}, ${\"sync,\"}|Also invoke #sync on the buffer's "
-                                                        "#file whenever the buffer is synced}") },
+          "$\"s\", $\"s-\", $\"s,\", $\"sync,\"|Also invoke #sync on @this buffer's #file whenever the buffer is synced}") },
     { NULL }
 };
 
@@ -1593,7 +1594,7 @@ buffer_class_sync(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_method buffer_class_methods[] = {
     { "sync", &buffer_class_sync,
-      DOC("()->none\n"
+      DOC("()\n"
           "Flush all buffers that are connected to TTY file descriptors\n"
           "This function is automatically called at the same time as :AppExit.atexit, "
           "as well as prior to any read operation on any other TTY buffer that might block") },
@@ -1610,24 +1611,24 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
                                 "@throw ValueError The given @mode is malformed, or not recognized\n"
                                 "Construct a new buffer for @fp using the given @mode and @size\n"
                                 "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
-                                "the buffering mode is set to ${\"none\"}. Otherwise a buffer size of $0 causes "
+                                "the buffering mode is set to $\"none\". Otherwise a buffer size of $0 causes "
                                 "the buffer to use an implementation-defined buffer size, as well as allow it to "
                                 "dynamically change said size if doing so is deemed useful\n"
                                 "The given @mode must case-insensitively equal to one of the following:\n"
                                 "%{table Mode|Description\n"
-                                "-${\"auto\"}|Automatically determine buffering, using line-buffering for TTY files, and full buffering for all others\n"
-                                "-${\"full\"}|Use full buffering, only synchronizing the buffer when it becomes full\n"
-                                "-${\"line\"}|Use line-buffering, automatically synchronizing the buffer whenever a linefeed is written\n"
-                                "-${\"none\"}|Use no buffering at all when @size is $0, or use a fixed-length buffer of @size bytes. "
-                                             "Note that even when the no buffer is allocated, the runtime guaranties "
-                                             "that #ungetc can be used to return and re-read at least 1 byte}\n"
+                                "$\"auto\"|Automatically determine buffering, using line-buffering for TTY files, and full buffering for all others\n"
+                                "$\"full\"|Use full buffering, only synchronizing the buffer when it becomes full\n"
+                                "$\"line\"|Use line-buffering, automatically synchronizing the buffer whenever a linefeed is written\n"
+                                "$\"none\"|Use no buffering at all when @size is $0, or use a fixed-length buffer of @size bytes. "
+                                          "Note that even when the no buffer is allocated, the runtime guaranties "
+                                          "that #ungetc can be used to return and re-read at least 1 byte}\n"
                                 "Additionally, @mode may be prefixed with one or more of the following case-insensitive strings:\n"
                                 "%{table Prefix|Description\n"
-                                "-${\"s\"}, ${\"s-\"}, ${\"s,\"}, ${\"sync,\"}|Also invoke #sync on the buffer's "
-                                                                              "#file whenever the buffer is synced\n"
-                                "-${\"c\"}, ${\"c-\"}, ${\"c,\"}, ${\"close,\"}|When the buffer is closed using ${operator close}, "
-                                                                               "also invoke that same operator on the contained file\n"
-                                "-${\"ro\"}, ${\"ro-\"}, ${\"ro,\"}, ${\"readonly,\"}|Disable write-access to the underlying @fp}\n"
+                                "$\"s\", $\"s-\", $\"s,\", $\"sync,\"|Also invoke #sync on the buffer's "
+                                                                     "#file whenever the buffer is synced\n"
+                                "$\"c\", $\"c-\", $\"c,\", $\"close,\"|When the buffer is closed using ${operator close}, "
+                                                                      "also invoke that same operator on the contained file\n"
+                                "$\"ro\", $\"ro-\", $\"ro,\", $\"readonly,\"|Disable write-access to the underlying @fp}\n"
                                 ">import file from deemon;\n"
                                 ">local base_fp = file.open(\"foo.txt\",\"rdonly,nobuf\"); /* Open without buffering */\n"
                                 ">local fp = file.buffer(base_fp,\"sync,full\"); /* Create a buffer wrapper */\n"

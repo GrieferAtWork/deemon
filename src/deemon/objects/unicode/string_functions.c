@@ -8578,7 +8578,7 @@ INTERN struct type_method string_methods[] = {
           "but used to highlight association:\n"
           "%{table Sub-expression|Description\n"
           "$\"42\"|Evaluates to ${int(42)}\n"
-          "$\"foobar\"|Evaluates to ${\"foobar\"}\n"
+          "$\"foobar\"|Evaluates to $\"foobar\"\n"
           "$\"{x}\"|Evaluates to the object selected by another selection expression $x}\n"
           "Once an object to-be formatted has been selected, the way in which it should "
           "then be formatted can be altered through use of spec string portion\n"

@@ -1160,10 +1160,10 @@ PRIVATE struct dex_symbol symbols[] = {
           "${operator()} while assing an internal progress decriptor object implementing "
           "the following functions:\n"
           "%{table Function name|Behavior\n"
-          "-${operator float}|Returns the overall progress as a floating-point value between ${0.0} and ${1.0}\n"
-          "-${member siz -> int}|The total number of bytes that must be copied\n"
-          "-${member cur -> int}|The total number of bytes already copied\n"
-          "-${member rem -> int}|The total number of bytes that must still be copied}\n"
+          "${operator float}|Returns the overall progress as a floating-point value between ${0.0} and ${1.0}\n"
+          "${member siz -> int}|The total number of bytes that must be copied\n"
+          "${member cur -> int}|The total number of bytes already copied\n"
+          "${member rem -> int}|The total number of bytes that must still be copied}\n"
           "The callback may throw an error to abort the copy operation, which is then "
           "propagated after the partially copied file may have been deleted, based on "
           "the host operating system's preferrance") },
@@ -1256,14 +1256,14 @@ PRIVATE struct dex_symbol symbols[] = {
           ">print fileof(\"C:/foo/bar.txt\"); /* \"bar\" */") },
     { "extof", (DeeObject *)&libfs_extof, MODSYM_FNORMAL,
       DOC("(string path)->string\n"
-          "@return The extension of a path, including the leading ${\".\"} character\n"
+          "@return The extension of a path, including the leading $\".\" character\n"
           ">import extof from fs;\n"
           ">print extof(\"bar.txt\");        /* \".txt\" */\n"
           ">print extof(\"/foo/bar.txt\");   /* \".txt\" */\n"
           ">print extof(\"C:/foo/bar.txt\"); /* \".txt\" */") },
     { "driveof", (DeeObject *)&libfs_driveof, MODSYM_FNORMAL,
       DOC("(string path)->string\n"
-          "@return The drive portion of an absolute path on windows, or ${\"/\"} on other platforms\n"
+          "@return The drive portion of an absolute path on windows, or $\"/\" on other platforms\n"
           ">import driveof from fs;\n"
           ">print driveof(\"bar.txt\");        /* \"\" or \"/\" */\n"
           ">print driveof(\"/foo/bar.txt\");   /* \"\" or \"/\" */\n"
@@ -1309,7 +1309,7 @@ PRIVATE struct dex_symbol symbols[] = {
     { "issep", (DeeObject *)&libfs_issep, MODSYM_FNORMAL,
       DOC("(string str)->bool\n"
           "Returns :true if the given @str is recognized as a path "
-          "seperator (Usually ${\"/\"} and/or ${\"\\\"})\n"
+          "seperator (Usually $\"/\" and/or $\"\\\")\n"
           "The host's primary and secondary seperator "
           "values can be read from #SEP and #ALTSEP")  },
     { "joinpath", (DeeObject *)&libfs_joinpath, MODSYM_FNORMAL,
@@ -1324,39 +1324,39 @@ PRIVATE struct dex_symbol symbols[] = {
           "@interrupt\n"
           "@param env A dict-style mapping used to resolve variable names. Defaults to :environ\n"
           "@throw ValueError The given @options string contains unrecognized options\n"
-          "@throw ValueError An unknown environment variable was accessed and ${\"f\"} isn't part of @options\n"
+          "@throw ValueError An unknown environment variable was accessed and $\"f\" isn't part of @options\n"
           "Expand parts of the given @path, according to @options which is either an "
           "implementation-specific bitset, or a sequence of the following option characters:\n"
           "%{table Name|Behavior\n"
-          "-${\"h\"}|Expand ${\"~\"} and ${\"~<nam>\"} to the return value of ${user([<nam>]).home()}\n"
-          "-${\"v\"}|Expand ${\"$<nam>\"} and ${\"${<nam>}\"} to ${env[nam]}\n"
-          "-${\"V\"}|Expand ${\"%<nam>%\"} to ${env[nam]}\n"
-          "-${\"p\"}|Expand ${\".\"} and ${\"..\"} folders names while also deleting multiple consecutive "
-                    "slashes, as well as all whitespace surrounding them. On hosts with an #ALTSEP differing "
-                    "from #SEP, all occurrances of #ALTSEP are also replaced with #SEP. "
-                    "This option, alongside ${\"c\"} and ${\"a\"} should be used before a path-string can be considered "
-                    "uniform and suitable to be used as key in a hash-table used for mapping files to objects. "
-                    "Note that the deemon core uses an option similar to this to implement the mapping "
-                    "between modules and their associated files\n"
-          "-${\"a\"}|Force the returned path to be absolute in relation to #getcwd\n"
-          "-${\"r\"}|Force the returned path to be relative to #getcwd (Overrules ${\"a\"})\n"
-          "-${\"c\"}|When the host filesystem is case-insensitive, force all case-sensitive parts into a "
-                    "uniform casing. If the host's filesystem isn't case-sensitive, this flag is ignored\n"
-          "-${\"f\"}|When used with ${\"h\"}, ${\"v\"} or ${\"V\"}, handle errors "
-                    "for unknown environment variables or :{KeyError}s when accessing "
-                    "@env, or a failure to determine the user's home directory "
-                    "by not expanding that part of the path}\n"
+          "$\"h\"|Expand $\"~\" and $\"~<nam>\" to the return value of ${user([<nam>]).home()}\n"
+          "$\"v\"|Expand $\"$<nam>\" and $\"${<nam>}\" to ${env[nam]}\n"
+          "$\"V\"|Expand $\"%<nam>%\" to ${env[nam]}\n"
+          "$\"p\"|Expand $\".\" and $\"..\" folders names while also deleting multiple consecutive "
+                 "slashes, as well as all whitespace surrounding them. On hosts with an #ALTSEP differing "
+                 "from #SEP, all occurrances of #ALTSEP are also replaced with #SEP. "
+                 "This option, alongside $\"c\" and $\"a\" should be used before a path-string can be considered "
+                 "uniform and suitable to be used as key in a hash-table used for mapping files to objects. "
+                 "Note that the deemon core uses an option similar to this to implement the mapping "
+                 "between modules and their associated files\n"
+          "$\"a\"|Force the returned path to be absolute in relation to #getcwd\n"
+          "$\"r\"|Force the returned path to be relative to #getcwd (Overrules $\"a\")\n"
+          "$\"c\"|When the host filesystem is case-insensitive, force all case-sensitive parts into a "
+                 "uniform casing. If the host's filesystem isn't case-sensitive, this flag is ignored\n"
+          "$\"f\"|When used with $\"h\", $\"v\" or $\"V\", handle errors "
+                 "for unknown environment variables or :{KeyError}s when accessing "
+                 "@env, or a failure to determine the user's home directory "
+                 "by not expanding that part of the path}\n"
           "Passing the same option more than once is allowed and simply ignored")  },
     { "SEP", (DeeObject *)&libfs_sep, MODSYM_FNORMAL,
       DOC("->string\n"
           "The host's primary path seperator. On windows that is "
-          "${\"\\\"} while on most other hosts it is ${\"/\"}\n"
+          "$\"\\\" while on most other hosts it is $\"/\"\n"
           "If supported by the host, an alternative seperator can be read from #ALTSEP\n"
           "Additionally, a string can be testing for being a seperator by calling #issep") },
     { "ALTSEP", (DeeObject *)&libfs_sep, MODSYM_FNORMAL,
       DOC("->string\n"
-          "The alternative path seperator or an alias for #SEP if "
-          "the host only supports a single type of seperator") },
+          "The alternative path seperator or an alias for #SEP "
+          "if the host only supports a single type of seperator") },
     { "DELIM", (DeeObject *)&libfs_delim, MODSYM_FNORMAL,
       DOC("->string\n"
           "A string used to delimit individual paths in path-listings often "
@@ -1410,8 +1410,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw AccessError You don't have permissions to change the attributes\n"
           "@throw ReadOnly The filesystem hosting @path is read-only\n"
           "@throw SystemError Failed to change attributes for some reason\n"
-          "Non-portable extension for changing the file attributes used by windows")
-    },
+          "Non-portable extension for changing the file attributes used by windows") },
 #endif /* CONFIG_HOST_WINDOWS */
     { NULL }
 };
