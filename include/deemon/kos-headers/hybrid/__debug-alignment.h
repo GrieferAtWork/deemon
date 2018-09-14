@@ -72,6 +72,9 @@ __NAMESPACE_INT_END
     !defined(__KOS_SYSTEM_HEADERS__)
 /* C's string functions aren't alignment-safe, so we override them here! */
 #include <string.h>
+#ifdef _MSC_VER
+#include <wchar.h>
+#endif
 __NAMESPACE_INT_BEGIN
 __SYSDECL_BEGIN
 __LOCAL void *
