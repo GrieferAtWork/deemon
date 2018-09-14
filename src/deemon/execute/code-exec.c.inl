@@ -4149,7 +4149,18 @@ do_setattr_this_c:
          imm_val = READ_imm16();
          goto do_push_module;
      }
-
+     TARGET(ASM_CLASS,-2,+1) {
+         DREF DeeTypeObject *new_class;
+         if (DeeObject_AssertTypeExact(TOP,&DeeClassDescriptor_Type))
+             HANDLE_EXCEPT();
+         new_class = DeeClass_New((DeeTypeObject *)SECOND,TOP);
+         if unlikely(!new_class)
+            HANDLE_EXCEPT();
+         POPREF();
+         Dee_Decref(TOP);
+         TOP = (DREF DeeObject *)new_class; /* Inherit reference. */
+         DISPATCH();
+     }
      TARGET(ASM16_CLASS_C,-1,+1) {
          imm_val = READ_imm16();
          goto do_class_c;

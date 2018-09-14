@@ -4630,14 +4630,17 @@ print_single_expr:
    first_flag = false;
   }
   if (self->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
+   if (!first_flag) PUTC(',');
    PRINT("varargs");
    first_flag = false;
   }
   if (self->a_operator.o_exflag & AST_OPERATOR_FMAYBEPFX) {
+   if (!first_flag) PUTC(',');
    PRINT("maybeprefix");
    first_flag = false;
   }
   if (self->a_operator.o_exflag & AST_OPERATOR_FDONTOPT) {
+   if (!first_flag) PUTC(',');
    PRINT("dontoptimize");
    first_flag = false;
   }

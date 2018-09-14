@@ -352,6 +352,8 @@ INTDEF int DCALL DeeSeq_RRemove(DeeObject *__restrict self, size_t start, size_t
 INTDEF size_t DCALL DeeSeq_RemoveAll(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
 INTDEF size_t DCALL DeeSeq_RemoveIf(DeeObject *__restrict self, DeeObject *__restrict should, size_t start, size_t end);
 INTDEF size_t DCALL DeeSeq_Fill(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict value);
+INTDEF int DCALL DeeSeq_Reverse(DeeObject *__restrict self);
+INTDEF int DCALL DeeSeq_Sort(DeeObject *__restrict self, DeeObject *pred_lo);
 
 /* Determine if a given sequence is mutable or resizable.
  * @return: 1:  The sequence is mutable or resizable.
@@ -575,19 +577,6 @@ DFUNDEF /*owned(Dee_Free)*/DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              size_t *__restrict plength,
                              size_t *__restrict pallocated);
-
-
-
-
-#ifdef CONFIG_BUILDING_DEEMON
-INTDEF struct keyword seq_insert_kwlist[];
-INTDEF struct keyword seq_insertall_kwlist[];
-INTDEF struct keyword seq_erase_kwlist[];
-INTDEF struct keyword seq_xch_kwlist[];
-INTDEF struct keyword seq_removeif_kwlist[];
-INTDEF struct keyword seq_pop_kwlist[];
-INTDEF struct keyword seq_resize_kwlist[];
-#endif /* CONFIG_BUILDING_DEEMON */
 
 
 DECL_END

@@ -116,10 +116,10 @@ function fix_path(rel_prefix,filename) {
 	while (argv) {
 		local arg = argv.pop(0);
 		switch (arg) {
-		case "--":
-			kernel_args = argv;
-			argv = [];
-			break;
+		//case "--":
+		//	kernel_args = argv;
+		//	argv = [];
+		//	break;
 		case "--no-auto-target":
 			do_auto_target = false;
 			break;
@@ -151,9 +151,9 @@ function fix_path(rel_prefix,filename) {
 		case "--force":
 			config_force_compile = true;
 			break;
-		case "--build-only":
-			config_start_qemu = false;
-			break;
+		//case "--build-only":
+		//	config_start_qemu = false;
+		//	break;
 		default:
 			if (!arg.startswith("-")) {
 				/* Define configuration options. */
@@ -484,7 +484,7 @@ function files(text,def_file) {
 				throw Error("Configure options cannot be used with wildcards");
 			}
 			try {
-				head = fs.path.head(text);
+				local head = fs.path.head(text);
 				for (local q: fs.query(text)) {
 					yield head+q;
 				}
@@ -547,7 +547,9 @@ function expand_options(text) {
 		} else {
 			do
 				end = end+1;
-			while (end < #text && text[end].isalnum());
+			while (end < #text &&
+				(text[end].isalnum() ||
+				 text[end] in ["_"]));
 		}
 		local replace = text[start+1:end];
 		if (replace.startswith("{"))

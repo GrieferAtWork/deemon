@@ -1234,17 +1234,22 @@ PRIVATE DREF DeeObject *DCALL
 seq_reversed(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":reversed"))
-     return NULL;
+     goto err;
  return DeeSeq_Reversed(self);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_sorted(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *pred = NULL;
  if (DeeArg_Unpack(argc,argv,"|o:sorted",&pred))
-     return NULL;
- if (DeeNone_Check(pred)) pred = NULL;
+     goto err;
+ if (DeeNone_Check(pred))
+     pred = NULL;
  return DeeSeq_Sorted(self,pred);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_segments(DeeObject *__restrict self,
@@ -1252,11 +1257,11 @@ seq_segments(DeeObject *__restrict self,
  size_t segsize;
  if (DeeArg_Unpack(argc,argv,"Iu:segments",&segsize))
      goto err;
- if unlikely(!segsize) {
-  err_invalid_segment_size(segsize);
-  goto err;
- }
+ if unlikely(!segsize)
+    goto err_invalid_segsize;
  return DeeSeq_Segments(self,segsize);
+err_invalid_segsize:
+ err_invalid_segment_size(segsize);
 err:
  return NULL;
 }
@@ -1266,10 +1271,8 @@ seq_distribute(DeeObject *__restrict self,
  size_t segsize,mylen;
  if (DeeArg_Unpack(argc,argv,"Iu:distribute",&segsize))
      goto err;
- if unlikely(!segsize) {
-  err_invalid_distribution_count(segsize);
-  goto err;
- }
+ if unlikely(!segsize)
+    goto err_invalid_segsize;
  mylen = DeeObject_Size(self);
  if unlikely(mylen == (size_t)-1) goto err;
  mylen += segsize - 1;
@@ -1277,6 +1280,8 @@ seq_distribute(DeeObject *__restrict self,
  if unlikely(!mylen)
     return_empty_seq;
  return DeeSeq_Segments(self,mylen);
+err_invalid_segsize:
+ err_invalid_distribution_count(segsize);
 err:
  return NULL;
 }
@@ -1321,8 +1326,9 @@ PRIVATE DREF DeeObject *DCALL
 seq_insert(DeeObject *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
  size_t index; DeeObject *item;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_insert_kwlist,"Iuo:insert",&index,&item) ||
-     DeeSeq_Insert(self,index,item))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_insert_kwlist,"Iuo:insert",&index,&item))
+     goto err;
+ if (DeeSeq_Insert(self,index,item))
      goto err;
  return_none;
 err:
@@ -1334,8 +1340,9 @@ PRIVATE DREF DeeObject *DCALL
 seq_insertall(DeeObject *__restrict self, size_t argc,
               DeeObject **__restrict argv, DeeObject *kw) {
  size_t index; DeeObject *items;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_insertall_kwlist,"Iuo:insertall",&index,&items) ||
-     DeeSeq_InsertAll(self,index,items))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_insertall_kwlist,"Iuo:insertall",&index,&items))
+     goto err;
+ if (DeeSeq_InsertAll(self,index,items))
      goto err;
  return_none;
 err:
@@ -1423,8 +1430,9 @@ PRIVATE DREF DeeObject *DCALL
 seq_append(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *obj;
- if (DeeArg_Unpack(argc,argv,"o:append",&obj) ||
-     DeeSeq_Append(self,obj))
+ if (DeeArg_Unpack(argc,argv,"o:append",&obj))
+     goto err;
+ if (DeeSeq_Append(self,obj))
      goto err;
  return_none;
 err:
@@ -1434,8 +1442,9 @@ PRIVATE DREF DeeObject *DCALL
 seq_extend(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *values;
- if (DeeArg_Unpack(argc,argv,"o:extend",&values) ||
-     DeeSeq_Extend(self,values))
+ if (DeeArg_Unpack(argc,argv,"o:extend",&values))
+     goto err;
+ if (DeeSeq_Extend(self,values))
      goto err;
  return_none;
 err:
@@ -1502,10 +1511,13 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_clear(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":clear") ||
-     DeeObject_SetRange(self,Dee_None,Dee_None,Dee_None))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,":clear"))
+     goto err;
+ if (DeeObject_SetRange(self,Dee_None,Dee_None,Dee_None))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1560,6 +1572,32 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeObject *DCALL
+seq_reverse(DeeObject *__restrict self,
+            size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":reverse"))
+     goto err;
+ if (DeeSeq_Reverse(self))
+     goto err;
+ return_none;
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+seq_sort(DeeObject *__restrict self,
+         size_t argc, DeeObject **__restrict argv) {
+ DeeObject *pred = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:sort",&pred))
+     goto err;
+ if (DeeNone_Check(pred))
+     pred = NULL;
+ if (DeeSeq_Sort(self,pred))
+     goto err;
+ return_none;
+err:
+ return NULL;
+}
+
 
 INTERN struct type_method seq_methods[] = {
     { "empty", &seq_empty,
@@ -1569,7 +1607,7 @@ INTERN struct type_method seq_methods[] = {
           ">function empty() {\n"
           "> import sequence from deemon;\n"
           "> return !(this as sequence).operator bool();\n"
-          ">}\n") },
+          ">}") },
     { "nonempty", &seq_nonempty,
       DOC("->bool\n"
           "Returns :true if @this sequence is non-empty\n"
@@ -1577,7 +1615,7 @@ INTERN struct type_method seq_methods[] = {
           ">function nonempty() {\n"
           "> import sequence from deemon;\n"
           "> return (this as sequence).operator bool();\n"
-          ">}\n") },
+          ">}") },
     { "reduce", &seq_reduce,
       DOC("(callable merger)->object\n"
           "(callable merger,init)->object\n"
@@ -1598,7 +1636,7 @@ INTERN struct type_method seq_methods[] = {
           "> if (init is bound)\n"
           ">  return init;\n"
           "> return none;\n"
-          ">}\n") },
+          ">}") },
     { "filter", &seq_filter,
       DOC("(callable pred_keep)->sequence\n"
           "@param pred_keep A predicate which is called for each element of @this sequence"
@@ -1608,7 +1646,7 @@ INTERN struct type_method seq_methods[] = {
           "> for (local x: this)\n"
           ">  if (pred_keep(x))\n"
           ">   yield x;\n"
-          ">}\n") },
+          ">}") },
     { "sum", &seq_sum,
       DOC("->object\nReturns the sum of all elements, or :none if the sequence is empty\n"
           "This, alongside :string.join is the preferred way of merging lists of strings "
@@ -1623,8 +1661,7 @@ INTERN struct type_method seq_methods[] = {
           ">  }\n"
           "> }\n"
           "> return result is bound ? result : none;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { "any", &seq_any,
       DOC("->bool\n"
           "Returns :true if any element of @this sequence evaluates to :{true}\n"
@@ -1635,8 +1672,7 @@ INTERN struct type_method seq_methods[] = {
           ">  if (x)\n"
           ">   return true;\n"
           "> return false;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { "all", &seq_all,
       DOC("->bool\n"
           "Returns :true if all elements of @this sequence evaluate to :{true}\n"
@@ -1647,8 +1683,7 @@ INTERN struct type_method seq_methods[] = {
           ">  if (!x)\n"
           ">   return false;\n"
           "> return true;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { "parity", &seq_parity,
       DOC("->bool\n"
           "Returns :true or :false indicative of the parity of sequence elements that are :true\n"
@@ -1660,8 +1695,7 @@ INTERN struct type_method seq_methods[] = {
           ">  if (x)\n"
           ">   result = !result;\n"
           "> return result;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { "min", &seq_min,
       DOC("(callable pred_lo=none)->object\n"
           "@param pred_lo A predicate for comparing 2 objects for lower_than\n"
@@ -1723,8 +1757,7 @@ INTERN struct type_method seq_methods[] = {
           ">  }\n"
           "> }\n"
           "> return result;\n"
-          ">}"
-          ) },
+          ">}") },
     { "locate", &seq_locate,
       DOC("(elem,callable pred_eq=none)->object\n"
           "@param elem The element to search for\n"
@@ -1765,8 +1798,7 @@ INTERN struct type_method seq_methods[] = {
           "> if (result is bound)\n"
           ">  return result;\n"
           "> throw Error.ValueError(\"Item not found...\")\n"
-          ">}\n"
-          ) },
+          ">}") },
     /* TODO: findall(elem,callable pred_eq=none) -> {int...} */
     { "locateall", &seq_locateall,
       DOC("(elem,callable pred_eq=none)->sequence\n"
@@ -1808,8 +1840,7 @@ INTERN struct type_method seq_methods[] = {
           ">   return true;\n"
           "> }\n"
           "> return false;\n"
-          ">}"
-          ) },
+          ">}") },
     { "startswith", &seq_startswith,
       DOC("(elem,callable pred_eq=none)->bool\n"
           "@param elem The element to compare against\n"
@@ -1895,8 +1926,7 @@ INTERN struct type_method seq_methods[] = {
           ">  ++index;\n"
           "> }\n"
           "> return -1;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { "rfind", &seq_rfind,
       DOC("(elem,callable pred_eq=none)->int\n"
           "(elem,int start,callable pred_eq=none)->int\n"
@@ -1975,8 +2005,7 @@ INTERN struct type_method seq_methods[] = {
           ">  ++index;\n"
           "> }\n"
           "> return result;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { "index", &seq_index,
       DOC("(elem,callable pred_eq=none)->int\n"
           "(elem,int start,callable pred_eq=none)->int\n"
@@ -2477,8 +2506,7 @@ INTERN struct type_method seq_methods[] = {
           ">  return true;\n"
           "> }\n"
           "> return false;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { DeeString_STR(&str_rremove), &seq_rremove,
       DOC("(elem,callable pred_eq=none)->bool\n"
           "(elem,int start,callable pred_eq=none)->bool\n"
@@ -2553,8 +2581,7 @@ INTERN struct type_method seq_methods[] = {
           ">  } while (i > start);\n"
           "> }\n"
           "> return false;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { DeeString_STR(&str_removeall), &seq_removeall,
       DOC("(elem,callable pred_eq=none)->int\n"
           "(elem,int start,callable pred_eq=none)->int\n"
@@ -2661,8 +2688,7 @@ INTERN struct type_method seq_methods[] = {
           ">  } while (i > start);\n"
           "> }\n"
           "> return count;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { DeeString_STR(&str_removeif),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_removeif,
       DOC("(callable should,int start=0,int end=-1)->int\n"
@@ -2754,7 +2780,7 @@ INTERN struct type_method seq_methods[] = {
           ">  } while (i > start);\n"
           "> }\n"
           "> return count;\n"
-          ">}\n"),
+          ">}"),
       TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_clear),
      &seq_clear,
@@ -2765,8 +2791,7 @@ INTERN struct type_method seq_methods[] = {
           "this function as follows (s.a. #op:setrange):\n"
           ">function clear() {\n"
           "> this[:] = none;\n"
-          ">}\n"
-          ) },
+          ">}") },
     { DeeString_STR(&str_resize),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_resize,
       DOC("(int newsize,filler=none)\n"
@@ -2788,8 +2813,7 @@ INTERN struct type_method seq_methods[] = {
           ">   this.extend(sequence.repeat(filler,newsize-oldsize));\n"
           ">  }\n"
           "> }\n"
-          ">}\n"
-          ),
+          ">}"),
       TYPE_METHOD_FKWDS },
     { "fill",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_fill,
@@ -2820,9 +2844,26 @@ INTERN struct type_method seq_methods[] = {
           "> for (local i = start; i < end; ++i)\n"
           ">  this[i] = filler;\n"
           "> return end - start;\n"
-          ">}\n"
-          ),
+          ">}"),
       TYPE_METHOD_FKWDS },
+    { "reverse", &seq_reverse,
+      DOC("()\n"
+          "@throw SequenceError @this sequence is immutable\n"
+          "For mutable sequences only: Reverse the order of all elements\n"
+          "When not implemented by a sub-class, :sequence implements "
+          "this function as follows (s.a. #op:assign):\n"
+          ">function reverse() {\n"
+          "> this := (this as sequence from deemon).reversed();\n"
+          ">}") },
+    { "sort", &seq_sort,
+      DOC("(callable pred_lo=none)\n"
+          "@throw SequenceError @this sequence is immutable\n"
+          "For mutable sequences only: Sort the elements of @this sequence\n"
+          "When not implemented by a sub-class, :sequence implements "
+          "this function as follows (s.a. #op:assign):\n"
+          ">function sort(pred_lo = none) {\n"
+          "> this := (this as sequence from deemon).sorted(pred_lo);\n"
+          ">}") },
 
 
     /* Old function names/deprecated functions. */
@@ -2871,30 +2912,42 @@ seq_set_first(DeeObject *__restrict self, DeeObject *__restrict value) {
 PRIVATE int DCALL
 seq_del_last(DeeObject *__restrict self) {
  size_t mylen = DeeObject_Size(self);
- if unlikely(mylen == (size_t)-1) return -1;
- if unlikely(!mylen) return err_empty_sequence(self);
+ if unlikely(mylen == (size_t)-1) goto err;
+ if unlikely(!mylen) goto err_empty;
  return DeeObject_DelItemIndex(self,mylen-1);
+err_empty:
+ err_empty_sequence(self);
+err:
+ return -1;
 }
 PRIVATE int DCALL
 seq_set_last(DeeObject *__restrict self, DeeObject *__restrict value) {
  size_t mylen = DeeObject_Size(self);
- if unlikely(mylen == (size_t)-1) return -1;
- if unlikely(!mylen) return err_empty_sequence(self);
+ if unlikely(mylen == (size_t)-1) goto err;
+ if unlikely(!mylen) goto err_empty;
  return DeeObject_SetItemIndex(self,mylen-1,value);
+err_empty:
+ err_empty_sequence(self);
+err:
+ return -1;
 }
 
 
 PRIVATE DREF DeeObject *DCALL
 seq_get_ismutable(DeeObject *__restrict self) {
  int result = DeeSeq_IsMutable(self);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0) goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_get_isresizable(DeeObject *__restrict self) {
  int result = DeeSeq_IsResizable(self);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0) goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
 
 
@@ -2945,8 +2998,7 @@ PRIVATE struct type_getset seq_getsets[] = {
           ">   throw Error.ValueError(\"Empty sequence...\");\n"
           ">  }\n"
           "> }\n"
-          ">}\n"
-          ) },
+          ">}") },
     { DeeString_STR(&str_last),
       &DeeSeq_Back,
       &seq_del_last,
@@ -2994,8 +3046,7 @@ PRIVATE struct type_getset seq_getsets[] = {
           ">   throw Error.ValueError(\"Empty sequence...\");\n"
           ">  return result;\n"
           "> }\n"
-          ">}\n"
-          ) },
+          ">}") },
     { "ismutable", &seq_get_ismutable, NULL, NULL,
       DOC("->bool\n"
           "Try to determine if @this sequence is mutable by looking at operators and "
@@ -3044,16 +3095,20 @@ seq_class_repeat(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *obj; size_t count;
  if (DeeArg_Unpack(argc,argv,"oIu:repeat",&obj,&count))
-     return NULL;
+     goto err;
  return DeeSeq_RepeatItem(obj,count);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_class_repeatseq(DeeObject *__restrict UNUSED(self),
                     size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq; size_t count;
  if (DeeArg_Unpack(argc,argv,"oIu:repeatseq",&seq,&count))
-     return NULL;
+     goto err;
  return DeeSeq_Repeat(seq,count);
+err:
+ return NULL;
 }
 
 INTDEF DeeTypeObject DeeCat_Type;
@@ -3667,9 +3722,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             ">  }\n"
                             "> }\n"
                             "> throw Error.ValueError.SequenceError(\"Immutable sequence\");\n"
-                            ">}\n"
-                            "\n"
-                            ),
+                            ">}"),
     /* .tp_flags    = */TP_FNORMAL|TP_FABSTRACT|TP_FNAMEOBJECT, /* Generic base class type. */
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -3922,14 +3975,12 @@ iterator_next(DeeObject *__restrict self,
 
 PRIVATE struct type_method iterator_methods[] = {
     { "next", &iterator_next,
-      DOC("()->object\n"
+      DOC("->object\n"
           "(object defl)->object\n"
           "@throw StopIteration @this iterator has been exhausted, and no @decl was given\n"
           "Same as ${this.operator next()}\n"
           "When given, @defl is returned when the iterator has been "
-          "exhaused, rather than throwing a :StopIteration error\n"
-          ""
-          ) },
+          "exhaused, rather than throwing a :StopIteration error") },
     { NULL }
 };
 
@@ -3963,8 +4014,7 @@ PRIVATE struct type_getset iterator_getsets[] = {
           ">local it = x.operator iter();\n"
           ">print repr it.future;     /* { 10, 20, 30 } */\n"
           ">print it.operator next(); /* 10 */\n"
-          ">print repr it.future;     /* { 20, 30 } */\n")
-    },
+          ">print repr it.future;     /* { 20, 30 } */") },
     { "pending", &IteratorPending_For, NULL, NULL,
       DOC("->sequence\n"
           "Very similar to #future, however the when invoking ${operator iter} on "
@@ -3978,9 +4028,7 @@ PRIVATE struct type_getset iterator_getsets[] = {
           ">/* ERROR: Signal.StopIteration.\n"
           "> *        The `repr' used the same iterator,\n"
           "> *        which consumed all remaining items */\n"
-          ">print it.operator next();"
-          )
-    },
+          ">print it.operator next();") },
     { NULL }
 };
 
@@ -4179,9 +4227,11 @@ PRIVATE int DCALL
 if_init(IteratorFuture *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"o:_iteratorfuture",&self->if_iter))
-     return -1;
+     goto err;
  Dee_Incref(self->if_iter);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -4298,9 +4348,11 @@ PRIVATE int DCALL
 ip_init(IteratorPending *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"o:_iteratorpending",&self->ip_iter))
-     return -1;
+     goto err;
  Dee_Incref(self->ip_iter);
  return 0;
+err:
+ return -1;
 }
 
 #define ip_bool  if_bool

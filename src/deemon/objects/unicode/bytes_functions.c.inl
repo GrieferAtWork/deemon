@@ -3603,7 +3603,7 @@ INTERN struct type_method bytes_methods[] = {
           "(int index,object defl)->object\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
-          "Same as #asnumber, but only succeed if the selected character matches #isdigit, rather than #isnumeric\n") },
+          "Same as #asnumber, but only succeed if the selected character matches #isdigit, rather than #isnumeric") },
     { "asdecimal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_asdecimal,
       DOC("->int\n"
           "@throw ValueError The string is longer than a single character\n"
@@ -3613,7 +3613,7 @@ INTERN struct type_method bytes_methods[] = {
           "(int index,object defl)->object\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
-          "Same as #asnumber, but only succeed if the selected character matches #isdecimal, rather than #isnumeric\n") },
+          "Same as #asnumber, but only succeed if the selected character matches #isdecimal, rather than #isnumeric") },
 
     { "isanyprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanyprint,
       DOC("(int start=0,int end=-1)->bool\n"
@@ -3840,7 +3840,7 @@ INTERN struct type_method bytes_methods[] = {
       DOC("(int start=0,int end=-1)->bytes\n"
           "Similar to ${this[start:end]}, and semantically equialent to :string.substr\n"
           "This function can be used to view a sub-set of bytes from @this bytes object\n"
-          "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object\n") },
+          "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object") },
     { "strip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_strip,
       DOC("->bytes\n"
           "(string mask)->bytes\n"
@@ -3871,7 +3871,7 @@ INTERN struct type_method bytes_methods[] = {
           ">while (result.startswith(other))\n"
           "> result = result[#other:];\n"
           ">while (result.endswith(other))\n"
-          "> result = result[:#result-#other];\n") },
+          "> result = result[:#result-#other];") },
     { "lsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lsstrip,
       DOC("(string other)->bytes\n"
           "(bytes other)->bytes\n"
@@ -3879,7 +3879,7 @@ INTERN struct type_method bytes_methods[] = {
           "Strip all leading instances of @other from @this string\n"
           ">local result = this;\n"
           ">while (result.startswith(other))\n"
-          "> result = result[#other:];\n") },
+          "> result = result[#other:];") },
     { "rsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rsstrip,
       DOC("(string other)->bytes\n"
           "(bytes other)->bytes\n"
@@ -3887,7 +3887,7 @@ INTERN struct type_method bytes_methods[] = {
           "Strip all trailing instances of @other from @this string\n"
           ">local result = this;\n"
           ">while (result.endswith(other))\n"
-          "> result = result[:#result-#other];\n") },
+          "> result = result[:#result-#other];") },
     { "startswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_startswith,
       DOC("(string needle,int start=0,int end=-1)->bool\n"
           "(bytes needle,int start=0,int end=-1)->bool\n"
@@ -4238,7 +4238,7 @@ INTERN struct type_method bytes_methods[] = {
           "Using @this bytes object as result, insert @filler at the front, as well as after "
           "every ascii-linefeed with the exception of one that may be located at its end\n"
           "The inteded use is for generating strings from structured data, such as HTML:\n"
-          ">text = \"<html>\n{}\n</html>\".format({ get_html_bytes().strip().indent() });\n") },
+          ">text = \"<html>\n{}\n</html>\".format({ get_html_bytes().strip().indent() });") },
     { "dedent", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_dedent,
       DOC("(int max_chars=1)->bytes\n"
           "(int max_chars=1,string mask)->bytes\n"

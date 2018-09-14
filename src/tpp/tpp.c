@@ -276,9 +276,9 @@ extern void __debugbreak(void);
 #elif (defined(__i386__) || defined(__i386) || defined(i386) || \
        defined(__x86_64__)) && (defined(__GNUC__) || defined(__DCC_VERSION__))
 #ifdef __XBLOCK
-#define TPP_BREAKPOINT() __XBLOCK({ __asm__ __volatile__("int {$}3\n"); (void)0; })
+#define TPP_BREAKPOINT() __XBLOCK({ __asm__ __volatile__("int {$}3\n" : ); (void)0; })
 #else
-#define TPP_BREAKPOINT()         ({ __asm__ __volatile__("int {$}3\n"); (void)0; })
+#define TPP_BREAKPOINT()         ({ __asm__ __volatile__("int {$}3\n" : ); (void)0; })
 #endif
 #endif
 

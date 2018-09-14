@@ -458,7 +458,7 @@ ast_makemultiple(DeeCompilerObject *__restrict self,
  DREF DeeCompilerAstObject **branch_v; size_t i,branch_c;
  PRIVATE struct keyword kwlist[] = { K(branches), K(typing), K(scope), K(loc), KEND };
  COMPILER_BEGIN(self);
- if (DeeArg_UnpackKw(argc,argv,kw,makesym_kwlist,"o|ooo:makemultiple",&branches,&typing,&scope,&loc))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|ooo:makemultiple",&branches,&typing,&scope,&loc))
      goto done;
  if unlikely((ast_scope = get_scope(scope)) == NULL)
     goto done;

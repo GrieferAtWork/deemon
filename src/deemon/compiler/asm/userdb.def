@@ -639,9 +639,9 @@ INSTR("defcmember",(
 /* CONSTRAINTS: `getcmember <r>, ...' */
 /* CONSTRAINTS: `getcmember <s>, ...' */
 INSTR("getcmember",(
-    O3(ASM_GETCMEMBER,  FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM8))  /* push getcmember ref <imm8/16>, $<imm8> */
-    O3(ASM_GETCMEMBER,  FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM16)) /* push getcmember ref <imm8/16>, $<imm16> */
-    O3(ASM16_GETCMEMBER,FRELABS,                  (TOP)(IMM16)) /* getcmember top, $<imm16> */
+    O2(ASM_GETCMEMBER_R,FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM8))  /* push getcmember ref <imm8/16>, $<imm8> */
+    O2(ASM_GETCMEMBER_R,FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM16)) /* push getcmember ref <imm8/16>, $<imm16> */
+    O2(ASM16_GETCMEMBER,FRELABS,                  (TOP)(IMM16)) /* getcmember top, $<imm16> */
 ))
 
 /* CONSTRAINTS: `callcmember <Ti>, <r>, ...' */

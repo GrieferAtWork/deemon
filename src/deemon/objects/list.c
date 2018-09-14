@@ -2096,6 +2096,14 @@ PRIVATE struct type_seq list_seq = {
 };
 
 
+INTDEF struct keyword seq_insert_kwlist[];
+INTDEF struct keyword seq_insertall_kwlist[];
+INTDEF struct keyword seq_erase_kwlist[];
+INTDEF struct keyword seq_xch_kwlist[];
+INTDEF struct keyword seq_removeif_kwlist[];
+INTDEF struct keyword seq_pop_kwlist[];
+INTDEF struct keyword seq_resize_kwlist[];
+
 PRIVATE DREF DeeObject *DCALL
 list_append(List *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
@@ -2607,7 +2615,7 @@ PRIVATE struct type_getset list_getsets[] = {
           ">/* Same as this: */\n"
           ">mylist.shrink();\n"
           ">/* And same as an atomic variant of: */\n"
-          ">mylist.allocated = #mylist;\n") },
+          ">mylist.allocated = #mylist;") },
     { "first", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_first, NULL, NULL,
       DOC("->object\n@return The first item from @this list") },
     { "last", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_last, NULL, NULL,

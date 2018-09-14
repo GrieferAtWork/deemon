@@ -737,7 +737,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
                             "()\n"
                             "(int exitcode)\n"
                             "Construct a new AppExit object using the given @exitcode "
-                            "or the host's default value for EXIT_FAILURE, or $1\n"),
+                            "or the host's default value for EXIT_FAILURE, or $1"),
     /* .tp_flags    = */TP_FFINAL|TP_FINTERRUPT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

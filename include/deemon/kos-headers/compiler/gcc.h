@@ -1178,3 +1178,16 @@ __extension__ typedef unsigned long long __ulonglong_t;
    ({ __pragma(message("Warning: " msg)) (val); })
 #endif
 
+
+
+/* g++ 6.4.0 on 32-bit windows had a bug that essentially broke
+ * `__builtin_choose_expr()' from working. - Instead, you'd get an
+ * error >'__builtin_types_compatible_p' was not declared in this scope< */
+#if defined(__cplusplus) && defined(_WIN32) && \
+   !defined(_WIN64) && __GNUC__ == 6 && __GNUC_MINOR__ == 4
+#undef __builtin_choose_expr
+#define __NO_builtin_choose_expr 1
+#define __builtin_choose_expr(c,tt,ff) ((c)?(tt):(ff))
+#endif
+
+

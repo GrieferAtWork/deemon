@@ -845,7 +845,7 @@ PUBLIC DeeTypeObject DeeSet_Type = {
                             ">import set from deemon;\n"
                             ">local x = { 10, 11, 15, 20, 30 };\n"
                             ">local y = { 11, 15 };\n"
-                            ">print repr((x as set) & ~(y as set)); // { 10, 20, 30 }\n"),
+                            ">print repr((x as set) & ~(y as set)); // { 10, 20, 30 }"),
     /* .tp_flags    = */TP_FNORMAL|TP_FABSTRACT|TP_FNAMEOBJECT, /* Generic base class type. */
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

@@ -8603,8 +8603,7 @@ INTERN struct type_method string_methods[] = {
           "$\"{:<42:foo}\"|Same as $\"{:42:foo}\"\n"
           "$\"{:>42:foo}\"|Will append ${selected_object.operator str().rjust(42,\"foo\")} to the resulting string (s.a. #rjust)\n"
           "$\"{:^42:foo}\"|Will append ${selected_object.operator str().center(42,\"foo\")} to the resulting string (s.a. #center)\n"
-          "$\"{:=42:foo}\"|Will append ${selected_object.operator str().zfill(42,\"foo\")} to the resulting string (s.a. #zfill)}\n"
-          ) },
+          "$\"{:=42:foo}\"|Will append ${selected_object.operator str().zfill(42,\"foo\")} to the resulting string (s.a. #zfill)}") },
     { "scanf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_scanf,
       DOC("(string format)->sequence\n"
           "@throw ValueError The given @format is malformed\n"
@@ -8627,8 +8626,7 @@ INTERN struct type_method string_methods[] = {
           "$\"%c\"|:string|Consume exactly `width' (see above) or one characters and return them as a string\n"
           "$\"%[...]\"|:string|Similar to the regex (s.a. #rematch) range function (e.g. $\"%[^xyz]\", $\"%[abc]\", $\"%[a-z]\", $\"%[^\\]]\")}\n"
           "Integer-width modifiers ($\"h\", $\"hh\", $\"l\", $\"ll\", $\"j\", $\"z\", "
-          "$\"t\", $\"L\", $\"I\", $\"I8\", $\"I16\", $\"I32\" and $\"I64\") are ignored\n"
-          ) },
+          "$\"t\", $\"L\", $\"I\", $\"I8\", $\"I16\", $\"I32\" and $\"I64\") are ignored") },
     /* What about something like this?:
      * >> print "You name is $your_name, and I'm ${my_name}"
      * >>       .substitute({ .your_name = "foo", .my_name = "bar" });
@@ -8801,7 +8799,7 @@ INTERN struct type_method string_methods[] = {
           "(int index,object defl)->object\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
-          "Same as #asnumber, but only succeed if the selected character matches #isdigit, rather than #isnumeric\n") },
+          "Same as #asnumber, but only succeed if the selected character matches #isdigit, rather than #isnumeric") },
     { "asdecimal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_asdecimal,
       DOC("->int\n"
           "@throw ValueError The string is longer than a single character\n"
@@ -8811,7 +8809,7 @@ INTERN struct type_method string_methods[] = {
           "(int index,object defl)->object\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
-          "Same as #asnumber, but only succeed if the selected character matches #isdecimal, rather than #isnumeric\n") },
+          "Same as #asnumber, but only succeed if the selected character matches #isdecimal, rather than #isnumeric") },
 
     { "isanyprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_isanyprint,
       DOC("(int start=0,int end=-1)->bool\n"
@@ -9011,19 +9009,19 @@ INTERN struct type_method string_methods[] = {
           ">while (result.startswith(needle))\n"
           "> result = result[#needle:];\n"
           ">while (result.endswith(needle))\n"
-          "> result = result[:#result-#needle];\n") },
+          "> result = result[:#result-#needle];") },
     { "lsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_lsstrip,
       DOC("(string needle)->string\n"
           "Strip all leading instances of @needle from @this string\n"
           ">local result = this;\n"
           ">while (result.startswith(needle))\n"
-          "> result = result[#needle:];\n") },
+          "> result = result[#needle:];") },
     { "rsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_rsstrip,
       DOC("(string needle)->string\n"
           "Strip all trailing instances of @needle from @this string\n"
           ">local result = this;\n"
           ">while (result.endswith(needle))\n"
-          "> result = result[:#result-#needle];\n") },
+          "> result = result[:#result-#needle];") },
     { "startswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_startswith,
       DOC("(string needle,int start=0,int end=-1)->bool\n"
           "Return :true if the sub-string ${this.substr(start,end)} starts with @needle"),
@@ -9240,7 +9238,7 @@ INTERN struct type_method string_methods[] = {
           "every linefeed with the exception of one that may be located at its end\n"
           "The inteded use is for generating strings from structured data, such as HTML:\n"
           ">text = get_html();\n"
-          ">text = \"<html>\n{}\n</html>\".format({ text.strip().indent() });\n") },
+          ">text = \"<html>\n{}\n</html>\".format({ text.strip().indent() });") },
     { "dedent", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_dedent,
       DOC("(int max_chars=1)->string\n"
           "(int max_chars=1,string mask)->string\n"

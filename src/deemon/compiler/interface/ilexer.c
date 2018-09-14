@@ -746,7 +746,7 @@ PRIVATE struct type_getset keyword_getsets[] = {
           "keyword descriptors. This value must be an unsigned integer that fits into "
           "a single pointer, as used by the host") },
     /* TODO: Access to keyword assertions (`kr_asserts')? */
-    NULL
+    { NULL }
 };
 
 
@@ -755,7 +755,7 @@ INTERN DeeTypeObject DeeCompilerKeyword_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"keyword",
     /* .tp_doc      = */DOC("str->\n"
-                            "Returns the name of @this keyword\n"),
+                            "Returns the name of @this keyword"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

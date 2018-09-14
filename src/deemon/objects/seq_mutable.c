@@ -3628,6 +3628,31 @@ err_overflow:
  return (size_t)-1;
 }
 
+INTERN int DCALL
+DeeSeq_Reverse(DeeObject *__restrict self) {
+ DREF DeeObject *reversed; int result;
+ /* TODO: This breaks when `reversed' is an index-based proxy! */
+ reversed = DeeSeq_Reversed(self);
+ if unlikely(!reversed) goto err;
+ result = DeeObject_Assign(self,reversed);
+ Dee_Decref(reversed);
+ return result;
+err:
+ return -1;
+}
+INTERN int DCALL
+DeeSeq_Sort(DeeObject *__restrict self, DeeObject *pred_lo) {
+ DREF DeeObject *sorted; int result;
+ /* TODO: This breaks when `sorted' is an index-based proxy! */
+ sorted = DeeSeq_Sorted(self,pred_lo);
+ if unlikely(!sorted) goto err;
+ result = DeeObject_Assign(self,sorted);
+ Dee_Decref(sorted);
+ return result;
+err:
+ return -1;
+}
+
 
 
 PRIVATE DeeObject *mutable_sequence_attributes[] = {

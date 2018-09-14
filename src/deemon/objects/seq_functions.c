@@ -1428,8 +1428,7 @@ INTERN DREF DeeObject *DCALL DeeSeq_Split(DeeObject *__restrict self, DeeObject 
 INTERN DREF DeeObject *DCALL
 DeeSeq_Reversed(DeeObject *__restrict self) {
  DREF DeeObject *result;
- /* TODO: Proxy for sequences implementing an index-based NSI. */
- /* TODO: Optimization using `DeeFastSeq_GetSize()' */
+ /* TODO: Proxy for sequences implementing index-based item access. */
  result = DeeList_FromSequence(self);
  if likely(result)
     DeeList_Reverse(result);
@@ -1440,7 +1439,7 @@ INTERN DREF DeeObject *DCALL
 DeeSeq_Sorted(DeeObject *__restrict self,
               DeeObject *pred_lo) {
  DREF DeeObject *result;
- /* TODO: Using lists for this is less than optional... */
+ /* TODO: Using lists for this is less than optimal... */
  result = DeeList_FromSequence(self);
  if unlikely(!result) goto done;
  if unlikely(DeeList_Sort(result,pred_lo))
