@@ -145,23 +145,13 @@
 #endif
 #define __has_attribute(x) __GCC_PRIVATE_IS_DEFINED(__GCC_HAS_ATTRIBUTE_##x)
 #endif
-#ifndef __has_declspec_attribute
-#define __has_declspec_attribute(x) 0
-#endif
 #ifndef __has_cpp_attribute
+#define __NO_has_cpp_attribute 1
 #define __has_cpp_attribute(x) 0
 #endif
-#ifndef __has_include
-#define __has_include(x) 0
-#endif
-#ifndef __has_include_next
-#define __has_include_next(x) 0
-#endif
 #ifndef __has_feature
+#define __NO_has_feature 1
 #define __has_feature(x) 0
-#endif
-#ifndef __has_extension
-#define __has_extension  __has_feature
 #endif
 #ifndef __has_builtin
 #define __GCC_HAS_BUILTIN___builtin_va_list
@@ -1180,14 +1170,30 @@ __extension__ typedef unsigned long long __ulonglong_t;
 
 
 
-/* g++ 6.4.0 on 32-bit windows had a bug that essentially broke
- * `__builtin_choose_expr()' from working. - Instead, you'd get an
- * error >'__builtin_types_compatible_p' was not declared in this scope< */
-#if defined(__cplusplus) && defined(_WIN32) && \
-   !defined(_WIN64) && __GNUC__ == 6 && __GNUC_MINOR__ == 4
+#ifdef __cplusplus
+/* `__builtin_choose_expr()' is only available in C, but not in C++ */
 #undef __builtin_choose_expr
 #define __NO_builtin_choose_expr 1
 #define __builtin_choose_expr(c,tt,ff) ((c)?(tt):(ff))
+
+/* g++ 6.4.0 on windows had a bug that essentially broke
+ * `__builtin_types_compatible_p()' from working. - Instead, you'd get an
+ * error >'__builtin_types_compatible_p' was not declared in this scope< */
+#if defined(_WIN32) && __GNUC__ == 6 && __GNUC_MINOR__ == 4
+namespace __int {
+template<class __T> struct __fixed_types_compatible_remcv {typedef __T __type; };
+template<class __T> struct __fixed_types_compatible_remcv<__T const> {typedef __T __type; };
+template<class __T> struct __fixed_types_compatible_remcv<__T volatile> {typedef __T __type; };
+template<class __T> struct __fixed_types_compatible_remcv<__T const volatile> {typedef __T __type; };
+template<class __T1, class __T2> struct __fixed_types_compatible_impl {enum{__val=false};};
+template<class __T1> struct __fixed_types_compatible_impl<__T1,__T1> {enum{__val=true};};
+template<class __T1, class __T2> struct __fixed_types_compatible:
+ __fixed_types_compatible_impl<typename __fixed_types_compatible_remcv<__T1>::__type,
+                               typename __fixed_types_compatible_remcv<__T2>::__type>{};
+}
+#undef __builtin_types_compatible_p
+#define __builtin_types_compatible_p(...) (::__int::__fixed_types_compatible< __VA_ARGS__ >::__val)
 #endif
+#endif /* __cplusplus */
 
 

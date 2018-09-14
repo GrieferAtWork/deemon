@@ -293,7 +293,14 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
    DBG_ALIGNMENT_ENABLE();
   } else {
    char *temp_name; size_t namelen = strlen(name);
+#ifdef Dee_AMallocNoFail
    Dee_AMallocNoFail(temp_name,(namelen+2)*sizeof(char));
+#else
+   temp_name = (char *)Dee_AMalloc((namelen+2)*sizeof(char));
+   if unlikely(!temp_name)
+      return NULL; /* ... Technically not correct, but if memory has gotten
+                    *     this low, that's the last or the user's problems. */
+#endif
    memcpy(temp_name+1,name,(namelen+1)*sizeof(char));
    temp_name[0] = '_';
    DBG_ALIGNMENT_DISABLE();

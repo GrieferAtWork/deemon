@@ -225,7 +225,10 @@ make_absolute(DeeObject *__restrict path) {
 #endif
  }
  iter = flush_start = begin;
- ASSERT(*end == '\0');
+ ASSERTF(*end == '\0',
+         "path = %r\n"
+         "end = %p(%q)\n",
+         path,end,end);
 next:
  ch = *iter++;
  switch (ch) {
@@ -1956,7 +1959,7 @@ PRIVATE DEFINE_STRING(default_deemon_home,CONFIG_DEEMON_HOME);
 #endif
 
 
-#ifdef CONFIG_HOST_UNIX
+#if !defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HOST_UNIX)
 INTERN DREF DeeObject *DCALL
 unix_readlink(char const *__restrict path) {
  DREF DeeObject *result; char *buffer; int error;

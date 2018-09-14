@@ -2108,73 +2108,61 @@ ast_parse_assign(unsigned int lookup_mode) {
  CASE_TOKEN_IS_PROD:
   if unlikely((result = ast_parse_prod_operand(result)) == NULL)
      goto done;
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_SUM(tok)) {
  CASE_TOKEN_IS_SUM:
    if unlikely((result = ast_parse_sum_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_SHIFT(tok)) {
  CASE_TOKEN_IS_SHIFT:
    if unlikely((result = ast_parse_shift_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_CMP(tok)) {
  CASE_TOKEN_IS_CMP:
    if unlikely((result = ast_parse_cmp_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_CMPEQ(tok)) {
  CASE_TOKEN_IS_CMPEQ:
    if unlikely((result = ast_parse_cmpeq_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_AND(tok)) {
  CASE_TOKEN_IS_AND:
    if unlikely((result = ast_parse_and_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_XOR(tok)) {
  CASE_TOKEN_IS_XOR:
    if unlikely((result = ast_parse_xor_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_OR(tok)) {
  CASE_TOKEN_IS_OR:
    if unlikely((result = ast_parse_or_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_AS(tok)) {
  CASE_TOKEN_IS_AS:
    if unlikely((result = ast_parse_as_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_LAND(tok)) {
  CASE_TOKEN_IS_LAND:
    if unlikely((result = ast_parse_land_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_LOR(tok)) {
  CASE_TOKEN_IS_LOR:
    if unlikely((result = ast_parse_lor_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_COND(tok)) {
  CASE_TOKEN_IS_COND:
    if unlikely((result = ast_parse_cond_operand(result)) == NULL)
       goto done;
   }
-  ATTR_FALLTHROUGH
   if (TOKEN_IS_ASSIGN(tok)) {
  CASE_TOKEN_IS_ASSIGN:
    if unlikely((result = ast_parse_assign_operand(result)) == NULL)

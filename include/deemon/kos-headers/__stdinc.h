@@ -31,31 +31,6 @@
 
 /* ... */
 
-#ifndef __has_builtin
-#define __has_builtin(x) 0
-#endif
-#ifndef __has_feature
-#define __has_feature(x) 0
-#endif
-#ifndef __has_extension
-#define __has_extension  __has_feature
-#endif
-#ifndef __has_attribute
-#define __has_attribute(x) 0
-#endif
-#ifndef __has_declspec_attribute
-#define __has_declspec_attribute(x) 0
-#endif
-#ifndef __has_cpp_attribute
-#define __has_cpp_attribute(x) 0
-#endif
-#ifndef __has_include
-#define __has_include(x) 0
-#endif
-#ifndef __has_include_next
-#define __has_include_next(x) 0
-#endif
-
 #if defined(__cplusplus) || defined(__INTELLISENSE__) || \
   (!defined(__LINKER__) && !defined(__ASSEMBLY__) && \
    !defined(__ASSEMBLER__) && !defined(__assembler) && \
@@ -87,6 +62,49 @@
 #   include "compiler/c++.h"
 #else
 #   include "compiler/c.h"
+#endif
+
+#ifndef __has_include
+#define __NO_has_include 1
+#ifdef __PREPROCESSOR_HAVE_VA_ARGS
+#define __has_include(...) 0
+#else
+#define __has_include(x)   0
+#endif
+#endif
+#ifndef __has_include_next
+#define __NO_has_include_next 1
+#ifdef __PREPROCESSOR_HAVE_VA_ARGS
+#define __has_include_next(...) 0
+#else
+#define __has_include_next(x)   0
+#endif
+#endif
+
+
+#ifndef __has_builtin
+#define __NO_has_builtin 1
+#define __has_builtin(x) 0
+#endif
+#ifndef __has_feature
+#define __NO_has_feature 1
+#define __has_feature(x) 0
+#endif
+#ifndef __has_extension
+#define __NO_has_extension 1
+#define __has_extension  __has_feature
+#endif
+#ifndef __has_attribute
+#define __NO_has_attribute 1
+#define __has_attribute(x) 0
+#endif
+#ifndef __has_declspec_attribute
+#define __NO_has_declspec_attribute 1
+#define __has_declspec_attribute(x) 0
+#endif
+#ifndef __has_cpp_attribute
+#define __NO_has_cpp_attribute 1
+#define __has_cpp_attribute(x) 0
 #endif
 
 #ifndef __SYSDECL_BEGIN
@@ -148,10 +166,12 @@
 #if !defined(__PE__) && !defined(__ELF__)
 /* Try to determine current binary format using other platform
  * identifiers. (When KOS headers are used on other systems) */
-#if defined(__linux__) || defined(__linux) || defined(linux) || \
-    defined(__unix__) || defined(__unix) || defined(unix)
+#if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__MINGW32__)
+#   define __PE__  1
+#elif defined(__linux__) || defined(__linux) || defined(linux) || \
+      defined(__unix__) || defined(__unix) || defined(unix)
 #   define __ELF__ 1
-#elif defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__MINGW32__) || defined(__WINDOWS__) || \
+#elif defined(__WINDOWS__) || \
       defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
       defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
       defined(_WIN32_WCE) || defined(WIN32_WCE)

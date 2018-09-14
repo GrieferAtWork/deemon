@@ -2372,6 +2372,7 @@ DeeModule_OpenDec(DeeModuleObject *__restrict module,
  /* Initialize the file */
  if ((result = DecFile_Init(&file,input_stream,module,dec_pathname,options)) != 0)
       goto done;
+ DEE_DPRINTF("[LD] Opened dec file %r\n",file.df_name);
  /* Check if the file is up-to-date (unless this check is being suppressed). */
  if ((!options || !(options->co_decloader&DEC_FLOADOUTDATED)) &&
       (result = DecFile_IsUpToDate(&file)) != 0)

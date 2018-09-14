@@ -140,12 +140,12 @@ follow_jmp(instruction_t *__restrict jmp,
  if (JMP_IS32(jmp)) { /* 32-bit jump */
   jmp        += 2;
   rel_addr    = (code_addr_t)(jmp - sc_main.sec_begin);
-  result_addr = (code_addr_t)((code_saddr_t)(int32_t)UNALIGNED_GETLE32((int32_t *)jmp));
+  result_addr = (code_addr_t)((code_saddr_t)(int32_t)UNALIGNED_GETLE32((uint32_t *)jmp));
   jmp        += 4;
  } else if (JMP_IS16(jmp)) { /* 16-bit jump */
   jmp        += 1;
   rel_addr    = (code_addr_t)(jmp - sc_main.sec_begin);
-  result_addr = (code_addr_t)((code_saddr_t)(int16_t)UNALIGNED_GETLE16((int16_t *)jmp));
+  result_addr = (code_addr_t)((code_saddr_t)(int16_t)UNALIGNED_GETLE16((uint16_t *)jmp));
   jmp        += 2;
  } else { /* 8-bit jump */
   jmp        += 1;
@@ -837,7 +837,7 @@ do_adjstack_optimization:
    case ASM16_ADJSTACK & 0xff:
     if (!(current_assembler.a_flag&ASM_FOPTIMIZE)) break;
     /* See above: It's our job to try and truncate this instruction. */
-    adjust = (int16_t)UNALIGNED_GETLE16((int16_t *)(iter + 2));
+    adjust = (int16_t)UNALIGNED_GETLE16((uint16_t *)(iter + 2));
     if (adjust >= INT8_MIN && adjust <= INT8_MAX) {
      /* Convert to an 8-bit instruction. */
      *iter++               = ASM_DELOP; /* F0 prefix. */
@@ -984,9 +984,9 @@ do_jmpf:
       }
       relative_target = (code_addr_t)target_rel->ar_sym->as_addr;
       if (JMP_IS32(jmp_target)) {
-       inplace_disp = (code_saddr_t)(int32_t)UNALIGNED_GETLE32((int32_t *)(jmp_target + 2)) + 4;
+       inplace_disp = (code_saddr_t)(int32_t)UNALIGNED_GETLE32((uint32_t *)(jmp_target + 2)) + 4;
       } else if (JMP_IS16(jmp_target)) {
-       inplace_disp = (code_saddr_t)(int16_t)UNALIGNED_GETLE16((int16_t *)(jmp_target + 1)) + 2;
+       inplace_disp = (code_saddr_t)(int16_t)UNALIGNED_GETLE16((uint16_t *)(jmp_target + 1)) + 2;
       } else {
        inplace_disp = (code_saddr_t)*(int8_t *)(jmp_target + 1) + 1;
       }
@@ -1250,7 +1250,7 @@ do_conditional_forward_optimization:
        ((*(instr_pop + 0) == ASM_ADJSTACK) && *(int8_t *)(instr_pop + 1) < 0) ||
        ((*(instr_pop + 0) == (ASM16_ADJSTACK & 0xff00) >> 8) && 
         (*(instr_pop + 1) == (ASM16_ADJSTACK & 0xff)) &&
-           (int16_t)UNALIGNED_GETLE16((int16_t *)(instr_pop + 2)) < 0))) {
+           (int16_t)UNALIGNED_GETLE16((uint16_t *)(instr_pop + 2)) < 0))) {
       /* Found sequence:
        * >>   bool  top
        * >>   dup
@@ -1276,7 +1276,7 @@ do_conditional_forward_optimization:
         uint8_t target_size = JMP_IS16(jmp_target) ? 3 : 2;
         if (JMP_IS16(instr_jmp)) {
          int32_t new_disp;
-         new_disp  = (int16_t)UNALIGNED_GETLE16((int16_t *)(instr_jmp + 1));
+         new_disp  = (int16_t)UNALIGNED_GETLE16((uint16_t *)(instr_jmp + 1));
          new_disp += target_size;
          if (new_disp >= INT16_MIN && new_disp <= INT16_MIN) {
           if (jmp_reloc) {
@@ -1527,7 +1527,7 @@ do_switch_after_prefix_opcode:
        goto do_unused_operand_optimization;
    goto do_pop_merge_optimization;
   case ASM16_ADJSTACK:
-   if ((int16_t)UNALIGNED_GETLE16((int16_t *)(iiter + 0)) > 0)
+   if ((int16_t)UNALIGNED_GETLE16((uint16_t *)(iiter + 0)) > 0)
        goto do_unused_operand_optimization;
    goto do_pop_merge_optimization;
   case ASM_PUSH_NONE:
@@ -1874,7 +1874,7 @@ do_unused_operand_optimization_ex:
        (next_instruction[0] == ASM_ADJSTACK && *(int8_t *)(next_instruction + 1) < 0) ||
        (next_instruction[0] == ASM_EXTENDED1 &&
         next_instruction[1] == ASM_ADJSTACK &&
-       (int16_t)UNALIGNED_GETLE16((int16_t *)(next_instruction + 2)) < 0)) &&
+       (int16_t)UNALIGNED_GETLE16((uint16_t *)(next_instruction + 2)) < 0)) &&
        !IS_PROTECTED(next_instruction)) {
     /* Optimize stuff like `dup; pop' */
     int16_t total_adjustment = stacksz-iiter_sp;
@@ -1883,7 +1883,7 @@ do_unused_operand_optimization_ex:
          total_adjustment -= 1;
     else if (next_instruction[0] == ASM_ADJSTACK)
          total_adjustment += *(int8_t *)(next_instruction + 1);
-    else total_adjustment += (int16_t)UNALIGNED_GETLE16((int16_t *)(next_instruction + 2));
+    else total_adjustment += (int16_t)UNALIGNED_GETLE16((uint16_t *)(next_instruction + 2));
     /* Delete existing assembly. */
     continue_after = asm_nextinstr(next_instruction);
     delete_assembly((code_addr_t)(iter-sc_main.sec_begin),
@@ -2053,7 +2053,7 @@ delete_asm_after_pop:
       /* Add +1 to the stack adjustment (which must be negative) to subtract one less stack object */
       if (iter[0] == ASM_EXTENDED1) {
        int16_t offset;
-       offset = (int16_t)UNALIGNED_GETLE16((int16_t *)(iter + 2)) + 1;
+       offset = (int16_t)UNALIGNED_GETLE16((uint16_t *)(iter + 2)) + 1;
        UNALIGNED_SETLE16((uint16_t *)(iter + 2),(uint16_t)offset);
        if (offset == 0) {
         iter[0] = ASM_DELOP;
@@ -2146,7 +2146,7 @@ do_pop_merge_optimization:
     }
     if (opcode == ASM_EXTENDED1 &&
         iter[0] == (ASM16_ADJSTACK & 0xff)) {
-     int16_t effect = (int16_t)UNALIGNED_GETLE16((int16_t *)(iter + 1));
+     int16_t effect = (int16_t)UNALIGNED_GETLE16((uint16_t *)(iter + 1));
      if (effect > 0 && effect_sum < 0) break;
      effect_sum += effect;
      iter += 3;

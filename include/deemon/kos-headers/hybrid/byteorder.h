@@ -22,10 +22,12 @@
 #include <__stdinc.h>
 #include "__byteorder.h"
 
+#if 0
 #define BYTE_ORDER          __BYTE_ORDER__
 #define ORDER_LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
 #define ORDER_BIG_ENDIAN    __ORDER_BIG_ENDIAN__   
 #define ORDER_PDP_ENDIAN    __ORDER_PDP_ENDIAN__   
+#endif
 
 #ifdef __GUARD_HYBRID_BYTESWAP_H
 #define LESWAP16(x)    __hybrid_leswap16(x)

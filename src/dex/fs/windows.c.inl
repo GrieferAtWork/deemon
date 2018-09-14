@@ -40,6 +40,7 @@
 #endif
 
 #include <string.h>
+#include <wchar.h>
 
 #ifndef __USE_KOS
 #define strend(str) ((str)+strlen(str))

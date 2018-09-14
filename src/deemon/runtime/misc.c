@@ -1065,7 +1065,6 @@ debug_printer(void *UNUSED(closure),
               char const *__restrict buffer, size_t bufsize) {
 #ifdef CONFIG_HOST_WINDOWS
  size_t result = bufsize;
- DBG_ALIGNMENT_DISABLE();
 #ifdef PAGESIZE
  /* (ab-)use the fact that the kernel can't keep us from reading
   *  beyond the end of a buffer so long as that memory location
@@ -1075,7 +1074,9 @@ debug_printer(void *UNUSED(closure),
      (((uintptr_t)buffer + bufsize)     & ~(uintptr_t)(PAGESIZE-1)) ==
      (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE-1)) &&
      (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
+  DBG_ALIGNMENT_DISABLE();
   OutputDebugStringA((char *)buffer);
+  DBG_ALIGNMENT_ENABLE();
  } else
 #endif
  {
@@ -1084,12 +1085,13 @@ debug_printer(void *UNUSED(closure),
    size_t part = MIN(bufsize,sizeof(temp)-sizeof(char));
    memcpy(temp,buffer,part);
    temp[part] = '\0';
+   DBG_ALIGNMENT_DISABLE();
    OutputDebugStringA(temp);
+   DBG_ALIGNMENT_ENABLE();
    *(uintptr_t *)&buffer += part;
    bufsize -= part;
   }
  }
- DBG_ALIGNMENT_ENABLE();
  return result;
 #else
  return DeeFile_Write(DeeFile_DefaultStddbg,buffer,bufsize);

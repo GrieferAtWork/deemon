@@ -37,6 +37,7 @@
 #include <deemon/arg.h>
 
 #include <string.h>
+#include <wchar.h>
 
 #include <tlhelp32.h>
 

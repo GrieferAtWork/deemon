@@ -1359,7 +1359,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
   {
    int16_t effect;
   case ASM16_ADJSTACK & 0xff:
-   effect = (int16_t)UNALIGNED_GETLE16((int16_t *)(ip + 2));
+   effect = (int16_t)UNALIGNED_GETLE16((uint16_t *)(ip + 2));
    *pstacksz += effect;
    if (effect >= 0) {
     *psp_add = (uint16_t)effect;

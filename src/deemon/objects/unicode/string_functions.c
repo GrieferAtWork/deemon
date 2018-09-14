@@ -7753,7 +7753,6 @@ do_empty_scan:
       goto err;
   if (regex_get_rules(DeeString_STR(argv[3]),&result->re_flags))
       goto err;
-  ATTR_FALLTHROUGH
  {
   size_t end_offset;
  case 3:

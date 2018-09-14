@@ -125,7 +125,11 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
+#ifndef CONFIG_HOST_WINDOWS
+#if defined(__NO_has_include) || __has_include(<sys/syscall.h>)
 #include <sys/syscall.h>
+#endif
+#endif /* !CONFIG_HOST_WINDOWS */
 #endif
 #ifdef CONFIG_THREADS_PTHREAD
 #include <unistd.h>

@@ -1236,9 +1236,18 @@ no:
 
  case AST_ACTION:
   switch (AST_FACTION_ARGC_GT(self->a_flag)) {
-  case 3: if (ast_contains_goto(self->a_action.a_act0,consider_loopctl)) goto yes;
-  case 2: if (ast_contains_goto(self->a_action.a_act0,consider_loopctl)) goto yes;
-  case 1: if (ast_contains_goto(self->a_action.a_act0,consider_loopctl)) goto yes;
+  case 3:
+   if (ast_contains_goto(self->a_action.a_act0,consider_loopctl))
+       goto yes;
+   ATTR_FALLTHROUGH
+  case 2:
+   if (ast_contains_goto(self->a_action.a_act0,consider_loopctl))
+       goto yes;
+   ATTR_FALLTHROUGH
+  case 1:
+   if (ast_contains_goto(self->a_action.a_act0,consider_loopctl))
+       goto yes;
+   ATTR_FALLTHROUGH
   default: break;
   }
   goto no;

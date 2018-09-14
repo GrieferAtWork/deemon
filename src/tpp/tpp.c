@@ -5161,19 +5161,30 @@ PUBLIC int TPPCALL TPPLexer_Init(struct TPPLexer *__restrict self) {
 #ifdef TPP_CONFIG_DYN_CALLBACKS
  memset(&self->l_callbacks,0,sizeof(struct TPPCallbacks));
 #endif /* TPP_CONFIG_DYN_CALLBACKS */
+#ifndef NDEBUG
  assert(hashof("",0) == EMPTY_STRING_HASH);
 #if __SIZEOF_SIZE_T__ == 4
  assert(hashof("<commandline>",13) == 3330511802ul);
 #elif __SIZEOF_SIZE_T__ == 8
  assert(hashof("<commandline>",13) == 12182544704004658106ull);
 #endif
+ {
+  union {
+      char     bytes[4];
+      uint32_t word;
+  } ordered = {
+      { '\x00', '\x44', '\x88', '\xaa' }
+  };
 #if TPP_BYTEORDER == 1234
- assert(*(uint32_t *)"\x00\x44\x88\xaa" == 0xaa884400);
+  assert(ordered.word == 0xaa884400);
 #elif TPP_BYTEORDER == 4321
- assert(*(uint32_t *)"\x00\x44\x88\xaa" == 0x008844aa);
+  assert(ordered.word == 0x008844aa);
 #elif TPP_BYTEORDER == 3412
- assert(*(uint32_t *)"\x00\x44\x88\xaa" == 0x88aa0044);
+  assert(ordered.word == 0x88aa0044);
+#else
+#error FIXME
 #endif
+ }
  assert(TPPFile_Empty.f_namehash ==
         hashof(TPPFile_Empty.f_name,
                TPPFile_Empty.f_namesize));
@@ -5204,6 +5215,7 @@ PUBLIC int TPPCALL TPPLexer_Init(struct TPPLexer *__restrict self) {
 #ifdef __SIZEOF_LONG_DOUBLE__
  assert(sizeof(long double) == __SIZEOF_LONG_DOUBLE__);
 #endif
+#endif /* !NDEBUG */
  return 1;
 }
 

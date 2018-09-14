@@ -31,11 +31,11 @@ BEGIN PROJECT("deemon")
 		L_FLAGS("-Wl,--out-implib=libdeemon.dll.a")
 		IF($TARGET_CPU == i?86)
 			L_FLAGS("-Wl,--stack,4194304")
+			L_FLAGS("-Wl,src/deemon/linker-scripts/link-deemon-gcc.def")
 		FI
 		IF($TARGET_CPU == x86_64)
 			L_FLAGS("-Wl,--stack,8388608")
 		FI
-		L_FLAGS("-Wl,src/deemon/linker-scripts/link-deemon-gcc.def")
 	ELSE
 		L_FLAGS("-Wl,--export-dynamic")
 		LIB("dl")

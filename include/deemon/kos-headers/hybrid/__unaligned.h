@@ -40,11 +40,11 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT8_TYPE__
 __NOTHROW(__hybrid_unaligned_get_swap(__UINT8_TYPE__ const *__restrict __ptr)) {
  return *__ptr;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__hybrid_unaligned_set(__UINT8_TYPE__ *__restrict __ptr, __UINT8_TYPE__ __val)) {
  *__ptr = __val;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__hybrid_unaligned_set_swap(__UINT8_TYPE__ *__restrict __ptr, __UINT8_TYPE__ __val)) {
  *__ptr = __val;
 }
@@ -65,7 +65,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(16)(__UINT16_TYPE__ const *__restrict _
  __hybrid_dbg_alignment_enable();
  return __res;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(16)(__UINT16_TYPE__ *__restrict __ptr, __UINT16_TYPE__ __val)) {
  __hybrid_dbg_alignment_disable();
  *__ptr = __val;
@@ -79,7 +79,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(32)(__UINT32_TYPE__ const *__restrict _
  __hybrid_dbg_alignment_enable();
  return __res;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(32)(__UINT32_TYPE__ *__restrict __ptr, __UINT32_TYPE__ __val)) {
  __hybrid_dbg_alignment_disable();
  *__ptr = __val;
@@ -94,7 +94,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(64)(__UINT64_TYPE__ const *__restrict _
  __hybrid_dbg_alignment_enable();
  return __res;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(64)(__UINT64_TYPE__ *__restrict __ptr, __UINT64_TYPE__ __val)) {
  __hybrid_dbg_alignment_disable();
  *__ptr = __val;
@@ -109,7 +109,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(128)(__UINT128_TYPE__ const *__restrict
  __hybrid_dbg_alignment_enable();
  return __res;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(128)(__UINT128_TYPE__ *__restrict __ptr, __UINT128_TYPE__ __val)) {
  __hybrid_dbg_alignment_disable();
  *__ptr = __val;
@@ -122,7 +122,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT16_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(16)(__UINT16_TYPE__ const *__restrict __ptr)) {
  return *__ptr;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(16)(__UINT16_TYPE__ *__restrict __ptr, __UINT16_TYPE__ __val)) {
  *__ptr = __val;
 }
@@ -130,7 +130,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT32_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(32)(__UINT32_TYPE__ const *__restrict __ptr)) {
  return *__ptr;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(32)(__UINT32_TYPE__ *__restrict __ptr, __UINT32_TYPE__ __val)) {
  *__ptr = __val;
 }
@@ -139,7 +139,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT64_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(64)(__UINT64_TYPE__ const *__restrict __ptr)) {
  return *__ptr;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(64)(__UINT64_TYPE__ *__restrict __ptr, __UINT64_TYPE__ __val)) {
  *__ptr = __val;
 }
@@ -148,7 +148,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT128_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(128)(__UINT128_TYPE__ const *__restrict __ptr)) {
  return *__ptr;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(128)(__UINT128_TYPE__ *__restrict __ptr, __UINT128_TYPE__ __val)) {
  *__ptr = __val;
 }
@@ -173,7 +173,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT16_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(16)(__UINT16_TYPE__ const *__restrict __ptr)) {
  return *(__packed __UINT16_TYPE__ *)__ptr;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(16)(__UINT16_TYPE__ *__restrict __ptr, __UINT16_TYPE__ __val)) {
  *(__packed __UINT16_TYPE__ *)__ptr = __val;
 }
@@ -181,7 +181,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT32_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(32)(__UINT32_TYPE__ const *__restrict __ptr)) {
  return *(__packed __UINT32_TYPE__ *)__ptr;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(32)(__UINT32_TYPE__ *__restrict __ptr, __UINT32_TYPE__ __val)) {
  *(__packed __UINT32_TYPE__ *)__ptr = __val;
 }
@@ -190,7 +190,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT64_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(64)(__UINT64_TYPE__ const *__restrict __ptr)) {
  return *(__packed __UINT64_TYPE__ *)__ptr;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(64)(__UINT64_TYPE__ *__restrict __ptr, __UINT64_TYPE__ __val)) {
  *(__packed __UINT64_TYPE__ *)__ptr = __val;
 }
@@ -199,7 +199,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT128_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(128)(__UINT128_TYPE__ const *__restrict __ptr)) {
  return *(__packed __UINT128_TYPE__ *)__ptr;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(128)(__UINT128_TYPE__ *__restrict __ptr, __UINT128_TYPE__ __val)) {
  *(__packed __UINT128_TYPE__ *)__ptr = __val;
 }
@@ -211,7 +211,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(16)(__UINT16_TYPE__ const *__restrict _
  struct __ATTR_PACKED __unaligned_ptr16 { __UINT16_TYPE__ __val; };
  return ((struct __unaligned_ptr16 *)__ptr)->__val;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(16)(__UINT16_TYPE__ *__restrict __ptr, __UINT16_TYPE__ __val)) {
  struct __ATTR_PACKED __unaligned_ptr16 { __UINT16_TYPE__ __val; };
  ((struct __unaligned_ptr16 *)__ptr)->__val = __val;
@@ -221,7 +221,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(32)(__UINT32_TYPE__ const *__restrict _
  struct __ATTR_PACKED __unaligned_ptr32 { __UINT32_TYPE__ __val; };
  return ((struct __unaligned_ptr32 *)__ptr)->__val;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(32)(__UINT32_TYPE__ *__restrict __ptr, __UINT32_TYPE__ __val)) {
  struct __ATTR_PACKED __unaligned_ptr32 { __UINT32_TYPE__ __val; };
  ((struct __unaligned_ptr32 *)__ptr)->__val = __val;
@@ -232,7 +232,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(64)(__UINT64_TYPE__ const *__restrict _
  struct __ATTR_PACKED __unaligned_ptr64 { __UINT64_TYPE__ __val; };
  return ((struct __unaligned_ptr64 *)__ptr)->__val;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(64)(__UINT64_TYPE__ *__restrict __ptr, __UINT64_TYPE__ __val)) {
  struct __ATTR_PACKED __unaligned_ptr64 { __UINT64_TYPE__ __val; };
  ((struct __unaligned_ptr64 *)__ptr)->__val = __val;
@@ -243,7 +243,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(128)(__UINT128_TYPE__ const *__restrict
  struct __ATTR_PACKED __unaligned_ptr128 { __UINT128_TYPE__ __val; };
  return ((struct __unaligned_ptr128 *)__ptr)->__val;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(128)(__UINT128_TYPE__ *__restrict __ptr, __UINT128_TYPE__ __val)) {
  struct __ATTR_PACKED __unaligned_ptr128 { __UINT128_TYPE__ __val; };
  ((struct __unaligned_ptr128 *)__ptr)->__val = __val;
@@ -270,7 +270,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(16)(__UINT16_TYPE__ const *__restrict _
  __res.__v8[1] = ((__UINT8_TYPE__ *)__ptr)[1];
  return __res.__v16;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(16)(__UINT16_TYPE__ *__restrict __ptr, __UINT16_TYPE__ __val)) {
  union {
     __UINT16_TYPE__ __v16;
@@ -296,7 +296,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER_SWAP(16)(__UINT16_TYPE__ const *__restr
  __res.__v8[0] = ((__UINT8_TYPE__ *)__ptr)[1];
  return __res.__v16;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER_SWAP(16)(__UINT16_TYPE__ *__restrict __ptr, __UINT16_TYPE__ __val)) {
  union {
     __UINT16_TYPE__ __v16;
@@ -329,7 +329,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(32)(__UINT32_TYPE__ const *__restrict _
  }
  return __res.__v32;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(32)(__UINT32_TYPE__ *__restrict __ptr, __UINT32_TYPE__ __val)) {
  union {
     __UINT32_TYPE__ __v32;
@@ -371,7 +371,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER_SWAP(32)(__UINT32_TYPE__ const *__restr
  }
  return __res.__v32;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER_SWAP(32)(__UINT32_TYPE__ *__restrict __ptr, __UINT32_TYPE__ __val)) {
  union {
     __UINT32_TYPE__ __v32;
@@ -423,7 +423,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(64)(__UINT64_TYPE__ const *__restrict _
  }
  return __res.__v64;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(64)(__UINT64_TYPE__ *__restrict __ptr, __UINT64_TYPE__ __val)) {
  union {
     __UINT64_TYPE__ __v64;
@@ -485,7 +485,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER_SWAP(64)(__UINT64_TYPE__ const *__restr
  }
  return __res.__v64;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER_SWAP(64)(__UINT64_TYPE__ *__restrict __ptr, __UINT64_TYPE__ __val)) {
  union {
     __UINT64_TYPE__ __v64;
@@ -565,7 +565,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER(128)(__UINT128_TYPE__ const *__restrict
  }
  return __res.__v128;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER(128)(__UINT128_TYPE__ const *__restrict __ptr, __UINT128_TYPE__ __val)) {
  union {
     __UINT128_TYPE__ __v128;
@@ -663,7 +663,7 @@ __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER_SWAP(128)(__UINT128_TYPE__ const *__res
  }
  return __res.__v128;
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER_SWAP(128)(__UINT128_TYPE__ const *__restrict __ptr, __UINT128_TYPE__ __val)) {
  union {
     __UINT128_TYPE__ __v128;
@@ -726,7 +726,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT16_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER_SWAP(16)(__UINT16_TYPE__ const *__restrict __ptr)) {
  return __hybrid_bswap16(__IMPL_HYBRID_UNALIGNED_GETTER(16)(__ptr));
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER_SWAP(16)(__UINT16_TYPE__ *__restrict __ptr, __UINT16_TYPE__ __val)) {
  __IMPL_HYBRID_UNALIGNED_SETTER(16)(__ptr,__hybrid_bswap16(__val));
 }
@@ -734,7 +734,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT32_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER_SWAP(32)(__UINT32_TYPE__ const *__restrict __ptr)) {
  return __hybrid_bswap32(__IMPL_HYBRID_UNALIGNED_GETTER(32)(__ptr));
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER_SWAP(32)(__UINT32_TYPE__ *__restrict __ptr, __UINT32_TYPE__ __val)) {
  __IMPL_HYBRID_UNALIGNED_SETTER(32)(__ptr,__hybrid_bswap32(__val));
 }
@@ -743,7 +743,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT64_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER_SWAP(64)(__UINT64_TYPE__ const *__restrict __ptr)) {
  return __hybrid_bswap64(__IMPL_HYBRID_UNALIGNED_GETTER(64)(__ptr));
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER_SWAP(64)(__UINT64_TYPE__ *__restrict __ptr, __UINT64_TYPE__ __val)) {
  __IMPL_HYBRID_UNALIGNED_SETTER(64)(__ptr,__hybrid_bswap64(__val));
 }
@@ -752,7 +752,7 @@ __LOCAL __WUNUSED __ATTR_PURE __NONNULL((1)) __UINT128_TYPE__
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_GETTER_SWAP(128)(__UINT128_TYPE__ const *__restrict __ptr)) {
  return __hybrid_bswap128(__IMPL_HYBRID_UNALIGNED_GETTER(128)(__ptr));
 }
-__LOCAL __ATTR_PURE __NONNULL((1)) void
+__LOCAL __NONNULL((1)) void
 __NOTHROW(__IMPL_HYBRID_UNALIGNED_SETTER_SWAP(128)(__UINT128_TYPE__ *__restrict __ptr, __UINT128_TYPE__ __val)) {
  __IMPL_HYBRID_UNALIGNED_SETTER(128)(__ptr,__hybrid_bswap128(__val));
 }

@@ -118,6 +118,9 @@ INTERN struct TPPKeyword TPPKeyword_Empty = {
     /* .k_macro = */NULL,
     /* .k_rare  = */NULL,
     /* .k_id    = */TOK_KEYWORD_BEGIN,
+#if __SIZEOF_POINTER__ > __SIZEOF_INT__
+    /* .k_pad   = */{ 0 },
+#endif
     /* .k_size  = */0,
     /* .k_hash  = */1,
     /* .k_zero  = */{0},

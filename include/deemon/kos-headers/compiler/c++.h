@@ -22,6 +22,15 @@
 #define __P(x) x
 #endif
 
+#ifndef __has_feature
+#define __NO_has_feature 1
+#define __has_feature(x) 0
+#endif
+#ifndef __has_extension
+#define __NO_has_extension 1
+#define __has_extension  __has_feature
+#endif
+
 #define __DECL_BEGIN extern "C" {
 #define __DECL_END   }
 
