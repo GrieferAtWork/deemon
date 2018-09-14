@@ -93,7 +93,24 @@ typedef struct {
 PRIVATE void DCALL
 comiter_fini(CombinationsIterator *__restrict self) {
  Dee_Free(self->ci_indices);
- Dee_Decref(self->ci_combi);
+ Dee_Decref_likely(self->ci_combi);
+}
+
+PRIVATE int DCALL
+comiter_copy(CombinationsIterator *__restrict self,
+             CombinationsIterator *__restrict other) {
+ self->ci_indices = (size_t *)Dee_Malloc(other->ci_combi->c_comlen);
+ if unlikely(!self->ci_indices) goto err;
+ rwlock_read(&other->ci_lock);
+ memcpy(self->ci_indices,other->ci_indices,
+        other->ci_combi->c_comlen * sizeof(size_t));
+ self->ci_first = other->ci_first;
+ rwlock_endread(&other->ci_lock);
+ rwlock_cinit(&self->ci_lock);
+ self->ci_combi = other->ci_combi;
+ Dee_Incref(self->ci_combi);
+err:
+ return -1;
 }
 
 PRIVATE void DCALL
@@ -169,7 +186,7 @@ PRIVATE DeeTypeObject CombinationsIterator_Type = {
         {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */NULL, /* TODO */
-                /* .tp_copy_ctor = */NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)&comiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
                 /* .tp_free      = */NULL,
@@ -404,7 +421,7 @@ PRIVATE DeeTypeObject RepeatCombinationsIterator_Type = {
         {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */NULL, /* TODO */
-                /* .tp_copy_ctor = */NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)&comiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
                 /* .tp_free      = */NULL,
@@ -595,7 +612,7 @@ PRIVATE DeeTypeObject PermutationsIterator_Type = {
         {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */NULL, /* TODO */
-                /* .tp_copy_ctor = */NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)&comiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
                 /* .tp_free      = */NULL,

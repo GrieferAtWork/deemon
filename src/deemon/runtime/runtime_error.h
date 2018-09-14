@@ -45,7 +45,7 @@ INTDEF ATTR_COLD int DCALL err_bytes_not_writable(DeeObject *__restrict bytes_ob
 INTDEF ATTR_COLD int DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);
 INTDEF ATTR_COLD int DCALL err_index_out_of_bounds_ob(DeeObject *__restrict self, DeeObject *__restrict index);
 INTDEF ATTR_COLD int DCALL err_va_index_out_of_bounds(size_t index, size_t size);
-INTDEF ATTR_COLD int DCALL err_index_unbound(DeeObject *__restrict self, size_t index);
+INTDEF ATTR_COLD int DCALL err_unbound_index(DeeObject *__restrict self, size_t index);
 INTDEF ATTR_COLD int DCALL err_expected_single_character_string(DeeObject *__restrict str);
 INTDEF ATTR_COLD int DCALL err_expected_string_for_attribute(DeeObject *__restrict but_instead_got);
 INTDEF ATTR_COLD int DCALL err_integer_overflow(DeeObject *__restrict overflowing_object, size_t cutoff_bits, bool positive_overflow);

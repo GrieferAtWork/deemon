@@ -42,8 +42,10 @@ typedef struct {
 #ifndef CONFIG_NO_THREADS
     rwlock_t        *rv_plock;    /* [0..1][const] An optional lock that must be held when accessing the list.
                                    * Also: when non-NULL, items of the vector can be modified. */
+#define RefVector_IsWritable(self) ((self)->rv_plock != NULL)
 #else
     bool             rv_writable; /* [const] Set to true if items of the vector can be modified. */
+#define RefVector_IsWritable(self) ((self)->rv_writable)
 #endif
 } RefVector;
 

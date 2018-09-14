@@ -199,7 +199,7 @@ err_va_index_out_of_bounds(size_t index, size_t size) {
                         index,size);
 }
 INTERN ATTR_COLD int DCALL
-err_index_unbound(DeeObject *__restrict self, size_t index) {
+err_unbound_index(DeeObject *__restrict self, size_t index) {
  ASSERT_OBJECT(self);
  return DeeError_Throwf(&DeeError_UnboundItem,
                         "Index `%Iu' of instance of `%k': %k has not been bound",

@@ -641,8 +641,8 @@ PRIVATE struct type_seq cat_seq = {
 };
 
 
-INTDEF void DCALL
-tuple_tp_free(void *__restrict ob);
+INTDEF void DCALL tuple_tp_free(void *__restrict ob);
+#define cat_tp_free  tuple_tp_free
 
 PRIVATE int DCALL cat_bool(Cat *__restrict self) {
  size_t i; int temp;
@@ -654,7 +654,27 @@ PRIVATE int DCALL cat_bool(Cat *__restrict self) {
 }
 
 
+
+
+INTDEF DREF Tuple *DCALL
+tuple_deepcopy(Tuple *__restrict self);
+
+PRIVATE DREF Cat *DCALL
+cat_deepcopy(Cat *__restrict self) {
+ DREF Cat *result;
+ result = (DREF Cat *)tuple_deepcopy((Tuple *)self);
+ if likely(result) {
+  Dee_Incref(&DeeCat_Type);
+  result->ob_type = &DeeCat_Type;
+  Dee_DecrefNokill(&DeeTuple_Type);
+ }
+ return result;
+}
+
+
 INTERN DeeTypeObject DeeCat_Type = {
+    /* NOTE: `_catseq' objects are never empty, because then
+     *        we'd get an overlap with `Dee_EmptyTuple' */
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_catseq",
     /* .tp_doc      = */NULL,
@@ -665,11 +685,11 @@ INTERN DeeTypeObject DeeCat_Type = {
     /* .tp_init = */{
         {
             /* .tp_var = */{
-                /* .tp_ctor      = */NULL, /* TODO */
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL, /* TODO */
-                /* .tp_free      = */&tuple_tp_free,
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */&DeeObject_NewRef,
+                /* .tp_deep_ctor = */&cat_deepcopy,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */&cat_tp_free,
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cat_fini,

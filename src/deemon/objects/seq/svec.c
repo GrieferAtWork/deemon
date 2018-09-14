@@ -309,7 +309,7 @@ rvec_getitem(RefVector *__restrict self,
   if (self->rv_plock)
       rwlock_endread(self->rv_plock);
 #endif
-  err_index_unbound((DeeObject *)self,index);
+  err_unbound_index((DeeObject *)self,index);
   goto err;
  }
  Dee_Incref(result);
@@ -395,7 +395,7 @@ rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
   if (self->rv_plock)
       rwlock_endread(self->rv_plock);
 #endif
-  err_index_unbound((DeeObject *)self,index);
+  err_unbound_index((DeeObject *)self,index);
   return NULL;
  }
  Dee_Incref(result);
@@ -425,7 +425,7 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 #ifndef CONFIG_NO_THREADS
   rwlock_endwrite(self->rv_plock);
 #endif
-  return err_index_unbound((DeeObject *)self,index);
+  return err_unbound_index((DeeObject *)self,index);
  }
  self->rv_vector[index] = NULL;
 #ifndef CONFIG_NO_THREADS
@@ -433,6 +433,41 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 #endif
  Dee_Decref(oldobj);
  return 0;
+}
+PRIVATE void DCALL
+rvec_nsi_delitem_fast(RefVector *__restrict self, size_t index) {
+ DREF DeeObject *oldobj;
+ ASSERT(index < self->rv_length);
+#ifndef CONFIG_NO_THREADS
+ ASSERT(self->rv_plock);
+ rwlock_write(self->rv_plock);
+#else
+ ASSERT(self->rv_writable);
+#endif
+ oldobj = self->rv_vector[index];
+ self->rv_vector[index] = NULL;
+#ifndef CONFIG_NO_THREADS
+ rwlock_endwrite(self->rv_plock);
+#endif
+ Dee_XDecref(oldobj);
+}
+PRIVATE void DCALL
+rvec_nsi_setitem_fast(RefVector *__restrict self, size_t index,
+                      /*inherit(always)*/DREF DeeObject *__restrict value) {
+ DREF DeeObject *oldobj;
+ ASSERT(index < self->rv_length);
+#ifndef CONFIG_NO_THREADS
+ ASSERT(self->rv_plock);
+ rwlock_write(self->rv_plock);
+#else
+ ASSERT(self->rv_writable);
+#endif
+ oldobj = self->rv_vector[index];
+ self->rv_vector[index] = value;
+#ifndef CONFIG_NO_THREADS
+ rwlock_endwrite(self->rv_plock);
+#endif
+ Dee_XDecref(oldobj);
 }
 PRIVATE int DCALL
 rvec_nsi_setitem(RefVector *__restrict self, size_t index,
@@ -476,6 +511,391 @@ rvec_nsi_getitem_fast(RefVector *__restrict self, size_t index) {
  return result;
 }
 
+PRIVATE DREF DeeObject *DCALL
+rvec_nsi_xchitem(RefVector *__restrict self, size_t index,
+                 DeeObject *__restrict value) {
+ DREF DeeObject *result;
+ if unlikely(index >= self->rv_length) {
+  err_index_out_of_bounds((DeeObject *)self,index,self->rv_length);
+  goto err;
+ }
+#ifndef CONFIG_NO_THREADS
+ if (self->rv_plock)
+  rwlock_write(self->rv_plock);
+ else
+#else
+ if (!self->rv_writable)
+#endif
+ {
+  err_readonly_rvec();
+  goto err;
+ }
+ result = self->rv_vector[index];
+ if unlikely(!result) {
+#ifndef CONFIG_NO_THREADS
+  rwlock_endwrite(self->rv_plock);
+#endif
+  err_unbound_index((DeeObject *)self,index);
+  goto err;
+ }
+ Dee_Incref(value);
+ self->rv_vector[index] = value;
+#ifndef CONFIG_NO_THREADS
+ rwlock_endwrite(self->rv_plock);
+#endif
+ return result;
+err:
+ return NULL;
+}
+
+PRIVATE bool DCALL
+rvec_nsi_cmpdelitem(RefVector *__restrict self, size_t index,
+                    DeeObject *__restrict old_value) {
+ ASSERT(index < self->rv_length);
+#ifndef CONFIG_NO_THREADS
+ ASSERT(self->rv_plock);
+ rwlock_write(self->rv_plock);
+#else
+ ASSERT(self->rv_writable);
+#endif
+ if unlikely(self->rv_vector[index] != old_value) {
+#ifndef CONFIG_NO_THREADS
+  rwlock_endwrite(self->rv_plock);
+#endif
+  return false;
+ }
+ self->rv_vector[index] = NULL;
+#ifndef CONFIG_NO_THREADS
+ rwlock_endwrite(self->rv_plock);
+#endif
+ Dee_Decref(old_value);
+ return true;
+}
+
+PRIVATE int
+(DCALL call_eq_predicate)(DeeObject *__restrict lhs,
+                          DeeObject *__restrict rhs,
+                          DeeObject *pred_eq) {
+ int result;
+ if (pred_eq) {
+  DREF DeeObject *pred_result;
+  DeeObject *args[2];
+  args[0] = lhs;
+  args[1] = rhs;
+  pred_result = DeeObject_Call(pred_eq,2,args);
+  if unlikely(!pred_result) goto err;
+  result = DeeObject_Bool(pred_result);
+  Dee_Decref(pred_result);
+ } else {
+  result = DeeObject_CompareEq(lhs,rhs);
+ }
+ return result;
+err:
+ return -1;
+}
+
+PRIVATE size_t DCALL
+rvec_nsi_find(RefVector *__restrict self,
+              size_t start, size_t end,
+              DeeObject *__restrict elem,
+              DeeObject *pred_eq) {
+ size_t i;
+ DREF DeeObject *item; int temp;
+ if (start > self->rv_length)
+     start = self->rv_length;
+ for (i = start; i < end; ++i) {
+  item = rvec_nsi_getitem_fast(self,i);
+  if (!item) continue; /* Unbound index */
+  temp = call_eq_predicate(item,elem,pred_eq);
+  Dee_Decref(item);
+  if (temp == 0) continue;
+  if unlikely(temp < 0) goto err;
+  return i;
+ }
+ return (size_t)-1;
+err:
+ return (size_t)-2;
+}
+PRIVATE size_t DCALL
+rvec_nsi_rfind(RefVector *__restrict self,
+               size_t start, size_t end,
+               DeeObject *__restrict elem,
+               DeeObject *pred_eq) {
+ size_t i;
+ DREF DeeObject *item; int temp;
+ if (start > self->rv_length)
+     start = self->rv_length;
+ i = end;
+ while (i > start) {
+  --i;
+  item = rvec_nsi_getitem_fast(self,i);
+  if (!item) continue; /* Unbound index */
+  temp = call_eq_predicate(item,elem,pred_eq);
+  Dee_Decref(item);
+  if (temp == 0) continue;
+  if unlikely(temp < 0) goto err;
+  return i;
+ }
+ return (size_t)-1;
+err:
+ return (size_t)-2;
+}
+
+
+PRIVATE int DCALL
+rvec_nsi_remove(RefVector *__restrict self,
+                size_t start, size_t end,
+                DeeObject *__restrict elem,
+                DeeObject *pred_eq) {
+ size_t i;
+ DREF DeeObject *item; int temp;
+ if (!RefVector_IsWritable(self))
+      return err_readonly_rvec();
+ if (start > self->rv_length)
+     start = self->rv_length;
+again:
+ for (i = start; i < end; ++i) {
+  item = rvec_nsi_getitem_fast(self,i);
+  if (!item) continue; /* Unbound index */
+  temp = call_eq_predicate(item,elem,pred_eq);
+  Dee_Decref(item);
+  if (temp == 0) continue;
+  if unlikely(temp < 0) goto err;
+  /* Found the item. */
+  if (!rvec_nsi_cmpdelitem(self,i,item))
+       goto again;
+  return 1;
+ }
+ return 0;
+err:
+ return -1;
+}
+PRIVATE int DCALL
+rvec_nsi_rremove(RefVector *__restrict self,
+                 size_t start, size_t end,
+                 DeeObject *__restrict elem,
+                 DeeObject *pred_eq) {
+ size_t i;
+ DREF DeeObject *item; int temp;
+ if (!RefVector_IsWritable(self))
+      return err_readonly_rvec();
+ if (start > self->rv_length)
+     start = self->rv_length;
+again:
+ i = end;
+ while (i > start) {
+  --i;
+  item = rvec_nsi_getitem_fast(self,i);
+  if (!item) continue; /* Unbound index */
+  temp = call_eq_predicate(item,elem,pred_eq);
+  Dee_Decref(item);
+  if (temp == 0) continue;
+  if unlikely(temp < 0) goto err;
+  /* Found the item. */
+  if (!rvec_nsi_cmpdelitem(self,i,item))
+       goto again;
+  return 1;
+ }
+ return 0;
+err:
+ return -1;
+}
+PRIVATE size_t DCALL
+rvec_nsi_removeall(RefVector *__restrict self,
+                   size_t start, size_t end,
+                   DeeObject *__restrict elem,
+                   DeeObject *pred_eq) {
+ size_t i; size_t result = 0;
+ DREF DeeObject *item; int temp;
+ if (!RefVector_IsWritable(self))
+      return err_readonly_rvec();
+ if (start > self->rv_length)
+     start = self->rv_length;
+again:
+ for (i = start; i < end; ++i) {
+  item = rvec_nsi_getitem_fast(self,i);
+  if (!item) continue; /* Unbound index */
+  temp = call_eq_predicate(item,elem,pred_eq);
+  Dee_Decref(item);
+  if (temp == 0) continue;
+  if unlikely(temp < 0) goto err;
+  /* Found the item. */
+  if (!rvec_nsi_cmpdelitem(self,i,item))
+       goto again;
+  ++result;
+  if unlikely(result == (size_t)-2)
+     break; /* Prevent overflows. */
+ }
+ return result;
+err:
+ return (size_t)-1;
+}
+PRIVATE size_t DCALL
+rvec_nsi_removeif(RefVector *__restrict self,
+                  size_t start, size_t end,
+                  DeeObject *__restrict should_remove) {
+ size_t i; size_t result = 0; int temp;
+ DREF DeeObject *item,*callback_result;
+ if (!RefVector_IsWritable(self))
+      return err_readonly_rvec();
+ if (start > self->rv_length)
+     start = self->rv_length;
+again:
+ for (i = start; i < end; ++i) {
+  item = rvec_nsi_getitem_fast(self,i);
+  if (!item) continue; /* Unbound index */
+  callback_result = DeeObject_Call(should_remove,1,&item);
+  Dee_Decref(item);
+  if unlikely(!callback_result) goto err;
+  temp = DeeObject_Bool(callback_result);
+  Dee_Decref(callback_result);
+  if (temp == 0) continue;
+  if unlikely(temp < 0) goto err;
+  /* Found the item. */
+  if (!rvec_nsi_cmpdelitem(self,i,item))
+       goto again;
+  ++result;
+  if unlikely(result == (size_t)-2)
+     break; /* Prevent overflows. */
+ }
+ return result;
+err:
+ return (size_t)-1;
+}
+
+PRIVATE int DCALL
+rvec_nsi_delrange(RefVector *__restrict self,
+                  dssize_t start, dssize_t end) {
+ size_t i;
+ if (!RefVector_IsWritable(self))
+      return err_readonly_rvec();
+ if (start < 0) start += self->rv_length;
+ if (end < 0) end += self->rv_length;
+ if ((size_t)end > self->rv_length) end = (dssize_t)self->rv_length;
+ for (i = (size_t)start; i < (size_t)end; ++i)
+    rvec_nsi_delitem_fast(self,i);
+ return 0;
+}
+
+PRIVATE int DCALL
+rvec_nsi_delrange_n(RefVector *__restrict self,
+                    dssize_t start) {
+ size_t i,end = self->rv_length;
+ if (!RefVector_IsWritable(self))
+      return err_readonly_rvec();
+ if (start < 0) start += end;
+ for (i = (size_t)start; i < end; ++i)
+    rvec_nsi_delitem_fast(self,i);
+ return 0;
+}
+
+PRIVATE int DCALL
+rvec_nsi_setrange(RefVector *__restrict self,
+                  dssize_t start, dssize_t end,
+                  DeeObject *__restrict values) {
+ size_t i,fast_length;
+ DREF DeeObject *elem;
+ if (DeeNone_Check(values))
+     return rvec_nsi_delrange(self,start,end);
+ if (!RefVector_IsWritable(self))
+     return err_readonly_rvec();
+ if (start < 0) start += self->rv_length;
+ if (end < 0) end += self->rv_length;
+ if ((size_t)end > self->rv_length)
+     end = (dssize_t)self->rv_length;
+ fast_length = DeeFastSeq_GetSize(values);
+ if (fast_length != DEE_FASTSEQ_NOTFAST) {
+  if (fast_length != ((size_t)end - (size_t)start)) {
+   return err_invalid_unpack_size(values,
+                                 (size_t)end - (size_t)start,
+                                  fast_length);
+  }
+  for (i = (size_t)start; i < (size_t)end; ++i) {
+   elem = DeeFastSeq_GetItem(values,i - (size_t)start);
+   if unlikely(!elem) goto err;
+   rvec_nsi_setitem_fast(self,i,elem); /* Inherit reference. */
+  }
+ } else {
+  DREF DeeObject *iterator;
+  iterator = DeeObject_IterSelf(values);
+  if unlikely(!iterator) goto err;
+  for (i = (size_t)start; i < (size_t)end; ++i) {
+   elem = DeeObject_IterNext(iterator);
+   if unlikely(!ITER_ISOK(elem)) {
+    if unlikely(elem == ITER_DONE) {
+     err_invalid_unpack_size(values,
+                            (size_t)end - (size_t)start,
+                             i - (size_t)start);
+    }
+err_iterator:
+    Dee_Decref(iterator);
+    goto err;
+   }
+   rvec_nsi_setitem_fast(self,i,elem); /* Inherit reference. */
+  }
+  /* Make sure that the given iterator ends here! */
+  elem = DeeObject_IterNext(iterator);
+  if unlikely(elem != ITER_DONE) {
+   if (elem) {
+    err_invalid_unpack_iter_size(values,iterator,(size_t)end - (size_t)start);
+    Dee_Decref(elem);
+   }
+   goto err_iterator;
+  }
+  Dee_Decref(iterator);
+ }
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+rvec_nsi_setrange_n(RefVector *__restrict self,
+                    dssize_t start,
+                    DeeObject *__restrict values) {
+ if (DeeNone_Check(values))
+     return rvec_nsi_delrange_n(self,start);
+ return rvec_nsi_setrange(self,start,
+                         (size_t)self->rv_length,
+                          values);
+}
+
+PRIVATE int DCALL
+rvec_delrange(RefVector *__restrict self,
+              DeeObject *__restrict start,
+              DeeObject *__restrict end) {
+ dssize_t start_index;
+ dssize_t end_index;
+ if (DeeObject_AsSSize(start,&start_index))
+     goto err;
+ if (DeeNone_Check(end))
+     return rvec_nsi_delrange_n(self,start_index);
+ if (DeeObject_AsSSize(end,&end_index))
+     goto err;
+ return rvec_nsi_delrange(self,start_index,end_index);
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+rvec_setrange(RefVector *__restrict self,
+              DeeObject *__restrict start,
+              DeeObject *__restrict end,
+              DeeObject *__restrict values) {
+ dssize_t start_index;
+ dssize_t end_index;
+ if (DeeObject_AsSSize(start,&start_index))
+     goto err;
+ if (DeeNone_Check(end))
+     return rvec_nsi_setrange_n(self,start_index,values);
+ if (DeeObject_AsSSize(end,&end_index))
+     goto err;
+ return rvec_nsi_setrange(self,start_index,end_index,values);
+err:
+ return -1;
+}
+
+
 PRIVATE struct type_nsi rvec_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
     /* .nsi_flags   = */TYPE_SEQX_FMUTABLE,
@@ -489,35 +909,35 @@ PRIVATE struct type_nsi rvec_nsi = {
             /* .nsi_getitem_fast = */(void *)&rvec_nsi_getitem_fast,
             /* .nsi_getrange     = */(void *)NULL,
             /* .nsi_getrange_n   = */(void *)NULL,
-            /* .nsi_setrange     = */(void *)NULL,
-            /* .nsi_setrange_n   = */(void *)NULL,
-            /* .nsi_find         = */(void *)NULL, /* TODO */
-            /* .nsi_rfind        = */(void *)NULL, /* TODO */
-            /* .nsi_xch          = */(void *)NULL,
+            /* .nsi_setrange     = */(void *)&rvec_nsi_setrange,
+            /* .nsi_setrange_n   = */(void *)&rvec_nsi_setrange_n,
+            /* .nsi_find         = */(void *)&rvec_nsi_find,
+            /* .nsi_rfind        = */(void *)&rvec_nsi_rfind,
+            /* .nsi_xch          = */(void *)&rvec_nsi_xchitem,
             /* .nsi_insert       = */(void *)NULL,
             /* .nsi_insertall    = */(void *)NULL,
             /* .nsi_insertvec    = */(void *)NULL,
             /* .nsi_pop          = */(void *)NULL,
             /* .nsi_erase        = */(void *)NULL,
-            /* .nsi_remove       = */(void *)NULL, /* TODO */
-            /* .nsi_rremove      = */(void *)NULL, /* TODO */
-            /* .nsi_removeall    = */(void *)NULL, /* TODO */
-            /* .nsi_removeif     = */(void *)NULL  /* TODO */
+            /* .nsi_remove       = */(void *)&rvec_nsi_remove,
+            /* .nsi_rremove      = */(void *)&rvec_nsi_rremove,
+            /* .nsi_removeall    = */(void *)&rvec_nsi_removeall,
+            /* .nsi_removeif     = */(void *)&rvec_nsi_removeif
         }
     }
 };
 
 
 PRIVATE struct type_seq rvec_seq = {
-    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self))&rvec_iter,
-    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self))&rvec_size,
-    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&rvec_contains,
-    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict index))&rvec_getitem,
-    /* .tp_del       = */(int(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict index))&rvec_delitem,
-    /* .tp_set       = */(int(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict index, DeeObject *__restrict value))&rvec_setitem,
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_iter,
+    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_size,
+    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&rvec_contains,
+    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&rvec_getitem,
+    /* .tp_del       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&rvec_delitem,
+    /* .tp_set       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&rvec_setitem,
     /* .tp_range_get = */NULL,
-    /* .tp_range_del = */NULL,
-    /* .tp_range_set = */NULL,
+    /* .tp_range_del = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&rvec_delrange,
+    /* .tp_range_set = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&rvec_setrange,
     /* .tp_nsi       = */&rvec_nsi
 };
 

@@ -25,6 +25,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/none.h>
+#include <deemon/string.h>
 #include <deemon/int.h>
 #include <deemon/error.h>
 
@@ -562,7 +563,7 @@ PRIVATE struct type_seq range_seq = {
 
 PRIVATE struct type_member range_members[] = {
     TYPE_MEMBER_FIELD("start",STRUCT_OBJECT,offsetof(Range,r_begin)),
-    TYPE_MEMBER_FIELD("stop",STRUCT_OBJECT,offsetof(Range,r_end)),
+    TYPE_MEMBER_FIELD("end",STRUCT_OBJECT,offsetof(Range,r_end)),
     TYPE_MEMBER_FIELD("step",STRUCT_OBJECT,offsetof(Range,r_step)),
     TYPE_MEMBER_FIELD("__rev__",STRUCT_CONST|STRUCT_BOOL,offsetof(Range,r_rev)),
     TYPE_MEMBER_END
@@ -572,6 +573,15 @@ PRIVATE struct type_member range_class_members[] = {
     TYPE_MEMBER_CONST("iterator",&RangeIterator_Type),
     TYPE_MEMBER_END
 };
+
+PRIVATE DREF DeeObject *DCALL
+range_repr(Range *__restrict self) {
+ return self->r_step
+       ? DeeString_Newf("[%r:%r,%r]",self->r_begin,self->r_end,self->r_step)
+       : DeeString_Newf("[%r:%r]",self->r_begin,self->r_end)
+       ;
+}
+
 
 INTERN DeeTypeObject Range_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -586,7 +596,7 @@ INTERN DeeTypeObject Range_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */NULL, /* TODO */
                 /* .tp_copy_ctor = */NULL, /* TODO */
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */NULL, /* TODO */
                 /* .tp_free      = */NULL,
                 {
@@ -600,7 +610,7 @@ INTERN DeeTypeObject Range_Type = {
     },
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
-        /* .tp_repr = */NULL,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&range_repr,
         /* .tp_bool = */NULL /* TODO */
     },
     /* .tp_call          = */NULL,
@@ -976,7 +986,7 @@ PRIVATE struct type_seq intrange_seq = {
 
 PRIVATE struct type_member intrange_members[] = {
     TYPE_MEMBER_FIELD("start",STRUCT_ATOMIC|STRUCT_SSIZE_T,offsetof(IntRange,ir_begin)),
-    TYPE_MEMBER_FIELD("stop",STRUCT_ATOMIC|STRUCT_SSIZE_T,offsetof(IntRange,ir_end)),
+    TYPE_MEMBER_FIELD("end",STRUCT_ATOMIC|STRUCT_SSIZE_T,offsetof(IntRange,ir_end)),
     TYPE_MEMBER_FIELD("step",STRUCT_ATOMIC|STRUCT_SSIZE_T,offsetof(IntRange,ir_step)),
     TYPE_MEMBER_END
 };
@@ -985,6 +995,14 @@ PRIVATE struct type_member intrange_class_members[] = {
     TYPE_MEMBER_CONST("iterator",&IntRangeIterator_Type),
     TYPE_MEMBER_END
 };
+
+PRIVATE DREF DeeObject *DCALL
+intrange_repr(IntRange *__restrict self) {
+ return self->ir_step != 1
+       ? DeeString_Newf("[%Id:%Id,%Id]",self->ir_begin,self->ir_end,self->ir_step)
+       : DeeString_Newf("[%Id:%Id]",self->ir_begin,self->ir_end)
+       ;
+}
 
 INTERN DeeTypeObject IntRange_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1013,7 +1031,7 @@ INTERN DeeTypeObject IntRange_Type = {
     },
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
-        /* .tp_repr = */NULL,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&intrange_repr,
         /* .tp_bool = */NULL /* TODO */
     },
     /* .tp_call          = */NULL,

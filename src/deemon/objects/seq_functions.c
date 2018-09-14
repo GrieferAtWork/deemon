@@ -116,7 +116,7 @@ DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
       goto err;
      }
      result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,index);
-     if unlikely(!result) err_index_unbound(self,index);
+     if unlikely(!result) err_unbound_index(self,index);
      return result;
     }
     if (nsi->nsi_seqlike.nsi_getrange) {

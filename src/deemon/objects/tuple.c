@@ -956,6 +956,25 @@ PRIVATE DREF Tuple *DCALL tuple_ctor(void) {
  return_reference_((DREF Tuple *)Dee_EmptyTuple);
 }
 
+INTERN DREF Tuple *DCALL
+tuple_deepcopy(Tuple *__restrict self) {
+ DREF Tuple *result; size_t i,size = DeeTuple_SIZE(self);
+ result = (DREF Tuple *)DeeTuple_NewUninitialized(size);
+ if unlikely(!result) goto err;
+ for (i = 0; i < size; ++i) {
+  DREF DeeObject *temp;
+  temp = DeeObject_DeepCopy(DeeTuple_GET(self,i));
+  if unlikely(!temp) goto err_r;
+  DeeTuple_SET(result,i,temp); /* Inherit reference. */
+ }
+ return result;
+err_r:
+ while (i--) Dee_Decref(DeeTuple_GET(result,i));
+ DeeTuple_FreeUninitialized((DeeObject *)result);
+err:
+ return NULL;
+}
+
 PRIVATE DREF Tuple *DCALL
 tuple_init(size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
@@ -1574,7 +1593,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
             /* .tp_var = */{
                 /* .tp_ctor      = */&tuple_ctor,
                 /* .tp_copy_ctor = */&DeeObject_NewRef,
-                /* .tp_deep_ctor = */&DeeObject_NewRef,
+                /* .tp_deep_ctor = */&tuple_deepcopy,
                 /* .tp_any_ctor  = */&tuple_init,
 #if TUPLE_CACHE_MAXCOUNT
                 /* .tp_free      = */&tuple_tp_free,

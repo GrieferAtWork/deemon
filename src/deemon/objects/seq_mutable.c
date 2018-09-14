@@ -2289,7 +2289,7 @@ DeeSeq_PopItem(DeeObject *__restrict self,
        goto err;
       }
       result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,(size_t)index);
-      if unlikely(!result) { err_index_unbound(self,(size_t)index); goto err; }
+      if unlikely(!result) { err_unbound_index(self,(size_t)index); goto err; }
       if unlikely((*nsi->nsi_seqlike.nsi_delitem)(self,(size_t)index)) goto err_r;
       return result;
      }
@@ -2315,7 +2315,7 @@ DeeSeq_PopItem(DeeObject *__restrict self,
        goto err;
       }
       result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,(size_t)index);
-      if unlikely(!result) { err_index_unbound(self,(size_t)index); goto err; }
+      if unlikely(!result) { err_unbound_index(self,(size_t)index); goto err; }
       if unlikely((*nsi->nsi_seqlike.nsi_erase)(self,(size_t)index,1) == (size_t)-1) goto err_r;
       return result;
      }
@@ -2341,7 +2341,7 @@ DeeSeq_PopItem(DeeObject *__restrict self,
        goto err;
       }
       result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,(size_t)index);
-      if unlikely(!result) { err_index_unbound(self,(size_t)index); goto err; }
+      if unlikely(!result) { err_unbound_index(self,(size_t)index); goto err; }
       if unlikely((*nsi->nsi_seqlike.nsi_setrange)(self,(size_t)index,(size_t)index+1,Dee_None)) goto err_r;
       return result;
      }

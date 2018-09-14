@@ -809,7 +809,7 @@ mg_get(ModuleGlobals *__restrict self,
  if unlikely(!result) {
   rwlock_endread(&module->mo_lock);
   DeeModule_UnlockSymbols((DeeObject *)module);
-  err_index_unbound((DeeObject *)self,index);
+  err_unbound_index((DeeObject *)self,index);
   return NULL;
  }
  Dee_Incref(result);
