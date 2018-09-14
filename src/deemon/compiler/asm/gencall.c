@@ -351,6 +351,25 @@ got_small_method:
     default: break;
     }
    }
+   if (func->a_type == AST_CONSTEXPR && argc <= 1 &&
+      (DeeObjMethod_Check(func->a_constexpr) ||
+       DeeKwObjMethod_Check(func->a_constexpr))) {
+    char const *name = DeeObjMethod_Name(func->a_constexpr);
+    if (name) {
+     /* call to some other object. */
+     int32_t attrid; DREF DeeObject *name_ob;
+     name_ob = DeeString_New(name);
+     if unlikely(!name_ob) goto err;
+     attrid = asm_newconst(name_ob);
+     Dee_Decref(name_ob);
+     if unlikely(attrid < 0) goto err;
+     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+     if unlikely(push_tuple_items(args->a_constexpr,args)) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
+     if (asm_gcallattr_const((uint16_t)attrid,argc)) goto err;
+     goto pop_unused;
+    }
+   }
    if (func->a_type == AST_OPERATOR &&
        func->a_flag == OPERATOR_GETATTR &&
      !(func->a_operator.o_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS))) {
@@ -573,6 +592,25 @@ invoke_cattr_funsym_tuple:
     goto pop_unused;
    }
   }
+  if (func->a_type == AST_CONSTEXPR &&
+     (DeeObjMethod_Check(func->a_constexpr) ||
+      DeeKwObjMethod_Check(func->a_constexpr))) {
+   char const *name = DeeObjMethod_Name(func->a_constexpr);
+   if (name) {
+    int32_t attrid; DREF DeeObject *name_ob;
+    name_ob = DeeString_New(name);
+    if unlikely(!name_ob) goto err;
+    attrid = asm_newconst(name_ob);
+    Dee_Decref(name_ob);
+    if unlikely(attrid < 0) goto err;
+    if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
+    if (asm_gcallattr_const_tuple((uint16_t)attrid)) goto err;
+    goto pop_unused;
+   }
+  }
   if (func->a_type == AST_OPERATOR &&
       func->a_flag == OPERATOR_GETATTR &&
     !(func->a_operator.o_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS))) {
@@ -660,10 +698,27 @@ check_getattr_base_symbol_class_tuple:
      !ast_multiple_hasexpand(arg0)) {
    if (arg0->a_flag == AST_FMULTIPLE_GENERIC &&
        arg0->a_multiple.m_astc <= UINT8_MAX) {
-    size_t         seq_argc = arg0->a_multiple.m_astc;
+    size_t       seq_argc = arg0->a_multiple.m_astc;
     struct ast **seq_argv = arg0->a_multiple.m_astv;
     /* Special case: Brace initializer-call can be encoded as ASM_CALL_SEQ. */
-#if 1
+    if (func->a_type == AST_CONSTEXPR &&
+       (DeeObjMethod_Check(func->a_constexpr) ||
+        DeeKwObjMethod_Check(func->a_constexpr))) {
+     char const *name = DeeObjMethod_Name(func->a_constexpr);
+     if (name) {
+      int32_t attrid; DREF DeeObject *name_ob;
+      name_ob = DeeString_New(name);
+      if unlikely(!name_ob) goto err;
+      attrid = asm_newconst(name_ob);
+      Dee_Decref(name_ob);
+      if unlikely(attrid < 0) goto err;
+      /* callattr with sequence argument. */
+      if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+      for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+      if (asm_gcallattr_const_seq((uint16_t)attrid,(uint8_t)seq_argc)) goto err;
+      goto pop_unused;
+     }
+    }
     if (func->a_type == AST_OPERATOR &&
         func->a_flag == OPERATOR_GETATTR &&
       !(func->a_operator.o_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS)) &&
@@ -679,7 +734,6 @@ check_getattr_base_symbol_class_tuple:
      if (asm_gcallattr_const_seq((uint16_t)cid,(uint8_t)seq_argc)) goto err;
      goto pop_unused;
     }
-#endif
     if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
     for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
     if (asm_gcall_seq((uint8_t)seq_argc)) goto err;
@@ -946,6 +1000,25 @@ got_method:
    break;
   }
  }
+ if (func->a_type == AST_CONSTEXPR &&
+    (DeeObjMethod_Check(func->a_constexpr) ||
+     DeeKwObjMethod_Check(func->a_constexpr))) {
+  char const *name = DeeObjMethod_Name(func->a_constexpr);
+  if (name) {
+   int32_t attrid; DREF DeeObject *name_ob;
+   name_ob = DeeString_New(name);
+   if unlikely(!name_ob) goto err;
+   attrid = asm_newconst(name_ob);
+   Dee_Decref(name_ob);
+   if unlikely(attrid < 0) goto err;
+   /* call to some other object. */
+   if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+   for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gcallattr_const((uint16_t)attrid,argc)) goto err;
+   goto pop_unused;
+  }
+ }
  if (func->a_type == AST_OPERATOR &&
      func->a_flag == OPERATOR_GETATTR &&
    !(func->a_operator.o_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS))) {
@@ -1066,6 +1139,96 @@ asm_gcall_kw_expr(struct ast *__restrict func,
                   struct ast *__restrict ddi_ast,
                   unsigned int gflags) {
  /* Optimizations for (highly likely) invocations, using the dedicated instruction. */
+ if (func->a_type == AST_CONSTEXPR &&
+    (DeeObjMethod_Check(func->a_constexpr) ||
+     DeeKwObjMethod_Check(func->a_constexpr))) {
+  char const *name = DeeObjMethod_Name(func->a_constexpr);
+  if (name) {
+   int32_t attrid; DREF DeeObject *name_ob;
+   name_ob = DeeString_New(name);
+   if unlikely(!name_ob) goto err;
+   attrid = asm_newconst(name_ob);
+   Dee_Decref(name_ob);
+   if unlikely(attrid < 0) goto err;
+   if (kwds->a_type == AST_CONSTEXPR) {
+    int32_t kwd_cid;
+    kwd_cid = asm_newconst(kwds->a_constexpr);
+    if unlikely(kwd_cid < 0) goto err;
+    if (args->a_type == AST_MULTIPLE &&
+        args->a_flag != AST_FMULTIPLE_KEEPLAST &&
+        args->a_multiple.m_astc <= UINT8_MAX &&
+       !ast_multiple_hasexpand(args)) {
+     size_t i;
+     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+     for (i = 0; i < args->a_multiple.m_astc; ++i) {
+      if (ast_genasm(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+          goto err;
+     }
+     if (ast_predict_type(args) != &DeeTuple_Type &&
+         asm_gcast_tuple()) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
+     if (asm_gcallattr_const_kw((uint16_t)attrid,
+                                (uint8_t)args->a_multiple.m_astc,
+                                (uint16_t)kwd_cid)) goto err;
+     goto pop_unused;
+    }
+    if (args->a_type == AST_CONSTEXPR &&
+        args->a_constexpr == Dee_EmptyTuple) {
+     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+     if (ast_predict_type(args) != &DeeTuple_Type &&
+         asm_gcast_tuple()) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
+     if (asm_gcallattr_const_kw((uint16_t)attrid,0,(uint16_t)kwd_cid)) goto err;
+     goto pop_unused;
+    }
+    if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (ast_predict_type(args) != &DeeTuple_Type &&
+        asm_gcast_tuple()) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    if (asm_gcallattr_const_tuple_kw((uint16_t)attrid,(uint16_t)kwd_cid)) goto err;
+    goto pop_unused;
+   } else {
+    if (args->a_type == AST_MULTIPLE &&
+        args->a_flag != AST_FMULTIPLE_KEEPLAST &&
+        args->a_multiple.m_astc <= UINT8_MAX &&
+       !ast_multiple_hasexpand(args)) {
+     size_t i;
+     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+     if (asm_gpush_const((uint16_t)attrid)) goto err;
+     for (i = 0; i < args->a_multiple.m_astc; ++i) {
+      if (ast_genasm(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+          goto err;
+     }
+     if (ast_predict_type(args) != &DeeTuple_Type &&
+         asm_gcast_tuple()) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
+     if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+     if (asm_gcallattr_kwds((uint8_t)args->a_multiple.m_astc)) goto err;
+     goto pop_unused;
+    }
+    if (args->a_type == AST_CONSTEXPR &&
+        args->a_constexpr == Dee_EmptyTuple) {
+     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+     if (asm_gpush_const((uint16_t)attrid)) goto err;
+     if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
+     if (asm_gcallattr_kwds(0)) goto err;
+     goto pop_unused;
+    }
+    if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
+    if (asm_gpush_const((uint16_t)attrid)) goto err;
+    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (ast_predict_type(args) != &DeeTuple_Type &&
+        asm_gcast_tuple()) goto err;
+    if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    if (asm_gcallattr_tuple_kwds()) goto err;
+    goto pop_unused;
+   }
+  }
+ }
  if (func->a_type == AST_OPERATOR &&
      func->a_flag == OPERATOR_GETATTR &&
    !(func->a_operator.o_exflag&(AST_OPERATOR_FPOSTOP|AST_OPERATOR_FVARARGS))) {
@@ -1138,9 +1301,6 @@ asm_gcall_kw_expr(struct ast *__restrict func,
        args->a_constexpr == Dee_EmptyTuple) {
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
     if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
-    if (ast_predict_type(args) != &DeeTuple_Type &&
-        asm_gcast_tuple()) goto err;
     if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcallattr_kwds(0)) goto err;

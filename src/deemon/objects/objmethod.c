@@ -71,6 +71,43 @@ DeeKwObjMethod_New(dkwobjmethod_t func, DeeObject *__restrict self) {
 }
 
 
+PRIVATE char const *DCALL
+typeobject_find_objmethod(DeeTypeObject *__restrict self,
+                          dobjmethod_t meth) {
+ do {
+  struct type_method *iter;
+  iter = self->tp_class_methods;
+  if (iter) for (; iter->m_name; ++iter) {
+   if (iter->m_func == meth)
+       return iter->m_name;
+  }
+ } while ((self = DeeType_Base(self)) != NULL);
+ return NULL;
+}
+PUBLIC char const *DCALL
+DeeObjMethod_Name(DeeObject *__restrict self) {
+ dobjmethod_t func; DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ ASSERT(DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self));
+ func    = DeeObjMethod_FUNC(self);
+ tp_self = Dee_TYPE(DeeObjMethod_SELF(self));
+ do {
+  struct type_method *iter;
+  if (tp_self == &DeeType_Type) {
+   char const *result;
+   result = typeobject_find_objmethod((DeeTypeObject *)DeeObjMethod_SELF(self),func);
+   if (result) return result;
+  }
+  iter = tp_self->tp_methods;
+  if (iter) for (; iter->m_name; ++iter) {
+   if (iter->m_func == func)
+       return iter->m_name;
+  }
+ } while ((tp_self = DeeType_Base(tp_self)) != NULL);
+ return NULL;
+}
+
+
 PRIVATE void DCALL
 objmethod_fini(DeeObjMethodObject *__restrict self) {
  Dee_Decref(self->om_self);
@@ -94,24 +131,18 @@ objmethod_hash(DeeObjMethodObject *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 objmethod_eq(DeeObjMethodObject *__restrict self,
              DeeObjMethodObject *__restrict other) {
- int temp;
  if (DeeObject_AssertType((DeeObject *)other,&DeeObjMethod_Type))
      return NULL;
  if (self->om_func != other->om_func) return_false;
- temp = DeeObject_CompareEq(self->om_self,other->om_self);
- if unlikely(temp < 0) return NULL;
- return_bool_(temp);
+ return DeeObject_CompareEqObject(self->om_self,other->om_self);
 }
 PRIVATE DREF DeeObject *DCALL
 objmethod_ne(DeeObjMethodObject *__restrict self,
              DeeObjMethodObject *__restrict other) {
- int temp;
  if (DeeObject_AssertType((DeeObject *)other,&DeeObjMethod_Type))
      return NULL;
  if (self->om_func != other->om_func) return_true;
- temp = DeeObject_CompareNe(self->om_self,other->om_self);
- if unlikely(temp < 0) return NULL;
- return_bool_(temp);
+ return DeeObject_CompareNeObject(self->om_self,other->om_self);
 }
 
 PRIVATE struct type_cmp objmethod_cmp = {
@@ -120,40 +151,6 @@ PRIVATE struct type_cmp objmethod_cmp = {
     /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&objmethod_ne
 };
 
-PRIVATE char const *DCALL
-typeobject_find_objmethod(DeeTypeObject *__restrict self,
-                          dobjmethod_t meth) {
- do {
-  struct type_method *iter;
-  iter = self->tp_class_methods;
-  if (iter) for (; iter->m_name; ++iter) {
-   if (iter->m_func == meth)
-       return iter->m_name;
-  }
- } while ((self = DeeType_Base(self)) != NULL);
- return NULL;
-}
-PRIVATE char const *DCALL
-object_find_objmethod(DeeObject *__restrict self,
-                      dobjmethod_t meth) {
- char const *result;
- DeeTypeObject *tp_self = Dee_TYPE(self);
- do {
-  struct type_method *iter;
-  if (tp_self == &DeeType_Type) {
-   result = typeobject_find_objmethod((DeeTypeObject *)self,meth);
-   if (result) return result;
-  }
-  iter = tp_self->tp_methods;
-  if (iter) for (; iter->m_name; ++iter) {
-   if (iter->m_func == meth)
-       return iter->m_name;
-  }
- } while ((tp_self = DeeType_Base(tp_self)) != NULL);
- return NULL;
-}
-
-
 PRIVATE DREF DeeObject *DCALL
 objmethod_get_func(DeeObjMethodObject *__restrict self) {
  return DeeClsMethod_New(Dee_TYPE(self->om_self),self->om_func);
@@ -161,7 +158,7 @@ objmethod_get_func(DeeObjMethodObject *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 objmethod_get_name(DeeObjMethodObject *__restrict self) {
  char const *name;
- name = object_find_objmethod(self->om_self,self->om_func);
+ name = DeeObjMethod_Name((DeeObject *)self);
  if unlikely(!name) name = "?";
  return DeeString_NewAuto(name);
 }
@@ -181,7 +178,7 @@ PRIVATE struct type_member objmethod_members[] = {
 PRIVATE DREF DeeObject *DCALL
 objmethod_repr(DeeObjMethodObject *__restrict self) {
  char const *name;
- name = object_find_objmethod(self->om_self,self->om_func);
+ name = DeeObjMethod_Name((DeeObject *)self);
  if unlikely(!name) name = "?";
  return DeeString_Newf("%r.%s",self->om_self,name);
 }

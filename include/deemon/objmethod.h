@@ -51,6 +51,8 @@ struct kwobjmethod_object {
 };
 DDATDEF DeeTypeObject DeeObjMethod_Type;
 DDATDEF DeeTypeObject DeeKwObjMethod_Type;
+#define DeeObjMethod_SELF(x)       ((DeeObjMethodObject *)REQUIRES_OBJECT(x))->om_self
+#define DeeObjMethod_FUNC(x)       ((DeeObjMethodObject *)REQUIRES_OBJECT(x))->om_func
 #define DeeObjMethod_Check(x)        DeeObject_InstanceOfExact(x,&DeeObjMethod_Type) /* `objmethod' is `final'. */
 #define DeeObjMethod_CheckExact(x)   DeeObject_InstanceOfExact(x,&DeeObjMethod_Type)
 #define DeeKwObjMethod_Check(x)      DeeObject_InstanceOfExact(x,&DeeKwObjMethod_Type) /* `kwobjmethod' is `final'. */
@@ -63,6 +65,10 @@ DDATDEF DeeTypeObject DeeKwObjMethod_Type;
 /* Construct a new `objmethod' object. */
 DFUNDEF DREF DeeObject *DCALL DeeObjMethod_New(dobjmethod_t func, DeeObject *__restrict self);
 DFUNDEF DREF DeeObject *DCALL DeeKwObjMethod_New(dkwobjmethod_t func, DeeObject *__restrict self);
+
+/* Returns the name of the function bound by the given
+ * objmethod, or `NULL' if the name could not be determined. */
+DFUNDEF char const *DCALL DeeObjMethod_Name(DeeObject *__restrict self);
 
 struct clsmethod_object {
     OBJECT_HEAD /* Unbound member function (`classmethod') (may be invoked as a thiscall object). */
