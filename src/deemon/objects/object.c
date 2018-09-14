@@ -1357,7 +1357,7 @@ object_setattr(DeeObject *__restrict self,
  return_reference_(value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 object_id_method(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":id"))

@@ -79,11 +79,15 @@ err:
 }
 
 
+INTDEF DREF DeeObject *DCALL
+object_id_method(DeeObject *__restrict self,
+                 size_t argc, DeeObject **__restrict argv);
+
 /* Returns `ITER_DONE' if the call isn't allowed. */
 PRIVATE DREF DeeObject *DCALL
 emulate_method_call(DeeObject *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
- if (DeeObjMethod_Check(self)) {
+ if (DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self)) {
   /* Must emulate encode() and decode() functions, so they don't
    * call into libcodecs, which should only be loaded at runtime!
    * However, builtin codecs are still allowed!
@@ -95,8 +99,10 @@ emulate_method_call(DeeObject *__restrict self,
       return emulate_object_encode(((DeeObjMethodObject *)self)->om_self,argc,argv);
   if (method == (dobjmethod_t)&string_decode)
       return emulate_object_decode(((DeeObjMethodObject *)self)->om_self,argc,argv);
+  /* `object.id()' should not be evaluated at compile-time! */
+  if (method == (dobjmethod_t)&object_id_method)
+      return ITER_DONE;
  }
- /* TODO: `object.id()' should not be evaluated at compile-time! */
  return DeeObject_Call(self,argc,argv);
 }
 
@@ -116,7 +122,8 @@ emulate_member_call(DeeObject *__restrict base,
   if (NAME_EQ("decode"))
       return emulate_object_decode(base,argc,argv);
  }
- /* TODO: `object.id()' should not be evaluated at compile-time! */
+ /* `object.id()' should not be evaluated at compile-time! */
+ if (NAME_EQ("id")) return ITER_DONE;
  return DeeObject_CallAttr(base,name,argc,argv);
 }
 
