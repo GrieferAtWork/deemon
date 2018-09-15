@@ -2539,17 +2539,29 @@ operator_without_prefix:
        self->a_action.a_act0->a_type == AST_SYM) {
     struct symbol *this_sym = self->a_action.a_act0->a_sym;
     SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-    if (SYMBOL_TYPE(this_sym) == SYMBOL_TYPE_THIS &&
-        self->a_action.a_act1->a_type == AST_SYM) {
-     /* Special optimizations for `this as ...' */
-     int32_t symid;
-     struct symbol *typesym = self->a_action.a_act1->a_sym;
-     SYMBOL_INPLACE_UNWIND_ALIAS(typesym);
-     if (ASM_SYMBOL_MAY_REFERENCE(typesym)) {
-      symid = asm_rsymid(typesym);
-      if unlikely(symid < 0) goto err;
-      if (asm_gsuper_this_r(symid)) goto err;
-      goto done;
+    if (this_sym->s_type == SYMBOL_TYPE_THIS &&
+       !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
+     struct symbol *typesym;
+     if (self->a_action.a_act1->a_type == AST_SYM) {
+      /* Special optimizations for `this as ...' */
+      int32_t symid;
+      typesym = self->a_action.a_act1->a_sym;
+      SYMBOL_INPLACE_UNWIND_ALIAS(typesym);
+      if (ASM_SYMBOL_MAY_REFERENCE(typesym)) {
+do_this_as_typesym_ref:
+       symid = asm_rsymid(typesym);
+       if unlikely(symid < 0) goto err;
+       if (asm_gsuper_this_r(symid)) goto err;
+       goto done;
+      }
+     }
+     if (self->a_action.a_act1->a_type == AST_CONSTEXPR &&
+         current_basescope != (DeeBaseScopeObject *)current_rootscope &&
+       !(current_assembler.a_flag & ASM_FREDUCEREFS)) {
+      typesym = asm_bind_deemon_export(self->a_action.a_act1->a_constexpr);
+      if unlikely(!typesym) goto err;
+      if (typesym != ASM_BIND_DEEMON_EXPORT_NOTFOUND)
+          goto do_this_as_typesym_ref;
      }
     }
    }

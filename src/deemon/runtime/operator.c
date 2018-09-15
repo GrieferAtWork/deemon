@@ -3730,10 +3730,12 @@ DeeObject_GetItemString(DeeObject *__restrict self,
      return DeeKwdsMapping_GetItemString(self,key,hash);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_New(key);
- if unlikely(!key_ob) return NULL;
+ if unlikely(!key_ob) goto err;
  result = DeeObject_GetItem(self,key_ob);
  Dee_Decref(key_ob);
  return result;
+err:
+ return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_GetItemStringDef(DeeObject *__restrict self,
@@ -3747,10 +3749,12 @@ DeeObject_GetItemStringDef(DeeObject *__restrict self,
      return DeeKwdsMapping_GetItemStringDef(self,key,hash,def);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewWithHash(key,hash);
- if unlikely(!key_ob) return NULL;
+ if unlikely(!key_ob) goto err;
  result = DeeObject_GetItemDef(self,key_ob,def);
  Dee_Decref(key_ob);
  return result;
+err:
+ return NULL;
 }
 PUBLIC int (DCALL DeeObject_DelItemString)(DeeObject *__restrict self,
                                            char const *__restrict key,
@@ -3761,10 +3765,12 @@ PUBLIC int (DCALL DeeObject_DelItemString)(DeeObject *__restrict self,
      return DeeDict_DelItemString(self,key,hash);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewWithHash(key,hash);
- if unlikely(!key_ob) return -1;
+ if unlikely(!key_ob) goto err;
  result = DeeObject_DelItem(self,key_ob);
  Dee_Decref(key_ob);
  return result;
+err:
+ return -1;
 }
 PUBLIC int (DCALL DeeObject_SetItemString)(DeeObject *__restrict self,
                                            char const *__restrict key,
@@ -3777,10 +3783,12 @@ PUBLIC int (DCALL DeeObject_SetItemString)(DeeObject *__restrict self,
      return DeeDict_SetItemString(self,key,hash,value);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewWithHash(key,hash);
- if unlikely(!key_ob) return -1;
+ if unlikely(!key_ob) goto err;
  result = DeeObject_SetItem(self,key_ob,value);
  Dee_Decref(key_ob);
  return result;
+err:
+ return -1;
 }
 
 INTDEF dssize_t DCALL
@@ -3803,10 +3811,12 @@ DeeObject_Print(DeeObject *__restrict self,
      return comerr_print((DeeCompilerErrorObject *)self,printer,arg);
  /* Fallback: print the object __str__ operator result. */
  ob_str = DeeObject_Str(self);
- if unlikely(!ob_str) return -1;
+ if unlikely(!ob_str) goto err;
  result = DeeString_PrintUtf8(ob_str,printer,arg);
  Dee_Decref(ob_str);
  return result;
+err:
+ return -1;
 }
 
 INTDEF dssize_t DCALL
