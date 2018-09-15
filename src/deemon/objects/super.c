@@ -34,6 +34,8 @@
 #define PRIVATE_EXPANDARGS(...) (DeeTypeObject *__restrict tp_self, __VA_ARGS__)
 #define DEFINE_OPERATOR(return,name,args) \
         INTERN return DCALL DeeObject_T##name PRIVATE_EXPANDARGS args
+#define DEFINE_INTERNAL_OPERATOR(return,name,args) \
+        INTERN return DCALL DeeObject_T##name PRIVATE_EXPANDARGS args
 #include "../runtime/operator.c"
 #undef DEFINE_TYPE_OPERATORS
 
@@ -534,7 +536,7 @@ super_iternext(Super *__restrict self) {
  return DeeObject_TIterNext(self->s_type,self->s_self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 super_getattr(Super *__restrict self,
               /*String*/DeeObject *__restrict name) {
  return DeeObject_TGetAttr(self->s_type,self->s_self,name);

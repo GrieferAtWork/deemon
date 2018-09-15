@@ -113,6 +113,14 @@ file_shl(DeeObject *__restrict self,
          DeeObject *__restrict some_object);
 #endif
 
+#ifndef OBJECT_TATTR_DECLARED
+#define OBJECT_TATTR_DECLARED 1
+INTDEF DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
+INTDEF int (DCALL DeeObject_TDelAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
+INTDEF int (DCALL DeeObject_TSetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict value);
+INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, size_t argc, DeeObject **__restrict argv);
+#endif
+
 #ifdef EXEC_FAST
 #define get_prefix_object()  get_prefix_object_fast(frame,code,sp)
 PRIVATE DREF DeeObject *ATTR_FASTCALL
@@ -3144,7 +3152,7 @@ do_setitem_c:
      TOP = call_result; /* Inherit reference. */
      DISPATCH();
  }
- RAW_TARGET(ASM_CALLATTR_TUPLE_C_KW) {
+ RAW_TARGET(ASM_CALLATTR_C_TUPLE_KW) {
      DREF DeeObject *call_result;
      imm_val  = READ_imm8();
      imm_val2 = READ_imm8();
@@ -3331,7 +3339,7 @@ do_callattr_this_c:
      DISPATCH();
  }
 
- TARGET(ASM_CALLATTR_TUPLE_C,-2,+1) {
+ TARGET(ASM_CALLATTR_C_TUPLE,-2,+1) {
      DREF DeeObject *callback_result;
      imm_val = READ_imm8();
 do_callattr_tuple_c:
@@ -3361,7 +3369,7 @@ do_callattr_tuple_c:
      DISPATCH();
  }
      
- TARGET(ASM_CALLATTR_THIS_TUPLE_C,-1,+1) {
+ TARGET(ASM_CALLATTR_THIS_C_TUPLE,-1,+1) {
      DREF DeeObject *callback_result;
      imm_val = READ_imm8();
 do_callattr_this_tuple_c:
@@ -4412,7 +4420,7 @@ do_setattr_this_c:
          TOP = call_result; /* Inherit reference. */
          DISPATCH();
      }
-     RAW_TARGET(ASM16_CALLATTR_TUPLE_C_KW) {
+     RAW_TARGET(ASM16_CALLATTR_C_TUPLE_KW) {
          imm_val  = READ_imm16();
          imm_val2 = READ_imm16();
          goto do_callattr_tuple_c_kw;
@@ -4461,7 +4469,7 @@ do_setattr_this_c:
          imm_val = READ_imm16();
          goto do_callattr_c;
      }
-     TARGET(ASM16_CALLATTR_TUPLE_C,-2,+1) {
+     TARGET(ASM16_CALLATTR_C_TUPLE,-2,+1) {
          imm_val = READ_imm16();
          goto do_callattr_tuple_c;
      }
@@ -4469,7 +4477,7 @@ do_setattr_this_c:
          imm_val = READ_imm16();
          goto do_callattr_this_c;
      }
-     TARGET(ASM16_CALLATTR_THIS_TUPLE_C,-1,+1) {
+     TARGET(ASM16_CALLATTR_THIS_C_TUPLE,-1,+1) {
          imm_val = READ_imm16();
          goto do_callattr_this_tuple_c;
      }
@@ -4919,6 +4927,90 @@ do_pack_dict:
          argobj = frame->cf_argv[index];
          PUSHREF(argobj);
          DISPATCH();
+     }
+
+
+     RAW_TARGET(ASM_SUPERGETATTR_THIS_RC) {
+         DREF DeeObject *attr_value;
+         imm_val  = READ_imm8();
+         imm_val2 = READ_imm8();
+do_supergetattr_rc:
+         ASSERT_USAGE(-0,+1);
+         ASSERT_REFimm();
+         ASSERT_CONSTimm2();
+         ASSERT_THISCALL();
+         if (DeeObject_AssertType(THIS,(DeeTypeObject *)REFimm))
+             HANDLE_EXCEPT();
+#ifdef EXEC_SAFE
+         {
+          DREF DeeObject *attr_name;
+          CONST_LOCKREAD();
+          attr_name = CONSTimm2;
+          Dee_Incref(attr_name);
+          CONST_LOCKENDREAD();
+          if (!DeeString_Check(attr_name)) {
+           err_expected_string_for_attribute(attr_name);
+           Dee_Decref(attr_name);
+           HANDLE_EXCEPT();
+          }
+          attr_value = DeeObject_TGetAttr((DeeTypeObject *)REFimm,THIS,attr_name);
+          Dee_Decref(attr_name);
+         }
+#else
+         attr_value = DeeObject_TGetAttr((DeeTypeObject *)REFimm,THIS,CONSTimm2);
+#endif
+         if unlikely(!attr_value)
+            HANDLE_EXCEPT();
+         PUSH(attr_value);
+         DISPATCH();
+     }
+     RAW_TARGET(ASM_SUPERCALLATTR_THIS_RC) {
+         DREF DeeObject *callback_result;
+         uint8_t argc;
+         imm_val  = READ_imm8();
+         imm_val2 = READ_imm8();
+do_supercallattr_rc:
+         ASSERT_REFimm();
+         ASSERT_CONSTimm2();
+         ASSERT_THISCALL();
+         argc = READ_imm8();
+         ASSERT_USAGE(-(int)argc,+1);
+         if (DeeObject_AssertType(THIS,(DeeTypeObject *)REFimm))
+             HANDLE_EXCEPT();
+#ifdef EXEC_SAFE
+         {
+          DREF DeeObject *attr_name;
+          CONST_LOCKREAD();
+          attr_name = CONSTimm2;
+          Dee_Incref(attr_name);
+          CONST_LOCKENDREAD();
+          if (!DeeString_Check(attr_name)) {
+           err_expected_string_for_attribute(attr_name);
+           Dee_Decref(attr_name);
+           HANDLE_EXCEPT();
+          }
+          callback_result = DeeObject_TCallAttr((DeeTypeObject *)REFimm,THIS,attr_name,argc,sp - argc);
+          Dee_Decref(attr_name);
+         }
+#else
+         callback_result = DeeObject_TCallAttr((DeeTypeObject *)REFimm,THIS,CONSTimm2,argc,sp - argc);
+#endif
+         if unlikely(!callback_result)
+            HANDLE_EXCEPT();
+         while (argc--) POPREF();
+         PUSH(callback_result);
+         DISPATCH();
+     }
+
+     RAW_TARGET(ASM16_SUPERGETATTR_THIS_RC) {
+         imm_val  = READ_imm16();
+         imm_val2 = READ_imm16();
+         goto do_supergetattr_rc;
+     }
+     RAW_TARGET(ASM16_SUPERCALLATTR_THIS_RC) {
+         imm_val  = READ_imm16();
+         imm_val2 = READ_imm16();
+         goto do_supercallattr_rc;
      }
 
 

@@ -330,13 +330,13 @@ PRIVATE uint8_t const intr_len[256] = {
     /* 0xcc */ 1, /* `ASM_BREAKPOINT':              `debug break' */
     /* 0xcd */ 1, /* `ASM_UD':                      `ud' */
     /* 0xce */ 4, /* `ASM_CALLATTR_C_KW':           `callattr top, const <imm8>, #<imm8>, const <imm8>' */
-    /* 0xcf */ 3, /* `ASM_CALLATTR_TUPLE_C_KW':     `callattr top, const <imm8>, pop..., const <imm8>' */
+    /* 0xcf */ 3, /* `ASM_CALLATTR_C_TUPLE_KW':     `callattr top, const <imm8>, pop..., const <imm8>' */
     /* 0xd0 */ 2, /* `ASM_CALLATTR':                `callattr top, pop, #<imm8>' */
     /* 0xd1 */ 1, /* `ASM_CALLATTR_TUPLE':          `callattr top, pop, pop...' */
     /* 0xd2 */ 3, /* `ASM_CALLATTR_C':              `callattr top, const <imm8>, #<imm8>' */
-    /* 0xd3 */ 2, /* `ASM_CALLATTR_TUPLE_C':        `callattr top, const <imm8>, pop...' */
+    /* 0xd3 */ 2, /* `ASM_CALLATTR_C_TUPLE':        `callattr top, const <imm8>, pop...' */
     /* 0xd4 */ 3, /* `ASM_CALLATTR_THIS_C':         `push callattr this, const <imm8>, #<imm8>' */
-    /* 0xd5 */ 2, /* `ASM_CALLATTR_THIS_TUPLE_C':   `push callattr this, const <imm8>, pop...' */
+    /* 0xd5 */ 2, /* `ASM_CALLATTR_THIS_C_TUPLE':   `push callattr this, const <imm8>, pop...' */
     /* 0xd6 */ 3, /* `ASM_CALLATTR_C_SEQ':          `callattr top, const <imm8>, [#<imm8>]' */
     /* 0xd7 */ 3, /* `ASM_CALLATTR_C_MAP':          `callattr top, const <imm8>, {#<imm8>*2}' */
     /* 0xd8 */ 1, /* --- */
@@ -493,10 +493,10 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0x6d */ 2, /* --- */
     /* 0x6e */ 5, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>+1' */
     /* 0x6f */ 6, /* `ASM16_FUNCTION_C_16':         `push function const <imm16>, #<imm16>+1' */
-    /* 0x70 */ 2, /* --- */
-    /* 0x71 */ 2, /* --- */
-    /* 0x72 */ 2, /* --- */
-    /* 0x73 */ 2, /* --- */
+    /* 0x70 */ 4, /* `ASM_SUPERGETATTR_THIS_RC':    `push getattr this, ref <imm8>, const <imm8>' */
+    /* 0x71 */ 6, /* `ASM16_SUPERGETATTR_THIS_RC':  `push getattr this, ref <imm16>, const <imm16>' */
+    /* 0x72 */ 5, /* `ASM_SUPERCALLATTR_THIS_RC':   `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
+    /* 0x73 */ 7, /* `ASM16_SUPERCALLATTR_THIS_RC': `push callattr this, ref <imm16>, const <imm16>, #<imm8>' */
     /* 0x74 */ 2, /* --- */
     /* 0x75 */ 2, /* --- */
     /* 0x76 */ 2, /* --- */
@@ -588,13 +588,13 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0xcc */ 3, /* `ASM_BOUNDMEMBER_THIS':        `push boundmember this, pop, $<imm8>' */
     /* 0xcd */ 4, /* `ASM16_BOUNDMEMBER_THIS':      `push boundmember this, pop, $<imm16>' */
     /* 0xce */ 7, /* `ASM16_CALLATTR_C_KW':         `callattr top, const <imm16>, #<imm8>, const <imm16>' */
-    /* 0xcf */ 6, /* `ASM16_CALLATTR_TUPLE_C_KW':   `callattr top, const <imm16>, pop..., const <imm16>' */
+    /* 0xcf */ 6, /* `ASM16_CALLATTR_C_TUPLE_KW':   `callattr top, const <imm16>, pop..., const <imm16>' */
     /* 0xd0 */ 2, /* `ASM_CALLATTR_KWDS':           `callattr top, pop, #<imm8>, pop' */
     /* 0xd1 */ 2, /* `ASM_CALLATTR_TUPLE_KWDS':     `callattr top, pop, pop..., pop' */
     /* 0xd2 */ 5, /* `ASM16_CALLATTR_C':            `callattr top, const <imm16>, #<imm8>' */
-    /* 0xd3 */ 4, /* `ASM16_CALLATTR_TUPLE_C':      `callattr top, const <imm16>, pop' */
+    /* 0xd3 */ 4, /* `ASM16_CALLATTR_C_TUPLE':      `callattr top, const <imm16>, pop' */
     /* 0xd4 */ 5, /* `ASM16_CALLATTR_THIS_C':       `callattr this, const <imm16>, #<imm8>' */
-    /* 0xd5 */ 4, /* `ASM16_CALLATTR_THIS_TUPLE_C': `callattr this, const <imm16>, pop' */
+    /* 0xd5 */ 4, /* `ASM16_CALLATTR_THIS_C_TUPLE': `callattr this, const <imm16>, pop' */
     /* 0xd6 */ 4, /* `ASM16_CALLATTR_C_SEQ':        `callattr top, const <imm16>, [#<imm8>]' */
     /* 0xd7 */ 4, /* `ASM16_CALLATTR_C_MAP':        `callattr top, const <imm16>, {#<imm8>*2}' */
     /* 0xd8 */ 2, /* --- */
@@ -846,13 +846,13 @@ PRIVATE uint8_t const stack_effect[256] = {
     /* 0xcc */ STACK_EFFECT(0,0),  /* `ASM_BREAKPOINT':              `debug break' */
     /* 0xcd */ STACK_EFFECT(0,0),  /* `ASM_UD':                      `ud' */
     /* 0xce */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR_C_KW':           `callattr top, const <imm8>, #<imm8>, const <imm8>' */
-    /* 0xcf */ STACK_EFFECT(2,1),  /* `ASM_CALLATTR_TUPLE_C_KW':     `callattr top, const <imm8>, pop..., const <imm8>' */
+    /* 0xcf */ STACK_EFFECT(2,1),  /* `ASM_CALLATTR_C_TUPLE_KW':     `callattr top, const <imm8>, pop..., const <imm8>' */
     /* 0xd0 */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR':                `callattr top, pop, #<imm8>' */
     /* 0xd1 */ STACK_EFFECT(3,1),  /* `ASM_CALLATTR_TUPLE':          `callattr top, pop, pop...' */
     /* 0xd2 */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR_C':              `callattr top, const <imm8>, #<imm8>' */
-    /* 0xd3 */ STACK_EFFECT(2,1),  /* `ASM_CALLATTR_TUPLE_C':        `callattr top, const <imm8>, pop...' */
+    /* 0xd3 */ STACK_EFFECT(2,1),  /* `ASM_CALLATTR_C_TUPLE':        `callattr top, const <imm8>, pop...' */
     /* 0xd4 */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR_THIS_C':         `push callattr this, const <imm8>, #<imm8>' */
-    /* 0xd5 */ STACK_EFFECT(1,1),  /* `ASM_CALLATTR_THIS_TUPLE_C':   `push callattr this, const <imm8>, pop...' */
+    /* 0xd5 */ STACK_EFFECT(1,1),  /* `ASM_CALLATTR_THIS_C_TUPLE':   `push callattr this, const <imm8>, pop...' */
     /* 0xd6 */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR_C_SEQ':          `callattr top, const <imm8>, [#<imm8>]' */
     /* 0xd7 */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR_C_MAP':          `callattr top, const <imm8>, {#<imm8>*2}' */
     /* 0xd8 */ STACK_EFFECT_UNDEF, /* --- */
@@ -1009,10 +1009,10 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0x6d */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x6e */ STACK_EFFECT_UNDEF, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>+1' */
     /* 0x6f */ STACK_EFFECT_UNDEF, /* `ASM16_FUNCTION_C_16':         `push function const <imm16>, #<imm16>+1' */
-    /* 0x70 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x71 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x72 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x73 */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x70 */ STACK_EFFECT(0,1),  /* `ASM_SUPERGETATTR_THIS_RC':    `push getattr this, ref <imm8>, const <imm8>' */
+    /* 0x71 */ STACK_EFFECT(0,1),  /* `ASM16_SUPERGETATTR_THIS_RC':  `push getattr this, ref <imm16>, const <imm16>' */
+    /* 0x72 */ STACK_EFFECT_UNDEF, /* `ASM_SUPERCALLATTR_THIS_RC':   `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
+    /* 0x73 */ STACK_EFFECT_UNDEF, /* `ASM16_SUPERCALLATTR_THIS_RC': `push callattr this, ref <imm16>, const <imm16>, #<imm8>' */
     /* 0x74 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x75 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x76 */ STACK_EFFECT_UNDEF, /* --- */
@@ -1104,13 +1104,13 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0xcc */ STACK_EFFECT(1,1),  /* `ASM_BOUNDMEMBER_THIS':        `push boundmember this, pop, $<imm8>' */
     /* 0xcd */ STACK_EFFECT(1,1),  /* `ASM16_BOUNDMEMBER_THIS':      `push boundmember this, pop, $<imm16>' */
     /* 0xce */ STACK_EFFECT_UNDEF, /* `ASM16_CALLATTR_C_KW':         `callattr top, const <imm16>, #<imm8>, const <imm16>' */
-    /* 0xcf */ STACK_EFFECT(2,1),  /* `ASM16_CALLATTR_TUPLE_C_KW':   `callattr top, const <imm16>, pop..., const <imm16>' */
+    /* 0xcf */ STACK_EFFECT(2,1),  /* `ASM16_CALLATTR_C_TUPLE_KW':   `callattr top, const <imm16>, pop..., const <imm16>' */
     /* 0xd0 */ STACK_EFFECT_UNDEF, /* `ASM_CALLATTR_KWDS':           `callattr top, pop, #<imm8>, pop' */
     /* 0xd1 */ STACK_EFFECT(4,1),  /* `ASM_CALLATTR_TUPLE_KWDS':     `callattr top, pop, pop..., pop' */
     /* 0xd2 */ STACK_EFFECT_UNDEF, /* `ASM16_CALLATTR_C':            `callattr top, const <imm16>, #<imm8>' */
-    /* 0xd3 */ STACK_EFFECT(2,1),  /* `ASM16_CALLATTR_TUPLE_C':      `callattr top, const <imm16>, pop' */
+    /* 0xd3 */ STACK_EFFECT(2,1),  /* `ASM16_CALLATTR_C_TUPLE':      `callattr top, const <imm16>, pop' */
     /* 0xd4 */ STACK_EFFECT_UNDEF, /* `ASM16_CALLATTR_THIS_C':       `callattr this, const <imm16>, #<imm8>' */
-    /* 0xd5 */ STACK_EFFECT(1,1),  /* `ASM16_CALLATTR_THIS_TUPLE_C': `callattr this, const <imm16>, pop' */
+    /* 0xd5 */ STACK_EFFECT(1,1),  /* `ASM16_CALLATTR_THIS_C_TUPLE': `callattr this, const <imm16>, pop' */
     /* 0xd6 */ STACK_EFFECT_UNDEF, /* `ASM16_CALLATTR_C_SEQ':        `callattr top, const <imm16>, [#<imm8>]' */
     /* 0xd7 */ STACK_EFFECT_UNDEF, /* `ASM16_CALLATTR_C_MAP':        `callattr top, const <imm16>, {#<imm8>*2}' */
     /* 0xd8 */ STACK_EFFECT_UNDEF, /* --- */
@@ -1489,6 +1489,20 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
    *psp_sub   = 0;
    *pstacksz += *psp_add;
    break;
+
+  case ASM_SUPERCALLATTR_THIS_RC & 0xff:
+   *psp_add   = 1;
+   *psp_sub   = *(uint8_t *)(ip + 4);
+   *pstacksz += 1;
+   *pstacksz -= *psp_sub;
+   break;
+  case ASM16_SUPERCALLATTR_THIS_RC & 0xff:
+   *psp_add   = 1;
+   *psp_sub   = *(uint8_t *)(ip + 6);
+   *pstacksz += 1;
+   *pstacksz -= *psp_sub;
+   break;
+
 
   {
    uint16_t sp_addr;
@@ -1923,9 +1937,9 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
  case ASM_CALLATTR_C:
  case ASM_CALLATTR_C_MAP:
  case ASM_CALLATTR_C_SEQ:
- case ASM_CALLATTR_TUPLE_C:
+ case ASM_CALLATTR_C_TUPLE:
  case ASM_CALLATTR_THIS_C:
- case ASM_CALLATTR_THIS_TUPLE_C:
+ case ASM_CALLATTR_THIS_C_TUPLE:
   if (*(uint8_t *)(ip + 1) != sid) break;
   result = ASM_USING_READ;
   break;
@@ -2001,9 +2015,9 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
   case ASM16_CALLATTR_C & 0xff:
   case ASM16_CALLATTR_C_MAP & 0xff:
   case ASM16_CALLATTR_C_SEQ & 0xff:
-  case ASM16_CALLATTR_TUPLE_C & 0xff:
+  case ASM16_CALLATTR_C_TUPLE & 0xff:
   case ASM16_CALLATTR_THIS_C & 0xff:
-  case ASM16_CALLATTR_THIS_TUPLE_C & 0xff:
+  case ASM16_CALLATTR_THIS_C_TUPLE & 0xff:
    if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != sid) break;
    result = ASM_USING_READ;
    break;

@@ -126,9 +126,9 @@ STATIC_ASSERT((ASM16_GETITEM_C&0xff) == ASM_GETITEM_C);
 STATIC_ASSERT((ASM16_SETITEM_C&0xff) == ASM_SETITEM_C);
 STATIC_ASSERT((ASM_ITERNEXT&0xff) == ASM_ITERSELF);
 STATIC_ASSERT((ASM16_CALLATTR_C&0xff) == ASM_CALLATTR_C);
-STATIC_ASSERT((ASM16_CALLATTR_TUPLE_C&0xff) == ASM_CALLATTR_TUPLE_C);
+STATIC_ASSERT((ASM16_CALLATTR_C_TUPLE&0xff) == ASM_CALLATTR_C_TUPLE);
 STATIC_ASSERT((ASM16_CALLATTR_THIS_C&0xff) == ASM_CALLATTR_THIS_C);
-STATIC_ASSERT((ASM16_CALLATTR_THIS_TUPLE_C&0xff) == ASM_CALLATTR_THIS_TUPLE_C);
+STATIC_ASSERT((ASM16_CALLATTR_THIS_C_TUPLE&0xff) == ASM_CALLATTR_THIS_C_TUPLE);
 STATIC_ASSERT((ASM16_GETMEMBER_THIS_R&0xff) == ASM_GETMEMBER_THIS_R);
 STATIC_ASSERT((ASM16_DELMEMBER_THIS_R&0xff) == ASM_DELMEMBER_THIS_R);
 STATIC_ASSERT((ASM16_SETMEMBER_THIS_R&0xff) == ASM_SETMEMBER_THIS_R);
@@ -2732,6 +2732,49 @@ asm_msymid(struct symbol *__restrict sym) {
 end:
  return result;
 }
+
+INTERN struct symbol *DCALL
+asm_bind_deemon_export(DeeObject *__restrict constval) {
+ uint16_t i;
+ if (!DeeType_Check(constval)) {
+  /* To speed this up, check what the user wants to seach for. */
+  if (DeeNone_Check(constval)) { i = id_none; goto did_find_export; }
+  if (constval == &DeeGCEnumTracked_Singleton) { i = id_gc; goto did_find_export; }
+  if (DeeBool_Check(constval)) goto do_search;
+  if (DeeCMethod_Check(constval)) goto do_search;
+  goto done;
+ }
+do_search:
+ rwlock_read(&deemon_module.mo_lock);
+ for (i = 0; i < num_builtins_obj; ++i) {
+  struct symbol *result;
+  if (deemon_module.mo_globalv[i] != constval)
+      continue;
+  rwlock_endread(&deemon_module.mo_lock);
+did_find_export:
+  /* Check if the symbol has already been bound. */
+  result = current_rootscope->rs_scope.bs_scope.s_del;
+  for (; result; result = result->s_next) {
+   if (result->s_type != SYMBOL_TYPE_EXTERN) continue;
+   if (result->s_extern.e_module != &deemon_module) continue;
+   if (result->s_extern.e_symbol->ss_index != i) continue;
+   return result; /* Found it! */
+  }
+  result = new_unnamed_symbol_in_scope((DeeScopeObject *)current_rootscope);
+  if unlikely(!result) goto done_result;
+  result->s_type            = SYMBOL_TYPE_EXTERN;
+  result->s_extern.e_module = get_deemon_module();
+  result->s_extern.e_symbol = DeeModule_GetSymbolID(&deemon_module,i);
+  ASSERT(result->s_extern.e_symbol != NULL);
+done_result:
+  return result;
+ }
+ rwlock_endread(&deemon_module.mo_lock);
+done:
+ return ASM_BIND_DEEMON_EXPORT_NOTFOUND;
+}
+
+
 
 INTERN int DCALL asm_check_user_labels_defined(void) {
  struct text_label **biter,**bend,*iter;

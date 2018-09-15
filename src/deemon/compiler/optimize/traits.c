@@ -927,12 +927,12 @@ ast_uses_symbol(struct ast *__restrict self,
       goto yup;
   if (ast_uses_symbol(self->a_class.c_desc,sym))
       goto yup;
-  if (symbol_uses_symbol_on_get(self->a_class.c_classsym,sym) ||
-      symbol_uses_symbol_on_set(self->a_class.c_classsym,sym))
+  if (symbol_uses_symbol_on_set(self->a_class.c_classsym,sym))
       goto yup;
-  if (symbol_uses_symbol_on_get(self->a_class.c_supersym,sym) ||
-      symbol_uses_symbol_on_set(self->a_class.c_supersym,sym))
-      goto yup;
+  if (!(self->a_flag & AST_FCLASS_NOWRITESUPER)) {
+   if (symbol_uses_symbol_on_set(self->a_class.c_supersym,sym))
+       goto yup;
+  }
   for (i = 0; i < self->a_class.c_memberc; ++i) {
    if (ast_uses_symbol(self->a_class.c_memberv[i].cm_ast,sym))
        goto yup;

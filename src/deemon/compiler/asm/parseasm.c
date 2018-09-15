@@ -1342,7 +1342,7 @@ parse_ref_operand:
   if unlikely(yield() < 0) goto err;
   val = do_parse_ref_operands();
   if unlikely(val < 0) goto err;
-  result->io_class = OPERAND_CLASS_ARG;
+  result->io_class = OPERAND_CLASS_REF;
   result->io_symid = (uint16_t)val;
  } break;
 

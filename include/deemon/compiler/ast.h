@@ -394,7 +394,9 @@ struct ast {
             DREF struct ast    *a_act2; /* [0..1] Third action operand or NULL when not used. */
         }                       a_action;
 
-#define AST_CLASS               0x0012          /* Create a new class object. */
+#define AST_CLASS               0x0012        /* Create a new class object. */
+#define AST_FCLASS_NORMAL       0x0000        /* Normal class flags. */
+#define AST_FCLASS_NOWRITESUPER 0x0001        /* When set, don't write `c_base' to `c_supersym'. */
         struct {
             DREF struct ast    *c_base;       /* [0..1] Base/super type. */
             DREF struct ast    *c_desc;       /* [1..1] Class descriptor (usually a constant branch). */

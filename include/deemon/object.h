@@ -1893,9 +1893,10 @@ DDATDEF DeeTypeObject DeeType_Type;   /* `type(object)' */
 #define DeeType_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeType_Type)
 
 /* Assert the typing of an object (raising an `Error.TypeError' if the type wasn't expected)
+ * HINT: When `required_type' isn't a type-object, these functions throw an error!
  * @return: -1: The object doesn't match the required typing.
  * @return:  0: The object matches the required typing. */
-DFUNDEF int DCALL DeeObject_AssertType(DeeObject *__restrict self, DeeTypeObject *__restrict required_type);
+DFUNDEF int (DCALL DeeObject_AssertType)(DeeObject *__restrict self, DeeTypeObject *__restrict required_type);
 DFUNDEF int (DCALL DeeObject_AssertTypeExact)(DeeObject *__restrict self, DeeTypeObject *__restrict required_type);
 /* Throw a TypeError stating that an instance of `required_type' was required, when `self' was given. */
 DFUNDEF ATTR_COLD int (DCALL DeeObject_TypeAssertFailed)(DeeObject *__restrict self, DeeTypeObject *__restrict required_type);

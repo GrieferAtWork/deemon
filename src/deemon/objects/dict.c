@@ -1316,7 +1316,7 @@ dict_popsomething(DeeDictObject *__restrict self,
   ASSERT(iter != self->d_elem + self->d_mask);
   ++iter;
  }
- DeeTuple_SET(result,0,iter->di_key); /* Inherit reference. */
+ DeeTuple_SET(result,0,iter->di_key);   /* Inherit reference. */
  DeeTuple_SET(result,1,iter->di_value); /* Inherit reference. */
  Dee_Incref(dummy);
  iter->di_key   = dummy;

@@ -74,7 +74,8 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
   temp->a_class.c_supersym = other->a_class.c_supersym;
   if (temp->a_class.c_classsym)
       SYMBOL_INC_NWRITE(temp->a_class.c_classsym);
-  if (temp->a_class.c_supersym)
+  if (temp->a_class.c_supersym &&
+    !(temp->a_flag & AST_FCLASS_NOWRITESUPER))
       SYMBOL_INC_NWRITE(temp->a_class.c_supersym);
   temp->a_class.c_memberv = dst;
   /* Copy the member descriptor table. */

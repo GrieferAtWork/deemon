@@ -734,13 +734,13 @@
 #define ASM_UD                0xcd /* [1][-0,+0]   `ud'                                 - Undefined instruction (always raises an `Error.RuntimeError.IllegalInstruction'). */
 /* Call attribute. */
 #define ASM_CALLATTR_C_KW     0xce /* [4][-1-n,+1] `callattr top, const <imm8>, #<imm8>, const <imm8>' - Similar to `ASM_CALLATTR_C', but also pass a keywords mapping from `<imm8>' */
-#define ASM_CALLATTR_TUPLE_C_KW 0xcf/*[3][-2,  +1] `callattr top, const <imm8>, pop..., const <imm8>'  - Similar to `ASM_CALLATTR_TUPLE_C', but also pass a keywords mapping from `<imm8>' */
+#define ASM_CALLATTR_C_TUPLE_KW 0xcf/*[3][-2,  +1] `callattr top, const <imm8>, pop..., const <imm8>'  - Similar to `ASM_CALLATTR_C_TUPLE', but also pass a keywords mapping from `<imm8>' */
 #define ASM_CALLATTR          0xd0 /* [2][-2-n,+1] `callattr top, pop, #<imm8>'         - Pop #<imm8> arguments into a tuple and a string, then use them to call an attribute in stack-top. @throws: Error.TypeError: The attribute object isn't a string. */
 #define ASM_CALLATTR_TUPLE    0xd1 /* [1][-3,  +1] `callattr top, pop, pop...'          - Pop a tuple and a string, then use them to call an attribute in stack-top. @throws: Error.TypeError: The attribute object isn't a string. */
 #define ASM_CALLATTR_C        0xd2 /* [3][-1-n,+1] `callattr top, const <imm8>, #<imm8>' - Pop #<imm8> arguments into a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm8>'. */
-#define ASM_CALLATTR_TUPLE_C  0xd3 /* [2][-2,  +1] `callattr top, const <imm8>, pop...' - Pop a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm8>'. */
+#define ASM_CALLATTR_C_TUPLE  0xd3 /* [2][-2,  +1] `callattr top, const <imm8>, pop...' - Pop a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm8>'. */
 #define ASM_CALLATTR_THIS_C   0xd4 /* [3][-n,  +1] `push callattr this, const <imm8>, #<imm8>' - Pop #<imm8> arguments into a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM_CALLATTR_THIS_TUPLE_C 0xd5 /* [2][-1,+1] `push callattr this, const <imm8>, pop...' - Pop a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
+#define ASM_CALLATTR_THIS_C_TUPLE 0xd5 /* [2][-1,+1] `push callattr this, const <imm8>, pop...' - Pop a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
 #define ASM_CALLATTR_C_SEQ    0xd6 /* [3][-1-n,+1] `callattr top, const <imm8>, [#<imm8>]' - Call an attribute <imm8> with a single sequence-like argument packed from the top #<imm8> stack-items. */
 #define ASM_CALLATTR_C_MAP    0xd7 /* [3][-1-n,+1] `callattr top, const <imm8>, {#<imm8>*2}' - Call an attribute <imm8> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
 /*      ASM_                  0xd8  *               --------                            - ------------------ */
@@ -1055,10 +1055,10 @@
                                       * [5][-n,+0]   `PREFIX: function const <imm16>, #<imm8>+1' */
 #define ASM16_FUNCTION_C_16   0xf06f /* [6][-n,+1]   `push function const <imm16>, #<imm16>+1' - Create a new function object, using constant slot <imm16> as code and popping $<imm16>+1 objects for use by references.
                                       * [6][-n,+0]   `PREFIX: function const <imm16>, #<imm16>+1' */
-/*      ASM_                  0xf070  *               --------                            - ------------------ */
-/*      ASM_                  0xf071  *               --------                            - ------------------ */
-/*      ASM_                  0xf072  *               --------                            - ------------------ */
-/*      ASM_                  0xf073  *               --------                            - ------------------ */
+#define ASM_SUPERGETATTR_THIS_RC 0xf070/*[4][-0,+1]  `push getattr this, ref <imm8>, const <imm8>' - Perform a super attribute lookup `(this as ref <imm8>).operator . (const <imm8>)'. */
+#define ASM16_SUPERGETATTR_THIS_RC 0xf071/*[6][-0,+1]`push getattr this, ref <imm16>, const <imm16>' - Perform a super attribute lookup `(this as ref <imm16>).operator . (const <imm16>)'. */
+#define ASM_SUPERCALLATTR_THIS_RC 0xf072/*[5][-n,+1] `push callattr this, ref <imm8>, const <imm8>, #<imm8>' - Perform a supercall on `(this as ref <imm8>).operator . (const <imm8>)', using `#<imm8>' arguments from the stack. */
+#define ASM16_SUPERCALLATTR_THIS_RC 0xf073/*[7][-n,+1]`push callattr this, ref <imm16>, const <imm16>, #<imm8>' - Perform a supercall on `(this as ref <imm16>).operator . (const <imm16>)', using `#<imm8>' arguments from the stack. */
 /*      ASM_                  0xf074  *               --------                            - ------------------ */
 /*      ASM_                  0xf075  *               --------                            - ------------------ */
 /*      ASM_                  0xf076  *               --------                            - ------------------ */
@@ -1155,13 +1155,13 @@
 #define ASM_BOUNDMEMBER_THIS  0xf0cc /* [3][-1,+1]   `push boundmember this, pop, $<imm8>' - Pop a class type describing one of the bases of `this' and push Dee_True/Dee_False if member at index `$<imm8>' is bound. */
 #define ASM16_BOUNDMEMBER_THIS 0xf0cd/* [4][-1,+1]   `push boundmember this, pop, $<imm16>' - Pop a class type describing one of the bases of `this' and push Dee_True/Dee_False if member at index `$<imm16>' is bound. */
 #define ASM16_CALLATTR_C_KW   0xf0ce /* [7][-1-n,+1] `callattr top, const <imm16>, #<imm8>, const <imm16>' - Similar to `ASM_CALLATTR_C', but also pass a keywords mapping from `<imm8>' */
-#define ASM16_CALLATTR_TUPLE_C_KW 0xf0cf/*[6][-2,+1] `callattr top, const <imm16>, pop..., const <imm16>'  - Similar to `ASM_CALLATTR_TUPLE_C', but also pass a keywords mapping from `<imm8>' */
+#define ASM16_CALLATTR_C_TUPLE_KW 0xf0cf/*[6][-2,+1] `callattr top, const <imm16>, pop..., const <imm16>'  - Similar to `ASM_CALLATTR_C_TUPLE', but also pass a keywords mapping from `<imm8>' */
 #define ASM_CALLATTR_KWDS     0xf0d0 /* [2][-3-n,+1] `callattr top, pop, #<imm8>, pop'    - Similar to `ASM_CALLATTR_TUPLE_KWDS', but take arguments from the stack */
 #define ASM_CALLATTR_TUPLE_KWDS 0xf0d1 /*[2][-4,+1]  `callattr top, pop, pop..., pop'     - The universal call-attribute-with-keywords instruction that also takes keywords from the stack. */
 #define ASM16_CALLATTR_C      0xf0d2 /* [5][-1-n,+1] `callattr top, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
-#define ASM16_CALLATTR_TUPLE_C 0xf0d3 /*[4][-2,+1]   `callattr top, const <imm16>, pop'   - Pop a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
+#define ASM16_CALLATTR_C_TUPLE 0xf0d3 /*[4][-2,+1]   `callattr top, const <imm16>, pop'   - Pop a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
 #define ASM16_CALLATTR_THIS_C 0xf0d4 /* [5][-n,+1]   `callattr this, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM16_CALLATTR_THIS_TUPLE_C 0xf0d5 /* [4][-1,+1] `callattr this, const <imm16>, pop' - Pop a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
+#define ASM16_CALLATTR_THIS_C_TUPLE 0xf0d5 /* [4][-1,+1] `callattr this, const <imm16>, pop' - Pop a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
 #define ASM16_CALLATTR_C_SEQ  0xf0d6 /* [4][-1-n,+1] `callattr top, const <imm16>, [#<imm8>]' - Call an attribute <imm16> with a single sequence-like argument packed from the top #<imm8> stack-items. */
 #define ASM16_CALLATTR_C_MAP  0xf0d7 /* [4][-1-n,+1] `callattr top, const <imm16>, {#<imm8>*2}' - Call an attribute <imm16> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
 /*      ASM_                  0xf0d8  *               --------                            - ------------------ */

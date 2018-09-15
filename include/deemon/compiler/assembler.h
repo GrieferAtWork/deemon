@@ -481,7 +481,7 @@ struct __ATTR_PACKED asm_overload {
 #define ASM_OVERLOAD_FPUSH       0x0010      /* The instruction must be prefixed by `push'  */
 #define ASM_OVERLOAD_FPREFIX     0x0020      /* The overload must be used with a prefix. */
 #define ASM_OVERLOAD_FPREFIX_RO  0x0040      /* The overload must be used with a prefix, which is allowed to be read-only. */
-/*      ASM_OVERLOAD_F           0x0080       * ... */
+#define ASM_OVERLOAD_F16BIT      0x0080      /* Same as `ASM_OVERLOAD_FF0', however no prefix is written. */
 #define ASM_OVERLOAD_FF0         0x0100      /* When set, `ao_instr' may be prefixed by `0xf0' to
                                               * double the bit-limits of io_symid-related operands. */
 #define ASM_OVERLOAD_FF0_IMM     0x0200      /* An extension to `ASM_OVERLOAD_FF0': Immediate operands are also extended. */
@@ -1022,6 +1022,16 @@ INTDEF int32_t DCALL asm_esymid(struct symbol *__restrict sym);  /* `SYMBOL_TYPE
 INTDEF int32_t DCALL asm_msymid(struct symbol *__restrict sym);  /* `SYMBOL_TYPE_MODULE' */
 INTDEF int32_t DCALL asm_rsymid(struct symbol *__restrict sym);  /* Reference a symbol for a lower base-scope. */
 
+/* Search the export table of the builtin `deemon' module for `constval'.
+ * If the object could be found, return an anonymous `SYMBOL_TYPE_EXTERN'
+ * symbol (allocated as part of `current_rootscope') that is bound to
+ * that specific export.
+ * @return: * :                              A `SYMBOL_TYPE_EXTERN' symbol, bound to `constval'
+ * @return: ASM_BIND_DEEMON_EXPORT_NOTFOUND: `constval' wasn't found in `deemon's exports
+ * @return: NULL:                            An error occurred. */
+INTDEF struct symbol *DCALL asm_bind_deemon_export(DeeObject *__restrict constval);
+#define ASM_BIND_DEEMON_EXPORT_NOTFOUND ((struct symbol *)-1)
+
 /* These versions emit read-before-write warnings if the symbol hadn't been allocated, yet. */
 INTDEF int32_t DCALL asm_gsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
 INTDEF int32_t DCALL asm_lsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
@@ -1035,14 +1045,14 @@ INTDEF int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, struct a
 #define INT8_MAX  127
 #endif
 
-#define asm_put816(op,imm) \
- ((imm) <= UINT8_MAX \
-   ?  asm_putimm8(op,(uint8_t)(imm)) \
-   : (asm_put(ASM_EXTENDED1) || asm_putimm16(op,(uint16_t)(imm))))
-#define asm_put816_8(op,imm,imm8) \
- ((imm) <= UINT8_MAX \
-   ?  asm_putimm8_8(op,(uint8_t)(imm),(uint8_t)(imm8)) \
-   : (asm_put(ASM_EXTENDED1) || asm_putimm16_8(op,(uint16_t)(imm),(uint8_t)(imm8))))
+#define asm_put816(op,imm816) \
+ ((imm816) <= UINT8_MAX \
+   ?  asm_putimm8(op,(uint8_t)(imm816)) \
+   : (asm_put(ASM_EXTENDED1) || asm_putimm16(op,(uint16_t)(imm816))))
+#define asm_put816_8(op,imm816,imm8) \
+ ((imm816) <= UINT8_MAX \
+   ?  asm_putimm8_8(op,(uint8_t)(imm816),(uint8_t)(imm8)) \
+   : (asm_put(ASM_EXTENDED1) || asm_putimm16_8(op,(uint16_t)(imm816),(uint8_t)(imm8))))
 #define asm_put8_816(op,imm8,imm816) \
  ((imm816) <= UINT8_MAX \
    ?  asm_putimm8_8(op,(uint8_t)(imm8),(uint8_t)(imm816)) \
@@ -1063,6 +1073,20 @@ INTDEF int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, struct a
  (((imma) <= UINT8_MAX && (immb) <= UINT8_MAX) \
    ?  asm_putimm8_8_8(op,(uint8_t)(imma),(uint8_t)(immb),(uint8_t)(immc)) \
    : (asm_put(ASM_EXTENDED1) || asm_putimm16_16_8(op,(uint16_t)(imma),(uint16_t)(immb),(uint8_t)(immc))))
+
+#define asm_put1616(op8,op16,imm816) \
+ ((imm816) <= UINT8_MAX \
+   ? (asm_put(((op8)  & 0xff00) >> 8) || asm_putimm8((op8) & 0xff,(uint8_t)(imm816))) \
+   : (asm_put(((op16) & 0xff00) >> 8) || asm_putimm16((op16) & 0xff,(uint16_t)(imm816))))
+#define asm_put16161616(op8,op16,imm816a,imm816b) \
+ ((imm816a) <= UINT8_MAX && (imm816b) <= UINT8_MAX \
+   ? (asm_put(((op8)  & 0xff00) >> 8) || asm_putimm8_8((op8) & 0xff,(uint8_t)(imm816a),(uint8_t)(imm816b))) \
+   : (asm_put(((op16) & 0xff00) >> 8) || asm_putimm16_16((op16) & 0xff,(uint16_t)(imm816a),(uint16_t)(imm816b))))
+#define asm_put16161616_8(op8,op16,imm816a,imm816b,imm8c) \
+ ((imm816a) <= UINT8_MAX && (imm816b) <= UINT8_MAX \
+   ? (asm_put(((op8)  & 0xff00) >> 8) || asm_putimm8_8_8((op8) & 0xff,(uint8_t)(imm816a),(uint8_t)(imm816b),(uint8_t)(imm8c))) \
+   : (asm_put(((op16) & 0xff00) >> 8) || asm_putimm16_16_8((op16) & 0xff,(uint16_t)(imm816a),(uint16_t)(imm816b),(uint8_t)(imm8c))))
+
 
 /* Generate a jump to the given target, automatically choosing
  * the proper mechanism and creating the associated relocation.
@@ -1317,9 +1341,9 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gcallattr(n)              (asm_subsp((n)+2),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_putimm8(ASM_CALLATTR,(uint8_t)(n)))
 #define asm_gcallattr_tuple()         (asm_dddicsp(),asm_put(ASM_CALLATTR_TUPLE))
 #define asm_gcallattr_const(cid,n)    (asm_subsp((n)+1),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALLATTR_C,cid,n))
-#define asm_gcallattr_const_tuple(cid)(asm_ddicsp(),asm_put816(ASM_CALLATTR_TUPLE_C,cid))
+#define asm_gcallattr_const_tuple(cid)(asm_ddicsp(),asm_put816(ASM_CALLATTR_C_TUPLE,cid))
 #define asm_gcallattr_this_const(cid,n)    (asm_subsp(n),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALLATTR_THIS_C,cid,n))
-#define asm_gcallattr_this_const_tuple(cid)(asm_dicsp(),asm_put816(ASM_CALLATTR_THIS_TUPLE_C,cid))
+#define asm_gcallattr_this_const_tuple(cid)(asm_dicsp(),asm_put816(ASM_CALLATTR_THIS_C_TUPLE,cid))
 #define asm_gcall_extern(mid,gid,n)   (asm_subsp(n),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put881616_8(ASM_CALL_EXTERN,mid,gid,n))
 #define asm_gcall_global(gid,n)       (asm_subsp(n),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALL_GLOBAL,gid,n))
 #define asm_gcall_local(lid,n)        (asm_subsp(n),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALL_LOCAL,lid,n))
@@ -1368,13 +1392,17 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gdefcmember(id)           (asm_ddicsp(),asm_put816(ASM_DEFCMEMBER,id))
 #define asm_ggetcmember(id)           (asm_dicsp(),asm_put((ASM16_GETCMEMBER & 0xff00) >> 8) || asm_putimm16(ASM16_GETCMEMBER & 0xff,id))
 #define asm_ggetcmember_r(rid,id)     (asm_incsp(),asm_put881616(ASM_GETCMEMBER_R,rid,id))
-#define asm_gcallcmember_this_r(rid,id,n)  (asm_subsp(n),asm_incsp(),asm_put881616_8(ASM_CALLCMEMBER_THIS_R,rid,id,n))
+#define asm_gcallcmember_this_r(rid,id,n) (asm_subsp(n),asm_incsp(),asm_put881616_8(ASM_CALLCMEMBER_THIS_R,rid,id,n))
+
+/* Super attribute access (optimizing the expression `(this as REF(rid)).operator . (CONST(cid))') */
+#define asm_gsupergetattr_this_rc(rid,cid)    (asm_incsp(),asm_put16161616(ASM_SUPERGETATTR_THIS_RC,ASM16_SUPERGETATTR_THIS_RC,rid,cid))
+#define asm_gsupercallattr_this_rc(rid,cid,n) (asm_subsp(n),asm_incsp(),asm_put16161616_8(ASM_SUPERCALLATTR_THIS_RC,ASM16_SUPERCALLATTR_THIS_RC,rid,cid,n))
 
 /* Call with keyword list instructions. */
 #define asm_gcall_kw(n,kwd_cid)                       (asm_subsp((n)+1),asm_incsp(),ASSERT((n)<=UINT8_MAX),asm_put8_816(ASM_CALL_KW,n,kwd_cid))
 #define asm_gcall_tuple_kw(kwd_cid)                   (asm_ddicsp(),asm_put816(ASM_CALL_TUPLE_KW,kwd_cid))
 #define asm_gcallattr_const_kw(att_cid,n,kwd_cid)     (asm_subsp((n)+1),asm_incsp(),ASSERT((n)<=UINT8_MAX),asm_put816_8_816(ASM_CALLATTR_C_KW,att_cid,n,kwd_cid))
-#define asm_gcallattr_const_tuple_kw(att_cid,kwd_cid) (asm_ddicsp(),asm_put881616(ASM_CALLATTR_TUPLE_C_KW,att_cid,kwd_cid))
+#define asm_gcallattr_const_tuple_kw(att_cid,kwd_cid) (asm_ddicsp(),asm_put881616(ASM_CALLATTR_C_TUPLE_KW,att_cid,kwd_cid))
 #define asm_gcall_tuple_kwds()                        (asm_dddicsp(),asm_put16(ASM_CALL_TUPLE_KWDS))
 #define asm_gcallattr_kwds(n)                         (asm_subsp((n)+3),asm_incsp(),ASSERT((n)<=UINT8_MAX),(asm_put(ASM_EXTENDED1) || asm_putimm8(ASM_CALLATTR_KWDS & 0xff,(uint8_t)(n))))
 #define asm_gcallattr_tuple_kwds()                    (asm_ddddicsp(),asm_put16(ASM_CALLATTR_TUPLE_KWDS))

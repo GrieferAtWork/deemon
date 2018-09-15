@@ -1215,9 +1215,16 @@ use_object_base:
 
  /* Create a symbol for the class's super type. */
  if (maker.cm_base) {
-  maker.cm_supersym = new_unnamed_symbol();
-  if unlikely(!maker.cm_supersym) goto err;
-  SYMBOL_TYPE(maker.cm_supersym) = SYMBOL_TYPE_STACK;
+#if 1
+  if (maker.cm_base->a_type == AST_SYM) {
+   maker.cm_supersym = maker.cm_base->a_sym;
+  } else
+#endif
+  {
+   maker.cm_supersym = new_unnamed_symbol();
+   if unlikely(!maker.cm_supersym) goto err;
+   maker.cm_supersym->s_type = SYMBOL_TYPE_STACK;
+  }
   ((DeeClassScopeObject *)current_scope)->cs_super = maker.cm_supersym;
  }
 

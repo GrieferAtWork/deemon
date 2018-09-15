@@ -765,6 +765,7 @@ DEFINE_AST_GENERATOR(ast_class,
  ASSERT(!memberc || memberv);
  if likely((result = ast_new()) != NULL) {
   result->a_type             = AST_CLASS;
+  result->a_flag             = AST_FCLASS_NORMAL;
   result->a_class.c_base     = base;
   result->a_class.c_desc     = descriptor;
   result->a_class.c_memberc  = memberc;
@@ -772,7 +773,16 @@ DEFINE_AST_GENERATOR(ast_class,
   result->a_class.c_classsym = class_symbol;
   result->a_class.c_supersym = super_symbol;
   if (class_symbol) SYMBOL_INC_NWRITE(class_symbol);
-  if (super_symbol) SYMBOL_INC_NWRITE(super_symbol);
+  if (super_symbol) {
+   /* If the base expression is a symbol that is identical to the super-symbol,
+    * then set the NOWRITESUPER flag to prevent an unnecessary write! */
+   if (base && base->a_type == AST_SYM &&
+       base->a_sym == super_symbol)
+       result->a_flag |= AST_FCLASS_NOWRITESUPER;
+   else {
+    SYMBOL_INC_NWRITE(super_symbol);
+   }
+  }
   ast_xincref(base);
   ast_xincref(descriptor);
   INIT_REF(result);
@@ -948,7 +958,8 @@ ast_fini_contents(struct ast *__restrict self) {
   ast_decref(self->a_class.c_desc);
   if (self->a_class.c_classsym)
       SYMBOL_DEC_NWRITE(self->a_class.c_classsym);
-  if (self->a_class.c_supersym)
+  if (self->a_class.c_supersym &&
+    !(self->a_flag & AST_FCLASS_NOWRITESUPER))
       SYMBOL_DEC_NWRITE(self->a_class.c_supersym);
  } break;
 

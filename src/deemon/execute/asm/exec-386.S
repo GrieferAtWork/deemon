@@ -8396,8 +8396,8 @@ prefix_target_ud = prefix_invop
 .ifndef prefix_target_callattr_c_kw
 prefix_target_callattr_c_kw = prefix_invop
 .endif
-.ifndef prefix_target_callattr_tuple_c_kw
-prefix_target_callattr_tuple_c_kw = prefix_invop
+.ifndef prefix_target_callattr_c_tuple_kw
+prefix_target_callattr_c_tuple_kw = prefix_invop
 .endif
 .ifndef prefix_target_callattr
 prefix_target_callattr = prefix_invop
@@ -8408,14 +8408,14 @@ prefix_target_callattr_tuple = prefix_invop
 .ifndef prefix_target_callattr_c
 prefix_target_callattr_c = prefix_invop
 .endif
-.ifndef prefix_target_callattr_tuple_c
-prefix_target_callattr_tuple_c = prefix_invop
+.ifndef prefix_target_callattr_c_tuple
+prefix_target_callattr_c_tuple = prefix_invop
 .endif
 .ifndef prefix_target_callattr_this_c
 prefix_target_callattr_this_c = prefix_invop
 .endif
-.ifndef prefix_target_callattr_this_tuple_c
-prefix_target_callattr_this_tuple_c = prefix_invop
+.ifndef prefix_target_callattr_this_c_tuple
+prefix_target_callattr_this_c_tuple = prefix_invop
 .endif
 .ifndef prefix_target_callattr_c_seq
 prefix_target_callattr_c_seq = prefix_invop
@@ -8687,6 +8687,18 @@ prefix_target16_function_c = prefix_invop
 .ifndef prefix_target16_function_c_16
 prefix_target16_function_c_16 = prefix_invop
 .endif
+.ifndef prefix_target_supergetattr_this_rc
+prefix_target_supergetattr_this_rc = prefix_invop
+.endif
+.ifndef prefix_target16_supergetattr_this_rc
+prefix_target16_supergetattr_this_rc = prefix_invop
+.endif
+.ifndef prefix_target_supercallattr_this_rc
+prefix_target_supercallattr_this_rc = prefix_invop
+.endif
+.ifndef prefix_target16_supercallattr_this_rc
+prefix_target16_supercallattr_this_rc = prefix_invop
+.endif
 .ifndef prefix_target_incpost
 prefix_target_incpost = prefix_invop
 .endif
@@ -8819,8 +8831,8 @@ prefix_target16_boundmember_this = prefix_invop
 .ifndef prefix_target16_callattr_c_kw
 prefix_target16_callattr_c_kw = prefix_invop
 .endif
-.ifndef prefix_target16_callattr_tuple_c_kw
-prefix_target16_callattr_tuple_c_kw = prefix_invop
+.ifndef prefix_target16_callattr_c_tuple_kw
+prefix_target16_callattr_c_tuple_kw = prefix_invop
 .endif
 .ifndef prefix_target_callattr_kwds
 prefix_target_callattr_kwds = prefix_invop
@@ -8831,14 +8843,14 @@ prefix_target_callattr_tuple_kwds = prefix_invop
 .ifndef prefix_target16_callattr_c
 prefix_target16_callattr_c = prefix_invop
 .endif
-.ifndef prefix_target16_callattr_tuple_c
-prefix_target16_callattr_tuple_c = prefix_invop
+.ifndef prefix_target16_callattr_c_tuple
+prefix_target16_callattr_c_tuple = prefix_invop
 .endif
 .ifndef prefix_target16_callattr_this_c
 prefix_target16_callattr_this_c = prefix_invop
 .endif
-.ifndef prefix_target16_callattr_this_tuple_c
-prefix_target16_callattr_this_tuple_c = prefix_invop
+.ifndef prefix_target16_callattr_this_c_tuple
+prefix_target16_callattr_this_c_tuple = prefix_invop
 .endif
 .ifndef prefix_target16_callattr_c_seq
 prefix_target16_callattr_c_seq = prefix_invop
@@ -9090,13 +9102,13 @@ inst_table:
 	.long target_breakpoint              /* `debug break' */
 	.long target_ud                      /* `ud' */
 	.long target_callattr_c_kw           /* `callattr top, const <imm8>, #<imm8>, const <imm8>' */
-	.long target_callattr_tuple_c_kw     /* `callattr top, const <imm8>, pop..., const <imm8>' */
+	.long target_callattr_c_tuple_kw     /* `callattr top, const <imm8>, pop..., const <imm8>' */
 	.long target_callattr                /* `callattr top, pop, #<imm8>' */
 	.long target_callattr_tuple          /* `callattr top, pop, pop...' */
 	.long target_callattr_c              /* `callattr top, const <imm8>, #<imm8>' */
-	.long target_callattr_tuple_c        /* `callattr top, const <imm8>, pop...' */
+	.long target_callattr_c_tuple        /* `callattr top, const <imm8>, pop...' */
 	.long target_callattr_this_c         /* `push callattr this, const <imm8>, #<imm8>' */
-	.long target_callattr_this_tuple_c   /* `push callattr this, const <imm8>, pop...' */
+	.long target_callattr_this_c_tuple   /* `push callattr this, const <imm8>, pop...' */
 	.long target_callattr_c_seq          /* `callattr top, const <imm8>, [#<imm8>]' */
 	.long target_callattr_c_map          /* `callattr top, const <imm8>, {#<imm8>*2}' */
 	.long invop
@@ -9253,10 +9265,10 @@ inst_table_f0:
 	.long invop
 	.long target16_function_c            /* `push function const <imm16>, #<imm8>+1' */
 	.long target16_function_c_16         /* `push function const <imm16>, #<imm16>+1' */
-	.long invop
-	.long invop
-	.long invop
-	.long invop
+	.long target_supergetattr_this_rc    /* `push getattr this, ref <imm8>, const <imm8>' */
+	.long target16_supergetattr_this_rc  /* `push getattr this, ref <imm16>, const <imm16>' */
+	.long target_supercallattr_this_rc   /* `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
+	.long target16_supercallattr_this_rc /* `push callattr this, ref <imm16>, const <imm16>, #<imm8>' */
 	.long invop
 	.long invop
 	.long invop
@@ -9348,13 +9360,13 @@ inst_table_f0:
 	.long target_boundmember_this        /* `push boundmember this, pop, $<imm8>' */
 	.long target16_boundmember_this      /* `push boundmember this, pop, $<imm16>' */
 	.long target16_callattr_c_kw         /* `callattr top, const <imm16>, #<imm8>, const <imm16>' */
-	.long target16_callattr_tuple_c_kw   /* `callattr top, const <imm16>, pop..., const <imm16>' */
+	.long target16_callattr_c_tuple_kw   /* `callattr top, const <imm16>, pop..., const <imm16>' */
 	.long target_callattr_kwds           /* `callattr top, pop, #<imm8>, pop' */
 	.long target_callattr_tuple_kwds     /* `callattr top, pop, pop..., pop' */
 	.long target16_callattr_c            /* `callattr top, const <imm16>, #<imm8>' */
-	.long target16_callattr_tuple_c      /* `callattr top, const <imm16>, pop' */
+	.long target16_callattr_c_tuple      /* `callattr top, const <imm16>, pop' */
 	.long target16_callattr_this_c       /* `callattr this, const <imm16>, #<imm8>' */
-	.long target16_callattr_this_tuple_c /* `callattr this, const <imm16>, pop' */
+	.long target16_callattr_this_c_tuple /* `callattr this, const <imm16>, pop' */
 	.long target16_callattr_c_seq        /* `callattr top, const <imm16>, [#<imm8>]' */
 	.long target16_callattr_c_map        /* `callattr top, const <imm16>, {#<imm8>*2}' */
 	.long invop
@@ -9606,13 +9618,13 @@ prefix_inst_table:
 	.long prefix_target_breakpoint              /* `debug break' */
 	.long prefix_target_ud                      /* `ud' */
 	.long prefix_target_callattr_c_kw           /* `callattr top, const <imm8>, #<imm8>, const <imm8>' */
-	.long prefix_target_callattr_tuple_c_kw     /* `callattr top, const <imm8>, pop..., const <imm8>' */
+	.long prefix_target_callattr_c_tuple_kw     /* `callattr top, const <imm8>, pop..., const <imm8>' */
 	.long prefix_target_callattr                /* `callattr top, pop, #<imm8>' */
 	.long prefix_target_callattr_tuple          /* `callattr top, pop, pop...' */
 	.long prefix_target_callattr_c              /* `callattr top, const <imm8>, #<imm8>' */
-	.long prefix_target_callattr_tuple_c        /* `callattr top, const <imm8>, pop...' */
+	.long prefix_target_callattr_c_tuple        /* `callattr top, const <imm8>, pop...' */
 	.long prefix_target_callattr_this_c         /* `push callattr this, const <imm8>, #<imm8>' */
-	.long prefix_target_callattr_this_tuple_c   /* `push callattr this, const <imm8>, pop...' */
+	.long prefix_target_callattr_this_c_tuple   /* `push callattr this, const <imm8>, pop...' */
 	.long prefix_target_callattr_c_seq          /* `callattr top, const <imm8>, [#<imm8>]' */
 	.long prefix_target_callattr_c_map          /* `callattr top, const <imm8>, {#<imm8>*2}' */
 	.long prefix_invop
@@ -9769,10 +9781,10 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_target16_function_c            /* `push function const <imm16>, #<imm8>+1' */
 	.long prefix_target16_function_c_16         /* `push function const <imm16>, #<imm16>+1' */
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
+	.long prefix_target_supergetattr_this_rc    /* `push getattr this, ref <imm8>, const <imm8>' */
+	.long prefix_target16_supergetattr_this_rc  /* `push getattr this, ref <imm16>, const <imm16>' */
+	.long prefix_target_supercallattr_this_rc   /* `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
+	.long prefix_target16_supercallattr_this_rc /* `push callattr this, ref <imm16>, const <imm16>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -9864,13 +9876,13 @@ prefix_inst_table_f0:
 	.long prefix_target_boundmember_this        /* `push boundmember this, pop, $<imm8>' */
 	.long prefix_target16_boundmember_this      /* `push boundmember this, pop, $<imm16>' */
 	.long prefix_target16_callattr_c_kw         /* `callattr top, const <imm16>, #<imm8>, const <imm16>' */
-	.long prefix_target16_callattr_tuple_c_kw   /* `callattr top, const <imm16>, pop..., const <imm16>' */
+	.long prefix_target16_callattr_c_tuple_kw   /* `callattr top, const <imm16>, pop..., const <imm16>' */
 	.long prefix_target_callattr_kwds           /* `callattr top, pop, #<imm8>, pop' */
 	.long prefix_target_callattr_tuple_kwds     /* `callattr top, pop, pop..., pop' */
 	.long prefix_target16_callattr_c            /* `callattr top, const <imm16>, #<imm8>' */
-	.long prefix_target16_callattr_tuple_c      /* `callattr top, const <imm16>, pop' */
+	.long prefix_target16_callattr_c_tuple      /* `callattr top, const <imm16>, pop' */
 	.long prefix_target16_callattr_this_c       /* `callattr this, const <imm16>, #<imm8>' */
-	.long prefix_target16_callattr_this_tuple_c /* `callattr this, const <imm16>, pop' */
+	.long prefix_target16_callattr_this_c_tuple /* `callattr this, const <imm16>, pop' */
 	.long prefix_target16_callattr_c_seq        /* `callattr top, const <imm16>, [#<imm8>]' */
 	.long prefix_target16_callattr_c_map        /* `callattr top, const <imm16>, {#<imm8>*2}' */
 	.long prefix_invop

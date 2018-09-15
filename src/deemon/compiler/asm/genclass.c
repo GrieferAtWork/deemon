@@ -49,6 +49,7 @@ INTERN int
       goto err;
  }
  if (class_ast->a_class.c_supersym &&
+   !(class_ast->a_flag & AST_FCLASS_NOWRITESUPER) &&
    (!class_ast->a_class.c_base ||
      class_ast->a_class.c_base->a_type != AST_SYM ||
      class_ast->a_class.c_base->a_sym != class_ast->a_class.c_supersym)) {
@@ -83,7 +84,7 @@ INTERN int
   * member table. */
  if (class_ast->a_class.c_classsym) {
   if (asm_can_prefix_symbol(class_ast->a_class.c_classsym)) {
-   /* mov <c_supersym>, top */
+   /* mov <c_classsym>, top */
    if (asm_gprefix_symbol(class_ast->a_class.c_classsym,class_ast))
        goto err;
    if (asm_gdup_p()) goto err;

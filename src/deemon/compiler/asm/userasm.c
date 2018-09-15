@@ -355,14 +355,14 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
   if (((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_ARG) &&
       (current_basescope->bs_flags & CODE_FVARARGS) &&
        iop->io_symid == current_basescope->bs_argc_max &&
-      (iop->io_symid <= UINT8_MAX || (ao_flags & ASM_OVERLOAD_FF0)) &&
+      (iop->io_symid <= UINT8_MAX || (ao_flags & (ASM_OVERLOAD_F16BIT|ASM_OVERLOAD_FF0))) &&
       (current_basescope->bs_flags & CODE_FVARARGS))
       break;
   goto nope;
 
  case OPERAND_CLASS_ARG:
   if ((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_ARG) {
-   if (iop->io_symid > UINT8_MAX && !(ao_flags&ASM_OVERLOAD_FF0))
+   if (iop->io_symid > UINT8_MAX && !(ao_flags & (ASM_OVERLOAD_F16BIT|ASM_OVERLOAD_FF0)))
        goto nope;
    break;
   }
@@ -370,7 +370,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
   if (!(current_basescope->bs_flags & CODE_FVARARGS)) goto nope;
   if ((iop->io_class & OPERAND_CLASS_FMASK) != OPERAND_CLASS_VARARGS) goto nope;
   /* Make sure the varargs index can be fitted by this overload. */
-  if (current_basescope->bs_argc_max > UINT8_MAX && !(ao_flags&ASM_OVERLOAD_FF0))
+  if (current_basescope->bs_argc_max > UINT8_MAX && !(ao_flags & (ASM_OVERLOAD_F16BIT|ASM_OVERLOAD_FF0)))
       goto nope;
   break;
 
@@ -495,7 +495,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
    * set when their index lies beyond the 8-bit address range. */
  case OPERAND_CLASS_EXTERN:
   if (iop->io_extern.io_modid > UINT8_MAX &&
-    !(ao_flags&ASM_OVERLOAD_FF0))
+    !(ao_flags & (ASM_OVERLOAD_F16BIT|ASM_OVERLOAD_FF0)))
       goto nope;
   ATTR_FALLTHROUGH
  case OPERAND_CLASS_REF:
@@ -505,7 +505,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
  case OPERAND_CLASS_GLOBAL:
  case OPERAND_CLASS_LOCAL:
   if (iop->io_symid > UINT8_MAX &&
-    !(ao_flags&ASM_OVERLOAD_FF0))
+    !(ao_flags & (ASM_OVERLOAD_F16BIT|ASM_OVERLOAD_FF0)))
       goto nope;
   ATTR_FALLTHROUGH
  default:
@@ -770,8 +770,10 @@ got_overload:
     if (invoc->ai_ops[i].io_symid <= UINT8_MAX)
         break;
 do_emit_f0_prefix:
-    if (asm_put(ASM_EXTENDED1))
-        goto err;
+    if (!(iter->ao_flags & ASM_OVERLOAD_F16BIT)) {
+     if (asm_put(ASM_EXTENDED1))
+         goto err;
+    }
     emit_sym16 = true;
     emit_imm16 = !!(iter->ao_flags&ASM_OVERLOAD_FF0_IMM);
     goto do_emit_instruction;
@@ -784,6 +786,8 @@ do_emit_f0_prefix:
     break;
    }
   }
+  if (iter->ao_flags & ASM_OVERLOAD_F16BIT)
+      emit_sym16 = true;
 
   /* Now emit the instruction itself. */
 do_emit_instruction:
@@ -1233,10 +1237,18 @@ abs_stack_any:
  {
   int32_t rid;
  case ASM_OP_REF_GEN:
-  if (self->a_type != AST_SYM) goto next_option;
-  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-  /* Check for may-reference, thus allowing anything that ~could~ be referenced. */
-  if (!SYMBOL_MAY_REFERENCE(sym)) goto next_option;
+  if (self->a_type == AST_CONSTEXPR &&
+      current_basescope != (DeeBaseScopeObject *)current_rootscope) {
+   /* Check if the object is being exported from `deemon' */
+   sym = asm_bind_deemon_export(self->a_constexpr);
+   if unlikely(!sym) goto err;
+   if (sym == ASM_BIND_DEEMON_EXPORT_NOTFOUND) goto next_option;
+  } else {
+   if (self->a_type != AST_SYM) goto next_option;
+   sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
+   /* Check for may-reference, thus allowing anything that ~could~ be referenced. */
+   if (!SYMBOL_MAY_REFERENCE(sym)) goto next_option;
+  }
   rid = asm_rsymid(sym);
   if unlikely(rid < 0) goto err;
   result = DeeString_Newf("ref %I16u",(uint16_t)rid);

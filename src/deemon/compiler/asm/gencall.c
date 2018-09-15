@@ -444,6 +444,60 @@ check_getattr_base_symbol_class_small:
       default: break;
       }
      }
+     if (function_self->a_type == AST_ACTION &&
+         function_self->a_flag == AST_FACTION_AS &&
+         function_self->a_action.a_act0->a_type == AST_SYM &&
+         function_self->a_action.a_act0->a_sym->s_type == SYMBOL_TYPE_THIS &&
+        !SYMBOL_MUST_REFERENCE_THIS(function_self->a_action.a_act0->a_sym) &&
+         /* Because we can't inline the argument tuple, only do this variant
+          * if we either don't have to allocate too man additional stack-slots,
+          * of when doing so wouldn't increase the size of the resulting text. */
+         /* When optimizing for size, only use this variant for up to 2 arguments:
+          * >> push     callattr this, ref <imm8/16>, @"foo", #... // 5 bytes
+          * VS:
+          * >> push     super this, ref <imm8/16>                  // 4 bytes
+          * >> push     const @args                                // 2 bytes
+          * >> callattr top, @"foo", pop...                        // 3 bytes
+          * Because of this, the 0-arguments case is 5 bytes vs 9 bytes
+          * With that in mind, we start out by saving 4 bytes.
+          *   4 bytes / sizeof(push const <imm8>) --> 2
+          * As you can see, so long as there aren't more than 2 arguments, we
+          * save text space by encoding a supercall. (with no loss or gain at
+          * exactly 2 arguments) */
+        argc <= ((current_assembler.a_stackmax - current_assembler.a_stackcur) +
+                 ((current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) ? 2 : 16))) {
+      /* `(this as ...).foobar(10,20,30)'
+       * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC' instructions. */
+      struct ast *type_expr = function_self->a_action.a_act1;
+      int32_t type_rid;
+      if (type_expr->a_type == AST_SYM &&
+          ASM_SYMBOL_MAY_REFERENCE(type_expr->a_sym)) {
+       /* We are allowed to reference the base-symbol! */
+       type_rid = asm_rsymid(type_expr->a_sym);
+do_perform_supercallattr_small:
+       if unlikely(type_rid < 0) goto err;
+       attrid = asm_newconst((DeeObject *)function_attr->a_constexpr);
+       if unlikely(attrid < 0) goto err;
+       if unlikely(push_tuple_items(args->a_constexpr,args)) goto err;
+       if (asm_putddi(ddi_ast)) goto err;
+       if (asm_gsupercallattr_this_rc((uint16_t)type_rid,(uint16_t)attrid,argc)) goto err;
+       goto pop_unused;
+      }
+      if (type_expr->a_type == AST_CONSTEXPR &&
+          current_basescope != (DeeBaseScopeObject *)current_rootscope &&
+        !(current_assembler.a_flag & ASM_FREDUCEREFS)) {
+       /* Check if the type-expression is a constant that had been exported
+        * from the builtin `deemon' module, in which case we are able to cast
+        * an explicit reference to it. */
+       struct symbol *deemon_symbol;
+       deemon_symbol = asm_bind_deemon_export(type_expr->a_constexpr);
+       if unlikely(!deemon_symbol) goto err;
+       if (deemon_symbol != ASM_BIND_DEEMON_EXPORT_NOTFOUND) {
+        type_rid = asm_rsymid(deemon_symbol);
+        goto do_perform_supercallattr_small;
+       }
+      }
+     }
      /* Only do this for 0/1 arguments:
       * 2 arguments would already need 4 instructions:
       * >> push     <this>
@@ -1092,6 +1146,43 @@ check_getattr_base_symbol_class_argv:
 
     default:
      break;
+    }
+   }
+   if (function_self->a_type == AST_ACTION &&
+       function_self->a_flag == AST_FACTION_AS &&
+       function_self->a_action.a_act0->a_type == AST_SYM &&
+       function_self->a_action.a_act0->a_sym->s_type == SYMBOL_TYPE_THIS &&
+      !SYMBOL_MUST_REFERENCE_THIS(function_self->a_action.a_act0->a_sym)) {
+    /* `(this as ...).foobar(a,b,c)'
+     * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC' instructions. */
+    struct ast *type_expr = function_self->a_action.a_act1;
+    int32_t type_rid;
+    if (type_expr->a_type == AST_SYM &&
+        ASM_SYMBOL_MAY_REFERENCE(type_expr->a_sym)) {
+     /* We are allowed to reference the base-symbol! */
+     type_rid = asm_rsymid(type_expr->a_sym);
+do_perform_supercallattr_argv:
+     if unlikely(type_rid < 0) goto err;
+     attrid = asm_newconst((DeeObject *)function_attr->a_constexpr);
+     if unlikely(attrid < 0) goto err;
+     for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
+     if (asm_gsupercallattr_this_rc((uint16_t)type_rid,(uint16_t)attrid,argc)) goto err;
+     goto pop_unused;
+    }
+    if (type_expr->a_type == AST_CONSTEXPR &&
+        current_basescope != (DeeBaseScopeObject *)current_rootscope &&
+      !(current_assembler.a_flag & ASM_FREDUCEREFS)) {
+     /* Check if the type-expression is a constant that had been exported
+      * from the builtin `deemon' module, in which case we are able to cast
+      * an explicit reference to it. */
+     struct symbol *deemon_symbol;
+     deemon_symbol = asm_bind_deemon_export(type_expr->a_constexpr);
+     if unlikely(!deemon_symbol) goto err;
+     if (deemon_symbol != ASM_BIND_DEEMON_EXPORT_NOTFOUND) {
+      type_rid = asm_rsymid(deemon_symbol);
+      goto do_perform_supercallattr_argv;
+     }
     }
    }
    /* call to some other object. */

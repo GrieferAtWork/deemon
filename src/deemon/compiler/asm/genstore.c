@@ -230,6 +230,42 @@ check_getattr_sym:
    default: break;
    }
   }
+  if (base->a_type == AST_ACTION &&
+      base->a_flag == AST_FACTION_AS &&
+      base->a_action.a_act0->a_type == AST_SYM &&
+      base->a_action.a_act0->a_sym->s_type == SYMBOL_TYPE_THIS &&
+     !SYMBOL_MUST_REFERENCE_THIS(base->a_action.a_act0->a_sym)) {
+   /* `(this as ...).foobar'
+    * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC' instructions. */
+   struct ast *type_expr = base->a_action.a_act1;
+   int32_t type_rid;
+   if (type_expr->a_type == AST_SYM &&
+       ASM_SYMBOL_MAY_REFERENCE(type_expr->a_sym)) {
+    /* We are allowed to reference the base-symbol! */
+    type_rid = asm_rsymid(type_expr->a_sym);
+do_perform_supergetattr:
+    if unlikely(type_rid < 0) goto err;
+    attrid   = asm_newconst((DeeObject *)attrname);
+    if unlikely(attrid < 0) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    if (asm_gsupergetattr_this_rc((uint16_t)type_rid,(uint16_t)attrid)) goto err;
+    goto pop_unused;
+   }
+   if (type_expr->a_type == AST_CONSTEXPR &&
+       current_basescope != (DeeBaseScopeObject *)current_rootscope &&
+     !(current_assembler.a_flag & ASM_FREDUCEREFS)) {
+    /* Check if the type-expression is a constant that had been exported
+     * from the builtin `deemon' module, in which case we are able to cast
+     * an explicit reference to it. */
+    struct symbol *deemon_symbol;
+    deemon_symbol = asm_bind_deemon_export(type_expr->a_constexpr);
+    if unlikely(!deemon_symbol) goto err;
+    if (deemon_symbol != ASM_BIND_DEEMON_EXPORT_NOTFOUND) {
+     type_rid = asm_rsymid(deemon_symbol);
+     goto do_perform_supergetattr;
+    }
+   }
+  }
   if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
   attrid = asm_newconst((DeeObject *)attrname);
   if unlikely(attrid < 0) goto err;

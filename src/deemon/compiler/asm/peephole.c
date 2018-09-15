@@ -390,9 +390,9 @@ PRIVATE char const mnemonic_names[256][29] = {
     /* 0xd0 */ "callattr top, pop, " PREFIX_STACKEFFECT, /* `ASM_CALLATTR' */
     /* 0xd1 */ "callattr top, pop, pop", /* `ASM_CALLATTR_TUPLE' */
     /* 0xd2 */ "callattr top, const ", /* `ASM_CALLATTR_C' */
-    /* 0xd3 */ "callattr top, const ", /* `ASM_CALLATTR_TUPLE_C' */
+    /* 0xd3 */ "callattr top, const ", /* `ASM_CALLATTR_C_TUPLE' */
     /* 0xd4 */ "callattr this, const ", /* `ASM_CALLATTR_THIS_C' */
-    /* 0xd5 */ "callattr this, const ", /* `ASM_CALLATTR_THIS_TUPLE_C' */
+    /* 0xd5 */ "callattr this, const ", /* `ASM_CALLATTR_THIS_C_TUPLE' */
     /* 0xd6 */ "getmember this, pop, " PREFIX_INTEGERAL, /* `ASM_GETMEMBER_THIS' */
     /* 0xd7 */ "getmember this, ref ", /* `ASM_GETMEMBER_THIS_R' */
     /* 0xd8 */ "delmember this, pop, " PREFIX_INTEGERAL, /* `ASM_DELMEMBER_THIS' */

@@ -364,13 +364,13 @@ PRIVATE char const mnemonic_names[256][31] = {
     /* 0xcc */ "debug  break", /* `ASM_BREAKPOINT' */
     /* 0xcd */ "ud", /* `ASM_UD' */
     /* 0xce */ "callattr top, ", /* `ASM_CALLATTR_C_KW' */
-    /* 0xcf */ "callattr top, ", /* `ASM_CALLATTR_TUPLE_C_KW' */
+    /* 0xcf */ "callattr top, ", /* `ASM_CALLATTR_C_TUPLE_KW' */
     /* 0xd0 */ "callattr top, pop, " PREFIX_STACKEFFECT, /* `ASM_CALLATTR' */
     /* 0xd1 */ "callattr top, pop, pop...", /* `ASM_CALLATTR_TUPLE' */
     /* 0xd2 */ "callattr top, ", /* `ASM_CALLATTR_C' */
-    /* 0xd3 */ "callattr top, ", /* `ASM_CALLATTR_TUPLE_C' */
+    /* 0xd3 */ "callattr top, ", /* `ASM_CALLATTR_C_TUPLE' */
     /* 0xd4 */ "push   callattr this, ", /* `ASM_CALLATTR_THIS_C' */
-    /* 0xd5 */ "push   callattr this, ", /* `ASM_CALLATTR_THIS_TUPLE_C' */
+    /* 0xd5 */ "push   callattr this, ", /* `ASM_CALLATTR_THIS_C_TUPLE' */
     /* 0xd6 */ "callattr top, ", /* `ASM_CALLATTR_C_SEQ' */
     /* 0xd7 */ "callattr top, ", /* `ASM_CALLATTR_C_MAP' */
     /* 0xd8 */ UNKNOWN_MNEMONIC, /* --- */
@@ -527,10 +527,10 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf06d */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf06e */ "push   function ", /* `ASM16_FUNCTION_C' */
     /* 0xf06f */ "push   function ", /* `ASM16_FUNCTION_C_16' */
-    /* 0xf070 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf071 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf072 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf073 */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0xf070 */ "push   getattr this, ", /* `ASM_SUPERGETATTR_THIS_RC' */
+    /* 0xf071 */ "push   getattr this, ", /* `ASM16_SUPERGETATTR_THIS_RC' */
+    /* 0xf072 */ "push   callattr this, ", /* `ASM_SUPERCALLATTR_THIS_RC' */
+    /* 0xf073 */ "push   callattr this, ", /* `ASM16_SUPERCALLATTR_THIS_RC' */
     /* 0xf074 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf075 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf076 */ UNKNOWN_MNEMONIC, /* --- */
@@ -622,13 +622,13 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf0cc */ "push   boundmember this, pop, " PREFIX_INTEGERAL, /* `ASM_BOUNDMEMBER_THIS' */
     /* 0xf0cd */ "push   boundmember this, pop, " PREFIX_INTEGERAL, /* `ASM16_BOUNDMEMBER_THIS' */
     /* 0xf0ce */ "callattr top, ", /* `ASM16_CALLATTR_C_KW' */
-    /* 0xf0cf */ "callattr top, ", /* `ASM16_CALLATTR_TUPLE_C_KW' */
+    /* 0xf0cf */ "callattr top, ", /* `ASM16_CALLATTR_C_TUPLE_KW' */
     /* 0xf0d0 */ "callattr top, pop, " PREFIX_STACKEFFECT, /* `ASM_CALLATTR_KWDS' */
     /* 0xf0d1 */ "callattr top, pop, pop..., pop", /* `ASM_CALLATTR_TUPLE_KWDS' */
     /* 0xf0d2 */ "callattr top, ", /* `ASM16_CALLATTR_C' */
-    /* 0xf0d3 */ "callattr top, ", /* `ASM16_CALLATTR_TUPLE_C' */
+    /* 0xf0d3 */ "callattr top, ", /* `ASM16_CALLATTR_C_TUPLE' */
     /* 0xf0d4 */ "callattr this, ", /* `ASM16_CALLATTR_THIS_C' */
-    /* 0xf0d5 */ "callattr this, ", /* `ASM16_CALLATTR_THIS_TUPLE_C' */
+    /* 0xf0d5 */ "callattr this, ", /* `ASM16_CALLATTR_THIS_C_TUPLE' */
     /* 0xf0d6 */ "callattr top, ", /* `ASM16_CALLATTR_C_SEQ' */
     /* 0xf0d7 */ "callattr top, ", /* `ASM16_CALLATTR_C_MAP' */
     /* 0xf0d8 */ UNKNOWN_MNEMONIC, /* --- */
@@ -1649,11 +1649,11 @@ print_imm_const:
   INVOKE(libdisasm_printconst(printer,arg,imm,code,flags,false));
   break;
 
- case ASM16_CALLATTR_TUPLE_C_KW:
+ case ASM16_CALLATTR_C_TUPLE_KW:
   imm  = READ_imm16(iter);
   imm2 = READ_imm16(iter);
   goto print_const_popdots_const;
- case ASM_CALLATTR_TUPLE_C_KW:
+ case ASM_CALLATTR_C_TUPLE_KW:
   imm  = READ_imm8(iter);
   imm2 = READ_imm8(iter);
 print_const_popdots_const:
@@ -1977,8 +1977,8 @@ print_const_int:
  case ASM16_FPRINT_C_SP:
  case ASM16_FPRINT_C_NL:
  case ASM16_SETITEM_C:
- case ASM16_CALLATTR_TUPLE_C:
- case ASM16_CALLATTR_THIS_TUPLE_C:
+ case ASM16_CALLATTR_C_TUPLE:
+ case ASM16_CALLATTR_THIS_C_TUPLE:
  case ASM16_SETATTR_C:
  case ASM16_SETATTR_THIS_C:
  case ASM16_CALLATTR_C:
@@ -2003,8 +2003,8 @@ print_const_int:
  case ASM_FPRINT_C_SP:
  case ASM_FPRINT_C_NL:
  case ASM_SETITEM_C:
- case ASM_CALLATTR_TUPLE_C:
- case ASM_CALLATTR_THIS_TUPLE_C:
+ case ASM_CALLATTR_C_TUPLE:
+ case ASM_CALLATTR_THIS_C_TUPLE:
  case ASM_SETATTR_C:
  case ASM_SETATTR_THIS_C:
  case ASM_CALLATTR_C:
@@ -2033,10 +2033,10 @@ print_const:
    break;
   case ASM_SETITEM_C:
   case ASM16_SETITEM_C:
-  case ASM_CALLATTR_TUPLE_C:
-  case ASM16_CALLATTR_TUPLE_C:
-  case ASM_CALLATTR_THIS_TUPLE_C:
-  case ASM16_CALLATTR_THIS_TUPLE_C:
+  case ASM_CALLATTR_C_TUPLE:
+  case ASM16_CALLATTR_C_TUPLE:
+  case ASM_CALLATTR_THIS_C_TUPLE:
+  case ASM16_CALLATTR_THIS_C_TUPLE:
   case ASM_SETATTR_C:
   case ASM16_SETATTR_C:
   case ASM_SETATTR_THIS_C:
@@ -2069,6 +2069,24 @@ do_print_stackeffect_after_const:
    break;
   default: break;
   }
+  break;
+
+ case ASM16_SUPERGETATTR_THIS_RC:
+ case ASM16_SUPERCALLATTR_THIS_RC:
+  imm  = READ_imm16(iter);
+  imm2 = READ_imm16(iter);
+  goto do_print_superattr_rc;
+ case ASM_SUPERGETATTR_THIS_RC:
+ case ASM_SUPERCALLATTR_THIS_RC:
+  imm  = READ_imm8(iter);
+  imm2 = READ_imm8(iter);
+do_print_superattr_rc:
+  INVOKE(libdisasm_printref(printer,arg,imm,code,flags));
+  PRINT(", ");
+  INVOKE(libdisasm_printconst(printer,arg,imm2,code,flags,false));
+  if (opcode == ASM_SUPERCALLATTR_THIS_RC ||
+      opcode == ASM16_SUPERCALLATTR_THIS_RC)
+      printf(", #%I8u",READ_imm8(iter));
   break;
 
  default: break;

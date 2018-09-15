@@ -184,6 +184,7 @@ for (local x: names) {
 #define FPREFIX    ASM_OVERLOAD_FPREFIX
 #define FPREFIX_RO ASM_OVERLOAD_FPREFIX_RO
 #define FF0        ASM_OVERLOAD_FF0
+#define F16BIT     ASM_OVERLOAD_F16BIT
 #define FF0_IMM    ASM_OVERLOAD_FF0_IMM
 #define FRET       ASM_OVERLOAD_FRET
 #define FYLD       ASM_OVERLOAD_FYLD
@@ -575,36 +576,6 @@ INSTR("deepcopy",(
     O1(ASM_DEEPCOPY,FNORMAL,(TOP))                           /* deepcopy top */
 ))
 
-/* CONSTRAINTS: `getattr <s>, <cs>' */
-/* CONSTRAINTS: `getattr <Ti>, <c>' */
-INSTR("getattr",(
-    O2(ASM_GETATTR,       FNORMAL,  (TOP)(POP))              /* getattr top, pop */
-    O2(ASM_GETATTR_C,     FF0,      (TOP)(CONST))            /* getattr top, const <imm8/16> */
-    O2(ASM_GETATTR_THIS_C,FF0|FPUSH,(THIS)(CONST))           /* getattr this, const <imm8/16> */
-))
-
-/* CONSTRAINTS: `boundattr <s>, <s>' */
-INSTR("boundattr",(
-    O2(ASM_BOUNDATTR,     FNORMAL,  (TOP)(POP))              /* boundattr top, pop */
-))
-
-/* CONSTRAINTS: `delattr <s>, <cs>' */
-/* CONSTRAINTS: `delattr <Ti>, <c>' */
-INSTR("delattr",(
-    O2(ASM_DELATTR,       FNORMAL,(POP)(POP))                /* delattr pop, pop */
-    O2(ASM_DELATTR_C,     FF0,    (POP)(CONST))              /* delattr pop, const <imm8/16> */
-    O2(ASM_DELATTR_THIS_C,FF0,    (THIS)(CONST))             /* delattr this, const <imm8/16> */
-))
-
-/* CONSTRAINTS: `setattr <s>, <cs>, <s>' */
-/* CONSTRAINTS: `setattr <Ti>, <c>, <s>' */
-INSTR("setattr",(
-    O3(ASM_SETATTR,       FNORMAL,(POP)(POP)(POP))           /* setattr pop, pop, pop */
-    O3(ASM_SETATTR_C,     FF0,    (POP)(CONST)(POP))         /* setattr pop, const <imm8/16>, pop */
-    O3(ASM_SETATTR_THIS_C,FF0,    (THIS)(CONST)(POP))        /* setattr this, const <imm8/16>, pop */
-))
-
-
 /* CONSTRAINTS: `cmp ..., <s>, <s>' */
 INSTR("cmp",(
     O3(ASM_CMP_EQ,FNORMAL,(EQ)(TOP)(POP))                          /* cmp eq, top, pop */
@@ -980,22 +951,58 @@ INSTR("ud",(
     O0(ASM_UD,FNORMAL) /* ud */
 ))
 
+/* CONSTRAINTS: `getattr <s>, <cs>' */
+/* CONSTRAINTS: `getattr <Ti>, <c>' */
+/* CONSTRAINTS: `getattr <Ti>, <R>, <c>' */
+INSTR("getattr",(
+    O2(ASM_GETATTR,               FNORMAL,             (TOP)(POP))         /* getattr top, pop */
+    O2(ASM_GETATTR_C,             FF0,                 (TOP)(CONST))       /* getattr top, const <imm8/16> */
+    O2(ASM_GETATTR_THIS_C,        FF0|FPUSH,           (THIS)(CONST))      /* getattr this, const <imm8/16> */
+    O3(ASM_SUPERGETATTR_THIS_RC,  FPUSH|FSTKABS,       (THIS)(REF)(CONST)) /* push getattr this, ref <imm8>, const <imm8> */
+    O3(ASM16_SUPERGETATTR_THIS_RC,FPUSH|F16BIT|FSTKABS,(THIS)(REF)(CONST)) /* push getattr this, ref <imm16>, const <imm16> */
+))
+
+/* CONSTRAINTS: `boundattr <s>, <s>' */
+INSTR("boundattr",(
+    O2(ASM_BOUNDATTR,     FNORMAL,  (TOP)(POP))              /* boundattr top, pop */
+))
+
+/* CONSTRAINTS: `delattr <s>, <cs>' */
+/* CONSTRAINTS: `delattr <Ti>, <c>' */
+INSTR("delattr",(
+    O2(ASM_DELATTR,               FNORMAL,       (POP)(POP))         /* delattr pop, pop */
+    O2(ASM_DELATTR_C,             FF0,           (POP)(CONST))       /* delattr pop, const <imm8/16> */
+    O2(ASM_DELATTR_THIS_C,        FF0,           (THIS)(CONST))      /* delattr this, const <imm8/16> */
+))
+
+/* CONSTRAINTS: `setattr <s>, <cs>, <s>' */
+/* CONSTRAINTS: `setattr <Ti>, <c>, <s>' */
+INSTR("setattr",(
+    O3(ASM_SETATTR,               FNORMAL,       (POP)(POP)(POP))         /* setattr pop, pop, pop */
+    O3(ASM_SETATTR_C,             FF0,           (POP)(CONST)(POP))       /* setattr pop, const <imm8/16>, pop */
+    O3(ASM_SETATTR_THIS_C,        FF0,           (THIS)(CONST)(POP))      /* setattr this, const <imm8/16>, pop */
+))
+
+
 /* CONSTRAINTS: `callattr <s>, <cs>, ...' */
 /* CONSTRAINTS: `callattr <s>, <c>, <QlQr>' */
 /* CONSTRAINTS: `callattr <Ti>, <c>, ...' */
+/* CONSTRAINTS: `callattr <Ti>, <R>, <c>, ...' */
 INSTR("callattr",(
-    O3(ASM_CALLATTR,             FSTKABS,          (TOP)(POP)(SPIMM8))                 /* callattr top, pop, #<imm8> */
-    O3(ASM_CALLATTR_TUPLE,       FNORMAL,          (TOP)(POP)(POP|FDOTSFLAG))          /* callattr top, pop, pop... */
-    O3(ASM_CALLATTR_C,           FF0|FSTKABS,      (TOP)(CONST)(SPIMM8))               /* callattr top, const <imm8/16>, #<imm8> */
-    O3(ASM_CALLATTR_TUPLE_C,     FF0,              (TOP)(CONST)(POP|FDOTSFLAG))        /* callattr top, const <imm8/16>, pop... */
-    O3(ASM_CALLATTR_C_SEQ,       FF0,              (TOP)(CONST)(BRSPIMM8))			   /* callattr top, const <imm8/16>, [#<imm8>] */
-    O3(ASM_CALLATTR_C_MAP,       FF0,              (TOP)(CONST)(BCSPIMM8|DISP8_HALF))  /* callattr top, const <imm8/16>, {#<imm8>} */
-    O3(ASM_CALLATTR_THIS_C,      FPUSH|FF0|FSTKABS,(THIS)(CONST)(SPIMM8))              /* push callattr this, const <imm8/16>, #<imm8> */
-    O3(ASM_CALLATTR_THIS_TUPLE_C,FPUSH|FF0,        (THIS)(CONST)(POP|FDOTSFLAG))       /* push callattr this, const <imm8/16>, pop... */
-    O4(ASM_CALLATTR_C_KW,        FF0|FSTKABS,      (TOP)(CONST)(SPIMM8)(CONST))        /* callattr top, const <imm8/16>, #<imm8>, const <imm8/16> */
-    O4(ASM_CALLATTR_TUPLE_C_KW,  FF0,              (TOP)(CONST)(POP|FDOTSFLAG)(CONST)) /* callattr top, const <imm8/16>, pop..., const <imm8/16> */
-    O4(ASM_CALLATTR_KWDS,        FSTKABS,          (TOP)(POP)(SPIMM8)(POP))            /* callattr top, pop, #<imm8>, pop */
-    O4(ASM_CALLATTR_TUPLE_KWDS,  FNORMAL,          (TOP)(POP)(POP|FDOTSFLAG)(POP))     /* callattr top, pop, pop..., pop */
+    O3(ASM_CALLATTR,               FSTKABS,             (TOP)(POP)(SPIMM8))                 /* callattr top, pop, #<imm8> */
+    O3(ASM_CALLATTR_TUPLE,         FNORMAL,             (TOP)(POP)(POP|FDOTSFLAG))          /* callattr top, pop, pop... */
+    O3(ASM_CALLATTR_C,             FF0|FSTKABS,         (TOP)(CONST)(SPIMM8))               /* callattr top, const <imm8/16>, #<imm8> */
+    O3(ASM_CALLATTR_C_TUPLE,       FF0,                 (TOP)(CONST)(POP|FDOTSFLAG))        /* callattr top, const <imm8/16>, pop... */
+    O3(ASM_CALLATTR_C_SEQ,         FF0,                 (TOP)(CONST)(BRSPIMM8))			  /* callattr top, const <imm8/16>, [#<imm8>] */
+    O3(ASM_CALLATTR_C_MAP,         FF0,                 (TOP)(CONST)(BCSPIMM8|DISP8_HALF))  /* callattr top, const <imm8/16>, {#<imm8>} */
+    O3(ASM_CALLATTR_THIS_C,        FPUSH|FF0|FSTKABS,   (THIS)(CONST)(SPIMM8))              /* push callattr this, const <imm8/16>, #<imm8> */
+    O3(ASM_CALLATTR_THIS_C_TUPLE,  FPUSH|FF0,           (THIS)(CONST)(POP|FDOTSFLAG))       /* push callattr this, const <imm8/16>, pop... */
+    O4(ASM_CALLATTR_C_KW,          FF0|FSTKABS,         (TOP)(CONST)(SPIMM8)(CONST))        /* callattr top, const <imm8/16>, #<imm8>, const <imm8/16> */
+    O4(ASM_CALLATTR_C_TUPLE_KW,    FF0,                 (TOP)(CONST)(POP|FDOTSFLAG)(CONST)) /* callattr top, const <imm8/16>, pop..., const <imm8/16> */
+    O4(ASM_CALLATTR_KWDS,          FSTKABS,             (TOP)(POP)(SPIMM8)(POP))            /* callattr top, pop, #<imm8>, pop */
+    O4(ASM_CALLATTR_TUPLE_KWDS,    FNORMAL,             (TOP)(POP)(POP|FDOTSFLAG)(POP))     /* callattr top, pop, pop..., pop */
+    O4(ASM_SUPERCALLATTR_THIS_RC,  FPUSH|FSTKABS,       (THIS)(REF)(CONST)(SPIMM8))         /* push callattr this, ref <imm8>, const <imm8>, #<imm8> */
+    O4(ASM16_SUPERCALLATTR_THIS_RC,FPUSH|F16BIT|FSTKABS,(THIS)(REF)(CONST)(SPIMM8))         /* push callattr this, ref <imm16>, const <imm16>, #<imm8> */
 ))
 
 /* CONSTRAINTS: `push getmember <Ti>, <rs>, ...' */
@@ -1214,6 +1221,7 @@ for (local x: names) {
 #undef FYLD
 #undef FRET
 #undef FF0_IMM
+#undef F16BIT
 #undef FF0
 #undef FPREFIX_RO
 #undef FPREFIX

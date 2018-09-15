@@ -63,6 +63,10 @@ DECL_BEGIN
 #define DEFINE_OPERATOR(return,name,args) \
         PUBLIC return (DCALL DeeObject_##name) args
 #endif /* !DEFINE_OPERATOR */
+#ifndef DEFINE_INTERNAL_OPERATOR
+#define DEFINE_INTERNAL_OPERATOR(return,name,args) \
+        INTERN return (DCALL DeeObject_##name) args
+#endif
 
 
 /* Setup how operator callbacks are invoked.
@@ -4018,6 +4022,83 @@ done:
  return temp;
 }
 
+INTDEF DREF DeeObject *DCALL type_getattr(DeeObject *__restrict self, DeeObject *__restrict name);
+INTDEF DREF DeeObject *DCALL type_callattr(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv);
+#ifndef DEFINE_TYPE_OPERATORS
+INTDEF DREF DeeObject *DCALL super_getattr(DeeObject *__restrict self, DeeObject *__restrict name);
+INTDEF DREF DeeObject *DCALL DeeObject_TCallAttr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv);
+#endif
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *,CallAttr,
+                        (DeeObject *__restrict self,
+                         /*String*/DeeObject *__restrict attr_name,
+                         size_t argc, DeeObject **__restrict argv)) {
+ DREF DeeObject *result; dhash_t hash;
+ struct membercache *cache;
+ LOAD_ITER;
+ ASSERT_OBJECT(self);
+ ASSERT_OBJECT(attr_name);
+ ASSERT(DeeString_Check(attr_name));
+ if (iter->tp_attr) goto do_iter_attr;
+ hash = DeeString_Hash(attr_name);
+ cache = &iter->tp_cache;
+ if ((result = membercache_callattr(cache,self,DeeString_STR(attr_name),hash,argc,argv)) != ITER_DONE)
+      goto done;
+ for (;;) {
+  if (DeeType_IsClass(iter)) {
+   struct class_attribute *attr;
+   struct class_desc *desc = DeeClass_DESC(iter);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
+     return NULL;
+    }
+    return DeeInstance_CallAttribute(iter,
+                                     DeeInstance_DESC(desc,
+                                                      self),
+                                     self,attr,argc,argv);
+   }
+  }
+  if (iter->tp_methods &&
+     (result = type_method_callattr(cache,iter->tp_methods,self,DeeString_STR(attr_name),hash,argc,argv)) != ITER_DONE)
+      goto done;
+  if (iter->tp_getsets &&
+     (result = type_getset_getattr(cache,iter->tp_getsets,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+      goto done_invoke;
+  if (iter->tp_members &&
+     (result = type_member_getattr(cache,iter->tp_members,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+      goto done_invoke;
+  iter = DeeType_Base(iter);
+  if (!iter) break;
+  if (iter->tp_attr) {
+do_iter_attr:
+   if (iter->tp_attr->tp_getattr == &type_getattr)
+       return type_callattr(self,attr_name,argc,argv);
+#ifndef DEFINE_TYPE_OPERATORS
+   if (iter->tp_attr->tp_getattr == &super_getattr)
+       return DeeObject_TCallAttr(DeeSuper_TYPE(self),DeeSuper_SELF(self),attr_name,argc,argv);
+#endif
+   if (!iter->tp_attr->tp_getattr) break;
+   result = (*iter->tp_attr->tp_getattr)(self,attr_name);
+   goto done_invoke;
+  }
+ }
+ err_unknown_attribute(DeeObject_Class(self),
+                       DeeString_STR(attr_name),
+                       ATTR_ACCESS_GET);
+ return NULL;
+done_invoke:
+ if likely(result) {
+  DREF DeeObject *callback_result;
+  callback_result = DeeObject_Call(result,argc,argv);
+  Dee_Decref(result);
+  result = callback_result;
+ }
+done:
+ return result;
+}
+
 
 #ifndef DEFINE_TYPE_OPERATORS
 INTERN bool DCALL
@@ -4157,6 +4238,7 @@ DEFINE_OPERATOR(void,PutBuf,
 #undef LOAD_ITER
 #undef LOAD_ITERP
 #undef LOAD_TP_SELF
+#undef DEFINE_INTERNAL_OPERATOR
 #undef DEFINE_OPERATOR
 
 
