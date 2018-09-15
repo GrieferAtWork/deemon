@@ -1091,21 +1091,13 @@ tuple_nsi_getitem_fast(Tuple *__restrict self, size_t index) {
 
 PRIVATE size_t DCALL
 tuple_nsi_find(Tuple *__restrict self, size_t start, size_t end,
-               DeeObject *__restrict value, DeeObject *pred_eq) {
- size_t i;
+               DeeObject *__restrict keyed_search_item,
+               DeeObject *key) {
+ size_t i; int temp;
  if (end > self->t_size)
      end = self->t_size;
  for (i = start; i < end; ++i) {
-  int temp;
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_CallPack(pred_eq,2,self->t_elem[i],value);
-   if unlikely(!pred_result) goto err;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareEq(self->t_elem[i],value);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,self->t_elem[i],key);
   if (temp != 0) {
    if unlikely(temp < 0) goto err;
    return i;
@@ -1117,23 +1109,15 @@ err:
 }
 PRIVATE size_t DCALL
 tuple_nsi_rfind(Tuple *__restrict self, size_t start, size_t end,
-                DeeObject *__restrict value, DeeObject *pred_eq) {
- size_t i;
+                DeeObject *__restrict keyed_search_item,
+                DeeObject *key) {
+ size_t i; int temp;
  if (end > self->t_size)
      end = self->t_size;
  i = end;
  while (i > start) {
-  int temp;
   --i;
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_CallPack(pred_eq,2,self->t_elem[i],value);
-   if unlikely(!pred_result) goto err;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareEq(self->t_elem[i],value);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,self->t_elem[i],key);
   if (temp != 0) {
    if unlikely(temp < 0) goto err;
    return i;

@@ -86,49 +86,49 @@ DECL_BEGIN
  *           - Returns true if all elements of the sequence equate to `false' and return `true' when empty.
  *        - `parity() -> object'
  *           - Same as `reduce([](a,b) -> !!a ^ !!b);'
- *        - `min(callable pred_lo = operator <) -> object'
- *           - Same as `reduce([](a,b) -> pred_lo(a,b) ? a : b);'
- *        - `max(callable pred_lo = operator <) -> object'
- *           - Same as `reduce([](a,b) -> pred_lo(a,b) ? b : a);'
- *        - `count(object ob, callable pred_eq = none) -> int'
- *        - `locate(object ob, callable pred_eq = none) -> object'
- *        - `rlocate(object ob, callable pred_eq = none) -> object'
- *        - `locateall(object ob, callable pred_eq = none) -> sequence'
+ *        - `min(callable key = none) -> object'
+ *           - Same as `reduce([](a,b) -> key(a,b) ? a : b);'
+ *        - `max(callable key = none) -> object'
+ *           - Same as `reduce([](a,b) -> key(a,b) ? b : a);'
+ *        - `count(object ob, callable key = none) -> int'
+ *        - `locate(object ob, callable key = none) -> object'
+ *        - `rlocate(object ob, callable key = none) -> object'
+ *        - `locateall(object ob, callable key = none) -> sequence'
  *        - `transform(callable transformation) -> sequence'
  *           - Invoke `transformation()' on all items and return a sequence of all the results.
  *           - Same as `(for (local x: this) transformation(x));'
- *        - `contains(object ob, callable pred_eq = none) -> bool'
- *           - Same as the `tp_contains' operator, but allows for an equivalents predicate.
- *        - `partition(object ob, callable pred_eq = none) -> (sequence,(ob),sequence)'
- *        - `rpartition(object ob, callable pred_eq = none) -> (sequence,(ob),sequence)'
- *        - `startswith(object ob, callable pred_eq = none) -> bool'
- *        - `endswith(object ob, callable pred_eq = none) -> bool'
- *        - `find(object ob, callable pred_eq = none) -> int'
- *        - `rfind(object ob, callable pred_eq = none) -> int'
- *        - `index(object ob, callable pred_eq = none) -> int'
- *        - `rindex(object ob, callable pred_eq = none) -> int'
+ *        - `contains(object ob, callable key = none) -> bool'
+ *           - Same as the `tp_contains' operator, but allows for a key function to be used.
+ *        - `partition(object ob, callable key = none) -> (sequence,(ob),sequence)'
+ *        - `rpartition(object ob, callable key = none) -> (sequence,(ob),sequence)'
+ *        - `startswith(object ob, callable key = none) -> bool'
+ *        - `endswith(object ob, callable key = none) -> bool'
+ *        - `find(object ob, callable key = none) -> int'
+ *        - `rfind(object ob, callable key = none) -> int'
+ *        - `index(object ob, callable key = none) -> int'
+ *        - `rindex(object ob, callable key = none) -> int'
  *        - `join(sequence items) -> sequence'
- *        - `strip(object ob, callable pred_eq = none) -> sequence'
- *        - `lstrip(object ob, callable pred_eq = none) -> sequence'
- *        - `rstrip(object ob, callable pred_eq = none) -> sequence'
- *        - `split(object sep, callable pred_eq = none) -> sequence'
+ *        - `strip(object ob, callable key = none) -> sequence'
+ *        - `lstrip(object ob, callable key = none) -> sequence'
+ *        - `rstrip(object ob, callable key = none) -> sequence'
+ *        - `split(object sep, callable key = none) -> sequence'
  *        - `reversed() -> sequence'
- *        - `sorted(callable pred_lo = none) -> sequence'
+ *        - `sorted(callable key = none) -> sequence'
  *        - `segments(size_t segsize) -> sequence'
- *        - `countseq(sequence seq, callable pred_eq = none) -> int'
- *        - `containsseq(sequence seq, callable pred_eq = none) -> bool'
- *        - `partitionseq(sequence seq, callable pred_eq = none) -> (sequence,seq,sequence)'
- *        - `rpartitionseq(sequence seq, callable pred_eq = none) -> (sequence,seq,sequence)'
- *        - `startswithseq(sequence seq, callable pred_eq = none) -> bool'
- *        - `endswithseq(sequence seq, callable pred_eq = none) -> bool'
- *        - `findseq(sequence seq, callable pred_eq = none) -> int'
- *        - `rfindseq(sequence seq, callable pred_eq = none) -> int'
- *        - `indexseq(sequence seq, callable pred_eq = none) -> int'
- *        - `rindexseq(sequence seq, callable pred_eq = none) -> int'
- *        - `stripseq(sequence items, callable pred_eq = none) -> sequence'
- *        - `lstripseq(sequence items, callable pred_eq = none) -> sequence'
- *        - `rstripseq(sequence items, callable pred_eq = none) -> sequence'
- *        - `splitseq(sequence sep_seq, callable pred_eq = none) -> sequence'
+ *        - `countseq(sequence seq, callable key = none) -> int'
+ *        - `containsseq(sequence seq, callable key = none) -> bool'
+ *        - `partitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence)'
+ *        - `rpartitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence)'
+ *        - `startswithseq(sequence seq, callable key = none) -> bool'
+ *        - `endswithseq(sequence seq, callable key = none) -> bool'
+ *        - `findseq(sequence seq, callable key = none) -> int'
+ *        - `rfindseq(sequence seq, callable key = none) -> int'
+ *        - `indexseq(sequence seq, callable key = none) -> int'
+ *        - `rindexseq(sequence seq, callable key = none) -> int'
+ *        - `stripseq(sequence items, callable key = none) -> sequence'
+ *        - `lstripseq(sequence items, callable key = none) -> sequence'
+ *        - `rstripseq(sequence items, callable key = none) -> sequence'
+ *        - `splitseq(sequence sep_seq, callable key = none) -> sequence'
  * Some operations (Such as `tp_add') will create instances of special objects
  * that will only start invoking underlying operators when worked with:
  * >> function foo() {
@@ -253,11 +253,12 @@ struct type_nsi {
             int             (DCALL *nsi_setrange_n)(DeeObject *__restrict self, dssize_t start, DeeObject *__restrict values); /* end: Dee_None */
             /* NOTE: start/end in here operate differently (and simpler) than in ranges:
              *       If either value is `>= nsi_getsize()', truncate it to that length.
+             * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
              * @return: * : Index of the matching item
              * @return: (size_t)-1: Index not found.
              * @return: (size_t)-2: Error. */
-            size_t          (DCALL *nsi_find)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
-            size_t          (DCALL *nsi_rfind)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
+            size_t          (DCALL *nsi_find)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
+            size_t          (DCALL *nsi_rfind)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
             DREF DeeObject *(DCALL *nsi_xch)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
             int             (DCALL *nsi_insert)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
             int             (DCALL *nsi_insertall)(DeeObject *__restrict self, size_t index, DeeObject *__restrict values);
@@ -271,14 +272,16 @@ struct type_nsi {
              * @return: (size_t)-1: Error. */
             size_t          (DCALL *nsi_erase)(DeeObject *__restrict self, size_t index, size_t count);
             /* Remove or unbind the first/last/all instance(s) of `elem'
+             * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
              * @return: 0 : Element not found.
              * @return: 1 : Element was unbound.
              * @return: -1 : error. */
-            int             (DCALL *nsi_remove)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
-            int             (DCALL *nsi_rremove)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
-            /* @return: * : The number of removed items.
+            int             (DCALL *nsi_remove)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
+            int             (DCALL *nsi_rremove)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
+            /* NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
+             * @return: * : The number of removed items.
              * @return: (size_t)-1: Error. */
-            size_t          (DCALL *nsi_removeall)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
+            size_t          (DCALL *nsi_removeall)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
             size_t          (DCALL *nsi_removeif)(DeeObject *__restrict self, DeeObject *__restrict should, size_t start, size_t end);
         }                   nsi_seqlike;
         struct { /* TYPE_SEQX_CLASS_MAP */
@@ -347,13 +350,13 @@ INTDEF int DCALL DeeSeq_InplaceExtend(DREF DeeObject **__restrict pself, DeeObje
 INTDEF int DCALL DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself, DeeObject *__restrict count);
 INTDEF size_t DCALL DeeSeq_Erase(DeeObject *__restrict self, size_t index, size_t count);
 INTDEF DREF DeeObject *DCALL DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index);
-INTDEF int DCALL DeeSeq_Remove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF int DCALL DeeSeq_RRemove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF size_t DCALL DeeSeq_RemoveAll(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq);
+INTDEF int DCALL DeeSeq_Remove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *key);
+INTDEF int DCALL DeeSeq_RRemove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *key);
+INTDEF size_t DCALL DeeSeq_RemoveAll(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *key);
 INTDEF size_t DCALL DeeSeq_RemoveIf(DeeObject *__restrict self, DeeObject *__restrict should, size_t start, size_t end);
 INTDEF size_t DCALL DeeSeq_Fill(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict value);
 INTDEF int DCALL DeeSeq_Reverse(DeeObject *__restrict self);
-INTDEF int DCALL DeeSeq_Sort(DeeObject *__restrict self, DeeObject *pred_lo);
+INTDEF int DCALL DeeSeq_Sort(DeeObject *__restrict self, DeeObject *key);
 
 /* Determine if a given sequence is mutable or resizable.
  * @return: 1:  The sequence is mutable or resizable.
@@ -424,26 +427,26 @@ INTDEF DREF DeeObject *DCALL DeeSeq_Sum(DeeObject *__restrict self);
 INTDEF int DCALL DeeSeq_Any(DeeObject *__restrict self);
 INTDEF int DCALL DeeSeq_All(DeeObject *__restrict self);
 INTDEF int DCALL DeeSeq_Parity(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeSeq_Min(DeeObject *__restrict self, DeeObject *pred_lo);
-INTDEF DREF DeeObject *DCALL DeeSeq_Max(DeeObject *__restrict self, DeeObject *pred_lo);
-INTDEF size_t DCALL DeeSeq_Count(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_Locate(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_RLocate(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_LocateAll(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
+INTDEF DREF DeeObject *DCALL DeeSeq_Min(DeeObject *__restrict self, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_Max(DeeObject *__restrict self, DeeObject *key);
+INTDEF size_t DCALL DeeSeq_Count(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_Locate(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_RLocate(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_LocateAll(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
 INTDEF DREF DeeObject *DCALL DeeSeq_Transform(DeeObject *__restrict self, DeeObject *__restrict transformation);
-INTDEF int DCALL DeeSeq_Contains(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF int DCALL DeeSeq_StartsWith(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF int DCALL DeeSeq_EndsWith(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF size_t DCALL DeeSeq_Find(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
-INTDEF size_t DCALL DeeSeq_RFind(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF int DCALL DeeSeq_Contains(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF int DCALL DeeSeq_StartsWith(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF int DCALL DeeSeq_EndsWith(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF size_t DCALL DeeSeq_Find(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF size_t DCALL DeeSeq_RFind(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
 INTDEF DREF DeeObject *DCALL DeeSeq_Join(DeeObject *__restrict self, DeeObject *__restrict items);
-INTDEF DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_Split(DeeObject *__restrict self, DeeObject *__restrict sep, DeeObject *pred_eq);
+INTDEF DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_Split(DeeObject *__restrict self, DeeObject *__restrict sep, DeeObject *key);
 INTDEF DREF DeeObject *DCALL DeeSeq_Reversed(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeSeq_Filter(DeeObject *__restrict self, DeeObject *__restrict pred_keep);
-INTDEF DREF DeeObject *DCALL DeeSeq_Sorted(DeeObject *__restrict self, DeeObject *pred_lo);
+INTDEF DREF DeeObject *DCALL DeeSeq_Sorted(DeeObject *__restrict self, DeeObject *key);
 INTDEF DREF DeeObject *DCALL DeeSeq_Segments(DeeObject *__restrict self, size_t segsize);
 INTDEF DREF DeeObject *DCALL DeeSeq_Combinations(DeeObject *__restrict self, size_t r);
 INTDEF DREF DeeObject *DCALL DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r);
@@ -451,28 +454,28 @@ INTDEF DREF DeeObject *DCALL DeeSeq_Permutations(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeSeq_Permutations2(DeeObject *__restrict self, size_t r);
 
 /* Sequence functions. */
-INTDEF size_t DCALL DeeSeq_CountSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq); /* @return: -1: Error. */
-INTDEF int DCALL DeeSeq_ContainsSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF int DCALL DeeSeq_StartsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF int DCALL DeeSeq_EndsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF size_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
-INTDEF size_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq); /* @return: -1: Not found. @return: -2: Error. */
-INTDEF DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTDEF DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *__restrict self, DeeObject *__restrict sep_seq, DeeObject *pred_eq);
+INTDEF size_t DCALL DeeSeq_CountSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key); /* @return: -1: Error. */
+INTDEF int DCALL DeeSeq_ContainsSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTDEF int DCALL DeeSeq_StartsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTDEF int DCALL DeeSeq_EndsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTDEF size_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF size_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTDEF DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *__restrict self, DeeObject *__restrict sep_seq, DeeObject *key);
 
 /* Vector-sorting functions. */
 INTDEF int DCALL DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
                                   DREF DeeObject *const *__restrict src,
-                                  size_t objc, DeeObject *pred_lo);
+                                  size_t objc, DeeObject *key);
 INTDEF int DCALL DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
                                       DREF DeeObject *const *__restrict src,
-                                      size_t objc, DeeObject *pred_lo);
+                                      size_t objc, DeeObject *key);
 
 /* Mutable-set operators. */
 

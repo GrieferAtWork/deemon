@@ -391,17 +391,17 @@ repeat_nsi_getitem(Repeat *__restrict self, size_t index) {
 PRIVATE size_t DCALL
 repeat_nsi_find(Repeat *__restrict self,
                 size_t start, size_t end,
-                DeeObject *__restrict value,
-                DeeObject *pred_eq) {
- return DeeSeq_Find(self->r_seq,start,end,value,pred_eq);
+                DeeObject *__restrict keyed_search_item,
+                DeeObject *key) {
+ return DeeSeq_Find(self->r_seq,start,end,keyed_search_item,key);
 }
 PRIVATE size_t DCALL
 repeat_nsi_rfind(Repeat *__restrict self,
                  size_t start, size_t end,
-                 DeeObject *__restrict value,
-                 DeeObject *pred_eq) {
+                 DeeObject *__restrict keyed_search_item,
+                 DeeObject *key) {
  size_t result;
- result = DeeSeq_RFind(self->r_seq,start,end,value,pred_eq);
+ result = DeeSeq_RFind(self->r_seq,start,end,keyed_search_item,key);
  if (result != (size_t)-1 && result != (size_t)-2) {
   size_t inner_size = DeeObject_Size(self->r_seq);
   size_t addend;
@@ -876,20 +876,12 @@ repeatitem_nsi_getrange_n(RepeatItem *__restrict self,
 PRIVATE size_t DCALL
 repeatitem_nsi_find(RepeatItem *__restrict self,
                     size_t start, size_t end,
-                    DeeObject *__restrict value,
-                    DeeObject *pred_eq) {
+                    DeeObject *__restrict keyed_search_item,
+                    DeeObject *key) {
  int error;
  if (start >= self->ri_num || start >= end)
      return (size_t)-1;
- if (pred_eq) {
-  DREF DeeObject *pred_result;
-  pred_result = DeeObject_CallPack(pred_eq,2,self->ri_obj,value);
-  if unlikely(!pred_result) return (size_t)-2;
-  error = DeeObject_Bool(pred_result);
-  Dee_Decref(pred_result);
- } else {
-  error = DeeObject_CompareEq(self->ri_obj,value);
- }
+ error = DeeObject_CompareKeyEq(self->ri_obj,keyed_search_item,key);
  if unlikely(error < 0) return (size_t)-2;
  if (!error) return (size_t)-1;
  return start;
@@ -897,10 +889,10 @@ repeatitem_nsi_find(RepeatItem *__restrict self,
 PRIVATE size_t DCALL
 repeatitem_nsi_rfind(RepeatItem *__restrict self,
                      size_t start, size_t end,
-                     DeeObject *__restrict value,
-                     DeeObject *pred_eq) {
+                     DeeObject *__restrict keyed_search_item,
+                     DeeObject *key) {
  size_t result;
- result = repeatitem_nsi_find(self,start,end,value,pred_eq);
+ result = repeatitem_nsi_find(self,start,end,keyed_search_item,key);
  if (result != (size_t)-1 && result != (size_t)-2) {
   if (end > self->ri_num)
       end = self->ri_num;

@@ -96,12 +96,30 @@ err:
 
 
 PRIVATE int DCALL
+compare_lo(DeeObject *__restrict lhs,
+           DeeObject *__restrict rhs,
+           DeeObject *__restrict key) {
+ int result;
+ lhs = DeeObject_Call(key,1,(DeeObject **)&lhs);
+ if unlikely(!lhs) goto err;
+ rhs = DeeObject_Call(key,1,(DeeObject **)&rhs);
+ if unlikely(!rhs) goto err_lhs;
+ result = DeeObject_CompareLo(lhs,rhs);
+ Dee_Decref(rhs);
+ Dee_Decref(lhs);
+ return result;
+err_lhs:
+ Dee_Decref(lhs);
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
 mergesort_impl_p(DREF DeeObject **__restrict dst,
                  DeeObject **__restrict temp,
                  DREF DeeObject *const *__restrict src,
                  size_t objc,
-                 DeeObject *__restrict pred_lo) {
- DREF DeeObject *pred_result;
+                 DeeObject *__restrict key) {
  int error;
  switch (objc) {
 
@@ -109,17 +127,12 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
  case 1: dst[0] = src[0]; break;
 
  case 2:
-  pred_result = DeeObject_Call(pred_lo,2,(DeeObject **)&src[0]);
-  if (!pred_result) error = -1;
-  else {
-   error = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  }
-  if unlikely(error < 0 &&
-             !DeeError_Catch(&DeeError_TypeError) &&
-             !DeeError_Catch(&DeeError_NotImplemented))
-     goto err;
+  error = compare_lo(src[0],src[1],key);
   if (error <= 0) {
+   if unlikely(error < 0 &&
+              !DeeError_Catch(&DeeError_TypeError) &&
+              !DeeError_Catch(&DeeError_NotImplemented))
+      goto err;
    dst[0] = src[1];
    dst[1] = src[0];
   } else {
@@ -134,27 +147,19 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
  default:
   s1 = objc/2;
   s2 = objc-s1;
-  error = mergesort_impl_p(temp,dst,src,s1,pred_lo);
+  error = mergesort_impl_p(temp,dst,src,s1,key);
   if unlikely(error < 0) goto err;
-  error = mergesort_impl_p(temp+s1,dst+s1,src+s1,s2,pred_lo);
+  error = mergesort_impl_p(temp+s1,dst+s1,src+s1,s2,key);
   if unlikely(error < 0) goto err;
   iter1 = temp;
   iter2 = temp+s1;
   while (s1 && s2) {
-   DeeObject *argv[2];
-   argv[0] = *iter1;
-   argv[1] = *iter2;
-   pred_result = DeeObject_Call(pred_lo,2,argv);
-   if (!pred_result) error = -1;
-   else {
-    error = DeeObject_Bool(pred_result);
-    Dee_Decref(pred_result);
-   }
-   if unlikely(error < 0 &&
-              !DeeError_Catch(&DeeError_TypeError) &&
-              !DeeError_Catch(&DeeError_NotImplemented))
-      goto err;
+   error = compare_lo(*iter1,*iter2,key);
    if (error <= 0) {
+    if unlikely(error < 0 &&
+               !DeeError_Catch(&DeeError_TypeError) &&
+               !DeeError_Catch(&DeeError_NotImplemented))
+       goto err;
     *dst++ = *iter2++;
     --s2;
    } else {
@@ -207,21 +212,13 @@ PRIVATE int DCALL
 insertsort_impl_p(DREF DeeObject **__restrict dst,
                   DREF DeeObject *const *__restrict src,
                   size_t objc,
-                  DeeObject *__restrict pred_lo) {
- DREF DeeObject *pred_result; int temp;
- size_t i,j;
+                  DeeObject *__restrict key) {
+ int temp; size_t i,j;
  for (i = 0; i < objc; ++i) {
-  DeeObject *argv[2];
-  argv[0] = src[i];
+  DeeObject *src_ob = src[i];
   for (j = 0; j < i; ++j) {
    /* Check if we need to insert the object in this location. */
-   argv[1] = dst[j];
-   pred_result = DeeObject_Call(pred_lo,2,argv);
-   if (!pred_result) temp = -1;
-   else {
-    temp = DeeObject_Bool(pred_result);
-    Dee_Decref(pred_result);
-   }
+   temp = compare_lo(src_ob,dst[j],key);
    if unlikely(temp < 0 &&
               !DeeError_Catch(&DeeError_TypeError) &&
               !DeeError_Catch(&DeeError_NotImplemented))
@@ -229,7 +226,7 @@ insertsort_impl_p(DREF DeeObject **__restrict dst,
    if (temp > 0) break;
   }
   MEMMOVE_PTR(&dst[j+1],&dst[j],i-j);
-  dst[j] = argv[0];
+  dst[j] = src_ob;
  }
  return 0;
 err:
@@ -241,7 +238,7 @@ err:
 INTERN int DCALL
 DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
                  DREF DeeObject *const *__restrict src,
-                 size_t objc, DeeObject *pred_lo) {
+                 size_t objc, DeeObject *key) {
  int result = 0;
  ASSERT(dst != src);
  switch (objc) {
@@ -252,20 +249,15 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
   int temp;
  case 2:
   /* Optimization for sorting 2 objects. */
-  if (pred_lo) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_Call(pred_lo,2,(DeeObject **)&src[0]);
-   if unlikely(!pred_result) goto err;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareLo(src[0],src[1]);
-  }
-  if unlikely(temp < 0 &&
-             !DeeError_Catch(&DeeError_TypeError) &&
-             !DeeError_Catch(&DeeError_NotImplemented))
-     goto err;
+  temp = key
+       ? compare_lo(src[0],src[1],key)
+       : DeeObject_CompareLo(src[0],src[1])
+       ;
   if (temp <= 0) {
+   if unlikely(temp < 0 &&
+              !DeeError_Catch(&DeeError_TypeError) &&
+              !DeeError_Catch(&DeeError_NotImplemented))
+      goto err;
    dst[0] = src[0];
    dst[1] = src[1];
   } else {
@@ -281,12 +273,12 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
   temp = (DeeObject **)Dee_TryMalloc(objc*sizeof(DeeObject *));
   if unlikely(!temp) {
    /* Use a fallback sorting function */
-   result = pred_lo
-          ? insertsort_impl_p(dst,src,objc,pred_lo)
+   result = key
+          ? insertsort_impl_p(dst,src,objc,key)
           : insertsort_impl(dst,src,objc);
   } else {
-   result = pred_lo
-          ? mergesort_impl_p(dst,temp,src,objc,pred_lo)
+   result = key
+          ? mergesort_impl_p(dst,temp,src,objc,key)
           : mergesort_impl(dst,temp,src,objc);
    Dee_Free(temp);
   }
@@ -302,7 +294,7 @@ err:
 INTERN int DCALL
 DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
                      DREF DeeObject *const *__restrict src,
-                     size_t objc, DeeObject *pred_lo) {
+                     size_t objc, DeeObject *key) {
  int result = 0;
  ASSERT(dst != src);
  switch (objc) {
@@ -313,15 +305,10 @@ DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
   int temp;
  case 2:
   /* Optimization for sorting 2 objects. */
-  if (pred_lo) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_Call(pred_lo,2,(DeeObject **)&src[0]);
-   if unlikely(!pred_result) goto err;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareLo(src[0],src[1]);
-  }
+  temp = key
+       ? compare_lo(src[0],src[1],key)
+       : DeeObject_CompareLo(src[0],src[1])
+       ;
   if unlikely(temp < 0 &&
              !DeeError_Catch(&DeeError_TypeError) &&
              !DeeError_Catch(&DeeError_NotImplemented))
@@ -336,8 +323,8 @@ DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
  } break;
 
  default:
-  result = pred_lo
-         ? insertsort_impl_p(dst,src,objc,pred_lo)
+  result = key
+         ? insertsort_impl_p(dst,src,objc,key)
          : insertsort_impl(dst,src,objc);
   break;
  }

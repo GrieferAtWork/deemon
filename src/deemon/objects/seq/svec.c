@@ -572,33 +572,11 @@ rvec_nsi_cmpdelitem(RefVector *__restrict self, size_t index,
  return true;
 }
 
-PRIVATE int
-(DCALL call_eq_predicate)(DeeObject *__restrict lhs,
-                          DeeObject *__restrict rhs,
-                          DeeObject *pred_eq) {
- int result;
- if (pred_eq) {
-  DREF DeeObject *pred_result;
-  DeeObject *args[2];
-  args[0] = lhs;
-  args[1] = rhs;
-  pred_result = DeeObject_Call(pred_eq,2,args);
-  if unlikely(!pred_result) goto err;
-  result = DeeObject_Bool(pred_result);
-  Dee_Decref(pred_result);
- } else {
-  result = DeeObject_CompareEq(lhs,rhs);
- }
- return result;
-err:
- return -1;
-}
-
 PRIVATE size_t DCALL
 rvec_nsi_find(RefVector *__restrict self,
               size_t start, size_t end,
-              DeeObject *__restrict elem,
-              DeeObject *pred_eq) {
+              DeeObject *__restrict keyed_search_item,
+              DeeObject *key) {
  size_t i;
  DREF DeeObject *item; int temp;
  if (start > self->rv_length)
@@ -606,7 +584,7 @@ rvec_nsi_find(RefVector *__restrict self,
  for (i = start; i < end; ++i) {
   item = rvec_nsi_getitem_fast(self,i);
   if (!item) continue; /* Unbound index */
-  temp = call_eq_predicate(item,elem,pred_eq);
+  temp = DeeObject_CompareKeyEq(keyed_search_item,item,key);
   Dee_Decref(item);
   if (temp == 0) continue;
   if unlikely(temp < 0) goto err;
@@ -619,8 +597,8 @@ err:
 PRIVATE size_t DCALL
 rvec_nsi_rfind(RefVector *__restrict self,
                size_t start, size_t end,
-               DeeObject *__restrict elem,
-               DeeObject *pred_eq) {
+               DeeObject *__restrict keyed_search_item,
+               DeeObject *key) {
  size_t i;
  DREF DeeObject *item; int temp;
  if (start > self->rv_length)
@@ -630,7 +608,7 @@ rvec_nsi_rfind(RefVector *__restrict self,
   --i;
   item = rvec_nsi_getitem_fast(self,i);
   if (!item) continue; /* Unbound index */
-  temp = call_eq_predicate(item,elem,pred_eq);
+  temp = DeeObject_CompareKeyEq(keyed_search_item,item,key);
   Dee_Decref(item);
   if (temp == 0) continue;
   if unlikely(temp < 0) goto err;
@@ -645,8 +623,8 @@ err:
 PRIVATE int DCALL
 rvec_nsi_remove(RefVector *__restrict self,
                 size_t start, size_t end,
-                DeeObject *__restrict elem,
-                DeeObject *pred_eq) {
+                DeeObject *__restrict keyed_search_item,
+                DeeObject *key) {
  size_t i;
  DREF DeeObject *item; int temp;
  if (!RefVector_IsWritable(self))
@@ -657,7 +635,7 @@ again:
  for (i = start; i < end; ++i) {
   item = rvec_nsi_getitem_fast(self,i);
   if (!item) continue; /* Unbound index */
-  temp = call_eq_predicate(item,elem,pred_eq);
+  temp = DeeObject_CompareKeyEq(keyed_search_item,item,key);
   Dee_Decref(item);
   if (temp == 0) continue;
   if unlikely(temp < 0) goto err;
@@ -673,8 +651,8 @@ err:
 PRIVATE int DCALL
 rvec_nsi_rremove(RefVector *__restrict self,
                  size_t start, size_t end,
-                 DeeObject *__restrict elem,
-                 DeeObject *pred_eq) {
+                 DeeObject *__restrict keyed_search_item,
+                 DeeObject *key) {
  size_t i;
  DREF DeeObject *item; int temp;
  if (!RefVector_IsWritable(self))
@@ -687,7 +665,7 @@ again:
   --i;
   item = rvec_nsi_getitem_fast(self,i);
   if (!item) continue; /* Unbound index */
-  temp = call_eq_predicate(item,elem,pred_eq);
+  temp = DeeObject_CompareKeyEq(keyed_search_item,item,key);
   Dee_Decref(item);
   if (temp == 0) continue;
   if unlikely(temp < 0) goto err;
@@ -703,8 +681,8 @@ err:
 PRIVATE size_t DCALL
 rvec_nsi_removeall(RefVector *__restrict self,
                    size_t start, size_t end,
-                   DeeObject *__restrict elem,
-                   DeeObject *pred_eq) {
+                   DeeObject *__restrict keyed_search_item,
+                   DeeObject *key) {
  size_t i; size_t result = 0;
  DREF DeeObject *item; int temp;
  if (!RefVector_IsWritable(self))
@@ -715,7 +693,7 @@ again:
  for (i = start; i < end; ++i) {
   item = rvec_nsi_getitem_fast(self,i);
   if (!item) continue; /* Unbound index */
-  temp = call_eq_predicate(item,elem,pred_eq);
+  temp = DeeObject_CompareKeyEq(keyed_search_item,item,key);
   Dee_Decref(item);
   if (temp == 0) continue;
   if unlikely(temp < 0) goto err;

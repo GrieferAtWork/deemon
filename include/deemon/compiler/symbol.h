@@ -31,8 +31,6 @@
 
 DECL_BEGIN
 
-#define CONFIG_USE_NEW_CLASS_SCOPES 1
-
 typedef struct scope_object       DeeScopeObject;
 typedef struct class_scope_object DeeClassScopeObject;
 typedef struct base_scope_object  DeeBaseScopeObject;

@@ -43,7 +43,7 @@ typedef struct {
     OBJECT_HEAD
     DREF DeeObject *l_seq;  /* [1..1][const] The sequence being transformed. */
     DREF DeeObject *l_elem; /* [1..1][const] The element being searched. */
-    DREF DeeObject *l_pred; /* [0..1][const] The predicate invoked for equals-comparison. */
+    DREF DeeObject *l_pred; /* [0..1][const] The key function invoked to transform elements. */
 } Locator;
 
 
@@ -51,7 +51,7 @@ typedef struct {
     OBJECT_HEAD
     DREF DeeObject *li_iter; /* [1..1][const] The iterator in which items are being located. */
     DREF DeeObject *li_elem; /* [1..1][const] The element being searched. */
-    DREF DeeObject *li_pred; /* [0..1][const] The predicate invoked for equals-comparison. */
+    DREF DeeObject *li_pred; /* [0..1][const] The key function invoked to transform elements. */
 } LocatorIterator;
 
 INTDEF DeeTypeObject DeeLocator_Type;
@@ -113,16 +113,7 @@ locatoriter_next(LocatorIterator *__restrict self) {
   int temp;
   result = DeeObject_IterNext(self->li_iter);
   if (!ITER_ISOK(result)) break;
-  if (self->li_pred) {
-   DREF DeeObject *pred_result;
-   /* Invoke the compare predicate. */
-   pred_result = DeeObject_CallPack(self->li_pred,2,result,self->li_elem);
-   if unlikely(!pred_result) goto err_r;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareEq(result,self->li_elem);
-  }
+  temp = DeeObject_CompareKeyEq(self->li_elem,result,self->li_pred);
   if (temp != 0) {
    if unlikely(temp < 0) goto err_r;
    break; /* Found it */
@@ -252,11 +243,18 @@ locator_init(Locator *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  self->l_pred = NULL;
  if (DeeArg_Unpack(argc,argv,"oo|o:_locator",&self->l_seq,&self->l_elem,&self->l_pred))
-     return -1;
+     goto err;
+ if (self->l_pred) {
+  self->l_elem = DeeObject_Call(self->l_pred,1,&self->l_elem);
+  if unlikely(!self->l_elem) goto err;
+  Dee_Incref(self->l_pred);
+ } else {
+  Dee_Incref(self->l_elem);
+ }
  Dee_Incref(self->l_seq);
- Dee_Incref(self->l_elem);
- Dee_XIncref(self->l_pred);
  return 0;
+err:
+ return -1;
 }
 PRIVATE void DCALL
 locator_fini(Locator *__restrict self) {
@@ -279,7 +277,7 @@ locator_iter(Locator *__restrict self) {
  /* Create the underlying iterator. */
  result->li_iter = DeeObject_IterSelf(self->l_seq);
  if unlikely(!result->li_iter) { DeeObject_Free(result); return NULL; }
- /* Assign the locator element & predicate. */
+ /* Assign the locator element & key function. */
  result->li_elem = self->l_elem;
  Dee_Incref(self->l_elem);
  result->li_pred = self->l_pred;
@@ -364,18 +362,18 @@ INTERN DeeTypeObject DeeLocator_Type = {
 
 INTERN DREF DeeObject *DCALL
 DeeSeq_LocateAll(DeeObject *__restrict self,
-                 DeeObject *__restrict elem,
-                 DeeObject *pred_eq) {
+                 DeeObject *__restrict keyed_search_item,
+                 DeeObject *key) {
  DREF Locator *result;
  /* Create a new locator sequence. */
  result = (DREF Locator *)DeeObject_Malloc(sizeof(Locator));
  if unlikely(!result) return NULL;
  result->l_seq  = self;
- result->l_elem = elem;
- result->l_pred = pred_eq;
+ result->l_elem = keyed_search_item;
+ result->l_pred = key;
  Dee_Incref(self);
- Dee_Incref(elem);
- Dee_XIncref(pred_eq);
+ Dee_Incref(keyed_search_item);
+ Dee_XIncref(key);
  DeeObject_Init(result,&DeeLocator_Type);
  return (DREF DeeObject *)result;
 }

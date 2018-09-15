@@ -1,0 +1,54 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+@"(callable pred_lo)->object"
+@"Convert an old-style compare-lo predicate to a new-style key function"
+@">import string from deemon;"
+@">import predlo2key from functools;"
+@">local x = [\"FOO\",\"bar\",\"FOoBaR\"];"
+@">x.sort(predlo2key([](x,y) -> x.lower() < y.lower()));"
+@">x.sort(string.lower); /* Same as this */"
+function predlo2key(pred_lo) {
+	class KeyClass {
+		private member m_self;
+		this(self) { m_self = self; }
+		operator < (other) -> pred_lo(this.m_self,other.m_self);
+		operator <= (other) -> !pred_lo(other.m_self,this.m_self);
+		operator == (other) -> !pred_lo(this.m_self,other.m_self) && !pred_lo(other.m_self,this.m_self);
+	}
+	return KeyClass;
+}
+
+@"(callable pred_eq)->object"
+@"Convert an old-style compare-eq predicate to a new-style key function"
+@">import string from deemon;"
+@">import predeq2key from functools;"
+@">local x = [\"FOO\",\"foo\",\"FOoBaR\"];"
+@">print x.find(\"foo\",predeq2key([](x,y) -> x.lower() == y.lower()));"
+@">print x.find(\"foo\",string.lower); /* Same as this */"
+function predeq2key(pred_eq) {
+	class KeyClass {
+		private member m_self;
+		this(self) { m_self = self; }
+		operator == (other) -> pred_eq(this.m_self,other.m_self);
+	}
+	return KeyClass;
+}
+
+

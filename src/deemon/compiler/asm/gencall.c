@@ -417,7 +417,6 @@ check_getattr_base_symbol_class_small:
        attrid = asm_newconst(function_attr->a_constexpr);
        if unlikely(attrid < 0) goto err;
        if (asm_putddi(ddi_ast)) goto err;
-       /* TODO: Try to statically access known class members! */
        if (asm_gcallattr_this_const((uint16_t)attrid,argc)) goto err;
        goto pop_unused;
 

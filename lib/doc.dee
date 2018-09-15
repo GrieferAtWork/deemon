@@ -2224,10 +2224,9 @@ local function lookup_object_in_module(mod,ob) {
 }
 
 
-@"(object ob,module curr_module = none)->string"
-@"(object ob,module curr_module = none)->none"
-@"Same as #lookup_object, but rather than returning"
-@"the Doc node, return its path as a string"
+@"(object ob,module curr_module=none)->string"
+@"(object ob,module curr_module=none)->none"
+@"Same as #lookup_object, but rather than returning the Doc node, return its path as a string"
 global function lookup_object_path(ob,curr_module = none) {
 	if (ob is module)
 		return str ob;

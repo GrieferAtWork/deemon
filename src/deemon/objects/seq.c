@@ -1004,29 +1004,35 @@ seq_parity(DeeObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 seq_min(DeeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- DeeObject *pred_lo = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:min",&pred_lo))
+ DeeObject *key = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:min",&key))
      return NULL;
- if (DeeNone_Check(pred_lo)) pred_lo = NULL;
- return DeeSeq_Min(self,pred_lo);
+ if (DeeNone_Check(key)) key = NULL;
+ return DeeSeq_Min(self,key);
 }
 PRIVATE DREF DeeObject *DCALL
 seq_max(DeeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- DeeObject *pred_lo = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:max",&pred_lo))
+ DeeObject *key = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:max",&key))
      return NULL;
- if (DeeNone_Check(pred_lo)) pred_lo = NULL;
- return DeeSeq_Max(self,pred_lo);
+ if (DeeNone_Check(key)) key = NULL;
+ return DeeSeq_Max(self,key);
 }
 PRIVATE DREF DeeObject *DCALL
 seq_count(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq = NULL; size_t result;
- if (DeeArg_Unpack(argc,argv,"o|o:count",&elem,&pred_eq))
+ DeeObject *elem,*key = Dee_None; size_t result;
+ if (DeeArg_Unpack(argc,argv,"o|o:count",&elem,&key))
      goto err;
- if (DeeNone_Check(pred_eq)) pred_eq = NULL;
- result = DeeSeq_Count(self,elem,pred_eq);
+ if (DeeNone_Check(key)) {
+  result = DeeSeq_Count(self,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_Count(self,elem,key);
+  Dee_Decref(elem);
+ }
  if (result == (size_t)-1) goto err;
  return DeeInt_NewSize(result);
 err:
@@ -1035,69 +1041,125 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_locate(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:locate",&elem,&pred_eq))
-     return NULL;
- if (DeeNone_Check(pred_eq)) pred_eq = NULL;
- return DeeSeq_Locate(self,elem,pred_eq);
+ DeeObject *elem,*key = Dee_None;
+ DREF DeeObject *result;
+ if (DeeArg_Unpack(argc,argv,"o|o:locate",&elem,&key))
+     goto err;
+ if (DeeNone_Check(key)) {
+  result = DeeSeq_Locate(self,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_Locate(self,elem,key);
+  Dee_Decref(elem);
+ }
+ return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_rlocate(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:rlocate",&elem,&pred_eq))
-     return NULL;
- if (DeeNone_Check(pred_eq)) pred_eq = NULL;
- return DeeSeq_RLocate(self,elem,pred_eq);
+ DeeObject *elem,*key = Dee_None;
+ DREF DeeObject *result;
+ if (DeeArg_Unpack(argc,argv,"o|o:rlocate",&elem,&key))
+     goto err;
+ if (DeeNone_Check(key)) {
+  result = DeeSeq_RLocate(self,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_RLocate(self,elem,key);
+  Dee_Decref(elem);
+ }
+ return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_locateall(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:locateall",&elem,&pred_eq))
-     return NULL;
- if (DeeNone_Check(pred_eq)) pred_eq = NULL;
- return DeeSeq_LocateAll(self,elem,pred_eq);
+ DeeObject *elem,*key = Dee_None;
+ DREF DeeObject *result;
+ if (DeeArg_Unpack(argc,argv,"o|o:locateall",&elem,&key))
+     goto err;
+ if (DeeNone_Check(key)) {
+  result = DeeSeq_LocateAll(self,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_LocateAll(self,elem,key);
+  Dee_Decref(elem);
+ }
+ return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_transform(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *transformation;
  if (DeeArg_Unpack(argc,argv,"o:transform",&transformation))
-     return NULL;
+     goto err;
  return DeeSeq_Transform(self,transformation);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_contains(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq = NULL; int result;
- if (DeeArg_Unpack(argc,argv,"o|o:contains",&elem,&pred_eq))
-     return NULL;
- if (DeeNone_Check(pred_eq)) pred_eq = NULL;
- /* Without a predicate, invoke the regular contains-operator. */
- if (!pred_eq) return DeeObject_ContainsObject(self,elem);
- result = DeeSeq_Contains(self,elem,pred_eq);
- return unlikely(result < 0) ? NULL : DeeObject_NewRef(DeeBool_For(result));
+ DeeObject *elem,*key = Dee_None; int result;
+ if (DeeArg_Unpack(argc,argv,"o|o:contains",&elem,&key))
+     goto err;
+ /* Without a key function, invoke the regular contains-operator. */
+ if (DeeNone_Check(key))
+     return DeeObject_ContainsObject(self,elem);
+ elem = DeeObject_Call(key,1,&elem);
+ if unlikely(!elem) goto err;
+ result = DeeSeq_Contains(self,elem,key);
+ Dee_Decref(elem);
+ if unlikely(result < 0) goto err;
+ return_bool_(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_startswith(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq = NULL; int result;
- if (DeeArg_Unpack(argc,argv,"o|o:startswith",&elem,&pred_eq))
-     return NULL;
- if (DeeNone_Check(pred_eq)) pred_eq = NULL;
- result = DeeSeq_StartsWith(self,elem,pred_eq);
- return unlikely(result < 0) ? NULL : DeeObject_NewRef(DeeBool_For(result));
+ DeeObject *elem,*key = Dee_None; int result;
+ if (DeeArg_Unpack(argc,argv,"o|o:startswith",&elem,&key))
+     goto err;
+ if (DeeNone_Check(key)) {
+  result = DeeSeq_StartsWith(self,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_StartsWith(self,elem,key);
+  Dee_Decref(elem);
+ }
+ if unlikely(result < 0) goto err;
+ return_bool_(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_endswith(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq = NULL; int result;
- if (DeeArg_Unpack(argc,argv,"o|o:endswith",&elem,&pred_eq))
-     return NULL;
- if (DeeNone_Check(pred_eq)) pred_eq = NULL;
- result = DeeSeq_EndsWith(self,elem,pred_eq);
- return unlikely(result < 0) ? NULL : DeeObject_NewRef(DeeBool_For(result));
+ DeeObject *elem,*key = Dee_None; int result;
+ if (DeeArg_Unpack(argc,argv,"o|o:endswith",&elem,&key))
+     goto err;
+ if (DeeNone_Check(key)) {
+  result = DeeSeq_EndsWith(self,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_EndsWith(self,elem,key);
+  Dee_Decref(elem);
+ }
+ if unlikely(result < 0) goto err;
+ return_bool_(result);
+err:
+ return NULL;
 }
 
 INTERN int DCALL
@@ -1166,10 +1228,17 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_find(DeeObject *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq; size_t result,start,end;
- if (get_sequence_find_args("find",argc,argv,&elem,&pred_eq,&start,&end))
+ DeeObject *elem,*key; size_t result,start,end;
+ if (get_sequence_find_args("find",argc,argv,&elem,&key,&start,&end))
      goto err;
- result = DeeSeq_Find(self,start,end,elem,pred_eq);
+ if (!key) {
+  result = DeeSeq_Find(self,start,end,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_Find(self,start,end,elem,key);
+  Dee_Decref(elem);
+ }
  if unlikely((dssize_t)result < 0) {
   if unlikely(result == (size_t)-2) goto err;
   if unlikely(result == (size_t)-1)
@@ -1182,11 +1251,18 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_rfind(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq;
+ DeeObject *elem,*key;
  size_t result,start,end;
- if (get_sequence_find_args("rfind",argc,argv,&elem,&pred_eq,&start,&end))
+ if (get_sequence_find_args("rfind",argc,argv,&elem,&key,&start,&end))
      goto err;
- result = DeeSeq_RFind(self,start,end,elem,pred_eq);
+ if (!key) {
+  result = DeeSeq_RFind(self,start,end,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_RFind(self,start,end,elem,key);
+  Dee_Decref(elem);
+ }
  if unlikely((dssize_t)result < 0) {
   if unlikely(result == (size_t)-2) goto err;
   if unlikely(result == (size_t)-1)
@@ -1199,10 +1275,17 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_index(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq; size_t result,start,end;
- if (get_sequence_find_args("index",argc,argv,&elem,&pred_eq,&start,&end))
+ DeeObject *elem,*key; size_t result,start,end;
+ if (get_sequence_find_args("index",argc,argv,&elem,&key,&start,&end))
      goto err;
- result = DeeSeq_Find(self,start,end,elem,pred_eq);
+ if (!key) {
+  result = DeeSeq_Find(self,start,end,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_Find(self,start,end,elem,key);
+  Dee_Decref(elem);
+ }
  if unlikely((dssize_t)result < 0) {
   if unlikely(result == (size_t)-2) goto err;
   if unlikely(result == (size_t)-1) goto err_not_found;
@@ -1216,10 +1299,17 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_rindex(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq; size_t result,start,end;
- if (get_sequence_find_args("rindex",argc,argv,&elem,&pred_eq,&start,&end))
+ DeeObject *elem,*key; size_t result,start,end;
+ if (get_sequence_find_args("rindex",argc,argv,&elem,&key,&start,&end))
      goto err;
- result = DeeSeq_RFind(self,start,end,elem,pred_eq);
+ if (!key) {
+  result = DeeSeq_RFind(self,start,end,elem,NULL);
+ } else {
+  elem = DeeObject_Call(key,1,&elem);
+  if unlikely(!elem) goto err;
+  result = DeeSeq_RFind(self,start,end,elem,key);
+  Dee_Decref(elem);
+ }
  if unlikely((dssize_t)result < 0) {
   if unlikely(result == (size_t)-2) goto err;
   if unlikely(result == (size_t)-1) goto err_not_found;
@@ -1242,12 +1332,12 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_sorted(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- DeeObject *pred = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:sorted",&pred))
+ DeeObject *key = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:sorted",&key))
      goto err;
- if (DeeNone_Check(pred))
-     pred = NULL;
- return DeeSeq_Sorted(self,pred);
+ if (DeeNone_Check(key))
+     key = NULL;
+ return DeeSeq_Sorted(self,key);
 err:
  return NULL;
 }
@@ -1458,10 +1548,10 @@ seq_pushback(DeeObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 seq_remove(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq; int result; size_t start,end;
- if (get_sequence_find_args("remove",argc,argv,&elem,&pred_eq,&start,&end))
+ DeeObject *elem,*key; int result; size_t start,end;
+ if (get_sequence_find_args("remove",argc,argv,&elem,&key,&start,&end))
      goto err;
- result = DeeSeq_Remove(self,start,end,elem,pred_eq);
+ result = DeeSeq_Remove(self,start,end,elem,key);
  if unlikely(result < 0) goto err;
  return_bool_(result);
 err:
@@ -1470,10 +1560,10 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_rremove(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq; int result; size_t start,end;
- if (get_sequence_find_args("rremove",argc,argv,&elem,&pred_eq,&start,&end))
+ DeeObject *elem,*key; int result; size_t start,end;
+ if (get_sequence_find_args("rremove",argc,argv,&elem,&key,&start,&end))
      goto err;
- result = DeeSeq_RRemove(self,start,end,elem,pred_eq);
+ result = DeeSeq_RRemove(self,start,end,elem,key);
  if unlikely(result < 0) goto err;
  return_bool_(result);
 err:
@@ -1482,10 +1572,10 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_removeall(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- DeeObject *elem,*pred_eq; size_t result; size_t start,end;
- if (get_sequence_find_args("removeall",argc,argv,&elem,&pred_eq,&start,&end))
+ DeeObject *elem,*key; size_t result; size_t start,end;
+ if (get_sequence_find_args("removeall",argc,argv,&elem,&key,&start,&end))
      goto err;
- result = DeeSeq_RemoveAll(self,start,end,elem,pred_eq);
+ result = DeeSeq_RemoveAll(self,start,end,elem,key);
  if unlikely(result == (size_t)-1) goto err;
  return DeeInt_NewSize(result);
 err:
@@ -1586,12 +1676,12 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_sort(DeeObject *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
- DeeObject *pred = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:sort",&pred))
+ DeeObject *key = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:sort",&key))
      goto err;
- if (DeeNone_Check(pred))
-     pred = NULL;
- if (DeeSeq_Sort(self,pred))
+ if (DeeNone_Check(key))
+     key = NULL;
+ if (DeeSeq_Sort(self,key))
      goto err;
  return_none;
 err:
@@ -1638,13 +1728,13 @@ INTERN struct type_method seq_methods[] = {
           "> return none;\n"
           ">}") },
     { "filter", &seq_filter,
-      DOC("(callable pred_keep)->sequence\n"
-          "@param pred_keep A predicate which is called for each element of @this sequence"
-          "Returns a sub-sequence of all elements for which ${pred_keep(elem)} evaluates to :true\n"
-          "Semantically, this is identical to ${(for (local x: this) if (pred_keep(x)) x)}\n"
-          ">function filter(pred_keep) {\n"
+      DOC("(callable keep)->sequence\n"
+          "@param keep A key function which is called for each element of @this sequence"
+          "Returns a sub-sequence of all elements for which ${keep(elem)} evaluates to :true\n"
+          "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
+          ">function filter(keep) {\n"
           "> for (local x: this)\n"
-          ">  if (pred_keep(x))\n"
+          ">  if (keep(x))\n"
           ">   yield x;\n"
           ">}") },
     { "sum", &seq_sum,
@@ -1697,20 +1787,26 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "min", &seq_min,
-      DOC("(callable pred_lo=none)->object\n"
-          "@param pred_lo A predicate for comparing 2 objects for lower_than\n"
+      DOC("(callable key=none)->object\n"
+          "@param key A key function for transforming sequence elements\n"
           "Returns the smallest element of @this sequence\n"
           "If @this sequence is empty, :none is returned\n"
-          "This function has the same effect as ${this < ...}\n"
-          ">function min(pred_lo) {\n"
+          "When no @key is given, this function has the same effect as ${this < ...}\n"
+          ">function min(key = none) {\n"
           "> local result;\n"
+          "> local key_result;\n"
           "> for (local x: this) {\n"
           ">  if (result !is bound)\n"
           ">   result = x;\n"
-          ">  else if (pred_lo !is none) {\n"
-          ">   if (pred_lo(x,result))\n"
+          ">  else if (key !is none) {\n"
+          ">   if (key_result !is bound)\n"
+          ">    key_result = key(result);\n"
+          ">   local key_x = key(x);\n"
+          ">   if (!(key_result < key_x)) {\n"
+          ">    key_result = key_x;\n"
           ">    result = x;\n"
-          ">  } else if (x < result) {\n"
+          ">   }\n"
+          ">  } else if (!(result < x)) {\n"
           ">   result = x;\n"
           ">  }\n"
           "> }\n"
@@ -1719,19 +1815,24 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "max", &seq_max,
-      DOC("(callable pred_lo=none)->object\n"
-          "@param pred_lo A predicate for comparing 2 objects for lower_than\n"
+      DOC("(callable key=none)->object\n"
+          "@param key A key function for transforming sequence elements\n"
           "Returns the greatest element of @this sequence\n"
           "If @this sequence is empty, :none is returned\n"
           "This function has the same effect as ${this > ...}\n"
-          ">function min(pred_lo) {\n"
+          ">function min(key) {\n"
           "> local result;\n"
           "> for (local x: this) {\n"
           ">  if (result !is bound)\n"
           ">   result = x;\n"
-          ">  else if (pred_lo !is none) {\n"
-          ">   if (pred_lo(result,x))\n"
+          ">  else if (key !is none) {\n"
+          ">   if (key_result !is bound)\n"
+          ">    key_result = key(result);\n"
+          ">   local key_x = key(x);\n"
+          ">   if (key_result < key_x) {\n"
+          ">    key_result = key_x;\n"
           ">    result = x;\n"
+          ">   }\n"
           ">  } else if (result < x) {\n"
           ">   result = x;\n"
           ">  }\n"
@@ -1741,15 +1842,15 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "count", &seq_count,
-      DOC("(elem,callable pred_eq=none)->int\n"
+      DOC("(elem,callable key=none)->int\n"
           "@param elem The element to search for\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "Returns the number of instances of a given object @elem in @this sequence\n"
-          ">function count(elem,pred_eq) {\n"
+          ">function count(elem,key) {\n"
           "> local result = 0;\n"
           "> for (local x: this) {\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (pred_eq(x,elem))\n"
+          ">  if (key !is none) {\n"
+          ">   if (key(x,elem))\n"
           ">    ++result;\n"
           ">  } else {\n"
           ">   if (x == elem)\n"
@@ -1759,39 +1860,43 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "locate", &seq_locate,
-      DOC("(elem,callable pred_eq=none)->object\n"
+      DOC("(elem,callable key=none)->object\n"
           "@param elem The element to search for\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "@throw ValueError The sequence does not contain an element matching @elem\n"
           "Returns the first item equal to @elem\n"
-          ">function locate(elem,pred_eq) {\n"
+          ">function locate(elem,key = none) {\n"
           "> import Error from deemon;\n"
+          "> if (key !is none)\n"
+          ">  elem = key(elem);\n"
           "> for (local x: this) {\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (pred_eq(x,elem))\n"
+          ">  if (key !is none) {\n"
+          ">   if (elem == key(x))\n"
           ">    return x;\n"
           ">  } else {\n"
-          ">   if (x == elem)\n"
+          ">   if (elem == x)\n"
           ">    return x;\n"
           ">  }\n"
           "> }\n"
           "> throw Error.ValueError(\"Item not found...\")\n"
           ">}") },
     { "rlocate", &seq_rlocate,
-      DOC("(elem,callable pred_eq=none)->object\n"
+      DOC("(elem,callable key=none)->object\n"
           "@param elem The element to search for\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "@throw ValueError The sequence does not contain an element matching @elem\n"
           "Returns the last item equal to @elem\n"
-          ">function rlocate(elem,pred_eq) {\n"
+          ">function rlocate(elem,key) {\n"
           "> import Error from deemon;\n"
           "> local result;\n"
+          "> if (key !is none)\n"
+          ">  elem = key(elem);\n"
           "> for (local x: this) {\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (pred_eq(x,elem))\n"
+          ">  if (key !is none) {\n"
+          ">   if (elem == key(x))\n"
           ">    result = x;\n"
           ">  } else {\n"
-          ">   if (x == elem)\n"
+          ">   if (elem == x)\n"
           ">    result = x;\n"
           ">  }\n"
           "> }\n"
@@ -1799,27 +1904,29 @@ INTERN struct type_method seq_methods[] = {
           ">  return result;\n"
           "> throw Error.ValueError(\"Item not found...\")\n"
           ">}") },
-    /* TODO: findall(elem,callable pred_eq=none) -> {int...} */
+    /* TODO: findall(elem,callable key=none) -> {int...} */
     { "locateall", &seq_locateall,
-      DOC("(elem,callable pred_eq=none)->sequence\n"
+      DOC("(elem,callable key=none)->sequence\n"
           "@param elem The element to search for\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "Returns a sequence of items equal to @elem\n"
-          ">function locateall(elem,pred_eq) {\n"
+          ">function locateall(elem,key) {\n"
           "> import Error from deemon;\n"
+          "> if (key !is none)\n"
+          ">  elem = key(elem);\n"
           "> for (local x: this) {\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (pred_eq(x,elem))\n"
+          ">  if (key !is none) {\n"
+          ">   if (elem == key(x))\n"
           ">    yield x;\n"
           ">  } else {\n"
-          ">   if (x == elem)\n"
+          ">   if (elem == x)\n"
           ">    yield x;\n"
           ">  }\n"
           "> }\n"
           ">}") },
     { "transform", &seq_transform,
       DOC("(callable transformation)->sequence\n"
-          "@param transformation A predicate invoked to transform members of @this sequence\n"
+          "@param transformation A key function invoked to transform members of @this sequence\n"
           "Returns a sequence that is a transformation of @this, with each element passed "
           "to @transformation for processing before being returned\n"
           ">function transform(transformation) {\n"
@@ -1828,41 +1935,42 @@ INTERN struct type_method seq_methods[] = {
           ">}\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/functions.html#map map}") },
     { "contains", &seq_contains,
-      DOC("(elem,callable pred_eq=none)->bool\n"
+      DOC("(elem,callable key=none)->bool\n"
           "@param elem The element to search for\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "Returns :true if @this sequence contains an element matching @elem\n"
-          ">function contains(elem,pred_eq) {\n"
-          "> if (pred_eq is none)\n"
+          ">function contains(elem,key) {\n"
+          "> if (key is none)\n"
           ">  return elem in this;\n"
+          "> elem = key(elem);\n"
           "> for (local x: this) {\n"
-          ">  if (pred_eq(x,elem))\n"
+          ">  if (elem == key(x))\n"
           ">   return true;\n"
           "> }\n"
           "> return false;\n"
           ">}") },
     { "startswith", &seq_startswith,
-      DOC("(elem,callable pred_eq=none)->bool\n"
+      DOC("(elem,callable key=none)->bool\n"
           "@param elem The element to compare against\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "Returns :true / :false indicative of @this sequence's first element matching :elem\n"
           "The implementation of this is derived from #first, where the found is then compared "
-          "against @elem, potentially through use of @{pred_eq}: ${pred_eq(first,elem)} or ${first == elem}, "
+          "against @elem, potentially through use of @{key}: ${key(first) == key(elem)} or ${first == elem}, "
           "however instead of throwing a :ValueError when the sequence is empty, :false is returned") },
     { "endswith", &seq_endswith,
-      DOC("(elem,callable pred_eq=none)->bool\n"
+      DOC("(elem,callable key=none)->bool\n"
           "@param elem The element to compare against\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "Returns :true / :false indicative of @this sequence's last element matching :elem\n"
           "The implementation of this is derived from #last, where the found is then compared "
-          "against @elem, potentially through use of @{pred_eq}: ${pred_eq(last,elem)} or ${last == elem}, "
+          "against @elem, potentially through use of @{key}: ${key(last) == key(elem)} or ${last == elem}, "
           "however instead of throwing a :ValueError when the sequence is empty, :false is returned") },
     { "find", &seq_find,
-      DOC("(elem,callable pred_eq=none)->int\n"
-          "(elem,int start,callable pred_eq=none)->int\n"
-          "(elem,int start,int end,callable pred_eq=none)->int\n"
+      DOC("(elem,callable key=none)->int\n"
+          "(elem,int start,callable key=none)->int\n"
+          "(elem,int start,int end,callable key=none)->int\n"
           "@param elem The element to search for\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "@param start The start index for a sub-range to search (clamped by ${#this})\n"
           "@param end The end index for a sub-range to search (clamped by ${#this})\n"
           "Search for the first element matching @elem and return its index\n"
@@ -1870,10 +1978,12 @@ INTERN struct type_method seq_methods[] = {
           "Depending on the nearest implemented group of operators, "
           "one of the following implementations is chosen\n"
           "For ${operator []} and ${operator #}:\n"
-          ">function find(elem,pred_eq,start,end) {\n"
+          ">function find(elem,start,end,key) {\n"
           "> import int, Error from deemon;\n"
           "> start = (int)start;\n"
           "> end = (int)end;\n"
+          "> if (key !is none)\n"
+          ">  elem = key(elem);\n"
           "> if (start >= end) return -1;\n"
           "> local my_size = #this;\n"
           "> if (start >= my_size) return -1;\n"
@@ -1883,21 +1993,23 @@ INTERN struct type_method seq_methods[] = {
           ">  try my_elem = this[index];\n"
           ">  catch (Error.ValueError.IndexError.UnboundItem)\n"
           ">   continue;\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (pred_eq(my_elem,elem))\n"
+          ">  if (key !is none) {\n"
+          ">   if (elem == key(my_elem))\n"
           ">    return index;\n"
           ">  } else {\n"
-          ">   if (my_elem == elem)\n"
+          ">   if (elem == my_elem)\n"
           ">    return index;\n"
           ">  }\n"
           "> }\n"
           "> return -1;\n"
           ">}\n"
           "For ${operator iter}:\n"
-          ">function find(elem,pred_eq,start,end) {\n"
+          ">function find(elem,start,end,key) {\n"
           "> import Signal, int from deemon;\n"
           "> start = (int)start;\n"
           "> end = (int)end;\n"
+          "> if (key !is none)\n"
+          ">  elem = key(elem);\n"
           "> if (start >= end) return -1;\n"
           "> local it = this.operator iter();\n"
           "> local search_size = end - start;\n"
@@ -1915,11 +2027,11 @@ INTERN struct type_method seq_methods[] = {
           ">  catch (Signal.StopIteration) {\n"
           ">   return -1;\n"
           ">  }\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (pred_eq(my_elem,elem))\n"
+          ">  if (key !is none) {\n"
+          ">   if (elem == key(my_elem))\n"
           ">    return index;\n"
           ">  } else {\n"
-          ">   if (my_elem == elem)\n"
+          ">   if (elem == my_elem)\n"
           ">    return index;\n"
           ">  }\n"
           ">  --search_size;\n"
@@ -1928,11 +2040,11 @@ INTERN struct type_method seq_methods[] = {
           "> return -1;\n"
           ">}") },
     { "rfind", &seq_rfind,
-      DOC("(elem,callable pred_eq=none)->int\n"
-          "(elem,int start,callable pred_eq=none)->int\n"
-          "(elem,int start,int end,callable pred_eq=none)->int\n"
+      DOC("(elem,callable key=none)->int\n"
+          "(elem,int start,callable key=none)->int\n"
+          "(elem,int start,int end,callable key=none)->int\n"
           "@param elem The element to search for\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "@param start The start index for a sub-range to search (clamped by ${#this})\n"
           "@param end The end index for a sub-range to search (clamped by ${#this})\n"
           "Search for the last element matching @elem and return its index\n"
@@ -1940,10 +2052,12 @@ INTERN struct type_method seq_methods[] = {
           "Depending on the nearest implemented group of operators, "
           "one of the following implementations is chosen\n"
           "For ${operator []} and ${operator #}:\n"
-          ">function rfind(elem,pred_eq,start,end) {\n"
+          ">function rfind(elem,start,end,key) {\n"
           "> import int from deemon;\n"
           "> start = (int)start;\n"
           "> end = (int)end;\n"
+          "> if (key !is none)\n"
+          ">  elem = key(elem);\n"
           "> if (start >= end) return -1;\n"
           "> local my_size = #this;\n"
           "> if (start >= my_size) return -1;\n"
@@ -1956,8 +2070,8 @@ INTERN struct type_method seq_methods[] = {
           ">  } catch (Error.ValueError.IndexError.UnboundItem) {\n"
           ">   goto next_item;\n"
           ">  }\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (pred_eq(my_elem,elem))\n"
+          ">  if (key !is none) {\n"
+          ">   if (key(my_elem,elem))\n"
           ">    return index;\n"
           ">  } else {\n"
           ">   if (my_elem == elem)\n"
@@ -1970,7 +2084,7 @@ INTERN struct type_method seq_methods[] = {
           "> return -1;\n"
           ">}\n"
           "For ${operator iter}:\n"
-          ">function find(elem,pred_eq,start,end) {\n"
+          ">function find(elem,start,end,key) {\n"
           "> import Signal, int from deemon;\n"
           "> start = (int)start;\n"
           "> end = (int)end;\n"
@@ -1994,8 +2108,8 @@ INTERN struct type_method seq_methods[] = {
           ">  } catch (Signal.StopIteration) {\n"
           ">   break;\n"
           ">  }\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (pred_eq(my_elem,elem))\n"
+          ">  if (key !is none) {\n"
+          ">   if (key(my_elem,elem))\n"
           ">    result = index;\n"
           ">  } else {\n"
           ">   if (my_elem == elem)\n"
@@ -2007,37 +2121,37 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "index", &seq_index,
-      DOC("(elem,callable pred_eq=none)->int\n"
-          "(elem,int start,callable pred_eq=none)->int\n"
-          "(elem,int start,int end,callable pred_eq=none)->int\n"
+      DOC("(elem,callable key=none)->int\n"
+          "(elem,int start,callable key=none)->int\n"
+          "(elem,int start,int end,callable key=none)->int\n"
           "@param elem The element to search for\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "@param start The start index for a sub-range to search (clamped by ${#this})\n"
           "@param end The end index for a sub-range to search (clamped by ${#this})\n"
           "@throw ValueError The sequence does not contain an element matching @elem\n"
           "Search for the first element matching @elem and return its index\n"
           "This function is implemented as:\n"
-          ">function index(elem,start,end,pred_eq) {\n"
+          ">function index(elem,start,end,key) {\n"
           "> import sequence, Error from deemon;\n"
-          "> local result = (this as sequence).find(elem,start,end,pred_eq);\n"
+          "> local result = (this as sequence).find(elem,start,end,key);\n"
           "> if (result == -1)\n"
           ">  throw Error.ValueError(\"...\");\n"
           "> return result;\n"
           ">}") },
     { "rindex", &seq_rindex,
-      DOC("(elem,callable pred_eq=none)->int\n"
-          "(elem,int start,callable pred_eq=none)->int\n"
-          "(elem,int start,int end,callable pred_eq=none)->int\n"
+      DOC("(elem,callable key=none)->int\n"
+          "(elem,int start,callable key=none)->int\n"
+          "(elem,int start,int end,callable key=none)->int\n"
           "@param elem The element to search for\n"
-          "@param pred_eq A predicate for comparing 2 objects for equality\n"
+          "@param key A key function for transforming sequence elements\n"
           "@param start The start index for a sub-range to search (clamped by ${#this})\n"
           "@param end The end index for a sub-range to search (clamped by ${#this})\n"
           "@throw ValueError The sequence does not contain an element matching @elem\n"
           "Search for the last element matching @elem and return its index\n"
           "This function is implemented as:\n"
-          ">function index(elem,start,end,pred_eq) {\n"
+          ">function index(elem,start,end,key) {\n"
           "> import sequence, Error from deemon;\n"
-          "> local result = (this as sequence).rfind(elem,start,end,pred_eq);\n"
+          "> local result = (this as sequence).rfind(elem,start,end,key);\n"
           "> if (result == -1)\n"
           ">  throw Error.ValueError(\"...\");\n"
           "> return result;\n"
@@ -2047,9 +2161,9 @@ INTERN struct type_method seq_methods[] = {
           "Return a sequence that contains the elements of @this sequence in reverse order\n"
           "The point at which @this sequence is enumerated is implementation-defined") },
     { "sorted", &seq_sorted,
-      DOC("(callable pred_lo=none)->sequence\n"
+      DOC("(callable key=none)->sequence\n"
           "Return a sequence that contains all elements from @this sequence, "
-          "but sorted in ascending order, or in accordance to @pred_lo\n"
+          "but sorted in ascending order, or in accordance to @key\n"
           "The point at which @this sequence is enumerated is implementation-defined") },
     { "segments", &seq_segments,
       DOC("(int segment_size)->sequence\n"
@@ -2115,26 +2229,26 @@ INTERN struct type_method seq_methods[] = {
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.permutations itertools.permutations}") },
 
     /* TODO: join({sequence...} items) -> sequence */
-    /* TODO: strip(object item, callable pred_eq = none) -> sequence */
-    /* TODO: lstrip(object item, callable pred_eq = none) -> sequence */
-    /* TODO: rstrip(object item, callable pred_eq = none) -> sequence */
-    /* TODO: split(object sep, callable pred_eq = none) -> sequence */
+    /* TODO: strip(object item, callable key = none) -> sequence */
+    /* TODO: lstrip(object item, callable key = none) -> sequence */
+    /* TODO: rstrip(object item, callable key = none) -> sequence */
+    /* TODO: split(object sep, callable key = none) -> sequence */
 
-    /* TODO: countseq(sequence seq, callable pred_eq = none) -> int */
-    /* TODO: partition(object item, callable pred_eq = none) -> (sequence,(item),sequence) */
-    /* TODO: rpartition(object item, callable pred_eq = none) -> (sequence,(item),sequence) */
-    /* TODO: partitionseq(sequence seq, callable pred_eq = none) -> (sequence,seq,sequence) */
-    /* TODO: rpartitionseq(sequence seq, callable pred_eq = none) -> (sequence,seq,sequence) */
-    /* TODO: startswithseq(sequence seq, callable pred_eq = none) -> bool */
-    /* TODO: endswithseq(sequence seq, callable pred_eq = none) -> bool */
-    /* TODO: findseq(sequence seq, callable pred_eq = none) -> int */
-    /* TODO: rfindseq(sequence seq, callable pred_eq = none) -> int */
-    /* TODO: indexseq(sequence seq, callable pred_eq = none) -> int */
-    /* TODO: rindexseq(sequence seq, callable pred_eq = none) -> int */
-    /* TODO: stripseq(sequence items, callable pred_eq = none) -> sequence */
-    /* TODO: lstripseq(sequence items, callable pred_eq = none) -> sequence */
-    /* TODO: rstripseq(sequence items, callable pred_eq = none) -> sequence */
-    /* TODO: splitseq(sequence seq, callable pred_eq = none) -> sequence */
+    /* TODO: countseq(sequence seq, callable key = none) -> int */
+    /* TODO: partition(object item, callable key = none) -> (sequence,(item),sequence) */
+    /* TODO: rpartition(object item, callable key = none) -> (sequence,(item),sequence) */
+    /* TODO: partitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence) */
+    /* TODO: rpartitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence) */
+    /* TODO: startswithseq(sequence seq, callable key = none) -> bool */
+    /* TODO: endswithseq(sequence seq, callable key = none) -> bool */
+    /* TODO: findseq(sequence seq, callable key = none) -> int */
+    /* TODO: rfindseq(sequence seq, callable key = none) -> int */
+    /* TODO: indexseq(sequence seq, callable key = none) -> int */
+    /* TODO: rindexseq(sequence seq, callable key = none) -> int */
+    /* TODO: stripseq(sequence items, callable key = none) -> sequence */
+    /* TODO: lstripseq(sequence items, callable key = none) -> sequence */
+    /* TODO: rstripseq(sequence items, callable key = none) -> sequence */
+    /* TODO: splitseq(sequence seq, callable key = none) -> sequence */
 
 
     /* Functions for mutable sequences. */
@@ -2445,91 +2559,115 @@ INTERN struct type_method seq_methods[] = {
           "> return this.append(item);\n"
           ">}") },
     { DeeString_STR(&str_remove), &seq_remove,
-      DOC("(elem,callable pred_eq=none)->bool\n"
-          "(elem,int start,callable pred_eq=none)->bool\n"
-          "(elem,int start,int end,callable pred_eq=none)->bool\n"
+      DOC("(elem,callable key=none)->bool\n"
+          "(elem,int start,callable key=none)->bool\n"
+          "(elem,int start,int end,callable key=none)->bool\n"
+          "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Find the first instance of @elem and remove it, "
           "returning :true if an element got removed, or :false if @elem could not be found\n"
           "Depending on the nearest implemented group of operators, "
           "one of the following implementations is chosen\n"
           "For ${operator del[]}:\n"
-          ">function remove(elem,start,end,pred_eq) {\n"
+          ">function remove(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
-          "> for (local i = start; i < end; ++i) {\n"
-          ">  local item = this[i];\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (!pred_eq(item,elem))\n"
-          ">    continue;\n"
-          ">  } else {\n"
-          ">   if (!(item == elem))\n"
-          ">    continue;\n"
+          "> if (start < end) {\n"
+          ">  if (key !is none)\n"
+          ">   elem = key(elem);\n"
+          ">  for (local i = start; i < end; ++i) {\n"
+          ">   local item = this[i];\n"
+          ">   if (key !is none) {\n"
+          ">    if (!(elem == key(item)))\n"
+          ">     continue;\n"
+          ">   } else {\n"
+          ">    if (!(elem == item))\n"
+          ">     continue;\n"
+          ">   }\n"
+          ">   del this[i];\n"
+          ">   return true;\n"
           ">  }\n"
-          ">  del this[i];\n"
-          ">  return true;\n"
           "> }\n"
           "> return false;\n"
           ">}\n"
           "For ${erase(index,count)}:\n"
-          ">function remove(elem,start,end,pred_eq) {\n"
+          ">function remove(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
-          "> for (local i = start; i < end; ++i) {\n"
-          ">  local item = this[i];\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (!pred_eq(item,elem))\n"
-          ">    continue;\n"
-          ">  } else {\n"
-          ">   if (!(item == elem))\n"
-          ">    continue;\n"
+          "> if (start < end) {\n"
+          ">  if (key !is none)\n"
+          ">   elem = key(elem);\n"
+          ">  for (local i = start; i < end; ++i) {\n"
+          ">   local item = this[i];\n"
+          ">   if (key !is none) {\n"
+          ">    if (!(elem == key(item)))\n"
+          ">     continue;\n"
+          ">   } else {\n"
+          ">    if (!(elem == item))\n"
+          ">     continue;\n"
+          ">   }\n"
+          ">   this.erase(i,1);\n"
+          ">   return true;\n"
           ">  }\n"
-          ">  this.erase(i,1);\n"
-          ">  return true;\n"
           "> }\n"
           "> return false;\n"
           ">}\n"
           "For ${operator del[:]}:\n"
-          ">function remove(elem,start,end,pred_eq) {\n"
+          ">function remove(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
-          "> for (local i = start; i < end; ++i) {\n"
-          ">  local item = this[i];\n"
-          ">  if (pred_eq !is none) {\n"
-          ">   if (!pred_eq(item,elem))\n"
-          ">    continue;\n"
-          ">  } else {\n"
-          ">   if (!(item == elem))\n"
-          ">    continue;\n"
+          "> if (start < end) {\n"
+          ">  if (key !is none)\n"
+          ">   elem = key(elem);\n"
+          ">  for (local i = start; i < end; ++i) {\n"
+          ">   local item = this[i];\n"
+          ">   if (key !is none) {\n"
+          ">    if (!(elem == key(item)))\n"
+          ">     continue;\n"
+          ">   } else {\n"
+          ">    if (!(elem == item))\n"
+          ">     continue;\n"
+          ">   }\n"
+          ">   del this[i:i+1];\n"
+          ">   return true;\n"
           ">  }\n"
-          ">  del this[i:i+1];\n"
-          ">  return true;\n"
           "> }\n"
           "> return false;\n"
           ">}") },
     { DeeString_STR(&str_rremove), &seq_rremove,
-      DOC("(elem,callable pred_eq=none)->bool\n"
-          "(elem,int start,callable pred_eq=none)->bool\n"
-          "(elem,int start,int end,callable pred_eq=none)->bool\n"
+      DOC("(elem,callable key=none)->bool\n"
+          "(elem,int start,callable key=none)->bool\n"
+          "(elem,int start,int end,callable key=none)->bool\n"
+          "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Find the last instance of @elem and remove it, "
           "returning :true if an element got removed, or :false if @elem could not be found\n"
           "Depending on the nearest implemented group of operators, "
           "one of the following implementations is chosen\n"
           "For ${operator del[]}:\n"
-          ">function remove(elem,start,end,pred_eq) {\n"
+          ">function remove(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
           "> if (end > start) {\n"
           ">  local i = end;\n"
+          ">  if (key !is none)\n"
+          ">   elem = key(elem);\n"
           ">  do {\n"
           ">   --i;\n"
           ">   local item = this[i];\n"
-          ">   if (pred_eq !is none) {\n"
-          ">    if (!pred_eq(item,elem))\n"
+          ">   if (key !is none) {\n"
+          ">    if (!(elem == key(item)))\n"
           ">     continue;\n"
           ">   } else {\n"
-          ">    if (!(item == elem))\n"
+          ">    if (!(elem == item))\n"
           ">     continue;\n"
           ">   }\n"
           ">   del this[i];\n"
@@ -2539,19 +2677,23 @@ INTERN struct type_method seq_methods[] = {
           "> return false;\n"
           ">}\n"
           "For ${erase(index,count)}:\n"
-          ">function remove(elem,start,end,pred_eq) {\n"
+          ">function remove(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
           "> if (end > start) {\n"
           ">  local i = end;\n"
+          ">  if (key !is none)\n"
+          ">   elem = key(elem);\n"
           ">  do {\n"
           ">   --i;\n"
           ">   local item = this[i];\n"
-          ">   if (pred_eq !is none) {\n"
-          ">    if (!pred_eq(item,elem))\n"
+          ">   if (key !is none) {\n"
+          ">    if (!(elem == key(item)))\n"
           ">     continue;\n"
           ">   } else {\n"
-          ">    if (!(item == elem))\n"
+          ">    if (!(elem == item))\n"
           ">     continue;\n"
           ">   }\n"
           ">   this.erase(i,1);\n"
@@ -2561,19 +2703,23 @@ INTERN struct type_method seq_methods[] = {
           "> return false;\n"
           ">}\n"
           "For ${operator del[:]}:\n"
-          ">function remove(elem,start,end,pred_eq) {\n"
+          ">function remove(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
           "> if (end > start) {\n"
           ">  local i = end;\n"
+          ">  if (key !is none)\n"
+          ">   elem = key(elem);\n"
           ">  do {\n"
           ">   --i;\n"
           ">   local item = this[i];\n"
-          ">   if (pred_eq !is none) {\n"
-          ">    if (!pred_eq(item,elem))\n"
+          ">   if (key !is none) {\n"
+          ">    if (!(elem == key(item)))\n"
           ">     continue;\n"
           ">   } else {\n"
-          ">    if (!(item == elem))\n"
+          ">    if (!(elem == item))\n"
           ">     continue;\n"
           ">   }\n"
           ">   del this[i:i+1];\n"
@@ -2583,58 +2729,80 @@ INTERN struct type_method seq_methods[] = {
           "> return false;\n"
           ">}") },
     { DeeString_STR(&str_removeall), &seq_removeall,
-      DOC("(elem,callable pred_eq=none)->int\n"
-          "(elem,int start,callable pred_eq=none)->int\n"
-          "(elem,int start,int end,callable pred_eq=none)->int\n"
+      DOC("(elem,callable key=none)->int\n"
+          "(elem,int start,callable key=none)->int\n"
+          "(elem,int start,int end,callable key=none)->int\n"
+          "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Find all instance of @elem and remove "
           "them, returning the number of instances found (and consequently removed)\n"
           "Depending on the nearest implemented group of operators, "
           "one of the following implementations is chosen\n"
           "For ${removeif(should,start,end)}:\n"
-          ">function removeall(elem,start,end,pred_eq) {\n"
-          "> local count = 0;\n"
-          "> if (end > start)\n"
-          ">  count = (int)this.removeif([](x) -> pred_eq is none ? x == elem : pred_eq(x,elem),start,end);\n"
-          "> return count;\n"
+          ">function removeall(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
+          "> if (start >= end) return 0;\n"
+          "> if (key is none)\n"
+          ">  return (int)this.removeif([](x) -> elem == x,start,end);\n"
+          "> elem = key(elem);\n"
+          "> return (int)this.removeif([](x) -> elem == key(x),start,end);\n"
           ">}\n"
-          "For ${rremove(elem,start,end,pred_eq)}:\n"
-          ">function removeall(elem,start,end,pred_eq) {\n"
+          "For ${rremove(elem,start,end,key)}:\n"
+          ">function removeall(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local count = 0;\n"
           "> while (end > start) {\n"
-          ">  if (!this.rremove(elem,start,end,pred_eq))\n"
-          ">   break;\n"
+          ">  if (key is none) {\n"
+          ">   if (!this.rremove(elem,start,end))\n"
+          ">    break;\n"
+          ">  } else {\n"
+          ">   if (!this.rremove(elem,start,end,key))\n"
+          ">    break;\n"
+          ">  }\n"
           ">  ++count;\n"
           ">  --end;\n"
           "> }\n"
           "> return count;\n"
           ">}\n"
-          "For ${remove(elem,start,end,pred_eq)}:\n"
-          ">function removeall(elem,start,end,pred_eq) {\n"
+          "For ${remove(elem,start,end,key)}:\n"
+          ">function removeall(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local count = 0;\n"
           "> while (end > start) {\n"
-          ">  if (!this.remove(elem,start,end,pred_eq))\n"
-          ">   break;\n"
+          ">  if (key is none) {\n"
+          ">   if (!this.remove(elem,start,end))\n"
+          ">    break;\n"
+          ">  } else {\n"
+          ">   if (!this.remove(elem,start,end,key))\n"
+          ">    break;\n"
+          ">  }\n"
           ">  ++count;\n"
           ">  --end;\n"
           "> }\n"
           "> return count;\n"
           ">}\n"
           "For ${operator del[]}:\n"
-          ">function removeall(elem,start,end,pred_eq) {\n"
+          ">function removeall(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local count = 0;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
           "> if (end > start) {\n"
           ">  local i = end;\n"
+          ">  if (key !is none)\n"
+          ">   elem = key(elem);\n"
           ">  do {\n"
           ">   --i;\n"
           ">   local item = this[i];\n"
-          ">   if (pred_eq !is none) {\n"
-          ">    if (!pred_eq(item,elem))\n"
+          ">   if (key !is none) {\n"
+          ">    if (!(elem == key(item)))\n"
           ">     continue;\n"
           ">   } else {\n"
-          ">    if (!(item == elem))\n"
+          ">    if (!(elem == item))\n"
           ">     continue;\n"
           ">   }\n"
           ">   del this[i];\n"
@@ -2644,20 +2812,24 @@ INTERN struct type_method seq_methods[] = {
           "> return count;\n"
           ">}\n"
           "For ${erase(index,count)}:\n"
-          ">function removeall(elem,start,end,pred_eq) {\n"
+          ">function removeall(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local count = 0;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
           "> if (end > start) {\n"
           ">  local i = end;\n"
+          ">  if (key !is none)\n"
+          ">   elem = key(elem);\n"
           ">  do {\n"
           ">   --i;\n"
           ">   local item = this[i];\n"
-          ">   if (pred_eq !is none) {\n"
-          ">    if (!pred_eq(item,elem))\n"
+          ">   if (key !is none) {\n"
+          ">    if (!(elem == key(item)))\n"
           ">     continue;\n"
           ">   } else {\n"
-          ">    if (!(item == elem))\n"
+          ">    if (!(elem == item))\n"
           ">     continue;\n"
           ">   }\n"
           ">   this.erase(i,1);\n"
@@ -2667,20 +2839,24 @@ INTERN struct type_method seq_methods[] = {
           "> return count;\n"
           ">}\n"
           "For ${operator del[:]}:\n"
-          ">function removeall(elem,start,end,pred_eq) {\n"
+          ">function removeall(elem,start,end,key) {\n"
+          "> start = (int)start;\n"
+          "> end = (int)end;\n"
           "> local count = 0;\n"
           "> local mylen = #this;\n"
           "> if (end > mylen) end = mylen;\n"
           "> if (end > start) {\n"
           ">  local i = end;\n"
+          ">  if (key !is none)\n"
+          ">   elem = key(elem);\n"
           ">  do {\n"
           ">   --i;\n"
           ">   local item = this[i];\n"
-          ">   if (pred_eq !is none) {\n"
-          ">    if (!pred_eq(item,elem))\n"
+          ">   if (key !is none) {\n"
+          ">    if (!(elem == key(item)))\n"
           ">     continue;\n"
           ">   } else {\n"
-          ">    if (!(item == elem))\n"
+          ">    if (!(elem == item))\n"
           ">     continue;\n"
           ">   }\n"
           ">   del this[i:i+1];\n"
@@ -2692,6 +2868,7 @@ INTERN struct type_method seq_methods[] = {
     { DeeString_STR(&str_removeif),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_removeif,
       DOC("(callable should,int start=0,int end=-1)->int\n"
+          "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Remove all elements within the given sub-range, "
           "for which ${should(elem)} evaluates to :true, and return the number "
@@ -2700,27 +2877,25 @@ INTERN struct type_method seq_methods[] = {
           "one of the following implementations is chosen\n"
           "For ${removeif(should,start,end)}:\n"
           ">function removeif(should,start,end) {\n"
-          "> local count = 0;\n"
-          "> if (end > start)\n"
-          ">  count = (int)this.removeall(none,start,end,[](x,y) -> should(x));\n"
-          "> return count;\n"
+          "> if (start >= end) return 0;\n"
+          "> return (int)this.removeall(true,start,end,should);\n"
           ">}\n"
-          "For ${rremove(elem,start,end,pred_eq)}:\n"
+          "For ${rremove(elem,start,end,key)}:\n"
           ">function removeif(should,start,end) {\n"
           "> local count = 0;\n"
           "> while (end > start) {\n"
-          ">  if (!this.rremove(none,start,end,[](x,y) -> should(x)))\n"
+          ">  if (!this.rremove(true,start,end,should))\n"
           ">   break;\n"
           ">  ++count;\n"
           ">  --end;\n"
           "> }\n"
           "> return count;\n"
           ">}\n"
-          "For ${remove(elem,start,end,pred_eq)}:\n"
+          "For ${remove(elem,start,end,key)}:\n"
           ">function removeif(should,start,end) {\n"
           "> local count = 0;\n"
           "> while (end > start) {\n"
-          ">  if (!this.remove(none,start,end,[](x,y) -> should(x)))\n"
+          ">  if (!this.remove(true,start,end,should))\n"
           ">   break;\n"
           ">  ++count;\n"
           ">  --end;\n"
@@ -2856,13 +3031,14 @@ INTERN struct type_method seq_methods[] = {
           "> this := (this as sequence from deemon).reversed();\n"
           ">}") },
     { "sort", &seq_sort,
-      DOC("(callable pred_lo=none)\n"
+      DOC("(callable key=none)\n"
+          "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Sort the elements of @this sequence\n"
           "When not implemented by a sub-class, :sequence implements "
           "this function as follows (s.a. #op:assign):\n"
-          ">function sort(pred_lo = none) {\n"
-          "> this := (this as sequence from deemon).sorted(pred_lo);\n"
+          ">function sort(key = none) {\n"
+          "> this := (this as sequence from deemon).sorted(key);\n"
           ">}") },
 
 
@@ -3328,7 +3504,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "contains(elem)\n"
                             "Returns :true/:false indicative of @elem being apart of @this sequence\n"
                             "This operator is an alias for the #contains member function, "
-                            "which allows the use of an additional search predicate\n"
+                            "which allows the use of an additional key function\n"
                             "When not implemented by a sub-class, this operator is implemented as defined by :sequence as follows\n"
                             ">operator contains(elem) {\n"
                             "> for (local my_elem: this) {\n"

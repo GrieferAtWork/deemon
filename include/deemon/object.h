@@ -2157,49 +2157,56 @@ DFUNDEF int DCALL DeeObject_InplaceXorInt(DREF DeeObject **__restrict pself, uin
  *          - `Error.ValueError'                  (`DeeError_ValueError';     Should indicate unsupported instance combination)
  *        This error handling is only performed during invocation of the `__eq__' / `__ne__'
  *        operators, but not when the returned result is then interpreted as a boolean. */
-DFUNDEF DREF DeeObject *DCALL DeeObject_CompareEqObject(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_CompareNeObject(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_CompareLoObject(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_CompareLeObject(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_CompareGrObject(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_CompareGeObject(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_CompareEq(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_CompareNe(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_CompareLo(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_CompareLe(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_CompareGr(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_CompareGe(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CompareEqObject)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CompareNeObject)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CompareLoObject)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CompareLeObject)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CompareGrObject)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CompareGeObject)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_CompareEq)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_CompareNe)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_CompareLo)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_CompareLe)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_CompareGr)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_CompareGe)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+
+/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
+ * @return:  > 0: The objects are equal.
+ * @return: == 0: The objects are non-equal.
+ * @return:  < 0: An error occurred. */
+DFUNDEF int (DCALL DeeObject_CompareKeyEq)(DeeObject *__restrict keyed_search_item,
+                                           DeeObject *__restrict elem, DeeObject *key);
 
 /* Sequence operator invocation. */
-DFUNDEF size_t DCALL DeeObject_Size(DeeObject *__restrict self); /* @return: (size_t)-1: Error */
-DFUNDEF DREF DeeObject *DCALL DeeObject_SizeObject(DeeObject *__restrict self);
-DFUNDEF int DCALL DeeObject_Contains(DeeObject *__restrict self, DeeObject *__restrict some_object); /* @return: 1: found */
-DFUNDEF DREF DeeObject *DCALL DeeObject_ContainsObject(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_GetItem(DeeObject *__restrict self, DeeObject *__restrict index);
-DFUNDEF DREF DeeObject *DCALL DeeObject_GetItemDef(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
-DFUNDEF DREF DeeObject *DCALL DeeObject_GetItemIndex(DeeObject *__restrict self, size_t index);
-DFUNDEF DREF DeeObject *DCALL DeeObject_GetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-DFUNDEF DREF DeeObject *DCALL DeeObject_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict def);
-DFUNDEF int DCALL DeeObject_DelItem(DeeObject *__restrict self, DeeObject *__restrict index);
-DFUNDEF int DCALL DeeObject_DelItemIndex(DeeObject *__restrict self, size_t index);
-DFUNDEF int DCALL DeeObject_DelItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-DFUNDEF int DCALL DeeObject_SetItem(DeeObject *__restrict self, DeeObject *__restrict index, DeeObject *__restrict value);
-DFUNDEF int DCALL DeeObject_SetItemIndex(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
-DFUNDEF int DCALL DeeObject_SetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict value);
-DFUNDEF DREF DeeObject *DCALL DeeObject_GetRange(DeeObject *__restrict self, DeeObject *__restrict begin, DeeObject *__restrict end);
-DFUNDEF DREF DeeObject *DCALL DeeObject_GetRangeBeginIndex(DeeObject *__restrict self, dssize_t begin, DeeObject *__restrict end);
-DFUNDEF DREF DeeObject *DCALL DeeObject_GetRangeEndIndex(DeeObject *__restrict self, DeeObject *__restrict begin, dssize_t end);
-DFUNDEF DREF DeeObject *DCALL DeeObject_GetRangeIndex(DeeObject *__restrict self, dssize_t begin, dssize_t end);
-DFUNDEF int DCALL DeeObject_DelRange(DeeObject *__restrict self, DeeObject *__restrict begin, DeeObject *__restrict end);
-DFUNDEF int DCALL DeeObject_SetRange(DeeObject *__restrict self, DeeObject *__restrict begin, DeeObject *__restrict end, DeeObject *__restrict value);
-DFUNDEF int DCALL DeeObject_SetRangeBeginIndex(DeeObject *__restrict self, dssize_t begin, DeeObject *__restrict end, DeeObject *__restrict value);
-DFUNDEF int DCALL DeeObject_SetRangeEndIndex(DeeObject *__restrict self, DeeObject *__restrict begin, dssize_t end, DeeObject *__restrict value);
-DFUNDEF int DCALL DeeObject_SetRangeIndex(DeeObject *__restrict self, dssize_t begin, dssize_t end, DeeObject *__restrict value);
+DFUNDEF size_t (DCALL DeeObject_Size)(DeeObject *__restrict self); /* @return: (size_t)-1: Error */
+DFUNDEF DREF DeeObject *(DCALL DeeObject_SizeObject)(DeeObject *__restrict self);
+DFUNDEF int (DCALL DeeObject_Contains)(DeeObject *__restrict self, DeeObject *__restrict some_object); /* @return: 1: found */
+DFUNDEF DREF DeeObject *(DCALL DeeObject_ContainsObject)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItem)(DeeObject *__restrict self, DeeObject *__restrict index);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemDef)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemIndex)(DeeObject *__restrict self, size_t index);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemStringDef)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict def);
+DFUNDEF int (DCALL DeeObject_DelItem)(DeeObject *__restrict self, DeeObject *__restrict index);
+DFUNDEF int (DCALL DeeObject_DelItemIndex)(DeeObject *__restrict self, size_t index);
+DFUNDEF int (DCALL DeeObject_DelItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+DFUNDEF int (DCALL DeeObject_SetItem)(DeeObject *__restrict self, DeeObject *__restrict index, DeeObject *__restrict value);
+DFUNDEF int (DCALL DeeObject_SetItemIndex)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
+DFUNDEF int (DCALL DeeObject_SetItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict value);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetRange)(DeeObject *__restrict self, DeeObject *__restrict begin, DeeObject *__restrict end);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *__restrict self, dssize_t begin, DeeObject *__restrict end);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetRangeEndIndex)(DeeObject *__restrict self, DeeObject *__restrict begin, dssize_t end);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self, dssize_t begin, dssize_t end);
+DFUNDEF int (DCALL DeeObject_DelRange)(DeeObject *__restrict self, DeeObject *__restrict begin, DeeObject *__restrict end);
+DFUNDEF int (DCALL DeeObject_SetRange)(DeeObject *__restrict self, DeeObject *__restrict begin, DeeObject *__restrict end, DeeObject *__restrict value);
+DFUNDEF int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self, dssize_t begin, DeeObject *__restrict end, DeeObject *__restrict value);
+DFUNDEF int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self, DeeObject *__restrict begin, dssize_t end, DeeObject *__restrict value);
+DFUNDEF int (DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self, dssize_t begin, dssize_t end, DeeObject *__restrict value);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
-INTDEF DREF DeeObject *DCALL DeeObject_ConcatInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL DeeObject_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc, /*inherit(on_success)*/DREF DeeObject **__restrict argv);
+INTDEF DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(on_success)*/DREF DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc, /*inherit(on_success)*/DREF DeeObject **__restrict argv);
 #endif
 
 /* Process UTF-8-encoded `data' in whatever way you wish. */

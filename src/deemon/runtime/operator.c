@@ -4286,6 +4286,23 @@ err_self:
 err:
  return -1;
 }
+
+PUBLIC int
+(DCALL DeeObject_CompareKeyEq)(DeeObject *__restrict keyed_search_item,
+                               DeeObject *__restrict elem,
+                               DeeObject *key) {
+ int result;
+ if (!key)
+      return DeeObject_CompareEq(keyed_search_item,elem);
+ elem = DeeObject_Call(key,1,(DeeObject **)&elem);
+ if unlikely(!elem) goto err;
+ result = DeeObject_CompareEq(keyed_search_item,elem);
+ Dee_Decref(elem);
+ return result;
+err:
+ return -1;
+}
+
 #endif
 
 

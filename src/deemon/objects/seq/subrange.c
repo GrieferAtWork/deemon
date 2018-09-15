@@ -290,25 +290,26 @@ subrange_nsi_getitem(SubRange *__restrict self, size_t index) {
 }
 PRIVATE size_t DCALL
 subrange_nsi_find(SubRange *__restrict self, size_t start, size_t end,
-                  DeeObject *__restrict value, DeeObject *pred_eq) {
+                  DeeObject *__restrict keyed_search_item,
+                  DeeObject *key) {
  if (start >= self->sr_size) return (size_t)-1;
  if (end > self->sr_size) end = self->sr_size;
  return DeeSeq_Find(self->sr_seq,
                     start + self->sr_begin,
                     end + self->sr_begin,
-                    value,
-                    pred_eq);
+                    keyed_search_item,
+                    key);
 }
 PRIVATE size_t DCALL
 subrange_nsi_rfind(SubRange *__restrict self, size_t start, size_t end,
-                   DeeObject *__restrict value, DeeObject *pred_eq) {
+                   DeeObject *__restrict keyed_search_item, DeeObject *key) {
  if (start >= self->sr_size) return (size_t)-1;
  if (end > self->sr_size) end = self->sr_size;
  return DeeSeq_RFind(self->sr_seq,
                      start + self->sr_begin,
                      end + self->sr_begin,
-                     value,
-                     pred_eq);
+                     keyed_search_item,
+                     key);
 }
 
 
@@ -533,21 +534,21 @@ subrangen_nsi_getitem(SubRangeN *__restrict self, size_t index) {
 
 PRIVATE size_t DCALL
 subrangen_nsi_find(SubRangeN *__restrict self, size_t start, size_t end,
-                   DeeObject *__restrict value, DeeObject *pred_eq) {
+                   DeeObject *__restrict keyed_search_item, DeeObject *key) {
  return DeeSeq_Find(self->sr_seq,
                     start + self->sr_begin,
                     end + self->sr_begin,
-                    value,
-                    pred_eq);
+                    keyed_search_item,
+                    key);
 }
 PRIVATE size_t DCALL
 subrangen_nsi_rfind(SubRangeN *__restrict self, size_t start, size_t end,
-                    DeeObject *__restrict value, DeeObject *pred_eq) {
+                    DeeObject *__restrict keyed_search_item, DeeObject *key) {
  return DeeSeq_RFind(self->sr_seq,
                      start + self->sr_begin,
                      end + self->sr_begin,
-                     value,
-                     pred_eq);
+                     keyed_search_item,
+                     key);
 }
 
 PRIVATE struct type_nsi subrangen_nsi = {

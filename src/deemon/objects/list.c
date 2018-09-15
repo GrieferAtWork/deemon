@@ -471,12 +471,12 @@ again:
 PUBLIC int DCALL
 DeeList_Remove(DeeObject *__restrict self,
                size_t start, size_t end,
-               DeeObject *__restrict elem,
-               DeeObject *pred_eq) {
+               DeeObject *__restrict keyed_search_item,
+               DeeObject *key) {
  DeeObject **vector; size_t i,length;
  ASSERT_OBJECT_TYPE(self,&DeeList_Type);
- ASSERT_OBJECT_OPT(pred_eq);
- ASSERT_OBJECT(elem);
+ ASSERT_OBJECT_OPT(key);
+ ASSERT_OBJECT(keyed_search_item);
  DeeList_LockRead(self);
 again:
  vector = DeeList_ELEM(self);
@@ -486,18 +486,8 @@ again:
   this_elem = DeeList_GET(self,i);
   Dee_Incref(this_elem);
   DeeList_LockEndRead(self);
-  if (pred_eq) {
-   /* Invoke a predicate. */
-   DREF DeeObject *callback_result;
-   callback_result = DeeObject_CallPack(pred_eq,2,this_elem,elem);
-   Dee_Decref(this_elem);
-   if unlikely(!callback_result) return -1;
-   temp = DeeObject_Bool(callback_result);
-   Dee_Decref(callback_result);
-  } else {
-   temp = DeeObject_CompareEq(this_elem,elem);
-   Dee_Decref(this_elem);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,this_elem,key);
+  Dee_Decref(this_elem);
   if unlikely(temp < 0) return temp;
   if (temp) {
    /* This is the element we're supposed to remove. */
@@ -531,12 +521,12 @@ again:
 PUBLIC int DCALL
 DeeList_RRemove(DeeObject *__restrict self,
                 size_t start, size_t end,
-                DeeObject *__restrict elem,
-                DeeObject *pred_eq) {
+                DeeObject *__restrict keyed_search_item,
+                DeeObject *key) {
  DeeObject **vector; size_t i,length;
  ASSERT_OBJECT_TYPE(self,&DeeList_Type);
- ASSERT_OBJECT_OPT(pred_eq);
- ASSERT_OBJECT(elem);
+ ASSERT_OBJECT_OPT(key);
+ ASSERT_OBJECT(keyed_search_item);
  DeeList_LockRead(self);
 again:
  vector = DeeList_ELEM(self);
@@ -550,18 +540,8 @@ again:
   this_elem = DeeList_GET(self,i);
   Dee_Incref(this_elem);
   DeeList_LockEndRead(self);
-  if (pred_eq) {
-   /* Invoke a predicate. */
-   DREF DeeObject *callback_result;
-   callback_result = DeeObject_CallPack(pred_eq,2,this_elem,elem);
-   Dee_Decref(this_elem);
-   if unlikely(!callback_result) return -1;
-   temp = DeeObject_Bool(callback_result);
-   Dee_Decref(callback_result);
-  } else {
-   temp = DeeObject_CompareEq(this_elem,elem);
-   Dee_Decref(this_elem);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,this_elem,key);
+  Dee_Decref(this_elem);
   if unlikely(temp < 0) return temp;
   if (temp) {
    /* This is the element we're supposed to remove. */
@@ -660,8 +640,8 @@ err:
 INTERN size_t DCALL
 DeeList_RemoveAll(List *__restrict self,
                   size_t start, size_t end,
-                  DeeObject *__restrict elem,
-                  DeeObject *pred_eq) {
+                  DeeObject *__restrict keyed_search_item,
+                  DeeObject *key) {
  DeeObject **vector;
  size_t i,length,result;
  DeeList_LockRead(self);
@@ -670,21 +650,12 @@ again:
  vector = DeeList_ELEM(self);
  length = DeeList_SIZE(self);
  for (i = start; i < length && i < end; ++i) {
-  DREF DeeObject *callback_result;
   DREF DeeObject *this_elem; int temp;
   this_elem = DeeList_GET(self,i);
   Dee_Incref(this_elem);
   DeeList_LockEndRead(self);
   /* Invoke a predicate. */
-  if (pred_eq) {
-   callback_result = DeeObject_CallPack(pred_eq,2,this_elem,elem);
-   Dee_Decref(this_elem);
-   if unlikely(!callback_result) goto err;
-   temp = DeeObject_Bool(callback_result);
-   Dee_Decref(callback_result);
-  } else {
-   temp = DeeObject_CompareEq(this_elem,elem);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,this_elem,key);
   if unlikely(temp < 0) goto err;
   if (temp) {
    /* This is the element we're supposed to remove. */
@@ -1961,23 +1932,15 @@ list_nsi_getitem_fast(List *__restrict self,
 PRIVATE size_t DCALL
 list_nsi_find(List *__restrict self,
               size_t start, size_t end,
-              DeeObject *__restrict elem,
-              DeeObject *pred_eq) {
+              DeeObject *__restrict keyed_search_item,
+              DeeObject *key) {
  DREF DeeObject *list_elem; size_t i; int temp;
  DeeList_LockRead(self);
  for (i = start; i < DeeList_SIZE(self) && i < end; ++i) {
   list_elem = DeeList_GET(self,i);
   Dee_Incref(list_elem);
   DeeList_LockEndRead(self);
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_CallPack(pred_eq,2,list_elem,elem);
-   if unlikely(!pred_result) goto err_list_elem;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareEq(list_elem,elem);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,list_elem,key);
   Dee_Decref(list_elem);
   if (temp != 0) {
    if unlikely(temp < 0) goto err;
@@ -1987,16 +1950,14 @@ list_nsi_find(List *__restrict self,
  }
  DeeList_LockEndRead(self);
  return (size_t)-1;
-err_list_elem:
- Dee_Decref(list_elem);
 err:
  return (size_t)-2;
 }
 PRIVATE size_t DCALL
 list_nsi_rfind(List *__restrict self,
                size_t start, size_t end,
-               DeeObject *__restrict elem,
-               DeeObject *pred_eq) {
+               DeeObject *__restrict keyed_search_item,
+               DeeObject *key) {
  DREF DeeObject *list_elem; size_t i; int temp;
  DeeList_LockRead(self);
  i = end;
@@ -2008,15 +1969,7 @@ list_nsi_rfind(List *__restrict self,
   list_elem = DeeList_GET(self,i);
   Dee_Incref(list_elem);
   DeeList_LockEndRead(self);
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_CallPack(pred_eq,2,list_elem,elem);
-   if unlikely(!pred_result) goto err_list_elem;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareEq(list_elem,elem);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,list_elem,key);
   Dee_Decref(list_elem);
   if (temp != 0) {
    if unlikely(temp < 0) goto err;
@@ -2026,8 +1979,6 @@ list_nsi_rfind(List *__restrict self,
  }
  DeeList_LockEndRead(self);
  return (size_t)-1;
-err_list_elem:
- Dee_Decref(list_elem);
 err:
  return (size_t)-2;
 }
@@ -2397,9 +2348,9 @@ list_reverse(List *__restrict self,
 
 
 
-/* Sort the given list ascendingly, or according to `pred_lo' */
+/* Sort the given list ascendingly, or according to `key' */
 PUBLIC int DCALL
-DeeList_Sort(DeeObject *__restrict self, DeeObject *pred_lo) {
+DeeList_Sort(DeeObject *__restrict self, DeeObject *key) {
  DeeObject **oldv,**newv; size_t i,objc;
  objc = DeeList_SIZE(self);
  oldv = (DeeObject **)Dee_Malloc(objc*sizeof(DeeObject *));
@@ -2425,7 +2376,7 @@ again:
  newv = (DeeObject **)Dee_Malloc(objc*sizeof(DeeObject *));
  if unlikely(!newv) goto err_oldv_elem;
  /* Do the actual sorting. */
- if (DeeSeq_MergeSort(newv,oldv,objc,pred_lo))
+ if (DeeSeq_MergeSort(newv,oldv,objc,key))
      goto err_newv;
  Dee_Free(oldv);
  DeeList_LockWrite(self);
@@ -2450,7 +2401,7 @@ err:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeList_Sorted(DeeObject *__restrict self, DeeObject *pred_lo) {
+DeeList_Sorted(DeeObject *__restrict self, DeeObject *key) {
  DeeObject **oldv; size_t i,objc;
  DeeTupleObject *result;
  objc = DeeList_SIZE(self);
@@ -2477,7 +2428,7 @@ again:
  result = (DeeTupleObject *)DeeTuple_NewUninitialized(objc);
  if unlikely(!result) goto err_oldv_elem;
  /* Do the actual sorting. */
- if (DeeSeq_MergeSort(DeeTuple_ELEM(result),oldv,objc,pred_lo))
+ if (DeeSeq_MergeSort(DeeTuple_ELEM(result),oldv,objc,key))
      goto err_result;
  Dee_Free(oldv);
  return (DeeObject *)result;
@@ -2495,19 +2446,19 @@ err:
 PRIVATE DREF DeeObject *DCALL
 list_sort(List *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- DeeObject *pred = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:sort",&pred) ||
-     DeeList_Sort((DeeObject *)self,pred))
+ DeeObject *key = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:sort",&key) ||
+     DeeList_Sort((DeeObject *)self,key))
      return NULL;
  return_none;
 }
 PRIVATE DREF DeeObject *DCALL
 list_sorted(List *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- DeeObject *pred = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:sorted",&pred))
+ DeeObject *key = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:sorted",&key))
      return NULL;
- return DeeList_Sorted((DeeObject *)self,pred);
+ return DeeList_Sorted((DeeObject *)self,key);
 }
 
 
@@ -2705,13 +2656,13 @@ PRIVATE struct type_method list_methods[] = {
           "Reverse the order of all the elements of @this list") },
     { "sort", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_sort,
       DOC("()\n"
-          "(callable pred_lo)\n"
-          "Sort the elements of @this list in ascending order, or in accordance to @pred_lo") },
+          "(callable key)\n"
+          "Sort the elements of @this list in ascending order, or in accordance to @key") },
     { "sorted", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_sorted,
       DOC("->sequence\n"
-          "(callable pred_lo)->sequence\n"
+          "(callable key)->sequence\n"
           "Return a sequence that contains all elements from @this sequence, "
-          "but sorted in ascending order, or in accordance to @pred_lo\n"
+          "but sorted in ascending order, or in accordance to @key\n"
           "The type of sequence returned is implementation-defined") },
 
     /* List buffer functions. */

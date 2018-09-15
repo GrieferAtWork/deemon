@@ -580,28 +580,133 @@ err_iter:
 err:
  return -1;
 }
-INTERN DREF DeeObject *DCALL
-DeeSeq_Min(DeeObject *__restrict self, DeeObject *pred_lo) {
+
+PRIVATE DREF DeeObject *DCALL
+DeeSeq_Min_k(DeeObject *__restrict self,
+             DeeObject *__restrict key) {
  DREF DeeObject *elem,*iterator,*result = NULL;
+ DREF DeeObject *key_result = NULL;
+ int temp;
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
     goto done;
  while ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
   if (!result)
    result = elem;
   else {
-   int temp;
-   if (pred_lo) {
-    DREF DeeObject *pred_result;
-    pred_result = DeeObject_CallPack(pred_lo,2,result,elem);
-    if unlikely(!pred_result) goto err_r_iter_elem;
-    temp = DeeObject_Bool(pred_result);
-    Dee_Decref(pred_result);
-   } else {
-    temp = DeeObject_CompareLo(result,elem);
+   DREF DeeObject *key_elem;
+   if (!key_result) {
+    key_result = DeeObject_Call(key,1,&result);
+    if unlikely(!key_result) goto err_r_iter_elem;
    }
+   key_elem = DeeObject_Call(key,1,&elem);
+   if unlikely(!key_elem) goto err_r_iter_elem;
+   temp = DeeObject_CompareLo(key_result,key_elem);
    if (temp <= 0) {
+    if unlikely(temp < 0) { Dee_Decref(key_elem); goto err_r_iter_elem; }
+    Dee_Decref(key_result);
     Dee_Decref(result);
+    /* Continue working with `elem' after
+     * `result < elem' evaluated to `false' */
+    result     = elem;
+    key_result = key_elem;
+   } else {
+    Dee_Decref(key_elem);
+    Dee_Decref(elem);
+   }
+  }
+  if (DeeThread_CheckInterrupt())
+      goto err_r_iter;
+ }
+ if unlikely(!elem)
+    goto err_r_iter;
+ Dee_Decref(iterator);
+ /* Return `none' when the sequence was empty. */
+ if (!result) {
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+ }
+done:
+ Dee_XDecref(key_result);
+ return result;
+err_r_iter_elem:
+ Dee_Decref(elem);
+err_r_iter:
+ Dee_XDecref(key_result);
+ Dee_XDecref(result);
+ Dee_Decref(iterator);
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+DeeSeq_Max_k(DeeObject *__restrict self,
+             DeeObject *__restrict key) {
+ DREF DeeObject *elem,*iterator,*result = NULL;
+ DREF DeeObject *key_result = NULL;
+ int temp;
+ if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
+    goto done;
+ while ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
+  if (!result)
+   result = elem;
+  else {
+   DREF DeeObject *key_elem;
+   if (!key_result) {
+    key_result = DeeObject_Call(key,1,&result);
+    if unlikely(!key_result) goto err_r_iter_elem;
+   }
+   key_elem = DeeObject_Call(key,1,&elem);
+   if unlikely(!key_elem) goto err_r_iter_elem;
+   temp = DeeObject_CompareLo(key_result,key_elem);
+   if (temp <= 0) {
+    if unlikely(temp < 0) { Dee_Decref(key_elem); goto err_r_iter_elem; }
+    Dee_Decref(key_elem);
+    Dee_Decref(elem);
+   } else {
+    Dee_Decref(key_result);
+    Dee_Decref(result);
+    /* Continue working with `elem' after
+     * `result < elem' evaluated to `false' */
+    result     = elem;
+    key_result = key_elem;
+   }
+  }
+  if (DeeThread_CheckInterrupt())
+      goto err_r_iter;
+ }
+ if unlikely(!elem)
+    goto err_r_iter;
+ Dee_Decref(iterator);
+ /* Return `none' when the sequence was empty. */
+ if (!result) {
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+ }
+done:
+ Dee_XDecref(key_result);
+ return result;
+err_r_iter_elem:
+ Dee_Decref(elem);
+err_r_iter:
+ Dee_XDecref(key_result);
+ Dee_XDecref(result);
+ Dee_Decref(iterator);
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+DeeSeq_Min(DeeObject *__restrict self, DeeObject *key) {
+ DREF DeeObject *elem,*iterator,*result = NULL; int temp;
+ if (key) return DeeSeq_Min_k(self,key);
+ if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
+    goto done;
+ while ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
+  if (!result)
+   result = elem;
+  else {
+   temp = DeeObject_CompareLo(result,elem);
+   if (temp <= 0) {
     if unlikely(temp < 0) goto err_r_iter_elem;
+    Dee_Decref(result);
     /* Continue working with `elem' after
      * `result < elem' evaluated to `false' */
     result = elem;
@@ -630,34 +735,24 @@ err_r_iter:
  return NULL;
 }
 INTERN DREF DeeObject *DCALL
-DeeSeq_Max(DeeObject *__restrict self, DeeObject *pred_lo) {
- DREF DeeObject *elem,*iterator,*result = NULL;
+DeeSeq_Max(DeeObject *__restrict self, DeeObject *key) {
+ DREF DeeObject *elem,*iterator,*result = NULL; int temp;
+ if (key) return DeeSeq_Max_k(self,key);
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
     goto done;
- while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+ while ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
   if (!result)
    result = elem;
   else {
-   int temp;
-   if (pred_lo) {
-    DREF DeeObject *pred_result;
-    pred_result = DeeObject_CallPack(pred_lo,2,result,elem);
-    if unlikely(!pred_result)
-       goto err_r_iter_elem;
-    temp = DeeObject_Bool(pred_result);
-    Dee_Decref(pred_result);
-   } else {
-    temp = DeeObject_CompareLo(result,elem);
-   }
-   if (temp != 0) {
-    Dee_Decref(result);
-    if unlikely(temp < 0)
-       goto err_r_iter_elem;
-    /* Continue working with `elem' after
-     * `result < elem' evaluated to `true' */
-    result = elem;
-   } else {
+   temp = DeeObject_CompareLo(result,elem);
+   if (temp <= 0) {
+    if unlikely(temp < 0) goto err_r_iter_elem;
     Dee_Decref(elem);
+   } else {
+    Dee_Decref(result);
+    /* Continue working with `elem' after
+     * `result < elem' evaluated to `false' */
+    result = elem;
    }
   }
   if (DeeThread_CheckInterrupt())
@@ -680,27 +775,19 @@ err_r_iter:
  Dee_Decref(iterator);
  return NULL;
 }
+
+
 INTERN size_t DCALL
 DeeSeq_Count(DeeObject *__restrict self,
-             DeeObject *__restrict search_item,
-             DeeObject *pred_eq) {
- size_t result = 0;
+             DeeObject *__restrict keyed_search_item,
+             DeeObject *key) {
+ size_t result = 0; int temp;
  DREF DeeObject *elem,*iterator;
  /* TODO: NSI Variant + index-based sequence optimizations */
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
     goto err;
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  int temp;
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_CallPack(pred_eq,2,elem,search_item);
-   if unlikely(!pred_result)
-      goto err_elem;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareEq(elem,search_item);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,elem,key);
   if (temp != 0) {
    if unlikely(temp < 0)
       goto err_elem;
@@ -723,23 +810,13 @@ err:
 }
 INTERN DREF DeeObject *DCALL
 DeeSeq_Locate(DeeObject *__restrict self,
-              DeeObject *__restrict search_item,
-              DeeObject *pred_eq) {
- DREF DeeObject *elem,*iterator;
+              DeeObject *__restrict keyed_search_item,
+              DeeObject *key) {
+ DREF DeeObject *elem,*iterator; int temp;
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
     return NULL;
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  int temp;
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_CallPack(pred_eq,2,elem,search_item);
-   if unlikely(!pred_result)
-      goto err_elem;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareEq(elem,search_item);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,elem,key);
   if (temp != 0) {
    if unlikely(temp < 0)
       goto err_elem;
@@ -752,7 +829,7 @@ DeeSeq_Locate(DeeObject *__restrict self,
       goto err_iter;
  }
  Dee_Decref(iterator);
- if (elem) err_item_not_found(self,search_item);
+ if (elem) err_item_not_found(self,keyed_search_item);
  return NULL;
 err_elem:
  Dee_Decref(elem);
@@ -762,23 +839,13 @@ err_iter:
 }
 INTERN DREF DeeObject *DCALL
 DeeSeq_RLocate(DeeObject *__restrict self,
-               DeeObject *__restrict search_item,
-               DeeObject *pred_eq) {
- DREF DeeObject *elem,*iterator,*result = NULL;
+               DeeObject *__restrict keyed_search_item,
+               DeeObject *key) {
+ DREF DeeObject *elem,*iterator,*result = NULL; int temp;
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
     return NULL;
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  int temp;
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_CallPack(pred_eq,2,elem,search_item);
-   if unlikely(!pred_result)
-      goto err_elem;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareEq(elem,search_item);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,elem,key);
   if (temp != 0) {
    if unlikely(temp < 0)
       goto err_elem;
@@ -793,7 +860,7 @@ DeeSeq_RLocate(DeeObject *__restrict self,
  }
  Dee_Decref(iterator);
  /* */if unlikely(!elem) Dee_XClear(result);
- else if (!result) err_item_not_found(self,search_item);
+ else if (!result) err_item_not_found(self,keyed_search_item);
  return result;
 err_elem:
  Dee_Decref(elem);
@@ -805,38 +872,28 @@ err_iter:
 
 INTERN int DCALL
 DeeSeq_Contains(DeeObject *__restrict self,
-                DeeObject *__restrict elem,
-                DeeObject *pred_eq) {
- DREF DeeObject *iter,*item; int temp;
+                DeeObject *__restrict keyed_search_item,
+                DeeObject *key) {
+ DREF DeeObject *iter,*elem; int temp;
  iter = DeeObject_IterSelf(self);
  if unlikely(!iter) return -1;
- while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   pred_result = DeeObject_CallPack(pred_eq,2,elem,item);
-   Dee_Decref(item);
-   if unlikely(!pred_result)
-      return -1;
-   temp = DeeObject_Bool(pred_result);
-   Dee_Decref(pred_result);
-  } else {
-   temp = DeeObject_CompareEq(elem,item);
-   Dee_Decref(item);
-  }
+ while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+  temp = DeeObject_CompareKeyEq(keyed_search_item,elem,key);
   if (temp != 0) {
    Dee_Decref(iter);
    return temp;
   }
+  Dee_Decref(elem);
  }
  Dee_Decref(iter);
- return item ? 0 : -1;
+ return likely(elem) ? 0 : -1;
 }
 
 
 INTERN int DCALL
 DeeSeq_StartsWith(DeeObject *__restrict self,
-                  DeeObject *__restrict search_item,
-                  DeeObject *pred_eq) {
+                  DeeObject *__restrict keyed_search_item,
+                  DeeObject *key) {
  DeeTypeObject *tp_self;
  DREF DeeObject *result;
  ASSERT_OBJECT(self);
@@ -858,17 +915,8 @@ DeeSeq_StartsWith(DeeObject *__restrict self,
      goto err;
     }
 check:
-    if (pred_eq) {
-     DREF DeeObject *pred_result;
-     pred_result = DeeObject_CallPack(pred_eq,2,result,search_item);
-     Dee_Decref(result);
-     if unlikely(!pred_result) goto err;
-     error = DeeObject_Bool(pred_result);
-     Dee_Decref(pred_result);
-    } else {
-     error = DeeObject_CompareEq(result,search_item);
-     Dee_Decref(result);
-    }
+    error = DeeObject_CompareKeyEq(keyed_search_item,result,key);
+    Dee_Decref(result);
     return error;
    }
    if (has_noninherited_getitem(tp_self,seq)) {
@@ -903,8 +951,8 @@ err_empty:
 }
 INTERN int DCALL
 DeeSeq_EndsWith(DeeObject *__restrict self,
-                DeeObject *__restrict search_item,
-                DeeObject *pred_eq) {
+                DeeObject *__restrict keyed_search_item,
+                DeeObject *key) {
  DeeTypeObject *tp_self; size_t seq_length;
  DREF DeeObject *result,*temp;
  ASSERT_OBJECT(self);
@@ -928,17 +976,8 @@ DeeSeq_EndsWith(DeeObject *__restrict self,
      }
      if unlikely(!result) goto err;
 check:
-     if (pred_eq) {
-      DREF DeeObject *pred_result;
-      pred_result = DeeObject_CallPack(pred_eq,2,result,search_item);
-      Dee_Decref(result);
-      if unlikely(!pred_result) goto err;
-      error = DeeObject_Bool(pred_result);
-      Dee_Decref(pred_result);
-     } else {
-      error = DeeObject_CompareEq(result,search_item);
-      Dee_Decref(result);
-     }
+     error = DeeObject_CompareKeyEq(keyed_search_item,result,key);
+     Dee_Decref(result);
      return error;
     }
     if (has_noninherited_getitem(tp_self,seq)) {
@@ -1008,9 +1047,9 @@ err_temp:
 
 PRIVATE size_t DCALL
 iterator_find(DeeObject *__restrict iterator,
-              DeeObject *__restrict search_item,
+              DeeObject *__restrict keyed_search_item,
               size_t start, size_t end,
-              DeeObject *pred_eq) {
+              DeeObject *key) {
  DREF DeeObject *elem;
  size_t index = 0; int temp;
  size_t search_size = end - start;
@@ -1026,15 +1065,7 @@ iterator_find(DeeObject *__restrict iterator,
       goto err;
  }
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   /* Invoke the given predicate. */
-   pred_result = DeeObject_CallPack(pred_eq,2,elem,search_item);
-   if unlikely(!pred_result) temp = -1;
-   else { temp = DeeObject_Bool(pred_result); Dee_Decref(pred_result); }
-  } else {
-   temp = DeeObject_CompareEq(elem,search_item);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,elem,key);
   Dee_Decref(elem);
   if (temp != 0) {
    if unlikely(temp < 0) goto err;
@@ -1060,9 +1091,9 @@ err:
 
 PRIVATE size_t DCALL
 iterator_rfind(DeeObject *__restrict iterator,
-               DeeObject *__restrict search_item,
+               DeeObject *__restrict keyed_search_item,
                size_t start, size_t end,
-               DeeObject *pred_eq) {
+               DeeObject *key) {
  DREF DeeObject *elem;
  size_t index = 0; int temp;
  size_t search_size = end - start;
@@ -1079,15 +1110,7 @@ iterator_rfind(DeeObject *__restrict iterator,
       goto err;
  }
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  if (pred_eq) {
-   DREF DeeObject *pred_result;
-   /* Invoke the given predicate. */
-   pred_result = DeeObject_CallPack(pred_eq,2,elem,search_item);
-   if unlikely(!pred_result) temp = -1;
-   else { temp = DeeObject_Bool(pred_result); Dee_Decref(pred_result); }
-  } else {
-   temp = DeeObject_CompareEq(elem,search_item);
-  }
+  temp = DeeObject_CompareKeyEq(keyed_search_item,elem,key);
   Dee_Decref(elem);
   if (temp != 0) {
    if unlikely(temp < 0) goto err;
@@ -1114,8 +1137,8 @@ err:
 INTERN size_t DCALL
 DeeSeq_Find(DeeObject *__restrict self,
             size_t start, size_t end,
-            DeeObject *__restrict search_item,
-            DeeObject *pred_eq) {
+            DeeObject *__restrict keyed_search_item,
+            DeeObject *key) {
  DREF DeeObject *iterator; size_t result;
  DeeTypeObject *tp_self; size_t i,seq_length;
  DREF DeeObject *temp; int error;
@@ -1129,7 +1152,7 @@ DeeSeq_Find(DeeObject *__restrict self,
    if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
        is_noninherited_nsi(tp_self,seq,nsi)) {
     if (nsi->nsi_seqlike.nsi_find)
-        return (*nsi->nsi_seqlike.nsi_find)(self,start,end,search_item,pred_eq);
+        return (*nsi->nsi_seqlike.nsi_find)(self,start,end,keyed_search_item,key);
     if (nsi->nsi_seqlike.nsi_getitem_fast) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
@@ -1138,18 +1161,8 @@ DeeSeq_Find(DeeObject *__restrict self,
      for (i = start; i < end; ++i) {
       temp = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,i);
       if unlikely(!temp) continue;
-      if (pred_eq) {
-       DREF DeeObject *pred_result;
-       /* Invoke the given predicate. */
-       pred_result = DeeObject_CallPack(pred_eq,2,temp,search_item);
-       Dee_Decref(temp);
-       if unlikely(!pred_result) goto err;
-       error = DeeObject_Bool(pred_result);
-       Dee_Decref(pred_result);
-      } else {
-       error = DeeObject_CompareEq(temp,search_item);
-       Dee_Decref(temp);
-      }
+      error = DeeObject_CompareKeyEq(keyed_search_item,temp,key);
+      Dee_Decref(temp);
       if (error != 0) {
        if unlikely(error < 0) goto err;
        if unlikely(i == (size_t)-2 || i == (size_t)-1) {
@@ -1172,18 +1185,8 @@ DeeSeq_Find(DeeObject *__restrict self,
            continue;
        goto err;
       }
-      if (pred_eq) {
-       DREF DeeObject *pred_result;
-       /* Invoke the given predicate. */
-       pred_result = DeeObject_CallPack(pred_eq,2,temp,search_item);
-       Dee_Decref(temp);
-       if unlikely(!pred_result) goto err;
-       error = DeeObject_Bool(pred_result);
-       Dee_Decref(pred_result);
-      } else {
-       error = DeeObject_CompareEq(temp,search_item);
-       Dee_Decref(temp);
-      }
+      error = DeeObject_CompareKeyEq(keyed_search_item,temp,key);
+      Dee_Decref(temp);
       if (error != 0) {
        if unlikely(error < 0) goto err;
        if unlikely(i == (size_t)-2 || i == (size_t)-1) {
@@ -1212,18 +1215,8 @@ do_lookup_tpget:
            continue;
        goto err;
       }
-      if (pred_eq) {
-       DREF DeeObject *pred_result;
-       /* Invoke the given predicate. */
-       pred_result = DeeObject_CallPack(pred_eq,2,temp,search_item);
-       Dee_Decref(temp);
-       if unlikely(!pred_result) goto err;
-       error = DeeObject_Bool(pred_result);
-       Dee_Decref(pred_result);
-      } else {
-       error = DeeObject_CompareEq(temp,search_item);
-       Dee_Decref(temp);
-      }
+      error = DeeObject_CompareKeyEq(keyed_search_item,temp,key);
+      Dee_Decref(temp);
       if (error != 0) {
        if unlikely(error < 0) goto err;
        if unlikely(i == (size_t)-2 || i == (size_t)-1) {
@@ -1248,7 +1241,7 @@ do_lookup_tpget:
     /* Use iterators */
     if unlikely((iterator = (*seq->tp_iter_self)(self)) == NULL)
        goto err;
-    result = iterator_find(iterator,search_item,start,end,pred_eq);
+    result = iterator_find(iterator,keyed_search_item,start,end,key);
     Dee_Decref(iterator);
     return result;
    }
@@ -1266,8 +1259,8 @@ err_temp:
 INTERN size_t DCALL
 DeeSeq_RFind(DeeObject *__restrict self,
              size_t start, size_t end,
-             DeeObject *__restrict search_item,
-             DeeObject *pred_eq) {
+             DeeObject *__restrict keyed_search_item,
+             DeeObject *key) {
  DREF DeeObject *iterator; size_t result;
  DeeTypeObject *tp_self; size_t i,seq_length;
  DREF DeeObject *temp; int error;
@@ -1281,7 +1274,7 @@ DeeSeq_RFind(DeeObject *__restrict self,
    if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
        is_noninherited_nsi(tp_self,seq,nsi)) {
     if (nsi->nsi_seqlike.nsi_rfind)
-        return (*nsi->nsi_seqlike.nsi_rfind)(self,start,end,search_item,pred_eq);
+        return (*nsi->nsi_seqlike.nsi_rfind)(self,start,end,keyed_search_item,key);
     if (nsi->nsi_seqlike.nsi_getitem_fast) {
      seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
      if unlikely(seq_length == (size_t)-1) goto err;
@@ -1291,18 +1284,8 @@ DeeSeq_RFind(DeeObject *__restrict self,
      do {
       temp = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,i);
       if unlikely(!temp) continue;
-      if (pred_eq) {
-       DREF DeeObject *pred_result;
-       /* Invoke the given predicate. */
-       pred_result = DeeObject_CallPack(pred_eq,2,temp,search_item);
-       Dee_Decref(temp);
-       if unlikely(!pred_result) goto err;
-       error = DeeObject_Bool(pred_result);
-       Dee_Decref(pred_result);
-      } else {
-       error = DeeObject_CompareEq(temp,search_item);
-       Dee_Decref(temp);
-      }
+      error = DeeObject_CompareKeyEq(keyed_search_item,temp,key);
+      Dee_Decref(temp);
       if (error != 0) {
        if unlikely(error < 0) goto err;
        if unlikely(i == (size_t)-2 || i == (size_t)-1) {
@@ -1326,18 +1309,8 @@ DeeSeq_RFind(DeeObject *__restrict self,
            continue;
        goto err;
       }
-      if (pred_eq) {
-       DREF DeeObject *pred_result;
-       /* Invoke the given predicate. */
-       pred_result = DeeObject_CallPack(pred_eq,2,temp,search_item);
-       Dee_Decref(temp);
-       if unlikely(!pred_result) goto err;
-       error = DeeObject_Bool(pred_result);
-       Dee_Decref(pred_result);
-      } else {
-       error = DeeObject_CompareEq(temp,search_item);
-       Dee_Decref(temp);
-      }
+      error = DeeObject_CompareKeyEq(keyed_search_item,temp,key);
+      Dee_Decref(temp);
       if (error != 0) {
        if unlikely(error < 0) goto err;
        if unlikely(i == (size_t)-2 || i == (size_t)-1) {
@@ -1367,18 +1340,8 @@ do_lookup_tpget:
            continue;
        goto err;
       }
-      if (pred_eq) {
-       DREF DeeObject *pred_result;
-       /* Invoke the given predicate. */
-       pred_result = DeeObject_CallPack(pred_eq,2,temp,search_item);
-       Dee_Decref(temp);
-       if unlikely(!pred_result) goto err;
-       error = DeeObject_Bool(pred_result);
-       Dee_Decref(pred_result);
-      } else {
-       error = DeeObject_CompareEq(temp,search_item);
-       Dee_Decref(temp);
-      }
+      error = DeeObject_CompareKeyEq(keyed_search_item,temp,key);
+      Dee_Decref(temp);
       if (error != 0) {
        if unlikely(error < 0) goto err;
        if unlikely(i == (size_t)-2 || i == (size_t)-1) {
@@ -1403,7 +1366,7 @@ do_lookup_tpget:
     /* Use iterators */
     if unlikely((iterator = (*seq->tp_iter_self)(self)) == NULL)
        goto err;
-    result = iterator_rfind(iterator,search_item,start,end,pred_eq);
+    result = iterator_rfind(iterator,keyed_search_item,start,end,key);
     Dee_Decref(iterator);
     return result;
    }
@@ -1420,10 +1383,10 @@ err_temp:
 }
 
 INTERN DREF DeeObject *DCALL DeeSeq_Join(DeeObject *__restrict self, DeeObject *__restrict items);
-INTERN DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_Split(DeeObject *__restrict self, DeeObject *__restrict sep, DeeObject *pred_eq);
+INTERN DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_Split(DeeObject *__restrict self, DeeObject *__restrict sep, DeeObject *key);
 
 INTERN DREF DeeObject *DCALL
 DeeSeq_Reversed(DeeObject *__restrict self) {
@@ -1437,38 +1400,38 @@ DeeSeq_Reversed(DeeObject *__restrict self) {
 
 INTERN DREF DeeObject *DCALL
 DeeSeq_Sorted(DeeObject *__restrict self,
-              DeeObject *pred_lo) {
+              DeeObject *key) {
  DREF DeeObject *result;
  /* TODO: Using lists for this is less than optimal... */
  result = DeeList_FromSequence(self);
  if unlikely(!result) goto done;
- if unlikely(DeeList_Sort(result,pred_lo))
+ if unlikely(DeeList_Sort(result,key))
     Dee_Clear(result);
 done:
  return result;
 }
 
 
-INTERN DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN int DCALL DeeSeq_StartsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN int DCALL DeeSeq_EndsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN size_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN size_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *pred_eq);
-INTERN DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *__restrict self, DeeObject *__restrict sep_seq, DeeObject *pred_eq);
+INTERN DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN int DCALL DeeSeq_StartsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN int DCALL DeeSeq_EndsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN size_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN size_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *__restrict self, DeeObject *__restrict sep_seq, DeeObject *key);
 
 INTERN size_t DCALL
 DeeSeq_CountSeq(DeeObject *__restrict self,
                 DeeObject *__restrict seq,
-                DeeObject *pred_eq) {
+                DeeObject *key) {
  (void)self;
  (void)seq;
- (void)pred_eq;
+ (void)key;
  /*
   * >> function copy_iterator(seq,iter,i) {
   * >>     try {
@@ -1485,7 +1448,7 @@ DeeSeq_CountSeq(DeeObject *__restrict self,
   * >>     try {
   * >>         foreach(local elem_b: b) {
   * >>             local elem_a = a.operator __next__();
-  * >>             if (!pred_eq(elem_a,elem_b))
+  * >>             if (!key(elem_a,elem_b))
   * >>                 return false;
   * >>         }
   * >>     } catch (Signal.StopIteration) {
@@ -1506,7 +1469,7 @@ DeeSeq_CountSeq(DeeObject *__restrict self,
   * >> local i = 0;
   * >> foreach(local elem: iter) {
   * >>     ++i;
-  * >>     if (pred_eq(elem,first)) {
+  * >>     if (key(elem,first)) {
   * >>         if (iter_same(copy_iterator(self,iter,i),
   * >>                       copy_iterator(seq,head,1)))
   * >>             ++result;
