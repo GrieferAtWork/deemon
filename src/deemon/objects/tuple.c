@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/none.h>
+#include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/bool.h>
 #include <deemon/thread.h>

@@ -327,6 +327,7 @@ struct type_nsi {
 };
 
 
+
 /* Lookup the closes NSI descriptor for `tp', or return `NULL'
  * if the top-most type implementing any sequence operator doesn't
  * expose NSI functionality. */
@@ -580,6 +581,19 @@ DFUNDEF /*owned(Dee_Free)*/DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              size_t *__restrict plength,
                              size_t *__restrict pallocated);
+
+
+#ifdef GUARD_DEEMON_OBJMETHOD_H
+#ifdef CONFIG_BUILDING_DEEMON
+#define DeeSeq_KeyIsID(key) ((DeeObject *)REQUIRES_OBJECT(key) == (DeeObject *)&_DeeObject_IdObjMethod)
+INTDEF DeeClsMethodObject _DeeObject_IdObjMethod;
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeSeq_KeyIsID(key) ((key) && DeeClsMethod_Check(key) && DeeClsMethod_FUNC(key) == &_DeeObject_IdFunc)
+DFUNDEF DREF DeeObject *DCALL
+_DeeObject_IdFunc(DeeObject *__restrict self, size_t argc,
+                  DeeObject **__restrict argv);
+#endif /* !CONFIG_BUILDING_DEEMON */
+#endif /* GUARD_DEEMON_OBJMETHOD_H */
 
 
 DECL_END

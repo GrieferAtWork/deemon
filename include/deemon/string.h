@@ -956,9 +956,9 @@ DREF DeeObject *DeeString_Chr(uint32_t ch);
        (sizeof(ch) == 1 ? _DeeString_Chr8((uint8_t)(ch)) : \
         sizeof(ch) == 2 ? _DeeString_Chr16((uint16_t)(ch)) : \
                           _DeeString_Chr32((uint32_t)(ch)))
-DFUNDEF DREF DeeObject *DCALL _DeeString_Chr8(uint8_t ch);
-DFUNDEF DREF DeeObject *DCALL _DeeString_Chr16(uint16_t ch);
-DFUNDEF DREF DeeObject *DCALL _DeeString_Chr32(uint32_t ch);
+DFUNDEF DREF DeeObject *(DCALL _DeeString_Chr8)(uint8_t ch);
+DFUNDEF DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch);
+DFUNDEF DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch);
 #endif
 
 

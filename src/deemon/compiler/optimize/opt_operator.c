@@ -80,7 +80,7 @@ err:
 
 
 INTDEF DREF DeeObject *DCALL
-object_id_method(DeeObject *__restrict self,
+_DeeObject_IdFunc(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv);
 
 /* Returns `ITER_DONE' if the call isn't allowed. */
@@ -100,7 +100,7 @@ emulate_method_call(DeeObject *__restrict self,
   if (method == (dobjmethod_t)&string_decode)
       return emulate_object_decode(((DeeObjMethodObject *)self)->om_self,argc,argv);
   /* `object.id()' should not be evaluated at compile-time! */
-  if (method == (dobjmethod_t)&object_id_method)
+  if (method == (dobjmethod_t)&_DeeObject_IdFunc)
       return ITER_DONE;
  }
  return DeeObject_Call(self,argc,argv);

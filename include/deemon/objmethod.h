@@ -83,6 +83,8 @@ struct kwclsmethod_object {
 
 DDATDEF DeeTypeObject DeeClsMethod_Type;
 DDATDEF DeeTypeObject DeeKwClsMethod_Type;
+#define DeeClsMethod_FUNC(x)       ((DeeClsMethodObject *)REQUIRES_OBJECT(x))->cm_func
+#define DeeClsMethod_TYPE(x)       ((DeeClsMethodObject *)REQUIRES_OBJECT(x))->cm_type
 #define DeeClsMethod_Check(x)        DeeObject_InstanceOfExact(x,&DeeClsMethod_Type)   /* `_classmethod' is `final'. */
 #define DeeClsMethod_CheckExact(x)   DeeObject_InstanceOfExact(x,&DeeClsMethod_Type)
 #define DeeKwClsMethod_Check(x)      DeeObject_InstanceOfExact(x,&DeeKwClsMethod_Type) /* `_kwclassmethod' is `final'. */
@@ -190,6 +192,19 @@ INTDEF DREF DeeObject *DCALL DeeKwCMethod_CallFunc_d(dkwcmethod_t fun, size_t ar
 INTDEF DREF DeeObject *DCALL DeeKwObjMethod_CallFunc_d(dkwobjmethod_t fun, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #endif
 #endif
+
+
+#ifdef GUARD_DEEMON_SEQ_H
+#ifdef CONFIG_BUILDING_DEEMON
+#define DeeSeq_KeyIsID(key) ((DeeObject *)REQUIRES_OBJECT(key) == (DeeObject *)&_DeeObject_IdObjMethod)
+INTDEF DeeClsMethodObject _DeeObject_IdObjMethod;
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeSeq_KeyIsID(key) ((key) && DeeClsMethod_Check(key) && DeeClsMethod_FUNC(key) == &_DeeObject_IdFunc)
+DFUNDEF DREF DeeObject *DCALL
+_DeeObject_IdFunc(DeeObject *__restrict self, size_t argc,
+                  DeeObject **__restrict argv);
+#endif /* !CONFIG_BUILDING_DEEMON */
+#endif /* GUARD_DEEMON_SEQ_H */
 
 DECL_END
 

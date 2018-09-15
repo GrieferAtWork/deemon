@@ -112,20 +112,6 @@ DFUNDEF size_t DCALL
 DeeList_Erase(DeeObject *__restrict self,
               size_t index, size_t count);
 
-/* @return: 0 : The given `keyed_search_item' count not found found.
- * @return: 1 : The given `keyed_search_item' was deleted once.
- * @return: -1: An error occurred. */
-DFUNDEF int DCALL
-DeeList_Remove(DeeObject *__restrict self,
-               size_t start, size_t end,
-               DeeObject *__restrict keyed_search_item,
-               DeeObject *key);
-DFUNDEF int DCALL
-DeeList_RRemove(DeeObject *__restrict self,
-                size_t start, size_t end,
-                DeeObject *__restrict keyed_search_item,
-                DeeObject *key);
-
 /* @return: * :   The popped element.
  * @return: NULL: The given index was out-of-bounds and an IndexError was thrown. */
 DFUNDEF DREF DeeObject *DCALL DeeList_Pop(DeeObject *__restrict self, dssize_t index);
@@ -136,7 +122,6 @@ DFUNDEF bool DCALL DeeList_Clear(DeeObject *__restrict self);
 
 /* Sort the given list ascendingly, or according to `key' */
 DFUNDEF int DCALL DeeList_Sort(DeeObject *__restrict self, DeeObject *key);
-DFUNDEF DREF DeeObject *DCALL DeeList_Sorted(DeeObject *__restrict self, DeeObject *key);
 
 /* Reverse the order of the elements of `self' */
 DFUNDEF void DCALL DeeList_Reverse(DeeObject *__restrict self);

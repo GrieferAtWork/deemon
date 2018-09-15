@@ -420,11 +420,12 @@ cat_size(Cat *__restrict self) {
  return DeeInt_NewSize(result);
 }
 PRIVATE DREF DeeObject *DCALL
-cat_contains(Cat *__restrict self, DeeObject *__restrict elem) {
+cat_contains(Cat *__restrict self,
+             DeeObject *__restrict search_item) {
  size_t i;
  for (i = 0; i < DeeTuple_SIZE(self); ++i) {
   DREF DeeObject *result; int error;
-  result = DeeObject_ContainsObject(DeeTuple_GET(self,i),elem);
+  result = DeeObject_ContainsObject(DeeTuple_GET(self,i),search_item);
   if unlikely(!result) return NULL;
   error = DeeObject_Bool(result);
   if (error != 0) {
@@ -463,11 +464,11 @@ cat_getitem(Cat *__restrict self,
 PRIVATE size_t DCALL
 cat_nsi_find(Cat *__restrict self,
              size_t start, size_t end,
-             DeeObject *__restrict elem,
+             DeeObject *__restrict keyed_search_item,
              DeeObject *key) {
  size_t temp,i,offset = 0;
  for (i = 0; i < DeeTuple_SIZE(self); ++i) {
-  temp = DeeSeq_Find(DeeTuple_GET(self,i),start,end,elem,key);
+  temp = DeeSeq_Find(DeeTuple_GET(self,i),start,end,keyed_search_item,key);
   if unlikely(temp == (size_t)-2) goto err;
   if (temp != (size_t)-1) {
    if (OVERFLOW_UADD(offset,temp,&offset))
@@ -494,7 +495,7 @@ err:
 PRIVATE size_t DCALL
 cat_nsi_rfind(Cat *__restrict self,
               size_t start, size_t end,
-              DeeObject *__restrict elem,
+              DeeObject *__restrict keyed_search_item,
               DeeObject *key) {
  size_t seq_min = 0,seq_max;
  size_t start_offset = 0,temp;
@@ -519,7 +520,7 @@ cat_nsi_rfind(Cat *__restrict self,
   /* The first used sequence contains `temp' items! */
   if (end <= temp) {
    /* All items that should be searched for are located within a single sub-sequence! */
-   temp = DeeSeq_RFind(DeeTuple_GET(self,seq_min),start,end,elem,key);
+   temp = DeeSeq_RFind(DeeTuple_GET(self,seq_min),start,end,keyed_search_item,key);
    goto check_final_temp_from_first;
   }
   seq_lengths = (size_t *)Dee_AMalloc((seq_max - seq_min) * sizeof(size_t));
@@ -546,9 +547,9 @@ cat_nsi_rfind(Cat *__restrict self,
  if (effective_length >= end) {
   temp = DeeSeq_RFind(DeeTuple_GET(self,seq_max - 1),
                       0,end - seq_lengths[(seq_max - seq_min) - 2],
-                      elem,key);
+                      keyed_search_item,key);
  } else {
-  temp = DeeSeq_RFind(DeeTuple_GET(self,seq_max - 1),0,(size_t)-1,elem,key);
+  temp = DeeSeq_RFind(DeeTuple_GET(self,seq_max - 1),0,(size_t)-1,keyed_search_item,key);
  }
 check_temp_for_errors:
  if unlikely(temp == (size_t)-2) goto err;
@@ -567,14 +568,14 @@ check_temp_for_errors:
  if (seq_max > seq_min + 1) {
   temp = DeeSeq_RFind(DeeTuple_GET(self,seq_max - 1),
                       0,(size_t)-1,
-                      elem,key);
+                      keyed_search_item,key);
   goto check_temp_for_errors;
  }
  ASSERT(seq_min + 1 == seq_max);
  Dee_AFree(seq_lengths);
  /* Search the first sequence. */
  temp = DeeSeq_RFind(DeeTuple_GET(self,seq_min),
-                     start,(size_t)-1,elem,key);
+                     start,(size_t)-1,keyed_search_item,key);
 check_final_temp_from_first:
  if likely(temp != (size_t)-2) {
   if (temp != (size_t)-1) {

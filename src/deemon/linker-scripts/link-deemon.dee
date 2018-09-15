@@ -50,6 +50,8 @@ print out: "\t; stdcall symbols without a leading underscore.";
 print out: "\t; See this mail that noone ever bothered to reply to:";
 print out: "\t; https://cygwin.com/ml/cygwin/2001-03/msg00514.html";
 for (local name: symbols) {
+	if ("_"+name in symbols)
+		continue;
 	print out: "\t"+name[1:]+"="+name;
 }
 local out = file.open("link-deemon-gcc.def","w");
@@ -59,6 +61,8 @@ print out: "\t; stdcall symbols with a leading underscore.";
 print out: "\t; See this mail that noone ever bothered to reply to:";
 print out: "\t; https://cygwin.com/ml/cygwin/2001-03/msg00514.html";
 for (local name: symbols) {
+	if ("_"+name in symbols)
+		continue;
 	print out: "\t"+name+"="+name[1:];
 }
 

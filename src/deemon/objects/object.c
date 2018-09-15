@@ -28,6 +28,7 @@
 #include <deemon/file.h>
 #include <deemon/arg.h>
 #include <deemon/tuple.h>
+#include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
@@ -1357,9 +1358,9 @@ object_setattr(DeeObject *__restrict self,
  return_reference_(value);
 }
 
-INTERN DREF DeeObject *DCALL
-object_id_method(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PUBLIC DREF DeeObject *DCALL
+_DeeObject_IdFunc(DeeObject *__restrict self, size_t argc,
+                  DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":id"))
      return NULL;
  return DeeInt_NewUIntptr(DeeObject_Id(self));
@@ -1395,9 +1396,17 @@ err:
 }
 
 
+INTERN DEFINE_CLSMETHOD(_DeeObject_IdObjMethod,_DeeObject_IdFunc,&DeeObject_Type);
+PRIVATE struct type_member object_class_members[] = {
+    TYPE_MEMBER_CONST_DOC("id",&_DeeObject_IdObjMethod,
+                          "Alias of #i:id (to provide a static instance to return when "
+                          "calling ${object.id} for the purposes of creating a key function)"),
+    TYPE_MEMBER_END
+};
+
 PRIVATE struct type_method object_methods[] = {
     /* Helper function: `foo.id()' returns a unique id for any object. */
-    { "id",              &object_id_method,
+    { "id",              &_DeeObject_IdFunc,
       DOC("->int\n"
           "Returns a unique id identifying this specific object instance") },
     /* Utility function: Return the size of a given object (in bytes) */

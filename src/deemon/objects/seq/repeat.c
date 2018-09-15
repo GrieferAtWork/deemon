@@ -389,17 +389,13 @@ repeat_nsi_getitem(Repeat *__restrict self, size_t index) {
 }
 
 PRIVATE size_t DCALL
-repeat_nsi_find(Repeat *__restrict self,
-                size_t start, size_t end,
-                DeeObject *__restrict keyed_search_item,
-                DeeObject *key) {
+repeat_nsi_find(Repeat *__restrict self, size_t start, size_t end,
+                DeeObject *__restrict keyed_search_item, DeeObject *key) {
  return DeeSeq_Find(self->r_seq,start,end,keyed_search_item,key);
 }
 PRIVATE size_t DCALL
-repeat_nsi_rfind(Repeat *__restrict self,
-                 size_t start, size_t end,
-                 DeeObject *__restrict keyed_search_item,
-                 DeeObject *key) {
+repeat_nsi_rfind(Repeat *__restrict self, size_t start, size_t end,
+                 DeeObject *__restrict keyed_search_item, DeeObject *key) {
  size_t result;
  result = DeeSeq_RFind(self->r_seq,start,end,keyed_search_item,key);
  if (result != (size_t)-1 && result != (size_t)-2) {

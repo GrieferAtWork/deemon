@@ -468,11 +468,13 @@ again:
  ASSERT(count != (size_t)-1);
  return count;
 }
-PUBLIC int DCALL
-DeeList_Remove(DeeObject *__restrict self,
-               size_t start, size_t end,
-               DeeObject *__restrict keyed_search_item,
-               DeeObject *key) {
+
+/* @return: 0 : The given `keyed_search_item' count not found found.
+ * @return: 1 : The given `keyed_search_item' was deleted once.
+ * @return: -1: An error occurred. */
+INTERN int DCALL
+DeeList_Remove(DeeObject *__restrict self, size_t start, size_t end,
+               DeeObject *__restrict keyed_search_item, DeeObject *key) {
  DeeObject **vector; size_t i,length;
  ASSERT_OBJECT_TYPE(self,&DeeList_Type);
  ASSERT_OBJECT_OPT(key);
@@ -518,11 +520,13 @@ again:
  DeeList_LockEndRead(self);
  return 0;
 }
-PUBLIC int DCALL
-DeeList_RRemove(DeeObject *__restrict self,
-                size_t start, size_t end,
-                DeeObject *__restrict keyed_search_item,
-                DeeObject *key) {
+
+/* @return: 0 : The given `keyed_search_item' count not found found.
+ * @return: 1 : The given `keyed_search_item' was deleted once.
+ * @return: -1: An error occurred. */
+INTERN int DCALL
+DeeList_RRemove(DeeObject *__restrict self, size_t start, size_t end,
+                DeeObject *__restrict keyed_search_item, DeeObject *key) {
  DeeObject **vector; size_t i,length;
  ASSERT_OBJECT_TYPE(self,&DeeList_Type);
  ASSERT_OBJECT_OPT(key);
@@ -638,10 +642,8 @@ err:
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
 INTERN size_t DCALL
-DeeList_RemoveAll(List *__restrict self,
-                  size_t start, size_t end,
-                  DeeObject *__restrict keyed_search_item,
-                  DeeObject *key) {
+DeeList_RemoveAll(List *__restrict self, size_t start, size_t end,
+                  DeeObject *__restrict keyed_search_item, DeeObject *key) {
  DeeObject **vector;
  size_t i,length,result;
  DeeList_LockRead(self);
@@ -2400,7 +2402,7 @@ err:
  return -1;
 }
 
-PUBLIC DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 DeeList_Sorted(DeeObject *__restrict self, DeeObject *key) {
  DeeObject **oldv; size_t i,objc;
  DeeTupleObject *result;
@@ -2443,22 +2445,33 @@ err:
  return NULL;
 }
 
+
+INTDEF struct keyword seq_sort_kwlist[];
 PRIVATE DREF DeeObject *DCALL
-list_sort(List *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+list_sort(List *__restrict self, size_t argc,
+          DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:sort",&key) ||
-     DeeList_Sort((DeeObject *)self,key))
-     return NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:sort",&key))
+     goto err;
+ if (DeeNone_Check(key))
+     key = NULL;
+ if (DeeList_Sort((DeeObject *)self,key))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-list_sorted(List *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+list_sorted(List *__restrict self, size_t argc,
+            DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:sorted",&key))
-     return NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:sorted",&key))
+     goto err;
+ if (DeeNone_Check(key))
+     key = NULL;
  return DeeList_Sorted((DeeObject *)self,key);
+err:
+ return NULL;
 }
 
 
@@ -2651,19 +2664,24 @@ PRIVATE struct type_method list_methods[] = {
       DOC("->object\nSame as ${this.pop(-1)}") },
 
     /* List ordering functions. */
-    { "reverse", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_reverse,
+    { "reverse",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_reverse,
       DOC("()\n"
           "Reverse the order of all the elements of @this list") },
-    { "sort", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_sort,
+    { "sort",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_sort,
       DOC("()\n"
           "(callable key)\n"
-          "Sort the elements of @this list in ascending order, or in accordance to @key") },
-    { "sorted", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_sorted,
+          "Sort the elements of @this list in ascending order, or in accordance to @key"),
+      TYPE_METHOD_FKWDS },
+    { "sorted",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_sorted,
       DOC("->sequence\n"
           "(callable key)->sequence\n"
           "Return a sequence that contains all elements from @this sequence, "
           "but sorted in ascending order, or in accordance to @key\n"
-          "The type of sequence returned is implementation-defined") },
+          "The type of sequence returned is implementation-defined"),
+      TYPE_METHOD_FKWDS },
 
     /* List buffer functions. */
     { "reserve", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_reserve,

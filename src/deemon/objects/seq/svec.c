@@ -573,10 +573,8 @@ rvec_nsi_cmpdelitem(RefVector *__restrict self, size_t index,
 }
 
 PRIVATE size_t DCALL
-rvec_nsi_find(RefVector *__restrict self,
-              size_t start, size_t end,
-              DeeObject *__restrict keyed_search_item,
-              DeeObject *key) {
+rvec_nsi_find(RefVector *__restrict self, size_t start, size_t end,
+              DeeObject *__restrict keyed_search_item, DeeObject *key) {
  size_t i;
  DREF DeeObject *item; int temp;
  if (start > self->rv_length)
@@ -595,10 +593,8 @@ err:
  return (size_t)-2;
 }
 PRIVATE size_t DCALL
-rvec_nsi_rfind(RefVector *__restrict self,
-               size_t start, size_t end,
-               DeeObject *__restrict keyed_search_item,
-               DeeObject *key) {
+rvec_nsi_rfind(RefVector *__restrict self, size_t start, size_t end,
+               DeeObject *__restrict keyed_search_item, DeeObject *key) {
  size_t i;
  DREF DeeObject *item; int temp;
  if (start > self->rv_length)
@@ -621,10 +617,8 @@ err:
 
 
 PRIVATE int DCALL
-rvec_nsi_remove(RefVector *__restrict self,
-                size_t start, size_t end,
-                DeeObject *__restrict keyed_search_item,
-                DeeObject *key) {
+rvec_nsi_remove(RefVector *__restrict self, size_t start, size_t end,
+                DeeObject *__restrict keyed_search_item, DeeObject *key) {
  size_t i;
  DREF DeeObject *item; int temp;
  if (!RefVector_IsWritable(self))
@@ -649,10 +643,8 @@ err:
  return -1;
 }
 PRIVATE int DCALL
-rvec_nsi_rremove(RefVector *__restrict self,
-                 size_t start, size_t end,
-                 DeeObject *__restrict keyed_search_item,
-                 DeeObject *key) {
+rvec_nsi_rremove(RefVector *__restrict self, size_t start, size_t end,
+                 DeeObject *__restrict keyed_search_item, DeeObject *key) {
  size_t i;
  DREF DeeObject *item; int temp;
  if (!RefVector_IsWritable(self))

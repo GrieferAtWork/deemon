@@ -1001,20 +1001,22 @@ seq_parity(DeeObject *__restrict self,
  result = DeeSeq_Parity(self);
  return unlikely(result < 0) ? NULL : DeeObject_NewRef(DeeBool_For(result));
 }
+
+INTERN struct keyword seq_sort_kwlist[] = { K(key), KEND };
 PRIVATE DREF DeeObject *DCALL
-seq_min(DeeObject *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+seq_min(DeeObject *__restrict self, size_t argc,
+        DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:min",&key))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:min",&key))
      return NULL;
  if (DeeNone_Check(key)) key = NULL;
  return DeeSeq_Min(self,key);
 }
 PRIVATE DREF DeeObject *DCALL
-seq_max(DeeObject *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+seq_max(DeeObject *__restrict self, size_t argc,
+        DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:max",&key))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:max",&key))
      return NULL;
  if (DeeNone_Check(key)) key = NULL;
  return DeeSeq_Max(self,key);
@@ -1330,10 +1332,10 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-seq_sorted(DeeObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+seq_sorted(DeeObject *__restrict self, size_t argc,
+           DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:sorted",&key))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:sorted",&key))
      goto err;
  if (DeeNone_Check(key))
      key = NULL;
@@ -1674,10 +1676,10 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-seq_sort(DeeObject *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+seq_sort(DeeObject *__restrict self, size_t argc,
+         DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:sort",&key))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:sort",&key))
      goto err;
  if (DeeNone_Check(key))
      key = NULL;
@@ -1786,7 +1788,7 @@ INTERN struct type_method seq_methods[] = {
           ">   result = !result;\n"
           "> return result;\n"
           ">}") },
-    { "min", &seq_min,
+    { "min", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_min,
       DOC("(callable key=none)->object\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns the smallest element of @this sequence\n"
@@ -1813,8 +1815,9 @@ INTERN struct type_method seq_methods[] = {
           "> if (result !is bound)\n"
           ">  result = none;\n"
           "> return result;\n"
-          ">}") },
-    { "max", &seq_max,
+          ">}"),
+      TYPE_METHOD_FKWDS },
+    { "max", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_max,
       DOC("(callable key=none)->object\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns the greatest element of @this sequence\n"
@@ -1840,7 +1843,8 @@ INTERN struct type_method seq_methods[] = {
           "> if (result !is bound)\n"
           ">  result = none;\n"
           "> return result;\n"
-          ">}") },
+          ">}"),
+      TYPE_METHOD_FKWDS },
     { "count", &seq_count,
       DOC("(elem,callable key=none)->int\n"
           "@param elem The element to search for\n"
@@ -2160,11 +2164,13 @@ INTERN struct type_method seq_methods[] = {
       DOC("->sequence\n"
           "Return a sequence that contains the elements of @this sequence in reverse order\n"
           "The point at which @this sequence is enumerated is implementation-defined") },
-    { "sorted", &seq_sorted,
+    { "sorted",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_sorted,
       DOC("(callable key=none)->sequence\n"
           "Return a sequence that contains all elements from @this sequence, "
           "but sorted in ascending order, or in accordance to @key\n"
-          "The point at which @this sequence is enumerated is implementation-defined") },
+          "The point at which @this sequence is enumerated is implementation-defined"),
+      TYPE_METHOD_FKWDS },
     { "segments", &seq_segments,
       DOC("(int segment_size)->sequence\n"
           "@throw IntegerOverflow @segment_size is negative, or too large\n"
@@ -3030,7 +3036,8 @@ INTERN struct type_method seq_methods[] = {
           ">function reverse() {\n"
           "> this := (this as sequence from deemon).reversed();\n"
           ">}") },
-    { "sort", &seq_sort,
+    { "sort",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_sort,
       DOC("(callable key=none)\n"
           "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
@@ -3039,7 +3046,8 @@ INTERN struct type_method seq_methods[] = {
           "this function as follows (s.a. #op:assign):\n"
           ">function sort(key = none) {\n"
           "> this := (this as sequence from deemon).sorted(key);\n"
-          ">}") },
+          ">}"),
+      TYPE_METHOD_FKWDS },
 
 
     /* Old function names/deprecated functions. */
@@ -3765,7 +3773,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             ">    this.erase(start,mylen - start);\n"
                             ">    return;\n"
                             ">   }\n"
-                            ">   if (tp.hasprivateoperator(\"\"del[])) {\n"
+                            ">   if (tp.hasprivateoperator(\"del[]\")) {\n"
                             ">    while (end > start) {\n"
                             ">     --end;\n"
                             ">     del this[end];\n"

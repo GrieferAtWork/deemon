@@ -227,11 +227,8 @@ EXPORTS
 	_DeeList_NewVector@8=DeeList_NewVector@8
 	_DeeList_NewVectorInherited@8=DeeList_NewVectorInherited@8
 	_DeeList_Pop@8=DeeList_Pop@8
-	_DeeList_RRemove@20=DeeList_RRemove@20
-	_DeeList_Remove@20=DeeList_Remove@20
 	_DeeList_Reverse@4=DeeList_Reverse@4
 	_DeeList_Sort@8=DeeList_Sort@8
-	_DeeList_Sorted@8=DeeList_Sorted@8
 	_DeeMapping_UnpackItemPair@12=DeeMapping_UnpackItemPair@12
 	_DeeMem_ClearCaches@4=DeeMem_ClearCaches@4
 	_DeeModule_Get@4=DeeModule_Get@4
@@ -264,6 +261,7 @@ EXPORTS
 	_DeeNotify_Broadcast@8=DeeNotify_Broadcast@8
 	_DeeNotify_BroadcastString@8=DeeNotify_BroadcastString@8
 	_DeeNotify_EndListen@16=DeeNotify_EndListen@16
+	_DeeObjMethod_Name@4=DeeObjMethod_Name@4
 	_DeeObjMethod_New@8=DeeObjMethod_New@8
 	_DeeObject_Add@8=DeeObject_Add@8
 	_DeeObject_AddInt@8=DeeObject_AddInt@8
@@ -307,6 +305,7 @@ EXPORTS
 	_DeeObject_CompareGeObject@8=DeeObject_CompareGeObject@8
 	_DeeObject_CompareGr@8=DeeObject_CompareGr@8
 	_DeeObject_CompareGrObject@8=DeeObject_CompareGrObject@8
+	_DeeObject_CompareKeyEq@12=DeeObject_CompareKeyEq@12
 	_DeeObject_CompareLe@8=DeeObject_CompareLe@8
 	_DeeObject_CompareLeObject@8=DeeObject_CompareLeObject@8
 	_DeeObject_CompareLo@8=DeeObject_CompareLo@8
@@ -625,6 +624,7 @@ EXPORTS
 	_Dee_vdprintf@8=Dee_vdprintf@8
 	_Dee_vsnprintf@16=Dee_vsnprintf@16
 	_Dee_vsprintf@12=Dee_vsprintf@12
+	__DeeObject_IdFunc@12=_DeeObject_IdFunc@12
 	__DeeString_Chr16@4=_DeeString_Chr16@4
 	__DeeString_Chr32@4=_DeeString_Chr32@4
 	__DeeString_Chr8@4=_DeeString_Chr8@4
