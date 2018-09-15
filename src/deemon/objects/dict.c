@@ -1312,8 +1312,10 @@ dict_popsomething(DeeDictObject *__restrict self,
   return NULL;
  }
  iter = self->d_elem;
- while ((ASSERT(iter != self->d_elem+(self->d_mask+1)),
-         iter->di_key && iter->di_key != dummy)) ++iter;
+ while (!iter->di_key || iter->di_key == dummy) {
+  ASSERT(iter != self->d_elem + self->d_mask);
+  ++iter;
+ }
  DeeTuple_SET(result,0,iter->di_key); /* Inherit reference. */
  DeeTuple_SET(result,1,iter->di_value); /* Inherit reference. */
  Dee_Incref(dummy);
@@ -1423,20 +1425,20 @@ PRIVATE struct type_method dict_methods[] = {
       DOC("()\n"
           "Clear all values from @this :dict") },
     { "keys", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_keys,
-      DOC("()->dict.keys\n"
+      DOC("->dict.keys\n"
           "@return A proxy sequence for viewing the keys of @this :dict") },
     { "values", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_values,
-      DOC("()->dict.values\n"
+      DOC("->dict.values\n"
           "@return A proxy sequence for viewing the values of @this :dict") },
     { "items", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_items,
-      DOC("()->dict.items\n"
+      DOC("->dict.items\n"
           "@return A proxy sequence for viewing the key-item pairs of @this :dict") },
     { "popitem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_popsomething,
-      DOC("()->(object,object)\n"
+      DOC("->(object,object)\n"
           "@return A random pair key-item pair that has been removed\n"
           "@throw ValueError @this :dict was empty") },
     { "setdefault", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setdefault,
-      DOC("(key,def=none)\n"
+      DOC("(key,def=none)->object\n"
           "@return The object currently assigned to @key\n"
           "Lookup @key in @this dict and return its value if found. Otherwise, assign @def to @key and return it instead") },
     { "setold", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setold,
