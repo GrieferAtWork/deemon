@@ -1215,12 +1215,15 @@ use_object_base:
 
  /* Create a symbol for the class's super type. */
  if (maker.cm_base) {
-#if 1
-  if (maker.cm_base->a_type == AST_SYM) {
+  /* Optimization: If the base expression is a symbol, where accessing
+   *               it doesn't have any side-effects, then we can omit
+   *               the creation of an additional storage symbol for the
+   *               class itself, and simply re-use the same symbol, for
+   *               allowing further optimizations down the line. */
+  if (maker.cm_base->a_type == AST_SYM &&
+     !symbol_get_haseffect(maker.cm_base->a_sym,current_scope)) {
    maker.cm_supersym = maker.cm_base->a_sym;
-  } else
-#endif
-  {
+  } else {
    maker.cm_supersym = new_unnamed_symbol();
    if unlikely(!maker.cm_supersym) goto err;
    maker.cm_supersym->s_type = SYMBOL_TYPE_STACK;
