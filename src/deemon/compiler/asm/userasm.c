@@ -1018,7 +1018,7 @@ struct assembler_state {
 #define ASM_OP_SYMBOL        OPNAME1('v')         /* Same as `racCseglRS' (Any symbol, potentially immutable). */
 #define ASM_OP_VARIABLE      OPNAME1('V')         /* Same as `eglS' (Any symbol, must be mutable). */
 #define ASM_OP_BINDABLE      OPNAME1('b')         /* Same as `egl' (Any symbol, must be able to be unbound). */
-#define ASM_OP_PUSH          OPNAME1('P')         /* Input operand:  Same as `nEmTiTmTfracCseglTTFFTcI64N64SR' (All operands accepted by the `push' instruction)
+#define ASM_OP_PUSH          OPNAME1('P')         /* Input operand:  Same as `nEMTiTmTfracCseglTTFFTcI64N64SR' (All operands accepted by the `push' instruction)
                                                    * Output operand: Same as `eglCsS' (All operands accepted by the `pop' instruction)
                                                    * In/out operand: Same as output operand (All operands accepted by both the `push' and `pop' instructions) */
 #define ASM_OP_ANYTHING      OPNAME1('x')         /* Any kind of operand (only really meaningful for artificial dependencies). */
@@ -1564,7 +1564,7 @@ write_regular_local:
   if (mode == OPTION_MODE_UNDEF)
       goto err_undefined_mode;
   if (mode == OPTION_MODE_INPUT)
-   result = get_assembly_formatter_oprepr(self,"nEmTiTmTfracCseglTTFFTcI64N64SR",
+   result = get_assembly_formatter_oprepr(self,"nEMTiTmTfracCseglTTFFTcI64N64SR",
                                           mode|OPTION_MODE_TRY,
                                           cleanup,init_state);
   else {
