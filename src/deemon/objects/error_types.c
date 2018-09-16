@@ -153,7 +153,7 @@ PRIVATE struct type_member error_class_members[] = {
     TYPE_MEMBER_END
 };
 PRIVATE int DCALL
-error_init(DeeErrorObject *__restrict self) {
+error_ctor(DeeErrorObject *__restrict self) {
  ASSERT(Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size >=
         sizeof(DeeErrorObject));
  memset(&self->e_message,0,
@@ -194,14 +194,21 @@ error_deep(DeeErrorObject *__restrict self,
         sizeof(DeeErrorObject));
  return 0;
 }
+
+PRIVATE char const error_init_fmt[] = "|oo:Error";
+PRIVATE struct keyword error_init_kwlist[] = { K(message), K(inner), KEND };
+
 PRIVATE int DCALL
-error_ctor(DeeErrorObject *__restrict self,
+error_init(DeeErrorObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- self->e_inner = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:Error",&self->e_message,&self->e_inner) ||
-     DeeObject_AssertTypeExact((DeeObject *)self->e_message,&DeeString_Type))
-     return -1;
- Dee_Incref(self->e_message);
+ self->e_message = NULL;
+ self->e_inner   = NULL;
+ if (DeeArg_Unpack(argc,argv,error_init_fmt,&self->e_message,&self->e_inner))
+     goto err;
+ if (self->e_message &&
+     DeeObject_AssertTypeExact(self->e_message,&DeeString_Type))
+     goto err;
+ Dee_XIncref(self->e_message);
  Dee_XIncref(self->e_inner);
  ASSERT(Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size >=
         sizeof(DeeErrorObject));
@@ -209,6 +216,29 @@ error_ctor(DeeErrorObject *__restrict self,
         Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size-
         sizeof(DeeErrorObject));
  return 0;
+err:
+ return -1;
+}
+PRIVATE int DCALL
+error_init_kw(DeeErrorObject *__restrict self, size_t argc,
+              DeeObject **__restrict argv, DeeObject *kw) {
+ self->e_message = NULL;
+ self->e_inner   = NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,error_init_kwlist,error_init_fmt,&self->e_message,&self->e_inner))
+     goto err;
+ if (self->e_message &&
+     DeeObject_AssertTypeExact(self->e_message,&DeeString_Type))
+     goto err;
+ Dee_XIncref(self->e_message);
+ Dee_XIncref(self->e_inner);
+ ASSERT(Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size >=
+        sizeof(DeeErrorObject));
+ memset(self+1,0,
+        Dee_TYPE(self)->tp_init.tp_alloc.tp_instance_size-
+        sizeof(DeeErrorObject));
+ return 0;
+err:
+ return -1;
 }
 PRIVATE void DCALL
 error_fini(DeeErrorObject *__restrict self) {
@@ -228,6 +258,23 @@ error_str(DeeErrorObject *__restrict self) {
      return DeeString_Newf("%k -> %k",Dee_TYPE(self),self->e_inner);
  return DeeObject_Str((DeeObject *)Dee_TYPE(self));
 }
+PRIVATE DREF DeeObject *DCALL
+error_repr(DeeErrorObject *__restrict self) {
+ if (self->e_inner) {
+  if (self->e_message) {
+   return DeeString_Newf("%k(%r,inner: %r)",
+                         Dee_TYPE(self),
+                         self->e_message,
+                         self->e_inner);
+  }
+  return DeeString_Newf("%k(inner: %r)",
+                        Dee_TYPE(self),
+                        self->e_inner);
+ }
+ return DeeString_Newf("%k(%r)",
+                       Dee_TYPE(self),
+                       self->e_message);
+}
 PRIVATE struct type_member error_members[] = {
     TYPE_MEMBER_FIELD_DOC("inner",STRUCT_CONST|STRUCT_OBJECT_OPT,offsetof(DeeErrorObject,e_inner),
                           "->object\n"
@@ -237,15 +284,58 @@ PRIVATE struct type_member error_members[] = {
                           "The error message associated with this Error object, or :none when not set"),
     TYPE_MEMBER_END
 };
-PUBLIC DeeTypeObject DeeError_Error =
-INIT_CUSTOM_ERROR(DeeString_STR(&str_Error),
-                  "()\n"
-                  "(string message)\n"
-                  "(string message, object inner)",
-                  TP_FNORMAL|TP_FNAMEOBJECT,&DeeObject_Type,
-                 &error_init,&error_copy,&error_deep,&error_ctor,sizeof(DeeErrorObject),
-                 &error_fini,&error_str,&error_visit,
-                  NULL,NULL,error_members,error_class_members);
+PUBLIC DeeTypeObject DeeError_Error = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */DeeString_STR(&str_Error),
+    /* .tp_doc      = */DOC("Base class for all errors thrown by the runtime\n"
+                            "\n"
+                            "()\n"
+                            "(string message)\n"
+                            "(string message, object inner)"),
+    /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeObject_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */(void *)&error_ctor,
+                /* .tp_copy_ctor = */(void *)&error_copy,
+                /* .tp_deep_ctor = */(void *)&error_deep,
+                /* .tp_any_ctor  = */(void *)&error_init,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(DeeErrorObject)
+                },
+                /* .tp_any_ctor_kw = */(void *)&error_init_kw,
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&error_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&error_str,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&error_repr,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&error_visit,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */error_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */error_class_members
+};
 /* END::Error */
 
 
@@ -846,17 +936,68 @@ PUBLIC DeeTypeObject DeeError_KeyboardInterrupt =
 INIT_CUSTOM_ERROR("KeyboardInterrupt",NULL,TP_FNORMAL|TP_FINHERITCTOR|TP_FINTERRUPT /* Interrupt type! */,&DeeError_Interrupt,
                   NULL,NULL,NULL,NULL,sizeof(DeeSignalObject),NULL,NULL,NULL,
                   NULL,NULL,NULL,NULL);
+INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
-INTDEF int DCALL none_i3(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c));
 PRIVATE struct type_member signal_class_members[] = {
     TYPE_MEMBER_CONST("Interrupt",&DeeError_Interrupt),
     TYPE_MEMBER_CONST("StopIteration",&DeeError_StopIteration),
     TYPE_MEMBER_END
 };
-PUBLIC DeeTypeObject DeeError_Signal =
-INIT_CUSTOM_ERROR(DeeString_STR(&str_Signal),NULL,TP_FNORMAL|TP_FNAMEOBJECT,&DeeObject_Type,
-                 &none_i2,&none_i3,&none_i3,NULL,sizeof(DeeSignalObject),NULL,NULL,NULL,
-                  NULL,NULL,NULL,signal_class_members);
+
+PRIVATE DREF DeeObject *DCALL
+signal_repr(DeeSignalObject *__restrict self) {
+ return DeeString_Newf("%k()",Dee_TYPE(self));
+}
+
+PUBLIC DeeTypeObject DeeError_Signal = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */DeeString_STR(&str_Signal),
+    /* .tp_doc      = */DOC("Base class for signaling exceptions\n"
+                            "\n"
+                            "()"),
+    /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeObject_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */(void *)&none_i1,
+                /* .tp_copy_ctor = */(void *)&none_i2,
+                /* .tp_deep_ctor = */(void *)&none_i2,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(DeeSignalObject)
+                }
+            }
+        },
+        /* .tp_dtor        = */NULL,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&signal_repr,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */NULL,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */signal_class_members
+};
 PUBLIC DeeSignalObject DeeError_StopIteration_instance = {
     OBJECT_HEAD_INIT(&DeeError_StopIteration)
 };
