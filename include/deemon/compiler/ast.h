@@ -182,7 +182,7 @@ struct ast {
                                                  * NOTE: This sequence class requires that `m_astc' is aligned
                                                  *       by 2, with every first used as key, and every second as item.
                                                  *       If it isn't aligned by 2, the last expression is ignored and not compiled. */
-#   define AST_FMULTIPLE_GENERIC        0x1009  /* Pack elements into a sequence of unspecified typing (used to encode
+#   define AST_FMULTIPLE_GENERIC        0x1008  /* Pack elements into a sequence of unspecified typing (used to encode
                                                  * brace-initializer being encoded as `ASM_CALL_SEQ' instructions). */
 #   define AST_FMULTIPLE_GENERIC_KEYS   0x100f  /* Pack elements into a dict-style sequence of unspecified typing (used to
                                                  * encode brace-initializer being encoded as `ASM_CALL_MAP' instructions). */
