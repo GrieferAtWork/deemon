@@ -1878,7 +1878,7 @@ unknown_attribute:
 			if (object !is bound ||
 				object !is deemon.type_)
 				return none;
-			return object.__base__;
+			return deemon.type_.__base__(object);
 		}
 	}
 
@@ -1890,7 +1890,7 @@ unknown_attribute:
 			if (object !is bound ||
 				object !is deemon.type_)
 				return none;
-			local objbase = object.__base__;
+			local objbase = deemon.type_.__base__(object);
 			if (objbase is none)
 				return none; /* no base class */
 			return lookup_object(objbase,module);
