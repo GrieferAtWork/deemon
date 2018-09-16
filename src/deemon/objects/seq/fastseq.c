@@ -289,6 +289,73 @@ err:
 }
 
 
+PUBLIC size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
+                                  /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
+                                  /*in-out*/size_t *__restrict pallocated) {
+ DeeObject **new_elemv,**elemv = *pvector;
+ DREF DeeObject *iterator,*elem;
+ size_t elema = *pallocated;
+ size_t elemc,i;
+ ASSERT(!elema || elemv);
+ elemc = DeeFastSeq_GetSize(self);
+ if (elemc != DEE_FASTSEQ_NOTFAST) {
+  /* Fast sequence optimizations. */
+  if (elemc > elema) {
+   new_elemv = (DeeObject **)Dee_Realloc(elemv,elemc * sizeof(DeeObject *));
+   if unlikely(!new_elemv) goto err;
+   *pvector    = elemv = new_elemv;
+   *pallocated = elema;
+  }
+  for (i = 0; i < elemc; ++i) {
+   elem = DeeFastSeq_GetItem(self,i);
+   if unlikely(!elem) goto err_i;
+   elemv[i] = elem; /* Inherit reference. */
+  }
+ } else {
+  /* Use iterators. */
+  iterator = DeeObject_IterSelf(self);
+  if unlikely(!iterator) goto err;
+  elemc = 0;
+  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+   ASSERT(elemc <= elema);
+   if (elemc >= elema) {
+    /* Allocate more memory. */
+    size_t new_elema = elema * 2;
+    if unlikely(new_elema < 16) new_elema = 16;
+    new_elemv = (DeeObject **)Dee_TryRealloc(elemv,new_elema *
+                                             sizeof(DeeObject *));
+    if unlikely(!new_elemv) {
+     new_elema = elemc + 1;
+     new_elemv = (DeeObject **)Dee_Realloc(elemv,new_elema *
+                                           sizeof(DeeObject *));
+     if unlikely(!new_elemv) goto err_iterator_elemc;
+    }
+    elemv = new_elemv;
+    elema = new_elema;
+   }
+   elemv[elemc] = elem; /* Inherit reference. */
+   ++elemc;
+  }
+  *pvector    = elemv;
+  *pallocated = elema;
+  if unlikely(!elem) goto err_iterator;
+  Dee_Decref(iterator);
+ }
+ return elemc;
+err_iterator_elemc:
+ while (elemc--) Dee_Decref(elemv[elemc]);
+ *pvector    = elemv;
+ *pallocated = elema;
+err_iterator:
+ Dee_Decref(iterator);
+ goto err;
+err_i:
+ while (i--) Dee_Decref(elemv[i]);
+err:
+ return (size_t)-1;
+}
+
 
 
 DECL_END

@@ -63,11 +63,52 @@ INTDEF DeeTypeObject DeeListIterator_Type;
 
 
 PRIVATE void DCALL
-list_dtor(DeeObject *__restrict self) {
+list_fini(List *__restrict self) {
  DeeObject **begin,**iter;
  iter = (begin = DeeList_ELEM(self))+DeeList_SIZE(self);
  while (iter-- != begin) Dee_Decref(*iter);
  Dee_Free(begin);
+}
+
+PRIVATE int DCALL
+list_assign(List *__restrict self,
+            DeeObject *__restrict other) {
+ DREF DeeObject **elemv,**old_elemv;
+ size_t elemc,elema,old_elemc;
+ if ((List *)other == self) return 0;
+ /* Steal the current list state to update it! */
+ DeeList_LockWrite(self);
+ elemv = self->l_elem;
+ elemc = self->l_size;
+ elema = self->l_alloc;
+ self->l_elem  = NULL;
+ self->l_size  = 0;
+ self->l_alloc = 0;
+ DeeList_LockEndWrite(self);
+ /* Delete all of the old list elements. */
+ while (elemc--) Dee_Decref(elemv[elemc]);
+ elemc = DeeSeq_AsHeapVectorWithAllocReuse(other,
+                                          &elemv,
+                                          &elema);
+ /* Save the new list buffer. */
+ DeeList_LockWrite(self);
+ old_elemv = self->l_elem;
+ old_elemc = self->l_size;
+ self->l_elem  = elemv;
+ self->l_size  = elemc == (size_t)-1 ? 0 : elemc;
+ self->l_alloc = elema;
+ DeeList_LockEndWrite(self);
+ if unlikely(old_elemv) {
+  /* Free the list state that got created while we loaded `other' */
+  while (old_elemc--) Dee_Decref(old_elemv[old_elemc]);
+  Dee_Free(old_elemv);
+ }
+ /* With the updated list state now saved, check for errors. */
+ if unlikely(elemc == (size_t)-1)
+    goto err;
+ return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -3405,18 +3446,18 @@ PUBLIC DeeTypeObject DeeList_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict))&list_ctor,
-                /* .tp_copy_ctor = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&list_copy,
-                /* .tp_deep_ctor = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&list_copy,
-                /* .tp_any_ctor  = */(int(DCALL *)(DeeTypeObject *__restrict,size_t,DeeObject **__restrict))&list_init,
+                /* .tp_ctor      = */(int(DCALL *)(DeeObject *__restrict))&list_ctor,
+                /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_copy,
+                /* .tp_deep_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_copy,
+                /* .tp_any_ctor  = */(int(DCALL *)(size_t,DeeObject **__restrict))&list_init,
                 /* .tp_free      = */NULL,
                 {
                     /* .tp_instance_size = */sizeof(DeeListObject)
                 }
             }
         },
-        /* .tp_dtor        = */&list_dtor,
-        /* .tp_assign      = */NULL,
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&list_fini,
+        /* .tp_assign      = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_assign,
         /* .tp_move_assign = */NULL,
         /* .tp_deepload    = */(int(DCALL *)(DeeObject *__restrict))&list_deepload
     },

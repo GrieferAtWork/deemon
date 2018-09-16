@@ -582,6 +582,29 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              size_t *__restrict plength,
                              size_t *__restrict pallocated);
 
+/* Same as `DeeSeq_AsHeapVectorWithAlloc()', however also inherit
+ * a pre-allocated heap-vector `*pvector' with an allocated size
+ * of `IN(*pallocated) * sizeof(DeeObject *)', which is updated
+ * as more memory needs to be allocated.
+ * NOTE: `*pvector' may be updated to point to a new vector, even
+ *       when the function fails (i.e. (size_t)-1 is returned)
+ * @param: pvector:     A pointer to a preallocated object-vector `[0..IN(*pallocated)]'
+ *                      May only point to a `NULL' vector when `IN(*pallocated)' is ZERO(0).
+ *                      Upon return, this pointer may have been updated to point to a
+ *                      realloc()-ated vector, should the need to allocate more memory
+ *                      have arisen.
+ * @param: pallocated:  A pointer to an information field describing how much pointers
+ *                      are allocated upon entry / how much are allocated upon exit.
+ *                      Just as `pvector', this pointer may be updated, even upon error.
+ * @return: * :         The amount of filled in objects in `*pvector'
+ * @return: (size_t)-1: An error occurred. Note that both `*pvector' and `*pallocated'
+ *                      may have been modified since entry, with their original values
+ *                      no longer being valid! */
+DFUNDEF size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
+                                  /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
+                                  /*in-out*/size_t *__restrict pallocated);
+
 
 #ifdef GUARD_DEEMON_OBJMETHOD_H
 #ifdef CONFIG_BUILDING_DEEMON
