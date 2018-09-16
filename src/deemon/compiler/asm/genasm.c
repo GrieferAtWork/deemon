@@ -686,6 +686,71 @@ done_fake_none:
  case AST_TRY:
   after_catch = NULL;
 
+  /* TODO: Optimize:
+   * >> try {
+   * >>     newitem = it.operator iter();
+   * >> } catch (Signal.StopIteration) {
+   * >>     print "Iterator exhausted";
+   * >>     return;
+   * >> }
+   * Into:
+   * >>     foreach (newitem: it) goto gotit;
+   * >>     print "Iterator exhausted";
+   * >>     return;
+   * >> gotit:
+   * ASSEMBLY:
+   * >>     push    @it
+   * >>     foreach top, 1f
+   * >>     pop     @newitem                   // Pushed by `foreach'
+   * >>     pop                                // The iterator itself
+   * >>     jmp     2f
+   * >> 1:  print   @"Iterator exhausted", nl
+   * >>     ret
+   * >> 2:
+   * The reason this works is because `foreach' is basically an instruction:
+   * >> ITEM = TOP.NEXT()
+   * >> IF ITEM !IS BOUND THEN
+   * >>     POP()
+   * >>     JUMP IP+IMM
+   * >> FI
+   * >> PUSH(ITEM)
+   * 
+   * This way, we're not required to introduce a new exception guard
+   * (in case we can prove that no expression could possible throw a
+   * StopIteration signal), and we can keep the runtime from needing
+   * to unnecessarily throw an exception (thus introducing the overhead
+   * to needing to keep track of the traceback), when we're just going
+   * to catch it immediately afterwards irregardless.
+   *
+   * -> Implement this by setting some flag to encode `iternext' branches
+   *    as `foreach' instructions that will jump to the exception handler `HND':
+   * DEEMON:
+   * >> x.operator iter();
+   * ASM:
+   * >>     push    @x
+   * >> 1:  foreach top, 2f
+   * >>     pop     #SP - 2 // `swap; pop' (write the yielded item into the slot still containing `x')
+   * >> 3:
+   * >>
+   * >>.if $$SECTION == ".cold"
+   * >>     jmp     4f
+   * >>.endif
+   * >>
+   * >>.pushsection .cold
+   * >>.adjstack    1b.SP
+   * >> 2:  adjstack #HND.SP
+   * >>     jmp     HND
+   * >>.popsection
+   * >>
+   * >>.if $$SECTION == ".cold"
+   * >> 4:
+   * >>.endif
+   * >>.adjstack    4b.SP
+   * Peephole optimization will then be able to remove the cold-section adjustment
+   * code, if that code turns out to be unnecessary.
+   */
+
+
   /* Keep track of where different sections are currently at,
    * so we can safely determine what changed afterwards and
    * therewith generate appropriate exception handlers for

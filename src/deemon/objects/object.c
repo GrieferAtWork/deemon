@@ -2683,10 +2683,25 @@ type_isbuffer(DeeTypeObject *__restrict self) {
  return_false;
 }
 
+PRIVATE DREF DeeObject *DCALL
+type_getclassdesc(DeeTypeObject *__restrict self) {
+ if (!self->tp_class) {
+  DeeError_Throwf(&DeeError_AttributeError,
+                  "Can't access `__class__' of non-user-defined type `%s'",
+                  self->tp_name);
+  return NULL;
+ }
+ return_reference_((DeeObject *)self->tp_class->cd_desc);
+}
+
 PRIVATE struct type_getset type_getsets[] = {
     TYPE_FEATURE_GETSETS
     { "isbuffer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_isbuffer, NULL, NULL,
       DOC("->bool\nReturns :true if @this type implements the buffer interface") },
+    { "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_getclassdesc, NULL, NULL,
+      DOC("->:rt.classdescriptor\n"
+          "@throw AttributeError @this type is a user-defined class (s.a. #isclass)\n"
+          "Returns the internal class-descriptor descriptor for a user-defined class") },
     { NULL }
 };
 

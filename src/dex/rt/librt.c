@@ -85,7 +85,7 @@ PRIVATE DEFINE_CMETHOD(librt_setstacklimit,librt_setstacklimit_f);
 
 PRIVATE struct dex_symbol symbols[] = {
     { "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FNORMAL,
-      DOC("()->int\n"
+      DOC("->int\n"
           "Returns the current stack limit, that is the max number of "
           "user-code functions that may be executed consecutively before "
           "a :StackOverflow error is thrown\n"
