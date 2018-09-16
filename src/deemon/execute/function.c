@@ -972,7 +972,7 @@ again:
   for (; iter != end; ++iter,++src) {
    DeeObject *ob = *src;
    *iter = ob;
-   Dee_Incref(ob);
+   Dee_XIncref(ob);
   }
   if (!self->yi_frame.cf_stacksz) {
    /* Relocate + copy a frame-shared stack. */
