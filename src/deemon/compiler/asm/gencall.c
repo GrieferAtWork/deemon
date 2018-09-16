@@ -64,6 +64,219 @@ get_module_symbol(DeeModuleObject *__restrict module,
 INTDEF int DCALL asm_check_thiscall(struct symbol *__restrict sym,
                                     struct ast *__restrict warn_ast);
 
+
+PRIVATE DREF DeeCodeObject *DCALL
+ast_assemble_function_refargs(struct ast *__restrict function_ast,
+                              uint16_t *__restrict prefc,
+                              struct asm_symbol_ref **__restrict prefv,
+                              uint16_t *__restrict pargc,
+                              /*out:inherit*/struct symbol ***__restrict pargv) {
+ DREF DeeCodeObject *result;
+ DeeScopeObject *prev_scope;
+ ASSERT(function_ast->a_type == AST_FUNCTION);
+ /* This is where it gets interesting, because this will
+  * create a temporary sub-assembler, allowing for recursion! */
+ ASSERT_OBJECT_TYPE((DeeObject *)current_scope,&DeeScope_Type);
+ ASSERT_OBJECT_TYPE((DeeObject *)current_basescope,&DeeBaseScope_Type);
+ ASSERT_OBJECT_TYPE((DeeObject *)function_ast->a_function.f_scope,&DeeBaseScope_Type);
+ ASSERT(function_ast->a_function.f_scope->bs_root == current_rootscope);
+ ASSERT(current_basescope == current_scope->s_base);
+ prev_scope        = current_scope;
+ /* Temporarily override the active scope + base-scope. */
+ current_scope     = (DREF DeeScopeObject *)function_ast->a_function.f_scope;
+ current_basescope = function_ast->a_function.f_scope;
+
+ /* HINT: `code_compile_argrefs' will safe and restore our own assembler context. */
+ result = code_compile_argrefs(function_ast->a_function.f_code,
+                               /* Don't propagate `ASM_FBIGCODE' */
+                              (current_assembler.a_flag & ~(ASM_FBIGCODE)) |
+                              (DeeCompiler_Current->cp_options ?
+                              (DeeCompiler_Current->cp_options->co_assembler & ASM_FBIGCODE) : 0)
+#if 1 /* Further reduce the amount of needed references by passing this flag!
+       * TODO: This flag should not be effective for recursive sub-functions,
+       *       but rather only for symbols where references would have to pass
+       *       through us. - I.e. a sub-function should not be hindered from
+       *       references a symbol that wouldn't even need to pass through our
+       *       scope (because it would be declared by one of our children) */
+                              | ASM_FREDUCEREFS
+#endif
+                              ,prefc,prefv,pargc,pargv);
+ /* Now that the code has been generated, it's time to
+  * register it as a constant variable of our own code. */
+ current_basescope = prev_scope->s_base;
+ current_scope     = prev_scope;
+ if unlikely(!result) goto err;
+ /* Save the restore-code-object for the event of the linker having to be reset. */
+ function_ast->a_function.f_scope->bs_restore = result;
+ return result;
+err:
+ return NULL;
+}
+
+PRIVATE int DCALL
+asm_gcall_func(struct ast *__restrict func,
+               struct ast *__restrict args,
+               struct ast *__restrict ddi_ast,
+               unsigned int gflags) {
+ /* If possible, references should be passed by-argument, rather than by-reference!
+  * That way, we can possible prevent having to re-create new function objects
+  * whenever the function is invoked at runtime.
+  * The major culprit here are generator expression, which are practically
+  * forced to use referenced variables:
+  * >> local count = 42;
+  * >> local items = [(for (local x: [:count]) (x * 2) / 3)...];
+  * Compiled as:
+  * >>     mov   local @count, $42
+  * >>     push  local @count
+  * >>     push  function const @.Lgen0, #1  // <--- Unnecessary temporary created here!
+  * >>     call  top, #0
+  * >>     cast  top, list
+  * >>     pop   local @items
+  * >> .const .Lgen0 = code {
+  * >>     push  ref @count
+  * >>     push  range default, pop
+  * >>     iterself top
+  * >> 1:  foreach top, 2f
+  * >>     mul   top, $2
+  * >>     div   top, $3
+  * >>     yield pop
+  * >>     jmp   1b
+  * >> 2:  ret
+  * >> }
+  * Can be compiled as as:
+  * >>     mov   local @count, $42
+  * >>     push  local @count
+  * >>     call  top, #1
+  * >>     cast  top, list
+  * >>     pop   local @items
+  * >> .const .Lgen0 = function {
+  * >>     push  arg @count
+  * >>     push  range default, pop
+  * >>     iterself top
+  * >> 1:  foreach top, 2f
+  * >>     mul   top, $2
+  * >>     div   top, $3
+  * >>     yield pop
+  * >>     jmp   1b
+  * >> 2:  ret
+  * >> } */
+ uint16_t refc,i; uint16_t refargc;
+ struct asm_symbol_ref *refv; struct symbol **refargv;
+ DREF DeeCodeObject *code; int32_t cid;
+ code = ast_assemble_function_refargs(func,&refc,&refv,&refargc,&refargv);
+ if unlikely(!code) goto err;
+ if (asm_putddi(func)) goto err_refv;
+ if (!refc) {
+  /* Special case: The function doesn't reference any code.
+   * -> In this case, we can construct the function object
+   *    itself as a constant. */
+  DREF DeeFunctionObject *function;
+  Dee_Free(refv);
+  function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)code);
+  Dee_Decref(code);
+  if unlikely(!function)
+     goto err_refargv;
+  cid = asm_newconst((DeeObject *)function);
+  Dee_Decref(function);
+  if unlikely(cid < 0) goto err_refargv;
+  if (asm_gpush_const((uint16_t)cid)) goto err_refargv;
+ } else {
+  cid = asm_newconst((DeeObject *)code);
+  Dee_Decref(code);
+  if unlikely(cid < 0)
+     goto err_refv;
+  /* Push referenced symbols. */
+  for (i = 0; i < refc; ++i) {
+   refv[i].sr_sym->s_flag &= ~(SYMBOL_FALLOC|SYMBOL_FALLOCREF);
+   refv[i].sr_sym->s_flag |= refv[i].sr_orig_flag & (SYMBOL_FALLOC|SYMBOL_FALLOCREF);
+   refv[i].sr_sym->s_refid = refv[i].sr_orig_refid;
+   if (asm_gpush_symbol(refv[i].sr_sym,func))
+       goto err_refv;
+  }
+  Dee_Free(refv);
+  /* Generate assembly to create (and push) the new function object. */
+  ASSERT(refc != 0);
+  if (asm_gfunction_ii((uint16_t)cid,(uint16_t)refc))
+      goto err_refargv;
+ }
+ /* At this point, the function that is being called is located ontop of the stack
+  * Now it's just a matter of figuring out what exactly it is that we're dealing
+  * with here, when it comes to arguments. */
+ if (args->a_type == AST_MULTIPLE &&
+     AST_FMULTIPLE_ISSEQUENCE(args->a_flag)) {
+  ASSERTF(!ast_multiple_hasexpand(args),"The caller should have asserted this!");
+  if (args->a_multiple.m_astc + refargc > UINT8_MAX)
+      goto generic_call;
+  for (i = 0; i < (uint8_t)args->a_multiple.m_astc; ++i) {
+   if (ast_genasm(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+       goto err_refargv;
+  }
+  if (refargc) {
+   /* Push all of the reference argument symbols. */
+   if (asm_putddi(func)) goto err_refargv;
+   for (i = 0; i < refargc; ++i) {
+    if (asm_gpush_symbol(refargv[i],func))
+        goto err_refargv;
+   }
+  }
+  Dee_Free(refargv);
+  /* Do the call. */
+  if (asm_putddi(ddi_ast)) goto err;
+  if (asm_gcall((uint8_t)(args->a_multiple.m_astc + refargc))) goto err;
+  goto pop_unused;
+ }
+ if (args->a_type == AST_CONSTEXPR &&
+     DeeTuple_Check(args->a_constexpr)) {
+  if (DeeTuple_SIZE(args->a_constexpr) + refargc > UINT8_MAX)
+      goto generic_call;
+  if (push_tuple_items(args->a_constexpr,args))
+      goto err_refargv;
+  if (refargc) {
+   /* Push all of the reference argument symbols. */
+   if (asm_putddi(func)) goto err_refargv;
+   for (i = 0; i < refargc; ++i) {
+    if (asm_gpush_symbol(refargv[i],func))
+        goto err_refargv;
+   }
+  }
+  Dee_Free(refargv);
+  /* Do the call. */
+  if (asm_putddi(ddi_ast)) goto err;
+  if (asm_gcall((uint8_t)(DeeTuple_SIZE(args->a_constexpr) + refargc))) goto err;
+  goto pop_unused;
+ }
+
+ /* Fallback: Push the arguments as a tuple, then concat that with refargs. */
+generic_call:
+ if (ast_genasm(args,ASM_G_FPUSHRES)) goto err_refargv;
+ if (ast_predict_type(args) != &DeeTuple_Type &&
+    (asm_putddi(args) || asm_gcast_tuple())) goto err_refargv;
+ if (refargv) {
+  if (refargc) {
+   /* Push all of the reference argument symbols. */
+   if (asm_putddi(func)) goto err_refv;
+   for (i = 0; i < refargc; ++i) {
+    if (asm_gpush_symbol(refargv[i],func))
+        goto err_refv;
+   }
+   if (asm_gextend(refargc))
+       goto err_refv;
+  }
+  Dee_Free(refargv);
+ }
+ if (asm_putddi(ddi_ast)) goto err;
+ if (asm_gcall_tuple()) goto err;
+pop_unused:
+ if (!(gflags & ASM_G_FPUSHRES) && asm_gpop()) goto err;
+ return 0;
+err_refv:
+ Dee_Free(refv);
+err_refargv:
+ Dee_Free(refargv);
+err:
+ return -1;
+}
+
 INTERN int DCALL
 asm_gcall_expr(struct ast *__restrict func,
                struct ast *__restrict args,
@@ -74,7 +287,14 @@ asm_gcall_expr(struct ast *__restrict func,
  uint8_t i,argc; struct ast **argv;
  ASSERT_AST(func);
  ASSERT_AST(args);
+ if (func->a_type == AST_FUNCTION &&
+     /* NOTE: Don't perform this optimization when the argument list is unpredictable. */
+    (args->a_type != AST_MULTIPLE || 
+    (AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
+    !ast_multiple_hasexpand(args))))
+     return asm_gcall_func(func,args,ddi_ast,gflags);
  if (args->a_type == AST_MULTIPLE &&
+     AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
      args->a_multiple.m_astc != 0 &&
      args->a_multiple.m_astc <= UINT8_MAX) {
   /* Check if this call can be encoded as an argument-forward-call. */
@@ -162,7 +382,7 @@ not_argument_forward:
 
  /* Optimized call for stack-packed argument list within an 8-bit range. */
  if ((args->a_type != AST_MULTIPLE ||
-      args->a_flag == AST_FMULTIPLE_KEEPLAST ||
+     !AST_FMULTIPLE_ISSEQUENCE(args->a_flag) ||
       args->a_multiple.m_astc > UINT8_MAX ||
       ast_multiple_hasexpand(args)) &&
      (args->a_type != AST_CONSTEXPR ||
@@ -563,14 +783,16 @@ invoke_cattr_funsym_tuple:
      } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
       if (asm_gpush_symbol(class_sym,func)) goto err; /* func, class_sym */
       if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;  /* func, class_sym, args */
+      if (ast_predict_type(args) != &DeeTuple_Type &&
+         (asm_putddi(args) || asm_gcast_tuple())) goto err;
       if (asm_putddi(ddi_ast)) goto err;
-      if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
       if (asm_gthiscall_tuple()) goto err; /* result */
       goto pop_unused;
      }
      if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;  /* func, args */
+     if (ast_predict_type(args) != &DeeTuple_Type &&
+        (asm_putddi(args) || asm_gcast_tuple())) goto err;
      if (asm_putddi(ddi_ast)) goto err;
-     if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
      if (asm_gcall_tuple()) goto err; /* result */
      goto pop_unused;
     }
@@ -658,8 +880,9 @@ invoke_cattr_funsym_tuple:
     if unlikely(attrid < 0) goto err;
     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (ast_predict_type(args) != &DeeTuple_Type &&
+       (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
-    if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
     if (asm_gcallattr_const_tuple((uint16_t)attrid)) goto err;
     goto pop_unused;
    }
@@ -709,9 +932,9 @@ check_getattr_base_symbol_class_tuple:
       if (SYMBOL_MUST_REFERENCE_THIS(sym))
           break;
       if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
-      if (asm_putddi(ddi_ast)) goto err;
       if (ast_predict_type(args) != &DeeTuple_Type &&
-          asm_gcast_tuple()) goto err;
+         (asm_putddi(args) || asm_gcast_tuple())) goto err;
+      if (asm_putddi(ddi_ast)) goto err;
       if (asm_gcallattr_this_const_tuple((uint16_t)attrid)) goto err;
       goto pop_unused;
 
@@ -720,16 +943,18 @@ check_getattr_base_symbol_class_tuple:
     }
     if (ast_genasm(function_self,ASM_G_FPUSHRES)) goto err;
     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (ast_predict_type(args) != &DeeTuple_Type &&
+       (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
-    if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
     if (asm_gcallattr_const_tuple((uint16_t)attrid)) goto err;
     goto pop_unused;
    }
    if (ast_genasm(function_self,ASM_G_FPUSHRES)) goto err;
    if (ast_genasm(function_attr,ASM_G_FPUSHRES)) goto err;
    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+   if (ast_predict_type(args) != &DeeTuple_Type &&
+      (asm_putddi(args) || asm_gcast_tuple())) goto err;
    if (asm_putddi(ddi_ast)) goto err;
-   if (ast_predict_type(args) != &DeeTuple_Type && asm_gcast_tuple()) goto err;
    if (asm_gcallattr_tuple()) goto err;
    goto pop_unused;
   }
@@ -1213,53 +1438,11 @@ pop_unused:
  if (!(gflags & ASM_G_FPUSHRES) && asm_gpop()) goto err;
  return 0;
 generic_call:
- //if (func->a_type == AST_FUNCTION) {
- // /* TODO: If possible, references should be passed by-argument, rather than by-reference!
- //  *       That way, we can possible prevent having to re-create new function objects
- //  *       whenever the function is invoked at runtime.
- //  *       The major culprit here are generator expression, which are practically
- //  *       forced to use referenced variables:
- //  *       >> local count = 42;
- //  *       >> local items = [(for (local x: [:count]) (x * 2) / 3)...];
- //  *       Compiled as:
- //  *       >>     mov   local @count, $42
- //  *       >>     push  local @count
- //  *       >>     push  function const @.Lgen0, #1  // <--- Unnecessary temporary created here!
- //  *       >>     call  top, #0
- //  *       >>     cast  top, list
- //  *       >>     pop   local @items
- //  *       >> .const .Lgen0 = code {
- //  *       >>     push  ref @count
- //  *       >>     push  range default, pop
- //  *       >>     iterself top
- //  *       >> 1:  foreach top, 2f
- //  *       >>     mul   top, $2
- //  *       >>     div   top, $3
- //  *       >>     yield pop
- //  *       >>     jmp   1b
- //  *       >> 2:  ret
- //  *       >> }
- //  *       Could be compiled as as:
- //  *       >>     mov   local @count, $42
- //  *       >>     push  local @count
- //  *       >>     call  top, #1
- //  *       >>     cast  top, list
- //  *       >>     pop   local @items
- //  *       >> .const .Lgen0 = function {
- //  *       >>     push  arg @count
- //  *       >>     push  range default, pop
- //  *       >>     iterself top
- //  *       >> 1:  foreach top, 2f
- //  *       >>     mul   top, $2
- //  *       >>     div   top, $3
- //  *       >>     yield pop
- //  *       >>     jmp   1b
- //  *       >> 2:  ret
- //  *       >> }
- //  */
- //}
  if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
  if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+ if (ast_predict_type(args) != &DeeTuple_Type &&
+    (asm_putddi(args) || asm_gcast_tuple())) goto err;
+ if (asm_putddi(ddi_ast)) goto err;
  if (asm_gcall_tuple()) goto err;
  goto pop_unused;
 err:
@@ -1290,7 +1473,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
     kwd_cid = asm_newconst(kwds->a_constexpr);
     if unlikely(kwd_cid < 0) goto err;
     if (args->a_type == AST_MULTIPLE &&
-        args->a_flag != AST_FMULTIPLE_KEEPLAST &&
+        AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
         args->a_multiple.m_astc <= UINT8_MAX &&
        !ast_multiple_hasexpand(args)) {
      size_t i;
@@ -1300,7 +1483,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
           goto err;
      }
      if (ast_predict_type(args) != &DeeTuple_Type &&
-         asm_gcast_tuple()) goto err;
+        (asm_putddi(args) || asm_gcast_tuple())) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcallattr_const_kw((uint16_t)attrid,
                                 (uint8_t)args->a_multiple.m_astc,
@@ -1312,7 +1495,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
      if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
      if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
      if (ast_predict_type(args) != &DeeTuple_Type &&
-         asm_gcast_tuple()) goto err;
+        (asm_putddi(args) || asm_gcast_tuple())) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcallattr_const_kw((uint16_t)attrid,0,(uint16_t)kwd_cid)) goto err;
      goto pop_unused;
@@ -1320,13 +1503,13 @@ asm_gcall_kw_expr(struct ast *__restrict func,
     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
     if (ast_predict_type(args) != &DeeTuple_Type &&
-        asm_gcast_tuple()) goto err;
+       (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcallattr_const_tuple_kw((uint16_t)attrid,(uint16_t)kwd_cid)) goto err;
     goto pop_unused;
    } else {
     if (args->a_type == AST_MULTIPLE &&
-        args->a_flag != AST_FMULTIPLE_KEEPLAST &&
+        AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
         args->a_multiple.m_astc <= UINT8_MAX &&
        !ast_multiple_hasexpand(args)) {
      size_t i;
@@ -1337,7 +1520,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
           goto err;
      }
      if (ast_predict_type(args) != &DeeTuple_Type &&
-         asm_gcast_tuple()) goto err;
+        (asm_putddi(args) || asm_gcast_tuple())) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
      if (asm_gcallattr_kwds((uint8_t)args->a_multiple.m_astc)) goto err;
@@ -1356,7 +1539,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
     if (asm_gpush_const((uint16_t)attrid)) goto err;
     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
     if (ast_predict_type(args) != &DeeTuple_Type &&
-        asm_gcast_tuple()) goto err;
+       (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcallattr_tuple_kwds()) goto err;
@@ -1379,7 +1562,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
    att_cid = asm_newconst(name->a_constexpr);
    if unlikely(att_cid < 0) goto err;
    if (args->a_type == AST_MULTIPLE &&
-       args->a_flag != AST_FMULTIPLE_KEEPLAST &&
+       AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
        args->a_multiple.m_astc <= UINT8_MAX &&
       !ast_multiple_hasexpand(args)) {
     size_t i;
@@ -1389,7 +1572,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
          goto err;
     }
     if (ast_predict_type(args) != &DeeTuple_Type &&
-        asm_gcast_tuple()) goto err;
+       (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcallattr_const_kw((uint16_t)att_cid,
                                (uint8_t)args->a_multiple.m_astc,
@@ -1401,7 +1584,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
     if (ast_predict_type(args) != &DeeTuple_Type &&
-        asm_gcast_tuple()) goto err;
+       (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcallattr_const_kw((uint16_t)att_cid,0,(uint16_t)kwd_cid)) goto err;
     goto pop_unused;
@@ -1409,13 +1592,13 @@ asm_gcall_kw_expr(struct ast *__restrict func,
    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
    if (ast_predict_type(args) != &DeeTuple_Type &&
-       asm_gcast_tuple()) goto err;
+      (asm_putddi(args) || asm_gcast_tuple())) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcallattr_const_tuple_kw((uint16_t)att_cid,(uint16_t)kwd_cid)) goto err;
    goto pop_unused;
   } else {
    if (args->a_type == AST_MULTIPLE &&
-       args->a_flag != AST_FMULTIPLE_KEEPLAST &&
+       AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
        args->a_multiple.m_astc <= UINT8_MAX &&
       !ast_multiple_hasexpand(args)) {
     size_t i;
@@ -1426,7 +1609,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
          goto err;
     }
     if (ast_predict_type(args) != &DeeTuple_Type &&
-        asm_gcast_tuple()) goto err;
+       (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
     if (asm_gcallattr_kwds((uint8_t)args->a_multiple.m_astc)) goto err;
@@ -1445,7 +1628,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
    if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
    if (ast_predict_type(args) != &DeeTuple_Type &&
-       asm_gcast_tuple()) goto err;
+      (asm_putddi(args) || asm_gcast_tuple())) goto err;
    if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcallattr_tuple_kwds()) goto err;
@@ -1459,7 +1642,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
   kwd_cid = asm_newconst(kwds->a_constexpr);
   if unlikely(kwd_cid < 0) goto err;
   if (args->a_type == AST_MULTIPLE &&
-      args->a_flag != AST_FMULTIPLE_KEEPLAST &&
+      AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
       args->a_multiple.m_astc <= UINT8_MAX &&
      !ast_multiple_hasexpand(args)) {
    size_t i;
@@ -1479,7 +1662,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
   } else {
    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
    if (ast_predict_type(args) != &DeeTuple_Type &&
-       asm_gcast_tuple()) goto err;
+      (asm_putddi(args) || asm_gcast_tuple())) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcall_tuple_kw((uint16_t)kwd_cid)) goto err;
   }
@@ -1487,7 +1670,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
   /* Fallback: use the stack to pass all the arguments. */
   if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
   if (ast_predict_type(args) != &DeeTuple_Type &&
-      asm_gcast_tuple()) goto err;
+     (asm_putddi(args) || asm_gcast_tuple())) goto err;
   if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_gcall_tuple_kwds()) goto err;

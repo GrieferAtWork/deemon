@@ -774,6 +774,11 @@ INTERN int
  ASSERT(sym);
 check_sym_class:
  if (SYMBOL_MUST_REFERENCE(sym)) {
+  if (current_assembler.a_flag & ASM_FARGREFS) {
+   symid = asm_asymid_r(sym);
+   if unlikely(symid < 0) goto err;
+   return asm_gpush_arg((uint16_t)symid);
+  }
   symid = asm_rsymid(sym);
   if unlikely(symid < 0) goto err;
   return asm_gpush_ref((uint16_t)symid);

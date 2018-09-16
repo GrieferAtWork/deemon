@@ -466,6 +466,7 @@ INTERN void DCALL assembler_fini(void) {
  Dee_Free(current_assembler.a_exceptv);
  Dee_Free(current_assembler.a_localuse);
  Dee_Free(current_assembler.a_refv);
+ Dee_Free(current_assembler.a_argrefv);
 
  /* Delete debug information. */
  for (i = 0; i < current_assembler.a_ddi.da_checkc; ++i)
@@ -1396,6 +1397,7 @@ INTERN DREF DeeCodeObject *DCALL asm_gencode(void) {
                           current_assembler.a_stackmax)*
                           sizeof(DeeObject *);
  result->co_codebytes  = total_codesize;
+ result->co_keywords   = NULL; /* TODO */
  result->co_defaultv   = current_basescope->bs_default;
  result->co_staticv    = current_assembler.a_constv;
  result->co_exceptv    = exceptv;
@@ -2643,6 +2645,52 @@ do_realloc:
 }
 
 
+INTERN int32_t DCALL
+asm_asymid_r(struct symbol *__restrict sym) {
+ uint16_t result;
+ ASSERT(SYMBOL_MAY_REFERENCE(sym));
+ ASSERTF(current_assembler.a_flag & ASM_FARGREFS,
+         "Not operating in ARGREF mode");
+ ASSERTF(asm_symbol_accessible(sym),
+         "Unreachable symbol %s",
+         sym->s_name->k_name);
+ /* Search for a pre-existing binding for `sym' */
+ result = current_assembler.a_argrefc;
+ while (result--) {
+  if (current_assembler.a_argrefv[result] == sym)
+      return current_basescope->bs_argc_max + result;
+ }
+ /* Allocate a new argref */
+ result = current_assembler.a_argrefc;
+ ASSERT(result <= current_assembler.a_argrefa);
+ if unlikely(result == UINT16_MAX) {
+  return DeeError_Throwf(&DeeError_CompilerError,
+                         "Too many reference-through-argument variables");
+ }
+ if (result == current_assembler.a_argrefa) {
+  /* Must allocate more references. */
+  struct symbol **new_vector; uint16_t new_size;
+  new_size = current_assembler.a_argrefa;
+  if (!new_size) new_size = 1;
+  new_size *= 2;
+  if unlikely(new_size <= result) new_size = UINT16_MAX;
+do_realloc:
+  new_vector = (struct symbol **)Dee_TryRealloc(current_assembler.a_argrefv,
+                                                new_size * sizeof(struct symbol *));
+  if unlikely(!new_vector) {
+   if (new_size != result+1) { new_size = result+1; goto do_realloc; }
+   if (Dee_CollectMemory(new_size*sizeof(struct symbol *))) goto do_realloc;
+   return -1;
+  }
+  current_assembler.a_argrefv = new_vector;
+  current_assembler.a_argrefa = new_size;
+ }
+ ++current_assembler.a_argrefc;
+ current_assembler.a_argrefv[result] = sym;
+ return current_basescope->bs_argc_max + result;
+}
+
+
 
 INTERN int32_t DCALL
 asm_newmodule(DeeModuleObject *__restrict mod) {
@@ -3053,12 +3101,13 @@ code_compile(struct ast *__restrict code_ast, uint16_t flags,
  current_assembler.a_scope = old_assembler.a_scope;
 
  /* Set assembler flags. */
- current_assembler.a_flag = flags;
+ current_assembler.a_flag = flags & ~ASM_FARGREFS;
 
  /* Actually code the given AST. */
  result = code_docompile(code_ast);
 
  if (result) {
+  ASSERT(!current_assembler.a_argrefc);
   /* Return information about the required references to the caller. */
   *prefc = current_assembler.a_refc;
   *prefv = current_assembler.a_refv;
@@ -3076,6 +3125,106 @@ end:
  return result;
 err: result = NULL; goto end;
 }
+
+INTERN DREF DeeCodeObject *DCALL
+code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
+                     uint16_t *__restrict prefc,
+                     /*out:inherit*/struct asm_symbol_ref **__restrict prefv,
+                     uint16_t *__restrict pargc,
+                     /*out:inherit*/struct symbol ***__restrict pargv) {
+ struct assembler old_assembler;
+ DREF DeeCodeObject *result;
+ ASSERT(prefc);
+ ASSERT(prefv);
+ /* Check if the function even qualifies for argrefs. */
+ if unlikely(current_basescope->bs_argc_opt ||
+             current_basescope->bs_argc_min != current_basescope->bs_argc_max ||
+             current_basescope->bs_varargs != NULL ||
+            (current_basescope->bs_flags & CODE_FVARARGS)) {
+  *pargc = 0;
+  *pargv = NULL;
+  return code_compile(code_ast,flags,prefc,prefv);
+ }
+
+ /* Copy the current, and create a new assembler. */
+ memcpy(&old_assembler,&current_assembler,sizeof(struct assembler));
+ if unlikely(assembler_init()) goto err;
+
+ /* Keep the old assembler scope so that asts know where their influence ends. */
+ current_assembler.a_scope = old_assembler.a_scope;
+
+ /* Set assembler flags. */
+ current_assembler.a_flag = flags | ASM_FARGREFS;
+
+ /* Actually code the given AST. */
+ result = code_docompile(code_ast);
+
+ if (result) {
+  uint16_t i;
+  if (current_assembler.a_argrefc) {
+   /* Adjust the resulting code object to account for references-through-arguments. */
+   if (result->co_keywords) {
+    DREF DeeStringObject **new_keyword_vector;
+    new_keyword_vector = (DREF DeeStringObject **)Dee_Realloc((void *)result->co_keywords,
+                                                              result->co_argc_max *
+                                                              sizeof(DREF DeeStringObject *));
+    if unlikely(!new_keyword_vector) goto err_r;
+    for (i = result->co_argc_max - current_assembler.a_argrefc;
+         i < result->co_argc_max; ++i)
+         new_keyword_vector[i] = (DeeStringObject *)Dee_EmptyString;
+    result->co_keywords = new_keyword_vector;
+   }
+   if (result->co_argc_min == result->co_argc_max) {
+    result->co_argc_min += current_assembler.a_argrefc;
+    result->co_argc_max += current_assembler.a_argrefc;
+   } else {
+    /* We shouldn't get here, but we must still keep consistency! */
+    if (result->co_defaultv) {
+     DREF DeeObject **new_default_vector;
+     new_default_vector = (DREF DeeObject **)Dee_Realloc((void *)result->co_defaultv,
+                                                        ((result->co_argc_max - result->co_argc_min) +
+                                                          current_assembler.a_argrefc) *
+                                                          sizeof(DREF DeeObject *));
+     if unlikely(!new_default_vector) goto err_r;
+     for (i = result->co_argc_max;
+          i < result->co_argc_max + current_assembler.a_argrefc; ++i)
+          new_default_vector[i] = Dee_None;
+     Dee_Incref_n(Dee_None,current_assembler.a_argrefc);
+    }
+    result->co_argc_max += current_assembler.a_argrefc;
+   }
+   if (result->co_keywords)
+       Dee_Incref_n(Dee_EmptyString,current_assembler.a_argrefc);
+  }
+  /* Return information about the required references to the caller. */
+  *prefc = current_assembler.a_refc;
+  *prefv = current_assembler.a_refv;
+  *pargc = current_assembler.a_argrefc;
+  *pargv = current_assembler.a_argrefv;
+  /* Steal the vector. */
+  current_assembler.a_refv    = NULL;
+  current_assembler.a_refc    = 0;
+  current_assembler.a_refa    = 0;
+  current_assembler.a_argrefv = NULL;
+  current_assembler.a_argrefc = 0;
+  current_assembler.a_argrefa = 0;
+ }
+end_fini:
+
+ /* Destroy the current assembler. */
+ assembler_fini();
+end:
+ /* Restore the old assembler. */
+ memcpy(&current_assembler,&old_assembler,sizeof(struct assembler));
+ return result;
+err_r:
+ Dee_Decref(result);
+ goto end_fini;
+err:
+ result = NULL;
+ goto end;
+}
+
 
 DECL_END
 

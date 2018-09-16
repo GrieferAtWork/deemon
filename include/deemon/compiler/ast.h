@@ -184,10 +184,11 @@ struct ast {
                                                  *       If it isn't aligned by 2, the last expression is ignored and not compiled. */
 #   define AST_FMULTIPLE_GENERIC        0x1008  /* Pack elements into a sequence of unspecified typing (used to encode
                                                  * brace-initializer being encoded as `ASM_CALL_SEQ' instructions). */
-#   define AST_FMULTIPLE_GENERIC_KEYS   0x100f  /* Pack elements into a dict-style sequence of unspecified typing (used to
+#   define AST_FMULTIPLE_GENERIC_KEYS   0x100b  /* Pack elements into a dict-style sequence of unspecified typing (used to
                                                  * encode brace-initializer being encoded as `ASM_CALL_MAP' instructions). */
-#   define AST_FMULTIPLE_ISGENERIC(x) (((x)&0x1008) == 0x1008)
-#   define AST_FMULTIPLE_ISDICT(x)    (((x)&0x1003) == 0x1003)
+#   define AST_FMULTIPLE_ISSEQUENCE(x) (((x)&0x1000) && ((x)&0x0003) <= 1)
+#   define AST_FMULTIPLE_ISGENERIC(x)  (((x)&0x1008) == 0x1008)
+#   define AST_FMULTIPLE_ISDICT(x)     (((x)&0x1003) == 0x1003)
         struct {
             size_t            m_astc;      /* Amount of expressions. */
             DREF struct ast **m_astv;      /* [1..1][0..m_astc][owned] Vector of expressions. */

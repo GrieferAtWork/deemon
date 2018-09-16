@@ -641,6 +641,8 @@ struct assembler {
                                         * NOTE: These are the symbols _FROM_ the previous scope. - _NOT_ those ref-symbols from the current,
                                         *       meaning that when creating the reference vector, these symbols should be pushed by the caller
                                         *       directly (Preferrably using `asm_gpush_symbol()')! */
+    struct symbol        **a_argrefv;  /* [1..1][0..a_argrefc|ALLOC(a_argrefa)][owned] Vector of argument references used from the previous base scope.
+                                        * Only used when assembling in `ASM_FARGREFS' mode (s.a. `asm_gcall_func' in `gencall.c') */
     struct asm_exc        *a_exceptv;  /* [0..a_exceptc|ALLOC(a_excepta)][owned] Assembly definitions for exception handlers. */
 #define ASM_LOOPCTL_BRK    0           /* Loop-break symbol. */
 #define ASM_LOOPCTL_CON    1           /* Loop-continue symbol. */
@@ -665,7 +667,9 @@ struct assembler {
     uint16_t               a_staticc;  /* Amount of required static variables. */
     uint16_t               a_statica;  /* Allocated amount of static variables. */
     uint16_t               a_refc;     /* Amount of required reference variables. */
-    uint16_t               a_refa;     /* Amount of required reference variables. */
+    uint16_t               a_refa;     /* Allocated amount of required reference variables. */
+    uint16_t               a_argrefc;  /* Amount of required reference-through-argument variables. */
+    uint16_t               a_argrefa;  /* Allocated amount of required reference-through-argument variables. */
     uint16_t               a_exceptc;  /* Amount of required exception handlers. */
     uint16_t               a_excepta;  /* Allocated amount of exception handlers. */
     uint16_t               a_stackcur; /* Current stack depth. */
@@ -766,6 +770,7 @@ struct assembler {
                                         * Additionally, problems may ensue when the class's symbol is overwritten,
                                         * as member function may not be holding their own references to the class,
                                         * but be using global symbols instead. */
+#define ASM_FARGREFS       0x8000      /* [INTERNAL] Make use of references-through-arguments */
     uint16_t               a_flag;     /* Assembler operation flags (Set of `ASM_F*') */
 };
 
@@ -1014,13 +1019,14 @@ INTDEF int32_t DCALL asm_newmodule(struct module_object *__restrict mod);
 /* Ensure that a given symbol has been allocated and return its index.
  * NOTE: These function automatically save the symbol index within the symbol itself,
  *       thus ensuring that successive calls to these functions will quickly yield the same value. */
-INTDEF int32_t DCALL asm_gsymid(struct symbol *__restrict sym);  /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
-INTDEF int32_t DCALL asm_lsymid(struct symbol *__restrict sym);  /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
-INTDEF int32_t DCALL asm_ssymid(struct symbol *__restrict sym);  /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
-INTDEF int32_t DCALL asm_esymid(struct symbol *__restrict sym);  /* `SYMBOL_TYPE_EXTERN' (Returns the module index in the current root-scope's import vector)
-                                                                  *  NOTE: This function will dereference external aliases. */
-INTDEF int32_t DCALL asm_msymid(struct symbol *__restrict sym);  /* `SYMBOL_TYPE_MODULE' */
-INTDEF int32_t DCALL asm_rsymid(struct symbol *__restrict sym);  /* Reference a symbol for a lower base-scope. */
+INTDEF int32_t DCALL asm_gsymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
+INTDEF int32_t DCALL asm_lsymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
+INTDEF int32_t DCALL asm_ssymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
+INTDEF int32_t DCALL asm_esymid(struct symbol *__restrict sym);   /* `SYMBOL_TYPE_EXTERN' (Returns the module index in the current root-scope's import vector)
+                                                                   *  NOTE: This function will dereference external aliases. */
+INTDEF int32_t DCALL asm_msymid(struct symbol *__restrict sym);   /* `SYMBOL_TYPE_MODULE' */
+INTDEF int32_t DCALL asm_rsymid(struct symbol *__restrict sym);   /* Reference a symbol for a lower base-scope. */
+INTDEF int32_t DCALL asm_asymid_r(struct symbol *__restrict sym); /* For use in `ASM_FARGREFS' mode: Return an argument ID for a referenced symbol. */
 
 /* Search the export table of the builtin `deemon' module for `constval'.
  * If the object could be found, return an anonymous `SYMBOL_TYPE_EXTERN'
@@ -1812,6 +1818,36 @@ INTDEF DREF DeeCodeObject *DCALL
 code_compile(struct ast *__restrict code_ast, uint16_t flags,
              uint16_t *__restrict prefc,
              /*out:inherit*/struct asm_symbol_ref **__restrict prefv);
+
+/* Similar to `code_compile()', however instructs the assembly to try to use
+ * anonymous arguments in order to compile the code, meaning that rather than
+ * being passed through references, referenced objects are passed through
+ * arguments (following arguments that were already passed regularly)
+ * This is mainly used when a function branch is directly invoked, as is the
+ * case for generator expressions, thus potentially allowing the generated
+ * code to be called as a constant function object (without the need of
+ * creating a new, temporary function object in addition to the yield-function
+ * and its wrapper), leading to faster code.
+ * NOTE: Because it's unfeasible to enforce the use of arguments instead of
+ *       references for all places where references may be used, an argrefs
+ *       code object may still make use of regular references, which is why
+ *       there are still `prefc' and `prefv' arguments.
+ *       The main culprit here is user-defined assembly, which may require
+ *       the creation of references.
+ * @param: pargv: Filled with a pointer to the a vector of extended symbols
+ *                that must be passed to the function during invocation,
+ *                following the regular argument list.
+ *                Upon success, the caller must `Dee_Free()' this vector.
+ * @param: pargc: Same as `pargv', but filled with the number of reference-arguments. */
+INTDEF DREF DeeCodeObject *DCALL
+code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
+                     uint16_t *__restrict prefc,
+                     /*out:inherit*/struct asm_symbol_ref **__restrict prefv,
+                     uint16_t *__restrict pargc,
+                     /*out:inherit*/struct symbol ***__restrict pargv);
+
+
+
 INTDEF DREF DeeCodeObject *DCALL code_docompile(struct ast *__restrict code_ast);
 
 /* Compile a new module, using `current_rootscope' for module information,
