@@ -1121,16 +1121,19 @@ imod_init(InteractiveModule *__restrict self,
 #ifndef NDEBUG
   memset(dots,0xcc,sizeof(struct symbol));
 #endif
-  dots->s_name   = &TPPKeyword_Empty;
-  dots->s_next   = root_scope->rs_scope.bs_scope.s_del;
+  dots->s_name        = &TPPKeyword_Empty;
+  dots->s_flag        = SYMBOL_FALLOC;
+  dots->s_nread       = 0;
+  dots->s_nwrite      = 0;
+  dots->s_nbound      = 0;
+  dots->s_scope       = &root_scope->rs_scope.bs_scope;
+  dots->s_type        = SYMBOL_TYPE_ARG;
+  dots->s_symid       = 0;
+  dots->s_decl.l_file = NULL;
+
+  dots->s_next                        = root_scope->rs_scope.bs_scope.s_del;
   root_scope->rs_scope.bs_scope.s_del = dots;
-  dots->s_flag   = SYMBOL_FALLOC;
-  dots->s_nread  = 0;
-  dots->s_nwrite = 0;
-  dots->s_nbound = 0;
-  dots->s_scope  = &root_scope->rs_scope.bs_scope;
-  dots->s_type   = SYMBOL_TYPE_ARG;
-  dots->s_symid  = 0;
+
   root_scope->rs_scope.bs_argv = (struct symbol **)Dee_Malloc(1*sizeof(struct symbol *));
   if unlikely(!root_scope->rs_scope.bs_argv) { sym_free(dots); goto err_compiler; }
   root_scope->rs_scope.bs_argc    = 1;
@@ -1208,8 +1211,8 @@ err_compiler_basefile:
      goto err_basefile;
     }
     sym->s_name  = TPPLexer_LookupKeyword(DeeString_STR(modsym->ss_name),
-                                            DeeString_SIZE(modsym->ss_name),
-                                            1);
+                                          DeeString_SIZE(modsym->ss_name),
+                                          1);
     if unlikely(!sym->s_name) goto err_compiler_basefile;
     sym->s_type         = SYMBOL_TYPE_GLOBAL;
     sym->s_flag         = SYMBOL_FALLOC;
