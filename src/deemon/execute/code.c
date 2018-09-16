@@ -954,19 +954,15 @@ function_call(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
+  result = DeeObject_MALLOC(DeeYieldFunctionObject);
   if unlikely(!result) return NULL;
   result->yf_func = (DREF DeeFunctionObject *)self;
   /* Pack together an argument tuple for the yield-function. */
   result->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(argc,argv);
   if unlikely(!result->yf_args) { DeeGCObject_Free(result); return NULL; }
-  DeeObject_Init(result,&DeeYieldFunction_Type);
   result->yf_this = NULL;
-#ifndef CONFIG_NO_THREADS
-  rwlock_init(&result->yf_lock);
-#endif
   Dee_Incref(self);
-  DeeGC_Track((DeeObject *)result);
+  DeeObject_Init(result,&DeeYieldFunction_Type);
   return (DREF DeeObject *)result;
  }
 }
@@ -1078,18 +1074,14 @@ DeeFunction_CallTuple(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
+  result = DeeObject_MALLOC(DeeYieldFunctionObject);
   if unlikely(!result) return NULL;
   result->yf_func = (DREF DeeFunctionObject *)self;
   result->yf_args = (DREF DeeTupleObject *)args;
-  DeeObject_Init(result,&DeeYieldFunction_Type);
   result->yf_this = NULL;
-#ifndef CONFIG_NO_THREADS
-  rwlock_init(&result->yf_lock);
-#endif
   Dee_Incref(self);
   Dee_Incref(args);
-  DeeGC_Track((DeeObject *)result);
+  DeeObject_Init(result,&DeeYieldFunction_Type);
   return (DREF DeeObject *)result;
  }
 }
@@ -1215,20 +1207,16 @@ DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
+  result = DeeObject_MALLOC(DeeYieldFunctionObject);
   if unlikely(!result) return NULL;
   result->yf_func = self;
   /* Pack together an argument tuple for the yield-function. */
   result->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(argc,argv);
   if unlikely(!result->yf_args) { DeeGCObject_Free(result); return NULL; }
-  DeeObject_Init(result,&DeeYieldFunction_Type);
   result->yf_this = this_arg;
-#ifndef CONFIG_NO_THREADS
-  rwlock_init(&result->yf_lock);
-#endif
   Dee_Incref(self);
   Dee_Incref(this_arg);
-  DeeGC_Track((DeeObject *)result);
+  DeeObject_Init(result,&DeeYieldFunction_Type);
   return (DREF DeeObject *)result;
  }
 }
@@ -1337,20 +1325,16 @@ DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = (DREF DeeYieldFunctionObject *)DeeGCObject_Malloc(sizeof(DeeYieldFunctionObject));
+  result = DeeObject_MALLOC(DeeYieldFunctionObject);
   if unlikely(!result) return NULL;
   result->yf_func = self;
   /* Pack together an argument tuple for the yield-function. */
   result->yf_args = (DREF DeeTupleObject *)args;
-  DeeObject_Init(result,&DeeYieldFunction_Type);
   result->yf_this = this_arg;
-#ifndef CONFIG_NO_THREADS
-  rwlock_init(&result->yf_lock);
-#endif
   Dee_Incref(self);
   Dee_Incref(this_arg);
   Dee_Incref(args);
-  DeeGC_Track((DeeObject *)result);
+  DeeObject_Init(result,&DeeYieldFunction_Type);
   return (DREF DeeObject *)result;
  }
 }

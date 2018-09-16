@@ -619,17 +619,14 @@ struct function_object {
 };
 
 struct yield_function_object {
-    OBJECT_HEAD /* GC Object. */
+    OBJECT_HEAD 
     /* TODO: Turn this object into a variable-length one,
      *       with elements of `yf_args' being stored in-line. */
-    DREF DeeFunctionObject   *yf_func; /* [0..1][(!= NULL) == (yf_args != NULL)][const] The function we are derived from.
+    DREF DeeFunctionObject   *yf_func; /* [1..1][const] The function we are derived from.
                                         * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
-    DREF struct tuple_object *yf_args; /* [0..1][(!= NULL) == (yf_func != NULL)][const] Arguments that we are called with.
+    DREF struct tuple_object *yf_args; /* [1..1][const] Arguments that we are called with.
                                         * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
     DREF DeeObject           *yf_this; /* [0..1][const] 'this' object during callback. */
-#ifndef CONFIG_NO_THREADS
-    rwlock_t                  yf_lock; /* Lock held while executing the frame of this iterator. */
-#endif
 };
 
 struct yield_function_iterator_object {

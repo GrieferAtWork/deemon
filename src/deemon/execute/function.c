@@ -119,7 +119,7 @@ function_init(size_t argc, DeeObject **__restrict argv) {
  DREF DeeFunctionObject *result;
  DeeCodeObject *code = &empty_code;
  DeeObject *refs = Dee_EmptyTuple;
- if (DeeArg_Unpack(argc,argv,"o|o:function",&code,&refs) ||
+ if (DeeArg_Unpack(argc,argv,"|oo:function",&code,&refs) ||
      DeeObject_AssertTypeExact((DeeObject *)code,&DeeCode_Type))
      goto err;
  result = (DREF DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject,fo_refv)+
@@ -365,87 +365,58 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 };
 
 PRIVATE void DCALL
-yf_dtor(YFunction *__restrict self) {
- Dee_XDecref(self->yf_func);
- Dee_XDecref(self->yf_args);
+yf_fini(YFunction *__restrict self) {
+ Dee_Decref(self->yf_func);
+ Dee_Decref(self->yf_args);
  Dee_XDecref(self->yf_this);
 }
 PRIVATE void DCALL
 yf_visit(YFunction *__restrict self, dvisit_t proc, void *arg) {
-#ifndef CONFIG_NO_THREADS
- rwlock_read(&self->yf_lock);
-#endif
- Dee_XVISIT(self->yf_func);
- Dee_XVISIT(self->yf_args);
- Dee_XVISIT(self->yf_this);
-#ifndef CONFIG_NO_THREADS
- rwlock_endread(&self->yf_lock);
-#endif
-}
-PRIVATE void DCALL
-yf_clear(YFunction *__restrict self) {
-#ifndef CONFIG_NO_THREADS
- DeeObject *obj[3];
- rwlock_write(&self->yf_lock);
- obj[0] = (DeeObject *)self->yf_func,self->yf_func = NULL;
- obj[1] = (DeeObject *)self->yf_args,self->yf_args = NULL;
- obj[2] = (DeeObject *)self->yf_this,self->yf_this = NULL;
- rwlock_endwrite(&self->yf_lock);
- Dee_XDecref(obj[0]);
- Dee_XDecref(obj[1]);
- Dee_XDecref(obj[2]);
-#else
- Dee_XClear(self->yf_func);
- Dee_XClear(self->yf_args);
- Dee_XClear(self->yf_this);
-#endif
+ Dee_Visit(self->yf_func);
+ Dee_Visit(self->yf_args);
+ Dee_XVisit(self->yf_this);
 }
 
 PRIVATE int DCALL
 yf_ctor(YFunction *__restrict self) {
- self->yf_func = NULL;
- self->yf_args = NULL;
+ self->yf_func = function_init(0,NULL);
+ if unlikely(!self->yf_func) goto err;
+ self->yf_args = (DREF DeeTupleObject *)Dee_EmptyTuple;
+ Dee_Incref(Dee_EmptyTuple);
  self->yf_this = NULL;
-#ifndef CONFIG_NO_THREADS
- rwlock_init(&self->yf_lock);
-#endif
  return 0;
+err:
+ return -1;
 }
 
 
 PRIVATE int DCALL
 yf_copy(YFunction *__restrict self,
         YFunction *__restrict other) {
-#ifndef CONFIG_NO_THREADS
- rwlock_init(&self->yf_lock);
- rwlock_read(&other->yf_lock);
-#endif
  self->yf_func = other->yf_func;
  self->yf_args = other->yf_args;
  self->yf_this = other->yf_this;
- Dee_XIncref(self->yf_func);
- Dee_XIncref(self->yf_args);
+ Dee_Incref(self->yf_func);
+ Dee_Incref(self->yf_args);
  Dee_XIncref(self->yf_this);
-#ifndef CONFIG_NO_THREADS
- rwlock_endread(&other->yf_lock);
-#endif
  return 0;
 }
+
 PRIVATE int DCALL
-yf_deepload(YFunction *__restrict self) {
- if (self->yf_func &&
-     DeeObject_InplaceDeepCopyWithLock((DeeObject **)&self->yf_func,
-                                                     &self->yf_lock))
-     goto err;
- if (self->yf_args &&
-     DeeObject_InplaceDeepCopyWithLock((DeeObject **)&self->yf_args,
-                                                     &self->yf_lock))
-     goto err;
- if (self->yf_this &&
-     DeeObject_InplaceDeepCopyWithLock((DeeObject **)&self->yf_this,
-                                                     &self->yf_lock))
-     goto err;
+yf_deepcopy(YFunction *__restrict self,
+            YFunction *__restrict other) {
+ self->yf_args = (DREF DeeTupleObject *)DeeObject_DeepCopy((DeeObject *)other->yf_args);
+ if unlikely(!self->yf_args) goto err;
+ self->yf_this = NULL;
+ if (other->yf_this) {
+  self->yf_this = DeeObject_DeepCopy(other->yf_this);
+  if unlikely(!self->yf_this) goto err_args;
+ }
+ self->yf_func = other->yf_func;
+ Dee_Incref(self->yf_func);
  return 0;
+err_args:
+ Dee_Decref(self->yf_args);
 err:
  return -1;
 }
@@ -453,31 +424,39 @@ err:
 PRIVATE int DCALL
 yf_new(YFunction *__restrict self,
        size_t argc, DeeObject **__restrict argv) {
- DeeObject *func,*args,*this_ = NULL;
- if (DeeArg_Unpack(argc,argv,"oo|o:yield_function",&func,&args,&this_))
-     return -1;
+ DeeObject *func = NULL,*args = Dee_EmptyTuple,*this_ = NULL;
+ if (DeeArg_Unpack(argc,argv,"|ooo:yield_function",&func,&args,&this_))
+     goto err;
  /* The actually available overloads are:
+  *   yield_function::yield_function();
+  *   yield_function::yield_function(function func);
   *   yield_function::yield_function(function func, tuple args);
-  *   yield_function::yield_function(function func, object this, tuple args);
-  */
+  *   yield_function::yield_function(function func, object this, tuple args); */
  if (this_) { DeeObject *temp = args; args = this_; this_ = temp; }
- if (DeeObject_AssertTypeExact(func,&DeeFunction_Type) ||
-     DeeObject_AssertTypeExact(args,&DeeTuple_Type))
-     return -1;
- if ((this_ != NULL) != (((DeeFunctionObject *)func)->fo_code->co_flags&CODE_FTHISCALL)) {
-  DeeError_Throwf(&DeeError_TypeError,"Invalid presence of this-argument");
-  return -1;
+ if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
+     goto err;
+ if (func) {
+  if (DeeObject_AssertTypeExact(func,&DeeFunction_Type))
+      goto err;
+  Dee_Incref(func);
+ } else {
+  func = (DeeObject *)function_init(0,NULL);
+  if unlikely(!func) goto err;
  }
- self->yf_func = (DREF DeeFunctionObject *)func;
+ if ((this_ != NULL) != (((DeeFunctionObject *)func)->fo_code->co_flags&CODE_FTHISCALL)) {
+  Dee_Decref(func);
+  DeeError_Throwf(&DeeError_TypeError,
+                  "Invalid presence of this-argument");
+  goto err;
+ }
+ self->yf_func = (DREF DeeFunctionObject *)func; /* Inherit reference. */
  self->yf_args = (DREF DeeTupleObject *)args;
  self->yf_this = this_;
- Dee_Incref(self->yf_this);
- Dee_Incref(self->yf_this);
+ Dee_Incref(self->yf_args);
  Dee_XIncref(self->yf_this);
-#ifndef CONFIG_NO_THREADS
- rwlock_init(&self->yf_lock);
-#endif
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -487,28 +466,9 @@ yfi_init(YFIterator *__restrict self,
 #ifndef NDEBUG
  memset(&self->yi_frame,0xcc,sizeof(struct code_frame));
 #endif
- self->yi_func = yield_function;
  /* Setup the frame for the iterator. */
-#ifndef CONFIG_NO_THREADS
- rwlock_read(&yield_function->yf_lock);
-#endif
- ASSERT((yield_function->yf_func != NULL) ==
-        (yield_function->yf_args != NULL));
- self->yi_frame.cf_func  = yield_function->yf_func;
- if unlikely(!self->yi_frame.cf_func) {
-#ifndef CONFIG_NO_THREADS
-  rwlock_endread(&yield_function->yf_lock);
-#endif
-  /* Special case: The yield_function is empty, or has been cleared.
-   * >> To deal with this, we create an empty
-   *    iterator that immediately returns `ITER_DONE'. */
-  memset(&self->yi_func,0,
-         sizeof(YFIterator)-
-         offsetof(YFIterator,yi_func));
-  self->yi_frame.cf_prev = CODE_FRAME_NOT_EXECUTING;
-  self->yi_func = NULL;
-  goto finish_init;
- }
+ self->yi_func          = yield_function;
+ self->yi_frame.cf_func = yield_function->yf_func;
  Dee_Incref(yield_function); /* Reference stored in `self->yi_func' */
  Dee_Incref(self->yi_frame.cf_func); /* Reference stored in here. */
  code = self->yi_frame.cf_func->fo_code;
@@ -526,37 +486,31 @@ yfi_init(YFIterator *__restrict self,
  self->yi_frame.cf_this  = yield_function->yf_this;
  Dee_XIncref(self->yi_frame.cf_this);
  self->yi_frame.cf_stacksz = 0;
-
 #ifndef CONFIG_NO_THREADS
- rwlock_endread(&yield_function->yf_lock);
  recursive_rwlock_init(&self->yi_lock);
 #endif
-finish_init:
  return 0;
 err:
-#ifndef CONFIG_NO_THREADS
- rwlock_endread(&yield_function->yf_lock);
-#endif
  return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
-yf_iter_self(DeeObject *__restrict self) {
+PRIVATE DREF YFIterator *DCALL
+yf_iter_self(YFunction *__restrict self) {
  DREF YFIterator *result;
- result = (DREF YFIterator *)
-  DeeGCObject_Malloc(sizeof(YFIterator));
- if unlikely(!result) return NULL;
- if unlikely(yfi_init(result,(DREF YFunction *)self)) {
-  DeeGCObject_Free(result);
-  return NULL;
- }
+ result = DeeGCObject_MALLOC(YFIterator);
+ if unlikely(!result) goto err;
+ if unlikely(yfi_init(result,self)) goto err_r;
  DeeObject_Init(result,&DeeYieldFunctionIterator_Type);
  DeeGC_Track((DeeObject *)result);
- return (DREF DeeObject *)result;
+ return result;
+err_r:
+ DeeGCObject_Free(result);
+err:
+ return NULL;
 }
 
 PRIVATE struct type_seq yf_seq = {
-    /* .tp_iter_self = */&yf_iter_self,
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_iter_self
 };
 
 PRIVATE struct type_member yf_class_members[] = {
@@ -564,100 +518,55 @@ PRIVATE struct type_member yf_class_members[] = {
     TYPE_MEMBER_END
 };
 
-PRIVATE struct type_gc yf_gc = {
-    /* .tp_clear = */(void(DCALL *)(DeeObject *__restrict))&yf_clear
-};
-
-
 /* Since yield_function objects are bound to a specific function, comparing
  * them won't compare the bound function, but rather that function's pointer! */
 PRIVATE dhash_t DCALL
 yf_hash(DeeYieldFunctionObject *__restrict self) {
- dhash_t result; DREF DeeObject *temp;
- rwlock_read(&self->yf_lock);
- result = DeeObject_HashGeneric(self->yf_func);
- if ((temp = (DREF DeeObject *)self->yf_args) != NULL) {
-  Dee_Incref(temp);
-  rwlock_endread(&self->yf_lock);
-  result ^= DeeObject_Hash(temp);
-  Dee_Decref(temp);
-  rwlock_read(&self->yf_lock);
- }
- if ((temp = (DREF DeeObject *)self->yf_this) != NULL) {
-  Dee_Incref(temp);
-  rwlock_endread(&self->yf_lock);
-  result ^= DeeObject_Hash(temp);
-  Dee_Decref(temp);
- } else {
-  rwlock_endread(&self->yf_lock);
- }
+ dhash_t result;
+ result  = DeeObject_HashGeneric(self->yf_func);
+ result ^= DeeObject_Hash((DeeObject *)self->yf_args);
+ if (self->yf_this)
+     result ^= DeeObject_Hash((DeeObject *)self->yf_this);
  return result;
 }
 
 PRIVATE int DCALL
 yf_eq_impl(DeeYieldFunctionObject *__restrict self,
            DeeYieldFunctionObject *__restrict other) {
- DREF DeeObject *lhs,*rhs; int error;
+ int error;
  if (DeeObject_AssertTypeExact(other,&DeeYieldFunction_Type))
-     return -1;
- if (self == other) return 1;
+     goto err;
+ if (self == other) goto yes;
  if (self->yf_func != other->yf_func) goto nope;
- rwlock_read(&self->yf_lock);
- if ((lhs = (DREF DeeObject *)self->yf_args) != NULL) {
-  Dee_Incref(lhs);
-  rwlock_endread(&self->yf_lock);
-  rwlock_read(&other->yf_lock);
-  rhs = (DREF DeeObject *)other->yf_args;
-  Dee_XIncref(rhs);
-  rwlock_endread(&other->yf_lock);
-  if (!rhs) { Dee_Decref(lhs); goto nope; }
-  error = DeeObject_CompareEq(lhs,rhs);
-  Dee_Decref(rhs);
-  Dee_Decref(lhs);
-  if (error <= 0) goto do_return_error;
-  rwlock_read(&self->yf_lock);
- } else if (other->yf_args != NULL) {
-  goto nope_unlock;
- }
- if ((lhs = (DREF DeeObject *)self->yf_this) != NULL) {
-  Dee_Incref(lhs);
-  rwlock_endread(&self->yf_lock);
-  rwlock_read(&other->yf_lock);
-  rhs = (DREF DeeObject *)other->yf_this;
-  Dee_XIncref(rhs);
-  rwlock_endread(&other->yf_lock);
-  if (!rhs) { Dee_Decref(lhs); goto nope; }
-  error = DeeObject_CompareEq(lhs,rhs);
-  Dee_Decref(rhs);
-  Dee_Decref(lhs);
-  return error;
- } else if (other->yf_this != NULL) {
-  goto nope_unlock;
- } else {
-  rwlock_endread(&self->yf_lock);
- }
+ error = DeeObject_CompareEq((DeeObject *)self->yf_args,
+                             (DeeObject *)other->yf_args);
+ if unlikely(error <= 0) goto do_return_error;
+ ASSERTF((self->yf_this != NULL) == (other->yf_this != NULL),
+         "If the functions are identical, they must also have "
+         "identical requirements for the presence of a this-argument!");
+ if (self->yf_this)
+     return DeeObject_CompareEq(self->yf_this,other->yf_this);
+yes:
  return 1;
 do_return_error:
  return error;
-nope_unlock:
- rwlock_endread(&self->yf_lock);
 nope:
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE DREF DeeObject *DCALL
 yf_eq(DeeYieldFunctionObject *__restrict self,
       DeeYieldFunctionObject *__restrict other) {
- int result;
- result = yf_eq_impl(self,other);
+ int result = yf_eq_impl(self,other);
  if unlikely(result < 0) return NULL;
  return_bool_(result);
 }
 PRIVATE DREF DeeObject *DCALL
 yf_ne(DeeYieldFunctionObject *__restrict self,
       DeeYieldFunctionObject *__restrict other) {
- int result;
- result = yf_eq_impl(self,other);
+ int result = yf_eq_impl(self,other);
  if unlikely(result < 0) return NULL;
  return_bool_(!result);
 }
@@ -673,7 +582,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"yield_function",
     /* .tp_doc      = */NULL,
-    /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FGC,
+    /* .tp_flags    = */TP_FNORMAL | TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeSeq_Type,
@@ -682,7 +591,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */&yf_ctor,
                 /* .tp_copy_ctor = */&yf_copy,
-                /* .tp_deep_ctor = */&yf_copy,
+                /* .tp_deep_ctor = */&yf_deepcopy,
                 /* .tp_any_ctor  = */&yf_new,
                 /* .tp_free      = */NULL,
                 {
@@ -690,10 +599,10 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
                 }
             }
         },
-        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&yf_dtor,
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&yf_fini,
         /* .tp_assign      = */NULL,
         /* .tp_move_assign = */NULL,
-        /* .tp_deepload    = */(int(DCALL *)(DeeObject *__restrict))&yf_deepload
+        /* .tp_deepload    = */NULL
     },
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
@@ -702,7 +611,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
     },
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&yf_visit,
-    /* .tp_gc            = */&yf_gc,
+    /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
     /* .tp_cmp           = */&yf_cmp,
     /* .tp_seq           = */&yf_seq,

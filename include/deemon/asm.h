@@ -751,7 +751,6 @@
 #define ASM_CALL_GLOBAL       0xde /* [3][-n,+1]   `push call global <imm8>, #<imm8>'   - Pop #<imm8> (second) values from the stack, pack then into a tuple, then call a function in global slot <imm8> (first). */
 #define ASM_CALL_LOCAL        0xdf /* [3][-n,+1]   `push call local <imm8>, #<imm8>'    - Pop #<imm8> (second) values from the stack, pack then into a tuple, then call a function in local slot <imm8> (first). */
 
-/* TODO: Remove `ASM_BOUNDMEMBER_THIS_R' and `ASM_BOUNDMEMBER_THIS' */
 
 
 /* Reserved. */
