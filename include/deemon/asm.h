@@ -104,7 +104,7 @@
  * Frame cleanup:
  * >> RETURN:
  * >>     // Serve finally handles affecting the last-executed instruction.
- * >>     IF HAS_FINALLY_HANDLERS(START_IP) THEN
+ * >>     IF HAS_FINALLY_HANDLERS(REG_START_IP) THEN
  * >>         EXECUTE_FINALLY_HANDLERS();
  * >>     FI
  * >>     ATTR_FALLTHROUGH();
@@ -133,7 +133,7 @@
  *
  * Misc. documentation functions:
  * >> EXCEPT:
- * >>     IF HAS_EXCEPTION_HANDLERS(START_IP) THEN
+ * >>     IF HAS_EXCEPTION_HANDLERS(REG_START_IP) THEN
  * >>         LOAD_LAST_EXCEPTION_HANDLER();
  * >>         GOTO DISPATCH;
  * >>     FI
@@ -141,7 +141,7 @@
  * >>
  * >>
  * >> void    THROW(object obj);
- * >> void    THROW_OR_UNDEFINED_BEHAVIOR(object obj); // Causes undefined behavior in fast-mode code. Else, throws an exception `obj' in slow-mode code
+ * >> void    THROW_OR_UNDEFINED_BEHAVIOR(object obj); // Causes undefined behavior in fast-mode code. Else, throws an exception `obj' in safe-mode code
  * >>
  * >> // Access to stack items.
  * >> void    PUSH(object obj);
@@ -155,7 +155,7 @@
  * >> object  CONSTANT(Integer static_index); // Constant and static symbols use the same indices
  * >> object  MODULE(Integer module_index);
  * >> object  REF(Integer reference_index);
- * >> object  ARG(Integer reference_index);
+ * >> object  ARG(Integer argument_index);
  * >> object &TOP    = NTH(0);
  * >> object &FIRST  = NTH(0);
  * >> object &SECOND = NTH(1);
@@ -187,7 +187,7 @@
                                     * >>     REG_RESULT = UNBOUND;
                                     * >> FI
                                     * >> IF IS_CODE_YIELDING THEN
-                                    * >>     IP                  = START_IP;
+                                    * >>     IP                  = REG_START_IP;
                                     * >>     REG_RESULT_ITERDONE = TRUE;
                                     * >> ELSE
                                     * >>     REG_RESULT          = none;
@@ -227,7 +227,7 @@
                                     * >>    POP();
                                     * >>    GOTO DISPATCH;
                                     * >> DONE
-                                    * >> IP = START_IP;
+                                    * >> IP = REG_START_IP;
                                     * >> GOTO RETURN_WITHOUT_FINALLY; */
 #define ASM_THROW             0x03 /* [1][-1,+0]   `throw pop'                          - Pop one object and throw it as an exception. This instruction does not return.
                                     * [1][-0,+0]   `throw PREFIX'                       - `PREFIX: throw'
@@ -421,7 +421,6 @@
 #define ASM_SUPER             0x28 /* [1][-2,+1]   `super top, pop'                     - Create a new super-wrapper using a type from `pop' and the associated object from `top'.
                                     * >> object ob = POP();
                                     * >> PUSH(POP() as ob); */
-/* TODO: Remove `ASM_SUPER_THIS_R' */
 #define ASM_SUPER_THIS_R      0x29 /* [2][-0,+1]   `push super this, ref <imm8>'        - Similar to `ASM_SUPER', but use a referenced variable `<imm8>' as type and the this-argument as object.
                                     * >> PUSH(THIS as REF(IMM8)); */
 /*      ASM_                  0x2a  *               --------                            - ------------------ */
@@ -755,6 +754,7 @@
 /* TODO: Remove `ASM_BOUNDMEMBER_THIS_R' and `ASM_BOUNDMEMBER_THIS' */
 
 
+/* Reserved. */
 /*      ASM_                  0xe0  *               --------                            - ------------------ */
 /*      ASM_                  0xe1  *               --------                            - ------------------ */
 /*      ASM_                  0xe2  *               --------                            - ------------------ */
@@ -781,24 +781,33 @@
 #define ASM_RESERVED5         0xf5 /* Reserved for future expansion. */
 #define ASM_RESERVED6         0xf6 /* Reserved for future expansion. */
 #define ASM_RESERVED7         0xf7 /* Reserved for future expansion. */
-
-//#define ASM_ISPREFIX(x)     (((x) >= 0xe0 && (x) <= 0xef) || (x) >= 0xf8)
-// #define ASM_PATTR             0xe0 /* [1+?][-2,+1] `attr top, pop'                   - Prefix: Perform an operation on the attribute of an object `top'. */
-// #define ASM_PITEM             0xe1 /* [1+?][-2,+1] `item top, pop'                   - Prefix: Perform an operation on the item of an object `top'. */
-// #define ASM_PRANGE            0xe2 /* [1+?][-2,+1] `range top, pop, pop'             - Prefix: Perform an operation on the sub-range of an object `top'. */
-// /*      ASM_                  0xe3  */
-// #define ASM_PATTR_C           0xe4 /* [2+?][-1,+1] `attr top, const <imm8>'          - Same as `ASM_PATTR' but use constant slot <imm8> as attribute name. */
-// #define ASM_PATTR_C16         0xe5 /* [3+?][-1,+1] `attr top, const <imm16>'         - Same as `ASM_PATTR' but use constant slot <imm16> as attribute name. */
-// #define ASM_PITEM_C           0xe6 /* [2+?][-1,+1] `item top, const <imm8>'          - Same as `ASM_PITEM' but use constant slot <imm8> as attribute name. */
-// #define ASM_PITEM_C16         0xe7 /* [3+?][-1,+1] `item top, const <imm16>'         - Same as `ASM_PITEM' but use constant slot <imm16> as attribute name. */
-// /*      ASM_                  0xe8  */
-// #define ASM_PRANGE_PN         0xe9 /* [1][-2,+1] `range top, pop, none'           - Same as `ASM_GETRANGE', but use `none' for the `end' key. */
-// #define ASM_PRANGE_NP         0xea /* [1][-2,+1] `range top, none, pop'           - Same as `ASM_GETRANGE', but use `none' for the `begin' key. */
-// #define ASM_PRANGE_PI         0xeb /* [3][-2,+1] `range top, pop, $<Simm16>'      - Same as `ASM_GETRANGE', but use an int <Simm16> for the `end' key. */
-// #define ASM_PRANGE_IP         0xec /* [2][-2,+1] `range top, $<Simm16>, pop'      - Same as `ASM_GETRANGE', but use an int <Simm16> for the `begin' key. */
-// #define ASM_PRANGE_NI         0xed /* [3][-1,+1] `range top, none, $<Simm16>'     - Same as `ASM_GETRANGE', but use `none' for the `begin' key and an int <Simm16> for the `end' key. */
-// #define ASM_PRANGE_IN         0xee /* [3][-1,+1] `range top, $<Simm16>, none'     - Same as `ASM_GETRANGE', but use an int <Simm16> for the `begin' key and `none' for the `end' key. */
-// #define ASM_PRANGE_II         0xef /* [5][-1,+1] `range top, $<Simm16>, $<Simm16>' - Same as `ASM_GETRANGE', but use an int <Simm16> (first) for the `begin' key and <Simm16> (second) for the `end' key. */
+#define ASM_EXTENDEDMIN       0xf0
+#define ASM_EXTENDEDMAX       0xf7
+#if 1 /* Only one extension table exists. */
+#define ASM_ISEXTENDED(x)   ((x) == ASM_EXTENDED1)
+#define CASE_ASM_EXTENDED    case ASM_EXTENDED1
+#else
+#if ASM_EXTENDEDMIN + 7 == ASM_EXTENDEDMAX
+#define CASE_ASM_EXTENDED    \
+        case ASM_EXTENDEDMIN + 0: \
+        case ASM_EXTENDEDMIN + 1: \
+        case ASM_EXTENDEDMIN + 2: \
+        case ASM_EXTENDEDMIN + 3: \
+        case ASM_EXTENDEDMIN + 4: \
+        case ASM_EXTENDEDMIN + 5: \
+        case ASM_EXTENDEDMIN + 6: \
+        case ASM_EXTENDEDMIN + 7
+#else
+#define CASE_ASM_EXTENDED    \
+        case ASM_EXTENDEDMIN ... ASM_EXTENDEDMAX
+#endif
+#if ((ASM_EXTENDEDMIN & 0xf8) == (ASM_EXTENDEDMAX & 0xf8)) && \
+    ((ASM_EXTENDEDMIN & 7) == 0 && (ASM_EXTENDEDMAX & 7) == 7)
+#define ASM_ISEXTENDED(x)   (((x) & 0xf8) == ASM_EXTENDEDMIN)
+#else
+#define ASM_ISEXTENDED(x)   ((x) >= ASM_EXTENDEDMIN && (x) <= ASM_EXTENDEDMAX)
+#endif
+#endif
 
 /* Working storage class modifiers. */
 /*      ASM_                  0xf8  *  --------                            - ------------------ */
@@ -830,9 +839,9 @@
                                     * @throws: Error.RuntimeError.UnboundLocal:
                                     *          The specified local variable is not assigned.
                                     */
-#define ASM_ISPREFIX(x)     ((x) >= ASM_PREFIXMIN)
 #define ASM_PREFIXMIN         0xf8
 #define ASM_PREFIXMAX         0xff
+#define ASM_ISPREFIX(x)     ((x) >= ASM_PREFIXMIN)
 
 
 /* Opcodes for misc/rarely used operators, as well as 16-bit

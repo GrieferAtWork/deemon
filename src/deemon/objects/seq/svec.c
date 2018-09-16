@@ -275,7 +275,7 @@ rvec_contains(RefVector *__restrict self,
       rwlock_endread(self->rv_plock);
 #endif
   if (!item) continue;
-  temp = DeeObject_CompareEq(item,other);
+  temp = DeeObject_CompareEq(other,item);
   Dee_Decref(item);
   if (temp != 0) {
    if unlikely(temp < 0)
@@ -1292,7 +1292,7 @@ svec_contains(SharedVector *__restrict self,
 #ifndef CONFIG_NO_THREADS
   rwlock_endread(&self->sv_lock);
 #endif
-  temp = DeeObject_CompareEq(item,other);
+  temp = DeeObject_CompareEq(other,item);
   Dee_Decref(item);
   if (temp != 0) {
    if unlikely(temp < 0) return NULL;

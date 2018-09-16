@@ -104,7 +104,7 @@ DFUNDEF DREF DeeObject *DCALL DeeDict_NewKeyItemsInherited(size_t num_keyitems, 
  * >>          struct dict_item *item = DICT_HASHIT(self,i);
  * >>          if (!item->di_key) break; // Not found
  * >>          if (item->di_hash != hash) continue; // Non-matching hash
- * >>          if (DeeObject_CompareEq(item->di_key,key))
+ * >>          if (DeeObject_CompareEq(key,item->di_key))
  * >>              return item->di_item;
  * >>     }
  * >>     return NULL;

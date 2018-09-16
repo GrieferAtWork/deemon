@@ -442,7 +442,7 @@ again:
   Dee_Incref(item_key);
   DeeHashSet_LockEndRead(me);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,search_item);
+  error = DeeObject_CompareEq(search_item,item_key);
   Dee_Decref(item_key);
   if unlikely(error < 0)
      return NULL; /* Error in compare operator. */
@@ -524,7 +524,7 @@ again:
   Dee_Incref(item_key);
   DeeHashSet_LockEndRead(me);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,search_item);
+  error = DeeObject_CompareEq(search_item,item_key);
   Dee_Decref(item_key);
   if unlikely(error < 0)
      return -1; /* Error in compare operator. */
@@ -594,7 +594,7 @@ restart:
   Dee_Incref(item_key);
   DeeHashSet_LockEndWrite(me);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,search_item);
+  error = DeeObject_CompareEq(search_item,item_key);
   Dee_Decref(item_key);
   if unlikely(error < 0)
      return -1; /* Error in compare operator. */
@@ -867,7 +867,7 @@ restart:
   Dee_Incref(item_key);
   DeeHashSet_LockEndRead(me);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,search_item);
+  error = DeeObject_CompareEq(search_item,item_key);
   Dee_Decref(item_key);
   if (error > 0) return 1; /* Found the item. */
   if unlikely(error < 0)

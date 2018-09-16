@@ -52,3 +52,32 @@ function predeq2key(pred_eq) {
 }
 
 
+@"(object key)->object"
+@"@return Always re-returns @key"
+@"An identity key function that simply re-returns the given @key"
+@"Since key functions are usually optional, this function may be "
+ "used as a default binding by implementations not designed to be "
+ "used without any key function"
+function identity(key) {
+	return key;
+}
+
+@"(callable keys...)->callable"
+@"@return A key function that is the combination of all given @keys"
+@"Construct and return a key function which, when executed, "
+ "transforms the given object using all of the given @keys functions "
+ "in reverse order, meaning that the last function is executed first, "
+ "and the return value of the first function then propagated as key value"
+function keycombine(keys...) {
+	if (#keys == 1)
+		return keys[0];
+	local keyfuncs = keys.reversed();
+	return [](x) {
+		for (local f: keyfuncs)
+			x = f(x);
+		return x;
+	};
+}
+
+
+

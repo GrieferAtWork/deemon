@@ -186,7 +186,7 @@ do_switch_on_iter:
   opcode = *iter;
 do_switch_on_opcode:
   switch (opcode) {
-  case ASM_EXTENDED1:
+  CASE_ASM_EXTENDED:
    opcode <<= 8;
    opcode  |= iter[1];
    goto do_switch_on_opcode;
@@ -682,8 +682,8 @@ get_next_instruction_without_stack:
    next = asm_nextinstr(iter);
   } else {
    uint16_t opcode = *iter;
-   if (opcode == ASM_EXTENDED1)
-       opcode = (ASM_EXTENDED1 << 8) | iter[1];
+   if (ASM_ISEXTENDED(opcode))
+       opcode = (opcode << 8) | iter[1];
    if (asm_isnoreturn(opcode,code_flags)) {
     new_stacksz = (uint16_t)-1;
     goto get_next_instruction_without_stack;

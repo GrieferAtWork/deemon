@@ -716,7 +716,7 @@ restart:
   Dee_Incref(item_key);
   DeeDict_LockEndRead(self);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,key);
+  error = DeeObject_CompareEq(key,item_key);
   Dee_Decref(item_key);
   if (error > 0) return_true; /* Found the item. */
   if unlikely(error < 0)
@@ -757,7 +757,7 @@ restart:
   Dee_Incref(item_value);
   DeeDict_LockEndRead(self);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,key);
+  error = DeeObject_CompareEq(key,item_key);
   Dee_Decref(item_key);
   if (error > 0) return item_value; /* Found the item. */
   Dee_Decref(item_value);
@@ -800,7 +800,7 @@ restart:
   Dee_Incref(item_value);
   DeeDict_LockEndRead(self);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,key);
+  error = DeeObject_CompareEq(key,item_key);
   Dee_Decref(item_key);
   if (error > 0) return item_value; /* Found the item. */
   Dee_Decref(item_value);
@@ -840,7 +840,7 @@ restart:
   Dee_Incref(item_key);
   DeeDict_LockEndRead(self);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,key);
+  error = DeeObject_CompareEq(key,item_key);
   Dee_Decref(item_key);
   if unlikely(error < 0)
      return NULL; /* Error in compare operator. */
@@ -910,7 +910,7 @@ again:
   Dee_Incref(item_key);
   DeeDict_LockEndRead(self);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,key);
+  error = DeeObject_CompareEq(key,item_key);
   Dee_Decref(item_key);
   if unlikely(error < 0)
      return -1; /* Error in compare operator. */
@@ -1009,7 +1009,7 @@ again:
   Dee_Incref(item_key);
   DeeDict_LockEndRead(self);
   /* Invoke the compare operator outside of any lock. */
-  error = DeeObject_CompareEq(item_key,key);
+  error = DeeObject_CompareEq(key,item_key);
   Dee_Decref(item_key);
   if unlikely(error < 0)
      return -1; /* Error in compare operator. */

@@ -75,7 +75,7 @@ DFUNDEF void DCALL DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self);
  *    tuples that are not initialized to contain ~real~ references.
  *    Using this function such tuples can be released with regards
  *    to fixing incorrect reference counters of contained objects.
- *    NOTE: Doing this is still ok, because the somewhere further up
+ *    NOTE: Doing this is still ok, because somewhere further up
  *          the call chain, a caller owns another reference to each
  *          contained object, even before we fix reference counters. */
 DFUNDEF void DCALL DeeTuple_DecrefSymbolic(DeeObject *__restrict self);

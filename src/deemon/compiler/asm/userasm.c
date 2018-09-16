@@ -660,7 +660,8 @@ got_overload:
    /* Check if the prefix needs to be extended. */
    if ((invoc->ai_prefix_id1 > UINT8_MAX ||
         invoc->ai_prefix_id2 > UINT8_MAX) &&
-       (is_extended = true,asm_put(ASM_EXTENDED1))) goto err;
+       (is_extended = true,asm_put(ASM_EXTENDED1)))
+        goto err;
    if (asm_put(invoc->ai_prefix)) goto err;
    if (is_extended) {
     if (asm_put_data16(invoc->ai_prefix_id1)) goto err;

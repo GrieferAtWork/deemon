@@ -1091,7 +1091,7 @@ again:
   list_elem = *iter;
   Dee_Incref(list_elem);
   DeeList_LockEndRead(self);
-  error = DeeObject_CompareEq(list_elem,elem);
+  error = DeeObject_CompareEq(elem,list_elem);
   Dee_Decref(list_elem);
   if unlikely(error < 0) return NULL;
   if (error) return_true;

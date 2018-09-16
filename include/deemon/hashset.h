@@ -96,7 +96,7 @@ DFUNDEF DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, DRE
  * >>          struct hashset_item *item = HASHSET_HASHIT(self,i);
  * >>          if (!item->si_key) break; // Not found
  * >>          if (item->si_hash != hash) continue; // Non-matching hash
- * >>          if (DeeObject_CompareEq(item->si_key,key))
+ * >>          if (DeeObject_CompareEq(key,item->si_key))
  * >>              return item->si_item;
  * >>     }
  * >>     return NULL;

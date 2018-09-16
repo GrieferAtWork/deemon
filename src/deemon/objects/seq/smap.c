@@ -340,7 +340,7 @@ smap_contains(SharedMap *__restrict self, DeeObject *__restrict key) {
   /* Check if this is the key we're looking for. */
   Dee_Decref(item_value);
   if (item_hash == hash) {
-   temp = DeeObject_CompareEq(item_key,key);
+   temp = DeeObject_CompareEq(key,item_key);
    if (temp != 0) {
     Dee_Decref(item_key);
     if unlikely(temp < 0) return NULL;
@@ -401,7 +401,7 @@ smap_getitem(SharedMap *__restrict self, DeeObject *__restrict key) {
   rwlock_endwrite(&self->sm_lock);
   /* Check if this is the key we're looking for. */
   if (item_hash == hash) {
-   temp = DeeObject_CompareEq(item_key,key);
+   temp = DeeObject_CompareEq(key,item_key);
    if (temp != 0) {
     Dee_Decref(item_key);
     if unlikely(temp < 0) { Dee_Decref(item_value); goto err; }
@@ -468,7 +468,7 @@ smap_nsi_getdefault(SharedMap *__restrict self,
   rwlock_endwrite(&self->sm_lock);
   /* Check if this is the key we're looking for. */
   if (item_hash == hash) {
-   temp = DeeObject_CompareEq(item_key,key);
+   temp = DeeObject_CompareEq(key,item_key);
    if (temp != 0) {
     Dee_Decref(item_key);
     if unlikely(temp < 0) { Dee_Decref(item_value); goto err; }

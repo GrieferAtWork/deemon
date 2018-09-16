@@ -936,9 +936,8 @@ libdisasm_printprefix(dformatprinter printer, void *arg,
  instruction_t *iter = instr_start;
  uint16_t imm,imm2;
  opcode = *iter++;
- if (opcode == ASM_EXTENDED1)
-     opcode = (ASM_EXTENDED1 << 8) | *iter++;
-
+ if (ASM_ISEXTENDED(opcode))
+     opcode = (opcode << 8) | *iter++;
  switch (opcode) {
 
  case ASM16_STACK:
@@ -1029,13 +1028,14 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
  int32_t jump_offset;
  iter.ptr = instr_start;
  opcode = *iter.ptr++;
- if (opcode == ASM_EXTENDED1)
-     opcode = (ASM_EXTENDED1 << 8) | *iter.ptr++;
+ if (ASM_ISEXTENDED(opcode))
+     opcode = (opcode << 8) | *iter.ptr++;
  if (opcode <= UINT8_MAX) {
   mnemonic = mnemonic_names[opcode];
  } else {
   ASSERT(opcode >= (ASM_EXTENDED1 << 8));
   ASSERT(opcode <= (ASM_EXTENDED1 << 8)+0xff);
+  /* XXX: If more opcode extension tables get added, they must be made available here! */
   mnemonic = mnemonic_names_f0[opcode & 0xff];
  }
  /* Special case for prefix instructions */
@@ -1060,13 +1060,14 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
   default: break;
   }
   opcode = *iter.ptr++;
-  if (opcode == ASM_EXTENDED1)
-      opcode = (ASM_EXTENDED1 << 8) | *iter.ptr++;
+  if (ASM_ISEXTENDED(opcode))
+      opcode = (opcode << 8) | *iter.ptr++;
   if (opcode <= UINT8_MAX) {
    mnemonic = mnemonic_names[opcode];
   } else {
    ASSERT(opcode >= (ASM_EXTENDED1 << 8));
    ASSERT(opcode <= (ASM_EXTENDED1 << 8)+0xff);
+   /* XXX: If more opcode extension tables get added, they must be made available here! */
    mnemonic = mnemonic_names_f0[opcode & 0xff];
   }
   /* Special representations for when a prefix is being used. */

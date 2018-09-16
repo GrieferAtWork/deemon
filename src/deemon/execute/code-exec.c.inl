@@ -6116,6 +6116,11 @@ end_nounhook:
    * any function. */
   if unlikely(this_thread->t_exceptsz > except_recursion+1) {
    uint16_t num_discard = (uint16_t)(this_thread->t_exceptsz-(except_recursion+1));
+   /* XX: If we got here because of an interrupt exception,
+    *     having that exception be re-scheduled as a pending
+    *     interrupt may trigger `DeeThread_CheckInterrupt()'
+    *     of the I/O code used to print the error message,
+    *     thus causing an infinite loop? */
    do DeeError_Print("Discarding secondary error\n",ERROR_PRINT_DOHANDLE);
    while (--num_discard);
   }

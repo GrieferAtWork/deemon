@@ -2233,7 +2233,7 @@ asm_newconst(DeeObject *__restrict constvalue) {
   for (; iter != end; ++iter) {
    elem = *iter;
    if (Dee_TYPE(elem) == Dee_TYPE(constvalue)) {
-    int error = DeeObject_CompareEq(elem,constvalue);
+    int error = DeeObject_CompareEq(constvalue,elem);
     if (error != 0) {
      if unlikely(error < 0)
         return -1;

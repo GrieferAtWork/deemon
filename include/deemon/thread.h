@@ -247,6 +247,7 @@ struct thread_object {
                                              * about to occur and is used to synchronize that operation. */
 #define THREAD_STATE_INTERRUPTED     0x0004 /* An interrupt object has been set.
                                              * NOTE: This flag can only be unset by `DeeThread_Self()' */
+#define THREAD_STATE_NOINTERRUPT     0x0800 /* [PRIVATE] The thread isn't serving interrupts right now. */
 #define THREAD_STATE_DETACHING       0x0008 /* The thread is currently being detached. */
 #define THREAD_STATE_DETACHED        0x0010 /* The thread has been joined/detached. */
 #define THREAD_STATE_DIDJOIN         0x0020 /* The thread has joined. */
@@ -396,8 +397,7 @@ DFUNDEF int DCALL DeeThread_GetTid(/*Thread*/DeeObject *__restrict self,
  * This function should be called before any blocking system call and is
  * invoked by the interpreter before execution of any JMP-instruction, or
  * only those that jump backwards in code (aka. is guarantied to be checked
- * periodically during execution of any kind of infinite-loop).
- */
+ * periodically during execution of any kind of infinite-loop). */
 DFUNDEF int (DCALL DeeThread_CheckInterrupt)(void);
 
 #ifdef CONFIG_BUILDING_DEEMON

@@ -643,7 +643,7 @@ switch_on_opcode:
    iter = iiter + 2;
    break;
 
-  case ASM_EXTENDED1:
+  CASE_ASM_EXTENDED:
    opcode <<= 8;
    opcode  |= *iiter++;
    goto switch_on_opcode;
@@ -1165,7 +1165,7 @@ do_noreturn_optimization:
 do_opcode:
   switch (opcode) {
 
-  case ASM_EXTENDED1:
+  CASE_ASM_EXTENDED:
    if (opcode & 0xff00) break;
    opcode <<= 8;
    opcode  |= *iiter++;
@@ -1495,7 +1495,7 @@ do_optimize_after_prefix:
 do_switch_after_prefix_opcode:
    switch (opcode) {
 
-   case ASM_EXTENDED1:
+   CASE_ASM_EXTENDED:
     opcode <<= 8;
     opcode  |= *after_prefix++;
     goto do_switch_after_prefix_opcode;
@@ -2270,8 +2270,8 @@ do_pop_push_optimization2:
    if (/*IS_PROTECTED(iter) || */IS_PROTECTED(next))
        goto do_writeonly_symbol_optimization;
    next_op = next[0];
-   if (next_op == ASM_EXTENDED1)
-       next_op = (ASM_EXTENDED1 << 8) | next[1];
+   if (ASM_ISEXTENDED(next_op))
+       next_op = (next_op << 8) | next[1];
    if (next_op == opcode + 0x10) {
     uint16_t next_op_imma,next_op_immb = 0;
     if (next_op == ASM16_PUSH_GLOBAL) {
@@ -2360,7 +2360,7 @@ do_pop_push_optimization2:
 do_switch_next_after_prefix_opcode:
      switch (next_after_prefix_opcode) {
 
-     case ASM_EXTENDED1:
+     CASE_ASM_EXTENDED:
       next_after_prefix_opcode <<= 8;
       next_after_prefix_opcode  |= next_after_prefix[1];
       goto do_switch_next_after_prefix_opcode;

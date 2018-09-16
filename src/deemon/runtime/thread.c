@@ -1261,16 +1261,18 @@ INTERN int (DCALL DeeThread_CheckInterruptSelf)(DeeThreadObject *__restrict self
  DREF DeeTupleObject *interrupt_args;
  DREF DeeObject *callback_result;
  struct thread_interrupt *next;
- /* Check: Is there an interrupt present for out thread. */
- if (!(self->t_state&(THREAD_STATE_INTERRUPTING|THREAD_STATE_INTERRUPTED)))
-       return 0;
+ /* Check: Is there an interrupt present for our thread, or are interrupt disabled? */
+ if ((self->t_state & (THREAD_STATE_INTERRUPTING|THREAD_STATE_INTERRUPTED)) == 0)
+      return 0;
+ if ((self->t_state & THREAD_STATE_NOINTERRUPT))
+      return 0;
  for (;;) {
   COMPILER_READ_BARRIER();
-  if (self->t_state&THREAD_STATE_INTERRUPTED)
+  if (self->t_state & THREAD_STATE_INTERRUPTED)
       break;
   /* The interrupting-flag may get unset if construction is aborted
    * for some reason by the other end (e.g. allocation failure) */
-  if (!(self->t_state&THREAD_STATE_INTERRUPTING))
+  if (!(self->t_state & THREAD_STATE_INTERRUPTING))
       return 0;
   /* Assume that the interrupt object is currently being constructed,
    * meaning the best thing we can do is to switch threads and let it

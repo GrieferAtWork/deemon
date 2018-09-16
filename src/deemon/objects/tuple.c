@@ -824,8 +824,14 @@ err:
 typedef struct {
     OBJECT_HEAD
     DREF DeeTupleObject *ti_tuple; /* [1..1][const] Referenced tuple. */
-    size_t               ti_index; /* [<= ti_tuple->t_size] Next-element index. */
+    ATOMIC_DATA size_t   ti_index; /* [<= ti_tuple->t_size] Next-element index. */
 } TupleIterator;
+
+#ifdef CONFIG_NO_THREADS
+#define READ_INDEX(x)            ((x)->ti_index)
+#else
+#define READ_INDEX(x) ATOMIC_READ((x)->ti_index)
+#endif
 
 INTDEF DeeTypeObject DeeTupleIterator_Type;
 
@@ -842,11 +848,7 @@ tuple_iterator_copy(TupleIterator *__restrict self,
                     TupleIterator *__restrict other) {
  self->ti_tuple = other->ti_tuple;
  Dee_Incref(self->ti_tuple);
-#ifdef CONFIG_NO_THREADS
- self->ti_index = other->ti_index;
-#else
- self->ti_index = ATOMIC_READ(other->ti_index);
-#endif
+ self->ti_index = READ_INDEX(other);
  return 0;
 }
 
@@ -857,16 +859,18 @@ tuple_iterator_init(TupleIterator *__restrict self,
  self->ti_index = 0;
  if (DeeArg_Unpack(argc,argv,"|oIu:tuple.iterator",
                     &self->ti_tuple,&self->ti_index))
-     return -1;
- if (DeeObject_AssertTypeExact((DeeObject *)self->ti_tuple,&DeeTuple_Type))
-     return -1;
- if (self->ti_index >= DeeTuple_SIZE(self->ti_tuple)) {
-  err_index_out_of_bounds((DeeObject *)self->ti_tuple,
-                           self->ti_index,DeeTuple_SIZE(self->ti_tuple));
-  return -1;
- }
+     goto err;
+ if (DeeObject_AssertTypeExact(self->ti_tuple,&DeeTuple_Type))
+     goto err;
+ if (self->ti_index >= DeeTuple_SIZE(self->ti_tuple))
+     goto err_bounds;
  Dee_Incref(self->ti_tuple);
  return 0;
+err_bounds:
+ err_index_out_of_bounds((DeeObject *)self->ti_tuple,
+                          self->ti_index,DeeTuple_SIZE(self->ti_tuple));
+err:
+ return -1;
 }
 
 PRIVATE void DCALL
@@ -877,21 +881,65 @@ tuple_iterator_fini(TupleIterator *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 tuple_iterator_next(TupleIterator *__restrict self) {
  DREF DeeObject *result;
- ASSERT(self->ti_index <= DeeTuple_SIZE(self->ti_tuple));
- if (self->ti_index == DeeTuple_SIZE(self->ti_tuple))
+#ifdef CONFIG_NO_THREADS
+ if (self->ti_index >= DeeTuple_SIZE(self->ti_tuple))
      return ITER_DONE;
  result = DeeTuple_GET(self->ti_tuple,self->ti_index);
  ASSERT_OBJECT(result);
  ++self->ti_index;
  Dee_Incref(result);
+#else
+ size_t index;
+ do {
+  index = ATOMIC_READ(self->ti_index);
+  if (index >= DeeTuple_SIZE(self->ti_tuple))
+      return ITER_DONE;
+ } while (!ATOMIC_CMPXCH(self->ti_index,index,index + 1));
+ result = DeeTuple_GET(self->ti_tuple,index);
+ ASSERT_OBJECT(result);
+ Dee_Incref(result);
+#endif
  return result;
 }
 
-PRIVATE struct type_member tupleiterator_members[] = {
+PRIVATE struct type_member tuple_iterator_members[] = {
     TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(TupleIterator,ti_tuple)),
     TYPE_MEMBER_FIELD("__index__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(TupleIterator,ti_index)),
     TYPE_MEMBER_END
 };
+
+#define DEFINE_TUPLE_ITERATOR_COMPARE(name,op) \
+PRIVATE DREF DeeObject *DCALL \
+name(TupleIterator *__restrict self, \
+     TupleIterator *__restrict other) { \
+ if (DeeObject_AssertTypeExact(other,&DeeTupleIterator_Type)) \
+     goto err; \
+ return_bool(READ_INDEX(self) op READ_INDEX(other)); \
+err: \
+ return NULL; \
+}
+DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_eq,==)
+DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_ne,!=)
+DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_lo,<)
+DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_le,<=)
+DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_gr,>)
+DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_ge,>=)
+#undef DEFINE_TUPLE_ITERATOR_COMPARE
+
+PRIVATE struct type_cmp tuple_iterator_cmp = {
+    /* .tp_hash = */NULL,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_ge
+};
+
+PRIVATE int DCALL
+tuple_iterator_bool(TupleIterator *__restrict self) {
+ return READ_INDEX(self) < DeeTuple_SIZE(self->ti_tuple);
+}
 
 INTERN DeeTypeObject DeeTupleIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -921,13 +969,13 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
         /* .tp_repr = */NULL,
-        /* .tp_bool = */NULL
+        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&tuple_iterator_bool
     },
     /* .tp_call          = */NULL,
     /* .tp_visit         = */NULL,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL, /* TODO */
+    /* .tp_cmp           = */&tuple_iterator_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_iterator_next,
     /* .tp_attr          = */NULL,
@@ -935,7 +983,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */tupleiterator_members,
+    /* .tp_members       = */tuple_iterator_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -1014,7 +1062,7 @@ tuple_contains(Tuple *__restrict self, DeeObject *__restrict item) {
  DeeObject **iter,**end; int error;
  end = (iter = DeeTuple_ELEM(self))+DeeTuple_SIZE(self);
  for (; iter != end; ++iter) {
-  error = DeeObject_CompareEq(*iter,item);
+  error = DeeObject_CompareEq(item,*iter);
   if unlikely(error < 0) return NULL;
   if (error) return_true;
  }
