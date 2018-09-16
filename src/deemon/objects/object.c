@@ -2584,10 +2584,12 @@ PRIVATE struct type_member type_members[] = {
     TYPE_MEMBER_FIELD("__name__",STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_name)),
     TYPE_MEMBER_FIELD("__doc__", STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_doc)),
     TYPE_MEMBER_FIELD("__base__",STRUCT_CONST|STRUCT_OBJECT_OPT,offsetof(DeeTypeObject,tp_base)),
+#if 0
     TYPE_MEMBER_FIELD("tp_name", STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_name)),
     TYPE_MEMBER_FIELD("tp_doc",  STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_doc)),
     TYPE_MEMBER_FIELD("tp_base", STRUCT_CONST|STRUCT_OBJECT_OPT,offsetof(DeeTypeObject,tp_base)),
     TYPE_MEMBER_FIELD("tp_flags",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeTypeObject,tp_flags)),
+#endif
     TYPE_MEMBER_END
 };
 

@@ -140,7 +140,7 @@ err:
 
 
 PRIVATE struct type_member function_class_members[] = {
-    TYPE_MEMBER_CONST("yield_function",&DeeYieldFunction_Type),
+    TYPE_MEMBER_CONST("yieldfunction",&DeeYieldFunction_Type),
     TYPE_MEMBER_END
 };
 
@@ -425,13 +425,13 @@ PRIVATE int DCALL
 yf_new(YFunction *__restrict self,
        size_t argc, DeeObject **__restrict argv) {
  DeeObject *func = NULL,*args = Dee_EmptyTuple,*this_ = NULL;
- if (DeeArg_Unpack(argc,argv,"|ooo:yield_function",&func,&args,&this_))
+ if (DeeArg_Unpack(argc,argv,"|ooo:yieldfunction",&func,&args,&this_))
      goto err;
  /* The actually available overloads are:
-  *   yield_function::yield_function();
-  *   yield_function::yield_function(function func);
-  *   yield_function::yield_function(function func, tuple args);
-  *   yield_function::yield_function(function func, object this, tuple args); */
+  *   this();
+  *   this(function func);
+  *   this(function func, tuple args);
+  *   this(function func, object this, tuple args); */
  if (this_) { DeeObject *temp = args; args = this_; this_ = temp; }
  if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
      goto err;
@@ -518,7 +518,7 @@ PRIVATE struct type_member yf_class_members[] = {
     TYPE_MEMBER_END
 };
 
-/* Since yield_function objects are bound to a specific function, comparing
+/* Since yieldfunction objects are bound to a specific function, comparing
  * them won't compare the bound function, but rather that function's pointer! */
 PRIVATE dhash_t DCALL
 yf_hash(DeeYieldFunctionObject *__restrict self) {
@@ -578,9 +578,34 @@ PRIVATE struct type_cmp yf_cmp = {
 };
 
 
+PRIVATE struct type_member yf_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(YFunction,yf_func),"->function"),
+    TYPE_MEMBER_FIELD_DOC("__args__",STRUCT_OBJECT,offsetof(YFunction,yf_args),"->sequence"),
+    TYPE_MEMBER_FIELD("__this__",STRUCT_OBJECT,offsetof(YFunction,yf_this)),
+    TYPE_MEMBER_END
+};
+
+PRIVATE DREF DeeCodeObject *DCALL
+yf_getcode(YFunction *__restrict self) {
+ return_reference_(self->yf_func->fo_code);
+}
+PRIVATE DREF DeeObject *DCALL
+yf_getrefs(YFunction *__restrict self) {
+ return function_getrefs(self->yf_func);
+}
+
+PRIVATE struct type_getset yf_getsets[] = {
+    { "__code__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_getcode, NULL, NULL,
+      DOC("->code") },
+    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_getrefs, NULL, NULL,
+      DOC("->sequence") },
+    { NULL }
+};
+
+
 PUBLIC DeeTypeObject DeeYieldFunction_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"yield_function",
+    /* .tp_name     = */"yieldfunction",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL | TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -620,8 +645,8 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
+    /* .tp_getsets       = */yf_getsets,
+    /* .tp_members       = */yf_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */yf_class_members
@@ -671,7 +696,7 @@ exec_finally:
   if likely(result)
    Dee_Decref(result); /* Most likely, this is `none' */
   else {
-   DeeError_Print("Unhandled exception in yield_function.iterator destructor\n",
+   DeeError_Print("Unhandled exception in yieldfunction.iterator destructor\n",
                   ERROR_PRINT_DOHANDLE);
   }
   goto exec_finally;
@@ -846,11 +871,13 @@ PRIVATE int DCALL
 yfi_new(YFIterator *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  YFunction *func;
- if (DeeArg_Unpack(argc,argv,"o:yield_function.iterator",&func))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:yieldfunction.iterator",&func))
+     goto err;
  if (DeeObject_AssertType((DeeObject *)func,&DeeYieldFunction_Type))
-     return -1;
+     goto err;
  return yfi_init(self,func);
+err:
+ return -1;
 }
 
 LOCAL int DCALL
@@ -901,9 +928,7 @@ yfi_copy(YFIterator *__restrict self,
  DeeCodeObject *code; size_t stack_size;
  DREF DeeObject **iter,**end,**src;
 again:
-#ifndef CONFIG_NO_THREADS
  recursive_rwlock_write(&other->yi_lock);
-#endif
  /* Make sure that the function is actually copyable. */
  code = NULL;
  if (other->yi_frame.cf_func &&
@@ -914,9 +939,7 @@ again:
    function_name = DeeDDI_NAME(ddi);
    Dee_Incref(ddi);
   }
-#ifndef CONFIG_NO_THREADS
   recursive_rwlock_endwrite(&other->yi_lock);
-#endif
   DeeError_Throwf(&DeeError_ValueError,"Function `%s' is not copyable",function_name);
   Dee_XDecref(ddi);
   return -1;
@@ -985,10 +1008,8 @@ again:
  Dee_XIncref(self->yi_frame.cf_this);
  Dee_XIncref(self->yi_frame.cf_vargs);
 
-#ifndef CONFIG_NO_THREADS
  recursive_rwlock_endwrite(&other->yi_lock);
  recursive_rwlock_init(&self->yi_lock);
-#endif
  if (code) {
   DeeObject *this_arg = self->yi_frame.cf_this;
   DeeObject *varargs = (DeeObject *)self->yi_frame.cf_vargs;
@@ -1024,9 +1045,7 @@ nomem_stack:
   Dee_Free(self->yi_frame.cf_stack);
  }
 nomem:
-#ifndef CONFIG_NO_THREADS
  recursive_rwlock_endwrite(&other->yi_lock);
-#endif
  if (Dee_CollectMemory(1))
      goto again;
  return -1;
@@ -1034,12 +1053,12 @@ nomem:
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE DREF YFunction *DCALL
-yfi_seq_get(YFIterator *__restrict self) {
+yfi_getyfunc(YFIterator *__restrict self) {
  DREF YFunction *result;
- recursive_rwlock_write(&self->yi_lock);
+ recursive_rwlock_read(&self->yi_lock);
  result = self->yi_func;
  Dee_XIncref(result);
- recursive_rwlock_endwrite(&self->yi_lock);
+ recursive_rwlock_endread(&self->yi_lock);
  if unlikely(!result)
     err_unbound_attribute(&DeeYieldFunctionIterator_Type,"seq");
  return result;
@@ -1049,16 +1068,12 @@ yfi_seq_get(YFIterator *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 yfi_getthis(YFIterator *__restrict self) {
  DREF DeeObject *result;
-#ifndef CONFIG_NO_THREADS
- recursive_rwlock_write(&self->yi_lock);
-#endif /* !CONFIG_NO_THREADS */
+ recursive_rwlock_read(&self->yi_lock);
  result = self->yi_frame.cf_this;
  if (!(self->yi_frame.cf_flags&CODE_FTHISCALL))
        result = NULL;
  Dee_XIncref(result);
-#ifndef CONFIG_NO_THREADS
- recursive_rwlock_endwrite(&self->yi_lock);
-#endif /* !CONFIG_NO_THREADS */
+ recursive_rwlock_endread(&self->yi_lock);
  if unlikely(!result)
     err_unbound_attribute(&DeeYieldFunctionIterator_Type,"__this__");
  return result;
@@ -1074,20 +1089,88 @@ yfi_getframe(YFIterator *__restrict self) {
                                       &self->yi_lock);
 }
 
+PRIVATE DREF DeeFunctionObject *DCALL
+yfi_getfunc(YFIterator *__restrict self) {
+ DREF DeeFunctionObject *result;
+ recursive_rwlock_write(&self->yi_lock);
+ if unlikely(!self->yi_func) {
+  recursive_rwlock_endwrite(&self->yi_lock);
+  err_unbound_attribute(&DeeYieldFunctionIterator_Type,"__func__");
+  return NULL;
+ }
+ result = self->yi_func->yf_func;
+ Dee_Incref(result);
+ recursive_rwlock_endwrite(&self->yi_lock);
+ return result;
+}
+
+PRIVATE DREF DeeCodeObject *DCALL
+yfi_getcode(YFIterator *__restrict self) {
+ DREF DeeCodeObject *result;
+ recursive_rwlock_write(&self->yi_lock);
+ if unlikely(!self->yi_func) {
+  recursive_rwlock_endwrite(&self->yi_lock);
+  err_unbound_attribute(&DeeYieldFunctionIterator_Type,"__code__");
+  return NULL;
+ }
+ result = self->yi_func->yf_func->fo_code;
+ Dee_Incref(result);
+ recursive_rwlock_endwrite(&self->yi_lock);
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+yfi_getrefs(YFIterator *__restrict self) {
+ DREF DeeObject *result;
+ DREF DeeFunctionObject *func;
+ recursive_rwlock_write(&self->yi_lock);
+ if unlikely(!self->yi_func) {
+  recursive_rwlock_endwrite(&self->yi_lock);
+  err_unbound_attribute(&DeeYieldFunctionIterator_Type,"__refs__");
+  return NULL;
+ }
+ func = self->yi_func->yf_func;
+ Dee_Incref(func);
+ recursive_rwlock_endwrite(&self->yi_lock);
+ result = function_getrefs(func);
+ Dee_Decref(func);
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+yfi_getargs(YFIterator *__restrict self) {
+ DREF DeeObject *result;
+ recursive_rwlock_write(&self->yi_lock);
+ if unlikely(!self->yi_func) {
+  recursive_rwlock_endwrite(&self->yi_lock);
+  err_unbound_attribute(&DeeYieldFunctionIterator_Type,"__args__");
+  return NULL;
+ }
+ result = (DeeObject *)self->yi_func->yf_args;
+ Dee_Incref(result);
+ recursive_rwlock_endwrite(&self->yi_lock);
+ return result;
+}
+
 PRIVATE struct type_getset yfi_getsets[] = {
 #ifndef CONFIG_NO_THREADS
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_seq_get, NULL, NULL },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getyfunc, NULL, NULL, DOC("->sequence\nAlias for #__yfunc__") },
 #endif /* !CONFIG_NO_THREADS */
-    { "__frame__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getframe, NULL, NULL },
+    { "__frame__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getframe, NULL, NULL, DOC("->frame") },
     { "__this__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getthis, NULL, NULL },
+    { "__yfunc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getyfunc, NULL, NULL, DOC("->yieldfunction") },
+    { "__func__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getfunc, NULL, NULL, DOC("->function") },
+    { "__code__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getcode, NULL, NULL, DOC("->code") },
+    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getrefs, NULL, NULL, DOC("->sequence") },
+    { "__args__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getargs, NULL, NULL, DOC("->sequence") },
     { NULL }
 };
-PRIVATE struct type_member yfi_members[] = {
 #ifdef CONFIG_NO_THREADS
+PRIVATE struct type_member yfi_members[] = {
     TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(YFIterator,yi_func)),
-#endif /* CONFIG_NO_THREADS */
     TYPE_MEMBER_END
 };
+#endif /* CONFIG_NO_THREADS */
 
 PRIVATE struct type_gc yfi_gc = {
     /* .tp_gc = */(void(DCALL *)(DeeObject *__restrict))&yfi_clear
@@ -1096,7 +1179,7 @@ PRIVATE struct type_gc yfi_gc = {
 
 PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"yield_function.iterator",
+    /* .tp_name     = */"yieldfunction.iterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FGC,
     /* .tp_weakrefs = */0,
@@ -1117,7 +1200,8 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&yfi_dtor,
         /* .tp_assign      = */NULL,
-        /* .tp_move_assign = */NULL
+        /* .tp_move_assign = */NULL,
+        /* .tp_deepload    = */NULL
     },
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
@@ -1136,7 +1220,11 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */yfi_getsets,
+#ifdef CONFIG_NO_THREADS
     /* .tp_members       = */yfi_members,
+#else
+    /* .tp_members       = */NULL,
+#endif
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
