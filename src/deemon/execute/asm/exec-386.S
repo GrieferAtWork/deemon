@@ -5492,10 +5492,10 @@ target_callattr_c:
 
 
 
-target16_callattr_tuple_c:
+target16_callattr_c_tuple:
 	lodsw
 	jmp     1f
-target_callattr_tuple_c:
+target_callattr_c_tuple:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
@@ -5565,10 +5565,10 @@ target_callattr_this_c:
 
 
 
-target16_callattr_this_tuple_c:
+target16_callattr_this_c_tuple:
 	lodsw
 	jmp     1f
-target_callattr_this_tuple_c:
+target_callattr_this_c_tuple:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
@@ -5743,12 +5743,12 @@ target_callattr_c_kw:
 
 
 
-target16_callattr_tuple_c_kw:
+target16_callattr_c_tuple_kw:
 	lodsw
 	movzwl  %ax, %edx
 	lodsw
 	jmp     1f
-target_callattr_tuple_c_kw:
+target_callattr_c_tuple_kw:
 	lodsb
 	movzbl  %al, %edx
 	lodsb
@@ -6205,6 +6205,102 @@ target_setattr_this_c:
 	sp_popref %eax
 	jmp   .disp
 
+
+target16_supergetattr_this_rc:
+	lodsw
+	movl   %eax, %ecx
+	lodsw
+	jmp    1f
+target_supergetattr_this_rc:
+	lodsb
+	movl   %eax, %ecx
+	lodsb
+1:	/* EAX: attr_cid */
+	/* ECX: tp_this_rid */
+	LOAD_CODE(%edx)
+	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
+	ASSERT_BELOW(%ax,co_staticc(CODE_OR_EDX))
+	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_EDX))
+	movl   co_staticv(CODE_OR_EDX), %edx
+	pushl (%edx,%eax,4)  /* DeeObject_TGetAttr:attr_name */
+	ADJUST_CFA_OFFSET(4)
+	movl   FRAME_FUNC, %edx
+	movl   fo_refv(%edx,%ecx,4), %ecx /* ECX = REFimm */
+	movl   FRAME_THIS, %edx           /* EDX = THIS */
+	pushl  %edx          /* DeeObject_TGetAttr:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %ecx          /* DeeObject_TGetAttr:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %ecx          /* DeeObject_AssertType:required_type */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %edx          /* DeeObject_AssertType:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_AssertType,8)
+	ADJUST_CFA_OFFSET(-8)
+	testl  %eax, %eax
+	jnz   .except_x12
+	call   fSYM(DeeObject_TGetAttr,12)
+	ADJUST_CFA_OFFSET(-12)
+	testl  %eax, %eax
+	jz    .except
+	sp_push %eax
+	jmp   .disp
+
+target16_supercallattr_this_rc:
+	lodsw
+	movl   %eax, %ecx
+	lodsw
+	jmp    1f
+target_supercallattr_this_rc:
+	lodsb
+	movl   %eax, %ecx
+	lodsb
+1:	/* EAX: attr_cid */
+	/* ECX: tp_this_rid */
+	subl   $12, %esp /* DeeObject_TCallAttr:argc, DeeObject_TCallAttr:argv, BACKUP(argc) */
+	ADJUST_CFA_OFFSET(12)
+	LOAD_CODE(%edx)
+	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
+	ASSERT_BELOW(%ax,co_staticc(CODE_OR_EDX))
+	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_EDX))
+	movl   co_staticv(CODE_OR_EDX), %edx
+	pushl (%edx,%eax,4)    /* DeeObject_TCallAttr:attr_name */
+	ADJUST_CFA_OFFSET(4)
+	lodsb                  /* EAX = argc; */
+	movl   %eax, 4(%esp)   /* DeeObject_TCallAttr:argc */
+	movl   %eax, 12(%esp)  /* BACKUP(argc) */
+	movl   SP, %edx
+	leal   (,%eax,4), %eax /* EAX = argc * 4 */
+	subl   %eax, %edx      /* EDX = SP - argc */
+	movl   %edx, 8(%esp)   /* DeeObject_TCallAttr:argv */
+	movl   FRAME_FUNC, %edx
+	movl   fo_refv(%edx,%ecx,4), %ecx /* ECX = REFimm */
+	movl   FRAME_THIS, %edx           /* EDX = THIS */
+	pushl  %edx            /* DeeObject_TCallAttr:self */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %ecx            /* DeeObject_TCallAttr:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %ecx            /* DeeObject_AssertType:required_type */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %edx            /* DeeObject_AssertType:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_AssertType,8)
+	ADJUST_CFA_OFFSET(-8)
+	testl  %eax, %eax
+	jnz   .except_x24
+	call   fSYM(DeeObject_TCallAttr,20)
+	ADJUST_CFA_OFFSET(-20)
+	testl  %eax, %eax
+	jz    .except_x4
+	popl   %ecx
+	ADJUST_CFA_OFFSET(-4)
+	/* Cleanup arguments passed to callattr */
+	testl  %ecx, %ecx
+	jz     1f
+2:	sp_popref %edx, 1, 1, 0
+	loop   2b
+1:	sp_push %eax
+	jmp   .disp
 
 
 target16_pack_hashset:

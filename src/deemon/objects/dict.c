@@ -42,7 +42,7 @@
 
 DECL_BEGIN
 
-/* Dummy dict item. */
+/* Dummy dict key. */
 INTERN DeeObject dict_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
 #define dummy   (&dict_dummy)
 
@@ -136,40 +136,28 @@ PRIVATE void DCALL dict_fini(Dict *__restrict self);
 PRIVATE int DCALL
 dict_insert_iterator(Dict *__restrict self,
                      DeeObject *__restrict iterator) {
- DREF DeeObject *elem,*it,*key,*item,*sentinel;
+ DREF DeeObject *elem;
+ DREF DeeObject *key_and_value[2];
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  /* Unpack the yielded element again.
-   * TODO: Add some sort of API for this, that is
-   *       able to take advantage of known types. */
-  it = DeeObject_IterSelf(elem);
-  if unlikely(!it) goto err_elem;
-  key  = DeeObject_IterNext(it);
-  if unlikely(!key) goto err_it;
-  item = DeeObject_IterNext(it);
-  if unlikely(!item) goto err_key;
-  sentinel = DeeObject_IterNext(it);
-  if unlikely(!sentinel) goto err_item;
-  if unlikely(sentinel != ITER_DONE) {
-   Dee_Decref(sentinel);
-   err_invalid_unpack_iter_size(elem,it,2);
-   goto err_item;
-  }
-  if unlikely(dict_setitem(self,key,item))
-     goto err_item;
-  Dee_Decref(item);
-  Dee_Decref(key);
-  Dee_Decref(it);
+  /* Unpack the yielded element again. */
+  if unlikely(DeeObject_Unpack(elem,2,key_and_value))
+     goto err_elem;
   Dee_Decref(elem);
+  if unlikely(dict_setitem(self,key_and_value[0],key_and_value[1]))
+     goto err_item;
   if (DeeThread_CheckInterrupt())
       goto err;
  }
- if unlikely(!elem) goto err;
+ if unlikely(!elem)
+    goto err;
  return 0;
-err_item: Dee_Decref(item);
-err_key:  Dee_Decref(key);
-err_it:   Dee_Decref(it);
-err_elem: Dee_Decref(elem);
-err:      return -1;
+err_item:
+ Dee_Decref(key_and_value[1]);
+ Dee_Decref(key_and_value[0]);
+err_elem:
+ Dee_Decref(elem);
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -261,7 +249,7 @@ dict_deepload(Dict *__restrict self) {
  } Entry;
  /* #1 Allocate 2 new element-vector of the same size as `self'
   *    One of them has a length `d_mask+1', the other `d_used'
-  * #2 Copy all key/item pairs from `self' into the d_used-one (create references)
+  * #2 Copy all key/value pairs from `self' into the d_used-one (create references)
   *    NOTE: Skip NULL/dummy entries in the dict vector.
   * #3 Go through the vector and create deep copies of all keys and items.
   *    For every key, hash it and insert it into the 2nd vector from before.
@@ -1015,7 +1003,7 @@ again:
      return -1; /* Error in compare operator. */
   if (error > 0) {
    DREF DeeObject *item_value;
-   /* Found an existing item. */
+   /* Found an existing key. */
    if (mode == SETITEM_SETOLD) {
     DeeDict_LockWrite(self);
     /* Check if the dict was modified. */
@@ -1193,7 +1181,7 @@ again:
   Dee_Incref(key);
   Dee_Incref(value);
   DeeDict_LockEndRead(self);
-  /* Print this item. */
+  /* Print this key/value pair. */
   error = unicode_printer_printf(&p,"%s%r: %r",is_first ? "" : ", ",key,value);
   Dee_Decref(value);
   Dee_Decref(key);
@@ -1301,7 +1289,7 @@ dict_popsomething(DeeDictObject *__restrict self,
  struct dict_item *iter;
  if (DeeArg_Unpack(argc,argv,":popitem"))
      return NULL;
- /* Allocate a tuple which we're going to fill with some key-item pair. */
+ /* Allocate a tuple which we're going to fill with some key-value pair. */
  result = DeeTuple_NewUninitialized(2);
  if unlikely(!result) return NULL;
  DeeDict_LockWrite(self);
@@ -1432,10 +1420,10 @@ PRIVATE struct type_method dict_methods[] = {
           "@return A proxy sequence for viewing the values of @this :dict") },
     { "items", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_items,
       DOC("->dict.items\n"
-          "@return A proxy sequence for viewing the key-item pairs of @this :dict") },
+          "@return A proxy sequence for viewing the key-value pairs of @this :dict") },
     { "popitem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_popsomething,
       DOC("->(object,object)\n"
-          "@return A random pair key-item pair that has been removed\n"
+          "@return A random pair key-value pair that has been removed\n"
           "@throw ValueError @this :dict was empty") },
     { "setdefault", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setdefault,
       DOC("(key,def=none)->object\n"
@@ -1459,7 +1447,7 @@ PRIVATE struct type_method dict_methods[] = {
            "Same as #setnew but return the previously assigned object on failure") },
     { "update", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
       DOC("({(object,object)...} items)\n"
-          "Iterate @items and unpack each element into 2 others, using them as key and item to insert into @this dict") },
+          "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this dict") },
     /* Old function names. */
     { "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
       DOC("({(object,object)...} items)\n"
@@ -1491,7 +1479,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
                             "\n"
                             "(mapping items)\n"
                             "Create a new dict, using key-items pairs extracted from @items.\n"
-                            "Iterate @items and unpack each element into 2 others, using them as key and item to insert into @this dict"),
+                            "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this dict"),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(Dict),
     /* .tp_features = */TF_NONE,

@@ -1537,7 +1537,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */NULL
+    /* .tp_class_members = */object_class_members
 };
 
 

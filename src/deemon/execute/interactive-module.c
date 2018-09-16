@@ -903,16 +903,18 @@ err:
 PRIVATE int DCALL
 module_import_symbol_pair(DeeModuleObject *__restrict self,
                           DeeObject *__restrict symbol_pair) {
- DREF DeeObject *key,*value; int result;
- if (DeeMapping_UnpackItemPair(symbol_pair,&key,&value))
+ DREF DeeObject *key_and_value[2]; int result;
+ if (DeeObject_Unpack(symbol_pair,2,key_and_value))
      goto err;
- if (DeeObject_AssertTypeExact(key,&DeeString_Type))
+ if (DeeObject_AssertTypeExact(key_and_value[0],&DeeString_Type))
      result = -1;
  else {
-  result = module_import_symbol(self,(DeeStringObject *)key,value);
+  result = module_import_symbol(self,
+                               (DeeStringObject *)key_and_value[0],
+                                key_and_value[1]);
  }
- Dee_Decref(value);
- Dee_Decref(key);
+ Dee_Decref(key_and_value[1]);
+ Dee_Decref(key_and_value[0]);
  return result;
 err:
  return -1;

@@ -112,10 +112,6 @@ DECL_BEGIN
 #endif
 
 
-/* TODO: Implement the ASM_SUPER*ATTR opcodes in the assembly interpreter. */
-#undef CONFIG_HAVE_EXEC_ASM
-
-
 #undef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 #undef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
 #ifndef __OPTIMIZE_SIZE__

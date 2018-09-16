@@ -229,7 +229,6 @@ EXPORTS
 	DeeList_Pop@8=_DeeList_Pop@8
 	DeeList_Reverse@4=_DeeList_Reverse@4
 	DeeList_Sort@8=_DeeList_Sort@8
-	DeeMapping_UnpackItemPair@12=_DeeMapping_UnpackItemPair@12
 	DeeMem_ClearCaches@4=_DeeMem_ClearCaches@4
 	DeeModule_Get@4=_DeeModule_Get@4
 	DeeModule_GetCTime@4=_DeeModule_GetCTime@4
@@ -487,6 +486,7 @@ EXPORTS
 	DeeRoSet_NewWithHint@4=_DeeRoSet_NewWithHint@4
 	DeeSeq_AsHeapVector@8=_DeeSeq_AsHeapVector@8
 	DeeSeq_AsHeapVectorWithAlloc@12=_DeeSeq_AsHeapVectorWithAlloc@12
+	DeeSeq_AsHeapVectorWithAllocReuse@12=_DeeSeq_AsHeapVectorWithAllocReuse@12
 	DeeSeq_ItemsToBytes@12=_DeeSeq_ItemsToBytes@12
 	DeeString_As2Byte@4=_DeeString_As2Byte@4
 	DeeString_As4Byte@4=_DeeString_As4Byte@4

@@ -37,82 +37,6 @@
 
 DECL_BEGIN
 
-PUBLIC int DCALL
-DeeMapping_UnpackItemPair(DeeObject *__restrict pair,
-                          DREF DeeObject **__restrict pkey,
-                          DREF DeeObject **__restrict pvalue) {
- DREF DeeObject *elem;
- DREF DeeObject *iter; size_t fast_seq_size;
- if likely(DeeTuple_CheckExact(pair)) {
-  /* Most likely case: It's a tuple! */
-  if unlikely(DeeTuple_SIZE(pair) != 2) {
-   err_invalid_unpack_size(pair,2,DeeTuple_SIZE(pair));
-   goto err;
-  }
-  *pkey   = DeeTuple_GET(pair,0);
-  Dee_Incref(*pkey);
-  *pvalue = DeeTuple_GET(pair,1);
-  Dee_Incref(*pvalue);
-  return 0;
- }
- /* Try to unpack the sequence using the fast-sequence interface. */
- fast_seq_size = DeeFastSeq_GetSize(pair);
- if (fast_seq_size != DEE_FASTSEQ_NOTFAST) {
-  if unlikely(fast_seq_size != 2) {
-   err_invalid_unpack_size(pair,2,fast_seq_size);
-   goto err;
-  }
-  *pkey = DeeFastSeq_GetItem(pair,0);
-  if unlikely(!*pkey) goto err;
-  *pvalue = DeeFastSeq_GetItem(pair,1);
-  if unlikely(!*pvalue) { Dee_Decref(*pkey); goto err; }
-  return 0;
- }
- if (DeeNone_Check(pair)) {
-  /* Special case: `none' is always what we want it to be! */
-  *pkey   = Dee_None;
-  *pvalue = Dee_None;
-  Dee_Incref(Dee_None);
-  Dee_Incref(Dee_None);
-  return 0;
- }
-
- /* The long haul: Use an iterator to unpack the pair. */
- iter = DeeObject_IterSelf(pair);
- if unlikely(!iter) goto err;
- elem = DeeObject_IterNext(iter);
- if unlikely(!ITER_ISOK(elem)) {
-  if (elem) err_invalid_unpack_size(pair,2,0);
-  goto err_iter;
- }
- *pkey = elem; /* Inherit reference. */
- elem = DeeObject_IterNext(iter);
- if unlikely(!ITER_ISOK(elem)) {
-  if (elem) err_invalid_unpack_size(pair,2,1);
-  Dee_Decref(*pkey);
-  goto err_iter;
- }
- *pvalue = elem; /* Inherit reference. */
- /* Make sure that the given sequence really ends here. */
- elem = DeeObject_IterNext(iter);
- if unlikely(elem != ITER_DONE) {
-  if (elem) {
-   err_invalid_unpack_iter_size(pair,iter,2);
-   Dee_Decref(elem);
-  }
-  goto err_iter;
- }
- /* All right! everything checked out in the end. */
- Dee_Decref(iter);
- return 0;
-err_iter:
- Dee_Decref(iter);
-err:
- return -1;
-}
-
-
-
 typedef struct {
     OBJECT_HEAD
     DREF DeeObject  *mpi_iter; /* [1..1][const] The iterator for enumerating `mpi_map'. */
@@ -170,35 +94,39 @@ PRIVATE struct type_member proxy_iterator_members[] = {
 
 PRIVATE DREF DeeObject *DCALL
 proxy_iterator_next_key(MapProxyIterator *__restrict self) {
- DREF DeeObject *pair,*key,*value; int error;
+ DREF DeeObject *pair;
+ DREF DeeObject *key_and_value[2];
+ int error;
  /* Optimize using NSI */
  if (self->mpi_nsi && self->mpi_nsi->nsi_maplike.nsi_nextkey)
      return (*self->mpi_nsi->nsi_maplike.nsi_nextkey)(self->mpi_iter);
  pair = DeeObject_IterNext(self->mpi_iter);
  if (pair == ITER_DONE) return ITER_DONE;
  if unlikely(!pair) goto err;
- error = DeeMapping_UnpackItemPair(pair,&key,&value);
+ error = DeeObject_Unpack(pair,2,key_and_value);
  Dee_Decref(pair);
  if unlikely(error) goto err;
- Dee_Decref(value);
- return key;
+ Dee_Decref(key_and_value[1]);
+ return key_and_value[0];
 err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 proxy_iterator_next_value(MapProxyIterator *__restrict self) {
- DREF DeeObject *pair,*key,*value; int error;
+ DREF DeeObject *pair;
+ DREF DeeObject *key_and_value[2];
+ int error;
  /* Optimize using NSI */
- if (self->mpi_nsi && self->mpi_nsi->nsi_maplike.nsi_nextvalue)
-     return (*self->mpi_nsi->nsi_maplike.nsi_nextvalue)(self->mpi_iter);
+ if (self->mpi_nsi && self->mpi_nsi->nsi_maplike.nsi_nextkey)
+     return (*self->mpi_nsi->nsi_maplike.nsi_nextkey)(self->mpi_iter);
  pair = DeeObject_IterNext(self->mpi_iter);
  if (pair == ITER_DONE) return ITER_DONE;
  if unlikely(!pair) goto err;
- error = DeeMapping_UnpackItemPair(pair,&key,&value);
+ error = DeeObject_Unpack(pair,2,key_and_value);
  Dee_Decref(pair);
  if unlikely(error) goto err;
- Dee_Decref(key);
- return value;
+ Dee_Decref(key_and_value[0]);
+ return key_and_value[1];
 err:
  return NULL;
 }
@@ -688,32 +616,32 @@ map_tpcontains(DeeObject *__restrict self, DeeObject *__restrict key) {
 
 PRIVATE DREF DeeObject *DCALL
 map_getitem(DeeObject *__restrict self, DeeObject *__restrict key) {
- DREF DeeObject *iter,*item,*item_key;
- DREF DeeObject *item_value;
+ DREF DeeObject *iter,*item;
+ DREF DeeObject *item_key_and_value[2];
  dhash_t key_hash = DeeObject_Hash(key);
  /* Very inefficient: iterate the mapping to search for a matching key-item pair. */
  iter = DeeObject_IterSelf(self);
  if unlikely(!iter) goto err;
  while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
   int unpack_error,temp;
-  unpack_error = DeeMapping_UnpackItemPair(item,&item_key,&item_value);
+  unpack_error = DeeObject_Unpack(item,2,item_key_and_value);
   Dee_Decref(item);
   if unlikely(unpack_error) goto err_iter;
   /* Check if this is the key we're looking for. */
-  if (DeeObject_Hash(item_key) != key_hash) {
-   Dee_Decref(item_key);
+  if (DeeObject_Hash(item_key_and_value[0]) != key_hash) {
+   Dee_Decref(item_key_and_value[0]);
   } else {
-   temp = DeeObject_CompareEq(key,item_key);
-   Dee_Decref(item_key);
+   temp = DeeObject_CompareEq(key,item_key_and_value[0]);
+   Dee_Decref(item_key_and_value[0]);
    if (temp != 0) {
     if unlikely(temp < 0)
-       Dee_Clear(item_value);
+       Dee_Clear(item_key_and_value[1]);
     /* Found it! */
     Dee_Decref(iter);
-    return item_value;
+    return item_key_and_value[1];
    }
   }
-  Dee_Decref(item_value);
+  Dee_Decref(item_key_and_value[1]);
   if (DeeThread_CheckInterrupt())
       goto err_iter;
  }
@@ -778,14 +706,16 @@ map_repr(DeeObject *__restrict self) {
  if unlikely(!iterator) return NULL;
  if unlikely(UNICODE_PRINTER_PRINT(&p,"{ ") < 0) goto err1;
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  DREF DeeObject *elem_key,*elem_value; dssize_t print_error;
-  if (DeeMapping_UnpackItemPair(elem,&elem_key,&elem_value)) goto err2;
+  dssize_t print_error;
+  DREF DeeObject *elem_key_and_value[2];
+  if (DeeObject_Unpack(elem,2,elem_key_and_value)) goto err2;
   Dee_Decref(elem);
   print_error = unicode_printer_printf(&p,"%s%r: %r",
                                        is_first ? "" : ", ",
-                                       elem_key,elem_value);
-  Dee_Decref(elem_value);
-  Dee_Decref(elem_key);
+                                       elem_key_and_value[0],
+                                       elem_key_and_value[1]);
+  Dee_Decref(elem_key_and_value[1]);
+  Dee_Decref(elem_key_and_value[0]);
   if (print_error < 0) goto err1;
   is_first = false;
   if (DeeThread_CheckInterrupt())
@@ -928,7 +858,7 @@ mapiter_next_key(DeeObject *__restrict self,
   if unlikely(!result) goto err;
   return ITER_DONE;
  }
- error = DeeMapping_UnpackItemPair(result,&content[0],&content[1]);
+ error = DeeObject_Unpack(result,2,content);
  Dee_Decref(result);
  if unlikely(error) goto err;
  Dee_Decref(content[1]);

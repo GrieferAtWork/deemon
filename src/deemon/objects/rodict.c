@@ -350,8 +350,8 @@ done:
 PRIVATE int DCALL
 insert(DREF Dict *__restrict self, size_t mask,
        size_t *__restrict pelemcount,
-       DREF DeeObject *__restrict key,
-       DREF DeeObject *__restrict value) {
+       /*inherit(always)*/DREF DeeObject *__restrict key,
+       /*inherit(always)*/DREF DeeObject *__restrict value) {
  size_t i,perturb,hash; struct rodict_item *item;
  hash    = DeeObject_Hash(key);
  perturb = i = hash & mask;
@@ -441,8 +441,8 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
  if unlikely(!result) goto done;
  while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
   int error;
-  DREF DeeObject *key,*value;
-  error = DeeMapping_UnpackItemPair(elem,&key,&value);
+  DREF DeeObject *key_and_value[2];
+  error = DeeObject_Unpack(elem,2,key_and_value);
   Dee_Decref(elem);
   if unlikely(error) goto err_r;
   /* Check if we must re-hash the resulting dict. */
@@ -450,14 +450,14 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
    size_t new_mask = (mask << 1) | 1;
    new_result = rehash(result,mask,new_mask);
    if unlikely(!new_result) {
-    Dee_Decref(value);
-    Dee_Decref(key);
+    Dee_Decref(key_and_value[1]);
+    Dee_Decref(key_and_value[0]);
     goto err_r;
    }
    mask = new_mask;
   }
   /* Insert the key-value pair into the resulting dict. */
-  if unlikely(insert(result,mask,&elem_count,key,value))
+  if unlikely(insert(result,mask,&elem_count,key_and_value[0],key_and_value[1]))
      goto err_r;
   if (DeeThread_CheckInterrupt())
       goto err_r;

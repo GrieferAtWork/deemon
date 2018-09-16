@@ -4109,6 +4109,35 @@ done:
  return result;
 }
 
+#ifndef DEFINE_TYPE_OPERATORS
+#ifdef CONFIG_VA_LIST_IS_STACK_POINTER
+#ifndef __NO_DEFINE_ALIAS
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VCallAttrPack,16),
+                    ASSEMBLY_NAME(DeeObject_CallAttr,16));
+#else
+PUBLIC DREF DeeObject *DCALL
+DeeObject_VCallAttrPack(DeeObject *__restrict self,
+                        /*String*/DeeObject *__restrict attr_name,
+                        size_t argc, va_list args) {
+ return DeeObject_CallAttr(self,attr_name,argc,(DeeObject **)args);
+}
+#endif
+#else
+PUBLIC DREF DeeObject *DCALL
+DeeObject_VCallAttrPack(DeeObject *__restrict self,
+                        /*String*/DeeObject *__restrict attr_name,
+                        size_t argc, va_list args) {
+ DREF DeeObject *result,*args_tuple;
+ args_tuple = DeeTuple_VPackSymbolic(argc,args);
+ if unlikely(!args_tuple) return NULL;
+ result = DeeObject_CallAttr(self,attr_name,argc,
+                             DeeTuple_ELEM(args_tuple));
+ DeeTuple_DecrefSymbolic(args_tuple);
+ return result;
+}
+#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
+
 
 #ifndef DEFINE_TYPE_OPERATORS
 INTERN bool DCALL

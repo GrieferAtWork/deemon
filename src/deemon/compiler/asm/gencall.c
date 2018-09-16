@@ -1213,6 +1213,51 @@ pop_unused:
  if (!(gflags & ASM_G_FPUSHRES) && asm_gpop()) goto err;
  return 0;
 generic_call:
+ //if (func->a_type == AST_FUNCTION) {
+ // /* TODO: If possible, references should be passed by-argument, rather than by-reference!
+ //  *       That way, we can possible prevent having to re-create new function objects
+ //  *       whenever the function is invoked at runtime.
+ //  *       The major culprit here are generator expression, which are practically
+ //  *       forced to use referenced variables:
+ //  *       >> local count = 42;
+ //  *       >> local items = [(for (local x: [:count]) (x * 2) / 3)...];
+ //  *       Compiled as:
+ //  *       >>     mov   local @count, $42
+ //  *       >>     push  local @count
+ //  *       >>     push  function const @.Lgen0, #1  // <--- Unnecessary temporary created here!
+ //  *       >>     call  top, #0
+ //  *       >>     cast  top, list
+ //  *       >>     pop   local @items
+ //  *       >> .const .Lgen0 = code {
+ //  *       >>     push  ref @count
+ //  *       >>     push  range default, pop
+ //  *       >>     iterself top
+ //  *       >> 1:  foreach top, 2f
+ //  *       >>     mul   top, $2
+ //  *       >>     div   top, $3
+ //  *       >>     yield pop
+ //  *       >>     jmp   1b
+ //  *       >> 2:  ret
+ //  *       >> }
+ //  *       Could be compiled as as:
+ //  *       >>     mov   local @count, $42
+ //  *       >>     push  local @count
+ //  *       >>     call  top, #1
+ //  *       >>     cast  top, list
+ //  *       >>     pop   local @items
+ //  *       >> .const .Lgen0 = function {
+ //  *       >>     push  arg @count
+ //  *       >>     push  range default, pop
+ //  *       >>     iterself top
+ //  *       >> 1:  foreach top, 2f
+ //  *       >>     mul   top, $2
+ //  *       >>     div   top, $3
+ //  *       >>     yield pop
+ //  *       >>     jmp   1b
+ //  *       >> 2:  ret
+ //  *       >> }
+ //  */
+ //}
  if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
  if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
  if (asm_gcall_tuple()) goto err;

@@ -95,16 +95,6 @@ DDATDEF DeeTypeObject DeeMapping_Type;  /* `mapping from deemon' */
 DDATDEF DeeObject          DeeMapping_EmptyInstance;
 #define Dee_EmptyMapping (&DeeMapping_EmptyInstance)
 
-
-/* Unpack a 2-element sequence `pair' into its 2 `key' & `value' items.
- * @return:  0: Successfully unpacked `pair' (`key' and `value' have been filled)
- * @return: -1: The unpack failed. */
-DFUNDEF int DCALL
-DeeMapping_UnpackItemPair(DeeObject *__restrict pair,
-                          DREF DeeObject **__restrict pkey,
-                          DREF DeeObject **__restrict pvalue);
-
-
 DECL_END
 
 #endif /* !GUARD_DEEMON_MAP_H */

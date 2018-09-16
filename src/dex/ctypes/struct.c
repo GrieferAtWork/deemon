@@ -64,7 +64,8 @@ PRIVATE DREF DeeStructTypeObject *DCALL
 struct_type_alloc_iterator(DeeObject *__restrict iter,
                            unsigned int flags) {
  DREF DeeStructTypeObject *result; size_t field_count = 0;
- DREF DeeObject *elem,*field_name,*field_type;
+ DREF DeeObject *elem;
+ DREF DeeObject *field_name_and_type[2];
  size_t i,min_align = 1,instance_size = 0;
  result = (DREF DeeStructTypeObject *)DeeGCObject_Calloc(offsetof(DeeStructTypeObject,st_fvec)+
                                                          2*sizeof(struct struct_field));
@@ -81,43 +82,43 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
    result = new_result;
   }
   ASSERT(field_count < result->st_fmsk);
-  temp = DeeMapping_UnpackItemPair(elem,&field_name,&field_type);
+  temp = DeeObject_Unpack(elem,2,field_name_and_type);
   Dee_Decref(elem);
   if unlikely(temp) goto err_r;
   /* Validate that this is a string/struct_type-pair. */
-  if (DeeObject_AssertTypeExact(field_name,&DeeString_Type) ||
-      DeeObject_AssertType(field_type,&DeeSType_Type)) {
-   Dee_Decref(field_type);
-   Dee_Decref(field_name);
+  if (DeeObject_AssertTypeExact(field_name_and_type[0],&DeeString_Type) ||
+      DeeObject_AssertType(field_name_and_type[1],&DeeSType_Type)) {
+   Dee_Decref(field_name_and_type[1]);
+   Dee_Decref(field_name_and_type[0]);
    goto err_r;
   }
-  hash = DeeString_Hash(field_name);
+  hash = DeeString_Hash(field_name_and_type[0]);
   i = perturb = STRUCT_TYPE_HASHST(result,hash);
   for (;; i = STRUCT_TYPE_HASHNX(i,perturb),STRUCT_TYPE_HASHPT(perturb)) {
    struct struct_field *field; size_t align;
    field = STRUCT_TYPE_HASHIT(result,i);
    if (field->sf_name) continue;
-   align = DeeSType_Alignof(field_type);
+   align = DeeSType_Alignof(field_name_and_type[1]);
    if (!(flags & STRUCT_TYPE_FPACKED) && (min_align < align))
          min_align = align;
    if (flags & STRUCT_TYPE_FUNION) {
     field->sf_offset = 0;
-    if (instance_size < DeeSType_Sizeof(field_type))
-        instance_size = DeeSType_Sizeof(field_type);
+    if (instance_size < DeeSType_Sizeof(field_name_and_type[1]))
+        instance_size = DeeSType_Sizeof(field_name_and_type[1]);
    } else {
     if (!(flags & STRUCT_TYPE_FPACKED)) {
      instance_size +=  (align-1);
      instance_size &= ~(align-1);
     }
     field->sf_offset = instance_size;
-    instance_size += DeeSType_Sizeof(field_type);
+    instance_size += DeeSType_Sizeof(field_name_and_type[1]);
    }
-   field->sf_hash = DeeString_Hash(field_name);
-   field->sf_name = (DREF struct string_object *)field_name;       /* Inherit reference. */
-   field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_type); /* Inherit reference. */
-   Dee_Decref(field_type);
+   field->sf_hash = DeeString_Hash(field_name_and_type[0]);
+   field->sf_name = (DREF struct string_object *)field_name_and_type[0];       /* Inherit reference. */
+   field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_name_and_type[1]); /* Inherit reference. */
+   Dee_Decref(field_name_and_type[1]);
    if unlikely(!field->sf_type) {
-    Dee_Decref(field_name);
+    Dee_Decref(field_name_and_type[0]);
     field->sf_name = NULL;
     goto err_r;
    }
@@ -162,47 +163,48 @@ DeeStructType_FromSequence(DeeObject *name,
   if unlikely(!result) goto err;
   result->st_fmsk = result_mask;
   for (i = 0; i < field_count; ++i) {
-   DREF DeeObject *elem,*field_name,*field_type;
+   DREF DeeObject *elem;
+   DREF DeeObject *field_name_and_type[2];
    int temp; dhash_t j,perturb,hash;
    elem = DeeFastSeq_GetItem(fields,i);
    if unlikely(!elem) goto err_r;
-   temp = DeeMapping_UnpackItemPair(elem,&field_name,&field_type);
+   temp = DeeObject_Unpack(elem,2,field_name_and_type);
    Dee_Decref(elem);
    if unlikely(temp) goto err_r;
    /* Validate that this is a string/struct_type-pair. */
-   if (DeeObject_AssertTypeExact(field_name,&DeeString_Type) ||
-       DeeObject_AssertType(field_type,&DeeSType_Type)) {
-    Dee_Decref(field_type);
-    Dee_Decref(field_name);
+   if (DeeObject_AssertTypeExact(field_name_and_type[0],&DeeString_Type) ||
+       DeeObject_AssertType(field_name_and_type[1],&DeeSType_Type)) {
+    Dee_Decref(field_name_and_type[1]);
+    Dee_Decref(field_name_and_type[0]);
     goto err_r;
    }
-   hash = DeeString_Hash(field_name);
+   hash = DeeString_Hash(field_name_and_type[0]);
    j = perturb = STRUCT_TYPE_HASHST(result,hash);
    for (;; j = STRUCT_TYPE_HASHNX(j,perturb),STRUCT_TYPE_HASHPT(perturb)) {
     struct struct_field *field; size_t align;
     field = STRUCT_TYPE_HASHIT(result,j);
     if (field->sf_name) continue;
-    align = DeeSType_Alignof(field_type);
+    align = DeeSType_Alignof(field_name_and_type[1]);
     if (!(flags & STRUCT_TYPE_FPACKED) && (min_align < align))
           min_align = align;
     if (flags & STRUCT_TYPE_FUNION) {
      field->sf_offset = 0;
-     if (instance_size < DeeSType_Sizeof(field_type))
-         instance_size = DeeSType_Sizeof(field_type);
+     if (instance_size < DeeSType_Sizeof(field_name_and_type[1]))
+         instance_size = DeeSType_Sizeof(field_name_and_type[1]);
     } else {
      if (!(flags & STRUCT_TYPE_FPACKED)) {
       instance_size +=  (align-1);
       instance_size &= ~(align-1);
      }
      field->sf_offset = instance_size;
-     instance_size += DeeSType_Sizeof(field_type);
+     instance_size += DeeSType_Sizeof(field_name_and_type[1]);
     }
-    field->sf_hash = DeeString_Hash(field_name);
-    field->sf_name = (DREF struct string_object *)field_name;       /* Inherit reference. */
-    field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_type); /* Inherit reference. */
-    Dee_Decref(field_type);
+    field->sf_hash = DeeString_Hash(field_name_and_type[0]);
+    field->sf_name = (DREF struct string_object *)field_name_and_type[0];       /* Inherit reference. */
+    field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_name_and_type[1]); /* Inherit reference. */
+    Dee_Decref(field_name_and_type[1]);
     if unlikely(!field->sf_type) {
-     Dee_Decref(field_name);
+     Dee_Decref(field_name_and_type[0]);
      field->sf_name = NULL;
      goto err_r;
     }
@@ -543,13 +545,17 @@ PRIVATE struct stype_attr struct_attr = {
 PRIVATE int DCALL
 struct_setpair(DeeStructTypeObject *__restrict tp_self,
                void *self, DeeObject *__restrict pair) {
- DREF DeeObject *key,*value; int result;
- if unlikely(DeeMapping_UnpackItemPair(pair,&key,&value))
-    return -1;
- result = struct_setattr(tp_self,self,key,value);
- Dee_Decref(value);
- Dee_Decref(key);
+ DREF DeeObject *key_and_value[2]; int result;
+ if unlikely(DeeObject_Unpack(pair,2,key_and_value))
+    goto err;
+ result = struct_setattr(tp_self,self,
+                         key_and_value[0],
+                         key_and_value[1]);
+ Dee_Decref(key_and_value[1]);
+ Dee_Decref(key_and_value[0]);
  return result;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
