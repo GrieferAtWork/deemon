@@ -112,6 +112,36 @@ err:
 }
 
 PRIVATE int DCALL
+list_moveassign(List *__restrict self,
+                List *__restrict other) {
+ DREF DeeObject **elemv,**old_elemv;
+ size_t elemc,elema,old_elemc;
+ if (self == other) goto done;
+ DeeList_LockWrite(other);
+ elemv = other->l_elem;
+ elemc = other->l_size;
+ elema = other->l_alloc;
+ other->l_elem  = NULL;
+ other->l_size  = 0;
+ other->l_alloc = 0;
+ DeeList_LockEndWrite(other);
+ DeeList_LockWrite(self);
+ old_elemv = self->l_elem;
+ old_elemc = self->l_size;
+ self->l_elem  = elemv;
+ self->l_size  = elemc;
+ self->l_alloc = elema;
+ DeeList_LockEndWrite(self);
+ if (old_elemc) {
+  while (old_elemc--)
+      Dee_Decref(old_elemv[old_elemc]);
+  Dee_Free(old_elemv);
+ }
+done:
+ return 0;
+}
+
+PRIVATE int DCALL
 list_ctor(DeeListObject *__restrict self) {
  self->l_alloc = 0;
  self->l_size  = 0;
@@ -3458,7 +3488,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&list_fini,
         /* .tp_assign      = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_assign,
-        /* .tp_move_assign = */NULL,
+        /* .tp_move_assign = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_moveassign,
         /* .tp_deepload    = */(int(DCALL *)(DeeObject *__restrict))&list_deepload
     },
     /* .tp_cast = */{
