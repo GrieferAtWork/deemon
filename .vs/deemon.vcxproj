@@ -58,6 +58,7 @@
     <ClInclude Include="..\include\deemon\list.h" />
     <ClInclude Include="..\include\deemon\map.h" />
     <ClInclude Include="..\include\deemon\module.h" />
+    <ClInclude Include="..\include\deemon\mro.h" />
     <ClInclude Include="..\include\deemon\none.h" />
     <ClInclude Include="..\include\deemon\numeric.h" />
     <ClInclude Include="..\include\deemon\object.h" />
@@ -244,8 +245,8 @@
     <ClCompile Include="..\src\deemon\runtime\error.c" />
     <ClCompile Include="..\src\deemon\runtime\format.c" />
     <ClCompile Include="..\src\deemon\runtime\gc.c" />
-    <ClCompile Include="..\src\deemon\runtime\membercache.c" />
     <ClCompile Include="..\src\deemon\runtime\misc.c" />
+    <ClCompile Include="..\src\deemon\runtime\mro.c" />
     <ClCompile Include="..\src\deemon\runtime\notify.c" />
     <ClCompile Include="..\src\deemon\runtime\operator.c" />
     <ClCompile Include="..\src\deemon\runtime\operator_info.c" />

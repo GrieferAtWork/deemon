@@ -28,6 +28,7 @@
 #include <deemon/thread.h>
 #include <deemon/class.h>
 #include <deemon/string.h>
+#include <deemon/mro.h>
 #include <deemon/tuple.h>
 #include <deemon/error.h>
 #include <deemon/callable.h>

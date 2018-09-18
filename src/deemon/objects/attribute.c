@@ -24,6 +24,7 @@
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
+#include <deemon/mro.h>
 #include <deemon/class.h>
 #include <deemon/super.h>
 #include <deemon/none.h>

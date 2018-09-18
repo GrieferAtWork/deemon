@@ -285,6 +285,9 @@
     <ClInclude Include="..\include\deemon\property.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\mro.h">
+      <Filter>include\deemon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -463,9 +466,6 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\callable.c">
       <Filter>src\deemon\objects</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\deemon\runtime\membercache.c">
-      <Filter>src\deemon\runtime</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\attribute.c">
       <Filter>src\deemon\objects</Filter>
@@ -760,6 +760,9 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\compiler\asm\genassert.c">
       <Filter>src\deemon\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\mro.c">
+      <Filter>src\deemon\runtime</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

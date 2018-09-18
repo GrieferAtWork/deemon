@@ -27,6 +27,7 @@
 #include <deemon/seq.h>
 #include <deemon/file.h>
 #include <deemon/arg.h>
+#include <deemon/mro.h>
 #include <deemon/tuple.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>

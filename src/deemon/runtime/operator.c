@@ -30,6 +30,7 @@
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
+#include <deemon/mro.h>
 #include <deemon/dict.h>
 #include <deemon/hashset.h>
 #include <deemon/objmethod.h>

@@ -16,11 +16,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_RUNTIME_MEMBERCACHE_C
-#define GUARD_DEEMON_RUNTIME_MEMBERCACHE_C 1
+#ifndef GUARD_DEEMON_RUNTIME_MRO_C
+#define GUARD_DEEMON_RUNTIME_MRO_C 1
 
 #include <deemon/api.h>
 #include <deemon/object.h>
+#include <deemon/mro.h>
 #include <deemon/objmethod.h>
 #include <deemon/class.h>
 #include <deemon/file.h>
@@ -6312,8 +6313,6 @@ type_obmemb_find(DeeTypeObject *__restrict tp_self,
 
 #endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
 
-
-
 DECL_END
 
-#endif /* !GUARD_DEEMON_RUNTIME_MEMBERCACHE_C */
+#endif /* !GUARD_DEEMON_RUNTIME_MRO_C */

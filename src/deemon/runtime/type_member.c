@@ -27,6 +27,7 @@
 #include <deemon/attribute.h>
 #include <deemon/float.h>
 #include <deemon/objmethod.h>
+#include <deemon/mro.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>

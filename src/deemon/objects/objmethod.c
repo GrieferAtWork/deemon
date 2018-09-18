@@ -27,6 +27,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/thread.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/arg.h>
 #include <deemon/string.h>

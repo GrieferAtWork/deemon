@@ -27,6 +27,7 @@
 #include <deemon/tuple.h>
 #include <deemon/bool.h>
 #include <deemon/string.h>
+#include <deemon/mro.h>
 #include <deemon/thread.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
