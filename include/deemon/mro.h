@@ -874,10 +874,11 @@ INTDEF dssize_t DCALL type_obmeth_enum(DeeTypeObject *__restrict tp_self, denum_
 INTDEF dssize_t DCALL type_obprop_enum(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg);
 INTDEF dssize_t DCALL type_obmemb_enum(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg);
 
+/* Helper functions for accessing type attributes. */
 #define type_method_get(desc,self) \
   (((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_New((dkwobjmethod_t)(desc)->m_func,self) \
                                         : DeeObjMethod_New((desc)->m_func,self))
-#define type_method_doc(desc)                        DeeString_NewUtf8((desc)->m_doc,strlen((desc)->m_doc),STRING_ERROR_FIGNORE)
+#define type_method_doc(desc)             DeeString_NewUtf8((desc)->m_doc,strlen((desc)->m_doc),STRING_ERROR_FIGNORE)
 #define type_method_call(desc,self,argc,argv) \
   (((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_CallFunc((dkwobjmethod_t)(desc)->m_func,self,argc,argv,NULL) \
                                         : DeeObjMethod_CallFunc((desc)->m_func,self,argc,argv))
@@ -910,6 +911,7 @@ INTDEF bool DCALL type_member_bound(struct type_member *__restrict desc, DeeObje
 INTDEF int DCALL type_member_set(struct type_member *__restrict desc, DeeObject *__restrict self, DeeObject *__restrict value);
 
 
+/* Static (class) attribute access for type objects. */
 INTDEF DREF DeeObject *DCALL DeeType_GetAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF int DCALL DeeType_BoundAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF int DCALL DeeType_FindAttrString(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
@@ -921,10 +923,12 @@ INTDEF int DCALL DeeType_DelAttrString(DeeTypeObject *__restrict self, char cons
 INTDEF int DCALL DeeType_SetAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict value);
 INTDEF dssize_t DCALL DeeType_EnumAttr(DeeTypeObject *__restrict self, denum_t proc, void *arg);
 
+/* Instance-only (wrapper) attribute access to the attributes of instance of types. */
 INTDEF DREF DeeObject *DCALL DeeType_GetInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF DREF DeeObject *DCALL DeeType_DocInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF DREF DeeObject *DCALL DeeType_CallInstanceAttrStringKw(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF bool DCALL DeeType_HasInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
+INTDEF int DCALL DeeType_BoundInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF int DCALL DeeType_DelInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF int DCALL DeeType_SetInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict value);
 #endif /* CONFIG_BUILDING_DEEMON */

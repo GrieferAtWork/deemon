@@ -3242,6 +3242,7 @@ DeeType_FindCachedAttr(DeeTypeObject *__restrict tp_self, DeeObject *instance,
    if (attr->ca_doc) {
     doc   = DeeString_STR(attr->ca_doc);
     perm |= ATTR_DOCOBJ;
+    Dee_Incref(attr->ca_doc);
    }
    if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
        perm |= ATTR_PRIVATE;
@@ -3287,37 +3288,22 @@ DeeType_FindCachedAttr(DeeTypeObject *__restrict tp_self, DeeObject *instance,
   Dee_Incref(member_decl);
   MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
   if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
+   if (perm & ATTR_DOCOBJ)
+       Dee_Decref(COMPILER_CONTAINER_OF(doc,DeeStringObject,s_str));
    Dee_XDecref(member_type);
    Dee_Decref(member_decl);
    goto not_found;
   }
   result->a_decl     = (DREF DeeObject *)member_decl;
-  result->a_doc      = NULL;
+  result->a_doc      = doc;
   result->a_perm     = perm;
   result->a_attrtype = member_type; /* Inherit reference. */
-  if (doc) {
-   if (perm & ATTR_DOCOBJ) {
-    result->a_doc = COMPILER_CONTAINER_OF(doc,DeeStringObject,s_str);
-    Dee_Incref(result->a_doc);
-   } else {
-    result->a_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,
-                                                              strlen(doc),
-                                                              STRING_ERROR_FIGNORE);
-    if unlikely(!result->a_doc) {
-     Dee_Decref(member_decl);
-     Dee_XDecref(member_type);
-     goto err;
-    }
-   }
-  }
   return 0;
  }
 done:
  MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
 not_found:
  return 1;
-err:
- return -1;
 }
 INTERN int DCALL
 DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
@@ -3377,6 +3363,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
    if (attr->ca_doc) {
     doc   = DeeString_STR(attr->ca_doc);
     perm |= ATTR_DOCOBJ;
+    Dee_Incref(attr->ca_doc);
    }
    if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
        perm |= ATTR_PRIVATE;
@@ -3451,6 +3438,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
    if (attr->ca_doc) {
     doc   = DeeString_STR(attr->ca_doc);
     perm |= ATTR_DOCOBJ;
+    Dee_Incref(attr->ca_doc);
    }
    if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
        perm |= ATTR_PRIVATE;
@@ -3493,37 +3481,22 @@ DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
   Dee_Incref(member_decl);
   MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
   if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
+   if (perm & ATTR_DOCOBJ)
+       Dee_Decref(COMPILER_CONTAINER_OF(doc,DeeStringObject,s_str));
    Dee_XDecref(member_type);
    Dee_Decref(member_decl);
    goto not_found;
   }
   result->a_decl     = (DREF DeeObject *)member_decl;
-  result->a_doc      = NULL;
+  result->a_doc      = doc;
   result->a_perm     = perm;
   result->a_attrtype = member_type; /* Inherit reference. */
-  if (doc) {
-   if (perm & ATTR_DOCOBJ) {
-    result->a_doc = COMPILER_CONTAINER_OF(doc,DeeStringObject,s_str);
-    Dee_Incref(result->a_doc);
-   } else {
-    result->a_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc,
-                                                              strlen(doc),
-                                                              STRING_ERROR_FIGNORE);
-    if unlikely(!result->a_doc) {
-     Dee_Decref(member_decl);
-     Dee_XDecref(member_type);
-     goto err;
-    }
-   }
-  }
   return 0;
  }
 done:
  MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
 not_found:
  return 1;
-err:
- return -1;
 }
 
 
@@ -4220,11 +4193,7 @@ type_method_findattr(struct membercache *__restrict cache, DeeTypeObject *__rest
  for (; chain->m_name; ++chain) {
   if (strcmp(chain->m_name,rules->alr_name)) continue;
   membercache_addmethod(cache,decl,rules->alr_hash,chain);
-  result->a_doc = NULL;
-  if (chain->m_doc) {
-   result->a_doc = (DREF DeeStringObject *)type_method_doc(chain);
-   if unlikely(!result->a_doc) goto err;
-  }
+  result->a_doc      = chain->m_doc;
   result->a_decl     = (DREF DeeObject *)decl;
   result->a_perm     = perm;
   result->a_attrtype = (chain->m_flag & TYPE_METHOD_FKWDS)
@@ -4237,8 +4206,6 @@ type_method_findattr(struct membercache *__restrict cache, DeeTypeObject *__rest
  }
 nope:
  return 1;
-err:
- return -1;
 }
 INTERN int DCALL
 DeeType_FindInstanceMethodAttr(DeeTypeObject *__restrict tp_invoker,
@@ -4253,11 +4220,7 @@ DeeType_FindInstanceMethodAttr(DeeTypeObject *__restrict tp_invoker,
  for (; chain->m_name; ++chain) {
   if (strcmp(chain->m_name,rules->alr_name)) continue;
   membercache_addinstancemethod(&tp_invoker->tp_class_cache,tp_self,rules->alr_hash,chain);
-  result->a_doc = NULL;
-  if (chain->m_doc) {
-   result->a_doc = (DREF DeeStringObject *)type_method_doc(chain);
-   if unlikely(!result->a_doc) goto err;
-  }
+  result->a_doc      = chain->m_doc;
   result->a_decl     = (DREF DeeObject *)tp_self;
   result->a_perm     = perm;
   result->a_attrtype = (chain->m_flag & TYPE_METHOD_FKWDS)
@@ -4270,8 +4233,6 @@ DeeType_FindInstanceMethodAttr(DeeTypeObject *__restrict tp_invoker,
  }
 nope:
  return 1;
-err:
- return -1;
 }
 
 INTERN int DCALL /* GETSET */
@@ -4289,11 +4250,7 @@ type_getset_findattr(struct membercache *__restrict cache, DeeTypeObject *__rest
   if ((flags & rules->alr_perm_mask) != rules->alr_perm_value) continue;
   if (strcmp(chain->gs_name,rules->alr_name)) continue;
   membercache_addgetset(cache,decl,rules->alr_hash,chain);
-  result->a_doc = NULL;
-  if (chain->gs_doc) {
-   result->a_doc = (DREF DeeStringObject *)type_getset_doc(chain);
-   if unlikely(!result->a_doc) goto err;
-  }
+  result->a_doc      = chain->gs_doc;
   result->a_perm     = flags;
   result->a_decl     = (DREF DeeObject *)decl;
   result->a_attrtype = NULL;
@@ -4301,8 +4258,6 @@ type_getset_findattr(struct membercache *__restrict cache, DeeTypeObject *__rest
   return 0;
  }
  return 1;
-err:
- return -1;
 }
 INTERN int DCALL
 DeeType_FindInstanceGetSetAttr(DeeTypeObject *__restrict tp_invoker,
@@ -4320,11 +4275,7 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *__restrict tp_invoker,
   if ((flags & rules->alr_perm_mask) != rules->alr_perm_value) continue;
   if (strcmp(chain->gs_name,rules->alr_name)) continue;
   membercache_addinstancegetset(&tp_invoker->tp_class_cache,tp_self,rules->alr_hash,chain);
-  result->a_doc = NULL;
-  if (chain->gs_doc) {
-   result->a_doc = (DREF DeeStringObject *)type_getset_doc(chain);
-   if unlikely(!result->a_doc) goto err;
-  }
+  result->a_doc      = chain->gs_doc;
   result->a_perm     = flags;
   result->a_decl     = (DREF DeeObject *)tp_self;
   result->a_attrtype = NULL;
@@ -4332,8 +4283,6 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *__restrict tp_invoker,
   return 0;
  }
  return 1;
-err:
- return -1;
 }
 
 INTERN int DCALL /* MEMBER */
@@ -4351,11 +4300,7 @@ type_member_findattr(struct membercache *__restrict cache, DeeTypeObject *__rest
   if ((flags & rules->alr_perm_mask) != rules->alr_perm_value) continue;
   if (strcmp(chain->m_name,rules->alr_name)) continue;
   membercache_addmember(cache,decl,rules->alr_hash,chain);
-  result->a_doc = NULL;
-  if (chain->m_doc) {
-   result->a_doc = (DREF DeeStringObject *)type_member_doc(chain);
-   if unlikely(!result->a_doc) goto err;
-  }
+  result->a_doc      = chain->m_doc;
   result->a_perm     = flags;
   result->a_decl     = (DREF DeeObject *)decl;
   result->a_attrtype = NULL;
@@ -4363,8 +4308,6 @@ type_member_findattr(struct membercache *__restrict cache, DeeTypeObject *__rest
   return 0;
  }
  return 1;
-err:
- return -1;
 }
 INTERN int DCALL
 DeeType_FindInstanceMemberAttr(DeeTypeObject *__restrict tp_invoker,
@@ -4382,11 +4325,7 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *__restrict tp_invoker,
   if ((flags & rules->alr_perm_mask) != rules->alr_perm_value) continue;
   if (strcmp(chain->m_name,rules->alr_name)) continue;
   membercache_addinstancemember(&tp_invoker->tp_class_cache,tp_self,rules->alr_hash,chain);
-  result->a_doc = NULL;
-  if (chain->m_doc) {
-   result->a_doc = (DREF DeeStringObject *)type_member_doc(chain);
-   if unlikely(!result->a_doc) goto err;
-  }
+  result->a_doc      = chain->m_doc;
   result->a_perm     = flags;
   result->a_decl     = (DREF DeeObject *)tp_self;
   result->a_attrtype = NULL;
@@ -4394,8 +4333,6 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *__restrict tp_invoker,
   return 0;
  }
  return 1;
-err:
- return -1;
 }
 
 #else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */

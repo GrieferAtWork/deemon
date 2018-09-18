@@ -71,15 +71,22 @@ typedef struct enumattr_iterator_object DeeEnumAttrIteratorObject;
 
 struct attribute_info {
     DREF DeeObject            *a_decl;     /* [1..1] The type defining the attribute. */
-    DREF struct string_object *a_doc;      /* [0..1] The documentation string of the attribute (when known).
+    char const                *a_doc;      /* [0..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(.,DeeStringObject,s_str)))]
+                                            * The documentation string of the attribute (when known).
                                             * NOTE: This may also be an empty string, which should be
-                                            *       interpreted as no documentation string being there at all. */
+                                            *       interpreted as no documentation string being there at all.
+                                            * NOTE: When the `ATTR_DOCOBJ' flag is set, then this is actually
+                                            *       the `DeeString_STR()' of a string objects, to which a
+                                            *       reference is being held. */
     uint16_t                   a_perm;     /* Set of `ATTR_*' flags, describing the attribute's behavior. */
     DREF DeeTypeObject        *a_attrtype; /* [0..1] The typing of this attribute. */
 };
 #define attribute_info_fini(self) \
     (Dee_Decref((self)->a_decl), \
-     Dee_XDecref((self)->a_doc),Dee_XDecref((self)->a_attrtype))
+     Dee_XDecref((self)->a_attrtype), \
+   ((self)->a_perm & ATTR_DOCOBJ) ? \
+     Dee_Decref(COMPILER_CONTAINER_OF((self)->a_doc,DeeStringObject,s_str)) : \
+    (void)0)
 
 
 struct attribute_object {

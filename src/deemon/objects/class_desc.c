@@ -439,7 +439,7 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
   if (!attr->ca_name) continue;
   attr_type = NULL;
   perm = (ATTR_IMEMBER | ATTR_CMEMBER | ATTR_WRAPPER |
-          ATTR_PERMGET | ATTR_NAMEOBJ | ATTR_DOCOBJ);
+          ATTR_PERMGET | ATTR_NAMEOBJ);
   if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
       perm |= ATTR_PROPERTY;
   else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
@@ -474,6 +474,7 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
    if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)))
         perm |= (ATTR_PERMDEL | ATTR_PERMSET);
   }
+  if (attr->ca_doc) perm |= ATTR_DOCOBJ;
   temp = (*proc)((DeeObject *)self,DeeString_STR(attr->ca_name),
                   attr->ca_doc ? DeeString_STR(attr->ca_doc) : NULL,
                   perm,attr_type,arg);
@@ -495,8 +496,7 @@ DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
   attr = &desc->cd_cattr_list[i];
   if (!attr->ca_name) continue;
   attr_type = NULL;
-  perm = (ATTR_CMEMBER | ATTR_PERMGET |
-          ATTR_NAMEOBJ | ATTR_DOCOBJ);
+  perm = (ATTR_CMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
   /* Figure out which instance descriptor the property is connected to. */
   rwlock_read(&my_class->cd_lock);
   if (!(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
@@ -510,7 +510,7 @@ DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
   if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
    perm |= (ATTR_PERMDEL | ATTR_PERMSET);
    if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-    perm = (ATTR_CMEMBER | ATTR_NAMEOBJ | ATTR_DOCOBJ);
+    perm = (ATTR_CMEMBER | ATTR_NAMEOBJ);
     /* Actually figure out what callbacks are assigned. */
     if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET]) perm |= ATTR_PERMGET;
     if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL]) perm |= ATTR_PERMDEL;
@@ -524,6 +524,7 @@ DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
       perm |= ATTR_PERMCALL;
   if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
       perm |= ATTR_PRIVATE;
+  if (attr->ca_doc) perm |= ATTR_DOCOBJ;
   temp = (*proc)((DeeObject *)self,DeeString_STR(attr->ca_name),
                   attr->ca_doc ? DeeString_STR(attr->ca_doc) : NULL,
                   perm,attr_type,arg);
@@ -547,8 +548,7 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
   attr = &desc->cd_iattr_list[i];
   if (!attr->ca_name) continue;
   inst = NULL,attr_type = NULL;
-  perm = (ATTR_IMEMBER | ATTR_PERMGET |
-          ATTR_NAMEOBJ | ATTR_DOCOBJ);
+  perm = (ATTR_IMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
   /* Figure out which instance descriptor the property is connected to. */
   if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
       inst = class_desc_as_instance(my_class);
@@ -568,7 +568,7 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
   if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
    perm |= (ATTR_PERMDEL | ATTR_PERMSET);
    if (inst && attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-    perm = (ATTR_IMEMBER | ATTR_NAMEOBJ | ATTR_DOCOBJ);
+    perm = (ATTR_IMEMBER | ATTR_NAMEOBJ);
     /* Actually figure out what callbacks are assigned. */
     if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET]) perm |= ATTR_PERMGET;
     if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL]) perm |= ATTR_PERMDEL;
@@ -582,6 +582,7 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
       perm |= ATTR_PERMCALL;
   if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
       perm |= ATTR_PRIVATE;
+  if (attr->ca_doc) perm |= ATTR_DOCOBJ;
   temp = (*proc)((DeeObject *)self,DeeString_STR(attr->ca_name),
                   attr->ca_doc ? DeeString_STR(attr->ca_doc) : NULL,
                   perm,attr_type,arg);
@@ -624,8 +625,7 @@ DeeClass_FindClassAttribute(DeeTypeObject *__restrict self,
 #endif
  if (!attr) goto not_found;
  attr_type = NULL;
- perm = (ATTR_CMEMBER | ATTR_PERMGET |
-         ATTR_NAMEOBJ | ATTR_DOCOBJ);
+ perm = (ATTR_CMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
  /* Figure out which instance descriptor the property is connected to. */
  rwlock_read(&my_class->cd_lock);
  if (!(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
@@ -636,7 +636,7 @@ DeeClass_FindClassAttribute(DeeTypeObject *__restrict self,
  if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
   perm |= (ATTR_PERMDEL | ATTR_PERMSET);
   if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-   perm = (ATTR_CMEMBER | ATTR_NAMEOBJ | ATTR_DOCOBJ);
+   perm = (ATTR_CMEMBER | ATTR_NAMEOBJ);
    /* Actually figure out what callbacks are assigned. */
    if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET]) perm |= ATTR_PERMGET;
    if (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL]) perm |= ATTR_PERMDEL;
@@ -655,12 +655,16 @@ DeeClass_FindClassAttribute(DeeTypeObject *__restrict self,
 not_found:
   return 1;
  }
+ result->a_doc      = NULL;
  result->a_decl     = (DREF DeeObject *)self;
- result->a_perm     = perm;
  result->a_attrtype = attr_type; /* Inherit reference. */
- result->a_doc      = attr->ca_doc;
+ if (attr->ca_doc) {
+  result->a_doc = DeeString_STR(attr->ca_doc);
+  perm         |= ATTR_DOCOBJ;
+  Dee_Incref(attr->ca_doc);
+ }
+ result->a_perm = perm;
  Dee_Incref(result->a_decl);
- Dee_XIncref(result->a_doc);
  return 0;
 }
 
@@ -698,7 +702,7 @@ DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict self,
  attr_type = NULL;
  perm = (ATTR_IMEMBER | ATTR_CMEMBER |
          ATTR_WRAPPER | ATTR_PERMGET |
-         ATTR_NAMEOBJ | ATTR_DOCOBJ);
+         ATTR_NAMEOBJ);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
      perm |= ATTR_PROPERTY;
  else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
@@ -739,11 +743,15 @@ not_found:
   return 1;
  }
  result->a_decl     = (DREF DeeObject *)self;
- result->a_perm     = perm;
  result->a_attrtype = attr_type; /* Inherit reference. */
- result->a_doc      = attr->ca_doc;
+ result->a_doc      = NULL;
+ if (attr->ca_doc) {
+  result->a_doc = DeeString_STR(attr->ca_doc);
+  perm         |= ATTR_DOCOBJ;
+  Dee_Incref(attr->ca_doc);
+ }
+ result->a_perm = perm;
  Dee_Incref(result->a_decl);
- Dee_XIncref(result->a_doc);
  return 0;
 }
 
@@ -779,8 +787,7 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict self, DeeObject *instan
 #endif
  if (!attr) goto not_found;
  attr_type = NULL,inst = NULL;
- perm = (ATTR_IMEMBER | ATTR_PERMGET |
-         ATTR_NAMEOBJ | ATTR_DOCOBJ);
+ perm = (ATTR_IMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
  /* Figure out which instance descriptor the property is connected to. */
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
      inst = class_desc_as_instance(my_class);
@@ -800,7 +807,7 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict self, DeeObject *instan
  if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
   perm |= (ATTR_PERMDEL | ATTR_PERMSET);
   if (inst && attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-   perm = (ATTR_IMEMBER | ATTR_NAMEOBJ | ATTR_DOCOBJ);
+   perm = (ATTR_IMEMBER | ATTR_NAMEOBJ);
    /* Actually figure out what callbacks are assigned. */
    if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET]) perm |= ATTR_PERMGET;
    if (inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL]) perm |= ATTR_PERMDEL;
@@ -820,11 +827,15 @@ not_found:
   return 1;
  }
  result->a_decl     = (DREF DeeObject *)self;
- result->a_perm     = perm;
  result->a_attrtype = attr_type; /* Inherit reference. */
- result->a_doc      = attr->ca_doc;
+ result->a_doc      = NULL;
+ if (attr->ca_doc) {
+  result->a_doc = DeeString_STR(attr->ca_doc);
+  perm         |= ATTR_DOCOBJ;
+  Dee_Incref(attr->ca_doc);
+ }
+ result->a_perm = perm;
  Dee_Incref(result->a_decl);
- Dee_XIncref(result->a_doc);
  return 0;
 }
 

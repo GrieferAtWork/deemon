@@ -801,7 +801,7 @@ module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
   uint16_t perm; DREF DeeTypeObject *attr_type;
   /* Skip empty and hidden entries. */
   if (!iter->ss_name || (iter->ss_flags&MODSYM_FHIDDEN)) continue;
-  perm = ATTR_IMEMBER|ATTR_ACCESS_GET|ATTR_NAMEOBJ|ATTR_DOCOBJ;
+  perm = ATTR_IMEMBER | ATTR_ACCESS_GET | ATTR_NAMEOBJ;
   ASSERT(iter->ss_index < self->mo_globalc);
   if (!(iter->ss_flags&MODSYM_FREADONLY))
         perm |= (ATTR_ACCESS_DEL|ATTR_ACCESS_SET);
@@ -851,6 +851,7 @@ module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
    ASSERT(doc_iter);
   }
   /* NOTE: Pass the module instance as declarator! */
+  if (doc_iter->ss_doc) perm |= ATTR_DOCOBJ;
   temp = (*proc)((DeeObject *)self,iter->ss_name->s_str,
                   doc_iter->ss_doc ? doc_iter->ss_doc->s_str : NULL,
                   perm,attr_type,arg);

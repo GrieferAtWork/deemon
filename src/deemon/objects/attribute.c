@@ -105,9 +105,37 @@ PRIVATE struct type_member attr_members[] = {
 
 PRIVATE DREF DeeStringObject *DCALL
 attr_getdoc(Attr *__restrict self) {
- DREF DeeStringObject *result = self->a_info.a_doc;
- if (!result) result = (DREF DeeStringObject *)Dee_EmptyString;
- return_reference_(result);
+ DREF DeeStringObject *result;
+ uint16_t perm = self->a_info.a_perm;
+ /* Make sure that `a_doc' is read _AFTER_ `a_perm' */
+ __hybrid_atomic_thread_fence(__ATOMIC_ACQUIRE);
+ if (perm & ATTR_DOCOBJ) {
+  result = COMPILER_CONTAINER_OF(self->a_info.a_doc,
+                                 DeeStringObject,
+                                 s_str);
+  Dee_Incref(result);
+ } else {
+  char const *doc_str;
+  doc_str = self->a_info.a_doc;
+  COMPILER_READ_BARRIER();
+  if (!doc_str) {
+   result = (DREF DeeStringObject *)Dee_EmptyString;
+   Dee_Incref(result);
+  } else {
+   /* Wrap the doc string into a string object. */
+   result = (DREF DeeStringObject *)DeeString_NewUtf8(doc_str,
+                                                      strlen(doc_str),
+                                                      STRING_ERROR_FIGNORE);
+   if unlikely(!result) goto done;
+   /* Cache the doc-string as part of the attribute structure. */
+   if (ATOMIC_FETCHOR(self->a_info.a_perm,ATTR_DOCOBJ)) {
+    self->a_info.a_doc = DeeString_STR(result);
+    Dee_Incref(result);
+   }
+  }
+ }
+done:
+ return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -420,9 +448,7 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
      return_false;
   goto err;
  }
- Dee_Decref(info.a_decl);
- Dee_XDecref(info.a_doc);
- Dee_XDecref(info.a_attrtype);
+ attribute_info_fini(&info);
  return_true;
 err:
  return NULL;
@@ -496,9 +522,7 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
  Dee_Incref(search_name);
  return (DREF DeeObject *)result;
 err_info:
- Dee_Decref(info.a_decl);
- Dee_XDecref(info.a_doc);
- Dee_XDecref(info.a_attrtype);
+ attribute_info_fini(&info);
 err:
  return NULL;
 }
@@ -989,20 +1013,21 @@ again:
  new_attribute->a_info.a_decl     = declarator;
  new_attribute->a_info.a_perm     = perm;
  new_attribute->a_info.a_attrtype = attr_type;
- if (perm&ATTR_NAMEOBJ) {
+ if (perm & ATTR_NAMEOBJ) {
   new_attribute->a_name = COMPILER_CONTAINER_OF(attr_name,DeeStringObject,s_str);
   Dee_Incref(new_attribute->a_name);
  } else {
   new_attribute->a_name = DeeString_TryNew(attr_name);
   if unlikely(!new_attribute->a_name) goto err_collect_2;
  }
- if (!attr_doc) new_attribute->a_info.a_doc = NULL;
- else if (perm&ATTR_DOCOBJ) {
-  new_attribute->a_info.a_doc = COMPILER_CONTAINER_OF(attr_doc,DeeStringObject,s_str);
-  Dee_Incref(new_attribute->a_info.a_doc);
+ if (!attr_doc) {
+  ASSERT(!(perm & ATTR_DOCOBJ));
+  new_attribute->a_info.a_doc = NULL;
+ } else if (perm & ATTR_DOCOBJ) {
+  new_attribute->a_info.a_doc = attr_doc;
+  Dee_Incref(COMPILER_CONTAINER_OF(attr_doc,DeeStringObject,s_str));
  } else {
-  new_attribute->a_info.a_doc = DeeString_TryNew(attr_doc);
-  if unlikely(!new_attribute->a_info.a_doc) goto err_collect_3;
+  new_attribute->a_info.a_doc = attr_doc;
  }
  Dee_XIncref(declarator);
  Dee_XIncref(attr_type);
@@ -1019,8 +1044,6 @@ again:
   if (error == CNTSIG_STOP) return -2;
  }
  return 0;
-err_collect_3:
- Dee_Decref(new_attribute->a_name);
 err_collect_2:
  DeeObject_Free(new_attribute);
 err_collect:
@@ -1280,16 +1303,14 @@ attribute_lookup_enum(DeeObject *__restrict declarator,
      return 0;
  /* This is the one! */
  result = arg->ald_info;
- if (!attr_doc)
+ if (!attr_doc) {
+  ASSERT(!(perm & ATTR_DOCOBJ));
   result->a_doc = NULL;
- else if (perm & ATTR_DOCOBJ) {
-  result->a_doc = COMPILER_CONTAINER_OF(attr_doc,DeeStringObject,s_str);
-  Dee_Incref(result->a_doc);
+ } else if (perm & ATTR_DOCOBJ) {
+  result->a_doc = attr_doc;
+  Dee_Incref(COMPILER_CONTAINER_OF(attr_doc,DeeStringObject,s_str));
  } else {
-  result->a_doc = (DREF struct string_object *)DeeString_NewUtf8(attr_doc,
-                                                                 strlen(attr_doc),
-                                                                 STRING_ERROR_FIGNORE);
-  if unlikely(!result->a_doc) goto err;
+  result->a_doc = attr_doc;
  }
  result->a_decl = declarator;
  Dee_Incref(declarator);
@@ -1297,8 +1318,6 @@ attribute_lookup_enum(DeeObject *__restrict declarator,
  result->a_attrtype = attr_type;
  Dee_XIncref(attr_type);
  return -2; /* Stop enumeration! */
-err:
- return -1;
 }
 
 

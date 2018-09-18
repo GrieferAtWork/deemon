@@ -1924,8 +1924,10 @@ DFUNDEF int (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc, DR
 /* Documentation string access.
  * @throw: Error.ValueError:     The object/attribute isn't documented.
  * @throw: Error.AttributeError: The attribute doesn't exist. */
-DFUNDEF DREF /*String*/DeeObject *DCALL DeeObject_Doc(DeeObject *__restrict self);
-DFUNDEF DREF /*String*/DeeObject *DCALL DeeObject_DocAttr(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
+DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_Doc)(DeeObject *__restrict self);
+DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_DocAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
+DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_DocAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
+DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_DocAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
 
 /* Attribute operator invocation. */
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
@@ -1957,13 +1959,13 @@ DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringPackHash)(DeeObject *__restrict
 DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringHashPack)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, size_t argc, va_list args);
 DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringHashf)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, ...);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringHashf)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, va_list args);
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#if defined(CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS) || defined(__OPTIMIZE_SIZE__)
 DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict args);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict args, DeeObject *kw);
-#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS || __OPTIMIZE_SIZE__ */
 #define DeeObject_CallAttrTuple(self,attr_name,args)      DeeObject_CallAttr(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
 #define DeeObject_CallAttrTupleKw(self,attr_name,args,kw) DeeObject_CallAttrKw(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
-#endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
 
 /* @return: 1 : Attribute is bound.
  * @return: 0 : Attribute isn't bound.
@@ -1985,8 +1987,7 @@ DFUNDEF int (DCALL DeeObject_BoundAttrStringHash)(DeeObject *__restrict self, ch
  * Translates to:
  * >> DeeObject_Enter(my_object);
  * >> ...
- * >> DeeObject_Leave(my_object);
- */
+ * >> DeeObject_Leave(my_object); */
 DFUNDEF int (DCALL DeeObject_Enter)(DeeObject *__restrict self);
 DFUNDEF int (DCALL DeeObject_Leave)(DeeObject *__restrict self);
 
@@ -2018,6 +2019,8 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 
 #ifndef __OPTIMIZE_SIZE__
 #define DeeObject_GetAttrString(self,attr_name)                 DeeObject_GetAttrStringHash(self,attr_name,hash_str(attr_name))
+#define DeeObject_DocAttrString(self,attr_name)                 DeeObject_DocAttrStringHash(self,attr_name,hash_str(attr_name))
+#define DeeObject_BoundAttrString(self,attr_name)               DeeObject_BoundAttrStringHash(self,attr_name,hash_str(attr_name))
 #define DeeObject_HasAttrString(self,attr_name)                 DeeObject_HasAttrStringHash(self,attr_name,hash_str(attr_name))
 #define DeeObject_DelAttrString(self,attr_name)                 DeeObject_DelAttrStringHash(self,attr_name,hash_str(attr_name))
 #define DeeObject_SetAttrString(self,attr_name,value)           DeeObject_SetAttrStringHash(self,attr_name,hash_str(attr_name),value)

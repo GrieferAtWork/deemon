@@ -103,6 +103,9 @@ typedef struct module_path_object DeeModulePathObject;
 
 struct module_symbol {
     DREF struct string_object *ss_name;   /* [0..1] Name of this symbol (NULL marks the sentinel) */
+    /* TODO: For the sake of DEX modules, `ss_doc' should be allowed to be a `char const *', with
+     *       one of the symbol flags being used to indicate if it's actually an object, which must
+     *       be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc,DeeStringObject,s_str))' */
     DREF struct string_object *ss_doc;    /* [0..1] An optional documentation string. */
     dhash_t                    ss_hash;   /* [== ss_name->s_hash] Hash-value of this symbol. */
 #define MODSYM_FNORMAL         0x0000     /* Normal symbol flags. */

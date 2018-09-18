@@ -2268,16 +2268,18 @@ PRIVATE DREF DeeObject *DCALL
 type_boundinstanceattr(DeeTypeObject *__restrict self,
                        size_t argc, DeeObject **__restrict argv,
                        DeeObject *kw) {
- DeeObject *name; bool allow_missing = true;
+ DeeObject *name; bool allow_missing = true; int result;
  if (DeeArg_UnpackKw(argc,argv,kw,boundattr_kwdlist,meth_boundinstanceattr,&name,&allow_missing) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type))
-     return NULL;
+     goto err;
  /* Instance attributes of types are always bound (because they're all wrappers) */
- if (DeeType_HasInstanceAttrString(self,DeeString_STR(name),DeeString_Hash(name)))
-     return_true;
+ result = DeeType_BoundInstanceAttrString(self,DeeString_STR(name),DeeString_Hash(name));
+ if (result > 0) return_true;
+ if (result == -1) goto err;
  if (allow_missing)
      return_false; /* Unknown attributes are unbound. */
  err_unknown_attribute(self,DeeString_STR(name),ATTR_ACCESS_GET);
+err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
