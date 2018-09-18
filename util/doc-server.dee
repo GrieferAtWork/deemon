@@ -265,8 +265,8 @@ function find_global_target(d,name,allow_module_root = true) {
 		subcache = deemon.dict();
 		global_target_cache[current_module.__name__] = subcache;
 	} else {
-		result = subcache.get(name);
-		if (result !is none)
+		result = subcache.get(name,false);
+		if (result !== false)
 			return result;
 	}
 	//print "do_find_global_target({!r},{!r})".format({ module_node, name });
@@ -315,10 +315,8 @@ function print_with_target(fp,d,target) {
 }
 
 function print_with_link(fp,d,name,allow_module_root = true) {
-	local target;
-	try {
-		target = find_global_target(d,name,allow_module_root);
-	} catch (...) {
+	local target = find_global_target(d,name,allow_module_root);
+	if (target is none) {
 		fp << "<div class=\"broken_link\"><i>" << name << "</i></div>";
 		return;
 	}
@@ -340,16 +338,50 @@ function print_argument(fp,d,name) {
 	/* TODO: `@foobar' */
 	fp << "<i>" << name << "</i>";
 }
-function print_type_expr(fp,d,expr) {
-	local target;
-	/* TODO: Deal with stuff like `{type...}' or `(x,y,z)' or `object...' */
-	try {
-		target = find_global_target(d,expr,false);
-	} catch (...) {
-		fp << expr;
-		return;
+
+
+@"(string text)->{(bool,string)...}"
+@"Split a given string @text into its individual identifiers, returning pairs of (is_identifier,content)"
+@">/* { { true, \"foo\" }, "
+@">/*   { false, \",\" }, "
+@">/*   { true, \"bar\" }, "
+@">/*   { false, \",\" }, "
+@">/*   { true, \"foobar\" } } */"
+@">print repr split_identifiers(\"foo,bar,foobar\");"
+function split_identifiers(text) {
+	local textlen = #text;
+	local segment_start = 0;
+	while (segment_start < textlen) {
+		local segment_end = segment_start + 1;
+		local ch = text[segment_start];
+		if (ch.issymstrt() || ch == ":") {
+			/* Identifier segment. */
+			while (segment_end < textlen &&
+				(text.issymcont(segment_end) || text[segment_end] in [".",":"]))
+				++segment_end;
+			yield pack(true,text[segment_start:segment_end]);
+		} else {
+			/* Non-identifier segment. */
+			while (segment_end < textlen &&
+				(!text.issymstrt(segment_end) && text[segment_end] != ":"))
+				++segment_end;
+			yield pack(false,text[segment_start:segment_end]);
+		}
+		segment_start = segment_end;
 	}
-	print_with_target(fp,d,target);
+}
+
+function print_type_expr(fp,d,expr) {
+	for (local is_ident,content: split_identifiers(expr)) {
+		if (is_ident) {
+			local target = find_global_target(d,content,false);
+			if (target !is none) {
+				print_with_target(fp,d,target);
+				continue;
+			}
+		}
+		fp << content;
+	}
 }
 
 
