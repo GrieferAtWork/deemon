@@ -125,13 +125,13 @@ typedef struct {
     uint16_t                   p_state;   /* The state of the process */
     uint16_t                   p_padding; /* ... */
     HANDLE                     p_handle;  /* [lock(p_lock)][const_if(PROCESS_FSTARTED)][owned]
-                                           *  [valid_if(PROCESS_FSTARTED && != NULL)]
-                                           *   A handle to the process. */
+                                           * [valid_if(PROCESS_FSTARTED && != NULL)]
+                                           * A handle to the process. */
     /* NOTE: None of the following may be set to a
      *       non-NULL value when `PROCESS_FSTARTING' is set. */
     DREF DeeObject            *p_std[3];  /* [lock(p_lock)][0..1] STD streams for when the process will be running (the handle is loaded by calling `.fileno()'). */
     DREF DeeObject            *p_environ; /* [lock(p_lock)][0..1] The environment block used by the process (or `NULL' to refer to that of the calling process).
-                                           *  NOTE: When set, this is a sequence type compatible with `fs.environ': `{(string,string)...}' */
+                                           * NOTE: When set, this is a sequence type compatible with `fs.environ': `{(string,string)...}' */
     DREF DeeStringObject      *p_pwd;     /* [lock(p_lock)][0..1] The process working directory (or `NULL' to refer to that of the calling process). */
     DREF DeeStringObject      *p_exe;     /* [lock(p_lock)][0..1] The filename to an executable that should be run by the process. */
     DREF DeeStringObject      *p_cmdline; /* [lock(p_lock)][0..1] The commandline of the process (VC/VC++ compatible). */

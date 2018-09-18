@@ -168,15 +168,6 @@
 
 /* DEPRECATED NAMES */
 #define member_mayaccess(class_type,member) class_attribute_mayaccess(member,class_type)
-#define member_get                DeeInstance_GetAttribute
-#define member_bound              DeeInstance_BoundAttribute
-#define member_call               DeeInstance_CallAttribute
-#define member_call_kw            DeeInstance_CallAttributeKw
-#define member_del                DeeInstance_DelAttribute
-#define member_set                DeeInstance_SetAttribute
-#define CLASS_PROPERTY_GET        CLASS_GETSET_GET
-#define CLASS_PROPERTY_DEL        CLASS_GETSET_DEL
-#define CLASS_PROPERTY_SET        CLASS_GETSET_SET
 
 DECL_BEGIN
 
@@ -365,16 +356,25 @@ DDATDEF DeeTypeObject DeeClassDescriptor_Type;
 /* Lookup class / instance attributes within the given class descriptor.
  * @return: * :   A pointer to attribute that was found.
  * @return: NULL: Attribute could not be found (no error is thrown) */
-DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryClassAttribute(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name);
-DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name, dhash_t hash);
-DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryClassAttributeStringWithHash(DeeClassDescriptorObject *__restrict self, char const *__restrict name, dhash_t hash);
-DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryInstanceAttribute(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name);
-DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name, dhash_t hash);
-DFUNDEF struct class_attribute *DCALL DeeClassDescriptor_QueryInstanceAttributeStringWithHash(DeeClassDescriptorObject *__restrict self, char const *__restrict name, dhash_t hash);
+DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeWithHash)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name, dhash_t hash);
+DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict name, dhash_t hash);
+DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeWithHash)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name, dhash_t hash);
+DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict name, dhash_t hash);
+#ifdef __INTELLISENSE__
+DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttribute)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name);
+DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttribute)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict name);
+DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict name);
+DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict name);
+#else
+#define DeeClassDescriptor_QueryClassAttribute(self,name) \
+        DeeClassDescriptor_QueryClassAttributeWithHash(self,name,DeeString_Hash(name))
+#define DeeClassDescriptor_QueryInstanceAttribute(self,name) \
+        DeeClassDescriptor_QueryInstanceAttributeWithHash(self,name,DeeString_Hash(name))
 #define DeeClassDescriptor_QueryClassAttributeString(self,name) \
         DeeClassDescriptor_QueryClassAttributeStringWithHash(self,name,hash_str(name))
 #define DeeClassDescriptor_QueryInstanceAttributeString(self,name) \
         DeeClassDescriptor_QueryInstanceAttributeStringWithHash(self,name,hash_str(name))
+#endif
 
 
 
@@ -491,25 +491,39 @@ INTDEF dssize_t DCALL DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__rest
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+INTDEF int DCALL DeeClass_FindClassAttribute(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+INTDEF int DCALL DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+INTDEF int DCALL DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+#else
 INTDEF int DCALL DeeClass_FindClassAttribute(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 INTDEF int DCALL DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 INTDEF int DCALL DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+#endif
 
 /* Get/Call/Del/Set an instance attribute, as acquired
  * through `DeeClassDescriptor_QueryInstanceAttribute()'. */
-INTDEF DREF DeeObject *DCALL DeeInstance_GetAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
-INTDEF int DCALL DeeInstance_BoundAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeKw(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF DREF DeeObject *DCALL DeeInstance_GetAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
+INTDEF int DCALL DeeInstance_BoundAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL DeeInstance_VCallAttributef(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, char const *__restrict format, va_list args);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeKw(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTuple(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTupleKw(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict args);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-INTDEF int DCALL DeeInstance_DelAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
-INTDEF int DCALL DeeInstance_SetAttribute(DeeTypeObject *__restrict class_type, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+INTDEF int DCALL DeeInstance_DelAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
+INTDEF int DCALL DeeInstance_SetAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+/* @return:  2: Attribute isn't a basic one
+ * @return:  0: Basic attribute successfully set
+ * @return: -1: An error occurred. */
+INTDEF int DCALL DeeInstance_SetBasicAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict value);
 
 /* Get/Call/Del/Set a class attribute, as acquired
- * through `DeeClassDescriptor_QueryClassAttribute()'. */
+ * through `DeeClassDescriptor_QueryClassAttribute()'.
+ * TODO: Adjust these functions to split between the type
+ *       implementing the attribute, and the type accessing
+ *       the attribute! */
 #ifdef __INTELLISENSE__
 INTDEF DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
 INTDEF int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
@@ -522,16 +536,16 @@ INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeTupleKw(DeeTypeObject *_
 INTDEF int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
 INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict value);
 #else
-#define DeeClass_GetClassAttribute(class_type,attr)                 DeeInstance_GetAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
-#define DeeClass_BoundClassAttribute(class_type,attr)               DeeInstance_BoundAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
-#define DeeClass_CallClassAttribute(class_type,attr,argc,argv)      DeeInstance_CallAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,argc,argv)
-#define DeeClass_CallClassAttributeKw(class_type,attr,argc,argv,kw) DeeInstance_CallAttributeKw(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,argc,argv,kw)
+#define DeeClass_GetClassAttribute(class_type,attr)                 DeeInstance_GetAttribute(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
+#define DeeClass_BoundClassAttribute(class_type,attr)               DeeInstance_BoundAttribute(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
+#define DeeClass_CallClassAttribute(class_type,attr,argc,argv)      DeeInstance_CallAttribute(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,argc,argv)
+#define DeeClass_CallClassAttributeKw(class_type,attr,argc,argv,kw) DeeInstance_CallAttributeKw(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,argc,argv,kw)
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-#define DeeClass_CallClassAttributeTuple(class_type,attr,args)      DeeInstance_CallAttributeTuple(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,args)
-#define DeeClass_CallClassAttributeTupleKw(class_type,attr,args,kw) DeeInstance_CallAttributeTupleKw(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,args,kw)
+#define DeeClass_CallClassAttributeTuple(class_type,attr,args)      DeeInstance_CallAttributeTuple(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,args)
+#define DeeClass_CallClassAttributeTupleKw(class_type,attr,args,kw) DeeInstance_CallAttributeTupleKw(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,args,kw)
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-#define DeeClass_DelClassAttribute(class_type,attr)                 DeeInstance_DelAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
-#define DeeClass_SetClassAttribute(class_type,attr,value)           DeeInstance_SetAttribute(class_type,class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,value)
+#define DeeClass_DelClassAttribute(class_type,attr)                 DeeInstance_DelAttribute(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
+#define DeeClass_SetClassAttribute(class_type,attr,value)           DeeInstance_SetAttribute(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr,value)
 #endif
 
 /* Get/Call/Del/Set a class attribute, as acquired
@@ -555,9 +569,15 @@ INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type
 INTDEF DREF DeeObject *DCALL DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
 INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTuple(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict args);
+INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+INTDEF DREF DeeObject *DCALL DeeClass_VCallInstanceAttributef(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, char const *__restrict format, va_list args);
 INTDEF int DCALL DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
 INTDEF int DCALL DeeClass_SetInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict value);
-#define DeeClass_BoundInstanceAttribute(class_type,attr) 1 /* Instance wrappers are always bound! (though checking for this doesn't really make any sense...) */
+INTDEF int DCALL DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
+#define DeeClass_SetBasicInstanceAttribute DeeClass_SetInstanceAttribute
 
 #endif
 

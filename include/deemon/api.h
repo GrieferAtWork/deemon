@@ -241,10 +241,6 @@ extern void (__debugbreak)(void);
 
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && 1
 #ifdef CONFIG_HOST_WINDOWS
-#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
-extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
-extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
-#define DEE_DPRINT(str)    (DBG_ALIGNMENT_DISABLE(),IsDebuggerPresent() ? OutputDebugStringA(str) : (void)0,DBG_ALIGNMENT_ENABLE())
 #ifdef _MSC_VER
 #define DEE_CHECKMEMORY()  (DBG_ALIGNMENT_DISABLE(),_CrtCheckMemory(),DBG_ALIGNMENT_ENABLE())
 #if !defined(_MSC_VER) || defined(_DLL)
@@ -264,19 +260,22 @@ extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
 #endif
 
 #ifndef NDEBUG
-#define DEE_DPRINTF  Dee_dprintf
-#define DEE_VDPRINTF Dee_vdprintf
-DFUNDEF void (Dee_dprintf)(char const *__restrict format, ...);
-DFUNDEF void (DCALL Dee_vdprintf)(char const *__restrict format, va_list args);
+#define DEE_DPRINT(message)       (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
+#define DEE_DPRINTF(...)          (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)
+#define DEE_VDPRINTF(format,args) (_Dee_dprint_enabled ? _Dee_vdprintf(format,args) : (void)0)
+DDATDEF int _Dee_dprint_enabled;
+DFUNDEF void (DCALL _Dee_dprint)(char const *__restrict message);
+DFUNDEF void (_Dee_dprintf)(char const *__restrict format, ...);
+DFUNDEF void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args);
 #endif
 
 
 #ifndef NO_ASSERT
 #ifndef NDEBUG
-DFUNDEF void (DCALL DeeAssert_Fail)(char const *expr, char const *file, int line);
-DFUNDEF void (DeeAssert_Failf)(char const *expr, char const *file, int line, char const *format, ...);
-#define ASSERT(expr)      ((expr) || (DeeAssert_Fail(#expr,__FILE__,__LINE__),BREAKPOINT(),0))
-#define ASSERTF(expr,...) ((expr) || (DeeAssert_Failf(#expr,__FILE__,__LINE__,__VA_ARGS__),BREAKPOINT(),0))
+DFUNDEF void (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line);
+DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, char const *format, ...);
+#define ASSERT(expr)      ((expr) || (_DeeAssert_Fail(#expr,__FILE__,__LINE__),BREAKPOINT(),0))
+#define ASSERTF(expr,...) ((expr) || (_DeeAssert_Failf(#expr,__FILE__,__LINE__,__VA_ARGS__),BREAKPOINT(),0))
 #elif !defined(__NO_builtin_assume)
 #define ASSERT(expr)       __builtin_assume(expr)
 #define ASSERTF(expr,...)  __builtin_assume(expr)
@@ -287,13 +286,9 @@ DFUNDEF void (DeeAssert_Failf)(char const *expr, char const *file, int line, cha
 #endif /* !NO_ASSERT */
 
 
-
-
 #ifndef DEE_DPRINT
-#define DEE_DPRINT(str) DEE_DPRINTF(str)
-#endif
-#ifndef DEE_DPRINTF
 #define DEE_NO_DPRINTF             1
+#define DEE_DPRINT(message)       (void)0
 #define DEE_DPRINTF(...)          (void)0
 #define DEE_VDPRINTF(format,args) (void)0
 #endif

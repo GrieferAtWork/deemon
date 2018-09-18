@@ -27,6 +27,7 @@ DECL_BEGIN
 struct module_object;
 struct code_object;
 struct class_attribute;
+struct class_desc;
 
 #define CATCH_ATTRIBUTE_ERROR() \
  (DeeError_Catch(&DeeError_AttributeError) || \
@@ -118,7 +119,9 @@ INTDEF ATTR_COLD int DCALL err_unknown_attribute(DeeTypeObject *__restrict tp, c
 INTDEF ATTR_COLD int DCALL err_nodoc_attribute(char const *base, char const *__restrict name);
 /* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD int DCALL err_cant_access_attribute(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
+INTDEF ATTR_COLD int DCALL err_cant_access_attribute_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
 INTDEF ATTR_COLD int DCALL err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name);
+INTDEF ATTR_COLD int DCALL err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name);
 
 
 INTDEF ATTR_COLD int DCALL err_file_not_found(char const *__restrict filename);

@@ -755,6 +755,12 @@
     <ClCompile Include="..\src\deemon\objects\seq\segments.c">
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\gentry.c">
+      <Filter>src\deemon\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genassert.c">
+      <Filter>src\deemon\compiler\asm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">

@@ -318,35 +318,46 @@ type_getset_set(struct type_getset *__restrict desc,
                 DeeObject *__restrict value) {
  if likely(desc->gs_set)
     return (*desc->gs_set)(self,value);
- err_cant_access_attribute(type_getset_typeof(desc,self),
-                           desc->gs_name,ATTR_ACCESS_SET);
- return -1;
+ return err_cant_access_attribute(type_getset_typeof(desc,self),
+                                  desc->gs_name,ATTR_ACCESS_SET);
 }
 
 PRIVATE struct keyword getter_kwlist[] = { K(thisarg), KEND };
 
 INTERN DREF DeeObject *DCALL
 type_obprop_call(DeeTypeObject *__restrict cls_type,
-                 dgetmethod_t getter,
+                 struct type_getset *__restrict desc,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *thisarg;
- if (DeeArg_Unpack(argc,argv,"o:get",&thisarg) ||
-       /* Allow non-instance objects for generic types. */
-    (!(cls_type->tp_flags&TP_FABSTRACT) &&
-       DeeObject_AssertType(thisarg,cls_type)))
-       return NULL;
- return (*getter)(thisarg);
+ if unlikely(!desc->gs_get)
+    goto err_unbound;
+ if unlikely(DeeArg_Unpack(argc,argv,"o:get",&thisarg))
+    goto err;
+ if unlikely(!(cls_type->tp_flags&TP_FABSTRACT) && DeeObject_AssertType(thisarg,cls_type))
+    goto err;
+ return (*desc->gs_get)(thisarg);
+err_unbound:
+ err_cant_access_attribute(cls_type,desc->gs_name,ATTR_ACCESS_GET);
+err:
+ return NULL;
 }
 INTERN DREF DeeObject *DCALL
-type_obprop_call_kw(DeeTypeObject *__restrict cls_type, dgetmethod_t getter,
-                    size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+type_obprop_call_kw(DeeTypeObject *__restrict cls_type,
+                    struct type_getset *__restrict desc,
+                    size_t argc, DeeObject **__restrict argv,
+                    DeeObject *kw) {
  DeeObject *thisarg;
- if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg) ||
-       /* Allow non-instance objects for generic types. */
-    (!(cls_type->tp_flags&TP_FABSTRACT) &&
-       DeeObject_AssertType(thisarg,cls_type)))
-       return NULL;
- return (*getter)(thisarg);
+ if unlikely(!desc->gs_get)
+    goto err_unbound;
+ if unlikely(DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg))
+    goto err;
+ if unlikely(!(cls_type->tp_flags&TP_FABSTRACT) && DeeObject_AssertType(thisarg,cls_type))
+    goto err;
+ return (*desc->gs_get)(thisarg);
+err_unbound:
+ err_cant_access_attribute(cls_type,desc->gs_name,ATTR_ACCESS_GET);
+err:
+ return NULL;
 }
 INTERN DREF DeeObject *DCALL
 type_obmemb_call(DeeTypeObject *__restrict cls_type,

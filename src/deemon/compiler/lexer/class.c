@@ -933,9 +933,9 @@ err:
 }
 
 #define CLASS_PROPERTY_CALLBACK_COUNT 3
-STATIC_ASSERT(CLASS_PROPERTY_GET < CLASS_PROPERTY_CALLBACK_COUNT);
-STATIC_ASSERT(CLASS_PROPERTY_DEL < CLASS_PROPERTY_CALLBACK_COUNT);
-STATIC_ASSERT(CLASS_PROPERTY_SET < CLASS_PROPERTY_CALLBACK_COUNT);
+STATIC_ASSERT(CLASS_GETSET_GET < CLASS_PROPERTY_CALLBACK_COUNT);
+STATIC_ASSERT(CLASS_GETSET_DEL < CLASS_PROPERTY_CALLBACK_COUNT);
+STATIC_ASSERT(CLASS_GETSET_SET < CLASS_PROPERTY_CALLBACK_COUNT);
 
 #define MAX_CALLBACK_NAME_LENGTH 8
 struct callback_name {
@@ -945,24 +945,24 @@ struct callback_name {
 };
 
 
-STATIC_ASSERT(CLASS_PROPERTY_GET == 0);
-STATIC_ASSERT(CLASS_PROPERTY_DEL == 1);
-STATIC_ASSERT(CLASS_PROPERTY_SET == 2);
+STATIC_ASSERT(CLASS_GETSET_GET == 0);
+STATIC_ASSERT(CLASS_GETSET_DEL == 1);
+STATIC_ASSERT(CLASS_GETSET_SET == 2);
 PRIVATE struct callback_name const callback_names[] = {
-    /* [CLASS_PROPERTY_GET] = */{ "get", 0, CLASS_PROPERTY_GET },
-    /* [CLASS_PROPERTY_DEL] = */{ "del", 0, CLASS_PROPERTY_DEL },
-    /* [CLASS_PROPERTY_SET] = */{ "set", 0, CLASS_PROPERTY_SET },
+    /* [CLASS_GETSET_GET] = */{ "get", 0, CLASS_GETSET_GET },
+    /* [CLASS_GETSET_DEL] = */{ "del", 0, CLASS_GETSET_DEL },
+    /* [CLASS_GETSET_SET] = */{ "set", 0, CLASS_GETSET_SET },
     /* The old deemon accepted _a_ _lot_ of other names for callbacks.
      * We continue to support them, but we warn if they are used instead
      * of the preferred `get', `del' and `set' names, as also found as
      * the names of property/member wrapper types like `classmember from deemon' */
-    { "__get__", 1, CLASS_PROPERTY_GET },
-    { "__del__", 1, CLASS_PROPERTY_DEL },
-    { "__set__", 1, CLASS_PROPERTY_SET },
-    { "read", 1, CLASS_PROPERTY_GET },
-    { "delete", 1, CLASS_PROPERTY_DEL },
-    { "write", 1, CLASS_PROPERTY_SET },
-    { "put", 1, CLASS_PROPERTY_SET },
+    { "__get__", 1, CLASS_GETSET_GET },
+    { "__del__", 1, CLASS_GETSET_DEL },
+    { "__set__", 1, CLASS_GETSET_SET },
+    { "read", 1, CLASS_GETSET_GET },
+    { "delete", 1, CLASS_GETSET_DEL },
+    { "write", 1, CLASS_GETSET_SET },
+    { "put", 1, CLASS_GETSET_SET },
 };
 
 
@@ -1019,14 +1019,14 @@ next:
   if (WARN(W_DEPRECATED_PROPERTY_NAME,"get' or `set"))
       goto err;
   if unlikely(yield() < 0) goto err;
-  callback_id = CLASS_PROPERTY_GET;
+  callback_id = CLASS_GETSET_GET;
   if (tok == '=') {
-   callback_id = CLASS_PROPERTY_SET;
+   callback_id = CLASS_GETSET_SET;
    if unlikely(yield() < 0) goto err;
   }
   goto got_callback_id;
- case '-': callback_id = CLASS_PROPERTY_DEL; goto warn_deprecated_yield;
- case '=': callback_id = CLASS_PROPERTY_SET; goto warn_deprecated_yield;
+ case '-': callback_id = CLASS_GETSET_DEL; goto warn_deprecated_yield;
+ case '=': callback_id = CLASS_GETSET_SET; goto warn_deprecated_yield;
 
  default:
   if (TPP_ISKEYWORD(tok)) {
@@ -1793,8 +1793,8 @@ define_constructor:
                  WARN(W_EXPECTED_RBRACE_AFTER_PROPERTY))
         goto err_property;
      /* Keep track of VTABLE slots used by the property and its callbacks. */
-     if (!prop_callbacks[CLASS_PROPERTY_DEL] &&
-         !prop_callbacks[CLASS_PROPERTY_SET]) {
+     if (!prop_callbacks[CLASS_GETSET_DEL] &&
+         !prop_callbacks[CLASS_GETSET_SET]) {
       /* Optimization: when no delete or setting callback
        *               was given, mark the symbol as read-only. */
       member_symbol->s_attr.a_attr->ca_flag |= CLASS_ATTRIBUTE_FREADONLY;

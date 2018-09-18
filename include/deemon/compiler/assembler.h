@@ -1126,6 +1126,8 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gret_none()               (asm_put(ASM_RET_NONE))
 #define asm_gret()                    (asm_decsp(),asm_put(ASM_RET))
 #define asm_gret_p()                  (asm_put(ASM_RET))
+#define asm_gsetret()                 (asm_decsp(),asm_put(ASM_SETRET))
+#define asm_gsetret_p()               (asm_put(ASM_SETRET))
 #define asm_gyield()                  (asm_decsp(),asm_put(ASM_YIELD))
 #define asm_gyield_p()                (asm_put(ASM_YIELD))
 #define asm_gyieldall()               (asm_decsp(),asm_put(ASM_YIELDALL))
@@ -1905,6 +1907,15 @@ INTDEF struct asm_sym *
 /* Sub-routine for `ast_genasm' for `AST_CLASS' */
 INTDEF int (DCALL asm_genclass)(struct ast *__restrict class_ast,
                                 unsigned int gflags);
+/* Sub-routine for `ast_genasm' for `AST_TRY' */
+INTDEF int (DCALL asm_gentry)(struct ast *__restrict try_ast,
+                              unsigned int gflags);
+
+/* Generate text for an assertion. */
+INTDEF int (DCALL asm_genassert)(struct ast *__restrict expr,
+                                 struct ast *message,
+                                 struct ast *__restrict ddi_ast,
+                                 unsigned int gflags);
 
 
 #ifndef __INTELLISENSE__

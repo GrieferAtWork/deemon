@@ -3979,10 +3979,10 @@ operator_fallback:
     struct class_member *functions[3]; size_t i;
     /* Instance-property (with its callbacks saved as part of the class) */
     functions[1] = functions[2] = NULL;
-    functions[0] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_GET);
+    functions[0] = find_class_member(self,attr->ca_addr + CLASS_GETSET_GET);
     if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-     functions[1] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_DEL);
-     functions[2] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_SET);
+     functions[1] = find_class_member(self,attr->ca_addr + CLASS_GETSET_DEL);
+     functions[2] = find_class_member(self,attr->ca_addr + CLASS_GETSET_SET);
     }
     printf("property %k = {\n",attr->ca_name);
     ++indent;
@@ -4049,10 +4049,10 @@ instance_member_in_class:
     struct class_member *functions[3]; size_t i;
     /* Instance-property (with its callbacks saved as part of the class) */
     functions[1] = functions[2] = NULL;
-    functions[0] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_GET);
+    functions[0] = find_class_member(self,attr->ca_addr + CLASS_GETSET_GET);
     if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-     functions[1] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_DEL);
-     functions[2] = find_class_member(self,attr->ca_addr + CLASS_PROPERTY_SET);
+     functions[1] = find_class_member(self,attr->ca_addr + CLASS_GETSET_DEL);
+     functions[2] = find_class_member(self,attr->ca_addr + CLASS_GETSET_SET);
     }
     printf("class property %k = {\n",attr->ca_name);
     ++indent;

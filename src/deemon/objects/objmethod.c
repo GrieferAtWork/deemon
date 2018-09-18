@@ -576,7 +576,9 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 
 PUBLIC DREF /*ClsProperty*/DeeObject *DCALL
 DeeClsProperty_New(DeeTypeObject *__restrict type,
-                   struct type_getset const *__restrict desc) {
+                   dgetmethod_t get,
+                   ddelmethod_t del,
+                   dsetmethod_t set) {
  DeeClsPropertyObject *result;
  ASSERT_OBJECT_TYPE(type,&DeeType_Type);
  result = DeeObject_MALLOC(DeeClsPropertyObject);
@@ -584,9 +586,9 @@ DeeClsProperty_New(DeeTypeObject *__restrict type,
  DeeObject_Init(result,&DeeClsProperty_Type);
  result->cp_type = type;
  Dee_Incref(type);
- result->cp_get = desc->gs_get;
- result->cp_del = desc->gs_del;
- result->cp_set = desc->gs_set;
+ result->cp_get = get;
+ result->cp_del = del;
+ result->cp_set = set;
  return (DREF DeeObject *)result;
 }
 
@@ -621,7 +623,7 @@ PRIVATE struct type_cmp clsproperty_cmp = {
     /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&clsproperty_ne
 };
 
-PRIVATE struct keyword getter_kwlist[] = { K(thisarg), KEND };
+INTERN struct keyword getter_kwlist[] = { K(thisarg), KEND };
 PRIVATE struct keyword setter_kwlist[] = { K(thisarg), K(value), KEND };
 
 PRIVATE DREF DeeObject *DCALL

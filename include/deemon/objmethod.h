@@ -113,7 +113,9 @@ DDATDEF DeeTypeObject DeeClsProperty_Type;
 /* Create a new unbound class property object. */
 DFUNDEF DREF /*ClsProperty*/DeeObject *DCALL
 DeeClsProperty_New(DeeTypeObject *__restrict type,
-                   struct type_getset const *__restrict desc);
+                   dgetmethod_t get,
+                   ddelmethod_t del,
+                   dsetmethod_t set);
 
 
 

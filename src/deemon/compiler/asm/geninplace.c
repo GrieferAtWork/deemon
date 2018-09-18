@@ -33,70 +33,7 @@
 DECL_BEGIN
 
 /* Quick translation table for most basic operator instruction codes. */
-PRIVATE instruction_t const operator_instr_table[] = {
-   /* [OPERATOR_CONSTRUCTOR] = */0,
-   /* [OPERATOR_COPY]        = */ASM_COPY,
-   /* [OPERATOR_DEEPCOPY]    = */ASM_DEEPCOPY,
-   /* [OPERATOR_DESTRUCTOR]  = */0,
-   /* [OPERATOR_ASSIGN]      = */ASM_ASSIGN,
-   /* [OPERATOR_MOVEASSIGN]  = */ASM_MOVE_ASSIGN,
-   /* [OPERATOR_STR]         = */ASM_STR,
-   /* [OPERATOR_REPR]        = */ASM_REPR,
-   /* [OPERATOR_BOOL]        = */ASM_BOOL,
-   /* [OPERATOR_ITERNEXT]    = */0, /* ASM_ITERNEXT - Extended opcodes can't be used here. */
-   /* [OPERATOR_CALL]        = */ASM_CALL_TUPLE,
-   /* [OPERATOR_INT]         = */ASM_CAST_INT,
-   /* [OPERATOR_FLOAT]       = */0,
-   /* [OPERATOR_INV]         = */ASM_INV,
-   /* [OPERATOR_POS]         = */ASM_POS,
-   /* [OPERATOR_NEG]         = */ASM_NEG,
-   /* [OPERATOR_ADD]         = */ASM_ADD,
-   /* [OPERATOR_SUB]         = */ASM_SUB,
-   /* [OPERATOR_MUL]         = */ASM_MUL,
-   /* [OPERATOR_DIV]         = */ASM_DIV,
-   /* [OPERATOR_MOD]         = */ASM_MOD,
-   /* [OPERATOR_SHL]         = */ASM_SHL,
-   /* [OPERATOR_SHR]         = */ASM_SHR,
-   /* [OPERATOR_AND]         = */ASM_AND,
-   /* [OPERATOR_OR]          = */ASM_OR,
-   /* [OPERATOR_XOR]         = */ASM_XOR,
-   /* [OPERATOR_POW]         = */ASM_POW,
-   /* [OPERATOR_INC]         = */ASM_INC, /* Inplace! */
-   /* [OPERATOR_DEC]         = */ASM_DEC, /* Inplace! */
-   /* [OPERATOR_INPLACE_ADD] = */ASM_ADD, /* Inplace! */
-   /* [OPERATOR_INPLACE_SUB] = */ASM_SUB, /* Inplace! */
-   /* [OPERATOR_INPLACE_MUL] = */ASM_MUL, /* Inplace! */
-   /* [OPERATOR_INPLACE_DIV] = */ASM_DIV, /* Inplace! */
-   /* [OPERATOR_INPLACE_MOD] = */ASM_MOD, /* Inplace! */
-   /* [OPERATOR_INPLACE_SHL] = */ASM_SHL, /* Inplace! */
-   /* [OPERATOR_INPLACE_SHR] = */ASM_SHR, /* Inplace! */
-   /* [OPERATOR_INPLACE_AND] = */ASM_AND, /* Inplace! */
-   /* [OPERATOR_INPLACE_OR]  = */ASM_OR,  /* Inplace! */
-   /* [OPERATOR_INPLACE_XOR] = */ASM_XOR, /* Inplace! */
-   /* [OPERATOR_INPLACE_POW] = */ASM_POW, /* Inplace! */
-   /* [OPERATOR_HASH]        = */0,
-   /* [OPERATOR_EQ]          = */ASM_CMP_EQ,
-   /* [OPERATOR_NE]          = */ASM_CMP_NE,
-   /* [OPERATOR_LO]          = */ASM_CMP_LO,
-   /* [OPERATOR_LE]          = */ASM_CMP_LE,
-   /* [OPERATOR_GR]          = */ASM_CMP_GR,
-   /* [OPERATOR_GE]          = */ASM_CMP_GE,
-   /* [OPERATOR_ITERSELF]    = */ASM_ITERSELF,
-   /* [OPERATOR_SIZE]        = */ASM_GETSIZE,
-   /* [OPERATOR_CONTAINS]    = */ASM_CONTAINS,
-   /* [OPERATOR_GETITEM]     = */ASM_GETITEM,
-   /* [OPERATOR_DELITEM]     = */ASM_DELITEM,
-   /* [OPERATOR_SETITEM]     = */ASM_SETITEM,
-   /* [OPERATOR_GETRANGE]    = */ASM_GETRANGE,
-   /* [OPERATOR_DELRANGE]    = */ASM_DELRANGE,
-   /* [OPERATOR_SETRANGE]    = */ASM_SETRANGE,
-   /* [OPERATOR_GETATTR]     = */ASM_GETATTR,
-   /* [OPERATOR_DELATTR]     = */ASM_DELATTR,
-   /* [OPERATOR_SETATTR]     = */ASM_SETATTR,
-   /* [OPERATOR_ENUMATTR]    = */0,
-   /* [OPERATOR_ENTER]       = */ASM_ENTER,
-   /* [OPERATOR_LEAVE]       = */ASM_LEAVE
-};
+INTDEF instruction_t const operator_instr_table[];
 
 
 INTDEF int DCALL

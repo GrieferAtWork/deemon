@@ -541,12 +541,12 @@ super_getattr(Super *__restrict self,
               /*String*/DeeObject *__restrict name) {
  return DeeObject_TGetAttr(self->s_type,self->s_self,name);
 }
-PRIVATE int DCALL
+INTERN int DCALL
 super_delattr(Super *__restrict self,
               /*String*/DeeObject *__restrict name) {
  return DeeObject_TDelAttr(self->s_type,self->s_self,name);
 }
-PRIVATE int DCALL
+INTERN int DCALL
 super_setattr(Super *__restrict self,
               /*String*/DeeObject *__restrict name,
               DeeObject *__restrict value) {

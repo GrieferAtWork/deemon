@@ -281,7 +281,7 @@ type_inherit_constructors(DeeTypeObject *__restrict self) {
  type_inherit_constructors(base);
  ASSERT((base->tp_flags & TP_FVARIABLE) ==
         (self->tp_flags & TP_FVARIABLE));
- DEE_DPRINTF("Inherit constructors from %q into %q\n",
+ DEE_DPRINTF("[RT] Inherit constructors from %q into %q\n",
              base->tp_name,self->tp_name);
  if (self->tp_flags & TP_FVARIABLE) {
   self->tp_init.tp_var.tp_ctor        = base->tp_init.tp_var.tp_ctor;
@@ -1207,7 +1207,7 @@ name(DeeTypeObject *__restrict self) { \
  if (!base || \
     (!base->field && !name(base))) \
      return false; \
- DEE_DPRINTF("Inherit `" opname "' from %q into %q\n", \
+ DEE_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
              base->tp_name,self->tp_name); \
  self->field = base->field; \
  return true; \
@@ -1219,7 +1219,7 @@ name(DeeTypeObject *__restrict self) { \
  if (!base || \
     (!base->field && !base->field2 && !name(base))) \
      return false; \
- DEE_DPRINTF("Inherit `" opname "' from %q into %q\n", \
+ DEE_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
              base->tp_name,self->tp_name); \
  self->field  = base->field; \
  self->field2 = base->field2; \
@@ -1803,7 +1803,7 @@ INTERN bool DCALL type_inherit_int(DeeTypeObject *__restrict self) {
      !base_math->tp_int64 && !base_math->tp_double)) &&
      !type_inherit_int(base)))
      return false;
- DEE_DPRINTF("Inherit `operator int' from %q into %q\n",
+ DEE_DPRINTF("[RT] Inherit `operator int' from %q into %q\n",
              base->tp_name,self->tp_name);
  base_math = base->tp_math;
  if (!self->tp_math) {
@@ -2501,7 +2501,7 @@ name(DeeTypeObject *__restrict self) { \
     (!base_math->tp_##field && \
      !base_math->tp_inplace_##field)) && !name(base))) \
       return false; \
- DEE_DPRINTF("Inherit `" opname "' from %q into %q\n", \
+ DEE_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
              base->tp_name,self->tp_name); \
  if (self->tp_math) { \
   self->tp_math->tp_##field         = base_math->tp_##field; \
@@ -2520,7 +2520,7 @@ name(DeeTypeObject *__restrict self) { \
    (((base_math = base->tp_math) == NULL || \
      !base_math->tp_##field) && !name(base))) \
       return false; \
- DEE_DPRINTF("Inherit `" opname "' from %q into %q\n", \
+ DEE_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
              base->tp_name,self->tp_name); \
  base_math = base->tp_math; \
  if (self->tp_math) { \
@@ -2553,7 +2553,7 @@ INTERN bool DCALL type_inherit_add(DeeTypeObject *__restrict self) {
      !base_math->tp_sub && !base_math->tp_inplace_sub &&
      !base_math->tp_inc && !base_math->tp_dec)) && !type_inherit_add(base)))
       return false;
- DEE_DPRINTF("Inherit `operator add' %q from into %q\n",
+ DEE_DPRINTF("[RT] Inherit `operator add' %q from into %q\n",
              base->tp_name,self->tp_name);
  base_math = base->tp_math;
  if (self->tp_math) {
@@ -3070,7 +3070,7 @@ INTERN bool DCALL type_inherit_compare(DeeTypeObject *__restrict self) {
      !base_cmp->tp_gr && !base_cmp->tp_ge)) &&
      !type_inherit_compare(base)))
       return false;
- DEE_DPRINTF("Inherit `operator <compare>' %q from into %q\n",
+ DEE_DPRINTF("[RT] Inherit `operator <compare>' %q from into %q\n",
              base->tp_name,self->tp_name);
  base_cmp = base->tp_cmp;
  if (self->tp_cmp) {
@@ -3847,33 +3847,65 @@ DeeObject_PrintRepr(DeeObject *__restrict self,
 DEFINE_OPERATOR(DREF DeeObject *,GetAttr,
                (DeeObject *__restrict self,
                 /*String*/DeeObject *__restrict attr_name)) {
- struct membercache *cache;
  DREF DeeObject *result;
  dhash_t hash;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ DeeTypeObject *iter;
+ LOAD_TP_SELF;
+ iter = tp_self;
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+ struct membercache *cache;
  LOAD_ITER;
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  ASSERT_OBJECT_TYPE_EXACT(attr_name,&DeeString_Type);
  if (iter->tp_attr) goto do_iter_attr;
- cache = &iter->tp_cache;
  hash = DeeString_Hash(attr_name);
  /* Search through the cache for the requested attribute. */
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ if ((result = DeeType_GetCachedAttr(iter,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+      goto done;
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+ cache = &iter->tp_cache;
  if ((result = membercache_getattr(cache,self,
                                    DeeString_STR(attr_name),
                                    hash)) != ITER_DONE)
       goto done;
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct class_attribute *member;
-   struct class_desc *desc;
-   desc = DeeClass_DESC(iter);
-   if ((member = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   struct class_attribute *attr;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+   if ((attr = DeeType_QueryAttributeWithHash(tp_self,iter,attr_name,hash)) != NULL)
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+   struct class_desc *desc = DeeClass_DESC(iter);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL)
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+   {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+    struct class_desc *desc;
+#endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      return NULL;
     }
-    return member_get(iter,DeeInstance_DESC(desc,self),self,member);
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+    desc = DeeClass_DESC(iter);
+#endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+    return DeeInstance_GetAttribute(desc,DeeInstance_DESC(desc,self),self,attr);
    }
   } else {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+   if (iter->tp_methods &&
+      (result = DeeType_GetMethodAttr(tp_self,iter,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+       goto done;
+   if (iter->tp_getsets &&
+      (result = DeeType_GetGetSetAttr(tp_self,iter,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+       goto done;
+   if (iter->tp_members &&
+      (result = DeeType_GetMemberAttr(tp_self,iter,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+       goto done;
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
    if (iter->tp_methods &&
       (result = type_method_getattr(cache,iter->tp_methods,self,
                                     DeeString_STR(attr_name),hash)) != ITER_DONE)
@@ -3886,6 +3918,7 @@ DEFINE_OPERATOR(DREF DeeObject *,GetAttr,
       (result = type_member_getattr(cache,iter->tp_members,self,
                                     DeeString_STR(attr_name),hash)) != ITER_DONE)
        goto done;
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
   }
   iter = DeeType_Base(iter);
   if (!iter) break;
@@ -3893,7 +3926,7 @@ DEFINE_OPERATOR(DREF DeeObject *,GetAttr,
 do_iter_attr:
    if likely(iter->tp_attr->tp_getattr)
       return DeeType_INVOKE_GETATTR(iter,self,attr_name);
-   /* Don't consider attributes from lower levels for custom member access. */
+   /* Don't consider attributes from lower levels for custom attr access. */
    break;
   }
  }
@@ -3907,32 +3940,64 @@ done:
 DEFINE_OPERATOR(int,DelAttr,
                (DeeObject *__restrict self,
                 /*String*/DeeObject *__restrict attr_name)) {
- struct membercache *cache;
  int temp; dhash_t hash;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ DeeTypeObject *iter;
+ LOAD_TP_SELF;
+ iter = tp_self;
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+ struct membercache *cache;
  LOAD_ITER;
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  ASSERT_OBJECT_TYPE_EXACT(attr_name,&DeeString_Type);
  if (iter->tp_attr) goto do_iter_attr;
- cache = &iter->tp_cache;
  hash = DeeString_Hash(attr_name);
  /* Search through the cache for the requested attribute. */
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ if ((temp = DeeType_DelCachedAttr(iter,self,DeeString_STR(attr_name),hash)) <= 0)
+      goto done;
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+ cache = &iter->tp_cache;
  if ((temp = membercache_delattr(cache,self,
                                  DeeString_STR(attr_name),
                                  hash)) <= 0)
       goto done;
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct class_attribute *member;
-   struct class_desc *desc;
-   desc = DeeClass_DESC(iter);
-   if ((member = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   struct class_attribute *attr;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+   if ((attr = DeeType_QueryAttributeWithHash(tp_self,iter,attr_name,hash)) != NULL)
+#else
+   struct class_desc *desc = DeeClass_DESC(iter);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL)
+#endif
+   {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+    struct class_desc *desc;
+#endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    return member_del(iter,DeeInstance_DESC(desc,self),self,member);
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+    desc = DeeClass_DESC(iter);
+#endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+    return DeeInstance_DelAttribute(desc,DeeInstance_DESC(desc,self),self,attr);
    }
   } else {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+   if (iter->tp_methods &&
+       DeeType_HasMethodAttr(tp_self,iter,DeeString_STR(attr_name),hash))
+       goto noaccess;
+   if (iter->tp_getsets &&
+      (temp = DeeType_DelGetSetAttr(tp_self,iter,self,DeeString_STR(attr_name),hash)) <= 0)
+       goto done;
+   if (iter->tp_members &&
+      (temp = DeeType_DelMemberAttr(tp_self,iter,self,DeeString_STR(attr_name),hash)) <= 0)
+       goto done;
+#else
    if (iter->tp_methods &&
        type_method_hasattr(cache,iter->tp_methods,DeeString_STR(attr_name),hash))
        goto noaccess;
@@ -3942,6 +4007,7 @@ DEFINE_OPERATOR(int,DelAttr,
    if (iter->tp_members &&
       (temp = type_member_delattr(cache,iter->tp_members,self,DeeString_STR(attr_name),hash)) <= 0)
        goto done;
+#endif
   }
   iter = DeeType_Base(iter);
   if (!iter) break;
@@ -3949,7 +4015,7 @@ DEFINE_OPERATOR(int,DelAttr,
 do_iter_attr:
    if likely(iter->tp_attr->tp_delattr)
       return DeeType_INVOKE_DELATTR(iter,self,attr_name);
-   /* Don't consider attributes from lower levels for custom member access. */
+   /* Don't consider attributes from lower levels for custom attr access. */
    break;
   }
  }
@@ -3971,33 +4037,65 @@ DEFINE_OPERATOR(int,SetAttr,
                (DeeObject *__restrict self,
                 /*String*/DeeObject *__restrict attr_name,
                 DeeObject *__restrict value)) {
- struct membercache *cache;
  int temp; dhash_t hash;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ DeeTypeObject *iter;
+ LOAD_TP_SELF;
+ iter = tp_self;
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+ struct membercache *cache;
  LOAD_ITER;
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  ASSERT_OBJECT_TYPE_EXACT(attr_name,&DeeString_Type);
  ASSERT_OBJECT(value);
  if (iter->tp_attr) goto do_iter_attr;
- cache = &iter->tp_cache;
  hash = DeeString_Hash(attr_name);
  /* Search through the cache for the requested attribute. */
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ if ((temp = DeeType_SetCachedAttr(iter,self,DeeString_STR(attr_name),hash,value)) <= 0)
+      goto done;
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+ cache = &iter->tp_cache;
  if ((temp = membercache_setattr(cache,self,
                                  DeeString_STR(attr_name),
                                  hash,value)) <= 0)
       goto done;
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  for (;;) {
   if (DeeType_IsClass(iter)) {
-   struct class_attribute *member;
-   struct class_desc *desc;
-   desc = DeeClass_DESC(iter);
-   if ((member = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
-    /* Check if we're allowed to access this member. */
-    if (!member_mayaccess(iter,member)) {
-     err_protected_member(iter,member);
+   struct class_attribute *attr;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+   if ((attr = DeeType_QueryAttributeWithHash(tp_self,iter,attr_name,hash)) != NULL)
+#else
+   struct class_desc *desc = DeeClass_DESC(iter);
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL)
+#endif
+   {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+    struct class_desc *desc;
+#endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+    /* Check if we're allowed to access this attr. */
+    if (!member_mayaccess(iter,attr)) {
+     err_protected_member(iter,attr);
      goto err;
     }
-    return member_set(iter,DeeInstance_DESC(desc,self),self,member,value);
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+    desc = DeeClass_DESC(iter);
+#endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+    return DeeInstance_SetAttribute(desc,DeeInstance_DESC(desc,self),self,attr,value);
    }
   } else {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+   if (iter->tp_methods &&
+       DeeType_HasMethodAttr(tp_self,iter,DeeString_STR(attr_name),hash))
+       goto noaccess;
+   if (iter->tp_getsets &&
+      (temp = DeeType_SetGetSetAttr(tp_self,iter,self,DeeString_STR(attr_name),hash,value)) <= 0)
+       goto done;
+   if (iter->tp_members &&
+      (temp = DeeType_SetMemberAttr(tp_self,iter,self,DeeString_STR(attr_name),hash,value)) <= 0)
+       goto done;
+#else
    if (iter->tp_methods &&
        type_method_hasattr(cache,iter->tp_methods,DeeString_STR(attr_name),hash))
        goto noaccess;
@@ -4007,6 +4105,7 @@ DEFINE_OPERATOR(int,SetAttr,
    if (iter->tp_members &&
       (temp = type_member_setattr(cache,iter->tp_members,self,DeeString_STR(attr_name),hash,value)) <= 0)
        goto done;
+#endif
   }
   iter = DeeType_Base(iter);
   if (!iter) break;
@@ -4014,7 +4113,7 @@ DEFINE_OPERATOR(int,SetAttr,
 do_iter_attr:
    if likely(iter->tp_attr->tp_setattr)
       return DeeType_INVOKE_SETATTR(iter,self,attr_name,value);
-   /* Don't consider attributes from lower levels for custom member access. */
+   /* Don't consider attributes from lower levels for custom attr access. */
    break;
   }
  }
@@ -4044,32 +4143,65 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *,CallAttr,
                          /*String*/DeeObject *__restrict attr_name,
                          size_t argc, DeeObject **__restrict argv)) {
  DREF DeeObject *result; dhash_t hash;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ DeeTypeObject *iter;
+ LOAD_TP_SELF;
+ iter = tp_self;
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  struct membercache *cache;
  LOAD_ITER;
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  ASSERT_OBJECT(self);
  ASSERT_OBJECT(attr_name);
  ASSERT(DeeString_Check(attr_name));
  if (iter->tp_attr) goto do_iter_attr;
  hash = DeeString_Hash(attr_name);
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ if ((result = DeeType_CallCachedAttr(iter,self,DeeString_STR(attr_name),hash,argc,argv)) != ITER_DONE)
+      goto done;
+#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  cache = &iter->tp_cache;
  if ((result = membercache_callattr(cache,self,DeeString_STR(attr_name),hash,argc,argv)) != ITER_DONE)
       goto done;
+#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
  for (;;) {
   if (DeeType_IsClass(iter)) {
    struct class_attribute *attr;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+   if ((attr = DeeType_QueryAttributeWithHash(tp_self,iter,attr_name,hash)) != NULL)
+#else
    struct class_desc *desc = DeeClass_DESC(iter);
-   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL) {
+   if ((attr = DeeClassDesc_QueryInstanceAttributeWithHash(desc,attr_name,hash)) != NULL)
+#endif
+   {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+    struct class_desc *desc;
+#endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
     /* Check if we're allowed to access this attr. */
     if (!member_mayaccess(iter,attr)) {
      err_protected_member(iter,attr);
-     return NULL;
+     goto err;
     }
-    return DeeInstance_CallAttribute(iter,
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+    desc = DeeClass_DESC(iter);
+#endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
+    return DeeInstance_CallAttribute(desc,
                                      DeeInstance_DESC(desc,
                                                       self),
                                      self,attr,argc,argv);
    }
   }
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+  if (iter->tp_methods &&
+     (result = DeeType_CallMethodAttr(tp_self,iter,self,DeeString_STR(attr_name),hash,argc,argv)) != ITER_DONE)
+      goto done;
+  if (iter->tp_getsets &&
+     (result = DeeType_GetGetSetAttr(tp_self,iter,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+      goto done_invoke;
+  if (iter->tp_members &&
+     (result = DeeType_GetMemberAttr(tp_self,iter,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
+      goto done_invoke;
+#else
   if (iter->tp_methods &&
      (result = type_method_callattr(cache,iter->tp_methods,self,DeeString_STR(attr_name),hash,argc,argv)) != ITER_DONE)
       goto done;
@@ -4079,6 +4211,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *,CallAttr,
   if (iter->tp_members &&
      (result = type_member_getattr(cache,iter->tp_members,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
       goto done_invoke;
+#endif
   iter = DeeType_Base(iter);
   if (!iter) break;
   if (iter->tp_attr) {
@@ -4097,6 +4230,7 @@ do_iter_attr:
  err_unknown_attribute(DeeObject_Class(self),
                        DeeString_STR(attr_name),
                        ATTR_ACCESS_GET);
+err:
  return NULL;
 done_invoke:
  if likely(result) {

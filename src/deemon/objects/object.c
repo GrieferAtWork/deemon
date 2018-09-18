@@ -1732,6 +1732,48 @@ set_basic_member(DeeTypeObject *__restrict tp_self,
                  DeeObject *__restrict self,
                  DeeStringObject *__restrict member_name,
                  DeeObject *__restrict value) {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ int temp; DeeTypeObject *iter = tp_self;
+ char const *attr_name = DeeString_STR(member_name);
+ dhash_t attr_hash = DeeString_Hash((DeeObject *)member_name);
+ if ((temp = DeeType_SetBasicCachedAttr(tp_self,self,attr_name,attr_hash,value)) <= 0)
+      goto done_temp;
+ do {
+  if (DeeType_IsClass(iter)) {
+   struct class_attribute *attr;
+   struct instance_desc *instance;
+   struct class_desc *desc;
+   DREF DeeObject *old_value;
+   attr = DeeType_QueryAttributeWithHash(tp_self,iter,
+                                        (DeeObject *)member_name,
+                                         attr_hash);
+   if (!attr) goto next_base;
+   if (attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM |
+                        CLASS_ATTRIBUTE_FGETSET))
+       goto next_base;
+   desc = DeeClass_DESC(iter);
+   instance = DeeInstance_DESC(desc,self);
+   Dee_Incref(value);
+   rwlock_write(&instance->id_lock);
+   old_value = instance->id_vtab[attr->ca_addr];
+   instance->id_vtab[attr->ca_addr] = value;
+   rwlock_endwrite(&instance->id_lock);
+   if unlikely(old_value)
+      Dee_Decref(old_value);
+   return 0;
+  }
+  if (iter->tp_members &&
+     (temp = DeeType_SetMemberAttr(tp_self,iter,self,attr_name,attr_hash,value)) <= 0)
+      goto done_temp;
+next_base:
+  ;
+ } while ((iter = DeeType_Base(iter)) != NULL);
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Could not find member %k in %k, or its bases",
+                        member_name,tp_self);
+done_temp:
+ return temp;
+#else
  int temp; DeeTypeObject *iter = tp_self;
  char const *attr_name = DeeString_STR(member_name);
  dhash_t attr_hash = DeeString_Hash((DeeObject *)member_name);
@@ -1771,6 +1813,7 @@ next_base:
                         member_name,tp_self);
 done_temp:
  return temp;
+#endif
 }
 
 PRIVATE int DCALL
@@ -1778,13 +1821,13 @@ set_private_basic_member(DeeTypeObject *__restrict tp_self,
                          DeeObject *__restrict self,
                          DeeStringObject *__restrict member_name,
                          DeeObject *__restrict value) {
- int temp; DeeTypeObject *iter = tp_self;
+ int temp;
  char const *attr_name = DeeString_STR(member_name);
  dhash_t attr_hash = DeeString_Hash((DeeObject *)member_name);
- if (DeeType_IsClass(iter)) {
+ if (DeeType_IsClass(tp_self)) {
   struct class_attribute *attr;
   struct instance_desc *instance;
-  struct class_desc *desc = DeeClass_DESC(iter);
+  struct class_desc *desc = DeeClass_DESC(tp_self);
   DREF DeeObject *old_value;
   attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
                                                            attr_name,
@@ -1803,9 +1846,15 @@ set_private_basic_member(DeeTypeObject *__restrict tp_self,
      Dee_Decref(old_value);
   return 0;
  }
- if (iter->tp_members &&
-    (temp = type_member_setattr(&tp_self->tp_cache,iter->tp_members,self,attr_name,attr_hash,value)) <= 0)
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ if (tp_self->tp_members &&
+    (temp = DeeType_SetMemberAttr(tp_self,tp_self,self,attr_name,attr_hash,value)) <= 0)
      goto done_temp;
+#else
+ if (tp_self->tp_members &&
+    (temp = type_member_setattr(&tp_self->tp_cache,tp_self->tp_members,self,attr_name,attr_hash,value)) <= 0)
+     goto done_temp;
+#endif
 not_found:
  return DeeError_Throwf(&DeeError_AttributeError,
                         "Could not find member %k in %k",
@@ -2263,11 +2312,24 @@ PRIVATE bool DCALL
 impl_type_hasprivateattribute(DeeTypeObject *__restrict self,
                               char const *name_str,
                               dhash_t name_hash) {
+ /* TODO: Lookup the attribute in the member cache, and
+  *       see which type is set as the declaring type! */
  if (DeeType_IsClass(self)) {
   struct class_desc *desc = DeeClass_DESC(self);
   if (DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name_str,name_hash) != NULL)
       goto found;
  } else {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+  if (self->tp_methods &&
+      DeeType_HasMethodAttr(self,self,name_str,name_hash))
+      goto found;
+  if (self->tp_getsets &&
+      DeeType_HasGetSetAttr(self,self,name_str,name_hash))
+      goto found;
+  if (self->tp_members &&
+      DeeType_HasMemberAttr(self,self,name_str,name_hash))
+      goto found;
+#else
   if (self->tp_methods &&
       type_method_hasattr(&self->tp_cache,self->tp_methods,name_str,name_hash))
       goto found;
@@ -2277,6 +2339,7 @@ impl_type_hasprivateattribute(DeeTypeObject *__restrict self,
   if (self->tp_members &&
       type_member_hasattr(&self->tp_cache,self->tp_members,name_str,name_hash))
       goto found;
+#endif
  }
  return 0;
 found:
@@ -2296,6 +2359,31 @@ type_hasattribute(DeeTypeObject *__restrict self,
  name_str  = DeeString_STR(name);
  name_hash = DeeString_Hash(name);
  if (!self->tp_attr) {
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+  DeeTypeObject *iter;
+  if (DeeType_HasCachedAttr(self,name_str,name_hash))
+      goto found;
+  iter = self;
+  for (;;) {
+   if (DeeType_IsClass(iter)) {
+    if (DeeType_QueryInstanceAttributeWithHash(self,iter,name,name_hash) != NULL)
+        goto found;
+   } else {
+    if (iter->tp_methods &&
+        DeeType_HasMethodAttr(self,iter,name_str,name_hash))
+        goto found;
+    if (iter->tp_getsets &&
+        DeeType_HasGetSetAttr(self,iter,name_str,name_hash))
+        goto found;
+    if (iter->tp_members &&
+        DeeType_HasMemberAttr(self,iter,name_str,name_hash))
+        goto found;
+   }
+   iter = DeeType_Base(iter);
+   if (!iter) break;
+   if (iter->tp_attr) break;
+  }
+#else
   if (membercache_hasattr(&self->tp_cache,name_str,name_hash))
       goto found;
   for (;;) {
@@ -2305,6 +2393,7 @@ type_hasattribute(DeeTypeObject *__restrict self,
    if (!self) break;
    if (self->tp_attr) break;
   }
+#endif
  }
  return_false;
 found:
@@ -3148,31 +3237,31 @@ assert_badobject_impl(char const *check_name,
                       char const *file,
                       int line, DeeObject *ob) {
  if (!ob) {
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p is a NULL pointer",
-                  ob);
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p is a NULL pointer",
+                   ob);
  } else if (!ob->ob_refcnt) {
   char const *type_name = "?";
   if (DeeObject_Check(ob->ob_type))
       type_name = ob->ob_type->tp_name;
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p (instance of %s) has a reference count of 0",
-                  ob,type_name);
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p (instance of %s) has a reference count of 0",
+                   ob,type_name);
  } else if (!ob->ob_type) {
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p (%Iu references) has a NULL-pointer as type",
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p (%Iu references) has a NULL-pointer as type",
                   ob,ob->ob_refcnt);
  } else if (!ob->ob_type->ob_refcnt) {
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p (instance of %s, %Iu references) has a type with a reference counter of 0",
-                  ob,ob->ob_type->tp_name,ob->ob_refcnt);
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p (instance of %s, %Iu references) has a type with a reference counter of 0",
+                   ob,ob->ob_type->tp_name,ob->ob_refcnt);
  } else {
   char const *type_name = "?";
   if (DeeObject_Check(ob->ob_type))
       type_name = ob->ob_type->tp_name;
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p (instance of %s, %Iu references)",
-                  ob,type_name,ob->ob_refcnt);
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p (instance of %s, %Iu references)",
+                   ob,type_name,ob->ob_refcnt);
  }
 }
 
@@ -3182,35 +3271,35 @@ assert_badtype_impl(char const *check_name, char const *file,
                     DeeTypeObject *__restrict wanted_type) {
  char const *is_exact = wanted_exact ? " an exact " : " a ";
  if (!ob) {
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p is a NULL pointer when%sinstance of %s was needed",
-                  ob,is_exact,wanted_type->tp_name);
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p is a NULL pointer when%sinstance of %s was needed",
+                   ob,is_exact,wanted_type->tp_name);
  } else if (!ob->ob_refcnt) {
   char const *type_name = "?";
   if (DeeObject_Check(ob->ob_type))
       type_name = ob->ob_type->tp_name;
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p (instance of %s) has a reference "
-                  "count of 0 when%sinstance of %s was needed",
-                  ob,type_name,is_exact,wanted_type->tp_name);
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p (instance of %s) has a reference "
+                   "count of 0 when%sinstance of %s was needed",
+                   ob,type_name,is_exact,wanted_type->tp_name);
  } else if (!ob->ob_type) {
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p (%Iu references) has a NULL-pointer "
-                  "as type when%sinstance of %s was needed",
-                  ob,ob->ob_refcnt,is_exact,wanted_type->tp_name);
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p (%Iu references) has a NULL-pointer "
+                   "as type when%sinstance of %s was needed",
+                   ob,ob->ob_refcnt,is_exact,wanted_type->tp_name);
  } else if (!ob->ob_type->ob_refcnt) {
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p (instance of %s, %Iu references) has a type "
-                  "with a reference counter of 0 when%sinstance of %s was needed",
-                  ob,ob->ob_type->tp_name,ob->ob_refcnt,is_exact,wanted_type->tp_name);
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p (instance of %s, %Iu references) has a type "
+                   "with a reference counter of 0 when%sinstance of %s was needed",
+                   ob,ob->ob_type->tp_name,ob->ob_refcnt,is_exact,wanted_type->tp_name);
  } else {
   char const *type_name = "?";
   if (DeeObject_Check(ob->ob_type))
       type_name = ob->ob_type->tp_name;
-  DeeAssert_Failf(check_name,file,line,
-                  "Bad object at %p (instance of %s, %Iu references) "
-                  "when%sinstance of %s was needed",
-                  ob,type_name,ob->ob_refcnt,is_exact,wanted_type->tp_name);
+  _DeeAssert_Failf(check_name,file,line,
+                   "Bad object at %p (instance of %s, %Iu references) "
+                   "when%sinstance of %s was needed",
+                   ob,type_name,ob->ob_refcnt,is_exact,wanted_type->tp_name);
  }
 }
 

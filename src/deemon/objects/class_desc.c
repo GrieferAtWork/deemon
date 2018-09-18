@@ -24,6 +24,7 @@
 #include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/none.h>
+#include <deemon/tuple.h>
 #include <deemon/bool.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
@@ -232,28 +233,33 @@ PRIVATE DREF DeeObject *DCALL
 instancemember_get(DeeInstanceMemberObject *__restrict self,
                    size_t argc, DeeObject **__restrict argv,
                    DeeObject *kw) {
- DeeObject *thisarg;
- if (DeeArg_UnpackKw(argc,argv,kw,thisarg_kwlist,"o:get",&thisarg) ||
-     DeeObject_AssertType(thisarg,self->im_type))
-     return NULL;
- return DeeInstance_GetAttribute(self->im_type,
-                                 DeeInstance_DESC(DeeClass_DESC(self),
+ DeeObject *thisarg; struct class_desc *desc;
+ if (DeeArg_UnpackKw(argc,argv,kw,thisarg_kwlist,"o:get",&thisarg))
+     goto err;
+ if (DeeObject_AssertType(thisarg,self->im_type))
+     goto err;
+ desc = DeeClass_DESC(self->im_type);
+ return DeeInstance_GetAttribute(desc,
+                                 DeeInstance_DESC(desc,
                                                   thisarg),
                                  thisarg,
                                  self->im_attribute);
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 instancemember_delete(DeeInstanceMemberObject *__restrict self,
                       size_t argc, DeeObject **__restrict argv,
                       DeeObject *kw) {
- DeeObject *thisarg;
+ DeeObject *thisarg; struct class_desc *desc;
  if (DeeArg_UnpackKw(argc,argv,kw,thisarg_kwlist,"o:delete",&thisarg))
      goto err;
  if (DeeObject_AssertType(thisarg,self->im_type))
      goto err;
- if (DeeInstance_DelAttribute(self->im_type,
-                              DeeInstance_DESC(DeeClass_DESC(self),
+ desc = DeeClass_DESC(self->im_type);
+ if (DeeInstance_DelAttribute(desc,
+                              DeeInstance_DESC(desc,
                                                thisarg),
                               thisarg,
                               self->im_attribute))
@@ -267,14 +273,15 @@ PRIVATE DREF DeeObject *DCALL
 instancemember_set(DeeInstanceMemberObject *__restrict self,
                    size_t argc, DeeObject **__restrict argv,
                    DeeObject *kw) {
- DeeObject *thisarg,*value;
+ DeeObject *thisarg,*value; struct class_desc *desc;
  PRIVATE struct keyword kwlist[] = { K(thisarg), K(value), KEND };
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo:set",&thisarg,&value))
      goto err;
  if (DeeObject_AssertType(thisarg,self->im_type))
      goto err;
- if (DeeInstance_SetAttribute(self->im_type,
-                              DeeInstance_DESC(DeeClass_DESC(self),
+ desc = DeeClass_DESC(self->im_type);
+ if (DeeInstance_SetAttribute(desc,
+                              DeeInstance_DESC(desc,
                                                thisarg),
                               thisarg,
                               self->im_attribute,
@@ -589,16 +596,31 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+INTERN int DCALL
+DeeClass_FindClassAttribute(DeeTypeObject *__restrict tp_invoker,
+                            DeeTypeObject *__restrict self,
+                            struct attribute_info *__restrict result,
+                            struct attribute_lookup_rules const *__restrict rules)
+#else
 INTERN int DCALL
 DeeClass_FindClassAttribute(DeeTypeObject *__restrict self,
                             struct attribute_info *__restrict result,
-                            struct attribute_lookup_rules const *__restrict rules) {
+                            struct attribute_lookup_rules const *__restrict rules)
+#endif
+{
  struct class_attribute *attr;
  struct class_desc *my_class = DeeClass_DESC(self);
  uint16_t perm; DREF DeeTypeObject *attr_type;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ attr = DeeType_QueryClassAttributeStringWithHash(tp_invoker,self,
+                                                  rules->alr_name,
+                                                  rules->alr_hash);
+#else
  attr = DeeClassDesc_QueryClassAttributeStringWithHash(my_class,
                                                        rules->alr_name,
                                                        rules->alr_hash);
+#endif
  if (!attr) goto not_found;
  attr_type = NULL;
  perm = (ATTR_CMEMBER | ATTR_PERMGET |
@@ -646,16 +668,31 @@ not_found:
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+INTERN int DCALL
+DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict tp_invoker,
+                                    DeeTypeObject *__restrict self,
+                                    struct attribute_info *__restrict result,
+                                    struct attribute_lookup_rules const *__restrict rules)
+#else
 INTERN int DCALL
 DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict self,
                                     struct attribute_info *__restrict result,
-                                    struct attribute_lookup_rules const *__restrict rules) {
+                                    struct attribute_lookup_rules const *__restrict rules)
+#endif
+{
  struct class_attribute *attr;
  struct class_desc *my_class = DeeClass_DESC(self);
  uint16_t perm; DREF DeeTypeObject *attr_type;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ attr = DeeType_QueryInstanceAttributeStringWithHash(tp_invoker,self,
+                                                     rules->alr_name,
+                                                     rules->alr_hash);
+#else
  attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(my_class,
-                                                          rules->alr_name,
-                                                          rules->alr_hash);
+                                                       rules->alr_name,
+                                                       rules->alr_hash);
+#endif
  if (!attr) goto not_found;
  attr_type = NULL;
  perm = (ATTR_IMEMBER | ATTR_CMEMBER |
@@ -713,16 +750,32 @@ not_found:
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+INTERN int DCALL
+DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict tp_invoker,
+                               DeeTypeObject *__restrict self,
+                               DeeObject *instance,
+                               struct attribute_info *__restrict result,
+                               struct attribute_lookup_rules const *__restrict rules)
+#else
 INTERN int DCALL
 DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict self, DeeObject *instance,
                                struct attribute_info *__restrict result,
-                               struct attribute_lookup_rules const *__restrict rules) {
+                               struct attribute_lookup_rules const *__restrict rules)
+#endif
+{
  struct class_attribute *attr; struct instance_desc *inst;
  struct class_desc *my_class = DeeClass_DESC(self);
  uint16_t perm; DREF DeeTypeObject *attr_type;
+#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
+ attr = DeeType_QueryAttributeStringWithHash(tp_invoker,self,
+                                             rules->alr_name,
+                                             rules->alr_hash);
+#else
  attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(my_class,
-                                                        rules->alr_name,
-                                                        rules->alr_hash);
+                                                          rules->alr_name,
+                                                          rules->alr_hash);
+#endif
  if (!attr) goto not_found;
  attr_type = NULL,inst = NULL;
  perm = (ATTR_IMEMBER | ATTR_PERMGET |
@@ -827,6 +880,29 @@ unbound:
                        DeeString_STR(attr->ca_name));
  return NULL;
 }
+INTERN int DCALL
+DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type,
+                                struct class_attribute *__restrict attr) {
+ int result;
+ struct class_desc *my_class;
+ /* Return an instance-wrapper for instance-members. */
+ if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+     return 1; /* instance-members outside of class memory are
+                * accessed through wrappers, which are always bound. */
+ my_class = DeeClass_DESC(class_type);
+ /* Check if the member is assigned. */
+ rwlock_read(&my_class->cd_lock);
+ if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET|CLASS_ATTRIBUTE_FREADONLY)) ==
+                       CLASS_ATTRIBUTE_FGETSET) {
+  result = ((my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET] != NULL) ||
+            (my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL] != NULL) ||
+            (my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET] != NULL));
+ } else {
+  result = my_class->cd_members[attr->ca_addr] != NULL;
+ }
+ rwlock_endread(&my_class->cd_lock);
+ return result;
+}
 INTERN DREF DeeObject *DCALL
 DeeClass_CallInstanceAttribute(DeeTypeObject *__restrict class_type,
                                struct class_attribute *__restrict attr,
@@ -843,7 +919,7 @@ DeeClass_CallInstanceAttribute(DeeTypeObject *__restrict class_type,
   }
   if (DeeObject_AssertType(argv[0],class_type))
       goto err;
-  return DeeInstance_GetAttribute(class_type,
+  return DeeInstance_GetAttribute(my_class,
                                   DeeInstance_DESC(my_class,argv[0]),
                                   argv[0],
                                   attr);
@@ -898,7 +974,7 @@ DeeClass_CallInstanceAttributeKw(DeeTypeObject *__restrict class_type,
   if (DeeArg_UnpackKw(argc,argv,kw,thisarg_kwlist,"o:get",&thisarg) ||
       DeeObject_AssertType(thisarg,class_type))
       goto err;
-  return DeeInstance_GetAttribute(class_type,
+  return DeeInstance_GetAttribute(my_class,
                                   DeeInstance_DESC(my_class,thisarg),
                                   thisarg,
                                   attr);
@@ -936,6 +1012,184 @@ DeeClass_CallInstanceAttributeKw(DeeTypeObject *__restrict class_type,
 unbound:
  err_unbound_attribute(class_type,
                        DeeString_STR(attr->ca_name));
+err:
+ return NULL;
+}
+
+#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+INTERN DREF DeeObject *DCALL
+DeeClass_CallInstanceAttributeTuple(DeeTypeObject *__restrict class_type,
+                                    struct class_attribute *__restrict attr,
+                                    DeeObject *__restrict args) {
+ DREF DeeObject *callback,*result;
+ struct class_desc *my_class = DeeClass_DESC(class_type);
+ if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
+  /* Simulate `operator ()' for wrappers generated by `instancemember_wrapper()'. */
+  if (DeeTuple_SIZE(args) != 1) {
+   DeeError_Throwf(&DeeError_TypeError,
+                   "instancemember `%k' must be called with exactly 1 argument",
+                   attr->ca_name);
+   goto err;
+  }
+  if (DeeObject_AssertType(DeeTuple_GET(args,0),class_type))
+      goto err;
+  return DeeInstance_GetAttribute(my_class,
+                                  DeeInstance_DESC(my_class,DeeTuple_GET(args,0)),
+                                  DeeTuple_GET(args,0),
+                                  attr);
+ }
+ /* Simple case: direct access to unbound class-based attr. */
+#if 0
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  /* Calling an instance property using the class as base
+   * will simply invoke the getter associated with that property.
+   * Technically, we could assert that `argc == 1' at this point,
+   * as well as that `DeeTuple_GET(args,0) is class_type', but there is no
+   * need for us to do this, as the callback that's going to be
+   * invoked will perform those same check (should that guaranty
+   * become relevant), because it's yet another object over which
+   * the user has full control. */
+ }
+#endif
+ rwlock_read(&my_class->cd_lock);
+#if CLASS_GETSET_GET != 0
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  callback = my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET];
+ } else {
+  callback = my_class->cd_members[attr->ca_addr];
+ }
+#else
+ callback = my_class->cd_members[attr->ca_addr];
+#endif
+ Dee_XIncref(callback);
+ rwlock_endread(&my_class->cd_lock);
+ if unlikely(!callback) goto unbound;
+ /* Invoke the callback. */
+ result = DeeObject_CallTuple(callback,args);
+ Dee_Decref(callback);
+ return result;
+unbound:
+ err_unbound_attribute(class_type,
+                       DeeString_STR(attr->ca_name));
+err:
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *__restrict class_type,
+                                      struct class_attribute *__restrict attr,
+                                      DeeObject *__restrict args, DeeObject *kw) {
+ DREF DeeObject *callback,*result;
+ struct class_desc *my_class = DeeClass_DESC(class_type);
+ if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
+  /* Simulate `operator ()' for wrappers generated by `instancemember_wrapper()'. */
+  DeeObject *thisarg;
+  if (DeeArg_UnpackKw(DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw,thisarg_kwlist,"o:get",&thisarg) ||
+      DeeObject_AssertType(thisarg,class_type))
+      goto err;
+  return DeeInstance_GetAttribute(my_class,
+                                  DeeInstance_DESC(my_class,thisarg),
+                                  thisarg,
+                                  attr);
+ }
+ /* Simple case: direct access to unbound class-based attr. */
+#if 0
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  /* Calling an instance property using the class as base
+   * will simply invoke the getter associated with that property.
+   * Technically, we could assert that `argc == 1' at this point,
+   * as well as that `DeeTuple_GET(args,0) is class_type', but there is no
+   * need for us to do this, as the callback that's going to be
+   * invoked will perform those same check (should that guaranty
+   * become relevant), because it's yet another object over which
+   * the user has full control. */
+ }
+#endif
+ rwlock_read(&my_class->cd_lock);
+#if CLASS_GETSET_GET != 0
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  callback = my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET];
+ } else {
+  callback = my_class->cd_members[attr->ca_addr];
+ }
+#else
+ callback = my_class->cd_members[attr->ca_addr];
+#endif
+ Dee_XIncref(callback);
+ rwlock_endread(&my_class->cd_lock);
+ if unlikely(!callback) goto unbound;
+ /* Invoke the callback. */
+ result = DeeObject_CallTupleKw(callback,args,kw);
+ Dee_Decref(callback);
+ return result;
+unbound:
+ err_unbound_attribute(class_type,
+                       DeeString_STR(attr->ca_name));
+err:
+ return NULL;
+}
+#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+
+INTERN DREF DeeObject *DCALL
+DeeClass_VCallInstanceAttributef(DeeTypeObject *__restrict class_type,
+                                 struct class_attribute *__restrict attr,
+                                 char const *__restrict format, va_list args) {
+ DREF DeeObject *callback,*result,*args_tuple;
+ struct class_desc *my_class = DeeClass_DESC(class_type);
+ if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
+  /* Simulate `operator ()' for wrappers generated by `instancemember_wrapper()'. */
+  DeeObject *thisarg;
+  args_tuple = DeeTuple_VNewf(format,args);
+  if unlikely(!args_tuple) goto err;
+  if (DeeArg_Unpack(DeeTuple_SIZE(args_tuple),
+                    DeeTuple_ELEM(args_tuple),
+                    "o:get",&thisarg))
+      goto err_args_tuple;
+  if (DeeObject_AssertType(thisarg,class_type))
+      goto err_args_tuple;
+  result = DeeInstance_GetAttribute(my_class,
+                                    DeeInstance_DESC(my_class,thisarg),
+                                    thisarg,
+                                    attr);
+  Dee_Decref(args_tuple);
+  return result;
+ }
+ /* Simple case: direct access to unbound class-based attr. */
+#if 0
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  /* Calling an instance property using the class as base
+   * will simply invoke the getter associated with that property.
+   * Technically, we could assert that `argc == 1' at this point,
+   * as well as that `argv[0] is class_type', but there is no
+   * need for us to do this, as the callback that's going to be
+   * invoked will perform those same check (should that guaranty
+   * become relevant), because it's yet another object over which
+   * the user has full control. */
+ }
+#endif
+ rwlock_read(&my_class->cd_lock);
+#if CLASS_GETSET_GET != 0
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  callback = my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET];
+ } else {
+  callback = my_class->cd_members[attr->ca_addr];
+ }
+#else
+ callback = my_class->cd_members[attr->ca_addr];
+#endif
+ Dee_XIncref(callback);
+ rwlock_endread(&my_class->cd_lock);
+ if unlikely(!callback) goto unbound;
+ /* Invoke the callback. */
+ result = DeeObject_VCallf(callback,format,args);
+ Dee_Decref(callback);
+ return result;
+unbound:
+ err_unbound_attribute(class_type,
+                       DeeString_STR(attr->ca_name));
+ goto err;
+err_args_tuple:
+ Dee_Decref(args_tuple);
 err:
  return NULL;
 }
@@ -1053,7 +1307,7 @@ err_noaccess:
 
 
 INTERN DREF DeeObject *DCALL
-DeeInstance_GetAttribute(DeeTypeObject *__restrict class_type,
+DeeInstance_GetAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
                          struct class_attribute *__restrict attr) {
@@ -1062,7 +1316,7 @@ DeeInstance_GetAttribute(DeeTypeObject *__restrict class_type,
  ASSERT(attr);
  ASSERT_OBJECT(this_arg);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-     self = class_desc_as_instance(DeeClass_DESC(class_type));
+     self = class_desc_as_instance(desc);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
   DREF DeeObject *getter;
   rwlock_read(&self->id_lock);
@@ -1095,17 +1349,16 @@ DeeInstance_GetAttribute(DeeTypeObject *__restrict class_type,
  }
  return result;
 unbound:
- err_unbound_attribute(class_type,
-                       DeeString_STR(attr->ca_name));
+ err_unbound_attribute_c(desc,DeeString_STR(attr->ca_name));
  return NULL;
 illegal:
- err_cant_access_attribute(class_type,
-                           DeeString_STR(attr->ca_name),
-                           ATTR_ACCESS_GET);
+ err_cant_access_attribute_c(desc,
+                             DeeString_STR(attr->ca_name),
+                             ATTR_ACCESS_GET);
  return NULL;
 }
 INTERN int DCALL
-DeeInstance_BoundAttribute(DeeTypeObject *__restrict class_type,
+DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
                            struct instance_desc *__restrict self,
                            DeeObject *__restrict this_arg,
                            struct class_attribute *__restrict attr) {
@@ -1114,7 +1367,7 @@ DeeInstance_BoundAttribute(DeeTypeObject *__restrict class_type,
  ASSERT(attr);
  ASSERT_OBJECT(this_arg);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-     self = class_desc_as_instance(DeeClass_DESC(class_type));
+     self = class_desc_as_instance(desc);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
   DREF DeeObject *getter;
   rwlock_read(&self->id_lock);
@@ -1128,6 +1381,8 @@ DeeInstance_BoundAttribute(DeeTypeObject *__restrict class_type,
          : DeeObject_Call(getter,0,NULL);
   Dee_Decref(getter);
   if likely(result) { Dee_Decref(result); return 1; }
+  if (CATCH_ATTRIBUTE_ERROR())
+      return -3;
   if (DeeError_Catch(&DeeError_UnboundAttribute))
       return 0;
   return -1;
@@ -1143,7 +1398,7 @@ unbound:
  return 0;
 }
 INTERN DREF DeeObject *DCALL
-DeeInstance_CallAttribute(DeeTypeObject *__restrict class_type,
+DeeInstance_CallAttribute(struct class_desc *__restrict desc,
                           struct instance_desc *__restrict self,
                           DeeObject *__restrict this_arg,
                           struct class_attribute *__restrict attr,
@@ -1153,7 +1408,7 @@ DeeInstance_CallAttribute(DeeTypeObject *__restrict class_type,
  ASSERT(attr);
  ASSERT_OBJECT(this_arg);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-     self = class_desc_as_instance(DeeClass_DESC(class_type));
+     self = class_desc_as_instance(desc);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
   DREF DeeObject *getter;
   rwlock_read(&self->id_lock);
@@ -1184,17 +1439,68 @@ DeeInstance_CallAttribute(DeeTypeObject *__restrict class_type,
  }
  return result;
 unbound:
- err_unbound_attribute(class_type,
-                       DeeString_STR(attr->ca_name));
+ err_unbound_attribute_c(desc,
+                         DeeString_STR(attr->ca_name));
  return NULL;
 illegal:
- err_cant_access_attribute(class_type,
-                           DeeString_STR(attr->ca_name),
-                           ATTR_ACCESS_GET);
+ err_cant_access_attribute_c(desc,
+                             DeeString_STR(attr->ca_name),
+                             ATTR_ACCESS_GET);
  return NULL;
 }
 INTERN DREF DeeObject *DCALL
-DeeInstance_CallAttributeKw(DeeTypeObject *__restrict class_type,
+DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
+                            struct instance_desc *__restrict self,
+                            DeeObject *__restrict this_arg,
+                            struct class_attribute *__restrict attr,
+                            char const *__restrict format, va_list args) {
+ DREF DeeObject *result,*callback;
+ ASSERT(self);
+ ASSERT(attr);
+ ASSERT_OBJECT(this_arg);
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+     self = class_desc_as_instance(desc);
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+  DREF DeeObject *getter;
+  rwlock_read(&self->id_lock);
+  getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+  Dee_XIncref(getter);
+  rwlock_endread(&self->id_lock);
+  if unlikely(!getter) goto illegal;
+  /* Invoke the getter. */
+  callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+   ? DeeObject_ThisCall(getter,this_arg,0,NULL)
+   : DeeObject_Call(getter,0,NULL);
+  Dee_Decref(getter);
+  /* Invoke the return value of the getter. */
+  if unlikely(!callback) return NULL;
+  result = DeeObject_VCallf(callback,format,args);
+  Dee_Decref(callback);
+ } else {
+  /* Call the attr as-is. */
+  rwlock_read(&self->id_lock);
+  callback = self->id_vtab[attr->ca_addr];
+  Dee_XIncref(callback);
+  rwlock_endread(&self->id_lock);
+  if unlikely(!callback) goto unbound;
+  result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+   ? DeeObject_VThisCallf(callback,this_arg,format,args)
+   : DeeObject_VCallf(callback,format,args);
+  Dee_Decref(callback);
+ }
+ return result;
+unbound:
+ err_unbound_attribute_c(desc,
+                         DeeString_STR(attr->ca_name));
+ return NULL;
+illegal:
+ err_cant_access_attribute_c(desc,
+                             DeeString_STR(attr->ca_name),
+                             ATTR_ACCESS_GET);
+ return NULL;
+}
+INTERN DREF DeeObject *DCALL
+DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
                             struct instance_desc *__restrict self,
                             DeeObject *__restrict this_arg,
                             struct class_attribute *__restrict attr,
@@ -1205,7 +1511,7 @@ DeeInstance_CallAttributeKw(DeeTypeObject *__restrict class_type,
  ASSERT(attr);
  ASSERT_OBJECT(this_arg);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-     self = class_desc_as_instance(DeeClass_DESC(class_type));
+     self = class_desc_as_instance(desc);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
   DREF DeeObject *getter;
   rwlock_read(&self->id_lock);
@@ -1236,18 +1542,18 @@ DeeInstance_CallAttributeKw(DeeTypeObject *__restrict class_type,
  }
  return result;
 unbound:
- err_unbound_attribute(class_type,
-                       DeeString_STR(attr->ca_name));
+ err_unbound_attribute_c(desc,
+                         DeeString_STR(attr->ca_name));
  return NULL;
 illegal:
- err_cant_access_attribute(class_type,
-                           DeeString_STR(attr->ca_name),
-                           ATTR_ACCESS_GET);
+ err_cant_access_attribute_c(desc,
+                             DeeString_STR(attr->ca_name),
+                             ATTR_ACCESS_GET);
  return NULL;
 }
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 INTERN DREF DeeObject *DCALL
-DeeInstance_CallAttributeTuple(DeeTypeObject *__restrict class_type,
+DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
                                struct instance_desc *__restrict self,
                                DeeObject *__restrict this_arg,
                                struct class_attribute *__restrict attr,
@@ -1257,7 +1563,7 @@ DeeInstance_CallAttributeTuple(DeeTypeObject *__restrict class_type,
  ASSERT(attr);
  ASSERT_OBJECT(this_arg);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-     self = class_desc_as_instance(DeeClass_DESC(class_type));
+     self = class_desc_as_instance(desc);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
   DREF DeeObject *getter;
   rwlock_read(&self->id_lock);
@@ -1288,17 +1594,17 @@ DeeInstance_CallAttributeTuple(DeeTypeObject *__restrict class_type,
  }
  return result;
 unbound:
- err_unbound_attribute(class_type,
-                       DeeString_STR(attr->ca_name));
+ err_unbound_attribute_c(desc,
+                         DeeString_STR(attr->ca_name));
  return NULL;
 illegal:
- err_cant_access_attribute(class_type,
-                           DeeString_STR(attr->ca_name),
-                           ATTR_ACCESS_GET);
+ err_cant_access_attribute_c(desc,
+                             DeeString_STR(attr->ca_name),
+                             ATTR_ACCESS_GET);
  return NULL;
 }
 INTERN DREF DeeObject *DCALL
-DeeInstance_CallAttributeTupleKw(DeeTypeObject *__restrict class_type,
+DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
                                  struct instance_desc *__restrict self,
                                  DeeObject *__restrict this_arg,
                                  struct class_attribute *__restrict attr,
@@ -1308,7 +1614,7 @@ DeeInstance_CallAttributeTupleKw(DeeTypeObject *__restrict class_type,
  ASSERT(attr);
  ASSERT_OBJECT(this_arg);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-     self = class_desc_as_instance(DeeClass_DESC(class_type));
+     self = class_desc_as_instance(desc);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
   DREF DeeObject *getter;
   rwlock_read(&self->id_lock);
@@ -1341,20 +1647,20 @@ DeeInstance_CallAttributeTupleKw(DeeTypeObject *__restrict class_type,
  }
  return result;
 unbound:
- err_unbound_attribute(class_type,
-                       DeeString_STR(attr->ca_name));
+ err_unbound_attribute_c(desc,
+                         DeeString_STR(attr->ca_name));
  return NULL;
 illegal:
- err_cant_access_attribute(class_type,
-                           DeeString_STR(attr->ca_name),
-                           ATTR_ACCESS_GET);
+ err_cant_access_attribute_c(desc,
+                             DeeString_STR(attr->ca_name),
+                             ATTR_ACCESS_GET);
  return NULL;
 }
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 
 INTERN int DCALL
-DeeInstance_DelAttribute(DeeTypeObject *__restrict class_type,
+DeeInstance_DelAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
                          struct class_attribute *__restrict attr) {
@@ -1365,7 +1671,7 @@ DeeInstance_DelAttribute(DeeTypeObject *__restrict class_type,
  if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
      goto illegal;
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-     self = class_desc_as_instance(DeeClass_DESC(class_type));
+     self = class_desc_as_instance(desc);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
   DREF DeeObject *delfun,*temp;
   rwlock_read(&self->id_lock);
@@ -1397,18 +1703,16 @@ DeeInstance_DelAttribute(DeeTypeObject *__restrict class_type,
  return 0;
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 unbound:
- err_unbound_attribute(class_type,
-                       DeeString_STR(attr->ca_name));
- return -1;
+ return err_unbound_attribute_c(desc,
+                                DeeString_STR(attr->ca_name));
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 illegal:
- err_cant_access_attribute(class_type,
-                           DeeString_STR(attr->ca_name),
-                           ATTR_ACCESS_DEL);
- return -1;
+ return err_cant_access_attribute_c(desc,
+                                    DeeString_STR(attr->ca_name),
+                                    ATTR_ACCESS_DEL);
 }
 INTERN int DCALL
-DeeInstance_SetAttribute(DeeTypeObject *__restrict class_type,
+DeeInstance_SetAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
                          struct class_attribute *__restrict attr,
@@ -1417,7 +1721,7 @@ DeeInstance_SetAttribute(DeeTypeObject *__restrict class_type,
  ASSERT(attr);
  ASSERT_OBJECT(this_arg);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
-     self = class_desc_as_instance(DeeClass_DESC(class_type));
+     self = class_desc_as_instance(desc);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
   DREF DeeObject *setter,*temp;
   /* Make sure that the access is allowed. */
@@ -1453,10 +1757,42 @@ DeeInstance_SetAttribute(DeeTypeObject *__restrict class_type,
  }
  return 0;
 illegal:
- err_cant_access_attribute(class_type,
-                           DeeString_STR(attr->ca_name),
-                           ATTR_ACCESS_SET);
- return -1;
+ return err_cant_access_attribute_c(desc,
+                                    DeeString_STR(attr->ca_name),
+                                    ATTR_ACCESS_SET);
+}
+INTERN int DCALL
+DeeInstance_SetBasicAttribute(struct class_desc *__restrict desc,
+                              struct instance_desc *__restrict self,
+                              DeeObject *__restrict this_arg,
+                              struct class_attribute *__restrict attr,
+                              DeeObject *__restrict value) {
+ DREF DeeObject *old_value;
+ ASSERT(self);
+ ASSERT(attr);
+ ASSERT_OBJECT(this_arg);
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+     self = class_desc_as_instance(desc);
+ if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+     return 2; /* Not a basic attribute. */
+ /* Simply override the field in the attr table. */
+ rwlock_write(&self->id_lock);
+ old_value = self->id_vtab[attr->ca_addr];
+ if (old_value && (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+  rwlock_endwrite(&self->id_lock);
+  goto illegal; /* readonly fields can only be set once. */
+ } else {
+  Dee_Incref(value);
+  self->id_vtab[attr->ca_addr] = value;
+ }
+ rwlock_endwrite(&self->id_lock);
+ /* Drop a reference from the old value. */
+ Dee_XDecref(old_value);
+ return 0;
+illegal:
+ return err_cant_access_attribute_c(desc,
+                                    DeeString_STR(attr->ca_name),
+                                    ATTR_ACCESS_SET);
 }
 
 
@@ -1547,22 +1883,6 @@ DeeClassDescriptor_QueryInstanceAttributeStringWithHash(DeeClassDescriptorObject
   return result;
  }
  return NULL;
-}
-PUBLIC struct class_attribute *DCALL
-DeeClassDescriptor_QueryClassAttribute(DeeClassDescriptorObject *__restrict self,
-                                       /*String*/DeeObject *__restrict name) {
- ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
- return DeeClassDescriptor_QueryClassAttributeWithHash(self,
-                                                       name,
-                                                       DeeString_Hash(name));
-}
-PUBLIC struct class_attribute *DCALL
-DeeClassDescriptor_QueryInstanceAttribute(DeeClassDescriptorObject *__restrict self,
-                                          /*String*/DeeObject *__restrict name) {
- ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
- return DeeClassDescriptor_QueryInstanceAttributeWithHash(self,
-                                                          name,
-                                                          DeeString_Hash(name));
 }
 
 PRIVATE ATTR_COLD int DCALL

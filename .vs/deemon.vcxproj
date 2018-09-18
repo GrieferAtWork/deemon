@@ -100,6 +100,7 @@
     <ClCompile Include="..\src\deemon\compiler\asm\assembler.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\directives.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genasm.c" />
+    <ClCompile Include="..\src\deemon\compiler\asm\genassert.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\gencall.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genclass.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genfaster.c" />
@@ -109,6 +110,7 @@
     <ClCompile Include="..\src\deemon\compiler\asm\genoperator_func.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genstore.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\genswitch.c" />
+    <ClCompile Include="..\src\deemon\compiler\asm\gentry.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\modgen.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\parseasm.c" />
     <ClCompile Include="..\src\deemon\compiler\asm\peephole.c" />

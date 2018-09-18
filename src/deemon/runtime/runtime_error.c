@@ -506,6 +506,25 @@ err_cant_access_attribute(DeeTypeObject *__restrict tp,
                         access_names[access&ATTR_ACCESS_MASK],
                         tp,name);
 }
+
+PRIVATE ATTR_RETNONNULL char const *DCALL
+get_desc_name(struct class_desc *__restrict desc) {
+ return desc->cd_desc->cd_name
+      ? DeeString_STR(desc->cd_desc->cd_name)
+      : "<unnamed>";
+}
+
+INTERN ATTR_COLD int DCALL
+err_cant_access_attribute_c(struct class_desc *__restrict desc,
+                            char const *__restrict name,
+                            int access) {
+ ASSERT(desc);
+ ASSERT(name);
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot %s attribute `%s.%s'",
+                        access_names[access&ATTR_ACCESS_MASK],
+                        get_desc_name(desc),name);
+}
 INTERN ATTR_COLD int DCALL
 err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name) {
  ASSERT_OBJECT(tp);
@@ -514,6 +533,14 @@ err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name)
  return DeeError_Throwf(&DeeError_UnboundAttribute,
                         "Unbound attribute `%k.%s'",
                         tp,name);
+}
+INTERN ATTR_COLD int DCALL
+err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name) {
+ ASSERT(desc);
+ ASSERT(name);
+ return DeeError_Throwf(&DeeError_UnboundAttribute,
+                        "Unbound attribute `%s.%s'",
+                        get_desc_name(desc),name);
 }
 INTERN ATTR_COLD int DCALL
 err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key) {

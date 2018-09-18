@@ -1059,7 +1059,15 @@ PUBLIC bool DCALL Dee_CollectMemory(size_t req_bytes) {
 }
 
 
+
 #ifndef NDEBUG
+
+#ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
+#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
+extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
+extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
+#endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
+
 PRIVATE dssize_t DCALL
 debug_printer(void *UNUSED(closure),
               char const *__restrict buffer, size_t bufsize) {
@@ -1099,36 +1107,74 @@ debug_printer(void *UNUSED(closure),
 }
 #endif /* !NDEBUG */
 
-PUBLIC void (DCALL Dee_vdprintf)(char const *__restrict format, va_list args) {
+#ifdef CONFIG_HOST_WINDOWS
+PUBLIC int _Dee_dprint_enabled = 2;
+#else
+PUBLIC int _Dee_dprint_enabled = 1;
+#endif
+
+
+PUBLIC void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args) {
 #ifdef NDEBUG
  (void)format;
  (void)args;
 #else
 #ifdef CONFIG_HOST_WINDOWS
- DBG_ALIGNMENT_DISABLE();
- if (!IsDebuggerPresent()) {
+ if (_Dee_dprint_enabled == 2) {
+  DBG_ALIGNMENT_DISABLE();
+  if (!IsDebuggerPresent()) {
+   DBG_ALIGNMENT_ENABLE();
+   _Dee_dprint_enabled = 0;
+   return;
+  }
   DBG_ALIGNMENT_ENABLE();
-  return;
+  _Dee_dprint_enabled = 1;
  }
- DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HOST_WINDOWS */
  if (Dee_VFormatPrintf(&debug_printer,NULL,format,args) < 0)
      DeeError_Handled(ERROR_HANDLED_RESTORE);
 #endif
 }
 
-PUBLIC void (Dee_dprintf)(char const *__restrict format, ...) {
+PUBLIC void (DCALL _Dee_dprint)(char const *__restrict message) {
+#ifdef NDEBUG
+ (void)message;
+#else
+#ifdef CONFIG_HOST_WINDOWS
+ DBG_ALIGNMENT_DISABLE();
+ if (_Dee_dprint_enabled == 2) {
+  if (!IsDebuggerPresent()) {
+   DBG_ALIGNMENT_ENABLE();
+   _Dee_dprint_enabled = 0;
+   return;
+  }
+  _Dee_dprint_enabled = 1;
+ }
+ OutputDebugStringA(message);
+ DBG_ALIGNMENT_ENABLE();
+#else /* CONFIG_HOST_WINDOWS */
+ if (debug_printer(NULL,message,strlen(message)) < 0)
+     DeeError_Handled(ERROR_HANDLED_RESTORE);
+#endif /* !CONFIG_HOST_WINDOWS */
+#endif
+}
+
+PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
 #ifdef NDEBUG
  (void)format;
 #else
  va_list args;
 #ifdef CONFIG_HOST_WINDOWS
- DBG_ALIGNMENT_DISABLE();
- if (!IsDebuggerPresent()) {
+ if (_Dee_dprint_enabled == 2) {
+  DBG_ALIGNMENT_DISABLE();
+  if (!IsDebuggerPresent()) {
+   DBG_ALIGNMENT_ENABLE();
+   _Dee_dprint_enabled = 0;
+   return;
+  }
   DBG_ALIGNMENT_ENABLE();
-  return;
+  _Dee_dprint_enabled = 1;
  }
- DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HOST_WINDOWS */
  va_start(args,format);
  if (Dee_VFormatPrintf(&debug_printer,NULL,format,args) < 0)
@@ -1152,11 +1198,11 @@ PRIVATE void assert_printf(char const *format, ...) {
 }
 
 #ifdef NDEBUG
-PUBLIC void (DeeAssert_Failf)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line), char const *UNUSED(format), ...) {}
-PUBLIC void (DCALL DeeAssert_Fail)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line)) {}
+PUBLIC void (_DeeAssert_Failf)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line), char const *UNUSED(format), ...) {}
+PUBLIC void (DCALL _DeeAssert_Fail)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line)) {}
 #else
 PUBLIC void
-(DeeAssert_Failf)(char const *expr, char const *file,
+(_DeeAssert_Failf)(char const *expr, char const *file,
                   int line, char const *format, ...) {
  assert_printf("\n\n\n"
                "%s(%d) : Assertion failed : %s\n",
@@ -1170,8 +1216,8 @@ PUBLIC void
  }
 }
 PUBLIC void
-(DCALL DeeAssert_Fail)(char const *expr, char const *file, int line) {
- DeeAssert_Failf(expr,file,line,NULL);
+(DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line) {
+ _DeeAssert_Failf(expr,file,line,NULL);
 }
 #endif
 
