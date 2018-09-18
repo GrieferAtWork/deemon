@@ -15,7 +15,6 @@ EXPORTS
 	_DeeAssert_BadObjectTypeExact@16=DeeAssert_BadObjectTypeExact@16
 	_DeeAssert_BadObjectTypeExactOpt@16=DeeAssert_BadObjectTypeExactOpt@16
 	_DeeAssert_BadObjectTypeOpt@16=DeeAssert_BadObjectTypeOpt@16
-	_DeeAssert_Fail@12=DeeAssert_Fail@12
 	_DeeAttribute_Lookup@16=DeeAttribute_Lookup@16
 	_DeeBytes_FromSequence@4=DeeBytes_FromSequence@4
 	_DeeBytes_NewBuffer@8=DeeBytes_NewBuffer@8
@@ -32,10 +31,8 @@ EXPORTS
 	_DeeCell_TryGet@4=DeeCell_TryGet@4
 	_DeeCell_Xch@8=DeeCell_Xch@8
 	_DeeCell_XchNonNull@8=DeeCell_XchNonNull@8
-	_DeeClassDescriptor_QueryClassAttribute@8=DeeClassDescriptor_QueryClassAttribute@8
 	_DeeClassDescriptor_QueryClassAttributeStringWithHash@12=DeeClassDescriptor_QueryClassAttributeStringWithHash@12
 	_DeeClassDescriptor_QueryClassAttributeWithHash@12=DeeClassDescriptor_QueryClassAttributeWithHash@12
-	_DeeClassDescriptor_QueryInstanceAttribute@8=DeeClassDescriptor_QueryInstanceAttribute@8
 	_DeeClassDescriptor_QueryInstanceAttributeStringWithHash@12=DeeClassDescriptor_QueryInstanceAttributeStringWithHash@12
 	_DeeClassDescriptor_QueryInstanceAttributeWithHash@12=DeeClassDescriptor_QueryInstanceAttributeWithHash@12
 	_DeeClass_GetOperator@8=DeeClass_GetOperator@8
@@ -44,7 +41,7 @@ EXPORTS
 	_DeeClass_TryGetPrivateOperator@8=DeeClass_TryGetPrivateOperator@8
 	_DeeClsMember_New@8=DeeClsMember_New@8
 	_DeeClsMethod_New@8=DeeClsMethod_New@8
-	_DeeClsProperty_New@8=DeeClsProperty_New@8
+	_DeeClsProperty_New@16=DeeClsProperty_New@16
 	_DeeCode_FindDDI@20=DeeCode_FindDDI@20
 	_DeeCode_SetAssembly@4=DeeCode_SetAssembly@4
 	_DeeCodec_Decode@12=DeeCodec_Decode@12
@@ -329,6 +326,8 @@ EXPORTS
 	_DeeObject_DivInt@8=DeeObject_DivInt@8
 	_DeeObject_Doc@4=DeeObject_Doc@4
 	_DeeObject_DocAttr@8=DeeObject_DocAttr@8
+	_DeeObject_DocAttrString@8=DeeObject_DocAttrString@8
+	_DeeObject_DocAttrStringHash@12=DeeObject_DocAttrStringHash@12
 	_DeeObject_Enter@4=DeeObject_Enter@4
 	_DeeObject_EnumAttr@16=DeeObject_EnumAttr@16
 	_DeeObject_Foreach@12=DeeObject_Foreach@12
@@ -621,13 +620,15 @@ EXPORTS
 	_Dee_VPUnpackf@12=Dee_VPUnpackf@12
 	_Dee_VPackf@8=Dee_VPackf@8
 	_Dee_VUnpackf@12=Dee_VUnpackf@12
-	_Dee_vdprintf@8=Dee_vdprintf@8
 	_Dee_vsnprintf@16=Dee_vsnprintf@16
 	_Dee_vsprintf@12=Dee_vsprintf@12
+	__DeeAssert_Fail@12=_DeeAssert_Fail@12
 	__DeeObject_IdFunc@12=_DeeObject_IdFunc@12
 	__DeeString_Chr16@4=_DeeString_Chr16@4
 	__DeeString_Chr32@4=_DeeString_Chr32@4
 	__DeeString_Chr8@4=_DeeString_Chr8@4
+	__Dee_dprint@4=_Dee_dprint@4
+	__Dee_vdprintf@8=_Dee_vdprintf@8
 	_ascii_printer_alloc@8=ascii_printer_alloc@8
 	_ascii_printer_allocstr@12=ascii_printer_allocstr@12
 	_ascii_printer_pack@4=ascii_printer_pack@4
