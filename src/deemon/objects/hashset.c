@@ -1228,14 +1228,16 @@ set_init(Set *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq; int error;
  if unlikely(DeeArg_Unpack(argc,argv,"o:hashset",&seq))
-    return -1;
+    goto err;
  /* TODO: Optimization for fast-sequence types. */
  if unlikely((seq = DeeObject_IterSelf(seq)) == NULL)
-    return -1;
+    goto err;
  error = set_init_iterator(self,seq);
  Dee_Decref(seq);
  weakref_support_init(self);
  return error;
+err:
+ return -1;
 }
 
 

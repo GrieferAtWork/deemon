@@ -1373,6 +1373,61 @@ svec_nsi_getitem_fast(SharedVector *__restrict self, size_t index) {
  return result;
 }
 
+PRIVATE size_t DCALL
+svec_nsi_find(SharedVector *__restrict self,
+              size_t start, size_t end,
+              DeeObject *__restrict keyed_search_item,
+              DeeObject *key) {
+ size_t i = start;
+ rwlock_read(&self->sv_lock);
+ for (; i < end && i < self->sv_length; ++i) {
+  DREF DeeObject *item; int temp;
+  item = self->sv_vector[i];
+  Dee_Incref(item);
+  rwlock_endread(&self->sv_lock);
+  temp = DeeObject_CompareKeyEq(keyed_search_item,item,key);
+  Dee_Decref(item);
+  if (temp != 0) {
+   if unlikely(temp < 0) goto err;
+   return i;
+  }
+  rwlock_read(&self->sv_lock);
+ }
+ rwlock_endread(&self->sv_lock);
+ return (size_t)-1;
+err:
+ return (size_t)-2;
+}
+PRIVATE size_t DCALL
+svec_nsi_rfind(SharedVector *__restrict self,
+               size_t start, size_t end,
+               DeeObject *__restrict keyed_search_item,
+               DeeObject *key) {
+ size_t i = end;
+ rwlock_read(&self->sv_lock);
+ for (;;) {
+  DREF DeeObject *item; int temp;
+  if (i > self->sv_length)
+      i = self->sv_length;
+  if (i <= start) break;
+  --i;
+  item = self->sv_vector[i];
+  Dee_Incref(item);
+  rwlock_endread(&self->sv_lock);
+  temp = DeeObject_CompareKeyEq(keyed_search_item,item,key);
+  Dee_Decref(item);
+  if (temp != 0) {
+   if unlikely(temp < 0) goto err;
+   return i;
+  }
+  rwlock_read(&self->sv_lock);
+ }
+ rwlock_endread(&self->sv_lock);
+ return (size_t)-1;
+err:
+ return (size_t)-2;
+}
+
 
 PRIVATE struct type_nsi svec_nsi = {
     /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
@@ -1389,8 +1444,8 @@ PRIVATE struct type_nsi svec_nsi = {
             /* .nsi_getrange_n   = */(void *)NULL,
             /* .nsi_setrange     = */(void *)NULL,
             /* .nsi_setrange_n   = */(void *)NULL,
-            /* .nsi_find         = */(void *)NULL, /* TODO */
-            /* .nsi_rfind        = */(void *)NULL, /* TODO */
+            /* .nsi_find         = */(void *)&svec_nsi_find,
+            /* .nsi_rfind        = */(void *)&svec_nsi_rfind,
             /* .nsi_xch          = */(void *)NULL,
             /* .nsi_insert       = */(void *)NULL,
             /* .nsi_insertall    = */(void *)NULL,

@@ -813,11 +813,11 @@ INTERN struct type_method map_methods[] = {
       DOC("(object key,object def=none)->object\n"
           "@return The value associated with @key or @def when @key has no value associated") },
     { "keys", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_keys,
-      DOC("()->sequence\nReturns a :sequence that can be enumerated to view only the keys of @this mapping") },
+      DOC("->sequence\nReturns a :sequence that can be enumerated to view only the keys of @this mapping") },
     { "values", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_values,
-      DOC("()->sequence\nReturns a :sequence that can be enumerated to view only the values of @this mapping") },
+      DOC("->sequence\nReturns a :sequence that can be enumerated to view only the values of @this mapping") },
     { "items", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_items,
-      DOC("()->sequence\n"
+      DOC("->sequence\n"
           "Returns a :sequence that can be enumerated to view the key-item "
           "pairs as 2-element sequences, the same way they could be viewed "
           "if @this mapping itself was being iterated\n"
@@ -826,11 +826,11 @@ INTERN struct type_method map_methods[] = {
           "way one would expect of any regular object implementing the sequence "
           "protocol") },
     { "iterkeys", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_iterkeys,
-      DOC("()->iterator\nReturns an iterator for #{keys}. Same as ${this.keys().operator iter()}") },
+      DOC("->iterator\nReturns an iterator for #{keys}. Same as ${this.keys().operator iter()}") },
     { "itervalues", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_itervalues,
-      DOC("()->iterator\nReturns an iterator for #{values}. Same as ${this.values().operator iter()}") },
+      DOC("->iterator\nReturns an iterator for #{values}. Same as ${this.values().operator iter()}") },
     { "iteritems", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_iteritems,
-      DOC("()->iterator\nReturns an iterator for #{items}. Same as ${this.items().operator iter()}") },
+      DOC("->iterator\nReturns an iterator for #{items}. Same as ${this.items().operator iter()}") },
     { NULL }
 };
 

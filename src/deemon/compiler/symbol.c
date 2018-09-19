@@ -877,7 +877,6 @@ INTERN int (DCALL classscope_push)(void) {
  new_scope->cs_scope.s_prev  = current_scope; /* Inherit reference */
  new_scope->cs_scope.s_base  = current_basescope;
  new_scope->cs_this          = this_sym;
- new_scope->cs_scope.s_flags = SCOPE_FCLASS; /* TODO: Get rid of this flag. - Use `x->s_class == x' instead! */
  current_scope = &new_scope->cs_scope; /* Inherit reference */
  return 0;
 err_new_scope:
@@ -1036,7 +1035,7 @@ err:
 
 INTERN int DCALL link_forward_symbols(void) {
  struct symbol **bucket_iter,**bucket_end,*iter;
- ASSERT(current_scope->s_flags & SCOPE_FCLASS);
+ ASSERT(DeeScope_IsClassScope(current_scope));
  bucket_end = (bucket_iter = current_scope->s_map) + current_scope->s_mapa;
  for (; bucket_iter < bucket_end; ++bucket_iter) {
   iter = *bucket_iter;
@@ -1267,7 +1266,7 @@ seach_single:
     return result;
    }
   }
-  if (iter->s_flags & SCOPE_FCLASS) {
+  if (DeeScope_IsClassScope(iter)) {
    /* Reached a class scope.
     * In order to allow for forward symbol declarations in class declarations,
     * we must remember that this is where the symbol was first used, and perform

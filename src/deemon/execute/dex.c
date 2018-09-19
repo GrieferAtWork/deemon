@@ -92,7 +92,9 @@ dex_load_file(DeeDexObject *__restrict self,
 #endif
  if (!handle) {
 #ifdef USE_LOADLIBRARY
-  /* TODO: Check against GetLastError() for the reason why. */
+  /* TODO: Check against GetLastError() for the reason why.
+   *       If it's anything other than file-not-found, throw an
+   *       error indicating that the module has been corrupted. */
   DWORD error;
   error = GetLastError();
   DBG_ALIGNMENT_ENABLE();

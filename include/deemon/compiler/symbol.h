@@ -347,18 +347,12 @@ struct scope_object {
     size_t                   s_mapc;  /* Amount of symbols defined within the hash-map `s_map'. */
     size_t                   s_mapa;  /* Allocated vector size of the symbol hash-map `s_map'. */
     struct symbol           *s_del;   /* [0..1][owned] Chain of symbols that have been deleted. (And thereby made invisible) */
-#define SCOPE_FNORMAL        0x0000   /* Normal scope flags. */
-#define SCOPE_FCLASS         0x0001   /* Class scope. */
-    uint16_t                 s_flags; /* Scope flags (Set of `SCOPE_F*'). */
 #ifndef NDEBUG
     uint16_t                 s_old_stack; /* Used by stack alignment assertions during assembly: The stack depth when the scope was entered. */
-#if __SIZEOF_POINTER__ > 4
-    uint16_t                 s_pad[(sizeof(void *)/2)-2];
-#endif
-#else
-    uint16_t                 s_pad[(sizeof(void *)/2)-1];
+    uint16_t                 s_pad[(sizeof(void *)-2)/2];
 #endif
 };
+#define DeeScope_IsClassScope(x) ((x)->s_class == (DeeClassScopeObject *)(x))
 
 
 struct class_scope_object {

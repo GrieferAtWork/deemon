@@ -779,8 +779,8 @@ DeeObject_Newf(DeeTypeObject *__restrict object_type,
 #endif /* DEFINE_TYPE_OPERATORS */
 
 #ifdef DEFINE_TYPE_OPERATORS
-#define LOAD_TP_SELF   ASSERT_OBJECT_TYPE(self,tp_self)
-#define LOAD_TP_SELFP  ASSERT(pself); ASSERT_OBJECT_TYPE(*pself,tp_self)
+#define LOAD_TP_SELF   ASSERT_OBJECT_TYPE_A(self,tp_self)
+#define LOAD_TP_SELFP  ASSERT(pself); ASSERT_OBJECT_TYPE_A(*pself,tp_self)
 #define LOAD_ITER      DeeTypeObject *iter = tp_self
 #define LOAD_ITERP     DeeTypeObject *iter = tp_self
 #define GET_TP_SELF()  tp_self
@@ -3019,6 +3019,7 @@ err:
 PUBLIC int DCALL \
 DeeObject_InplaceXXX(DREF DeeObject **__restrict pself, intX_t val) { \
  DREF DeeObject *temp; int result; \
+ /* TODO: Optimization for `int' */ \
  temp = DeeInt_NewXXX(val); \
  if unlikely(!temp) goto err; \
  result = reg(pself,temp); \

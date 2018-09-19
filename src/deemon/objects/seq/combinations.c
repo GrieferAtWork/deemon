@@ -109,6 +109,7 @@ comiter_copy(CombinationsIterator *__restrict self,
  rwlock_cinit(&self->ci_lock);
  self->ci_combi = other->ci_combi;
  Dee_Incref(self->ci_combi);
+ return 0;
 err:
  return -1;
 }

@@ -621,7 +621,7 @@ struct asm_symbol_ref {
      *     at the test `/util/test/recursive_references.dee'
      */
     struct symbol         *sr_sym;         /* [1..1][const]
-                                            * [->s_flags & SYMBOL_FALLOCREF]
+                                            * [->s_flag & SYMBOL_FALLOCREF]
                                             * [->s_refid == INDEXOF(self,:a_refv)]
                                             * The symbol being referenced. */
     uint16_t               sr_orig_refid;  /* [const] The original value of `sr_sym->s_refid', before that symbol */

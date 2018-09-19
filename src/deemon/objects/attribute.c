@@ -1335,7 +1335,7 @@ DeeAttribute_Lookup(DeeTypeObject *__restrict tp_self,
  int error;
  DeeTypeObject *iter = tp_self;
  ASSERT_OBJECT_TYPE(tp_self,&DeeType_Type);
- ASSERT_OBJECT_TYPE(self,tp_self);
+ ASSERT_OBJECT_TYPE_A(self,tp_self);
  ASSERT(result);
  ASSERT(rules);
  ASSERT(rules->alr_name);
@@ -1392,7 +1392,7 @@ done:
  int error; struct membercache *cache;
  DeeTypeObject *iter = tp_self;
  ASSERT_OBJECT_TYPE(tp_self,&DeeType_Type);
- ASSERT_OBJECT_TYPE(self,tp_self);
+ ASSERT_OBJECT_TYPE_A(self,tp_self);
  ASSERT(result);
  ASSERT(rules);
  ASSERT(rules->alr_name);

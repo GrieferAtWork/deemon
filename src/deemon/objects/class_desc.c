@@ -1958,7 +1958,7 @@ INTERN DREF DeeObject *
  DREF DeeObject *result;
  ASSERT_OBJECT_TYPE(tp_self,&DeeType_Type);
  ASSERT(DeeType_IsClass(tp_self));
- ASSERT_OBJECT_TYPE(self,tp_self);
+ ASSERT_OBJECT_TYPE_A(self,tp_self);
  desc = DeeClass_DESC(tp_self);
  ASSERT(addr <= desc->cd_desc->cd_imemb_size);
  inst = DeeInstance_DESC(desc,self);
@@ -1979,7 +1979,7 @@ INTERN bool
  struct instance_desc *inst;
  ASSERT_OBJECT_TYPE(tp_self,&DeeType_Type);
  ASSERT(DeeType_IsClass(tp_self));
- ASSERT_OBJECT_TYPE(self,tp_self);
+ ASSERT_OBJECT_TYPE_A(self,tp_self);
  desc = DeeClass_DESC(tp_self);
  ASSERT(addr <= desc->cd_desc->cd_imemb_size);
  inst = DeeInstance_DESC(desc,self);
@@ -1998,7 +1998,7 @@ INTERN int
  DREF DeeObject *old_value;
  ASSERT_OBJECT_TYPE(tp_self,&DeeType_Type);
  ASSERT(DeeType_IsClass(tp_self));
- ASSERT_OBJECT_TYPE(self,tp_self);
+ ASSERT_OBJECT_TYPE_A(self,tp_self);
  desc = DeeClass_DESC(tp_self);
  ASSERT(addr <= desc->cd_desc->cd_imemb_size);
  inst = DeeInstance_DESC(desc,self);
@@ -2025,7 +2025,7 @@ INTERN void
  DREF DeeObject *old_value;
  ASSERT_OBJECT_TYPE(tp_self,&DeeType_Type);
  ASSERT(DeeType_IsClass(tp_self));
- ASSERT_OBJECT_TYPE(self,tp_self);
+ ASSERT_OBJECT_TYPE_A(self,tp_self);
  desc = DeeClass_DESC(tp_self);
  ASSERT(addr <= desc->cd_desc->cd_imemb_size);
  inst = DeeInstance_DESC(desc,self);

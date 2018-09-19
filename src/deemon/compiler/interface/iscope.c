@@ -147,21 +147,7 @@ scope_getprev(DeeCompilerScopeObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
- return_bool((ATOMIC_READ(self->ci_value->s_flags) & SCOPE_FCLASS) != 0);
-}
-PRIVATE int DCALL
-scope_set_isclassscope(DeeCompilerScopeObject *__restrict self,
-                       DeeObject *__restrict value) {
- int newval = DeeObject_Bool(value);
- if unlikely(newval < 0) return -1;
- COMPILER_BEGIN(self->ci_compiler);
- if (newval) {
-  self->ci_value->s_flags |= SCOPE_FCLASS;
- } else {
-  self->ci_value->s_flags &= ~SCOPE_FCLASS;
- }
- COMPILER_END();
- return 0;
+ return_bool(DeeScope_IsClassScope(self->ci_value));
 }
 
 
@@ -174,10 +160,9 @@ PRIVATE struct type_getset scope_getsets[] = {
           "->none\n"
           "Returns a the parent of @this scope, or :none if @this scope is the root-scope") },
     { "isclassscope",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_get_isclassscope, NULL,
-      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&scope_set_isclassscope,
+      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_get_isclassscope, NULL, NULL,
       DOC("->bool\n"
-          "Get or set if @this scope is a class-scope\n"
+          "Check if @this scope is a class-scope\n"
           "Class scopes are somewhat special, in that they prolong the full linkage of "
           "symbol lookup going beyond their range, up to the point where the scope is "
           "removed from the scope-stack\n"

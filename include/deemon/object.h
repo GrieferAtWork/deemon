@@ -250,6 +250,8 @@ struct object_ { OBJECT_HEAD };
 #define ASSERT_OBJECT_OPT(ob)                 (!(ob) || DeeObject_DoCheck(ob) || (DeeAssert_BadObjectOpt(__FILE__,__LINE__,(DeeObject *)(ob)),BREAKPOINT(),0))
 #define ASSERT_OBJECT_TYPE(ob,type)           ((DeeObject_Check(ob) && DeeObject_InstanceOf(ob,type)) || (DeeAssert_BadObjectType(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
 #define ASSERT_OBJECT_TYPE_OPT(ob,type)       (!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOf(ob,type)) || (DeeAssert_BadObjectTypeOpt(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
+#define ASSERT_OBJECT_TYPE_A(ob,type)         ((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob,type) || DeeType_IsGeneric(type))) || (DeeAssert_BadObjectType(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
+#define ASSERT_OBJECT_TYPE_A_OPT(ob,type)     (!(ob) || (DeeObject_DoCheck(ob) && (DeeObject_InstanceOf(ob,type) || DeeType_IsGeneric(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
 #define ASSERT_OBJECT_TYPE_EXACT(ob,type)     ((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob,type)) || (DeeAssert_BadObjectTypeExact(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
 #define ASSERT_OBJECT_TYPE_EXACT_OPT(ob,type) (!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOfExact(ob,type)) || (DeeAssert_BadObjectTypeExactOpt(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
 DFUNDEF void DCALL DeeAssert_BadObject(char const *file, int line, DeeObject *ob);
@@ -265,6 +267,8 @@ DFUNDEF void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, int line, D
 #define ASSERT_OBJECT_OPT(ob)                 (void)0
 #define ASSERT_OBJECT_TYPE(ob,type)           (void)0
 #define ASSERT_OBJECT_TYPE_OPT(ob,type)       (void)0
+#define ASSERT_OBJECT_TYPE_A(ob,type)         (void)0
+#define ASSERT_OBJECT_TYPE_A_OPT(ob,type)     (void)0
 #define ASSERT_OBJECT_TYPE_EXACT(ob,type)     (void)0
 #define ASSERT_OBJECT_TYPE_EXACT_OPT(ob,type) (void)0
 #endif

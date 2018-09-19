@@ -96,7 +96,7 @@ PRIVATE void DCALL
 relocate_attribute(struct class_attribute *__restrict old_attr,
                    struct class_attribute *__restrict new_attr) {
  struct symbol **biter,**bend,*iter;
- ASSERT(current_scope->s_flags & SCOPE_FCLASS);
+ ASSERT(DeeScope_IsClassScope(current_scope));
  bend = (biter = current_scope->s_map)+current_scope->s_mapa;
  for (; biter != bend; ++biter) {
   for (iter = *biter; iter; iter = iter->s_next) {
