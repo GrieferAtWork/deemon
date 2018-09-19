@@ -89,7 +89,8 @@ gcsetiterator_next(GCSetIterator *__restrict self) {
  size_t new_index;
  new_index = self->gsi_index;
  for (;;) {
-  if (new_index > self->gsi_set->gs_mask) { result = ITER_DONE; break; }
+  if (new_index > self->gsi_set->gs_mask)
+      return ITER_DONE;
   result = self->gsi_set->gs_elem[new_index++];
   if (result) break;
  }
@@ -100,7 +101,8 @@ gcsetiterator_next(GCSetIterator *__restrict self) {
   index = self->gsi_index;
   new_index = index;
   for (;;) {
-   if (new_index > self->gsi_set->gs_mask) { result = ITER_DONE; break; }
+   if (new_index > self->gsi_set->gs_mask)
+       return ITER_DONE;
    result = self->gsi_set->gs_elem[new_index++];
    if (result) break;
   }
@@ -501,7 +503,7 @@ visit_reachable_func(DeeObject *__restrict self,
   int error = GCSetMaker_Insert(data,self);
   if (error == 0) {
    Dee_Incref(self);
-   DeeObject_Visit(self,(dvisit_t)&visit_reachable_func,self);
+   DeeObject_Visit(self,(dvisit_t)&visit_reachable_func,data);
   }
  }
 }
