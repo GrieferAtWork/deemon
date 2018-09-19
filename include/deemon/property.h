@@ -62,6 +62,8 @@ struct property_object {
 };
 
 DDATDEF DeeTypeObject DeeProperty_Type;
+#define DeeProperty_Check(ob)      DeeObject_InstanceOf(ob,&DeeProperty_Type)
+#define DeeProperty_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeProperty_Type)
 
 DECL_END
 

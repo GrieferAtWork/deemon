@@ -269,7 +269,7 @@ struct static_module_struct {
     DeeModuleObject    m_module;
 };
 /* The module of builtin objects accessible by opening `deemon'. */
-INTDEF DeeModuleObject *DCALL get_deemon_module(void);
+INTDEF ATTR_RETNONNULL DeeModuleObject *DCALL get_deemon_module(void);
 
 #ifdef __INTELLISENSE__
 INTDEF DeeModuleObject empty_module;

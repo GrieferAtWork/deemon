@@ -23,9 +23,11 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/dex.h>
+#include <deemon/module.h>
 
 #ifndef CONFIG_NO_DEX
-#include <deemon/module.h>
+#include <deemon/file.h>
+#include <deemon/class.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 #include <deemon/error.h>
@@ -340,9 +342,7 @@ PRIVATE DREF DeeDexObject *dex_chain;
 INTERN bool DCALL DeeDex_Cleanup(void) {
  bool result = false;
  DREF DeeDexObject *dex;
-#ifndef CONFIG_NO_THREADS
  rwlock_read(&dex_lock);
-#endif
  /* NOTE: Since DEX modules are only actually removed
   *       at a later phase, we can still be sure that
   *       we can safely traverse the list and simply
@@ -352,46 +352,34 @@ INTERN bool DCALL DeeDex_Cleanup(void) {
   */
  for (dex = dex_chain; dex;
       dex = dex->d_next) {
-#ifndef CONFIG_NO_THREADS
   rwlock_endread(&dex_lock);
-#endif
 
   /* Invoke the clear-operator on the dex (If it implements it). */
   if (dex->d_dex->d_clear &&
     (*dex->d_dex->d_clear)(dex))
       result = true;
 
-#ifndef CONFIG_NO_THREADS
   rwlock_read(&dex_lock);
-#endif
  }
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&dex_lock);
-#endif
  return result;
 }
 
 INTERN void DCALL DeeDex_Finalize(void) {
  DREF DeeDexObject *dex;
 again:
-#ifndef CONFIG_NO_THREADS
  rwlock_write(&dex_lock);
-#endif
  while ((dex = dex_chain) != NULL) {
   dex_chain    = dex->d_next;
   dex->d_pself = NULL;
   dex->d_next  = NULL;
   if (!Dee_DecrefIfNotOne((DeeObject *)dex)) {
-#ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&dex_lock);
-#endif
    Dee_Decref((DeeObject *)dex);
    goto again;
   }
  }
-#ifndef CONFIG_NO_THREADS
  rwlock_endwrite(&dex_lock);
-#endif
 }
 
 
@@ -402,17 +390,13 @@ dex_initialize(DeeDexObject *__restrict self) {
  func = self->d_dex->d_init;
  if (func && (*func)(self)) return -1;
  /* Register the dex in the global chain. */
-#ifndef CONFIG_NO_THREADS
  rwlock_write(&dex_lock);
-#endif
  if ((self->d_next = dex_chain) != NULL)
       dex_chain->d_pself = &self->d_next;
  self->d_pself = &dex_chain;
  dex_chain = self;
  Dee_Incref((DeeObject *)self); /* The reference stored in the dex chain. */
-#ifndef CONFIG_NO_THREADS
  rwlock_endwrite(&dex_lock);
-#endif
  return 0;
 }
 
@@ -510,7 +494,82 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 };
 
 
+#ifdef _MSC_VER
+extern IMAGE_DOS_HEADER __ImageBase;
+#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
+#else
+#define HINST_THISCOMPONENT   GetModuleHandleW(NULL)
+#endif
+
+PUBLIC DREF DeeObject *DCALL
+DeeType_GetModule(DeeTypeObject *__restrict self) {
+ /* - For user-defined classes: search though all the operator/method bindings
+  *   described for the class member table, testing them for functions and
+  *   returning the module that they are bound to.
+  * - For types loaded by dex modules, do some platform-specific trickery to
+  *   determine the address space bounds within which the module was loaded,
+  *   then simply compare the type pointer against those bounds.
+  * - All other types are defined as part of the builtin `deemon' module. */
+again:
+ if (self->tp_class)
+     return DeeClass_GetModule(self);
+ if (!(self->tp_flags & TP_FHEAP)) {
+#ifdef USE_LOADLIBRARY
+  HMODULE hTypeModule;
+  DBG_ALIGNMENT_DISABLE();
+  if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                        (LPCWSTR)self,&hTypeModule)) {
+   DeeDexObject *iter;
+   DBG_ALIGNMENT_ENABLE();
+   rwlock_read(&dex_lock);
+   for (iter = dex_chain; iter; iter = iter->d_next) {
+    if ((HMODULE)iter->d_handle != hTypeModule)
+         continue;
+    Dee_Incref((DeeModuleObject *)iter);
+    rwlock_endread(&dex_lock);
+    return (DREF DeeObject *)iter;
+   }
+   rwlock_endread(&dex_lock);
+   DBG_ALIGNMENT_DISABLE();
+   if (hTypeModule == HINST_THISCOMPONENT) {
+    /* Type is declared as part of the builtin `deemon' module. */
+    DBG_ALIGNMENT_ENABLE();
+    Dee_Incref(&deemon_module);
+    return (DREF DeeObject *)get_deemon_module();
+   }
+   DBG_ALIGNMENT_ENABLE();
+  }
+#else
+  /* TODO: Implement for ELF */
+#endif
+ }
+
+ /* Special case for custom type-types (such
+  * as those provided by the `ctypes' module)
+  *  -> In this case, we simply return the module associated with the
+  *     typetype, thus allowing custom types to be resolved as well. */
+ if (self != Dee_TYPE(self)) {
+  self = Dee_TYPE(self);
+  if (self != &DeeType_Type &&
+      self != &DeeFileType_Type)
+      goto again;
+ }
+ return NULL;
+}
+
+
 DECL_END
-#endif /* !CONFIG_NO_DEX */
+#else /* !CONFIG_NO_DEX */
+DECL_BEGIN
+
+PUBLIC void *DCALL
+DeeModule_GetNativeSymbol(DeeObject *__restrict UNUSED(self),
+                          char const *__restrict UNUSED(name)) {
+ return NULL;
+}
+
+DECL_END
+#endif /* CONFIG_NO_DEX */
 
 #endif /* !GUARD_DEEMON_EXECUTE_DEX_C */

@@ -31,8 +31,12 @@ struct instance_method {
     DREF DeeObject *im_func; /* [1..1] The function to-be called. */
     DREF DeeObject *im_this; /* [1..1] The this argument. */
 };
+#define DeeInstanceMethod_FUNC(x) ((DeeInstanceMethodObject *)REQUIRES_OBJECT(x))->im_func
+#define DeeInstanceMethod_THIS(x) ((DeeInstanceMethodObject *)REQUIRES_OBJECT(x))->im_this
 
 DDATDEF DeeTypeObject DeeInstanceMethod_Type;
+#define DeeInstanceMethod_Check(ob)      DeeObject_InstanceOf(ob,&DeeInstanceMethod_Type)
+#define DeeInstanceMethod_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeInstanceMethod_Type)
 
 /* Create a new instance method.
  * This is a simple wrapper object that simply invokes a thiscall on

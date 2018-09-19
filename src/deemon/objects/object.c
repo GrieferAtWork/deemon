@@ -2793,20 +2793,35 @@ type_get_classdesc(DeeTypeObject *__restrict self) {
  return_reference_((DeeObject *)self->tp_class->cd_desc);
 }
 
+#ifdef CONFIG_NO_DEX
 PUBLIC DREF DeeObject *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self) {
- /* TODO: __module__
-  *  - For user-defined classes: search though all the operator/method bindings
-  *    described for the class member table, testing them for functions and
-  *    returning the module that they are bound to.
-  *  - For types loaded by dex modules, do some platform-specific trickery to
-  *    determine the address space bounds within which the module was loaded,
-  *    then simply compare the type pointer against those bounds.
-  *  - All other types are defined as part of the builtin `deemon' module.
-  */
- (void)self;
+ /* - For user-defined classes: search though all the operator/method bindings
+  *   described for the class member table, testing them for functions and
+  *   returning the module that they are bound to.
+  * - All other types are defined as part of the builtin `deemon' module. */
+again:
+ if (self->tp_class)
+     return DeeClass_GetModule(self);
+ if (!(self->tp_flags & TP_FHEAP)) {
+  /* Without C-extensions, all non-heap types
+   * are provided by the deemon module. */
+  Dee_Incref(&deemon_module);
+  return (DREF DeeObject *)get_deemon_module();
+ }
+
+ /* Special case for custom type-types
+  *  -> In this case, we simply return the module associated with the
+  *     typetype, thus allowing custom types to be resolved as well. */
+ if (self != Dee_TYPE(self)) {
+  self = Dee_TYPE(self);
+  if (self != &DeeType_Type &&
+      self != &DeeFileType_Type)
+      goto again;
+ }
  return NULL;
 }
+#endif /* CONFIG_NO_DEX */
 
 PUBLIC DREF DeeObject *DCALL
 type_get_module(DeeTypeObject *__restrict self) {
@@ -2826,7 +2841,7 @@ PRIVATE struct type_getset type_getsets[] = {
       DOC("->:rt.classdescriptor\n"
           "@throw AttributeError @this type is a user-defined class (s.a. #isclass)\n"
           "Returns the internal class-descriptor descriptor for a user-defined class") },
-    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_module, NULL, NULL,
       DOC("->module\n"
           "->none\n"
           "Return the module used to define @this type, or :none if the module cannot "
