@@ -4303,8 +4303,9 @@ type_member_findattr(struct membercache *__restrict cache, DeeTypeObject *__rest
   result->a_doc      = chain->m_doc;
   result->a_perm     = flags;
   result->a_decl     = (DREF DeeObject *)decl;
-  result->a_attrtype = NULL;
+  result->a_attrtype = type_member_typefor(chain);
   Dee_Incref(decl);
+  Dee_XIncref(result->a_attrtype);
   return 0;
  }
  return 1;
@@ -4328,8 +4329,9 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *__restrict tp_invoker,
   result->a_doc      = chain->m_doc;
   result->a_perm     = flags;
   result->a_decl     = (DREF DeeObject *)tp_self;
-  result->a_attrtype = NULL;
+  result->a_attrtype = type_member_typefor(chain);
   Dee_Incref(tp_self);
+  Dee_XIncref(result->a_attrtype);
   return 0;
  }
  return 1;

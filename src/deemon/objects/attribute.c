@@ -97,7 +97,7 @@ PRIVATE struct type_member attr_members[] = {
     TYPE_MEMBER_FIELD_DOC("name",STRUCT_OBJECT,offsetof(Attr,a_name),
                           "->string\n"
                           "The name of this attribute"),
-    TYPE_MEMBER_FIELD_DOC("attrtype",STRUCT_CONST|STRUCT_OBJECT_OPT,offsetof(Attr,a_info.a_attrtype),
+    TYPE_MEMBER_FIELD_DOC("attrtype",STRUCT_OBJECT_OPT,offsetof(Attr,a_info.a_attrtype),
                           "->type\n"
                           "The type of this attribute, or :none if not known"),
     TYPE_MEMBER_END

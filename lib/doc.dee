@@ -1365,6 +1365,8 @@ local function fix_operator_prototype(line,type_name,force = false) {
 		}));
 }
 
+@"(string name,bool ismember=false)->(none,string)"
+@"(string name,bool ismember=false)->(string,string)"
 local function get_default_prototype(name,ismember = false) {
 	try {
 		local defls = import("__docdefaults");
@@ -1665,7 +1667,7 @@ unknown_attribute:
 		}
 		/* Types implement their own documentation strings. */
 		if (object is bound && object is deemon.type_) {
-			m_raw_doc = object.__doc__;
+			m_raw_doc = deemon.type_.__doc__(object);
 			m_raw_doc_is_type = true;
 			if (m_raw_doc !is string)
 				m_raw_doc = "";
@@ -1908,16 +1910,24 @@ unknown_attribute:
 		}
 		if (text !is bound) {
 			local is_a_function = isfunction;
-			local args = get_default_prototype(name,is_a_function);
-			text = is_a_function
-				? "{}({})->{}".format({ name, args[0], args[1] })
-				: "{}->{}".format({ name, args[1] })
-				;
+			if (!is_a_function && attr is bound) {
+				local attr_type = attr.attrtype;
+				if (attr_type !is none)
+					text = "{}->{}".format({ name, attr_type });
+			}
+			if (text !is bound) {
+				local args = get_default_prototype(name,!is_a_function);
+				text = is_a_function
+					? "{}({})->{}".format({ name, args[0], args[1] })
+					: "{}->{}".format({ name, args[1] })
+					;
+			}
 		}
 		return Prototype(text);
 	}
 
 
+	@"()"
 	private function split_operator_docs() {
 		if (m_operator_doc !is none) return;
 		if (m_raw_doc is none) {

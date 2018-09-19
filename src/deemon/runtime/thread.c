@@ -3352,7 +3352,7 @@ PRIVATE struct type_getset thread_getsets[] = {
 
 PRIVATE struct type_member thread_members[] = {
 #ifndef CONFIG_NO_THREADS
-    TYPE_MEMBER_FIELD_DOC("name",STRUCT_CONST|STRUCT_OBJECT_OPT,offsetof(DeeThreadObject,t_threadname),
+    TYPE_MEMBER_FIELD_DOC("name",STRUCT_OBJECT_OPT,offsetof(DeeThreadObject,t_threadname),
                           "->string\n"
                           "The name of the thread, or :none when none was assigned"),
 #else

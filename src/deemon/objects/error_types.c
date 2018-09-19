@@ -276,10 +276,10 @@ error_repr(DeeErrorObject *__restrict self) {
                        self->e_message);
 }
 PRIVATE struct type_member error_members[] = {
-    TYPE_MEMBER_FIELD_DOC("inner",STRUCT_CONST|STRUCT_OBJECT_OPT,offsetof(DeeErrorObject,e_inner),
+    TYPE_MEMBER_FIELD_DOC("inner",STRUCT_OBJECT_OPT,offsetof(DeeErrorObject,e_inner),
                           "->object\n"
                           "An optional inner error object, or :none when not set"),
-    TYPE_MEMBER_FIELD_DOC("message",STRUCT_CONST|STRUCT_OBJECT_OPT,offsetof(DeeErrorObject,e_message),
+    TYPE_MEMBER_FIELD_DOC("message",STRUCT_OBJECT_OPT,offsetof(DeeErrorObject,e_message),
                           "->string\n"
                           "The error message associated with this Error object, or :none when not set"),
     TYPE_MEMBER_END

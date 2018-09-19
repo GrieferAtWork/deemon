@@ -178,7 +178,7 @@ PRIVATE struct type_getset locatoriter_getsets[] = {
 PRIVATE struct type_member locatoriter_members[] = {
     TYPE_MEMBER_FIELD("__iterator__",STRUCT_OBJECT,offsetof(LocatorIterator,li_iter)),
     TYPE_MEMBER_FIELD("__elem__",STRUCT_OBJECT,offsetof(LocatorIterator,li_elem)),
-    TYPE_MEMBER_FIELD("__pred__",STRUCT_CONST|STRUCT_OBJECT_OPT,offsetof(LocatorIterator,li_pred)),
+    TYPE_MEMBER_FIELD("__pred__",STRUCT_OBJECT_OPT,offsetof(LocatorIterator,li_pred)),
     TYPE_MEMBER_END
 };
 
@@ -289,7 +289,7 @@ locator_iter(Locator *__restrict self) {
 PRIVATE struct type_member locator_members[] = {
    TYPE_MEMBER_FIELD("__seq__",STRUCT_OBJECT,offsetof(Locator,l_seq)),
    TYPE_MEMBER_FIELD("__elem__",STRUCT_OBJECT,offsetof(Locator,l_elem)),
-   TYPE_MEMBER_FIELD("__pred__",STRUCT_CONST|STRUCT_OBJECT_OPT,offsetof(Locator,l_pred)),
+   TYPE_MEMBER_FIELD("__pred__",STRUCT_OBJECT_OPT,offsetof(Locator,l_pred)),
    TYPE_MEMBER_END
 };
 
