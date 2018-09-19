@@ -24,6 +24,7 @@
 #include <deemon/float.h>
 #include <deemon/numeric.h>
 #include <deemon/bool.h>
+#include <deemon/int.h>
 #include <deemon/error.h>
 #include <deemon/string.h>
 #include <deemon/arg.h>
@@ -32,6 +33,7 @@
 #include "../runtime/strings.h"
 
 #include <stdlib.h> /* `strtod' */
+#include <float.h>
 
 DECL_BEGIN
 
@@ -237,6 +239,51 @@ PRIVATE struct type_cmp float_cmp = {
 };
 
 
+
+DEFINE_FLOAT(float_min,DBL_MIN);
+DEFINE_INT15(float_min_exp,DBL_MIN_EXP);
+DEFINE_INT15(float_min_10_exp,DBL_MIN_10_EXP);
+DEFINE_FLOAT(float_max,DBL_MAX);
+DEFINE_INT15(float_max_exp,DBL_MAX_EXP);
+DEFINE_INT15(float_max_10_exp,DBL_MAX_10_EXP);
+DEFINE_INT15(float_dig,DBL_DIG);
+DEFINE_INT15(float_mant_dig,DBL_MANT_DIG);
+DEFINE_FLOAT(float_epsilon,DBL_EPSILON);
+#ifdef _DBL_RADIX
+DEFINE_INT15(float_radix,_DBL_RADIX);
+#elif defined(DBL_RADIX)
+DEFINE_INT15(float_radix,DBL_RADIX);
+#elif defined(__DBL_RADIX__)
+DEFINE_INT15(float_radix,__DBL_RADIX__);
+#else
+DEFINE_INT15(float_radix,FLT_RADIX);
+#endif
+#ifdef _DBL_ROUNDS
+DEFINE_INT15(float_rounds,_DBL_ROUNDS);
+#elif defined(DBL_ROUNDS)
+DEFINE_INT15(float_rounds,DBL_ROUNDS);
+#elif defined(__DBL_ROUNDS__)
+DEFINE_INT15(float_rounds,__DBL_ROUNDS__);
+#else
+DEFINE_INT15(float_rounds,FLT_ROUNDS);
+#endif
+
+PRIVATE struct type_member float_class_members[] = {
+    TYPE_MEMBER_CONST_DOC("min",&float_min,"The lowest possible floating point value"),
+    TYPE_MEMBER_CONST_DOC("max",&float_max,"The greatest possible floating point value"),
+    TYPE_MEMBER_CONST_DOC("min_exp",&float_min_exp,"Lowest binary exponent ($e such that ${radix ** (e - 1)} is a normalized :float)"),
+    TYPE_MEMBER_CONST_DOC("min_10_exp",&float_min_10_exp,"Lowest decimal exponent ($e such that ${10 ** e} is a normalized :float)"),
+    TYPE_MEMBER_CONST_DOC("max_exp",&float_max_exp,"Greatest binary exponent ($e such that ${radix ** (e - 1)} is representible as a :float)"),
+    TYPE_MEMBER_CONST_DOC("max_10_exp",&float_max_10_exp,"Greatest decimal exponent ($e such that ${10 ** e} is representible as a :float)"),
+    TYPE_MEMBER_CONST_DOC("dig",&float_dig,"The number of decimal precision digits"),
+    TYPE_MEMBER_CONST_DOC("mant_dig",&float_mant_dig,"the number of bits in mantissa"),
+    TYPE_MEMBER_CONST_DOC("epsilon",&float_epsilon,"Difference between ${1.0} and the next floating point value, such that ${1.0 + float.epsilon != 1.0}"),
+    TYPE_MEMBER_CONST_DOC("radix",&float_radix,"Exponent radix"),
+    TYPE_MEMBER_CONST_DOC("rounds",&float_rounds,"Rounding mode"),
+    TYPE_MEMBER_END
+};
+
+
 PUBLIC DeeTypeObject DeeFloat_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_float),
@@ -281,7 +328,7 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */NULL
+    /* .tp_class_members = */float_class_members
 };
 
 DECL_END
