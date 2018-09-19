@@ -453,8 +453,8 @@ class TextSplitter {
 		switch (cmd) {
 
 		{
-		case "link":
 			local target;
+		case "link":
 			target,none,text = text.partition(" ")...;
 			decode_link(fp,target,text.lstrip(),preferred_line_length,closure);
 		}	break;
@@ -620,10 +620,10 @@ local function count_leading_whitespace(line) {
 	return result;
 }
 
-@"A wrapper and analyzer for the human-readable portion of documentation strings"
-@"The main use of this is to enumerate the different sections found in a"
-@"documentation text, then split those further into individual documentation"
-@"links and cross-references."
+@"A wrapper and analyzer for the human-readable portion of documentation strings "
+@"The main use of this is to enumerate the different sections found in a "
+ "documentation text, then split those further into individual documentation "
+ "links and cross-references."
 class Text {
 
 	@"->string"
@@ -643,8 +643,10 @@ class Text {
 	@"->{(string,none,string)...}"
 	@"Split the documentation text into its component parts (name,kind,content):"
 	@"%{table Part Name|Kind Value|Content"
-	@"${\"TEXT\"}|Always $none|The raw human-readable text, still containing special characters such as ${\"@\"} or ${\"$\"}, among others"
-	@"${\"SOURCE\"}|Always $none|A section of in-line source code (writted by prefixing a group of lines with ${\">\"})"
+	@"${\"TEXT\"}|Always $none|The raw human-readable text, still containing special "
+	                          "characters such as ${\"@\"} or ${\"$\"}, among others"
+	@"${\"SOURCE\"}|Always $none|A section of in-line source code (writted by "
+	                            "prefixing a group of lines with ${\">\"})"
 	@"${\"TAG\"}|The name of the tag in lower-case|The text associated with the tag}"
 	operator for() {
 		local lines = [splitlines_escapeaware(text.expandtabs())...];
@@ -807,12 +809,12 @@ class Text {
 
 
 @"(string text)->{(string,string,string)...}"
-@"Split a given parameter string into the individual arguments, and those"
-@"arguments into a tuple (name,type,default), where any missing option is"
-@"denoted by a none. For example, ${\"int x = 7\"} produces ${(\"int\",\"x\",\"7\")},"
-@"${\"int x\"} produces ${(\"int\",\"x\",none)}, ${\"x\"} produces ${(none,\"x\",none)},"
-@"${\"args...\"} produces ${(\"object...\",\"args\",none)},"
-@"and ${\"string x...\"} or ${\"string... x\"} produce ${(\"string...\",\"x\",none)}"
+@"Split a given parameter string into the individual arguments, and those "
+ "arguments into a tuple (name,type,default), where any missing option is "
+ "denoted by a none. For example, ${\"int x = 7\"} produces ${(\"int\",\"x\",\"7\")}, "
+ "${\"int x\"} produces ${(\"int\",\"x\",none)}, ${\"x\"} produces ${(none,\"x\",none)}, "
+ "${\"args...\"} produces ${(\"object...\",\"args\",none)}, "
+ "and ${\"string x...\"} or ${\"string... x\"} produce ${(\"string...\",\"x\",none)}"
 local function split_paramstring(text) {
 	local part_start = 0;
 	local part_end = 0;
@@ -865,8 +867,8 @@ local function count_paramstring(text) {
 @"A wrapper class for processing documentation prototypes for functions, or members"
 class Prototype {
 	@"->string"
-	@"The raw text of the prototype, uniformly formatted to include an"
-	@"argument list, as well as a return type, and a prefixed name."
+	@"The raw text of the prototype, uniformly formatted to include an "
+	 "argument list, as well as a return type, and a prefixed name."
 	public final member text;
 
 	@"(string text)"
@@ -900,9 +902,9 @@ class Prototype {
 
 	@"->string"
 	@"Returns the text for the return type of @this Prototype"
-	@"Note that this string may use abstract sequence syntax, such"
-	@"as ${\"{(string,int)...}\"}, which would referr to a sequence "
-	"of string+int tuples"
+	@"Note that this string may use abstract sequence syntax, such "
+	 "as ${\"{(string,int)...}\"}, which would referr to a sequence "
+	 "of string+int tuples"
 	returntype = {
 		get() {
 			if (m_returntype !is bound) {
@@ -916,9 +918,9 @@ class Prototype {
 
 	@"->string"
 	@"->none"
-	@"Returns the parameter string of a function-like prototype"
-	@"(excluding surrounding parenthesis), or return :none if"
-	@"the prototype belongs to a member-, or property-like node."
+	@"Returns the parameter string of a function-like prototype "
+	 "(excluding surrounding parenthesis), or return :none if "
+	 "the prototype belongs to a member-, or property-like node."
 	paramstring = {
 		get() {
 			if (m_paramstring !is bound) {
@@ -942,12 +944,12 @@ class Prototype {
 
 	@"->none"
 	@"->{(string,string,string)...}"
-	@"Return the individual parameters of the prototype as tuples"
-	@"(type,name,default), where any missing option is denoted"
-	@"by a none. For example, ${\"int x = 7\"} produces ${(\"int\",\"x\",\"7\")},"
-	@"${\"int x\"} produces ${(\"int\",\"x\",none)}, ${\"x\"} produces ${(none,\"x\",none)},"
-	@"${\"args...\"} produces ${(\"object...\",\"args\",none)}, and"
-	@"${\"string x...\"} or ${\"string... x\"} produce ${(\"string...\",\"x\",none)}"
+	@"Return the individual parameters of the prototype as tuples "
+	 "(type,name,default), where any missing option is denoted "
+	 "by a none. For example, ${\"int x = 7\"} produces ${(\"int\",\"x\",\"7\")}, "
+	 "${\"int x\"} produces ${(\"int\",\"x\",none)}, ${\"x\"} produces ${(none,\"x\",none)}, "
+	 "${\"args...\"} produces ${(\"object...\",\"args\",none)}, and "
+	 "${\"string x...\"} or ${\"string... x\"} produce ${(\"string...\",\"x\",none)}"
 	@"In the event that @this Prototype isn't a function (s.a. #isfunction), return :none"
 	parameters = {
 		get() {
@@ -1258,7 +1260,7 @@ local pretty_operator_names = {
 @"(string name)->string"
 @"(string name)->none"
 @"Given an operator name such as ${\"getitem\"}, "
-@"return a pretty varient such as ${\"[]\"}"
+ "return a pretty varient such as ${\"[]\"}"
 local function operator_getprettyname(name) {
 	return pretty_operator_names.get(name,name);
 }
@@ -1277,8 +1279,8 @@ local function find_doctext_sections(text,i = 0) {
 
 @"(string text)->string"
 @"Split the given documentation text @text into sections"
-@"A documentation text section exists where 2 consecutive"
-@"linefeeds appear, without the first linefeed being escaped"
+@"A documentation text section exists where 2 consecutive "
+ "linefeeds appear, without the first linefeed being escaped"
 local function split_doctext_sections(text) {
 	local start = 0;
 	local end;
@@ -1483,17 +1485,17 @@ local function generate_pseudo_prototype(func,name) {
 global lookup_object;
 global lookup_object_path;
 
-@"The main interface for accessing the documentation API provided by deemon"
-@"Documentation text is addressed using unambiguos paths structures as follows:"
+@"The main interface for accessing the documentation API provided by deemon "
+ "Documentation text is addressed using unambiguos paths structures as follows:"
 @"The string is split into segments seperated by ${\"/\"}"
 @"Dangling leading and trailing slashes are ignored."
-@"The first segment is a module name that describes which module to search"
-@"for the documenation strings. If no slash follows, the Doc node will refer"
-@"to that module as a whole"
-@"Otherwise, the remaining segment are walked left-to-right and used to dereference"
-@"attribute names of their respective object."
-@"These attributes can optionally be prefixed with one of the following"
-@"modifiers in order to address different attributes namespaces:"
+@"The first segment is a module name that describes which module to search "
+ "for the documenation strings. If no slash follows, the Doc node will refer "
+ "to that module as a whole"
+@"Otherwise, the remaining segment are walked left-to-right and used to dereference "
+ "attribute names of their respective object."
+@"These attributes can optionally be prefixed with one of the following "
+ "modifiers in order to address different attributes namespaces:"
 @"%{table Prefix|Description"
 @"$\"\"|The attribute is either a class-attribute, or an instance-attribute (may lead "
        "to ambiguity when a name is re-used, such as by :dict.c:keys and :dict.i:keys)"
@@ -1501,12 +1503,12 @@ global lookup_object_path;
 @"$\"i:\"|The attribute is a instance-attribute (e.g. ${string.find})"
 @"$\"op:\"|The attribute is a real operator name (e.g. ${\"eq\"} instead of ${\"==\"})}"
 @"Furthermore, child-nodes (attributes) can be reached using #child, and all existing "
-@"child nodes can be enumerated by using the doc-node as a sequence-like object."
-@"Some restrictions apply to Doc-nodes, most notably the restriction that the object"
-@"being documented must somehow by addressible as a module export, meaning that private (local)"
-@"functions or classes usually cannot be addressed, and that builtin objects used by the"
-@"deemon core, which aren't actually exported from the builtin deemon module cannot be"
-@"addressed without the use of the :rt module."
+ "child nodes can be enumerated by using the doc-node as a sequence-like object."
+@"Some restrictions apply to Doc-nodes, most notably the restriction that the object "
+ "being documented must somehow by addressible as a module export, meaning that private (local) "
+ "functions or classes usually cannot be addressed, and that builtin objects used by the "
+ "deemon core, which aren't actually exported from the builtin deemon module cannot be "
+ "addressed without the use of the :rt module."
 global class Doc: sequence {
 
 	private member m_fixed_doc = none;
@@ -1771,11 +1773,11 @@ unknown_attribute:
 
 	@"->bool"
 	@"Evaluates to :true if the object is an operator"
-	isoperator = { get() -> attr !is bound && object !is bound; }
+	isoperator = { get() -> attr !is bound && object !is bound && parent.istype; }
 
 	@"->bool"
 	@"Evaluates to :true if the object is function-like"
-	isfunction = { get() -> isoperator || (attr !is none && (attr.cancall || callable.baseof(attr.attrtype))); }
+	isfunction = { get() -> isoperator || (attr !is none && (attr.cancall || callable.baseof(attr.attrtype))) || (object is bound && object is callable); }
 
 	@"->bool"
 	@"Evaluates to :true if the object is private to its class"
@@ -1934,8 +1936,8 @@ unknown_attribute:
 
 	@"->none"
 	@"->type"
-	@"Returns the type of the base class of @this node, or :none if"
-	@"@this node isn't a type, or if that type doesn't have a base."
+	@"Returns the type of the base class of @this node, or :none if "
+	 "@this node isn't a type, or if that type doesn't have a base."
 	objectbase = {
 		get() {
 			if (object !is bound ||
@@ -2061,20 +2063,20 @@ do_append_prototype:
 
 	@"->{({Prototype...},Text)...}"
 	@"->{(none,Text)...}"
-	@"Return the documentation text associated with this doc node"
-	@"For type nodes, documentation for operators is filtered and"
-	@"must be accessed through individual child nodes"
-	@"The $text portion of the prototype is the human-readable description, combined"
-	@"with formating tags, as well as prototype tags (such as )"
+	@"Return the documentation text associated with this doc node "
+	 "For type nodes, documentation for operators is filtered and "
+	 "must be accessed through individual child nodes"
+	@"The $text portion of the prototype is the human-readable description, combined "
+	 "with formating tags, as well as prototype tags (such as )"
 	@">for (local prototypes, text: this.doc) {"
-	@">    for (local p: prototypes)"
-	@">        print p;"
-	@">    print repr text;"
-	@">    print;"
+	@"> for (local p: prototypes)"
+	@">  print p;"
+	@"> print repr text;"
+	@"> print;"
 	@">}"
-	@"For type-like Doc nodes, the return value is always a single-element sequence"
-	@"with :none set as prototypes, and the type description string as text, except"
-	@"for when the type has no doc, in which case an empty sequence is returned directly."
+	@"For type-like Doc nodes, the return value is always a single-element sequence "
+	 "with :none set as prototypes, and the type description string as text, except "
+	 "for when the type has no doc, in which case an empty sequence is returned directly."
 	@"The exact layout is represented by the second prototype overload above."
 	doc = {
 		get() {
@@ -2189,8 +2191,8 @@ do_append_prototype:
 	}
 
 	@"->{Doc...}"
-	@"Enumerate nodes for all the operators implemented"
-	@"by @this node, should @this node referr to a type"
+	@"Enumerate nodes for all the operators implemented "
+	 "by @this node, should @this node referr to a type"
 	enumerate_operators() {
 		if (!istype)
 			return;
@@ -2237,8 +2239,8 @@ do_append_prototype:
 		}
 	}
 
-	@"Convenience interface for printing documentation information"
-	@"in a basic, but neat (and human-readable) format"
+	@"Convenience interface for printing documentation information "
+	 "in a basic, but neat (and human-readable) format"
 	operator str() {
 		file.writer fp;
 		print fp: "-"*80;
@@ -2269,9 +2271,9 @@ do_append_prototype:
 @"(object ob,module curr_module=none)->Doc"
 @"(object ob,module curr_module=none)->none"
 @"Given an object, try to figure out where that object "
-@"originates from, and return a doc node for that object."
-@"If the given @ob cannot be traced (likely because it is a "
-@"runtime-instance), :none will be returned instead."
+ "originates from, and return a doc node for that object."
+@"If the given @ob cannot be traced (likely because it is "
+ "a runtime-instance), :none will be returned instead."
 global function lookup_object(ob,curr_module = none) {
 	local path = lookup_object_path(ob,curr_module);
 	if (path is none)
