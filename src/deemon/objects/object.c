@@ -2783,7 +2783,7 @@ type_isbuffer(DeeTypeObject *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-type_getclassdesc(DeeTypeObject *__restrict self) {
+type_get_classdesc(DeeTypeObject *__restrict self) {
  if (!self->tp_class) {
   DeeError_Throwf(&DeeError_AttributeError,
                   "Can't access `__class__' of non-user-defined type `%s'",
@@ -2793,14 +2793,45 @@ type_getclassdesc(DeeTypeObject *__restrict self) {
  return_reference_((DeeObject *)self->tp_class->cd_desc);
 }
 
+PUBLIC DREF DeeObject *DCALL
+DeeType_GetModule(DeeTypeObject *__restrict self) {
+ /* TODO: __module__
+  *  - For user-defined classes: search though all the operator/method bindings
+  *    described for the class member table, testing them for functions and
+  *    returning the module that they are bound to.
+  *  - For types loaded by dex modules, do some platform-specific trickery to
+  *    determine the address space bounds within which the module was loaded,
+  *    then simply compare the type pointer against those bounds.
+  *  - All other types are defined as part of the builtin `deemon' module.
+  */
+ (void)self;
+ return NULL;
+}
+
+PUBLIC DREF DeeObject *DCALL
+type_get_module(DeeTypeObject *__restrict self) {
+ DREF DeeObject *result;
+ result = DeeType_GetModule(self);
+ if unlikely(!result) return_none;
+ return result;
+}
+
+
+
 PRIVATE struct type_getset type_getsets[] = {
     TYPE_FEATURE_GETSETS
     { "isbuffer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_isbuffer, NULL, NULL,
       DOC("->bool\nReturns :true if @this type implements the buffer interface") },
-    { "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_getclassdesc, NULL, NULL,
+    { "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
       DOC("->:rt.classdescriptor\n"
           "@throw AttributeError @this type is a user-defined class (s.a. #isclass)\n"
           "Returns the internal class-descriptor descriptor for a user-defined class") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
+      DOC("->module\n"
+          "->none\n"
+          "Return the module used to define @this type, or :none if the module cannot "
+          "be determined, which may be the case if the type doesn't have any defining "
+          "features such as operators, or class/instance member functions") },
     { NULL }
 };
 

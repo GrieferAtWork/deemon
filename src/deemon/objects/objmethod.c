@@ -51,7 +51,7 @@ DeeObjMethod_New(dobjmethod_t func, DeeObject *__restrict self) {
  if (result) {
   DeeObject_Init(result,&DeeObjMethod_Type);
   result->om_func = func;
-  result->om_self = self;
+  result->om_this = self;
   Dee_Incref(self);
  }
  return (DREF DeeObject *)result;
@@ -65,7 +65,7 @@ DeeKwObjMethod_New(dkwobjmethod_t func, DeeObject *__restrict self) {
  if (result) {
   DeeObject_Init(result,&DeeKwObjMethod_Type);
   result->om_func = func;
-  result->om_self = self;
+  result->om_this = self;
   Dee_Incref(self);
  }
  return (DREF DeeObject *)result;
@@ -155,7 +155,7 @@ DeeObjMethod_GetDoc(DeeObject *__restrict self) {
  } while ((tp_self = DeeType_Base(tp_self)) != NULL);
  return NULL;
 }
-PUBLIC DeeTypeObject *DCALL
+PUBLIC ATTR_RETNONNULL DeeTypeObject *DCALL
 DeeObjMethod_GetType(DeeObject *__restrict self) {
  dobjmethod_t func; DeeTypeObject *tp_self;
  ASSERT_OBJECT(self);
@@ -175,7 +175,7 @@ DeeObjMethod_GetType(DeeObject *__restrict self) {
        return tp_self;
   }
  } while ((tp_self = DeeType_Base(tp_self)) != NULL);
- return NULL;
+ return Dee_TYPE(DeeObjMethod_SELF(self));
 }
 
 PUBLIC char const *DCALL
@@ -211,23 +211,23 @@ DeeClsMethod_GetDoc(DeeObject *__restrict self) {
 
 PRIVATE void DCALL
 objmethod_fini(DeeObjMethodObject *__restrict self) {
- Dee_Decref(self->om_self);
+ Dee_Decref(self->om_this);
 }
 
 PRIVATE void DCALL
 objmethod_visit(DeeObjMethodObject *__restrict self,
                 dvisit_t proc, void *arg) {
- Dee_Visit(((DeeObjMethodObject *)self)->om_self);
+ Dee_Visit(((DeeObjMethodObject *)self)->om_this);
 }
 
 PRIVATE DREF DeeObject *DCALL
 objmethod_call(DeeObjMethodObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
- return DeeObjMethod_CallFunc(self->om_func,self->om_self,argc,argv);
+ return DeeObjMethod_CallFunc(self->om_func,self->om_this,argc,argv);
 }
 PRIVATE dhash_t DCALL
 objmethod_hash(DeeObjMethodObject *__restrict self) {
- return DeeObject_Hash(self->om_self) ^
+ return DeeObject_Hash(self->om_this) ^
         Dee_HashPointer(self->om_func);
 }
 PRIVATE DREF DeeObject *DCALL
@@ -236,7 +236,7 @@ objmethod_eq(DeeObjMethodObject *__restrict self,
  if (DeeObject_AssertType((DeeObject *)other,&DeeObjMethod_Type))
      return NULL;
  if (self->om_func != other->om_func) return_false;
- return DeeObject_CompareEqObject(self->om_self,other->om_self);
+ return DeeObject_CompareEqObject(self->om_this,other->om_this);
 }
 PRIVATE DREF DeeObject *DCALL
 objmethod_ne(DeeObjMethodObject *__restrict self,
@@ -244,7 +244,7 @@ objmethod_ne(DeeObjMethodObject *__restrict self,
  if (DeeObject_AssertType((DeeObject *)other,&DeeObjMethod_Type))
      return NULL;
  if (self->om_func != other->om_func) return_true;
- return DeeObject_CompareNeObject(self->om_self,other->om_self);
+ return DeeObject_CompareNeObject(self->om_this,other->om_this);
 }
 
 PRIVATE struct type_cmp objmethod_cmp = {
@@ -255,16 +255,14 @@ PRIVATE struct type_cmp objmethod_cmp = {
 
 PRIVATE DREF DeeObject *DCALL
 objmethod_get_func(DeeObjMethodObject *__restrict self) {
- DeeTypeObject *type;
- type = DeeObjMethod_GetType((DeeObject *)self);
- if (!type) type = Dee_TYPE(self->om_self);
- return DeeClsMethod_New(type,self->om_func);
+ return DeeClsMethod_New(DeeObjMethod_GetType((DeeObject *)self),
+                         self->om_func);
 }
 PRIVATE DREF DeeObject *DCALL
 objmethod_get_name(DeeObjMethodObject *__restrict self) {
  char const *name;
  name = DeeObjMethod_GetName((DeeObject *)self);
- if unlikely(!name) return_none;
+ if unlikely(!name) name = "?";
  return DeeString_NewAuto(name);
 }
 PRIVATE DREF DeeObject *DCALL
@@ -278,9 +276,15 @@ PRIVATE DREF DeeTypeObject *DCALL
 objmethod_get_type(DeeObjMethodObject *__restrict self) {
  DeeTypeObject *result;
  result = DeeObjMethod_GetType((DeeObject *)self);
- if unlikely(!result)
-    result = (DeeTypeObject *)Dee_None;
  Dee_Incref(result);
+ return result;
+}
+PRIVATE DREF DeeObject *DCALL
+objmethod_get_module(DeeObjMethodObject *__restrict self) {
+ DeeTypeObject *type; DREF DeeObject *result;
+ type = DeeObjMethod_GetType((DeeObject *)self);
+ result = DeeType_GetModule(type);
+ if (!result) return_none;
  return result;
 }
 
@@ -289,26 +293,29 @@ DOC_DEF(objmethod_get_func_doc,
         "The unbound class-function that is being bound by this object-method");
 DOC_DEF(objmethod_get_name_doc,
         "->string\n"
-        "->none\n"
-        "The name of the function being bound, or :none if unknown");
+        "The name of the function being bound");
 DOC_DEF(objmethod_get_doc_doc,
         "->string\n"
         "->none\n"
         "The documentation string of the function being bound, or :none if unknown");
 DOC_DEF(objmethod_get_type_doc,
         "->type\n"
+        "The type implementing the function that is being bound");
+DOC_DEF(objmethod_get_module_doc,
+        "->module\n"
         "->none\n"
-        "The type implementing the function that is being bound, or :none if unknown");
+        "The module implementing the function that is being bound, or :none if unknown");
 
 PRIVATE struct type_getset objmethod_getsets[] = {
     { "__func__", (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_func, NULL, NULL, DOC_GET(objmethod_get_func_doc) },
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_name, NULL, NULL, DOC_GET(objmethod_get_name_doc) },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_doc, NULL, NULL, DOC_GET(objmethod_get_doc_doc) },
     { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_type, NULL, NULL, DOC_GET(objmethod_get_type_doc) },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_module, NULL, NULL, DOC_GET(objmethod_get_module_doc) },
     { NULL }
 };
 PRIVATE struct type_member objmethod_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__self__",STRUCT_OBJECT,offsetof(DeeObjMethodObject,om_self),
+    TYPE_MEMBER_FIELD_DOC("__this__",STRUCT_OBJECT,offsetof(DeeObjMethodObject,om_this),
                           "->object\n"
                           "The object to which @this object-method is bound"),
     TYPE_MEMBER_END
@@ -319,15 +326,15 @@ objmethod_str(DeeObjMethodObject *__restrict self) {
  char const *name = DeeObjMethod_GetName((DeeObject *)self);
  DeeTypeObject *type = DeeObjMethod_GetType((DeeObject *)self);
  if unlikely(!name) name = "<unknown>";
- if (!type) return DeeString_Newf("<object method <unknown>.%s, bound to %r>",name,self->om_self);
- return DeeString_Newf("<object method %k.%s, bound to %r>",type,name,self->om_self);
+ if (!type) return DeeString_Newf("<object method <unknown>.%s, bound to %r>",name,self->om_this);
+ return DeeString_Newf("<object method %k.%s, bound to %r>",type,name,self->om_this);
 }
 PRIVATE DREF DeeObject *DCALL
 objmethod_repr(DeeObjMethodObject *__restrict self) {
  char const *name;
  name = DeeObjMethod_GetName((DeeObject *)self);
  if unlikely(!name) name = "?";
- return DeeString_Newf("%r.%s",self->om_self,name);
+ return DeeString_Newf("%r.%s",self->om_this,name);
 }
 
 
@@ -380,8 +387,8 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 };
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeObjMethodObject,om_self) ==
-              COMPILER_OFFSETOF(DeeKwObjMethodObject,om_self));
+STATIC_ASSERT(COMPILER_OFFSETOF(DeeObjMethodObject,om_this) ==
+              COMPILER_OFFSETOF(DeeKwObjMethodObject,om_this));
 STATIC_ASSERT(COMPILER_OFFSETOF(DeeObjMethodObject,om_func) ==
               COMPILER_OFFSETOF(DeeKwObjMethodObject,om_func));
 #define kwobjmethod_fini  objmethod_fini
@@ -389,33 +396,37 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeObjMethodObject,om_func) ==
 PRIVATE DREF DeeObject *DCALL
 kwobjmethod_call(DeeKwObjMethodObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
- return DeeKwObjMethod_CallFunc(self->om_func,self->om_self,argc,argv,NULL);
+ return DeeKwObjMethod_CallFunc(self->om_func,self->om_this,argc,argv,NULL);
 }
 PRIVATE DREF DeeObject *DCALL
 kwobjmethod_call_kw(DeeKwObjMethodObject *__restrict self,
                     size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
- return DeeKwObjMethod_CallFunc(self->om_func,self->om_self,argc,argv,kw);
+ return DeeKwObjMethod_CallFunc(self->om_func,self->om_this,argc,argv,kw);
 }
 #define kwobjmethod_cmp objmethod_cmp
 PRIVATE DREF DeeObject *DCALL
 kwobjmethod_get_func(DeeKwObjMethodObject *__restrict self) {
  DeeTypeObject *type;
  type = DeeObjMethod_GetType((DeeObject *)self);
- if (!type) type = Dee_TYPE(self->om_self);
+ if (!type) type = Dee_TYPE(self->om_this);
  return DeeKwClsMethod_New(type,self->om_func);
 }
-#define kwobjmethod_get_name     objmethod_get_name
-#define kwobjmethod_get_doc      objmethod_get_doc
-#define kwobjmethod_get_type     objmethod_get_type
-#define kwobjmethod_get_func_doc objmethod_get_func_doc
-#define kwobjmethod_get_name_doc objmethod_get_name_doc
-#define kwobjmethod_get_type_doc objmethod_get_type_doc
+#define kwobjmethod_get_name       objmethod_get_name
+#define kwobjmethod_get_doc        objmethod_get_doc
+#define kwobjmethod_get_type       objmethod_get_type
+#define kwobjmethod_get_module     objmethod_get_module
+#define kwobjmethod_get_func_doc   objmethod_get_func_doc
+#define kwobjmethod_get_name_doc   objmethod_get_name_doc
+#define kwobjmethod_get_doc_doc    objmethod_get_doc_doc
+#define kwobjmethod_get_type_doc   objmethod_get_type_doc
+#define kwobjmethod_get_module_doc objmethod_get_module_doc
 
 PRIVATE struct type_getset kwobjmethod_getsets[] = {
     { "__func__", (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_func, NULL, NULL, DOC_GET(kwobjmethod_get_func_doc) },
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_name, NULL, NULL, DOC_GET(kwobjmethod_get_name_doc) },
-    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_doc, NULL, NULL, DOC_GET(objmethod_get_doc_doc) },
+    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_doc, NULL, NULL, DOC_GET(kwobjmethod_get_doc_doc) },
     { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_type, NULL, NULL, DOC_GET(kwobjmethod_get_type_doc) },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_module, NULL, NULL, DOC_GET(kwobjmethod_get_module_doc) },
     { NULL }
 };
 #define kwobjmethod_members objmethod_members
@@ -521,7 +532,7 @@ clsmethod_call(DeeClsMethodObject *__restrict self,
 
 #if 1
 STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject,cm_type) ==
-              COMPILER_OFFSETOF(DeeObjMethodObject,om_self));
+              COMPILER_OFFSETOF(DeeObjMethodObject,om_this));
 STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject,cm_func) ==
               COMPILER_OFFSETOF(DeeObjMethodObject,om_func));
 #define clsmethod_fini  objmethod_fini
@@ -614,29 +625,44 @@ PRIVATE DREF DeeObject *DCALL
 clsmethod_get_name(DeeClsMethodObject *__restrict self) {
  char const *name;
  name = DeeClsMethod_GetName((DeeObject *)self);
- if unlikely(!name) return_none;
+ if unlikely(!name) name = "?";
  return DeeString_NewAuto(name);
 }
 PRIVATE DREF DeeObject *DCALL
 clsmethod_get_doc(DeeClsMethodObject *__restrict self) {
  char const *doc;
  doc = DeeClsMethod_GetDoc((DeeObject *)self);
- if unlikely(!doc) return_none;
+ if (!doc) return_none;
  return DeeString_NewAuto(doc);
+}
+PRIVATE DREF DeeObject *DCALL
+clsmethod_get_module(DeeClsMethodObject *__restrict self) {
+ DREF DeeObject *result;
+ result = DeeType_GetModule(self->cm_type);
+ if (!result) return_none;
+ return result;
 }
 
 PRIVATE struct type_getset clsmethod_getsets[] = {
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_name, NULL, NULL,
-      DOC("->string\n->none\nThe name of @this method, or :none if unknown") },
+      DOC("->string\n"
+          "The name of @this method") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_doc, NULL, NULL,
-      DOC("->string\n->none\nThe documentation string of @this method, or :none if unknown") },
+      DOC("->string\n"
+          "->none\n"
+          "The documentation string of @this method, or :none if unknown") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_module, NULL, NULL,
+      DOC("->module\n"
+          "->none\n"
+          "The module implementing @this method, or :none if unknown") },
     { NULL }
 };
 
 
 PRIVATE struct type_member clsmethod_members[] = {
     TYPE_MEMBER_FIELD_DOC("__type__",STRUCT_OBJECT,offsetof(DeeClsMethodObject,cm_type),
-                          "->type\nThe type implementing @this method"),
+                          "->type\n"
+                          "The type implementing @this method"),
     TYPE_MEMBER_END
 };
 
@@ -963,15 +989,22 @@ PRIVATE DREF DeeObject *DCALL
 clsproperty_get_name(DeeClsPropertyObject *__restrict self) {
  char const *name;
  name = DeeClsProperty_GetName((DeeObject *)self);
- if unlikely(!name) return_none;
+ if unlikely(!name) name = "?";
  return DeeString_NewAuto(name);
 }
 PRIVATE DREF DeeObject *DCALL
 clsproperty_get_doc(DeeClsPropertyObject *__restrict self) {
  char const *doc;
  doc = DeeClsProperty_GetDoc((DeeObject *)self);
- if unlikely(!doc) return_none;
+ if (!doc) return_none;
  return DeeString_NewAuto(doc);
+}
+PRIVATE DREF DeeObject *DCALL
+clsproperty_get_module(DeeClsPropertyObject *__restrict self) {
+ DREF DeeObject *result;
+ result = DeeType_GetModule(self->cp_type);
+ if unlikely(!result) return_none;
+ return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -990,12 +1023,15 @@ clsproperty_canset(DeeClsPropertyObject *__restrict self) {
 PRIVATE struct type_getset clsproperty_getsets[] = {
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_name, NULL, NULL,
       DOC("->string\n"
-          "->none\n"
-          "The name of @this property, or :none if unknown") },
+          "The name of @this property") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_doc, NULL, NULL,
       DOC("->string\n"
           "->none\n"
           "The documentation string of @this property, or :none if unknown") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_module, NULL, NULL,
+      DOC("->module\n"
+          "->none\n"
+          "The module implementing @this property, or :none if unknown") },
     { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canget, NULL, NULL,
       DOC("->bool\n"
           "Returns :true if @this property has a getter callback") },
@@ -1211,11 +1247,25 @@ clsmember_canset(DeeClsMemberObject *__restrict self) {
  return_bool_(!(self->cm_memb.m_field.m_type & STRUCT_CONST));
 }
 
+PRIVATE DREF DeeObject *DCALL
+clsmember_get_module(DeeClsMemberObject *__restrict self) {
+ DREF DeeObject *result;
+ result = DeeType_GetModule(self->cm_type);
+ if (!result) return_none;
+ return result;
+}
+
 PRIVATE struct type_getset clsmember_getsets[] = {
     { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
-      DOC("->bool\nAlias for #canset") },
+      DOC("->bool\n"
+          "Alias for #canset") },
     { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
-      DOC("->bool\nReturns :true if @this member can be modified") },
+      DOC("->bool\n"
+          "Returns :true if @this member can be modified") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsmember_get_module, NULL, NULL,
+      DOC("->module\n"
+          "->none\n"
+          "The module implementing @this member, or :none if unknown") },
     { NULL }
 };
 

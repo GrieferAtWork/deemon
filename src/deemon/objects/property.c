@@ -23,6 +23,7 @@
 #include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/object.h>
+#include <deemon/code.h>
 #include <deemon/property.h>
 #include <deemon/super.h>
 #include <deemon/format.h>
@@ -193,6 +194,105 @@ property_canset(Property *__restrict self) {
  return_bool_(self->p_set != NULL);
 }
 
+PRIVATE int DCALL
+property_info(Property *__restrict self,
+              struct function_info *__restrict info) {
+ int result = 1;
+ if (self->p_get && DeeFunction_Check(self->p_get) &&
+    (result = DeeFunction_GetInfo(self->p_get,info)) <= 0)
+     goto done;
+ if (self->p_del && DeeFunction_Check(self->p_del) &&
+    (result = DeeFunction_GetInfo(self->p_del,info)) <= 0)
+     goto done;
+ if (self->p_set && DeeFunction_Check(self->p_set) &&
+    (result = DeeFunction_GetInfo(self->p_set,info)) <= 0)
+     goto done;
+done:
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+property_getattr(Property *__restrict self,
+                 char const *__restrict name) {
+ if (self->p_get) return DeeObject_GetAttrString(self->p_get,name);
+ if (self->p_del) return DeeObject_GetAttrString(self->p_del,name);
+ if (self->p_set) return DeeObject_GetAttrString(self->p_set,name);
+ return ITER_DONE;
+}
+
+PRIVATE DREF DeeObject *DCALL
+property_get_name(Property *__restrict self) {
+ struct function_info info; int error;
+ DREF DeeObject *result;
+ error = property_info(self,&info);
+ if unlikely(error < 0) goto err;
+ Dee_XDecref(info.fi_doc);
+ Dee_XDecref(info.fi_type);
+ if (info.fi_name) return (DREF DeeObject *)info.fi_name;
+ result = property_getattr(self,"__name__");
+ if (result != ITER_DONE) return result;
+ return DeeString_New("?");
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+property_get_doc(Property *__restrict self) {
+ struct function_info info; int error;
+ DREF DeeObject *result;
+ error = property_info(self,&info);
+ if unlikely(error < 0) goto err;
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_type);
+ if (info.fi_doc) return (DREF DeeObject *)info.fi_doc;
+ result = property_getattr(self,"__doc__");
+ if (result != ITER_DONE) return result;
+ return_none;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeTypeObject *DCALL
+property_get_type(Property *__restrict self) {
+ struct function_info info; int error;
+ DREF DeeTypeObject *result;
+ error = property_info(self,&info);
+ if unlikely(error < 0) goto err;
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_doc);
+ Dee_XDecref(info.fi_type);
+ if (info.fi_type) return info.fi_type;
+ result = (DREF DeeTypeObject *)property_getattr(self,"__doc__");
+ if (result == (DREF DeeTypeObject *)ITER_DONE) {
+  result = (DREF DeeTypeObject *)Dee_None;
+  Dee_Incref(result);
+ }
+ return result;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+get_function_module(DeeObject *__restrict self) {
+ return_reference_((DeeObject *)(((DeeFunctionObject *)self)->fo_code->co_module));
+}
+
+PRIVATE DREF DeeObject *DCALL
+property_get_module(Property *__restrict self) {
+ DREF DeeObject *result;
+ if (self->p_get && DeeFunction_Check(self->p_get))
+     return get_function_module(self->p_get);
+ if (self->p_del && DeeFunction_Check(self->p_del))
+     return get_function_module(self->p_get);
+ if (self->p_set && DeeFunction_Check(self->p_set))
+     return get_function_module(self->p_get);
+ result = property_getattr(self,"__module__");
+ if (result != ITER_DONE) return result;
+ return_none;
+}
+
+
+
 PRIVATE struct type_getset property_getsets[] = {
     { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_canget, NULL, NULL,
       DOC("->bool\n"
@@ -203,6 +303,21 @@ PRIVATE struct type_getset property_getsets[] = {
     { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_canset, NULL, NULL,
       DOC("->bool\n"
           "Returns :true if @this property has a setter callback") },
+    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_name, NULL, NULL,
+      DOC("->string\n"
+          "Returns the name of @this property") },
+    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_doc, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "Returns the documentation string of @this property, or :none if unknown") },
+    { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_type, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "Returns the type implementing @this property, or :none if unknown") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_module, NULL, NULL,
+      DOC("->module\n"
+          "->none\n"
+          "Returns the module within which @this property is declared, or :none if unknown") },
     { NULL }
 };
 

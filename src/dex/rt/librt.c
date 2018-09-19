@@ -136,6 +136,7 @@ PRIVATE struct dex_symbol symbols[] = {
     { "roset", (DeeObject *)&DeeRoSet_Type },                     /* A read-only variant of the builtin `hashset' type (used by the compiler to construct constant, generic set expression) */
     { "kwds", (DeeObject *)&DeeKwds_Type },                       /* The type used to represent keyword arguments being mapped onto positional arguments. */
     { "kwdsmapping", (DeeObject *)&DeeKwdsMapping_Type },         /* A wrapper around `kwds' and the associated argc/argv to create a proper mapping object */
+    { "ddi", (DeeObject *)&DeeDDI_Type },                         /* The type used to hold debug information for user-defined code objects. */
     { "NoMemory_instance", (DeeObject *)&DeeError_NoMemory_instance },
     { "StopIteration_instance", (DeeObject *)&DeeError_StopIteration_instance },
     { "Interrupt_instance", (DeeObject *)&DeeError_Interrupt_instance },

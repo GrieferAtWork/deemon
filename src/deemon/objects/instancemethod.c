@@ -59,7 +59,7 @@ DeeInstanceMethod_New(DeeObject *__restrict func,
  if unlikely(!result) return NULL;
  DeeObject_Init(result,&DeeInstanceMethod_Type);
  result->im_func = func;
- result->im_self = this_arg;
+ result->im_this = this_arg;
  Dee_Incref(func);
  Dee_Incref(this_arg);
  return (DREF DeeObject *)result;
@@ -69,7 +69,7 @@ PRIVATE int DCALL
 im_ctor(InstanceMethod *__restrict self) {
  /* Initialize a stub instance-method. */
  self->im_func = Dee_None;
- self->im_self = Dee_None;
+ self->im_this = Dee_None;
 #ifdef CONFIG_NO_THREADS
  Dee_None->ob_refcnt += 2;
 #else
@@ -81,9 +81,9 @@ im_ctor(InstanceMethod *__restrict self) {
 PRIVATE int DCALL
 im_copy(InstanceMethod *__restrict self,
         InstanceMethod *__restrict other) {
- self->im_self = other->im_self;
+ self->im_this = other->im_this;
  self->im_func = other->im_func;
- Dee_Incref(self->im_self);
+ Dee_Incref(self->im_this);
  Dee_Incref(self->im_func);
  return 0;
 }
@@ -91,10 +91,10 @@ im_copy(InstanceMethod *__restrict self,
 PRIVATE int DCALL
 im_deepcopy(InstanceMethod *__restrict self,
             InstanceMethod *__restrict other) {
- self->im_self = DeeObject_DeepCopy(other->im_self);
- if unlikely(!self->im_self) return -1;
+ self->im_this = DeeObject_DeepCopy(other->im_this);
+ if unlikely(!self->im_this) return -1;
  self->im_func = DeeObject_DeepCopy(other->im_func);
- if unlikely(!self->im_func) { Dee_Decref(self->im_self); return -1; }
+ if unlikely(!self->im_func) { Dee_Decref(self->im_this); return -1; }
  return 0;
 }
 
@@ -106,7 +106,7 @@ im_init(InstanceMethod *__restrict self,
  PRIVATE struct keyword kwlist[] = { K(func), K(thisarg), KEND };
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo:instancemethod",&func,&thisarg))
      return -1;
- self->im_self = thisarg;
+ self->im_this = thisarg;
  self->im_func = func;
  Dee_Incref(thisarg);
  Dee_Incref(func);
@@ -115,22 +115,22 @@ im_init(InstanceMethod *__restrict self,
 
 PRIVATE DREF DeeObject *DCALL
 im_repr(InstanceMethod *__restrict self) {
- return DeeString_Newf("instancemethod(func: %r, thisarg: %r)",self->im_func,self->im_self);
+ return DeeString_Newf("instancemethod(func: %r, thisarg: %r)",self->im_func,self->im_this);
 }
 
 PRIVATE DREF DeeObject *DCALL
 im_call(InstanceMethod *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- return DeeObject_ThisCall(self->im_func,self->im_self,argc,argv);
+ return DeeObject_ThisCall(self->im_func,self->im_this,argc,argv);
 }
 PRIVATE DREF DeeObject *DCALL
 im_callkw(InstanceMethod *__restrict self, size_t argc,
           DeeObject **__restrict argv, DeeObject *kw) {
- return DeeObject_ThisCallKw(self->im_func,self->im_self,argc,argv,kw);
+ return DeeObject_ThisCallKw(self->im_func,self->im_this,argc,argv,kw);
 }
 PRIVATE dhash_t DCALL
 im_hash(InstanceMethod *__restrict self) {
- return DeeObject_Hash(self->im_func) ^ DeeObject_Hash(self->im_self);
+ return DeeObject_Hash(self->im_func) ^ DeeObject_Hash(self->im_this);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -141,7 +141,7 @@ im_eq(InstanceMethod *__restrict self,
      return NULL;
  temp = DeeObject_CompareEq(self->im_func,other->im_func);
  if (temp <= 0) return unlikely(temp < 0) ? NULL : (Dee_Incref(Dee_False),Dee_False);
- temp = DeeObject_CompareEq(self->im_self,other->im_self);
+ temp = DeeObject_CompareEq(self->im_this,other->im_this);
  if unlikely(temp < 0) return NULL;
  return_bool_(temp);
 }
@@ -153,7 +153,7 @@ im_ne(InstanceMethod *__restrict self,
      return NULL;
  temp = DeeObject_CompareNe(self->im_func,other->im_func);
  if (temp != 0) return unlikely(temp < 0) ? NULL : (Dee_Incref(Dee_True),Dee_True);
- temp = DeeObject_CompareNe(self->im_self,other->im_self);
+ temp = DeeObject_CompareNe(self->im_this,other->im_this);
  if unlikely(temp < 0) return NULL;
  return_bool_(temp);
 }
@@ -178,7 +178,7 @@ instancemethod_getattr(InstanceMethod *__restrict self,
                        DeeTypeObject **pdecl_type) {
  struct class_attribute *result;
  DeeTypeObject *tp_iter;
- tp_iter = Dee_TYPE(self->im_self);
+ tp_iter = Dee_TYPE(self->im_this);
  do {
   DeeClassDescriptorObject *desc;
   struct class_desc *my_class;
@@ -209,6 +209,7 @@ instancemethod_getattr(InstanceMethod *__restrict self,
     if (pdecl_type) *pdecl_type = tp_iter;
     return result;
    }
+   rwlock_read(&my_class->cd_lock);
   }
   rwlock_endread(&my_class->cd_lock);
  } while ((tp_iter = DeeType_Base(tp_iter)) != NULL);
@@ -239,6 +240,11 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
  return_reference_(result);
 }
 
+PRIVATE DREF DeeObject *DCALL
+instancemethod_get_module(InstanceMethod *__restrict self) {
+ return DeeObject_GetAttrString(self->im_func,"__module__");
+}
+
 PRIVATE struct type_getset im_getsets[] = {
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_name, NULL, NULL,
       DOC("->string\n"
@@ -252,11 +258,19 @@ PRIVATE struct type_getset im_getsets[] = {
       DOC("->type\n"
           "->none\n"
           "The type implementing the function that is being bound, or :none if unknown") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_module, NULL, NULL,
+      DOC("->module\n"
+          "->none\n"
+          "The type within which the bound function was defined "
+          "(alias for :function.__module__ though ${__func__.__module__})\n"
+          "If something other than a user-level function was set for #__func__, "
+          "a $\"__module__\" attribute will be loaded from it, with its value "
+          "then forwarded") },
     { NULL }
 };
 
 PRIVATE struct type_member im_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__self__",STRUCT_OBJECT,offsetof(InstanceMethod,im_self),
+    TYPE_MEMBER_FIELD_DOC("__this__",STRUCT_OBJECT,offsetof(InstanceMethod,im_this),
                           "->object\nThe object to which @this :instancemethod is bound"),
     TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(InstanceMethod,im_func),
                           "->callable\n"
@@ -310,7 +324,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */im_getsets,
     /* .tp_members       = */im_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

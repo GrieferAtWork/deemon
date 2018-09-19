@@ -96,9 +96,9 @@ emulate_method_call(DeeObject *__restrict self,
   dobjmethod_t method;
   method = ((DeeObjMethodObject *)self)->om_func;
   if (method == (dobjmethod_t)&string_encode)
-      return emulate_object_encode(((DeeObjMethodObject *)self)->om_self,argc,argv);
+      return emulate_object_encode(((DeeObjMethodObject *)self)->om_this,argc,argv);
   if (method == (dobjmethod_t)&string_decode)
-      return emulate_object_decode(((DeeObjMethodObject *)self)->om_self,argc,argv);
+      return emulate_object_decode(((DeeObjMethodObject *)self)->om_this,argc,argv);
   /* `object.id()' should not be evaluated at compile-time! */
   if (method == (dobjmethod_t)&_DeeObject_IdFunc)
       return ITER_DONE;

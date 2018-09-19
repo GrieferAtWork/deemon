@@ -23,7 +23,10 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/bool.h>
+#include <deemon/class.h>
+#include <deemon/int.h>
 #include <deemon/arg.h>
+#include <deemon/module.h>
 #include <deemon/tuple.h>
 #include <deemon/error.h>
 #include <deemon/traceback.h>
@@ -45,18 +48,200 @@
 
 DECL_BEGIN
 
+typedef DeeFunctionObject              Function;
 typedef DeeYieldFunctionIteratorObject YFIterator;
 typedef DeeYieldFunctionObject         YFunction;
+
+
+PRIVATE int DCALL
+lookup_code_info_in_class(DeeTypeObject *__restrict type,
+                          DeeCodeObject *__restrict self,
+                          DeeFunctionObject *function,
+                          struct function_info *__restrict info) {
+ struct class_desc *my_class;
+ DeeClassDescriptorObject *desc;
+ uint16_t addr; size_t i;
+ my_class = DeeClass_DESC(type);
+ desc     = my_class->cd_desc;
+ rwlock_read(&my_class->cd_lock);
+ for (addr = 0; addr < desc->cd_cmemb_size; ++addr) {
+  if (my_class->cd_members[addr] == (DeeObject *)function ||
+     (DeeFunction_Check(my_class->cd_members[addr]) &&
+    ((DeeFunctionObject *)my_class->cd_members[addr])->fo_code == self)) {
+   rwlock_endread(&my_class->cd_lock);
+   for (i = 0; i <= desc->cd_iattr_mask; ++i) {
+    struct class_attribute *attr;
+    attr = &desc->cd_iattr_list[i];
+    if (!attr->ca_name) continue;
+    if (addr < attr->ca_addr) continue;
+    if ((attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM|CLASS_ATTRIBUTE_FMETHOD)) !=
+                         (CLASS_ATTRIBUTE_FCLASSMEM|CLASS_ATTRIBUTE_FMETHOD))
+        continue;
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+     if (addr >= attr->ca_addr + 3) continue;
+     info->fi_getset = (uint16_t)(addr - attr->ca_addr);
+    } else {
+     if (addr > attr->ca_addr) continue;
+    }
+    /* Found it! (it's an instance method) */
+    info->fi_type = type;
+    info->fi_name = attr->ca_name;
+    info->fi_doc  = attr->ca_doc;
+    Dee_Incref(type);
+    Dee_Incref(attr->ca_name);
+    Dee_XIncref(attr->ca_doc);
+    return 0;
+   }
+   for (i = 0; i <= desc->cd_cattr_mask; ++i) {
+    struct class_attribute *attr;
+    attr = &desc->cd_cattr_list[i];
+    if (!attr->ca_name) continue;
+    if (addr < attr->ca_addr) continue;
+    if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+     if (addr >= attr->ca_addr + 3) continue;
+     info->fi_getset = (uint16_t)(addr - attr->ca_addr);
+    } else {
+     if (addr > attr->ca_addr) continue;
+    }
+    /* Found it! (it's a class method) */
+    info->fi_type = type;
+    info->fi_name = attr->ca_name;
+    info->fi_doc  = attr->ca_doc;
+    Dee_Incref(type);
+    Dee_Incref(attr->ca_name);
+    Dee_XIncref(attr->ca_doc);
+    return 0;
+   }
+   /* Check if we can find the address as an operator binding. */
+   for (i = 0; i <= desc->cd_clsop_mask; ++i) {
+    struct class_operator *op;
+    op = &desc->cd_clsop_list[i];
+    if (op->co_name == (uint16_t)-1) continue;
+    if (op->co_addr != addr) continue;
+    /* Found it! */
+    info->fi_type   = type;
+    info->fi_opname = op->co_name;
+    Dee_Incref(type);
+    return 0;
+   }
+   rwlock_read(&my_class->cd_lock);
+  }
+ }
+ rwlock_endread(&my_class->cd_lock);
+ return 1;
+}
+
+PRIVATE int DCALL
+lookup_code_info(DeeCodeObject *__restrict self,
+                 DeeFunctionObject *function,                      
+                 struct function_info *__restrict info) {
+ DeeModuleObject *module;
+ uint16_t addr; int result;
+ info->fi_type   = NULL;
+ info->fi_name   = NULL;
+ info->fi_doc    = NULL;
+ info->fi_opname = (uint16_t)-1;
+ info->fi_getset = (uint16_t)-1;
+ /* Step #1: Search the code object's module for the given `function' */
+ module = self->co_module;
+ if unlikely(!module) goto without_module;
+ rwlock_read(&module->mo_lock);
+ for (addr = 0; addr < module->mo_globalc; ++addr) {
+  if (!module->mo_globalv[addr]) continue;
+  if (module->mo_globalv[addr] == (DeeObject *)function ||
+     (DeeFunction_Check(module->mo_globalv[addr]) &&
+    ((DeeFunctionObject *)module->mo_globalv[addr])->fo_code == self)) {
+   struct module_symbol *function_symbol;
+   function_symbol = DeeModule_GetSymbolID(module,addr);
+   if (function_symbol) {
+    /* Found it! (it's a global) */
+    rwlock_endread(&module->mo_lock);
+    info->fi_name = function_symbol->ss_name;
+    info->fi_doc  = function_symbol->ss_doc;
+    Dee_Incref(info->fi_name);
+    Dee_XIncref(info->fi_doc);
+    return 0;
+   }
+  }
+ }
+ /* Do another pass, this time looking for class objects
+  * which the function may be defined to be apart of. */
+ for (addr = 0; addr < module->mo_globalc; ++addr) {
+  DeeObject *glob = module->mo_globalv[addr];
+  if (!glob) continue;
+  if (!DeeType_Check(glob)) continue;
+  if (!DeeType_IsClass(glob)) continue;
+  Dee_Incref(glob);
+  rwlock_endread(&module->mo_lock);
+  result = lookup_code_info_in_class((DeeTypeObject *)glob,self,function,info);
+  Dee_Decref(glob);
+  if (result <= 0)
+      return result;
+  rwlock_read(&module->mo_lock);
+ }
+ rwlock_endread(&module->mo_lock);
+without_module:
+ if (function) {
+  /* Search though the function's references for class types, and
+   * check if the given code object may be referring to one of them. */
+  uint16_t i,count = self->co_refc;
+  for (i = 0; i < count; ++i) {
+   DeeObject *ref = function->fo_refv[i];
+   if (!ref) continue;
+   if (!DeeType_Check(ref)) continue;
+   if (!DeeType_IsClass(ref)) continue;
+   result = lookup_code_info_in_class((DeeTypeObject *)ref,self,function,info);
+   if (result <= 0)
+       return result;
+  }
+ }
+ /* If we still haven't found anything about the function it's
+  * probably been locally created as part of a caller's stack-frame.
+  * That, or it's been bound externally, before being deleted from its
+  * declaration module.
+  * In either case: we probably won't be able to find it, so the best
+  * we can do is to check what kind of DDI information is provided by
+  * the function's code. */
+ if (DeeDDI_HAS_NAME(self->co_ddi)) {
+  char const *name;
+  name = DeeDDI_NAME(self->co_ddi);
+  /* Well... At least we got the name. - That's something. */
+  info->fi_name = (DREF DeeStringObject *)DeeString_New(name);
+  if unlikely(!info->fi_name) goto err;
+  return 0;
+ }
+ return 1;
+err:
+ return -1;
+}
+
+
+PUBLIC int DCALL
+DeeCode_GetInfo(DeeObject *__restrict self,
+                struct function_info *__restrict info) {
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeCode_Type);
+ return lookup_code_info((DeeCodeObject *)self,NULL,info);
+}
+PUBLIC int DCALL
+DeeFunction_GetInfo(DeeObject *__restrict self,
+                    struct function_info *__restrict info) {
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeFunction_Type);
+ return lookup_code_info(((DeeFunctionObject *)self)->fo_code,
+                          (DeeFunctionObject *)self,
+                           info);
+}
+
+
 
 
 
 PUBLIC DREF DeeObject *DCALL
 DeeFunction_New(DeeObject *__restrict code, size_t refc,
                 DeeObject *const *__restrict refv) {
- DREF DeeFunctionObject *result; size_t i;
+ DREF Function *result; size_t i;
  ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
  ASSERT(((DeeCodeObject *)code)->co_refc == refc);
- result = (DREF DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject,fo_refv)+
+ result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv)+
                                                     (refc*sizeof(DREF DeeObject *)));
  if unlikely(!result) goto done;
  result->fo_code = (DREF DeeCodeObject *)code;
@@ -76,7 +261,7 @@ done:
 INTERN DREF DeeObject *DCALL
 DeeFunction_NewInherited(DeeObject *__restrict code, size_t refc,
                          DREF DeeObject *const *__restrict refv) {
- DREF DeeFunctionObject *result;
+ DREF Function *result;
  ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
  ASSERTF(((DeeCodeObject *)code)->co_refc == refc,
          "((DeeCodeObject *)code)->co_refc = %I16u\n"
@@ -84,7 +269,7 @@ DeeFunction_NewInherited(DeeObject *__restrict code, size_t refc,
          "name                             = %s\n",
          ((DeeCodeObject *)code)->co_refc,refc,
          DeeDDI_NAME(((DeeCodeObject *)code)->co_ddi));
- result = (DREF DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject,fo_refv)+
+ result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv)+
                                                     (refc*sizeof(DREF DeeObject *)));
  if unlikely(!result) goto done;
  result->fo_code = (DREF DeeCodeObject *)code;
@@ -96,10 +281,10 @@ done:
 }
 INTERN DREF DeeObject *DCALL
 DeeFunction_NewNoRefs(DeeObject *__restrict code) {
- DREF DeeFunctionObject *result;
+ DREF Function *result;
  ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
  ASSERT(((DeeCodeObject *)code)->co_refc == 0);
- result = (DREF DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject,fo_refv));
+ result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv));
  if unlikely(!result) goto done;
  result->fo_code = (DREF DeeCodeObject *)code;
  Dee_Incref(code);
@@ -114,15 +299,15 @@ function_call(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv);
 
 
-PRIVATE DREF DeeFunctionObject *DCALL
+PRIVATE DREF Function *DCALL
 function_init(size_t argc, DeeObject **__restrict argv) {
- DREF DeeFunctionObject *result;
+ DREF Function *result;
  DeeCodeObject *code = &empty_code;
  DeeObject *refs = Dee_EmptyTuple;
  if (DeeArg_Unpack(argc,argv,"|oo:function",&code,&refs) ||
      DeeObject_AssertTypeExact((DeeObject *)code,&DeeCode_Type))
      goto err;
- result = (DREF DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject,fo_refv)+
+ result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv)+
                                                     (code->co_refc*sizeof(DREF DeeObject *)));
  if unlikely(!result)
      goto err;
@@ -145,25 +330,166 @@ PRIVATE struct type_member function_class_members[] = {
 };
 
 PRIVATE DREF DeeObject *DCALL
-function_getrefs(DeeFunctionObject *__restrict self) {
+function_get_refs(Function *__restrict self) {
  return DeeRefVector_NewReadonly((DeeObject *)self,
                                   self->fo_code->co_refc,
                                   self->fo_refv);
 }
 
+PRIVATE DREF DeeObject *DCALL
+function_get_name(Function *__restrict self) {
+ struct function_info info;
+ if (DeeFunction_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_type);
+ Dee_XDecref(info.fi_doc);
+ if (!info.fi_name) return_none;
+ return (DREF DeeObject *)info.fi_name;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+function_get_doc(Function *__restrict self) {
+ struct function_info info;
+ if (DeeFunction_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_type);
+ Dee_XDecref(info.fi_name);
+ if (!info.fi_doc) return_none;
+ return (DREF DeeObject *)info.fi_doc;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeTypeObject *DCALL
+function_get_type(Function *__restrict self) {
+ struct function_info info;
+ if (DeeFunction_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_doc);
+ if (!info.fi_type) {
+  info.fi_type = (DREF DeeTypeObject *)Dee_None;
+  Dee_Incref(Dee_None);
+ }
+ return info.fi_type;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+function_get_module(Function *__restrict self) {
+ if unlikely(!self->fo_code->co_module)
+    goto err_unbound; /* Shouldn't happen... */
+ return_reference_((DREF DeeObject *)self->fo_code->co_module);
+err_unbound:
+ err_unbound_attribute(&DeeFunction_Type,"__module__");
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+function_get_operator(Function *__restrict self) {
+ struct function_info info;
+ if (DeeFunction_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_type);
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_doc);
+ if (info.fi_opname == (uint16_t)-1) return_none;
+ return DeeInt_NewU16(info.fi_opname);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+function_get_operatorname(Function *__restrict self) {
+ struct function_info info;
+ struct opinfo *op;
+ if (DeeFunction_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_doc);
+ if (info.fi_opname == (uint16_t)-1) {
+  Dee_XDecref(info.fi_type);
+  return_none;
+ }
+ op = Dee_OperatorInfo(info.fi_type,info.fi_opname);
+ Dee_XDecref(info.fi_type);
+ if (!op) return DeeInt_NewU16(info.fi_opname);
+ return DeeString_New(op->oi_sname);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+function_get_property(Function *__restrict self) {
+ struct function_info info;
+ if (DeeFunction_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_doc);
+ Dee_XDecref(info.fi_type);
+ if (info.fi_getset == (uint16_t)-1) return_none;
+ return DeeInt_NewU16(info.fi_getset);
+err:
+ return NULL;
+}
+
 PRIVATE struct type_getset function_getsets[] = {
-    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_getrefs, NULL, NULL,
-      DOC("->sequence") },
+    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_name, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "Returns the name of @this function, or :none if unknown") },
+    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_doc, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "Returns the documentation string of @this function, or :none if unknown") },
+    { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_type, NULL, NULL,
+      DOC("->type\n"
+          "->none\n"
+          "Try to determine if @this function is defined as part of a user-defined class, "
+          "and if it is, return that class type, or :none if that class couldn't be found, "
+          "of if @this function is defined as stand-alone") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_module, NULL, NULL,
+      DOC("->module\n"
+          "Return the module as part of which @this function's code was originally written") },
+    { "__operator__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_operator, NULL, NULL,
+      DOC("->int\n"
+          "->none\n"
+          "Try to determine if @this function is defined as part of a user-defined class, "
+          "and if so, if it is used to define an operator callback. If that is the case, "
+          "return the internal ID of the operator that @this function provides, or :none "
+          "if that class couldn't be found, @this function is defined as stand-alone, or "
+          "defined as a class- or instance-method") },
+    { "__operatorname__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_operatorname, NULL, NULL,
+      DOC("->string\n"
+          "->int\n"
+          "->none\n"
+          "Same as #__operator__, but instead try to return the unambiguous name of the "
+          "operator, though still return its ID if the operator isn't recognized as being "
+          "part of the standard") },
+    { "__property__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_property, NULL, NULL,
+      DOC("->int\n"
+          "->none\n"
+          "Returns an integer describing the kind if @this function is part of a property or getset, "
+          "or returns :none if the function's property could not be found, or if the function isn't "
+          "declared as a property callback\n"
+          "%{table Id|Callback|Compatible prototype\n"
+          "$" PP_STR(CLASS_GETSET_GET) "|Getter callback|${function get() -> object}\n"
+          "$" PP_STR(CLASS_GETSET_DEL) "|Delete callback|${function delete() -> none}\n"
+          "$" PP_STR(CLASS_GETSET_SET) "|Setter callback|${function set(object value) -> none}}") },
+    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_refs, NULL, NULL,
+      DOC("->sequence\n"
+          "Returns a sequence of all of the references used by @this function") },
     { NULL }
 };
 PRIVATE struct type_member function_members[] = {
-    TYPE_MEMBER_FIELD("__code__",STRUCT_OBJECT,offsetof(DeeFunctionObject,fo_code)),
+    TYPE_MEMBER_FIELD("__code__",STRUCT_OBJECT,offsetof(Function,fo_code)),
     TYPE_MEMBER_END
 };
 
 
 PRIVATE void DCALL
-function_fini(DeeFunctionObject *__restrict self) {
+function_fini(Function *__restrict self) {
  size_t i;
  for (i = 0; i < self->fo_code->co_refc; ++i)
      Dee_Decref(self->fo_refv[i]);
@@ -171,7 +497,7 @@ function_fini(DeeFunctionObject *__restrict self) {
 }
 
 PRIVATE void DCALL
-function_visit(DeeFunctionObject *__restrict self,
+function_visit(Function *__restrict self,
                dvisit_t proc, void *arg) {
  size_t i;
  for (i = 0; i < self->fo_code->co_refc; ++i)
@@ -180,14 +506,14 @@ function_visit(DeeFunctionObject *__restrict self,
 }
 
 PRIVATE DREF DeeObject *DCALL
-function_str(DeeFunctionObject *__restrict self) {
+function_str(Function *__restrict self) {
  DeeDDIObject *ddi = self->fo_code->co_ddi;
  if (DeeDDI_HAS_NAME(ddi))
      return DeeString_New(DeeDDI_NAME(ddi));
  return_reference_(&str_function);
 }
 PRIVATE DREF DeeObject *DCALL
-function_repr(DeeFunctionObject *__restrict self) {
+function_repr(Function *__restrict self) {
 #if 1
  uint16_t i;
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -259,7 +585,7 @@ err:
 }
 
 PRIVATE dhash_t DCALL
-function_hash(DeeFunctionObject *__restrict self) {
+function_hash(Function *__restrict self) {
  uint16_t i; dhash_t result;
  result = DeeObject_Hash((DeeObject *)self->fo_code);
  for (i = 0; i < self->fo_code->co_refc; ++i)
@@ -268,8 +594,8 @@ function_hash(DeeFunctionObject *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-function_eq(DeeFunctionObject *__restrict self,
-            DeeFunctionObject *__restrict other) {
+function_eq(Function *__restrict self,
+            Function *__restrict other) {
  uint16_t i; int result;
  if (DeeObject_AssertTypeExact(other,&DeeFunction_Type))
      goto err;
@@ -291,8 +617,8 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-function_ne(DeeFunctionObject *__restrict self,
-            DeeFunctionObject *__restrict other) {
+function_ne(Function *__restrict self,
+            Function *__restrict other) {
  uint16_t i; int result;
  if (DeeObject_AssertTypeExact(other,&DeeFunction_Type))
      goto err;
@@ -444,13 +770,13 @@ yf_new(YFunction *__restrict self,
   func = (DeeObject *)function_init(0,NULL);
   if unlikely(!func) goto err;
  }
- if ((this_ != NULL) != (((DeeFunctionObject *)func)->fo_code->co_flags&CODE_FTHISCALL)) {
+ if ((this_ != NULL) != (((Function *)func)->fo_code->co_flags&CODE_FTHISCALL)) {
   Dee_Decref(func);
   DeeError_Throwf(&DeeError_TypeError,
                   "Invalid presence of this-argument");
   goto err;
  }
- self->yf_func = (DREF DeeFunctionObject *)func; /* Inherit reference. */
+ self->yf_func = (DREF Function *)func; /* Inherit reference. */
  self->yf_args = (DREF DeeTupleObject *)args;
  self->yf_this = this_;
  Dee_Incref(self->yf_args);
@@ -587,19 +913,77 @@ PRIVATE struct type_member yf_members[] = {
 };
 
 PRIVATE DREF DeeCodeObject *DCALL
-yf_getcode(YFunction *__restrict self) {
+yf_get_code(YFunction *__restrict self) {
  return_reference_(self->yf_func->fo_code);
 }
 PRIVATE DREF DeeObject *DCALL
-yf_getrefs(YFunction *__restrict self) {
- return function_getrefs(self->yf_func);
+yf_get_name(YFunction *__restrict self) {
+ return function_get_name(self->yf_func);
+}
+PRIVATE DREF DeeObject *DCALL
+yf_get_doc(YFunction *__restrict self) {
+ return function_get_doc(self->yf_func);
+}
+PRIVATE DREF DeeTypeObject *DCALL
+yf_get_type(YFunction *__restrict self) {
+ return function_get_type(self->yf_func);
+}
+PRIVATE DREF DeeObject *DCALL
+yf_get_module(YFunction *__restrict self) {
+ return function_get_module(self->yf_func);
+}
+PRIVATE DREF DeeObject *DCALL
+yf_get_operator(YFunction *__restrict self) {
+ return function_get_operator(self->yf_func);
+}
+PRIVATE DREF DeeObject *DCALL
+yf_get_operatorname(YFunction *__restrict self) {
+ return function_get_operatorname(self->yf_func);
+}
+PRIVATE DREF DeeObject *DCALL
+yf_get_property(YFunction *__restrict self) {
+ return function_get_property(self->yf_func);
+}
+PRIVATE DREF DeeObject *DCALL
+yf_get_refs(YFunction *__restrict self) {
+ return function_get_refs(self->yf_func);
 }
 
 PRIVATE struct type_getset yf_getsets[] = {
-    { "__code__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_getcode, NULL, NULL,
-      DOC("->code") },
-    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_getrefs, NULL, NULL,
-      DOC("->sequence") },
+    { "__code__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_code, NULL, NULL,
+      DOC("->code\n"
+          "Alias for :function.__code__ though #__func__") },
+    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_name, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "Alias for :function.__name__ though #__func__") },
+    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_doc, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "Alias for :function.__doc__ though #__func__") },
+    { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_type, NULL, NULL,
+      DOC("->type\n"
+          "->none\n"
+          "Alias for :function.__type__ though #__func__") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_module, NULL, NULL,
+      DOC("->module\n"
+          "Alias for :function.__module__ though #__func__") },
+    { "__operator__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_operator, NULL, NULL,
+      DOC("->int\n"
+          "->none\n"
+          "Alias for :function.__operator__ though #__func__") },
+    { "__operatorname__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_operatorname, NULL, NULL,
+      DOC("->string\n"
+          "->int\n"
+          "->none\n"
+          "Alias for :function.__operatorname__ though #__func__") },
+    { "__property__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_property, NULL, NULL,
+      DOC("->int\n"
+          "->none\n"
+          "Alias for :function.__property__ though #__func__") },
+    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_refs, NULL, NULL,
+      DOC("->sequence\n"
+          "Alias for :function.__refs__ though #__func__") },
     { NULL }
 };
 
@@ -1054,7 +1438,7 @@ nomem:
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE DREF YFunction *DCALL
-yfi_getyfunc(YFIterator *__restrict self) {
+yfi_get_yfunc(YFIterator *__restrict self) {
  DREF YFunction *result;
  recursive_rwlock_read(&self->yi_lock);
  result = self->yi_func;
@@ -1067,7 +1451,7 @@ yfi_getyfunc(YFIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE DREF DeeObject *DCALL
-yfi_getthis(YFIterator *__restrict self) {
+yfi_get_this(YFIterator *__restrict self) {
  DREF DeeObject *result;
  recursive_rwlock_read(&self->yi_lock);
  result = self->yi_frame.cf_this;
@@ -1081,7 +1465,7 @@ yfi_getthis(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-yfi_getframe(YFIterator *__restrict self) {
+yfi_get_frame(YFIterator *__restrict self) {
  return DeeFrame_NewReferenceWithLock((DeeObject *)self,
                                       &self->yi_frame,
                                        DEEFRAME_FREADONLY|
@@ -1090,9 +1474,9 @@ yfi_getframe(YFIterator *__restrict self) {
                                       &self->yi_lock);
 }
 
-PRIVATE DREF DeeFunctionObject *DCALL
-yfi_getfunc(YFIterator *__restrict self) {
- DREF DeeFunctionObject *result;
+PRIVATE DREF Function *DCALL
+yfi_get_func(YFIterator *__restrict self) {
+ DREF Function *result;
  recursive_rwlock_write(&self->yi_lock);
  if unlikely(!self->yi_func) {
   recursive_rwlock_endwrite(&self->yi_lock);
@@ -1106,7 +1490,7 @@ yfi_getfunc(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF DeeCodeObject *DCALL
-yfi_getcode(YFIterator *__restrict self) {
+yfi_get_code(YFIterator *__restrict self) {
  DREF DeeCodeObject *result;
  recursive_rwlock_write(&self->yi_lock);
  if unlikely(!self->yi_func) {
@@ -1121,9 +1505,9 @@ yfi_getcode(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-yfi_getrefs(YFIterator *__restrict self) {
+yfi_get_refs(YFIterator *__restrict self) {
  DREF DeeObject *result;
- DREF DeeFunctionObject *func;
+ DREF Function *func;
  recursive_rwlock_write(&self->yi_lock);
  if unlikely(!self->yi_func) {
   recursive_rwlock_endwrite(&self->yi_lock);
@@ -1133,13 +1517,13 @@ yfi_getrefs(YFIterator *__restrict self) {
  func = self->yi_func->yf_func;
  Dee_Incref(func);
  recursive_rwlock_endwrite(&self->yi_lock);
- result = function_getrefs(func);
+ result = function_get_refs(func);
  Dee_Decref(func);
  return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
-yfi_getargs(YFIterator *__restrict self) {
+yfi_get_args(YFIterator *__restrict self) {
  DREF DeeObject *result;
  recursive_rwlock_write(&self->yi_lock);
  if unlikely(!self->yi_func) {
@@ -1153,17 +1537,120 @@ yfi_getargs(YFIterator *__restrict self) {
  return result;
 }
 
+PRIVATE DREF YFunction *DCALL
+yfi_getfunc(YFIterator *__restrict self,
+            char const *__restrict attr_name) {
+ DREF YFunction *result;
+ recursive_rwlock_write(&self->yi_lock);
+ if unlikely(!self->yi_func) {
+  recursive_rwlock_endwrite(&self->yi_lock);
+  err_unbound_attribute(&DeeYieldFunctionIterator_Type,attr_name);
+  return NULL;
+ }
+ result = self->yi_func;
+ Dee_Incref(result);
+ recursive_rwlock_endwrite(&self->yi_lock);
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+yfi_get_name(YFIterator *__restrict self) {
+ DREF DeeObject *result;
+ DREF YFunction *func = yfi_getfunc(self,"__name__");
+ if unlikely(!func) goto err;
+ result = yf_get_name(func);
+ Dee_Decref(func);
+ return result;
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+yfi_get_doc(YFIterator *__restrict self) {
+ DREF DeeObject *result;
+ DREF YFunction *func = yfi_getfunc(self,"__doc__");
+ if unlikely(!func) goto err;
+ result = yf_get_doc(func);
+ Dee_Decref(func);
+ return result;
+err:
+ return NULL;
+}
+PRIVATE DREF DeeTypeObject *DCALL
+yfi_get_type(YFIterator *__restrict self) {
+ DREF DeeTypeObject *result;
+ DREF YFunction *func = yfi_getfunc(self,"__type__");
+ if unlikely(!func) goto err;
+ result = yf_get_type(func);
+ Dee_Decref(func);
+ return result;
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+yfi_get_module(YFIterator *__restrict self) {
+ DREF DeeObject *result;
+ DREF YFunction *func = yfi_getfunc(self,"__module__");
+ if unlikely(!func) goto err;
+ result = yf_get_module(func);
+ Dee_Decref(func);
+ return result;
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+yfi_get_operator(YFIterator *__restrict self) {
+ DREF DeeObject *result;
+ DREF YFunction *func = yfi_getfunc(self,"__operator__");
+ if unlikely(!func) goto err;
+ result = yf_get_operator(func);
+ Dee_Decref(func);
+ return result;
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+yfi_get_operatorname(YFIterator *__restrict self) {
+ DREF DeeObject *result;
+ DREF YFunction *func = yfi_getfunc(self,"__operatorname__");
+ if unlikely(!func) goto err;
+ result = yf_get_operatorname(func);
+ Dee_Decref(func);
+ return result;
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+yfi_get_property(YFIterator *__restrict self) {
+ DREF DeeObject *result;
+ DREF YFunction *func = yfi_getfunc(self,"__property__");
+ if unlikely(!func) goto err;
+ result = yf_get_property(func);
+ Dee_Decref(func);
+ return result;
+err:
+ return NULL;
+}
+
+
 PRIVATE struct type_getset yfi_getsets[] = {
 #ifndef CONFIG_NO_THREADS
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getyfunc, NULL, NULL, DOC("->sequence\nAlias for #__yfunc__") },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_yfunc, NULL, NULL, DOC("->sequence\nAlias for #__yfunc__") },
 #endif /* !CONFIG_NO_THREADS */
-    { "__frame__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getframe, NULL, NULL, DOC("->frame") },
-    { "__this__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getthis, NULL, NULL },
-    { "__yfunc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getyfunc, NULL, NULL, DOC("->yieldfunction") },
-    { "__func__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getfunc, NULL, NULL, DOC("->function") },
-    { "__code__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getcode, NULL, NULL, DOC("->code") },
-    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getrefs, NULL, NULL, DOC("->sequence") },
-    { "__args__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getargs, NULL, NULL, DOC("->sequence") },
+    { "__frame__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_frame, NULL, NULL, DOC("->frame\nThe execution stack-frame representing the current state of the iterator") },
+    { "__this__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_this, NULL, NULL, DOC("->object\n@throw UnboundAttribute No $this-argument available\nThe $this-argument used during execution") },
+    { "__yfunc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_yfunc, NULL, NULL, DOC("->yieldfunction\nThe underlying yield-function, describing the :function and arguments that are being executed") },
+    { "__func__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_func, NULL, NULL, DOC("->function\nThe function that is being executed") },
+    { "__code__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_code, NULL, NULL, DOC("->code\nThe code object that is being executed") },
+    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_refs, NULL, NULL, DOC("->sequence\nReturns a sequence of all of the references used by the function") },
+    { "__args__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_args, NULL, NULL, DOC("->sequence\nReturns a sequence representing the arguments passed to the function") },
+    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_name, NULL, NULL, DOC("->string\n->none\nAlias for :function.__name__ though #__func__") },
+    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_doc, NULL, NULL, DOC("->string\n->none\nAlias for :function.__doc__ though #__func__") },
+    { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_type, NULL, NULL, DOC("->type\n->none\nAlias for :function.__type__ though #__func__") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_module, NULL, NULL, DOC("->module\nAlias for :function.__module__ though #__func__") },
+    { "__operator__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_operator, NULL, NULL, DOC("->int\n->none\nAlias for :function.__operator__ though #__func__") },
+    { "__operatorname__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_operatorname, NULL, NULL, DOC("->string\n->int\n->none\nAlias for :function.__operatorname__ though #__func__") },
+    { "__property__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_property, NULL, NULL, DOC("->int\n->none\nAlias for :function.__property__ though #__func__") },
+    { "__refs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_refs, NULL, NULL, DOC("->sequence\nAlias for :function.__refs__ though #__func__") },
     { NULL }
 };
 #ifdef CONFIG_NO_THREADS

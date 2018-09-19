@@ -34,6 +34,7 @@
 #include <deemon/code.h>
 #include <deemon/map.h>
 #include <deemon/module.h>
+#include <deemon/int.h>
 #include <deemon/asm.h>
 #include <deemon/util/string.h>
 
@@ -548,14 +549,137 @@ code_isconstructor(DeeCodeObject *__restrict self) {
 }
 
 PRIVATE struct type_member code_members[] = {
-    TYPE_MEMBER_FIELD_DOC("ddi",STRUCT_OBJECT,offsetof(DeeCodeObject,co_ddi),"->ddi\nThe DDI (DeemonDebugInformation) data block"),
+    TYPE_MEMBER_FIELD_DOC("__ddi__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_ddi),"->:rt.ddi\nThe DDI (DeemonDebugInformation) data block"),
     TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_module),"->module"),
     TYPE_MEMBER_FIELD_DOC("__argc_min__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_min),"Min amount of arguments required to execute this code"),
     TYPE_MEMBER_FIELD_DOC("__argc_max__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_max),"Max amount of arguments accepted by this code (excluding a varargs argument)"),
     TYPE_MEMBER_END
 };
 
+PRIVATE DREF DeeObject *DCALL
+code_get_name(DeeCodeObject *__restrict self) {
+ struct function_info info;
+ if (DeeCode_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_type);
+ Dee_XDecref(info.fi_doc);
+ if (!info.fi_name) return_none;
+ return (DREF DeeObject *)info.fi_name;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+code_get_doc(DeeCodeObject *__restrict self) {
+ struct function_info info;
+ if (DeeCode_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_type);
+ Dee_XDecref(info.fi_name);
+ if (!info.fi_doc) return_none;
+ return (DREF DeeObject *)info.fi_doc;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeTypeObject *DCALL
+code_get_type(DeeCodeObject *__restrict self) {
+ struct function_info info;
+ if (DeeCode_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_doc);
+ if (!info.fi_type) {
+  info.fi_type = (DREF DeeTypeObject *)Dee_None;
+  Dee_Incref(Dee_None);
+ }
+ return info.fi_type;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+code_get_operator(DeeCodeObject *__restrict self) {
+ struct function_info info;
+ if (DeeCode_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_type);
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_doc);
+ if (info.fi_opname == (uint16_t)-1) return_none;
+ return DeeInt_NewU16(info.fi_opname);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+code_get_operatorname(DeeCodeObject *__restrict self) {
+ struct function_info info;
+ struct opinfo *op;
+ if (DeeCode_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_doc);
+ if (info.fi_opname == (uint16_t)-1) {
+  Dee_XDecref(info.fi_type);
+  return_none;
+ }
+ op = Dee_OperatorInfo(info.fi_type,info.fi_opname);
+ Dee_XDecref(info.fi_type);
+ if (!op) return DeeInt_NewU16(info.fi_opname);
+ return DeeString_New(op->oi_sname);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+code_get_property(DeeCodeObject *__restrict self) {
+ struct function_info info;
+ if (DeeCode_GetInfo((DeeObject *)self,&info) < 0)
+     goto err;
+ Dee_XDecref(info.fi_name);
+ Dee_XDecref(info.fi_doc);
+ Dee_XDecref(info.fi_type);
+ if (info.fi_getset == (uint16_t)-1) return_none;
+ return DeeInt_NewU16(info.fi_getset);
+err:
+ return NULL;
+}
+
 PRIVATE struct type_getset code_getsets[] = {
+    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_name, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "Returns the name of @this code object, or :none if unknown (s.a. :function.__name__)") },
+    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_doc, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "Returns the documentation string of @this code object, or :none if unknown (s.a. :function.__doc__)") },
+    { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_type, NULL, NULL,
+      DOC("->type\n"
+          "->none\n"
+          "Try to determine if @this code object is defined as part of a user-defined class, "
+          "and if it is, return that class type, or :none if that class couldn't be found, "
+          "of if @this code object is defined as stand-alone (s.a. :function.__type__)") },
+    { "__operator__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operator, NULL, NULL,
+      DOC("->int\n"
+          "->none\n"
+          "Try to determine if @this code object is defined as part of a user-defined class, "
+          "and if so, if it is used to define an operator callback. If that is the case, "
+          "return the internal ID of the operator that @this code object provides, or :none "
+          "if that class couldn't be found, @this code object is defined as stand-alone, or "
+          "defined as a class- or instance-method (s.a. :function.__operator__)") },
+    { "__operatorname__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operatorname, NULL, NULL,
+      DOC("->string\n"
+          "->int\n"
+          "->none\n"
+          "Same as #__operator__, but instead try to return the unambiguous name of the "
+          "operator, though still return its ID if the operator isn't recognized as being "
+          "part of the standard (s.a. :function.__operatorname__)") },
+    { "__property__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_property, NULL, NULL,
+      DOC("->int\n"
+          "->none\n"
+          "Returns an integer describing the kind if @this function is part of a property or getset, "
+          "or returns :none if the function's property could not be found, or if the function isn't "
+          "declared as a property callback (s.a. :function.__property__)") },
     { "__default__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getdefault, NULL, NULL,
       DOC("->sequence\nAccess to the default values of arguments") },
     { "__static__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getstatic, NULL, NULL,
@@ -586,12 +710,6 @@ PRIVATE struct type_getset code_getsets[] = {
           "causes some sort of exception to be thrown") },
     { NULL }
 };
-
-PRIVATE struct type_member code_class_members[] = {
-    TYPE_MEMBER_CONST("ddi",&DeeDDI_Type),
-    TYPE_MEMBER_END
-};
-
 
 PRIVATE struct type_gc code_gc = {
     /* .tp_clear = */(void(DCALL *)(DeeObject *__restrict))&code_clear
@@ -802,7 +920,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
     /* .tp_members       = */code_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */code_class_members
+    /* .tp_class_members = */NULL
 };
 
 

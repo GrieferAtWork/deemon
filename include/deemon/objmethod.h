@@ -42,16 +42,16 @@ typedef DREF DeeObject *(DCALL *dkwcmethod_t)(size_t argc, DeeObject **__restric
 struct objmethod_object {
     OBJECT_HEAD /* Object-bound member function. */
     dobjmethod_t    om_func;  /* [1..1][const] C-level object function. */
-    DREF DeeObject *om_self;  /* [1..1][const] The `self' argument passed to `om_func'. */
+    DREF DeeObject *om_this;  /* [1..1][const] The `self' argument passed to `om_func'. */
 };
 struct kwobjmethod_object {
     OBJECT_HEAD /* Object-bound member function. */
     dkwobjmethod_t  om_func;  /* [1..1][const] C-level object function. */
-    DREF DeeObject *om_self;  /* [1..1][const] The `self' argument passed to `om_func'. */
+    DREF DeeObject *om_this;  /* [1..1][const] The `self' argument passed to `om_func'. */
 };
 DDATDEF DeeTypeObject DeeObjMethod_Type;
 DDATDEF DeeTypeObject DeeKwObjMethod_Type;
-#define DeeObjMethod_SELF(x)       ((DeeObjMethodObject *)REQUIRES_OBJECT(x))->om_self
+#define DeeObjMethod_SELF(x)       ((DeeObjMethodObject *)REQUIRES_OBJECT(x))->om_this
 #define DeeObjMethod_FUNC(x)       ((DeeObjMethodObject *)REQUIRES_OBJECT(x))->om_func
 #define DeeObjMethod_Check(x)        DeeObject_InstanceOfExact(x,&DeeObjMethod_Type) /* `objmethod' is `final'. */
 #define DeeObjMethod_CheckExact(x)   DeeObject_InstanceOfExact(x,&DeeObjMethod_Type)
@@ -70,9 +70,8 @@ DFUNDEF DREF DeeObject *DCALL DeeKwObjMethod_New(dkwobjmethod_t func, DeeObject 
  * objmethod, or `NULL' if the name could not be determined. */
 DFUNDEF char const *DCALL DeeObjMethod_GetName(DeeObject *__restrict self);
 DFUNDEF char const *DCALL DeeObjMethod_GetDoc(DeeObject *__restrict self);
-/* Returns the type that is implementing the bound method,
- * or `NULL' if that type could not be determined. */
-DFUNDEF DeeTypeObject *DCALL DeeObjMethod_GetType(DeeObject *__restrict self);
+/* Returns the type that is implementing the bound method. */
+DFUNDEF ATTR_RETNONNULL DeeTypeObject *DCALL DeeObjMethod_GetType(DeeObject *__restrict self);
 
 struct clsmethod_object {
     OBJECT_HEAD /* Unbound member function (`classmethod') (may be invoked as a thiscall object). */

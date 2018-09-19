@@ -156,7 +156,7 @@ again0:
   if (!DeeCompiler_Current->cp_options ||
      !(DeeCompiler_Current->cp_options->co_assembler & ASM_FNODEC))
        goto illegal;
-  self = ((DeeObjMethodObject *)self)->om_self;
+  self = ((DeeObjMethodObject *)self)->om_this;
   goto again0;
  }
  if (type == &DeeSuper_Type) {

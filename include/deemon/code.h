@@ -667,6 +667,31 @@ DeeFunction_New(DeeObject *__restrict code, size_t refc,
                 DeeObject *const *__restrict refv);
 
 
+
+struct function_info {
+    DREF DeeTypeObject        *fi_type;   /* [0..1] The type as part of which a function is implemented. */
+    DREF struct string_object *fi_name;   /* [0..1] The name of the function. */
+    DREF struct string_object *fi_doc;    /* [0..1] A documentation string for the function. */
+    uint16_t                   fi_opname; /* When the function is implementing an operator, the name of that operator.
+                                           * Otherwise, this field is set to `(uint16_t)-1'
+                                           * NOTE: When this field is set, `fi_name' is usually set to `NULL' */
+    uint16_t                   fi_getset; /* When the function is a getset callback, one of `CLASS_GETSET_*'.
+                                           * Otherwise, this field is set to `(uint16_t)-1' */
+};
+#define function_info_fini(x) \
+       (Dee_XDecref((x)->fi_type), \
+        Dee_XDecref((x)->fi_name), \
+        Dee_XDecref((x)->fi_doc))
+
+/* Search for information surrounding the given function/code object(s).
+ * Information that cannot be determined is filled in as described by the comments above.
+ * @return:  0: The function could be located (though which information became available must still be checked)
+ * @return:  1: The function couldn't be found (all fields in `info' are set to indicate <unknown>)
+ * @return: -1: An error occurred. */
+DFUNDEF int DCALL DeeFunction_GetInfo(DeeObject *__restrict self, struct function_info *__restrict info);
+DFUNDEF int DCALL DeeCode_GetInfo(DeeObject *__restrict self, struct function_info *__restrict info);
+
+
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF DREF DeeObject *DCALL
 DeeFunction_NewInherited(DeeObject *__restrict code, size_t refc,

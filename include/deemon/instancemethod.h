@@ -29,7 +29,7 @@ typedef struct instance_method DeeInstanceMethodObject;
 struct instance_method {
     OBJECT_HEAD
     DREF DeeObject *im_func; /* [1..1] The function to-be called. */
-    DREF DeeObject *im_self; /* [1..1] The this argument. */
+    DREF DeeObject *im_this; /* [1..1] The this argument. */
 };
 
 DDATDEF DeeTypeObject DeeInstanceMethod_Type;

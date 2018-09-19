@@ -1581,6 +1581,10 @@ DFUNDEF ATTR_RETNONNULL DeeTypeObject *DCALL DeeObject_Class(DeeObject *__restri
 DFUNDEF bool DCALL DeeType_IsInherited(DeeTypeObject *__restrict test_type,
                                        DeeTypeObject *__restrict inherited_type);
 
+/* Return the module used to define a given type `self',
+ * or `NULL' if that module could not be determined. */
+DFUNDEF DREF DeeObject *DCALL DeeType_GetModule(DeeTypeObject *__restrict self);
+
 /* Object creation (constructor invocation). */
 DFUNDEF DREF DeeObject *DCALL DeeObject_NewDefault(DeeTypeObject *__restrict object_type);
 DFUNDEF DREF DeeObject *DCALL DeeObject_New(DeeTypeObject *__restrict object_type, size_t argc, DeeObject **__restrict argv);

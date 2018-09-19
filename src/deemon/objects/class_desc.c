@@ -331,6 +331,83 @@ PRIVATE struct type_method instancemember_methods[] = {
     { NULL }
 };
 
+PRIVATE DREF DeeObject *DCALL
+instancemember_get_module(DeeInstanceMemberObject *__restrict self) {
+ DREF DeeObject *result;
+ result = DeeType_GetModule(self->im_type);
+ if (!result) return_none;
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+instancemember_get_name(DeeInstanceMemberObject *__restrict self) {
+ return_reference_((DREF DeeObject *)self->im_attribute->ca_name);
+}
+PRIVATE DREF DeeObject *DCALL
+instancemember_get_doc(DeeInstanceMemberObject *__restrict self) {
+ if (!self->im_attribute->ca_doc) return_none;
+ return_reference_((DREF DeeObject *)self->im_attribute->ca_doc);
+}
+PRIVATE DREF DeeObject *DCALL
+instancemember_get_canget(DeeInstanceMemberObject *__restrict self) {
+ ASSERT(self);
+ if ((self->im_attribute->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) ==
+                                    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) {
+  if (!self->im_type->tp_class->cd_members[self->im_attribute->ca_addr + CLASS_GETSET_GET])
+       return_false;
+ }
+ return_true;
+}
+PRIVATE DREF DeeObject *DCALL
+instancemember_get_candel(DeeInstanceMemberObject *__restrict self) {
+ ASSERT(self);
+ if (self->im_attribute->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+     return_false;
+ if ((self->im_attribute->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) ==
+                                    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) {
+  if (!self->im_type->tp_class->cd_members[self->im_attribute->ca_addr + CLASS_GETSET_DEL])
+       return_false;
+ }
+ return_true;
+}
+PRIVATE DREF DeeObject *DCALL
+instancemember_get_canset(DeeInstanceMemberObject *__restrict self) {
+ ASSERT(self);
+ if (self->im_attribute->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+     return_false;
+ if ((self->im_attribute->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) ==
+                                    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) {
+  if (!self->im_type->tp_class->cd_members[self->im_attribute->ca_addr + CLASS_GETSET_SET])
+       return_false;
+ }
+ return_true;
+}
+
+PRIVATE struct type_getset instancemember_getsets[] = {
+    { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_canget, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this member can be read from") },
+    { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_candel, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this member can be deleted") },
+    { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_canset, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this member can be written to") },
+    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_name, NULL, NULL,
+      DOC("->string\n"
+          "The name of @this instance member") },
+    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_doc, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "The documentation string associated with @this instance member") },
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_module, NULL, NULL,
+      DOC("->module\n"
+          "->none\n"
+          "Returns the module that is defining @this instance "
+          "member, or :none if that module could not be defined") },
+    { NULL }
+};
+
 PRIVATE struct type_member instancemember_members[] = {
     TYPE_MEMBER_FIELD("__type__",STRUCT_OBJECT,offsetof(DeeInstanceMemberObject,im_type)),
     TYPE_MEMBER_END
@@ -399,7 +476,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */instancemember_methods,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */instancemember_getsets,
     /* .tp_members       = */instancemember_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
