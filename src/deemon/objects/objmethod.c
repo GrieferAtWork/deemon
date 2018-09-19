@@ -309,7 +309,8 @@ PRIVATE struct type_getset objmethod_getsets[] = {
 };
 PRIVATE struct type_member objmethod_members[] = {
     TYPE_MEMBER_FIELD_DOC("__self__",STRUCT_OBJECT,offsetof(DeeObjMethodObject,om_self),
-                          "->object\nThe object to which @this object-method is bound"),
+                          "->object\n"
+                          "The object to which @this object-method is bound"),
     TYPE_MEMBER_END
 };
 
@@ -789,7 +790,6 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 
 PUBLIC char const *DCALL
 DeeClsProperty_GetName(DeeObject *__restrict self) {
- DeeTypeObject *tp_self;
  struct type_getset *iter;
  ASSERT_OBJECT(self);
  ASSERT(DeeClsProperty_Check(self));
@@ -804,7 +804,6 @@ DeeClsProperty_GetName(DeeObject *__restrict self) {
 }
 PUBLIC char const *DCALL
 DeeClsProperty_GetDoc(DeeObject *__restrict self) {
- DeeTypeObject *tp_self;
  struct type_getset *iter;
  ASSERT_OBJECT(self);
  ASSERT(DeeClsProperty_Check(self));
@@ -932,9 +931,11 @@ PRIVATE struct type_method clsproperty_methods[] = {
     { "set", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
        DOC("(thisarg,value)->none"), TYPE_METHOD_FKWDS },
     { "getter", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
-       DOC("(thisarg)\nAlias for #get"), TYPE_METHOD_FKWDS },
+       DOC("(thisarg)\n"
+           "Alias for #get"), TYPE_METHOD_FKWDS },
     { "setter", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
-       DOC("(thisarg,value)->none\nAlias for #set"), TYPE_METHOD_FKWDS },
+       DOC("(thisarg,value)->none\n"
+           "Alias for #set"), TYPE_METHOD_FKWDS },
     { NULL }
 };
 
@@ -988,21 +989,29 @@ clsproperty_canset(DeeClsPropertyObject *__restrict self) {
 
 PRIVATE struct type_getset clsproperty_getsets[] = {
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_name, NULL, NULL,
-      DOC("->string\n->none\nThe name of @this property, or :none if unknown") },
+      DOC("->string\n"
+          "->none\n"
+          "The name of @this property, or :none if unknown") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_doc, NULL, NULL,
-      DOC("->string\n->none\nThe documentation string of @this property, or :none if unknown") },
+      DOC("->string\n"
+          "->none\n"
+          "The documentation string of @this property, or :none if unknown") },
     { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canget, NULL, NULL,
-      DOC("->bool\nReturns :true if @this property has a getter callback") },
+      DOC("->bool\n"
+          "Returns :true if @this property has a getter callback") },
     { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_candel, NULL, NULL,
-      DOC("->bool\nReturns :true if @this property has a delete callback") },
+      DOC("->bool\n"
+          "Returns :true if @this property has a delete callback") },
     { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canset, NULL, NULL,
-      DOC("->bool\nReturns :true if @this property has a setter callback") },
+      DOC("->bool\n"
+          "Returns :true if @this property has a setter callback") },
     { NULL }
 };
 
 PRIVATE struct type_member clsproperty_members[] = {
     TYPE_MEMBER_FIELD_DOC("__type__",STRUCT_OBJECT,offsetof(DeeClsPropertyObject,cp_type),
-                          "->type\nThe type implementing @this property"),
+                          "->type\n"
+                          "The type implementing @this property"),
     TYPE_MEMBER_END
 };
 
@@ -1182,9 +1191,15 @@ PRIVATE struct type_cmp clsmember_cmp = {
 };
 
 PRIVATE struct type_member clsmember_members[] = {
-    TYPE_MEMBER_FIELD("__type__",STRUCT_OBJECT,offsetof(DeeClsMemberObject,cm_type)),
-    TYPE_MEMBER_FIELD("__name__",STRUCT_CONST|STRUCT_CSTR,offsetof(DeeClsMemberObject,cm_memb.m_name)),
-    TYPE_MEMBER_FIELD("__doc__",STRUCT_CONST|STRUCT_CSTR_EMPTY,offsetof(DeeClsMemberObject,cm_memb.m_doc)),
+    TYPE_MEMBER_FIELD_DOC("__type__",STRUCT_OBJECT,offsetof(DeeClsMemberObject,cm_type),
+                          "->type\n"
+                          "The type implementing @this member"),
+    TYPE_MEMBER_FIELD_DOC("__name__",STRUCT_CONST|STRUCT_CSTR,offsetof(DeeClsMemberObject,cm_memb.m_name),
+                          "The name of @this member"),
+    TYPE_MEMBER_FIELD_DOC("__doc__",STRUCT_CONST|STRUCT_CSTR_EMPTY,offsetof(DeeClsMemberObject,cm_memb.m_doc),
+                          "->string\n"
+                          "->none\n"
+                          "The documentation string of @this member, or :none if unknown"),
     TYPE_MEMBER_CONST_DOC("canget",Dee_True,"Always evaluates to :true"),
     TYPE_MEMBER_END
 };
@@ -1230,7 +1245,7 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
         /* .tp_move_assign = */NULL
     },
     /* .tp_cast = */{
-        /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_repr,
+        /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_str,
         /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_repr,
         /* .tp_bool = */NULL
     },

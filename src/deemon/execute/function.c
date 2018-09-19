@@ -201,9 +201,10 @@ function_repr(DeeFunctionObject *__restrict self) {
   if (UNICODE_PRINTER_PRINT(&printer,",{ ") < 0) goto err;
   for (i = 0; i < self->fo_code->co_refc; ++i) {
    if (i != 0 && UNICODE_PRINTER_PRINT(&printer,", ") < 0) goto err;
-   if (unicode_printer_printobjectrepr(&printer,self->fo_refv[i]) < 0) goto err;
+   if (unicode_printer_printobjectrepr(&printer,self->fo_refv[i]) < 0)
+       goto err;
   }
-  if (UNICODE_PRINTER_PRINT(&printer," }")) goto err;
+  if (UNICODE_PRINTER_PRINT(&printer," }") < 0) goto err;
  }
  if (unicode_printer_putascii(&printer,')')) goto err;
  return unicode_printer_pack(&printer);

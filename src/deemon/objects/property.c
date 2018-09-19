@@ -162,12 +162,48 @@ PRIVATE struct type_cmp property_cmp = {
 };
 
 PRIVATE struct type_member property_members[] = {
-    TYPE_MEMBER_FIELD_DOC("getter",STRUCT_OBJECT,offsetof(Property,p_get),"->callable\nThe getter callback"),
-    TYPE_MEMBER_FIELD_DOC("delete",STRUCT_OBJECT,offsetof(Property,p_del),"->callable\nThe delete callback"),
-    TYPE_MEMBER_FIELD_DOC("setter",STRUCT_OBJECT,offsetof(Property,p_set),"->callable\nThe setter callback"),
-    TYPE_MEMBER_FIELD_DOC("get",STRUCT_OBJECT,offsetof(Property,p_get),"->callable\nAlias for #getter"),
-    TYPE_MEMBER_FIELD_DOC("set",STRUCT_OBJECT,offsetof(Property,p_set),"->callable\nAlias for #setter"),
+    TYPE_MEMBER_FIELD_DOC("getter",STRUCT_OBJECT,offsetof(Property,p_get),
+                          "->callable\n"
+                          "The getter callback"),
+    TYPE_MEMBER_FIELD_DOC("delete",STRUCT_OBJECT,offsetof(Property,p_del),
+                          "->callable\n"
+                          "The delete callback"),
+    TYPE_MEMBER_FIELD_DOC("setter",STRUCT_OBJECT,offsetof(Property,p_set),
+                          "->callable\n"
+                          "The setter callback"),
+    TYPE_MEMBER_FIELD_DOC("get",STRUCT_OBJECT,offsetof(Property,p_get),
+                          "->callable\n"
+                          "Alias for #getter"),
+    TYPE_MEMBER_FIELD_DOC("set",STRUCT_OBJECT,offsetof(Property,p_set),
+                          "->callable\n"
+                          "Alias for #setter"),
     TYPE_MEMBER_END
+};
+
+PRIVATE DREF DeeObject *DCALL
+property_canget(Property *__restrict self) {
+ return_bool_(self->p_get != NULL);
+}
+PRIVATE DREF DeeObject *DCALL
+property_candel(Property *__restrict self) {
+ return_bool_(self->p_del != NULL);
+}
+PRIVATE DREF DeeObject *DCALL
+property_canset(Property *__restrict self) {
+ return_bool_(self->p_set != NULL);
+}
+
+PRIVATE struct type_getset property_getsets[] = {
+    { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_canget, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this property has a getter callback") },
+    { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_candel, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this property has a delete callback") },
+    { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_canset, NULL, NULL,
+      DOC("->bool\n"
+          "Returns :true if @this property has a setter callback") },
+    { NULL }
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -226,7 +262,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */property_getsets,
     /* .tp_members       = */property_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

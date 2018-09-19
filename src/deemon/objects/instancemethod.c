@@ -59,7 +59,7 @@ DeeInstanceMethod_New(DeeObject *__restrict func,
  if unlikely(!result) return NULL;
  DeeObject_Init(result,&DeeInstanceMethod_Type);
  result->im_func = func;
- result->im_this = this_arg;
+ result->im_self = this_arg;
  Dee_Incref(func);
  Dee_Incref(this_arg);
  return (DREF DeeObject *)result;
@@ -69,7 +69,7 @@ PRIVATE int DCALL
 im_ctor(InstanceMethod *__restrict self) {
  /* Initialize a stub instance-method. */
  self->im_func = Dee_None;
- self->im_this = Dee_None;
+ self->im_self = Dee_None;
 #ifdef CONFIG_NO_THREADS
  Dee_None->ob_refcnt += 2;
 #else
@@ -81,9 +81,9 @@ im_ctor(InstanceMethod *__restrict self) {
 PRIVATE int DCALL
 im_copy(InstanceMethod *__restrict self,
         InstanceMethod *__restrict other) {
- self->im_this = other->im_this;
+ self->im_self = other->im_self;
  self->im_func = other->im_func;
- Dee_Incref(self->im_this);
+ Dee_Incref(self->im_self);
  Dee_Incref(self->im_func);
  return 0;
 }
@@ -91,10 +91,10 @@ im_copy(InstanceMethod *__restrict self,
 PRIVATE int DCALL
 im_deepcopy(InstanceMethod *__restrict self,
             InstanceMethod *__restrict other) {
- self->im_this = DeeObject_DeepCopy(other->im_this);
- if unlikely(!self->im_this) return -1;
+ self->im_self = DeeObject_DeepCopy(other->im_self);
+ if unlikely(!self->im_self) return -1;
  self->im_func = DeeObject_DeepCopy(other->im_func);
- if unlikely(!self->im_func) { Dee_Decref(self->im_this); return -1; }
+ if unlikely(!self->im_func) { Dee_Decref(self->im_self); return -1; }
  return 0;
 }
 
@@ -106,7 +106,7 @@ im_init(InstanceMethod *__restrict self,
  PRIVATE struct keyword kwlist[] = { K(func), K(thisarg), KEND };
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo:instancemethod",&func,&thisarg))
      return -1;
- self->im_this = thisarg;
+ self->im_self = thisarg;
  self->im_func = func;
  Dee_Incref(thisarg);
  Dee_Incref(func);
@@ -115,22 +115,22 @@ im_init(InstanceMethod *__restrict self,
 
 PRIVATE DREF DeeObject *DCALL
 im_repr(InstanceMethod *__restrict self) {
- return DeeString_Newf("instancemethod(func: %r, thisarg: %r)",self->im_func,self->im_this);
+ return DeeString_Newf("instancemethod(func: %r, thisarg: %r)",self->im_func,self->im_self);
 }
 
 PRIVATE DREF DeeObject *DCALL
 im_call(InstanceMethod *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- return DeeObject_ThisCall(self->im_func,self->im_this,argc,argv);
+ return DeeObject_ThisCall(self->im_func,self->im_self,argc,argv);
 }
 PRIVATE DREF DeeObject *DCALL
 im_callkw(InstanceMethod *__restrict self, size_t argc,
           DeeObject **__restrict argv, DeeObject *kw) {
- return DeeObject_ThisCallKw(self->im_func,self->im_this,argc,argv,kw);
+ return DeeObject_ThisCallKw(self->im_func,self->im_self,argc,argv,kw);
 }
 PRIVATE dhash_t DCALL
 im_hash(InstanceMethod *__restrict self) {
- return DeeObject_Hash(self->im_func) ^ DeeObject_Hash(self->im_this);
+ return DeeObject_Hash(self->im_func) ^ DeeObject_Hash(self->im_self);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -141,7 +141,7 @@ im_eq(InstanceMethod *__restrict self,
      return NULL;
  temp = DeeObject_CompareEq(self->im_func,other->im_func);
  if (temp <= 0) return unlikely(temp < 0) ? NULL : (Dee_Incref(Dee_False),Dee_False);
- temp = DeeObject_CompareEq(self->im_this,other->im_this);
+ temp = DeeObject_CompareEq(self->im_self,other->im_self);
  if unlikely(temp < 0) return NULL;
  return_bool_(temp);
 }
@@ -153,7 +153,7 @@ im_ne(InstanceMethod *__restrict self,
      return NULL;
  temp = DeeObject_CompareNe(self->im_func,other->im_func);
  if (temp != 0) return unlikely(temp < 0) ? NULL : (Dee_Incref(Dee_True),Dee_True);
- temp = DeeObject_CompareNe(self->im_this,other->im_this);
+ temp = DeeObject_CompareNe(self->im_self,other->im_self);
  if unlikely(temp < 0) return NULL;
  return_bool_(temp);
 }
@@ -172,9 +172,95 @@ INTDEF void DCALL super_visit(DeeSuperObject *__restrict self, dvisit_t proc, vo
 #define im_fini   super_fini
 #define im_visit  super_visit
 
+PRIVATE struct class_attribute *DCALL
+instancemethod_getattr(InstanceMethod *__restrict self,
+                       uint16_t *pgetset_index,
+                       DeeTypeObject **pdecl_type) {
+ struct class_attribute *result;
+ DeeTypeObject *tp_iter;
+ tp_iter = Dee_TYPE(self->im_self);
+ do {
+  DeeClassDescriptorObject *desc;
+  struct class_desc *my_class;
+  uint16_t addr; size_t i;
+  if (!DeeType_IsClass(tp_iter)) break;
+  my_class = DeeClass_DESC(tp_iter);
+  desc = my_class->cd_desc;
+  rwlock_read(&my_class->cd_lock);
+  for (addr = 0; addr < desc->cd_cmemb_size; ++addr) {
+   if (my_class->cd_members[addr] != self->im_func)
+       continue;
+   rwlock_endread(&my_class->cd_lock);
+   /* Found the address at which the function is located. */
+   for (i = 0; i <= desc->cd_iattr_mask; ++i) {
+    result = &desc->cd_iattr_list[i];
+    if (!result->ca_name) continue;
+    if (addr < result->ca_addr) continue;
+    if ((result->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM|CLASS_ATTRIBUTE_FMETHOD)) !=
+                           (CLASS_ATTRIBUTE_FCLASSMEM|CLASS_ATTRIBUTE_FMETHOD))
+        continue;
+    if (result->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+     if (addr >= result->ca_addr + 3) continue;
+     if (pgetset_index) *pgetset_index = (uint16_t)(addr - result->ca_addr);
+    } else {
+     if (addr > result->ca_addr) continue;
+     if (pgetset_index) *pgetset_index = 0;
+    }
+    if (pdecl_type) *pdecl_type = tp_iter;
+    return result;
+   }
+  }
+  rwlock_endread(&my_class->cd_lock);
+ } while ((tp_iter = DeeType_Base(tp_iter)) != NULL);
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+instancemethod_get_name(InstanceMethod *__restrict self) {
+ struct class_attribute *attr;
+ attr = instancemethod_getattr(self,NULL,NULL);
+ if (!attr) return_none;
+ return_reference_((DeeObject *)attr->ca_name);
+}
+
+PRIVATE DREF DeeObject *DCALL
+instancemethod_get_doc(InstanceMethod *__restrict self) {
+ struct class_attribute *attr;
+ attr = instancemethod_getattr(self,NULL,NULL);
+ if (!attr || !attr->ca_doc) return_none;
+ return_reference_((DeeObject *)attr->ca_doc);
+}
+
+PRIVATE DREF DeeTypeObject *DCALL
+instancemethod_get_type(InstanceMethod *__restrict self) {
+ DeeTypeObject *result;
+ if (!instancemethod_getattr(self,NULL,&result))
+      result = (DeeTypeObject *)Dee_None;
+ return_reference_(result);
+}
+
+PRIVATE struct type_getset im_getsets[] = {
+    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_name, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "The name of the function being bound, or :none if unknown") },
+    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_doc, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "The documentation string of the function being bound, or :none if unknown") },
+    { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_type, NULL, NULL,
+      DOC("->type\n"
+          "->none\n"
+          "The type implementing the function that is being bound, or :none if unknown") },
+    { NULL }
+};
+
 PRIVATE struct type_member im_members[] = {
-    TYPE_MEMBER_FIELD("__this__",STRUCT_OBJECT,offsetof(InstanceMethod,im_this)),
-    TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(InstanceMethod,im_func),"->callable"),
+    TYPE_MEMBER_FIELD_DOC("__self__",STRUCT_OBJECT,offsetof(InstanceMethod,im_self),
+                          "->object\nThe object to which @this :instancemethod is bound"),
+    TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(InstanceMethod,im_func),
+                          "->callable\n"
+                          "The unbound class-function that is being bound by this :instancemethod"),
     TYPE_MEMBER_END
 };
 
@@ -187,7 +273,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
                             "\n"
                             "call(args...)\n"
                             "Invoke the $func used to construct @this "
-                            "instancemethod as ${func(this_arg,args...)}"),
+                            "instancemethod as ${func(thisarg,args...)}"),
     /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
