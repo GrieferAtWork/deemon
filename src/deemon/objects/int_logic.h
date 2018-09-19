@@ -34,11 +34,44 @@
 
 DECL_BEGIN
 
+#if defined(CONFIG_NO_CACHES) || \
+    defined(CONFIG_NO_INT_CACHES)
+#undef CONFIG_INT_CACHE_MAXSIZE
+#define CONFIG_INT_CACHE_MAXSIZE  0
+#undef CONFIG_INT_CACHE_MAXCOUNT
+#define CONFIG_INT_CACHE_MAXCOUNT 0
+#endif
+
+/* The max amount of integers per cache */
+#ifndef CONFIG_INT_CACHE_MAXSIZE
+#define CONFIG_INT_CACHE_MAXSIZE   64
+#endif
+
+/* The max number of digits for which a cache is kept */
+#ifndef CONFIG_INT_CACHE_MAXCOUNT
+/* The max number of integer bits for which a dedicated cache must exist */
+#ifndef CONFIG_INT_CACHE_BITCOUNT
+#define CONFIG_INT_CACHE_BITCOUNT    64
+#endif /* !CONFIG_INT_CACHE_BITCOUNT */
+#define CONFIG_INT_CACHE_MAXCOUNT  ((CONFIG_INT_CACHE_BITCOUNT + (DIGIT_BITS-1)) / DIGIT_BITS)
+#endif /* !CONFIG_INT_CACHE_MAXCOUNT */
+
+#if !CONFIG_INT_CACHE_MAXSIZE
+#undef CONFIG_INT_CACHE_MAXCOUNT
+#define CONFIG_INT_CACHE_MAXCOUNT 0
+#endif
+
+
 #ifdef NDEBUG
 INTDEF DREF DeeIntObject *DCALL DeeInt_Alloc(size_t n_digits);
 #else
 INTDEF DREF DeeIntObject *DCALL DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line);
 #define DeeInt_Alloc(n_digits)  DeeInt_Alloc_dbg(n_digits,__FILE__,__LINE__)
+#endif
+#if CONFIG_INT_CACHE_MAXCOUNT != 0
+INTDEF void DCALL DeeInt_Free(DeeIntObject *__restrict self);
+#else
+#define DeeInt_Free(self) DeeObject_Free(self)
 #endif
 
 INTDEF DREF DeeIntObject *DCALL int_copy(DeeIntObject const *__restrict self);

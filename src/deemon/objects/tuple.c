@@ -46,19 +46,30 @@
 #include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
 
-#ifndef TUPLE_CACHE_MAXSIZE
-#define TUPLE_CACHE_MAXSIZE   64
-#endif
-#ifndef TUPLE_CACHE_MAXCOUNT
-#define TUPLE_CACHE_MAXCOUNT  8
-#endif
-
-#if !TUPLE_CACHE_MAXSIZE
-#undef TUPLE_CACHE_MAXCOUNT
-#define TUPLE_CACHE_MAXCOUNT 0
+#if defined(CONFIG_NO_CACHES) || \
+    defined(CONFIG_NO_TUPLE_CACHES)
+#undef CONFIG_TUPLE_CACHE_MAXSIZE
+#define CONFIG_TUPLE_CACHE_MAXSIZE  0
+#undef CONFIG_TUPLE_CACHE_MAXCOUNT
+#define CONFIG_TUPLE_CACHE_MAXCOUNT 0
 #endif
 
-#if TUPLE_CACHE_MAXCOUNT && !defined(CONFIG_NO_THREADS)
+/* The max amount of tuples per cache */
+#ifndef CONFIG_TUPLE_CACHE_MAXSIZE
+#define CONFIG_TUPLE_CACHE_MAXSIZE   64
+#endif
+
+/* The max tuple length for which a cache is kept */
+#ifndef CONFIG_TUPLE_CACHE_MAXCOUNT
+#define CONFIG_TUPLE_CACHE_MAXCOUNT  8
+#endif
+
+#if !CONFIG_TUPLE_CACHE_MAXSIZE
+#undef CONFIG_TUPLE_CACHE_MAXCOUNT
+#define CONFIG_TUPLE_CACHE_MAXCOUNT 0
+#endif
+
+#if CONFIG_TUPLE_CACHE_MAXCOUNT && !defined(CONFIG_NO_THREADS)
 #include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 #endif
@@ -75,15 +86,15 @@ typedef DeeTupleObject Tuple;
 #endif
 
 
-#if TUPLE_CACHE_MAXCOUNT
+#if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
 struct cached_object {
- struct cached_object *co_next;
+    struct cached_object *co_next;
 };
 struct tuple_cache {
- size_t                c_count; /* [lock(c_lock)][<= TUPLE_CACHE_MAXSIZE] Amount of cached objects int `c_head' */
- struct cached_object *c_head;  /* [lock(c_lock)][0..1] Linked list of cached tuple objects. */
+    size_t                c_count; /* [lock(c_lock)][<= CONFIG_TUPLE_CACHE_MAXSIZE] Amount of cached objects int `c_head' */
+    struct cached_object *c_head;  /* [lock(c_lock)][0..1] Linked list of cached tuple objects. */
 #ifndef CONFIG_NO_THREADS
- rwlock_t              c_lock;  /* Lock for this tuple cache. */
+    rwlock_t              c_lock;  /* Lock for this tuple cache. */
 #endif /* !CONFIG_NO_THREADS */
 };
 
@@ -95,7 +106,7 @@ struct tuple_cache {
 #define UNLOCK(x) rwlock_endwrite(&(x))
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE struct tuple_cache cache[TUPLE_CACHE_MAXCOUNT];
+PRIVATE struct tuple_cache cache[CONFIG_TUPLE_CACHE_MAXCOUNT];
 
 INTERN size_t DCALL
 tuplecache_clear(size_t max_clear) {
@@ -122,12 +133,12 @@ tuplecache_clear(size_t max_clear) {
 }
 
 
-#else /* TUPLE_CACHE_MAXCOUNT */
+#else /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 INTERN size_t DCALL
 tuplecache_clear(size_t UNUSED(max_clear)) {
  return 0;
 }
-#endif /* !TUPLE_CACHE_MAXCOUNT */
+#endif /* !CONFIG_TUPLE_CACHE_MAXCOUNT */
 
 
 PUBLIC DREF DeeObject *DCALL
@@ -135,8 +146,8 @@ DeeTuple_NewUninitialized(size_t n) {
  DREF DeeTupleObject *result;
  if unlikely(!n)
     return_empty_tuple;
-#if TUPLE_CACHE_MAXCOUNT
- if (n < TUPLE_CACHE_MAXCOUNT) {
+#if CONFIG_TUPLE_CACHE_MAXCOUNT
+ if (n < CONFIG_TUPLE_CACHE_MAXCOUNT) {
   struct tuple_cache *c = &cache[n-1];
   if (c->c_count) {
    LOCK(c->c_lock);
@@ -157,12 +168,12 @@ DeeTuple_NewUninitialized(size_t n) {
    UNLOCK(c->c_lock);
   }
  }
-#endif /* TUPLE_CACHE_MAXCOUNT */
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
  result = (DREF DeeTupleObject *)DeeObject_Malloc(offsetof(DeeTupleObject,t_elem)+
                                                   n*sizeof(DeeObject *));
  if unlikely(!result) return NULL;
  result->t_size = n;
-#if TUPLE_CACHE_MAXCOUNT
+#if CONFIG_TUPLE_CACHE_MAXCOUNT
 got_result:
 #endif
  DeeObject_Init(result,&DeeTuple_Type);
@@ -172,7 +183,7 @@ got_result:
  return (DREF DeeObject *)result;
 }
 
-#if TUPLE_CACHE_MAXCOUNT
+#if CONFIG_TUPLE_CACHE_MAXCOUNT
 INTERN void DCALL
 tuple_tp_free(void *__restrict ob) {
  ASSERT(ob);
@@ -182,13 +193,13 @@ tuple_tp_free(void *__restrict ob) {
  MEMSET_PTR(DeeTuple_ELEM((DeeObject *)ob),0xcc,
             DeeTuple_SIZE((DeeObject *)ob));
 #endif
- if (DeeTuple_SIZE((DeeObject *)ob) < TUPLE_CACHE_MAXCOUNT) {
+ if (DeeTuple_SIZE((DeeObject *)ob) < CONFIG_TUPLE_CACHE_MAXCOUNT) {
   struct tuple_cache *c = &cache[DeeTuple_SIZE((DeeObject *)ob)-1];
-  if (c->c_count < TUPLE_CACHE_MAXSIZE) {
+  if (c->c_count < CONFIG_TUPLE_CACHE_MAXSIZE) {
    LOCK(c->c_lock);
 #ifndef CONFIG_NO_THREADS
    COMPILER_READ_BARRIER();
-   if (c->c_count < TUPLE_CACHE_MAXSIZE)
+   if (c->c_count < CONFIG_TUPLE_CACHE_MAXSIZE)
 #endif /* !CONFIG_NO_THREADS */
    {
     ((struct cached_object *)ob)->co_next = c->c_head;
@@ -202,9 +213,9 @@ tuple_tp_free(void *__restrict ob) {
  }
  DeeObject_Free(ob);
 }
-#else /* TUPLE_CACHE_MAXCOUNT */
+#else /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 #define tuple_tp_free(ob) DeeObject_Free(ob)
-#endif /* TUPLE_CACHE_MAXCOUNT */
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 
 PUBLIC void DCALL
 DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self) {
@@ -235,9 +246,9 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
   return_empty_tuple;
  }
 
-#if TUPLE_CACHE_MAXCOUNT
+#if CONFIG_TUPLE_CACHE_MAXCOUNT
  /* Check if we can use a cached tuple. */
- if (new_size < TUPLE_CACHE_MAXCOUNT) {
+ if (new_size < CONFIG_TUPLE_CACHE_MAXCOUNT) {
   struct tuple_cache *c = &cache[new_size-1];
   if (c->c_count) {
    LOCK(c->c_lock);
@@ -268,7 +279,7 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
    UNLOCK(c->c_lock);
   }
  }
-#endif /* TUPLE_CACHE_MAXCOUNT */
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
  /* Resize the old tuple. */
  new_tuple = (DREF DeeTupleObject *)DeeObject_Realloc(self,offsetof(DeeTupleObject,t_elem)+
                                                       new_size*sizeof(DREF DeeObject *));
@@ -301,9 +312,9 @@ DeeTuple_TruncateUninitialized(DREF DeeObject *__restrict self,
   return_empty_tuple;
  }
 
-#if TUPLE_CACHE_MAXCOUNT
+#if CONFIG_TUPLE_CACHE_MAXCOUNT
  /* Check if we can use a cached tuple. */
- if (new_size < TUPLE_CACHE_MAXCOUNT) {
+ if (new_size < CONFIG_TUPLE_CACHE_MAXCOUNT) {
   struct tuple_cache *c = &cache[new_size-1];
   if (c->c_count) {
    LOCK(c->c_lock);
@@ -334,7 +345,7 @@ DeeTuple_TruncateUninitialized(DREF DeeObject *__restrict self,
    UNLOCK(c->c_lock);
   }
  }
-#endif /* TUPLE_CACHE_MAXCOUNT */
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
  /* Try to resize the old tuple. */
  new_tuple = (DREF DeeTupleObject *)DeeObject_TryRealloc(self,offsetof(DeeTupleObject,t_elem)+
                                                          new_size*sizeof(DREF DeeObject *));
@@ -470,8 +481,8 @@ err_cleanup:
   result = NULL;
  } else if (used_size != result->t_size) {
   /* Fix the actually used size. */
-#if TUPLE_CACHE_MAXCOUNT
-  if (used_size < TUPLE_CACHE_MAXCOUNT) {
+#if CONFIG_TUPLE_CACHE_MAXCOUNT
+  if (used_size < CONFIG_TUPLE_CACHE_MAXCOUNT) {
    DREF DeeTupleObject *new_tuple;
    struct tuple_cache *c = &cache[used_size-1];
    if (c->c_count) {
@@ -499,7 +510,7 @@ err_cleanup:
     UNLOCK(c->c_lock);
    }
   }
-#endif /* TUPLE_CACHE_MAXCOUNT */
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
   ASSERT(result->ob_refcnt == 1);
   next = (DREF DeeObject *)DeeObject_TryRealloc(result,offsetof(DeeTupleObject,t_elem)+
                                                 used_size*sizeof(DREF DeeObject *));
@@ -1628,8 +1639,8 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
                 /* .tp_copy_ctor = */&DeeObject_NewRef,
                 /* .tp_deep_ctor = */&tuple_deepcopy,
                 /* .tp_any_ctor  = */&tuple_init,
-#if TUPLE_CACHE_MAXCOUNT
-                /* .tp_free      = */&tuple_tp_free,
+#if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
+                /* .tp_free      = */&tuple_tp_free
 #else
                 /* .tp_free      = */NULL
 #endif

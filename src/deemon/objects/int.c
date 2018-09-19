@@ -55,7 +55,158 @@
 #define SSIZE_MAX  __SSIZE_MAX__
 #endif
 
+#if CONFIG_INT_CACHE_MAXCOUNT != 0
+#include <deemon/util/rwlock.h>
+#endif
+
 DECL_BEGIN
+
+#if CONFIG_INT_CACHE_MAXCOUNT != 0
+struct free_int {
+    struct free_int *fi_next; /* [0..1] Next free integer. */
+};
+struct free_int_set {
+    struct free_int *fis_head; /* [0..1][lock(fis_lock)] First free integer object. */
+    size_t           fis_size; /* [lock(fis_lock)][<= CONFIG_INT_CACHE_MAXSIZE]
+                                * Amount of free integer objects in this set. */
+#ifndef CONFIG_NO_THREADS
+    rwlock_t         fis_lock; /* Lock for this free integer set. */
+#endif
+};
+
+PRIVATE struct free_int_set free_ints[CONFIG_INT_CACHE_MAXCOUNT];
+
+INTERN size_t DCALL
+intcache_clear(size_t max_clear) {
+ size_t i,result = 0;
+ struct free_int_set *set;
+ for (i = 0; i < COMPILER_LENOF(free_ints); ++i) {
+  struct free_int *chain;
+  struct free_int *chain_end;
+  size_t total_free;
+  set = &free_ints[i];
+  while (!rwlock_trywrite(&set->fis_lock)) {
+   if (!set->fis_size) goto next_set;
+   SCHED_YIELD();
+  }
+  total_free = set->fis_size * (offsetof(DeeIntObject,ob_digit) +
+                                i * sizeof(digit));
+  chain = set->fis_head;
+  if (max_clear >= result + total_free) {
+   result += total_free;
+   set->fis_size = 0;
+   set->fis_head = NULL;
+  } else {
+   size_t single_item;
+   single_item = offsetof(DeeIntObject,ob_digit) + i * sizeof(digit);
+   total_free  = max_clear - result;
+   total_free += single_item - 1;
+   total_free /= single_item;
+   ASSERT(total_free < set->fis_size);
+   chain_end = chain;
+   set->fis_size -= total_free;
+   result += total_free * single_item;
+   --total_free;
+   while (total_free--)
+       chain_end = chain_end->fi_next;
+   set->fis_head = chain_end->fi_next;
+   chain_end->fi_next = NULL;
+  }
+  ASSERT((set->fis_head != NULL) == (set->fis_size != 0));
+  rwlock_endwrite(&set->fis_lock);
+  /* Free all of the extracted chain elements. */
+  while (chain) {
+   chain_end = chain->fi_next;
+   DeeObject_Free(chain);
+   chain = chain_end;
+  }
+  if (result >= max_clear) break;
+next_set:
+  ;
+ }
+ return result;
+}
+
+INTERN void DCALL
+DeeInt_Free(DeeIntObject *__restrict self) {
+ size_t n_digits;
+ ASSERT(self);
+ n_digits = (size_t)self->ob_size;
+ if (self->ob_size < 0)
+     n_digits = (size_t)-self->ob_size;
+ if (n_digits < CONFIG_INT_CACHE_MAXCOUNT) {
+  struct free_int_set *set;
+  set = &free_ints[n_digits];
+  while (!rwlock_trywrite(&set->fis_lock)) {
+   if (set->fis_size >= CONFIG_INT_CACHE_MAXSIZE)
+       goto do_free;
+   SCHED_YIELD();
+  }
+  COMPILER_READ_BARRIER();
+  if (set->fis_size < CONFIG_INT_CACHE_MAXSIZE) {
+   ((struct free_int *)self)->fi_next = set->fis_head;
+   set->fis_head = (struct free_int *)self;
+   ++set->fis_size;
+   rwlock_endwrite(&set->fis_lock);
+   return;
+  }
+  rwlock_endwrite(&set->fis_lock);
+ }
+do_free:
+ DeeObject_Free(self);
+}
+
+INTERN DREF DeeIntObject *DCALL
+#ifdef NDEBUG
+DeeInt_Alloc(size_t n_digits)
+#else
+DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
+#endif
+{
+ DREF DeeIntObject *result;
+ /* Search the cache for free integers. */
+ if (n_digits < CONFIG_INT_CACHE_MAXCOUNT) {
+  struct free_int_set *set;
+  set = &free_ints[n_digits];
+  while (!rwlock_trywrite(&set->fis_lock)) {
+   if (!set->fis_size)
+       goto do_alloc;
+   SCHED_YIELD();
+  }
+  ASSERT((set->fis_size != 0) == (set->fis_head != NULL));
+  if (set->fis_size) {
+   result = (DREF DeeIntObject *)set->fis_head;
+   set->fis_head = ((struct free_int *)result)->fi_next;
+   --set->fis_size;
+   ASSERT((set->fis_size != 0) == (set->fis_head != NULL));
+   rwlock_endwrite(&set->fis_lock);
+   goto init_result;
+  }
+  rwlock_endwrite(&set->fis_lock);
+ }
+do_alloc:
+#ifdef NDEBUG
+ result = (DREF DeeIntObject *)DeeObject_Malloc(offsetof(DeeIntObject,ob_digit) +
+                                                n_digits * sizeof(digit));
+#else
+ result = (DREF DeeIntObject *)DeeDbgObject_Malloc(offsetof(DeeIntObject,ob_digit) +
+                                                   n_digits * sizeof(digit),
+                                                   file,
+                                                   line);
+#endif
+ if unlikely(!result) goto done;
+init_result:
+ DeeObject_Init(result,&DeeInt_Type);
+ result->ob_size = n_digits;
+done:
+ return result;
+}
+#else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
+INTERN size_t DCALL
+intcache_clear(size_t UNUSED(max_clear)) {
+ return 0;
+}
+
 
 INTERN DREF DeeIntObject *DCALL
 #ifdef NDEBUG
@@ -80,6 +231,7 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
  }
  return result;
 }
+#endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
 
 /* Create an integer from signed/unsigned LEB data. */
 PUBLIC DREF DeeObject *DCALL
@@ -113,7 +265,7 @@ DeeInt_NewSleb(uint8_t **__restrict preader) {
    if (!num_bits) {
     if (dst == result->ob_digit) {
      /* Special case: INT(0) */
-     DeeObject_Free(result);
+     DeeInt_Free(result);
      result = &DeeInt_Zero;
      Dee_Incref(result);
      goto done2;
@@ -174,7 +326,7 @@ DeeInt_NewUleb(uint8_t **__restrict preader) {
    if (!num_bits) {
     if (dst == result->ob_digit) {
      /* Special case: INT(0) */
-     DeeObject_Free(result);
+     DeeInt_Free(result);
      result = &DeeInt_Zero;
      Dee_Incref(result);
      goto done2;
@@ -2250,7 +2402,12 @@ PUBLIC DeeTypeObject DeeInt_Type = {
                 /* .tp_ctor      = */&int_return_zero,
                 /* .tp_copy_ctor = */&DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
                 /* .tp_deep_ctor = */&DeeObject_NewRef,
-                /* .tp_any_ctor  = */&int_new
+                /* .tp_any_ctor  = */&int_new,
+#if CONFIG_INT_CACHE_MAXCOUNT != 0
+                /* .tp_free      = */&DeeInt_Free
+#else
+                /* .tp_free      = */NULL
+#endif
             }
         },
         /* .tp_dtor        = */NULL,

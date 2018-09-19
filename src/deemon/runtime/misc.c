@@ -991,7 +991,10 @@ DCALL DeeDbg_Free(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
 #undef Co
 #undef Cs
 
+
+/* TODO: CONFIG_NO_CACHES */
 typedef size_t (DCALL *pcacheclr)(size_t max_clear);
+INTDEF size_t DCALL intcache_clear(size_t max_clear);
 INTDEF size_t DCALL tuplecache_clear(size_t max_clear);
 INTDEF size_t DCALL latincache_clear(size_t max_clear);
 INTDEF size_t DCALL membercache_clear(size_t max_clear);
@@ -1003,6 +1006,7 @@ PRIVATE pcacheclr caches[] = {
 #undef Co
 #undef Cs
     /* Custom object/data cache clear functions. */
+    &intcache_clear,
     &tuplecache_clear,
     &latincache_clear,
     &membercache_clear,
