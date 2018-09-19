@@ -3310,11 +3310,11 @@ DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
                             struct attribute_info *__restrict result,
                             struct attribute_lookup_rules const *__restrict rules) {
  dhash_t i,perturb;
- MEMBERCACHE_READ(&tp_self->tp_cache);
- if unlikely(!tp_self->tp_cache.mc_table) goto done;
- perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache,rules->alr_hash);
+ MEMBERCACHE_READ(&tp_self->tp_class_cache);
+ if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
+ perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache,rules->alr_hash);
  for (;; i = MEMBERCACHE_HASHNX(i,perturb),MEMBERCACHE_HASHPT(perturb)) {
-  struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
+  struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   char const *doc; uint16_t perm;
   DREF DeeTypeObject *member_decl,*member_type;
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
@@ -3479,7 +3479,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
   }
   member_decl = item->mcs_decl;
   Dee_Incref(member_decl);
-  MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+  MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
   if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
    if (perm & ATTR_DOCOBJ)
        Dee_Decref(COMPILER_CONTAINER_OF(doc,DeeStringObject,s_str));
@@ -3494,7 +3494,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
   return 0;
  }
 done:
- MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+ MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
 not_found:
  return 1;
 }
