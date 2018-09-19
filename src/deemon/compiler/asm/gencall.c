@@ -574,7 +574,7 @@ got_small_method:
    if (func->a_type == AST_CONSTEXPR && argc <= 1 &&
       (DeeObjMethod_Check(func->a_constexpr) ||
        DeeKwObjMethod_Check(func->a_constexpr))) {
-    char const *name = DeeObjMethod_Name(func->a_constexpr);
+    char const *name = DeeObjMethod_GetName(func->a_constexpr);
     if (name) {
      /* call to some other object. */
      int32_t attrid; DREF DeeObject *name_ob;
@@ -870,7 +870,7 @@ invoke_cattr_funsym_tuple:
   if (func->a_type == AST_CONSTEXPR &&
      (DeeObjMethod_Check(func->a_constexpr) ||
       DeeKwObjMethod_Check(func->a_constexpr))) {
-   char const *name = DeeObjMethod_Name(func->a_constexpr);
+   char const *name = DeeObjMethod_GetName(func->a_constexpr);
    if (name) {
     int32_t attrid; DREF DeeObject *name_ob;
     name_ob = DeeString_New(name);
@@ -982,7 +982,7 @@ check_getattr_base_symbol_class_tuple:
     if (func->a_type == AST_CONSTEXPR &&
        (DeeObjMethod_Check(func->a_constexpr) ||
         DeeKwObjMethod_Check(func->a_constexpr))) {
-     char const *name = DeeObjMethod_Name(func->a_constexpr);
+     char const *name = DeeObjMethod_GetName(func->a_constexpr);
      if (name) {
       int32_t attrid; DREF DeeObject *name_ob;
       name_ob = DeeString_New(name);
@@ -1281,7 +1281,7 @@ got_method:
  if (func->a_type == AST_CONSTEXPR &&
     (DeeObjMethod_Check(func->a_constexpr) ||
      DeeKwObjMethod_Check(func->a_constexpr))) {
-  char const *name = DeeObjMethod_Name(func->a_constexpr);
+  char const *name = DeeObjMethod_GetName(func->a_constexpr);
   if (name) {
    int32_t attrid; DREF DeeObject *name_ob;
    name_ob = DeeString_New(name);
@@ -1460,7 +1460,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
  if (func->a_type == AST_CONSTEXPR &&
     (DeeObjMethod_Check(func->a_constexpr) ||
      DeeKwObjMethod_Check(func->a_constexpr))) {
-  char const *name = DeeObjMethod_Name(func->a_constexpr);
+  char const *name = DeeObjMethod_GetName(func->a_constexpr);
   if (name) {
    int32_t attrid; DREF DeeObject *name_ob;
    name_ob = DeeString_New(name);

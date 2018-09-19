@@ -68,7 +68,11 @@ DFUNDEF DREF DeeObject *DCALL DeeKwObjMethod_New(dkwobjmethod_t func, DeeObject 
 
 /* Returns the name of the function bound by the given
  * objmethod, or `NULL' if the name could not be determined. */
-DFUNDEF char const *DCALL DeeObjMethod_Name(DeeObject *__restrict self);
+DFUNDEF char const *DCALL DeeObjMethod_GetName(DeeObject *__restrict self);
+DFUNDEF char const *DCALL DeeObjMethod_GetDoc(DeeObject *__restrict self);
+/* Returns the type that is implementing the bound method,
+ * or `NULL' if that type could not be determined. */
+DFUNDEF DeeTypeObject *DCALL DeeObjMethod_GetType(DeeObject *__restrict self);
 
 struct clsmethod_object {
     OBJECT_HEAD /* Unbound member function (`classmethod') (may be invoked as a thiscall object). */
@@ -101,7 +105,8 @@ DFUNDEF DREF /*KwClsMethod*/DeeObject *DCALL DeeKwClsMethod_New(DeeTypeObject *_
 
 /* Returns the name of the function bound by the given
  * clsmethod, or `NULL' if the name could not be determined. */
-DFUNDEF char const *DCALL DeeClsMethod_Name(DeeObject *__restrict self);
+DFUNDEF char const *DCALL DeeClsMethod_GetName(DeeObject *__restrict self);
+DFUNDEF char const *DCALL DeeClsMethod_GetDoc(DeeObject *__restrict self);
 
 
 
@@ -113,6 +118,12 @@ struct clsproperty_object {
     dsetmethod_t        cp_set;  /* [0..1] Setter callback. */
 };
 DDATDEF DeeTypeObject DeeClsProperty_Type;
+#define DeeClsProperty_TYPE(x)         ((DeeClsPropertyObject *)REQUIRES_OBJECT(x))->cp_type
+#define DeeClsProperty_GET(x)          ((DeeClsPropertyObject *)REQUIRES_OBJECT(x))->cp_get
+#define DeeClsProperty_DEL(x)          ((DeeClsPropertyObject *)REQUIRES_OBJECT(x))->cp_del
+#define DeeClsProperty_SET(x)          ((DeeClsPropertyObject *)REQUIRES_OBJECT(x))->cp_set
+#define DeeClsProperty_Check(x)        DeeObject_InstanceOfExact(x,&DeeClsProperty_Type) /* `_classproperty' is `final'. */
+#define DeeClsProperty_CheckExact(x)   DeeObject_InstanceOfExact(x,&DeeClsProperty_Type)
 
 /* Create a new unbound class property object. */
 DFUNDEF DREF /*ClsProperty*/DeeObject *DCALL
@@ -120,6 +131,11 @@ DeeClsProperty_New(DeeTypeObject *__restrict type,
                    dgetmethod_t get,
                    ddelmethod_t del,
                    dsetmethod_t set);
+
+/* Returns the name of the function bound by the given
+ * clsproperty, or `NULL' if the name could not be determined. */
+DFUNDEF char const *DCALL DeeClsProperty_GetName(DeeObject *__restrict self);
+DFUNDEF char const *DCALL DeeClsProperty_GetDoc(DeeObject *__restrict self);
 
 
 
