@@ -80,6 +80,7 @@
     <ClInclude Include="..\include\deemon\util\string.h" />
     <ClInclude Include="..\include\deemon\weakref.h" />
     <ClInclude Include="..\src\deemon\cmdline.h" />
+    <ClInclude Include="..\src\deemon\objects\gc_inspect.h" />
     <ClInclude Include="..\src\deemon\objects\int_logic.h" />
     <ClInclude Include="..\src\deemon\objects\seq\filter.h" />
     <ClInclude Include="..\src\deemon\objects\seq\range.h" />
@@ -193,6 +194,7 @@
     <ClCompile Include="..\src\deemon\objects\filetypes.c" />
     <ClCompile Include="..\src\deemon\objects\float.c" />
     <ClCompile Include="..\src\deemon\objects\frame.c" />
+    <ClCompile Include="..\src\deemon\objects\gc_inspect.c" />
     <ClCompile Include="..\src\deemon\objects\hashset.c" />
     <ClCompile Include="..\src\deemon\objects\instancemethod.c" />
     <ClCompile Include="..\src\deemon\objects\int.c" />

@@ -453,7 +453,6 @@ EXPORTS
 	_DeeObject_VNewf@12=DeeObject_VNewf@12
 	_DeeObject_VThisCallf@16=DeeObject_VThisCallf@16
 	_DeeObject_Visit@12=DeeObject_Visit@12
-	_DeeObject_VisitAll@12=DeeObject_VisitAll@12
 	_DeeObject_Xor@8=DeeObject_Xor@8
 	_DeeObject_XorInt@8=DeeObject_XorInt@8
 	_DeeRefVector_New@16=DeeRefVector_New@16

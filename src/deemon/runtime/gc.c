@@ -44,6 +44,8 @@
 
 #include "strings.h"
 
+#include "../objects/gc_inspect.h"
+
 DECL_BEGIN
 
 
@@ -519,7 +521,7 @@ found_chain_link:
  data->vd_chain = &node;
 
  /* Recursively search this object. */
- DeeObject_VisitAll(self,(dvisit_t)&visit_object,data);
+ DeeObject_Visit(self,(dvisit_t)&visit_object,data);
 
  /* Step #4: Remove our stack-allocated dependency entry if it
   *          is the one located on-top of the stack. */
@@ -576,7 +578,7 @@ gc_trydestroy(struct gc_head *__restrict head,
       break;
  }
  /* Recursively visit our initial dependency. */
- DeeObject_VisitAll(&head->gc_object,(dvisit_t)&visit_object,&visit);
+ DeeObject_Visit(&head->gc_object,(dvisit_t)&visit_object,&visit);
 
 #define OPTIMIZE_DEPS_SET() \
  { \
@@ -1171,16 +1173,99 @@ gcenum_collect(DeeObject *__restrict UNUSED(self),
                size_t argc, DeeObject **__restrict argv) {
  size_t max = (size_t)-1,result;
  if (DeeArg_Unpack(argc,argv,"|Iu:collect",&max))
-     return NULL;
+     goto err;
  result = DeeGC_Collect(max);
  return DeeInt_NewSize(result);
+err:
+ return NULL;
 }
+
+PRIVATE DREF DeeObject *DCALL
+gcenum_referred(DeeObject *__restrict UNUSED(self),
+                size_t argc, DeeObject **__restrict argv) {
+ DeeObject *start;
+ if (DeeArg_Unpack(argc,argv,"o:referred",&start))
+     goto err;
+ return (DREF DeeObject *)DeeGC_NewReferred(start);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+gcenum_referredgc(DeeObject *__restrict UNUSED(self),
+                  size_t argc, DeeObject **__restrict argv) {
+ DeeObject *start;
+ if (DeeArg_Unpack(argc,argv,"o:referredgc",&start))
+     goto err;
+ return (DREF DeeObject *)DeeGC_NewReferredGC(start);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+gcenum_reachable(DeeObject *__restrict UNUSED(self),
+                 size_t argc, DeeObject **__restrict argv) {
+ DeeObject *start;
+ if (DeeArg_Unpack(argc,argv,"o:reachable",&start))
+     goto err;
+ return (DREF DeeObject *)DeeGC_NewReachable(start);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+gcenum_reachablegc(DeeObject *__restrict UNUSED(self),
+                   size_t argc, DeeObject **__restrict argv) {
+ DeeObject *start;
+ if (DeeArg_Unpack(argc,argv,"o:reachablegc",&start))
+     goto err;
+ return (DREF DeeObject *)DeeGC_NewReachableGC(start);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+gcenum_referring(DeeObject *__restrict UNUSED(self),
+                 size_t argc, DeeObject **__restrict argv) {
+ DeeObject *to;
+ if (DeeArg_Unpack(argc,argv,"o:referring",&to))
+     goto err;
+ return (DREF DeeObject *)DeeGC_NewGCReferred(to);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+gcenum_isreferring(DeeObject *__restrict UNUSED(self),
+                   size_t argc, DeeObject **__restrict argv) {
+ DeeObject *from,*to;
+ if (DeeArg_Unpack(argc,argv,"oo:isreferring",&from,&to))
+     goto err;
+ return_bool(DeeGC_ReferredBy(from,to));
+err:
+ return NULL;
+}
+
 
 PRIVATE struct type_method gcenum_methods[] = {
     { "collect", &gcenum_collect,
       DOC("(int max=-1)->int\n"
           "Try to collect at least @max GC objects and return the actual number collected\n"
           "Note that more than @max objects may be collected if sufficiently large reference cycles exist") },
+    { "referred", &gcenum_referred,
+      DOC("(object start)->set\n"
+          "Returns a set of objects that are immediatly referred to by @start") },
+    { "referredgc", &gcenum_referredgc,
+      DOC("(object start)->set\n"
+          "Same as #referred, but only include gc-objects (s.a. :type.isgc)") },
+    { "reachable", &gcenum_reachable,
+      DOC("(object start)->set\n"
+          "Returns a set of objects that are reachable from @start") },
+    { "reachablegc", &gcenum_reachablegc,
+      DOC("(object start)->set\n"
+          "Same as #reachable, but only include gc-objects (s.a. :type.isgc)") },
+    { "referring", &gcenum_referring,
+      DOC("(object to)->set\n"
+          "Returns a set of gc-objects (s.a. :type.isgc) that are referring to @to") },
+    { "isreferring", &gcenum_isreferring,
+      DOC("(object from,object to)->bool\n"
+          "Returns :true if @to is referred to by @from, or :false otherwise") },
     { NULL }
 };
 
@@ -1236,6 +1321,40 @@ PRIVATE DeeTypeObject GCEnum_Type = {
 PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
     OBJECT_HEAD_INIT(&GCEnum_Type)
 };
+
+/* GC objects referring to X */
+INTERN int DCALL
+DeeGC_CollectGCReferred(GCSetMaker *__restrict self,
+                        DeeObject *__restrict target) {
+ struct gc_head *iter;
+again:
+ GCLOCK_ACQUIRE_READ();
+ for (iter = gc_root; iter; iter = iter->gc_next) {
+  DREF DeeObject *obj = &iter->gc_object;
+  if (!Dee_IncrefIfNotZero(obj))
+       continue;
+  if (DeeGC_ReferredBy(obj,target)) {
+   int error = GCSetMaker_Insert(self,obj);
+   if (error == 0) continue;
+   if (error > 0) goto decref_obj;
+   GCLOCK_RELEASE_READ();
+   Dee_Decref_unlikely(obj);
+   if (Dee_CollectMemory(self->gs_err))
+       goto again;
+   return -1;
+  } else {
+decref_obj:
+   if (!Dee_DecrefIfNotOne(obj)) {
+    GCLOCK_RELEASE_READ();
+    Dee_Decref_likely(obj);
+    goto again;
+   }
+  }
+ }
+ GCLOCK_RELEASE_READ();
+ return 0;
+}
+
 
 
 DECL_END

@@ -1736,19 +1736,9 @@ DeeObject_Visit(DeeObject *__restrict self,
    }
   }
  } while ((tp_self = DeeType_Base(tp_self)) != NULL);
-}
-PUBLIC void DCALL
-DeeObject_VisitAll(DeeObject *__restrict self,
-                   dvisit_t proc, void *arg) {
- DeeObject_Visit(self,proc,arg);
  /* Only visit heap-allocated types. */
-#if 1
  if (Dee_TYPE(self)->tp_flags & TP_FHEAP)
     (*proc)((DeeObject *)Dee_TYPE(self),arg);
-#else
- if (Dee_TYPE(self)->tp_flags & TP_FHEAP)
-     DeeObject_Visit((DeeObject *)Dee_TYPE(self),proc,arg);
-#endif
 }
 
 PUBLIC void DCALL

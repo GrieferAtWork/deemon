@@ -1680,41 +1680,38 @@ DFUNDEF DREF DeeObject *DCALL DeeObject_ThisCallTupleKw(DeeObject *__restrict se
 #endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 /* Generate and return the hash of a given object. */
-DFUNDEF dhash_t DCALL DeeObject_Hash(DeeObject *__restrict self);
+DFUNDEF dhash_t (DCALL DeeObject_Hash)(DeeObject *__restrict self);
 
-/* GC operator invocation.
- * NOTE: `DeeObject_VisitAll' is the same as `DeeObject_Visit',
- *        but will also visit everything reachable from `Dee_TYPE(self)'. */
-DFUNDEF void DCALL DeeObject_Visit(DeeObject *__restrict self, dvisit_t proc, void *arg);
-DFUNDEF void DCALL DeeObject_VisitAll(DeeObject *__restrict self, dvisit_t proc, void *arg);
-DFUNDEF void DCALL DeeObject_Clear(DeeObject *__restrict self);
-DFUNDEF void DCALL DeeObject_PClear(DeeObject *__restrict self, unsigned int gc_priority);
+/* GC operator invocation. */
+DFUNDEF void (DCALL DeeObject_Visit)(DeeObject *__restrict self, dvisit_t proc, void *arg);
+DFUNDEF void (DCALL DeeObject_Clear)(DeeObject *__restrict self);
+DFUNDEF void (DCALL DeeObject_PClear)(DeeObject *__restrict self, unsigned int gc_priority);
 
 /* Integral value lookup operators.
  * @return: INT_SIGNED:   The value stored in `result' must be interpreted as signed.
  * @return: INT_UNSIGNED: The value stored in `result' must be interpreted as unsigned.
  * @return: -1:           An error occurred. */
-DFUNDEF int DCALL DeeObject_GetInt8(DeeObject *__restrict self, int8_t *__restrict result);
-DFUNDEF int DCALL DeeObject_GetInt16(DeeObject *__restrict self, int16_t *__restrict result);
-DFUNDEF int DCALL DeeObject_GetInt32(DeeObject *__restrict self, int32_t *__restrict result);
-DFUNDEF int DCALL DeeObject_GetInt64(DeeObject *__restrict self, int64_t *__restrict result);
-DFUNDEF int DCALL DeeObject_GetInt128(DeeObject *__restrict self, dint128_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_GetInt8)(DeeObject *__restrict self, int8_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_GetInt16)(DeeObject *__restrict self, int16_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_GetInt32)(DeeObject *__restrict self, int32_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_GetInt64)(DeeObject *__restrict self, int64_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_GetInt128)(DeeObject *__restrict self, dint128_t *__restrict result);
 
 /* Integral/Floating-point conversion operator invocation. */
-DFUNDEF int DCALL DeeObject_AsInt8(DeeObject *__restrict self, int8_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsInt16(DeeObject *__restrict self, int16_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsInt32(DeeObject *__restrict self, int32_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsInt64(DeeObject *__restrict self, int64_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsInt128(DeeObject *__restrict self, dint128_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsUInt8(DeeObject *__restrict self, uint8_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsUInt16(DeeObject *__restrict self, uint16_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsUInt32(DeeObject *__restrict self, uint32_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsUInt64(DeeObject *__restrict self, uint64_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsUInt128(DeeObject *__restrict self, duint128_t *__restrict result);
-DFUNDEF int DCALL DeeObject_AsDouble(DeeObject *__restrict self, double *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsInt8)(DeeObject *__restrict self, int8_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsInt16)(DeeObject *__restrict self, int16_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self, int32_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self, int64_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsInt128)(DeeObject *__restrict self, dint128_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self, uint8_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self, uint16_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsUInt32)(DeeObject *__restrict self, uint32_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsUInt64)(DeeObject *__restrict self, uint64_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self, duint128_t *__restrict result);
+DFUNDEF int (DCALL DeeObject_AsDouble)(DeeObject *__restrict self, double *__restrict result);
 
 /* Cast-to-pointer conversion operator invocation. */
-DFUNDEF DREF DeeObject *DCALL DeeObject_Int(DeeObject *__restrict self);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__restrict self);
 
 #define DEE_PRIVATE_OBJECT_AS_INT_1(self,result)  DeeObject_AsInt8(self,(int8_t *)(result))
 #define DEE_PRIVATE_OBJECT_AS_INT_2(self,result)  DeeObject_AsInt16(self,(int16_t *)(result))
@@ -1749,20 +1746,20 @@ DFUNDEF DREF DeeObject *DCALL DeeObject_Int(DeeObject *__restrict self);
 
 
 /* Math operator invocation. */
-DFUNDEF DREF DeeObject *DCALL DeeObject_Inv(DeeObject *__restrict self);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Pos(DeeObject *__restrict self);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Neg(DeeObject *__restrict self);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Add(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Sub(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Mul(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Div(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Mod(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Shl(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Shr(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_And(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Or(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Xor(DeeObject *__restrict self, DeeObject *__restrict some_object);
-DFUNDEF DREF DeeObject *DCALL DeeObject_Pow(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Inv)(DeeObject *__restrict self);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Pos)(DeeObject *__restrict self);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Neg)(DeeObject *__restrict self);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Add)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Sub)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Mul)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Div)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Mod)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Shl)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Shr)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_And)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Or)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Xor)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_Pow)(DeeObject *__restrict self, DeeObject *__restrict some_object);
 
 /* Inplace math operator invocation.
  * NOTE: For the duration of the call, `*pself' must not be changed by outside sources.
@@ -1777,45 +1774,45 @@ DFUNDEF DREF DeeObject *DCALL DeeObject_Pow(DeeObject *__restrict self, DeeObjec
  *    such as `DeeObject_Inc(&my_int)' to potentially be completed without having to allocate
  *    a new integer object (though only in case `my_int' isn't being shared, and incrementing
  *    wouldn't overflow within the available number of digits) */
-DFUNDEF int DCALL DeeObject_Inc(DREF DeeObject **__restrict pself);
-DFUNDEF int DCALL DeeObject_Dec(DREF DeeObject **__restrict pself);
-DFUNDEF int DCALL DeeObject_InplaceAdd(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplaceSub(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplaceMul(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplaceDiv(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplaceMod(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplaceShl(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplaceShr(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplaceAnd(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplaceOr(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplaceXor(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
-DFUNDEF int DCALL DeeObject_InplacePow(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_Inc)(DREF DeeObject **__restrict pself);
+DFUNDEF int (DCALL DeeObject_Dec)(DREF DeeObject **__restrict pself);
+DFUNDEF int (DCALL DeeObject_InplaceAdd)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplaceSub)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplaceMul)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplaceDiv)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplaceMod)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplaceShl)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplaceShr)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplaceAnd)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplaceOr)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplaceXor)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
+DFUNDEF int (DCALL DeeObject_InplacePow)(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);
 
 /* Math operations with C (aka. host) integer operand. */
-DFUNDEF DREF DeeObject *DCALL DeeObject_AddS8(DeeObject *__restrict self, int8_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_SubS8(DeeObject *__restrict self, int8_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_AddInt(DeeObject *__restrict self, uint32_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_SubInt(DeeObject *__restrict self, uint32_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_MulInt(DeeObject *__restrict self, int8_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_DivInt(DeeObject *__restrict self, int8_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_ModInt(DeeObject *__restrict self, int8_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_ShlInt(DeeObject *__restrict self, uint8_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_ShrInt(DeeObject *__restrict self, uint8_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_AndInt(DeeObject *__restrict self, uint32_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_OrInt(DeeObject *__restrict self, uint32_t val);
-DFUNDEF DREF DeeObject *DCALL DeeObject_XorInt(DeeObject *__restrict self, uint32_t val);
-DFUNDEF int DCALL DeeObject_InplaceAddS8(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF int DCALL DeeObject_InplaceSubS8(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF int DCALL DeeObject_InplaceAddInt(DREF DeeObject **__restrict pself, uint32_t val);
-DFUNDEF int DCALL DeeObject_InplaceSubInt(DREF DeeObject **__restrict pself, uint32_t val);
-DFUNDEF int DCALL DeeObject_InplaceMulInt(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF int DCALL DeeObject_InplaceDivInt(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF int DCALL DeeObject_InplaceModInt(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF int DCALL DeeObject_InplaceShlInt(DREF DeeObject **__restrict pself, uint8_t val);
-DFUNDEF int DCALL DeeObject_InplaceShrInt(DREF DeeObject **__restrict pself, uint8_t val);
-DFUNDEF int DCALL DeeObject_InplaceAndInt(DREF DeeObject **__restrict pself, uint32_t val);
-DFUNDEF int DCALL DeeObject_InplaceOrInt(DREF DeeObject **__restrict pself, uint32_t val);
-DFUNDEF int DCALL DeeObject_InplaceXorInt(DREF DeeObject **__restrict pself, uint32_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_AddS8)(DeeObject *__restrict self, int8_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_SubS8)(DeeObject *__restrict self, int8_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_AddInt)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_SubInt)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_MulInt)(DeeObject *__restrict self, int8_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_DivInt)(DeeObject *__restrict self, int8_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_ModInt)(DeeObject *__restrict self, int8_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_ShlInt)(DeeObject *__restrict self, uint8_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_ShrInt)(DeeObject *__restrict self, uint8_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_AndInt)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_OrInt)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_XorInt)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF int (DCALL DeeObject_InplaceAddS8)(DREF DeeObject **__restrict pself, int8_t val);
+DFUNDEF int (DCALL DeeObject_InplaceSubS8)(DREF DeeObject **__restrict pself, int8_t val);
+DFUNDEF int (DCALL DeeObject_InplaceAddInt)(DREF DeeObject **__restrict pself, uint32_t val);
+DFUNDEF int (DCALL DeeObject_InplaceSubInt)(DREF DeeObject **__restrict pself, uint32_t val);
+DFUNDEF int (DCALL DeeObject_InplaceMulInt)(DREF DeeObject **__restrict pself, int8_t val);
+DFUNDEF int (DCALL DeeObject_InplaceDivInt)(DREF DeeObject **__restrict pself, int8_t val);
+DFUNDEF int (DCALL DeeObject_InplaceModInt)(DREF DeeObject **__restrict pself, int8_t val);
+DFUNDEF int (DCALL DeeObject_InplaceShlInt)(DREF DeeObject **__restrict pself, uint8_t val);
+DFUNDEF int (DCALL DeeObject_InplaceShrInt)(DREF DeeObject **__restrict pself, uint8_t val);
+DFUNDEF int (DCALL DeeObject_InplaceAndInt)(DREF DeeObject **__restrict pself, uint32_t val);
+DFUNDEF int (DCALL DeeObject_InplaceOrInt)(DREF DeeObject **__restrict pself, uint32_t val);
+DFUNDEF int (DCALL DeeObject_InplaceXorInt)(DREF DeeObject **__restrict pself, uint32_t val);
 
 
 /* Comparison operator invocation.
@@ -1890,8 +1887,8 @@ typedef dssize_t (DCALL *dformatprinter)(void *arg, char const *__restrict data,
  * error, the first negative return value of printer is propagated,
  * or -1 is returned if an operator invocation failed.
  * NOTE: Printing is done as UTF-8 encoded strings. */
-DFUNDEF dssize_t DCALL DeeObject_Print(DeeObject *__restrict self, dformatprinter printer, void *arg);
-DFUNDEF dssize_t DCALL DeeObject_PrintRepr(DeeObject *__restrict self, dformatprinter printer, void *arg);
+DFUNDEF dssize_t (DCALL DeeObject_Print)(DeeObject *__restrict self, dformatprinter printer, void *arg);
+DFUNDEF dssize_t (DCALL DeeObject_PrintRepr)(DeeObject *__restrict self, dformatprinter printer, void *arg);
 
 /* Print a given object while using the given `format_str' format-string.
  * These functions are called by `string.format' when a `:' is found in
@@ -1916,17 +1913,17 @@ DFUNDEF dssize_t DCALL DeeObject_PrintRepr(DeeObject *__restrict self, dformatpr
  *  - "{:>42:foo}" --> arg.operator str().rjust(42,"foo");
  *  - "{:^42:foo}" --> arg.operator str().center(42,"foo");
  *  - "{:=42:foo}" --> arg.operator str().zfill(42,"foo"); */
-DFUNDEF dssize_t DCALL
-DeeObject_PrintFormatString(DeeObject *__restrict self, dformatprinter printer, void *arg,
-                            /*utf-8*/char const *__restrict format_str, size_t format_len);
-DFUNDEF dssize_t DCALL
-DeeObject_PrintFormat(DeeObject *__restrict self, dformatprinter printer, void *arg,
-                      DeeObject *__restrict format_str);
+DFUNDEF dssize_t
+(DCALL DeeObject_PrintFormatString)(DeeObject *__restrict self, dformatprinter printer, void *arg,
+                                    /*utf-8*/char const *__restrict format_str, size_t format_len);
+DFUNDEF dssize_t
+(DCALL DeeObject_PrintFormat)(DeeObject *__restrict self, dformatprinter printer, void *arg,
+                              DeeObject *__restrict format_str);
 
 /* Create a/Yield from an iterator.
- * @return: ITER_DONE: [DeeObject_TIterNext] The iterator has been exhausted. */
-DFUNDEF DREF DeeObject *DCALL DeeObject_IterSelf(DeeObject *__restrict self);
-DFUNDEF DREF DeeObject *DCALL DeeObject_IterNext(DeeObject *__restrict self);
+ * @return: ITER_DONE: [DeeObject_IterNext] The iterator has been exhausted. */
+DFUNDEF DREF DeeObject *(DCALL DeeObject_IterSelf)(DeeObject *__restrict self);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
 
 /* Invoke `proc' for each element of a general-purpose sequence.
  * When `*proc' returns < 0, that value is propagated.
@@ -1934,7 +1931,7 @@ DFUNDEF DREF DeeObject *DCALL DeeObject_IterNext(DeeObject *__restrict self);
  * NOTE: This function does some special optimizations for known sequence types.
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
 typedef dssize_t (DCALL *dforeach_t)(void *arg, DeeObject *__restrict elem);
-DFUNDEF dssize_t DCALL DeeObject_Foreach(DeeObject *__restrict self, dforeach_t proc, void *arg);
+DFUNDEF dssize_t (DCALL DeeObject_Foreach)(DeeObject *__restrict self, dforeach_t proc, void *arg);
 
 /* Unpack the given sequence `self' into `opjc' items then stored within the `objv' vector. */
 DFUNDEF int (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc, DREF DeeObject **__restrict objv);
@@ -1947,7 +1944,7 @@ DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_DocAttr)(DeeObject *__restric
 DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_DocAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
 DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_DocAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
 
-/* Attribute operator invocation. */
+/* Object attribute access. */
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
