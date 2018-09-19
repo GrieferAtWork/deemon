@@ -1763,6 +1763,20 @@ DFUNDEF DREF DeeObject *DCALL DeeObject_And(DeeObject *__restrict self, DeeObjec
 DFUNDEF DREF DeeObject *DCALL DeeObject_Or(DeeObject *__restrict self, DeeObject *__restrict some_object);
 DFUNDEF DREF DeeObject *DCALL DeeObject_Xor(DeeObject *__restrict self, DeeObject *__restrict some_object);
 DFUNDEF DREF DeeObject *DCALL DeeObject_Pow(DeeObject *__restrict self, DeeObject *__restrict some_object);
+
+/* Inplace math operator invocation.
+ * NOTE: For the duration of the call, `*pself' must not be changed by outside sources.
+ *       Because of this, pointers to external, global, or static variables must be passed
+ *       indirectly, though local or stack variables can be passed directly (as they are
+ *       private to their stack-frame and cannot be changed through outside interference,
+ *       aside of debuggers which know to look out for manipulating operands of inplace
+ *       instructions)
+ * >> Because these functions will inherit a reference to `IN(*pself)' upon success, it is
+ *    possible for the implementation to check for otherwise immutable objects to be modified
+ *    in-line (when `DeeObject_IsShared(IN(*pself))' is false), thus allowing an invocation
+ *    such as `DeeObject_Inc(&my_int)' to potentially be completed without having to allocate
+ *    a new integer object (though only in case `my_int' isn't being shared, and incrementing
+ *    wouldn't overflow within the available number of digits) */
 DFUNDEF int DCALL DeeObject_Inc(DREF DeeObject **__restrict pself);
 DFUNDEF int DCALL DeeObject_Dec(DREF DeeObject **__restrict pself);
 DFUNDEF int DCALL DeeObject_InplaceAdd(DREF DeeObject **__restrict pself, DeeObject *__restrict some_object);

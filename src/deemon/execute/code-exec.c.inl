@@ -121,6 +121,84 @@ INTDEF int (DCALL DeeObject_TSetAttr)(DeeTypeObject *__restrict tp_self, DeeObje
 INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, size_t argc, DeeObject **__restrict argv);
 #endif
 
+
+/* @return: * :        Prefixed object pointer (dereferences to non-NULL)
+ * @return: NULL:      An error occurred
+ * @return: ITER_DONE: The used prefix does not support pointer addressing. */
+#ifdef EXEC_FAST
+#define get_prefix_object_ptr()  get_prefix_object_ptr_fast(frame,code,sp)
+PRIVATE DREF DeeObject **ATTR_FASTCALL
+get_prefix_object_ptr_fast(struct code_frame *__restrict frame,
+                           DeeCodeObject *__restrict code,
+                           DeeObject **__restrict sp)
+#else
+#define get_prefix_object_ptr()  get_prefix_object_ptr_safe(frame,code,sp)
+PRIVATE DREF DeeObject **ATTR_FASTCALL
+get_prefix_object_ptr_safe(struct code_frame *__restrict frame,
+                           DeeCodeObject *__restrict code,
+                           DeeObject **__restrict sp)
+#endif
+{
+ DREF DeeObject **result;
+ instruction_t *ip = frame->cf_ip;
+ uint16_t imm_val;
+ switch (*ip++) {
+
+ case ASM_STACK:
+  imm_val = *(uint8_t *)ip;
+do_get_stack:
+#ifdef EXEC_SAFE
+  if unlikely((frame->cf_stack + imm_val) >= sp) {
+   frame->cf_sp = sp;
+   err_srt_invalid_sp(frame,imm_val);
+   return NULL;
+  }
+#else
+  ASSERT((frame->cf_stack + imm_val) < sp);
+#endif
+  result = &frame->cf_stack[imm_val];
+  break;
+
+ case ASM_LOCAL:
+  imm_val = *(uint8_t *)(ip + 0);
+do_get_local:
+#ifdef EXEC_SAFE
+  if unlikely(imm_val >= code->co_localc) {
+   frame->cf_sp = sp;
+   err_srt_invalid_locale(frame,imm_val);
+   return NULL;
+  }
+#else
+  ASSERT(imm_val < code->co_localc);
+#endif
+  result = &frame->cf_frame[imm_val];
+  if unlikely(!*result) {
+   err_unbound_local(code,frame->cf_ip,imm_val);
+   return NULL;
+  }
+  break;
+
+ case ASM_EXTENDED1:
+  switch (*ip++) {
+
+  case ASM16_STACK & 0xff:
+   imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
+   goto do_get_stack;
+  case ASM16_LOCAL & 0xff:
+   imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+   goto do_get_local;
+
+  default:
+   return (DREF DeeObject **)ITER_DONE;
+  }
+  break;
+
+ default:
+  return (DREF DeeObject **)ITER_DONE;
+ }
+ return result;
+}
+
 #ifdef EXEC_FAST
 #define get_prefix_object()  get_prefix_object_fast(frame,code,sp)
 PRIVATE DREF DeeObject *ATTR_FASTCALL
@@ -5125,13 +5203,21 @@ prefix_foreach_16:
   PREFIX_TARGET(ASM_##ADD) \
   { \
       int error; \
-      USING_PREFIX_OBJECT \
+      DREF DeeObject **prefix_pointer; \
       ASSERT_USAGE(-1,+0); \
-      prefix_ob = get_prefix_object(); \
-      if unlikely(!prefix_ob) HANDLE_EXCEPT(); \
-      error = DeeObject_Inplace##Add(&prefix_ob,TOP); \
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); } \
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT(); \
+      prefix_pointer = get_prefix_object_ptr(); \
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) { \
+          if unlikely(!prefix_pointer) HANDLE_EXCEPT(); \
+          error = DeeObject_Inplace##Add(prefix_pointer,TOP); \
+          if unlikely(error) HANDLE_EXCEPT(); \
+      } else { \
+          USING_PREFIX_OBJECT \
+          prefix_ob = get_prefix_object(); \
+          if unlikely(!prefix_ob) HANDLE_EXCEPT(); \
+          error = DeeObject_Inplace##Add(&prefix_ob,TOP); \
+          if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); } \
+          if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT(); \
+      } \
       POPREF(); \
       DISPATCH(); \
   }
@@ -5150,131 +5236,227 @@ prefix_foreach_16:
 
   PREFIX_TARGET(ASM_ADD_SIMM8) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceAddS8(&prefix_ob,READ_Simm8());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceAddS8(prefix_pointer,READ_Simm8());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceAddS8(&prefix_ob,READ_Simm8());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
   PREFIX_TARGET(ASM_ADD_IMM32) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceAddInt(&prefix_ob,READ_imm32());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceAddInt(prefix_pointer,READ_imm32());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceAddInt(&prefix_ob,READ_imm32());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_SUB_SIMM8) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceSubS8(&prefix_ob,READ_Simm8());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceSubS8(prefix_pointer,READ_Simm8());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceSubS8(&prefix_ob,READ_Simm8());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
   PREFIX_TARGET(ASM_SUB_IMM32) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceSubInt(&prefix_ob,READ_imm32());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceSubInt(prefix_pointer,READ_imm32());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceSubInt(&prefix_ob,READ_imm32());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_MUL_SIMM8) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceMulInt(&prefix_ob,READ_Simm8());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceMulInt(prefix_pointer,READ_Simm8());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceMulInt(&prefix_ob,READ_Simm8());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_DIV_SIMM8) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceDivInt(&prefix_ob,READ_Simm8());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceDivInt(prefix_pointer,READ_Simm8());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceDivInt(&prefix_ob,READ_Simm8());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_MOD_SIMM8) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceModInt(&prefix_ob,READ_Simm8());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceModInt(prefix_pointer,READ_Simm8());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceModInt(&prefix_ob,READ_Simm8());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_AND_IMM32) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceAndInt(&prefix_ob,READ_imm32());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceAndInt(prefix_pointer,READ_imm32());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceAndInt(&prefix_ob,READ_imm32());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_OR_IMM32) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceOrInt(&prefix_ob,READ_imm32());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceOrInt(prefix_pointer,READ_imm32());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceOrInt(&prefix_ob,READ_imm32());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_XOR_IMM32) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceXorInt(&prefix_ob,READ_imm32());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceXorInt(prefix_pointer,READ_imm32());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceXorInt(&prefix_ob,READ_imm32());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_SHL_IMM8) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceShlInt(&prefix_ob,READ_imm8());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceShlInt(prefix_pointer,READ_imm8());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceShlInt(&prefix_ob,READ_imm8());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_SHR_IMM8) {
       int error;
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      error = DeeObject_InplaceShrInt(&prefix_ob,READ_imm8());
-      if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       error = DeeObject_InplaceShrInt(prefix_pointer,READ_imm8());
+       if unlikely(error) HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       error = DeeObject_InplaceShrInt(&prefix_ob,READ_imm8());
+       if unlikely(error) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
@@ -5325,66 +5507,106 @@ prefix_do_function_c:
 
 
   PREFIX_TARGET(ASM_INC) {
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      if unlikely(DeeObject_Inc(&prefix_ob)) {
-       Dee_Decref(prefix_ob);
-       HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       if unlikely(DeeObject_Inc(prefix_pointer))
+          HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       if unlikely(DeeObject_Inc(&prefix_ob)) {
+        Dee_Decref(prefix_ob);
+        HANDLE_EXCEPT();
+       }
+       if unlikely(set_prefix_object(prefix_ob))
+          HANDLE_EXCEPT();
       }
-      if unlikely(set_prefix_object(prefix_ob))
-         HANDLE_EXCEPT();
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_DEC) {
-      USING_PREFIX_OBJECT
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      if unlikely(DeeObject_Dec(&prefix_ob)) {
-       Dee_Decref(prefix_ob);
-       HANDLE_EXCEPT();
+      DREF DeeObject **prefix_pointer;
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       if unlikely(DeeObject_Dec(prefix_pointer))
+          HANDLE_EXCEPT();
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       if unlikely(DeeObject_Dec(&prefix_ob)) {
+        Dee_Decref(prefix_ob);
+        HANDLE_EXCEPT();
+       }
+       if unlikely(set_prefix_object(prefix_ob))
+          HANDLE_EXCEPT();
       }
-      if unlikely(set_prefix_object(prefix_ob))
-         HANDLE_EXCEPT();
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_OPERATOR) {
       DREF DeeObject *call_result;
-      USING_PREFIX_OBJECT
+      DREF DeeObject **prefix_pointer;
       imm_val  = READ_imm8();
       imm_val2 = READ_imm8();
 do_prefix_operator:
       ASSERT_USAGE(-(int)imm_val2,+1);
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      call_result = DeeObject_PInvokeOperator(&prefix_ob,imm_val,
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       call_result = DeeObject_PInvokeOperator(prefix_pointer,imm_val,
                                                imm_val2,sp-imm_val2);
-      if unlikely(!call_result) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      while (imm_val2--) POPREF();
-      PUSH(call_result);
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+       if unlikely(!call_result) HANDLE_EXCEPT();
+       while (imm_val2--) POPREF();
+       PUSH(call_result);
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       call_result = DeeObject_PInvokeOperator(&prefix_ob,imm_val,
+                                                imm_val2,sp-imm_val2);
+       if unlikely(!call_result) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       while (imm_val2--) POPREF();
+       PUSH(call_result);
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
   PREFIX_TARGET(ASM_OPERATOR_TUPLE) {
       DREF DeeObject *call_result;
-      USING_PREFIX_OBJECT
+      DREF DeeObject **prefix_pointer;
       imm_val = READ_imm8();
 do_prefix_operator_tuple:
       ASSERT_USAGE(-1,+1);
       ASSERT_TUPLE(TOP);
-      prefix_ob = get_prefix_object();
-      if unlikely(!prefix_ob) HANDLE_EXCEPT();
-      call_result = DeeObject_PInvokeOperator(&prefix_ob,
+      prefix_pointer = get_prefix_object_ptr();
+      if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+       if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+       call_result = DeeObject_PInvokeOperator(prefix_pointer,
                                                imm_val,
                                                DeeTuple_SIZE(TOP),
                                                DeeTuple_ELEM(TOP));
-      if unlikely(!call_result) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-      Dee_Decref(TOP);
-      TOP = call_result; /* Inherit reference. */
-      if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+       if unlikely(!call_result) HANDLE_EXCEPT();
+       Dee_Decref(TOP);
+       TOP = call_result; /* Inherit reference. */
+      } else {
+       USING_PREFIX_OBJECT
+       prefix_ob = get_prefix_object();
+       if unlikely(!prefix_ob) HANDLE_EXCEPT();
+       call_result = DeeObject_PInvokeOperator(&prefix_ob,
+                                                imm_val,
+                                                DeeTuple_SIZE(TOP),
+                                                DeeTuple_ELEM(TOP));
+       if unlikely(!call_result) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+       Dee_Decref(TOP);
+       TOP = call_result; /* Inherit reference. */
+       if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+      }
       DISPATCH();
   }
 
@@ -5434,31 +5656,71 @@ prefix_do_unpack:
           goto prefix_do_unpack;
 
       PREFIX_TARGET(ASM_INCPOST) { /* incpost */
+          DREF DeeObject **prefix_pointer;
           DREF DeeObject *obcopy;
-          USING_PREFIX_OBJECT
           ASSERT_USAGE(-0,+1);
-          prefix_ob = get_prefix_object();
-          if unlikely(!prefix_ob) HANDLE_EXCEPT();
-          obcopy = DeeObject_Copy(prefix_ob);
-          if unlikely(!obcopy) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-          PUSH(obcopy); /* Inherit reference. */
-          if (DeeObject_Inc(&prefix_ob)) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-          if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+          prefix_pointer = get_prefix_object_ptr();
+          if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+           if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+           obcopy = DeeObject_Copy(*prefix_pointer);
+           if unlikely(!obcopy) HANDLE_EXCEPT();
+           PUSH(obcopy); /* Inherit reference. */
+           if unlikely(!*prefix_pointer) {
+#ifdef NDEBUG
+            get_prefix_object_ptr();
+#else
+            prefix_pointer = get_prefix_object_ptr();
+            ASSERT(!prefix_pointer);
+#endif
+            HANDLE_EXCEPT();
+           }
+           if (DeeObject_Inc(prefix_pointer))
+               HANDLE_EXCEPT();
+          } else {
+           USING_PREFIX_OBJECT
+           prefix_ob = get_prefix_object();
+           if unlikely(!prefix_ob) HANDLE_EXCEPT();
+           obcopy = DeeObject_Copy(prefix_ob);
+           if unlikely(!obcopy) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+           PUSH(obcopy); /* Inherit reference. */
+           if (DeeObject_Inc(&prefix_ob)) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+           if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+          }
           DISPATCH();
       }
 
 
-      PREFIX_TARGET(ASM_DECPOST) { /* incpost */
+      PREFIX_TARGET(ASM_DECPOST) { /* decpost */
+          DREF DeeObject **prefix_pointer;
           DREF DeeObject *obcopy;
-          USING_PREFIX_OBJECT
           ASSERT_USAGE(-0,+1);
-          prefix_ob = get_prefix_object();
-          if unlikely(!prefix_ob) HANDLE_EXCEPT();
-          obcopy = DeeObject_Copy(prefix_ob);
-          if unlikely(!obcopy) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-          PUSH(obcopy); /* Inherit reference. */
-          if (DeeObject_Dec(&prefix_ob)) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
-          if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+          prefix_pointer = get_prefix_object_ptr();
+          if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
+           if unlikely(!prefix_pointer) HANDLE_EXCEPT();
+           obcopy = DeeObject_Copy(*prefix_pointer);
+           if unlikely(!obcopy) HANDLE_EXCEPT();
+           PUSH(obcopy); /* Inherit reference. */
+           if unlikely(!*prefix_pointer) {
+#ifdef NDEBUG
+            get_prefix_object_ptr();
+#else
+            prefix_pointer = get_prefix_object_ptr();
+            ASSERT(!prefix_pointer);
+#endif
+            HANDLE_EXCEPT();
+           }
+           if (DeeObject_Dec(prefix_pointer))
+               HANDLE_EXCEPT();
+          } else {
+           USING_PREFIX_OBJECT
+           prefix_ob = get_prefix_object();
+           if unlikely(!prefix_ob) HANDLE_EXCEPT();
+           obcopy = DeeObject_Copy(prefix_ob);
+           if unlikely(!obcopy) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+           PUSH(obcopy); /* Inherit reference. */
+           if (DeeObject_Dec(&prefix_ob)) { Dee_Decref(prefix_ob); HANDLE_EXCEPT(); }
+           if unlikely(set_prefix_object(prefix_ob)) HANDLE_EXCEPT();
+          }
           DISPATCH();
       }
 
@@ -6409,4 +6671,5 @@ DECL_END
 #undef USE_SWITCH
 #undef set_prefix_object
 #undef xch_prefix_object
+#undef get_prefix_object_ptr
 #undef get_prefix_object

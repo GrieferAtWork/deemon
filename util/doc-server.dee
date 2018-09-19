@@ -882,7 +882,7 @@ function ClientThreadMain(con) {
 }
 
 
-
+#ifdef __MAIN__
 local s;
 try {
 	s = socket("INET6",none,none);
@@ -912,6 +912,7 @@ try {
 	global_target_cache.clear();
 	doc_cache.clear();
 }
+#endif
 
 
 

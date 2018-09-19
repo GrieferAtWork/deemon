@@ -1483,6 +1483,13 @@ PRIVATE struct type_getset object_getsets[] = {
     { NULL }
 };
 
+PRIVATE struct type_member object_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__refcnt__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(DeeObject,ob_refcnt),
+                          "->int\nThe number of references currently existing for this object"),
+    TYPE_MEMBER_END
+};
+
+
 PUBLIC DeeTypeObject DeeObject_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_object),
@@ -1535,7 +1542,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */object_methods,
     /* .tp_getsets       = */object_getsets,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */object_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */object_class_members

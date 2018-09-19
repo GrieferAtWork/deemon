@@ -574,6 +574,54 @@ do_reverse:
 INTERN int DCALL
 int_inc(DREF DeeIntObject **__restrict pself) {
  DREF DeeIntObject *z,*a = *pself;
+ if (!DeeObject_IsShared(a)) {
+  size_t i;
+  /* Try to do the increment in-line, thus not having to allocate a new integer. */
+  if unlikely(a->ob_size == 0) {
+   *pself = (DeeIntObject *)&DeeInt_One;
+   Dee_Incref(&DeeInt_One);
+   Dee_DecrefDokill(a);
+   goto done2;
+  }
+  if (a->ob_size > 0) {
+   for (i = 0; i < (size_t)a->ob_size; ++i) {
+    if (a->ob_digit[i]++ != DIGIT_MASK) goto done2;
+    a->ob_digit[i] = 0;
+   }
+   z = DeeInt_Alloc(a->ob_size + 1);
+   if unlikely(!z) goto err;
+   memset(z->ob_digit,0,(size_t)a->ob_size * sizeof(digit));
+   z->ob_digit[(size_t)a->ob_size] = 1;
+  } else {
+   for (i = 0;; ++i) {
+    digit oldval;
+    ASSERT(i < (size_t)-a->ob_size);
+    oldval = a->ob_digit[i];
+    if (oldval == 0) {
+     a->ob_digit[i] = DIGIT_MASK;
+     continue;
+    }
+    if (oldval == 1) {
+     if (a->ob_size == -1) {
+      ASSERT(i == 0);
+      *pself = (DeeIntObject *)&DeeInt_Zero;
+      Dee_Incref(&DeeInt_Zero);
+      Dee_DecrefDokill(a);
+     } else if (i == ((size_t)-a->ob_size - 1)) {
+      /* XXX: Check the integer cache for a better fit for the new size. */
+      ++a->ob_size;
+      ASSERT(a->ob_size < 0);
+     }
+     goto done2;
+    }
+    a->ob_digit[i] = oldval - 1;
+    goto done2;
+   }
+  }
+  *pself = z; /* Inherit reference. */
+  Dee_DecrefDokill(a);
+  goto done2;
+ }
  if (ABS(a->ob_size) <= 1) {
   z = (DREF DeeIntObject *)DeeInt_NewMedian(MEDIUM_VALUE(a) + 1);
   goto done;
@@ -584,13 +632,67 @@ int_inc(DREF DeeIntObject **__restrict pself) {
   z = x_add_int(a,(digit)1);
  }
 done:
+ if unlikely(!z) goto err;
  *pself = z; /* Inherit reference. */
  Dee_Decref(a);
+done2:
  return 0;
+err:
+ return -1;
 }
 INTERN int DCALL
 int_dec(DREF DeeIntObject **__restrict pself) {
  DREF DeeIntObject *z,*a = *pself;
+ if (!DeeObject_IsShared(a)) {
+  size_t i;
+  /* Try to do the increment in-line, thus not having to allocate a new integer. */
+  if unlikely(a->ob_size == 0) {
+   *pself = (DeeIntObject *)&DeeInt_One;
+   Dee_Incref(&DeeInt_One);
+   Dee_DecrefDokill(a);
+   goto done2;
+  }
+  if (a->ob_size > 0) {
+   for (i = 0;; ++i) {
+    digit oldval;
+    ASSERT(i < (size_t)a->ob_size);
+    oldval = a->ob_digit[i];
+    if (oldval == 0) {
+     a->ob_digit[i] = DIGIT_MASK;
+     continue;
+    }
+    if (oldval == 1) {
+     if (a->ob_size == 1) {
+      ASSERT(i == 0);
+      *pself = (DeeIntObject *)&DeeInt_Zero;
+      Dee_Incref(&DeeInt_Zero);
+      Dee_DecrefDokill(a);
+     } else if (i == ((size_t)a->ob_size - 1)) {
+      /* XXX: Check the integer cache for a better fit for the new size. */
+      ++a->ob_size;
+      ASSERT(a->ob_size < 0);
+     }
+     goto done2;
+    }
+    a->ob_digit[i] = oldval - 1;
+    goto done2;
+   }
+  } else {
+   size_t a_digits = (size_t)-a->ob_size;
+   for (i = 0; i < a_digits; ++i) {
+    if (a->ob_digit[i]++ != DIGIT_MASK) goto done2;
+    a->ob_digit[i] = 0;
+   }
+   z = DeeInt_Alloc(a_digits + 1);
+   if unlikely(!z) goto err;
+   z->ob_size = -z->ob_size;
+   memset(z->ob_digit,0,a_digits * sizeof(digit));
+   z->ob_digit[a_digits] = 1;
+  }
+  *pself = z; /* Inherit reference. */
+  Dee_DecrefDokill(a);
+  goto done2;
+ }
  if (ABS(a->ob_size) <= 1) {
   z = (DREF DeeIntObject *)DeeInt_NewMedian(MEDIUM_VALUE(a) - 1);
   goto done;
@@ -603,9 +705,13 @@ int_dec(DREF DeeIntObject **__restrict pself) {
   z = x_sub_int(a,(digit)1);
  }
 done:
+ if unlikely(!z) goto err;
  *pself = z; /* Inherit reference. */
  Dee_Decref(a);
+done2:
  return 0;
+err:
+ return -1;
 }
 
 INTERN DREF DeeObject *DCALL
