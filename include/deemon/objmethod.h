@@ -99,6 +99,10 @@ DDATDEF DeeTypeObject DeeKwClsMethod_Type;
 DFUNDEF DREF /*ClsMethod*/DeeObject *DCALL DeeClsMethod_New(DeeTypeObject *__restrict type, dobjmethod_t func);
 DFUNDEF DREF /*KwClsMethod*/DeeObject *DCALL DeeKwClsMethod_New(DeeTypeObject *__restrict type, dkwobjmethod_t func);
 
+/* Returns the name of the function bound by the given
+ * clsmethod, or `NULL' if the name could not be determined. */
+DFUNDEF char const *DCALL DeeClsMethod_Name(DeeObject *__restrict self);
+
 
 
 struct clsproperty_object {

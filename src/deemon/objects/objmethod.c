@@ -108,6 +108,29 @@ DeeObjMethod_Name(DeeObject *__restrict self) {
  return NULL;
 }
 
+PUBLIC char const *DCALL
+DeeClsMethod_Name(DeeObject *__restrict self) {
+ dobjmethod_t func; DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ ASSERT(DeeClsMethod_Check(self) || DeeKwClsMethod_Check(self));
+ func    = DeeClsMethod_FUNC(self);
+ tp_self = DeeClsMethod_TYPE(self);
+ do {
+  struct type_method *iter;
+  if (tp_self == &DeeType_Type) {
+   char const *result;
+   result = typeobject_find_objmethod((DeeTypeObject *)DeeObjMethod_SELF(self),func);
+   if (result) return result;
+  }
+  iter = tp_self->tp_methods;
+  if (iter) for (; iter->m_name; ++iter) {
+   if (iter->m_func == func)
+       return iter->m_name;
+  }
+ } while ((tp_self = DeeType_Base(tp_self)) != NULL);
+ return NULL;
+}
+
 
 PRIVATE void DCALL
 objmethod_fini(DeeObjMethodObject *__restrict self) {
@@ -127,7 +150,8 @@ objmethod_call(DeeObjMethodObject *__restrict self,
 }
 PRIVATE dhash_t DCALL
 objmethod_hash(DeeObjMethodObject *__restrict self) {
- return DeeObject_Hash(self->om_self) ^ (dhash_t)self->om_func;
+ return DeeObject_Hash(self->om_self) ^
+        Dee_HashPointer(self->om_func);
 }
 PRIVATE DREF DeeObject *DCALL
 objmethod_eq(DeeObjMethodObject *__restrict self,
@@ -361,6 +385,15 @@ clsmethod_call(DeeClsMethodObject *__restrict self,
  return (*self->cm_func)(argv[0],argc-1,argv+1);
 }
 
+
+#if 1
+STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject,cm_type) ==
+              COMPILER_OFFSETOF(DeeObjMethodObject,om_self));
+STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject,cm_func) ==
+              COMPILER_OFFSETOF(DeeObjMethodObject,om_func));
+#define clsmethod_fini  objmethod_fini
+#define clsmethod_visit objmethod_visit
+#else
 PRIVATE void DCALL
 clsmethod_fini(DeeClsMethodObject *__restrict self) {
  Dee_Decref(self->cm_type);
@@ -370,6 +403,16 @@ clsmethod_visit(DeeClsMethodObject *__restrict self,
                 dvisit_t proc, void *arg) {
  Dee_Visit(self->cm_type);
 }
+#endif
+
+PRIVATE DREF DeeObject *DCALL
+clsmethod_repr(DeeClsMethodObject *__restrict self) {
+ char const *name;
+ name = DeeClsMethod_Name((DeeObject *)self);
+ if unlikely(!name) name = "?";
+ return DeeString_Newf("%r.%s",self->cm_type,name);
+}
+
 PRIVATE dhash_t DCALL
 clsmethod_hash(DeeClsMethodObject *__restrict self) {
  return Dee_HashPointer(self->cm_func);
@@ -427,10 +470,25 @@ PRIVATE struct type_cmp clsmethod_cmp = {
     /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&clsmethod_ge
 };
 
+PRIVATE DREF DeeObject *DCALL
+clsmethod_get_name(DeeClsMethodObject *__restrict self) {
+ char const *name;
+ name = DeeClsMethod_Name((DeeObject *)self);
+ if unlikely(!name) name = "?";
+ return DeeString_NewAuto(name);
+}
+
+PRIVATE struct type_getset clsmethod_getsets[] = {
+    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_name, NULL, NULL, DOC("->string") },
+    { NULL }
+};
+
+
 PRIVATE struct type_member clsmethod_members[] = {
     TYPE_MEMBER_FIELD("__type__",STRUCT_OBJECT,offsetof(DeeClsMethodObject,cm_type)),
     TYPE_MEMBER_END
 };
+
 
 PUBLIC DeeTypeObject DeeClsMethod_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -459,7 +517,7 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
     },
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
-        /* .tp_repr = */NULL,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmethod_repr,
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmethod_call,
@@ -473,7 +531,7 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */clsmethod_getsets,
     /* .tp_members       = */clsmethod_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
@@ -520,9 +578,11 @@ kwclsmethod_call_kw(DeeKwClsMethodObject *__restrict self,
 }
 
 #define kwclsmethod_fini    clsmethod_fini
+#define kwclsmethod_repr    clsmethod_repr
 #define kwclsmethod_visit   clsmethod_visit
 #define kwclsmethod_hash    clsmethod_hash
 #define kwclsmethod_cmp     clsmethod_cmp
+#define kwclsmethod_getsets clsmethod_getsets
 #define kwclsmethod_members clsmethod_members
 
 PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
@@ -552,7 +612,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
     },
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
-        /* .tp_repr = */NULL,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwclsmethod_repr,
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&kwclsmethod_call,
@@ -566,7 +626,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */kwclsmethod_getsets,
     /* .tp_members       = */kwclsmethod_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
