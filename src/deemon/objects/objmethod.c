@@ -1376,7 +1376,12 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */NULL, /* TODO: __name__, __doc__, __module__
+                                    *  -> We can determine the originating module, and search that
+                                    *     module's export table the same way we're able to determine
+                                    *     a type's module.
+                                    *     And Since `cmethod' objects are C-only, we don't even have
+                                    *     to worry about user-created instances! */
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

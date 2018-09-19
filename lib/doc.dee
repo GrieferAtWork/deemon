@@ -1540,9 +1540,25 @@ global class Doc: sequence {
 	private member m_raw_doc_is_type = false;
 
 	@"(string path)"
+	@"Lookup a given @path in the form /<module>/<x>/<y>/<z>"
+	@""
 	@"(module mod)"
-	@"(module mod,string subpath)"
-	@"(Doc parent,string attribute_name)"
+	@"Lookup the Doc node for a given module"
+	@""
+	@"(type tp)"
+	@"Lookup the Doc node for a given type"
+	@""
+	@"(attribute attr)"
+	@"Lookup the Doc node for a given attribute"
+	@""
+	@"(object wrapper)"
+	@"Lookup the Doc node for a wrapper, as produced by expressions such as ${string.lower}"
+	@""
+	@"(module base,string attrname)"
+	@"(type base,string attrname)"
+	@"(Doc base,string attrname)"
+	@"(object base,string attrname)"
+	@"Lookup a given @attrname as a child of a given @base"
 	this(doc_parent_or_path, attribute_name?, operator_doc?) {
 		if (attribute_name !is bound) {
 			if (doc_parent_or_path is deemon.module) {
@@ -1552,7 +1568,53 @@ global class Doc: sequence {
 				name = path = deemon.module.__name__(doc_parent_or_path);
 				return;
 			}
-			assert doc_parent_or_path is string;
+			if (doc_parent_or_path is deemon.type_) {
+				local type_module = deemon.type_.__module__(doc_parent_or_path);
+				object = doc_parent_or_path;
+				parent = Doc(type_module);
+				m_raw_doc = deemon.type_.__doc__(doc_parent_or_path);
+				m_raw_doc_is_type = true;
+				name = deemon.type_.__name__(doc_parent_or_path);
+				attr = deemon.attribute.lookup(type_module,name);
+				path = "{}/{}".format({ parent.path, name });
+				return;
+			}
+			/* Support for loading docs directly from attribute objects. */
+			if (doc_parent_or_path is deemon.attribute) {
+				name = doc_parent_or_path.name;
+				m_raw_doc = doc_parent_or_path.doc;
+				local decl = doc_parent_or_path.decl;
+				parent = Doc(decl);
+				if (doc_parent_or_path.isclass) {
+					if (doc_parent_or_path.isclass) {
+						local parob = decl;
+						if (doc_parent_or_path.isinstance) {
+							/* Use `type.getinstanceattr' to prevent ambiguity
+							 * between stuff like `dict.c:keys' and `dict.i:keys' */
+							object = deemon.type_.getinstanceattr(parob,name);
+						} else {
+							object = parob.operator . (name);
+						}
+					}
+				}
+				attr = doc_parent_or_path;
+				path = "{}/{}".format({ parent.path, name });
+				return;
+			}
+			/* Support for attribute wrappers */
+			if (doc_parent_or_path !is string) {
+				name = doc_parent_or_path.__name__;
+				m_raw_doc = doc_parent_or_path.__doc__;
+				object = doc_parent_or_path;
+				if (deemon.hasattr(doc_parent_or_path,"__type__"))
+					parent = Doc(doc_parent_or_path.__type__);
+				else {
+					parent = Doc(doc_parent_or_path.__module__);
+				}
+				path = "{}/{}".format({ parent.path, name });
+				attr = deemon.attribute(parent.object,name);
+				return;
+			}
 			local head,none,tail = doc_parent_or_path.strip("/ ").rpartition("/")...;
 			if (!tail) {
 				/* Module documentation */
@@ -1571,9 +1633,8 @@ global class Doc: sequence {
 			doc_parent_or_path = Doc(head);
 			attribute_name     = tail;
 		}
-		if (doc_parent_or_path is deemon.module)
+		if (doc_parent_or_path !is Doc)
 			doc_parent_or_path = Doc(doc_parent_or_path);
-		assert doc_parent_or_path is Doc;
 		/* Check that the parent-node allows child nodes. */
 		local my_attr;
 		local fixed_attribute_name;
