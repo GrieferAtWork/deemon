@@ -24,6 +24,7 @@
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/error.h>
+#include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/thread.h>
@@ -1330,9 +1331,236 @@ cmethod_call(DeeCMethodObject *__restrict self,
  return DeeCMethod_CallFunc(self->cm_func,argc,argv);
 }
 
+PRIVATE struct module_symbol *DCALL
+cmethod_getmodsym(DeeModuleObject *__restrict module,
+                  dcmethod_t func_ptr) {
+ uint16_t addr;
+ struct module_symbol *result;
+ rwlock_read(&module->mo_lock);
+ for (addr = 0; addr < module->mo_globalc; ++addr) {
+  DeeObject *glob = module->mo_globalv[addr];
+  if (!glob) continue;
+  if (!DeeCMethod_Check(glob) &&
+      !DeeKwCMethod_Check(glob))
+      continue;
+  if (DeeCMethod_FUNC(glob) != func_ptr)
+      continue;
+  rwlock_endread(&module->mo_lock);
+  result = DeeModule_GetSymbolID(module,addr);
+  if (result) return result;
+  rwlock_read(&module->mo_lock);
+ }
+ rwlock_endread(&module->mo_lock);
+ return NULL;
+}
+
+PRIVATE struct type_member *DCALL
+type_member_search_cmethod(DeeTypeObject *__restrict type,
+                           struct type_member *__restrict chain,
+                           DeeTypeObject **__restrict ptarget_type,
+                           dcmethod_t func_ptr) {
+ for (; chain->m_name; ++chain) {
+  if (!TYPE_MEMBER_ISCONST(chain)) continue;
+  if (DeeType_Check(chain->m_const)) {
+   /* XXX: Recursively search sub-types? (would require keeping a working set to prevent recursion) */
+  } else if (DeeCMethod_Check(chain->m_const) ||
+             DeeKwCMethod_Check(chain->m_const)) {
+   if (DeeCMethod_FUNC(chain->m_const) == func_ptr)
+       goto gotit;
+  }
+ }
+ return NULL;
+gotit:
+ *ptarget_type = type;
+ return chain;
+}
+PRIVATE struct type_member *DCALL
+type_seach_cmethod(DeeTypeObject *__restrict self,
+                   dcmethod_t func_ptr,
+                   DeeTypeObject **__restrict ptarget_type) {
+ struct type_member *result;
+ do {
+  if (self->tp_class_members &&
+     (result = type_member_search_cmethod(self,self->tp_class_members,ptarget_type,func_ptr)) != NULL)
+      goto gotit;
+  if (self->tp_members &&
+     (result = type_member_search_cmethod(self,self->tp_members,ptarget_type,func_ptr)) != NULL)
+      goto gotit;
+ } while ((self = DeeType_Base(self)) != NULL);
+ return NULL;
+gotit:
+ return result;
+}
+
+PRIVATE struct type_member *DCALL
+cmethod_gettypefield(DeeModuleObject *__restrict module,
+                     DREF DeeTypeObject **__restrict ptype,
+                     dcmethod_t func_ptr) {
+ uint16_t addr;
+ struct type_member *result;
+ rwlock_read(&module->mo_lock);
+ for (addr = 0; addr < module->mo_globalc; ++addr) {
+  DeeObject *glob = module->mo_globalv[addr];
+  if (!glob) continue;
+  /* Check for cmethod objects defined as TYPE_MEMBER_CONST() fields of exported types. */
+  if (!DeeType_Check(glob)) continue;
+  Dee_Incref(glob);
+  rwlock_endread(&module->mo_lock);
+  result = type_seach_cmethod((DeeTypeObject *)glob,func_ptr,ptype);
+  if (result) {
+   Dee_Incref(*ptype);
+   Dee_Decref_unlikely(glob);
+   return result;
+  }
+  Dee_Decref_unlikely(glob);
+  rwlock_read(&module->mo_lock);
+ }
+ rwlock_endread(&module->mo_lock);
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+cmethod_get_module(DeeCMethodObject *__restrict self) {
+ DREF DeeObject *result;
+ result = DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+ if (!result) return_none;
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+cmethod_get_name(DeeCMethodObject *__restrict self) {
+ DREF DeeModuleObject *module;
+ DREF DeeObject *result;
+ module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+ if (module) {
+  struct module_symbol *symbol;
+  struct type_member *member;
+  DREF DeeTypeObject *type;
+  symbol = cmethod_getmodsym(module,self->cm_func);
+  if (symbol) {
+   result = (DREF DeeObject *)symbol->ss_name;
+   Dee_Incref(result);
+   Dee_Decref(module);
+   return result;
+  }
+  member = cmethod_gettypefield(module,&type,self->cm_func);
+  if (member) {
+   result = DeeString_NewAuto(member->m_name);
+   Dee_Decref(type);
+   Dee_Decref(module);
+   return result;
+  }
+  Dee_Decref(module);
+ }
+ return DeeString_New("?");
+}
+
+PRIVATE DREF DeeObject *DCALL
+cmethod_get_type(DeeCMethodObject *__restrict self) {
+ DREF DeeModuleObject *module;
+ module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+ if (module) {
+  struct module_symbol *symbol;
+  struct type_member *member;
+  DREF DeeTypeObject *type;
+  symbol = cmethod_getmodsym(module,self->cm_func);
+  if (symbol) { Dee_Decref(module); return_none; }
+  member = cmethod_gettypefield(module,&type,self->cm_func);
+  if (member) { Dee_Decref(module); return (DREF DeeObject *)type; }
+  Dee_Decref(module);
+ }
+ return_none;
+}
+
+PRIVATE DREF DeeObject *DCALL
+cmethod_get_doc(DeeCMethodObject *__restrict self) {
+ DREF DeeModuleObject *module;
+ DREF DeeObject *result;
+ module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+ if (module) {
+  struct module_symbol *symbol;
+  struct type_member *member;
+  DREF DeeTypeObject *type;
+  symbol = cmethod_getmodsym(module,self->cm_func);
+  if (symbol) {
+   if (symbol->ss_doc) {
+    result = (DREF DeeObject *)symbol->ss_doc;
+    Dee_Incref(result);
+    Dee_Decref(module);
+    return result;
+   }
+  } else {
+   member = cmethod_gettypefield(module,&type,self->cm_func);
+   if (member) {
+    if (member->m_doc) {
+     result = DeeString_NewAuto(member->m_doc);
+    } else {
+     result = Dee_None;
+     Dee_Incref(Dee_None);
+    }
+    Dee_Decref(module);
+    Dee_Decref(type);
+    return result;
+   }
+  }
+  Dee_Decref(module);
+ }
+ return_none;
+}
+
+
+PRIVATE struct type_getset cmethod_getsets[] = {
+    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_module, NULL, NULL,
+      DOC("->module\n"
+          "->none\n"
+          "Returns the module defining @this method, or :none if that module could not be determined") },
+    { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_type, NULL, NULL,
+      DOC("->type\n"
+          "->none\n"
+          "Returns the type as part of which @this method was declared, or :none "
+          "if @this method was declared as part of a module, or if the type could "
+          "not be located") },
+    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_name, NULL, NULL,
+      DOC("->string\n"
+          "Returns the name of @this method") },
+    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_doc, NULL, NULL,
+      DOC("->string\n"
+          "->none\n"
+          "Returns the documentation string of @this method, or :none if unknown") },
+    { NULL }
+};
+
+
+
 PRIVATE DREF DeeObject *DCALL
 cmethod_str(DeeCMethodObject *__restrict self) {
  return DeeString_Newf("<cmethod at %p>",self->cm_func);
+}
+PRIVATE DREF DeeObject *DCALL
+cmethod_repr(DeeCMethodObject *__restrict self) {
+ DREF DeeModuleObject *module;
+ DREF DeeObject *result;
+ module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+ if (module) {
+  struct module_symbol *symbol;
+  struct type_member *member;
+  DREF DeeTypeObject *type;
+  symbol = cmethod_getmodsym(module,self->cm_func);
+  if (symbol) {
+   result = DeeString_Newf("%k.%k",module,symbol->ss_name);
+   Dee_Decref(module);
+   return result;
+  }
+  member = cmethod_gettypefield(module,&type,self->cm_func);
+  if (member) {
+   result = DeeString_Newf("%k.%k.%s",module,type,member->m_name);
+   Dee_Decref(type);
+   Dee_Decref(module);
+   return result;
+  }
+  Dee_Decref(module);
+ }
+ return cmethod_str(self);
 }
 
 PUBLIC DeeTypeObject DeeCMethod_Type = {
@@ -1362,7 +1590,7 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
     },
     /* .tp_cast = */{
         /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_str,
-        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_str,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_repr,
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cmethod_call,
@@ -1376,12 +1604,7 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL, /* TODO: __name__, __doc__, __module__
-                                    *  -> We can determine the originating module, and search that
-                                    *     module's export table the same way we're able to determine
-                                    *     a type's module.
-                                    *     And Since `cmethod' objects are C-only, we don't even have
-                                    *     to worry about user-created instances! */
+    /* .tp_getsets       = */cmethod_getsets,
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
@@ -1407,7 +1630,9 @@ kwcmethod_call_kw(DeeKwCMethodObject *__restrict self,
  return DeeKwCMethod_CallFunc(self->cm_func,argc,argv,kw);
 }
 
-#define kwcmethod_str cmethod_str
+#define kwcmethod_str     cmethod_str
+#define kwcmethod_repr    cmethod_repr
+#define kwcmethod_getsets cmethod_getsets
 
 PUBLIC DeeTypeObject DeeKwCMethod_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1436,7 +1661,7 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
     },
     /* .tp_cast = */{
         /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwcmethod_str,
-        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwcmethod_str,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwcmethod_repr,
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&kwcmethod_call,
@@ -1450,7 +1675,7 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */kwcmethod_getsets,
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

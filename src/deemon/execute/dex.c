@@ -502,62 +502,38 @@ extern IMAGE_DOS_HEADER __ImageBase;
 #endif
 
 PUBLIC DREF DeeObject *DCALL
-DeeType_GetModule(DeeTypeObject *__restrict self) {
- /* - For user-defined classes: search though all the operator/method bindings
-  *   described for the class member table, testing them for functions and
-  *   returning the module that they are bound to.
-  * - For types loaded by dex modules, do some platform-specific trickery to
-  *   determine the address space bounds within which the module was loaded,
-  *   then simply compare the type pointer against those bounds.
-  * - All other types are defined as part of the builtin `deemon' module. */
-again:
- if (self->tp_class)
-     return DeeClass_GetModule(self);
- if (!(self->tp_flags & TP_FHEAP)) {
+DeeModule_FromStaticPointer(void const *__restrict ptr) {
 #ifdef USE_LOADLIBRARY
-  HMODULE hTypeModule;
-  DBG_ALIGNMENT_DISABLE();
-  if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                        (LPCWSTR)self,&hTypeModule)) {
-   DeeDexObject *iter;
-   DBG_ALIGNMENT_ENABLE();
-   rwlock_read(&dex_lock);
-   for (iter = dex_chain; iter; iter = iter->d_next) {
-    if ((HMODULE)iter->d_handle != hTypeModule)
-         continue;
-    Dee_Incref((DeeModuleObject *)iter);
-    rwlock_endread(&dex_lock);
-    return (DREF DeeObject *)iter;
-   }
+ HMODULE hTypeModule;
+ DBG_ALIGNMENT_DISABLE();
+ if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                       (LPCWSTR)ptr,&hTypeModule)) {
+  DeeDexObject *iter;
+  DBG_ALIGNMENT_ENABLE();
+  rwlock_read(&dex_lock);
+  for (iter = dex_chain; iter; iter = iter->d_next) {
+   if ((HMODULE)iter->d_handle != hTypeModule)
+        continue;
+   Dee_Incref((DeeModuleObject *)iter);
    rwlock_endread(&dex_lock);
-   DBG_ALIGNMENT_DISABLE();
-   if (hTypeModule == HINST_THISCOMPONENT) {
-    /* Type is declared as part of the builtin `deemon' module. */
-    DBG_ALIGNMENT_ENABLE();
-    Dee_Incref(&deemon_module);
-    return (DREF DeeObject *)get_deemon_module();
-   }
-   DBG_ALIGNMENT_ENABLE();
+   return (DREF DeeObject *)iter;
   }
+  rwlock_endread(&dex_lock);
+  DBG_ALIGNMENT_DISABLE();
+  if (hTypeModule == HINST_THISCOMPONENT) {
+   /* Type is declared as part of the builtin `deemon' module. */
+   DBG_ALIGNMENT_ENABLE();
+   Dee_Incref(&deemon_module);
+   return (DREF DeeObject *)get_deemon_module();
+  }
+  DBG_ALIGNMENT_ENABLE();
+ }
 #else
-  /* TODO: Implement for ELF */
+ /* TODO: Implement for ELF */
 #endif
- }
-
- /* Special case for custom type-types (such
-  * as those provided by the `ctypes' module)
-  *  -> In this case, we simply return the module associated with the
-  *     typetype, thus allowing custom types to be resolved as well. */
- if (self != Dee_TYPE(self)) {
-  self = Dee_TYPE(self);
-  if (self != &DeeType_Type &&
-      self != &DeeFileType_Type)
-      goto again;
- }
  return NULL;
 }
-
 
 DECL_END
 #else /* !CONFIG_NO_DEX */
@@ -567,6 +543,12 @@ PUBLIC void *DCALL
 DeeModule_GetNativeSymbol(DeeObject *__restrict UNUSED(self),
                           char const *__restrict UNUSED(name)) {
  return NULL;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *__restrict UNUSED(ptr)) {
+ Dee_Incref(&deemon_module);
+ return (DREF DeeObject *)get_deemon_module();
 }
 
 DECL_END

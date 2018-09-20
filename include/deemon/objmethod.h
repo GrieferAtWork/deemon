@@ -167,6 +167,7 @@ struct kwcmethod_object {
 };
 DDATDEF DeeTypeObject DeeCMethod_Type;
 DDATDEF DeeTypeObject DeeKwCMethod_Type;
+#define DeeCMethod_FUNC(x)         ((DeeCMethodObject *)REQUIRES_OBJECT(x))->cm_func
 #define DeeCMethod_Check(x)        DeeObject_InstanceOfExact(x,&DeeCMethod_Type) /* `_cmethod' is `final'. */
 #define DeeCMethod_CheckExact(x)   DeeObject_InstanceOfExact(x,&DeeCMethod_Type)
 #define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x,&DeeKwCMethod_Type) /* `_kwcmethod' is `final'. */

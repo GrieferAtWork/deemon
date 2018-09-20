@@ -25,6 +25,8 @@
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/seq.h>
+#include <deemon/code.h>
+#include <deemon/module.h>
 #include <deemon/file.h>
 #include <deemon/arg.h>
 #include <deemon/mro.h>
@@ -2793,24 +2795,109 @@ type_get_classdesc(DeeTypeObject *__restrict self) {
  return_reference_((DeeObject *)self->tp_class->cd_desc);
 }
 
-#ifdef CONFIG_NO_DEX
+
+PRIVATE DREF DeeObject *DCALL
+get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
+ DeeObject *slot;
+ DREF DeeModuleObject *result = NULL;
+ rwlock_read(&my_class->cd_lock);
+ slot = my_class->cd_members[addr];
+ if (slot && DeeFunction_Check(slot)) {
+  result = ((DeeFunctionObject *)slot)->fo_code->co_module;
+  Dee_Incref(result);
+ }
+ rwlock_endread(&my_class->cd_lock);
+ return (DREF DeeObject *)result;
+}
+
+LOCAL DREF DeeObject *DCALL
+DeeClass_GetModule(DeeTypeObject *__restrict self) {
+ struct class_desc *my_class = self->tp_class;
+ DeeClassDescriptorObject *desc = my_class->cd_desc;
+ DREF DeeObject *result; size_t i;
+ /* Search through the operator bindings table. */
+ for (i = 0; i <= desc->cd_clsop_mask; ++i) {
+  if (desc->cd_clsop_list[i].co_name == (uint16_t)-1)
+      continue;
+  result = get_module_from_addr(my_class,
+                                desc->cd_clsop_list[i].co_addr);
+  if (result) goto done;
+ }
+ /* Search through class attribute table. */
+ for (i = 0; i <= desc->cd_cattr_mask; ++i) {
+  if (!desc->cd_cattr_list[i].ca_name) continue;
+  result = get_module_from_addr(my_class,
+                                desc->cd_cattr_list[i].ca_addr);
+  if (result) goto done;
+  if ((desc->cd_cattr_list[i].ca_flag &
+      (CLASS_ATTRIBUTE_FREADONLY | CLASS_ATTRIBUTE_FGETSET)) ==
+                                  (CLASS_ATTRIBUTE_FGETSET)) {
+   result = get_module_from_addr(my_class,
+                                 desc->cd_cattr_list[i].ca_addr + CLASS_GETSET_DEL);
+   if (result) goto done;
+   result = get_module_from_addr(my_class,
+                                 desc->cd_cattr_list[i].ca_addr + CLASS_GETSET_SET);
+   if (result) goto done;
+  }
+ }
+ for (i = 0; i <= desc->cd_iattr_mask; ++i) {
+  if (!desc->cd_iattr_list[i].ca_name) continue;
+  if (!(desc->cd_iattr_list[i].ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+      continue;
+#if CLASS_GETSET_GET == 0
+  result = get_module_from_addr(my_class,
+                                desc->cd_iattr_list[i].ca_addr);
+  if (result) goto done;
+#endif
+  if ((desc->cd_iattr_list[i].ca_flag &
+      (CLASS_ATTRIBUTE_FREADONLY | CLASS_ATTRIBUTE_FGETSET)) ==
+                                  (CLASS_ATTRIBUTE_FGETSET)) {
+#if CLASS_GETSET_GET != 0
+   result = get_module_from_addr(my_class,
+                                 desc->cd_iattr_list[i].ca_addr + CLASS_GETSET_GET);
+   if (result) goto done;
+#endif
+   result = get_module_from_addr(my_class,
+                                 desc->cd_iattr_list[i].ca_addr + CLASS_GETSET_DEL);
+   if (result) goto done;
+   result = get_module_from_addr(my_class,
+                                 desc->cd_iattr_list[i].ca_addr + CLASS_GETSET_SET);
+   if (result) goto done;
+  }
+#if CLASS_GETSET_GET != 0
+  else {
+   result = get_module_from_addr(my_class,
+                                 desc->cd_iattr_list[i].ca_addr);
+   if (result) goto done;
+  }
+#endif
+ }
+ return NULL;
+done:
+ return result;
+}
+
 PUBLIC DREF DeeObject *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self) {
+ DREF DeeObject *result;
  /* - For user-defined classes: search though all the operator/method bindings
   *   described for the class member table, testing them for functions and
   *   returning the module that they are bound to.
+  * - For types loaded by dex modules, do some platform-specific trickery to
+  *   determine the address space bounds within which the module was loaded,
+  *   then simply compare the type pointer against those bounds.
   * - All other types are defined as part of the builtin `deemon' module. */
 again:
  if (self->tp_class)
      return DeeClass_GetModule(self);
  if (!(self->tp_flags & TP_FHEAP)) {
-  /* Without C-extensions, all non-heap types
-   * are provided by the deemon module. */
-  Dee_Incref(&deemon_module);
-  return (DREF DeeObject *)get_deemon_module();
+  /* Lookup the originating module of a statically allocated C-type. */
+  result = DeeModule_FromStaticPointer(self);
+  if (result)
+      return result;
  }
-
- /* Special case for custom type-types
+ /* Special case for custom type-types (such
+  * as those provided by the `ctypes' module)
   *  -> In this case, we simply return the module associated with the
   *     typetype, thus allowing custom types to be resolved as well. */
  if (self != Dee_TYPE(self)) {
@@ -2821,7 +2908,6 @@ again:
  }
  return NULL;
 }
-#endif /* CONFIG_NO_DEX */
 
 PUBLIC DREF DeeObject *DCALL
 type_get_module(DeeTypeObject *__restrict self) {

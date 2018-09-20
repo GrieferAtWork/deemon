@@ -486,9 +486,6 @@ INTDEF dssize_t DCALL DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict 
  * accessed by `DeeClass_GetInstanceAttribute()'. */
 INTDEF dssize_t DCALL DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self, denum_t proc, void *arg);
 
-/* Helper function for `DeeType_GetModule' */
-INTDEF DREF DeeObject *DCALL DeeClass_GetModule(DeeTypeObject *__restrict self);
-
 /* Find a specific class-, instance- or
  * instance-through-class-attribute, matching the given lookup rules.
  * @return:  0: Attribute found (*result was filled with data).

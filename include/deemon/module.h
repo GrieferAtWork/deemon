@@ -723,6 +723,16 @@ DFUNDEF void *DCALL
 DeeModule_GetNativeSymbol(DeeObject *__restrict self,
                           char const *__restrict name);
 
+/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
+ * try to determine which DEX module (if not the deemon core itself) was used to declare
+ * a structure located at that pointer, and return a reference to that module.
+ * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
+ * instead, but don't throw an error.
+ * When deemon has been built with `CONFIG_NO_DEX', this function will always return
+ * a reference to the builtin `deemon' module. */
+DFUNDEF DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *__restrict ptr);
+
 
 /* Open a module, given its name in the global module namespace.
  * Global modules use their own cache that differs from the cache
