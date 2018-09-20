@@ -874,7 +874,7 @@ INTDEF int DCALL DeeModule_SetAttrString(DeeModuleObject *__restrict self, char 
  *                Note that in the case of aliases existing for `gid', this function prefers not to
  *                return the name of an alias, but that of the original symbol itself, so long as that
  *                symbol actually exist, which if it doesn't it will return the name of a random alias. */
-DFUNDEF /*String*/DeeObject *DCALL
+DFUNDEF char const *DCALL
 DeeModule_GlobalName(/*Module*/DeeObject *__restrict self, uint16_t gid);
 
 /* Try to run the initializer of a module, should it not have run yet.

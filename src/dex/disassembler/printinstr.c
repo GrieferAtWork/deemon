@@ -838,14 +838,14 @@ libdisasm_printglobal(dformatprinter printer, void *arg,
                       uint16_t gid, DeeCodeObject *code,
                       unsigned int flags) {
  if (code) {
-  DeeObject *name;
+  char const *name;
   if (gid >= code->co_module->mo_globalc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
    return Dee_FormatPrintf(printer,arg,"global %u /* invalid gid */",(unsigned int)gid);
   }
   name = DeeModule_GlobalName((DeeObject *)code->co_module,gid);
-  if (name) return Dee_FormatPrintf(printer,arg,"global " PREFIX_VARNAME "%k",name);
+  if (name) return Dee_FormatPrintf(printer,arg,"global " PREFIX_VARNAME "%s",name);
  }
 print_generic:
  return Dee_FormatPrintf(printer,arg,"global %u",(unsigned int)gid);
@@ -872,7 +872,7 @@ libdisasm_printextern(dformatprinter printer, void *arg,
                       uint16_t mid, uint16_t gid,
                       DeeCodeObject *code, unsigned int flags) {
  if (code) {
-  DeeStringObject *name;
+  char const *name;
   DeeModuleObject *module;
   if (mid >= code->co_module->mo_importc) {
    if (flags & PCODE_FNOBADCOMMENT)
@@ -885,12 +885,12 @@ libdisasm_printextern(dformatprinter printer, void *arg,
        goto print_unknown_name;
    return Dee_FormatPrintf(printer,arg,"extern " PREFIX_VARNAME "%k:%u /* invalid gid */",module->mo_name,(unsigned int)gid);
   }
-  name = (DeeStringObject *)DeeModule_GlobalName((DeeObject *)module,gid);
+  name = DeeModule_GlobalName((DeeObject *)module,gid);
   if (!name) {
 print_unknown_name:
    return Dee_FormatPrintf(printer,arg,"extern " PREFIX_VARNAME "%k:%u",module->mo_name,(unsigned int)gid);
   }
-  return Dee_FormatPrintf(printer,arg,"extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%k",module->mo_name,name);
+  return Dee_FormatPrintf(printer,arg,"extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s",module->mo_name,name);
  }
 print_generic:
  return Dee_FormatPrintf(printer,arg,"extern %u:%u",(unsigned int)mid,(unsigned int)gid);

@@ -47,6 +47,7 @@ EXPORTS
 	_DeeClsProperty_GetName@4=DeeClsProperty_GetName@4
 	_DeeClsProperty_New@16=DeeClsProperty_New@16
 	_DeeCode_FindDDI@20=DeeCode_FindDDI@20
+	_DeeCode_GetInfo@8=DeeCode_GetInfo@8
 	_DeeCode_SetAssembly@4=DeeCode_SetAssembly@4
 	_DeeCodec_Decode@12=DeeCodec_Decode@12
 	_DeeCodec_Encode@12=DeeCodec_Encode@12
@@ -145,6 +146,7 @@ EXPORTS
 	_DeeFloat_New@8=DeeFloat_New@8
 	_DeeFrame_DecrefShared@4=DeeFrame_DecrefShared@4
 	_DeeFrame_NewReferenceWithLock@16=DeeFrame_NewReferenceWithLock@16
+	_DeeFunction_GetInfo@8=DeeFunction_GetInfo@8
 	_DeeFunction_New@12=DeeFunction_New@12
 	_DeeGCObject_Calloc@4=DeeGCObject_Calloc@4
 	_DeeGCObject_Free@4=DeeGCObject_Free@4
@@ -231,6 +233,7 @@ EXPORTS
 	_DeeList_Reverse@4=DeeList_Reverse@4
 	_DeeList_Sort@8=DeeList_Sort@8
 	_DeeMem_ClearCaches@4=DeeMem_ClearCaches@4
+	_DeeModule_FromStaticPointer@4=DeeModule_FromStaticPointer@4
 	_DeeModule_Get@4=DeeModule_Get@4
 	_DeeModule_GetCTime@4=DeeModule_GetCTime@4
 	_DeeModule_GetNativeSymbol@8=DeeModule_GetNativeSymbol@8
@@ -566,6 +569,7 @@ EXPORTS
 	_DeeTuple_VNewf@8=DeeTuple_VNewf@8
 	_DeeTuple_VPack@8=DeeTuple_VPack@8
 	_DeeTuple_VPackSymbolic@8=DeeTuple_VPackSymbolic@8
+	_DeeType_GetModule@4=DeeType_GetModule@4
 	_DeeType_HasOperator@8=DeeType_HasOperator@8
 	_DeeType_HasPrivateOperator@8=DeeType_HasPrivateOperator@8
 	_DeeType_IsInherited@8=DeeType_IsInherited@8
@@ -684,6 +688,7 @@ EXPORTS
 	_string_utf_alloc_d@8=string_utf_alloc_d@8
 	_string_utf_free@4=string_utf_free@4
 	_tpp_string_printer_pack@4=tpp_string_printer_pack@4
+	_type_get_module@4=type_get_module@4
 	_unicode_printer_alloc_utf16@8=unicode_printer_alloc_utf16@8
 	_unicode_printer_alloc_utf8@8=unicode_printer_alloc_utf8@8
 	_unicode_printer_allocate@12=unicode_printer_allocate@12

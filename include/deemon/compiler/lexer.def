@@ -412,7 +412,7 @@ DEF_WARNING(W_NO_OPERATOR_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `operato
 DEF_WARNING(W_NO_OPERATOR_FALLBACK_FUNCTION,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `operators' is not exporting the fallback `operator' function required to implement generic operator support"))
 DEF_WARNING(W_NO_D200_OLD_USER_CLASS,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `d200' is not exporting `OldUserClass' required to implement legacy user-classes"))
 
-DEF_WARNING(W_COMPARE_SODO_NONBUILTIN_UNDEFINED,(WG_SYMBOL),WSTATE_WARN,WARNF("Comparing compiler-generated constants using `===' and `!==' produces undefined results"))
+DEF_WARNING(W_COMPARE_SODO_NONBUILTIN_UNDEFINED,(WG_SYMBOL),WSTATE_WARN,WARNF("Comparing compiler-generated constants with `===' or `!==' produces undefined results"))
 
 
 #ifdef CONFIG_LANGUAGE_NO_ASM

@@ -808,11 +808,11 @@ PUBLIC int (DCALL DeeModule_InitImports)(DeeObject *__restrict self) {
 }
 
 
-PUBLIC /*String*/DeeObject *DCALL
+PUBLIC char const *DCALL
 DeeModule_GlobalName(DeeObject *__restrict self, uint16_t gid) {
  struct module_symbol *sym;
  sym = DeeModule_GetSymbolID((DeeModuleObject *)self,gid);
- return sym ? (DeeObject *)sym->ss_name : NULL;
+ return sym ? sym->ss_name : NULL;
 }
 
 

@@ -389,14 +389,14 @@ err_invalid_unpack_iter_size_minmax(DeeObject *__restrict unpack_object,
 INTERN ATTR_COLD int DCALL
 err_unbound_global(DeeModuleObject *__restrict module,
                    uint16_t global_index) {
- DeeObject *name;
+ char const *name;
  ASSERT_OBJECT(module);
  ASSERT(DeeModule_Check(module));
  ASSERT(global_index < module->mo_globalc);
  name = DeeModule_GlobalName((DeeObject *)module,global_index);
  return DeeError_Throwf(&DeeError_UnboundLocal, /* XXX: UnboundGlobal? */
                         "Unbound global variable `%s' from `%s'",
-                        name ? DeeString_STR(name) : "??" "?",
+                        name ? name : "??" "?",
                         DeeString_STR(module->mo_name));
 }
 INTERN ATTR_COLD int DCALL
