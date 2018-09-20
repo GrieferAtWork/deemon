@@ -249,7 +249,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
    }
    if (symiter->ss_index == normali) {
     if (!first_alias) first_alias = symiter;
-    if (!(symiter->ss_flags&MODSYM_FALIAS))
+    if (!(symiter->ss_flags & MODSYM_FALIAS))
           break;
    }
   }
@@ -265,24 +265,31 @@ decgen_globals(DeeModuleObject *__restrict self) {
    dec_curr = symtab;
    if (dec_putptr(addr)) goto err; /* Dec_GlbSym.s_nam */
   } else {
+   size_t name_len;
    /* Write information for this symbol. */
-   if (dec_putw(symiter->ss_flags)) goto err; /* Dec_GlbSym.s_flg */
+   if (dec_putw(symiter->ss_flags & ~(MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ))) goto err; /* Dec_GlbSym.s_flg */
    dec_curr = SC_STRING;
-   ptr = dec_allocstr(DeeString_STR(symiter->ss_name),
-                     (DeeString_SIZE(symiter->ss_name)+1)*sizeof(char));
+   name_len = MODULE_SYMBOL_GETNAMELEN(symiter);
+   ptr = dec_allocstr(MODULE_SYMBOL_GETNAMESTR(symiter),
+                     (name_len+1)*sizeof(char));
    if unlikely(!ptr) goto err;
    addr = dec_ptr2addr(ptr);
    dec_curr = symtab;
    if (dec_putptr(addr)) goto err; /* Dec_GlbSym.s_nam */
-   if likely(DeeString_SIZE(symiter->ss_name)) {
-    DeeStringObject *doc = symiter->ss_doc;
-    if (!doc || (current_dec.dw_flags&DEC_WRITE_FNODOC))
-         doc = (DeeStringObject *)Dee_EmptyString;
-    if (dec_putptr((uint32_t)DeeString_SIZE(doc))) goto err; /* Dec_GlbSym.s_doclen */
-    if (DeeString_SIZE(doc)) {
+   if likely(name_len) {
+    char const *doc_str; size_t doc_len;
+    if (!symiter->ss_doc || (current_dec.dw_flags&DEC_WRITE_FNODOC)) {
+     doc_str = NULL;
+     doc_len = 0;
+    } else {
+     doc_str = MODULE_SYMBOL_GETDOCSTR(symiter);
+     doc_len = MODULE_SYMBOL_GETDOCLEN(symiter);
+    }
+    if (dec_putptr((uint32_t)doc_len)) goto err; /* Dec_GlbSym.s_doclen */
+    if (doc_len) {
      dec_curr = SC_STRING;
-     ptr = dec_allocstr(DeeString_STR(doc),
-                       (DeeString_SIZE(doc)+1)*sizeof(char));
+     ptr = dec_allocstr(doc_str,
+                       (doc_len+1)*sizeof(char));
      if unlikely(!ptr) goto err;
      addr = dec_ptr2addr(ptr);
      dec_curr = symtab;
@@ -305,25 +312,31 @@ decgen_globals(DeeModuleObject *__restrict self) {
      * Add it to the extended symbol table. */
     dec_curr = exttab;
     ++symcount; /* Track the total number of symbols. */
-    if (dec_putw(first_alias->ss_flags)) goto err; /* Dec_GlbExt.s_flg */
+    if (dec_putw(first_alias->ss_flags & ~(MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ))) goto err; /* Dec_GlbExt.s_flg */
     if (dec_putw(normali)) goto err;               /* Dec_GlbExt.s_addr */
     dec_curr = SC_STRING;
-    ptr = dec_allocstr(DeeString_STR(first_alias->ss_name),
-                      (DeeString_SIZE(first_alias->ss_name)+1)*sizeof(char));
+    name_len = MODULE_SYMBOL_GETNAMELEN(first_alias);
+    ptr = dec_allocstr(MODULE_SYMBOL_GETNAMESTR(first_alias),
+                      (name_len+1)*sizeof(char));
     if unlikely(!ptr) goto err;
     addr = dec_ptr2addr(ptr);
     dec_curr = exttab;
     if (dec_putptr(addr)) goto err; /* Dec_GlbExt.s_nam */
-    if likely(DeeString_SIZE(first_alias->ss_name)) {
+    if likely(name_len) {
      /* Write the length of the doc, and potentially the doc, too. */
-     DeeStringObject *doc = first_alias->ss_doc;
-     if (!doc || (current_dec.dw_flags&DEC_WRITE_FNODOC))
-          doc = (DeeStringObject *)Dee_EmptyString;
-     if (dec_putptr((uint32_t)DeeString_SIZE(doc))) goto err; /* Dec_GlbSym.s_doclen */
-     if (DeeString_SIZE(doc)) {
+     char const *doc_str; size_t doc_len;
+     if (!first_alias->ss_doc || (current_dec.dw_flags&DEC_WRITE_FNODOC)) {
+      doc_str = NULL;
+      doc_len = 0;
+     } else {
+      doc_str = MODULE_SYMBOL_GETDOCSTR(first_alias);
+      doc_len = MODULE_SYMBOL_GETDOCLEN(first_alias);
+     }
+     if (dec_putptr((uint32_t)doc_len)) goto err; /* Dec_GlbSym.s_doclen */
+     if (doc_len) {
       dec_curr = SC_STRING;
-      ptr = dec_allocstr(DeeString_STR(doc),
-                        (DeeString_SIZE(doc)+1)*sizeof(char));
+      ptr = dec_allocstr(doc_str,
+                        (doc_len+1)*sizeof(char));
       if unlikely(!ptr) goto err;
       addr = dec_ptr2addr(ptr);
       dec_curr = symtab;
@@ -338,29 +351,36 @@ decgen_globals(DeeModuleObject *__restrict self) {
   dec_curr = exttab;
   for (symiter = symbegin; symiter != symend; ++symiter) {
    uint8_t *ptr; uint32_t addr;
+   size_t name_len;
    if (!symiter->ss_name) continue; /* Skip empty entries. */
    if (!(symiter->ss_flags & MODSYM_FEXTERN)) continue;
    ++symcount; /* Track the total number of symbols. */
-   if (dec_putw(symiter->ss_flags)) goto err; /* Dec_GlbExt.s_flg */
+   if (dec_putw(symiter->ss_flags & ~(MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ))) goto err; /* Dec_GlbExt.s_flg */
    if (dec_putw(symiter->ss_extern.ss_symid)) goto err; /* Dec_GlbExt.s_addr */
    if (dec_putw(symiter->ss_extern.ss_impid)) goto err; /* Dec_GlbExt.s_addr2 */
    dec_curr = SC_STRING;
-   ptr = dec_allocstr(DeeString_STR(symiter->ss_name),
-                     (DeeString_SIZE(symiter->ss_name)+1)*sizeof(char));
+   name_len = MODULE_SYMBOL_GETNAMELEN(symiter);
+   ptr = dec_allocstr(MODULE_SYMBOL_GETNAMESTR(symiter),
+                     (name_len+1)*sizeof(char));
    if unlikely(!ptr) goto err;
    addr = dec_ptr2addr(ptr);
    dec_curr = exttab;
    if (dec_putptr(addr)) goto err; /* Dec_GlbExt.s_nam */
-   if likely(DeeString_SIZE(symiter->ss_name)) {
+   if likely(name_len) {
     /* Write the length of the doc, and potentially the doc, too. */
-    DeeStringObject *doc = symiter->ss_doc;
-    if (!doc || (current_dec.dw_flags&DEC_WRITE_FNODOC))
-         doc = (DeeStringObject *)Dee_EmptyString;
-    if (dec_putptr((uint32_t)DeeString_SIZE(doc))) goto err; /* Dec_GlbSym.s_doclen */
-    if (DeeString_SIZE(doc)) {
+    char const *doc_str; size_t doc_len;
+    if (!symiter->ss_doc || (current_dec.dw_flags&DEC_WRITE_FNODOC)) {
+     doc_str = NULL;
+     doc_len = 0;
+    } else {
+     doc_str = MODULE_SYMBOL_GETDOCSTR(symiter);
+     doc_len = MODULE_SYMBOL_GETDOCLEN(symiter);
+    }
+    if (dec_putptr((uint32_t)doc_len)) goto err; /* Dec_GlbSym.s_doclen */
+    if (doc_len) {
      dec_curr = SC_STRING;
-     ptr = dec_allocstr(DeeString_STR(doc),
-                       (DeeString_SIZE(doc)+1)*sizeof(char));
+     ptr = dec_allocstr(doc_str,
+                       (doc_len+1)*sizeof(char));
      if unlikely(!ptr) goto err;
      addr = dec_ptr2addr(ptr);
      dec_curr = symtab;

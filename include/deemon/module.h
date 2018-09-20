@@ -102,12 +102,12 @@ typedef struct module_object DeeModuleObject;
 typedef struct module_path_object DeeModulePathObject;
 
 struct module_symbol {
-    DREF struct string_object *ss_name;   /* [0..1] Name of this symbol (NULL marks the sentinel) */
-    /* TODO: For the sake of DEX modules, `ss_doc' should be allowed to be a `char const *', with
-     *       one of the symbol flags being used to indicate if it's actually an object, which must
-     *       be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc,DeeStringObject,s_str))' */
-    DREF struct string_object *ss_doc;    /* [0..1] An optional documentation string. */
-    dhash_t                    ss_hash;   /* [== ss_name->s_hash] Hash-value of this symbol. */
+    /* For the sake of DEX modules, `ss_doc' should be allowed to be a `char const *', with
+     * one of the symbol flags being used to indicate if it's actually an object, which must
+     * be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc,DeeStringObject,s_str))' */
+    char const                *ss_name;   /* [0..1] Name of this symbol (NULL marks the sentinel) */
+    char const                *ss_doc;    /* [0..1] An optional documentation string. */
+    dhash_t                    ss_hash;   /* [== hash_str(ss_name)] Hash-value of this symbol. */
 #define MODSYM_FNORMAL         0x0000     /* Normal symbol flags. */
 #define MODSYM_FREADONLY       0x0001     /* Don't allow write-access to this symbol.
                                            * When set, attempting to write/delete to this symbol will cause
@@ -160,12 +160,15 @@ struct module_symbol {
                                            * helper functions found in the `deemon' module which the compiler
                                            * is allowed to generate helper class to for stuff that doesn't
                                            * deserve its own opcode due to how rare its occurrence is... */
-#define MODSYM_FEXTERN         0x8000     /* Refers to an global variable slot for a different module (would allow for forwarding/aliasing)
+#define MODSYM_FPROPERTY       0x0010     /* The symbol is a property. */
+#define MODSYM_FEXTERN         0x0020     /* Refers to an global variable slot for a different module (would allow for forwarding/aliasing)
                                            * Using this, we could easily implement something along the lines of
                                            * `global import foo = bar from baz;' vs. `local import foo = bar from baz;'
                                            * (Default visibility would be `local') */
-#define MODSYM_FPROPERTY       0x4000     /* The symbol is a property. */
-#define MODSYM_FMASK           0xc00f     /* Mask of known MODSYM_F* flags. */
+#define MODSYM_FMASK           0x003f     /* Mask of known MODSYM_F* flags (those that are allowed by DEC files). */
+#define MODSYM_FNAMEOBJ        0x4000     /* The symbol's name is actually a reference to a string object's `s_str' */
+#define MODSYM_FDOCOBJ         0x8000     /* The symbol's doc is actually a reference to a string object's `s_str'
+                                           * NOTE: When this flag is set, `ss_doc' is always [1..1] */
     uint16_t                   ss_flags;  /* Set of `MODSYM_F*'. */
     union {
 #define MODULE_PROPERTY_GET    0 /* Index offset for property get callbacks. */
@@ -182,6 +185,24 @@ struct module_symbol {
         }                      ss_extern; /* [valid_if(MODSYM_FEXTERN)] External symbol reference. */
     };
 };
+
+#define MODULE_SYMBOL_EQUALS(x,name,size)  \
+       (memcmp((x)->ss_name,name,(size)*sizeof(char)) == 0 && \
+       (x)->ss_name[size] == 0)
+#define MODULE_SYMBOL_GETNAMESTR(x)                        ((x)->ss_name)
+#define MODULE_SYMBOL_GETNAMELEN(x)      (((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_name,DeeStringObject,s_str)) : strlen((x)->ss_name))
+#define MODULE_SYMBOL_GETDOCSTR(x)                         ((x)->ss_doc)
+#define MODULE_SYMBOL_GETDOCLEN(x)       (((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_doc,DeeStringObject,s_str)) : strlen((x)->ss_doc))
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF DREF struct string_object *DCALL module_symbol_getnameobj(struct module_symbol *__restrict self);
+INTDEF DREF struct string_object *DCALL module_symbol_getdocobj(struct module_symbol *__restrict self);
+#else /* CONFIG_BUILDING_DEEMON */
+#define module_symbol_getnameobj(x)   ((DeeStringObject *)(((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_name,DeeStringObject,s_str)) : DeeString_NewWithHash((x)->ss_name,(x)->ss_hash)))
+#define module_symbol_getdocobj(x)    ((DeeStringObject *)(((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_doc,DeeStringObject,s_str)) : DeeString_NewUtf8((x)->ss_doc,strlen((x)->ss_doc),STRING_ERROR_FIGNORE)))
+#endif /* !CONFIG_BUILDING_DEEMON */
+
+
+
 
 struct module_object {
     /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */

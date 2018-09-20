@@ -127,9 +127,7 @@ import_module_symbol(DeeModuleObject *__restrict module,
   struct module_symbol *item = MODULE_HASHIT(module,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (DeeString_SIZE(item->ss_name) != name->k_size) continue; /* Non-matching length */
-  if (memcmp(DeeString_STR(item->ss_name), /* Differing strings. */
-             name->k_name,name->k_size*sizeof(char)) != 0) continue;
+  if (!MODULE_SYMBOL_EQUALS(item,name->k_name,name->k_size)) continue; /* Differing strings. */
   return item; /* Found it! */
  }
  return NULL;
@@ -510,10 +508,11 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
  for (; iter != end; ++iter) {
   struct symbol *sym;
   struct TPPKeyword *name;
-  if (!iter->ss_name) continue; /* Empty slot. */
+  if (!MODULE_SYMBOL_GETNAMESTR(iter)) continue; /* Empty slot. */
   if (iter->ss_flags&MODSYM_FHIDDEN) continue; /* Hidden symbol. */
-  name = TPPLexer_LookupKeyword(iter->ss_name->s_str,
-                                iter->ss_name->s_len,1);
+  name = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(iter),
+                                MODULE_SYMBOL_GETNAMELEN(iter),
+                                1);
   if unlikely(!name) goto err;
   sym = get_local_symbol(name);
   if unlikely(sym) {

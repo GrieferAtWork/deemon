@@ -1438,8 +1438,7 @@ cmethod_get_name(DeeCMethodObject *__restrict self) {
   DREF DeeTypeObject *type;
   symbol = cmethod_getmodsym(module,self->cm_func);
   if (symbol) {
-   result = (DREF DeeObject *)symbol->ss_name;
-   Dee_Incref(result);
+   result = (DREF DeeObject *)module_symbol_getnameobj(symbol);
    Dee_Decref(module);
    return result;
   }
@@ -1484,8 +1483,7 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
   symbol = cmethod_getmodsym(module,self->cm_func);
   if (symbol) {
    if (symbol->ss_doc) {
-    result = (DREF DeeObject *)symbol->ss_doc;
-    Dee_Incref(result);
+    result = (DREF DeeObject *)module_symbol_getdocobj(symbol);
     Dee_Decref(module);
     return result;
    }
@@ -1547,7 +1545,7 @@ cmethod_repr(DeeCMethodObject *__restrict self) {
   DREF DeeTypeObject *type;
   symbol = cmethod_getmodsym(module,self->cm_func);
   if (symbol) {
-   result = DeeString_Newf("%k.%k",module,symbol->ss_name);
+   result = DeeString_Newf("%k.%s",module,symbol->ss_name);
    Dee_Decref(module);
    return result;
   }

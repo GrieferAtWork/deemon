@@ -43,6 +43,70 @@
 
 DECL_BEGIN
 
+
+INTERN DREF DeeStringObject *DCALL
+module_symbol_getnameobj(struct module_symbol *__restrict self) {
+ DREF DeeStringObject *result;
+ char const *name_str;
+ uint16_t flags;
+again:
+ name_str = self->ss_name;
+ __hybrid_atomic_thread_fence(__ATOMIC_ACQUIRE);
+ flags = self->ss_flags;
+ if (flags & MODSYM_FNAMEOBJ) {
+  result = COMPILER_CONTAINER_OF(name_str,
+                                 DeeStringObject,
+                                 s_str);
+  Dee_Incref(result);
+ } else {
+  /* Wrap the name string into a string object. */
+  result = (DREF DeeStringObject *)DeeString_New(name_str);
+  if unlikely(!result) goto done;
+  /* Cache the name-string as part of the attribute structure. */
+  if (!ATOMIC_CMPXCH(self->ss_name,name_str,DeeString_STR(result))) {
+   Dee_Decref(result);
+   goto again;
+  }
+  ATOMIC_FETCHOR(self->ss_flags,MODSYM_FNAMEOBJ);
+  Dee_Incref(result);
+ }
+done:
+ return result;
+}
+INTERN DREF DeeStringObject *DCALL
+module_symbol_getdocobj(struct module_symbol *__restrict self) {
+ DREF DeeStringObject *result;
+ char const *doc_str;
+ uint16_t flags;
+again:
+ doc_str = self->ss_doc;
+ ASSERT(doc_str != NULL);
+ __hybrid_atomic_thread_fence(__ATOMIC_ACQUIRE);
+ flags = self->ss_flags;
+ if (flags & MODSYM_FDOCOBJ) {
+  result = COMPILER_CONTAINER_OF(doc_str,
+                                 DeeStringObject,
+                                 s_str);
+  Dee_Incref(result);
+ } else {
+  /* Wrap the doc string into a string object. */
+  result = (DREF DeeStringObject *)DeeString_NewUtf8(doc_str,
+                                                     strlen(doc_str),
+                                                     STRING_ERROR_FIGNORE);
+  if unlikely(!result) goto done;
+  /* Cache the doc-string as part of the attribute structure. */
+  if (!ATOMIC_CMPXCH(self->ss_doc,doc_str,DeeString_STR(result))) {
+   Dee_Decref(result);
+   goto again;
+  }
+  ATOMIC_FETCHOR(self->ss_flags,MODSYM_FDOCOBJ);
+  Dee_Incref(result);
+ }
+done:
+ return result;
+}
+
+
 PUBLIC DREF DeeObject *DCALL
 DeeModule_GetRoot(DeeObject *__restrict self) {
  DREF DeeFunctionObject *result;
@@ -137,7 +201,7 @@ DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
     return NULL;
  end = (iter = self->mo_bucketv)+(self->mo_bucketm+1);
  for (; iter != end; ++iter) {
-  if (!iter->ss_name) continue; /* Skip empty entries. */
+  if (!MODULE_SYMBOL_GETNAMESTR(iter)) continue; /* Skip empty entries. */
   if (iter->ss_index == gid) {
    result = iter;
    /* If it's a symbol, we still stored it's name as
@@ -161,7 +225,7 @@ DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (strcmp(DeeString_STR(item->ss_name),attr_name)) continue;
+  if (strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name)) continue;
   return item;
  }
  return NULL;
@@ -197,7 +261,7 @@ read_symbol:
   rwlock_endread(&self->mo_lock);
 #endif
   if unlikely(!callback) {
-   err_cannot_read_property(self,DeeString_STR(symbol->ss_name));
+   err_cannot_read_property(self,MODULE_SYMBOL_GETNAMESTR(symbol));
    return NULL;
   }
   /* Invoke the property callback. */
@@ -266,7 +330,7 @@ module_getattr_impl(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (!strcmp(DeeString_STR(item->ss_name),attr_name))
+  if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name))
        return module_getattr_symbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
@@ -285,7 +349,7 @@ module_boundattr_impl(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (!strcmp(DeeString_STR(item->ss_name),attr_name))
+  if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name))
        return module_boundattr_symbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
@@ -301,7 +365,7 @@ module_hasattr_impl(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (!strcmp(DeeString_STR(item->ss_name),attr_name))
+  if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name))
        return true;
  }
  /* Fallback: Do a generic attribute lookup on the module. */
@@ -314,7 +378,7 @@ module_delattr_symbol(DeeModuleObject *__restrict self,
  DREF DeeObject *old_value;
  if unlikely(symbol->ss_flags&(MODSYM_FREADONLY|MODSYM_FEXTERN|MODSYM_FPROPERTY)) {
   if (symbol->ss_flags & MODSYM_FREADONLY) {
-   err_readonly_global(self,DeeString_STR(symbol->ss_name));
+   err_readonly_global(self,MODULE_SYMBOL_GETNAMESTR(symbol));
    return -1;
   }
   if (symbol->ss_flags & MODSYM_FPROPERTY) {
@@ -329,7 +393,7 @@ module_delattr_symbol(DeeModuleObject *__restrict self,
    rwlock_endread(&self->mo_lock);
 #endif
    if unlikely(!callback) {
-    err_cannot_delete_property(self,DeeString_STR(symbol->ss_name));
+    err_cannot_delete_property(self,MODULE_SYMBOL_GETNAMESTR(symbol));
     return -1;
    }
    /* Invoke the property callback. */
@@ -372,7 +436,7 @@ module_delattr_impl(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (!strcmp(DeeString_STR(item->ss_name),attr_name))
+  if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name))
        return module_delattr_symbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
@@ -406,7 +470,7 @@ module_setattr_symbol(DeeModuleObject *__restrict self,
     rwlock_endwrite(&self->mo_lock);
 #endif
 err_is_readonly:
-    err_readonly_global(self,DeeString_STR(symbol->ss_name));
+    err_readonly_global(self,MODULE_SYMBOL_GETNAMESTR(symbol));
     return -1;
    }
    Dee_Incref(value);
@@ -427,7 +491,7 @@ err_is_readonly:
    rwlock_endwrite(&self->mo_lock);
 #endif
    if (!callback) {
-    err_cannot_write_property(self,DeeString_STR(symbol->ss_name));
+    err_cannot_write_property(self,MODULE_SYMBOL_GETNAMESTR(symbol));
     return -1;
    }
    temp = DeeObject_Call(callback,1,(DeeObject **)&value);
@@ -463,7 +527,7 @@ module_setattr_impl(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (!strcmp(DeeString_STR(item->ss_name),attr_name))
+  if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name))
        return module_setattr_symbol(self,item,value);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
@@ -800,8 +864,8 @@ module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
  for (; iter != end; ++iter) {
   uint16_t perm; DREF DeeTypeObject *attr_type;
   /* Skip empty and hidden entries. */
-  if (!iter->ss_name || (iter->ss_flags&MODSYM_FHIDDEN)) continue;
-  perm = ATTR_IMEMBER | ATTR_ACCESS_GET | ATTR_NAMEOBJ;
+  if (!MODULE_SYMBOL_GETNAMESTR(iter) || (iter->ss_flags&MODSYM_FHIDDEN)) continue;
+  perm = ATTR_IMEMBER | ATTR_ACCESS_GET;
   ASSERT(iter->ss_index < self->mo_globalc);
   if (!(iter->ss_flags&MODSYM_FREADONLY))
         perm |= (ATTR_ACCESS_DEL|ATTR_ACCESS_SET);
@@ -851,9 +915,11 @@ module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
    ASSERT(doc_iter);
   }
   /* NOTE: Pass the module instance as declarator! */
-  if (doc_iter->ss_doc) perm |= ATTR_DOCOBJ;
-  temp = (*proc)((DeeObject *)self,iter->ss_name->s_str,
-                  doc_iter->ss_doc ? doc_iter->ss_doc->s_str : NULL,
+  if (iter->ss_flags & MODSYM_FNAMEOBJ) perm |= ATTR_NAMEOBJ;
+  if (doc_iter->ss_flags & MODSYM_FDOCOBJ) perm |= ATTR_DOCOBJ;
+  temp = (*proc)((DeeObject *)self,
+                  MODULE_SYMBOL_GETNAMESTR(iter),
+                  doc_iter->ss_doc,
                   perm,attr_type,arg);
   Dee_XDecref(attr_type);
   if unlikely(temp < 0) goto err;
@@ -1016,8 +1082,11 @@ module_fini(DeeModuleObject *__restrict self) {
  if (self->mo_bucketv != empty_module_buckets) {
   end = (iter = self->mo_bucketv)+self->mo_bucketm+1;
   for (; iter != end; ++iter) {
-   Dee_XDecref(iter->ss_name);
-   Dee_XDecref(iter->ss_doc);
+   if (!MODULE_SYMBOL_GETNAMESTR(iter)) continue;
+   if (iter->ss_flags & MODSYM_FNAMEOBJ)
+       Dee_Decref(COMPILER_CONTAINER_OF(MODULE_SYMBOL_GETNAMESTR(iter),DeeStringObject,s_str));
+   if (iter->ss_flags & MODSYM_FDOCOBJ)
+       Dee_Decref(COMPILER_CONTAINER_OF(iter->ss_doc,DeeStringObject,s_str));
   }
   Dee_Free((void *)self->mo_bucketv);
  }

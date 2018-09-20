@@ -36,13 +36,6 @@ DECL_BEGIN
 
 #define BUILTIN(name,object,flags) \
 PRIVATE DEFINE_STRING(str_##name,#name);
-#ifndef CONFIG_NO_DOC
-#define BUILTIN_DOC(name,object,flags,doc) \
-PRIVATE DEFINE_STRING(str_##name,#name); \
-PRIVATE DEFINE_STRING(docstr_##name,doc);
-#define BUILTIN_DOC_REUSE(name,object,flags,doc) \
-PRIVATE DEFINE_STRING(docstr_##name,doc);
-#endif
 
 #define BUILTIN_REUSE(name,object,flags) /* nothing */
 #include "builtins.def"
@@ -82,11 +75,11 @@ enum {
 
 PRIVATE struct module_symbol deemon_symbols[builtins_hashmask+1];
 PRIVATE struct module_symbol deemon_builtins[num_builtins_sym] = {
-#define BUILTIN(name,object,flags)         { (DeeStringObject *)&str_##name, NULL, 0, flags, { id_##name } },
+#define BUILTIN(name,object,flags)         { DeeString_STR(&str_##name), NULL, 0, flags|MODSYM_FNAMEOBJ, { id_##name } },
 #ifndef CONFIG_NO_DOC
-#define BUILTIN_DOC(name,object,flags,doc) { (DeeStringObject *)&str_##name, (DeeStringObject *)&docstr_##name, 0, flags, { id_##name } },
+#define BUILTIN_DOC(name,object,flags,doc) { DeeString_STR(&str_##name), doc, 0, flags|MODSYM_FNAMEOBJ, { id_##name } },
 #endif
-#define BUILTIN_ALIAS(name,alt,flags)      { (DeeStringObject *)&str_##name, NULL, 0, flags|MODSYM_FALIAS, { id_##alt } },
+#define BUILTIN_ALIAS(name,alt,flags)      { DeeString_STR(&str_##name), NULL, 0, flags|MODSYM_FALIAS|MODSYM_FNAMEOBJ, { id_##alt } },
 #include "builtins.def"
 };
 
@@ -128,7 +121,9 @@ PRIVATE ATTR_NOINLINE void DCALL init_builtins(void) {
  struct module_symbol *iter;
  for (iter = deemon_builtins;
       iter != COMPILER_ENDOF(deemon_builtins); ++iter) {
-  DeeStringObject *name = iter->ss_name; dhash_t hash,i,perturb;
+  dhash_t hash,i,perturb;
+  DeeStringObject *name;
+  name = COMPILER_CONTAINER_OF(MODULE_SYMBOL_GETNAMESTR(iter),DeeStringObject,s_str);
   hash = hash_ptr(name->s_str,name->s_len*sizeof(char));
   iter->ss_hash = name->s_hash = hash;
   perturb = i = hash & builtins_hashmask;

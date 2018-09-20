@@ -1016,7 +1016,7 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
   if unlikely(reader >= end)
      GOTO_CORRUPTED(reader,stop_symbolv); /* Validate bounds. */
   flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-  if (flags&~MODSYM_FMASK)
+  if (flags & ~MODSYM_FMASK)
       GOTO_CORRUPTED(reader,stop_symbolv); /* Unknown flags are being used. */
   /* The first `globalc' descriptors lack the `s_addr' field. */
   addr2 = (uint16_t)-1;
@@ -1046,16 +1046,23 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
   name_hash = hash_str(name);
   perturb = hash_i = name_hash & bucket_mask;
   for (;; hash_i = MODULE_HASHNX(hash_i,perturb),MODULE_HASHPT(perturb)) {
+   DREF DeeStringObject *temp;
    struct module_symbol *target = &bucketv[hash_i & bucket_mask];
    if (target->ss_name) continue;
    /* Found an unused slot compatible with the hash of this symbol's name. */
-   target->ss_name = (DREF DeeStringObject *)DeeString_New(name);
-   if unlikely(!target->ss_name) goto err_symbolv;
-   target->ss_name->s_hash = name_hash; /* Save the name hash. */
+   temp = (DREF DeeStringObject *)DeeString_New(name);
+   if unlikely(!temp) goto err_symbolv;
+   temp->s_hash = name_hash; /* Save the name hash. */
+   target->ss_name = DeeString_STR(temp);
+   flags |= MODSYM_FNAMEOBJ;
    if (doclen) {
     /* Allocate the documentation string. */
-    target->ss_doc = (DREF DeeStringObject *)DeeString_NewSized(doc,doclen);
-    if unlikely(!target->ss_doc) goto err_symbolv;
+    temp = (DREF DeeStringObject *)DeeString_NewUtf8(doc,
+                                                     doclen,
+                                                     STRING_ERROR_FSTRICT);
+    if unlikely(!temp) goto err_symbolv;
+    target->ss_doc = DeeString_STR(temp);
+    flags |= MODSYM_FDOCOBJ;
    }
    target->ss_extern.ss_symid = addr;
    target->ss_extern.ss_impid = addr2;
@@ -1081,8 +1088,10 @@ err_symbolv:
  result = -1;
 stop_symbolv:
  do {
-  Dee_XDecref(bucketv[bucket_mask].ss_name);
-  Dee_XDecref(bucketv[bucket_mask].ss_doc);
+  if (bucketv[bucket_mask].ss_name)
+      Dee_Decref(COMPILER_CONTAINER_OF(bucketv[bucket_mask].ss_name,DeeStringObject,s_str));
+  if (bucketv[bucket_mask].ss_doc)
+      Dee_Decref(COMPILER_CONTAINER_OF(bucketv[bucket_mask].ss_doc,DeeStringObject,s_str));
  } while (bucket_mask--);
  Dee_Free(bucketv);
  goto stop;
@@ -2344,8 +2353,12 @@ err:
         (module->mo_bucketm != 0));
  if (module->mo_bucketm) {
   do {
-   Dee_XDecref(module->mo_bucketv[module->mo_bucketm].ss_name);
-   Dee_XDecref(module->mo_bucketv[module->mo_bucketm].ss_doc);
+   if (module->mo_bucketv[module->mo_bucketm].ss_name) {
+    if (module->mo_bucketv[module->mo_bucketm].ss_flags & MODSYM_FNAMEOBJ)
+        Dee_Decref(COMPILER_CONTAINER_OF(module->mo_bucketv[module->mo_bucketm].ss_name,DeeStringObject,s_str));
+    if (module->mo_bucketv[module->mo_bucketm].ss_flags & MODSYM_FDOCOBJ)
+        Dee_Decref(COMPILER_CONTAINER_OF(module->mo_bucketv[module->mo_bucketm].ss_doc,DeeStringObject,s_str));
+   }
   } while (module->mo_bucketm--);
   Dee_Free(module->mo_bucketv);
   module->mo_bucketm = 0;

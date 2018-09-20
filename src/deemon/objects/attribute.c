@@ -106,18 +106,18 @@ PRIVATE struct type_member attr_members[] = {
 PRIVATE DREF DeeStringObject *DCALL
 attr_getdoc(Attr *__restrict self) {
  DREF DeeStringObject *result;
- uint16_t perm = self->a_info.a_perm;
- /* Make sure that `a_doc' is read _AFTER_ `a_perm' */
+ char const *doc_str;
+ uint16_t perm;
+again:
+ doc_str = self->a_info.a_doc;
  __hybrid_atomic_thread_fence(__ATOMIC_ACQUIRE);
+ perm = self->a_info.a_perm;
  if (perm & ATTR_DOCOBJ) {
-  result = COMPILER_CONTAINER_OF(self->a_info.a_doc,
+  result = COMPILER_CONTAINER_OF(doc_str,
                                  DeeStringObject,
                                  s_str);
   Dee_Incref(result);
  } else {
-  char const *doc_str;
-  doc_str = self->a_info.a_doc;
-  COMPILER_READ_BARRIER();
   if (!doc_str) {
    result = (DREF DeeStringObject *)Dee_EmptyString;
    Dee_Incref(result);
@@ -128,10 +128,12 @@ attr_getdoc(Attr *__restrict self) {
                                                       STRING_ERROR_FIGNORE);
    if unlikely(!result) goto done;
    /* Cache the doc-string as part of the attribute structure. */
-   if (ATOMIC_FETCHOR(self->a_info.a_perm,ATTR_DOCOBJ)) {
-    self->a_info.a_doc = DeeString_STR(result);
-    Dee_Incref(result);
+   if (!ATOMIC_CMPXCH(self->a_info.a_doc,doc_str,DeeString_STR(result))) {
+    Dee_Decref(result);
+    goto again;
    }
+   ATOMIC_FETCHOR(self->a_info.a_perm,ATTR_DOCOBJ);
+   Dee_Incref(result);
   }
  }
 done:

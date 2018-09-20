@@ -2790,14 +2790,14 @@ print_enter_scope(DeeScopeObject *caller_scope,
         continue;
     switch (sym->s_type) {
     case SYMBOL_TYPE_EXTERN:
-     if (sym->s_name->k_size == DeeString_SIZE(sym->s_extern.e_symbol->ss_name) &&
-         memcmp(sym->s_name->k_name,DeeString_STR(sym->s_extern.e_symbol->ss_name),
-                sym->s_name->k_size * sizeof(char)) == 0) {
-      printf("import %k from %k",
+     if (MODULE_SYMBOL_EQUALS(sym->s_extern.e_symbol,
+                              sym->s_name->k_name,
+                              sym->s_name->k_size)) {
+      printf("import %s from %k",
              sym->s_extern.e_symbol->ss_name,
              sym->s_extern.e_module->mo_name);
      } else {
-      printf("import %$s = %k from %k",
+      printf("import %$s = %s from %k",
              sym->s_name->k_size,
              sym->s_name->k_name,
              sym->s_extern.e_symbol->ss_name,
@@ -2896,7 +2896,8 @@ print_symbol(struct symbol *__restrict sym,
     PRINT("import");
    } else {
     PRINT("(");
-    DO(DeeObject_Print((DeeObject *)sym->s_extern.e_symbol->ss_name,printer,arg));
+    DO((*printer)(arg,sym->s_extern.e_symbol->ss_name,
+                  strlen(sym->s_extern.e_symbol->ss_name)));
     PRINT(" from ");
     DO(DeeObject_Print((DeeObject *)sym->s_extern.e_module->mo_name,printer,arg));
     PRINT(")");

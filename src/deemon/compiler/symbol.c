@@ -759,10 +759,13 @@ root_scope_fini(DeeRootScopeObject *__restrict self) {
  }
  if (self->rs_bucketv != empty_module_buckets) {
   struct module_symbol *iter,*end;
-  end = (iter = self->rs_bucketv)+(self->rs_bucketm+1);
+  end = (iter = self->rs_bucketv) + (self->rs_bucketm + 1);
   for (; iter != end; ++iter) {
-   Dee_XDecref(iter->ss_name);
-   Dee_XDecref(iter->ss_doc);
+   if (!MODULE_SYMBOL_GETNAMESTR(iter)) continue;
+   if (iter->ss_flags & MODSYM_FNAMEOBJ)
+       Dee_Decref(COMPILER_CONTAINER_OF(MODULE_SYMBOL_GETNAMESTR(iter),DeeStringObject,s_str));
+   if (iter->ss_flags & MODSYM_FDOCOBJ)
+       Dee_Decref(COMPILER_CONTAINER_OF(iter->ss_doc,DeeStringObject,s_str));
   }
   Dee_Free(self->rs_bucketv);
  }

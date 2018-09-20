@@ -1379,7 +1379,11 @@ check_sym_class:
      * >> push    module <mid>
      * >> delattr pop, const DeeModule_GlobalName(<module>,<gid>) */
     int32_t cid;
-    cid = asm_newconst((DeeObject *)modsym->ss_name);
+    DREF DeeStringObject *name_obj;
+    name_obj = module_symbol_getnameobj(modsym);
+    if unlikely(!name_obj) goto err;
+    cid = asm_newconst((DeeObject *)name_obj);
+    Dee_Decref(name_obj);
     if unlikely(cid < 0) goto err;
     if (asm_gpush_module((uint16_t)mid)) goto err;
     return asm_gdelattr_const((uint16_t)cid);

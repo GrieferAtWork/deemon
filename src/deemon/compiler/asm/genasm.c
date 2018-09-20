@@ -370,11 +370,8 @@ get_module_symbol(DeeModuleObject *__restrict module,
   struct module_symbol *item = MODULE_HASHIT(module,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (DeeString_SIZE(item->ss_name) != DeeString_SIZE(name)) continue; /* Non-matching length */
-  if (memcmp(DeeString_STR(item->ss_name), /* Differing strings. */
-             DeeString_STR(name),
-             DeeString_SIZE(name)*sizeof(char)) != 0)
-      continue;
+  if (!MODULE_SYMBOL_EQUALS(item,DeeString_STR(name),DeeString_SIZE(name)))
+      continue; /* Differing strings. */
   return item; /* Found it! */
  }
  return NULL;

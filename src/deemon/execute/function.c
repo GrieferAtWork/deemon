@@ -145,6 +145,7 @@ lookup_code_info(DeeCodeObject *__restrict self,
  /* Step #1: Search the code object's module for the given `function' */
  module = self->co_module;
  if unlikely(!module) goto without_module;
+ if unlikely(DeeInteractiveModule_Check(module)) goto without_module;
  rwlock_read(&module->mo_lock);
  for (addr = 0; addr < module->mo_globalc; ++addr) {
   if (!module->mo_globalv[addr]) continue;
@@ -152,16 +153,19 @@ lookup_code_info(DeeCodeObject *__restrict self,
      (DeeFunction_Check(module->mo_globalv[addr]) &&
     ((DeeFunctionObject *)module->mo_globalv[addr])->fo_code == self)) {
    struct module_symbol *function_symbol;
+   rwlock_endread(&module->mo_lock);
    function_symbol = DeeModule_GetSymbolID(module,addr);
    if (function_symbol) {
     /* Found it! (it's a global) */
-    rwlock_endread(&module->mo_lock);
-    info->fi_name = function_symbol->ss_name;
-    info->fi_doc  = function_symbol->ss_doc;
-    Dee_Incref(info->fi_name);
-    Dee_XIncref(info->fi_doc);
+    info->fi_name = module_symbol_getnameobj(function_symbol);
+    if unlikely(!info->fi_name) goto err;
+    if (function_symbol->ss_doc) {
+     info->fi_doc = module_symbol_getdocobj(function_symbol);
+     if unlikely(!info->fi_doc) goto err_name;
+    }
     return 0;
    }
+   rwlock_read(&module->mo_lock);
   }
  }
  /* Do another pass, this time looking for class objects
@@ -211,6 +215,8 @@ without_module:
   return 0;
  }
  return 1;
+err_name:
+ Dee_Decref(info->fi_name);
 err:
  return -1;
 }

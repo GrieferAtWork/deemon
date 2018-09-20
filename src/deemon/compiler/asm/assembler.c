@@ -2455,11 +2455,9 @@ asm_gsymid(struct symbol *__restrict sym) {
  perturb = i = name_hash & current_rootscope->rs_bucketm;
  for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
   iter = &current_rootscope->rs_bucketv[i & current_rootscope->rs_bucketm];
-  if (!iter->ss_name) break;
+  if (!MODULE_SYMBOL_GETNAMESTR(iter)) break;
   if (iter->ss_hash == name_hash &&
-      iter->ss_name->s_len == name->k_size &&
-      memcmp(DeeString_STR(iter->ss_name),name->k_name,
-             name->k_size*sizeof(char)) == 0) {
+      MODULE_SYMBOL_EQUALS(iter,name->k_name,name->k_size)) {
    /* Found a match! - This global variable had already been defined. */
    result = iter->ss_index;
    sym->s_symid = result;
@@ -2467,8 +2465,9 @@ asm_gsymid(struct symbol *__restrict sym) {
    sym->s_flag |= SYMBOL_FALLOC;
    /* Better late than never... */
    if (!iter->ss_doc && sym->s_global.g_doc) {
-    iter->ss_doc = sym->s_global.g_doc;
-    Dee_Incref(iter->ss_doc);
+    iter->ss_doc    = DeeString_STR(sym->s_global.g_doc);
+    iter->ss_flags |= MODSYM_FDOCOBJ;
+    Dee_Incref(sym->s_global.g_doc);
    }
    return result;
   }
@@ -2493,16 +2492,22 @@ asm_gsymid(struct symbol *__restrict sym) {
 
  perturb = i = name_hash & current_rootscope->rs_bucketm;
  for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
+  DREF DeeObject *name_obj;
   iter = &current_rootscope->rs_bucketv[i & current_rootscope->rs_bucketm];
-  if (iter->ss_name) continue;
-  iter->ss_name  = (DREF struct string_object *)DeeString_NewSized(name->k_name,name->k_size);
-  if unlikely(!iter->ss_name) goto err;
-  iter->ss_doc = sym->s_global.g_doc;
-  Dee_XIncref(iter->ss_doc); /* Assign a documentation string. */
-  iter->ss_name->s_hash = name_hash;
-  iter->ss_hash         = name_hash;
-  iter->ss_index        = result;
-  iter->ss_flags        = MODSYM_FNORMAL;
+  if (MODULE_SYMBOL_GETNAMESTR(iter)) continue;
+  name_obj = DeeString_NewSized(name->k_name,name->k_size);
+  if unlikely(!name_obj) goto err;
+  MODULE_SYMBOL_GETNAMESTR(iter) = DeeString_STR(name_obj);
+  ((DeeStringObject *)name_obj)->s_hash = name_hash;
+  iter->ss_flags = MODSYM_FNAMEOBJ;
+  if (sym->s_global.g_doc) {
+   /* Assign a documentation string. */
+   iter->ss_doc = DeeString_STR(sym->s_global.g_doc);
+   Dee_Incref(sym->s_global.g_doc);
+   iter->ss_flags |= MODSYM_FDOCOBJ;
+  }
+  iter->ss_hash  = name_hash;
+  iter->ss_index = result;
   break;
  }
  /* Increment to indicate that this index has now bee taken up. */

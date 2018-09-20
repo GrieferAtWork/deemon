@@ -27,7 +27,7 @@
 #define BUILTIN_DOC(name,object,flags,doc) BUILTIN(name,object,flags)
 #endif
 #ifndef BUILTIN_DOC_REUSE
-#define BUILTIN_DOC_REUSE BUILTIN_DOC
+#define BUILTIN_DOC_REUSE(name,object,flags,doc) BUILTIN_REUSE(name,object,flags)
 #endif
 #ifndef BUILTIN_ALIAS
 #define BUILTIN_ALIAS(name,alt,flags) BUILTIN(name,---,flags)

@@ -175,32 +175,21 @@ dex_load_file(DeeDexObject *__restrict self,
  for (symi = 0; symi < (uint16_t)symcount; ++symi) {
   struct dex_symbol *sym = &symbols[symi];
   dhash_t i,perturb,hash;
-  DREF DeeObject *name_ob,*doc_ob;
   ASSERT(sym->ds_name);
   ASSERTF(!sym->ds_obj || DeeObject_DoCheck(sym->ds_obj),
           "Invalid object %p exported: `%s' by `%s'",
           sym->ds_obj,sym->ds_name,DeeString_STR(input_file));
-  /* Create objects for the symbol's name and documentation.
-   * XXX: Create doc-strings lazily? */
-  name_ob = DeeString_NewAuto(sym->ds_name);
-  if unlikely(!name_ob) goto err_glob_elem;
-  doc_ob = NULL;
-  if (sym->ds_doc) {
-   doc_ob = DeeString_NewUtf8(sym->ds_doc,
-                              strlen(sym->ds_doc),
-                              STRING_ERROR_FIGNORE);
-   if unlikely(!doc_ob) { Dee_Decref(name_ob); goto err_glob_elem; }
-  }
-  hash    = DeeString_Hash(name_ob);
+  hash    = hash_str(sym->ds_name);
   perturb = i = hash & bucket_mask;
   for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
    struct module_symbol *target = &modsym[i & bucket_mask];
    if (target->ss_name) continue;
-   target->ss_name  = (DREF DeeStringObject *)name_ob;
-   target->ss_doc   = (DREF DeeStringObject *)doc_ob;
+   target->ss_name  = sym->ds_name;
+   target->ss_doc   = sym->ds_doc;
    target->ss_index = symi;
    target->ss_hash  = hash;
    target->ss_flags = (uint16_t)sym->ds_flags;
+   ASSERT(!(sym->ds_flags & (MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)));
    break;
   }
   /* Safe the proper initialization object in the global table. */
@@ -217,16 +206,6 @@ dex_load_file(DeeDexObject *__restrict self,
  /* Save the import table in the descriptor. */
  descriptor->d_imports     = (DeeObject **)imports;
  return 0;
-err_glob_elem:
- /* Cleanup global variables. */
- while (symi--)
-     Dee_XDecrefNokill(globals[symi]);
- /* Cleanup symbol names. */
- for (symi = 0; symi <= bucket_mask; ++symi) {
-  Dee_XDecref(modsym[symi].ss_doc);
-  Dee_XDecref(modsym[symi].ss_name);
- }
- Dee_Free(modsym);
 err_glob:
  Dee_Free(globals);
 err_imp_elem:

@@ -887,10 +887,10 @@ module_import_symbol(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (item->ss_name) continue;
   /* Use this item. */
-  item->ss_name  = name;
+  item->ss_name  = DeeString_STR(name);
+  item->ss_flags = MODSYM_FNAMEOBJ;
   item->ss_doc   = NULL;
   item->ss_hash  = hash;
-  item->ss_flags = MODSYM_FNORMAL;
   item->ss_index = self->mo_globalc - 1;
   Dee_Incref(name);
   break;
@@ -1210,8 +1210,8 @@ err_compiler_basefile:
      COMPILER_END();
      goto err_basefile;
     }
-    sym->s_name  = TPPLexer_LookupKeyword(DeeString_STR(modsym->ss_name),
-                                          DeeString_SIZE(modsym->ss_name),
+    sym->s_name  = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(modsym),
+                                          MODULE_SYMBOL_GETNAMELEN(modsym),
                                           1);
     if unlikely(!sym->s_name) goto err_compiler_basefile;
     sym->s_type         = SYMBOL_TYPE_GLOBAL;
@@ -1302,10 +1302,14 @@ err_globals:
  for (i = 0; i < self->im_module.mo_globalc; ++i)
      Dee_XDecref(self->im_module.mo_globalv[i]);
  for (i = 0; i <= self->im_module.mo_bucketm; ++i) {
-  if (!self->im_module.mo_bucketv[i].ss_name)
+  struct module_symbol *sym;
+  sym = &self->im_module.mo_bucketv[i];
+  if (!sym->ss_name)
        continue;
-  Dee_Decref(self->im_module.mo_bucketv[i].ss_name);
-  Dee_XDecref(self->im_module.mo_bucketv[i].ss_doc);
+  if (sym->ss_flags & MODSYM_FNAMEOBJ)
+      Dee_Decref(COMPILER_CONTAINER_OF(sym->ss_name,DeeStringObject,s_str));
+  if (sym->ss_flags & MODSYM_FDOCOBJ)
+      Dee_Decref(COMPILER_CONTAINER_OF(sym->ss_doc,DeeStringObject,s_str));
  }
  Dee_Free(self->im_module.mo_bucketv);
  Dee_Free(self->im_module.mo_globalv);

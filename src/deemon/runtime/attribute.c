@@ -1743,8 +1743,8 @@ DeeModule_DocAttrString(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (strcmp(DeeString_STR(item->ss_name),attr_name)) continue;
-  if (item->ss_doc) return_reference_((DeeObject *)item->ss_doc);
+  if (strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name)) continue;
+  if (item->ss_doc) return (DREF DeeObject *)module_symbol_getdocobj(item);
   DeeModule_UnlockSymbols((DeeObject *)self);
   err_nodoc_attribute(self->mo_name->s_str,attr_name);
   return NULL;
@@ -3829,8 +3829,8 @@ DeeModule_DocAttrString(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (strcmp(DeeString_STR(item->ss_name),attr_name)) continue;
-  if (item->ss_doc) return_reference_((DeeObject *)item->ss_doc);
+  if (strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name)) continue;
+  if (item->ss_doc) return (DREF DeeObject *)module_symbol_getdocobj(item);
   DeeModule_UnlockSymbols((DeeObject *)self);
   err_nodoc_attribute(self->mo_name->s_str,attr_name);
   return NULL;

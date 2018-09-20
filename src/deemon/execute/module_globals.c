@@ -194,8 +194,14 @@ again:
   new_index = old_index;
   for (;;) {
    symbol = &module->mo_bucketv[new_index];
-   result_name = (DREF DeeObject *)symbol->ss_name;
-   if (result_name) break;
+   if (symbol->ss_name) {
+    result_name = (DREF DeeObject *)module_symbol_getnameobj(symbol);
+    if unlikely(!result_name) {
+     DeeModule_UnlockSymbols((DeeObject *)module);
+     return NULL;
+    }
+    break;
+   }
 continue_symbol_search:
    ++new_index;
    if (new_index > module->mo_bucketm) {
@@ -368,8 +374,14 @@ read_symbol:
 #ifndef CONFIG_NO_THREADS
   rwlock_endread(&self->mo_lock);
 #endif
-  if unlikely(!result)
-     err_unknown_key((DeeObject *)exports_map,(DeeObject *)symbol->ss_name);
+  if unlikely(!result) {
+   if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
+    err_unknown_key((DeeObject *)exports_map,
+                    (DeeObject *)COMPILER_CONTAINER_OF(symbol->ss_name,DeeStringObject,s_str));
+   } else {
+    err_unknown_key_str((DeeObject *)exports_map,symbol->ss_name);
+   }
+  }
   return result;
  }
  /* External symbol, or property. */
@@ -384,7 +396,12 @@ read_symbol:
   rwlock_endread(&self->mo_lock);
 #endif
   if unlikely(!callback) {
-   err_unknown_key((DeeObject *)exports_map,(DeeObject *)symbol->ss_name);
+   if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
+    err_unknown_key((DeeObject *)exports_map,
+                    (DeeObject *)COMPILER_CONTAINER_OF(symbol->ss_name,DeeStringObject,s_str));
+   } else {
+    err_unknown_key_str((DeeObject *)exports_map,symbol->ss_name);
+   }
    return NULL;
   }
   /* Invoke the property callback. */
