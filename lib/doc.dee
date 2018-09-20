@@ -1608,10 +1608,31 @@ global class Doc: sequence {
 				name = doc_parent_or_path.__name__;
 				m_raw_doc = doc_parent_or_path.__doc__;
 				object = doc_parent_or_path;
-				if (deemon.hasattr(doc_parent_or_path,"__type__"))
-					parent = Doc(doc_parent_or_path.__type__);
-				else {
-					parent = Doc(doc_parent_or_path.__module__);
+				if (deemon.hasattr(doc_parent_or_path,"__type__")) {
+					local doc_type;
+					try {
+						doc_type = doc_parent_or_path.__type__;
+					} catch (Error.AttributeError) {
+						goto do_load_wrapper_module;
+					}
+					if (doc_type is none)
+						goto do_load_wrapper_module;
+					parent = Doc(doc_type);
+				} else {
+do_load_wrapper_module:
+					local mod;
+					try {
+						mod = doc_parent_or_path.__module__;
+					} catch (Error.AttributeError) {
+						goto do_throw_unknown_object_origin;
+					}
+					if (mod is none) {
+do_throw_unknown_object_origin:
+						throw Error.AttributeError(
+							"Failed to determine the declaring type or module of {!r}".
+							format({ doc_parent_or_path }));
+					}
+					parent = Doc(mod);
 				}
 				path = "{}/{}".format({ parent.path, name });
 				attr = deemon.attribute(parent.object,name);
