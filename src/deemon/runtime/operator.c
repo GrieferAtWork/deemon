@@ -3878,7 +3878,7 @@ DEFINE_OPERATOR(DREF DeeObject *,GetAttr,
 #endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
     /* Check if we're allowed to access this attr. */
     if (!member_mayaccess(iter,attr)) {
-     err_protected_member(iter,attr);
+     err_class_protected_member(iter,attr);
      return NULL;
     }
 #ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
@@ -3970,7 +3970,7 @@ DEFINE_OPERATOR(int,DelAttr,
 #endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
     /* Check if we're allowed to access this attr. */
     if (!member_mayaccess(iter,attr)) {
-     err_protected_member(iter,attr);
+     err_class_protected_member(iter,attr);
      goto err;
     }
 #ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
@@ -4068,7 +4068,7 @@ DEFINE_OPERATOR(int,SetAttr,
 #endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
     /* Check if we're allowed to access this attr. */
     if (!member_mayaccess(iter,attr)) {
-     err_protected_member(iter,attr);
+     err_class_protected_member(iter,attr);
      goto err;
     }
 #ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
@@ -4171,7 +4171,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *,CallAttr,
 #endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
     /* Check if we're allowed to access this attr. */
     if (!member_mayaccess(iter,attr)) {
-     err_protected_member(iter,attr);
+     err_class_protected_member(iter,attr);
      goto err;
     }
 #ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING

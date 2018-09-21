@@ -139,7 +139,7 @@ DeeCell_Get(DeeObject *__restrict self) {
  DREF DeeObject *result;
  result = DeeCell_TryGet(self);
  if unlikely(!result) {
-  DeeError_Throwf(&DeeError_AttributeError,
+  DeeError_Throwf(&DeeError_UnboundAttribute,
                   "The cell is empty");
   /* No mitochondria here... */
  }
@@ -291,7 +291,8 @@ PRIVATE struct type_cmp cell_cmp = {
 
 PRIVATE struct type_getset cell_getsets[] = {
     { "item", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
-      DOC("read/write access to the underlying, contained :object") },
+      DOC("@throw UnboundAttribute Attempted to read from an empty cell\n"
+          "read/write access to the underlying, contained :object") },
     { "value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
       DOC("Deprecated alias for #item") },
     { NULL }
@@ -317,10 +318,10 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_del(Cell *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+cell_delete(Cell *__restrict self,
+            size_t argc, DeeObject **__restrict argv) {
  DeeObject *oldval;
- if (DeeArg_Unpack(argc,argv,":del"))
+ if (DeeArg_Unpack(argc,argv,":delete"))
      goto err;
  oldval = DeeCell_Xch((DeeObject *)self,NULL);
  if (!oldval) return_false;
@@ -439,18 +440,18 @@ err:
 
 PRIVATE struct type_method cell_methods[] = {
     { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_get,
-      DOC("()\n"
+      DOC("->object\n"
           "@throw ValueError @this cell is empty\n"
           "Returns the contained value of the cell\n"
           "\n"
-          "(def)\n"
+          "(def)->object\n"
           "Returns the contained value of the cell or @def when it is empty") },
-    { "del", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_del,
-      DOC("()->bool\n"
+    { "delete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_delete,
+      DOC("->bool\n"
           "Delete the value stored in @this cell, returning :true if "
           "the cell wasn't empty before, or :false if it already was") },
     { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_pop,
-      DOC("()->object\n"
+      DOC("->object\n"
           "@throw ValueError The cell was empty\n"
           "\n"
           "(def)->object\n"
@@ -509,7 +510,7 @@ PUBLIC DeeTypeObject DeeCell_Type = {
                             "Create a new, empty cell\n"
                             "\n"
                             "(obj)\n"
-                            "Create a new cell containing @{obj}"),
+                            "Create a new cell containing @obj"),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

@@ -488,6 +488,13 @@ err_unknown_attribute(DeeTypeObject *__restrict tp,
                         access_names[access&ATTR_ACCESS_MASK],tp,name);
 }
 INTERN ATTR_COLD int DCALL
+err_unknown_attribute_lookup(DeeTypeObject *__restrict tp,
+                             char const *__restrict name) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Unknown attribute `%k.%s'",
+                         tp,name);
+}
+INTERN ATTR_COLD int DCALL
 err_nodoc_attribute(char const *base,
                     char const *__restrict name) {
  return DeeError_Throwf(&DeeError_ValueError,
@@ -541,6 +548,51 @@ err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restri
  return DeeError_Throwf(&DeeError_UnboundAttribute,
                         "Unbound attribute `%s.%s'",
                         get_desc_name(desc),name);
+}
+INTERN ATTR_COLD int DCALL
+err_module_not_loaded_attr(DeeModuleObject *__restrict self,
+                           char const *__restrict name, int access) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot %s global variable `%s' of module `%k' that hasn't been loaded yet",
+                        access_names[access&ATTR_ACCESS_MASK],
+                        name,self->mo_name);
+}
+INTERN ATTR_COLD int DCALL
+err_module_no_such_global(DeeModuleObject *__restrict self,
+                          char const *__restrict name, int access) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot %s unknown global variable: `%k.%s'",
+                        access_names[access&ATTR_ACCESS_MASK],
+                        self->mo_name,name);
+}
+INTERN ATTR_COLD int DCALL
+err_module_readonly_global(DeeModuleObject *__restrict self,
+                           char const *__restrict name) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot modify read-only global variable: `%k.%s'",
+                        self->mo_name,name);
+}
+
+INTERN ATTR_COLD int DCALL
+err_module_cannot_read_property(DeeModuleObject *__restrict self,
+                                char const *__restrict name) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot read global property: `%k.%s'",
+                        self->mo_name,name);
+}
+INTERN ATTR_COLD int DCALL
+err_module_cannot_delete_property(DeeModuleObject *__restrict self,
+                                  char const *__restrict name) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot write global property: `%k.%s'",
+                        self->mo_name,name);
+}
+INTERN ATTR_COLD int DCALL
+err_module_cannot_write_property(DeeModuleObject *__restrict self,
+                                 char const *__restrict name) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot write global property: `%k.%s'",
+                        self->mo_name,name);
 }
 INTERN ATTR_COLD int DCALL
 err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key) {
@@ -601,7 +653,7 @@ err_index_not_found(DeeObject *__restrict seq, DeeObject *__restrict item) {
                         item,seq);
 }
 INTERN ATTR_COLD int DCALL
-err_protected_member(DeeTypeObject *__restrict class_type,
+err_class_protected_member(DeeTypeObject *__restrict class_type,
                      struct class_attribute *__restrict member) {
  ASSERT_OBJECT_TYPE(class_type,&DeeType_Type);
  ASSERT(DeeType_IsClass(class_type));

@@ -48,7 +48,6 @@ INTDEF ATTR_COLD int DCALL err_index_out_of_bounds_ob(DeeObject *__restrict self
 INTDEF ATTR_COLD int DCALL err_va_index_out_of_bounds(size_t index, size_t size);
 INTDEF ATTR_COLD int DCALL err_unbound_index(DeeObject *__restrict self, size_t index);
 INTDEF ATTR_COLD int DCALL err_expected_single_character_string(DeeObject *__restrict str);
-INTDEF ATTR_COLD int DCALL err_expected_string_for_attribute(DeeObject *__restrict but_instead_got);
 INTDEF ATTR_COLD int DCALL err_integer_overflow(DeeObject *__restrict overflowing_object, size_t cutoff_bits, bool positive_overflow);
 INTDEF ATTR_COLD int DCALL err_integer_overflow_i(size_t cutoff_bits, bool positive_overflow);
 INTDEF ATTR_COLD int DCALL err_keywords_not_accepted(DeeTypeObject *__restrict tp_self, DeeObject *__restrict kw);
@@ -88,7 +87,6 @@ INTDEF ATTR_COLD int DCALL err_empty_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD int DCALL err_changed_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD int DCALL err_item_not_found(DeeObject *__restrict seq, DeeObject *__restrict item);
 INTDEF ATTR_COLD int DCALL err_index_not_found(DeeObject *__restrict seq, DeeObject *__restrict item);
-INTDEF ATTR_COLD int DCALL err_protected_member(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict member);
 INTDEF ATTR_COLD int DCALL err_no_super_class(DeeTypeObject *__restrict type);
 INTDEF ATTR_COLD int DCALL err_immutable_sequence(DeeObject *__restrict self);
 INTDEF ATTR_COLD int DCALL err_fixedlength_sequence(DeeObject *__restrict self);
@@ -116,12 +114,21 @@ INTDEF ATTR_COLD int DCALL err_unimplemented_operator3(DeeTypeObject *__restrict
 #define ATTR_ACCESS_MASK    3
 /* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD int DCALL err_unknown_attribute(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
+INTDEF ATTR_COLD int DCALL err_unknown_attribute_lookup(DeeTypeObject *__restrict tp, char const *__restrict name);
 INTDEF ATTR_COLD int DCALL err_nodoc_attribute(char const *base, char const *__restrict name);
 /* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD int DCALL err_cant_access_attribute(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
 INTDEF ATTR_COLD int DCALL err_cant_access_attribute_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
 INTDEF ATTR_COLD int DCALL err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name);
 INTDEF ATTR_COLD int DCALL err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name);
+INTDEF ATTR_COLD int DCALL err_expected_string_for_attribute(DeeObject *__restrict but_instead_got);
+INTDEF ATTR_COLD int DCALL err_class_protected_member(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict member);
+INTERN ATTR_COLD int DCALL err_module_not_loaded_attr(struct module_object *__restrict self, char const *__restrict name, int access);
+INTERN ATTR_COLD int DCALL err_module_no_such_global(struct module_object *__restrict self, char const *__restrict name, int access);
+INTERN ATTR_COLD int DCALL err_module_readonly_global(struct module_object *__restrict self, char const *__restrict name);
+INTERN ATTR_COLD int DCALL err_module_cannot_read_property(struct module_object *__restrict self, char const *__restrict name);
+INTERN ATTR_COLD int DCALL err_module_cannot_delete_property(struct module_object *__restrict self, char const *__restrict name);
+INTERN ATTR_COLD int DCALL err_module_cannot_write_property(struct module_object *__restrict self, char const *__restrict name);
 
 
 INTDEF ATTR_COLD int DCALL err_file_not_found(char const *__restrict filename);

@@ -134,55 +134,6 @@ DeeModule_GetRoot(DeeObject *__restrict self) {
 }
 
 
-PRIVATE char const access_names[3][4] = {
-   /* [ATTR_ACCESS_GET] = */"get",
-   /* [ATTR_ACCESS_DEL] = */"del",
-   /* [ATTR_ACCESS_SET] = */"set"
-};
-INTERN ATTR_COLD void DCALL
-err_module_not_loaded_attr(DeeModuleObject *__restrict self,
-                           char const *__restrict name, int access) {
- DeeError_Throwf(&DeeError_AttributeError,
-                 "Cannot %s global variable `%s' of module `%k' that hasn't been loaded yet",
-                 access_names[access],name,self->mo_name);
-}
-INTERN ATTR_COLD void DCALL
-err_no_such_global(DeeModuleObject *__restrict self,
-                   char const *__restrict name, int access) {
- DeeError_Throwf(&DeeError_AttributeError,
-                 "Cannot %s unknown global variable: `%k.%s'",
-                 access_names[access],self->mo_name,name);
-}
-INTERN ATTR_COLD void DCALL
-err_readonly_global(DeeModuleObject *__restrict self,
-                    char const *__restrict name) {
- DeeError_Throwf(&DeeError_AttributeError,
-                 "Cannot modify read-only global variable: `%k.%s'",
-                 self->mo_name,name);
-}
-
-INTERN ATTR_COLD void DCALL
-err_cannot_read_property(DeeModuleObject *__restrict self,
-                         char const *__restrict name) {
- DeeError_Throwf(&DeeError_AttributeError,
-                 "Cannot read global property: `%k.%s'",
-                 self->mo_name,name);
-}
-INTERN ATTR_COLD void DCALL
-err_cannot_delete_property(DeeModuleObject *__restrict self,
-                           char const *__restrict name) {
- DeeError_Throwf(&DeeError_AttributeError,
-                 "Cannot write global property: `%k.%s'",
-                 self->mo_name,name);
-}
-INTERN ATTR_COLD void DCALL
-err_cannot_write_property(DeeModuleObject *__restrict self,
-                          char const *__restrict name) {
- DeeError_Throwf(&DeeError_AttributeError,
-                 "Cannot write global property: `%k.%s'",
-                 self->mo_name,name);
-}
-
 INTERN struct module_symbol empty_module_buckets[] = {
     { NULL, 0, 0 }
 };
@@ -261,7 +212,7 @@ read_symbol:
   rwlock_endread(&self->mo_lock);
 #endif
   if unlikely(!callback) {
-   err_cannot_read_property(self,MODULE_SYMBOL_GETNAMESTR(symbol));
+   err_module_cannot_read_property(self,MODULE_SYMBOL_GETNAMESTR(symbol));
    return NULL;
   }
   /* Invoke the property callback. */
@@ -336,7 +287,7 @@ module_getattr_impl(DeeModuleObject *__restrict self,
  /* Fallback: Do a generic attribute lookup on the module. */
  result = DeeObject_GenericGetAttrString((DeeObject *)self,attr_name,hash);
  if (result != ITER_DONE) return result;
- err_no_such_global(self,attr_name,ATTR_ACCESS_GET);
+ err_module_no_such_global(self,attr_name,ATTR_ACCESS_GET);
  return NULL;
 }
 
@@ -377,10 +328,8 @@ module_delattr_symbol(DeeModuleObject *__restrict self,
                       struct module_symbol *__restrict symbol) {
  DREF DeeObject *old_value;
  if unlikely(symbol->ss_flags&(MODSYM_FREADONLY|MODSYM_FEXTERN|MODSYM_FPROPERTY)) {
-  if (symbol->ss_flags & MODSYM_FREADONLY) {
-   err_readonly_global(self,MODULE_SYMBOL_GETNAMESTR(symbol));
-   return -1;
-  }
+  if (symbol->ss_flags & MODSYM_FREADONLY)
+      return err_module_readonly_global(self,MODULE_SYMBOL_GETNAMESTR(symbol));
   if (symbol->ss_flags & MODSYM_FPROPERTY) {
    DREF DeeObject *callback,*temp;
 #ifndef CONFIG_NO_THREADS
@@ -392,10 +341,8 @@ module_delattr_symbol(DeeModuleObject *__restrict self,
 #ifndef CONFIG_NO_THREADS
    rwlock_endread(&self->mo_lock);
 #endif
-   if unlikely(!callback) {
-    err_cannot_delete_property(self,MODULE_SYMBOL_GETNAMESTR(symbol));
-    return -1;
-   }
+   if unlikely(!callback)
+      return err_module_cannot_delete_property(self,MODULE_SYMBOL_GETNAMESTR(symbol));
    /* Invoke the property callback. */
    temp = DeeObject_Call(callback,0,NULL);
    Dee_Decref(callback);
@@ -442,8 +389,7 @@ module_delattr_impl(DeeModuleObject *__restrict self,
  /* Fallback: Do a generic attribute lookup on the module. */
  error = DeeObject_GenericDelAttrString((DeeObject *)self,attr_name,hash);
  if unlikely(error <= 0) return error;
- err_no_such_global(self,attr_name,ATTR_ACCESS_DEL);
- return -1;
+ return err_module_no_such_global(self,attr_name,ATTR_ACCESS_DEL);
 }
 
 INTERN int DCALL
@@ -470,8 +416,7 @@ module_setattr_symbol(DeeModuleObject *__restrict self,
     rwlock_endwrite(&self->mo_lock);
 #endif
 err_is_readonly:
-    err_readonly_global(self,MODULE_SYMBOL_GETNAMESTR(symbol));
-    return -1;
+    return err_module_readonly_global(self,MODULE_SYMBOL_GETNAMESTR(symbol));
    }
    Dee_Incref(value);
    self->mo_globalv[symbol->ss_index] = value;
@@ -490,10 +435,8 @@ err_is_readonly:
 #ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&self->mo_lock);
 #endif
-   if (!callback) {
-    err_cannot_write_property(self,MODULE_SYMBOL_GETNAMESTR(symbol));
-    return -1;
-   }
+   if unlikely(!callback)
+      return err_module_cannot_write_property(self,MODULE_SYMBOL_GETNAMESTR(symbol));
    temp = DeeObject_Call(callback,1,(DeeObject **)&value);
    Dee_Decref(callback);
    Dee_XDecref(temp);
@@ -533,8 +476,7 @@ module_setattr_impl(DeeModuleObject *__restrict self,
  /* Fallback: Do a generic attribute lookup on the module. */
  error = DeeObject_GenericSetAttrString((DeeObject *)self,attr_name,hash,value);
  if unlikely(error <= 0) return error;
- err_no_such_global(self,attr_name,ATTR_ACCESS_SET);
- return -1;
+ return err_module_no_such_global(self,attr_name,ATTR_ACCESS_SET);
 }
 
 
@@ -612,8 +554,7 @@ DeeModule_DelAttrString(DeeModuleObject *__restrict self,
    interactivemodule_lockendwrite(self);
    return result;
   }
-  err_module_not_loaded_attr(self,attr_name,ATTR_ACCESS_DEL);
-  return -1;
+  return err_module_not_loaded_attr(self,attr_name,ATTR_ACCESS_DEL);
  }
  return module_delattr_impl(self,attr_name,hash);
 }
@@ -630,8 +571,7 @@ DeeModule_SetAttrString(DeeModuleObject *__restrict self,
    interactivemodule_lockendwrite(self);
    return result;
   }
-  err_module_not_loaded_attr(self,attr_name,ATTR_ACCESS_SET);
-  return -1;
+  return err_module_not_loaded_attr(self,attr_name,ATTR_ACCESS_SET);
  }
  return module_setattr_impl(self,attr_name,hash,value);
 }

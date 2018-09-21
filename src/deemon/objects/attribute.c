@@ -376,10 +376,7 @@ attribute_init(DeeAttributeObject *__restrict self, size_t argc,
                                    &rules);
  if (lookup_error > 0) {
   /* Attribute wasn't found... */
-  DeeError_Throwf(&DeeError_AttributeError,
-                  "Unknown attribute `%k.%s'",
-                   Dee_TYPE(search_self),
-                   rules.alr_name);
+  err_unknown_attribute_lookup(Dee_TYPE(search_self),rules.alr_name);
   goto err;
  }
  if likely(!lookup_error) {

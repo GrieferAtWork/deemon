@@ -487,7 +487,7 @@ struct_delattr(DeeStructTypeObject *__restrict tp_self,
 #endif
   return 0;
  }
- return err_unknown_attribute((DeeTypeObject *)tp_self,name,"del");
+ return err_unknown_attribute((DeeTypeObject *)tp_self,name,"delete");
 }
 
 PRIVATE int DCALL
