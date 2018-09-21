@@ -50,6 +50,7 @@
 
 #include "int_logic.h"
 
+#include <hybrid/overflow.h>
 #ifndef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX  __SSIZE_MAX__
@@ -1109,6 +1110,196 @@ invalid:
                  len,str);
  return NULL;
 }
+
+PUBLIC int
+(DCALL Dee_Atoi64)(/*utf-8*/char const *__restrict str,
+                   size_t len, uint32_t radix_and_flags,
+                   int64_t *__restrict value) {
+ unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
+ char *iter,*begin = (char *)str,*end = (char *)str+len;
+ bool negative = false; uint64_t result;
+ /* Parse a sign prefix. */
+ for (;; ++begin) {
+  if (begin == end) goto err_invalid;
+  if (*begin == '+') continue;
+  if (*begin == '-') { negative = !negative; continue; }
+  if (*begin == '\\' && (radix_and_flags&DEEINT_STRING_FESCAPED)) {
+   uint32_t begin_plus_one;
+   char *new_begin = begin + 1;
+   begin_plus_one = utf8_readchar((char const **)&new_begin,end);
+   if (DeeUni_IsLF(begin_plus_one)) {
+    begin = new_begin;
+    if (begin_plus_one == '\r' &&
+       *begin == '\n') ++begin;
+    continue;
+   }
+  }
+  break;
+ }
+ if unlikely(negative &&
+           !(radix_and_flags & DEEATOI_STRING_FSIGNED)) {
+  /* Negative value when unsigned was needed. */
+  if (radix_and_flags & DEEINT_STRING_FTRY)
+      return 1;
+  return err_integer_overflow_i(64,false);
+ }
+ if (!radix) {
+  /* Automatically determine the radix. */
+  char *old_begin = begin; uint32_t leading_zero;
+  leading_zero = utf8_readchar((char const **)&begin,end);
+  if (DeeUni_IsDecimalX(leading_zero,0)) {
+   if (begin == end) {
+    /* Special case: int(0) */
+    *value = 0;
+    return 0;
+   }
+   while (*begin == '\\' && (radix_and_flags&DEEINT_STRING_FESCAPED)) {
+    uint32_t begin_plus_one;
+    char *new_begin = begin + 1;
+    begin_plus_one = utf8_readchar((char const **)&new_begin,end);
+    if (DeeUni_IsLF(begin_plus_one)) {
+     begin = new_begin;
+     if (begin_plus_one == '\r' &&
+        *begin == '\n') ++begin;
+     continue;
+    }
+    break;
+   }
+   /* */if (*begin == 'x' || *begin == 'X') radix = 16,++begin;
+   else if (*begin == 'b' || *begin == 'B') radix = 2,++begin;
+   else radix = 8;
+  } else {
+   begin = old_begin;
+   radix = 10;
+  }
+ }
+ if unlikely(begin == end)
+    goto err_invalid;
+ ASSERT(radix >= 2);
+ /* Parse the integer starting with the least significant bits. */
+ result = 0;
+ iter = end;
+ while (iter > begin) {
+  uint32_t ch; uint8_t dig;
+  struct unitraits *trt;
+  ch = utf8_readchar_rev((char const **)&iter,begin);
+  trt = DeeUni_Descriptor(ch);
+  /* */if (trt->ut_flags & UNICODE_FDECIMAL) dig = trt->ut_digit;
+  else if (ch >= 'a' && ch <= 'z') dig = 10+(uint8_t)(ch-'a');
+  else if (ch >= 'A' && ch <= 'Z') dig = 10+(uint8_t)(ch-'A');
+  else if (DeeUni_IsLF(ch) &&
+          (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+   if (iter == begin) goto err_invalid;
+   if (iter[-1] == '\\') { --iter; continue; }
+   if (iter[-1] == '\r' && ch == '\n' &&
+       iter-1 != begin && iter[-2] == '\\')
+   { iter -= 2; continue; }
+   goto err_invalid;
+  } else {
+   goto err_invalid;
+  }
+  /* Got the digit. */
+  if unlikely(dig >= radix)
+     goto err_invalid;
+  /* Add the digit to out number buffer. */
+  if (OVERFLOW_UMUL(result,radix,&result))
+      goto err_overflow;
+  if (OVERFLOW_UADD(result,dig,&result))
+      goto err_overflow;
+ }
+ /* Negate the integer if it was prefixed by `-' */
+ if (negative) {
+  if (result > INT64_MAX)
+      goto err_overflow;
+  result = (uint64_t)-(int64_t)result;
+ }
+ *value = result;
+ return 0;
+err_overflow:
+ if (radix_and_flags & DEEINT_STRING_FTRY)
+     return 1;
+ return err_integer_overflow_i(64,!negative);
+err_invalid:
+ if (radix_and_flags & DEEINT_STRING_FTRY)
+     return 1;
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "Invalid integer %$q",
+                        len,str);
+}
+
+PUBLIC int
+(DCALL Dee_Atoi32)(/*utf-8*/char const *__restrict str,
+                   size_t len, uint32_t radix_and_flags,
+                   int32_t *__restrict value) {
+ int64_t val64;
+ int result = Dee_Atoi64(str,len,radix_and_flags,&val64);
+ if (result == 0) {
+  if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
+   if unlikely(val64 < INT32_MIN || val64 > INT32_MAX) {
+    err_integer_overflow_i(32,val64 < 0);
+    goto err;
+   }
+  } else {
+   if unlikely((uint64_t)val64 > UINT32_MAX) {
+    err_integer_overflow_i(32,true);
+    goto err;
+   }
+  }
+  *value = (int32_t)val64;
+ }
+ return result;
+err:
+ return -1;
+}
+PUBLIC int
+(DCALL Dee_Atoi16)(/*utf-8*/char const *__restrict str,
+                   size_t len, uint32_t radix_and_flags,
+                   int16_t *__restrict value) {
+ int64_t val64;
+ int result = Dee_Atoi64(str,len,radix_and_flags,&val64);
+ if (result == 0) {
+  if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
+   if unlikely(val64 < INT16_MIN || val64 > INT16_MAX) {
+    err_integer_overflow_i(16,val64 < 0);
+    goto err;
+   }
+  } else {
+   if unlikely((uint64_t)val64 > UINT16_MAX) {
+    err_integer_overflow_i(16,true);
+    goto err;
+   }
+  }
+  *value = (int16_t)val64;
+ }
+ return result;
+err:
+ return -1;
+}
+PUBLIC int
+(DCALL Dee_Atoi8)(/*utf-8*/char const *__restrict str,
+                  size_t len, uint32_t radix_and_flags,
+                  int8_t *__restrict value) {
+ int64_t val64;
+ int result = Dee_Atoi64(str,len,radix_and_flags,&val64);
+ if (result == 0) {
+  if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
+   if unlikely(val64 < INT8_MIN || val64 > INT8_MAX) {
+    err_integer_overflow_i(8,val64 < 0);
+    goto err;
+   }
+  } else {
+   if unlikely((uint64_t)val64 > UINT8_MAX) {
+    err_integer_overflow_i(8,true);
+    goto err;
+   }
+  }
+  *value = (int8_t)val64;
+ }
+ return result;
+err:
+ return -1;
+}
+
 
 PRIVATE dssize_t DCALL
 DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,

@@ -23,6 +23,9 @@
 #include "object.h"
 #ifndef CONFIG_NO_DEX
 #include "module.h"
+#ifndef CONFIG_NO_NOTIFICATIONS
+#include "notify.h"
+#endif /* !CONFIG_NO_NOTIFICATIONS */
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -37,6 +40,24 @@ struct dex_symbol {
     uintptr_t            ds_flags; /* Set of `MODSYM_F*'. */
     /*utf-8*/char const *ds_doc;   /* [0..1] An optional documentation string. */
 };
+
+#ifndef CONFIG_NO_NOTIFICATIONS
+struct dex_notification {
+#define DEX_NOTIFICATION_FNORMAL 0x0000 /* Normal notification flags. */
+#if __SIZEOF_POINTER__ >= 8
+    uint32_t              dn_class;    /* [valid_if(dn_name)] Notification class (One of `NOTIFICATION_CLASS_*') */
+    uint32_t              dn_flag;     /* [valid_if(dn_name)] Notification flags (Set of `DEX_NOTIFICATION_F*') */
+#elif __SIZEOF_POINTER__ >= 4
+    uint16_t              dn_class;    /* [valid_if(dn_name)] Notification class (One of `NOTIFICATION_CLASS_*') */
+    uint16_t              dn_flag;     /* [valid_if(dn_name)] Notification flags (Set of `DEX_NOTIFICATION_F*') */
+#else
+#error FIXME
+#endif
+    struct string_object *dn_name;     /* [0..1] Notification name (`NULL' indicates sentinal). */
+    dnotify_t             dn_callback; /* [1..1][valid_if(dn_name)] Notification callback. */
+    DeeObject            *dn_arg;      /* [0..1][valid_if(dn_name)] Notification argument. */
+};
+#endif /* !CONFIG_NO_NOTIFICATIONS */
 
 struct dex {
     /* The extension descriptor structure that must be
@@ -67,6 +88,9 @@ struct dex {
      * @return: true:  Something was cleared.
      * @return: false: Nothing was cleared. (Same as not implementing this callback) */
     bool       (DCALL *d_clear)(DeeDexObject *__restrict self);
+#ifndef CONFIG_NO_NOTIFICATIONS
+    struct dex_notification *d_notify;     /* [0..1] Dex notification hooks. */
+#endif
 };
 
 struct dex_object {

@@ -60,6 +60,7 @@
     <ClInclude Include="..\include\deemon\module.h" />
     <ClInclude Include="..\include\deemon\mro.h" />
     <ClInclude Include="..\include\deemon\none.h" />
+    <ClInclude Include="..\include\deemon\notify.h" />
     <ClInclude Include="..\include\deemon\numeric.h" />
     <ClInclude Include="..\include\deemon\object.h" />
     <ClInclude Include="..\include\deemon\objmethod.h" />

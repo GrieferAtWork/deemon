@@ -367,7 +367,31 @@ dex_initialize(DeeDexObject *__restrict self) {
  int (DCALL *func)(DeeDexObject *__restrict self);
  ASSERT(self->d_dex);
  func = self->d_dex->d_init;
- if (func && (*func)(self)) return -1;
+ if (func && (*func)(self)) goto err;
+#ifndef CONFIG_NO_NOTIFICATIONS
+ {
+  struct dex_notification *hooks;
+  /* Install notification hooks. */
+  hooks = self->d_dex->d_notify;
+  if (hooks) for (; hooks->dn_name; ++hooks) {
+   if unlikely(DeeNotify_BeginListen(hooks->dn_class,
+                                    (DeeObject *)hooks->dn_name,
+                                     hooks->dn_callback,
+                                     hooks->dn_arg) < 0) {
+    while (hooks != self->d_dex->d_notify) {
+     --hooks;
+     DeeNotify_EndListen(hooks->dn_class,
+                        (DeeObject *)hooks->dn_name,
+                         hooks->dn_callback,
+                         hooks->dn_arg);
+    }
+    if (self->d_dex->d_fini)
+      (*self->d_dex->d_fini)(self);
+    goto err;
+   }
+  }
+ }
+#endif /* !CONFIG_NO_NOTIFICATIONS */
  /* Register the dex in the global chain. */
  rwlock_write(&dex_lock);
  if ((self->d_next = dex_chain) != NULL)
@@ -377,6 +401,8 @@ dex_initialize(DeeDexObject *__restrict self) {
  Dee_Incref((DeeObject *)self); /* The reference stored in the dex chain. */
  rwlock_endwrite(&dex_lock);
  return 0;
+err:
+ return -1;
 }
 
 INTDEF size_t DCALL membercache_clear(size_t max_clear);
@@ -391,9 +417,21 @@ dex_fini(DeeDexObject *__restrict self) {
   for (i = 0; i < self->d_module.mo_globalc; ++i)
        Dee_XClear(self->d_module.mo_globalv[i]);
   ASSERT(self->d_dex);
-  if (self->d_module.mo_flags&MODULE_FDIDINIT &&
-      self->d_dex->d_fini)
-    (*self->d_dex->d_fini)(self);
+  if (self->d_module.mo_flags&MODULE_FDIDINIT) {
+#ifndef CONFIG_NO_NOTIFICATIONS
+   struct dex_notification *hooks;
+   /* Uninstall notification hooks. */
+   hooks = self->d_dex->d_notify;
+   if (hooks) for (; hooks->dn_name; ++hooks) {
+    DeeNotify_EndListen(hooks->dn_class,
+                       (DeeObject *)hooks->dn_name,
+                        hooks->dn_callback,
+                        hooks->dn_arg);
+   }
+#endif /* !CONFIG_NO_NOTIFICATIONS */
+   if (self->d_dex->d_fini)
+     (*self->d_dex->d_fini)(self);
+  }
   /* Must clear membercaches that may have been loaded by
    * this extension before unloading the associated library.
    * If we don't do this before, dangling points may be left

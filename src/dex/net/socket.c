@@ -34,6 +34,7 @@
 #include <deemon/thread.h>
 #include <deemon/bytes.h>
 #include <deemon/string.h>
+#include <deemon/notify.h>
 
 DECL_BEGIN
 
@@ -698,17 +699,30 @@ err:
 #pragma warning(pop)
 #endif
 
+#ifdef CONFIG_NO_NOTIFICATIONS
 PRIVATE int DCALL get_default_backlog(void) {
- /* TODO: getenv("DEEMON_MAXBACKLOG") */
  return 5;
 }
+#else
+DEFINE_NOTIFY_ENVIRON_INTEGER(uint16_t,maxbacklog,5,"DEEMON_MAXBACKLOG");
+PRIVATE int DCALL get_default_backlog(void) {
+ uint16_t result;
+ if (maxbacklog_get(&result))
+     return -1;
+ return (int)(unsigned int)result;
+}
+#endif
+
 
 INTERN int DCALL
 DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog) {
  int error; uint16_t state;
  neterrno_t error_code;
- if (max_backlog < 0)
-     max_backlog = get_default_backlog();
+ if (max_backlog < 0) {
+  max_backlog = get_default_backlog();
+  if unlikely(max_backlog < 0)
+     goto err;
+ }
 again:
  if (DeeThread_CheckInterrupt())
      goto err;

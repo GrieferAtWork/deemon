@@ -253,6 +253,9 @@ INTDEF DeeTypeObject DeeEnvIterator_Type; /* Can be default-constructed. */
 /* A singleton instance of `DeeEnv_Type' that is exported from this module as `env'. */
 INTDEF DeeObject DeeEnv_Singleton;
 
+INTDEF DREF DeeObject *DCALL enviterator_next_key(DeeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL enviterator_next_value(DeeObject *__restrict self);
+
 
 /* Path manipulation functions */
 INTDEF DREF DeeObject *DCALL fs_pathhead(DeeObject *__restrict path);

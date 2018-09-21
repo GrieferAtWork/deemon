@@ -209,65 +209,8 @@ DFUNDEF size_t DCALL Dee_Shutdown(void);
  *     least hope to be able to trust) not to cause something like this.
  * @return: * : The amount of code objects that were affected. */
 INTDEF size_t DCALL DeeExec_KillUserCode(void);
-#endif
+#endif /* !CONFIG_BUILDING_DEEMON */
 
-
-#ifndef CONFIG_NO_NOTIFICATIONS
-/* Notification callback system for changes in environment variables.
- * Using this system, callbacks can be registered to-be executed after
- * specific environment variables have changed their value.
- * The intended use for this is for libraries to invalidate caches that
- * might be associated with specific variables, such as the $PATHEXT
- * cache used by Window's implementation of the `process' module to
- * quickly map executable names to their full image paths.
- * However in order to ensure that this will remain the central hub
- * for custom notification callbacks, in addition to its name, a
- * notification class must be specified (which is not restricted
- * to those listed below).
- */
-#define NOTIFICATION_CLASS_FNOCASE     0x8000 /* FLAG: Callback names are case-insensitive. */
-#define NOTIFICATION_CLASS_FIDMASK     0x7fff /* MASK: The actual notification class ID. */
-#ifdef CONFIG_HOST_WINDOWS
-#define NOTIFICATION_CLASS_ENVIRON     0x8000 /* Environment variable. (The callback name is the variable name) */
-#else
-#define NOTIFICATION_CLASS_ENVIRON     0x0000 /* Environment variable. (The callback name is the variable name) */
-#endif
-
-/* @return:  0: Successfully handled the notification.
- * @return: -1: An error occurred and should be propagated. */
-typedef int (DCALL *dnotify_t)(DeeObject *arg);
-
-/* Add/remove a notification listener for a given class and name.
- * @param:  arg: When non-NULL, an object to which the internal
- *               notification registration will keep a reference.
- *               Additionally, this object is passed to `callback'
- *               whenever it is invoked.
- * @param:  cls: One of `NOTIFICATION_CLASS_*'
- * @param: name: The name of the notification to listen for. (Must be a string; e.g.: Name of an environment variable)
- * @return:   0: Successfully registered/removed the given `callback' and `arg' for `cls' and `name'.
- * @return:   1: The given `callback' has already / hasn't been registered for `cls'
- *               and `name' with the same `arg' and was not registered again / removed.
- * @return:  -1: An error occurred (Never returned by `DeeNotify_EndListen').
- * WARNING: Notifications may be invoked more than once if added from a notification callback. */
-DFUNDEF int DCALL DeeNotify_BeginListen(uint16_t cls, DeeObject *__restrict name,
-                                        dnotify_t callback, DeeObject *arg);
-DFUNDEF int DCALL DeeNotify_EndListen(uint16_t cls, DeeObject *__restrict name,
-                                      dnotify_t callback, DeeObject *arg);
-
-/* Broadcast a change notification for the given class `cls' and `name'
- * NOTE: The caller is responsible for passing a string for `name'
- * @return:  * : The number of callbacks that were executed.
- * @return: -1 : Callback invocation was stopped after a callback indicated an error. */
-DFUNDEF int DCALL DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name);
-DFUNDEF int DCALL DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name);
-
-#ifdef CONFIG_BUILDING_DEEMON
-/* Delete all registered notification callbacks.
- * @return: true:  At least one registration was deleted.
- * @return: false: There was nothing to delete. */
-INTDEF bool DCALL DeeNotify_Shutdown(void);
-#endif /* CONFIG_BUILDING_DEEMON */
-#endif /* !CONFIG_NO_NOTIFICATIONS */
 
 DECL_END
 

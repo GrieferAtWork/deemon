@@ -182,6 +182,43 @@ env_contains(DeeObject *__restrict UNUSED(self),
  return_bool(fs_hasenv(key));
 }
 
+PRIVATE size_t DCALL
+env_nsi_getsize(DeeObject *__restrict self) {
+ return (*DeeSeq_Type.tp_seq->tp_nsi->nsi_seqlike.nsi_getsize)(self);
+}
+
+PRIVATE DREF DeeObject *DCALL
+env_nsi_getdefault(DeeObject *__restrict UNUSED(self),
+                   DeeObject *__restrict key,
+                   DeeObject *__restrict defl) {
+ DREF DeeObject *result;
+ if (DeeObject_AssertTypeExact(key,&DeeString_Type))
+     goto err;
+ result = fs_getenv(key,true);
+ if (result) return result;
+ if (defl != ITER_DONE)
+     Dee_Incref(defl);
+ return defl;
+err:
+ return NULL;
+}
+
+PRIVATE struct type_nsi env_nsi = {
+    /* .nsi_class = */TYPE_SEQX_CLASS_MAP,
+    /* .nsi_flags = */TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
+    {
+        /* .nsi_maplike = */{
+            /* .nsi_getsize    = */(void *)&env_nsi_getsize, /* Must be defined because this one's mandatory... */
+            /* .nsi_nextkey    = */(void *)&enviterator_next_key,
+            /* .nsi_nextvalue  = */(void *)&enviterator_next_value,
+            /* .nsi_getdefault = */(void *)&env_nsi_getdefault,
+            /* .nsi_setdefault = */(void *)NULL,
+            /* .nsi_updateold  = */(void *)NULL,
+            /* .nsi_insertnew  = */(void *)NULL
+        }        
+    }
+};
+
 PRIVATE struct type_seq env_seq = {
     /* .tp_iter_self = */&env_iter,
     /* .tp_size      = */NULL,
@@ -191,7 +228,8 @@ PRIVATE struct type_seq env_seq = {
     /* .tp_set       = */&env_setitem,
     /* .tp_range_get = */NULL,
     /* .tp_range_del = */NULL,
-    /* .tp_range_set = */NULL
+    /* .tp_range_set = */NULL,
+    /* .tp_nsi       = */&env_nsi
 };
 
 PRIVATE struct type_member env_members[] = {

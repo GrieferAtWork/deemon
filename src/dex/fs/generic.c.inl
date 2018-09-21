@@ -37,7 +37,9 @@ PRIVATE ATTR_NOINLINE int DCALL fs_unsupported(void) {
 }
 PRIVATE int DCALL env_init(DeeObject *__restrict UNUSED(self)) { return fs_unsupported(); }
 PRIVATE int DCALL env_bool(DeeObject *__restrict UNUSED(self)) { return fs_unsupported(); }
-PRIVATE DREF DeeObject *DCALL env_next(DeeObject *__restrict UNUSED(self)) { fs_unsupported(); return NULL; }
+PRIVATE DREF DeeObject *DCALL env_next(DeeObject *__restrict UNUSED(self)) { return ITER_DONE; }
+INTERN DREF DeeObject *DCALL enviterator_next_key(DeeObject *__restrict UNUSED(self)) { return ITER_DONE; }
+INTERN DREF DeeObject *DCALL enviterator_next_value(DeeObject *__restrict UNUSED(self)) { return ITER_DONE; }
 PRIVATE struct type_member env_members[] = {
     TYPE_MEMBER_CONST("seq",&DeeEnv_Singleton),
     TYPE_MEMBER_END

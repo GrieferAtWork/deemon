@@ -220,10 +220,72 @@ env_next(Env *__restrict self) {
  result = DeeTuple_PackSymbolic(2,name,value); /* Inherit: name, value */
  if unlikely(!result) goto err_value;
  return result;
-err_value: Dee_Decref(value);
-err_name:  Dee_Decref(name);
-err:       return NULL;
+err_value:
+ Dee_Decref(value);
+err_name:
+ Dee_Decref(name);
+err:
+ return NULL;
 }
+
+INTERN DREF DeeObject *DCALL
+enviterator_next_key(DeeObject *__restrict self) {
+ LPWCH result_string,next_string;
+ Env *me = (Env *)self;
+#ifdef CONFIG_NO_THREADS
+ result_string = ATOMIC_READ(me->e_iter);
+ if (!*result_string)
+       return ITER_DONE;
+ next_string = result_string;
+ while (*next_string++);
+ me->e_iter = next_string;
+#else /* CONFIG_NO_THREADS */
+ do {
+  result_string = ATOMIC_READ(me->e_iter);
+  if (!*result_string)
+        return ITER_DONE;
+  next_string = result_string;
+  while (*next_string++);
+ } while (!ATOMIC_CMPXCH(me->e_iter,result_string,next_string));
+#endif /* !CONFIG_NO_THREADS */
+ /* Split the line to extract the name and value. */
+ next_string = result_string+1;
+ /* XXX: This code assumes the double NUL-termination guarantied by windows. */
+ while (*next_string++ && next_string[-1] != '=');
+ return DeeString_NewWide(result_string,
+                         (size_t)(next_string-result_string)-1,
+                          STRING_ERROR_FREPLAC);
+}
+
+INTERN DREF DeeObject *DCALL
+enviterator_next_value(DeeObject *__restrict self) {
+ LPWCH result_string,next_string;
+ Env *me = (Env *)self;
+#ifdef CONFIG_NO_THREADS
+ result_string = ATOMIC_READ(me->e_iter);
+ if (!*result_string)
+       return ITER_DONE;
+ next_string = result_string;
+ while (*next_string++);
+ me->e_iter = next_string;
+#else /* CONFIG_NO_THREADS */
+ do {
+  result_string = ATOMIC_READ(me->e_iter);
+  if (!*result_string)
+        return ITER_DONE;
+  next_string = result_string;
+  while (*next_string++);
+ } while (!ATOMIC_CMPXCH(me->e_iter,result_string,next_string));
+#endif /* !CONFIG_NO_THREADS */
+ /* Split the line to extract the name and value. */
+ next_string = result_string+1;
+ /* XXX: This code assumes the double NUL-termination guarantied by windows. */
+ while (*next_string++ && next_string[-1] != '=');
+ return DeeString_NewWide(next_string,
+                          wcslen(next_string),
+                          STRING_ERROR_FREPLAC);
+}
+
 
 PRIVATE struct type_member env_members[] = {
     TYPE_MEMBER_CONST("seq",&DeeEnv_Singleton),
@@ -282,7 +344,7 @@ INTERN DeeTypeObject DeeEnvIterator_Type = {
 
 PRIVATE void DCALL
 err_unknown_env_var(DeeObject *__restrict name) {
- DeeError_Throwf(&DeeError_ValueError,
+ DeeError_Throwf(&DeeError_KeyError,
                  "Unknown environment variable `%k'",
                  name);
 }
@@ -321,12 +383,12 @@ fs_getenv(DeeObject *__restrict name, bool try_get) {
   }
   if (error <= bufsize) break;
   /* Resize to fit. */
-  new_buffer = DeeString_ResizeWideBuffer(buffer,error-1);
+  new_buffer = DeeString_ResizeWideBuffer(buffer,error);
   if unlikely(!new_buffer) goto err_result;
   buffer  = new_buffer;
   bufsize = error-1;
  }
- new_buffer = DeeString_TryResizeWideBuffer(buffer,error-1);
+ new_buffer = DeeString_TryResizeWideBuffer(buffer,error);
  if likely(new_buffer) buffer = new_buffer;
  result = DeeString_PackWideBuffer(buffer,STRING_ERROR_FREPLAC);
  if unlikely(!result) goto err_consume;
@@ -352,7 +414,7 @@ again:
  DBG_ALIGNMENT_ENABLE();
  if unlikely(!new_bufsize) {
   if (!try_get) {
-   DeeError_Throwf(&DeeError_ValueError,
+   DeeError_Throwf(&DeeError_KeyError,
                    "Unknown environment variable `%s'",
                    name);
    goto err_release;
@@ -362,9 +424,9 @@ again:
  }
  if (new_bufsize > bufsize) {
   /* Increase the buffer and try again. */
-  if unlikely(!ascii_printer_alloc(printer,(new_bufsize-1)-bufsize))
+  if unlikely(!ascii_printer_alloc(printer,new_bufsize-bufsize))
      goto err_release;
-  bufsize = new_bufsize-1;
+  bufsize = new_bufsize;
   goto again;
  } else if likely(new_bufsize < bufsize) {
   /* Release unused buffer memory. */

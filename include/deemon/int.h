@@ -520,6 +520,54 @@ DeeInt_FromAscii(/*ascii*/char const *__restrict str,
 #define DEEINT_STRING_FESCAPED 0x0001 /* Decode escaped linefeeds in the given input string. */
 #define DEEINT_STRING_FTRY     0x0002 /* Don't throw a ValueError, but return ITER_DONE. */
 
+/* @return:  0: Successfully parsed an integer.
+ * @return: -1: An error occurred. (never returned when `DEEINT_STRING_FTRY' is set)
+ * @return:  1: Failed to parse an integer. (returned when `DEEINT_STRING_FTRY' is set) */
+DFUNDEF int (DCALL Dee_Atoi8)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atoi16)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, int16_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atoi32)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, int32_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atoi64)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, int64_t *__restrict value);
+#define DEEATOI_STRING_FSIGNED 0x0004 /* The generated value is signed. */
+
+#ifdef __INTELLISENSE__
+DFUNDEF int (DCALL Dee_Atos8)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atos16)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, int16_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atos32)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, int32_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atos64)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, int64_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atou8)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, uint8_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atou16)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, uint16_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atou32)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, uint32_t *__restrict value);
+DFUNDEF int (DCALL Dee_Atou64)(/*utf-8*/char const *__restrict str, size_t len, uint32_t radix_and_flags, uint64_t *__restrict value);
+#else
+#define Dee_Atos8(str,len,radix_and_flags,value)   Dee_Atoi8(str,len,(radix_and_flags)|DEEATOI_STRING_FSIGNED,value)
+#define Dee_Atos16(str,len,radix_and_flags,value)  Dee_Atoi16(str,len,(radix_and_flags)|DEEATOI_STRING_FSIGNED,value)
+#define Dee_Atos32(str,len,radix_and_flags,value)  Dee_Atoi32(str,len,(radix_and_flags)|DEEATOI_STRING_FSIGNED,value)
+#define Dee_Atos64(str,len,radix_and_flags,value)  Dee_Atoi64(str,len,(radix_and_flags)|DEEATOI_STRING_FSIGNED,value)
+#define Dee_Atou8(str,len,radix_and_flags,value)   Dee_Atoi8(str,len,radix_and_flags,(int8_t *)(value))
+#define Dee_Atou16(str,len,radix_and_flags,value)  Dee_Atoi16(str,len,radix_and_flags,(int16_t *)(value))
+#define Dee_Atou32(str,len,radix_and_flags,value)  Dee_Atoi32(str,len,radix_and_flags,(int32_t *)(value))
+#define Dee_Atou64(str,len,radix_and_flags,value)  Dee_Atoi64(str,len,radix_and_flags,(int64_t *)(value))
+#endif
+
+#ifdef __NO_builtin_choose_expr
+#define DEE_PRIVATE_ATOI_FLAGS(T,flags) \
+        (((T)-1) < (T)0 ? (flags)|DEEATOI_STRING_FSIGNED : (flags))
+#define Dee_TAtoi(T,str,len,radix_and_flags,value) \
+        (sizeof(T) <= 1 ? Dee_Atoi8(str,len,DEE_PRIVATE_ATOI_FLAGS(T,radix_and_flags),(int8_t *)(value)) : \
+         sizeof(T) <= 2 ? Dee_Atoi16(str,len,DEE_PRIVATE_ATOI_FLAGS(T,radix_and_flags),(int16_t *)(value)) : \
+         sizeof(T) <= 4 ? Dee_Atoi32(str,len,DEE_PRIVATE_ATOI_FLAGS(T,radix_and_flags),(int32_t *)(value)) : \
+                          Dee_Atoi64(str,len,DEE_PRIVATE_ATOI_FLAGS(T,radix_and_flags),(int64_t *)(value)))
+#else /* __NO_builtin_choose_expr */
+#define DEE_PRIVATE_ATOI_FLAGS(T,flags) \
+        __builtin_choose_expr(((T)-1) < (T)0,(flags)|DEEATOI_STRING_FSIGNED,(flags))
+#define Dee_TAtoi(T,str,len,radix_and_flags,value) \
+        __builtin_choose_expr(sizeof(T) <= 1,Dee_Atoi8(str,len,DEE_PRIVATE_ATOI_FLAGS(T,radix_and_flags),(int8_t *)(value)), \
+        __builtin_choose_expr(sizeof(T) <= 2,Dee_Atoi16(str,len,DEE_PRIVATE_ATOI_FLAGS(T,radix_and_flags),(int16_t *)(value)), \
+        __builtin_choose_expr(sizeof(T) <= 4,Dee_Atoi32(str,len,DEE_PRIVATE_ATOI_FLAGS(T,radix_and_flags),(int32_t *)(value)), \
+                                             Dee_Atoi64(str,len,DEE_PRIVATE_ATOI_FLAGS(T,radix_and_flags),(int64_t *)(value)))))
+#endif /* !__NO_builtin_choose_expr */
+
+
 /* Print an integer to a given format-printer.
  * Radix must be one of `2', `4', `8', `10' or `16' and
  * if it isn't, a `NotImplemented' error is thrown.
@@ -589,14 +637,18 @@ DeeInt_Print(DREF DeeObject *self, uint32_t radix_and_flags,
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeInt_AsS32(self,value)    __builtin_expect(DeeInt_AsS32(self,value),0)
-#define DeeInt_AsS64(self,value)    __builtin_expect(DeeInt_AsS64(self,value),0)
-#define DeeInt_AsU32(self,value)    __builtin_expect(DeeInt_AsU32(self,value),0)
-#define DeeInt_AsU64(self,value)    __builtin_expect(DeeInt_AsU64(self,value),0)
-#define DeeInt_TryAsS32(self,value) __builtin_expect(DeeInt_TryAsS32(self,value),true)
-#define DeeInt_TryAsS64(self,value) __builtin_expect(DeeInt_TryAsS64(self,value),true)
-#define DeeInt_TryAsU32(self,value) __builtin_expect(DeeInt_TryAsU32(self,value),true)
-#define DeeInt_TryAsU64(self,value) __builtin_expect(DeeInt_TryAsU64(self,value),true)
+#define DeeInt_AsS32(self,value)                   __builtin_expect(DeeInt_AsS32(self,value),0)
+#define DeeInt_AsS64(self,value)                   __builtin_expect(DeeInt_AsS64(self,value),0)
+#define DeeInt_AsU32(self,value)                   __builtin_expect(DeeInt_AsU32(self,value),0)
+#define DeeInt_AsU64(self,value)                   __builtin_expect(DeeInt_AsU64(self,value),0)
+#define DeeInt_TryAsS32(self,value)                __builtin_expect(DeeInt_TryAsS32(self,value),true)
+#define DeeInt_TryAsS64(self,value)                __builtin_expect(DeeInt_TryAsS64(self,value),true)
+#define DeeInt_TryAsU32(self,value)                __builtin_expect(DeeInt_TryAsU32(self,value),true)
+#define DeeInt_TryAsU64(self,value)                __builtin_expect(DeeInt_TryAsU64(self,value),true)
+#define Dee_Atoi8(str,len,radix_and_flags,value)   __builtin_expect(Dee_Atoi8(str,len,radix_and_flags,value),0)
+#define Dee_Atoi16(str,len,radix_and_flags,value)  __builtin_expect(Dee_Atoi16(str,len,radix_and_flags,value),0)
+#define Dee_Atoi32(str,len,radix_and_flags,value)  __builtin_expect(Dee_Atoi32(str,len,radix_and_flags,value),0)
+#define Dee_Atoi64(str,len,radix_and_flags,value)  __builtin_expect(Dee_Atoi64(str,len,radix_and_flags,value),0)
 #endif /* !__NO_builtin_expect */
 #endif
 

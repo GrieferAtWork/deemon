@@ -166,6 +166,92 @@ err:
  return NULL;
 }
 
+
+PRIVATE DREF DeeObject *DCALL
+enviterator_next_key(DeeObject *__restrict self) {
+ unsigned int my_version;
+ DREF DeeObject *name;
+ char **presult,*result,*valstart;
+ Env *me = (Env *)self;
+ rwlock_read(&env_lock);
+ /* Check environment version number. */
+ if ((my_version = me->e_version) != env_version) {
+iter_done:
+  rwlock_endread(&env_lock);
+  return ITER_DONE;
+ }
+ do {
+  presult = me->e_iter;
+  if (!*presult) goto iter_done;
+ } while (ATOMIC_CMPXCH(me->e_iter,presult,presult+1));
+ result   = *presult;
+ valstart = strrchr(result,'=');
+ if (!valstart)
+     valstart = strend(result);
+ else --valstart;
+allocate_name:
+ name = DeeString_TryNewSized(result,(size_t)(valstart-result));
+ if unlikely(!name) {
+  /* Collect memory and try again. */
+  rwlock_endread(&env_lock);
+  if (!Dee_CollectMemory(offsetof(DeeStringObject,s_str)+
+                        ((size_t)(valstart-result)+1)*sizeof(char)))
+       goto err;
+  rwlock_read(&env_lock);
+  if (my_version != env_version)
+      goto iter_done;
+  goto allocate_name;
+ }
+ rwlock_endread(&env_lock);
+ return name;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+enviterator_next_value(DeeObject *__restrict self) {
+ unsigned int my_version;
+ DREF DeeObject *value;
+ char **presult,*result,*valstart;
+ Env *me = (Env *)self;
+ rwlock_read(&env_lock);
+ /* Check environment version number. */
+ if ((my_version = me->e_version) != env_version) {
+iter_done:
+  rwlock_endread(&env_lock);
+  return ITER_DONE;
+ }
+ do {
+  presult = me->e_iter;
+  if (!*presult) goto iter_done;
+ } while (ATOMIC_CMPXCH(me->e_iter,presult,presult+1));
+ result   = *presult;
+ valstart = strrchr(result,'=');
+ if (!valstart) {
+  value = Dee_EmptyString;
+  Dee_Incref(value);
+ } else {
+allocate_value:
+  value = DeeString_TryNewSized(valstart,strlen(valstart));
+  if unlikely(!value) {
+   /* Collect memory and try again. */
+   rwlock_endread(&env_lock);
+   if (!Dee_CollectMemory(offsetof(DeeStringObject,s_str)+
+                         (strlen(valstart)+1)*sizeof(char)))
+        goto err;
+   rwlock_read(&env_lock);
+   if (my_version != env_version)
+       goto iter_done;
+   goto allocate_value;
+  }
+ }
+ rwlock_endread(&env_lock);
+ return value;
+err:
+ return NULL;
+}
+
+
 PRIVATE struct type_member env_members[] = {
     TYPE_MEMBER_CONST("seq",&DeeEnv_Singleton),
     TYPE_MEMBER_END
@@ -223,13 +309,13 @@ INTERN DeeTypeObject DeeEnvIterator_Type = {
 
 PRIVATE void DCALL
 err_unknown_env_var(DeeObject *__restrict name) {
- DeeError_Throwf(&DeeError_ValueError,
+ DeeError_Throwf(&DeeError_KeyError,
                  "Unknown environment variable `%k'",
                  name);
 }
 PRIVATE void DCALL
 err_unknown_env_var_s(char const *__restrict name) {
- DeeError_Throwf(&DeeError_ValueError,
+ DeeError_Throwf(&DeeError_KeyError,
                  "Unknown environment variable `%s'",
                  name);
 }
@@ -256,7 +342,7 @@ again:
  if (!strval) {
   rwlock_endread(&env_lock);
   if (!try_get) {
-   DeeError_Throwf(&DeeError_ValueError,
+   DeeError_Throwf(&DeeError_KeyError,
                    "Unknown environment variable `%s'",
                    name);
   }

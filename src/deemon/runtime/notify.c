@@ -23,16 +23,106 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/exec.h>
+#include <deemon/none.h>
+#include <deemon/error.h>
+#include <deemon/module.h>
+#include <deemon/notify.h>
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/recursive-rwlock.h>
 #endif
+
+#include "strings.h"
 
 #include <limits.h>
 #include <string.h>
 
 #ifndef CONFIG_NO_NOTIFICATIONS
 DECL_BEGIN
+
+
+/* [0..1][lock(WRITE_ONCE)] The `fs' module. */
+PRIVATE DREF DeeObject *fs_module = NULL;
+#ifndef CONFIG_NO_THREADS
+PRIVATE DEFINE_RWLOCK(fs_module_lock);
+#endif
+
+PRIVATE DREF DeeObject *DCALL
+get_fs_object(DeeObject *__restrict name) {
+ DREF DeeObject *result,*mod;
+again:
+#ifndef CONFIG_NO_THREADS
+ rwlock_read(&fs_module_lock);
+#endif
+ mod = fs_module;
+ if unlikely(!mod) {
+#ifndef CONFIG_NO_THREADS
+  rwlock_endread(&fs_module_lock);
+#endif
+  mod = DeeModule_Open(&str_fs,NULL,true);
+  if unlikely(!mod) return NULL;
+  if unlikely(DeeModule_RunInit(mod) < 0) {
+   Dee_Decref(mod);
+   return NULL;
+  }
+#ifndef CONFIG_NO_THREADS
+  rwlock_write(&fs_module_lock);
+#endif
+  if unlikely(fs_module) {
+#ifndef CONFIG_NO_THREADS
+   rwlock_endwrite(&fs_module_lock);
+#endif
+   Dee_Decref(mod);
+   goto again;
+  }
+  Dee_Incref(mod);
+  fs_module = mod;
+#ifndef CONFIG_NO_THREADS
+  rwlock_endwrite(&fs_module_lock);
+#endif
+ } else {
+  Dee_Incref(mod);
+#ifndef CONFIG_NO_THREADS
+  rwlock_endread(&fs_module_lock);
+#endif
+ }
+ result = DeeObject_GetAttr(mod,name);
+ Dee_Decref(mod);
+ return result;
+}
+
+INTERN bool DCALL clear_fs_module(void) {
+ DREF DeeObject *mod;
+#ifndef CONFIG_NO_THREADS
+ rwlock_write(&fs_module_lock);
+#endif
+ mod = fs_module;
+ fs_module = NULL;
+#ifndef CONFIG_NO_THREADS
+ rwlock_endwrite(&fs_module_lock);
+#endif
+ Dee_XDecref(mod);
+ return mod != NULL;
+}
+
+PUBLIC DREF DeeObject *DCALL
+Dee_GetEnv(DeeObject *__restrict name) {
+ DREF DeeObject *result;
+ DREF DeeObject *fs_environ;
+ fs_environ = get_fs_object(&str_environ);
+ if unlikely(!fs_environ) goto err;
+ result = DeeObject_GetItemDef(fs_environ,name,ITER_DONE);
+ Dee_Decref(fs_environ);
+ if unlikely(!result) goto err;
+ return result;
+err:
+ if (DeeError_Catch(&DeeError_ValueError) ||     /* Super-error that includes `KeyError' (thrown when a key (env_name) wasn't found) */
+     DeeError_Catch(&DeeError_AttributeError) || /* Attribute-error (thrown when `fs' doesn't export a symbol `environ') */
+     DeeError_Catch(&DeeError_UnsupportedAPI) || /* Unsupported-API (thrown when `fs' only provides a stub implementation for `environ') */
+     DeeError_Catch(&DeeError_NotImplemented))   /* Not-implemented error (thrown if `fs.environ' doesn't support lookup) */
+     return ITER_DONE;
+ return NULL;
+}
+
 
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */
 #if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
@@ -63,7 +153,10 @@ struct notify_entry {
     DREF DeeObject       *nh_arg;   /* [0..1][valid_if(nh_name)] The argument passed to `nh_func' */
 };
 
-PRIVATE ATTR_COLD int DCALL dummy_notify(DeeObject *UNUSED(arg)) { return 0; }
+PRIVATE ATTR_COLD int DCALL
+dummy_notify(DeeObject *UNUSED(arg)) {
+ return 0;
+}
 
 PRIVATE struct notify_entry const empty_notifications[1] = {
     { 0, {0, }, NULL, 0, NULL, 0 }
@@ -279,7 +372,8 @@ not_found:
 PRIVATE int DCALL
 DeeNotify_DoBroadcast(uint16_t cls,
                       char const *__restrict name,
-                      size_t name_size, dhash_t name_hash) {
+                      size_t name_size,
+                      dhash_t name_hash) {
  dhash_t perturb,i; size_t mask; int result = 0;
  struct notify_entry *list; int temp;
 #ifndef CONFIG_NO_THREADS
@@ -344,9 +438,7 @@ DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name) {
  name_hash = (cls&NOTIFICATION_CLASS_FNOCASE)
            ?  DeeString_HashCase(name)
            :  DeeString_Hash(name);
- return DeeNotify_DoBroadcast(cls,
-                              DeeString_STR(name),
-                              name_size,name_hash);
+ return DeeNotify_DoBroadcast(cls,DeeString_STR(name),name_size,name_hash);
 }
 PUBLIC int DCALL
 DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name) {
@@ -379,8 +471,8 @@ INTERN bool DCALL DeeNotify_Shutdown(void) {
  rwlock_endwrite(&notify_lock);
 #endif
  COMPILER_WRITE_BARRIER();
- ASSERT((mask == 0) == (notify_list == empty_notifications));
- if (notify_list == empty_notifications)
+ ASSERT((mask == 0) == (list == empty_notifications));
+ if (list == empty_notifications)
      return false;
  /* Clear out the notification vector and discard it. */
  do {

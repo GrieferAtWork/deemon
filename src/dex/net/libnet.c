@@ -28,6 +28,7 @@
 #include <deemon/arg.h>
 #include <deemon/int.h>
 #include <deemon/objmethod.h>
+#include <deemon/notify.h>
 #include <hybrid/byteswap.h>
 
 DECL_BEGIN
@@ -289,12 +290,27 @@ libnet_fini(DeeDexObject *__restrict UNUSED(self)) {
 #endif
 
 
+#ifndef CONFIG_NO_NOTIFICATIONS
+DECLARE_NOTIFY_ENVIRON_INTEGER(uint16_t,maxbacklog)
+PRIVATE struct dex_notification libnet_notifications[] = {
+    DEX_NOTIFICATION_ENVIRON(maxbacklog),
+    DEX_NOTIFICATION_END
+};
+#endif
+
 PUBLIC struct dex DEX = {
     /* .d_symbols = */symbols,
-    /* .d_init    = */&libnet_init
+    /* .d_init    = */&libnet_init,
 #ifdef CONFIG_HOST_WINDOWS
+    /* .d_fini    = */&libnet_fini,
+#else
+    /* .d_fini    = */NULL,
+#endif
+    /* .d_import_names = */{ NULL },
+    /* .d_clear   = */NULL
+#ifndef CONFIG_NO_NOTIFICATIONS
     ,
-    /* .d_fini    = */&libnet_fini
+    /* .d_notify  =  */libnet_notifications
 #endif
 };
 

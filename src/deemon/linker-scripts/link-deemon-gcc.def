@@ -577,6 +577,10 @@ EXPORTS
 	_DeeUni_Descriptor@4=DeeUni_Descriptor@4
 	_DeeUni_ToFolded@8=DeeUni_ToFolded@8
 	_Dee_AtExit@8=Dee_AtExit@8
+	_Dee_Atoi16@16=Dee_Atoi16@16
+	_Dee_Atoi32@16=Dee_Atoi32@16
+	_Dee_Atoi64@16=Dee_Atoi64@16
+	_Dee_Atoi8@16=Dee_Atoi8@16
 	_Dee_BadAlloc@4=Dee_BadAlloc@4
 	_Dee_Calloc@4=Dee_Calloc@4
 	_Dee_CollectMemory@4=Dee_CollectMemory@4
@@ -606,6 +610,7 @@ EXPORTS
 	_Dee_FormatRepeatUtf8@20=Dee_FormatRepeatUtf8@20
 	_Dee_Free@4=Dee_Free@4
 	_Dee_GetArgv@0=Dee_GetArgv@0
+	_Dee_GetEnv@4=Dee_GetEnv@4
 	_Dee_Incref@4=Dee_Incref@4
 	_Dee_IncrefIfNotZero@4=Dee_IncrefIfNotZero@4
 	_Dee_IncrefIfNotZero_traced@12=Dee_IncrefIfNotZero_traced@12

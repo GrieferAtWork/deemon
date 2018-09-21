@@ -291,6 +291,9 @@
     <ClInclude Include="..\src\deemon\objects\gc_inspect.h">
       <Filter>src\deemon\objects</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\notify.h">
+      <Filter>include\deemon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
