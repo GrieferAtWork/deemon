@@ -4774,6 +4774,163 @@ err:
 
 
 
+PUBLIC uint32_t *
+(DCALL unicode_printer_tryalloc_utf32)(struct unicode_printer *__restrict self,
+                                       size_t length) {
+ void *string = self->up_buffer;
+ if (!string) {
+  size_t initial_alloc;
+#ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  ASSERT(!self->up_length);
+  ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+#endif
+  /* Allocate the initial buffer. */
+  initial_alloc = length;
+  if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
+      initial_alloc = UNICODE_PRINTER_INITIAL_BUFSIZE;
+#ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
+  if (initial_alloc < self->up_length)
+      initial_alloc = self->up_length;
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#if STRING_WIDTH_1BYTE != 0
+  self->up_flags |= STRING_WIDTH_1BYTE;
+#endif
+#endif
+  string = DeeString_TryNewBuffer32(initial_alloc);
+  if unlikely(!string) {
+   string = DeeString_TryNewBuffer32(length);
+   if unlikely(!string) goto err;
+  }
+  self->up_length = length;
+  self->up_buffer = string;
+#if STRING_WIDTH_1BYTE != 0
+  self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+#endif
+  self->up_flags |= STRING_WIDTH_4BYTE;
+  return (uint32_t *)string;
+ }
+ if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_4BYTE) {
+  uint32_t *result;
+  if (self->up_length + length > WSTR_LENGTH(string)) {
+   size_t new_alloc;
+   /* Must allocate more memory. */
+   new_alloc = WSTR_LENGTH(string);
+   do new_alloc *= 2;
+   while (new_alloc < self->up_length + length);
+   string = DeeString_TryResizeBuffer32((uint32_t *)string,new_alloc);
+   if unlikely(!string) {
+    string = DeeString_TryResizeBuffer32((uint32_t *)string,self->up_length + length);
+    if unlikely(!string) goto err;
+   }
+   self->up_buffer = string;
+  }
+  result = (uint32_t *)string + self->up_length;
+  self->up_length += length;
+  return result;
+ }
+ return (uint32_t *)Dee_TryMalloc((length+1)*sizeof(uint32_t));
+err:
+ return NULL;
+}
+PUBLIC uint32_t *
+(DCALL unicode_printer_tryresize_utf32)(struct unicode_printer *__restrict self,
+                                        uint32_t *buf, size_t new_length) {
+ if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_4BYTE) {
+  uint32_t *string;
+  size_t old_length,total_avail,new_alloc,old_alloc;
+  if (!buf) return unicode_printer_tryalloc_utf32(self,new_length);
+  string = (uint32_t *)self->up_buffer;
+  ASSERT(string != NULL);
+  ASSERT(buf >= string);
+  ASSERT(buf <= string+self->up_length);
+  /* The buffer was allocated in-line. */
+  old_length  = (size_t)((string+self->up_length) - buf);
+  total_avail = (size_t)((string+WSTR_LENGTH(string)) - buf);
+  ASSERT(total_avail >= old_length);
+  if (new_length <= total_avail) {
+   /* Update the buffer length within the pre-allocated bounds. */
+   self->up_length -= old_length;
+   self->up_length += new_length;
+   return buf;
+  }
+  /* Must allocate a new buffer. */
+  old_alloc = WSTR_LENGTH(string);
+  new_alloc = (self->up_length - old_length) + new_length;
+  ASSERT(old_alloc < new_alloc);
+  ASSERT(old_alloc != 0);
+  do old_alloc *= 2;
+  while (old_alloc < new_alloc);
+  /* Reallocate the buffer to fit the requested size. */
+  string = DeeString_TryResizeBuffer32(string,old_alloc);
+  if unlikely(!string) {
+   string = DeeString_TryResizeBuffer32(string,new_alloc);
+   if unlikely(!string) goto err;
+  }
+  /* Install the reallocated buffer. */
+  self->up_buffer  = string;
+  self->up_length -= old_length;
+  buf = string + self->up_length;
+  self->up_length += new_length;
+  return buf;
+ } else {
+  /* The buffer is purely heap-allocated. */
+  return (uint32_t *)Dee_TryRealloc(buf,(new_length+1)*sizeof(uint32_t));
+ }
+err:
+ return NULL;
+}
+PUBLIC uint32_t *
+(DCALL unicode_printer_alloc_utf32)(struct unicode_printer *__restrict self,
+                                    size_t length) {
+ uint32_t *result;
+ do result = unicode_printer_tryalloc_utf32(self,length);
+ while (!result && Dee_CollectMemory(length*sizeof(uint32_t)));
+ return result;
+}
+PUBLIC uint32_t *
+(DCALL unicode_printer_resize_utf32)(struct unicode_printer *__restrict self,
+                                     uint32_t *buf, size_t new_length) {
+ uint32_t *result;
+ do result = unicode_printer_tryresize_utf32(self,buf,new_length);
+ while (!result && Dee_CollectMemory(new_length*sizeof(uint32_t)));
+ return result;
+}
+PUBLIC void
+(DCALL unicode_printer_free_utf32)(struct unicode_printer *__restrict self,
+                                   uint32_t *buf) {
+ if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_4BYTE) {
+  if (!buf) return;
+  ASSERT(buf >= (uint32_t *)self->up_buffer);
+  ASSERT(buf <= (uint32_t *)self->up_buffer+self->up_length);
+  /* Mark the buffer memory as having been freed again. */
+  self->up_length = (size_t)((uint32_t *)buf - (uint32_t *)self->up_buffer);
+ } else {
+  Dee_Free(buf);
+ }
+}
+PUBLIC dssize_t
+(DCALL unicode_printer_confirm_utf32)(struct unicode_printer *__restrict self,
+                                      /*inherit(always)*/uint32_t *buf,
+                                      size_t final_length) {
+ if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_2BYTE) {
+  if (!buf) return 0;
+  ASSERT(buf              >= (uint32_t *)self->up_buffer);
+  ASSERT(buf+final_length <= (uint32_t *)self->up_buffer+self->up_length);
+  /* Remember the actual length of the buffer. */
+  self->up_length = (size_t)(((uint32_t *)buf + final_length) - (uint32_t *)self->up_buffer);
+  return (dssize_t)final_length;
+ } else {
+  dssize_t result;
+  /* Simply print the buffer as UTF-16 text. */
+  result = unicode_printer_printutf32(self,
+                                      buf,
+                                      final_length);
+  Dee_Free(buf);
+  return result;
+ }
+}
+
+
 
 
 
