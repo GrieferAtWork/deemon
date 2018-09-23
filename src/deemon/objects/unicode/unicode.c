@@ -4383,7 +4383,7 @@ unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
   *(uint16_t *)string = *(uint16_t *)self->up_pend;
   return (uint16_t *)string + 1;
  }
- if ((self->up_flags & UNICODE_PRINTER_FPENDING) == STRING_WIDTH_2BYTE) {
+ if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_2BYTE) {
   uint16_t *result;
   if (self->up_flags & UNICODE_PRINTER_FPENDING) ++length;
   if (self->up_length + length > WSTR_LENGTH(string)) {
@@ -4578,7 +4578,7 @@ check_low_surrogate:
    }
   }
   /* Remember the actual length of the buffer. */
-  self->up_length = (size_t)(((uint8_t *)buf + confirm_length) - (uint8_t *)self->up_buffer);
+  self->up_length = (size_t)(((uint16_t *)buf + confirm_length) - (uint16_t *)self->up_buffer);
 return_final_length:
   return (dssize_t)final_length;
  } else {
