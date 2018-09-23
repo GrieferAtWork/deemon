@@ -84,6 +84,10 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
 #endif /* !__USE_GNU */
 
 #ifndef __USE_KOS
+#define memmoveb(dst,src,n) memmove(dst,src,(n)*1)
+#define memmovew(dst,src,n) memmove(dst,src,(n)*2)
+#define memmovel(dst,src,n) memmove(dst,src,(n)*4)
+
 #define memcpyb(dst,src,n)             memcpy(dst,src,n)
 #if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
 #ifdef __x86_64__

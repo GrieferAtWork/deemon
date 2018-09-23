@@ -77,14 +77,20 @@ INTDEF DeeTypeObject DeeUser_Type;
 INTDEF DeeTypeObject  DeeGroup_Type;
 #endif
 
-/* Lookup the home folder of the current user.
- * >> Same as `fs.user().home()' */
+/* Lookup the home folder / name of the current user.
+ * Same as `fs.user.home' / `fs.user.name' */
 INTDEF DREF DeeObject *DCALL fs_gethome(bool try_get);
+INTDEF DREF DeeObject *DCALL fs_getuser(bool try_get);
+
 /* @return:  1: Failed to retrieve the home path and `try_get' was true.
  * @return:  0: Successfully printed the home path.
  * @return: -1: An error occurred. */
-INTDEF int DCALL fs_printhome(struct ascii_printer *__restrict printer, bool try_get);
-INTDEF int DCALL fs_printhome_u(struct unicode_printer *__restrict printer, bool try_get);
+INTDEF int DCALL fs_printhome(struct unicode_printer *__restrict printer, bool try_get);
+INTDEF int DCALL fs_printuser(struct unicode_printer *__restrict printer, bool try_get);
+#ifdef CONFIG_HOST_WINDOWS
+INTDEF int DCALL nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, bool bTryGet);
+INTDEF int DCALL nt_printhome_process(struct unicode_printer *__restrict printer, void *hProcess, bool bTryGet);
+#endif
 
 /* STAT bitflags. */
 

@@ -505,16 +505,19 @@ fs_gethome(bool try_get) {
  (void)try_get; /* TODO */
  return_empty_string;
 }
+INTERN DREF DeeObject *DCALL
+fs_getuser(bool try_get) {
+ (void)try_get; /* TODO */
+ return_empty_string;
+}
 INTERN int DCALL
-fs_printhome(struct ascii_printer *__restrict printer,
-             bool try_get) {
+fs_printhome(struct unicode_printer *__restrict printer, bool try_get) {
  (void)printer; /* TODO */
  if (try_get) return 1;
  return 0;
 }
 INTERN int DCALL
-fs_printhome_u(struct unicode_printer *__restrict printer,
-               bool try_get) {
+fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
  (void)printer; /* TODO */
  if (try_get) return 1;
  return 0;
@@ -671,7 +674,7 @@ lstat_ctor(DeeStatObject *__restrict self,
 }
 
 PRIVATE DREF DeeObject *DCALL
-stat_getdev(DeeStatObject *__restrict self) {
+stat_get_dev(DeeStatObject *__restrict self) {
  __STATIC_IF (sizeof(self->st_stat.st_dev) <= 4) {
   return DeeInt_NewU32((uint32_t)self->st_stat.st_dev);
  } __STATIC_ELSE (sizeof(self->st_stat.st_dev) <= 4) {
@@ -679,7 +682,7 @@ stat_getdev(DeeStatObject *__restrict self) {
  }
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getino(DeeStatObject *__restrict self) {
+stat_get_ino(DeeStatObject *__restrict self) {
  __STATIC_IF (sizeof(self->st_stat.st_ino) <= 2) {
   return DeeInt_NewU16((uint16_t)self->st_stat.st_ino);
  } __STATIC_ELSE (sizeof(self->st_stat.st_ino) <= 2) {
@@ -691,7 +694,7 @@ stat_getino(DeeStatObject *__restrict self) {
  }
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getmode(DeeStatObject *__restrict self) {
+stat_get_mode(DeeStatObject *__restrict self) {
  __STATIC_IF (sizeof(self->st_stat.st_mode) <= 2) {
   return DeeInt_NewU16((uint16_t)self->st_stat.st_mode);
  } __STATIC_ELSE (sizeof(self->st_stat.st_mode) <= 2) {
@@ -699,7 +702,7 @@ stat_getmode(DeeStatObject *__restrict self) {
  }
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getnlink(DeeStatObject *__restrict self) {
+stat_get_nlink(DeeStatObject *__restrict self) {
  __STATIC_IF (sizeof(self->st_stat.st_nlink) <= 2) {
   return DeeInt_NewU16((uint16_t)self->st_stat.st_nlink);
  } __STATIC_ELSE (sizeof(self->st_stat.st_nlink) <= 2) {
@@ -711,7 +714,7 @@ stat_getnlink(DeeStatObject *__restrict self) {
  }
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getrdev(DeeStatObject *__restrict self) {
+stat_get_rdev(DeeStatObject *__restrict self) {
  __STATIC_IF (sizeof(self->st_stat.st_rdev) <= 4) {
   return DeeInt_NewU32((uint32_t)self->st_stat.st_rdev);
  } __STATIC_ELSE (sizeof(self->st_stat.st_rdev) <= 4) {
@@ -719,7 +722,7 @@ stat_getrdev(DeeStatObject *__restrict self) {
  }
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getsize(DeeStatObject *__restrict self) {
+stat_get_size(DeeStatObject *__restrict self) {
  __STATIC_IF (sizeof(self->st_stat.st_size) <= 4) {
   return DeeInt_NewU32((uint32_t)self->st_stat.st_size);
  } __STATIC_ELSE (sizeof(self->st_stat.st_size) <= 4) {
@@ -727,34 +730,34 @@ stat_getsize(DeeStatObject *__restrict self) {
  }
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getatime(DeeStatObject *__restrict self) {
+stat_get_atime(DeeStatObject *__restrict self) {
  /* TODO: Extensions for better resolution. */
  return DeeTime_New((uint64_t)self->st_stat.st_atime * MICROSECONDS_PER_SECOND);
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getmtime(DeeStatObject *__restrict self) {
+stat_get_mtime(DeeStatObject *__restrict self) {
  /* TODO: Extensions for better resolution. */
  return DeeTime_New((uint64_t)self->st_stat.st_mtime * MICROSECONDS_PER_SECOND);
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getctime(DeeStatObject *__restrict self) {
+stat_get_ctime(DeeStatObject *__restrict self) {
  /* TODO: Extensions for better resolution. */
  return DeeTime_New((uint64_t)self->st_stat.st_ctime * MICROSECONDS_PER_SECOND);
 }
 
 
 PRIVATE struct type_getset stat_getsets[] = {
-    { "st_dev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getdev, NULL, NULL, DeeStat_st_dev_doc },
-    { "st_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getino, NULL, NULL, DeeStat_st_ino_doc },
-    { "st_mode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getmode, NULL, NULL, DeeStat_st_mode_doc },
-    { "st_nlink", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getnlink, NULL, NULL, DeeStat_st_nlink_doc },
+    { "st_dev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_dev, NULL, NULL, DeeStat_st_dev_doc },
+    { "st_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ino, NULL, NULL, DeeStat_st_ino_doc },
+    { "st_mode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mode, NULL, NULL, DeeStat_st_mode_doc },
+    { "st_nlink", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_nlink, NULL, NULL, DeeStat_st_nlink_doc },
     /* >> property st_uid -> user;
      * >> property st_gid -> group; */
-    { "st_rdev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getrdev, NULL, NULL, DeeStat_st_rdev_doc },
-    { "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getsize, NULL, NULL, DeeStat_st_size_doc },
-    { "st_atime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getatime, NULL, NULL, DeeStat_st_atime_doc },
-    { "st_mtime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getmtime, NULL, NULL, DeeStat_st_mtime_doc },
-    { "st_ctime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getctime, NULL, NULL, DeeStat_st_ctime_doc },
+    { "st_rdev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_rdev, NULL, NULL, DeeStat_st_rdev_doc },
+    { "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, DeeStat_st_size_doc },
+    { "st_atime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_atime, NULL, NULL, DeeStat_st_atime_doc },
+    { "st_mtime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mtime, NULL, NULL, DeeStat_st_mtime_doc },
+    { "st_ctime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ctime, NULL, NULL, DeeStat_st_ctime_doc },
     { NULL }
 };
 

@@ -1279,6 +1279,10 @@ DFUNDEF dssize_t
 (DCALL unicode_printer_printutf32)(struct unicode_printer *__restrict self,
                                    /*utf-32*/uint32_t const *__restrict text,
                                    size_t textlen);
+DFUNDEF dssize_t
+(DCALL unicode_printer_printwide)(struct unicode_printer *__restrict self,
+                                  dwchar_t const *__restrict text,
+                                  size_t textlen);
 #else
 #define unicode_printer_printascii(self,text,textlen) \
         unicode_printer_print8(self,(uint8_t *)(text),textlen)
@@ -1286,6 +1290,13 @@ DFUNDEF dssize_t
         unicode_printer_print(self,text,textlen)
 #define unicode_printer_printutf32(self,text,textlen) \
         unicode_printer_print32(self,text,textlen)
+#if __SIZEOF_WCHAR_T__ == 2
+#define unicode_printer_printwide(self,text,textlen) \
+        unicode_printer_printutf16(self,(uint16_t *)(text),textlen)
+#else
+#define unicode_printer_printwide(self,text,textlen) \
+        unicode_printer_printutf32(self,(uint32_t *)(text),textlen)
+#endif
 #endif
 
 /* Append the ASCII character `ch' a total of `num_repetitions' times. */
@@ -1469,6 +1480,9 @@ DFUNDEF dssize_t DCALL unicode_printer_confirm32(struct unicode_printer *__restr
  * @return: -1: The character wasn't found. */
 DFUNDEF dssize_t (DCALL unicode_printer_memchr)(struct unicode_printer *__restrict self, uint32_t chr, size_t start, size_t length);
 DFUNDEF dssize_t (DCALL unicode_printer_memrchr)(struct unicode_printer *__restrict self, uint32_t chr, size_t start, size_t length);
+
+/* Move `length' characters from `src' to `dst' */
+DFUNDEF void (DCALL unicode_printer_memmove)(struct unicode_printer *__restrict self, size_t dst, size_t src, size_t length);
 
 
 

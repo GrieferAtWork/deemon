@@ -35,10 +35,6 @@ struct system_error_object {
     syserrno_t se_errno; /* A system-specific error code, or `SYSTEM_ERROR_UNKNOWN' when not known. */
 };
 
-#ifndef SYSTEM_ERROR_UNKNOWN
-#define SYSTEM_ERROR_UNKNOWN 0
-#endif
-
 
 struct nomemory_error_object {
     ERROR_OBJECT_HEAD

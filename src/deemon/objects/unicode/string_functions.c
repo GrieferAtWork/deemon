@@ -10207,6 +10207,28 @@ not_found:
  return -1;
 }
 
+PUBLIC void
+(DCALL unicode_printer_memmove)(struct unicode_printer *__restrict self,
+                                size_t dst, size_t src, size_t length) {
+ union dcharptr str;
+ str.ptr = self->up_buffer;
+ ASSERT(dst+length <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0));
+ ASSERT(src+length <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0));
+ if unlikely(!str.ptr) return;
+ SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+ CASE_WIDTH_1BYTE:
+  memmoveb(str.cp8 + dst,str.cp8 + src,length);
+  break;
+ CASE_WIDTH_2BYTE:
+  memmovew(str.cp16 + dst,str.cp16 + src,length);
+  break;
+ CASE_WIDTH_4BYTE:
+  memmovel(str.cp32 + dst,str.cp32 + src,length);
+  break;
+ }
+}
+
+
 DECL_END
 
 #ifndef __INTELLISENSE__

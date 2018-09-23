@@ -198,7 +198,7 @@ local __objects = deemon.list {
 	/* 0x0099 */ rt.compiler.ast, /* DeeSAst_Type */
 	/* 0x009a */ fs.getcwd,
 	/* 0x009b */ fs.chdir,
-	/* 0x009c */ [] -> fs.user().home(),
+	/* 0x009c */ [] -> fs.user.home,
 	/* 0x009d */ [] -> fs.environ,
 	/* 0x009e */ [](x) -> fs.environ[x],
 	/* 0x009f */ [](x) -> x in fs.environ,
@@ -447,13 +447,13 @@ local __objects = deemon.list {
 	/* 0x0192 */ "", /* _Dee_EmptyUtf16String */
 	/* 0x0193 */ deemon.string.iterator, /* DeeUtf32StringIterator_Type */
 	/* 0x0194 */ "", /* _Dee_EmptyUtf32String */
-	/* 0x0195 */ []() -> fs.user().name(),
+	/* 0x0195 */ []() -> fs.user.name,
 	/* 0x0196 */ fs.gethostname,
-	/* 0x0197 */ []() -> fs.user().name(), /* DeeBuiltinFunction___builtin_fs_wuser */
+	/* 0x0197 */ []() -> fs.user.name, /* DeeBuiltinFunction___builtin_fs_wuser */
 	/* 0x0198 */ fs.gethostname, /* DeeBuiltinFunction___builtin_fs_whost */
 	/* 0x0199 */ fs.getcwd, /* DeeBuiltinFunction___builtin_fs_wgetcwd */
 	/* 0x019A */ fs.gettmp, /* DeeBuiltinFunction___builtin_fs_wgettmp */
-	/* 0x019B */ [](...) -> fs.user(...).home(), /* DeeBuiltinFunction___builtin_fs_wgethome */
+	/* 0x019B */ [](...) -> fs.user(...).home, /* DeeBuiltinFunction___builtin_fs_wgethome */
 	/* 0x019C */ []() -> fs.environ, /* DeeBuiltinFunction___builtin_fs_wlistenv */
 	/* 0x019D */ none, /* DeeBuiltinFunction___builtin_fs_win32wmodulename */
 	/* 0x019E */ none, /* DeeBuiltinFunction___builtin_fs_win32wdlldirectory */

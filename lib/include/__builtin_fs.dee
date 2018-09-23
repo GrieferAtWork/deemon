@@ -57,7 +57,7 @@ from fs import
 #endif
 ;
 
-function __builtin_fs_gethome() -> (user from fs)().home();
+function __builtin_fs_gethome() -> (user from fs).home;
 #define __builtin_fs_wgethome __builtin_fs_gethome
 #define __builtin_fs_wgettmp __builtin_fs_gettmp
 //const __builtin_fs_gettmpname = __builtin_object(0x0168); /* TODO */
@@ -107,14 +107,14 @@ function __builtin_fs_getown(path) {
 function __builtin_fs_uidname(uid) {
 	if (uid !is user from fs)
 		uid = (user from fs)(uid);
-	return uid.name();
+	return uid.name;
 }
 
 #define __builtin_fs_wgidname __builtin_fs_gidname
 function __builtin_fs_gidname(gid) {
 	if (gid !is group from fs)
 		gid = (group from fs)(gid);
-	return gid.name();
+	return gid.name;
 }
 
 #ifdef __WINDOWS__
@@ -134,7 +134,7 @@ function __builtin_fs_gidname(gid) {
 //#define __builtin_fs_win32wdrives __builtin_fs_win32drives
 #endif
 
-function __builtin_fs_user() -> (user from fs)().name();
+function __builtin_fs_user() -> (user from fs).name;
 #define __builtin_fs_wuser __builtin_fs_user
 
 

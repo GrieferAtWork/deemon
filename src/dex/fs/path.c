@@ -702,7 +702,7 @@ next:
          goto home_lookup_failed;
     goto err;
    }
-   homepath = DeeObject_CallAttrString(user_ob,"home",0,NULL);
+   homepath = DeeObject_GetAttrString(user_ob,"home");
    Dee_Decref(user_ob);
    if unlikely(!homepath) {
     if ((options&FS_EXPAND_FNOFAIL) &&
@@ -719,7 +719,7 @@ next:
    if unlikely(error < 0) goto err;
    error = 0;
   } else {
-   error = fs_printhome_u(&printer,!!(options&FS_EXPAND_FNOFAIL));
+   error = fs_printhome(&printer,!!(options&FS_EXPAND_FNOFAIL));
    if unlikely(error < 0) goto err;
   }
   flush_start = iter;

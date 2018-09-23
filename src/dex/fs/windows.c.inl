@@ -47,6 +47,19 @@
 #define strend(str) ((str)+strlen(str))
 #endif
 
+#ifndef PATH_MAX
+#ifdef PATHMAX
+#   define PATH_MAX PATHMAX
+#elif defined(MAX_PATH)
+#   define PATH_MAX MAX_PATH
+#elif defined(MAXPATH)
+#   define PATH_MAX MAXPATH
+#else
+#   define PATH_MAX 260
+#endif
+#endif
+
+
 DECL_BEGIN
 
 INTDEF DREF DeeObject *DCALL nt_GetEnvironmentVariableA(char const *__restrict name);
@@ -900,6 +913,44 @@ err:
  return NULL;
 }
 INTERN int DCALL
+fs_wprintenv(uint16_t const *__restrict name,
+             struct unicode_printer *__restrict printer,
+             bool try_get) {
+ LPWSTR buffer; DWORD new_bufsize,bufsize = 256;
+ buffer = unicode_printer_alloc_wchar(printer,bufsize);
+ if unlikely(!buffer) goto err;
+again:
+ DBG_ALIGNMENT_DISABLE();
+ new_bufsize = GetEnvironmentVariableW((LPCWSTR)name,buffer,bufsize+1);
+ DBG_ALIGNMENT_ENABLE();
+ if unlikely(!new_bufsize) {
+  if (!try_get) {
+   DeeError_Throwf(&DeeError_KeyError,
+                   "Unknown environment variable `%I16s'",
+                   name);
+   goto err_release;
+  }
+  unicode_printer_free_wchar(printer,buffer);
+  return 1; /* Not found. */
+ }
+ if (new_bufsize > bufsize) {
+  LPWSTR new_buffer;
+  /* Increase the buffer and try again. */
+  new_buffer = unicode_printer_resize_wchar(printer,buffer,new_bufsize);
+  if unlikely(!new_buffer) goto err_release;
+  buffer  = new_buffer;
+  bufsize = new_bufsize;
+  goto again;
+ }
+ if (unicode_printer_confirm_wchar(printer,buffer,new_bufsize) < 0)
+     goto err;
+ return 0;
+err_release:
+ unicode_printer_free_wchar(printer,buffer);
+err:
+ return -1;
+}
+INTERN int DCALL
 fs_printenv(/*utf-8*/char const *__restrict name,
             struct unicode_printer *__restrict printer,
             bool try_get) {
@@ -936,7 +987,7 @@ again:
   goto again;
  }
  if (unicode_printer_confirm_wchar(printer,buffer,new_bufsize) < 0)
-     goto err_release;
+     goto err;
  Dee_Decref(wide_name);
  return 0;
 err_release:
@@ -1180,7 +1231,7 @@ PRIVATE ATTR_COLD int DCALL err_getcwd(DWORD dwError) {
 
 INTERN int DCALL
 fs_printcwd(struct unicode_printer *__restrict printer) {
- LPWSTR buffer; DWORD new_bufsize,bufsize = 256;
+ LPWSTR buffer; DWORD new_bufsize,bufsize = PATH_MAX;
  if (DeeThread_CheckInterrupt()) goto err;
  buffer = unicode_printer_alloc_wchar(printer,bufsize);
  if unlikely(!buffer) goto err;
@@ -1209,7 +1260,8 @@ again:
   bufsize = new_bufsize;
   goto again;
  }
- unicode_printer_confirm_wchar(printer,buffer,new_bufsize);
+ if (unicode_printer_confirm_wchar(printer,buffer,new_bufsize) < 0)
+     goto err;
  return 0;
 err_release:
  unicode_printer_free_wchar(printer,buffer);
@@ -1219,7 +1271,7 @@ err:
 
 
 INTERN DREF DeeObject *DCALL fs_getcwd(void) {
- LPWSTR buffer,new_buffer; DWORD bufsize = 256,new_bufsize;
+ LPWSTR buffer,new_buffer; DWORD bufsize = PATH_MAX,new_bufsize;
  if (DeeThread_CheckInterrupt()) goto err;
  buffer = DeeString_NewWideBuffer(bufsize);
  if unlikely(!buffer) goto err;
@@ -1321,42 +1373,591 @@ err:
 }
 
 
+typedef BOOL (WINAPI *LPGETUSERPROFILEDIRECTORYW)(HANDLE hToken, LPWSTR lpProfileDir, LPDWORD lpcchSize);
+typedef BOOL (WINAPI *LPGETPROFILESDIRECTORYW)(LPWSTR lpProfileDir, LPDWORD lpcchSize);
+typedef BOOL (WINAPI *LPGETDEFAULTUSERPROFILEDIRECTORYW)(LPWSTR lpProfileDir, LPDWORD lpcchSize);
+typedef BOOL (WINAPI *LPGETALLUSERSPROFILEDIRECTORYW)(LPWSTR lpProfileDir, LPDWORD lpcchSize);
+PRIVATE LPGETUSERPROFILEDIRECTORYW p_GetUserProfileDirectoryW = NULL;
+PRIVATE LPGETPROFILESDIRECTORYW p_GetProfilesDirectoryW = NULL;
+PRIVATE LPGETDEFAULTUSERPROFILEDIRECTORYW p_GetDefaultUserProfileDirectoryW = NULL;
+PRIVATE LPGETALLUSERSPROFILEDIRECTORYW p_GetAllUsersProfileDirectoryW = NULL;
+PRIVATE char const s_GetUserProfileDirectoryW[] = "GetUserProfileDirectoryW";
+PRIVATE char const s_GetProfilesDirectoryW[] = "GetProfilesDirectoryW";
+PRIVATE char const s_GetDefaultUserProfileDirectoryW[] = "GetDefaultUserProfileDirectoryW";
+PRIVATE char const s_GetAllUsersProfileDirectoryW[] = "GetAllUsersProfileDirectoryW";
+PRIVATE WCHAR s_USERENV[] = { 'U','S','E','R','E','N','V',0 };
+PRIVATE WCHAR s_userenv_dll[] = { 'u','s','e','r','e','n','v','.','d','l','l',0 };
+
+PRIVATE HMODULE DCALL get_userenv_module(void) {
+ HMODULE result = GetModuleHandleW(s_USERENV);
+ if (!result) result = LoadLibraryW(s_userenv_dll);
+ return result;
+}
+
+INTERN int DCALL
+nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, bool bTryGet) {
+ LPGETUSERPROFILEDIRECTORYW my_GetUserProfileDirectoryW;
+ LPWSTR wBuffer; DWORD dwBufsize;
+ my_GetUserProfileDirectoryW = p_GetUserProfileDirectoryW;
+ if (*(void **)&my_GetUserProfileDirectoryW == (void *)NULL) {
+  /* Load the module */
+  HMODULE hUserEnv;
+  DBG_ALIGNMENT_DISABLE();
+  hUserEnv = get_userenv_module();
+  if (hUserEnv)
+      my_GetUserProfileDirectoryW = (LPGETUSERPROFILEDIRECTORYW)GetProcAddress(hUserEnv,"GetUserProfileDirectoryW");
+  DBG_ALIGNMENT_ENABLE();
+  if (!my_GetUserProfileDirectoryW)
+    *(void **)&my_GetUserProfileDirectoryW = (void *)ITER_DONE;
+  p_GetUserProfileDirectoryW = my_GetUserProfileDirectoryW;
+ }
+ if (*(void **)&my_GetUserProfileDirectoryW == (void *)ITER_DONE) {
+  if (bTryGet) return 1;
+  return DeeError_SysThrowf(&DeeError_UnsupportedAPI,SYSTEM_ERROR_UNKNOWN,
+                            "Cannot determine home of token %p (`GetUserProfileDirectoryW' not found)",
+                            hToken);
+ }
+ dwBufsize = PATH_MAX;
+ wBuffer = unicode_printer_alloc_wchar(printer,dwBufsize);
+ if unlikely(!wBuffer) goto err;
+ DBG_ALIGNMENT_DISABLE();
+ while (!(*my_GetUserProfileDirectoryW)((HANDLE)hToken,wBuffer,&dwBufsize)) {
+  DWORD dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError == ERROR_INSUFFICIENT_BUFFER ||
+      dwError == ERROR_MORE_DATA) {
+   LPWSTR wNewBuffer;
+   wNewBuffer = unicode_printer_resize_wchar(printer,wBuffer,dwBufsize - 1);
+   if unlikely(!wNewBuffer) goto err_release;
+   wBuffer = wNewBuffer;
+  } else {
+   if (bTryGet) { unicode_printer_free_wchar(printer,wBuffer); return 1; }
+   DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                      "Failed to determine home of token %p",
+                      hToken);
+   goto err_release;
+  }
+  DBG_ALIGNMENT_DISABLE();
+ }
+ DBG_ALIGNMENT_ENABLE();
+ if (unicode_printer_confirm_wchar(printer,wBuffer,dwBufsize - 1) < 0)
+     goto err;
+ return 0;
+err_release:
+ unicode_printer_free_wchar(printer,wBuffer);
+err:
+ return -1;
+}
+
+INTERN int DCALL
+nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool bTryGet) {
+ LPGETPROFILESDIRECTORYW my_GetProfilesDirectoryW;
+ LPWSTR wBuffer; DWORD dwBufsize;
+ my_GetProfilesDirectoryW = p_GetProfilesDirectoryW;
+ if (*(void **)&my_GetProfilesDirectoryW == (void *)NULL) {
+  /* Load the module */
+  HMODULE hUserEnv;
+  DBG_ALIGNMENT_DISABLE();
+  hUserEnv = get_userenv_module();
+  if (hUserEnv)
+      my_GetProfilesDirectoryW = (LPGETPROFILESDIRECTORYW)GetProcAddress(hUserEnv,"GetProfilesDirectoryW");
+  DBG_ALIGNMENT_ENABLE();
+  if (!my_GetProfilesDirectoryW)
+    *(void **)&my_GetProfilesDirectoryW = (void *)ITER_DONE;
+  p_GetProfilesDirectoryW = my_GetProfilesDirectoryW;
+ }
+ if (*(void **)&my_GetProfilesDirectoryW == (void *)ITER_DONE) {
+  if (bTryGet) return 1;
+  return DeeError_SysThrowf(&DeeError_UnsupportedAPI,SYSTEM_ERROR_UNKNOWN,
+                            "Cannot determine profiles directory (`GetProfilesDirectoryW' not found)");
+ }
+ dwBufsize = PATH_MAX;
+ wBuffer = unicode_printer_alloc_wchar(printer,dwBufsize);
+ if unlikely(!wBuffer) goto err;
+ DBG_ALIGNMENT_DISABLE();
+ while (!(*my_GetProfilesDirectoryW)(wBuffer,&dwBufsize)) {
+  DWORD dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError == ERROR_INSUFFICIENT_BUFFER ||
+      dwError == ERROR_MORE_DATA) {
+   LPWSTR wNewBuffer;
+   wNewBuffer = unicode_printer_resize_wchar(printer,wBuffer,dwBufsize - 1);
+   if unlikely(!wNewBuffer) goto err_release;
+   wBuffer = wNewBuffer;
+  } else {
+   if (bTryGet) { unicode_printer_free_wchar(printer,wBuffer); return 1; }
+   DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                      "Failed to determine profiles directory");
+   goto err_release;
+  }
+  DBG_ALIGNMENT_DISABLE();
+ }
+ DBG_ALIGNMENT_ENABLE();
+ if (unicode_printer_confirm_wchar(printer,wBuffer,dwBufsize - 1) < 0)
+     goto err;
+ return 0;
+err_release:
+ unicode_printer_free_wchar(printer,wBuffer);
+err:
+ return -1;
+}
+
+
+INTERN int DCALL
+nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict printer, bool bTryGet) {
+ LPGETDEFAULTUSERPROFILEDIRECTORYW my_GetDefaultUserProfileDirectoryW;
+ LPWSTR wBuffer; DWORD dwBufsize;
+ my_GetDefaultUserProfileDirectoryW = p_GetDefaultUserProfileDirectoryW;
+ if (*(void **)&my_GetDefaultUserProfileDirectoryW == (void *)NULL) {
+  /* Load the module */
+  HMODULE hUserEnv;
+  DBG_ALIGNMENT_DISABLE();
+  hUserEnv = get_userenv_module();
+  if (hUserEnv)
+      my_GetDefaultUserProfileDirectoryW = (LPGETDEFAULTUSERPROFILEDIRECTORYW)GetProcAddress(hUserEnv,"GetDefaultUserProfileDirectoryW");
+  DBG_ALIGNMENT_ENABLE();
+  if (!my_GetDefaultUserProfileDirectoryW)
+    *(void **)&my_GetDefaultUserProfileDirectoryW = (void *)ITER_DONE;
+  p_GetDefaultUserProfileDirectoryW = my_GetDefaultUserProfileDirectoryW;
+ }
+ if (*(void **)&my_GetDefaultUserProfileDirectoryW == (void *)ITER_DONE) {
+  if (bTryGet) return 1;
+  return DeeError_SysThrowf(&DeeError_UnsupportedAPI,SYSTEM_ERROR_UNKNOWN,
+                            "Cannot determine profiles directory (`GetDefaultUserProfileDirectoryW' not found)");
+ }
+ dwBufsize = PATH_MAX;
+ wBuffer = unicode_printer_alloc_wchar(printer,dwBufsize);
+ if unlikely(!wBuffer) goto err;
+ DBG_ALIGNMENT_DISABLE();
+ while (!(*my_GetDefaultUserProfileDirectoryW)(wBuffer,&dwBufsize)) {
+  DWORD dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError == ERROR_INSUFFICIENT_BUFFER ||
+      dwError == ERROR_MORE_DATA) {
+   LPWSTR wNewBuffer;
+   wNewBuffer = unicode_printer_resize_wchar(printer,wBuffer,dwBufsize - 1);
+   if unlikely(!wNewBuffer) goto err_release;
+   wBuffer = wNewBuffer;
+  } else {
+   if (bTryGet) { unicode_printer_free_wchar(printer,wBuffer); return 1; }
+   DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                      "Failed to determine profiles directory");
+   goto err_release;
+  }
+  DBG_ALIGNMENT_DISABLE();
+ }
+ DBG_ALIGNMENT_ENABLE();
+ if (unicode_printer_confirm_wchar(printer,wBuffer,dwBufsize - 1) < 0)
+     goto err;
+ return 0;
+err_release:
+ unicode_printer_free_wchar(printer,wBuffer);
+err:
+ return -1;
+}
+
+INTERN int DCALL
+nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer, bool bTryGet) {
+ LPGETALLUSERSPROFILEDIRECTORYW my_GetAllUsersProfileDirectoryW;
+ LPWSTR wBuffer; DWORD dwBufsize;
+ my_GetAllUsersProfileDirectoryW = p_GetAllUsersProfileDirectoryW;
+ if (*(void **)&my_GetAllUsersProfileDirectoryW == (void *)NULL) {
+  /* Load the module */
+  HMODULE hUserEnv;
+  DBG_ALIGNMENT_DISABLE();
+  hUserEnv = get_userenv_module();
+  if (hUserEnv)
+      my_GetAllUsersProfileDirectoryW = (LPGETALLUSERSPROFILEDIRECTORYW)GetProcAddress(hUserEnv,"GetAllUsersProfileDirectoryW");
+  DBG_ALIGNMENT_ENABLE();
+  if (!my_GetAllUsersProfileDirectoryW)
+    *(void **)&my_GetAllUsersProfileDirectoryW = (void *)ITER_DONE;
+  p_GetAllUsersProfileDirectoryW = my_GetAllUsersProfileDirectoryW;
+ }
+ if (*(void **)&my_GetAllUsersProfileDirectoryW == (void *)ITER_DONE) {
+  if (bTryGet) return 1;
+  return DeeError_SysThrowf(&DeeError_UnsupportedAPI,SYSTEM_ERROR_UNKNOWN,
+                            "Cannot determine profiles directory (`GetAllUsersProfileDirectoryW' not found)");
+ }
+ dwBufsize = PATH_MAX;
+ wBuffer = unicode_printer_alloc_wchar(printer,dwBufsize);
+ if unlikely(!wBuffer) goto err;
+ DBG_ALIGNMENT_DISABLE();
+ while (!(*my_GetAllUsersProfileDirectoryW)(wBuffer,&dwBufsize)) {
+  DWORD dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError == ERROR_INSUFFICIENT_BUFFER ||
+      dwError == ERROR_MORE_DATA) {
+   LPWSTR wNewBuffer;
+   wNewBuffer = unicode_printer_resize_wchar(printer,wBuffer,dwBufsize - 1);
+   if unlikely(!wNewBuffer) goto err_release;
+   wBuffer = wNewBuffer;
+  } else {
+   if (bTryGet) { unicode_printer_free_wchar(printer,wBuffer); return 1; }
+   DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                      "Failed to determine profiles directory");
+   goto err_release;
+  }
+  DBG_ALIGNMENT_DISABLE();
+ }
+ DBG_ALIGNMENT_ENABLE();
+ if (unicode_printer_confirm_wchar(printer,wBuffer,dwBufsize - 1) < 0)
+     goto err;
+ return 0;
+err_release:
+ unicode_printer_free_wchar(printer,wBuffer);
+err:
+ return -1;
+}
+
+
+INTERN int DCALL
+nt_printhome_process(struct unicode_printer *__restrict printer, void *hProcess, bool bTryGet) {
+ int result; HANDLE hProcessToken;
+ DBG_ALIGNMENT_DISABLE();
+ if unlikely(!OpenProcessToken((HANDLE)hProcess,TOKEN_QUERY,&hProcessToken)) {
+  DWORD dwError;
+  DBG_ALIGNMENT_ENABLE();
+  if (bTryGet) return 1;
+  DBG_ALIGNMENT_DISABLE();
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  return DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                            "Failed to determine home of process %p",
+                            hProcess);
+ }
+ result = nt_printhome_token(printer,(void *)hProcessToken,bTryGet);
+ CloseHandle(hProcessToken);
+ return result;
+}
+
+INTERN int DCALL
+fs_printhome(struct unicode_printer *__restrict printer, bool try_get) {
+ PRIVATE uint16_t const var_HOME[] = { 'H','O','M','E',0 };
+ PRIVATE uint16_t const var_USERPROFILE[] = { 'U','S','E','R','P','R','O','F','I','L','E',0 };
+ PRIVATE uint16_t const var_HOMEDRIVE[] = { 'H','O','M','E','D','R','I','V','E',0 };
+ PRIVATE uint16_t const var_HOMEPATH[] = { 'H','O','M','E','P','A','T','H',0 };
+ int error; size_t old_length;
+ if ((error = fs_wprintenv(var_HOME,printer,true)) <= 0) goto done_error;
+ if ((error = fs_wprintenv(var_USERPROFILE,printer,true)) <= 0) goto done_error;
+ old_length = UNICODE_PRINTER_LENGTH(printer);
+ if ((error = fs_wprintenv(var_HOMEDRIVE,printer,true)) <= 0) {
+  size_t before_homepath_index;
+  if unlikely(error < 0) goto done_error;
+  before_homepath_index = UNICODE_PRINTER_LENGTH(printer);
+  while (before_homepath_index) {
+   uint32_t ch;
+   ch = UNICODE_PRINTER_GETCHAR(printer,before_homepath_index - 1);
+   if (ch != '/' && ch != '\\' && !DeeUni_IsSpace(ch)) break;
+   --before_homepath_index;
+  }
+  unicode_printer_truncate(printer,before_homepath_index);
+  if (unicode_printer_putascii(printer,'\\')) goto err;
+  ++before_homepath_index;
+  error = fs_wprintenv(var_HOMEPATH,printer,true);
+  if (error <= 0) {
+   size_t remove_count;
+   if unlikely(error < 0)
+      goto done_error;
+   /* Remove any additional leading slashes/space characters from $HOMEPATH */
+   remove_count = 0;
+   while (before_homepath_index + remove_count < UNICODE_PRINTER_LENGTH(printer)) {
+    uint32_t ch;
+    ch = UNICODE_PRINTER_GETCHAR(printer,
+                                 before_homepath_index +
+                                 remove_count);
+    if (ch != '/' && ch != '\\' && !DeeUni_IsSpace(ch)) break;
+    ++remove_count;
+   }
+   if (remove_count) {
+    unicode_printer_memmove(printer,
+                            before_homepath_index,
+                            before_homepath_index + remove_count,
+                            UNICODE_PRINTER_LENGTH(printer) -
+                           (before_homepath_index + remove_count));
+    unicode_printer_truncate(printer,UNICODE_PRINTER_LENGTH(printer) - remove_count);
+   }
+   goto done_error;
+  }
+  unicode_printer_truncate(printer,old_length);
+ }
+ /* Environment variables aren't holding the key...
+  * -> Let's try something else. */
+ return nt_printhome_process(printer,GetCurrentProcess(),try_get);
+done_error:
+ return error;
+err:
+ return -1;
+}
+
+INTERN int DCALL
+fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
+ DWORD dwBufsize = 64 + 1;
+ LPWSTR wBuffer = unicode_printer_alloc_wchar(printer,dwBufsize - 1);
+ if unlikely(!wBuffer) goto err;
+ while (!GetUserNameW(wBuffer,&dwBufsize)) {
+  DWORD dwError = GetLastError();
+  if (dwError == ERROR_BUFFER_OVERFLOW ||
+      dwError == ERROR_INSUFFICIENT_BUFFER ||
+      dwError == ERROR_MORE_DATA) {
+   LPWSTR wNewBuffer;
+   wNewBuffer = unicode_printer_resize_wchar(printer,wBuffer,dwBufsize - 1);
+   if unlikely(!wNewBuffer) goto err_release;
+  } else {
+   if (try_get) { unicode_printer_free_wchar(printer,wBuffer); return 1; }
+   DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                      "Failed to determine name of the current user");
+   goto err_release;
+  }
+ }
+ if (unicode_printer_confirm_wchar(printer,wBuffer,dwBufsize - 1) < 0)
+     goto err;
+ return 0;
+err_release:
+ unicode_printer_free_wchar(printer,wBuffer);
+err:
+ return -1;
+}
+
+
+
+INTERN DREF DeeObject *DCALL
+fs_gethome(bool try_get) {
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ if (fs_printhome(&printer,try_get))
+     goto err;
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_fini(&printer);
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+fs_getuser(bool try_get) {
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ if (fs_printuser(&printer,try_get))
+     goto err;
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_fini(&printer);
+ return NULL;
+}
+
+#include <aclapi.h>
+
 /* User (SSID) implementation. */
 struct user_object {
     OBJECT_HEAD
     /* TODO: SSID */
-    DREF DeeStringObject *u_name; /* [0..1][lock(WRITE_ONCE)] The name of the user. */
-    DREF DeeStringObject *u_home; /* [0..1][lock(WRITE_ONCE)] The home folder of the user. */
+    PSECURITY_DESCRIPTOR u_sd;   /* [0..1][const][owned(LocalFree)] The security descriptor buffer, or `NULL' if the current user is being referred to. */
+    PSID                 u_sid;  /* [0..1][valid_if(u_sd != NULL)][const] The SID descriptor of this user-object */
 };
 
-INTERN DREF DeeObject *DCALL
-fs_gethome(bool try_get) {
- if (DeeThread_CheckInterrupt()) goto err;
- (void)try_get; /* TODO */
- return_empty_string;
+PRIVATE int DCALL
+user_init(struct user_object *__restrict self,
+          size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *name_or_id = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:user",&name_or_id))
+     goto err;
+ if (!name_or_id) {
+  self->u_sd  = NULL;
+  self->u_sid = NULL;
+ } else {
+  /* TODO */
+  DERROR_NOTIMPLEMENTED();
+  goto err;
+ }
+ return 0;
 err:
+ return -1;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+default_user_get_home(DeeObject *__restrict UNUSED(self)) {
+ return fs_gethome(false);
+}
+
+PRIVATE DREF DeeObject *DCALL
+default_user_get_domain(DeeObject *__restrict UNUSED(self)) {
+ return fs_gethostname();
+}
+
+PRIVATE DREF DeeObject *DCALL
+default_user_get_name(DeeObject *__restrict UNUSED(self)) {
+ return fs_getuser(false);
+}
+
+PRIVATE DREF DeeObject *DCALL
+user_get_profiles_dir(DeeObject *__restrict UNUSED(self)) {
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ if (nt_print_GetProfilesDirectory(&printer,false))
+     goto err;
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_fini(&printer);
  return NULL;
 }
-INTERN int DCALL
-fs_printhome(struct ascii_printer *__restrict printer,
-             bool try_get) {
- if (DeeThread_CheckInterrupt()) goto err;
- (void)printer; /* TODO */
- if (try_get) return 1;
+
+PRIVATE DREF DeeObject *DCALL
+user_get_defaulthome(DeeObject *__restrict UNUSED(self)) {
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ if (nt_print_GetDefaultUserProfileDirectory(&printer,false))
+     goto err;
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_fini(&printer);
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+user_get_allusershome(DeeObject *__restrict UNUSED(self)) {
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ if (nt_print_GetAllUsersProfileDirectory(&printer,false))
+     goto err;
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_fini(&printer);
+ return NULL;
+}
+
+PRIVATE struct type_getset user_class_getsets[] = {
+    { "name", &default_user_get_name, NULL, NULL, DeeUser_static_name_doc },
+    { "home", &default_user_get_home, NULL, NULL, DeeUser_static_home_doc },
+    { "domain_np", &default_user_get_domain, NULL, NULL,
+      DOC("->string\n"
+          "Alias for :gethostname") },
+    { "profilesdir_np", &user_get_profiles_dir, NULL, NULL,
+      DOC("->string\n"
+          "Returns the windows profiles directory containing all user profiles (Usually ${r\"C:\\Users\"})") },
+    { "defaultuserhome_np", &user_get_defaulthome, NULL, NULL,
+      DOC("->string\n"
+          "Returns the home folder of the default profile (Usually ${r\"C:\\Users\\Default\"})") },
+    { "allusershome_np", &user_get_allusershome, NULL, NULL,
+      DOC("->string\n"
+          "Returns the home folder of all profiles (Usually ${r\"C:\\ProgramData\"})") },
+    { NULL }
+};
+
+
+PRIVATE void DCALL
+user_fini(struct user_object *__restrict self) {
+ LocalFree(self->u_sd);
+}
+
+PRIVATE int DCALL
+user_get_name_and_domain(struct user_object *__restrict self,
+                         LPWSTR *__restrict pname,
+                         LPWSTR *__restrict pdomain,
+                         PSID_NAME_USE peUse) {
+ LPWSTR wNameBuffer; DWORD wNameBufSize = 64 + 1;
+ LPWSTR wDomainBuffer; DWORD wDomainBufSize = 64 + 1;
+ LPWSTR wNewBuffer;
+ wNameBuffer   = DeeString_NewWideBuffer(wNameBufSize - 1);
+ if unlikely(!wNameBuffer) goto err;
+ wDomainBuffer = DeeString_NewWideBuffer(wDomainBufSize - 1);
+ if unlikely(!wDomainBuffer) goto err_name_buffer;
+ DBG_ALIGNMENT_DISABLE();
+ while (!LookupAccountSidW(NULL,
+                           self->u_sid,
+                           wNameBuffer,&wNameBufSize,
+                           wDomainBuffer,&wDomainBufSize,
+                           peUse)) {
+  DWORD dwError;
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError == ERROR_BUFFER_OVERFLOW ||
+      dwError == ERROR_INSUFFICIENT_BUFFER ||
+      dwError == ERROR_MORE_DATA) {
+   wNewBuffer = DeeString_ResizeWideBuffer(wNameBuffer,wNameBufSize - 1);
+   if unlikely(!wNewBuffer) goto err_domain_buffer;
+   wNameBuffer = wNewBuffer;
+   wNewBuffer = DeeString_ResizeWideBuffer(wDomainBuffer,wDomainBufSize - 1);
+   if unlikely(!wNewBuffer) goto err_domain_buffer;
+   wDomainBuffer = wNewBuffer;
+  } else {
+
+   goto err_domain_buffer;
+  }
+  DBG_ALIGNMENT_DISABLE();
+ }
+ DBG_ALIGNMENT_ENABLE();
+ if (wNameBuffer[wNameBufSize])
+     wNameBufSize = wcsnlen(wNameBuffer,wNameBufSize);
+ if (wDomainBuffer[wDomainBufSize])
+     wDomainBufSize = wcsnlen(wDomainBuffer,wDomainBufSize);
+ wNewBuffer = DeeString_TryResizeWideBuffer(wNameBuffer,wNameBufSize);
+ if likely(wNewBuffer) wNameBuffer = wNewBuffer;
+ wNewBuffer = DeeString_TryResizeWideBuffer(wDomainBuffer,wDomainBufSize);
+ if likely(wNewBuffer) wDomainBuffer = wNewBuffer;
+ *pname   = wNameBuffer;
+ *pdomain = wDomainBuffer;
  return 0;
+err_domain_buffer:
+ DeeString_FreeWideBuffer(wDomainBuffer);
+err_name_buffer:
+ DeeString_FreeWideBuffer(wNameBuffer);
 err:
  return -1;
 }
-INTERN int DCALL
-fs_printhome_u(struct unicode_printer *__restrict printer,
-               bool try_get) {
- if (DeeThread_CheckInterrupt()) goto err;
- (void)printer; /* TODO */
- if (try_get) return 1;
- return 0;
-err:
- return -1;
+
+
+PRIVATE DREF DeeObject *DCALL
+user_get_name(struct user_object *__restrict self) {
+ DREF DeeObject *result;
+ LPWSTR name,domain; SID_NAME_USE use;
+ if (!self->u_sd) return fs_getuser(false);
+ if (user_get_name_and_domain(self,&name,&domain,&use))
+     return NULL;
+ DeeString_FreeWideBuffer(domain);
+ result = DeeString_PackWideBuffer(name,STRING_ERROR_FIGNORE);
+ return result;
 }
+PRIVATE DREF DeeObject *DCALL
+user_get_domain(struct user_object *__restrict self) {
+ DREF DeeObject *result;
+ LPWSTR name,domain; SID_NAME_USE use;
+ if (!self->u_sd) return fs_gethostname();
+ if (user_get_name_and_domain(self,&name,&domain,&use))
+     return NULL;
+ DeeString_FreeWideBuffer(name);
+ result = DeeString_PackWideBuffer(domain,STRING_ERROR_FIGNORE);
+ return result;
+}
+PRIVATE DREF DeeObject *DCALL
+user_get_home(struct user_object *__restrict self) {
+ LPWSTR name,domain; SID_NAME_USE use;
+ if (!self->u_sd) return fs_gethome(false);
+ {
+  dssize_t error;
+  struct unicode_printer printer = UNICODE_PRINTER_INIT;
+  if (nt_print_GetProfilesDirectory(&printer,false))
+      goto err;
+  if (UNICODE_PRINTER_LENGTH(&printer) &&
+      UNICODE_PRINTER_GETCHAR(&printer,UNICODE_PRINTER_LENGTH(&printer) - 1) != '\\' &&
+      unicode_printer_putascii(&printer,'\\'))
+      goto err;
+  if (user_get_name_and_domain(self,&name,&domain,&use))
+      goto err;
+  DeeString_FreeWideBuffer(domain);
+  error = unicode_printer_printwide(&printer,name,WSTR_LENGTH(name));
+  DeeString_FreeWideBuffer(name);
+  if unlikely(error < 0) goto err;
+  return unicode_printer_pack(&printer);
+err:
+  unicode_printer_fini(&printer);
+  return NULL;
+ }
+}
+
+PRIVATE struct type_getset user_getsets[] = {
+    { "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_name, NULL, NULL, DeeUser_name_doc },
+    { "home", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_home, NULL, NULL, DeeUser_home_doc },
+    { "domain_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_domain, NULL, NULL,
+      DOC("->string\n"
+          "@throw SystemError Failed to retrieve the domain\n"
+          "Returns the windows-specific name of the domain associated with @this user") },
+    { NULL }
+};
 
 INTERN DeeTypeObject DeeUser_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1372,14 +1973,14 @@ INTERN DeeTypeObject DeeUser_Type = {
                 /* .tp_ctor      = */NULL,
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_any_ctor  = */(void *)&user_init,
                 /* .tp_free      = */NULL,
                 {
                     /* .tp_instance_size = */sizeof(DeeUserObject)
                 }
             }
         },
-        /* .tp_dtor        = */NULL,
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&user_fini,
         /* .tp_assign      = */NULL,
         /* .tp_move_assign = */NULL
     },
@@ -1399,29 +2000,96 @@ INTERN DeeTypeObject DeeUser_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */user_getsets,
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
-    /* .tp_class_getsets = */NULL,
+    /* .tp_class_getsets = */user_class_getsets,
     /* .tp_class_members = */NULL
 };
+
+PRIVATE DREF DeeObject *DCALL
+nt_NewUserDescriptor(/*inherit(on_success)*/PSID pSid,
+                     /*inherit(on_success)*/PSECURITY_DESCRIPTOR pSD) {
+ DREF struct user_object *result;
+ result = DeeObject_MALLOC(struct user_object);
+ if unlikely(!result) goto done;
+ result->u_sd = pSD;
+ result->u_sid = pSid;
+ DeeObject_Init(result,&DeeUser_Type);
+done:
+ return (DREF DeeObject *)result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+nt_NewUserDescriptorFromHandleOwner(HANDLE hHandle, SE_OBJECT_TYPE ObjectType) {
+ PSID pSidOwner; DWORD dwError;
+ PSECURITY_DESCRIPTOR pSD;
+ DREF DeeObject *result;
+ DBG_ALIGNMENT_DISABLE();
+ dwError = GetSecurityInfo(hHandle,ObjectType,
+                           OWNER_SECURITY_INFORMATION,
+                          &pSidOwner,NULL,NULL,NULL,&pSD);
+ if (dwError != ERROR_SUCCESS) {
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                     "Failed to query owner SID of %lu-typed handle %p",
+                    (unsigned long)ObjectType,(void *)hHandle);
+  goto err;
+ }
+ DBG_ALIGNMENT_ENABLE();
+ result = nt_NewUserDescriptor(pSidOwner,pSD);
+ if likely(result) return result;
+ LocalFree(pSD);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+nt_NewUserDescriptorFromHandleGroup(HANDLE hHandle, SE_OBJECT_TYPE ObjectType) {
+ PSID pSidGroup; DWORD dwError;
+ PSECURITY_DESCRIPTOR pSD;
+ DREF DeeObject *result;
+ DBG_ALIGNMENT_DISABLE();
+ dwError = GetSecurityInfo(hHandle,ObjectType,
+                           GROUP_SECURITY_INFORMATION,
+                           NULL,&pSidGroup,NULL,NULL,&pSD);
+ if (dwError != ERROR_SUCCESS) {
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                     "Failed to query group SID of %lu-typed handle %p",
+                    (unsigned long)ObjectType,(void *)hHandle);
+  goto err;
+ }
+ DBG_ALIGNMENT_ENABLE();
+ result = nt_NewUserDescriptor(pSidGroup,pSD);
+ if likely(result) return result;
+ LocalFree(pSD);
+err:
+ return NULL;
+}
+
+
+
+
 
 
 
 typedef struct {
-    BY_HANDLE_FILE_INFORMATION s_info;  /* Windows-specific stat information. */
-    DWORD                      s_ftype; /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not determined. */
-#define STAT_FNORMAL           0x0000   /* Normal information. */
-#define STAT_FNOTIME           0x0001   /* Time stamps are unknown. */
-#define STAT_FNOVOLSERIAL      0x0002   /* `dwVolumeSerialNumber' is unknown. */
-#define STAT_FNOSIZE           0x0004   /* `nFileSize' is unknown. */
-#define STAT_FNONLINK          0x0008   /* `nNumberOfLinks' is unknown. */
-#define STAT_FNOFILEID         0x0010   /* `nFileIndex' is unknown. */
-#define STAT_FNONTTYPE         0x0020   /* `s_ftype' is unknown. */
-    uint16_t                   s_valid; /* Set of `STAT_F*' */
-    HANDLE                     s_hand;  /* [0..1|NULL(INVALID_HANDLE_VALUE)]
-                                         *  Optional handle that may be used to load
-                                         *  additional information upon request. */
+    BY_HANDLE_FILE_INFORMATION s_info;   /* Windows-specific stat information. */
+    DWORD                      s_ftype;  /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not determined. */
+#define STAT_FNORMAL           0x0000    /* Normal information. */
+#define STAT_FNOTIME           0x0001    /* Time stamps are unknown. */
+#define STAT_FNOVOLSERIAL      0x0002    /* `dwVolumeSerialNumber' is unknown. */
+#define STAT_FNOSIZE           0x0004    /* `nFileSize' is unknown. */
+#define STAT_FNONLINK          0x0008    /* `nNumberOfLinks' is unknown. */
+#define STAT_FNOFILEID         0x0010    /* `nFileIndex' is unknown. */
+#define STAT_FNONTTYPE         0x0020    /* `s_ftype' is unknown. */
+    uint16_t                   s_valid;  /* Set of `STAT_F*' */
+    uint16_t                   s_pad[1]; /* ... */
+    HANDLE                     s_hand;   /* [0..1|NULL(INVALID_HANDLE_VALUE)]
+                                          * Optional handle that may be used to load
+                                          * additional information upon request. */
 } Stat;
 #define Stat_Fini(x) ((x)->s_hand == INVALID_HANDLE_VALUE || (CloseHandle((x)->s_hand),0))
 
@@ -1443,6 +2111,8 @@ DCALL err_no_info(char const *__restrict level) {
 PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_dev_info(void) { return err_no_info("device"); }
 PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_ino_info(void) { return err_no_info("inode"); }
 PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_link_info(void) { return err_no_info("nlink"); }
+PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_uid_info(void) { return err_no_info("uid"); }
+PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_gid_info(void) { return err_no_info("gid"); }
 PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_size_info(void) { return err_no_info("size"); }
 PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_time_info(void) { return err_no_info("time"); }
 PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_nttype_info(void) { return err_no_info("NT Type"); }
@@ -1451,6 +2121,7 @@ PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_nttype_info(void) { return err_
 #define DOSTAT_FTRY      0x01
 #define DOSTAT_FLSTAT    0x02
 #define DOSTAT_FNOEXINFO 0x04
+
 
 /* @return:  1: `try_stat' was true and the given `path' could not be found.
  * @return:  0: Successfully did a stat() in the given `path'.
@@ -1467,13 +2138,25 @@ again:
  self->s_ftype = FILE_TYPE_UNKNOWN; /* Lazily initialized. */
  if (DeeString_Check(path)) {
   int error; WIN32_FILE_ATTRIBUTE_DATA attrib;
-  fd = nt_CreateFile(path,FILE_READ_ATTRIBUTES,
+  fd = nt_CreateFile(path,FILE_READ_ATTRIBUTES|READ_CONTROL,
                      FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,NULL,OPEN_EXISTING,
                     (flags&DOSTAT_FLSTAT ? /* In lstat()-mode, open a reparse point.
                                             * NOTE: If the file isn't a reparse
                                             *       point, the flag is ignored ;) */
                     (FILE_ATTRIBUTE_NORMAL|FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OPEN_REPARSE_POINT) :
                     (FILE_ATTRIBUTE_NORMAL|FILE_FLAG_BACKUP_SEMANTICS)),NULL);
+  if (fd == INVALID_HANDLE_VALUE) {
+   /* Try again, but leave out READ_CONTROL access permissions.
+    * NOTE: `READ_CONTROL' is normally required by the `st_uid' / `st_gid' fields. */
+   fd = nt_CreateFile(path,FILE_READ_ATTRIBUTES,
+                      FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,NULL,OPEN_EXISTING,
+                     (flags&DOSTAT_FLSTAT ? /* In lstat()-mode, open a reparse point.
+                                             * NOTE: If the file isn't a reparse
+                                             *       point, the flag is ignored ;) */
+                     (FILE_ATTRIBUTE_NORMAL|FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OPEN_REPARSE_POINT) :
+                     (FILE_ATTRIBUTE_NORMAL|FILE_FLAG_BACKUP_SEMANTICS)),NULL);
+  }
+
   if (fd == NULL) goto err;
   if (fd != INVALID_HANDLE_VALUE) {
    BOOL error;
@@ -1555,12 +2238,22 @@ ok_user_fd:
   if (flags&DOSTAT_FNOEXINFO) {
    self->s_valid |= STAT_FNONTTYPE;
   } else {
+   HANDLE hCurrentProcess;
    DBG_ALIGNMENT_DISABLE();
-   self->s_ftype = GetFileType(fd);
+   hCurrentProcess = GetCurrentProcess();
    DBG_ALIGNMENT_ENABLE();
-   self->s_valid = STAT_FNORMAL;
-   if unlikely(self->s_ftype == FILE_TYPE_UNKNOWN)
-      self->s_valid |= STAT_FNONTTYPE;
+   /* Duplicate the user-given handle, so we can use it to lookup additional information later. */
+   if (!DuplicateHandle(hCurrentProcess,fd,
+                        hCurrentProcess,&self->s_hand,
+                        0,TRUE,DUPLICATE_SAME_ACCESS)) {
+    self->s_hand = INVALID_HANDLE_VALUE;
+    DBG_ALIGNMENT_DISABLE();
+    self->s_ftype = GetFileType(fd);
+    DBG_ALIGNMENT_ENABLE();
+    self->s_valid = STAT_FNORMAL;
+    if unlikely(self->s_ftype == FILE_TYPE_UNKNOWN)
+       self->s_valid |= STAT_FNONTTYPE;
+   }
   }
   goto done;
  }
@@ -1662,19 +2355,19 @@ DeeTime_NewFiletime(FILETIME const *__restrict val) {
 
 
 PRIVATE DREF DeeObject *DCALL
-stat_getdev(DeeStatObject *__restrict self) {
+stat_get_dev(DeeStatObject *__restrict self) {
  if unlikely(self->st_stat.s_valid&STAT_FNOVOLSERIAL) { err_no_dev_info(); return NULL; }
  return DeeInt_NewU32((uint32_t)self->st_stat.s_info.dwVolumeSerialNumber);
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getino(DeeStatObject *__restrict self) {
+stat_get_ino(DeeStatObject *__restrict self) {
  if unlikely(self->st_stat.s_valid&STAT_FNOFILEID) { err_no_ino_info(); return NULL; }
  return DeeInt_NewU64(((uint64_t)self->st_stat.s_info.nFileIndexHigh << 32) |
                       ((uint64_t)self->st_stat.s_info.nFileIndexLow));
 }
 
 PRIVATE DREF DeeObject *DCALL
-stat_getmode(DeeStatObject *__restrict self) {
+stat_get_mode(DeeStatObject *__restrict self) {
  uint32_t result = 0222|0111; /* XXX: executable should depend on extension. */
  if (self->st_stat.s_info.dwFileAttributes&FILE_ATTRIBUTE_READONLY)
      result |= 0444;
@@ -1703,33 +2396,43 @@ stat_getmode(DeeStatObject *__restrict self) {
  return DeeInt_NewU32(result);
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getnlink(DeeStatObject *__restrict self) {
+stat_get_nlink(DeeStatObject *__restrict self) {
  if unlikely(self->st_stat.s_valid&STAT_FNONLINK) { err_no_link_info(); return NULL; }
  return DeeInt_NewU32(self->st_stat.s_info.nNumberOfLinks);
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getrdev(DeeStatObject *__restrict UNUSED(self)) {
+stat_get_uid(DeeStatObject *__restrict self) {
+ if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE) { err_no_uid_info(); return NULL; }
+ return nt_NewUserDescriptorFromHandleOwner(self->st_stat.s_hand,SE_FILE_OBJECT);
+}
+PRIVATE DREF DeeObject *DCALL
+stat_get_gid(DeeStatObject *__restrict self) {
+ if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE) { err_no_gid_info(); return NULL; }
+ return nt_NewUserDescriptorFromHandleGroup(self->st_stat.s_hand,SE_FILE_OBJECT);
+}
+PRIVATE DREF DeeObject *DCALL
+stat_get_rdev(DeeStatObject *__restrict UNUSED(self)) {
  err_no_info("rdev");
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getsize(DeeStatObject *__restrict self) {
+stat_get_size(DeeStatObject *__restrict self) {
  if unlikely(self->st_stat.s_valid&STAT_FNOSIZE) { err_no_size_info(); return NULL; }
  return DeeInt_NewU64(((uint64_t)self->st_stat.s_info.nFileSizeHigh << 32) |
                       ((uint64_t)self->st_stat.s_info.nFileSizeLow));
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getatime(DeeStatObject *__restrict self) {
+stat_get_atime(DeeStatObject *__restrict self) {
  if unlikely(self->st_stat.s_valid&STAT_FNOTIME) { err_no_time_info(); return NULL; }
  return DeeTime_NewFiletime(&self->st_stat.s_info.ftLastAccessTime);
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getmtime(DeeStatObject *__restrict self) {
+stat_get_mtime(DeeStatObject *__restrict self) {
  if unlikely(self->st_stat.s_valid&STAT_FNOTIME) { err_no_time_info(); return NULL; }
  return DeeTime_NewFiletime(&self->st_stat.s_info.ftLastWriteTime);
 }
 PRIVATE DREF DeeObject *DCALL
-stat_getctime(DeeStatObject *__restrict self) {
+stat_get_ctime(DeeStatObject *__restrict self) {
  if unlikely(self->st_stat.s_valid&STAT_FNOTIME) { err_no_time_info(); return NULL; }
  return DeeTime_NewFiletime(&self->st_stat.s_info.ftCreationTime);
 }
@@ -1748,17 +2451,17 @@ stat_getnttype_np(DeeStatObject *__restrict self) {
 
 
 PRIVATE struct type_getset stat_getsets[] = {
-    { "st_dev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getdev, NULL, NULL, DeeStat_st_dev_doc },
-    { "st_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getino, NULL, NULL, DeeStat_st_ino_doc },
-    { "st_mode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getmode, NULL, NULL, DeeStat_st_mode_doc },
-    { "st_nlink", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getnlink, NULL, NULL, DeeStat_st_nlink_doc },
-    /* TODO: property st_uid -> user; */
-    /* TODO: property st_gid -> group; */
-    { "st_rdev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getrdev, NULL, NULL, DeeStat_st_rdev_doc },
-    { "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getsize, NULL, NULL, DeeStat_st_size_doc },
-    { "st_atime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getatime, NULL, NULL, DeeStat_st_atime_doc },
-    { "st_mtime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getmtime, NULL, NULL, DeeStat_st_mtime_doc },
-    { "st_ctime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getctime, NULL, NULL, DeeStat_st_ctime_doc },
+    { "st_dev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_dev, NULL, NULL, DeeStat_st_dev_doc },
+    { "st_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ino, NULL, NULL, DeeStat_st_ino_doc },
+    { "st_mode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mode, NULL, NULL, DeeStat_st_mode_doc },
+    { "st_nlink", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_nlink, NULL, NULL, DeeStat_st_nlink_doc },
+    { "st_uid", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_uid, NULL, NULL, DeeStat_st_uid_doc },
+    { "st_gid", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_gid, NULL, NULL, DeeStat_st_gid_doc },
+    { "st_rdev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_rdev, NULL, NULL, DeeStat_st_rdev_doc },
+    { "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, DeeStat_st_size_doc },
+    { "st_atime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_atime, NULL, NULL, DeeStat_st_atime_doc },
+    { "st_mtime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mtime, NULL, NULL, DeeStat_st_mtime_doc },
+    { "st_ctime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ctime, NULL, NULL, DeeStat_st_ctime_doc },
 
     /* Non-portable NT extensions. */
     { "ntattr_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getntattr_np, NULL, NULL,
@@ -2859,7 +3562,13 @@ fs_symlink(DeeObject *__restrict target_text,
      goto err;
  (void)format_target; /* TODO: Fix slashes. */
  flags = symlink_additional_flags;
- /* TODO: `SYMBOLIC_LINK_FLAG_DIRECTORY' */
+ /* TODO: `SYMBOLIC_LINK_FLAG_DIRECTORY'
+  * >> local abs_target = target_text;
+  * >> if (!fs.isabs(target_text))
+  * >>      abs_target = fs.abspath(target_text,fs.headof(link_path));
+  * >> if (fs.stat.isdir(abs_target))
+  * >>     flags |= SYMBOLIC_LINK_FLAG_DIRECTORY;
+  */
 again:
  error = nt_CreateSymbolicLink(link_path,target_text,flags);
  if unlikely(error > 0) goto err_nt;
@@ -3024,7 +3733,7 @@ again_createfile:
  default:
   DeeError_Throwf(&DeeError_UnsupportedAPI,
                   "Unsupported link type %lu in file %r",
-                  buffer->ReparseTag,path);
+                 (unsigned long)buffer->ReparseTag,path);
   Dee_Free(buffer);
   goto err;
  }

@@ -184,6 +184,12 @@ DFUNDEF bool DCALL DeeError_Catch(DeeTypeObject *__restrict type);
  * @return: -1: Always returns `-1' */
 DFUNDEF int DCALL DeeError_Throw(DeeObject *__restrict ob);
 
+
+/* Value set for `syserrno_t' when the error is not known. */
+#ifndef SYSTEM_ERROR_UNKNOWN
+#define SYSTEM_ERROR_UNKNOWN 0
+#endif /* !SYSTEM_ERROR_UNKNOWN */
+
 /* Throw a new error of type `tp', using a printf-formatted
  * message passed through `format' and varargs.
  * @return: -1: Always returns `-1'*/

@@ -24,6 +24,19 @@
 DECL_BEGIN
 
 /* Resource strings. */
+#define DeeUser_home_doc         DOC("->string\n" \
+                                     "@throw SystemError Failed to retrieve the home path\n" \
+                                     "Returns the home path of @this user")
+#define DeeUser_name_doc         DOC("->string\n" \
+                                     "@throw SystemError Failed to retrieve the name\n" \
+                                     "Returns the name of @this user")
+#define DeeUser_static_home_doc  DOC("->string\n" \
+                                     "@throw SystemError Failed to retrieve the home path of the current user\n" \
+                                     "Returns the home path of the current user (same as ${fs.user().home})")
+#define DeeUser_static_name_doc  DOC("->string\n" \
+                                     "@throw SystemError Failed to retrieve the name of the current user\n" \
+                                     "Returns the name of the current user (same as ${fs.user().name})")
+
 #define DeeStat_st_dev_doc       DOC("->int\n" \
                                      "@throw ValueError @this stat-file does not contain valid device information\n" \
                                      "Return the device number of the storage device on which the stat-file is located")

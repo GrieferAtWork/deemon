@@ -28,15 +28,18 @@ fs_gethome(bool try_get) {
  if (!try_get) fs_unsupported();
  return NULL;
 }
+INTERN DREF DeeObject *DCALL
+fs_getuser(bool try_get) {
+ if (!try_get) fs_unsupported();
+ return NULL;
+}
 INTERN int DCALL
-fs_printhome(struct ascii_printer *__restrict UNUSED(printer),
-             bool try_get) {
+fs_printhome(struct unicode_printer *__restrict UNUSED(printer), bool try_get) {
  if (try_get) return 1;
  return fs_unsupported();
 }
 INTERN int DCALL
-fs_printhome_u(struct unicode_printer *__restrict UNUSED(printer),
-               bool try_get) {
+fs_printuser(struct unicode_printer *__restrict UNUSED(printer), bool try_get) {
  if (try_get) return 1;
  return fs_unsupported();
 }
