@@ -1902,7 +1902,7 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
  uint32_t *buffer32,*dst32;
  size_t i,simple_length,utf_length;
  result = (DREF String *)DeeObject_Malloc(COMPILER_OFFSETOF(String,s_str)+
-                                         (length+1)*sizeof(char));
+                                         (length + 1)*sizeof(char));
  if unlikely(!result) goto err;
  memcpy(result->s_str,str,length*sizeof(char));
  /* Search for multi-byte character sequences. */
@@ -2074,6 +2074,184 @@ err_buffer16:
 err_r:
  DeeObject_Free(result);
 err:
+ return NULL;
+}
+
+
+PUBLIC DREF DeeObject *DCALL
+DeeString_SetUtf8(/*inherit(always)*/DREF DeeObject *__restrict self,
+                  unsigned int error_mode) {
+ DREF String *result; uint8_t *iter,*end;
+ struct string_utf *utf = NULL;
+ uint32_t *buffer32,*dst32;
+ size_t i,simple_length,utf_length;
+ result = (DREF String *)self;
+ /* Search for multi-byte character sequences. */
+ end = (iter = (uint8_t *)result->s_str)+result->s_len;
+ while (iter < end) {
+  uint8_t seqlen,ch = *iter;
+  uint32_t ch32;
+  if (ch <= 0x7f) { ++iter; continue; }
+  seqlen = utf8_sequence_len[ch];
+  if unlikely(!seqlen || iter + seqlen > end) {
+   /* Invalid UTF-8 character */
+   if (error_mode == STRING_ERROR_FREPLAC) {
+    *iter = '?';
+    ++iter;
+    continue;
+   }
+   if (error_mode == STRING_ERROR_FIGNORE) {
+    --end;
+    memmove(iter,iter + 1,(end - iter)*sizeof(char));
+    continue;
+   }
+   DeeError_Throwf(&DeeError_UnicodeDecodeError,
+                   "Invalid utf-8 character byte 0x%.2I8x",
+                   ch);
+   goto err_r;
+  }
+  ch32 = utf8_getchar(iter,seqlen);
+  if unlikely(ch32 <= 0x7f) {
+   *iter = (uint8_t)ch32;
+   memmove(iter + 1,
+           iter + seqlen,
+          (end - (iter + seqlen))*
+           sizeof(char));
+   ++iter;
+   continue;
+  }
+  if (ch32 > 0xffff) {
+   /* Must decode into a 4-byte string */
+   buffer32 = DeeString_NewBuffer32(result->s_len - (seqlen - 1));
+   if unlikely(!buffer32) goto err_r;
+   dst32 = buffer32;
+   simple_length = iter - (uint8_t *)result->s_str;
+   for (i = 0; i < simple_length; ++i)
+       *dst32++ = (uint32_t)(uint8_t)result->s_str[i];
+   *dst32++ = ch32;
+   iter += seqlen;
+use_buffer32:
+   while (iter < end) {
+    ch = *iter;
+    if (ch <= 0x7f) {
+     ++iter;
+     *dst32++ = ch;
+     continue;
+    }
+    seqlen = utf8_sequence_len[ch];
+    if unlikely(!seqlen || iter + seqlen > end) {
+     /* Invalid UTF-8 character */
+     if (error_mode == STRING_ERROR_FREPLAC) {
+      *iter++ = '?';
+      *dst32++  = '?';
+      continue;
+     }
+     if (error_mode == STRING_ERROR_FIGNORE) {
+      --end;
+      memmove(iter,iter + 1,(end - iter)*sizeof(char));
+      continue;
+     }
+     DeeError_Throwf(&DeeError_UnicodeDecodeError,
+                     "Invalid utf-8 character byte 0x%.2I8x",
+                     ch);
+err_buffer32:
+     DeeString_Free4ByteBuffer(buffer32);
+     goto err_r;
+    }
+    ch32 = utf8_getchar(iter,seqlen);
+    *dst32++ = ch32;
+    iter += seqlen;
+   }
+   utf_length = (size_t)(dst32 - buffer32);
+   ASSERT(utf_length <= WSTR_LENGTH(buffer32));
+   if (utf_length != WSTR_LENGTH(buffer32)) {
+    uint32_t *new_buffer32;
+    new_buffer32 = DeeString_TryResizeBuffer32(buffer32,utf_length);
+    if likely(new_buffer32) buffer32 = new_buffer32;
+   }
+   utf = utf_alloc();
+   if unlikely(!utf) goto err_buffer32;
+   memset(utf,0,sizeof(*utf));
+   utf->u_data[STRING_WIDTH_4BYTE] = (size_t *)buffer32; /* Inherit data */
+   utf->u_width = STRING_WIDTH_4BYTE;
+   utf->u_utf8  = DeeString_STR(result);
+  } else {
+   uint16_t *buffer16,*dst16;
+   /* Must decode into a 2/4-byte string */
+   buffer16 = DeeString_NewBuffer16(result->s_len - (seqlen - 1));
+   if unlikely(!buffer16) goto err_r;
+   dst16 = buffer16;
+   simple_length = iter - (uint8_t *)result->s_str;
+   for (i = 0; i < simple_length; ++i)
+       *dst16++ = (uint16_t)(uint8_t)result->s_str[i];
+   *dst16++ = (uint16_t)ch32;
+   iter += seqlen;
+   while (iter < end) {
+    ch = *iter;
+    if (ch <= 0x7f) {
+     ++iter;
+     *dst16++ = ch;
+     continue;
+    }
+    seqlen = utf8_sequence_len[ch];
+    if unlikely(!seqlen || iter + seqlen > end) {
+     /* Invalid UTF-8 character */
+     if (error_mode == STRING_ERROR_FREPLAC) {
+      *iter++ = '?';
+      *dst16++  = '?';
+      continue;
+     }
+     if (error_mode == STRING_ERROR_FIGNORE) {
+      --end;
+      memmove(iter,iter + 1,(end - iter)*sizeof(char));
+      continue;
+     }
+     DeeError_Throwf(&DeeError_UnicodeDecodeError,
+                     "Invalid utf-8 character byte 0x%.2I8x",
+                     ch);
+err_buffer16:
+     DeeString_Free2ByteBuffer(buffer16);
+     goto err_r;
+    }
+    ch32 = utf8_getchar(iter,seqlen);
+    if unlikely(ch32 > 0xffff) {
+     iter += seqlen;
+     /* Must upgrade to use a 4-byte buffer. */
+     buffer32 = DeeString_NewBuffer32((dst16 - buffer16) + 1 + (end - iter));
+     if unlikely(!buffer32) goto err_buffer16;
+     simple_length = (size_t)(dst16 - buffer16);
+     for (i = 0; i < simple_length; ++i)
+         buffer32[i] = buffer16[i];
+     DeeString_Free2ByteBuffer(buffer16);
+     dst32 = buffer32 + simple_length;
+     *dst32++ = ch32;
+     goto use_buffer32;
+    }
+    *dst16++ = (uint16_t)ch32;
+    iter += seqlen;
+   }
+   utf_length = (size_t)(dst16 - buffer16);
+   ASSERT(utf_length <= WSTR_LENGTH(buffer16));
+   if (utf_length != WSTR_LENGTH(buffer16)) {
+    uint16_t *new_buffer16;
+    new_buffer16 = DeeString_TryResizeBuffer16(buffer16,utf_length);
+    if likely(new_buffer16) buffer16 = new_buffer16;
+   }
+   utf = utf_alloc();
+   if unlikely(!utf) goto err_buffer16;
+   memset(utf,0,sizeof(*utf));
+   utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)buffer16; /* Inherit data */
+   utf->u_width = STRING_WIDTH_2BYTE;
+   utf->u_utf8  = DeeString_STR(result);
+  }
+  break;
+ }
+ ASSERT(!DeeObject_IsShared(result));
+ ASSERT(!result->s_data);
+ result->s_data = utf;
+ return (DREF DeeObject *)result;
+err_r:
+ DeeObject_Free(result);
  return NULL;
 }
 

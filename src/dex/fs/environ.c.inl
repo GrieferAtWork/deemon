@@ -365,8 +365,11 @@ again:
 }
 INTERN int DCALL
 fs_printenv(char const *__restrict name,
-            struct ascii_printer *__restrict printer, bool try_get) {
- char *buf,*envval; int env_ver; size_t envlen;
+            struct unicode_printer *__restrict printer,
+            bool try_get) {
+ char *buf,*envval;
+ unsigned int env_ver;
+ size_t envlen; dssize_t error;
 again:
  rwlock_read(&env_lock);
  env_ver = env_version;
@@ -380,18 +383,20 @@ again:
  }
  envlen = strlen(envval);
  rwlock_endread(&env_lock);
- buf = ascii_printer_alloc(printer,envlen);
+ buf = unicode_printer_alloc_utf8(printer,envlen);
  if unlikely(!buf) goto err;
  rwlock_read(&env_lock);
  /* Check if the environment changed in the mean time. */
  if unlikely(env_ver != env_version) {
   rwlock_endread(&env_lock);
-  ascii_printer_release(printer,envlen);
+  unicode_printer_free_utf8(printer,buf);
   goto again;
  }
  /* Copy the environment variable string. */
  memcpy(buf,envval,envlen*sizeof(char));
  rwlock_endread(&env_lock);
+ error = unicode_printer_confirm_utf8(printer,buf,envlen);
+ if unlikely(error < 0) goto err;
  return 0;
 err:
  return -1;

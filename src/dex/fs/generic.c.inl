@@ -101,7 +101,7 @@ fs_getenv(DeeObject *__restrict UNUSED(name), bool try_get) {
 }
 INTERN int DCALL
 fs_printenv(char const *__restrict UNUSED(name),
-            struct ascii_printer *__restrict UNUSED(printer),
+            struct unicode_printer *__restrict UNUSED(printer),
             bool try_get) {
  if (try_get) return 1;
  return fs_unsupported();
@@ -110,7 +110,7 @@ INTERN int DCALL fs_delenv(DeeObject *__restrict UNUSED(name)) { return -1; }
 INTERN int DCALL fs_setenv(DeeObject *__restrict UNUSED(name), DeeObject *__restrict UNUSED(value)) { return fs_unsupported(); }
 INTERN DREF /*String*/DeeObject *DCALL fs_gethostname(void) { return fs_getcwd(); }
 INTERN DREF DeeObject *DCALL fs_gettmp(void) { return fs_getcwd(); }
-INTERN int DCALL fs_printcwd(struct ascii_printer *__restrict UNUSED(printer)) { return fs_unsupported(); }
+INTERN int DCALL fs_printcwd(struct unicode_printer *__restrict UNUSED(printer)) { return fs_unsupported(); }
 INTERN DREF DeeObject *DCALL fs_getcwd(void) { fs_unsupported(); return NULL; }
 INTERN int DCALL fs_chdir(DeeObject *__restrict UNUSED(path)) { return fs_unsupported(); }
 #ifndef __INTELLISENSE__

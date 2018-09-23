@@ -40,12 +40,13 @@
 DECL_BEGIN
 
 struct ascii_printer;
+struct unicode_printer;
 typedef struct user_object DeeUserObject;
 typedef struct stat_object DeeStatObject;
 
 /* Get/Set the current working directory. */
 INTDEF DREF /*String*/DeeObject *DCALL fs_getcwd(void);
-INTDEF int DCALL fs_printcwd(struct ascii_printer *__restrict printer);
+INTDEF int DCALL fs_printcwd(struct unicode_printer *__restrict printer);
 INTDEF int DCALL fs_chdir(DeeObject *__restrict path);
 
 /* Return a temporary directory, such as `/tmp' */
@@ -62,8 +63,8 @@ INTDEF int DCALL fs_setenv(/*String*/DeeObject *__restrict name, /*String*/DeeOb
 /* @return:  1: Failed to retrieve the home path and `try_get' was true.
  * @return:  0: Successfully printed the home path.
  * @return: -1: An error occurred. */
-INTDEF int DCALL fs_printenv(char const *__restrict name,
-                             struct ascii_printer *__restrict printer, bool try_get);
+INTDEF int DCALL fs_printenv(/*utf-8*/char const *__restrict name,
+                             struct unicode_printer *__restrict printer, bool try_get);
 
 /* The descriptor for a user account.
  * When default-constructed, return a descriptor for the current user.
@@ -83,6 +84,7 @@ INTDEF DREF DeeObject *DCALL fs_gethome(bool try_get);
  * @return:  0: Successfully printed the home path.
  * @return: -1: An error occurred. */
 INTDEF int DCALL fs_printhome(struct ascii_printer *__restrict printer, bool try_get);
+INTDEF int DCALL fs_printhome_u(struct unicode_printer *__restrict printer, bool try_get);
 
 /* STAT bitflags. */
 

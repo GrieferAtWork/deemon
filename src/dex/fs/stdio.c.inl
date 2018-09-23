@@ -48,7 +48,7 @@ PRIVATE ATTR_NOINLINE int DCALL fs_unsupported(void) {
 }
 INTERN DREF /*String*/DeeObject *DCALL fs_gethostname(void) { return fs_getcwd(); }
 INTERN DREF DeeObject *DCALL fs_gettmp(void) { return fs_getcwd(); }
-INTERN int DCALL fs_printcwd(struct ascii_printer *__restrict UNUSED(printer)) { return fs_unsupported(); }
+INTERN int DCALL fs_printcwd(struct unicode_printer *__restrict UNUSED(printer)) { return fs_unsupported(); }
 INTERN DREF DeeObject *DCALL fs_getcwd(void) { fs_unsupported(); return NULL; }
 INTERN int DCALL fs_chdir(DeeObject *__restrict UNUSED(path)) { return fs_unsupported(); }
 #include "generic-user.c.inl"

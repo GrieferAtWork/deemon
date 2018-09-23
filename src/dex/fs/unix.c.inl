@@ -251,11 +251,10 @@ done:
 
 
 INTERN int DCALL
-fs_printcwd(struct ascii_printer *__restrict printer) {
- /* TODO: Unicode support (through UTF-8) */
+fs_printcwd(struct unicode_printer *__restrict printer) {
  char *buffer; size_t bufsize = PATH_MAX;
  if (DeeThread_CheckInterrupt()) goto err;
- buffer = ascii_printer_alloc(printer,bufsize);
+ buffer = unicode_printer_alloc_utf8(printer,bufsize);
  if unlikely(!buffer) goto err;
 again:
  DBG_ALIGNMENT_DISABLE();
@@ -263,11 +262,14 @@ again:
   DBG_ALIGNMENT_ENABLE();
   int error = errno;
   if (error == ERANGE) {
+   char *new_buffer;
+   size_t new_bufsize;
    /* Increase buffer size. */
-   buffer = ascii_printer_alloc(printer,bufsize*2);
-   if unlikely(!buffer) goto err_release;
-   buffer  -= bufsize;
-   bufsize *= 2;
+   new_bufsize = bufsize * 2;
+   new_buffer  = unicode_printer_resize_utf8(printer,buffer,new_bufsize);
+   if unlikely(!new_buffer) goto err_release;
+   buffer  = new_buffer;
+   bufsize = new_bufsize;
    goto again;
   }
   if (error == EACCES) {
@@ -285,21 +287,21 @@ again:
  }
  DBG_ALIGNMENT_ENABLE();
  /* Truncate the actual used buffer. */
- ascii_printer_release(printer,bufsize-strlen(buffer));
+ if (unicode_printer_confirm_utf8(printer,buffer,strlen(buffer)) < 0)
+     goto err_release;
  return 0;
 err_release:
- ascii_printer_release(printer,bufsize);
+ unicode_printer_free_utf8(printer,buffer);
 err:
  return -1;
 }
 
 INTERN DREF DeeObject *DCALL fs_getcwd(void) {
- /* TODO: Unicode support (through UTF-8) */
- struct ascii_printer printer = ASCII_PRINTER_INIT;
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
  if (fs_printcwd(&printer)) goto err;
- return ascii_printer_pack(&printer);
+ return unicode_printer_pack(&printer);
 err:
- ascii_printer_fini(&printer);
+ unicode_printer_fini(&printer);
  return NULL;
 }
 
@@ -455,6 +457,13 @@ fs_gethome(bool try_get) {
 INTERN int DCALL
 fs_printhome(struct ascii_printer *__restrict printer,
              bool try_get) {
+ (void)printer; /* TODO */
+ if (try_get) return 1;
+ return 0;
+}
+INTERN int DCALL
+fs_printhome_u(struct unicode_printer *__restrict printer,
+               bool try_get) {
  (void)printer; /* TODO */
  if (try_get) return 1;
  return 0;

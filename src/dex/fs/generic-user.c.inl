@@ -34,6 +34,12 @@ fs_printhome(struct ascii_printer *__restrict UNUSED(printer),
  if (try_get) return 1;
  return fs_unsupported();
 }
+INTERN int DCALL
+fs_printhome_u(struct unicode_printer *__restrict UNUSED(printer),
+               bool try_get) {
+ if (try_get) return 1;
+ return fs_unsupported();
+}
 INTERN DeeTypeObject DeeUser_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"user",

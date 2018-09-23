@@ -402,15 +402,20 @@ err:
  return NULL;
 }
 INTERN int DCALL
-fs_printenv(char const *__restrict name,
-            struct ascii_printer *__restrict printer, bool try_get) {
- char *buffer; DWORD new_bufsize,bufsize = 256;
- /* TODO: Unicode support */
- buffer = ascii_printer_alloc(printer,bufsize);
- if unlikely(!buffer) goto err;
+fs_printenv(/*utf-8*/char const *__restrict name,
+            struct unicode_printer *__restrict printer,
+            bool try_get) {
+ LPWSTR buffer,wname; DWORD new_bufsize,bufsize = 256;
+ DREF DeeObject *wide_name;
+ wide_name = DeeString_NewUtf8(name,strlen(name),STRING_ERROR_FSTRICT);
+ if unlikely(!wide_name) goto err;
+ wname = DeeString_AsWide(wide_name);
+ if unlikely(!wname) goto err_wide_name;
+ buffer = unicode_printer_alloc_wchar(printer,bufsize);
+ if unlikely(!buffer) goto err_wide_name;
 again:
  DBG_ALIGNMENT_DISABLE();
- new_bufsize = GetEnvironmentVariableA(name,buffer,bufsize+1);
+ new_bufsize = GetEnvironmentVariableW(wname,buffer,bufsize+1);
  DBG_ALIGNMENT_ENABLE();
  if unlikely(!new_bufsize) {
   if (!try_get) {
@@ -419,22 +424,27 @@ again:
                    name);
    goto err_release;
   }
-  ascii_printer_release(printer,bufsize);
+  unicode_printer_free_wchar(printer,buffer);
+  Dee_Decref(wide_name);
   return 1; /* Not found. */
  }
  if (new_bufsize > bufsize) {
+  LPWSTR new_buffer;
   /* Increase the buffer and try again. */
-  if unlikely(!ascii_printer_alloc(printer,new_bufsize-bufsize))
-     goto err_release;
+  new_buffer = unicode_printer_resize_wchar(printer,buffer,new_bufsize);
+  if unlikely(!new_buffer) goto err_release;
+  buffer  = new_buffer;
   bufsize = new_bufsize;
   goto again;
- } else if likely(new_bufsize < bufsize) {
-  /* Release unused buffer memory. */
-  ascii_printer_release(printer,bufsize-new_bufsize);
  }
+ if (unicode_printer_confirm_wchar(printer,buffer,new_bufsize) < 0)
+     goto err_release;
+ Dee_Decref(wide_name);
  return 0;
 err_release:
- ascii_printer_release(printer,bufsize);
+ unicode_printer_free_wchar(printer,buffer);
+err_wide_name:
+ Dee_Decref(wide_name);
 err:
  return -1;
 }
@@ -539,29 +549,29 @@ err:
 
 
 INTERN int DCALL
-fs_printcwd(struct ascii_printer *__restrict printer) {
- char *buffer; DWORD new_bufsize,bufsize = 256;
+fs_printcwd(struct unicode_printer *__restrict printer) {
+ LPWSTR buffer; DWORD new_bufsize,bufsize = 256;
  if (DeeThread_CheckInterrupt()) goto err;
- buffer = ascii_printer_alloc(printer,bufsize);
+ buffer = unicode_printer_alloc_wchar(printer,bufsize);
  if unlikely(!buffer) goto err;
 again:
  DBG_ALIGNMENT_DISABLE();
- new_bufsize = GetCurrentDirectoryA(bufsize+1,buffer);
+ new_bufsize = GetCurrentDirectoryW(bufsize+1,buffer);
  DBG_ALIGNMENT_ENABLE();
  if unlikely(!new_bufsize) { nt_ThrowLastError(); goto err_release; }
  if (new_bufsize > bufsize) {
+  LPWSTR new_buffer;
   /* Increase the buffer and try again. */
-  if unlikely(!ascii_printer_alloc(printer,new_bufsize-bufsize))
-     goto err_release;
+  new_buffer = unicode_printer_resize_wchar(printer,buffer,new_bufsize);
+  if unlikely(!new_buffer) goto err_release;
+  buffer  = new_buffer;
   bufsize = new_bufsize;
   goto again;
- } else if likely(new_bufsize < bufsize) {
-  /* Release unused buffer memory. */
-  ascii_printer_release(printer,bufsize-new_bufsize);
  }
+ unicode_printer_confirm_wchar(printer,buffer,new_bufsize);
  return 0;
 err_release:
- ascii_printer_release(printer,bufsize);
+ unicode_printer_free_wchar(printer,buffer);
 err:
  return -1;
 }
@@ -667,6 +677,16 @@ err:
 INTERN int DCALL
 fs_printhome(struct ascii_printer *__restrict printer,
              bool try_get) {
+ if (DeeThread_CheckInterrupt()) goto err;
+ (void)printer; /* TODO */
+ if (try_get) return 1;
+ return 0;
+err:
+ return -1;
+}
+INTERN int DCALL
+fs_printhome_u(struct unicode_printer *__restrict printer,
+               bool try_get) {
  if (DeeThread_CheckInterrupt()) goto err;
  (void)printer; /* TODO */
  if (try_get) return 1;
