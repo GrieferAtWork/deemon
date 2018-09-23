@@ -574,6 +574,29 @@ err:
 #undef DO
 }
 
+struct codeflag {
+    uint16_t cf_flag;
+    char     cf_name[14];
+};
+
+PRIVATE struct codeflag const codeflag_names[] = {
+    { CODE_FYIELDING,    "yielding" },
+    { CODE_FCOPYABLE,    "copyable" },
+    { CODE_FASSEMBLY,    "assembly" },
+    { CODE_FLENIENT,     "lenient" },
+    { CODE_FVARARGS,     "varargs" },
+    { CODE_FVARKWDS,     "varkwds" },
+    { CODE_FTHISCALL,    "thiscall" },
+    { CODE_FHEAPFRAME,   "heapframe" },
+    { CODE_FFINALLY,     "finally" },
+    { CODE_FCONSTRUCTOR, "constructor" }
+};
+#define CODEFLAG_NAMEDMASK  \
+ (CODE_FYIELDING | CODE_FCOPYABLE | CODE_FASSEMBLY | \
+  CODE_FLENIENT | CODE_FVARARGS | CODE_FVARKWDS | \
+  CODE_FTHISCALL | CODE_FHEAPFRAME | CODE_FFINALLY | \
+  CODE_FCONSTRUCTOR)
+
 
 INTERN dssize_t DCALL
 libdisasm_printcode(dformatprinter printer, void *arg,
@@ -609,6 +632,36 @@ libdisasm_printcode(dformatprinter printer, void *arg,
   memset(&ddi,0,sizeof(ddi));
  }
 
+ if ((code_flags & CODEFLAG_NAMEDMASK) &&
+    !(flags & PCODE_FNOCOFLAGS)) {
+  uint16_t named_flags = code_flags & CODEFLAG_NAMEDMASK;
+  uint16_t i;
+  if (prefix_len) print(line_prefix,prefix_len);
+  if (!(flags & PCODE_FNOADDRESS)) print(whitespace,7);
+  if (!(flags & PCODE_FNOBYTES)) print(whitespace,LINE_MAXBYTES*3);
+  if (!(flags & PCODE_FNODEPTH)) print(whitespace,(sp_width*2)+7);
+  if (!(flags & PCODE_FNOJUMPARROW) && jumps.tj_max) {
+   size_t line_length;
+   line_length = jumps.tj_max*2-1;
+#if DIRECTIVE_DEDENT_WIDTH == 0
+   line_length += 4;
+#else
+   line_length += 3;
+#endif
+   temp = Dee_FormatRepeat(printer,arg,' ',line_length);
+   if unlikely(temp < 0) goto err;
+   result += temp;
+  }
+  PRINT(".code @");
+  for (i = 0; i < COMPILER_LENOF(codeflag_names); ++i) {
+   if (!(named_flags & codeflag_names[i].cf_flag)) continue;
+   print(codeflag_names[i].cf_name,strlen(codeflag_names[i].cf_name));
+   named_flags &= ~codeflag_names[i].cf_flag;
+   if (!named_flags) break;
+   PRINT(", @");
+  }
+  PRINT("\n");
+ }
 
  for (iter = instr_start;
       iter < instr_end;

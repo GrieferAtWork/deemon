@@ -85,6 +85,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 #define PCODE_FDDI          0x0001 /* FLAG: Include DDI directives in output. */
 #define PCODE_FNOEXCEPT     0x0002 /* FLAG: Do not include exception handler labels & directives. */
 #define PCODE_FNOJUMPARROW  0x0004 /* FLAG: Do not draw arrows indicating the path of jumps. */
+#define PCODE_FNOCOFLAGS    0x0008 /* FLAG: Do not include code-flag directives in output. */
 #define PCODE_FINSTRMASK    0x00f0 /* MASK: Mask of flags recognized by `libdisasm_printinstr()'. */
 #define PCODE_FNOBADCOMMENT 0x0010 /* FLAG: Do not include comments about invalid instructions/operands. */
 #define PCODE_FNOARGCOMMENT 0x0020 /* FLAG: Do not include comments about the typing of operands. */

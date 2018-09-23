@@ -50,6 +50,7 @@ struct disasm_flag {
 
 PRIVATE struct disasm_flag const disasm_flags[] = {
     { "ddi",        0, PCODE_FDDI },
+    { "coflags",    1, PCODE_FNOCOFLAGS },
     { "except",     1, PCODE_FNOEXCEPT },
     { "jmparrow",   1, PCODE_FNOJUMPARROW },
     { "badcomment", 1, PCODE_FNOBADCOMMENT },
@@ -160,6 +161,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "When @flags is given as a string, it must be a comma-separated list of the following options:\n"
           "%{table Name|Behavior\n"
           "$\"ddi\"|Include DDI directives in output\n"
+          "$\"coflags\"|Include code flag directions in output\n"
           "$\"except\"|Include exception handler labels and directives\n"
           "$\"jmparrow\"|Draw arrows indicating the paths taken by jump instructions\n"
           "$\"badcomment\"|Include comments about invalid instructions/operands\n"
@@ -175,7 +177,7 @@ PRIVATE struct dex_symbol symbols[] = {
           //          "Used to direct the disassembler to produce output as close to what "
           //          "user-defined input assembly may have looked like\n"
           "Any option may be prefixed with $\"n\" or $\"no-\" to disable that feature.\n"
-          "The initial options state is identical to $\"no-ddi,except,jmparrow,"
+          "The initial options state is identical to $\"no-ddi,coflags,except,jmparrow,"
           "badcomment,argcomment,no-altcomment,depth,skipdelop,address,bytes,inner\"") },
     /* TODO: API for enumerate code instructions, analyzing & grouping their effect,
      *       as well as query available instructions by id, and by name. */
