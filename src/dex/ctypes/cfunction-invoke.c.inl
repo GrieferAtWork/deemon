@@ -160,6 +160,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
    ++argv,++argp_iter;
 #endif
    ++ffi_argtyv;
+   ++arg_iter;
   }
 #undef argt
  }
