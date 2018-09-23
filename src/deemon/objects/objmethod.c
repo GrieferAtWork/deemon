@@ -1532,7 +1532,30 @@ PRIVATE struct type_getset cmethod_getsets[] = {
 
 PRIVATE DREF DeeObject *DCALL
 cmethod_str(DeeCMethodObject *__restrict self) {
- return DeeString_Newf("<cmethod at %p>",self->cm_func);
+ DREF DeeModuleObject *module;
+ DREF DeeObject *result;
+ char const *name = Dee_TYPE(self)->tp_name + 1;
+ module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+ if (module) {
+  struct module_symbol *symbol;
+  struct type_member *member;
+  DREF DeeTypeObject *type;
+  symbol = cmethod_getmodsym(module,self->cm_func);
+  if (symbol) {
+   result = DeeString_Newf("<%s %k.%s at %p>",name,module,symbol->ss_name,*(void **)&self->cm_func);
+   Dee_Decref(module);
+   return result;
+  }
+  member = cmethod_gettypefield(module,&type,self->cm_func);
+  if (member) {
+   result = DeeString_Newf("<%s %k.%k.%s at %p>",name,module,type,member->m_name,*(void **)&self->cm_func);
+   Dee_Decref(type);
+   Dee_Decref(module);
+   return result;
+  }
+  Dee_Decref(module);
+ }
+ return DeeString_Newf("<%s at %p>",name,*(void **)&self->cm_func);
 }
 PRIVATE DREF DeeObject *DCALL
 cmethod_repr(DeeCMethodObject *__restrict self) {
@@ -1558,7 +1581,9 @@ cmethod_repr(DeeCMethodObject *__restrict self) {
   }
   Dee_Decref(module);
  }
- return cmethod_str(self);
+ return DeeString_Newf("<%s at %p>",
+                       Dee_TYPE(self)->tp_name + 1,
+                       *(void **)&self->cm_func);
 }
 
 PUBLIC DeeTypeObject DeeCMethod_Type = {
