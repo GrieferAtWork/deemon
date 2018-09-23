@@ -273,9 +273,11 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
  DREF DeeStringObject *name;
  DREF DeeSTypeObject **argv_copy;
  size_t i;
- if (inherit_argv)
+ if (inherit_argv) {
   argv_copy = argv; /* Inherit */
- else if (!argc)
+  for (i = 0; i < argc; ++i)
+      Dee_Incref((DeeObject *)argv_copy[i]);
+ } else if (!argc)
   argv_copy = NULL;
  else {
   argv_copy = (DREF DeeSTypeObject **)Dee_Malloc(argc*sizeof(DREF DeeSTypeObject *));
@@ -447,6 +449,8 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
  (void)return_type;
  (void)calling_convention;
  (void)argc,(void)argv;
+ if (inherit_argv)
+     Dee_Free(argv);
  err_no_cfunction();
  return NULL;
 #else
