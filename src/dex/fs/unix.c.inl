@@ -48,6 +48,7 @@
 typedef int ssize_t;
 #define __USE_LARGEFILE64 1
 #include <io.h>
+#include <direct.h>
 #include <wchar.h>
 #define __stat64 _stat64
 #define stat64   _stat64
@@ -154,6 +155,9 @@ LOCAL struct dirent *(readdir)(DIR *dirp) {
 
 DECL_END
 
+#undef getcwd
+#define getcwd  _getcwd
+
 #else
 #include <unistd.h>
 #include <dirent.h>
@@ -163,6 +167,11 @@ DECL_END
 /* Pull in definitions for an stdlib-style environ. */
 #include "environ.c.inl"
 #endif
+
+#ifdef _WDIRECT_DEFINED
+#include <wchar.h>
+#endif
+
 
 #ifndef PATH_MAX
 #ifdef PATHMAX
@@ -197,6 +206,8 @@ DECL_END
 #ifndef S_ISSOCK
 #define S_ISSOCK(x) (((x)&STAT_IFMT)==STAT_IFSOCK)
 #endif
+
+
 
 
 DECL_BEGIN
@@ -247,62 +258,6 @@ INTERN DREF DeeObject *DCALL fs_gettmp(void) {
  Dee_Incref(result);
 done:
  return result;
-}
-
-
-INTERN int DCALL
-fs_printcwd(struct unicode_printer *__restrict printer) {
- char *buffer; size_t bufsize = PATH_MAX;
- if (DeeThread_CheckInterrupt()) goto err;
- buffer = unicode_printer_alloc_utf8(printer,bufsize);
- if unlikely(!buffer) goto err;
-again:
- DBG_ALIGNMENT_DISABLE();
- if (!_getcwd(buffer,bufsize+1)) {
-  DBG_ALIGNMENT_ENABLE();
-  int error = errno;
-  if (error == ERANGE) {
-   char *new_buffer;
-   size_t new_bufsize;
-   /* Increase buffer size. */
-   new_bufsize = bufsize * 2;
-   new_buffer  = unicode_printer_resize_utf8(printer,buffer,new_bufsize);
-   if unlikely(!new_buffer) goto err_release;
-   buffer  = new_buffer;
-   bufsize = new_bufsize;
-   goto again;
-  }
-  if (error == EACCES) {
-   DeeError_SysThrowf(&DeeError_AccessError,error,
-                      "Permission to read a part of the current "
-                      "working directory's path was denied");
-  } else if (error == ENOENT) {
-   DeeError_SysThrowf(&DeeError_FileNotFound,error,
-                      "The current working directory has been unlinked");
-  } else {
-   DeeError_SysThrowf(&DeeError_FSError,error,
-                      "Failed to retrieve the current working directory");
-  }
-  goto err_release;
- }
- DBG_ALIGNMENT_ENABLE();
- /* Truncate the actual used buffer. */
- if (unicode_printer_confirm_utf8(printer,buffer,strlen(buffer)) < 0)
-     goto err_release;
- return 0;
-err_release:
- unicode_printer_free_utf8(printer,buffer);
-err:
- return -1;
-}
-
-INTERN DREF DeeObject *DCALL fs_getcwd(void) {
- struct unicode_printer printer = UNICODE_PRINTER_INIT;
- if (fs_printcwd(&printer)) goto err;
- return unicode_printer_pack(&printer);
-err:
- unicode_printer_fini(&printer);
- return NULL;
 }
 
 PRIVATE ATTR_COLD int DCALL
@@ -366,6 +321,101 @@ err_handle_closed(int error, DeeObject *__restrict path) {
                            path);
 }
 
+PRIVATE ATTR_COLD int DCALL err_getcwd(int error) {
+ if (error == EACCES) {
+  return DeeError_SysThrowf(&DeeError_AccessError,error,
+                            "Permission to read a part of the current "
+                            "working directory's path was denied");
+ } else if (error == ENOENT) {
+  return DeeError_SysThrowf(&DeeError_FileNotFound,error,
+                            "The current working directory has been unlinked");
+ }
+ return DeeError_SysThrowf(&DeeError_FSError,error,
+                           "Failed to retrieve the current working directory");
+}
+
+
+
+INTERN int DCALL
+fs_printcwd(struct unicode_printer *__restrict printer) {
+#ifdef _WDIRECT_DEFINED
+ wchar_t *buffer; size_t bufsize = PATH_MAX;
+ if (DeeThread_CheckInterrupt()) goto err;
+ buffer = unicode_printer_alloc_wchar(printer,bufsize);
+ if unlikely(!buffer) goto err;
+again:
+ DBG_ALIGNMENT_DISABLE();
+ if (!_wgetcwd(buffer,bufsize+1)) {
+  int error = errno;
+  DBG_ALIGNMENT_ENABLE();
+  if (error == ERANGE) {
+   wchar_t *new_buffer;
+   size_t new_bufsize;
+   /* Increase buffer size. */
+   new_bufsize = bufsize * 2;
+   new_buffer  = unicode_printer_resize_wchar(printer,buffer,new_bufsize);
+   if unlikely(!new_buffer) goto err_release;
+   buffer  = new_buffer;
+   bufsize = new_bufsize;
+   goto again;
+  }
+  err_getcwd(error);
+  goto err_release;
+ }
+ DBG_ALIGNMENT_ENABLE();
+ /* Truncate the actual used buffer. */
+ if (unicode_printer_confirm_wchar(printer,buffer,wcslen(buffer)) < 0)
+     goto err_release;
+ return 0;
+err_release:
+ unicode_printer_free_wchar(printer,buffer);
+err:
+ return -1;
+#else
+ char *buffer; size_t bufsize = PATH_MAX;
+ if (DeeThread_CheckInterrupt()) goto err;
+ buffer = unicode_printer_alloc_utf8(printer,bufsize);
+ if unlikely(!buffer) goto err;
+again:
+ DBG_ALIGNMENT_DISABLE();
+ if (!getcwd(buffer,bufsize+1)) {
+  int error = errno;
+  DBG_ALIGNMENT_ENABLE();
+  if (error == ERANGE) {
+   char *new_buffer;
+   size_t new_bufsize;
+   /* Increase buffer size. */
+   new_bufsize = bufsize * 2;
+   new_buffer  = unicode_printer_resize_utf8(printer,buffer,new_bufsize);
+   if unlikely(!new_buffer) goto err_release;
+   buffer  = new_buffer;
+   bufsize = new_bufsize;
+   goto again;
+  }
+  err_getcwd(error);
+  goto err_release;
+ }
+ DBG_ALIGNMENT_ENABLE();
+ /* Truncate the actual used buffer. */
+ if (unicode_printer_confirm_utf8(printer,buffer,strlen(buffer)) < 0)
+     goto err_release;
+ return 0;
+err_release:
+ unicode_printer_free_utf8(printer,buffer);
+err:
+ return -1;
+#endif
+}
+
+INTERN DREF DeeObject *DCALL fs_getcwd(void) {
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ if (fs_printcwd(&printer)) goto err;
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_fini(&printer);
+ return NULL;
+}
+
 INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
  int error;
  if (DeeThread_CheckInterrupt()) goto err;
@@ -411,6 +461,7 @@ try_filename:
 #else
  if (!DeeString_SIZE(path)) goto done;
  DBG_ALIGNMENT_DISABLE();
+ /* TODO: Unicode support through UTF-8 */
  error = chdir(DeeString_STR(path));
  DBG_ALIGNMENT_ENABLE();
 #endif
@@ -532,8 +583,8 @@ INTERN DeeTypeObject DeeUser_Type = {
 
 /* STAT implementation. */
 struct stat_object {
- OBJECT_HEAD
- STRUCT_STAT st_stat;
+    OBJECT_HEAD
+    STRUCT_STAT st_stat;
 };
 
 /* @return:  1: `try_stat' was true and the given `path' could not be found.
@@ -571,6 +622,7 @@ Stat_Init(STRUCT_STAT *__restrict self,
  } else {
   /* Do a filename stat. */
   DBG_ALIGNMENT_DISABLE();
+  /* TODO: Unicode support through UTF-8 */
   error = do_lstat ? LSTAT(DeeString_STR(path),self)
                    :  STAT(DeeString_STR(path),self);
   DBG_ALIGNMENT_ENABLE();
@@ -1095,6 +1147,7 @@ fs_mkdir(DeeObject *__restrict path,
  }
 #else
  DBG_ALIGNMENT_DISABLE();
+ /* TODO: Unicode support through UTF-8 */
  error = mkdir(DeeString_STR(path),creat_mode);
  DBG_ALIGNMENT_ENABLE();
 #endif
@@ -1147,6 +1200,7 @@ no_access:
    * However in that event, we want to throw an access error, not an
    * unsupported-api error. */
   DBG_ALIGNMENT_DISABLE();
+  /* TODO: Unicode support through UTF-8 */
   if (!STAT(DeeString_STR(path),&st) &&
       (st.st_mode&STAT_ISVTX))
        goto no_access;
@@ -1209,6 +1263,7 @@ err_isdir:
    * but also if the filesystem does not support unlinking files. */
   STRUCT_STAT st;
   DBG_ALIGNMENT_DISABLE();
+  /* TODO: Unicode support through UTF-8 */
   if (!STAT(DeeString_STR(path),&st)) {
    DBG_ALIGNMENT_ENABLE();
    if (S_ISDIR(st.st_mode)) goto err_isdir;
@@ -1244,6 +1299,7 @@ fs_unlink(DeeObject *__restrict path) {
  }
 #else
  DBG_ALIGNMENT_DISABLE();
+ /* TODO: Unicode support through UTF-8 */
  error = unlink(DeeString_STR(path));
  DBG_ALIGNMENT_ENABLE();
 #endif
@@ -1272,6 +1328,7 @@ fs_remove(DeeObject *__restrict path) {
  DBG_ALIGNMENT_ENABLE();
 #else
  DBG_ALIGNMENT_DISABLE();
+ /* TODO: Unicode support through UTF-8 */
  error = unlink(DeeString_STR(path));
  DBG_ALIGNMENT_ENABLE();
 #endif
@@ -1283,6 +1340,7 @@ fs_remove(DeeObject *__restrict path) {
 #ifdef _WIO_DEFINED
    error = _wrmdir(wpath);
 #else
+   /* TODO: Unicode support through UTF-8 */
    error = rmdir(DeeString_STR(path));
 #endif
    DBG_ALIGNMENT_ENABLE();
@@ -1347,8 +1405,9 @@ fs_rename(DeeObject *__restrict existing_path,
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeObject_AssertTypeExact(new_path,&DeeString_Type))
      goto err;
- /* TODO: _wrename() */
  DBG_ALIGNMENT_DISABLE();
+ /* TODO: Unicode support through UTF-8 */
+ /* TODO: _wrename() */
  error = rename(DeeString_STR(existing_path),
                 DeeString_STR(new_path));
  DBG_ALIGNMENT_ENABLE();
@@ -1378,6 +1437,7 @@ err_access:
    STRUCT_STAT st;
    /* The same deal concerning the sticky bit. */
    DBG_ALIGNMENT_DISABLE();
+   /* TODO: Unicode support through UTF-8 */
    if ((!STAT(DeeString_STR(existing_path),&st) && (st.st_mode&STAT_ISVTX)) ||
        (!STAT(DeeString_STR(new_path),&st) && (st.st_mode&STAT_ISVTX)))
          goto err_access;
@@ -1416,6 +1476,7 @@ fs_link(DeeObject *__restrict existing_path,
  if (DeeObject_AssertTypeExact(new_path,&DeeString_Type))
      goto err;
  DBG_ALIGNMENT_DISABLE();
+ /* TODO: Unicode support through UTF-8 */
  error = link(DeeString_STR(existing_path),
               DeeString_STR(new_path));
  DBG_ALIGNMENT_ENABLE();
@@ -1455,6 +1516,7 @@ fs_symlink(DeeObject *__restrict target_text,
      DeeObject_AssertTypeExact(link_path,&DeeString_Type))
      goto err;
  DBG_ALIGNMENT_DISABLE();
+ /* TODO: Unicode support through UTF-8 */
  error = symlink(DeeString_STR(target_text),
                  DeeString_STR(link_path));
  DBG_ALIGNMENT_ENABLE();
@@ -1470,7 +1532,7 @@ fs_symlink(DeeObject *__restrict target_text,
    err_path_no_dir(error,link_path);
   } else if (error == EPERM) {
    DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
-                      "The filesystem hosting path %r "
+                      "The filesystem hosting the path %r "
                       "does not support creation of symbolic links",
                       link_path);
   } else if (error == EROFS) {
@@ -1505,6 +1567,7 @@ fs_readlink(DeeObject *__restrict path) {
  for (;;) {
   STRUCT_STAT st;
   DBG_ALIGNMENT_DISABLE();
+  /* TODO: Unicode support through UTF-8 */
   req_size = readlink(DeeString_STR(path),buffer,bufsize+1);
   DBG_ALIGNMENT_ENABLE();
   if unlikely(req_size < 0) {
@@ -1531,6 +1594,7 @@ no_link:
   }
   if (req_size <= bufsize) break;
   DBG_ALIGNMENT_DISABLE();
+  /* TODO: Unicode support through UTF-8 */
   if (LSTAT(DeeString_STR(path),&st))
       goto handle_error;
   DBG_ALIGNMENT_ENABLE();
@@ -1647,17 +1711,15 @@ err:
  return NULL;
 }
 
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 err_handle_opendir(int error, DeeObject *__restrict path) {
- if (error == ENOENT) {
-  err_path_not_found(error,path);
- } else if (error == ENOTDIR) {
-  err_path_no_dir(error,path);
- } else {
-  DeeError_SysThrowf(&DeeError_FSError,error,
-                     "Failed to open directory %r",
-                     path);
- }
+ if (error == ENOENT)
+     return err_path_not_found(error,path);
+ if (error == ENOTDIR)
+     return err_path_no_dir(error,path);
+ return DeeError_SysThrowf(&DeeError_FSError,error,
+                           "Failed to open directory %r",
+                           path);
 }
 
 PRIVATE DREF DirIterator *DCALL
@@ -1668,6 +1730,7 @@ dir_iter(Dir *__restrict self) {
  if unlikely(!result) goto err;
  /* Open a directory descriptor. */
  DBG_ALIGNMENT_DISABLE();
+ /* TODO: Unicode support through UTF-8 */
  result->d_hnd = opendir(DeeString_STR(self->d_path));
  DBG_ALIGNMENT_ENABLE();
  if unlikely(!result->d_hnd) {
@@ -1885,6 +1948,7 @@ queryiter_next(QueryIterator *__restrict self) {
 again:
  result = diriter_next(&self->q_iter);
  if (ITER_ISOK(result)) {
+  /* TODO: Unicode support through UTF-8 */
   if (wild_match(DeeString_STR(result),self->q_wild) != 0) {
    /* Non-matching entry (read more) */
    Dee_Decref(result);
@@ -1956,6 +2020,7 @@ query_iter(Dir *__restrict self) {
  if (DeeThread_CheckInterrupt()) goto err;
  result = DeeObject_MALLOC(QueryIterator);
  if unlikely(!result) goto err;
+ /* TODO: Unicode support through UTF-8 */
  query_start = (char *)memrchr(DeeString_STR(self->d_path),'/',
                                DeeString_SIZE(self->d_path));
  if (!query_start) {

@@ -568,102 +568,141 @@ PRIVATE DEFINE_CMETHOD(libfs_expand,&f_libfs_expand);
 
 /* Filesystem write operations. */
 PRIVATE DREF DeeObject *DCALL
-f_libfs_chtime(size_t argc, DeeObject **__restrict argv) {
- DeeObject *path,*atime,*mtime,*ctime = Dee_None;
- if (DeeArg_Unpack(argc,argv,"ooo|o:chtime",&path,&atime,&mtime,&ctime) ||
-     fs_chtime(path,atime,mtime,ctime))
-     return NULL;
+f_libfs_chtime(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+ DeeObject *path;
+ DeeObject *atime = Dee_None;
+ DeeObject *mtime = Dee_None;
+ DeeObject *ctime = Dee_None;
+ PRIVATE struct keyword kwlist[] = { K(path), K(atime), K(mtime), K(ctime), KEND };
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|ooo:chtime",&path,&atime,&mtime,&ctime))
+     goto err;
+ if (fs_chtime(path,atime,mtime,ctime))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_chmod(size_t argc, DeeObject **__restrict argv) {
  DeeObject *path,*mode;
- if (DeeArg_Unpack(argc,argv,"oo:chmod",&path,&mode) ||
-     fs_chmod(path,mode))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"oo:chmod",&path,&mode))
+     goto err;
+ if (fs_chmod(path,mode))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_chown(size_t argc, DeeObject **__restrict argv) {
  DeeObject *path,*user,*group;
- if (DeeArg_Unpack(argc,argv,"ooo:chown",&path,&user,&group) ||
-     fs_chown(path,user,group))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"ooo:chown",&path,&user,&group))
+     goto err;
+ if (fs_chown(path,user,group))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_mkdir(size_t argc, DeeObject **__restrict argv) {
  DeeObject *path,*perm = Dee_None;
- if (DeeArg_Unpack(argc,argv,"o|o:mkdir",&path,&perm) ||
-     fs_mkdir(path,perm))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"o|o:mkdir",&path,&perm))
+     goto err;
+ if (fs_mkdir(path,perm))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_rmdir(size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:rmdir",&path) ||
-     fs_rmdir(path))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"o:rmdir",&path))
+     goto err;
+ if (fs_rmdir(path))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_unlink(size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:unlink",&path) ||
-     fs_unlink(path))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"o:unlink",&path))
+     goto err;
+ if (fs_unlink(path))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_remove(size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:remove",&path) ||
-     fs_remove(path))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"o:remove",&path))
+     goto err;
+ if (fs_remove(path))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_rename(size_t argc, DeeObject **__restrict argv) {
  DeeObject *existing_path,*new_path;
- if (DeeArg_Unpack(argc,argv,"oo:rename",&existing_path,&new_path) ||
-     fs_rename(existing_path,new_path))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"oo:rename",&existing_path,&new_path))
+     goto err;
+ if (fs_rename(existing_path,new_path))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_copyfile(size_t argc, DeeObject **__restrict argv) {
  DeeObject *existing_file,*new_file,*progress_callback = Dee_None;
- if (DeeArg_Unpack(argc,argv,"oo|o:copyfile",&existing_file,&new_file,&progress_callback) ||
-     fs_copyfile(existing_file,new_file,progress_callback))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"oo|o:copyfile",&existing_file,&new_file,&progress_callback))
+     goto err;
+ if (fs_copyfile(existing_file,new_file,progress_callback))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_link(size_t argc, DeeObject **__restrict argv) {
  DeeObject *existing_path,*new_path;
- if (DeeArg_Unpack(argc,argv,"oo:link",&existing_path,&new_path) ||
-     fs_link(existing_path,new_path))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"oo:link",&existing_path,&new_path))
+     goto err;
+ if (fs_link(existing_path,new_path))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_symlink(size_t argc, DeeObject **__restrict argv) {
  DeeObject *target_text,*link_path; bool format_target = true;
- if (DeeArg_Unpack(argc,argv,"oo|b:symlink",&target_text,&link_path,&format_target) ||
-     fs_symlink(target_text,link_path,format_target))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"oo|b:symlink",&target_text,&link_path,&format_target))
+     goto err;
+ if (fs_symlink(target_text,link_path,format_target))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 f_libfs_readlink(size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
  if (DeeArg_Unpack(argc,argv,"o:readlink",&path))
-     return NULL;
+     goto err;
  return fs_readlink(path);
+err:
+ return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(libfs_chtime,&f_libfs_chtime);
+PRIVATE DEFINE_KWCMETHOD(libfs_chtime,&f_libfs_chtime);
 PRIVATE DEFINE_CMETHOD(libfs_chmod,&f_libfs_chmod);
 PRIVATE DEFINE_CMETHOD(libfs_chown,&f_libfs_chown);
 PRIVATE DEFINE_CMETHOD(libfs_mkdir,&f_libfs_mkdir);
@@ -1007,18 +1046,20 @@ PRIVATE struct dex_symbol symbols[] = {
     { "gettmp", (DeeObject *)&libfs_gettmp, MODSYM_FNORMAL,
       DOC("->string\n"
           "@interrupt\n"
-          "@throw FSError Failed to retrieve a temporary path name for some reason\n"
+          "@throw SystemError Failed to retrieve a temporary path name for some reason\n"
           "Return the path to a folder that can be used as "
           "temporary storage of files and directories") },
     { "getcwd", (DeeObject *)&libfs_getcwd, MODSYM_FNORMAL,
       DOC("->string\n"
           "@interrupt\n"
-          "@throw FSError Failed to retrieve the current working directory for some reason\n"
+          "@throw AccessError Permission to read a part of the current working directory's path was denied\n"
+          "@throw FileNotFound The current working directory has been unlinked\n"
+          "@throw SystemError Failed to retrieve the current working directory for some reason\n"
           "Return the absolute path of the current working directory") },
     { "gethostname", (DeeObject *)&libfs_gethostname, MODSYM_FNORMAL,
       DOC("->string\n"
           "@interrupt\n"
-          "@throw FSError Failed to retrieve the name of the hosting machine for some reason\n"
+          "@throw SystemError Failed to retrieve the name of the hosting machine for some reason\n"
           "Returns the user-assigned name of the hosting machine") },
     { "chdir", (DeeObject *)&libfs_chdir, MODSYM_FNORMAL,
       DOC("(string path)\n"
@@ -1033,12 +1074,9 @@ PRIVATE struct dex_symbol symbols[] = {
           "Change the current working directory to @path, which may be a path "
           "relative to the old current working directory") },
     { "chtime", (DeeObject *)&libfs_chtime, MODSYM_FNORMAL,
-      DOC("(string path,time atime,time mtime,time ctime=none)\n"
-          "(string path,none atime,none mtime,none ctime=none)\n"
-          "(file fp,time atime,time mtime,time ctime=none)\n"
-          "(file fp,none atime,none mtime,none ctime=none)\n"
-          "(int fd,time atime,time mtime,time ctime=none)\n"
-          "(int fd,none atime,none mtime,none ctime=none)\n"
+      DOC("(string path,time atime=none,time mtime=none,time ctime=none)\n"
+          "(file fp,time atime=none,time mtime=none,time ctime=none)\n"
+          "(int fd,time atime=none,time mtime=none,time ctime=none)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"

@@ -237,7 +237,7 @@ err:
 PUBLIC int DCALL nt_ThrowError(DWORD dwError) {
  /* TODO: Translate specific error codes. */
  return DeeError_SysThrowf(&DeeError_SystemError,dwError,
-                           "System call failed");
+                           "System call failed (%lu)",dwError);
 }
 PUBLIC int DCALL nt_ThrowLastError(void) {
  DWORD dwError;

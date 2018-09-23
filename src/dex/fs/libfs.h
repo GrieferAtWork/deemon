@@ -289,12 +289,12 @@ INTDEF DREF DeeObject *DCALL fs_pathexpand(DeeObject *__restrict path, uint16_t 
 
 
 /* New error classes added for the filesystem. */
-INTDEF DeeTypeObject DeeError_NoDirectory;
-INTDEF DeeTypeObject DeeError_IsDirectory;
-INTDEF DeeTypeObject DeeError_CrossDevice;
-INTDEF DeeTypeObject DeeError_NotEmpty;
-INTDEF DeeTypeObject DeeError_BusyFile;
-INTDEF DeeTypeObject DeeError_NoLink;
+INTDEF DeeTypeObject DeeError_NoDirectory; /* extends FileNotFound */
+INTDEF DeeTypeObject DeeError_IsDirectory; /* extends FileExists */
+INTDEF DeeTypeObject DeeError_CrossDevice; /* extends FSError */
+INTDEF DeeTypeObject DeeError_NotEmpty;    /* extends FSError */
+INTDEF DeeTypeObject DeeError_BusyFile;    /* extends FSError */
+INTDEF DeeTypeObject DeeError_NoLink;      /* extends FileNotFound */
 
 
 /* Imported module access. */

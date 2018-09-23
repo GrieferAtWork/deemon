@@ -38,6 +38,7 @@
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
 #endif
+#include <hybrid/unaligned.h>
 
 #include <string.h>
 #include <wchar.h>
@@ -50,6 +51,12 @@ DECL_BEGIN
 
 INTDEF DREF DeeObject *DCALL nt_GetEnvironmentVariableA(char const *__restrict name);
 INTDEF DREF DeeObject *DCALL nt_GetTempPath(void);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully changed working directories.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF int DCALL nt_SetCurrentDirectory(DeeObject *__restrict lpPathName);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully retrieved attributes.
@@ -126,6 +133,505 @@ nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
 
 
 
+
+LOCAL bool DCALL nt_IsBusy(DWORD dwError) {
+ switch (dwError) {
+#ifdef ERROR_CURRENT_DIRECTORY
+ case ERROR_CURRENT_DIRECTORY:
+#endif
+#ifdef ERROR_BUSY
+ case ERROR_BUSY:
+#endif
+#ifdef ERROR_NETWORK_BUSY
+ case ERROR_NETWORK_BUSY:
+#endif
+#ifdef ERROR_DEVICE_SUPPORT_IN_PROGRESS
+ case ERROR_DEVICE_SUPPORT_IN_PROGRESS:
+#endif
+#ifdef DXGI_ERROR_MODE_CHANGE_IN_PROGRESS
+ case DXGI_ERROR_MODE_CHANGE_IN_PROGRESS:
+#endif
+#ifdef ERROR_CLUSTER_BACKUP_IN_PROGRESS
+ case ERROR_CLUSTER_BACKUP_IN_PROGRESS:
+#endif
+#ifdef ERROR_CLUSTER_DATABASE_TRANSACTION_IN_PROGRESS
+ case ERROR_CLUSTER_DATABASE_TRANSACTION_IN_PROGRESS:
+#endif
+#ifdef ERROR_CLUSTER_JOIN_IN_PROGRESS
+ case ERROR_CLUSTER_JOIN_IN_PROGRESS:
+#endif
+#ifdef ERROR_CLUSTER_NODE_DRAIN_IN_PROGRESS
+ case ERROR_CLUSTER_NODE_DRAIN_IN_PROGRESS:
+#endif
+#ifdef ERROR_DS_DOMAIN_RENAME_IN_PROGRESS
+ case ERROR_DS_DOMAIN_RENAME_IN_PROGRESS:
+#endif
+#ifdef ERROR_DS_PDC_OPERATION_IN_PROGRESS
+ case ERROR_DS_PDC_OPERATION_IN_PROGRESS:
+#endif
+#ifdef ERROR_FTP_TRANSFER_IN_PROGRESS
+ case ERROR_FTP_TRANSFER_IN_PROGRESS:
+#endif
+#ifdef ERROR_GRAPHICS_OPM_SESSION_TYPE_CHANGE_IN_PROGRESS
+ case ERROR_GRAPHICS_OPM_SESSION_TYPE_CHANGE_IN_PROGRESS:
+#endif
+#ifdef ERROR_GRAPHICS_SESSION_TYPE_CHANGE_IN_PROGRESS
+ case ERROR_GRAPHICS_SESSION_TYPE_CHANGE_IN_PROGRESS:
+#endif
+#ifdef ERROR_JOURNAL_DELETE_IN_PROGRESS
+ case ERROR_JOURNAL_DELETE_IN_PROGRESS:
+#endif
+#ifdef ERROR_LOG_ARCHIVE_IN_PROGRESS
+ case ERROR_LOG_ARCHIVE_IN_PROGRESS:
+#endif
+#ifdef ERROR_LOG_FULL_HANDLER_IN_PROGRESS
+ case ERROR_LOG_FULL_HANDLER_IN_PROGRESS:
+#endif
+#ifdef ERROR_NDIS_RESET_IN_PROGRESS
+ case ERROR_NDIS_RESET_IN_PROGRESS:
+#endif
+#ifdef ERROR_OPERATION_IN_PROGRESS
+ case ERROR_OPERATION_IN_PROGRESS:
+#endif
+#ifdef ERROR_OPLOCK_BREAK_IN_PROGRESS
+ case ERROR_OPLOCK_BREAK_IN_PROGRESS:
+#endif
+#ifdef ERROR_RUNLEVEL_SWITCH_IN_PROGRESS
+ case ERROR_RUNLEVEL_SWITCH_IN_PROGRESS:
+#endif
+#ifdef ERROR_SERVER_SHUTDOWN_IN_PROGRESS
+ case ERROR_SERVER_SHUTDOWN_IN_PROGRESS:
+#endif
+#ifdef ERROR_SHUTDOWN_IN_PROGRESS
+ case ERROR_SHUTDOWN_IN_PROGRESS:
+#endif
+#ifdef ERROR_TIERING_VOLUME_DISMOUNT_IN_PROGRESS
+ case ERROR_TIERING_VOLUME_DISMOUNT_IN_PROGRESS:
+#endif
+#ifdef ERROR_TRANSACTION_FREEZE_IN_PROGRESS
+ case ERROR_TRANSACTION_FREEZE_IN_PROGRESS:
+#endif
+#ifdef ERROR_VOLMGR_TRANSACTION_IN_PROGRESS
+ case ERROR_VOLMGR_TRANSACTION_IN_PROGRESS:
+#endif
+  return true;
+ default: break;
+ }
+ return false;
+}
+LOCAL bool DCALL nt_IsExists(DWORD dwError) {
+ switch (dwError) {
+#ifdef ERROR_FILE_EXISTS
+ case ERROR_FILE_EXISTS:
+#endif
+#ifdef ERROR_ALREADY_EXISTS
+ case ERROR_ALREADY_EXISTS:
+#endif
+#ifdef ERROR_ALIAS_EXISTS
+ case ERROR_ALIAS_EXISTS:
+#endif
+#ifdef ERROR_OBJECT_NAME_EXISTS
+ case ERROR_OBJECT_NAME_EXISTS:
+#endif
+  return true;
+ default: break;
+ }
+ return false;
+}
+LOCAL bool DCALL nt_IsNotDir(DWORD dwError) {
+ switch (dwError) {
+#ifdef ERROR_DIRECTORY
+ case ERROR_DIRECTORY:
+#endif
+#ifdef ERROR_PATH_NOT_FOUND
+ case ERROR_PATH_NOT_FOUND:
+#endif
+#ifdef ERROR_INVALID_DRIVE
+ case ERROR_INVALID_DRIVE:
+#endif
+  return true;
+ default: break;
+ }
+ return false;
+}
+LOCAL bool DCALL nt_IsNotEmpty(DWORD dwError) {
+ switch (dwError) {
+#ifdef ERROR_DIR_NOT_EMPTY
+ case ERROR_DIR_NOT_EMPTY:
+#endif
+#ifdef ERROR_NOT_EMPTY
+ case ERROR_NOT_EMPTY:
+#endif
+#ifdef ERROR_TXF_DIR_NOT_EMPTY
+ case ERROR_TXF_DIR_NOT_EMPTY:
+#endif
+#ifdef ERROR_VOLMGR_DISK_NOT_EMPTY
+ case ERROR_VOLMGR_DISK_NOT_EMPTY:
+#endif
+  return true;
+ default: break;
+ }
+ return false;
+}
+LOCAL bool DCALL nt_IsBadf(DWORD dwError) {
+ switch (dwError) {
+#ifdef ERROR_INVALID_HANDLE
+ case ERROR_INVALID_HANDLE:
+#endif
+  return true;
+ default: break;
+ }
+ return false;
+}
+LOCAL bool DCALL nt_IsXDev(DWORD dwError) {
+ switch (dwError) {
+#ifdef ERROR_NOT_SAME_DEVICE
+ case ERROR_NOT_SAME_DEVICE:
+#endif
+  return true;
+ default: break;
+ }
+ return false;
+}
+LOCAL bool DCALL nt_IsBadAlloc(DWORD dwError) {
+ switch (dwError) {
+#ifdef ERROR_OUTOFMEMORY
+  case ERROR_OUTOFMEMORY:
+#endif
+#ifdef ERROR_NOT_ENOUGH_SERVER_MEMORY
+  case ERROR_NOT_ENOUGH_SERVER_MEMORY:
+#endif
+#ifdef ERROR_IPSEC_IKE_OUT_OF_MEMORY
+ case ERROR_IPSEC_IKE_OUT_OF_MEMORY:
+#endif
+#ifdef E_OUTOFMEMORY
+ case E_OUTOFMEMORY:
+#endif
+#ifdef CO_E_INIT_MEMORY_ALLOCATOR
+ case CO_E_INIT_MEMORY_ALLOCATOR:
+#endif
+#ifdef STG_E_INSUFFICIENTMEMORY
+ case STG_E_INSUFFICIENTMEMORY:
+#endif
+#ifdef NTE_NO_MEMORY
+ case NTE_NO_MEMORY:
+#endif
+#ifdef SEC_E_INSUFFICIENT_MEMORY
+ case SEC_E_INSUFFICIENT_MEMORY:
+#endif
+#ifdef OSS_OUT_MEMORY
+ case OSS_OUT_MEMORY:
+#endif
+#ifdef CRYPT_E_ASN1_MEMORY
+ case CRYPT_E_ASN1_MEMORY:
+#endif
+#ifdef SCARD_E_NO_MEMORY
+ case SCARD_E_NO_MEMORY:
+#endif
+#ifdef ERROR_GRAPHICS_NO_VIDEO_MEMORY
+ case ERROR_GRAPHICS_NO_VIDEO_MEMORY:
+#endif
+#ifdef TPMAPI_E_OUT_OF_MEMORY
+ case TPMAPI_E_OUT_OF_MEMORY:
+#endif
+#ifdef TBSIMP_E_OUT_OF_MEMORY
+ case TBSIMP_E_OUT_OF_MEMORY:
+#endif
+#ifdef ERROR_HV_INSUFFICIENT_MEMORY
+ case ERROR_HV_INSUFFICIENT_MEMORY:
+#endif
+#ifdef E_MBN_SMS_MEMORY_FULL
+ case E_MBN_SMS_MEMORY_FULL:
+#endif
+#ifdef DXGI_ERROR_REMOTE_OUTOFMEMORY
+ case DXGI_ERROR_REMOTE_OUTOFMEMORY:
+#endif
+#ifdef UCEERR_MEMORYFAILURE
+ case UCEERR_MEMORYFAILURE:
+#endif
+#if defined(DNS_ERROR_NO_MEMORY) && DNS_ERROR_NO_MEMORY != ERROR_OUTOFMEMORY
+ case DNS_ERROR_NO_MEMORY:
+#endif
+  return true;
+ default: break;
+ }
+ return false;
+}
+LOCAL bool DCALL nt_IsUnsupported(DWORD dwError) {
+ switch (dwError) {
+#ifdef ERROR_NOT_SUPPORTED
+  case ERROR_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_INVALID_FUNCTION
+  case ERROR_INVALID_FUNCTION:
+#endif
+#ifdef ERROR_ATOMIC_LOCKS_NOT_SUPPORTED
+  case ERROR_ATOMIC_LOCKS_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_EAS_NOT_SUPPORTED
+  case ERROR_EAS_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_DEVICE_FEATURE_NOT_SUPPORTED
+  case ERROR_DEVICE_FEATURE_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_FILE_LEVEL_TRIM_NOT_SUPPORTED
+  case ERROR_FILE_LEVEL_TRIM_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_RESIDENT_FILE_NOT_SUPPORTED
+  case ERROR_RESIDENT_FILE_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_DIRECTORY_NOT_SUPPORTED
+  case ERROR_DIRECTORY_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_UNSUPPORTED_COMPRESSION
+  case ERROR_UNSUPPORTED_COMPRESSION:
+#endif
+#ifdef ERROR_CARDBUS_NOT_SUPPORTED
+  case ERROR_CARDBUS_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_NOT_SUPPORTED_ON_SBS
+  case ERROR_NOT_SUPPORTED_ON_SBS:
+#endif
+#ifdef ERROR_SYMLINK_NOT_SUPPORTED
+  case ERROR_SYMLINK_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_INSTALL_LANGUAGE_UNSUPPORTED
+  case ERROR_INSTALL_LANGUAGE_UNSUPPORTED:
+#endif
+#ifdef ERROR_UNSUPPORTED_TYPE
+  case ERROR_UNSUPPORTED_TYPE:
+#endif
+#ifdef ERROR_INSTALL_PLATFORM_UNSUPPORTED
+  case ERROR_INSTALL_PLATFORM_UNSUPPORTED:
+#endif
+#ifdef ERROR_PATCH_PACKAGE_UNSUPPORTED
+  case ERROR_PATCH_PACKAGE_UNSUPPORTED:
+#endif
+#ifdef ERROR_PATCH_REMOVAL_UNSUPPORTED
+  case ERROR_PATCH_REMOVAL_UNSUPPORTED:
+#endif
+#ifdef RPC_S_PROTSEQ_NOT_SUPPORTED
+  case RPC_S_PROTSEQ_NOT_SUPPORTED:
+#endif
+#ifdef RPC_S_UNSUPPORTED_TRANS_SYN
+  case RPC_S_UNSUPPORTED_TRANS_SYN:
+#endif
+#ifdef RPC_S_UNSUPPORTED_TYPE
+  case RPC_S_UNSUPPORTED_TYPE:
+#endif
+#ifdef RPC_S_UNSUPPORTED_NAME_SYNTAX
+  case RPC_S_UNSUPPORTED_NAME_SYNTAX:
+#endif
+#ifdef RPC_S_CANNOT_SUPPORT
+  case RPC_S_CANNOT_SUPPORT:
+#endif
+#ifdef RPC_S_UNSUPPORTED_AUTHN_LEVEL
+  case RPC_S_UNSUPPORTED_AUTHN_LEVEL:
+#endif
+#ifdef ERROR_METAFILE_NOT_SUPPORTED
+  case ERROR_METAFILE_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_TRANSFORM_NOT_SUPPORTED
+  case ERROR_TRANSFORM_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_CLIPPING_NOT_SUPPORTED
+  case ERROR_CLIPPING_NOT_SUPPORTED:
+#endif
+#ifdef PEERDIST_ERROR_CONTENTINFO_VERSION_UNSUPPORTED
+  case PEERDIST_ERROR_CONTENTINFO_VERSION_UNSUPPORTED:
+#endif
+#ifdef PEERDIST_ERROR_VERSION_UNSUPPORTED
+  case PEERDIST_ERROR_VERSION_UNSUPPORTED:
+#endif
+#ifdef ERROR_NOT_SUPPORTED_IN_APPCONTAINER
+  case ERROR_NOT_SUPPORTED_IN_APPCONTAINER:
+#endif
+#ifdef ERROR_NO_SUPPORTING_DRIVES
+  case ERROR_NO_SUPPORTING_DRIVES:
+#endif
+#ifdef ERROR_OFFLOAD_READ_FLT_NOT_SUPPORTED
+  case ERROR_OFFLOAD_READ_FLT_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_OFFLOAD_WRITE_FLT_NOT_SUPPORTED
+  case ERROR_OFFLOAD_WRITE_FLT_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_OFFLOAD_READ_FILE_NOT_SUPPORTED
+  case ERROR_OFFLOAD_READ_FILE_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_OFFLOAD_WRITE_FILE_NOT_SUPPORTED
+  case ERROR_OFFLOAD_WRITE_FILE_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED
+  case ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_CLUSTER_RESOURCE_CONTAINS_UNSUPPORTED_DIFF_AREA_FOR_SHARED_VOLUMES
+  case ERROR_CLUSTER_RESOURCE_CONTAINS_UNSUPPORTED_DIFF_AREA_FOR_SHARED_VOLUMES:
+#endif
+#ifdef ERROR_VOLUME_NOT_SUPPORT_EFS
+  case ERROR_VOLUME_NOT_SUPPORT_EFS:
+#endif
+#ifdef ERROR_EFS_VERSION_NOT_SUPPORT
+  case ERROR_EFS_VERSION_NOT_SUPPORT:
+#endif
+#ifdef ERROR_CS_ENCRYPTION_UNSUPPORTED_SERVER
+  case ERROR_CS_ENCRYPTION_UNSUPPORTED_SERVER:
+#endif
+#ifdef ERROR_IMPLICIT_TRANSACTION_NOT_SUPPORTED
+  case ERROR_IMPLICIT_TRANSACTION_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_TRANSACTIONS_UNSUPPORTED_REMOTE
+  case ERROR_TRANSACTIONS_UNSUPPORTED_REMOTE:
+#endif
+#ifdef ERROR_TRANSACTED_MAPPING_UNSUPPORTED_REMOTE
+  case ERROR_TRANSACTED_MAPPING_UNSUPPORTED_REMOTE:
+#endif
+#ifdef ERROR_OPERATION_NOT_SUPPORTED_IN_TRANSACTION
+  case ERROR_OPERATION_NOT_SUPPORTED_IN_TRANSACTION:
+#endif
+#ifdef ERROR_DS_AUTH_METHOD_NOT_SUPPORTED
+  case ERROR_DS_AUTH_METHOD_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_DS_NOT_SUPPORTED
+  case ERROR_DS_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_DS_DRA_NOT_SUPPORTED
+  case ERROR_DS_DRA_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_DS_NOT_SUPPORTED_SORT_ORDER
+  case ERROR_DS_NOT_SUPPORTED_SORT_ORDER:
+#endif
+#ifdef ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER
+  case ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER:
+#endif
+#ifdef DNS_ERROR_UNSUPPORTED_ALGORITHM
+  case DNS_ERROR_UNSUPPORTED_ALGORITHM:
+#endif
+#ifdef DNS_ERROR_KSP_DOES_NOT_SUPPORT_PROTECTION
+  case DNS_ERROR_KSP_DOES_NOT_SUPPORT_PROTECTION:
+#endif
+#ifdef WSAENOPROTOOPT
+  case WSAENOPROTOOPT:
+#endif
+#ifdef WSAEPROTONOSUPPORT
+  case WSAEPROTONOSUPPORT:
+#endif
+#ifdef WSAESOCKTNOSUPPORT
+  case WSAESOCKTNOSUPPORT:
+#endif
+#ifdef WSAEOPNOTSUPP
+  case WSAEOPNOTSUPP:
+#endif
+#ifdef WSAEPFNOSUPPORT
+  case WSAEPFNOSUPPORT:
+#endif
+#ifdef WSAEAFNOSUPPORT
+  case WSAEAFNOSUPPORT:
+#endif
+#ifdef WSAVERNOTSUPPORTED
+  case WSAVERNOTSUPPORTED:
+#endif
+#ifdef ERROR_IPSEC_IKE_UNSUPPORTED_ID
+  case ERROR_IPSEC_IKE_UNSUPPORTED_ID:
+#endif
+#ifdef ERROR_IPSEC_IKE_PEER_DOESNT_SUPPORT_MOBIKE
+  case ERROR_IPSEC_IKE_PEER_DOESNT_SUPPORT_MOBIKE:
+#endif
+#ifdef ERROR_EVT_FILTER_UNSUPPORTEDOP
+  case ERROR_EVT_FILTER_UNSUPPORTEDOP:
+#endif
+#ifdef ERROR_MRM_UNSUPPORTED_DIRECTORY_TYPE
+  case ERROR_MRM_UNSUPPORTED_DIRECTORY_TYPE:
+#endif
+#ifdef ERROR_MRM_UNSUPPORTED_PROFILE_TYPE
+  case ERROR_MRM_UNSUPPORTED_PROFILE_TYPE:
+#endif
+#ifdef ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_MERGE
+  case ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_MERGE:
+#endif
+#ifdef ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_LOAD_UNLOAD_PRI_FILE
+  case ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_LOAD_UNLOAD_PRI_FILE:
+#endif
+#ifdef ERROR_MCA_UNSUPPORTED_MCCS_VERSION
+  case ERROR_MCA_UNSUPPORTED_MCCS_VERSION:
+#endif
+#ifdef ERROR_MCA_UNSUPPORTED_COLOR_TEMPERATURE
+  case ERROR_MCA_UNSUPPORTED_COLOR_TEMPERATURE:
+#endif
+#ifdef ERROR_HASH_NOT_SUPPORTED
+  case ERROR_HASH_NOT_SUPPORTED:
+#endif
+#ifdef ERROR_GPIO_VERSION_NOT_SUPPORTED
+  case ERROR_GPIO_VERSION_NOT_SUPPORTED:
+#endif
+#ifdef RO_E_UNSUPPORTED_FROM_MTA
+  case RO_E_UNSUPPORTED_FROM_MTA:
+#endif
+#ifdef CO_E_NOT_SUPPORTED
+  case CO_E_NOT_SUPPORTED:
+#endif
+#ifdef OLE_E_ADVISENOTSUPPORTED
+  case OLE_E_ADVISENOTSUPPORTED:
+#endif
+#ifdef CACHE_S_FORMATETC_NOTSUPPORTED
+  case CACHE_S_FORMATETC_NOTSUPPORTED:
+#endif
+#ifdef SCHED_E_UNSUPPORTED_ACCOUNT_OPTION
+  case SCHED_E_UNSUPPORTED_ACCOUNT_OPTION:
+#endif
+#ifdef NTE_NOT_SUPPORTED
+  case NTE_NOT_SUPPORTED:
+#endif
+#ifdef NTE_HMAC_NOT_SUPPORTED
+  case NTE_HMAC_NOT_SUPPORTED:
+#endif
+#ifdef SEC_E_UNSUPPORTED_FUNCTION
+  case SEC_E_UNSUPPORTED_FUNCTION:
+#endif
+#ifdef SEC_E_QOP_NOT_SUPPORTED
+  case SEC_E_QOP_NOT_SUPPORTED:
+#endif
+#ifdef SEC_E_STRONG_CRYPTO_NOT_SUPPORTED
+  case SEC_E_STRONG_CRYPTO_NOT_SUPPORTED:
+#endif
+#ifdef SEC_E_UNSUPPORTED_PREAUTH
+  case SEC_E_UNSUPPORTED_PREAUTH:
+#endif
+#ifdef SEC_E_NO_S4U_PROT_SUPPORT
+  case SEC_E_NO_S4U_PROT_SUPPORT:
+#endif
+#ifdef OSS_INDEFINITE_NOT_SUPPORTED
+  case OSS_INDEFINITE_NOT_SUPPORTED:
+#endif
+#ifdef CERTSRV_E_KEY_ATTESTATION_NOT_SUPPORTED
+  case CERTSRV_E_KEY_ATTESTATION_NOT_SUPPORTED:
+#endif
+#ifdef CERTSRV_E_UNSUPPORTED_CERT_TYPE
+  case CERTSRV_E_UNSUPPORTED_CERT_TYPE:
+#endif
+#ifdef SPAPI_E_REMOTE_REQUEST_UNSUPPORTED
+  case SPAPI_E_REMOTE_REQUEST_UNSUPPORTED:
+#endif
+#ifdef SCARD_E_READER_UNSUPPORTED
+  case SCARD_E_READER_UNSUPPORTED:
+#endif
+#ifdef SCARD_E_CARD_UNSUPPORTED
+  case SCARD_E_CARD_UNSUPPORTED:
+#endif
+#ifdef SCARD_E_UNSUPPORTED_FEATURE
+  case SCARD_E_UNSUPPORTED_FEATURE:
+#endif
+#ifdef SCARD_W_UNSUPPORTED_CARD
+  case SCARD_W_UNSUPPORTED_CARD:
+#endif
+  return true;
+ default: break;
+ }
+ return false;
+}
+
+
+
+
 #if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
 #define MEMCASEEQ(a,b,s) (memcasecmp(a,b,s) == 0)
 #elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
@@ -142,14 +648,6 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
  return true;
 }
 #endif
-
-#define ERROR_IS_FILE_NOT_FOUND(x) \
-    ((x) == ERROR_FILE_NOT_FOUND || \
-     (x) == ERROR_PATH_NOT_FOUND || \
-     (x) == ERROR_INVALID_DRIVE || \
-     (x) == ERROR_BAD_NETPATH || \
-     (x) == ERROR_BAD_PATHNAME)
-
 
 typedef struct {
     OBJECT_HEAD
@@ -474,14 +972,20 @@ fs_setenv(DeeObject *__restrict name,
  if unlikely(!wname) goto err;
  wvalue = (LPWSTR)DeeString_AsWide(value);
  if unlikely(!wvalue) goto err;
+again_setenv:
  DBG_ALIGNMENT_DISABLE();
  if (!SetEnvironmentVariableW(wname,wvalue)) {
   DWORD dwError;
   dwError = GetLastError();
   DBG_ALIGNMENT_ENABLE();
-  DeeError_SysThrowf(&DeeError_SystemError,dwError,
-                     "Failed to set environment variable `%k' to `%k'",
-                     name,value);
+  if (nt_IsBadAlloc(dwError)) {
+   if (Dee_CollectMemory(1))
+       goto again_setenv;
+  } else {
+   DeeError_SysThrowf(&DeeError_SystemError,dwError,
+                      "Failed to set environment variable `%k' to `%k'",
+                      name,value);
+  }
   goto err;
  }
  DBG_ALIGNMENT_ENABLE();
@@ -491,12 +995,11 @@ err:
  return -1;
 }
 
-INTERN DREF /*String*/DeeObject *
-DCALL fs_gethostname(void) {
- DWORD bufsize = MAX_COMPUTERNAME_LENGTH+1;
+INTERN DREF /*String*/DeeObject *DCALL fs_gethostname(void) {
+ DWORD bufsize = MAX_COMPUTERNAME_LENGTH + 1;
  LPWSTR buffer,new_buffer;
  if (DeeThread_CheckInterrupt()) goto err;
- buffer = DeeString_NewWideBuffer(bufsize-1);
+ buffer = DeeString_NewWideBuffer(bufsize - 1);
  if unlikely(!buffer) goto err;
 again:
  DBG_ALIGNMENT_DISABLE();
@@ -504,12 +1007,20 @@ again:
   DWORD error = GetLastError();
   DBG_ALIGNMENT_ENABLE();
   if (error == ERROR_BUFFER_OVERFLOW && bufsize &&
-      bufsize-1 > WSTR_LENGTH(buffer)) {
-   new_buffer = DeeString_ResizeWideBuffer(buffer,bufsize-1);
+      bufsize - 1 > WSTR_LENGTH(buffer)) {
+   new_buffer = DeeString_ResizeWideBuffer(buffer,bufsize - 1);
    if unlikely(!new_buffer) goto err_result;
    buffer = new_buffer;
    goto again;
   }
+  if (nt_IsBadAlloc(error)) {
+   if (Dee_CollectMemory(1))
+       goto again;
+   goto err_result;
+  }
+  DeeError_Throwf(&DeeError_SystemError,
+                  "Failed to retrieve the name of the hosting machine");
+  goto err_result;
  }
  DBG_ALIGNMENT_ENABLE();
  /* Truncate the buffer and return it. */
@@ -548,6 +1059,125 @@ err:
 }
 
 
+PRIVATE ATTR_COLD int DCALL
+err_path_exists(int error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_FileExists,error,
+                           "Path %r already exists",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_no_dir(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_NoDirectory,error,
+                           "Some part of the path %r is not a directory",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_is_dir(int error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_IsDirectory,error,
+                           "Path %r is a directory",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_not_found(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_FileNotFound,error,
+                           "Path %r could not be found",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_file_not_found(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_FileNotFound,error,
+                           "File %r could not be found",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_file_no_write_access(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_AccessError,error,
+                           "Write permissions have not been granted for file %r",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_no_write_access(int error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_AccessError,error,
+                           "Write permissions have not been granted for path %r",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_busy(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_BusyFile,error,
+                           "Path %r cannot be deleted because it is still in use",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_no_access(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_AccessError,error,
+                           "Search permissions are not granted for path %r",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_not_empty(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_NotEmpty,error,
+                           "The directory %r cannot be deleted because it is not empty",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_chtime_no_access(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_AccessError,error,
+                           "Changes to the selected timestamps of %r are not allowed",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_chattr_no_access(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_AccessError,error,
+                           "Changes to the attributes of %r are not allowed",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_handle_closed(DWORD error, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_HandleClosed,error,
+                           "The given handle %r has been closed",
+                           path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_no_access2(int error,
+                    DeeObject *__restrict existing_path,
+                    DeeObject *__restrict new_path) {
+ return DeeError_SysThrowf(&DeeError_AccessError,error,
+                           "Access to %r or %r has not been granted",
+                           existing_path,new_path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_not_found2(int error,
+                    DeeObject *__restrict existing_path,
+                    DeeObject *__restrict new_path) {
+ return DeeError_SysThrowf(&DeeError_FileNotFound,error,
+                           "Path %r or %r could not be found",
+                           existing_path,new_path);
+}
+PRIVATE ATTR_COLD int DCALL
+err_path_crossdev2(int error,
+                   DeeObject *__restrict existing_path,
+                   DeeObject *__restrict new_path) {
+ return DeeError_SysThrowf(&DeeError_CrossDevice,error,
+                           "Paths %r and %r are not apart of the same filesystem",
+                           existing_path,new_path);
+}
+
+
+
+
+PRIVATE ATTR_COLD int DCALL err_getcwd(DWORD dwError) {
+ if (nt_IsAccessDenied(dwError)) {
+  return DeeError_SysThrowf(&DeeError_AccessError,dwError,
+                            "Permission to read a part of the current "
+                            "working directory's path was denied");
+ } else if (nt_IsFileNotFound(dwError)) {
+  return DeeError_SysThrowf(&DeeError_FileNotFound,dwError,
+                            "The current working directory has been unlinked");
+ }
+ return DeeError_SysThrowf(&DeeError_FSError,dwError,
+                           "Failed to retrieve the current working directory");
+}
+
 INTERN int DCALL
 fs_printcwd(struct unicode_printer *__restrict printer) {
  LPWSTR buffer; DWORD new_bufsize,bufsize = 256;
@@ -557,8 +1187,19 @@ fs_printcwd(struct unicode_printer *__restrict printer) {
 again:
  DBG_ALIGNMENT_DISABLE();
  new_bufsize = GetCurrentDirectoryW(bufsize+1,buffer);
+ if unlikely(!new_bufsize) {
+  DWORD dwError;
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (nt_IsBadAlloc(dwError)) {
+   if (Dee_CollectMemory(1))
+       goto again;
+  } else {
+   err_getcwd(dwError);
+  }
+  goto err_release;
+ }
  DBG_ALIGNMENT_ENABLE();
- if unlikely(!new_bufsize) { nt_ThrowLastError(); goto err_release; }
  if (new_bufsize > bufsize) {
   LPWSTR new_buffer;
   /* Increase the buffer and try again. */
@@ -576,31 +1217,37 @@ err:
  return -1;
 }
 
+
 INTERN DREF DeeObject *DCALL fs_getcwd(void) {
- LPWSTR buffer,new_buffer; DWORD bufsize = 256,error;
+ LPWSTR buffer,new_buffer; DWORD bufsize = 256,new_bufsize;
  if (DeeThread_CheckInterrupt()) goto err;
  buffer = DeeString_NewWideBuffer(bufsize);
  if unlikely(!buffer) goto err;
  for (;;) {
+again:
   DBG_ALIGNMENT_DISABLE();
-  error = GetCurrentDirectoryW(bufsize+1,buffer);
-  if (!error) {
-   error = GetLastError();
+  new_bufsize = GetCurrentDirectoryW(bufsize+1,buffer);
+  if (!new_bufsize) {
+   DWORD dwError;
+   dwError = GetLastError();
    DBG_ALIGNMENT_ENABLE();
-   /* Error. */
-   DeeError_SysThrowf(&DeeError_SystemError,error,
-                      "Failed to lookup pwd");
+   if (nt_IsBadAlloc(dwError)) {
+    if (Dee_CollectMemory(1))
+        goto again;
+   } else {
+    err_getcwd(dwError);
+   }
    goto err_result;
   }
   DBG_ALIGNMENT_ENABLE();
-  if (error <= bufsize) break;
+  if (new_bufsize <= bufsize) break;
   /* Resize to fit. */
-  new_buffer = DeeString_ResizeWideBuffer(buffer,error);
+  new_buffer = DeeString_ResizeWideBuffer(buffer,new_bufsize);
   if unlikely(!new_buffer) goto err_result;
   buffer  = new_buffer;
-  bufsize = error;
+  bufsize = new_bufsize;
  }
- new_buffer = DeeString_TryResizeWideBuffer(buffer,error);
+ new_buffer = DeeString_TryResizeWideBuffer(buffer,new_bufsize);
  if likely(new_buffer) buffer = new_buffer;
  return DeeString_PackWideBuffer(buffer,STRING_ERROR_FREPLAC);
 err_result:
@@ -608,8 +1255,11 @@ err_result:
 err:
  return NULL;
 }
+
+
+
 INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
- LPWSTR wpath; int result;
+ int result;
  if (DeeThread_CheckInterrupt()) goto err;
  if (!DeeString_Check(path)) {
   if (DeeInt_Check(path)) {
@@ -628,29 +1278,42 @@ INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
   Dee_Decref(path);
   return result;
  }
- wpath = (LPWSTR)DeeString_AsWide(path);
- if unlikely(!wpath) goto err;
- if ((*wpath || WSTR_LENGTH(wpath))) {
+again:
+ result = nt_SetCurrentDirectory(path);
+ if unlikely(result != 0) {
+  DWORD dwError;
+  if unlikely(result < 0) goto err;
   DBG_ALIGNMENT_DISABLE();
-  if (!SetCurrentDirectoryW(wpath)) {
-   DWORD dwError = GetLastError();
-   DBG_ALIGNMENT_ENABLE();
-   if (nt_IsFileNotFound(dwError)) {
-    DeeError_SysThrowf(&DeeError_FileNotFound,dwError,
-                       "Cannot chdir because to non-existant path %r",
-                       path);
-   } else if (nt_IsAccessDenied(dwError)) {
-    DeeError_SysThrowf(&DeeError_AccessError,dwError,
-                       "Cannot chdir because access to %r has been denied",
-                       path);
-   } else {
-    DeeError_SysThrowf(&DeeError_SystemError,dwError,
-                       "Failed to set pwd to %r",
-                       path);
-   }
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (nt_IsBadAlloc(dwError)) {
+   if (Dee_CollectMemory(1))
+       goto again;
    goto err;
   }
-  DBG_ALIGNMENT_ENABLE();
+  if (nt_IsNotDir(dwError))
+      goto do_throw_not_dir;
+  if (dwError == ERROR_ACCESS_DENIED) {
+   DWORD dwAttributes;
+   /* Check if the path is actually a directory. */
+   result = nt_GetFileAttributes(path,&dwAttributes);
+   if (result < 0) goto err;
+   if (result == 0 && !(dwAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+do_throw_not_dir:
+    err_path_no_dir(dwError,path);
+    goto err;
+   }
+  }
+  if (nt_IsFileNotFound(dwError)) {
+   err_path_not_found(dwError,path);
+  } else if (nt_IsAccessDenied(dwError)) {
+   err_path_no_access(dwError,path);
+  } else {
+   DeeError_SysThrowf(&DeeError_FSError,dwError,
+                      "Failed to change the current working directory to %r",
+                      path);
+  }
+  goto err;
  }
  return 0;
 err:
@@ -798,6 +1461,7 @@ Stat_Init(Stat *__restrict self,
           DeeObject *__restrict path,
           uint16_t flags) {
  HANDLE fd; int error;
+again:
  if (DeeThread_CheckInterrupt()) goto err;
  self->s_hand  = INVALID_HANDLE_VALUE; /* If inherited, set later. */
  self->s_ftype = FILE_TYPE_UNKNOWN; /* Lazily initialized. */
@@ -829,7 +1493,9 @@ done:
   /* Failed to open the file as a reparse point.
    * All the fallback code here only works for
    * regular stat, so we can't use it... */
+#if 0
   if (flags&DOSTAT_FLSTAT) goto err_nt;
+#endif
 
   /* CreateFile() failed. - Try a more direct approach. */
   memset(&self->s_info,0,sizeof(BY_HANDLE_FILE_INFORMATION));
@@ -902,9 +1568,26 @@ err_nt:
  DBG_ALIGNMENT_DISABLE();
  error = (int)GetLastError();
  DBG_ALIGNMENT_ENABLE();
- if ((flags&DOSTAT_FTRY) && ERROR_IS_FILE_NOT_FOUND(error))
+ if ((flags&DOSTAT_FTRY) && nt_IsFileNotFound((DWORD)error))
       return 1; /* File not found. */
- nt_ThrowError((DWORD)error);
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again;
+ } else if (nt_IsNotDir((DWORD)error)) {
+  if (flags&DOSTAT_FTRY) return 1;
+  err_path_no_dir((DWORD)error,path);
+ } else if (nt_IsAccessDenied((DWORD)error)) {
+  err_path_no_access((DWORD)error,path);
+ } else if (nt_IsFileNotFound((DWORD)error)) {
+  if (flags&DOSTAT_FTRY) return 1;
+  err_path_not_found((DWORD)error,path);
+ } else if (nt_IsBadf((DWORD)error)) {
+  err_handle_closed((DWORD)error,path);
+ } else {
+  DeeError_SysThrowf(&DeeError_FSError,(DWORD)error,
+                     "Failed to open file %r",
+                     path);
+ }
 err:
  return -1;
 }
@@ -1069,8 +1752,8 @@ PRIVATE struct type_getset stat_getsets[] = {
     { "st_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getino, NULL, NULL, DeeStat_st_ino_doc },
     { "st_mode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getmode, NULL, NULL, DeeStat_st_mode_doc },
     { "st_nlink", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getnlink, NULL, NULL, DeeStat_st_nlink_doc },
-    /* >> property st_uid -> user;
-     * >> property st_gid -> group; */
+    /* TODO: property st_uid -> user; */
+    /* TODO: property st_gid -> group; */
     { "st_rdev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getrdev, NULL, NULL, DeeStat_st_rdev_doc },
     { "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getsize, NULL, NULL, DeeStat_st_size_doc },
     { "st_atime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getatime, NULL, NULL, DeeStat_st_atime_doc },
@@ -1577,12 +2260,33 @@ get_pathhandle_wrattr(DeeObject *__restrict path,
                       HANDLE *__restrict phandle) {
  int result;
  if (DeeString_Check(path)) {
+again:
   *phandle = nt_CreateFile(path,FILE_WRITE_ATTRIBUTES,
                            FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
                            NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL|
                            FILE_FLAG_BACKUP_SEMANTICS,NULL);
-  if (*phandle == INVALID_HANDLE_VALUE) { nt_ThrowLastError(); return -1; }
-  if (*phandle == NULL) return -1;
+  if (*phandle == INVALID_HANDLE_VALUE) {
+   DWORD dwError;
+   DBG_ALIGNMENT_DISABLE();
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (nt_IsBadAlloc(dwError)) {
+    if (Dee_CollectMemory(1))
+        goto again;
+   } else if (nt_IsNotDir(dwError)) {
+    err_path_no_dir(dwError,path);
+   } else if (nt_IsFileNotFound(dwError)) {
+    err_file_not_found(dwError,path);
+   } else if (nt_IsAccessDenied(dwError)) {
+    err_file_no_write_access(dwError,path);
+   } else {
+    DeeError_SysThrowf(&DeeError_FSError,dwError,
+                       "Failed to obtain a writable handle for %r",
+                       path);
+   }
+   goto err;
+  }
+  if (*phandle == NULL) goto err;
   return 1;
  }
  /* Convert an integer to a handle. */
@@ -1593,13 +2297,15 @@ get_pathhandle_wrattr(DeeObject *__restrict path,
  if (*phandle != INVALID_HANDLE_VALUE) return 0;
  if (!DeeError_Catch(&DeeError_AttributeError) &&
      !DeeError_Catch(&DeeError_NotImplemented))
-      return -1;
+      goto err;
  /* Use the filename of a file stream. */
  path = DeeFile_Filename(path);
- if unlikely(!path) return -1;
+ if unlikely(!path) goto err;
  result = get_pathhandle_wrattr(path,phandle);
  Dee_Decref(path);
  return result;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -1615,7 +2321,10 @@ ob_GetFileTime(DeeObject *__restrict lpTime,
   goto err;
  }
  value -= time_yer2day(1601)*MICROSECONDS_PER_DAY;
- *(uint64_t *)lpFileTime = FILETIME_GET64(value*(FILETIME_PER_SECONDS/MICROSECONDS_PER_SECOND));
+ UNALIGNED_SET64((uint64_t *)lpFileTime,
+                  FILETIME_GET64(value *
+                                (FILETIME_PER_SECONDS /
+                                 MICROSECONDS_PER_SECOND)));
  return 0;
 err:
  return -1;
@@ -1633,14 +2342,37 @@ fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
  if (!DeeNone_Check(atime) && unlikely(ob_GetFileTime(atime,&ftAtime))) goto err;
  if (!DeeNone_Check(mtime) && unlikely(ob_GetFileTime(mtime,&ftMtime))) goto err;
  if (!DeeNone_Check(ctime) && unlikely(ob_GetFileTime(ctime,&ftCtime))) goto err;
+again:
  DBG_ALIGNMENT_DISABLE();
  error = SetFileTime(hnd,
                      DeeNone_Check(ctime) ? NULL : &ftCtime,
                      DeeNone_Check(atime) ? NULL : &ftAtime,
                      DeeNone_Check(mtime) ? NULL : &ftMtime);
  if (result) CloseHandle(hnd);
+ if unlikely(!error) {
+  DWORD dwError;
+  dwError = GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (nt_IsBadAlloc(dwError)) {
+   if (Dee_CollectMemory(1))
+       goto again;
+  } else if (nt_IsBadf(dwError)) {
+   err_handle_closed(dwError,path);
+  } else if (nt_IsAccessDenied(dwError)) {
+   err_chtime_no_access(dwError,path);
+  } else if (nt_IsUnsupported(dwError)) {
+   DeeError_SysThrowf(&DeeError_UnsupportedAPI,(DWORD)error,
+                      "The filesystem hosting the path %r does "
+                      "not support the changing of time stamps",
+                      path);
+  } else {
+   DeeError_SysThrowf(&DeeError_FSError,dwError,
+                      "Failed to change time properties of %r",
+                      path);
+  }
+  goto err;
+ }
  DBG_ALIGNMENT_ENABLE();
- if unlikely(!error) { nt_ThrowLastError(); goto err; }
  return 0;
 err:
  return -1;
@@ -1666,9 +2398,9 @@ fs_chmod(DeeObject *__restrict path,
   Dee_Decref(path);
   return error;
  }
-
  if (fs_getchmod_mask(mode,&mask,&flags))
      goto err;
+again:
  error = nt_GetFileAttributes(path,&old_flags);
  if unlikely(error < 0) goto err;
  if unlikely(error) goto err_nt;
@@ -1688,7 +2420,24 @@ fs_chmod(DeeObject *__restrict path,
  }
  return 0;
 err_nt:
- nt_ThrowLastError();
+ DBG_ALIGNMENT_DISABLE();
+ error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again;
+ } else if (nt_IsAccessDenied((DWORD)error)) {
+  err_chattr_no_access((DWORD)error,path);
+ } else if (nt_IsUnsupported((DWORD)error)) {
+  DeeError_SysThrowf(&DeeError_UnsupportedAPI,(DWORD)error,
+                     "The filesystem hosting the path %r does "
+                     "not support the changing of NT attributes",
+                     path);
+ } else {
+  DeeError_SysThrowf(&DeeError_FSError,(DWORD)error,
+                     "Failed to change attributes of %r",
+                     path);
+ }
 err:
  return -1;
 }
@@ -1696,12 +2445,44 @@ INTERN int DCALL
 fs_chattr_np(DeeObject *__restrict path,
              DeeObject *__restrict new_attr) {
  DWORD attr; int error;
+ if (!DeeString_Check(path)) {
+  if (DeeInt_Check(path)) {
+   HANDLE fd; /* Support for descriptor-based chmod() */
+   if (DeeObject_AsUIntptr(path,(uintptr_t *)&fd))
+    goto err;
+   path = nt_GetFilenameOfHandle(fd);
+  } else {
+   path = DeeFile_Filename(path);
+  }
+  if unlikely(!path) goto err;
+  error = fs_chattr_np(path,new_attr);
+  Dee_Decref(path);
+  return error;
+ }
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeObject_AsUInt32(new_attr,(uint32_t *)&attr))
      goto err;
+again:
  error = nt_SetFileAttributes(path,attr);
  if (error <= 0) return error;
- nt_ThrowLastError();
+ DBG_ALIGNMENT_DISABLE();
+ error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again;
+ } else if (nt_IsAccessDenied((DWORD)error)) {
+  err_chattr_no_access((DWORD)error,path);
+ } else if (nt_IsUnsupported((DWORD)error)) {
+  DeeError_SysThrowf(&DeeError_UnsupportedAPI,(DWORD)error,
+                     "The filesystem hosting the path %r does "
+                     "not support the changing of NT attributes",
+                     path);
+ } else {
+  DeeError_SysThrowf(&DeeError_FSError,(DWORD)error,
+                     "Failed to change attributes of %r",
+                     path);
+ }
 err:
  return -1;
 }
@@ -1724,16 +2505,63 @@ fs_mkdir(DeeObject *__restrict path,
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeObject_AssertTypeExact(path,&DeeString_Type))
      goto err;
+again:
  if (!DeeNone_Check(perm)) {
   /* TODO: Initial security attributes. */
+  error = nt_CreateDirectory(path,NULL);
+ } else {
+  error = nt_CreateDirectory(path,NULL);
  }
- error = nt_CreateDirectory(path,NULL);
  if unlikely(error > 0) goto err_nt;
  return error;
 err_nt:
- nt_ThrowLastError();
+ DBG_ALIGNMENT_DISABLE();
+ error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again;
+ } else if (nt_IsAccessDenied((DWORD)error)) {
+  err_path_no_write_access((DWORD)error,path);
+ } else if (nt_IsExists((DWORD)error)) {
+  err_path_exists((DWORD)error,path);
+ } else if (nt_IsNotDir((DWORD)error)) {
+  err_path_no_dir((DWORD)error,path);
+ } else if (nt_IsUnsupported((DWORD)error)) {
+  DeeError_SysThrowf(&DeeError_UnsupportedAPI,(DWORD)error,
+                     "The filesystem hosting the path %r does "
+                     "not support the creation of directories",
+                     path);
+ } else {
+  DeeError_SysThrowf(&DeeError_FSError,(DWORD)error,
+                     "Failed to create directory %r",
+                     path);
+ }
 err:
  return -1;
+}
+
+PRIVATE ATTR_COLD int DCALL
+handle_rmdir_error(DWORD error, DeeObject *__restrict path) {
+ if (nt_IsNotEmpty(error))
+     return err_path_not_empty(error,path);
+ if (nt_IsAccessDenied(error))
+     return err_path_no_write_access(error,path);
+ if (nt_IsBusy(error))
+     return err_path_busy(error,path);
+ if (nt_IsFileNotFound(error))
+     return err_path_not_found(error,path);
+ if (nt_IsNotDir(error))
+     return err_path_no_dir(error,path);
+ if (nt_IsUnsupported(error)) {
+  return DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
+                            "The filesystem hosting the path %r does "
+                            "not support the removal of directories",
+                            path);
+ }
+ return DeeError_SysThrowf(&DeeError_FSError,error,
+                           "Failed to remove directory %r",
+                           path);
 }
 
 INTERN int DCALL
@@ -1742,50 +2570,106 @@ fs_rmdir(DeeObject *__restrict path) {
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeObject_AssertTypeExact(path,&DeeString_Type))
      goto err;
+again:
  error = nt_RemoveDirectory(path);
  if unlikely(error > 0) goto err_nt;
  return error;
 err_nt:
+ DBG_ALIGNMENT_DISABLE();
  error = (int)GetLastError();
- if (error == ERROR_DIR_NOT_EMPTY) {
-  DeeError_SysThrowf(&DeeError_NotEmpty,error,
-                     "Directory `%k' is not empty",
-                     path);
- } else {
-  nt_ThrowError((DWORD)error);
+ DBG_ALIGNMENT_ENABLE();
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again;
  }
+ handle_rmdir_error((DWORD)error,path);
 err:
  return -1;
 }
+
+PRIVATE ATTR_COLD int DCALL
+handle_unlink_error(DWORD error, DeeObject *__restrict path) {
+ if (error == ERROR_ACCESS_DENIED) {
+  DWORD dwAttributes; int temp;
+  /* Check if the path is actually a directory. */
+  temp = nt_GetFileAttributes(path,&dwAttributes);
+  if (temp < 0) return temp;
+  if (temp == 0 && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY))
+      return err_path_is_dir(error,path);
+ }
+ if (nt_IsAccessDenied(error))
+     return err_path_no_write_access(error,path);
+ if (nt_IsBusy(error))
+     return err_path_busy(error,path);
+ if (nt_IsNotDir(error))
+     return err_path_no_dir(error,path);
+ if (nt_IsFileNotFound(error))
+     return err_path_not_found(error,path);
+ if (nt_IsUnsupported(error)) {
+  return DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
+                            "The filesystem hosting the path %r "
+                            "does not support unlinking files",
+                            path);
+ }
+ return DeeError_SysThrowf(&DeeError_FSError,error,
+                           "Failed to unlink file %r",
+                           path);
+}
+
 INTERN int DCALL
 fs_unlink(DeeObject *__restrict path) {
  int error;
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeObject_AssertTypeExact(path,&DeeString_Type))
      goto err;
+again_deletefile:
  error = nt_DeleteFile(path);
- if unlikely(error > 0) goto err_nt;
- return error;
-err_nt:
+ if unlikely(error <= 0)
+    return error;
+ DBG_ALIGNMENT_DISABLE();
  error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
  if (error == ERROR_ACCESS_DENIED) {
   /* Check if we've failed to delete a symbolic
    * directory-link (for which RemoveDirectory() must be used) */
   DWORD attr;
+again_getattr:
   error = nt_GetFileAttributes(path,&attr);
   if (error < 0) goto err;
   if (!error &&
-      (attr&(FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_REPARSE_POINT)) ==
-            (FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_REPARSE_POINT)) {
+      (attr & (FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_REPARSE_POINT)) ==
+              (FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_REPARSE_POINT)) {
+again_rmdir:
    error = nt_RemoveDirectory(path);
    if unlikely(error <= 0)
       return error;
+   DBG_ALIGNMENT_DISABLE();
    error = (int)GetLastError();
-  } else {
-   error = ERROR_ACCESS_DENIED;
+   DBG_ALIGNMENT_ENABLE();
+   if (nt_IsBadAlloc((DWORD)error)) {
+    if (Dee_CollectMemory(1))
+        goto again_rmdir;
+    goto err;
+   }
+   handle_rmdir_error((DWORD)error,path);
+   goto err;
   }
+  DBG_ALIGNMENT_DISABLE();
+  error = (int)GetLastError();
+  DBG_ALIGNMENT_ENABLE();
+  if (nt_IsBadAlloc((DWORD)error)) {
+   if (Dee_CollectMemory(1))
+       goto again_getattr;
+   goto err;
+  }
+  error = ERROR_ACCESS_DENIED;
  }
- nt_ThrowError(error);
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again_deletefile;
+  goto err;
+ }
+ handle_unlink_error((DWORD)error,path);
 err:
  return -1;
 }
@@ -1795,18 +2679,37 @@ fs_remove(DeeObject *__restrict path) {
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeObject_AssertTypeExact(path,&DeeString_Type))
      goto err;
+again:
  error = nt_DeleteFile(path);
- /* NOTE: DeleteFile() returns `ERROR_ACCESS_DENIED'
+ if likely(error <= 0)
+    return error;
+ DBG_ALIGNMENT_DISABLE();
+ error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
+ /* NOTE: DeleteFile() sets `ERROR_ACCESS_DENIED'
   *       if the folder is actually a directory. */
- if (error > 0 && GetLastError() == ERROR_ACCESS_DENIED)
-     error = nt_RemoveDirectory(path);
- if unlikely(error > 0) goto err_nt;
- return error;
-err_nt:
- nt_ThrowLastError();
+ if (error == ERROR_ACCESS_DENIED) {
+  error = nt_RemoveDirectory(path);
+  if (error <= 0) return error;
+  if (nt_IsBadAlloc((DWORD)error)) {
+   if (Dee_CollectMemory(1))
+       goto again;
+   goto err;
+  }
+  handle_rmdir_error((DWORD)error,path);
+ }
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again;
+  goto err;
+ }
+ handle_unlink_error((DWORD)error,path);
 err:
  return -1;
 }
+
+
+
 INTERN int DCALL
 fs_rename(DeeObject *__restrict existing_path,
           DeeObject *__restrict new_path) {
@@ -1828,19 +2731,46 @@ fs_rename(DeeObject *__restrict existing_path,
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeObject_AssertTypeExact(new_path,&DeeString_Type))
      goto err;
+again_movefile:
  error = nt_MoveFile(existing_path,new_path);
- if unlikely(error > 0) goto err_nt;
+ if likely(error <= 0) goto err_nt;
  return error;
 err_nt:
  DBG_ALIGNMENT_DISABLE();
  error = (int)GetLastError();
  DBG_ALIGNMENT_ENABLE();
- if (error == ERROR_NOT_SAME_DEVICE) {
-  DeeError_SysThrowf(&DeeError_CrossDevice,error,
-                     "Cannot move file `%k' to a different device `%k'",
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again_movefile;
+ } else if (nt_IsAccessDenied((DWORD)error)) {
+  err_path_no_access2((DWORD)error,existing_path,new_path);
+ } else if (nt_IsBusy((DWORD)error)) {
+  DeeError_SysThrowf(&DeeError_BusyFile,(DWORD)error,
+                     "Path %r or %r cannot be accessed because it is already in use",
                      existing_path,new_path);
+ } else if (nt_IsNotDir((DWORD)error)) {
+  DeeError_Throwf(&DeeError_ValueError,
+                  "Cannot rename path %r to %r which is a sub-directory of the old",
+                  existing_path,new_path);
+ } else if (nt_IsFileNotFound((DWORD)error)) {
+  err_path_not_found2((DWORD)error,existing_path,new_path);
+ } else if (nt_IsNotEmpty((DWORD)error) || nt_IsExists((DWORD)error)) {
+  err_path_exists((DWORD)error,new_path);
+ } else if (nt_IsNotDir((DWORD)error)) {
+  DeeError_SysThrowf(&DeeError_NoDirectory,(DWORD)error,
+                     "Some part of the path %r or %r is not a directory",
+                     existing_path,new_path);
+ } else if (nt_IsUnsupported((DWORD)error)) {
+  DeeError_SysThrowf(&DeeError_UnsupportedAPI,(DWORD)error,
+                     "The filesystem hosting the paths %r and %r "
+                     "does not support renaming of files",
+                     existing_path,new_path);
+ } else if (nt_IsXDev((DWORD)error)) {
+  err_path_crossdev2((DWORD)error,existing_path,new_path);
  } else {
-  nt_ThrowError((DWORD)error);
+  DeeError_SysThrowf(&DeeError_FSError,(DWORD)error,
+                     "Failed to rename %r to %r",
+                     existing_path,new_path);
  }
 err:
  return -1;
@@ -1856,19 +2786,33 @@ fs_link(DeeObject *__restrict existing_path,
  if (DeeObject_AssertTypeExact(existing_path,&DeeString_Type) ||
      DeeObject_AssertTypeExact(new_path,&DeeString_Type))
      goto err;
+again:
  error = nt_CreateHardLink(new_path,existing_path,NULL);
- if unlikely(error > 0) goto err_nt;
- return error;
-err_nt:
+ if likely(error <= 0)
+    return error;
  DBG_ALIGNMENT_DISABLE();
  error = (int)GetLastError();
  DBG_ALIGNMENT_ENABLE();
- if (error == ERROR_NOT_SAME_DEVICE) {
-  DeeError_SysThrowf(&DeeError_CrossDevice,error,
-                     "Cannot create a hardlink to file `%k' from a different device `%k'",
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again;
+ } else if (nt_IsAccessDenied((DWORD)error)) {
+  err_path_no_access2((DWORD)error,existing_path,new_path);
+ } else if (nt_IsExists((DWORD)error)) {
+  err_path_exists((DWORD)error,new_path);
+ } else if (nt_IsFileNotFound((DWORD)error)) {
+  err_path_not_found2((DWORD)error,existing_path,new_path);
+ } else if (nt_IsXDev((DWORD)error)) {
+  err_path_crossdev2((DWORD)error,existing_path,new_path);
+ } else if (nt_IsUnsupported((DWORD)error)) {
+  DeeError_SysThrowf(&DeeError_UnsupportedAPI,(DWORD)error,
+                     "The filesystem hosting the paths %r and %r "
+                     "does not support creation of hardlinks",
                      existing_path,new_path);
  } else {
-  nt_ThrowError((DWORD)error);
+  DeeError_SysThrowf(&DeeError_FSError,(DWORD)error,
+                     "Failed to rename %r to %r",
+                     existing_path,new_path);
  }
 err:
  return -1;
@@ -1876,8 +2820,8 @@ err:
 
 
 PRIVATE WCHAR const str_SeCreateSymbolicLinkPrivilege[] = {
- 'S','e','C','r','e','a','t','e','S','y','m','b','o','l','i',
- 'c','L','i','n','k','P','r','i','v','i','l','e','g','e',0};
+    'S','e','C','r','e','a','t','e','S','y','m','b','o','l','i',
+    'c','L','i','n','k','P','r','i','v','i','l','e','g','e',0};
 PRIVATE BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
  HANDLE tok,hProcess; LUID luid;
  TOKEN_PRIVILEGES tok_priv; DWORD error;
@@ -1917,8 +2861,7 @@ fs_symlink(DeeObject *__restrict target_text,
  flags = symlink_additional_flags;
  /* TODO: `SYMBOLIC_LINK_FLAG_DIRECTORY' */
 again:
- error = nt_CreateSymbolicLink(link_path,target_text,
-                               flags);
+ error = nt_CreateSymbolicLink(link_path,target_text,flags);
  if unlikely(error > 0) goto err_nt;
  return error;
 err_nt:
@@ -1944,12 +2887,27 @@ err_nt:
    DBG_ALIGNMENT_ENABLE();
   }
   /* May as well not exist at all... */
-  DeeError_SysThrowf(&DeeError_AccessError,error,
+  DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
                      "The operating system has restricted "
                      "access to symlink functionality");
-  goto err;
+ } else if (nt_IsAccessDenied(error)) {
+  err_path_no_access(error,link_path);
+ } else if (nt_IsExists(error)) {
+  err_path_exists(error,link_path);
+ } else if (nt_IsFileNotFound(error)) {
+  err_path_not_found(error,link_path);
+ } else if (nt_IsNotDir(error)) {
+  err_path_no_dir(error,link_path);
+ } else if (nt_IsUnsupported(error)) {
+  DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
+                     "The filesystem hosting the path %r "
+                     "does not support creation of symbolic links",
+                     link_path);
+ } else {
+  DeeError_SysThrowf(&DeeError_FSError,error,
+                     "Failed to create a symbolic link %r with text %r",
+                     link_path,target_text);
  }
- nt_ThrowError((DWORD)error);
 err:
  return -1;
 }
@@ -1988,10 +2946,12 @@ fs_readlink(DeeObject *__restrict path) {
  DREF DeeObject *result; DWORD bufsiz,buflen,error;
  LPWSTR linkstr_begin,linkstr_end; bool owns_linkfd;
  if (DeeString_Check(path)) {
+again_createfile:
   link_fd = nt_CreateFile(path,FILE_READ_ATTRIBUTES,FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,NULL,
                           OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OPEN_REPARSE_POINT,NULL);
   if unlikely(!link_fd) goto err;
-  if unlikely(link_fd == INVALID_HANDLE_VALUE) goto err_nt;
+  if unlikely(link_fd == INVALID_HANDLE_VALUE)
+     goto err_nt_createfile;
   owns_linkfd = true;
  } else if (DeeInt_Check(path)) {
   if (DeeObject_AsUIntptr(path,(uintptr_t *)&link_fd)) goto err;
@@ -2029,7 +2989,22 @@ fs_readlink(DeeObject *__restrict path) {
    DBG_ALIGNMENT_DISABLE();
    continue;
   }
-  nt_ThrowLastError();
+  if (nt_IsAccessDenied(error)) {
+   err_path_no_access(error,path);
+  } else if (error == ERROR_NOT_A_REPARSE_POINT) {
+   DeeError_SysThrowf(&DeeError_NoLink,error,
+                      "Path %r is not a symbolic link",
+                      path);
+  } else if (nt_IsUnsupported(error)) {
+   DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
+                      "The filesystem hosting the path %r does "
+                      "not support reading symbolic links",
+                      path);
+  } else {
+   DeeError_SysThrowf(&DeeError_FSError,error,
+                      "Failed to read symbolic link %r",
+                      path);
+  }
   goto err_buffer;
  }
  if (owns_linkfd) CloseHandle(link_fd);
@@ -2047,8 +3022,8 @@ fs_readlink(DeeObject *__restrict path) {
                 (buffer->MountPointReparseBuffer.SubstituteNameLength/sizeof(WCHAR));
   break;
  default:
-  DeeError_Throwf(&DeeError_NotImplemented,
-                  "Unsupported link type %lu of file %r",
+  DeeError_Throwf(&DeeError_UnsupportedAPI,
+                  "Unsupported link type %lu in file %r",
                   buffer->ReparseTag,path);
   Dee_Free(buffer);
   goto err;
@@ -2065,8 +3040,26 @@ fs_readlink(DeeObject *__restrict path) {
  /* Free our buffer. */
  Dee_Free(buffer);
  return result;
-err_nt:
- nt_ThrowLastError();
+err_nt_createfile:
+ DBG_ALIGNMENT_DISABLE();
+ error = (int)GetLastError();
+ DBG_ALIGNMENT_ENABLE();
+ if (nt_IsBadAlloc((DWORD)error)) {
+  if (Dee_CollectMemory(1))
+      goto again_createfile;
+ } else if (nt_IsNotDir((DWORD)error)) {
+  err_path_no_dir((DWORD)error,path);
+ } else if (nt_IsAccessDenied((DWORD)error)) {
+  err_path_no_access((DWORD)error,path);
+ } else if (nt_IsFileNotFound((DWORD)error)) {
+  err_path_not_found((DWORD)error,path);
+ } else if (nt_IsBadf((DWORD)error)) {
+  err_handle_closed((DWORD)error,path);
+ } else {
+  DeeError_SysThrowf(&DeeError_FSError,(DWORD)error,
+                     "Failed to open file %r",
+                     path);
+ }
 err:
  return NULL;
 err_buffer:
@@ -2146,9 +3139,18 @@ diriter_copy(DirIterator *__restrict self,
 }
 #endif
 
+PRIVATE ATTR_COLD int DCALL
+err_handle_findnextfile(DWORD dwError, DeeObject *__restrict path) {
+ return DeeError_SysThrowf(&DeeError_FSError,dwError,
+                           "Failed to read entires from directory %r",
+                           path);
+}
+
+
 PRIVATE DREF DeeStringObject *DCALL
 diriter_next(DirIterator *__restrict self) {
- WCHAR *result_string,*begin; size_t length;
+ WCHAR *result_string,*begin;
+ size_t length; DWORD dwError;
 again:
  if (DeeThread_CheckInterrupt()) goto err;
 #ifndef CONFIG_NO_THREADS
@@ -2170,9 +3172,9 @@ read_filename:
   /* Skip self/parent directories. */
   DBG_ALIGNMENT_DISABLE();
   if (!FindNextFileW(self->d_hnd,&self->d_data)) {
-   DWORD error = GetLastError();
+   dwError = GetLastError();
    DBG_ALIGNMENT_ENABLE();
-   if (error == ERROR_NO_MORE_FILES) {
+   if (dwError == ERROR_NO_MORE_FILES) {
     HANDLE hnd = self->d_hnd;
     self->d_hnd = INVALID_HANDLE_VALUE;
 #ifndef CONFIG_NO_THREADS
@@ -2186,8 +3188,12 @@ read_filename:
 #ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&self->d_lock);
 #endif
-   nt_ThrowError(error);
-   goto err;
+   if (nt_IsBadAlloc(dwError)) {
+    if (Dee_CollectMemory(1))
+        goto again;
+    goto err;
+   }
+   goto err_read_failed;
   }
   DBG_ALIGNMENT_ENABLE();
   goto read_filename;
@@ -2208,14 +3214,19 @@ read_filename:
  /* Advance the directory by one. */
  DBG_ALIGNMENT_DISABLE();
  if (!FindNextFileW(self->d_hnd,&self->d_data)) {
-  HANDLE hnd; DWORD error = GetLastError();
+  HANDLE hnd;
+  dwError = GetLastError();
   DBG_ALIGNMENT_ENABLE();
-  if unlikely(error != ERROR_NO_MORE_FILES) {
+  if unlikely(dwError != ERROR_NO_MORE_FILES) {
 #ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&self->d_lock);
 #endif
-   nt_ThrowError(error);
-   goto err;
+   if (nt_IsBadAlloc(dwError)) {
+    if (Dee_CollectMemory(1))
+        goto again;
+    goto err;
+   }
+   goto err_read_failed;
   }
   hnd = self->d_hnd;
   self->d_hnd = INVALID_HANDLE_VALUE;
@@ -2234,9 +3245,23 @@ read_filename:
  /* Manually construct a string object and fill
   * it with data read from the directory entry. */
  return (DREF DeeStringObject *)DeeString_PackWideBuffer(result_string,STRING_ERROR_FREPLAC);
+err_read_failed:
+ err_handle_findnextfile(dwError,(DeeObject *)self->d_dir->d_path);
 err:
  return NULL;
 }
+
+PRIVATE ATTR_COLD int DCALL
+err_handle_opendir(DWORD error, DeeObject *__restrict path) {
+ if (nt_IsFileNotFound(error))
+     return err_path_not_found(error,path);
+ if (nt_IsNotDir(error))
+     return err_path_no_dir(error,path);
+ return DeeError_SysThrowf(&DeeError_FSError,error,
+                           "Failed to open directory %r",
+                           path);
+}
+
 
 PRIVATE DREF DirIterator *DCALL
 dir_iter(Dir *__restrict self) {
@@ -2280,7 +3305,7 @@ dir_iter(Dir *__restrict self) {
   dwError = GetLastError();
   DBG_ALIGNMENT_ENABLE();
   if (dwError != ERROR_NO_MORE_FILES) {
-   nt_ThrowError(dwError);
+   err_handle_opendir(dwError,(DeeObject *)self->d_path);
    goto err_r;
   }
   /* Empty directory? ok... */
@@ -2502,7 +3527,8 @@ typedef struct {
 
 PRIVATE DREF DeeStringObject *DCALL
 queryiter_next(QueryIterator *__restrict self) {
- WCHAR *result_string,*begin; size_t length;
+ WCHAR *result_string,*begin;
+ size_t length; DWORD dwError;
 again:
  if (DeeThread_CheckInterrupt()) goto err;
 #ifndef CONFIG_NO_THREADS
@@ -2527,9 +3553,9 @@ read_filename:
   /* Skip self/parent directories. */
   DBG_ALIGNMENT_DISABLE();
   if (!FindNextFileW(self->q_iter.d_hnd,&self->q_iter.d_data)) {
-   DWORD error = GetLastError();
+   dwError = GetLastError();
    DBG_ALIGNMENT_ENABLE();
-   if (error == ERROR_NO_MORE_FILES) {
+   if (dwError == ERROR_NO_MORE_FILES) {
     HANDLE hnd = self->q_iter.d_hnd;
     self->q_iter.d_hnd = INVALID_HANDLE_VALUE;
 #ifndef CONFIG_NO_THREADS
@@ -2541,8 +3567,12 @@ read_filename:
 #ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&self->q_iter.d_lock);
 #endif
-   nt_ThrowError(error);
-   goto err;
+   if (nt_IsBadAlloc(dwError)) {
+    if (Dee_CollectMemory(1))
+        goto again;
+    goto err;
+   }
+   goto err_read_failed;
   }
   DBG_ALIGNMENT_ENABLE();
   goto read_filename;
@@ -2563,14 +3593,19 @@ read_filename:
  /* Advance the directory by one. */
  DBG_ALIGNMENT_DISABLE();
  if (!FindNextFileW(self->q_iter.d_hnd,&self->q_iter.d_data)) {
-  HANDLE hnd; DWORD error = GetLastError();
+  HANDLE hnd;
+  dwError = GetLastError();
   DBG_ALIGNMENT_ENABLE();
-  if unlikely(error != ERROR_NO_MORE_FILES) {
+  if unlikely(dwError != ERROR_NO_MORE_FILES) {
 #ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&self->q_iter.d_lock);
 #endif
-   nt_ThrowError(error);
-   goto err;
+   if (nt_IsBadAlloc(dwError)) {
+    if (Dee_CollectMemory(1))
+        goto again;
+    goto err;
+   }
+   goto err_read_failed;
   }
   hnd = self->q_iter.d_hnd;
   self->q_iter.d_hnd = INVALID_HANDLE_VALUE;
@@ -2589,6 +3624,8 @@ read_filename:
  /* Manually construct a string object and fill
   * it with data read from the directory entry. */
  return (DREF DeeStringObject *)DeeString_PackWideBuffer(result_string,STRING_ERROR_FREPLAC);
+err_read_failed:
+ err_handle_findnextfile(dwError,(DeeObject *)self->q_iter.d_dir->d_path);
 err:
  return NULL;
 }
@@ -2657,6 +3694,7 @@ query_iter(Dir *__restrict self) {
  if unlikely(!result) goto err;
  wname = (LPWSTR)DeeString_AsWide((DeeObject *)self->d_path);
  if unlikely(!wname) goto err_r;
+again_wname:
  /* Append the `\\*' to the given path and fix forward-slashes. */
  wname_length = WSTR_LENGTH(wname);
  /* Locate the previous directory. */
@@ -2698,7 +3736,17 @@ query_iter(Dir *__restrict self) {
   dwError = GetLastError();
   DBG_ALIGNMENT_ENABLE();
   if (dwError != ERROR_NO_MORE_FILES) {
-   nt_ThrowError(dwError);
+   DREF DeeObject *query_path;
+   if (nt_IsBadAlloc(dwError)) {
+    if (Dee_CollectMemory(1))
+        goto again_wname;
+    goto err;
+   }
+   query_path = DeeString_NewWide(wname,wname_length,
+                                  STRING_ERROR_FIGNORE);
+   if unlikely(!query_path) goto err_r;
+   err_handle_opendir(dwError,query_path);
+   Dee_Decref(query_path);
    goto err_r;
   }
   /* Empty directory? ok... */
