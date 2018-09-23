@@ -662,6 +662,7 @@ dec_putkwds(DeeKwdsObject *__restrict self) {
    DeeStringObject *name;
    for (j = 0;; ++j) {
     ASSERT(j <= self->kw_mask);
+    if (!self->kw_map[j].ke_name) continue;
     if (self->kw_map[j].ke_index == i)
         break;
    }
