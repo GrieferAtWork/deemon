@@ -82,12 +82,12 @@ global gidof = fs.group;
 function uidname(uid) {
 	if (uid !is fs.user)
 		uid = fs.user(uid);
-	return uid.name();
+	return uid.name;
 }
 function gidname(gid) {
 	if (gid !is fs.group)
 		gid = fs.group(gid);
-	return gid.name();
+	return gid.name;
 }
 global dir = fs.dir;
 global query = fs.query;

@@ -345,7 +345,9 @@ next_expr:
      var_symbol->s_type = SYMBOL_TYPE_STATIC;
     } else if (lookup_mode & LOOKUP_SYM_STACK) {
      var_symbol->s_type = SYMBOL_TYPE_STACK;
-    } else if (lookup_mode & LOOKUP_SYM_VGLOBAL) {
+    } else if ((lookup_mode & LOOKUP_SYM_VGLOBAL) ||
+             (!(lookup_mode & LOOKUP_SYM_VLOCAL) &&
+                current_scope == (DeeScopeObject *)current_rootscope)) {
      var_symbol->s_type = SYMBOL_TYPE_GLOBAL;
      /* Package together documentation tags for this variable symbol. */
      var_symbol->s_global.g_doc = (DREF DeeStringObject *)unicode_printer_pack(&current_tags.at_doc);

@@ -1903,25 +1903,21 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 user_get_name(struct user_object *__restrict self) {
- DREF DeeObject *result;
  LPWSTR name,domain; SID_NAME_USE use;
  if (!self->u_sd) return fs_getuser(false);
  if (user_get_name_and_domain(self,&name,&domain,&use))
      return NULL;
  DeeString_FreeWideBuffer(domain);
- result = DeeString_PackWideBuffer(name,STRING_ERROR_FIGNORE);
- return result;
+ return DeeString_PackWideBuffer(name,STRING_ERROR_FIGNORE);
 }
 PRIVATE DREF DeeObject *DCALL
 user_get_domain(struct user_object *__restrict self) {
- DREF DeeObject *result;
  LPWSTR name,domain; SID_NAME_USE use;
  if (!self->u_sd) return fs_gethostname();
  if (user_get_name_and_domain(self,&name,&domain,&use))
      return NULL;
  DeeString_FreeWideBuffer(name);
- result = DeeString_PackWideBuffer(domain,STRING_ERROR_FIGNORE);
- return result;
+ return DeeString_PackWideBuffer(domain,STRING_ERROR_FIGNORE);
 }
 PRIVATE DREF DeeObject *DCALL
 user_get_home(struct user_object *__restrict self) {

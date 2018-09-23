@@ -501,10 +501,10 @@ local __objects = deemon.list {
 	/* 0x01C8 */ [](path) { __stack local st = fs.stat(path); return (st.st_uid,st.st_gid); },
 	/* 0x01C9 */ fs.user, /* DeeBuiltinFunction___builtin_fs_uidof */
 	/* 0x01CA */ fs.group, /* DeeBuiltinFunction___builtin_fs_gidof */
-	/* 0x01CB */ [](uid) { if (uid !is fs.user) uid = fs.user(uid); return uid.name(); },
-	/* 0x01CC */ [](uid) { if (uid !is fs.user) uid = fs.user(uid); return uid.name(); }, /* DeeBuiltinFunction___builtin_fs_wuidname */
-	/* 0x01CD */ [](uid) { if (uid !is fs.group) uid = fs.group(uid); return uid.name(); },
-	/* 0x01CE */ [](uid) { if (uid !is fs.group) uid = fs.group(uid); return uid.name(); }, /* DeeBuiltinFunction___builtin_fs_wgidname */
+	/* 0x01CB */ [](uid) { if (uid !is fs.user) uid = fs.user(uid); return uid.name; },
+	/* 0x01CC */ [](uid) { if (uid !is fs.user) uid = fs.user(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wuidname */
+	/* 0x01CD */ [](uid) { if (uid !is fs.group) uid = fs.group(uid); return uid.name; },
+	/* 0x01CE */ [](uid) { if (uid !is fs.group) uid = fs.group(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wgidname */
 	/* 0x01CF */ none, /* TODO: DeeBuiltinFunction___builtin_fs_win32drives */
 	/* 0x01D0 */ none, /* TODO: DeeBuiltinFunction___builtin_fs_win32wdrives */
 	/* 0x01D1 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64encode */
