@@ -996,8 +996,8 @@ PRIVATE struct dex_symbol symbols[] = {
     { "dir", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL },
     { "query", (DeeObject *)&DeeQuery_Type, MODSYM_FNORMAL },
     { "environ", &DeeEnv_Singleton, MODSYM_FNORMAL,
-      DOC("->environ\n"
-          "A mapping-style singleton instance that can be used to "
+      DOC("->{(string,string)...}\n"
+          "A :mapping-style singleton instance that can be used to "
           "access and enumerate environment variables by name:\n"
           ">print environ[\"PATH\"]; /* \"/bin:/usr/bin:...\" */\n"
           "Other mapping operations known from :dict can be used "
@@ -1005,25 +1005,25 @@ PRIVATE struct dex_symbol symbols[] = {
           "check for the existance of (${... in environ}) environment variables, "
           "as well as enumerating all variables (${for (key,item: environ) ...})") },
     { "gettmp", (DeeObject *)&libfs_gettmp, MODSYM_FNORMAL,
-      DOC("()->string\n"
+      DOC("->string\n"
           "@interrupt\n"
-          "@throw SytemError Failed to retrieve a temporary path name for some reason\n"
+          "@throw FSError Failed to retrieve a temporary path name for some reason\n"
           "Return the path to a folder that can be used as "
           "temporary storage of files and directories") },
     { "getcwd", (DeeObject *)&libfs_getcwd, MODSYM_FNORMAL,
-      DOC("()->string\n"
+      DOC("->string\n"
           "@interrupt\n"
-          "@throw SytemError Failed to retrieve the current working directory for some reason\n"
+          "@throw FSError Failed to retrieve the current working directory for some reason\n"
           "Return the absolute path of the current working directory") },
     { "gethostname", (DeeObject *)&libfs_gethostname, MODSYM_FNORMAL,
-      DOC("()->string\n"
+      DOC("->string\n"
           "@interrupt\n"
-          "@throw SytemError Failed to retrieve the name of the hosting machine for some reason\n"
+          "@throw FSError Failed to retrieve the name of the hosting machine for some reason\n"
           "Returns the user-assigned name of the hosting machine") },
     { "chdir", (DeeObject *)&libfs_chdir, MODSYM_FNORMAL,
-      DOC("(string path)->none\n"
-          "(file fp)->none\n"
-          "(int fd)->none\n"
+      DOC("(string path)\n"
+          "(file fp)\n"
+          "(int fd)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
           "@throw NoDirectory The given @path is not a directory\n"
@@ -1033,12 +1033,12 @@ PRIVATE struct dex_symbol symbols[] = {
           "Change the current working directory to @path, which may be a path "
           "relative to the old current working directory") },
     { "chtime", (DeeObject *)&libfs_chtime, MODSYM_FNORMAL,
-      DOC("(string path,time atime,time mtime,time ctime=none)->none\n"
-          "(string path,none atime,none mtime,none ctime=none)->none\n"
-          "(file fp,time atime,time mtime,time ctime=none)->none\n"
-          "(file fp,none atime,none mtime,none ctime=none)->none\n"
-          "(int fd,time atime,time mtime,time ctime=none)->none\n"
-          "(int fd,none atime,none mtime,none ctime=none)->none\n"
+      DOC("(string path,time atime,time mtime,time ctime=none)\n"
+          "(string path,none atime,none mtime,none ctime=none)\n"
+          "(file fp,time atime,time mtime,time ctime=none)\n"
+          "(file fp,none atime,none mtime,none ctime=none)\n"
+          "(int fd,time atime,time mtime,time ctime=none)\n"
+          "(int fd,none atime,none mtime,none ctime=none)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1055,12 +1055,12 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to change time for some reason\n"
           "Change the timestamps associated with the given @path") },
     { "chmod", (DeeObject *)&libfs_chmod, MODSYM_FNORMAL,
-      DOC("(string path,string mode)->none\n"
-          "(string path,int mode)->none\n"
-          "(file fp,string mode)->none\n"
-          "(file fp,int mode)->none\n"
-          "(int fd,string mode)->none\n"
-          "(int fd,int mode)->none\n"
+      DOC("(string path,string mode)\n"
+          "(string path,int mode)\n"
+          "(file fp,string mode)\n"
+          "(file fp,int mode)\n"
+          "(int fd,string mode)\n"
+          "(int fd,int mode)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1074,15 +1074,15 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw ValueError The given @mode is malformed or not recognized\n"
           "Change the permissions associated with a given @path") },
     { "chown", (DeeObject *)&libfs_chown, MODSYM_FNORMAL,
-      DOC("(string path,string user,string group)->none\n"
-          "(string path,user user,group group)->none\n"
-          "(string path,int uid,int gid)->none\n"
-          "(file fp,string user,string group)->none\n"
-          "(file fp,user user,group group)->none\n"
-          "(file fp,int uid,int gid)->none\n"
-          "(int fd,string user,string group)->none\n"
-          "(int fd,user user,group group)->none\n"
-          "(int fd,int uid,int gid)->none\n"
+      DOC("(string path,string user,string group)\n"
+          "(string path,user user,group group)\n"
+          "(string path,int uid,int gid)\n"
+          "(file fp,string user,string group)\n"
+          "(file fp,user user,group group)\n"
+          "(file fp,int uid,int gid)\n"
+          "(int fd,string user,string group)\n"
+          "(int fd,user user,group group)\n"
+          "(int fd,int uid,int gid)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1096,8 +1096,8 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to change ownership for some reason\n"
           "Change the ownership of a given @path") },
     { "mkdir", (DeeObject *)&libfs_mkdir, MODSYM_FNORMAL,
-      DOC("(string path,string permissions=none)->none\n"
-          "(string path,int permissions)->none\n"
+      DOC("(string path,string permissions=none)\n"
+          "(string path,int permissions)\n"
           "@interrupt\n"
           "@throw FileNotFound One or more of @path's parents do not exist\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1111,7 +1111,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to create a directory for some reason\n"
           "Create a new directory named @path") },
     { "rmdir", (DeeObject *)&libfs_rmdir, MODSYM_FNORMAL,
-      DOC("(string path)->none\n"
+      DOC("(string path)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path does not exist\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1127,7 +1127,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to delete the directory @path for some reason\n"
           "Remove a directory named @path") },
     { "unlink", (DeeObject *)&libfs_unlink, MODSYM_FNORMAL,
-      DOC("(string path)->none\n"
+      DOC("(string path)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path does not exist\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1141,7 +1141,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to unlink the given file @path for some reason\n"
           "Remove a non-directory filesystem object named @path") },
     { "remove", (DeeObject *)&libfs_remove, MODSYM_FNORMAL,
-      DOC("(string path)->none\n"
+      DOC("(string path)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path does not exist\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1155,7 +1155,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to remove the given file @path for some reason\n"
           "Remove a file or an empty directory name @path") },
     { "rename", (DeeObject *)&libfs_rename, MODSYM_FNORMAL,
-      DOC("(string existing_path,string new_path)->none\n"
+      DOC("(string existing_path,string new_path)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @existing_path could not be found, or a parent directory of @new_path does not exist\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1171,15 +1171,15 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to rename the given @existing_path for some reason\n"
           "Renames or moves a given @existing_path to be referred to as @new_path from then on") },
     { "copyfile", (DeeObject *)&libfs_copyfile, MODSYM_FNORMAL,
-      DOC("(string existing_file,string new_file,callable progress=none)->none\n"
-          "(string existing_file,file new_fp,callable progress=none)->none\n"
-          "(string existing_file,int new_fd,callable progress=none)->none\n"
-          "(file existing_fp,string new_file,callable progress=none)->none\n"
-          "(file existing_fp,file new_fp,callable progress=none)->none\n"
-          "(file existing_fp,int new_fd,callable progress=none)->none\n"
-          "(int existing_fd,string new_file,callable progress=none)->none\n"
-          "(int existing_fd,file new_fp,callable progress=none)->none\n"
-          "(int existing_fd,int new_fd,callable progress=none)->none\n"
+      DOC("(string existing_file,string new_file,callable progress=none)\n"
+          "(string existing_file,file new_fp,callable progress=none)\n"
+          "(string existing_file,int new_fd,callable progress=none)\n"
+          "(file existing_fp,string new_file,callable progress=none)\n"
+          "(file existing_fp,file new_fp,callable progress=none)\n"
+          "(file existing_fp,int new_fd,callable progress=none)\n"
+          "(int existing_fd,string new_file,callable progress=none)\n"
+          "(int existing_fd,file new_fp,callable progress=none)\n"
+          "(int existing_fd,int new_fd,callable progress=none)\n"
           "@interrupt\n"
           "@throw FileExists The given @new_file already exists\n"
           "@throw NoDirectory A part of the given @existing_file or @new_file is not a directory\n"
@@ -1206,9 +1206,9 @@ PRIVATE struct dex_symbol symbols[] = {
           "propagated after the partially copied file may have been deleted, based on "
           "the host operating system's preferrance") },
     { "link", (DeeObject *)&libfs_link, MODSYM_FNORMAL,
-      DOC("(string existing_path,string new_path)->none\n"
-          "(file existing_fp,string new_path)->none\n"
-          "(int existing_fd,string new_path)->none\n"
+      DOC("(string existing_path,string new_path)\n"
+          "(file existing_fp,string new_path)\n"
+          "(int existing_fd,string new_path)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @existing_path could not be found, or a parent directory of @new_path does not exist\n"
           "@throw NoDirectory A part of the given @existing_path or @new_path is not a directory\n"
@@ -1228,7 +1228,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "directory entry under @new_path that points to the data block of an existing "
           "file @existing_path") },
     { "symlink", (DeeObject *)&libfs_symlink, MODSYM_FNORMAL,
-      DOC("(string target_text,string link_path,bool format_target=true)->none\n"
+      DOC("(string target_text,string link_path,bool format_target=true)\n"
           "@interrupt\n"
           "@throw FileExists A file or directory named @link_path already exists\n"
           "@throw FileNotFound A parent directory of @link_path does not exist\n"
@@ -1401,26 +1401,26 @@ PRIVATE struct dex_symbol symbols[] = {
           "found in environment variables, most notably ${environ[\"PATH\"]}") },
 
     /* stat.st_mode bits. */
-    { "S_IFMT",   (DeeObject *)&libfs_S_IFMT,   MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IFDIR",  (DeeObject *)&libfs_S_IFDIR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IFCHR",  (DeeObject *)&libfs_S_IFCHR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IFBLK",  (DeeObject *)&libfs_S_IFBLK,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IFREG",  (DeeObject *)&libfs_S_IFREG,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IFIFO",  (DeeObject *)&libfs_S_IFIFO,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IFLNK",  (DeeObject *)&libfs_S_IFLNK,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IFSOCK", (DeeObject *)&libfs_S_IFSOCK, MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_ISUID",  (DeeObject *)&libfs_S_ISUID,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_ISGID",  (DeeObject *)&libfs_S_ISGID,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_ISVTX",  (DeeObject *)&libfs_S_ISVTX,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IRUSR",  (DeeObject *)&libfs_S_IRUSR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IWUSR",  (DeeObject *)&libfs_S_IWUSR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IXUSR",  (DeeObject *)&libfs_S_IXUSR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IRGRP",  (DeeObject *)&libfs_S_IRGRP,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IWGRP",  (DeeObject *)&libfs_S_IWGRP,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IXGRP",  (DeeObject *)&libfs_S_IXGRP,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IROTH",  (DeeObject *)&libfs_S_IROTH,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IWOTH",  (DeeObject *)&libfs_S_IWOTH,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
-    { "S_IXOTH",  (DeeObject *)&libfs_S_IXOTH,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("->int") },
+    { "S_IFMT",   (DeeObject *)&libfs_S_IFMT,   MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IFDIR",  (DeeObject *)&libfs_S_IFDIR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IFCHR",  (DeeObject *)&libfs_S_IFCHR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IFBLK",  (DeeObject *)&libfs_S_IFBLK,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IFREG",  (DeeObject *)&libfs_S_IFREG,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IFIFO",  (DeeObject *)&libfs_S_IFIFO,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IFLNK",  (DeeObject *)&libfs_S_IFLNK,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IFSOCK", (DeeObject *)&libfs_S_IFSOCK, MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_ISUID",  (DeeObject *)&libfs_S_ISUID,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_ISGID",  (DeeObject *)&libfs_S_ISGID,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_ISVTX",  (DeeObject *)&libfs_S_ISVTX,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IRUSR",  (DeeObject *)&libfs_S_IRUSR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IWUSR",  (DeeObject *)&libfs_S_IWUSR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IXUSR",  (DeeObject *)&libfs_S_IXUSR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IRGRP",  (DeeObject *)&libfs_S_IRGRP,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IWGRP",  (DeeObject *)&libfs_S_IWGRP,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IXGRP",  (DeeObject *)&libfs_S_IXGRP,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IROTH",  (DeeObject *)&libfs_S_IROTH,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IWOTH",  (DeeObject *)&libfs_S_IWOTH,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
+    { "S_IXOTH",  (DeeObject *)&libfs_S_IXOTH,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR },
     /* stat.st_mode helper functions. */
     { "S_ISDIR",  (DeeObject *)&libfs_S_ISDIR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("(int mode)->bool") },
     { "S_ISCHR",  (DeeObject *)&libfs_S_ISCHR,  MODSYM_FREADONLY|MODSYM_FCONSTEXPR, DOC("(int mode)->bool") },
@@ -1440,9 +1440,9 @@ PRIVATE struct dex_symbol symbols[] = {
           "limit of regular paths under windows and extend it to a "
           "maximum of around ${2**16}")  },
     { "chattr_np", (DeeObject *)&libfs_chattr_np, MODSYM_FHIDDEN,
-      DOC("(string path,int mode)->none\n"
-          "(file fp,int mode)->none\n"
-          "(int fd,int mode)->none\n"
+      DOC("(string path,int mode)\n"
+          "(file fp,int mode)\n"
+          "(int fd,int mode)\n"
           "@interrupt\n"
           "@throw FileNotFound The file specified by @path could not be found\n"
           "@throw AccessError You don't have permissions to change the attributes\n"
