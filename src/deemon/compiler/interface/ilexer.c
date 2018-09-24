@@ -3078,7 +3078,7 @@ INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
                             ">case \"\\\"\":\n"
                             "> print \"Special token: string\",com.lexer.token.decodestring();\n"
                             "> break;\n"
-                            ">case \"\\\"\':\n"
+                            ">case \"\\\'\":\n"
                             "> print \"Special token: character\",com.lexer.token.decodeinteger();\n"
                             "> break;\n"
                             ">case \"0\":\n"

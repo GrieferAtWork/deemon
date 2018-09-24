@@ -33,6 +33,7 @@
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
+#include <deemon/bytes.h>
 #include <deemon/arg.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
@@ -126,6 +127,8 @@ f_ctypes_sizeof(size_t argc, DeeObject **__restrict argv) {
  if (DeeStruct_Check(arg))
   type = (DeeSTypeObject *)Dee_TYPE(arg);
  else {
+  if (DeeBytes_Check(arg))
+      return DeeInt_NewSize(DeeBytes_SIZE(arg));
   type = DeeSType_Get(arg);
   if unlikely(!type) goto err;
  }
@@ -439,7 +442,10 @@ PRIVATE struct dex_symbol symbols[] = {
       DOC("(structured_type tp)->deemon:int\n"
           "(structured ob)->deemon:int\n"
           "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
-          "Returns the size of a given structured type or object in bytes") },
+          "Returns the size of a given structured type or object in bytes\n"
+          "\n"
+          "(bytes ob)->deemon:int\n"
+          "Returns the size of the given :bytes ob, which is the same as ${#ob}") },
     { "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FNORMAL,
       DOC("(structured_type tp)->deemon:int\n"
           "(structured ob)->deemon:int\n"
