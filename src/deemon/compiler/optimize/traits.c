@@ -885,12 +885,10 @@ ast_uses_symbol(struct ast *__restrict self,
   return symbol_uses_symbol_on_bnd(self->a_sym,sym);
 
  {
-  DREF struct ast **iter,**end;
+  size_t i;
  case AST_MULTIPLE:
-  end = (iter = self->a_multiple.m_astv)+
-                self->a_multiple.m_astc;
-  for (; iter != end; ++iter) {
-   if (ast_uses_symbol(*iter,sym))
+  for (i = 0; i < self->a_multiple.m_astc; ++i) {
+   if (ast_uses_symbol(self->a_multiple.m_astv[i],sym))
        goto yup;
   }
  } break;
@@ -947,11 +945,14 @@ ast_uses_symbol(struct ast *__restrict self,
  case AST_LOOP:
  case AST_CONDITIONAL:
  case AST_ACTION:
-  if (self->a_loop.l_elem && ast_uses_symbol(self->a_loop.l_elem,sym)) goto yup;
+  if (self->a_loop.l_loop &&
+      ast_uses_symbol(self->a_loop.l_loop,sym)) goto yup;
   ATTR_FALLTHROUGH
  case AST_SWITCH:
-  if (self->a_loop.l_iter && ast_uses_symbol(self->a_loop.l_iter,sym)) goto yup;
-  if (self->a_loop.l_loop && ast_uses_symbol(self->a_loop.l_loop,sym)) goto yup;
+  if (self->a_loop.l_iter &&
+      ast_uses_symbol(self->a_loop.l_iter,sym)) goto yup;
+  if (self->a_loop.l_elem &&
+      ast_uses_symbol(self->a_loop.l_elem,sym)) goto yup;
   break;
 
  {
