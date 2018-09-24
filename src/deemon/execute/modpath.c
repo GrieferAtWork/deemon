@@ -1962,12 +1962,11 @@ PRIVATE DEFINE_STRING(default_deemon_home,CONFIG_DEEMON_HOME);
 #if !defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HOST_UNIX)
 INTERN DREF DeeObject *DCALL
 unix_readlink(char const *__restrict path) {
- DREF DeeObject *result; char *buffer; int error;
+ DREF DeeObject *result; char *buffer,*new_buffer; int error;
  size_t bufsize,new_size; dssize_t req_size;
- /* TODO: Use a UTF-8 enabled unicode printer here! */
- struct ascii_printer printer = ASCII_PRINTER_INIT;
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
  bufsize = PATH_MAX;
- buffer  = ascii_printer_alloc(&printer,bufsize);
+ buffer  = unicode_printer_alloc_utf8(&printer,bufsize);
  if unlikely(!buffer) goto err;
  for (;;) {
   struct stat st;
@@ -1992,19 +1991,21 @@ handle_error:
   if (!S_ISLNK(st.st_mode)) { error = EINVAL; goto handle_error; }
   new_size = (size_t)st.st_size;
   if (new_size <= bufsize) break; /* Shouldn't happen, but might due to race conditions? */
-  buffer = ascii_printer_alloc(&printer,new_size-bufsize);
-  if unlikely(!buffer) goto err;
-  buffer -= bufsize;
+  new_buffer = unicode_printer_resize_utf8(&printer,buffer,new_size);
+  if unlikely(!new_buffer) goto err;
+  buffer  = new_buffer;
   bufsize = new_size;
  }
  /* Release unused data. */
- while ((size_t)req_size && printer.ap_string->s_str[(size_t)req_size-1] != '/') --req_size;
- while ((size_t)req_size && printer.ap_string->s_str[(size_t)req_size-1] == '/') --req_size;
- printer.ap_string->s_str[(size_t)(req_size++)] = '/';
- ascii_printer_release(&printer,(size_t)(bufsize-(size_t)req_size));
- return ascii_printer_pack(&printer);
+ unicode_printer_confirm_utf8(&printer,buffer,(size_t)req_size);
+ bufsize = UNICODE_PRINTER_LENGTH(&printer);
+ while (bufsize && UNICODE_PRINTER_GETCHAR(&printer,bufsize - 1) != '/') --bufsize;
+ while (bufsize && UNICODE_PRINTER_GETCHAR(&printer,bufsize - 1) == '/') --bufsize;
+ UNICODE_PRINTER_SETCHAR(&printer,bufsize,'/');
+ unicode_printer_truncate(&printer,bufsize + 1);
+ return unicode_printer_pack(&printer);
 err:
- ascii_printer_fini(&printer);
+ unicode_printer_fini(&printer);
  return NULL;
 }
 #endif

@@ -213,7 +213,7 @@ INTDEF DREF DeeObject *DCALL DeeObjMethod_CallFunc_d(dobjmethod_t fun, DeeObject
 INTDEF DREF DeeObject *DCALL DeeKwCMethod_CallFunc_d(dkwcmethod_t fun, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF DREF DeeObject *DCALL DeeKwObjMethod_CallFunc_d(dkwobjmethod_t fun, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #endif
-#endif
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 #ifdef GUARD_DEEMON_SEQ_H

@@ -515,6 +515,8 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 extern IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
 #else
+/* XXX: This only works when deemon is the primary
+ *      binary, but not if it was loaded as a DLL! */
 #define HINST_THISCOMPONENT   GetModuleHandleW(NULL)
 #endif
 

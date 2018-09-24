@@ -21,6 +21,9 @@
 
 #include "api.h"
 #include "object.h"
+#ifndef CONFIG_NO_THREADS
+#include "util/rwlock.h"
+#endif
 
 DECL_BEGIN
 

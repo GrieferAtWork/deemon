@@ -2963,7 +2963,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&type_ctor,
+                /* .tp_ctor      = */(void *)&type_ctor,
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
@@ -3339,7 +3339,7 @@ PRIVATE void DCALL
 assert_badtype_impl(char const *check_name, char const *file,
                     int line, DeeObject *ob, bool wanted_exact,
                     DeeTypeObject *__restrict wanted_type) {
- char const *is_exact = wanted_exact ? " an exact " : " a ";
+ char const *is_exact = wanted_exact ? " an exact " : " an ";
  if (!ob) {
   _DeeAssert_Failf(check_name,file,line,
                    "Bad object at %p is a NULL pointer when%sinstance of %s was needed",
