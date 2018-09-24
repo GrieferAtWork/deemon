@@ -92,8 +92,9 @@ struct attribute_info {
 struct attribute_object {
     /* Wrapper object for attribute information provided to `denum_t' */
     OBJECT_HEAD
-    DREF struct string_object *a_name;     /* [1..1] The name of the attribute. */
-    struct attribute_info      a_info;     /* [const] Attribute information. */
+    char const           *a_name; /* [1..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(.,DeeStringObject,s_str)))]
+                                   * The name of the attribute. */
+    struct attribute_info a_info; /* [const] Attribute information. */
 };
 
 struct enumattr_object {

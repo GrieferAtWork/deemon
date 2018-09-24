@@ -51,8 +51,9 @@ typedef DeeEnumAttrIteratorObject EnumAttrIter;
 
 PRIVATE void DCALL
 attr_fini(Attr *__restrict self) {
+ if (self->a_info.a_perm & ATTR_NAMEOBJ)
+     Dee_Decref(COMPILER_CONTAINER_OF(self->a_name,DeeStringObject,s_str));
  attribute_info_fini(&self->a_info);
- Dee_Decref(self->a_name);
 }
 PRIVATE void DCALL
 attr_visit(Attr *__restrict self, dvisit_t proc, void *arg) {
@@ -61,29 +62,64 @@ attr_visit(Attr *__restrict self, dvisit_t proc, void *arg) {
 }
 PRIVATE DREF DeeObject *DCALL
 attr_str(Attr *__restrict self) {
- return DeeString_Newf("%k.%k",
+ return DeeString_Newf("%k.%s",
                        self->a_info.a_decl,
                        self->a_name);
 }
 
 PRIVATE dhash_t DCALL
 attr_hash(Attr *__restrict self) {
- return (DeeObject_Hash(self->a_info.a_decl) ^
-         Dee_HashPointer(self->a_info.a_attrtype) ^ self->a_info.a_perm ^
-         DeeString_Hash((DeeObject *)self->a_name));
+ dhash_t result;
+ result = (DeeObject_Hash(self->a_info.a_decl) ^
+           Dee_HashPointer(self->a_info.a_attrtype) ^
+           self->a_info.a_perm);
+ if (self->a_info.a_perm & ATTR_NAMEOBJ) {
+  result ^= DeeString_Hash((DeeObject *)COMPILER_CONTAINER_OF(self->a_name,
+                                                              DeeStringObject,
+                                                              s_str));
+ } else {
+  result ^= hash_str(self->a_name);
+ }
+ return result;
 }
 PRIVATE DREF DeeObject *DCALL
 attr_eq(Attr *__restrict self, Attr *__restrict other) {
+ int result;
  if (DeeObject_AssertType((DeeObject *)other,&DeeAttribute_Type))
-     return NULL;
+     goto err;
  if (self->a_info.a_attrtype != other->a_info.a_attrtype)
-     return_false;
- return_bool(self->a_name == other->a_name ||
-            (DeeString_Hash((DeeObject *)self->a_name) ==
-             DeeString_Hash((DeeObject *)other->a_name) &&
-             self->a_name->s_len == other->a_name->s_len &&
-             memcmp(self->a_name->s_str,other->a_name->s_str,
-                    self->a_name->s_len*sizeof(char)) == 0));
+     goto nope;
+ if (self->a_info.a_decl != other->a_info.a_decl) {
+  result = DeeObject_CompareEq(self->a_info.a_decl,
+                               other->a_info.a_decl);
+  if unlikely(result < 0) goto err;
+  if (!result) goto nope;
+ }
+ if ((self->a_info.a_perm & ~(ATTR_NAMEOBJ|ATTR_DOCOBJ)) !=
+     (other->a_info.a_perm & ~(ATTR_NAMEOBJ|ATTR_DOCOBJ)))
+     goto nope;
+ if (self->a_name == other->a_name)
+     goto yup;
+ if ((self->a_info.a_perm & ATTR_NAMEOBJ) &&
+     (other->a_info.a_perm & ATTR_NAMEOBJ)) {
+  DeeStringObject *my_name = COMPILER_CONTAINER_OF(self->a_name,DeeStringObject,s_str);
+  DeeStringObject *ot_name = COMPILER_CONTAINER_OF(other->a_name,DeeStringObject,s_str);
+  if (DeeString_Hash((DeeObject *)my_name) != DeeString_Hash((DeeObject *)ot_name))
+      goto nope;
+  if (DeeString_SIZE(my_name) != DeeString_SIZE(ot_name))
+      goto nope;
+  if (memcmp(DeeString_STR(my_name),DeeString_STR(ot_name),DeeString_SIZE(ot_name) * sizeof(char)) != 0)
+      goto nope;
+ } else {
+  if (strcmp(self->a_name,other->a_name) != 0)
+      goto nope;
+ }
+yup:
+ return_true;
+nope:
+ return_false;
+err:
+ return NULL;
 }
 
 PRIVATE struct type_cmp attr_cmp = {
@@ -94,17 +130,50 @@ PRIVATE struct type_cmp attr_cmp = {
 PRIVATE struct type_member attr_members[] = {
     TYPE_MEMBER_FIELD_DOC("decl",STRUCT_OBJECT,offsetof(Attr,a_info.a_decl),
                           "The type or object that is declaring this attribute"),
-    TYPE_MEMBER_FIELD_DOC("name",STRUCT_OBJECT,offsetof(Attr,a_name),
-                          "->string\n"
-                          "The name of this attribute"),
     TYPE_MEMBER_FIELD_DOC("attrtype",STRUCT_OBJECT_OPT,offsetof(Attr,a_info.a_attrtype),
                           "->type\n"
+                          "->none\n"
                           "The type of this attribute, or :none if not known"),
     TYPE_MEMBER_END
 };
 
 PRIVATE DREF DeeStringObject *DCALL
-attr_getdoc(Attr *__restrict self) {
+attr_get_name(Attr *__restrict self) {
+ DREF DeeStringObject *result;
+ char const *name_str;
+ uint16_t perm;
+again:
+ name_str = self->a_name;
+ __hybrid_atomic_thread_fence(__ATOMIC_ACQUIRE);
+ perm = self->a_info.a_perm;
+ if (perm & ATTR_NAMEOBJ) {
+  result = COMPILER_CONTAINER_OF(name_str,
+                                 DeeStringObject,
+                                 s_str);
+  Dee_Incref(result);
+ } else {
+  if (!name_str) {
+   result = (DREF DeeStringObject *)Dee_EmptyString;
+   Dee_Incref(result);
+  } else {
+   /* Wrap the name string into a string object. */
+   result = (DREF DeeStringObject *)DeeString_New(name_str);
+   if unlikely(!result) goto done;
+   /* Cache the name-string as part of the attribute structure. */
+   if (!ATOMIC_CMPXCH(self->a_name,name_str,DeeString_STR(result))) {
+    Dee_Decref(result);
+    goto again;
+   }
+   ATOMIC_FETCHOR(self->a_info.a_perm,ATTR_NAMEOBJ);
+   Dee_Incref(result);
+  }
+ }
+done:
+ return result;
+}
+
+PRIVATE DREF DeeStringObject *DCALL
+attr_get_doc(Attr *__restrict self) {
  DREF DeeStringObject *result;
  char const *doc_str;
  uint16_t perm;
@@ -222,7 +291,7 @@ PRIVATE DREF DeeObject *DCALL
 attr_repr(Attr *__restrict self) {
  DREF DeeObject *flags_str,*result;
  flags_str = attr_getflags(self);
- result = DeeString_Newf("attribute(%r,%r,%r,%r,%r)",
+ result = DeeString_Newf("attribute(%r,%q,%r,%r,%r)",
                          self->a_info.a_decl,
                          self->a_name,
                          flags_str,
@@ -235,7 +304,10 @@ attr_repr(Attr *__restrict self) {
 
 
 PRIVATE struct type_getset attr_getsets[] = {
-    { "doc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_getdoc, NULL, NULL,
+    { "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_get_name, NULL, NULL,
+      DOC("->string\n"
+          "The name of this attribute") },
+    { "doc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_get_doc, NULL, NULL,
       DOC("->string\n"
           "The documentation string of this attribute, or an empty string when no documentation is present") },
     { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_canget, NULL, NULL,
@@ -380,7 +452,8 @@ attribute_init(DeeAttributeObject *__restrict self, size_t argc,
   goto err;
  }
  if likely(!lookup_error) {
-  self->a_name = (DREF struct string_object *)argv[1];
+  self->a_name = DeeString_STR(argv[1]);
+  self->a_info.a_perm |= ATTR_NAMEOBJ;
   Dee_Incref(argv[1]);
  }
  return lookup_error;
@@ -516,8 +589,9 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
  result = DeeObject_MALLOC(DeeAttributeObject);
  if unlikely(!result) goto err_info;
  DeeObject_Init(result,&DeeAttribute_Type);
+ info.a_perm |= ATTR_NAMEOBJ;
  memcpy(&result->a_info,&info,sizeof(struct attribute_info)); /* Inherit references */
- result->a_name = (DREF DeeStringObject *)search_name;
+ result->a_name = DeeString_STR(search_name);
  Dee_Incref(search_name);
  return (DREF DeeObject *)result;
 err_info:
@@ -663,9 +737,9 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 
 #ifndef CONFIG_LONGJMP_ENUMATTR
 struct attr_list {
- size_t      al_c;
- size_t      al_a;
- DREF Attr **al_v;
+    size_t      al_c;
+    size_t      al_a;
+    DREF Attr **al_v;
 };
 
 PRIVATE dssize_t DCALL
@@ -693,22 +767,17 @@ do_realloc:
  /* Allocate a new attribute descriptor. */
  new_attr = DeeObject_MALLOC(Attr);
  if unlikely(!new_attr) goto err;
- if (perm&ATTR_NAMEOBJ) {
-  new_attr->a_name = COMPILER_CONTAINER_OF(attr_name,DeeStringObject,s_str);
-  Dee_Incref(new_attr->a_name);
+ new_attr->a_name = attr_name;
+ if (perm & ATTR_NAMEOBJ)
+     Dee_Incref(COMPILER_CONTAINER_OF(attr_name,DeeStringObject,s_str));
+ if (!attr_doc) {
+  ASSERT(!(perm & ATTR_DOCOBJ));
+  new_attr->a_info.a_doc = NULL;
+ } else if (perm & ATTR_DOCOBJ) {
+  new_attr->a_info.a_doc = attr_doc;
+  Dee_Incref(COMPILER_CONTAINER_OF(attr_doc,DeeStringObject,s_str));
  } else {
-  new_attr->a_name = (DREF DeeStringObject *)DeeString_New(attr_name);
-  if unlikely(!new_attr->a_name) goto err_attr;
- }
- if (!attr_doc) new_attr->a_info.a_doc = NULL;
- else if (perm&ATTR_DOCOBJ) {
-  new_attr->a_info.a_doc = COMPILER_CONTAINER_OF(attr_doc,DeeStringObject,s_str);
-  Dee_Incref(new_attr->a_info.a_doc);
- } else {
-  new_attr->a_info.a_doc = (DREF DeeStringObject *)DeeString_NewUtf8(attr_doc,
-                                                                     strlen(attr_doc),
-                                                                     STRING_ERROR_FIGNORE);
-  if unlikely(!new_attr->a_info.a_doc) goto err_name;
+  new_attr->a_info.a_doc = attr_doc;
  }
  new_attr->a_info.a_decl     = declarator;
  new_attr->a_info.a_perm     = perm;
@@ -718,9 +787,8 @@ do_realloc:
  DeeObject_Init(new_attr,&DeeAttribute_Type);
  self->al_v[self->al_c++] = new_attr; /* Inherit reference. */
  return 0;
-err_name: Dee_Decref(new_attr->a_name);
-err_attr: DeeObject_Free(new_attr);
-err:      return -1;
+err:
+ return -1;
 }
 #endif
 
@@ -1012,13 +1080,9 @@ again:
  new_attribute->a_info.a_decl     = declarator;
  new_attribute->a_info.a_perm     = perm;
  new_attribute->a_info.a_attrtype = attr_type;
- if (perm & ATTR_NAMEOBJ) {
-  new_attribute->a_name = COMPILER_CONTAINER_OF(attr_name,DeeStringObject,s_str);
-  Dee_Incref(new_attribute->a_name);
- } else {
-  new_attribute->a_name = DeeString_TryNew(attr_name);
-  if unlikely(!new_attribute->a_name) goto err_collect_2;
- }
+ new_attribute->a_name = attr_name;
+ if (perm & ATTR_NAMEOBJ)
+     Dee_Incref(COMPILER_CONTAINER_OF(attr_name,DeeStringObject,s_str));
  if (!attr_doc) {
   ASSERT(!(perm & ATTR_DOCOBJ));
   new_attribute->a_info.a_doc = NULL;
@@ -1043,8 +1107,6 @@ again:
   if (error == CNTSIG_STOP) return -2;
  }
  return 0;
-err_collect_2:
- DeeObject_Free(new_attribute);
 err_collect:
  /* Let the other end collect memory for us.
   * With how small our stack is, we'd probably not be able to
