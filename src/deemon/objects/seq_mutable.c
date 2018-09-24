@@ -73,7 +73,6 @@ has_generic_attribute(DeeTypeObject *__restrict tp_self,
    *       if the attribute is implemented by the type itself. */
   if (DeeType_IsClass(tp_self))
       return DeeClass_QueryInstanceAttributeStringWithHash(tp_self,name,hash) != NULL ? 1 : 0;
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
   if (tp_self->tp_methods &&
       DeeType_HasMethodAttr(tp_self,tp_self,name,hash))
       goto yes;
@@ -83,21 +82,6 @@ has_generic_attribute(DeeTypeObject *__restrict tp_self,
   if (tp_self->tp_members &&
       DeeType_HasMemberAttr(tp_self,tp_self,name,hash))
       goto yes;
-#else
-  {
-   struct membercache *cache;
-   cache = &tp_self->tp_cache;
-   if (tp_self->tp_methods &&
-       type_method_hasattr(cache,tp_self->tp_methods,name,hash))
-       goto yes;
-   if (tp_self->tp_getsets &&
-       type_getset_hasattr(cache,tp_self->tp_getsets,name,hash))
-       goto yes;
-   if (tp_self->tp_members &&
-       type_member_hasattr(cache,tp_self->tp_members,name,hash))
-       goto yes;
-  }
-#endif
  }
  return 0;
 yes:
@@ -122,7 +106,6 @@ vcall_generic_attribute(DeeTypeObject *__restrict tp_self,
   *       if the attribute is implemented by the type itself. */
  if (DeeType_IsClass(tp_self)) {
   struct class_attribute *member;
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
   if ((member = DeeType_QueryAttributeStringWithHash(tp_self,tp_self,name,hash)) != NULL) {
    struct class_desc *desc = DeeClass_DESC(tp_self);
    return DeeInstance_VCallAttributef(desc,
@@ -130,19 +113,9 @@ vcall_generic_attribute(DeeTypeObject *__restrict tp_self,
                                                        self),
                                       self,member,format,args);
   }
-#else
-  struct class_desc *desc = DeeClass_DESC(tp_self);
-  if ((member = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name,hash)) != NULL) {
-   return DeeInstance_VCallAttributef(desc,
-                                      DeeInstance_DESC(desc,
-                                                       self),
-                                      self,member,format,args);
-  }
-#endif
   result = ITER_DONE;
  } else {
   result = ITER_DONE;
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
   if (tp_self->tp_methods &&
      (result = DeeType_VCallMethodAttrf(tp_self,tp_self,self,name,hash,format,args)) != ITER_DONE)
       goto done;
@@ -152,21 +125,6 @@ vcall_generic_attribute(DeeTypeObject *__restrict tp_self,
   if (tp_self->tp_members &&
      (result = DeeType_GetMemberAttr(tp_self,tp_self,self,name,hash)) != ITER_DONE)
       goto done_call;
-#else
-  {
-   struct membercache *cache;
-   cache = &tp_self->tp_cache;
-   if (tp_self->tp_methods &&
-      (result = type_method_vcallattrf(cache,tp_self->tp_methods,self,name,hash,format,args)) != ITER_DONE)
-       goto done;
-   if (tp_self->tp_getsets &&
-      (result = type_getset_getattr(cache,tp_self->tp_getsets,self,name,hash)) != ITER_DONE)
-       goto done_call;
-   if (tp_self->tp_members &&
-      (result = type_member_getattr(cache,tp_self->tp_members,self,name,hash)) != ITER_DONE)
-       goto done_call;
-  }
-#endif
  }
 done:
  return result;
@@ -195,7 +153,6 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
   *       if the attribute is implemented by the type itself. */
  if (DeeType_IsClass(tp_self)) {
   struct class_attribute *member;
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
   if ((member = DeeType_QueryAttributeStringWithHash(tp_self,tp_self,
                                                      DeeString_STR(name),
                                                      hash)) != NULL) {
@@ -206,22 +163,9 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
                                    self,
                                    member);
   }
-#else
-  struct class_desc *desc = DeeClass_DESC(tp_self);
-  if ((member = DeeClass_QueryInstanceAttributeStringWithHash(desc,
-                                                                  DeeString_STR(name),
-                                                                  hash)) != NULL) {
-   return DeeInstance_GetAttribute(desc,
-                                   DeeInstance_DESC(desc,
-                                                    self),
-                                   self,
-                                   member);
-  }
-#endif
   result = ITER_DONE;
  } else {
   result = ITER_DONE;
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
   if (tp_self->tp_methods &&
      (result = DeeType_GetMethodAttr(tp_self,tp_self,self,DeeString_STR(name),hash)) != ITER_DONE)
       goto done;
@@ -231,21 +175,6 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
   if (tp_self->tp_members &&
      (result = DeeType_GetMemberAttr(tp_self,tp_self,self,DeeString_STR(name),hash)) != ITER_DONE)
       goto done;
-#else
-  {
-   struct membercache *cache;
-   cache = &tp_self->tp_cache;
-   if (tp_self->tp_methods &&
-      (result = type_method_getattr(cache,tp_self->tp_methods,self,DeeString_STR(name),hash)) != ITER_DONE)
-       goto done;
-   if (tp_self->tp_getsets &&
-      (result = type_getset_getattr(cache,tp_self->tp_getsets,self,DeeString_STR(name),hash)) != ITER_DONE)
-       goto done;
-   if (tp_self->tp_members &&
-      (result = type_member_getattr(cache,tp_self->tp_members,self,DeeString_STR(name),hash)) != ITER_DONE)
-       goto done;
-  }
-#endif
  }
 done:
  return result;

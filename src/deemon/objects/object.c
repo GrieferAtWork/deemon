@@ -1742,7 +1742,6 @@ set_basic_member(DeeTypeObject *__restrict tp_self,
                  DeeObject *__restrict self,
                  DeeStringObject *__restrict member_name,
                  DeeObject *__restrict value) {
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
  int temp; DeeTypeObject *iter = tp_self;
  char const *attr_name = DeeString_STR(member_name);
  dhash_t attr_hash = DeeString_Hash((DeeObject *)member_name);
@@ -1783,47 +1782,6 @@ next_base:
                         member_name,tp_self);
 done_temp:
  return temp;
-#else
- int temp; DeeTypeObject *iter = tp_self;
- char const *attr_name = DeeString_STR(member_name);
- dhash_t attr_hash = DeeString_Hash((DeeObject *)member_name);
- temp = membercache_setbasicattr(&tp_self->tp_cache,self,attr_name,attr_hash,value);
- if (temp <= 0) goto done_temp;
- do {
-  if (DeeType_IsClass(iter)) {
-   struct class_attribute *attr;
-   struct instance_desc *instance;
-   struct class_desc *desc = DeeClass_DESC(iter);
-   DREF DeeObject *old_value;
-   attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
-                                                            attr_name,
-                                                            attr_hash);
-   if (!attr) goto next_base;
-   if (attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM |
-                        CLASS_ATTRIBUTE_FGETSET))
-       goto next_base;
-   instance = DeeInstance_DESC(desc,self);
-   Dee_Incref(value);
-   rwlock_write(&instance->id_lock);
-   old_value = instance->id_vtab[attr->ca_addr];
-   instance->id_vtab[attr->ca_addr] = value;
-   rwlock_endwrite(&instance->id_lock);
-   if unlikely(old_value)
-      Dee_Decref(old_value);
-   return 0;
-  }
-  if (iter->tp_members &&
-     (temp = type_member_setattr(&tp_self->tp_cache,iter->tp_members,self,attr_name,attr_hash,value)) <= 0)
-      goto done_temp;
-next_base:
-  ;
- } while ((iter = DeeType_Base(iter)) != NULL);
- return DeeError_Throwf(&DeeError_AttributeError,
-                        "Could not find member %k in %k, or its bases",
-                        member_name,tp_self);
-done_temp:
- return temp;
-#endif
 }
 
 PRIVATE int DCALL
@@ -1856,15 +1814,9 @@ set_private_basic_member(DeeTypeObject *__restrict tp_self,
      Dee_Decref(old_value);
   return 0;
  }
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
  if (tp_self->tp_members &&
     (temp = DeeType_SetMemberAttr(tp_self,tp_self,self,attr_name,attr_hash,value)) <= 0)
      goto done_temp;
-#else
- if (tp_self->tp_members &&
-    (temp = type_member_setattr(&tp_self->tp_cache,tp_self->tp_members,self,attr_name,attr_hash,value)) <= 0)
-     goto done_temp;
-#endif
 not_found:
  return DeeError_Throwf(&DeeError_AttributeError,
                         "Could not find member %k in %k",
@@ -2331,7 +2283,6 @@ impl_type_hasprivateattribute(DeeTypeObject *__restrict self,
   if (DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,name_str,name_hash) != NULL)
       goto found;
  } else {
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
   if (self->tp_methods &&
       DeeType_HasMethodAttr(self,self,name_str,name_hash))
       goto found;
@@ -2341,17 +2292,6 @@ impl_type_hasprivateattribute(DeeTypeObject *__restrict self,
   if (self->tp_members &&
       DeeType_HasMemberAttr(self,self,name_str,name_hash))
       goto found;
-#else
-  if (self->tp_methods &&
-      type_method_hasattr(&self->tp_cache,self->tp_methods,name_str,name_hash))
-      goto found;
-  if (self->tp_getsets &&
-      type_getset_hasattr(&self->tp_cache,self->tp_getsets,name_str,name_hash))
-      goto found;
-  if (self->tp_members &&
-      type_member_hasattr(&self->tp_cache,self->tp_members,name_str,name_hash))
-      goto found;
-#endif
  }
  return 0;
 found:
@@ -2371,7 +2311,6 @@ type_hasattribute(DeeTypeObject *__restrict self,
  name_str  = DeeString_STR(name);
  name_hash = DeeString_Hash(name);
  if (!self->tp_attr) {
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
   DeeTypeObject *iter;
   if (DeeType_HasCachedAttr(self,name_str,name_hash))
       goto found;
@@ -2395,17 +2334,6 @@ type_hasattribute(DeeTypeObject *__restrict self,
    if (!iter) break;
    if (iter->tp_attr) break;
   }
-#else
-  if (membercache_hasattr(&self->tp_cache,name_str,name_hash))
-      goto found;
-  for (;;) {
-   if (impl_type_hasprivateattribute(self,name_str,name_hash))
-       goto found;
-   self = DeeType_Base(self);
-   if (!self) break;
-   if (self->tp_attr) break;
-  }
-#endif
  }
  return_false;
 found:

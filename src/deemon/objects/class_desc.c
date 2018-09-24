@@ -676,31 +676,17 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
 INTERN int DCALL
 DeeClass_FindClassAttribute(DeeTypeObject *__restrict tp_invoker,
                             DeeTypeObject *__restrict self,
                             struct attribute_info *__restrict result,
-                            struct attribute_lookup_rules const *__restrict rules)
-#else
-INTERN int DCALL
-DeeClass_FindClassAttribute(DeeTypeObject *__restrict self,
-                            struct attribute_info *__restrict result,
-                            struct attribute_lookup_rules const *__restrict rules)
-#endif
-{
+                            struct attribute_lookup_rules const *__restrict rules) {
  struct class_attribute *attr;
  struct class_desc *my_class = DeeClass_DESC(self);
  uint16_t perm; DREF DeeTypeObject *attr_type;
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
  attr = DeeType_QueryClassAttributeStringWithHash(tp_invoker,self,
                                                   rules->alr_name,
                                                   rules->alr_hash);
-#else
- attr = DeeClassDesc_QueryClassAttributeStringWithHash(my_class,
-                                                       rules->alr_name,
-                                                       rules->alr_hash);
-#endif
  if (!attr) goto not_found;
  attr_type = NULL;
  perm = (ATTR_CMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
@@ -751,31 +737,17 @@ not_found:
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
 INTERN int DCALL
 DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict tp_invoker,
                                     DeeTypeObject *__restrict self,
                                     struct attribute_info *__restrict result,
-                                    struct attribute_lookup_rules const *__restrict rules)
-#else
-INTERN int DCALL
-DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict self,
-                                    struct attribute_info *__restrict result,
-                                    struct attribute_lookup_rules const *__restrict rules)
-#endif
-{
+                                    struct attribute_lookup_rules const *__restrict rules) {
  struct class_attribute *attr;
  struct class_desc *my_class = DeeClass_DESC(self);
  uint16_t perm; DREF DeeTypeObject *attr_type;
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
  attr = DeeType_QueryInstanceAttributeStringWithHash(tp_invoker,self,
                                                      rules->alr_name,
                                                      rules->alr_hash);
-#else
- attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(my_class,
-                                                       rules->alr_name,
-                                                       rules->alr_hash);
-#endif
  if (!attr) goto not_found;
  attr_type = NULL;
  perm = (ATTR_IMEMBER | ATTR_CMEMBER |
@@ -837,32 +809,18 @@ not_found:
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
 INTERN int DCALL
 DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict tp_invoker,
                                DeeTypeObject *__restrict self,
                                DeeObject *instance,
                                struct attribute_info *__restrict result,
-                               struct attribute_lookup_rules const *__restrict rules)
-#else
-INTERN int DCALL
-DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict self, DeeObject *instance,
-                               struct attribute_info *__restrict result,
-                               struct attribute_lookup_rules const *__restrict rules)
-#endif
-{
+                               struct attribute_lookup_rules const *__restrict rules) {
  struct class_attribute *attr; struct instance_desc *inst;
  struct class_desc *my_class = DeeClass_DESC(self);
  uint16_t perm; DREF DeeTypeObject *attr_type;
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
  attr = DeeType_QueryAttributeStringWithHash(tp_invoker,self,
                                              rules->alr_name,
                                              rules->alr_hash);
-#else
- attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(my_class,
-                                                          rules->alr_name,
-                                                          rules->alr_hash);
-#endif
  if (!attr) goto not_found;
  attr_type = NULL,inst = NULL;
  perm = (ATTR_IMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);

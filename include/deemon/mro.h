@@ -41,22 +41,16 @@ struct membercache_slot {
 #define MEMBERCACHE_GETSET          2  /* Getset slot. */
 #define MEMBERCACHE_MEMBER          3  /* Member slot. */
 #define MEMBERCACHE_ATTRIB          4  /* Class attribute. */
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
 #define MEMBERCACHE_INSTANCE_METHOD 5  /* Same as `MEMBERCACHE_METHOD', but only found in `tp_class_cache', referring to an instance-method */
 #define MEMBERCACHE_INSTANCE_GETSET 6  /* Same as `MEMBERCACHE_GETSET', but only found in `tp_class_cache', referring to an instance-getset */
 #define MEMBERCACHE_INSTANCE_MEMBER 7  /* Same as `MEMBERCACHE_MEMBER', but only found in `tp_class_cache', referring to an instance-member */
 #define MEMBERCACHE_INSTANCE_ATTRIB 8  /* Same as `MEMBERCACHE_ATTRIB', but only found in `tp_class_cache', referring to an instance-attribute */
 #define MEMBERCACHE_COUNT           9  /* Amount of different cache types. */
-#else
-#define MEMBERCACHE_COUNT           5  /* Amount of different cache types. */
-#endif
     uint16_t               mcs_type;   /* The type of this slot (One of `MEMBERCACHE_*') */
     uint16_t               mcs_pad[(sizeof(void *)-2)/2];
     dhash_t                mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][== hash_str(mcs_name)] */
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
     DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][1..1][const]
                                         * One of the base-classes of type, providing this attribute. */
-#endif /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
     union {
         char const        *mcs_name;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)] */
         struct type_method mcs_method; /* [valid_if(mcs_type == MEMBERCACHE_METHOD || mcs_type == MEMBERCACHE_INSTANCE_METHOD)] */
@@ -66,10 +60,6 @@ struct membercache_slot {
             char const             *a_name; /* [1..1][const][== DeeString_STR(a_attr->ca_name)] The attribute name. */
             struct class_attribute *a_attr; /* [1..1][const] The class attribute. */
             struct class_desc      *a_desc; /* [1..1][const][== DeeClass_DESC(mcs_decl)] The class implementing the attribute. */
-#ifndef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
-            DeeTypeObject          *a_type; /* [1..1][const] The type with `.->tp_class == a_desc'
-                                             * One of the base-classes of the type implementing this cache. */
-#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
         }                  mcs_attrib; /* [valid_if(mcs_type == MEMBERCACHE_ATTRIB || mcs_type == MEMBERCACHE_INSTANCE_ATTRIB)] */
     };
 };
@@ -96,7 +86,6 @@ struct membercache_slot {
 /* Finalize a given membercache. */
 INTDEF void DCALL membercache_fini(struct membercache *__restrict self);
 
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
 /* Try to insert a new caching point into the given membercache `self'.
  * @param: self: The cache to insert into.
  * @param: decl: The type providing the declaration. */
@@ -616,255 +605,6 @@ type_member_findattr(struct membercache *__restrict cache, DeeTypeObject *__rest
 #define DeeType_FindClassMemberAttr(tp_invoker,tp_self,result,rules)    type_member_findattr(&(tp_invoker)->tp_class_cache,tp_self,(tp_self)->tp_class_members,ATTR_CMEMBER,result,rules)
 INTDEF int DCALL DeeType_FindInstanceMemberAttr(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 #endif
-
-#else /* CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
-/* Lookup an attribute from cache.
- * @return: * :        The attribute value.
- * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The attribute could not be found in the cache. */
-INTDEF DREF DeeObject *DCALL
-membercache_getattr(struct membercache *__restrict cache,
-                    DeeObject *__restrict self,
-                    char const *__restrict name, dhash_t hash);
-/* @return: 1 : Attribute is bound.
- * @return: 0 : Attribute isn't bound.
- * @return: -1: An error occurred.
- * @return: -2: The attribute doesn't exist. */
-INTDEF int DCALL
-membercache_boundattr(struct membercache *__restrict cache,
-                      DeeObject *__restrict self,
-                      char const *__restrict name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-membercache_docattr(struct membercache *__restrict cache, char const *base,
-                    char const *__restrict name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-membercache_callattr(struct membercache *__restrict cache,
-                     DeeObject *__restrict self,
-                     char const *__restrict name, dhash_t hash,
-                     size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL
-membercache_callattr_kw(struct membercache *__restrict cache,
-                        DeeObject *__restrict self,
-                        char const *__restrict name, dhash_t hash,
-                        size_t argc, DeeObject **__restrict argv,
-                        DeeObject *kw);
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-#define membercache_callattr_tuple(cache,self,name,hash,args) \
-        membercache_callattr(cache,self,name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
-#define membercache_callattr_tuple_kw(cache,self,name,hash,args,kw) \
-        membercache_callattr_kw(cache,self,name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-INTDEF DREF DeeObject *DCALL
-membercache_vcallattrf(struct membercache *__restrict cache,
-                       DeeObject *__restrict self,
-                       char const *__restrict name, dhash_t hash,
-                       char const *__restrict format, va_list args);
-INTDEF bool DCALL
-membercache_hasattr(struct membercache *__restrict cache,
-                    char const *__restrict name, dhash_t hash);
-/* Lookup an attribute from cache.
- * @return:  0: Successfully invoked the delete-operator on the attribute.
- * @return: -1: An error occurred.
- * @return:  1: The attribute could not be found in the cache. */
-INTDEF int DCALL
-membercache_delattr(struct membercache *__restrict cache,
-                    DeeObject *__restrict self,
-                    char const *__restrict name, dhash_t hash);
-INTDEF int DCALL
-membercache_setattr(struct membercache *__restrict cache,
-                    DeeObject *__restrict self,
-                    char const *__restrict name, dhash_t hash,
-                    DeeObject *__restrict value);
-INTDEF int DCALL
-membercache_setbasicattr(struct membercache *__restrict cache,
-                         DeeObject *__restrict self,
-                         char const *__restrict name, dhash_t hash,
-                         DeeObject *__restrict value);
-
-struct attribute_info;
-struct attribute_lookup_rules;
-
-/* @return:  0: Attribute was found.
- * @return:  1: Attribute wasn't found.
- * @return: -1: An error occurred.
- * @param: flags: Set of `ATTR_IMEMBER|ATTR_CMEMBER' */
-INTDEF int DCALL
-membercache_find(struct membercache *__restrict cache,
-                 DeeObject *__restrict decl, uint16_t flags,
-                 struct attribute_info *__restrict result,
-                 struct attribute_lookup_rules const *__restrict rules);
-
-
-INTDEF DREF DeeObject *DCALL membercache_getinstanceattr(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF int DCALL membercache_findinstanceattr(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF DREF DeeObject *DCALL membercache_callinstanceattr(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL membercache_callinstanceattr_kw(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL membercache_delinstanceattr(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF int DCALL membercache_setinstanceattr(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict value);
-#ifdef __INTELLISENSE__
-INTDEF DREF DeeObject *DCALL membercache_docinstanceattr(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF bool DCALL membercache_hasinstanceattr(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
-#else
-#define membercache_docinstanceattr(self,name,hash)   membercache_docattr(&(self)->tp_cache,(self)->tp_name,name,hash)
-#define membercache_hasinstanceattr(self,name,hash)   membercache_hasattr(&(self)->tp_cache,name,hash)
-#endif
-
-/* Cache a given class attribute as part of the given member cache. */
-INTDEF void DCALL membercache_addclassattr(struct membercache *__restrict cache,
-                                           struct class_attribute *__restrict attr,
-                                           DeeTypeObject *__restrict type);
-
-/* Search for an attribute in type descriptor tables, adding
- * the entry to the given cache when found and not yet cached.
- * @return: * :        The attribute value.
- * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The attribute could not be found in `chain'. */
-INTDEF DREF DeeObject *DCALL
-type_method_getattr(struct membercache *__restrict cache,
-                    struct type_method *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_method_docattr(struct membercache *__restrict cache,
-                    struct type_method *__restrict chain,
-                    char const *base,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_method_callattr(struct membercache *__restrict cache,
-                     struct type_method *__restrict chain, DeeObject *__restrict self,
-                     char const *__restrict attr_name, dhash_t hash,
-                     size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL
-type_method_callattr_kw(struct membercache *__restrict cache,
-                        struct type_method *__restrict chain, DeeObject *__restrict self,
-                        char const *__restrict attr_name, dhash_t hash,
-                        size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-#define type_method_callattr_tuple(cache,chain,self,attr_name,hash,args) \
-        type_method_callattr(cache,chain,self,attr_name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
-#define type_method_callattr_tuple_kw(cache,chain,self,attr_name,hash,args,kw) \
-        type_method_callattr_kw(cache,chain,self,attr_name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-INTDEF DREF DeeObject *DCALL
-type_method_vcallattrf(struct membercache *__restrict cache,
-                       struct type_method *__restrict chain, DeeObject *__restrict self,
-                       char const *__restrict attr_name, dhash_t hash,
-                       char const *__restrict format, va_list args);
-INTDEF DREF DeeObject *DCALL
-type_obmeth_getattr(DeeTypeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_obmeth_docattr(DeeTypeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_obmeth_callattr(DeeTypeObject *__restrict self,
-                     char const *__restrict attr_name, dhash_t hash,
-                     size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL
-type_obmeth_callattr_kw(DeeTypeObject *__restrict self,
-                        char const *__restrict attr_name, dhash_t hash,
-                        size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF DREF DeeObject *DCALL
-type_getset_getattr(struct membercache *__restrict cache,
-                    struct type_getset *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-/* @return: 1 : Attribute is bound.
- * @return: 0 : Attribute isn't bound.
- * @return: -1: An error occurred.
- * @return: -2: The attribute doesn't exist. */
-INTDEF int DCALL
-type_getset_boundattr(struct membercache *__restrict cache,
-                      struct type_getset *__restrict chain, DeeObject *__restrict self,
-                      char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_getset_docattr(struct membercache *__restrict cache,
-                    struct type_getset *__restrict chain, char const *base,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_obprop_getattr(DeeTypeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_obprop_docattr(DeeTypeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_obprop_callattr(DeeTypeObject *__restrict self,
-                     char const *__restrict attr_name, dhash_t hash,
-                     size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL
-type_obprop_callattr_kw(DeeTypeObject *__restrict self,
-                        char const *__restrict attr_name, dhash_t hash,
-                        size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF DREF DeeObject *DCALL
-type_obmemb_getattr(DeeTypeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_obmemb_docattr(DeeTypeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_obmemb_callattr(DeeTypeObject *__restrict self,
-                     char const *__restrict attr_name, dhash_t hash,
-                     size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL
-type_obmemb_callattr_kw(DeeTypeObject *__restrict self,
-                        char const *__restrict attr_name, dhash_t hash,
-                        size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF DREF DeeObject *DCALL
-type_member_getattr(struct membercache *__restrict cache,
-                    struct type_member *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL
-type_member_docattr(struct membercache *__restrict cache,
-                    struct type_member *__restrict chain, char const *base,
-                    char const *__restrict attr_name, dhash_t hash);
-/* @return: -1 : An error occurred.
- * @return:  0 : Successfully accessed the attribute.
- * @return:  1 : The attribute could not be found in `chain'. */
-INTDEF int DCALL
-type_getset_delattr(struct membercache *__restrict cache,
-                    struct type_getset *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF int DCALL
-type_getset_setattr(struct membercache *__restrict cache,
-                    struct type_getset *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash, DeeObject *__restrict value);
-INTDEF int DCALL
-type_member_delattr(struct membercache *__restrict cache,
-                    struct type_member *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF int DCALL
-type_member_setattr(struct membercache *__restrict cache,
-                    struct type_member *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash, DeeObject *__restrict value);
-/* @return: true:  The attribute was found.
- * @return: false: The attribute could not be found in `chain'. */
-INTDEF bool DCALL
-type_method_hasattr(struct membercache *__restrict cache,
-                    struct type_method *__restrict chain,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF bool DCALL
-type_obmeth_hasattr(DeeTypeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF bool DCALL
-type_getset_hasattr(struct membercache *__restrict cache,
-                    struct type_getset *__restrict chain,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF bool DCALL
-type_obprop_hasattr(DeeTypeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF bool DCALL
-type_obmemb_hasattr(DeeTypeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash);
-INTDEF bool DCALL
-type_member_hasattr(struct membercache *__restrict cache,
-                    struct type_member *__restrict chain,
-                    char const *__restrict attr_name, dhash_t hash);
-
-INTDEF int DCALL type_method_find(struct membercache *__restrict cache, DeeObject *__restrict decl, struct type_method *__restrict chain, uint16_t flags, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF int DCALL type_getset_find(struct membercache *__restrict cache, DeeObject *__restrict decl, struct type_getset *__restrict chain, uint16_t flags, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF int DCALL type_member_find(struct membercache *__restrict cache, DeeObject *__restrict decl, struct type_member *__restrict chain, uint16_t flags, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF int DCALL type_obmeth_find(DeeTypeObject *__restrict tp_self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF int DCALL type_obprop_find(DeeTypeObject *__restrict tp_self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF int DCALL type_obmemb_find(DeeTypeObject *__restrict tp_self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-#endif /* !CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING */
 
 /* Enumerate attributes. */
 INTDEF dssize_t DCALL type_method_enum(DeeTypeObject *__restrict tp_self, struct type_method *__restrict chain, uint16_t flags, denum_t proc, void *arg);

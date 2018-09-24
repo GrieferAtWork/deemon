@@ -1329,8 +1329,6 @@ DeeAttribute_Lookup(DeeTypeObject *__restrict tp_self,
                     DeeObject *__restrict self,
                     struct attribute_info *__restrict result,
                     struct attribute_lookup_rules const *__restrict rules) {
-#if 1
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
  int error;
  DeeTypeObject *iter = tp_self;
  ASSERT_OBJECT_TYPE(tp_self,&DeeType_Type);
@@ -1387,83 +1385,6 @@ do_iter_attr:
  return 1; /* Not found */
 done:
  return error;
-#else
- int error; struct membercache *cache;
- DeeTypeObject *iter = tp_self;
- ASSERT_OBJECT_TYPE(tp_self,&DeeType_Type);
- ASSERT_OBJECT_TYPE_A(self,tp_self);
- ASSERT(result);
- ASSERT(rules);
- ASSERT(rules->alr_name);
- ASSERT_OBJECT_OPT(rules->alr_decl);
- if (tp_self->tp_attr) goto do_iter_attr;
- cache = &tp_self->tp_cache;
- /* Search through the cache for the requested attribute. */
- if ((error = membercache_find(cache,self,ATTR_IMEMBER|ATTR_CMEMBER,result,rules)) <= 0)
-      goto done;
- for (;;) {
-  if (rules->alr_decl && iter != (DeeTypeObject *)rules->alr_decl)
-      goto next_iter;
-  if (DeeType_IsClass(iter)) {
-   if ((error = DeeClass_FindInstanceAttribute(iter,self,result,rules)) <= 0)
-        goto done;
-  } else {
-   if (iter->tp_methods &&
-      (error = type_method_find(cache,(DeeObject *)iter,iter->tp_methods,
-                                ATTR_IMEMBER|ATTR_CMEMBER,
-                                result,rules)) <= 0)
-       goto done;
-   if (iter->tp_getsets &&
-      (error = type_getset_find(cache,(DeeObject *)iter,iter->tp_getsets,
-                                ATTR_IMEMBER|ATTR_CMEMBER|ATTR_PROPERTY,
-                                result,rules)) <= 0)
-       goto done;
-   if (iter->tp_members &&
-      (error = type_member_find(cache,(DeeObject *)iter,iter->tp_members,
-                                ATTR_IMEMBER|ATTR_CMEMBER,
-                                result,rules)) <= 0)
-       goto done;
-  }
-next_iter:
-  iter = DeeType_Base(iter);
-  if (!iter) break;
-  if (iter->tp_attr) {
-   dssize_t enum_error;
-   struct attribute_lookup_data data;
-   dssize_t (DCALL *enumattr)(DeeTypeObject *__restrict,DeeObject *__restrict,denum_t,void *);
-do_iter_attr:
-   enumattr = iter->tp_attr->tp_enumattr;
-   if (!enumattr) break;
-   if (enumattr == &type_enumattr)
-       return DeeType_FindAttrString((DeeTypeObject *)self,result,rules);
-   /* TODO: Also add special case for modules. */
-   data.ald_info    = result;
-   data.ald_rules   = rules;
-   data.ald_fnddecl = false;
-   enum_error = (*enumattr)(iter,self,(denum_t)&attribute_lookup_enum,&data);
-   if (enum_error == 0 || enum_error == -3)/* Not found */
-       break; /* Don't consider attributes from lower levels for custom member access. */
-   if (enum_error == -1) return -1; /* Error... */
-   ASSERT(enum_error == -2); /* Found it! */
-   return 0;
-  }
- }
- return 1; /* Not found */
-done:
- return error;
-#endif
-#else
- dssize_t error;
- struct attribute_lookup_data data;
- data.ald_info    = result;
- data.ald_rules   = rules;
- data.ald_fnddecl = false;
- error = DeeObject_EnumAttr(tp_self,self,(denum_t)&attribute_lookup_enum,&data);
- if (error == 0 || error == -3) return 1;   /* Not found */
- if (error == -1) return -1; /* Error... */
- ASSERT(error == -2); /* Found it! */
- return 0;
-#endif
 }
 
 

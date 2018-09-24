@@ -491,15 +491,9 @@ INTDEF dssize_t DCALL DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__rest
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
-#ifdef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
 INTDEF int DCALL DeeClass_FindClassAttribute(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 INTDEF int DCALL DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 INTDEF int DCALL DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-#else
-INTDEF int DCALL DeeClass_FindClassAttribute(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF int DCALL DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF int DCALL DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-#endif
 
 /* Get/Call/Del/Set an instance attribute, as acquired
  * through `DeeClassDescriptor_QueryInstanceAttribute()'. */

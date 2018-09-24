@@ -52,9 +52,6 @@
 
 DECL_BEGIN
 
-#undef CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING
-#define CONFIG_USE_NEW_TYPE_ATTRIBUTE_CACHING 1
-
 #ifdef __INTELLISENSE__
 typedef __INTPTR_TYPE__  intptr_t;
 typedef __UINTPTR_TYPE__ uintptr_t;
