@@ -19,9 +19,12 @@
 #ifndef GUARD_DEEMON_RUNTIME_STRINGS_H
 #define GUARD_DEEMON_RUNTIME_STRINGS_H 1
 
+#ifndef ONLY_LISTING
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/file.h>
+DECL_BEGIN
+#endif /* !ONLY_LISTING */
 
 #ifndef STRING2
 #define STRING2(name,str) INTDEF DeeObject name;
@@ -29,8 +32,6 @@
 #ifndef STRING
 #define STRING(str) STRING2(str_##str,#str)
 #endif
-
-DECL_BEGIN
 
 STRING(Signal)
 STRING(Error)
@@ -183,10 +184,11 @@ STRING(ambig)
 STRING(fwd)
 STRING(const)
 
-
-DECL_END
-
 #undef STRING2
 #undef STRING
+
+#ifndef ONLY_LISTING
+DECL_END
+#endif /* !ONLY_LISTING */
 
 #endif /* !GUARD_DEEMON_RUNTIME_STRINGS_H */

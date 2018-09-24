@@ -1051,21 +1051,6 @@ enumattriter_visit(EnumAttrIter *__restrict self, dvisit_t proc, void *arg) {
 
 #ifdef CONFIG_LONGJMP_ENUMATTR
 
-/* Same as the non-try version, but will not invoke memory collection. */
-PRIVATE DREF DeeStringObject *DCALL
-DeeString_TryNew(char const *__restrict str) {
- DREF DeeStringObject *result; size_t len = strlen(str);
- result = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject,s_str)+
-                                                     (len+1)*sizeof(char));
- if unlikely(!result) return NULL;
- DeeObject_Init(result,&DeeString_Type);
- result->s_data = NULL;
- result->s_hash = (dhash_t)-1;
- result->s_len  = len;
- memcpy(result->s_str,str,(len+1)*sizeof(char));
- return result;
-}
-
 PRIVATE dssize_t DCALL
 enumattr_longjmp(DeeObject *__restrict declarator,
                  char const *__restrict attr_name, char const *attr_doc,

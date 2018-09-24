@@ -254,6 +254,7 @@ again:
    utf_free(utf);
    goto again;
   }
+  Dee_UntrackAlloc(utf);
  }
  ASSERT(utf->u_width <= STRING_WIDTH_2BYTE);
  if likely(!utf->u_data[STRING_WIDTH_2BYTE]) {
@@ -267,8 +268,10 @@ again:
   for (i = 0; i < length; ++i)
       result[i] = data[i];
   result[length] = 0;
-  if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_2BYTE],NULL,result))
-     return result;
+  if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_2BYTE],NULL,result)) {
+   Dee_UntrackAlloc((size_t *)result - 1);
+   return result;
+  }
   Dee_Free(result);
  }
  return (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE];
@@ -291,6 +294,7 @@ again:
    utf_free(utf);
    goto again;
   }
+  Dee_UntrackAlloc(utf);
  }
  ASSERT(utf->u_width <= STRING_WIDTH_4BYTE);
  if likely(!utf->u_data[STRING_WIDTH_4BYTE]) {
@@ -304,10 +308,6 @@ again:
    if unlikely(!result) goto err;
    for (i = 0; i < length; ++i)
        result[i] = data[i];
-   result[length] = 0;
-   if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_4BYTE],NULL,result))
-      return result;
-   Dee_Free(result);
   } else {
    uint16_t *data;
    ASSERT(utf->u_width == STRING_WIDTH_2BYTE);
@@ -318,11 +318,13 @@ again:
    if unlikely(!result) goto err;
    for (i = 0; i < length; ++i)
        result[i] = data[i];
-   result[length] = 0;
-   if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_4BYTE],NULL,result))
-      return result;
-   Dee_Free(result);
   }
+  result[length] = 0;
+  if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_4BYTE],NULL,result)) {
+   Dee_UntrackAlloc((size_t *)result - 1);
+   return result;
+  }
+  Dee_Free(result);
  }
  return (uint32_t *)utf->u_data[STRING_WIDTH_4BYTE];
 err:
@@ -360,6 +362,7 @@ set_utf8_and_return_1byte:
    utf_free(utf);
    goto again;
   }
+  Dee_UntrackAlloc(utf);
  }
  iter = (uint8_t *)DeeString_STR(self);
  end = iter + DeeString_SIZE(self);
@@ -400,10 +403,11 @@ set_utf8_and_return_1byte:
   *dst = '\0';
   /* Save the generated UTF-8 string in the string's UTF cache. */
   if (!ATOMIC_CMPXCH(utf->u_utf8,NULL,(char *)result)) {
-   Dee_Free(((size_t *)result)-1);
+   Dee_Free((size_t *)result - 1);
    ASSERT(utf->u_utf8 != NULL);
    return utf->u_utf8;
   }
+  Dee_UntrackAlloc((size_t *)result - 1);
   return (char *)result;
  }
  /* No latin1 characters here! */
@@ -490,6 +494,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
   Dee_Free((size_t *)result - 1);
   return (uint8_t *)utf->u_data[STRING_WIDTH_1BYTE];
  }
+ Dee_UntrackAlloc((size_t *)result - 1);
  return result;
 err_result:
  Dee_Free((size_t *)result - 1);
@@ -580,6 +585,7 @@ load_2byte_width:
     DeeString_Free2ByteBuffer(result);
     return (uint16_t *)utf->u_utf16;
    }
+   Dee_UntrackAlloc((size_t *)result - 1);
    return result;
   }
   /* The 2-byte variant doesn't contain any illegal characters,
@@ -646,6 +652,7 @@ err_invalid_unicode:
    DeeString_Free2ByteBuffer(result);
    return (uint16_t *)utf->u_utf16;
   }
+  Dee_UntrackAlloc((size_t *)result - 1);
   return result;
  } break;
 
@@ -742,6 +749,7 @@ print_ascii:
    utf_free(utf);
    goto again;
   }
+  Dee_UntrackAlloc(utf);
  }
  result = 0;
  iter = flush_start = (uint8_t *)DeeString_STR(self);
@@ -1388,8 +1396,10 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/uint16_t *__restrict text) {
  utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text; /* Inherit data */
  result->s_hash = DEE_STRING_HASH_UNSET;
  result->s_data = utf;
+ Dee_UntrackAlloc(utf);
  result->s_str[utf8_length] = '\0';
  DeeObject_Init(result,&DeeString_Type);
+ Dee_UntrackAlloc((size_t *)text - 1);
  return (DREF DeeObject *)result;
 err_r:
  DeeObject_Free(result);
@@ -1439,8 +1449,10 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/uint16_t *__restrict text) {
  utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text; /* Inherit data */
  result->s_hash = DEE_STRING_HASH_UNSET;
  result->s_data = utf;
+ Dee_UntrackAlloc(utf);
  result->s_str[utf8_length] = '\0';
  DeeObject_Init(result,&DeeString_Type);
+ Dee_UntrackAlloc((size_t *)text - 1);
  return (DREF DeeObject *)result;
 err_r:
  DeeObject_Free(result);
@@ -1538,7 +1550,7 @@ read_text_i:
                                          (utf8_length+1)*sizeof(char));
  if unlikely(!result) goto err;
  result->s_len = utf8_length;
- result->s_data = utf = utf_alloc();
+ utf = utf_alloc();
  if unlikely(!utf) goto err_r;
  memset(utf,0,sizeof(struct string_utf));
  *(uint16_t **)&utf->u_utf16 = (uint16_t *)text; /* Inherit data */
@@ -1547,6 +1559,7 @@ read_text_i:
   /* Pure UTF-16 in ASCII range. */
   utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)result->s_str;
   utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text;
+  Dee_UntrackAlloc((size_t *)text - 1);
   utf->u_width                    = STRING_WIDTH_1BYTE;
   ASSERT(character_count == utf8_length);
   ASSERT(character_count == length);
@@ -1571,6 +1584,7 @@ read_text_i:
    buffer[character_count] = 0;
    utf->u_width = STRING_WIDTH_2BYTE;
    utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)buffer;
+   Dee_UntrackAlloc((size_t *)buffer - 1);
    ASSERT(character_count < WSTR_LENGTH(text));
    utf16_to_utf8_char16(text,length,(uint8_t *)result->s_str,buffer);
   } break;
@@ -1584,6 +1598,7 @@ read_text_i:
    buffer[character_count] = 0;
    utf->u_width = STRING_WIDTH_4BYTE;
    utf->u_data[STRING_WIDTH_4BYTE] = (size_t *)buffer;
+   Dee_UntrackAlloc((size_t *)buffer - 1);
    ASSERT(character_count < WSTR_LENGTH(text));
    utf16_to_utf8_char32(text,length,(uint8_t *)result->s_str,buffer);
   } break;
@@ -1591,9 +1606,11 @@ read_text_i:
   }
  }
  result->s_data = utf;
+ Dee_UntrackAlloc(utf);
  result->s_hash = DEE_STRING_HASH_UNSET;
  result->s_str[utf8_length] = '\0';
  DeeObject_Init(result,&DeeString_Type);
+ Dee_UntrackAlloc(utf);
  return (DREF DeeObject *)result;
 err_r_utf:
  utf_free(utf);
@@ -1659,9 +1676,12 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/uint32_t *__restrict text,
   utf->u_width = STRING_WIDTH_4BYTE;
  }
  result->s_data = utf;
+ Dee_UntrackAlloc(utf);
  result->s_hash = DEE_STRING_HASH_UNSET;
  result->s_str[utf8_length] = '\0';
  DeeObject_Init(result,&DeeString_Type);
+ Dee_UntrackAlloc((size_t *)text - 1);
+ Dee_UntrackAlloc(utf);
  return (DREF DeeObject *)result;
 err_r:
  DeeObject_Free(result);
@@ -1709,9 +1729,12 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/uint32_t *__restrict text) {
   utf->u_width = STRING_WIDTH_4BYTE;
  }
  result->s_data = utf;
+ Dee_UntrackAlloc(utf);
  result->s_hash = DEE_STRING_HASH_UNSET;
  result->s_str[utf8_length] = '\0';
  DeeObject_Init(result,&DeeString_Type);
+ Dee_UntrackAlloc((size_t *)text - 1);
+ Dee_UntrackAlloc(utf);
  return (DREF DeeObject *)result;
 err_r:
  DeeObject_Free(result);
@@ -1819,6 +1842,8 @@ done:
  result->s_hash                             = DEE_STRING_HASH_UNSET;
  result->s_str[mbcs_length]                 = '\0';
  DeeObject_Init(result,&DeeString_Type);
+ Dee_UntrackAlloc((size_t *)text - 1);
+ Dee_UntrackAlloc(result->s_data);
  return (DREF DeeObject *)result;
 err_r:
  DeeObject_Free(result);
@@ -1886,6 +1911,7 @@ continue_ascii_fast:
   if unlikely(!data->u_data[STRING_WIDTH_4BYTE]) { utf_free(data); goto err; }
 #endif
   ((String *)self)->s_data = data;
+  Dee_UntrackAlloc(data);
   return self;
  }
 
@@ -1992,6 +2018,7 @@ err_buffer32:
    if unlikely(!utf) goto err_buffer32;
    memset(utf,0,sizeof(*utf));
    utf->u_data[STRING_WIDTH_4BYTE] = (size_t *)buffer32; /* Inherit data */
+   Dee_UntrackAlloc((size_t *)buffer32 - 1);
    utf->u_width = STRING_WIDTH_4BYTE;
    utf->u_utf8  = DeeString_STR(result);
   } else {
@@ -2060,12 +2087,14 @@ err_buffer16:
    if unlikely(!utf) goto err_buffer16;
    memset(utf,0,sizeof(*utf));
    utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)buffer16; /* Inherit data */
+   Dee_UntrackAlloc((size_t *)buffer16 - 1);
    utf->u_width = STRING_WIDTH_2BYTE;
    utf->u_utf8  = DeeString_STR(result);
   }
   break;
  }
  result->s_data = utf;
+ Dee_UntrackAlloc(utf);
  result->s_hash = DEE_STRING_HASH_UNSET;
  result->s_len  = length;
  result->s_str[length] = '\0';
@@ -2173,6 +2202,7 @@ err_buffer32:
    if unlikely(!utf) goto err_buffer32;
    memset(utf,0,sizeof(*utf));
    utf->u_data[STRING_WIDTH_4BYTE] = (size_t *)buffer32; /* Inherit data */
+   Dee_UntrackAlloc((size_t *)buffer32 - 1);
    utf->u_width = STRING_WIDTH_4BYTE;
    utf->u_utf8  = DeeString_STR(result);
   } else {
@@ -2241,6 +2271,7 @@ err_buffer16:
    if unlikely(!utf) goto err_buffer16;
    memset(utf,0,sizeof(*utf));
    utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)buffer16; /* Inherit data */
+   Dee_UntrackAlloc((size_t *)buffer16 - 1);
    utf->u_width = STRING_WIDTH_2BYTE;
    utf->u_utf8  = DeeString_STR(result);
   }
@@ -2249,6 +2280,7 @@ err_buffer16:
  ASSERT(!DeeObject_IsShared(result));
  ASSERT(!result->s_data);
  result->s_data = utf;
+ Dee_UntrackAlloc(utf);
  return (DREF DeeObject *)result;
 err_r:
  DeeObject_Free(result);

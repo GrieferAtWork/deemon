@@ -627,6 +627,7 @@ DFUNDEF ATTR_MALLOC void *(DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *f
 DFUNDEF ATTR_MALLOC void *(DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line);
 DFUNDEF void *(DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes, char const *file, int line);
 DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
+DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line);
 
 #ifndef NDEBUG
 #define Dee_Malloc(n_bytes)         DeeDbg_Malloc(n_bytes,__FILE__,__LINE__)
@@ -636,6 +637,7 @@ DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
 #define Dee_TryCalloc(n_bytes)      DeeDbg_TryCalloc(n_bytes,__FILE__,__LINE__)
 #define Dee_TryRealloc(ptr,n_bytes) DeeDbg_TryRealloc(ptr,n_bytes,__FILE__,__LINE__)
 #define Dee_Free(ptr)               DeeDbg_Free(ptr,__FILE__,__LINE__)
+#define Dee_UntrackAlloc(ptr)       DeeDbg_UntrackAlloc(ptr,__FILE__,__LINE__)
 #else
 #define DeeDbg_Malloc(n_bytes,file,line)         Dee_Malloc(n_bytes)
 #define DeeDbg_Calloc(n_bytes,file,line)         Dee_Calloc(n_bytes)
@@ -644,6 +646,7 @@ DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
 #define DeeDbg_TryCalloc(n_bytes,file,line)      Dee_TryCalloc(n_bytes)
 #define DeeDbg_TryRealloc(ptr,n_bytes,file,line) Dee_TryRealloc(ptr,n_bytes)
 #define DeeDbg_Free(ptr,file,line)               Dee_Free(ptr)
+#define Dee_UntrackAlloc(ptr)                   (ptr)
 #endif
 
 /* Reclaim free memory by going through internal pre-allocation caches,

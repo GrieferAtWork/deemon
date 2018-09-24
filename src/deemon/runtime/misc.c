@@ -41,6 +41,7 @@
 #else
 #include <hybrid/minmax.h>
 #include <hybrid/limits.h>
+#include <Windows.h>
 #endif
 #endif
 
@@ -945,6 +946,123 @@ PUBLIC void
  _free_dbg(ptr,_NORMAL_BLOCK);
  DBG_ALIGNMENT_ENABLE();
 }
+
+#ifdef _MSC_VER
+extern ATTR_DLLIMPORT void __cdecl _lock(_In_ int _File);
+extern ATTR_DLLIMPORT void __cdecl _unlock(_Inout_ int _File);
+#define _HEAP_LOCK 4
+#define nNoMansLandSize 4
+
+typedef struct _CrtMemBlockHeader
+{
+        struct _CrtMemBlockHeader *pBlockHeaderNext;
+        struct _CrtMemBlockHeader *pBlockHeaderPrev;
+        char                      *szFileName;
+        int                        nLine;
+#if __SIZEOF_POINTER__ >= 8
+        int                        nBlockUse;
+        size_t                     nDataSize;
+#else
+        size_t                     nDataSize;
+        int                        nBlockUse;
+#endif
+        long                       lRequest;
+        unsigned char              gap[nNoMansLandSize];
+} _CrtMemBlockHeader;
+
+#define pbData(pblock) ((unsigned char *)((_CrtMemBlockHeader *)pblock + 1))
+#define pHdr(pbData) (((_CrtMemBlockHeader *)pbData)-1)
+
+#define IGNORE_REQ  0L              /* Request number for ignore block */
+#define IGNORE_LINE 0xFEDCBABC      /* Line number for ignore block */
+#ifndef _IGNORE_BLOCK
+#define _IGNORE_BLOCK 3
+#endif
+
+PRIVATE bool DCALL
+validate_header(_CrtMemBlockHeader *__restrict hdr) {
+ unsigned int i;
+ __try {
+  for (i = 0; i < nNoMansLandSize; ++i)
+      if (hdr->gap[i] != 0xFD) goto nope;
+  if (hdr->pBlockHeaderNext->pBlockHeaderPrev != hdr)
+      goto nope;
+  if (hdr->pBlockHeaderPrev &&
+      hdr->pBlockHeaderPrev->pBlockHeaderNext != hdr)
+      goto nope;
+  /* Badly named. - Should be `_COUNT_BLOCKS' or `_NUM_BLOCKS'!
+   * `_MAX_BLOCKS' would be the max-valid-block, but this is
+   * number of block types! */
+  if (hdr->nBlockUse >= _MAX_BLOCKS)
+      goto nope;
+ } __except (EXCEPTION_EXECUTE_HANDLER) {
+  /* If we failed to access the header for some reason, assume
+   * that something went wrong because the header was malformed. */
+  goto nope;
+ }
+ return true;
+nope:
+ return false;
+}
+
+PRIVATE void DCALL
+do_unhook(_CrtMemBlockHeader *__restrict hdr) {
+ hdr->pBlockHeaderPrev->pBlockHeaderNext = hdr->pBlockHeaderNext;
+ hdr->pBlockHeaderNext->pBlockHeaderPrev = hdr->pBlockHeaderPrev;
+ hdr->pBlockHeaderNext = NULL;
+ hdr->pBlockHeaderPrev = NULL;
+ hdr->szFileName       = NULL;
+ hdr->nLine            = IGNORE_LINE;
+ hdr->nBlockUse        = _IGNORE_BLOCK;
+ hdr->lRequest         = IGNORE_REQ;
+}
+
+PUBLIC void *
+(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line) {
+ if (ptr) {
+  _CrtMemBlockHeader *hdr;
+  DBG_ALIGNMENT_DISABLE();
+  _lock(_HEAP_LOCK);
+  __try {
+   hdr = pHdr(ptr);
+   /* We can't untrack the first allocation ever made... */
+   if likely(hdr->pBlockHeaderNext) {
+    /* Validate the header in case something changes in MSVC,
+     * and our untracking code would SEGFAULT. */
+    if (validate_header(hdr)) {
+     if (!hdr->pBlockHeaderPrev) {
+      void *temp;
+      /* Allocate another block, which should be pre-pended before the one we're trying to delete.
+       * ... This work-around is required because we can't actually access the debug-allocation
+       *     list head, which is a PRIVATE symbol `_pFirstBlock'
+       * (This wouldn't have been a problem if MSVC used a self-pointer, instead of a prev-pointer...) */
+      temp = _malloc_dbg(1,_NORMAL_BLOCK,file,line);
+      if (hdr->pBlockHeaderPrev)
+          do_unhook(hdr);
+      _free_dbg(temp,_NORMAL_BLOCK);
+     } else {
+      do_unhook(hdr);
+     }
+    }
+   }
+  } __finally {
+   _unlock(_HEAP_LOCK);
+  }
+  DBG_ALIGNMENT_ENABLE();
+ }
+ return ptr;
+}
+#else /* _MSC_VER */
+extern void __cdecl _lock(_In_ int _File);
+extern void __cdecl _unlock(_Inout_ int _File);
+#define _HEAP_LOCK 4
+
+PUBLIC void *
+(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
+ return ptr;
+}
+#endif /* !_MSC_VER */
+
 #endif
 #endif /* !NDEBUG */
 
@@ -976,8 +1094,12 @@ PUBLIC void *
  return (Dee_TryRealloc)(ptr,n_bytes);
 }
 PUBLIC void
-DCALL DeeDbg_Free(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
+(DCALL DeeDbg_Free)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
  return (Dee_Free)(ptr);
+}
+PUBLIC void *
+(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
+ return ptr;
 }
 #endif /* !HAVE_DEEDBG_MALLOC */
 
