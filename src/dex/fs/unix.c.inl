@@ -449,6 +449,8 @@ try_filename:
   Dee_Decref(path);
   return error;
  }
+ /* Allow an empty path as an alias for `chdir(".")' (aka. no-op) */
+ if (DeeString_WLEN(path) == 0) goto done;
 #ifdef _WDIRECT_DEFINED
  {
   wchar_t *wstr = (wchar_t *)DeeString_AsWide(path);

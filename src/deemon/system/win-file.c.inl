@@ -143,6 +143,9 @@ PUBLIC bool DCALL nt_IsFileNotFound(DWORD error) {
 #ifdef ERROR_BAD_PATHNAME
  case ERROR_BAD_PATHNAME:
 #endif
+#ifdef ERROR_INVALID_NAME
+ case ERROR_INVALID_NAME:
+#endif
   return true;
  default: break;
  }

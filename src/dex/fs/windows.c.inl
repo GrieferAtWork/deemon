@@ -1331,6 +1331,9 @@ INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
   return result;
  }
 again:
+ /* Allow an empty path as an alias for `chdir(".")' (aka. no-op)
+  * Windows would normally set an `ERROR_INVALID_NAME' error for this case. */
+ if (DeeString_WLEN(path) == 0) goto done;
  result = nt_SetCurrentDirectory(path);
  if unlikely(result != 0) {
   DWORD dwError;
@@ -1367,6 +1370,7 @@ do_throw_not_dir:
   }
   goto err;
  }
+done:
  return 0;
 err:
  return -1;
