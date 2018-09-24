@@ -1404,6 +1404,7 @@ print;
 for (local path: required_paths) {
 	path = path.replace("\\","/");
 	if (path.startswith("../")) continue;
+	if (!path || path == ".") continue;
 	print output_buffer: "${MKDIR} -p",path;
 }
 print output_buffer.pack(),;
