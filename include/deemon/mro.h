@@ -672,8 +672,19 @@ INTDEF DREF DeeObject *DCALL DeeType_DocInstanceAttrString(DeeTypeObject *__rest
 INTDEF DREF DeeObject *DCALL DeeType_CallInstanceAttrStringKw(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF bool DCALL DeeType_HasInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF int DCALL DeeType_BoundInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF int DCALL DeeType_DelInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF int DCALL DeeType_SetInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict value);
+INTDEF int (DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash);
+INTDEF int (DCALL DeeType_SetInstanceAttrString)(DeeTypeObject *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict value);
+
+
+#ifndef __INTELLISENSE__
+#ifndef __NO_builtin_expect
+#define DeeType_DelAttrString(self,name,hash)                  __builtin_expect(DeeType_DelAttrString(self,name,hash),0)
+#define DeeType_SetAttrString(self,name,hash,value)            __builtin_expect(DeeType_SetAttrString(self,name,hash,value),0)
+#define DeeType_DelInstanceAttrString(self,name,hash)          __builtin_expect(DeeType_DelInstanceAttrString(self,name,hash),0)
+#define DeeType_SetInstanceAttrString(self,name,hash,value)    __builtin_expect(DeeType_SetInstanceAttrString(self,name,hash,value),0)
+#endif /* !__NO_builtin_expect */
+#endif
+
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_END

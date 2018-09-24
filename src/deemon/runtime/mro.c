@@ -445,12 +445,10 @@ DeeType_GetCachedClassAttr(DeeTypeObject *__restrict tp_self,
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_GetAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr);
   }
@@ -758,12 +756,10 @@ DeeType_BoundCachedClassAttr(DeeTypeObject *__restrict tp_self,
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_BoundAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr);
   }
@@ -973,12 +969,10 @@ DeeType_DelCachedClassAttr(DeeTypeObject *__restrict tp_self,
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_DelAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr);
   }
@@ -1152,12 +1146,10 @@ DeeType_SetCachedClassAttr(DeeTypeObject *__restrict tp_self,
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_SetAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,value);
   }
@@ -1288,12 +1280,10 @@ DeeType_SetBasicCachedClassAttr(DeeTypeObject *__restrict tp_self,
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_SetBasicAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,value);
   }
@@ -1503,12 +1493,10 @@ check_and_invoke_callback:
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_CallAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,argc,argv);
   }
@@ -1849,12 +1837,10 @@ check_and_invoke_callback:
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_CallAttributeKw(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,argc,argv,kw);
   }
@@ -2199,12 +2185,10 @@ check_and_invoke_callback:
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_CallAttributeTuple(desc,class_desc_as_instance(desc),
                                         (DeeObject *)tp_self,attr,args);
@@ -2537,12 +2521,10 @@ check_and_invoke_callback:
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_CallAttributeTupleKw(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,args,kw);
   }
@@ -2932,12 +2914,10 @@ check_and_invoke_callback:
   }
   {
    struct class_attribute *attr;
-   DeeTypeObject *type;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
    attr = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
-   type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_VCallAttributef(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,format,args);
   }

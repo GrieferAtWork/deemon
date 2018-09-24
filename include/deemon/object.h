@@ -1530,6 +1530,8 @@ DFUNDEF dssize_t DCALL DeeObject_GenericEnumAttr(DeeTypeObject *__restrict tp_se
 #define DeeObject_GenericSetAttrString(self,name,hash,value)           DeeObject_TGenericSetAttrString(Dee_TYPE(self),self,name,hash,value)
 
 #ifdef CONFIG_BUILDING_DEEMON
+struct attribute_info;
+struct attribute_lookup_rules;
 INTERN bool DCALL DeeObject_TGenericHasAttrString(DeeTypeObject *__restrict tp_self, char const *__restrict name, dhash_t hash);
 INTERN int DCALL DeeObject_TGenericBoundAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict name, dhash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
 INTERN DREF DeeObject *DCALL DeeObject_GenericDocAttrString(DeeTypeObject *__restrict tp_self, char const *__restrict name, dhash_t hash);
@@ -2049,8 +2051,6 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeType_DelAttrString(self,name,hash)                  __builtin_expect(DeeType_DelAttrString(self,name,hash),0)
-#define DeeType_SetAttrString(self,name,hash,value)            __builtin_expect(DeeType_SetAttrString(self,name,hash,value),0)
 #define DeeObject_AssertType(self,required_type)               __builtin_expect(DeeObject_AssertType(self,required_type),0)
 #ifndef DeeObject_AssertTypeExact
 #define DeeObject_AssertTypeExact(self,required_type)          __builtin_expect(DeeObject_AssertTypeExact(self,required_type),0)

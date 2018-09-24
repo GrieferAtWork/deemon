@@ -709,6 +709,7 @@ PRIVATE int DCALL get_default_backlog(void) {
  uint16_t result;
  if (maxbacklog_get(&result))
      return -1;
+ DBG_ALIGNMENT_DISABLE();
  return (int)(unsigned int)result;
 }
 #endif
@@ -720,6 +721,7 @@ DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog) {
  neterrno_t error_code;
  if (max_backlog < 0) {
   max_backlog = get_default_backlog();
+  DBG_ALIGNMENT_ENABLE();
   if unlikely(max_backlog < 0)
      goto err;
  }
