@@ -494,6 +494,9 @@ PRIVATE struct type_method cell_methods[] = {
           "Atomically check if the stored value equals @old_value and return :true "
           "alongside storing @new_value if this is the case. Otherwise, return :false\n"
           "When @new_value is omit, the function behaves identical to #cmpdel") },
+    { "del", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_delete,
+      DOC("->bool\n"
+          "Deprecated alias for #delete") },
     { NULL }
 };
 
