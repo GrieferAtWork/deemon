@@ -310,6 +310,10 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
    DBG_ALIGNMENT_ENABLE();
    Dee_DecrefNokill(&DeeString_Type);
    if (result->s_data) {
+    ASSERT(result->s_data->u_utf16 == buffer);
+    result->s_data->u_utf16 = NULL;
+    if (result->s_data->u_data[STRING_WIDTH_2BYTE] == (size_t *)buffer)
+        result->s_data->u_data[STRING_WIDTH_2BYTE] = NULL;
     string_utf_fini(result->s_data,result);
     string_utf_free(result->s_data);
    }
