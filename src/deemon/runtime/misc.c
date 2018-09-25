@@ -953,21 +953,20 @@ extern ATTR_DLLIMPORT void __cdecl _unlock(_Inout_ int _File);
 #define _HEAP_LOCK 4
 #define nNoMansLandSize 4
 
-typedef struct _CrtMemBlockHeader
-{
-        struct _CrtMemBlockHeader *pBlockHeaderNext;
-        struct _CrtMemBlockHeader *pBlockHeaderPrev;
-        char                      *szFileName;
-        int                        nLine;
+typedef struct _CrtMemBlockHeader {
+    struct _CrtMemBlockHeader *pBlockHeaderNext;
+    struct _CrtMemBlockHeader *pBlockHeaderPrev;
+    char                      *szFileName;
+    int                        nLine;
 #if __SIZEOF_POINTER__ >= 8
-        int                        nBlockUse;
-        size_t                     nDataSize;
+    int                        nBlockUse;
+    size_t                     nDataSize;
 #else
-        size_t                     nDataSize;
-        int                        nBlockUse;
+    size_t                     nDataSize;
+    int                        nBlockUse;
 #endif
-        long                       lRequest;
-        unsigned char              gap[nNoMansLandSize];
+    long                       lRequest;
+    unsigned char              gap[nNoMansLandSize];
 } _CrtMemBlockHeader;
 
 #define pbData(pblock) ((unsigned char *)((_CrtMemBlockHeader *)pblock + 1))
@@ -1053,10 +1052,6 @@ PUBLIC void *
  return ptr;
 }
 #else /* _MSC_VER */
-extern void __cdecl _lock(_In_ int _File);
-extern void __cdecl _unlock(_Inout_ int _File);
-#define _HEAP_LOCK 4
-
 PUBLIC void *
 (DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
  return ptr;
@@ -1233,11 +1228,31 @@ debug_printer(void *UNUSED(closure),
 }
 #endif /* !NDEBUG */
 
-#ifdef CONFIG_HOST_WINDOWS
-PUBLIC int _Dee_dprint_enabled = 2;
+
+#ifdef NDEBUG
+PUBLIC int _Dee_dprint_enabled = 0;
 #else
-PUBLIC int _Dee_dprint_enabled = 1;
+PUBLIC int _Dee_dprint_enabled = 2;
+PRIVATE void DCALL determine_is_dprint_enabled(void) {
+ char *env;
+ DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HOST_WINDOWS
+ if (!IsDebuggerPresent()) {
+  DBG_ALIGNMENT_ENABLE();
+  _Dee_dprint_enabled = 0;
+  return;
+ }
+#endif /* CONFIG_HOST_WINDOWS */
+ env = getenv("DEEMON_SILENT");
+ DBG_ALIGNMENT_ENABLE();
+ if (env && *env)
+  _Dee_dprint_enabled = 0;
+ else {
+  _Dee_dprint_enabled = 1;
+ }
+}
 #endif
+
 
 
 PUBLIC void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args) {
@@ -1245,18 +1260,9 @@ PUBLIC void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args) {
  (void)format;
  (void)args;
 #else
-#ifdef CONFIG_HOST_WINDOWS
- if (_Dee_dprint_enabled == 2) {
-  DBG_ALIGNMENT_DISABLE();
-  if (!IsDebuggerPresent()) {
-   DBG_ALIGNMENT_ENABLE();
-   _Dee_dprint_enabled = 0;
-   return;
-  }
-  DBG_ALIGNMENT_ENABLE();
-  _Dee_dprint_enabled = 1;
- }
-#endif /* CONFIG_HOST_WINDOWS */
+ if (_Dee_dprint_enabled == 2)
+     determine_is_dprint_enabled();
+ if (!_Dee_dprint_enabled) return;
  if (Dee_VFormatPrintf(&debug_printer,NULL,format,args) < 0)
      DeeError_Handled(ERROR_HANDLED_RESTORE);
 #endif
@@ -1266,16 +1272,11 @@ PUBLIC void (DCALL _Dee_dprint)(char const *__restrict message) {
 #ifdef NDEBUG
  (void)message;
 #else
+ if (_Dee_dprint_enabled == 2)
+     determine_is_dprint_enabled();
+ if (!_Dee_dprint_enabled) return;
 #ifdef CONFIG_HOST_WINDOWS
  DBG_ALIGNMENT_DISABLE();
- if (_Dee_dprint_enabled == 2) {
-  if (!IsDebuggerPresent()) {
-   DBG_ALIGNMENT_ENABLE();
-   _Dee_dprint_enabled = 0;
-   return;
-  }
-  _Dee_dprint_enabled = 1;
- }
  OutputDebugStringA(message);
  DBG_ALIGNMENT_ENABLE();
 #else /* CONFIG_HOST_WINDOWS */
@@ -1290,18 +1291,9 @@ PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
  (void)format;
 #else
  va_list args;
-#ifdef CONFIG_HOST_WINDOWS
- if (_Dee_dprint_enabled == 2) {
-  DBG_ALIGNMENT_DISABLE();
-  if (!IsDebuggerPresent()) {
-   DBG_ALIGNMENT_ENABLE();
-   _Dee_dprint_enabled = 0;
-   return;
-  }
-  DBG_ALIGNMENT_ENABLE();
-  _Dee_dprint_enabled = 1;
- }
-#endif /* CONFIG_HOST_WINDOWS */
+ if (_Dee_dprint_enabled == 2)
+     determine_is_dprint_enabled();
+ if (!_Dee_dprint_enabled) return;
  va_start(args,format);
  if (Dee_VFormatPrintf(&debug_printer,NULL,format,args) < 0)
      DeeError_Handled(ERROR_HANDLED_RESTORE);

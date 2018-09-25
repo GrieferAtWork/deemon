@@ -1220,27 +1220,31 @@ done:
  DeeMem_ClearCaches((size_t)-1);
  DEE_CHECKMEMORY();
 #endif
- /* Dump information on all objects that are still alive.
-  * Anything that still exists at this point really is a
-  * reference leak. */
-#ifdef CONFIG_TRACE_REFCHANGES
- Dee_DumpReferenceLeaks();
+#ifndef NDEBUG
+ if (_Dee_dprint_enabled != 0)
 #endif
- DBG_ALIGNMENT_DISABLE();
+ {
+  /* Dump information on all objects that are still alive.
+   * Anything that still exists at this point really is a
+   * reference leak. */
+#ifdef CONFIG_TRACE_REFCHANGES
+  Dee_DumpReferenceLeaks();
+#endif
+  DBG_ALIGNMENT_DISABLE();
 #ifndef NDEBUG
 #if defined(_MSC_VER) || defined(__CRT_DOS)
- {
+  {
 #if !defined(_MSC_VER) || defined(_DLL)
-  extern ATTR_DLLIMPORT int ATTR_CDECL _CrtDumpMemoryLeaks(void);
+   extern ATTR_DLLIMPORT int ATTR_CDECL _CrtDumpMemoryLeaks(void);
 #else
-  extern int ATTR_CDECL _CrtDumpMemoryLeaks(void);
+   extern int ATTR_CDECL _CrtDumpMemoryLeaks(void);
 #endif
-  _CrtDumpMemoryLeaks();
+   _CrtDumpMemoryLeaks();
+  }
+#endif
+#endif
  }
-#endif
-#endif
  return result;
-
 err_no_input:
  DeeError_Throwf(&DeeError_RuntimeError,
                  "No input files");
