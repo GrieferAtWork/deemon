@@ -88,7 +88,7 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_len,
  while ((candidate = memchr(haystack,marker,haystack_len)) != NULL) {
   if (memcmp(candidate,needle,needle_len) == 0)
       return (void *)candidate;
-  haystack_len = ((uintptr_t)haystack+haystack_len)-((uintptr_t)candidate)+1;
+  haystack_len = ((uintptr_t)haystack+haystack_len)-((uintptr_t)candidate+1);
   haystack     = (void const *)((uintptr_t)candidate+1);
  }
  return NULL;
