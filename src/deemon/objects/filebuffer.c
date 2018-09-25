@@ -1430,9 +1430,9 @@ PRIVATE DREF DeeObject *DCALL
 buffer_setbuf(Buffer *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  uint16_t mode; char const *mode_iter;
- DeeObject *file; char const *mode_str; size_t size = 0;
+ char const *mode_str; size_t size = 0;
  unsigned int i; union{ char chrs[4]; uint32_t id; } buf;
- if (DeeArg_Unpack(argc,argv,"s|d:setbuf",&file,&mode_str,&size))
+ if (DeeArg_Unpack(argc,argv,"s|d:setbuf",&mode_str,&size))
      goto err;
  mode_iter = mode_str,mode = 0;
  /* Interpret the given mode string. */
