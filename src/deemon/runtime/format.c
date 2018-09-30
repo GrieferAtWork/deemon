@@ -1162,7 +1162,7 @@ Dee_FormatQuote(dformatprinter printer, void *arg,
  char encoded_text[12]; size_t encoded_text_size;
  dssize_t result = 0,temp; char const *c_hex;
  char const *textend = text + textlen;
- c_hex = decimals[!(flags&FORMAT_QUOTE_FUPPERHEX)];
+ c_hex = decimals[!(flags & FORMAT_QUOTE_FUPPERHEX)];
  encoded_text[0] = '\\';
  if (!(flags&FORMAT_QUOTE_FPRINTRAW)) print("\"",1);
  while (text < textend) {

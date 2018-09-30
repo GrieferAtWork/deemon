@@ -2680,7 +2680,8 @@ PRIVATE struct type_method list_methods[] = {
       DOC("(int index,item)\n"
           "@throw IntegerOverflow The given @index is too large\n"
           "Insert the given @item at the specified @index\n"
-          "When @index is lower than $0, or greater thatn ${#this}, append items at the end") },
+          "When @index is lower than $0, or greater thatn ${#this}, append items at the end"),
+      TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_insertall),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_insertall,
       DOC("(int index,sequence seq)\n"
