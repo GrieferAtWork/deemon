@@ -668,7 +668,7 @@ DeeFile_ReadText(DeeObject *__restrict self,
 got_read:
  {
   struct bytes_printer printer = BYTES_PRINTER_INIT;
-  for (;;) {
+  while (max_length) {
    uint8_t *buffer; dssize_t read_size;
    size_t bufsize = MIN(max_length,READTEXT_BUFSIZE);
    /* Allocate more buffer memory. */
@@ -683,7 +683,7 @@ got_read:
        break; /* EOF */
    max_length -= (size_t)read_size;
   }
- /*done:*/
+/*done:*/
   return bytes_printer_pack(&printer);
 err_printer:
   bytes_printer_fini(&printer);
@@ -720,7 +720,7 @@ DeeFile_PReadText(DeeObject *__restrict self,
 got_read:
  {
   struct bytes_printer printer = BYTES_PRINTER_INIT;
-  for (;;) {
+  while (max_length) {
    uint8_t *buffer; dssize_t read_size;
    size_t bufsize = MIN(max_length,READTEXT_BUFSIZE);
    /* Allocate more buffer memory. */
