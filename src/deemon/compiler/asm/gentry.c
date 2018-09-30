@@ -279,7 +279,17 @@ gen_guard:
                          * simple evaluate it as an expression and move on. */
        ast_genasm(iter->ce_mask,ASM_G_FNORMAL)) goto err_hand_frame;
    if (ast_genasm(iter->ce_code,ASM_G_FNORMAL)) goto err_hand_frame;
-   if (is_guarding && asm_gendfinally()) goto err_hand_frame;
+   if (is_guarding) {
+    struct handler_frame *catch_iter;
+    uint16_t num_catch = 0;
+    catch_iter = current_assembler.a_handler;
+    for (; catch_iter; catch_iter = catch_iter->hf_prev) {
+     if (!(catch_iter->hf_flags & EXCEPTION_HANDLER_FFINALLY))
+         ++num_catch;
+    }
+    if (asm_gendfinally_n(num_catch))
+        goto err_hand_frame;
+   }
    if (guard_finflags&ASM_FINFLAG_USED) {
     /* Search for the next finally-handler. */
     struct catch_expr *iter2 = iter+1;
