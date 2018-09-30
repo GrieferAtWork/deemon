@@ -678,8 +678,8 @@ got_read:
    read_size = (*pread)((DeeFileObject *)self,buffer,bufsize,DEE_FILEIO_FNORMAL);
    if unlikely(read_size < 0) goto err_printer;
    bytes_printer_release(&printer,bufsize-(size_t)read_size);
-   if (readall ? (size_t)read_size == 0
-               : (size_t)read_size != bufsize)
+   if (!read_size ||
+      (!readall && (size_t)read_size != bufsize))
        break; /* EOF */
    max_length -= (size_t)read_size;
   }
@@ -730,8 +730,8 @@ got_read:
    read_size = (*ppread)((DeeFileObject *)self,buffer,bufsize,pos,DEE_FILEIO_FNORMAL);
    if unlikely(read_size < 0) goto err_printer;
    bytes_printer_release(&printer,bufsize-(size_t)read_size);
-   if (readall ? (size_t)read_size == 0
-               : (size_t)read_size != bufsize)
+   if (!read_size ||
+      (!readall && (size_t)read_size != bufsize))
        break; /* EOF */
    max_length -= (size_t)read_size;
    pos        += (size_t)read_size;
