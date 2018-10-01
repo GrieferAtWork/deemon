@@ -2393,6 +2393,7 @@ thread_fini(DeeThreadObject *__restrict self) {
   Dee_Decref(self->t_interrupt.ti_intr);
   Dee_XDecref(self->t_interrupt.ti_args);
   next = self->t_interrupt.ti_next;
+  if (!next) break;
   memcpy(&self->t_interrupt,next,sizeof(struct thread_interrupt));
   Dee_Free(next);
  }
