@@ -830,7 +830,6 @@ os_write_utf8_to_console(SystemFile *__restrict self,
                          size_t bufsize) {
  WCHAR stackBuffer[512];
  DWORD num_widechars;
- ASSERT(bufsize != 0);
 again:
  DBG_ALIGNMENT_DISABLE();
  num_widechars = (DWORD)MultiByteToWideChar(CP_UTF8,
@@ -842,6 +841,8 @@ again:
  DBG_ALIGNMENT_ENABLE();
  if (!num_widechars) {
   DBG_ALIGNMENT_DISABLE();
+  if (!bufsize)
+      goto done;
   if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
    LPWSTR tempbuf;
    num_widechars = (DWORD)MultiByteToWideChar(CP_UTF8,
@@ -851,7 +852,8 @@ again:
                                               NULL,
                                               0);
    DBG_ALIGNMENT_ENABLE();
-   if unlikely(!num_widechars) goto fallback;
+   if unlikely(!num_widechars)
+      goto fallback;
    tempbuf = (LPWSTR)Dee_Malloc(num_widechars*sizeof(WCHAR));
    if unlikely(!tempbuf) goto err;
    DBG_ALIGNMENT_DISABLE();
@@ -872,6 +874,7 @@ again:
  }
  if (!write_all_console_w(self->sf_handle,stackBuffer,num_widechars))
       goto fallback;
+done:
  return 0;
 fallback:
  DBG_ALIGNMENT_DISABLE();
