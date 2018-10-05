@@ -970,7 +970,7 @@ bytes_ne(Bytes *__restrict self,
  other_data = DeeBytes_DATA(other);
  other_size = DeeBytes_SIZE(other);
  if (DeeBytes_SIZE(self) != other_size)
-     return_false;
+     return_true;
  return_bool(memcmp(DeeBytes_DATA(self),other_data,other_size) != 0);
 }
 
