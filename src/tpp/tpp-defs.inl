@@ -252,6 +252,9 @@ KWD(KWD___VA_COMMA__,"__VA_COMMA__")
 #if !defined(TPP_CONFIG_EXTENSION_VA_NARGS) || TPP_CONFIG_EXTENSION_VA_NARGS
 KWD(KWD___VA_NARGS__,"__VA_NARGS__")
 #endif
+#if !defined(TPP_CONFIG_EXTENSION_VA_OPT) || TPP_CONFIG_EXTENSION_VA_OPT
+KWD(KWD___VA_OPT__,"__VA_OPT__")
+#endif
 
 /* TPP extension macros. */
 #if !defined(TPP_CONFIG_EXTENSION_TPP_EVAL) || TPP_CONFIG_EXTENSION_TPP_EVAL
@@ -532,6 +535,9 @@ EXTENSION(EXT_GCC_IFELSE,       "if-else-optional-true",        TPP_CONFIG_EXTEN
 #endif
 #ifndef TPP_CONFIG_EXTENSION_VA_COMMA
 EXTENSION(EXT_VA_COMMA,         "va-comma-in-macros",           TPP_CONFIG_EXTENSION_VA_COMMA_DEFAULT)
+#endif
+#ifndef TPP_CONFIG_EXTENSION_VA_OPT
+EXTENSION(EXT_VA_OPT,           "va-opt-in-macros",             TPP_CONFIG_EXTENSION_VA_OPT_DEFAULT)
 #endif
 #ifndef TPP_CONFIG_EXTENSION_VA_NARGS
 EXTENSION(EXT_VA_NARGS,         "va-nargs-in-macros",           TPP_CONFIG_EXTENSION_VA_NARGS_DEFAULT)
@@ -846,7 +852,8 @@ WGROUP(WG_DEPENDENCY,          "dependency",          WSTATE_WARN)
 }) /* [tok_t] OLD(TPPWarn_ReusedMacroParameter). */
 #if !defined(TPP_CONFIG_EXTENSION_VA_ARGS) || TPP_CONFIG_EXTENSION_VA_ARGS || \
     !defined(TPP_CONFIG_EXTENSION_VA_COMMA) || TPP_CONFIG_EXTENSION_VA_COMMA || \
-    !defined(TPP_CONFIG_EXTENSION_VA_NARGS) || TPP_CONFIG_EXTENSION_VA_NARGS
+    !defined(TPP_CONFIG_EXTENSION_VA_NARGS) || TPP_CONFIG_EXTENSION_VA_NARGS || \
+    !defined(TPP_CONFIG_EXTENSION_VA_OPT) || TPP_CONFIG_EXTENSION_VA_OPT
 /*64*/DEF_WARNING(W_SPECIAL_ARGUMENT_NAME,(WG_MACROS),WSTATE_WARN,WARNF("Special keyword " Q("%s") " used as argument name",KWDNAME())) /* [struct TPPKeyword *] OLD(TPPWarn_VaArgsUsedAsMacroParameter). */
 #else
 /*64*/WARNING(W_UNUSED_64,(WG_MACROS),WSTATE_WARN) /* [struct TPPKeyword *] OLD(TPPWarn_VaArgsUsedAsMacroParameter). */
@@ -972,7 +979,13 @@ DEF_WARNING(W_DEPENDENCY_CHANGED,(WG_DEPENDENCY),WSTATE_ERROR,{
  WARNF("Dependency " Q("%s") " changed after " Q("%s"),depnam,srcnam);
  if (reason_length) WARNF(" (" Q("%.*s") ")",(unsigned int)reason_length,reason);
 })
+#if !defined(TPP_CONFIG_EXTENSION_VA_OPT) || TPP_CONFIG_EXTENSION_VA_OPT
+DEF_WARNING(W_EXPECTED_LPAREN_AFTER_VA_OPT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected " Q("(") " after " Q("__VA_OPT__") ", but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_VA_OPT,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected " Q(")") " after " Q("__VA_OPT__(...") ", but got " TOK_S,TOK_A))
+#endif
+
 /* _always_ add new warnings here! */
+
 
 
 #ifdef TPP_USERDEFS

@@ -121,6 +121,7 @@ INTDEF struct TPPFile *DCALL tpp_unknown_file(int mode, char *__restrict filenam
 #define TPP_CONFIG_EXTENSION_VA_COMMA          1
 #define TPP_CONFIG_EXTENSION_VA_NARGS          1
 #define TPP_CONFIG_EXTENSION_VA_ARGS           1
+#define TPP_CONFIG_EXTENSION_VA_OPT            1
 #define TPP_CONFIG_EXTENSION_STR_E             1
 #define TPP_CONFIG_EXTENSION_ALTMAC            1
 /* #define TPP_CONFIG_EXTENSION_RECMAC            0 */

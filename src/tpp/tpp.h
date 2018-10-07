@@ -75,6 +75,7 @@
 /* #define TPP_CONFIG_EXTENSION_GCC_IFELSE        1 = 1 */
 /* #define TPP_CONFIG_EXTENSION_VA_COMMA          1 = 1 */
 /* #define TPP_CONFIG_EXTENSION_VA_NARGS          1 = 1 */
+/* #define TPP_CONFIG_EXTENSION_VA_OPT            1 = 1 */
 /* #define TPP_CONFIG_EXTENSION_VA_ARGS           1 = 1 */
 /* #define TPP_CONFIG_EXTENSION_STR_E             1 = 1 */
 /* #define TPP_CONFIG_EXTENSION_ALTMAC            1 = 1 */
@@ -580,6 +581,9 @@ struct TPPTextFile {
 #if !defined(TPP_CONFIG_EXTENSION_VA_NARGS) || TPP_CONFIG_EXTENSION_VA_NARGS
 #define TPP_FUNOP_VA_NARGS 0x08 /* [1] Delete ARG(0) characters and insert a decimal representation of the variadic argument size (NOTE: When inserting, the text-pointer is advanced). */
 #endif
+#if !defined(TPP_CONFIG_EXTENSION_VA_OPT) || TPP_CONFIG_EXTENSION_VA_OPT
+#define TPP_FUNOP_VA_OPT   0x09 /* [3] Delete ARG(0) characters, Delete (if varargs are empty) or Insert (otherwise) ARG(1) characters, Delete ARG(2) characters */
+#endif
 typedef uint8_t       TPP(funop_t);
 typedef int_least64_t TPP(int_t);
 typedef long double   TPP(float_t);
@@ -639,9 +643,9 @@ struct TPPMacroFile {
            TPP(funop_t)           *f_expand;        /* [const][1..1][owned] Chain of text commands invoked to expand a function macro. */
            struct TPP(arginfo_t)  *f_arginfo;       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
            size_t                  f_deltotal;      /* [const][<= (:f_end-:f_begin)] The total amount of characters removed during expansion (minus those added). */
-#ifdef TPP_FUNOP_VA_COMMA
-           size_t                  f_n_vacomma;     /* [const] Amount of times `TPP_FUNOP_VA_COMMA' is used in `f_expand'. */
-#endif /* TPP_FUNOP_VA_COMMA */
+#if defined(TPP_FUNOP_VA_COMMA) || defined(TPP_FUNOP_VA_OPT)
+           size_t                  f_n_vacomma;     /* [const] Amount of times `TPP_FUNOP_VA_COMMA' is used in `f_expand' + amount of characters potentially inserted by `TPP_FUNOP_VA_OPT'. */
+#endif /* TPP_FUNOP_VA_COMMA || TPP_FUNOP_VA_OPT */
 #ifdef TPP_FUNOP_VA_NARGS
            size_t                  f_n_vanargs;     /* [const] Amount of times `TPP_FUNOP_VA_NARGS' is used in `f_expand'. */
 #endif /* TPP_FUNOP_VA_NARGS */

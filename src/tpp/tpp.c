@@ -636,6 +636,9 @@ do{ tok_t              _old_tok_id    = token.t_id; \
 #ifndef TPP_CONFIG_EXTENSION_VA_COMMA_DEFAULT
 #define TPP_CONFIG_EXTENSION_VA_COMMA_DEFAULT                1
 #endif
+#ifndef TPP_CONFIG_EXTENSION_VA_OPT_DEFAULT
+#define TPP_CONFIG_EXTENSION_VA_OPT_DEFAULT                  1
+#endif
 #ifndef TPP_CONFIG_EXTENSION_VA_NARGS_DEFAULT
 #define TPP_CONFIG_EXTENSION_VA_NARGS_DEFAULT                1
 #endif
@@ -815,6 +818,12 @@ do{ tok_t              _old_tok_id    = token.t_id; \
 #else
 #define NO_EXTENSION_VA_COMMA 1
 #define IF_CONFIG_EXTENSION_VA_COMMA(x,y) y
+#endif
+#if !defined(TPP_CONFIG_EXTENSION_VA_OPT) || TPP_CONFIG_EXTENSION_VA_OPT
+#define IF_CONFIG_EXTENSION_VA_OPT(x,y) x
+#else
+#define NO_EXTENSION_VA_OPT 1
+#define IF_CONFIG_EXTENSION_VA_OPT(x,y) y
 #endif
 #if !defined(TPP_CONFIG_EXTENSION_VA_NARGS) || TPP_CONFIG_EXTENSION_VA_NARGS
 #define IF_CONFIG_EXTENSION_VA_NARGS(x,y) x
@@ -1129,6 +1138,11 @@ do{ tok_t              _old_tok_id    = token.t_id; \
 #define HAVE_EXTENSION_VA_COMMA          TPP_CONFIG_EXTENSION_VA_COMMA
 #else
 #define HAVE_EXTENSION_VA_COMMA          HAS(EXT_VA_COMMA)
+#endif
+#ifdef TPP_CONFIG_EXTENSION_VA_OPT
+#define HAVE_EXTENSION_VA_OPT            TPP_CONFIG_EXTENSION_VA_OPT
+#else
+#define HAVE_EXTENSION_VA_OPT            HAS(EXT_VA_COMMA)
 #endif
 #ifdef TPP_CONFIG_EXTENSION_VA_NARGS
 #define HAVE_EXTENSION_VA_NARGS          TPP_CONFIG_EXTENSION_VA_NARGS
@@ -2136,6 +2150,9 @@ TPPMacroFile_LCScan(struct lc_scan *__restrict scan,
 #endif
 #ifdef TPP_FUNOP_VA_NARGS
   case TPP_FUNOP_VA_NARGS:
+#endif
+#ifdef TPP_FUNOP_VA_OPT
+  case TPP_FUNOP_VA_OPT:
 #endif
    must_align = 1;
    ATTR_FALLTHROUGH
@@ -3545,7 +3562,7 @@ codewriter_put0(struct codewriter *__restrict self, funop_t op) {
 
 LOCAL int TPPCALL
 codewriter_put1(struct codewriter *__restrict self, funop_t op, size_t a1) {
- funop_t buf[1+ceildiv(sizeof(size_t)*8,7)];
+ funop_t buf[1+ceildiv(sizeof(size_t)*8*1,7)];
  funop_t *iter = buf; *iter++ = op;
  LOG(LOG_MC_OPGEN,("[MC] OPx1: %lx -> %x (%lx)\n",
                   (unsigned long)(self->cw_pos-self->cw_begin),
@@ -3557,7 +3574,7 @@ codewriter_put1(struct codewriter *__restrict self, funop_t op, size_t a1) {
 LOCAL int TPPCALL
 codewriter_put2(struct codewriter *__restrict self,
                 funop_t op, size_t a1, size_t a2) {
- funop_t buf[1+ceildiv(sizeof(size_t)*8,7)];
+ funop_t buf[1+ceildiv(sizeof(size_t)*8*2,7)];
  funop_t *iter = buf; *iter++ = op;
  LOG(LOG_MC_OPGEN,("[MC] OPx2: %lx -> %x (%lx, %lx)\n",
                   (unsigned long)(self->cw_pos-self->cw_begin),
@@ -3566,6 +3583,23 @@ codewriter_put2(struct codewriter *__restrict self,
  iter = funop_putarg(iter,a2);
  return codewriter_putp(self,buf,(size_t)(iter-buf));
 }
+
+#ifdef TPP_FUNOP_VA_OPT
+LOCAL int TPPCALL
+codewriter_put3(struct codewriter *__restrict self,
+                funop_t op, size_t a1, size_t a2, size_t a3) {
+ funop_t buf[1+ceildiv(sizeof(size_t)*8*3,7)];
+ funop_t *iter = buf; *iter++ = op;
+ LOG(LOG_MC_OPGEN,("[MC] OPx2: %lx -> %x (%lx, %lx, %lx)\n",
+                  (unsigned long)(self->cw_pos-self->cw_begin),
+                  (unsigned int)op,(unsigned long)a1,
+                  (unsigned long)a2,(unsigned long)a3));
+ iter = funop_putarg(iter,a1);
+ iter = funop_putarg(iter,a2);
+ iter = funop_putarg(iter,a3);
+ return codewriter_putp(self,buf,(size_t)(iter-buf));
+}
+#endif /* TPP_FUNOP_VA_OPT */
 
 
 PRIVDEF struct TPPKeyword *TPPCALL
@@ -3586,7 +3620,7 @@ macro_function_scan_block_traditional(struct TPPFile *__restrict self) {
  assert(self->f_kind == TPPFILE_KIND_MACRO);
  assert((self->f_macro.m_flags&TPP_MACROFILE_KIND) == TPP_MACROFILE_KIND_FUNCTION);
  func.f_deltotal  = 0;
-#ifdef TPP_FUNOP_VA_COMMA
+#if defined(TPP_FUNOP_VA_COMMA) || defined(TPP_FUNOP_VA_OPT)
  func.f_n_vacomma = 0;
 #endif
 #ifdef TPP_FUNOP_VA_NARGS
@@ -3869,20 +3903,25 @@ strop_normal:
     }
    }
    /* Special variadic keywords. */
-#if !defined(NO_EXTENSION_VA_COMMA) || !defined(NO_EXTENSION_VA_NARGS)
-   if (IF_CONFIG_EXTENSION_VA_COMMA((tok == KWD___VA_COMMA__ && HAVE_EXTENSION_VA_COMMA),0) ||
-       IF_CONFIG_EXTENSION_VA_NARGS((tok == KWD___VA_NARGS__ && HAVE_EXTENSION_VA_NARGS),0)) {
+#if !defined(NO_EXTENSION_VA_COMMA) || !defined(NO_EXTENSION_VA_NARGS) || \
+    !defined(NO_EXTENSION_VA_ARGS) || !defined(NO_EXTENSION_VA_OPT)
+   if (IF_CONFIG_EXTENSION_VA_COMMA((tok == KWD___VA_ARGS__ && HAVE_EXTENSION_VA_ARGS),0) ||
+       IF_CONFIG_EXTENSION_VA_COMMA((tok == KWD___VA_COMMA__ && HAVE_EXTENSION_VA_COMMA),0) ||
+       IF_CONFIG_EXTENSION_VA_NARGS((tok == KWD___VA_NARGS__ && HAVE_EXTENSION_VA_NARGS),0) ||
+       IF_CONFIG_EXTENSION_VA_OPT((tok == KWD___VA_OPT__ && HAVE_EXTENSION_VA_OPT),0)) {
     if (!(self->f_macro.m_flags&TPP_MACROFILE_FLAG_FUNC_VARIADIC)) {
      if unlikely(!WARN(W_VA_KEYWORD_IN_REGULAR_MACRO,token.t_kwd))
         goto err;
-    } else {
+    }
+#if !defined(NO_EXTENSION_VA_COMMA) || !defined(NO_EXTENSION_VA_NARGS) || !defined(NO_EXTENSION_VA_OPT)
+    IF_CONFIG_EXTENSION_VA_COMMA(else if (tok != KWD___VA_ARGS__ || !HAVE_EXTENSION_VA_ARGS),else) {
      if (token.t_begin != last_text_pointer) {
       if unlikely(!codewriter_put1(&writer,TPP_FUNOP_ADV,
                                   (size_t)(token.t_begin-last_text_pointer)))
          goto seterr;
      }
 #ifndef NO_EXTENSION_VA_COMMA
-#ifndef NO_EXTENSION_VA_NARGS
+#if !defined(NO_EXTENSION_VA_NARGS) || !defined(NO_EXTENSION_VA_OPT)
      if (tok == KWD___VA_COMMA__)
 #endif
      {
@@ -3891,6 +3930,54 @@ strop_normal:
                                   (size_t)(token.t_end-token.t_begin)))
          goto seterr;
       ++func.f_n_vacomma;
+     }
+#if !defined(NO_EXTENSION_VA_NARGS) || !defined(NO_EXTENSION_VA_OPT)
+     else
+#endif
+#endif
+#ifndef NO_EXTENSION_VA_OPT
+#ifndef NO_EXTENSION_VA_NARGS
+     if (tok == KWD___VA_OPT__)
+#endif
+     {
+      /* Replace __VA_OPT__(...) with `...' if necessary. */
+      size_t before_delete_size;
+      size_t within_delete_size;
+      size_t after_delete_size;
+      unsigned int paren_recursion;
+      last_text_pointer = token.t_begin;
+      TPPLexer_YieldRaw();
+      if unlikely(tok != '(' && !WARN(W_EXPECTED_LPAREN_AFTER_VA_OPT))
+         goto err;
+      before_delete_size = (size_t)(token.t_end - last_text_pointer);
+      last_text_pointer = token.t_end;
+      paren_recursion = 0;
+      while (TPPLexer_YieldRaw()) {
+       if (tok == '(') ++paren_recursion;
+       else if (tok == ')') {
+        if (!paren_recursion)
+            break;
+        --paren_recursion;
+       }
+      }
+      within_delete_size = (size_t)(token.t_begin - last_text_pointer);
+      if unlikely(tok != ')' &&
+                 !WARN(W_EXPECTED_RPAREN_AFTER_VA_OPT))
+         goto err;
+      after_delete_size = (size_t)(token.t_end - token.t_begin);
+      last_text_pointer = token.t_end;
+      if unlikely(!codewriter_put3(&writer,TPP_FUNOP_VA_OPT,
+                                   before_delete_size,
+                                   within_delete_size,
+                                   after_delete_size))
+         goto seterr;
+      func.f_n_vacomma += within_delete_size;
+      func.f_deltotal += before_delete_size;
+      func.f_deltotal += within_delete_size;
+      func.f_deltotal += after_delete_size;
+#if !defined(NO_EXTENSION_VA_COMMA) || !defined(NO_EXTENSION_VA_NARGS)
+      goto after_adjusted_va_opt;
+#endif
      }
 #ifndef NO_EXTENSION_VA_NARGS
      else
@@ -3905,9 +3992,16 @@ strop_normal:
       ++func.f_n_vanargs;
      }
 #endif
+#if !defined(NO_EXTENSION_VA_COMMA) || !defined(NO_EXTENSION_VA_NARGS)
      func.f_deltotal += (size_t)(token.t_end-token.t_begin);
      last_text_pointer = token.t_end;
+#ifndef NO_EXTENSION_VA_OPT
+after_adjusted_va_opt:
+     ;
+#endif
+#endif
     }
+#endif
    } else
 #endif
    if (tok == KWD_defined) {
@@ -4096,10 +4190,12 @@ common_call_extension:
   if (tok != argend_token) while (tok > 0) {
    if (TPP_ISKEYWORD(tok)) { /* Argument name. */
     argument_name = tok;
-#if !defined(NO_EXTENSION_VA_ARGS) || !defined(NO_EXTENSION_VA_COMMA) || !defined(NO_EXTENSION_VA_NARGS)
+#if !defined(NO_EXTENSION_VA_ARGS) || !defined(NO_EXTENSION_VA_COMMA) || \
+    !defined(NO_EXTENSION_VA_NARGS) || !defined(NO_EXTENSION_VA_OPT)
     if unlikely(IF_CONFIG_EXTENSION_VA_ARGS ((argument_name == KWD___VA_ARGS__),0) ||
                 IF_CONFIG_EXTENSION_VA_COMMA((argument_name == KWD___VA_COMMA__ && HAVE_EXTENSION_VA_COMMA),0) ||
-                IF_CONFIG_EXTENSION_VA_NARGS((argument_name == KWD___VA_NARGS__ && HAVE_EXTENSION_VA_NARGS),0)) {
+                IF_CONFIG_EXTENSION_VA_NARGS((argument_name == KWD___VA_NARGS__ && HAVE_EXTENSION_VA_NARGS),0) ||
+                IF_CONFIG_EXTENSION_VA_OPT((argument_name == KWD___VA_OPT__ && HAVE_EXTENSION_VA_OPT),0)) {
      /* Warn about argument name with otherwise special meaning. */
      if unlikely(!WARN(W_SPECIAL_ARGUMENT_NAME,token.t_kwd))
         goto err_arginfo;
@@ -9316,6 +9412,39 @@ advance_src:
   case TPP_FUNOP_VA_COMMA:
    /* VA_COMMA: Insert a `,' character if va_size is non-empty. */
    if (va_size) *dest_iter++ = ',';
+   goto advance_src;
+#endif
+
+#ifdef TPP_FUNOP_VA_OPT
+  case TPP_FUNOP_VA_OPT:
+   /* VA_OPT: Replace with substitution if va_size is non-empty. */
+   arg = funop_getarg(code);
+   assertf(arg <= (size_t)(source_end-source_iter),
+          (DBG_TEXT "Delete operand %lu larger than %lu",
+           DBG_DATA (unsigned long)(arg),
+                    (unsigned long)(source_end-source_iter)));
+   source_iter += arg; /* Delete prefix */
+   arg = funop_getarg(code);
+   if (va_size) {
+    assertf(arg <= (size_t)(dest_end-dest_iter),
+           (DBG_TEXT "Insufficient memory for text advancing in DST (Required: %lu; Available: %lu; dest_iter: %p)",
+            DBG_DATA (unsigned long)(arg),
+                     (unsigned long)(dest_end-dest_iter),dest_iter));
+    assertf(arg <= (size_t)(source_end-source_iter),
+           (DBG_TEXT "Insufficient memory for text advancing in SRC (Required: %lu; Available: %lu)",
+            DBG_DATA (unsigned long)(arg),
+                     (unsigned long)(source_end-source_iter)));
+    memcpy(dest_iter,source_iter,arg*sizeof(char));
+    dest_iter   += arg;
+    source_iter += arg;
+   } else {
+    assertf(arg <= (size_t)(source_end-source_iter),
+           (DBG_TEXT "Delete operand %lu larger than %lu",
+            DBG_DATA (unsigned long)(arg),
+                     (unsigned long)(source_end-source_iter)));
+    source_iter += arg;
+   }
+   /* Delete suffix */
    goto advance_src;
 #endif
 
