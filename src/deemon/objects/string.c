@@ -866,7 +866,8 @@ string_eq(String *__restrict self, DeeObject *__restrict some_object) {
 PRIVATE DREF DeeObject *DCALL
 string_ne(String *__restrict self, DeeObject *__restrict some_object) {
  /* Basic checks for same-object. */
- if (self == (String *)some_object) return_false;
+ if (self == (String *)some_object)
+     return_false;
  if (DeeBytes_Check(some_object))
      return_bool(!string_eq_bytes(self,(DeeBytesObject *)some_object));
  if (DeeObject_AssertTypeExact(some_object,&DeeString_Type))

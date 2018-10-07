@@ -115,7 +115,7 @@ ast_setddi(struct ast *self,
  ASSERT(info);
  if unlikely(self->a_ddi.l_file)
     TPPFile_Decref(self->a_ddi.l_file);
- if (info->l_file == TPPLexer_Global.l_token.t_file) {
+ if (tpp_is_reachable_file(info->l_file)) {
   self->a_ddi = *info;
  } else {
   loc_here(&self->a_ddi);
@@ -146,7 +146,7 @@ ast_putddi(struct ast *self,
  ASSERT_AST(self);
  ASSERT(info);
  if unlikely(self->a_ddi.l_file) goto done;
- if (info->l_file == TPPLexer_Global.l_token.t_file) {
+ if (tpp_is_reachable_file(info->l_file)) {
   self->a_ddi = *info;
  } else {
   loc_here(&self->a_ddi);

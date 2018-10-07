@@ -421,6 +421,8 @@ PRIVATE int const tpp_warning_mode_matrix[3] = {
     /* [TPP_WARNINGMODE_WARN]  = */COMPILER_ERROR_FATALITY_WARNING
 };
 
+
+
 PRIVATE int DCALL
 capture_compiler_location(struct TPPFile *__restrict file,
                           struct compiler_error_loc *__restrict result,
@@ -530,6 +532,23 @@ err:
 INTDEF DeeTypeObject *DCALL
 get_warning_error_class(int wnum);
 
+INTERN bool DCALL
+tpp_is_reachable_file(struct TPPFile *__restrict file) {
+ struct TPPFile *iter = token.t_file;
+ /* Make sure that the given file is still valid. */
+ for (;;) {
+  if (!iter) goto nope;
+  if (file == iter) break;
+  if (iter->f_prev == iter)
+      goto nope;
+  iter = iter->f_prev;
+ }
+ return true;
+nope:
+ return false;
+}
+
+
 PRIVATE int DCALL
 handle_compiler_warning(struct ast_loc *loc, bool force_fatal,
                         int wnum, va_list args) {
@@ -562,7 +581,7 @@ handle_compiler_warning(struct ast_loc *loc, bool force_fatal,
  error->ce_mode   = mode;
  error->ce_wnum   = wnum;
  /* Collect/inherit debug information. */
- if (loc && loc->l_file) {
+ if (loc && loc->l_file && tpp_is_reachable_file(loc->l_file)) {
   /* Make sure that the file owns its own filename,
    * as otherwise, the name may have been de-allocated
    * once the user actually wants to print it. */

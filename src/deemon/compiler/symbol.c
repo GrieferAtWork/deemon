@@ -374,8 +374,11 @@ symbol_addambig(struct symbol *__restrict self,
  self->s_ambig.a_declv = new_vec;
  new_vec += self->s_ambig.a_declc++;
  if (loc) {
+  if (!tpp_is_reachable_file(loc->l_file))
+       goto set_default_location;
   memcpy(new_vec,loc,sizeof(struct ast_loc));
  } else {
+set_default_location:
   loc_here(new_vec);
  }
  if (new_vec->l_file)
@@ -1332,11 +1335,14 @@ add_result_to_iter:
  result->s_next = *bucket;
  *bucket = result;
  result->s_scope = iter;
- if (warn_loc)
+ if (warn_loc) {
+  if (!tpp_is_reachable_file(warn_loc->l_file))
+       goto set_default_location;
   memcpy(&result->s_decl,
           warn_loc,
           sizeof(struct ast_loc));
- else {
+ } else {
+set_default_location:
   loc_here(&result->s_decl);
  }
  if (result->s_decl.l_file)
@@ -1398,8 +1404,11 @@ new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
  result->s_nbound  = 0;
  result->s_scope   = current_scope;
  if (loc) {
+  if (!tpp_is_reachable_file(loc->l_file))
+       goto set_default_location;
   memcpy(&result->s_decl,loc,sizeof(struct ast_loc));
  } else {
+set_default_location:
   loc_here(&result->s_decl);
  }
  if (result->s_decl.l_file)
@@ -1470,8 +1479,11 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
  result->s_nbound  = 0;
  result->s_scope   = scope;
  if (loc) {
+  if (!tpp_is_reachable_file(loc->l_file))
+       goto set_default_location;
   memcpy(&result->s_decl,loc,sizeof(struct ast_loc));
  } else {
+set_default_location:
   loc_here(&result->s_decl);
  }
  if (result->s_decl.l_file)
