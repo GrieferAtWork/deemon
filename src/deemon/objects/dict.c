@@ -33,6 +33,7 @@
 #include <deemon/list.h>
 #include <deemon/arg.h>
 #include <deemon/tuple.h>
+#include <deemon/float.h>
 #include <deemon/map.h>
 #include <deemon/string.h>
 #include <deemon/util/string.h>
@@ -1221,13 +1222,18 @@ dict_init(Dict *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq; int error;
  if unlikely(DeeArg_Unpack(argc,argv,"o:dict",&seq))
-    return -1;
+    goto err;
+ /* TODO: Support for initialization from `_rodict' */
+ /* TODO: Support for initialization from `_sharedmap' */
+ /* TODO: Fast-sequence support */
  if unlikely((seq = DeeObject_IterSelf(seq)) == NULL)
-    return -1;
+    goto err;
  error = dict_init_iterator(self,seq);
  Dee_Decref(seq);
  weakref_support_init(self);
  return error;
+err:
+ return -1;
 }
 
 
@@ -1239,31 +1245,39 @@ PRIVATE DREF DeeObject *DCALL
 dict_keys(DeeDictObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":keys"))
-     return NULL;
+     goto err;
  return dict_newproxy(self,&DeeDictKeys_Type);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_items(DeeDictObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":items"))
-     return NULL;
+     goto err;
  return dict_newproxy(self,&DeeDictItems_Type);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_values(DeeDictObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":values"))
-     return NULL;
+     goto err;
  return dict_newproxy(self,&DeeDictValues_Type);
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 dict_doclear(DeeDictObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":clear"))
-     return NULL;
+     goto err;
  dict_clear(self);
  return_none;
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1271,16 +1285,20 @@ dict_get(DeeDictObject *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*def = Dee_None;
  if (DeeArg_Unpack(argc,argv,"o|o:get",&key,&def))
-     return NULL;
+     goto err;
  return DeeDict_GetItemDef((DeeObject *)self,key,def);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_pop(DeeDictObject *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*def = NULL;
  if (DeeArg_Unpack(argc,argv,"o|o:pop",&key,&def))
-     return NULL;
+     goto err;
  return dict_popitem(self,key,def);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_popsomething(DeeDictObject *__restrict self,
@@ -1288,16 +1306,16 @@ dict_popsomething(DeeDictObject *__restrict self,
  DREF DeeObject *result;
  struct dict_item *iter;
  if (DeeArg_Unpack(argc,argv,":popitem"))
-     return NULL;
+     goto err;
  /* Allocate a tuple which we're going to fill with some key-value pair. */
  result = DeeTuple_NewUninitialized(2);
- if unlikely(!result) return NULL;
+ if unlikely(!result) goto err;
  DeeDict_LockWrite(self);
  if unlikely(!self->d_used) {
   DeeDict_LockEndWrite(self);
   DeeTuple_FreeUninitialized(result);
   err_empty_sequence((DeeObject *)self);
-  return NULL;
+  goto err;
  }
  iter = self->d_elem;
  while (!iter->di_key || iter->di_key == dummy) {
@@ -1314,46 +1332,54 @@ dict_popsomething(DeeDictObject *__restrict self,
      dict_rehash(self,-1);
  DeeDict_LockEndWrite(self);
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_setdefault(DeeDictObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*value = Dee_None,*old_value; int error;
  if (DeeArg_Unpack(argc,argv,"o|o:setdefault",&key,&value))
-     return NULL;
+     goto err;
  error = dict_setitem_ex(self,key,value,SETITEM_SETNEW,&old_value);
- if unlikely(error < 0) return NULL;
+ if unlikely(error < 0) goto err;
  if (error == 1) return old_value;
  return_reference_(value);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_setold(DeeDictObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*value; int error;
  if (DeeArg_Unpack(argc,argv,"oo:setold",&key,&value))
-     return NULL;
+     goto err;
  error = dict_setitem_ex(self,key,value,SETITEM_SETOLD,NULL);
- if unlikely(error < 0) return NULL;
+ if unlikely(error < 0) goto err;
  return_bool_(error);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_setnew(DeeDictObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*value; int error;
  if (DeeArg_Unpack(argc,argv,"oo:setnew",&key,&value))
-     return NULL;
+     goto err;
  error = dict_setitem_ex(self,key,value,SETITEM_SETNEW,NULL);
- if unlikely(error < 0) return NULL;
+ if unlikely(error < 0) goto err;
  return_bool_(!error);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_setold_ex(DeeDictObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*value,*old_value,*result; int error;
  if (DeeArg_Unpack(argc,argv,"oo:setold_ex",&key,&value))
-     return NULL;
+     goto err;
  error = dict_setitem_ex(self,key,value,SETITEM_SETOLD,&old_value);
- if unlikely(error < 0) return NULL;
+ if unlikely(error < 0) goto err;
  if (error == 1) {
   result = DeeTuple_Pack(2,Dee_True,old_value);
   Dee_Decref(old_value);
@@ -1361,15 +1387,17 @@ dict_setold_ex(DeeDictObject *__restrict self,
   result = DeeTuple_Pack(2,Dee_False,Dee_None);
  }
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_setnew_ex(DeeDictObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*value,*old_value,*result; int error;
  if (DeeArg_Unpack(argc,argv,"oo:setnew_ex",&key,&value))
-     return NULL;
+     goto err;
  error = dict_setitem_ex(self,key,value,SETITEM_SETNEW,&old_value);
- if unlikely(error < 0) return NULL;
+ if unlikely(error < 0) goto err;
  if (error == 1) {
   result = DeeTuple_Pack(2,Dee_False,old_value);
   Dee_Decref(old_value);
@@ -1377,18 +1405,24 @@ dict_setnew_ex(DeeDictObject *__restrict self,
   result = DeeTuple_Pack(2,Dee_True,Dee_None);
  }
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 dict_update(DeeDictObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- DeeObject *sequence,*iterator; int error;
- if (DeeArg_Unpack(argc,argv,"o:update",&sequence))
-     return NULL;
- iterator = DeeObject_IterSelf(sequence);
+ DeeObject *items,*iterator; int error;
+ if (DeeArg_Unpack(argc,argv,"o:update",&items))
+     goto err;
+ /*  */
+ iterator = DeeObject_IterSelf(items);
  error = dict_insert_iterator(self,iterator);
  Dee_Decref(iterator);
- if unlikely(error) return NULL;
+ if unlikely(error)
+    goto err;
  return_none;
+err:
+ return NULL;
 }
 
 
@@ -1402,11 +1436,11 @@ dict_update(DeeDictObject *__restrict self,
 
 PRIVATE struct type_method dict_methods[] = {
     { DeeString_STR(&str_get), (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_get,
-       DOC("(key,def=none)\n"
+       DOC("(key,def=none)->object\n"
            "@return The value associated with @key or @def when @key has no value associated") },
     { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_pop,
-       DOC("(key)\n"
-           "(key,def)\n"
+       DOC("(key)->object\n"
+           "(key,def)->object\n"
            "@throw KeyError No @def was given and @key was not found\n"
            "Delete @key from @this and return its previously assigned value or @def when @key had no item associated") },
     { "clear", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_doclear,
@@ -1448,12 +1482,20 @@ PRIVATE struct type_method dict_methods[] = {
     { "update", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
       DOC("({(object,object)...} items)\n"
           "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this dict") },
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Old function names. */
     { "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
       DOC("({(object,object)...} items)\n"
           "A deprecated alias for #update")  },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
 };
+
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+INTDEF struct type_getset set_getsets[];
+#define dict_getsets set_getsets
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
 
 INTDEF DeeTypeObject DictIterator_Type;
 PRIVATE struct type_member dict_class_members[] = {
@@ -1518,7 +1560,11 @@ PUBLIC DeeTypeObject DeeDict_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */dict_methods,
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+    /* .tp_getsets       = */dict_getsets,
+#else
     /* .tp_getsets       = */NULL,
+#endif
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

@@ -24,6 +24,7 @@
 #include <deemon/hashset.h>
 #include <deemon/bool.h>
 #include <deemon/gc.h>
+#include <deemon/float.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
@@ -1229,6 +1230,7 @@ set_init(Set *__restrict self,
  DeeObject *seq; int error;
  if unlikely(DeeArg_Unpack(argc,argv,"o:hashset",&seq))
     goto err;
+ /* TODO: Support for initialization from `_roset' */
  /* TODO: Optimization for fast-sequence types. */
  if unlikely((seq = DeeObject_IterSelf(seq)) == NULL)
     goto err;
@@ -1325,9 +1327,9 @@ PRIVATE struct type_method set_methods[] = {
     { "clear", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_doclear,
       DOC("()\nClear all items from the set") },
     { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
-      DOC("->object\n@throw ValueError The set is empty\nPop a random item from the set and reutrn it") },
+      DOC("->object\n@throw ValueError The set is empty\nPop a random item from the set and return it") },
     { "popitem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
-      DOC("->object\n@throw ValueError The set is empty\nPop a random item from the set and reutrn it") },
+      DOC("->object\n@throw ValueError The set is empty\nPop a random item from the set and return it (alias for #pop)") },
     { "unify", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_unify,
       DOC("(ob)->object\nInsert @ob into the set if it wasn't inserted before, and re-return it, or the pre-existing instance") },
     { "insert", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_insert,
@@ -1341,11 +1343,40 @@ PRIVATE struct type_method set_methods[] = {
       DOC("(ob)->bool\nDeprecated alias for #insert") },
     { "discard", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_remove,
       DOC("(ob)->bool\nDeprecated alias for #remove") },
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Old function names. */
     { "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_update,
       DOC("(ob)->bool\nDeprecated alias for #update") },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
 };
+
+
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+PRIVATE DREF DeeObject *DCALL
+set_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
+ return DeeFloat_New(1.0);
+}
+PRIVATE int DCALL
+set_del_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
+ return 0;
+}
+PRIVATE int DCALL
+set_set_maxloadfactor(DeeObject *__restrict UNUSED(self),
+                      DeeObject *__restrict UNUSED(value)) {
+ return 0;
+}
+
+INTERN struct type_getset set_getsets[] = {
+    { "max_load_factor",
+      &set_get_maxloadfactor,
+      &set_del_maxloadfactor,
+      &set_set_maxloadfactor,
+      DOC("->float\n"
+          "Deprecated. Always returns ${1.0}, with del/set being ignored") },
+    { NULL }
+};
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_member set_class_members[] = {
     TYPE_MEMBER_CONST("iterator",&SetIterator_Type),
@@ -1424,7 +1455,11 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */set_methods,
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+    /* .tp_getsets       = */set_getsets,
+#else
     /* .tp_getsets       = */NULL,
+#endif
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
