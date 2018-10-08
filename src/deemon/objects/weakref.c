@@ -239,6 +239,7 @@ ob_weakref_lock(WeakRef *__restrict self,
  return result;
 }
 
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE DREF DeeObject *DCALL
 ob_weakref_try_lock(WeakRef *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
@@ -252,6 +253,7 @@ ob_weakref_try_lock(WeakRef *__restrict self,
  }
  return result;
 }
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE DREF DeeObject *DCALL
 ob_weakref_alive(WeakRef *__restrict self,
@@ -268,16 +270,19 @@ PRIVATE struct type_method ob_weakref_methods[] = {
           "@throw ReferenceError The weak reference is no longer bound and no @def was given\n"
           "Lock the weak reference and return the pointed-to object") },
     { "alive", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ob_weakref_alive,
-      DOC("->bool\nDeprecated alias for #op:bool") },
+      DOC("->bool\n"
+          "Alias for #op:bool") },
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
     { "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ob_weakref_try_lock,
       DOC("->none\n"
           "->object\n"
           "Deprecated alias for #lock with passing :none (${this.lock(none)})") },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
 };
 
 PRIVATE struct type_getset ob_weakref_getsets[] = {
-    { "item",
+    { "value",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ob_weakref_get,
      (int(DCALL *)(DeeObject *__restrict))&ob_weakref_del,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ob_weakref_set,

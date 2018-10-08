@@ -230,7 +230,7 @@ PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-tls_getitem(Tls *__restrict self) {
+tls_getvalue(Tls *__restrict self) {
  DREF DeeObject **presult,*result;
  presult = thread_tls_get(self->t_index);
  if unlikely(!presult) goto err;
@@ -327,14 +327,14 @@ err:
 }
 
 PRIVATE int DCALL
-tls_delitem(Tls *__restrict self) {
+tls_delvalue(Tls *__restrict self) {
  int result = tls_dodelitem(self);
  if (result > 0) result = err_tls_unbound();
  return result;
 }
 
 PRIVATE int DCALL
-tls_setitem(Tls *__restrict self, DeeObject *__restrict value) {
+tls_setvalue(Tls *__restrict self, DeeObject *__restrict value) {
  DREF DeeObject **pitem,*item;
  pitem = thread_tls_get(self->t_index);
  if unlikely(!pitem) goto err;
@@ -361,8 +361,8 @@ again:
   goto err;
  }
  if (!result) {
-  /* Cheat a bit by letting `tls_getitem()' deal with the factory call. */
-  result = tls_getitem(self);
+  /* Cheat a bit by letting `tls_getvalue()' deal with the factory call. */
+  result = tls_getvalue(self);
   if unlikely(!result) goto err;
   Dee_Decref(result);
   goto again;
@@ -446,7 +446,7 @@ PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-tls_getitem(Tls *__restrict self) {
+tls_getvalue(Tls *__restrict self) {
  DREF DeeObject *result;
  result = self->t_value;
  if unlikely(result == ITER_DONE) {
@@ -534,14 +534,14 @@ err:
 }
 
 PRIVATE int DCALL
-tls_delitem(Tls *__restrict self) {
+tls_delvalue(Tls *__restrict self) {
  int result = tls_dodelitem(self);
  if (result > 0) result = err_tls_unbound();
  return result;
 }
 
 PRIVATE int DCALL
-tls_setitem(Tls *__restrict self, DeeObject *__restrict value) {
+tls_setvalue(Tls *__restrict self, DeeObject *__restrict value) {
  DREF DeeObject *item;
  Dee_Incref(value);
  item          = self->t_value; /* Inherit */
@@ -562,8 +562,8 @@ again:
   goto err;
  }
  if (!result) {
-  /* Cheat a bit by letting `tls_getitem()' deal with the factory call. */
-  result = tls_getitem(self);
+  /* Cheat a bit by letting `tls_getvalue()' deal with the factory call. */
+  result = tls_getvalue(self);
   if unlikely(!result) goto err;
   Dee_Decref(result);
   goto again;
@@ -604,19 +604,15 @@ PRIVATE int DCALL tls_bool(Tls *__restrict self) {
 
 
 PRIVATE struct type_getset tls_getsets[] = {
-    { "item", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tls_getitem,
-              (int(DCALL *)(DeeObject *__restrict))&tls_delitem,
-              (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tls_setitem,
+    { "value", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tls_getvalue,
+               (int(DCALL *)(DeeObject *__restrict))&tls_delvalue,
+               (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tls_setvalue,
       DOC("->object\n"
           "@throw AttributeError The TLS variable isn't bound, or has already been unbound\n"
           "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
           "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
           "If no factory has been defined, the TLS is initialized as unbound and any attempt "
           "to read or delete it will cause an :AttributeError to be thrown") },
-    { "value", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tls_getitem,
-               (int(DCALL *)(DeeObject *__restrict))&tls_delitem,
-               (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tls_setitem,
-      DOC("->object\nDeprecated alias for #item") },
     { NULL }
 };
 
@@ -641,7 +637,7 @@ tls_get(Tls *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":get"))
      return NULL;
- return tls_getitem(self);
+ return tls_getvalue(self);
 }
 PRIVATE DREF DeeObject *DCALL
 tls_delete(Tls *__restrict self,
@@ -660,7 +656,7 @@ tls_set(Tls *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  DeeObject *ob;
  if (DeeArg_Unpack(argc,argv,"o:set",&ob) ||
-     tls_setitem(self,ob))
+     tls_setvalue(self,ob))
      return NULL;
  return_none;
 }

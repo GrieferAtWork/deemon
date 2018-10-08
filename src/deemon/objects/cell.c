@@ -290,11 +290,9 @@ PRIVATE struct type_cmp cell_cmp = {
 
 
 PRIVATE struct type_getset cell_getsets[] = {
-    { "item", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
+    { "value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
       DOC("@throw UnboundAttribute Attempted to read from an empty cell\n"
           "read/write access to the underlying, contained :object") },
-    { "value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
-      DOC("Deprecated alias for #item") },
     { NULL }
 };
 
