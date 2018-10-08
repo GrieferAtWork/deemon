@@ -205,6 +205,24 @@ PRIVATE struct type_getset pointer_getsets[] = {
 };
 
 
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+PRIVATE DREF DeeObject *DCALL
+struct_deref_func(DeeObject *__restrict self,
+                  size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":__deref__"))
+     goto err;
+ return (DREF DeeObject *)pointer_get_deref((struct pointer_object *)self);
+err:
+ return NULL;
+}
+
+PRIVATE struct type_method pointer_methods[] = {
+    /* Methods for backwards-compatibility with deemon 100+ */
+    { "__deref__", &struct_deref_func, DOC("->pointer\nDeprecated alias for #ind") },
+    { NULL }
+};
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
 INTERN DeePointerTypeObject DeePointer_Type = {
     /* .pt_base = */{
         /* .st_base = */{
@@ -246,8 +264,12 @@ INTERN DeePointerTypeObject DeePointer_Type = {
             /* .tp_iter_next     = */NULL,
             /* .tp_attr          = */NULL,
             /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+            /* .tp_buffer        = */NULL,
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+            /* .tp_methods       = */pointer_methods,
+#else /* !CONFIG_NO_DEEMON_100_COMPAT */
             /* .tp_methods       = */NULL,
+#endif /* CONFIG_NO_DEEMON_100_COMPAT */
             /* .tp_getsets       = */pointer_getsets,
             /* .tp_members       = */NULL,
             /* .tp_class_methods = */NULL,

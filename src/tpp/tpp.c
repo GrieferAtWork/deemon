@@ -1142,7 +1142,7 @@ do{ tok_t              _old_tok_id    = token.t_id; \
 #ifdef TPP_CONFIG_EXTENSION_VA_OPT
 #define HAVE_EXTENSION_VA_OPT            TPP_CONFIG_EXTENSION_VA_OPT
 #else
-#define HAVE_EXTENSION_VA_OPT            HAS(EXT_VA_COMMA)
+#define HAVE_EXTENSION_VA_OPT            HAS(EXT_VA_OPT)
 #endif
 #ifdef TPP_CONFIG_EXTENSION_VA_NARGS
 #define HAVE_EXTENSION_VA_NARGS          TPP_CONFIG_EXTENSION_VA_NARGS

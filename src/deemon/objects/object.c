@@ -933,6 +933,7 @@ PRIVATE char const meth_add[]        = "o:__add__";
 PRIVATE char const meth_sub[]        = "o:__sub__";
 PRIVATE char const meth_mul[]        = "o:__mul__";
 PRIVATE char const meth_div[]        = "o:__div__";
+PRIVATE char const meth_mod[]        = "o:__mod__";
 PRIVATE char const meth_shl[]        = "o:__shl__";
 PRIVATE char const meth_shr[]        = "o:__shr__";
 PRIVATE char const meth_and[]        = "o:__and__";
@@ -1125,6 +1126,14 @@ object_div(DeeObject *__restrict self,
  if (DeeArg_Unpack(argc,argv,meth_div,&other))
      return NULL;
  return DeeObject_Div(self,other);
+}
+PRIVATE DREF DeeObject *DCALL
+object_mod(DeeObject *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ DeeObject *other;
+ if (DeeArg_Unpack(argc,argv,meth_mod,&other))
+     return NULL;
+ return DeeObject_Mod(self,other);
 }
 PRIVATE DREF DeeObject *DCALL
 object_shl(DeeObject *__restrict self,
@@ -1398,6 +1407,165 @@ err:
  return NULL;
 }
 
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+PRIVATE DREF DeeObject *DCALL
+object_not(DeeObject *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ int temp;
+ if (DeeArg_Unpack(argc,argv,":__not__"))
+     goto err;
+ temp = DeeObject_Bool(self);
+ if unlikely(temp < 0)
+    goto err;
+ return_bool_(!temp);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+object_is(DeeObject *__restrict self,
+          size_t argc, DeeObject **__restrict argv) {
+ bool is_instance;
+ DeeTypeObject *tp;
+ if (DeeArg_Unpack(argc,argv,"o:__is__",&tp))
+     goto err;
+ if (DeeNone_Check((DeeObject *)tp)) {
+  is_instance = DeeNone_Check(self);
+ } else if (DeeSuper_Check(self)) {
+  is_instance = DeeType_IsInherited(DeeSuper_TYPE(self),tp);
+ } else {
+  is_instance = DeeObject_InstanceOf(self,tp);
+ }
+ return_bool_(is_instance);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+object_inc(DeeObject *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *selfref; int error;
+ if (DeeArg_Unpack(argc,argv,":__inc__"))
+     goto err;
+ selfref = self;
+ Dee_Incref(selfref);
+ error = DeeObject_Inc(&selfref);
+ if unlikely(error)
+    goto err_selfref;
+ error = DeeObject_Assign(self,selfref);
+ if unlikely(error)
+    goto err_selfref;
+ return selfref;
+err_selfref:
+ Dee_Decref(selfref);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+object_dec(DeeObject *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *selfref; int error;
+ if (DeeArg_Unpack(argc,argv,":__dec__"))
+     goto err;
+ selfref = self;
+ Dee_Incref(selfref);
+ error = DeeObject_Dec(&selfref);
+ if unlikely(error)
+    goto err_selfref;
+ error = DeeObject_Assign(self,selfref);
+ if unlikely(error)
+    goto err_selfref;
+ return selfref;
+err_selfref:
+ Dee_Decref(selfref);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+object_incpost(DeeObject *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *selfref,*result; int error;
+ if (DeeArg_Unpack(argc,argv,":__incpost__"))
+     goto err;
+ result = DeeObject_Copy(self);
+ if unlikely(!result) goto err;
+ selfref = self;
+ Dee_Incref(selfref);
+ error = DeeObject_Inc(&selfref);
+ if (likely(error == 0) && selfref != self)
+     error = DeeObject_Assign(self,selfref);
+ Dee_Decref(selfref);
+ if unlikely(error)
+    goto err_r;
+ return result;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+object_decpost(DeeObject *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *selfref,*result; int error;
+ if (DeeArg_Unpack(argc,argv,":__decpost__"))
+     goto err;
+ result = DeeObject_Copy(self);
+ if unlikely(!result) goto err;
+ selfref = self;
+ Dee_Incref(selfref);
+ error = DeeObject_Dec(&selfref);
+ if (likely(error == 0) && selfref != self)
+     error = DeeObject_Assign(self,selfref);
+ Dee_Decref(selfref);
+ if unlikely(error)
+    goto err_r;
+ return result;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+
+#define DEFINE_DEPRECATED_INPLACE_BINARY(name,func) \
+PRIVATE DREF DeeObject *DCALL \
+object_##name(DeeObject *__restrict self, \
+              size_t argc, DeeObject **__restrict argv) { \
+ DREF DeeObject *selfref; int error; \
+ DeeObject *other; \
+ if (DeeArg_Unpack(argc,argv,"o:__" #name "__",&other)) \
+     goto err; \
+ selfref = self; \
+ Dee_Incref(selfref); \
+ error = func(&selfref,other); \
+ if unlikely(error) \
+    goto err_selfref; \
+ error = DeeObject_Assign(self,selfref); \
+ if unlikely(error) \
+    goto err_selfref; \
+ return selfref; \
+err_selfref: \
+ Dee_Decref(selfref); \
+err: \
+ return NULL; \
+}
+DEFINE_DEPRECATED_INPLACE_BINARY(iadd,DeeObject_InplaceAdd)
+DEFINE_DEPRECATED_INPLACE_BINARY(isub,DeeObject_InplaceSub)
+DEFINE_DEPRECATED_INPLACE_BINARY(imul,DeeObject_InplaceMul)
+DEFINE_DEPRECATED_INPLACE_BINARY(idiv,DeeObject_InplaceDiv)
+DEFINE_DEPRECATED_INPLACE_BINARY(imod,DeeObject_InplaceMod)
+DEFINE_DEPRECATED_INPLACE_BINARY(ishl,DeeObject_InplaceShl)
+DEFINE_DEPRECATED_INPLACE_BINARY(ishr,DeeObject_InplaceShr)
+DEFINE_DEPRECATED_INPLACE_BINARY(iand,DeeObject_InplaceAnd)
+DEFINE_DEPRECATED_INPLACE_BINARY(ior,DeeObject_InplaceOr)
+DEFINE_DEPRECATED_INPLACE_BINARY(ixor,DeeObject_InplaceXor)
+DEFINE_DEPRECATED_INPLACE_BINARY(ipow,DeeObject_InplacePow)
+#undef DEFINE_DEPRECATED_INPLACE_BINARY
+
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
 
 INTERN DEFINE_CLSMETHOD(_DeeObject_IdObjMethod,_DeeObject_IdFunc,&DeeObject_Type);
 PRIVATE struct type_member object_class_members[] = {
@@ -1436,6 +1604,7 @@ PRIVATE struct type_method object_methods[] = {
     { meth_sub+2,        &object_sub, DOC("(other)->object\n@return The result of ${this.operator - (other)}") },
     { meth_mul+2,        &object_mul, DOC("(other)->object\n@return The result of ${this.operator * (other)}") },
     { meth_div+2,        &object_div, DOC("(other)->object\n@return The result of ${this.operator / (other)}") },
+    { meth_mod+2,        &object_mod, DOC("(other)->object\n@return The result of ${this.operator % (other)}") },
     { meth_shl+2,        &object_shl, DOC("(other)->object\n@return The result of ${this.operator << (other)}") },
     { meth_shr+2,        &object_shr, DOC("(other)->object\n@return The result of ${this.operator >> (other)}") },
     { meth_and+2,        &object_and, DOC("(other)->object\n@return The result of ${this.operator & (other)}") },
@@ -1465,11 +1634,37 @@ PRIVATE struct type_method object_methods[] = {
     { meth_setattr+3,    &object_setattr, DOC("(string name,value)->object\n@return Always re-returned @value\nInvokes ${this.operator .= (name,value)}") },
     { DeeString_STR(&str___format__), &object_format_method,
       DOC("(string format)->string\nFormat @this object. (s.a. :string.format)") },
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Aliases for backwards compatibility with deemon < v200 */
     { "__iterself__",    &object_iterself, DOC("->object\nDeprecated alias for #__iter__") },
     { "__iternext__",    &object_iternext, DOC("->object\nDeprecated alias for #__next__") },
+    /* Deprecated function for backwards compatibility with deemon < v200 */
+    { "__move__",        &object_copy, DOC("->object\nDeprecated alias for #__copy__") },
+    { "__lt__",          &object_lo, DOC("(other)->object\nDeprecated alias for #__lo__") },
+    { "__gt__",          &object_gr, DOC("(other)->object\nDeprecated alias for #__gr__") },
+    { "__not__",         &object_not, DOC("->bool\nDeprecated alias for ${!this}") },
+    { "__is__",          &object_is, DOC("(type tp)->bool\n(none tp)->bool\nDeprecated alias for ${this is tp}") },
+    { "__deepequals__",  &object_eq, DOC("(other)->object\nDeprecated alias for #__eq__") },
+    { "__inc__",         &object_inc, DOC("->object\nDeprecated alias for ${({ local temp = this; ++temp; if (temp !== this) this := temp; this; })}") },
+    { "__dec__",         &object_dec, DOC("->object\nDeprecated alias for ${({ local temp = this; --temp; if (temp !== this) this := temp; this; })}") },
+    { "__incpost__",     &object_incpost, DOC("->object\nDeprecated alias for ${({ local res = copy this; local temp = this; ++temp; if (temp !== this) this := temp; res; })}") },
+    { "__decpost__",     &object_decpost, DOC("->object\nDeprecated alias for ${({ local res = copy this; local temp = this; --temp; if (temp !== this) this := temp; res; })}") },
+    { "__iadd__",        &object_iadd, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp += other; if (temp !== this) this := temp; res; })}") },
+    { "__isub__",        &object_isub, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp -= other; if (temp !== this) this := temp; res; })}") },
+    { "__imul__",        &object_imul, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp *= other; if (temp !== this) this := temp; res; })}") },
+    { "__idiv__",        &object_idiv, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp /= other; if (temp !== this) this := temp; res; })}") },
+    { "__imod__",        &object_imod, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp %= other; if (temp !== this) this := temp; res; })}") },
+    { "__ishl__",        &object_ishl, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp <<= other; if (temp !== this) this := temp; res; })}") },
+    { "__ishr__",        &object_ishr, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp >>= other; if (temp !== this) this := temp; res; })}") },
+    { "__iand__",        &object_iand, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp &= other; if (temp !== this) this := temp; res; })}") },
+    { "__ior__",         &object_ior,  DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp |= other; if (temp !== this) this := temp; res; })}") },
+    { "__ixor__",        &object_ixor, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp ^= other; if (temp !== this) this := temp; res; })}") },
+    { "__ipow__",        &object_ipow, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp **= other; if (temp !== this) this := temp; res; })}") },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
 };
+
+
 
 
 PRIVATE DREF DeeObject *DCALL
@@ -1479,8 +1674,12 @@ object_class_get(DeeObject *__restrict self) {
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset object_getsets[] = {
+#ifndef CONFIG_LANGUAGE_NO_ASM
+    { DeeString_STR(&str_this), &DeeObject_NewRef, NULL, NULL },
+#else
     { "this", &DeeObject_NewRef, NULL, NULL },
-    { "class", &object_class_get, NULL, NULL },
+#endif
+    { DeeString_STR(&str_class), &object_class_get, NULL, NULL },
     { DeeString_STR(&str_super), &DeeSuper_Of, NULL, NULL },
     { NULL }
 };
@@ -1488,6 +1687,8 @@ PRIVATE struct type_getset object_getsets[] = {
 PRIVATE struct type_member object_members[] = {
     TYPE_MEMBER_FIELD_DOC("__refcnt__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(DeeObject,ob_refcnt),
                           "->int\nThe number of references currently existing for this object"),
+    TYPE_MEMBER_FIELD_DOC("__type__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(DeeObject,ob_type),
+                          "->type\nThe type of @this object (same as ${type this})"),
     TYPE_MEMBER_END
 };
 
@@ -1627,6 +1828,16 @@ type_baseof(DeeTypeObject *__restrict self, size_t argc,
  if (!DeeType_Check((DeeObject *)other))
      return_false;
  return_bool(DeeType_IsInherited(other,self));
+}
+
+PRIVATE DREF DeeObject *DCALL
+type_derivedfrom(DeeTypeObject *__restrict self, size_t argc,
+                 DeeObject **__restrict argv, DeeObject *kw) {
+ DeeTypeObject *other;
+ PRIVATE struct keyword kwlist[] = { K(other), KEND };
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o:derivedfrom",&other))
+     return NULL;
+ return_bool(DeeType_IsInherited(self,other));
 }
 
 
@@ -2402,6 +2613,145 @@ err:
  return NULL;
 }
 
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+PRIVATE DREF DeeObject *DCALL
+type_derivedfrom_not_same(DeeTypeObject *__restrict self, size_t argc,
+                          DeeObject **__restrict argv) {
+ DeeTypeObject *other;
+ if (DeeArg_Unpack(argc,argv,"o:derived_from",&other))
+     return NULL;
+ return_bool(self != other && DeeType_IsInherited(self,other));
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_vartype(DeeTypeObject *__restrict self, size_t argc,
+                DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_vartype"))
+     return NULL;
+ return_bool(DeeType_IsVariable(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_heaptype(DeeTypeObject *__restrict self, size_t argc,
+                 DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_heaptype"))
+     return NULL;
+ return_bool(DeeType_IsCustom(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_gctype(DeeTypeObject *__restrict self, size_t argc,
+               DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_gctype"))
+     return NULL;
+ return_bool(DeeType_IsGC(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_final(DeeTypeObject *__restrict self, size_t argc,
+              DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_final"))
+     return NULL;
+ return_bool(DeeType_IsFinal(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_class(DeeTypeObject *__restrict self, size_t argc,
+              DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_class"))
+     return NULL;
+ return_bool(DeeType_IsClass(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_complete(DeeTypeObject *__restrict UNUSED(self),
+                 size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_complete"))
+     return NULL;
+ return_true;
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_classtype(DeeTypeObject *__restrict UNUSED(self),
+                  size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_class_type"))
+     return NULL;
+ return_false;
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_ctypes_class(DeeTypeObject *__restrict self,
+                     char const *__restrict name) {
+ DREF DeeObject *temp; int error;
+ temp = DeeObject_GetAttrString((DeeObject *)self,"isstructured");
+ if unlikely(!temp) goto err;
+ error = DeeObject_Bool(temp);
+ Dee_Decref(temp);
+ if unlikely(error < 0) goto err;
+ if (!error) goto nope;
+ temp = DeeObject_GetAttrString((DeeObject *)self,name);
+ if unlikely(!temp) goto err;
+ error = DeeObject_Bool(temp);
+ Dee_Decref(temp);
+ if unlikely(error < 0) goto err;
+ if (error) return_true;
+nope:
+ return_false;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+type_is_pointer(DeeTypeObject *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_pointer"))
+     return NULL;
+ return type_is_ctypes_class(self,"ispointer");
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_lvalue(DeeTypeObject *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_pointer"))
+     return NULL;
+ return type_is_ctypes_class(self,"islvalue");
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_structured(DeeTypeObject *__restrict self,
+                   size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_structured"))
+     return NULL;
+ return DeeObject_GetAttrString((DeeObject *)self,"isstructured");
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_struct(DeeTypeObject *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_struct"))
+     return NULL;
+ return type_is_ctypes_class(self,"isstruct");
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_array(DeeTypeObject *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_array"))
+     return NULL;
+ return type_is_ctypes_class(self,"isarray");
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_foreign_function(DeeTypeObject *__restrict self,
+                          size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_foreign_function"))
+     return NULL;
+ return type_is_ctypes_class(self,"isfunction");
+}
+
+PRIVATE DREF DeeObject *DCALL
+type_is_filetype(DeeTypeObject *__restrict self, size_t argc,
+                 DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_file"))
+     return NULL;
+ return_bool(Dee_TYPE(self) == &DeeFileType_Type);
+}
+PRIVATE DREF DeeObject *DCALL
+type_is_superbase(DeeTypeObject *__restrict self, size_t argc,
+                  DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":is_super_base"))
+     return NULL;
+ return_bool(DeeType_Base(self) == NULL);
+}
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
 PRIVATE struct type_method type_methods[] = {
     { "baseof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_baseof,
       DOC("(type other)->bool\n"
@@ -2409,6 +2759,11 @@ PRIVATE struct type_method type_methods[] = {
           "If @other isn't a type, :false is returned\n"
           "Using baseof, the behavior of ${x is y} can be approximated as:\n"
           ">print y.baseof(type(x)); // print x is y;"),
+      TYPE_METHOD_FKWDS },
+    { "derivedfrom", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom,
+      DOC("(type other)->bool\n"
+          "Returns :true if @this type is equal to, or has been derived from @other\n"
+          "If @other isn't a type, :false is returned"),
       TYPE_METHOD_FKWDS },
     { "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_newinstance,
       DOC("(**fields)->object\n"
@@ -2606,6 +2961,28 @@ PRIVATE struct type_method type_methods[] = {
     { meth_setinstanceattr+3, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_setinstanceattr,
       DOC("(string name,object value)->object\ns.a. #getinstanceattr"),
       TYPE_METHOD_FKWDS },
+
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+    /* Deprecated functions */
+    { "same_or_derived_from", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom, DOC("(type other)->bool\nDeprecated alias for #derivedfrom"), TYPE_METHOD_FKWDS },
+    { "derived_from", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom_not_same, DOC("(type other)->bool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
+    { "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_vartype, DOC("->bool\nDeprecated alias for #isvariable") },
+    { "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_heaptype, DOC("->bool\nDeprecated alias for #iscustom") },
+    { "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_gctype, DOC("->bool\nDeprecated alias for #isgc") },
+    { "is_final", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_final, DOC("->bool\nDeprecated alias for #isfinal") },
+    { "is_class", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_class, DOC("->bool\nDeprecated alias for #isclass") },
+    { "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_complete, DOC("->bool\nDeprecated (always returns :true)") },
+    { "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_classtype, DOC("->bool\nDeprecated (always returns :false)") },
+    { "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_pointer, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
+    { "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_lvalue, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}") },
+    { "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_structured, DOC("->bool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}") },
+    { "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_struct, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}") },
+    { "is_array", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_array, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}") },
+    { "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_foreign_function, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}") },
+    { "is_file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_filetype, DOC("->bool\nDeprecated alias for ${this is type file from deemon}") },
+    { "is_super_base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_superbase, DOC("->bool\nDeprecated alias for ${this.__base__ !is bound}") },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
     { NULL }
 };
 
@@ -2613,14 +2990,9 @@ PRIVATE struct type_member type_members[] = {
     TYPE_MEMBER_FIELD("__name__",STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_name)),
     TYPE_MEMBER_FIELD("__doc__", STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_doc)),
     TYPE_MEMBER_FIELD("__base__",STRUCT_OBJECT_OPT,offsetof(DeeTypeObject,tp_base)),
-#if 0
-    TYPE_MEMBER_FIELD("tp_name", STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_name)),
-    TYPE_MEMBER_FIELD("tp_doc",  STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_doc)),
-    TYPE_MEMBER_FIELD("tp_base", STRUCT_OBJECT_OPT,offsetof(DeeTypeObject,tp_base)),
-    TYPE_MEMBER_FIELD("tp_flags",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeTypeObject,tp_flags)),
-#endif
     TYPE_MEMBER_END
 };
+
 
 /*[[[deemon
 import file from deemon;
@@ -2687,6 +3059,10 @@ PRIVATE DREF DeeObject *DCALL
 type_istypetype(DeeObject *__restrict self) {
     return_bool(DeeType_IsTypeType(self));
 }
+PRIVATE DREF DeeObject *DCALL
+type_iscustom(DeeObject *__restrict self) {
+    return_bool(DeeType_IsCustom(self));
+}
 #define TYPE_FEATURE_GETSETS \
     { "isvariable", &type_isvariable, NULL, NULL, DOC("->bool") }, \
     { "isfinal", &type_isfinal, NULL, NULL, DOC("->bool") }, \
@@ -2699,6 +3075,7 @@ type_istypetype(DeeObject *__restrict self) {
     { "issequence", &type_issequence, NULL, NULL, DOC("->bool") }, \
     { "isiterator", &type_isiterator, NULL, NULL, DOC("->bool") }, \
     { "istypetype", &type_istypetype, NULL, NULL, DOC("->bool") }, \
+    { "iscustom", &type_iscustom, NULL, NULL, DOC("->bool") }, \
 /* ... */
 //[[[end]]]
 
@@ -2845,6 +3222,21 @@ type_get_module(DeeTypeObject *__restrict self) {
  return result;
 }
 
+PUBLIC DREF DeeObject *DCALL
+type_get_instancesize(DeeTypeObject *__restrict self) {
+ if (self->tp_flags & TP_FVARIABLE)
+     goto retnone;
+ if (!self->tp_init.tp_alloc.tp_ctor &&
+     !self->tp_init.tp_alloc.tp_copy_ctor &&
+     !self->tp_init.tp_alloc.tp_deep_ctor &&
+     !self->tp_init.tp_alloc.tp_any_ctor &&
+     !self->tp_init.tp_alloc.tp_any_ctor_kw)
+     goto retnone;
+ return DeeInt_NewSize(self->tp_init.tp_alloc.tp_instance_size);
+retnone:
+ return_none;
+}
+
 
 
 PRIVATE struct type_getset type_getsets[] = {
@@ -2861,6 +3253,17 @@ PRIVATE struct type_getset type_getsets[] = {
           "Return the module used to define @this type, or :none if the module cannot "
           "be determined, which may be the case if the type doesn't have any defining "
           "features such as operators, or class/instance member functions") },
+    { "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
+      DOC("->int\n"
+          "->none\n"
+          "Returns the heap allocation size of instances of @this type, or :none when @this type cannot "
+          "be instantiated, is a singletone (such as :none), or has variable-length instances (#isvariable)") },
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+    { "__instance_size__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
+      DOC("->int\n"
+          "->none\n"
+          "Deprecated alias for #__instancesize__") },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
 };
 

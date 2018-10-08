@@ -34,16 +34,11 @@
 
 DECL_BEGIN
 
-PRIVATE char const ispointer_name[] = ":ispointer";
-PRIVATE char const islvalue_name[] = ":islvalue";
-PRIVATE char const isarray_name[] = ":islvalue";
-PRIVATE char const isfunction_name[] = ":isfunction";
-PRIVATE char const isstruct_name[] = ":isstruct";
-DOC_DEF(ispointer_doc,"()->bool\nReturns :true if @this :structured_type is a :pointer_type");
-DOC_DEF(islvalue_doc,"()->bool\nReturns :true if @this :structured_type is an :lvalue_type");
-DOC_DEF(isarray_doc,"()->bool\nReturns :true if @this :structured_type is an :array_type");
-DOC_DEF(isfunction_doc,"()->bool\nReturns :true if @this :structured_type is a :function_type");
-DOC_DEF(isstruct_doc,"()->bool\nReturns :true if @this :structured_type is a :struct_type");
+DOC_DEF(ispointer_doc,"->bool\nReturns :true if @this :structured_type is a :pointer_type");
+DOC_DEF(islvalue_doc,"->bool\nReturns :true if @this :structured_type is an :lvalue_type");
+DOC_DEF(isarray_doc,"->bool\nReturns :true if @this :structured_type is an :array_type");
+DOC_DEF(isfunction_doc,"->bool\nReturns :true if @this :structured_type is a :function_type");
+DOC_DEF(isstruct_doc,"->bool\nReturns :true if @this :structured_type is a :struct_type");
 
 
 /* Interpret `self' as a pointer and store the result in `*result'
@@ -157,42 +152,6 @@ stype_fini(DeeSTypeObject *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-stype_ispointer(DeePointerTypeObject *__restrict UNUSED(self),
-                size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,ispointer_name))
-     return NULL;
- return_false;
-}
-PRIVATE DREF DeeObject *DCALL
-stype_islvalue(DeePointerTypeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,islvalue_name))
-     return NULL;
- return_false;
-}
-PRIVATE DREF DeeObject *DCALL
-stype_isarray(DeePointerTypeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,isarray_name))
-     return NULL;
- return_false;
-}
-PRIVATE DREF DeeObject *DCALL
-stype_isfunction(DeePointerTypeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,isfunction_name))
-     return NULL;
- return_false;
-}
-PRIVATE DREF DeeObject *DCALL
-stype_isstruct(DeePointerTypeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,isstruct_name))
-     return NULL;
- return_false;
-}
-
-PRIVATE DREF DeeObject *DCALL
 stype_dofunc(DeeSTypeObject *__restrict self, size_t argc,
              DeeObject **__restrict argv, cc_t cc_flags) {
  DeeSTypeObject **argv_types; size_t i;
@@ -232,11 +191,6 @@ stype_vfunc(DeeSTypeObject *__restrict self,
 
 
 PRIVATE struct type_method stype_methods[] = {
-    { ispointer_name+1, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_ispointer, DOC_GET(ispointer_doc) },
-    { islvalue_name+1, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_islvalue, DOC_GET(islvalue_doc) },
-    { isarray_name+1, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_isarray, DOC_GET(isarray_doc) },
-    { isfunction_name+1, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_isfunction, DOC_GET(isfunction_doc) },
-    { isstruct_name+1, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_isstruct, DOC_GET(isstruct_doc) },
     { "func", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_func,
       DOC("(type types...)->function_type\n"
           "(string calling_convention, type types...)->function_type\n"
@@ -253,6 +207,12 @@ PRIVATE struct type_method stype_methods[] = {
           "@param calling_convention The name of the calling convention\n"
           "Same as #func, but enable support for varrgs") },
     { NULL }
+//    { "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
+//    { "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
+//    { "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
+//    { "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
+//    { "is_array", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
+//    { "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -269,16 +229,27 @@ stype_alignof(DeeSTypeObject *__restrict self) {
 PRIVATE struct type_getset stype_getsets[] = {
     { "ptr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
       DOC("->pointer_type\nReturns the pointer type associated with @this :structured_type") },
-    { islvalue_name+3, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_LValue, NULL, NULL,
+    { "lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_LValue, NULL, NULL,
       DOC("->lvalue_type\nReturns the l-value type associated with @this :structured_type") },
     { "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stype_sizeof, NULL, NULL,
       DOC("->int\nReturns the size of @this :structured_type in bytes") },
     { "alignof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stype_alignof, NULL, NULL,
       DOC("->int\nReturns the alignment of @this :structured_type in bytes") },
-    { ispointer_name+3, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
+    { "pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
       DOC("->pointer_type\nAlias for #ptr") },
     { NULL }
 };
+
+PRIVATE struct type_member stype_members[] = {
+    TYPE_MEMBER_CONST_DOC("ispointer",Dee_False,DOC_GET(ispointer_doc)),
+    TYPE_MEMBER_CONST_DOC("islvalue",Dee_False,DOC_GET(islvalue_doc)),
+    TYPE_MEMBER_CONST_DOC("isarray",Dee_False,DOC_GET(isarray_doc)),
+    TYPE_MEMBER_CONST_DOC("isfunction",Dee_False,DOC_GET(isfunction_doc)),
+    TYPE_MEMBER_CONST_DOC("isstruct",Dee_False,DOC_GET(isstruct_doc)),
+    TYPE_MEMBER_END
+};
+
+
 
 PRIVATE DREF DeeArrayTypeObject *DCALL
 stype_getitem(DeeSTypeObject *__restrict self,
@@ -375,7 +346,7 @@ INTERN DeeTypeObject DeeSType_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */stype_methods,
     /* .tp_getsets       = */stype_getsets,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */stype_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -402,21 +373,9 @@ ptype_visit(DeePointerTypeObject *__restrict self, dvisit_t proc, void *arg) {
 }
 
 PRIVATE struct type_member ptype_members[] = {
+    TYPE_MEMBER_CONST_DOC("ispointer",Dee_True,DOC_GET(ispointer_doc)),
     TYPE_MEMBER_FIELD("base",STRUCT_OBJECT,offsetof(DeePointerTypeObject,pt_orig)),
     TYPE_MEMBER_END
-};
-
-PRIVATE DREF DeeObject *DCALL
-ptype_ispointer(DeePointerTypeObject *__restrict UNUSED(self),
-                size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,ispointer_name))
-     return NULL;
- return_true;
-}
-
-PRIVATE struct type_method ptype_methods[] = {
-    { ispointer_name+1, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ptype_ispointer, DOC_GET(ispointer_doc) },
-    { NULL }
 };
 
 INTERN DeeTypeObject DeePointerType_Type = {
@@ -459,7 +418,7 @@ INTERN DeeTypeObject DeePointerType_Type = {
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */ptype_methods,
+    /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
     /* .tp_members       = */ptype_members,
     /* .tp_class_methods = */NULL,
@@ -472,18 +431,6 @@ INTERN DeeTypeObject DeePointerType_Type = {
 STATIC_ASSERT(COMPILER_OFFSETOF(DeePointerTypeObject,pt_orig) ==
               COMPILER_OFFSETOF(DeeLValueTypeObject,lt_orig));
 
-PRIVATE DREF DeeObject *DCALL
-ltype_islvalue(DeePointerTypeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,islvalue_name))
-     return NULL;
- return_true;
-}
-
-PRIVATE struct type_method ltype_methods[] = {
-    { islvalue_name+1, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ltype_islvalue, DOC_GET(islvalue_doc) },
-    { NULL }
-};
 
 PRIVATE DREF DeeObject *DCALL
 ltype_sizeof(DeeLValueTypeObject *__restrict self) {
@@ -495,6 +442,12 @@ PRIVATE struct type_getset ltype_getsets[] = {
     { "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ltype_sizeof, NULL, NULL,
       DOC("->int\nReturns the size of the base of @this :lvalue_type in bytes") },
     { NULL }
+};
+
+PRIVATE struct type_member ltype_members[] = {
+    TYPE_MEMBER_CONST_DOC("islvalue",Dee_True,DOC_GET(islvalue_doc)),
+    TYPE_MEMBER_FIELD("base",STRUCT_OBJECT,offsetof(DeeLValueTypeObject,lt_orig)),
+    TYPE_MEMBER_END
 };
 
 PRIVATE void DCALL
@@ -553,9 +506,9 @@ INTERN DeeTypeObject DeeLValueType_Type = {
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */ltype_methods,
+    /* .tp_methods       = */NULL,
     /* .tp_getsets       = */ltype_getsets,
-    /* .tp_members       = */ptype_members,
+    /* .tp_members       = */ltype_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -1025,6 +978,8 @@ err:
  return NULL;
 }
 
+
+
 PRIVATE struct type_getset struct_getsets[] = {
     { "sizeof", &struct_sizeof, NULL, NULL,
       DOC("->int\nReturns the size of @this :structured object") },
@@ -1035,7 +990,23 @@ PRIVATE struct type_getset struct_getsets[] = {
     { NULL }
 };
 
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+PRIVATE DREF DeeObject *DCALL
+struct_ref_func(DeeObject *__restrict self,
+                size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":__ref__"))
+     goto err;
+ return struct_ref(self);
+err:
+ return NULL;
+}
 
+PRIVATE struct type_method struct_methods[] = {
+    /* Methods for backwards-compatibility with deemon 100+ */
+    { "__ref__", &struct_ref_func, DOC("->pointer\nDeprecated alias for #ref") },
+    { NULL }
+};
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 /* This type needs to implement _all_ operators
  * to forward them to their structured counterparts! */
@@ -1081,7 +1052,11 @@ INTERN DeeSTypeObject DeeStructured_Type = {
         /* .tp_attr          = */&struct_attr,
         /* .tp_with          = */NULL,
         /* .tp_buffer        = */&struct_buffer,
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+        /* .tp_methods       = */struct_methods,
+#else /* !CONFIG_NO_DEEMON_100_COMPAT */
         /* .tp_methods       = */NULL,
+#endif /* CONFIG_NO_DEEMON_100_COMPAT */
         /* .tp_getsets       = */struct_getsets,
         /* .tp_members       = */NULL,
         /* .tp_class_methods = */NULL,
@@ -1721,23 +1696,10 @@ atype_fini(DeeArrayTypeObject *__restrict self) {
 }
 
 PRIVATE struct type_member atype_members[] = {
+    TYPE_MEMBER_CONST_DOC("isarray",Dee_True,DOC_GET(isarray_doc)),
     TYPE_MEMBER_FIELD("base",STRUCT_OBJECT,offsetof(DeeArrayTypeObject,at_orig)),
     TYPE_MEMBER_FIELD("size",STRUCT_CONST|STRUCT_SIZE_T,offsetof(DeeArrayTypeObject,at_count)),
     TYPE_MEMBER_END
-};
-
-
-PRIVATE DREF DeeObject *DCALL
-atype_isarray(DeeArrayTypeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,isarray_name))
-     return NULL;
- return_true;
-}
-
-PRIVATE struct type_method atype_methods[] = {
-    { isarray_name+1, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&atype_isarray, DOC_GET(isarray_doc) },
-    { NULL }
 };
 
 /* Assert that we can re-use some operators from `pointer_type'. */
@@ -1784,7 +1746,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */atype_methods,
+    /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
     /* .tp_members       = */atype_members,
     /* .tp_class_methods = */NULL,
@@ -1837,19 +1799,6 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeArrayTypeObject,at_orig) ==
 #endif /* !CONFIG_NO_CFUNCTION */
 
 PRIVATE DREF DeeObject *DCALL
-ftype_isfunction(DeeCFunctionTypeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,isfunction_name))
-     return NULL;
- return_true;
-}
-
-PRIVATE struct type_method ftype_methods[] = {
-    { isfunction_name+1, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ftype_isfunction, DOC_GET(isfunction_name) },
-    { NULL }
-};
-
-PRIVATE DREF DeeObject *DCALL
 ftype_args(DeeCFunctionTypeObject *__restrict self) {
 #ifdef CONFIG_NO_CFUNCTION
  (void)self;
@@ -1866,10 +1815,17 @@ ftype_args(DeeCFunctionTypeObject *__restrict self) {
 
 PRIVATE struct type_getset ftype_getsets[] = {
     { "args", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ftype_args, NULL, NULL,
-      DOC("->sequence\n"
+      DOC("->{structured_type...}\n"
           "Returns an immutable sequence describing the argument types used by this function") },
     { NULL }
 };
+
+PRIVATE struct type_member ftype_members[] = {
+    TYPE_MEMBER_CONST_DOC("isfunction",Dee_True,DOC_GET(isfunction_doc)),
+    TYPE_MEMBER_FIELD("base",STRUCT_OBJECT,offsetof(DeeCFunctionTypeObject,ft_orig)),
+    TYPE_MEMBER_END
+};
+
 
 INTERN DeeTypeObject DeeCFunctionType_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1919,9 +1875,9 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */ftype_methods,
+    /* .tp_methods       = */NULL,
     /* .tp_getsets       = */ftype_getsets,
-    /* .tp_members       = */ptype_members,
+    /* .tp_members       = */ftype_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL

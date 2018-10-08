@@ -287,19 +287,13 @@ struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg
 }
 
 PRIVATE DREF DeeObject *DCALL
-struct_type_isstruct(DeeStructTypeObject *__restrict UNUSED(self),
-                     size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isstruct"))
-     return NULL;
- return_true;
-}
-PRIVATE DREF DeeObject *DCALL
 struct_type_offsetof(DeeStructTypeObject *__restrict self,
                      size_t argc, DeeObject **__restrict argv) {
  dhash_t i,perturb,hash; DeeObject *name;
- if (DeeArg_Unpack(argc,argv,"o:offsetof",&name) ||
-     DeeObject_AssertTypeExact(name,&DeeString_Type))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"o:offsetof",&name))
+     goto err;
+ if (DeeObject_AssertTypeExact(name,&DeeString_Type))
+     goto err;
  hash = DeeString_Hash(name);
  i = perturb = STRUCT_TYPE_HASHST(self,hash);
  for (;; i = STRUCT_TYPE_HASHNX(i,perturb),STRUCT_TYPE_HASHPT(perturb)) {
@@ -320,6 +314,39 @@ struct_type_offsetof(DeeStructTypeObject *__restrict self,
  DeeError_Throwf(&DeeError_AttributeError,
                  "Cannot get unknown attribute `%k.%k'",
                  self,name);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+struct_type_offsetafter(DeeStructTypeObject *__restrict self,
+                        size_t argc, DeeObject **__restrict argv) {
+ dhash_t i,perturb,hash; DeeObject *name;
+ if (DeeArg_Unpack(argc,argv,"o:offsetafter",&name))
+     goto err;
+ if (DeeObject_AssertTypeExact(name,&DeeString_Type))
+     goto err;
+ hash = DeeString_Hash(name);
+ i = perturb = STRUCT_TYPE_HASHST(self,hash);
+ for (;; i = STRUCT_TYPE_HASHNX(i,perturb),STRUCT_TYPE_HASHPT(perturb)) {
+  struct struct_field *field;
+  field = STRUCT_TYPE_HASHIT(self,i);
+  if unlikely(!field->sf_name) break;
+  if (field->sf_hash != hash)
+      continue;
+  if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
+      continue;
+  if (memcmp(DeeString_STR(field->sf_name),
+             DeeString_STR(name),
+             DeeString_SIZE(name)*
+             sizeof(char)) != 0)
+      continue;
+  return DeeInt_NewSize(field->sf_offset +
+                        DeeSType_Sizeof(field->sf_type->lt_orig));
+ }
+ DeeError_Throwf(&DeeError_AttributeError,
+                 "Cannot get unknown attribute `%k.%k'",
+                 self,name);
+err:
  return NULL;
 }
 
@@ -356,17 +383,27 @@ struct_type_typeof(DeeStructTypeObject *__restrict self,
 
 
 PRIVATE struct type_method struct_type_methods[] = {
-    { "isstruct", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&struct_type_isstruct,
-      DOC("()->bool\nReturns :true if @this :structured_type is a :struct_type") },
     { "offsetof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&struct_type_offsetof,
       DOC("(string field)->int\n"
           "@throw AttributeError No field with the name @field exists\n"
-          "Returns the offset of given @field") },
+          "Returns the offset of a given @field") },
+    { "offsetafter", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&struct_type_offsetafter,
+      DOC("(string field)->int\n"
+          "@throw AttributeError No field with the name @field exists\n"
+          "Returns the offset after a given @field") },
+    /* TODO: containerof(pointer p, string field) -> lvalue
+     *       Where type(p) === this.typeof(field).pointer,
+     *       and type(return) == this.lvalue */
     { "typeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&struct_type_typeof,
       DOC("(string field)->structured_type\n"
           "@throw AttributeError No field with the name @field exists\n"
           "Returns the typing of given @field") },
     { NULL }
+};
+
+PRIVATE struct type_member struct_type_members[] = {
+    TYPE_MEMBER_CONST_DOC("isstruct",Dee_True,"Returns :true if @this :structured_type is a :struct_type"),
+    TYPE_MEMBER_END
 };
 
 
@@ -409,7 +446,7 @@ INTERN DeeTypeObject DeeStructType_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */struct_type_methods,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */struct_type_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
