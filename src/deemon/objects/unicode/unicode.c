@@ -2553,7 +2553,7 @@ utf8_readchar(char const **__restrict piter,
  uint32_t result;
  char const *iter = *piter;
  if (iter >= end) return 0;
- result = *iter++;
+ result = (uint8_t)*iter++;
  if (result >= 0xc0) {
   uint8_t len;
   len = utf8_sequence_len[result];
@@ -2626,7 +2626,7 @@ PUBLIC uint32_t DCALL
 utf8_readchar_u(char const **__restrict piter) {
  uint32_t result;
  char const *iter = *piter;
- result = *iter++;
+ result = (uint8_t)*iter++;
  if (result >= 0xc0) {
   uint8_t len;
   len = utf8_sequence_len[result];
