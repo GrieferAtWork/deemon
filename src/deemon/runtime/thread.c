@@ -2983,6 +2983,9 @@ PRIVATE struct type_method thread_class_methods[] = {
           "@interrupt\n"
           "Checks for interrupts in the calling thread") },
     { "yield", &thread_yield,
+      /* TODO: Must make this one deprecated, and add a new one with a different name!
+       *       `yield' is a reserved identifer, and `import thread from deemon; thread.yield();'
+       *       causes a compiler warning! */
       DOC("->none\n"
           "Willingly preempt execution to another thread or process") },
     { "sleep", &thread_sleep,
@@ -2993,7 +2996,7 @@ PRIVATE struct type_method thread_class_methods[] = {
       DOC("(result=none)\n"
           "@throw ThreadExit Always thrown to exit the current thread\n"
           "Throw a :ThreadExit error object in order to terminate execution "
-          "within the current thread") },
+          "within the current thread. This function does not return normally") },
     { NULL }
 };
 

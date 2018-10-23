@@ -459,11 +459,11 @@ PRIVATE struct type_method cell_methods[] = {
           "Set (override) @this cell's value, returning :true if a previous value "
           "has been overwritten, or :falue if no value had been set before") },
     { "xch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_xch,
-      DOC("(value)\n"
+      DOC("(value)->object\n"
           "@throw ValueError @this cell is empty\n"
           "Overwrite the cell's value and return the old value or throw an error when it was empty\n"
           "\n"
-          "(value,def)\n"
+          "(value,def)->object\n"
           "Returns the contained value of the cell or @def when it is empty") },
     { "cmpdel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_cmpdel,
       DOC("(old_value)->bool\n"
@@ -492,9 +492,15 @@ PRIVATE struct type_method cell_methods[] = {
           "Atomically check if the stored value equals @old_value and return :true "
           "alongside storing @new_value if this is the case. Otherwise, return :false\n"
           "When @new_value is omit, the function behaves identical to #cmpdel") },
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
     { "del", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_delete,
       DOC("->bool\n"
           "Deprecated alias for #delete") },
+    { "exchange", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_xch,
+      DOC("(value)->object\n"
+          "(value,def)->object\n"
+          "Deprecated alias for #xch") },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
 };
 
