@@ -905,9 +905,9 @@ do_realloc:
   me->l_elem  = new_vector;
  }
  /* Move objects above the point of insertion. */
- MEMMOVE_PTR(me->l_elem+index+1,
-             me->l_elem+index,
-            (me->l_size-index));
+ MEMMOVE_PTR(me->l_elem + index + 1,
+             me->l_elem + index,
+            (me->l_size - index));
  /* Store the given element. */
  me->l_elem[index] = elem;
  ++me->l_size;
@@ -942,9 +942,9 @@ do_realloc:
   me->l_elem  = new_vector;
  }
  /* Move objects above the point of insertion. */
- MEMMOVE_PTR(me->l_elem+index+objc,
-             me->l_elem+index,
-            (me->l_size-(index+objc)));
+ MEMMOVE_PTR(me->l_elem + index + objc,
+             me->l_elem + index,
+            (me->l_size - index));
  /* Store the given elements. */
  me->l_size += objc;
  while (objc--) {
@@ -1332,9 +1332,9 @@ list_delitem_index(List *__restrict self, size_t index) {
  /* Adjust to shift following elements downwards. */
  delob = DeeList_GET(self,index);
  --DeeList_SIZE(self);
- MEMMOVE_PTR(DeeList_ELEM(self)+index,
-             DeeList_ELEM(self)+index+1,
-            (DeeList_SIZE(self)-index));
+ MEMMOVE_PTR(DeeList_ELEM(self) + index,
+             DeeList_ELEM(self) + index + 1,
+            (DeeList_SIZE(self) - index));
  DeeList_LockEndWrite(self);
  Dee_Decref(delob);
  return 0;
