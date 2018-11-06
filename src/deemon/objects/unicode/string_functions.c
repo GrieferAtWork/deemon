@@ -7718,10 +7718,10 @@ do_full_data_match:
        goto err;
    goto do_full_data_match;
   }
-do_start_offset_only:
   /* Start offset. */
   if (DeeObject_AsSSize(argv[1],(dssize_t *)&result->re_offset))
       goto err;
+do_start_offset_only:
   if (result->re_offset >= DeeString_WLEN(self)) {
 do_empty_scan:
    result->re_offset  = DeeString_WLEN(self);
@@ -7748,20 +7748,41 @@ do_empty_scan:
    }
   }
   break;
- case 4:
-  if (DeeObject_AssertTypeExact(argv[3],&DeeString_Type))
-      goto err;
-  if (regex_get_rules(DeeString_STR(argv[3]),&result->re_flags))
-      goto err;
+
+ case 3:
+  if (DeeString_Check(argv[1])) {
+   if (regex_get_rules(DeeString_STR(argv[1]),&result->re_flags))
+       goto err;
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&result->re_offset))
+       goto err;
+   goto do_start_offset_only;
+  }
+  goto do_load_3args;
+
  {
   size_t end_offset;
- case 3:
-  if (DeeObject_AsSSize(argv[2],(dssize_t *)&end_offset))
-      goto err;
+ case 4:
+  if (DeeString_Check(argv[1])) {
+   /* pattern,rules,start,end */
+   if (regex_get_rules(DeeString_STR(argv[1]),&result->re_flags))
+       goto err;
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&result->re_offset))
+       goto err;
+   if (DeeObject_AsSSize(argv[3],(dssize_t *)&end_offset))
+       goto err;
+  } else {
+   if (DeeObject_AssertTypeExact(argv[3],&DeeString_Type))
+       goto err;
+   if (regex_get_rules(DeeString_STR(argv[3]),&result->re_flags))
+       goto err;
+do_load_3args:
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&end_offset))
+       goto err;
+   if (DeeObject_AsSSize(argv[1],(dssize_t *)&result->re_offset))
+       goto err;
+  }
   if (end_offset >= DeeString_WLEN(self))
       goto do_start_offset_only;
-  if (DeeObject_AsSSize(argv[1],(dssize_t *)&result->re_offset))
-      goto err;
   if (result->re_offset >= end_offset)
       goto do_empty_scan;
   /* Do a sub-string scan. */
@@ -7828,10 +7849,10 @@ do_full_data_match:
        goto err;
    goto do_full_data_match;
   }
-do_start_offset_only:
   /* Start offset. */
   if (DeeObject_AsSSize(argv[1],(dssize_t *)&result->re_offset))
       goto err;
+do_start_offset_only:
   if (result->re_offset >= DeeString_WLEN(self)) {
 do_empty_scan:
    result->re_offset   = DeeString_WLEN(self);
@@ -7859,21 +7880,41 @@ do_empty_scan:
    }
   }
   break;
- case 4:
-  if (DeeObject_AssertTypeExact(argv[3],&DeeString_Type))
-      goto err;
-  if (regex_get_rules(DeeString_STR(argv[3]),&result->re_flags))
-      goto err;
-  ATTR_FALLTHROUGH
+
  case 3:
-  if (DeeObject_AsSSize(argv[2],(dssize_t *)&result->re_endindex))
-      goto err;
+  if (DeeString_Check(argv[1])) {
+   if (regex_get_rules(DeeString_STR(argv[1]),&result->re_flags))
+       goto err;
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&result->re_offset))
+       goto err;
+   goto do_start_offset_only;
+  }
+  goto do_load_3args;
+
+ case 4:
+  if (DeeString_Check(argv[1])) {
+   /* pattern,rules,start,end */
+   if (regex_get_rules(DeeString_STR(argv[1]),&result->re_flags))
+       goto err;
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&result->re_offset))
+       goto err;
+   if (DeeObject_AsSSize(argv[3],(dssize_t *)&result->re_endindex))
+       goto err;
+  } else {
+   if (DeeObject_AssertTypeExact(argv[3],&DeeString_Type))
+       goto err;
+   if (regex_get_rules(DeeString_STR(argv[3]),&result->re_flags))
+       goto err;
+do_load_3args:
+   if (DeeObject_AsSSize(argv[1],(dssize_t *)&result->re_offset))
+       goto err;
+   if (DeeObject_AsSSize(argv[2],(dssize_t *)&result->re_endindex))
+       goto err;
+  }
   if (result->re_endindex >= DeeString_WLEN(self)) {
    result->re_endindex = DeeString_WLEN(self);
    goto do_start_offset_only;
   }
-  if (DeeObject_AsSSize(argv[1],(dssize_t *)&result->re_offset))
-      goto err;
   if (result->re_offset >= result->re_endindex)
       goto do_empty_scan;
   /* Do a sub-string scan. */
@@ -9709,8 +9750,8 @@ INTERN struct type_method string_methods[] = {
           "Count the number of matches of a given regular expression @pattern (s.a. #count)\n"
           "Hint: This is the same as ${#this.refindall(pattern)} or ${#this.relocateall(pattern)}") },
     { "recontains", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_recontains,
-      DOC("(string pattern,int start=0,int end=-1,string rules=\"\")->int\n"
-          "(string pattern,string rules,int start=0,int end=-1)->int\n"
+      DOC("(string pattern,int start=0,int end=-1,string rules=\"\")->bool\n"
+          "(string pattern,string rules,int start=0,int end=-1)->bool\n"
           "@param pattern The regular expression patterm (s.a. #rematch)\n"
           "@param rules The regular expression rules (s.a. #rematch)\n"
           "@throw ValueError The given @pattern is malformed\n"

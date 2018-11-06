@@ -1792,7 +1792,7 @@ INTERN DeeTypeObject DeeRelInt_Type = {
 
 INTERN DREF DeeObject *DCALL
 DeeRelInt_New(struct asm_sym *__restrict sym,
-              int_t addend, uint16_t mode) {
+              tint_t addend, uint16_t mode) {
  DREF DeeRelIntObject *result;
  result = DeeObject_MALLOC(DeeRelIntObject);
  if unlikely(!result) goto err;
@@ -1808,7 +1808,7 @@ err:
 
 INTERN int32_t DCALL
 asm_newrelint(struct asm_sym *sym,
-              int_t addend, uint16_t mode) {
+              tint_t addend, uint16_t mode) {
  DREF DeeObject *obj; int32_t result;
  if likely(sym) {
   obj = DeeRelInt_New(sym,addend,mode);
@@ -1824,7 +1824,7 @@ err:
 }
 
 PRIVATE int DCALL fix_relint(DeeObject **__restrict pobj) {
- int_t value; DREF DeeObject *intob;
+ tint_t value; DREF DeeObject *intob;
  DeeRelIntObject *relint = (DeeRelIntObject *)*pobj;
  ASSERT(!DeeObject_IsShared(relint));
  ASSERT(relint->ri_sym);

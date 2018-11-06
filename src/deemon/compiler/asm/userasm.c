@@ -300,7 +300,7 @@ PRIVATE bool FCALL
 compatible_operand(struct asm_invoke_operand   const *__restrict iop,
                    struct asm_overload_operand const *__restrict oop,
                    uint16_t ao_flags) {
- int_t imm_val; uint16_t imm_rel;
+ tint_t imm_val; uint16_t imm_rel;
 #define OPERAND_CLASS_FFLAGMASK (~OPERAND_CLASS_FMASK & ~(OPERAND_CLASS_FSUBSP|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_FSPADD))
 
  /* Match context flags (aka. flags set by a prefix such as `$' or `{...}') */
@@ -800,7 +800,7 @@ do_emit_instruction:
 
   /* Now emit operands in ascending order. */
   for (i = 0; i < iter->ao_opcount; ++i) {
-   int_t imm_val; struct asm_sym *imm_sym; uint16_t imm_rel;
+   tint_t imm_val; struct asm_sym *imm_sym; uint16_t imm_rel;
    imm_val = invoc->ai_ops[i].io_intexpr.ie_val;
    imm_sym = invoc->ai_ops[i].io_intexpr.ie_sym;
    imm_rel = invoc->ai_ops[i].io_intexpr.ie_rel;

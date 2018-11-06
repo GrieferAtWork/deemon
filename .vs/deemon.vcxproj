@@ -39,8 +39,17 @@
     <ClInclude Include="..\include\deemon\compiler\optimize.h" />
     <ClInclude Include="..\include\deemon\compiler\symbol.h" />
     <ClInclude Include="..\include\deemon\compiler\tpp.h" />
+    <ClInclude Include="..\include\deemon\cxx\any.h" />
     <ClInclude Include="..\include\deemon\cxx\api.h" />
+    <ClInclude Include="..\include\deemon\cxx\float.h" />
+    <ClInclude Include="..\include\deemon\cxx\function.h" />
+    <ClInclude Include="..\include\deemon\cxx\int.h" />
+    <ClInclude Include="..\include\deemon\cxx\list.h" />
     <ClInclude Include="..\include\deemon\cxx\object.h" />
+    <ClInclude Include="..\include\deemon\cxx\sequence.h" />
+    <ClInclude Include="..\include\deemon\cxx\string.h" />
+    <ClInclude Include="..\include\deemon\cxx\tuple.h" />
+    <ClInclude Include="..\include\deemon\cxx\type.h" />
     <ClInclude Include="..\include\deemon\dec.h" />
     <ClInclude Include="..\include\deemon\dex.h" />
     <ClInclude Include="..\include\deemon\dict.h" />

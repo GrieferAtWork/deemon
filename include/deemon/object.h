@@ -1745,6 +1745,10 @@ DFUNDEF DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__restrict self);
 #define DeeObject_AsUInt(self,result)    DeeObject_AsXUInt(__SIZEOF_INT__,self,REQUIRES_TYPE(unsigned int *,result))
 #define DeeObject_AsLong(self,result)    DeeObject_AsXInt(__SIZEOF_LONG__,self,REQUIRES_TYPE(long *,result))
 #define DeeObject_AsULong(self,result)   DeeObject_AsXUInt(__SIZEOF_LONG__,self,REQUIRES_TYPE(unsigned long *,result))
+#ifdef __COMPILER_HAVE_LONGLONG
+#define DeeObject_AsLLong(self,result)   DeeObject_AsXInt(__SIZEOF_LONG_LONG__,self,REQUIRES_TYPE(long long *,result))
+#define DeeObject_AsULLong(self,result)  DeeObject_AsXUInt(__SIZEOF_LONG_LONG__,self,REQUIRES_TYPE(unsigned long long *,result))
+#endif
 #define DeeObject_AsSize(self,result)    DeeObject_AsXUInt(__SIZEOF_SIZE_T__,self,REQUIRES_TYPE(size_t *,result))
 #define DeeObject_AsSSize(self,result)   DeeObject_AsXInt(__SIZEOF_SIZE_T__,self,REQUIRES_TYPE(dssize_t *,result))
 #define DeeObject_AsPtrdiff(self,result) DeeObject_AsXInt(__SIZEOF_PTRDIFF_T__,self,REQUIRES_TYPE(ptrdiff_t *,result))

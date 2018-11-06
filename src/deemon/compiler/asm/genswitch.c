@@ -133,7 +133,7 @@ try_get_integer_as_u16(DeeObject *__restrict self,
   return true;
  }
  if (DeeObject_InstanceOfExact(self,&DeeRelInt_Type)) {
-  int_t val;
+  tint_t val;
   DeeRelIntObject *me = (DeeRelIntObject *)self;
   if (!ASM_SYM_DEFINED(me->ri_sym)) goto nope;
   if (me->ri_mode == RELINT_MODE_FADDR)

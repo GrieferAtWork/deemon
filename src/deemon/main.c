@@ -1396,7 +1396,7 @@ LOCAL void DCALL emitpp_putline(void) {
  } else {
   emitpp_writeout("# ",2*sizeof(char));
  }
- emitpp_writeout(buffer,(TPP_Itos(buffer,(TPP(int_t))(line+1))-buffer)*sizeof(char));
+ emitpp_writeout(buffer,(TPP_Itos(buffer,(TPP(tint_t))(line+1))-buffer)*sizeof(char));
  if (emitpp_lastfilename != filename_text) {
   char *quote_buffer;
   size_t quote_size;

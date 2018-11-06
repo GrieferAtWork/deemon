@@ -83,6 +83,7 @@ typedef struct string_object DeeStringObject;
 #if defined(_NATIVE_WCHAR_T_DEFINED) || \
     defined(_WCHAR_T_DEFINED) || \
     defined(__wchar_t_defined)
+#define CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T 1
 typedef wchar_t dwchar_t;
 #elif __SIZEOF_WCHAR_T__ == 2
 typedef uint16_t dwchar_t;

@@ -3462,7 +3462,7 @@ TPP_SizeofEscape(char const *__restrict data, size_t size) {
 }
 
 PUBLIC char *TPPCALL
-TPP_Itos(char *__restrict buf, int_t i) {
+TPP_Itos(char *__restrict buf, tint_t i) {
  char *result;
  assert(buf);
  if (i < 0) *buf++ = '-',i = -i;
@@ -3473,7 +3473,7 @@ TPP_Itos(char *__restrict buf, int_t i) {
 }
 
 PUBLIC size_t TPPCALL
-TPP_SizeofItos(int_t i) {
+TPP_SizeofItos(tint_t i) {
  size_t result = 0;
  assertf(i != 0 || i == 0,("i = %ld",(long)i));
  if (i < 0) ++result,i = -i;
@@ -3483,13 +3483,13 @@ TPP_SizeofItos(int_t i) {
 }
 
 PUBLIC char *TPPCALL
-TPP_Ftos(char *__restrict buf, float_t f) {
+TPP_Ftos(char *__restrict buf, tfloat_t f) {
  (void)f; /* TODO */
  return buf;
 }
 
 PUBLIC size_t TPPCALL
-TPP_SizeofFtos(float_t f) {
+TPP_SizeofFtos(tfloat_t f) {
  (void)f; /* TODO */
  return 0;
 }
@@ -8012,7 +8012,7 @@ PUBLIC tok_t TPPCALL TPPLexer_Yield(void) {
  struct TPPFile *macro;
  struct TPPString *string_text;
  tok_t result;
- int_t intval;
+ tint_t intval;
 again:
  result = TPPLexer_YieldPP();
  if (TPP_ISKEYWORD(result)) {
@@ -8182,7 +8182,7 @@ create_string_file:
      * the 1-based index of the current source-line. */
    size_t intsize;
   case KWD___LINE__:
-   intval = (int_t)TPPLexer_LINE()+1;
+   intval = (tint_t)TPPLexer_LINE()+1;
    goto create_int_file;
 create_int_file:
    intsize = TPP_SizeofItos(intval);
@@ -8196,7 +8196,7 @@ create_int_file:
   /* Expand into an integral constant representing the current column number. */
   case KWD___COLUMN__:
    if (!HAVE_EXTENSION_COLUMN) break;
-   intval = (int_t)TPPLexer_COLUMN()+1;
+   intval = (tint_t)TPPLexer_COLUMN()+1;
    goto create_int_file;
 #endif
 
@@ -8287,7 +8287,7 @@ create_int_file:
       char *n = name.c_data.c_string->s_text;
       if (*n == '-') ++n;
       if (*n == 'f') ++n;
-      intval = (int_t)TPPLexer_GetExtension(n);
+      intval = (tint_t)TPPLexer_GetExtension(n);
       intval = mode == KWD___has_extension ? ((int)intval == 1)
                                            : ((int)intval >= 0);
       TPPString_Decref(name.c_data.c_string);
@@ -8302,12 +8302,12 @@ create_int_file:
       char *n = name.c_data.c_string->s_text;
       if (*n == '-') ++n;
       if (*n == 'W') ++n;
-      intval = (int_t)TPPLexer_GetWarnings(n);
+      intval = (tint_t)TPPLexer_GetWarnings(n);
       TPPString_Decref(name.c_data.c_string);
      } else if likely(name.c_kind != TPP_CONST_FLOAT) {
-      intval = (int_t)TPPLexer_GetWarning((int)name.c_data.c_int);
+      intval = (tint_t)TPPLexer_GetWarning((int)name.c_data.c_int);
      } else {
-      intval = (int_t)TPPLexer_GetWarning((int)name.c_data.c_float);
+      intval = (tint_t)TPPLexer_GetWarning((int)name.c_data.c_float);
      }
      intval = mode == KWD___has_warning ? TPP_WSTATE_ISENABLED((int)intval)
                                         : intval != WSTATE_UNKNOWN;
@@ -8809,7 +8809,7 @@ create_int_file:
 
 #ifndef NO_EXTENSION_TPP_RANDOM
   { /* Expand into a random integral. */
-   int_t random_begin,random_end;
+   tint_t random_begin,random_end;
    struct TPPConst val;
   case KWD___TPP_RANDOM:
    if (!HAVE_EXTENSION_TPP_RANDOM) break;
@@ -8849,7 +8849,7 @@ create_int_file:
     random_end -= random_begin;
     /* NOTE: The modulo here ~should~ be unnecessary
      *      (But I don't trust nofin I didn't screw up myself)... */
-    intval      = (((int_t)rand()*random_end)/RAND_MAX) % random_end;
+    intval      = (((tint_t)rand()*random_end)/RAND_MAX) % random_end;
     intval     += random_begin;
    }
    goto create_int_file;
@@ -8978,8 +8978,8 @@ err_substr:  TPPString_Decref(basestring);
    TPPConst_ToInt(&val);
    subindex = 0;
    if (basestring->s_size) {
-    val.c_data.c_int %= (int_t)basestring->s_size;
-    if (val.c_data.c_int < 0) val.c_data.c_int += (int_t)basestring->s_size;
+    val.c_data.c_int %= (tint_t)basestring->s_size;
+    if (val.c_data.c_int < 0) val.c_data.c_int += (tint_t)basestring->s_size;
     subindex = (size_t)val.c_data.c_int;
    }
    if (tok != ',') {
@@ -8990,7 +8990,7 @@ err_substr:  TPPString_Decref(basestring);
     TPPConst_ToInt(&val);
     sublen = 0;
     if (basestring->s_size) {
-     val.c_data.c_int %= (int_t)basestring->s_size;
+     val.c_data.c_int %= (tint_t)basestring->s_size;
      if (val.c_data.c_int < 0) val.c_data.c_int += basestring->s_size;
      sublen = (size_t)val.c_data.c_int;
     }
@@ -9033,7 +9033,7 @@ err_substr:  TPPString_Decref(basestring);
     WARN(W_EXPECTED_STRING_AFTER_TPP_STRAT,&val);
     intval = 0;
    } else {
-    intval = (int_t)val.c_data.c_string->s_size;
+    intval = (tint_t)val.c_data.c_string->s_size;
     TPPString_Decref(val.c_data.c_string);
    }
    goto create_int_file;
@@ -9451,11 +9451,11 @@ advance_src:
 #ifdef TPP_FUNOP_VA_NARGS
   case TPP_FUNOP_VA_NARGS:
    /* VA_NARGS: Insert an integral representation of the variadic argument size. */
-   assertf((size_t)(dest_end-dest_iter) >= TPP_SizeofItos((int_t)va_size),
+   assertf((size_t)(dest_end-dest_iter) >= TPP_SizeofItos((tint_t)va_size),
           (DBG_TEXT "Insufficient buffer space for ITOS (remaining: %lu; required: %lu)",
            DBG_DATA (unsigned long)(dest_end-dest_iter),
-                    (unsigned long)TPP_SizeofItos((int_t)va_size)));
-   dest_iter = TPP_Itos(dest_iter,(int_t)va_size);
+                    (unsigned long)TPP_SizeofItos((tint_t)va_size)));
+   dest_iter = TPP_Itos(dest_iter,(tint_t)va_size);
    goto advance_src;
 #endif
 
@@ -10326,8 +10326,8 @@ err:
 #undef sizeof_char
 }
 
-PUBLIC int TPPCALL TPP_Atoi(int_t *__restrict pint) {
- char ch,*begin,*end; int_t intval,new_intval,more;
+PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
+ char ch,*begin,*end; tint_t intval,new_intval,more;
  int numsys,result = TPP_ATOI_OK|TPP_ATOI_TYPE_INT;
  assert(pint);
  assert(TPPLexer_Current);
@@ -10343,10 +10343,10 @@ PUBLIC int TPPCALL TPP_Atoi(int_t *__restrict pint) {
    if likely(begin != end && end[-1] == '\'') --end;
    size = (size_t)(end-begin);
    esc_size = TPP_SizeofUnescapeRaw(begin,size);
-   if (esc_size > sizeof(int_t)) {
+   if (esc_size > sizeof(tint_t)) {
     if unlikely(!WARN(W_CHARACTER_TOO_LONG)) goto err;
     do assert(size),--size;
-    while (TPP_SizeofUnescapeRaw(begin,size) > sizeof(int_t));
+    while (TPP_SizeofUnescapeRaw(begin,size) > sizeof(tint_t));
    }
    *pint = 0;
    size = (size_t)((uintptr_t)TPP_UnescapeRaw((char *)pint,begin,size)-
@@ -10358,10 +10358,10 @@ PUBLIC int TPPCALL TPP_Atoi(int_t *__restrict pint) {
    if likely(begin != end && end[-1] == '\'') --end;
    size = (size_t)(end-begin);
    esc_size = TPP_SizeofUnescape(begin,size,sizeof(char));
-   if (esc_size > sizeof(int_t)) {
+   if (esc_size > sizeof(tint_t)) {
     if unlikely(!WARN(W_CHARACTER_TOO_LONG)) goto err;
     do assert(size),--size;
-    while (TPP_SizeofUnescape(begin,size,sizeof(char)) > sizeof(int_t));
+    while (TPP_SizeofUnescape(begin,size,sizeof(char)) > sizeof(tint_t));
    }
    *pint = 0;
    size = (size_t)((uintptr_t)TPP_Unescape((char *)pint,begin,size,sizeof(char))-
@@ -10369,7 +10369,7 @@ PUBLIC int TPPCALL TPP_Atoi(int_t *__restrict pint) {
   }
 #if TPP_BYTEORDER == 4321
   /* Adjust for big endian. */
-  *pint >>= (sizeof(int_t)-size)*8;
+  *pint >>= (sizeof(tint_t)-size)*8;
 #elif TPP_BYTEORDER != 1234
 #   error FIXME
 #endif
@@ -10392,9 +10392,9 @@ PUBLIC int TPPCALL TPP_Atoi(int_t *__restrict pint) {
  while (begin != end) {
   while (SKIP_WRAPLF(begin,end));
   ch = *begin;
-       if (ch >= '0' && ch <= '9') more = (int_t)(ch-'0');
-  else if (ch >= 'A' && ch <= 'F') more = (int_t)(10+(ch-'A'));
-  else if (ch >= 'a' && ch <= 'f') more = (int_t)(10+(ch-'a'));
+       if (ch >= '0' && ch <= '9') more = (tint_t)(ch-'0');
+  else if (ch >= 'A' && ch <= 'F') more = (tint_t)(10+(ch-'A'));
+  else if (ch >= 'a' && ch <= 'f') more = (tint_t)(10+(ch-'a'));
   else break;
   if unlikely(more >= numsys) break;
   new_intval = intval*numsys+more;
@@ -10457,7 +10457,7 @@ wrong_suffix:
 #if 0
  /* Clamp `intval' with the determined type. */
  switch (result&TPP_ATOI_TYPE_MASK) {
-#define T_MASK(T) (int_t)(~(T)0)
+#define T_MASK(T) (tint_t)(~(T)0)
   default                    : new_intval = intval&T_MASK(int); break;
   case TPP_ATOI_TYPE_LONG    : new_intval = intval&T_MASK(long); break;
   case TPP_ATOI_TYPE_INT8    : new_intval = intval&T_MASK(int8_t); break;
@@ -10481,8 +10481,8 @@ end:   return result;
 err:   result = TPP_ATOI_ERR; goto end;
 }
 
-PUBLIC int TPPCALL TPP_Atof(TPP(float_t) *__restrict pfloat) {
- float_t fltval = 0; char *iter,*end,ch;
+PUBLIC int TPPCALL TPP_Atof(TPP(tfloat_t) *__restrict pfloat) {
+ tfloat_t fltval = 0; char *iter,*end,ch;
  int numsys,more,float_extension_mult;
  int result = TPP_ATOF_OK;
  assert(pfloat);
@@ -10490,7 +10490,7 @@ PUBLIC int TPPCALL TPP_Atof(TPP(float_t) *__restrict pfloat) {
  assert(tok == TOK_INT || tok == TOK_CHAR || tok == TOK_FLOAT);
  if (tok == TOK_INT || tok == TOK_CHAR) {
   /* Evaluate an integer as a float */
-  int_t intval;
+  tint_t intval;
   result = TPP_Atoi(&intval);
   if (result == TPP_ATOI_ERR)
       goto err;
@@ -10501,7 +10501,7 @@ PUBLIC int TPPCALL TPP_Atof(TPP(float_t) *__restrict pfloat) {
   } else {
    result = TPP_ATOF_TYPE_DOUBLE;
   }
-  *pfloat = (float_t)intval;
+  *pfloat = (tfloat_t)intval;
   return 0;
  }
  iter = token.t_begin;
@@ -10548,7 +10548,7 @@ PUBLIC int TPPCALL TPP_Atof(TPP(float_t) *__restrict pfloat) {
   if unlikely(more >= numsys)
      goto sfx;
   if (float_extension_mult != 0) {
-   fltval += (float_t)more/(float_t)float_extension_mult;
+   fltval += (tfloat_t)more/(tfloat_t)float_extension_mult;
    float_extension_mult *= numsys;
   } else {
    fltval = fltval*numsys+more;
@@ -10958,7 +10958,7 @@ rparen_after_expression:
      goto res_zero;
     }
     /* Lookup an assertion */
-    result->c_data.c_int = (int_t)keyword_hasassert(ass_keyword,token.t_kwd);
+    result->c_data.c_int = (tint_t)keyword_hasassert(ass_keyword,token.t_kwd);
     TPPLexer_YieldRaw();
     if unlikely(tok != ')') WARN(W_EXPECTED_RPAREN);
     else TPPLexer_YieldRaw();
@@ -10986,7 +10986,7 @@ rparen_after_expression:
     size_t length = result->c_data.c_string->s_size;
     TPPString_Decref(result->c_data.c_string);
     result->c_kind = TPP_CONST_INTEGRAL;
-    result->c_data.c_int = (int_t)length;
+    result->c_data.c_int = (tint_t)length;
    }
   }
   break;
@@ -11275,7 +11275,7 @@ skip_array_deref:
     ch = result->c_data.c_string->s_text[index];
     TPPString_Decref(result->c_data.c_string);
     result->c_kind = TPP_CONST_INTEGRAL;
-    result->c_data.c_int = (int_t)ch;
+    result->c_data.c_int = (tint_t)ch;
    }
   }
   if (tok == ']') yield();
@@ -11381,7 +11381,7 @@ PRIVATE void EVAL_CALL eval_cmp(struct TPPConst *result) {
  for (;;) {
   struct TPPConst result2;
   register tok_t t;
-  register int_t diff;
+  register tint_t diff;
   switch (t = tok) {
   case TOK_LOWER:
   case TOK_LOWER_EQUAL:
@@ -11452,7 +11452,7 @@ PRIVATE void EVAL_CALL eval_cmp_eq(struct TPPConst *result) {
      result->c_kind = TPP_CONST_INTEGRAL;
     }
     if (t == TOK_NOT_EQUAL) resval = !resval;
-    result->c_data.c_int = (int_t)resval;
+    result->c_data.c_int = (tint_t)resval;
    }
    break;
   default: return;

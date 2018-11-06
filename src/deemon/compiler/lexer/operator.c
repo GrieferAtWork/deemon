@@ -284,7 +284,7 @@ ast_parse_operator_name(uint16_t features) {
  switch (tok) {
 
  {
-  int_t intval;
+  tint_t intval;
  case TOK_INT:
   /* Special case: Invoke an operator using its internal index. */
   if (TPP_Atoi(&intval) == TPP_ATOI_ERR)

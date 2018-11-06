@@ -450,20 +450,28 @@ DFUNDEF uint8_t *DCALL DeeInt_GetUleb(DeeObject *__restrict self, uint8_t *__res
  *       values, however in deemon's C api, we must limit ourself
  *       to only a set number of bits.
  * @return: One of `INT_*' (See above) */
+DFUNDEF int DCALL DeeInt_TryAs8(DeeObject *__restrict self, int8_t *__restrict value);
+DFUNDEF int DCALL DeeInt_TryAs16(DeeObject *__restrict self, int16_t *__restrict value);
 DFUNDEF int DCALL DeeInt_TryAs32(DeeObject *__restrict self, int32_t *__restrict value);
 DFUNDEF int DCALL DeeInt_TryAs64(DeeObject *__restrict self, int64_t *__restrict value);
 DFUNDEF int DCALL DeeInt_TryAs128(DeeObject *__restrict self, dint128_t *__restrict value);
 
 /* Similar to the functions above, but explicitly require signed/unsigned 32/64-bit values. */
+DFUNDEF bool DCALL DeeInt_TryAsS8(DeeObject *__restrict self, int8_t *__restrict value);
+DFUNDEF bool DCALL DeeInt_TryAsS16(DeeObject *__restrict self, int16_t *__restrict value);
 DFUNDEF bool DCALL DeeInt_TryAsS32(DeeObject *__restrict self, int32_t *__restrict value);
 DFUNDEF bool DCALL DeeInt_TryAsS64(DeeObject *__restrict self, int64_t *__restrict value);
 DFUNDEF bool DCALL DeeInt_TryAsS128(DeeObject *__restrict self, dint128_t *__restrict value);
+DFUNDEF bool DCALL DeeInt_TryAsU8(DeeObject *__restrict self, uint8_t *__restrict value);
+DFUNDEF bool DCALL DeeInt_TryAsU16(DeeObject *__restrict self, uint16_t *__restrict value);
 DFUNDEF bool DCALL DeeInt_TryAsU32(DeeObject *__restrict self, uint32_t *__restrict value);
 DFUNDEF bool DCALL DeeInt_TryAsU64(DeeObject *__restrict self, uint64_t *__restrict value);
 DFUNDEF bool DCALL DeeInt_TryAsU128(DeeObject *__restrict self, duint128_t *__restrict value);
 
 /* Same as the functions above, but raise an `Error.ValueError.Arithmetic.IntegerOverflow'
  * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and returns -1. */
+DFUNDEF int DCALL DeeInt_As8(DeeObject *__restrict self, int8_t *__restrict value);
+DFUNDEF int DCALL DeeInt_As16(DeeObject *__restrict self, int16_t *__restrict value);
 DFUNDEF int DCALL DeeInt_As32(DeeObject *__restrict self, int32_t *__restrict value);
 DFUNDEF int DCALL DeeInt_As64(DeeObject *__restrict self, int64_t *__restrict value);
 DFUNDEF int DCALL DeeInt_As128(DeeObject *__restrict self, dint128_t *__restrict value);
@@ -471,9 +479,13 @@ DFUNDEF int DCALL DeeInt_As128(DeeObject *__restrict self, dint128_t *__restrict
 /* Read the signed/unsigned values from the given integer.
  * @return: 0:  Successfully read the value.
  * @return: -1: An error occurred (Integer overflow). */
+DFUNDEF int (DCALL DeeInt_AsS8)(DeeObject *__restrict self, int8_t *__restrict value);
+DFUNDEF int (DCALL DeeInt_AsS16)(DeeObject *__restrict self, int16_t *__restrict value);
 DFUNDEF int (DCALL DeeInt_AsS32)(DeeObject *__restrict self, int32_t *__restrict value);
 DFUNDEF int (DCALL DeeInt_AsS64)(DeeObject *__restrict self, int64_t *__restrict value);
 DFUNDEF int (DCALL DeeInt_AsS128)(DeeObject *__restrict self, dint128_t *__restrict value);
+DFUNDEF int (DCALL DeeInt_AsU8)(DeeObject *__restrict self, uint8_t *__restrict value);
+DFUNDEF int (DCALL DeeInt_AsU16)(DeeObject *__restrict self, uint16_t *__restrict value);
 DFUNDEF int (DCALL DeeInt_AsU32)(DeeObject *__restrict self, uint32_t *__restrict value);
 DFUNDEF int (DCALL DeeInt_AsU64)(DeeObject *__restrict self, uint64_t *__restrict value);
 DFUNDEF int (DCALL DeeInt_AsU128)(DeeObject *__restrict self, duint128_t *__restrict value);
@@ -489,14 +501,54 @@ DFUNDEF DREF DeeObject *
 (DCALL DeeInt_FromBytes)(void const *__restrict buf, size_t length,
                          bool little_endian, bool as_signed);
 
-#define DEE_PRIVATE_TRYGETSINT_4 DeeInt_TryAsS32
-#define DEE_PRIVATE_TRYGETSINT_8 DeeInt_TryAsS64
-#define DEE_PRIVATE_TRYGETUINT_4 DeeInt_TryAsU32
-#define DEE_PRIVATE_TRYGETUINT_8 DeeInt_TryAsU64
+#define DEE_PRIVATE_TRYGETSINT_1(self,val) DeeInt_TryAsS8(self,(int8_t *)(val))
+#define DEE_PRIVATE_TRYGETSINT_2(self,val) DeeInt_TryAsS16(self,(int16_t *)(val))
+#define DEE_PRIVATE_TRYGETSINT_4(self,val) DeeInt_TryAsS32(self,(int32_t *)(val))
+#define DEE_PRIVATE_TRYGETSINT_8(self,val) DeeInt_TryAsS64(self,(int64_t *)(val))
+#define DEE_PRIVATE_TRYGETUINT_1(self,val) DeeInt_TryAsU8(self,(uint8_t *)(val))
+#define DEE_PRIVATE_TRYGETUINT_2(self,val) DeeInt_TryAsU16(self,(uint16_t *)(val))
+#define DEE_PRIVATE_TRYGETUINT_4(self,val) DeeInt_TryAsU32(self,(uint32_t *)(val))
+#define DEE_PRIVATE_TRYGETUINT_8(self,val) DeeInt_TryAsU64(self,(uint64_t *)(val))
 #define DEE_PRIVATE_TRYGETSINT(size) DEE_PRIVATE_TRYGETSINT_##size
 #define DEE_PRIVATE_TRYGETUINT(size) DEE_PRIVATE_TRYGETUINT_##size
 #define DeeInt_TryAsS(size,self,val) DEE_PRIVATE_TRYGETSINT(size)(self,val)
 #define DeeInt_TryAsU(size,self,val) DEE_PRIVATE_TRYGETUINT(size)(self,val)
+
+#define DEE_PRIVATE_GETSINT_1(self,val) DeeInt_AsS8(self,(int8_t *)(val))
+#define DEE_PRIVATE_GETSINT_2(self,val) DeeInt_AsS16(self,(int16_t *)(val))
+#define DEE_PRIVATE_GETSINT_4(self,val) DeeInt_AsS32(self,(int32_t *)(val))
+#define DEE_PRIVATE_GETSINT_8(self,val) DeeInt_AsS64(self,(int64_t *)(val))
+#define DEE_PRIVATE_GETUINT_1(self,val) DeeInt_AsU8(self,(uint8_t *)(val))
+#define DEE_PRIVATE_GETUINT_2(self,val) DeeInt_AsU16(self,(uint16_t *)(val))
+#define DEE_PRIVATE_GETUINT_4(self,val) DeeInt_AsU32(self,(uint32_t *)(val))
+#define DEE_PRIVATE_GETUINT_8(self,val) DeeInt_AsU64(self,(uint64_t *)(val))
+#define DEE_PRIVATE_GETSINT(size) DEE_PRIVATE_GETSINT_##size
+#define DEE_PRIVATE_GETUINT(size) DEE_PRIVATE_GETUINT_##size
+#define DeeInt_AsS(size,self,val) DEE_PRIVATE_GETSINT(size)(self,val)
+#define DeeInt_AsU(size,self,val) DEE_PRIVATE_GETUINT(size)(self,val)
+
+#ifdef __CHAR_UNSIGNED__
+#define DeeInt_AsChar(self,result)    DeeInt_AsU(__SIZEOF_CHAR__,self,REQUIRES_TYPE(char *,result))
+#else
+#define DeeInt_AsChar(self,result)    DeeInt_AsS(__SIZEOF_CHAR__,self,REQUIRES_TYPE(char *,result))
+#endif
+#define DeeInt_AsSChar(self,result)   DeeInt_AsS(__SIZEOF_CHAR__,self,REQUIRES_TYPE(signed char *,result))
+#define DeeInt_AsUChar(self,result)   DeeInt_AsU(__SIZEOF_CHAR__,self,REQUIRES_TYPE(unsigned char *,result))
+#define DeeInt_AsShort(self,result)   DeeInt_AsS(__SIZEOF_SHORT__,self,REQUIRES_TYPE(short *,result))
+#define DeeInt_AsUShort(self,result)  DeeInt_AsU(__SIZEOF_SHORT__,self,REQUIRES_TYPE(unsigned short *,result))
+#define DeeInt_AsInt(self,result)     DeeInt_AsS(__SIZEOF_INT__,self,REQUIRES_TYPE(int *,result))
+#define DeeInt_AsUInt(self,result)    DeeInt_AsU(__SIZEOF_INT__,self,REQUIRES_TYPE(unsigned int *,result))
+#define DeeInt_AsLong(self,result)    DeeInt_AsS(__SIZEOF_LONG__,self,REQUIRES_TYPE(long *,result))
+#define DeeInt_AsULong(self,result)   DeeInt_AsU(__SIZEOF_LONG__,self,REQUIRES_TYPE(unsigned long *,result))
+#ifdef __COMPILER_HAVE_LONGLONG
+#define DeeInt_AsLLong(self,result)   DeeInt_AsS(__SIZEOF_LONG_LONG__,self,REQUIRES_TYPE(long long *,result))
+#define DeeInt_AsULLong(self,result)  DeeInt_AsU(__SIZEOF_LONG_LONG__,self,REQUIRES_TYPE(unsigned long long *,result))
+#endif
+#define DeeInt_AsSize(self,result)    DeeInt_AsU(__SIZEOF_SIZE_T__,self,REQUIRES_TYPE(size_t *,result))
+#define DeeInt_AsSSize(self,result)   DeeInt_AsS(__SIZEOF_SIZE_T__,self,REQUIRES_TYPE(dssize_t *,result))
+#define DeeInt_AsPtrdiff(self,result) DeeInt_AsS(__SIZEOF_PTRDIFF_T__,self,REQUIRES_TYPE(ptrdiff_t *,result))
+#define DeeInt_AsIntptr(self,result)  DeeInt_AsS(__SIZEOF_POINTER__,self,REQUIRES_TYPE(intptr_t *,result))
+#define DeeInt_AsUIntptr(self,result) DeeInt_AsU(__SIZEOF_POINTER__,self,REQUIRES_TYPE(uintptr_t *,result))
 
 #define DeeInt_TryAsSSize(self,val)    DeeInt_TryAsS(__SIZEOF_SIZE_T__,self,val)
 #define DeeInt_TryAsSize(self,val)     DeeInt_TryAsU(__SIZEOF_SIZE_T__,self,val)
@@ -604,7 +656,12 @@ DeeInt_Print(DREF DeeObject *self, uint32_t radix_and_flags,
 #define DeeInt_New(size,val)  DEE_PRIVATE_NEWINT(size)(val)
 #define DeeInt_Newu(size,val) DEE_PRIVATE_NEWUINT(size)(val)
 
+#ifndef __CHAR_UNSIGNED__
 #define DeeInt_NewChar(val)    DeeInt_New(__SIZEOF_CHAR__,val)
+#else /* !__CHAR_UNSIGNED__ */
+#define DeeInt_NewChar(val)    DeeInt_Newu(__SIZEOF_CHAR__,val)
+#endif /* __CHAR_UNSIGNED__ */
+#define DeeInt_NewSChar(val)   DeeInt_New(__SIZEOF_CHAR__,val)
 #define DeeInt_NewUChar(val)   DeeInt_Newu(__SIZEOF_CHAR__,val)
 #define DeeInt_NewShort(val)   DeeInt_New(__SIZEOF_SHORT__,val)
 #define DeeInt_NewUShort(val)  DeeInt_Newu(__SIZEOF_SHORT__,val)

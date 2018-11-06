@@ -405,7 +405,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
  switch (tok) {
 
  {
-  int_t value;
+  tint_t value;
   DREF DeeObject *resval;
  case TOK_INT:
   /* Use our own integer parser, so we can process infinite-precision integers. */
@@ -443,7 +443,7 @@ create_constexpr:
  } break;
 
  {
-  float_t value;
+  tfloat_t value;
   DREF DeeObject *resval;
  case TOK_FLOAT:
   if (TPP_Atof(&value) == TPP_ATOF_ERR) goto err;

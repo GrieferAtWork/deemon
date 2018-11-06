@@ -278,7 +278,7 @@ struct user_assembler {
 };
 
 struct asm_intexpr {
-    int_t           ie_val; /* Constant expression addend. */
+    tint_t          ie_val; /* Constant expression addend. */
     struct asm_sym *ie_sym; /* [0..1] Symbol who's address is added to the result. */
     uint16_t        ie_rel; /* Relocation mode / value type (One of `ASM_OVERLOAD_FREL*' or
                              * `ASM_OVERLOAD_FSTK', or (uint16_t)-1 if not defined) */
@@ -1960,7 +1960,7 @@ INTDEF int (DCALL asm_genassert)(struct ast *__restrict expr,
 typedef struct {
     OBJECT_HEAD
     struct asm_sym *ri_sym;  /* [1..1][REF(->as_used)] Symbol added to relocation integer. */
-    int_t           ri_add;  /* Addend added to the value of `ri_sym'. */
+    tint_t          ri_add;  /* Addend added to the value of `ri_sym'. */
 #define RELINT_MODE_FADDR 0x0000 /* Use the address of `ri_sym' */
 #define RELINT_MODE_FSTCK 0x0001 /* Use the stack-depth of `ri_sym' */
     uint16_t        ri_mode; /* The mode in which `ri_sym' is used. (One of `RELINT_MODE_F*') */
@@ -1970,8 +1970,8 @@ INTDEF DeeTypeObject DeeRelInt_Type;
 
 /* Construct and register a new relocation-integer as a constant.
  * If `sym' is NULL, a regular integer is created instead. */
-INTDEF int32_t DCALL asm_newrelint(struct asm_sym *sym, int_t addend, uint16_t mode);
-INTDEF DREF DeeObject *DCALL DeeRelInt_New(struct asm_sym *__restrict sym, int_t addend, uint16_t mode);
+INTDEF int32_t DCALL asm_newrelint(struct asm_sym *sym, tint_t addend, uint16_t mode);
+INTDEF DREF DeeObject *DCALL DeeRelInt_New(struct asm_sym *__restrict sym, tint_t addend, uint16_t mode);
 
 
 DECL_END

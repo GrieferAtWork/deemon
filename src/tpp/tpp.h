@@ -585,8 +585,8 @@ struct TPPTextFile {
 #define TPP_FUNOP_VA_OPT   0x09 /* [3] Delete ARG(0) characters, Delete (if varargs are empty) or Insert (otherwise) ARG(1) characters, Delete ARG(2) characters */
 #endif
 typedef uint8_t       TPP(funop_t);
-typedef int_least64_t TPP(int_t);
-typedef long double   TPP(float_t);
+typedef int_least64_t TPP(tint_t);
+typedef long double   TPP(tfloat_t);
 
 struct TPP(arginfo_t) {
     TPP(tok_t) ai_id;       /* Token ID associated with this argument name. */
@@ -849,11 +849,11 @@ TPPFUN size_t TPPCALL TPP_SizeofUnescapeRaw(char const *__restrict data, size_t 
 #endif
 
 TPPFUN char *TPPCALL TPP_Escape(char *__restrict buf, char const *__restrict data, size_t size);
-TPPFUN char *TPPCALL TPP_Itos(char *__restrict buf, TPP(int_t) i);
-TPPFUN char *TPPCALL TPP_Ftos(char *__restrict buf, TPP(float_t) f);
+TPPFUN char *TPPCALL TPP_Itos(char *__restrict buf, TPP(tint_t) i);
+TPPFUN char *TPPCALL TPP_Ftos(char *__restrict buf, TPP(tfloat_t) f);
 TPPFUN size_t TPPCALL TPP_SizeofEscape(char const *__restrict data, size_t size);
-TPPFUN size_t TPPCALL TPP_SizeofItos(TPP(int_t) i);
-TPPFUN size_t TPPCALL TPP_SizeofFtos(TPP(float_t) f);
+TPPFUN size_t TPPCALL TPP_SizeofItos(TPP(tint_t) i);
+TPPFUN size_t TPPCALL TPP_SizeofFtos(TPP(tfloat_t) f);
 TPPFUN TPP(hash_t) TPPCALL TPP_Hashof(void const *__restrict data, size_t size);
 
 /* Implement TPP's hashing algorithm for constant strings, using only the preprocessor!
@@ -1350,7 +1350,7 @@ struct TPPRareKeyword {
 #define TPP_KEYWORDFLAG_HAS_TPP_BUILTIN        0x00000100 /* The keyword is a __builtin-function available for use in preprocessor expressions. */
 #define TPP_KEYWORDFLAG_USERMASK               0x0000007f /* Set of flags modifiable through `#pragma tpp_set_keyword_flags()'. */
     uint32_t                  kr_flags;    /* A set of `TPP_KEYWORDFLAG_*'. */
-    TPP(int_t)                kr_counter;  /* Counter value used by `__TPP_COUNTER()' */
+    TPP(tint_t)                kr_counter;  /* Counter value used by `__TPP_COUNTER()' */
 #ifndef TPP_CONFIG_NO_ASSERTIONS
     struct TPPAssertions      kr_asserts;  /* Assertions (aka. #assert/#unassert associated with this keyword) */
 #endif /* !TPP_CONFIG_NO_ASSERTIONS */
@@ -1576,7 +1576,7 @@ struct TPPLexer {
     struct TPPCallbacks   l_callbacks;  /* User-defined lexer callbacks. */
 #endif /* TPP_CONFIG_DYN_CALLBACKS */
     TPP(tok_t)            l_noerror;    /* Old token ID before `TPPLEXER_FLAG_ERROR' was set. */
-    TPP(int_t)            l_counter;    /* Value returned the next time `__COUNTER__' is expanded (Initialized to ZERO(0)). */
+    TPP(tint_t)            l_counter;    /* Value returned the next time `__COUNTER__' is expanded (Initialized to ZERO(0)). */
 };
 
 #ifndef TPPLEXER_DEFAULT_LIMIT_ECNT
@@ -1865,8 +1865,8 @@ struct TPPConst {
 #define TPP_CONST_STRING   2
     unsigned int c_kind; /* Constant kind (One of `TPP_CONST_*'). */
     union {
-        TPP(int_t)               c_int;    /* [TPP_CONST_INTEGRAL] Integral. */
-        TPP(float_t)             c_float;  /* [TPP_CONST_FLOAT] Floating point. */
+        TPP(tint_t)               c_int;    /* [TPP_CONST_INTEGRAL] Integral. */
+        TPP(tfloat_t)             c_float;  /* [TPP_CONST_FLOAT] Floating point. */
         /*ref*/struct TPPString *c_string; /* [TPP_CONST_STRING][1..1] String. */
     } c_data;
 };
@@ -1878,19 +1878,19 @@ struct TPPConst {
    : ((self)->c_data.c_int != 0))
 #define TPPConst_IsBool(self) \
   ((self)->c_kind == TPP_CONST_INTEGRAL && \
- !((self)->c_data.c_int&~(TPP(int_t))1))
+ !((self)->c_data.c_int&~(TPP(tint_t))1))
 #define TPPConst_AsInt(self) \
     ((self)->c_kind == TPP_CONST_INTEGRAL \
    ? (self)->c_data.c_int \
    : (self)->c_kind == TPP_CONST_FLOAT \
-   ? (TPP(int_t))(self)->c_data.c_float \
+   ? (TPP(tint_t))(self)->c_data.c_float \
    : TPPString_SIZE((self)->c_data.c_string) != 0)
 #define TPPConst_AsFloat(self) \
     ((self)->c_kind == TPP_CONST_FLOAT \
    ? (self)->c_data.c_float \
    : (self)->c_kind == TPP_CONST_INTEGRAL \
-   ? (TPP(float_t))(self)->c_data.c_int \
-   : (TPP(float_t))(TPPString_SIZE((self)->c_data.c_string) != 0))
+   ? (TPP(tfloat_t))(self)->c_data.c_int \
+   : (TPP(tfloat_t))(TPPString_SIZE((self)->c_data.c_string) != 0))
 #define TPPConst_InitCopy(self,right) \
 do{ *(self) = *(right); \
     if ((self)->c_kind == TPP_CONST_STRING) \
@@ -1902,7 +1902,7 @@ do{ \
  if ((self)->c_kind == TPP_CONST_STRING) { \
   int c_newval = TPPString_SIZE((self)->c_data.c_string) != 0; \
   TPPString_Decref((self)->c_data.c_string); \
-  (self)->c_data.c_int = (TPP(int_t))c_newval; \
+  (self)->c_data.c_int = (TPP(tint_t))c_newval; \
   (self)->c_kind = TPP_CONST_INTEGRAL; \
  } else if ((self)->c_kind == TPP_CONST_FLOAT) { \
   (self)->c_data.c_int = (self)->c_data.c_float != 0.0L; \
@@ -1916,10 +1916,10 @@ do{ \
  if ((self)->c_kind == TPP_CONST_STRING) { \
   int c_newval = TPPString_SIZE((self)->c_data.c_string) != 0; \
   TPPString_Decref((self)->c_data.c_string); \
-  (self)->c_data.c_int = (TPP(int_t))c_newval; \
+  (self)->c_data.c_int = (TPP(tint_t))c_newval; \
   (self)->c_kind = TPP_CONST_INTEGRAL; \
  } else if ((self)->c_kind == TPP_CONST_FLOAT) { \
-  (self)->c_data.c_int = (TPP(int_t))(self)->c_data.c_float; \
+  (self)->c_data.c_int = (TPP(tint_t))(self)->c_data.c_float; \
   (self)->c_kind = TPP_CONST_INTEGRAL; \
  } \
 }while(TPP_MACRO_FALSE)
@@ -1981,7 +1981,7 @@ TPPFUN /*ref*/struct TPPString *TPPCALL TPPLexer_ParseStringEx(size_t sizeof_cha
  *       If intended, the caller is responsible for advancing it upon success.
  * @return: TPP_ATOI_ERR: Emiting a warning caused the lexer to error out (TPPLexer_SetErr() was set).
  * @return: * :           A set of `TPP_ATOI_*' (see below) */
-TPPFUN int TPPCALL TPP_Atoi(TPP(int_t) *__restrict pint);
+TPPFUN int TPPCALL TPP_Atoi(TPP(tint_t) *__restrict pint);
 #define TPP_ATOI_ERR           0x00 /* NOTE: Never used with any flags (indicates failure). */
 #define TPP_ATOI_OK            0x01 /* Always set on success. */
 #define TPP_ATOI_UNSIGNED      0x02 /* Unless set, the integral is signed. */
@@ -2001,7 +2001,7 @@ TPPFUN int TPPCALL TPP_Atoi(TPP(int_t) *__restrict pint);
  *       If intended, the caller is responsible for advancing it upon success.
  * @return: TPP_ATOF_ERR: Emiting a warning caused the lexer to error out (TPPLexer_SetErr() was set).
  * @return: * :           A set of `TPP_ATOF_*' (see below) */
-TPPFUN int TPPCALL TPP_Atof(TPP(float_t) *__restrict pfloat);
+TPPFUN int TPPCALL TPP_Atof(TPP(tfloat_t) *__restrict pfloat);
 #define TPP_ATOF_ERR             0x00 /* NOTE: Never used with any flags (indicates failure). */
 #define TPP_ATOF_OK              0x01 /* Always set on success. */
 #define TPP_ATOF_TYPE_MASK       0xf0 /* Mask of the float's typing. */

@@ -2172,14 +2172,14 @@ INTERN struct type_method seq_methods[] = {
           "The point at which @this sequence is enumerated is implementation-defined"),
       TYPE_METHOD_FKWDS },
     { "segments", &seq_segments,
-      DOC("(int segment_size)->sequence\n"
+      DOC("(int segment_size)->{sequence...}\n"
           "@throw IntegerOverflow @segment_size is negative, or too large\n"
           "@throw ValueError The given @segment_size is zero\n"
           "Return a sequence of sequences contains all elements from @this sequence, "
           "with the first n sequences all consisting of @segment_size elements, before "
           "the last one contains the remainder of up to @segment_size elements") },
     { "distribute", &seq_distribute,
-      DOC("(int bucket_count)->sequence\n"
+      DOC("(int bucket_count)->{sequence...}\n"
           "@throw IntegerOverflow @segment_size is negative, or too large\n"
           "@throw ValueError The given @segment_size is zero\n"
           "Re-distribute the elements of @this sequence to form @bucket_count similarly-sized "

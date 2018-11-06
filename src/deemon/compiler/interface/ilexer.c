@@ -2953,7 +2953,7 @@ lexer_token_decodeinteger(DeeCompilerWrapperObject *__restrict self,
   result = DeeInt_FromString(token.t_begin,(size_t)(token.t_end-token.t_begin),
                              DEEINT_STRING(0,DEEINT_STRING_FESCAPED));
  } else if (TPPLexer_Current->l_token.t_id == TOK_CHAR) {
-  int_t value;
+  tint_t value;
   if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR) goto done;
   if (warnchar && WARN(W_DEPRECATED_CHARACTER_INT)) goto done;
   result = DeeInt_NewS64(value);

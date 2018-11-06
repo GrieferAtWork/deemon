@@ -27,6 +27,7 @@ DECL_BEGIN
 
 #ifdef __CC__
 
+#if 0
 #ifndef __std_memory_order_defined
 #define __std_memory_order_defined 1
 __NAMESPACE_STD_BEGIN
@@ -50,6 +51,7 @@ __NAMESPACE_STD_USING(memory_order_acq_rel)
 __NAMESPACE_STD_USING(memory_order_seq_cst)
 __NAMESPACE_STD_USING(memory_order)
 #endif /* !__memory_order_defined */
+#endif
 
 #define OATOMIC_LOAD(x,order)                          __hybrid_atomic_load(x,order)
 #define OATOMIC_STORE(x,v,order)                       __hybrid_atomic_store(x,v,order)

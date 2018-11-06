@@ -390,27 +390,27 @@ PREDEFINED_MACRO(__TPP_VERSION__,TPP_PP_STR(TPP_PREPROCESSOR_VERSION))
 #if TPP_CONFIG_MINGCCFUNC == 0
 /* Builtin functions recognized in expressions. */
 #ifdef DEFINE_GLOBAL_SYMBOLS
-PRIVATE int_t tpp_ffs(int_t i) {
- int_t result;
+PRIVATE tint_t tpp_ffs(tint_t i) {
+ tint_t result;
  if (!i) return 0;
  for (result = 1; !(i&1); ++result) i >>= 1;
  return result;
 }
-PRIVATE int_t tpp_clz(int_t i) {
- int_t mask = ~(((int_t)-1)/2); /* Only set MSB (e.g.: `0x80000000'). */
- int_t result = 0;
+PRIVATE tint_t tpp_clz(tint_t i) {
+ tint_t mask = ~(((tint_t)-1)/2); /* Only set MSB (e.g.: `0x80000000'). */
+ tint_t result = 0;
  while (!(i&mask)) ++result,mask >>= 1;
  return result;
 }
-PRIVATE int_t tpp_ctz(int_t i) {
- int_t mask = 1; /* Only set LSB. */
- int_t result = 0;
+PRIVATE tint_t tpp_ctz(tint_t i) {
+ tint_t mask = 1; /* Only set LSB. */
+ tint_t result = 0;
  while (!(i&mask)) ++result,mask <<= 1;
  return result;
 }
-PRIVATE int_t tpp_clrsb(int_t i) {
- int_t mask = ~(((int_t)-1)/2); /* Only set MSB (e.g.: `0x80000000'). */
- int_t result = 0;
+PRIVATE tint_t tpp_clrsb(tint_t i) {
+ tint_t mask = ~(((tint_t)-1)/2); /* Only set MSB (e.g.: `0x80000000'). */
+ tint_t result = 0;
  int msb = !!(i&mask); /* Extract the MSB bit. */
  for (;;) {
   mask >>= 1;
@@ -419,13 +419,13 @@ PRIVATE int_t tpp_clrsb(int_t i) {
  }
  return result;
 }
-PRIVATE int_t tpp_popcount(int_t i) {
- int_t result = 0;
+PRIVATE tint_t tpp_popcount(tint_t i) {
+ tint_t result = 0;
  while (i) { if (i&1) ++result; i >>= 1; }
  return result;
 }
-PRIVATE int_t tpp_parity(int_t i) {
- int_t result = 0;
+PRIVATE tint_t tpp_parity(tint_t i) {
+ tint_t result = 0;
  while (i) { if (i&1) result ^= 1; i >>= 1; }
  return result;
 }
@@ -456,9 +456,9 @@ PREDEFINED_BUILTIN_FUNCTION(__builtin_strncasecmp,3,{ RETURN_INT((IS_STRING(0) &
 //PREDEFINED_BUILTIN_FUNCTION(__builtin_strrchr,2,{ RETURN_INT(IS_STRING(0) ? !!strchr(STRING(0)->s_text,(int)INT(1)) : 0); })
 PREDEFINED_BUILTIN_FUNCTION(__builtin_expect,2,{ RETURN_COPY(A(0)); })
 PREDEFINED_BUILTIN_FUNCTION(__builtin_assume_aligned,2,{ RETURN_COPY(A(0)); })
-PREDEFINED_BUILTIN_FUNCTION(__builtin_abs,1,{ int_t x = INT(0)&((int)-1); RETURN_INT(x < 0 ? -x : x); })
-PREDEFINED_BUILTIN_FUNCTION(__builtin_labs,1,{ int_t x = INT(0)&((long)-1); RETURN_INT(x < 0 ? -x : x); })
-PREDEFINED_BUILTIN_FUNCTION(__builtin_llabs,1,{ int_t x = INT(0)&((llong_t)-1); RETURN_INT(x < 0 ? -x : x); })
+PREDEFINED_BUILTIN_FUNCTION(__builtin_abs,1,{ tint_t x = INT(0)&((int)-1); RETURN_INT(x < 0 ? -x : x); })
+PREDEFINED_BUILTIN_FUNCTION(__builtin_labs,1,{ tint_t x = INT(0)&((long)-1); RETURN_INT(x < 0 ? -x : x); })
+PREDEFINED_BUILTIN_FUNCTION(__builtin_llabs,1,{ tint_t x = INT(0)&((llong_t)-1); RETURN_INT(x < 0 ? -x : x); })
 PREDEFINED_BUILTIN_FUNCTION(__builtin_clz,1,{ RETURN_INT(tpp_clz(INT(0)&((int)-1))); })
 PREDEFINED_BUILTIN_FUNCTION(__builtin_clzl,1,{ RETURN_INT(tpp_clz(INT(0)&((long)-1))); })
 PREDEFINED_BUILTIN_FUNCTION(__builtin_clzll,1,{ RETURN_INT(tpp_clz(INT(0)&((llong_t)-1))); })
@@ -946,11 +946,11 @@ DEF_WARNING(W_CANT_POP_EXTENSIONS,(WG_VALUE),WSTATE_ERROR,WARNF("Can't pop exten
 DEF_WARNING(W_CANT_POP_INCLUDE_PATH,(WG_VALUE),WSTATE_ERROR,WARNF("Can't pop #include paths")) /* . */
 DEF_WARNING(W_CONSIDER_PAREN_AROUND_LAND,(WG_QUALITY),WSTATE_WARN,WARNF("Consider adding parenthesis around " Q("&&") " to prevent confusion with " Q("||"))) /* . */
 #if TPP_HAVE_LONGLONG
-DEF_WARNING(W_INTEGRAL_OVERFLOW,(WG_VALUE),WSTATE_WARN,{ int_t old = ARG(int_t); WARNF("Integral constant overflow from " Q("%lld") " to " Q("%lld"),(long long)old,(long long)ARG(int_t)); }) /* [int_t,int_t]. */
+DEF_WARNING(W_INTEGRAL_OVERFLOW,(WG_VALUE),WSTATE_WARN,{ tint_t old = ARG(tint_t); WARNF("Integral constant overflow from " Q("%lld") " to " Q("%lld"),(long long)old,(long long)ARG(tint_t)); }) /* [tint_t,tint_t]. */
 #else
-DEF_WARNING(W_INTEGRAL_OVERFLOW,(WG_VALUE),WSTATE_WARN,{ int_t old = ARG(int_t); WARNF("Integral constant overflow from " Q("%ld") " to " Q("%ld"),(long)old,(long)ARG(int_t)); }) /* [int_t,int_t]. */
+DEF_WARNING(W_INTEGRAL_OVERFLOW,(WG_VALUE),WSTATE_WARN,{ tint_t old = ARG(tint_t); WARNF("Integral constant overflow from " Q("%ld") " to " Q("%ld"),(long)old,(long)ARG(tint_t)); }) /* [tint_t,tint_t]. */
 #endif
-DEF_WARNING(W_INTEGRAL_CLAMPED,(WG_VALUE),WSTATE_WARN,WARNF("Integral constant clamped to fit")) /* [int_t,int_t]. */
+DEF_WARNING(W_INTEGRAL_CLAMPED,(WG_VALUE),WSTATE_WARN,WARNF("Integral constant clamped to fit")) /* [tint_t,tint_t]. */
 DEF_WARNING(W_UNKNOWN_INCLUDE_PATH,(WG_VALUE),WSTATE_WARN,{ char *temp = ARG(char *); WARNF("Unknown system #include-path " Q("%.*s"),(int)ARG(size_t),temp); }) /* [char const *,size_t]. */
 DEF_WARNING(W_INCLUDE_PATH_ALREADY_EXISTS,(WG_VALUE),WSTATE_WARN,{ char *temp = ARG(char *); WARNF("System #include-path " Q("%.*s") " already exists",(int)ARG(size_t),temp); }) /* [char const *,size_t]. */
 #if (!defined(TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR) || TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR)
