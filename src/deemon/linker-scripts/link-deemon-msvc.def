@@ -143,7 +143,6 @@ EXPORTS
 	DeeFile_Write@12=_DeeFile_Write@12
 	DeeFile_WriteAll@12=_DeeFile_WriteAll@12
 	DeeFile_Writef@16=_DeeFile_Writef@16
-	DeeFloat_LPrint@28=_DeeFloat_LPrint@28
 	DeeFloat_New@8=_DeeFloat_New@8
 	DeeFloat_Print@28=_DeeFloat_Print@28
 	DeeFrame_DecrefShared@4=_DeeFrame_DecrefShared@4

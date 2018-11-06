@@ -38,6 +38,8 @@ for (local l: r) {
 	name = name.strip();
 	if ("@" !in name) continue;
 	if (!name.startswith("_")) continue;
+	if (name.startswith("_DeeFloat_LPrint"))
+		continue; /* Don't mirror this one - GCC has a different sizeof(long double) than MSVC */
 	symbols.append(name);
 }
 r.close();
