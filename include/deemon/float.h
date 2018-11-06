@@ -44,6 +44,25 @@ DDATDEF DeeTypeObject DeeFloat_Type;
 DFUNDEF DREF DeeObject *DCALL DeeFloat_New(double value);
 
 
+
+/* Print a string representation of the given floating point value.
+ * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
+DFUNDEF dssize_t DCALL DeeFloat_Print(double value, dformatprinter printer, void *arg,
+                                      size_t width, size_t precision, unsigned int flags);
+#ifdef __COMPILER_HAVE_LONGDOUBLE
+DFUNDEF dssize_t DCALL DeeFloat_LPrint(long double value, dformatprinter printer, void *arg,
+                                       size_t width, size_t precision, unsigned int flags);
+#endif
+#define DEEFLOAT_PRINT_FNORMAL    0x0000 /* Normal printing flags. */
+#define DEEFLOAT_PRINT_FLJUST     0x0002 /* Justify the written value to the left. */
+#define DEEFLOAT_PRINT_FSIGN      0x0004 /* Always print a sign. */
+#define DEEFLOAT_PRINT_FSPACE     0x0008 /* When no sign is printed, put a space character instead. */
+#define DEEFLOAT_PRINT_FPADZERO   0x0010 /* Use '0' to pad leading digits to fit `width'. */
+#define DEEFLOAT_PRINT_FWIDTH     0x0020 /* The given `width' must be respected. */
+#define DEEFLOAT_PRINT_FPRECISION 0x0040 /* The given `precision' must be respected. */
+
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_FLOAT_H */

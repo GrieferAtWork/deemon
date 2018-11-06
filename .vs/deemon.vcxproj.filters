@@ -871,6 +871,9 @@
     <None Include="..\src\deemon\objects\unicode\bytes_finder.c.inl">
       <Filter>src\deemon\objects\unicode</Filter>
     </None>
+    <None Include="..\src\deemon\objects\float-print.c.inl">
+      <Filter>src\deemon\objects</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

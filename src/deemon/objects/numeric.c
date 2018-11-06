@@ -23,9 +23,12 @@
 #include <deemon/object.h>
 #include <deemon/numeric.h>
 #include <deemon/string.h>
+#include <deemon/float.h>
 #include <deemon/int.h>
 
 #include "../runtime/strings.h"
+
+#include <math.h>
 
 DECL_BEGIN
 
@@ -33,28 +36,35 @@ INTDEF int DCALL none_i1(void *UNUSED(b));
 INTDEF int DCALL none_i2(void *UNUSED(b), void *UNUSED(c));
 
 PRIVATE DREF DeeObject *DCALL
-numeric_asi8(DeeObject *__restrict self) {
+numeric_asflt(DeeObject *__restrict self) {
+ double result;
+ if (DeeObject_AsDouble(self,&result))
+     return NULL;
+ return DeeFloat_New(result);
+}
+PRIVATE DREF DeeObject *DCALL
+numeric_ass8(DeeObject *__restrict self) {
  int8_t result;
  if (DeeObject_AsInt8(self,&result))
      return NULL;
  return DeeInt_NewS8(result);
 }
 PRIVATE DREF DeeObject *DCALL
-numeric_asi16(DeeObject *__restrict self) {
+numeric_ass16(DeeObject *__restrict self) {
  int16_t result;
  if (DeeObject_AsInt16(self,&result))
      return NULL;
  return DeeInt_NewS16(result);
 }
 PRIVATE DREF DeeObject *DCALL
-numeric_asi32(DeeObject *__restrict self) {
+numeric_ass32(DeeObject *__restrict self) {
  int32_t result;
  if (DeeObject_AsInt32(self,&result))
      return NULL;
  return DeeInt_NewS32(result);
 }
 PRIVATE DREF DeeObject *DCALL
-numeric_asi64(DeeObject *__restrict self) {
+numeric_ass64(DeeObject *__restrict self) {
  int64_t result;
  if (DeeObject_AsInt64(self,&result))
      return NULL;
@@ -94,22 +104,26 @@ PRIVATE struct type_getset numeric_getsets[] = {
       DOC("->int\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "Return @this number as an integer, truncating all digits after a dot/comma") },
-    { "asi8", &numeric_asi8, NULL, NULL,
+    { "asflt", &numeric_asflt, NULL, NULL,
+      DOC("->float\n"
+          "@throw NotImplemented @this number does not implement ${operator float}\n"
+          "Return @this number as a floating point value") },
+    { "ass8", &numeric_ass8, NULL, NULL,
       DOC("->int\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${-128 ... 127}") },
-    { "asi16", &numeric_asi16, NULL, NULL,
+    { "ass16", &numeric_ass16, NULL, NULL,
       DOC("->int\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${-32768 ... 32767}") },
-    { "asi32", &numeric_asi32, NULL, NULL,
+    { "ass32", &numeric_ass32, NULL, NULL,
       DOC("->int\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${-2147483648 ... 2147483647}") },
-    { "asi64", &numeric_asi64, NULL, NULL,
+    { "ass64", &numeric_ass64, NULL, NULL,
       DOC("->int\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
@@ -134,6 +148,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${0x0 ... 0xffffffffffffffff}") },
+    { NULL }
 };
 
 

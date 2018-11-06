@@ -24,6 +24,7 @@
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/error.h>
+#include <deemon/float.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
@@ -527,20 +528,40 @@ err_preprinter:
    }
    break;
 
-#if 0
   {
    double value;
-  case 'f':
+  case 'f': case 'F':
+  case 'e': case 'E':
+  case 'g': case 'G':
    GETARG();
    if (DeeObject_AsDouble(in_arg,&value))
        goto err;
-   /* TODO */
-  } break;
+#if F_LJUST == DEEFLOAT_PRINT_FLJUST && \
+    F_SIGN == DEEFLOAT_PRINT_FSIGN && \
+    F_SPACE == DEEFLOAT_PRINT_FSPACE && \
+    F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
+    F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH && \
+    F_HASPREC == DEEFLOAT_PRINT_FPRECISION
+   temp = DeeFloat_Print(value,printer,arg,width,precision,flags);
+#else
+   {
+    unsigned int float_flags = DEEFLOAT_PRINT_FNORMAL;
+    if (flags & F_LJUST) float_flags |= DEEFLOAT_PRINT_FLJUST;
+    if (flags & F_SIGN) float_flags |= DEEFLOAT_PRINT_FSIGN;
+    if (flags & F_SPACE) float_flags |= DEEFLOAT_PRINT_FSPACE;
+    if (flags & F_PADZERO) float_flags |= DEEFLOAT_PRINT_FPADZERO;
+    if (flags & F_HASWIDTH) float_flags |= DEEFLOAT_PRINT_FWIDTH;
+    if (flags & F_HASPREC) float_flags |= DEEFLOAT_PRINT_FPRECISION;
+    temp = DeeFloat_Print(value,printer,arg,width,precision,float_flags);
+   }
 #endif
+   if unlikely(temp < 0) goto err;
+   result += temp;
+  } break;
 
   default:
    if ((ch >= '0' && ch <= '9') &&
-      !(flags&F_HASWIDTH)) {
+      !(flags & F_HASWIDTH)) {
     width = ch-'0';
     while ((ch = *iter,ch >= '0' && ch <= '9'))
         width *= 10,width += ch-'0',++iter;

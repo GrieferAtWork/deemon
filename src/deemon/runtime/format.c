@@ -22,6 +22,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/format.h>
+#include <deemon/float.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <hybrid/minmax.h>
@@ -151,7 +152,7 @@ do{ temp = (*printer)(arg,p,s); \
 
 PRIVATE char const decimals[2][17] = {
     { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'x' },
-    { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'X' },
+    { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'X' }
 };
 
 PRIVATE void DCALL
@@ -256,6 +257,20 @@ nextfmt:
  case 'r':
   va_arg(args,char *);
   goto next;
+
+ case 'f': case 'F':
+ case 'e': case 'E':
+ case 'g': case 'G':
+#ifdef __COMPILER_HAVE_LONGDOUBLE
+  if (length == LENGTH_L) {
+   va_arg(args,long double);
+  } else
+#endif /* __COMPILER_HAVE_LONGDOUBLE */
+  {
+   va_arg(args,double);
+  }
+  goto next;
+
 
  {
   DeeObject *ob;
@@ -645,6 +660,61 @@ nextfmt:
   if unlikely(temp < 0) goto err;
   result += temp;
  } break;
+
+ case 'f': case 'F':
+ case 'e': case 'E':
+ case 'g': case 'G':
+#ifdef __COMPILER_HAVE_LONGDOUBLE
+  if (length == LENGTH_L) {
+   long double value;
+   value = va_arg(args,long double);
+#if F_LJUST == DEEFLOAT_PRINT_FLJUST && \
+    F_SIGN == DEEFLOAT_PRINT_FSIGN && \
+    F_SPACE == DEEFLOAT_PRINT_FSPACE && \
+    F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
+    F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH && \
+    F_HASPREC == DEEFLOAT_PRINT_FPRECISION
+   temp = DeeFloat_LPrint(value,printer,arg,width,precision,flags);
+#else
+   {
+    unsigned int float_flags = DEEFLOAT_PRINT_FNORMAL;
+    if (flags & F_LJUST) float_flags |= DEEFLOAT_PRINT_FLJUST;
+    if (flags & F_SIGN) float_flags |= DEEFLOAT_PRINT_FSIGN;
+    if (flags & F_SPACE) float_flags |= DEEFLOAT_PRINT_FSPACE;
+    if (flags & F_PADZERO) float_flags |= DEEFLOAT_PRINT_FPADZERO;
+    if (flags & F_HASWIDTH) float_flags |= DEEFLOAT_PRINT_FWIDTH;
+    if (flags & F_HASPREC) float_flags |= DEEFLOAT_PRINT_FPRECISION;
+    temp = DeeFloat_LPrint(value,printer,arg,width,precision,float_flags);
+   }
+#endif
+  } else
+#endif /* __COMPILER_HAVE_LONGDOUBLE */
+  {
+   double value;
+   value = va_arg(args,double);
+#if F_LJUST == DEEFLOAT_PRINT_FLJUST && \
+    F_SIGN == DEEFLOAT_PRINT_FSIGN && \
+    F_SPACE == DEEFLOAT_PRINT_FSPACE && \
+    F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
+    F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH && \
+    F_HASPREC == DEEFLOAT_PRINT_FPRECISION
+   temp = DeeFloat_Print(value,printer,arg,width,precision,flags);
+#else
+   {
+    unsigned int float_flags = DEEFLOAT_PRINT_FNORMAL;
+    if (flags & F_LJUST) float_flags |= DEEFLOAT_PRINT_FLJUST;
+    if (flags & F_SIGN) float_flags |= DEEFLOAT_PRINT_FSIGN;
+    if (flags & F_SPACE) float_flags |= DEEFLOAT_PRINT_FSPACE;
+    if (flags & F_PADZERO) float_flags |= DEEFLOAT_PRINT_FPADZERO;
+    if (flags & F_HASWIDTH) float_flags |= DEEFLOAT_PRINT_FWIDTH;
+    if (flags & F_HASPREC) float_flags |= DEEFLOAT_PRINT_FPRECISION;
+    temp = DeeFloat_Print(value,printer,arg,width,precision,float_flags);
+   }
+#endif
+  }
+  if unlikely(temp < 0) goto err;
+  result += temp;
+  break;
  
  default:
   if (ch >= '0' && ch <= '9') {

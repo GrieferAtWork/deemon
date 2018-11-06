@@ -333,4 +333,13 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 
 DECL_END
 
+#ifndef __INTELLISENSE__
+#undef PRINT_LONG_DOUBLE
+#ifdef __COMPILER_HAVE_LONGDOUBLE
+#define PRINT_LONG_DOUBLE 1
+#include "float-print.c.inl"
+#endif /* __COMPILER_HAVE_LONGDOUBLE */
+#include "float-print.c.inl"
+#endif
+
 #endif /* !GUARD_DEEMON_OBJECTS_FLOAT_C */
