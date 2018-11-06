@@ -1467,42 +1467,23 @@ err:
 
 PUBLIC int DCALL
 DeeInt_TryAs8(DeeObject *__restrict self, int8_t *__restrict value) {
- uint8_t prev,result; int sign;
- dssize_t i;
- ASSERT_OBJECT_TYPE_EXACT(self,&DeeInt_Type);
- switch (DeeInt_SIZE(self)) {
- case 0: *value = 0; return 0;
- case 1:
-  *value = DeeInt_DIGIT(self)[0];
-  return INT_UNSIGNED;
- case -1:
-  *value = -(int8_t)DeeInt_DIGIT(self)[0];
-  return INT_SIGNED;
- default: break;
+ int16_t val16; int result;
+ result = DeeInt_TryAs16(self,&val16);
+ switch (result) {
+ case INT_UNSIGNED:
+  if ((uint16_t)val16 > 0xff)
+      return INT_POS_OVERFLOW;
+  *value = (int8_t)(uint8_t)(uint16_t)val16;
+  break;
+ case INT_SIGNED:
+  if (val16 > INT8_MAX)
+      return INT_POS_OVERFLOW;
+  if (val16 < INT8_MIN)
+      return INT_NEG_OVERFLOW;
+  *value = (int8_t)val16;
+  break;
  }
- result = prev = 0,sign = 1;
- i = DeeInt_SIZE(self);
- if (i < 0) sign = -1,i = -i;
- while (--i >= 0) {
-  result = (result << DIGIT_BITS) | DeeInt_DIGIT(self)[i];
-  if ((result >> DIGIT_BITS) != prev)
-       goto overflow;
-  prev = result;
- }
- if (sign < 0) {
-  if (result <= INT8_MAX) {
-   result = (uint8_t)(-(int8_t)result);
-  } else if (result == (uint8_t)(0-(uint8_t)INT8_MIN)) {
-   result = (uint8_t)INT8_MIN;
-  } else {
-overflow:
-   return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
-  }
-  *value = (int8_t)result;
-  return INT_SIGNED;
- }
- *value = (int8_t)result;
- return INT_UNSIGNED;
+ return result;
 }
 PUBLIC int DCALL
 DeeInt_TryAs16(DeeObject *__restrict self, int16_t *__restrict value) {

@@ -241,11 +241,11 @@ DFUNDEF int DCALL DeeFile_Sync(DeeObject *__restrict self);
 DFUNDEF int DCALL DeeFile_Trunc(DeeObject *__restrict self, dpos_t size);
 DFUNDEF int DCALL DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *psize);
 DFUNDEF int DCALL DeeFile_Close(DeeObject *__restrict self);
-DFUNDEF int DCALL DeeFile_Getc(DeeObject *__restrict self);
-DFUNDEF int DCALL DeeFile_Getcf(DeeObject *__restrict self, dioflag_t flags);
-DFUNDEF int DCALL DeeFile_Ungetc(DeeObject *__restrict self, int ch);
-DFUNDEF int DCALL DeeFile_Putc(DeeObject *__restrict self, int ch);
-DFUNDEF int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t flags);
+DFUNDEF int DCALL DeeFile_Getc(DeeObject *__restrict self); /* @return: GETC_ERR: Error */
+DFUNDEF int DCALL DeeFile_Getcf(DeeObject *__restrict self, dioflag_t flags); /* @return: GETC_ERR: Error */
+DFUNDEF int DCALL DeeFile_Ungetc(DeeObject *__restrict self, int ch); /* @return: GETC_ERR: Error */
+DFUNDEF int DCALL DeeFile_Putc(DeeObject *__restrict self, int ch); /* @return: GETC_ERR: Error */
+DFUNDEF int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t flags); /* @return: GETC_ERR: Error */
 
 /* Returns the total size of a given file stream.
  * If the file doesn't support retrieval of its
@@ -255,12 +255,15 @@ DFUNDEF int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t fl
  *       end of the file and determining where that position is located at.
  * @return: * : The size of the given file `self' in bytes.
  * @return: -1: An error occurred. */
-DFUNDEF doff_t DCALL DeeFile_GetSize(DeeObject *__restrict self);
+DFUNDEF dpos_t DCALL DeeFile_GetSize(DeeObject *__restrict self);
 
 /* Check if the given file is an interactive device.
  * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type' and
  *       invokes `self.isatty()' without arguments, casting the return value to bool.
- *       This function is used to implement the auto-buffering mode of `file.buffer' */
+ *       This function is used to implement the auto-buffering mode of `file.buffer'
+ * @return: > 0 : The file is a TTY
+ * @return:   0 : The file isn't a TTY
+ * @return: < 0 : An error occurred. */
 DFUNDEF int DCALL DeeFile_IsAtty(DeeObject *__restrict self);
 
 /* Return the system file descriptor of the given file, or throws
@@ -317,7 +320,7 @@ DFUNDEF dssize_t DCALL DeeFile_VPrintf(DeeObject *__restrict self, char const *_
 
 
 /* Print text to a given file, implementing behavior of the print statement. */
-DFUNDEF int DCALL DeeFile_PrintLn(DeeObject *__restrict self);
+DFUNDEF int DCALL DeeFile_PrintNl(DeeObject *__restrict self);
 DFUNDEF int DCALL DeeFile_PrintObject(DeeObject *__restrict self, DeeObject *__restrict ob);
 DFUNDEF int DCALL DeeFile_PrintObjectSp(DeeObject *__restrict self, DeeObject *__restrict ob);
 DFUNDEF int DCALL DeeFile_PrintObjectNl(DeeObject *__restrict self, DeeObject *__restrict ob);
@@ -358,17 +361,11 @@ DFUNDEF DREF /*File*/DeeObject *DCALL DeeFile_OpenString(char const *__restrict 
                                    *       other processes from modifying the file at the same time. */
 #define OPEN_FHIDDEN   0x80000000 /* If the host's file system implements a hidden-file attribute, set it when creating a new file. */
 
-/* Translate the given fopen-mode-string into an open mode.
- * @return: * : A set of `OPEN_F*'
- * @return: -1: An invalid open mode was passed (An error was thrown).
- *              WARNING: Make sure to check for `== -1', and not `< 0',
- *                       because negative values may be returned upon
- *                       success! */
-DFUNDEF int DCALL DeeFile_ProcessMode(char const *__restrict text);
 
-#define DEE_STDIN  0
-#define DEE_STDOUT 1
-#define DEE_STDERR 2
+
+#define DEE_STDIN  0 /* Standard input */
+#define DEE_STDOUT 1 /* Standard output */
+#define DEE_STDERR 2 /* Standard error */
 
 /* Return a file stream for a standard file number `id'.
  * @param: id:   One of `DEE_STD*' (Except `DEE_STDDBG')
@@ -389,6 +386,11 @@ DFUNDEF bool DCALL DeeFile_ResetStd(void);
 /* Return the the default stream for a given STD number. */
 DFUNDEF ATTR_RETNONNULL DeeObject *DCALL DeeFile_DefaultStd(unsigned int id);
 
+
+/* DEE_STDDBG -- Same as `DEE_STDERR', but on windows, also print to `OutputDebugString()'
+ * On other platforms, similar system APIs intended for printing debug strings may
+ * be linked as well, but in all cases, text will always be printed to stderr, the
+ * same way a non-redirected `DeeFile_DefaultStderr' would do. */
 #ifdef CONFIG_HOST_WINDOWS
 #define DEE_STDDBG_IS_UNIQUE 1
 #define DEE_STDDBG 3

@@ -4541,7 +4541,7 @@ target_printnl:
 	ADJUST_CFA_OFFSET(4)
 	pushl  %eax /* DeeFile_Stdout */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeFile_PrintLn,4)
+	call   fSYM(DeeFile_PrintNl,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jnz   .except_decref_pop /* Check for errors. */
@@ -4618,7 +4618,7 @@ target_fprintall_nl:
 target_fprintnl:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeFile_PrintLn,4)
+	call   fSYM(DeeFile_PrintNl,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jz    .disp /* Check for errors. */

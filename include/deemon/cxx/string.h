@@ -634,6 +634,13 @@ DEFINE_RE_FUNCTION(deemon::int_,recount)
 #undef DEFINE_RE_FUNCTION
 #endif /* GUARD_DEEMON_CXX_INT_H */
 
+#ifdef GUARD_DEEMON_CXX_FILE_H
+inline string (file::filename)() const { return inherit(DeeFile_Filename(*this)); }
+inline string (file::readline)(size_t max_length, bool keep_lf) const { return inherit(DeeFile_ReadLine(*this,max_length,keep_lf)); }
+inline string (file::read)(size_t max_length, bool readall) const { return inherit(DeeFile_ReadText(*this,max_length,readall)); }
+inline string (file::pread)(dpos_t pos, size_t max_length, bool readall) const { return inherit(DeeFile_PReadText(*this,max_length,pos,readall)); }
+#endif /* GUARD_DEEMON_CXX_FILE_H */
+
 
 inline string object::doc() const { return inherit(DeeObject_Doc(*this)); }
 inline string object::str() const { return inherit(DeeObject_Str(*this)); }

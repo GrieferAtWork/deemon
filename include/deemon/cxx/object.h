@@ -79,8 +79,14 @@ inline unsigned int DCALL throw_if_negative(int x) { if unlikely(x < 0) throw_la
 #if __SIZEOF_SIZE_T__ != __SIZEOF_INT__
 inline size_t DCALL throw_if_negative(dssize_t x) { if unlikely(x < 0) throw_last_deemon_exception(); return (size_t)x; }
 #endif
+#if __SIZEOF_SIZE_T__ != 8 && __SIZEOF_INT__ != 8
+inline dpos_t DCALL throw_if_negative(doff_t x) { if unlikely(x < 0) throw_last_deemon_exception(); return (dpos_t)x; }
+#endif
 inline unsigned int DCALL throw_if_nonzero(int x) { if unlikely(x != 0) throw_last_deemon_exception(); return (unsigned int)x; }
 inline size_t DCALL throw_if_minusone(size_t x) { if unlikely(x == (size_t)-1) throw_last_deemon_exception(); return x; }
+#if __SIZEOF_SIZE_T__ != 8
+inline dpos_t DCALL throw_if_minusone(dpos_t x) { if unlikely(x == (dpos_t)-1) throw_last_deemon_exception(); return x; }
+#endif
 
 #define DEFINE_OBJECT_WRAPPER(name) \
 class name { \

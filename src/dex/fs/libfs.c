@@ -82,14 +82,13 @@ fs_copyfile(DeeObject *__restrict existing_file,
  if unlikely(!buffer) goto err_dst;
  if (!DeeNone_Check(progress_callback)) {
   /* Determine the full size of the source data stream. */
-  file_size = (dpos_t)DeeFile_GetSize(src);
-  if unlikely((doff_t)file_size < 0) {
+  file_size = DeeFile_GetSize(src);
+  if unlikely(file_size == (dpos_t)-1) {
    /* Failed to determine stream size.
     * If this is because the source stream doesn't implement
     * seeking, ignore the error and proceed to copy file data. */
    if (!DeeError_Catch(&DeeError_NotImplemented))
         goto err_dst;
-   file_size = (dpos_t)-1;
   }
  }
  for (;;) {

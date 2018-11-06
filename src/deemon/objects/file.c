@@ -753,7 +753,7 @@ PRIVATE int DCALL print_sp(DeeObject *__restrict self) {
 }
 
 PUBLIC int DCALL
-DeeFile_PrintLn(DeeObject *__restrict self) {
+DeeFile_PrintNl(DeeObject *__restrict self) {
  dssize_t result = DeeFile_WriteAll(self,"\n",sizeof(char));
  return unlikely(result < 0) ? (int)result : 0;
 }
@@ -777,7 +777,7 @@ PUBLIC int DCALL
 DeeFile_PrintObjectNl(DeeObject *__restrict self,
                       DeeObject *__restrict ob) {
  if unlikely(print_ob_str(self,ob)) return -1;
- return DeeFile_PrintLn(self);
+ return DeeFile_PrintNl(self);
 }
 PUBLIC int DCALL
 DeeFile_PrintAll(DeeObject *__restrict self,
@@ -863,7 +863,7 @@ PUBLIC int DCALL
 DeeFile_PrintAllNl(DeeObject *__restrict self,
                    DeeObject *__restrict ob) {
  if unlikely(DeeFile_PrintAll(self,ob)) return -1;
- return DeeFile_PrintLn(self);
+ return DeeFile_PrintNl(self);
 }
 
 
@@ -881,21 +881,6 @@ DeeFile_Printf(DeeObject *__restrict self,
  va_start(args,format);
  result = DeeFile_VPrintf(self,format,args);
  va_end(args);
- return result;
-}
-
-PUBLIC int DCALL
-DeeFile_ProcessMode(char const *__restrict text) {
- int result;
- ASSERT(text);
- for (;;) {
-  char ch = *text++;
-  /* */if (ch == 'w') result = OPEN_FWRONLY|OPEN_FCREAT|OPEN_FTRUNC;
-  else if (ch == 'r') result = OPEN_FRDONLY;
-  else if (ch == '+') result = (result&~(OPEN_FACCMODE|OPEN_FTRUNC))|OPEN_FRDWR;
-  else if (!ch) break;
-  else { /* TODO: Error Invalid mode string. */ }
- }
  return result;
 }
 
@@ -1208,9 +1193,16 @@ PRIVATE struct type_method file_class_methods[] = {
 };
 
 
+#ifdef DEE_STDDBG_IS_UNIQUE
+#define DEE_STDCNT 4
+PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] =
+    { ITER_DONE, ITER_DONE, ITER_DONE, ITER_DONE };
+#else
 #define DEE_STDCNT 3
 PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] =
     { ITER_DONE, ITER_DONE, ITER_DONE };
+#endif
+
 #ifndef CONFIG_NO_THREADS
 PRIVATE DEFINE_RWLOCK(dee_std_lock);
 #endif
@@ -1219,6 +1211,10 @@ PRIVATE uint16_t const std_buffer_modes[DEE_STDCNT] = {
     /* [DEE_STDIN ] = */FILE_BUFFER_MODE_AUTO|FILE_BUFFER_FREADONLY,
     /* [DEE_STDOUT] = */FILE_BUFFER_MODE_AUTO,
     /* [DEE_STDERR] = */FILE_BUFFER_MODE_AUTO
+#ifdef DEE_STDDBG_IS_UNIQUE
+    ,
+    /* [DEE_STDDBG] = */FILE_BUFFER_MODE_AUTO
+#endif
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -1519,7 +1515,15 @@ PRIVATE struct type_member file_class_members[] = {
     TYPE_MEMBER_END
 };
 
-PUBLIC doff_t DCALL
+/* Returns the total size of a given file stream.
+ * If the file doesn't support retrieval of its
+ * size, a NotImplemented error is thrown.
+ * NOTE: This function is equivalent to calling a member function `size()',
+ *       which file objects default-implement by temporarily seeking to the
+ *       end of the file and determining where that position is located at.
+ * @return: * : The size of the given file `self' in bytes.
+ * @return: -1: An error occurred. */
+PUBLIC dpos_t DCALL
 DeeFile_GetSize(DeeObject *__restrict self) {
  DREF DeeObject *result;
  result = DeeObject_CallAttr(self,&str_size,0,NULL);
@@ -1529,13 +1533,13 @@ DeeFile_GetSize(DeeObject *__restrict self) {
   Dee_Decref(result);
   if unlikely(error) goto err;
   /* Ensure that the file isn't too large. */
-  if unlikely((doff_t)resval < 0) {
+  if unlikely(resval == (dpos_t)-1) {
    DeeError_Throwf(&DeeError_ValueError,
                    "Failed %k is too large (%I64u is bigger than 2^63 bytes)",
                    self,resval);
    goto err;
   }
-  return (doff_t)resval;
+  return resval;
  }
  /* Failed to call the size() member function. */
  if (DeeFileType_CheckExact(Dee_TYPE(self)) &&
@@ -1545,7 +1549,7 @@ DeeFile_GetSize(DeeObject *__restrict self) {
                              FILE_OPERATOR_SEEK);
  }
 err:
- return -1;
+ return (dpos_t)-1;
 }
 
 

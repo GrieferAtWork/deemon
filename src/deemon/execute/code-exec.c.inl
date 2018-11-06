@@ -2456,7 +2456,7 @@ do_function_c:
      stream = DeeFile_GetStd(DEE_STDOUT);
      if unlikely(!stream)
         HANDLE_EXCEPT();
-     error = DeeFile_PrintLn(stream);
+     error = DeeFile_PrintNl(stream);
      Dee_Decref(stream);
      if unlikely(error)
         HANDLE_EXCEPT();
@@ -2506,7 +2506,7 @@ do_function_c:
  }
 
  TARGET(ASM_FPRINTNL,-1,+1) {
-     if unlikely(DeeFile_PrintLn(FIRST))
+     if unlikely(DeeFile_PrintNl(FIRST))
         HANDLE_EXCEPT();
      DISPATCH();
  }
