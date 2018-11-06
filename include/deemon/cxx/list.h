@@ -27,7 +27,7 @@
 
 DEE_CXX_BEGIN
 
-template<class T = any> class list;
+template<class T = object> class list;
 
 template<class T>
 class list: public sequence<T> {

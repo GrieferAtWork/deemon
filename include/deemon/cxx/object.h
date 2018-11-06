@@ -26,6 +26,8 @@
 #include "../none.h"
 #include "../error.h"
 #include "../int.h"
+#include "../float.h"
+#include "../string.h"
 
 #include <exception>
 #include <type_traits>
@@ -130,13 +132,12 @@ inline WUNUSED NONNULL((1)) obj_inherited DCALL inherit(obj_inherited ptr) { ret
 inline WUNUSED NONNULL((1)) obj_nonnull_inherited DCALL inherit(obj_nonnull ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
 inline WUNUSED NONNULL((1)) obj_nonnull_inherited DCALL inherit(obj_nonnull_inherited ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
 
-class any;
 class object;
 class string;
-template<class T = any> class type;
-template<class T = any> class iterator;
-template<class T = any> class sequence;
-template<class T = any> class tuple;
+template<class T = object> class type;
+template<class T = object> class iterator;
+template<class T = object> class sequence;
+template<class T = object> class tuple;
 template<class Prototype> class function;
 class int_;
 class float_;
@@ -148,7 +149,7 @@ protected:
     DREF DeeObject *m_ptr; /* [1..1][lock(CALLER)] The represented object. */
 public:
 #define DEFINE_OBJECT_CONSTRUCTORS(T,superT) \
-    T(T &&right) DEE_CXX_NOTHROW: superT(std::move(right)) { } \
+    T(T &&right) DEE_CXX_NOTHROW: superT(std::move((superT &)right)) { } \
     T(T const &right) DEE_CXX_NOTHROW: superT(right) { } \
     T(DeeObject *obj) DEE_CXX_NOTHROW: superT(obj) { } \
     T(obj_nonnull obj) DEE_CXX_NOTHROW: superT(obj) { } \
@@ -156,7 +157,7 @@ public:
     T(obj_inherited obj) DEE_CXX_NOTHROW: superT(obj) { } \
     T(obj_nonnull_inherited obj) DEE_CXX_NOTHROW: superT(obj) { } \
     T(obj_maybenull_inherited obj) DEE_CXX_NOTHROW: superT(obj) { } \
-    T &operator = (T &&right) { superT::operator = (std::move(right)); return *this; } \
+    T &operator = (T &&right) { superT::operator = (std::move((superT &)right)); return *this; } \
     T &operator = (T const &right) { superT::operator = (right); return *this; } \
     T copy() const { return inherit(DeeObject_Copy(*this)); } \
     T deepcopy() const { return inherit(DeeObject_DeepCopy(*this)); } \
@@ -250,7 +251,89 @@ public:
     }
 };
 
-}
+
+class any_convertible_base {
+public:
+    typedef int available;
+};
+template<class T, bool C> class any_convertible_cc;
+template<class T> class any_convertible_cc<T,true>: public any_convertible_base {
+public:
+    static DREF DeeObject *convert(T const &value) {
+        return (DREF DeeObject *)value;
+    }
+};
+template<class T> class any_convertible: public any_convertible_cc<T,std::is_convertible<T,DeeObject *>::value> { };
+
+template<> class any_convertible<char>: public any_convertible_base { public: static DREF DeeObject *convert(char value) { return DeeInt_NewChar(value); } };
+template<> class any_convertible<signed char>: public any_convertible_base { public: static DREF DeeObject *convert(signed char value) { return DeeInt_NewSChar(value); } };
+template<> class any_convertible<unsigned char>: public any_convertible_base { public: static DREF DeeObject *convert(unsigned char value) { return DeeInt_NewUChar(value); } };
+template<> class any_convertible<short>: public any_convertible_base { public: static DREF DeeObject *convert(short value) { return DeeInt_NewShort(value); } };
+template<> class any_convertible<unsigned short>: public any_convertible_base { public: static DREF DeeObject *convert(unsigned short value) { return DeeInt_NewUShort(value); } };
+template<> class any_convertible<int>: public any_convertible_base { public: static DREF DeeObject *convert(int value) { return DeeInt_NewInt(value); } };
+template<> class any_convertible<unsigned int>: public any_convertible_base { public: static DREF DeeObject *convert(unsigned int value) { return DeeInt_NewUInt(value); } };
+template<> class any_convertible<long>: public any_convertible_base { public: static DREF DeeObject *convert(long value) { return DeeInt_NewLong(value); } };
+template<> class any_convertible<unsigned long>: public any_convertible_base { public: static DREF DeeObject *convert(unsigned long value) { return DeeInt_NewULong(value); } };
+#ifdef __COMPILER_HAVE_LONGLONG
+template<> class any_convertible<long long>: public any_convertible_base { public: static DREF DeeObject *convert(long value) { return DeeInt_NewLLong(value); } };
+template<> class any_convertible<unsigned long long>: public any_convertible_base { public: static DREF DeeObject *convert(unsigned long value) { return DeeInt_NewULLong(value); } };
+#endif /* __COMPILER_HAVE_LONGLONG */                                                                            
+template<> class any_convertible<dint128_t>: public any_convertible_base { public: static DREF DeeObject *convert(dint128_t value) { return DeeInt_NewS128(value); } };
+template<> class any_convertible<duint128_t>: public any_convertible_base { public: static DREF DeeObject *convert(duint128_t value) { return DeeInt_NewU128(value); } };
+template<> class any_convertible<float>: public any_convertible_base { public: static DREF DeeObject *convert(float value) { return DeeFloat_New((double)value); } };
+template<> class any_convertible<double>: public any_convertible_base { public: static DREF DeeObject *convert(double value) { return DeeFloat_New(value); } };
+template<> class any_convertible<long double>: public any_convertible_base { public: static DREF DeeObject *convert(long double value) { return DeeFloat_New((double)value); } };
+template<> class any_convertible</*utf-8*/char const *>: public any_convertible_base { public: static DREF DeeObject *convert(/*utf-8*/char const *__restrict value) { return DeeString_NewUtf8(value,strlen(value),STRING_ERROR_FSTRICT); } };
+#ifdef CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T
+template<> class any_convertible</*wide*/dwchar_t const *>: public any_convertible_base { public: static DREF DeeObject *convert(/*wide*/dwchar_t const *__restrict value) { return DeeString_NewWide(value,wcslen(value),STRING_ERROR_FSTRICT); } };
+#endif
+#undef DEFINE_CONVERTIBLE
+template<size_t sz>
+class any_convertible<char const[sz]>: public any_convertible_base {
+public:
+    static DREF DeeObject *convert(/*utf-8*/char const (&value)[sz]) {
+        return DeeString_NewUtf8(value,sz - 1,STRING_ERROR_FSTRICT);
+    }
+};
+template<size_t sz> class any_convertible<char[sz]>: public any_convertible<char const[sz]> { };
+#ifdef CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T
+template<size_t sz>
+class any_convertible<dwchar_t const[sz]>: public any_convertible_base {
+public:
+    static DREF DeeObject *convert(/*utf-8*/dwchar_t const (&value)[sz]) {
+        return DeeString_NewWide(value,sz - 1,STRING_ERROR_FSTRICT);
+    }
+};
+template<size_t sz> class any_convertible<dwchar_t[sz]>: public any_convertible<dwchar_t const[sz]> { };
+#endif
+
+template<class T>
+class any_convertible<std::initializer_list<T> > {
+public:
+    typedef typename any_convertible<T>::available available;
+    static DREF DeeObject *convert(std::initializer_list<T> const &values) {
+        DREF DeeObject *result;
+        T const *elem = values.begin();
+        size_t i = 0,size = values.size();
+        result = throw_if_null(DeeTuple_NewUninitialized(size));
+        try {
+            for (; i < size; ++i) {
+                DREF DeeObject *temp;
+                temp = any_convertible<T>::convert(elem[i]);
+                DeeTuple_SET(result,i,temp);
+            }
+        } catch (...) {
+            while (i--)
+                Dee_Decref(DeeTuple_GET(result,i));
+            DeeTuple_FreeUninitialized(result);
+            throw;
+        }
+        return result;
+    }
+};
+
+} /* namespace intern... */
+
 
 
 
@@ -415,6 +498,10 @@ class object: public detail::object_base {
         range_proxy_ii const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetRangeIndex(m_ptr,m_bgn,m_end,value)); return *this; }
     };
 public:
+    template<class T> object(T const &init, typename detail::any_convertible<T>::available* =0)
+        : object_base(inherit(detail::any_convertible<T>::convert(init))) { }
+    template<class T> object(std::initializer_list<T> const &init, typename detail::any_convertible<std::initializer_list<T> >::available* =0)
+        : object_base(inherit(detail::any_convertible<std::initializer_list<T> >::convert(init))) { }
     DEFINE_OBJECT_CONSTRUCTORS(object,object_base)
     attr_proxy_obj attr(obj_string name) const { return attr_proxy_obj(*this,name); }
     attr_proxy_str attr(char const *__restrict name) const { return attr_proxy_str(*this,name); }

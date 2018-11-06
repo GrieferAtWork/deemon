@@ -315,10 +315,10 @@
     <ClInclude Include="..\include\deemon\cxx\function.h">
       <Filter>include\deemon\cxx</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\any.h">
+    <ClInclude Include="..\include\deemon\cxx\float.h">
       <Filter>include\deemon\cxx</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\float.h">
+    <ClInclude Include="..\include\deemon\cxx\file.h">
       <Filter>include\deemon\cxx</Filter>
     </ClInclude>
   </ItemGroup>
