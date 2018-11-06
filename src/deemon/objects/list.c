@@ -1392,7 +1392,7 @@ done:
  return result;
 }
 
-PUBLIC int DCALL
+PRIVATE int DCALL
 list_delrange_i(List *__restrict self,
                 dssize_t start,
                 dssize_t end) {
@@ -1445,7 +1445,7 @@ done_noop:
  goto done;
 }
 
-PUBLIC int DCALL
+PRIVATE int DCALL
 list_delrange_in(List *__restrict self,
                  dssize_t start) {
  DREF DeeObject **delobv; size_t count;
@@ -1488,7 +1488,7 @@ done_noop:
  goto done;
 }
 
-PUBLIC int DCALL
+PRIVATE int DCALL
 list_setrange_fast_i(List *__restrict self,
                      dssize_t start, dssize_t end,
                      DeeObject *__restrict items,
@@ -1587,7 +1587,7 @@ err:
  return -1;
 }
 
-PUBLIC int DCALL
+PRIVATE int DCALL
 list_setrange_fast_in(List *__restrict self,
                       dssize_t start,
                       DeeObject *__restrict items,
@@ -1675,7 +1675,7 @@ err:
  return -1;
 }
 
-PUBLIC int DCALL
+PRIVATE int DCALL
 list_setrange_i(List *__restrict self,
                 dssize_t start, dssize_t end,
                 DeeObject *__restrict items) {
@@ -1806,7 +1806,7 @@ err:
  return -1;
 }
 
-PUBLIC int DCALL
+PRIVATE int DCALL
 list_setrange_in(List *__restrict self,
                  dssize_t start,
                  DeeObject *__restrict items) {
@@ -1928,7 +1928,7 @@ err:
 
 
 
-PUBLIC int DCALL
+PRIVATE int DCALL
 list_delrange(List *__restrict self,
               DeeObject *__restrict start_ob,
               DeeObject *__restrict end_ob) {
@@ -1944,7 +1944,7 @@ err:
  return -1;
 }
 
-PUBLIC int DCALL
+PRIVATE int DCALL
 list_setrange(List *__restrict self,
               DeeObject *__restrict start_ob,
               DeeObject *__restrict end_ob,

@@ -3214,7 +3214,7 @@ again:
  return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PRIVATE DREF DeeObject *DCALL
 type_get_module(DeeTypeObject *__restrict self) {
  DREF DeeObject *result;
  result = DeeType_GetModule(self);
@@ -3222,7 +3222,7 @@ type_get_module(DeeTypeObject *__restrict self) {
  return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PRIVATE DREF DeeObject *DCALL
 type_get_instancesize(DeeTypeObject *__restrict self) {
  if (self->tp_flags & TP_FVARIABLE)
      goto retnone;

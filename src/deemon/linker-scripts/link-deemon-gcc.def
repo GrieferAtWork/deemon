@@ -688,14 +688,6 @@ EXPORTS
 	_hash_ptrl@8=hash_ptrl@8
 	_hash_ptrw@8=hash_ptrw@8
 	_hash_str@4=hash_str@4
-	_list_delrange@12=list_delrange@12
-	_list_delrange_i@12=list_delrange_i@12
-	_list_delrange_in@8=list_delrange_in@8
-	_list_setrange@16=list_setrange@16
-	_list_setrange_fast_i@20=list_setrange_fast_i@20
-	_list_setrange_fast_in@16=list_setrange_fast_in@16
-	_list_setrange_i@16=list_setrange_i@16
-	_list_setrange_in@12=list_setrange_in@12
 	_nt_CreateFile@28=nt_CreateFile@28
 	_nt_FixUncPath@4=nt_FixUncPath@4
 	_nt_GetFilenameOfHandle@4=nt_GetFilenameOfHandle@4
@@ -707,8 +699,6 @@ EXPORTS
 	_string_utf_alloc@0=string_utf_alloc@0
 	_string_utf_alloc_d@8=string_utf_alloc_d@8
 	_string_utf_free@4=string_utf_free@4
-	_type_get_instancesize@4=type_get_instancesize@4
-	_type_get_module@4=type_get_module@4
 	_unicode_printer_alloc_utf16@8=unicode_printer_alloc_utf16@8
 	_unicode_printer_alloc_utf32@8=unicode_printer_alloc_utf32@8
 	_unicode_printer_alloc_utf8@8=unicode_printer_alloc_utf8@8
