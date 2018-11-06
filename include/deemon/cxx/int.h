@@ -27,6 +27,10 @@ DEE_CXX_BEGIN
 
 class int_: public object {
 public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeInt_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeInt_Check(ob); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeInt_CheckExact(ob); }
+public:
     DEFINE_OBJECT_CONSTRUCTORS(int_,object)
     int_() DEE_CXX_NOTHROW: object(nonnull((DeeObject *)&DeeInt_Zero)) { }
     int_(char value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewChar(value))) { }

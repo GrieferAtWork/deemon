@@ -48,6 +48,7 @@
     <ClInclude Include="..\include\deemon\cxx\object.h" />
     <ClInclude Include="..\include\deemon\cxx\sequence.h" />
     <ClInclude Include="..\include\deemon\cxx\string.h" />
+    <ClInclude Include="..\include\deemon\cxx\super.h" />
     <ClInclude Include="..\include\deemon\cxx\tuple.h" />
     <ClInclude Include="..\include\deemon\cxx\type.h" />
     <ClInclude Include="..\include\deemon\dec.h" />

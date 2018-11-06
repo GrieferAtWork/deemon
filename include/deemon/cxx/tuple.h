@@ -30,6 +30,10 @@ DEE_CXX_BEGIN
 template<class T>
 class tuple: public sequence<T> {
 public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeTuple_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeTuple_Check(ob); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeTuple_CheckExact(ob); }
+public:
     tuple() DEE_CXX_NOTHROW: sequence(nonnull(Dee_EmptyTuple)) { }
     tuple(std::initializer_list<T> const &items): sequence(inherit(DeeTuple_NewVector(items.size(),(DeeObject **)items.begin()))) { }
     tuple(std::initializer_list<DeeObject *> const &items): sequence(inherit(DeeTuple_NewVector(items.size(),items.begin()))) { }

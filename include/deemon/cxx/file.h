@@ -30,6 +30,10 @@ DEE_CXX_BEGIN
 
 class file: public object {
 public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return (DeeTypeObject *)&DeeFile_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeFile_Check(ob); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeFile_CheckExact(ob); }
+public:
     class buffer;
     class writer;
 public:
@@ -129,6 +133,10 @@ public:
 
 class file::buffer: public file {
 public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return (DeeTypeObject *)&DeeFileBuffer_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOf(ob,(DeeTypeObject *)&DeeFileBuffer_Type); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOfExact(ob,(DeeTypeObject *)&DeeFileBuffer_Type); }
+public:
     DEFINE_OBJECT_CONSTRUCTORS(buffer,file)
     buffer(DeeObject *__restrict file, uint16_t mode, size_t size): file(inherit(DeeFileBuffer_New(file,mode,size))) {}
     void setmode(uint16_t mode, size_t size) { throw_if_nonzero(DeeFileBuffer_SetMode(*this,mode,size)); }
@@ -136,6 +144,10 @@ public:
 };
 
 class file::writer: public file {
+public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return (DeeTypeObject *)&DeeFileWriter_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOf(ob,(DeeTypeObject *)&DeeFileWriter_Type); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOfExact(ob,(DeeTypeObject *)&DeeFileWriter_Type); }
 public:
     writer(): file(inherit(DeeFile_OpenWriter())) {}
     DEFINE_OBJECT_CONSTRUCTORS(writer,file)

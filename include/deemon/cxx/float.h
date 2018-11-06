@@ -27,6 +27,10 @@ DEE_CXX_BEGIN
 
 class float_: public object {
 public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeFloat_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeFloat_Check(ob); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeFloat_CheckExact(ob); }
+public:
     DEFINE_OBJECT_CONSTRUCTORS(float_,object)
     float_(): object(inherit(DeeFloat_New(0.0))) {}
     float_(float value): object(inherit(DeeFloat_New((double)value))) {}

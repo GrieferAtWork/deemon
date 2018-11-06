@@ -29,6 +29,10 @@ DEE_CXX_BEGIN
 namespace detail {
 class sequence_base: public object {
 public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeSeq_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOf(ob,&DeeSeq_Type); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOfExact(ob,&DeeSeq_Type); }
+public:
     DEFINE_OBJECT_CONSTRUCTORS(sequence_base,object)
     operator obj_sequence() const { return obj_sequence(this->ptr()); }
     bool ismutable() const { return object(inherit(DeeObject_GetAttrString(*this,"ismutable"))).bool_(); }

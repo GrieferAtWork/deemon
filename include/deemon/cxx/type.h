@@ -27,6 +27,10 @@ DEE_CXX_BEGIN
 namespace detail {
 class type_base: public object {
 public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeType_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeType_Check(ob); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeType_CheckExact(ob); }
+public:
     type_base(DeeTypeObject *obj): object((DeeObject *)obj) {}
     DEFINE_OBJECT_CONSTRUCTORS(type_base,object)
     WUNUSED operator DeeTypeObject *() const DEE_CXX_NOTHROW { return (DeeTypeObject *)this->m_ptr; }
@@ -58,6 +62,14 @@ public: /* type_ from deemon */
 inline WUNUSED NONNULL((1)) obj_nonnull DCALL nonnull(DeeTypeObject *__restrict ptr) { return obj_nonnull((DeeObject *)ptr); }
 inline WUNUSED NONNULL((1)) obj_maybenull DCALL maybenull(DeeTypeObject *ptr) { return obj_maybenull((DeeObject *)ptr); }
 inline WUNUSED NONNULL((1)) obj_inherited DCALL inherit(DeeTypeObject *__restrict ptr) { return obj_inherited((DeeObject *)ptr); }
+
+#ifdef GUARD_DEEMON_CXX_SUPER_H
+inline deemon::type<object> super::supertype() const {
+    if (DeeSuper_CheckExact(this->ptr()))
+        return nonnull(DeeSuper_TYPE(this->ptr()));
+    return nonnull(Dee_TYPE(this->ptr()));
+}
+#endif /* GUARD_DEEMON_CXX_SUPER_H */
 
 inline deemon::type<object> object::type() const { return nonnull(Dee_TYPE((DeeObject *)*this)); }
 inline deemon::type<object> object::class_() const { return nonnull(DeeObject_Class(*this)); }

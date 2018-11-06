@@ -140,6 +140,7 @@ inline WUNUSED NONNULL((1)) obj_nonnull_inherited DCALL inherit(obj_nonnull_inhe
 
 class object;
 class string;
+class super;
 template<class T = object> class type;
 template<class T = object> class iterator;
 template<class T = object> class sequence;
@@ -508,6 +509,10 @@ class object: public detail::object_base {
         range_proxy_ii const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetRangeIndex(m_ptr,m_bgn,m_end,value)); return *this; }
     };
 public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeObject_Type; }
+    static bool check(DeeObject *__restrict UNUSED(ob)) DEE_CXX_NOTHROW { return true; }
+    static bool checkexact(DeeObject *__restrict UNUSED(ob)) DEE_CXX_NOTHROW { return true; }
+public:
     template<class T> object(T const &init, typename detail::any_convertible<T>::available* =0)
         : object_base(inherit(detail::any_convertible<T>::convert(init))) { }
     template<class T> object(std::initializer_list<T> const &init, typename detail::any_convertible<std::initializer_list<T> >::available* =0)
@@ -617,6 +622,9 @@ public:
     string doc() const;
     string str() const;
     string repr() const;
+    deemon::super super() const;
+    deemon::super super(DeeTypeObject *__restrict super_type) const;
+    template<class T = object> deemon::super super() const;
     deemon::type<object> type() const;
     deemon::type<object> class_() const;
     int_ int_() const;
@@ -845,6 +853,10 @@ public:
 
 
 class bool_: public object {
+public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeBool_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeBool_Check(ob); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeBool_CheckExact(ob); }
 public:
     DEFINE_OBJECT_CONSTRUCTORS(bool_,object)
     bool_() DEE_CXX_NOTHROW: object(nonnull(Dee_False)) { }

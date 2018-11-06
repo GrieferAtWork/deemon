@@ -32,6 +32,10 @@ template<class T = object> class list;
 template<class T>
 class list: public sequence<T> {
 public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeList_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeList_Check(ob); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeList_CheckExact(ob); }
+public:
     list(): sequence(nonnull(DeeList_New())) { }
     list(std::initializer_list<T> const &items): sequence(inherit(DeeList_NewVector(items.size(),(DeeObject **)items.begin()))) { }
     list(std::initializer_list<DeeObject *> const &items): sequence(inherit(DeeList_NewVector(items.size(),items.begin()))) { }

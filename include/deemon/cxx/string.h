@@ -36,6 +36,10 @@ DEE_CXX_BEGIN
 
 
 class string: public sequence<string> {
+public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeString_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeString_Check(ob); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeString_CheckExact(ob); }
 public: /* string from deemon */
     DEFINE_OBJECT_CONSTRUCTORS(string,sequence)
     string() DEE_CXX_NOTHROW: sequence(nonnull(Dee_EmptyString)) { }

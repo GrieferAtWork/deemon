@@ -56,29 +56,34 @@ DeeSuper_New(DeeTypeObject *__restrict tp_self,
  if (tp_self == (DeeTypeObject *)Dee_None)
      tp_self = &DeeNone_Type;
  if (DeeObject_AssertType((DeeObject *)tp_self,&DeeType_Type))
-     return NULL;
+     goto err;
  if (DeeSuper_Check(self)) {
   if unlikely(!DeeType_IsGeneric(tp_self) &&
-              !DeeType_IsInherited(DeeSuper_TYPE(self),tp_self)) {
-   err_unexpected_type(self,tp_self);
-   return NULL;
-  }
+              !DeeType_IsInherited(DeeSuper_TYPE(self),tp_self))
+     goto err_badtype;
   self = DeeSuper_SELF(self);
  } else {
-  if (!DeeType_IsGeneric(tp_self) && DeeObject_AssertType(self,tp_self))
-      return NULL;
+  if unlikely(!DeeType_IsGeneric(tp_self) &&
+               DeeObject_AssertType(self,tp_self))
+     goto err;
  }
  ASSERT(!DeeSuper_Check(self));
  /* Allocate + construct a new super-object. */
  result = super_alloc();
- if unlikely(!result) return NULL;
+ if unlikely(!result)
+    goto err;
  DeeObject_Init(result,&DeeSuper_Type);
  result->s_type = tp_self;
  result->s_self = self;
  Dee_Incref(tp_self);
  Dee_Incref(self);
  return (DREF DeeObject *)result;
+err_badtype:
+ err_unexpected_type(self,tp_self);
+err:
+ return NULL;
 }
+
 PUBLIC DREF DeeObject *DCALL
 DeeSuper_Of(DeeObject *__restrict self) {
  DeeTypeObject *base;

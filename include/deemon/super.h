@@ -42,7 +42,7 @@ struct super_object {
 
 DDATDEF DeeTypeObject DeeSuper_Type;
 #define DeeSuper_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeSuper_Type) /* `super' is `final' */
-#define DeeSuper_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeSuper_Type) /* `super' is `final' */
+#define DeeSuper_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeSuper_Type)
 
 /* Create a new super-wrapper for `tp_self:self'.
  * NOTE: This function automatically checks the given operands for validity:
