@@ -1822,7 +1822,9 @@ PRIVATE struct type_getset ftype_getsets[] = {
 
 PRIVATE struct type_member ftype_members[] = {
     TYPE_MEMBER_CONST_DOC("isfunction",Dee_True,DOC_GET(isfunction_doc)),
+#ifndef CONFIG_NO_CFUNCTION
     TYPE_MEMBER_FIELD("base",STRUCT_OBJECT,offsetof(DeeCFunctionTypeObject,ft_orig)),
+#endif /* !CONFIG_NO_CFUNCTION */
     TYPE_MEMBER_END
 };
 
