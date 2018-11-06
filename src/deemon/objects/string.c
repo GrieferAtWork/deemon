@@ -509,7 +509,7 @@ string_fini(String *__restrict self) {
  /* Clean up UTF data. */
  if ((utf = self->s_data) != NULL) {
   string_utf_fini(utf,self);
-  Dee_Free(utf);
+  string_utf_free(utf);
  }
 }
 

@@ -37,8 +37,8 @@ struct system_file_object {
 #ifdef CONFIG_HOST_WINDOWS
     DREF DeeObject *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename of this systemfile. */
     /*HANDLE*/void *sf_handle;     /* [0..1] Underlying file handle.
-                                    *       - STD handles are set to `NULL' before being initialized.
-                                    *       - Closed handlers are set to `INVALID_HANDLE_VALUE' */
+                                    *      - STD handles are set to `NULL' before being initialized.
+                                    *      - Closed handlers are set to `INVALID_HANDLE_VALUE' */
     /*HANDLE*/void *sf_ownhandle;  /* [0..1] The owned file handle. */
     uint32_t        sf_filetype;   /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not loaded. */
     unsigned char   sf_pendingc;   /* Number of write-pending characters (for UTF-8 console output). */
@@ -66,26 +66,26 @@ struct file_buffer_object {
     recursive_rwlock_t          fb_lock;  /* Lock for synchronizing access to the buffer. */
 #endif
     DREF DeeObject             *fb_file;  /* [0..1][lock(fb_lock)] The file referenced by this buffer.
-                                           *  NOTE: Set to `NULL' when the buffer is closed. */
+                                           * NOTE: Set to `NULL' when the buffer is closed. */
     uint8_t                    *fb_ptr;   /* [>= fb_base][+fb_cnt <= fb_base+fb_size][lock(fb_lock)]
-                                           *  Pointer to the next character to-be read/written.
-                                           *  The absolute in-file position is then `fb_fblk+(fb_ptr-fb_base)' */
+                                           * Pointer to the next character to-be read/written.
+                                           * The absolute in-file position is then `fb_fblk+(fb_ptr-fb_base)' */
     size_t                      fb_cnt;   /* [lock(fb_lock)] The amount of unread, buffered bytes located at `fb_ptr'. */
     uint8_t                    *fb_chng;  /* [>= fb_base][+fb_chsz <= fb_base+fb_size]
                                            * [valid_if(fb_chsz != 0)][lock(fb_lock)]
-                                           *  Pointer to the first character that was
-                                           *  changed since the buffer had been loaded. */
+                                           * Pointer to the first character that was
+                                           * changed since the buffer had been loaded. */
     size_t                      fb_chsz;  /* [lock(fb_lock)] Amount of bytes that were changed. */
     uint8_t                    *fb_base;  /* [0..fb_size][owned_if(!FILE_BUFFER_FSTATICBUF)][lock(fb_lock)] Allocated buffer.
-                                           *  NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
+                                           * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
     size_t                      fb_size;  /* [lock(fb_lock)] Total allocated / available buffer size.
-                                           *  NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
+                                           * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
     struct file_buffer_link     fb_ttych; /* Chain of changed TTY file buffers (buffers that are used with an interactive file).
-                                           *  Any buffer that is connected to an interactive device is flushed before
-                                           *  data is read from any other interactive device.
-                                           *  This chain is weakly linked in that buffer objects remove themself
-                                           *  before destruction, also meaning that any buffer contained in this
-                                           *  chain may have a reference counter to ZERO(0). */
+                                           * Any buffer that is connected to an interactive device is flushed before
+                                           * data is read from any other interactive device.
+                                           * This chain is weakly linked in that buffer objects remove themself
+                                           * before destruction, also meaning that any buffer contained in this
+                                           * chain may have a reference counter to ZERO(0). */
     dpos_t                      fb_fblk;  /* The starting address of the data block currently stored in `fb_base'. */
     dpos_t                      fb_fpos;  /* The current (assumed) position within `fb_file'. */
 #define FILE_BUFFER_FNORMAL     0x0000    /* Normal buffer flags. */
@@ -100,7 +100,7 @@ struct file_buffer_object {
                                            * always up-to-date before data is read from one of them. */
 #define FILE_BUFFER_FSYNC       0x0008    /* Also synchronize the underlying file after flushing the buffer. */
 #define FILE_BUFFER_FCLOFILE    0x0010    /* When the buffer is closed through use of `operator close',
-                                           * also invoke `operator close' the associated file.
+                                           * also invoke `operator close' on the associated file.
                                            * However, when `close()' is never invoked on the buffer, its
                                            * destructor will _NOT_ invoke close on the underlying file. */
 #define FILE_BUFFER_FREADING    0x0800    /* The buffer is currently being read into and must not be changed or resized. */
@@ -113,7 +113,7 @@ struct file_buffer_object {
                                            * buffer from attempting to resize (realloc) it dynamically. */
 #define FILE_BUFFER_FLNIFTTY    0x8000    /* Automatically set/delete the `FILE_BUFFER_FLNBUF' and
                                            * `FILE_BUFFER_FISATTY' flags, and add/remove the file from
-                                           * `fb_ttys' the next this it comes into question. To determine
+                                           * `fb_ttys' the next time this comes into question. To determine
                                            * this, the pointed-to file is tested for being a TTY device
                                            * using `DeeFile_IsAtty(fb_file)'.
                                            * HINT: This flag is set for all newly created buffers by default. */

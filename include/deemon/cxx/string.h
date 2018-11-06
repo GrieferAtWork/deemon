@@ -639,6 +639,7 @@ inline string (file::filename)() const { return inherit(DeeFile_Filename(*this))
 inline string (file::readline)(size_t max_length, bool keep_lf) const { return inherit(DeeFile_ReadLine(*this,max_length,keep_lf)); }
 inline string (file::read)(size_t max_length, bool readall) const { return inherit(DeeFile_ReadText(*this,max_length,readall)); }
 inline string (file::pread)(dpos_t pos, size_t max_length, bool readall) const { return inherit(DeeFile_PReadText(*this,max_length,pos,readall)); }
+inline deemon::string (file::writer::string)() const { return inherit(DeeObject_InstanceOfExact(this->ptr(),(DeeTypeObject *)&DeeFileWriter_Type) ? DeeFileWriter_GetString(*this) : DeeObject_GetAttrString(*this,"string")); }
 #endif /* GUARD_DEEMON_CXX_FILE_H */
 
 

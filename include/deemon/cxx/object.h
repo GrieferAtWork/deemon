@@ -261,12 +261,16 @@ public:
 class any_convertible_base {
 public:
     typedef int available;
+    enum{exists = true};
 };
-template<class T, bool C> class any_convertible_cc;
+template<class T, bool C> class any_convertible_cc { enum{exists = false}; };
 template<class T> class any_convertible_cc<T,true>: public any_convertible_base {
 public:
     static DREF DeeObject *convert(T const &value) {
-        return (DREF DeeObject *)value;
+        DREF DeeObject *result;
+        result = (DREF DeeObject *)value;
+        Dee_Incref(result);
+        return result;
     }
 };
 template<class T> class any_convertible: public any_convertible_cc<T,std::is_convertible<T,DeeObject *>::value> { };

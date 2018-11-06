@@ -22,12 +22,16 @@
 #include "api.h"
 #include "object.h"
 #include "../file.h"
+#include "../filetypes.h"
 
 #include <stdarg.h>
 
 DEE_CXX_BEGIN
 
 class file: public object {
+public:
+    class buffer;
+    class writer;
 public:
     DEFINE_OBJECT_CONSTRUCTORS(file,object)
     size_t (read)(void *__restrict buffer, size_t bufsize) const { return throw_if_negative(DeeFile_Read(*this,buffer,bufsize)); }
@@ -78,8 +82,11 @@ public:
     void (printall)(DeeObject *__restrict seq) const { throw_if_nonzero(DeeFile_PrintAll(*this,seq)); }
     void (printallsp)(DeeObject *__restrict seq) const { throw_if_nonzero(DeeFile_PrintAllSp(*this,seq)); }
     void (printallnl)(DeeObject *__restrict seq) const { throw_if_nonzero(DeeFile_PrintAllNl(*this,seq)); }
-    WUNUSED file const &operator << (DeeObject *__restrict right) const { printobj(right); return *this; }
-    WUNUSED file const &operator << (object const &right) const { printobj(right); return *this; }
+    file const &operator << (DeeObject *__restrict right) const { printobj(right); return *this; }
+    file const &operator << (object const &right) const { printobj(right); return *this; }
+    template<class T> typename std::enable_if<detail::any_convertible<T>::exists,file>::type const &
+    operator << (T const &right) const { printobj(object(inherit(detail::any_convertible<T>::convert(right)))); return *this; }
+
     static file (stdin_)() { return inherit(DeeFile_GetStd(DEE_STDIN)); }
     static file (stdout_)() { return inherit(DeeFile_GetStd(DEE_STDOUT)); }
     static file (stderr_)() { return inherit(DeeFile_GetStd(DEE_STDERR)); }
@@ -112,6 +119,31 @@ public:
     static file (openfd)(dsysfd_t fd, /*String*/DeeObject *filename = NULL, int oflags = OPEN_FRDONLY, bool inherit_fd = true) {
         return inherit(DeeFile_OpenFd(fd,filename,oflags,inherit_fd));
     }
+    static file (open_object)(DeeObject *__restrict data_owner, void const *data, size_t data_size) {
+        return inherit(DeeFile_OpenObjectMemory(data_owner,data,data_size));
+    }
+    static file (open_object)(DeeObject *__restrict data_owner, dssize_t begin, dssize_t end) {
+        return inherit(DeeFile_OpenObjectBuffer(data_owner,begin,end));
+    }
+};
+
+class file::buffer: public file {
+public:
+    DEFINE_OBJECT_CONSTRUCTORS(buffer,file)
+    buffer(DeeObject *__restrict file, uint16_t mode, size_t size): file(inherit(DeeFileBuffer_New(file,mode,size))) {}
+    void setmode(uint16_t mode, size_t size) { throw_if_nonzero(DeeFileBuffer_SetMode(*this,mode,size)); }
+    static void sync_ttys() { throw_if_nonzero(DeeFileBuffer_SyncTTYs()); }
+};
+
+class file::writer: public file {
+public:
+    writer(): file(inherit(DeeFile_OpenWriter())) {}
+    DEFINE_OBJECT_CONSTRUCTORS(writer,file)
+    deemon::string (string)() const;
+    writer const &operator << (DeeObject *__restrict right) const { printobj(right); return *this; }
+    writer const &operator << (object const &right) const { printobj(right); return *this; }
+    template<class T> typename std::enable_if<detail::any_convertible<T>::exists,writer>::type const &
+    operator << (T const &right) const { printobj(object(inherit(detail::any_convertible<T>::convert(right)))); return *this; }
 };
 
 
@@ -156,6 +188,7 @@ inline string (file::filename)() const { return inherit(DeeFile_Filename(*this))
 inline string (file::readline)(size_t max_length, bool keep_lf) const { return inherit(DeeFile_ReadLine(*this,max_length,keep_lf)); }
 inline string (file::read)(size_t max_length, bool readall) const { return inherit(DeeFile_ReadText(*this,max_length,readall)); }
 inline string (file::pread)(dpos_t pos, size_t max_length, bool readall) const { return inherit(DeeFile_PReadText(*this,max_length,pos,readall)); }
+inline deemon::string (file::writer::string)() const { return inherit(DeeObject_InstanceOfExact(this->ptr(),(DeeTypeObject *)&DeeFileWriter_Type) ? DeeFileWriter_GetString(*this) : DeeObject_GetAttrString(*this,"string")); }
 #endif /* GUARD_DEEMON_CXX_STRING_H */
 
 DEE_CXX_END
