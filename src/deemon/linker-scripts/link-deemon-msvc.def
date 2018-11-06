@@ -707,7 +707,6 @@ EXPORTS
 	string_utf_alloc@0=_string_utf_alloc@0
 	string_utf_alloc_d@8=_string_utf_alloc_d@8
 	string_utf_free@4=_string_utf_free@4
-	tpp_string_printer_pack@4=_tpp_string_printer_pack@4
 	type_get_instancesize@4=_type_get_instancesize@4
 	type_get_module@4=_type_get_module@4
 	unicode_printer_alloc_utf16@8=_unicode_printer_alloc_utf16@8

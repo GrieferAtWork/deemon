@@ -321,7 +321,7 @@ tpp_string_printer_print(void *arg, char const *__restrict buf, size_t bufsize) 
  return (dssize_t)bufsize;
 }
 
-PUBLIC /*REF*/ struct TPPString *
+PRIVATE /*REF*/ struct TPPString *
 (TPPCALL tpp_string_printer_pack)(struct tpp_string_printer *__restrict self) {
  /*REF*/ struct TPPString *result = (struct TPPString *)self->sp_string;
  if unlikely(!result)
