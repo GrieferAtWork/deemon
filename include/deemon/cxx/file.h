@@ -137,8 +137,8 @@ public:
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOf(ob,(DeeTypeObject *)&DeeFileBuffer_Type); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOfExact(ob,(DeeTypeObject *)&DeeFileBuffer_Type); }
 public:
-    DEFINE_OBJECT_CONSTRUCTORS(buffer,file)
-    buffer(DeeObject *__restrict file, uint16_t mode, size_t size): file(inherit(DeeFileBuffer_New(file,mode,size))) {}
+    DEFINE_OBJECT_CONSTRUCTORS(buffer,deemon::file)
+    buffer(DeeObject *__restrict file, uint16_t mode, size_t size): deemon::file(inherit(DeeFileBuffer_New(file,mode,size))) {}
     void setmode(uint16_t mode, size_t size) { throw_if_nonzero(DeeFileBuffer_SetMode(*this,mode,size)); }
     static void sync_ttys() { throw_if_nonzero(DeeFileBuffer_SyncTTYs()); }
 };

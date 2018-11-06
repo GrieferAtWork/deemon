@@ -219,13 +219,19 @@ template<class T>
 class iterator: public object {
 public: /* iterator from deemon */
     DEFINE_OBJECT_CONSTRUCTORS(iterator,object)
-    T next() const { DREF DeeObject *result = throw_if_null(DeeObject_IterNext(*this)); if (result == ITER_DONE) result = NULL; return inherit(maybenull(result)); }
+    T next() const {
+        DREF DeeObject *result = throw_if_null(DeeObject_IterNext(*this));
+        if (result == ITER_DONE)
+            result = NULL;
+        return inherit(maybenull(result));
+    }
     sequence<T> seq() const { return inherit(DeeObject_GetAttrString(*this,"seq")); }
     sequence<T> future() const { return inherit(DeeObject_GetAttrString(*this,"future")); }
     sequence<T> pending() const { return inherit(DeeObject_GetAttrString(*this,"pending")); }
 };
 
 deemon::iterator<object> object::iter() const { return inherit(DeeObject_IterSelf(*this)); }
+template<class T> deemon::iterator<T> object::iter() const { return inherit(DeeObject_IterSelf(*this)); }
 
 
 template<class T>

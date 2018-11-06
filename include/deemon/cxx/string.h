@@ -41,15 +41,15 @@ public:
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeString_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeString_CheckExact(ob); }
 public: /* string from deemon */
-    DEFINE_OBJECT_CONSTRUCTORS(string,sequence)
-    string() DEE_CXX_NOTHROW: sequence(nonnull(Dee_EmptyString)) { }
-    string(/*utf-8*/char const *__restrict utf8_str): sequence(inherit(DeeString_NewUtf8(utf8_str,strlen(utf8_str),STRING_ERROR_FSTRICT))) { }
-    string(/*utf-8*/char const *__restrict utf8_str, size_t utf8_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence(inherit(DeeString_NewUtf8(utf8_str,utf8_len,error_mode))) { }
-    string(/*utf-16*/uint16_t const *__restrict utf16_str, size_t utf16_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence(inherit(DeeString_NewUtf16(utf16_str,utf16_len,error_mode))) { }
-    string(/*utf-32*/uint32_t const *__restrict utf32_str, size_t utf32_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence(inherit(DeeString_NewUtf32(utf32_str,utf32_len,error_mode))) { }
+    DEFINE_OBJECT_CONSTRUCTORS(string,sequence<string>)
+    string() DEE_CXX_NOTHROW: sequence<string>(nonnull(Dee_EmptyString)) { }
+    string(/*utf-8*/char const *__restrict utf8_str): sequence<string>(inherit(DeeString_NewUtf8(utf8_str,strlen(utf8_str),STRING_ERROR_FSTRICT))) { }
+    string(/*utf-8*/char const *__restrict utf8_str, size_t utf8_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence<string>(inherit(DeeString_NewUtf8(utf8_str,utf8_len,error_mode))) { }
+    string(/*utf-16*/uint16_t const *__restrict utf16_str, size_t utf16_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence<string>(inherit(DeeString_NewUtf16(utf16_str,utf16_len,error_mode))) { }
+    string(/*utf-32*/uint32_t const *__restrict utf32_str, size_t utf32_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence<string>(inherit(DeeString_NewUtf32(utf32_str,utf32_len,error_mode))) { }
 #ifdef CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T
-    string(/*wide*/dwchar_t const *__restrict wide_str): sequence(inherit(DeeString_NewWide(wide_str,wcslen(wide_str),STRING_ERROR_FSTRICT))) { }
-    string(/*wide*/dwchar_t const *__restrict wide_str, size_t wide_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence(inherit(DeeString_NewWide(wide_str,wide_len,error_mode))) { }
+    string(/*wide*/dwchar_t const *__restrict wide_str): sequence<string>(inherit(DeeString_NewWide(wide_str,wcslen(wide_str),STRING_ERROR_FSTRICT))) { }
+    string(/*wide*/dwchar_t const *__restrict wide_str, size_t wide_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence<string>(inherit(DeeString_NewWide(wide_str,wide_len,error_mode))) { }
 #endif
     static WUNUSED string vcformat(/*utf-8*/char const *__restrict str, va_list args) { return inherit(DeeString_VNewf(str,args)); }
     static WUNUSED string cformat(/*utf-8*/char const *__restrict str, ...) { va_list args; DREF DeeObject *result; va_start(args,str); result = DeeString_VNewf(str,args); va_end(args); return inherit(result); }
@@ -493,20 +493,20 @@ public: /* string from deemon */
 public:
     WUNUSED string add(DeeObject *__restrict right) const { return inherit(DeeObject_Add(*this,right)); }
     WUNUSED string operator + (DeeObject *__restrict right) const { return inherit(DeeObject_Add(*this,right)); }
-    WUNUSED string &inplace_add(DeeObject *__restrict right) { sequence::inplace_add(right); return *this; }
-    WUNUSED string &operator += (DeeObject *__restrict right) { sequence::operator += (right); return *this; }
+    WUNUSED string &inplace_add(DeeObject *__restrict right) { sequence<string>::inplace_add(right); return *this; }
+    WUNUSED string &operator += (DeeObject *__restrict right) { sequence<string>::operator += (right); return *this; }
     WUNUSED string mul(DeeObject *__restrict n) const { return inherit(DeeObject_Mul(*this,n)); }
     WUNUSED string mul(int8_t n) const { return inherit(DeeObject_MulInt(*this,n)); }
     WUNUSED string mul(size_t n) const { return inherit(_mulref(n)); }
     WUNUSED string operator * (DeeObject *__restrict n) const { return inherit(DeeObject_Mul(*this,n)); }
     WUNUSED string operator * (int8_t n) const { return inherit(DeeObject_MulInt(*this,n)); }
     WUNUSED string operator * (size_t n) const { return inherit(_mulref(n)); }
-    WUNUSED string &inplace_mul(DeeObject *__restrict n) { sequence::inplace_mul(n); return *this; }
-    WUNUSED string &inplace_mul(int8_t n) { sequence::inplace_mul(n); return *this; }
-    WUNUSED string &inplace_mul(size_t n) { sequence::inplace_mul(n); return *this; }
-    WUNUSED string &operator *= (DeeObject *__restrict n) { sequence::inplace_mul(n); return *this; }
-    WUNUSED string &operator *= (int8_t n) { sequence::inplace_mul(n); return *this; }
-    WUNUSED string &operator *= (size_t n) { sequence::inplace_mul(n); return *this; }
+    WUNUSED string &inplace_mul(DeeObject *__restrict n) { sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &inplace_mul(int8_t n) { sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &inplace_mul(size_t n) { sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &operator *= (DeeObject *__restrict n) { sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &operator *= (int8_t n) { sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &operator *= (size_t n) { sequence<string>::inplace_mul(n); return *this; }
 };
 
 

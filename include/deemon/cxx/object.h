@@ -76,17 +76,16 @@ inline ATTR_NORETURN ATTR_COLD void DCALL throw_last_deemon_exception(void);
 inline ATTR_RETNONNULL void *DCALL throw_if_null(void *ptr) { if unlikely(!ptr) throw_last_deemon_exception(); return ptr; }
 inline ATTR_RETNONNULL DeeObject *DCALL throw_if_null(DeeObject *obj) { if unlikely(!obj) throw_last_deemon_exception(); return obj; }
 inline unsigned int DCALL throw_if_negative(int x) { if unlikely(x < 0) throw_last_deemon_exception(); return (unsigned int)x; }
-#if __SIZEOF_SIZE_T__ != __SIZEOF_INT__
-inline size_t DCALL throw_if_negative(dssize_t x) { if unlikely(x < 0) throw_last_deemon_exception(); return (size_t)x; }
-#endif
-#if __SIZEOF_SIZE_T__ != 8 && __SIZEOF_INT__ != 8
-inline dpos_t DCALL throw_if_negative(doff_t x) { if unlikely(x < 0) throw_last_deemon_exception(); return (dpos_t)x; }
-#endif
+inline unsigned long DCALL throw_if_negative(long x) { if unlikely(x < 0l) throw_last_deemon_exception(); return (unsigned long)x; }
+#ifdef __COMPILER_HAVE_LONGLONG
+inline unsigned long long DCALL throw_if_negative(long long x) { if unlikely(x < 0ll) throw_last_deemon_exception(); return (unsigned long long)x; }
+#endif /* __COMPILER_HAVE_LONGLONG */
 inline unsigned int DCALL throw_if_nonzero(int x) { if unlikely(x != 0) throw_last_deemon_exception(); return (unsigned int)x; }
-inline size_t DCALL throw_if_minusone(size_t x) { if unlikely(x == (size_t)-1) throw_last_deemon_exception(); return x; }
-#if __SIZEOF_SIZE_T__ != 8
-inline dpos_t DCALL throw_if_minusone(dpos_t x) { if unlikely(x == (dpos_t)-1) throw_last_deemon_exception(); return x; }
-#endif
+inline unsigned int DCALL throw_if_minusone(unsigned int x) { if unlikely(x == (unsigned int)-1) throw_last_deemon_exception(); return x; }
+inline unsigned long DCALL throw_if_minusone(unsigned long x) { if unlikely(x == (unsigned long)-1l) throw_last_deemon_exception(); return x; }
+#ifdef __COMPILER_HAVE_LONGLONG
+inline unsigned long long DCALL throw_if_minusone(unsigned long long x) { if unlikely(x == (unsigned long long)-1ll) throw_last_deemon_exception(); return x; }
+#endif /* __COMPILER_HAVE_LONGLONG */
 
 #define DEFINE_OBJECT_WRAPPER(name) \
 class name { \
@@ -110,7 +109,7 @@ DEFINE_OBJECT_WRAPPER(obj_sequence)
 
 class exception: public std::exception {
 public:
-	virtual const char *what() const {
+	virtual const char *what() const DEE_CXX_NOTHROW {
         DeeObject *current = DeeError_Current();
         return current ? Dee_TYPE(current)->tp_name : "No exception";
     }
@@ -121,22 +120,22 @@ public:
 /* Indicate that is-NULL checks to throw an exception can
  * be omitted, because an object pointer is never NULL. */
 inline WUNUSED NONNULL((1)) obj_nonnull DCALL nonnull(DeeObject *__restrict ptr) { return obj_nonnull(ptr); }
-inline WUNUSED NONNULL((1)) obj_nonnull DCALL nonnull(obj_nonnull ptr) { return obj_nonnull((DeeObject *)ptr); }
-inline WUNUSED NONNULL((1)) obj_nonnull_inherited DCALL nonnull(obj_inherited ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
-inline WUNUSED NONNULL((1)) obj_nonnull_inherited DCALL nonnull(obj_nonnull_inherited ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
+inline WUNUSED obj_nonnull DCALL nonnull(obj_nonnull ptr) { return obj_nonnull((DeeObject *)ptr); }
+inline WUNUSED obj_nonnull_inherited DCALL nonnull(obj_inherited ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
+inline WUNUSED obj_nonnull_inherited DCALL nonnull(obj_nonnull_inherited ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
 
 /* Indicate that is-NULL checks to throw an exception can
  * be omitted, because a NULL-object is allowed. */
-inline WUNUSED NONNULL((1)) obj_maybenull DCALL maybenull(DeeObject *ptr) { return obj_maybenull(ptr); }
-inline WUNUSED NONNULL((1)) obj_maybenull DCALL maybenull(obj_maybenull ptr) { return obj_maybenull((DeeObject *)ptr); }
-inline WUNUSED NONNULL((1)) obj_maybenull_inherited DCALL maybenull(obj_inherited ptr) { return obj_maybenull_inherited((DeeObject *)ptr); }
-inline WUNUSED NONNULL((1)) obj_maybenull_inherited DCALL maybenull(obj_maybenull_inherited ptr) { return obj_maybenull_inherited((DeeObject *)ptr); }
+inline WUNUSED obj_maybenull DCALL maybenull(DeeObject *ptr) { return obj_maybenull(ptr); }
+inline WUNUSED obj_maybenull DCALL maybenull(obj_maybenull ptr) { return obj_maybenull((DeeObject *)ptr); }
+inline WUNUSED obj_maybenull_inherited DCALL maybenull(obj_inherited ptr) { return obj_maybenull_inherited((DeeObject *)ptr); }
+inline WUNUSED obj_maybenull_inherited DCALL maybenull(obj_maybenull_inherited ptr) { return obj_maybenull_inherited((DeeObject *)ptr); }
 
 /* Indicate that an object reference should be inherited. */
 inline WUNUSED NONNULL((1)) obj_inherited DCALL inherit(DeeObject *__restrict ptr) { return obj_inherited(ptr); }
-inline WUNUSED NONNULL((1)) obj_inherited DCALL inherit(obj_inherited ptr) { return obj_inherited((DeeObject *)ptr); }
-inline WUNUSED NONNULL((1)) obj_nonnull_inherited DCALL inherit(obj_nonnull ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
-inline WUNUSED NONNULL((1)) obj_nonnull_inherited DCALL inherit(obj_nonnull_inherited ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
+inline WUNUSED obj_inherited DCALL inherit(obj_inherited ptr) { return obj_inherited((DeeObject *)ptr); }
+inline WUNUSED obj_nonnull_inherited DCALL inherit(obj_nonnull ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
+inline WUNUSED obj_nonnull_inherited DCALL inherit(obj_nonnull_inherited ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
 
 class object;
 class string;
@@ -164,8 +163,8 @@ public:
     T(obj_inherited obj) DEE_CXX_NOTHROW: superT(obj) { } \
     T(obj_nonnull_inherited obj) DEE_CXX_NOTHROW: superT(obj) { } \
     T(obj_maybenull_inherited obj) DEE_CXX_NOTHROW: superT(obj) { } \
-    T &operator = (T &&right) { superT::operator = (std::move((superT &)right)); return *this; } \
-    T &operator = (T const &right) { superT::operator = (right); return *this; } \
+    T &operator = (T &&right) DEE_CXX_NOTHROW { superT::operator = (std::move((superT &)right)); return *this; } \
+    T &operator = (T const &right) DEE_CXX_NOTHROW { superT::operator = (right); return *this; } \
     T copy() const { return inherit(DeeObject_Copy(*this)); } \
     T deepcopy() const { return inherit(DeeObject_DeepCopy(*this)); } \
     T &inplace_deepcopy() { throw_if_nonzero(DeeObject_InplaceDeepCopy(&this->m_ptr)); return *this; } \
@@ -185,10 +184,12 @@ public:
     operator DeeObject *(void) const DEE_CXX_NOTHROW { return m_ptr; }
     bool (isnull)() const DEE_CXX_NOTHROW { return m_ptr == NULL; }
     bool (isnone)() const DEE_CXX_NOTHROW { return DeeNone_Check(m_ptr); }
-    bool (is)(DeeTypeObject *__restrict tp) const { return DeeObject_InstanceOf(m_ptr,tp); }
-    bool (isexact)(DeeTypeObject *__restrict tp) const { return DeeObject_InstanceOfExact(m_ptr,tp); }
-    object_base &operator = (object_base &&right) { Dee_XDecref(this->m_ptr); this->m_ptr = right.m_ptr; right.m_ptr = NULL; return *this; }
-    object_base &operator = (object_base const &right) { Dee_XDecref(this->m_ptr); this->m_ptr = xincref(right.m_ptr); return *this; }
+    bool (is)(DeeTypeObject *__restrict tp) const DEE_CXX_NOTHROW { return DeeObject_InstanceOf(m_ptr,tp); }
+    bool (isexact)(DeeTypeObject *__restrict tp) const DEE_CXX_NOTHROW { return DeeObject_InstanceOfExact(m_ptr,tp); }
+    template<class T> bool (is)() const DEE_CXX_NOTHROW { return T::check(this->ptr()); }
+    template<class T> bool (isexact)() const DEE_CXX_NOTHROW { return T::checkexact(this->ptr()); }
+    object_base &operator = (object_base &&right) DEE_CXX_NOTHROW { Dee_XDecref(this->m_ptr); this->m_ptr = right.m_ptr; right.m_ptr = NULL; return *this; }
+    object_base &operator = (object_base const &right) DEE_CXX_NOTHROW { Dee_XDecref(this->m_ptr); this->m_ptr = xincref(right.m_ptr); return *this; }
     object_base &operator = (DeeObject *obj) { throw_if_null(obj); xdecref(m_ptr); m_ptr = incref(obj); return *this; }
     object_base &operator = (obj_nonnull obj) DEE_CXX_NOTHROW { xdecref(m_ptr); m_ptr = incref(obj); return *this; }
     object_base &operator = (obj_maybenull obj) DEE_CXX_NOTHROW { xdecref(m_ptr); m_ptr = xincref(obj); return *this; }
@@ -218,18 +219,22 @@ public:
     bool operator > (cxx_iterator const &right) const { return !right.it_iter ? false : throw_if_negative(DeeObject_CompareGr(it_iter,right.it_iter)) != 0; }
     bool operator >= (cxx_iterator const &right) const { return !right.it_iter ? it_next == ITER_DONE : throw_if_negative(DeeObject_CompareGe(it_iter,right.it_iter)) != 0; }
     cxx_iterator &operator = (cxx_iterator &&right) DEE_CXX_NOTHROW {
-        object::operator = (std::move(right));
+        Dee_XDecref(it_iter);
         if (ITER_ISOK(it_next))
             Dee_Decref(it_next);
+        it_iter = right.it_iter;
         it_next = right.it_next;
+        right.it_iter = NULL;
         right.it_next = NULL;
         return *this;
     }
     cxx_iterator &operator = (cxx_iterator const &right) {
-        object::operator = (right);
+        Dee_XDecref(it_iter);
         if (ITER_ISOK(it_next))
             Dee_Decref(it_next);
+        it_iter = right.it_iter;
         it_next = right.it_next;
+        Dee_XIncref(it_iter);
         if (ITER_ISOK(it_next))
             Dee_Incref(it_next);
         return *this;
@@ -344,7 +349,6 @@ public:
 };
 
 } /* namespace intern... */
-
 
 
 
@@ -649,6 +653,7 @@ public:
     WUNUSED iterator begin() const { return inherit(DeeObject_IterSelf(*this)); }
     WUNUSED iterator end() const { return iterator(); }
     deemon::iterator<object> iter() const;
+    template<class T = object> deemon::iterator<T> iter() const;
 
     object next() const { DREF DeeObject *result = throw_if_null(DeeObject_IterNext(*this)); if (result == ITER_DONE) result = NULL; return inherit(maybenull(result)); }
     size_t print(dformatprinter printer, void *arg) const { return throw_if_negative(DeeObject_Print(*this,printer,arg)); }
@@ -675,12 +680,12 @@ public:
     object shl(DeeObject *__restrict right) const { return inherit(DeeObject_Shl(*this,right)); }
     object shr(uint8_t right) const { return inherit(DeeObject_ShrInt(*this,right)); }
     object shr(DeeObject *__restrict right) const { return inherit(DeeObject_Shr(*this,right)); }
-    object and(uint32_t right) const { return inherit(DeeObject_AndInt(*this,right)); }
-    object and(DeeObject *__restrict right) const { return inherit(DeeObject_And(*this,right)); }
-    object or(uint32_t right) const { return inherit(DeeObject_OrInt(*this,right)); }
-    object or(DeeObject *__restrict right) const { return inherit(DeeObject_Or(*this,right)); }
-    object xor(uint32_t right) const { return inherit(DeeObject_XorInt(*this,right)); }
-    object xor(DeeObject *__restrict right) const { return inherit(DeeObject_Xor(*this,right)); }
+    object and_(uint32_t right) const { return inherit(DeeObject_AndInt(*this,right)); }
+    object and_(DeeObject *__restrict right) const { return inherit(DeeObject_And(*this,right)); }
+    object or_(uint32_t right) const { return inherit(DeeObject_OrInt(*this,right)); }
+    object or_(DeeObject *__restrict right) const { return inherit(DeeObject_Or(*this,right)); }
+    object xor_(uint32_t right) const { return inherit(DeeObject_XorInt(*this,right)); }
+    object xor_(DeeObject *__restrict right) const { return inherit(DeeObject_Xor(*this,right)); }
     object pow(DeeObject *__restrict right) const { return inherit(DeeObject_Pow(*this,right)); }
     object &inplace_add(int8_t right) { throw_if_nonzero(DeeObject_InplaceAddS8(&this->m_ptr,right)); return *this; }
     object &inplace_add(uint32_t right) { throw_if_nonzero(DeeObject_InplaceAddInt(&this->m_ptr,right)); return *this; }
