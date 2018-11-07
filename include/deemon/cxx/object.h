@@ -856,6 +856,16 @@ public:
 };
 
 
+class none: public object {
+public:
+    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeNone_Type; }
+    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeNone_Check(ob); }
+    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeNone_CheckExact(ob); }
+public:
+    DEFINE_OBJECT_CONSTRUCTORS(none,object)
+    none() DEE_CXX_NOTHROW: object(nonnull(Dee_None)) { }
+};
+
 
 class bool_: public object {
 public:

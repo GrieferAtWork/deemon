@@ -1,21 +1,22 @@
-/* Copyright (c) 2018 Griefer@Work   *
- *     *
- * This software is provided 'as-is', without any express or implied *
- * warranty. In no event will the authors be held liable for any damages *
- * arising from the use of this software.   *
- *     *
- * Permission is granted to anyone to use this software for any purpose, *
- * including commercial applications, and to alter it and redistribute it *
- * freely, subject to the following restrictions:  *
- *     *
- * 1. The origin of this software must not be misrepresented; you must not *
- * claim that you wrote the original software. If you use this software *
- * in a product, an acknowledgement in the product documentation would be *
- * appreciated but is not required.   *
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
  * 2. Altered source versions must be plainly marked as such, and must not be *
- * misrepresented as being the original software.  *
+ *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+
 #pragma once
 
 /* The entire include-system should no longer be used by new code.
@@ -26,7 +27,8 @@
  * legacy, as well as the fact that no new features will be added and
  * that existing features are often implement as clutches, following
  * the removal of any compiler-helpers that used to do a lot of things
- * at compile-time that must now be done at run-time. */
+ * at compile-time that must now be done at run-time (especially in
+ * the field of C-compatibility now implemented through `ctypes'). */
 
 #ifndef __DEEMON__
 #	error "This header is meant for deemon"
@@ -69,22 +71,23 @@
 #define __unused /* nothing */
 
 
-/* A _really_ dirty fix for an incompatibility
- * between deemon200+'s dict member functions:
+/* A _really_ dirty fix for an incompatibility between
+ * deemon200+'s and deemon100+'s dict member functions:
  * - While the intention of dict's proxy views had always been to
- * emulate python, deemon 100+ did this incorrectly and had swapped
- * the meaning of `items' and `values'
+ *   emulate python, deemon 100+ did this incorrectly and had swapped
+ *   the meaning of `items' and `values'
  * - In python (just as in deemon200), items() is a sequence of 2-element
- * tuples, each referring to a key-value pair, while values() is the
- * same sequence, however only referring to the value-portion.
+ *   tuples, each referring to a key-value pair, while values() is the
+ *   same sequence, however only referring to the value-portion.
  * - To keep backwards-compatibility with older code, as well as considering
- * that old code was usually written to use dict.items() / dict.keys()
- * directly, we simply make use of macros to swap the 2 functions within
- * the preprocessor.
+ *   that old code was usually written to use dict.items() / dict.keys()
+ *   directly, we simply make use of macros to swap the 2 functions within
+ *   the preprocessor.
  * -> This is _extremely_ ugly, however since we _really_ don't care about
- * how little, or how much we're clobbering the root-namespace in here,
- * considering our sole purpose is to ensure backwards-compatibility,
- * macros are the easiest, and simplest sollution! */
+ *    how little, or how much we're clobbering the root-namespace in here,
+ *    considering our sole purpose is to ensure backwards-compatibility
+ *    with a limited set of existing code, macros are the easiest, and
+ *    simplest sollution, not requiring any modifications of the runtime! */
 #define items() values __NO_MACRO()
 #define values() items __NO_MACRO()
 
@@ -121,13 +124,13 @@ local function __ctypes_new(tp) {
 #define __builtin_unused_1(a) ({ a; none; })
 #define __builtin_unused_2(a,b) ({ a; b; })
 #define __builtin_unused(...) __builtin_unused_##__VA_NARGS__(__VA_ARGS__)
-#define __builtin_dead(x)  (true || (x))
-#define __builtin_exists(x)  true /* we can only hope... */
+#define __builtin_dead(x)    (true || (x))
+#define __builtin_exists(x)   true /* Cannot be emulated, so we can only hope... */
 #define __builtin_choose_expr(c,tt,ff) ((c)?(tt):(ff))
 #define __builtin_unreachable() __asm__("" : : : "noreturn")
 #define __builtin_types_compatible_p(x,y) ((x)===(y))
 #define __builtin_last_traceback() ((traceback from deemon).current)
-#define __builtin_super_1(x) ((x) as type(super))
+#define __builtin_super_1(x)   ((x).super)
 #define __builtin_super_2(x,y) ((x) as (y))
 #define __builtin_super(...) __builtin_super_##__VA_NARGS__(__VA_ARGS__)
 #define __super(...)  __builtin_super_##__VA_NARGS__(__VA_ARGS__)
@@ -184,6 +187,11 @@ from ctypes import
  * always extending `OldUserClass from d200') */
 #pragma extension("-fold-style-classes")
 
+/* Enable old-style character literals, causing '\x12' to be compiled
+ * as an alias for 0x12, preventing user-code to use 'foo' as an alias
+ * for "foo"! */
+#pragma extension("-fcharacter-literals")
+
 /* Not necessarily true, but legacy deemon was only ever built on
  * little-endian machines, meaning that this actually used to be true. */
 #define __BYTEORDER__ 1234
@@ -204,7 +212,7 @@ from ctypes import
  * >> fp = file.writer();
  * >> fp.pack(); // You should use `fp.string' now
  * >> local my_cell = cell(42);
- * >> my_cell.del(); // You should use `del my_cell.item' now
+ * >> my_cell.del(); // You should use `del my_cell.value' now
  * There are more like this, you should get the item.
  *
  * Deemon 200 on the other hand will now warn about the use
@@ -212,11 +220,11 @@ from ctypes import
  * suggesting refactoring, as well as doing something like
  * `my_cell.operator . ("del")()', which will work to suppress
  * such a warning, however since we're only here to keep legacy
- * code running as intended, just disable those types of warnings! */
+ * code running as intended, just disable these types of warnings! */
 #pragma warning("-Wno-reserved")
 
-/* Apparently, deemon 100+ didn't warn about some something
- * like slash+star repeated inside of comments, or line-comments
+/* Apparently, deemon 100+ didn't warn about things like
+ * slash+star repeated inside of comments, or line-comments
  * being continued following an escaped line feed. (Deemon 200+
  * will only warn about the later if the next line doesn't start
  * with a line-comment, optionally preceded by white-space)
@@ -242,21 +250,23 @@ from ctypes import
  * user, with __FILE__ either being an absolute path, or being
  * relative to that directory.
  * However in deemon 200+, __FILE__ may still be a relative path,
- * however may not be relative to the current working directory.
+ * though not relative to the current working directory.
  * Using the combination of macros above, alongside the fact that
  * this file is the hub for backwards-compatibility with the old
  * deemon, and included whenever user-code uses one of the old-style
  * headers, we can reverse-engineer the value of PWD that an old-style
  * format script would expect.
  * NOTE: Old-style scripts often used to do something like the
- * following to change PWD to their script:
- * >> #include <fs>
- * >> fs.chdir(fs.path.head(__FILE__));
- * Because after doing that, they'd get a consistent execution
- * context for opening other files in order to produce format
- * output.
+ *       following to change PWD to their script:
+ *       >> #include <fs>
+ *       >> fs.chdir(fs.path.head(__FILE__));
+ *       Because after doing that, they'd get a consistent system
+ *       context for opening other files in order to produce format
+ *       output.
  * In deemon 200+ this is no longer necessary because PWD
- * will have already been set to what the above would achive.
+ * will have already been set to what the above would achive,
+ * with the following code undoing the directory change done
+ * by such code.
  */
 {
 	/* Change PWD to the original PWD */

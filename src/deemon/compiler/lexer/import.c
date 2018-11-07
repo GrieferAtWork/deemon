@@ -149,6 +149,7 @@ ast_parse_module_name(struct unicode_printer *__restrict printer,
       goto err;
    if (UNICODE_PRINTER_LENGTH(printer) == 1 &&
       (!TPP_ISKEYWORD(tok) && tok != TOK_STRING &&
+       (tok != TOK_CHAR || HAS(EXT_CHARACTER_LITERALS)) &&
        !TOK_ISDOT(tok)))
        break; /* Special case: `.' is a valid name for the current module. */
   } else if (TPP_ISKEYWORD(tok)) {
@@ -166,12 +167,14 @@ ast_parse_module_name(struct unicode_printer *__restrict printer,
    if unlikely(yield() < 0)
       goto err;
    if (!TOK_ISDOT(tok)) break;
-  } else if (tok == TOK_STRING) {
+  } else if (tok == TOK_STRING ||
+            (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
    if (ast_decode_unicode_string(printer) < 0)
        goto err;
    if unlikely(yield() < 0)
       goto err;
-   if (!TOK_ISDOT(tok) && tok != TOK_STRING)
+   if (!TOK_ISDOT(tok) && tok != TOK_STRING &&
+       (tok != TOK_CHAR || HAS(EXT_CHARACTER_LITERALS)))
         break;
   } else {
    if (WARN(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST))
@@ -202,13 +205,15 @@ ast_parse_symbol_name(struct unicode_printer *__restrict printer,
       goto err;
   if unlikely(yield() < 0)
      goto err;
- } else if (tok == TOK_STRING) {
+ } else if (tok == TOK_STRING ||
+           (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
   do {
    if (ast_decode_unicode_string(printer) < 0)
        goto err;
    if unlikely(yield() < 0)
       goto err;
-  } while (tok == TOK_STRING);
+  } while (tok == TOK_STRING ||
+          (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
  } else {
   if (WARN(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))
       goto err;
@@ -416,6 +421,7 @@ complete_module_name:
      goto err_printer;
   /* Make sure to properly parse `import . as me' */
   if ((TPP_ISKEYWORD(tok) && tok != KWD_as) || tok == TOK_STRING ||
+      (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)) ||
       (UNICODE_PRINTER_LENGTH(&printer) != 1)) {
    if unlikely(ast_parse_module_name(&printer,true) < 0)
       goto err_printer;
@@ -451,7 +457,8 @@ autogenerate_symbol_name:
                result->ii_symbol_name))
        goto err_name;
   }
- } else if (tok == TOK_STRING) {
+ } else if (tok == TOK_STRING ||
+           (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
   /* - `"foo"'
    * - `"foo" as foobar'
    * - `"foo.bar"'

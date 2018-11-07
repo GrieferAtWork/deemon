@@ -334,27 +334,35 @@ err:
 
 INTERN int DCALL
 ast_decode_unicode_string(struct unicode_printer *__restrict printer) {
- ASSERT(tok == TOK_STRING);
+ ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
  char *escape_start = token.t_begin;
  char *escape_end = token.t_end;
  if (escape_start < escape_end && escape_start[0] == 'r') {
   ++escape_start;
-  if (escape_start < escape_end && escape_start[0] == '\"') ++escape_start;
-  if (escape_end > escape_start && escape_end[-1] == '\"') --escape_end;
+  if (escape_start < escape_end &&
+     (escape_start[0] == '\"' || escape_start[0] == '\''))
+    ++escape_start;
+  if (escape_end > escape_start &&
+     (escape_end[-1] == '\"' || escape_end[-1] == '\''))
+    --escape_end;
   if unlikely(escape_end < escape_start)
               escape_end = escape_start;
   if unlikely(DeeString_DecodeLFEscaped(printer,
                                         escape_start,
-                                       (size_t)(escape_end-escape_start)))
+                                       (size_t)(escape_end - escape_start)))
      goto err;
  } else {
-  if (escape_start < escape_end && escape_start[0] == '\"') ++escape_start;
-  if (escape_end > escape_start && escape_end[-1] == '\"') --escape_end;
+  if (escape_start < escape_end &&
+     (escape_start[0] == '\"' || escape_start[0] == '\''))
+    ++escape_start;
+  if (escape_end > escape_start &&
+     (escape_end[-1] == '\"' || escape_end[-1] == '\''))
+    --escape_end;
   if unlikely(escape_end < escape_start)
               escape_end = escape_start;
   if unlikely(DeeString_DecodeBackslashEscaped(printer,
                                                escape_start,
-                                              (size_t)(escape_end-escape_start),
+                                              (size_t)(escape_end - escape_start),
                                                STRING_ERROR_FSTRICT))
      goto err;
  }
@@ -365,13 +373,14 @@ err:
 
 INTERN DREF DeeObject *FCALL ast_parse_string(void) {
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
- ASSERT(tok == TOK_STRING);
+ ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
  do {
   if unlikely(ast_decode_unicode_string(&printer))
      goto err;
   if unlikely(yield() < 0)
      goto err;
- } while (tok == TOK_STRING);
+ } while (tok == TOK_STRING ||
+         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
  return unicode_printer_pack(&printer);
 err:
  unicode_printer_fini(&printer);
@@ -426,6 +435,8 @@ create_constexpr:
   if unlikely(yield() < 0) goto err_r;
   break;
  case TOK_CHAR:
+  if (!HAS(EXT_CHARACTER_LITERALS))
+      goto decode_string;
   if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR) goto err;
   if (WARN(W_DEPRECATED_CHARACTER_INT)) goto err;
   resval = DeeInt_NewS64(value);
@@ -435,6 +446,7 @@ create_constexpr:
  {
   DREF DeeObject *resval;
  case TOK_STRING:
+decode_string:
   loc_here(&loc);
   resval = ast_parse_string();
   if unlikely(!resval) goto err;

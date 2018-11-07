@@ -177,8 +177,19 @@ EXTENSION(EXT_SYSTEM_MACROS,"define-system-macros",1)
 
 /* Old-style classes simply means that any class without an explicitly
  * defined base will be derived from `OldUserClass from d200', instead
- * of `object from deemon' */
+ * of `object from deemon', where `OldUserClass' overrides the attribute
+ * operators to emulate a dynamic member table, as expected by old-style
+ * code. */
 EXTENSION(EXT_OLD_STYLE_CLASSES,"old-style-classes",0)
+
+/* enable/disable the use of `'\x12'' to define an integer
+ * contant `0x12' when enabled.
+ * Disabled by default and enabled when a legacy header is
+ * included by user-code, when disabled 'foo' is an exact alias
+ * for "foo", allowing strings to be written as `'foo = "bar"'',
+ * as well as "foo = 'bar'", without the need of escaping
+ * characters */
+EXTENSION(EXT_CHARACTER_LITERALS,"character-literals",0)
 
 /* Indicate to user-code that they are running under deemon v200 */
 PREDEFINED_MACRO_IF(__DEEMON__,HAS(EXT_SYSTEM_MACROS),"200")

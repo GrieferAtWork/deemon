@@ -315,7 +315,8 @@ uasm_parse_symnam(void) {
  struct TPPKeyword *result;
  char *symbol_start;
  char *symbol_end;
- if (tok == TOK_STRING) {
+ if (tok == TOK_STRING ||
+    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
   /* Special case: String symbol name. */
   struct TPPString *strval;
   strval = TPPLexer_ParseString();
@@ -411,6 +412,8 @@ uasm_parse_intexpr_unary_base(struct asm_intexpr *result, uint16_t features) {
   }
   ATTR_FALLTHROUGH
  case TOK_CHAR:
+  /* NOTE: Here, we always interpret character tokens as literals,
+   *       regardless of what may `EXT_CHARACTER_LITERALS' may be set to. */
   if (!result)
        goto yield_done;
   /* Character constant. */

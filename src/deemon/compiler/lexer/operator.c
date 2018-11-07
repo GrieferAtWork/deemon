@@ -285,6 +285,10 @@ ast_parse_operator_name(uint16_t features) {
 
  {
   tint_t intval;
+ case TOK_CHAR:
+  if (!HAS(EXT_CHARACTER_LITERALS))
+      goto parse_string;
+  ATTR_FALLTHROUGH
  case TOK_INT:
   /* Special case: Invoke an operator using its internal index. */
   if (TPP_Atoi(&intval) == TPP_ATOI_ERR)
@@ -366,6 +370,7 @@ ast_parse_operator_name(uint16_t features) {
   goto done_y1;
 
  case TOK_STRING:
+parse_string:
   if (advance_wraplf(advance_wraplf(token.t_begin)) != token.t_end &&
       WARN(W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME)) goto err;
   ATTR_FALLTHROUGH

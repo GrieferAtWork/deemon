@@ -2927,7 +2927,8 @@ lexer_token_decodestring(DeeCompilerWrapperObject *__restrict self,
  if (DeeArg_Unpack(argc,argv,":decodestring"))
      goto err;
  COMPILER_BEGIN(self->cw_compiler);
- if (TPPLexer_Current->l_token.t_id != TOK_STRING) {
+ if (TPPLexer_Current->l_token.t_id != TOK_STRING ||
+    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
   error = DeeError_Throwf(&DeeError_ValueError,
                           "The current token isn't a string");
  } else {

@@ -206,11 +206,13 @@ err:
 }
 
 PRIVATE int DCALL append_doc_string(void) {
- ASSERT(tok == TOK_STRING);
+ ASSERT(tok == TOK_STRING ||
+       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
  do {
   if unlikely(ast_decode_unicode_string(&current_tags.at_doc)) goto err;
   if unlikely(yield() < 0) goto err;
- } while (tok == TOK_STRING);
+ } while (tok == TOK_STRING ||
+         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
  /* Append a line-feed at the end. */
  if unlikely(unicode_printer_putascii(&current_tags.at_doc,'\n'))
     goto err;
@@ -220,7 +222,8 @@ err:
 }
 
 INTERN int (DCALL parse_tags)(void) {
- if (tok == TOK_STRING) {
+ if (tok == TOK_STRING ||
+    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
   if unlikely(append_doc_string())
      goto err;
  } else if (tok == ':') {

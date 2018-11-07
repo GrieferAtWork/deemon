@@ -99,9 +99,11 @@ asm_parse_operands(struct operand_list *__restrict list,
  /*ref*/struct TPPString *operand_type;
  DREF struct ast *operand_value;
  struct asm_operand *operand;
- while ((type == OPERAND_TYPE_LABEL ? TPP_ISKEYWORD(tok)
-                                    : tok == TOK_STRING) ||
-         tok == '[') {
+ while ((type == OPERAND_TYPE_LABEL
+       ? TPP_ISKEYWORD(tok)
+       : (tok == TOK_STRING ||
+         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)))) ||
+       (tok == '[')) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
   struct TPPKeyword *name = NULL;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
@@ -140,7 +142,8 @@ asm_parse_operands(struct operand_list *__restrict list,
    operand->ao_label = label_value;
    operand->ao_type  = NULL;
   } else {
-   if (tok == TOK_STRING) {
+   if (tok == TOK_STRING ||
+      (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
     operand_type = TPPLexer_ParseString();
     if unlikely(!operand_type) goto err;
    } else {
@@ -209,7 +212,8 @@ PRIVATE struct clobber_desc const clobber_descs[] = {
 PRIVATE int32_t DCALL asm_parse_clobber(void) {
  struct TPPString *name;
  uint16_t result = 0;
- while (tok == TOK_STRING) {
+ while (tok == TOK_STRING ||
+       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
   name = TPPLexer_ParseString();
   if unlikely(!name) goto err;
   if (name->s_size < COMPILER_LENOF(clobber_descs[0].cd_name)) {
@@ -502,7 +506,8 @@ with_paren:
   has_paren = true;
  }
  loc_here(&loc); /* Use the assembly text for DDI information. */
- if (tok == TOK_STRING) {
+ if (tok == TOK_STRING ||
+    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
   text = TPPLexer_ParseString();
   if unlikely(!text) goto err_flags;
  } else if (tok == '{') {
