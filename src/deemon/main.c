@@ -1086,7 +1086,6 @@ int main(int argc, char *argv[]) {
                                                                  MODULE_FILECLASS_THROWERROR,
                                                                 &script_options);
   if unlikely(!user_module) goto err;
-
   if (operation_mode == OPERATION_MODE_PRINTASM) {
    /* Print a full disassembly of the user-module. */
    dssize_t temp;
@@ -1123,7 +1122,7 @@ int main(int argc, char *argv[]) {
    DREF DeeObject *user_module_args;
    int temp;
    /* The user's module has been loaded. - Now load dependencies and open it's root. */
-   user_module_main = DeeModule_GetRoot((DeeObject *)user_module);
+   user_module_main = DeeModule_GetRoot((DeeObject *)user_module,true);
    Dee_Decref(user_module);
    if unlikely(!user_module_main) goto err;
 
@@ -1706,7 +1705,7 @@ exec_module_and_capture_stdout(DeeModuleObject *__restrict module) {
  DREF DeeObject *new_stdout;
  DREF DeeObject *temp;
  /* Open the root of the module. */
- module_root = (DeeFunctionObject *)DeeModule_GetRoot((DeeObject *)module);
+ module_root = (DeeFunctionObject *)DeeModule_GetRoot((DeeObject *)module,true);
  if unlikely(!module_root) goto out;
  /* Create a new writer and set it as target for STDOUT */
  new_stdout = DeeFile_OpenWriter();

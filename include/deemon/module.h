@@ -828,9 +828,12 @@ DeeModule_OpenRelativeString(char const *__restrict module_name,
  *       imported by this one have been fully initialized.
  * NOTE: This function automatically calls `DeeModule_InitImports()'
  *       to ensure that the module is ready to be executed.
+ * @param: set_initialized: When true, also set the `MODULE_FDIDINIT' flag if
+ *                          it, or `MODULE_FINITIALIZING' hasn't been set already
  * @return: NULL: Failed to create a function object for the module's root code object. */
 DFUNDEF DREF /*Function*/DeeObject *DCALL
-DeeModule_GetRoot(/*Module*/DeeObject *__restrict self);
+DeeModule_GetRoot(/*Module*/DeeObject *__restrict self,
+                  bool set_initialized);
 
 
 #ifndef CONFIG_NO_DEC

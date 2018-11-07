@@ -250,7 +250,7 @@ EXPORTS
 	DeeModule_Get@4=_DeeModule_Get@4
 	DeeModule_GetCTime@4=_DeeModule_GetCTime@4
 	DeeModule_GetNativeSymbol@8=_DeeModule_GetNativeSymbol@8
-	DeeModule_GetRoot@4=_DeeModule_GetRoot@4
+	DeeModule_GetRoot@8=_DeeModule_GetRoot@8
 	DeeModule_GetString@4=_DeeModule_GetString@4
 	DeeModule_GlobalName@8=_DeeModule_GlobalName@8
 	DeeModule_InitImports@4=_DeeModule_InitImports@4

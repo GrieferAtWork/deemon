@@ -108,7 +108,8 @@ done:
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_GetRoot(DeeObject *__restrict self) {
+DeeModule_GetRoot(DeeObject *__restrict self,
+                  bool set_initialized) {
  DREF DeeFunctionObject *result;
  DeeModuleObject *me = (DeeModuleObject *)self;
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
@@ -130,6 +131,15 @@ DeeModule_GetRoot(DeeObject *__restrict self) {
   Dee_Incref(&empty_code);
  }
  DeeObject_Init(result,&DeeFunction_Type);
+ if (set_initialized) {
+  uint16_t flags;
+  /* Try to set the `MODULE_FDIDINIT' flag */
+  do {
+   flags = ATOMIC_READ(me->mo_flags);
+   if (flags & MODULE_FINITIALIZING)
+       break; /* Don't interfere with an on-going initialization. */
+  } while (!ATOMIC_CMPXCH_WEAK(me->mo_flags,flags,flags | MODULE_FDIDINIT));
+ }
  return (DREF DeeObject *)result;
 }
 
@@ -696,7 +706,7 @@ begin_init:
   /* Create and run the module's initializer function. */
   DREF DeeObject *init_function,*init_result;
   DREF DeeObject *argv;
-  init_function = DeeModule_GetRoot(self);
+  init_function = DeeModule_GetRoot(self,false);
   if unlikely(!init_function) goto err;
   /* Call the module's main function with globally registered argv. */
   argv = Dee_GetArgv();

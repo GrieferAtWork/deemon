@@ -104,59 +104,59 @@ local function __ctypes_new(tp) {
 
 
 /* Re-implement some old builtin functions as macros. */
-#define __builtin_dex(x)  import(x)
-#define __builtin_breakpoint() __asm__("debug break")
-#define __builtin_typeof(x)  type(x)
-#define __builtin_help(...) ((doc from deemon)(__VA_ARGS__))
-#define __builtin_expect(x,y) (x)
-#define __builtin_object(id) (get_builtin from __builtins(id))
-#define __builtin_predictable(x) false
-#define __builtin_exprast(...) none
-#define __builtin_alloca(sz) (malloc from ctypes)(sz) /* It's a leak, but it'll work... */
-#define __builtin_noop(...)  none
-#define __noop(...)  none
-#define _Noexcept(...)  false
-#define __builtin_noexcept(...) false
-#define _Noreturn(...)  false
-#define __builtin_noreturn(...) false
-#define __builtin_noeffect(...) false
-#define __builtin_constant_p(...) false
-#define __builtin_unused_1(a) ({ a; none; })
-#define __builtin_unused_2(a,b) ({ a; b; })
-#define __builtin_unused(...) __builtin_unused_##__VA_NARGS__(__VA_ARGS__)
-#define __builtin_dead(x)    (true || (x))
-#define __builtin_exists(x)   true /* Cannot be emulated, so we can only hope... */
-#define __builtin_choose_expr(c,tt,ff) ((c)?(tt):(ff))
-#define __builtin_unreachable() __asm__("" : : : "noreturn")
+#define __builtin_dex(x)                    import(x)
+#define __builtin_breakpoint()              __asm__("debug break")
+#define __builtin_typeof(x)                 type(x)
+#define __builtin_help(...)               ((doc from deemon)(__VA_ARGS__))
+#define __builtin_expect(x,y)              (x)
+#define __builtin_object(id)               (get_builtin from __builtins(id))
+#define __builtin_predictable(x)            false
+#define __builtin_exprast(...)              none
+#define __builtin_alloca(sz)               (malloc from ctypes)(sz) /* It's a leak, but it'll work... */
+#define __builtin_noop(...)                 none
+#define __noop(...)                         none
+#define _Noexcept(...)                      false
+#define __builtin_noexcept(...)             false
+#define _Noreturn(...)                      false
+#define __builtin_noreturn(...)             false
+#define __builtin_noeffect(...)             false
+#define __builtin_constant_p(...)           false
+#define __builtin_unused_1(a)            ({ a; none; })
+#define __builtin_unused_2(a,b)          ({ a; b; })
+#define __builtin_unused(...)               __builtin_unused_##__VA_NARGS__(__VA_ARGS__)
+#define __builtin_dead(x)                  (true || (x))
+#define __builtin_exists(x)                 true /* Cannot be emulated, so we can only hope... */
+#define __builtin_choose_expr(c,tt,ff)    ((c)?(tt):(ff))
+#define __builtin_unreachable()             __asm__("" : : : "noreturn")
 #define __builtin_types_compatible_p(x,y) ((x)===(y))
-#define __builtin_last_traceback() ((traceback from deemon).current)
-#define __builtin_super_1(x)   ((x).super)
-#define __builtin_super_2(x,y) ((x) as (y))
-#define __builtin_super(...) __builtin_super_##__VA_NARGS__(__VA_ARGS__)
-#define __super(...)  __builtin_super_##__VA_NARGS__(__VA_ARGS__)
-#define __builtin_bound(x)  bound(x)
-#define __builtin_offsetof(s,t) ((s).offsetof(#t))
+#define __builtin_last_traceback()        ((traceback from deemon).current)
+#define __builtin_super_1(x)              ((x).super)
+#define __builtin_super_2(x,y)            ((x) as (y))
+#define __builtin_super(...)                __builtin_super_##__VA_NARGS__(__VA_ARGS__)
+#define __super(...)                        __builtin_super_##__VA_NARGS__(__VA_ARGS__)
+#define __builtin_bound(x)                  bound(x)
+#define __builtin_offsetof(s,t)           ((s).offsetof(#t))
 
 /* Define some unary-expression keywords that got removed */
-#define weak weakref from deemon pack
-#define move copy
+#define weak   weakref from deemon pack /* Create weak referece */
+#define move   copy                     /* Move-construct (implement as copy-construct) */
 
 /* Stub-implement removed static-if keywords (as far as possible). */
 #define __static_if(x) if(x)
-#define __static_else else
-#define __if_true if(true)
-#define __if_false if(false)
+#define __static_else  else
+#define __if_true      if(true)
+#define __if_false     if(false)
 
 /* Re-define the removed alias for `assert' */
-#define __assert assert
+#define __assert    assert
 
 /* Re-define removed loop statements. */
 #define __looponce{...} do { __VA_ARGS__ } while (0)
-#define __loopever for (;;)
-#define __loopnone while (0)
+#define __loopever      for (;;)
+#define __loopnone      while (0)
 
 /* Delete some keywords that got removed. */
-#define const /* nothing */
+#define const     /* nothing */
 #define constexpr /* nothing */
 
 /* Import some of the symbols that old code assumes to be visible. */
