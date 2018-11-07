@@ -57,12 +57,6 @@ from math import
 	__builtin_erf = erf,
 	__builtin_tgamma = tgamma,
 	__builtin_lgamma = lgamma,
-	__builtin_ceilf = ceilf,
-	__builtin_floorf = floorf,
-	__builtin_truncf = truncf,
-	__builtin_roundf = roundf,
-	__builtin_i32round = i32round,
-	__builtin_i64round = i64round,
 	__builtin_fmod = fmod,
 	__builtin_rint = rint,
 	__builtin_i32rint = i32rint,
@@ -87,7 +81,14 @@ from math import
 	__builtin_isunordered = isunordered
 ;
 
+function __builtin_ceilf(x) -> (float from deemon)(ceil from util)(x);
+function __builtin_floorf(x) -> (float from deemon)(floor from util)(x);
+function __builtin_truncf(x) -> (float from deemon)(int from deemon)(x);
+function __builtin_roundf(x) -> (float from deemon)(round from util)(x);
+
 from util import
+	__builtin_i32round = round,
+	__builtin_i64round = round,
 	__builtin_min = min,
 	__builtin_max = max,
 	__builtin_abs = abs,
