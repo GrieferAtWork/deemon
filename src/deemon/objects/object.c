@@ -726,6 +726,9 @@ PUBLIC void (DCALL DeeObject_Destroy_d)
 #undef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 //#define CONFIG_OBJECT_DESTROY_CHECK_MEMORY 1
  DeeTypeObject *orig_type,*type;
+#ifndef CONFIG_TRACE_REFCHANGES
+again:
+#endif
  orig_type = type = Dee_TYPE(self);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
  if (self->ob_refcnt != 0) {
@@ -779,12 +782,33 @@ PUBLIC void (DCALL DeeObject_Destroy_d)
     /* Special case: The destructor managed to revive the object. */
     if unlikely(self->ob_refcnt != 0) {
      Dee_Incref(type);
-     ASSERTF(type->tp_flags&TP_FGC,
+     ASSERTF(type->tp_flags & TP_FGC,
              "This runtime does not implementing reviving "
              "GC-allocated objects as non-GC objects.");
      /* Continue tracking the object. */
      DeeGC_Track(self);
-     goto done;
+     /* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
+      * in order to prevent a race condition that could otherwise occur when another
+      * thread would have cleared the external reference after the destructor created
+      * it, but before we were able to read out the fact that `ob_refcnt' was now
+      * non-zero. - If that were to happen, the other thread may also attempt to destroy
+      * the object, causing it to be destroyed in multiple threads at the same time,
+      * which is something that's not allowed! */
+     Dee_Decref(orig_type);
+#ifndef CONFIG_TRACE_REFCHANGES
+     /* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
+     {
+      dref_t oldref = ATOMIC_FETCHDEC(self->ob_refcnt);
+      ASSERTF(oldref != 0,
+              "Upon revival, a destructor must let the caller inherit a "
+              "reference (which may appear like a leak, but actually isn't)");
+      if (oldref == 1)
+          goto again;
+     }
+#else
+     Dee_Decref(self);
+#endif
+     return;
     }
    }
    /* Delete all weak references linked against this type level. */
@@ -837,7 +861,28 @@ PUBLIC void (DCALL DeeObject_Destroy_d)
       *       will actually be called, limiting its use to pre-allocated object
       *       caches that allocate their instances using `DeeObject_Malloc'. */
      Dee_Incref(type);
-     goto done;
+     /* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
+      * in order to prevent a race condition that could otherwise occur when another
+      * thread would have cleared the external reference after the destructor created
+      * it, but before we were able to read out the fact that `ob_refcnt' was now
+      * non-zero. - If that were to happen, the other thread may also attempt to destroy
+      * the object, causing it to be destroyed in multiple threads at the same time,
+      * which is something that's not allowed! */
+     Dee_Decref(orig_type);
+#ifndef CONFIG_TRACE_REFCHANGES
+     /* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
+     {
+      dref_t oldref = ATOMIC_FETCHDEC(self->ob_refcnt);
+      ASSERTF(oldref != 0,
+              "Upon revival, a destructor must let the caller inherit a "
+              "reference (which may appear like a leak, but actually isn't)");
+      if (oldref == 1)
+          goto again;
+     }
+#else
+     Dee_Decref(self);
+#endif
+     return;
     }
    }
    /* Delete all weak references linked against this type level. */
@@ -859,7 +904,7 @@ PUBLIC void (DCALL DeeObject_Destroy_d)
    DeeObject_Free(self);
   }
  }
-done:
+/*done:*/
  /* Drop a reference from the original type. */
  Dee_Decref(orig_type);
 }

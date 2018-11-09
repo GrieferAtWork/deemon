@@ -582,8 +582,27 @@ instance_destructor(DeeObject *__restrict self) {
  if unlikely(!callback)
     result = NULL;
  else {
+  dref_t new_refcnt;
+  ATOMIC_FETCHINC(self->ob_refcnt);
   result = DeeObject_ThisCall(callback,self,0,NULL);
   Dee_Decref(callback);
+  /* Check if `self' got revived. - If it did we let the caller
+   * inherit a reference to it to prevent a race condition. */
+  for (;;) {
+   new_refcnt = ATOMIC_READ(self->ob_refcnt);
+   if (new_refcnt > 1) {
+    /* Object got revived (let the caller inherit our reference) */
+    if likely(result)
+       Dee_Decref(result);
+    else {
+     DeeError_Print("Unhandled error in destructor\n",
+                    ERROR_PRINT_DOHANDLE);
+    }
+    return;
+   }
+   if (ATOMIC_CMPXCH_WEAK(self->ob_refcnt,new_refcnt,0))
+       break;
+  }
  }
  if likely(result)
     Dee_Decref(result);
@@ -3316,7 +3335,8 @@ DeeClass_New(DeeTypeObject *__restrict base,
   result_class->cd_offset +=  (sizeof(void *)-1);
   result_class->cd_offset &= ~(sizeof(void *)-1);
   result->tp_base = base;
-  result->tp_flags |= base->tp_flags & TP_FINTERHITABLE;
+  result->tp_flags   |= base->tp_flags & TP_FINTERHITABLE;
+  result->tp_weakrefs = base->tp_weakrefs;
   Dee_Incref(base);
  }
  result_class->cd_desc = desc;
