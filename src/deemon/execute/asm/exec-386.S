@@ -4112,9 +4112,9 @@ target_getmember:
 	lodsb
 1:	pushl   %eax   /* DeeInstance_GetMemberSafe:addr */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FIRST  /* DeeInstance_GetMemberSafe:self */
+	pushl   SECOND /* DeeInstance_GetMemberSafe:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND /* DeeInstance_GetMemberSafe:tp_self */
+	pushl   FIRST  /* DeeInstance_GetMemberSafe:tp_self */
 	ADJUST_CFA_OFFSET(4)
 	call    fSYM(DeeInstance_GetMemberSafe,12)
 	ADJUST_CFA_OFFSET(-12)
@@ -4135,9 +4135,9 @@ target_boundmember:
 	lodsb
 1:	pushl   %eax   /* DeeInstance_BoundMemberSafe:addr */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FIRST  /* DeeInstance_BoundMemberSafe:self */
+	pushl   SECOND /* DeeInstance_BoundMemberSafe:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND /* DeeInstance_BoundMemberSafe:tp_self */
+	pushl   FIRST  /* DeeInstance_BoundMemberSafe:tp_self */
 	ADJUST_CFA_OFFSET(4)
 	call    fSYM(DeeInstance_BoundMemberSafe,12)
 	ADJUST_CFA_OFFSET(-12)
@@ -4162,9 +4162,9 @@ target_delmember:
 	lodsb
 1:	pushl   %eax   /* DeeInstance_DelMemberSafe:addr */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FIRST  /* DeeInstance_DelMemberSafe:self */
+	pushl   SECOND /* DeeInstance_DelMemberSafe:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND /* DeeInstance_DelMemberSafe:tp_self */
+	pushl   FIRST  /* DeeInstance_DelMemberSafe:tp_self */
 	ADJUST_CFA_OFFSET(4)
 	call    fSYM(DeeInstance_DelMemberSafe,12)
 	ADJUST_CFA_OFFSET(-12)
@@ -4186,9 +4186,9 @@ target_setmember:
 	ADJUST_CFA_OFFSET(4)
 	pushl   %eax   /* DeeInstance_SetMemberSafe:addr */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND /* DeeInstance_SetMemberSafe:self */
+	pushl   THIRD  /* DeeInstance_SetMemberSafe:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   THIRD  /* DeeInstance_SetMemberSafe:tp_self */
+	pushl   SECOND /* DeeInstance_SetMemberSafe:tp_self */
 	ADJUST_CFA_OFFSET(4)
 	call    fSYM(DeeInstance_SetMemberSafe,16)
 	ADJUST_CFA_OFFSET(-16)

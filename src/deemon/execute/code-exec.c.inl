@@ -4571,7 +4571,7 @@ do_setattr_this_c:
          DREF DeeObject *result;
          imm_val = READ_imm8();
 do_getmember:
-         result = DeeInstance_GetMemberSafe((DeeTypeObject *)SECOND,FIRST,imm_val);
+         result = DeeInstance_GetMemberSafe((DeeTypeObject *)FIRST,SECOND,imm_val);
          if unlikely(!result) HANDLE_EXCEPT();
          POPREF();
          Dee_Decref(TOP);
@@ -4582,7 +4582,7 @@ do_getmember:
          int temp;
          imm_val = READ_imm8();
 do_hasmember:
-         temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)SECOND,FIRST,imm_val);
+         temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)FIRST,SECOND,imm_val);
          if unlikely(temp < 0) HANDLE_EXCEPT();
          POPREF();
          Dee_Decref(TOP);
@@ -4593,7 +4593,7 @@ do_hasmember:
      TARGET(ASM_DELMEMBER,-2,+0) {
          imm_val = READ_imm8();
 do_delmember:
-         if (DeeInstance_DelMemberSafe((DeeTypeObject *)SECOND,FIRST,imm_val))
+         if (DeeInstance_DelMemberSafe((DeeTypeObject *)FIRST,SECOND,imm_val))
              HANDLE_EXCEPT();
          POPREF();
          POPREF();
@@ -4602,7 +4602,7 @@ do_delmember:
      TARGET(ASM_SETMEMBER,-3,+0) {
          imm_val = READ_imm8();
 do_setmember:
-         if (DeeInstance_SetMemberSafe((DeeTypeObject *)THIRD,SECOND,imm_val,FIRST))
+         if (DeeInstance_SetMemberSafe((DeeTypeObject *)SECOND,THIRD,imm_val,FIRST))
              HANDLE_EXCEPT();
          POPREF();
          POPREF();
