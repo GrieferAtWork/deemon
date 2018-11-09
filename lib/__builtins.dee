@@ -285,8 +285,8 @@ local __objects = deemon.list {
 	/* 0x00f0 */ [](x) -> deemon.Error.AppExit.exit(x,false),
 	/* 0x00f1 */ [](x) -> deemon.Error.AppExit.exit(1,false),
 	/* 0x00f2 */ deemon.Error.AppExit.atexit,
-	/* 0x00f3 */ deemon.function_.yield_function,
-	/* 0x00f4 */ deemon.function_.yield_function.iterator,
+	/* 0x00f3 */ deemon.function_.yieldfunction,
+	/* 0x00f4 */ deemon.function_.yieldfunction.iterator,
 	/* 0x00f5 */ ctypes.memset,
 	/* 0x00f6 */ ctypes.mempcpy,
 	/* 0x00f7 */ ctypes.memccpy,
@@ -391,7 +391,7 @@ local __objects = deemon.list {
 	/* 0x015A */ deemon.string, /* string.utf16 */
 	/* 0x015B */ deemon.string, /* string.utf32 */
 	/* 0x015C */ net.sockaddr,
-	/* 0x015D */ deemon.function_.yield_function.iterator, /* DeeZipIterator_Type */
+	/* 0x015D */ deemon.function_.yieldfunction.iterator, /* DeeZipIterator_Type */
 	/* 0x015E */ none, /* TODO: __builtin_FILE */
 	/* 0x015F */ none, /* TODO: __builtin_LINE */
 	/* 0x0160 */ none, /* TODO: __builtin_FUNCTION */
@@ -539,7 +539,7 @@ local __objects = deemon.list {
 	/* 0x01EC */ operators.close, /* DeeBuiltinFunction___close__ */
 	/* 0x01ED */ fs.user, /* DeeFSWin32SID_Type */
 	/* 0x01EF */ deemon.function_,
-	/* 0x01F0 */ deemon.function_.yield_function.iterator, /* DeeEnumIterator_Type (util.enumerate is now implemented as a user-function) */
+	/* 0x01F0 */ deemon.function_.yieldfunction.iterator, /* DeeEnumIterator_Type (util.enumerate is now implemented as a user-function) */
 	/* 0x01F1 */ util.enumerate, /* DeeBuiltinFunction___builtin_enumerate */
 };
 
