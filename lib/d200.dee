@@ -33,8 +33,6 @@ import dict from deemon;
 @"> "
 @"> print MyClass().my_member;"
 @"> "
-class OldUserClass {
-
 	@"A dict mapping old member variables to their proper names."
 class OldUserClass
 	/* Inherit from weakrefable, because it used to be that
