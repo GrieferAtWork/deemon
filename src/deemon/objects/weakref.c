@@ -395,7 +395,7 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
     /* .tp_name     = */DeeString_STR(&str_weakrefable),
     /* .tp_doc      = */DOC("An base class that user-defined clases can "
                             "be derived from to become weakly referencable"),
-    /* .tp_flags    = */TP_FNORMAL|TP_FINHERITCTOR|TP_FNAMEOBJECT,
+    /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(WeakRefAble),
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeObject_Type,
