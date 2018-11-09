@@ -36,6 +36,14 @@ import dict from deemon;
 class OldUserClass {
 
 	@"A dict mapping old member variables to their proper names."
+class OldUserClass
+	/* Inherit from weakrefable, because it used to be that
+	 * any user-defined class could be weakly referneced by
+	 * default, since _any_ object was capable of sustaining
+	 * weak references. */
+	: weakrefable
+{
+
 	private m_members = dict();
 
 	operator . (name) {
