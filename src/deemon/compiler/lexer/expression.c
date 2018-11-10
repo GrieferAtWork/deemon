@@ -694,7 +694,11 @@ do_else_branch:
    function_name = token.t_kwd;
    if unlikely(yield() < 0) goto err;
   }
-  result = ast_parse_function(function_name,NULL,false,&loc);
+  result = ast_parse_function(function_name,NULL,false,&loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                              ,NULL
+#endif
+                              );
  } break;
 
  {
@@ -1010,7 +1014,11 @@ do_lambda:
     old_flags = TPPLexer_Current->l_flags;
     TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
     if unlikely(parse_tags_block()) goto err_flags;
-    result = ast_parse_function(NULL,NULL,true,&loc);
+    result = ast_parse_function(NULL,NULL,true,&loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                                ,NULL
+#endif
+                                );
     TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
     break;
    }
@@ -1311,9 +1319,11 @@ ast_parse_unary_operand(/*inherit(always)*/DREF struct ast *__restrict result) {
     result = merge;
 got_attr:
     if unlikely(yield() < 0) goto err_r;
-got_attr2:;
+got_attr2:
+    ;
    } else {
-    if (WARN(W_EXPECTED_KEYWORD_AFTER_DOT)) goto err_r;
+    if (WARN(W_EXPECTED_KEYWORD_AFTER_DOT))
+        goto err_r;
    }
    break;
 

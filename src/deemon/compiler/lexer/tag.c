@@ -187,7 +187,7 @@ err:
  return -1;
 }
 
-INTERN int (DCALL clear_current_tags)(void) {
+INTERN int (DCALL ast_tags_clear)(void) {
  while (current_tags.at_anno.an_annoc) {
   struct ast_annotation *anno;
   anno = &current_tags.at_anno.an_annov[current_tags.at_anno.an_annoc - 1];
@@ -196,8 +196,16 @@ INTERN int (DCALL clear_current_tags)(void) {
   ast_decref(anno->aa_func);
   --current_tags.at_anno.an_annoc;
  }
- unicode_printer_fini(&current_tags.at_doc);
- unicode_printer_init(&current_tags.at_doc);
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_decl)) {
+  unicode_printer_fini(&current_tags.at_decl);
+  unicode_printer_init(&current_tags.at_decl);
+ }
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+ if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
+  unicode_printer_fini(&current_tags.at_doc);
+  unicode_printer_init(&current_tags.at_doc);
+ }
  current_tags.at_expect      = 0;
  current_tags.at_class_flags = 0;
  return 0;
@@ -205,17 +213,46 @@ err:
  return -1;
 }
 
-PRIVATE int DCALL append_doc_string(void) {
+
+
+/* Pack together the current documentation string. */
+#ifndef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+INTERN DREF DeeObject *DCALL ast_tags_doc(void) {
+ DREF DeeObject *result;
+ if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
+  result = unicode_printer_pack(&current_tags.at_doc);
+  unicode_printer_init(&current_tags.at_doc);
+ } else {
+  result = Dee_EmptyString;
+  Dee_Incref(result);
+ }
+ return result;
+err:
+ return NULL;
+}
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+
+
+PRIVATE int DCALL append_decl_string(void) {
  ASSERT(tok == TOK_STRING ||
        (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
  do {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+  if unlikely(ast_decode_unicode_string(&current_tags.at_decl)) goto err;
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
   if unlikely(ast_decode_unicode_string(&current_tags.at_doc)) goto err;
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
   if unlikely(yield() < 0) goto err;
  } while (tok == TOK_STRING ||
          (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
  /* Append a line-feed at the end. */
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ if unlikely(unicode_printer_putascii(&current_tags.at_decl,'\n'))
+    goto err;
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  if unlikely(unicode_printer_putascii(&current_tags.at_doc,'\n'))
     goto err;
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  return 0;
 err:
  return -1;
@@ -224,8 +261,41 @@ err:
 INTERN int (DCALL parse_tags)(void) {
  if (tok == TOK_STRING ||
     (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
-  if unlikely(append_doc_string())
+  if unlikely(append_decl_string())
      goto err;
+ } else if (tok == '@') {
+  /* Line-style documentation string (terminated by a line-feed) */
+  char *doc_start = token.t_end;
+  char *doc_end = doc_start;
+  char *file_end = token.t_file->f_end;
+  while (doc_end < file_end) {
+   char ch = *doc_end;
+   if (ch == '\\') {
+    if (++doc_end >= file_end) break;
+    ch = *doc_end;
+    if (ch == '\r') {
+     ch = *++doc_end;
+     if (doc_end >= file_end) break;
+     if (ch == '\n') {
+      ch = *++doc_end;
+      if (doc_end >= file_end) break;
+     }
+    } else if (ch == '\n') {
+     ++doc_end;
+    }
+   } else if (DeeUni_IsLF(ch)) {
+    break;
+   } else {
+    ++doc_end;
+   }
+  }
+  token.t_file->f_pos = doc_end;
+  if unlikely(unicode_printer_print(&current_tags.at_doc,doc_start,
+                                   (size_t)(doc_end - doc_start)) < 0)
+     goto err;
+  if unlikely(unicode_printer_putascii(&current_tags.at_doc,'\n'))
+     goto err;
+  if (yield() < 0) goto err;
  } else if (tok == ':') {
   /* Implementation-specific / compile-time tags */
   char const *tag_name_str;

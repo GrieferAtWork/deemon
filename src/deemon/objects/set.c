@@ -496,26 +496,26 @@ PRIVATE struct type_math set_math = {
 
 INTERN struct type_method set_methods[] = {
     { "difference", &set_difference,
-      DOC("(set other)->set\n"
+      DOC("(other:?.)->?.\n"
           "Same as ${this.operator - (other)}") },
     { "intersection", &set_intersection,
-      DOC("(set other)->set\n"
+      DOC("(other:?.)->?.\n"
           "Same as ${this.operator & (other)}") },
     { "isdisjoint", &set_isdisjoint,
-      DOC("(set other)->bool\n"
+      DOC("(other:?.)->?Dbool\n"
           "Returns :true if ${#(this & other) == 0}\n"
           "In other words: If @this and @other have no items in common") },
     { "union", &set_union,
-      DOC("(set other)->set\n"
+      DOC("(other:?.)->?.\n"
           "Same as ${this.operator | (other)}") },
     { "symmetric_difference", &set_symmetric_difference,
-      DOC("(set other)->set\n"
+      DOC("(other:?.)->?.\n"
           "Same as ${this.operator ^ (other)}") },
     { "issubset", &set_issubset,
-      DOC("(set other)->bool\n"
+      DOC("(other:?.)->?Dbool\n"
           "Same as ${this.operator <= (other)}") },
     { "issuperset", &set_issuperset,
-      DOC("(set other)->bool\n"
+      DOC("(other:?.)->?Dbool\n"
           "Same as ${this.operator >= (other)}") },
     { NULL }
 };
@@ -533,7 +533,7 @@ set_iterator_get(DeeTypeObject *__restrict self) {
 
 PRIVATE struct type_getset set_class_getsets[] = {
     { DeeString_STR(&str_iterator), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_iterator_get, NULL, NULL,
-      DOC("->type\nReturns the iterator class used by instances of @this set type\n"
+      DOC("->?Dtype\nReturns the iterator class used by instances of @this set type\n"
           "This member must be overwritten by sub-classes of :set") },
     { NULL }
 };
@@ -646,7 +646,7 @@ INTDEF int DCALL
 seq_ctor(DeeObject *__restrict UNUSED(self));
 
 
-/* TODO: insert(object item)->bool
+/* TODO: insert(object item)->?Dbool
  *       >> // Option #1:
  *       >> return this.insertall([item]) != 0;
  *       >> // Option #2:
@@ -657,7 +657,7 @@ seq_ctor(DeeObject *__restrict UNUSED(self));
  *       >> if (item in this)
  *       >>     return false;
  *       >> this |= [item];
- * TODO: insertall(sequence items)->int
+ * TODO: insertall(items:?S?O)->?Dint
  *       >> local result = 0;
  *       >> for (local x: items) {
  *       >>     // Option #1:
@@ -674,7 +674,7 @@ seq_ctor(DeeObject *__restrict UNUSED(self));
  *       >>     ++result;
  *       >> }
  *       >> return result;
- * TODO: remove(object item)->bool
+ * TODO: remove(object item)->?Dbool
  *       >> // Option #1:
  *       >> return this.removeall([item]) != 0;
  *       >> // Option #2:
@@ -687,7 +687,7 @@ seq_ctor(DeeObject *__restrict UNUSED(self));
  *       >>     return false;
  *       >> this &= ~([item] as set from deemon);
  *       >> return true;
- * TODO: removeall(sequence items)->int
+ * TODO: removeall(items:?S?O)->?Dint
  *       >> local result = 0;
  *       >> for (local x: items) {
  *       >>     // Option #1:
@@ -719,7 +719,7 @@ seq_ctor(DeeObject *__restrict UNUSED(self));
  *       >> // Option #6:
  *       >> for (local x: items)
  *       >>     this.remove(x);
- * TODO: operator += (sequence items)
+ * TODO: operator += (items:?S?O)
  *       >> // Option #1:
  *       >> this |= items;
  *       >> // Option #2:
@@ -731,7 +731,7 @@ seq_ctor(DeeObject *__restrict UNUSED(self));
  *       >> // Option #4:
  *       >> this := (this + items)
  *       >> return this;
- * TODO: operator |= (sequence items)
+ * TODO: operator |= (items:?S?O)
  *       >> // Option #1:
  *       >> this += items;
  *       >> // Option #2:
@@ -743,7 +743,7 @@ seq_ctor(DeeObject *__restrict UNUSED(self));
  *       >> // Option #4:
  *       >> this := (this | items);
  *       >> return this;
- * TODO: operator &= (sequence items)
+ * TODO: operator &= (items:?S?O)
  *       >> if (items is <negated set>) {
  *       >>     // Option #1:
  *       >>     this -= ~items;
@@ -758,7 +758,7 @@ seq_ctor(DeeObject *__restrict UNUSED(self));
  *       >>     this := (this & items);
  *       >> }
  *       >> return this;
- * TODO: operator := (sequence items)
+ * TODO: operator := (items:?S?O)
  *       >> this.clear(); // s.a. default handling for clear()
  *       >> // Option #1:
  *       >> this += items;
@@ -785,15 +785,15 @@ PUBLIC DeeTypeObject DeeSet_Type = {
                             "A no-op default constructor that is implicitly called by sub-classes\n"
                             "When invoked manually, a general-purpose, empty set is returned\n"
                             "\n"
-                            "repr()\n"
+                            "repr->\n"
                             "Returns the representation of all sequence elements, "
                             "using abstract sequence syntax\n"
                             "e.g.: ${{ \"foo\", \"bar\", \"baz\" }}\n"
                             "\n"
-                            "contains(object item)\n"
+                            "contains->\n"
                             "Returns :true indicative of @item being apart of @this set\n"
                             "\n"
-                            "bool()\n"
+                            "bool->\n"
                             "Returns :true if @this set is non-empty\n"
                             "\n"
                             "iter->\n"
@@ -801,39 +801,39 @@ PUBLIC DeeTypeObject DeeSet_Type = {
                             "Note that some set types do not implement this functionality, most "
                             "notably symbolically inversed sets\n"
                             "\n"
-                            "-(set other)->set\n"
+                            "sub->\n"
                             "Returns a set of all objects from @this, excluding those also found in @other\n"
                             "\n"
-                            "&(set other)->set\n"
+                            "&->\n"
                             "Returns the intersection of @this and @other\n"
                             "\n"
-                            "|(set other)->set\n"
-                            "+(set other)->set\n"
+                            "|->\n"
+                            "add->\n"
                             "Returns the union of @this and @other\n"
                             "\n"
-                            "^(set other)->set\n"
+                            "^->\n"
                             "Returns a set containing objects only found in either "
                             "@this or @other, but not those found in both\n"
                             "\n"
-                            "<=(set other)->bool\n"
+                            "<=->\n"
                             "Returns :true if all items found in @this set can also be found in @other\n"
                             "\n"
-                            "==(set other)->bool\n"
+                            "==->\n"
                             "Returns :true if @this set contains the same items as @other, and not any more than that\n"
                             "\n"
-                            "!=(set other)->bool\n"
+                            "!=->\n"
                             "Returns :true if @this contains different, or less items than @other\n"
                             "\n"
-                            "<(set other)->bool\n"
+                            "<->\n"
                             "The result of ${this <= other && this != other}\n"
                             "\n"
-                            ">=(set other)->bool\n"
+                            ">=->\n"
                             "Returns :true if all items found in @other can also be found in @this set\n"
                             "\n"
-                            ">(set other)->bool\n"
+                            ">->\n"
                             "The result of ${this >= other && this != other}\n"
                             "\n"
-                            "~->set\n"
+                            "~->\n"
                             "Returns a symbolic set that behaves as though it contained "
                             "any feasible object that isn't already apart of @this set\n"
                             "Note however that due to the impossibility of such a set, you "

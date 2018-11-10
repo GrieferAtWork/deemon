@@ -242,8 +242,8 @@ err:
  return NULL;
 }
 
-INTERN DREF struct ast *FCALL
-ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
+INTERN struct symbol *FCALL
+ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
  DREF DeeModuleObject *module;
  struct symbol *extern_symbol;
  struct module_symbol *modsym;
@@ -273,11 +273,21 @@ ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
   extern_symbol->s_extern.e_module = module; /* Inherit reference. */
   extern_symbol->s_extern.e_symbol = modsym;
  }
- /* Return the whole thing as a symbol-ast. */
- return ast_sym(extern_symbol);
+ return extern_symbol;
 err_module:
  Dee_Decref(module);
- goto err;
+ /*goto err;*/
+err:
+ return NULL;
+}
+INTERN DREF struct ast *FCALL
+ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
+ struct symbol *extern_symbol;
+ extern_symbol = ast_parse_import_single_sym(import_name);
+ if unlikely(!extern_symbol)
+    goto err;
+ /* Return the whole thing as a symbol-ast. */
+ return ast_sym(extern_symbol);
 err:
  return NULL;
 }

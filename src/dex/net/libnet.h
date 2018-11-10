@@ -657,7 +657,7 @@ sock_gethostbyaddr(void const *__restrict data, socklen_t datalen, sa_family_t f
 
 /* @param flags: Set of `SOCKADDR_STR_F*' */
 INTDEF DREF DeeObject *DCALL SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags);
-#define SOCKADDR_STR_FNORMAL 0x0000 /* Normal string flags. */
+#define SOCKADDR_STR_FNORMAL 0x0000 /* Normal flags:?Dstring. */
 #define SOCKADDR_STR_FNOFAIL 0x0001 /* Don't return with an error if DNS lookup failed. */
 #define SOCKADDR_STR_FNODNS  0x0002 /* Don't use DNS names in the string (use raw IPs instead). */
 #define SOCKADDR_STR_FNOPORT 0x0004 /* Don't include port numbers in address strings. */

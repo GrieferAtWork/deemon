@@ -247,20 +247,20 @@ instancemethod_get_module(InstanceMethod *__restrict self) {
 
 PRIVATE struct type_getset im_getsets[] = {
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_name, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "The name of the function being bound, or :none if unknown") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_doc, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "The documentation string of the function being bound, or :none if unknown") },
     { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_type, NULL, NULL,
-      DOC("->type\n"
-          "->none\n"
+      DOC("->?Dtype\n"
+          "->?N\n"
           "The type implementing the function that is being bound, or :none if unknown") },
     { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_module, NULL, NULL,
-      DOC("->module\n"
-          "->none\n"
+      DOC("->?Dmodule\n"
+          "->?N\n"
           "The type within which the bound function was defined "
           "(alias for :function.__module__ though ${__func__.__module__})\n"
           "If something other than a user-level function was set for #__func__, "
@@ -271,9 +271,10 @@ PRIVATE struct type_getset im_getsets[] = {
 
 PRIVATE struct type_member im_members[] = {
     TYPE_MEMBER_FIELD_DOC("__this__",STRUCT_OBJECT,offsetof(InstanceMethod,im_this),
-                          "->object\nThe object to which @this :instancemethod is bound"),
+                          "->\n"
+                          "The object to which @this :instancemethod is bound"),
     TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(InstanceMethod,im_func),
-                          "->callable\n"
+                          "->?D\n"
                           "The unbound class-function that is being bound by this :instancemethod"),
     TYPE_MEMBER_END
 };
@@ -285,7 +286,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
     /* .tp_doc      = */DOC("(callable func,object thisarg)\n"
                             "Construct an object-bound instance method that can be used to invoke @func\n"
                             "\n"
-                            "call(args...)\n"
+                            "call(args!)->\n"
                             "Invoke the $func used to construct @this "
                             "instancemethod as ${func(thisarg,args...)}"),
     /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,

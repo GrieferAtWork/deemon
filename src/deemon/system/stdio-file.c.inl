@@ -735,7 +735,7 @@ PRIVATE struct type_method sysfile_methods[] = {
     { "flush", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_flush,
       DOC("()->none\nAn alias for #sync used for compatibility with :file.buffer") },
     { "setbuf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_setbuf,
-      DOC("(string mode,int size=0)->none\n"
+      DOC("(string mode,size=!0)->none\n"
           "Set the buffering mode in a manner that is compatible with :file.buffer.setbuf") },
     { NULL }
 };

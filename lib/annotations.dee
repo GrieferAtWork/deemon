@@ -17,39 +17,31 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-from deemon import callable, Error, file;
+import * from deemon;
 
-@"An annotation that may be used to overload a function by "
- "its arguments count"
-@">import Overload from annotations;"
-@">"
-@">@Overload"
-@">function foobar(x) {"
-@"> print \"Called with 1 argument:\",x;"
-@">}"
-@">@foobar.register"
-@">function foobar(x,y) {"
-@"> print \"Called with 2 arguments:\",x,y;"
-@">}"
-@">foobar(10);    /* First variant */"
-@">foobar(10,20); /* Second variant */"
+@@An annotation that may be used to overload a function by its arguments count
+@@>import Overload from annotations;
+@@>
+@@>@Overload
+@@>function foobar(x) {
+@@> print "Called with 1 argument:",x;
+@@>}
+@@>@foobar.register
+@@>function foobar(x,y) {
+@@> print "Called with 2 arguments:",x,y;
+@@>}
+@@>foobar(10);    /* First variant */
+@@>foobar(10,20); /* Second variant */
 class Overload: callable {
 
-	@"->callable"
-	private member primary;
+	private member primary: callable;
+	private member overloads: {callable...} = [];
+	this(func: callable): primary(func) { }
 
-	@"->[callable...]"
-	private member overloads = [];
-
-	@"(callable func)"
-	this(func) {
-		primary = func;
-	}
-
-	operator str() {
+	operator str(): string {
 		return str primary;
 	}
-	operator repr() {
+	operator repr(): string {
 		file.writer fp;
 		fp	<< "Overload("
 			<< repr primary
@@ -76,9 +68,8 @@ class Overload: callable {
 		return primary(args...);
 	}
 
-	@"(function func)->Overload"
-	@"Register a new overload to-be considered for invocation"
-	register(func) {
+	@@Register a new overload to-be considered for invocation
+	register(func: callable): Overload {
 		__stack local code = func.__code__;
 		__stack local min = code.__argc_min__;
 		__stack local max = code.__argc_max__;
@@ -97,44 +88,33 @@ class Overload: callable {
 
 
 
-@"An annotation that may be used to mark a function as deprecated, "
- "and have a warning be printed to :file.stderr the first time it is "
- "invoked"
-@">import Deprecated from annotations;"
-@">"
-@">@Deprecated"
-@">function mydepr() {"
-@"> print \"In mydepr()\";"
-@">}"
-@">@Deprecated(\"Don't call me!\")"
-@">function mydepr2() {"
-@"> print \"In mydepr2()\";"
-@">}"
-@">"
-@">mydepr();  /* ... : Deprecated function `mydepr' called */"
-@">mydepr2(); /* ... : Deprecated function `mydepr2' called: Don't call me! */"
+@@An annotation that may be used to mark a function as deprecated, and have a warning be printed to :file.stderr the first time it is invoked
+@@>import Deprecated from annotations;
+@@>
+@@>@Deprecated
+@@>function mydepr() {
+@@> print "In mydepr()";
+@@>}
+@@>@Deprecated("Don't call me!")
+@@>function mydepr2() {
+@@> print "In mydepr2()";
+@@>}
+@@>
+@@>mydepr();  /* ... : Deprecated function `mydepr' called */
+@@>mydepr2(); /* ... : Deprecated function `mydepr2' called: Don't call me! */
 class Deprecated: callable {
-
-	@"->callable"
-	private member m_func;
-
-	@"->string"
-	private member m_message;
-
-	@"->bool"
-	private member m_didcall = false;
-
-	@"(callable func,string reason=\"\")"
-	this(func, reason = "") {
+	private member m_func: callable;
+	private member m_message: string;
+	private member m_didcall: bool = false;
+	this(func: callable, reason: string = "") {
 		m_func = func;
 		if (reason)
 			m_message = reason;
 	}
-
-	operator str() {
+	operator str(): string {
 		return str m_func;
 	}
-	operator repr() {
+	operator repr(): string {
 		if (m_message is bound)
 			return "Deprecated({!r},{!r})".format({ m_func, m_message });
 		return "Deprecated({!r})".format({ m_func });
@@ -175,41 +155,26 @@ class Deprecated: callable {
 
 
 
-@"An annotation that may be used wrap a function as only being allowed "
- "to be executed by a single thread at a time, as well as allow the "
- "function to be used in $with-statements"
-@">import Synchronized from annotations;"
-@">import mutex from threading;"
-@">@Synchronized"
-@">function myfunc() {"
-@"> print \"Synchronized call to myfunc()\";"
-@">}"
-@">"
-@">local mylock = mutex();"
-@">@Synchronized(mylock)"
-@">function myfunc() {"
-@"> print \"Synchronized call to myfunc()\";"
-@">}"
-@"When annotated with an explicit lock object, the annotated function "
- "is called while being surrounded by an ${operator enter} / ${operator leave} "
- "pair, thus allowing the use of a lock to restrict invocation"
+@@An annotation that may be used wrap a function as only being allowed to be executed by a single thread at a time, as well as allow the function to be used in $with-statements
+@@>import Synchronized from annotations;
+@@>import mutex from threading;
+@@>@Synchronized
+@@>function myfunc() {
+@@> print "Synchronized call to myfunc()";
+@@>}
+@@>
+@@>local mylock = mutex();
+@@>@Synchronized(mylock)
+@@>function myfunc() {
+@@> print "Synchronized call to myfunc()";
+@@>}
+@@When annotated with an explicit lock object, the annotated function is called while being surrounded by an ${operator enter} / ${operator leave} pair, thus allowing the use of a lock to restrict invocation"
 class Synchronized: callable {
-
-	@"->callable"
-	private member m_func;
-
-	@"->:threading.mutex"
-	@"->object"
-	private member m_lock;
-
-	@"(callable func)"
-	@"(callable func,:threading.mutex lock)"
-	@"(callable func,object lock)"
-	@"@param lock The lock that is entered prior to invocation of @func, and "
-	 "will be left afterwards. When omit, a new instance of :threading.mutex "
-	 "will be constructed and used in its place"
-	@"Construct a new Synchronized function annotation for @func"
-	this(func, lock?) {
+	private member m_func: callable;
+	private member m_lock: mutex from threading | object;
+	@@@param lock The lock that is entered prior to invocation of @func, and will be left afterwards. When omit, a new instance of :threading.mutex will be constructed and used in its place"
+	@@Construct a new Synchronized function annotation for @func
+	this(func: callable, lock?: mutex from threading | object) {
 		m_func = func;
 		if (lock is bound)
 			m_lock = lock;
@@ -218,17 +183,17 @@ class Synchronized: callable {
 		}
 	}
 
-	operator str() {
+	operator str(): string {
 		return str m_func;
 	}
-	operator repr() {
+	operator repr(): string {
 		return "Synchronized({!r},{!r})".format({ m_func, m_lock });
 	}
 
-	operator enter() {
+	operator enter(): none {
 		return m_lock.operator enter();
 	}
-	operator leave() {
+	operator leave(): none {
 		return m_lock.operator leave();
 	}
 	operator () (args...) {
@@ -242,48 +207,38 @@ class Synchronized: callable {
 
 
 
-@"Annotation for timing how long a function took to execute"
-@">import Timed from annotations;"
-@">"
-@">@Timed"
-@">function myfunc() {"
-@"> print \"In myfunc()\";"
-@">}"
-@">"
-@">myfunc();"
-@">/* ??? Microseconds */"
-@">print repr myfunc.total.microseconds;"
-@">"
-@">myfunc();"
-@">/* ??? Microseconds (about 2x as many; probably less due to CPU caching) */"
-@">print repr myfunc.total.microseconds;"
+@@Annotation for timing how long a function took to execute
+@@>import Timed from annotations;
+@@>
+@@>@Timed
+@@>function myfunc() {
+@@> print "In myfunc()";
+@@>}
+@@>
+@@>myfunc();
+@@>/* ??? Microseconds */
+@@>print repr myfunc.total.microseconds;
+@@>
+@@>myfunc();
+@@>/* ??? Microseconds (about 2x as many; probably less due to CPU caching) */
+@@>print repr myfunc.total.microseconds;
 class Timed: callable {
-
-	@"->module"
-	private static member m_libtime;
-
-	@"->callable"
-	private member m_func;
-
-	@"->:time.time"
-	private member m_total_spend;
-
-	@"->int"
-	private member m_num_invocations = 0;
-
-	@"(callable func)"
-	this(func) {
+	private static member m_libtime: module;
+	private member m_func: callable;
+	private member m_total_spend: time from time;
+	private member m_num_invocations: int = 0;
+	this(func: callable) {
 		m_func = func;
 		if (m_libtime !is bound)
 			m_libtime = import("time");
 		m_total_spend = m_libtime.time(0);
 	}
 
-	operator str() {
+	operator str(): string {
 		return str m_func;
 	}
 
-	operator repr() {
+	operator repr(): string {
 		return "Timed({!r})".format({ m_func });
 	}
 
@@ -297,25 +252,22 @@ class Timed: callable {
 		}
 	}
 
-	@"()"
-	@"Reset all timing data"
+	@@Reset all timing data
 	reset() {
 		del total;
 	}
 
-	@"->:time.time"
-	@"Get/del (reset)/set the amount of time that has "
-	 "already been spent while inside of the function."
-	@">print myfunc.total.microseconds;"
-	property total = {
-		get() {
+	@@Get/del (reset)/set the amount of time that has already been spent while inside of the function."
+	@@>print myfunc.total.microseconds;
+	property total: time from time = {
+		get(): time from time {
 			return m_total_spend;
 		}
 		del() {
 			m_total_spend = m_libtime.time(0);
 			m_num_invocations = 0;
 		}
-		set(value) {
+		set(value: time from time) {
 			if (value is none) {
 do_del_total:
 				del total;
@@ -330,12 +282,11 @@ do_del_total:
 		}
 	}
 
-	@"->:time.time"
-	@"@throw ValueError The function hasn't been called yet"
-	@"Get the average time spent while inside of the function"
-	@">print myfunc.average.microseconds;"
-	property average = {
-		get() {
+	@@@throw ValueError The function hasn't been called yet
+	@@Get the average time spent while inside of the function
+	@@>print myfunc.average.microseconds;
+	property average: time from time = {
+		get(): time from time {
 			try {
 				return m_total_spend / m_num_invocations;
 			} catch (Error.ValueError.Arithmetic.DivideByZero) {
@@ -345,8 +296,23 @@ do_del_total:
 			}
 		}
 	}
-
 }
+
+
+/* TODO: @Typed -- Ensures that input types match declared types
+ * >> import * from deemon;
+ * >> import Typed from annotations;
+ * >> @Typed
+ * >> function foo(x: int, y: int): int {
+ * >>     return x + y;
+ * >> }
+ * >> foo(10,20);    // Ok
+ * >> foo(10,"foo"); // Error: Argument `y' must be an `int', but is actually a `string'
+ * TODO: Also extend the Overload annotation to look at argument
+ *       types and try to overload depending on the argument types
+ *       being passed.
+ */
+
 
 
 

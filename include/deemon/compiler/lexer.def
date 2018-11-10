@@ -152,7 +152,7 @@ DEF_K(member)
  * >>           // and therewith visible to, as well as addressible and modifyable by other modules.
  * >> function set_local_y() {
  * >>     y = 42;        // Error: Cannot write to referenced variable (`y' isn't a global)
- * >>     global y = 42; // Same error: `global y' referrs to a variable in
+ * >>     global y = 42; // Same error: `global y' refers to a variable in
  * >>                    // the root scope, not an actual `global' variable.
  * >> }
  * >>
@@ -318,6 +318,14 @@ DEF_WARNING(W_CANNOT_TEST_EXPRESSION_BINDING,(WG_SYNTAX),WSTATE_ERROR,WARNF("Can
 DEF_WARNING(W_UNCLEAR_CAST_INTENT,(WG_QUALITY),WSTATE_DISABLED,WARNF("Intended code behavior of potential cast expression is ambiguous and not compiled as a cast. "
                                                                      "To suppress this warning, add a second pair of parenthesis to the previous expression"))
 DEF_WARNING(W_EXPECTED_COLLON_AFTER_KEYWORD_LABEL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after keyword label in argument list, but got " TOK_S,TOK_A))
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+DEF_WARNING(W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION,(WG_SYNTAX),WSTATE_ERROR,WARNF("Unexpected token " TOK_S " encountered within declaration expression",TOK_A))
+DEF_WARNING(W_EXPECTED_DOTS_AFTER_SEQUENCE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `...' after sequence declaration, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RBRACE_AFTER_SEQUENCE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' after sequence declaration, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_TUPLE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after tuple declaration, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION,(WG_CONST,WG_VALUE),WSTATE_ERROR,WARNF("Expected a constant expression as argument for `type' inside of a declaration expression"))
+#endif
+
 
 WARNING_NAMESPACE(WN_GOTO_LABEL,2380)
 DEF_WARNING(W_MISSING_STATEMENT_AFTER_LABEL,(WG_SYNTAX),WSTATE_WARN,WARNF("Expected a statement after a label, but got " TOK_S,TOK_A))
@@ -425,6 +433,11 @@ DEF_WARNING(W_NO_D200_OLD_USER_CLASS,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `d20
 
 DEF_WARNING(W_COMPARE_SODO_NONBUILTIN_UNDEFINED,(WG_SYMBOL),WSTATE_WARN,WARNF("Comparing compiler-generated constants with `===' or `!==' produces undefined results"))
 
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+DEF_WARNING(W_SYMBOL_TYPE_DECLARATION_CHANGED,(WG_SYNTAX),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Type declaration for symbol `%s' differs from previous definition",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE,(WG_SYNTAX),WSTATE_ERROR,{ char *name = ARG(char *); WARNF("Unknown attribute `%s' of constant expressions `%r'",name,ARG(DeeObject *)); })
+#endif
+
 
 #ifdef CONFIG_LANGUAGE_NO_ASM
 WARNING_NAMESPACE(WN_ASM_INTERPRETER,4100)
@@ -521,7 +534,7 @@ DEF_WARNING(W_ASM_CANNOT_UNBIND_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol 
 DEF_WARNING(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind undesignated stack variable `%s' at this time",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,(WG_SYMBOL),WSTATE_WARN,{ struct symbol *sym = ARG(struct symbol *); WARNF("Deleting stack variable `%s' will not cause the symbol to become unbound",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_CANNOT_WRITE_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot write to symbol `%s' of class `%s'",SYMBOL_NAME(sym),SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
-DEF_WARNING(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot modify read-only external symbol `%k from %k'",SYMBOL_EXTERN_SYMBOL(sym)->ss_name,SYMBOL_EXTERN_MODULE(sym)->mo_name); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot modify read-only external symbol `%s from %k'",SYMBOL_EXTERN_SYMBOL(sym)->ss_name,SYMBOL_EXTERN_MODULE(sym)->mo_name); PRINT_SYMBOL_DECLARATION(sym); })
 
 WARNING_NAMESPACE(WN_ASSEMBLER_LABLES,8120)
 DEF_WARNING(W_ASM_LABEL_ALREADY_DEFINED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Label `%s' has already been defined",ARG(char *)))

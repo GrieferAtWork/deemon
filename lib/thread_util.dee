@@ -19,33 +19,32 @@
 
 
 
-@"function suspend_thread(thread t) -> with_closure"
-@"Suspends executing within the given thread @t until the returned object"
-@"has been destroyed, or until its $__leave__ operator has been invoked."
-@"Make sure not to acquire any lock that the thread may be holding while"
-@"you're suspending it. Doing so will cause a deadlock."
-@"Also note that this function acts synchronously, meaning that once it returns"
-@"the with_closure to the caller, the given thread @t will already be suspended."
-@"Also note that the thread @t can still be interrupted"
-@">> import thread from deemon;"
-@">> import milliseconds,seconds from time;"
-@">> local my_thread = thread([]{"
-@">>     for (;;) {"
-@">>         print \"In thread\";"
-@">>         thread.sleep(milliseconds(20));"
-@">>     }"
-@">> });"
-@">> thread.start();"
-@">> thread.sleep(seconds(1));"
-@">> with (suspend_thread(thread)) {"
-@">>     print \"The thread is now suspended\";"
-@">>     thread.sleep(milliseconds(100));"
-@">> }"
-@">> print \"The thread is now running again\";"
-@">> thread.sleep(seconds(1));"
-@">> thread.interrupt();"
-@">> thread.join();"
-function suspend_thread(t) {
+@@Suspends executing within the given thread @t until the returned object
+@@has been destroyed, or until its $__leave__ operator has been invoked.
+@@Make sure not to acquire any lock that the thread may be holding while
+@@you're suspending it. Doing so will cause a deadlock.
+@@Also note that this function acts synchronously, meaning that once it returns
+@@the with_closure to the caller, the given thread @t will already be suspended.
+@@Also note that the thread @t can still be interrupted
+@@>import thread from deemon;
+@@>import milliseconds,seconds from time;
+@@>local my_thread = thread([]{
+@@>    for (;;) {
+@@>        print "In thread";
+@@>        thread.sleep(milliseconds(20));
+@@>    }
+@@>});
+@@>thread.start();
+@@>thread.sleep(seconds(1));
+@@>with (suspend_thread(thread)) {
+@@>    print "The thread is now suspended";
+@@>    thread.sleep(milliseconds(100));
+@@>}
+@@>print "The thread is now running again";
+@@>thread.sleep(seconds(1));
+@@>thread.interrupt();
+@@>thread.join();
+function suspend_thread(t: thread from deemon) {
 	import semaphore from threading;
 	local key = semaphore(0);
 	local sync = semaphore(0);

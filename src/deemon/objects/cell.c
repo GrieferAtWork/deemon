@@ -438,42 +438,42 @@ err:
 
 PRIVATE struct type_method cell_methods[] = {
     { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_get,
-      DOC("->object\n"
+      DOC("->\n"
           "@throw ValueError @this cell is empty\n"
           "Returns the contained value of the cell\n"
           "\n"
-          "(def)->object\n"
+          "(def)->\n"
           "Returns the contained value of the cell or @def when it is empty") },
     { "delete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_delete,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Delete the value stored in @this cell, returning :true if "
           "the cell wasn't empty before, or :false if it already was") },
     { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_pop,
-      DOC("->object\n"
+      DOC("->\n"
           "@throw ValueError The cell was empty\n"
           "\n"
-          "(def)->object\n"
+          "(def)->\n"
           "Pop and return the previously contained object, @def, or throw a ValueError") },
     { "set", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_set,
-      DOC("(value)->bool\n"
+      DOC("(value)->?Dbool\n"
           "Set (override) @this cell's value, returning :true if a previous value "
           "has been overwritten, or :falue if no value had been set before") },
     { "xch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_xch,
-      DOC("(value)->object\n"
+      DOC("(value)->\n"
           "@throw ValueError @this cell is empty\n"
           "Overwrite the cell's value and return the old value or throw an error when it was empty\n"
           "\n"
-          "(value,def)->object\n"
+          "(value,def)->\n"
           "Returns the contained value of the cell or @def when it is empty") },
     { "cmpdel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_cmpdel,
-      DOC("(old_value)->bool\n"
+      DOC("(old_value)->?Dbool\n"
           "Atomically check if the stored object's id matches @{old_value}. If this is "
           "the case, delete the stored object and return :{true}. Otherwise, return :false") },
     { "cmpxch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_cmpxch,
-      DOC("(old_value,new_value)\n"
+      DOC("(old_value,new_value)->\n"
           "@throw ValueError @this cell is empty\n"
           "\n"
-          "(old_value,new_value,def)\n"
+          "(old_value,new_value,def)->\n"
           "Do an id-compare of the stored object against @old_value and overwrite "
           "that object with @new_value when they match. Otherwise, don't modify the "
           "stored object. In both cases, return the previously stored object, @def, or throw a :{ValueError}.\n"
@@ -483,22 +483,22 @@ PRIVATE struct type_method cell_methods[] = {
           ">    this.value = new_value;\n"
           ">return result\n"
           "\n"
-          "(new_value)->bool\n"
+          "(new_value)->?Dbool\n"
           "Return :true and atomically set @new_value as stored object only "
           "if no object had been set before. Otherwise, return :false") },
     { "cmpset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_cmpset,
-      DOC("(old_value)->bool\n"
-          "(old_value,new_value)->bool\n"
+      DOC("(old_value)->?Dbool\n"
+          "(old_value,new_value)->?Dbool\n"
           "Atomically check if the stored value equals @old_value and return :true "
           "alongside storing @new_value if this is the case. Otherwise, return :false\n"
           "When @new_value is omit, the function behaves identical to #cmpdel") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     { "del", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_delete,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Deprecated alias for #delete") },
     { "exchange", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_xch,
-      DOC("(value)->object\n"
-          "(value,def)->object\n"
+      DOC("(value)->\n"
+          "(value,def)->\n"
           "Deprecated alias for #xch") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }

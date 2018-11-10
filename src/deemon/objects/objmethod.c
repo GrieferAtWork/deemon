@@ -293,18 +293,18 @@ DOC_DEF(objmethod_get_func_doc,
         "->callable\n"
         "The unbound class-function that is being bound by this object-method");
 DOC_DEF(objmethod_get_name_doc,
-        "->string\n"
+        "->?Dstring\n"
         "The name of the function being bound");
 DOC_DEF(objmethod_get_doc_doc,
-        "->string\n"
-        "->none\n"
+        "->?Dstring\n"
+        "->?N\n"
         "The documentation string of the function being bound, or :none if unknown");
 DOC_DEF(objmethod_get_type_doc,
-        "->type\n"
+        "->?Dtype\n"
         "The type implementing the function that is being bound");
 DOC_DEF(objmethod_get_module_doc,
-        "->module\n"
-        "->none\n"
+        "->?Dmodule\n"
+        "->?N\n"
         "The module implementing the function that is being bound, or :none if unknown");
 
 PRIVATE struct type_getset objmethod_getsets[] = {
@@ -646,15 +646,15 @@ clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 
 PRIVATE struct type_getset clsmethod_getsets[] = {
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_name, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "The name of @this method") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_doc, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "The documentation string of @this method, or :none if unknown") },
     { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_module, NULL, NULL,
-      DOC("->module\n"
-          "->none\n"
+      DOC("->?Dmodule\n"
+          "->?N\n"
           "The module implementing @this method, or :none if unknown") },
     { NULL }
 };
@@ -662,7 +662,7 @@ PRIVATE struct type_getset clsmethod_getsets[] = {
 
 PRIVATE struct type_member clsmethod_members[] = {
     TYPE_MEMBER_FIELD_DOC("__type__",STRUCT_OBJECT,offsetof(DeeClsMethodObject,cm_type),
-                          "->type\n"
+                          "->?Dtype\n"
                           "The type implementing @this method"),
     TYPE_MEMBER_END
 };
@@ -952,16 +952,16 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
 
 PRIVATE struct type_method clsproperty_methods[] = {
     { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
-       DOC("(thisarg)"), TYPE_METHOD_FKWDS },
+       DOC("(thisarg)->"), TYPE_METHOD_FKWDS },
     { "delete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_delete,
-       DOC("(thisarg)->none"), TYPE_METHOD_FKWDS },
+       DOC("(thisarg)"), TYPE_METHOD_FKWDS },
     { "set", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
-       DOC("(thisarg,value)->none"), TYPE_METHOD_FKWDS },
+       DOC("(thisarg,value)"), TYPE_METHOD_FKWDS },
     { "getter", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
-       DOC("(thisarg)\n"
+       DOC("(thisarg)->\n"
            "Alias for #get"), TYPE_METHOD_FKWDS },
     { "setter", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
-       DOC("(thisarg,value)->none\n"
+       DOC("(thisarg,value)\n"
            "Alias for #set"), TYPE_METHOD_FKWDS },
     { NULL }
 };
@@ -1023,31 +1023,31 @@ clsproperty_canset(DeeClsPropertyObject *__restrict self) {
 
 PRIVATE struct type_getset clsproperty_getsets[] = {
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_name, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "The name of @this property") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_doc, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "The documentation string of @this property, or :none if unknown") },
     { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_module, NULL, NULL,
-      DOC("->module\n"
-          "->none\n"
+      DOC("->?Dmodule\n"
+          "->?N\n"
           "The module implementing @this property, or :none if unknown") },
     { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canget, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this property has a getter callback") },
     { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_candel, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this property has a delete callback") },
     { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canset, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this property has a setter callback") },
     { NULL }
 };
 
 PRIVATE struct type_member clsproperty_members[] = {
     TYPE_MEMBER_FIELD_DOC("__type__",STRUCT_OBJECT,offsetof(DeeClsPropertyObject,cp_type),
-                          "->type\n"
+                          "->?Dtype\n"
                           "The type implementing @this property"),
     TYPE_MEMBER_END
 };
@@ -1181,7 +1181,7 @@ clsmember_set(DeeClsMemberObject *__restrict self,
 
 PRIVATE struct type_method clsmember_methods[] = {
     { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_get,
-       DOC("(thisarg)"), TYPE_METHOD_FKWDS },
+       DOC("(thisarg)->"), TYPE_METHOD_FKWDS },
     { "delete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_delete,
        DOC("(thisarg)"), TYPE_METHOD_FKWDS },
     { "set", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_set,
@@ -1229,13 +1229,13 @@ PRIVATE struct type_cmp clsmember_cmp = {
 
 PRIVATE struct type_member clsmember_members[] = {
     TYPE_MEMBER_FIELD_DOC("__type__",STRUCT_OBJECT,offsetof(DeeClsMemberObject,cm_type),
-                          "->type\n"
+                          "->?Dtype\n"
                           "The type implementing @this member"),
     TYPE_MEMBER_FIELD_DOC("__name__",STRUCT_CONST|STRUCT_CSTR,offsetof(DeeClsMemberObject,cm_memb.m_name),
                           "The name of @this member"),
     TYPE_MEMBER_FIELD_DOC("__doc__",STRUCT_CONST|STRUCT_CSTR_EMPTY,offsetof(DeeClsMemberObject,cm_memb.m_doc),
-                          "->string\n"
-                          "->none\n"
+                          "->?Dstring\n"
+                          "->?N\n"
                           "The documentation string of @this member, or :none if unknown"),
     TYPE_MEMBER_CONST_DOC("canget",Dee_True,"Always evaluates to :true"),
     TYPE_MEMBER_END
@@ -1258,14 +1258,14 @@ clsmember_get_module(DeeClsMemberObject *__restrict self) {
 
 PRIVATE struct type_getset clsmember_getsets[] = {
     { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Alias for #canset") },
     { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this member can be modified") },
     { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *))&clsmember_get_module, NULL, NULL,
-      DOC("->module\n"
-          "->none\n"
+      DOC("->?Dmodule\n"
+          "->?N\n"
           "The module implementing @this member, or :none if unknown") },
     { NULL }
 };
@@ -1509,21 +1509,21 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 
 PRIVATE struct type_getset cmethod_getsets[] = {
     { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_module, NULL, NULL,
-      DOC("->module\n"
-          "->none\n"
+      DOC("->?Dmodule\n"
+          "->?N\n"
           "Returns the module defining @this method, or :none if that module could not be determined") },
     { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_type, NULL, NULL,
-      DOC("->type\n"
-          "->none\n"
+      DOC("->?Dtype\n"
+          "->?N\n"
           "Returns the type as part of which @this method was declared, or :none "
           "if @this method was declared as part of a module, or if the type could "
           "not be located") },
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_name, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Returns the name of @this method") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_doc, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "Returns the documentation string of @this method, or :none if unknown") },
     { NULL }
 };

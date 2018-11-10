@@ -68,7 +68,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
               WARN(W_EXPECTED_LPAREN_AFTER_IF))
      goto err_flags;
   /* NOTE: Allow variable declarations within the condition. */
-  result = ast_parse_comma(LOOKUP_SYM_NORMAL|
+  result = ast_parse_comma(LOOKUP_SYM_NORMAL |
                            LOOKUP_SYM_ALLOWDECL,
                            AST_FMULTIPLE_KEEPLAST,
                            NULL);
@@ -197,8 +197,8 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
   merge = ast_loop((uint16_t)type,elem_or_cond,iter_or_next,result);
   ast_decref(result);
   if unlikely(!merge) goto err_for_loop;
-  ast_decref(iter_or_next);
-  ast_decref(elem_or_cond);
+  ast_xdecref(iter_or_next);
+  ast_xdecref(elem_or_cond);
   result = merge;
   /* Check if a loop initializer was parsed.
    * If one was, then simply wrap everything in a multi-branch AST. */

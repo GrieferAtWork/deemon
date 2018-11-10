@@ -1828,16 +1828,16 @@ PRIVATE struct type_getset user_class_getsets[] = {
     { "name", &default_user_get_name, NULL, NULL, DeeUser_static_name_doc },
     { "home", &default_user_get_home, NULL, NULL, DeeUser_static_home_doc },
     { "domain_np", &default_user_get_domain, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Alias for :gethostname") },
     { "profilesdir_np", &user_get_profiles_dir, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Returns the windows profiles directory containing all user profiles (Usually ${r\"C:\\Users\"})") },
     { "defaultuserhome_np", &user_get_defaulthome, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Returns the home folder of the default profile (Usually ${r\"C:\\Users\\Default\"})") },
     { "allusershome_np", &user_get_allusershome, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Returns the home folder of all profiles (Usually ${r\"C:\\ProgramData\"})") },
     { NULL }
 };
@@ -1953,7 +1953,7 @@ PRIVATE struct type_getset user_getsets[] = {
     { "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_name, NULL, NULL, DeeUser_name_doc },
     { "home", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_home, NULL, NULL, DeeUser_home_doc },
     { "domain_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_domain, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "@throw SystemError Failed to retrieve the domain\n"
           "Returns the windows-specific name of the domain associated with @this user") },
     { NULL }
@@ -2465,11 +2465,11 @@ PRIVATE struct type_getset stat_getsets[] = {
 
     /* Non-portable NT extensions. */
     { "ntattr_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getntattr_np, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "Non-portable windows extension for retrieveing the NT attributes of the stat-file, those "
           "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers") },
     { "nttype_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getnttype_np, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw ValueError @this stat-file does not contain valid NT-type information\n"
           "Non-portable windows extension for retrieveing the NT type of this stat-file, that "
           "type being one of the `FILE_TYPE_*' constants found in windows system headers") },

@@ -316,7 +316,7 @@ instancemember_visit(DeeInstanceMemberObject *__restrict self, dvisit_t proc, vo
 PRIVATE struct type_method instancemember_methods[] = {
     { "get",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&instancemember_get,
-      DOC("(thisarg)->object\n"
+      DOC("(thisarg)->\n"
           "Return the @thisarg's value of @this member"),
       TYPE_METHOD_FKWDS },
     { "delete",
@@ -386,24 +386,24 @@ instancemember_get_canset(DeeInstanceMemberObject *__restrict self) {
 
 PRIVATE struct type_getset instancemember_getsets[] = {
     { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_canget, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this member can be read from") },
     { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_candel, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this member can be deleted") },
     { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_canset, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this member can be written to") },
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_name, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "The name of @this instance member") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_doc, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "The documentation string associated with @this instance member") },
     { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_module, NULL, NULL,
-      DOC("->module\n"
-          "->none\n"
+      DOC("->?Dmodule\n"
+          "->?N\n"
           "Returns the module that is defining @this instance "
           "member, or :none if that module could not be defined") },
     { NULL }

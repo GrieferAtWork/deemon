@@ -74,7 +74,7 @@ INTDEF DeeFileTypeObject DeePipeWriter_Type;
  *    Return the process's pid
  * >> function join() -> int;
  * >> function tryjoin() -> (bool,int);
- * >> function timedjoin(int timeout_in_microseconds) -> (bool,int);
+ * >> function timedjoin(timeout_in_microseconds:?Dint) -> (bool,int);
  * >> function detach() -> bool;
  *    Returns false if the process already was detached.
  * >> function terminate(int exit_code = 0) -> bool;

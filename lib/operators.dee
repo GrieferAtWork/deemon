@@ -23,20 +23,19 @@
  * >> items.sort(operator <); // Compiled as `items.sort(lo from operators)'
  */
 
+import * from deemon;
 
-@"(type tp,callable operator_function)->callable"
-@"Bind a given @operator_function to execute the "
-@"associated operator for a specific type @tp only:"
-@">import bind from operators;"
-@">import * from deemon;"
-@">local sequence_add = bind(sequence,operator +);"
-@">local foo = [10,20,30];"
-@">local bar = [40,50,60];"
-@">// Invokes `(foo as list).operator + (bar)'"
-@">print repr sequence_add(foo,bar);"
-@">// Invokes `foo.operator + (bar)'"
-@">print repr operator + (foo,bar);"
-function bind(tp,operator_function) {
+@@Bind a given @operator_function to execute the associated operator for a specific type @tp only:
+@@>import bind from operators;
+@@>import * from deemon;
+@@>local sequence_add = bind(sequence,operator +);
+@@>local foo = [10,20,30];
+@@>local bar = [40,50,60];
+@@>// Invokes `(foo as list).operator + (bar)'
+@@>print repr sequence_add(foo,bar);
+@@>// Invokes `foo.operator + (bar)'
+@@>print repr operator + (foo,bar);
+function bind(tp: type object,operator_function: callable): callable {
 	return [](x,args...) {
 		import Error from deemon;
 		if (x !is tp && !tp.isgeneric) {
@@ -267,15 +266,10 @@ function __gaosa(obj,attr,opt?) {
 
 
 
-@"function operator(int id, object args...) -> object"
-@"Fallback function."
-@"Any operator not exported as its S-name will invoke this"
-@"function, passing its implementation-specific ID as first"
-@"argument with all the other arguments following thereafter."
-@"Additionally, any operator with an unknown S-name calls this"
-@"function to implement its callback."
-function operator(id,args...) {
-	import Error from deemon;
+@@Operator fallback function.
+@@Any operator not exported as its S-name will invoke this function, passing its implementation-specific ID as first argument with all the other arguments following thereafter.
+@@Additionally, any operator with an unknown S-name calls this function to implement its callback.
+function operator(id: int,args...) {
 	throw Error.TypeError("Cannot invoke unknown operator #%X" % id);
 }
 

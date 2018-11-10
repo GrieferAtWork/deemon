@@ -34,11 +34,11 @@
 
 DECL_BEGIN
 
-DOC_DEF(ispointer_doc,"->bool\nReturns :true if @this :structured_type is a :pointer_type");
-DOC_DEF(islvalue_doc,"->bool\nReturns :true if @this :structured_type is an :lvalue_type");
-DOC_DEF(isarray_doc,"->bool\nReturns :true if @this :structured_type is an :array_type");
-DOC_DEF(isfunction_doc,"->bool\nReturns :true if @this :structured_type is a :function_type");
-DOC_DEF(isstruct_doc,"->bool\nReturns :true if @this :structured_type is a :struct_type");
+DOC_DEF(ispointer_doc,"->?Dbool\nReturns :true if @this :structured_type is a :pointer_type");
+DOC_DEF(islvalue_doc,"->?Dbool\nReturns :true if @this :structured_type is an :lvalue_type");
+DOC_DEF(isarray_doc,"->?Dbool\nReturns :true if @this :structured_type is an :array_type");
+DOC_DEF(isfunction_doc,"->?Dbool\nReturns :true if @this :structured_type is a :function_type");
+DOC_DEF(isstruct_doc,"->?Dbool\nReturns :true if @this :structured_type is a :struct_type");
 
 
 /* Interpret `self' as a pointer and store the result in `*result'
@@ -192,8 +192,8 @@ stype_vfunc(DeeSTypeObject *__restrict self,
 
 PRIVATE struct type_method stype_methods[] = {
     { "func", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_func,
-      DOC("(type types...)->function_type\n"
-          "(string calling_convention, type types...)->function_type\n"
+      DOC("(types!:?Dtype)->?Gfunction_type\n"
+          "(calling_convention:?Dstring,types!:?Dtype)->?Gfunction_type\n"
           "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
           "@param calling_convention The name of the calling convention\n"
           "Construct a new function prototype, using @types as argument, @this "
@@ -201,18 +201,18 @@ PRIVATE struct type_method stype_methods[] = {
           "Note that unlike #{operator ()}, certain types from the deemon core are "
           "also accepted as argument types, such as :deemon:bool inplace of :bool") },
     { "vfunc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_vfunc,
-      DOC("(type types...)->function_type\n"
-          "(string calling_convention, type types...)->function_type\n"
+      DOC("(types!:?Dtype)->function_type\n"
+          "(calling_convention:?Dstring,types!:?Dtype)->function_type\n"
           "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
           "@param calling_convention The name of the calling convention\n"
           "Same as #func, but enable support for varrgs") },
     { NULL }
-//    { "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
-//    { "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
-//    { "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
-//    { "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
-//    { "is_array", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
-//    { "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->bool\nDeprecated (always returns :false)") },
+//    { "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+//    { "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+//    { "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+//    { "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+//    { "is_array", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+//    { "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -228,15 +228,15 @@ stype_alignof(DeeSTypeObject *__restrict self) {
 
 PRIVATE struct type_getset stype_getsets[] = {
     { "ptr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
-      DOC("->pointer_type\nReturns the pointer type associated with @this :structured_type") },
+      DOC("->?Gpointer_type\nReturns the pointer type associated with @this :structured_type") },
     { "lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_LValue, NULL, NULL,
-      DOC("->lvalue_type\nReturns the l-value type associated with @this :structured_type") },
+      DOC("->?Glvalue_type\nReturns the l-value type associated with @this :structured_type") },
     { "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stype_sizeof, NULL, NULL,
-      DOC("->int\nReturns the size of @this :structured_type in bytes") },
+      DOC("->?Dint\nReturns the size of @this :structured_type in bytes") },
     { "alignof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stype_alignof, NULL, NULL,
-      DOC("->int\nReturns the alignment of @this :structured_type in bytes") },
+      DOC("->?Dint\nReturns the alignment of @this :structured_type in bytes") },
     { "pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
-      DOC("->pointer_type\nAlias for #ptr") },
+      DOC("->?Gpointer_type\nAlias for #ptr") },
     { NULL }
 };
 
@@ -300,12 +300,12 @@ create_inst:
 INTERN DeeTypeObject DeeSType_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"structured_type",
-    /* .tp_doc      = */DOC("operator getitem\n"
-                            "Construct new array types using this type as item type\n"
+    /* .tp_doc      = */DOC("[]->\n"
+                            "Construct new array types using @this type as item type\n"
                             "\n"
-                            "operator()()->structured\n"
-                            "operator()(object args...)->structured\n"
-                            "operator()(structured_type types...)->function\n"
+                            "call()->?Gstructured\n"
+                            "call(args!)->?Gstructured\n"
+                            "call(types!:?Gstructured_type)->?Gfunction\n"
                             "Construct a new function type using this type as return type, "
                             "or construct a new instance of @this :structured_type"),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC,
@@ -440,7 +440,7 @@ ltype_sizeof(DeeLValueTypeObject *__restrict self) {
 
 PRIVATE struct type_getset ltype_getsets[] = {
     { "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ltype_sizeof, NULL, NULL,
-      DOC("->int\nReturns the size of the base of @this :lvalue_type in bytes") },
+      DOC("->?Dint\nReturns the size of the base of @this :lvalue_type in bytes") },
     { NULL }
 };
 
@@ -982,11 +982,14 @@ err:
 
 PRIVATE struct type_getset struct_getsets[] = {
     { "sizeof", &struct_sizeof, NULL, NULL,
-      DOC("->int\nReturns the size of @this :structured object") },
+      DOC("->?Dint\n"
+          "Returns the size of @this :structured object") },
     { "alignof", &struct_alignof, NULL, NULL,
-      DOC("->int\nReturns the alignment of @this :structured object") },
+      DOC("->?Dint\n"
+          "Returns the alignment of @this :structured object") },
     { "ref", &struct_ref, NULL, NULL,
-      DOC("->pointer\nReturns a pointer to @this :structured object") },
+      DOC("->pointer\n"
+          "Returns a pointer to @this :structured object") },
     { NULL }
 };
 
@@ -1815,7 +1818,7 @@ ftype_args(DeeCFunctionTypeObject *__restrict self) {
 
 PRIVATE struct type_getset ftype_getsets[] = {
     { "args", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ftype_args, NULL, NULL,
-      DOC("->{structured_type...}\n"
+      DOC("->?S?Gstructured_type\n"
           "Returns an immutable sequence describing the argument types used by this function") },
     { NULL }
 };

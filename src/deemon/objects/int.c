@@ -2423,7 +2423,7 @@ int_tostr(DeeObject *__restrict self, size_t argc,
    else if (ch == 's' || ch == '+') flags |= DEEINT_PRINT_FSIGN;
    else {
     DeeError_Throwf(&DeeError_ValueError,
-                    "Invalid integer to string flags %q",
+                    "Invalid integer to flags:?Dstring %q",
                     flags_str);
     goto err;
    }
@@ -2556,7 +2556,7 @@ err:
 
 PRIVATE struct type_method int_class_methods[] = {
     { "frombytes", (dobjmethod_t)&int_frombytes,
-      DOC("(buffer bytes,string byteorder=none,bool signed=false)->int\n"
+      DOC("(data:?Dbytes,byteorder:?Dstring=!N,signed=!f)->?Dint\n"
           "@param byteorder The byteorder encoding used by the returned bytes. "
                            "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
                            "or $none (for host-endian)\n"
@@ -2568,7 +2568,7 @@ PRIVATE struct type_method int_class_methods[] = {
 
 PRIVATE struct type_method int_methods[] = {
     { "tostr", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_tostr,
-      DOC("(int radix=10,string mode=\"\")->string\n"
+      DOC("(radix=!10,mode=!P{})->?Dstring\n"
           "@throw ValueError The given @mode was not recognized\n"
           "@throw NotImplemented The given @radix cannot be represented\n"
           "Convert @this integer to a string, using @radix as base and a "
@@ -2580,16 +2580,16 @@ PRIVATE struct type_method int_methods[] = {
           "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
       TYPE_METHOD_FKWDS },
     { "hex", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_hex,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Short-hand alias for ${this.tostr(16,\"n\")} (s.a. #tostr)") },
     { "bin", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_bin,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Short-hand alias for ${this.tostr(2,\"n\")} (s.a. #tostr)") },
     { "oct", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_oct,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Short-hand alias for ${this.tostr(8,\"n\")} (s.a. #tostr)") },
     { "tobytes", (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_tobytes,
-      DOC("(int length,string byteorder=none,bool signed=false)->bytes\n"
+      DOC("(length:?Dint,byteorder:?Dstring=!N,signed=!f)->?Dbytes\n"
           "@param byteorder The byteorder encoding used by the returned bytes. "
                            "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
                            "or $none (for host-endian)\n"
@@ -2645,12 +2645,12 @@ PUBLIC DeeTypeObject DeeInt_Type = {
                             "()\n"
                             "Returns the integer constant $0\n"
                             "\n"
-                            "(object ob)\n"
+                            "(ob)\n"
                             "@throw NotImplemented The given @ob does not implement ${operator int}\n"
                             "Converts @ob into an integer\n"
                             "\n"
-                            "(string s, int radix = 0)\n"
-                            "(bytes s, int radix = 0)\n"
+                            "(s:?Dstring,radix=!0)\n"
+                            "(s:?Dbytes,radix=!0)\n"
                             "@throw ValueError The given string @s is not a valid integer\n"
                             "@throw ValueError The given @radix is invalid\n"
                             "Convert the given :string or :bytes object @s into an integer\n"
@@ -2700,11 +2700,11 @@ PUBLIC DeeTypeObject DeeInt_Type = {
                             "@throw DivideByZero The given @other is $0\n"
                             "Divide @this by @other and return the remainder\n"
                             "\n"
-                            "<<(int count)->\n"
+                            "<<(count:?Dint)->\n"
                             "@throw NegativeShift The given @count is lower than $0\n"
                             "Shift the bits of @this left a total of @count times\n"
                             "\n"
-                            ">>(int count)->\n"
+                            ">>(count:?Dint)->\n"
                             "@throw NegativeShift The given @count is lower than $0\n"
                             "Shift the bits of @this right a total of @count times. "
                             "All bits that fall off of the end are discarded\n"

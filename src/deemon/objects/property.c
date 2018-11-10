@@ -164,19 +164,19 @@ PRIVATE struct type_cmp property_cmp = {
 
 PRIVATE struct type_member property_members[] = {
     TYPE_MEMBER_FIELD_DOC("getter",STRUCT_OBJECT,offsetof(Property,p_get),
-                          "->callable\n"
+                          "->?Dcallable\n"
                           "The getter callback"),
     TYPE_MEMBER_FIELD_DOC("delete",STRUCT_OBJECT,offsetof(Property,p_del),
-                          "->callable\n"
+                          "->?Dcallable\n"
                           "The delete callback"),
     TYPE_MEMBER_FIELD_DOC("setter",STRUCT_OBJECT,offsetof(Property,p_set),
-                          "->callable\n"
+                          "->?Dcallable\n"
                           "The setter callback"),
     TYPE_MEMBER_FIELD_DOC("get",STRUCT_OBJECT,offsetof(Property,p_get),
-                          "->callable\n"
+                          "->?Dcallable\n"
                           "Alias for #getter"),
     TYPE_MEMBER_FIELD_DOC("set",STRUCT_OBJECT,offsetof(Property,p_set),
-                          "->callable\n"
+                          "->?Dcallable\n"
                           "Alias for #setter"),
     TYPE_MEMBER_END
 };
@@ -294,28 +294,28 @@ property_get_module(Property *__restrict self) {
 
 PRIVATE struct type_getset property_getsets[] = {
     { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_canget, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this property has a getter callback") },
     { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_candel, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this property has a delete callback") },
     { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_canset, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this property has a setter callback") },
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_name, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Returns the name of @this property") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_doc, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "Returns the documentation string of @this property, or :none if unknown") },
     { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_type, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "Returns the type implementing @this property, or :none if unknown") },
     { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_module, NULL, NULL,
-      DOC("->module\n"
-          "->none\n"
+      DOC("->?Dmodule\n"
+          "->?N\n"
           "Returns the module within which @this property is declared, or :none if unknown") },
     { NULL }
 };
@@ -334,9 +334,9 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_property),
     /* .tp_doc      = */DOC("()\n"
-                            "(callable getter=none,callable delete=none,callable setter=none)\n"
+                            "(getter:?Dcallable=!N,delete:?Dcallable=!N,setter:?Dcallable=!N)\n"
                             "\n"
-                            "call(args...)\n"
+                            "call(args!)->\n"
                             "Same as ${this.get(args...)}"),
     /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,

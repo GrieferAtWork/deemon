@@ -25,38 +25,6 @@ import util;
 
 chdir from fs(headof from fs(__FILE__));
 
-global opname_to_symbol_map = {
-	"lo" : "<",
-	"le" : "<=",
-	"eq" : "==",
-	"ne" : "!=",
-	"gr" : ">",
-	"ge" : ">=",
-	"add" : "+",
-	"sub" : "-",
-	"mul" : "*",
-	"div" : "/",
-	"mod" : "%",
-	"shl" : "<<",
-	"shr" : ">>",
-	"size" : "#",
-	"iterself" : "iter",
-	"iternext" : "next",
-	"getitem" : "[]",
-	"delitem" : "del[]",
-	"setitem" : "[]=",
-	"getrange" : "[:]",
-	"delrange" : "del[:]",
-	"setrange" : "[:]=",
-};
-
-global default_return_types = {
-	"length" : "int",
-	"any" : "bool",
-};
-global default_param_list = {
-	"reduce" : "(callable merger)",
-};
 global syntax_highlight = {
 	"pack" : "h_kwd",
 	"str" : "h_kwd",
@@ -132,390 +100,23 @@ local error_type_links = deemon.dict();
 	find_error_links(error_type_links,deemon.Error,"/modules/deemon");
 }
 
-function recursive_hasattr(obj,attr) {
-	if ("." !in attr)
-		return deemon.hasattr(obj,attr);
-	local parts = deemon.list(attr.split("."));
-	try {
-		for (local x: parts[:#parts-1])
-			obj = obj.operator . (x);
-	} catch (...) {
-		return false;
-	}
-	return deemon.hasattr(obj,parts.back());
+
+function write_page_head(fp,title) {
+	fp <<
+		"<!DOCTYPE HTLM>\r\n"
+		"<html>\r\n"
+		"<head>\r\n"
+			"<meta charset=\"UTF-8\">"
+			"<link rel=\"stylesheet\" href=\"/style.css\">"
+			"<title>{}</title>"
+		"</head>\r\n"
+		"<body>\r\n"
+		.format({
+		title
+	});
 }
-
-@"Formats parameter, or return types in prototypes, as well as \\:{...} links"
-function format_type_link(mod,d,fp,name) {
-	local name_link = "";
-	local name_start = name.find(":");
-	/* Most powerful case: an explicit module name is contained. */
-	if (name_start >= 0) {
-		local module_name = name[:name_start].rstrip();
-		name = name[name_start+1:].lstrip();
-		name_link = "/modules/{}/{}".format({
-			module_name.replace(".","/"),
-			name
-		});
-		goto has_link;
-	}
-	/* No `:' is contained in the type name. */
-	/* #1: Search the module containing `d' */
-	if (recursive_hasattr(mod,name)) {
-		name_link = "/modules/{}/{}".format({
-			mod.name,
-			name.replace(".","/")
-		});
-		goto has_link;
-	}
-	/* #2: Search all modules imported by that module, but don't do so recursively. */
-	for (local imp: mod.__imports__) {
-		if (recursive_hasattr(imp,name)) {
-			name_link = "/modules/{}/{}".format({
-				imp.name,
-				name.replace(".","/")
-			});
-			goto has_link;
-		}
-	}
-	/* #3: Search the builtin `deemon' module if it wasn't already searched. */
-	if (recursive_hasattr(deemon,name)) {
-		name_link = "/modules/deemon/" + name.replace(".","/");
-		goto has_link;
-	}
-	/* #4: Recursively search all builtin errors reachable
-	 *     from `Error from deemon' and `Signal from deemon' */
-	name_link = error_type_links.get(name,"");
-
-	if (name_link) {
-has_link:
-		fp.write("<a href=\"");
-		fp.write(name_link);
-		fp.write("\">");
-		fp.write(name);
-		fp.write("</a>");
-	} else {
-		fp.write(name);
-	}
-}
-
-
-global format_sourcecode;
-function format_function_param(mod,d,fp,index,param) {
-	local default_value = "";
-	local param_type = "";
-	local param_name = "";
-	local temp = param.find("=");
-	if (temp >= 0) {
-		default_value = param[temp+1:].lstrip();
-		param = param[:temp].rstrip();
-	}
-	temp = param.find(" ");
-	if (temp >= 0) {
-		param_type = param[:temp].rstrip();
-		param_name = param[temp+1:].lstrip();
-	} else {
-		param_type = "object";
-		param_name = param;
-	}
-	format_type_link(mod,d,fp,param_type);
-	fp.write(" ");
-	fp.write(param_name);
-	if (default_value) {
-		fp.write(" = ");
-		format_sourcecode(mod,d,fp,default_value);
-	}
-}
-
-function format_prototype(mod,d,fp,name,proto) {
-	local item_type = d.typeof();
-	proto = proto.strip().rstrip("; ");
-	if (proto.startswith("function"))
-		proto = proto[#"function":].lstrip();
-	if (proto.startswith(name))
-		proto = proto[#name:].lstrip();
-	local is_type_object = item_type == type object;
-	local is_callable = (is_type_object ||
-		(try deemon.callable.baseof(item_type) catch (...) false));
-	if (is_type_object && !proto.startswith("(") && !proto.startswith("->"))
-		proto = "operator "+proto;
-	if (proto.startswith("operator")) {
-		name  = "operator ";
-		proto = proto[#"operator":].lstrip();
-		if (proto.startswith("()")) {
-			local fwd = proto[2:].lstrip();
-			if (fwd.startswith("(")) {
-				name += "()";
-				proto = fwd;
-				goto got_name;
-			}
-		}
-		local param_start = proto.find("(");
-		if (param_start < 0)
-			param_start = proto.find("->");
-		if (param_start < 0) {
-			name = proto;
-			proto = "()";
-			goto got_name;
-		}
-		name += proto[:param_start].replace(" ","");
-		proto = proto[param_start:].lstrip();
-	}
-got_name:
-	local return_type = "";
-	local param_list = "";
-	if (proto.startswith("(")) {
-		local paren_endpos = proto.find(")");
-		if (paren_endpos >= 0) {
-			param_list = proto[:paren_endpos+1];
-			proto = proto[paren_endpos+1:].lstrip();
-		}
-	}
-	local arrow_pos = proto.find("->");
-	if (arrow_pos >= 0) {
-		return_type = proto[arrow_pos+2:].lstrip();
-		proto = proto[:arrow_pos].rstrip();
-	}
-
-	if (is_callable) {
-		/* Unify operator names. */
-		if (name.startswith("operator ")) {
-			local opname = name[#"operator ":];
-			opname = opname.strip().strip("_");
-			opname = opname_to_symbol_map.get(opname,opname);
-			name = "operator " + opname;
-		}
-		if (!return_type) {
-			if (name == d.name()) {
-				/* Special case: constructor. */
-				return_type = name;
-			} else if (name.startswith("operator ")) {
-				/* Default return types for operators. */
-				local opname = name[#"operator ":];
-				if (opname in ["+","*","/","%","<<",">>","&","|","^","**"])
-					return_type = d.name();
-				else if (opname in ["<","<=","==","!=",">",">=","bool","contains"])
-					return_type = "bool";
-				else if (opname in ["repr","str"])
-					return_type = "string";
-				else if (opname == "#")
-					return_type = "int";
-				else if (opname == "iter")
-					return_type = "iterator";
-			}
-		}
-		if (!param_list) {
-			if (name.startswith("operator ")) {
-				/* Default argument lists for operators. */
-				local opname = name[#"operator ":];
-				if (opname in ["+","*","/","%","<<",">>","&","|","^",
-				               "**","<","<=","==","!=",">",">="])
-					param_list = "("+d.name()+" other)";
-				else if (opname in ["repr","str","bool","#"])
-					param_list = "()";
-				else if (opname in ["[]","del[]"])
-					param_list = "(int index)";
-				else if (opname in ["[]="])
-					param_list = "(int index,object item)";
-				else if (opname in ["[:]","del[:]"])
-					param_list = "(int start,int end)";
-				else if (opname in ["[:]="])
-					param_list = "(int start,int end,sequence items)";
-				else if (opname in ["contains"])
-					param_list = "(object elem)";
-			}
-		}
-	}
-	if (!return_type) {
-		return_type = default_return_types.get(name,"");
-		/* If the user documented an actual parameter list,
-		 * assume that the lack of a return type means that
-		 * they intended the function to return `none' */
-		if (!return_type)
-			return_type = param_list ? "none" : "object";
-	}
-	if (!param_list && is_callable)
-		param_list = default_param_list.get(name,"()");
-
-	fp.write(name);
-	if (!name.back().issymbol()) fp.write(" ");
-	if (param_list) {
-		fp.write("(");
-		if (param_list.startswith("("))
-			param_list = param_list[1:];
-		if (param_list.endswith(")"))
-			param_list = param_list[:#param_list-1];
-		param_list = param_list.strip();
-		if (param_list) {
-			local params = deemon.list(param_list.split(","));
-			for (local i,param: util.enumerate(params)) {
-				format_function_param(mod,d,fp,i,param.strip());
-				if (i != #params-1) fp.write(", ");
-			}
-		}
-		fp.write(")");
-	}
-	fp.write(" -> ");
-	format_type_link(mod,d,fp,return_type);
-}
-
-local replacements = {
-	{ "\\\\", "\\{s}" },
-	{ "\\\n", "\\{l}" },
-	{ "\\@",  "\\{a}" },
-	{ "\\:",  "\\{c}" },
-	{ "\\#",  "\\{h}" },
-	{ "\\$",  "\\{C}" },
-	{ "\\%",  "\\{p}" },
-};
-function encode_escape(x) {
-	for (local o,n: replacements)
-		x = x.replace(o,n);
-	return x;
-}
-function decode_escape(x) {
-	for (local o,n: replacements)
-		x = x.replace(n,o[1:]);
-	return x;
-}
-
-
-function emit_human_text(fp,text) {
-	text = decode_escape(text);
-	text = text.replace("<","&lt;");
-	text = text.replace(">","&gt;");
-	text = text.replace("\n","");
-	fp.write(text);
-}
-
-function find_first(s,items) {
-	local tag = none;
-	local result = #s;
-	for (local i: items) {
-		local temp = s.find(i);
-		if (temp < 0) continue;
-		if (temp < result) {
-			tag = i;
-			result = temp;
-		}
-	}
-	return tag,result;
-}
-
-global format_sourcecode;
-global format_human_doctext;
-function format_human_content(mod,d,fp,prefix,content) {
-	switch (prefix) {
-
-	case ":":
-		format_type_link(mod,d,fp,decode_escape(content));
-		break;
-
-	case "$":
-		fp.write("<div class=\"inline_source\">");
-		format_sourcecode(mod,d,fp,content);
-		fp.write("</div>");
-		break;
-
-	case "@":
-		fp.write("<i>");
-		fp.write(content);
-		fp.write("</i>");
-		break;
-
-	case "#":
-		fp.write("<i>");
-		/* TODO: Link to member documentation. */
-		fp.write(content);
-		fp.write("</i>");
-		break;
-
-	case "@":
-		fp.write("<i>");
-		format_human_doctext(mod,d,fp,content);
-		fp.write("</i>");
-		break;
-
-	{
-	case "%":
-		local name;
-		name,none,content = content.partition(" ")...;
-		switch (name) {
-
-		case "table":
-			fp.write("<br>\r\n<table>\r\n");
-			local is_first_line = true;
-			for (local line: content.splitlines()) {
-				line = line.strip().lstrip("- ");
-				if (line) {
-					fp.write("<tr>");
-					for (local entry: line.split("|")) {
-						fp.write(is_first_line ? "<th>" : "<td>");
-						format_human_doctext(mod,d,fp,entry.strip());
-						fp.write(is_first_line ? "</th>" : "</td>");
-					}
-					fp.write("</tr>\r\n");
-				}
-				is_first_line = false;
-			}
-			fp.write("</table>\r\n");
-			break;
-
-		case "link":
-			local target;
-			target,none,content = content.partition(" ")...;
-			fp.write("<a href={!r}>".format({ target }));
-			fp.write(content.strip());
-			fp.write("</a>");
-			break;
-
-		default:
-			fp.write("UNKNOWN_COMMAND(");
-			fp.write(repr name);
-			fp.write(",");
-			fp.write(repr content);
-			fp.write(")");
-			break;
-		}
-	} break;
-
-	default:
-		fp.write("UNKNOWN_TAG(");
-		fp.write(repr prefix);
-		fp.write(",");
-		format_human_doctext(mod,d,fp,content);
-		fp.write(")");
-		break;
-	}
-}
-
-function format_human_doctext(mod,d,fp,text) {
-	/* Encode escaped characters. */
-	text = encode_escape(text);
-	for (;;) {
-		local st,i = find_first(text,{
-			":", "@", "#", "$", "%"
-		})...;
-		if (st is none)
-			break;
-		emit_human_text(fp,text[:i]);
-		text = text[i+1:];
-		if (text.startswith("{")) {
-			local cend = text.findmatch("{","}",1);
-			if (cend < 0) cend = #text;
-			format_human_content(mod,d,fp,st,text[1:cend]);
-			text = text[cend+1:];
-		} else {
-			local cend = 1;
-			while (cend < #text &&
-			      (text.issymstrt(cend) ||
-			       text[cend] in [".",":"]))
-				++cend;
-			format_human_content(mod,d,fp,st,text[:cend]);
-			text = text[cend:];
-		}
-	}
-	emit_human_text(fp,text);
+function write_page_tail(fp) {
+	fp << "</body>\r\n</html>\r\n";
 }
 
 function split_tokens(text) {
@@ -524,11 +125,23 @@ function split_tokens(text) {
 	for (;;) {
 		if (i >= length) break;
 		local tok_start = i;
-		while (i < length && text.issymstrt(i)) ++i;
-		if (i != tok_start) yield text[tok_start:i];
-		if (i >= length) break;
-		tok_start = i;
-		if (text[i] in ["\"","\'"]) {
+		if (text[i] == "r" && i+1 < length && text[i+1] in ["\"","\'"]) {
+			++i;
+			text[i];
+			i = text.find(text[i],i+1);
+			if (i < 0) i = length;
+			else ++i;
+		} else if (text.issymstrt(i)) {
+			do ++i;
+			while (i < length && text.issymcont(i));
+			yield text[tok_start:i];
+			continue;
+		} else if (text.isdecimal(i)) {
+			do ++i;
+			while (i < length && text.isalnum(i));
+			yield text[tok_start:i];
+			continue;
+		} else if (text[i] in ["\"","\'"]) {
 			local find_end = text[i];
 			do ++i;
 			while (i < length && (text[i] != find_end || text[i-1] == "\\"));
@@ -553,32 +166,8 @@ function split_tokens(text) {
 	}
 }
 
-function strip_common_linehead(text) {
-	local lines = list(
-		for (local x: text.expandtabs().splitlines())
-			if (x) x);
-	if (!lines) return "";
-	local first_line = lines[0];
-	local common_head = "";
-	while (first_line && first_line[0] in [">"," "]) {
-		common_head += first_line[0];
-		first_line = first_line[1:];
-	}
-	if (common_head) {
-		for (local i = 0; i < #lines; ++i) {
-			local common = 0;
-			local line = lines[i];
-			while (common < #common_head && line[common] == common_head[common])
-				++common;
-			line = line[common:];
-			lines[i] = line;
-		}
-	}
-	return "\n".join(lines);
-}
 
-function format_sourcecode(mod,d,fp,text) {
-	text = strip_common_linehead(text);
+function format_sourcecode(fp,d,text) {
 	for (local tok: split_tokens(text)) {
 		if (!tok) continue;
 		local fmt = syntax_highlight.get(tok,none);
@@ -587,7 +176,9 @@ function format_sourcecode(mod,d,fp,text) {
 				fmt = "h_string";
 			else if (tok.startswith("//") || tok.startswith("/*"))
 				fmt = "h_comment";
-			else if (tok[0].isdigit())
+			else if (tok.startswith("r\"") || tok.startswith("r\'"))
+				fmt = "h_rawstring";
+			else if (tok[0].isdecimal())
 				fmt = "h_number";
 			else if (tok[0] in [
 				"=","<",">","?",":","+","-","*","/","%",".",",",";",
@@ -600,247 +191,532 @@ function format_sourcecode(mod,d,fp,text) {
 		tok = tok.replace(" ","&nbsp;");
 		tok = tok.replace("\n","<br>\r\n");
 		if (fmt !is none) {
-			tok = "<var class=\"{}\">{}</var>".format({ fmt, tok });
+			fp << "<var class=\"" << fmt << "\">" << tok << "</var>";
+		} else {
+			fp << tok;
 		}
-		fp.write(tok);
 	}
 }
 
-@"format_doctag(module mod, DocItem d, file fp, string tag_name, string descr)"
-@"@param tag_name The name of the tag. e.g. ${\"param\"}"
-@"@param descr The description of the tag. e.g. ${\"descr The description of the tag\"}"
-@"Format a documentation tag"
-function format_doctag(mod,d,fp,tag_name,descr) {
-	/* Tag names are case-insensitive */
-	tag_name = tag_name.lower();
-	/* Special case: The @interrupt tag is a short-hand of this. */
-	if (tag_name == "interrupt") {
-		tag_name = "throw";
-		descr = "Signal.Interrupt: The calling :thread was interrupted";
-	}
-	fp.write("<var class=\"doc_tag\">");
-	switch (tag_name) {
+global doc_cache = deemon.dict();
+global global_target_cache = deemon.dict();
+global tooltip_cache = deemon.dict();
+global get_tooltip_text;
 
-	{
+function get_doc_path(path) {
+	path = path.lstrip("/");
+	local result = doc_cache.get(path);
+	if (result is none) {
+		result = Doc(path);
+		doc_cache[path] = result;
+	}
+	return result;
+}
+
+
+function do_find_global_target(module_node,name,allow_module_root = true) {
+	local colon_pos = name.find(":");
+	if (colon_pos >= 0 &&
+	   (colon_pos < 2 ||
+	   (name[colon_pos-2:colon_pos] != "op" && name[colon_pos-1] !in ["c","i"]))) {
+		local target_module,target_path;
+		target_module,none,target_path = name.partition(":")...;
+		return get_doc_path("/{}/{}".format({ target_module, target_path }));
+	}
+	/* #1: Search the module of the type referring to the documentation string. */
+	local did_search_deemon = module_node.object === deemon;
+	try {
+		return module_node.recursive_child(name);
+	} catch (...) {
+	}
+	/* #2: Search all modules imported by that module, but don't do so recursively. */
+	for (local x: module_node.object.__imports__) {
+		try {
+			return get_doc_path("{}/{}".format({ x.__name__, name }));
+		} catch (...) {
+		}
+		if (x === deemon)
+			did_search_deemon = true;
+	}
+	/* #3: Search the builtin `deemon' module if it wasn't already searched. */
+	if (!did_search_deemon) {
+		try {
+			return get_doc_path("deemon/{}".format({ name }));
+		} catch (...) {
+		}
+	}
+	/* #4: Recursively search all builtin errors reachable from `Error from deemon' and `Signal from deemon' */
+	local result = error_type_links.get(name);
+	if (result !is none)
+		return get_doc_path(result[#"/modules":]);
+	/* #5: Try to open a module with the specified name */
+	if (allow_module_root)
+		return get_doc_path(name);
+	return none;
+}
+
+function find_global_target(d,name,allow_module_root = true) {
+	local module_node = d.modulenode;
+	local current_module = module_node.object;
+	name = name.replace(".","/");
+	local subcache = global_target_cache.get(current_module.__name__);
+	local result;
+	if (subcache is none) {
+		subcache = deemon.dict();
+		global_target_cache[current_module.__name__] = subcache;
+	} else {
+		result = subcache.get(name,false);
+		if (result !== false)
+			return result;
+	}
+	//print "do_find_global_target({!r},{!r})".format({ module_node, name });
+	result = do_find_global_target(module_node,name,allow_module_root);
+	subcache[name] = result;
+	return result;
+}
+
+
+@"(Doc d)->string"
+function get_tooltip(d) {
+	local result = tooltip_cache.get(d.path);
+	if (result !is none)
+		return result;
+	for (local none, text: d.doc) {
+		result = get_tooltip_text(d,text);
+		if (result !is none)
+			break;
+	}
+	if (result is none)
+		result = "";
+	tooltip_cache[d.path] = result;
+	return result;
+}
+
+
+function escape_html_test(text) {
+	return text
+		.replace("<","&lt;")
+		.replace(">","&gt;")
+		.replace("\n","<br />\r\n");
+}
+
+
+function print_with_target(fp,d,target) {
+	local tooltip = get_tooltip(target);
+	if (tooltip)
+		fp << "<div class=\"tooltip\">";
+	fp << "<a href=" << repr "/modules/{}".format({ target.path });
+	fp << "><i>" << target.name << "</i></a>";
+	if (tooltip) {
+		fp	<< "<span class=\"tooltiptext\">"
+			<< tooltip
+			<< "</span></div>";
+	}
+}
+
+function print_with_link(fp,d,name,allow_module_root = true) {
+	local target = find_global_target(d,name,allow_module_root);
+	if (target is none) {
+		fp << "<div class=\"broken_link\"><i>" << name << "</i></div>";
+		return;
+	}
+	print_with_target(fp,d,target);
+}
+function print_local_link(fp,d,name) {
+	/* `#find' */
+	local parent = d.istype ? d : d.parent;
+	local target;
+	try {
+		target = parent.child(name);
+	} catch (...) {
+		fp	<< "<div class=\"broken_link\"><i>" << name << "</i></div>";
+		return;
+	}
+	print_with_target(fp,d,target);
+}
+function print_argument(fp,d,name) {
+	/* TODO: `@foobar' */
+	fp << "<i>" << name << "</i>";
+}
+
+
+@"(string text)->{(bool,string)...}"
+@"Split a given string @text into its individual identifiers, returning pairs of (is_identifier,content)"
+@">/* { { true, \"foo\" }, "
+@">/*   { false, \",\" }, "
+@">/*   { true, \"bar\" }, "
+@">/*   { false, \",\" }, "
+@">/*   { true, \"foobar\" } } */"
+@">print repr split_identifiers(\"foo,bar,foobar\");"
+function split_identifiers(text) {
+	local textlen = #text;
+	local segment_start = 0;
+	while (segment_start < textlen) {
+		local segment_end = segment_start + 1;
+		local ch = text[segment_start];
+		if (ch.issymstrt() || ch == ":") {
+			/* Identifier segment. */
+			while (segment_end < textlen &&
+				(text.issymcont(segment_end) || text[segment_end] in [".",":"]))
+				++segment_end;
+			yield pack(true,text[segment_start:segment_end]);
+		} else {
+			/* Non-identifier segment. */
+			while (segment_end < textlen &&
+				(!text.issymstrt(segment_end) && text[segment_end] != ":"))
+				++segment_end;
+			yield pack(false,text[segment_start:segment_end]);
+		}
+		segment_start = segment_end;
+	}
+}
+
+function print_type_expr(fp,d,expr) {
+	for (local is_ident,content: split_identifiers(expr)) {
+		if (is_ident) {
+			local target = find_global_target(d,content,false);
+			if (target !is none) {
+				print_with_target(fp,d,target);
+				continue;
+			}
+		}
+		fp << content;
+	}
+}
+
+
+class HTMLTextSplitter: TextSplitter {
+
+	@"(file fp,string text,int preferred_line_length,closure)->none"
+	print_text(fp,text,preferred_line_length,closure) {
+		fp << escape_html_test(text);
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_at(fp,content,preferred_line_length,closure) {
+		print_argument(fp,closure,content);
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_dollar(fp,content,preferred_line_length,closure) {
+#if 1
+		fp << "<div class=\"tooltip\"><code class=\"inline_source\">";
+		format_sourcecode(fp,closure,content);
+		fp <<
+			"</code><span class=\"autotooltiptext\">"
+			"<div class=\"source\">";
+		format_sourcecode(fp,closure,content);
+		fp << "</div></span></div>";
+#else
+		fp << "<code class=\"inline_source\">";
+		format_sourcecode(fp,closure,content);
+		fp << "</code>";
+#endif
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_collon(fp,content,preferred_line_length,closure) {
+		print_with_link(fp,closure,content);
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_hash(fp,content,preferred_line_length,closure) {
+		print_local_link(fp,closure,content);
+	}
+
+	@"(file fp,string target,string text,int preferred_line_length,closure)->none"
+	decode_link(fp,target,text,preferred_line_length,closure) {
+		fp << "<a href=" << repr target << ">";
+		print_text(fp,text,preferred_line_length,closure);
+		fp << "</a>";
+	}
+
+	@"(file fp,{{string...}...} table,int preferred_line_length,closure)->none"
+	decode_table(fp,table,preferred_line_length,closure) {
+		fp << "<table>";
+		local is_first_row = true;
+		for (local row: table) {
+			fp << "<tr>";
+			if (is_first_row) {
+				for (local cell: row) {
+					fp << "<th><b>" << cell << "</b></th>";
+				}
+				is_first_row = false;
+			} else {
+				for (local cell: row) {
+					fp << "<td>";
+					this.decode(cell,fp,preferred_line_length,closure);
+					fp << "</td>";
+				}
+			}
+			fp << "</tr>\r\n";
+		}
+		fp << "</table>";
+	}
+}
+
+class PlainTextSplitter: HTMLTextSplitter {
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_at(fp,content,preferred_line_length,closure) {
+		fp << content;
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_dollar(fp,content,preferred_line_length,closure) {
+		fp << content;
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_collon(fp,content,preferred_line_length,closure) {
+		fp << content;
+	}
+
+	@"(file fp,string content,int preferred_line_length,closure)->none"
+	decode_hash(fp,content,preferred_line_length,closure) {
+		fp << content;
+	}
+
+	@"(file fp,string target,string text,int preferred_line_length,closure)->none"
+	decode_link(fp,target,text,preferred_line_length,closure) {
+		fp << text;
+	}
+
+	@"(file fp,{{string...}...} table,int preferred_line_length,closure)->none"
+	decode_table(fp,table,preferred_line_length,closure) {
+		for (local row: table) {
+			local is_first_cell = true;
+			for (local cell: table) {
+				if (!is_first_cell) {
+					fp << " ";
+				}
+				is_first_cell = false;
+				fp << cell;
+			}
+			fp << "\n";
+		}
+	}
+}
+
+local html_splitter = HTMLTextSplitter();
+local plain_splitter = PlainTextSplitter();
+
+
+function print_prototype_params(fp,d,proto) {
+	local params = proto.parameters;
+	if (params !is none) {
+		fp << "(";
+		local is_first = true;
+		for (local typ,name,defl: params) {
+			if (!is_first)
+				fp << ", ";
+			if (typ is none)
+				typ = "object";
+			print_type_expr(fp,d,typ);
+			fp << " ";
+			print_argument(fp,d,name);
+			if (defl !is none)
+				fp << " = " << defl;
+			is_first = false;
+		}
+		fp << ")";
+	}
+	fp << " -> ";
+	print_type_expr(fp,d,proto.returntype);
+}
+function print_prototype(fp,d,name,proto,function_link = none) {
+	if (function_link is none) {
+		fp << name;
+	} else {
+		fp << "<a href={!r}>".format({ function_link }) << name << "</a>";
+	}
+	if (!name[#name-1].issymcont())
+		fp << " ";
+	print_prototype_params(fp,d,proto);
+}
+
+function print_doctag(fp,d,name,content) {
+	fp << "<tr><td><var class=\"doc_tag\">";
+	switch (name) {
+
+	case "return":
+	case "returns":
+		fp << "Returns</var></td><td>";
+		html_splitter.decode(content,fp,none,d);
+		break;
+
+	case "arg":
+	case "param":
+		fp << "Argument</var></td><td>";
+		local type_end = 0;
+		while (type_end < #content &&
+		      (content.issymstrt(type_end) ||
+		       content[type_end] in [".",":"]))
+			++type_end;
+		local error_typename = content[:type_end].rstrip(":");
+		content = content[type_end:].lstrip();
+		print_argument(fp,d,error_typename);
+		fp << "</td><td>";
+		html_splitter.decode(content,fp,none,d);
+		break;
+
 	case "throw":
 	case "throws":
-		fp.write("Throws");
-		fp.write("</var> ");
+		fp << "Throws</var></td><td>";
 		local type_end = 0;
-		while (type_end < #descr &&
-		      (descr.issymstrt(type_end) ||
-		       descr[type_end] in [".",":"]))
+		while (type_end < #content &&
+		      (content.issymstrt(type_end) ||
+		       content[type_end] in [".",":"]))
 			++type_end;
-		local error_typename = descr[:type_end].rstrip(":");
-		descr = descr[type_end:].lstrip();
-		format_type_link(mod,d,fp,error_typename);
-		fp.write(" ");
-		format_human_doctext(mod,d,fp,descr);
-		fp.write("<br>\r\n");
-	}	break;
+		local error_typename = content[:type_end].rstrip(":");
+		content = content[type_end:].lstrip();
+		print_with_link(fp,d,error_typename,false);
+		fp << "</td><td>";
+		html_splitter.decode(content,fp,none,d);
+		break;
 
 	default:
-		fp.write("UNKNOWN_TAG(<code>");
-		fp.write(repr tag_name);
-		fp.write("</code>):");
-		fp.write("</var> ");
-		format_human_doctext(mod,d,fp,descr);
-		fp.write("<br>\r\n");
+		fp << "UNKNOWN_TAG(<code>" << repr name << "</code>)</var></td><td>";
+		html_splitter.decode(content,fp,none,d);
 		break;
 	}
+	fp << "</td></tr>\r\n";
 }
 
-@"format_doctext_part(module mod, DocItem d, file fp, string prefix, string text)"
-function format_doctext_part(mod,d,fp,prefix,text) {
-	if (!text) return;
-	if (prefix == "@") {
-		local tag_name_end = 0;
-		while (tag_name_end < #text &&
-		      (text.issymstrt(tag_name_end) ||
-		       text[tag_name_end] in [".",":"]))
-			++tag_name_end;
-		local tag_name = text[:tag_name_end].rstrip(":");
-		text = text[tag_name_end:].lstrip();
-		format_doctag(mod,d,fp,tag_name,text.replace("\n",""));
-	} else if (prefix in [">","$"]) {
-		fp.write("<div class=\"source\">");
-		format_sourcecode(mod,d,fp,text);
-		fp.write("</div>\r\n");
-	} else {
-		/* Default case: emit as human-text. */
-		format_human_doctext(mod,d,fp,text);
-		fp.write("<br>\r\n");
-	}
-}
-
-function format_doctext(mod,d,fp,text) {
-	local current_line = "";
-	local current_prefix = "";
-	local current_prefix_length = 0;
-	for (local l: text.splitlines()) {
-		l = l.rstrip();
-		local stripped_l;
-		if (current_line.endswith("\\") && !current_line.endswith("\\\\")) {
-			/* Escaped linefeed is prevents detection of special sections. */
-			current_line = current_line[:#current_line-1]; /* Delete the backslash. */
-			stripped_l = "";
-			goto append_to_current_line;
-		}
-		stripped_l = l.lstrip();
-		if (!stripped_l) continue; /* Skip empty lines. */
-		if (current_prefix == "@" &&
-		   (#l-#stripped_l) >= current_prefix_length) {
-			/* Continuation of the current tag. */
-			goto append_to_current_line;
-		}
-		if (stripped_l[0] == "@" ||
-		   (current_prefix && stripped_l[0] != current_prefix) ||
-		   (!current_prefix && stripped_l[0] in ["$",">"])) {
-			/* Specially prefixed text. */
-			format_doctext_part(mod,d,fp,current_prefix,current_line);
-			current_prefix = "";
-			current_prefix_length = 0;
-			if (stripped_l[0] in ["$",">"]) {
-				current_prefix = stripped_l[0];
-				stripped_l = stripped_l[1:];
-			} else if (stripped_l[0] == "@") {
-				/* Figure out how long the current tag is. */
-				current_prefix = "@";
-				current_prefix_length = 1;
-				while (current_prefix_length < #stripped_l &&
-				      (stripped_l.issymstrt(current_prefix_length) ||
-				       stripped_l[current_prefix_length] in [".",":"]))
-					++current_prefix_length;
-				/* Account for an optional, trailing ':' following the tag name. */
-				if (current_prefix_length < #stripped_l &&
-				    stripped_l[current_prefix_length] == ":")
-					++current_prefix_length;
-				stripped_l = stripped_l[1:];
+function print_text(fp,d,text) {
+	assert text is Text;
+	local last_name = none;
+	local last_kind = none;
+	for (local name,kind,content: text) {
+		switch (name) {
+		case "TAG":
+			if (last_name != "TAG")
+				fp << "<table>";
+			else if (last_kind != kind) {
+				fp << "</table><table>";
 			}
-			current_line = stripped_l;
-		} else if (current_prefix in ["$",">"]) {
-			current_line += "\n";
-			current_line += stripped_l[1:];
+			print_doctag(fp,d,kind,content);
+			break;
+		case "SOURCE":
+			if (last_name == "TAG")
+				fp << "</table>";
+			fp << "<div class=\"source\">";
+			format_sourcecode(fp,d,content);
+			fp << "</div>\r\n";
+			break;
+		default:
+			if (last_name == "TAG")
+				fp << "</table>";
+			html_splitter.decode(content,fp,none,d);
+			break;
+		}
+		last_name = name;
+		last_kind = kind;
+	}
+	if (last_name == "TAG")
+		fp << "</table>";
+}
+
+@"(Doc d,Text t)->string"
+@"(Doc d,Text t)->none"
+function get_tooltip_text(d,text) {
+	for (local name,kind,content: text) {
+		if (name != "TEXT") continue;
+		file.writer tooltip_printer;
+		plain_splitter.decode(content,tooltip_printer,none,d);
+		local tooltip_string = tooltip_printer.string.strip();
+		local tooltip_line_end = tooltip_string.find("\n");
+		if (tooltip_line_end >= 0) {
+			if (tooltip_line_end > 128)
+				tooltip_line_end = 128;
+			return tooltip_string[:tooltip_line_end].rstrip() + "...";
 		} else {
-append_to_current_line:
-			if (current_line) {
-				/* Append a dot at the end of a line, if the
-				 * next line starts with an uppercase letter. */
-				if (stripped_l[0].isupper() && current_line &&
-				   !current_line.endswith(".") &&
-				    current_line.isalnum(#current_line-1))
-					current_line += ".";
-				current_line += " \n";
-			}
-			current_line += stripped_l;
+			if (#tooltip_string > 128)
+				tooltip_string = tooltip_string[:128] + "...";
+			return tooltip_string;
 		}
 	}
-	/* Format all unwritten data. */
-	format_doctext_part(mod,d,fp,current_prefix,current_line);
+	return none;
 }
 
-function do_typename(tp) {
-	if (deemon.callable.baseof(tp))
-		return "callable";
-	return str tp;
-}
-
-@"format_object_attribute(module mod, DocItem d, file fp, DocItem attrib_doc)"
-function format_object_attribute(mod,d,fp,attrib_doc) {
-	fp.write("<a href=\"/modules/{}\">".format({
-		attrib_doc.path("/")
-	}));
-	fp.write("{}</a>: {} -- {}".format({
-		attrib_doc.name(),
-		do_typename(attrib_doc.typeof()),
-		attrib_doc
-	}));
-}
-
-function write_page_head(fp,title) {
-	fp.write(
-		"<!DOCTYPE HTLM>\r\n"
-		"<html>\r\n"
-		"<head>\r\n"
-			"<meta charset=\"UTF-8\">"
-			"<link rel=\"stylesheet\" href=\"/style.css\">"
-			"<title>{}</title>"
-		"</head>\r\n"
-		"<body>\r\n"
-		.format({ title }));
-}
-function write_page_tail(fp) {
-	fp.write("</body>\r\n</html>\r\n");
-}
 
 function get_module_page(fp,path) {
-	local mod = import(path[0]);
-	local d = DocItem(mod);
-	for (local x: path[1:]) {
-		if (!x) continue;
-		d = d[x];
-	}
-	if (!d.hasdoc())
-		d = d.deref();
-	write_page_head(fp,d);
-	local path = d.path("/");
-	fp.write("<nav><ul>"
+	write_page_head(fp,path[#path-1]);
+	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
-		"<li><a href=\"/modules\">modules</a></li>"
-		);
-	local full_path = "/modules";
-	for (local x: path.split("/")) {
-		full_path += "/";
-		full_path += x;
-		fp.write("<li><a href=\"");
-		fp.write(full_path);
-		fp.write("\">&gt;");
-		fp.write(x);
-		fp.write("</a></li>");
+		"<li><a href=\"/modules\">modules</a></li>";
+	local link_path = "/modules";
+	for (local x: path) {
+		link_path = "{}/{}".format({ link_path, x });
+		local name_start = x.find(":");
+		fp << "<li><a href=\"{}\">&gt;{}</a></li>".format({
+			link_path,
+			name_start >= 0 ? x[name_start+1:] : x
+		});
 	}
-	fp.write("</ul></nav>\r\n"
-	         "<main>\r\n"
-	         "<div class=\"type_proto\">\r\n");
-	for (local tok: d.tokenize()) {
-		fp.write("<div class=\"doc_token\">");
-		if (tok.header) {
-			local name = d.name();
-			fp.write("<div class=\"proto_header\">");
-			for (local head: tok.header.strip().splitlines(false)) {
-				fp.write("<div class=\"code\">");
-				format_prototype(mod,d,fp,name,head);
-				fp.write("</div>");
-				fp.write("\r\n");
+	fp << "</ul></nav><main>\r\n";
+	local d = get_doc_path("/".join(path));
+	fp << "<h2><b>" << d.kind << "</b>: " << d.name;
+	if (d.istype) {
+		local basetype = d.objectbase;
+		if (basetype !is none) {
+			local basenode = d.objectbasenode;
+			fp << " extends <b>";
+			if (basenode !is none) {
+				fp	<< "<a href=\"/modules/"
+					<< basenode.path
+					<< "\">"
+					<< basenode.name
+					<< "</a>";
+			} else {
+				fp	<< basetype.__name__;
 			}
-			fp.write("</div>");
+			fp << "</b>";
 		}
-		fp.write("<div class=\"proto_text\">");
-		format_doctext(mod,d,fp,tok.text.strip());
-		fp.write("</div></div><br>\r\n");
 	}
-	fp.write("</div>\r\n");
-	local attr = list(d.enumerate());
-	local class_attr = list(attr.filter([](x) -> x.attr().isclass && !x.attr().isinstance));
-	local instance_attr = list(attr.filter([](x) -> !x.attr().isclass || x.attr().isinstance));
-	if (class_attr) {
-		class_attr.sort([](a,b) -> a.name() < b.name());
-		fp.write("<div><div class=\"category_title\">Class Attributes</div>\r\n");
-		for (local x: class_attr) {
-			format_object_attribute(mod,d,fp,x);
-			fp.write("<br>\r\n");
+	fp << "</h2><hr>\r\n<div>"
+	;
+	local pretty_name = d.name;
+	for (local prototypes, text: d.doc) {
+		for (local p: prototypes) {
+			fp << "<div><code>" << d.kind << " ";
+			print_prototype(fp,d,pretty_name,p);
+			fp << "</code></div>\r\n";
 		}
-		fp.write("</div>\r\n");
+		print_text(fp,d,text);
 	}
-	if (instance_attr) {
-		instance_attr.sort([](a,b) -> a.name() < b.name());
-		fp.write("<div><div class=\"category_title\">Instance Attributes</div>\r\n");
-		for (local x: instance_attr) {
-			format_object_attribute(mod,d,fp,x);
-			fp.write("<br>\r\n");
+	fp << "</div><hr>\r\n<div><table>";
+	local children = list(d);
+	children.sort();
+	for (local child: children) {
+		local child_link = "/modules/" + child.path;
+		for (local prototypes, text: child.doc) {
+			fp << "<tr><td>" << child.kind << "</td><td>";
+			local pretty_name = child.name;
+			local tooltip = get_tooltip_text(d,text);
+			for (local p: prototypes) {
+				fp << "<div><code>";
+				if (tooltip !is none)
+					fp << "<div class=\"tooltip\">";
+				fp << "<a href="
+					<< repr child_link
+					<< ">"
+					<< pretty_name
+					<< "</a>";
+				if (tooltip !is none) {
+					fp	<< "<span class=\"tooltiptext\">"
+						<< tooltip
+						<< "</span></div>";
+				}
+				if (!pretty_name[#pretty_name-1].issymcont())
+					fp << " ";
+				print_prototype_params(fp,child,p);
+				fp << "</code></div>\r\n";
+			}
+			fp << "</td></tr>";
 		}
-		fp.write("</div>\r\n");
 	}
-	fp.write("</main>\r\n");
+	fp << "</table></div></main>\r\n";
 	write_page_tail(fp);
 }
 
@@ -849,6 +725,8 @@ function ls_modules_path(p,prefix) {
 	try {
 		for (local f: fs.dir(p)) {
 			local path = fs.joinpath(p,f);
+			if (f.startswith("_"))
+				continue; /* Hidden symbol (e.g. `_codecs') */
 			if (fs.stat.isdir(path)) {
 				/* Skip files found in /include-folders. */
 				if (f == "include")
@@ -879,32 +757,30 @@ function ls_modules() {
 
 function get_modules_list(fp) {
 	write_page_head(fp,"Modules");
-	fp.write("<nav><ul>"
+	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>"
-		"</ul></nav><main>\r\n");
+		"</ul></nav><main>\r\n";
 	for (local name: ls_modules()) {
-		fp.write("<div class=\"module_item\">");
-		fp.write("<a href=\"/modules/");
-		fp.write(name);
-		fp.write("\">");
-		fp.write(name);
-		fp.write("</a>");
-		fp.write("</div>");
+		fp	<< "<div class=\"module_item\"><a href=\"/modules/"
+			<< name
+			<< "\">"
+			<< name
+			<< "</a></div>";
 	}
-	fp.write("</main>");
+	fp << "</main>";
 	write_page_tail(fp);
 }
 
 function get_home_page(fp) {
 	write_page_head(fp,"Home");
-	fp.write("<nav><ul>"
+	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>"
-		"</ul></nav><main>\r\n");
-	fp.write("<h1>Deemon Documentation</h1>\r\n");
-	fp.write("<a href=\"/modules\">List of all modules</a><br>\r\n");
-	fp.write("</main>");
+		"</ul></nav><main>\r\n"
+		"<h1>Deemon Documentation</h1>\r\n"
+		"<a href=\"/modules\">List of all modules</a><br />\r\n"
+		"</main>";
 	write_page_tail(fp);
 }
 
@@ -926,7 +802,7 @@ function get_page(fp,path) {
 
 
 function ClientThreadMain(con) {
-	print "New connection:",repr con;
+	print "New connection:",con;
 	try {
 		try {
 			try for (;;) {
@@ -935,10 +811,11 @@ function ClientThreadMain(con) {
 					break; /* The other end disconnected gracefully */
 				local command = msg.splitlines()[0];
 				local fp = file.writer();
+				local protocol = command[#command-8:];
 				if (!command.startswith("GET") ||
-					!command.endswith("HTTP/1.1")) {
+				     protocol !in ["HTTP/1.1","HTTP/1.0"]) {
 					print "Bad command:",repr command;
-					fp.write("HTTP/1.1 400 Bad Request\r\n");
+					fp << protocol << " 400 Bad Request\r\n";
 				} else {
 					command = command[3:#command-8].strip();
 					local content;
@@ -947,60 +824,74 @@ function ClientThreadMain(con) {
 					} else {
 						content = file.writer();
 						get_page(content,command);
-						content = content.string;
+						content = content.string.encode("utf-8");
 					}
-					fp.write(
-						"HTTP/1.1 200 OK\r\n"
+					fp << protocol << " 200 OK\r\n"
 						"Content-Length: {}\r\n"
-						"Content-Type: text/html; charset=iso-8859-1\r\n"
-						"\r\n".format({ #content }));
+						"Content-Type: text/html; charset=UTF-8\r\n"
+						"\r\n".format({ #content });
 					fp.write(content);
 				}
-				con.send(fp.string);
+				con.send(fp.string.encode("UTF-8"));
+				if (protocol == "HTTP/1.0") {
+					/* Don't allow for connection re-use.
+					 * If the we didn't do this, the client wouldn't get the
+					 * memo on the entire document having been delivered. */
+					break;
+				}
 			} catch (e...) {
 				local err_out = file.writer();
 				local err_content = file.writer();
 				write_page_head(err_content,e);
-				err_content.write("<main>\r\n");
-				err_content.write("<h2>DOC Server crashed</h2><br>");
-				err_content.write("<hr>");
+				err_content <<
+					"<main>\r\n"
+					"<h2>DOC Server crashed</h2><br />"
+					"<hr>";
 				if (e !is string) {
-					err_content.write("<b>");
-					err_content.write(str(type e));
-					err_content.write("</b>: ");
+					err_content
+						<< "<b>"
+						<< str(type e)
+						<< "</b>: ";
 				}
-				err_content.write((e is string ? e : repr e).replace("\n","<br>\r\n"));
-				err_content.write("<hr>");
-				err_content.write((repr deemon.traceback.current()).replace("\n","<br>\r\n"));
-				err_content.write("<hr>");
-				err_content.write("</main>\r\n");
+				err_content
+					<< (e is string ? e : repr e).replace("\n","<br />\r\n")
+					<< "<hr>"
+					<< repr(deemon.traceback.current).replace("\n","<br />\r\n")
+					<< "<hr></main>\r\n";
 				write_page_tail(err_content);
-				err_content = err_content.string;
-				err_out.write(
+				err_content = err_content.string.encode("utf-8");
+				err_out <<
 					"HTTP/1.1 200 OK\r\n"
 					"Content-Length: {}\r\n"
-					"Content-Type: text/html; charset=iso-8859-1\r\n"
-					"\r\n".format({ #err_content }));
+					"Content-Type: text/html; charset=UTF-8\r\n"
+					"\r\n".format({ #err_content });
 				err_out.write(err_content);
 				con.send(err_out.string);
 				throw;
 			}
 		} finally {
 			con.close();
-			print "Disconnected:",repr con;
+			print "Disconnected:",con;
 		}
 	} catch (e...) {
 		print "Client thread crashed:";
 		print repr e;
-		print repr deemon.traceback.current();
+		print repr deemon.traceback.current;
 	}
 
 }
 
 
-
-local s = socket("INET6",none,none);
-s.bind("localhost:8080");
+#ifdef __MAIN__
+local s;
+try {
+	s = socket("INET6",none,none);
+	s.bind("[::]:8080");
+} catch (...) {
+	s = socket("INET",none,none);
+	s.bind("0.0.0.0:8080");
+	print "Cannot use IPv6 to run server (using IPv4)";
+}
 s.listen();
 
 print "Doc Server is up & running.";
@@ -1009,12 +900,19 @@ print "127.0.0.1:8080";
 print;
 print;
 
-for (;;) {
-	local con = s.accept();
-	local th = thread(ClientThreadMain,pack con);
-	th.start();
-	th.detach();
+try {
+	for (;;) {
+		local con = s.accept();
+		local th = thread(ClientThreadMain,pack con);
+		th.start();
+		th.detach();
+	}
+} finally {
+	tooltip_cache.clear();
+	global_target_cache.clear();
+	doc_cache.clear();
 }
+#endif
 
 
 

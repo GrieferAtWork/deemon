@@ -1325,28 +1325,38 @@ set_remove(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
 
 PRIVATE struct type_method set_methods[] = {
     { "clear", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_doclear,
-      DOC("()\nClear all items from the set") },
+      DOC("()\n"
+          "Clear all items from the set") },
     { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
-      DOC("->object\n@throw ValueError The set is empty\nPop a random item from the set and return it") },
+      DOC("->\n"
+          "@throw ValueError The set is empty\nPop a random item from the set and return it") },
     { "popitem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
-      DOC("->object\n@throw ValueError The set is empty\nPop a random item from the set and return it (alias for #pop)") },
+      DOC("->\n"
+          "@throw ValueError The set is empty\nPop a random item from the set and return it (alias for #pop)") },
     { "unify", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_unify,
-      DOC("(ob)->object\nInsert @ob into the set if it wasn't inserted before, and re-return it, or the pre-existing instance") },
+      DOC("(ob)->\n"
+          "Insert @ob into the set if it wasn't inserted before, and re-return it, or the pre-existing instance") },
     { "insert", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_insert,
-      DOC("(ob)->bool\nReturns :true if the object wasn't apart of the set before") },
+      DOC("(ob)->?Dbool\n"
+          "Returns :true if the object wasn't apart of the set before") },
     { "update", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_update,
-      DOC("(sequence items)->int\nInsert all items from @items into @this set, and return the number of inserted items") },
+      DOC("(items:?S?O)->?Dint\n"
+          "Insert all items from @items into @this set, and return the number of inserted items") },
     { DeeString_STR(&str_remove), (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_remove,
-      DOC("(ob)->bool\nReturns :true if the object was removed from the set") },
+      DOC("(ob)->?Dbool\n"
+          "Returns :true if the object was removed from the set") },
     /* Alternative function names. */
     { "add", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_insert,
-      DOC("(ob)->bool\nDeprecated alias for #insert") },
+      DOC("(ob)->?Dbool\n"
+          "Deprecated alias for #insert") },
     { "discard", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_remove,
-      DOC("(ob)->bool\nDeprecated alias for #remove") },
+      DOC("(ob)->?Dbool\n"
+          "Deprecated alias for #remove") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Old function names. */
     { "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_update,
-      DOC("(ob)->bool\nDeprecated alias for #update") },
+      DOC("(ob)->?Dbool\n"
+          "Deprecated alias for #update") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
 };
@@ -1372,7 +1382,7 @@ INTERN struct type_getset set_getsets[] = {
       &set_get_maxloadfactor,
       &set_del_maxloadfactor,
       &set_set_maxloadfactor,
-      DOC("->float\n"
+      DOC("->?Dfloat\n"
           "Deprecated. Always returns ${1.0}, with del/set being ignored") },
     { NULL }
 };
@@ -1395,19 +1405,19 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
                             "()\n"
                             "Create an empty hashset\n"
                             "\n"
-                            "(sequence items)\n"
+                            "(items:?S?O)\n"
                             "Create a new hashset populated with elements from @items\n"
                             "\n"
-                            "copy()\n"
+                            "copy->\n"
                             "Returns a shallow copy of @this hashset\n"
                             "\n"
-                            "deepcopy()\n"
+                            "deepcopy->\n"
                             "Returns a deep copy of @this hashset\n"
                             "\n"
-                            "bool()\n"
+                            "bool->\n"
                             "Returns :true if @this hashset is non-empty\n"
                             "\n"
-                            "contains(item)\n"
+                            "contains->\n"
                             "Returns :true if @item is apart of @this hashset\n"
                             "\n"
                             "#->\n"

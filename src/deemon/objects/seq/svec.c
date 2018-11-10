@@ -934,7 +934,7 @@ rvec_get_writable(RefVector *__restrict self) {
 PRIVATE struct type_getset rvec_getsets[] = {
     { "__writable__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_get_writable,
-      NULL, NULL, DOC("->bool") },
+      NULL, NULL, DOC("->?Dbool") },
     { NULL }
 };
 

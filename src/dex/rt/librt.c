@@ -85,13 +85,13 @@ PRIVATE DEFINE_CMETHOD(librt_setstacklimit,librt_setstacklimit_f);
 
 PRIVATE struct dex_symbol symbols[] = {
     { "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FNORMAL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "Returns the current stack limit, that is the max number of "
           "user-code functions that may be executed consecutively before "
           "a :StackOverflow error is thrown\n"
           "The default stack limit is $" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT)) },
     { "setstacklimit", (DeeObject *)&librt_setstacklimit, MODSYM_FNORMAL,
-      DOC("(int new_limit=" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT) ")->int\n"
+      DOC("(new_limit=!" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT) ")->?Dint\n"
           "@throw IntegerOverflow @new_limit is negative, or greater than $0xffff\n"
           "Set the new stack limit to @new_limit and return the old limit\n"
           "The stack limit is checked every time a user-code function is "
@@ -105,7 +105,7 @@ PRIVATE struct dex_symbol symbols[] = {
 #endif
       ,
       MODSYM_FNORMAL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "A boolean that is :true if the deemon interpreter supports "
           "an unlimited stack limit, meaning that #setstacklimit can "
           "be used to set a stack limit to up $0xffff ($65535), which "

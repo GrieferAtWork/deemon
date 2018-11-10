@@ -265,17 +265,17 @@ ob_weakref_alive(WeakRef *__restrict self,
 
 PRIVATE struct type_method ob_weakref_methods[] = {
     { "lock", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ob_weakref_lock,
-      DOC("->object\n"
-          "(object def)->object\n"
+      DOC("->\n"
+          "(def)->\n"
           "@throw ReferenceError The weak reference is no longer bound and no @def was given\n"
           "Lock the weak reference and return the pointed-to object") },
     { "alive", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ob_weakref_alive,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Alias for #op:bool") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     { "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ob_weakref_try_lock,
-      DOC("->none\n"
-          "->object\n"
+      DOC("()\n"
+          "->\n"
           "Deprecated alias for #lock with passing :none (${this.lock(none)})") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
@@ -286,8 +286,7 @@ PRIVATE struct type_getset ob_weakref_getsets[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ob_weakref_get,
      (int(DCALL *)(DeeObject *__restrict))&ob_weakref_del,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ob_weakref_set,
-      DOC("->object\n"
-          "@throw ReferenceError Attempted to get the value after the reference has been unbound\n"
+      DOC("@throw ReferenceError Attempted to get the value after the reference has been unbound\n"
           "@throw ValueError Attempted to set an object that does not support weak referencing\n"
           "Access to the referenced object") },
     { NULL }
@@ -302,34 +301,35 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
                             "()\n"
                             "Construct an unbound weak reference\n"
                             "\n"
-                            "(object obj)\n"
+                            "(obj)\n"
                             "@throw TypeError The given object @obj does not implement weak referencing support\n"
                             "Construct a weak reference bound to @obj, that will be notified once said "
-                            "object is supposed to be destroyed With that in mind, weak references don't "
+                            "object is supposed to be destroyed. With that in mind, weak references don't "
                             "actually hold references at all, but rather allow the user to test if an "
                             "object is still allocated at runtime.\n"
                             "\n"
-                            "operator bool\n"
+                            "bool->\n"
                             "Returns true if the weak reference is currently bound. Note however that this "
                             "information is volatile and may not longer be up-to-date by the time the operator returns\n"
                             "\n"
-                            "==(none other)\n"
-                            "!=(none other)\n"
-                            "<(none other)\n"
-                            "<=(none other)\n"
-                            ">(none other)\n"
-                            ">=(none other)\n"
+                            "==(other:?N)->\n"
+                            "!=(other:?N)->\n"
+                            "<(other:?N)->\n"
+                            "<=(other:?N)->\n"
+                            ">(other:?N)->\n"
+                            ">=(other:?N)->\n"
                             "Test for the pointed-to object being bound\n"
-                            "==(weakref other)\n"
-                            "!=(weakref other)\n"
-                            "<(weakref other)\n"
-                            "<=(weakref other)\n"
-                            ">(weakref other)\n"
-                            ">=(weakref other)\n"
-                            "Compare the pointed-to objects to @this weak reference to that of @other\n"
                             "\n"
-                            ":=(weakref other)\n"
-                            ":=(object obj)\n"
+                            "==->\n"
+                            "!=->\n"
+                            "<->\n"
+                            "<=->\n"
+                            ">->\n"
+                            ">=->\n"
+                            "Compare the pointed-to object of @this weak reference to that of @other\n"
+                            "\n"
+                            ":=->\n"
+                            ":=(obj)->\n"
                             "@throw TypeError The given @obj does not implement weak referencing support\n"
                             "Assign the value of @other, or @obj to @this weakref object"),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT|TP_FFINAL,

@@ -1252,7 +1252,7 @@ done:
 
 PRIVATE struct type_method tuple_class_methods[] = {
     { "unpack", &tuple_unpack,
-       DOC("(int num_items,sequence init)->tuple\n"
+      DOC("(num_items:?Dint,init:?S?O)->?.\n"
            "@throw UnpackError The given @init doesn't contain exactly @num_items elements\n"
            "Unpack the given sequence @init into a tuple consisting of @num_items elements") },
     { NULL }
@@ -1569,7 +1569,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
                             "()\n"
                             "Construct an empty tuple\n"
                             "\n"
-                            "(sequence items)\n"
+                            "(items:?S?O)\n"
                             "Construct a new tuple that is pre-initializes with the elements from @items\n"
                             "\n"
                             "str->\n"
@@ -1589,13 +1589,13 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
                             "bool->\n"
                             "Returns :true if @this tuple is non-empty\n"
                             "\n"
-                            "+(tuple other)->\n"
-                            "+(sequence other)->\n"
+                            "+->\n"
+                            "+(other:?S?O)->\n"
                             "@throw NotImplemented The given @other isn't iterable\n"
                             "Returns a new tuple consisting of the elements from @this, followed by "
                             "those from @other, which may be another tuple, or a generic sequence\n"
                             "\n"
-                            "*(int count)->\n"
+                            "*(count:?Dint)->\n"
                             "@throw IntegerOverflow The given @count is negative, or too large\n"
                             "Return a new tuple consisting of the elements from @this, repeated @count times\n"
                             "When @count is $0, an empty tuple is returned. When @count is $1, @this tuple is re-returned\n"
@@ -1617,16 +1617,15 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
                             "contains->\n"
                             "Returns :true if @elem is apart of @this tuple, or @false otherwise\n"
                             "\n"
-                            "[](int index)->\n"
+                            "[]->\n"
                             "@throw IntegerOverflow The given @index is negative, or too large\n"
                             "@throw IndexError The given @index is out of bounds\n"
                             "Returns the @index'th item of @this tuple\n"
                             "\n"
-                            "[:](int start,int end)->\n"
+                            "[:]->?.\n"
                             "Returns a new tuple for the given subrange, following the usual rules for "
                             "negative @start or @end values, as well as :none being passed for either "
-                            "(s.a. :sequence.op:getrange)\n"
-                            "\n"
+                            "(s.a. :sequence.op:getrange)"
                             ),
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,

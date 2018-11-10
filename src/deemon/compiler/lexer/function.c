@@ -136,6 +136,22 @@ do_realloc_symv:
    /* Varargs */
 done_dots:
    if unlikely(yield() < 0) goto err;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+   if (tok == ':') {
+    /* Parse argument declaration information. */
+    struct decl_ast decl;
+    if unlikely(yield() < 0) goto err;
+    if unlikely(decl_ast_parse(&decl)) goto err;
+    if (arg->s_decltype.da_type != DAST_NONE &&
+       !decl_ast_equal(&arg->s_decltype,&decl)) {
+     decl_ast_fini(&decl);
+     if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,arg))
+         goto err;
+    } else {
+     memcpy(&arg->s_decltype,&decl,sizeof(struct decl_ast));
+    }
+   }
+#endif
    if (tok == ',' && unlikely(yield() < 0)) goto err;
    if unlikely(tok != ')' && WARN(W_EXPECTED_RPAREN_AFTER_VARARGS)) goto err;
    /* Set the varargs flag in the new base scope. */
@@ -147,6 +163,22 @@ done_dots:
    arg_is_optional = true;
    if unlikely(yield() < 0) goto err;
   }
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+  if (tok == ':') {
+   /* Parse argument declaration information. */
+   struct decl_ast decl;
+   if unlikely(yield() < 0) goto err;
+   if unlikely(decl_ast_parse(&decl)) goto err;
+   if (arg->s_decltype.da_type != DAST_NONE &&
+      !decl_ast_equal(&arg->s_decltype,&decl)) {
+    decl_ast_fini(&decl);
+    if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,arg))
+        goto err;
+   } else {
+    memcpy(&arg->s_decltype,&decl,sizeof(struct decl_ast));
+   }
+  }
+#endif
   ++current_basescope->bs_argc_max;
   if (tok == '=') {
    uint16_t defaultc;
@@ -275,12 +307,20 @@ err:
 INTERN DREF struct ast *DCALL
 ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
                    bool allow_missing_params,
-                   struct ast_loc *name_loc) {
+                   struct ast_loc *name_loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                   , struct decl_ast *decl
+#endif
+                   ) {
  DREF struct ast *result;
  struct ast_annotations annotations;
  ast_annotations_get(&annotations);
  if unlikely(basescope_push()) goto err_anno;
- result = ast_parse_function_noscope(name,pneed_semi,allow_missing_params,name_loc);
+ result = ast_parse_function_noscope(name,pneed_semi,allow_missing_params,name_loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                                     ,decl
+#endif
+                                     );
  basescope_pop();
  if unlikely(!result) goto err_anno;
  return ast_annotations_apply(&annotations,result);
@@ -288,16 +328,27 @@ err_anno:
  ast_annotations_free(&annotations);
  return NULL;
 }
+
 INTERN DREF struct ast *DCALL
 ast_parse_function_noscope(struct TPPKeyword *name,
                            bool *pneed_semi,
                            bool allow_missing_params,
-                           struct ast_loc *name_loc) {
+                           struct ast_loc *name_loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                           , struct decl_ast *__restrict decl
+#endif
+                           ) {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ struct decl_ast my_decl;
+ struct symbol *funcself_symbol = NULL;
+#endif
  uint32_t old_flags;
  DREF struct ast *result,*code;
  /* Add information from tags. */
  if (name) {
+#ifndef CONFIG_HAVE_DECLARATION_DOCUMENTATION
   struct symbol *funcself_symbol;
+#endif
   /* Save the function name in the base scope. */
   current_basescope->bs_name = name;
   /* Create a new symbol to allow for function-self-referencing. */
@@ -305,27 +356,60 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   if unlikely(!funcself_symbol) goto err;
   SYMBOL_TYPE(funcself_symbol) = SYMBOL_TYPE_MYFUNC;
  }
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ /* Declaration meta-information */
+ my_decl.da_type          = DAST_FUNC;
+ my_decl.da_func.f_scope = current_basescope;
+ my_decl.da_func.f_ret   = NULL;
+#endif
  if (tok == '(') {
   /* Argument list. */
   old_flags = TPPLexer_Current->l_flags;
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-  if unlikely(yield() < 0) goto err_flags;
-  if unlikely(parse_arglist()) goto err_flags;
+  if unlikely(yield() < 0) goto err_flags_decl;
+  if unlikely(parse_arglist()) goto err_flags_decl;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
               WARN(W_EXPECTED_RPAREN_AFTER_ARGLIST))
-     goto err;
+     goto err_decl;
  } else if (!allow_missing_params) {
   if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
-      goto err;
+      goto err_decl;
  }
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ if (tok == ':') {
+  struct decl_ast *return_type;
+  if unlikely(yield() < 0) goto err_decl;
+  /* Function return type information. */
+  assert(!my_decl.da_func.f_ret);
+  return_type = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
+  if unlikely(!return_type) goto err_decl;
+  if unlikely(decl_ast_parse(return_type)) {
+   Dee_Free(return_type);
+   goto err_decl;
+  }
+  my_decl.da_func.f_ret = return_type; /* Inherit */
+ }
+ /* Copy declaration information into the function symbol (if it exists) */
+ if (funcself_symbol) {
+  if (funcself_symbol->s_decltype.da_type != DAST_NONE &&
+     !decl_ast_equal(&funcself_symbol->s_decltype,&my_decl)) {
+   decl_ast_fini(&my_decl);
+   if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,funcself_symbol))
+       goto err;
+  } else {
+   memcpy(&funcself_symbol->s_decltype,&my_decl,sizeof(struct decl_ast));
+  }
+  my_decl.da_type = DAST_NONE;
+ }
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  if (tok == TOK_ARROW) {
   struct ast_loc arrow_loc;
   loc_here(&arrow_loc);
-  if unlikely(yield() < 0) goto err;
+  if unlikely(yield() < 0) goto err_decl;
   /* Expression function. */
   code = ast_parse_expr(LOOKUP_SYM_NORMAL);
-  if unlikely(!code) goto err;
+  if unlikely(!code) goto err_decl;
   result = code->a_type == AST_EXPAND
          ? (current_basescope->bs_flags |= CODE_FYIELDING,ast_yield(code))
          : (ast_return(code));
@@ -340,32 +424,55 @@ ast_parse_function_noscope(struct TPPKeyword *name,
       TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == '{') ? (yield() < 0) :
               WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
-     goto err_flags;
+     goto err_flags_decl;
   code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&brace_loc);
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == '}') ? (yield() < 0) :
               WARN(W_EXPECTED_RBRACE_AFTER_FUNCTION))
-     goto err_xcode;
+     goto err_xcode_decl;
   if (pneed_semi) *pneed_semi = false;
  }
- if unlikely(!code) goto err;
+ if unlikely(!code) goto err_decl;
  result = ast_function(code,current_basescope);
  ast_decref(code);
- if unlikely(!result) goto err;
+ if unlikely(!result) goto err_decl;
  /* Hack: The function AST itself must be located in the caller's scope. */
  Dee_Decref(result->a_scope);
  ASSERT(current_basescope);
  ASSERT(current_basescope->bs_scope.s_prev);
  result->a_scope = current_basescope->bs_scope.s_prev;
  Dee_Incref(result->a_scope);
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ assert(!funcself_symbol || my_decl.da_type == DAST_NONE);
+ if (decl) {
+  /* Pass Declaration information to the caller. */
+  if (funcself_symbol) {
+   if unlikely(decl_ast_copy(decl,&funcself_symbol->s_decltype))
+      Dee_Clear(result);
+  } else {
+   memcpy(decl,&my_decl,sizeof(struct decl_ast));
+  }
+ } else {
+  decl_ast_fini(&my_decl);
+ }
+#endif
  return ast_setddi(result,name_loc);
-err_flags:
+err_flags_decl:
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ decl_ast_fini(&my_decl);
+#endif
+/*err_flags:*/
  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err;
-err_xcode:
+err_xcode_decl:
  ast_xdecref(code);
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+err_decl:
+ decl_ast_fini(&my_decl);
+ goto err;
+#endif
 err:
  return NULL;
 }

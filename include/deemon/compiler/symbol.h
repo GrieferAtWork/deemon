@@ -43,6 +43,399 @@ struct module_object;
 struct asm_sym;
 struct class_attribute;
 
+/* Declaration information encoded in documentation strings:
+ *
+ * Special documentation information is encoded line-wise, with line-feeds allowed to be
+ * escaped by prefixing them with a \ character which is later removed. As a matter of
+ * fact: Any special character can be escaped by prefixing it with \, with the following
+ * being a list of all special characters:
+ *    _ _ _ _ _ _ _ _ _ _ _ _ _ _ __ __ __ ____
+ *    \ ? ! { } | , < > ( ) [ ] = -> \n \r \r\n
+ *
+ * Additionally, the following characters will only be escaped when appearing in certain
+ * situations:
+ *    
+ *    '\'  Always (as r"\\")
+ *    '>'  When encountered after a '-'
+ *    '('  When encountered at the start of a line
+ *    <LF> When immediately preceded by another LF, such that "\n\n\n" is escaped as "\n\\\n\\\n"
+ *
+ * None of the other characters will be escaped for user-defined documentation strings, as
+ * only the special character sequences "<START_OF_LINE>(" and "->" are accepted as indices
+ * of the (potentially \<LF> - wrapped) line containing declaration information.
+ *
+ * Since declaration information may also contain user-defined identifier names, which in turn
+ * may also contain any of the aforementioned special characters, all of them are escaped by
+ * prefixing each of them with a \ character in that context (see the syntax for declaration
+ * information below)
+ *
+ * Declaration information formats:
+ *
+ * Pattern: "<START_OF_LINE>("
+ *    The line describes argument name, and return type information:
+ *    NOTE: optional whitespace may _NOT_ appear between individual strings
+ *        "<START_OF_LINE>(" ("," ~~ (
+ *            ["<ARGUMENT_NAME>"]
+ *            ["?" | "!" | "!!"]                  // Optional / Varargs / Kwds indicators
+ *            [":" ["|" ~~ "<ARGUMENT_TYPE>"...]] // Type defaults to "object" (encoded as "?O")
+ *            ["=" "<ARGUMENT_DEFAULT>"]
+ *        )...) ")" ["->" ["|" ~~ "<RETURN_TYPE>"...]] "<END_OF_LINE>"
+ *    
+ *    CONTENT-SPECIFIC:
+ *      - When encountered in a function-doc, it contains information about the function's intended invocation
+ *        Unnamed arguments are automatically generated as one abcdefghijklmnopqrstuvwxyz,
+ *        after which naming continues as aa ab ac, etc... The chosen name is the first one
+ *        that hasn't already been taken by another explicitly defined name, or another
+ *        auto-generated one.
+ *        >> ()       // function(): none { ... }
+ *        >> (:)      // function(none): none { ... }
+ *        >> (,)      // function(none,none): none { ... }
+ *        >> (:?Dint) // function(none: int): none { ... }
+ *        REMINDER: Using `none' as argument name sets the name to be undefined/reserved.
+ *      - When encountered in a member-doc, the member is assumed to be a function
+ *      - When encountered in a type-doc, it contains information about the type's constructor operator
+ *    
+ *    ARGUMENT_NAME: A user-defined identifier describing the name of an argument
+ *                   This operand may be prefixed by one of "?", "!" or "!!" to describe
+ *                   a variable amount of arguments being passed through this argument.
+ *    ARGUMENT_TYPE: An encoded type description of the intended typing of the argument (see TYPE-ENCODING below)
+ *    ARGUMENT_DEFAULT: An encoded description of an argument default value.
+ *                      When omitted, argument default information is substituted from
+ *                      code execution information, or left as undefined when the function
+ *                      isn't implemented in user-code and thus doesn't offset execution
+ *                      information. (see EXPR-ENCODING below)
+ *    RETURN_TYPE:   An encoded type description of the intended return type of the function
+ *                   When "->" is omitted, the programmer intended the function to return `none'
+ *                   When "<RETURN_TYPE>" is omitted but "->" is present, the programmer
+ *                   intended the function to return `object' (aka anything / unspecified)
+ *
+ *
+ * PATTERN: "->"  (Only when the line doesn't match the "<START_OF_LINE>(" pattern)
+ *    The line describes the return type of an argument-less function,
+ *    or the expected type of a field/member/variable/global/extern/etc.
+ *    In type type-docs, it is used to define the prototype for a specific operator
+ *    NOTE: optional whitespace may _NOT_ appear between individual strings
+ *        "->" ["|" ~~ "<RETURN_TYPE>"...] "<END_OF_LINE>"
+ *
+ *    CONTENT-SPECIFIC:
+ *      - When encountered in a function-doc, the argument list defaults
+ *        to empty, such that "->?Dint" is the same as "<START_OF_LINE>()->?Dint"
+ *      - When encountered in a member-doc, the member's occupant's intended type is described.
+ *      - When encountered in a type-doc, an operator is described (See OPERATOR DECLARATION)
+ *
+ *    RETURN_TYPE: An encoded type description of the occupant's intended type.
+ *                 When "<RETURN_TYPE>" is omitted, the programmer
+ *                 intended the field to contain anything (`object' / aka anything / unspecified)
+ *
+ *
+ * OPERATOR DECLARATION:
+ *    Operator information is described as a sub-set of the "->"-pattern, by defining the
+ *    contents and meaning of whatever is contained within the line prior to "->" being encountered
+ *    NOTE: optional whitespace may _NOT_ appear between individual strings
+ *        "<OPERATOR_NAME>"
+ *        ["(" ("," ~~ (
+ *            ["<ARGUMENT_NAME>"]
+ *            ["?" | "!" | "!!"]                  // Optional / Varargs / Kwds indicators
+ *            [":" ["|" ~~ "<ARGUMENT_TYPE>"...]] // Type defaults to "object" (encoded as "?O")
+ *            ["=" "<ARGUMENT_DEFAULT>"]          // Default value (not allowed for optional, varargs, or Kwds arguments)
+ *        )...) ")"]
+ *        "->"    // Like seen in the "->" pattern
+ *            (["|" ~~ "<RETURN_TYPE>"...] | // Operator return type
+ *             // NOTE: The following 2 may only be used when no parameter list was given before
+ *             "!D" |                        // Indicator that the operator gets deleted (intended for `operator str = del;')
+ *             "!S"                          // Indicator that the operator is explicitly inherited (intended for `this = super;')
+ *             )
+ *        "<END_OF_LINE>"
+ *    With this, operator declarations are split into 3 sections:
+ *      - OPERATOR_NAME
+ *      - OPTIONAL(ARGUMENT_LIST)
+ *      - OPTIONAL(RETURN_TYPE)
+ *    ARGUMENT_LIST is structured the same as seen in the "<START_OF_LINE>(" pattern, with the only
+ *    difference being the special action taken when it is omitted (in which case it is default-generated
+ *    depending on OPERATOR_NAME)
+ *    RETURN_TYPE also behaves the same as in both the "<START_OF_LINE>(" and "->" patterns when
+ *    dealing with a function-like declaration. The addition here being that it, too, is default-generated
+ *    depending on OPERATOR_NAME when omitted.
+ *
+ *    OPERATOR_NAME is one of the following, with the other tables describing the default-generated
+ *    values for ARGUMENT_LIST and RETURN_TYPE, where <TYPE> refers to the type for which the operator
+ *    declaration is written
+ *       OPERATOR_NAME         | DEFAULT
+ *        copy, deepcopy       | (other:<TYPE>)
+ *        ~this                | ()
+ *        :=, move :=          | (other:<TYPE>)
+ *        str, repr            | ()->?Dstring
+ *        bool                 | ()->?Dbool
+ *        next                 | ()->?O
+ *        call                 | (args!:?O)->?O
+ *        int, hash, #         | ()->?Dint
+ *        float                | ()->?Dfloat
+ *        ~                    | ()-><TYPE>
+ *        +                    | ()-><TYPE>               (When argument count indicates 1 argument, default to (other:<TYPE>)-><TYPE>)
+ *        -                    | ()-><TYPE>               (When argument count indicates 1 argument, default to (other:<TYPE>)-><TYPE>)
+ *        *, /, %, &, |, ^, ** | (other:<TYPE>)-><TYPE>
+ *        <<, >>               | (shift:?Dint)-><TYPE>
+ *        ++, --               | ()-><TYPE>
+ *        +=, -=, *=, /=, %=   | (other:<TYPE>)-><TYPE>
+ *        &=, |=, ^=,          | (other:<TYPE>)-><TYPE>
+ *        <<=, >>=             | (other:?Dint)-><TYPE>
+ *        <, <=, >, >=, ==, != | (other:<TYPE>)->?Dbool
+ *        iter                 | ()->?Aiterator<TYPE>
+ *        contains             | (item)->?Dbool
+ *        []                   | (index:?Dint)->?O
+ *        del[]                | (index:?Dint)
+ *        []=                  | (index:?Dint,value:?O)
+ *        [:]                  | (start:?Dint,end:?Dint)->?S?O
+ *        del[:]               | (start:?Dint,end:?Dint)
+ *        [:]=                 | (start:?Dint,end:?Dint,values:?S?O)
+ *        .                    | (attr:?Dstring)->?O
+ *        del.                 | (attr:?Dstring)
+ *        .=                   | (attr:?Dstring,value:?O)
+ *        enumattr             | ()->?S?Dattribute
+ *        enter, leave         | ()
+ *    Alternatively to the operator's symbol-like name, one can also use the operators real name,
+ *    optionally surrounded by any number of _ (underscores), such that `__le__' is the same as `<='
+ *    Also note that missing argument type information is also automatically filled in when the type
+ *    is known or guarantied to have a certain typing.
+ *    This applies to all instances where a type other than `<TYPE>' is listed above, as well as in
+ *    the following special cases:
+ *       OPERATOR_NAME   | DEFAULT
+ *        deepcopy, copy | (other:<TYPE>)
+ *        move :=        | (other:<TYPE>)         // Only when the type doesn't have the `TP_FMOVEANY' flag set.
+ *
+ *
+ *
+ *
+ *
+ * Each pattern line is usually then followed by any number of regular lines containing human-written
+ * documentation text (in user-code written as @@TEXT<LF> or @"TEXT"), which is then escaped as described
+ * above by the section of character escaping only done in certain situations.
+ * These sections of prototype docs are separated from each other by 2 consecutive line-feeds, such that
+ * these sections can simply be seperated from each other with `__doc__.unifylines().split("\n\n")'
+ *
+ * NOTE:
+ *   - Sections may also appear without any associated declaration pattern, in which case
+ *     the declaration pattern is automatically deduced form the documented object, or left
+ *     omitted if no object is being documented:
+ *       - For types, the doc is appended to the set of strings giving a generic overview of the type
+ *       - For a `function foo(x,y,z)' the doc defaults to `(!a,!b,!c)->'
+ *          - Since argument name information is lost during this, names are generated
+ *            as abcdefghijklmnopqrstuvwxyz, after which naming continues as aa ab ac, etc...
+ *       - For member/variables the declaration defaults to `->' (untyped, object)
+ *   - Declarations can be grouped by having a section contain more than one line, matching either
+ *     the "->" pattern, or the "<START_OF_LINE>(" one.
+ *     This may be done to describe available overloads, with the associated human-readable
+ *     texts then applying to 
+ *     
+ *
+ *
+ *
+ * TYPE-ENCODING:  (How type/symbol references are encoded)
+ *
+ *   ?.              --- Referring to the current type in an operator or static/instance member.
+ *   ?N              --- Referring to `none' (or in this context: `type none')
+ *   ?O              --- Referring to `object from deemon'
+ *   ?#<NAME>        --- Referring to a a field <DECODED_NAME> of the surrounding component (the type of a member/operator, or module or a global, etc., that is expected to contain the type at runtime)
+ *   ?D<NAME>        --- Referring to a symbol exported from the `deemon' module (import("deemon").<DECODED_NAME>)
+ *   ?U<NAME>        --- Referring to an undefined/private symbol
+ *   ?G<NAME>        --- Referring to a global symbol exported from the associated module
+ *   ?E<NAME>:<NAME> --- Referring to an external symbol (import("<DECODED_FIRST_NAME>").<DECODED_SECOND_NAME>)
+ *   ?A<NAME><TYPE>  --- Referring to an attribute <DECODED_FIRST_NAME> of another TYPE-ENCODING <TYPE>
+ *
+ * Extended type encodings (Implemented by `doc.TypeExpr', rather than `doc.TypeRef'):
+ *   ?C<TYPE><TYPE>    --- Referring to a cell <FIRST_TYPE> containing an element of type <SECOND_TYPE> (SECOND_TYPE
+ *                         is only there to improve meta-information, whilst FIRST_TYPE should implement an instance-attribute
+ *                        `value', with when accessed should yield an element of <SECOND_TYPE>)
+ *                         This type of encoding is used to represent `weakref with object',
+ *                        `tls with object' or `cell with object'
+ *   ?T<N>(<TYPE> * N) --- A tuple expression containing <N> (encoded as a decimal) other types
+ *                         e.g.: `?T2?Dstring?Dint' --- `(string,int)'
+ *   ?X<N>(<TYPE> * N) --- A set of <N> (encoded as a decimal) alternative type representations
+ *                         e.g.: `?S?Dstring' --- `{string...}'
+ *   ?S<TYPE>          --- A generic sequence expression for <TYPE>
+ *                         e.g.: `?S?Dstring' --- `{string...}'
+ *
+ *   In all of the aforementioned encodings, <NAME> is encoded as follows:
+ *   >> if (!name.issymbol()) {
+ *   >>     for (local x: r'\?!{}|,()<>[]=')
+ *   >>          name = name.replace(x,r'\' + x);
+ *   >>     name = name.replace(r"->",r"-\>");
+ *   >>     name = name.replace("\n","\\\n"); // For any type of line-feed
+ *   >>     name = "{" + name + "}";
+ *   >> }
+ *   Decoding then happens in the reverse direction, decoding \ escape sequences
+ *
+ *   Any encoded type not starting with one of the disclosed prefixed is considered
+ *   to be a legacy-doc symbol reference and handle in a special manner that is not
+ *   documented here and should be considered deprecated.
+ *
+ *
+ *
+ * EXPR-ENCODING:  (How (simple) expressions are encoded)
+ *   
+ *   <EXPR>     --- Where `<EXPR>' contains the actual expression, which is encoded as follows:
+ *
+ *   
+ *   <EXPR> ::= "!" (
+ *       INTEGER_LITERAL |          // 1234 (decimal), 0x12/0X12 (hex), 012 (oct) or 0b10/0B10 (bin)
+ *       FLOAT_LITERAL |            // 1.0  (decimal followed by a `.'; prevent ambiguity with decimal-operator)
+ *       "P" <NAME> |               // Pfoo (where `foo' is en-/decoded the same way a <NAME> would)
+ *       "N"                        // The none builtin constant
+ *       "t"                        // The true builtin constant
+ *       "f"                        // The false builtin constant
+ *       "#" <NAME>                 // Referring to a field <DECODED_NAME> of the surrounding component (the type of a member/operator, or module or a global, etc., that is expected to contain the type at runtime)
+ *       "VA" <NAME>                // Referring to another argument <DECODED_NAME>
+ *       "D" <NAME>                 // Referring to a symbol exported from the `deemon' module (import("deemon").<DECODED_NAME>)
+ *       "U" <NAME>                 // Referring to an undefined/private symbol (in expressions, `none' is used, but if produced as result, it's name is used; getattr() also extends ontop of it)
+ *       "G" <NAME>                 // Referring to a global symbol exported from the associated module
+ *       "E" <NAME> ":" <NAME>      // Referring to an external symbol (import("<DECODED_FIRST_NAME>").<DECODED_SECOND_NAME>)
+ *       "M" <NAME>                 // Referring to a module  (import("<DECODED_NAME>"))
+ *       "T<N>" ((EXPR)... * <N>) | // TUPLE(EXPR * <N>)   A tuple of <N> (encoded as a decimal) elements
+ *       "L<N>" ((EXPR)... * <N>) | // LIST(EXPR * <N>)    A list of <N> (encoded as a decimal) elements
+ *       "S<N>" ((EXPR)... * <N>) | // HASHSET(EXPR * <N>) A set of <N> (encoded as a decimal) elements
+ *       "H<N>" ((EXPR)... * <N>) | // DICT(EXPR * <N>)    A dict of <N> (encoded as a decimal) elements (every first is a key, every second is the associated value)
+ *       "A" EXPR EXPR |            // FIRST_EXPR.operator . (SECOND_EXPR)
+ *       "B" EXPR EXPR |            // boundattr(FIRST_EXPR,SECOND_EXPR)
+ *       "C" EXPR |                 // copy(EXPR)
+ *       "X" EXPR |                 // deepcopy(EXPR)
+ *       "W" EXPR |                 // #(EXPR)
+ *       "!!!" EXPR |               // !(EXPR)
+ *       "I" EXPR EXPR EXPR |       // FIRST_EXPR ? SECOND_EXPR : THIRD_EXPR  (Non-syntax errors encountered within the dead branch are ignored)
+ *       "O" EXPR |                 // type(EXPR)
+ *       "K" EXPR |                 // str(EXPR)
+ *       "R" EXPR |                 // repr(EXPR)
+ *       "Q" EXPR |                 // EXPR.operator hash()
+ *       "+" EXPR |                 // +EXPR
+ *       "+" EXPR EXPR |            // FIRST_EXPR + SECOND_EXPR
+ *       "-" EXPR |                 // -EXPR
+ *       "-" INTEGER_LITERAL |      // -INTEGER_LITERAL
+ *       "-" FLOAT_LITERAL |        // -FLOAT_LITERAL
+ *       "-" EXPR EXPR |            // FIRST_EXPR - SECOND_EXPR
+ *       "~" EXPR |                 // ~EXPR
+ *       "*" EXPR EXPR |            // FIRST_EXPR * SECOND_EXPR
+ *       "/" EXPR EXPR |            // FIRST_EXPR / SECOND_EXPR
+ *       "%" EXPR EXPR |            // FIRST_EXPR % SECOND_EXPR
+ *       "!!<" EXPR EXPR |          // FIRST_EXPR << SECOND_EXPR
+ *       "!!>" EXPR EXPR |          // FIRST_EXPR >> SECOND_EXPR
+ *       "&" EXPR EXPR |            // FIRST_EXPR & SECOND_EXPR
+ *       "|" EXPR EXPR |            // FIRST_EXPR | SECOND_EXPR
+ *       "^" EXPR EXPR |            // FIRST_EXPR ^ SECOND_EXPR
+ *       "!*" EXPR EXPR |           // FIRST_EXPR ** SECOND_EXPR
+ *       "=" EXPR EXPR |            // FIRST_EXPR == SECOND_EXPR
+ *       "!=" EXPR EXPR |           // FIRST_EXPR != SECOND_EXPR
+ *       "<" EXPR EXPR |            // FIRST_EXPR < SECOND_EXPR
+ *       ">" EXPR EXPR |            // FIRST_EXPR > SECOND_EXPR
+ *       "!<" EXPR EXPR |           // FIRST_EXPR <= SECOND_EXPR
+ *       "!>" EXPR EXPR |           // FIRST_EXPR >= SECOND_EXPR
+ *       "!C" EXPR EXPR |           // FIRST_EXPR.operator contains(SECOND_EXPR)
+ *       "[" EXPR EXPR |            // FIRST_EXPR[SECOND_EXPR]
+ *       "[" EXPR EXPR EXPR |       // FIRST_EXPR[SECOND_EXPR:THIRD_EXPR]
+ *   );
+ *
+ *
+ *   NOTE: Whitespace may not appear with encoded expression and its presence (outside
+ *         of a string literal) is considered to be a syntax error.
+ *   EXAMPLES:
+ *       "foo"           // string("foo")
+ *       1?2             // int(1) + int(2)
+ *       1inL2nn         // int(i) in list([none,none])
+ *       (1.0).{a-\>b}   // float(1.0).operator getattr("a->b")
+ *
+ *
+ *   Any encoded default expression not starting with one of the disclosed prefixed
+ *   must be a simple, constant expression and may not reference other arguments,
+ *   meaning that exclusively one of the following is allowed:
+ *     none    --- The none builtin
+ *     true    --- The true builtin
+ *     false   --- The false builtin
+ *     1234    --- Integer constant    (also accepted with radix prefix `0x', `0X', `0b', `0B')
+ *     1.2     --- Float constant
+ *     "foo"   --- String constant     (where `foo' is decoded the same way a <NAME> would, before being decoded again as a C-escaped string)
+ *     r"foo"  --- String constant     (where `foo' is decoded the same way a <NAME> would, before being decoded again as a raw string literal)
+ *
+ */
+
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#define DAST_NONE    0x0000 /* No declaration information. */
+#define DAST_SYMBOL  0x0001 /* `int from deemon' Declaration information is provided as a symbol reference. */
+#define DAST_CONST   0x0002 /* `type(0)' Declaration information is provided as a constant type. */
+#define DAST_ALT     0x0003 /* `int | bool' Declaration information has multiple, alternative representations. */
+#define DAST_TUPLE   0x0004 /* `(int,string,float)' Declaration describes an n-element tuple of values. */
+#define DAST_SEQ     0x0005 /* `{int...}' Declaration describes a variable-length sequence of some element-type. */
+#define DAST_FUNC    0x0006 /* `(x: int, y: int): int' Declaration describes a variable-length sequence of some element-type. */
+#define DAST_ATTR    0x0007 /* `list.iterator' Access a custom attribute of another declaration. */
+#define DAST_WITH    0x0008 /* `weakref with object' Extended type information to describe cell-like objects */
+#define DAST_STRING  0x0009 /* __asm__("?T2?O?O") Custom string inserted into the representation. */
+
+#define DAST_FNORMAL 0x0000 /* Normal declaration ast flags */
+
+struct decl_ast {
+    uint16_t     da_type;  /* Decl AST Type (One of `DAST_*') */
+    uint16_t     da_flag;  /* Decl AST Flags (Set of `DAST_F*') */
+    union {
+        struct symbol      *da_symbol; /* [1..1][DAST_SYMBOL] The referenced type expression symbol. */
+        DREF DeeObject     *da_const;  /* [1..1][DAST_CONST] A constant expression type. */
+        struct {
+            size_t          a_altc;    /* Amount of alternative representations. */
+            struct decl_ast*a_altv;    /* [0..a_altc][owned] Vector of alternative representations. */
+        }                   da_alt;    /* [DAST_ALT] One of many different representations is acceptable. */
+        struct {
+            size_t          t_itemc;   /* Amount of tuple elements. */
+            struct decl_ast*t_itemv;   /* [0..a_altc][owned] Vector of tuple elements. */
+        }                   da_tuple;  /* [DAST_TUPLE] The representation is a fixed-length tuple containing known types. */
+        struct decl_ast    *da_seq;    /* [1..1][owned][DAST_SEQ] The sequence element */
+        struct {
+            struct decl_ast    *f_ret;   /* [0..1][owned] Function return type (or `NULL' when `object' or `none' is returned) */
+            DeeBaseScopeObject *f_scope; /* [1..1] The scope containing function argument info, as well as associated
+                                          * type declaration information (through `struct symbol::s_decltype') */
+        }                   da_func;   /* [DAST_FUNC] The representation is a function. */
+        struct {
+            struct decl_ast           *a_base; /* [1..1][owned] Attribute base expression. */
+            DREF struct string_object *a_name; /* [1..1] Attribute name. */
+        }                   da_attr;   /* [DAST_ATTR] The representation is the attribute of another expression. */
+        struct {
+            struct decl_ast *w_cell;   /* [2..2][owned] 0: The cell container; 1: The cell element. */
+        }                   da_with;   /* [DAST_WITH] Representation for cell-like containers. */
+        DREF struct string_object *da_string; /* [1..1][DAST_STRING] Custom string. */
+    };
+};
+struct decl_arg_ast {
+    struct TPPKeyword *da_name; /* [1..1] Argument name */
+    struct decl_ast    da_type; /* Argument type */
+};
+#ifdef CONFIG_BUILDING_DEEMON
+/* Finalize the given declaration ast. */
+INTDEF void DCALL decl_ast_fini(struct decl_ast *__restrict self);
+INTDEF int DCALL decl_ast_copy(struct decl_ast *__restrict self, struct decl_ast const *__restrict other);
+
+/* If `self' refers to a constant object, return that object.
+ * Otherwise, return `NULL' */
+INTDEF DeeObject *DCALL decl_ast_getobj(struct decl_ast const *__restrict self);
+/* Check if `self' refers to `none' or `type none' */
+INTDEF bool DCALL decl_ast_isnone(struct decl_ast const *__restrict self);
+/* Check if `self' refers to `object from deemon' */
+INTDEF bool DCALL decl_ast_isobject(struct decl_ast const *__restrict self);
+
+/* Check if the given declaration AST contains information that can't be inferred
+ * from non-documentation sources (such as argument names, types, etc.) */
+INTDEF bool DCALL decl_ast_isempty(struct decl_ast const *__restrict self);
+
+/* Print declaration information from `self', encoded as described above, into `printer' */
+INTDEF int DCALL
+decl_ast_print(struct decl_ast const *__restrict self,
+               struct unicode_printer *__restrict printer);
+
+/* Parse a declaration expression. */
+INTDEF int DCALL decl_ast_parse(struct decl_ast *__restrict self);
+
+/* Check if `a' and `b' are exactly identical. */
+INTDEF bool DCALL decl_ast_equal(struct decl_ast const *__restrict a,
+                                 struct decl_ast const *__restrict b);
+#endif /* CONFIG_BUILDING_DEEMON */
+
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+
+
 struct ast_loc {
     struct TPPFile      *l_file; /* [0..1] Location file. */
 #ifdef CONFIG_BUILDING_DEEMON
@@ -151,6 +544,9 @@ struct symbol {
     uint32_t             s_nread;  /* Number of times the symbol is read */
     uint32_t             s_nwrite; /* Number of times the symbol is written */
     uint32_t             s_nbound; /* Number of times the symbol is checking for being bound */
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+    struct decl_ast      s_decltype; /* Symbol declaration type. */
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
     union {                        /* Type-specific symbol data. */
         struct {
             DREF struct module_object *e_module; /* [1..1] The module from which the symbol is imported. */
@@ -391,6 +787,7 @@ struct base_scope_object {
                                         * this code object will be used to restore inherited (stolen) data. */
     DREF DeeObject    **bs_default;    /* [1..1][0..(bs_argc_max - bs_argc_min)][owned] Vector of function default arguments. */
     struct symbol      *bs_varargs;    /* [0..1] A symbol for the varargs argument. */
+    /* TODO: `bs_kwargs' */
     struct symbol     **bs_argv;       /* [1..1][0..bs_argc][owned] Vector of arguments taken by the function implemented by this scope.
                                         * HINT: This vector is also used to track which arguments was written to
                                         *      (deemon assembly doesn't allow modifications of arguments), as all
@@ -424,6 +821,7 @@ struct base_scope_object {
      *  bs_argc_min ... bs_argc_max-1             --- `foo = none' Optional arguments with default values
      *  bs_argc_max ... bs_argc_max+bs_argc_opt-1 --- `?foo'       Optional arguments without default values
      *  bs_argc_max+bs_argc_opt                   --- `foo...'     The varargs argument
+     *  TODO: bs_kwargs
      */
 #define DeeBaseScope_IsArgRequired(self,x)   ((x) < (self)->bs_argc_min)
 #define DeeBaseScope_IsArgDefault(self,x)    ((x) >= (self)->bs_argc_min && (x) < (self)->bs_argc_max)

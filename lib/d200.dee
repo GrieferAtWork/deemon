@@ -20,20 +20,22 @@
 /* Backwards-compatibility and helpers to
  * achieve this with previous version of deemon. */
 
-import dict from deemon;
+import * from deemon;
 
-@"A class that may be specified as the base of other user-classes"
-@"to achieve old-style member semanics, diverting lookup of member"
-@"variables to be done at runtime:"
-@"> class MyClass: OldUserClass from d200 {"
-@">     this() {"
-@">         this.my_member = 42;"
-@">     }"
-@"> }"
-@"> "
-@"> print MyClass().my_member;"
-@"> "
-	@"A dict mapping old member variables to their proper names."
+@@A class that may be specified as the base of other user-classes
+@@to achieve old-style member semanics, diverting lookup of member
+@@variables to be done at runtime:
+@@>class MyClass: OldUserClass from d200 {
+@@>    this() {
+@@>        this.my_member = 42;
+@@>    }
+@@>}
+@@>
+@@>print MyClass().my_member;
+@@>
+@@Note that once an old-style headers has been included, any
+@@class that doesn't declare an explicit base is automatically
+@@assembled to be deribed from `OldUserClass from d200'
 class OldUserClass
 	/* Inherit from weakrefable, because it used to be that
 	 * any user-defined class could be weakly referneced by
@@ -42,17 +44,18 @@ class OldUserClass
 	: weakrefable
 {
 
+	@@A dict mapping old member variables to their proper names
 	private m_members = dict();
 
-	operator . (name) {
+	operator . (name: string): object {
 		return m_members[name];
 	}
 
-	operator del. (name) {
+	operator del. (name: string) {
 		del m_members[name];
 	}
 
-	operator .= (name,value) {
+	operator .= (name: string, value: object) {
 		m_members[name] = value;
 	}
 

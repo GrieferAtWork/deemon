@@ -4734,29 +4734,29 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "scope",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getscope, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setscope,
-      DOC("->:compiler.scope\n"
+      DOC("->?Ascope?Ert:compiler\n"
           "@throw ValueError Attempted to set a scope associated with a different compiler\n"
           "@throw ReferenceError Attempted to set a scope not apart of the same base-scope (s.a. :compiler.scope.base)\n"
           "@throw ReferenceError Attempted to set the scope of a branch containing symbols that would no longer be reachable\n"
           "Get or set the scope with which this branch is assocated") },
     { "kind",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getkind, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "Get the name of the ast kind (same as the `make*' methods of :compiler)") },
     { "typeid",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettypeid, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "Get the internal type-id of ast") },
     { "constexpr",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconstexpr, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconstexpr,
-      DOC("->object\n"
+      DOC("->\n"
           "@throw TypeError #kind isn't $\"constexpr\"\n"
           "Get or set the constant expression value of a $\"constexpr\" (s.a. #kind) ast") },
     { "sym",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getsym, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setsym,
-      DOC("->:compiler.symbol\n"
+      DOC("->?Asymbol?Ert:compiler\n"
           "@throw TypeError #kind isn't $\"sym\", $\"unbind\" or $\"bound\"\n"
           "@throw ValueError Attempted to set a :compiler.symbol associated with a different compiler\n"
           "Get or set the symbol associated with a symbol-related AST") },
@@ -4764,7 +4764,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getmultiple,
       (int(DCALL *)(DeeObject *__restrict))&ast_delmultiple,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setmultiple,
-      DOC("->{ast...}\n"
+      DOC("->?S?.\n"
           "@throw TypeError #kind isn't $\"multiple\"\n"
           "@throw ValueError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
@@ -4772,7 +4772,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "multiple_typing",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getmultiple_typing, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setmultiple_typing,
-      DOC("->type\n"
+      DOC("->?Dtype\n"
           "@throw TypeError #kind isn't $\"multiple\"\n"
           "@throw TypeError Attempted to set a typing that is neither :none, nor one of the type listed in :compiler.makemultiple\n"
           "Get or set the typing of a @ multi-branch ast") },
@@ -4780,7 +4780,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getreturnast,
       (int(DCALL *)(DeeObject *__restrict))&ast_delreturnast,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setreturnast,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"return\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute No return expression has been bound\n"
@@ -4790,7 +4790,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "yieldast",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getyieldast, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setyieldast,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"yield\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
@@ -4799,7 +4799,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getthrowast,
       (int(DCALL *)(DeeObject *__restrict))&ast_delthrowast,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setthrowast,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"throw\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute No throw expression has been bound\n"
@@ -4809,7 +4809,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "tryguard",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettryguard, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_settryguard,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"try\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute No throw expression has been bound\n"
@@ -4818,7 +4818,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "tryhandlers",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettryhandlers, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_settryhandlers,
-      DOC("->{(string,ast,ast)...}\n"
+      DOC("->?S?T3?Dstring?.?.\n"
           "@throw TypeError #kind isn't $\"try\"\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
           "@throw ValueError One of the flags-strings contains an unknown flag\n"
@@ -4827,7 +4827,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "loopflags",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopflags, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopflags,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "@throw ValueError Attempted to set an invalid flags string\n"
           "@throw UnboundAttribute Attempted to enable $\"foreach\" mode with #loopnext being unbound\n"
@@ -4838,27 +4838,27 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "loopisforeach",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopisforeach, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopisforeach,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "@throw UnboundAttribute Attempted to enable $\"foreach\" mode with #loopnext being unbound\n"
           "Get or set if @this ast is a foreach-loop, controlling the $\"foreach\" flag of #loopflags") },
     { "loopispostcond",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopispostcond, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopispostcond,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "Get or set if #loopcond is evaluated after #looploop or before, controlling the $\"postcond\" flag of #loopflags") },
     { "loopisunlikely",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopisunlikely, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopisunlikely,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "Get or set if #looploop is unlikely to be executed, controlling the $\"unlikely\" flag of #loopflags") },
     { "loopcond",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopcond,
       (int(DCALL *)(DeeObject *__restrict))&ast_delloopcond,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopcond,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "@throw TypeError #loopflags contains $\"foreach\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
@@ -4870,7 +4870,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopnext,
       (int(DCALL *)(DeeObject *__restrict))&ast_delloopnext,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopnext,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "@throw TypeError #loopflags contains $\"foreach\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
@@ -4882,7 +4882,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getlooploop,
       (int(DCALL *)(DeeObject *__restrict))&ast_dellooploop,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setlooploop,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute No loop block expression has been bound\n"
@@ -4893,7 +4893,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopelem,
       (int(DCALL *)(DeeObject *__restrict))&ast_delloopelem,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopelem,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "@throw TypeError #loopflags doesn't contain $\"foreach\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
@@ -4904,7 +4904,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "loopiter",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopiter, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopiter,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "@throw TypeError #loopflags doesn't contain $\"foreach\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
@@ -4914,7 +4914,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopelemcond,
       (int(DCALL *)(DeeObject *__restrict))&ast_delloopelemcond,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopelemcond,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute No condition or element expression has been bound\n"
@@ -4924,7 +4924,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopiternext,
       (int(DCALL *)(DeeObject *__restrict))&ast_delloopiternext,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopiternext,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"loop\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute No loop advance expression has been bound\n"
@@ -4934,13 +4934,13 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "loopctlisbreak",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopctlisbreak, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setloopctlisbreak,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"loopctl\"\n"
           "Get or set if @this loop control branch behaves as a $break, or as a $continue") },
     { "conditionalcond",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalcond, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalcond,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"conditional\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
@@ -4949,7 +4949,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionaltt,
       (int(DCALL *)(DeeObject *__restrict))&ast_delconditionaltt,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionaltt,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"conditional\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute No true-branch has been bound\n"
@@ -4961,7 +4961,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalff,
       (int(DCALL *)(DeeObject *__restrict))&ast_delconditionalff,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalff,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"conditional\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute No false-branch has been bound\n"
@@ -4972,32 +4972,32 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "conditionalflags",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalflags, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalflags,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "@throw TypeError #kind isn't $\"conditional\"\n"
           "@throw ValueError Attempted to set an invalid set of flags\n"
           "Get or set the flags used for evaluating @this conditional branch (s.a. :compiler.makeconditional)") },
     { "conditionalisbool",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalisbool, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalisbool,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"conditional\"\n"
           "Control the $\"bool\"-flag of #conditionalflags (s.a. :compiler.makeconditional)") },
     { "conditionalislikely",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalislikely, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalislikely,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"conditional\"\n"
           "Control the $\"likely\"-flag of #conditionalflags (s.a. :compiler.makeconditional)") },
     { "conditionalisunlikely",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalisunlikely, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setconditionalisunlikely,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"conditional\"\n"
           "Control the $\"unlikely\"-flag of #conditionalflags (s.a. :compiler.makeconditional)") },
     { "boolast",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getboolast, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setboolast,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"bool\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
@@ -5005,13 +5005,13 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "boolisnegated",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getboolisnegated, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setboolisnegated,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"bool\"\n"
           "Get or set if the boolean value of #boolast should be negated") },
     { "expandast",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getexpandast, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setexpandast,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"expand\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
@@ -5019,7 +5019,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "functioncode",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getfunctioncode, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setfunctioncode,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"function\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw ReferenceError ${this.scope} is not reachable from ${VALUE.scope}\n"
@@ -5028,8 +5028,8 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "operatorfuncname",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorfuncname, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorfuncname,
-      DOC("->string\n"
-          "->int\n"
+      DOC("->?Dstring\n"
+          "->?Dint\n"
           "@throw TypeError #kind isn't $\"operatorfunc\"\n"
           "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
           "Get or set the name of the operator that is loaded as a function by this branch") },
@@ -5037,7 +5037,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorfuncbinding,
       (int(DCALL *)(DeeObject *__restrict))&ast_deloperatorfuncbinding,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorfuncbinding,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"operatorfunc\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute The operator function hasn't been bound\n"
@@ -5048,15 +5048,15 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "operatorname",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorname, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorname,
-      DOC("->string\n"
-          "->int\n"
+      DOC("->?Dstring\n"
+          "->?Dint\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
           "Get or set the name of the operator executed by @this ast") },
     { "operatora",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatora, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatora,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
@@ -5065,7 +5065,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorb,
       (int(DCALL *)(DeeObject *__restrict))&ast_deloperatorb,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorb,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute The second operand has been unbound\n"
@@ -5076,7 +5076,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorc,
       (int(DCALL *)(DeeObject *__restrict))&ast_deloperatorc,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorc,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute The third operand has been unbound\n"
@@ -5087,7 +5087,7 @@ PRIVATE struct type_getset ast_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatord,
       (int(DCALL *)(DeeObject *__restrict))&ast_deloperatord,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatord,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw UnboundAttribute The fourth operand has been unbound\n"
@@ -5097,38 +5097,38 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "operatorflags",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorflags, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorflags,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw ValueError Attempted to set invalid flags\n"
           "Get or set the flags used to describe special behavior for executing an operator (s.a. :compiler.makeoperator)") },
     { "operatorispost",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorispost, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorispost,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "Get or set the $\"post\"-flag of #operatorflags (s.a. :compiler.makeoperator)") },
     { "operatorisvarargs",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorisvarargs, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorisvarargs,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "Get or set the $\"varargs\"-flag of #operatorflags (s.a. :compiler.makeoperator)") },
     { "operatorismaybeprefix",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorismaybeprefix, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorismaybeprefix,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "Get or set the $\"maybeprefix\"-flag of #operatorflags (s.a. :compiler.makeoperator)") },
     { "operatorisdontoptimize",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorisdontoptimize, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorisdontoptimize,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "Get or set the $\"dontoptimize\"-flag of #operatorflags (s.a. :compiler.makeoperator)") },
     { "actionname",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactionname, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setactionname,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw ValueError Attempted to set an invalid action\n"
           "@throw ValueError Attempted to set an action taking a different number of operands than "
@@ -5137,7 +5137,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "actiona",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactiona, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setactiona,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw AttributeError The currently set action takes $0 arguments\n"
@@ -5146,7 +5146,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "actionb",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactionb, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setactionb,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw AttributeError The currently set action takes $0, or $1 argument\n"
@@ -5155,7 +5155,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "actionc",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactionc, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setactionc,
-      DOC("->ast\n"
+      DOC("->?.\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw TypeError Attempted to set an :compiler.ast associated with a different compiler\n"
           "@throw AttributeError The currently set action takes $0, $1 or $2 arguments\n"

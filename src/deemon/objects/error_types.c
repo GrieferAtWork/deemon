@@ -277,10 +277,10 @@ error_repr(DeeErrorObject *__restrict self) {
 }
 PRIVATE struct type_member error_members[] = {
     TYPE_MEMBER_FIELD_DOC("inner",STRUCT_OBJECT_OPT,offsetof(DeeErrorObject,e_inner),
-                          "->object\n"
+                          "->\n"
                           "An optional inner error object, or :none when not set"),
     TYPE_MEMBER_FIELD_DOC("message",STRUCT_OBJECT_OPT,offsetof(DeeErrorObject,e_message),
-                          "->string\n"
+                          "->?Dstring\n"
                           "The error message associated with this Error object, or :none when not set"),
     TYPE_MEMBER_END
 };
@@ -290,8 +290,8 @@ PUBLIC DeeTypeObject DeeError_Error = {
     /* .tp_doc      = */DOC("Base class for all errors thrown by the runtime\n"
                             "\n"
                             "()\n"
-                            "(string message)\n"
-                            "(string message, object inner)"),
+                            "(message:?Dstring)\n"
+                            "(message:?Dstring,inner)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -799,15 +799,15 @@ err:
 
 PRIVATE struct type_method appexit_class_methods[] = {
     { "exit", &appexit_class_exit,
-      DOC("()->none\n"
-          "(int exitcode,bool invoke_atexit=true)->none\n"
+      DOC("()\n"
+          "(exitcode:?Dint,invoke_atexit=!t)\n"
           "Terminate execution of deemon after invoking #atexit callbacks when @invoke_atexit is :true\n"
           "Termination is done using the C $exit or $_exit functions, if available. However if these "
           "functions are not provided by the host, an :AppExit error is thrown instead\n"
           "When no @exitcode is given, the host's default default value of EXIT_FAILURE, or $1 is used\n"
           "This function never returns normally") },
     { "atexit", &appexit_class_atexit,
-      DOC("(callable callback, tuple args = ())\n"
+      DOC("(callback:?Dcallable,args=!T0)\n"
           "@throw RuntimeError Additional atexit-callbacks can no longer be registered\n"
           "@throw NotImplemented Deemon was built without support for #atexit\n"
           "Register a given @callback to be executed before deemon terminates") },
@@ -825,7 +825,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
                             "will be terminated with the given exitcode\n"
                             "\n"
                             "()\n"
-                            "(int exitcode)\n"
+                            "(exitcode:?Dint)\n"
                             "Construct a new AppExit object using the given @exitcode "
                             "or the host's default value for EXIT_FAILURE, or $1"),
     /* .tp_flags    = */TP_FFINAL|TP_FINTERRUPT,

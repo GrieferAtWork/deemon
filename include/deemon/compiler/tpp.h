@@ -45,6 +45,8 @@ DECL_BEGIN
 #endif
 
 
+#undef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#define CONFIG_HAVE_DECLARATION_DOCUMENTATION 1
 
 struct ast_loc;
 struct ast;

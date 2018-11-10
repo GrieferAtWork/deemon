@@ -5022,7 +5022,7 @@ History:
 
     V2.7.1 Thu Jul 25 10:58:03 2002  Doug Lea  (dl at gee)
       * Allow tuning of FIRST_SORTED_BIN_SIZE
-      * Use PTR_UINT as type for all ptr->int casts. Thanks to John Belmonte.
+      * Use PTR_UINT as type for all ptr->?Dint casts. Thanks to John Belmonte.
       * Better detection and support for non-contiguousness of MORECORE.
         Thanks to Andreas Mueller, Conal Walsh, and Wolfram Gloger
       * Bypass most of malloc if no frees. Thanks To Emery Berger.

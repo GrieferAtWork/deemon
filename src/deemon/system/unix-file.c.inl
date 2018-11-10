@@ -605,7 +605,7 @@ PRIVATE struct type_method sysfile_methods[] = {
 };
 
 PRIVATE struct type_getset sysfile_getsets[] = {
-    { "filename", &DeeSystemFile_Filename, NULL, NULL, DOC("->string") },
+    { "filename", &DeeSystemFile_Filename, NULL, NULL, DOC("->?Dstring") },
     { NULL }
 };
 

@@ -373,7 +373,7 @@ err:
 
 PRIVATE struct type_method shlib_methods[] = {
     { "base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&shlib_base,
-      DOC("()-void.ptr\nReturns the base address of the shared library") },
+      DOC("->?Aptr?Gvoid\nReturns the base address of the shared library") },
     { NULL }
 };
 

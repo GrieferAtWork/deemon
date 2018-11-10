@@ -189,66 +189,66 @@ PRIVATE struct dex_symbol symbols[] = {
     { "sockaddr", (DeeObject *)&DeeSockAddr_Type, MODSYM_FREADONLY },
     { "NetError", (DeeObject *)&DeeError_NetError, MODSYM_FREADONLY },
     { "getafname", (DeeObject *)&lib_getafname, MODSYM_FREADONLY,
-      DOC("(int id)->string\n"
-          "(int id)->int\n"
+      DOC("(id:?Dint)->?Dstring\n"
+          "(id:?Dint)->?Dint\n"
           "Return the name of a given address family, given its system-dependent ID\n"
           "When not known, re-return the given @id") },
     { "getafof", (DeeObject *)&lib_getafof, MODSYM_FREADONLY,
-      DOC("(int id)->int\n"
-          "(string name)->int\n"
+      DOC("(id:?Dint)->?Dint\n"
+          "(name:?Dstring)->?Dint\n"
           "@throw NetError.NoSupport The given @name is not recognized by this library\n"
           "Return the system-dependent ID of a given address family @name, or re-return the given @id.\n"
           "The given @name is encoded the same way as the first constructor argument for :socket") },
     { "gettypename", (DeeObject *)&lib_gettypename, MODSYM_FREADONLY,
-      DOC("(int type)->string\n"
-          "(int type)->int\n"
+      DOC("(typ:?Dint)->?Dstring\n"
+          "(typ:?Dint)->?Dint\n"
           "Return the name of a given socket type @type, given its system-dependent ID\n"
           "When not known, re-return the given @type") },
     { "gettypeof", (DeeObject *)&lib_gettypeof, MODSYM_FREADONLY,
-      DOC("(int type)->int\n"
-          "(string name)->int\n"
+      DOC("(typ:?Dint)->?Dint\n"
+          "(name:?Dstring)->?Dint\n"
           "@throw NetError.NoSupport The given @name is not recognized by this library\n"
           "Return the system-dependent ID of a given socket type @name, or re-return the given @type.\n"
           "The given @name is encoded the same way as the second constructor argument for :socket") },
     { "getprotoname", (DeeObject *)&lib_getprotoname, MODSYM_FREADONLY,
-      DOC("(int proto)->string\n"
-          "(int proto)->int\n"
+      DOC("(proto:?Dint)->?Dstring\n"
+          "(proto:?Dint)->?Dint\n"
           "Return the name of a given protocol @proto, given its system-dependent ID\n"
           "When not known, re-return the given @proto") },
     { "getprotoof", (DeeObject *)&lib_getprotoof, MODSYM_FREADONLY,
-      DOC("(int proto)->int\n"
-          "(string name)->int\n"
+      DOC("(proto:?Dint)->?Dint\n"
+          "(name:?Dstring)->?Dint\n"
           "@throw NetError.NoSupport The given @name is not recognized by this library\n"
           "Return the system-dependent ID of a given protocol name @name, or re-return the given @proto.\n"
           "The given @name is encoded the same way as the third constructor argument for :socket") },
     { "getmsgflagsname", (DeeObject *)&lib_getmsgflagsname, MODSYM_FREADONLY,
-      DOC("(int msgflags)->string\n"
-          "(int msgflags)->int\n"
+      DOC("(msgflags:?Dint)->?Dstring\n"
+          "(msgflags:?Dint)->?Dint\n"
           "Return the name of a given message flags @msgflags, given a system-dependent set of flags\n"
           "When not known, re-return the given @msgflags") },
     { "getmsgflagsof", (DeeObject *)&lib_getmsgflagsof, MODSYM_FREADONLY,
-      DOC("(int msgflags)->int\n"
-          "(string flags)->int\n"
+      DOC("(msgflags:?Dint)->?Dint\n"
+          "(flags:?Dstring)->?Dint\n"
           "@throw NetError.NoSupport The given @flags contains at least one flag that is not recognized by this library\n"
           "Return a system-dependent set of flags for given message flags @flags, or re-return the given @flags.\n"
           "The given @flags is encoded the same way as the flags argument passed to :socket.recv") },
     { "ntoh16", (DeeObject *)&lib_ntoh16, MODSYM_FREADONLY,
-      DOC("(int x)->int\n"
+      DOC("(x:?Dint)->?Dint\n"
           "Convert a 16-bit integer @x from network-endian to host-endian") },
     { "ntoh32", (DeeObject *)&lib_ntoh32, MODSYM_FREADONLY,
-      DOC("(int x)->int\n"
+      DOC("(x:?Dint)->?Dint\n"
           "Convert a 32-bit integer @x from network-endian to host-endian") },
     { "ntoh64", (DeeObject *)&lib_ntoh64, MODSYM_FREADONLY,
-      DOC("(int x)->int\n"
+      DOC("(x:?Dint)->?Dint\n"
           "Convert a 64-bit integer @x from network-endian to host-endian") },
     { "hton16", (DeeObject *)&lib_hton16, MODSYM_FREADONLY,
-      DOC("(int x)->int\n"
+      DOC("(x:?Dint)->?Dint\n"
           "Convert a 16-bit integer @x from host-endian to network-endian") },
     { "hton32", (DeeObject *)&lib_hton32, MODSYM_FREADONLY,
-      DOC("(int x)->int\n"
+      DOC("(x:?Dint)->?Dint\n"
           "Convert a 32-bit integer @x from host-endian to network-endian") },
     { "hton64", (DeeObject *)&lib_hton64, MODSYM_FREADONLY,
-      DOC("(int x)->int\n"
+      DOC("(x:?Dint)->?Dint\n"
           "Convert a 64-bit integer @x from host-endian to network-endian") },
     { NULL }
 };

@@ -3370,40 +3370,40 @@ err:
 
 INTERN struct type_method bytes_methods[] = {
     { "decode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_decode,
-      DOC("(string codec,string errors=\"strict\")->string\n"
-          "(string codec,string errors=\"strict\")->object\n"
+      DOC("(codec:?Dstring,errors=!Pstrict)->?Dstring\n"
+          "(codec:?Dstring,errors=!Pstrict)->\n"
           "@throw ValueError The given @codec or @errors wasn't recognized\n"
           "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
           "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
           "Same as :string.decode, but instead use the data of @this bytes object as characters to decode"),
       TYPE_METHOD_FKWDS },
     { "encode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_encode,
-      DOC("(string codec,string errors=\"strict\")->bytes\n"
-          "(string codec,string errors=\"strict\")->string\n"
-          "(string codec,string errors=\"strict\")->object\n"
+      DOC("(codec:?Dstring,errors=!Pstrict)->?.\n"
+          "(codec:?Dstring,errors=!Pstrict)->?Dstring\n"
+          "(codec:?Dstring,errors=!Pstrict)->\n"
           "@throw ValueError The given @codec or @errors wasn't recognized\n"
           "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
           "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
           "Same as :string.encode, but instead use the data of @this bytes object as characters to decode"),
       TYPE_METHOD_FKWDS },
     { "bytes", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_substr,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "Same as #substr (here for ABI compatibility with :string.bytes)"),
       TYPE_METHOD_FKWDS },
     { "ord", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_ord,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw ValueError The length of @this bytes object is not equal to $1\n"
           "Same as ${this[0]}\n"
           "\n"
-          "(int index)->int\n"
+          "(index:?Dint)->?Dint\n"
           "@throw IntegerOverflow The given @index is lower than $0\n"
           "@throw IndexError The given @index is greater than ${#this}\n"
           "Same as ${this[index]}") },
 
     /* Bytes-specific functions. */
     { "resized", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_resized,
-      DOC("(int new_size)->bytes\n"
-          "(int new_size,int filler)->bytes\n"
+      DOC("(new_size:?Dint)->?.\n"
+          "(new_size:?Dint,filler:?Dint)->?.\n"
           "Return a new writable bytes object with a length of @new_size, and its "
           "first ${(#this,new_size) < ...} bytes initialized from ${this.substr(0,new_size)}, "
           "with the remainder then either left uninitialized, or initialized to @filler\n"
@@ -3415,18 +3415,18 @@ INTERN struct type_method bytes_methods[] = {
           ">y = y.resized(16,\"?\".ord());\n"
           ">print repr y; /* \"foobar??" "??" "??" "??" "??\" */") },
     { "reverse", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_reverse,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #reversed, but modifications are performed "
           "in-line, before @this bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "makereadonly", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_makereadonly,
-      DOC("->bytes\n"
+      DOC("->?.\n"
           "The inverse of #makewritable, either re-returning @this bytes object if it "
           "already is read-only, or construct a view for the data contained within @this "
           "bytes object, but making that view read-only") },
     { "makewritable", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_makewritable,
-      DOC("->bytes\n"
+      DOC("->?.\n"
           "Either re-return @this bytes object is it already #iswritable, or create a "
           "copy (s.a. #op:copy) and return it:\n"
           ">function makewritable() {\n"
@@ -3435,7 +3435,7 @@ INTERN struct type_method bytes_methods[] = {
           "> return copy this;\n"
           ">}") },
     { "hex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_hex,
-      DOC("(int start=0,int end=-1)->string\n"
+      DOC("(start=!0,end=!-1)->?Dstring\n"
           "Returns a hex-encoded string for the bytes contained within "
           "${this.substr(start,end)}, that is a string containing 2 characters "
           "for each encoded byte, both of which are lower-case hexadecimal digits\n"
@@ -3445,337 +3445,337 @@ INTERN struct type_method bytes_methods[] = {
 
     /* Bytes formatting / scanning. */
     { "format", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_format,
-      DOC("(sequence args)->bytes") },
+      DOC("(args:?S?O)->?.") },
     { "scanf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_scanf,
-      DOC("(string format)->sequence") },
+      DOC("(format:?Dstring)->?S?O") },
 
     /* String/Character traits */
     { "isprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isprint,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all "
           "characters in ${this.substr(start,end)} are printable") },
     { "isalpha", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isalpha,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are alphabetical") },
     { "isspace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isspace,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are space-characters") },
     { "islf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_islf,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are line-feeds") },
     { "islower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_islower,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are lower-case") },
     { "isupper", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isupper,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are upper-case") },
     { "iscntrl", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_iscntrl,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are control characters") },
     { "isdigit", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isdigit,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are digits") },
     { "isdecimal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isdecimal,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are dicimal characters") },
     { "issymstrt", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_issymstrt,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} can be used to start a symbol name") },
     { "issymcont", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_issymcont,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} can be used to continue a symbol name") },
     { "isalnum", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isalnum,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} are alpha-numerical") },
     { "isnumeric", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isnumeric,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
           "in ${this.substr(start,end)} qualify as digit or decimal characters") },
     { "istitle", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_istitle,
-      DOC("(int index)->bool\n"
+      DOC("(index:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if the character at ${this[index]} has title-casing\n"
           "\n"
-          "->bool\n"
-          "(int start,int end)->bool\n"
+          "->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
           "follows title-casing, meaning that space is followed by upper-case") },
     { "issymbol", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_issymbol,
-      DOC("(int index)->bool\n"
+      DOC("(index:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if the character at ${this[index]} can be used "
           "to start a symbol name. Same as ${this.issymstrt(index)}\n"
           "\n"
-          "->bool\n"
-          "(int start,int end)->bool\n"
+          "->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
           "is a valid symbol name") },
     { "isascii", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isascii,
-      DOC("->bool\n"
-          "(int index)->bool\n"
-          "(int start,int end)->bool\n"
+      DOC("->?Dbool\n"
+          "(index:?Dint)->?Dbool\n"
+          "(start:?Dint,end:?Dint)->?Dbool\n"
           "@throw IndexError The given @index is larger than ${#this}\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start,end)} "
           "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
     { "asnumber", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_asnumber,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw ValueError The string is longer than a single character\n"
-          "(int index)->int\n"
+          "(index:?Dint)->?Dint\n"
           "@throw ValueError The character at @index isn't numeric\n"
-          "(int index,int defl)->int\n"
-          "(int index,object defl)->object\n"
+          "(index:?Dint,defl:?Dint)->?Dint\n"
+          "(index:?Dint,defl)->\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
           "Return the numeric value of the @index'th or only character of @this string, "
           "or throw a :ValueError or return @defl if that character isn't #isnumeric") },
     { "asdigit", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_asdigit,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw ValueError The string is longer than a single character\n"
-          "(int index)->int\n"
+          "(index:?Dint)->?Dint\n"
           "@throw ValueError The character at @index isn't numeric\n"
-          "(int index,int defl)->int\n"
-          "(int index,object defl)->object\n"
+          "(index:?Dint,defl:?Dint)->?Dint\n"
+          "(index:?Dint,defl)->\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
           "Same as #asnumber, but only succeed if the selected character matches #isdigit, rather than #isnumeric") },
     { "asdecimal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_asdecimal,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw ValueError The string is longer than a single character\n"
-          "(int index)->int\n"
+          "(index:?Dint)->?Dint\n"
           "@throw ValueError The character at @index isn't numeric\n"
-          "(int index,int defl)->int\n"
-          "(int index,object defl)->object\n"
+          "(index:?Dint,defl:?Dint)->?Dint\n"
+          "(index:?Dint,defl)->\n"
           "@throw IntegerOverflow The given @index is negative or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
           "Same as #asnumber, but only succeed if the selected character matches #isdecimal, rather than #isnumeric") },
 
     { "isanyprint", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanyprint,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is printable"),
       TYPE_METHOD_FKWDS },
     { "isanyalpha", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanyalpha,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is alphabetical"),
       TYPE_METHOD_FKWDS },
     { "isanyspace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanyspace,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is a space character"),
       TYPE_METHOD_FKWDS },
     { "isanylf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanylf,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is a line-feeds"),
       TYPE_METHOD_FKWDS },
     { "isanylower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanylower,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is lower-case"),
       TYPE_METHOD_FKWDS },
     { "isanyupper", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanyupper,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is upper-case"),
       TYPE_METHOD_FKWDS },
     { "isanycntrl", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanycntrl,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is a control character"),
       TYPE_METHOD_FKWDS },
     { "isanydigit", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanydigit,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is a digit"),
       TYPE_METHOD_FKWDS },
     { "isanydecimal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanydecimal,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is a dicimal character"),
       TYPE_METHOD_FKWDS },
     { "isanysymstrt", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanysymstrt,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} can be used to start a symbol name"),
       TYPE_METHOD_FKWDS },
     { "isanysymcont", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanysymcont,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} can be used to continue a symbol name"),
       TYPE_METHOD_FKWDS },
     { "isanyalnum", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanyalnum,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} is alpha-numerical"),
       TYPE_METHOD_FKWDS },
     { "isanynumeric", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanynumeric,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} qualifies as digit or decimal characters"),
       TYPE_METHOD_FKWDS },
     { "isanytitle", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanytitle,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in "
           "${this.substr(start,end)} has title-casing"),
       TYPE_METHOD_FKWDS },
     { "isanyascii", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_isanyascii,
-      DOC("(int start=0,int end=-1)->bool\n"
+      DOC("(start=!0,end=!-1)->?Dbool\n"
           "Returns :true if any character in ${this.substr(start,end)} are "
           "ascii-characters, that is have an ordinal value ${<= 0x7f}"),
       TYPE_METHOD_FKWDS },
 
     /* Bytes conversion functions */
     { "lower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lower,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "Returns a writable copy of @this bytes object converted to lower-case (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "upper", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_upper,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "Returns a writable copy of @this bytes object converted to upper-case (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "title", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_title,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "Returns a writable copy of @this bytes object converted to title-casing (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "capitalize", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_capitalize,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "Returns a writable copy of @this bytes object with each word capitalized (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "swapcase", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_swapcase,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "Returns a writable copy of @this bytes object with the casing of each "
           "character that has two different casings swapped (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "casefold", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lower,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "Alias for #{lower}. This function exists to match :string.casefold in "
           "order to improve binary compatibility between :bytes and :string objects"),
       TYPE_METHOD_FKWDS },
 
     /* Inplace variants of bytes conversion functions */
     { "tolower", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tolower,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #lower, but character modifications are performed in-place, and @this bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "toupper", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_toupper,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #upper, but character modifications are performed in-place, and @this bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "totitle", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_totitle,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #title, but character modifications are performed in-place, and @this bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "tocapitalize", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tocapitalize,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #capitalize, but character modifications are performed in-place, and @this bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "toswapcase", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_toswapcase,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "@throw BufferError @this bytes object is not writable\n"
           "Same as #swapcase, but character modifications are performed in-place, and @this bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "tocasefold", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tolower,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "@throw BufferError @this bytes object is not writable\n"
           "Alias for #tolower, here to coincide with #casefold existing as an alias for #lower"),
       TYPE_METHOD_FKWDS },
 
     /* Case-sensitive query functions */
     { "replace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_replace,
-      DOC("(string find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(string find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(string find,int replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,int replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,int replace,int max=int.SIZE_MAX)->bytes\n"
+      DOC("(find:?Dstring,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dstring,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dstring,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
           "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
           "Find up to @max occurrances of @find and replace each with @replace, then return the resulting data as a writable bytes object"),
       TYPE_METHOD_FKWDS },
     { "toreplace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_toreplace,
-      DOC("(string find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(string find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(string find,int replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,int replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,int replace,int max=int.SIZE_MAX)->bytes\n"
+      DOC("(find:?Dstring,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dstring,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dstring,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
           "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
           "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
@@ -3783,89 +3783,89 @@ INTERN struct type_method bytes_methods[] = {
           "Same as #replace, but the bytes object is modified in-place, and @this is re-returned"),
       TYPE_METHOD_FKWDS },
     { "find", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_find,
-      DOC("(bytes needle,int start=0,int end=-1)->int\n"
-          "(string needle,int start=0,int end=-1)->int\n"
-          "(int needle,int start=0,int end=-1)->int\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dint\n"
           "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
           "Find the first instance of @needle that exists within ${this.substr(start,end)}, "
           "and return its starting index, or ${-1} if no such position exists"),
       TYPE_METHOD_FKWDS },
     { "rfind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rfind,
-      DOC("(bytes needle,int start=0,int end=-1)->int\n"
-          "(string needle,int start=0,int end=-1)->int\n"
-          "(int needle,int start=0,int end=-1)->int\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dint\n"
           "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
           "Find the first instance of @needle that exists within ${this.substr(start,end)}, "
           "and return its starting index, or ${-1} if no such position exists"),
       TYPE_METHOD_FKWDS },
     { "index", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_index,
-      DOC("(bytes needle,int start=0,int end=-1)->int\n"
-          "(string needle,int start=0,int end=-1)->int\n"
-          "(int needle,int start=0,int end=-1)->int\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dint\n"
           "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
           "Find the first instance of @needle that exists within ${this.substr(start,end)}, "
           "and return its starting index"),
       TYPE_METHOD_FKWDS },
     { "rindex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rindex,
-      DOC("(bytes needle,int start=0,int end=-1)->int\n"
-          "(string needle,int start=0,int end=-1)->int\n"
-          "(int needle,int start=0,int end=-1)->int\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dint\n"
           "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
           "Find the last instance of @needle that exists within ${this.substr(start,end)}, "
           "and return its starting index"),
       TYPE_METHOD_FKWDS },
     { "findall", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_findall,
-      DOC("(bytes needle,int start=0,int end=-1)->{int...}\n"
-          "(string needle,int start=0,int end=-1)->{int...}\n"
-          "(int needle,int start=0,int end=-1)->{int...}\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?S?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?S?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?S?Dint\n"
           "Find all instances of @needle within ${this.substr(start,end)}, "
           "and return their starting indeces as a sequence"),
       TYPE_METHOD_FKWDS },
     { "count", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_count,
-      DOC("(bytes needle,int start=0,int end=-1)->int\n"
-          "(string needle,int start=0,int end=-1)->int\n"
-          "(int needle,int start=0,int end=-1)->int\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dint\n"
           "Count the number of instances of @needle that exists within ${this.substr(start,end)}, "
           "and return now many were found"),
       TYPE_METHOD_FKWDS },
     { "contains", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_contains_f,
-      DOC("(bytes needle,int start=0,int end=-1)->bool\n"
-          "(string needle,int start=0,int end=-1)->bool\n"
-          "(int needle,int start=0,int end=-1)->bool\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dbool\n"
           "Check if @needle can be found within ${this.substr(start,end)}, and return a boolean indicative of that"),
       TYPE_METHOD_FKWDS },
     { "substr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_substr,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "Similar to ${this[start:end]}, and semantically equialent to :string.substr\n"
           "This function can be used to view a sub-set of bytes from @this bytes object\n"
           "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object") },
     { "strip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_strip,
-      DOC("->bytes\n"
-          "(string mask)->bytes\n"
-          "(bytes mask)->bytes\n"
-          "(int mask)->bytes\n"
+      DOC("->?.\n"
+          "(mask:?Dstring)->?.\n"
+          "(mask:?.)->?.\n"
+          "(mask:?Dint)->?.\n"
           "Strip all leading and trailing whitespace-characters, or "
           "characters apart of @mask, and return a sub-view of @this bytes object") },
     { "lstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lstrip,
-      DOC("->bytes\n"
-          "(string mask)->bytes\n"
-          "(bytes mask)->bytes\n"
-          "(int mask)->bytes\n"
+      DOC("->?.\n"
+          "(mask:?Dstring)->?.\n"
+          "(mask:?.)->?.\n"
+          "(mask:?Dint)->?.\n"
           "Strip all leading whitespace-characters, or characters "
           "apart of @mask, and return a sub-view of @this bytes object") },
     { "rstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rstrip,
-      DOC("->bytes\n"
-          "(string mask)->bytes\n"
-          "(bytes mask)->bytes\n"
-          "(int mask)->bytes\n"
+      DOC("->?.\n"
+          "(mask:?Dstring)->?.\n"
+          "(mask:?.)->?.\n"
+          "(mask:?Dint)->?.\n"
           "Strip all trailing whitespace-characters, or characters "
           "apart of @mask, and return a sub-view of @this bytes object") },
     { "sstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_sstrip,
-      DOC("(string other)->bytes\n"
-          "(bytes other)->bytes\n"
-          "(int other)->bytes\n"
+      DOC("(other:?Dstring)->?.\n"
+          "(other:?.)->?.\n"
+          "(int other)->?.\n"
           "Strip all leading and trailing instances of @other from @this string\n"
           ">local result = this;\n"
           ">while (result.startswith(other))\n"
@@ -3873,65 +3873,65 @@ INTERN struct type_method bytes_methods[] = {
           ">while (result.endswith(other))\n"
           "> result = result[:#result-#other];") },
     { "lsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lsstrip,
-      DOC("(string other)->bytes\n"
-          "(bytes other)->bytes\n"
-          "(int other)->bytes\n"
+      DOC("(other:?Dstring)->?.\n"
+          "(other:?.)->?.\n"
+          "(int other)->?.\n"
           "Strip all leading instances of @other from @this string\n"
           ">local result = this;\n"
           ">while (result.startswith(other))\n"
           "> result = result[#other:];") },
     { "rsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rsstrip,
-      DOC("(string other)->bytes\n"
-          "(bytes other)->bytes\n"
-          "(int other)->bytes\n"
+      DOC("(other:?Dstring)->?.\n"
+          "(other:?.)->?.\n"
+          "(int other)->?.\n"
           "Strip all trailing instances of @other from @this string\n"
           ">local result = this;\n"
           ">while (result.endswith(other))\n"
           "> result = result[:#result-#other];") },
     { "startswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_startswith,
-      DOC("(string needle,int start=0,int end=-1)->bool\n"
-          "(bytes needle,int start=0,int end=-1)->bool\n"
-          "(int needle,int start=0,int end=-1)->bool\n"
+      DOC("(needle:?Dstring,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dbool\n"
           "Return :true if the sub-string ${this.substr(start,end)} starts with @other"),
       TYPE_METHOD_FKWDS },
     { "endswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_endswith,
-      DOC("(string needle,int start=0,int end=-1)->bool\n"
-          "(bytes needle,int start=0,int end=-1)->bool\n"
-          "(int needle,int start=0,int end=-1)->bool\n"
+      DOC("(needle:?Dstring,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dbool\n"
           "Return :true if the sub-string ${this.substr(start,end)} ends with @other"),
       TYPE_METHOD_FKWDS },
     { "partition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_parition,
-      DOC("(string needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+      DOC("(needle:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(needle:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
           "Search for the first instance of @needle within ${this.substr(start,end)} and "
           "return a 3-element sequence of byte objects ${(this[:pos],needle,this[pos+#needle:])}.\n"
           "If @needle could not be found, ${(this,\"\".bytes(),\"\".bytes())} is returned"),
       TYPE_METHOD_FKWDS },
     { "rpartition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rparition,
-      DOC("(string needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+      DOC("(needle:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(needle:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
           "Search for the last instance of @needle within ${this.substr(start,end)} and "
           "return a 3-element sequence of strings ${(this[:pos],needle,this[pos+#needle:])}.\n"
           "If @needle could not be found, ${(this,\"\".bytes(),\"\".bytes())} is returned"),
       TYPE_METHOD_FKWDS },
     { "compare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_compare,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Compare the sub-string ${left = this.substr(my_start,my_end)} with ${right = other.substr(other_start,other_end)}, "
           "returning ${< 0} if ${left < right}, ${> 0} if ${left > right}, or ${== 0} if they are equal") },
     { "vercompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_vercompare,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Performs a version-string comparison. This is similar to #compare, but rather than "
           "performing a strict lexicographical comparison, the numbers found in the strings "
           "being compared are comparsed as a whole, solving the common problem seen in applications "
@@ -3940,12 +3940,12 @@ INTERN struct type_method bytes_methods[] = {
           "%{link https://linux.die.net/man/3/strverscmp strverscmp}, "
           "for which you may follow the link for further details") },
     { "wildcompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_wildcompare,
-      DOC("(string pattern,int other_start=0,int other_end=-1)->int\n"
-          "(bytes pattern,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string pattern,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes pattern,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string pattern,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes pattern,int other_start=0,int other_end=-1)->int\n"
+      DOC("(pattern:?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+          "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+          "(my_start:?Dint,pattern:?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+          "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,pattern:?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
           "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start,my_end)} "
           "with ${right = pattern.substr(pattern_start,pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
           "if ${left > right}, or ${== 0} if they are equal\n"
@@ -3953,12 +3953,12 @@ INTERN struct type_method bytes_methods[] = {
           "be matched with any single character from @this, and $\"*\" to be matched to "
           "any number of characters") },
     { "fuzzycompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_fuzzycompare,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Perform a fuzzy string comparison between ${this.substr(my_start,my_end)} and ${other.substr(other_start,other_end)}\n"
           "The return value is a similarty-factor that can be used to score how close the two strings look alike.\n"
           "How exactly the scoring is done is implementation-specific, however a score of $0 is reserved for two "
@@ -3968,39 +3968,39 @@ INTERN struct type_method bytes_methods[] = {
           "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
           "Note that there is another version #casefuzzycompare that also ignores casing") },
     { "wmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_wmatch,
-      DOC("(string pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(bytes pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(int my_start,string pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(int my_start,bytes pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(int my_start,int my_end,string pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(int my_start,int my_end,bytes pattern,int other_start=0,int other_end=-1)->bool\n"
+      DOC("(pattern:?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(my_start:?Dint,pattern:?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(my_start:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(my_start:?Dint,my_end:?Dint,pattern:?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
           "Same as #wildcompare, returning :true where #wildcompare would return $0, and :false in all pattern cases") },
 
     /* Case-insensitive query functions */
     { "casereplace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casereplace,
-      DOC("(string find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(string find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(string find,int replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,int replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,int replace,int max=int.SIZE_MAX)->bytes\n"
+      DOC("(find:?Dstring,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dstring,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dstring,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
           "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
           "Same as #replace, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "tocasereplace", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tocasereplace,
-      DOC("(string find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(string find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(string find,int replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(bytes find,int replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,string replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,bytes replace,int max=int.SIZE_MAX)->bytes\n"
-          "(int find,int replace,int max=int.SIZE_MAX)->bytes\n"
+      DOC("(find:?Dstring,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dstring,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dstring,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?.,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?Dstring,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+          "(find:?Dint,replace:?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
           "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
           "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
@@ -4008,188 +4008,188 @@ INTERN struct type_method bytes_methods[] = {
           "Same as #toreplace, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "casefind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casefind,
-      DOC("(bytes needle,int start=0,int end=-1)->(int,int)\n"
-          "(string needle,int start=0,int end=-1)->(int,int)\n"
-          "(int needle,int start=0,int end=-1)->(int,int)\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
           "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
           "Same as #find, however ascii-casing is ignored during character comparisons\n"
           "Upon success, the second returned integer is equal to ${return[0] + #needle}"),
       TYPE_METHOD_FKWDS },
     { "caserfind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserfind,
-      DOC("(bytes needle,int start=0,int end=-1)->(int,int)\n"
-          "(string needle,int start=0,int end=-1)->(int,int)\n"
-          "(int needle,int start=0,int end=-1)->(int,int)\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
           "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
           "Same as #rfind, however ascii-casing is ignored during character comparisons\n"
           "Upon success, the second returned integer is equal to ${return[0] + #needle}"),
       TYPE_METHOD_FKWDS },
     { "caseindex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caseindex,
-      DOC("(bytes needle,int start=0,int end=-1)->(int,int)\n"
-          "(string needle,int start=0,int end=-1)->(int,int)\n"
-          "(int needle,int start=0,int end=-1)->(int,int)\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
           "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
           "Same as #index, however ascii-casing is ignored during character comparisons\n"
           "Upon success, the second returned integer is equal to ${return[0] + #needle}"),
       TYPE_METHOD_FKWDS },
     { "caserindex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserindex,
-      DOC("(bytes needle,int start=0,int end=-1)->(int,int)\n"
-          "(string needle,int start=0,int end=-1)->(int,int)\n"
-          "(int needle,int start=0,int end=-1)->(int,int)\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
           "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
           "Same as #rindex, however ascii-casing is ignored during character comparisons\n"
           "Upon success, the second returned integer is equal to ${return[0] + #needle}"),
       TYPE_METHOD_FKWDS },
     { "casefindall", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casefindall,
-      DOC("(bytes needle,int start=0,int end=-1)->{(int,int)...}\n"
-          "(string needle,int start=0,int end=-1)->{(int,int)...}\n"
-          "(int needle,int start=0,int end=-1)->{(int,int)...}\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
           "Same as #findall, however ascii-casing is ignored during character comparisons\n"
           "Upon success, the second returned integer is equal to ${return[0] + #needle}"),
       TYPE_METHOD_FKWDS },
     { "casecount", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casecount,
-      DOC("(bytes needle,int start=0,int end=-1)->int\n"
-          "(string needle,int start=0,int end=-1)->int\n"
-          "(int needle,int start=0,int end=-1)->int\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dint\n"
           "Same as #count, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "casecontains", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casecontains_f,
-      DOC("(bytes needle,int start=0,int end=-1)->bool\n"
-          "(string needle,int start=0,int end=-1)->bool\n"
-          "(int needle,int start=0,int end=-1)->bool\n"
+      DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?Dstring,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dbool\n"
           "Same as #contains, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "casestrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casestrip,
-      DOC("->bytes\n"
-          "(string mask)->bytes\n"
-          "(bytes mask)->bytes\n"
-          "(int mask)->bytes\n"
+      DOC("->?.\n"
+          "(mask:?Dstring)->?.\n"
+          "(mask:?.)->?.\n"
+          "(mask:?Dint)->?.\n"
           "Same as #strip, however ascii-casing is ignored during character comparisons") },
     { "caselstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caselstrip,
-      DOC("->bytes\n"
-          "(string mask)->bytes\n"
-          "(bytes mask)->bytes\n"
-          "(int mask)->bytes\n"
+      DOC("->?.\n"
+          "(mask:?Dstring)->?.\n"
+          "(mask:?.)->?.\n"
+          "(mask:?Dint)->?.\n"
           "Same as #lstrip, however ascii-casing is ignored during character comparisons") },
     { "caserstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserstrip,
-      DOC("->bytes\n"
-          "(string mask)->bytes\n"
-          "(bytes mask)->bytes\n"
-          "(int mask)->bytes\n"
+      DOC("->?.\n"
+          "(mask:?Dstring)->?.\n"
+          "(mask:?.)->?.\n"
+          "(mask:?Dint)->?.\n"
           "Same as #rstrip, however ascii-casing is ignored during character comparisons") },
     { "casesstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casesstrip,
-      DOC("(string other)->bytes\n"
-          "(bytes other)->bytes\n"
-          "(int other)->bytes\n"
+      DOC("(other:?Dstring)->?.\n"
+          "(other:?.)->?.\n"
+          "(int other)->?.\n"
           "Same as #sstrip, however ascii-casing is ignored during character comparisons") },
     { "caselsstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caselsstrip,
-      DOC("(string other)->bytes\n"
-          "(bytes other)->bytes\n"
-          "(int other)->bytes\n"
+      DOC("(other:?Dstring)->?.\n"
+          "(other:?.)->?.\n"
+          "(int other)->?.\n"
           "Same as #lsstrip, however ascii-casing is ignored during character comparisons") },
     { "casersstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casersstrip,
-      DOC("(string other)->bytes\n"
-          "(bytes other)->bytes\n"
-          "(int other)->bytes\n"
+      DOC("(other:?Dstring)->?.\n"
+          "(other:?.)->?.\n"
+          "(int other)->?.\n"
           "Same as #rsstrip, however ascii-casing is ignored during character comparisons") },
     { "casestartswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casestartswith,
-      DOC("(string needle,int start=0,int end=-1)->bool\n"
-          "(bytes needle,int start=0,int end=-1)->bool\n"
-          "(int needle,int start=0,int end=-1)->bool\n"
+      DOC("(needle:?Dstring,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dbool\n"
           "Same as #startswith, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "caseendswith", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caseendswith,
-      DOC("(string needle,int start=0,int end=-1)->bool\n"
-          "(bytes needle,int start=0,int end=-1)->bool\n"
-          "(int needle,int start=0,int end=-1)->bool\n"
+      DOC("(needle:?Dstring,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+          "(needle:?Dint,start=!0,end=!-1)->?Dbool\n"
           "Same as #endswith, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "casepartition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caseparition,
-      DOC("(string needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+      DOC("(needle:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(needle:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
           "Same as #partition, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "caserpartition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserparition,
-      DOC("(string needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int needle,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+      DOC("(needle:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(needle:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
           "Same as #rpartition, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "casecompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casecompare,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Same as #compare, however ascii-casing is ignored during character comparisons") },
     { "casevercompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casevercompare,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Same as #vercompare, however ascii-casing is ignored during character comparisons") },
     { "casewildcompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casewildcompare,
-      DOC("(string pattern,int other_start=0,int other_end=-1)->int\n"
-          "(bytes pattern,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string pattern,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes pattern,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string pattern,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes pattern,int other_start=0,int other_end=-1)->int\n"
+      DOC("(pattern:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(pattern:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,pattern:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,pattern:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Same as #wildcompare, however ascii-casing is ignored during character comparisons") },
     { "casefuzzycompare", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casefuzzycompare,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Same as #fuzzycompare, however ascii-casing is ignored during character comparisons") },
     { "casewmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casewmatch,
-      DOC("(string pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(bytes pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(int my_start,string pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(int my_start,bytes pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(int my_start,int my_end,string pattern,int other_start=0,int other_end=-1)->bool\n"
-          "(int my_start,int my_end,bytes pattern,int other_start=0,int other_end=-1)->bool\n"
+      DOC("(pattern:?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(my_start:?Dint,pattern:?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(my_start:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(my_start:?Dint,my_end:?Dint,pattern:?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+          "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
           "Same as #casewmatch, however ascii-casing is ignored during character comparisons") },
 
     /* Bytes alignment functions. */
     { "center", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_center,
-      DOC("(int width,string filler=\" \")->string\n"
-          "(int width,bytes filler)->string\n"
-          "(int width,int filler)->string\n"
+      DOC("(width:?Dint,filler=!P{ })->?.\n"
+          "(width:?Dint,filler:?.)->?.\n"
+          "(width:?Dint,filler:?Dint)->?.\n"
           "Use a writable copy of @this bytes object as result, then evenly "
           "insert @filler at the front and back to pad its length to @width bytes") },
     { "ljust", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_ljust,
-      DOC("(int width,string filler=\" \")->string\n"
+      DOC("(width:?Dint,filler=!P{ })->?.\n"
           "Use a writable copy of @this bytes object as result, then "
           "insert @filler at the back to pad its length to @width bytes") },
     { "rjust", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rjust,
-      DOC("(int width,string filler=\" \")->string\n"
+      DOC("(width:?Dint,filler=!P{ })->?.\n"
           "Use a writable copy of @this bytes object as result, then "
           "insert @filler at the front to pad its length to @width bytes") },
     { "zfill", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_zfill,
-      DOC("(int width,string filler=\"0\")->string\n"
+      DOC("(width:?Dint,filler=!P{0})->?.\n"
           "Skip leading ${\'+\'} and ${\'-\'} ascii-characters, then insert @filler "
           "to pad the resulting string to a length of @width bytes") },
     { "reversed", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_reversed,
-      DOC("(int start=0,int end=-1)->bytes\n"
+      DOC("(start=!0,end=!-1)->?.\n"
           "Return a copy of the sub-string ${this.substr(start,end)} with its byte order reversed"),
       TYPE_METHOD_FKWDS },
     { "expandtabs", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_expandtabs,
-      DOC("(int tabwidth=8)->bytes\n"
+      DOC("(tabwidth=!8)->?.\n"
           "Expand tab characters with whitespace offset from the "
           "start of their respective line at multiples of @tabwidth\n"
           "Note that in the event of no tabs being found, @this bytes object may be re-returned") },
     { "unifylines", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_unifylines,
-      DOC("(string replacement=\"\\n\")->bytes\n"
-          "(bytes replacement)->bytes\n"
-          "(int replacement)->bytes\n"
+      DOC("(replacement=!P{\\\n})->?.\n"
+          "(replacement:?.)->?.\n"
+          "(replacement:?Dint)->?.\n"
           "Unify all ascii-linefeed character sequences ($\"\\n\", $\"\\r\" and $\"\\r\\n\") "
           "found in @this bytes object to make exclusive use of @replacement\n"
           "Note that in the event of no line-feeds differing from @replacement being found, "
@@ -4197,30 +4197,30 @@ INTERN struct type_method bytes_methods[] = {
 
     /* Bytes splitter functions. */
     { "join", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_join,
-      DOC("(sequence seq)->bytes\n"
+      DOC("(seq:?S?O)->?.\n"
           "Iterate @seq and convert all items into string, inserting @this "
           "bytes object before each string's :string.bytes representation element, "
           "starting only with the second. :bytes objects contained in @seq are not "
           "converted to and from strings, but inserted directly") },
     { "split", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_split,
-      DOC("(bytes needle)->{bytes...}\n"
-          "(string needle)->{bytes...}\n"
-          "(int needle)->{bytes...}\n"
+      DOC("(needle:?.)->?S?.\n"
+          "(needle:?Dstring)->?S?.\n"
+          "(needle:?Dint)->?S?.\n"
           "Split @this bytes object at each instance of @sep, "
           "returning a sequence of the resulting parts\n"
           "The returned bytes objects are views of @this byte object, meaning they "
           "have the same #iswritable characteristics as @this, and refer to the same "
           "memory") },
     { "casesplit", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casesplit,
-      DOC("(bytes needle)->{bytes...}\n"
-          "(string needle)->{bytes...}\n"
-          "(int needle)->{bytes...}\n"
+      DOC("(needle:?.)->?S?.\n"
+          "(needle:?Dstring)->?S?.\n"
+          "(needle:?Dint)->?S?.\n"
           "Same as #split, however ascii-casing is ignored during character comparisons\n"
           "The returned bytes objects are views of @this byte object, meaning they "
           "have the same #iswritable characteristics as @this, and refer to the same "
           "memory") },
     { "splitlines", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_splitlines,
-      DOC("(bool keepends=false)->{bytes...}\n"
+      DOC("(keepends=!f)->?S?.\n"
           "Split @this bytes object at each linefeed, returning a sequence of all contained lines\n"
           "When @keepends is :false, this is identical to ${this.unifylines().split(\"\\n\")}\n"
           "When @keepends is :true, items found in the returned sequence will still have their "
@@ -4232,119 +4232,119 @@ INTERN struct type_method bytes_methods[] = {
 
     /* String indentation. */
     { "indent", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_indent,
-      DOC("(string filler=\"\\t\")->bytes\n"
-          "(bytes filler)->bytes\n"
-          "(int filler)->bytes\n"
+      DOC("(filler=!P{\t})->?.\n"
+          "(filler:?.)->?.\n"
+          "(filler:?Dint)->?.\n"
           "Using @this bytes object as result, insert @filler at the front, as well as after "
           "every ascii-linefeed with the exception of one that may be located at its end\n"
           "The inteded use is for generating strings from structured data, such as HTML:\n"
           ">text = \"<html>\n{}\n</html>\".format({ get_html_bytes().strip().indent() });") },
     { "dedent", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_dedent,
-      DOC("(int max_chars=1)->bytes\n"
-          "(int max_chars=1,string mask)->bytes\n"
-          "(int max_chars=1,bytes mask)->bytes\n"
-          "(int max_chars=1,int mask)->bytes\n"
+      DOC("(max_chars=!1)->?.\n"
+          "(max_chars=!1,mask:?Dstring)->?.\n"
+          "(max_chars=!1,mask:?.)->?.\n"
+          "(max_chars=!1,mask:?Dint)->?.\n"
           "Using @this string as result, remove up to @max_chars whitespace "
           "(s.a. #isspace) characters, or if given: characters apart of @mask "
           "from the front, as well as following any linefeed") },
 
     /* Common-character search functions. */
     { "common", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_common,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Returns the number of common leading bytes shared between @this and @other, "
           "or in other words: the lowest index $i for which ${this[i] != other.bytes()[i]} is true") },
     { "rcommon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rcommon,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Returns the number of common trailing bytes shared between @this and @other") },
     { "casecommon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casecommon,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Same as #common, however ascii-casing is ignored during character comparisons") },
     { "casercommon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casercommon,
-      DOC("(string other,int other_start=0,int other_end=-1)->int\n"
-          "(bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,bytes other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,string other,int other_start=0,int other_end=-1)->int\n"
-          "(int my_start,int my_end,bytes other,int other_start=0,int other_end=-1)->int\n"
+      DOC("(other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+          "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
           "Same as #rcommon, however ascii-casing is ignored during character comparisons") },
 
     /* Find match character sequences */
     { "findmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_findmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->int\n"
-          "(string open,bytes close,int start=0,int end=-1)->int\n"
-          "(string open,int close,int start=0,int end=-1)->int\n"
-          "(bytes open,string close,int start=0,int end=-1)->int\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
-          "(bytes open,int close,int start=0,int end=-1)->int\n"
-          "(int open,string close,int start=0,int end=-1)->int\n"
-          "(int open,bytes close,int start=0,int end=-1)->int\n"
-          "(int open,int close,int start=0,int end=-1)->int\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?Dint\n"
           "Similar to #find, but do a recursive search for the "
           "first @close that doesn't have a match @{open}\n"
           "For more information, see :string.findmatch") },
     { "indexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_indexmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->int\n"
-          "(string open,bytes close,int start=0,int end=-1)->int\n"
-          "(string open,int close,int start=0,int end=-1)->int\n"
-          "(bytes open,string close,int start=0,int end=-1)->int\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
-          "(bytes open,int close,int start=0,int end=-1)->int\n"
-          "(int open,string close,int start=0,int end=-1)->int\n"
-          "(int open,bytes close,int start=0,int end=-1)->int\n"
-          "(int open,int close,int start=0,int end=-1)->int\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?Dint\n"
           "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
           "Same as #findmatch, but throw an :IndexError instead of "
           "returning ${-1} if no @close without a match @open exists") },
     { "casefindmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casefindmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(string open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(string open,int close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,int close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,int close,int start=0,int end=-1)->(int,int)\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
           "Same as #findmatch, however casing is ignored during character comparisons\n"
           "Upon success, the second returned integer is equal to ${return[0] + #close}") },
     { "caseindexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caseindexmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(string open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(string open,int close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,int close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,int close,int start=0,int end=-1)->(int,int)\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
           "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
           "Same as #indexmatch, however casing is ignored during character comparisons\n"
           "Upon success, the second returned integer is equal to ${return[0] + #close}") },
     { "rfindmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rfindmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->int\n"
-          "(string open,bytes close,int start=0,int end=-1)->int\n"
-          "(string open,int close,int start=0,int end=-1)->int\n"
-          "(bytes open,string close,int start=0,int end=-1)->int\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
-          "(bytes open,int close,int start=0,int end=-1)->int\n"
-          "(int open,string close,int start=0,int end=-1)->int\n"
-          "(int open,bytes close,int start=0,int end=-1)->int\n"
-          "(int open,int close,int start=0,int end=-1)->int\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?Dint\n"
           "Similar to #findmatch, but operate in a mirrored fashion, searching for the "
           "last instance of @open that has no match @close within ${this.substr(start,end)}:\n"
           ">s = \"get_string().foo(bar(),baz(42),7).length\";\n"
@@ -4354,99 +4354,99 @@ INTERN struct type_method bytes_methods[] = {
           ">print repr s[mtch:lcol+1]; /* \"(bar(),baz(42),7)\" */\n"
           "If no @open without a match @close exists, ${-1} is returned") },
     { "rindexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rindexmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->int\n"
-          "(string open,bytes close,int start=0,int end=-1)->int\n"
-          "(string open,int close,int start=0,int end=-1)->int\n"
-          "(bytes open,string close,int start=0,int end=-1)->int\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->int\n"
-          "(bytes open,int close,int start=0,int end=-1)->int\n"
-          "(int open,string close,int start=0,int end=-1)->int\n"
-          "(int open,bytes close,int start=0,int end=-1)->int\n"
-          "(int open,int close,int start=0,int end=-1)->int\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?Dint\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?Dint\n"
           "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
           "Same as #rfindmatch, but throw an :IndexError instead of returning ${-1} if no @open without a match @close exists") },
     { "caserfindmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserfindmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(string open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(string open,int close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,int close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,int close,int start=0,int end=-1)->(int,int)\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
           "Same as #rfindmatch, however ascii-casing is ignored during character comparisons\n"
           "Upon success, the second returned integer is equal to ${return[0] + #open}") },
     { "caserindexmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserindexmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(string open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(string open,int close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(bytes open,int close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,string close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,bytes close,int start=0,int end=-1)->(int,int)\n"
-          "(int open,int close,int start=0,int end=-1)->(int,int)\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
           "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
           "Same as #rindexmatch, however ascii-casing is ignored during character comparisons\n"
           "Upon success, the second returned integer is equal to ${return[0] + #open}") },
 
     /* Using the find-match functionality, also provide a partitioning version */
     { "partitionmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_partitionmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(string open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(string open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
           "A hybrid between #find, #findmatch and #partition that returns the strings surrounding "
           "the matched string portion, the first being the substring prior to the match, "
           "the second being the matched string itself (including the @open and @close strings), "
           "and the third being the substring after the match\n"
           "For more information see :string.partitionmatch") },
     { "rpartitionmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rpartitionmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(string open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(string open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
           "A hybrid between #rfind, #rfindmatch and #rpartition that returns the strings surrounding "
           "the matched string portion, the first being the substring prior to the match, "
           "the second being the matched string itself (including the @open and @close strings), "
           "and the third being the substring after the match.\n"
           "For more information see :string.rpartitionmatch") },
     { "casepartitionmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casepartitionmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(string open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(string open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
           "Same as #partitionmatch, however casing is ignored during character comparisons") },
     { "caserpartitionmatch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserpartitionmatch,
-      DOC("(string open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(string open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(string open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(bytes open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,string close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,bytes close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
-          "(int open,int close,int start=0,int end=-1)->(bytes,bytes,bytes)\n"
+      DOC("(open:?Dstring,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dstring,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dstring,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?.,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?Dstring,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+          "(open:?Dint,close:?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
           "Same as #rpartitionmatch, however casing is ignored during character comparisons") },
 
     { "segments", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_segments,
-      DOC("(int substring_length)->{bytes...}\n"
+      DOC("(substring_length:?Dint)->?S?.\n"
           "Split @this bytes object into segments, each exactly @substring_length characters long, with the "
           "last segment containing the remaining characters and having a length of between "
           "$1 and @substring_length characters.\n"
@@ -4454,7 +4454,7 @@ INTERN struct type_method bytes_methods[] = {
           "length of sub-strings and figuring out their amount, this function takes "
           "the amount of sub-strings and figures out their lengths") },
     { "distribute", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_distribute,
-      DOC("(int substring_count)->{bytes...}\n"
+      DOC("(substring_count:?Dint)->?S?.\n"
           "Split @this bytes object into @substring_count similarly sized sub-strings, each with a "
           "length of ${(#this + (substring_count - 1)) / substring_count}, followed by a last, optional "
           "sub-string containing all remaining characters.\n"

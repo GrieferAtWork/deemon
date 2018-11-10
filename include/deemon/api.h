@@ -603,7 +603,7 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
  * >>     }
  * >>
  * >>     // Special case: The compiler will automatically notice that this
- * >>     //               documentation string referrs to the __str__ operator
+ * >>     //               documentation string refers to the __str__ operator
  * >>     //               and will therefor prepend `str' before lines starting
  * >>     //               with a `(' character, thus ensuring that the string,
  * >>     //               when later added to the class's main documentation

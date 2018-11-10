@@ -1915,19 +1915,19 @@ socket_recv(Socket *__restrict self, size_t argc,
   flags    = 0;
   if (arg_0) {
    if (DeeString_Check(arg_0)) {
-    /* "(string flags)->string\n" */
+    /* "(flags:?Dstring)->?Dstring\n" */
     if (sock_getmsgflagsof(arg_0,&flags))
         goto err;
    } else {
-    /* "(int max_size=-1,int string flags=\"\")->string\n" */
-    /* "(int max_size=-1,int timeout_microseconds=-1)->string\n" */
+    /* "(max_size=!-1,int flags=!P{})->?Dstring\n" */
+    /* "(max_size=!-1,timeout_microseconds=!-1)->?Dstring\n" */
     if (DeeObject_AsSSize(arg_0,(dssize_t *)&max_size))
         goto err;
    }
   }
  } else if (!arg_2) {
-  /* "(int max_size=-1,int string flags=\"\")->string\n" */
-  /* "(int max_size=-1,int timeout_microseconds=-1)->string\n" */
+  /* "(max_size=!-1,int flags=!P{})->?Dstring\n" */
+  /* "(max_size=!-1,timeout_microseconds=!-1)->?Dstring\n" */
   if (DeeObject_AsSSize(arg_0,(dssize_t *)&max_size))
       goto err;
   if (DeeString_Check(arg_1)) {
@@ -1940,8 +1940,8 @@ socket_recv(Socket *__restrict self, size_t argc,
        goto err;
   }
  } else {
-  /* "(int max_size=-1,int timeout_microseconds=-1,string flags=\"\")->string\n" */
-  /* "(int max_size=-1,int timeout_microseconds=-1,int flags=0)->string\n" */
+  /* "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?Dstring\n" */
+  /* "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?Dstring\n" */
   if (DeeObject_AsSSize(arg_0,(dssize_t *)&max_size) ||
       DeeObject_AsInt64(arg_1,(int64_t *)&timeout) ||
       sock_getmsgflagsof(arg_2,&flags))
@@ -1963,12 +1963,12 @@ socket_recvinto(Socket *__restrict self, size_t argc,
  if (DeeArg_Unpack(argc,argv,"o|oo:recvinto",&data,&arg1,&arg2))
      goto err;
  if (!arg1) {
-  //"(buffer dst,int timeout_microseconds=-1,int flags=0)->int\n"
+  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   timeout = (uint64_t)-1;
   flags   = 0;
  } else if (!arg2) {
-  //"(buffer dst,string flags=\"\")->int\n"
-  //"(buffer dst,int timeout_microseconds=-1,int flags=0)->int\n"
+  //"(dst:?Dbytes,flags=!P{})->?Dint\n"
+  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   if (DeeString_Check(arg1)) {
    if (sock_getmsgflagsof(arg1,&flags))
        goto err;
@@ -1979,8 +1979,8 @@ socket_recvinto(Socket *__restrict self, size_t argc,
    flags = 0;
   }
  } else {
-  //"(buffer dst,int timeout_microseconds=-1,string flags=\"\")->int\n"
-  //"(buffer dst,int timeout_microseconds=-1,int flags=0)->int\n"
+  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   if (DeeObject_AsInt64(arg1,(int64_t *)&timeout))
       goto err;
   if (sock_getmsgflagsof(arg2,&flags))
@@ -2015,19 +2015,19 @@ socket_recvfrom(Socket *__restrict self, size_t argc,
   flags    = 0;
   if (arg_0) {
    if (DeeString_Check(arg_0)) {
-    /* "(string flags)->(sockaddr,string)\n" */
+    /* "(flags:?Dstring)->(sockaddr,string)\n" */
     if (sock_getmsgflagsof(arg_0,&flags))
         goto err;
    } else {
-    /* "(int max_size=-1,int string flags=\"\")->(sockaddr,string)\n" */
-    /* "(int max_size=-1,int timeout_microseconds=-1)->(sockaddr,string)\n" */
+    /* "(max_size=!-1,int flags=!P{})->(sockaddr,string)\n" */
+    /* "(max_size=!-1,timeout_microseconds=!-1)->(sockaddr,string)\n" */
     if (DeeObject_AsSSize(arg_0,(dssize_t *)&max_size))
         goto err;
    }
   }
  } else if (!arg_2) {
-  /* "(int max_size=-1,int string flags=\"\")->(sockaddr,string)\n" */
-  /* "(int max_size=-1,int timeout_microseconds=-1)->(sockaddr,string)\n" */
+  /* "(max_size=!-1,int flags=!P{})->(sockaddr,string)\n" */
+  /* "(max_size=!-1,timeout_microseconds=!-1)->(sockaddr,string)\n" */
   if (DeeObject_AsSSize(arg_0,(dssize_t *)&max_size))
       goto err;
   if (DeeString_Check(arg_1)) {
@@ -2040,8 +2040,8 @@ socket_recvfrom(Socket *__restrict self, size_t argc,
        goto err;
   }
  } else {
-  /* "(int max_size=-1,int timeout_microseconds=-1,string flags=\"\")->(sockaddr,string)\n" */
-  /* "(int max_size=-1,int timeout_microseconds=-1,int flags=0)->(sockaddr,string)\n" */
+  /* "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->(sockaddr,string)\n" */
+  /* "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->(sockaddr,string)\n" */
   if (DeeObject_AsSSize(arg_0,(dssize_t *)&max_size) ||
       DeeObject_AsInt64(arg_1,(int64_t *)&timeout) ||
       sock_getmsgflagsof(arg_2,&flags))
@@ -2088,12 +2088,12 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
  if (DeeArg_Unpack(argc,argv,"o|oo:recvfrominto",&data,&arg1,&arg2))
      goto err;
  if (!arg1) {
-  //"(buffer dst,int timeout_microseconds=-1,int flags=0)->int\n"
+  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   timeout = (uint64_t)-1;
   flags   = 0;
  } else if (!arg2) {
-  //"(buffer dst,string flags=\"\")->int\n"
-  //"(buffer dst,int timeout_microseconds=-1,int flags=0)->int\n"
+  //"(dst:?Dbytes,flags=!P{})->?Dint\n"
+  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   if (DeeString_Check(arg1)) {
    if (sock_getmsgflagsof(arg1,&flags))
        goto err;
@@ -2104,8 +2104,8 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
    flags = 0;
   }
  } else {
-  //"(buffer dst,int timeout_microseconds=-1,string flags=\"\")->int\n"
-  //"(buffer dst,int timeout_microseconds=-1,int flags=0)->int\n"
+  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   if (DeeObject_AsInt64(arg1,(int64_t *)&timeout))
       goto err;
   if (sock_getmsgflagsof(arg2,&flags))
@@ -2163,12 +2163,12 @@ socket_send(Socket *__restrict self, size_t argc,
  if (DeeArg_Unpack(argc,argv,"o|oo:send",&data,&arg_0,&arg_1))
      goto err;
  if (!arg_0) {
-  /* "(buffer data,int timeout_microseconds=-1,int flags=0)->int\n" */
+  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
   timeout = (uint64_t)-1;
   flags   = 0;
  } else if (!arg_1) {
-  /* "(buffer data,string flags=\"\")->int\n" */
-  /* "(buffer data,int timeout_microseconds=-1,int flags=0)->int\n" */
+  /* "(data:?Dbytes,flags=!P{})->?Dint\n" */
+  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
   if (DeeString_Check(arg_0)) {
    if (sock_getmsgflagsof(arg_0,&flags))
        goto err;
@@ -2179,8 +2179,8 @@ socket_send(Socket *__restrict self, size_t argc,
    flags = 0;
   }
  } else {
-  /* "(buffer data,int timeout_microseconds=-1,int flags=0)->int\n" */
-  /* "(buffer data,int timeout_microseconds=-1,string flags=\"\")->int\n" */
+  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
   if (DeeObject_AsInt64(arg_0,(int64_t *)&timeout) ||
       sock_getmsgflagsof(arg_1,&flags))
       goto err;
@@ -2229,12 +2229,12 @@ socket_sendto(Socket *__restrict self, size_t argc,
  }
  DBG_ALIGNMENT_ENABLE();
  if (!arg_0) {
-  /* "(buffer data,int timeout_microseconds=-1,int flags=0)->int\n" */
+  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
   timeout = (uint64_t)-1;
   flags   = 0;
  } else if (!arg_1) {
-  /* "(buffer data,string flags=\"\")->int\n" */
-  /* "(buffer data,int timeout_microseconds=-1,int flags=0)->int\n" */
+  /* "(data:?Dbytes,flags=!P{})->?Dint\n" */
+  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
   if (DeeString_Check(arg_0)) {
    if (sock_getmsgflagsof(arg_0,&flags))
        goto err;
@@ -2245,8 +2245,8 @@ socket_sendto(Socket *__restrict self, size_t argc,
    flags = 0;
   }
  } else {
-  /* "(buffer data,int timeout_microseconds=-1,int flags=0)->int\n" */
-  /* "(buffer data,int timeout_microseconds=-1,string flags=\"\")->int\n" */
+  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
   if (DeeObject_AsInt64(arg_0,(int64_t *)&timeout) ||
       sock_getmsgflagsof(arg_1,&flags))
       goto err;
@@ -2343,8 +2343,8 @@ socket_fileno(Socket *__restrict self,
 
 PRIVATE struct type_method socket_methods[] = {
     { "close", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_close,
-      DOC("(int shutdown_mode)\n"
-          "(string shutdown_mode=\"rw\")\n"
+      DOC("(shutdown_mode:?Dint)\n"
+          "(shutdown_mode=!Prw)\n"
           "@interrupt\n"
           "@throw ValueError Invalid shutdown mode\n"
           "@throw NetError Failed to shutdown @this socket\n"
@@ -2353,15 +2353,15 @@ PRIVATE struct type_method socket_methods[] = {
           "#shutdown will automatically be invoked on @this socket if it hasn't before\n"
           "Note that in the event that #shutdown has already been called, ") },
     { "shutdown", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_shutdown,
-      DOC("(int how)\n"
-          "(string how=\"rw\")\n"
+      DOC("(how:?Dint)\n"
+          "(how=!Prw)\n"
           "@interrupt\n"
           "@throw ValueError Invalid shutdown mode\n"
           "@throw NetError Failed to shutdown @this socket\n"
           "@throw HandleClosed @this socket has already been closed\n"
           "Shuts down @this socket either for reading, for writing or for both") },
     { "bind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_bind,
-      DOC("(...)\n"
+      DOC("(args!)\n"
           "@interrupt\n"
           "@throw NetError.AddrInUse The address specified for binding is already in use\n"
           "@throw NetError.NoSupport The protocol of @this socket does not support binding\n"
@@ -2371,9 +2371,9 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError Failed to bind @this socket for some unknown reason\n"
           "@throw HandleClosed @this socket has already been closed\n"
           "Binds @this socket to a given address.\n"
-          "Accepted arguments are the same as ${sockaddr(this.sock_af,...)} when creating :sockaddr") },
+          "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
     { "connect", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_connect,
-      DOC("(...)\n"
+      DOC("(args!)\n"
           "@interrupt\n"
           "@throw NetError.AddrNotAvail The speficied address is not reachable from this machine\n"
           "@throw NetError.NoSupport @this socket is currently listening and cannot be connected\n"
@@ -2388,9 +2388,9 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError Failed to connect @this socket for some unknown reason\n"
           "@throw HandleClosed @this socket has already been closed\n"
           "Connect @this socket with a given address.\n"
-          "Accepted arguments are the same as ${sockaddr(this.sock_af,...)} when creating :sockaddr") },
+          "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
     { "listen", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_listen,
-      DOC("(int max_backlog=-1)\n"
+      DOC("(max_backlog=!-1)\n"
           "@interrupt\n"
           "@throw NetError.NotBound @this socket has not been bound and the protocol does not allow listening on an unbound address\n"
           "@throw NetError.NoSupport The protocol of @this socket does not allow listening\n"
@@ -2403,8 +2403,8 @@ PRIVATE struct type_method socket_methods[] = {
           "Start listening for incoming connections on @this socket, preferrable after it has been #bound\n"
           "Note that calling this function may require the user to whitelist deemon in their firewall") },
     { "accept", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_accept,
-      DOC("(int timeout_microseconds=-1)->socket\n"
-          "(int timeout_microseconds=-1)\n"
+      DOC("(timeout_microseconds=!-1)->?Gsocket\n"
+          "(timeout_microseconds=!-1)->?N\n"
           "@interrupt\n"
           "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
           "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
@@ -2415,8 +2415,8 @@ PRIVATE struct type_method socket_methods[] = {
           "@return A new socket object describing the connection to the new client, or :none when @timeout_microseconds has passed\n"
           "Accept new incoming connections on a listening socket") },
     { "tryaccept", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_tryaccept,
-      DOC("->socket\n"
-          "->none\n"
+      DOC("->?Gsocket\n"
+          "->?N\n"
           "@interrupt\n"
           "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
           "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
@@ -2424,11 +2424,11 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw HandleClosed @this socket has already been closed or was shut down\n"
           "Same as calling #accept with a timeout_microseconds argument of ${0}") },
     { "recv", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recv,
-      DOC("(string flags)->bytes\n"
-          "(int max_size=-1,string flags=\"\")->bytes\n"
-          "(int max_size=-1,int timeout_microseconds=-1)->bytes\n"
-          "(int max_size=-1,int timeout_microseconds=-1,string flags=\"\")->bytes\n"
-          "(int max_size=-1,int timeout_microseconds=-1,int flags=0)->bytes\n"
+      DOC("(flags:?Dstring)->?Dbytes\n"
+          "(max_size=!-1,flags=!P{})->?Dbytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1)->?Dbytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?Dbytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?Dbytes\n"
           "@interrupt\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
@@ -2449,10 +2449,10 @@ PRIVATE struct type_method socket_methods[] = {
           "Some protocols may also cause this function to return an empty string to indicate a graceful "
           "termination of the connection") },
     { "recvinto", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recvinto,
-      DOC("(buffer dst,string flags=\"\")->int\n"
-          "(buffer dst,int timeout_microseconds=-1)->int\n"
-          "(buffer dst,int timeout_microseconds=-1,string flags=\"\")->int\n"
-          "(buffer dst,int timeout_microseconds=-1,int flags=0)->int\n"
+      DOC("(dst:?Dbytes,flags=!P{})->?Dint\n"
+          "(dst:?Dbytes,timeout_microseconds=!-1)->?Dint\n"
+          "(dst:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+          "(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
           "@interrupt\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
@@ -2463,11 +2463,11 @@ PRIVATE struct type_method socket_methods[] = {
           "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
           "Same as #recv, but received data is written into the given buffer @dst") },
     { "recvfrom", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recvfrom,
-      DOC("(string flags)->(sockaddr,bytes)\n"
-          "(int max_size=-1,int string flags=\"\")->(sockaddr,bytes)\n"
-          "(int max_size=-1,int timeout_microseconds=-1)->(sockaddr,bytes)\n"
-          "(int max_size=-1,int timeout_microseconds=-1,string flags=\"\")->(sockaddr,bytes)\n"
-          "(int max_size=-1,int timeout_microseconds=-1,int flags=0)->(sockaddr,bytes)\n"
+      DOC("(flags:?Dstring)->?T2?Gsockaddr?Dbytes\n"
+          "(max_size=!-1,flags=!P{})->?T2?Gsockaddr?Dbytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1)->?T2?Gsockaddr?Dbytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dbytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?Dbytes\n"
           "@interrupt\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
           "@throw NetError.ConnectReset The peer has reset the connection\n"
@@ -2482,10 +2482,10 @@ PRIVATE struct type_method socket_methods[] = {
           "as ${-1} (default) to wait for incoming data indefinitely or until the socket is #{close}ed, or "
           "as any other integer value to specify how long to wait before returning ${(none,\"\")}") },
     { "recvfrominto", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recvfrominto,
-      DOC("(buffer dst,string flags=\"\")->(sockaddr,int)\n"
-          "(buffer dst,int timeout_microseconds=-1)->(sockaddr,int)\n"
-          "(buffer dst,int timeout_microseconds=-1,string flags=\"\")->(sockaddr,int)\n"
-          "(buffer dst,int timeout_microseconds=-1,int flags=0)->(sockaddr,int)\n"
+      DOC("(dst:?Dbytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
+          "(dst:?Dbytes,timeout_microseconds=!-1)->?T2?Gsockaddr?Dint\n"
+          "(dst:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
+          "(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?Dint\n"
           "@interrupt\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
           "@throw NetError.ConnectReset The peer has reset the connection\n"
@@ -2495,9 +2495,9 @@ PRIVATE struct type_method socket_methods[] = {
           "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
           "Same as #recvfrom, buf read received data into the given buffer @dst") },
     { "send", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_send,
-      DOC("(buffer data,string flags=\"\")->int\n"
-          "(buffer data,int timeout_microseconds=-1,int flags=0)->int\n"
-          "(buffer data,int timeout_microseconds=-1,string flags=\"\")->int\n"
+      DOC("(data:?Dbytes,flags=!P{})->?Dint\n"
+          "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+          "(data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
           "@interrupt\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
@@ -2512,12 +2512,12 @@ PRIVATE struct type_method socket_methods[] = {
           "@return The total number of bytes that was sent\n"
           "Send @data over the network to the peer of a connected socket") },
     { "sendto", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_sendto,
-      DOC("((...) target,buffer data,string flags=\"\")->int\n"
-          "((...) target,buffer data,int timeout_microseconds=-1,int flags=0)->int\n"
-          "((...) target,buffer data,int timeout_microseconds=-1,string flags=\"\")->int\n"
-          "(object target,buffer data,string flags=\"\")->int\n"
-          "(object target,buffer data,int timeout_microseconds=-1,int flags=0)->int\n"
-          "(object target,buffer data,int timeout_microseconds=-1,string flags=\"\")->int\n"
+      DOC("(target:?Dbytes,data:?Dbytes,flags=!P{})->?Dint\n"
+          "(target:?Dbytes,data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+          "(target:?Dbytes,data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+          "(target:?O,data:?Dbytes,flags=!P{})->?Dint\n"
+          "(target:?O,data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+          "(target:?O,data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
           "@interrupt\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
@@ -2533,36 +2533,36 @@ PRIVATE struct type_method socket_methods[] = {
           "@return The total number of bytes that was sent\n"
           "Same as #send, but used to transmit data to a specific network target, rather than one that is already connected.") },
     { "isbound", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_isbound,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this socket has been bound (s.a. #bind)") },
     { "isconnected", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_isconnected,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this socket has been #{connect}ed") },
     { "islistening", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_islistening,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this socket is #{listen}ing for incoming connections") },
     { "wasshutdown", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_wasshutdown,
-      DOC("(int how)->bool\n"
-          "(string how=\"rw\")->bool\n"
+      DOC("(how:?Dint)->?Dbool\n"
+          "(how=!?rw)->?Dbool\n"
           "Returns :true if @this socket has been #shutdown according to @how (inclusive when multiple modes are specified)\n"
           "See #shutdown for possible values that may be passed to @how") },
     { "wasclosed", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_wasclosed,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this socket has been #{close}ed") },
     { "fileno", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_fileno,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "Returns the underlying file descriptor/handle associated @this socket") },
     { NULL }
 };
 
 PRIVATE struct type_getset socket_getsets[] = {
     { "sockname", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_sockname_get, NULL, NULL,
-      DOC("->sockaddr\n"
+      DOC("->?Gsockaddr\n"
           "@throw HandleClosed @this socket has been closed\n"
           "@throw NetError.NotConnected @this socket is neither connected, nor bound\n"
           "Returns the socket name (local address) of @this socket") },
     { "peeraddr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_peeraddr_get, NULL, NULL,
-      DOC("->sockaddr\n"
+      DOC("->?Gsockaddr\n"
           "@interrupt\n"
           "@throw HandleClosed @this socket has been closed\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
@@ -2573,16 +2573,13 @@ PRIVATE struct type_getset socket_getsets[] = {
 };
 
 PRIVATE struct type_member socket_members[] = {
-    TYPE_MEMBER_FIELD_DOC("sock_af",STRUCT_CONST|STRUCT_UINT16_T,
-                          offsetof(DeeSocketObject,s_sockaddr.sa.sa_family),
+    TYPE_MEMBER_FIELD_DOC("sock_af",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeSocketObject,s_sockaddr.sa.sa_family),
                           "The socket's address family as a system-specific integer id\n"
                           "Usually one of AF_*, the name of which can be determined using :getafname"),
-    TYPE_MEMBER_FIELD_DOC("sock_type",STRUCT_CONST|STRUCT_INT,
-                          offsetof(DeeSocketObject,s_type),
+    TYPE_MEMBER_FIELD_DOC("sock_type",STRUCT_CONST|STRUCT_INT,offsetof(DeeSocketObject,s_type),
                           "The socket's type as a system-specific integer id\n"
                           "Usually one of SOCK_*, the name of which can be determined using :gettypename"),
-    TYPE_MEMBER_FIELD_DOC("sock_proto",STRUCT_CONST|STRUCT_INT,
-                          offsetof(DeeSocketObject,s_type),
+    TYPE_MEMBER_FIELD_DOC("sock_proto",STRUCT_CONST|STRUCT_INT,offsetof(DeeSocketObject,s_type),
                           "The socket's protocol as a system-specific integer id\n"
                           "Usually one of *PROTO_*, the name of which can be determined using :getprotoname"),
     TYPE_MEMBER_END
@@ -2682,8 +2679,7 @@ err:
 INTERN DeeTypeObject DeeSocket_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"socket",
-    /* .tp_doc      = */DOC("(int af, int type = ..., int proto = ...)\n"
-                            "(string af, string type = ..., string proto = ...)\n"
+    /* .tp_doc      = */DOC("(af:?Dint|?Dstring,type:?Dint|?Dstring=!N,proto:?Dint|?Dstring=!N)\n"
                             "@param proto The protocol to use for the socket, or :none or $0 to use the default\n"
                             "@param type The socket type, or none to use $\"SOCK_STREAM\"\n"
                             "@param af The socket address family (e.g.: $\"AF_INET\" or $\"AF_INET6\").\n"
@@ -2696,7 +2692,7 @@ INTERN DeeTypeObject DeeSocket_Type = {
                             "@throw ValueError $\"AF_AUTO\" cannot be used as address family in the socket constructor\n"
                             "Constructs and allocates a new socket descriptor that has yet to be #bound or be #{connect}ed\n"
                             "\n"
-                            "bool()\n"
+                            "bool->\n"
                             "Returns :true indicative of the socket not having been closed (s.a. #wasclosed)"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

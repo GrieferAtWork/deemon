@@ -1245,26 +1245,26 @@ err:
 
 PRIVATE struct type_method gcenum_methods[] = {
     { "collect", &gcenum_collect,
-      DOC("(int max=-1)->int\n"
+      DOC("(max:?Dint=-1)->?Dint\n"
           "Try to collect at least @max GC objects and return the actual number collected\n"
           "Note that more than @max objects may be collected if sufficiently large reference cycles exist") },
     { "referred", &gcenum_referred,
-      DOC("(object start)->set\n"
+      DOC("(start)->?Dset\n"
           "Returns a set of objects that are immediatly referred to by @start") },
     { "referredgc", &gcenum_referredgc,
-      DOC("(object start)->set\n"
+      DOC("(start)->?Dset\n"
           "Same as #referred, but only include gc-objects (s.a. :type.isgc)") },
     { "reachable", &gcenum_reachable,
-      DOC("(object start)->set\n"
+      DOC("(start)->?Dset\n"
           "Returns a set of objects that are reachable from @start") },
     { "reachablegc", &gcenum_reachablegc,
-      DOC("(object start)->set\n"
+      DOC("(start)->?Dset\n"
           "Same as #reachable, but only include gc-objects (s.a. :type.isgc)") },
     { "referring", &gcenum_referring,
-      DOC("(object to)->set\n"
+      DOC("(to)->?Dset\n"
           "Returns a set of gc-objects (s.a. :type.isgc) that are referring to @to") },
     { "isreferring", &gcenum_isreferring,
-      DOC("(object from,object to)->bool\n"
+      DOC("(from,to)->?Dbool\n"
           "Returns :true if @to is referred to by @from, or :false otherwise") },
     { NULL }
 };

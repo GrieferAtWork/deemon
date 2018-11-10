@@ -294,8 +294,10 @@ catiterator_curr_get(CatIterator *__restrict self) {
  return result;
 }
 PRIVATE struct type_getset catiterator_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_seq_get, NULL, NULL },
-    { "__curr__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_curr_get, NULL, NULL },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_seq_get, NULL, NULL,
+      DOC("->?S?O") },
+    { "__curr__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_curr_get, NULL, NULL,
+      DOC("->?Diterator") },
     { NULL }
 };
 PRIVATE struct type_member catiterator_members[] = {
@@ -389,7 +391,7 @@ cat_getsequences(Cat *__restrict self) {
 
 PRIVATE struct type_getset cat_getsets[] = {
     { "__sequences__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_getsequences, NULL, NULL,
-      DOC("->{sequence...}") },
+      DOC("->?S?S?O") },
     { NULL }
 };
 

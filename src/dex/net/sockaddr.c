@@ -1284,7 +1284,7 @@ SockAddr_FromArgv(SockAddr *__restrict self,
   case 1:
    arg0 = argv[0];
    /* (string address) */
-   /* ((int,int) address) */
+   /* (?T2?Dint?Dint address) */
 #ifdef AF_INET
    if (DeeTuple_Check(arg0) && DeeTuple_SIZE(arg0) == 2 &&
       (family == AF_AUTO || family == AF_INET)) {
@@ -1616,19 +1616,19 @@ sockaddr_inet6_scope_id(DeeSockAddrObject *__restrict self) {
 PRIVATE struct type_getset sockaddr_getsets[] = {
 #ifdef AF_INET
     { "inet_host", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet_host, NULL, NULL,
-      DOC("->int\nFor $\"AF_INET\": The host address in host endian") },
+      DOC("->?Dint\nFor $\"AF_INET\": The host address in host endian") },
     { "inet_port", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet_port, NULL, NULL,
-      DOC("->int\nFor $\"AF_INET\": The port number in host endian") },
+      DOC("->?Dint\nFor $\"AF_INET\": The port number in host endian") },
 #endif
 #ifdef AF_INET6
     { "inet6_port", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_port, NULL, NULL,
-      DOC("->int\nFor $\"AF_INET6\": The port number in host endian") },
+      DOC("->?Dint\nFor $\"AF_INET6\": The port number in host endian") },
     { "inet6_host", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_host, NULL, NULL,
-      DOC("->int\nFor $\"AF_INET6\": The host address") },
+      DOC("->?Dint\nFor $\"AF_INET6\": The host address") },
     { "inet6_flowinfo", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_flowinfo, NULL, NULL,
-      DOC("->int\nFor $\"AF_INET6\": The IPv6 flow identifier") },
+      DOC("->?Dint\nFor $\"AF_INET6\": The IPv6 flow identifier") },
     { "inet6_scope_id", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_scope_id, NULL, NULL,
-      DOC("->int\nFor $\"AF_INET6\": The IPv6 scope id") },
+      DOC("->?Dint\nFor $\"AF_INET6\": The IPv6 scope id") },
 #endif
     { NULL }
 };
@@ -1666,21 +1666,20 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 #ifdef CONFIG_NO_DOC
     /* .tp_doc      = */NULL,
 #else /* CONFIG_NO_DOC */
-    /* .tp_doc      = */"(string family, ...)\n"
-                        "(int family, ...)\n"
+    /* .tp_doc      = */"(family:?Dstring|?Dint,args!)\n"
                         "@param family The family of which this is a socket address. You may pass :none, an empty "
                                       "string, $\"AF_AUTO\", or ${-1} to determine the proper family automatically\n"
-                        "Create a new socket address. @{...} is documented below and depends on @family\n"
-                        "Note that many functions from :socket also accept @{...} as arguments to various functions\n"
+                        "Create a new socket address. @args is documented below and depends on @family\n"
+                        "Note that many functions from :socket also accept @args as arguments to various functions\n"
                         "\n"
-                        "(*, sockaddr other)\n"
+                        "(args!,other:?Dsockaddr)\n"
                         "@throw ValueError The @other socket uses a #family incompatible to the previously specified family\n"
                         "@param other The @other socket address that should be duplicated\n"
                         "Always accepted is another socket address that is duplicated\n"
                         "\n"
-                        "(*, string host_and_port)\n"
-                        "(*, string host, string port)\n"
-                        "(*, string host, int port)\n"
+                        "(args!,host_and_port:?Dstring)\n"
+                        "(args!,host:?Dstring,port:?Dstring)\n"
+                        "(args!,host:?Dstring,port:?Dint)\n"
                         "@throw NetError.HostNotFound.NoHostAddress The @host exists, but offers no address matching the required family\n"
                         "@throw NetError.HostNotFound Failed to find the host described by @host_and_port or @host and @port\n"
                         "@throw NetError An unknown error caused the hostname lookup to fail\n"
@@ -1725,25 +1724,28 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 #endif /* AF_INET || AF_INET6 */
                         "\n"
 #ifdef AF_INET
-                        "(${\"AF_INET\" | \"AF_AUTO\"}, (int,int) host_and_port)\n"
-                        "(${\"AF_INET\" | \"AF_AUTO\"}, int host, int port)\n"
+                        "(family=!PAF_INET,host_and_port:?T2?Dint?Dint)\n"
+                        "(family=!PAF_AUTO,host_and_port:?T2?Dint?Dint)\n"
+                        "(family=!PAF_INET,host:?Dint,port:?Dint)\n"
+                        "(family=!PAF_AUTO,host:?Dint,port:?Dint)\n"
                         "Create an IPv4 address using a @host and @port data pair\n"
                         "\n"
-                        "(${\"AF_INET\" | \"AF_AUTO\"}, int a, int b, int c, int d, int port)\n"
+                        "(family=!PAF_INET,a:?Dint,b:?Dint,c:?Dint,d:?Dint,port:?Dint)\n"
+                        "(family=!PAF_AUTO,a:?Dint,b:?Dint,c:?Dint,d:?Dint,port:?Dint)\n"
                         "Create an IPv4 address by combining the 4 single-byte integers @a, @b, @c and @d alongside @port\n"
                         "\n"
 #endif /* AF_INET */
 #ifdef AF_UNIX
-                        "($\"AF_UNIX\", string path)\n"
+                        "(family=!PAF_UNIX,path:?Dstring)\n"
                         "@throw ValueError The given @path is too long\n"
                         "Create a unix-pipe socket address using the given @path\n"
                         "\n"
 #endif /* AF_UNIX */
 #ifdef AF_NETLINK
-                        "($\"AF_NETLINK\", int pid, int grops)\n"
+                        "(family=!PAF_NETLINK,pid:?Dint,groups:?Dint)\n"
                         "\n"
 #endif /* AF_NETLINK */
-                        "str()\n"
+                        "str->\n"
                         "@throw \n"
                         "Generates and returns a string representation of @this sockaddr\n"
                         ,

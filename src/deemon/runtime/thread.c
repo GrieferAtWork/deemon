@@ -2781,20 +2781,20 @@ err:
 
 PRIVATE struct type_method thread_methods[] = {
     { "start", &thread_start,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw SystemError Failed to start @this thread for some reason\n"
           "@return true: The :thread is now running\n"
           "@return false: The :thread had already been started\n"
           "Starts @this thread") },
     { "detach", &thread_detach,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw ValueError @this thread was never started\n"
           "@throw SystemError Failed to detach @this thread for some reason\n"
           "@return true: The :thread has been detached\n"
           "@return false: The :thread was already detached\n"
           "Detaches @this thread") },
     { "join", &thread_join,
-      DOC("->object\n"
+      DOC("->\n"
           "@interrupt\n"
           "@throw ValueError @this thread was never started\n"
           "@throw SystemError Failed to join @this thread for some reason\n"
@@ -2803,21 +2803,21 @@ PRIVATE struct type_method thread_methods[] = {
           "Joins @this thread and returns the return value of its main function\n"
           "In the event") },
     { "tryjoin", &thread_tryjoin,
-      DOC("->(bool,object)\n"
+      DOC("->?T2?Dbool?O\n"
           "@throw ValueError @this thread was never started\n"
           "@throw SystemError Failed to join @this thread for some reason\n"
           "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
           "Same as #join, but don't check for interrupts and fail immediately") },
     { "timedjoin", &thread_timedjoin,
-      DOC("(int timeout_in_microseconds)->(bool,object)\n"
+      DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
           "@throw ValueError @this thread was never started\n"
           "@throw SystemError Failed to join @this thread for some reason\n"
           "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
           "Same as #join, but only attempt to join for a given @timeout_in_microseconds") },
     { "interrupt", &thread_interrupt,
-      DOC("->bool\n"
-          "(object signal)->bool\n"
-          "(callable async_func, tuple async_args)->bool\n"
+      DOC("->?Dbool\n"
+          "(signal)->?Dbool\n"
+          "(async_func:?Dcallable,async_args:?Dtuple)->?Dbool\n"
           "@return true: The interrupt was delivered\n"
           "@return false: The :thread has already terminated and can no longer process interrupts\n"
           "Throws the given @signal or an instance of :Interrupt within @this thread, "
@@ -2840,35 +2840,35 @@ PRIVATE struct type_method thread_methods[] = {
           "However to truely ensure that all interrupts have been processed, you must #join @this thread\n"
           "User-code may also check for interrupts explicitly by calling `:thread.check_interrupt'") },
     { "started", &thread_started,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Deprecated alias for #hasstarted") },
     { "detached", &thread_detached,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Deprecated alias for #wasdetached") },
     { "terminated", &thread_terminated,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Deprecated alias for #hasterminated") },
     { "interrupted", &thread_interrupted,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Deprecated alias for #wasinterrupted") },
     { "crashed", &thread_crashed,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Deprecated alias for #hascrashed") },
 
     /* Old, deprecated function names for backwards compatibility */
     { "try_join", &thread_tryjoin,
-      DOC("->(bool,object)\n"
+      DOC("->?T2?Dbool?O\n"
           "Old, deprecated name for #tryjoin") },
     { "timed_join", &thread_timedjoin,
-      DOC("(int timeout_in_microseconds)->(bool,object)\n"
+      DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
           "Old, deprecated name for #timedjoin") },
     { "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&thread_crash_error,
-      DOC("->traceback\n"
-          "->none\n"
+      DOC("->?Dtraceback\n"
+          "->?N\n"
           "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
     { "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&thread_crash_traceback,
-      DOC("->traceback\n"
-          "->none\n"
+      DOC("->?Dtraceback\n"
+          "->?N\n"
           "Deprecated function that does the same as ${this.crashinfo.first()[1]}") },
     { NULL }
 };
@@ -2960,7 +2960,8 @@ err:
 PRIVATE struct type_getset thread_class_getsets[] = {
     { "current",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_current_get, NULL, NULL,
-       DOC("Returns a thread descriptor for the calling thread") },
+       DOC("->?.\n"
+           "Returns a thread descriptor for the calling thread") },
     /* TODO: enumerate -> {thread...} 
      * >> Returns a proxy sequence for enumerating all
      *    deemon-threads; s.a. `add_running_thread()' */
@@ -2972,28 +2973,28 @@ PRIVATE struct type_member thread_class_members[] = {
 };
 PRIVATE struct type_method thread_class_methods[] = {
     { "self", &thread_self,
-      DOC("->thread\n"
+      DOC("->?.\n"
           "Deprecated alias for #current") },
     { "selfid", &thread_selfid,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw SystemError The system does not provide a way to query thread ids\n"
           "Deprecated alias for ${thread.current.id}") },
     { "check_interrupt", &thread_check_interrupt,
-      DOC("->none\n"
+      DOC("()\n"
           "@interrupt\n"
           "Checks for interrupts in the calling thread") },
     { "yield", &thread_yield,
       /* TODO: Must make this one deprecated, and add a new one with a different name!
        *       `yield' is a reserved identifer, and `import thread from deemon; thread.yield();'
        *       causes a compiler warning! */
-      DOC("->none\n"
+      DOC("()\n"
           "Willingly preempt execution to another thread or process") },
     { "sleep", &thread_sleep,
-      DOC("(int timeout_in_microseconds)->none\n"
+      DOC("(timeout_in_microseconds:?Dint)\n"
           "@interrupt\n"
           "Suspending execution for a total of @timeout_in_microseconds") },
     { "exit", &thread_exit,
-      DOC("(result=none)\n"
+      DOC("(result=!N)\n"
           "@throw ThreadExit Always thrown to exit the current thread\n"
           "Throw a :ThreadExit error object in order to terminate execution "
           "within the current thread. This function does not return normally") },
@@ -3281,7 +3282,7 @@ PRIVATE struct type_getset thread_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callback_get,
       (int(DCALL *)(DeeObject *__restrict))&thread_callback_del,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&thread_callback_set,
-      DOC("->callable\n"
+      DOC("->?Dcallable\n"
           "@throw AttributeError Attempted to overwrite the callback of a sub-class of :thread, rather than an exact instance. "
                                 "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
                                 "member function, write-access to this field is denied in sub-classes of :thread and only granted "
@@ -3295,7 +3296,7 @@ PRIVATE struct type_getset thread_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callargs_get,
       (int(DCALL *)(DeeObject *__restrict))&thread_callargs_del,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&thread_callargs_set,
-      DOC("->tuple\n"
+      DOC("->?Dtuple\n"
           "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of :thread, rather than an exact instance. "
                                 "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
                                 "member function, write-access to this field is denied in sub-classes of :thread and only granted "
@@ -3311,7 +3312,7 @@ PRIVATE struct type_getset thread_getsets[] = {
           "the thread terminated because it crashed, :none is returned rather "
           "than all the errors that caused the thread to crash being encapsulated and propagated") },
     { "crashinfo", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_crashinfo, NULL, NULL,
-      DOC("->{{object,traceback}...}\n"
+      DOC("->?S?T2?O?Dtraceback\n"
           "@throw ValueEror @this thread hasn't terminated yet\n"
           "Returns a sequence of 2-element tuples describing the errors that were "
           "active when the thread crashed (s.a. #hascrashed), or an empty sequence when "
@@ -3323,30 +3324,30 @@ PRIVATE struct type_getset thread_getsets[] = {
           "When iterated, elements of the returned sequence identify errors that "
           "caused the crash from most to least recently thrown") },
     { "traceback", &DeeThread_Trace, NULL, NULL,
-      DOC("->traceback\n"
+      DOC("->?Dtraceback\n"
           "Generate a traceback for the thread's current execution position") },
     { "id", &thread_id, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw ValueError The thread hasn't been started yet\n"
           "@throw SystemError The system does not provide a way to query thread ids\n"
           "Returns an operating-system specific id of @this thread") },
     { "isrunning", &thread_isrunning, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this thread is current running (i.e. #wasstarted, but hasn't #hasterminated)") },
     { "hasstarted", &thread_hasstarted, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this thread has been started") },
     { "wasdetached", &thread_wasdetached, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this thread has been detached") },
     { "hasterminated", &thread_hasterminated, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this thread has terminated") },
     { "wasinterrupted", &thread_wasinterrupted, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if interrupts are pending for @this thread") },
     { "hascrashed", &thread_hascrashed, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this thread has crashed, that "
           "is having #hasterminated while errors were still active\n"
           "When :true, attempting to #join @this thread will cause all of the "
@@ -3357,7 +3358,7 @@ PRIVATE struct type_getset thread_getsets[] = {
 PRIVATE struct type_member thread_members[] = {
 #ifndef CONFIG_NO_THREADS
     TYPE_MEMBER_FIELD_DOC("name",STRUCT_OBJECT_OPT,offsetof(DeeThreadObject,t_threadname),
-                          "->string\n"
+                          "->?Dstring\n"
                           "The name of the thread, or :none when none was assigned"),
 #else
     TYPE_MEMBER_CONST_DOC("name",&main_thread_name,
@@ -3448,9 +3449,9 @@ PUBLIC DeeTypeObject DeeThread_Type = {
     /* .tp_doc      = */DOC("The core object type for enabling parallel computation\n"
                             "\n"
                             "()\n"
-                            "(string name)\n"
-                            "(callable thread_main,tuple thread_args = none)\n"
-                            "(string name,callable thread_main,tuple thread_args = none)\n"
+                            "(name:?Dstring)\n"
+                            "(thread_main:?Dcallable,thread_args:?Dtuple=!N)\n"
+                            "(name:?Dstring,thread_main:?Dcallable,thread_args:?Dtuple=!N)\n"
                             "Construct a new thread that that has yet to be started.\n"
                             "When no @thread_main callable has been provided, invoke a $run "
                             "member which must be implemented by a sub-class:\n"
@@ -3460,7 +3461,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
                             ">\n"
                             "> this(jobs)\n"
                             ">  : m_jobs = jobs\n"
-                            "> { }\n"
+                            "> {}\n"
                             ">\n"
                             "> @\"Thread entry point\"\n"
                             "> run() {\n"

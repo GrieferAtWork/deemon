@@ -672,9 +672,9 @@ DeeModule_OpenStreamString(char const *__restrict source_pathname,
  *                          Set of `MODULE_INTERACTIVE_MODE_F*'
  * @param: argv:            An optional tuple object (when NULL, `Dee_EmptyTuple' is used),
  *                          that is passed to module code as arguments (i.e. `[...]').
- * @param: default_symbols: A options mapping-like object of type `[(string,object)...]'
- *                          that contains a set of pre-defined variables that should be
- *                          made available to the interactive source code by use of global
+ * @param: default_symbols: A mapping-like object of type `{(string,object)...}', that
+ *                          contains a set of pre-defined variables that should be made
+ *                          available to the interactive source code by use of global
  *                          variables.
  *                          Each item contained within is used to define a global variable
  *                          using the key (which must be a string) as name, and the associated
@@ -844,6 +844,14 @@ DeeModule_GetRoot(/*Module*/DeeObject *__restrict self,
  * NOTE: If the module's file could not be found, 0 is returned. */
 DFUNDEF uint64_t DCALL DeeModule_GetCTime(/*Module*/DeeObject *__restrict self);
 #endif /* !CONFIG_NO_DEC */
+
+/* Same as `DeeModule_Import', but relative module paths are
+ * imported in relation to `basemodule' */
+DFUNDEF DREF DeeObject *DCALL
+DeeModule_ImportRel(DeeObject *__restrict basemodule,
+                    DeeObject *__restrict module_name,
+                    struct compiler_options *options,
+                    bool throw_error);
 
 
 #ifdef CONFIG_BUILDING_DEEMON

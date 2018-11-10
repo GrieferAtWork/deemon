@@ -115,7 +115,7 @@ ast_parse_try(bool is_statement) {
  catcha = catchc = 0,catchv = NULL;
  for (;;) {
   tok_t mode = tok;
-  if unlikely(clear_current_tags()) goto err_try;
+  if unlikely(ast_tags_clear()) goto err_try;
   if unlikely(parse_tags_block()) goto err_try;
   if (tok != KWD_finally && tok != KWD_catch) break;
   if unlikely(yield() < 0) goto err_try;
@@ -280,7 +280,7 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
  catcha = catchc = 0,catchv = NULL;
  for (;;) {
   tok_t mode = tok;
-  if unlikely(clear_current_tags()) goto err_try;
+  if unlikely(ast_tags_clear()) goto err_try;
   if unlikely(parse_tags_block()) goto err_try;
   if (tok != KWD_finally && tok != KWD_catch) break;
   if unlikely(yield() < 0) goto err_try;

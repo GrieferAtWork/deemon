@@ -1181,7 +1181,7 @@ err:
 
 PRIVATE struct type_method process_methods[] = {
     { "start", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_start,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@interrupt\n"
           "@throw FileNotFound The specified executable could not be found\n"
           "@throw AccessError The current user does not have permissions to access the "
@@ -1189,7 +1189,7 @@ PRIVATE struct type_method process_methods[] = {
           "@throw SystemError Failed to start the process for some reason\n"
           "Begin execution of the process") },
     { "join", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_join,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@interrupt\n"
           "@throw ValueError @this process was never started\n"
           "@throw SystemError Failed to join @this process for some reason\n"
@@ -1197,19 +1197,19 @@ PRIVATE struct type_method process_methods[] = {
           "Joins @this process and returns the return value of its main function\n"
           "In the event") },
     { "tryjoin", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_tryjoin,
-      DOC("->int\n"
-          "->none\n"
+      DOC("->?Dint\n"
+          "()\n"
           "@throw ValueError @this process was never started\n"
           "@throw SystemError Failed to join @this process for some reason\n"
           "Same as #join, but don't check for interrupts and fail immediately") },
     { "timedjoin", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_timedjoin,
-      DOC("(int timeout_in_microseconds)->int\n"
-          "(int timeout_in_microseconds)->none\n"
+      DOC("(timeout_in_microseconds:?Dint)->?Dint\n"
+          "(timeout_in_microseconds:?Dint)\n"
           "@throw ValueError @this process was never started\n"
           "@throw SystemError Failed to join @this process for some reason\n"
           "Same as #join, but only attempt to join for a given @timeout_in_microseconds") },
     { "detach", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_detach,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "@throw ValueError @this process was never started\n"
           "@throw ValueError @this process is not a child of the calling process\n"
           "@throw SystemError Failed to detach @this process for some reason\n"
@@ -1217,26 +1217,26 @@ PRIVATE struct type_method process_methods[] = {
           "@return false: The :process was already detached\n"
           "Detaches @this process") },
     { "terminate", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_terminate,
-      DOC("(int exitcode=0)->bool\n"
+      DOC("(exitcode=!0)->?Dbool\n"
           "@throw ValueError @this process was never started\n"
           "@throw SystemError Failed to terminate @this process for some reason\n"
           "@return true: The :process has been terminated\n"
           "@return false: The :process was already terminated\n"
           "Terminate @this process with the given @exitcode") },
     { "started", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_started,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this process was started") },
     { "detached", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_detached,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this process has been detached") },
     { "terminated", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_terminated,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this process has terminated") },
     { "isachild", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_isachild,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this process is a child of the calling process") },
     { "id", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&process_id,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw ValueError The process hasn't been started yet\n"
           "@throw SystemError The system does not provide a way to query process ids\n"
           "Returns an operating-system specific id of @this process") },
@@ -1939,45 +1939,45 @@ err_noprinter:
 PRIVATE struct type_getset process_getsets[] = {
 #ifndef CONFIG_NO_THREADS
     { "threads", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads, NULL, NULL,
-      DOC("->{thread...}\nEnumerate all the threads of @this process") },
+      DOC("->?S?Dthread\nEnumerate all the threads of @this process") },
 #endif
     { "files", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_files },
     { "stdin", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdin,
                (int(DCALL *)(DeeObject *__restrict))&process_del_stdin,
                (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_stdin,
-      DOC("->file\nGet or set the standard input stream used by the process") },
+      DOC("->?Dfile\nGet or set the standard input stream used by the process") },
     { "stdout", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdout,
                 (int(DCALL *)(DeeObject *__restrict))&process_del_stdout,
                 (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_stdout,
-      DOC("->file\nGet or set the standard output stream used by the process") },
+      DOC("->?Dfile\nGet or set the standard output stream used by the process") },
     { "stderr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stderr,
                 (int(DCALL *)(DeeObject *__restrict))&process_del_stderr,
                 (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_stderr,
-      DOC("->file\nGet or set the standard error stream used by the process") },
+      DOC("->?Dfile\nGet or set the standard error stream used by the process") },
     { "pwd", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_pwd,
              (int(DCALL *)(DeeObject *__restrict))&process_del_pwd,
              (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_pwd,
-      DOC("->file\nGet or set the process working directory used by the process") },
+      DOC("->?Dfile\nGet or set the process working directory used by the process") },
     { "exe", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_exe,
              (int(DCALL *)(DeeObject *__restrict))&process_del_exe,
              (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_exe,
-      DOC("->string\nThe filename of the image being executed by the process") },
+      DOC("->?Dstring\nThe filename of the image being executed by the process") },
     { "cmdline", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
                  (int(DCALL *)(DeeObject *__restrict))&process_del_cmdline,
                  (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_cmdline,
-      DOC("->string\nThe commandline used to executed the process") },
+      DOC("->?Dstring\nThe commandline used to executed the process") },
     { "argv", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_argv,
               (int(DCALL *)(DeeObject *__restrict))&process_del_cmdline, /* Same thing! */
               (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_argv,
-      DOC("->{string...}\nThe argument vector passed to the programms C-main() method") },
+      DOC("->?S?Dstring\nThe argument vector passed to the programms C-main() method") },
     { "cmd", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
              (int(DCALL *)(DeeObject *__restrict))&process_del_cmdline,
              (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_cmdline,
-      DOC("->string\nDeprecated alias for #cmdline") },
+      DOC("->?Dstring\nDeprecated alias for #cmdline") },
     { "environ", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_environ,
                  (int(DCALL *)(DeeObject *__restrict))&process_del_environ,
                  (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_environ,
-      DOC("->{{string,string}...}\nThe state of environment variables in the given process") },
+      DOC("->?S?T2?Dstring?Dstring\nThe state of environment variables in the given process") },
     /* Process environment control:
      * >> property memory -> file; // A file allowing read/write access to the process's VM
      */
@@ -1997,7 +1997,7 @@ process_class_self(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_method process_class_methods[] = {
     { "self", &process_class_self,
-      DOC("->process\n"
+      DOC("->?.\n"
           "Deprecated alias for #current") },
     { NULL }
 };
@@ -2072,8 +2072,8 @@ PRIVATE struct type_gc process_gc = {
 INTERN DeeTypeObject DeeProcess_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"process",
-    /* .tp_doc      = */DOC("(string exe)\n"
-                            "(string exe,sequence args)\n"
+    /* .tp_doc      = */DOC("(exe:?Dstring)\n"
+                            "(exe:?Dstring,args:{?Dstring})\n"
                             "@param args A sequence of :{string}s that should be passed as secondary arguments. "
                                         "When provided, @exe is prepended first, however the full argument list "
                                         "can be overwritten using the #argv property\n"

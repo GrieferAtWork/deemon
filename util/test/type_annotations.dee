@@ -1,3 +1,4 @@
+#!/usr/bin/deemon
 /* Copyright (c) 2018 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
@@ -16,24 +17,37 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_RUNTIME_BUILTIN_H
-#define GUARD_DEEMON_RUNTIME_BUILTIN_H 1
 
-#include <deemon/api.h>
+import * from doc;
+import * from deemon;
 
-#define BUILTIN(name,object,flags)
-#include "builtins.def"
+@@This is my test function
+@@This function takes 1 argument @x, which should be
+@@an :int or :float, allowing it to then return a :string
+function foo(x: int | float): string {
+	return str x;
+}
 
-DECL_BEGIN
 
-enum{
-    /* Global object ids for builtin objects, as exported by the `deemon' module. */
-#define BUILTIN(name,object,flags)    id_##name,
-#define BUILTIN_ALIAS(name,alt,flags) /* nothing */
-#include "builtins.def"
-    num_builtins_obj
-};
 
-DECL_END
+local d = Doc(foo);
 
-#endif /* !GUARD_DEEMON_RUNTIME_BUILTIN_H */
+/* Ensure that parameter information got decoded properly */
+assert d.decls[0].parameters[0].name == "x";
+assert d.decls[0].parameters[0].typ.Xtypes[0].Etyperef.typ === int;
+assert d.decls[0].parameters[0].typ.Xtypes[1].Etyperef.typ === float;
+assert d.decls[0].ret.Etyperef.typ === string;
+
+/* Assert that we can properly deduce if a
+ * given argument is accepted by the function. */
+assert d.isaccepted(1234) == true;
+assert d.isaccepted(1.0) == true;
+assert d.isaccepted("foo") == false;
+
+
+
+
+
+
+
+

@@ -151,6 +151,7 @@
     <ClCompile Include="..\src\deemon\compiler\lexer\cast.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\class.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\comma.c" />
+    <ClCompile Include="..\src\deemon\compiler\lexer\decl.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\del.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\expression.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\function.c" />
@@ -286,6 +287,7 @@ ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj;%(Outputs)</Outputs>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
+    <None Include="..\src\deemon\compiler\lexer\decl-escape-text-impl.c.inl" />
     <None Include="..\src\deemon\execute\asm\exec-386.S">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">false</DeploymentContent>
       <FileType>Document</FileType>

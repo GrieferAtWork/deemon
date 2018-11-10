@@ -1121,6 +1121,9 @@ imod_init(InteractiveModule *__restrict self,
 #ifndef NDEBUG
   memset(dots,0xcc,sizeof(struct symbol));
 #endif
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+  dots->s_decltype.da_type = DAST_NONE;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
   dots->s_name        = &TPPKeyword_Empty;
   dots->s_flag        = SYMBOL_FALLOC;
   dots->s_nread       = 0;
@@ -1210,10 +1213,16 @@ err_compiler_basefile:
      COMPILER_END();
      goto err_basefile;
     }
+#ifndef NDEBUG
+    memset(sym,0xcc,sizeof(struct symbol));
+#endif
     sym->s_name  = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(modsym),
                                           MODULE_SYMBOL_GETNAMELEN(modsym),
                                           1);
     if unlikely(!sym->s_name) goto err_compiler_basefile;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+    sym->s_decltype.da_type = DAST_NONE;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
     sym->s_type         = SYMBOL_TYPE_GLOBAL;
     sym->s_flag         = SYMBOL_FALLOC;
     sym->s_symid        = modsym->ss_index;

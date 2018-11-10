@@ -543,19 +543,14 @@ local __objects = deemon.list {
 	/* 0x01F1 */ util.enumerate, /* DeeBuiltinFunction___builtin_enumerate */
 };
 
-@"(int id) -> object"
-@"Library function implementing the deprecated ${__builtin_object()} builtin function"
-@"Prior to deemon 200, and in the absence of module support, stuff you'd now"
-@"find in the :deemon module was provided for using builtin-functions."
-@"Due to their rediculous amount, not every builtin had its own keyword, but"
-@"instead, a single access symbol was defined by the compiler: ${__builtin_object}"
-@"Using this symbol, as well as a fixed (and now emulated) symbol index, one"
-@"was able to access these functions, as could be seen in the include-folder"
-@"of deemon prior to its rewrite:"
-@">local __builtin_range = __builtin_object(0x0117);"
-@">for (local x: __builtin_range(20))"
-@"> print x;"
-global function get_builtin(id) {
+@@Library function implementing the deprecated ${__builtin_object()} builtin function
+@@Prior to deemon 200, and in the absence of module support, stuff you'd now find in the :deemon module was provided for using builtin-functions.
+@@Due to their rediculous amount, not every builtin had its own keyword, but instead, a single access symbol was defined by the compiler: ${__builtin_object}
+@@Using this symbol, as well as a fixed (and now emulated) symbol index, one was able to access these functions, as could be seen in the include-folder of deemon prior to its rewrite:
+@@>local __builtin_range = __builtin_object(0x0117);
+@@>for (local x: __builtin_range(20))
+@@> print x;
+global function get_builtin(id: deemon.int) {
 	return __objects[id];
 }
 

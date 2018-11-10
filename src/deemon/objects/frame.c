@@ -313,13 +313,17 @@ frame_getname(Frame *__restrict self) {
 
 PRIVATE struct type_getset frame_getsets[] = {
     { "file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfile, NULL, NULL,
-      DOC("->string\nThe filename of this frame's source file, or an empty string") },
+      DOC("->?Dstring\n"
+          "The filename of this frame's source file, or an empty string") },
     { "line", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getline, NULL, NULL,
-      DOC("->int\nThe line number within this frame's source file, or ${-1}") },
+      DOC("->?Dint\n"
+          "The line number within this frame's source file, or ${-1}") },
     { "col", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcol, NULL, NULL,
-      DOC("->int\nThe column offset within this frame's source file, or ${-1}") },
+      DOC("->?Dint\n"
+          "The column offset within this frame's source file, or ${-1}") },
     { "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getname, NULL, NULL,
-      DOC("->string\nThe name of this frame's function, or an empty string") },
+      DOC("->?Dstring\n"
+          "The name of this frame's function, or an empty string") },
     { NULL }
 };
 

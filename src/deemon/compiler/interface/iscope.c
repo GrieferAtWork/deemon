@@ -153,15 +153,15 @@ scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
 
 PRIVATE struct type_getset scope_getsets[] = {
     { "base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getbase, NULL, NULL,
-      DOC("->basescope\n"
+      DOC("->?Abasescope?Ert:compiler\n"
           "Returns the nearest base-scope that @this scope is apart of") },
     { "prev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getprev, NULL, NULL,
-      DOC("->scope\n"
-          "->none\n"
+      DOC("->?Ascope?Ert:compiler\n"
+          "->?N\n"
           "Returns a the parent of @this scope, or :none if @this scope is the root-scope") },
     { "isclassscope",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_get_isclassscope, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Check if @this scope is a class-scope\n"
           "Class scopes are somewhat special, in that they prolong the full linkage of "
           "symbol lookup going beyond their range, up to the point where the scope is "
@@ -345,7 +345,7 @@ done:
 
 PRIVATE struct type_method scope_methods[] = {
     { "newanon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&scope_newanon,
-      DOC("->symbol\n"
+      DOC("->?Asymbol?Ert:compiler\n"
           "Construct a new anonymous symbol, and add it as part of @this scope\n"
           "The symbol isn't given a name (when queried it will have an empty name), and "
           "will otherwise behave just like a symbol that has been deleted (s.a. #op:delitem)\n"
@@ -354,7 +354,7 @@ PRIVATE struct type_method scope_methods[] = {
           "values, as used by $with-statements\n"
           "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)") },
     { "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&scope_newlocal,
-      DOC("(string name,bool requirenew=true,(:compiler.lexer.file,int,int) loc?)->symbol\n"
+      DOC("(name:?Dstring,requirenew=!t,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Asymbol?Ert:compiler\n"
           "@param loc The declaration position of the symbol, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"
           "Lookup, or create a new local symbol named @name\n"
@@ -383,8 +383,8 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
                             "repr->\n"
                             "Returns a unique, human-readable representation of @this scope\n"
                             "\n"
-                            "contains(string name)->bool\n"
-                            "contains(symbol sym)->bool\n"
+                            "contains(name:?Dstring)->?Dbool\n"
+                            "contains(sym:?Asymbol?Ert:compiler)->?Dbool\n"
                             "Returns :true if @this scope contains a given symbol @sym, "
                             "or some symbol with a name matching the given @name\n"
                             "\n"

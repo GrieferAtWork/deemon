@@ -1146,8 +1146,8 @@ err:
 
 PRIVATE struct type_method file_class_methods[] = {
     { "open", &file_class_open,
-      DOC("(string path,string mode=\"r\")->file\n"
-          "(string path,int mode)->file\n"
+      DOC("(path:?Dstring,mode=!Pr)->file\n"
+          "(path:?Dstring,mode:?Dint)->file\n"
           "@interrupt\n"
           "@throw FileExists The passed mode contains both $\"creat\" and $\"excl\", but the given @path already existed\n"
           "@throw FileNotFound The given @path could not be found\n"
@@ -1471,9 +1471,9 @@ file_class_getjoined(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE struct type_getset file_class_getsets[] = {
     { "stdin", &file_class_get_stdin, &file_class_del_stdin, &file_class_set_stdin,
-      DOC("->file\nThe standard input stream") },
+      DOC("->:?Dfile\nThe standard input stream") },
     { "stdout", &file_class_get_stdout, &file_class_del_stdout, &file_class_set_stdout,
-      DOC("->file\nThe standard output stream\n"
+      DOC("->:?Dfile\nThe standard output stream\n"
           "This is also what $print statements will write to when used "
           "without an explicit file target:\n"
           ">print \"foo\";\n"
@@ -1482,20 +1482,20 @@ PRIVATE struct type_getset file_class_getsets[] = {
           ">print file.stdout: \"foo\";\n"
           ) },
     { "stderr", &file_class_get_stderr, &file_class_del_stderr, &file_class_set_stderr,
-      DOC("->file\nThe standard error stream") },
+      DOC("->:?Dfile\nThe standard error stream") },
     { "default_stdin", &file_class_default_stdin, NULL, NULL,
-      DOC("->file\nThe default standard input stream") },
+      DOC("->:?Dfile\nThe default standard input stream") },
     { "default_stdout", &file_class_default_stdout, NULL, NULL,
-      DOC("->file\nThe default standard output stream") },
+      DOC("->:?Dfile\nThe default standard output stream") },
     { "default_stderr", &file_class_default_stderr, NULL, NULL,
-      DOC("->file\nThe default standard error stream") },
+      DOC("->:?Dfile\nThe default standard error stream") },
     { "stddbg", &file_class_stddbg, NULL, NULL,
-      DOC("->file\n"
+      DOC("->:?Dfile\n"
           "A standard stream that usually simply aliases the "
           "default #stderr, but should be used for debug-output\n"
           "Note that unlike the other streams, this one can't be redirected") },
     { "joined", &file_class_getjoined, NULL, NULL,
-      DOC("->type\nDeprecated alias for :files:joined") },
+      DOC("->?Dtype\nDeprecated alias for :files:joined") },
     { NULL }
 };
 
@@ -1864,38 +1864,38 @@ file_readallat(DeeObject *__restrict self,
 
 PRIVATE struct type_method file_methods[] = {
     { "read", &file_read,
-      DOC("(int max_bytes=-1,bool readall=false)->bytes\n"
+      DOC("(max_bytes=!-1,readall=!f)->?Dbytes\n"
           "Read and return at most @max_bytes of data from the file stream. "
           "When @readall is :true, keep on reading data until the buffer is full, or the "
           "read-callback returns ${0}, rather than until it returns something other than the "
           "internal buffer size used when reading data.") },
     { "readinto", &file_readinto,
-      DOC("(buffer dst,bool readall=false)->int\n"
+      DOC("(dst:?Dbytes,readall=!f)->?Dint\n"
           "Read data into the given buffer @dst and return the number of bytes read. "
           "When @readall is :true, keep on reading data until the buffer is full, or the "
           "read-callback returns ${0}, rather than until it returns something other than the "
           "requested read size.") },
     { "write", &file_write,
-      DOC("(buffer data,bool writeall=true)->int\n"
+      DOC("(data:?Dbytes,writeall=!t)->?Dint\n"
           "Write @data to the file stream and return the actual number of bytes written. "
           "When @writeall is :true, keep writing data until the write-callback "
           "returns $0 or until all data has been written, rather than invoke "
           "the write-callback only a single time.") },
     { "pread", &file_pread,
-      DOC("(int pos,int max_bytes=-1,bool readall=false)->bytes\n"
+      DOC("(pos:?Dint,max_bytes=!-1,readall=!f)->?Dbytes\n"
           "Similar to #read, but read data from a given file-offset "
           "@pos, rather than from the current file position") },
     { "preadinto", &file_preadinto,
-      DOC("(buffer dst,int pos,bool readall=false)->bytes\n"
+      DOC("(dst:?Dbytes,pos:?Dint,readall=!f)->?Dbytes\n"
           "Similar to #readinto, but read data from a given file-offset "
           "@pos, rather than from the current file position") },
     { "pwrite", &file_pwrite,
-      DOC("(buffer data,int pos,bool writeall=true)->int\n"
+      DOC("(data:?Dbytes,pos:?Dint,writeall=!t)->?Dint\n"
           "Similar to #write, but write data to a given file-offset "
           "@pos, rather than at the current file position") },
     { "seek", &file_seek,
-      DOC("(int off,string whence=\"SET\")->int\n"
-          "(int off,int whence)->int\n"
+      DOC("(off:?Dint,whence=!PSET)->?Dint\n"
+          "(off:?Dint,whence:?Dint)->?Dint\n"
           "@throw ValueError The given string passed as seek mode @whence was not recognized\n"
           "Change the current file pointer according to @off and @whence "
           "before returning its absolute offset within the file.\n"
@@ -1906,14 +1906,14 @@ PRIVATE struct type_method file_methods[] = {
           "$\"CUR\"|Adjust the file pointer relative to its previous position\n"
           "$\"END\"|Set the file pointer relative to the end of the stream}") },
     { "tell", &file_tell,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "Same as calling #seek as ${this.seek(0,\"CUR\")}") },
     { "rewind", &file_rewind,
       DOC("()\n"
           "Same as calling #seek as ${this.seek(0,\"SET\")}") },
     { "trunc", &file_trunc,
-      DOC("(int new_size)->int\n"
-          "->int\n"
+      DOC("(new_size:?Dint)->?Dint\n"
+          "->?Dint\n"
           "Truncate the file to a new length of @new_size bytes. "
           "When no argument is given, the file's length is truncated "
           "to its current position, rather than the one given") },
@@ -1924,47 +1924,47 @@ PRIVATE struct type_method file_methods[] = {
       DOC("()\n"
           "Close the file") },
     { "getc", &file_getc,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "Read and return a single character (byte) from then file, "
           "or return ${-1} if the file's end has been reached") },
     { "ungetc", &file_ungetc,
-      DOC("(int ch)->bool\n"
+      DOC("(ch:?Dint)->?Dbool\n"
           "Unget a given character @ch to be re-read the next time #getc or #read is called. "
           "If the file's start has already been reached, :false is returned and the character "
           "will not be re-read from this file") },
     { "putc", &file_putc,
-      DOC("(int byte)->bool\n"
+      DOC("(byte:?Dint)->?Dbool\n"
           "Append a single @byte at the end of @this file, returning :true on "
           "success, or :false if the file has entered an end-of-file state") },
     { DeeString_STR(&str_size), &file_size,
-      DOC("->int\nReturns the size (in bytes) of the file stream") },
+      DOC("->?Dint\nReturns the size (in bytes) of the file stream") },
     { "readline", &file_readline,
-      DOC("(bool keeplf)->bytes\n"
-          "(int max_bytes=-1,bool keeplf=true)->bytes\n"
+      DOC("(keeplf:?Dbool)->?Dbytes\n"
+          "(max_bytes=!-1,keeplf=!t)->?Dbytes\n"
           "Read one line from the file stream, but read at most @max_bytes bytes.\n"
           "When @keeplf is :false, strip the trailing linefeed from the returned bytes object") },
 
     /* Deprecated functions. */
     { "readall", &file_readall,
-      DOC("(int max_bytes=-1)->bytes\n"
+      DOC("(max_bytes=!-1)->?Dbytes\n"
           "Deprecated alias for ${this.read(max_bytes,true)}") },
     { "readat", &file_pread,
-      DOC("(int pos,int max_bytes=-1,bool readall=false)->bytes\n"
+      DOC("(pos:?Dint,max_bytes=!-1,readall=!f)->?Dbytes\n"
           "Deprecated alias for #pread") },
     { "writeat", &file_pwrite,
-      DOC("(buffer data,int pos,bool writeall=true)->int\n"
+      DOC("(data:?Dbytes,pos:?Dint,writeall=!t)->?Dint\n"
           "Deprecated alias for #pwrite") },
     { "readallat", &file_readallat,
-      DOC("(int pos,int max_bytes=-1,bool readall=false)->bytes\n"
+      DOC("(pos:?Dint,max_bytes=!-1,readall=!f)->?Dbytes\n"
           "Deprecated alias for ${this.pread(pos,max_bytes,true)}") },
     { "setpos", &file_seek,
-      DOC("(int pos)->int\n"
+      DOC("(pos:?Dint)->?Dint\n"
           "Deprecated alias for #seek") },
     { "flush", &file_sync,
       DOC("()\n"
           "Deprecated alias for #sync") },
     { "puts", &file_write,
-      DOC("(buffer data)->int\n"
+      DOC("(data:?Dbytes)->?Dint\n"
           "Deprecated alias for #write") },
 
     { NULL }
@@ -2059,7 +2059,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
                                 "%{table Operator prototype|Description\n"
                                 "${operator read(int size) -> buffer}|Reads up to size bytes and returns a buffer (usually a :string) containing read data\n"
                                 "${operator write(buffer buf) -> int}|Writes data from buf into the file and returns the number of bytes written\n"
-                                "${operator seek(int off, int whence) -> int}|Moves the file pointer relative to whence, "
+                                "${operator seek(off:?Dint, int whence) -> int}|Moves the file pointer relative to whence, "
                                                                              "which is one of #SEEK_SET, #SEEK_CUR or #SEEK_END. "
                                                                              "The return value of this operator is the new, "
                                                                              "absolute file position within the stream\n"
@@ -2067,8 +2067,8 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
                                 "${operator trunc(int newsize) -> none}|Truncate, or pre-allocate file memory to match a length of newsize\n"
                                 "${operator close() -> none}|Close the file. This operator is invoked during destruction, but "
                                                             "can also be invoked before then using the #close member function\n"
-                                "${operator pread(int size, int pos) -> buffer}|Similar to ${operator read}, but data is read from the given absolute file position pos\n"
-                                "${operator pwrite(buffer buf, int pos) -> int}|Similar to ${operator write}, but data is written to the given absolute file position pos\n"
+                                "${operator pread(int size, pos:?Dint) -> buffer}|Similar to ${operator read}, but data is read from the given absolute file position pos\n"
+                                "${operator pwrite(buffer buf, pos:?Dint) -> int}|Similar to ${operator write}, but data is written to the given absolute file position pos\n"
                                 "${operator getc() -> int}|Reads, and returns a single byte from the stream (Usually the same as ${operator read(1)}). "
                                                           "If EOF has been reached, a negative value is returned\n"
                                 "${operator ungetc(int ch) -> bool}|Returns a previously read character to the stream, allowing it to be read once again. "
@@ -2082,7 +2082,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
                                 "()\n"
                                 "Default-construct the file base-class\n"
                                 "\n"
-                                "iter()\n"
+                                "iter->\n"
                                 "Returns an iterator that allows for line-wise processing of "
                                 "file data, making use of the the #readline member function\n"
                                 "The returned lines have their trailing line-feeds stripped\n"
@@ -2095,16 +2095,16 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
                                 "Note that because isn't derived from :sequence, the returned "
                                 "iterator also isn't required to be derived from :iterator\n"
                                 "\n"
-                                "<<(object ob)\n"
+                                "<<(ob)->\n"
                                 "@return Always re-returns @this file\n"
                                 "Same as ${print this: ob,;}\n"
                                 "\n"
-                                ">>(buffer buf)\n"
+                                ">>(buf:?Dbytes)->\n"
                                 "@throw FSError Failed to fill the entirety of @buf\n"
                                 "@return Always re-returns @this file\n"
                                 "Same as ${this.readinto(buf,true)}\n"
                                 "\n"
-                                "leave()\n"
+                                "leave->\n"
                                 "Invokes ${this.operator close()}\n"
                                 "Note that due to this operators presence, an "
                                 "implicit enter-operator exists, which is a no-op"),

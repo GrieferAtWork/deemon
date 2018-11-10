@@ -926,9 +926,9 @@ module_get_imports(DeeModuleObject *__restrict self) {
 }
 
 PRIVATE struct type_member module_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__name__",STRUCT_OBJECT,
-                          offsetof(DeeModuleObject,mo_name),
-                          "->string\nThe name of @this module"),
+    TYPE_MEMBER_FIELD_DOC("__name__",STRUCT_OBJECT,offsetof(DeeModuleObject,mo_name),
+                          "->?Dstring\n"
+                          "The name of @this module"),
     TYPE_MEMBER_END
 };
 
@@ -939,7 +939,7 @@ DeeModule_ViewGlobals(DeeObject *__restrict self);
 
 PRIVATE struct type_getset module_getsets[] = {
     { "__exports__", &DeeModule_ViewExports, NULL, NULL,
-      DOC("->{(string,object)...}\n"
+      DOC("->?S?T2?Dstring?O\n"
           "Returns a modifyable mapping-like object containing @this "
           "module's global variables accessible by name (and enumerable)\n"
           "Note that only existing exports can be modified, however no new symbols can be added:\n"
@@ -951,21 +951,21 @@ PRIVATE struct type_getset module_getsets[] = {
           ">util.__exports__[\"min\"] = 42;\n"
           ">print util.min;                // 42") },
     { "__imports__", (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_imports, NULL, NULL,
-      DOC("->{module...}\n"
+      DOC("->?S?Dmodule\n"
           "Returns an immutable sequence of all other modules imported by this one") },
     { "__globals__", &DeeModule_ViewGlobals, NULL, NULL,
-      DOC("->sequence\n"
+      DOC("->?S?O\n"
           "Similar to #__exports__, however global variables are addressed using their "
           "internal index. Using this, anonymous global variables (such as property callbacks) "
           "can be accessed and modified") },
     { "__code__",
      (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_code, NULL, NULL,
-      DOC("->code\n"
+      DOC("->?Dcode\n"
           "@throw ValueError The module hasn't been fully loaded\n"
           "Returns the code object for the module's root initializer") },
     { "__path__",
      (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_path, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?Dstring\n"
           "@throw ValueError The module hasn't been fully loaded\n"
           "@throw AttributeError The module wasn't accessed through the filesystem\n"
           "Returns the absolute filesystem path of the module's source file") },
@@ -984,11 +984,11 @@ module_class_setpath(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_getset module_class_getsets[] = {
     { "path", &module_class_getpath, NULL, &module_class_setpath,
-      DOC("->list\n"
+      DOC("->?Dlist\n"
           "A list of strings describing the search path for system libraries") },
     /* Deprecated aliases to emulate the old `dexmodule' builtin type. */
     { "search_path", &module_class_getpath, NULL, &module_class_setpath,
-      DOC("->list\n"
+      DOC("->?Dlist\n"
           "Deprecated alias for #path") },
     { NULL }
 };
@@ -1009,7 +1009,9 @@ module_class_open(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_method module_class_methods[] = {
     /* Deprecated aliases to emulate the old `dexmodule' builtin type. */
-    { "open", &module_class_open, DOC("(string name)->module\nDeprecated alias for :import") },
+    { "open", &module_class_open,
+      DOC("(name:?Dstring)->?Dmodule\n"
+          "Deprecated alias for :import") },
     { NULL }
 };
 

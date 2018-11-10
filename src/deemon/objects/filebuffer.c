@@ -1484,16 +1484,16 @@ err:
 
 PRIVATE struct type_method buffer_methods[] = {
     { "size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&buffer_size,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "Forward to the $size function of the file being buffered") },
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
     { "fileno", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&buffer_fileno,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw AttributeError The file being buffered does not implement a member function $fileno\n"
           "Forward to the $fileno function of the file being buffered") },
 #endif
     { "isatty", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&buffer_isatty,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Forward to the $isatty function of the file being buffered\n"
           "Note that in order to implement auto-buffering, file buffers are allowed to "
           "cache the return value of ${this.file.isatty()}, furthermore allowing this "
@@ -1505,7 +1505,7 @@ PRIVATE struct type_method buffer_methods[] = {
           "Similar to #sync, but never synchronize the underlying file, regardless "
           "of whether or not $\"nosync\" was passed to the constructor, or #setbuf") },
     { "setbuf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&buffer_setbuf,
-      DOC("(string mode,int size=0)\n"
+      DOC("(mode:?Dstring,size=!0)\n"
           "@throw ValueError The given @mode is malformed, or not recognized\n"
           "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
           "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
@@ -1567,9 +1567,9 @@ err:
 
 PRIVATE struct type_getset buffer_getsets[] = {
     { "file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&buffer_getfile, NULL, NULL,
-       DOC("->file\nReturns the file that is being buffered") },
+       DOC("->?Dfile\nReturns the file that is being buffered") },
     { "filename", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&buffer_filename, NULL, NULL,
-       DOC("->string\nForward the filename attribute of the file being buffered") },
+       DOC("->?Dstring\nForward the filename attribute of the file being buffered") },
     { NULL }
 };
 
@@ -1607,7 +1607,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
         /* .tp_name     = */"buffer",
         /* .tp_doc      = */DOC("General-purpose input/output file buffering\n"
                                 "\n"
-                                "(file fp,string mode=\"auto\",int size=0)\n"
+                                "(fp:?Dfile,mode=!Pauto,size=!0)\n"
                                 "@throw ValueError The given @mode is malformed, or not recognized\n"
                                 "Construct a new buffer for @fp using the given @mode and @size\n"
                                 "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "

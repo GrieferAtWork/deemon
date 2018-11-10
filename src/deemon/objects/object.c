@@ -1623,88 +1623,88 @@ PRIVATE struct type_member object_class_members[] = {
 PRIVATE struct type_method object_methods[] = {
     /* Helper function: `foo.id()' returns a unique id for any object. */
     { "id",              &_DeeObject_IdFunc,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "Returns a unique id identifying this specific object instance") },
     /* Utility function: Return the size of a given object (in bytes) */
     { "__sizeof__",      &object_sizeof,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "Return the size of @this object in bytes") },
 
     /* Operator invocation functions. */
-    { meth_copy+1,       &object_copy, DOC("->object\n@return A copy of @this object") },
-    { meth_deepcopy+1,   &object_deepcopy, DOC("->object\n@return A deep copy of @this object") },
+    { meth_copy+1,       &object_copy, DOC("->\n@return A copy of @this object") },
+    { meth_deepcopy+1,   &object_deepcopy, DOC("->\n@return A deep copy of @this object") },
     { meth_assign+2,     &object_assign, DOC("(other)->@this\nAssigns @other to @this and") },
     { meth_moveassign+2, &object_moveassign, DOC("(other)->@this\nMove-assign @other to @this and") },
-    { meth_str+1,        &object_dostr, DOC("->string\n@return: @this converted to a :string") },
-    { meth_repr+1,       &object_dorepr, DOC("->string\n@return: The :string representation of @this") },
-    { meth_bool+1,       &object_bool, DOC("->bool\n@return: The :bool value of @this") },
-    { meth_call+2,       &object_call, DOC("(tuple args)->object\nCall @this using the given @args :tuple") },
-    { meth_thiscall+3,   &object_thiscall, DOC("(object this_arg, tuple args)->object\nDo a this-call on @this using the given @this_arg and @args :tuple") },
-    { meth_hash+1,       &object_hash, DOC("->int\n@return The hash-value of @this") },
-    { meth_int+1,        &object_int, DOC("->int\n@return The integer-value of @this") },
-    { meth_inv+1,        &object_inv, DOC("->object\n@return The result of ${this.operator ~ ()}") },
-    { meth_pos+1,        &object_pos, DOC("->object\n@return The result of ${this.operator + ()}") },
-    { meth_neg+1,        &object_neg, DOC("->object\n@return The result of ${this.operator - ()}") },
-    { meth_add+2,        &object_add, DOC("(other)->object\n@return The result of ${this.operator + (other)}") },
-    { meth_sub+2,        &object_sub, DOC("(other)->object\n@return The result of ${this.operator - (other)}") },
-    { meth_mul+2,        &object_mul, DOC("(other)->object\n@return The result of ${this.operator * (other)}") },
-    { meth_div+2,        &object_div, DOC("(other)->object\n@return The result of ${this.operator / (other)}") },
-    { meth_mod+2,        &object_mod, DOC("(other)->object\n@return The result of ${this.operator % (other)}") },
-    { meth_shl+2,        &object_shl, DOC("(other)->object\n@return The result of ${this.operator << (other)}") },
-    { meth_shr+2,        &object_shr, DOC("(other)->object\n@return The result of ${this.operator >> (other)}") },
-    { meth_and+2,        &object_and, DOC("(other)->object\n@return The result of ${this.operator & (other)}") },
-    { meth_or+2,         &object_or, DOC("(other)->object\n@return The result of ${this.operator | (other)}") },
-    { meth_xor+2,        &object_xor, DOC("(other)->object\n@return The result of ${this.operator ^ (other)}") },
-    { meth_pow+2,        &object_pow, DOC("(other)->object\n@return The result of ${this.operator ** (other)}") },
-    { meth_eq+2,         &object_eq, DOC("(other)->object\n@return The result of ${this.operator == (other)}") },
-    { meth_ne+2,         &object_ne, DOC("(other)->object\n@return The result of ${this.operator != (other)}") },
-    { meth_lo+2,         &object_lo, DOC("(other)->object\n@return The result of ${this.operator < (other)}") },
-    { meth_le+2,         &object_le, DOC("(other)->object\n@return The result of ${this.operator <= (other)}") },
-    { meth_gr+2,         &object_gr, DOC("(other)->object\n@return The result of ${this.operator > (other)}") },
-    { meth_ge+2,         &object_ge, DOC("(other)->object\n@return The result of ${this.operator >= (other)}") },
-    { meth_size+1,       &object_size, DOC("->object\n@return The result of ${this.operator # ()}") },
-    { meth_contains+2,   &object_contains, DOC("(item)->object\n@return The result of ${this.operator contains (item)}") },
-    { meth_getitem+2,    &object_getitem, DOC("(index)->object\n@return The result of ${this.operator [] (index)}") },
+    { meth_str+1,        &object_dostr, DOC("->?Dstring\n@return: @this converted to a :string") },
+    { meth_repr+1,       &object_dorepr, DOC("->?Dstring\n@return: The :string representation of @this") },
+    { meth_bool+1,       &object_bool, DOC("->?Dbool\n@return: The :bool value of @this") },
+    { meth_call+2,       &object_call, DOC("(args:?tuple)->\nCall @this using the given @args :tuple") },
+    { meth_thiscall+3,   &object_thiscall, DOC("(this_arg,args:?tuple)->\nDo a this-call on @this using the given @this_arg and @args :tuple") },
+    { meth_hash+1,       &object_hash, DOC("->?Dint\n@return The hash-value of @this") },
+    { meth_int+1,        &object_int, DOC("->?Dint\n@return The integer-value of @this") },
+    { meth_inv+1,        &object_inv, DOC("->\n@return The result of ${this.operator ~ ()}") },
+    { meth_pos+1,        &object_pos, DOC("->\n@return The result of ${this.operator + ()}") },
+    { meth_neg+1,        &object_neg, DOC("->\n@return The result of ${this.operator - ()}") },
+    { meth_add+2,        &object_add, DOC("(other)->\n@return The result of ${this.operator + (other)}") },
+    { meth_sub+2,        &object_sub, DOC("(other)->\n@return The result of ${this.operator - (other)}") },
+    { meth_mul+2,        &object_mul, DOC("(other)->\n@return The result of ${this.operator * (other)}") },
+    { meth_div+2,        &object_div, DOC("(other)->\n@return The result of ${this.operator / (other)}") },
+    { meth_mod+2,        &object_mod, DOC("(other)->\n@return The result of ${this.operator % (other)}") },
+    { meth_shl+2,        &object_shl, DOC("(other)->\n@return The result of ${this.operator << (other)}") },
+    { meth_shr+2,        &object_shr, DOC("(other)->\n@return The result of ${this.operator >> (other)}") },
+    { meth_and+2,        &object_and, DOC("(other)->\n@return The result of ${this.operator & (other)}") },
+    { meth_or+2,         &object_or, DOC("(other)->\n@return The result of ${this.operator | (other)}") },
+    { meth_xor+2,        &object_xor, DOC("(other)->\n@return The result of ${this.operator ^ (other)}") },
+    { meth_pow+2,        &object_pow, DOC("(other)->\n@return The result of ${this.operator ** (other)}") },
+    { meth_eq+2,         &object_eq, DOC("(other)->\n@return The result of ${this.operator == (other)}") },
+    { meth_ne+2,         &object_ne, DOC("(other)->\n@return The result of ${this.operator != (other)}") },
+    { meth_lo+2,         &object_lo, DOC("(other)->\n@return The result of ${this.operator < (other)}") },
+    { meth_le+2,         &object_le, DOC("(other)->\n@return The result of ${this.operator <= (other)}") },
+    { meth_gr+2,         &object_gr, DOC("(other)->\n@return The result of ${this.operator > (other)}") },
+    { meth_ge+2,         &object_ge, DOC("(other)->\n@return The result of ${this.operator >= (other)}") },
+    { meth_size+1,       &object_size, DOC("->\n@return The result of ${this.operator # ()}") },
+    { meth_contains+2,   &object_contains, DOC("(item)->\n@return The result of ${this.operator contains (item)}") },
+    { meth_getitem+2,    &object_getitem, DOC("(index)->\n@return The result of ${this.operator [] (index)}") },
     { meth_delitem+2,    &object_delitem, DOC("(index)\nInvokes ${this.operator del[] (index)}") },
-    { meth_setitem+3,    &object_setitem, DOC("(index,value)->object\n@return Always re-returned @value\nInvokes ${this.operator []= (index,value)}") },
-    { meth_getrange+3,   &object_getrange, DOC("(start,end)->object\n@return The result of ${this.operator [:] (start,end)}") },
+    { meth_setitem+3,    &object_setitem, DOC("(index,value)->\n@return Always re-returned @value\nInvokes ${this.operator []= (index,value)}") },
+    { meth_getrange+3,   &object_getrange, DOC("(start,end)->\n@return The result of ${this.operator [:] (start,end)}") },
     { meth_delrange+3,   &object_delrange, DOC("(start,end)\nInvokes ${this.operator del[:] (start,end)}") },
-    { meth_setrange+4,   &object_setrange, DOC("(start,end,value)->object\n@return Always re-returned @value\nInvokes ${this.operator [:]= (start,end,value)}") },
-    { meth_iterself+1,   &object_iterself, DOC("->object\n@return The result of ${this.operator iter()}") },
-    { meth_iternext+1,   &object_iternext, DOC("->object\n@return The result of ${this.operator next()}") },
-    { meth_getattr+2,    &object_getattr, DOC("(string name)->object\n@return The result of ${this.operator . (name)}") },
-    { meth_callattr,     &object_callattr, DOC("(string name,args...)->object\n@return The result of ${this.operator . (name)(args...)}") },
-    { meth_hasattr+2,    &object_hasattr, DOC("(string name)->bool\nCheck if @this object provides an attribute @name, returning :true or :false indicative of this") },
-    { meth_delattr+2,    &object_delattr, DOC("(string name)->none\nInvokes ${this.operator del . (name)}") },
-    { meth_setattr+3,    &object_setattr, DOC("(string name,value)->object\n@return Always re-returned @value\nInvokes ${this.operator .= (name,value)}") },
+    { meth_setrange+4,   &object_setrange, DOC("(start,end,value)->\n@return Always re-returned @value\nInvokes ${this.operator [:]= (start,end,value)}") },
+    { meth_iterself+1,   &object_iterself, DOC("->\n@return The result of ${this.operator iter()}") },
+    { meth_iternext+1,   &object_iternext, DOC("->\n@return The result of ${this.operator next()}") },
+    { meth_getattr+2,    &object_getattr, DOC("(name:?Dstring)->\n@return The result of ${this.operator . (name)}") },
+    { meth_callattr,     &object_callattr, DOC("(name:?Dstring,args!)->\n@return The result of ${this.operator . (name)(args!)}") },
+    { meth_hasattr+2,    &object_hasattr, DOC("(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning :true or :false indicative of this") },
+    { meth_delattr+2,    &object_delattr, DOC("(name:?Dstring)->none\nInvokes ${this.operator del . (name)}") },
+    { meth_setattr+3,    &object_setattr, DOC("(name:?Dstring,value)->\n@return Always re-returned @value\nInvokes ${this.operator .= (name,value)}") },
     { DeeString_STR(&str___format__), &object_format_method,
-      DOC("(string format)->string\nFormat @this object. (s.a. :string.format)") },
+      DOC("(format:?Dstring)->?Dstring\nFormat @this object. (s.a. :string.format)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Aliases for backwards compatibility with deemon < v200 */
-    { "__iterself__",    &object_iterself, DOC("->object\nDeprecated alias for #__iter__") },
-    { "__iternext__",    &object_iternext, DOC("->object\nDeprecated alias for #__next__") },
+    { "__iterself__",    &object_iterself, DOC("->\nDeprecated alias for #__iter__") },
+    { "__iternext__",    &object_iternext, DOC("->\nDeprecated alias for #__next__") },
     /* Deprecated function for backwards compatibility with deemon < v200 */
-    { "__move__",        &object_copy, DOC("->object\nDeprecated alias for #__copy__") },
-    { "__lt__",          &object_lo, DOC("(other)->object\nDeprecated alias for #__lo__") },
-    { "__gt__",          &object_gr, DOC("(other)->object\nDeprecated alias for #__gr__") },
-    { "__not__",         &object_not, DOC("->bool\nDeprecated alias for ${!this}") },
-    { "__is__",          &object_is, DOC("(type tp)->bool\n(none tp)->bool\nDeprecated alias for ${this is tp}") },
-    { "__deepequals__",  &object_eq, DOC("(other)->object\nDeprecated alias for #__eq__") },
-    { "__inc__",         &object_inc, DOC("->object\nDeprecated alias for ${({ local temp = this; ++temp; if (temp !== this) this := temp; this; })}") },
-    { "__dec__",         &object_dec, DOC("->object\nDeprecated alias for ${({ local temp = this; --temp; if (temp !== this) this := temp; this; })}") },
-    { "__incpost__",     &object_incpost, DOC("->object\nDeprecated alias for ${({ local res = copy this; local temp = this; ++temp; if (temp !== this) this := temp; res; })}") },
-    { "__decpost__",     &object_decpost, DOC("->object\nDeprecated alias for ${({ local res = copy this; local temp = this; --temp; if (temp !== this) this := temp; res; })}") },
-    { "__iadd__",        &object_iadd, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp += other; if (temp !== this) this := temp; res; })}") },
-    { "__isub__",        &object_isub, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp -= other; if (temp !== this) this := temp; res; })}") },
-    { "__imul__",        &object_imul, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp *= other; if (temp !== this) this := temp; res; })}") },
-    { "__idiv__",        &object_idiv, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp /= other; if (temp !== this) this := temp; res; })}") },
-    { "__imod__",        &object_imod, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp %= other; if (temp !== this) this := temp; res; })}") },
-    { "__ishl__",        &object_ishl, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp <<= other; if (temp !== this) this := temp; res; })}") },
-    { "__ishr__",        &object_ishr, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp >>= other; if (temp !== this) this := temp; res; })}") },
-    { "__iand__",        &object_iand, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp &= other; if (temp !== this) this := temp; res; })}") },
-    { "__ior__",         &object_ior,  DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp |= other; if (temp !== this) this := temp; res; })}") },
-    { "__ixor__",        &object_ixor, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp ^= other; if (temp !== this) this := temp; res; })}") },
-    { "__ipow__",        &object_ipow, DOC("(other)->object\nDeprecated alias for ${({ local temp = this; temp **= other; if (temp !== this) this := temp; res; })}") },
+    { "__move__",        &object_copy, DOC("->\nDeprecated alias for #__copy__") },
+    { "__lt__",          &object_lo, DOC("(other)->\nDeprecated alias for #__lo__") },
+    { "__gt__",          &object_gr, DOC("(other)->\nDeprecated alias for #__gr__") },
+    { "__not__",         &object_not, DOC("->?Dbool\nDeprecated alias for ${!this}") },
+    { "__is__",          &object_is, DOC("(tp:?Dtype)->?Dbool\n(tp:?N)->?Dbool\nDeprecated alias for ${this is tp}") },
+    { "__deepequals__",  &object_eq, DOC("(other)->\nDeprecated alias for #__eq__") },
+    { "__inc__",         &object_inc, DOC("->\nDeprecated alias for ${({ local temp = this; ++temp; if (temp !== this) this := temp; this; })}") },
+    { "__dec__",         &object_dec, DOC("->\nDeprecated alias for ${({ local temp = this; --temp; if (temp !== this) this := temp; this; })}") },
+    { "__incpost__",     &object_incpost, DOC("->\nDeprecated alias for ${({ local res = copy this; local temp = this; ++temp; if (temp !== this) this := temp; res; })}") },
+    { "__decpost__",     &object_decpost, DOC("->\nDeprecated alias for ${({ local res = copy this; local temp = this; --temp; if (temp !== this) this := temp; res; })}") },
+    { "__iadd__",        &object_iadd, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp += other; if (temp !== this) this := temp; res; })}") },
+    { "__isub__",        &object_isub, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp -= other; if (temp !== this) this := temp; res; })}") },
+    { "__imul__",        &object_imul, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp *= other; if (temp !== this) this := temp; res; })}") },
+    { "__idiv__",        &object_idiv, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp /= other; if (temp !== this) this := temp; res; })}") },
+    { "__imod__",        &object_imod, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp %= other; if (temp !== this) this := temp; res; })}") },
+    { "__ishl__",        &object_ishl, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp <<= other; if (temp !== this) this := temp; res; })}") },
+    { "__ishr__",        &object_ishr, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp >>= other; if (temp !== this) this := temp; res; })}") },
+    { "__iand__",        &object_iand, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp &= other; if (temp !== this) this := temp; res; })}") },
+    { "__ior__",         &object_ior,  DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp |= other; if (temp !== this) this := temp; res; })}") },
+    { "__ixor__",        &object_ixor, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp ^= other; if (temp !== this) this := temp; res; })}") },
+    { "__ipow__",        &object_ipow, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp **= other; if (temp !== this) this := temp; res; })}") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
 };
@@ -1731,9 +1731,9 @@ PRIVATE struct type_getset object_getsets[] = {
 
 PRIVATE struct type_member object_members[] = {
     TYPE_MEMBER_FIELD_DOC("__refcnt__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(DeeObject,ob_refcnt),
-                          "->int\nThe number of references currently existing for this object"),
+                          "->?Dint\nThe number of references currently existing for this object"),
     TYPE_MEMBER_FIELD_DOC("__type__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(DeeObject,ob_type),
-                          "->type\nThe type of @this object (same as ${type this})"),
+                          "->?Dtype\nThe type of @this object (same as ${type this})"),
     TYPE_MEMBER_END
 };
 
@@ -1748,7 +1748,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
                             "\n"
                             "str->\n"
                             "Returns the name of the object's type\n"
-                            ">operator str() {\n"
+                            ">operator str(): string {\n"
                             "> return str type this;\n"
                             ">}\n"
                             ),
@@ -2799,19 +2799,19 @@ type_is_superbase(DeeTypeObject *__restrict self, size_t argc,
 
 PRIVATE struct type_method type_methods[] = {
     { "baseof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_baseof,
-      DOC("(type other)->bool\n"
+      DOC("(other:?Dtype)->?Dbool\n"
           "Returns :true if @this type is equal to, or a base of @other\n"
           "If @other isn't a type, :false is returned\n"
           "Using baseof, the behavior of ${x is y} can be approximated as:\n"
           ">print y.baseof(type(x)); // print x is y;"),
       TYPE_METHOD_FKWDS },
     { "derivedfrom", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom,
-      DOC("(type other)->bool\n"
+      DOC("(other:?Dtype)->?Dbool\n"
           "Returns :true if @this type is equal to, or has been derived from @other\n"
           "If @other isn't a type, :false is returned"),
       TYPE_METHOD_FKWDS },
     { "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_newinstance,
-      DOC("(**fields)->object\n"
+      DOC("(fields!!)->\n"
           "Allocate a new instance of @this type and initialize members in accordance ot @fields\n"
           ">class MyClass {\n"
           "> member foo;\n"
@@ -2820,14 +2820,14 @@ PRIVATE struct type_method type_methods[] = {
           ">local x = MyClass.newinstance(foo: 42);\n"
           ">print x.foo;\n"
           "\n"
-          "({(type,({(string,object)...},))...} initializer=none)->object\n"
-          "({(type,({(string,object)...},none))...} initializer=none)->object\n"
-          "({(type,({(string,object)...},tuple))...} initializer=none)->object\n"
-          "({(type,({(string,object)...},tuple,none))...} initializer=none)->object\n"
-          "({(type,({(string,object)...},tuple,mapping))...} initializer=none)->object\n"
-          "({(type,(none,tuple))...} initializer=none)->object\n"
-          "({(type,(none,tuple,none))...} initializer=none)->object\n"
-          "({(type,(none,tuple,mapping))...} initializer=none)->object\n"
+          "(initializer:?S?T2?Dtype?T1?S?T2?Dstring?O=!N)->\n"                 /* {(type,({(string,object)...},)...} */
+          "(initializer:?S?T2?Dtype?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(type,({(string,object)...},none)...} */
+          "(initializer:?S?T2?Dtype?T2?S?T2?Dstring?O?Dtuple=!N)->\n"          /* {(type,({(string,object)...},tuple)...} */
+          "(initializer:?S?T2?Dtype?T3?S?T2?Dstring?O?Dtuple?N=!N)->\n"        /* {(type,({(string,object)...},tuple,none)...} */
+          "(initializer:?S?T2?Dtype?T3?S?T2?Dstring?O?Dtuple?Dmapping=!N)->\n" /* {(type,({(string,object)...},tuple,mapping)...} */
+          "(initializer:?S?T2?Dtype?T2?N?Dtuple=!N)->\n"                       /* {(type,(none,tuple)...} */
+          "(initializer:?S?T2?Dtype?T3?N?Dtuple?N=!N)->\n"                     /* {(type,(none,tuple,none)...} */
+          "(initializer:?S?T2?Dtype?T3?N?Dtuple?Dmapping=!N)->\n"              /* {(type,(none,tuple,mapping)...} */
           "@throw TypeError No superargs tuple was provided for one of the type's bases, when that base "
                            "has a mandatory constructor that can't be invoked without any arguments. "
                            "Note that a user-defined class never has a mandatory constructor, with this "
@@ -2854,7 +2854,7 @@ PRIVATE struct type_method type_methods[] = {
           ">print repr x;          /* [10,20,30,\"abc\"] */"),
       TYPE_METHOD_FKWDS },
     { "hasattribute", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasattribute,
-      DOC("(string name)->bool\n"
+      DOC("(name:?Dstring)->?Dbool\n"
           "Returns :true if this type, or one of its sub-classes defines an "
           "instance-attribute @name, and doesn't define any attribute-operators. "
           "Otherwise, return :false\n"
@@ -2869,7 +2869,7 @@ PRIVATE struct type_method type_methods[] = {
           "when one of that types implements one of the attribute operators."),
       TYPE_METHOD_FKWDS },
     { "hasprivateattribute", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasprivateattribute,
-      DOC("(string name)->bool\n"
+      DOC("(name:?Dstring)->?Dbool\n"
           "Similar to #hasattribute, but only looks at attributes declared by "
           "@this type, excluding any defined by a sub-class.\n"
           ">function hasattribute(name) {\n"
@@ -2878,8 +2878,8 @@ PRIVATE struct type_method type_methods[] = {
           ">}"),
       TYPE_METHOD_FKWDS },
     { "hasoperator", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasoperator,
-      DOC("(int name)->bool\n"
-          "(string name)->bool\n"
+      DOC("(name:?Dint)->?Dbool\n"
+          "(name:?Dstring)->?Dbool\n"
           "Returns :true if instances of @this type implement an operator @name, "
           "or :false if not, or if @name is not recognized as an operator provided "
           "available for the type-type that is ${type this}\n"
@@ -2891,7 +2891,7 @@ PRIVATE struct type_method type_methods[] = {
           "The given @name is the so-called real operator name, "
           "as listed under Name in the following table:\n"
           "%{table Name|Symbolical name|Prototype\n"
-          "$\"constructor\"|$\"this\"|${this(args...)}\n"
+          "$\"constructor\"|$\"this\"|${this(args!)}\n"
           "$\"copy\"|$\"copy\"|${copy()}\n"
           "$\"deepcopy\"|$\"deepcopy\"|${deepcopy()}\n"
           "$\"destructor\"|$\"~this\"|${~this()}\n"
@@ -2899,7 +2899,7 @@ PRIVATE struct type_method type_methods[] = {
           "$\"str\"|$\"str\"|${operator str() -> string}\n"
           "$\"repr\"|$\"repr\"|${operator repr() -> string}\n"
           "$\"bool\"|$\"bool\"|${operator bool() -> bool}\n"
-          "$\"call\"|$\"()\"|${operator ()(args...) -> object}\n"
+          "$\"call\"|$\"()\"|${operator ()(args!) -> object}\n"
           "$\"next\"|$\"next\"|${operator next() -> object}\n"
           "$\"int\"|$\"int\"|${operator int() -> int}\n"
           "$\"float\"|$\"float\"|${operator float() -> float}\n"
@@ -2955,8 +2955,8 @@ PRIVATE struct type_method type_methods[] = {
           "}"),
       TYPE_METHOD_FKWDS },
     { "hasprivateoperator", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasprivateoperator,
-      DOC("(int name)->bool\n"
-          "(string name)->bool\n"
+      DOC("(name:?Dint)->?Dbool\n"
+          "(name:?Dstring)->?Dbool\n"
           "Returns :true if instances of @this type implement an operator @name, "
           "or :false if not, or if @name is not recognized as an operator provided "
           "available for the type-type that is ${type this}\n"
@@ -2967,7 +2967,7 @@ PRIVATE struct type_method type_methods[] = {
           "For a list of operator names, see #hasoperator"),
       TYPE_METHOD_FKWDS },
     { meth_getinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_getinstanceattr,
-      DOC("(string name)->object\n"
+      DOC("(name:?Dstring)->object\n"
           "Lookup an attribute @name that is implemented by instances of @this type\n"
           "Normally, such attributes can also be accessed using regular attribute lookup, "
           "however in ambiguous cases where both the type, as well as instances implement "
@@ -2992,40 +2992,45 @@ PRIVATE struct type_method type_methods[] = {
           "if those attributes would normally have been overshadowed by attribute callbacks"),
       TYPE_METHOD_FKWDS },
     { meth_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_callinstanceattr,
-      DOC("(string name,args...)->object\ns.a. #getinstanceattr"),
+      DOC("(name:?Dstring,args!)->object\n"
+          "s.a. #getinstanceattr"),
       TYPE_METHOD_FKWDS },
     { meth_hasinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasinstanceattr,
-      DOC("(string name)->bool\ns.a. #getinstanceattr"),
+      DOC("(name:?Dstring)->?Dbool\n"
+          "s.a. #getinstanceattr"),
       TYPE_METHOD_FKWDS },
     { meth_boundinstanceattr+4, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_boundinstanceattr,
-      DOC("(string name,bool allow_missing=true)->bool\ns.a. #getinstanceattr"),
+      DOC("(name:?Dstring,allow_missing=!t)->?Dbool\n"
+          "s.a. #getinstanceattr"),
       TYPE_METHOD_FKWDS },
     { meth_delinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_delinstanceattr,
-      DOC("(string name)->none\ns.a. #getinstanceattr"),
+      DOC("(name:?Dstring)\n"
+          "s.a. #getinstanceattr"),
       TYPE_METHOD_FKWDS },
     { meth_setinstanceattr+3, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_setinstanceattr,
-      DOC("(string name,object value)->object\ns.a. #getinstanceattr"),
+      DOC("(name:?Dstring,value)->\n"
+          "s.a. #getinstanceattr"),
       TYPE_METHOD_FKWDS },
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Deprecated functions */
-    { "same_or_derived_from", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom, DOC("(type other)->bool\nDeprecated alias for #derivedfrom"), TYPE_METHOD_FKWDS },
-    { "derived_from", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom_not_same, DOC("(type other)->bool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
-    { "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_vartype, DOC("->bool\nDeprecated alias for #isvariable") },
-    { "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_heaptype, DOC("->bool\nDeprecated alias for #iscustom") },
-    { "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_gctype, DOC("->bool\nDeprecated alias for #isgc") },
-    { "is_final", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_final, DOC("->bool\nDeprecated alias for #isfinal") },
-    { "is_class", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_class, DOC("->bool\nDeprecated alias for #isclass") },
-    { "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_complete, DOC("->bool\nDeprecated (always returns :true)") },
-    { "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_classtype, DOC("->bool\nDeprecated (always returns :false)") },
-    { "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_pointer, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
-    { "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_lvalue, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}") },
-    { "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_structured, DOC("->bool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}") },
-    { "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_struct, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}") },
-    { "is_array", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_array, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}") },
-    { "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_foreign_function, DOC("->bool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}") },
-    { "is_file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_filetype, DOC("->bool\nDeprecated alias for ${this is type file from deemon}") },
-    { "is_super_base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_superbase, DOC("->bool\nDeprecated alias for ${this.__base__ !is bound}") },
+    { "same_or_derived_from", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom, DOC("(other:?Dtype)->?Dbool\nDeprecated alias for #derivedfrom"), TYPE_METHOD_FKWDS },
+    { "derived_from", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom_not_same, DOC("(other:?Dtype)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
+    { "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_vartype, DOC("->?Dbool\nDeprecated alias for #isvariable") },
+    { "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_heaptype, DOC("->?Dbool\nDeprecated alias for #iscustom") },
+    { "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for #isgc") },
+    { "is_final", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_final, DOC("->?Dbool\nDeprecated alias for #isfinal") },
+    { "is_class", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_class, DOC("->?Dbool\nDeprecated alias for #isclass") },
+    { "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_complete, DOC("->?Dbool\nDeprecated (always returns :true)") },
+    { "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_classtype, DOC("->?Dbool\nDeprecated (always returns :false)") },
+    { "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_pointer, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
+    { "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_lvalue, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}") },
+    { "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_structured, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}") },
+    { "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_struct, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}") },
+    { "is_array", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_array, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}") },
+    { "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_foreign_function, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}") },
+    { "is_file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_filetype, DOC("->?Dbool\nDeprecated alias for ${this is type file from deemon}") },
+    { "is_super_base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_superbase, DOC("->?Dbool\nDeprecated alias for ${this.__base__ !is bound}") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
     { NULL }
@@ -3056,7 +3061,7 @@ for (local o: options) {
 }
 print "#define TYPE_FEATURE_GETSETS \\";
 for (local o: options) {
-    print "    { "+repr("is"+o.lower())+", &type_is"+o.lower()+", NULL, NULL, DOC(\"->bool\") }, \\";
+    print "    { "+repr("is"+o.lower())+", &type_is"+o.lower()+", NULL, NULL, DOC(\"->?Dbool\") }, \\";
 }
 print "/" "* ... *" "/";
 ]]]*/
@@ -3109,18 +3114,18 @@ type_iscustom(DeeObject *__restrict self) {
     return_bool(DeeType_IsCustom(self));
 }
 #define TYPE_FEATURE_GETSETS \
-    { "isvariable", &type_isvariable, NULL, NULL, DOC("->bool") }, \
-    { "isfinal", &type_isfinal, NULL, NULL, DOC("->bool") }, \
-    { "isgc", &type_isgc, NULL, NULL, DOC("->bool") }, \
-    { "isclass", &type_isclass, NULL, NULL, DOC("->bool") }, \
-    { "isinterrupt", &type_isinterrupt, NULL, NULL, DOC("->bool") }, \
-    { "isgeneric", &type_isgeneric, NULL, NULL, DOC("->bool") }, \
-    { "isarithmetic", &type_isarithmetic, NULL, NULL, DOC("->bool") }, \
-    { "iscomparable", &type_iscomparable, NULL, NULL, DOC("->bool") }, \
-    { "issequence", &type_issequence, NULL, NULL, DOC("->bool") }, \
-    { "isiterator", &type_isiterator, NULL, NULL, DOC("->bool") }, \
-    { "istypetype", &type_istypetype, NULL, NULL, DOC("->bool") }, \
-    { "iscustom", &type_iscustom, NULL, NULL, DOC("->bool") }, \
+    { "isvariable", &type_isvariable, NULL, NULL, DOC("->?Dbool") }, \
+    { "isfinal", &type_isfinal, NULL, NULL, DOC("->?Dbool") }, \
+    { "isgc", &type_isgc, NULL, NULL, DOC("->?Dbool") }, \
+    { "isclass", &type_isclass, NULL, NULL, DOC("->?Dbool") }, \
+    { "isinterrupt", &type_isinterrupt, NULL, NULL, DOC("->?Dbool") }, \
+    { "isgeneric", &type_isgeneric, NULL, NULL, DOC("->?Dbool") }, \
+    { "isarithmetic", &type_isarithmetic, NULL, NULL, DOC("->?Dbool") }, \
+    { "iscomparable", &type_iscomparable, NULL, NULL, DOC("->?Dbool") }, \
+    { "issequence", &type_issequence, NULL, NULL, DOC("->?Dbool") }, \
+    { "isiterator", &type_isiterator, NULL, NULL, DOC("->?Dbool") }, \
+    { "istypetype", &type_istypetype, NULL, NULL, DOC("->?Dbool") }, \
+    { "iscustom", &type_iscustom, NULL, NULL, DOC("->?Dbool") }, \
 /* ... */
 //[[[end]]]
 
@@ -3287,26 +3292,26 @@ retnone:
 PRIVATE struct type_getset type_getsets[] = {
     TYPE_FEATURE_GETSETS
     { "isbuffer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_isbuffer, NULL, NULL,
-      DOC("->bool\nReturns :true if @this type implements the buffer interface") },
+      DOC("->?Dbool\nReturns :true if @this type implements the buffer interface") },
     { "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
-      DOC("->:rt.classdescriptor\n"
+      DOC("->?Ert:classdescriptor\n"
           "@throw AttributeError @this type is a user-defined class (s.a. #isclass)\n"
           "Returns the internal class-descriptor descriptor for a user-defined class") },
     { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_module, NULL, NULL,
-      DOC("->module\n"
-          "->none\n"
+      DOC("->?Dmodule\n"
+          "->?N\n"
           "Return the module used to define @this type, or :none if the module cannot "
           "be determined, which may be the case if the type doesn't have any defining "
           "features such as operators, or class/instance member functions") },
     { "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
-      DOC("->int\n"
-          "->none\n"
+      DOC("->?Dint\n"
+          "->?N\n"
           "Returns the heap allocation size of instances of @this type, or :none when @this type cannot "
           "be instantiated, is a singletone (such as :none), or has variable-length instances (#isvariable)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     { "__instance_size__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
-      DOC("->int\n"
-          "->none\n"
+      DOC("->?Dint\n"
+          "->?N\n"
           "Deprecated alias for #__instancesize__") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }

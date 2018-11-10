@@ -200,7 +200,7 @@ PRIVATE struct type_getset pointer_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pointer_get_deref,
       (int(DCALL *)(DeeObject *__restrict))&pointer_del_deref,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&pointer_set_deref,
-       DOC("->lvalue\nGet/clear/set the dereferenced memory location of @this pointer") },
+       DOC("->?Glvalue\nGet/clear/set the dereferenced memory location of @this pointer") },
     { NULL }
 };
 
@@ -515,11 +515,11 @@ lvalue_alignof(struct lvalue_object *__restrict self) {
 
 PRIVATE struct type_getset lvalue_getsets[] = {
     { "ref", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_ref, NULL, NULL,
-      DOC("->pointer\nReturns a pointer for the object referred to by @this :lvalue") },
+      DOC("->?Gpointer\nReturns a pointer for the object referred to by @this :lvalue") },
     { "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_sizeof, NULL, NULL,
-      DOC("->int\nReturns the size of the structured objected pointed to by @this :lvalue") },
+      DOC("->?Dint\nReturns the size of the structured objected pointed to by @this :lvalue") },
     { "alignof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_alignof, NULL, NULL,
-      DOC("->int\nReturns the alignment of the structured objected pointed to by @this :lvalue") },
+      DOC("->?Dint\nReturns the alignment of the structured objected pointed to by @this :lvalue") },
     { NULL }
 };
 

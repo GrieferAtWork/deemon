@@ -810,14 +810,14 @@ map_get(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
 
 INTERN struct type_method map_methods[] = {
     { DeeString_STR(&str_get), (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_get,
-      DOC("(object key,object def=none)->object\n"
+      DOC("(key,def:?O=!N)->object\n"
           "@return The value associated with @key or @def when @key has no value associated") },
     { "keys", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_keys,
-      DOC("->sequence\nReturns a :sequence that can be enumerated to view only the keys of @this mapping") },
+      DOC("->?S?O\nReturns a :sequence that can be enumerated to view only the keys of @this mapping") },
     { "values", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_values,
-      DOC("->sequence\nReturns a :sequence that can be enumerated to view only the values of @this mapping") },
+      DOC("->?S?O\nReturns a :sequence that can be enumerated to view only the values of @this mapping") },
     { "items", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_items,
-      DOC("->sequence\n"
+      DOC("->?S?T2?O?O\n"
           "Returns a :sequence that can be enumerated to view the key-item "
           "pairs as 2-element sequences, the same way they could be viewed "
           "if @this mapping itself was being iterated\n"
@@ -965,16 +965,8 @@ err:
 }
 
 PRIVATE struct type_getset map_getsets[] = {
-    { DeeString_STR(&str_first),
-      &DeeMap_GetFirst,
-      &DeeMap_DelFirst,
-      NULL,
-      DOC("->object") },
-    { DeeString_STR(&str_last),
-      &DeeMap_GetLast,
-      &DeeMap_DelLast,
-      NULL,
-      DOC("->object") },
+    { DeeString_STR(&str_first),&DeeMap_GetFirst, &DeeMap_DelFirst, NULL },
+    { DeeString_STR(&str_last), &DeeMap_GetLast, &DeeMap_DelLast, NULL },
     { NULL }
 };
 
@@ -992,15 +984,16 @@ map_iterator_get(DeeTypeObject *__restrict self) {
 
 PRIVATE struct type_getset map_class_getsets[] = {
     { DeeString_STR(&str_iterator), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iterator_get, NULL, NULL,
-      DOC("->type\nReturns the iterator class used by instances of @this mapping type\n"
+      DOC("->?Dtype\n"
+          "Returns the iterator class used by instances of @this mapping type\n"
           "This member must be overwritten by sub-classes of :mapping") },
     { NULL }
 };
 PRIVATE struct type_member map_class_members[] = {
-    TYPE_MEMBER_CONST_DOC("proxy",&DeeMapProxy_Type,"->type\nThe common base-class of #c:keys, #c:values and #c:items"),
-    TYPE_MEMBER_CONST_DOC("keys",&DeeMapKeys_Type,"->type\nThe return type of the #i:keys member function"),
-    TYPE_MEMBER_CONST_DOC("values",&DeeMapValues_Type,"->type\nThe return type of the #i:values member function"),
-    TYPE_MEMBER_CONST_DOC("items",&DeeMapItems_Type,"->type\nThe return type of the #i:items member function"),
+    TYPE_MEMBER_CONST_DOC("proxy",&DeeMapProxy_Type,"->?Dtype\nThe common base-class of #c:keys, #c:values and #c:items"),
+    TYPE_MEMBER_CONST_DOC("keys",&DeeMapKeys_Type,"->?Dtype\nThe return type of the #i:keys member function"),
+    TYPE_MEMBER_CONST_DOC("values",&DeeMapValues_Type,"->?Dtype\nThe return type of the #i:values member function"),
+    TYPE_MEMBER_CONST_DOC("items",&DeeMapItems_Type,"->?Dtype\nThe return type of the #i:items member function"),
     TYPE_MEMBER_END
 };
 
@@ -1020,13 +1013,12 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
                             "A no-op default constructor that is implicitly called by sub-classes\n"
                             "When invoked manually, a general-purpose, empty mapping is returned\n"
                             "\n"
-                            "repr()\n"
+                            "repr->\n"
                             "Returns the representation of all sequence elements, using "
                             "abstract mapping syntax\n"
                             "e.g.: ${{ \"foo\": 10, \"bar\": \"baz\" }}\n"
                             "\n"
-                            "[:](int start,int end)\n"
-                            "Always throws a :NotImplemented error\n"
+                            "[:]->!D\n"
                             "\n"
                             "iter->\n"
                             "Returns an iterator for enumerating key-value pairs as 2-elements sequences"

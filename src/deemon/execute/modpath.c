@@ -1923,7 +1923,7 @@ DeeModule_Import(DeeObject *__restrict module_name,
    return NULL;
   }
   ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
-  end = (begin = DeeString_STR(path))+DeeString_SIZE(path);
+  end = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
   /* Find the end of the current path. */
   while (begin != end && !ISSEP(end[-1])) --end;
   result = DeeModule_OpenRelative(module_name,begin,(size_t)(end-begin),options,throw_error);
@@ -1932,6 +1932,28 @@ DeeModule_Import(DeeObject *__restrict module_name,
   result = DeeModule_Open(module_name,options,throw_error);
  }
  return result;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeModule_ImportRel(DeeObject *__restrict basemodule,
+                    DeeObject *__restrict module_name,
+                    struct compiler_options *options,
+                    bool throw_error) {
+ DeeStringObject *path; char *begin,*end;
+ ASSERT_OBJECT_TYPE(basemodule,&DeeModule_Type);
+ /* Load the path of the currently executing code (for relative imports). */
+ path = ((DeeModuleObject *)basemodule)->mo_path;
+ if unlikely(!path) {
+  DeeError_Throwf(&DeeError_FileNotFound,
+                  "The given module %k has no associated filesystem location",
+                  basemodule);
+  return NULL;
+ }
+ ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
+ end = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
+ /* Find the end of the current path. */
+ while (begin != end && !ISSEP(end[-1])) --end;
+ return DeeModule_OpenRelative(module_name,begin,(size_t)(end-begin),options,throw_error);
 }
 
 

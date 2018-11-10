@@ -92,7 +92,7 @@ DeeCompilerObjItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg
 }
 
 INTERN struct type_member DeeCompilerItem_Members[] = {
-    TYPE_MEMBER_FIELD_DOC("compiler",STRUCT_OBJECT,offsetof(CompilerItem,ci_compiler),"->compiler"),
+    TYPE_MEMBER_FIELD_DOC("compiler",STRUCT_OBJECT,offsetof(CompilerItem,ci_compiler),"->?Ert:compiler"),
     TYPE_MEMBER_END
 };
 

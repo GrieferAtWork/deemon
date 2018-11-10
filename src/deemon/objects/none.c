@@ -143,7 +143,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
                             "without causing :{UnpackError}s to be thrown, only being one "
                             "of them\n"
                             "\n"
-                            "(...)\n"
+                            "(args!)\n"
                             "Taking any number of arguments, return the none-singleton"),
     /* .tp_flags    = */TP_FVARIABLE|TP_FNORMAL|TP_FNAMEOBJECT|TP_FABSTRACT,
     /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(DeeNoneObject),

@@ -410,9 +410,10 @@ is_a_statement:
   /* Figure out what we're dealing with as we go. */
   if unlikely(scope_push() < 0) goto err;
   comma_mode = 0;
-  result = ast_parse_comma(AST_COMMA_NORMAL|
-                           AST_COMMA_FORCEMULTIPLE|
-                           AST_COMMA_ALLOWVARDECLS|
+  result = ast_parse_comma(AST_COMMA_NORMAL |
+                           AST_COMMA_FORCEMULTIPLE |
+                           AST_COMMA_ALLOWVARDECLS |
+                           AST_COMMA_ALLOWTYPEDECL |
                            AST_COMMA_PARSESEMI,
                            AST_FMULTIPLE_GENERIC,
                           &comma_mode);

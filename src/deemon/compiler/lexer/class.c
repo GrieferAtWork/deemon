@@ -398,7 +398,11 @@ class_maker_addmember(struct class_maker *__restrict self,
                       bool is_class_member,
                       uint16_t flags,
                       uint16_t **__restrict ppusage_counter,
-                      struct ast_loc *loc) {
+                      struct ast_loc *loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                      , struct decl_ast *decl
+#endif
+                      ) {
  struct symbol *result;
  DREF DeeStringObject *name_str;
  struct class_attribute *attr;
@@ -418,9 +422,17 @@ class_maker_addmember(struct class_maker *__restrict self,
  if unlikely(!attr) goto err;
 
  /* Add a documentation string to the member. */
- if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
-  attr->ca_doc = (DREF DeeStringObject *)unicode_printer_pack(&current_tags.at_doc);
-  unicode_printer_init(&current_tags.at_doc);
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ if (decl)
+#else
+ if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc))
+#endif
+ {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+  attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc(decl);
+#else
+  attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc();
+#endif
   if unlikely(!attr->ca_doc) goto err;
  }
 
@@ -462,6 +474,13 @@ class_maker_addmember(struct class_maker *__restrict self,
   result = new_local_symbol(name,loc);
   if unlikely(!result) goto err;
  }
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ /* Steal declaration information. */
+ if (decl && result->s_decltype.da_type == DAST_NONE) {
+  memcpy(&result->s_decltype,decl,sizeof(struct decl_ast));
+  decl->da_type = DAST_NONE;
+ }
+#endif
  /* Initialize that symbol to be a member symbol. */
  result->s_type         = SYMBOL_TYPE_CATTR;
  result->s_attr.a_class = self->cm_classsym;
@@ -974,6 +993,9 @@ parse_property(DREF struct ast *callbacks[CLASS_PROPERTY_CALLBACK_COUNT],
  uint16_t callback_id; struct ast_loc loc;
  DREF struct ast *callback;
  struct ast_annotations annotations;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ struct decl_ast decl;
+#endif
  bool has_name_prefix,need_semi;
  for (callback_id = 0; callback_id < CLASS_PROPERTY_CALLBACK_COUNT; ++callback_id)
      callbacks[callback_id] = NULL;
@@ -1078,14 +1100,26 @@ got_callback_id:
  ast_annotations_get(&annotations);
  if (is_class_property) {
   /* Parse a new function in the class scope. */
-  callback = ast_parse_function(NULL,&need_semi,false,&loc);
+  callback = ast_parse_function(NULL,&need_semi,false,&loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                                ,&decl
+#endif
+                                );
  } else {
   if unlikely(class_maker_push_methscope(maker)) goto err;
   /* Parse a new function in its own member-method scope. */
-  callback = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
+  callback = ast_parse_function_noscope(NULL,&need_semi,false,&loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                                        ,&decl
+#endif
+                                        );
   basescope_pop();
  }
  if unlikely(!ast_setddi(callback,&loc)) goto err_anno;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ /* TODO: Make use of declaration information! */
+ decl_ast_fini(&decl);
+#endif
  callback = ast_annotations_apply(&annotations,callback);
  if unlikely(!callback) goto err;
  callbacks[callback_id] = callback; /* Inherit */
@@ -1114,6 +1148,10 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
  struct ast_annotations annotations;
  uint16_t default_member_flags; /* Set of `CLASS_ATTRIBUTE_F*' */
  uint32_t old_flags = TPPLexer_Current->l_flags;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ struct decl_ast decl;
+#endif
+
  class_maker_init(&maker);
  /* Inherit the documentation string printer. */
  memcpy(&maker.cm_doc,&current_tags.at_doc,sizeof(struct unicode_printer));
@@ -1251,14 +1289,14 @@ next_member:
   is_class_member = false;
   modifiers_encountered = false;
   /* Reset member tags. */
-  if unlikely(clear_current_tags()) goto err;
+  if unlikely(ast_tags_clear()) goto err;
 next_modifier:
   switch (tok) {
 
   case '@':
    /* Allow tags in class blocks. */
    if unlikely(yield() < 0) goto err;
-   if (parse_tags()) goto err;
+   if unlikely(parse_tags()) goto err;
    modifiers_encountered = true;
    goto next_modifier;
 
@@ -1429,11 +1467,22 @@ define_operator:
      *                                             AST_MULTIPLE(AST_FMULTIPLE_TUPLE,[
      *                                                          AST_SYM(this)]))))' */
     if unlikely(class_maker_push_methscope(&maker)) goto err_anno;
-    yield_function = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
+    yield_function = ast_parse_function_noscope(NULL,&need_semi,false,&loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                                                ,&decl
+#endif
+                                                );
     basescope_pop();
     if unlikely(!yield_function) { err_operator_ast_ddi: operator_ast = NULL; goto got_operator_ast; }
     temp = ast_setddi(ast_sym(maker.cm_thissym),&loc);
-    if unlikely(!temp) { err_yield_function: ast_decref(yield_function); goto err_operator_ast_ddi; }
+    if unlikely(!temp) {
+err_yield_function:
+     ast_decref(yield_function);
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+     decl_ast_fini(&decl); /* TODO: Encode declaration information in operator docs! */
+#endif
+     goto err_operator_ast_ddi;
+    }
     argv = (DREF struct ast **)DeeObject_Malloc(1*sizeof(DREF struct ast *));
     if unlikely(!argv) { err_yield_function_temp: ast_decref(temp); goto err_yield_function; }
     argv[0] = temp; /* Inherit reference */
@@ -1481,11 +1530,18 @@ define_operator:
     if unlikely(class_maker_push_methscope(&maker)) goto err_anno;
     /* Parse a new function in its own member-method scope. */
     current_basescope->bs_name = operator_name_kwd;
-    operator_ast = ast_parse_function_noscope(NULL,&need_semi,false,&loc);
+    operator_ast = ast_parse_function_noscope(NULL,&need_semi,false,&loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                                              ,&decl
+#endif
+                                              );
    }
 got_operator_ast:
    basescope_pop();
    if unlikely(!operator_ast) goto err_anno;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+   decl_ast_fini(&decl); /* TODO: Encode declaration information in operator docs! */
+#endif
    ASSERT(operator_ast->a_type == AST_FUNCTION);
    ASSERT(operator_ast->a_function.f_scope);
    if (operator_name >= AST_OPERATOR_MIN &&
@@ -1741,13 +1797,20 @@ define_constructor:
     * >>     function_member() { ... }
     * >> }; */
    if unlikely(yield() < 0) goto err;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+   decl.da_type = DAST_NONE;
+   if (tok == ':') {
+    if unlikely(yield() < 0) goto err;
+    if unlikely(decl_ast_parse(&decl)) goto err;
+   }
+#endif
    if (is_semicollon()) {
     if (member_class == MEMBER_CLASS_AUTO) {
      if (WARNAT(&loc,W_IMPLICIT_MEMBER_DECLARATION,member_name))
-         goto err;
+         goto err_decl;
     } else if (member_class != MEMBER_CLASS_MEMBER) {
      if (WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_ASSIGNED,member_name))
-         goto err;
+         goto err_decl;
     }
     /* Uninitialized instance/class member. */
     if (!class_maker_addmember(&maker,
@@ -1755,24 +1818,31 @@ define_constructor:
                                 is_class_member,
                                 member_flags,
                                &pusage_counter,
-                               &loc))
-         goto err;
+                               &loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                               ,&decl
+#endif
+                               ))
+         goto err_decl;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+    decl_ast_fini(&decl);
+#endif
     ++*pusage_counter;
     if unlikely(yield_semicollon() < 0) goto err;
     break;
    }
    if (tok == '=') {
     /* Property or member assign. */
-    if unlikely(clear_current_tags()) goto err;
-    if unlikely(yield() < 0) goto err;
+    if unlikely(yield() < 0) goto err_decl;
     if (tok == '{') {
      DREF struct ast *prop_callbacks[CLASS_PROPERTY_CALLBACK_COUNT];
      uint16_t i,prop_addr;
      if (member_class != MEMBER_CLASS_AUTO &&
          member_class != MEMBER_CLASS_GETSET &&
          WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED,member_name))
-         goto err;
-     if unlikely(yield() < 0) goto err;
+         goto err_decl;
+     if unlikely(yield() < 0)
+        goto err_decl;
      /* Properties are always allocated in class memory and have the FPROPERTY flag set. */
      member_flags |= (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FGETSET);
      /* Set the method flag to invoke property callbacks as this-call functions. */
@@ -1784,7 +1854,14 @@ define_constructor:
                                             is_class_member,
                                             member_flags,
                                            &pusage_counter,
-                                           &loc);
+                                           &loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                                           ,&decl
+#endif
+                                           );
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+     decl_ast_fini(&decl);
+#endif
      if unlikely(!member_symbol) goto err;
      /* Parse the property declaration. */
      if unlikely(parse_property(prop_callbacks,&maker,is_class_member))
@@ -1827,13 +1904,20 @@ err_property:
     if (member_class != MEMBER_CLASS_AUTO &&
         member_class != MEMBER_CLASS_MEMBER &&
         WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED,member_name))
-        goto err;
+        goto err_decl;
     member_symbol = class_maker_addmember(&maker,
                                            member_name,
                                            is_class_member,
                                            member_flags,
                                           &pusage_counter,
-                                          &loc);
+                                          &loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                                          ,&decl
+#endif
+                                          );
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+    decl_ast_fini(&decl);
+#endif
     if unlikely(!member_symbol) goto err;
     /* Member assignment. (part of the initialization) */
     if (SYM_ISCLASSMEMBER(member_symbol)) {
@@ -1860,12 +1944,59 @@ err_property:
    if (member_class != MEMBER_CLASS_AUTO &&
        member_class != MEMBER_CLASS_METHOD &&
        WARNAT(&loc,W_CLASS_MEMBER_TYPE_NOT_MATCHED,member_name))
-       goto err;
+       goto err_decl;
    /* Everything else is parsed as a member function.
     * NOTE: We mark such members are read-only because the intention is to never overwrite them. */
    member_flags |= (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FREADONLY);
    if (!is_class_member)
        member_flags |= CLASS_ATTRIBUTE_FMETHOD;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+   {
+    struct ast_tags_printers temp;
+    if (decl.da_type != DAST_NONE) {
+     /* TODO: Warn if declaration information has already been loaded! */
+     decl_ast_fini(&decl);
+     decl.da_type = DAST_NONE;
+    }
+    /* Must load the argument list of the following function
+     * now, so we can include declaration information. */
+    member_symbol = class_maker_addmember(&maker,
+                                           member_name,
+                                           is_class_member,
+                                           member_flags,
+                                          &pusage_counter,
+                                          &loc,
+                                           NULL);
+    if unlikely(!member_symbol) goto err_decl;
+    ast_annotations_get(&annotations);
+    if (is_class_member) {
+     /* Parse a new function in the class scope. */
+     AST_TAGS_BACKUP_PRINTERS(temp);
+     init_ast = ast_parse_function(member_name,&need_semi,false,&loc,&decl);
+     AST_TAGS_RESTORE_PRINTERS(temp);
+    } else {
+     if unlikely(class_maker_push_methscope(&maker)) goto err;
+     /* Parse a new function in its own member-method scope. */
+     AST_TAGS_BACKUP_PRINTERS(temp);
+     init_ast = ast_parse_function_noscope(member_name,&need_semi,false,&loc,&decl);
+     AST_TAGS_RESTORE_PRINTERS(temp);
+     basescope_pop();
+    }
+    if unlikely(!init_ast) goto err_anno;
+    /* Remember declaration information within the function member */
+    if (member_symbol->s_decltype.da_type == DAST_NONE) {
+     memcpy(&member_symbol->s_decltype,&decl,sizeof(struct decl_ast));
+    } else {
+     decl_ast_fini(&decl);
+    }
+    /* Generate the documentation string for the function member. */
+    if (!member_symbol->s_attr.a_attr->ca_doc) {
+     member_symbol->s_attr.a_attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc(&member_symbol->s_decltype);
+     if unlikely(!member_symbol->s_attr.a_attr->ca_doc)
+        goto err;
+    }
+   }
+#else
    member_symbol = class_maker_addmember(&maker,
                                           member_name,
                                           is_class_member,
@@ -1884,6 +2015,7 @@ err_property:
     basescope_pop();
    }
    if unlikely(!init_ast) goto err_anno;
+#endif
    init_ast = ast_annotations_apply(&annotations,init_ast);
    if unlikely(!init_ast) goto err;
    /* Add the given AST as an initialization branch to the class. */
@@ -1907,8 +2039,16 @@ done_class_modal:
  scope_pop();
  class_maker_fini(&maker);
  return result;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+err_decl:
+ decl_ast_fini(&decl);
+ goto err;
+#endif
 err_anno:
  ast_annotations_free(&annotations);
+#ifndef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+err_decl:
+#endif
 err:
  TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;

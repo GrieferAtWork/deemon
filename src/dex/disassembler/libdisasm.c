@@ -151,10 +151,10 @@ PRIVATE DEFINE_CMETHOD(libdisasm_public_printcode,libdisasm_public_printcode_f);
 
 PRIVATE struct dex_symbol symbols[] = {
     { "printcode", (DeeObject *)&libdisasm_public_printcode, MODSYM_FNORMAL,
-      DOC("(code co,int flags=0)->string\n"
-          "(code co,string flags=\"\")->string\n"
-          "(code co,file out,int flags=0)->int\n"
-          "(code co,file out,string flags=\"\")->int\n"
+      DOC("(co:?Dcode,flags=!0)->?Dstring\n"
+          "(co:?Dcode,flags=!P{})->?Dstring\n"
+          "(co:?Dcode,out:?Dfile,flags=!0)->?Dint\n"
+          "(co:?Dcode,out:?Dfile,flags=!P{})->?Dint\n"
           "@throw ValueError The given @flags string contains an unknown flag\n"
           "@param flags Either an integer set of internal flags, or a comma-separated options list (see below)\n"
           "Print the given code object @co, either to file @out, or into a string that is then returned\n"

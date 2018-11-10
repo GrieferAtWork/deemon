@@ -169,18 +169,18 @@ err:
 
 PRIVATE struct type_method sema_methods[] = {
     { "post", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_post,
-      DOC("(int count=1)->none\n"
+      DOC("(count=!1)\n"
           "Post @count tickets to the semaphore") },
     { "wait", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_wait,
-      DOC("()->none\nWait for the semaphore to become ready and acquire a ticket") },
+      DOC("()\nWait for the semaphore to become ready and acquire a ticket") },
     { "trywait", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_trywait,
-      DOC("()->bool\n"
+      DOC("->?Dbool\n"
           "@interrupt\n"
           "@return true: A ticket was acquired\n"
           "@return false: No ticket was available\n"
           "Check if unused tickets are available and acquire one") },
     { "timedwait", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_timedwait,
-      DOC("(int timeout_microseconds)->bool\n"
+      DOC("(timeout_microseconds:?Dint)->?Dbool\n"
           "@interrupt\n"
           "@return true: A ticket was acquired\n"
           "@return false: The given @timeout_microseconds has expired without a ticket becoming available\n"
@@ -197,14 +197,14 @@ PRIVATE struct type_with sema_with = {
 INTERN DeeTypeObject DeeSemaphore_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"semaphore",
-    /* .tp_doc      = */DOC("(int num_tickets = 0)\n"
+    /* .tp_doc      = */DOC("(num_tickets=!0)\n"
                             "Construct a new semaphore with @num_tickets initial tickets\n"
                             "\n"
-                            "operator enter\n"
+                            "enter->\n"
                             "@interrupt\n"
                             "Same as #wait\n"
                             "\n"
-                            "operator leave\n"
+                            "leave->\n"
                             "Same as #post"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -379,18 +379,18 @@ mutex_release(Mutex *__restrict self,
 
 PRIVATE struct type_method mutex_methods[] = {
     { "acquire", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&mutex_acquire,
-      DOC("()->none\n"
+      DOC("()\n"
           "Wait for the mutex to becomes available and recursive acquires an exclusive lock") },
     { "tryacquire", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&mutex_tryacquire,
-      DOC("()->bool\n"
+      DOC("->?Dbool\n"
           "Try to recursive acquire an exclusive lock but fail and "
           "return :false if this is not possible without blocking") },
     { "timedacquire", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&mutex_timedacquire,
-      DOC("(int timeout_microseconds)->bool\n"
+      DOC("(timeout_microseconds:?Dint)->?Dbool\n"
           "Try to recursive acquire an exclusive lock but fail and "
           "return :false if the given @timeout_microseconds has passed") },
     { "release", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&mutex_release,
-      DOC("()->none\n"
+      DOC("()\n"
           "@throw RuntimeError The calling thread has not acquired the mutex\n"
           "Recursively release a lock to @this mutex") },
     { NULL }
@@ -402,10 +402,10 @@ INTERN DeeTypeObject DeeMutex_Type = {
     /* .tp_name     = */"mutex",
     /* .tp_doc      = */DOC("Construct a new mutex (mutual exclusion) object\n"
                             "\n"
-                            "enter()\n"
+                            "enter->\n"
                             "Same as #acquire\n"
                             "\n"
-                            "leave()\n"
+                            "leave->\n"
                             "Same as #release"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

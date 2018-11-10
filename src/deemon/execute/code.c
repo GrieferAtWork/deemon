@@ -549,10 +549,15 @@ code_isconstructor(DeeCodeObject *__restrict self) {
 }
 
 PRIVATE struct type_member code_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__ddi__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_ddi),"->:rt.ddi\nThe DDI (DeemonDebugInformation) data block"),
-    TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_module),"->module"),
-    TYPE_MEMBER_FIELD_DOC("__argc_min__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_min),"Min amount of arguments required to execute this code"),
-    TYPE_MEMBER_FIELD_DOC("__argc_max__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_max),"Max amount of arguments accepted by this code (excluding a varargs argument)"),
+    TYPE_MEMBER_FIELD_DOC("__ddi__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_ddi),
+                          "->?Ert:ddi\n"
+                          "The DDI (DeemonDebugInformation) data block"),
+    TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_module),
+                          "->?Dmodule"),
+    TYPE_MEMBER_FIELD_DOC("__argc_min__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_min),
+                          "Min amount of arguments required to execute this code"),
+    TYPE_MEMBER_FIELD_DOC("__argc_max__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_max),
+                          "Max amount of arguments accepted by this code (excluding a varargs argument)"),
     TYPE_MEMBER_END
 };
 
@@ -646,65 +651,74 @@ err:
 
 PRIVATE struct type_getset code_getsets[] = {
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_name, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "Returns the name of @this code object, or :none if unknown (s.a. :function.__name__)") },
     { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_doc, NULL, NULL,
-      DOC("->string\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?N\n"
           "Returns the documentation string of @this code object, or :none if unknown (s.a. :function.__doc__)") },
     { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_type, NULL, NULL,
-      DOC("->type\n"
-          "->none\n"
+      DOC("->?Dtype\n"
+          "->?N\n"
           "Try to determine if @this code object is defined as part of a user-defined class, "
           "and if it is, return that class type, or :none if that class couldn't be found, "
           "of if @this code object is defined as stand-alone (s.a. :function.__type__)") },
     { "__operator__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operator, NULL, NULL,
-      DOC("->int\n"
-          "->none\n"
+      DOC("->?Dint\n"
+          "->?N\n"
           "Try to determine if @this code object is defined as part of a user-defined class, "
           "and if so, if it is used to define an operator callback. If that is the case, "
           "return the internal ID of the operator that @this code object provides, or :none "
           "if that class couldn't be found, @this code object is defined as stand-alone, or "
           "defined as a class- or instance-method (s.a. :function.__operator__)") },
     { "__operatorname__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operatorname, NULL, NULL,
-      DOC("->string\n"
-          "->int\n"
-          "->none\n"
+      DOC("->?Dstring\n"
+          "->?Dint\n"
+          "->?N\n"
           "Same as #__operator__, but instead try to return the unambiguous name of the "
           "operator, though still return its ID if the operator isn't recognized as being "
           "part of the standard (s.a. :function.__operatorname__)") },
     { "__property__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_property, NULL, NULL,
-      DOC("->int\n"
-          "->none\n"
-          "Returns an integer describing the kind if @this function is part of a property or getset, "
+      DOC("->?Dint\n"
+          "->?N\n"
+          "Returns an integer describing the kind if @this code is part of a property or getset, "
           "or returns :none if the function's property could not be found, or if the function isn't "
           "declared as a property callback (s.a. :function.__property__)") },
     { "__default__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getdefault, NULL, NULL,
-      DOC("->sequence\nAccess to the default values of arguments") },
+      DOC("->?S?O\n"
+          "Access to the default values of arguments") },
     { "__static__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getstatic, NULL, NULL,
-      DOC("->sequence\nAccess to the static values of @this code object") },
+      DOC("->?S?O\n"
+          "Access to the static values of @this code object") },
     { "__isyielding__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isyielding, NULL, NULL,
-      DOC("->bool\nCheck if the code object is for a yield-function") },
+      DOC("->?Dbool\n"
+          "Check if the code object is for a yield-function") },
     { "__iscopyable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_iscopyable, NULL, NULL,
-      DOC("->bool\nCheck if execution frames of the code object can be copied") },
+      DOC("->?Dbool\n"
+          "Check if execution frames of the code object can be copied") },
     { "__hasassembly__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasassembly, NULL, NULL,
-      DOC("->bool\nCheck if assembly of the code object is executed in safe-mode") },
+      DOC("->?Dbool\n"
+          "Check if assembly of the code object is executed in safe-mode") },
     { "__islenient__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_islenient, NULL, NULL,
-      DOC("->bool\nCheck if the runtime stack allocation allows for leniency") },
+      DOC("->?Dbool\n"
+          "Check if the runtime stack allocation allows for leniency") },
     { "__hasvarargs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasvarargs, NULL, NULL,
-      DOC("->bool\nCheck if the code object takes its last argument as a varargs-tuple") },
+      DOC("->?Dbool\n"
+          "Check if the code object takes its last argument as a varargs-tuple") },
     { "__isthiscall__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isthiscall, NULL, NULL,
-      DOC("->bool\nCheck if the code object requires a hidden leading this-argument") },
+      DOC("->?Dbool\n"
+          "Check if the code object requires a hidden leading this-argument") },
     { "__hasheapframe__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasheapframe, NULL, NULL,
-      DOC("->bool\nCheck if the runtime stack-frame must be allocated on the heap") },
+      DOC("->?Dbool\n"
+          "Check if the runtime stack-frame must be allocated on the heap") },
     { "__hasfinally__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasfinally, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
           "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in "
           "the user's source code, as the compiler may try to optimize this flag away to speed up runtime execution") },
     { "__isconstructor__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isconstructor, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "True for class constructor code objects. - When set, don't include the this-argument in "
           "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
           "causes some sort of exception to be thrown") },

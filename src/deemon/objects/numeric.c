@@ -289,7 +289,7 @@ err:
 
 PRIVATE struct type_getset numeric_getsets[] = {
     { "int", &DeeObject_Int, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "Return @this number as an integer, truncating all digits after a dot/comma") },
     { "float", &numeric_asflt, NULL, NULL,
@@ -297,57 +297,57 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "@throw NotImplemented @this number does not implement ${operator float}\n"
           "Return @this number as a floating point value") },
     { "s8", &numeric_ass8, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${-128 ... 127}") },
     { "s16", &numeric_ass16, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${-32768 ... 32767}") },
     { "s32", &numeric_ass32, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${-2147483648 ... 2147483647}") },
     { "s64", &numeric_ass64, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${-9223372036854775808 ... 9223372036854775807}") },
     { "s128", &numeric_ass128, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${-170141183460469231731687303715884105728 ... 170141183460469231731687303715884105727}") },
     { "u8", &numeric_asu8, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${0x0 ... 0xff}") },
     { "u16", &numeric_asu16, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${0x0 ... 0xffff}") },
     { "u32", &numeric_asu32, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${0x0 ... 0xffffffff}") },
     { "u64", &numeric_asu64, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${0x0 ... 0xffffffffffffffff}") },
     { "u128", &numeric_asu128, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Return @this number as an integer in the range of ${0x0 ... 0xffffffffffffffffffffffffffffffff}") },
     { "signed8", &numeric_signed8, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${-128 ... 127}, return the same value as @s8\n"
@@ -355,7 +355,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "This is the same behavior as casting an 8-bit integer to becoming signed, by "
           "re-interpreting the most significant bit as a sign-bit") },
     { "signed16", &numeric_signed16, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${-32768 ... 32767}, return the same value as @s16\n"
@@ -363,7 +363,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "This is the same behavior as casting an 16-bit integer to becoming signed, by "
           "re-interpreting the most significant bit as a sign-bit") },
     { "signed32", &numeric_signed32, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${-2147483648 ... 2147483647}, return the same value as @s32\n"
@@ -371,7 +371,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "This is the same behavior as casting an 32-bit integer to becoming signed, by "
           "re-interpreting the most significant bit as a sign-bit") },
     { "signed64", &numeric_signed64, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${-9223372036854775808 ... 9223372036854775807}, return the same value as @s64\n"
@@ -379,7 +379,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "This is the same behavior as casting an 64-bit integer to becoming signed, by "
           "re-interpreting the most significant bit as a sign-bit") },
     { "signed128", &numeric_signed128, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${-170141183460469231731687303715884105728 ... 170141183460469231731687303715884105727}, return the same value as @s128\n"
@@ -387,7 +387,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "This is the same behavior as casting an 128-bit integer to becoming signed, by "
           "re-interpreting the most significant bit as a sign-bit") },
     { "unsigned8", &numeric_unsigned8, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${0 ... 255}, return the same value as @u8\n"
@@ -395,7 +395,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "This is the same behavior as casting an 8-bit integer to becoming unsigned, by "
           "ignoring the most significant bit from potentially being a sign-bit") },
     { "unsigned16", &numeric_unsigned16, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${0 ... 65535}, return the same value as @u16\n"
@@ -403,7 +403,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "This is the same behavior as casting an 16-bit integer to becoming unsigned, by "
           "ignoring the most significant bit from potentially being a sign-bit") },
     { "unsigned32", &numeric_unsigned32, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${0 ... 4294967295}, return the same value as @u32\n"
@@ -411,7 +411,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "This is the same behavior as casting an 32-bit integer to becoming unsigned, by "
           "ignoring the most significant bit from potentially being a sign-bit") },
     { "unsigned64", &numeric_unsigned64, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${0 ... 18446744073709551615}, return the same value as @u64\n"
@@ -419,7 +419,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "This is the same behavior as casting an 64-bit integer to becoming unsigned, by "
           "ignoring the most significant bit from potentially being a sign-bit") },
     { "unsigned128", &numeric_unsigned128, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "When @this number fits the range ${0 ... 340282366920938463463374607431768211455}, return the same value as @u128\n"
@@ -428,42 +428,42 @@ PRIVATE struct type_getset numeric_getsets[] = {
           "ignoring the most significant bit from potentially being a sign-bit") },
 
     { "swap16", &numeric_swap16, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Take the integer generated by #u16 and exchange its low and high 8 bits") },
     { "swap32", &numeric_swap32, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap16, but #u32 is taken as input, and the 8-bit tuples $abcd are re-arranged as $dcba") },
     { "swap64", &numeric_swap64, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap16, but #u64 is taken as input, and the 8-bit tuples $abcdefgh are re-arranged as $hgfedcba") },
     { "swap128", &numeric_swap128, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap16, but #u128 is taken as input, and the 8-bit tuples $abcdefghijklmnop are re-arranged as $ponmlkjihgfedcba") },
     { "sswap16", &numeric_sswap16, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Same as ${this.swap16.signed16}") },
     { "sswap32", &numeric_sswap32, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Same as ${this.swap32.signed32}") },
     { "sswap64", &numeric_sswap64, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Same as ${this.swap64.signed64}") },
     { "sswap128", &numeric_sswap128, NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Same as ${this.swap128.signed128}") },
@@ -476,97 +476,97 @@ PRIVATE struct type_getset numeric_getsets[] = {
 #define BE_SEL(cast,swap) cast
 #endif
     { "leswap16", &LE_SEL(numeric_unsigned16,numeric_swap16), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap16, but a little-endian encoded integer is converted to host-endian\n"
           "When the host already is little-endian, this is identical to #unsigned16") },
     { "leswap32", &LE_SEL(numeric_unsigned32,numeric_swap32), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap32, but a little-endian encoded integer is converted to host-endian\n"
           "When the host already is little-endian, this is identical to #unsigned32") },
     { "leswap64", &LE_SEL(numeric_unsigned64,numeric_swap64), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap64, but a little-endian encoded integer is converted to host-endian\n"
           "When the host already is little-endian, this is identical to #unsigned64") },
     { "leswap128", &LE_SEL(numeric_unsigned128,numeric_swap128), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap128, but a little-endian encoded integer is converted to host-endian\n"
           "When the host already is little-endian, this is identical to #unsigned128") },
     { "beswap16", &BE_SEL(numeric_unsigned16,numeric_swap16), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap16, but a big-endian encoded integer is converted to host-endian\n"
           "When the host already is big-endian, this is identical to #unsigned16") },
     { "beswap32", &BE_SEL(numeric_unsigned32,numeric_swap32), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap32, but a big-endian encoded integer is converted to host-endian\n"
           "When the host already is big-endian, this is identical to #unsigned32") },
     { "beswap64", &BE_SEL(numeric_unsigned64,numeric_swap64), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap64, but a big-endian encoded integer is converted to host-endian\n"
           "When the host already is big-endian, this is identical to #unsigned64") },
     { "beswap128", &BE_SEL(numeric_unsigned128,numeric_swap128), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #swap128, but a big-endian encoded integer is converted to host-endian\n"
           "When the host already is big-endian, this is identical to #unsigned128") },
     { "lesswap16", &LE_SEL(numeric_signed16,numeric_sswap16), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #sswap16, but a little-endian encoded integer is converted to host-endian\n"
           "When the host already is little-endian, this is identical to #signed16") },
     { "lesswap32", &LE_SEL(numeric_signed32,numeric_sswap32), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #sswap32, but a little-endian encoded integer is converted to host-endian\n"
           "When the host already is little-endian, this is identical to #signed32") },
     { "lesswap64", &LE_SEL(numeric_signed64,numeric_sswap64), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #sswap64, but a little-endian encoded integer is converted to host-endian\n"
           "When the host already is little-endian, this is identical to #signed64") },
     { "lesswap128", &LE_SEL(numeric_signed128,numeric_sswap128), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #sswap128, but a little-endian encoded integer is converted to host-endian\n"
           "When the host already is little-endian, this is identical to #signed128") },
     { "besswap16", &BE_SEL(numeric_signed16,numeric_sswap16), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #sswap16, but a big-endian encoded integer is converted to host-endian\n"
           "When the host already is big-endian, this is identical to #signed16") },
     { "besswap32", &BE_SEL(numeric_signed32,numeric_sswap32), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #sswap32, but a big-endian encoded integer is converted to host-endian\n"
           "When the host already is big-endian, this is identical to #signed32") },
     { "besswap64", &BE_SEL(numeric_signed64,numeric_sswap64), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #sswap64, but a big-endian encoded integer is converted to host-endian\n"
           "When the host already is big-endian, this is identical to #signed64") },
     { "besswap128", &BE_SEL(numeric_signed128,numeric_sswap128), NULL, NULL,
-      DOC("->int\n"
+      DOC("->?Dint\n"
           "@throw NotImplemented @this number does not implement ${operator int}\n"
           "@throw IntegerOverflow The value of @this number is outside the requested range\n"
           "Similar to #sswap128, but a big-endian encoded integer is converted to host-endian\n"

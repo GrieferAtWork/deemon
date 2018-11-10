@@ -17,14 +17,15 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-@"(callable pred_lo)->object"
-@"Convert an old-style compare-lo predicate to a new-style key function"
-@">import string from deemon;"
-@">import predlo2key from functools;"
-@">local x = [\"FOO\",\"bar\",\"FOoBaR\"];"
-@">x.sort(predlo2key([](x,y) -> x.lower() < y.lower()));"
-@">x.sort(string.lower); /* Same as this */"
-function predlo2key(pred_lo) {
+import * from deemon;
+
+@@Convert an old-style compare-lo predicate to a new-style key function
+@@>import string from deemon;
+@@>import predlo2key from functools;
+@@>local x = ["FOO","bar","FOoBaR"];
+@@>x.sort(predlo2key([](x,y) -> x.lower() < y.lower()));
+@@>x.sort(string.lower); /* Same as this */
+function predlo2key(pred_lo: callable) {
 	class KeyClass {
 		private member m_self;
 		this(self) { m_self = self; }
@@ -35,14 +36,13 @@ function predlo2key(pred_lo) {
 	return KeyClass;
 }
 
-@"(callable pred_eq)->object"
-@"Convert an old-style compare-eq predicate to a new-style key function"
-@">import string from deemon;"
-@">import predeq2key from functools;"
-@">local x = [\"FOO\",\"foo\",\"FOoBaR\"];"
-@">print x.find(\"foo\",predeq2key([](x,y) -> x.lower() == y.lower()));"
-@">print x.find(\"foo\",string.lower); /* Same as this */"
-function predeq2key(pred_eq) {
+@@Convert an old-style compare-eq predicate to a new-style key function
+@@>import string from deemon;
+@@>import predeq2key from functools;
+@@>local x = ["FOO","foo","FOoBaR"];
+@@>print x.find("foo",predeq2key([](x,y) -> x.lower() == y.lower()));
+@@>print x.find("foo",string.lower); /* Same as this */
+function predeq2key(pred_eq: callable) {
 	class KeyClass {
 		private member m_self;
 		this(self) { m_self = self; }
@@ -52,23 +52,16 @@ function predeq2key(pred_eq) {
 }
 
 
-@"(object key)->object"
-@"@return Always re-returns @key"
-@"An identity key function that simply re-returns the given @key"
-@"Since key functions are usually optional, this function may be "
- "used as a default binding by implementations not designed to be "
- "used without any key function"
+@@@return Always re-returns @key
+@@An identity key function that simply re-returns the given @key
+@@Since key functions are usually optional, this function may be used as a default binding by implementations not designed to be used without any key function
 function identity(key) {
 	return key;
 }
 
-@"(callable keys...)->callable"
-@"@return A key function that is the combination of all given @keys"
-@"Construct and return a key function which, when executed, "
- "transforms the given object using all of the given @keys functions "
- "in reverse order, meaning that the last function is executed first, "
- "and the return value of the first function then propagated as key value"
-function keycombine(keys...) {
+@@@return A key function that is the combination of all given @keys
+@@Construct and return a key function which, when executed, transforms the given object using all of the given @keys functions in reverse order, meaning that the last function is executed first,  and the return value of the first function then propagated as key value
+function keycombine(keys...: callable): callable {
 	if (#keys == 1)
 		return keys[0];
 	local keyfuncs = keys.reversed();

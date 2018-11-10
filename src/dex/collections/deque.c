@@ -1032,8 +1032,8 @@ PRIVATE struct type_seq deq_seq = {
     /* .tp_del       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&deq_del,
     /* .tp_set       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&deq_set
     /* XXX: range operators? (Also: Add a fallback delrange / setrange in `sequence' that calls
-     *                              forward to member functions `insert(int index, object ob)',
-     *                             `erase(int index, int count = 1)') */
+     *                              forward to member functions `insert(index:?Dint, ob)',
+     *                             `erase(index:?Dint, count:?Dint = 1)') */
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -1140,38 +1140,38 @@ deq_rrrot(Deque *__restrict self,
 
 PRIVATE struct type_method deq_methods[] = {
     { "insert", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_insert,
-      DOC("(int index,object ob)\n"
+      DOC("(index:?Dint,ob)\n"
           "@throw IntegerOverflow @index is negative or too large\n"
           "Insert the given object @ob at @index"),
       TYPE_METHOD_FKWDS },
     { "erase", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_erase,
-      DOC("(int index,int num_items=1)->int\n"
+      DOC("(index:?Dint,num_items=!1)->?Dint\n"
           "@throw IntegerOverflow @index is negative or too large\n"
           "@return The actual number of erased items\n"
           "Erase up to @num_items objects from @this deque, starting at @index"),
       TYPE_METHOD_FKWDS },
     { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_pop,
-      DOC("(int index=-1)->object\n"
+      DOC("(index=!-1)->\n"
           "@throw IntegerOverflow @index is negative or too large\n"
           "@return The item that got removed\n"
           "Pop (erase) the item located at @index and return it"),
       TYPE_METHOD_FKWDS },
     { "pushfront", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_pushfront,
-      DOC("(object ob)\n"
+      DOC("(ob)\n"
           "Insert the given object @ob at the front of @this deque") },
     { "pushback", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_pushback,
-      DOC("(object ob)\n"
+      DOC("(ob)\n"
           "Insert the given object @ob at the back of @this deque") },
     { "popfront", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_popfront,
-      DOC("->object\n"
+      DOC("->\n"
           "@throw ValueError @this deque is empty\n"
           "Pop and return an item from the front of @this deque") },
     { "popback", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_popback,
-      DOC("->object\n"
+      DOC("->\n"
           "@throw ValueError @this deque is empty\n"
           "Pop and return an item from the back of @this deque") },
     { "llrot", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_llrot,
-      DOC("(int num_items)\n"
+      DOC("(num_items:?Dint)\n"
           "@throw IndexError @this deque contain less than @num_items items\n"
           "Rotate the first num_items items left by 1:\n"
           ">import deque from collections;\n"
@@ -1179,7 +1179,7 @@ PRIVATE struct type_method deq_methods[] = {
           ">x.llrot(3);\n"
           ">print repr x; /* { 20, 30, 10, 40, 50 } */") },
     { "lrrot", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_lrrot,
-      DOC("(int num_items)->none\n"
+      DOC("(num_items:?Dint)\n"
           "@throw IndexError @this deque contain less than @num_items items\n"
           "Rotate the first num_items items right by 1:\n"
           ">import deque from collections;\n"
@@ -1187,7 +1187,7 @@ PRIVATE struct type_method deq_methods[] = {
           ">x.lrrot(3);\n"
           ">print repr x; /* { 30, 10, 20, 40, 50 } */") },
     { "rlrot", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_rlrot,
-      DOC("(int num_items)->none\n"
+      DOC("(num_items:?Dint)\n"
           "@throw IndexError @this deque contain less than @num_items items\n"
           "Rotate the last num_items items left by 1:\n"
           ">import deque from collections;\n"
@@ -1195,7 +1195,7 @@ PRIVATE struct type_method deq_methods[] = {
           ">x.rlrot(3);\n"
           ">print repr x; /* { 10, 20, 40, 50, 30 } */") },
     { "rrrot", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_rrrot,
-      DOC("(int num_items)->none\n"
+      DOC("(num_items:?Dint)\n"
           "@throw IndexError @this deque contain less than @num_items items\n"
           "Rotate the last num_items items right by 1:\n"
           ">import deque from collections;\n"
@@ -1229,49 +1229,49 @@ INTERN DeeTypeObject Deque_Type = {
                             "()\n"
                             "Construct an empty deque\n"
                             "\n"
-                            "(sequence seq)\n"
-                            "(sequence seq,int bucketsize)\n"
+                            "(seq:?S?O)\n"
+                            "(seq:?S?O,bucketsize:?Dint)\n"
                             "Construct a deque pre-initialized with items from "
                             "@seq, and set the deque's bucket size to @bucketsize\n"
                             "When @bucketsize is omitted, an implementation-specific "
                             "default value is used, which may also depend on other "
                             "environmental factors selected to maximize performance\n"
                             "\n"
-                            "copy()\n"
+                            "copy->\n"
                             "Returns a shallow copy of all elements of @this deque\n"
                             "\n"
-                            "deepcopy()\n"
+                            "deepcopy->\n"
                             "Returns a deep copy of all elements of @this deque\n"
                             "\n"
-                            ":=(sequence other)\n"
+                            ":=(other:?S?O)->\n"
                             "Assign all the elements from @other to @this deque\n"
                             "\n"
-                            "move:=(deque other)\n"
+                            "move:=->\n"
                             "Move all the elements from @other into @this deque, clearing @other in the process\n"
                             "\n"
-                            "bool()\n"
+                            "bool->\n"
                             "Returns :true if @this deque is non-empty. :false otherwise\n"
                             "\n"
-                            "iter()->deque.iterator\n"
+                            "iter->\n"
                             "Returns an iterator for enumerating the elements of @this deque in ascending order\n"
                             "\n"
-                            "[](int index)\n"
+                            "[]->\n"
                             "@throw IndexError @index is greater that the length of @this deque\n"
                             "@throw IntegerOverflow @index is negative or too large\n"
                             "Returns the @index'th item of @this deque\n"
                             "\n"
-                            "[]=(int index,object ob)\n"
+                            "[]=->\n"
                             "@throw IndexError @index is greater that the length of @this deque\n"
                             "@throw IntegerOverflow @index is negative or too large\n"
-                            "Set the @index'th item of @this deque to @ob\n"
+                            "Set the @index'th item of @this deque to @item\n"
                             "\n"
-                            "del[](int index)\n"
+                            "del[]->\n"
                             "@throw IndexError @index is greater that the length of @this deque\n"
                             "@throw IntegerOverflow @index is negative or too large\n"
                             "Same as ${this.pop(index)} for positive values for @index\n"
                             "\n"
-                            "contains(object ob)->bool\n"
-                            "Returns :true if @ob is apart of this deque, :false otherwise"
+                            "contains->\n"
+                            "Returns :true if @item is apart of this deque, :false otherwise"
                             ),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC,
     /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(Deque),

@@ -189,6 +189,9 @@ err:
 
 INTERN DREF struct ast *DCALL
 ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *pout_mode) {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ struct decl_ast decl;
+#endif
  DREF struct ast *current; bool need_semi; int error;
  unsigned int lookup_mode; struct ast_loc loc;
  /* In: "foo,bar = 10,x,y = getvalue()...,7"
@@ -277,17 +280,46 @@ next_expr:
    /* Create the symbol that will be used by the function. */
    function_symbol = lookup_symbol(symbol_mode,function_name,&loc);
    if unlikely(!function_symbol) goto err;
-   /* Pack together the documentation string for the function. */
+  }
+  {
+   struct ast_tags_printers temp;
+   AST_TAGS_BACKUP_PRINTERS(temp);
+   current = ast_parse_function(function_name,&need_semi,false,&loc
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+                                ,&decl
+#endif
+                                );
+   AST_TAGS_RESTORE_PRINTERS(temp);
+  }
+  if unlikely(!current) goto err_decl;
+  /* Pack together the documentation string for the function. */
+  if (function_symbol) {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+   if (function_symbol->s_decltype.da_type != DAST_NONE) {
+    if (!decl_ast_equal(&function_symbol->s_decltype,&decl)) {
+     if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,function_symbol))
+         goto err_decl;
+    }
+    decl_ast_fini(&decl);
+   } else {
+    memcpy(&function_symbol->s_decltype,&decl,sizeof(struct decl_ast));
+   }
+#endif
    if (function_symbol->s_type == SYMBOL_TYPE_GLOBAL &&
       !function_symbol->s_global.g_doc) {
-    function_symbol->s_global.g_doc = (DREF DeeStringObject *)unicode_printer_pack(&current_tags.at_doc);
-    unicode_printer_init(&current_tags.at_doc);
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+    function_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&function_symbol->s_decltype);
+#else
+    function_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
+#endif
     if unlikely(!function_symbol->s_global.g_doc) goto err;
    }
+  } else {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+   decl_ast_fini(&decl);
+#endif
   }
-  current = ast_parse_function(function_name,&need_semi,false,&loc);
-  if unlikely(!current) goto err;
-  if unlikely(clear_current_tags()) goto err_current;
+  if unlikely(ast_tags_clear()) goto err_current;
   if (function_symbol) {
    DREF struct ast *function_name_ast,*merge;
    /* Store the function in the parsed symbol. */
@@ -329,6 +361,7 @@ next_expr:
      goto err;
   if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) && TPP_ISKEYWORD(tok) &&
     (!(mode & AST_COMMA_NOSUFFIXKWD) || !is_reserved_symbol_name(token.t_kwd))) {
+   /* C-style variable declarations. */
    struct symbol *var_symbol;
    DREF struct ast *args,*merge;
    struct ast_loc symbol_name_loc;
@@ -349,15 +382,38 @@ next_expr:
              (!(lookup_mode & LOOKUP_SYM_VLOCAL) &&
                 current_scope == (DeeScopeObject *)current_rootscope)) {
      var_symbol->s_type = SYMBOL_TYPE_GLOBAL;
+     var_symbol->s_global.g_doc = NULL;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+     if (var_symbol->s_decltype.da_type == DAST_NONE) {
+      /* Try to extract documentation information from the C-declaration's type specifier. */
+      switch (current->a_type) {
+      case AST_SYM:
+       var_symbol->s_decltype.da_type   = DAST_SYMBOL;
+       var_symbol->s_decltype.da_symbol = current->a_sym;
+       break;
+      case AST_CONSTEXPR:
+       var_symbol->s_decltype.da_type  = DAST_CONST;
+       var_symbol->s_decltype.da_const = current->a_constexpr;
+       Dee_Incref(current->a_constexpr);
+       break;
+      default: break;
+      }
+     }
      /* Package together documentation tags for this variable symbol. */
-     var_symbol->s_global.g_doc = (DREF DeeStringObject *)unicode_printer_pack(&current_tags.at_doc);
-     unicode_printer_init(&current_tags.at_doc);
+     var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
      if unlikely(!var_symbol->s_global.g_doc) goto err_current;
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+     /* Package together documentation tags for this variable symbol. */
+     var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
+     if unlikely(!var_symbol->s_global.g_doc) goto err_current;
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
     } else {
      var_symbol->s_type = SYMBOL_TYPE_LOCAL;
     }
    }
+   if unlikely(ast_tags_clear()) goto err_current;
    if unlikely(yield() < 0) goto err_current;
+
    /* Allow syntax like this:
     * >> list my_list;
     * >> int my_int = 42;
@@ -390,6 +446,7 @@ next_expr:
     if unlikely(!exprv) goto err_args;
     exprv[0] = args; /* Inherit */
     /* Create a multi-branch AST for the assigned expression. */
+    /* TODO: Add support for applying annotations here! */
     args = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,exprv),&equal_loc);
     if unlikely(!args) { ast_decref(exprv[0]); Dee_Free(exprv); goto err_current; }
    } else if (tok == '(' || tok == KWD_pack) {
@@ -402,6 +459,7 @@ next_expr:
      TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
      goto err_current;
     }
+    /* TODO: Add support for applying annotations here! */
     if (tok == ')' || (!has_paren && !maybe_expression_begin())) {
      /* Empty argument list (Same as none at all). */
      args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
@@ -442,6 +500,36 @@ err_args:
    ast_decref(current);
    if unlikely(!merge) goto err;
    current = merge;
+  } else {
+   if (current->a_type == AST_SYM &&
+      (mode & AST_COMMA_ALLOWTYPEDECL)) {
+    struct symbol *var_symbol = current->a_sym;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+    if (tok == ':') {
+     struct decl_ast decl;
+     if unlikely(yield() < 0) goto err_current;
+     if unlikely(decl_ast_parse(&decl)) goto err_current;
+     if (var_symbol->s_decltype.da_type != DAST_NONE &&
+        !decl_ast_equal(&var_symbol->s_decltype,&decl)) {
+      decl_ast_fini(&decl);
+      if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,var_symbol))
+          goto err_current;
+     } else {
+      memcpy(&var_symbol->s_decltype,&decl,sizeof(struct decl_ast));
+     }
+    }
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+    if (var_symbol->s_type == SYMBOL_TYPE_GLOBAL &&
+       !var_symbol->s_global.g_doc) {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+     var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+     var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+     if unlikely(!var_symbol->s_global.g_doc)
+        goto err_current;
+    }
+   }
   }
  }
 
@@ -485,12 +573,14 @@ continue_at_comma:
    * assign to expression in the active comma-list. */
   loc_here(&loc);
   if unlikely(yield() < 0) goto err_current;
-  store_source = ast_parse_comma(AST_COMMA_PARSESINGLE|
-                                (mode&AST_COMMA_STRICTCOMMA),
+  /* TODO: Add support for applying annotations here! */
+  store_source = ast_parse_comma(AST_COMMA_PARSESINGLE |
+                                (mode & AST_COMMA_STRICTCOMMA),
                                  AST_FMULTIPLE_KEEPLAST,
                                  NULL);
   if unlikely(!store_source) goto err_current;
-  need_semi = !!(mode&AST_COMMA_PARSESEMI);
+
+  need_semi = !!(mode & AST_COMMA_PARSESEMI);
   /* Now everything depends on whether or not what
    * we've just parsed is an expand-expression:
    * >> a,b,c = get_value()...; // >> (((a,b,c) = get_value())...);
@@ -643,8 +733,16 @@ done_expression_nocurrent:
   if unlikely(!current) goto err;
  }
  goto done_expression_nomerge;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+err_decl:
+ decl_ast_fini(&decl);
+ goto err;
+#endif
 err_current:
  ast_decref(current);
+#ifndef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+err_decl:
+#endif
 err:
  astlist_fini(&expr_comma);
  astlist_fini(&expr_batch);

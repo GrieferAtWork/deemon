@@ -84,18 +84,32 @@ f_builtin_boundattr(size_t argc, DeeObject **__restrict argv) {
 INTERN DEFINE_CMETHOD(builtin_boundattr,&f_builtin_boundattr);
 
 PRIVATE DREF DeeObject *DCALL
-f_builtin_import(size_t argc, DeeObject **__restrict argv) {
+f_builtin_import(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DREF DeeObject *result;
- DeeObject *module_name;
- if (DeeArg_Unpack(argc,argv,"o:import",&module_name) ||
-     DeeObject_AssertTypeExact(module_name,&DeeString_Type))
-     return NULL;
- result = DeeModule_Import(module_name,NULL,true);
- if (likely(result) && unlikely(DeeModule_RunInit(result) < 0))
-     Dee_Clear(result);
+ DeeObject *module_name,*base = NULL;
+ PRIVATE struct keyword kwlist[] = { K(name), K(base), KEND };
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:import",&module_name,&base))
+     goto err;
+ if (DeeObject_AssertTypeExact(module_name,&DeeString_Type))
+     goto err;
+ if (base) {
+  if (DeeObject_AssertType(module_name,&DeeModule_Type))
+      goto err;
+  result = DeeModule_ImportRel(base,module_name,NULL,true);
+ } else {
+  result = DeeModule_Import(module_name,NULL,true);
+ }
+ if unlikely(!result)
+    goto err;
+ if unlikely(DeeModule_RunInit(result) < 0)
+    goto err_r;
  return result;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
 }
-INTERN DEFINE_CMETHOD(builtin_import,&f_builtin_import);
+INTERN DEFINE_KWCMETHOD(builtin_import,&f_builtin_import);
 
 
 PRIVATE DREF DeeObject *DCALL

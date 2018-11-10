@@ -157,6 +157,7 @@ INTDEF DREF struct ast *FCALL ast_parse_brace_list(struct ast *__restrict initia
 INTDEF DREF struct ast *FCALL ast_parse_import(void);
 /* Parse a module name and generate an AST to reference a single symbol `import_name'. */
 INTDEF DREF struct ast *FCALL ast_parse_import_single(struct TPPKeyword *__restrict import_name);
+INTDEF struct symbol *FCALL ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name);
 
 /* Parse a comma-separated list of expressions,
  * as well as assignment/inplace expressions.
@@ -181,6 +182,7 @@ ast_parse_comma(uint16_t mode, uint16_t flags,
 #define AST_COMMA_NOSUFFIXKWD   0x0080 /* Don't parse c-style variable declarations for reserved keywords.
                                         * This is required for `else', `catch', `finally', etc.
                                         * >> `try foo catch (...)' (don't interpret as `local catch = foo(...)' when starting with `foo') */
+#define AST_COMMA_ALLOWTYPEDECL 0x0800 /* Allow type declaration to be appended to variables, as well as documentation strings to be consumed. */
 #define AST_COMMA_ALLOWKWDLIST  0x1000 /* Stop if what a keyword list label is encountered. */
 #define AST_COMMA_PARSESINGLE   0x2000 /* Only parse a single expression. */
 #define AST_COMMA_PARSESEMI     0x4000 /* Parse a `;' as part of the expression (if a `;' is required). */
@@ -283,8 +285,13 @@ INTDEF DREF struct ast *FCALL ast_parse_loopexpr(void);
  *       scope if the desire is to address the function by name.
  *       This parser function will merely return the `AST_FUNCTION',
  *       not some wrapper that assigns it to a symbol using `AST_STORE'. */
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+INTDEF DREF struct ast *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc, struct decl_ast *decl);
+INTDEF DREF struct ast *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc, struct decl_ast *__restrict decl);
+#else
 INTDEF DREF struct ast *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
 INTDEF DREF struct ast *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
+#endif
 INTDEF DREF struct ast *DCALL ast_parse_function_noscope_noargs(bool *pneed_semi);
 
 /* Parse everything following a `del' keyword in a statement, or expression:
@@ -487,12 +494,40 @@ struct ast_annotations {
                                       * Amount of allocated annotations. */
 };
 
+struct ast_tags_printers {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+    struct unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+    struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
+};
+
 struct ast_tags {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+    struct unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
     struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
     struct ast_annotations at_anno;         /* AST Annotations. */
     uint16_t               at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
     uint16_t               at_class_flags;  /* Set of `TP_F*' or'd to flags during creation of a new class. */
 };
+
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#define AST_TAGS_BACKUP_PRINTERS(buf) \
+   (memcpy(&(buf),&current_tags,2 * sizeof(struct unicode_printer)), \
+    memset(&current_tags,0,2 * sizeof(struct unicode_printer)))
+#define AST_TAGS_RESTORE_PRINTERS(buf) \
+   (unicode_printer_fini(&current_tags.at_decl), \
+    unicode_printer_fini(&current_tags.at_doc), \
+    memcpy(&current_tags,&(buf),2 * sizeof(struct unicode_printer)))
+#else
+#define AST_TAGS_BACKUP_PRINTERS(buf) \
+   (memcpy(&(buf),&current_tags,sizeof(struct unicode_printer)), \
+    memset(&current_tags,0,sizeof(struct unicode_printer)))
+#define AST_TAGS_RESTORE_PRINTERS(buf) \
+   (unicode_printer_fini(&current_tags.at_doc), \
+    memcpy(&current_tags,&(buf),sizeof(struct unicode_printer)))
+#endif
+
 
 /* Current set of active AST tags.
  * This set is cleared at least every time a statement ends,
@@ -501,7 +536,14 @@ struct ast_tags {
 INTDEF struct ast_tags current_tags;
 
 /* Reset the current set of active tags to an empty (unallocated) state. */
-INTDEF int (DCALL clear_current_tags)(void);
+INTDEF int (DCALL ast_tags_clear)(void);
+
+/* Pack together the current documentation string. */
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+INTDEF DREF DeeObject *DCALL ast_tags_doc(struct decl_ast const *decl);
+#else
+INTDEF DREF DeeObject *DCALL ast_tags_doc(void);
+#endif
 
 /* Add a new annotation to the current set of tags. */
 INTDEF int (DCALL ast_annotations_add)(struct ast *__restrict func, uint16_t flag);
@@ -515,6 +557,7 @@ INTDEF int (DCALL ast_annotations_clear)(struct ast_annotations *__restrict self
 INTDEF DREF struct ast *
 (DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
                               /*inherit(always)*/DREF struct ast *__restrict input);
+
 
 
 /* Parse tags at the current lexer position, starting

@@ -386,6 +386,9 @@ set_default_location:
 }
 
 INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ decl_ast_fini(&self->s_decltype);
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  switch (self->s_type) {
  case SYMBOL_TYPE_EXTERN:
  case SYMBOL_TYPE_MODULE:
@@ -875,6 +878,11 @@ INTERN int (DCALL classscope_push)(void) {
  if unlikely(!this_sym) goto err_new_scope;
  DeeObject_Init((DeeObject *)new_scope,&DeeClassScope_Type);
  memset(this_sym,0,sizeof(*this_sym));
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#if DAST_NONE != 0
+ this_sym->s_decltype.da_type = DAST_NONE;
+#endif
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  this_sym->s_type            = SYMBOL_TYPE_THIS;
  this_sym->s_scope           = &new_scope->cs_scope;
  this_sym->s_name            = TPPLexer_LookupKeyword("this",4,0);
@@ -1241,6 +1249,7 @@ seach_single:
           /* Default variable lookup in the root scope creates global variables. */
           current_scope == (DeeScopeObject *)current_rootscope)) {
       result->s_type = SYMBOL_TYPE_GLOBAL;
+      result->s_global.g_doc = NULL;
      } else if (mode & LOOKUP_SYM_STACK) {
       result->s_type = SYMBOL_TYPE_STACK;
      } else if (mode & LOOKUP_SYM_STATIC) {
@@ -1282,6 +1291,11 @@ seach_single:
    if unlikely((result = sym_alloc()) == NULL)
       goto err;
    memset(result,0,sizeof(*result));
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#if DAST_NONE != 0
+   result->s_decltype.da_type = DAST_NONE;
+#endif
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
    result->s_name  = name;
    result->s_type  = SYMBOL_TYPE_FWD;
    goto add_result_to_iter;
@@ -1305,6 +1319,11 @@ create_variable:
  if unlikely((result = sym_alloc()) == NULL)
     goto err;
  memset(result,0,sizeof(*result));
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#if DAST_NONE != 0
+ result->s_decltype.da_type = DAST_NONE;
+#endif
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  result->s_name  = name;
  result->s_scope = current_scope;
  result->s_type  = SYMBOL_TYPE_FWD;
@@ -1313,6 +1332,7 @@ create_variable:
       /* Default variable lookup in the root scope creates global variables. */
       current_scope == (DeeScopeObject *)current_rootscope)) {
   result->s_type = SYMBOL_TYPE_GLOBAL;
+  assert(result->s_global.g_doc == NULL);
   iter = (DeeScopeObject *)current_rootscope;
  } else {
   iter = current_scope;
@@ -1396,8 +1416,11 @@ new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
  }
  ASSERT(current_scope->s_mapa != 0);
  bucket            = &current_scope->s_map[name->k_id % current_scope->s_mapa];
- result->s_next  = *bucket;
+ result->s_next    = *bucket;
  *bucket           = result;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ result->s_decltype.da_type = DAST_NONE;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  result->s_flag    = SYMBOL_FNORMAL;
  result->s_nread   = 0;
  result->s_nwrite  = 0;
@@ -1425,6 +1448,9 @@ INTERN struct symbol *DCALL new_unnamed_symbol(void) {
 #ifndef NDEBUG
  memset(result,0xcc,sizeof(struct symbol));
 #endif
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ result->s_decltype.da_type = DAST_NONE;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  result->s_name        = &TPPKeyword_Empty;
  result->s_next        = current_scope->s_del;
  current_scope->s_del  = result;
@@ -1443,6 +1469,9 @@ new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope){
 #ifndef NDEBUG
  memset(result,0xcc,sizeof(struct symbol));
 #endif
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ result->s_decltype.da_type = DAST_NONE;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  result->s_name        = &TPPKeyword_Empty;
  result->s_next        = scope->s_del;
  scope->s_del          = result;
@@ -1470,8 +1499,11 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
      goto err_r;
  }
  ASSERT(scope->s_mapa != 0);
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+ result->s_decltype.da_type = DAST_NONE;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
  bucket            = &scope->s_map[name->k_id % scope->s_mapa];
- result->s_next  = *bucket;
+ result->s_next    = *bucket;
  *bucket           = result;
  result->s_flag    = SYMBOL_FNORMAL;
  result->s_nread   = 0;

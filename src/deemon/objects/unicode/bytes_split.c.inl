@@ -454,7 +454,7 @@ bs_getsep(BytesSplit *__restrict self) {
 
 PRIVATE struct type_getset bs_getsets[] = {
     { "__sep__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bs_getsep, NULL, NULL,
-      DOC("->bytes") },
+      DOC("->?Dbytes") },
     { NULL }
 };
 

@@ -740,9 +740,7 @@ DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict 
 /* Return true if a given `AST_MULTIPLE' contains expand ASTs. */
 INTDEF bool (DCALL ast_multiple_hasexpand)(struct ast *__restrict self);
 
-
 #endif /* !CONFIG_BUILDING_DEEMON */
-
 
 DECL_END
 

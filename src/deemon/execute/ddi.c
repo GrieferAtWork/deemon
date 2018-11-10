@@ -599,7 +599,7 @@ ddi_fini(DeeDDIObject *__restrict self) {
 
 PRIVATE struct type_member ddi_members[] = {
     TYPE_MEMBER_FIELD("__size__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT32,offsetof(DeeDDIObject,d_ddi_size)),
-    TYPE_MEMBER_FIELD("__strtab__",STRUCT_OBJECT,offsetof(DeeDDIObject,d_strtab)),
+    TYPE_MEMBER_FIELD_DOC("__strtab__",STRUCT_OBJECT,offsetof(DeeDDIObject,d_strtab),"->?Dstring"),
     TYPE_MEMBER_FIELD("__num_static__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_nstatic)),
     TYPE_MEMBER_FIELD("__num_refs__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_nrefs)),
     TYPE_MEMBER_FIELD("__num_args__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_nargs)),

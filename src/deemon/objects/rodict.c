@@ -732,7 +732,7 @@ rodict_get(Dict *__restrict self,
 
 PRIVATE struct type_method rodict_methods[] = {
     { DeeString_STR(&str_get), (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&rodict_get,
-       DOC("(key,def=none)\n"
+       DOC("(key,def=!N)\n"
            "@return The value associated with @key or @def when @key has no value associated") },
     { NULL }
 };

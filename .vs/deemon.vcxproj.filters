@@ -803,6 +803,9 @@
     <ClCompile Include="..\src\deemon\objects\gc_inspect.c">
       <Filter>src\deemon\objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\decl.c">
+      <Filter>src\deemon\compiler\lexer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">
@@ -876,6 +879,9 @@
     </None>
     <None Include="..\src\deemon\objects\float-print.c.inl">
       <Filter>src\deemon\objects</Filter>
+    </None>
+    <None Include="..\src\deemon\compiler\lexer\decl-escape-text-impl.c.inl">
+      <Filter>src\deemon\compiler\lexer</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

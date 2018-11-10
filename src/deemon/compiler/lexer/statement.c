@@ -237,7 +237,7 @@ again:
   if unlikely(!tt_branch) goto err_r;
   ff_branch = NULL;
   /* Allow tags before the `else' keyword (forward-compatibility...) */
-  if unlikely(clear_current_tags()) goto err_tt_branch;
+  if unlikely(ast_tags_clear()) goto err_tt_branch;
   if unlikely(skip_lf()) goto err_tt_branch;
   if unlikely(parse_tags_block()) {
 err_tt_branch:
@@ -553,7 +553,7 @@ err_foreach_elem:
   result = ast_parse_statement(false);
   if unlikely(!result) goto err;
   /* Allow tags before the `while' keyword (forward-compatibility...) */
-  if unlikely(clear_current_tags()) goto err_r;
+  if unlikely(ast_tags_clear()) goto err_r;
   if unlikely(skip_lf()) goto err_r;
   if unlikely(parse_tags_block()) goto err_r;
   if unlikely(skip_lf()) goto err_r;
@@ -896,15 +896,15 @@ handle_post_label:
 
   /* Parse a comma-separated expression in style of keep-last. */
   result = ast_parse_comma(allow_nonblock
-                        ? (AST_COMMA_NORMAL|AST_COMMA_ALLOWVARDECLS|AST_COMMA_PARSESEMI|AST_COMMA_ALLOWNONBLOCK)
-                        : (AST_COMMA_NORMAL|AST_COMMA_ALLOWVARDECLS|AST_COMMA_PARSESEMI),
+                        ? (AST_COMMA_NORMAL|AST_COMMA_ALLOWVARDECLS|AST_COMMA_ALLOWTYPEDECL|AST_COMMA_PARSESEMI|AST_COMMA_ALLOWNONBLOCK)
+                        : (AST_COMMA_NORMAL|AST_COMMA_ALLOWVARDECLS|AST_COMMA_ALLOWTYPEDECL|AST_COMMA_PARSESEMI),
                            AST_FMULTIPLE_KEEPLAST,
                            NULL);
   /*if unlikely(!result) goto err;*/
   break;
  }
  /* Clear tags at the end of each statement. */
- if unlikely(clear_current_tags())
+ if unlikely(ast_tags_clear())
     goto err_r;
 done_no_tag_reset:
  return result;

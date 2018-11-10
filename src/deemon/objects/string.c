@@ -1263,11 +1263,11 @@ err:
 
 PRIVATE struct type_method string_class_methods[] = {
     { "chr", &string_class_chr,
-      DOC("(int ch)->string\n"
+      DOC("(ch:?.)->?.\n"
           "@throw IntegerOverflow @ch is negative or greater than the greatest unicode-character\n"
           "@return A single-character string matching the unicode-character @ch") },
     { "fromseq", &string_class_fromseq,
-      DOC("({int...} ordinals)->string\n"
+      DOC("(ordinals:?S?Dint)->?.\n"
           "@throw IntegerOverflow One of the ordinals is negative, or greater than $0xffffffff\n"
           "Construct a new string object from a sequence of ordinal values") },
     { NULL }
@@ -1310,20 +1310,20 @@ string_getlast(String *__restrict self) {
 
 PRIVATE struct type_getset string_getsets[] = {
     { "ordinals", &DeeString_Ordinals, NULL, NULL,
-      DOC("->{int...}\n"
+      DOC("->?S?Dint\n"
           "Returns a proxy view for the characters of @this string as a sequence of "
           "integers referring to the ordinal values of each character (s.a. #ord)") },
     { "__hashed__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hashed, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Evaluates to :true if @this string has been hashed") },
     { "first",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?.\n"
           "@throw ValueError @this string is empty\n"
           "Returns the first character of @this string") },
     { "last",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getlast, NULL, NULL,
-      DOC("->string\n"
+      DOC("->?.\n"
           "@throw ValueError @this string is empty\n"
           "Returns the last character of @this string") },
     { NULL }
@@ -1355,7 +1355,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
                             "()\n"
                             "Returns an empty string $\"\"\n"
                             "\n"
-                            "(object ob)\n"
+                            "(ob)\n"
                             "Same as ${str ob}, returning the string representation of @ob\n"
                             "\n"
                             "str->\n"
@@ -1373,20 +1373,20 @@ PUBLIC DeeTypeObject DeeString_Type = {
                             "> return #this != 0;\n"
                             ">}\n"
                             "\n"
-                            "+(string other)->string\n"
-                            "+(bytes other)->string\n"
-                            "+(object other)->string\n"
+                            "+(other:?.)->\n"
+                            "+(other:?Dbytes)->\n"
+                            "+(other)->\n"
                             "Return a new string that is the concatenation of @this and ${str other}\n"
                             ">operator + (other) {\n"
                             "> return \"{}{}\".format({ this, other });\n"
                             ">}\n"
                             "\n"
-                            "*(int times)->string\n"
+                            "*(times:?Dint)->\n"
                             "@throw IntegerOverflow @times is negative, or too large\n"
                             "Returns @this string repeated @times number of times\n"
                             "\n"
-                            "%(tuple args)->string\n"
-                            "%(object arg)->string\n"
+                            "%(args:?Dtuple)->\n"
+                            "%(arg:?O)->\n"
                             "Using @this string as a printf-style format string, use a tuple found "
                             "in @args to format it into a new string, which is then returned\n"
                             "If @arg isn't a tuple, it is packed into one and the call is identical "
@@ -1394,18 +1394,18 @@ PUBLIC DeeTypeObject DeeString_Type = {
                             ">local x = 42;\n"
                             ">print \"x = %d\" % x; /* \"x = 42\" */\n"
                             "\n"
-                            "<(string other)\n"
-                            "<(bytes other)\n"
-                            "<=(string other)\n"
-                            "<=(bytes other)\n"
-                            "==(string other)\n"
-                            "==(bytes other)\n"
-                            "!=(string other)\n"
-                            "!=(bytes other)\n"
-                            ">(string other)\n"
-                            ">(bytes other)\n"
-                            ">=(string other)\n"
-                            ">=(bytes other)\n"
+                            "<->\n"
+                            "<(other:?Dbytes)->\n"
+                            "<=->\n"
+                            "<=(other:?Dbytes)->\n"
+                            "==->\n"
+                            "==(other:?Dbytes)->\n"
+                            "!=->\n"
+                            "!=(other:?Dbytes)->\n"
+                            ">->\n"
+                            ">(other:?Dbytes)->\n"
+                            ">=->\n"
+                            ">=(other:?Dbytes)->\n"
                             "Perform a lexicographical comparison between @this string and @other, and return the result\n"
                             "\n"
                             "iter->\n"
@@ -1414,20 +1414,20 @@ PUBLIC DeeTypeObject DeeString_Type = {
                             "#->\n"
                             "Returns the length of @this string in characters\n"
                             "\n"
-                            "contains(string substr)\n"
-                            "contains(bytes substr)\n"
+                            "contains(substr:?.)->\n"
+                            "contains(substr:?Dbytes)->\n"
                             "Returns :true if @substr is apart of @this string\n"
                             ">print \"foo\" in \"bar\";    /* false */\n"
                             ">print \"foo\" in \"foobar\"; /* true */\n"
                             "\n"
-                            "[](int index)->string\n"
+                            "[]->?.\n"
                             "@throw IntegerOverflow @index is negative\n"
                             "@throw IndexError @index is greater than ${#this}\n"
                             "Returns the @{index}th character of @this string\n"
                             ">print \"foo\"[0]; /* \"f\" */\n"
                             ">print \"foo\"[1]; /* \"o\" */\n"
                             "\n"
-                            "[:](int start,int end)->string\n"
+                            "[:]->?.\n"
                             "Return a sub-string of @this, that starts at @start and ends at @end\n"
                             "If @end is greater than ${#this}, it is truncated to that value\n"
                             "If @start is greater than, or equal to @end, an empty string is returned\n"

@@ -37,7 +37,8 @@ ast_parse_argument_list(uint16_t mode,
  DeeObject *kwdlist;
  *pkeyword_labels = NULL;
  ASSERT(mode & AST_COMMA_FORCEMULTIPLE);
- result = ast_parse_comma(mode|AST_COMMA_ALLOWKWDLIST,
+ result = ast_parse_comma(mode |
+                          AST_COMMA_ALLOWKWDLIST,
                           AST_FMULTIPLE_TUPLE,
                           NULL);
  if unlikely(!result) goto err;

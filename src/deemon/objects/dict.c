@@ -1436,56 +1436,56 @@ err:
 
 PRIVATE struct type_method dict_methods[] = {
     { DeeString_STR(&str_get), (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_get,
-       DOC("(key,def=none)->object\n"
+       DOC("(key,def=!N)->\n"
            "@return The value associated with @key or @def when @key has no value associated") },
     { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_pop,
-       DOC("(key)->object\n"
-           "(key,def)->object\n"
+       DOC("(key)->\n"
+           "(key,def)->\n"
            "@throw KeyError No @def was given and @key was not found\n"
            "Delete @key from @this and return its previously assigned value or @def when @key had no item associated") },
     { "clear", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_doclear,
       DOC("()\n"
           "Clear all values from @this :dict") },
     { "keys", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_keys,
-      DOC("->dict.keys\n"
+      DOC("->?Akeys?.\n"
           "@return A proxy sequence for viewing the keys of @this :dict") },
     { "values", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_values,
-      DOC("->dict.values\n"
+      DOC("->?Akeys?.\n"
           "@return A proxy sequence for viewing the values of @this :dict") },
     { "items", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_items,
-      DOC("->dict.items\n"
+      DOC("->?Akeys?.\n"
           "@return A proxy sequence for viewing the key-value pairs of @this :dict") },
     { "popitem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_popsomething,
-      DOC("->(object,object)\n"
+      DOC("->?T2?O?O\n"
           "@return A random pair key-value pair that has been removed\n"
           "@throw ValueError @this :dict was empty") },
     { "setdefault", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setdefault,
-      DOC("(key,def=none)->object\n"
+      DOC("(key,def=!N)->\n"
           "@return The object currently assigned to @key\n"
           "Lookup @key in @this dict and return its value if found. Otherwise, assign @def to @key and return it instead") },
     { "setold", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setold,
-      DOC("(key,value)->bool\n"
+      DOC("(key,value)->?Dbool\n"
           "@return Indicative of @value having been assigned to @key\n"
           "Assign @value to @key, only succeeding when @key already existed to begin with") },
     { "setnew", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setnew,
-      DOC("(key,value)->bool\n"
+      DOC("(key,value)->?Dbool\n"
           "@return Indicative of @value having been assigned to @key\n"
           "Assign @value to @key, only succeeding when @key didn't exist before") },
     { "setold_ex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setold_ex,
-      DOC("(key,value)->(bool,object)\n"
+      DOC("(key,value)->?T2?Dbool?O\n"
            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
            "Same as #setold but also return the previously assigned object") },
     { "setnew_ex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setnew_ex,
-      DOC("(key,value)->(bool,object)\n"
+      DOC("(key,value)->?T2?Dbool?O\n"
            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
            "Same as #setnew but return the previously assigned object on failure") },
     { "update", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
-      DOC("({(object,object)...} items)\n"
+      DOC("(items:?S?T2?O?O)\n"
           "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this dict") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Old function names. */
     { "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
-      DOC("({(object,object)...} items)\n"
+      DOC("(items:?S?T2?O?O)\n"
           "A deprecated alias for #update")  },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
@@ -1519,7 +1519,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
                             "()\n"
                             "Create a new, empty dict\n"
                             "\n"
-                            "(mapping items)\n"
+                            "(items:?S?T2?O?O)\n"
                             "Create a new dict, using key-items pairs extracted from @items.\n"
                             "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this dict"),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,

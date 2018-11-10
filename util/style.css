@@ -132,7 +132,7 @@ th {
 	display: inline;
 }
 .broken_link {
-	color: red;
+	color: rgb(231, 101, 101);
 	border: 0px;
 	padding: 0px;
 	display: inline;

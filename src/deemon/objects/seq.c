@@ -81,10 +81,10 @@ seq_getitem(DeeObject *__restrict self, DeeObject *__restrict index) {
 }
 PRIVATE DREF DeeObject *DCALL
 seq_getrange(DeeObject *__restrict self,
-             DeeObject *__restrict begin,
+             DeeObject *__restrict start,
              DeeObject *__restrict end) {
  dssize_t i_begin,i_end;
- if (DeeObject_AsSSize(begin,&i_begin))
+ if (DeeObject_AsSSize(start,&i_begin))
      return NULL;
  if (DeeNone_Check(end)) {
   if unlikely(i_begin < 0) {
@@ -888,7 +888,7 @@ fail:
 
 PRIVATE struct type_getset seq_class_getsets[] = {
     { DeeString_STR(&str_iterator), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_iterator_get, NULL, NULL,
-      DOC("->type\nReturns the iterator class used by instances of @this sequence type\n"
+      DOC("->?Dtype\nReturns the iterator class used by instances of @this sequence type\n"
           "Should a sub-class implement its own iterator, this attribute should be overwritten") },
     { NULL }
 };
@@ -1693,7 +1693,7 @@ err:
 
 INTERN struct type_method seq_methods[] = {
     { "empty", &seq_empty,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this sequence is empty\n"
           "Implemented as (s.a. #op:bool):\n"
           ">function empty() {\n"
@@ -1701,7 +1701,7 @@ INTERN struct type_method seq_methods[] = {
           "> return !(this as sequence).operator bool();\n"
           ">}") },
     { "nonempty", &seq_nonempty,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if @this sequence is non-empty\n"
           "Implemented as (s.a. #op:bool):\n"
           ">function nonempty() {\n"
@@ -1709,8 +1709,8 @@ INTERN struct type_method seq_methods[] = {
           "> return (this as sequence).operator bool();\n"
           ">}") },
     { "reduce", &seq_reduce,
-      DOC("(callable merger)->object\n"
-          "(callable merger,init)->object\n"
+      DOC("(merger:?Dcallable)->\n"
+          "(merger:?Dcallable,init)->\n"
           "Combines consecutive elements of @this sequence by passing them as pairs of 2 to @merger, "
           "then re-using its return value in the next invocation, before finally returning its last "
           "return value. If the sequence consists of only 1 element, @merger is never invoked.\n"
@@ -1730,7 +1730,7 @@ INTERN struct type_method seq_methods[] = {
           "> return none;\n"
           ">}") },
     { "filter", &seq_filter,
-      DOC("(callable keep)->sequence\n"
+      DOC("(keep:?Dcallable)->?S?O\n"
           "@param keep A key function which is called for each element of @this sequence"
           "Returns a sub-sequence of all elements for which ${keep(elem)} evaluates to :true\n"
           "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
@@ -1740,7 +1740,7 @@ INTERN struct type_method seq_methods[] = {
           ">   yield x;\n"
           ">}") },
     { "sum", &seq_sum,
-      DOC("->object\nReturns the sum of all elements, or :none if the sequence is empty\n"
+      DOC("->\nReturns the sum of all elements, or :none if the sequence is empty\n"
           "This, alongside :string.join is the preferred way of merging lists of strings "
           "into a single string\n"
           ">function sum() {\n"
@@ -1755,7 +1755,7 @@ INTERN struct type_method seq_methods[] = {
           "> return result is bound ? result : none;\n"
           ">}") },
     { "any", &seq_any,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if any element of @this sequence evaluates to :{true}\n"
           "If @this sequence is empty, :false is returned\n"
           "This function has the same effect as ${this || ...}\n"
@@ -1766,7 +1766,7 @@ INTERN struct type_method seq_methods[] = {
           "> return false;\n"
           ">}") },
     { "all", &seq_all,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true if all elements of @this sequence evaluate to :{true}\n"
           "If @this sequence is empty, :true is returned\n"
           "This function has the same effect as ${this && ...}\n"
@@ -1777,10 +1777,10 @@ INTERN struct type_method seq_methods[] = {
           "> return true;\n"
           ">}") },
     { "parity", &seq_parity,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Returns :true or :false indicative of the parity of sequence elements that are :true\n"
           "If @this sequence is empty, :false is returned\n"
-          "Parity here referrs to ${#this.filter([](x) -> !!x) % 2}\n"
+          "Parity here refers to ${#this.filter([](x) -> !!x) % 2}\n"
           ">function parity() {\n"
           "> local result = false;\n"
           "> for (local x: this)\n"
@@ -1789,7 +1789,7 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "min", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_min,
-      DOC("(callable key=none)->object\n"
+      DOC("(key:?Dcallable=!N)->\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns the smallest element of @this sequence\n"
           "If @this sequence is empty, :none is returned\n"
@@ -1818,7 +1818,7 @@ INTERN struct type_method seq_methods[] = {
           ">}"),
       TYPE_METHOD_FKWDS },
     { "max", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_max,
-      DOC("(callable key=none)->object\n"
+      DOC("(key:?Dcallable=!N)->\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns the greatest element of @this sequence\n"
           "If @this sequence is empty, :none is returned\n"
@@ -1846,7 +1846,7 @@ INTERN struct type_method seq_methods[] = {
           ">}"),
       TYPE_METHOD_FKWDS },
     { "count", &seq_count,
-      DOC("(elem,callable key=none)->int\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dint\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns the number of instances of a given object @elem in @this sequence\n"
@@ -1864,7 +1864,7 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "locate", &seq_locate,
-      DOC("(elem,callable key=none)->object\n"
+      DOC("(elem,key:?Dcallable=!N)->\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "@throw ValueError The sequence does not contain an element matching @elem\n"
@@ -1885,7 +1885,7 @@ INTERN struct type_method seq_methods[] = {
           "> throw Error.ValueError(\"Item not found...\")\n"
           ">}") },
     { "rlocate", &seq_rlocate,
-      DOC("(elem,callable key=none)->object\n"
+      DOC("(elem,key:?Dcallable=!N)->\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "@throw ValueError The sequence does not contain an element matching @elem\n"
@@ -1908,9 +1908,9 @@ INTERN struct type_method seq_methods[] = {
           ">  return result;\n"
           "> throw Error.ValueError(\"Item not found...\")\n"
           ">}") },
-    /* TODO: findall(elem,callable key=none) -> {int...} */
+    /* TODO: findall(elem,key:?Dcallable=!N)->?S?Dint */
     { "locateall", &seq_locateall,
-      DOC("(elem,callable key=none)->sequence\n"
+      DOC("(elem,key:?Dcallable=!N)->?S?O\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns a sequence of items equal to @elem\n"
@@ -1929,7 +1929,7 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           ">}") },
     { "transform", &seq_transform,
-      DOC("(callable transformation)->sequence\n"
+      DOC("(callable transformation)->?S?O\n"
           "@param transformation A key function invoked to transform members of @this sequence\n"
           "Returns a sequence that is a transformation of @this, with each element passed "
           "to @transformation for processing before being returned\n"
@@ -1939,7 +1939,7 @@ INTERN struct type_method seq_methods[] = {
           ">}\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/functions.html#map map}") },
     { "contains", &seq_contains,
-      DOC("(elem,callable key=none)->bool\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns :true if @this sequence contains an element matching @elem\n"
@@ -1954,7 +1954,7 @@ INTERN struct type_method seq_methods[] = {
           "> return false;\n"
           ">}") },
     { "startswith", &seq_startswith,
-      DOC("(elem,callable key=none)->bool\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
           "@param elem The element to compare against\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns :true / :false indicative of @this sequence's first element matching :elem\n"
@@ -1962,7 +1962,7 @@ INTERN struct type_method seq_methods[] = {
           "against @elem, potentially through use of @{key}: ${key(first) == key(elem)} or ${first == elem}, "
           "however instead of throwing a :ValueError when the sequence is empty, :false is returned") },
     { "endswith", &seq_endswith,
-      DOC("(elem,callable key=none)->bool\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
           "@param elem The element to compare against\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns :true / :false indicative of @this sequence's last element matching :elem\n"
@@ -1970,9 +1970,9 @@ INTERN struct type_method seq_methods[] = {
           "against @elem, potentially through use of @{key}: ${key(last) == key(elem)} or ${last == elem}, "
           "however instead of throwing a :ValueError when the sequence is empty, :false is returned") },
     { "find", &seq_find,
-      DOC("(elem,callable key=none)->int\n"
-          "(elem,int start,callable key=none)->int\n"
-          "(elem,int start,int end,callable key=none)->int\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "@param start The start index for a sub-range to search (clamped by ${#this})\n"
@@ -2044,9 +2044,9 @@ INTERN struct type_method seq_methods[] = {
           "> return -1;\n"
           ">}") },
     { "rfind", &seq_rfind,
-      DOC("(elem,callable key=none)->int\n"
-          "(elem,int start,callable key=none)->int\n"
-          "(elem,int start,int end,callable key=none)->int\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "@param start The start index for a sub-range to search (clamped by ${#this})\n"
@@ -2125,9 +2125,9 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "index", &seq_index,
-      DOC("(elem,callable key=none)->int\n"
-          "(elem,int start,callable key=none)->int\n"
-          "(elem,int start,int end,callable key=none)->int\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "@param start The start index for a sub-range to search (clamped by ${#this})\n"
@@ -2143,9 +2143,9 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "rindex", &seq_rindex,
-      DOC("(elem,callable key=none)->int\n"
-          "(elem,int start,callable key=none)->int\n"
-          "(elem,int start,int end,callable key=none)->int\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "@param start The start index for a sub-range to search (clamped by ${#this})\n"
@@ -2161,25 +2161,25 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "reversed", &seq_reversed,
-      DOC("->sequence\n"
+      DOC("->?S?O\n"
           "Return a sequence that contains the elements of @this sequence in reverse order\n"
           "The point at which @this sequence is enumerated is implementation-defined") },
     { "sorted",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_sorted,
-      DOC("(callable key=none)->sequence\n"
+      DOC("(key:?Dcallable=!N)->?S?O\n"
           "Return a sequence that contains all elements from @this sequence, "
           "but sorted in ascending order, or in accordance to @key\n"
           "The point at which @this sequence is enumerated is implementation-defined"),
       TYPE_METHOD_FKWDS },
     { "segments", &seq_segments,
-      DOC("(int segment_size)->{sequence...}\n"
+      DOC("(segment_size:?Dint)->{sequence...}\n"
           "@throw IntegerOverflow @segment_size is negative, or too large\n"
           "@throw ValueError The given @segment_size is zero\n"
           "Return a sequence of sequences contains all elements from @this sequence, "
           "with the first n sequences all consisting of @segment_size elements, before "
           "the last one contains the remainder of up to @segment_size elements") },
     { "distribute", &seq_distribute,
-      DOC("(int bucket_count)->{sequence...}\n"
+      DOC("(bucket_count:?Dint)->{sequence...}\n"
           "@throw IntegerOverflow @segment_size is negative, or too large\n"
           "@throw ValueError The given @segment_size is zero\n"
           "Re-distribute the elements of @this sequence to form @bucket_count similarly-sized "
@@ -2188,7 +2188,7 @@ INTERN struct type_method seq_methods[] = {
           "This is similar to #segments, however rather than having the caller specify the "
           "size of the a bucket, the number of buckets is specified instead.") },
     { "combinations", &seq_combinations,
-      DOC("(int r)->{sequence...}\n"
+      DOC("(r:?Dint)->{sequence...}\n"
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Returns a sequence of r-long sequences representing all possible (ordered) "
           "combinations of elements retrieved from @this\n"
@@ -2204,7 +2204,7 @@ INTERN struct type_method seq_methods[] = {
           "When @r is greater than ${#this}, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations itertools.combinations}") },
     { "repeatcombinations", &seq_repeatcombinations,
-      DOC("(int r)->{sequence...}\n"
+      DOC("(r:?Dint)->{sequence...}\n"
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Same as #combinations, however elements of @this sequence may be repeated (though element order is still enforced)\n"
           ">/* { (\"A\", \"A\"), (\"A\", \"B\"), "
@@ -2218,7 +2218,7 @@ INTERN struct type_method seq_methods[] = {
           "When ${#this} is zero, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations_with_replacement itertools.combinations_with_replacement}") },
     { "permutations", &seq_permutations,
-      DOC("(int r=none)->{sequence...}\n"
+      DOC("(r:?Dint=!N)->{sequence...}\n"
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Same as #combinations, however the order of elements must "
           "not be enforced, though indices may not be repeated\n"
@@ -2240,27 +2240,27 @@ INTERN struct type_method seq_methods[] = {
     /* TODO: rstrip(object item, callable key = none) -> sequence */
     /* TODO: split(object sep, callable key = none) -> sequence */
 
-    /* TODO: countseq(sequence seq, callable key = none) -> int */
+    /* TODO: countseq(seq:?S?O, callable key = none) -> int */
     /* TODO: partition(object item, callable key = none) -> (sequence,(item),sequence) */
     /* TODO: rpartition(object item, callable key = none) -> (sequence,(item),sequence) */
-    /* TODO: partitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence) */
-    /* TODO: rpartitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence) */
-    /* TODO: startswithseq(sequence seq, callable key = none) -> bool */
-    /* TODO: endswithseq(sequence seq, callable key = none) -> bool */
-    /* TODO: findseq(sequence seq, callable key = none) -> int */
-    /* TODO: rfindseq(sequence seq, callable key = none) -> int */
-    /* TODO: indexseq(sequence seq, callable key = none) -> int */
-    /* TODO: rindexseq(sequence seq, callable key = none) -> int */
-    /* TODO: stripseq(sequence items, callable key = none) -> sequence */
-    /* TODO: lstripseq(sequence items, callable key = none) -> sequence */
-    /* TODO: rstripseq(sequence items, callable key = none) -> sequence */
-    /* TODO: splitseq(sequence seq, callable key = none) -> sequence */
+    /* TODO: partitionseq(seq:?S?O, callable key = none) -> (sequence,seq,sequence) */
+    /* TODO: rpartitionseq(seq:?S?O, callable key = none) -> (sequence,seq,sequence) */
+    /* TODO: startswithseq(seq:?S?O, callable key = none) -> bool */
+    /* TODO: endswithseq(seq:?S?O, callable key = none) -> bool */
+    /* TODO: findseq(seq:?S?O, callable key = none) -> int */
+    /* TODO: rfindseq(seq:?S?O, callable key = none) -> int */
+    /* TODO: indexseq(seq:?S?O, callable key = none) -> int */
+    /* TODO: rindexseq(seq:?S?O, callable key = none) -> int */
+    /* TODO: stripseq(items:?S?O, callable key = none) -> sequence */
+    /* TODO: lstripseq(items:?S?O, callable key = none) -> sequence */
+    /* TODO: rstripseq(items:?S?O, callable key = none) -> sequence */
+    /* TODO: splitseq(seq:?S?O, callable key = none) -> sequence */
 
 
     /* Functions for mutable sequences. */
     { DeeString_STR(&str_insert),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_insert,
-      DOC("(int index,item)\n"
+      DOC("(index:?Dint,item)\n"
           "@throw IntegerOverflow The given @index is negative, or too large\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "When @index is negative, it will referr to the end of the sequence\n"
@@ -2303,7 +2303,7 @@ INTERN struct type_method seq_methods[] = {
       TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_insertall),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_insertall,
-      DOC("(int index,sequence items)\n"
+      DOC("(index:?Dint,items:?S?O)\n"
           "@throw IntegerOverflow The given @index is negative, or too large\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "For mutable sequences only: Insert all elements from @items at @index\n"
@@ -2383,7 +2383,7 @@ INTERN struct type_method seq_methods[] = {
           "> throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
           ">}") },
     { DeeString_STR(&str_extend), &seq_extend,
-      DOC("(sequence items)\n"
+      DOC("(items:?S?O)\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "For mutable sequences only: Append all elements from @items at the end of @this sequence\n"
           "When this function isn't defined by a sub-class, the following "
@@ -2418,7 +2418,7 @@ INTERN struct type_method seq_methods[] = {
           ">}") },
     { DeeString_STR(&str_erase),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_erase,
-      DOC("(int index,int count=1)\n"
+      DOC("(index:?Dint,count=!1)\n"
           "@throw IntegerOverflow The given @index is negative, or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2461,7 +2461,7 @@ INTERN struct type_method seq_methods[] = {
       TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_xch),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_xch,
-      DOC("(int index,value)->object\n"
+      DOC("(index:?Dint,value)->\n"
           "@throw IntegerOverflow The given @index is negative, or too large\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2489,7 +2489,7 @@ INTERN struct type_method seq_methods[] = {
       TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_pop),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_pop,
-      DOC("(int index=-1)->object\n"
+      DOC("(index=!-1)->\n"
           "@throw IntegerOverflow The given @index is too large\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2523,7 +2523,7 @@ INTERN struct type_method seq_methods[] = {
           ">}"),
       TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_popfront), &seq_popfront,
-      DOC("->object\n"
+      DOC("->\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "For mutable sequences only: Convenience wrapper for #pop\n"
@@ -2536,7 +2536,7 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           ">}") },
     { DeeString_STR(&str_popback), &seq_popback,
-      DOC("->object\n"
+      DOC("->\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "For mutable sequences only: Convenience wrapper for #pop\n"
@@ -2565,9 +2565,9 @@ INTERN struct type_method seq_methods[] = {
           "> return this.append(item);\n"
           ">}") },
     { DeeString_STR(&str_remove), &seq_remove,
-      DOC("(elem,callable key=none)->bool\n"
-          "(elem,int start,callable key=none)->bool\n"
-          "(elem,int start,int end,callable key=none)->bool\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
+          "(elem,start:?Dint,key:?Dcallable=!N)->?Dbool\n"
+          "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dbool\n"
           "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Find the first instance of @elem and remove it, "
@@ -2647,9 +2647,9 @@ INTERN struct type_method seq_methods[] = {
           "> return false;\n"
           ">}") },
     { DeeString_STR(&str_rremove), &seq_rremove,
-      DOC("(elem,callable key=none)->bool\n"
-          "(elem,int start,callable key=none)->bool\n"
-          "(elem,int start,int end,callable key=none)->bool\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
+          "(elem,start:?Dint,key:?Dcallable=!N)->?Dbool\n"
+          "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dbool\n"
           "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Find the last instance of @elem and remove it, "
@@ -2735,9 +2735,9 @@ INTERN struct type_method seq_methods[] = {
           "> return false;\n"
           ">}") },
     { DeeString_STR(&str_removeall), &seq_removeall,
-      DOC("(elem,callable key=none)->int\n"
-          "(elem,int start,callable key=none)->int\n"
-          "(elem,int start,int end,callable key=none)->int\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
+          "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
           "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Find all instance of @elem and remove "
@@ -2873,7 +2873,7 @@ INTERN struct type_method seq_methods[] = {
           ">}") },
     { DeeString_STR(&str_removeif),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_removeif,
-      DOC("(callable should,int start=0,int end=-1)->int\n"
+      DOC("(should:?Dcallable,start=!0,end=!-1)->?Dint\n"
           "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Remove all elements within the given sub-range, "
@@ -2975,13 +2975,13 @@ INTERN struct type_method seq_methods[] = {
           ">}") },
     { DeeString_STR(&str_resize),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_resize,
-      DOC("(int newsize,filler=none)\n"
+      DOC("(int newsize,filler=!N)\n"
           "@throw SequenceError @this sequence isn't resizable\n"
           "Resize @this sequence to have a new length of @newsize "
           "items, using @filler to initialize newly added entries\n"
           "When not implemented by a sub-class, :sequence "
           "implements this function as follows:\n"
-          ">function resize(newsize,filler=none) {\n"
+          ">function resize(newsize,filler=!N) {\n"
           "> import int, sequence from deemon;\n"
           "> newsize = (int)newsize;\n"
           "> if (!newsize) {\n"
@@ -2998,7 +2998,7 @@ INTERN struct type_method seq_methods[] = {
       TYPE_METHOD_FKWDS },
     { "fill",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_fill,
-      DOC("(int start=0,int end=-1,filler=none)->int\n"
+      DOC("(start=!0,end=!-1,filler=!N)->?Dint\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Assign @filler to all elements within "
           "the given sub-range, and return the number of written indices\n"
@@ -3038,7 +3038,7 @@ INTERN struct type_method seq_methods[] = {
           ">}") },
     { "sort",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_sort,
-      DOC("(callable key=none)\n"
+      DOC("(key:?Dcallable=!N)\n"
           "@param key A key function for transforming sequence elements\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Sort the elements of @this sequence\n"
@@ -3052,16 +3052,16 @@ INTERN struct type_method seq_methods[] = {
 
     /* Old function names/deprecated functions. */
     { "front", &seq_front,
-      DOC("->object\nDeprecated alias for #first") },
+      DOC("->\nDeprecated alias for #first") },
     { "back", &seq_back,
-      DOC("->object\nDeprecated alias for #last") },
+      DOC("->\nDeprecated alias for #last") },
     { "non_empty", &seq_nonempty_deprecated,
-       DOC("->bool\nDeprecated alias for #nonempty") },
+       DOC("->?Dbool\nDeprecated alias for #nonempty") },
     { "at", &seq_at,
-       DOC("(int index)->object\n"
+       DOC("(index:?Dint)->\n"
            "Deprecated alias for ${this[index]}") },
     { "get", &seq_at,
-       DOC("(int index)->object\n"
+       DOC("(index:?Dint)->\n"
            "Deprecated alias for ${this[index]}\n"
            "In older versions of deemon, this function (as well as ${operator []}) "
            "would modulate the given @index by the length of the sequence. Starting "
@@ -3137,12 +3137,12 @@ err:
 
 
 PRIVATE struct type_getset seq_getsets[] = {
-    { "length", &seq_length_get, NULL, NULL, DOC("->int\nAlias for ${#this}") },
+    { "length", &seq_length_get, NULL, NULL, DOC("->?Dint\nAlias for ${#this}") },
     { DeeString_STR(&str_first),
       &DeeSeq_Front,
       &seq_del_first,
       &seq_set_first,
-      DOC("->object\n"
+      DOC("->\n"
           "Access the first item of the sequence\n"
           "Depending on the nearest implemented group of operators, "
           "one of the following implementations is chosen\n"
@@ -3187,7 +3187,7 @@ PRIVATE struct type_getset seq_getsets[] = {
       &DeeSeq_Back,
       &seq_del_last,
       &seq_set_last,
-      DOC("->object\n"
+      DOC("->\n"
           "Access the last item of the sequence\n"
           "Depending on the nearest implemented group of operators, "
           "one of the following implementations is chosen\n"
@@ -3232,7 +3232,7 @@ PRIVATE struct type_getset seq_getsets[] = {
           "> }\n"
           ">}") },
     { "ismutable", &seq_get_ismutable, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Try to determine if @this sequence is mutable by looking at operators and "
           "member functions implemented by sub-classes. Note however that this property "
           "indicating :true does not necessarily guaranty that elements of the sequence "
@@ -3242,7 +3242,7 @@ PRIVATE struct type_getset seq_getsets[] = {
           "#rremove, #removeall, #removeif, #pop, #xch, #resize, #clear, #pushfront, "
           "#pushback, #popfront or #popback") },
     { "isresizable", &seq_get_isresizable, NULL, NULL,
-      DOC("->bool\n"
+      DOC("->?Dbool\n"
           "Similar to #ismutable, but tries to determine if @this sequence is resizable by "
           "looking at member functions implemented by sub-classes. Note however that this "
           "property indicating :true does not necessarily guaranty that elements of the "
@@ -3260,14 +3260,14 @@ seq_class_range(DeeObject *__restrict UNUSED(self),
   * `sequence.range()' is the new builtin way of getting this
   *  behavior from a core function (since `sequence' is a
   *  builtin type like `list', `tuple', etc.). */
- DeeObject *begin,*end = NULL,*step = NULL,*result;
- if (DeeArg_Unpack(argc,argv,"o|oo:range",&begin,&end,&step))
+ DeeObject *start,*end = NULL,*step = NULL,*result;
+ if (DeeArg_Unpack(argc,argv,"o|oo:range",&start,&end,&step))
      goto err;
- if (end) return DeeRange_New(begin,end,step);
- /* Use a default-constructed instance of `type(begin)' for the real begin. */
- end = DeeObject_NewDefault(Dee_TYPE(begin));
+ if (end) return DeeRange_New(start,end,step);
+ /* Use a default-constructed instance of `type(start)' for the real start. */
+ end = DeeObject_NewDefault(Dee_TYPE(start));
  if unlikely(!end) goto err;
- result = DeeRange_New(end,begin,step);
+ result = DeeRange_New(end,start,step);
  Dee_Decref(end);
  return result;
 err:
@@ -3315,31 +3315,31 @@ seq_class_concat(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_method seq_class_methods[] = {
     { "range", &seq_class_range,
-       DOC("(int end)->sequence\n"
-           "(object end)->sequence\n"
-           "(int begin,int end)->sequence\n"
-           "(object begin,object end)->sequence\n"
-           "(int begin,int end,int step)->sequence\n"
-           "(object begin,object end,object step)->sequence\n"
+       DOC("(end:?Dint)->?S?Dint\n"
+           "(end)->?S?O\n"
+           "(start:?Dint,end:?Dint)->?S?Dint\n"
+           "(start,end)->?S?O\n"
+           "(start:?Dint,end:?Dint,step:?Dint)->?S?Dint\n"
+           "(start,end,step)->?S?O\n"
            "Create a new sequence object for enumeration of indices. "
            "This function is a simple wrapper for the same "
            "functionality available through the following usercode:\n"
            ">local x = [:end];\n"
-           ">local x = [begin:end];\n"
-           ">local x = [begin:end,step];") },
+           ">local x = [start:end];\n"
+           ">local x = [start:end,step];") },
     { "repeat", &seq_class_repeat,
-       DOC("(object obj,int count)->sequence\n"
+       DOC("(obj,count:?Dint)->?S?O\n"
            "@throw IntegerOverflow @count is negative\n"
            "Create a proxy-sequence that yields @obj a total of @count times\n"
            "The main purpose of this function is to construct large sequences "
            "to be used as initializers for mutable sequences such as :list") },
     { "repeatseq", &seq_class_repeatseq,
-       DOC("(sequence seq,int count)->sequence\n"
+       DOC("(seq:?S?O,count:?Dint)->?S?O\n"
            "@throw IntegerOverflow @count is negative\n"
            "Repeat all the elements from @seq a total of @count times\n"
            "This is the same as ${(seq as sequence from deemon) * count}") },
     { "concat", &seq_class_concat,
-       DOC("(sequence seqs...)->sequence\n"
+       DOC("(seqs!:?S?O)->?S?O\n"
            "Returns a proxy-sequence describing the concantation of all of the given sequences\n"
            "When only 1 sequence is given, that sequence is forwarded directly.\n"
            "When no sequences are given, an empty sequence is returned\n"
@@ -3417,7 +3417,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> return fp.string;\n"
                             ">}\n"
                             "\n"
-                            "+(sequence other)->\n"
+                            "+(other:?S?O)->\n"
                             "Returns a proxy sequence for accessing elements from @this "
                             "sequence, and those from @other in a seamless stream of items\n"
                             "This operator is implemented similar to the following, however the actual "
@@ -3429,7 +3429,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> yield other...;\n"
                             ">}\n"
                             "\n"
-                            "*(int count)->\n"
+                            "*(count:?Dint)->\n"
                             "@throw IntegerOverflow @count is negative, or larger than :int.SIZE_MAX\n"
                             "Returns a proxy sequence for accessing the elements of @this "
                             "sequence, consecutively repeated a total of @count times\n"
@@ -3463,7 +3463,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "compare-support, should the user with to provide that kind of functionality\n"
                             "The lexicographical comparison will makes use of iterators to compare sequences\n"
                             "\n"
-                            "[](int index)\n"
+                            "[]->\n"
                             "@throw OverflowError The given @index is negative\n"
                             "@throw IndexError The given @index is greater than the length of @this sequence (${#this})\n"
                             "@throw UnboundItem The item associated with @index is unbound\n"
@@ -3471,7 +3471,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "Depending on the nearest implemented group of operators, "
                             "one of the following implementations is chosen\n"
                             "For ${operator [:]}:\n"
-                            ">operator [] (index) {\n"
+                            ">operator [] (index: int) {\n"
                             "> import int, sequence, Error from deemon;\n"
                             "> index = (int)index;\n"
                             "> local result = this[index:index+1];\n"
@@ -3482,7 +3482,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> }\n"
                             ">}\n"
                             "For ${operator iter}:\n"
-                            ">operator [] (index) {\n"
+                            ">operator [] (index: int) {\n"
                             "> import int, Error, Signal from deemon;\n"
                             "> index = (int)index;\n"
                             "> local it = this.operator iter();\n"
@@ -3509,20 +3509,20 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> return result;\n"
                             ">}\n"
                             "\n"
-                            "contains(elem)\n"
-                            "Returns :true/:false indicative of @elem being apart of @this sequence\n"
+                            "contains->\n"
+                            "Returns :true/:false indicative of @item being apart of @this sequence\n"
                             "This operator is an alias for the #contains member function, "
                             "which allows the use of an additional key function\n"
                             "When not implemented by a sub-class, this operator is implemented as defined by :sequence as follows\n"
-                            ">operator contains(elem) {\n"
+                            ">operator contains(item) {\n"
                             "> for (local my_elem: this) {\n"
-                            ">  if (my_elem == elem)\n"
+                            ">  if (my_elem == item)\n"
                             ">   return true;\n"
                             "> }\n"
                             "> return false;\n"
                             ">}\n"
                             "\n"
-                            "[:](int start,int end)\n"
+                            "[:](start:?Dint,end:?Dint)->\n"
                             "Returns a sub-range of @this sequence, spanning across all elements from @start to @end\n"
                             "If either @start or @end is smaller than ${0}, ${#this} is added once to either\n"
                             "If @end is greater than the length of @this sequence, it is clamped to its length\n"
@@ -3531,7 +3531,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "return type may be a proxy sequence that further optimizes the iteration "
                             "strategy used, based on which operators have been implemented by sub-classes, as well "
                             "as how the sub-range is accessed (i.e. ${this[10:20][3]} will invoke ${this[13]}).\n"
-                            ">operator [:](int start, int end) {\n"
+                            ">operator [:](start: int, end: int): sequence {\n"
                             "> import int, Signal from deemon;\n"
                             "> start = (int)start;\n"
                             "> if (end is none) {\n"
@@ -3588,11 +3588,11 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> private m_idx = 0;\n"
                             "> private m_seq;\n"
                             "> private m_len;\n"
-                            "> this(seq) {\n"
+                            "> this(seq: sequence) {\n"
                             ">  m_seq = seq;\n"
                             ">  m_len = #seq;\n"
                             "> }\n"
-                            "> operator next() {\n"
+                            "> operator next(): object {\n"
                             ">  import Error, Signal from deemon;\n"
                             ">  for (;;) {\n"
                             ">   local index = m_idx;\n"
@@ -3607,13 +3607,13 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> }\n"
                             ">}\n"
                             "\n"
-                            "+=(sequence other)->\n"
+                            "+=(other:?S?O)->\n"
                             "Highly similar to #extend, however if that fails, or if the nearest "
                             "matching sub-class provides an implementation for ${operator +}, replace "
                             "the caller's storage symbol with ${this + other}, meaning that similar "
                             "to when `operator +=' is used with strings, the original sequence remains "
                             "unmodified, but the caller's symbol used to access that sequence is changed\n"
-                            ">operator += (items) {\n"
+                            ">operator += (items: sequence) {\n"
                             "> import int, Error, sequence from deemon;\n"
                             "> for (local tp = type(this); tp !is none && tp !== sequence; tp = tp.__base__) {\n"
                             ">  if (tp.hasprivateattribute(\"extend\")) {\n"
@@ -3648,10 +3648,10 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> return (this as sequence) + items;\n"
                             ">}\n"
                             "\n"
-                            "*=(int count)->\n"
+                            "*=(count:?Dint)->\n"
                             "Inplace-repeat the elements of @this sequence\n"
                             "If @this sequence isn't mutable, replace the caller's symbol with ${this * count}\n"
-                            ">operator *= (count) {\n"
+                            ">operator *= (count: int) {\n"
                             "> import sequence from deemon;\n"
                             "> for (local tp = type(this); tp !is none && tp !== sequence; tp = tp.__base__) {\n"
                             ">  if (tp.hasprivateoperator(\"assign\")) {\n"
@@ -3674,12 +3674,12 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> return (this as sequence) * count;\n"
                             ">}\n"
                             "\n"
-                            ":=(sequence other)->\n"
+                            ":=(other:?S?O)->\n"
                             "@throw SequenceError @this sequence is immutable\n"
                             "For mutable sequences only: Assign the contents from @other to @this sequence\n"
                             "When this operator is lacking, the following "
                             "default-implementation is provided by :{sequence}:\n"
-                            ">operator := (other) {\n"
+                            ">operator := (other: sequence) {\n"
                             "> import Error from deemon;\n"
                             "> try {\n"
                             ">  this[:] = other; /* Implemented using `setrange(none,none,other)' */\n"
@@ -3688,7 +3688,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> }\n"
                             ">}\n"
                             "\n"
-                            "del[](int index)->\n"
+                            "del[]->\n"
                             "@throw IntegerOverflow The given @index is negative, or too large\n"
                             "@throw IndexError The given @index is out of bounds\n"
                             "@throw UnboundItem The item associated with @index had already been unbound\n"
@@ -3696,9 +3696,9 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "For mutable sequences only: Remove the item found at @index, either "
                             "removing it from the sequence, or changing it to being unbound\n"
                             "When this operator is lacking, but ${operator del[:]}, ${operator [:]=} or "
-                            "${erase(int index, int count = 1)} are available, the following "
+                            "${erase(index:?Dint, count:?Dint = 1)} are available, the following "
                             "default-implementation is provided by :{sequence}:\n"
-                            ">operator del[] (index) {\n"
+                            ">operator del[] (index: int) {\n"
                             "> import int, Error from deemon;\n"
                             "> index = (int)index;\n"
                             "> if (index < 0)\n"
@@ -3724,14 +3724,14 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> throw Error.ValueError.SequenceError(\"Immutable sequence\");\n"
                             ">}\n"
                             "\n"
-                            "[]=(int index,value)->\n"
+                            "[]=->\n"
                             "@throw IntegerOverflow The given @index is negative, or too large\n"
                             "@throw IndexError The given @index is out of bounds\n"
                             "@throw SequenceError @this sequence is immutable\n"
                             "For mutable sequences only: Override the item found at @index with @value\n"
                             "When this operator is lacking, but ${operator [:]=} is available, the following "
                             "default-implementation is provided by :{sequence}:\n"
-                            ">operator []= (index,value) {\n"
+                            ">operator []= (index: int, value) {\n"
                             "> import int, Error from deemon;\n"
                             "> index = (int)index;\n"
                             "> if (index < 0)\n"
@@ -3741,15 +3741,15 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> self[index:index+1] = { value };\n"
                             ">}\n"
                             "\n"
-                            "del[:](int start,int end)->\n"
+                            "del[:]->\n"
                             "@throw IntegerOverflow @start or @end are too large\n"
                             "@throw SequenceError @this sequence cannot be resized\n"
                             "For mutable sequences only: Delete, or unbind all items within the given range\n"
                             "When this operator is lacking, the following default-implementation is "
                             "provided by :{sequence} when the required operators and members are present.\n"
                             "Also note that in order to properly function in resizable sequences, the member function "
-                            "${erase(int index, int count = 1)} must be defined by a sub-class\n"
-                            ">operator del[:] (start,end) {\n"
+                            "${erase(index:?Dint, count:?Dint = 1)} must be defined by a sub-class\n"
+                            ">operator del[:] (start: int, end: int) {\n"
                             "> import int, Error, Signal from deemon;\n"
                             "> start = (int)start;\n"
                             "> if (end is none) {\n"
@@ -3815,16 +3815,16 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> }\n"
                             ">}\n"
                             "\n"
-                            "[:]=(int start,int end,values)->\n"
+                            "[:]=->\n"
                             "@throw IntegerOverflow @start or @end are too large\n"
                             "@throw SequenceError @this sequence is immutable, or cannot be resized\n"
                             "For mutable sequences only: Override the given range with items from @{values}:\n"
                             "When this operator is lacking, the following default-implementation is "
                             "provided by :{sequence} when the required operators and members are present.\n"
                             "Also note that in order to properly function in resizable sequences, 2 member functions "
-                            "${insert(int index, object item)} and ${erase(int index, int count = 1)} must be defined "
+                            "${insert(index:?Dint, object item)} and ${erase(index:?Dint, count:?Dint = 1)} must be defined "
                             "by a sub-class\n"
-                            ">operator [:]= (start,end,values) {\n"
+                            ">operator [:]= (start: int, end: int, values: sequence) {\n"
                             "> import int, Error, Signal, iterator, sequence from deemon;\n"
                             "> start = (int)start;\n"
                             "> if (values is none) {\n"
@@ -4159,8 +4159,8 @@ iterator_next(DeeObject *__restrict self,
 
 PRIVATE struct type_method iterator_methods[] = {
     { "next", &iterator_next,
-      DOC("->object\n"
-          "(object defl)->object\n"
+      DOC("->\n"
+          "(object defl)->\n"
           "@throw StopIteration @this iterator has been exhausted, and no @decl was given\n"
           "Same as ${this.operator next()}\n"
           "When given, @defl is returned when the iterator has been "
@@ -4170,7 +4170,7 @@ PRIVATE struct type_method iterator_methods[] = {
 
 PRIVATE struct type_member iterator_members[] = {
     TYPE_MEMBER_CONST_DOC("seq",Dee_EmptySeq,
-                          "->sequence\n"
+                          "->?S?O\n"
                           "Returns the underlying sequence that is being iterated\n"
                           "Since use of this member isn't all too common, sub-classes are allowed "
                           "to (and sometimes do) not return the exact original sequence, but rather "
@@ -4186,7 +4186,7 @@ INTDEF DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
 
 PRIVATE struct type_getset iterator_getsets[] = {
     { "future", &IteratorFuture_For, NULL, NULL,
-      DOC("->sequence\n"
+      DOC("->?S?O\n"
           "Returns an abstract sequence proxy that always refers to the items that are "
           "still left to be yielded by @this iterator. Note that for this to function "
           "properly, the iterator must be copyable.\n"
@@ -4200,7 +4200,7 @@ PRIVATE struct type_getset iterator_getsets[] = {
           ">print it.operator next(); /* 10 */\n"
           ">print repr it.future;     /* { 20, 30 } */") },
     { "pending", &IteratorPending_For, NULL, NULL,
-      DOC("->sequence\n"
+      DOC("->?S?O\n"
           "Very similar to #future, however the when invoking ${operator iter} on "
           "the returned sequence, rather than having it return a copy of @this iterator, "
           "re-return the exact same iterator, allowing the use of this member for iterators "
@@ -4290,32 +4290,32 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
                             "()\n"
                             "Default-construct an iterator object\n"
                             "\n"
-                            "next()\n"
+                            "next->\n"
                             "Default-implemented to always indicate iterator exhaustion\n"
                             "This function must be overwritten by sub-classes\n"
                             "\n"
-                            "repr()\n"
+                            "repr->\n"
                             "Copies @this iterator and enumerate all remaining elements, constructing "
                             "a representation of all of them using abstract sequence syntax\n"
                             "\n"
-                            "bool()\n"
+                            "bool->\n"
                             "Copies @this iterator and tries to yield an item. If the iterator "
                             "has been exhausted, return :{false}. Otherwise return :true\n"
                             "\n"
-                            "+(int step)\n"
+                            "+(int step)->\n"
                             "@throws IntegerOverflow @step is negative\n"
                             "Copies @this iterator and advance it by yielding @step items from it before returning it\n"
                             "If the iterator becomes exhausted before then, stop and return that exhausted iteartor\n"
                             "\n"
-                            "+=(int step)\n"
+                            "+=(int step)->\n"
                             "@throws IntegerOverflow @step is negative\n"
                             "Advance @this iterator by yielding @step items\n"
                             "If @this iterator becomes exhausted before then, stop prematurely\n"
                             "\n"
-                            "++()\n"
+                            "++->\n"
                             "Advance @this iterator by one. No-op if the iterator has been exhausted\n"
                             "\n"
-                            "call()->object\n"
+                            "call()->\n"
                             "Calling an operator as a function will invoke ${operator next}, and return "
                             "that value, allowing iterators to be used as function-like producers\n"
                             ">operator call() {\n"

@@ -78,6 +78,7 @@ PRIVATE struct module_symbol deemon_builtins[num_builtins_sym] = {
 #define BUILTIN(name,object,flags)         { DeeString_STR(&str_##name), NULL, 0, flags|MODSYM_FNAMEOBJ, { id_##name } },
 #ifndef CONFIG_NO_DOC
 #define BUILTIN_DOC(name,object,flags,doc) { DeeString_STR(&str_##name), doc, 0, flags|MODSYM_FNAMEOBJ, { id_##name } },
+#define BUILTIN_DOC_REUSE(name,object,flags,doc) BUILTIN_DOC(name,object,flags,doc)
 #endif
 #define BUILTIN_ALIAS(name,alt,flags)      { DeeString_STR(&str_##name), NULL, 0, flags|MODSYM_FALIAS|MODSYM_FNAMEOBJ, { id_##alt } },
 #include "builtins.def"

@@ -2909,6 +2909,9 @@ search_suitable_end_again:
 #define MODE_INCHAR    0x02
 #define MODE_INCOMMENT 0x04
 #define MODE_INPP      0x08
+#ifdef TPP_CONFIG_RAW_STRING_LITERALS
+#define MODE_RAW       0x10
+#endif
    /* >> We managed to find a text chunk suitable to our needs (ends with a non-escaped linefeed)
     *    Yet there are still some more restrictions: It must not end inside an unfinished comment,
     *    and it must not contain an unterminated string/character (if the necessary flag is set). */
@@ -2918,9 +2921,15 @@ search_suitable_end_again:
     assert(iter < end);
     if (!mode) last_zero_mode = iter;
     ch = *iter++;
+#ifdef TPP_CONFIG_RAW_STRING_LITERALS
+    if (ch == '\\' && iter != end) { if (!(mode & MODE_RAW) && (*iter++ == '\r' && iter != end && *iter == '\n')) ++iter; }
+    else if (ch == '\'' && !(mode&~(MODE_INCHAR))) { mode ^= MODE_INCHAR; if ((mode & MODE_INCHAR) && iter-1 > self->f_begin && iter[-2] == 'r') mode |= MODE_RAW; }
+    else if (ch == '\"' && !(mode&~(MODE_INSTRING))) { mode ^= MODE_INSTRING; if ((mode & MODE_INSTRING) && iter-1 > self->f_begin && iter[-2] == 'r') mode |= MODE_RAW; }
+#else
     if (ch == '\\' && iter != end) { if (*iter++ == '\r' && iter != end && *iter == '\n') ++iter; }
     else if (ch == '\'' && !(mode&~(MODE_INCHAR))) mode ^= MODE_INCHAR;
     else if (ch == '\"' && !(mode&~(MODE_INSTRING))) mode ^= MODE_INSTRING;
+#endif
     /* Linefeeds should also terminate strings when the line started with a `#':
      * >> #define m  This macro's fine!
      * >> #error This error contains an unmatched ", but that's OK (< and so was that)
@@ -2929,7 +2938,11 @@ search_suitable_end_again:
     else if (tpp_islf(ch)) {
      if (ch == '\r' && iter != end && *iter == '\n') ++iter;
      mode &= ~(MODE_INPP);
+#ifdef TPP_CONFIG_RAW_STRING_LITERALS
+     if (termstring_onlf) mode &= ~(MODE_INCHAR|MODE_INSTRING|MODE_RAW);
+#else
      if (termstring_onlf) mode &= ~(MODE_INCHAR|MODE_INSTRING);
+#endif
 #if 1
      if (!mode) last_zero_mode = iter;
      if (iter != end && *iter == '#' &&
