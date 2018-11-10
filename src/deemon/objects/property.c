@@ -260,9 +260,8 @@ property_get_type(Property *__restrict self) {
  if unlikely(error < 0) goto err;
  Dee_XDecref(info.fi_name);
  Dee_XDecref(info.fi_doc);
- Dee_XDecref(info.fi_type);
  if (info.fi_type) return info.fi_type;
- result = (DREF DeeTypeObject *)property_getattr(self,"__doc__");
+ result = (DREF DeeTypeObject *)property_getattr(self,"__type__");
  if (result == (DREF DeeTypeObject *)ITER_DONE) {
   result = (DREF DeeTypeObject *)Dee_None;
   Dee_Incref(result);
