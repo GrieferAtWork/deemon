@@ -232,13 +232,16 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
   if (deemon->mo_globalv[i] != ob)
       continue;
   /* Special encodings for specific objects. */
+#if 0
   if (i == id_sequence) {
    if (UNICODE_PRINTER_PRINT(printer,"?S?O") < 0)
        goto err;
   } else if (i == id_mapping) {
    if (UNICODE_PRINTER_PRINT(printer,"?S?T2?O?O") < 0) /* {(object,object)...} */
        goto err;
-  } else if (i == id_none) {
+  } else
+#endif
+  if (i == id_none) {
    if (UNICODE_PRINTER_PRINT(printer,"?N") < 0)
        goto err;
   } else if (i == id_object) {
@@ -323,12 +326,14 @@ switch_symbol_type:
     } else if (msym->ss_index == id_none) {
      if (UNICODE_PRINTER_PRINT(printer,"?N") < 0)
          goto err;
+#if 0
     } else if (msym->ss_index == id_sequence) {
      if (UNICODE_PRINTER_PRINT(printer,"?S?O") < 0)
          goto err;
     } else if (msym->ss_index == id_mapping) {
      if (UNICODE_PRINTER_PRINT(printer,"?S?T2?O?O") < 0)
          goto err;
+#endif
     } else {
      if (UNICODE_PRINTER_PRINT(printer,"?D") < 0)
          goto err;

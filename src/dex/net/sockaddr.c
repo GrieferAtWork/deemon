@@ -1666,7 +1666,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 #ifdef CONFIG_NO_DOC
     /* .tp_doc      = */NULL,
 #else /* CONFIG_NO_DOC */
-    /* .tp_doc      = */"(family:?Dstring|?Dint,args!)\n"
+    /* .tp_doc      = */"(family:?X2?Dstring?Dint,args!)\n"
                         "@param family The family of which this is a socket address. You may pass :none, an empty "
                                       "string, $\"AF_AUTO\", or ${-1} to determine the proper family automatically\n"
                         "Create a new socket address. @args is documented below and depends on @family\n"

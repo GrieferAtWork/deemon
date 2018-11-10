@@ -3091,7 +3091,7 @@ err:
 
 INTERN DREF DeeCodeObject *DCALL
 code_compile(struct ast *__restrict code_ast, uint16_t flags,
-             uint16_t *__restrict prefc,
+             bool first_function, uint16_t *__restrict prefc,
              /*out:inherit*/struct asm_symbol_ref **__restrict prefv) {
  struct assembler old_assembler;
  DREF DeeCodeObject *result;
@@ -3103,7 +3103,8 @@ code_compile(struct ast *__restrict code_ast, uint16_t flags,
  if unlikely(assembler_init()) goto err;
 
  /* Keep the old assembler scope so that asts know where their influence ends. */
- current_assembler.a_scope = old_assembler.a_scope;
+ if (!first_function)
+      current_assembler.a_scope = old_assembler.a_scope;
 
  /* Set assembler flags. */
  current_assembler.a_flag = flags & ~ASM_FARGREFS;
@@ -3148,7 +3149,7 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
             (current_basescope->bs_flags & CODE_FVARARGS)) {
   *pargc = 0;
   *pargv = NULL;
-  return code_compile(code_ast,flags,prefc,prefv);
+  return code_compile(code_ast,flags,false,prefc,prefv);
  }
 
  /* Copy the current, and create a new assembler. */

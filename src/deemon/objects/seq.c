@@ -1730,7 +1730,7 @@ INTERN struct type_method seq_methods[] = {
           "> return none;\n"
           ">}") },
     { "filter", &seq_filter,
-      DOC("(keep:?Dcallable)->?S?O\n"
+      DOC("(keep:?Dcallable)->?Dsequence\n"
           "@param keep A key function which is called for each element of @this sequence"
           "Returns a sub-sequence of all elements for which ${keep(elem)} evaluates to :true\n"
           "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
@@ -1910,7 +1910,7 @@ INTERN struct type_method seq_methods[] = {
           ">}") },
     /* TODO: findall(elem,key:?Dcallable=!N)->?S?Dint */
     { "locateall", &seq_locateall,
-      DOC("(elem,key:?Dcallable=!N)->?S?O\n"
+      DOC("(elem,key:?Dcallable=!N)->?Dsequence\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns a sequence of items equal to @elem\n"
@@ -1929,7 +1929,7 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           ">}") },
     { "transform", &seq_transform,
-      DOC("(callable transformation)->?S?O\n"
+      DOC("(callable transformation)->?Dsequence\n"
           "@param transformation A key function invoked to transform members of @this sequence\n"
           "Returns a sequence that is a transformation of @this, with each element passed "
           "to @transformation for processing before being returned\n"
@@ -2161,25 +2161,25 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}") },
     { "reversed", &seq_reversed,
-      DOC("->?S?O\n"
+      DOC("->?Dsequence\n"
           "Return a sequence that contains the elements of @this sequence in reverse order\n"
           "The point at which @this sequence is enumerated is implementation-defined") },
     { "sorted",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_sorted,
-      DOC("(key:?Dcallable=!N)->?S?O\n"
+      DOC("(key:?Dcallable=!N)->?Dsequence\n"
           "Return a sequence that contains all elements from @this sequence, "
           "but sorted in ascending order, or in accordance to @key\n"
           "The point at which @this sequence is enumerated is implementation-defined"),
       TYPE_METHOD_FKWDS },
     { "segments", &seq_segments,
-      DOC("(segment_size:?Dint)->{sequence...}\n"
+      DOC("(segment_size:?Dint)->?S?Dsequence\n"
           "@throw IntegerOverflow @segment_size is negative, or too large\n"
           "@throw ValueError The given @segment_size is zero\n"
           "Return a sequence of sequences contains all elements from @this sequence, "
           "with the first n sequences all consisting of @segment_size elements, before "
           "the last one contains the remainder of up to @segment_size elements") },
     { "distribute", &seq_distribute,
-      DOC("(bucket_count:?Dint)->{sequence...}\n"
+      DOC("(bucket_count:?Dint)->?S?Dsequence\n"
           "@throw IntegerOverflow @segment_size is negative, or too large\n"
           "@throw ValueError The given @segment_size is zero\n"
           "Re-distribute the elements of @this sequence to form @bucket_count similarly-sized "
@@ -2188,7 +2188,7 @@ INTERN struct type_method seq_methods[] = {
           "This is similar to #segments, however rather than having the caller specify the "
           "size of the a bucket, the number of buckets is specified instead.") },
     { "combinations", &seq_combinations,
-      DOC("(r:?Dint)->{sequence...}\n"
+      DOC("(r:?Dint)->?S?Dsequence\n"
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Returns a sequence of r-long sequences representing all possible (ordered) "
           "combinations of elements retrieved from @this\n"
@@ -2204,7 +2204,7 @@ INTERN struct type_method seq_methods[] = {
           "When @r is greater than ${#this}, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations itertools.combinations}") },
     { "repeatcombinations", &seq_repeatcombinations,
-      DOC("(r:?Dint)->{sequence...}\n"
+      DOC("(r:?Dint)->?S?Dsequence\n"
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Same as #combinations, however elements of @this sequence may be repeated (though element order is still enforced)\n"
           ">/* { (\"A\", \"A\"), (\"A\", \"B\"), "
@@ -2218,7 +2218,7 @@ INTERN struct type_method seq_methods[] = {
           "When ${#this} is zero, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations_with_replacement itertools.combinations_with_replacement}") },
     { "permutations", &seq_permutations,
-      DOC("(r:?Dint=!N)->{sequence...}\n"
+      DOC("(r:?Dint=!N)->?S?Dsequence\n"
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Same as #combinations, however the order of elements must "
           "not be enforced, though indices may not be repeated\n"
@@ -2234,27 +2234,27 @@ INTERN struct type_method seq_methods[] = {
           "When ${#this} is zero, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.permutations itertools.permutations}") },
 
-    /* TODO: join({sequence...} items) -> sequence */
+    /* TODO: join(?S?Dsequence items) -> sequence */
     /* TODO: strip(object item, callable key = none) -> sequence */
     /* TODO: lstrip(object item, callable key = none) -> sequence */
     /* TODO: rstrip(object item, callable key = none) -> sequence */
     /* TODO: split(object sep, callable key = none) -> sequence */
 
-    /* TODO: countseq(seq:?S?O, callable key = none) -> int */
+    /* TODO: countseq(seq:?Dsequence, callable key = none) -> int */
     /* TODO: partition(object item, callable key = none) -> (sequence,(item),sequence) */
     /* TODO: rpartition(object item, callable key = none) -> (sequence,(item),sequence) */
-    /* TODO: partitionseq(seq:?S?O, callable key = none) -> (sequence,seq,sequence) */
-    /* TODO: rpartitionseq(seq:?S?O, callable key = none) -> (sequence,seq,sequence) */
-    /* TODO: startswithseq(seq:?S?O, callable key = none) -> bool */
-    /* TODO: endswithseq(seq:?S?O, callable key = none) -> bool */
-    /* TODO: findseq(seq:?S?O, callable key = none) -> int */
-    /* TODO: rfindseq(seq:?S?O, callable key = none) -> int */
-    /* TODO: indexseq(seq:?S?O, callable key = none) -> int */
-    /* TODO: rindexseq(seq:?S?O, callable key = none) -> int */
-    /* TODO: stripseq(items:?S?O, callable key = none) -> sequence */
-    /* TODO: lstripseq(items:?S?O, callable key = none) -> sequence */
-    /* TODO: rstripseq(items:?S?O, callable key = none) -> sequence */
-    /* TODO: splitseq(seq:?S?O, callable key = none) -> sequence */
+    /* TODO: partitionseq(seq:?Dsequence, callable key = none) -> (sequence,seq,sequence) */
+    /* TODO: rpartitionseq(seq:?Dsequence, callable key = none) -> (sequence,seq,sequence) */
+    /* TODO: startswithseq(seq:?Dsequence, callable key = none) -> bool */
+    /* TODO: endswithseq(seq:?Dsequence, callable key = none) -> bool */
+    /* TODO: findseq(seq:?Dsequence, callable key = none) -> int */
+    /* TODO: rfindseq(seq:?Dsequence, callable key = none) -> int */
+    /* TODO: indexseq(seq:?Dsequence, callable key = none) -> int */
+    /* TODO: rindexseq(seq:?Dsequence, callable key = none) -> int */
+    /* TODO: stripseq(items:?Dsequence, callable key = none) -> sequence */
+    /* TODO: lstripseq(items:?Dsequence, callable key = none) -> sequence */
+    /* TODO: rstripseq(items:?Dsequence, callable key = none) -> sequence */
+    /* TODO: splitseq(seq:?Dsequence, callable key = none) -> sequence */
 
 
     /* Functions for mutable sequences. */
@@ -2303,7 +2303,7 @@ INTERN struct type_method seq_methods[] = {
       TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_insertall),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_insertall,
-      DOC("(index:?Dint,items:?S?O)\n"
+      DOC("(index:?Dint,items:?Dsequence)\n"
           "@throw IntegerOverflow The given @index is negative, or too large\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "For mutable sequences only: Insert all elements from @items at @index\n"
@@ -2383,7 +2383,7 @@ INTERN struct type_method seq_methods[] = {
           "> throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
           ">}") },
     { DeeString_STR(&str_extend), &seq_extend,
-      DOC("(items:?S?O)\n"
+      DOC("(items:?Dsequence)\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "For mutable sequences only: Append all elements from @items at the end of @this sequence\n"
           "When this function isn't defined by a sub-class, the following "
@@ -3316,11 +3316,11 @@ seq_class_concat(DeeObject *__restrict UNUSED(self),
 PRIVATE struct type_method seq_class_methods[] = {
     { "range", &seq_class_range,
        DOC("(end:?Dint)->?S?Dint\n"
-           "(end)->?S?O\n"
+           "(end)->?Dsequence\n"
            "(start:?Dint,end:?Dint)->?S?Dint\n"
-           "(start,end)->?S?O\n"
+           "(start,end)->?Dsequence\n"
            "(start:?Dint,end:?Dint,step:?Dint)->?S?Dint\n"
-           "(start,end,step)->?S?O\n"
+           "(start,end,step)->?Dsequence\n"
            "Create a new sequence object for enumeration of indices. "
            "This function is a simple wrapper for the same "
            "functionality available through the following usercode:\n"
@@ -3328,18 +3328,18 @@ PRIVATE struct type_method seq_class_methods[] = {
            ">local x = [start:end];\n"
            ">local x = [start:end,step];") },
     { "repeat", &seq_class_repeat,
-       DOC("(obj,count:?Dint)->?S?O\n"
+       DOC("(obj,count:?Dint)->?Dsequence\n"
            "@throw IntegerOverflow @count is negative\n"
            "Create a proxy-sequence that yields @obj a total of @count times\n"
            "The main purpose of this function is to construct large sequences "
            "to be used as initializers for mutable sequences such as :list") },
     { "repeatseq", &seq_class_repeatseq,
-       DOC("(seq:?S?O,count:?Dint)->?S?O\n"
+       DOC("(seq:?Dsequence,count:?Dint)->?Dsequence\n"
            "@throw IntegerOverflow @count is negative\n"
            "Repeat all the elements from @seq a total of @count times\n"
            "This is the same as ${(seq as sequence from deemon) * count}") },
     { "concat", &seq_class_concat,
-       DOC("(seqs!:?S?O)->?S?O\n"
+       DOC("(seqs!:?Dsequence)->?Dsequence\n"
            "Returns a proxy-sequence describing the concantation of all of the given sequences\n"
            "When only 1 sequence is given, that sequence is forwarded directly.\n"
            "When no sequences are given, an empty sequence is returned\n"
@@ -3417,7 +3417,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> return fp.string;\n"
                             ">}\n"
                             "\n"
-                            "+(other:?S?O)->\n"
+                            "+(other:?Dsequence)->\n"
                             "Returns a proxy sequence for accessing elements from @this "
                             "sequence, and those from @other in a seamless stream of items\n"
                             "This operator is implemented similar to the following, however the actual "
@@ -3607,7 +3607,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> }\n"
                             ">}\n"
                             "\n"
-                            "+=(other:?S?O)->\n"
+                            "+=(other:?Dsequence)->\n"
                             "Highly similar to #extend, however if that fails, or if the nearest "
                             "matching sub-class provides an implementation for ${operator +}, replace "
                             "the caller's storage symbol with ${this + other}, meaning that similar "
@@ -3674,7 +3674,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                             "> return (this as sequence) * count;\n"
                             ">}\n"
                             "\n"
-                            ":=(other:?S?O)->\n"
+                            ":=->\n"
                             "@throw SequenceError @this sequence is immutable\n"
                             "For mutable sequences only: Assign the contents from @other to @this sequence\n"
                             "When this operator is lacking, the following "
@@ -4170,7 +4170,7 @@ PRIVATE struct type_method iterator_methods[] = {
 
 PRIVATE struct type_member iterator_members[] = {
     TYPE_MEMBER_CONST_DOC("seq",Dee_EmptySeq,
-                          "->?S?O\n"
+                          "->?Dsequence\n"
                           "Returns the underlying sequence that is being iterated\n"
                           "Since use of this member isn't all too common, sub-classes are allowed "
                           "to (and sometimes do) not return the exact original sequence, but rather "
@@ -4186,7 +4186,7 @@ INTDEF DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
 
 PRIVATE struct type_getset iterator_getsets[] = {
     { "future", &IteratorFuture_For, NULL, NULL,
-      DOC("->?S?O\n"
+      DOC("->?Dsequence\n"
           "Returns an abstract sequence proxy that always refers to the items that are "
           "still left to be yielded by @this iterator. Note that for this to function "
           "properly, the iterator must be copyable.\n"
@@ -4200,7 +4200,7 @@ PRIVATE struct type_getset iterator_getsets[] = {
           ">print it.operator next(); /* 10 */\n"
           ">print repr it.future;     /* { 20, 30 } */") },
     { "pending", &IteratorPending_For, NULL, NULL,
-      DOC("->?S?O\n"
+      DOC("->?Dsequence\n"
           "Very similar to #future, however the when invoking ${operator iter} on "
           "the returned sequence, rather than having it return a copy of @this iterator, "
           "re-return the exact same iterator, allowing the use of this member for iterators "
@@ -4216,7 +4216,7 @@ PRIVATE struct type_getset iterator_getsets[] = {
     { NULL }
 };
 
-/* TODO: tee(int n=2)->{sequence...}
+/* TODO: tee(int n=2)->?S?Dsequence
  * Return @n independent sequences, each containing a copy of all elements
  * that were pending for @this, with @this iterator never needing to be copied,
  * and elements only read from that iterator as that element is first accessed by

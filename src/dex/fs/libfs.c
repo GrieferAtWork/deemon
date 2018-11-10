@@ -1394,7 +1394,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "after removal of additional slashes and spaces surrounding the given @paths")  },
     { "expand", (DeeObject *)&libfs_expand, MODSYM_FNORMAL,
       DOC("(path:?Dstring,env:?Dmapping=!Genviron)->?Dstring\n"
-          "(path:?Dstring,options:?Dstring=\"hvpf\",env:?Dmapping=!Genviron)->?Dstring\n"
+          "(path:?Dstring,options:?Dstring=!Phvpf,env:?Dmapping=!Genviron)->?Dstring\n"
           "(path:?Dstring,options:?Dint,env:?Dmapping=!Genviron)->?Dstring\n"
           "@interrupt\n"
           "@param env A dict-style mapping used to resolve variable names. Defaults to :environ\n"

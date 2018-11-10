@@ -261,6 +261,13 @@ err:
 INTERN int (DCALL parse_tags)(void) {
  if (tok == TOK_STRING ||
     (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+  /* TODO: Writing custom declaration strings shouldn't be this simple.
+   *       Instead, it should be required to do something like this:
+   * >> @__asm__("(x,y,z)")
+   * >> function foo(args...) {
+   * >>     local x,y,z = args...;
+   * >> }
+   */
   if unlikely(append_decl_string())
      goto err;
  } else if (tok == '@') {

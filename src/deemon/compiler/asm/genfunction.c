@@ -50,10 +50,10 @@ ast_assemble_function(struct ast *__restrict function_ast,
  /* HINT: `code_compile' will safe and restore our own assembler context. */
  result = code_compile(function_ast->a_function.f_code,
                        /* Don't propagate `ASM_FBIGCODE' */
-                      (current_assembler.a_flag&~(ASM_FBIGCODE)) |
+                      (current_assembler.a_flag & ~ASM_FBIGCODE) |
                       (DeeCompiler_Current->cp_options ?
                       (DeeCompiler_Current->cp_options->co_assembler & ASM_FBIGCODE) : 0),
-                       prefc,prefv);
+                       false,prefc,prefv);
  /* Now that the code has been generated, it's time to
   * register it as a constant variable of our own code. */
  current_basescope = prev_scope->s_base;

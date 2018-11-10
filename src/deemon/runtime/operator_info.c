@@ -29,6 +29,7 @@
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>
+#include <deemon/attribute.h>
 #include <deemon/super.h>
 #include <deemon/string.h>
 
@@ -516,6 +517,7 @@ PRIVATE DREF DeeObject *DCALL
 invoke_operator(DeeObject *__restrict self,
                 DeeObject **pself, uint16_t name,
                 size_t argc, DeeObject **__restrict argv) {
+ DeeObject *other;
  ASSERT_OBJECT(self);
  /* Fast-pass for known operators. */
  switch (name) {
@@ -523,77 +525,69 @@ invoke_operator(DeeObject *__restrict self,
  case OPERATOR_CONSTRUCTOR:
   /* Special wrapper: invoke the construction operator. */
   if (DeeObject_AssertType(self,&DeeType_Type))
-      return NULL;
+      goto err;
   return DeeObject_New((DeeTypeObject *)self,argc,argv);
 
  case OPERATOR_COPY:
   /* Special wrapper: invoke the copy constructor. */
   if (DeeArg_Unpack(argc,argv,":__copy__"))
-      return NULL;
+      goto err;
   return DeeObject_Copy(self);
 
  case OPERATOR_DEEPCOPY:
   /* Special wrapper: invoke the deepcopy constructor. */
   if (DeeArg_Unpack(argc,argv,":__deepcopy__"))
-      return NULL;
+      goto err;
   return DeeObject_DeepCopy(self);
 
- {
-  DeeObject *other;
  case OPERATOR_ASSIGN:
   if (DeeArg_Unpack(argc,argv,"o:__assign__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_Assign(self,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
 
- {
-  DeeObject *other;
  case OPERATOR_MOVEASSIGN:
   if (DeeArg_Unpack(argc,argv,"o:__moveassign__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_MoveAssign(self,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
 
  case OPERATOR_STR:
   if (DeeArg_Unpack(argc,argv,":__str__"))
-      return NULL;
+      goto err;
   return DeeObject_Str(self);
 
  case OPERATOR_REPR:
   if (DeeArg_Unpack(argc,argv,":__repr__"))
-      return NULL;
+      goto err;
   return DeeObject_Repr(self);
 
  {
   int result;
  case OPERATOR_BOOL:
   if (DeeArg_Unpack(argc,argv,":__bool__"))
-      return NULL;
+      goto err;
   result = DeeObject_Bool(self);
-  if unlikely(result < 0) return NULL;
+  if unlikely(result < 0) goto err;
   return_bool_(result);
  }
 
- {
-  DREF DeeObject *args;
  case OPERATOR_CALL:
-  if (DeeArg_Unpack(argc,argv,"o:__call__",&args) ||
-      DeeObject_AssertTypeExact(args,&DeeTuple_Type))
-      return NULL;
+  if (DeeArg_Unpack(argc,argv,"o:__call__",&other))
+      goto err;
+  if (DeeObject_AssertTypeExact(other,&DeeTuple_Type))
+      goto err;
   return DeeObject_Call(self,
-                        DeeTuple_SIZE(args),
-                        DeeTuple_ELEM(args));
- } break;
+                        DeeTuple_SIZE(other),
+                        DeeTuple_ELEM(other));
 
  {
   dhash_t result;
  case OPERATOR_HASH:
   if (DeeArg_Unpack(argc,argv,":__hash__"))
-      return NULL;
+      goto err;
   result = DeeObject_Hash(self);
   return DeeInt_NewHash(result);
  }
@@ -602,7 +596,7 @@ invoke_operator(DeeObject *__restrict self,
   DREF DeeObject *result;
  case OPERATOR_ITERNEXT:
   if (DeeArg_Unpack(argc,argv,":__next__"))
-      return NULL;
+      goto err;
   result = DeeObject_IterNext(self);
   if (result == ITER_DONE) {
    DeeError_Throw(&DeeError_StopIteration_instance);
@@ -613,381 +607,319 @@ invoke_operator(DeeObject *__restrict self,
 
  case OPERATOR_INT:
   if (DeeArg_Unpack(argc,argv,":__int__"))
-      return NULL;
+      goto err;
   return DeeObject_Int(self);
 
  {
   double value;
  case OPERATOR_FLOAT:
   if (DeeArg_Unpack(argc,argv,":__float__"))
-      return NULL;
+      goto err;
   if (DeeObject_AsDouble(self,&value))
-      return NULL;
+      goto err;
   return DeeFloat_New(value);
  }
 
  case OPERATOR_INV:
   if (DeeArg_Unpack(argc,argv,":__inv__"))
-      return NULL;
+      goto err;
   return DeeObject_Inv(self);
  case OPERATOR_POS:
   if (DeeArg_Unpack(argc,argv,":__pos__"))
-      return NULL;
+      goto err;
   return DeeObject_Pos(self);
  case OPERATOR_NEG:
   if (DeeArg_Unpack(argc,argv,":__neg__"))
-      return NULL;
+      goto err;
   return DeeObject_Neg(self);
- {
-  DeeObject *other;
+
  case OPERATOR_ADD:
   if (DeeArg_Unpack(argc,argv,"o:__add__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Add(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_SUB:
   if (DeeArg_Unpack(argc,argv,"o:__sub__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Sub(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_MUL:
   if (DeeArg_Unpack(argc,argv,"o:__mul__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Mul(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_DIV:
   if (DeeArg_Unpack(argc,argv,"o:__div__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Div(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_MOD:
   if (DeeArg_Unpack(argc,argv,"o:__mod__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Mod(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_SHL:
   if (DeeArg_Unpack(argc,argv,"o:__shl__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Shl(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_SHR:
   if (DeeArg_Unpack(argc,argv,"o:__shr__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Shr(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_AND:
   if (DeeArg_Unpack(argc,argv,"o:__and__",&other))
-      return NULL;
+      goto err;
   return DeeObject_And(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_OR:
   if (DeeArg_Unpack(argc,argv,"o:__or__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Or(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_XOR:
   if (DeeArg_Unpack(argc,argv,"o:__xor__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Xor(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_POW:
   if (DeeArg_Unpack(argc,argv,"o:__pow__",&other))
-      return NULL;
+      goto err;
   return DeeObject_Pow(self,other);
- }
+
  case OPERATOR_INC:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,":__inc__"))
-      return NULL;
+      goto err;
   if (DeeObject_Inc(pself))
-      return NULL;
+      goto err;
   goto return_self;
+
  case OPERATOR_DEC:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,":__dec__"))
-      return NULL;
+      goto err;
   if (DeeObject_Dec(pself))
-      return NULL;
+      goto err;
   goto return_self;
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_ADD:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__iadd__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceAdd(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_SUB:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__isub__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceSub(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_MUL:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__imul__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceMul(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_DIV:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__idiv__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceDiv(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_MOD:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__imod__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceMod(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_SHL:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__ishl__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceShl(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_SHR:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__ishr__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceShr(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_AND:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__iand__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceAnd(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_OR:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__ior__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceOr(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_XOR:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__ixor__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplaceXor(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_INPLACE_POW:
   if unlikely(!pself) goto requires_inplace;
   if (DeeArg_Unpack(argc,argv,"o:__ipow__",&other))
-      return NULL;
+      goto err;
   if (DeeObject_InplacePow(pself,other))
-      return NULL;
+      goto err;
   goto return_self;
- }
- {
-  DeeObject *other;
+
  case OPERATOR_EQ:
   if (DeeArg_Unpack(argc,argv,"o:__eq__",&other))
-      return NULL;
+      goto err;
   return DeeObject_CompareEqObject(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_NE:
   if (DeeArg_Unpack(argc,argv,"o:__ne__",&other))
-      return NULL;
+      goto err;
   return DeeObject_CompareNeObject(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_LO:
   if (DeeArg_Unpack(argc,argv,"o:__lo__",&other))
-      return NULL;
+      goto err;
   return DeeObject_CompareLoObject(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_LE:
   if (DeeArg_Unpack(argc,argv,"o:__le__",&other))
-      return NULL;
+      goto err;
   return DeeObject_CompareLeObject(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_GR:
   if (DeeArg_Unpack(argc,argv,"o:__gr__",&other))
-      return NULL;
+      goto err;
   return DeeObject_CompareGrObject(self,other);
- }
- {
-  DeeObject *other;
+
  case OPERATOR_GE:
   if (DeeArg_Unpack(argc,argv,"o:__ge__",&other))
-      return NULL;
+      goto err;
   return DeeObject_CompareGeObject(self,other);
- }
+
  case OPERATOR_ITERSELF:
   if (DeeArg_Unpack(argc,argv,":__iter__"))
-      return NULL;
+      goto err;
   return DeeObject_IterSelf(self);
+
  case OPERATOR_SIZE:
   if (DeeArg_Unpack(argc,argv,":__size__"))
-      return NULL;
+      goto err;
   return DeeObject_SizeObject(self);
- {
-  DeeObject *item;
+
  case OPERATOR_CONTAINS:
-  if (DeeArg_Unpack(argc,argv,"o:__contains__",&item))
-      return NULL;
-  return DeeObject_ContainsObject(self,item);
- }
- {
-  DeeObject *index;
+  if (DeeArg_Unpack(argc,argv,"o:__contains__",&other))
+      goto err;
+  return DeeObject_ContainsObject(self,other);
+
  case OPERATOR_GETITEM:
-  if (DeeArg_Unpack(argc,argv,"o:__getitem__",&index))
-      return NULL;
-  return DeeObject_GetItem(self,index);
- }
- {
-  DeeObject *index;
+  if (DeeArg_Unpack(argc,argv,"o:__getitem__",&other))
+      goto err;
+  return DeeObject_GetItem(self,other);
+
  case OPERATOR_DELITEM:
-  if (DeeArg_Unpack(argc,argv,"o:__delitem__",&index))
-      return NULL;
-  if (DeeObject_DelItem(self,index))
-      return NULL;
+  if (DeeArg_Unpack(argc,argv,"o:__delitem__",&other))
+      goto err;
+  if (DeeObject_DelItem(self,other))
+      goto err;
   goto return_none_;
- }
- {
-  DeeObject *index,*value;
- case OPERATOR_SETITEM:
-  if (DeeArg_Unpack(argc,argv,"oo:__setitem__",&index,&value))
-      return NULL;
-  if (DeeObject_SetItem(self,index,value))
-      return NULL;
-  return_reference_(value);
- }
+
  {
   DeeObject *begin,*end;
+ case OPERATOR_SETITEM:
+  if (DeeArg_Unpack(argc,argv,"oo:__setitem__",&begin,&other))
+      goto err;
+  if (DeeObject_SetItem(self,begin,other))
+      goto err;
+  return_reference_(other);
  case OPERATOR_GETRANGE:
   if (DeeArg_Unpack(argc,argv,"oo:__getrange__",&begin,&end))
-      return NULL;
+      goto err;
   return DeeObject_GetRange(self,begin,end);
- }
- {
-  DeeObject *begin,*end;
  case OPERATOR_DELRANGE:
   if (DeeArg_Unpack(argc,argv,"oo:__delrange__",&begin,&end))
-      return NULL;
+      goto err;
   if (DeeObject_DelRange(self,begin,end))
-      return NULL;
+      goto err;
   goto return_none_;
- }
- {
-  DeeObject *begin,*end,*value;
  case OPERATOR_SETRANGE:
-  if (DeeArg_Unpack(argc,argv,"ooo:__setrange__",&begin,&end,&value))
-      return NULL;
-  if (DeeObject_SetRange(self,begin,end,value))
-      return NULL;
-  return_reference_(value);
+  if (DeeArg_Unpack(argc,argv,"ooo:__setrange__",&begin,&end,&other))
+      goto err;
+  if (DeeObject_SetRange(self,begin,end,other))
+      goto err;
+  return_reference_(other);
  }
- {
-  DeeObject *attr;
+
  case OPERATOR_GETATTR:
-  if (DeeArg_Unpack(argc,argv,"o:__getattr__",&attr) ||
-      DeeObject_AssertTypeExact(attr,&DeeString_Type))
-      return NULL;
-  return DeeObject_GetAttr(self,attr);
- }
- {
-  DeeObject *attr;
+  if (DeeArg_Unpack(argc,argv,"o:__getattr__",&other))
+      goto err;
+  if (DeeObject_AssertTypeExact(other,&DeeString_Type))
+      goto err;
+  return DeeObject_GetAttr(self,other);
+
  case OPERATOR_DELATTR:
-  if (DeeArg_Unpack(argc,argv,"o:__delattr__",&attr) ||
-      DeeObject_AssertTypeExact(attr,&DeeString_Type))
-      return NULL;
-  if (DeeObject_DelAttr(self,attr))
-      return NULL;
+  if (DeeArg_Unpack(argc,argv,"o:__delattr__",&other))
+      goto err;
+  if (DeeObject_AssertTypeExact(other,&DeeString_Type))
+      goto err;
+  if (DeeObject_DelAttr(self,other))
+      goto err;
   goto return_none_;
- }
+
  {
-  DeeObject *attr,*value;
+  DeeObject *value;
  case OPERATOR_SETATTR:
-  if (DeeArg_Unpack(argc,argv,"oo:__setattr__",&attr,&value) ||
-      DeeObject_AssertTypeExact(attr,&DeeString_Type))
-      return NULL;
-  if (DeeObject_SetAttr(self,attr,value))
-      return NULL;
+  if (DeeArg_Unpack(argc,argv,"oo:__setattr__",&other,&value))
+      goto err;
+  if (DeeObject_AssertTypeExact(other,&DeeString_Type))
+      goto err;
+  if (DeeObject_SetAttr(self,other,value))
+      goto err;
   return_reference_(value);
  }
+
  case OPERATOR_ENUMATTR:
-  /* TODO */
-  break;
+  if (DeeArg_Unpack(argc,argv,":__enumattr__"))
+      goto err;
+  return DeeObject_New(&DeeEnumAttr_Type,1,(DeeObject **)&self);
 
  case OPERATOR_ENTER:
-  if (DeeArg_Unpack(argc,argv,"__enter__") ||
-      DeeObject_Enter(self))
-      return NULL;
+  if (DeeArg_Unpack(argc,argv,":__enter__"))
+      goto err;
+  if (DeeObject_Enter(self))
+      goto err;
   goto return_none_;
 
  case OPERATOR_LEAVE:
-  if (DeeArg_Unpack(argc,argv,"__leave__") ||
-      DeeObject_Leave(self))
-      return NULL;
+  if (DeeArg_Unpack(argc,argv,":__leave__"))
+      goto err;
+  if (DeeObject_Leave(self))
+      goto err;
   goto return_none_;
 
  default: break;
@@ -1012,8 +944,9 @@ invoke_operator(DeeObject *__restrict self,
      size_t max_bytes;
     case FILE_OPERATOR_READ:
      max_bytes = (size_t)-1;
+     /* TODO: Support for reading into buffers */
      if (DeeArg_Unpack(argc,argv,"|Iu:__read__",&max_bytes))
-         return NULL;
+         goto err;
      return DeeFile_ReadText(self,max_bytes,false);
     }
 
@@ -1022,14 +955,15 @@ invoke_operator(DeeObject *__restrict self,
      dssize_t result;
     case FILE_OPERATOR_WRITE:
      begin = end = NULL;
+     /* TODO: Support for writing buffers */
      if (DeeArg_Unpack(argc,argv,"o|oo:__write__",&data,&begin,&end) ||
          DeeObject_AssertTypeExact(data,&DeeString_Type))
-         return NULL;
+         goto err;
      if (end) {
       dssize_t ibegin,iend;
       if (DeeObject_AsSSize(begin,&ibegin) ||
           DeeObject_AsSSize(end,&iend))
-          return NULL;
+          goto err;
       if ((size_t)iend > DeeString_SIZE(data)*sizeof(char))
           iend = (dssize_t)DeeString_SIZE(data)*sizeof(char);
       if ((size_t)ibegin >= (size_t)iend)
@@ -1038,7 +972,7 @@ invoke_operator(DeeObject *__restrict self,
      } else if (begin) {
       size_t max_size;
       if (DeeObject_AsSize(begin,&max_size))
-          return NULL;
+          goto err;
       if (max_size > DeeString_SIZE(data)*sizeof(char))
           max_size = DeeString_SIZE(data)*sizeof(char);
       result = DeeFile_Write(self,DeeString_STR(data),max_size);
@@ -1046,7 +980,7 @@ invoke_operator(DeeObject *__restrict self,
       result = DeeFile_Write(self,DeeString_STR(data),
                              DeeString_SIZE(data)*sizeof(char));
      }
-     if unlikely(result < 0) return NULL;
+     if unlikely(result < 0) goto err;
      return DeeInt_NewSize((size_t)result);
     }
 
@@ -1055,34 +989,34 @@ invoke_operator(DeeObject *__restrict self,
     case FILE_OPERATOR_SEEK:
      whence = SEEK_SET;
      if (DeeArg_Unpack(argc,argv,"I64d|d:seek",&off,&whence))
-         return NULL;
+         goto err;
      off = DeeFile_Seek(self,off,whence);
-     if unlikely(off < 0) return NULL;
+     if unlikely(off < 0) goto err;
      return DeeInt_NewU64((uint64_t)off);
     } break;
 
     case FILE_OPERATOR_SYNC:
      if (DeeArg_Unpack(argc,argv,":sync"))
-         return NULL;
+         goto err;
      if (DeeFile_Sync(self))
-         return NULL;
+         goto err;
      goto return_none_;
 
     {
      dpos_t length;
     case FILE_OPERATOR_TRUNC:
      if (DeeArg_Unpack(argc,argv,"I64u:trunc",&length))
-         return NULL;
+         goto err;
      if (DeeFile_Trunc(self,length))
-         return NULL;
+         goto err;
      goto return_none_;
     }
 
     case FILE_OPERATOR_CLOSE:
      if (DeeArg_Unpack(argc,argv,":close"))
-         return NULL;
+         goto err;
      if (DeeFile_Close(self))
-         return NULL;
+         goto err;
      goto return_none_;
 
     {
@@ -1090,16 +1024,17 @@ invoke_operator(DeeObject *__restrict self,
      dpos_t pos; size_t max_bytes;
     case FILE_OPERATOR_PREAD:
      b = NULL;
+     /* TODO: Support for reading into buffers */
      if (DeeArg_Unpack(argc,argv,"o|o:__pread__",&a,&b))
-         return NULL;
+         goto err;
      if (b) {
       if (DeeObject_AsSize(a,&max_bytes) ||
           DeeObject_AsUInt64(b,&pos))
-          return NULL;
+          goto err;
      } else {
       max_bytes = (size_t)-1;
       if (DeeObject_AsUInt64(a,&pos))
-          return NULL;
+          goto err;
      }
      return DeeFile_PReadText(self,max_bytes,pos,false);
     }
@@ -1111,13 +1046,14 @@ invoke_operator(DeeObject *__restrict self,
      b = c = NULL;
      if (DeeArg_Unpack(argc,argv,"oo|oo:__write__",&data,&a,&b,&c) ||
          DeeObject_AssertTypeExact(data,&DeeString_Type))
-         return NULL;
+         goto err;
+     /* TODO: Support for writing buffers */
      if (c) {
       dssize_t ibegin,iend;
       if (DeeObject_AsSSize(a,&ibegin) ||
           DeeObject_AsSSize(b,&iend) ||
           DeeObject_AsUInt64(c,&pos))
-          return NULL;
+          goto err;
       if ((size_t)iend > DeeString_SIZE(data)*sizeof(char))
           iend = (dssize_t)DeeString_SIZE(data)*sizeof(char);
       if ((size_t)ibegin >= (size_t)iend)
@@ -1125,20 +1061,22 @@ invoke_operator(DeeObject *__restrict self,
       result = DeeFile_PWrite(self,DeeString_STR(data)+ibegin,(size_t)(iend-ibegin),pos);
      } else if (b) {
       size_t max_size;
-      if (DeeObject_AsSize(a,&max_size) ||
-          DeeObject_AsUInt64(b,&pos))
-          return NULL;
+      if (DeeObject_AsUInt64(b,&pos))
+          goto err;
+      if (DeeObject_AsSize(a,&max_size))
+          goto err;
       if (max_size > DeeString_SIZE(data)*sizeof(char))
           max_size = DeeString_SIZE(data)*sizeof(char);
       result = DeeFile_PWrite(self,DeeString_STR(data),max_size,pos);
      } else {
       if (DeeObject_AsUInt64(a,&pos))
-          return NULL;
+          goto err;
       result = DeeFile_PWrite(self,DeeString_STR(data),
                               DeeString_SIZE(data)*sizeof(char),
                               pos);
      }
-     if unlikely(result < 0) return NULL;
+     if unlikely(result < 0)
+        goto err;
      return DeeInt_NewSize((size_t)result);
     }
 
@@ -1146,9 +1084,9 @@ invoke_operator(DeeObject *__restrict self,
      int result;
     case FILE_OPERATOR_GETC:
      if (DeeArg_Unpack(argc,argv,":__getc__"))
-         return NULL;
+         goto err;
      result = DeeFile_Getc(self);
-     if unlikely(result == GETC_ERR) return NULL;
+     if unlikely(result == GETC_ERR) goto err;
      return DeeInt_NewInt(result);
     }
 
@@ -1156,9 +1094,9 @@ invoke_operator(DeeObject *__restrict self,
      int ch;
     case FILE_OPERATOR_UNGETC:
      if (DeeArg_Unpack(argc,argv,"d:__ungetc__",&ch))
-         return NULL;
+         goto err;
      ch = DeeFile_Ungetc(self,ch);
-     if unlikely(ch == GETC_ERR) return NULL;
+     if unlikely(ch == GETC_ERR) goto err;
      return_bool_(ch != GETC_EOF);
     }
 
@@ -1166,9 +1104,10 @@ invoke_operator(DeeObject *__restrict self,
      int ch;
     case FILE_OPERATOR_PUTC:
      if (DeeArg_Unpack(argc,argv,"d:__putc__",&ch))
-         return NULL;
+         goto err;
      ch = DeeFile_Putc(self,ch);
-     if unlikely(ch == GETC_ERR) return NULL;
+     if unlikely(ch == GETC_ERR)
+        goto err;
      return_bool_(ch != GETC_EOF);
     }
 
@@ -1181,17 +1120,17 @@ invoke_operator(DeeObject *__restrict self,
   }
   DeeError_Throwf(&DeeError_TypeError,
                   "Cannot invoke unknown operator #%X",name);
-  return NULL;
+  goto err;
 special_operator:
   DeeError_Throwf(&DeeError_TypeError,
                   "Cannot invoke special `operator %s' (`__%s__') directly",
                   info->oi_uname,info->oi_sname);
-  return NULL;
+  goto err;
 private_operator:
   DeeError_Throwf(&DeeError_TypeError,
                   "Cannot invoke private `operator %s' (`__%s__') directly",
                   info->oi_uname,info->oi_sname);
-  return NULL;
+  goto err;
 requires_inplace:
   typetype = Dee_TYPE(self);
   if (typetype == &DeeSuper_Type)
@@ -1207,6 +1146,7 @@ requires_inplace:
                    "Cannot invoke inplace operator #%X without l-value",
                    name);
   }
+err:
   return NULL;
 return_none_:
   return_none;

@@ -294,6 +294,18 @@ local operator_names: {(string,string)...} = {
 	"[:]=" : "setrange", "." : "getattr", ".=" : "setattr",
 	"del." : "delattr", "lt" : "lo", "gt" : "gr",
 };
+local pretty_operator_names: {(string,string)...} = {
+	"assign" : " :=", "moveassign" : "move :=", "size" : "#",
+	"inv" : "~", "add" : "+", "sub" : "-", "pos" : "+", "neg" : "-",
+	"mul" : "*", "div" : "/", "mod" : "%", "shl" : "<<",
+	"shr" : ">>", "and" : "&", "or" : "|", "xor" : "^",
+	"delitem" : "del[]", "ne" : "!=", "getitem" : "[]", "iand" : "&=",
+	"ishr" : ">>=", "isub" : "-=", "eq" : "==", "ishl" : "<<=",
+	"setitem" : "[]=", "delrange" : "del[:]", "iadd" : "+=",
+	"setrange" : "[:]=", "ior" : "|=", "ixor" : "^=", "imul" : "*=",
+	"idiv" : "/=", "getrange" : "[:]", "ipow" : "**=", "imod" : "%=",
+	"le" : "<=", "pow" : "**", "ge" : ">="
+};
 
 @@Weight of different node types when being sorted
 local kind_sorting_weights: {(string,int)...} = {
@@ -353,8 +365,11 @@ local function operator_realname(name: string, argc: int | none = none): string 
 local function get_qualified_typepath(docnode: weakref with Doc, qual: string): string | none {
 	if (#qual >= 2) switch (qual[1]) {
 	case "G": {
+		local mod = docnode.value.module;
+		if (mod is none)
+			return none;
 		return "/{}/{}".format({
-			deemon.module.__name__(docnode.value.module),
+			deemon.module.__name__(mod),
 			decode_name(qual.substr(2)),
 		});
 	}	break;
@@ -367,8 +382,11 @@ local function get_qualified_typepath(docnode: weakref with Doc, qual: string): 
 	}	break;
 	case "A": {
 		local nameend = decode_name_end(qual,2);
-		return "{}/{}".format({
-			get_qualified_typepath(docnode,qual.substr(nameend)),
+		local base = get_qualified_typepath(docnode,qual.substr(nameend));
+		if (base is none)
+			return none;
+		return "{}/c:{}".format({
+			base,
 			decode_name(qual.substr(2,nameend)),
 		});
 	}	break;
@@ -618,15 +636,6 @@ class TypeRef: weakrefable {
 	}
 }
 
-
-@@Fully detailed names for specific type expressions
-local typeexpr_shorthands: {(string,string)...} = {
-	"?Dsequence" : "?S?O",
-	"?Dmapping" : "?S?T2?O?O",
-	"?Edeemon:sequence" : "?S?O",
-	"?Edeemon:mapping" : "?S?T2?O?O",
-};
-
 @@Returns the character index where a type expression starting at @start ends
 local function typeexpr_end(s: string, start: int): int {
 	local len = #s;
@@ -687,6 +696,13 @@ again:
 	return result;
 }
 
+//@@Fully detailed names for specific type expressions
+//local typeexpr_shorthands: {(string,string)...} = {
+//	"?Dsequence" : "?S?O",
+//	"?Dmapping" : "?S?T2?O?O",
+//	"?Edeemon:sequence" : "?S?O",
+//	"?Edeemon:mapping" : "?S?T2?O?O",
+//};
 
 @@Abstract representation of a type expression, including
 @@support for generic sequence expressions, alternative
@@ -716,7 +732,8 @@ class TypeExpr: weakrefable {
 
 	this(d: Doc | weakref with Doc, ds: string)
 		: docnode(d is weakref ? d : weakref(d))
-		, docstring(typeexpr_shorthands.get(ds,ds))
+		, docstring(ds)
+//		, docstring(typeexpr_shorthands.get(ds,ds))
 	{}
 
 	@@Returns a string representation of how @this TypeExpr can be created
@@ -1993,6 +2010,55 @@ class Doc: weakrefable {
 	@@its typing can be recreated with the attributes #isclassattr and #isoperator
 	public final member name: string;
 
+	@@Similar to #name, but if @this Doc node is an operator, return
+	@@that operator's name in the form of $"==", rather than $"eq"
+	public final property prettyname: string = {
+		get(): string {
+			if (isoperator) {
+				local res = pretty_operator_names.get(name);
+				if (res !is none)
+					return res;
+			}
+			return name;
+		}
+	}
+
+	@@Similar to #prettyname, but include an $"operator"
+	@@prefix when @this Doc node describes an operator.
+	public final property prettypathname: string = {
+		get(): string {
+			if (isoperator) {
+				local res = pretty_operator_names.get(name);
+				if (res !is none)
+					return "operator " + res;
+			}
+			return name;
+		}
+	}
+
+	@@Similar to #prettyname, but also include the node kind,
+	@@resulting in the form of $"operator ==" or "function foo"
+	public final property prettydesc: string = {
+		get(): string {
+			return "{} {}".format({ kind, prettyname });
+		}
+	}
+
+	@@Similar to #path, but return in a form akin to $"deemon.string.operator =="
+	public final property prettypath: string = {
+		get(): string {
+			local result = path.lstrip("/");
+			if (isoperator) {
+				local opname = pretty_operator_names.get(name);
+				if (opname !is none) {
+					result = result.rpartition("/")[0];
+					result = "{}.operator {}".format({ result, opname });
+				}
+			}
+			return result.replace("/",".");
+		}
+	}
+
 	@@The object represented by @this Doc node (May be unbound)
 	public final member object;
 	public final property attr: attribute | none = {
@@ -2009,7 +2075,8 @@ class Doc: weakrefable {
 	}
 	private member m_attr: attribute | none;
 
-	@@The parent doc, or a string describing its path
+	@@The parent doc, or :none when unknown or @this
+	@@Doc node is already a top-level module node
 	public property parent: Doc | none = {
 		get(): Doc | none {
 			if (m_parent !is Doc && m_parent !is none)
@@ -2526,7 +2593,7 @@ err_unknown_attribute:
 			if (code.__hasvarargs__) {
 				if (argc_max)
 					resdoc << ",";
-				resdoc << encode_type(argc_max) << "!";
+				resdoc << get_generic_argument_name(argc_max) << "!";
 			}
 			resdoc << ")";
 			if (code.__isconstructor__) {

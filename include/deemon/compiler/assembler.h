@@ -624,7 +624,7 @@ struct asm_symbol_ref {
                                             * [->s_flag & SYMBOL_FALLOCREF]
                                             * [->s_refid == INDEXOF(self,:a_refv)]
                                             * The symbol being referenced. */
-    uint16_t               sr_orig_refid;  /* [const] The original value of `sr_sym->s_refid', before that symbol */
+    uint16_t               sr_orig_refid;  /* [const] The original value of `sr_sym->s_refid', before that symbol was re-referenced */
     uint16_t               sr_orig_flag;   /* [const] The original value of `sr_sym->s_flag', who's `SYMBOL_FALLOCREF' bit must be restored. */
 };
 
@@ -1813,12 +1813,16 @@ INTDEF DREF DeeDDIObject *DCALL ddi_compile(void);
 /* Compile a new function, using `current_basescope'
  * as scope, and the given expression as code.
  * @param: flags: Set of `ASM_F*' (Assembly flags; see above)
+ * @param: first_function: True if the function is the first one to-be compiled.
+ *                         When set, don't propagate reference scopes normally
+ *                         required to allow for recursive assembly and inter-
+ *                         text-segment symbol referencing.
  * @param: prefc: The amount of required references to create a function object.
  * @param: prefv: Upon success, a vector of symbols that must passed to the
  *                code object when a function is being created. */
 INTDEF DREF DeeCodeObject *DCALL
 code_compile(struct ast *__restrict code_ast, uint16_t flags,
-             uint16_t *__restrict prefc,
+             bool first_function, uint16_t *__restrict prefc,
              /*out:inherit*/struct asm_symbol_ref **__restrict prefv);
 
 /* Similar to `code_compile()', however instructs the assembly to try to use

@@ -130,7 +130,13 @@ function print_decl_params(fp: file, decl: Declaration) {
 		for (local par: params) {
 			if (!is_first) fp << ", ";
 			is_first = false;
+			if (par.iskwargs)
+				fp << "**";
 			fp << "<i>" << escape_html(par.name) << "</i>";
+			if (par.isvarargs)
+				fp << "...";
+			else if (par.isoptional)
+				fp << "?";
 			fp << ": ";
 			print_typeexpr(fp,par.typ);
 			local def = par.defexpr;
@@ -154,13 +160,14 @@ function print_text(fp: file, t: TextSegment) {
 }
 
 
-function get_module_page(fp: file, path: string) {
-	write_page_head(fp,path[#path-1]);
+function get_module_page(fp: file, path: {string...}) {
+	local d = get_doc_path("/".join(path));
+	write_page_head(fp,d.prettypath);
 	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>";
 	local link_path = "/modules";
-	for (local x: path) {
+	for (local x: path[:-1]) {
 		link_path = "{}/{}".format({ link_path, x });
 		local name_start = x.find(":");
 		fp << "<li><a href=\"{}\">&gt;{}</a></li>".format({
@@ -168,8 +175,11 @@ function get_module_page(fp: file, path: string) {
 			name_start >= 0 ? x[name_start+1:] : x
 		});
 	}
+	fp << "<li><a href=\"/modules{}\">&gt;{}</a></li>".format({
+		d.path,
+		d.prettypathname
+	});
 	fp << "</ul></nav><main>\r\n";
-	local d = get_doc_path("/".join(path));
 	fp << "<h2><b>" << d.kind << "</b>: " << d.name;
 	if (d.istype) {
 		//TODO:local basetype = d.objectbase;

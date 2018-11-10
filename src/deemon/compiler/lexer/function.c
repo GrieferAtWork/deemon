@@ -412,7 +412,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   if unlikely(!code) goto err_decl;
   result = code->a_type == AST_EXPAND
          ? (current_basescope->bs_flags |= CODE_FYIELDING,ast_yield(code))
-         : (ast_return(code));
+         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN,ast_return(code));
   ast_decref(code);
   code = ast_setddi(result,&arrow_loc);
   if (pneed_semi) *pneed_semi = true;
@@ -489,7 +489,7 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
   if unlikely(!code) goto err;
   result = code->a_type == AST_EXPAND
          ? (current_basescope->bs_flags |= CODE_FYIELDING,ast_yield(code))
-         : (ast_return(code));
+         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN,ast_return(code));
   ast_decref(code);
   code = ast_setddi(result,&arrow_loc);
   if (pneed_semi) *pneed_semi = true;

@@ -2679,7 +2679,7 @@ err:
 INTERN DeeTypeObject DeeSocket_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"socket",
-    /* .tp_doc      = */DOC("(af:?Dint|?Dstring,type:?Dint|?Dstring=!N,proto:?Dint|?Dstring=!N)\n"
+    /* .tp_doc      = */DOC("(af:?X2?Dint?Dstring,type:?X2?Dint?Dstring=!N,proto:?X2?Dint?Dstring=!N)\n"
                             "@param proto The protocol to use for the socket, or :none or $0 to use the default\n"
                             "@param type The socket type, or none to use $\"SOCK_STREAM\"\n"
                             "@param af The socket address family (e.g.: $\"AF_INET\" or $\"AF_INET6\").\n"

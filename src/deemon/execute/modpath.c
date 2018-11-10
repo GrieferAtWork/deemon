@@ -588,7 +588,7 @@ do_create_base_name:
 
  {
   uint16_t refc; struct asm_symbol_ref *refv;
-  root_code = code_compile(code,assembler_flags,&refc,&refv);
+  root_code = code_compile(code,assembler_flags,true,&refc,&refv);
   ASSERT(!root_code || !refc);
   ASSERT(!root_code || !refv);
  }

@@ -429,6 +429,15 @@ class_maker_addmember(struct class_maker *__restrict self,
 #endif
  {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+  /* TODO: The creation of doc strings must be prolonged
+   *       until the entire class is being finalized.
+   *    -> Only fater FORWARD symbols have been resolved
+   *       can we actually encode type annotations.
+   * XXX: What about recursive class declarations?
+   *      we'd have to wait until _all_ classes have
+   *      been fully declared, at which point we'd
+   *      have to wait much longer, presumably until
+   *      code starts getting assembled. */
   attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc(decl);
 #else
   attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc();

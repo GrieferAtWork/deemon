@@ -306,11 +306,11 @@ struct class_attribute;
  *       "R" EXPR |                 // repr(EXPR)
  *       "Q" EXPR |                 // EXPR.operator hash()
  *       "+" EXPR |                 // +EXPR
- *       "+" EXPR EXPR |            // FIRST_EXPR + SECOND_EXPR
  *       "-" EXPR |                 // -EXPR
  *       "-" INTEGER_LITERAL |      // -INTEGER_LITERAL
  *       "-" FLOAT_LITERAL |        // -FLOAT_LITERAL
- *       "-" EXPR EXPR |            // FIRST_EXPR - SECOND_EXPR
+ *       "!+" EXPR EXPR |           // FIRST_EXPR + SECOND_EXPR
+ *       "!-" EXPR EXPR |           // FIRST_EXPR - SECOND_EXPR
  *       "~" EXPR |                 // ~EXPR
  *       "*" EXPR EXPR |            // FIRST_EXPR * SECOND_EXPR
  *       "/" EXPR EXPR |            // FIRST_EXPR / SECOND_EXPR
@@ -329,7 +329,7 @@ struct class_attribute;
  *       "!>" EXPR EXPR |           // FIRST_EXPR >= SECOND_EXPR
  *       "!C" EXPR EXPR |           // FIRST_EXPR.operator contains(SECOND_EXPR)
  *       "[" EXPR EXPR |            // FIRST_EXPR[SECOND_EXPR]
- *       "[" EXPR EXPR EXPR |       // FIRST_EXPR[SECOND_EXPR:THIRD_EXPR]
+ *       "![" EXPR EXPR EXPR |      // FIRST_EXPR[SECOND_EXPR:THIRD_EXPR]
  *   );
  *
  *
