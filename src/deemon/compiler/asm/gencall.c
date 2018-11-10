@@ -993,6 +993,7 @@ check_getattr_base_symbol_class_tuple:
       /* callattr with sequence argument. */
       if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
       for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+      if (asm_putddi(ddi_ast)) goto err;
       if (asm_gcallattr_const_seq((uint16_t)attrid,(uint8_t)seq_argc)) goto err;
       goto pop_unused;
      }
@@ -1009,11 +1010,13 @@ check_getattr_base_symbol_class_tuple:
      cid = asm_newconst(func->a_operator.o_op1->a_constexpr);
      if unlikely(cid < 0) goto err;
      for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcallattr_const_seq((uint16_t)cid,(uint8_t)seq_argc)) goto err;
      goto pop_unused;
     }
     if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
     for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcall_seq((uint8_t)seq_argc)) goto err;
     goto pop_unused;
    }
@@ -1034,6 +1037,7 @@ check_getattr_base_symbol_class_tuple:
      cid = asm_newconst(func->a_operator.o_op1->a_constexpr);
      if unlikely(cid < 0) goto err;
      for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcallattr_const_map((uint16_t)cid,(uint8_t)(seq_argc / 2))) goto err;
      goto pop_unused;
     }
@@ -1041,6 +1045,7 @@ check_getattr_base_symbol_class_tuple:
     /* Special case: Brace initializer-call with keys can be encoded as ASM_CALL_MAP. */
     if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
     for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcall_map((uint8_t)(seq_argc / 2))) goto err;
     goto pop_unused;
    }

@@ -817,9 +817,9 @@ err:
 
 INTERN int
 (DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
-                        struct symbol *__restrict src_sym,
-                        struct ast *__restrict dst_ast,
-                        struct ast *__restrict src_ast) {
+                         struct symbol *__restrict src_sym,
+                         struct ast *__restrict dst_ast,
+                         struct ast *__restrict src_ast) {
  int32_t symid;
  ASSERT(asm_can_prefix_symbol(dst_sym));
 check_src_sym_class:

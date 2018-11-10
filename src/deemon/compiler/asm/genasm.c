@@ -1343,6 +1343,7 @@ pop_unused:
    if (DeeInt_TryAsS32(self->a_operator.o_op1->a_constexpr,&intval) &&
       (intval >= INT8_MIN && intval <= INT8_MAX)) {
     if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(self)) goto err;
     if (operator_name == OPERATOR_ADD ? asm_gadd_simm8((int8_t)intval)
                                       : asm_gsub_simm8((int8_t)intval))
         goto err;
@@ -1351,6 +1352,7 @@ pop_unused:
    if (DeeInt_TryAsU32(self->a_operator.o_op1->a_constexpr,
                        (uint32_t *)&intval)) {
     if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(self)) goto err;
     if (operator_name == OPERATOR_ADD ? asm_gadd_imm32(*(uint32_t *)&intval)
                                       : asm_gsub_imm32(*(uint32_t *)&intval))
         goto err;
@@ -1371,6 +1373,7 @@ pop_unused:
       (intval >= INT8_MIN && intval <= INT8_MAX)) {
     if (asm_gprefix_symbol(self->a_operator.o_op0->a_sym,
                            self->a_operator.o_op0)) goto err;
+    if (asm_putddi(self)) goto err;
     if (operator_name == OPERATOR_INPLACE_ADD ? asm_gadd_inplace_simm8((int8_t)intval)
                                               : asm_gsub_inplace_simm8((int8_t)intval))
         goto err;
@@ -1383,6 +1386,7 @@ push_a_if_used:
                        (uint32_t *)&intval)) {
     if (asm_gprefix_symbol(self->a_operator.o_op0->a_sym,
                            self->a_operator.o_op0)) goto err;
+    if (asm_putddi(self)) goto err;
     if (operator_name == OPERATOR_INPLACE_ADD ? asm_gadd_inplace_imm32(*(uint32_t *)&intval)
                                               : asm_gsub_inplace_imm32(*(uint32_t *)&intval))
         goto err;
@@ -1401,6 +1405,7 @@ push_a_if_used:
    if (DeeInt_TryAsS32(self->a_operator.o_op1->a_constexpr,&intval) &&
       (intval >= INT8_MIN && intval <= INT8_MAX)) {
     if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(self)) goto err;
     if (operator_name == OPERATOR_MUL ? asm_gmul_simm8((int8_t)intval) :
         operator_name == OPERATOR_DIV ? asm_gdiv_simm8((int8_t)intval) :
                                         asm_gmod_simm8((int8_t)intval))
@@ -1421,6 +1426,7 @@ push_a_if_used:
    if (!DeeInt_Check(self->a_operator.o_op1->a_constexpr)) break;
    if (DeeInt_TryAsS32(self->a_operator.o_op1->a_constexpr,&intval) &&
       (intval >= INT8_MIN && intval <= INT8_MAX)) {
+    if (asm_putddi(self)) goto err;
     if (asm_gprefix_symbol(self->a_operator.o_op0->a_sym,
                            self->a_operator.o_op0)) goto err;
     if (operator_name == OPERATOR_INPLACE_MUL ? asm_gmul_inplace_simm8((int8_t)intval) :
@@ -1441,6 +1447,7 @@ push_a_if_used:
    if (!DeeInt_Check(self->a_operator.o_op1->a_constexpr)) break;
    if (DeeInt_TryAsU32(self->a_operator.o_op1->a_constexpr,&intval)) {
     if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(self)) goto err;
     if (operator_name == OPERATOR_AND ? asm_gand_imm32(intval) :
         operator_name == OPERATOR_OR  ? asm_gor_imm32(intval) :
                                         asm_gxor_imm32(intval))
@@ -1460,6 +1467,7 @@ push_a_if_used:
    if (!asm_can_prefix_symbol(self->a_operator.o_op0->a_sym)) break;
    if (!DeeInt_Check(self->a_operator.o_op1->a_constexpr)) break;
    if (DeeInt_TryAsU32(self->a_operator.o_op1->a_constexpr,&intval)) {
+    if (asm_putddi(self)) goto err;
     if (asm_gprefix_symbol(self->a_operator.o_op0->a_sym,
                            self->a_operator.o_op0)) goto err;
     if (operator_name == OPERATOR_INPLACE_AND ? asm_gand_inplace_imm32(intval) :
