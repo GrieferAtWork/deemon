@@ -568,6 +568,28 @@ got_small_method:
      goto pop_unused;
     } break;
 
+    case SYMBOL_TYPE_MYFUNC:
+     if (funsym->s_scope->s_base != current_basescope)
+         break;
+     if (!(current_basescope->bs_flags & CODE_FTHISCALL))
+         break;
+     assert(!SYMBOL_MUST_REFERENCE_NOTTHIS(funsym));
+     /* Call to the current or surrounding function, when
+      * that function is defined to be a this-call function.
+      * In this case, pushing the raw function would result
+      * in an instancemethod object having to be created at
+      * runtime, which is something that we can prevent by
+      * referencing the associated this-argument and simply
+      * calling the function directly. */
+     if (asm_putddi(func)) goto err;
+     if (asm_gpush_this_function()) goto err;
+     if (asm_gpush_this()) goto err;
+     ASSERT(argc != (uint8_t)-1);
+     if unlikely(push_tuple_items(args->a_constexpr,args)) goto err;
+     if (asm_putddi(ddi_ast)) goto err;
+     if (asm_gcall(argc + 1)) goto err;
+     goto pop_unused;
+
     default: break;
     }
    }
@@ -1278,6 +1300,28 @@ got_method:
    if (asm_gcall(argc)) goto err;     /* result */
    goto pop_unused;
   } break;
+
+  case SYMBOL_TYPE_MYFUNC:
+   if (funsym->s_scope->s_base != current_basescope)
+       break;
+   if (!(current_basescope->bs_flags & CODE_FTHISCALL))
+       break;
+   if unlikely(argc >= (uint8_t)-1) break;
+   assert(!SYMBOL_MUST_REFERENCE_NOTTHIS(funsym));
+   /* Call to the current or surrounding function, when
+    * that function is defined to be a this-call function.
+    * In this case, pushing the raw function would result
+    * in an instancemethod object having to be created at
+    * runtime, which is something that we can prevent by
+    * referencing the associated this-argument and simply
+    * calling the function directly. */
+   if (asm_putddi(func)) goto err;
+   if (asm_gpush_this_function()) goto err;
+   if (asm_gpush_this()) goto err;
+   for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+   if (asm_putddi(ddi_ast)) goto err;
+   if (asm_gcall(argc + 1)) goto err;
+   goto pop_unused;
 
   default:
    break;

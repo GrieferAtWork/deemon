@@ -960,6 +960,14 @@ check_sym_class:
  case SYMBOL_TYPE_MYMOD:
   return asm_gpush_this_module();
  case SYMBOL_TYPE_MYFUNC:
+  if (current_basescope->bs_flags & CODE_FTHISCALL) {
+   /* Must bind the function. */
+   if (asm_gpush_this_function()) goto err;
+   if (asm_gpush_this()) goto err;
+   symid = asm_newmodule(get_deemon_module());
+   if unlikely(symid < 0) goto err;
+   return asm_gcall_extern((uint16_t)symid,id_instancemethod,2);
+  }
   return asm_gpush_this_function();
  case SYMBOL_TYPE_THIS:
   return asm_gpush_this();

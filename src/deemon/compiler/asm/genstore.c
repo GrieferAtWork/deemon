@@ -879,6 +879,8 @@ check_src_sym_class:
   return asm_gpush_this_module_p();
 
  case SYMBOL_TYPE_MYFUNC:
+  if (current_basescope->bs_flags & CODE_FTHISCALL)
+      break; /* The function has to be bound! */
   /* mov PREFIX, this_function */
   if (asm_putddi(dst_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,dst_ast)) goto err;
