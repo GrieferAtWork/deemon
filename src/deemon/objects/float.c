@@ -102,10 +102,11 @@ float_ctor(Float *__restrict self,
  while (DeeUni_IsSpace(*str)) ++str;
  if (*str) {
   /* There is more here than just a floating point number. */
-  DeeError_Throwf(&DeeError_ValueError,
-                  "Not a float point number %k",
-                  arg);
+  return DeeError_Throwf(&DeeError_ValueError,
+                         "Not a float point number %k",
+                         arg);
  }
+ return 0;
 err:
  return -1;
 }
