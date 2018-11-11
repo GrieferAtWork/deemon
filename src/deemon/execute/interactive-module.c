@@ -1121,6 +1121,9 @@ imod_init(InteractiveModule *__restrict self,
 #ifndef NDEBUG
   memset(dots,0xcc,sizeof(struct symbol));
 #endif
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+  dots->s_refcnt = 1;
+#endif
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
   dots->s_decltype.da_type = DAST_NONE;
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
@@ -1215,6 +1218,9 @@ err_compiler_basefile:
     }
 #ifndef NDEBUG
     memset(sym,0xcc,sizeof(struct symbol));
+#endif
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+    sym->s_refcnt = 1;
 #endif
     sym->s_name  = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(modsym),
                                           MODULE_SYMBOL_GETNAMELEN(modsym),

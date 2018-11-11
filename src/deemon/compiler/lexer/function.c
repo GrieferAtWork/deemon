@@ -148,7 +148,7 @@ done_dots:
      if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,arg))
          goto err;
     } else {
-     memcpy(&arg->s_decltype,&decl,sizeof(struct decl_ast));
+     decl_ast_move(&arg->s_decltype,&decl);
     }
    }
 #endif
@@ -175,7 +175,7 @@ done_dots:
     if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,arg))
         goto err;
    } else {
-    memcpy(&arg->s_decltype,&decl,sizeof(struct decl_ast));
+    decl_ast_move(&arg->s_decltype,&decl);
    }
   }
 #endif
@@ -358,9 +358,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
  }
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
  /* Declaration meta-information */
- my_decl.da_type          = DAST_FUNC;
- my_decl.da_func.f_scope = current_basescope;
- my_decl.da_func.f_ret   = NULL;
+ decl_ast_initfunc(&my_decl,NULL,current_basescope);
 #endif
  if (tok == '(') {
   /* Argument list. */
@@ -398,7 +396,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
    if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,funcself_symbol))
        goto err;
   } else {
-   memcpy(&funcself_symbol->s_decltype,&my_decl,sizeof(struct decl_ast));
+   decl_ast_move(&funcself_symbol->s_decltype,&my_decl);
   }
   my_decl.da_type = DAST_NONE;
  }
@@ -451,7 +449,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
    if unlikely(decl_ast_copy(decl,&funcself_symbol->s_decltype))
       Dee_Clear(result);
   } else {
-   memcpy(decl,&my_decl,sizeof(struct decl_ast));
+   decl_ast_move(decl,&my_decl);
   }
  } else {
   decl_ast_fini(&my_decl);

@@ -96,10 +96,10 @@ extern void __movsd(unsigned long *, unsigned long const *, unsigned __int64);
 extern void __stosw(unsigned short *, unsigned short, unsigned __int64);
 extern void __stosd(unsigned long *, unsigned long, unsigned __int64);
 #else
-extern void __movsw(unsigned short *, unsigned short const *, unsigned long);
-extern void __movsd(unsigned long *, unsigned long const *, unsigned long);
-extern void __stosw(unsigned short *, unsigned short, unsigned long);
-extern void __stosd(unsigned long *, unsigned long, unsigned long);
+extern void __movsw(unsigned short *, unsigned short const *, unsigned int);
+extern void __movsd(unsigned long *, unsigned long const *, unsigned int);
+extern void __stosw(unsigned short *, unsigned short, unsigned int);
+extern void __stosd(unsigned long *, unsigned long, unsigned int);
 #endif
 #pragma intrinsic(__movsw)
 #pragma intrinsic(__movsd)

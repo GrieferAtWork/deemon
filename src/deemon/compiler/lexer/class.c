@@ -486,7 +486,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
  /* Steal declaration information. */
  if (decl && result->s_decltype.da_type == DAST_NONE) {
-  memcpy(&result->s_decltype,decl,sizeof(struct decl_ast));
+  decl_ast_move(&result->s_decltype,decl);
   decl->da_type = DAST_NONE;
  }
 #endif
@@ -494,7 +494,10 @@ class_maker_addmember(struct class_maker *__restrict self,
  result->s_type         = SYMBOL_TYPE_CATTR;
  result->s_attr.a_class = self->cm_classsym;
  result->s_attr.a_attr  = attr;
- result->s_attr.a_this  = is_class_member ? NULL : self->cm_thissym;
+ result->s_attr.a_this  = is_class_member
+                        ? NULL
+                        : (symbol_incref(self->cm_thissym),self->cm_thissym);
+ symbol_incref(self->cm_classsym);
  if (result->s_attr.a_this)
      SYMBOL_INC_NREAD(result->s_attr.a_this);
  SYMBOL_INC_NREAD(result->s_attr.a_class);
@@ -1994,7 +1997,7 @@ err_property:
     if unlikely(!init_ast) goto err_anno;
     /* Remember declaration information within the function member */
     if (member_symbol->s_decltype.da_type == DAST_NONE) {
-     memcpy(&member_symbol->s_decltype,&decl,sizeof(struct decl_ast));
+     decl_ast_move(&member_symbol->s_decltype,&decl);
     } else {
      decl_ast_fini(&decl);
     }

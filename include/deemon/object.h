@@ -279,6 +279,7 @@ struct weakref {
     DeeObject       *wr_obj;   /* [0..1][lock(BIT0(wr_next))] Pointed-to object. */
 };
 #define WEAKREF_INIT  {NULL,NULL,NULL}
+#define WEAKREF(T)     struct weakref
 
 struct weakref_list {
     struct weakref  *wl_nodes; /* [0..1][lock(BIT0(wl_nodes))] chain of weak references. */
@@ -287,7 +288,7 @@ struct weakref_list {
 /* Structure field: When present in an object, it supports weak referencing. */
 #define WEAKREF_SUPPORT struct weakref_list ob_weakrefs;
 #define WEAKREF_SUPPORT_ADDR(T)  offsetof(T,ob_weakrefs)
-#define WEAKREF_SUPPORT_INIT    { NULL }
+#define WEAKREF_SUPPORT_INIT   { NULL }
 
 /* Initialize weakref support (must be called manually by
  * constructors of types implementing weakref support!) */
@@ -301,7 +302,10 @@ struct weakref_list {
  * @return: true:  Successfully initialized the given weak reference.
  * @return: false: The given object `ob' does not support weak referencing. */
 DFUNDEF bool DCALL weakref_init(weakref_t *__restrict self, DeeObject *__restrict ob);
+DFUNDEF void DCALL weakref_copy(weakref_t *__restrict self, weakref_t *__restrict other);
+DFUNDEF void DCALL weakref_move(weakref_t *__restrict dst, weakref_t *__restrict src);
 DFUNDEF void DCALL weakref_fini(weakref_t *__restrict self);
+
 /* Overwrite an already initialize weak reference with the given `ob'.
  * @return: true:  Successfully overwritten the weak reference.
  * @return: false: The given object `ob' does not support weak referencing

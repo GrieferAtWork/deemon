@@ -63,7 +63,7 @@ DECL_END
 #define MEMFIL_PTR(dst,ptr,n)  __stosq((unsigned __int64 *)(dst),(unsigned __int64)(ptr),n)
 #elif defined(_MSC_VER) && defined(__i386__)
 DECL_BEGIN
-extern void __stosd(unsigned long *, unsigned long, unsigned long);
+extern void __stosd(unsigned long *, unsigned long, unsigned int);
 DECL_END
 #pragma intrinsic(__stosd)
 #define MEMFIL_PTR(dst,ptr,n)  __stosd((unsigned long *)(dst),(unsigned long)(ptr),n)

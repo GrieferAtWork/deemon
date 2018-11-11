@@ -397,23 +397,32 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
  case SYMBOL_TYPE_GLOBAL:
   Dee_XDecref(self->s_global.g_doc);
   break;
+
  case SYMBOL_TYPE_ALIAS:
   SYMBOL_SUB_NREAD(self->s_alias,self->s_nread);
   SYMBOL_SUB_NWRITE(self->s_alias,self->s_nwrite);
   SYMBOL_SUB_NBOUND(self->s_alias,self->s_nbound);
+  symbol_decref(self->s_alias);
   break;
+
  case SYMBOL_TYPE_CATTR:
   SYMBOL_DEC_NREAD(self->s_attr.a_class);
-  //if (self->s_attr.a_this) /* TODO: This fails when `self->s_attr.a_this' was already deleted. */
-  //    SYMBOL_DEC_NREAD(self->s_attr.a_this);
+  symbol_decref(self->s_attr.a_class);
+  if (self->s_attr.a_this) {
+   SYMBOL_DEC_NREAD(self->s_attr.a_this);
+   symbol_decref(self->s_attr.a_this);
+  }
   break;
  case SYMBOL_TYPE_GETSET:
   if (self->s_getset.gs_get)
-      SYMBOL_DEC_NREAD(self->s_getset.gs_get);
+      SYMBOL_DEC_NREAD(self->s_getset.gs_get),
+      symbol_decref(self->s_getset.gs_get);
   if (self->s_getset.gs_del)
-      SYMBOL_DEC_NREAD(self->s_getset.gs_del);
+      SYMBOL_DEC_NREAD(self->s_getset.gs_del),
+      symbol_decref(self->s_getset.gs_del);
   if (self->s_getset.gs_set)
-      SYMBOL_DEC_NREAD(self->s_getset.gs_set);
+      SYMBOL_DEC_NREAD(self->s_getset.gs_set),
+      symbol_decref(self->s_getset.gs_set);
   break;
  {
   size_t i;
@@ -435,16 +444,22 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
 }
 
 
-
 /* -------- DeeScopeObject Implementation -------- */
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+INTERN void DCALL
+symbol_destroy(struct symbol *__restrict self)
+#else
 PRIVATE void DCALL
-delsym(struct symbol *__restrict self) {
+delsym(struct symbol *__restrict self)
+#endif
+{
  DeeCompiler_DelItem(self);
  if (self->s_decl.l_file)
      TPPFile_Decref(self->s_decl.l_file);
  symbol_fini(self);
  sym_free(self);
 }
+
 PRIVATE void DCALL
 visitsym(struct symbol *__restrict self, dvisit_t proc, void *arg) {
  switch (self->s_type) {
@@ -470,7 +485,13 @@ scope_fini(DeeScopeObject *__restrict self) {
   iter = *biter;
   while (iter) {
    next = iter->s_next;
+   ASSERT(iter->s_scope == self);
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+   iter->s_scope = NULL;
+   symbol_decref(iter);
+#else
    delsym(iter);
+#endif
    iter = next;
   }
  }
@@ -478,7 +499,13 @@ scope_fini(DeeScopeObject *__restrict self) {
  iter = self->s_del;
  while (iter) {
   next = iter->s_next;
+  ASSERT(iter->s_scope == self);
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+  iter->s_scope = NULL;
+  symbol_decref(iter);
+#else
   delsym(iter);
+#endif
   iter = next;
  }
  Dee_XDecref(self->s_prev);
@@ -510,7 +537,7 @@ INTERN DeeTypeObject DeeScope_Type = {
     /* .tp_name     = */"scope",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
-    /* .tp_weakrefs = */0,
+    /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(DeeScopeObject),
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */NULL, /*&DeeObject_Type,*/
     /* .tp_init = */{
@@ -563,14 +590,20 @@ INTERN DeeTypeObject DeeScope_Type = {
 
 PRIVATE void DCALL
 class_scope_fini(DeeClassScopeObject *__restrict self) {
+ ASSERT(self->cs_this->s_scope == (DeeScopeObject *)self);
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+ self->cs_this->s_scope = NULL;
+ symbol_decref(self->cs_this);
+#else
  sym_free(self->cs_this);
+#endif
 }
 INTERN DeeTypeObject DeeClassScope_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"class_scope",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
-    /* .tp_weakrefs = */0,
+    /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(DeeScopeObject),
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeScope_Type,
     /* .tp_init = */{
@@ -679,7 +712,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
     /* .tp_name     = */"base_scope",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
-    /* .tp_weakrefs = */0,
+    /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(DeeScopeObject),
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeScope_Type,
     /* .tp_init = */{
@@ -741,6 +774,7 @@ root_scope_ctor(DeeRootScopeObject *__restrict self,
      return -1;
  memset((uint8_t *)self + offsetof(DeeScopeObject,s_prev),0,
          sizeof(DeeRootScopeObject)-offsetof(DeeScopeObject,s_prev));
+ weakref_support_init((DeeScopeObject *)self);
  Dee_Incref(module);
  self->rs_scope.bs_scope.s_base = &self->rs_scope;
  self->rs_scope.bs_root         = self;
@@ -798,7 +832,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
     /* .tp_name     = */"root_scope",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
-    /* .tp_weakrefs = */0,
+    /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(DeeScopeObject),
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeBaseScope_Type,
     /* .tp_init = */{
@@ -878,6 +912,9 @@ INTERN int (DCALL classscope_push)(void) {
  if unlikely(!this_sym) goto err_new_scope;
  DeeObject_Init((DeeObject *)new_scope,&DeeClassScope_Type);
  memset(this_sym,0,sizeof(*this_sym));
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+ this_sym->s_refcnt = 1;
+#endif
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 #if DAST_NONE != 0
  this_sym->s_decltype.da_type = DAST_NONE;
@@ -973,7 +1010,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
  /* Copy default arguments. */
  count = other->bs_argc_max - other->bs_argc_min;
  if (count) {
-  current_basescope->bs_default = (DREF DeeObject **)Dee_Malloc(count*sizeof(DREF DeeObject *));
+  current_basescope->bs_default = (DREF DeeObject **)Dee_Malloc(count * sizeof(DREF DeeObject *));
   if unlikely(!current_basescope->bs_default) goto err;
   for (i = 0; i < count; ++i) {
    current_basescope->bs_default[i] = other->bs_default[i];
@@ -982,7 +1019,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
  }
  count = other->bs_argc;
  if (count) {
-  current_basescope->bs_argv = (struct symbol **)Dee_Malloc(count*sizeof(struct symbol *));
+  current_basescope->bs_argv = (struct symbol **)Dee_Malloc(count * sizeof(struct symbol *));
   if unlikely(!current_basescope->bs_argv) goto err;
   /* Copy the actual argument symbols. */
   for (i = 0; i < count; ++i) {
@@ -1037,6 +1074,7 @@ link_forward_symbol(struct symbol *__restrict self) {
   SYMBOL_ADD_NREAD(outer_match,self->s_nread);
   SYMBOL_ADD_NWRITE(outer_match,self->s_nwrite);
   SYMBOL_ADD_NBOUND(outer_match,self->s_nbound);
+  symbol_incref(outer_match);
   return 0;
  }
  if (WARNAT(&self->s_decl,W_UNKNOWN_VARIABLE,SYMBOL_NAME(self)))
@@ -1291,6 +1329,9 @@ seach_single:
    if unlikely((result = sym_alloc()) == NULL)
       goto err;
    memset(result,0,sizeof(*result));
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+   result->s_refcnt = 1;
+#endif
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 #if DAST_NONE != 0
    result->s_decltype.da_type = DAST_NONE;
@@ -1319,6 +1360,9 @@ create_variable:
  if unlikely((result = sym_alloc()) == NULL)
     goto err;
  memset(result,0,sizeof(*result));
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+ result->s_refcnt = 1;
+#endif
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 #if DAST_NONE != 0
  result->s_decltype.da_type = DAST_NONE;
@@ -1409,6 +1453,9 @@ new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
 #ifndef NDEBUG
  memset(result,0xcc,sizeof(struct symbol));
 #endif
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+ result->s_refcnt = 1;
+#endif
  result->s_name = name;
  if (++current_scope->s_mapc > current_scope->s_mapa) {
   if unlikely(rehash_scope(current_scope))
@@ -1448,6 +1495,9 @@ INTERN struct symbol *DCALL new_unnamed_symbol(void) {
 #ifndef NDEBUG
  memset(result,0xcc,sizeof(struct symbol));
 #endif
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+ result->s_refcnt = 1;
+#endif
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
  result->s_decltype.da_type = DAST_NONE;
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
@@ -1468,6 +1518,9 @@ new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope){
  if unlikely((result = sym_alloc()) == NULL) return NULL;
 #ifndef NDEBUG
  memset(result,0xcc,sizeof(struct symbol));
+#endif
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+ result->s_refcnt = 1;
 #endif
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
  result->s_decltype.da_type = DAST_NONE;
@@ -1492,6 +1545,9 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
  if unlikely((result = sym_alloc()) == NULL) return NULL;
 #ifndef NDEBUG
  memset(result,0xcc,sizeof(struct symbol));
+#endif
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+ result->s_refcnt = 1;
 #endif
  result->s_name = name;
  if (++scope->s_mapc > scope->s_mapa) {
@@ -1589,8 +1645,7 @@ done:
 }
 
 
-PRIVATE int DCALL
-rehash_labels(void) {
+PRIVATE int DCALL rehash_labels(void) {
  struct text_label **new_map,**biter,**bend;
  struct text_label *lbl_iter,*s_next,**bucket;
  size_t old_size = current_basescope->bs_lbla;

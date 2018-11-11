@@ -327,6 +327,7 @@ symbol_setalias(DeeCompilerSymbolObject *__restrict self,
   symbol_fini(sym);
   sym->s_type  = SYMBOL_TYPE_ALIAS;
   sym->s_alias = other_sym;
+  symbol_incref(other_sym);
   /* Track new symbol usage within the referenced symbol(s). */
   SYMBOL_ADD_NREAD(other_sym,sym->s_nread);
   SYMBOL_ADD_NWRITE(other_sym,sym->s_nwrite);

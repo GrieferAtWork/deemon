@@ -42,6 +42,134 @@ DECL_BEGIN
 
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 
+INTERN int DCALL
+decl_ast_copy(struct decl_ast *__restrict self,
+              struct decl_ast const *__restrict other) {
+ memcpy(self,other,sizeof(struct decl_ast));
+ switch (self->da_type) {
+
+ case DAST_SYMBOL:
+  symbol_incref(self->da_symbol);
+  break;
+
+ case DAST_CONST:
+ case DAST_STRING:
+  Dee_Incref(self->da_const);
+  break;
+
+ {
+  size_t i;
+  struct decl_ast *new_vec;
+ case DAST_ALT:
+ case DAST_TUPLE:
+  new_vec = (struct decl_ast *)Dee_Malloc(self->da_alt.a_altc *
+                                          sizeof(struct decl_ast));
+  if unlikely(!new_vec) goto err;
+  for (i = 0; i < self->da_alt.a_altc; ++i) {
+   if unlikely(decl_ast_copy(&new_vec[i],
+                             &self->da_alt.a_altv[i])) {
+    while (i--) decl_ast_fini(&new_vec[i]);
+    Dee_Free(new_vec);
+    goto err;
+   }
+  }
+  self->da_alt.a_altv = new_vec;
+ } break;
+
+ {
+  struct decl_ast *inner;
+ case DAST_ATTR:
+  Dee_Incref(self->da_attr.a_name);
+  goto copy_inner;
+ case DAST_FUNC:
+  weakref_copy(&self->da_func.f_scope,
+              (weakref_t *)&other->da_func.f_scope);
+  if (!self->da_func.f_ret)
+      break;
+  ATTR_FALLTHROUGH
+ case DAST_SEQ:
+copy_inner:
+  inner = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
+  if unlikely(!inner) goto err;
+  if unlikely(decl_ast_copy(inner,self->da_seq)) {
+   Dee_Free(inner);
+   goto err;
+  }
+  self->da_seq = inner;
+ } break;
+
+ {
+  struct decl_ast *inner;
+ case DAST_WITH:
+  inner = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
+  if unlikely(!inner) goto err;
+  if unlikely(decl_ast_copy(&inner[0],&self->da_with.w_cell[0])) {
+err_with_inner:
+   Dee_Free(inner);
+   goto err;
+  }
+  if unlikely(decl_ast_copy(&inner[1],&self->da_with.w_cell[1])) {
+   decl_ast_fini(&inner[0]);
+   goto err_with_inner;
+  }
+  self->da_with.w_cell = inner;
+ } break;
+
+ default: break;
+ }
+ return 0;
+err:
+ return -1;
+}
+
+
+/* Finalize the given declaration ast. */
+INTERN void DCALL
+decl_ast_fini(struct decl_ast *__restrict self) {
+ switch (self->da_type) {
+
+ case DAST_SYMBOL:
+  symbol_decref(self->da_symbol);
+  break;
+
+ case DAST_CONST:
+ case DAST_STRING:
+  Dee_Decref(self->da_const);
+  break;
+
+ {
+  size_t i;
+ case DAST_ALT:
+ case DAST_TUPLE:
+  for (i = 0; i < self->da_alt.a_altc; ++i)
+      decl_ast_fini(&self->da_alt.a_altv[i]);
+  Dee_Free(self->da_alt.a_altv);
+ } break;
+
+ case DAST_WITH:
+  decl_ast_fini(&self->da_with.w_cell[1]);
+  goto free_inner;
+ case DAST_ATTR:
+  Dee_Decref(self->da_attr.a_name);
+  goto free_inner;
+ case DAST_FUNC:
+  weakref_fini(&self->da_func.f_scope);
+  if (!self->da_func.f_ret)
+      break;
+  ATTR_FALLTHROUGH
+ case DAST_SEQ:
+free_inner:
+  decl_ast_fini(self->da_seq);
+  Dee_Free(self->da_seq);
+  break;
+
+ default: break;
+ }
+}
+
+
+
+
 /* If `self' refers to a constant object, return that object. */
 INTERN DeeObject *DCALL
 decl_ast_getobj(struct decl_ast const *__restrict self) {
@@ -127,17 +255,23 @@ decl_ast_isempty(struct decl_ast const *__restrict self) {
  case DAST_STRING:
   return DeeString_IsEmpty(self->da_string);
 
+ {
+  DeeBaseScopeObject *scope;
  case DAST_FUNC:
   if (self->da_func.f_ret &&
      !decl_ast_isempty(self->da_func.f_ret))
       goto nope; /* We've got a return type. */
-  if (self->da_func.f_scope->bs_argc != 0)
-      goto nope; /* We've got argument names */
-  if (!(self->da_func.f_scope->bs_cflags & BASESCOPE_FRETURN))
-      goto nope; /* We know that only `none' is ever returned */
+  scope = decl_ast_func_getscope(self);
+  if unlikely(!scope) goto nope;
+  if ((scope->bs_argc != 0) ||                  /* We've got argument names */
+     !(scope->bs_cflags & BASESCOPE_FRETURN)) { /* We know that only `none' is ever returned */
+   Dee_Decref_unlikely((DeeObject *)scope);
+   goto nope;
+  }
+  Dee_Decref_unlikely((DeeObject *)scope);
   /* The argument count can be determined without the doc,
    * so we can simply consider this decl ast as empty. */
-  break;
+ } break;
 
  default: break;
  }
@@ -512,17 +646,17 @@ INTERN int DCALL
 decl_ast_print(struct decl_ast const *__restrict self,
                struct unicode_printer *__restrict printer) {
  size_t i; struct symbol **argv;
- DeeBaseScopeObject *scope;
+ DREF DeeBaseScopeObject *scope;
  if (self->da_type != DAST_FUNC) {
   if (self->da_type == DAST_STRING) {
    /* Simply print the declaration string prefix. */
    return decl_ast_print_type(self,printer);
   }
   if (UNICODE_PRINTER_PRINT(printer,"->") < 0)
-      goto err;
+      goto err_noscope;
   return decl_ast_print_type(self,printer);
  }
- scope = self->da_func.f_scope;
+ scope = decl_ast_func_getscope(self);
  if (scope->bs_argc) {
   /* Special case: function */
   if (unicode_printer_putascii(printer,'('))
@@ -637,8 +771,11 @@ encode_empty_paren:
   if (UNICODE_PRINTER_PRINT(printer,"()") < 0)
       goto err;
  }
+ Dee_Decref_unlikely((DeeObject *)scope);
  return 0;
 err:
+ Dee_Decref_unlikely((DeeObject *)scope);
+err_noscope:
  return -1;
 }
 
@@ -749,120 +886,6 @@ err:
 err2:
  return NULL;
 #endif
-}
-
-
-INTERN int DCALL
-decl_ast_copy(struct decl_ast *__restrict self,
-              struct decl_ast const *__restrict other) {
- memcpy(self,other,sizeof(struct decl_ast));
- switch (self->da_type) {
- case DAST_CONST:
- case DAST_STRING:
-  Dee_Incref(self->da_const);
-  break;
-
- {
-  size_t i;
-  struct decl_ast *new_vec;
- case DAST_ALT:
- case DAST_TUPLE:
-  new_vec = (struct decl_ast *)Dee_Malloc(self->da_alt.a_altc *
-                                          sizeof(struct decl_ast));
-  if unlikely(!new_vec) goto err;
-  for (i = 0; i < self->da_alt.a_altc; ++i) {
-   if unlikely(decl_ast_copy(&new_vec[i],
-                             &self->da_alt.a_altv[i])) {
-    while (i--) decl_ast_fini(&new_vec[i]);
-    Dee_Free(new_vec);
-    goto err;
-   }
-  }
-  self->da_alt.a_altv = new_vec;
- } break;
-
- {
-  struct decl_ast *inner;
- case DAST_ATTR:
-  Dee_Incref(self->da_attr.a_name);
-  goto copy_inner;
- case DAST_FUNC:
-  if (!self->da_func.f_ret)
-      break;
-  ATTR_FALLTHROUGH
- case DAST_SEQ:
-copy_inner:
-  inner = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
-  if unlikely(!inner) goto err;
-  if unlikely(decl_ast_copy(inner,self->da_seq)) {
-   Dee_Free(inner);
-   goto err;
-  }
-  self->da_seq = inner;
- } break;
-
- {
-  struct decl_ast *inner;
- case DAST_WITH:
-  inner = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
-  if unlikely(!inner) goto err;
-  if unlikely(decl_ast_copy(&inner[0],&self->da_with.w_cell[0])) {
-err_with_inner:
-   Dee_Free(inner);
-   goto err;
-  }
-  if unlikely(decl_ast_copy(&inner[1],&self->da_with.w_cell[1])) {
-   decl_ast_fini(&inner[0]);
-   goto err_with_inner;
-  }
-  self->da_with.w_cell = inner;
- } break;
-
- default: break;
- }
- return 0;
-err:
- return -1;
-}
-
-
-/* Finalize the given declaration ast. */
-INTERN void DCALL
-decl_ast_fini(struct decl_ast *__restrict self) {
- switch (self->da_type) {
-
- case DAST_CONST:
- case DAST_STRING:
-  Dee_Decref(self->da_const);
-  break;
-
- {
-  size_t i;
- case DAST_ALT:
- case DAST_TUPLE:
-  for (i = 0; i < self->da_alt.a_altc; ++i)
-      decl_ast_fini(&self->da_alt.a_altv[i]);
-  Dee_Free(self->da_alt.a_altv);
- } break;
-
- case DAST_WITH:
-  decl_ast_fini(&self->da_with.w_cell[1]);
-  goto free_inner;
- case DAST_ATTR:
-  Dee_Decref(self->da_attr.a_name);
-  goto free_inner;
- case DAST_FUNC:
-  if (!self->da_func.f_ret)
-      break;
-  ATTR_FALLTHROUGH
- case DAST_SEQ:
-free_inner:
-  decl_ast_fini(self->da_seq);
-  Dee_Free(self->da_seq);
-  break;
-
- default: break;
- }
 }
 
 
@@ -1074,6 +1097,7 @@ err_nth:
     self->da_type   = DAST_SYMBOL;
     self->da_flag   = DAST_FNORMAL;
     self->da_symbol = sym;
+    symbol_incref(sym);
    } else {
     if (WARN(W_UNKNOWN_NTH_SYMBOL,nth_symbol))
         goto err;
@@ -1081,7 +1105,7 @@ err_nth:
     self->da_flag = DAST_FNORMAL;
    }
    if unlikely(yield() < 0)
-      goto err;
+      goto err_r;
   } else {
    ast_decref(nth_expr);
    if (WARN(W_EXPECTED_KEYWORD_AFTER_NTH))
@@ -1108,6 +1132,7 @@ err_nth:
    self->da_type   = DAST_SYMBOL;
    self->da_flag   = DAST_FNORMAL;
    self->da_symbol = sym;
+   symbol_incref(sym);
    break;
   }
   if (WARN(W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION))
@@ -1165,6 +1190,8 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
     new_symbol->s_extern.e_module = self->da_symbol->s_module;
     new_symbol->s_extern.e_symbol = modsym;
     Dee_Incref(self->da_symbol->s_module);
+    symbol_incref(new_symbol);
+    symbol_decref(self->da_symbol);
     self->da_symbol = new_symbol;
    } else {
     if (WARN(W_MODULE_IMPORT_NOT_FOUND,token.t_kwd->k_name,
@@ -1180,7 +1207,7 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
    if unlikely(!attr_name) goto err_r;
    inner_ast = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
    if unlikely(!inner_ast) { Dee_Decref(attr_name); goto err_r; }
-   memcpy(inner_ast,self,sizeof(struct decl_ast));
+   decl_ast_move(inner_ast,self);
    self->da_type        = DAST_ATTR;
    self->da_flag        = DAST_FNORMAL;
    self->da_attr.a_base = inner_ast;    /* Inherit reference. */
@@ -1210,7 +1237,7 @@ decl_ast_parse_alt(struct decl_ast *__restrict self) {
   elema = 2,elemc = 1;
   elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
   if unlikely(!elemv) goto err_r;
-  memcpy(&elemv[0],self,sizeof(struct decl_ast));
+  decl_ast_move(&elemv[0],self);
   for (;;) {
    if unlikely(yield() < 0) goto err_elemv;
    result = decl_ast_parse_unary(&elemv[elemc]);
@@ -1281,7 +1308,7 @@ decl_ast_parse(struct decl_ast *__restrict self) {
   if unlikely(!inner) goto err_r;
   result = decl_ast_parse_alt(&inner[1]);
   if unlikely(result) { Dee_Free(inner); goto err_r; }
-  memcpy(&inner[0],self,sizeof(struct decl_ast));
+  decl_ast_move(&inner[0],self);
   self->da_type = DAST_WITH;
   self->da_flag = DAST_FNORMAL;
   self->da_with.w_cell = inner; /* Inherit */

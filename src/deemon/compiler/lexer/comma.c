@@ -302,7 +302,7 @@ next_expr:
     }
     decl_ast_fini(&decl);
    } else {
-    memcpy(&function_symbol->s_decltype,&decl,sizeof(struct decl_ast));
+    decl_ast_move(&function_symbol->s_decltype,&decl);
    }
 #endif
    if (function_symbol->s_type == SYMBOL_TYPE_GLOBAL &&
@@ -390,6 +390,7 @@ next_expr:
       case AST_SYM:
        var_symbol->s_decltype.da_type   = DAST_SYMBOL;
        var_symbol->s_decltype.da_symbol = current->a_sym;
+       symbol_incref(current->a_sym);
        break;
       case AST_CONSTEXPR:
        var_symbol->s_decltype.da_type  = DAST_CONST;
@@ -515,7 +516,7 @@ err_args:
       if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,var_symbol))
           goto err_current;
      } else {
-      memcpy(&var_symbol->s_decltype,&decl,sizeof(struct decl_ast));
+      decl_ast_move(&var_symbol->s_decltype,&decl);
      }
     }
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */

@@ -22,8 +22,12 @@
 #include "../api.h"
 #include "../object.h"
 #include "../code.h"
+#include "../util/string.h"
 #ifdef CONFIG_BUILDING_DEEMON
 #include "tpp.h"
+#ifndef CONFIG_NO_THREADS
+#include <hybrid/__atomic.h>
+#endif
 #endif
 #include <stddef.h>
 #include <stdint.h>
@@ -355,6 +359,9 @@ struct class_attribute;
  *
  */
 
+
+
+
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 #define DAST_NONE    0x0000 /* No declaration information. */
 #define DAST_SYMBOL  0x0001 /* `int from deemon' Declaration information is provided as a symbol reference. */
@@ -373,7 +380,7 @@ struct decl_ast {
     uint16_t     da_type;  /* Decl AST Type (One of `DAST_*') */
     uint16_t     da_flag;  /* Decl AST Flags (Set of `DAST_F*') */
     union {
-        struct symbol      *da_symbol; /* [1..1][DAST_SYMBOL] The referenced type expression symbol. */
+        DREF struct symbol *da_symbol; /* [1..1][DAST_SYMBOL] The referenced type expression symbol. */
         DREF DeeObject     *da_const;  /* [1..1][DAST_CONST] A constant expression type. */
         struct {
             size_t          a_altc;    /* Amount of alternative representations. */
@@ -385,9 +392,9 @@ struct decl_ast {
         }                   da_tuple;  /* [DAST_TUPLE] The representation is a fixed-length tuple containing known types. */
         struct decl_ast    *da_seq;    /* [1..1][owned][DAST_SEQ] The sequence element */
         struct {
-            struct decl_ast    *f_ret;   /* [0..1][owned] Function return type (or `NULL' when `object' or `none' is returned) */
-            DeeBaseScopeObject *f_scope; /* [1..1] The scope containing function argument info, as well as associated
-                                          * type declaration information (through `struct symbol::s_decltype') */
+            struct decl_ast            *f_ret;   /* [0..1][owned] Function return type (or `NULL' when `object' or `none' is returned) */
+            WEAKREF(DeeBaseScopeObject) f_scope; /* [1..1] The scope containing function argument info, as well as associated
+                                                  * type declaration information (through `struct symbol::s_decltype') */
         }                   da_func;   /* [DAST_FUNC] The representation is a function. */
         struct {
             struct decl_ast           *a_base; /* [1..1][owned] Attribute base expression. */
@@ -425,12 +432,12 @@ INTDEF int DCALL
 decl_ast_print(struct decl_ast const *__restrict self,
                struct unicode_printer *__restrict printer);
 
-/* Parse a declaration expression. */
-INTDEF int DCALL decl_ast_parse(struct decl_ast *__restrict self);
-
 /* Check if `a' and `b' are exactly identical. */
 INTDEF bool DCALL decl_ast_equal(struct decl_ast const *__restrict a,
                                  struct decl_ast const *__restrict b);
+
+/* Parse a declaration expression. */
+INTDEF int DCALL decl_ast_parse(struct decl_ast *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
@@ -494,8 +501,15 @@ struct text_label {
 };
 
 
+#undef CONFIG_SYMBOL_HAS_REFCNT
+#define CONFIG_SYMBOL_HAS_REFCNT 1
+
+
 struct symbol {
-    struct symbol       *s_next;   /* [0..1][owned] Next symbol with the same modulated `s_name->k_id' */
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+    ATOMIC_DATA dref_t   s_refcnt; /* Reference counter */
+#endif /* CONFIG_SYMBOL_HAS_REFCNT */
+    DREF struct symbol  *s_next;   /* [0..1][owned] Next symbol with the same modulated `s_name->k_id' */
     struct TPPKeyword   *s_name;   /* [1..1][const] Name of this symbol. */
     DeeScopeObject      *s_scope;  /* [1..1][const] The scope declaring this symbol. */
 #define SYMBOL_TYPE_NONE   0x0000  /* Undefined symbol type. */
@@ -557,17 +571,17 @@ struct symbol {
             DREF struct string_object *g_doc;    /* [0..1] An optional documentation string of this global symbol. */
         }                s_global; /* [SYMBOL_TYPE_GLOBAL] */
         struct {
-            struct class_attribute    *a_attr;   /* [1..1] The attribute that is being described. */
-            struct symbol             *a_class;  /* [1..1][REF(SYMBOL_NREAD(.))] The class that is defining the symbol. */
-            struct symbol             *a_this;   /* [0..1][REF(SYMBOL_NREAD(.))] The instance to which the attribute is bound (NULL when this is a class attribute). */
+            struct class_attribute *a_attr;   /* [1..1] The attribute that is being described. */
+            DREF struct symbol     *a_class;  /* [1..1][REF(SYMBOL_NREAD(.))] The class that is defining the symbol. */
+            DREF struct symbol     *a_this;   /* [0..1][REF(SYMBOL_NREAD(.))] The instance to which the attribute is bound (NULL when this is a class attribute). */
         }                s_attr;   /* [SYMBOL_TYPE_CATTR] Class / instance attribute */
         struct {
-            struct symbol             *gs_get;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as getter. */
-            struct symbol             *gs_del;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as delete. */
-            struct symbol             *gs_set;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as setter. */
+            DREF struct symbol     *gs_get;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as getter. */
+            DREF struct symbol     *gs_del;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as delete. */
+            DREF struct symbol     *gs_set;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as setter. */
         }                s_getset; /* [SYMBOL_TYPE_GETSET] */
-        struct symbol   *s_alias;  /* [SYMBOL_TYPE_ALIAS][1..1] The symbol being aliased.
-                                    * NOTE: This symbol may be another alias, however is not allowed to produce a loop */
+        DREF struct symbol *s_alias;  /* [SYMBOL_TYPE_ALIAS][1..1] The symbol being aliased.
+                                       * NOTE: This symbol may be another alias, however is not allowed to produce a loop */
         struct {
             struct ast_loc             a_decl2;  /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
                                                   * The second declaration location. */
@@ -697,6 +711,21 @@ FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_
 /* Finalize the given symbol. */
 INTDEF void DCALL symbol_fini(struct symbol *__restrict self);
 
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+/* Destroy a given symbol. */
+INTDEF void DCALL symbol_destroy(struct symbol *__restrict self);
+#define symbol_incref(x)  (void)(__hybrid_atomic_fetchinc((x)->s_refcnt,__ATOMIC_SEQ_CST))
+#define symbol_decref(x)  (void)(__hybrid_atomic_decfetch((x)->s_refcnt,__ATOMIC_SEQ_CST) || (symbol_destroy(x),0))
+#define symbol_xincref(x) (void)(!(x) || (__hybrid_atomic_fetchinc((x)->s_refcnt,__ATOMIC_SEQ_CST)))
+#define symbol_xdecref(x) (void)(!(x) || (__hybrid_atomic_decfetch((x)->s_refcnt,__ATOMIC_SEQ_CST) || (symbol_destroy(x),0)))
+#else
+#define symbol_incref(x)  (void)0
+#define symbol_decref(x)  (void)0
+#define symbol_xincref(x) (void)0
+#define symbol_xdecref(x) (void)0
+#endif
+
+
 /* Add a 3rd, 4th, etc. ambiguity location to a given symbol.
  * When `loc' is NULL, the current location is used. */
 INTDEF void DCALL symbol_addambig(struct symbol *__restrict self,
@@ -730,6 +759,7 @@ INTDEF char const symclass_names[0x1f + 1][8];
 
 struct scope_object {
     OBJECT_HEAD
+    WEAKREF_SUPPORT
 #ifdef __INTELLISENSE__
     DeeScopeObject          *s_prev;  /* [0..1][const] Previous scope. */
 #else                                 
@@ -738,11 +768,11 @@ struct scope_object {
     DeeBaseScopeObject      *s_base;  /* [1..1][const] The base scope of the surrounding function.
                                        * HINT: If this is a self-pointer, this scope is actually a `DeeBaseScopeObject'  */
     DeeClassScopeObject     *s_class; /* [0..1][const] A pointer to the nearest class scope, or NULL if outside of any. */
-    struct symbol          **s_map;   /* [0..1][owned][0..s_mapa][owned] Hash-map of symbols defined in this scope.
+    DREF struct symbol     **s_map;   /* [0..1][owned][0..s_mapa][owned] Hash-map of symbols defined in this scope.
                                        * HINT: Use the TPP keyword id modulated by `s_mapa' as index. */
     size_t                   s_mapc;  /* Amount of symbols defined within the hash-map `s_map'. */
     size_t                   s_mapa;  /* Allocated vector size of the symbol hash-map `s_map'. */
-    struct symbol           *s_del;   /* [0..1][owned] Chain of symbols that have been deleted. (And thereby made invisible) */
+    DREF struct symbol      *s_del;   /* [0..1][owned] Chain of symbols that have been deleted. (And thereby made invisible) */
 #ifndef NDEBUG
     uint16_t                 s_old_stack; /* Used by stack alignment assertions during assembly: The stack depth when the scope was entered. */
     uint16_t                 s_pad[(sizeof(void *)-2)/2];
@@ -756,7 +786,7 @@ struct class_scope_object {
                                    * This is also where all of the class's members are defined. */
     struct symbol      *cs_class; /* [0..1] A symbol describing the class being described. */
     struct symbol      *cs_super; /* [0..1] A symbol describing the new class's base-class. */
-    struct symbol      *cs_this;  /* [1..1][owned] A symbol describing the this-argument of instances of the class. */
+    DREF struct symbol *cs_this;  /* [1..1][owned] A symbol describing the this-argument of instances of the class. */
 };
 
 /* Returns a pointer to the previous class scope, or `NULL' if no such scope exists. */
@@ -979,6 +1009,82 @@ INTDEF struct symbol *DCALL get_local_symbol_in_scope(DeeScopeObject *__restrict
 #define basescope_push()  __builtin_expect(basescope_push(),0)
 #endif
 #endif
+
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+
+FORCELOCAL void DCALL
+decl_ast_move(struct decl_ast *__restrict dst,
+              struct decl_ast *__restrict src) {
+ memcpy(dst,src,sizeof(struct decl_ast));
+ if (dst->da_type == DAST_FUNC) {
+  weakref_move(&dst->da_func.f_scope,
+               &src->da_func.f_scope);
+ }
+}
+
+
+FORCELOCAL void DCALL
+decl_ast_initsym(struct decl_ast *__restrict self,
+                 struct symbol *__restrict sym) {
+ self->da_type   = DAST_SYMBOL;
+ self->da_flag   = DAST_FNORMAL;
+ self->da_symbol = sym;
+ symbol_incref(sym);
+}
+FORCELOCAL void DCALL
+decl_ast_initconst(struct decl_ast *__restrict self,
+                   DeeObject *__restrict constval) {
+ self->da_type  = DAST_CONST;
+ self->da_flag  = DAST_FNORMAL;
+ self->da_const = constval;
+ Dee_Incref(constval);
+}
+FORCELOCAL void DCALL
+decl_ast_initalt(struct decl_ast *__restrict self, size_t altc,
+                 /*inherit(always)*/struct decl_ast *__restrict altv) {
+ self->da_type       = DAST_ALT;
+ self->da_flag       = DAST_FNORMAL;
+ self->da_alt.a_altc = altc;
+ self->da_alt.a_altv = altv;
+}
+FORCELOCAL void DCALL
+decl_ast_inittuple(struct decl_ast *__restrict self, size_t itemc,
+                   /*inherit(always)*/struct decl_ast *__restrict itemv) {
+ self->da_type          = DAST_TUPLE;
+ self->da_flag          = DAST_FNORMAL;
+ self->da_tuple.t_itemc = itemc;
+ self->da_tuple.t_itemv = itemv;
+}
+FORCELOCAL void DCALL
+decl_ast_initseq(struct decl_ast *__restrict self,
+                 /*inherit(always)*/struct decl_ast *__restrict item_type) {
+ self->da_type = DAST_SEQ;
+ self->da_flag = DAST_FNORMAL;
+ self->da_seq  = item_type;
+}
+FORCELOCAL void DCALL
+decl_ast_initfunc(struct decl_ast *__restrict self,
+                  /*inherit(always)*/struct decl_ast *return_type,
+                  DeeBaseScopeObject *__restrict function_scope) {
+ self->da_type = DAST_FUNC;
+ self->da_flag = DAST_FNORMAL;
+ self->da_func.f_ret = return_type;
+ weakref_init(&self->da_func.f_scope,
+             (DeeObject *)function_scope);
+}
+FORCELOCAL WUNUSED DREF DeeBaseScopeObject *DCALL
+decl_ast_func_getscope(struct decl_ast const *__restrict self) {
+ ASSERT(self->da_type == DAST_FUNC);
+ return (DREF DeeBaseScopeObject *)weakref_lock((weakref_t *)&self->da_func.f_scope);
+}
+
+#define DAST_ATTR    0x0007 /* `list.iterator' Access a custom attribute of another declaration. */
+#define DAST_WITH    0x0008 /* `weakref with object' Extended type information to describe cell-like objects */
+#define DAST_STRING  0x0009 /* __asm__("?T2?O?O") Custom string inserted into the representation. */
+
+
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+
 
 #endif /* CONFIG_BUILDING_DEEMON */
 

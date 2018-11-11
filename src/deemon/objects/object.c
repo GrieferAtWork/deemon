@@ -227,6 +227,65 @@ weakref_init(weakref_t *__restrict self, DeeObject *__restrict ob) {
 }
 
 PUBLIC void DCALL
+weakref_copy(weakref_t *__restrict self,
+             weakref_t *__restrict other) {
+ DREF DeeObject *obj;
+ /* XXX: This should be doable without having to lock the object! */
+ obj = weakref_lock(other);
+ if (!obj)
+  weakref_null(self);
+ else {
+  weakref_init(self,obj);
+  Dee_Decref_unlikely(obj);
+ }
+}
+
+PUBLIC void DCALL
+weakref_move(weakref_t *__restrict dst,
+             weakref_t *__restrict src) {
+ ASSERT(dst);
+ ASSERT(src);
+#ifndef NDEBUG
+ ASSERT(src->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
+#endif
+again:
+#ifndef NDEBUG
+ dst->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
+ dst->wr_next  = (struct weakref *)WEAKREF_BAD_POINTER;
+#endif
+ if (src->wr_obj) {
+  WEAKREF_LOCK(src);
+  COMPILER_READ_BARRIER();
+  if likely(src->wr_obj) {
+   weakref_t *next;
+   LOCK_POINTER(*src->wr_pself);
+   next = (weakref_t *)GET_POINTER(src->wr_next);
+   dst->wr_pself = src->wr_pself;
+   dst->wr_next  = next;
+   if (next) {
+    if unlikely(!WEAKREF_TRYLOCK(next)) {
+     /* Prevent a deadlock. */
+     WEAKREF_UNLOCK(*src->wr_pself);
+     WEAKREF_UNLOCK(src);
+     goto again;
+    }
+    next->wr_pself = &dst->wr_next;
+    ATOMIC_WRITE(*dst->wr_pself,dst);
+    WEAKREF_UNLOCK(next);
+   } else {
+    ATOMIC_WRITE(*dst->wr_pself,dst);
+   }
+   /*WEAKREF_UNLOCK(src);*/
+  } else {
+   /*WEAKREF_UNLOCK(src);*/
+   dst->wr_obj = NULL;
+  }
+ } else {
+  dst->wr_obj = NULL;
+ }
+}
+
+PUBLIC void DCALL
 weakref_fini(weakref_t *__restrict self) {
  ASSERT(self);
 #ifndef NDEBUG
@@ -236,7 +295,7 @@ again:
  if (self->wr_obj) {
   WEAKREF_LOCK(self);
   COMPILER_READ_BARRIER();
-  if (self->wr_obj) {
+  if likely(self->wr_obj) {
    weakref_t *next;
    LOCK_POINTER(*self->wr_pself);
    next = (weakref_t *)GET_POINTER(self->wr_next);
@@ -252,7 +311,7 @@ again:
    }
    ATOMIC_WRITE(*self->wr_pself,next);
   }
-  WEAKREF_UNLOCK(self);
+  /*WEAKREF_UNLOCK(self);*/
  }
 #ifndef NDEBUG
  self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;

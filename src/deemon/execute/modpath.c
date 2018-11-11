@@ -542,6 +542,12 @@ do_create_base_name:
   if unlikely(!dots) goto err_compiler;
   current_basescope->bs_argv    = (struct symbol **)Dee_Malloc(1*sizeof(struct symbol *));
   if unlikely(!current_basescope->bs_argv) goto err_compiler;
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+  dots->s_refcnt = 1;
+#endif
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+  dots->s_decltype.da_type = DAST_NONE;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
   dots->s_type  = SYMBOL_TYPE_ARG;
   dots->s_symid = 0;
   dots->s_flag |= SYMBOL_FALLOC;
