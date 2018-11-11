@@ -156,8 +156,7 @@ PRIVATE struct type_getset scope_getsets[] = {
       DOC("->?Abasescope?Ert:compiler\n"
           "Returns the nearest base-scope that @this scope is apart of") },
     { "prev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getprev, NULL, NULL,
-      DOC("->?Ascope?Ert:compiler\n"
-          "->?N\n"
+      DOC("->?X2?Ascope?Ert:compiler?N\n"
           "Returns a the parent of @this scope, or :none if @this scope is the root-scope") },
     { "isclassscope",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_get_isclassscope, NULL, NULL,
@@ -392,7 +391,7 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
                             "@throw ValueError No symbol matching @name is contained within @this scope\n"
                             "Returns the symbol associated with @name\n"
                             "\n"
-                            "del[](string name)\n"
+                            "del[](string name)->\n"
                             "@throw ValueError No symbol matching @name is contained within @this scope\n"
                             "Delete the symbol associated with @name, adding it to the set of deleted symbols"
                             ),

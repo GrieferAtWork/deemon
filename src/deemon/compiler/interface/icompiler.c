@@ -199,9 +199,11 @@ compiler_get_module(DeeCompilerObject *__restrict self) {
 
 INTERN struct type_getset compiler_getsets[] = {
     { "lexer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_lexer, NULL, NULL,
-      DOC("->?Alexer?Ert:compiler\nReturns the lexer (tokenizer) of @this compiler") },
+      DOC("->?Alexer?Ert:compiler\n"
+          "Returns the lexer (tokenizer) of @this compiler") },
     { "parser", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_parser, NULL, NULL,
-      DOC("->?Aparser?Ert:compiler\nReturns the parser (token to ast converter) of @this compiler") },
+      DOC("->?Aparser?Ert:compiler\n"
+          "Returns the parser (token to ast converter) of @this compiler") },
     { "scope",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_scope, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&compiler_set_scope,

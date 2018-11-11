@@ -5035,8 +5035,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "operatorfuncname",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorfuncname, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorfuncname,
-      DOC("->?Dstring\n"
-          "->?Dint\n"
+      DOC("->?X2?Dstring?Dint\n"
           "@throw TypeError #kind isn't $\"operatorfunc\"\n"
           "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
           "Get or set the name of the operator that is loaded as a function by this branch") },
@@ -5055,8 +5054,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "operatorname",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorname, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setoperatorname,
-      DOC("->?Dstring\n"
-          "->?Dint\n"
+      DOC("->?X2?Dstring?Dint\n"
           "@throw TypeError #kind isn't $\"operator\"\n"
           "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
           "Get or set the name of the operator executed by @this ast") },
