@@ -184,18 +184,18 @@ check_getattr_sym:
     /* Try to statically access known class members! */
     if (sym == class_scope->cs_class ||
         sym == class_scope->cs_this) {
-     struct symbol *funsym;
-     funsym = scope_lookup_str(&class_scope->cs_scope,
-                                DeeString_STR(attrname),
-                                DeeString_SIZE(attrname));
+     struct symbol *classsym;
+     classsym = scope_lookup_str(&class_scope->cs_scope,
+                                  DeeString_STR(attrname),
+                                  DeeString_SIZE(attrname));
      /* Generate a regular attribute access. */
-     if (funsym &&
-         funsym->s_type == SYMBOL_TYPE_CATTR &&
-         funsym->s_attr.a_class == class_scope->cs_class) {
-      if (sym == funsym->s_attr.a_this ||                             /* Regular access to a dynamic attribute. */
-         (sym == funsym->s_attr.a_class && !funsym->s_attr.a_this)) { /* Regular access to a static-attribute. */
+     if (classsym &&
+         classsym->s_type == SYMBOL_TYPE_CATTR &&
+         classsym->s_attr.a_class == class_scope->cs_class) {
+      if (sym == classsym->s_attr.a_this ||                             /* Regular access to a dynamic attribute. */
+         (sym == classsym->s_attr.a_class && !classsym->s_attr.a_this)) { /* Regular access to a static-attribute. */
        if (asm_putddi(ddi_ast)) goto err;
-       if (asm_gpush_symbol(funsym,ddi_ast)) goto err;
+       if (asm_gpush_symbol(classsym,ddi_ast)) goto err;
        goto pop_unused;
       }
      }
@@ -215,6 +215,24 @@ check_getattr_sym:
     goto pop_unused;
 
    {
+    struct symbol *globsym;
+    struct TPPKeyword *kwd; int32_t symid;
+   case SYMBOL_TYPE_MYMOD: /* mymod.attr --> push bnd global ... */
+    kwd = TPPLexer_LookupKeyword(DeeString_STR(attrname),
+                                 DeeString_SIZE(attrname),
+                                 0);
+    if (!kwd) break; /* Never used as keyword (TODO: Add a warning for this) */
+    globsym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope,kwd);
+    if (!globsym) break; /* No such symbol was ever defined (TODO: Add a warning for this) */
+    if (globsym->s_type != SYMBOL_TYPE_GLOBAL) break; /* Not a global symbol (TODO: Add a warning for this) */
+    if (!PUSH_RESULT) goto done;
+    symid = asm_gsymid_for_read(globsym,ddi_ast);
+    if unlikely(symid < 0) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    return asm_gpush_global((uint16_t)symid);
+   } break;
+
+   {
     struct module_symbol *modsym; int32_t module_id;
    case SYMBOL_TYPE_MODULE: /* module.attr --> push extern ... */
     modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),attrname);
@@ -224,9 +242,9 @@ check_getattr_sym:
     if unlikely(module_id < 0) goto err;
     /* Push an external symbol accessed through its module. */
     if (asm_putddi(ddi_ast)) goto err;
-    if (asm_gpush_extern((uint16_t)module_id,modsym->ss_index)) goto err;
-    goto done;
+    return asm_gpush_extern((uint16_t)module_id,modsym->ss_index);
    } break;
+
    default: break;
    }
   }
@@ -302,18 +320,18 @@ check_delattr_sym:
     /* Try to statically access known class members! */
     if (sym == class_scope->cs_class ||
         sym == class_scope->cs_this) {
-     struct symbol *funsym;
-     funsym = scope_lookup_str(&class_scope->cs_scope,
-                                DeeString_STR(name->a_constexpr),
-                                DeeString_SIZE(name->a_constexpr));
+     struct symbol *classsym;
+     classsym = scope_lookup_str(&class_scope->cs_scope,
+                                  DeeString_STR(name->a_constexpr),
+                                  DeeString_SIZE(name->a_constexpr));
      /* Generate a regular attribute access. */
-     if (funsym &&
-         funsym->s_type == SYMBOL_TYPE_CATTR &&
-         funsym->s_attr.a_class == class_scope->cs_class) {
-      if (sym == funsym->s_attr.a_this ||                             /* Regular access to a dynamic attribute. */
-         (sym == funsym->s_attr.a_class && !funsym->s_attr.a_this)) { /* Regular access to a static-attribute. */
+     if (classsym &&
+         classsym->s_type == SYMBOL_TYPE_CATTR &&
+         classsym->s_attr.a_class == class_scope->cs_class) {
+      if (sym == classsym->s_attr.a_this ||                             /* Regular access to a dynamic attribute. */
+         (sym == classsym->s_attr.a_class && !classsym->s_attr.a_this)) { /* Regular access to a static-attribute. */
        if (asm_putddi(ddi_ast)) goto err;
-       return asm_gdel_symbol(funsym,ddi_ast);
+       return asm_gdel_symbol(classsym,ddi_ast);
       }
      }
      break;
@@ -332,7 +350,24 @@ check_delattr_sym:
     if unlikely(attrid < 0) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     return asm_gdelattr_this_const(attrid);
-   
+
+   {
+    struct symbol *globsym;
+    struct TPPKeyword *kwd; int32_t symid;
+   case SYMBOL_TYPE_MYMOD: /* mymod.attr --> push bnd global ... */
+    kwd = TPPLexer_LookupKeyword(DeeString_STR(name->a_constexpr),
+                                 DeeString_SIZE(name->a_constexpr),
+                                 0);
+    if (!kwd) break; /* Never used as keyword (TODO: Add a warning for this) */
+    globsym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope,kwd);
+    if (!globsym) break; /* No such symbol was ever defined (TODO: Add a warning for this) */
+    if (globsym->s_type != SYMBOL_TYPE_GLOBAL) break; /* Not a global symbol (TODO: Add a warning for this) */
+    symid = asm_gsymid(globsym);
+    if unlikely(symid < 0) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    return asm_gdel_global((uint16_t)symid);
+   } break;
+
    default: break;
    }
   }
@@ -606,9 +641,29 @@ check_base_symbol_class:
     cid = asm_newconst(name->a_constexpr);
     if unlikely(cid < 0) goto err;
     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
-    if (PUSH_RESULT && (asm_putddi(ddi_ast) || asm_gdup())) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    if (PUSH_RESULT && asm_gdup()) goto err;
     if (asm_gsetattr_this_const((uint16_t)cid)) goto err;
     goto done;
+
+   {
+    struct symbol *globsym;
+    struct TPPKeyword *kwd; int32_t symid;
+   case SYMBOL_TYPE_MYMOD: /* mymod.attr --> pop global ... */
+    kwd = TPPLexer_LookupKeyword(DeeString_STR(name->a_constexpr),
+                                 DeeString_SIZE(name->a_constexpr),
+                                 0);
+    if (!kwd) break; /* Never used as keyword (TODO: Add a warning for this) */
+    globsym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope,kwd);
+    if (!globsym) break; /* No such symbol was ever defined (TODO: Add a warning for this) */
+    if (globsym->s_type != SYMBOL_TYPE_GLOBAL) break; /* Not a global symbol (TODO: Add a warning for this) */
+    symid = asm_gsymid(globsym);
+    if unlikely(symid < 0) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    if (PUSH_RESULT && asm_gdup()) goto err;
+    return asm_gpop_global((uint16_t)symid);
+   } break;
+
    {
     struct module_symbol *modsym; int32_t module_id;
    case SYMBOL_TYPE_MODULE: /* module.attr --> pop extern ... */
