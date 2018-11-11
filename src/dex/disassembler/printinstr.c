@@ -162,7 +162,7 @@ PRIVATE char const mnemonic_names[256][31] = {
     /* 0x02 */ "yield  foreach, pop", /* `ASM_YIELDALL' */
     /* 0x03 */ "throw  pop", /* `ASM_THROW' */
     /* 0x04 */ "throw  except", /* `ASM_RETHROW' */
-    /* 0x05 */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0x05 */ "setret pop", /* `ASM_SETRET' */
     /* 0x06 */ "end    catch", /* `ASM_ENDCATCH' */
     /* 0x07 */ "end    finally", /* `ASM_ENDFINALLY' */
     /* 0x08 */ UNKNOWN_MNEMONIC, /* --- */
@@ -504,7 +504,7 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf056 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf057 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf058 */ UNKNOWN_MNEMONIC, /* --- */
-    /* 0xf059 */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0xf059 */ "bounditem top, pop", /* `ASM_BOUNDITEM' */
     /* 0xf05a */ "getattr top, ", /* `ASM16_GETATTR_C' */
     /* 0xf05b */ "delattr pop, ", /* `ASM16_DELATTR_C' */
     /* 0xf05c */ "setattr pop, ", /* `ASM16_SETATTR_C' */

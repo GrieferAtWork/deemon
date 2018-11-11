@@ -220,6 +220,7 @@ DeeKwdsMapping_New(/*Kwds*/DeeObject *__restrict kwds,
 DFUNDEF void DCALL DeeKwdsMapping_Decref(DREF DeeObject *__restrict self);
 
 #ifdef CONFIG_BUILDING_DEEMON
+INTDEF bool DCALL DeeKwdsMapping_HasItemString(DeeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemString(DeeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
 #endif

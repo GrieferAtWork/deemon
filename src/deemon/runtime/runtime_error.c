@@ -218,7 +218,7 @@ err_expected_single_character_string(DeeObject *__restrict str) {
 INTERN ATTR_COLD int DCALL
 err_expected_string_for_attribute(DeeObject *__restrict but_instead_got) {
  ASSERT_OBJECT(but_instead_got);
- ASSERT(DeeString_Check(but_instead_got));
+ ASSERT(!DeeString_Check(but_instead_got));
  return DeeError_Throwf(&DeeError_TypeError,
                         "Expected string for attribute, but got instance of `%k': %k",
                         Dee_TYPE(but_instead_got),but_instead_got);

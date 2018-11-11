@@ -315,6 +315,7 @@ ast_predict_type(struct ast *__restrict self) {
   ACTION(AST_FACTION_ANY)
   ACTION(AST_FACTION_ALL)
   ACTION(AST_FACTION_BOUNDATTR)
+  ACTION(AST_FACTION_BOUNDITEM)
   ACTION(AST_FACTION_SAMEOBJ)
   ACTION(AST_FACTION_DIFFOBJ)
    return &DeeBool_Type;
@@ -393,6 +394,7 @@ ast_has_sideeffects(struct ast *__restrict self) {
   case AST_FACTION_IS:
   case AST_FACTION_AS:
   case AST_FACTION_BOUNDATTR:
+  case AST_FACTION_BOUNDITEM:
   case AST_FACTION_SAMEOBJ:
   case AST_FACTION_DIFFOBJ:
    return (ast_has_sideeffects(self->a_action.a_act0) ||
@@ -516,6 +518,7 @@ ast_doesnt_return(struct ast *__restrict self,
   ACTION(AST_FACTION_ASSERT)
 //ACTION(AST_FACTION_ASSERT_M) /* Assertion-with-message doesn't follow normal rules. */
   ACTION(AST_FACTION_BOUNDATTR)
+  ACTION(AST_FACTION_BOUNDITEM)
   ACTION(AST_FACTION_SAMEOBJ)
   ACTION(AST_FACTION_DIFFOBJ)
    /* Actions which follow regular operator execution rules. */

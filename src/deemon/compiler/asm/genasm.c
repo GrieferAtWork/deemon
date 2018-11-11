@@ -2012,13 +2012,20 @@ do_this_as_typesym_ref:
    if unlikely(asm_gstore(self->a_action.a_act0,
                           self->a_action.a_act1,
                           self,PUSH_RESULT))
-               goto err;
+      goto err;
    break;
 
   ACTION(AST_FACTION_BOUNDATTR)
+   if unlikely(ast_gen_boundattr(self->a_action.a_act0,
+                                 self->a_action.a_act1,
+                                 self,PUSH_RESULT))
+      goto err;
+   break;
+
+  ACTION(AST_FACTION_BOUNDITEM)
    if (ast_genasm(self->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
    if (ast_genasm(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
-   if (asm_putddi(self) || asm_gboundattr()) goto err;
+   if (asm_putddi(self) || asm_gbounditem()) goto err;
    goto pop_unused;
 
   ACTION(AST_FACTION_CALL_KW)

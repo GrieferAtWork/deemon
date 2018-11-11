@@ -40,33 +40,41 @@ DECL_BEGIN
 PRIVATE DREF DeeObject *DCALL
 f_builtin_get_documentation(size_t argc, DeeObject **__restrict argv) {
  DeeObject *self,*attr = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:doc",&self,&attr))
-     return NULL;
- if (!attr) return DeeObject_Doc(self);
+ if (DeeArg_Unpack(argc,argv,"o|o:docfor",&self,&attr))
+     goto err;
+ if (!attr)
+     return DeeObject_Doc(self);
  if (DeeObject_AssertTypeExact(attr,&DeeString_Type))
-     return NULL;
+     goto err;
  return DeeObject_DocAttr(self,attr);
+err:
+ return NULL;
 }
 INTERN DEFINE_CMETHOD(builtin_get_documentation,&f_builtin_get_documentation);
 
 PRIVATE DREF DeeObject *DCALL
 f_builtin_hasattr(size_t argc, DeeObject **__restrict argv) {
  DeeObject *self,*attr; int result;
- if (DeeArg_Unpack(argc,argv,"oo:hasattr",&self,&attr) ||
-     DeeObject_AssertTypeExact(attr,&DeeString_Type))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"oo:hasattr",&self,&attr))
+     goto err;
+ if (DeeObject_AssertTypeExact(attr,&DeeString_Type))
+     goto err;
  result = DeeObject_HasAttr(self,attr);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
 INTERN DEFINE_CMETHOD(builtin_hasattr,&f_builtin_hasattr);
 
 PRIVATE DREF DeeObject *DCALL
 f_builtin_boundattr(size_t argc, DeeObject **__restrict argv) {
  DeeObject *self,*attr; bool allow_missing = true;
- if (DeeArg_Unpack(argc,argv,"oo|b:boundattr",&self,&attr,&allow_missing) ||
-     DeeObject_AssertTypeExact(attr,&DeeString_Type))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"oo|b:boundattr",&self,&attr,&allow_missing))
+     goto err;
+ if (DeeObject_AssertTypeExact(attr,&DeeString_Type))
+     goto err;
  switch (DeeObject_BoundAttr(self,attr)) {
  case 0: return_false;
  case 1: return_true;
@@ -79,9 +87,25 @@ f_builtin_boundattr(size_t argc, DeeObject **__restrict argv) {
                         ATTR_ACCESS_GET);
   break;
  }
+err:
  return NULL;
 }
 INTERN DEFINE_CMETHOD(builtin_boundattr,&f_builtin_boundattr);
+
+PRIVATE DREF DeeObject *DCALL
+f_builtin_bounditem(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *self,*key; bool allow_missing = true;
+ if (DeeArg_Unpack(argc,argv,"oo|b:bounditem",&self,&key,&allow_missing))
+     goto err;
+ switch (DeeObject_BoundItem(self,key,allow_missing)) {
+ default: return_false;
+ case 1: return_true;
+ case -1: break; /* Error */
+ }
+err:
+ return NULL;
+}
+INTERN DEFINE_CMETHOD(builtin_bounditem,&f_builtin_bounditem);
 
 PRIVATE DREF DeeObject *DCALL
 f_builtin_import(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {

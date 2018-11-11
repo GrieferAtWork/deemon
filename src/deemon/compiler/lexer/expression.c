@@ -285,6 +285,13 @@ make_bound_expression(struct ast *__restrict base_expr,
   result = ast_action2(AST_FACTION_BOUNDATTR,
                        base_expr->a_operator.o_op0,
                        base_expr->a_operator.o_op1);
+ } else if (base_expr->a_type == AST_OPERATOR &&
+            base_expr->a_flag == OPERATOR_GETITEM &&
+            base_expr->a_operator.o_op1) {
+  /* Check if a given item is bound. */
+  result = ast_action2(AST_FACTION_BOUNDITEM,
+                       base_expr->a_operator.o_op0,
+                       base_expr->a_operator.o_op1);
  } else if (WARNAT(&base_expr->a_ddi,W_CANNOT_TEST_EXPRESSION_BINDING)) {
   result = NULL;
  } else {

@@ -3883,6 +3883,13 @@ operator_fallback:
     PRINT(" is bound)");
    }
    break;
+  ACTION(AST_FACTION_BOUNDITEM):
+   PRINT("(");
+   DO(print_ast_code(self->a_action.a_act0,printer,arg,true,self->a_scope,indent));
+   PRINT("[");
+   DO(print_ast_code(self->a_action.a_act1,printer,arg,true,self->a_scope,indent));
+   PRINT("] is bound)");
+   break;
   ACTION(AST_FACTION_SAMEOBJ):
    PRINT("(");
    DO(print_ast_code(self->a_action.a_act0,printer,arg,true,self->a_scope,indent));

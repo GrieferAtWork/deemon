@@ -128,7 +128,7 @@ PRIVATE uint8_t const intr_len[256] = {
     /* 0x02 */ 1, /* `ASM_YIELDALL':                `yield foreach, pop' */
     /* 0x03 */ 1, /* `ASM_THROW':                   `throw pop' */
     /* 0x04 */ 1, /* `ASM_RETHROW':                 `throw except' */
-    /* 0x05 */ 1, /* --- */
+    /* 0x05 */ 1, /* `ASM_SETRET':                  `setret pop' */
     /* 0x06 */ 1, /* `ASM_ENDCATCH':                `end catch' */
     /* 0x07 */ 1, /* `ASM_ENDFINALLY':              `end finally' */
     /* 0x08 */ 1, /* --- */
@@ -470,7 +470,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0x56 */ 2, /* --- */
     /* 0x57 */ 2, /* --- */
     /* 0x58 */ 2, /* --- */
-    /* 0x59 */ 2, /* --- */
+    /* 0x59 */ 1, /* `ASM_BOUNDITEM':               `bounditem top, pop' */
     /* 0x5a */ 4, /* `ASM16_GETATTR_C':             `getattr top, const <imm16>' */
     /* 0x5b */ 4, /* `ASM16_DELATTR_C':             `delattr pop, const <imm16>' */
     /* 0x5c */ 4, /* `ASM16_SETATTR_C':             `setattr pop, const <imm16>, pop' */
@@ -644,7 +644,7 @@ PRIVATE uint8_t const stack_effect[256] = {
     /* 0x02 */ STACK_EFFECT(1,0),  /* `ASM_YIELDALL':                `yield foreach, pop' */
     /* 0x03 */ STACK_EFFECT(1,0),  /* `ASM_THROW':                   `throw pop' */
     /* 0x04 */ STACK_EFFECT(0,0),  /* `ASM_RETHROW':                 `throw except' */
-    /* 0x05 */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x05 */ STACK_EFFECT(1,0),  /* `ASM_SETRET':                  `setret pop' */
     /* 0x06 */ STACK_EFFECT(0,0),  /* `ASM_ENDCATCH':                `end catch' */
     /* 0x07 */ STACK_EFFECT(0,0),  /* `ASM_ENDFINALLY':              `end finally' */
     /* 0x08 */ STACK_EFFECT_UNDEF, /* --- */
@@ -986,7 +986,7 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0x56 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x57 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x58 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x59 */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x59 */ STACK_EFFECT(2,1),  /* `ASM_BOUNDITEM':               `bounditem top, pop' */
     /* 0x5a */ STACK_EFFECT(1,1),  /* `ASM16_GETATTR_C':             `getattr top, const <imm16>' */
     /* 0x5b */ STACK_EFFECT(1,0),  /* `ASM16_DELATTR_C':             `delattr pop, const <imm16>' */
     /* 0x5c */ STACK_EFFECT(2,0),  /* `ASM16_SETATTR_C':             `setattr pop, const <imm16>, pop' */

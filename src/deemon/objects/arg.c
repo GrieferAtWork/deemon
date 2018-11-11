@@ -1119,6 +1119,25 @@ clear_argv:
 
 
 
+INTERN bool DCALL
+DeeKwdsMapping_HasItemString(DeeObject *__restrict self,
+                             char const *__restrict name,
+                             dhash_t hash) {
+ size_t index; KwdsMapping *me;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeKwdsMapping_Type);
+ me = (KwdsMapping *)self;
+ index = kwds_findstr(me->kmo_kwds,name,hash);
+ if unlikely(index == (size_t)-1)
+    return false;
+#ifdef CONFIG_NO_THREADS
+ if unlikely(!me->kmo_argv)
+    return false;
+#else
+ if unlikely(!ATOMIC_READ(me->kmo_argv))
+    return false;
+#endif
+ return true;
+}
 INTERN DREF DeeObject *DCALL
 DeeKwdsMapping_GetItemString(DeeObject *__restrict self,
                              char const *__restrict name,

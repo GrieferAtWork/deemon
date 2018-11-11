@@ -303,6 +303,103 @@ done:
 err:
  return -1;
 }
+
+INTERN int DCALL
+ast_gen_boundattr(struct ast *__restrict base,
+                  struct ast *__restrict name,
+                  struct ast *__restrict ddi_ast,
+                  unsigned int gflags) {
+ /* Special optimizations when the attribute name is known at compile-time. */
+ if (name->a_type == AST_CONSTEXPR &&
+     DeeString_Check(name->a_constexpr)) {
+  DeeStringObject *attrname;
+  attrname = (DeeStringObject *)name->a_constexpr;
+  if (base->a_type == AST_SYM) {
+   struct symbol *sym = base->a_sym;
+   DeeClassScopeObject *class_scope;
+check_boundattr_sym:
+   for (class_scope = base->a_scope->s_class; class_scope;
+        class_scope = DeeClassScope_Prev(class_scope)) {
+    /* Try to statically access known class members! */
+    if (sym == class_scope->cs_class ||
+        sym == class_scope->cs_this) {
+     struct symbol *classsym;
+     classsym = scope_lookup_str(&class_scope->cs_scope,
+                                  DeeString_STR(attrname),
+                                  DeeString_SIZE(attrname));
+     /* Generate a regular attribute access. */
+     if (classsym &&
+         classsym->s_type == SYMBOL_TYPE_CATTR &&
+         classsym->s_attr.a_class == class_scope->cs_class) {
+      if (sym == classsym->s_attr.a_this ||                               /* Regular access to a dynamic attribute. */
+         (sym == classsym->s_attr.a_class && !classsym->s_attr.a_this)) { /* Regular access to a static-attribute. */
+       if (asm_putddi(ddi_ast)) goto err;
+       if (asm_gpush_bnd_symbol(classsym,ddi_ast)) goto err;
+       goto pop_unused;
+      }
+     }
+     break;
+    }
+   }
+   switch (SYMBOL_TYPE(sym)) {
+   case SYMBOL_TYPE_ALIAS:
+    sym = SYMBOL_ALIAS(sym);
+    goto check_boundattr_sym;
+
+   {
+    struct symbol *globsym;
+    struct TPPKeyword *kwd; int32_t symid;
+   case SYMBOL_TYPE_MYMOD: /* mymod.attr --> push bnd global ... */
+    kwd = TPPLexer_LookupKeyword(DeeString_STR(attrname),
+                                 DeeString_SIZE(attrname),
+                                 0);
+    if (!kwd) break; /* Never used as keyword (TODO: Add a warning for this) */
+    globsym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope,kwd);
+    if (!globsym) break; /* No such symbol was ever defined (TODO: Add a warning for this) */
+    if (globsym->s_type != SYMBOL_TYPE_GLOBAL) break; /* Not a global symbol (TODO: Add a warning for this) */
+    if (!PUSH_RESULT) goto done;
+    if (!SYMBOL_NWRITE(globsym)) {
+     /* Never written -> must be unbound */
+     if (asm_putddi(ddi_ast)) goto err;
+     return asm_gpush_false();
+    }
+    symid = asm_gsymid_for_read(globsym,ddi_ast);
+    if unlikely(symid < 0) goto err;
+    if (asm_putddi(ddi_ast)) goto err;
+    return asm_gpush_bnd_global((uint16_t)symid);
+   } break;
+
+   {
+    struct module_symbol *modsym; int32_t module_id;
+   case SYMBOL_TYPE_MODULE: /* module.attr --> push bnd extern ... */
+    modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),attrname);
+    if (!modsym) break;
+    if (!PUSH_RESULT) goto done;
+    module_id = asm_msymid(sym);
+    if unlikely(module_id < 0) goto err;
+    /* Push an external symbol accessed through its module. */
+    if (asm_putddi(ddi_ast)) goto err;
+    return asm_gpush_bnd_extern((uint16_t)module_id,modsym->ss_index);
+   } break;
+
+   default: break;
+   }
+  }
+ }
+ if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
+ if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
+ if (asm_putddi(ddi_ast)) goto err;
+ if (asm_gboundattr()) goto err;
+pop_unused:
+ if (!(gflags & ASM_G_FPUSHRES))
+     return asm_gpop();
+done:
+ return 0;
+err:
+ return -1;
+}
+
+
 INTERN int DCALL
 ast_gen_delattr(struct ast *__restrict base,
                 struct ast *__restrict name,

@@ -1359,6 +1359,7 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gdelattr()                (asm_ddcsp(),asm_put(ASM_DELATTR))
 #define asm_gsetattr()                (asm_dddcsp(),asm_put(ASM_SETATTR))
 #define asm_gboundattr()              (asm_ddicsp(),asm_put(ASM_BOUNDATTR))
+#define asm_gbounditem()              (asm_ddicsp(),asm_put16(ASM_BOUNDITEM))
 #define asm_gsameobj()                (asm_ddicsp(),asm_put16(ASM_CMP_SO))
 #define asm_gdiffobj()                (asm_ddicsp(),asm_put16(ASM_CMP_DO))
 #define asm_ggetattr_const(cid)       (asm_dicsp(),asm_put816(ASM_GETATTR_C,cid))
@@ -1568,6 +1569,11 @@ ast_gen_getattr(struct ast *__restrict base,
                 struct ast *__restrict name,
                 struct ast *__restrict ddi_ast,
                 unsigned int gflags);
+INTDEF int DCALL
+ast_gen_boundattr(struct ast *__restrict base,
+                  struct ast *__restrict name,
+                  struct ast *__restrict ddi_ast,
+                  unsigned int gflags);
 INTDEF int DCALL
 ast_gen_delattr(struct ast *__restrict base,
                 struct ast *__restrict name,

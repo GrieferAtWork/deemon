@@ -1049,7 +1049,8 @@
 /*      ASM_                  0xf056  *               --------                            - ------------------ */
 /*      ASM_                  0xf057  *               --------                            - ------------------ */
 /*      ASM_                  0xf058  *               --------                            - ------------------ */
-/*      ASM_                  0xf059  *               --------                            - ------------------ */
+#define ASM_BOUNDITEM         0xf059 /* [1][-2,+1]   `bounditem top, pop'                 - Pop an index/key, then use it to check if an item is bound in stack-top.
+                                      * >> PUSH(bound(POP().operator [] (POP())); */
 #define ASM16_GETATTR_C       0xf05a /* [4][-1,+1]   `getattr top, const <imm16>'         - Perform a fast attribute lookup on stack-top using a string in constant slot `<imm16>' (little-endian). */
 #define ASM16_DELATTR_C       0xf05b /* [4][-1,+0]   `delattr pop, const <imm16>'         - Delete an attribute of stack-top named by a string in constant slot `<imm16>' (little-endian). */
 #define ASM16_SETATTR_C       0xf05c /* [4][-2,+0]   `setattr pop, const <imm16>, pop'    - Pop a value and set an attribute of (then) stack-top named by a string in constant slot `<imm16>' (little-endian). */

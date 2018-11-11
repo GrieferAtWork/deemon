@@ -3597,6 +3597,187 @@ DEFINE_OPERATOR(int,SetRange,(DeeObject *__restrict self,
 
 
 #ifndef DEFINE_TYPE_OPERATORS
+PUBLIC int
+(DCALL DeeObject_BoundItem)(DeeObject *__restrict self,
+                            DeeObject *__restrict index,
+                            bool allow_missing) {
+ DREF DeeObject *result;
+ DeeTypeObject *tp_self; size_t i;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
+   struct type_nsi *nsi;
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi) {
+    if (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+     if (nsi->nsi_seqlike.nsi_getitem_fast) {
+      size_t size;
+      if (DeeObject_AsSize(index,&i))
+          goto err;
+      if (nsi->nsi_seqlike.nsi_getsize_fast) {
+       size = (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
+      } else {
+       size = (*nsi->nsi_seqlike.nsi_getsize)(self);
+       if unlikely(size == (size_t)-1) goto err;
+      }
+      if unlikely(i >= size) {
+       /* Bad index */
+       if (allow_missing)
+           return -2;
+       return err_index_out_of_bounds(self,i,size);
+      }
+      result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,i);
+      if (!result) return 0;
+      Dee_Decref(result);
+      return 1;
+     }
+     if (nsi->nsi_seqlike.nsi_getitem) {
+      if (DeeObject_AsSize(index,&i))
+          goto err;
+      result = (*nsi->nsi_seqlike.nsi_getitem)(self,i);
+      goto check_result;
+     }
+    } else if (nsi->nsi_class == TYPE_SEQX_CLASS_MAP) {
+     if (nsi->nsi_maplike.nsi_getdefault) {
+      result = (*nsi->nsi_maplike.nsi_getdefault)(self,index,ITER_DONE);
+      if (result == ITER_DONE) {
+       if (allow_missing)
+           return -2;
+       return err_unknown_key(self,index);
+      }
+      goto check_result;
+     }
+     /* We can't actually substitute with `operator contains', because
+      * if we did that, we may get a false positive for a valid key, but
+      * an unbound key none-the-less. */
+    }
+   }
+   /* Fallback create an integer object and use it for indexing. */
+   result = DeeType_INVOKE_GETITEM(tp_self,self,index);
+check_result:
+   if (!result) {
+    if (DeeError_Catch(&DeeError_UnboundItem))
+        return 0;
+    if (allow_missing &&
+       (DeeError_Catch(&DeeError_IndexError) ||
+        DeeError_Catch(&DeeError_KeyError)))
+        return -2;
+    goto err;
+   }
+   Dee_Decref(result);
+   return 1;
+  }
+ } while (type_inherit_getitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_GETITEM);
+err:
+ return -1;
+}
+
+PUBLIC int
+(DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self,
+                                 size_t index, bool allow_missing) {
+ DREF DeeObject *result,*index_ob;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
+   struct type_nsi *nsi;
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi) {
+    if (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+     if (nsi->nsi_seqlike.nsi_getitem_fast) {
+      size_t size;
+      if (nsi->nsi_seqlike.nsi_getsize_fast) {
+       size = (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
+      } else {
+       size = (*nsi->nsi_seqlike.nsi_getsize)(self);
+       if unlikely(size == (size_t)-1) goto err;
+      }
+      if unlikely(index >= size) {
+       if (allow_missing)
+           return -2; /* Bad index */
+       return err_index_out_of_bounds(self,index,size);
+      }
+      result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,index);
+      if (!result) return 0;
+      Dee_Decref(result);
+      return 1;
+     }
+     if (nsi->nsi_seqlike.nsi_getitem) {
+      result = (*nsi->nsi_seqlike.nsi_getitem)(self,index);
+      goto check_result;
+     }
+    } else if (nsi->nsi_class == TYPE_SEQX_CLASS_MAP) {
+     if (nsi->nsi_maplike.nsi_getdefault) {
+      index_ob = DeeInt_NewSize(index);
+      if unlikely(!index_ob) goto err;
+      result = (*nsi->nsi_maplike.nsi_getdefault)(self,index_ob,ITER_DONE);
+      if (result == ITER_DONE) {
+       if (allow_missing) {
+        Dee_Decref(index_ob);
+        return -2;
+       }
+       err_unknown_key(self,index_ob);
+       Dee_Decref(index_ob);
+       return -1;
+      }
+      Dee_Decref(index_ob);
+      goto check_result;
+     }
+     /* We can't actually substitute with `operator contains', because
+      * if we did that, we may get a false positive for a valid key, but
+      * an unbound key none-the-less. */
+    }
+   }
+   /* Fallback create an integer object and use it for indexing. */
+   index_ob = DeeInt_NewSize(index);
+   if unlikely(!index_ob) goto err;
+   result = DeeType_INVOKE_GETITEM(tp_self,self,index_ob);
+   Dee_Decref(index_ob);
+check_result:
+   if (!result) {
+    if (DeeError_Catch(&DeeError_UnboundItem))
+        return 0;
+    if (allow_missing &&
+       (DeeError_Catch(&DeeError_IndexError) ||
+        DeeError_Catch(&DeeError_KeyError)))
+        return -2;
+    goto err;
+   }
+   Dee_Decref(result);
+   return 1;
+  }
+ } while (type_inherit_getitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_GETITEM);
+err:
+ return -1;
+}
+
+PUBLIC int
+(DCALL DeeObject_BoundItemString)(DeeObject *__restrict self,
+                                  char const *__restrict key,
+                                  dhash_t hash,
+                                  bool allow_missing) {
+ int result;
+ DREF DeeObject *key_ob;
+ ASSERT_OBJECT(self);
+ if (DeeDict_CheckExact(self))
+     return DeeDict_HasItemString(self,key,hash) ? 1 : 0;
+ if (DeeKwdsMapping_CheckExact(self))
+     return DeeKwdsMapping_HasItemString(self,key,hash) ? 1 : 0;
+ /* Fallback: create a string object and use it for indexing. */
+ key_ob = DeeString_NewWithHash(key,hash);
+ if unlikely(!key_ob) goto err;
+ result = DeeObject_BoundItem(self,key_ob,allow_missing);
+ Dee_Decref(key_ob);
+ return result;
+err:
+ return -1;
+}
+
+
 PUBLIC DREF DeeObject *DCALL
 DeeObject_GetItemDef(DeeObject *__restrict self,
                      DeeObject *__restrict key,
@@ -3721,7 +3902,7 @@ DeeObject_GetItemString(DeeObject *__restrict self,
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_GetItemString(self,key,hash);
  /* Fallback: create a string object and use it for indexing. */
- key_ob = DeeString_New(key);
+ key_ob = DeeString_NewWithHash(key,hash);
  if unlikely(!key_ob) goto err;
  result = DeeObject_GetItem(self,key_ob);
  Dee_Decref(key_ob);

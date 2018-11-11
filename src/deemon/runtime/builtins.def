@@ -153,6 +153,7 @@ INTDEF DeeCMethodObject rt_badcall;
 INTDEF DeeCMethodObject builtin_get_documentation;
 INTDEF DeeCMethodObject builtin_hasattr;
 INTDEF DeeCMethodObject builtin_boundattr;
+INTDEF DeeCMethodObject builtin_bounditem;
 INTDEF DeeCMethodObject builtin_import;
 
 DECL_END
@@ -174,17 +175,32 @@ BUILTIN_DOC(hasattr,&builtin_hasattr,MODSYM_FREADONLY,
             "(ob,attr:?Dstring)->?Dbool\n"
             "@return Indicative of @ob containing an attribute @attr")
 
-/* Check if an object has a given attribute.
+/* Check if a given object attribute is bound.
  * >> boundattr(object ob, string attr, bool allow_missing = true) -> bool; */
 BUILTIN_DOC(boundattr,&builtin_boundattr,MODSYM_FREADONLY,
-            "(ob,attr:?Dstring,allow_missing=true)->?Dbool\n"
+            "(ob,attr:?Dstring,allow_missing=!t)->?Dbool\n"
             "@throw AttributeError The attribute doesn't exist, and @allow_missing is :false\n"
             "@return Indicative of attribute @attr of @ob currently being bound\n"
-            "If the attribute doesn't exist, return :false, or an :AttributeError, "
+            "If the attribute doesn't exist, return :false, or throw an :AttributeError, "
             "depending on the given @allow_missing\n"
             ">import boundattr from deemon;\n"
             ">print boundattr(foo,\"bar\",true);\n"
             ">print foo.bar is bound; /* Functionally equivalent */\n")
+
+/* Check if a given object item is bound.
+ * >> bounditem(object ob, int index, bool allow_missing = true) -> bool;
+ * >> bounditem(object ob, object key, bool allow_missing = true) -> bool; */
+BUILTIN_DOC(bounditem,&builtin_bounditem,MODSYM_FREADONLY,
+            "(ob,index:?Dint,allow_missing=!t)->?Dbool\n"
+            "(ob,key:?Dobject,allow_missing=!t)->?Dbool\n"
+            "@throw IndexError The given @index doesn't exist, and @allow_missing is :false\n"
+            "@throw KeyError The given @key doesn't exist, and @allow_missing is :false\n"
+            "@return Indicative of item @index or @key of @ob currently being bound\n"
+            "If the item doesn't exist, return :false, or throw an :IndexError or :KeyError, "
+            "depending on the given @allow_missing\n"
+            ">import bounditem from deemon;\n"
+            ">print bounditem(foo,42,true);\n"
+            ">print foo[42] is bound; /* Functionally equivalent */\n")
 
 /* Load a module, given its name.
  * >> import(string module_name) -> string;

@@ -3927,7 +3927,6 @@ target_boundmember_this:
 	xorl    %ecx, %ecx
 	cmpl    $0, %eax
 	jl     .except
-	setg    %cl
 	setnz   %cl
 	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
 	incref  %eax
@@ -5027,6 +5026,27 @@ target_setrange:
 	sp_popref %eax
 	jmp   .disp
 
+target_bounditem:
+	pushl  $1     /* DeeObject_BoundItem:allow_missing */
+	ADJUST_CFA_OFFSET(4)
+	pushl  FIRST  /* DeeObject_BoundItem:key */
+	ADJUST_CFA_OFFSET(4)
+	pushl  SECOND /* DeeObject_BoundItem:self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_BoundItem,12)
+	ADJUST_CFA_OFFSET(-12)
+	xorl   %ecx, %ecx /* Clear out ECX */
+	cmpl   $-1, %eax
+	je    .except /* Check for errors. */
+	cmpl   $0, %eax
+	setg   %cl /* CL = EAX > 0 */
+	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
+	incref %eax /* Incref the boolean value. */
+	xchgl  SECOND, %eax /* Store the result onto the stack. */
+	decref %eax
+	sp_popref %eax
+	jmp   .disp
+
 
 target16_contains_c:
 	lodsw
@@ -6021,10 +6041,10 @@ target_boundattr:
 	call   fSYM(DeeObject_BoundAttr,8)
 	ADJUST_CFA_OFFSET(-8)
 	xorl   %ecx, %ecx /* Clear out ECX */
-	cmpl   $-2, %eax
+	cmpl   $-1, %eax
 	je    .except /* Check for errors. */
 	cmpl   $0, %eax
-	seta   %cl /* CL = EAX > 0 */
+	setg   %cl /* CL = EAX > 0 */
 	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
 	incref %eax /* Incref the boolean value. */
 	xchgl  SECOND, %eax /* Store the result onto the stack. */
@@ -7958,6 +7978,9 @@ prefix_target_throw = prefix_invop
 .ifndef prefix_target_rethrow
 prefix_target_rethrow = prefix_invop
 .endif
+.ifndef prefix_target_setret
+prefix_target_setret = prefix_invop
+.endif
 .ifndef prefix_target_endcatch
 prefix_target_endcatch = prefix_invop
 .endif
@@ -8723,6 +8746,9 @@ prefix_target_pack_hashset = prefix_invop
 .ifndef prefix_target_pack_dict
 prefix_target_pack_dict = prefix_invop
 .endif
+.ifndef prefix_target_bounditem
+prefix_target_bounditem = prefix_invop
+.endif
 .ifndef prefix_target16_getattr_c
 prefix_target16_getattr_c = prefix_invop
 .endif
@@ -8996,7 +9022,7 @@ inst_table:
 	.long target_yieldall                /* `yield foreach, pop' */
 	.long target_throw                   /* `throw pop' */
 	.long target_rethrow                 /* `throw except' */
-	.long invop
+	.long target_setret                  /* `setret pop' */
 	.long target_endcatch                /* `end catch' */
 	.long target_endfinally              /* `end finally' */
 	.long invop
@@ -9338,7 +9364,7 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long invop
-	.long invop
+	.long target_bounditem               /* `bounditem top, pop' */
 	.long target16_getattr_c             /* `getattr top, const <imm16>' */
 	.long target16_delattr_c             /* `delattr pop, const <imm16>' */
 	.long target16_setattr_c             /* `setattr pop, const <imm16>, pop' */
@@ -9512,7 +9538,7 @@ prefix_inst_table:
 	.long prefix_target_yieldall                /* `yield foreach, pop' */
 	.long prefix_target_throw                   /* `throw pop' */
 	.long prefix_target_rethrow                 /* `throw except' */
-	.long prefix_invop
+	.long prefix_target_setret                  /* `setret pop' */
 	.long prefix_target_endcatch                /* `end catch' */
 	.long prefix_target_endfinally              /* `end finally' */
 	.long prefix_invop
@@ -9854,7 +9880,7 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_invop
+	.long prefix_target_bounditem               /* `bounditem top, pop' */
 	.long prefix_target16_getattr_c             /* `getattr top, const <imm16>' */
 	.long prefix_target16_delattr_c             /* `delattr pop, const <imm16>' */
 	.long prefix_target16_setattr_c             /* `setattr pop, const <imm16>, pop' */

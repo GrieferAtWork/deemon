@@ -386,9 +386,10 @@ struct ast {
                                         *                               <act1> is a message that is evaluated and added
                                         *                               to the error message when the assertion fails. */
 #   define AST_FACTION_BOUNDATTR 0x2015/* `<act0>.operator . (<act1>) is bound' - Check if the attribute `<act1>' of `<act0>' is currently bound. */
-#   define AST_FACTION_SAMEOBJ  0x2016 /* `<act0> === <act1>'         - Check if <act0> and <act1> are the same object */
-#   define AST_FACTION_DIFFOBJ  0x2017 /* `<act0> !== <act1>'         - Check if <act0> and <act1> are the different objects */
-#   define AST_FACTION_CALL_KW  0x3018 /* `<act0>(<act1>...,**<act2>)' - Call `act0' with `act1', while also passing keywords from `act2' */
+#   define AST_FACTION_BOUNDITEM 0x2016/* `<act0>.operator [] (<act1>) is bound' - Check if the item `<act1>' of `<act0>' is currently bound. */
+#   define AST_FACTION_SAMEOBJ  0x2017 /* `<act0> === <act1>'         - Check if <act0> and <act1> are the same object */
+#   define AST_FACTION_DIFFOBJ  0x2018 /* `<act0> !== <act1>'         - Check if <act0> and <act1> are the different objects */
+#   define AST_FACTION_CALL_KW  0x3019 /* `<act0>(<act1>...,**<act2>)' - Call `act0' with `act1', while also passing keywords from `act2' */
         struct {
             DREF struct ast    *a_act0; /* [0..1] Primary action operand or NULL when not used. */
             DREF struct ast    *a_act1; /* [0..1] Secondary action operand or NULL when not used. */

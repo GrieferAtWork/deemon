@@ -967,6 +967,11 @@ INSTR("boundattr",(
     O2(ASM_BOUNDATTR,     FNORMAL,  (TOP)(POP))              /* boundattr top, pop */
 ))
 
+/* CONSTRAINTS: `bounditem <s>, <s>' */
+INSTR("bounditem",(
+    O2(ASM_BOUNDITEM,     FNORMAL,  (TOP)(POP))              /* bounditem top, pop */
+))
+
 /* CONSTRAINTS: `delattr <s>, <cs>' */
 /* CONSTRAINTS: `delattr <Ti>, <c>' */
 INSTR("delattr",(

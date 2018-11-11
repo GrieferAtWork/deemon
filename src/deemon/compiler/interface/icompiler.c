@@ -1379,6 +1379,8 @@ get_action_by_name(char const *__restrict name) {
  case 'b':
   if (EQAT(name + 1,"oundattr"))
       RETURN(AST_FACTION_BOUNDATTR);
+  if (EQAT(name + 1,"ounditem"))
+      RETURN(AST_FACTION_BOUNDITEM);
   break;
  case 'c':
   if (EQAT(name + 1,"lassof"))
@@ -1474,6 +1476,7 @@ get_action_name(uint16_t action) {
  ACTION(AST_FACTION_ASSERT):
  ACTION(AST_FACTION_ASSERT_M):  result = "assert"; break;
  ACTION(AST_FACTION_BOUNDATTR): result = "boundattr"; break;
+ ACTION(AST_FACTION_BOUNDITEM): result = "bounditem"; break;
  ACTION(AST_FACTION_SAMEOBJ):   result = "sameobj"; break;
  ACTION(AST_FACTION_DIFFOBJ):   result = "diffobj"; break;
  ACTION(AST_FACTION_CALL_KW):   result = "callkw"; break;

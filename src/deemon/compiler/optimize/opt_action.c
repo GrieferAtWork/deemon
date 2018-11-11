@@ -430,12 +430,31 @@ action_set_expr_result:
   if (self->a_action.a_act0->a_type == AST_CONSTEXPR &&
       self->a_action.a_act1->a_type == AST_CONSTEXPR &&
       DeeString_Check(self->a_action.a_act1->a_constexpr)) {
-   int temp = DeeObject_HasAttr(self->a_action.a_act0->a_constexpr,
-                                self->a_action.a_act1->a_constexpr);
-   if (temp < 0)
+   int temp = DeeObject_BoundAttr(self->a_action.a_act0->a_constexpr,
+                                  self->a_action.a_act1->a_constexpr);
+   if (temp == -1)
     expr_result = NULL;
    else {
-    expr_result = DeeBool_For(temp);
+    expr_result = DeeBool_For(temp > 0);
+    Dee_Incref(expr_result);
+   }
+   goto action_set_expr_result;
+  }
+  break;
+
+ case AST_FACTION_BOUNDITEM:
+  if (ast_optimize(stack,self->a_action.a_act0,true)) goto err;
+  if (ast_optimize(stack,self->a_action.a_act1,true)) goto err;
+  if (self->a_action.a_act0->a_type == AST_CONSTEXPR &&
+      self->a_action.a_act1->a_type == AST_CONSTEXPR &&
+      DeeString_Check(self->a_action.a_act1->a_constexpr)) {
+   int temp = DeeObject_BoundItem(self->a_action.a_act0->a_constexpr,
+                                  self->a_action.a_act1->a_constexpr,
+                                  true);
+   if (temp == -1)
+    expr_result = NULL;
+   else {
+    expr_result = DeeBool_For(temp > 0);
     Dee_Incref(expr_result);
    }
    goto action_set_expr_result;

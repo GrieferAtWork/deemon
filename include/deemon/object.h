@@ -1884,6 +1884,16 @@ DFUNDEF int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self, dss
 DFUNDEF int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self, DeeObject *__restrict begin, dssize_t end, DeeObject *__restrict value);
 DFUNDEF int (DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self, dssize_t begin, dssize_t end, DeeObject *__restrict value);
 
+/* Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self,index)')
+ * @return: 1 : Item is bound.
+ * @return: 0 : Item isn't bound. (`UnboundItem' was caught internally)
+ * @return: -1: An error occurred.
+ * @return: -2: Item doesn't exist (`KeyError' or `IndexError' were caught when `allow_missing' was `false'). */
+DFUNDEF int (DCALL DeeObject_BoundItem)(DeeObject *__restrict self, DeeObject *__restrict index, bool allow_missing);
+DFUNDEF int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index, bool allow_missing);
+DFUNDEF int (DCALL DeeObject_BoundItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, bool allow_missing);
+
+
 #ifdef CONFIG_BUILDING_DEEMON
 /* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
 INTDEF DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(on_success)*/DREF DeeObject *__restrict self, DeeObject *__restrict other);

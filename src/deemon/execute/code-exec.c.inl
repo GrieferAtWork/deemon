@@ -3650,7 +3650,8 @@ do_call_local:
       HANDLE_EXCEPT();
      }
      error = DeeObject_BoundAttr(SECOND,FIRST);
-     if unlikely(error == -2) HANDLE_EXCEPT();
+     if unlikely(error == -1)
+        HANDLE_EXCEPT();
      POPREF();
      Dee_Decref(TOP);
      TOP = DeeBool_For(error > 0);
@@ -4719,6 +4720,18 @@ do_setmember_this:
          imm_val = READ_imm16();
          goto do_call_local;
      }
+     TARGET(ASM_BOUNDITEM,-2,+1) {
+         int error;
+         error = DeeObject_BoundItem(SECOND,FIRST,true);
+         if unlikely(error == -1)
+            HANDLE_EXCEPT();
+         POPREF();
+         Dee_Decref(TOP);
+         TOP = DeeBool_For(error > 0);
+         Dee_Incref(TOP);
+         DISPATCH();
+     }
+
      TARGET(ASM16_GETATTR_C,-1,+1) {
          imm_val = READ_imm16();
          goto do_getattr_c;
