@@ -238,6 +238,41 @@ check_symbol:
  return false;
 }
 
+INTERN bool DCALL
+decl_ast_istype(struct decl_ast const *__restrict self,
+                DeeTypeObject *__restrict tp) {
+ if (tp == &DeeNone_Type)
+     return decl_ast_isnone(self);
+ if (self->da_type == DAST_CONST)
+     return self->da_const == (DeeObject *)tp;
+ if (self->da_type == DAST_SYMBOL) {
+  struct symbol *sym = self->da_symbol;
+check_symbol:
+  switch (sym->s_type) {
+
+  case SYMBOL_TYPE_ALIAS:
+   sym = sym->s_alias;
+   goto check_symbol;
+
+  case SYMBOL_TYPE_EXTERN:
+   /* Check if the symbol refers to the same type, when
+    * that type is exported from the deemon module. */
+   if (sym->s_extern.e_module != &deemon_module)
+       return false;
+   if (sym->s_extern.e_symbol->ss_index < deemon_module.mo_globalc &&
+       deemon_module.mo_globalv[sym->s_extern.e_symbol->ss_index] == (DeeObject *)tp)
+       return true;
+   break;
+
+  case SYMBOL_TYPE_CONST:
+   return sym->s_const == (DeeObject *)tp;
+
+  default: break;
+  }
+ }
+ return false;
+}
+
 
 INTERN bool DCALL
 decl_ast_isempty(struct decl_ast const *__restrict self) {
@@ -509,6 +544,7 @@ switch_symbol_type:
     sym = get_local_symbol_in_scope(iter,symbol_name);
     if (sym) goto switch_symbol_type;
    }
+   sym = self->da_symbol;
    goto print_undefined_symbol_name;
   } break;
 
@@ -596,9 +632,12 @@ err:
  return -1;
 }
 
+#if 0
 INTERN int DCALL
 decl_ast_print_const_expr(DeeObject *__restrict self,
                           struct unicode_printer *__restrict printer) {
+ if (unicode_printer_putascii(printer,'!'))
+     goto err;
  if (DeeNone_Check(self))
      goto eval_none;
  if (DeeInt_Check(self)) {
@@ -641,6 +680,7 @@ eval_none:
 err:
  return -1;
 }
+#endif
 
 INTERN int DCALL
 decl_ast_print(struct decl_ast const *__restrict self,
@@ -671,7 +711,10 @@ decl_ast_print(struct decl_ast const *__restrict self,
                              arg->s_name->k_name,
                              arg->s_name->k_size) < 0)
        goto err;
-   if (!decl_ast_isempty(&arg->s_decltype)) {
+   if (!decl_ast_isempty(&arg->s_decltype) &&
+      (i < scope->bs_argc_min ||
+      !decl_ast_istype(&arg->s_decltype, /* Don't encode a type if it can be deduced from the default argument */
+                        Dee_TYPE(scope->bs_default[i - scope->bs_argc_min])))) {
     /* Encode the argument type. */
     if (unicode_printer_putascii(printer,':'))
         goto err;
@@ -682,8 +725,10 @@ decl_ast_print(struct decl_ast const *__restrict self,
     /* Argument has a default parameter. */
     if (unicode_printer_putascii(printer,'='))
         goto err;
+#if 0
     if (decl_ast_print_const_expr(scope->bs_default[i - scope->bs_argc_min],printer))
         goto err;
+#endif
    }
   }
   argv += scope->bs_argc_max;

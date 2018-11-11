@@ -246,6 +246,8 @@ local function decode_name_end(name: string, start: int = 0): int {
 global Doc;
 global DocSection;
 global Declaration;
+global Parameter;
+global Expression;
 
 @@Lookup table to convert pretty operator names to their real counterparts
 local operator_defaults: {(string,string)...} = {
@@ -507,15 +509,28 @@ class TypeRef: weakrefable {
 	@@ - $"?E<NAME>:<NAME>" (For types with a known resident location)
 	@@ - $"?G<NAME>" (For types with a known resident location in the associated module)
 	@@ - $"?U<NAME>" (For types with an unknown resident location)
-	public final member docstring: string;
+	public final property docstring: string = {
+		get(): string {
+			if (m_docstring !is string)
+				m_docstring = qualify_typeref_string(docnode,encode_type(m_docstring));
+			return m_docstring;
+		}
+	}
+	public final member m_docstring: string | deemon.type_;
 
 	@@The doc node that contains a reference to @this TypeRef
 	public final member docnode: weakref with Doc;
 
-	this(d: Doc | weakref with Doc, ds: string)
+	this(d: Doc | weakref with Doc, ds: string | deemon.type_)
 		: docnode(d is weakref ? d : weakref(d))
-		, docstring(qualify_typeref_string(docnode,ds))
-	{}
+	{
+		if (ds is string) {
+			m_docstring = qualify_typeref_string(docnode,ds);
+		} else {
+			m_docstring = ds;
+			m_typ = ds;
+		}
+	}
 
 	@@Returns a string representation of how @this TypeRef can be created
 	operator repr(): string {
@@ -528,7 +543,7 @@ class TypeRef: weakrefable {
 		get(): deemon.type_ | none {
 			if (m_typ !is bound) {
 				m_typ =
-					try get_type_from_qualpath(docnode,docstring)
+					try get_type_from_qualpath(docnode,m_docstring)
 					catch (...) none;
 				if (m_typ !is deemon.type_)
 					m_typ = none;
@@ -689,6 +704,12 @@ again:
 	case "S":
 		++result;
 		goto again;
+	case "Q": {
+		local end = find_nonescaped(s,"]",result + 1);
+		if (end < 0)
+			end = #s - 1;
+		result = end + 1;
+	}	break;
 	default:
 		++result;
 		break;
@@ -725,26 +746,47 @@ class TypeExpr: weakrefable {
 
 	@@The raw documentation string for this type
 	@@Example: $"?T2?Dint?Dint"
-	public final member docstring: string;
+	public final property docstring: string = {
+		get(): string {
+			if (m_docstring !is string)
+				m_docstring = encode_type(m_docstring);
+			return m_docstring;
+		}
+	}
+	private member m_docstring: string | deemon.type_;
 
 	@@The doc node that contains a reference to @this TypeExpr
-	public final member docnode: weakref with Doc;
+	public final property docnode: weakref with Doc = {
+		get(): weakref with Doc {
+			return docdecl.value.docsect.value.docnode;
+		}
+	}
 
-	this(d: Doc | weakref with Doc, ds: string)
-		: docnode(d is weakref ? d : weakref(d))
-		, docstring(ds)
-//		, docstring(typeexpr_shorthands.get(ds,ds))
-	{}
+	@@The doc Declaration that uses @this TypeExpr
+	public final member docdecl: weakref with Declaration;
+
+	this(d: Declaration | weakref with Declaration, ds: string | deemon.type_)
+		: docdecl(d is weakref ? d : weakref(d))
+		, m_docstring(ds)
+	{
+		if (m_docstring !is string) {
+			m_kind = "E";
+			m_cache = TypeRef(docnode,m_docstring);
+			m_types = (m_docstring,);
+		}
+	}
 
 	@@Returns a string representation of how @this TypeExpr can be created
 	operator repr(): string {
-		return "TypeExpr({!r},{!r})".format({ docnode.lock(none), docstring });
+		return "TypeExpr({!r},{!r})".format({ docdecl.lock(none), docstring });
 	}
 
 	@@Returns true if @this Type expression referrs to :none
 	public final property isnone: bool = {
 		get(): bool {
-			return docstring in ["?N","?Dnone","?Edeemon:none"];
+			if (m_docstring is string)
+				return m_docstring in ["?N","?Dnone","?Edeemon:none"];
+			return m_docstring === type none;
 		}
 	}
 
@@ -755,7 +797,9 @@ class TypeExpr: weakrefable {
 	public final property acceptsany: bool = {
 		get(): bool {
 			if (m_acceptsany !is bound) {
-				if (docstring in ["?O","?Dobject","?Edeemon:object"])
+				if (m_docstring !is string)
+					m_acceptsany = m_docstring === deemon.object;
+				else if (m_docstring in ["?O","?Dobject","?Edeemon:object"])
 					m_acceptsany = true;
 				else {
 					m_acceptsany = false;
@@ -880,6 +924,9 @@ check_elem:
 				yield deemon.sequence; /* Sequence of something else. */
 			}
 		}	break;
+		case "Q":
+			yield Qexpr.exprtypes...;
+			break;
 		default:
 			yield deemon.object;
 			break;
@@ -893,13 +940,14 @@ check_elem:
 	@@ - $"T": Tuple consisting of multiple child-elements (s.a. #Ttypes)
 	@@ - $"X": A set of multiple, alternatively accepted types (s.a. #Xtypes)
 	@@ - $"S": A sequence containing elements of a specific type (s.a. #Stype)
+	@@ - $"Q": The type of an expression (s.a. #Qexpr)
 	public final property kind: string = {
 		get(): string {
 			if (m_kind !is bound) {
-				if (#docstring < 2 || !docstring.startswith("?"))
+				if (#m_docstring < 2 || !m_docstring.startswith("?"))
 					m_kind = "E"; /* Legacy-like type name */
 				else {
-					m_kind = docstring[1];
+					m_kind = m_docstring[1];
 					if (m_kind in [".","N","O","#","D","U","G"/*,"E"*/,"A"])
 						m_kind = "E"; /* Fully qualifyable */
 				}
@@ -911,29 +959,32 @@ check_elem:
 
 
 	@@Cache of child-expressions / references
-	private member m_cache: TypeRef | TypeExpr | {TypeExpr...} | (TypeExpr,TypeExpr);
+	private member m_cache: TypeRef | TypeExpr | {TypeExpr...} | (TypeExpr,TypeExpr) | Expression;
 	private loadC() {
-		local end = typeexpr_end(docstring,2);
+		local end = typeexpr_end(m_docstring,2);
 		m_cache = (
-			TypeExpr(docnode,docstring.substr(2,end)),
-			TypeExpr(docnode,docstring.substr(end)),
+			TypeExpr(docdecl,m_docstring.substr(2,end)),
+			TypeExpr(docdecl,m_docstring.substr(end)),
 		);
 	}
 	private loadTX() {
 		local pos = 2;
-		while (pos < #docstring && docstring.isdigit(pos))
+		while (pos < #m_docstring && m_docstring.isdigit(pos))
 			++pos;
-		local n = try int(docstring[2:pos]) catch (...) 0;
+		local n = try int(m_docstring[2:pos]) catch (...) 0;
 		local result = list(n,none);
 		for (local i: [:n]) {
-			local end = typeexpr_end(docstring,pos);
-			result[i] = TypeExpr(docnode,docstring.substr(pos,end));
+			local end = typeexpr_end(m_docstring,pos);
+			result[i] = TypeExpr(docdecl,m_docstring.substr(pos,end));
 			pos = end;
 		}
 		m_cache = tuple(result);
 	}
 	private loadS() {
-		m_cache = TypeExpr(docnode,docstring.substr(2));
+		m_cache = TypeExpr(docdecl,m_docstring.substr(2));
+	}
+	private loadQ() {
+		m_cache = Expression(docdecl,m_docstring[2:-1]);
 	}
 
 
@@ -942,7 +993,7 @@ check_elem:
 	public final property Etyperef: TypeRef = {
 		get(): TypeRef {
 			if (m_cache !is bound)
-				m_cache = TypeRef(docnode,docstring);
+				m_cache = TypeRef(docnode,m_docstring);
 			return m_cache;
 		}
 	}
@@ -997,6 +1048,16 @@ check_elem:
 		}
 	}
 
+	@@Returns the expression who's type is referenced by @this TypeExpr
+	@@WARNING: This property must only be used when #kind is equal to $"Q"
+	public final property Qexpr: Expression = {
+		get(): Expression {
+			if (m_cache !is bound)
+				loadQ();
+			return m_cache;
+		}
+	}
+
 	@@Return @this type in a way in which the user may have originally written it
 	operator str(): string {
 		switch (kind) {
@@ -1012,6 +1073,8 @@ check_elem:
 			return " | ".join(Xtypes);
 		case "S":
 			return "{{{}...}}".format({ Stype });
+		case "Q":
+			return "type({})".format({ Qexpr });
 		default: break;
 		}
 		return docstring;
@@ -1025,7 +1088,14 @@ class Expression: weakrefable {
 
 	@@The raw documentation string for this expression
 	@@Example: $"!Edeemon:none"
-	public final member docstring: string;
+	public final property docstring: string = {
+		get(): string {
+			if (m_docstring === false)
+				m_docstring = encode_expr(m_cache);
+			return m_docstring;
+		}
+	}
+	private member m_docstring: string | bool;
 
 	@@The doc Declaration that contains a reference to @this Expression
 	public final member docdecl: weakref with Declaration;
@@ -1037,10 +1107,15 @@ class Expression: weakrefable {
 		}
 	}
 
-	this(d: Declaration | weakref with Declaration, ds: string)
+	this(d: Declaration | weakref with Declaration, ds: string | bool, cval?: object)
 		: docdecl(d is weakref ? d : weakref(d))
-		, docstring(ds)
-	{}
+		, m_docstring(ds)
+	{
+		if (cval is bound) {
+			m_kind = "C";
+			m_cache = cval;
+		}
+	}
 
 	@@Returns a string representation of how @this Expression can be created
 	operator repr(): string {
@@ -1050,19 +1125,271 @@ class Expression: weakrefable {
 	@@Enumerate a sequence of all the possible types that @this expression can take
 	public final property exprtypes: {TypeExpr...} = {
 		get(): {TypeExpr...} {
-			/* TODO */
-			//yield TypeExpr(docnode,"?Dint");
+			switch (kind) {
+			case "C":
+				yield TypeExpr(docdecl,type Cvalue);
+				break;
+			case "A":
+				/* Alias the same types as seen in another argument. */
+				yield Aparam.typ.types...;
+				break;
+			case "S":
+				yield Stype;
+				break;
+			default:
+				yield deemon.object;
+				break;
+			}
 		}
 	}
 
-	/* TODO: Expression evaluation functions */
+	@@Helper function to try and optimize an expression into a constant
+	private try_optimize_expression() {
+		/* TODO */
+	}
+
+
+	@@The kind of expression, which is one of
+	@@  - C  A constant expression (s.a. #Cvalue)
+	@@  - E  An fully qualified location within a reachable module (s.a. #Epath, #Emodule, #Evalue)
+	@@  - A  Another argument (s.a. #Aparam)
+	@@  - U  An undefined/private symbol (s.a. #Uname)
+	@@  - S  A sequence expression (s.a. #Sitems, #Stype)
+	@@  - O  An operator being invoked on another expression (s.a. #Ooperator and #Ooperands)
+	public final property kind: string = {
+		get(): string {
+			if (m_kind !is bound) {
+				if (!m_docstring.startswith("!")) {
+					/* Raw, constant expression */
+					m_kind = "C";
+					if (!m_docstring)
+						m_cache = none;
+					else if (m_docstring.startswith("\""))
+						m_cache = try m_docstring.decode("c-escape") catch (...) m_docstring;
+					else if (m_docstring.startswith("r\""))
+						m_cache = m_docstring[2:-1];
+					else if (m_docstring.isdigit(0))
+						m_cache = try
+							"." in m_docstring
+								? float(m_docstring)
+								: int(m_docstring)
+							catch (...)
+								m_docstring;
+					else if (":" in m_docstring) {
+						/* Assume external symbol. */
+						local mod,none,path = m_docstring.partition(":")...;
+						m_docstring = "!E{}:{}".format({
+							encode_name(mod),
+							encode_name(path),
+						});
+						m_kind = "E";
+					} else {
+						local defl = {
+							"none" : none,
+							"true" : true,
+							"false" : false,
+						};
+						m_cache = defl.get(m_docstring,m_docstring);
+					}
+				} else if (#m_docstring < 2) {
+					m_kind = "C";
+					m_cache = none;
+				} else {
+					/* New-style default expression. */
+					local id = m_docstring[1];
+					if (id == "P" || id.isdigit()) {
+						m_kind = "C";
+					} else if (id in ["N","t","f"]) {
+						local map = { "N" : none, "t" : true, "f" : false };
+						m_kind = "C";
+						m_cache = map[id];
+					} else if (id in ["D","U","G","E","M"]) {
+						m_kind = "E";
+					} else if (id in ["T","L","S","H"]) {
+						m_kind = "S";
+					} else if (id == "V" && #m_docstring >= 3 && m_docstring[2] == "A") {
+						m_kind = "A";
+					} else {
+						if (id == "!" && #m_docstring >= 4) {
+							id = m_docstring[2];
+							if (id == "+" && m_docstring.isdigit(3)) {
+								local ds = m_docstring.substr(3);
+								m_kind = "C";
+								m_cache = try
+									"." in ds
+										? int(ds)
+										: float(ds)
+									catch (...)
+										ds;
+								goto done;
+							} else if (id == "-" && m_docstring.isdigit(3)) {
+								local ds = m_docstring.substr(3);
+								m_kind = "C";
+								m_cache = try
+									"." in ds
+										? -int(ds)
+										: -float(ds)
+									catch (...)
+										ds;
+								goto done;
+							}
+						}
+						m_kind = "O";
+						try_optimize_expression();
+					}
+				}
+			}
+done:
+			return m_kind;
+		}
+	}
+	private member m_kind: string;
+	private member m_cache;
+
+
+	@@Returns the constant default value when #kind is $"C"
+	public final property Cvalue: object = {
+		get(): object {
+			if (m_cache !is bound) {
+				if (m_docstring[1] == "P") {
+					m_cache = decode_name(m_docstring.substr(2));
+				} else {
+					local ds = m_docstring.substr(1);
+					m_cache = try
+						"." in ds
+							? float(ds)
+							: int(ds)
+						catch (...)
+							ds;
+				}
+			}
+			return m_cache;
+		}
+	}
+
+	public final property Epath: string | none = {
+		get(): string | none {
+			/* TODO */
+		}
+	}
+
+	public final property Enode: Doc | none = {
+		get(): Doc | none {
+			/* TODO */
+		}
+	}
+
+	public final property Emodule: module | none = {
+		get(): string | none {
+			/* module | TODO */
+		}
+	}
+
+	public final property Evalue: object | none = {
+		get(): object | none {
+			/* TODO */
+		}
+	}
+
+	@@Returns the referenced parameter when #kind is $"C"
+	public final property Aparam: Parameter | none = {
+		get(): Parameter {
+			if (m_cache !is bound) {
+				/* HINT: If this line causes a ReferenceError to be thrown, then
+				 *       you must store the Doc node used to access parameters in
+				 *       a temporary variable.
+				 * >> import * from deemon;
+				 * >> import * from doc;
+				 * >> function foo(x: string = "foo"): type(x) {
+				 * >> 	return x;
+				 * >> }
+				 * >>
+				 * >> print Doc(foo).decls[0].ret.types...; // Wrong!
+				 * >>
+				 * >> local d = Doc(foo);
+				 * >> print d.decls[0].ret.types...; // OK
+				 * >>
+				 * This is required, because in the later case, the compiler is
+				 * required to keep `d' alive for the duration of enumeration of
+				 * the function's return types.
+				 * In the first variant, the compiler isn't required to do this,
+				 * leading to the weak references we use to point back to the
+				 * original doc node to have become stale, causing the `value'
+				 * dereference in the following line to read a dead weakref.
+				 */
+				m_cache = docdecl.value.getparambyname(
+					decode_name(m_docstring.substr(3)));
+			}
+			return m_cache;
+		}
+	}
+
+	@@Returns the name of the undefined object referenced
+	public final property Uname: string = {
+		get(): string {
+			/* TODO */
+			if (m_cache !is bound)
+				m_cache = decode_name(m_docstring.substr(2));
+			return m_cache;
+		}
+	}
+
+	@@Returns the sequence element expression of @this
+	public final property Sitems: {Expression...} = {
+		get(): string {
+			/* TODO */
+			if (m_cache !is bound)
+				m_cache = decode_name(m_docstring.substr(2));
+			return m_cache;
+		}
+	}
+
+	@@Returns the sequence type of @this, which is one of:
+	@@ - :deemon.list
+	@@ - :deemon.tuple
+	@@ - :deemon.dict
+	@@ - :deemon.hashset
+	public final property Stype: deemon.type_ = {
+		get(): string {
+			local map = {
+				"L" : deemon.list,
+				"T" : deemon.tuple,
+				"D" : deemon.list,
+				"S" : deemon.hashset,
+			};
+			return map[m_docstring[1]];
+		}
+	}
+
+	@@Returns the real-name (e.g. $"add") of the operator being invoked
+	public final property Ooperator: string = {
+		get(): string {
+			/* TODO */
+			return "add";
+		}
+	}
+
+	@@Return the operands of @this Expression
+	public final property Ooperands: {Expression...} = {
+		get(): {Expression...} {
+			/* TODO */
+			return {};
+		}
+	}
 
 	operator str(): string {
 		/* TODO: Should instead return a human-readable representation of the expression.
 		 *  !t -> true
 		 *  !C!Umy_instance -> copy(my_instance)
 		 */
-		return docstring;
+		switch (kind) {
+		case "C":
+			return repr Cvalue;
+		case "A":
+			return Aparam.name;
+		default:
+			return docstring;
+		}
 	}
 }
 
@@ -1180,6 +1507,7 @@ class Parameter: weakrefable {
 			}
 		}
 		if (!doclen) {
+			/* TODO: Try to extract the argument name from kwargs information */
 			m_namstring = get_generic_argument_name(docargi);
 			return;
 		}
@@ -1201,6 +1529,7 @@ class Parameter: weakrefable {
 			if (name_end < doclen)
 				++name_end;
 		} else {
+			/* TODO: Try to extract the argument name from kwargs information */
 			/* Parameter is unnamed. */
 			m_namstring = get_generic_argument_name(docargi);
 			name_end = 0;
@@ -1246,7 +1575,14 @@ class Parameter: weakrefable {
 				if (types) {
 					if (#types == 1) {
 						m_typ = types[0];
-						m_typstring = m_typ.docstring;
+						/* An implicit non-argument should not be interpreted
+						 * as the argument requiring to be typed as `none' */
+						if (m_typ.isnone) {
+							m_typstring = "?O";
+							del m_typ;
+						} else {
+							m_typstring = m_typ.docstring;
+						}
 					} else {
 						m_typstring = "?X{}{}".format({
 							(#types),
@@ -1292,7 +1628,7 @@ class Parameter: weakrefable {
 				local typstr = typstring;
 				if (typstr is none)
 					typstr = "?O";
-				m_typ = TypeExpr(docdecl.value.docsect.value.docnode,typstr);
+				m_typ = TypeExpr(docdecl,typstr);
 			}
 			return m_typ;
 		}
@@ -1323,9 +1659,31 @@ class Parameter: weakrefable {
 				if (defstr is none)
 					m_defexpr = none;
 				else {
+					if (!defstr) {
+						/* Try to load the default value from the documented object. */
+						local node = docdecl.lock(none)
+							.docsect.lock(none)
+							.docnode.lock(none);
+						if (node !is none && node.object is bound) {
+							local ob = node.object;
+							if (ob is deemon.function_) {
+								/* Extract from default argument list of user-level function */
+								local code = ob.__code__;
+								local argc_min = code.__argc_min__;
+								if (docargi >= argc_min &&
+								    docargi <  code.__argc_max__) {
+									/* Default argument is available. */
+									local val = code.__default__[docargi - argc_min];
+									m_defexpr = Expression(docdecl,false,val);
+									goto done;
+								}
+							}
+						}
+					}
 					m_defexpr = Expression(docdecl,defstr);
 				}
 			}
+done:
 			return m_defexpr;
 		}
 	}
@@ -1613,13 +1971,12 @@ class Declaration: weakrefable {
 		get(): TypeExpr {
 			if (m_typ !is bound) {
 				local retstr = retstring;
-				local node = docsect.value.docnode;
 				if (retstr is none)
-					m_typ = TypeExpr(node,"?N");
+					m_typ = TypeExpr(this,"?N");
 				else if (!retstr)
-					m_typ = TypeExpr(node,"?O");
+					m_typ = TypeExpr(this,"?O");
 				else {
-					m_typ = TypeExpr(node,retstr);
+					m_typ = TypeExpr(this,retstr);
 				}
 			}
 			return m_typ;
@@ -1649,6 +2006,15 @@ class Declaration: weakrefable {
 		}
 	}
 	private member m_parameters: {Parameter...} | none;
+
+	@@Return a function parameter, given its name
+	public final getparambyname(name: string): Parameter | none {
+		for (local p: parameters) {
+			if (p.name == name)
+				return p;
+		}
+		return none;
+	}
 
 	@@If @this declaration is that of a function or operator, check if the
 	@@type specifications of that function allow
@@ -1780,7 +2146,7 @@ local function split_section(sect: DocSection, docstring: string): {Declaration 
 		/* The first line is already is one that is special */
 		local newstart = find_nonescaped(docstring,"\n",start);
 		if (newstart < 0) newstart = #docstring;
-		yield Declaration(sect,docstring.substr(start,newstart).replace("\\\n",""));
+		yield Declaration(sect,docstring.substr(start,newstart));
 		start = newstart + 1;
 	}
 	for (;;) {
@@ -1802,7 +2168,7 @@ local function split_section(sect: DocSection, docstring: string): {Declaration 
 			yield TextSegment(sect,decode_text(docstring.substr(start,i - 1)));
 		local line_end = find_nonescaped(docstring,"\n",i);
 		if (line_end < 0) line_end = #docstring;
-		yield Declaration(sect,docstring.substr(i,line_end).replace("\\\n",""));
+		yield Declaration(sect,docstring.substr(i,line_end));
 		start = line_end + 1;
 	}
 	if (start < #docstring)
@@ -2113,7 +2479,7 @@ class Doc: weakrefable {
 				}
 				return result;
 			}
-			result = result.lstrip("/");
+			result = result.lstrip("/").replace("i:","").replace("c:","");
 			if (isoperator) {
 				result = result.rpartition("/")[0];
 				result = "{}.operator {}".format({
@@ -2176,7 +2542,7 @@ class Doc: weakrefable {
 	@"(base:?GDoc,attrname:?Dstring)"
 	@"(base,attrname:?Dstring)"
 	@"Lookup a given @attrname as a child of a given @base"
-	this(doc_parent_or_path, attribute_name?, operator_doc?: {DocSection...}) {
+	this(doc_parent_or_path, attribute_name?: deemon.attribute | string, operator_doc?: {DocSection...}) {
 		if (attribute_name !is bound) {
 			if (doc_parent_or_path is deemon.module) {
 				/* Doc(module) */

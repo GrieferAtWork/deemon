@@ -82,7 +82,7 @@ struct class_attribute;
  *            ["<ARGUMENT_NAME>"]
  *            ["?" | "!" | "!!"]                  // Optional / Varargs / Kwds indicators
  *            [":" ["|" ~~ "<ARGUMENT_TYPE>"...]] // Type defaults to "object" (encoded as "?O")
- *            ["=" "<ARGUMENT_DEFAULT>"]
+ *            ["=" ["<ARGUMENT_DEFAULT>"]]
  *        )...) ")" ["->" ["|" ~~ "<RETURN_TYPE>"...]] "<END_OF_LINE>"
  *    
  *    CONTENT-SPECIFIC:
@@ -258,6 +258,7 @@ struct class_attribute;
  *                         e.g.: `?S?Dstring' --- `{string...}'
  *   ?S<TYPE>          --- A generic sequence expression for <TYPE>
  *                         e.g.: `?S?Dstring' --- `{string...}'
+ *   ?Q<EXPR>]         --- Referring to the types which a given <EXPR> can take on (yes: the trailing `]' is intended)
  *
  *   In all of the aforementioned encodings, <NAME> is encoded as follows:
  *   >> if (!name.issymbol()) {
@@ -340,10 +341,10 @@ struct class_attribute;
  *   NOTE: Whitespace may not appear with encoded expression and its presence (outside
  *         of a string literal) is considered to be a syntax error.
  *   EXAMPLES:
- *       "foo"           // string("foo")
- *       1?2             // int(1) + int(2)
- *       1inL2nn         // int(i) in list([none,none])
- *       (1.0).{a-\>b}   // float(1.0).operator getattr("a->b")
+ *       !Pfoo           // string("foo")
+ *       !!+!1!2         // int(1) + int(2)
+ *       !C!L2!N!N!VAi   // i in list([none,none])
+ *       !A!1.0!P{a-\>b} // float(1.0).operator getattr("a->b")
  *
  *
  *   Any encoded default expression not starting with one of the disclosed prefixed
@@ -418,10 +419,9 @@ INTDEF int DCALL decl_ast_copy(struct decl_ast *__restrict self, struct decl_ast
 /* If `self' refers to a constant object, return that object.
  * Otherwise, return `NULL' */
 INTDEF DeeObject *DCALL decl_ast_getobj(struct decl_ast const *__restrict self);
-/* Check if `self' refers to `none' or `type none' */
-INTDEF bool DCALL decl_ast_isnone(struct decl_ast const *__restrict self);
-/* Check if `self' refers to `object from deemon' */
-INTDEF bool DCALL decl_ast_isobject(struct decl_ast const *__restrict self);
+INTDEF bool DCALL decl_ast_isnone(struct decl_ast const *__restrict self); /* Check if `self' refers to `none' or `type none' */
+INTDEF bool DCALL decl_ast_isobject(struct decl_ast const *__restrict self); /* Check if `self' refers to `object from deemon' */
+INTDEF bool DCALL decl_ast_istype(struct decl_ast const *__restrict self, DeeTypeObject *__restrict tp); /* Check if `self' is the given `tp' */
 
 /* Check if the given declaration AST contains information that can't be inferred
  * from non-documentation sources (such as argument names, types, etc.) */
