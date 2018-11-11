@@ -66,7 +66,8 @@ lookup_code_info_in_class(DeeTypeObject *__restrict type,
  rwlock_read(&my_class->cd_lock);
  for (addr = 0; addr < desc->cd_cmemb_size; ++addr) {
   if (my_class->cd_members[addr] == (DeeObject *)function ||
-     (DeeFunction_Check(my_class->cd_members[addr]) &&
+     (my_class->cd_members[addr] &&
+      DeeFunction_Check(my_class->cd_members[addr]) &&
     ((DeeFunctionObject *)my_class->cd_members[addr])->fo_code == self)) {
    rwlock_endread(&my_class->cd_lock);
    for (i = 0; i <= desc->cd_iattr_mask; ++i) {
