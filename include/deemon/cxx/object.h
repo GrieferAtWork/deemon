@@ -430,6 +430,7 @@ class object: public detail::object_base {
     public:
         item_proxy_obj(DeeObject *ptr, DeeObject *str) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str) {}
         item_proxy_obj(item_proxy_obj const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str) {}
+        bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItem(m_ptr,m_str,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItem(m_ptr,m_str); }
         DREF DeeObject *getref_def(DeeObject *__restrict def) const { return DeeObject_GetItemDef(m_ptr,m_str,def); }
         object getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
@@ -443,6 +444,7 @@ class object: public detail::object_base {
     public:
         item_proxy_idx(DeeObject *ptr, size_t idx) DEE_CXX_NOTHROW: m_ptr(ptr), m_idx(idx) {}
         item_proxy_idx(item_proxy_idx const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_idx(right.m_idx) {}
+        bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemIndex(m_ptr,m_idx,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItemIndex(m_ptr,m_idx); }
         DREF DeeObject *getref_def(DeeObject *__restrict def) const { DREF DeeObject *result,*index_ob = throw_if_null(DeeInt_NewSize(m_idx)); result = DeeObject_GetItemDef(m_ptr,index_ob,def); Dee_Decref(index_ob); return inherit(result); }
         object getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
@@ -458,6 +460,7 @@ class object: public detail::object_base {
         item_proxy_sth(DeeObject *ptr, char const *str) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(hash_str(str)) {}
         item_proxy_sth(DeeObject *ptr, char const *str, dhash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(hsh) {}
         item_proxy_sth(item_proxy_sth const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str), m_hsh(right.m_hsh) {}
+        bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemString(m_ptr,m_str,m_hsh,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItemString(m_ptr,m_str,m_hsh); }
         DREF DeeObject *getref_def(DeeObject *__restrict def) const { return DeeObject_GetItemStringDef(m_ptr,m_str,m_hsh,def); }
         object getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
@@ -573,6 +576,10 @@ public:
     object getitem_def(size_t index, DeeObject *__restrict def) const { DREF DeeObject *result,*index_ob = throw_if_null(DeeInt_NewSize(index)); result = DeeObject_GetItemDef(*this,index_ob,def); Dee_Decref(index_ob); return inherit(result); }
     object getitem_def(char const *__restrict name, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash_str(name),def)); }
     object getitem_def(char const *__restrict name, dhash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash,def)); }
+    bool bounditem(DeeObject *__restrict key_or_index, bool allow_missing = true) const { int result = DeeObject_BoundItem(*this,key_or_index,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
+    bool bounditem(size_t index, bool allow_missing = true) const { int result = DeeObject_BoundItemIndex(*this,index,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
+    bool bounditem(char const *__restrict key, bool allow_missing = true) const { int result = DeeObject_BoundItemString(*this,key,hash_str(key),allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
+    bool bounditem(char const *__restrict key, dhash_t hash, bool allow_missing = true) const { int result = DeeObject_BoundItemString(*this,key,hash,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
     void delitem(DeeObject *__restrict index) const { throw_if_negative(DeeObject_DelItem(*this,index)); }
     void delitem(size_t index) const { throw_if_negative(DeeObject_DelItemIndex(*this,index)); }
     void delitem(char const *__restrict name) const { throw_if_negative(DeeObject_DelItemString(*this,name,hash_str(name))); }
