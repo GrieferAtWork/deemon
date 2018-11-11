@@ -523,7 +523,7 @@ function_repr(Function *__restrict self) {
 #if 1
  uint16_t i;
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
-#if 1
+#if 0
  if (UNICODE_PRINTER_PRINT(&printer,"function(code") < 0) goto err;
 #else
  if (UNICODE_PRINTER_PRINT(&printer,"function(") < 0) goto err;

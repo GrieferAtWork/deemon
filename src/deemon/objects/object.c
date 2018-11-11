@@ -1849,6 +1849,8 @@ object_class_get(DeeObject *__restrict self) {
  return_reference((DeeObject *)DeeObject_Class(self));
 }
 
+INTDEF DREF DeeObject *DCALL instance_get_itable(DeeObject *__restrict self);
+
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset object_getsets[] = {
 #ifndef CONFIG_LANGUAGE_NO_ASM
@@ -1858,6 +1860,12 @@ PRIVATE struct type_getset object_getsets[] = {
 #endif
     { DeeString_STR(&str_class), &object_class_get, NULL, NULL },
     { DeeString_STR(&str_super), &DeeSuper_Of, NULL, NULL },
+    { "__itable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instance_get_itable, NULL, NULL,
+      DOC("->?Aobjecttable?Ert:classdescriptor\n"
+          "Returns an indexable sequence describing the instance object "
+          "table, as referenced by :rt.classdescriptor.attribute.addr\n"
+          "For non-user-defined classes (aka. when ${this.class.__isclass__} is :false), an empty sequence is returned\n"
+          "The class-attribute table can be accessed through :type.__ctable__") },
     { NULL }
 };
 
@@ -3148,11 +3156,11 @@ PRIVATE struct type_method type_methods[] = {
     /* Deprecated functions */
     { "same_or_derived_from", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom, DOC("(other:?Dtype)->?Dbool\nDeprecated alias for #derivedfrom"), TYPE_METHOD_FKWDS },
     { "derived_from", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_derivedfrom_not_same, DOC("(other:?Dtype)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
-    { "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_vartype, DOC("->?Dbool\nDeprecated alias for #isvariable") },
-    { "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_heaptype, DOC("->?Dbool\nDeprecated alias for #iscustom") },
-    { "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for #isgc") },
+    { "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_vartype, DOC("->?Dbool\nDeprecated alias for #__isvariable__") },
+    { "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_heaptype, DOC("->?Dbool\nDeprecated alias for #__iscustom__") },
+    { "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for #__isgc__") },
     { "is_final", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_final, DOC("->?Dbool\nDeprecated alias for #isfinal") },
-    { "is_class", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_class, DOC("->?Dbool\nDeprecated alias for #isclass") },
+    { "is_class", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_class, DOC("->?Dbool\nDeprecated alias for #__isclass__") },
     { "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_complete, DOC("->?Dbool\nDeprecated (always returns :true)") },
     { "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_classtype, DOC("->?Dbool\nDeprecated (always returns :false)") },
     { "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_is_pointer, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
@@ -3193,17 +3201,28 @@ for (local o: options) {
 }
 print "#define TYPE_FEATURE_GETSETS \\";
 for (local o: options) {
-    print "    { "+repr("is"+o.lower())+", &type_is"+o.lower()+", NULL, NULL, DOC(\"->?Dbool\") }, \\";
+    local isname = "is" + o.lower();
+    if (isname !in ["isfinal","isabstract","isinterrupt"])
+        isname = "__" + isname + "__";
+    print "    { "+repr(isname)+", &type_is"+o.lower()+", NULL, NULL, DOC(\"->?Dbool\") }, \\";
 }
 print "/" "* ... *" "/";
 ]]]*/
 PRIVATE DREF DeeObject *DCALL
-type_isvariable(DeeObject *__restrict self) {
-    return_bool(DeeType_IsVariable(self));
-}
-PRIVATE DREF DeeObject *DCALL
 type_isfinal(DeeObject *__restrict self) {
     return_bool(DeeType_IsFinal(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_isinterrupt(DeeObject *__restrict self) {
+    return_bool(DeeType_IsInterrupt(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_isabstract(DeeObject *__restrict self) {
+    return_bool(DeeType_IsAbstract(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_isvariable(DeeObject *__restrict self) {
+    return_bool(DeeType_IsVariable(self));
 }
 PRIVATE DREF DeeObject *DCALL
 type_isgc(DeeObject *__restrict self) {
@@ -3212,14 +3231,6 @@ type_isgc(DeeObject *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 type_isclass(DeeObject *__restrict self) {
     return_bool(DeeType_IsClass(self));
-}
-PRIVATE DREF DeeObject *DCALL
-type_isinterrupt(DeeObject *__restrict self) {
-    return_bool(DeeType_IsInterrupt(self));
-}
-PRIVATE DREF DeeObject *DCALL
-type_isgeneric(DeeObject *__restrict self) {
-    return_bool(DeeType_IsGeneric(self));
 }
 PRIVATE DREF DeeObject *DCALL
 type_isarithmetic(DeeObject *__restrict self) {
@@ -3234,6 +3245,14 @@ type_issequence(DeeObject *__restrict self) {
     return_bool(DeeType_IsSequence(self));
 }
 PRIVATE DREF DeeObject *DCALL
+type_isinttruncated(DeeObject *__restrict self) {
+    return_bool(DeeType_IsIntTruncated(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_ismoveany(DeeObject *__restrict self) {
+    return_bool(DeeType_IsMoveAny(self));
+}
+PRIVATE DREF DeeObject *DCALL
 type_isiterator(DeeObject *__restrict self) {
     return_bool(DeeType_IsIterator(self));
 }
@@ -3245,19 +3264,26 @@ PRIVATE DREF DeeObject *DCALL
 type_iscustom(DeeObject *__restrict self) {
     return_bool(DeeType_IsCustom(self));
 }
+PRIVATE DREF DeeObject *DCALL
+type_issuperinit(DeeObject *__restrict self) {
+    return_bool(DeeType_IsSuperInit(self));
+}
 #define TYPE_FEATURE_GETSETS \
-    { "isvariable", &type_isvariable, NULL, NULL, DOC("->?Dbool") }, \
     { "isfinal", &type_isfinal, NULL, NULL, DOC("->?Dbool") }, \
-    { "isgc", &type_isgc, NULL, NULL, DOC("->?Dbool") }, \
-    { "isclass", &type_isclass, NULL, NULL, DOC("->?Dbool") }, \
     { "isinterrupt", &type_isinterrupt, NULL, NULL, DOC("->?Dbool") }, \
-    { "isgeneric", &type_isgeneric, NULL, NULL, DOC("->?Dbool") }, \
-    { "isarithmetic", &type_isarithmetic, NULL, NULL, DOC("->?Dbool") }, \
-    { "iscomparable", &type_iscomparable, NULL, NULL, DOC("->?Dbool") }, \
-    { "issequence", &type_issequence, NULL, NULL, DOC("->?Dbool") }, \
-    { "isiterator", &type_isiterator, NULL, NULL, DOC("->?Dbool") }, \
-    { "istypetype", &type_istypetype, NULL, NULL, DOC("->?Dbool") }, \
-    { "iscustom", &type_iscustom, NULL, NULL, DOC("->?Dbool") }, \
+    { "isabstract", &type_isabstract, NULL, NULL, DOC("->?Dbool") }, \
+    { "__isvariable__", &type_isvariable, NULL, NULL, DOC("->?Dbool") }, \
+    { "__isgc__", &type_isgc, NULL, NULL, DOC("->?Dbool") }, \
+    { "__isclass__", &type_isclass, NULL, NULL, DOC("->?Dbool") }, \
+    { "__isarithmetic__", &type_isarithmetic, NULL, NULL, DOC("->?Dbool") }, \
+    { "__iscomparable__", &type_iscomparable, NULL, NULL, DOC("->?Dbool") }, \
+    { "__issequence__", &type_issequence, NULL, NULL, DOC("->?Dbool") }, \
+    { "__isinttruncated__", &type_isinttruncated, NULL, NULL, DOC("->?Dbool") }, \
+    { "__ismoveany__", &type_ismoveany, NULL, NULL, DOC("->?Dbool") }, \
+    { "__isiterator__", &type_isiterator, NULL, NULL, DOC("->?Dbool") }, \
+    { "__istypetype__", &type_istypetype, NULL, NULL, DOC("->?Dbool") }, \
+    { "__iscustom__", &type_iscustom, NULL, NULL, DOC("->?Dbool") }, \
+    { "__issuperinit__", &type_issuperinit, NULL, NULL, DOC("->?Dbool") }, \
 /* ... */
 //[[[end]]]
 
@@ -3420,14 +3446,18 @@ retnone:
 }
 
 
+INTDEF DREF DeeObject *DCALL type_get_ctable(DeeTypeObject *__restrict self);
+
 
 PRIVATE struct type_getset type_getsets[] = {
     TYPE_FEATURE_GETSETS
     { "isbuffer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_isbuffer, NULL, NULL,
-      DOC("->?Dbool\nReturns :true if @this type implements the buffer interface") },
+      DOC("->?Dbool\n"
+          "Returns :true if @this type implements the buffer interface\n"
+          "The most prominent type to which this applies is :bytes, however other types also support this") },
     { "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
       DOC("->?Ert:classdescriptor\n"
-          "@throw AttributeError @this type is a user-defined class (s.a. #isclass)\n"
+          "@throw AttributeError @this type is a user-defined class (s.a. #__isclass__)\n"
           "Returns the internal class-descriptor descriptor for a user-defined class") },
     { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_module, NULL, NULL,
       DOC("->?Dmodule\n"
@@ -3435,6 +3465,12 @@ PRIVATE struct type_getset type_getsets[] = {
           "Return the module used to define @this type, or :none if the module cannot "
           "be determined, which may be the case if the type doesn't have any defining "
           "features such as operators, or class/instance member functions") },
+    { "__ctable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_ctable, NULL, NULL,
+      DOC("->?Aobjecttable?Ert:classdescriptor\n"
+          "Returns an indexable sequence describing the class object table, "
+          "as referenced by :rt.classdescriptor.attribute.addr\n"
+          "For non-user-defined classes (aka. #__isclass__ is :false), an empty sequence is returned\n"
+          "The instance-attribute table can be accessed through :object.__itable__") },
     { "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
       DOC("->?Dint\n"
           "->?N\n"

@@ -1253,16 +1253,16 @@ PRIVATE struct type_method gcenum_methods[] = {
           "Returns a set of objects that are immediatly referred to by @start") },
     { "referredgc", &gcenum_referredgc,
       DOC("(start)->?Dset\n"
-          "Same as #referred, but only include gc-objects (s.a. :type.isgc)") },
+          "Same as #referred, but only include gc-objects (s.a. :type.__isgc__)") },
     { "reachable", &gcenum_reachable,
       DOC("(start)->?Dset\n"
           "Returns a set of objects that are reachable from @start") },
     { "reachablegc", &gcenum_reachablegc,
       DOC("(start)->?Dset\n"
-          "Same as #reachable, but only include gc-objects (s.a. :type.isgc)") },
+          "Same as #reachable, but only include gc-objects (s.a. :type.__isgc__)") },
     { "referring", &gcenum_referring,
       DOC("(to)->?Dset\n"
-          "Returns a set of gc-objects (s.a. :type.isgc) that are referring to @to") },
+          "Returns a set of gc-objects (s.a. :type.__isgc__) that are referring to @to") },
     { "isreferring", &gcenum_isreferring,
       DOC("(from,to)->?Dbool\n"
           "Returns :true if @to is referred to by @from, or :false otherwise") },

@@ -891,6 +891,22 @@ PRIVATE struct type_cmp code_cmp = {
     /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&code_ne
 };
 
+PRIVATE DREF DeeObject *DCALL
+code_str(DeeCodeObject *__restrict self) {
+ DREF DeeObject *result;
+ DREF DeeObject *name = code_get_name(self);
+ if unlikely(!name) goto err;
+ if (DeeNone_Check(name))
+  result = DeeString_New("<code for <anonymous>>");
+ else {
+  result = DeeString_Newf("<code for %r>",name);
+ }
+ Dee_Decref(name);
+ return result;
+err:
+ return NULL;
+}
+
 
 PUBLIC DeeTypeObject DeeCode_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -915,8 +931,8 @@ PUBLIC DeeTypeObject DeeCode_Type = {
         /* .tp_move_assign = */NULL
     },
     /* .tp_cast = */{
-        /* .tp_str  = */NULL,
-        /* .tp_repr = */NULL,
+        /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_str,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_str,
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */NULL,

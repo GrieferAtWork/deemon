@@ -188,7 +188,7 @@ again:
   Dee_Incref(result);
  } else {
   if (!doc_str) {
-   result = (DREF DeeStringObject *)Dee_EmptyString;
+   result = (DREF DeeStringObject *)Dee_None;
    Dee_Incref(result);
   } else {
    /* Wrap the doc string into a string object. */
@@ -308,8 +308,8 @@ PRIVATE struct type_getset attr_getsets[] = {
       DOC("->?Dstring\n"
           "The name of this attribute") },
     { "doc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_get_doc, NULL, NULL,
-      DOC("->?Dstring\n"
-          "The documentation string of this attribute, or an empty string when no documentation is present") },
+      DOC("->?X2?Dstring?N\n"
+          "The documentation string of this attribute, or :none when no documentation is present") },
     { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_canget, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the attribute has a way of being read from") },
@@ -1162,7 +1162,9 @@ again:
  if (self->ei_bufpos != COMPILER_ENDOF(self->ei_buffer)) {
   if (!self->ei_bufpos) {
    /* Special case: initial call. */
-   uintptr_t *new_sp = COMPILER_ENDOF(self->ei_stack);
+   uintptr_t *new_sp;
+   /* TODO: Special handling for user-defined enumattr operators. */
+   new_sp = COMPILER_ENDOF(self->ei_stack);
 #ifndef __x86_64__
    *--new_sp = (uintptr_t)self; /* First argument to `enumattr_start' */
 #endif

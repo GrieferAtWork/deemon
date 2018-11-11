@@ -330,8 +330,7 @@ struct class_descriptor_object {
                                                   *       the `TP_FINHERITCTOR' flag is simply ignored.
                                                   *       If the user overrides `OPERATOR_CONSTRUCTOR',
                                                   *       the user's constructor will be invoked, though
-                                                  *       no arguments will be passed to it.
-                                                  */
+                                                  *       no arguments will be passed to it. */
     uint16_t                   cd_cmemb_size;    /* [const] The allocation size of the class member table. */
     uint16_t                   cd_imemb_size;    /* [const] The allocation size of the instance member table. */
     uint16_t                   cd_clsop_mask;    /* [const] Mask for the `cd_clsop_list' hash-vector. */

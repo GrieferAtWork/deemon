@@ -58,12 +58,12 @@ DeeSuper_New(DeeTypeObject *__restrict tp_self,
  if (DeeObject_AssertType((DeeObject *)tp_self,&DeeType_Type))
      goto err;
  if (DeeSuper_Check(self)) {
-  if unlikely(!DeeType_IsGeneric(tp_self) &&
+  if unlikely(!DeeType_IsAbstract(tp_self) &&
               !DeeType_IsInherited(DeeSuper_TYPE(self),tp_self))
      goto err_badtype;
   self = DeeSuper_SELF(self);
  } else {
-  if unlikely(!DeeType_IsGeneric(tp_self) &&
+  if unlikely(!DeeType_IsAbstract(tp_self) &&
                DeeObject_AssertType(self,tp_self))
      goto err;
  }
@@ -165,7 +165,7 @@ super_init(Super *__restrict self,
    /* Make sure the passed type matches. */
    if (DeeObject_AssertType((DeeObject *)tp,&DeeType_Type))
        return -1;
-   if (!DeeType_IsGeneric(tp) && DeeObject_AssertType(ob,tp))
+   if (!DeeType_IsAbstract(tp) && DeeObject_AssertType(ob,tp))
        return -1;
   }
  } else {

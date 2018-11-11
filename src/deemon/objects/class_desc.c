@@ -24,6 +24,10 @@
 #include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/module.h>
+#include <deemon/seq.h>
+#include <deemon/super.h>
+#include <deemon/int.h>
+#include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/tuple.h>
 #include <deemon/bool.h>
@@ -59,6 +63,912 @@ INTERN struct class_attribute empty_class_attributes[] = {
         /* .ca_flag = */CLASS_ATTRIBUTE_FNORMAL
     }
 };
+
+typedef struct {
+    /* A mapping-like {(string | int,int)...} object used for mapping
+     * operator names to their respective class instance table slots. */
+    OBJECT_HEAD
+    DREF ClassDescriptor *co_desc; /* [1..1][const] The referenced class descriptor. */
+} ClassOperatorTable;
+
+typedef struct {
+    /* A mapping-like {(string | int,int)...} object used for mapping
+     * operator names to their respective class instance table slots. */
+    OBJECT_HEAD
+    DREF ClassDescriptor              *co_desc; /* [1..1][const] The referenced class descriptor. */
+    ATOMIC_DATA struct class_operator *co_iter; /* [1..1] Current iterator position. */
+    struct class_operator             *co_end;  /* [1..1][const] Iterator end position. */
+} ClassOperatorTableIterator;
+
+INTDEF DeeTypeObject ClassOperatorTableIterator_Type;
+INTDEF DeeTypeObject ClassOperatorTable_Type;
+
+#ifdef CONFIG_NO_THREADS
+#define COTI_GETITER(x) (x)->co_iter
+#else
+#define COTI_GETITER(x) ATOMIC_READ((x)->co_iter)
+#endif
+
+LOCAL struct class_operator *DCALL
+coti_next_ent(ClassOperatorTableIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ struct class_operator *result;
+ result = self->co_iter;
+ for (;; ++result) {
+  if (result >= self->co_end)
+      return NULL;
+  if (result->co_name != (uint16_t)-1)
+      break;
+ }
+ self->co_iter = result + 1;
+#else
+ struct class_operator *result,*start;
+ for (;;) {
+  result = start = ATOMIC_READ(self->co_iter);
+  for (;; ++result) {
+   if (result >= self->co_end)
+       return NULL;
+   if (result->co_name != (uint16_t)-1)
+       break;
+  }
+  if (ATOMIC_CMPXCH_WEAK(self->co_iter,start,result + 1))
+      break;
+ }
+#endif
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+coti_next(ClassOperatorTableIterator *__restrict self) {
+ struct class_operator *ent;
+ struct opinfo *info;
+ ent = coti_next_ent(self);
+ if (!ent) return ITER_DONE;
+ info = Dee_OperatorInfo(NULL,ent->co_name);
+ if (info) return DeeTuple_Newf("sI16u",info->oi_sname,ent->co_addr);
+ return DeeTuple_Newf("I16uI16u",ent->co_name,ent->co_addr);
+}
+PRIVATE DREF DeeObject *DCALL
+coti_next_key(ClassOperatorTableIterator *__restrict self) {
+ struct class_operator *ent;
+ struct opinfo *info;
+ ent = coti_next_ent(self);
+ if (!ent) return ITER_DONE;
+ info = Dee_OperatorInfo(NULL,ent->co_name);
+ if (info) return DeeString_New(info->oi_sname);
+ return DeeInt_NewU16(ent->co_name);
+}
+PRIVATE DREF DeeObject *DCALL
+coti_next_value(ClassOperatorTableIterator *__restrict self) {
+ struct class_operator *ent;
+ ent = coti_next_ent(self);
+ if (!ent) return ITER_DONE;
+ return DeeInt_NewU16(ent->co_addr);
+}
+
+PRIVATE void DCALL
+coti_fini(ClassOperatorTableIterator *__restrict self) {
+ Dee_Decref(self->co_desc);
+}
+
+PRIVATE int DCALL
+coti_copy(ClassOperatorTableIterator *__restrict self,
+          ClassOperatorTableIterator *__restrict other) {
+ self->co_desc = other->co_desc;
+ self->co_iter = COTI_GETITER(other);
+ self->co_end = other->co_end;
+ Dee_Incref(self->co_desc);
+ return 0;
+}
+
+PRIVATE DREF ClassOperatorTable *DCALL
+coti_getseq(ClassOperatorTableIterator *__restrict self) {
+ DREF ClassOperatorTable *result;
+ result = DeeObject_MALLOC(ClassOperatorTable);
+ if unlikely(!result) goto done;
+ result->co_desc = self->co_desc;
+ Dee_Incref(self->co_desc);
+ DeeObject_Init(result,&ClassOperatorTable_Type);
+done:
+ return result;
+}
+
+#define DEFINE_COTI_COMPARE(name,op) \
+PRIVATE DREF DeeObject *DCALL \
+name(ClassOperatorTableIterator *__restrict self, \
+     ClassOperatorTableIterator *__restrict other) { \
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&ClassOperatorTableIterator_Type)) \
+     goto err; \
+ return_bool(COTI_GETITER(self) op COTI_GETITER(other)); \
+err: \
+ return NULL; \
+} \
+/**/
+DEFINE_COTI_COMPARE(coti_eq,==)
+DEFINE_COTI_COMPARE(coti_ne,!=)
+DEFINE_COTI_COMPARE(coti_lo,<)
+DEFINE_COTI_COMPARE(coti_le,<=)
+DEFINE_COTI_COMPARE(coti_gr,>)
+DEFINE_COTI_COMPARE(coti_ge,>=)
+#undef DEFINE_COTI_COMPARE
+
+PRIVATE struct type_cmp coti_cmp = {
+    /* .tp_hash = */NULL,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&coti_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&coti_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&coti_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&coti_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&coti_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&coti_ge,
+};
+
+PRIVATE struct type_getset coti_getsets[] = {
+    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_getseq, NULL, NULL,
+      DOC("->?Aoperators?Ert:classdescriptor") },
+    { NULL }
+};
+
+PRIVATE struct type_member coti_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__class__",STRUCT_OBJECT,offsetof(ClassOperatorTableIterator,co_desc),"->?Ert:classdescriptor"),
+    TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"_classoperatortableiterator",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FFINAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeIterator_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */(void *)&coti_copy,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(ClassOperatorTableIterator)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&coti_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */&coti_cmp,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_next,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */coti_getsets,
+    /* .tp_members       = */coti_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+
+STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable,co_desc) ==
+              COMPILER_OFFSETOF(ClassOperatorTableIterator,co_desc));
+#define cot_fini    coti_fini
+#define cot_members coti_members
+
+PRIVATE int DCALL
+cot_bool(ClassOperatorTable *__restrict self) {
+ return self->co_desc->cd_clsop_list != empty_class_operators;
+}
+
+PRIVATE DREF ClassOperatorTableIterator *DCALL
+cot_iter(ClassOperatorTable *__restrict self) {
+ DREF ClassOperatorTableIterator *result;
+ result = DeeObject_MALLOC(ClassOperatorTableIterator);
+ if unlikely(!result) goto done;
+ result->co_desc = self->co_desc;
+ result->co_iter = self->co_desc->cd_clsop_list;
+ result->co_end  = (self->co_desc->cd_clsop_list +
+                    self->co_desc->cd_clsop_mask + 1);
+ Dee_Incref(self->co_desc);
+ DeeObject_Init(result,&ClassOperatorTableIterator_Type);
+done:
+ return result;
+}
+
+PRIVATE size_t DCALL
+cot_nsi_getsize(ClassOperatorTable *__restrict self) {
+ uint16_t i; size_t result = 0;
+ ClassDescriptor *desc = self->co_desc;
+ for (i = 0; i <= desc->cd_clsop_mask; ++i) {
+  if (desc->cd_clsop_list[i].co_name != (uint16_t)-1)
+      ++result;
+ }
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+cot_size(ClassOperatorTable *__restrict self) {
+ return DeeInt_NewSize(cot_nsi_getsize(self));
+}
+
+PRIVATE DREF DeeObject *DCALL
+cot_getitemdef(ClassOperatorTable *__restrict self,
+               DeeObject *__restrict key,
+               DeeObject *__restrict defl) {
+ uint16_t opname,i,perturb;
+ ClassDescriptor *desc = self->co_desc;
+ if (DeeString_Check(key)) {
+  opname = Dee_OperatorFromName(NULL,DeeString_STR(key));
+  if (opname == (uint16_t)-1) goto nope;
+ } else {
+  if (DeeObject_AsUInt16(key,&opname))
+      goto err;
+ }
+ i = perturb = opname & desc->cd_clsop_mask;
+ for (;; DeeClassDescriptor_CLSOPNEXT(i,perturb)) {
+  struct class_operator *op;
+  op = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
+  if (op->co_name == (uint16_t)-1) break;
+  if (op->co_name != opname) continue;
+  return DeeInt_NewU16(op->co_addr);
+ }
+nope:
+ if (defl != ITER_DONE)
+     Dee_Incref(defl);
+ return defl;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+cot_getitem(ClassOperatorTable *__restrict self,
+            DeeObject *__restrict key) {
+ DREF DeeObject *result;
+ result = cot_getitemdef(self,key,ITER_DONE);
+ if (result == ITER_DONE) {
+  err_unknown_key((DeeObject *)self,key);
+  result = NULL;
+ }
+ return result;
+}
+
+PRIVATE struct type_nsi cot_nsi = {
+    /* .nsi_class   = */TYPE_SEQX_CLASS_MAP,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
+    {
+        /* .nsi_maplike = */{
+                /* .nsi_getsize    = */(void *)&cot_nsi_getsize,
+                /* .nsi_nextkey    = */(void *)&coti_next_key,
+                /* .nsi_nextvalue  = */(void *)&coti_next_value,
+                /* .nsi_getdefault = */(void *)&cot_getitemdef,
+                /* .nsi_setdefault = */(void *)NULL,
+                /* .nsi_updateold  = */(void *)NULL,
+                /* .nsi_insertnew  = */(void *)NULL
+        }
+    }
+};
+
+PRIVATE struct type_seq cot_seq = {
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_iter,
+    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_size,
+    /* .tp_contains  = */NULL,
+    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&cot_getitem,
+    /* .tp_del       = */NULL,
+    /* .tp_set       = */NULL,
+    /* .tp_range_get = */NULL,
+    /* .tp_range_del = */NULL,
+    /* .tp_range_set = */NULL,
+    /* .tp_nsi       = */&cot_nsi
+};
+
+PRIVATE struct type_member cot_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&ClassOperatorTableIterator_Type),
+    TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject ClassOperatorTable_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"_classoperatortable",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FFINAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeMapping_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(ClassOperatorTable)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cot_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&cot_bool
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */&cot_seq,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */cot_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */cot_class_members
+};
+
+
+
+
+typedef struct {
+    OBJECT_HEAD
+    DREF ClassDescriptor   *ca_desc; /* [1..1][const] Class descriptor. */
+    struct class_attribute *ca_attr; /* [1..1][const] The attribute that was queried. */
+} ClassAttribute;
+
+typedef struct {
+    OBJECT_HEAD
+    DREF ClassDescriptor               *ca_desc; /* [1..1][const] Class descriptor. */
+    ATOMIC_DATA struct class_attribute *ca_iter; /* [1..1] Current iterator position. */
+    struct class_attribute             *ca_end;  /* [1..1][const] Iterator end. */
+} ClassAttributeTableIterator;
+
+typedef struct {
+    OBJECT_HEAD
+    DREF ClassDescriptor   *ca_desc;  /* [1..1][const] Class descriptor. */
+    struct class_attribute *ca_start; /* [1..1][const] Hash-vector starting pointer. */
+    size_t                  ca_mask;  /* [const] Mask-vector size mask. */
+} ClassAttributeTable;
+
+INTDEF DeeTypeObject ClassAttribute_Type;
+INTDEF DeeTypeObject ClassAttributeTable_Type;
+INTDEF DeeTypeObject ClassAttributeTableIterator_Type;
+
+PRIVATE DREF ClassAttribute *DCALL
+cattr_new(ClassDescriptor *__restrict desc,
+          struct class_attribute *__restrict attr) {
+ DREF ClassAttribute *result;
+ result = DeeObject_MALLOC(DREF ClassAttribute);
+ if unlikely(!result) goto done;
+ result->ca_desc = desc;
+ result->ca_attr = attr;
+ Dee_Incref(desc);
+ DeeObject_Init(result,&ClassAttribute_Type);
+done:
+ return result;
+}
+
+STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable,co_desc) ==
+              COMPILER_OFFSETOF(ClassAttribute,ca_desc));
+#define ca_fini    cot_fini
+#define ca_members cot_members
+STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable,co_desc) ==
+              COMPILER_OFFSETOF(ClassAttributeTable,ca_desc));
+#define cat_fini    cot_fini
+#define cat_members cot_members
+STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable,co_desc) ==
+              COMPILER_OFFSETOF(ClassAttributeTableIterator,ca_desc));
+#define cati_fini    cot_fini
+#define cati_members cot_members
+
+STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTableIterator,co_desc) == COMPILER_OFFSETOF(ClassAttributeTableIterator,ca_desc));
+STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTableIterator,co_iter) == COMPILER_OFFSETOF(ClassAttributeTableIterator,ca_iter));
+STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTableIterator,co_end) == COMPILER_OFFSETOF(ClassAttributeTableIterator,ca_end));
+#define cati_cmp  coti_cmp
+#define cati_copy coti_copy
+
+#ifdef CONFIG_NO_THREADS
+#define CATI_GETITER(x) (x)->ca_iter
+#else
+#define CATI_GETITER(x) ATOMIC_READ((x)->ca_iter)
+#endif
+
+LOCAL struct class_attribute *DCALL
+cati_next_ent(ClassAttributeTableIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ struct class_attribute *result;
+ result = self->ca_iter;
+ for (;; ++result) {
+  if (result >= self->ca_end)
+      return NULL;
+  if (result->co_name != NULL)
+      break;
+ }
+ self->co_iter = result + 1;
+#else
+ struct class_attribute *result,*start;
+ for (;;) {
+  result = start = ATOMIC_READ(self->ca_iter);
+  for (;; ++result) {
+   if (result >= self->ca_end)
+       return NULL;
+   if (result->ca_name != NULL)
+       break;
+  }
+  if (ATOMIC_CMPXCH_WEAK(self->ca_iter,start,result + 1))
+      break;
+ }
+#endif
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+cati_next(ClassAttributeTableIterator *__restrict self) {
+ DREF DeeObject *result;
+ DREF ClassAttribute *attr;
+ struct class_attribute *ent;
+ ent = cati_next_ent(self);
+ if (!ent) return ITER_DONE;
+ attr = cattr_new(self->ca_desc,ent);
+ if unlikely(!attr) return NULL;
+ result = DeeTuple_Pack(2,ent->ca_name,attr);
+ Dee_Decref(attr);
+ return result;
+}
+PRIVATE DREF DeeObject *DCALL
+cati_next_key(ClassAttributeTableIterator *__restrict self) {
+ struct class_attribute *ent;
+ ent = cati_next_ent(self);
+ if (!ent) return ITER_DONE;
+ return_reference_((DeeObject *)ent->ca_name);
+}
+PRIVATE DREF ClassAttribute *DCALL
+cati_next_value(ClassAttributeTableIterator *__restrict self) {
+ struct class_attribute *ent;
+ ent = cati_next_ent(self);
+ if (!ent) return (DREF ClassAttribute *)ITER_DONE;
+ return cattr_new(self->ca_desc,ent);
+}
+
+PRIVATE DREF ClassAttributeTableIterator *DCALL
+cat_iter(ClassAttributeTable *__restrict self) {
+ DREF ClassAttributeTableIterator *result;
+ result = DeeObject_MALLOC(ClassAttributeTableIterator);
+ if unlikely(!result) goto done;
+ result->ca_desc = self->ca_desc;
+ result->ca_iter = self->ca_start;
+ result->ca_end  = (self->ca_start + self->ca_mask + 1);
+ Dee_Incref(self->ca_desc);
+ DeeObject_Init(result,&ClassAttributeTableIterator_Type);
+done:
+ return result;
+}
+
+PRIVATE int DCALL
+cat_bool(ClassAttributeTable *__restrict self) {
+ size_t i;
+ for (i = 0; i <= self->ca_mask; ++i) {
+  if (self->ca_start[i].ca_name != NULL)
+      return 1;
+ }
+ return 0;
+}
+
+PRIVATE size_t DCALL
+cat_nsi_getsize(ClassAttributeTable *__restrict self) {
+ size_t i,result = 0;
+ for (i = 0; i <= self->ca_mask; ++i) {
+  if (self->ca_desc[i].cd_name != NULL)
+      ++result;
+ }
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+cat_size(ClassAttributeTable *__restrict self) {
+ return DeeInt_NewSize(cat_nsi_getsize(self));
+}
+
+PRIVATE DREF DeeObject *DCALL
+cat_getitemdef(ClassAttributeTable *__restrict self,
+               DeeObject *__restrict key,
+               DeeObject *__restrict defl) {
+ dhash_t hash,i,perturb;
+ if (DeeObject_AssertTypeExact(key,&DeeString_Type))
+     goto err;
+ hash = DeeString_Hash(key);
+ i = perturb = hash & self->ca_mask;
+ for (;; DeeClassDescriptor_CLSOPNEXT(i,perturb)) {
+  struct class_attribute *at;
+  at = &self->ca_start[i & self->ca_mask];
+  if (at->ca_name == NULL) break;
+  if (at->ca_hash != hash) continue;
+  if (DeeString_SIZE(at->ca_name) != DeeString_SIZE(key))
+      continue;
+  if (memcmp(DeeString_STR(at->ca_name),DeeString_STR(key),
+             DeeString_SIZE(key) * sizeof(char)) != 0)
+      continue;
+  return (DREF DeeObject *)cattr_new(self->ca_desc,at);
+ }
+/*nope:*/
+ if (defl != ITER_DONE)
+     Dee_Incref(defl);
+ return defl;
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+cat_getitem(ClassAttributeTable *__restrict self,
+            DeeObject *__restrict key) {
+ DREF DeeObject *result;
+ result = cat_getitemdef(self,key,ITER_DONE);
+ if (result == ITER_DONE) {
+  err_unknown_key((DeeObject *)self,key);
+  result = NULL;
+ }
+ return result;
+}
+
+PRIVATE DREF ClassAttributeTable *DCALL
+cati_getseq(ClassAttributeTableIterator *__restrict self) {
+ DREF ClassAttributeTable *result;
+ result = DeeObject_MALLOC(ClassAttributeTable);
+ if unlikely(!result) goto done;
+ result->ca_desc = self->ca_desc;
+ if (self->ca_end == self->ca_desc->cd_iattr_list + self->ca_desc->cd_iattr_mask + 1) {
+  result->ca_start = self->ca_desc->cd_iattr_list;
+  result->ca_mask  = self->ca_desc->cd_iattr_mask;
+ } else {
+  result->ca_start = self->ca_desc->cd_cattr_list;
+  result->ca_mask  = self->ca_desc->cd_cattr_mask;
+ }
+ Dee_Incref(self->ca_desc);
+ DeeObject_Init(result,&ClassAttributeTable_Type);
+done:
+ return result;
+}
+
+PRIVATE struct type_getset cati_getsets[] = {
+    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_getseq, NULL, NULL,
+      DOC("->?Aattributes?Ert:classdescriptor") },
+    { NULL }
+};
+
+PRIVATE struct type_member cat_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&ClassAttributeTableIterator_Type),
+    TYPE_MEMBER_END
+};
+
+
+PRIVATE DREF DeeObject *DCALL
+ca_str(ClassAttribute *__restrict self) {
+ DeeStringObject *cnam = self->ca_desc->cd_name;
+ if (cnam)
+     return DeeString_Newf("%k.%k",cnam,self->ca_attr->ca_name);
+ return_reference_((DeeObject *)self->ca_attr->ca_name);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ca_repr(ClassAttribute *__restrict self) {
+ ClassDescriptor *desc = self->ca_desc;
+ DeeStringObject *cnam = desc->cd_name;
+ char field_id = 'c';
+ if (self->ca_attr >= desc->cd_iattr_list &&
+     self->ca_attr <= desc->cd_iattr_list + desc->cd_iattr_mask)
+     field_id = 'i';
+ if (cnam)
+     return DeeString_Newf("%k.__class__.%cattr[%r]",cnam,field_id,self->ca_attr->ca_name);
+ return DeeString_Newf("<anonymous>.__class__.%cattr[%r]",field_id,self->ca_attr->ca_name);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ca_getname(ClassAttribute *__restrict self) {
+ return_reference_((DeeObject *)self->ca_attr->ca_name);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ca_getdoc(ClassAttribute *__restrict self) {
+ DeeStringObject *result;
+ result = self->ca_attr->ca_doc;
+ if (!result) result = (DeeStringObject *)Dee_None;
+ return_reference_((DeeObject *)result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ca_getaddr(ClassAttribute *__restrict self) {
+ return DeeInt_NewU16(self->ca_attr->ca_addr);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ca_isprivate(ClassAttribute *__restrict self) {
+ return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE);
+}
+PRIVATE DREF DeeObject *DCALL
+ca_isfinal(ClassAttribute *__restrict self) {
+ return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FFINAL);
+}
+PRIVATE DREF DeeObject *DCALL
+ca_isreadonly(ClassAttribute *__restrict self) {
+ return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY);
+}
+PRIVATE DREF DeeObject *DCALL
+ca_ismethod(ClassAttribute *__restrict self) {
+ return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD);
+}
+PRIVATE DREF DeeObject *DCALL
+ca_isproperty(ClassAttribute *__restrict self) {
+ return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FGETSET);
+}
+PRIVATE DREF DeeObject *DCALL
+ca_isclassmem(ClassAttribute *__restrict self) {
+ return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ca_getisclassns(ClassAttribute *__restrict self) {
+ ClassDescriptor *desc = self->ca_desc;
+ return_bool(!(self->ca_attr >= desc->cd_iattr_list &&
+               self->ca_attr <= desc->cd_iattr_list +
+                                desc->cd_iattr_mask));
+}
+
+PRIVATE struct type_getset ca_getsets[] = {
+    { "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getname, NULL, NULL, DOC("->?Dstring") },
+    { "doc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getdoc, NULL, NULL, DOC("->?X2?Dstring?N") },
+    { "addr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getaddr, NULL, NULL,
+      DOC("->?Dint\n"
+          "Index into the class/instance object table, where @this attribute is stored\n"
+          "When #isclassmem or #isclassns are :true, this index and any index offset from it "
+          "refer to the class object table. Otherwise, the instance object table is dereferenced\n"
+          "This is done so-as to allow instance attributes such as member functions to be stored "
+          "within the class itself, rather than having to be copied into each and every instance "
+          "of the class\n"
+          "S.a. :type.__ctable__ and :type.__itable__") },
+    { "isprivate", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isprivate, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Evaluates to :true if @this class attribute was declared as $private") },
+    { "isfinal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isfinal, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Evaluates to :true if @this class attribute was declared as $final") },
+    { "isreadonly", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isreadonly, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Evaluates to :true if @this class attribute can only be read from\n"
+          "When this is case, a property-like attribute can only ever have a getter "
+          "associated with itself, while field- or method-like attribute can only be "
+          "written once (aka. when not already bound)") },
+    { "ismethod", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_ismethod, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Evaluates to :true if @this class attribute referrs to a method\n"
+          "When set, reading from the attribute will return a an object "
+          "${instancemethod(obj.MEMBER_TABLE[this.addr],obj)}\n"
+          "Note however that this is rarely ever required to be done, as method attributes "
+          "are usually called directly, in which case a callattr instruction can silently "
+          "prepend the this-argument before the passed argument list") },
+    { "isproperty", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isproperty, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Evaluates to :true if @this class attribute was defined as a property\n"
+          "When this is the case, a #readonly attribute only has a single callback "
+          "that may be stored at #addr + 0, with that callback being the getter\n"
+          "Otherwise, up to 3 indices within the associated object table are used by "
+          "@this attribute, each of which may be left unbound:\n"
+          "%{table Offset|Callback\n"
+          "$" PP_STR(CLASS_GETSET_GET) "|The getter callback ($get)\n"
+          "$" PP_STR(CLASS_GETSET_DEL) "|The delete callback ($del)\n"
+          "$" PP_STR(CLASS_GETSET_SET) "|The setter callback ($set)}") },
+    { "isclassmem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isclassmem, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Set if #addr is an index into the class object table, rather than into the "
+          "instance object table. Note however that when #isclassns") },
+    { "isclassns", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getisclassns, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Returns :true if @this class attribute is exclusive to the "
+          "class-namespace (i.e. was declared as $static)\n"
+          "During enumeration of attributes, all attributes where this is :true "
+          "are enumated by :classdescriptor.cattr, while all for which it isn't "
+          "are enumated by :classdescriptor.iattr") },
+    { NULL }
+};
+
+
+PRIVATE struct type_nsi cat_nsi = {
+    /* .nsi_class   = */TYPE_SEQX_CLASS_MAP,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
+    {
+        /* .nsi_maplike = */{
+                /* .nsi_getsize    = */(void *)&cat_nsi_getsize,
+                /* .nsi_nextkey    = */(void *)&cati_next_key,
+                /* .nsi_nextvalue  = */(void *)&cati_next_value,
+                /* .nsi_getdefault = */(void *)&cat_getitemdef,
+                /* .nsi_setdefault = */(void *)NULL,
+                /* .nsi_updateold  = */(void *)NULL,
+                /* .nsi_insertnew  = */(void *)NULL
+        }
+    }
+};
+
+PRIVATE struct type_seq cat_seq = {
+    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
+    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_size,
+    /* .tp_contains  = */NULL,
+    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&cat_getitem,
+    /* .tp_del       = */NULL,
+    /* .tp_set       = */NULL,
+    /* .tp_range_get = */NULL,
+    /* .tp_range_del = */NULL,
+    /* .tp_range_set = */NULL,
+    /* .tp_nsi       = */&cat_nsi
+};
+
+INTERN DeeTypeObject ClassAttribute_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"_classattribute",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FFINAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeObject_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(ClassAttribute)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ca_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_str,
+        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_repr,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */ca_getsets,
+    /* .tp_members       = */ca_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"_classattributetableiterator",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FFINAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeMapping_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */(void *)&cati_copy,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(ClassAttributeTableIterator)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cati_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */NULL
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */&cati_cmp,
+    /* .tp_seq           = */NULL,
+    /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_next,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */cati_getsets,
+    /* .tp_members       = */cati_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */NULL
+};
+
+INTERN DeeTypeObject ClassAttributeTable_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"_classattributetable",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FFINAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeMapping_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(ClassAttributeTable)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cat_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */NULL,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&cat_bool
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */&cat_seq,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */NULL,
+    /* .tp_members       = */cat_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */cat_class_members
+};
+
+
+
+
+
+
+
 
 PRIVATE void DCALL
 cd_fini(ClassDescriptor *__restrict self) {
@@ -182,6 +1092,105 @@ PRIVATE struct type_cmp cd_cmp = {
 };
 
 
+PRIVATE DREF DeeObject *DCALL
+cd_isfinal(ClassDescriptor *__restrict self) {
+ return_bool(self->cd_flags & TP_FFINAL);
+}
+PRIVATE DREF DeeObject *DCALL
+cd_isinttruncated(ClassDescriptor *__restrict self) {
+ return_bool(self->cd_flags & TP_FTRUNCATE);
+}
+PRIVATE DREF DeeObject *DCALL
+cd_isinterrupt(ClassDescriptor *__restrict self) {
+ return_bool(self->cd_flags & TP_FINTERRUPT);
+}
+PRIVATE DREF DeeObject *DCALL
+cd_ismoveany(ClassDescriptor *__restrict self) {
+ return_bool(self->cd_flags & TP_FMOVEANY);
+}
+PRIVATE DREF ClassOperatorTable *DCALL
+cd_operators(ClassDescriptor *__restrict self) {
+ DREF ClassOperatorTable *result;
+ result = DeeObject_MALLOC(ClassOperatorTable);
+ if unlikely(!result) goto done;
+ result->co_desc = self;
+ Dee_Incref(self);
+ DeeObject_Init(result,&ClassOperatorTable_Type);
+done:
+ return result;
+}
+PRIVATE DREF ClassAttributeTable *DCALL
+cd_iattr(ClassDescriptor *__restrict self) {
+ DREF ClassAttributeTable *result;
+ result = DeeObject_MALLOC(ClassAttributeTable);
+ if unlikely(!result) goto done;
+ result->ca_desc  = self;
+ result->ca_start = self->cd_iattr_list;
+ result->ca_mask  = self->cd_iattr_mask;
+ Dee_Incref(self);
+ DeeObject_Init(result,&ClassAttributeTable_Type);
+done:
+ return result;
+}
+PRIVATE DREF ClassAttributeTable *DCALL
+cd_cattr(ClassDescriptor *__restrict self) {
+ DREF ClassAttributeTable *result;
+ result = DeeObject_MALLOC(ClassAttributeTable);
+ if unlikely(!result) goto done;
+ result->ca_desc  = self;
+ result->ca_start = self->cd_cattr_list;
+ result->ca_mask  = self->cd_cattr_mask;
+ Dee_Incref(self);
+ DeeObject_Init(result,&ClassAttributeTable_Type);
+done:
+ return result;
+}
+
+PRIVATE struct type_getset cd_getsets[] = {
+    { "isfinal", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isfinal, NULL, NULL, DOC("->?Dbool") },
+    { "isinterrupt", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinterrupt, NULL, NULL, DOC("->?Dbool") },
+    { "__isinttruncated__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinttruncated, NULL, NULL, DOC("->?Dbool") },
+    { "__ismoveany__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_ismoveany, NULL, NULL, DOC("->?Dbool") },
+    { "operators", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_operators, NULL, NULL,
+      DOC("->?#operators\n"
+          "Enumerate operators implemented by @this class, as well as their associated "
+          "class object table indices which are holding the respective implementations\n"
+          "Note that the class object table entry may be left unbound to explicitly "
+          "define an operator as having been deleted") },
+    { "iattr", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_iattr, NULL, NULL,
+      DOC("->?#attributes\n"
+          "Enumerate user-defined instance attributes as a mapping-like string-attribute sequence") },
+    { "cattr", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_cattr, NULL, NULL,
+      DOC("->?#attributes\n"
+          "Enumerate user-defined class ($static) attributes as a mapping-like string-attribute sequence") },
+    { NULL }
+};
+
+PRIVATE struct type_member cd_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__name__",STRUCT_OBJECT_OPT,offsetof(ClassDescriptor,cd_name),"->?X2?Dstring?N"),
+    TYPE_MEMBER_FIELD_DOC("__doc__",STRUCT_OBJECT_OPT,offsetof(ClassDescriptor,cd_doc),"->?X2?Dstring?N"),
+    TYPE_MEMBER_FIELD_DOC("__csize__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(ClassDescriptor,cd_cmemb_size),"Size of the class object table"),
+    TYPE_MEMBER_FIELD_DOC("__isize__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(ClassDescriptor,cd_imemb_size),"Size of the instance object table"),
+    TYPE_MEMBER_END
+};
+
+INTDEF DeeTypeObject ObjectTable_Type;
+PRIVATE struct type_member cd_class_members[] = {
+    TYPE_MEMBER_CONST("operators",&ClassOperatorTable_Type),
+    TYPE_MEMBER_CONST("attribute",&ClassAttribute_Type),
+    TYPE_MEMBER_CONST("attributes",&ClassAttributeTable_Type),
+    TYPE_MEMBER_CONST("objecttable",&ObjectTable_Type),
+    TYPE_MEMBER_END
+};
+
+PRIVATE DREF DeeObject *DCALL
+cd_str(ClassDescriptor *__restrict self) {
+ if (self->cd_name)
+     return_reference_((DeeObject *)self->cd_name);
+ return DeeString_New("<anonymous>");
+}
+
+
 PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_classdescriptor",
@@ -205,7 +1214,7 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
         /* .tp_move_assign = */NULL
     },
     /* .tp_cast = */{
-        /* .tp_str  = */NULL,
+        /* .tp_str  = */(DeeObject *(DCALL *)(DeeObject *__restrict))&cd_str,
         /* .tp_repr = */NULL,
         /* .tp_bool = */NULL
     },
@@ -219,13 +1228,381 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */NULL, /* TODO */
-    /* .tp_getsets       = */NULL, /* TODO */
-    /* .tp_members       = */NULL, /* TODO */
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */cd_getsets,
+    /* .tp_members       = */cd_members,
+    /* .tp_class_methods = */NULL,
+    /* .tp_class_getsets = */NULL,
+    /* .tp_class_members = */cd_class_members
+};
+
+
+
+typedef struct {
+    OBJECT_HEAD
+    DREF DeeObject       *ot_owner; /* [1..1][const] The associated owner object.
+                                     * NOTE: This may be a super-object, in which case the referenced
+                                     *       object table refers to the described super-type. */
+    struct instance_desc *ot_desc;  /* [1..1][valid_if(ot_size != 0)][const] The referenced instance descriptor. */
+    uint16_t              ot_size;  /* [const] The length of the object table contained within `ot_desc' */
+} ObjectTable;
+
+STATIC_ASSERT(COMPILER_OFFSETOF(ObjectTable,ot_owner) ==
+              COMPILER_OFFSETOF(ClassAttributeTable,ca_desc));
+#define ot_fini    cot_fini
+
+PRIVATE DREF DeeObject *DCALL
+ot_str(ObjectTable *__restrict self) {
+ DeeTypeObject *tp = DeeObject_Class(self->ot_owner);
+ if (DeeType_IsTypeType(tp))
+     return DeeString_Newf("<class object table for %k>",tp);
+ return DeeString_Newf("<object table for instance of %k>",tp);
+}
+
+PRIVATE int DCALL
+ot_bool(ObjectTable *__restrict self) {
+ return self->ot_size != 0;
+}
+
+PRIVATE void DCALL
+ot_visit(ObjectTable *__restrict self, dvisit_t proc, void *arg) {
+ Dee_Visit(self->ot_owner);
+}
+
+
+PRIVATE size_t DCALL
+ot_nsi_getsize(ObjectTable *__restrict self) {
+ return self->ot_size;
+}
+PRIVATE DREF DeeObject *DCALL
+ot_size(ObjectTable *__restrict self) {
+ return DeeInt_NewU16(self->ot_size);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ot_nsi_getitem(ObjectTable *__restrict self, size_t index) {
+ DREF DeeObject *result;
+ if unlikely(index >= self->ot_size)
+    goto err_index;
+ rwlock_read(&self->ot_desc->id_lock);
+ result = self->ot_desc->id_vtab[index];
+ if unlikely(!result) goto err_unbound;
+ Dee_Incref(result);
+ rwlock_endread(&self->ot_desc->id_lock);
+ return result;
+err_unbound:
+ rwlock_endread(&self->ot_desc->id_lock);
+ err_unbound_index((DeeObject *)self,index);
+ return NULL;
+err_index:
+ err_index_out_of_bounds((DeeObject *)self,index,self->ot_size);
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ot_nsi_getitem_fast(ObjectTable *__restrict self, size_t index) {
+ DREF DeeObject *result;
+ ASSERT(index < self->ot_size);
+ rwlock_read(&self->ot_desc->id_lock);
+ result = self->ot_desc->id_vtab[index];
+ Dee_XIncref(result);
+ rwlock_endread(&self->ot_desc->id_lock);
+ return result;
+}
+
+PRIVATE int DCALL
+ot_nsi_delitem(ObjectTable *__restrict self, size_t index) {
+ DREF DeeObject *oldval;
+ if unlikely(index >= self->ot_size)
+    goto err_index;
+ rwlock_write(&self->ot_desc->id_lock);
+ oldval = self->ot_desc->id_vtab[index];
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ if unlikely(!oldval) goto err_unbound;
+#endif
+ self->ot_desc->id_vtab[index] = NULL;
+ rwlock_endwrite(&self->ot_desc->id_lock);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+ Dee_Decref(oldval);
+#else
+ Dee_XDecref(oldval);
+#endif
+ return 0;
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+err_unbound:
+ rwlock_endwrite(&self->ot_desc->id_lock);
+ return err_unbound_index((DeeObject *)self,index);
+#endif
+err_index:
+ return err_index_out_of_bounds((DeeObject *)self,index,self->ot_size);
+}
+
+PRIVATE int DCALL
+ot_nsi_setitem(ObjectTable *__restrict self, size_t index,
+               DeeObject *__restrict value) {
+ DREF DeeObject *oldval;
+ if unlikely(index >= self->ot_size)
+    goto err_index;
+ Dee_Incref(value);
+ rwlock_write(&self->ot_desc->id_lock);
+ oldval = self->ot_desc->id_vtab[index];
+ self->ot_desc->id_vtab[index] = value;
+ rwlock_endwrite(&self->ot_desc->id_lock);
+ Dee_XDecref(oldval);
+ return 0;
+err_index:
+ return err_index_out_of_bounds((DeeObject *)self,index,self->ot_size);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ot_nsi_xchitem(ObjectTable *__restrict self, size_t index,
+               DeeObject *__restrict newval) {
+ DREF DeeObject *oldval;
+ if unlikely(index >= self->ot_size)
+    goto err_index;
+ rwlock_write(&self->ot_desc->id_lock);
+ oldval = self->ot_desc->id_vtab[index];
+ if unlikely(!oldval) goto err_unbound;
+ Dee_Incref(newval);
+ self->ot_desc->id_vtab[index] = newval;
+ rwlock_endwrite(&self->ot_desc->id_lock);
+ return oldval;
+err_unbound:
+ rwlock_endwrite(&self->ot_desc->id_lock);
+ err_unbound_index((DeeObject *)self,index);
+ goto err;
+err_index:
+ err_index_out_of_bounds((DeeObject *)self,index,self->ot_size);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+ot_getitem(ObjectTable *__restrict self,
+           DeeObject *__restrict index) {
+ size_t i;
+ if (DeeObject_AsSize(index,&i))
+     goto err;
+ return ot_nsi_getitem(self,i);
+err:
+ return NULL;
+}
+
+PRIVATE int DCALL
+ot_delitem(ObjectTable *__restrict self,
+           DeeObject *__restrict index) {
+ size_t i;
+ if (DeeObject_AsSize(index,&i))
+     goto err;
+ return ot_nsi_delitem(self,i);
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+ot_setitem(ObjectTable *__restrict self,
+           DeeObject *__restrict index,
+           DeeObject *__restrict value) {
+ size_t i;
+ if (DeeObject_AsSize(index,&i))
+     goto err;
+ return ot_nsi_setitem(self,i,value);
+err:
+ return -1;
+}
+
+
+
+PRIVATE struct type_nsi ot_nsi = {
+    /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FMUTABLE,
+    {
+        /* .nsi_seqlike = */{
+            /* .nsi_getsize      = */(void *)&ot_nsi_getsize,
+            /* .nsi_getsize_fast = */(void *)&ot_nsi_getsize,
+            /* .nsi_getitem      = */(void *)&ot_nsi_getitem,
+            /* .nsi_delitem      = */(void *)&ot_nsi_delitem,
+            /* .nsi_setitem      = */(void *)&ot_nsi_setitem,
+            /* .nsi_getitem_fast = */(void *)&ot_nsi_getitem_fast,
+            /* .nsi_getrange     = */(void *)NULL,
+            /* .nsi_getrange_n   = */(void *)NULL,
+            /* .nsi_setrange     = */(void *)NULL,
+            /* .nsi_setrange_n   = */(void *)NULL,
+            /* .nsi_find         = */(void *)NULL,
+            /* .nsi_rfind        = */(void *)NULL,
+            /* .nsi_xch          = */(void *)&ot_nsi_xchitem,
+            /* .nsi_insert       = */(void *)NULL,
+            /* .nsi_insertall    = */(void *)NULL,
+            /* .nsi_insertvec    = */(void *)NULL,
+            /* .nsi_pop          = */(void *)NULL,
+            /* .nsi_erase        = */(void *)NULL,
+            /* .nsi_remove       = */(void *)NULL,
+            /* .nsi_rremove      = */(void *)NULL,
+            /* .nsi_removeall    = */(void *)NULL,
+            /* .nsi_removeif     = */(void *)NULL
+        }
+    }
+};
+
+PRIVATE struct type_seq ot_seq = {
+    /* .tp_iter_self = */NULL,
+    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ot_size,
+    /* .tp_contains  = */NULL,
+    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ot_getitem,
+    /* .tp_del       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ot_delitem,
+    /* .tp_set       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&ot_setitem,
+    /* .tp_range_get = */NULL,
+    /* .tp_range_del = */NULL,
+    /* .tp_range_set = */NULL,
+    /* .tp_nsi       = */&ot_nsi
+};
+
+
+PRIVATE DREF DeeTypeObject *DCALL
+ot_gettype(ObjectTable *__restrict self) {
+ DREF DeeTypeObject *result;
+ result = DeeType_Check(self->ot_owner)
+        ? (DeeTypeObject *)self->ot_owner
+        : Dee_TYPE(self->ot_owner);
+ if (result == &DeeSuper_Type)
+     result = DeeSuper_TYPE(self->ot_owner);
+ return_reference_(result);
+}
+
+PRIVATE DREF ClassDescriptor *DCALL
+ot_getclass(ObjectTable *__restrict self) {
+ DREF ClassDescriptor *result;
+ DREF DeeTypeObject *type;
+ type = DeeType_Check(self->ot_owner)
+      ? (DeeTypeObject *)self->ot_owner
+      : Dee_TYPE(self->ot_owner);
+ if (type == &DeeSuper_Type)
+     type = DeeSuper_TYPE(self->ot_owner);
+ result = DeeClass_DESC(type)->cd_desc;
+ return_reference_(result);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ot_isctable(ObjectTable *__restrict self) {
+ return_bool(DeeType_Check(self->ot_owner));
+}
+PRIVATE DREF DeeObject *DCALL
+ot_isitable(ObjectTable *__restrict self) {
+ return_bool(!DeeType_Check(self->ot_owner));
+}
+
+PRIVATE struct type_getset ot_getsets[] = {
+    { "__type__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_gettype, NULL, NULL,
+       DOC("->?Dtype\nThe type describing @this object table") },
+    { "__class__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_getclass, NULL, NULL,
+      DOC("->?Ert:classdescriptor\nSame as ${this.__type__.__class__}") },
+    { "__isctable__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_isctable, NULL, NULL,
+      DOC("->?Dbool\nEvaluates to :true if @this is a class object table") },
+    { "__isitable__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_isitable, NULL, NULL,
+      DOC("->?Dbool\nEvaluates to :true if @this is an instance object table") },
+    { NULL }
+};
+
+PRIVATE struct type_member ot_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__owner__",STRUCT_OBJECT,offsetof(ClassOperatorTableIterator,co_desc),
+                          "The object that owns @this object table"),
+    TYPE_MEMBER_END
+};
+
+
+INTERN DeeTypeObject ObjectTable_Type = {
+    OBJECT_HEAD_INIT(&DeeType_Type),
+    /* .tp_name     = */"_objecttable",
+    /* .tp_doc      = */NULL,
+    /* .tp_flags    = */TP_FFINAL,
+    /* .tp_weakrefs = */0,
+    /* .tp_features = */TF_NONE,
+    /* .tp_base     = */&DeeSeq_Type,
+    /* .tp_init = */{
+        {
+            /* .tp_alloc = */{
+                /* .tp_ctor      = */NULL,
+                /* .tp_copy_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL,
+                /* .tp_any_ctor  = */NULL,
+                /* .tp_free      = */NULL,
+                {
+                    /* .tp_instance_size = */sizeof(ObjectTable)
+                }
+            }
+        },
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ot_fini,
+        /* .tp_assign      = */NULL,
+        /* .tp_move_assign = */NULL
+    },
+    /* .tp_cast = */{
+        /* .tp_str  = */(DeeObject *(DCALL *)(DeeObject *__restrict))&ot_str,
+        /* .tp_repr = */NULL,
+        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&ot_bool
+    },
+    /* .tp_call          = */NULL,
+    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&ot_visit,
+    /* .tp_gc            = */NULL,
+    /* .tp_math          = */NULL,
+    /* .tp_cmp           = */NULL,
+    /* .tp_seq           = */&ot_seq,
+    /* .tp_iter_next     = */NULL,
+    /* .tp_attr          = */NULL,
+    /* .tp_with          = */NULL,
+    /* .tp_buffer        = */NULL,
+    /* .tp_methods       = */NULL,
+    /* .tp_getsets       = */ot_getsets,
+    /* .tp_members       = */ot_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
 };
+
+
+INTERN DREF DeeObject *DCALL
+type_get_ctable(DeeTypeObject *__restrict self) {
+ DREF ObjectTable *result;
+ struct class_desc *desc;
+ if (!DeeType_IsClass(self))
+     return_empty_seq;
+ desc = DeeClass_DESC(self);
+ result = DeeObject_MALLOC(DREF ObjectTable);
+ if unlikely(!result) goto done;
+ result->ot_owner = (DREF DeeObject *)self;
+ result->ot_desc  = class_desc_as_instance(desc);
+ result->ot_size  = desc->cd_desc->cd_cmemb_size;
+ Dee_Incref(self);
+ DeeObject_Init(result,&ObjectTable_Type);
+done:
+ return (DREF DeeObject *)result;
+}
+
+INTERN DREF DeeObject *DCALL
+instance_get_itable(DeeObject *__restrict self) {
+ DREF ObjectTable *result;
+ struct class_desc *desc;
+ DeeTypeObject *type;
+ DeeObject *real_self = self;
+ type = Dee_TYPE(self);
+ if (type == &DeeSuper_Type) {
+  type = DeeSuper_TYPE(self);
+  real_self = DeeSuper_SELF(self);
+ }
+ if (!DeeType_IsClass(type))
+     return_empty_seq;
+ desc = DeeClass_DESC(type);
+ result = DeeObject_MALLOC(DREF ObjectTable);
+ if unlikely(!result) goto done;
+ result->ot_owner = (DREF DeeObject *)self;
+ result->ot_desc  = DeeInstance_DESC(desc,real_self);
+ result->ot_size  = desc->cd_desc->cd_imemb_size;
+ Dee_Incref(self);
+ DeeObject_Init(result,&ObjectTable_Type);
+done:
+ return (DREF DeeObject *)result;
+}
+
+
 
 
 

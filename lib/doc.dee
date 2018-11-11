@@ -2135,18 +2135,19 @@ class Doc: weakrefable {
 			if (doc_parent_or_path is deemon.attribute) {
 				/* Doc(attribute) */
 				name = doc_parent_or_path.name;
-				docstring = doc_parent_or_path.doc.rstrip();
+				local ds = doc_parent_or_path.doc;
+				if (ds is none)
+					ds = "";
+				docstring = ds.rstrip();
 				local decl = m_parent = doc_parent_or_path.decl;
 				if (doc_parent_or_path.isclass) {
-					if (doc_parent_or_path.isclass) {
-						local parob = decl;
-						if (doc_parent_or_path.isinstance) {
-							/* Use `type.getinstanceattr' to prevent ambiguity
-							 * between stuff like `dict.c:keys' and `dict.i:keys' */
-							object = deemon.type_.getinstanceattr(parob,name);
-						} else {
-							object = parob.operator . (name);
-						}
+					local parob = decl;
+					if (doc_parent_or_path.isinstance) {
+						/* Use `type.getinstanceattr' to prevent ambiguity
+						 * between stuff like `dict.c:keys' and `dict.i:keys' */
+						object = deemon.type_.getinstanceattr(parob,name);
+					} else {
+						object = parob.operator . (name);
 					}
 				}
 				m_attr = doc_parent_or_path;
@@ -2155,7 +2156,10 @@ class Doc: weakrefable {
 			/* Support for attribute wrappers */
 			if (doc_parent_or_path !is string) {
 				name = doc_parent_or_path.__name__;
-				docstring = doc_parent_or_path.__doc__.rstrip();
+				local ds = doc_parent_or_path.__doc__;
+				if (ds is none)
+					ds = "";
+				docstring = ds.rstrip();
 				object = doc_parent_or_path;
 				if (deemon.hasattr(doc_parent_or_path,"__type__")) {
 					local doc_type;
@@ -2681,7 +2685,7 @@ err_unknown_attribute:
 			 * specified operator, auto-generate a doc for it. */
 			if (object !is bound)
 				return;
-			if (object.isclass) {
+			if (object.__isclass__) {
 				local cls = object.__class__;
 				/* TODO: Check if `cls' makes any mention of the operator
 				 *       For example: `operator str = del;' */

@@ -247,8 +247,8 @@ struct object_ { OBJECT_HEAD };
 #define ASSERT_OBJECT_OPT(ob)                 (!(ob) || DeeObject_DoCheck(ob) || (DeeAssert_BadObjectOpt(__FILE__,__LINE__,(DeeObject *)(ob)),BREAKPOINT(),0))
 #define ASSERT_OBJECT_TYPE(ob,type)           ((DeeObject_Check(ob) && DeeObject_InstanceOf(ob,type)) || (DeeAssert_BadObjectType(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
 #define ASSERT_OBJECT_TYPE_OPT(ob,type)       (!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOf(ob,type)) || (DeeAssert_BadObjectTypeOpt(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
-#define ASSERT_OBJECT_TYPE_A(ob,type)         ((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob,type) || DeeType_IsGeneric(type))) || (DeeAssert_BadObjectType(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
-#define ASSERT_OBJECT_TYPE_A_OPT(ob,type)     (!(ob) || (DeeObject_DoCheck(ob) && (DeeObject_InstanceOf(ob,type) || DeeType_IsGeneric(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
+#define ASSERT_OBJECT_TYPE_A(ob,type)         ((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob,type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectType(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
+#define ASSERT_OBJECT_TYPE_A_OPT(ob,type)     (!(ob) || (DeeObject_DoCheck(ob) && (DeeObject_InstanceOf(ob,type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
 #define ASSERT_OBJECT_TYPE_EXACT(ob,type)     ((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob,type)) || (DeeAssert_BadObjectTypeExact(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
 #define ASSERT_OBJECT_TYPE_EXACT_OPT(ob,type) (!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOfExact(ob,type)) || (DeeAssert_BadObjectTypeExactOpt(__FILE__,__LINE__,(DeeObject *)(ob),(DeeTypeObject *)(type)),BREAKPOINT(),0))
 DFUNDEF void DCALL DeeAssert_BadObject(char const *file, int line, DeeObject *ob);
@@ -1454,18 +1454,21 @@ struct type_object {
     /* ... Extended type fields go here (e.g.: `DeeFileTypeObject') */
     /* ... `struct class_desc' of class types goes here */
 };
-#define DeeType_IsVariable(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FVARIABLE)
-#define DeeType_IsFinal(x)        (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FFINAL)
-#define DeeType_IsGC(x)           (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FGC)
+#define DeeType_IsFinal(x)        (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FFINAL)
+#define DeeType_IsInterrupt(x)    (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FINTERRUPT)
+#define DeeType_IsAbstract(x)      (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FABSTRACT)
+#define DeeType_IsVariable(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FVARIABLE)
+#define DeeType_IsGC(x)           (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FGC)
 #define DeeType_IsClass(x)        (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_class != NULL)
-#define DeeType_IsInterrupt(x)    (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FINTERRUPT)
-#define DeeType_IsGeneric(x)      (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FABSTRACT)
 #define DeeType_IsArithmetic(x)   (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_math != NULL)
 #define DeeType_IsComparable(x)   (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_cmp != NULL)
 #define DeeType_IsSequence(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_seq != NULL)
+#define DeeType_IsIntTruncated(x) (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FTRUNCATE)
+#define DeeType_IsMoveAny(x)      (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FMOVEANY)
 #define DeeType_IsIterator(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_iter_next != NULL)
 #define DeeType_IsTypeType(x)        DeeType_IsInherited((DeeTypeObject *)REQUIRES_OBJECT(x),&DeeType_Type)
-#define DeeType_IsCustom(x)       (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags&TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
+#define DeeType_IsCustom(x)       (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
+#define DeeType_IsSuperInit(x)    (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FINHERITCTOR)
 #define DeeType_Base(x)           (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_base)
 #define DeeType_GCPriority(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc->tp_gcprio : GC_PRIORITY_LATE)
 #define DeeObject_GCPriority(x)      DeeType_GCPriority(Dee_TYPE(x))
