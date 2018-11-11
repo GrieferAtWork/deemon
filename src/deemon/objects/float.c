@@ -103,7 +103,8 @@ float_ctor(Float *__restrict self,
  if (!*str) {
   /* There is more here than just a floating point number. */
   DeeError_Throwf(&DeeError_ValueError,
-                  "Not a float point number %k");
+                  "Not a float point number %k",
+                  arg);
  }
 err:
  return -1;
