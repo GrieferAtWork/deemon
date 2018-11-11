@@ -1932,6 +1932,47 @@ class DocSection: weakrefable {
 
 
 
+@@Automatically generate documentation for a given @fun
+local function generate_function_params(fp: file, fun: deemon.function_) {
+	/* We can actually figure out a lot about this function! */
+	local code = fun.__code__;
+	local argc_min = code.__argc_min__;
+	local argc_max = code.__argc_max__;
+	fp << "(";
+	for (local i: [:argc_min]) {
+		if (i != 0)
+			fp << ",";
+		fp << get_generic_argument_name(i);
+	}
+	if (argc_max > argc_min) {
+		local defl = code.__default__;
+		if (argc_min)
+			fp << ",";
+		for (local i: [:argc_max - argc_min]) {
+			if (i != 0)
+				fp << ",";
+			fp << get_generic_argument_name(i);
+			local default_value = defl[i];
+			/* Only emit type information when the default value isn't none
+			 * Since `none' is usually used as a placeholder, the user probably
+			 * doesn't expect the user of this function to pass `none' intentionally. */
+			if (default_value !is none)
+				fp << ":" << encode_type(type(default_value));
+			local defl = encode_expr(default_value);
+			if (defl !is none)
+				fp << "=" << defl;
+		}
+	}
+	if (code.__hasvarargs__) {
+		if (argc_max)
+			fp << ",";
+		fp << get_generic_argument_name(argc_max) << "!";
+	}
+	fp << ")";
+}
+
+
+
 @@The main interface for accessing the documentation API provided by deemon
 @@Documentation text is addressed using unambiguos paths structures as follows:
 @@
@@ -2609,38 +2650,8 @@ err_unknown_attribute:
 		if (isoperator) {
 			yield parent.autogenerate_opdecl(name)...;
 		} else if (object is bound && object is deemon.function_) {
-			/* We can actually figure out a lot about this function! */
-			local code = object.__code__;
-			local argc_min = code.__argc_min__;
-			local argc_max = code.__argc_max__;
 			file.writer resdoc;
-			resdoc << "(";
-			for (local i: [:argc_min]) {
-				if (i != 0)
-					resdoc << ",";
-				resdoc << get_generic_argument_name(i);
-			}
-			if (argc_max > argc_min) {
-				local defl = code.__default__;
-				if (argc_min)
-					resdoc << ",";
-				for (local i: [:argc_max - argc_min]) {
-					if (i != 0)
-						resdoc << ",";
-					resdoc << get_generic_argument_name(i) << ":";
-					local default_value = defl[i];
-					resdoc << encode_type(type(default_value));
-					local defl = encode_expr(default_value);
-					if (defl !is none)
-						resdoc << "=!" << defl;
-				}
-			}
-			if (code.__hasvarargs__) {
-				if (argc_max)
-					resdoc << ",";
-				resdoc << get_generic_argument_name(argc_max) << "!";
-			}
-			resdoc << ")";
+			generate_function_params(resdoc,object);
 			if (code.__isconstructor__) {
 				/* Constructors always return :none */
 			} else {
@@ -2705,6 +2716,26 @@ err_unknown_attribute:
 	}
 	private member m_docsections: {DocSection...};
 
+	@@Automatically generate documentation for native type constructors.
+	private autogenerate_native_constructor_descl(): {DocSection...} {
+		if (object.__issuperconstructible__) {
+			yield DocSection(this,"constructor->!S");
+		} else {
+			local hasany = false;
+			if (object.__isnoargconstructible__) {
+				yield DocSection(this,"constructor()->");
+				hasany = true;
+			}
+			if (object.__isvarargconstructible__) {
+				yield DocSection(this,"constructor->");
+				hasany = true;
+			}
+			if (!hasany)
+				yield DocSection(this,"constructor->!D");
+		}
+	}
+
+
 	@@Returns the DocSection associated with a given @opname, which
 	@@must be the operator's real name (e.g. $"eq", and not $"==")
 	@@If the operator is implemented, but doesn't have an explicit
@@ -2733,9 +2764,23 @@ err_unknown_attribute:
 				local opaddr = cls.operators.get(opname);
 				if (opaddr !is none) {
 					/* The operator does indeed get overwritten by this class */
-					if (object.__ctable__[opaddr] is bound)
-						yield autogenerate_opdecl(opname)...;
-					else {
+					if (object.__ctable__[opaddr] is bound) {
+						local fun = object.__ctable__[opaddr];
+						if (fun is deemon.function_) {
+							file.writer resdoc;
+							resdoc << opname;
+							generate_function_params(resdoc,fun);
+							resdoc << "->";
+							local defl = operator_defaults.get(opname);
+							if (defl !is none) {
+								local rt = find_nonescaped(defl,"->");
+								resdoc << defl.substr(rt + 2);
+							}
+							yield DocSection(this,resdoc.string);
+						} else {
+							yield autogenerate_opdecl(opname)...;
+						}
+					} else {
 						/* Deleted operator */
 						yield DocSection(this,opname + "->!D");
 					}
@@ -2743,6 +2788,9 @@ err_unknown_attribute:
 			} else {
 				if (object.hasprivateoperator(opname))
 					yield autogenerate_opdecl(opname)...;
+				else if (opname == "constructor") {
+					yield autogenerate_native_constructor_descl()...;
+				}
 			}
 		}
 	}
@@ -2764,20 +2812,44 @@ err_unknown_attribute:
 				local ctab = object.__ctable__;
 				local cls = object.__class__;
 				local ops = cls.operators;
-				if (cls.issuperconstructor && "constructor" !in result)
+				if (cls.hassuperconstructor && "constructor" !in result)
 					result["constructor"] = (DocSection(this,"constructor->!S"),);
 				for (local name,addr: ops) {
 					if (name !in result) {
 						if (ctab[addr] is bound) {
-							result[name] = tuple(autogenerate_opdecl(name));
+							local fun = ctab[addr];
+							if (fun is deemon.function_) {
+								file.writer resdoc;
+								resdoc << name;
+								generate_function_params(resdoc,fun);
+								resdoc << "->";
+								local defl = operator_defaults.get(name);
+								if (defl !is none) {
+									local rt = find_nonescaped(defl,"->");
+									resdoc << defl.substr(rt + 2);
+								}
+								result[name] = (DocSection(this,resdoc.string),);
+							} else {
+								result[name] = tuple(autogenerate_opdecl(name));
+							}
 						} else {
 							result[name] = (DocSection(this,name + "->!D"),);
 						}
 					}
 				}
 			} else {
+				if ("constructor" !in result)
+					result["constructor"] = tuple(autogenerate_native_constructor_descl());
 				for (local name: object.__operators__) {
 					if (name !is string)
+						continue;
+					/* Don't implicitly generate documentation for destructors of native classes
+					 * Since these classes pretty much always require the presence of a destructor
+					 * in order to allow them to clean up pointed-to objects, there really isn't
+					 * any point in documenting them unless the type does so explicitly.
+					 * -> So just skip them if we encounter them as part of the list of operators
+					 *    that have been overwritten by the type. */
+					if (name == "destructor")
 						continue;
 					if (name !in result)
 						result[name] = tuple(autogenerate_opdecl(name));

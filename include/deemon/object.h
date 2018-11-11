@@ -1472,7 +1472,11 @@ struct type_object {
 #define DeeType_IsIterator(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_iter_next != NULL)
 #define DeeType_IsTypeType(x)        DeeType_IsInherited((DeeTypeObject *)REQUIRES_OBJECT(x),&DeeType_Type)
 #define DeeType_IsCustom(x)       (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
-#define DeeType_IsSuperInit(x)    (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FINHERITCTOR)
+#define DeeType_IsSuperConstructible(x)  (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FINHERITCTOR)
+#define DeeType_IsNoArgConstructible(x)  (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_ctor != NULL)
+#define DeeType_IsVarArgConstructible(x) (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_any_ctor != NULL || ((DeeTypeObject *)(x))->tp_init.tp_alloc.tp_any_ctor_kw != NULL)
+#define DeeType_IsConstructible(x)       (DeeType_IsNoArgConstructible(x) || DeeType_IsVarArgConstructible(x))
+#define DeeType_IsCopyable(x)            (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_copy_ctor != NULL || ((DeeTypeObject *)(x))->tp_init.tp_alloc.tp_deep_ctor != NULL)
 #define DeeType_Base(x)           (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_base)
 #define DeeType_GCPriority(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc->tp_gcprio : GC_PRIORITY_LATE)
 #define DeeObject_GCPriority(x)      DeeType_GCPriority(Dee_TYPE(x))

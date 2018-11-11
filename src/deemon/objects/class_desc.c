@@ -1105,7 +1105,7 @@ cd_isinterrupt(ClassDescriptor *__restrict self) {
  return_bool(self->cd_flags & TP_FINTERRUPT);
 }
 PRIVATE DREF DeeObject *DCALL
-cd_issuperconstructor(ClassDescriptor *__restrict self) {
+cd_hassuperconstructor(ClassDescriptor *__restrict self) {
  return_bool(self->cd_flags & TP_FINHERITCTOR);
 }
 PRIVATE DREF DeeObject *DCALL
@@ -1153,7 +1153,7 @@ done:
 PRIVATE struct type_getset cd_getsets[] = {
     { "isfinal", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isfinal, NULL, NULL, DOC("->?Dbool") },
     { "isinterrupt", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinterrupt, NULL, NULL, DOC("->?Dbool") },
-    { "issuperconstructor", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_issuperconstructor, NULL, NULL,
+    { "hassuperconstructor", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hassuperconstructor, NULL, NULL,
       DOC("->?Dbool\n"
           "Evaluates to :true if @this class inherits its constructor from its base-type") },
     { "__isinttruncated__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinttruncated, NULL, NULL, DOC("->?Dbool") },

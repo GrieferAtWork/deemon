@@ -3324,8 +3324,24 @@ type_iscustom(DeeObject *__restrict self) {
     return_bool(DeeType_IsCustom(self));
 }
 PRIVATE DREF DeeObject *DCALL
-type_issuperinit(DeeObject *__restrict self) {
-    return_bool(DeeType_IsSuperInit(self));
+type_issuperconstructible(DeeObject *__restrict self) {
+    return_bool(DeeType_IsSuperConstructible(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_isnoargconstructible(DeeObject *__restrict self) {
+    return_bool(DeeType_IsNoArgConstructible(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_isvarargconstructible(DeeObject *__restrict self) {
+    return_bool(DeeType_IsVarArgConstructible(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_isconstructible(DeeObject *__restrict self) {
+    return_bool(DeeType_IsConstructible(self));
+}
+PRIVATE DREF DeeObject *DCALL
+type_iscopyable(DeeObject *__restrict self) {
+    return_bool(DeeType_IsCopyable(self));
 }
 #define TYPE_FEATURE_GETSETS \
     { "isfinal", &type_isfinal, NULL, NULL, DOC("->?Dbool") }, \
@@ -3342,7 +3358,11 @@ type_issuperinit(DeeObject *__restrict self) {
     { "__isiterator__", &type_isiterator, NULL, NULL, DOC("->?Dbool") }, \
     { "__istypetype__", &type_istypetype, NULL, NULL, DOC("->?Dbool") }, \
     { "__iscustom__", &type_iscustom, NULL, NULL, DOC("->?Dbool") }, \
-    { "__issuperinit__", &type_issuperinit, NULL, NULL, DOC("->?Dbool") }, \
+    { "__issuperconstructible__", &type_issuperconstructible, NULL, NULL, DOC("->?Dbool") }, \
+    { "__isnoargconstructible__", &type_isnoargconstructible, NULL, NULL, DOC("->?Dbool") }, \
+    { "__isvarargconstructible__", &type_isvarargconstructible, NULL, NULL, DOC("->?Dbool") }, \
+    { "__isconstructible__", &type_isconstructible, NULL, NULL, DOC("->?Dbool") }, \
+    { "__iscopyable__", &type_iscopyable, NULL, NULL, DOC("->?Dbool") }, \
 /* ... */
 //[[[end]]]
 

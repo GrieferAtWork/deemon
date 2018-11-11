@@ -123,6 +123,14 @@ function print_expr(fp: file, t: Expression) {
 
 @@Print Declaration parameters (if any), as well as the return type
 function print_decl_params(fp: file, decl: Declaration) {
+	if (decl.isdeleted) {
+		fp << " = del";
+		return;
+	}
+	if (decl.isinherited) {
+		fp << " = super";
+		return;
+	}
 	local params = decl.parameters;
 	if (params !is none) {
 		fp << "(";

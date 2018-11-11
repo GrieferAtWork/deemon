@@ -1207,6 +1207,12 @@ DeeType_GetOpPointer(DeeTypeObject *__restrict self,
 PUBLIC bool DCALL
 DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
  struct opinfo *info;
+ if (name == OPERATOR_CONSTRUCTOR) {
+  /* Special case: the constructor operator (which cannot be inherited). */
+  return (self->tp_init.tp_alloc.tp_ctor != NULL ||
+          self->tp_init.tp_alloc.tp_any_ctor != NULL ||
+          self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
+ }
  info = Dee_OperatorInfo(self,name);
  if (info) do {
   if (DeeType_GetOpPointer(self,info))
@@ -1219,7 +1225,14 @@ DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
  * operator has been inherited implicitly through caching mechanisms. */
 PUBLIC bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
- void *my_ptr; struct opinfo *info = Dee_OperatorInfo(self,name);
+ void *my_ptr; struct opinfo *info;
+ if (name == OPERATOR_CONSTRUCTOR) {
+  /* Special case: the constructor operator (which cannot be inherited). */
+  return (self->tp_init.tp_alloc.tp_ctor != NULL ||
+          self->tp_init.tp_alloc.tp_any_ctor != NULL ||
+          self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
+ }
+ info = Dee_OperatorInfo(self,name);
  return (info != NULL &&
         (my_ptr = DeeType_GetOpPointer(self,info)) != NULL &&
         (!self->tp_base || my_ptr != DeeType_GetOpPointer(self->tp_base,info)));
@@ -1378,6 +1391,14 @@ toi_next(TypeOperatorsIterator *__restrict self) {
    void *my_ptr;
    /* Query information about the given operator. */
    info = Dee_OperatorInfo(Dee_TYPE(tp),result);
+   if (result == OPERATOR_CONSTRUCTOR) {
+    /* Special case: the constructor operator (which cannot be inherited). */
+    if (tp->tp_init.tp_alloc.tp_ctor != NULL ||
+        tp->tp_init.tp_alloc.tp_any_ctor != NULL ||
+        tp->tp_init.tp_alloc.tp_any_ctor_kw != NULL)
+        break;
+    continue;
+   }
    if (!info) {
     /* If there isn't an operator record, switch to extended operators. */
     if (result < OPERATOR_EXTENDED(0)) {
