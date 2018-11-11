@@ -470,7 +470,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0x56 */ 2, /* --- */
     /* 0x57 */ 2, /* --- */
     /* 0x58 */ 2, /* --- */
-    /* 0x59 */ 1, /* `ASM_BOUNDITEM':               `bounditem top, pop' */
+    /* 0x59 */ 2, /* `ASM_BOUNDITEM':               `bounditem top, pop' */
     /* 0x5a */ 4, /* `ASM16_GETATTR_C':             `getattr top, const <imm16>' */
     /* 0x5b */ 4, /* `ASM16_DELATTR_C':             `delattr pop, const <imm16>' */
     /* 0x5c */ 4, /* `ASM16_SETATTR_C':             `setattr pop, const <imm16>, pop' */
