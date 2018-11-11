@@ -1137,7 +1137,7 @@ class Expression: weakrefable {
 				yield Stype;
 				break;
 			default:
-				yield deemon.object;
+				yield TypeExpr(docdecl,"?O");
 				break;
 			}
 		}

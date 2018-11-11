@@ -1471,9 +1471,9 @@ file_class_getjoined(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE struct type_getset file_class_getsets[] = {
     { "stdin", &file_class_get_stdin, &file_class_del_stdin, &file_class_set_stdin,
-      DOC("->:?Dfile\nThe standard input stream") },
+      DOC("->?Dfile\nThe standard input stream") },
     { "stdout", &file_class_get_stdout, &file_class_del_stdout, &file_class_set_stdout,
-      DOC("->:?Dfile\nThe standard output stream\n"
+      DOC("->?Dfile\nThe standard output stream\n"
           "This is also what $print statements will write to when used "
           "without an explicit file target:\n"
           ">print \"foo\";\n"
@@ -1482,15 +1482,15 @@ PRIVATE struct type_getset file_class_getsets[] = {
           ">print file.stdout: \"foo\";\n"
           ) },
     { "stderr", &file_class_get_stderr, &file_class_del_stderr, &file_class_set_stderr,
-      DOC("->:?Dfile\nThe standard error stream") },
+      DOC("->?Dfile\nThe standard error stream") },
     { "default_stdin", &file_class_default_stdin, NULL, NULL,
-      DOC("->:?Dfile\nThe default standard input stream") },
+      DOC("->?Dfile\nThe default standard input stream") },
     { "default_stdout", &file_class_default_stdout, NULL, NULL,
-      DOC("->:?Dfile\nThe default standard output stream") },
+      DOC("->?Dfile\nThe default standard output stream") },
     { "default_stderr", &file_class_default_stderr, NULL, NULL,
-      DOC("->:?Dfile\nThe default standard error stream") },
+      DOC("->?Dfile\nThe default standard error stream") },
     { "stddbg", &file_class_stddbg, NULL, NULL,
-      DOC("->:?Dfile\n"
+      DOC("->?Dfile\n"
           "A standard stream that usually simply aliases the "
           "default #stderr, but should be used for debug-output\n"
           "Note that unlike the other streams, this one can't be redirected") },
