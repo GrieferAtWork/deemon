@@ -100,7 +100,7 @@ float_ctor(Float *__restrict self,
  self->f_value = strtod(str,&str);
  /* Skip trailing space. */
  while (DeeUni_IsSpace(*str)) ++str;
- if (!*str) {
+ if (*str) {
   /* There is more here than just a floating point number. */
   DeeError_Throwf(&DeeError_ValueError,
                   "Not a float point number %k",
