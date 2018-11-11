@@ -3504,9 +3504,9 @@ retnone:
  return_none;
 }
 
-
+INTDEF DREF DeeObject *DCALL type_get_operators(DeeTypeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL type_get_operatorids(DeeTypeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL type_get_ctable(DeeTypeObject *__restrict self);
-
 
 PRIVATE struct type_getset type_getsets[] = {
     TYPE_FEATURE_GETSETS
@@ -3530,6 +3530,25 @@ PRIVATE struct type_getset type_getsets[] = {
           "as referenced by :rt.classdescriptor.attribute.addr\n"
           "For non-user-defined classes (aka. #__isclass__ is :false), an empty sequence is returned\n"
           "The instance-attribute table can be accessed through :object.__itable__") },
+    { "__operators__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operators, NULL, NULL,
+      DOC("->?S?X2?Dstring?Dint\n"
+          "Enumerate the names of all the operators overwritten by @this type as a set-like sequence\n"
+          "This member functions such that the member function #hasprivateoperator can be implemented as:\n"
+          ">function hasprivateoperator(name: string | int): bool {\n"
+          "> return name in this.__operators__;\n"
+          ">}\n"
+          "Also note that this set doesn't differentiate between overwritten and deleted operators, "
+          "as for this purpose any deleted operator is considered to be implemented as throwing a "
+          ":NotImplemented exception\n"
+          "Additionally, this set also includes automatically generated operators for user-classes, "
+          "meaning that pretty much any user-class will always have its compare, assignment, as well "
+          "as constructor and destructor operators overwritten, even when the user didn't actually "
+          "define any of them") },
+    { "__operatorids__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operatorids, NULL, NULL,
+      DOC("->?S?Dint\n"
+          "Enumerate the ids of all the operators overwritten by @this type as a set-like sequence\n"
+          "This is the same as #__operators__, but the runtime will not attempt to translate known "
+          "operator ids to their user-friendly name, as described in #hasoperator") },
     { "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
       DOC("->?Dint\n"
           "->?N\n"
