@@ -2040,20 +2040,45 @@ class Doc: weakrefable {
 	@@resulting in the form of $"operator ==" or "function foo"
 	public final property prettydesc: string = {
 		get(): string {
-			return "{} {}".format({ kind, prettyname });
+			return "{} {}".format({
+				kind,
+				prettyname
+			});
 		}
 	}
 
 	@@Similar to #path, but return in a form akin to $"deemon.string.operator =="
+	@@Additionally, this name representation still provides good-looking results
+	@@when #path would evaluate to :none
 	public final property prettypath: string = {
 		get(): string {
-			local result = path.lstrip("/");
-			if (isoperator) {
-				local opname = pretty_operator_names.get(name);
-				if (opname !is none) {
-					result = result.rpartition("/")[0];
-					result = "{}.operator {}".format({ result, opname });
+			local result = path;
+			if (result is none) {
+				local par = parent;
+				if (par is none) {
+					result = name;
+					if (isoperator)
+						result = "operator " + pretty_operator_names.get(name,name);
+					return result;
 				}
+				result = par.prettypath;
+				if (isoperator) {
+					result = "{}.operator {}".format({
+						result,
+						pretty_operator_names.get(name,name)
+					});
+				} else {
+					result = "{}.{}".format({ result, name });
+				}
+				return result;
+			}
+			result = result.lstrip("/");
+			if (isoperator) {
+				result = result.rpartition("/")[0];
+				result = "{}.operator {}".format({
+					result,
+					pretty_operator_names.get(name,name)
+				});
 			}
 			return result.replace("/",".");
 		}
@@ -2123,13 +2148,19 @@ class Doc: weakrefable {
 			}
 			if (doc_parent_or_path is deemon.type_) {
 				/* Doc(type) */
-				local type_module = m_parent = deemon.type_.__module__(doc_parent_or_path);
+				local type_module = deemon.type_.__module__(doc_parent_or_path);
+				m_parent = type_module;
 				object = doc_parent_or_path;
 				docstring = deemon.type_.__doc__(doc_parent_or_path).rstrip();
 				istype = true;
 				name = deemon.type_.__name__(doc_parent_or_path);
-				m_attr = deemon.attribute.lookup(type_module,name);
-				m_path = "/{}/{}".format({ deemon.module.__name__(type_module), name });
+				if (type_module is none) {
+					m_attr = none;
+					m_path = none;
+				} else {
+					m_attr = deemon.attribute.lookup(type_module,name);
+					m_path = "/{}/{}".format({ deemon.module.__name__(type_module), name });
+				}
 				return;
 			}
 			if (doc_parent_or_path is deemon.attribute) {
@@ -2243,10 +2274,15 @@ err_unknown_attribute:
 			});
 		} else if (attribute_name.startswith("op:")) {
 			/* Operator node. */
-			m_path = "{}/{}".format({
-				doc_parent_or_path.path,
-				attribute_name
-			});
+			local parpath = doc_parent_or_path.path;
+			if (parpath is none) {
+				m_path = none;
+			} else {
+				m_path = "{}/{}".format({
+					parpath,
+					attribute_name
+				});
+			}
 			attribute_name = name = attribute_name[3:];
 			isoperator = true;
 			local sect;
@@ -2321,10 +2357,15 @@ err_unknown_attribute:
 			docstring = my_attr.doc.rstrip();
 		m_attr = my_attr;
 		name = fixed_attribute_name;
-		m_path = "{}/{}".format({
-			doc_parent_or_path.path,
-			attribute_name
-		});
+		local parpath = doc_parent_or_path.path;
+		if (parpath is none) {
+			m_path = none;
+		} else {
+			m_path = "{}/{}".format({
+				parpath,
+				attribute_name
+			});
+		}
 	}
 
 	@@Returns a string representation of how @this Doc node can be constructed
@@ -2687,11 +2728,22 @@ err_unknown_attribute:
 				return;
 			if (object.__isclass__) {
 				local cls = object.__class__;
-				/* TODO: Check if `cls' makes any mention of the operator
-				 *       For example: `operator str = del;' */
+				/* Check if `cls' makes any mention of the operator
+				 * For example: `operator str = del;' */
+				local opaddr = cls.operators.get(opname);
+				if (opaddr !is none) {
+					/* The operator does indeed get overwritten by this class */
+					if (object.__ctable__[opaddr] is bound)
+						yield autogenerate_opdecl(opname)...;
+					else {
+						/* Deleted operator */
+						yield DocSection(this,opname + "->!D");
+					}
+				}
+			} else {
+				if (object.hasprivateoperator(opname))
+					yield autogenerate_opdecl(opname)...;
 			}
-			if (object.hasprivateoperator(opname))
-				yield autogenerate_opdecl(opname)...;
 		}
 	}
 
@@ -2704,6 +2756,32 @@ err_unknown_attribute:
 				if (lst is none)
 					result[name] = lst = [];
 				lst.append(opsec);
+			}
+		}
+		/* Enumerate operators overwritten, but not documented */
+		if (object is bound && istype) {
+			if (object.__isclass__) {
+				local ctab = object.__ctable__;
+				local cls = object.__class__;
+				local ops = cls.operators;
+				if (cls.issuperconstructor && "constructor" !in result)
+					result["constructor"] = (DocSection(this,"constructor->!S"),);
+				for (local name,addr: ops) {
+					if (name !in result) {
+						if (ctab[addr] is bound) {
+							result[name] = tuple(autogenerate_opdecl(name));
+						} else {
+							result[name] = (DocSection(this,name + "->!D"),);
+						}
+					}
+				}
+			} else {
+				for (local name: object.__operators__) {
+					if (name !is string)
+						continue;
+					if (name !in result)
+						result[name] = tuple(autogenerate_opdecl(name));
+				}
 			}
 		}
 		return result;
@@ -2747,7 +2825,7 @@ err_unknown_attribute:
 	operator str(): string {
 		file.writer fp;
 		print fp: "-"*80;
-		print fp: "| Documentation for `{}'".format({ path });
+		print fp: "| Documentation for `{}'".format({ prettypath });
 		for (local sec: docsections) {
 			print fp: "-"*80;
 			for (local seg: sec.segments) {

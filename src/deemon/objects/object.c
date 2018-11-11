@@ -3543,7 +3543,10 @@ PRIVATE struct type_getset type_getsets[] = {
           "Additionally, this set also includes automatically generated operators for user-classes, "
           "meaning that pretty much any user-class will always have its compare, assignment, as well "
           "as constructor and destructor operators overwritten, even when the user didn't actually "
-          "define any of them") },
+          "define any of them\n"
+          "For the purposes of human-readable information, is is recommended to use #__class__.operators "
+          "when @this type is a user-defined class (aka. #__isclass__ is :true), and only use #__operators__ "
+          "for all other types that this doesn't apply to") },
     { "__operatorids__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operatorids, NULL, NULL,
       DOC("->?S?Dint\n"
           "Enumerate the ids of all the operators overwritten by @this type as a set-like sequence\n"
