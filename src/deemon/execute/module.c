@@ -1022,6 +1022,7 @@ PRIVATE void DCALL
 module_fini(DeeModuleObject *__restrict self) {
  struct module_symbol *iter,*end;
  DREF DeeModuleObject **miter,**mend; size_t i;
+ weakref_support_fini(self);
  module_unbind(self);
  Dee_Decref(self->mo_name);
  Dee_XDecref(self->mo_root);
@@ -1146,21 +1147,6 @@ module_pclear(DeeModuleObject *__restrict self,
 #endif
 }
 
-PRIVATE int DCALL
-module_init(DeeModuleObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
- /* Clear out module-specific data. */
- memset(DeeObject_DATA(self),0,
-        sizeof(DeeModuleObject)-
-        sizeof(DeeObject));
- if (DeeArg_Unpack(argc,argv,"o:module",&self->mo_name) ||
-     DeeObject_AssertTypeExact((DeeObject *)self->mo_name,&DeeString_Type))
-     return -1;
- self->mo_bucketv = empty_module_buckets;
- Dee_Incref(self->mo_name);
- weakref_support_init(self);
- return 0;
-}
 
 INTERN struct type_gc module_gc = {
     /* .tp_clear  = */(void(DCALL *)(DeeObject *__restrict))&module_clear,
@@ -1211,7 +1197,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
                 /* .tp_ctor      = */NULL,
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&module_init,
+                /* .tp_any_ctor  = */NULL,
                 /* .tp_free      = */NULL,
                 {
                     /* .tp_instance_size = */sizeof(DeeModuleObject)

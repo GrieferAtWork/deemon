@@ -283,6 +283,7 @@ err_items:
 }
 
 PRIVATE void DCALL set_fini(Set *__restrict self) {
+ weakref_support_fini(self);
  ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
  ASSERT((self->s_elem == empty_set_items) == (self->s_size == 0));
  ASSERT(self->s_used <= self->s_size);

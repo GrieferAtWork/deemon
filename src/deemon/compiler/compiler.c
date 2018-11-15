@@ -42,7 +42,7 @@ DECL_BEGIN
 PUBLIC recursive_rwlock_t DeeCompiler_Lock = RWLOCK_INIT;
 #endif
 
-PUBLIC weakref_t DeeCompiler_Active = WEAKREF_INIT;
+PUBLIC struct weakref DeeCompiler_Active = WEAKREF_INIT;
 PRIVATE DeeCompilerObject *compiler_loaded = NULL; /* == DeeCompiler_Active */
 
 PRIVATE void *DCALL memxch(void *a, void *b, size_t num_bytes) {
@@ -280,6 +280,8 @@ err_r:
 
 PRIVATE void DCALL
 compiler_fini(DeeCompilerObject *__restrict self) {
+ weakref_support_fini(self);
+
  /* Make sure that the compiler is fully unloaded. */
  DeeCompiler_Unload(self);
 

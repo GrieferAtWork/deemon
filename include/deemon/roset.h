@@ -38,7 +38,7 @@ DECL_BEGIN
  * >> }
  * ASM:
  * >>     push  @_roset { 10, 20, 17, 19, 11, 3 }
- * >>     call  global @get_item, #0
+ * >>     push  call global @get_item, #0
  * >>     contains top, pop
  * >>     jf    1f
  * >>     print @"Well... It's one of 'em!", nl

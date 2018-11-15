@@ -345,6 +345,7 @@ err_items:
 }
 
 PRIVATE void DCALL dict_fini(Dict *__restrict self) {
+ weakref_support_fini(self);
  ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
  ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
  ASSERT(self->d_used <= self->d_size);

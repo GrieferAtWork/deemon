@@ -174,9 +174,9 @@ DDATDEF recursive_rwlock_t DeeCompiler_Lock;
  * the currently active global compiler context.
  * WARNING: Do _NOT_ attempt to write to this weak reference! _EVER_! */
 #ifdef GUARD_DEEMON_COMPILER_COMPILER_C
-DDATDEF weakref_t DeeCompiler_Active;
+DDATDEF struct weakref DeeCompiler_Active;
 #else
-DDATDEF weakref_t const DeeCompiler_Active;
+DDATDEF struct weakref const DeeCompiler_Active;
 #endif
 
 /* [0..1][lock(DeeCompiler_Lock)] The currently active compiler.

@@ -697,6 +697,7 @@ deq_deepload(Deque *__restrict self) {
 PRIVATE void DCALL
 deq_fini(Deque *__restrict self) {
  size_t i; DequeBucket *iter,*next;
+ weakref_support_fini(self);
  if (!self->d_size) return;
  iter = self->d_head;
  for (i = 0; i < self->d_head_use; ++i)

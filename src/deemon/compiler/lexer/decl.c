@@ -83,7 +83,7 @@ decl_ast_copy(struct decl_ast *__restrict self,
   goto copy_inner;
  case DAST_FUNC:
   weakref_copy(&self->da_func.f_scope,
-              (weakref_t *)&other->da_func.f_scope);
+               &other->da_func.f_scope);
   if (!self->da_func.f_ret)
       break;
   ATTR_FALLTHROUGH

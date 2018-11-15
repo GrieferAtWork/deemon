@@ -197,7 +197,7 @@ LOCAL void DCALL ptrlock_unlock(void **__restrict self) {
 
 
 PUBLIC bool DCALL
-weakref_init(weakref_t *__restrict self, DeeObject *__restrict ob) {
+weakref_init(struct weakref *__restrict self, DeeObject *__restrict ob) {
  struct weakref_list *list;
  struct weakref *next;
  ASSERT(self);
@@ -227,8 +227,8 @@ weakref_init(weakref_t *__restrict self, DeeObject *__restrict ob) {
 }
 
 PUBLIC void DCALL
-weakref_copy(weakref_t *__restrict self,
-             weakref_t *__restrict other) {
+weakref_copy(struct weakref *__restrict self,
+             struct weakref *__restrict other) {
  DREF DeeObject *obj;
  /* XXX: This should be doable without having to lock the object! */
  obj = weakref_lock(other);
@@ -241,8 +241,8 @@ weakref_copy(weakref_t *__restrict self,
 }
 
 PUBLIC void DCALL
-weakref_move(weakref_t *__restrict dst,
-             weakref_t *__restrict src) {
+weakref_move(struct weakref *__restrict dst,
+             struct weakref *__restrict src) {
  ASSERT(dst);
  ASSERT(src);
 #ifndef NDEBUG
@@ -257,9 +257,9 @@ again:
   WEAKREF_LOCK(src);
   COMPILER_READ_BARRIER();
   if likely(src->wr_obj) {
-   weakref_t *next;
+   struct weakref *next;
    LOCK_POINTER(*src->wr_pself);
-   next = (weakref_t *)GET_POINTER(src->wr_next);
+   next = (struct weakref *)GET_POINTER(src->wr_next);
    dst->wr_pself = src->wr_pself;
    dst->wr_next  = next;
    if (next) {
@@ -286,7 +286,7 @@ again:
 }
 
 PUBLIC void DCALL
-weakref_fini(weakref_t *__restrict self) {
+weakref_fini(struct weakref *__restrict self) {
  ASSERT(self);
 #ifndef NDEBUG
  ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
@@ -296,9 +296,9 @@ again:
   WEAKREF_LOCK(self);
   COMPILER_READ_BARRIER();
   if likely(self->wr_obj) {
-   weakref_t *next;
+   struct weakref *next;
    LOCK_POINTER(*self->wr_pself);
-   next = (weakref_t *)GET_POINTER(self->wr_next);
+   next = (struct weakref *)GET_POINTER(self->wr_next);
    if (next) {
     if unlikely(!WEAKREF_TRYLOCK(next)) {
      /* Prevent a deadlock. */
@@ -321,7 +321,7 @@ again:
 }
 
 PUBLIC bool DCALL
-weakref_clear(weakref_t *__restrict self) {
+weakref_clear(struct weakref *__restrict self) {
  ASSERT(self);
 #ifndef NDEBUG
  ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
@@ -331,9 +331,9 @@ again:
   WEAKREF_LOCK(self);
   COMPILER_READ_BARRIER();
   if (self->wr_obj) {
-   weakref_t *next;
+   struct weakref *next;
    LOCK_POINTER(*self->wr_pself);
-   next = (weakref_t *)GET_POINTER(self->wr_next);
+   next = (struct weakref *)GET_POINTER(self->wr_next);
    if (next) {
     if unlikely(!WEAKREF_TRYLOCK(next)) {
      /* Prevent a deadlock. */
@@ -361,10 +361,10 @@ again:
 
 
 PUBLIC bool DCALL
-weakref_set(weakref_t *__restrict self,
+weakref_set(struct weakref *__restrict self,
             DeeObject *__restrict ob) {
  struct weakref_list *new_list;
- weakref_t *next;
+ struct weakref *next;
  ASSERT(self);
  ASSERT(ob);
  ASSERT(ob->ob_refcnt);
@@ -381,7 +381,7 @@ again:
   /* Delete a previously assigned object. */
   if (self->wr_obj) {
    LOCK_POINTER(*self->wr_pself);
-   next = (weakref_t *)GET_POINTER(self->wr_next);
+   next = (struct weakref *)GET_POINTER(self->wr_next);
    if (next) {
     if unlikely(!WEAKREF_TRYLOCK(next)) {
      /* Prevent a deadlock. */
@@ -413,8 +413,14 @@ again:
  return true;
 }
 
+#ifdef __INTELLISENSE__
 PUBLIC DREF DeeObject *DCALL
-weakref_lock(weakref_t *__restrict self) {
+weakref_lock(struct weakref const *__restrict self)
+#else
+PUBLIC DREF DeeObject *DCALL
+weakref_lock(struct weakref *__restrict self)
+#endif
+{
  DREF DeeObject *result;
  ASSERT(self);
  ASSERT(IS_ALIGNED((uintptr_t)self,PTRLOCK_LOCK_MASK+1));
@@ -445,7 +451,7 @@ weakref_lock(weakref_t *__restrict self) {
 }
 
 PUBLIC bool DCALL
-weakref_bound(weakref_t *__restrict self) {
+weakref_bound(struct weakref *__restrict self) {
  DeeObject *curr;
  ASSERT(self);
  ASSERT(IS_ALIGNED((uintptr_t)self,PTRLOCK_LOCK_MASK+1));
@@ -471,7 +477,7 @@ weakref_bound(weakref_t *__restrict self) {
 }
 
 PUBLIC DREF DeeObject *DCALL
-weakref_cmpxch(weakref_t *__restrict self,
+weakref_cmpxch(struct weakref *__restrict self,
                DeeObject *old_ob,
                DeeObject *new_ob) {
  DREF DeeObject *result;
@@ -491,10 +497,10 @@ again:
    if unlikely(!old_ob) {
     WEAKREF_UNLOCK(self);
    } else {
-    weakref_t *next;
+    struct weakref *next;
     /* Delete a previously assigned object. */
     LOCK_POINTER(*self->wr_pself);
-    next = (weakref_t *)GET_POINTER(self->wr_next);
+    next = (struct weakref *)GET_POINTER(self->wr_next);
     if (next) {
      if unlikely(!WEAKREF_TRYLOCK(next)) {
       /* Prevent a deadlock. */
@@ -526,11 +532,11 @@ again:
    } else if unlikely(old_ob == new_ob) {
     WEAKREF_UNLOCK(self);
    } else {
-    weakref_t *next;
+    struct weakref *next;
     /* Delete a previously assigned object. */
     if (old_ob) {
      LOCK_POINTER(*self->wr_pself);
-     next = (weakref_t *)GET_POINTER(self->wr_next);
+     next = (struct weakref *)GET_POINTER(self->wr_next);
      if (next) {
       if unlikely(!WEAKREF_TRYLOCK(next)) {
        /* Prevent a deadlock. */
@@ -728,8 +734,9 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref,4),
 #endif
 
 
-PRIVATE void DCALL
-clear_weakrefs(struct weakref_list *__restrict list) {
+/* Finalize weakref support */
+PUBLIC void DCALL
+Dee_weakref_support_fini(struct weakref_list *__restrict list) {
  struct weakref *iter,*next;
 restart_clear_weakrefs:
  LOCK_POINTER(list->wl_nodes);
@@ -765,7 +772,11 @@ restart_clear_weakrefs:
   ATOMIC_WRITE(list->wl_nodes,next);
   goto restart_clear_weakrefs;
  }
+#if 1
+ ATOMIC_WRITE(list->wl_nodes,NULL);
+#else
  UNLOCK_POINTER(list->wl_nodes);
+#endif
 }
 
 
@@ -871,11 +882,6 @@ again:
      return;
     }
    }
-   /* Delete all weak references linked against this type level. */
-   if (has_noninherited_weakrefs(type)) {
-    ASSERT(type->tp_weakrefs >= sizeof(DeeObject));
-    clear_weakrefs((struct weakref_list *)((uintptr_t)self+type->tp_weakrefs));
-   }
    /* Drop the reference held by this type.
     * NOTE: Keep the reference to `orig_type' alive, though! */
    if ((type = type->tp_base) == NULL) break;
@@ -944,11 +950,6 @@ again:
 #endif
      return;
     }
-   }
-   /* Delete all weak references linked against this type level. */
-   if (has_noninherited_weakrefs(type)) {
-    ASSERT(type->tp_weakrefs >= sizeof(DeeObject));
-    clear_weakrefs((struct weakref_list *)((uintptr_t)self+type->tp_weakrefs));
    }
    /* Drop the reference held by this type.
     * NOTE: Keep the reference to `orig_type' alive, though! */
@@ -1828,8 +1829,8 @@ PRIVATE struct type_method object_methods[] = {
     { meth_str+1,        &object_dostr, DOC("->?Dstring\n@return: @this converted to a :string") },
     { meth_repr+1,       &object_dorepr, DOC("->?Dstring\n@return: The :string representation of @this") },
     { meth_bool+1,       &object_bool, DOC("->?Dbool\n@return: The :bool value of @this") },
-    { meth_call+2,       &object_call, DOC("(args:?tuple)->\nCall @this using the given @args :tuple") },
-    { meth_thiscall+3,   &object_thiscall, DOC("(this_arg,args:?tuple)->\nDo a this-call on @this using the given @this_arg and @args :tuple") },
+    { meth_call+2,       &object_call, DOC("(args:?Dtuple)->\nCall @this using the given @args :tuple") },
+    { meth_thiscall+3,   &object_thiscall, DOC("(this_arg,args:?Dtuple)->\nDo a this-call on @this using the given @this_arg and @args :tuple") },
     { meth_hash+1,       &object_hash, DOC("->?Dint\n@return The hash-value of @this") },
     { meth_int+1,        &object_int, DOC("->?Dint\n@return The integer-value of @this") },
     { meth_inv+1,        &object_inv, DOC("->\n@return The result of ${this.operator ~ ()}") },
@@ -2027,6 +2028,10 @@ INTDEF void DCALL class_clear(DeeTypeObject *__restrict self);
 INTDEF void DCALL class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority);
 
 PRIVATE void DCALL type_fini(DeeTypeObject *__restrict self) {
+ /* Clear weak references and check for revival. */
+ weakref_support_fini(self);
+ if (Dee_IncrefIfNotZero(self))
+     return;
  ASSERTF(self->tp_flags & TP_FHEAP,
          "Non heap-allocated type %s is being destroyed (This shouldn't happen)",
          self->tp_name);

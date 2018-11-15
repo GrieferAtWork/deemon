@@ -44,7 +44,7 @@
 #   include <malloc.h>
 #elif defined(__GNUC__)
 #   define alloca(x) __builtin_alloca(x)
-#else
+#elif !defined(__NO_has_include) && __has_include(<alloca.h>)
 #   include <alloca.h>
 #endif
 #endif /* !alloca */
@@ -63,7 +63,6 @@ struct weakref;
 
 typedef struct type_object DeeTypeObject;
 typedef struct object_     DeeObject;
-typedef struct weakref     weakref_t;
 typedef uintptr_t          dref_t;
 typedef __SSIZE_TYPE__     dssize_t;
 typedef __LONG64_TYPE__    doff_t;
@@ -294,6 +293,13 @@ struct weakref_list {
  * constructors of types implementing weakref support!) */
 #define weakref_support_init(x) ((x)->ob_weakrefs.wl_nodes = NULL)
 
+/* Finalize weakref support */
+#define weakref_support_fini(x) \
+      (__hybrid_atomic_load((x)->ob_weakrefs.wl_nodes,__ATOMIC_ACQUIRE) ? \
+      (Dee_weakref_support_fini(&(x)->ob_weakrefs)) : (void)0)
+DFUNDEF void DCALL Dee_weakref_support_fini(struct weakref_list *__restrict self);
+
+
 /* Initialize the given weak reference to NULL. */
 #define weakref_null(self) ((self)->wr_obj = NULL)
 
@@ -301,31 +307,41 @@ struct weakref_list {
  * @assume(ob != NULL);
  * @return: true:  Successfully initialized the given weak reference.
  * @return: false: The given object `ob' does not support weak referencing. */
-DFUNDEF bool DCALL weakref_init(weakref_t *__restrict self, DeeObject *__restrict ob);
-DFUNDEF void DCALL weakref_copy(weakref_t *__restrict self, weakref_t *__restrict other);
-DFUNDEF void DCALL weakref_move(weakref_t *__restrict dst, weakref_t *__restrict src);
-DFUNDEF void DCALL weakref_fini(weakref_t *__restrict self);
+DFUNDEF bool DCALL weakref_init(struct weakref *__restrict self, DeeObject *__restrict ob);
+DFUNDEF void DCALL weakref_move(struct weakref *__restrict dst, struct weakref *__restrict src);
+DFUNDEF void DCALL weakref_fini(struct weakref *__restrict self);
+#ifdef __INTELLISENSE__
+DFUNDEF void DCALL weakref_copy(struct weakref *__restrict self, struct weakref const *__restrict other);
+#else
+DFUNDEF void DCALL weakref_copy(struct weakref *__restrict self, struct weakref *__restrict other);
+#define weakref_copy(self,other) weakref_copy(self,(struct weakref *)(other))
+#endif
 
 /* Overwrite an already initialize weak reference with the given `ob'.
  * @return: true:  Successfully overwritten the weak reference.
  * @return: false: The given object `ob' does not support weak referencing
  *                 and the stored weak reference was not modified. */
-DFUNDEF bool DCALL weakref_set(weakref_t *__restrict self, DeeObject *__restrict ob);
+DFUNDEF bool DCALL weakref_set(struct weakref *__restrict self, DeeObject *__restrict ob);
 /* Clear the weak reference `self', returning true if it used to point to an object. */
-DFUNDEF bool DCALL weakref_clear(weakref_t *__restrict self);
+DFUNDEF bool DCALL weakref_clear(struct weakref *__restrict self);
 /* Lock a weak reference, returning a regular reference to the pointed-to object.
  * @return: * :   A new reference to the pointed-to object.
  * @return: NULL: Failed to lock the weak reference. */
-DFUNDEF DREF DeeObject *DCALL weakref_lock(weakref_t *__restrict self);
+#ifdef __INTELLISENSE__
+DFUNDEF DREF DeeObject *DCALL weakref_lock(struct weakref const *__restrict self);
+#else
+DFUNDEF DREF DeeObject *DCALL weakref_lock(struct weakref *__restrict self);
+#define weakref_lock(self)    weakref_lock((struct weakref *)(self))
+#endif
 /* Return the state of a snapshot of `self' currently being bound. */
-DFUNDEF bool DCALL weakref_bound(weakref_t *__restrict self);
+DFUNDEF bool DCALL weakref_bound(struct weakref *__restrict self);
 
 /* Do an atomic compare-exchange operation on the weak reference
  * and return a reference to the previously assigned object, or
  * `NULL' when none was assigned, or `ITER_DONE' when `new_ob'
  * does not support weak referencing functionality.
  * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
-DFUNDEF DREF DeeObject *DCALL weakref_cmpxch(weakref_t *__restrict self,
+DFUNDEF DREF DeeObject *DCALL weakref_cmpxch(struct weakref *__restrict self,
                                              DeeObject *old_ob,
                                              DeeObject *new_ob);
 
@@ -1091,9 +1107,9 @@ struct type_getset {
 /* Member type codes. */
 #define STRUCT_NONE        0x0000 /* Ignore offset and always return `none' (Useful for forward/backward no-op compatibility) */
 #define STRUCT_OBJECT      0x8001 /* `[0..1] DREF DeeObject *' (raise `Error.AttributeError' if `NULL') */
-#define STRUCT_WOBJECT     0x0003 /* `[0..1] weakref_t' (raise `Error.AttributeError' if locking fails) */
+#define STRUCT_WOBJECT     0x0003 /* `[0..1] struct weakref' (raise `Error.AttributeError' if locking fails) */
 #define STRUCT_OBJECT_OPT  0x8005 /* `[0..1] DREF DeeObject *' (return `none' if NULL) */
-#define STRUCT_WOBJECT_OPT 0x0007 /* `[0..1] weakref_t' (return `none' if locking fails) */
+#define STRUCT_WOBJECT_OPT 0x0007 /* `[0..1] struct weakref' (return `none' if locking fails) */
 #define STRUCT_CSTR        0x8010 /* `[0..1] char *' (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
 #define STRUCT_CSTR_OPT    0x8011 /* `[0..1] char *' (Accessible as `DeeStringObject'; return `none' when `NULL') */
 #define STRUCT_CSTR_EMPTY  0x8012 /* `[0..1] char *' (Accessible as `DeeStringObject'; return an empty string when `NULL') */
@@ -1416,7 +1432,9 @@ struct type_object {
 #define TP_FINTERHITABLE   (TP_FINTERRUPT|TP_FVARIABLE|TP_FGC) /* Set of special flags that is inherited by sub-classes. */
     uint16_t                tp_flags;    /* Type flags (Set of `TP_F*'). */
     uint16_t                tp_weakrefs; /* Offset to `offsetof(Dee?Object *,ob_weakrefs)', or 0 when not supported.
-                                          * NOTE: Must be explicitly inherited for multiple-inheritance. */
+                                          * NOTE: Must be explicitly inherited by derived types.
+                                          * NOTE: This member must explicitly be initialized during object construction
+                                          *       using `weakref_support_init' and `weakref_support_fini', during destruction. */
 #define TF_NONE             0x00000000   /* No special features. */
 #define TF_HASFILEOPS       0x80000000   /* The type implements file operations (for types typed as DeeFileType_Type). */
     uint32_t                tp_features; /* Type sub-class specific features (Set of `TF_*'). */

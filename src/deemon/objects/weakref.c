@@ -389,6 +389,11 @@ weakrefable_copy(WeakRefAble *__restrict self,
  weakref_support_init(self);
  return 0;
 }
+PRIVATE void DCALL
+weakrefable_fini(WeakRefAble *__restrict self) {
+ weakref_support_fini(self);
+}
+
 
 PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -412,7 +417,7 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
                 }
             }
         },
-        /* .tp_dtor        = */NULL,
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&weakrefable_fini,
         /* .tp_assign      = */NULL,
         /* .tp_move_assign = */NULL,
         /* .tp_deepload    = */NULL

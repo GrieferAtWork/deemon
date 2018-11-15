@@ -479,6 +479,7 @@ visitsym(struct symbol *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE void DCALL
 scope_fini(DeeScopeObject *__restrict self) {
  struct symbol **biter,**bend,*iter,*next;
+ weakref_support_fini(self);
  DeeCompiler_DelItem(self);
  bend = (biter = self->s_map)+self->s_mapa;
  for (; biter != bend; ++biter) {

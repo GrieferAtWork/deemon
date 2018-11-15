@@ -1075,7 +1075,7 @@ decl_ast_initfunc(struct decl_ast *__restrict self,
 FORCELOCAL WUNUSED DREF DeeBaseScopeObject *DCALL
 decl_ast_func_getscope(struct decl_ast const *__restrict self) {
  ASSERT(self->da_type == DAST_FUNC);
- return (DREF DeeBaseScopeObject *)weakref_lock((weakref_t *)&self->da_func.f_scope);
+ return (DREF DeeBaseScopeObject *)weakref_lock(&self->da_func.f_scope);
 }
 
 #define DAST_ATTR    0x0007 /* `list.iterator' Access a custom attribute of another declaration. */

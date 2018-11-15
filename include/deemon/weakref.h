@@ -29,7 +29,7 @@ typedef struct weakrefable_object DeeWeakRefAbleObject;
 
 struct weakref_object {
     OBJECT_HEAD
-    weakref_t wr_ref; /* The weak reference pointer. */
+    struct weakref wr_ref; /* The weak reference pointer. */
 };
 
 #define DeeWeakRef_Check(self)      DeeObject_InstanceOfExact(self,&DeeWeakRef_Type) /* `weakref' is `final' */

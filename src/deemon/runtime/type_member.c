@@ -406,7 +406,7 @@ ret_none:
   DeeObject *ob;
  CASE(STRUCT_WOBJECT):
  CASE(STRUCT_WOBJECT_OPT):
-  ob = weakref_lock(&FIELD(weakref_t));
+  ob = weakref_lock(&FIELD(struct weakref));
   if unlikely(!ob) goto handle_null_ob;
   return ob;
  CASE(STRUCT_OBJECT):
@@ -517,7 +517,7 @@ type_member_bound(struct type_member *__restrict desc,
 
  CASE(STRUCT_WOBJECT):
  CASE(STRUCT_WOBJECT_OPT):
-  return weakref_bound(&FIELD(weakref_t));
+  return weakref_bound(&FIELD(struct weakref));
 
  CASE(STRUCT_OBJECT):
  CASE(STRUCT_CSTR):
@@ -545,12 +545,12 @@ type_member_set(struct type_member *__restrict desc,
 
  case STRUCT_WOBJECT_OPT:
   if (DeeNone_Check(value)) {
-   weakref_clear(&FIELD(weakref_t));
+   weakref_clear(&FIELD(struct weakref));
    return 0;
   }
   ATTR_FALLTHROUGH
  case STRUCT_WOBJECT:
-  if unlikely(!weakref_set(&FIELD(weakref_t),value))
+  if unlikely(!weakref_set(&FIELD(struct weakref),value))
      return err_cannot_weak_reference(value);
   return 0;
 
