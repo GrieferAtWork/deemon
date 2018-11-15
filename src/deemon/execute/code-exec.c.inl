@@ -1251,7 +1251,7 @@ jump_16:
      ip.ptr += (int16_t)imm_val;
 #ifdef EXEC_SAFE
 assert_ip_bounds:
-     /* Raise an error if the new IP has been displaced out-of-bounds. */
+     /* Raise an error if the new PC has been displaced out-of-bounds. */
      if unlikely(ip.ptr <  code->co_code ||
                  ip.ptr >= code->co_code+code->co_codebytes)
         goto err_invalid_ip;
@@ -1284,12 +1284,12 @@ assert_ip_bounds:
 #ifdef EXEC_SAFE
      if (absip >= code->co_codebytes) {
       DeeError_Throwf(&DeeError_SegFault,
-                      "Invalid IP %.4I32X in absolute jmp",
+                      "Invalid PC %.4I32X in absolute jmp",
                       absip);
       HANDLE_EXCEPT();
      }
 #else
-     ASSERTF(absip < code->co_codebytes,"Invalid IP: %X",
+     ASSERTF(absip < code->co_codebytes,"Invalid PC: %X",
             (unsigned int)absip);
 #endif
      new_ip = code->co_code + absip;
@@ -3035,7 +3035,7 @@ do_setitem_c:
 #endif
      /* Trigger a breakpoint. */
      error = trigger_breakpoint(frame);
-     /* _always_ load new SP/IP from the frame to ensure that we are in a
+     /* _always_ load new PC/SP from the frame to ensure that we are in a
       * consistent state before handling potential exception, or moving on.
       * After all: The purpose of this instruction is to allow some external
       *            utility to inspect and/or modify our frame before either
@@ -3915,14 +3915,14 @@ do_setattr_this_c:
 #ifdef EXEC_SAFE
          if (absip >= code->co_codebytes) {
           DeeError_Throwf(&DeeError_SegFault,
-                          "Invalid IP %.4I32X in absolute jmp",
+                          "Invalid PC %.4I32X in absolute jmp",
                           absip);
           HANDLE_EXCEPT();
          }
          if (absstk > STACKSIZE)
              goto increase_stacksize;
 #else
-         ASSERTF(absip < code->co_codebytes,"Invalid IP: %X",
+         ASSERTF(absip < code->co_codebytes,"Invalid PC: %X",
                 (unsigned int)absip);
          ASSERT(absstk <= STACKSIZE);
 #endif
@@ -6351,7 +6351,7 @@ end_return:
  }
 end_without_finally:
 
- /* Store exit IP/SP */
+ /* Store exit PC/SP */
  frame->cf_ip = ip.ptr;
  frame->cf_sp = sp;
 
@@ -6454,7 +6454,7 @@ exec_except:
  frame->cf_sp = sp;
  { struct except_frame *iter;
    /* Use this point to extend upon tracebacks!
-    * Considering the lazy updating of code-frame SP/IP, any code
+    * Considering the lazy updating of code-frame PC/SP, any code
     * that causes an exception can no longer rely upon the validity
     * of the stack/instruction pointers it encounters on the stack.
     * (Well... It can read the start-ip register safely, as this
@@ -6496,7 +6496,7 @@ exec_except:
         (uint16_t)(sp - frame->cf_stack));
  }
 #ifndef CONFIG_NO_THREADS
- /* With the new IP address active, check for interrupts to prevent
+ /* With the new PC address active, check for interrupts to prevent
   * potential loop constructs using exceptions of all things... */
  if (DeeThread_CheckInterruptSelf(this_thread))
      goto handle_except;

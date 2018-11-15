@@ -55,7 +55,7 @@ PRIVATE char const question[] = "?" "?" "?" "?" "?" "?" "?";
 
 #define print(p,s)                do{ if ((temp = (*printer)(arg,p,s)) < 0) goto err; result += temp; }__WHILE0
 #define PRINT(s)                  print(s,COMPILER_STRLEN(s))
-#define printf(...)               do{ if ((temp = Dee_FormatPrintf(printer,arg,__VA_ARGS__)) < 0) goto err; result += temp; }__WHILE0
+#define printf(...)               do{ if ((temp = DeeFormat_Printf(printer,arg,__VA_ARGS__)) < 0) goto err; result += temp; }__WHILE0
 
 PRIVATE dssize_t DCALL
 print_sp_transition(dformatprinter printer, void *arg,
@@ -464,19 +464,19 @@ libdisasm_printclassattribute(dformatprinter printer, void *arg,
                               char const *line_prefix, uint16_t addr_size) {
  dssize_t temp,result; unsigned int i;
 #define DO(x) do{if((temp=(x))<0)goto err;result+=temp;}__WHILE0
- result = Dee_FormatPrintf(printer,arg,
+ result = DeeFormat_Printf(printer,arg,
                            "%s        attribute %k, %I16u",
                            line_prefix,self->ca_name,
                            self->ca_addr);
  if unlikely(result < 0) goto done;
  for (i = 0; i < COMPILER_LENOF(attributeflags); ++i) {
   if (!(self->ca_flag & attributeflags[i].mask)) continue;
-  DO(Dee_FormatPrintf(printer,arg,", @%s",attributeflags[i].name));
+  DO(DeeFormat_Printf(printer,arg,", @%s",attributeflags[i].name));
  }
  if (self->ca_addr >= addr_size)
-     DO(Dee_FormatPRINT(printer,arg," /* Invalid address */"));
+     DO(DeeFormat_PRINT(printer,arg," /* Invalid address */"));
  if (self->ca_flag & ~CLASS_ATTRIBUTE_FMASK)
-  DO(Dee_FormatPrintf(printer,arg," /* Invalid flags %#I16x */",self->ca_flag));
+  DO(DeeFormat_Printf(printer,arg," /* Invalid flags %#I16x */",self->ca_flag));
  DO((*printer)(arg,"\n",1));
 done:
  return result;
@@ -491,7 +491,7 @@ libdisasm_printclass(dformatprinter printer, void *arg,
  dssize_t temp,result; size_t i;
 #define DO(x) do{if((temp=(x))<0)goto err;result+=temp;}__WHILE0
  if (!line_prefix) line_prefix = "";
- result = Dee_FormatPrintf(printer,arg,
+ result = DeeFormat_Printf(printer,arg,
                            "%s.const %Iu = class %k%s{\n"
                            "%s    /* INSTANCESIZE = %I16u */\n"
                            "%s    /* CLASSSIZE    = %I16u */\n",
@@ -503,7 +503,7 @@ libdisasm_printclass(dformatprinter printer, void *arg,
  if unlikely(result < 0) goto done;
  for (i = 0; i < COMPILER_LENOF(typeflags); ++i) {
   if (!(self->cd_flags & typeflags[i].mask)) continue;
-  DO(Dee_FormatPrintf(printer,arg,
+  DO(DeeFormat_Printf(printer,arg,
                       "%s    @%s\n",
                       line_prefix,
                       typeflags[i].name));
@@ -515,23 +515,23 @@ libdisasm_printclass(dformatprinter printer, void *arg,
    if (self->cd_clsop_list[i].co_name == (uint16_t)-1)
        continue;
    if (!has_operators) {
-    DO(Dee_FormatPrintf(printer,arg,"%s    operators = {\n",line_prefix));
+    DO(DeeFormat_Printf(printer,arg,"%s    operators = {\n",line_prefix));
     has_operators = true;
    }
    info = Dee_OperatorInfo(NULL,self->cd_clsop_list[i].co_name);
    if (info) {
-    DO(Dee_FormatPrintf(printer,arg,"%s        %s = %I16u\n",
+    DO(DeeFormat_Printf(printer,arg,"%s        %s = %I16u\n",
                         line_prefix,info->oi_sname,
                         self->cd_clsop_list[i].co_addr));
    } else {
-    DO(Dee_FormatPrintf(printer,arg,"%s        %#I16x = %I16u\n",
+    DO(DeeFormat_Printf(printer,arg,"%s        %#I16x = %I16u\n",
                         line_prefix,
                         self->cd_clsop_list[i].co_name,
                         self->cd_clsop_list[i].co_addr));
    }
   }
   if (has_operators)
-      DO(Dee_FormatPrintf(printer,arg,"%s    }\n",line_prefix));
+      DO(DeeFormat_Printf(printer,arg,"%s    }\n",line_prefix));
  }
  {
   bool has_class_attributes = false;
@@ -540,13 +540,13 @@ libdisasm_printclass(dformatprinter printer, void *arg,
    attr = &self->cd_cattr_list[i];
    if (!attr->ca_name) continue;
    if (!has_class_attributes) {
-    DO(Dee_FormatPrintf(printer,arg,"%s    class_attributes = {\n",line_prefix));
+    DO(DeeFormat_Printf(printer,arg,"%s    class_attributes = {\n",line_prefix));
     has_class_attributes = true;
    }
    DO(libdisasm_printclassattribute(printer,arg,attr,line_prefix,self->cd_cmemb_size));
   }
   if (has_class_attributes)
-      DO(Dee_FormatPrintf(printer,arg,"%s    }\n",line_prefix));
+      DO(DeeFormat_Printf(printer,arg,"%s    }\n",line_prefix));
  }
  {
   bool has_instance_attributes = false;
@@ -555,7 +555,7 @@ libdisasm_printclass(dformatprinter printer, void *arg,
    attr = &self->cd_iattr_list[i];
    if (!attr->ca_name) continue;
    if (!has_instance_attributes) {
-    DO(Dee_FormatPrintf(printer,arg,"%s    instance_attributes = {\n",line_prefix));
+    DO(DeeFormat_Printf(printer,arg,"%s    instance_attributes = {\n",line_prefix));
     has_instance_attributes = true;
    }
    DO(libdisasm_printclassattribute(printer,arg,attr,line_prefix,
@@ -564,9 +564,9 @@ libdisasm_printclass(dformatprinter printer, void *arg,
                                   : self->cd_imemb_size));
   }
   if (has_instance_attributes)
-      DO(Dee_FormatPrintf(printer,arg,"%s    }\n",line_prefix));
+      DO(DeeFormat_Printf(printer,arg,"%s    }\n",line_prefix));
  }
- DO(Dee_FormatPrintf(printer,arg,"%s}\n",line_prefix));
+ DO(DeeFormat_Printf(printer,arg,"%s}\n",line_prefix));
 done:
  return result;
 err:
@@ -648,7 +648,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 #else
    line_length += 3;
 #endif
-   temp = Dee_FormatRepeat(printer,arg,' ',line_length);
+   temp = DeeFormat_Repeat(printer,arg,' ',line_length);
    if unlikely(temp < 0) goto err;
    result += temp;
   }
@@ -924,7 +924,7 @@ prefix_except_prefix:
    }
    Dee_Incref(inner_code);
    rwlock_endread(&code->co_static_lock);
-   temp = Dee_FormatPrintf(printer,arg,
+   temp = DeeFormat_Printf(printer,arg,
                            "%s.const %Iu = %s {\n",
                            line_prefix ? line_prefix : "",
                            i,
@@ -945,7 +945,7 @@ prefix_except_prefix:
                                 flags);
      DBG_ALIGNMENT_ENABLE();
      if likely(temp >= 0) {
-      temp = Dee_FormatPrintf(printer,arg,"%s}\n",line_prefix ? line_prefix : "");
+      temp = DeeFormat_Printf(printer,arg,"%s}\n",line_prefix ? line_prefix : "");
       if likely(temp >= 0)
          result += temp;
      }

@@ -872,7 +872,7 @@ DeeFile_PrintAllNl(DeeObject *__restrict self,
 PUBLIC dssize_t DCALL
 DeeFile_VPrintf(DeeObject *__restrict self,
                 char const *__restrict format, va_list args) {
- return Dee_VFormatPrintf((dformatprinter)&DeeFile_WriteAll,self,format,args);
+ return DeeFormat_VPrintf((dformatprinter)&DeeFile_WriteAll,self,format,args);
 }
 PUBLIC dssize_t
 DeeFile_Printf(DeeObject *__restrict self,

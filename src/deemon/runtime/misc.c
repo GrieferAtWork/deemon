@@ -1263,7 +1263,7 @@ PUBLIC void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args) {
  if (_Dee_dprint_enabled == 2)
      determine_is_dprint_enabled();
  if (!_Dee_dprint_enabled) return;
- if (Dee_VFormatPrintf(&debug_printer,NULL,format,args) < 0)
+ if (DeeFormat_VPrintf(&debug_printer,NULL,format,args) < 0)
      DeeError_Handled(ERROR_HANDLED_RESTORE);
 #endif
 }
@@ -1295,7 +1295,7 @@ PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
      determine_is_dprint_enabled();
  if (!_Dee_dprint_enabled) return;
  va_start(args,format);
- if (Dee_VFormatPrintf(&debug_printer,NULL,format,args) < 0)
+ if (DeeFormat_VPrintf(&debug_printer,NULL,format,args) < 0)
      DeeError_Handled(ERROR_HANDLED_RESTORE);
  va_end(args);
 #endif

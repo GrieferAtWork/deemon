@@ -99,7 +99,7 @@ err:
 }
 
 
-/* Construct a tuple `(sym.IP,sym.SP)' for the given `sym' */
+/* Construct a tuple `(sym.PC,sym.SP)' for the given `sym' */
 PRIVATE DREF DeeObject *DCALL
 pack_target_tuple(struct asm_sym *__restrict sym) {
  DREF DeeObject *ri_ip;
@@ -307,9 +307,9 @@ err_jump_table:
   /* With the jump table now generated, generate code like this:
    * >>    push     const @<jump_table>            // expr, jump_table
    * >>    swap                                    // jump_table, expr
-   * >>    push     const @(default.IP,default.SP) // jump_table, expr, default
+   * >>    push     const @(default.PC,default.SP) // jump_table, expr, default
    * >>    callattr top, @"get", #2                // target
-   * >>    unpack   pop, #2                        // target.IP, target.SP
+   * >>    unpack   pop, #2                        // target.PC, target.SP
    * >>    jmp      pop, #pop */                   // ...
   if (asm_allowconst(jump_table)) {
    jumptable_cid = asm_newconst(jump_table);
@@ -339,7 +339,7 @@ err_jump_table:
   if unlikely(get_cid < 0) goto err;
   if (asm_gcallattr_const((uint16_t)get_cid,2)) goto err; /* target */
   case_unpack_addr = asm_ip();
-  if (asm_gunpack(2)) goto err; /* target.IP, target.SP */
+  if (asm_gunpack(2)) goto err; /* target.PC, target.SP */
   if (asm_gjmp_pop_pop()) goto err;
   stack_size_after_jump = current_assembler.a_stackcur;
  }
@@ -369,14 +369,14 @@ do_generate_block:
    * OLD:
    * >>    push     const @<jump_table>            // expr, jump_table
    * >>    swap                                    // jump_table, expr
-   * >>    push     const @(default.IP,default.SP) // jump_table, expr, default
+   * >>    push     const @(default.PC,default.SP) // jump_table, expr, default
    * >>    callattr top, @"get", #2                // target
-   * >>    unpack   pop, #2                        // target.IP, target.SP
+   * >>    unpack   pop, #2                        // target.PC, target.SP
    * >>    jmp      pop, #pop                      // ...
    * NEW:
    * >>    push     const @<jump_table>            // expr, jump_table
    * >>    swap                                    // jump_table, expr
-   * >>    push     const @default.IP              // jump_table, expr, default
+   * >>    push     const @default.PC              // jump_table, expr, default
    * >>    callattr top, @"get", #2                // target
    * >>    jmp      pop                            // ...
    */

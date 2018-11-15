@@ -740,26 +740,26 @@ INTERN dssize_t DCALL
 bytes_print_repr(Bytes *__restrict self, dformatprinter printer, void *arg) {
  dssize_t temp,result;
 #if 1
- temp = Dee_FormatQuote8(printer,arg,
+ temp = DeeFormat_Quote8(printer,arg,
                          DeeBytes_DATA(self),
                          DeeBytes_SIZE(self),
                          FORMAT_QUOTE_FNORMAL);
  if unlikely(temp < 0)
     goto err;
  result = temp;
- temp = Dee_FormatPRINT(printer,arg,".bytes()");
+ temp = DeeFormat_PRINT(printer,arg,".bytes()");
 #else
- temp = Dee_FormatPRINT(printer,arg,"bytes(");
+ temp = DeeFormat_PRINT(printer,arg,"bytes(");
  if unlikely(temp < 0) goto err;
  result = temp;
- temp = Dee_FormatQuote8(printer,arg,
+ temp = DeeFormat_Quote8(printer,arg,
                          DeeBytes_DATA(self),
                          DeeBytes_SIZE(self),
                          FORMAT_QUOTE_FNORMAL);
  if unlikely(temp < 0)
     goto err;
  result += temp;
- temp = Dee_FormatPRINT(printer,arg,")");
+ temp = DeeFormat_PRINT(printer,arg,")");
 #endif
  if unlikely(temp < 0) goto err;
  return result + temp;

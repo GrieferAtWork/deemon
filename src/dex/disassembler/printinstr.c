@@ -685,7 +685,7 @@ libdisasm_printconst(dformatprinter printer, void *arg,
   if (cid >= code->co_staticc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
-   return Dee_FormatPrintf(printer,arg,"const %u /* invalid cid */",(unsigned int)cid);
+   return DeeFormat_Printf(printer,arg,"const %u /* invalid cid */",(unsigned int)cid);
   }
   rwlock_read(&code->co_static_lock);
   constval = code->co_staticv[cid];
@@ -718,11 +718,11 @@ libdisasm_printconst(dformatprinter printer, void *arg,
   if (!DeeCode_CheckExact(constval) &&
       !DeeFunction_CheckExact(constval) &&
       !DeeClassDescriptor_Check(constval))
-       return Dee_FormatPrintf(printer,arg,PREFIX_CONSTANT "%R",constval);
+       return DeeFormat_Printf(printer,arg,PREFIX_CONSTANT "%R",constval);
   Dee_Decref(constval);
  }
 print_generic:
- return Dee_FormatPrintf(printer,arg,"const %u",(unsigned int)cid);
+ return DeeFormat_Printf(printer,arg,"const %u",(unsigned int)cid);
 }
 PRIVATE dssize_t DCALL
 libdisasm_printstatic(dformatprinter printer, void *arg,
@@ -735,11 +735,11 @@ libdisasm_printstatic(dformatprinter printer, void *arg,
  if (code) {
   char *name;
   if ((name = DeeCode_GetSSymbolName((DeeObject *)code,sid)) != NULL)
-      return Dee_FormatPrintf(printer,arg,"static " PREFIX_VARNAME "%s",name);
+      return DeeFormat_Printf(printer,arg,"static " PREFIX_VARNAME "%s",name);
   if (sid >= code->co_staticc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
-   return Dee_FormatPrintf(printer,arg,"static %u /* invalid sid */",(unsigned int)sid);
+   return DeeFormat_Printf(printer,arg,"static %u /* invalid sid */",(unsigned int)sid);
   }
 #if 0
   if (readonly && !(flags & PCODE_FNOARGCOMMENT)) {
@@ -748,12 +748,12 @@ libdisasm_printstatic(dformatprinter printer, void *arg,
    init = code->co_staticv[sid];
    Dee_Incref(init);
    rwlock_endread(&code->co_static_lock);
-   return Dee_FormatPrintf(printer,arg,"static %u /* %R */",sid,init);
+   return DeeFormat_Printf(printer,arg,"static %u /* %R */",sid,init);
   }
 #endif
  }
 print_generic:
- return Dee_FormatPrintf(printer,arg,"static %u",(unsigned int)sid);
+ return DeeFormat_Printf(printer,arg,"static %u",(unsigned int)sid);
 }
 PRIVATE dssize_t DCALL
 libdisasm_printlocal(dformatprinter printer, void *arg,
@@ -764,16 +764,16 @@ libdisasm_printlocal(dformatprinter printer, void *arg,
   if (ddi && lid < ddi->rs_xregs.dx_lcnamc) {
    char *name;
    if ((name = DeeCode_GetDDIString((DeeObject *)code,ddi->rs_xregs.dx_lcnamv[lid])) != NULL)
-        return Dee_FormatPrintf(printer,arg,"local " PREFIX_VARNAME "%s",name);
+        return DeeFormat_Printf(printer,arg,"local " PREFIX_VARNAME "%s",name);
   } 
   if (lid >= code->co_localc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
-   return Dee_FormatPrintf(printer,arg,"local %u /* invalid lid */",(unsigned int)lid);
+   return DeeFormat_Printf(printer,arg,"local %u /* invalid lid */",(unsigned int)lid);
   }
  }
 print_generic:
- return Dee_FormatPrintf(printer,arg,"local %u",(unsigned int)lid);
+ return DeeFormat_Printf(printer,arg,"local %u",(unsigned int)lid);
 }
 PRIVATE dssize_t DCALL
 libdisasm_printstack(dformatprinter printer, void *arg,
@@ -783,18 +783,18 @@ libdisasm_printstack(dformatprinter printer, void *arg,
   if (soff >= DeeCode_StackDepth(code)) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
-   return Dee_FormatPrintf(printer,arg,"%s%I16u /* invalid stack-offset */",
+   return DeeFormat_Printf(printer,arg,"%s%I16u /* invalid stack-offset */",
                            is_prefix ? "stack #" : "#",soff);
   }
   /* Use DDI information to lookup the name of the variable. */
   if (ddi && soff < MIN(ddi->rs_xregs.dx_base.dr_usp,ddi->rs_xregs.dx_spnama)) {
    char *name;
    if ((name = DeeCode_GetDDIString((DeeObject *)code,ddi->rs_xregs.dx_spnamv[soff])) != NULL)
-        return Dee_FormatPrintf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
+        return DeeFormat_Printf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
   } 
  }
 print_generic:
- return Dee_FormatPrintf(printer,arg,"%s%I16u",
+ return DeeFormat_Printf(printer,arg,"%s%I16u",
                          is_prefix ? "stack #" : "#",soff);
 }
 PRIVATE dssize_t DCALL
@@ -806,7 +806,7 @@ libdisasm_printrelstack(dformatprinter printer, void *arg,
  if (!sp_sub) goto invalid_offset;
  if (stacksz == (uint16_t)-1) {
 print_generic:
-  return Dee_FormatPrintf(printer,arg,"#SP - %I16u",sp_sub);
+  return DeeFormat_Printf(printer,arg,"#SP - %I16u",sp_sub);
  }
  if (sp_sub > stacksz) goto invalid_offset;
  soff = stacksz - sp_sub;
@@ -819,19 +819,19 @@ print_generic:
                                       ddi->rs_xregs.dx_spnamv[soff]);
    if (name) {
     if (!(flags & PCODE_FALTCOMMENT))
-        return Dee_FormatPrintf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
-    return Dee_FormatPrintf(printer,arg,"stack " PREFIX_VARNAME "%s /* #%I16u / #SP - %I16u */",
+        return DeeFormat_Printf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
+    return DeeFormat_Printf(printer,arg,"stack " PREFIX_VARNAME "%s /* #%I16u / #SP - %I16u */",
                             name,soff,sp_sub);
    }
   } 
  }
  if (!(flags & PCODE_FALTCOMMENT))
-       return Dee_FormatPrintf(printer,arg,"#%I16u",soff);
- return Dee_FormatPrintf(printer,arg,"#%I16u /* #SP - %I16u */",soff,sp_sub);
+       return DeeFormat_Printf(printer,arg,"#%I16u",soff);
+ return DeeFormat_Printf(printer,arg,"#%I16u /* #SP - %I16u */",soff,sp_sub);
 invalid_offset:
  if (flags & PCODE_FNOBADCOMMENT)
      goto print_generic;
- return Dee_FormatPrintf(printer,arg,"#SP - %I16u /* invalid stack-offset */",sp_sub);
+ return DeeFormat_Printf(printer,arg,"#SP - %I16u /* invalid stack-offset */",sp_sub);
 }
 PRIVATE dssize_t DCALL
 libdisasm_printglobal(dformatprinter printer, void *arg,
@@ -842,13 +842,13 @@ libdisasm_printglobal(dformatprinter printer, void *arg,
   if (gid >= code->co_module->mo_globalc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
-   return Dee_FormatPrintf(printer,arg,"global %u /* invalid gid */",(unsigned int)gid);
+   return DeeFormat_Printf(printer,arg,"global %u /* invalid gid */",(unsigned int)gid);
   }
   name = DeeModule_GlobalName((DeeObject *)code->co_module,gid);
-  if (name) return Dee_FormatPrintf(printer,arg,"global " PREFIX_VARNAME "%s",name);
+  if (name) return DeeFormat_Printf(printer,arg,"global " PREFIX_VARNAME "%s",name);
  }
 print_generic:
- return Dee_FormatPrintf(printer,arg,"global %u",(unsigned int)gid);
+ return DeeFormat_Printf(printer,arg,"global %u",(unsigned int)gid);
 }
 PRIVATE dssize_t DCALL
 libdisasm_printmodule(dformatprinter printer, void *arg,
@@ -859,13 +859,13 @@ libdisasm_printmodule(dformatprinter printer, void *arg,
   if (mid >= code->co_module->mo_importc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
-   return Dee_FormatPrintf(printer,arg,"module %u /* invalid mid */",(unsigned int)mid);
+   return DeeFormat_Printf(printer,arg,"module %u /* invalid mid */",(unsigned int)mid);
   }
   name = code->co_module->mo_importv[mid]->mo_name;
-  return Dee_FormatPrintf(printer,arg,"module " PREFIX_VARNAME "%k",name);
+  return DeeFormat_Printf(printer,arg,"module " PREFIX_VARNAME "%k",name);
  }
 print_generic:
- return Dee_FormatPrintf(printer,arg,"module %u",(unsigned int)mid);
+ return DeeFormat_Printf(printer,arg,"module %u",(unsigned int)mid);
 }
 PRIVATE dssize_t DCALL
 libdisasm_printextern(dformatprinter printer, void *arg,
@@ -877,23 +877,23 @@ libdisasm_printextern(dformatprinter printer, void *arg,
   if (mid >= code->co_module->mo_importc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
-   return Dee_FormatPrintf(printer,arg,"extern %u:%u /* invalid mid */",(unsigned int)mid,(unsigned int)gid);
+   return DeeFormat_Printf(printer,arg,"extern %u:%u /* invalid mid */",(unsigned int)mid,(unsigned int)gid);
   }
   module = code->co_module->mo_importv[mid];
   if (gid >= module->mo_globalc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_unknown_name;
-   return Dee_FormatPrintf(printer,arg,"extern " PREFIX_VARNAME "%k:%u /* invalid gid */",module->mo_name,(unsigned int)gid);
+   return DeeFormat_Printf(printer,arg,"extern " PREFIX_VARNAME "%k:%u /* invalid gid */",module->mo_name,(unsigned int)gid);
   }
   name = DeeModule_GlobalName((DeeObject *)module,gid);
   if (!name) {
 print_unknown_name:
-   return Dee_FormatPrintf(printer,arg,"extern " PREFIX_VARNAME "%k:%u",module->mo_name,(unsigned int)gid);
+   return DeeFormat_Printf(printer,arg,"extern " PREFIX_VARNAME "%k:%u",module->mo_name,(unsigned int)gid);
   }
-  return Dee_FormatPrintf(printer,arg,"extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s",module->mo_name,name);
+  return DeeFormat_Printf(printer,arg,"extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s",module->mo_name,name);
  }
 print_generic:
- return Dee_FormatPrintf(printer,arg,"extern %u:%u",(unsigned int)mid,(unsigned int)gid);
+ return DeeFormat_Printf(printer,arg,"extern %u:%u",(unsigned int)mid,(unsigned int)gid);
 }
 PRIVATE dssize_t DCALL
 libdisasm_printref(dformatprinter printer, void *arg,
@@ -902,16 +902,16 @@ libdisasm_printref(dformatprinter printer, void *arg,
  if (code) {
   char *name;
   if ((name = DeeCode_GetRSymbolName((DeeObject *)code,rid)) != NULL)
-      return Dee_FormatPrintf(printer,arg,"ref " PREFIX_VARNAME "%s",name);
+      return DeeFormat_Printf(printer,arg,"ref " PREFIX_VARNAME "%s",name);
   if (rid >= code->co_refc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
-   return Dee_FormatPrintf(printer,arg,"ref %u /* invalid rid */",(unsigned int)rid);
+   return DeeFormat_Printf(printer,arg,"ref %u /* invalid rid */",(unsigned int)rid);
   }
       
  }
 print_generic:
- return Dee_FormatPrintf(printer,arg,"ref %u",(unsigned int)rid);
+ return DeeFormat_Printf(printer,arg,"ref %u",(unsigned int)rid);
 }
 PRIVATE dssize_t DCALL
 libdisasm_printarg(dformatprinter printer, void *arg,
@@ -920,13 +920,13 @@ libdisasm_printarg(dformatprinter printer, void *arg,
  if (code) {
   char *name = DeeCode_GetASymbolName((DeeObject *)code,aid);
   if (name)
-      return Dee_FormatPrintf(printer,arg,"arg " PREFIX_VARNAME "%s",name);
+      return DeeFormat_Printf(printer,arg,"arg " PREFIX_VARNAME "%s",name);
   if (aid == code->co_argc_max && (code->co_flags & CODE_FVARARGS))
       return (*printer)(arg,"varargs",COMPILER_STRLEN("varargs"));
   if (aid >= code->co_argc_max && !(flags & PCODE_FNOBADCOMMENT))
-      return Dee_FormatPrintf(printer,arg,"arg %u /* invalid aid */",(unsigned int)aid);
+      return DeeFormat_Printf(printer,arg,"arg %u /* invalid aid */",(unsigned int)aid);
  }
- return Dee_FormatPrintf(printer,arg,"arg %u",(unsigned int)aid);
+ return DeeFormat_Printf(printer,arg,"arg %u",(unsigned int)aid);
 }
 PRIVATE dssize_t DCALL
 libdisasm_printprefix(dformatprinter printer, void *arg,
@@ -1021,7 +1021,7 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
 #define INVOKE(expr)              do{ if ((temp = expr) < 0) goto err; result += temp; }__WHILE0
 #define print(p,s)                INVOKE((*printer)(arg,p,s))
 #define PRINT(s)                  print(s,COMPILER_STRLEN(s))
-#define printf(...)               INVOKE(Dee_FormatPrintf(printer,arg,__VA_ARGS__))
+#define printf(...)               INVOKE(DeeFormat_Printf(printer,arg,__VA_ARGS__))
  ip_t iter;
  dssize_t temp,result = 0;
  uint16_t opcode,imm,imm2;

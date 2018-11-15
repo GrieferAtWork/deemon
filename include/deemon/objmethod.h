@@ -194,9 +194,9 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
  * happens, but return the positive sum of all printer calls on success (which
  * unless nothing was printed, is also non-zero).
  * This can easily be fixed by replacing:
- * >> if (Dee_FormatPrintf(...)) goto err;
+ * >> if (DeeFormat_Printf(...)) goto err;
  * with this:
- * >> if (Dee_FormatPrintf(...) < 0) goto err;
+ * >> if (DeeFormat_Printf(...) < 0) goto err;
  */
 #ifdef NDEBUG
 #define DeeCMethod_CallFunc(fun,argc,argv)              (*fun)(argc,argv)

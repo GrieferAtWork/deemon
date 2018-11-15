@@ -802,11 +802,11 @@ DeeString_PrintRepr(DeeObject *__restrict self,
  str = DeeString_WSTR(self);
  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
  CASE_WIDTH_1BYTE:
-  return Dee_FormatQuote8(printer,arg,(uint8_t *)str,WSTR_LENGTH(str),flags);
+  return DeeFormat_Quote8(printer,arg,(uint8_t *)str,WSTR_LENGTH(str),flags);
  CASE_WIDTH_2BYTE:
-  return Dee_FormatQuote16(printer,arg,(uint16_t *)str,WSTR_LENGTH(str),flags);
+  return DeeFormat_Quote16(printer,arg,(uint16_t *)str,WSTR_LENGTH(str),flags);
  CASE_WIDTH_4BYTE:
-  return Dee_FormatQuote32(printer,arg,(uint32_t *)str,WSTR_LENGTH(str),flags);
+  return DeeFormat_Quote32(printer,arg,(uint32_t *)str,WSTR_LENGTH(str),flags);
  }
 }
 
@@ -4147,7 +4147,7 @@ err:
 
 
 PUBLIC dssize_t DCALL
-Dee_FormatPutc(dformatprinter printer, void *arg, uint32_t ch) {
+DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
  char utf8_repr[UTF8_MAX_MBLEN];
  size_t utf8_len;
  if (printer == (dformatprinter)&unicode_printer_print) {
@@ -5221,7 +5221,7 @@ PUBLIC int
 }
 
 PUBLIC dssize_t DCALL
-Dee_FormatPrint8(dformatprinter printer, void *arg,
+DeeFormat_Print8(dformatprinter printer, void *arg,
                  uint8_t const *__restrict text,
                  size_t textlen) {
  uint8_t const *iter,*end,*flush_start;
@@ -5259,7 +5259,7 @@ err:
 }
 
 PUBLIC dssize_t DCALL
-Dee_FormatPrint16(dformatprinter printer, void *arg,
+DeeFormat_Print16(dformatprinter printer, void *arg,
                   uint16_t const *__restrict text,
                   size_t textlen) {
  dssize_t temp,result = 0; uint8_t utf8_buffer[3]; size_t utf8_length;
@@ -5290,7 +5290,7 @@ err:
 }
 
 PUBLIC dssize_t DCALL
-Dee_FormatPrint32(dformatprinter printer, void *arg,
+DeeFormat_Print32(dformatprinter printer, void *arg,
                   uint32_t const *__restrict text, size_t textlen) {
  dssize_t temp,result = 0; size_t utf8_length;
  uint8_t utf8_buffer[UTF8_MAX_MBLEN];

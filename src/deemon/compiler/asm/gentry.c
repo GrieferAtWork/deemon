@@ -71,7 +71,7 @@ INTERN int
   * >> ITEM = TOP.NEXT()
   * >> IF ITEM !IS BOUND THEN
   * >>     POP()
-  * >>     JUMP IP+IMM
+  * >>     JUMP PC+IMM
   * >> FI
   * >> PUSH(ITEM)
   * Meaning it's more of a push_next_or_pop_and_jmp

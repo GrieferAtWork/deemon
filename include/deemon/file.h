@@ -314,7 +314,7 @@ DFUNDEF DREF DeeObject *DCALL DeeFile_ReadText(DeeObject *__restrict self, size_
 DFUNDEF DREF DeeObject *DCALL DeeFile_PReadText(DeeObject *__restrict self, size_t max_length, dpos_t pos, bool readall);
 
 
-/* HINT: `DeeFile_Printf' is literally implemented as `Dee_FormatPrintf(&DeeFile_WriteAll,self,format,...)' */
+/* HINT: `DeeFile_Printf' is literally implemented as `DeeFormat_Printf(&DeeFile_WriteAll,self,format,...)' */
 DFUNDEF dssize_t DeeFile_Printf(DeeObject *__restrict self, char const *__restrict format, ...);
 DFUNDEF dssize_t DCALL DeeFile_VPrintf(DeeObject *__restrict self, char const *__restrict format, va_list args);
 

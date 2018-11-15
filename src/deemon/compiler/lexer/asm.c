@@ -404,13 +404,13 @@ PRIVATE /*REF*/struct TPPString *DCALL parse_brace_text(void) {
     /* Insert an automatic DDI directive, describing
      * the location of this instruction token. */
     if (loc.l_file == last_file) {
-     error = Dee_FormatPrintf(&tpp_string_printer_print,&printer,
+     error = DeeFormat_Printf(&tpp_string_printer_print,&printer,
                               ".ddi %d,%d;\t",
                               loc.l_line+1,
                               loc.l_col+1);
     } else {
      last_file = loc.l_file;
-     error = Dee_FormatPrintf(&tpp_string_printer_print,&printer,
+     error = DeeFormat_Printf(&tpp_string_printer_print,&printer,
                               ".ddi %$q,%d,%d;\t",
                               loc.l_file->f_namesize,
                               loc.l_file->f_name,

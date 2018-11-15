@@ -163,8 +163,8 @@ struct except_handler {
 struct ddi_regs {
     code_addr_t          dr_uip;    /* The current user instruction. */
     uint16_t             dr_usp;    /* The current stack alignment/depth.
-                                     * NOTE: If a debugger chooses to adjust the IP to manually jump to `dr_uip',
-                                     *       it must also match a stack depth of `dr_usp' before starting/continuing
+                                     * NOTE: If a debugger chooses to adjust PC to manually jump to `dr_uip', it
+                                     *       must also match a stack depth of `dr_usp' before starting/continuing
                                      *       execution of code.
                                      *       Otherwise, the interpreter is not in a consistent state and
                                      *       will either crash (FAST-mode), or throw an error (SAFE-mode). */
@@ -550,7 +550,7 @@ DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafeAltStack(struct code_
  *                 The execution frame that triggered the breakpoint.
  *                 Anything and everything about the state described
  *                 within this frame is subject to change by this
- *                 function, including IP/SP, as well as the running
+ *                 function, including PC/SP, as well as the running
  *                 code itself.
  *                  - The stack pointer is the stack location as
  *                    it is at the breakpoint instruction, as well
@@ -581,9 +581,9 @@ INTDEF int DCALL trigger_breakpoint(struct code_frame *__restrict frame);
                                           *                   or some other instruction expecting to find a specific type of object.
                                           *   - Changing the running assembly in an unpredictable manner.
                                           *     - Obviously changing the assembly can be dangerous...
-                                          *   - Changing the running IP
-                                          *     - The code located at the new IP may expect a different stack-depth.
-                                          * WARNING: Any sort of changes made to SP/IP must be validated by the caller.
+                                          *   - Changing the running PC
+                                          *     - The code located at the new PC may expect a different stack-depth.
+                                          * WARNING: Any sort of changes made to PC/SP must be validated by the caller.
                                           *          The breakpoint instruction will not perform such checks, as it is
                                           *          expected that whoever hooked the breakpoint knows what they're doing. */
 #define TRIGGER_BREAKPOINT_RETURN     2  /* Yield/Return from the calling function normally.

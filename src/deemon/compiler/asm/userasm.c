@@ -109,7 +109,7 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
  case OPERAND_CLASS_DISP16_HALF:
   if (self->io_intexpr.ie_sym) {
    struct TPPKeyword *name;
-   char const *mode = ".IP";
+   char const *mode = ".PC";
    char const *suffix = " + ";
    name = self->io_intexpr.ie_sym->as_uname;
    if (self->io_intexpr.ie_rel == ASM_OVERLOAD_FSTKABS ||

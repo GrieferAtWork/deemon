@@ -314,7 +314,7 @@ LOCAL size_t DCALL strnlen32(uint32_t const *__restrict str, size_t maxlen) {
 
 
 PUBLIC dssize_t DCALL
-Dee_VFormatPrintf(dformatprinter printer, void *arg,
+DeeFormat_VPrintf(dformatprinter printer, void *arg,
                   char const *__restrict format, va_list args) {
  dssize_t result = 0,temp;
  char const *flush_start; char ch;
@@ -507,7 +507,7 @@ nextfmt:
   {
    print_ch = (uint32_t)va_arg(args,uint64_t);
   }
-  temp = Dee_FormatPutc(printer,arg,print_ch);
+  temp = DeeFormat_Putc(printer,arg,print_ch);
   if unlikely(temp < 0) goto err;
   result += temp;
  } break;
@@ -536,12 +536,12 @@ nextfmt:
   if (!(flags & F_PREFIX)) print("\'",1);
   if (print_ch <= 0xff) {
    uint8_t ch8 = (uint8_t)print_ch;
-   temp = Dee_FormatQuote8(printer,arg,&ch8,1,FORMAT_QUOTE_FPRINTRAW);
+   temp = DeeFormat_Quote8(printer,arg,&ch8,1,FORMAT_QUOTE_FPRINTRAW);
   } else if (print_ch <= 0xffff) {
    uint16_t ch16 = (uint16_t)print_ch;
-   temp = Dee_FormatQuote16(printer,arg,&ch16,1,FORMAT_QUOTE_FPRINTRAW);
+   temp = DeeFormat_Quote16(printer,arg,&ch16,1,FORMAT_QUOTE_FPRINTRAW);
   } else {
-   temp = Dee_FormatQuote32(printer,arg,&print_ch,1,FORMAT_QUOTE_FPRINTRAW);
+   temp = DeeFormat_Quote32(printer,arg,&print_ch,1,FORMAT_QUOTE_FPRINTRAW);
   }
   if unlikely(temp < 0) goto err;
   result += temp;
@@ -562,7 +562,7 @@ nextfmt:
    if (flags&F_FIXBUF) string_length = precision;
    else string_length = strnlen(string,precision);
    if (ch == 'q') {
-    temp = Dee_FormatQuote(printer,arg,string,string_length,
+    temp = DeeFormat_Quote(printer,arg,string,string_length,
 #if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
                            flags&F_PREFIX
 #else
@@ -581,7 +581,7 @@ nextfmt:
    if (flags&F_FIXBUF) string_length = precision;
    else string_length = strnlen(string,precision);
    if (ch == 'q') {
-    temp = Dee_FormatQuote8(printer,arg,
+    temp = DeeFormat_Quote8(printer,arg,
                            (uint8_t *)string,string_length,
 #if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
                             flags&F_PREFIX
@@ -592,7 +592,7 @@ nextfmt:
 #endif
                             );
    } else {
-    temp = Dee_FormatPrint8(printer,arg,(uint8_t *)string,string_length);
+    temp = DeeFormat_Print8(printer,arg,(uint8_t *)string,string_length);
    }
    break;
 
@@ -601,7 +601,7 @@ nextfmt:
    if (flags&F_FIXBUF) string_length = precision;
    else string_length = strnlen16((uint16_t *)string,precision);
    if (ch == 'q') {
-    temp = Dee_FormatQuote16(printer,arg,
+    temp = DeeFormat_Quote16(printer,arg,
                             (uint16_t *)string,string_length,
 #if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
                              flags&F_PREFIX
@@ -612,7 +612,7 @@ nextfmt:
 #endif
                              );
    } else {
-    temp = Dee_FormatPrint16(printer,arg,(uint16_t *)string,string_length);
+    temp = DeeFormat_Print16(printer,arg,(uint16_t *)string,string_length);
    }
    break;
 
@@ -621,7 +621,7 @@ nextfmt:
    if (flags&F_FIXBUF) string_length = precision;
    else string_length = strnlen32((uint32_t *)string,precision);
    if (ch == 'q') {
-    temp = Dee_FormatQuote32(printer,arg,
+    temp = DeeFormat_Quote32(printer,arg,
                             (uint32_t *)string,string_length,
 #if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
                              flags&F_PREFIX
@@ -632,7 +632,7 @@ nextfmt:
 #endif
                              );
    } else {
-    temp = Dee_FormatPrint32(printer,arg,(uint32_t *)string,string_length);
+    temp = DeeFormat_Print32(printer,arg,(uint32_t *)string,string_length);
    }
    break;
 
@@ -752,12 +752,12 @@ err_finish:
 
 
 PUBLIC dssize_t
-Dee_FormatPrintf(dformatprinter printer, void *arg,
+DeeFormat_Printf(dformatprinter printer, void *arg,
                  char const *__restrict format, ...) {
  dssize_t result;
  va_list args;
  va_start(args,format);
- result = Dee_VFormatPrintf(printer,arg,format,args);
+ result = DeeFormat_VPrintf(printer,arg,format,args);
  va_end(args);
  return result;
 }
@@ -766,7 +766,7 @@ Dee_FormatPrintf(dformatprinter printer, void *arg,
 
 #define tooct(c) ('0'+(char)(unsigned char)(c))
 PUBLIC dssize_t DCALL
-Dee_FormatQuote8(dformatprinter printer, void *arg,
+DeeFormat_Quote8(dformatprinter printer, void *arg,
                  uint8_t const *__restrict text, size_t textlen,
                  unsigned int flags) {
  char encoded_text[6]; size_t encoded_text_size;
@@ -892,7 +892,7 @@ err:
 }
 
 PUBLIC dssize_t DCALL
-Dee_FormatQuote16(dformatprinter printer, void *arg,
+DeeFormat_Quote16(dformatprinter printer, void *arg,
                   uint16_t const *__restrict text, size_t textlen,
                   unsigned int flags) {
  char encoded_text[7]; size_t encoded_text_size;
@@ -1026,7 +1026,7 @@ err:
  return temp;
 }
 PUBLIC dssize_t DCALL
-Dee_FormatQuote32(dformatprinter printer, void *arg,
+DeeFormat_Quote32(dformatprinter printer, void *arg,
                   uint32_t const *__restrict text, size_t textlen,
                   unsigned int flags) {
  char encoded_text[12]; size_t encoded_text_size;
@@ -1226,7 +1226,7 @@ err:
 }
 
 PUBLIC dssize_t DCALL
-Dee_FormatQuote(dformatprinter printer, void *arg,
+DeeFormat_Quote(dformatprinter printer, void *arg,
                 /*utf-8*/char const *__restrict text, size_t textlen,
                 unsigned int flags) {
  char encoded_text[12]; size_t encoded_text_size;
@@ -1431,8 +1431,8 @@ err:
 
 
 PUBLIC dssize_t DCALL
-Dee_FormatRepeat(dformatprinter printer, void *arg,
-                 char ch, size_t count) {
+DeeFormat_Repeat(/*ascii*/dformatprinter printer, void *arg,
+                 /*ascii*/char ch, size_t count) {
  char buffer[128];
  dssize_t temp,result;
  if (count <= sizeof(buffer)) {
@@ -1456,7 +1456,7 @@ err:
 
 
 DFUNDEF dssize_t DCALL
-Dee_FormatRepeatUtf8(dformatprinter printer, void *arg,
+DeeFormat_RepeatUtf8(dformatprinter printer, void *arg,
                      /*utf-8*/char const *__restrict str,
                      size_t length, size_t total_characters) {
  size_t utf8_length,i;
@@ -1470,7 +1470,7 @@ Dee_FormatRepeatUtf8(dformatprinter printer, void *arg,
   *       passing a valid UTF-8 string, so us not operating
   *       correctly is on them, too. */
  if (length == 1)
-     return Dee_FormatRepeat(printer,arg,str[0],total_characters);
+     return DeeFormat_Repeat(printer,arg,str[0],total_characters);
  utf8_length = length;
  for (i = 0; i < length; ++i) {
   uint8_t ch = (uint8_t)str[i];
@@ -1537,7 +1537,7 @@ snprintf_callback(struct snprintf_data *__restrict arg,
 PUBLIC char *DCALL
 Dee_vsprintf(char *__restrict buffer,
              char const *__restrict format, va_list args) {
- if unlikely(Dee_VFormatPrintf((dformatprinter)&sprintf_callback,
+ if unlikely(DeeFormat_VPrintf((dformatprinter)&sprintf_callback,
                                (void *)&buffer,format,args) < 0)
      return NULL;
  *buffer = '\0';
@@ -1549,7 +1549,7 @@ Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
  struct snprintf_data data;
  data.buf = buffer;
  data.siz = bufsize;
- if unlikely(Dee_VFormatPrintf((dformatprinter)&snprintf_callback,
+ if unlikely(DeeFormat_VPrintf((dformatprinter)&snprintf_callback,
                                &data,format,args) < 0)
      return NULL;
  if (data.siz) *data.buf = '\0';

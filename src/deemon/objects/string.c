@@ -479,19 +479,19 @@ string_repr(DeeObject *__restrict self) {
  str.ptr = DeeString_WSTR(self);
  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
  CASE_WIDTH_1BYTE:
-  if unlikely(Dee_FormatQuote8((dformatprinter)&ascii_printer_print,&printer,
+  if unlikely(DeeFormat_Quote8((dformatprinter)&ascii_printer_print,&printer,
                                 str.cp8,WSTR_LENGTH(str.cp8),
                                 FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
  CASE_WIDTH_2BYTE:
-  if unlikely(Dee_FormatQuote16((dformatprinter)&ascii_printer_print,&printer,
+  if unlikely(DeeFormat_Quote16((dformatprinter)&ascii_printer_print,&printer,
                                  str.cp16,WSTR_LENGTH(str.cp16),
                                  FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
  CASE_WIDTH_4BYTE:
-  if unlikely(Dee_FormatQuote32((dformatprinter)&ascii_printer_print,&printer,
+  if unlikely(DeeFormat_Quote32((dformatprinter)&ascii_printer_print,&printer,
                                  str.cp32,WSTR_LENGTH(str.cp32),
                                  FORMAT_QUOTE_FNORMAL) < 0)
      goto err;

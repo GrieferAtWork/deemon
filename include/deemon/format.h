@@ -65,18 +65,18 @@ DECL_BEGIN
  *       the format string is _always_ fully processed.
  * @return: * :  The sum of all return values from calls to `*printer'
  * @return: < 0: The first negative return value of a call to `*printer' */
-DFUNDEF dssize_t Dee_FormatPrintf(dformatprinter printer, void *arg, char const *__restrict format, ...);
-DFUNDEF dssize_t DCALL Dee_VFormatPrintf(dformatprinter printer, void *arg, char const *__restrict format, va_list args);
+DFUNDEF dssize_t DeeFormat_Printf(dformatprinter printer, void *arg, char const *__restrict format, ...);
+DFUNDEF dssize_t DCALL DeeFormat_VPrintf(dformatprinter printer, void *arg, char const *__restrict format, va_list args);
 
 
-#define Dee_FormatPRINT(printer,arg,str) \
+#define DeeFormat_PRINT(printer,arg,str) \
         (*printer)(arg,str,COMPILER_STRLEN(str))
 
 /* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
  * NOTE: This function always generates pure ASCII, and is therefor safe to be used
  *       when targeting an `ascii_printer' */
 DFUNDEF dssize_t DCALL
-Dee_FormatQuote(/*ascii*/dformatprinter printer, void *arg,
+DeeFormat_Quote(/*ascii*/dformatprinter printer, void *arg,
                 /*utf-8*/char const *__restrict text, size_t textlen,
                 unsigned int flags);
 #define FORMAT_QUOTE_FNORMAL   0x0000
@@ -89,41 +89,41 @@ Dee_FormatQuote(/*ascii*/dformatprinter printer, void *arg,
 
 
 DFUNDEF dssize_t DCALL
-Dee_FormatQuote8(/*ascii*/dformatprinter printer, void *arg,
+DeeFormat_Quote8(/*ascii*/dformatprinter printer, void *arg,
                  uint8_t const *__restrict text, size_t textlen,
                  unsigned int flags);
 
 /* Format-quote 16-bit, and 32-bit text. */
 DFUNDEF dssize_t DCALL
-Dee_FormatQuote16(/*ascii*/dformatprinter printer, void *arg,
+DeeFormat_Quote16(/*ascii*/dformatprinter printer, void *arg,
                   uint16_t const *__restrict text, size_t textlen,
                   unsigned int flags);
 DFUNDEF dssize_t DCALL
-Dee_FormatQuote32(/*ascii*/dformatprinter printer, void *arg,
+DeeFormat_Quote32(/*ascii*/dformatprinter printer, void *arg,
                   uint32_t const *__restrict text, size_t textlen,
                   unsigned int flags);
 
 /* Repeat the given `ch' a total of `count' times. */
 DFUNDEF dssize_t DCALL
-Dee_FormatRepeat(/*ascii*/dformatprinter printer, void *arg,
-                 char ch, size_t count);
+DeeFormat_Repeat(/*ascii*/dformatprinter printer, void *arg,
+                 /*ascii*/char ch, size_t count);
 
 /* Repeat `str...+=length' such that a total of `total_characters'
  * characters (not bytes, but characters) are printed. */
 DFUNDEF dssize_t DCALL
-Dee_FormatRepeatUtf8(dformatprinter printer, void *arg,
+DeeFormat_RepeatUtf8(dformatprinter printer, void *arg,
                      /*utf-8*/char const *__restrict str,
                      size_t length, size_t total_characters);
 
 /* Print a unicode character `ch', encoded as UTF-8 into `printer' */
 DFUNDEF dssize_t DCALL
-Dee_FormatPutc(dformatprinter printer, void *arg, uint32_t ch);
+DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch);
 
 /* Convert an 8, 16, or 32-bit character array to UTF-8 and write it to `printer'
  * NOTE: 8-bit here refers to the unicode range U+0000 - U+00FF */
-DFUNDEF dssize_t DCALL Dee_FormatPrint8(dformatprinter printer, void *arg, uint8_t const *__restrict text, size_t textlen);
-DFUNDEF dssize_t DCALL Dee_FormatPrint16(dformatprinter printer, void *arg, uint16_t const *__restrict text, size_t textlen);
-DFUNDEF dssize_t DCALL Dee_FormatPrint32(dformatprinter printer, void *arg, uint32_t const *__restrict text, size_t textlen);
+DFUNDEF dssize_t DCALL DeeFormat_Print8(dformatprinter printer, void *arg, uint8_t const *__restrict text, size_t textlen);
+DFUNDEF dssize_t DCALL DeeFormat_Print16(dformatprinter printer, void *arg, uint16_t const *__restrict text, size_t textlen);
+DFUNDEF dssize_t DCALL DeeFormat_Print32(dformatprinter printer, void *arg, uint32_t const *__restrict text, size_t textlen);
 
 
 struct va_list_struct { va_list vl_ap; };
@@ -208,9 +208,9 @@ DFUNDEF void DCALL Dee_VPPackf_Cleanup(char const *__restrict format, va_list ar
  *     ;
  *     ref_bool   ::= 'b'; // `va_arg(bool)'
  */
-DFUNDEF int Dee_Unpackf(DeeObject *__restrict self, char const *__restrict format, ...);
-DFUNDEF int DCALL Dee_VUnpackf(DeeObject *__restrict self, char const *__restrict format, va_list args);
-DFUNDEF int DCALL Dee_VPUnpackf(DeeObject *__restrict self, char const **__restrict pformat, struct va_list_struct *__restrict pargs);
+DFUNDEF int (Dee_Unpackf)(DeeObject *__restrict self, char const *__restrict format, ...);
+DFUNDEF int (DCALL Dee_VUnpackf)(DeeObject *__restrict self, char const *__restrict format, va_list args);
+DFUNDEF int (DCALL Dee_VPUnpackf)(DeeObject *__restrict self, char const **__restrict pformat, struct va_list_struct *__restrict pargs);
 
 
 /* Both of these functions return a pointer to the target address where

@@ -126,7 +126,7 @@ print_ljust:
   temp = DeeString_PrintUtf8(self_str,printer,arg);
   if unlikely(temp < 0) goto err_temp;
   result += temp;
-  temp = Dee_FormatRepeatUtf8(printer,arg,
+  temp = DeeFormat_RepeatUtf8(printer,arg,
                               filler_str,filler_len,
                               alignment_width);
   if unlikely(temp < 0) goto err_temp;
@@ -135,7 +135,7 @@ print_ljust:
 
  case ALIGN_RIGHT:
   if (alignment_width > self_len) {
-   temp = Dee_FormatRepeatUtf8(printer,arg,
+   temp = DeeFormat_RepeatUtf8(printer,arg,
                                filler_str,filler_len,
                                alignment_width);
    if unlikely(temp < 0) goto err_temp;
@@ -155,7 +155,7 @@ print_self_raw:
   rinsert = alignment_width - self_len;
   linsert = rinsert/2;
   rinsert = rinsert - linsert;
-  temp = Dee_FormatRepeatUtf8(printer,arg,
+  temp = DeeFormat_RepeatUtf8(printer,arg,
                               filler_str,filler_len,
                               linsert);
   if unlikely(temp < 0) goto err_temp;
@@ -163,7 +163,7 @@ print_self_raw:
   temp = DeeString_PrintUtf8(self_str,printer,arg);
   if unlikely(temp < 0) goto err_temp;
   result += temp;
-  temp = Dee_FormatRepeatUtf8(printer,arg,
+  temp = DeeFormat_RepeatUtf8(printer,arg,
                               filler_str,filler_len,
                               rinsert);
   if unlikely(temp < 0) goto err_temp;
@@ -187,7 +187,7 @@ print_self_raw:
   temp = (*printer)(arg,my_str,num_signs);
   if unlikely(temp < 0) goto err_temp;
   result += temp;
-  temp = Dee_FormatRepeatUtf8(printer,arg,
+  temp = DeeFormat_RepeatUtf8(printer,arg,
                               filler_str,filler_len,
                               alignment_width-self_len);
   if unlikely(temp < 0) goto err_temp;

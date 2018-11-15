@@ -755,7 +755,7 @@ print_arg_end:
  }
 print_text_space:
  if (name_width > width) {
-  if (Dee_FormatRepeat(printer,arg,' ',name_width - width) < 0)
+  if (DeeFormat_Repeat(printer,arg,' ',name_width - width) < 0)
       goto err;
  }
  line_end = strchr(text,'\n');
@@ -867,7 +867,7 @@ display_help_query(dformatprinter printer, void *arg,
    }
   }
  }
- if (Dee_FormatPrintf(printer,arg,"Unknown option %$q%s%s\n",
+ if (DeeFormat_Printf(printer,arg,"Unknown option %$q%s%s\n",
                       query_length,query,*prefix ? " in group " : "",
                       prefix) < 0)
      goto err;

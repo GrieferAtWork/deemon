@@ -71,7 +71,7 @@ struct ascii_printer;
                            * >>         // >> end       finally, #1
                            * >>         // >> end       catch
                            * >>         // >> adjstack #my_label.SP
-                           * >>         // >> jmp       my_label.IP
+                           * >>         // >> jmp       my_label.PC
                            * >>         goto my_label;
                            * >>     }
                            * >> }
@@ -990,8 +990,8 @@ INTDEF int DCALL asm_put_data64(uint64_t data);
 #endif
 
 /* Push the absolute address of an assembly symbol + offset onto the stack. */
-INTDEF int DCALL asm_gpush_abs(struct asm_sym *__restrict sym);
-INTDEF int DCALL asm_gpush_stk(struct asm_sym *__restrict sym);
+INTDEF int DCALL asm_gpush_abs(struct asm_sym *__restrict sym); /* PC */
+INTDEF int DCALL asm_gpush_stk(struct asm_sym *__restrict sym); /* SP */
 
 /* Add the given `constvalue' to the set of
  * constant variables and return its 16-bit index.

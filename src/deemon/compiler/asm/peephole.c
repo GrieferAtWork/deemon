@@ -727,7 +727,7 @@ continue_at_iter:
   uint16_t opcode;
   instruction_t *iiter = iter;
 #if 0
-  DeeFile_Printf(DeeFile_DefaultStddbg,"IP %.4I32X SP %I16u (`%s')\n",
+  DeeFile_Printf(DeeFile_DefaultStddbg,"PC %.4I32X SP %I16u (`%s')\n",
                 (uint32_t)(iter - sc_main.sec_begin),stacksz,
                  mnemonic_names[*iter]);
 #endif

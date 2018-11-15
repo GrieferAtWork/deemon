@@ -99,11 +99,11 @@ print_repr_precision(DeeObject *__restrict self, size_t length,
  ASSERT(length <= WSTR_LENGTH(str));
  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
  CASE_WIDTH_1BYTE:
-  return Dee_FormatQuote8(printer,arg,(uint8_t *)str,length,flags);
+  return DeeFormat_Quote8(printer,arg,(uint8_t *)str,length,flags);
  CASE_WIDTH_2BYTE:
-  return Dee_FormatQuote16(printer,arg,(uint16_t *)str,length,flags);
+  return DeeFormat_Quote16(printer,arg,(uint16_t *)str,length,flags);
  CASE_WIDTH_4BYTE:
-  return Dee_FormatQuote32(printer,arg,(uint32_t *)str,length,flags);
+  return DeeFormat_Quote32(printer,arg,(uint32_t *)str,length,flags);
  }
 }
 
@@ -120,7 +120,7 @@ DeeString_CFormat(dformatprinter printer,
 #define print(p,s)        do{ if ((temp = (*printer)(arg,p,s)) < 0) goto err; result += temp; }__WHILE0
 #define print_format(p,s) do{ if ((temp = (*format_printer)(arg,p,s)) < 0) goto err; result += temp; }__WHILE0
 #define printob(ob)       do{ if ((temp = DeeObject_Print(ob,printer,arg)) < 0) goto err; result += temp; }__WHILE0
-#define printf(...)       do{ if ((temp = Dee_FormatPrintf(printer,arg,__VA_ARGS__)) < 0) goto err; result += temp; }__WHILE0
+#define printf(...)       do{ if ((temp = DeeFormat_Printf(printer,arg,__VA_ARGS__)) < 0) goto err; result += temp; }__WHILE0
 #define GETARG()          do{if(!argc) goto missing_argument; in_arg = *argv++; --argc; }__WHILE0
  ASSERT(!argc || argv);
  end = (iter = flush_start = (char *)format)+format_len;
@@ -341,7 +341,7 @@ do_length_integer:
    if (printsize < precision+addend)
        printsize = precision+addend;
    if (width > printsize && !(flags&F_LJUST)) {
-    temp = Dee_FormatRepeat(format_printer,arg,' ',width-printsize);
+    temp = DeeFormat_Repeat(format_printer,arg,' ',width-printsize);
     if unlikely(temp < 0) goto err;
     result += temp;
    }
@@ -350,7 +350,7 @@ do_length_integer:
     /* Print the leading addend. */
     print_format(bufiter,addend);
     bufiter += addend;
-    temp = Dee_FormatRepeat(format_printer,arg,'0',
+    temp = DeeFormat_Repeat(format_printer,arg,'0',
                             precision-printsize);
     if unlikely(temp < 0) goto err;
     result += temp;
@@ -360,7 +360,7 @@ do_length_integer:
     print_format(bufiter,printsize);
    }
    if (width > printsize && (flags&F_LJUST)) {
-    temp = Dee_FormatRepeat(format_printer,arg,' ',width-printsize);
+    temp = DeeFormat_Repeat(format_printer,arg,' ',width-printsize);
     if unlikely(temp < 0) goto err;
     result += temp;
    }
@@ -387,7 +387,7 @@ do_length_integer:
 
    if (width <= str_length || ch == 's' || (flags&F_LJUST)) {
     if (width > str_length && !(flags&F_LJUST)) {
-     temp = Dee_FormatRepeat(format_printer,arg,' ',width-str_length);
+     temp = DeeFormat_Repeat(format_printer,arg,' ',width-str_length);
      if unlikely(temp < 0) goto err;
      result += temp;
     }
@@ -413,7 +413,7 @@ do_length_integer:
      result += temp;
     }
     if (width > str_length && (flags&F_LJUST)) {
-     temp = Dee_FormatRepeat(format_printer,arg,' ',width-str_length);
+     temp = DeeFormat_Repeat(format_printer,arg,' ',width-str_length);
      if unlikely(temp < 0) goto err;
      result += temp;
     }
@@ -440,7 +440,7 @@ err_subprinter:
      goto err;
     }
     /* Print leading spaces. */
-    temp = Dee_FormatRepeat(format_printer,arg,' ',width-UNICODE_PRINTER_LENGTH(&subprinter));
+    temp = DeeFormat_Repeat(format_printer,arg,' ',width-UNICODE_PRINTER_LENGTH(&subprinter));
     if unlikely(temp < 0) goto err_subprinter;
     result += temp;
     /* Print the substring. */
@@ -467,15 +467,15 @@ err_subprinter:
    }
    /* Print the user-character. */
    if (width > 1 && !(flags&F_LJUST)) {
-    temp = Dee_FormatRepeat(format_printer,arg,' ',width-1);
+    temp = DeeFormat_Repeat(format_printer,arg,' ',width-1);
     if unlikely(temp < 0) goto err;
     result += temp;
    }
-   temp = Dee_FormatPutc(printer,arg,uch);
+   temp = DeeFormat_Putc(printer,arg,uch);
    if unlikely(temp < 0) goto err;
    result += temp;
    if (width > 1 && (flags&F_LJUST)) {
-    temp = Dee_FormatRepeat(format_printer,arg,' ',width-1);
+    temp = DeeFormat_Repeat(format_printer,arg,' ',width-1);
     if unlikely(temp < 0) goto err;
     result += temp;
    }
@@ -504,7 +504,7 @@ err_preprinter:
     }
     preprinter_length = UNICODE_PRINTER_LENGTH(&preprinter);
     if (width > preprinter_length && !(flags&F_LJUST)) {
-     temp = Dee_FormatRepeat(format_printer,arg,' ',width-preprinter_length);
+     temp = DeeFormat_Repeat(format_printer,arg,' ',width-preprinter_length);
      if unlikely(temp < 0) goto err_preprinter;
      result += temp;
     }
@@ -513,7 +513,7 @@ err_preprinter:
     if unlikely(temp < 0) goto err_preprinter;
     result += temp;
     if (width > preprinter_length && (flags&F_LJUST)) {
-     temp = Dee_FormatRepeat(format_printer,arg,' ',width-preprinter_length);
+     temp = DeeFormat_Repeat(format_printer,arg,' ',width-preprinter_length);
      if unlikely(temp < 0) goto err_preprinter;
      result += temp;
     }

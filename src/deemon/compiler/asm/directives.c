@@ -661,7 +661,7 @@ do_handle_adjstack:
    * Adjust/set the virtual stack-depth as seen by the assembler.
    * Doing this usually only makes sense if the previous instruction
    * doesn't return, as well as no symbols having been defined since:
-   * >>     push $1f.IP
+   * >>     push $1f.PC
    * >>     push $1f.SP
    * >>     jmp  pop, #pop
    * >> .setstack 42  // `jmp' doesn't return and no label had been defined

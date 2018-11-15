@@ -38,7 +38,7 @@
 
 /*
 
-CODE_IP = (ESI - ((*(unsigned int *)(EBP - 16)) + (60)))
+CODE_PC = (ESI - ((*(unsigned int *)(EBP - 16)) + (60)))
 CODE_SIZE = (*(unsigned int *)((*(unsigned int *)(EBP - 16)) + 28))
 CODE = (*(unsigned int *)(EBP - 16))
 CODE_DDI = (*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)))
@@ -363,7 +363,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 
 
 #define FRAME %ebx /* Dedicated register: Current execution frame. */
-#define IP    %esi /* Dedicated register: instruction pointer. */
+#define PC    %esi /* Dedicated register: instruction pointer. */
 #define SP    %edi /* Dedicated register: stack pointer. */
 #define SP_IS_DI 1
 
@@ -381,7 +381,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define FRAME_FRAME    cf_frame(FRAME)   /* DREF DeeObject     **cf_frame; */
 #define FRAME_STACK    cf_stack(FRAME)   /* DREF DeeObject     **cf_stack; */
 #define FRAME_SP       cf_sp(FRAME)      /* DeeObject          **cf_sp; */
-#define FRAME_IP       cf_ip(FRAME)      /* instruction_t       *cf_ip; */
+#define FRAME_PC       cf_ip(FRAME)      /* instruction_t       *cf_ip; */
 #define FRAME_VARARGS  cf_vargs(FRAME)   /* DREF struct tuple_object *cf_vargs; */
 #define FRAME_THIS     cf_this(FRAME)    /* DeeObject           *cf_this; */
 #define FRAME_RESULT   cf_result(FRAME)  /* DeeObject           *cf_result; */
@@ -512,7 +512,7 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 
 	/* Load execution state. */
 	movl   FRAME_SP,      SP
-	movl   FRAME_IP,      IP
+	movl   FRAME_PC,      PC
 #ifdef CODE_IS_REGISTER
 	movl   FRAME_FUNC,    CODE
 	movl   fo_code(CODE), CODE
@@ -573,8 +573,8 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 
 .disp: /* DISPATCH() */
 #ifndef NDEBUG
-	leal   (0-co_code)(IP), %eax
-	subl   CODE_OR_LOC, %eax /* EAX == IP */
+	leal   (0-co_code)(PC), %eax
+	subl   CODE_OR_LOC, %eax /* EAX == PC */
 #endif
 #if !defined(CODE_IS_REGISTER) && !defined(NDEBUG)
 	/* Assert that the host's stack is correctly aligned. */
@@ -585,13 +585,13 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 	ASSERT_ABOVE_EQUAL(SP,FRAME_STACK) /* ERROR: Stack underflow. */
 	ASSERT_BELOW_EQUAL(SP,L_STACK_END) /* ERROR: Stack overflow. */
 
-	movl   IP, FRAME_IP
+	movl   PC, FRAME_PC
 	xorl   %eax, %eax
 	lodsb  /* Read the next instruction into AL. */
 
 #ifdef TRACE_EXECUTION
 	pushl  %eax
-	movl   FRAME_IP, %edx
+	movl   FRAME_PC, %edx
 	LOAD_CODE(%ecx)
 	leal   co_code(CODE_OR_ECX), %ecx
 	subl   %ecx, %edx
@@ -625,7 +625,7 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 
 	/* Save execution state. */
 .end_without_finally:
-	movl   IP, FRAME_IP
+	movl   PC, FRAME_PC
 	movl   SP, FRAME_SP
 
 	/* Unlink the execution frame. */
@@ -653,7 +653,7 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 	ADJUST_CFA_OFFSET(4)
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 	subl   $(co_code), %eax
 	subl   CODE_OR_LOC, %eax
 	pushl  %eax
@@ -664,7 +664,7 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 	addl   $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 .section .rodata
-1:	.string "EXIT_IP = %p\nresult  = %p\n"
+1:	.string "EXIT_PC = %p\nresult  = %p\n"
 .text
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
@@ -901,7 +901,7 @@ IF_USE_CFI(.cfi_restore_state)
 .endm
 #endif /* !CONFIG_NO_THREADS */
 
-#define repeat_instruction movl  FRAME_IP, IP
+#define repeat_instruction movl  FRAME_PC, PC
 
 #define ASSERT_YIELDING  \
 	ASSERT(LOAD_CODE(%eax); \
@@ -952,7 +952,7 @@ delete_exceptions:
 
 run_finally_after_return:
 	LOAD_CODE(%edx)
-	movl   FRAME_IP,                %eax
+	movl   FRAME_PC,                %eax
 	subl   CODE_OR_EDX,             %eax
 	subl   $(co_code),              %eax /* eax: ip_addr */
 	movzwl co_exceptc(CODE_OR_EDX), %ecx /* ecx: exception_hander_count */
@@ -1039,7 +1039,7 @@ run_finally_after_return:
 .except: /* Entry point for general-purpose exception handlers. */
 	/* Execute exception handlers. */
 	LOAD_CODE(%edx)
-	movl   FRAME_IP,                %eax
+	movl   FRAME_PC,                %eax
 	subl   CODE_OR_EDX,             %eax
 	subl   $(co_code),              %eax /* eax: ip_addr */
 	movzwl co_exceptc(CODE_OR_EDX), %ecx /* ecx: exception_hander_count */
@@ -1155,12 +1155,12 @@ run_except_handler_in_edx:
 	 *              handler whose descriptor is stored in EDX. */
 	/* EDX: `struct except_handler *' */
 #ifdef CODE_IS_REGISTER
-	leal   co_code(CODE),    IP
-	addl   eh_addr(%edx),    IP /* ip = code->co_code + eh_addr; */
+	leal   co_code(CODE),    PC
+	addl   eh_addr(%edx),    PC /* ip = code->co_code + eh_addr; */
 #else
-	movl   L_CODE,           IP
-	addl   $(co_code),       IP
-	addl   eh_addr(%edx),    IP /* ip = code->co_code + eh_addr; */
+	movl   L_CODE,           PC
+	addl   $(co_code),       PC
+	addl   eh_addr(%edx),    PC /* ip = code->co_code + eh_addr; */
 #endif
 #ifndef NDEBUG
 	LOAD_CODE(%eax)
@@ -1266,7 +1266,7 @@ exec_on_altstack:
 
 
 invop:
-	pushl  FRAME_IP
+	pushl  FRAME_PC
 	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC
 	ADJUST_CFA_OFFSET(4)
@@ -1554,17 +1554,17 @@ target_jf:
 	ADJUST_CFA_OFFSET(-4)
 1:
 #endif
-	addl   %edx, IP /* ip += Simm8/16 */
+	addl   %edx, PC /* ip += Simm8/16 */
 	sp_popref %ecx /* POPREF() */
 #ifndef NDEBUG
 .disp_checkip:
 	LOAD_CODE(%eax)
 	leal   co_code(CODE_OR_EAX), %edx
-	cmpl   %edx, IP
+	cmpl   %edx, PC
 	jae    1f
 	int    $3 /* ASSERT_FAIL: `ip >= code->co_code' */
 1:	addl   co_codebytes(CODE_OR_EAX), %edx
-	cmpl   %edx, IP
+	cmpl   %edx, PC
 	jb     1f
 	int    $3 /* ASSERT_FAIL: `ip < code->co_code + code->co_codebytes' */
 1:
@@ -1612,7 +1612,7 @@ target_jt:
 	ADJUST_CFA_OFFSET(-4)
 1:
 #endif
-	addl   %edx, IP /* ip += Simm8/16 */
+	addl   %edx, PC /* ip += Simm8/16 */
 	sp_popref %ecx /* POPREF() */
 	jmp   .disp_checkip
 
@@ -1650,7 +1650,7 @@ prefix_target_jt16:
 	decref %edx
 	lodsw
 	movswl %ax, %eax
-	addl   %eax, IP /* ip += Simm16 */
+	addl   %eax, PC /* ip += Simm16 */
 #ifndef NDEBUG
 	jno   .disp_checkip
 	int3   /* ASSERTION_FAILED: `ip += Simm16' did overflow. */
@@ -1661,7 +1661,7 @@ prefix_target_jt16:
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 	decref %edx
-	addl   $2, IP
+	addl   $2, PC
 	jmp   .disp
 
 prefix_target_jf:
@@ -1696,7 +1696,7 @@ prefix_target_jt:
 	decref %edx
 	lodsb
 	movsbl %al, %eax
-	addl   %eax, IP /* ip += Simm8 */
+	addl   %eax, PC /* ip += Simm8 */
 #ifndef NDEBUG
 	jno   .disp_checkip
 	int3   /* ASSERTION_FAILED: `ip += Simm8' did overflow. */
@@ -1707,7 +1707,7 @@ prefix_target_jt:
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 	decref %edx
-	incl   IP
+	incl   PC
 	jmp   .disp
 
 
@@ -1730,7 +1730,7 @@ target32_jmp:
 	ADJUST_CFA_OFFSET(-4)
 1:
 #endif
-	addl   %eax, IP /* ip += Simm32 */
+	addl   %eax, PC /* ip += Simm32 */
 #ifndef NDEBUG
 	jno   .disp_checkip
 	int3   /* ASSERTION_FAILED: `ip += Simm32' did overflow. */
@@ -1755,7 +1755,7 @@ target_jmp16:
 	ADJUST_CFA_OFFSET(-4)
 1:
 #endif
-	addl   %eax, IP /* ip += Simm16 */
+	addl   %eax, PC /* ip += Simm16 */
 	jmp   .disp_checkip
 target_jmp:
 	lodsb
@@ -1776,7 +1776,7 @@ target_jmp:
 	ADJUST_CFA_OFFSET(-4)
 1:
 #endif
-	addl   %eax, IP /* ip += Simm8 */
+	addl   %eax, PC /* ip += Simm8 */
 	jmp   .disp_checkip
 
 
@@ -1796,9 +1796,9 @@ target_iterself:
 	jz    .except /* Check for errors. */
 	xchgl  TOP, %eax /* Store the result onto the stack. */
 	decref %eax
-	cmpb   $(ASM_FOREACH), 0(IP)
+	cmpb   $(ASM_FOREACH), 0(PC)
 	jne   .disp /* Unlikely case: some other opcode follows. */
-	incl   IP /* Adjust to advance past the FOREACH opcode. */
+	incl   PC /* Adjust to advance past the FOREACH opcode. */
 	/* Fall through to start a foreach loop */
 target_foreach:
 	lodsb
@@ -1835,7 +1835,7 @@ target_foreach:
 	ADJUST_CFA_OFFSET(-4)
 1:
 #endif
-	addl   %edx, IP /* ip += Simm8/16 */
+	addl   %edx, PC /* ip += Simm8/16 */
 	sp_popref %eax
 	jmp   .disp_checkip
 
@@ -1857,15 +1857,15 @@ target_jmp_pop:
 	popl   %edx /* absip */
 	ADJUST_CFA_OFFSET(-4)
 .jmp_abs_edx:
-	/* At this point, the absolute IP is stored in EDX */
+	/* At this point, the absolute PC is stored in EDX */
 #ifdef CONFIG_NO_THREADS
 #ifdef CODE_IS_REGISTER
-	leal   co_code(CODE), IP
-	addl   %edx,          IP
+	leal   co_code(CODE), PC
+	addl   %edx,          PC
 #else
-	movl   L_CODE,   IP
-	addl   $co_code, IP
-	addl   %edx,     IP
+	movl   L_CODE,   PC
+	addl   $co_code, PC
+	addl   %edx,     PC
 #endif
 #else
 #ifdef CODE_IS_REGISTER
@@ -1876,7 +1876,7 @@ target_jmp_pop:
 	addl   $co_code, %eax
 	addl   %edx,     %eax
 #endif
-	cmpl   IP, %eax
+	cmpl   PC, %eax
 	jge    1f
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
@@ -1889,7 +1889,7 @@ target_jmp_pop:
 	jnz   .except_x4
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
-1:	movl   %eax,     IP
+1:	movl   %eax,     PC
 #endif
 	jmp   .disp_checkip
 
@@ -2979,7 +2979,7 @@ target_push_local:
 	jmp   .disp
 99:	pushl  %eax        /* LID */
 	ADJUST_CFA_OFFSET(4)
-	pushl  FRAME_IP /* IP */
+	pushl  FRAME_PC /* PC */
 	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC /* CODE */
 	ADJUST_CFA_OFFSET(4)
@@ -6000,7 +6000,7 @@ target_call_local:
 	jmp   .disp
 99:	pushl  %eax        /* LID */
 	ADJUST_CFA_OFFSET(4)
-	pushl  FRAME_IP    /* IP */
+	pushl  FRAME_PC    /* PC */
 	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC /* CODE */
 	ADJUST_CFA_OFFSET(4)
@@ -6389,10 +6389,10 @@ target_breakpoint:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(trigger_breakpoint,4) /* Trigger a breakpoint. */
 	ADJUST_CFA_OFFSET(-4)
-	/* _always_ load new SP/IP from the frame to ensure that we are in a
+	/* _always_ load new SP/PC from the frame to ensure that we are in a
 	 * consistent state before handling potential exception, or moving on.
 	 * For an explaination of why we do it this way, look at the C implementation. */
-	movl   FRAME_IP, IP
+	movl   FRAME_PC, PC
 	movl   FRAME_SP, SP
 	/* Check how we're to continue execution. */
 	cmpl   $(TRIGGER_BREAKPOINT_MIN), %eax
@@ -6481,7 +6481,7 @@ do_breakpoint_exit_nofin:
 prefix_invop = invop
 
 target16_extern:
-	addl  $4, IP /* Skip the prefix operand. */
+	addl  $4, PC /* Skip the prefix operand. */
 	lodsb /* Load the instruction being prefixed. */
 	jmp   *prefix_inst_table(,%eax,4)
 target_extern:
@@ -6489,14 +6489,14 @@ target16_stack:
 target16_static:
 target16_global:
 target16_local:
-	addl  $2, IP /* Skip the prefix operand. */
+	addl  $2, PC /* Skip the prefix operand. */
 	lodsb /* Load the instruction being prefixed. */
 	jmp   *prefix_inst_table(,%eax,4)
 target_stack:
 target_static:
 target_global:
 target_local:
-	incl  IP /* Skip the prefix operand. */
+	incl  PC /* Skip the prefix operand. */
 	lodsb /* Load the instruction being prefixed. */
 	jmp   *prefix_inst_table(,%eax,4)
 
@@ -7166,7 +7166,7 @@ prefix_target_push_local:
 	jmp     set_prefix_object
 99:	pushl   %eax        /* LID */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_IP /* IP */
+	pushl   FRAME_PC /* PC */
 	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC /* CODE */
 	ADJUST_CFA_OFFSET(4)
@@ -7296,7 +7296,7 @@ prefix_target_push_false:
  * inherit a reference from EDX and throw an error.
  * For a usage example, see the documentation for `get_prefix_object' above. */
 set_prefix_object:
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 	movzbl 0(%eax), %ecx
 	ASSERT_ABOVE_EQUAL(%ecx,$0xf0)
 	ASSERT_BELOW_EQUAL(%ecx,$0xff)
@@ -7331,7 +7331,7 @@ impl_set_prefix16_static:
 	popl   %edx
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 #endif
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 #endif
 	movzwl 2(%eax), %eax
 	jmp    1f
@@ -7348,7 +7348,7 @@ impl_set_prefix_static:
 	popl   %edx
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 #endif
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 #endif
 	movzbl 1(%eax), %eax
 1:	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
@@ -7370,7 +7370,7 @@ impl_set_prefix16_extern:
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 	movzwl 4(%eax), %eax
 	jmp    1f
 impl_set_prefix_extern:
@@ -7380,7 +7380,7 @@ impl_set_prefix_extern:
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 	movzbl 2(%eax), %eax
 	jmp    1f
 impl_set_prefix16_global:
@@ -7490,7 +7490,7 @@ END(impl_set_prefix_table_f0)
 .text
 IF_USE_CFI(.cfi_startproc)
 xch_prefix_object:
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 	movzbl 0(%eax), %ecx
 	ASSERT_ABOVE_EQUAL(%ecx,$0xf0)
 	ASSERT_BELOW_EQUAL(%ecx,$0xff)
@@ -7525,7 +7525,7 @@ impl_xch_prefix16_static:
 	popl   %edx
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 #endif
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 #endif
 	movzwl 2(%eax), %eax
 	jmp    1f
@@ -7542,7 +7542,7 @@ impl_xch_prefix_static:
 	popl   %edx
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 #endif
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 #endif
 	movzbl 1(%eax), %eax
 1:	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
@@ -7563,7 +7563,7 @@ impl_xch_prefix16_extern:
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 	movzwl 4(%eax), %eax
 	jmp    1f
 impl_xch_prefix_extern:
@@ -7573,7 +7573,7 @@ impl_xch_prefix_extern:
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
 	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 	movzbl 2(%eax), %eax
 	jmp    1f
 impl_xch_prefix16_global:
@@ -7644,7 +7644,7 @@ impl_xch_prefix_local:
 	decref %edx, 1, 1
 	pushl  %eax     /* err_unbound_local:index */
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
-	pushl  FRAME_IP /* err_unbound_local:ip */
+	pushl  FRAME_PC /* err_unbound_local:ip */
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
 	pushl  CODE_OR_LOC /* err_unbound_local:code */
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
@@ -7715,7 +7715,7 @@ END(impl_xch_prefix_table_f0)
 .text
 IF_USE_CFI(.cfi_startproc)
 get_prefix_object:
-	movl   FRAME_IP, %eax
+	movl   FRAME_PC, %eax
 	movzbl 0(%eax), %ecx
 	ASSERT_ABOVE_EQUAL(%ecx,$0xf0)
 	ASSERT_BELOW_EQUAL(%ecx,$0xff)
@@ -7833,7 +7833,7 @@ impl_get_prefix_local:
 	ret /* Return to the caller. */
 99:	pushl  %eax        /* LID */
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
-	pushl  FRAME_IP    /* IP */
+	pushl  FRAME_PC    /* PC */
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
 	pushl  CODE_OR_LOC /* CODE */
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)

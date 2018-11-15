@@ -61,7 +61,7 @@ do_special_float:
   if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
                (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST) &&
       (width > total_len)) {
-   temp = Dee_FormatRepeat(printer,arg,' ',width - total_len);
+   temp = DeeFormat_Repeat(printer,arg,' ',width - total_len);
    if unlikely(temp < 0)
     goto err;
    result += temp;
@@ -83,7 +83,7 @@ do_special_float:
   if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
                (DEEFLOAT_PRINT_FWIDTH) &&
       (width > total_len)) {
-   temp = Dee_FormatRepeat(printer,arg,' ',width - total_len);
+   temp = DeeFormat_Repeat(printer,arg,' ',width - total_len);
    if unlikely(temp < 0)
       goto err;
    result += temp;
@@ -167,7 +167,7 @@ do_special_float:
   if (width <= total_len)
       goto do_float_normal_width;
   if (!(flags & DEEFLOAT_PRINT_FPADZERO)) {
-   temp = Dee_FormatRepeat(printer,arg,' ',width - total_len);
+   temp = DeeFormat_Repeat(printer,arg,' ',width - total_len);
    if unlikely(temp < 0)
     goto err;
    result += temp;
@@ -182,7 +182,7 @@ do_special_float:
    result += temp;
   }
   /* Insert leading zeroes for padding. */
-  temp = Dee_FormatRepeat(printer,arg,'0',width - total_len);
+  temp = DeeFormat_Repeat(printer,arg,'0',width - total_len);
   if unlikely(temp < 0)
      goto err;
   result += temp;
@@ -218,7 +218,7 @@ do_float_normal_width:
   result += temp;
   total_len += COMPILER_LENOF(buf) - len;
   if (min_prec) {
-   temp = Dee_FormatRepeat(printer,arg,'0',min_prec);
+   temp = DeeFormat_Repeat(printer,arg,'0',min_prec);
    if unlikely(temp < 0)
       goto err;
    result += temp;
@@ -238,7 +238,7 @@ do_float_normal_width:
    --total_len;
   }
   /* Add trailing zeroes to pad out our length the requested width. */
-  temp = Dee_FormatRepeat(printer,arg,
+  temp = DeeFormat_Repeat(printer,arg,
                           flags & DEEFLOAT_PRINT_FPADZERO ? '0' : ' ',
                           width - total_len);
   if unlikely(temp < 0)

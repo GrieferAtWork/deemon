@@ -71,9 +71,9 @@
  */
 
 /* Interpreter registers:
- *   - pointer    REG_IP              // Instruction pointer
+ *   - pointer    REG_PC              // Instruction pointer
  *   - pointer    REG_SP              // Stack pointer (Describes a potentially infinite amount of memory)
- *   - pointer    REG_START_IP        // Instruction pointer directed at the start of the current instruction.
+ *   - pointer    REG_START_PC        // Instruction pointer directed at the start of the current instruction.
  *   - object     REG_RESULT          // Result value
  *   - bool       REG_RESULT_ITERDONE // When true, the function shall return to indicate iterator exhaustion. Only available in yielding function.
  *   - integer    REG_EXCEPTION_START // Value of `thread->t_exceptsz' when the frame got created
@@ -88,7 +88,7 @@
  * >>         PROPAGATE_EXCEPTIONS_TO_CALLER();
  * >>     FI
  * >>     INCREMENT_THREADLOCAL_FRAME_COUNT();
- * >>     REG_IP              = GET_IP_BASE() + 0;
+ * >>     REG_PC              = GET_IP_BASE() + 0;
  * >>     REG_SP              = GET_SP_BASE() + 0;
  * >>     REG_RESULT          = UNBOUND;
  * >>     REG_RESULT_ITERDONE = FALSE;
@@ -97,14 +97,14 @@
  * Interpretation loop:
  * >>     WHILE TRUE DO
  * >> DISPATCH:
- * >>         REG_START_IP = REG_IP;
+ * >>         REG_START_PC = REG_PC;
  * >>         EXECUTE_INSTRUCTION();
  * >>     DONE
  *
  * Frame cleanup:
  * >> RETURN:
  * >>     // Serve finally handles affecting the last-executed instruction.
- * >>     IF HAS_FINALLY_HANDLERS(REG_START_IP) THEN
+ * >>     IF HAS_FINALLY_HANDLERS(REG_START_PC) THEN
  * >>         EXECUTE_FINALLY_HANDLERS();
  * >>     FI
  * >>     ATTR_FALLTHROUGH();
@@ -133,7 +133,7 @@
  *
  * Misc. documentation functions:
  * >> EXCEPT:
- * >>     IF HAS_EXCEPTION_HANDLERS(REG_START_IP) THEN
+ * >>     IF HAS_EXCEPTION_HANDLERS(REG_START_PC) THEN
  * >>         LOAD_LAST_EXCEPTION_HANDLER();
  * >>         GOTO DISPATCH;
  * >>     FI
@@ -187,7 +187,7 @@
                                     * >>     REG_RESULT = UNBOUND;
                                     * >> FI
                                     * >> IF IS_CODE_YIELDING THEN
-                                    * >>     IP                  = REG_START_IP;
+                                    * >>     REG_PC              = REG_START_PC;
                                     * >>     REG_RESULT_ITERDONE = TRUE;
                                     * >> ELSE
                                     * >>     REG_RESULT          = none;
@@ -212,7 +212,7 @@
                                     * [1][-0,+0]   `yield foreach, PREFIX'              - `PREFIX: yield foreach'
                                     *                                                     NOTE: Only available in code of yield functions.
                                     *                                                     HINT: During execution, this opcode will replace stack-top with its own iterator and
-                                    *                                                           keep resetting `IP' to re-execute itself until the iterator is finished, at which
+                                    *                                                           keep resetting `REG_PC' to re-execute itself until the iterator is finished, at which
                                     *                                                           point it will finally pop one value and resume execution at the next instruction.
                                     *                                                     WARNING: This instruction takes an iterator, not a sequence.
                                     * >> IF EXEC_SAFE && !IS_CODE_YIELDING THEN
@@ -227,7 +227,7 @@
                                     * >>    POP();
                                     * >>    GOTO DISPATCH;
                                     * >> DONE
-                                    * >> IP = REG_START_IP;
+                                    * >> REG_PC = REG_START_PC;
                                     * >> GOTO RETURN_WITHOUT_FINALLY; */
 #define ASM_THROW             0x03 /* [1][-1,+0]   `throw pop'                          - Pop one object and throw it as an exception. This instruction does not return.
                                     * [1][-0,+0]   `throw PREFIX'                       - `PREFIX: throw'
@@ -277,23 +277,23 @@
                                     * >> PUSH(bool(IS_BOUND(LOCAL(IMM8)))); */
 
 /* Control-flow-related instructions. */
-#define ASM_JF                0x10 /* [2][-1,+0]   `jf pop, <Sdisp8>'                   - Pop one object. If it evaluates to `false', add `<Sdisp8>' to the `IP' of the next instruction.
+#define ASM_JF                0x10 /* [2][-1,+0]   `jf pop, <Sdisp8>'                   - Pop one object. If it evaluates to `false', add `<Sdisp8>' to the `REG_PC' of the next instruction.
                                     * [2][-0,+0]   `jf PREFIX, <Sdisp8>'                - `PREFIX: jf <Sdisp8>'
                                     * NOTE: This instruction unconditionally invokes the `bool' operator. */
-#define ASM_JF16              0x11 /* [3][-1,+0]   `jf pop, <Sdisp16>'                  - Pop one object. If it evaluates to `false', add `<Sdisp16>' (little endian) to the `IP' of the next instruction.
+#define ASM_JF16              0x11 /* [3][-1,+0]   `jf pop, <Sdisp16>'                  - Pop one object. If it evaluates to `false', add `<Sdisp16>' (little endian) to the `REG_PC' of the next instruction.
                                     * [3][-0,+0]   `jf PREFIX, <Sdisp16>'               - `PREFIX: jf <Sdisp16>'
                                     * NOTE: This instruction unconditionally invokes the `bool' operator.
-                                    * >> IF !POP() THEN REG_IP += SDISP16; FI */
-#define ASM_JT                0x12 /* [2][-1,+0]   `jt pop, <Sdisp8>'                   - Pop one object. If it evaluates to `true', add `<Sdisp8>' to the `IP' of the next instruction.
+                                    * >> IF !POP() THEN REG_PC += SDISP16; FI */
+#define ASM_JT                0x12 /* [2][-1,+0]   `jt pop, <Sdisp8>'                   - Pop one object. If it evaluates to `true', add `<Sdisp8>' to the `REG_PC' of the next instruction.
                                     * [2][-0,+0]   `jt PREFIX, <Sdisp8>'                - `PREFIX: jt <Sdisp8>'
                                     * NOTE: This instruction unconditionally invokes the `bool' operator. */
-#define ASM_JT16              0x13 /* [3][-1,+0]   `jt pop, <Sdisp16>'                  - Pop one object. If it evaluates to `true', add `<Sdisp16>' (little endian) to the `IP' of the next instruction.
+#define ASM_JT16              0x13 /* [3][-1,+0]   `jt pop, <Sdisp16>'                  - Pop one object. If it evaluates to `true', add `<Sdisp16>' (little endian) to the `REG_PC' of the next instruction.
                                     * [3][-0,+0]   `jt PREFIX, <Sdisp16>'               - `PREFIX: jt <Sdisp16>'
                                     * NOTE: This instruction unconditionally invokes the `bool' operator.
-                                    * >> IF POP() THEN REG_IP += SDISP16; FI */
-#define ASM_JMP               0x14 /* [2][-0,+0]   `jmp <Sdisp8>'                       - Unconditionally add `<Sdisp8>' to the `IP' of the next instruction. */
-#define ASM_JMP16             0x15 /* [3][-0,+0]   `jmp <Sdisp16>'                      - Unconditionally add `<Sdisp16>' (little endian) to the `IP' of the next instruction.
-                                    * >> REG_IP += SDISP16; */
+                                    * >> IF POP() THEN REG_PC += SDISP16; FI */
+#define ASM_JMP               0x14 /* [2][-0,+0]   `jmp <Sdisp8>'                       - Unconditionally add `<Sdisp8>' to the `REG_PC' of the next instruction. */
+#define ASM_JMP16             0x15 /* [3][-0,+0]   `jmp <Sdisp16>'                      - Unconditionally add `<Sdisp16>' (little endian) to the `REG_PC' of the next instruction.
+                                    * >> REG_PC += SDISP16; */
 #define ASM_FOREACH           0x16 /* [2][-1,+2|0] `foreach top, <Sdisp8>'              - Invoke the __iternext__ operator on stack-top, popping the iterator and performing a `jmp' using <Sdisp8> when it is empty, or leaving the iterator and pushing the loaded value onto the stack otherwise.
                                     * [2][-0,+1|0] `foreach PREFIX, <Sdisp8>'           - `PREFIX: foreach <Sdisp8>' */
 #define ASM_FOREACH16         0x17 /* [3][-1,+2|0] `foreach top, <Sdisp16>'             - Invoke the __iternext__ operator on stack-top, popping the iterator and performing a `jmp' using <Sdisp16> when it is empty, or leaving the iterator and pushing the loaded value onto the stack otherwise.
@@ -303,15 +303,15 @@
                                     * >>     PUSH(ob);
                                     * >> ELSE
                                     * >>     POP();
-                                    * >>     IP += Sdisp16;
+                                    * >>     REG_PC += Sdisp16;
                                     * >> FI */
-#define ASM_JMP_POP           0x18 /* [1][-1,+0]   `jmp pop'                            - Pop one value from the stack and convert it to an int, using that value as new instruction pointer. NOTE: In safe-exec code, an out-of-bounds IP causes an `Error.RuntimeError.SegFault'
+#define ASM_JMP_POP           0x18 /* [1][-1,+0]   `jmp pop'                            - Pop one value from the stack and convert it to an int, using that value as new instruction pointer. NOTE: In safe-exec code, an out-of-bounds REG_PC causes an `Error.RuntimeError.SegFault'
                                     * >> int new_ip = int(POP());
                                     * >> IF new_ip < 0 || new_ip > MAX_VALID_INSTRUCTION_INDEX THEN
                                     * >>     THROW_OR_UNDEFINED_BEHAVIOR(Error.RuntimeError.SegFault());
                                     * >>     EXCEPT();
                                     * >> FI
-                                    * >> IP = new_ip; */
+                                    * >> REG_PC = new_ip; */
 #define ASM_OPERATOR          0x19 /* [3][-1-n,+1] `op top, $<imm8>, #<imm8>'           - Invoke an operator `$<imm8>' on `top' after popping `#<imm8>' values used as arguments.
                                     * [3][-n,+1]   `PREFIX: push op $<imm8>, #<imm8>'
                                     * >> int id = IMM8;
@@ -921,7 +921,7 @@
 /*      ASM_                  0xf011  *               --------                            - ------------------ */
 /*      ASM_                  0xf012  *               --------                            - ------------------ */
 /*      ASM_                  0xf013  *               --------                            - ------------------ */
-#define ASM32_JMP             0xf014 /* [6][-0,+0]   `jmp <Sdisp32>'                      - Unconditionally add `<Sdisp32>' (little endian) to the `IP' of the next instruction. */
+#define ASM32_JMP             0xf014 /* [6][-0,+0]   `jmp <Sdisp32>'                      - Unconditionally add `<Sdisp32>' (little endian) to the `REG_PC' of the next instruction. */
 /*      ASM_                  0xf015  *               --------                            - ------------------ */
 /*      ASM_                  0xf016  *               --------                            - ------------------ */
 /*      ASM_                  0xf017  *               --------                            - ------------------ */
@@ -951,7 +951,7 @@
                                       * >>         PUSH(none);
                                       * >>     FI
                                       * >> DONE
-                                      * >> IP = new_ip; */
+                                      * >> REG_PC = new_ip; */
 #define ASM16_OPERATOR        0xf019 /* [5][-1-n,+1] `op top, $<imm16>, #<imm8>'          - Same as `ASM_OPERATOR', but can be used to invoke extended operator codes.
                                       * [5][-n,+1]   `PREFIX: push op $<imm16>, #<imm8>' */
 #define ASM16_OPERATOR_TUPLE  0xf01a /* [4][-2,+1]   `op top, $<imm16>, pop'              - Same as `ASM_OPERATOR_TUPLE', but can be used to invoke extended operator codes.
@@ -1256,7 +1256,7 @@
  * >>         return is_enumerating_code_points ? enumeration_done() : ip_no_found();
  * >>     
  * >>         ... // Handle other instructions.
- * >>             // Whenever any of them try to modify IP, the following must be done:
+ * >>             // Whenever any of them try to modify REG_PC, the following must be done:
  * >>             // >>
  * >>             // >> ... // Do other work done by the instruction.
  * >>             // >>

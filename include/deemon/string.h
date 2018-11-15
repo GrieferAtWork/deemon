@@ -1107,8 +1107,8 @@ dssize_t ascii_printer_vprintf(struct ascii_printer *__restrict self, char const
 #define ASCII_PRINTER_PRINT(self,S)                ascii_printer_print(self,S,COMPILER_STRLEN(S))
 #else
 #define ASCII_PRINTER_PRINT(self,S)                ascii_printer_print(self,S,COMPILER_STRLEN(S))
-#define ascii_printer_printf(self,...)             Dee_FormatPrintf((dformatprinter)&ascii_printer_print,self,__VA_ARGS__)
-#define ascii_printer_vprintf(self,format,args)    Dee_VFormatPrintf((dformatprinter)&ascii_printer_print,self,format,args)
+#define ascii_printer_printf(self,...)             DeeFormat_Printf((dformatprinter)&ascii_printer_print,self,__VA_ARGS__)
+#define ascii_printer_vprintf(self,format,args)    DeeFormat_VPrintf((dformatprinter)&ascii_printer_print,self,format,args)
 #endif
 
 /* Print a single character, returning -1 on error or 0 on success. */
@@ -1507,8 +1507,8 @@ dssize_t (unicode_printer_vprintf)(struct unicode_printer *__restrict self, char
 dssize_t (unicode_printer_printobject)(struct unicode_printer *__restrict self, DeeObject *__restrict ob);
 dssize_t (unicode_printer_printobjectrepr)(struct unicode_printer *__restrict self, DeeObject *__restrict ob);
 #else
-#define unicode_printer_printf(self,...)          Dee_FormatPrintf((dformatprinter)&unicode_printer_print,self,__VA_ARGS__)
-#define unicode_printer_vprintf(self,format,args) Dee_VFormatPrintf((dformatprinter)&unicode_printer_print,self,format,args)
+#define unicode_printer_printf(self,...)          DeeFormat_Printf((dformatprinter)&unicode_printer_print,self,__VA_ARGS__)
+#define unicode_printer_vprintf(self,format,args) DeeFormat_VPrintf((dformatprinter)&unicode_printer_print,self,format,args)
 #define unicode_printer_printobject(self,ob)      DeeObject_Print(ob,(dformatprinter)&unicode_printer_print,self)
 #define unicode_printer_printobjectrepr(self,ob)  DeeObject_PrintRepr(ob,(dformatprinter)&unicode_printer_print,self)
 #endif

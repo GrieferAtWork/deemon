@@ -338,7 +338,7 @@ PRIVATE DREF DeeObject *DCALL
 encode_c_escape(DeeObject *__restrict self) {
  if (DeeBytes_Check(self)) {
   struct bytes_printer printer = BYTES_PRINTER_INIT;
-  if unlikely(Dee_FormatQuote((dformatprinter)&bytes_printer_print,&printer,
+  if unlikely(DeeFormat_Quote((dformatprinter)&bytes_printer_print,&printer,
                              (char *)DeeBytes_DATA(self),
                               DeeBytes_SIZE(self),
                               FORMAT_QUOTE_FNORMAL|
@@ -354,21 +354,21 @@ err_bytes_printer:
   void *str = DeeString_WSTR(self);
   SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
   CASE_WIDTH_1BYTE:
-   if unlikely(Dee_FormatQuote8((dformatprinter)&ascii_printer_print,&printer,
+   if unlikely(DeeFormat_Quote8((dformatprinter)&ascii_printer_print,&printer,
                                 (uint8_t *)str,WSTR_LENGTH(str),
                                  FORMAT_QUOTE_FNORMAL|
                                  FORMAT_QUOTE_FPRINTRAW) < 0)
       goto err_ascii_printer;
    break;
   CASE_WIDTH_2BYTE:
-   if unlikely(Dee_FormatQuote16((dformatprinter)&ascii_printer_print,&printer,
+   if unlikely(DeeFormat_Quote16((dformatprinter)&ascii_printer_print,&printer,
                                  (uint16_t *)str,WSTR_LENGTH(str),
                                   FORMAT_QUOTE_FNORMAL|
                                   FORMAT_QUOTE_FPRINTRAW) < 0)
       goto err_ascii_printer;
    break;
   CASE_WIDTH_4BYTE:
-   if unlikely(Dee_FormatQuote32((dformatprinter)&ascii_printer_print,&printer,
+   if unlikely(DeeFormat_Quote32((dformatprinter)&ascii_printer_print,&printer,
                                  (uint32_t *)str,WSTR_LENGTH(str),
                                   FORMAT_QUOTE_FNORMAL|
                                   FORMAT_QUOTE_FPRINTRAW) < 0)

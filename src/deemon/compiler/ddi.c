@@ -592,25 +592,27 @@ do_realloc:
       goto err_xwriter;
   }
   ASSERT(current_assembler.a_constc >= current_assembler.a_staticc);
-  offset = current_assembler.a_constc - current_assembler.a_staticc;
-  for (i = 0; i < current_assembler.a_staticc; ++i) {
-   char *name;
-   sym = current_assembler.a_staticv[i].ss_sym;
-   if (!sym)
-       continue; /* Anonymous symbol (asm-level). */
-   if (sym->s_name->k_size == 0)
-       continue; /* Anonymous symbol (ast-level). */
-   name = ascii_printer_allocstr(&strtab,
-                                  sym->s_name->k_name,
-                                  sym->s_name->k_size + 1);
-   if unlikely(!name) goto err_xwriter;
-   if unlikely(xddi_putsymbol(&writer,
-                               DDI_EXDAT_O_SNAM,
-                               offset + i,
-                              (uint32_t)(name - strtab.ap_string->s_str)))
-      goto err_xwriter;
+  if (current_assembler.a_staticc != 0) {
+   offset = current_assembler.a_constc - current_assembler.a_staticc;
+   /* Generate information about the names of static variables. */
+   for (i = 0; i < current_assembler.a_staticc; ++i) {
+    char *name;
+    sym = current_assembler.a_staticv[i].ss_sym;
+    if (!sym)
+        continue; /* Anonymous symbol (asm-level). */
+    if (sym->s_name->k_size == 0)
+        continue; /* Anonymous symbol (ast-level). */
+    name = ascii_printer_allocstr(&strtab,
+                                   sym->s_name->k_name,
+                                   sym->s_name->k_size + 1);
+    if unlikely(!name) goto err_xwriter;
+    if unlikely(xddi_putsymbol(&writer,
+                                DDI_EXDAT_O_SNAM,
+                                offset + i,
+                               (uint32_t)(name - strtab.ap_string->s_str)))
+       goto err_xwriter;
+   }
   }
-  /* TODO: Generate information about the names of static variables. */
   ((struct ddi_exdat *)writer.bw_base)->dx_size = (uint32_t)(writer.bw_size - 4);
   result->d_exdat = (struct ddi_exdat *)bytewriter_flush(&writer);
   __IF0 {

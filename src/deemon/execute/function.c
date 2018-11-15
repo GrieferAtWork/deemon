@@ -1005,7 +1005,7 @@ yfi_run_finally(YFIterator *__restrict self) {
  struct except_handler *iter,*begin;
  if unlikely(!self->yi_func) return;
  /* Recursively execute all finally-handlers that
-  * protect the current IP until none are left. */
+  * protect the current PC until none are left. */
  code = self->yi_frame.cf_func->fo_code;
  if unlikely(!code) return;
  ASSERT_OBJECT_TYPE(code,&DeeCode_Type);
@@ -1013,7 +1013,7 @@ yfi_run_finally(YFIterator *__restrict self) {
  if (!(code->co_flags&CODE_FFINALLY)) return;
 exec_finally:
  iter = (begin = code->co_exceptv)+code->co_exceptc;
- /* NOTE: The frame-IP is allowed to equal the end of the
+ /* NOTE: The frame-PC is allowed to equal the end of the
   *       associated code object, because it contains the
   *       address of the next instruction to-be executed.
   *       Similarly, range checks of handlers are adjusted, too.
@@ -1188,7 +1188,7 @@ yfi_iter_next(YFIterator *__restrict self) {
   ASSERTF(self->yi_frame.cf_ip >= self->yi_frame.cf_func->fo_code->co_code &&
           self->yi_frame.cf_ip <= self->yi_frame.cf_func->fo_code->co_code+
                                   self->yi_frame.cf_func->fo_code->co_codebytes,
-          "Illegal IP: %p is not in %p...%p",
+          "Illegal PC: %p is not in %p...%p",
           self->yi_frame.cf_ip,
           self->yi_frame.cf_func->fo_code->co_code,
           self->yi_frame.cf_func->fo_code->co_code+

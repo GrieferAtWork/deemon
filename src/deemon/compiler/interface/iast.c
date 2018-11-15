@@ -2754,7 +2754,7 @@ ast_setactionc(Ast *__restrict self,
 #define DO(x)         do if unlikely((x) < 0) goto err; __WHILE0
 #define PRINT(str)    DO((*printer)(arg,str,COMPILER_STRLEN(str)))
 #define print(p,s)    DO((*printer)(arg,p,s))
-#define printf(...)   DO(Dee_FormatPrintf(printer,arg,__VA_ARGS__))
+#define printf(...)   DO(DeeFormat_Printf(printer,arg,__VA_ARGS__))
 
 PRIVATE int DCALL
 print_enter_scope(DeeScopeObject *caller_scope,
@@ -2773,7 +2773,7 @@ print_enter_scope(DeeScopeObject *caller_scope,
   ++*pindent;
   *pis_scope = true;
  }
- DO(Dee_FormatRepeat(printer,arg,'\t',*pindent));
+ DO(DeeFormat_Repeat(printer,arg,'\t',*pindent));
  for (; child_scope && child_scope != caller_scope; child_scope = child_scope->s_prev) {
   size_t i; struct symbol *sym;
   if (!child_scope->s_mapc) continue;
@@ -2838,7 +2838,7 @@ print_symbol_name:
     default: break;
     }
     PRINT(";\n");
-    DO(Dee_FormatRepeat(printer,arg,'\t',*pindent));
+    DO(DeeFormat_Repeat(printer,arg,'\t',*pindent));
    }
   }
  }
@@ -2857,7 +2857,7 @@ print_leave_scope(dformatprinter printer, void *arg,
   } else {
    PRINT("\n");
   }
-  DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
+  DO(DeeFormat_Repeat(printer,arg,'\t',indent - 1));
   PRINT("}");
   if (is_expression) PRINT(")");
  } else if (!is_expression && need_semicolon) {
@@ -3040,7 +3040,7 @@ force_scope:
   if (is_expression) PRINT("(");
   PRINT("{\n");
   ++indent;
-  DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+  DO(DeeFormat_Repeat(printer,arg,'\t',indent));
   is_scope = true;
  }
  switch (self->a_type) {
@@ -3125,7 +3125,7 @@ force_scope:
     DO(print_ast_code(self->a_multiple.m_astv[i],printer,arg,false,self->a_scope,indent));
     if (i < self->a_multiple.m_astc-1) {
      PRINT("\n");
-     DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+     DO(DeeFormat_Repeat(printer,arg,'\t',indent));
     }
    }
    need_semicolon = false;
@@ -3177,16 +3177,16 @@ force_scope:
     PRINT(" finally ");
     if (handler->ce_mask) {
      PRINT("{\n");
-     DO(Dee_FormatRepeat(printer,arg,'\t',indent + 1));
+     DO(DeeFormat_Repeat(printer,arg,'\t',indent + 1));
      DO(print_ast_code(handler->ce_mask,printer,arg,false,
                        self->a_scope,indent + 1));
      PRINT(";\n");
-     DO(Dee_FormatRepeat(printer,arg,'\t',indent + 1));
+     DO(DeeFormat_Repeat(printer,arg,'\t',indent + 1));
      DO(print_ast_code(handler->ce_code,printer,arg,
                        is_expression && !is_scope,
                        self->a_scope,indent + 1));
      PRINT(";\n");
-     DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+     DO(DeeFormat_Repeat(printer,arg,'\t',indent));
      PRINT("}");
     } else {
      DO(print_ast_code(handler->ce_code,printer,arg,
@@ -3263,15 +3263,15 @@ got_except_symbol:
    PRINT("do ");
    if (self->a_loop.l_next && self->a_loop.l_loop) {
     PRINT("{\n");
-    DO(Dee_FormatRepeat(printer,arg,'\t',indent + 1));
+    DO(DeeFormat_Repeat(printer,arg,'\t',indent + 1));
     DO(print_ast_code(self->a_loop.l_loop,printer,arg,false,
                       self->a_scope,indent + 1));
     PRINT(";\n");
-    DO(Dee_FormatRepeat(printer,arg,'\t',indent + 1));
+    DO(DeeFormat_Repeat(printer,arg,'\t',indent + 1));
     DO(print_ast_code(self->a_loop.l_next,printer,arg,false,
                       self->a_scope,indent + 1));
     PRINT(";\n");
-    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    DO(DeeFormat_Repeat(printer,arg,'\t',indent));
     PRINT("}");
    } else if (self->a_loop.l_next) {
     DO(print_ast_code(self->a_loop.l_next,printer,arg,false,self->a_scope,indent));
@@ -3937,12 +3937,12 @@ operator_fallback:
    PRINT(" {\n");
    ++indent;
    for (i = 0; i < self->a_class.c_memberc; ++i) {
-    DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
+    DO(DeeFormat_Repeat(printer,arg,'\t',indent - 1));
     printf("<member(%I16u)> = ",self->a_class.c_memberv[i].cm_index);
     DO(print_ast_code(self->a_class.c_memberv[i].cm_ast,printer,arg,true,self->a_scope,indent));
     PRINT("\n");
    }
-   DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
+   DO(DeeFormat_Repeat(printer,arg,'\t',indent - 1));
    PRINT("}");
    break;
   }
@@ -3969,12 +3969,12 @@ operator_fallback:
    attr = &desc->cd_iattr_list[i];
    if (!attr->ca_name) continue;
    if (attr->ca_doc) {
-    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    DO(DeeFormat_Repeat(printer,arg,'\t',indent));
     PRINT("@");
     DO(DeeObject_PrintRepr((DeeObject *)attr->ca_doc,printer,arg));
     PRINT("\n");
    }
-   DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+   DO(DeeFormat_Repeat(printer,arg,'\t',indent));
    if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
        PRINT("private ");
    if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
@@ -3996,7 +3996,7 @@ operator_fallback:
     ++indent;
     for (i = 0; i < 3; ++i) {
      if (!functions[i]) continue;
-     DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+     DO(DeeFormat_Repeat(printer,arg,'\t',indent));
      print(property_names[i],3);
      if (functions[i]->cm_ast->a_type == AST_FUNCTION &&
          is_instance_method(functions[i]->cm_ast->a_function.f_scope)) {
@@ -4009,7 +4009,7 @@ operator_fallback:
      PRINT("\n");
     }
     --indent;
-    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    DO(DeeFormat_Repeat(printer,arg,'\t',indent));
     PRINT("}\n");
    } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
     struct class_member *method;
@@ -4045,12 +4045,12 @@ instance_member_in_class:
    attr = &desc->cd_cattr_list[i];
    if (!attr->ca_name) continue;
    if (attr->ca_doc) {
-    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    DO(DeeFormat_Repeat(printer,arg,'\t',indent));
     PRINT("@");
     DO(DeeObject_PrintRepr((DeeObject *)attr->ca_doc,printer,arg));
     PRINT("\n");
    }
-   DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+   DO(DeeFormat_Repeat(printer,arg,'\t',indent));
    if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
        PRINT("private ");
    if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
@@ -4066,7 +4066,7 @@ instance_member_in_class:
     ++indent;
     for (i = 0; i < 3; ++i) {
      if (!functions[i]) continue;
-     DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+     DO(DeeFormat_Repeat(printer,arg,'\t',indent));
      print(property_names[i],3);
      if (functions[i]->cm_ast->a_type == AST_FUNCTION) {
       DO(print_function_atargs(functions[i]->cm_ast,printer,arg,indent,true));
@@ -4078,7 +4078,7 @@ instance_member_in_class:
      PRINT("\n");
     }
     --indent;
-    DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+    DO(DeeFormat_Repeat(printer,arg,'\t',indent));
     PRINT("}\n");
    } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
     struct class_member *method;
@@ -4113,7 +4113,7 @@ class_member_in_class:
    struct class_operator *op = &desc->cd_clsop_list[i];
    if (op->co_name == (uint16_t)-1) continue;
    member = find_class_member(self,op->co_addr);
-   DO(Dee_FormatRepeat(printer,arg,'\t',indent));
+   DO(DeeFormat_Repeat(printer,arg,'\t',indent));
    if (op->co_name == OPERATOR_CONSTRUCTOR &&
        member && member->cm_ast->a_type == AST_FUNCTION) {
     PRINT("this");
@@ -4143,7 +4143,7 @@ class_member_in_class:
    }
    PRINT("\n");
   }
-  DO(Dee_FormatRepeat(printer,arg,'\t',indent - 1));
+  DO(DeeFormat_Repeat(printer,arg,'\t',indent - 1));
   PRINT("}");
  } break;
 

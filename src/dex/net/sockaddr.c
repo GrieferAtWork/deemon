@@ -1340,7 +1340,7 @@ do_generic_string_2:
        goto err;
    {
     char port_buffer[32];
-    sprintf(port_buffer,"%u",(unsigned)port);
+    Dee_sprintf(port_buffer,"%u",(unsigned)port);
     if (SockAddr_FromStringPort(self,family,protocol,type,
                                 DeeString_STR(arg0),DeeString_SIZE(arg0),
                                 port_buffer,strlen(port_buffer)))

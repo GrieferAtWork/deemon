@@ -113,7 +113,7 @@ DFUNDEF int DCALL Dee_AtExit(DeeObject *__restrict callback,
  * NOTE: This function is automatically called when `exit()'
  *       from stdlib is used to stop execution of the program. */
 DFUNDEF int DCALL Dee_RunAtExit(uint16_t flags);
-#define DEE_RUNATEXIT_FNORMAL  0x0000
+#define DEE_RUNATEXIT_FNORMAL  0x0000 /* Normal flags. */
 #define DEE_RUNATEXIT_FRUNALL  0x0001 /* Always run all callbacks and display all errors
                                        * that may occur during their execution. */
 #define DEE_RUNATEXIT_FDONTRUN 0x0002 /* Do not execute callbacks, but discard all of them.
@@ -134,9 +134,10 @@ DFUNDEF NONNULL((1)) void DCALL Dee_SetArgv(/*Tuple*/DeeObject *__restrict argv)
 
 
 
-/* Keep clear global hooks while invoking the GC to
+
+/* Keep clearing global hooks while invoking the GC to
  * finalize all user-objects that may still be loaded.
- * This function can be called any number of timed, but
+ * This function can be called any number of times, but
  * is intended to be called once before deemon gets unloaded.
  * @return: * : The total number of GC object that were collected. */
 DFUNDEF size_t DCALL Dee_Shutdown(void);

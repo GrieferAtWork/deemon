@@ -566,13 +566,13 @@ again:
   if unlikely(yield() < 0) goto err;
   if (TPP_ISKEYWORD(tok)) {
    /* Explicitly define the relocation mode:
-    * >>    push $1f.IP    // Push the address
+    * >>    push $1f.PC    // Push the address
     * >>    push $1f.SP    // Push the stack-depth
     * >>    jmp  pop, #pop // Do a long-jump with an absolute stack-depth.
     * >>.setstack 42       // Set the absolute stack-depth prior to the following instruction.
     * >>1:
     */
-   if (IS_KWD_NOCASE("IP")) {
+   if (IS_KWD_NOCASE("PC") || IS_KWD_NOCASE("IP")) {
     if unlikely(yield() < 0) goto err;
     if (!result) goto again;
     if (result->ie_rel != (uint16_t)-1)
@@ -597,7 +597,7 @@ again:
     goto again;
    }
   }
-  if unlikely(WARN(W_UASM_EXPECTED_IP_OR_SP_AFTER_DOT))
+  if unlikely(WARN(W_UASM_EXPECTED_PC_OR_SP_AFTER_DOT))
      goto err;
   break;
 err_ipsp_no_symbol:
@@ -678,7 +678,7 @@ uasm_parse_intexpr_sum(struct asm_intexpr *result, uint16_t features) {
     if (other.ie_sym)
         result->ie_sym = other.ie_sym;
    } else if (result->ie_sym && other.ie_sym && ASM_SYM_DEFINED(other.ie_sym)) {
-    /* IP - . */
+    /* PC - . */
 #if ((ASM_OVERLOAD_FRELABS|1) == ASM_OVERLOAD_FRELDSP) && \
     ((ASM_OVERLOAD_FSTKABS|1) == ASM_OVERLOAD_FSTKDSP)
     result->ie_rel = other.ie_rel | 1;

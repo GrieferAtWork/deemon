@@ -367,7 +367,7 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
 #endif
 #define PRINT(str)  print(str,COMPILER_STRLEN(str))
 #define print(p,s)  do{if ((temp = (*printer)(arg,p,s)) < 0) goto err; result += temp;}__WHILE0
-#define printf(...) do{if ((temp = Dee_FormatPrintf(printer,arg,__VA_ARGS__)) < 0) goto err; result += temp;}__WHILE0
+#define printf(...) do{if ((temp = DeeFormat_Printf(printer,arg,__VA_ARGS__)) < 0) goto err; result += temp;}__WHILE0
 #define printob(ob) do{if ((temp = DeeObject_Print(ob,printer,arg)) < 0) goto err; result += temp;}__WHILE0
  dssize_t temp,result = 0;
  size_t i,count = self->ce_errorc;

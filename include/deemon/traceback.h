@@ -115,7 +115,7 @@ struct frame_object {
 #define DEEFRAME_FUNDEFSP  0x0002 /* The stack-pointer of the frame is undefined.
                                    * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack
                                    * pointer may be obtainable from DDI information, as well
-                                   * as use of the current IP, alongside further validation. */
+                                   * as use of the current PC, alongside further validation. */
 #define DEEFRAME_FUNDEFSP2 0x0004 /* The stack-pointer of the frame is always undefined.
                                    * This flag is set after `DEEFRAME_FUNDEFSP' was set and
                                    * the actual stack pointer could still not be determined

@@ -214,8 +214,8 @@ dssize_t (bytes_printer_vprintf)(struct bytes_printer *__restrict self, char con
 dssize_t (bytes_printer_printobject)(struct bytes_printer *__restrict self, DeeObject *__restrict ob);
 dssize_t (bytes_printer_printobjectrepr)(struct bytes_printer *__restrict self, DeeObject *__restrict ob);
 #else
-#define bytes_printer_printf(self,...)          Dee_FormatPrintf((dformatprinter)&bytes_printer_print,self,__VA_ARGS__)
-#define bytes_printer_vprintf(self,format,args) Dee_VFormatPrintf((dformatprinter)&bytes_printer_print,self,format,args)
+#define bytes_printer_printf(self,...)          DeeFormat_Printf((dformatprinter)&bytes_printer_print,self,__VA_ARGS__)
+#define bytes_printer_vprintf(self,format,args) DeeFormat_VPrintf((dformatprinter)&bytes_printer_print,self,format,args)
 #define bytes_printer_printobject(self,ob)      DeeObject_Print(ob,(dformatprinter)&bytes_printer_print,self)
 #define bytes_printer_printobjectrepr(self,ob)  DeeObject_PrintRepr(ob,(dformatprinter)&bytes_printer_print,self)
 #endif
