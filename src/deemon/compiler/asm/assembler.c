@@ -428,10 +428,8 @@ assembler_init_reuse(DeeCodeObject *__restrict code_obj,
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 }
 INTERN void DCALL assembler_fini(void) {
- struct asm_sym *iter,*next;
- DREF DeeObject **ob_iter,**ob_end;
+ struct asm_sym *iter,*next; uint16_t i;
  struct asm_exc *xiter,*xend;
- unsigned int i;
 #ifndef CONFIG_LANGUAGE_NO_ASM
  userassembler_fini();
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
@@ -449,14 +447,12 @@ INTERN void DCALL assembler_fini(void) {
   iter = next;
  }
  /* Free up constant variables. */
- ob_end = (ob_iter = current_assembler.a_constv)+
-                     current_assembler.a_constc;
- for (; ob_iter != ob_end; ++ob_iter) Dee_XDecref(*ob_iter);
+ for (i = 0; i < current_assembler.a_constc; ++i)
+     Dee_Decref(current_assembler.a_constv[i]);
  Dee_Free(current_assembler.a_constv);
  /* Free up static variables. */
- ob_end = (ob_iter = current_assembler.a_staticv)+
-                     current_assembler.a_staticc;
- for (; ob_iter != ob_end; ++ob_iter) Dee_XDecref(*ob_iter);
+ for (i = 0; i < current_assembler.a_staticc; ++i)
+     Dee_Decref(current_assembler.a_staticv[i].ss_init);
  Dee_Free(current_assembler.a_staticv);
  /* Free up exception handlers. */
  xend = (xiter = current_assembler.a_exceptv)+
@@ -1023,7 +1019,7 @@ INTERN int DCALL asm_mergetext(void) {
 }
 
 INTERN int DCALL asm_mergestatic(void) {
- uint16_t static_offset,total_count;
+ uint16_t static_offset,total_count,i;
  struct asm_rel *iter,*end;
  DREF DeeObject **total_vector;
  /* Simple case: Without any static variables, we've got nothing to do! */
@@ -1042,18 +1038,24 @@ INTERN int DCALL asm_mergestatic(void) {
                                                total_count*sizeof(DREF DeeObject *));
  if unlikely(!total_vector) return -1;
  /* Copy static variable initializers. */
- memcpy(total_vector+current_assembler.a_constc,
-        current_assembler.a_staticv,
-        current_assembler.a_staticc*
-        sizeof(DREF DeeObject *));
  current_assembler.a_constv = total_vector;
  current_assembler.a_constc = total_count;
  current_assembler.a_consta = total_count;
- /* Delete the static variable vector. */
- Dee_Free(current_assembler.a_staticv);
- current_assembler.a_staticv = NULL;
- current_assembler.a_staticc = 0;
- current_assembler.a_statica = 0;
+ if (current_assembler.a_flag & (ASM_FNODDI | ASM_FNODDIXDAT)) {
+  for (i = 0; i < current_assembler.a_staticc; ++i)
+      total_vector[static_offset + i] = current_assembler.a_staticv[i].ss_init;
+  /* Delete the static variable vector. */
+  Dee_Free(current_assembler.a_staticv);
+  current_assembler.a_staticv = NULL;
+  current_assembler.a_staticc = 0;
+  current_assembler.a_statica = 0;
+ } else {
+  for (i = 0; i < current_assembler.a_staticc; ++i) {
+   DeeObject *ob = current_assembler.a_staticv[i].ss_init;
+   total_vector[static_offset + i] = ob;
+   Dee_Incref(ob);
+  }
+ }
  /* Fix relocations for static variables. */
  end = (iter = sc_main.sec_relv)+sc_main.sec_relc;
  for (; iter != end; ++iter) {
@@ -1344,6 +1346,7 @@ INTERN struct except_handler *DCALL asm_pack_exceptv(void) {
 INTERN DREF DeeCodeObject *DCALL asm_gencode(void) {
  DREF DeeDDIObject *ddi;
  DREF DeeCodeObject *result;
+ DREF DeeStringObject **kwds = NULL;
  code_size_t total_codesize;
  struct except_handler *exceptv;
  ASSERT(sc_main.sec_code);
@@ -1353,17 +1356,17 @@ INTERN DREF DeeCodeObject *DCALL asm_gencode(void) {
  if (sc_main.sec_iter != sc_main.sec_end) {
   /* Try to release as much code memory as possible. - We won't be needing it anymore. */
   result = (DREF DeeCodeObject *)DeeGCObject_TryRealloc(sc_main.sec_code,offsetof(DeeCodeObject,co_code)+
-                                                       (sc_main.sec_iter-sc_main.sec_begin)*sizeof(instruction_t));
+                                                       (sc_main.sec_iter - sc_main.sec_begin)*sizeof(instruction_t));
   if (!result) result = sc_main.sec_code;
  } else {
   result = sc_main.sec_code;
  }
  if (current_assembler.a_staticc != current_assembler.a_statica) {
-  DREF DeeObject **svec;
-  svec = (DREF DeeObject **)Dee_TryRealloc(current_assembler.a_staticv,
-                                           current_assembler.a_staticc*
-                                           sizeof(DREF DeeObject *));
-  if (svec) current_assembler.a_staticv = svec;
+  struct asm_symbol_static *svec;
+  svec = (struct asm_symbol_static *)Dee_TryRealloc(current_assembler.a_staticv,
+                                                    current_assembler.a_staticc *
+                                                    sizeof(struct asm_symbol_static));
+  if likely(svec) current_assembler.a_staticv = svec;
  }
  
  /* Make the exception handler vector become
@@ -1371,11 +1374,39 @@ INTERN DREF DeeCodeObject *DCALL asm_gencode(void) {
  if (current_assembler.a_exceptc) {
   exceptv = asm_pack_exceptv();
   if unlikely(!exceptv) {
+err_ddi:
    Dee_Decref(ddi);
    return NULL; /* Well... $h1t. */
   }
  } else {
   exceptv = NULL;
+ }
+
+ /* Allocate keyword information (if necessary) */
+ if (current_basescope->bs_argc_max != 0) {
+  uint16_t i,size = current_basescope->bs_argc_max;
+  kwds = (DREF DeeStringObject **)Dee_Malloc(size *
+                                             sizeof(DREF DeeStringObject *));
+  if unlikely(!kwds) goto err_ddi;
+  for (i = 0; i < size; ++i) {
+   struct TPPKeyword *name;
+   name = current_basescope->bs_argv[i]->s_name;
+   if (!name->k_size) {
+    kwds[i] = (DREF DeeStringObject *)Dee_EmptyString;
+    Dee_Incref(Dee_EmptyString);
+   } else {
+    DREF DeeStringObject *nameob;
+    nameob = (DREF DeeStringObject *)DeeString_NewUtf8(name->k_name,
+                                                       name->k_size,
+                                                       STRING_ERROR_FIGNORE);
+    if unlikely(!nameob) {
+     while (i--) Dee_Decref(kwds[i]);
+     Dee_Free(kwds);
+     goto err_ddi;
+    }
+    kwds[i] = nameob; /* Inherit reference. */
+   }
+  }
  }
 
  DeeObject_Init(result,&DeeCode_Type);
@@ -1397,7 +1428,7 @@ INTERN DREF DeeCodeObject *DCALL asm_gencode(void) {
                           current_assembler.a_stackmax)*
                           sizeof(DeeObject *);
  result->co_codebytes  = total_codesize;
- result->co_keywords   = NULL; /* TODO */
+ result->co_keywords   = kwds;
  result->co_defaultv   = current_basescope->bs_default;
  result->co_staticv    = current_assembler.a_constv;
  result->co_exceptv    = exceptv;
@@ -2284,43 +2315,44 @@ do_realloc:
 }
 
 INTERN int32_t DCALL
-asm_newstatic(DeeObject *initializer) {
+asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym) {
  int32_t result;
- ASSERT_OBJECT_OPT(initializer);
+ ASSERT_OBJECT(initializer);
  /* Allocate more buffer memory when nothing is left. */
  ASSERT(current_assembler.a_staticc <=
         current_assembler.a_statica);
  if (current_assembler.a_staticc ==
      current_assembler.a_statica) {
   uint16_t new_statica = current_assembler.a_statica * 2;
-  DREF DeeObject **new_vector;
+  struct asm_symbol_static *new_vector;
   if (!new_statica) new_statica = 1;
   if unlikely(new_statica < current_assembler.a_staticc) {
    new_statica = current_assembler.a_staticc+1;
    if unlikely(new_statica < current_assembler.a_staticc) {
-    DeeError_Throwf(&DeeError_CompilerError,
-                    "Too many static variables");
-    return -1;
+    return DeeError_Throwf(&DeeError_CompilerError,
+                           "Too many static variables");
    }
   }
 do_realloc:
-  new_vector = (DREF DeeObject **)Dee_TryRealloc(current_assembler.a_staticv,
-                                                 new_statica*sizeof(DREF DeeObject *));
+  new_vector = (struct asm_symbol_static *)Dee_TryRealloc(current_assembler.a_staticv,
+                                                          new_statica *
+                                                          sizeof(struct asm_symbol_static));
   if unlikely(!new_vector) {
-   if (new_statica != current_assembler.a_staticc+1) {
-    new_statica = current_assembler.a_staticc+1;
+   if (new_statica != current_assembler.a_staticc + 1) {
+    new_statica = current_assembler.a_staticc + 1;
     goto do_realloc;
    }
-   if (Dee_CollectMemory(new_statica*sizeof(DREF DeeObject *)))
+   if (Dee_CollectMemory(new_statica * sizeof(DREF DeeObject *)))
        goto do_realloc;
    return -1;
   }
   current_assembler.a_staticv = new_vector;
   current_assembler.a_statica = new_statica;
  }
- result = current_assembler.a_staticc;
- current_assembler.a_staticv[current_assembler.a_staticc++] = initializer;
- Dee_XIncref(initializer);
+ result = current_assembler.a_staticc++;
+ current_assembler.a_staticv[result].ss_init = initializer;
+ current_assembler.a_staticv[result].ss_sym  = sym;
+ Dee_Incref(initializer);
  return result;
 }
 
@@ -2553,7 +2585,7 @@ asm_ssymid(struct symbol *__restrict sym) {
      return sym->s_symid;
  /* Allocate a new static variable index for the given symbol.
   * NOTE: By default, `Dee_None' is used for default-initialization of static variables. */
- new_index = asm_newstatic(Dee_None);
+ new_index = asm_newstatic(Dee_None,sym);
  if unlikely(new_index < 0) goto end;
  ASSERT(new_index <= UINT16_MAX);
  sym->s_symid = (uint16_t)new_index;

@@ -27,6 +27,10 @@
 #include <deemon/code.h>
 #include <deemon/error.h>
 #include <deemon/compiler/assembler.h>
+#include <deemon/util/bytewriter.h>
+
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
 
 #include <stdlib.h> /* `qsort()' */
 #include <string.h> /* `memrchr()' */
@@ -83,17 +87,17 @@ struct ddi_gen_state {
 };
 
 PRIVATE int32_t DCALL
-find_or_alloc_offset(uintptr_t **__restrict pvector,
-                     uint16_t   *__restrict psize,
-                     uintptr_t offset_value,
-                     uint16_t max_size) {
+find_or_alloc_offset(uint32_t **__restrict pvector,
+                     uint32_t  *__restrict psize,
+                     uint32_t offset_value,
+                     uint32_t max_size) {
  /* Search for `offset_value' in the given vector and return its index.
   * If not found, extend the vector by adding to the end, but don't
   * exceed a size of `max_size'.
   * If the size limit cannot be sustained, raise a Compiler Error.
   * Upon failure, return -1. Upon success return the index of `offset_value' */
- uintptr_t *vector = *pvector,*iter,*end;
- uint16_t size = *psize;
+ uint32_t *vector = *pvector,*iter,*end;
+ uint32_t size = *psize;
  end = (iter = vector)+size;
  for (; iter != end; ++iter) {
   if (*iter == offset_value)
@@ -106,7 +110,8 @@ find_or_alloc_offset(uintptr_t **__restrict pvector,
   return -1;
  }
  /* Append a new value. */
- vector = (uintptr_t *)Dee_Realloc(vector,(size+1)*sizeof(uintptr_t));
+ vector = (uint32_t *)Dee_Realloc(vector,(size + 1) *
+                                  sizeof(uint32_t));
  if unlikely(!vector) return -1;
  vector[size] = offset_value;
  *pvector = vector;
@@ -222,6 +227,52 @@ ddi_transition(uint8_t *__restrict text,
 }
 
 
+PRIVATE int DCALL
+xddi_putsymbol(struct bytewriter *__restrict writer,
+               uint8_t symbol_class,
+               uint16_t symbol_id,
+               uint32_t name_offset) {
+ uint8_t length;
+ if (name_offset > UINT16_MAX)
+     length = DDI_EXDAT_OP32;
+ else if (name_offset > UINT8_MAX || symbol_id > UINT8_MAX)
+     length = DDI_EXDAT_OP16;
+ else
+     length = DDI_EXDAT_OP8;
+ if (bytewriter_putb(writer,length | symbol_class))
+     goto err;
+ switch (length) {
+
+ case DDI_EXDAT_OP8:
+  if (bytewriter_putb(writer,(uint8_t)symbol_id))
+      goto err;
+  if (bytewriter_putb(writer,(uint8_t)name_offset))
+      goto err;
+  break;
+
+ case DDI_EXDAT_OP16:
+  if (bytewriter_putw(writer,LESWAP16(symbol_id)))
+      goto err;
+  if (bytewriter_putw(writer,LESWAP16((uint16_t)name_offset)))
+      goto err;
+  break;
+
+ case DDI_EXDAT_OP32:
+  if (bytewriter_putw(writer,LESWAP16(symbol_id)))
+      goto err;
+  if (bytewriter_putl(writer,LESWAP32(name_offset)))
+      goto err;
+  break;
+
+ default: __builtin_unreachable();
+ }
+ return 0;
+err:
+ return -1;
+}
+
+
+
 
 INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
  DeeDDIObject *result; size_t result_size;
@@ -262,10 +313,10 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
                           (current_basescope->bs_name->k_size+1)) < 0)
       goto err;
   /* Link the initial symbol name for the main function. */
-  result->d_symbol_names = (uintptr_t *)Dee_Malloc(sizeof(uintptr_t));
-  if unlikely(!result->d_symbol_names) goto err;
-  result->d_symbols = 1;
-  ((uintptr_t *)result->d_symbol_names)[0] = 0;
+  result->d_strings = (uint32_t *)Dee_Malloc(sizeof(uint32_t));
+  if unlikely(!result->d_strings) goto err;
+  result->d_nstring = 1;
+  ((uint32_t *)result->d_strings)[0] = 0;
   /* No need to set this field. - The name has
    * already been set to point at offset ZERO(0). */
   ASSERT(result->d_start.dr_name == 0);
@@ -300,7 +351,7 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
     /* The source file has changed and we must
      * allocate the new one's path & file. */
     char *filename; size_t length; char *file_begin;
-    uintptr_t path_offset,file_offset; int32_t temp;
+    uint32_t path_offset,file_offset; int32_t temp;
     filename = (char *)TPPFile_Filename(new_state.tpp_file,&length);
     file_begin = (char *)memrchr(filename,'/',length);
 #ifdef CONFIG_HOST_WINDOWS
@@ -317,7 +368,7 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
      tab_str = ascii_printer_allocstr(&strtab,file_begin+1,
                                       (size_t)(length-(file_begin-filename))+1);
      if unlikely(!tab_str) goto err;
-     file_offset = (uintptr_t)(tab_str - strtab.ap_string->s_str);
+     file_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);
      /* Now to allocate the path. */
      backup = file_begin[0];
      file_begin[0] = '\0'; /* TPP allocates these dynamically to we can cheat a bit... */
@@ -325,10 +376,10 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
                                       (size_t)(file_begin-filename)+1);
      file_begin[0] = backup;
      if unlikely(!tab_str) goto err;
-     path_offset = (uintptr_t)(tab_str - strtab.ap_string->s_str);
-     temp = find_or_alloc_offset((uintptr_t **)&result->d_path_names,
-                                               &result->d_paths,
-                                  path_offset,UINT16_MAX-1);
+     path_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);
+     temp = find_or_alloc_offset((uint32_t **)&result->d_strings,
+                                              &result->d_nstring,
+                                  path_offset,UINT32_MAX-1);
      if unlikely(temp < 0) goto err;
      new_state.reg_path = (uint16_t)(temp+1);
     } else {
@@ -336,13 +387,13 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
      if (length) ++length;
      filename = ascii_printer_allocstr(&strtab,filename,length);
      if unlikely(!filename) goto err;
-     file_offset = (uintptr_t)(filename - strtab.ap_string->s_str);
+     file_offset = (uint32_t)(filename - strtab.ap_string->s_str);
      new_state.reg_path = 0; /* No path. */
     }
     /* Allocate an entry for the file name. */
-    temp = find_or_alloc_offset((uintptr_t **)&result->d_file_names,
-                                              &result->d_files,
-                                 file_offset,UINT16_MAX);
+    temp = find_or_alloc_offset((uint32_t **)&result->d_strings,
+                                             &result->d_nstring,
+                                 file_offset,UINT32_MAX);
     if unlikely(temp < 0) goto err;
     new_state.reg_file = (uint16_t)temp;
    }
@@ -359,15 +410,15 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
       ASSERT(binding->db_index < current_assembler.a_localc);
       if (binding->db_name) {
        symbol_name = ascii_printer_allocstr(&strtab,
-                                              binding->db_name->k_name,
-                                              binding->db_name->k_size+1);
+                                             binding->db_name->k_name,
+                                             binding->db_name->k_size + 1);
        if unlikely(!symbol_name) goto err;
        /* Allocate an entry for the symbol name. */
-       symbol_name_id = find_or_alloc_offset((uintptr_t **)&result->d_symbol_names,
-                                                           &result->d_symbols,
-                                             (size_t)(symbol_name -
-                                                      strtab.ap_string->s_str),
-                                              UINT16_MAX);
+       symbol_name_id = find_or_alloc_offset((uint32_t **)&result->d_strings,
+                                                          &result->d_nstring,
+                                             (uint32_t)(symbol_name -
+                                                        strtab.ap_string->s_str),
+                                              UINT32_MAX);
        if unlikely(symbol_name_id < 0) goto err;
        *bind_text++ = DDI_DEFLCNAME;
        bind_text = put_uleb(bind_text,binding->db_index);
@@ -380,20 +431,20 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
       /* Stack-binding */
       if (binding->db_name) {
        symbol_name = ascii_printer_allocstr(&strtab,
-                                              binding->db_name->k_name,
-                                              binding->db_name->k_size+1);
+                                             binding->db_name->k_name,
+                                             binding->db_name->k_size+1);
        if unlikely(!symbol_name) goto err;
        /* Allocate an entry for the symbol name. */
-       symbol_name_id = find_or_alloc_offset((uintptr_t **)&result->d_symbol_names,
-                                                           &result->d_symbols,
-                                             (size_t)(symbol_name -
-                                                      strtab.ap_string->s_str),
-                                              UINT16_MAX);
+       symbol_name_id = find_or_alloc_offset((uint32_t **)&result->d_strings,
+                                                          &result->d_nstring,
+                                             (uint32_t)(symbol_name -
+                                                        strtab.ap_string->s_str),
+                                              UINT32_MAX);
        if unlikely(symbol_name_id < 0) goto err;
        /* Optimize to make use of the `DDI_DEFSPNAME' instruction. */
-       if (old_state.reg_usp == binding->db_index+1) {
+       if (old_state.reg_usp == binding->db_index + 1) {
         *bind_text++ = DDI_DEFSPNAME;
-       } else if (new_state.reg_usp == binding->db_index+1) {
+       } else if (new_state.reg_usp == binding->db_index + 1) {
         bind_text = usp_transition(bind_text,old_state.reg_usp,new_state.reg_usp);
         old_state.reg_usp = new_state.reg_usp;
         *bind_text++ = DDI_DEFSPNAME;
@@ -413,14 +464,14 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
       }
      }
      /* Append the new text to the resulting DDI object. */
-     bind_size = (size_t)(bind_text-bind_buffer);
+     bind_size = (size_t)(bind_text - bind_buffer);
      if (!bind_size) continue;
      /* NOTE: With our very generous preallocation above,
       *       we're unlikely to have to allocate even more... */
      while unlikely(bind_size > result_size) {
       /* Must allocate more buffer memory. */
-      size_t old_alloc = result_size+(size_t)(code_iter-result->d_ddi);
-      size_t new_alloc = old_alloc*2;
+      size_t old_alloc = result_size + (size_t)(code_iter - result->d_ddi);
+      size_t new_alloc = old_alloc * 2;
       DeeDDIObject *new_result;
 do_realloc_bind:
       ASSERT(old_alloc);
@@ -428,7 +479,7 @@ do_realloc_bind:
       ASSERT(old_alloc != new_alloc);
       new_result = (DeeDDIObject *)DeeObject_TryRealloc(result,offsetof(DeeDDIObject,d_ddi)+1+new_alloc);
       if unlikely(!new_result) {
-       size_t min_alloc = bind_size+(size_t)(code_iter-result->d_ddi);
+       size_t min_alloc = bind_size + (size_t)(code_iter - result->d_ddi);
        if (new_alloc != min_alloc) { new_alloc = min_alloc; goto do_realloc_bind; }
        if (Dee_CollectMemory(offsetof(DeeDDIObject,d_ddi)+1+new_alloc)) goto do_realloc_bind;
        goto err;
@@ -438,7 +489,7 @@ do_realloc_bind:
       code_iter += (uintptr_t)new_result;
       /* Update the result buffer and its remaining size. */
       result      = new_result;
-      result_size = new_alloc-(size_t)(code_iter-result->d_ddi);
+      result_size = new_alloc - (size_t)(code_iter - result->d_ddi);
      }
      memcpy(code_iter,bind_buffer,bind_size);
      code_iter   += bind_size;
@@ -459,6 +510,8 @@ do_realloc_bind:
     result->d_start.dr_name = old_state.reg_name;
     result->d_start.dr_col  = old_state.reg_col;
     result->d_start.dr_lno  = old_state.reg_lno;
+    /* Remember how many text-bytes were used to describe initial transformations. */
+    result->d_ddiinit       = (uint16_t)(code_iter - result->d_ddi);
     is_first                = false;
     /* Don't emit a transition if the first checkpoint
      * is located at the start of the function */
@@ -487,7 +540,7 @@ do_realloc:
     ASSERT(old_alloc != new_alloc);
     new_result = (DeeDDIObject *)DeeObject_TryRealloc(result,offsetof(DeeDDIObject,d_ddi)+1+new_alloc);
     if unlikely(!new_result) {
-     size_t min_alloc = text_size+(size_t)(code_iter-result->d_ddi);
+     size_t min_alloc = text_size + (size_t)(code_iter - result->d_ddi);
      if (new_alloc != min_alloc) { new_alloc = min_alloc; goto do_realloc; }
      if (Dee_CollectMemory(offsetof(DeeDDIObject,d_ddi)+1+new_alloc)) goto do_realloc;
      goto err;
@@ -518,14 +571,60 @@ do_realloc:
   }
  }
 
- /* TODO: Inherit name information for static, ref & argument symbols.
-  *      (That information isn't being created, yet) */
+ if (!(current_assembler.a_flag & ASM_FNODDIXDAT)) {
+  uint16_t i,offset; struct symbol *sym;
+  struct bytewriter writer = BYTEWRITER_INIT;
+  if unlikely(!bytewriter_alloc(&writer,4)) goto err_xwriter; /* `dx_size' */
+  /* Generate debug information for references and static variables. */
+  for (i = 0; i < current_assembler.a_refc; ++i) {
+   char *name;
+   sym = current_assembler.a_refv[i].sr_sym;
+   if (sym->s_name->k_size == 0)
+       continue; /* Anonymous reference. */
+   name = ascii_printer_allocstr(&strtab,
+                                  sym->s_name->k_name,
+                                  sym->s_name->k_size + 1);
+   if unlikely(!name) goto err_xwriter;
+   if unlikely(xddi_putsymbol(&writer,
+                               DDI_EXDAT_O_RNAM,
+                               i,
+                              (uint32_t)(name - strtab.ap_string->s_str)))
+      goto err_xwriter;
+  }
+  ASSERT(current_assembler.a_constc >= current_assembler.a_staticc);
+  offset = current_assembler.a_constc - current_assembler.a_staticc;
+  for (i = 0; i < current_assembler.a_staticc; ++i) {
+   char *name;
+   sym = current_assembler.a_staticv[i].ss_sym;
+   if (!sym)
+       continue; /* Anonymous symbol (asm-level). */
+   if (sym->s_name->k_size == 0)
+       continue; /* Anonymous symbol (ast-level). */
+   name = ascii_printer_allocstr(&strtab,
+                                  sym->s_name->k_name,
+                                  sym->s_name->k_size + 1);
+   if unlikely(!name) goto err_xwriter;
+   if unlikely(xddi_putsymbol(&writer,
+                               DDI_EXDAT_O_SNAM,
+                               offset + i,
+                              (uint32_t)(name - strtab.ap_string->s_str)))
+      goto err_xwriter;
+  }
+  /* TODO: Generate information about the names of static variables. */
+  ((struct ddi_exdat *)writer.bw_base)->dx_size = (uint32_t)(writer.bw_size - 4);
+  result->d_exdat = (struct ddi_exdat *)bytewriter_flush(&writer);
+  __IF0 {
+err_xwriter:
+   bytewriter_fini(&writer);
+   goto err;
+  }
+ }
 
  *code_iter++ = DDI_STOP; /* This is why we always overallocate by one. */
  /* Free up unused memory. */
  { uint32_t used_size = (uint32_t)(code_iter-result->d_ddi);
    DeeDDIObject *new_result;
-   result->d_ddi_size = used_size;
+   result->d_ddisize = used_size;
    new_result = (DeeDDIObject *)DeeObject_TryRealloc(result,used_size+
                                                      offsetof(DeeDDIObject,d_ddi));
    if (new_result) result = new_result;
@@ -545,12 +644,8 @@ err:
  /* Free all buffers and fail. */
  ascii_printer_fini(&strtab);
 err_noprinter:
- Dee_Free((void *)result->d_symbol_names);
- Dee_Free((void *)result->d_file_names);
- Dee_Free((void *)result->d_path_names);
- Dee_Free((void *)result->d_arg_names);
- Dee_Free((void *)result->d_ref_names);
- Dee_Free((void *)result->d_static_names);
+ Dee_Free((void *)result->d_exdat);
+ Dee_Free((void *)result->d_strings);
  DeeObject_Free(result);
  return NULL;
 }

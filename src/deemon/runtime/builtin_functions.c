@@ -345,7 +345,7 @@ PRIVATE DREF DeeObject *DCALL
 f_rt_badcall(size_t argc, DeeObject **__restrict argv) {
  DeeThreadObject *ts;
  size_t argc_cur,argc_min = 0,argc_max;
- char const *function_name = NULL;
+ char *function_name = NULL;
  if (DeeArg_Unpack(argc,argv,"Iu:__badcall",&argc_max))
      goto done;
  ts = DeeThread_Self();
@@ -355,8 +355,7 @@ f_rt_badcall(size_t argc, DeeObject **__restrict argv) {
   DeeCodeObject *code = frame->cf_func->fo_code;
   argc_cur = frame->cf_argc;
   argc_min = code->co_argc_min;
-  function_name = DeeDDI_NAME(code->co_ddi);
-  if (!*function_name) function_name = NULL;
+  function_name = DeeCode_NAME(code);
  }
  /* Throw the invalid-argument-count error. */
  err_invalid_argc(function_name,

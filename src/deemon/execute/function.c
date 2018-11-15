@@ -207,13 +207,14 @@ without_module:
   * In either case: we probably won't be able to find it, so the best
   * we can do is to check what kind of DDI information is provided by
   * the function's code. */
- if (DeeDDI_HAS_NAME(self->co_ddi)) {
-  char const *name;
-  name = DeeDDI_NAME(self->co_ddi);
-  /* Well... At least we got the name. - That's something. */
-  info->fi_name = (DREF DeeStringObject *)DeeString_New(name);
-  if unlikely(!info->fi_name) goto err;
-  return 0;
+ {
+  char *name = DeeCode_NAME(self);
+  if (name) {
+   /* Well... At least we got the name. - That's something. */
+   info->fi_name = (DREF DeeStringObject *)DeeString_New(name);
+   if unlikely(!info->fi_name) goto err;
+   return 0;
+  }
  }
  return 1;
 err_name:
@@ -275,7 +276,7 @@ DeeFunction_NewInherited(DeeObject *__restrict code, size_t refc,
          "refc                             = %I16u\n"
          "name                             = %s\n",
          ((DeeCodeObject *)code)->co_refc,refc,
-         DeeDDI_NAME(((DeeCodeObject *)code)->co_ddi));
+         DeeCode_NAME(code));
  result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv)+
                                                     (refc*sizeof(DREF DeeObject *)));
  if unlikely(!result) goto done;
@@ -514,14 +515,13 @@ function_visit(Function *__restrict self,
 
 PRIVATE DREF DeeObject *DCALL
 function_str(Function *__restrict self) {
- DeeDDIObject *ddi = self->fo_code->co_ddi;
- if (DeeDDI_HAS_NAME(ddi))
-     return DeeString_New(DeeDDI_NAME(ddi));
+ char *name = DeeCode_NAME(self->fo_code);
+ if (name)
+     return DeeString_New(name);
  return_reference_(&str_function);
 }
 PRIVATE DREF DeeObject *DCALL
 function_repr(Function *__restrict self) {
-#if 1
  uint16_t i;
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
 #if 0
@@ -544,51 +544,6 @@ function_repr(Function *__restrict self) {
 err:
  unicode_printer_fini(&printer);
  return NULL;
-#else
- uint16_t i,argc;
- struct unicode_printer printer = UNICODE_PRINTER_INIT;
- DeeCodeObject *code = self->fo_code;
- DeeDDIObject *ddi = code->co_ddi;
- char const *name = DeeDDI_NAME(ddi);
- /* Include attribute tags in the string representation. */
- if (code->co_flags&CODE_FCOPYABLE && UNICODE_PRINTER_PRINT(&printer,"@copyable ") < 0) goto err;
- if (code->co_flags&CODE_FASSEMBLY && UNICODE_PRINTER_PRINT(&printer,"@assembly ") < 0) goto err;
- if (code->co_flags&CODE_FLENIENT && UNICODE_PRINTER_PRINT(&printer,"@lenient ") < 0) goto err;
- if (code->co_flags&CODE_FTHISCALL && UNICODE_PRINTER_PRINT(&printer,"@thiscall ") < 0) goto err;
- if (code->co_flags&CODE_FHEAPFRAME && UNICODE_PRINTER_PRINT(&printer,"@heapframe ") < 0) goto err;
- if (code->co_flags&CODE_FCONSTRUCTOR && UNICODE_PRINTER_PRINT(&printer,"@constructor ") < 0) goto err;
- if (UNICODE_PRINTER_PRINT(&printer,"function") < 0) goto err;
- if (*name && unicode_printer_printf(&printer," %s",name) < 0) goto err;
- if (UNICODE_PRINTER_PRINT(&printer,"(") < 0) goto err;
- argc = code->co_argc_max;
- for (i = 0; i < argc; ++i) {
-  if (i != 0 && UNICODE_PRINTER_PRINT(&printer,", ") < 0) goto err;
-  if (DeeDDI_HAS_ARG(ddi,i)) {
-   if (unicode_printer_printf(&printer,"%s",DeeDDI_ARG_NAME(ddi,i)) < 0)
-       goto err;
-  } else {
-   if (unicode_printer_printf(&printer,"arg%I16u",i) < 0)
-       goto err;
-  }
-  if (i >= code->co_argc_min) {
-   if (unicode_printer_printf(&printer," = %r",
-                              code->co_defaultv[i-code->co_argc_min]) < 0)
-       goto err;
-  }
- }
- if (code->co_flags&CODE_FVARARGS) {
-  if (argc != 0 && UNICODE_PRINTER_PRINT(&printer,", ") < 0) goto err;
-  if (DeeDDI_HAS_ARG(ddi,argc) &&
-      unicode_printer_printf(&printer,"%s",DeeDDI_ARG_NAME(ddi,argc)) < 0)
-      goto err;
-  if (UNICODE_PRINTER_PRINT(&printer,"...") < 0) goto err;
- }
- if (UNICODE_PRINTER_PRINT(&printer,")") < 0) goto err;
- return unicode_printer_pack(&printer);
-err:
- unicode_printer_fini(&printer);
- return NULL;
-#endif
 }
 
 PRIVATE dhash_t DCALL
@@ -665,8 +620,8 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_copy_ctor = */NULL, /* TODO */
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */&function_init,
                 /* .tp_free      = */NULL, /* XXX: Use the tuple-allocator? */
             }
@@ -1325,15 +1280,14 @@ again:
  code = NULL;
  if (other->yi_frame.cf_func &&
   !((code = other->yi_frame.cf_func->fo_code)->co_flags&CODE_FCOPYABLE)) {
-  DeeDDIObject *ddi = other->yi_frame.cf_func->fo_code->co_ddi;
-  char *function_name = "?";
-  if (ddi) {
-   function_name = DeeDDI_NAME(ddi);
-   Dee_Incref(ddi);
-  }
+  char *function_name; DeeCodeObject *code;
+  code = other->yi_frame.cf_func->fo_code;
+  Dee_Incref(code);
+  function_name = DeeCode_NAME(code);
   recursive_rwlock_endwrite(&other->yi_lock);
+  if (!function_name) function_name = "?";
   DeeError_Throwf(&DeeError_ValueError,"Function `%s' is not copyable",function_name);
-  Dee_XDecref(ddi);
+  Dee_XDecref(code);
   return -1;
  }
  self->yi_func = other->yi_func;

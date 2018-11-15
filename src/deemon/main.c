@@ -1402,11 +1402,11 @@ LOCAL void DCALL emitpp_putline(void) {
   emitpp_lastfilename = filename_text;
   emitpp_writeout(" \"",2);
   quote_size = TPP_SizeofEscape(filename_text,filename_size);
-  quote_buffer = (char *)malloc(quote_size*sizeof(char));
+  quote_buffer = (char *)Dee_TryMalloc(quote_size*sizeof(char));
   if (quote_buffer) {
    TPP_Escape(quote_buffer,filename_text,filename_size);
    emitpp_writeout(quote_buffer,quote_size*sizeof(char));
-   free(quote_buffer);
+   Dee_Free(quote_buffer);
   }
   emitpp_writeout((emitpp_state&EMITPP_MOUTLINE) == EMITPP_FOUTLINE_ZERO
                ? "\"\0" : "\"\n",2*sizeof(char));
@@ -1684,7 +1684,7 @@ PRIVATE void DCALL clear_inner_tpp_state(void) {
  /* Emit warnings about all unclosed #ifdef-blocks. */
  if (!(TPPLexer_Current->l_flags&TPPLEXER_FLAG_ERROR))
        TPPLexer_ClearIfdefStack();
- free(TPPLexer_Current->l_ifdef.is_slotv);
+ Dee_Free(TPPLexer_Current->l_ifdef.is_slotv);
  /* Clear the remainder of the #include-stack. */
  fileiter = TPPLexer_Current->l_token.t_file;
  do {

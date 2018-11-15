@@ -117,30 +117,30 @@ LOCAL ssize_t (readlink)(char const *UNUSED(path),
 LOCAL DIR *(opendir)(char const *name) {
  DIR *result; size_t namelen = strlen(name);
  char *query = (char *)malloc((namelen+3)*sizeof(char));
- if __unlikely(!query) return NULL;
+ if unlikely(!query) return NULL;
  result = (DIR *)malloc(sizeof(DIR));
- if __unlikely(!result) goto done;
+ if unlikely(!result) goto done;
  memcpy(query,name,namelen*sizeof(char));
  query[namelen]   = '\\';
  query[namelen+1] = '*';
  query[namelen+2] = '\0';
  result->d_isfirst = 1;
  result->d_hnd = _findfirst32(query,(struct _finddata32_t *)&result->d_ent.d_attrib);
- if __unlikely(result->d_hnd == -1) { free(result); result = 0; }
+ if unlikely(result->d_hnd == -1) { free(result); result = 0; }
 done:
  free(query);
  return result;
 }
 LOCAL int (closedir)(DIR *dirp) {
 #if 0
- if __unlikely(!dirp) { _set_errno(EINVAL); return -1; }
+ if unlikely(!dirp) { _set_errno(EINVAL); return -1; }
 #endif
  _findclose(dirp->d_hnd);
  free(dirp);
  return 0;
 }
 LOCAL struct dirent *(readdir)(DIR *dirp) {
- if __unlikely(!dirp) { _set_errno(EINVAL); return NULL; }
+ if unlikely(!dirp) { _set_errno(EINVAL); return NULL; }
  if (!dirp->d_isfirst) {
   if (_findnext32(dirp->d_hnd,(struct _finddata32_t *)&dirp->d_ent.d_attrib))
       return NULL;

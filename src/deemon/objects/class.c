@@ -900,7 +900,7 @@ instance_builtin_tdeepload(DeeTypeObject *__restrict tp_self,
  /* Replace all members with deep copies of themself. */
  size = desc->cd_desc->cd_imemb_size;
  for (i = 0; i < size; ++i) {
-  if (DeeObject_InplaceXDeepCopyWithLock(&instance->id_vtab[i],
+  if (DeeObject_XInplaceDeepCopyWithLock(&instance->id_vtab[i],
                                          &instance->id_lock))
       goto err;
  }

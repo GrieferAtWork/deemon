@@ -38,6 +38,9 @@
 #include <deemon/asm.h>
 #include <deemon/util/string.h>
 
+#include <hybrid/unaligned.h>
+#include <hybrid/byteswap.h>
+#include <hybrid/byteorder.h>
 #include <stdint.h>
 
 #include "../objects/seq/svec.h"
@@ -299,6 +302,142 @@ trigger_breakpoint(struct code_frame *__restrict frame) {
 }
 
 
+
+
+
+
+PUBLIC char *DCALL
+DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid) {
+ /* Argument */
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeCode_Type);
+ if (((DeeCodeObject *)self)->co_keywords &&
+     aid < ((DeeCodeObject *)self)->co_argc_max)
+     return DeeString_STR(((DeeCodeObject *)self)->co_keywords[aid]);
+ return NULL;
+}
+
+PUBLIC char *DCALL
+DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid) {
+ /* Static symbol name */
+ DeeDDIObject *ddi; uint8_t *reader;
+ uint32_t offset;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeCode_Type);
+ ddi = ((DeeCodeObject *)self)->co_ddi;
+ if (ddi->d_exdat) {
+  reader = (uint8_t *)ddi->d_exdat->dx_data;
+  for (;;) {
+   uint8_t op = *reader++;
+   switch (op) {
+   case DDI_EXDAT_O_END:
+    goto done_exdat;
+   case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP8:
+    if (*(uint8_t *)(reader + 0) == sid) {
+     offset = *(uint8_t *)(reader + 1);
+     goto return_strtab_offset;
+    }
+    reader += 1 + 1;
+    break;
+   case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP16:
+    if (UNALIGNED_GETLE16((uint16_t *)(reader + 0)) == sid) {
+     offset = UNALIGNED_GETLE16((uint16_t *)(reader + 2));
+     goto return_strtab_offset;
+    }
+    reader += 2 + 2;
+    break;
+   case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP32:
+    if (UNALIGNED_GETLE16((uint16_t *)(reader + 0)) == sid) {
+     offset = UNALIGNED_GETLE32((uint32_t *)(reader + 2));
+     goto return_strtab_offset;
+    }
+    reader += 2 + 4;
+    break;
+   default:
+    switch (op & DDI_EXDAT_OPMASK) {
+    case DDI_EXDAT_OP8:  reader += 1 + 1; break;
+    case DDI_EXDAT_OP16: reader += 2 + 2; break;
+    case DDI_EXDAT_OP32: reader += 2 + 4; break;
+    default: break;
+    }
+    break;
+   }
+  }
+ }
+done_exdat:
+ return NULL;
+return_strtab_offset:
+ return DeeString_STR(ddi->d_strtab) + offset;
+}
+
+PUBLIC char *DCALL
+DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid) {
+ /* Reference symbol name */
+ DeeDDIObject *ddi; uint8_t *reader;
+ uint32_t offset;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeCode_Type);
+ ddi = ((DeeCodeObject *)self)->co_ddi;
+ if (ddi->d_exdat) {
+  reader = (uint8_t *)ddi->d_exdat->dx_data;
+  for (;;) {
+   uint8_t op = *reader++;
+   switch (op) {
+   case DDI_EXDAT_O_END:
+    goto done_exdat;
+   case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP8:
+    if (*(uint8_t *)(reader + 0) == rid) {
+     offset = *(uint8_t *)(reader + 1);
+     goto return_strtab_offset;
+    }
+    reader += 1 + 1;
+    break;
+   case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP16:
+    if (UNALIGNED_GETLE16((uint16_t *)(reader + 0)) == rid) {
+     offset = UNALIGNED_GETLE16((uint16_t *)(reader + 2));
+     goto return_strtab_offset;
+    }
+    reader += 2 + 2;
+    break;
+   case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP32:
+    if (UNALIGNED_GETLE16((uint16_t *)(reader + 0)) == rid) {
+     offset = UNALIGNED_GETLE32((uint32_t *)(reader + 2));
+     goto return_strtab_offset;
+    }
+    reader += 2 + 4;
+    break;
+   default:
+    switch (op & DDI_EXDAT_OPMASK) {
+    case DDI_EXDAT_OP8:  reader += 1 + 1; break;
+    case DDI_EXDAT_OP16: reader += 2 + 2; break;
+    case DDI_EXDAT_OP32: reader += 2 + 4; break;
+    default: break;
+    }
+    break;
+   }
+  }
+ }
+done_exdat:
+ return NULL;
+return_strtab_offset:
+ return DeeString_STR(ddi->d_strtab) + offset;
+}
+
+PUBLIC char *DCALL
+DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id) {
+ /* DDI String */
+ DeeDDIObject *ddi;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeCode_Type);
+ ddi = ((DeeCodeObject *)self)->co_ddi;
+ if (id < ddi->d_nstring)
+     return DeeString_STR(ddi->d_strtab) + ddi->d_strings[id];
+ return NULL;
+}
+
+
+
+
+
+
+
+
 /* @return: 0: The code is not contained.
  * @return: 1: The code is contained.
  * @return: 2: The frame chain is incomplete, but code wasn't found thus far. */
@@ -385,7 +524,7 @@ err:
 
 PRIVATE void DCALL
 code_fini(DeeCodeObject *__restrict self) {
- DeeObject *const *iter,*const *end;
+ uint16_t i;
  ASSERTF(!self->co_module ||
          !DeeModule_Check(self->co_module) ||
           self != self->co_module->mo_root ||
@@ -395,21 +534,27 @@ code_fini(DeeCodeObject *__restrict self) {
  ASSERT(self->co_argc_max >= self->co_argc_min);
  /* Clear default argument objects. */
  if (self->co_argc_max != self->co_argc_min) {
-  iter = self->co_defaultv;
-  end  = iter+(self->co_argc_max-self->co_argc_min);
-  for (; iter != end; ++iter) Dee_Decref(*iter);
+  uint16_t count = self->co_argc_max - self->co_argc_min;
+  for (i = 0; i < count; ++i)
+      Dee_Decref(self->co_defaultv[i]);
  }
  /* Clear static variables/constants. */
- end = (iter = self->co_staticv)+self->co_staticc;
- for (; iter != end; ++iter) Dee_Decref(*iter);
+ for (i = 0; i < self->co_staticc; ++i)
+     Dee_Decref(self->co_staticv[i]);
 
  /* Clear exception handlers. */
- { struct except_handler *xiter,*xend;
-   xend = (xiter = self->co_exceptv)+self->co_exceptc;
-   for (; xiter != xend; ++xiter) Dee_XDecref(xiter->eh_mask);
- }
+ for (i = 0; i < self->co_exceptc; ++i)
+     Dee_XDecref(self->co_exceptv[i].eh_mask);
+
  /* Clear debug information. */
  Dee_Decref(self->co_ddi);
+
+ /* Clear keyword names. */
+ if (self->co_keywords) {
+  for (i = 0; i < self->co_argc_max; ++i)
+      Dee_Decref(self->co_keywords[i]);
+  Dee_Free((void *)self->co_keywords);
+ }
 
  /* Clear module information. */
  Dee_XDecref(self->co_module);
@@ -548,19 +693,6 @@ code_isconstructor(DeeCodeObject *__restrict self) {
  return_bool_(self->co_flags & CODE_FCONSTRUCTOR);
 }
 
-PRIVATE struct type_member code_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__ddi__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_ddi),
-                          "->?Ert:ddi\n"
-                          "The DDI (DeemonDebugInformation) data block"),
-    TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_module),
-                          "->?Dmodule"),
-    TYPE_MEMBER_FIELD_DOC("__argc_min__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_min),
-                          "Min amount of arguments required to execute this code"),
-    TYPE_MEMBER_FIELD_DOC("__argc_max__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_max),
-                          "Max amount of arguments accepted by this code (excluding a varargs argument)"),
-    TYPE_MEMBER_END
-};
-
 PRIVATE DREF DeeObject *DCALL
 code_get_name(DeeCodeObject *__restrict self) {
  struct function_info info;
@@ -649,6 +781,19 @@ err:
  return NULL;
 }
 
+PRIVATE struct type_member code_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__ddi__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_ddi),
+                          "->?Ert:ddi\n"
+                          "The DDI (DeemonDebugInformation) data block"),
+    TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_module),
+                          "->?Dmodule"),
+    TYPE_MEMBER_FIELD_DOC("__argc_min__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_min),
+                          "Min amount of arguments required to execute this code"),
+    TYPE_MEMBER_FIELD_DOC("__argc_max__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_max),
+                          "Max amount of arguments accepted by this code (excluding a varargs argument)"),
+    TYPE_MEMBER_END
+};
+
 PRIVATE struct type_getset code_getsets[] = {
     { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_name, NULL, NULL,
       DOC("->?Dstring\n"
@@ -728,10 +873,6 @@ PRIVATE struct type_getset code_getsets[] = {
 PRIVATE struct type_gc code_gc = {
     /* .tp_clear = */(void(DCALL *)(DeeObject *__restrict))&code_clear
 };
-
-PRIVATE DREF DeeObject *DCALL code_ctor(void) {
- return_reference_((DeeObject *)&empty_code);
-}
 
 PRIVATE dhash_t DCALL
 code_hash(DeeCodeObject *__restrict self) {
@@ -907,6 +1048,146 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeObject *DCALL code_ctor(void) {
+ return_reference_((DeeObject *)&empty_code);
+}
+
+PRIVATE DREF DeeCodeObject *DCALL
+code_copy(DeeCodeObject *__restrict self) {
+ DREF DeeCodeObject *result; uint16_t i;
+ result = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject,co_code) +
+                                                   self->co_codebytes);
+ if unlikely(!result) goto done;
+ memcpy(result,self,offsetof(DeeCodeObject,co_code) + self->co_codebytes);
+#ifndef CONFIG_NO_THREADS
+ rwlock_init(&result->co_static_lock);
+#endif
+ if (result->co_keywords) {
+  if (!result->co_argc_max)
+       result->co_keywords = NULL;
+  else {
+   result->co_keywords = (DREF DeeStringObject **)Dee_Malloc(result->co_argc_max *
+                                                             sizeof(DREF DeeStringObject *));
+   if unlikely(!result->co_keywords)
+      goto err_r;
+   memcpy((void *)result->co_keywords,self->co_keywords,
+           result->co_argc_max * sizeof(DREF DeeStringObject *));
+   for (i = 0; i < result->co_argc_max; ++i)
+       Dee_Incref(result->co_keywords[i]);
+  }
+ }
+ assert(result->co_argc_max >= result->co_argc_min);
+ assert((result->co_defaultv == NULL) ==
+        (result->co_argc_max == result->co_argc_min));
+ if (result->co_defaultv) {
+  uint16_t n = result->co_argc_max - result->co_argc_min;
+  result->co_defaultv = (DREF DeeObject **)Dee_Malloc(n * sizeof(DREF DeeObject *));
+  if unlikely(!result->co_defaultv)
+     goto err_r_keywords;
+  memcpy((void *)result->co_defaultv,self->co_defaultv,
+          n * sizeof(DREF DeeObject *));
+  for (i = 0; i < n; ++i)
+      Dee_Incref(result->co_defaultv[i]);
+ }
+ assert((result->co_staticc != 0) ==
+        (result->co_staticv != NULL));
+ if (result->co_staticv) {
+  result->co_staticv = (DREF DeeObject **)Dee_Malloc(result->co_staticc *
+                                                     sizeof(DREF DeeObject *));
+  if unlikely(!result->co_staticv)
+     goto err_r_default;
+  rwlock_read(&self->co_static_lock);
+  memcpy((void *)result->co_staticv,self->co_staticv,
+          result->co_staticc * sizeof(DREF DeeObject *));
+  for (i = 0; i < result->co_staticc; ++i)
+      Dee_Incref(result->co_staticv[i]);
+  rwlock_endread(&self->co_static_lock);
+ }
+ if (!result->co_exceptc)
+      result->co_exceptv = NULL;
+ else {
+  result->co_exceptv = (struct except_handler *)Dee_Malloc(result->co_exceptc *
+                                                           sizeof(struct except_handler));
+  if unlikely(!result->co_exceptv)
+     goto err_r_static;
+  memcpy(result->co_exceptv,self->co_exceptv,
+         result->co_exceptc *
+         sizeof(struct except_handler));
+  for (i = 0; i < result->co_exceptc; ++i)
+      Dee_XIncref(result->co_exceptv[i].eh_mask);
+ }
+
+ Dee_XIncref(result->co_ddi);
+ Dee_XIncref(result->co_module);
+ DeeObject_Init(result,&DeeCode_Type);
+ DeeGC_Track((DeeObject *)result);
+done:
+ return result;
+err_r_static:
+ if (result->co_staticv) {
+  for (i = 0; i < result->co_staticc; ++i)
+      Dee_Decref(result->co_staticv[i]);
+  Dee_Free(result->co_staticv);
+ }
+err_r_default:
+ if (result->co_defaultv) {
+  uint16_t n = result->co_argc_max - result->co_argc_min;
+  for (i = 0; i < n; ++i)
+      Dee_Decref(result->co_defaultv[i]);
+  Dee_Free((void *)result->co_defaultv);
+ }
+err_r_keywords:
+ if (result->co_keywords) {
+  for (i = 0; i < result->co_argc_max; ++i)
+      Dee_Decref(result->co_keywords[i]);
+  Dee_Free((void *)result->co_keywords);
+ }
+err_r:
+ DeeGCObject_Free(result);
+ return NULL;
+}
+
+PRIVATE DREF DeeCodeObject *DCALL
+code_deepcopy(DeeCodeObject *__restrict self) {
+ DREF DeeCodeObject *result; uint16_t i;
+ result = code_copy(self);
+ if unlikely(!result) goto done;
+ if (result->co_defaultv) {
+  uint16_t n = result->co_argc_max - result->co_argc_min;
+  for (i = 0; i < n; ++i) {
+   if (DeeObject_InplaceDeepCopy((DeeObject **)&result->co_defaultv[i]))
+       goto err_r;
+  }
+ }
+ if (result->co_staticv) {
+  for (i = 0; i < result->co_staticc; ++i) {
+   if (DeeObject_InplaceDeepCopyWithLock((DeeObject **)&result->co_staticv[i],&result->co_static_lock))
+       goto err_r;
+  }
+ }
+#if 0 /* Default information wouldn't change... */
+ if (DeeObject_InplaceDeepCopy((DeeObject **)&result->co_ddi))
+     goto err_r;
+#endif
+#if 0 /* Types are singletons. */
+ if (result->co_exceptv) {
+  for (i = 0; i < result->co_exceptc; ++i) {
+   if (DeeObject_XInplaceDeepCopy((DeeObject **)&result->co_exceptv[i].eh_mask))
+       goto err_r;
+  }
+ }
+#endif
+#if 0 /* Modules are singletons! - If they weren't we'd be corrupting their filesystem namespace... */
+ if (DeeObject_XInplaceDeepCopy((DeeObject **)&result->co_module))
+     goto err_r;
+#endif
+done:
+ return result;
+err_r:
+ Dee_Decref(result);
+ return NULL;
+}
+
 
 PUBLIC DeeTypeObject DeeCode_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -920,8 +1201,8 @@ PUBLIC DeeTypeObject DeeCode_Type = {
         {
             /* .tp_var = */{
                 /* .tp_ctor      = */&code_ctor,
-                /* .tp_copy_ctor = */&DeeObject_NewRef,
-                /* .tp_deep_ctor = */&DeeObject_NewRef,
+                /* .tp_copy_ctor = */&code_copy,
+                /* .tp_deep_ctor = */&code_deepcopy,
                 /* .tp_any_ctor  = */NULL,
                 /* .tp_free      = */NULL
             }
@@ -1012,9 +1293,8 @@ function_call(DeeFunctionObject *__restrict self,
  if unlikely(code->co_flags&CODE_FTHISCALL) {
   /* Special case: Invoke the function as a this-call. */
   if unlikely(!argc) {
-   char *name = DeeDDI_NAME(code->co_ddi);
-   err_invalid_argc(*name ? name : NULL,0,code->co_argc_min+1,
-                     code->co_flags&CODE_FVARARGS ?
+   err_invalid_argc(DeeCode_NAME(code),0,code->co_argc_min+1,
+                    code->co_flags&CODE_FVARARGS ?
                    (size_t)-1 : ((size_t)code->co_argc_max+1));
    return NULL;
   }
@@ -1025,9 +1305,8 @@ function_call(DeeFunctionObject *__restrict self,
             (argc > code->co_argc_max &&
            !(code->co_flags&CODE_FVARARGS))) {
   /* ERROR: Invalid argument count! */
-  char *name = DeeDDI_NAME(code->co_ddi);
-  err_invalid_argc(*name ? name : NULL,argc,code->co_argc_min,
-                    code->co_flags&CODE_FVARARGS ?
+  err_invalid_argc(DeeCode_NAME(code),argc,code->co_argc_min,
+                   code->co_flags&CODE_FVARARGS ?
                   (size_t)-1 : ((size_t)code->co_argc_max));
   return NULL;
  }
@@ -1126,9 +1405,8 @@ DeeFunction_CallTuple(DeeFunctionObject *__restrict self,
  if unlikely(code->co_flags & CODE_FTHISCALL) {
   /* Special case: Invoke the function as a this-call. */
   if unlikely(!DeeTuple_SIZE(args)) {
-   char *name = DeeDDI_NAME(code->co_ddi);
-   err_invalid_argc(*name ? name : NULL,0,code->co_argc_min+1,
-                     code->co_flags&CODE_FVARARGS ?
+   err_invalid_argc(DeeCode_NAME(code),0,code->co_argc_min+1,
+                    code->co_flags&CODE_FVARARGS ?
                    (size_t)-1 : ((size_t)code->co_argc_max+1));
    return NULL;
   }
@@ -1141,10 +1419,9 @@ DeeFunction_CallTuple(DeeFunctionObject *__restrict self,
             (DeeTuple_SIZE(args) > code->co_argc_max &&
            !(code->co_flags&CODE_FVARARGS))) {
   /* ERROR: Invalid argument count! */
-  char *name = DeeDDI_NAME(code->co_ddi);
-  err_invalid_argc(*name ? name : NULL,
-                    DeeTuple_SIZE(args),code->co_argc_min,
-                    code->co_flags&CODE_FVARARGS ?
+  err_invalid_argc(DeeCode_NAME(code),
+                   DeeTuple_SIZE(args),code->co_argc_min,
+                   code->co_flags&CODE_FVARARGS ?
                   (size_t)-1 : ((size_t)code->co_argc_max));
   return NULL;
  }
@@ -1254,7 +1531,7 @@ DeeFunction_ThisCallKw(DeeFunctionObject *__restrict self,
  }
  return DeeFunction_ThisCall(self,this_arg,argc,argv);
 err_no_keywords:
- err_keywords_func_not_accepted(DeeDDI_NAME(self->fo_code->co_ddi),kw);
+ err_keywords_func_not_accepted(DeeCode_NAME(self->fo_code),kw);
  return NULL;
 }
 
@@ -1287,9 +1564,8 @@ DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
             (argc > code->co_argc_max &&
            !(code->co_flags&CODE_FVARARGS))) {
   /* ERROR: Invalid argument count! */
-  char *name = DeeDDI_NAME(code->co_ddi);
-  err_invalid_argc(*name ? name : NULL,argc,code->co_argc_min,
-                    code->co_flags&CODE_FVARARGS ? (size_t)-1 :
+  err_invalid_argc(DeeCode_NAME(code),argc,code->co_argc_min,
+                   code->co_flags&CODE_FVARARGS ? (size_t)-1 :
                   (size_t)code->co_argc_max);
   return NULL;
  }
@@ -1401,10 +1677,9 @@ DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
             (DeeTuple_SIZE(args) > code->co_argc_max &&
            !(code->co_flags&CODE_FVARARGS))) {
   /* ERROR: Invalid argument count! */
-  char *name = DeeDDI_NAME(code->co_ddi);
-  err_invalid_argc(*name ? name : NULL,
-                    DeeTuple_SIZE(args),code->co_argc_min,
-                    code->co_flags&CODE_FVARARGS ? (size_t)-1 :
+  err_invalid_argc(DeeCode_NAME(code),
+                   DeeTuple_SIZE(args),code->co_argc_min,
+                   code->co_flags&CODE_FVARARGS ? (size_t)-1 :
                   (size_t)code->co_argc_max);
   return NULL;
  }
@@ -1507,7 +1782,7 @@ DeeFunction_CallTupleKw(DeeFunctionObject *__restrict self,
  }
  return DeeFunction_CallTuple(self,args);
 err_no_keywords:
- err_keywords_func_not_accepted(DeeDDI_NAME(self->fo_code->co_ddi),kw);
+ err_keywords_func_not_accepted(DeeCode_NAME(self->fo_code),kw);
  return NULL;
 }
 INTERN DREF DeeObject *DCALL
@@ -1528,7 +1803,7 @@ DeeFunction_ThisCallTupleKw(DeeFunctionObject *__restrict self,
  }
  return DeeFunction_ThisCallTuple(self,this_arg,args);
 err_no_keywords:
- err_keywords_func_not_accepted(DeeDDI_NAME(self->fo_code->co_ddi),kw);
+ err_keywords_func_not_accepted(DeeCode_NAME(self->fo_code),kw);
  return NULL;
 }
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */

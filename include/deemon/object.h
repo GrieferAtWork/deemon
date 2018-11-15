@@ -1612,7 +1612,7 @@ DFUNDEF DREF DeeObject *DCALL DeeObject_VNewf(DeeTypeObject *__restrict object_t
 DFUNDEF DREF DeeObject *DCALL DeeObject_Copy(DeeObject *__restrict self);
 DFUNDEF DREF DeeObject *DCALL DeeObject_DeepCopy(DeeObject *__restrict self);
 DFUNDEF int DCALL DeeObject_InplaceDeepCopy(/*in|out*/DREF DeeObject **__restrict pself);
-#define DeeObject_InplaceXDeepCopy(pself) (!*(pself) ? 0 : DeeObject_InplaceDeepCopy(pself))
+#define DeeObject_XInplaceDeepCopy(pself) (!*(pself) ? 0 : DeeObject_InplaceDeepCopy(pself))
 #ifndef CONFIG_NO_THREADS
 /* A helper functions to acquire the proper read/write locks on a given
  * rwlock_t when accessing memory pointed to by the given `*pself'.
@@ -1650,10 +1650,10 @@ DFUNDEF int DCALL DeeObject_InplaceDeepCopy(/*in|out*/DREF DeeObject **__restric
  * >> return 0;
  */
 DFUNDEF int DCALL DeeObject_InplaceDeepCopyWithLock(/*in|out*/DREF DeeObject **__restrict pself, rwlock_t *__restrict plock);
-DFUNDEF int DCALL DeeObject_InplaceXDeepCopyWithLock(/*in|out*/DREF DeeObject **__restrict pself, rwlock_t *__restrict plock);
+DFUNDEF int DCALL DeeObject_XInplaceDeepCopyWithLock(/*in|out*/DREF DeeObject **__restrict pself, rwlock_t *__restrict plock);
 #else
 #define DeeObject_InplaceDeepCopyWithLock(pself,plock)  DeeObject_InplaceDeepCopy(pself)
-#define DeeObject_InplaceXDeepCopyWithLock(pself,plock) DeeObject_InplaceXDeepCopy(pself)
+#define DeeObject_XInplaceDeepCopyWithLock(pself,plock) DeeObject_XInplaceDeepCopy(pself)
 #endif
 DFUNDEF int DCALL DeeObject_Assign(DeeObject *__restrict self, DeeObject *__restrict some_object);
 DFUNDEF int DCALL DeeObject_MoveAssign(DeeObject *__restrict self, DeeObject *__restrict other);

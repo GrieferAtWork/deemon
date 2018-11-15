@@ -407,8 +407,7 @@ err_unbound_local(struct code_object *__restrict code,
  ASSERT_OBJECT(code);
  ASSERT(DeeCode_Check(code));
  ASSERT(local_index < code->co_localc);
- code_name = DeeDDI_NAME(code->co_ddi);
- if (!*code_name) code_name = NULL;
+ code_name = DeeCode_NAME(code);
 #if 1
  local_name = NULL;
  (void)ip;
@@ -418,12 +417,14 @@ err_unbound_local(struct code_object *__restrict code,
 #endif
  if (local_name) {
   return DeeError_Throwf(&DeeError_UnboundLocal,
-                         "Unbound local variable `%s' %s%s",local_name,
+                         "Unbound local variable `%s' %s%s",
+                         local_name,
                          code_name ? " in function " : "",
                          code_name ? code_name : "");
  } else {
   return DeeError_Throwf(&DeeError_UnboundLocal,
-                         "Unbound local variable %d%s%s",local_index,
+                         "Unbound local variable %d%s%s",
+                         local_index,
                          code_name ? " in function " : "",
                          code_name ? code_name : "");
  }
@@ -431,8 +432,8 @@ err_unbound_local(struct code_object *__restrict code,
 INTERN ATTR_COLD int DCALL
 err_illegal_instruction(struct code_object *__restrict code,
                         void *__restrict ip) {
- char const *code_name = DeeDDI_NAME(code->co_ddi);
- if (!*code_name) code_name = "??" "?";
+ char const *code_name = DeeCode_NAME(code->co_ddi);
+ if (!code_name) code_name = "<anonymous>";
  return DeeError_Throwf(&DeeError_IllegalInstruction,
                         "Illegal instruction at %s+%.4I32X",
                         code_name,(uint32_t)((instruction_t *)ip - code->co_code));

@@ -111,7 +111,7 @@ cell_clear(Cell *__restrict self) {
 
 PRIVATE int DCALL
 cell_deepload(Cell *__restrict self) {
- return DeeObject_InplaceXDeepCopyWithLock(&self->c_item,
+ return DeeObject_XInplaceDeepCopyWithLock(&self->c_item,
                                            &self->c_lock);
 }
 

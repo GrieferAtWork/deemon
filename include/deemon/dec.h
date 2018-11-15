@@ -93,7 +93,8 @@ typedef struct PACKED {
 
 
 typedef struct PACKED {
-    uint16_t i_len;    /* Number of string pointers. */
+    uint16_t i_len;    /* Number of string pointers.
+                        * NOTE: When (uint16_t)-1, a `uint32_t' follows with the actual size. */
     uint8_t  i_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'. */
 } Dec_Strmap;
@@ -191,28 +192,42 @@ typedef struct PACKED {
 } Dec_DDIRegStart;
 
 typedef struct PACKED {
-    uint32_t        cd_static;  /* Absolute pointer to a `Dec_Strmap' structure describing static variable names, or ZERO(0) when not available. */
-    uint32_t        cd_refs;    /* Absolute pointer to a `Dec_Strmap' structure describing reference variable names, or ZERO(0) when not available. */
-    uint32_t        cd_args;    /* Absolute pointer to a `Dec_Strmap' structure describing argument variable names, or ZERO(0) when not available. */
-    uint32_t        cd_paths;   /* Absolute pointer to a `Dec_Strmap' structure describing path names, or ZERO(0) when not available. */
-    uint32_t        cd_files;   /* Absolute pointer to a `Dec_Strmap' structure describing file names, or ZERO(0) when not available. */
-    uint32_t        cd_symbols; /* Absolute pointer to a `Dec_Strmap' structure describing symbol names, or ZERO(0) when not available. */
+    uint16_t  dx_size;    /* Data size (when (uint16_t)-1, the a uint32_t containing the actual size follows immediatly) */
+    uint8_t   dx_data[1]; /* [dx_size] DDI extension data. */
+} Dec_DDIExdat;
+
+typedef struct PACKED {
+    uint32_t        cd_strings; /* Absolute pointer to a `Dec_Strmap' structure describing DDI string. */
+    uint32_t        cd_ddixdat; /* Absolute pointer to a `Dec_DDIExdat' structure, or 0. */
     uint32_t        cd_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
     uint32_t        cd_ddisize; /* The total size (in bytes) of DDI text for translating instruction pointers to file+line, etc. */
+    uint16_t        cd_ddiinit; /* Amount of leading DDI instruction bytes that are used for state initialization */
     Dec_DDIRegStart cd_regs;    /* The initial register state. */
 } Dec_CodeDDI;
 
 typedef struct PACKED {
-    uint16_t        cd_static;  /* Absolute pointer to a `Dec_Strmap' structure describing static variable names, or ZERO(0) when not available. */
-    uint16_t        cd_refs;    /* Absolute pointer to a `Dec_Strmap' structure describing reference variable names, or ZERO(0) when not available. */
-    uint16_t        cd_args;    /* Absolute pointer to a `Dec_Strmap' structure describing argument variable names, or ZERO(0) when not available. */
-    uint16_t        cd_paths;   /* Absolute pointer to a `Dec_Strmap' structure describing path names, or ZERO(0) when not available. */
-    uint16_t        cd_files;   /* Absolute pointer to a `Dec_Strmap' structure describing file names, or ZERO(0) when not available. */
-    uint16_t        cd_symbols; /* Absolute pointer to a `Dec_Strmap' structure describing symbol names, or ZERO(0) when not available. */
+    uint16_t        cd_strings; /* Absolute pointer to a `Dec_Strmap' structure describing DDI string. */
+    uint16_t        cd_ddixdat; /* Absolute pointer to a `Dec_DDIExdat' structure, or 0. */
     uint16_t        cd_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
     uint16_t        cd_ddisize; /* The total size (in bytes) of DDI text for translating instruction pointers to file+line, etc. */
+    uint8_t         cd_ddiinit; /* Amount of leading DDI instruction bytes that are used for state initialization */
     Dec_DDIRegStart cd_regs;    /* The initial register state. */
 } Dec_8BitCodeDDI;
+
+typedef struct PACKED {
+    uint8_t     ck_len[1]; /* Length of the keyword (excluding any trailing \0 character) */
+    uint8_t     ck_off[1]; /* [exists_if(ck_len != 0)] Offset into string table to where the keyword's name is written. */
+} Dec_CodeKwd;
+typedef struct PACKED {
+    Dec_CodeKwd ck_map[1]; /* Vector of code keywords.
+                            * NOTE: The length of this vector is `co_argc_max' */
+} Dec_CodeKwds;
+
+typedef struct PACKED {
+    uint8_t  ck_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
+                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
+                         * NOTE: The length of this vector is `co_argc_max' */
+} Dec_8BitCodeKwds;
 
 typedef struct PACKED {
     uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `DEC_CODE_F8BIT'.
@@ -232,6 +247,8 @@ typedef struct PACKED {
                                * NOTE: `DTYPE_NULL' is not allowed. */
     uint32_t   co_ddioff;     /* Absolute file offset to optional code debug information (`Dec_CodeDDI').
                                * NOTE: When ZERO(0), there is no DDI information. */
+    uint32_t   co_kwdoff;     /* Absolute file offset to optional keyword argument information (`Dec_CodeKwds')
+                               * NOTE: When ZERO(0), there is no keyword information. */
     uint32_t   co_textsiz;    /* Absolute size of this code's text section (in bytes) */
     uint32_t   co_textoff;    /* Absolute file offset to the assembly text that will be executed by this code. */
 } Dec_Code;
@@ -251,6 +268,8 @@ typedef struct PACKED {
                                *      `co_argc_max' can be calculated from `co_argc_min+os_len' */
     uint16_t   co_ddioff;     /* Absolute file offset to optional code debug information (`Dec_8BitCodeDDI').
                                * NOTE: When ZERO(0), there is no DDI information. */
+    uint16_t   co_kwdoff;     /* Absolute file offset to optional keyword argument information (`Dec_8BitCodeKwds')
+                               * NOTE: When ZERO(0), there is no keyword information. */
     uint16_t   co_textsiz;    /* Absolute size of this code's text section (in bytes) */
     uint16_t   co_textoff;    /* Absolute file offset to the assembly text that will be executed by this code. */
 } Dec_8BitCode;

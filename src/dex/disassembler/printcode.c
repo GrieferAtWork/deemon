@@ -686,8 +686,10 @@ libdisasm_printcode(dformatprinter printer, void *arg,
     }
     PRINT(".ddi ");
     if (last_print_ddi.dr_name != ddi.rs_regs.dr_name) {
-     if (DeeDDI_VALID_SYMBOL(code->co_ddi,ddi.rs_regs.dr_name))
-      printf("@name(%q)",DeeDDI_SYMBOL_NAME(code->co_ddi,ddi.rs_regs.dr_name));
+     char *name = DeeCode_GetDDIString((DeeObject *)code,
+                                        ddi.rs_regs.dr_name);
+     if (name)
+      printf("@name(%q)",name);
      else {
       PRINT("@name(none)");
      }
@@ -696,14 +698,12 @@ libdisasm_printcode(dformatprinter printer, void *arg,
     /* TODO: DDI commands for local/stack name bindings. */
     if (last_print_ddi.dr_path != ddi.rs_regs.dr_path ||
         last_print_ddi.dr_file != ddi.rs_regs.dr_file) {
-     char const *path = "",*file = "";
-     if (ddi.rs_regs.dr_path != 0 &&
-         DeeDDI_VALID_PATH(code->co_ddi,ddi.rs_regs.dr_path-1))
-         path = DeeDDI_PATH_NAME(code->co_ddi,ddi.rs_regs.dr_path-1);
-     if (DeeDDI_VALID_FILE(code->co_ddi,ddi.rs_regs.dr_file))
-         file = DeeDDI_FILE_NAME(code->co_ddi,ddi.rs_regs.dr_file);
+     char const *path = NULL,*file;
+     if (ddi.rs_regs.dr_path != 0)
+         path = DeeCode_GetDDIString((DeeObject *)code,ddi.rs_regs.dr_path-1);
+     file = DeeCode_GetDDIString((DeeObject *)code,ddi.rs_regs.dr_file);
      if (!is_first) PRINT(", ");
-     printf("\"%#q%s%#q\"",path,*path ? "/" : "",file);
+     printf("\"%#q%s%#q\"",path ? path : "",path ? "/" : "",file ? file : "");
      is_first = false;
     }
     if (!is_first) PRINT(", ");

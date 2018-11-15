@@ -1096,7 +1096,7 @@ err:
  return -1;
 }
 PUBLIC int DCALL
-DeeObject_InplaceXDeepCopyWithLock(DREF DeeObject **__restrict pself,
+DeeObject_XInplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
                                    rwlock_t *__restrict plock) {
  DREF DeeObject *temp,*copy;
  /* Step #1: Extract the existing object. */

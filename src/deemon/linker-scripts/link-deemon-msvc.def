@@ -253,6 +253,7 @@ EXPORTS
 	DeeModule_GetRoot@8=_DeeModule_GetRoot@8
 	DeeModule_GetString@4=_DeeModule_GetString@4
 	DeeModule_GlobalName@8=_DeeModule_GlobalName@8
+	DeeModule_ImportRel@16=_DeeModule_ImportRel@16
 	DeeModule_InitImports@4=_DeeModule_InitImports@4
 	DeeModule_InitPath@0=_DeeModule_InitPath@0
 	DeeModule_LoadSourceStream@20=_DeeModule_LoadSourceStream@20
@@ -304,6 +305,9 @@ EXPORTS
 	DeeObject_BoundAttr@8=_DeeObject_BoundAttr@8
 	DeeObject_BoundAttrString@8=_DeeObject_BoundAttrString@8
 	DeeObject_BoundAttrStringHash@12=_DeeObject_BoundAttrStringHash@12
+	DeeObject_BoundItem@12=_DeeObject_BoundItem@12
+	DeeObject_BoundItemIndex@12=_DeeObject_BoundItemIndex@12
+	DeeObject_BoundItemString@16=_DeeObject_BoundItemString@16
 	DeeObject_Bytes@16=_DeeObject_Bytes@16
 	DeeObject_Call@12=_DeeObject_Call@12
 	DeeObject_CallAttr@16=_DeeObject_CallAttr@16
@@ -400,7 +404,6 @@ EXPORTS
 	DeeObject_InplaceSub@8=_DeeObject_InplaceSub@8
 	DeeObject_InplaceSubInt@8=_DeeObject_InplaceSubInt@8
 	DeeObject_InplaceSubS8@8=_DeeObject_InplaceSubS8@8
-	DeeObject_InplaceXDeepCopyWithLock@8=_DeeObject_InplaceXDeepCopyWithLock@8
 	DeeObject_InplaceXor@8=_DeeObject_InplaceXor@8
 	DeeObject_InplaceXorInt@8=_DeeObject_InplaceXorInt@8
 	DeeObject_Int@4=_DeeObject_Int@4
@@ -475,6 +478,7 @@ EXPORTS
 	DeeObject_VNewf@12=_DeeObject_VNewf@12
 	DeeObject_VThisCallf@16=_DeeObject_VThisCallf@16
 	DeeObject_Visit@12=_DeeObject_Visit@12
+	DeeObject_XInplaceDeepCopyWithLock@8=_DeeObject_XInplaceDeepCopyWithLock@8
 	DeeObject_Xor@8=_DeeObject_Xor@8
 	DeeObject_XorInt@8=_DeeObject_XorInt@8
 	DeeRefVector_New@16=_DeeRefVector_New@16
@@ -746,7 +750,9 @@ EXPORTS
 	weakref_bound@4=_weakref_bound@4
 	weakref_clear@4=_weakref_clear@4
 	weakref_cmpxch@12=_weakref_cmpxch@12
+	weakref_copy@8=_weakref_copy@8
 	weakref_fini@4=_weakref_fini@4
 	weakref_init@8=_weakref_init@8
 	weakref_lock@4=_weakref_lock@4
+	weakref_move@8=_weakref_move@8
 	weakref_set@8=_weakref_set@8

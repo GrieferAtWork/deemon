@@ -1211,7 +1211,7 @@ check_dst_sym_class:
      /* The simple case: the initializer itself is a constant expression
       * -> In this case, we can simply encode the initializer as the raw
       *    static value and not have to generate any runtime code! */
-     sid = asm_newstatic(src->a_constexpr);
+     sid = asm_newstatic(src->a_constexpr,dst_sym);
      if unlikely(sid < 0) goto err;
      dst_sym->s_symid = (uint16_t)sid;
      dst_sym->s_flag |= SYMBOL_FALLOC;

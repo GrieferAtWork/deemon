@@ -1413,8 +1413,9 @@ PRIVATE void *thread_entry(DREF DeeThreadObject *__restrict self)
  } else if (DeeFunction_Check(threadmain)) {
   /* If DDI allows, set the name of the function that's to-be executed. */
   DeeCodeObject *exec_code = ((DeeFunctionObject *)threadmain)->fo_code;
-  if (DeeDDI_HAS_NAME(exec_code->co_ddi))
-   sys_setthreadname(DeeDDI_NAME(exec_code->co_ddi));
+  char *name = DeeCode_NAME(exec_code);
+  if (name)
+   sys_setthreadname(name);
   else if (exec_code == exec_code->co_module->mo_root) {
    sys_setthreadname(DeeString_STR(exec_code->co_module->mo_name));
   }

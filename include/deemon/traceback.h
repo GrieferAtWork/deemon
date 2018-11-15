@@ -116,13 +116,21 @@ struct frame_object {
                                    * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack
                                    * pointer may be obtainable from DDI information, as well
                                    * as use of the current IP, alongside further validation. */
-#define DEEFRAME_FUNDEFSP2 0x0004 /* The stack-pointer of the frame is always undefined. */
+#define DEEFRAME_FUNDEFSP2 0x0004 /* The stack-pointer of the frame is always undefined.
+                                   * This flag is set after `DEEFRAME_FUNDEFSP' was set and
+                                   * the actual stack pointer could still not be determined
+                                   * from meta-information.
+                                   * However, this should not happen for normal code, as a truely
+                                   * inconsistent stack can (should) only happen when the function
+                                   * contains custom user-assembly. */
+#define DEEFRAME_FREGENGSP 0x0008 /* The SP pointer was reverse engineered and stored in `f_revsp' */
 #ifndef CONFIG_NO_THREADS
 #define DEEFRAME_FRECLOCK  0x8000 /* The frame uses a recursive lock. */
 #else /* !CONFIG_NO_THREADS */
 #define DEEFRAME_FRECLOCK  0x0000 /* Ignored. */
 #endif /* CONFIG_NO_THREADS */
     uint16_t           f_flags; /* [const] Contents of the frame may be modified. */
+    uint16_t           f_revsp; /* [lock(f_lock)][valid_if(DEEFRAME_FREGENGSP)] Reverse engineered SP. */
 };
 
 DDATDEF DeeTypeObject DeeFrame_Type;

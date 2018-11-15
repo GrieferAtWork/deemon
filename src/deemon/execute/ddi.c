@@ -511,6 +511,16 @@ ddi_state_init(struct ddi_state *__restrict self,
   }
  }
  self->rs_save = NULL;
+
+ /* Execute the initialization bootstrap DDI block. */
+ if (ddi->d_ddiinit != 0) {
+  uint8_t *result,*end;
+  end = ddi->d_ddi + ddi->d_ddiinit;
+  result = ddi->d_ddi;
+  do result = ddi_next_state(result,self,flags);
+  while (DDI_ISOK(result) && result < end);
+  return result;
+ }
  return ddi->d_ddi;
 }
 PUBLIC void DCALL
@@ -555,20 +565,13 @@ DeeCode_FindDDI(DeeObject *__restrict self,
 
 INTERN DeeDDIObject empty_ddi = {
     OBJECT_HEAD_INIT(&DeeDDI_Type),
-    /* .d_static_names = */NULL,
-    /* .d_ref_names    = */NULL,
-    /* .d_arg_names    = */NULL,
-    /* .d_path_names   = */NULL,
-    /* .d_file_names   = */NULL,
-    /* .d_symbol_names = */NULL,
-    /* .d_strtab       = */(DeeStringObject *)Dee_EmptyString,
-    /* .d_ddi_size     = */1,
-    /* .d_nstatic      = */0,
-    /* .d_nrefs        = */0,
-    /* .d_nargs        = */0,
-    /* .d_paths        = */0,
-    /* .d_files        = */0,
-    /* .d_symbols      = */0,
+    /* .d_strings = */NULL,
+    /* .d_strtab  = */(DeeStringObject *)Dee_EmptyString,
+    /* .d_exdat   = */NULL,
+    /* .d_ddisize = */1,
+    /* .d_nstring = */0,
+    /* .d_ddiinit = */0,
+    /* .d_pad     = */0,
     /* .d_start = */{
         /* .dr_uip   = */0,
         /* .dr_usp   = */0,
@@ -588,24 +591,13 @@ INTERN DeeDDIObject empty_ddi = {
 PRIVATE void DCALL
 ddi_fini(DeeDDIObject *__restrict self) {
  ASSERT(self != &empty_ddi);
- Dee_Free((void *)self->d_static_names);
- Dee_Free((void *)self->d_ref_names);
- Dee_Free((void *)self->d_arg_names);
- Dee_Free((void *)self->d_path_names);
- Dee_Free((void *)self->d_file_names);
- Dee_Free((void *)self->d_symbol_names);
+ Dee_Free((void *)self->d_strings);
+ Dee_Free((void *)self->d_exdat);
  Dee_Decref(self->d_strtab);
 }
 
 PRIVATE struct type_member ddi_members[] = {
-    TYPE_MEMBER_FIELD("__size__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT32,offsetof(DeeDDIObject,d_ddi_size)),
     TYPE_MEMBER_FIELD_DOC("__strtab__",STRUCT_OBJECT,offsetof(DeeDDIObject,d_strtab),"->?Dstring"),
-    TYPE_MEMBER_FIELD("__num_static__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_nstatic)),
-    TYPE_MEMBER_FIELD("__num_refs__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_nrefs)),
-    TYPE_MEMBER_FIELD("__num_args__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_nargs)),
-    TYPE_MEMBER_FIELD("__num_paths__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_paths)),
-    TYPE_MEMBER_FIELD("__num_files__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_files)),
-    TYPE_MEMBER_FIELD("__num_symbols__",STRUCT_CONST|STRUCT_UNSIGNED|STRUCT_INT16,offsetof(DeeDDIObject,d_symbols)),
     TYPE_MEMBER_END
 };
 
@@ -616,27 +608,14 @@ PRIVATE DREF DeeDDIObject *DCALL ddi_ctor(void) {
 PRIVATE dhash_t DCALL
 ddi_hash(DeeDDIObject *__restrict self) {
  dhash_t result; uint16_t i;
- result  = self->d_ddi_size;
- result ^= self->d_nstatic;
- result ^= self->d_nrefs;
- result ^= self->d_nargs;
- result ^= self->d_paths;
- result ^= self->d_files;
- result ^= self->d_symbols;
- for (i = 0; i < self->d_nstatic; ++i)
-     result ^= self->d_static_names[i];
- for (i = 0; i < self->d_nrefs; ++i)
-     result ^= self->d_ref_names[i];
- for (i = 0; i < self->d_nargs; ++i)
-     result ^= self->d_arg_names[i];
- for (i = 0; i < self->d_paths; ++i)
-     result ^= self->d_path_names[i];
- for (i = 0; i < self->d_files; ++i)
-     result ^= self->d_file_names[i];
- for (i = 0; i < self->d_symbols; ++i)
-     result ^= self->d_symbol_names[i];
+ result  = self->d_ddisize;
+ result ^= *(uint32_t *)&self->d_nstring;
+ for (i = 0; i < self->d_nstring; ++i)
+     result ^= self->d_strings[i];
  result ^= DeeString_Hash((DeeObject *)self->d_strtab);
- result ^= hash_ptr(&self->d_start,self->d_ddi_size + sizeof(struct ddi_regs));
+ result ^= hash_ptr(&self->d_start,self->d_ddisize + sizeof(struct ddi_regs));
+ if (self->d_exdat)
+     result ^= hash_ptr(self->d_exdat->dx_data,self->d_exdat->dx_size);
  return result;
 }
 
@@ -644,25 +623,23 @@ PRIVATE bool DCALL
 ddi_eq_impl(DeeDDIObject *__restrict self,
             DeeDDIObject *__restrict other) {
  if (self == other) return true;
- if (self->d_ddi_size != other->d_ddi_size) goto nope;
- if (self->d_nstatic != other->d_nstatic) goto nope;
- if (self->d_nrefs != other->d_nrefs) goto nope;
- if (self->d_nargs != other->d_nargs) goto nope;
- if (self->d_paths != other->d_paths) goto nope;
- if (self->d_files != other->d_files) goto nope;
- if (self->d_symbols != other->d_symbols) goto nope;
+ if (self->d_ddisize != other->d_ddisize) goto nope;
+ if (self->d_nstring != other->d_nstring) goto nope;
  if (DeeString_SIZE(self->d_strtab) != DeeString_SIZE(other->d_strtab)) goto nope;
+ if ((self->d_exdat != NULL) != (other->d_exdat != NULL)) goto nope;
+ if (self->d_exdat &&
+    (self->d_exdat->dx_size != other->d_exdat->dx_size ||
+     memcmp(self->d_exdat->dx_data,other->d_exdat->dx_data,
+            self->d_exdat->dx_size) != 0))
+     goto nope;
  if (memcmp(DeeString_STR(self->d_strtab),
             DeeString_STR(other->d_strtab),
             DeeString_SIZE(self->d_strtab)) != 0)
      goto nope;
- if (memcmp(self->d_static_names,other->d_static_names,self->d_nstatic * sizeof(*self->d_static_names)) != 0) goto nope;
- if (memcmp(self->d_ref_names,other->d_ref_names,self->d_nrefs * sizeof(*self->d_ref_names)) != 0) goto nope;
- if (memcmp(self->d_arg_names,other->d_arg_names,self->d_nargs * sizeof(*self->d_arg_names)) != 0) goto nope;
- if (memcmp(self->d_path_names,other->d_path_names,self->d_paths * sizeof(*self->d_path_names)) != 0) goto nope;
- if (memcmp(self->d_file_names,other->d_file_names,self->d_files * sizeof(*self->d_file_names)) != 0) goto nope;
- if (memcmp(self->d_symbol_names,other->d_symbol_names,self->d_symbols * sizeof(*self->d_symbol_names)) != 0) goto nope;
- if (memcmp(&self->d_start,&other->d_start,self->d_ddi_size + sizeof(struct ddi_regs)) != 0) goto nope;
+ if (memcmp(self->d_strings,other->d_strings,self->d_nstring * sizeof(*self->d_strings)) != 0)
+     goto nope;
+ if (memcmp(&self->d_start,&other->d_start,self->d_ddisize + sizeof(struct ddi_regs)) != 0)
+     goto nope;
  return true;
 nope:
  return false;

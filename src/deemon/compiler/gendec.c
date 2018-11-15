@@ -1049,7 +1049,7 @@ allow_8bit_code(DeeCodeObject *__restrict self) {
  /* In big-file mode, we can never emit an 8-bit
   * image default file pointers may (will because
   * of the text (aka. assembly) pointer) be used. */
- if (current_dec.dw_flags&DEC_WRITE_FBIGFILE)
+ if (current_dec.dw_flags & DEC_WRITE_FBIGFILE)
      goto nope;
 
  /* Check the bounds on some fields that are more
@@ -1068,8 +1068,19 @@ allow_8bit_code(DeeCodeObject *__restrict self) {
   if (self->co_exceptv[i].eh_stack > UINT8_MAX) goto nope;
  }
  /* Check if DDI information is located in 8-bit bounds. */
- if (!(current_dec.dw_flags&DEC_WRITE_FNODEBUG)) {
-  if (self->co_ddi->d_ddi_size > UINT16_MAX) goto nope;
+ if (!(current_dec.dw_flags & DEC_WRITE_FNODEBUG)) {
+  if (self->co_ddi->d_ddisize > UINT16_MAX)
+      goto nope;
+  if (self->co_ddi->d_ddiinit > UINT8_MAX)
+      goto nope;
+ }
+ if (self->co_keywords) {
+  uint16_t i;
+  for (i = 0; i < self->co_argc_max; ++i) {
+   DeeStringObject *kw = self->co_keywords[i];
+   if (strlen(kw->s_str) != kw->s_len)
+       goto nope; /* Argument name can't simply be encoded as nul-terminated */
+  }
  }
  return true;
 nope:
@@ -1080,10 +1091,15 @@ nope:
 PRIVATE int DCALL
 dec_do_putddi_strtab(DeeDDIObject *__restrict self,
                      uintptr_t const *__restrict vec,
-                     uint16_t length) {
+                     uint32_t length) {
  struct dec_section *ddi_sec; uint32_t straddr;
- uint16_t i; char *str; uint8_t *strptr;
- if (dec_putw(length)) goto err; /* Dec_Strmap.i_len */
+ uint32_t i; char *str; uint8_t *strptr;
+ if (length >= (uint16_t)-1) {
+  if (dec_putw(0xffff)) goto err; /* Dec_Strmap.i_len */
+  if (dec_putl(length)) goto err; /* Dec_Strmap.i_len */
+ } else {
+  if (dec_putw((uint16_t)length)) goto err; /* Dec_Strmap.i_len */
+ }
  for (i = 0; i < length; ++i) {
   ddi_sec  = dec_curr;
   /* Emit the DDI string within the string section. */
@@ -1105,7 +1121,7 @@ err:
 PRIVATE struct dec_sym *DCALL
 dec_putddi_strtab(DeeDDIObject *__restrict self,
                   uintptr_t const *__restrict vec,
-                  uint16_t length) {
+                  uint32_t length) {
  struct dec_section *result,*old_sec;
  /* Create a new section within which debug data will be placed. */
  result = dec_newsection_after(SC_DEBUG_DATA);
@@ -1127,7 +1143,7 @@ err:
 PRIVATE int DCALL
 dec_putddi_strtab_ptr(DeeDDIObject *__restrict self,
                       uintptr_t const *__restrict vec,
-                      uint16_t length, bool use_16bit) {
+                      uint32_t length, bool use_16bit) {
  struct dec_sym *sym;
  if (length) {
   sym = dec_putddi_strtab(self,vec,length);
@@ -1143,6 +1159,41 @@ err:
  return -1;
 }
 
+PRIVATE int DCALL
+dec_putddi_xdat_ptr(struct ddi_exdat const *self, bool use_16bit) {
+ if (self && self->dx_size != 0) {
+  uint8_t *buf;
+  struct dec_section *xsect,*old_sec;
+  /* Create a new section within which debug data will be placed. */
+  xsect = dec_newsection_after(SC_DEBUG_DATA);
+  if unlikely(!xsect) goto err;
+  old_sec  = dec_curr;
+  dec_curr = xsect;
+  if (self->dx_size >= (uint16_t)-1) {
+   if (dec_putw(0xffff)) goto err;
+   if (dec_putl(self->dx_size)) goto err;
+  } else {
+   if (dec_putw((uint16_t)self->dx_size)) goto err;
+  }
+  buf = dec_alloc(self->dx_size);
+  if unlikely(!buf) goto err;
+  memcpy(buf,self->dx_data,self->dx_size);
+
+  /* Switch back to the old section. */
+  dec_curr = old_sec;
+  if (dec_putrel(use_16bit ? DECREL_ABS16 : DECREL_ABS32,&xsect->ds_start))
+      goto err;
+ } else {
+  /* Special case: no table (just emit a NULL-pointer) */
+ }
+ if (use_16bit ? dec_putw(0) : dec_putl(0)) goto err;
+ return 0;
+err:
+ return -1;
+}
+
+
+
 INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
  bool use_8bit;
  Dec_Code descr; uint8_t *ptr;
@@ -1151,6 +1202,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
  struct dec_sym *except_sym = NULL;
  struct dec_sym *default_sym = NULL;
  struct dec_sym *ddi_sym = NULL;
+ struct dec_sym *kwd_sym = NULL;
  struct dec_section *code_sec = dec_curr;
  /* Fill in a code object descriptor. */
  descr.co_flags      = self->co_flags;
@@ -1163,6 +1215,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
  descr.co_exceptoff  = 0;
  descr.co_defaultoff = 0;
  descr.co_ddioff     = 0;
+ descr.co_kwdoff     = 0;
  descr.co_textsiz    = self->co_codebytes;
  descr.co_textoff    = 0;
 
@@ -1241,11 +1294,11 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
       goto err;
  }
 
- if (!(current_dec.dw_flags&DEC_WRITE_FNODEBUG)) {
+ if (!(current_dec.dw_flags & DEC_WRITE_FNODEBUG)) {
   /* Emit debug information if there are some */
   DeeDDIObject *ddi = self->co_ddi;
   /* Don't emit any debug information, if the DDI object doesn't have any text. */
-  if (ddi->d_ddi_size) {
+  if (ddi->d_ddisize) {
    uint8_t *tempptr; struct dec_sym *tempsym;
    struct dec_section *ddi_section = dec_newsection_after(SC_DEBUG);
    if unlikely(!ddi_section) goto err;
@@ -1253,64 +1306,83 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
    ddi_sym = &ddi_section->ds_start;
    /* Start emitting the DDI object. */
    if (dec_putddi_strtab_ptr(ddi,
-                             ddi->d_static_names,
-                             ddi->d_nstatic,
+                             ddi->d_strings,
+                             ddi->d_nstring,
                              use_8bit))
-       goto err; /* Dec_CodeDDI.cd_static */
-   if (dec_putddi_strtab_ptr(ddi,
-                             ddi->d_ref_names,
-                             ddi->d_nrefs,
-                             use_8bit))
-       goto err; /* Dec_CodeDDI.cd_refs */
-   if (dec_putddi_strtab_ptr(ddi,
-                             ddi->d_arg_names,
-                             ddi->d_nargs,
-                             use_8bit))
-       goto err; /* Dec_CodeDDI.cd_args */
-   if (dec_putddi_strtab_ptr(ddi,
-                             ddi->d_path_names,
-                             ddi->d_paths,
-                             use_8bit))
-       goto err; /* Dec_CodeDDI.cd_paths */
-   if (dec_putddi_strtab_ptr(ddi,
-                             ddi->d_file_names,
-                             ddi->d_files,
-                             use_8bit))
-       goto err; /* Dec_CodeDDI.cd_files */
-   if (dec_putddi_strtab_ptr(ddi,
-                             ddi->d_symbol_names,
-                             ddi->d_symbols,
-                             use_8bit))
-       goto err; /* Dec_CodeDDI.cd_symbols */
+       goto err; /* Dec_CodeDDI.cd_strings */
    /* Emit the DDI text into the debug-text section. */
    dec_curr = SC_DEBUG_TEXT;
-   tempptr = dec_allocstr(ddi->d_ddi,ddi->d_ddi_size);
+   tempptr = dec_allocstr(ddi->d_ddi,ddi->d_ddisize);
    if unlikely(!tempptr) goto err;
    tempsym = dec_newsym();
    if unlikely(!tempsym) goto err;
    dec_defsymat(tempsym,dec_ptr2addr(tempptr));
    dec_curr = ddi_section;
+   if unlikely(dec_putddi_xdat_ptr(ddi->d_exdat,use_8bit))
+      goto err;
 
    /* Now emit the size of, and a pointer to the DDI's text. */
    if (use_8bit) {
     if (dec_putrel(DECREL_ABS16,tempsym)) goto err;
-    if (dec_putw(0)) goto err;
-    if (dec_putw((uint16_t)ddi->d_ddi_size)) goto err;
+    if (dec_putw(0)) goto err;                         /* Dec_8BitCodeDDI.cd_ddiaddr */
+    if (dec_putw((uint16_t)ddi->d_ddisize)) goto err;  /* Dec_8BitCodeDDI.cd_ddisize */
+    if (dec_putb((uint8_t)ddi->d_ddiinit)) goto err;   /* Dec_8BitCodeDDI.cd_ddiinit */
    } else {
     if (dec_putrel(DECREL_ABS32,tempsym)) goto err;
-    if (dec_putl(0)) goto err;
-    if (dec_putl(ddi->d_ddi_size)) goto err;
+    if (dec_putl(0)) goto err;                         /* Dec_CodeDDI.cd_ddiaddr */
+    if (dec_putl(ddi->d_ddisize)) goto err;            /* Dec_CodeDDI.cd_ddisize */
+    if (dec_putw(ddi->d_ddiinit)) goto err;            /* Dec_CodeDDI.cd_ddiinit */
    }
 
    /* Save the initial register state (`cd_regs'). */
-   if (dec_putw(ddi->d_start.dr_flags)) goto err;   /* rs_flags */
-   if (dec_putuleb(ddi->d_start.dr_uip)) goto err;  /* rs_uip */
-   if (dec_putuleb(ddi->d_start.dr_usp)) goto err;  /* rs_usp */
-   if (dec_putuleb(ddi->d_start.dr_path)) goto err; /* rs_path */
-   if (dec_putuleb(ddi->d_start.dr_file)) goto err; /* rs_file */
-   if (dec_putuleb(ddi->d_start.dr_name)) goto err; /* rs_name */
-   if (dec_putsleb(ddi->d_start.dr_col)) goto err;  /* rs_col */
-   if (dec_putsleb(ddi->d_start.dr_lno)) goto err;  /* rs_lno */
+   if (dec_putw(ddi->d_start.dr_flags)) goto err;   /* Dec_DDIRegStart.rs_flags */
+   if (dec_putuleb(ddi->d_start.dr_uip)) goto err;  /* Dec_DDIRegStart.rs_uip */
+   if (dec_putuleb(ddi->d_start.dr_usp)) goto err;  /* Dec_DDIRegStart.rs_usp */
+   if (dec_putuleb(ddi->d_start.dr_path)) goto err; /* Dec_DDIRegStart.rs_path */
+   if (dec_putuleb(ddi->d_start.dr_file)) goto err; /* Dec_DDIRegStart.rs_file */
+   if (dec_putuleb(ddi->d_start.dr_name)) goto err; /* Dec_DDIRegStart.rs_name */
+   if (dec_putsleb(ddi->d_start.dr_col)) goto err;  /* Dec_DDIRegStart.rs_col */
+   if (dec_putsleb(ddi->d_start.dr_lno)) goto err;  /* Dec_DDIRegStart.rs_lno */
+  }
+ }
+
+ /* Encode keyword names. */
+ if (self->co_keywords != NULL) {
+  struct dec_section *kwd_section; uint16_t i;
+  kwd_section = dec_newsection_after(SC_ROOT);
+  if unlikely(!kwd_section) goto err;
+  kwd_sym = &kwd_section->ds_start;
+  if (use_8bit) {
+   for (i = 0; i < self->co_argc_max; ++i) {
+    uint8_t *name; uint32_t addr;
+    dec_curr = SC_STRING;
+    name = (uint8_t *)DeeString_AsUtf8((DeeObject *)self->co_keywords[i]);
+    if unlikely(!name) goto err;
+    name = dec_allocstr(name,WSTR_LENGTH(name) * sizeof(char));
+    if unlikely(!name) goto err;
+    addr = dec_ptr2addr(name);
+    dec_curr = kwd_section;
+    if (dec_putptr(addr)) goto err;
+   }
+  } else {
+   for (i = 0; i < self->co_argc_max; ++i) {
+    uint8_t *name; uint32_t addr; size_t len;
+    name = (uint8_t *)DeeString_AsUtf8((DeeObject *)self->co_keywords[i]);
+    if unlikely(!name) goto err;
+    len = WSTR_LENGTH(name);
+    if (len) {
+     dec_curr = SC_STRING;
+     name = dec_allocstr(name,len * sizeof(char));
+     if unlikely(!name) goto err;
+     addr = dec_ptr2addr(name);
+     dec_curr = kwd_section;
+     if (dec_putptr(len)) goto err;
+     if (dec_putptr(addr)) goto err;
+    } else {
+     dec_curr = kwd_section; /* Unnamed */
+     if (dec_putptr(0)) goto err;
+    }
+   }
   }
  }
 
@@ -1322,26 +1394,24 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
   pdesc8 = (Dec_8BitCode *)dec_alloc(sizeof(Dec_8BitCode));
   if unlikely(!pdesc8) goto err;
   UNALIGNED_SETLE16(&pdesc8->co_flags,descr.co_flags);                     /* Dec_Code.co_flags */
-  pdesc8->co_localc     = (uint8_t)descr.co_localc;                        /* Dec_Code.co_localc */
-  pdesc8->co_refc       = (uint8_t)descr.co_refc;                          /* Dec_Code.co_refc */
-  pdesc8->co_argc_min   = (uint8_t)descr.co_argc_min;                      /* Dec_Code.co_argc_min */
-  pdesc8->co_stackmax   = (uint8_t)descr.co_stackmax;                      /* Dec_Code.co_stackmax */
+  pdesc8->co_localc   = (uint8_t)descr.co_localc;                          /* Dec_Code.co_localc */
+  pdesc8->co_refc     = (uint8_t)descr.co_refc;                            /* Dec_Code.co_refc */
+  pdesc8->co_argc_min = (uint8_t)descr.co_argc_min;                        /* Dec_Code.co_argc_min */
+  pdesc8->co_stackmax = (uint8_t)descr.co_stackmax;                        /* Dec_Code.co_stackmax */
   UNALIGNED_SETLE16(&pdesc8->co_staticoff, (uint16_t)descr.co_staticoff);  /* Dec_Code.co_staticoff */
   UNALIGNED_SETLE16(&pdesc8->co_exceptoff, (uint16_t)descr.co_exceptoff);  /* Dec_Code.co_exceptoff */
   UNALIGNED_SETLE16(&pdesc8->co_defaultoff,(uint16_t)descr.co_defaultoff); /* Dec_Code.co_defaultoff */
   UNALIGNED_SETLE16(&pdesc8->co_ddioff,    (uint16_t)descr.co_ddioff);     /* Dec_Code.co_ddioff */
+  UNALIGNED_SETLE16(&pdesc8->co_kwdoff,    (uint16_t)descr.co_kwdoff);     /* Dec_Code.co_ddioff */
   UNALIGNED_SETLE16(&pdesc8->co_textsiz,   (uint16_t)descr.co_textsiz);    /* Dec_Code.co_textsiz */
   UNALIGNED_SETLE16(&pdesc8->co_textoff,   (uint16_t)descr.co_textoff);    /* Dec_Code.co_textoff */
 
   /* Create relocations. */
-  if (static_sym &&
-      dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_staticoff),DECREL_ABS16,static_sym)) goto err;
-  if (except_sym &&
-      dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_exceptoff),DECREL_ABS16,except_sym)) goto err;
-  if (default_sym &&
-      dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_defaultoff),DECREL_ABS16,default_sym)) goto err;
-  if (ddi_sym &&
-      dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_ddioff),DECREL_ABS16,ddi_sym)) goto err;
+  if (static_sym && dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_staticoff),DECREL_ABS16,static_sym)) goto err;
+  if (except_sym && dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_exceptoff),DECREL_ABS16,except_sym)) goto err;
+  if (default_sym && dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_defaultoff),DECREL_ABS16,default_sym)) goto err;
+  if (ddi_sym && dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_ddioff),DECREL_ABS16,ddi_sym)) goto err;
+  if (kwd_sym && dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_kwdoff),DECREL_ABS16,kwd_sym)) goto err;
   if (dec_putrelat(code_addr+offsetof(Dec_8BitCode,co_textoff),DECREL_ABS16,text_sym)) goto err;
  } else {
   Dec_Code *pdesc; uint32_t code_addr = dec_addr;
@@ -1356,6 +1426,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
   descr.co_exceptoff  = LESWAP32(descr.co_exceptoff);  /* Dec_Code.co_exceptoff */
   descr.co_defaultoff = LESWAP32(descr.co_defaultoff); /* Dec_Code.co_defaultoff */
   descr.co_ddioff     = LESWAP32(descr.co_ddioff);     /* Dec_Code.co_ddioff */
+  descr.co_kwdoff     = LESWAP32(descr.co_kwdoff);     /* Dec_Code.co_kwdoff */
   descr.co_textsiz    = LESWAP32(descr.co_textsiz);    /* Dec_Code.co_textsiz */
   descr.co_textoff    = LESWAP32(descr.co_textoff);    /* Dec_Code.co_textoff */
 #endif
@@ -1364,14 +1435,11 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
   if unlikely(!pdesc) goto err;
   memcpy(pdesc,&descr,sizeof(Dec_Code));
   /* Create relocations. */
-  if (static_sym &&
-      dec_putrelat(code_addr+offsetof(Dec_Code,co_staticoff),DECREL_ABS32,static_sym)) goto err;
-  if (except_sym &&
-      dec_putrelat(code_addr+offsetof(Dec_Code,co_exceptoff),DECREL_ABS32,except_sym)) goto err;
-  if (default_sym &&
-      dec_putrelat(code_addr+offsetof(Dec_Code,co_defaultoff),DECREL_ABS32,default_sym)) goto err;
-  if (ddi_sym &&
-      dec_putrelat(code_addr+offsetof(Dec_Code,co_ddioff),DECREL_ABS32,ddi_sym)) goto err;
+  if (static_sym && dec_putrelat(code_addr+offsetof(Dec_Code,co_staticoff),DECREL_ABS32,static_sym)) goto err;
+  if (except_sym && dec_putrelat(code_addr+offsetof(Dec_Code,co_exceptoff),DECREL_ABS32,except_sym)) goto err;
+  if (default_sym && dec_putrelat(code_addr+offsetof(Dec_Code,co_defaultoff),DECREL_ABS32,default_sym)) goto err;
+  if (ddi_sym && dec_putrelat(code_addr+offsetof(Dec_Code,co_ddioff),DECREL_ABS32,ddi_sym)) goto err;
+  if (kwd_sym && dec_putrelat(code_addr+offsetof(Dec_Code,co_kwdoff),DECREL_ABS32,kwd_sym)) goto err;
   if (dec_putrelat(code_addr+offsetof(Dec_Code,co_textoff),DECREL_ABS32,text_sym)) goto err;
  }
  return 0;

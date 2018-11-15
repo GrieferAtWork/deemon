@@ -628,6 +628,11 @@ struct asm_symbol_ref {
     uint16_t               sr_orig_flag;   /* [const] The original value of `sr_sym->s_flag', who's `SYMBOL_FALLOCREF' bit must be restored. */
 };
 
+struct asm_symbol_static {
+    DREF DeeObject        *ss_init; /* [1..1] Static symbol initializer. */
+    struct symbol         *ss_sym;  /* [0..1] The symbol descriptor associated with this state symbol. */
+};
+
 struct assembler {
     struct asm_sec         a_sect[SECTION_COUNT]; /* Assembly sections. */
     struct asm_sec        *a_curr;     /* [1..1][in(a_sect)] The current target section. */
@@ -636,7 +641,8 @@ struct assembler {
     uint8_t               *a_localuse; /* [0..((a_localc+7)/8)|ALLOC(a_locala)][if(!ASM_FREUSELOC,== NULL)][owned] Bitset of local variables that are currently in use. */
     DREF DeeObject       **a_constv;   /* [1..1][0..a_constc|ALLOC(a_consta)][owned] Vector of constant variables.
                                         * WARNING: Elements are only guarantied to always be non-NULL before `asm_mergestatic()' has been called. */
-    DREF DeeObject       **a_staticv;  /* [0..1][0..a_staticc|ALLOC(a_statica)][owned] Vector of static variable initializers. */
+    struct asm_symbol_static
+                          *a_staticv;  /* [1..1][0..a_staticc|ALLOC(a_statica)][owned] Vector of static variable initializers. */
     struct asm_symbol_ref *a_refv;     /* [1..1][0..a_refc|ALLOC(a_refa)][owned] Vector of symbol references used from the previous base scope.
                                         * NOTE: These are the symbols _FROM_ the previous scope. - _NOT_ those ref-symbols from the current,
                                         *       meaning that when creating the reference vector, these symbols should be pushed by the caller
@@ -758,19 +764,20 @@ struct assembler {
                                         * >>    print    pop, nl // Print `x'
                                         * >>    jmp      2b
                                         * >>1: */
-#define ASM_FNODDI         0x0020      /* Do not generate DDI debug information.
-                                        * Setting this flag allows peephole optimizations to
-                                        * be more effective than when this flag wasn't set. */
-#define ASM_FNOASSERT      0x0040      /* Replace all assert statements with a compile-time constant `true'. */
-#define ASM_FNODEC         0x0080      /* Do not create a `*.dec' file once the module has been compiled. */
-#define ASM_FNOREUSECONST  0x0100      /* Do not re-use constants. */
-#define ASM_FREDUCEREFS    0x0200      /* Try to minimize use of references when accessing class/instance members.
+#define ASM_FNOASSERT      0x0020      /* Replace all assert statements with a compile-time constant `true'. */
+#define ASM_FNODEC         0x0040      /* Do not create a `*.dec' file once the module has been compiled. */
+#define ASM_FNOREUSECONST  0x0080      /* Do not re-use constants. */
+#define ASM_FREDUCEREFS    0x0100      /* Try to minimize use of references when accessing class/instance members.
                                         * Enabling this isn't a good idea, as it slows down access to members inside
                                         * of classes, while only speeding up construction of said class.
                                         * Additionally, problems may ensue when the class's symbol is overwritten,
                                         * as member function may not be holding their own references to the class,
                                         * but be using global symbols instead. */
-#define ASM_FARGREFS       0x8000      /* [INTERNAL] Make use of references-through-arguments */
+#define ASM_FARGREFS       0x0200      /* [INTERNAL] Make use of references-through-arguments */
+#define ASM_FNODDIXDAT     0x4000      /* Do not generate extended DDI debug information. */
+#define ASM_FNODDI         0x8000      /* Do not generate DDI debug information.
+                                        * Setting this flag allows peephole optimizations to
+                                        * be more effective than when this flag wasn't set. */
     uint16_t               a_flag;     /* Assembler operation flags (Set of `ASM_F*') */
 };
 
@@ -997,10 +1004,11 @@ INTDEF int32_t DCALL asm_newconst(DeeObject *__restrict constvalue);
  * generate code capable of pushing the given value onto the stack. */
 INTDEF bool DCALL asm_allowconst(DeeObject *__restrict constvalue);
 /* Similar to `asm_newconst', but don't re-use identical static variables.
- * NOTE: The given `initializer' is optional and the caller must encode
+ * @param: sym: The symbol with which to associated the static variable, or NULL if anonymous.
+ * NOTE: The given `initializer' is required and the caller must encode
  *       the returned index alongside a `R_DMN_STATIC16' relocation.
  *       This can easily be achieved using the `asm_putsid16()' function. */
-INTDEF int32_t DCALL asm_newstatic(DeeObject *initializer);
+INTDEF int32_t DCALL asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym);
 
 /* Allocate a new local variable index. */
 INTDEF int32_t DCALL asm_newlocal(void);

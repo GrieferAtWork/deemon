@@ -4862,14 +4862,14 @@ do_pack_dict:
           if (arg_hi < frame->cf_argc) {
            /* Just a regular, old call-forward */
            temp = DeeObject_Call(TOP,
-                                (size_t)(arg_hi-arg_lo)+1,
-                                 frame->cf_argv+arg_lo);
+                                (size_t)(arg_hi - arg_lo) + 1,
+                                 frame->cf_argv + arg_lo);
           } else if (arg_lo >= frame->cf_argc) {
            /* Call using only default-arguments. */
            ASSERT(arg_lo >= code->co_argc_min);
            temp = DeeObject_Call(TOP,
-                                (size_t)(arg_hi-arg_lo)+1,
-                                (DeeObject **)code->co_defaultv+
+                                (size_t)(arg_hi - arg_lo) + 1,
+                                (DeeObject **)code->co_defaultv +
                                 (arg_lo - code->co_argc_min));
           } else {
            /* Partial call using both default, and given arguments. */
@@ -4880,7 +4880,7 @@ do_pack_dict:
                                    frame->cf_argv + arg_lo,
                                    argc - fwd_argc,
                                   (DeeObject **)code->co_defaultv +
-                                 ((code->co_argc_max-code->co_argc_min) - (argc-fwd_argc)));
+                                 ((code->co_argc_max - code->co_argc_min) - (argc - fwd_argc)));
           }
          } else {
           /* Special case: Varargs-inclusive. */
@@ -6413,7 +6413,7 @@ handle_except:
           "No new exceptions have been thrown\n"
           "ip_addr = +%.4I32X\n"
           "name    = %s\n",
-         (uint32_t)ip_addr,DeeDDI_NAME(code->co_ddi));
+         (uint32_t)ip_addr,DeeCode_NAME(code));
   ASSERTF(this_thread->t_except,"No error has been set");
   /* Lazily allocate a missing traceback.
    * TODO: Only include information that would become lost _now_ in the traceback.

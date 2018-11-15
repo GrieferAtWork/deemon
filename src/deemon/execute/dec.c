@@ -1869,11 +1869,11 @@ decode_sleb(uint8_t **__restrict pptr) {
 PRIVATE int DCALL
 load_strmap(DecFile *__restrict self,
             uint32_t map_addr,
-            uint16_t *__restrict pmaplen,
-            uintptr_t const **__restrict pmapvec) {
- uint16_t i,map_length;
+            uint32_t *__restrict pmaplen,
+            uint32_t const **__restrict pmapvec) {
+ uint32_t i,map_length;
  uint8_t *reader;
- uintptr_t *vector;
+ uint32_t *vector;
  uint32_t string_size;
  if (!map_addr) return 0; /* Undefined map. */
  if unlikely(map_addr+2 >= self->df_size)
@@ -1881,10 +1881,14 @@ load_strmap(DecFile *__restrict self,
  reader = self->df_base + map_addr;
  map_length = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
  if unlikely(!map_length) return 0; /* Empty map (same as undefined). */
- if unlikely(map_length > (self->df_size-(map_addr+2)))
+ if unlikely(map_length == (uint16_t)-1) {
+  map_length = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
+  if unlikely(!map_length) return 0; /* Empty map (same as undefined). */
+ }
+ if unlikely(map_length > (self->df_size - (map_addr + 2)))
     GOTO_CORRUPTED(reader - 2,err_currupt); /* Map items are out-of-bounds. */
  /* Allocate the map vector. */
- vector = (uintptr_t *)Dee_Malloc(map_length*sizeof(uintptr_t));
+ vector = (uint32_t *)Dee_Malloc(map_length * sizeof(uint32_t));
  if unlikely(!vector) return -1;
 
  string_size = LESWAP32(self->df_ehdr->e_strsiz);
@@ -1897,7 +1901,7 @@ load_strmap(DecFile *__restrict self,
      GOTO_CORRUPTEDF(reader,err_currupt_vec,
                      "[%I16u/%I16u] pointer = %#I32x, string_size = %#I32x",
                      i,map_length,pointer,string_size);
-  vector[i] = (uintptr_t)pointer;
+  vector[i] = pointer;
  }
 
  /* Fill in the caller-provided data fields. */
@@ -1918,48 +1922,44 @@ DecFile_LoadDDI(DecFile *__restrict self,
  int map_error;
  DREF DeeDDIObject *result;
  uint8_t *ddi_text;
- uint32_t ddi_static;  /* Absolute pointer to a `Dec_Strmap' structure describing static variable names, or ZERO(0) when not available. */
- uint32_t ddi_refs;    /* Absolute pointer to a `Dec_Strmap' structure describing reference variable names, or ZERO(0) when not available. */
- uint32_t ddi_args;    /* Absolute pointer to a `Dec_Strmap' structure describing argument variable names, or ZERO(0) when not available. */
- uint32_t ddi_paths;   /* Absolute pointer to a `Dec_Strmap' structure describing path names, or ZERO(0) when not available. */
- uint32_t ddi_files;   /* Absolute pointer to a `Dec_Strmap' structure describing file names, or ZERO(0) when not available. */
- uint32_t ddi_symbols; /* Absolute pointer to a `Dec_Strmap' structure describing symbol names, or ZERO(0) when not available. */
- uint32_t ddi_ddisize; /* The total size (in bytes) of DDI text for translating instruction pointers to file+line, etc. */
+ uint32_t ddi_strings; /* Absolute pointer to a `Dec_Strmap' structure describing DDI string. */
+ uint32_t ddi_ddixdat; /* Absolute pointer to a `Dec_DDIExdat' structure, or 0. */
  uint32_t ddi_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
+ uint32_t ddi_ddisize; /* The total size (in bytes) of DDI text for translating instruction pointers to file+line, etc. */
+ uint16_t ddi_ddiinit; /* Amount of leading DDI instruction bytes that are used for state initialization */
+
  /* Read generic DDI fields. */
  if (is_8bit_ddi) {
-  ddi_static  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-  ddi_refs    = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-  ddi_args    = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-  ddi_paths   = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-  ddi_files   = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-  ddi_symbols = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-  ddi_ddiaddr = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
-  ddi_ddisize = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+  ddi_strings = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_8BitCodeDDI.cd_strings */
+  ddi_ddixdat = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_8BitCodeDDI.cd_ddixdat */
+  ddi_ddiaddr = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_8BitCodeDDI.cd_ddiaddr */
+  ddi_ddisize = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_8BitCodeDDI.cd_ddisize */
+  ddi_ddiinit = *(uint8_t *)reader,reader += 1;                    /* Dec_8BitCodeDDI.cd_ddiinit */
  } else {
-  ddi_static  = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
-  ddi_refs    = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
-  ddi_args    = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
-  ddi_paths   = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
-  ddi_files   = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
-  ddi_symbols = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
-  ddi_ddiaddr = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
-  ddi_ddisize = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
+  ddi_strings = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4; /* Dec_CodeDDI.cd_strings */
+  ddi_ddixdat = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4; /* Dec_CodeDDI.cd_ddixdat */
+  ddi_ddiaddr = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4; /* Dec_CodeDDI.cd_ddiaddr */
+  ddi_ddisize = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4; /* Dec_CodeDDI.cd_ddisize */
+  ddi_ddiinit = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2; /* Dec_CodeDDI.cd_ddiinit */
  }
  ddi_text = self->df_base + ddi_ddiaddr;
+
  /* Make sure that DDI text is contained entirely within the DEC object file. */
- if ((ddi_text <  self->df_base ||
-      ddi_text >= self->df_base+self->df_size) && ddi_ddisize != 0)
+ if ((ddi_text               <  self->df_base ||
+      ddi_text + ddi_ddisize <  ddi_text ||
+      ddi_text + ddi_ddisize >= self->df_base + self->df_size) && ddi_ddisize != 0)
       GOTO_CORRUPTED(reader,err_currupted);
- result = (DREF DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject,d_ddi)+
-                                                ddi_ddisize+DDI_INSTRLEN_MAX);
+ result = (DREF DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject,d_ddi) +
+                                                ddi_ddisize + DDI_INSTRLEN_MAX);
  if unlikely(!result) goto err;
+
  /* Copy DDI text. */
  memcpy(result->d_ddi,ddi_text,ddi_ddisize);
 #if DDI_STOP != 0
  memset(result->d_ddi+ddi_ddisize,DDI_STOP,DDI_INSTRLEN_MAX);
 #endif
- result->d_ddi_size = ddi_ddisize;
+ result->d_ddiinit = ddi_ddiinit;
+ result->d_ddisize = ddi_ddisize;
 
  /* Parse the initial DDI register state. */
  result->d_start.dr_flags = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
@@ -1972,14 +1972,39 @@ DecFile_LoadDDI(DecFile *__restrict self,
  result->d_start.dr_name = (uint16_t)decode_uleb((uint8_t **)&reader);
  result->d_start.dr_col  = (int)decode_sleb((uint8_t **)&reader);
  result->d_start.dr_lno  = (int)decode_sleb((uint8_t **)&reader);
+ if (ddi_ddixdat) {
+  /* Load DDI extension data. */
+  uint8_t *xdat = self->df_base + ddi_ddixdat;
+  uint32_t xsiz;
+  if (xdat < self->df_base ||
+      xdat >= self->df_base + self->df_size)
+      GOTO_CORRUPTED(xdat,err_currupted_r_maps);
+  xsiz = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+  if unlikely(xsiz == (uint16_t)-1)
+     xsiz = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
+  if likely(xsiz != 0) {
+   struct ddi_exdat *xres;
+   if (xdat        <  self->df_base ||
+       xdat + xsiz <  xdat ||
+       xdat + xsiz >= self->df_base + self->df_size)
+       GOTO_CORRUPTED(xdat,err_currupted_r_maps);
+   xres = (struct ddi_exdat *)Dee_Malloc(offsetof(struct ddi_exdat,dx_data) +
+                                         xsiz + DDI_EXDAT_MAXSIZE);
+   if unlikely(!xres)
+      goto err_r_maps;
+   xres->dx_size = xsiz;
+   /* Initialize X-data information. */
+   memcpy(xres->dx_data,xdat,xsiz);
+   memset(xres->dx_data + xsiz,0,DDI_EXDAT_MAXSIZE);
+   result->d_exdat = xres;
+  }
+ }
 
  /* Load all the DDI string maps. */
- if ((map_error = load_strmap(self,ddi_static,&result->d_nstatic,&result->d_static_names)) != 0) goto handle_map_error;
- if ((map_error = load_strmap(self,ddi_refs,&result->d_nrefs,&result->d_ref_names)) != 0) goto handle_map_error;
- if ((map_error = load_strmap(self,ddi_args,&result->d_nargs,&result->d_arg_names)) != 0) goto handle_map_error;
- if ((map_error = load_strmap(self,ddi_paths,&result->d_paths,&result->d_path_names)) != 0) goto handle_map_error;
- if ((map_error = load_strmap(self,ddi_files,&result->d_files,&result->d_file_names)) != 0) goto handle_map_error;
- if ((map_error = load_strmap(self,ddi_symbols,&result->d_symbols,&result->d_symbol_names)) != 0) goto handle_map_error;
+ if ((map_error = load_strmap(self,ddi_strings,
+                             &result->d_nstring,
+                             &result->d_strings)) != 0)
+      goto handle_map_error;
 
  /* Use the string table of the DEC file as DDI string table,
   * thus allowing data-reuse and solving the problem that DEC
@@ -1992,23 +2017,15 @@ DecFile_LoadDDI(DecFile *__restrict self,
  DeeObject_Init(result,&DeeDDI_Type);
  return result;
 err_r_maps:
- Dee_Free((void *)result->d_symbol_names);
- Dee_Free((void *)result->d_file_names);
- Dee_Free((void *)result->d_path_names);
- Dee_Free((void *)result->d_arg_names);
- Dee_Free((void *)result->d_ref_names);
- Dee_Free((void *)result->d_static_names);
+ Dee_Free((void *)result->d_strings);
+ Dee_Free((void *)result->d_exdat);
 /*err_r:*/
  Dee_Free(result);
 err:
  return NULL;
 err_currupted_r_maps:
- Dee_Free((void *)result->d_symbol_names);
- Dee_Free((void *)result->d_file_names);
- Dee_Free((void *)result->d_path_names);
- Dee_Free((void *)result->d_arg_names);
- Dee_Free((void *)result->d_ref_names);
- Dee_Free((void *)result->d_static_names);
+ Dee_Free((void *)result->d_strings);
+ Dee_Free((void *)result->d_exdat);
 err_currupted_r:
  Dee_Free(result);
 err_currupted:
@@ -2045,6 +2062,7 @@ DecFile_LoadCode(DecFile *__restrict self,
   header.co_exceptoff  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
   header.co_defaultoff = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
   header.co_ddioff     = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+  header.co_kwdoff     = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
   header.co_textsiz    = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
   header.co_textoff    = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
  } else {
@@ -2061,6 +2079,7 @@ DecFile_LoadCode(DecFile *__restrict self,
   header.co_exceptoff  = LESWAP32(header.co_exceptoff);
   header.co_defaultoff = LESWAP32(header.co_defaultoff);
   header.co_ddioff     = LESWAP32(header.co_ddioff);
+  header.co_kwdoff     = LESWAP32(header.co_kwdoff);
   header.co_textsiz    = LESWAP32(header.co_textsiz);
   header.co_textoff    = LESWAP32(header.co_textoff);
 #endif
@@ -2096,6 +2115,7 @@ DecFile_LoadCode(DecFile *__restrict self,
  result->co_argc_min = header.co_argc_min;
  result->co_argc_max = header.co_argc_min;
  result->co_defaultv = NULL;
+
  if (header.co_defaultoff) {
   /* Load the vector of default argument objects. */
   uint16_t defaultc; DREF DeeObject **defv;
@@ -2203,7 +2223,7 @@ DecFile_LoadCode(DecFile *__restrict self,
   uint8_t *ddi_reader;
   ddi_reader = self->df_base + header.co_ddioff;
   if unlikely(ddi_reader >= end || ddi_reader < self->df_base)
-     GOTO_CORRUPTED(reader,corrupt_r_except);
+     GOTO_CORRUPTED(ddi_reader,corrupt_r_except);
   ddi = DecFile_LoadDDI(self,ddi_reader,!!(header.co_flags & DEC_CODE_F8BIT));
   if unlikely(!ITER_ISOK(ddi)) {
    if (!ddi) goto err_r_except;
@@ -2213,6 +2233,63 @@ DecFile_LoadCode(DecFile *__restrict self,
  } else {
   result->co_ddi = &empty_ddi;
   Dee_Incref(&empty_ddi);
+ }
+
+ /* Load keyword information. */
+ result->co_keywords = NULL;
+ if (header.co_kwdoff && result->co_argc_max != 0) {
+  DREF DeeStringObject **kwds; uint16_t i;
+  uint32_t string_size = LESWAP32(self->df_ehdr->e_strsiz);
+  char *strtab = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
+  uint8_t *kwd_reader = self->df_base + header.co_ddioff;
+  if unlikely(kwd_reader >= end || kwd_reader < self->df_base)
+     GOTO_CORRUPTED(kwd_reader,corrupt_r_ddi);
+  kwds = (DREF DeeStringObject **)Dee_Malloc(result->co_argc_max *
+                                             sizeof(DREF DeeStringObject *));
+  if unlikely(!kwds) goto err_r_ddi;
+  if (header.co_flags & DEC_CODE_F8BIT) {
+   for (i = 0; i < result->co_argc_max; ++i) {
+    uint32_t addr; char *name;
+    if unlikely(kwd_reader >= end) {
+corrupt_kwds_i:
+     while (i--) Dee_Decref(kwds[i]);
+     Dee_Free(kwds);
+     GOTO_CORRUPTED(kwd_reader,corrupt_r_ddi);
+    }
+    addr = Dec_DecodePointer((uint8_t **)&kwd_reader);
+    if unlikely(addr >= string_size)
+       goto corrupt_kwds_i;
+    name = strtab + addr;
+    if ((kwds[i] = (DREF DeeStringObject *)DeeString_NewUtf8(name,
+                                                             strlen(name),
+                                                             STRING_ERROR_FSTRICT)) == NULL) {
+err_kwds_i:
+     while (i--) Dee_Decref(kwds[i]);
+     Dee_Free(kwds);
+     goto err_r_ddi;
+    }
+   }
+  } else {
+   for (i = 0; i < result->co_argc_max; ++i) {
+    uint32_t addr,size;
+    if unlikely(kwd_reader >= end)
+       goto corrupt_kwds_i;
+    size = Dec_DecodePointer((uint8_t **)&kwd_reader);
+    if (!size) {
+     kwds[i] = (DREF DeeStringObject *)Dee_EmptyString;
+     Dee_Incref(Dee_EmptyString);
+     continue;
+    }
+    addr = Dec_DecodePointer((uint8_t **)&kwd_reader);
+    if unlikely(addr >= string_size ||
+                addr + size > addr ||
+                addr + size >= string_size)
+       goto corrupt_kwds_i;
+    if ((kwds[i] = (DREF DeeStringObject *)DeeString_NewUtf8(strtab + addr,size,STRING_ERROR_FSTRICT)) == NULL)
+        goto err_kwds_i;
+   }
+  }
+  result->co_keywords = kwds;
  }
  
  /* Load the code's text assembly from the file.
@@ -2251,6 +2328,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 done:
  *preader = reader;
  return result;
+err_r_ddi:
+ Dee_Decref(result->co_ddi);
 err_r_except:
  while (result->co_exceptc) {
   --result->co_exceptc;
@@ -2276,6 +2355,8 @@ err_r:
  DeeGCObject_Free(result);
  result = NULL;
  goto done;
+corrupt_r_ddi:
+ Dee_Decref(result->co_ddi);
 corrupt_r_except:
  while (result->co_exceptc) {
   --result->co_exceptc;

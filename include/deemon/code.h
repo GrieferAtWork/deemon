@@ -170,10 +170,9 @@ struct ddi_regs {
                                      *       will either crash (FAST-mode), or throw an error (SAFE-mode). */
     uint16_t             dr_flags;  /* Set of `DDI_REGS_F*' */
     uint16_t             dr_path;   /* The current path number. (NOTE: ZERO indicates no path and all other values
-                                     *                                 are used as index-1 in the `d_path_names'
-                                     *                                 vector of the associated `DeeDDIObject') */
-    uint16_t             dr_file;   /* The current file number. */
-    uint16_t             dr_name;   /* The current function name. */
+                                     *                                 are used as index-1 with `DeeCode_GetDDIString()') */
+    uint16_t             dr_file;   /* The current file number. (for use with `DeeCode_GetDDIString()') */
+    uint16_t             dr_name;   /* The current function name. (for use with `DeeCode_GetDDIString()') */
 #if (__SIZEOF_POINTER__ - (14 % __SIZEOF_POINTER__)) != 0
     uint16_t            _dr_pad[(__SIZEOF_POINTER__ - (14 % __SIZEOF_POINTER__))/2]; /* ... */
 #endif
@@ -275,25 +274,33 @@ DFUNDEF uint8_t *DCALL ddi_next_regs(uint8_t *__restrict ip, struct ddi_regs *__
 DFUNDEF uint8_t *DCALL ddi_next_state(uint8_t *__restrict ip, struct ddi_state *__restrict regs, unsigned int flags);
 
 
+/* DDI extended data opcode flags. */
+#define DDI_EXDAT_OP8     0x40 /*  8-bit extended data field. (+1+1) (operands are little-endian) */
+#define DDI_EXDAT_OP16    0x80 /* 16-bit extended data field. (+2+2) (operands are little-endian) */
+#define DDI_EXDAT_OP32    0xc0 /* 32-bit extended data field. (+2+4) (operands are little-endian) */
+#define DDI_EXDAT_OPMASK  0xc0 /* Operand size mask. */
+#define DDI_EXDAT_MAXSIZE 7 /* Max size (in bytes) of a single DDI extension data block. */
+#define DDI_EXDAT_O_END   0x00 /* End of extended data. */
+#define DDI_EXDAT_O_RNAM  0x00 /* | DDI_EXDAT_OP*; [id,strtab_offset] */
+#define DDI_EXDAT_O_SNAM  0x01 /* | DDI_EXDAT_OP*; [id,strtab_offset] */
+
+struct ddi_exdat {
+    uint32_t  dx_size;    /* Amount of extended data bytes. */
+    uint8_t   dx_data[1]; /* Extended DDI data. */
+};
+
 struct ddi_object {
     OBJECT_HEAD
-    uintptr_t const            *d_static_names; /* [OFFSET(d_strtab->s_str)][0..d_nstatic][owned][const] Vector of static variable names. */
-    uintptr_t const            *d_ref_names;    /* [OFFSET(d_strtab->s_str)][0..d_nrefs][owned][const] Vector of reference variable names. */
-    uintptr_t const            *d_arg_names;    /* [OFFSET(d_strtab->s_str)][0..d_nargs][owned][const] Vector of argument variable names. */
-    uintptr_t const            *d_path_names;   /* [OFFSET(d_strtab->s_str)][0..d_paths][owned][const] Vector of path names. */
-    uintptr_t const            *d_file_names;   /* [OFFSET(d_strtab->s_str)][0..d_files][owned][const] Vector of file names. */
-    uintptr_t const            *d_symbol_names; /* [OFFSET(d_strtab->s_str)][0..d_symbols][owned][const] Vector of symbol names. */
-    DREF struct string_object  *d_strtab;       /* [1..1][const] String table of NUL-terminated strings.
-                                                 *               All offsets above point into this table. */
-    uint32_t                    d_ddi_size;     /* [const] Amount of DDI instruction bytes stored in `d_ddi' */
-    uint16_t                    d_nstatic;      /* [const] Amount of static variable names. */
-    uint16_t                    d_nrefs;        /* [const] Amount of reference variable names. */
-    uint16_t                    d_nargs;        /* [const] Amount of argument variable names. */
-    uint16_t                    d_paths;        /* [const] Amount of path strings. */
-    uint16_t                    d_files;        /* [const] Amount of argument variable names. */
-    uint16_t                    d_symbols;      /* [const] Amount of symbol names. */
-    struct ddi_regs             d_start;        /* [const] The initial DDI register state. */
-    uint8_t                     d_ddi[1];       /* [const] DDI bytecode (s.a.: `DDI_*') */
+    uint32_t const             *d_strings; /* [OFFSET(d_strtab->s_str)][0..d_nstring][owned][const] Vector of DDI string offsets. */
+    DREF struct string_object  *d_strtab;  /* [1..1][const] String table of NUL-terminated strings.
+                                            *               All offsets above point into this table. */
+    struct ddi_exdat const     *d_exdat;   /* [0..1][owned][const] Extended DDI data */
+    uint32_t                    d_ddisize; /* [const] Amount of DDI instruction bytes stored in `d_ddi' */
+    uint32_t                    d_nstring; /* [const] Amount of static variable names. */
+    uint16_t                    d_ddiinit; /* [const] Amount of leading DDI instruction bytes that are used for state initialization */
+    uint16_t                    d_pad;     /* ... */
+    struct ddi_regs             d_start;   /* [const] The initial DDI register state. */
+    uint8_t                     d_ddi[1];  /* [const] DDI bytecode (s.a.: `DDI_*') */
 };
 
 
@@ -310,27 +317,13 @@ DeeCode_FindDDI(DeeObject *__restrict self,
                 code_addr_t *opt_endip, code_addr_t uip,
                 unsigned int flags);
 
-/* NOTE: The caller is responsible for validating indices before passing them to these functions. */
-#define DeeDDI_NAME(x)           (DeeDDI_VALID_SYMBOL(x,(x)->d_start.dr_name) ? DeeDDI_SYMBOL_NAME(x,(x)->d_start.dr_name) : "")
-#define DeeDDI_STATIC_NAME(x,i)  (DeeString_STR((x)->d_strtab)+(x)->d_static_names[i])
-#define DeeDDI_REF_NAME(x,i)     (DeeString_STR((x)->d_strtab)+(x)->d_ref_names[i])
-#define DeeDDI_ARG_NAME(x,i)     (DeeString_STR((x)->d_strtab)+(x)->d_arg_names[i])
-#define DeeDDI_PATH_NAME(x,i)    (DeeString_STR((x)->d_strtab)+(x)->d_path_names[i])
-#define DeeDDI_FILE_NAME(x,i)    (DeeString_STR((x)->d_strtab)+(x)->d_file_names[i])
-#define DeeDDI_SYMBOL_NAME(x,i)  (DeeString_STR((x)->d_strtab)+(x)->d_symbol_names[i])
-#define DeeDDI_HAS_NAME(x)       (*DeeDDI_NAME(x) != '\0')
-#define DeeDDI_HAS_STATIC(x,i)   ((i) < (x)->d_nstatic && *DeeDDI_STATIC_NAME(x,i) != '\0')
-#define DeeDDI_HAS_REF(x,i)      ((i) < (x)->d_nrefs && *DeeDDI_REF_NAME(x,i) != '\0')
-#define DeeDDI_HAS_ARG(x,i)      ((i) < (x)->d_nargs && *DeeDDI_ARG_NAME(x,i) != '\0')
-#define DeeDDI_HAS_PATH(x,i)     ((i) < (x)->d_paths && *DeeDDI_PATH_NAME(x,i) != '\0')
-#define DeeDDI_HAS_FILE(x,i)     ((i) < (x)->d_files && *DeeDDI_FILE_NAME(x,i) != '\0')
-#define DeeDDI_HAS_SYMBOL(x,i)   ((i) < (x)->d_symbols && *DeeDDI_SYMBOL_NAME(x,i) != '\0')
-#define DeeDDI_VALID_STATIC(x,i) ((i) < (x)->d_nstatic)
-#define DeeDDI_VALID_REF(x,i)    ((i) < (x)->d_nrefs)
-#define DeeDDI_VALID_ARG(x,i)    ((i) < (x)->d_nargs)
-#define DeeDDI_VALID_PATH(x,i)   ((i) < (x)->d_paths)
-#define DeeDDI_VALID_FILE(x,i)   ((i) < (x)->d_files)
-#define DeeDDI_VALID_SYMBOL(x,i) ((i) < (x)->d_symbols)
+/* Return the name for a specific assembly symbol which may be found in code. */
+DFUNDEF char *DCALL DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid); /* Argument */
+DFUNDEF char *DCALL DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid); /* Static */
+DFUNDEF char *DCALL DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid); /* Reference */
+DFUNDEF char *DCALL DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
+
+#define DeeCode_NAME(x) DeeCode_GetDDIString((DeeObject *)REQUIRES_OBJECT(x),((DeeCodeObject *)(x))->co_ddi->d_start.dr_name)
 
 #define DeeDDI_Check(ob)         DeeObject_InstanceOfExact(ob,&DeeDDI_Type) /* `ddi' is final. */
 #define DeeDDI_CheckExact(ob)    DeeObject_InstanceOfExact(ob,&DeeDDI_Type)
@@ -485,7 +478,7 @@ struct code_frame {
                                            *       the valid object-range is `cf_stack...cf_sp' */
     instruction_t            *cf_ip;      /* [1..1][in(cf_func->fo_code->co_code)] Current instruction pointer. */
     DREF struct tuple_object *cf_vargs;   /* [0..1][lock(write_once)] Saved var-args object. */
-    DeeObject                *cf_this;    /* [1..1][valid_if(cf_func->fo_code->co_flags&CODE_FTHISCALL)][const]
+    DeeObject                *cf_this;    /* [1..1][valid_if(cf_func->fo_code->co_flags & CODE_FTHISCALL)][const]
                                            * The `this' argument passed for this-calls. */
     DeeObject                *cf_result;  /* [0..1] Storage location of the frame's currently set return value.
                                            *        The caller of the frame should pre-initialize this field to NULL. */

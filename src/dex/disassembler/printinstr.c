@@ -733,14 +733,14 @@ libdisasm_printstatic(dformatprinter printer, void *arg,
      return libdisasm_printconst(printer,arg,sid,code,flags,false);
 #endif
  if (code) {
-  DeeDDIObject *ddi = code->co_ddi;
+  char *name;
+  if ((name = DeeCode_GetSSymbolName((DeeObject *)code,sid)) != NULL)
+      return Dee_FormatPrintf(printer,arg,"static " PREFIX_VARNAME "%s",name);
   if (sid >= code->co_staticc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
    return Dee_FormatPrintf(printer,arg,"static %u /* invalid sid */",(unsigned int)sid);
   }
-  if (DeeDDI_HAS_STATIC(ddi,sid))
-      return Dee_FormatPrintf(printer,arg,"static " PREFIX_VARNAME "%s",DeeDDI_STATIC_NAME(ddi,sid));
 #if 0
   if (readonly && !(flags & PCODE_FNOARGCOMMENT)) {
    DREF DeeObject *init;
@@ -760,17 +760,17 @@ libdisasm_printlocal(dformatprinter printer, void *arg,
                      uint16_t lid, struct ddi_state *ddi,
                      DeeCodeObject *code, unsigned int flags) {
  if (code) {
+  /* Use DDI information to lookup the name of the variable. */
+  if (ddi && lid < ddi->rs_xregs.dx_lcnamc) {
+   char *name;
+   if ((name = DeeCode_GetDDIString((DeeObject *)code,ddi->rs_xregs.dx_lcnamv[lid])) != NULL)
+        return Dee_FormatPrintf(printer,arg,"local " PREFIX_VARNAME "%s",name);
+  } 
   if (lid >= code->co_localc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
    return Dee_FormatPrintf(printer,arg,"local %u /* invalid lid */",(unsigned int)lid);
   }
-  /* Use DDI information to lookup the name of the variable. */
-  if (ddi && lid < ddi->rs_xregs.dx_lcnamc &&
-      DeeDDI_VALID_SYMBOL(code->co_ddi,ddi->rs_xregs.dx_lcnamv[lid])) {
-   return Dee_FormatPrintf(printer,arg,"local " PREFIX_VARNAME "%s",
-                           DeeDDI_SYMBOL_NAME(code->co_ddi,ddi->rs_xregs.dx_lcnamv[lid]));
-  } 
  }
 print_generic:
  return Dee_FormatPrintf(printer,arg,"local %u",(unsigned int)lid);
@@ -787,10 +787,10 @@ libdisasm_printstack(dformatprinter printer, void *arg,
                            is_prefix ? "stack #" : "#",soff);
   }
   /* Use DDI information to lookup the name of the variable. */
-  if (ddi && soff < MIN(ddi->rs_xregs.dx_base.dr_usp,ddi->rs_xregs.dx_spnama) &&
-      DeeDDI_VALID_SYMBOL(code->co_ddi,ddi->rs_xregs.dx_spnamv[soff])) {
-   return Dee_FormatPrintf(printer,arg,"stack " PREFIX_VARNAME "%s",
-                           DeeDDI_SYMBOL_NAME(code->co_ddi,ddi->rs_xregs.dx_spnamv[soff]));
+  if (ddi && soff < MIN(ddi->rs_xregs.dx_base.dr_usp,ddi->rs_xregs.dx_spnama)) {
+   char *name;
+   if ((name = DeeCode_GetDDIString((DeeObject *)code,ddi->rs_xregs.dx_spnamv[soff])) != NULL)
+        return Dee_FormatPrintf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
   } 
  }
 print_generic:
@@ -814,15 +814,15 @@ print_generic:
   if (soff >= DeeCode_StackDepth(code))
       goto invalid_offset;
   /* Use DDI information to lookup the name of the variable. */
-  if (ddi && soff < MIN(ddi->rs_xregs.dx_base.dr_usp,ddi->rs_xregs.dx_spnama) &&
-      DeeDDI_VALID_SYMBOL(code->co_ddi,ddi->rs_xregs.dx_spnamv[soff])) {
-   if (!(flags & PCODE_FALTCOMMENT)) {
-    return Dee_FormatPrintf(printer,arg,"stack " PREFIX_VARNAME "%s",
-                            DeeDDI_SYMBOL_NAME(code->co_ddi,ddi->rs_xregs.dx_spnamv[soff]));
+  if (ddi && soff < MIN(ddi->rs_xregs.dx_base.dr_usp,ddi->rs_xregs.dx_spnama)) {
+   char *name = DeeCode_GetDDIString((DeeObject *)code,
+                                      ddi->rs_xregs.dx_spnamv[soff]);
+   if (name) {
+    if (!(flags & PCODE_FALTCOMMENT))
+        return Dee_FormatPrintf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
+    return Dee_FormatPrintf(printer,arg,"stack " PREFIX_VARNAME "%s /* #%I16u / #SP - %I16u */",
+                            name,soff,sp_sub);
    }
-   return Dee_FormatPrintf(printer,arg,"stack " PREFIX_VARNAME "%s /* #%I16u / #SP - %I16u */",
-                           DeeDDI_SYMBOL_NAME(code->co_ddi,ddi->rs_xregs.dx_spnamv[soff]),
-                           soff,sp_sub);
   } 
  }
  if (!(flags & PCODE_FALTCOMMENT))
@@ -900,14 +900,15 @@ libdisasm_printref(dformatprinter printer, void *arg,
                    uint16_t rid, DeeCodeObject *code,
                    unsigned int flags) {
  if (code) {
-  DeeDDIObject *ddi = code->co_ddi;
+  char *name;
+  if ((name = DeeCode_GetRSymbolName((DeeObject *)code,rid)) != NULL)
+      return Dee_FormatPrintf(printer,arg,"ref " PREFIX_VARNAME "%s",name);
   if (rid >= code->co_refc) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
    return Dee_FormatPrintf(printer,arg,"ref %u /* invalid rid */",(unsigned int)rid);
   }
-  if (DeeDDI_HAS_REF(ddi,rid))
-      return Dee_FormatPrintf(printer,arg,"ref " PREFIX_VARNAME "%s",DeeDDI_REF_NAME(ddi,rid));
+      
  }
 print_generic:
  return Dee_FormatPrintf(printer,arg,"ref %u",(unsigned int)rid);
@@ -917,9 +918,9 @@ libdisasm_printarg(dformatprinter printer, void *arg,
                    uint16_t aid, DeeCodeObject *code,
                    unsigned int flags) {
  if (code) {
-  DeeDDIObject *ddi = code->co_ddi;
-  if (DeeDDI_HAS_ARG(ddi,aid))
-      return Dee_FormatPrintf(printer,arg,"arg " PREFIX_VARNAME "%s",DeeDDI_ARG_NAME(ddi,aid));
+  char *name = DeeCode_GetASymbolName((DeeObject *)code,aid);
+  if (name)
+      return Dee_FormatPrintf(printer,arg,"arg " PREFIX_VARNAME "%s",name);
   if (aid == code->co_argc_max && (code->co_flags & CODE_FVARARGS))
       return (*printer)(arg,"varargs",COMPILER_STRLEN("varargs"));
   if (aid >= code->co_argc_max && !(flags & PCODE_FNOBADCOMMENT))
@@ -1269,7 +1270,11 @@ do_prefix_push_static:
    PRINT("mov    ");
    INVOKE(libdisasm_printprefix(printer,arg,instr_start,false,ddi,code,flags));
    PRINT(", ");
+#if 1
+   INVOKE(libdisasm_printstatic(printer,arg,imm,false,code,flags));
+#else
    INVOKE(libdisasm_printstatic(printer,arg,imm,true,code,flags));
+#endif
    goto done;
 
   case ASM16_PUSH_EXTERN:
@@ -1950,10 +1955,14 @@ print_arg:
  case ASM_PUSH_STATIC:
   imm = READ_imm8(iter);
 print_static:
+#if 1
+  INVOKE(libdisasm_printstatic(printer,arg,imm,false,code,flags));
+#else
   INVOKE(libdisasm_printstatic(printer,arg,imm,
                                opcode == ASM_PUSH_STATIC ||
                                opcode == ASM16_PUSH_STATIC,
                                code,flags));
+#endif
   break;
 
 
