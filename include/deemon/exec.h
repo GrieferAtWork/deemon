@@ -135,6 +135,157 @@ DFUNDEF NONNULL((1)) void DCALL Dee_SetArgv(/*Tuple*/DeeObject *__restrict argv)
 
 
 
+#define DEE_EXEC_RUNMODE_EXPR                  0x0000 /* Parse, compile and execute a basic expression (same as `DEE_EXEC_RUNMODE_EXPR',
+                                                       * but the compiler may choose not to allow function or class expressions, thus
+                                                       * restricting the set of executable to only basic expressions)
+                                                       * When this mode is chosen, and `DEE_EXEC_RUNMODE_FHASPP' isn't set (and specified
+                                                       * compiler options don't prevent it), the compiler may choose to use a simpler,
+                                                       * smaller compilation driver which doesn't include the overhead associated with
+                                                       * the normal (full) compiler.
+                                                       * NOTE: As far as comma-expressions go, simply return the last component. */
+#define DEE_EXEC_RUNMODE_FULLEXPR              0x0001 /* Parse, compile and execute a single expression (e.g. `10 + 20' or `[]{ print 42; return "foo"; }') and return the result
+                                                       * NOTE: As far as comma-expressions go, simply return the last component, but do allow assignments. */
+#define DEE_EXEC_RUNMODE_STMT                  0x0002 /* Parse, compile and execute a single statement (e.g. `if (x) y; else z;') and return the result like `return ({ ... });' */
+#define DEE_EXEC_RUNMODE_STMTS                 0x0003 /* Parse a whole module source as a sequence of statements. */
+#define DEE_EXEC_RUNMODE_MASK                  0x000f /* Mode mask */
+#define DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS 0x4000 /* FLAG: Default symbols are declared as read/write globals (otherwise, they are read-only constants) */
+#define DEE_EXEC_RUNMODE_FHASPP                0x8000 /* FLAG: Enable the preprocessor.
+                                                       *  - When not set, preprocessor directives and macros are disabled. */
+struct compiler_options;
+
+/* Execute source code from `source_stream' and return the result of invoking it.
+ * @param: source_stream:   The input stream from which to take input arguments.
+ * @param: mode:            One of `DEE_EXEC_RUNMODE_*', optionally or'd with a set of `DEE_EXEC_RUNMODE_F*'
+ * @param: argv:            Variable arguments passed to user-code 
+ * @param: start_line:      The starting line number when compiling code. (zero-based)
+ * @param: start_col:       The starting column number when compiling code. (zero-based)
+ * @param: options:         A set of compiler options applicable for compiled code.
+ *                          Note however that certain options have no effect, such
+ *                          as the fact that peephole and other optimizations are
+ *                          forced to be disabled, or DEC files are never generated,
+ *                          all for reasons that should be quite obvious.
+ * @param: default_symbols: A mapping-like object of type `{(string,object)...}', that
+ *                          contains a set of pre-defined variables that should be made
+ *                          available to the interactive source code by use of global
+ *                          variables.
+ *                          These are either provided as constants, or as globals,
+ *                          depending on `DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS'
+ * @param: source_pathname: The name for the source file (the path of which is
+ *                          then used for relative import()s and #include's)
+ * @param: module_name:     The name of the internal module, or NULL to determine automatically.
+ *                          Note that the internal module is never registered globally, and
+ *                          only exists as an anonymous module. */
+DFUNDEF DREF DeeObject *DCALL
+DeeExec_RunStream(DeeObject *__restrict source_stream,
+                  unsigned int mode,
+                  size_t argc, DeeObject **argv,
+                  int start_line, int start_col,
+                  struct compiler_options *options,
+                  DeeObject *default_symbols,
+                  DeeObject *source_pathname,
+                  DeeObject *module_name);
+DFUNDEF DREF DeeObject *DCALL
+DeeExec_RunStreamString(DeeObject *__restrict source_stream,
+                        unsigned int mode,
+                        size_t argc, DeeObject **argv,
+                        int start_line, int start_col,
+                        struct compiler_options *options,
+                        DeeObject *default_symbols,
+                        /*utf-8*/char const *source_pathname,
+                        /*utf-8*/char const *module_name);
+
+
+/* Similar to `DeeExec_RunStream()', but rather than directly executing it,
+ * return the module used to describe the code that is being executed, or
+ * some unspecified, callable object which (when invoked) executed the given
+ * input code in one way or another.
+ * It is up to the implementation if an associated module should simply be
+ * generated, before that module's root is returned, or if the given user-code
+ * is only executed when the function is called, potentially allowing for
+ * JIT-like execution of simple expressions such as `10 + 20' */
+DFUNDEF /*Module*/DREF DeeObject *DCALL
+DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
+                            unsigned int mode,
+                            int start_line, int start_col,
+                            struct compiler_options *options,
+                            DeeObject *default_symbols,
+                            DeeObject *source_pathname,
+                            DeeObject *module_name);
+DFUNDEF /*Callable*/DREF DeeObject *DCALL
+DeeExec_CompileFunctionStream(DeeObject *__restrict source_stream,
+                              unsigned int mode,
+                              int start_line, int start_col,
+                              struct compiler_options *options,
+                              DeeObject *default_symbols,
+                              DeeObject *source_pathname,
+                              DeeObject *module_name);
+DFUNDEF /*Module*/DREF DeeObject *DCALL
+DeeExec_CompileModuleStreamString(DeeObject *__restrict source_stream,
+                                  unsigned int mode,
+                                  int start_line, int start_col,
+                                  struct compiler_options *options,
+                                  DeeObject *default_symbols,
+                                  /*utf-8*/char const *source_pathname,
+                                  /*utf-8*/char const *module_name);
+DFUNDEF /*Callable*/DREF DeeObject *DCALL
+DeeExec_CompileFunctionStreamString(DeeObject *__restrict source_stream,
+                                    unsigned int mode,
+                                    int start_line, int start_col,
+                                    struct compiler_options *options,
+                                    DeeObject *default_symbols,
+                                    /*utf-8*/char const *source_pathname,
+                                    /*utf-8*/char const *module_name);
+
+
+/* Same as the functions above, but instead take a raw memory block as input */
+DFUNDEF DREF DeeObject *DCALL
+DeeExec_RunMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+                  unsigned int mode, size_t argc, DeeObject **argv,
+                  int start_line, int start_col,
+                  struct compiler_options *options,
+                  DeeObject *default_symbols,
+                  DeeObject *source_pathname,
+                  DeeObject *module_name);
+DFUNDEF DREF DeeObject *DCALL
+DeeExec_RunMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                        unsigned int mode, size_t argc, DeeObject **argv,
+                        int start_line, int start_col,
+                        struct compiler_options *options,
+                        DeeObject *default_symbols,
+                        /*utf-8*/char const *source_pathname,
+                        /*utf-8*/char const *module_name);
+DFUNDEF /*Module*/DREF DeeObject *DCALL
+DeeExec_CompileModuleMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+                            unsigned int mode, int start_line, int start_col,
+                            struct compiler_options *options,
+                            DeeObject *default_symbols,
+                            DeeObject *source_pathname,
+                            DeeObject *module_name);
+DFUNDEF /*Callable*/DREF DeeObject *DCALL
+DeeExec_CompileFunctionMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+                              unsigned int mode, int start_line, int start_col,
+                              struct compiler_options *options,
+                              DeeObject *default_symbols,
+                              DeeObject *source_pathname,
+                              DeeObject *module_name);
+DFUNDEF /*Module*/DREF DeeObject *DCALL
+DeeExec_CompileModuleMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                                  unsigned int mode, int start_line, int start_col,
+                                  struct compiler_options *options,
+                                  DeeObject *default_symbols,
+                                  /*utf-8*/char const *source_pathname,
+                                  /*utf-8*/char const *module_name);
+DFUNDEF /*Callable*/DREF DeeObject *DCALL
+DeeExec_CompileFunctionMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                                    unsigned int mode, int start_line, int start_col,
+                                    struct compiler_options *options,
+                                    DeeObject *default_symbols,
+                                    /*utf-8*/char const *source_pathname,
+                                    /*utf-8*/char const *module_name);
+
+
+
+
 /* Keep clearing global hooks while invoking the GC to
  * finalize all user-objects that may still be loaded.
  * This function can be called any number of times, but

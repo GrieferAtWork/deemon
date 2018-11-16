@@ -838,9 +838,10 @@ module_rehash_globals(DeeModuleObject *__restrict self) {
  new_vec = (struct module_symbol *)Dee_Calloc((new_mask+1)*
                                                sizeof(struct module_symbol));
  if unlikely(!new_vec) goto err;
- for (i = 0; i < self->mo_bucketm; ++i) {
+ for (i = 0; i <= self->mo_bucketm; ++i) {
   size_t j,perturb;
-  struct module_symbol *item = MODULE_HASHIT(self,i);
+  struct module_symbol *item;
+  item = &self->mo_bucketv[i];
   if (!item->ss_name) continue;
   perturb = j = item->ss_hash & new_mask;
   for (;; j = MODULE_HASHNX(j,perturb),MODULE_HASHPT(perturb)) {
@@ -962,16 +963,16 @@ TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
 
 PRIVATE int DCALL
 imod_init(InteractiveModule *__restrict self,
-          DeeObject *__restrict source_pathname,
-          DeeObject *module_name,
           DeeObject *__restrict source_stream,
+          DeeObject *source_pathname,
+          DeeObject *module_name,
           int start_line, int start_col,
           struct compiler_options *options,
           unsigned int mode,
           DeeObject *argv,
           DeeObject *default_symbols) {
  size_t i;
- ASSERT_OBJECT_TYPE_EXACT(source_pathname,&DeeString_Type);
+ ASSERT_OBJECT_TYPE_EXACT_OPT(source_pathname,&DeeString_Type);
  ASSERT_OBJECT_TYPE_EXACT_OPT(module_name,&DeeString_Type);
  ASSERT_OBJECT_TYPE_EXACT_OPT(argv,&DeeTuple_Type);
  if (!argv) argv = Dee_EmptyTuple;
@@ -1001,33 +1002,38 @@ imod_init(InteractiveModule *__restrict self,
 
  /* Determine the module's name. */
  if (!module_name) {
-  char  *name = DeeString_STR(source_pathname);
-  size_t size = DeeString_SIZE(source_pathname);
-  char *name_end,*name_start;
-  name_end = name+size;
+  if (source_pathname) {
+   char  *name = DeeString_STR(source_pathname);
+   size_t size = DeeString_SIZE(source_pathname);
+   char *name_end,*name_start;
+   name_end = name+size;
 #ifdef CONFIG_HOST_WINDOWS
-  name_start = name_end;
-  while (name_start != name && !ISSEP(name_start[-1]))
-       --name_start;
+   name_start = name_end;
+   while (name_start != name && !ISSEP(name_start[-1]))
+        --name_start;
 #else
-  name_start = (char *)memrchr(name,SEP,size);
-  if (!name_start) name_start = name-1;
-  ++name_start;
+   name_start = (char *)memrchr(name,SEP,size);
+   if (!name_start) name_start = name-1;
+   ++name_start;
 #endif
-  /* Get rid of a file extension in the module name. */
-  while (name_end != name_start && name_end[-1] != '.') --name_end;
-  while (name_end != name_start && name_end[-1] == '.') --name_end;
-  if (name_end == name_start) name_end = name+size;
-  module_name = DeeString_NewSized(name_start,(size_t)(name_end-name_start));
-  if unlikely(!module_name) goto err_options;
-  self->im_module.mo_name = (DREF struct string_object *)module_name; /* Inherit reference */
+   /* Get rid of a file extension in the module name. */
+   while (name_end != name_start && name_end[-1] != '.') --name_end;
+   while (name_end != name_start && name_end[-1] == '.') --name_end;
+   if (name_end == name_start) name_end = name+size;
+   module_name = DeeString_NewSized(name_start,(size_t)(name_end-name_start));
+   if unlikely(!module_name) goto err_options;
+   self->im_module.mo_name = (DREF struct string_object *)module_name; /* Inherit reference */
+  } else {
+   module_name = Dee_EmptyString;
+   Dee_Incref(Dee_EmptyString);
+  }
  } else {
   Dee_Incref(module_name);
   self->im_module.mo_name = (DREF struct string_object *)module_name;
  }
  /* Fill in the module's path name. */
- ASSERT_OBJECT_TYPE_EXACT(source_pathname,&DeeString_Type);
- Dee_Incref(source_pathname);
+ ASSERT_OBJECT_TYPE_EXACT_OPT(source_pathname,&DeeString_Type);
+ Dee_XIncref(source_pathname);
  self->im_module.mo_path = (DREF struct string_object *)source_pathname;
 
  /* Set global hook members as NULL pointers. */
@@ -1037,20 +1043,22 @@ imod_init(InteractiveModule *__restrict self,
  self->im_module.mo_globnext  = NULL;
 
  /* Reset imports, globals and flags. */
- self->im_module.mo_importc   = 0;
- self->im_module.mo_importv   = NULL;
- self->im_module.mo_globalc   = 0;
- self->im_module.mo_globalv   = NULL;
- self->im_module.mo_flags     = MODULE_FLOADING|MODULE_FINITIALIZING;
- self->im_module.mo_bucketm   = INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK;
- self->im_module.mo_bucketv   = (struct module_symbol *)Dee_Calloc((INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK+1)*
-                                                                    sizeof(struct module_symbol));
- if unlikely(!self->im_module.mo_bucketv) goto err_name;
+ self->im_module.mo_importc = 0;
+ self->im_module.mo_importv = NULL;
+ self->im_module.mo_globalc = 0;
+ self->im_module.mo_globalv = NULL;
+ self->im_module.mo_flags   = MODULE_FLOADING|MODULE_FINITIALIZING;
+ self->im_module.mo_bucketm = INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK;
+ self->im_module.mo_bucketv = (struct module_symbol *)Dee_Calloc((INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK+1)*
+                                                                  sizeof(struct module_symbol));
+ if unlikely(!self->im_module.mo_bucketv)
+    goto err_name;
 
  /* If given, import default symbols as globals. */
- if (default_symbols &&
-     module_import_symbols(&self->im_module,default_symbols))
+ if (default_symbols) {
+  if unlikely(module_import_symbols(&self->im_module,default_symbols))
      goto err_globals;
+ }
 
 
 #ifndef CONFIG_NO_THREADS
@@ -1146,6 +1154,7 @@ imod_init(InteractiveModule *__restrict self,
   root_scope->rs_scope.bs_argv[0] = dots;
   root_scope->rs_scope.bs_varargs = dots;
   root_scope->rs_scope.bs_flags  |= INTERACTIVE_MODULE_CODE_FLAGS;
+  root_scope->rs_globalc;
  }
 
 
@@ -1155,7 +1164,7 @@ imod_init(InteractiveModule *__restrict self,
   source_path = self->im_options.co_pathname;
   if (!source_path) source_path = (DeeStringObject *)source_pathname;
   base_file = TPPFile_OpenStream((stream_t)source_stream,
-                                  DeeString_STR(source_path));
+                                  source_path ? DeeString_STR(source_path) : "");
   if unlikely(!base_file) goto err_compiler;
   /* Set the non-blocking I/O flag for the input file. */
   base_file->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_NONBLOCK;
@@ -1202,52 +1211,61 @@ do_create_base_name:
   }
 
   /* Create symbol bindings for all the global variables that had been pre-defined. */
-  if (self->im_module.mo_globalc) {
+  if (self->im_module.mo_globalc || self->im_options.co_setup) {
    /* NOTE: Sadly we must switch compiler context here,
     *       just so we can use `TPPLexer_LookupKeyword()' */
    COMPILER_BEGIN(self->im_compiler);
-   for (i = 0; i <= self->im_module.mo_bucketm; ++i) {
-    struct symbol *sym,**bucket;
-    struct module_symbol *modsym;
-    modsym = &self->im_module.mo_bucketv[i];
-    if (!modsym->ss_name) continue;
-    if unlikely((sym = sym_alloc()) == NULL) {
+   if (self->im_options.co_setup) {
+    int error;
+    error = (*self->im_options.co_setup)(self->im_options.co_setup_arg);
+    if unlikely(error != 0)
+       goto err_compiler_basefile;
+   }
+   if (self->im_module.mo_globalc) {
+    current_rootscope->rs_globalc = self->im_module.mo_globalc;
+    for (i = 0; i <= self->im_module.mo_bucketm; ++i) {
+     struct symbol *sym,**bucket;
+     struct module_symbol *modsym;
+     modsym = &self->im_module.mo_bucketv[i];
+     if (!modsym->ss_name) continue;
+     if unlikely((sym = sym_alloc()) == NULL) {
 err_compiler_basefile:
-     COMPILER_END();
-     goto err_basefile;
-    }
+      COMPILER_END();
+      goto err_basefile;
+     }
 #ifndef NDEBUG
-    memset(sym,0xcc,sizeof(struct symbol));
+     memset(sym,0xcc,sizeof(struct symbol));
 #endif
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
-    sym->s_refcnt = 1;
+     sym->s_refcnt = 1;
 #endif
-    sym->s_name  = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(modsym),
+     sym->s_name = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(modsym),
                                           MODULE_SYMBOL_GETNAMELEN(modsym),
                                           1);
-    if unlikely(!sym->s_name) goto err_compiler_basefile;
+     if unlikely(!sym->s_name) goto err_compiler_basefile;
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-    sym->s_decltype.da_type = DAST_NONE;
+     sym->s_decltype.da_type = DAST_NONE;
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-    sym->s_type         = SYMBOL_TYPE_GLOBAL;
-    sym->s_flag         = SYMBOL_FALLOC;
-    sym->s_symid        = modsym->ss_index;
-    sym->s_global.g_doc = NULL;
-    sym->s_nread        = 0;
-    sym->s_nwrite       = 1; /* The initial write done by the pre-initialization. */
-    sym->s_nbound       = 0;
-    sym->s_decl.l_file  = NULL;
-    /* Register the symbol in the current scope. */
-    if (++current_scope->s_mapc > current_scope->s_mapa) {
-     /* Must rehash this scope. */
-     if unlikely(rehash_scope(current_scope))
-        goto err_compiler_basefile;
+     sym->s_type         = SYMBOL_TYPE_GLOBAL;
+     sym->s_flag         = SYMBOL_FALLOC;
+     sym->s_symid        = modsym->ss_index;
+     sym->s_global.g_doc = NULL;
+     sym->s_nread        = 0;
+     sym->s_nwrite       = 1; /* The initial write done by the pre-initialization. */
+     sym->s_nbound       = 0;
+     sym->s_decl.l_file  = NULL;
+     /* Register the symbol in the current scope. */
+     if (++current_scope->s_mapc > current_scope->s_mapa) {
+      /* Must rehash this scope. */
+      if unlikely(rehash_scope(current_scope))
+         goto err_compiler_basefile;
+     }
+     /* Insert the new symbol into the scope lookup map. */
+     ASSERT(current_scope->s_mapa != 0);
+     bucket = &current_scope->s_map[sym->s_name->k_id % current_scope->s_mapa];
+     sym->s_next = *bucket;
+     *bucket = sym;
     }
-    /* Insert the new symbol into the scope lookup map. */
-    ASSERT(current_scope->s_mapa != 0);
-    bucket = &current_scope->s_map[sym->s_name->k_id % current_scope->s_mapa];
-    sym->s_next = *bucket;
-    *bucket = sym;
    }
    COMPILER_END();
   }
@@ -1330,7 +1348,7 @@ err_globals:
  Dee_Free(self->im_module.mo_globalv);
 err_name:
  Dee_Decref(self->im_module.mo_name);
- Dee_Decref(self->im_module.mo_path);
+ Dee_XDecref(self->im_module.mo_path);
 err_options:
  free_options_chain(self->im_options.co_inner,
                     self->im_options.co_inner,
@@ -1343,7 +1361,7 @@ err:
 PRIVATE int DCALL
 imod_ctor(InteractiveModule *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- DeeObject *imod_path = Dee_EmptyString;
+ DeeObject *imod_path = NULL;
  DeeObject *imod_name = NULL;
  DeeObject *imod_argv = NULL;
  DeeObject *imod_syms = NULL;
@@ -1421,10 +1439,17 @@ imod_ctor(InteractiveModule *__restrict self,
   err_invalid_argc("_interactivemodule",argc,1,5);
   goto err;
  }
- return imod_init(self,imod_path,imod_name,argv[0],0,0,NULL,
-                  MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR|
+ return imod_init(self,
+                  argv[0],
+                  imod_path,
+                  imod_name,
+                  0,
+                  0,
+                  NULL,
+                  MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR |
                   MODULE_INTERACTIVE_MODE_FONLYBASEFILE,
-                  imod_argv,imod_syms);
+                  imod_argv,
+                  imod_syms);
 err:
  return -1;
 }
@@ -1433,9 +1458,9 @@ err:
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenInteractive(DeeObject *__restrict source_pathname,
+DeeModule_OpenInteractive(DeeObject *__restrict source_stream,
+                          DeeObject *source_pathname,
                           DeeObject *module_name,
-                          DeeObject *__restrict source_stream,
                           int start_line, int start_col,
                           struct compiler_options *options,
                           unsigned int mode,
@@ -1445,15 +1470,16 @@ DeeModule_OpenInteractive(DeeObject *__restrict source_pathname,
  result = DeeGCObject_MALLOC(InteractiveModule);
  if unlikely(!result) goto done;
  DeeObject_Init((DeeObject *)result,&DeeInteractiveModule_Type);
- if (imod_init(result,source_pathname,
-                      module_name,
-                      source_stream,
-                      start_line,
-                      start_col,
-                      options,
-                      mode,
-                      argv,
-                      default_symbols))
+ if (imod_init(result,
+               source_stream,
+               source_pathname,
+               module_name,
+               start_line,
+               start_col,
+               options,
+               mode,
+               argv,
+               default_symbols))
      goto err_r;
  /* Start tracking the new module as a GC object. */
  DeeGC_Track((DeeObject *)result);
@@ -1467,29 +1493,43 @@ err_r:
 }
 
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenInteractiveString(char const *__restrict source_pathname,
-                                DeeObject *module_name,
-                                DeeObject *__restrict source_stream,
+DeeModule_OpenInteractiveString(DeeObject *__restrict source_stream,
+                                char const *source_pathname,
+                                char const *module_name,
                                 int start_line, int start_col,
                                 struct compiler_options *options,
                                 unsigned int mode,
                                 DeeObject *argv,
                                 DeeObject *default_symbols) {
  DREF DeeObject *result;
- DREF DeeObject *source_pathname_ob;
- source_pathname_ob = DeeString_New(source_pathname);
- if unlikely(!source_pathname_ob) return NULL;
- result = DeeModule_OpenInteractive(source_pathname_ob,
-                                    module_name,
-                                    source_stream,
+ DREF DeeObject *module_name_ob = NULL;
+ DREF DeeObject *source_pathname_ob = NULL;
+ if (source_pathname) {
+  source_pathname_ob = DeeString_New(source_pathname);
+  if unlikely(!source_pathname_ob)
+     goto err;
+ }
+ if (module_name) {
+  module_name_ob = DeeString_New(module_name);
+  if unlikely(!module_name_ob)
+     goto err_source_pathname_ob;
+ }
+ result = DeeModule_OpenInteractive(source_stream,
+                                    source_pathname_ob,
+                                    module_name_ob,
                                     start_line,
                                     start_col,
                                     options,
                                     mode,
                                     argv,
                                     default_symbols);
- Dee_Decref(source_pathname_ob);
+ Dee_XDecref(module_name_ob);
+ Dee_XDecref(source_pathname_ob);
  return result;
+err_source_pathname_ob:
+ Dee_XDecref(source_pathname_ob);
+err:
+ return NULL;
 }
 
 

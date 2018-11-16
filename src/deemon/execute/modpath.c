@@ -367,7 +367,9 @@ err:
 PRIVATE int DCALL
 DeeModule_BeginLoading(DeeModuleObject *__restrict self) {
  uint16_t flags;
+#ifndef CONFIG_NO_THREADS
  DeeThreadObject *caller = DeeThread_Self();
+#endif
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
 begin_loading:
  flags = ATOMIC_FETCHOR(self->mo_flags,MODULE_FLOADING);
@@ -376,6 +378,9 @@ begin_loading:
   while ((flags = ATOMIC_READ(self->mo_flags),
          (flags&(MODULE_FLOADING|MODULE_FDIDLOAD)) ==
                  MODULE_FLOADING)) {
+#ifdef CONFIG_NO_THREADS
+   return 2;
+#else
    /* Check if the module is being loaded in the current thread. */
    if (self->mo_loader == caller)
        return 2;
@@ -387,14 +392,17 @@ begin_loading:
 #else
    SCHED_YIELD();
 #endif
+#endif
   }
   /* If the module has now been marked as having finished loading,
    * then simply act as though it was us that did it. */
   if (flags&MODULE_FDIDLOAD) return 1;
   goto begin_loading;
  }
+#ifndef CONFIG_NO_THREADS
  /* Setup the module to indicate that we're the ones loading it. */
  self->mo_loader = caller;
+#endif
  return 0;
 }
 PRIVATE void DCALL
@@ -458,14 +466,12 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
  if unlikely(!compiler) goto err;
  /* Start working with this compiler. */
  COMPILER_BEGIN(compiler);
-again_openstream:
  base_file = TPPFile_OpenStream((stream_t)input_file,
-                                 input_pathname ? DeeString_STR(input_pathname) : "");
- if unlikely(!base_file) {
-  if (Dee_CollectMemory(TPPFILE_SIZEOF_TEXT))
-      goto again_openstream;
-  goto err_compiler;
- }
+                                 input_pathname
+                               ? DeeString_STR(input_pathname)
+                               : "");
+ if unlikely(!base_file)
+    goto err_compiler;
  /* Set the starting-line offset. */
  if (TPPFile_SetStartingLineAndColumn(base_file,start_line,start_col)) {
   TPPFile_Decref(base_file);
@@ -481,15 +487,10 @@ again_openstream:
  if (options && options->co_filename) {
   struct TPPString *used_name;
   ASSERT_OBJECT_TYPE_EXACT(options->co_filename,&DeeString_Type);
-do_create_used_name:
   used_name = TPPString_New(DeeString_STR(options->co_filename),
                             DeeString_SIZE(options->co_filename));
-  if unlikely(!used_name) {
-   if (Dee_CollectMemory(offsetof(struct TPPString,s_text)+
-                        (DeeString_SIZE(options->co_filename)+1)*sizeof(char)))
-       goto do_create_used_name;
-   goto err_compiler;
-  }
+  if unlikely(!used_name)
+     goto err_compiler;
   ASSERT(!base_file->f_textfile.f_usedname);
   base_file->f_textfile.f_usedname = used_name; /* Inherit */
  }
@@ -498,15 +499,10 @@ do_create_used_name:
   * describes the function of the module's root code. */
  if (options && options->co_rootname) {
   ASSERT_OBJECT_TYPE_EXACT(options->co_rootname,&DeeString_Type);
-do_create_base_name:
   current_basescope->bs_name = TPPLexer_LookupKeyword(DeeString_STR(options->co_rootname),
                                                       DeeString_SIZE(options->co_rootname),1);
-  if unlikely(!current_basescope->bs_name) {
-   if (Dee_CollectMemory(offsetof(struct TPPKeyword,k_name)+
-                        (DeeString_SIZE(options->co_rootname)+1)*sizeof(char)))
-       goto do_create_base_name;
-   goto err_compiler;
-  }
+  if unlikely(!current_basescope->bs_name)
+     goto err_compiler;
  }
 
  assembler_flags = 0;
@@ -921,7 +917,8 @@ module_unbind(DeeModuleObject *__restrict self) {
 
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenFile(DeeObject *__restrict source_pathname,
-                   DeeObject *module_name, uint16_t file_class,
+                   DeeObject *module_name,
+                   uint16_t file_class,
                    struct compiler_options *options) {
  DREF DeeModuleObject *result; int load_error;
  DREF DeeObject *input_stream = NULL;
@@ -998,7 +995,8 @@ DeeModule_OpenFile(DeeObject *__restrict source_pathname,
   while (name_end != name_start && name_end[-1] != '.') --name_end;
   while (name_end != name_start && name_end[-1] == '.') --name_end;
   if (name_end == name_start) name_end = name+size;
-  name_object = DeeString_NewSized(name_start,(size_t)(name_end-name_start));
+  name_object = DeeString_NewSized(name_start,
+                                  (size_t)(name_end - name_start));
   if unlikely(!name_object) goto err;
 #ifndef CONFIG_NO_DEX
   if ((file_class&MODULE_FILECLASS_MASK) == MODULE_FILECLASS_EXTENSION)
@@ -1170,15 +1168,36 @@ err:
  goto done;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenFileString(char const *__restrict source_pathname,
-                         DeeObject *module_name, uint16_t file_class,
+DeeModule_OpenFileString(/*utf-8*/char const *__restrict source_pathname,
+                         /*utf-8*/char const *module_name,
+                         uint16_t file_class,
                          struct compiler_options *options) {
- DREF DeeObject *pathname_string,*result;
- pathname_string = DeeString_New(source_pathname);
- if unlikely(!pathname_string) return NULL;
- result = DeeModule_OpenFile(pathname_string,module_name,file_class,options);
- Dee_Decref(pathname_string);
+ DREF DeeObject *result;
+ DREF DeeObject *module_name_ob = NULL;
+ DREF DeeObject *source_pathname_ob;
+ source_pathname_ob = DeeString_NewUtf8(source_pathname,
+                                        strlen(source_pathname),
+                                        STRING_ERROR_FSTRICT);
+ if unlikely(!source_pathname_ob)
+    goto err;
+ if (module_name) {
+  module_name_ob = DeeString_NewUtf8(module_name,
+                                     strlen(source_pathname),
+                                     STRING_ERROR_FSTRICT);
+  if unlikely(!module_name_ob)
+     goto err_source_pathname_ob;
+ }
+ result = DeeModule_OpenFile(source_pathname_ob,
+                             module_name_ob,
+                             file_class,
+                             options);
+ Dee_XDecref(module_name_ob);
+ Dee_Decref(source_pathname_ob);
  return result;
+err_source_pathname_ob:
+ Dee_Decref(source_pathname_ob);
+err:
+ return NULL;
 }
 
 
@@ -1186,37 +1205,42 @@ DeeModule_OpenFileString(char const *__restrict source_pathname,
  * however source data is made available using a stream object derived
  * from `file from deemon' */
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenStream(DeeObject *__restrict source_pathname,
+DeeModule_OpenStream(DeeObject *__restrict source_stream,
+                     DeeObject *source_pathname,
                      DeeObject *module_name,
-                     DeeObject *__restrict source_stream,
                      int start_line, int start_col,
                      struct compiler_options *options) {
  DREF DeeModuleObject *result; int load_error;
  /* Create a new module. */
  if (!module_name) {
-  char  *name = DeeString_STR(source_pathname);
-  size_t size = DeeString_SIZE(source_pathname);
-  char *name_end,*name_start;
-  DREF DeeObject *name_object;
-  name_end = name+size;
+  if (source_pathname) {
+   char  *name = DeeString_STR(source_pathname);
+   size_t size = DeeString_SIZE(source_pathname);
+   char *name_end,*name_start;
+   DREF DeeObject *name_object;
+   name_end = name+size;
 #ifdef CONFIG_HOST_WINDOWS
-  name_start = name_end;
-  while (name_start != name && !ISSEP(name_start[-1]))
-       --name_start;
+   name_start = name_end;
+   while (name_start != name && !ISSEP(name_start[-1]))
+        --name_start;
 #else
-  name_start = (char *)memrchr(name,SEP,size);
-  if (!name_start) name_start = name-1;
-  ++name_start;
+   name_start = (char *)memrchr(name,SEP,size);
+   if (!name_start) name_start = name-1;
+   ++name_start;
 #endif
 
-  /* Get rid of a file extension in the module name. */
-  while (name_end != name_start && name_end[-1] != '.') --name_end;
-  while (name_end != name_start && name_end[-1] == '.') --name_end;
-  if (name_end == name_start) name_end = name+size;
-  name_object = DeeString_NewSized(name_start,(size_t)(name_end-name_start));
-  if unlikely(!name_object) goto err;
-  result = (DREF DeeModuleObject *)DeeModule_New(name_object);
-  Dee_Decref(name_object);
+   /* Get rid of a file extension in the module name. */
+   while (name_end != name_start && name_end[-1] != '.') --name_end;
+   while (name_end != name_start && name_end[-1] == '.') --name_end;
+   if (name_end == name_start) name_end = name+size;
+   name_object = DeeString_NewSized(name_start,
+                                   (size_t)(name_end - name_start));
+   if unlikely(!name_object) goto err;
+   result = (DREF DeeModuleObject *)DeeModule_New(name_object);
+   Dee_Decref(name_object);
+  } else {
+   result = (DREF DeeModuleObject *)DeeModule_New(Dee_EmptyString);
+  }
  } else {
   DeeModuleObject *existing_module;
   /* Check if the module is already loaded in the global cache. */
@@ -1292,22 +1316,41 @@ err:
  goto done;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenStreamString(char const *__restrict source_pathname,
-                           DeeObject *module_name,
-                           DeeObject *__restrict source_stream,
+DeeModule_OpenStreamString(DeeObject *__restrict source_stream,
+                           /*utf-8*/char const *source_pathname,
+                           /*utf-8*/char const *module_name,
                            int start_line, int start_col,
                            struct compiler_options *options) {
- DREF DeeObject *source_pathname_object,*result;
- source_pathname_object = DeeString_New(source_pathname);
- if unlikely(!source_pathname_object) return NULL;
- result = DeeModule_OpenStream(source_pathname_object,
-                               module_name,
-                               source_stream,
+ DREF DeeObject *result;
+ DREF DeeObject *module_name_ob = NULL;
+ DREF DeeObject *source_pathname_ob = NULL;
+ if (source_pathname) {
+  source_pathname_ob = DeeString_NewUtf8(source_pathname,
+                                         strlen(source_pathname),
+                                         STRING_ERROR_FSTRICT);
+  if unlikely(!source_pathname_ob)
+     goto err;
+ }
+ if (module_name) {
+  module_name_ob = DeeString_NewUtf8(module_name,
+                                     strlen(module_name),
+                                     STRING_ERROR_FSTRICT);
+  if unlikely(!module_name_ob)
+     goto err_source_pathname_ob;
+ }
+ result = DeeModule_OpenStream(source_stream,
+                               source_pathname_ob,
+                               module_name_ob,
                                start_line,
                                start_col,
                                options);
- Dee_Decref(source_pathname_object);
+ Dee_XDecref(module_name_ob);
+ Dee_XDecref(source_pathname_ob);
  return result;
+err_source_pathname_ob:
+ Dee_XDecref(source_pathname_ob);
+err:
+ return NULL;
 }
 
 
@@ -1319,6 +1362,8 @@ DeeModule_OpenStreamString(char const *__restrict source_pathname,
  *       and be available for later addressing using `DeeModule_Open()'
  * @param: source_pathname: The filename of the source file from which data (supposedly) originates.
  *                          Used by `#include' directives, as well as `__FILE__' and ddi information.
+ *                          When NULL, an empty string is used internally, which results in the current
+ *                          directory being used as base for relative imports.
  * @param: module_name:     When non-NULL, use this as the module's actual name.
  *                          Also: register the module as a global module.
  * @param: data:            A pointer to the raw source-code that should be parsed as
@@ -1328,16 +1373,17 @@ DeeModule_OpenStreamString(char const *__restrict source_pathname,
  * @param: start_col:       The starting column offset of the data blob (zero-based)
  * @param: options:         An optional set of extended compiler options. */
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenMemory(DeeObject *__restrict source_pathname,
-                     DeeObject *module_name, char const *__restrict data,
-                     size_t data_size, int start_line, int start_col,
+DeeModule_OpenMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+                     DeeObject *source_pathname,
+                     DeeObject *module_name,
+                     int start_line, int start_col,
                      struct compiler_options *options) {
  DREF DeeObject *source_stream,*result;
  source_stream = DeeFile_OpenRoMemory(data,data_size);
  if unlikely(!source_stream) return NULL;
- result = DeeModule_OpenStream(source_pathname,
+ result = DeeModule_OpenStream(source_stream,
+                               source_pathname,
                                module_name,
-                               source_stream,
                                start_line,
                                start_col,
                                options);
@@ -1346,30 +1392,52 @@ DeeModule_OpenMemory(DeeObject *__restrict source_pathname,
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenMemoryString(char const *__restrict source_pathname,
-                           DeeObject *module_name, char const *__restrict data,
-                           size_t data_size, int start_line, int start_col,
+DeeModule_OpenMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                           /*utf-8*/char const *source_pathname,
+                           /*utf-8*/char const *module_name,
+                           int start_line, int start_col,
                            struct compiler_options *options) {
- DREF DeeObject *source_pathname_object,*result;
- source_pathname_object = DeeString_New(source_pathname);
- if unlikely(!source_pathname_object) return NULL;
- result = DeeModule_OpenMemory(source_pathname_object,
-                               module_name,
-                               data,
+ DREF DeeObject *result;
+ DREF DeeObject *module_name_ob = NULL;
+ DREF DeeObject *source_pathname_ob = NULL;
+ if (source_pathname) {
+  source_pathname_ob = DeeString_NewUtf8(source_pathname,
+                                         strlen(source_pathname),
+                                         STRING_ERROR_FSTRICT);
+  if unlikely(!source_pathname_ob)
+     goto err;
+ }
+ if (module_name) {
+  module_name_ob = DeeString_NewUtf8(module_name,
+                                     strlen(module_name),
+                                     STRING_ERROR_FSTRICT);
+  if unlikely(!module_name_ob)
+     goto err_source_pathname_ob;
+ }
+ result = DeeModule_OpenMemory(data,
                                data_size,
+                               source_pathname_ob,
+                               module_name_ob,
                                start_line,
                                start_col,
                                options);
- Dee_Decref(source_pathname_object);
+ Dee_XDecref(module_name_ob);
+ Dee_XDecref(source_pathname_ob);
  return result;
+err_source_pathname_ob:
+ Dee_XDecref(source_pathname_ob);
+err:
+ return NULL;
 }
 
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_NewString(char const *__restrict name) {
+DeeModule_NewString(/*utf-8*/char const *__restrict name) {
  DREF DeeObject *name_object,*result;
- name_object = DeeString_New(name);
+ name_object = DeeString_NewUtf8(name,
+                                 strlen(name),
+                                 STRING_ERROR_FSTRICT);
  if unlikely(!name_object) return NULL;
  result = DeeModule_New(name_object);
  Dee_Decref(name_object);
@@ -1384,6 +1452,7 @@ DeeModule_New(DeeObject *__restrict name) {
  DeeObject_Init(result,&DeeModule_Type);
  result->mo_name    = (DeeStringObject *)name;
  result->mo_bucketv = empty_module_buckets;
+ rwlock_cinit(&result->mo_lock);
  Dee_Incref(name);
  weakref_support_init(result);
  DeeGC_Track((DREF DeeObject *)result);
@@ -1552,8 +1621,9 @@ DeeModule_Open(DeeObject *__restrict module_name,
   DeeList_LockEndRead(paths);
   if (DeeString_Check(path)) {
    size_t j,length,module_ext_start;
+   size_t module_name_start;
 #ifndef CONFIG_NO_DEC
-   size_t module_name_start,module_name_size;
+   size_t module_name_size;
 #endif
    struct unicode_printer printer = UNICODE_PRINTER_INIT;
    DREF DeeStringObject *module_path;
@@ -1584,9 +1654,7 @@ DeeModule_Open(DeeObject *__restrict module_name,
       goto err_path_printer;
    /* Append the module filename. */
    j = UNICODE_PRINTER_LENGTH(&printer);
-#ifndef CONFIG_NO_DEC
    module_name_start = j;
-#endif
    if unlikely(unicode_printer_printstring(&printer,module_name) < 0)
       goto err_path_printer;
    module_ext_start = UNICODE_PRINTER_LENGTH(&printer);
@@ -1604,17 +1672,22 @@ err_path_printer:
      }
      continue;
     }
+    /* The first character of a system-level module name mustn't be a `.'
+     * This also checks for 2 consecutive `.' characters, which also aren't
+     * allowed in system-level module names. */
+    if (j == module_name_start)
+        goto err_invalid_name;
+#if 0
     /* Make sure the next character isn't another `.'
      * (which isn't allowed in system module names) */
     if (j + 1 >= module_ext_start)
         goto err_invalid_name;
     if (UNICODE_PRINTER_GETCHAR(&printer,j+1) == '.')
         goto err_invalid_name;
+#endif
     /* Convert to a slash. */
     UNICODE_PRINTER_SETCHAR(&printer,j,SEP);
-#ifndef CONFIG_NO_DEC
     module_name_start = j + 1;
-#endif
    }
    /* Reserve characters for the extension. */
    if (unicode_printer_reserve(&printer,
@@ -1697,11 +1770,13 @@ done:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenString(char const *__restrict module_name,
+DeeModule_OpenString(/*utf-8*/char const *__restrict module_name,
                      struct compiler_options *options,
                      bool throw_error) {
  DREF DeeObject *name_object,*result;
- name_object = DeeString_New(module_name);
+ name_object = DeeString_NewUtf8(module_name,
+                                 strlen(module_name),
+                                 STRING_ERROR_FSTRICT);
  if unlikely(!name_object) return NULL;
  result = DeeModule_Open(name_object,options,throw_error);
  Dee_Decref(name_object);
@@ -1712,7 +1787,7 @@ DeeModule_OpenString(char const *__restrict module_name,
 
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenRelative(DeeObject *__restrict module_name,
-                       char const *__restrict module_pathname,
+                       /*utf-8*/char const *__restrict module_pathname,
                        size_t module_pathsize,
                        struct compiler_options *options,
                        bool throw_error) {
@@ -1893,13 +1968,15 @@ err_noprinter:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenRelativeString(char const *__restrict module_name,
-                             char const *__restrict module_pathname,
+DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name,
+                             /*utf-8*/char const *__restrict module_pathname,
                              size_t module_pathsize,
                              struct compiler_options *options,
                              bool throw_error) {
  DREF DeeObject *name_object,*result;
- name_object = DeeString_New(module_name);
+ name_object = DeeString_NewUtf8(module_name,
+                                 strlen(module_name),
+                                 STRING_ERROR_FSTRICT);
  if unlikely(!name_object) return NULL;
  result = DeeModule_OpenRelative(name_object,
                                  module_pathname,
@@ -1922,24 +1999,27 @@ DeeModule_Import(DeeObject *__restrict module_name,
   ASSERT_OBJECT_TYPE_EXACT(frame->cf_func->fo_code,&DeeCode_Type);
   ASSERT_OBJECT_TYPE(frame->cf_func->fo_code->co_module,&DeeModule_Type);
   path = frame->cf_func->fo_code->co_module->mo_path;
-  if unlikely(!path) {
-   DeeError_Throwf(&DeeError_FileNotFound,
-                   "The calling module %k has no associated filesystem location",
-                   frame->cf_func->fo_code->co_module);
-   return NULL;
-  }
+  if unlikely(!path) goto open_normal;
   ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
+  begin = DeeString_AsUtf8((DeeObject *)path);
+  if unlikely(!begin) goto err;
   end = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
   /* Find the end of the current path. */
   while (begin != end && !ISSEP(end[-1])) --end;
   result = DeeModule_OpenRelative(module_name,begin,(size_t)(end-begin),options,throw_error);
  } else {
+open_normal:
   /* Without an execution frame, dismiss the relative import() code handling. */
   result = DeeModule_Open(module_name,options,throw_error);
  }
  return result;
+err:
+ return NULL;
 }
 
+
+/* Same as `DeeModule_Import', but relative module
+ * paths are imported in relation to `basemodule' */
 PUBLIC DREF DeeObject *DCALL
 DeeModule_ImportRel(DeeObject *__restrict basemodule,
                     DeeObject *__restrict module_name,
@@ -1949,18 +2029,501 @@ DeeModule_ImportRel(DeeObject *__restrict basemodule,
  ASSERT_OBJECT_TYPE(basemodule,&DeeModule_Type);
  /* Load the path of the currently executing code (for relative imports). */
  path = ((DeeModuleObject *)basemodule)->mo_path;
- if unlikely(!path) {
-  DeeError_Throwf(&DeeError_FileNotFound,
-                  "The given module %k has no associated filesystem location",
-                  basemodule);
-  return NULL;
- }
+ if unlikely(!path)
+    return DeeModule_Open(module_name,options,throw_error);
  ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
- end = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
+ begin = DeeString_AsUtf8((DeeObject *)path);
+ if unlikely(!begin) goto err;
+ end = begin + WSTR_LENGTH(begin);
  /* Find the end of the current path. */
- while (begin != end && !ISSEP(end[-1])) --end;
- return DeeModule_OpenRelative(module_name,begin,(size_t)(end-begin),options,throw_error);
+ while (begin < end && !ISSEP(end[-1])) --end;
+ return DeeModule_OpenRelative(module_name,
+                               begin,
+                              (size_t)(end - begin),
+                               options,
+                               throw_error);
+err:
+ return NULL;
 }
+
+
+PRIVATE int DCALL
+module_rehash_globals(void) {
+ size_t i,new_mask = (current_rootscope->rs_bucketm << 1) | 1;
+ struct module_symbol *new_vec;
+ ASSERT(!(new_mask & (new_mask+1)));
+ new_vec = (struct module_symbol *)Dee_Calloc((new_mask+1)*
+                                               sizeof(struct module_symbol));
+ if unlikely(!new_vec) goto err;
+ for (i = 0; i <= current_rootscope->rs_bucketm; ++i) {
+  size_t j,perturb;
+  struct module_symbol *item;
+  item = &current_rootscope->rs_bucketv[i];
+  if (!item->ss_name) continue;
+  perturb = j = item->ss_hash & new_mask;
+  for (;; j = MODULE_HASHNX(j,perturb),MODULE_HASHPT(perturb)) {
+   struct module_symbol *new_item = &new_vec[j & new_mask];
+   if (new_item->ss_name) continue;
+   /* Copy the old item into this new slot. */
+   memcpy(new_item,item,sizeof(struct module_symbol));
+   break;
+  }
+ }
+ /* Free the old bucket vector and assign the new one */
+ Dee_Free(current_rootscope->rs_bucketv);
+ current_rootscope->rs_bucketm = (uint16_t)new_mask;
+ current_rootscope->rs_bucketv = new_vec;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+module_import_symbol(DeeModuleObject *__restrict self,
+                     DeeStringObject *__restrict name,
+                     DeeObject *__restrict value,
+                     unsigned int mode,
+                     uint16_t *__restrict pglobala) {
+ if (!(mode & DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS)) {
+  struct TPPKeyword *kwd;
+  struct symbol *sym;
+  /* Define as local constants. */
+  kwd = TPPLexer_LookupKeyword(DeeString_STR(name),
+                               DeeString_SIZE(name),
+                               1);
+  if unlikely(!kwd) goto err;
+  sym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope,
+                                   kwd);
+  if unlikely(sym) {
+   if (sym->s_type == SYMBOL_TYPE_CONST &&
+       sym->s_const == value)
+       return 0; /* Already defined. */
+   DeeError_Throwf(&DeeError_KeyError,
+                   "Default value for %r has already been defined",
+                   name);
+   goto err;
+  }
+  sym = new_local_symbol_in_scope((DeeScopeObject *)current_rootscope,
+                                   kwd,
+                                   NULL);
+  if unlikely(!sym) goto err;
+  sym->s_type  = SYMBOL_TYPE_CONST;
+  sym->s_const = value;
+  Dee_Incref(value);
+ } else {
+  dhash_t i,perturb,hash;
+  uint16_t addr;
+  /* Rehash the global symbol table is need be. */
+  if (self->mo_globalc/2 >= current_rootscope->rs_bucketm &&
+      module_rehash_globals())
+      goto err;
+  if (self->mo_globalc >= *pglobala) {
+   DREF DeeObject **new_globalv;
+   uint16_t new_globala = *pglobala * 2;
+   if (!new_globala)
+        new_globala = 2;
+   ASSERT(new_globala > self->mo_globalc);
+   new_globalv = (DREF DeeObject **)Dee_TryRealloc(self->mo_globalv,
+                                                   new_globala *
+                                                   sizeof(DREF DeeObject *));
+   if unlikely(!new_globalv) {
+    new_globala = self->mo_globalc + 1;
+    new_globalv = (DREF DeeObject **)Dee_Realloc(self->mo_globalv,
+                                                 new_globala *
+                                                 sizeof(DREF DeeObject *));
+    if unlikely(!new_globalv)
+       goto err;
+   }
+   self->mo_globalv = new_globalv;
+   *pglobala = new_globala;
+  }
+
+  /* Append the symbol initializer */
+  addr = self->mo_globalc++;
+  self->mo_globalv[addr] = value;
+  Dee_Incref(value);
+
+  /* Insert the new object into the symbol table. */
+  hash = DeeString_Hash((DeeObject *)name);
+  perturb = i = MODULE_HASHST(self,hash);
+  for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
+   struct module_symbol *item = MODULE_HASHIT(self,i);
+   if (item->ss_name) continue;
+   /* Use this item. */
+   item->ss_name  = DeeString_STR(name);
+   item->ss_flags = MODSYM_FNAMEOBJ;
+   item->ss_doc   = NULL;
+   item->ss_hash  = hash;
+   item->ss_index = addr;
+   Dee_Incref(name);
+   break;
+  }
+ }
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+module_import_symbol_pair(DeeModuleObject *__restrict self,
+                          DeeObject *__restrict symbol_pair,
+                          unsigned int mode,
+                          uint16_t *__restrict pglobala) {
+ DREF DeeObject *key_and_value[2]; int result;
+ if (DeeObject_Unpack(symbol_pair,2,key_and_value))
+     goto err;
+ if (DeeObject_AssertTypeExact(key_and_value[0],&DeeString_Type))
+     result = -1;
+ else {
+  result = module_import_symbol(self,
+                               (DeeStringObject *)key_and_value[0],
+                                key_and_value[1],
+                                mode,
+                                pglobala);
+ }
+ Dee_Decref(key_and_value[1]);
+ Dee_Decref(key_and_value[0]);
+ return result;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+module_import_symbols(DeeModuleObject *__restrict self,
+                      DeeObject *__restrict default_symbols,
+                      unsigned int mode,
+                      uint16_t *__restrict pglobala) {
+ DREF DeeObject *iterator,*elem; int temp;
+ iterator = DeeObject_IterSelf(default_symbols);
+ if unlikely(!iterator) goto err;
+ while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+  temp = module_import_symbol_pair(self,elem,mode,pglobala);
+  Dee_Decref(elem);
+  if unlikely(temp) goto err;
+ }
+ Dee_Decref(iterator);
+ return 0;
+err:
+ return -1;
+}
+
+
+/* Similar to `DeeExec_RunStream()', but rather than directly executing it,
+ * return the module or the module's root function used to describe the code
+ * that is being executed. */
+PUBLIC /*Module*/DREF DeeObject *DCALL
+DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
+                            unsigned int mode,
+                            int start_line, int start_col,
+                            struct compiler_options *options,
+                            DeeObject *default_symbols,
+                            DeeObject *source_pathname,
+                            DeeObject *module_name) {
+ struct TPPFile *base_file;
+ DREF DeeCodeObject *root_code;
+ DREF DeeModuleObject *result;
+ DREF DeeCompilerObject *compiler;
+ DREF struct ast *code;
+ uint16_t assembler_flags,result_globala;
+ /* Create a new module. */
+ if (!module_name) {
+  if (source_pathname) {
+   char  *name = DeeString_STR(source_pathname);
+   size_t size = DeeString_SIZE(source_pathname);
+   char *name_end,*name_start;
+   name_end = name+size;
+#ifdef CONFIG_HOST_WINDOWS
+   name_start = name_end;
+   while (name_start != name && !ISSEP(name_start[-1]))
+        --name_start;
+#else
+   name_start = (char *)memrchr(name,SEP,size);
+   if (!name_start) name_start = name-1;
+   ++name_start;
+#endif
+
+   /* Get rid of a file extension in the module name. */
+   while (name_end != name_start && name_end[-1] != '.') --name_end;
+   while (name_end != name_start && name_end[-1] == '.') --name_end;
+   if (name_end == name_start) name_end = name+size;
+   module_name = DeeString_NewSized(name_start,
+                                   (size_t)(name_end - name_start));
+   if unlikely(!module_name) goto err;
+  } else {
+   module_name = Dee_EmptyString;
+   Dee_Incref(Dee_EmptyString);
+  }
+ } else {
+  Dee_Incref(module_name);
+ }
+ /* Create the new module. */
+ result = DeeGCObject_CALLOC(DeeModuleObject);
+ if unlikely(!result) goto err_module_name;
+ result->mo_name    = (DREF DeeStringObject *)module_name; /* Inherit reference. */
+ result->mo_bucketv = empty_module_buckets;
+ rwlock_cinit(&result->mo_lock);
+ DeeObject_Init(result,&DeeModule_Type);
+ weakref_support_init(result);
+ DeeGC_Track((DREF DeeObject *)result);
+ result->mo_flags = MODULE_FLOADING;
+#ifndef CONFIG_NO_THREADS
+ result->mo_loader = DeeThread_Self();
+#endif
+ compiler = DeeCompiler_New((DeeObject *)result,
+                             options ? options->co_compiler : COMPILER_FNORMAL);
+ if unlikely(!compiler) goto err_r;
+ COMPILER_BEGIN(compiler);
+ base_file = TPPFile_OpenStream((stream_t)source_stream,
+                                 source_pathname
+                               ? DeeString_STR(source_pathname)
+                               : "");
+ if unlikely(!base_file)
+    goto err_r_compiler;
+ /* Set the starting-line offset. */
+ if (TPPFile_SetStartingLineAndColumn(base_file,start_line,start_col)) {
+  TPPFile_Decref(base_file);
+  goto err_r_compiler;
+ }
+
+ /* Push the initial source file onto the #include-stack,
+  * and TPP inherit our reference to it. */
+ TPPLexer_PushFileInherited(base_file);
+
+ /* Override the name that is used as the
+  * effective display/DDI string of the file. */
+ if (options && options->co_filename) {
+  struct TPPString *used_name;
+  ASSERT_OBJECT_TYPE_EXACT(options->co_filename,&DeeString_Type);
+  used_name = TPPString_New(DeeString_STR(options->co_filename),
+                            DeeString_SIZE(options->co_filename));
+  if unlikely(!used_name)
+     goto err_r_compiler;
+  ASSERT(!base_file->f_textfile.f_usedname);
+  base_file->f_textfile.f_usedname = used_name; /* Inherit */
+ }
+ ASSERT(!current_basescope->bs_name);
+
+ if (!(mode & DEE_EXEC_RUNMODE_FHASPP)) {
+  /* Disable preprocessor directives & macros. */
+  TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_NO_DIRECTIVES |
+                                TPPLEXER_FLAG_NO_MACROS |
+                                TPPLEXER_FLAG_NO_BUILTIN_MACROS);
+ }
+
+ inner_compiler_options = NULL;
+ if (options) {
+  /* Set the name of the current base-scope, which
+   * describes the function of the module's root code. */
+  if (options->co_rootname) {
+   ASSERT_OBJECT_TYPE_EXACT(options->co_rootname,&DeeString_Type);
+   current_basescope->bs_name = TPPLexer_LookupKeyword(DeeString_STR(options->co_rootname),
+                                                       DeeString_SIZE(options->co_rootname),
+                                                       1);
+   if unlikely(!current_basescope->bs_name)
+      goto err_r_compiler;
+  }
+
+  compiler->cp_options   = options;
+  inner_compiler_options = options->co_inner;
+  parser_flags           = options->co_parser;
+  optimizer_flags        = options->co_optimizer;
+  optimizer_unwind_limit = options->co_unwind_limit;
+  if (options->co_tabwidth)
+      TPPLexer_Current->l_tabsize = (size_t)options->co_tabwidth;
+  if (parser_flags & PARSE_FLFSTMT)
+      TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
+  if (options->co_setup) {
+   /* Run a custom setup protocol. */
+   if unlikely((*options->co_setup)(options->co_setup_arg) < 0)
+      goto err_r_compiler;
+  }
+ }
+
+ /* Allocate the varargs symbol for the root-scope. */
+ {
+  struct symbol *dots = new_unnamed_symbol();
+  if unlikely(!dots) goto err_r_compiler;
+  current_basescope->bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
+  if unlikely(!current_basescope->bs_argv) goto err_r_compiler;
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+  dots->s_refcnt = 1;
+#endif
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+  dots->s_decltype.da_type = DAST_NONE;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+  dots->s_type  = SYMBOL_TYPE_ARG;
+  dots->s_symid = 0;
+  dots->s_flag |= SYMBOL_FALLOC;
+  current_basescope->bs_argc    = 1;
+  current_basescope->bs_argv[0] = dots;
+  current_basescope->bs_varargs = dots;
+  current_basescope->bs_flags  |= CODE_FVARARGS;
+ }
+
+ result_globala = 0;
+ if (default_symbols) {
+  /* Provide default symbols as though they were defined as globals. */
+  if unlikely(module_import_symbols(result,default_symbols,mode,&result_globala))
+     goto err_r_compiler;
+  current_rootscope->rs_globalc = result->mo_globalc;
+ }
+
+ /* Save the current exception context. */
+ parser_start();
+
+ /* Yield the initial token. */
+ if unlikely(yield() < 0)
+  code = NULL;
+ else {
+  /* Parse statements until the end of the source stream. */
+  switch (mode & DEE_EXEC_RUNMODE_MASK) {
+  case DEE_EXEC_RUNMODE_STMT:
+   code = ast_parse_statement(false);
+   goto pack_code_in_return;
+  case DEE_EXEC_RUNMODE_EXPR:
+   code = ast_parse_comma(AST_COMMA_NORMAL,
+                          AST_FMULTIPLE_KEEPLAST,
+                          NULL);
+   goto pack_code_in_return;
+  case DEE_EXEC_RUNMODE_FULLEXPR:
+   code = ast_parse_comma(AST_COMMA_NORMAL |
+                          AST_COMMA_ALLOWVARDECLS |
+                          AST_COMMA_ALLOWTYPEDECL,
+                          AST_FMULTIPLE_KEEPLAST,
+                          NULL);
+pack_code_in_return:
+   if likely(code) {
+    DREF struct ast *return_ast;
+    return_ast = ast_putddi(ast_return(code),&code->a_ddi);
+    ast_decref(code);
+    code = return_ast;
+   }
+   break;
+  default:
+   code = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,TOK_EOF);
+   break;
+  }
+ }
+ if (!(TPPLexer_Current->l_flags & TPPLEXER_FLAG_ERROR))
+       TPPLexer_ClearIfdefStack();
+
+ /* Rethrow all errors that may have occurred during parsing. */
+ if unlikely(parser_rethrow(code == NULL))
+    goto err_r_compiler_code;
+ if unlikely(!code)
+    goto err_r_compiler;
+
+ /* Run an additional optimization pass on the
+  * AST before passing it off to the assembler. */
+ if (optimizer_flags & OPTIMIZE_FENABLED) {
+  int error = ast_optimize_all(code,false);
+  /* Rethrow all errors that may have occurred during optimization. */
+  if (parser_rethrow(error != 0))
+      error = -1;
+  if (error)
+      goto err_r_compiler_code;
+ }
+
+ assembler_flags = ASM_FNORMAL;
+ if (options)
+     assembler_flags = options->co_assembler;
+ {
+  uint16_t refc; struct asm_symbol_ref *refv;
+  root_code = code_compile(code,
+                           assembler_flags,
+                           true,
+                          &refc,
+                          &refv);
+  ASSERT(!root_code || !refc);
+  ASSERT(!root_code || !refv);
+ }
+ ast_decref(code);
+
+ /* Rethrow all errors that may have occurred during text assembly. */
+ if (parser_rethrow(root_code == NULL))
+     Dee_XClear(root_code);
+
+ /* Check for errors during assembly. */
+ if unlikely(!root_code)
+    goto err_r_compiler;
+
+ /* Finally, put together the module itself. */
+ if (current_rootscope->rs_importa != current_rootscope->rs_importc) {
+  DREF DeeModuleObject **new_vector;
+  new_vector = (DREF DeeModuleObject **)Dee_TryRealloc(current_rootscope->rs_importv,
+                                                       current_rootscope->rs_importc*
+                                                       sizeof(DREF DeeModuleObject *));
+  if likely(new_vector) current_rootscope->rs_importv = new_vector;
+ }
+ if (!result->mo_globalv) {
+  result->mo_globalv = (DREF DeeObject **)Dee_Calloc(current_rootscope->rs_globalc *
+                                                     sizeof(DREF DeeObject *));
+  if unlikely(!result->mo_globalv)
+     goto err_r_compiler;
+ } else {
+  if (current_rootscope->rs_globalc > result_globala) {
+   DREF DeeObject **final_globalv;
+   final_globalv = (DREF DeeObject **)Dee_Realloc(result->mo_globalv,
+                                                  current_rootscope->rs_globalc *
+                                                  sizeof(DREF DeeObject *));
+   if unlikely(!final_globalv)
+      goto err_r_compiler;
+   result->mo_globalv = final_globalv;
+  }
+  MEMSET_PTR(result->mo_globalv + result->mo_globalc,0,
+             current_rootscope->rs_globalc - result->mo_globalc);
+ }
+ result->mo_globalc = current_rootscope->rs_globalc;
+ result->mo_importc = current_rootscope->rs_importc;
+#ifdef CONFIG_NO_THREADS
+ result->mo_flags  |= current_rootscope->rs_flags;
+#else
+ ATOMIC_FETCHOR(result->mo_flags,current_rootscope->rs_flags);
+#endif
+ result->mo_bucketm = current_rootscope->rs_bucketm;
+ result->mo_bucketv = current_rootscope->rs_bucketv;
+ result->mo_importv = current_rootscope->rs_importv;
+ result->mo_root    = root_code; /* Inherit reference. */
+ 
+ /* Yes, we're just stealing all of these. */
+ current_rootscope->rs_importv = NULL;
+ current_rootscope->rs_importc = 0;
+ current_rootscope->rs_importa = 0;
+ current_rootscope->rs_bucketv = empty_module_buckets;
+ current_rootscope->rs_bucketm = 0;
+
+ { DREF DeeCodeObject *iter,*next;
+   iter = current_rootscope->rs_code;
+   current_rootscope->rs_code = NULL;
+   while (iter) {
+    next = iter->co_next;
+    iter->co_module = result;
+    Dee_Incref(result); /* Create the new module-reference now stored in `iter->co_module'. */
+    Dee_Decref(iter); /* This reference was owned by the chain before. */
+    iter = next;
+   }
+ }
+
+ COMPILER_END();
+ Dee_Decref(compiler);
+ ATOMIC_FETCHOR(result->mo_flags,MODULE_FDIDLOAD);
+ return (DREF DeeObject *)result;
+err_r_compiler_code:
+ ast_xdecref(code);
+err_r_compiler:
+ COMPILER_END();
+ Dee_Decref(compiler);
+err_r:
+ ATOMIC_FETCHAND(result->mo_flags,~(MODULE_FLOADING));
+ Dee_Decref_likely(result);
+ goto err;
+err_module_name:
+ Dee_Decref(module_name);
+err:
+ return NULL;
+}
+
+
 
 
 
@@ -2046,7 +2609,9 @@ DCALL get_default_home(void) {
  env = getenv("DEEMON_HOME");
  DBG_ALIGNMENT_ENABLE();
  if (env && *env) {
-  result = DeeString_New(env);
+  result = DeeString_NewUtf8(env,
+                             strlen(env),
+                             STRING_ERROR_FIGNORE);
   if unlikely(!result) goto err;
   new_result = make_absolute(result);
   Dee_Decref(result);
@@ -2199,11 +2764,15 @@ PRIVATE void DCALL do_init_module_path(void) {
   /* Split the module path. */
   char *next_path = strchr(path,DELIM);
   if (next_path) {
-   path_part = DeeString_NewSized(path,(size_t)(next_path-path));
+   path_part = DeeString_NewUtf8(path,
+                                (size_t)(next_path - path),
+                                 STRING_ERROR_FIGNORE);
    ++next_path;
   } else {
    next_path = strend(path);
-   path_part = DeeString_NewSized(path,(size_t)(next_path-path));
+   path_part = DeeString_NewUtf8(path,
+                                (size_t)(next_path - path),
+                                 STRING_ERROR_FIGNORE);
   }
   if unlikely(!path_part) goto init_error;
   error = DeeList_Append((DeeObject *)&DeeModule_Path,path_part);

@@ -973,7 +973,6 @@ int main(int argc, char *argv[]) {
  DeeError_InstallKeyboardInterrupt();
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 
- /* TODO: Generate DDI information for argument, ref, and static symbol names. */
 
  /* Skip the first argument (the deemon executable name) */
  if (argc) --argc,++argv;
@@ -1037,9 +1036,9 @@ int main(int argc, char *argv[]) {
    if (!interactive_output &&
        (interactive_output = DeeFile_GetStd(DEE_STDERR)) == NULL)
         goto err;
-   interactive_module = DeeModule_OpenInteractiveString("STDIN",
+   interactive_module = DeeModule_OpenInteractiveString(interactive_input,
+                                                        "STDIN",
                                                         NULL,
-                                                        interactive_input,
                                                         0,
                                                         0,
                                                        &script_options,
@@ -1081,8 +1080,9 @@ int main(int argc, char *argv[]) {
   if unlikely(!argc) goto err_no_input;
 
   /* Run the module passed through argv[0] */
-  user_module = (DREF DeeModuleObject *)DeeModule_OpenFileString(argv[0],NULL,
-                                                                 MODULE_FILECLASS_SOURCE|
+  user_module = (DREF DeeModuleObject *)DeeModule_OpenFileString(argv[0],
+                                                                 NULL,
+                                                                 MODULE_FILECLASS_SOURCE |
                                                                  MODULE_FILECLASS_THROWERROR,
                                                                 &script_options);
   if unlikely(!user_module) goto err;
@@ -1929,10 +1929,10 @@ try_exec_format_impl(DeeObject *__restrict stream,
        script_module = NULL;
   else {
    /* Compile the format-script into a module. */
-   script_module = (DREF DeeModuleObject *)DeeModule_OpenMemoryString(filename,
-                                                                      NULL,
-                                                                      format_code_start,
+   script_module = (DREF DeeModuleObject *)DeeModule_OpenMemoryString(format_code_start,
                                                                      (size_t)(format_code_end - format_code_start),
+                                                                      filename,
+                                                                      NULL,
                                                                       format_code_start_line,
                                                                       format_code_start_col,
                                                                      &opt);

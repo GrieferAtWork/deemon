@@ -1840,8 +1840,10 @@ TPPFile_Destroy(struct TPPFile *__restrict self) {
 #endif
  TPPString_Decref(self->f_text);
  switch (self->f_kind) {
+
  case TPPFILE_KIND_TEXT:
-  free(self->f_name);
+  if (self->f_namesize != 0)
+      free(self->f_name);
   if (self->f_textfile.f_cacheentry) {
    assert(self->f_textfile.f_cacheentry->f_kind == TPPFILE_KIND_TEXT);
    assert(self->f_textfile.f_cacheentry->f_textfile.f_cacheinc);
@@ -1853,28 +1855,33 @@ TPPFile_Destroy(struct TPPFile *__restrict self) {
   if (self->f_textfile.f_ownedstream != TPP_STREAM_INVALID)
       stream_close(self->f_textfile.f_ownedstream);
   break;
+
  case TPPFILE_KIND_MACRO:
-  if (self->f_macro.m_flags&TPP_MACROFILE_FLAG_OWNSNAME) free(self->f_name);
-  if (self->f_macro.m_deffile) TPPFile_Decref(self->f_macro.m_deffile);
-  switch (self->f_macro.m_flags&TPP_MACROFILE_KIND) {
+  if (self->f_macro.m_flags & TPP_MACROFILE_FLAG_OWNSNAME)
+      free(self->f_name);
+  if (self->f_macro.m_deffile)
+      TPPFile_Decref(self->f_macro.m_deffile);
+  switch (self->f_macro.m_flags & TPP_MACROFILE_KIND) {
   case TPP_MACROFILE_KIND_KEYWORD:
   case TPP_MACROFILE_KIND_FUNCTION:
-   if ((self->f_macro.m_flags&TPP_MACROFILE_KIND) != TPP_MACROFILE_KIND_KEYWORD) {
+   if ((self->f_macro.m_flags & TPP_MACROFILE_KIND) != TPP_MACROFILE_KIND_KEYWORD) {
     free(self->f_macro.m_function.f_argbuf);
     free(self->f_macro.m_function.f_arginfo);
     if (self->f_macro.m_function.f_expand != empty_code)
-     free(self->f_macro.m_function.f_expand);
+        free(self->f_macro.m_function.f_expand);
    }
    break;
+
   {
    struct TPPFile *origin;
   case TPP_MACROFILE_KIND_EXPANDED:
    origin = self->f_macro.m_expand.e_expand_origin;
    assert(origin);
    assert(origin->f_kind == TPPFILE_KIND_MACRO);
-   assert((origin->f_macro.m_flags&TPP_MACROFILE_KIND) == TPP_MACROFILE_KIND_FUNCTION);
+   assert((origin->f_macro.m_flags & TPP_MACROFILE_KIND) == TPP_MACROFILE_KIND_FUNCTION);
    TPPFile_Decref(origin);
   } break;
+
   default: break;
   }
   break;
@@ -1886,11 +1893,12 @@ TPPFile_Destroy(struct TPPFile *__restrict self) {
 PUBLIC int TPPCALL
 TPPFile_Copyname(struct TPPFile *__restrict self) {
  if (self->f_kind == TPPFILE_KIND_MACRO &&
-   !(self->f_macro.m_flags&TPP_MACROFILE_FLAG_OWNSNAME)) {
+   !(self->f_macro.m_flags & TPP_MACROFILE_FLAG_OWNSNAME)) {
   /* Must copy the filename. */
-  char *name_copy = (char *)API_MALLOC((self->f_namesize+1)*sizeof(char));
-  if unlikely(!name_copy) return 0;
-  memcpy(name_copy,self->f_name,(self->f_namesize+1)*sizeof(char));
+  char *name_copy = (char *)API_MALLOC((self->f_namesize + 1)*sizeof(char));
+  if unlikely(!name_copy)
+     return 0;
+  memcpy(name_copy,self->f_name,(self->f_namesize + 1)*sizeof(char));
   self->f_name           = name_copy;
   self->f_macro.m_flags |= TPP_MACROFILE_FLAG_OWNSNAME;
  }
@@ -2056,14 +2064,19 @@ TPPFile_OpenStream(stream_t stream, char const *__restrict name) {
 #if TPP_ENCODING_UTF8
  result->f_textfile.f_encoding    = TPP_ENCODING_UTF8;
 #endif
- result->f_refcnt                 = 1;
- result->f_kind                   = TPPFILE_KIND_TEXT;
- result->f_prev                   = NULL;
- result->f_namesize               = strlen(name);
- result->f_name                   = (char *)API_MALLOC((result->f_namesize+1)*sizeof(char));
- if unlikely(!result->f_name) goto err_r;
- memcpy(result->f_name,name,(result->f_namesize+1)*sizeof(char));
- result->f_namehash = hashof(result->f_name,result->f_namesize);
+ result->f_refcnt   = 1;
+ result->f_kind     = TPPFILE_KIND_TEXT;
+ result->f_prev     = NULL;
+ result->f_namesize = strlen(name);
+ if unlikely(!result->f_namesize) {
+  result->f_name     = (char *)"";
+  result->f_namehash = EMPTY_STRING_HASH;
+ } else {
+  result->f_name     = (char *)API_MALLOC((result->f_namesize + 1)*sizeof(char));
+  if unlikely(!result->f_name) goto err_r;
+  memcpy(result->f_name,name,(result->f_namesize+1)*sizeof(char));
+  result->f_namehash = hashof(result->f_name,result->f_namesize);
+ }
  TPPString_Incref(empty_string);
  result->f_text  = empty_string;
  result->f_begin =
@@ -2298,10 +2311,12 @@ TPPFile_Filename(struct TPPFile const *__restrict self,
      *opt_filename_length = TPPString_SIZE(self->f_textfile.f_usedname);
   return TPPString_TEXT(self->f_textfile.f_usedname);
  }
- if (opt_filename_length) *opt_filename_length = self->f_namesize;
+ if (opt_filename_length)
+    *opt_filename_length = self->f_namesize;
  return self->f_name;
 nope:
- if (opt_filename_length) *opt_filename_length = 0;
+ if (opt_filename_length)
+    *opt_filename_length = 0;
  return NULL;
 }
 
@@ -2320,10 +2335,12 @@ TPPFile_RealFilename(struct TPPFile const *__restrict self,
   } else break;
  }
  assert(self->f_kind == TPPFILE_KIND_TEXT);
- if (opt_filename_length) *opt_filename_length = self->f_namesize;
+ if (opt_filename_length)
+    *opt_filename_length = self->f_namesize;
  return self->f_name;
 nope:
- if (opt_filename_length) *opt_filename_length = 0;
+ if (opt_filename_length)
+    *opt_filename_length = 0;
  return NULL;
 }
 
@@ -2855,8 +2872,6 @@ unix_do_read:
   newchunk->s_text[newchunk->s_size] = '\0';
   if (!read_bufsize) {
    /* True input stream EOF. */
-   assert(self->f_name != (char *)(uintptr_t)-1);
-   assert(self->f_namesize != (size_t)-1);
 #ifdef TPP_CONFIG_NONBLOCKING_IO
    /* Only mark the stream as closed if the EOF wasn't caused due to
     * non-blocking I/O, in which case we must consider it premature. */

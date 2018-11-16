@@ -448,9 +448,11 @@ DeeModule_LoadSourceStream(DeeObject *__restrict self,
  * NOTE: In case the module is currently being loaded in the calling
  *       thread, that same partially loaded module is returned, meaning
  *       that the caller can easily check for `MODULE_FLOADING && !MODULE_FDIDLOAD'
- * @param: source_pathname: The filename of the source file that should be opened.
  * @param: module_name:     When non-NULL, use this as the module's actual name.
- *                          Also: register the module as a global module.
+ *                          Also: register the module as a global module under this name when given.
+ *                          When not given, the module isn't registered globally, and the
+ *                          name of the module will be deduced from its `source_pathname'
+ * @param: source_pathname: The filename of the source file that should be opened.
  * @param: file_class:      One of `MODULE_FILECLASS_*'
  * @return: ITER_DONE:      The given file named by `source_pathname' could not be found
  *                          or a DEC/Extension is out of date, has been corrupted, or was
@@ -460,11 +462,13 @@ DeeModule_LoadSourceStream(DeeObject *__restrict self,
  *                          having been thrown. */
 DFUNDEF DREF DeeObject *DCALL
 DeeModule_OpenFile(DeeObject *__restrict source_pathname,
-                   DeeObject *module_name, uint16_t file_class,
+                   DeeObject *module_name,
+                   uint16_t file_class,
                    struct compiler_options *options);
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenFileString(char const *__restrict source_pathname,
-                         DeeObject *module_name, uint16_t file_class,
+DeeModule_OpenFileString(/*utf-8*/char const *__restrict source_pathname,
+                         /*utf-8*/char const *module_name,
+                         uint16_t file_class,
                          struct compiler_options *options);
 #define MODULE_FILECLASS_SOURCE     0 /* Raw source file. */
 #ifndef CONFIG_NO_DEC
@@ -483,40 +487,54 @@ DeeModule_OpenFileString(char const *__restrict source_pathname,
  *       anonymous, except for when `module_name' was passed as non-NULL, in which case
  *       the returned module will be made available as a global import with that same name,
  *       and be available for later addressing using `DeeModule_Open()'
- * @param: source_pathname: The filename of the source file from which data (supposedly) originates.
- *                          Used by `#include' directives, as well as `__FILE__' and ddi information.
- * @param: module_name:     When non-NULL, use this as the module's actual name.
- *                          Also: register the module as a global module.
  * @param: data:            A pointer to the raw source-code that should be parsed as
  *                          the deemon source for the module.
  * @param: data_size:       The size of the `data' blob (in characters)
+ * @param: source_pathname: The filename of the source file from which data (supposedly) originates.
+ *                          Used by `#include' directives, as well as `__FILE__' and ddi information.
+ *                          When NULL, an empty string is used internally, which results in the current
+ *                          directory being used as base for relative imports.
+ * @param: module_name:     When non-NULL, use this as the module's actual name.
+ *                          Also: register the module as a global module.
  * @param: start_line:      The starting line number of the data blob (zero-based)
  * @param: start_col:       The starting column offset of the data blob (zero-based)
  * @param: options:         An optional set of extended compiler options. */
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenMemory(DeeObject *__restrict source_pathname,
-                     DeeObject *module_name, char const *__restrict data,
-                     size_t data_size, int start_line, int start_col,
+DeeModule_OpenMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+                     DeeObject *source_pathname,
+                     DeeObject *module_name,
+                     int start_line, int start_col,
                      struct compiler_options *options);
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenMemoryString(char const *__restrict source_pathname,
-                           DeeObject *module_name, char const *__restrict data,
-                           size_t data_size, int start_line, int start_col,
+DeeModule_OpenMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                           /*utf-8*/char const *source_pathname,
+                           /*utf-8*/char const *module_name,
+                           int start_line, int start_col,
                            struct compiler_options *options);
 
 /* Very similar to `DeeModule_OpenMemory()', and used to implement it,
  * however source data is made available using a stream object derived
- * from `file from deemon' */
+ * from `file from deemon'
+ * @param: source_stream:   A File object from which source code will be read.
+ * @param: source_pathname: The filename of the source file from which data (supposedly) originates.
+ *                          Used by `#include' directives, as well as `__FILE__' and ddi information.
+ *                          When NULL, an empty string is used internally, which results in the current
+ *                          directory being used as base for relative imports.
+ * @param: module_name:     When non-NULL, use this as the module's actual name.
+ *                          Also: register the module as a global module.
+ * @param: start_line:      The starting line number of the data blob (zero-based)
+ * @param: start_col:       The starting column offset of the data blob (zero-based)
+ * @param: options:         An optional set of extended compiler options. */
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenStream(DeeObject *__restrict source_pathname,
+DeeModule_OpenStream(DeeObject *__restrict source_stream,
+                     DeeObject *source_pathname,
                      DeeObject *module_name,
-                     DeeObject *__restrict source_stream,
                      int start_line, int start_col,
                      struct compiler_options *options);
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenStreamString(char const *__restrict source_pathname,
-                           DeeObject *module_name,
-                           DeeObject *__restrict source_stream,
+DeeModule_OpenStreamString(DeeObject *__restrict source_stream,
+                           /*utf-8*/char const *source_pathname,
+                           /*utf-8*/char const *module_name,
                            int start_line, int start_col,
                            struct compiler_options *options);
 
@@ -658,10 +676,13 @@ DeeModule_OpenStreamString(char const *__restrict source_pathname,
  *             never be interactive modules.
  * @param: source_pathname: The filename of the source file from which data (supposedly) originates.
  *                          Used by `#include' directives, as well as `__FILE__' and ddi information.
+ *                          When NULL, an empty string is used internally, which results in the current
+ *                          directory being used as base for relative imports.
  * @param: module_name:     When non-NULL, use this as the module's actual name.
+ *                          Note however that the module is never made available globally.
  * @param: source_stream:   A stream from which source code is read, which is then compiled immediately.
- * @param: start_line:      The starting line number when compiling code.
- * @param: start_col:       The starting column number when compiling code.
+ * @param: start_line:      The starting line number when compiling code. (zero-based)
+ * @param: start_col:       The starting column number when compiling code. (zero-based)
  * @param: options:         A set of compiler options applicable for compiled code.
  *                          Note however that certain options have no effect, such
  *                          as the fact that peephole and other optimizations are
@@ -683,18 +704,18 @@ DeeModule_OpenStreamString(char const *__restrict source_pathname,
  *                          Thus, provided symbols are made available by name, left to-be used
  *                          by the module however it pleases. */
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenInteractive(DeeObject *__restrict source_pathname,
+DeeModule_OpenInteractive(DeeObject *__restrict source_stream,
+                          DeeObject *source_pathname,
                           DeeObject *module_name,
-                          DeeObject *__restrict source_stream,
                           int start_line, int start_col,
                           struct compiler_options *options,
                           unsigned int mode,
                           DeeObject *argv,
                           DeeObject *default_symbols);
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenInteractiveString(char const *__restrict source_pathname,
-                                DeeObject *module_name,
-                                DeeObject *__restrict source_stream,
+DeeModule_OpenInteractiveString(DeeObject *__restrict source_stream,
+                                /*utf-8*/char const *source_pathname,
+                                /*utf-8*/char const *module_name,
                                 int start_line, int start_col,
                                 struct compiler_options *options,
                                 unsigned int mode,
@@ -785,7 +806,7 @@ DeeModule_Open(DeeObject *__restrict module_name,
                struct compiler_options *options,
                bool throw_error);
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenString(char const *__restrict module_name,
+DeeModule_OpenString(/*utf-8*/char const *__restrict module_name,
                      struct compiler_options *options,
                      bool throw_error);
 
@@ -793,7 +814,7 @@ DeeModule_OpenString(char const *__restrict module_name,
  * If the module hasn't been loaded yet, NULL is returned.
  * NOTE: These functions never throw an error! */
 DFUNDEF DREF DeeObject *DCALL DeeModule_Get(DeeObject *__restrict module_name);
-DFUNDEF DREF DeeObject *DCALL DeeModule_GetString(char const *__restrict module_name);
+DFUNDEF DREF DeeObject *DCALL DeeModule_GetString(/*utf-8*/char const *__restrict module_name);
 
 
 /* Open a module using a relative module name
@@ -812,13 +833,13 @@ DFUNDEF DREF DeeObject *DCALL DeeModule_GetString(char const *__restrict module_
  *                      found and return `NULL', otherwise return `ITER_DONE'. */
 DFUNDEF DREF DeeObject *DCALL
 DeeModule_OpenRelative(DeeObject *__restrict module_name,
-                       char const *__restrict module_pathname,
+                       /*utf-8*/char const *__restrict module_pathname,
                        size_t module_pathsize,
                        struct compiler_options *options,
                        bool throw_error);
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenRelativeString(char const *__restrict module_name,
-                             char const *__restrict module_pathname,
+DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name,
+                             /*utf-8*/char const *__restrict module_pathname,
                              size_t module_pathsize,
                              struct compiler_options *options,
                              bool throw_error);
@@ -845,8 +866,8 @@ DeeModule_GetRoot(/*Module*/DeeObject *__restrict self,
 DFUNDEF uint64_t DCALL DeeModule_GetCTime(/*Module*/DeeObject *__restrict self);
 #endif /* !CONFIG_NO_DEC */
 
-/* Same as `DeeModule_Import', but relative module paths are
- * imported in relation to `basemodule' */
+/* Same as `DeeModule_Import', but relative module
+ * paths are imported in relation to `basemodule' */
 DFUNDEF DREF DeeObject *DCALL
 DeeModule_ImportRel(DeeObject *__restrict basemodule,
                     DeeObject *__restrict module_name,

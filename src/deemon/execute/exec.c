@@ -25,6 +25,7 @@
 #include <deemon/exec.h>
 #include <deemon/thread.h>
 #include <deemon/file.h>
+#include <deemon/filetypes.h>
 #include <deemon/list.h>
 #include <deemon/dex.h>
 #include <deemon/module.h>
@@ -49,9 +50,360 @@
 #include "../runtime/builtin.h"
 #include <deemon/asm.h>
 
-
-
 DECL_BEGIN
+
+
+/* Execute source code from `source_stream' and return the result of invoking it.
+ * @param: source_stream:   The input stream from which to take input arguments.
+ * @param: mode:            One of `DEE_EXEC_RUNMODE_*', optionally or'd with a set of `DEE_EXEC_RUNMODE_F*'
+ * @param: argv:            Variable arguments passed to user-code 
+ * @param: start_line:      The starting line number when compiling code. (zero-based)
+ * @param: start_col:       The starting column number when compiling code. (zero-based)
+ * @param: options:         A set of compiler options applicable for compiled code.
+ *                          Note however that certain options have no effect, such
+ *                          as the fact that peephole and other optimizations are
+ *                          forced to be disabled, or DEC files are never generated,
+ *                          all for reasons that should be quite obvious.
+ * @param: default_symbols: A mapping-like object of type `{(string,object)...}', that
+ *                          contains a set of pre-defined variables that should be made
+ *                          available to the interactive source code by use of global
+ *                          variables.
+ *                          These are either provided as constants, or as globals,
+ *                          depending on `DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS'
+ * @param: source_pathname: The name for the source file (the path of which is
+ *                          then used for relative import()s and #include's)
+ * @param: module_name:     The name of the internal module, or NULL to determine automatically.
+ *                          Note that the internal module is never registered globally, and
+ *                          only exists as an anonymous module. */
+PUBLIC DREF DeeObject *DCALL
+DeeExec_RunStream(DeeObject *__restrict source_stream,
+                  unsigned int mode,
+                  size_t argc, DeeObject **argv,
+                  int start_line, int start_col,
+                  struct compiler_options *options,
+                  DeeObject *default_symbols,
+                  DeeObject *source_pathname,
+                  DeeObject *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *function;
+ function = DeeExec_CompileFunctionStream(source_stream,
+                                          mode,
+                                          start_line,
+                                          start_col,
+                                          options,
+                                          default_symbols,
+                                          source_pathname,
+                                          module_name);
+ if unlikely(!function)
+    goto err;
+ result = DeeObject_Call(function,argc,argv);
+ Dee_Decref(function);
+ return result;
+err:
+ return NULL;
+}
+PUBLIC DREF DeeObject *DCALL
+DeeExec_RunStreamString(DeeObject *__restrict source_stream,
+                        unsigned int mode,
+                        size_t argc, DeeObject **argv,
+                        int start_line, int start_col,
+                        struct compiler_options *options,
+                        DeeObject *default_symbols,
+                        /*utf-8*/char const *source_pathname,
+                        /*utf-8*/char const *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *source_pathname_ob = NULL;
+ DREF DeeObject *module_name_ob = NULL;
+ if (source_pathname) {
+  source_pathname_ob = DeeString_NewUtf8(source_pathname,
+                                         strlen(source_pathname),
+                                         STRING_ERROR_FSTRICT);
+  if unlikely(!source_pathname_ob)
+     goto err;
+ }
+ if (module_name) {
+  module_name_ob = DeeString_NewUtf8(module_name,
+                                     strlen(module_name),
+                                     STRING_ERROR_FSTRICT);
+  if unlikely(!module_name_ob)
+     goto err_source_pathname_ob;
+ }
+ result = DeeExec_RunStream(source_stream,
+                            mode,
+                            argc,
+                            argv,
+                            start_line,
+                            start_col,
+                            options,
+                            default_symbols,
+                            source_pathname_ob,
+                            module_name_ob);
+ Dee_XDecref(module_name_ob);
+ Dee_XDecref(source_pathname_ob);
+ return result;
+err_source_pathname_ob:
+ Dee_XDecref(source_pathname_ob);
+err:
+ return NULL;
+}
+
+
+/* Similar to `DeeExec_RunStream()', but rather than directly executing it,
+ * return the module or the module's root function used to describe the code
+ * that is being executed. */
+PUBLIC /*Callable*/DREF DeeObject *DCALL
+DeeExec_CompileFunctionStream(DeeObject *__restrict source_stream,
+                              unsigned int mode,
+                              int start_line, int start_col,
+                              struct compiler_options *options,
+                              DeeObject *default_symbols,
+                              DeeObject *source_pathname,
+                              DeeObject *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *module;
+ module = DeeExec_CompileModuleStream(source_stream,
+                                      mode,
+                                      start_line,
+                                      start_col,
+                                      options,
+                                      default_symbols,
+                                      source_pathname,
+                                      module_name);
+ if unlikely(!module)
+    goto err;
+ result = DeeModule_GetRoot(module,true);
+ Dee_Decref(module);
+ return result;
+err:
+ return NULL;
+}
+PUBLIC /*Module*/DREF DeeObject *DCALL
+DeeExec_CompileModuleStreamString(DeeObject *__restrict source_stream,
+                                  unsigned int mode,
+                                  int start_line, int start_col,
+                                  struct compiler_options *options,
+                                  DeeObject *default_symbols,
+                                  /*utf-8*/char const *source_pathname,
+                                  /*utf-8*/char const *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *source_pathname_ob = NULL;
+ DREF DeeObject *module_name_ob = NULL;
+ if (source_pathname) {
+  source_pathname_ob = DeeString_NewUtf8(source_pathname,
+                                         strlen(source_pathname),
+                                         STRING_ERROR_FSTRICT);
+  if unlikely(!source_pathname_ob)
+     goto err;
+ }
+ if (module_name) {
+  module_name_ob = DeeString_NewUtf8(module_name,
+                                     strlen(module_name),
+                                     STRING_ERROR_FSTRICT);
+  if unlikely(!module_name_ob)
+     goto err_source_pathname_ob;
+ }
+ result = DeeExec_CompileModuleStream(source_stream,
+                                      mode,
+                                      start_line,
+                                      start_col,
+                                      options,
+                                      default_symbols,
+                                      source_pathname_ob,
+                                      module_name_ob);
+ Dee_XDecref(module_name_ob);
+ Dee_XDecref(source_pathname_ob);
+ return result;
+err_source_pathname_ob:
+ Dee_XDecref(source_pathname_ob);
+err:
+ return NULL;
+}
+PUBLIC /*Callable*/DREF DeeObject *DCALL
+DeeExec_CompileFunctionStreamString(DeeObject *__restrict source_stream,
+                                    unsigned int mode,
+                                    int start_line, int start_col,
+                                    struct compiler_options *options,
+                                    DeeObject *default_symbols,
+                                    /*utf-8*/char const *source_pathname,
+                                    /*utf-8*/char const *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *module;
+ module = DeeExec_CompileModuleStreamString(source_stream,
+                                            mode,
+                                            start_line,
+                                            start_col,
+                                            options,
+                                            default_symbols,
+                                            source_pathname,
+                                            module_name);
+ if unlikely(!module)
+    goto err;
+ result = DeeModule_GetRoot(module,true);
+ Dee_Decref(module);
+ return result;
+err:
+ return NULL;
+}
+
+
+/* Same as the functions above, but instead take a raw memory block as input */
+PUBLIC DREF DeeObject *DCALL
+DeeExec_RunMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+                  unsigned int mode, size_t argc, DeeObject **argv,
+                  int start_line, int start_col,
+                  struct compiler_options *options,
+                  DeeObject *default_symbols,
+                  DeeObject *source_pathname,
+                  DeeObject *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *stream;
+ stream = DeeFile_OpenRoMemory(data,data_size);
+ if unlikely(!stream)
+    goto err;
+ result = DeeExec_RunStream(stream,
+                            mode,
+                            argc,
+                            argv,
+                            start_line,
+                            start_col,
+                            options,
+                            default_symbols,
+                            source_pathname,
+                            module_name);
+ DeeFile_ReleaseMemory(stream);
+ return result;
+err:
+ return NULL;
+}
+PUBLIC DREF DeeObject *DCALL
+DeeExec_RunMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                        unsigned int mode, size_t argc, DeeObject **argv,
+                        int start_line, int start_col,
+                        struct compiler_options *options,
+                        DeeObject *default_symbols,
+                        /*utf-8*/char const *source_pathname,
+                        /*utf-8*/char const *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *stream;
+ stream = DeeFile_OpenRoMemory(data,data_size);
+ if unlikely(!stream)
+    goto err;
+ result = DeeExec_RunStreamString(stream,
+                                  mode,
+                                  argc,
+                                  argv,
+                                  start_line,
+                                  start_col,
+                                  options,
+                                  default_symbols,
+                                  source_pathname,
+                                  module_name);
+ DeeFile_ReleaseMemory(stream);
+ return result;
+err:
+ return NULL;
+}
+PUBLIC /*Module*/DREF DeeObject *DCALL
+DeeExec_CompileModuleMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+                            unsigned int mode, int start_line, int start_col,
+                            struct compiler_options *options,
+                            DeeObject *default_symbols,
+                            DeeObject *source_pathname,
+                            DeeObject *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *stream;
+ stream = DeeFile_OpenRoMemory(data,data_size);
+ if unlikely(!stream)
+    goto err;
+ result = DeeExec_CompileModuleStream(stream,
+                                      mode,
+                                      start_line,
+                                      start_col,
+                                      options,
+                                      default_symbols,
+                                      source_pathname,
+                                      module_name);
+ DeeFile_ReleaseMemory(stream);
+ return result;
+err:
+ return NULL;
+}
+PUBLIC /*Callable*/DREF DeeObject *DCALL
+DeeExec_CompileFunctionMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+                              unsigned int mode, int start_line, int start_col,
+                              struct compiler_options *options,
+                              DeeObject *default_symbols,
+                              DeeObject *source_pathname,
+                              DeeObject *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *stream;
+ stream = DeeFile_OpenRoMemory(data,data_size);
+ if unlikely(!stream)
+    goto err;
+ result = DeeExec_CompileFunctionStream(stream,
+                                        mode,
+                                        start_line,
+                                        start_col,
+                                        options,
+                                        default_symbols,
+                                        source_pathname,
+                                        module_name);
+ DeeFile_ReleaseMemory(stream);
+ return result;
+err:
+ return NULL;
+}
+PUBLIC /*Module*/DREF DeeObject *DCALL
+DeeExec_CompileModuleMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                                  unsigned int mode, int start_line, int start_col,
+                                  struct compiler_options *options,
+                                  DeeObject *default_symbols,
+                                  /*utf-8*/char const *source_pathname,
+                                  /*utf-8*/char const *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *stream;
+ stream = DeeFile_OpenRoMemory(data,data_size);
+ if unlikely(!stream)
+    goto err;
+ result = DeeExec_CompileModuleStreamString(stream,
+                                            mode,
+                                            start_line,
+                                            start_col,
+                                            options,
+                                            default_symbols,
+                                            source_pathname,
+                                            module_name);
+ DeeFile_ReleaseMemory(stream);
+ return result;
+err:
+ return NULL;
+}
+PUBLIC /*Callable*/DREF DeeObject *DCALL
+DeeExec_CompileFunctionMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                                    unsigned int mode, int start_line, int start_col,
+                                    struct compiler_options *options,
+                                    DeeObject *default_symbols,
+                                    /*utf-8*/char const *source_pathname,
+                                    /*utf-8*/char const *module_name) {
+ DREF DeeObject *result;
+ DREF DeeObject *stream;
+ stream = DeeFile_OpenRoMemory(data,data_size);
+ if unlikely(!stream)
+    goto err;
+ result = DeeExec_CompileFunctionStreamString(stream,
+                                              mode,
+                                              start_line,
+                                              start_col,
+                                              options,
+                                              default_symbols,
+                                              source_pathname,
+                                              module_name);
+ DeeFile_ReleaseMemory(stream);
+ return result;
+err:
+ return NULL;
+}
+
 
 
 
@@ -206,7 +558,7 @@ Dee_AtExit(DeeObject *__restrict UNUSED(callback),
                  "Deemon was built without atexit() support");
  return -1;
 }
-DFUNDEF int DCALL
+PUBLIC int DCALL
 Dee_RunAtExit(uint16_t UNUSED(flags)) {
  return 0;
 }

@@ -2492,8 +2492,14 @@ DeeModule_GetCTime(/*Module*/DeeObject *__restrict self) {
   result = DeeExec_GetTimestamp();
  } else {
   /* Lookup the last-modified time of the module's path file. */
-  result = DecTime_Lookup((DeeObject *)((DeeModuleObject *)self)->mo_path);
-  if unlikely(result == (uint64_t)-1) goto done;
+  DeeStringObject *path;
+  path = ((DeeModuleObject *)self)->mo_path;
+  if unlikely(!path)
+     result = 0;
+  else {
+   result = DecTime_Lookup((DeeObject *)path);
+   if unlikely(result == (uint64_t)-1) goto done;
+  }
   /* Cache the result value in the module itself. */
   ((DeeModuleObject *)self)->mo_ctime = result;
 #ifdef CONFIG_NO_THREADS
