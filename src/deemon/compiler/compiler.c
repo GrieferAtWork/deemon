@@ -154,7 +154,7 @@ do_load_compiler:
    /* Load the new compiler. */
    load_compiler(compiler);
    compiler_loaded = compiler;
-   weakref_set(&DeeCompiler_Active,(DeeObject *)compiler);
+   Dee_weakref_set(&DeeCompiler_Active,(DeeObject *)compiler);
   }
   DeeCompiler_Current = compiler;
  }
@@ -181,7 +181,7 @@ DeeCompiler_End(void) {
    save_compiler(curr);
    load_compiler(DeeCompiler_Current);
    compiler_loaded = DeeCompiler_Current;
-   weakref_set(&DeeCompiler_Active,(DeeObject *)DeeCompiler_Current);
+   Dee_weakref_set(&DeeCompiler_Active,(DeeObject *)DeeCompiler_Current);
   } else {
    /* NOTE: We intentionally leave `compiler_loaded' dangling,
     *       so we can optimize for cases in which only one compiler
@@ -191,7 +191,7 @@ DeeCompiler_End(void) {
 #if 0
    save_compiler(curr);
    compiler_loaded = NULL;
-   weakref_clear(&DeeCompiler_Active);
+   Dee_weakref_clear(&DeeCompiler_Active);
 #endif
   }
  }
@@ -210,7 +210,7 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
   compiler_loaded = NULL;
   /* NOTE: Depending on order of destruction, the runtime
    *       may have already cleared this reference. */
-  weakref_clear(&DeeCompiler_Active);
+  Dee_weakref_clear(&DeeCompiler_Active);
  }
 #ifndef CONFIG_NO_THREADS
  recursive_rwlock_endwrite(&DeeCompiler_Lock);

@@ -338,7 +338,7 @@ handle_master:
 
   /* Weakly reference the master error in all child errors. */
   for (i = 0; i < count; ++i)
-      weakref_set(&current_parser_errors.pe_errorv[i]->ce_master,(DeeObject *)master);
+      Dee_weakref_set(&current_parser_errors.pe_errorv[i]->ce_master,(DeeObject *)master);
   master->ce_errorc = current_parser_errors.pe_errorc;
   master->ce_errorv = current_parser_errors.pe_errorv; /* Inherit */
 
@@ -637,7 +637,7 @@ handle_compiler_warning(struct ast_loc *loc, bool force_fatal,
       error->ce_loc = &error->ce_locs;
   }
  }
- weakref_null(&error->ce_master);
+ Dee_weakref_null(&error->ce_master);
 
  /* NOTE: Use different sub-classes depending
   *       on wgroups associated with `wnum' */

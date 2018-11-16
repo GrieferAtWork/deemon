@@ -1017,8 +1017,8 @@ decl_ast_move(struct decl_ast *__restrict dst,
               struct decl_ast *__restrict src) {
  memcpy(dst,src,sizeof(struct decl_ast));
  if (dst->da_type == DAST_FUNC) {
-  weakref_move(&dst->da_func.f_scope,
-               &src->da_func.f_scope);
+  Dee_weakref_move(&dst->da_func.f_scope,
+                   &src->da_func.f_scope);
  }
 }
 
@@ -1069,13 +1069,13 @@ decl_ast_initfunc(struct decl_ast *__restrict self,
  self->da_type = DAST_FUNC;
  self->da_flag = DAST_FNORMAL;
  self->da_func.f_ret = return_type;
- weakref_init(&self->da_func.f_scope,
-             (DeeObject *)function_scope);
+ Dee_weakref_init(&self->da_func.f_scope,
+                 (DeeObject *)function_scope);
 }
 FORCELOCAL WUNUSED DREF DeeBaseScopeObject *DCALL
 decl_ast_func_getscope(struct decl_ast const *__restrict self) {
  ASSERT(self->da_type == DAST_FUNC);
- return (DREF DeeBaseScopeObject *)weakref_lock(&self->da_func.f_scope);
+ return (DREF DeeBaseScopeObject *)Dee_weakref_lock(&self->da_func.f_scope);
 }
 
 #define DAST_ATTR    0x0007 /* `list.iterator' Access a custom attribute of another declaration. */

@@ -393,7 +393,7 @@ comerr_fini(DeeCompilerErrorObject *__restrict self) {
       Dee_Decref(self->ce_errorv[i]);
  }
  Dee_Free(self->ce_errorv);
- weakref_fini(&self->ce_master);
+ Dee_weakref_fini(&self->ce_master);
 }
 PRIVATE void DCALL
 comerr_visit(DeeCompilerErrorObject *__restrict self,

@@ -82,7 +82,7 @@ decl_ast_copy(struct decl_ast *__restrict self,
   Dee_Incref(self->da_attr.a_name);
   goto copy_inner;
  case DAST_FUNC:
-  weakref_copy(&self->da_func.f_scope,
+  Dee_weakref_copy(&self->da_func.f_scope,
                &other->da_func.f_scope);
   if (!self->da_func.f_ret)
       break;
@@ -153,7 +153,7 @@ decl_ast_fini(struct decl_ast *__restrict self) {
   Dee_Decref(self->da_attr.a_name);
   goto free_inner;
  case DAST_FUNC:
-  weakref_fini(&self->da_func.f_scope);
+  Dee_weakref_fini(&self->da_func.f_scope);
   if (!self->da_func.f_ret)
       break;
   ATTR_FALLTHROUGH

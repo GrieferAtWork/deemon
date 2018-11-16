@@ -301,49 +301,66 @@ DFUNDEF void DCALL Dee_weakref_support_fini(struct weakref_list *__restrict self
 
 
 /* Initialize the given weak reference to NULL. */
-#define weakref_null(self) ((self)->wr_obj = NULL)
+#define Dee_weakref_null(self) ((self)->wr_obj = NULL)
 
 /* Weak reference functionality.
  * @assume(ob != NULL);
  * @return: true:  Successfully initialized the given weak reference.
  * @return: false: The given object `ob' does not support weak referencing. */
-DFUNDEF bool DCALL weakref_init(struct weakref *__restrict self, DeeObject *__restrict ob);
-DFUNDEF void DCALL weakref_move(struct weakref *__restrict dst, struct weakref *__restrict src);
-DFUNDEF void DCALL weakref_fini(struct weakref *__restrict self);
+DFUNDEF bool DCALL Dee_weakref_init(struct weakref *__restrict self, DeeObject *__restrict ob);
+
+/* Finalize a given weak reference. */
+DFUNDEF void DCALL Dee_weakref_fini(struct weakref *__restrict self);
+
+/* Move/Copy a given weak reference into another, optionally
+ * overwriting whatever object was referenced before. */
+DFUNDEF void DCALL Dee_weakref_move(struct weakref *__restrict dst, struct weakref *__restrict src);
+DFUNDEF void DCALL Dee_weakref_moveassign(struct weakref *__restrict dst, struct weakref *__restrict src);
 #ifdef __INTELLISENSE__
-DFUNDEF void DCALL weakref_copy(struct weakref *__restrict self, struct weakref const *__restrict other);
+DFUNDEF void (DCALL Dee_weakref_copy)(struct weakref *__restrict self, struct weakref const *__restrict other);
+DFUNDEF void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self, struct weakref const *__restrict other);
 #else
-DFUNDEF void DCALL weakref_copy(struct weakref *__restrict self, struct weakref *__restrict other);
-#define weakref_copy(self,other) weakref_copy(self,(struct weakref *)(other))
+DFUNDEF void (DCALL Dee_weakref_copy)(struct weakref *__restrict self, struct weakref *__restrict other);
+DFUNDEF void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self, struct weakref *__restrict other);
+#define Dee_weakref_copy(self,other) Dee_weakref_copy(self,(struct weakref *)(other))
+#define Dee_weakref_copyassign(self,other) Dee_weakref_copyassign(self,(struct weakref *)(other))
 #endif
 
 /* Overwrite an already initialize weak reference with the given `ob'.
  * @return: true:  Successfully overwritten the weak reference.
  * @return: false: The given object `ob' does not support weak referencing
  *                 and the stored weak reference was not modified. */
-DFUNDEF bool DCALL weakref_set(struct weakref *__restrict self, DeeObject *__restrict ob);
+DFUNDEF bool DCALL Dee_weakref_set(struct weakref *__restrict self, DeeObject *__restrict ob);
+
 /* Clear the weak reference `self', returning true if it used to point to an object. */
-DFUNDEF bool DCALL weakref_clear(struct weakref *__restrict self);
+DFUNDEF bool DCALL Dee_weakref_clear(struct weakref *__restrict self);
+
 /* Lock a weak reference, returning a regular reference to the pointed-to object.
  * @return: * :   A new reference to the pointed-to object.
  * @return: NULL: Failed to lock the weak reference. */
 #ifdef __INTELLISENSE__
-DFUNDEF DREF DeeObject *DCALL weakref_lock(struct weakref const *__restrict self);
+DFUNDEF DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref const *__restrict self);
 #else
-DFUNDEF DREF DeeObject *DCALL weakref_lock(struct weakref *__restrict self);
-#define weakref_lock(self)    weakref_lock((struct weakref *)(self))
+DFUNDEF DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restrict self);
+#define Dee_weakref_lock(self) Dee_weakref_lock((struct weakref *)(self))
 #endif
+
 /* Return the state of a snapshot of `self' currently being bound. */
-DFUNDEF bool DCALL weakref_bound(struct weakref *__restrict self);
+#ifdef __INTELLISENSE__
+DFUNDEF bool (DCALL Dee_weakref_bound)(struct weakref const *__restrict self);
+#else
+DFUNDEF bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self);
+#define Dee_weakref_bound(self) Dee_weakref_bound((struct weakref *)(self))
+#endif
 
 /* Do an atomic compare-exchange operation on the weak reference
  * and return a reference to the previously assigned object, or
  * `NULL' when none was assigned, or `ITER_DONE' when `new_ob'
  * does not support weak referencing functionality.
  * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
-DFUNDEF DREF DeeObject *DCALL weakref_cmpxch(struct weakref *__restrict self,
-                                             DeeObject *old_ob,
-                                             DeeObject *new_ob);
+DFUNDEF DREF DeeObject *(DCALL Dee_weakref_cmpxch)(struct weakref *__restrict self,
+                                                   DeeObject *old_ob,
+                                                   DeeObject *new_ob);
 
 
 /* Type visit helpers. */

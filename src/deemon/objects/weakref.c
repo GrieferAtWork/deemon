@@ -39,24 +39,24 @@ typedef DeeWeakRefAbleObject WeakRefAble;
 
 PRIVATE void DCALL
 ob_weakref_fini(WeakRef *__restrict self) {
- weakref_fini(&self->wr_ref);
+ Dee_weakref_fini(&self->wr_ref);
 }
 PRIVATE int DCALL
-ob_weakref_init(WeakRef *__restrict self) {
- weakref_null(&self->wr_ref);
+ob_weakref_ctor(WeakRef *__restrict self) {
+ Dee_weakref_null(&self->wr_ref);
  return 0;
 }
 PRIVATE int DCALL
 ob_weakref_copy(WeakRef *__restrict self,
                 WeakRef *__restrict other) {
  DREF DeeObject *refobj;
- refobj = weakref_lock(&other->wr_ref);
- if (!refobj) weakref_null(&self->wr_ref);
+ refobj = Dee_weakref_lock(&other->wr_ref);
+ if (!refobj) Dee_weakref_null(&self->wr_ref);
  else {
 #ifdef NDEBUG
-  weakref_init(&self->wr_ref,refobj);
+  Dee_weakref_init(&self->wr_ref,refobj);
 #else
-  bool ok = weakref_init(&self->wr_ref,refobj);
+  bool ok = Dee_weakref_init(&self->wr_ref,refobj);
   ASSERT(ok && "Then how did `other' manage to create one?");
 #endif
   Dee_Decref(refobj);
@@ -67,18 +67,18 @@ PRIVATE int DCALL
 ob_weakref_deep(WeakRef *__restrict self,
                 WeakRef *__restrict other) {
  DREF DeeObject *refobj,*refcopy;
- refobj = weakref_lock(&other->wr_ref);
+ refobj = Dee_weakref_lock(&other->wr_ref);
  if (!refobj)
-  weakref_null(&self->wr_ref);
+  Dee_weakref_null(&self->wr_ref);
  else {
   refcopy = DeeObject_DeepCopy(refobj);
   Dee_Decref(refobj);
   if unlikely(!refcopy) return -1;
 #ifdef NDEBUG
-  weakref_init(&self->wr_ref,refcopy);
+  Dee_weakref_init(&self->wr_ref,refcopy);
 #else
   {
-   bool ok = weakref_init(&self->wr_ref,refcopy);
+   bool ok = Dee_weakref_init(&self->wr_ref,refcopy);
    ASSERT(ok && "Then how did `other' manage to create one?");
   }
 #endif
@@ -87,12 +87,12 @@ ob_weakref_deep(WeakRef *__restrict self,
  return 0;
 }
 PRIVATE int DCALL
-ob_weakref_ctor(WeakRef *__restrict self,
+ob_weakref_init(WeakRef *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  DeeObject *obj;
  if (DeeArg_Unpack(argc,argv,"o:weakref",&obj))
      goto err;
- if (!weakref_init(&self->wr_ref,obj))
+ if (!Dee_weakref_init(&self->wr_ref,obj))
       goto err_nosupport;
  return 0;
 err_nosupport:
@@ -104,26 +104,40 @@ err:
 PRIVATE int DCALL
 ob_weakref_assign(WeakRef *__restrict self,
                   DeeObject *__restrict other) {
- DREF DeeObject *refobj;
  if (DeeWeakRef_Check(other)) {
-  refobj = weakref_lock(&((WeakRef *)other)->wr_ref);
-  if (!refobj) weakref_null(&self->wr_ref);
+#if 1
+  Dee_weakref_copyassign(&self->wr_ref,
+                         &((WeakRef *)other)->wr_ref);
+#else
+  DREF DeeObject *refobj;
+  refobj = Dee_weakref_lock(&((WeakRef *)other)->wr_ref);
+  if (!refobj)
+      Dee_weakref_clear(&self->wr_ref);
   else {
 #ifdef NDEBUG
-   weakref_init(&self->wr_ref,refobj);
+   Dee_weakref_set(&self->wr_ref,refobj);
 #else
-   bool ok = weakref_init(&self->wr_ref,refobj);
+   bool ok = Dee_weakref_set(&self->wr_ref,refobj);
    ASSERT(ok && "Then how did `other' manage to create one?");
 #endif
    Dee_Decref(refobj);
   }
+#endif
  } else {
   /* Assign the given other to our weak reference. */
-  if (!weakref_set(&self->wr_ref,other)) {
+  if (!Dee_weakref_set(&self->wr_ref,other)) {
    err_cannot_weak_reference(other);
    return -1;
   }
  }
+ return 0;
+}
+
+PRIVATE int DCALL
+ob_weakref_moveassign(WeakRef *__restrict self,
+                      WeakRef *__restrict other) {
+ Dee_weakref_moveassign(&self->wr_ref,
+                        &other->wr_ref);
  return 0;
 }
 
@@ -133,7 +147,7 @@ PRIVATE DEFINE_STRING(empty_weakref_repr,"weakref()");
 PRIVATE DREF DeeObject *DCALL
 ob_weakref_str(WeakRef *__restrict self) {
  DREF DeeObject *refobj;
- refobj = weakref_lock(&self->wr_ref);
+ refobj = Dee_weakref_lock(&self->wr_ref);
  if (!refobj) return_reference_((DeeObject *)&empty_weakref);
  return DeeString_Newf("weakref -> %K",refobj);
 }
@@ -141,18 +155,14 @@ ob_weakref_str(WeakRef *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 ob_weakref_repr(WeakRef *__restrict self) {
  DREF DeeObject *refobj;
- refobj = weakref_lock(&self->wr_ref);
+ refobj = Dee_weakref_lock(&self->wr_ref);
  if (!refobj) return_reference_((DeeObject *)&empty_weakref_repr);
  return DeeString_Newf("weakref(%R)",refobj);
 }
 
 PRIVATE int DCALL
 ob_weakref_bool(WeakRef *__restrict self) {
- DREF DeeObject *refobj;
- refobj = weakref_lock(&self->wr_ref);
- if (!refobj) return 0;
- Dee_Decref(refobj);
- return 1;
+ return Dee_weakref_bound(&self->wr_ref);
 }
 
 #ifdef CONFIG_NO_THREADS
@@ -199,7 +209,7 @@ PRIVATE struct type_cmp ob_weakref_cmp = {
 PRIVATE DREF DeeObject *DCALL
 ob_weakref_get(WeakRef *__restrict self) {
  DREF DeeObject *result;
- result = weakref_lock(&self->wr_ref);
+ result = Dee_weakref_lock(&self->wr_ref);
  if (!result)
       err_cannot_lock_weakref();
  return result;
@@ -207,7 +217,7 @@ ob_weakref_get(WeakRef *__restrict self) {
 
 PRIVATE int DCALL
 ob_weakref_del(WeakRef *__restrict self) {
- weakref_clear(&self->wr_ref);
+ Dee_weakref_clear(&self->wr_ref);
  /* Don't throw an error if the reference wasn't bound to prevent
   * a race condition between someone trying to delete the weakref
   * and someone else destroying the pointed-to object. */
@@ -217,7 +227,7 @@ ob_weakref_del(WeakRef *__restrict self) {
 PRIVATE int DCALL
 ob_weakref_set(WeakRef *__restrict self,
                DeeObject *__restrict value) {
- if (!weakref_set(&self->wr_ref,value)) {
+ if (!Dee_weakref_set(&self->wr_ref,value)) {
   err_cannot_weak_reference(value);
   return -1;
  }
@@ -230,7 +240,7 @@ ob_weakref_lock(WeakRef *__restrict self,
  DREF DeeObject *result; DeeObject *alt = NULL;
  if (DeeArg_Unpack(argc,argv,"|o:lock",&alt))
      return NULL;
- result = weakref_lock(&self->wr_ref);
+ result = Dee_weakref_lock(&self->wr_ref);
  if (!result) {
   if ((result = alt) == NULL)
        err_cannot_lock_weakref();
@@ -246,7 +256,7 @@ ob_weakref_try_lock(WeakRef *__restrict self,
  DREF DeeObject *result;
  if (DeeArg_Unpack(argc,argv,":try_lock"))
      return NULL;
- result = weakref_lock(&self->wr_ref);
+ result = Dee_weakref_lock(&self->wr_ref);
  if (!result) {
   result = Dee_None;
   Dee_Incref(Dee_None);
@@ -331,7 +341,12 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
                             ":=->\n"
                             ":=(obj)->\n"
                             "@throw TypeError The given @obj does not implement weak referencing support\n"
-                            "Assign the value of @other, or @obj to @this weakref object"),
+                            "Assign the value of @other, or @obj to @this weakref object\n"
+                            "\n"
+                            "move:=->\n"
+                            "Override @this weak reference with the value referenced by @other, "
+                            "while atomically clearing the weak reference from @other\n"
+                            ),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -339,10 +354,10 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&ob_weakref_init,
+                /* .tp_ctor      = */&ob_weakref_ctor,
                 /* .tp_copy_ctor = */&ob_weakref_copy,
                 /* .tp_deep_ctor = */&ob_weakref_deep,
-                /* .tp_any_ctor  = */&ob_weakref_ctor,
+                /* .tp_any_ctor  = */&ob_weakref_init,
                 /* .tp_free      = */NULL,
                 {
                     /* .tp_instance_size = */sizeof(WeakRef)
@@ -351,7 +366,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ob_weakref_fini,
         /* .tp_assign      = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ob_weakref_assign,
-        /* .tp_move_assign = */NULL,
+        /* .tp_move_assign = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ob_weakref_moveassign,
         /* .tp_deepload    = */NULL
     },
     /* .tp_cast = */{
@@ -393,6 +408,19 @@ PRIVATE void DCALL
 weakrefable_fini(WeakRefAble *__restrict self) {
  weakref_support_fini(self);
 }
+PRIVATE int DCALL
+weakrefable_assign(WeakRefAble *__restrict self,
+                   WeakRefAble *__restrict other) {
+ (void)self;
+ return DeeObject_AssertType((DeeObject *)other,&DeeWeakRefAble_Type);
+}
+PRIVATE int DCALL
+weakrefable_moveassign(WeakRefAble *__restrict self,
+                       WeakRefAble *__restrict other) {
+ (void)self;
+ (void)other;
+ return 0;
+}
 
 
 PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
@@ -418,8 +446,8 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&weakrefable_fini,
-        /* .tp_assign      = */NULL,
-        /* .tp_move_assign = */NULL,
+        /* .tp_assign      = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&weakrefable_assign,
+        /* .tp_move_assign = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&weakrefable_moveassign,
         /* .tp_deepload    = */NULL
     },
     /* .tp_cast = */{

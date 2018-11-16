@@ -348,8 +348,56 @@ public:
     }
 };
 
-} /* namespace intern... */
+LOCAL ATTR_COLD ATTR_NORETURN void DCALL
+err_cannot_weak_reference(DeeObject *__restrict ob) {
+ ASSERT_OBJECT(ob);
+ DeeError_Throwf(&DeeError_TypeError,
+                 "Cannot create weak reference for instances of type `%k'",
+                 Dee_TYPE(ob));
+ throw_last_deemon_exception();
+}
+LOCAL ATTR_COLD ATTR_NORETURN void DCALL
+err_cannot_lock_weakref(void) {
+ DeeError_Throwf(&DeeError_ReferenceError,
+                 "Cannot lock weak reference");
+ throw_last_deemon_exception();
+}
 
+
+} /* namespace detail... */
+
+
+class weakref {
+private:
+    struct ::weakref w_ref; /* The underlying weak reference. */
+public:
+    weakref() DEE_CXX_NOTHROW { Dee_weakref_null(&w_ref); }
+    weakref(DeeObject *ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
+    weakref(obj_nonnull ob) { if (!Dee_weakref_init(&w_ref,ob)) detail::err_cannot_weak_reference(ob); }
+    weakref(obj_maybenull ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
+    weakref(weakref const &other) DEE_CXX_NOTHROW { Dee_weakref_copy(&w_ref,&other.w_ref); }
+    weakref(weakref &&other) DEE_CXX_NOTHROW { Dee_weakref_move(&w_ref,&other.w_ref); }
+    ~weakref() DEE_CXX_NOTHROW { Dee_weakref_fini(&w_ref); }
+    weakref &operator = (DeeObject *ob) { if (ob) { if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
+    weakref &operator = (obj_nonnull ob) { if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); return *this; }
+    weakref &operator = (obj_maybenull ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
+    weakref &operator = (weakref &&other) DEE_CXX_NOTHROW { Dee_weakref_moveassign(&w_ref,&other.w_ref); return *this; }
+    weakref &operator = (weakref const &other) DEE_CXX_NOTHROW { Dee_weakref_copyassign(&w_ref,&other.w_ref); return *this; }
+    DREF DeeObject *trylockref() const DEE_CXX_NOTHROW { return Dee_weakref_lock(&w_ref); }
+    ATTR_RETNONNULL DREF DeeObject *lockref() const { DREF DeeObject *result = Dee_weakref_lock(&w_ref); if (!result) detail::err_cannot_lock_weakref(); return result; }
+    ATTR_RETNONNULL DREF DeeObject *lockref(DeeObject *__restrict defl) const DEE_CXX_NOTHROW { DREF DeeObject *result = Dee_weakref_lock(&w_ref); if (!result) { result = defl; Dee_Incref(defl); } return result; }
+    WUNUSED object trylock() const DEE_CXX_NOTHROW { return inherit(maybenull(trylockref())); }
+    WUNUSED object lock() const { return inherit(nonnull(lockref())); }
+    WUNUSED object lock(DeeObject *__restrict defl) const DEE_CXX_NOTHROW { return inherit(nonnull(lockref(defl))); }
+    bool alive() const DEE_CXX_NOTHROW { return Dee_weakref_bound(&w_ref); }
+    operator bool() const DEE_CXX_NOTHROW { return Dee_weakref_bound(&w_ref); }
+    bool operator !() const DEE_CXX_NOTHROW { return !Dee_weakref_bound(&w_ref); }
+    void clear() DEE_CXX_NOTHROW { Dee_weakref_clear(&w_ref); }
+    DREF DeeObject *cmpxchref(DeeObject *old_ob, DeeObject *new_ob) DEE_CXX_NOTHROW { return Dee_weakref_cmpxch(&w_ref,old_ob,new_ob); }
+    void set(DeeObject *ob) { if (ob) { if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); }
+    void set(obj_nonnull ob) { if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); }
+    void set(obj_maybenull ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); }
+};
 
 
 class object: public detail::object_base {
