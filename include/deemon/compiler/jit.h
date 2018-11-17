@@ -38,6 +38,8 @@
 #ifndef CONFIG_NO_JIT
 #include "../object.h"
 #include "../module.h"
+#include "../util/rwlock.h"
+#include "lexer.h"
 #include "tpp.h"
 
 DECL_BEGIN
@@ -48,31 +50,160 @@ DECL_BEGIN
 #define JIT_RAWSTRING  TOK_CHAR
 
 typedef struct jit_small_lexer JITSmallLexer;
+typedef struct jit_symbol JITSymbol;
+typedef struct jit_lvalue JITLValue;
 typedef struct jit_lexer JITLexer;
 typedef struct jit_module JITModule;
 typedef struct jit_context JITContext;
+typedef struct jit_object_table JITObjectTable;
+
+
+#undef TOKEN_IS_CMPEQ
+#define TOKEN_IS_CMPEQ(self)  \
+      ((self)->jl_tok == TOK_EQUAL || (self)->jl_tok == TOK_NOT_EQUAL || \
+       (self)->jl_tok == TOK_EQUAL3 || (self)->jl_tok == TOK_NOT_EQUAL3 || \
+       (self)->jl_tok == '!' || \
+      ((self)->jl_tok == JIT_KEYWORD && \
+       (JITLexer_ISTOK(self,"is") || JITLexer_ISTOK(self,"in"))))
+#undef CASE_TOKEN_IS_CMPEQ
+#define CASE_TOKEN_IS_CMPEQ  \
+      case TOK_EQUAL: case TOK_NOT_EQUAL: case TOK_EQUAL3: case TOK_NOT_EQUAL3: case '!'
+#undef TOKEN_IS_AS
+#define TOKEN_IS_AS(self) \
+     ((self)->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self,"as"))
+
+
+struct jit_object_entry;
+
+#define JIT_SYMBOL_NONE     0x0000 /* No symbol (unused) */
+#define JIT_SYMBOL_POINTER  0x0001 /* Pointer to an object reference (used to describe local & inherited variables) */
+#define JIT_SYMBOL_OBJENT   0x0002 /* Object table entry. */
+#define JIT_SYMBOL_EXTERN   0x0003 /* External symbol reference */
+#define JIT_SYMBOL_USERGLOB 0x0004 /* Try to access an entry inside of `jc_uglobals'
+                                    * If the JIT module has been loaded, access one of its elements instead. */
+struct jit_symbol {
+    uint16_t js_kind;  /* Symbol kind (One of JIT_SYMBOL_*) */
+    uint16_t js_pad[(sizeof(void *)-2)/2];
+    union {
+        DREF DeeObject **js_ptr; /* [0..1][1..1] JIT_SYMBOL_POINTER -- Object pointer. */
+        struct {
+            struct jit_object_entry *jo_ent;     /* [1..1] The entry, the last time it was loaded. */
+            struct jit_object_table *jo_tab;     /* [1..1] The object table in question. */
+            unsigned char           *jo_namestr; /* [0..jo_namelen] The object name. */
+            size_t                   jo_namelen; /* Length of the object name. */
+        } js_objent; /* JIT_SYMBOL_OBJENT -- Object table entry. */
+        struct {
+            DREF DeeModuleObject *jx_mod; /* [1..1] The module that is being referenced.
+                                           * NOTE: Guarantied to be a regular, or a DEX module. */
+            struct module_symbol *jx_sym; /* The symbol that is being accessed. */
+        } js_extern; /* JIT_SYMBOL_EXTERN | JIT_SYMBOL_ROEXTERN */
+        DREF struct string_object *js_uglob_name; /* [1..1] JIT_SYMBOL_USERGLOB user-level global symbol name. */
+    };
+};
+#ifdef __INTELLISENSE__
+INTDEF void FCALL JITSymbol_Fini(JITSymbol *__restrict self);
+#else
+#define JITSymbol_Fini(self) JITLValue_Fini((JITLValue *)(self))
+#endif
+
+
+/* Special value which may be returned by the EVAL functions to indicate
+ * that the parsed expression cannot losslessly be represented as an object.
+ * When this value is returned, everything required to calculate the underlying
+ * value is stored within the the associated length `->jl_lvalue', and
+ * `JITLexer_GetLValue()' can be called to discard extended information and
+ * acquire the actual expression value. */
+#define JIT_LVALUE    ITER_DONE
+
+
+#define JIT_LVALUE_NONE       JIT_SYMBOL_NONE     /* No l-value */
+#define JIT_LVALUE_POINTER    JIT_SYMBOL_POINTER  /* Pointer to an object reference (used to describe local & inherited variables) */
+#define JIT_LVALUE_OBJENT     JIT_SYMBOL_OBJENT   /* Object table entry. */
+#define JIT_LVALUE_EXTERN     JIT_SYMBOL_EXTERN   /* External symbol reference */
+#define JIT_LVALUE_USERGLOB   JIT_SYMBOL_USERGLOB /* Try to access an entry inside of `jc_uglobals'
+                                                   * If the JIT module has been loaded, access one of its elements instead. */
+#define JIT_LVALUE_ATTR       0x0100              /* Attribute expression. */
+#define JIT_LVALUE_ATTR_STR   0x0101              /* Attribute string expression. */
+#define JIT_LVALUE_ITEM       0x0102              /* Item expression. */
+#define JIT_LVALUE_RANGE      0x0103              /* Range expression. */
+#define JIT_LVALUE_EXPAND     0x0104              /* An expand expression (read-only) */
+struct jit_lvalue {
+    uint16_t lv_kind;  /* L-value kind (One of JIT_LVALUE_*) */
+    uint16_t lv_pad[(sizeof(void *)-2)/2];
+    union {
+        DREF DeeObject **lv_ptr; /* [0..1][1..1] JIT_LVALUE_POINTER -- Object pointer. */
+        struct {
+            struct jit_object_entry *lo_ent;     /* [1..1] The entry, the last time it was loaded. */
+            struct jit_object_table *lo_tab;     /* [1..1] The object table in question. */
+            char const              *lo_namestr; /* [0..lo_namelen] The object name. */
+            size_t                   lo_namesiz; /* Length of the object name. */
+        } js_objent; /* JIT_SYMBOL_OBJENT -- Object table entry. */
+        struct {
+            DREF DeeModuleObject *lx_mod; /* [1..1] The module that is being referenced.
+                                           * NOTE: Guarantied to be a regular, or a DEX module. */
+            struct module_symbol *lx_sym; /* The symbol that is being accessed. */
+        } lv_extern; /* JIT_LVALUE_EXTERN | JIT_LVALUE_ROEXTERN */
+        DREF struct string_object *lv_uglob_name; /* [1..1] JIT_LVALUE_USERGLOB user-level global symbol name. */
+        struct {
+            DREF DeeObject            *la_base; /* [1..1] Expression base object */
+            DREF struct string_object *la_name; /* [1..1] Attribute name object */
+        } lv_attr; /* JIT_LVALUE_ATTR */
+        struct {
+            DREF DeeObject      *la_base; /* [1..1] Expression base object */
+            /*utf-8*/char const *la_name; /* [0..la_nsiz] Attribute name. */
+            size_t               la_nsiz; /* Length of the attribute name. */
+        } lv_attr_str; /* JIT_LVALUE_ATTR_STR */
+        struct {
+            DREF DeeObject *li_base;  /* [1..1] Expression base object */
+            DREF DeeObject *li_index; /* [1..1] Item index/key object */
+        } lv_item; /* JIT_LVALUE_ITEM */
+        struct {
+            DREF DeeObject *lr_base;  /* [1..1] Expression base object */
+            DREF DeeObject *lr_start; /* [1..1] Range start index object */
+            DREF DeeObject *lr_end;   /* [1..1] Range end index object */
+        } lv_range; /* JIT_LVALUE_RANGE */
+        DREF DeeObject *lv_expand; /* [1..1] JIT_LVALUE_EXPAND */
+    };
+};
+
+#define JITLValue_Init(self) ((self)->lv_kind = JIT_LVALUE_NONE)
+
+/* Finalize a given L-Value object. */
+INTDEF void FCALL JITLValue_Fini(JITLValue *__restrict self);
+
+/* Interact with an L-Value
+ * NOTE: For all of these, the caller must ensure that `self->lv_kind != JIT_LVALUE_NONE' */
+INTDEF int FCALL JITLValue_IsBound(JITLValue *__restrict self, JITContext *__restrict context); /* -1: error; 0: no; 1: yes */
+INTDEF DREF DeeObject *FCALL JITLValue_GetValue(JITLValue *__restrict self, JITContext *__restrict context);
+INTDEF int FCALL JITLValue_DelValue(JITLValue *__restrict self, JITContext *__restrict context);
+INTDEF int FCALL JITLValue_SetValue(JITLValue *__restrict self, JITContext *__restrict context, DeeObject *__restrict value);
+
 
 struct jit_small_lexer {
     unsigned int            jl_tok;      /* Token ID (One of `TOK_*' from <tpp.h>, or `JIT_KEYWORD' for an arbitrary keyword) */
     /*utf-8*/unsigned char *jl_tokstart; /* [1..1] Token starting pointer. */
     /*utf-8*/unsigned char *jl_tokend;   /* [1..1] Token end pointer. */
-    /*utf-8*/unsigned char *jl_end;      /* [1..1] Input end pointer (dereferences to '\0'). */
+    /*utf-8*/unsigned char *jl_end;      /* [1..1] Input end pointer. */
 };
 
 struct jit_lexer {
     unsigned int            jl_tok;      /* Token ID (One of `TOK_*' from <tpp.h>, or `JIT_KEYWORD' for an arbitrary keyword) */
     /*utf-8*/unsigned char *jl_tokstart; /* [1..1] Token starting pointer. */
     /*utf-8*/unsigned char *jl_tokend;   /* [1..1] Token end pointer. */
-    /*utf-8*/unsigned char *jl_end;      /* [1..1] Input end pointer (dereferences to '\0'). */
+    /*utf-8*/unsigned char *jl_end;      /* [1..1] Input end pointer. */
+    /*utf-8*/unsigned char *jl_errpos;   /* [0..1] Lexer error position. */
+    DeeObject              *jl_text;     /* [1..1] The object that owns input text (Usually a string or bytes object)
+                                          * For expressions such as ones used to create lambda functions, a reference
+                                          * to this object is stored to ensure that child code will not be deallocated. */
     JITContext             *jl_context;  /* [1..1][const] The associated JIT context. */
-    unsigned int            jl_paren;    /* Paren recursion.
-                                          * Required to know how many `)' tokens may be skipped
-                                          * when searching for suffix expressions in code such
-                                          * as `(x[2]) += 3' */
-    unsigned int            jl_suffix;   /* Number of pre-consumed suffix expressions.
-                                          * Used to explicitly handle expressions such
-                                          * as `x[2] += 3' or `foo.bar is bound' */
+    JITLValue               jl_lvalue;   /* L-value expression. */
 };
+
+/* Similar to `JITLexer_GetLValue()', but also finalize
+ * the stored L-value, and set it to describe nothing.
+ * NOTE: The stored L-value is _always_ reset! */
+INTDEF DREF DeeObject *DCALL JITLexer_PackLValue(JITLexer *__restrict self);
+
 
 /* Check if the current token is a keyword `x' */
 #define JITLexer_ISKWD(self,x) \
@@ -93,31 +224,133 @@ struct jit_lexer {
 /* Starting at `token->jl_tokend', scan for the next input token
  * NOTE: This function may also be used with `JITSmallLexer' */
 INTDEF void FCALL JITLexer_Yield(JITLexer *__restrict self);
+#define JITLexer_YieldAt(self,pos) ((self)->jl_tokend = (pos),JITLexer_Yield(self))
 
 /* Remember the fact that an exception was thrown
  * when code at `pos' was being executed. */
+#ifdef __INTELLISENSE__
 INTDEF void FCALL
 JITLexer_ErrorTrace(JITLexer *__restrict self,
                     unsigned char *__restrict pos);
+#else
+#define JITLexer_ErrorTrace(self,pos) (void)((self)->jl_errpos = (pos))
+#endif
+
+
+
+
+struct jit_object_entry {
+    DREF DeeObject         *oe_nameobj; /* [0..1] The object that owns the `oe_namestr' string (usually a string or bytes object)
+                                         * NOTE: `NULL' indicates an unused/sentinal entry; `ITER_DONE' indicates a deleted entry. */
+    /*utf-8*/unsigned char *oe_namestr; /* [0..oe_namelen] Name of the object */
+    size_t                  oe_namelen; /* Length of the object name. */
+    dhash_t                 oe_namehsh; /* Hash of the object name. */
+    DREF DeeObject         *oe_value;   /* [0..1] Value associated with this entry (NULL if unbound). */
+};
+struct jit_object_table {
+    /* A small, light-weight table for mapping objects to strings
+     * -> Used to represent local variables in functions. */
+    size_t                   ot_mask; /* Allocated hash-mask. */
+    size_t                   ot_size; /* Number of used + deleted entries. */
+    size_t                   ot_used; /* Number of used entries. */
+    struct jit_object_entry *ot_list; /* [1..ot_mask + 1][owned_if(!= jit_empty_object_list)]
+                                       * Object table hash-vector. */
+    JITObjectTable          *ot_prev; /* [0..1] Previous object table (does not affect utility functions,
+                                       * and is only used to link between different scoped object tables) */
+};
+
+INTDEF struct jit_object_entry jit_empty_object_list[1];
+
+#define JITObjectTable_NEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
+
+/* Initialize/finalize a given JIT object table. */
+#define JITOBJECTTABLE_INIT         { 0, 0, 0, jit_empty_object_list }
+#define JITObjectTable_CInit(self)  (ASSERT((self)->ot_mask == 0),ASSERT((self)->ot_size == 0),ASSERT((self)->ot_used == 0),(self)->ot_list = jit_empty_object_list)
+#define JITObjectTable_Init(self)   ((self)->ot_mask = (self)->ot_size = (self)->ot_used = 0,(self)->ot_list = jit_empty_object_list)
+INTDEF void DCALL JITObjectTable_Fini(JITObjectTable *__restrict self);
+
+/* Initialize `dst' as a copy of `src' */
+INTDEF int DCALL
+JITObjectTable_Copy(JITObjectTable *__restrict dst,
+                    JITObjectTable const *__restrict src);
+
+/* Insert all elements from `src' into `dst'
+ * Existing entires will not be overwritten. */
+INTDEF int DCALL
+JITObjectTable_UpdateTable(JITObjectTable *__restrict dst,
+                           JITObjectTable const *__restrict src);
+
+/* Update an object within the given object table, potentially overwriting an
+ * existing object, or creating a new entry if no existing object could be found.
+ * @param: value: The value to assign to the entry.
+ *                When `NULL', the entry is unbound.
+ * @return: 1:  Successfully updated an existing entry when `override_existing' was `true'.
+ * @return: 1:  An entry already existed for the given name when `override_existing' was `false'.
+ * @return: 0:  Successfully created a new entry.
+ * @return: -1: An error occurred (failed to increase the hash size of `self') */
+INTDEF int DCALL
+JITObjectTable_Update(JITObjectTable *__restrict self,
+                      /*utf-8*/unsigned char *namestr,
+                      size_t namelen, dhash_t namehsh,
+                      DeeObject *__restrict nameobj,
+                      DeeObject *value,
+                      bool override_existing);
+
+/* Delete an existing entry for an object with the given name
+ * @return: true:  Successfully deleted the entry, after potentially unbinding an associated object.
+ * @return: false: The object table didn't include an entry matching the given name. */
+INTDEF bool DCALL
+JITObjectTable_Delete(JITObjectTable *__restrict self,
+                      /*utf-8*/unsigned char *namestr,
+                      size_t namelen, dhash_t namehsh);
+
+/* Lookup a given object within `self'
+ * @return: * :        The value associated with the given name. (NOTE: Not a reference!)
+ * @return: NULL:      The object matching the specified name has been unbound. (no error was thrown)
+ * @return: ITER_DONE: Could not find an object matching the specified name. (no error was thrown) */
+INTDEF DeeObject *DCALL
+JITObjectTable_Lookup(JITObjectTable *__restrict self,
+                      /*utf-8*/unsigned char *namestr,
+                      size_t namelen, dhash_t namehsh);
+
 
 
 struct jit_module {
-    DeeModuleObject jm_module; /* The underlying module. */
+    DeeModuleObject jm_module;     /* The underlying module. */
 };
-
 
 struct jit_context {
-    DREF JITModule *jc_module; /* [0..1] The JIT-module descriptor (lazily allocated). */
+    DeeModuleObject *jc_impbase;    /* [0..1] Base module used for relative, static imports (such as `foo from .baz.bar')
+                                     * When `NULL', code isn't allowed to perform relative imports. */
+#ifdef __INTELLISENSE__
+         JITModule  *jc_module;     /* [0..1] The JIT-module descriptor (lazily allocated). */
+#else
+    DREF JITModule  *jc_module;     /* [0..1] The JIT-module descriptor (lazily allocated). */
+#endif
+    JITObjectTable  *jc_locals;     /* [0..1] Local variable table (forms a chain all the way to the previous base-scope) */
+    DeeObject       *jc_uglobals;   /* [0..1] A pre-defined, mapping-like object containing pre-defined globals.
+                                     * This object can be passed via the `globals' argument to `exec from deemon' */
+
 };
-#define JITCONTEXT_INIT    { NULL }
-#define JITContext_Init(x) ((x)->jc_module = NULL)
-#define JITContext_Fini(x) Dee_XDecref((DeeObject *)(x)->jc_module)
+#define JITCONTEXT_INIT    { NULL, NULL, NULL, NULL }
+#define JITContext_Init(x)   memset(x,0,sizeof(JITContext))
+#define JITContext_Fini(x)   Dee_XDecref((DeeObject *)(x)->jc_module)
 
 
 
-/* Lookup a given symbol within a specific JIT context */
-INTDEF DREF DeeObject *FCALL JITContext_Lookup(JITContext *__restrict self, /*utf-8*/char const *__restrict name, size_t namelen);
-INTDEF DREF DeeObject *FCALL JITContext_LookupNth(JITContext *__restrict self, /*utf-8*/char const *__restrict name, size_t namelen, size_t nth);
+/* Lookup a given symbol within a specific JIT context
+ * @return: true:  The specified symbol was found, and `result' was filled
+ * @return: false: The symbol could not be found, and `result' was set to `JIT_SYMBOL_NONE' */
+INTDEF bool FCALL
+JITContext_Lookup(JITContext *__restrict self,
+                  struct jit_symbol *__restrict result,
+                  /*utf-8*/char const *__restrict name,
+                  size_t namelen);
+INTDEF bool FCALL
+JITContext_LookupNth(JITContext *__restrict self,
+                     struct jit_symbol *__restrict result,
+                     /*utf-8*/char const *__restrict name,
+                     size_t namelen, size_t nth);
 
 
 
@@ -129,11 +362,6 @@ INTDEF int32_t FCALL JITLexer_ParseOperatorName(JITLexer *__restrict self, uint1
 
 /* Return the operator function for `opname', as exported from the `operators' module. */
 INTDEF DREF DeeObject *FCALL JIT_GetOperatorFunction(uint16_t opname);
-
-/* Parse, evaluate & execute an expression using JIT
- * @param: flags: Set of `JITLEXER_EVAL_F*' */
-#define JITLexer_EvalExpression JITLexer_EvalAssign
-#define JITLexer_SkipExpression JITLexer_SkipAssign
 
 /* JIT-specific evaluation flags. */
 #define JITLEXER_EVAL_FNORMAL       0x0000 /* Normal evaluation flags. */
@@ -174,13 +402,29 @@ INTDEF DREF DeeObject *FCALL JITLexer_EvalLorOperand(JITLexer *__restrict self, 
 INTDEF DREF DeeObject *FCALL JITLexer_EvalCondOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF DREF DeeObject *FCALL JITLexer_EvalAssignOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
 
-
 INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaTupleOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipCommaTupleOperand(JITLexer *__restrict self, unsigned int flags);
 INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaListOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipCommaListOperand(JITLexer *__restrict self, unsigned int flags);
 INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaDictOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipCommaDictOperand(JITLexer *__restrict self, unsigned int flags);
+
+INTDEF DREF /*Module*/DeeObject *FCALL JITLexer_EvalModule(JITLexer *__restrict self);
+#define JITLexer_SkipModule(self) (JITLexer_ParseModuleName(self,NULL,NULL,NULL) < 0 ? -1 : 0)
+
+
+/* Parse a module name, either writing it to `*printer' (if non-NULL),
+ * or storing the name's start and end pointers in `*pname_start' and
+ * `*pname_end'
+ * @return:  1: Successfully parsed the module name and stored it in `*printer'
+ *              In this case, this function will have also initialized `*printer'
+ * @return:  0: Successfully parsed the module name and stored it in `*pname_start' / `*pname_end'
+ * @return: -1: An error occurred. */
+INTDEF int FCALL
+JITLexer_ParseModuleName(JITLexer *__restrict self,
+                         struct unicode_printer *printer,
+                         /*utf-8*/unsigned char **pname_start,
+                         /*utf-8*/unsigned char **pname_end);
 
 
 
@@ -216,6 +460,26 @@ INTDEF int FCALL JITLexer_SkipLorOperand(JITLexer *__restrict self, unsigned int
 INTDEF int FCALL JITLexer_SkipCondOperand(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipAssignOperand(JITLexer *__restrict self, unsigned int flags);
 
+
+
+
+/* Parse, evaluate & execute an expression using JIT
+ * @param: flags: Set of `JITLEXER_EVAL_F*' */
+#define JITLexer_EvalExpression JITLexer_EvalAssign
+#define JITLexer_SkipExpression JITLexer_SkipAssign
+
+/* Wrapper for `JITLexer_EvalExpression()' which
+ * automatically unwinds L-value expressions. */
+LOCAL DREF DeeObject *FCALL
+JITLexer_EvalRValue(JITLexer *__restrict self) {
+ DREF DeeObject *result;
+ result = JITLexer_EvalExpression(self,JITLEXER_EVAL_FNORMAL);
+ ASSERT((result == JIT_LVALUE) ==
+        (self->jl_lvalue.lv_kind != JIT_LVALUE_NONE));
+ if (result == JIT_LVALUE)
+     result = JITLexer_PackLValue(self);
+ return result;
+}
 
 
 DECL_END

@@ -26,6 +26,7 @@
 #include <deemon/error.h>
 #include <deemon/class.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/stringutils.h>
 #include <hybrid/unaligned.h>
 
 #include "../../runtime/strings.h"
@@ -400,6 +401,191 @@ done:
 err:
  return -1;
 }
+
+
+/* @return:  1: OK (the parsed object most certainly was a module)
+ * @return:  0: OK
+ * @return: -1: Error */
+PRIVATE int DCALL
+print_module_name(JITLexer *__restrict self,
+                  struct unicode_printer *printer) {
+ int result = 0;
+ for (;;) {
+  if (self->jl_tok == '.' || self->jl_tok == TOK_DOTS) {
+   if (printer &&
+       unicode_printer_printascii(printer,"...",self->jl_tok == '.' ? 1 : 3) < 0)
+       goto err;
+   result = 1;
+   JITLexer_Yield(self);
+   if (self->jl_tok != JIT_KEYWORD &&
+       self->jl_tok != JIT_STRING &&
+       self->jl_tok != JIT_RAWSTRING &&
+       self->jl_tok != '.' &&
+       self->jl_tok != TOK_DOTS)
+       break; /* Special case: `.' is a valid name for the current module. */
+  } else if (self->jl_tok == JIT_KEYWORD) {
+   if (printer &&
+       unicode_printer_print(printer,
+                            (char *)self->jl_tokstart,
+                            (size_t)(self->jl_tokend - self->jl_tokstart)) < 0)
+       goto err;
+   JITLexer_Yield(self);
+   if (self->jl_tok != '.' && self->jl_tok != TOK_DOTS) break;
+  } else if (self->jl_tok == JIT_STRING ||
+             self->jl_tok == JIT_RAWSTRING) {
+   if (printer) {
+    if (self->jl_tok == JIT_RAWSTRING) {
+     if (unicode_printer_print(printer,
+                              (char *)self->jl_tokstart + 2,
+                              (size_t)(self->jl_tokend - self->jl_tokstart) - 3) < 0)
+         goto err;
+    } else {
+     if (DeeString_DecodeBackslashEscaped(printer,
+                                         (char *)self->jl_tokstart + 1,
+                                         (size_t)(self->jl_tokend - self->jl_tokstart) - 2,
+                                          STRING_ERROR_FSTRICT) < 0)
+         goto err;
+    }
+   }
+   JITLexer_Yield(self);
+   if (self->jl_tok != '.' &&
+       self->jl_tok != TOK_DOTS &&
+       self->jl_tok != JIT_STRING &&
+       self->jl_tok != JIT_RAWSTRING)
+       break;
+  } else {
+   if (WARN(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST))
+       goto err;
+   break;
+  }
+ }
+ return result;
+err:
+ return -1;
+}
+
+
+/* Parse a module name, either writing it to `*printer' (if non-NULL),
+ * or storing the name's start and end pointers in `*pname_start' and
+ * `*pname_end'
+ * @return:  1: Successfully parsed the module name and stored it in `*printer'
+ *              In this case, this function will have also initialized `*printer'
+ * @return:  0: Successfully parsed the module name and stored it in `*pname_start' / `*pname_end'
+ * @return: -1: An error occurred. */
+INTERN int FCALL
+JITLexer_ParseModuleName(JITLexer *__restrict self,
+                         struct unicode_printer *printer,
+                         /*utf-8*/unsigned char **pname_start,
+                         /*utf-8*/unsigned char **pname_end) {
+ int error;
+ /* Optimization for simple/inline module names, such that we
+  * don't have to actually copy the module name at this point! */
+ if (self->jl_tok == '.' || self->jl_tok == JIT_KEYWORD) {
+  unsigned char *start,*end;
+  start = self->jl_tokstart;
+  end = self->jl_tokend;
+  while (end < self->jl_end) {
+   unsigned char ch = *end++;
+   if (ch == '.') continue;
+   if (ch > 0x7f) {
+    uint32_t ch32;
+    unsigned char *temp;
+    --end;
+    temp = end;
+    ch32 = utf8_readchar((char const **)&end,
+                         (char const *)self->jl_end);
+    if (!DeeUni_IsSymCont(ch32)) {
+     end = temp;
+     break;
+    }
+   } else {
+    if (!DeeUni_IsSymCont(ch)) {
+     --end;
+     break;
+    }
+   }
+  }
+  if (pname_start) *pname_start = start;
+  if (pname_end) *pname_end = end;
+  /* Check if the keyword following the simple module
+   * name is something that would belong to our name. */
+  JITLexer_YieldAt(self,end);
+  if (self->jl_tok == '.' ||
+      self->jl_tok == JIT_KEYWORD ||
+      self->jl_tok == JIT_STRING ||
+      self->jl_tok == JIT_RAWSTRING) {
+   JITLexer_YieldAt(self,start);
+   goto use_printer;
+  }
+  return 0;
+ }
+use_printer:
+ if (printer) unicode_printer_init(printer);
+ error = print_module_name(self,
+                           printer);
+ if (error == 0) error = 1;
+ return error;
+}
+
+
+
+
+INTERN DREF /*Module*/DeeObject *FCALL
+JITLexer_EvalModule(JITLexer *__restrict self) {
+ int error; DREF /*Module*/DeeObject *result;
+ struct unicode_printer printer;
+ unsigned char *name_start,*name_end;
+ error = JITLexer_ParseModuleName(self,
+                                 &printer,
+                                 &name_start,
+                                 &name_end);
+ if unlikely(error < 0)
+    goto err;
+ if (error > 0) {
+  /* The printer was used. */
+  DREF DeeObject *str;
+  str = unicode_printer_pack(&printer);
+  if unlikely(!str) goto err;
+  if (DeeString_STR(str)[0] != '.') {
+   result = DeeModule_Open(str,NULL,true);
+  } else {
+   DeeModuleObject *base = self->jl_context->jc_impbase;
+   if unlikely(!base) {
+    DeeError_Throwf(&DeeError_CompilerError,
+                    "Cannot import relative module %r",
+                    str);
+    result = NULL;
+   } else {
+    result = DeeModule_ImportRel((DeeObject *)base,str,NULL,true);
+   }
+  }
+  Dee_Decref(str);
+ } else if (name_start[0] != '.') {
+  result = DeeModule_OpenString((char const *)name_start,
+                                (size_t)(name_end - name_start),
+                                 NULL,
+                                 true);
+ } else {
+  DeeModuleObject *base = self->jl_context->jc_impbase;
+  if unlikely(!base) {
+   DeeError_Throwf(&DeeError_CompilerError,
+                   "Cannot import relative module %$q",
+                  (size_t)(name_end - name_start),
+                   name_start);
+   result = NULL;
+  } else {
+   result = DeeModule_ImportRelString((DeeObject *)base,
+                                      (char const *)name_start,
+                                      (size_t)(name_end - name_start),
+                                       NULL,
+                                       true);
+  }
+ }
+ return result;
+err:
+ return NULL;
+}
+
 
 DECL_END
 

@@ -807,6 +807,7 @@ DeeModule_Open(DeeObject *__restrict module_name,
                bool throw_error);
 DFUNDEF DREF DeeObject *DCALL
 DeeModule_OpenString(/*utf-8*/char const *__restrict module_name,
+                     size_t module_namesize,
                      struct compiler_options *options,
                      bool throw_error);
 
@@ -838,9 +839,8 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
                        struct compiler_options *options,
                        bool throw_error);
 DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name,
-                             /*utf-8*/char const *__restrict module_pathname,
-                             size_t module_pathsize,
+DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name, size_t module_namesize,
+                             /*utf-8*/char const *__restrict module_pathname, size_t module_pathsize,
                              struct compiler_options *options,
                              bool throw_error);
 
@@ -873,6 +873,12 @@ DeeModule_ImportRel(DeeObject *__restrict basemodule,
                     DeeObject *__restrict module_name,
                     struct compiler_options *options,
                     bool throw_error);
+DFUNDEF DREF DeeObject *DCALL
+DeeModule_ImportRelString(DeeObject *__restrict basemodule,
+                          /*utf-8*/char const *__restrict module_name,
+                          size_t module_namesize,
+                          struct compiler_options *options,
+                          bool throw_error);
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -890,8 +896,10 @@ DeeModule_Import(DeeObject *__restrict module_name,
  * These functions act and behave just as once would expect, raising errors when
  * appropriate and returning NULL/false/-1 upon error or not knowing the given name. */
 INTDEF struct module_symbol *DCALL DeeModule_GetSymbolString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+INTDEF struct module_symbol *DCALL DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attr_name_len, dhash_t hash);
 INTDEF struct module_symbol *DCALL DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid);
 INTDEF DREF DeeObject *DCALL DeeModule_GetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+INTDEF DREF DeeObject *DCALL DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attr_name_len, dhash_t hash);
 INTDEF bool DCALL DeeModule_HasAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
 INTDEF int DCALL DeeModule_BoundAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
 INTDEF int DCALL DeeModule_DelAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);

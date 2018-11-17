@@ -886,6 +886,7 @@ DFUNDEF DREF DeeObject *DCALL DeeString_VNewf(/*utf-8*/char const *__restrict fo
 DFUNDEF DREF DeeObject *DCALL DeeString_NewSized(/*unsigned*/char const *__restrict str, size_t length);
 DFUNDEF DREF DeeObject *DCALL DeeString_New2Byte(uint16_t const *__restrict str, size_t length);
 DFUNDEF DREF DeeObject *DCALL DeeString_New4Byte(uint32_t const *__restrict str, size_t length);
+#define DeeString_NewSizedWithHash(str,length,hash) DeeString_NewSized(str,length) /* XXX: Take advantage of this? */
 
 #ifdef __INTELLISENSE__
 DREF DeeObject *DeeString_New1Byte(uint8_t const *__restrict str, size_t length);

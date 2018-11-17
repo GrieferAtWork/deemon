@@ -176,20 +176,39 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
   JITContext context = JITCONTEXT_INIT;
   JITLexer lexer;
   lexer.jl_context = &context;
-  lexer.jl_paren   = 0;
-  lexer.jl_suffix  = 0;
+  lexer.jl_errpos  = NULL;
+  lexer.jl_text    = expr;
+  JITLValue_Init(&lexer.jl_lvalue);
   JITLexer_Start(&lexer,
                 (unsigned char *)usertext,
                 (unsigned char *)usertext + usersize);
   result = JITLexer_EvalExpression(&lexer,
                                     JITLEXER_EVAL_FNORMAL);
-  if (likely(result) &&
-      unlikely(lexer.jl_tok != TOK_EOF)) {
-   DeeError_Throwf(&DeeError_SyntaxError,
-                   "Expected EOF but got `%$s'",
-                  (size_t)(lexer.jl_end - lexer.jl_tokstart),
-                   lexer.jl_tokstart);
-   Dee_Clear(result);
+  ASSERT((result == JIT_LVALUE) ==
+         (lexer.jl_lvalue.lv_kind != JIT_LVALUE_NONE));
+  /* Check if the resulting expression evaluates to an L-Value
+   * If so, unpack that l-value to access the pointed-to object. */
+  if (result == JIT_LVALUE) {
+   result = JITLValue_GetValue(&lexer.jl_lvalue,
+                               &context);
+   JITLValue_Fini(&lexer.jl_lvalue);
+  }
+  if likely(result) {
+   if unlikely(lexer.jl_tok != TOK_EOF) {
+    DeeError_Throwf(&DeeError_SyntaxError,
+                    "Expected EOF but got `%$s'",
+                   (size_t)(lexer.jl_end - lexer.jl_tokstart),
+                    lexer.jl_tokstart);
+    lexer.jl_errpos = lexer.jl_tokstart;
+    Dee_Clear(result);
+    goto handle_error;
+   }
+  } else {
+   if (!lexer.jl_errpos)
+        lexer.jl_errpos = lexer.jl_tokstart;
+handle_error:
+   /* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
+   ;
   }
   JITContext_Fini(&context);
  }

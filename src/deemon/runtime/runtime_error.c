@@ -559,12 +559,30 @@ err_module_not_loaded_attr(DeeModuleObject *__restrict self,
                         name,self->mo_name);
 }
 INTERN ATTR_COLD int DCALL
+err_module_not_loaded_attr_len(DeeModuleObject *__restrict self,
+                               char const *__restrict name,
+                               size_t namelen, int access) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot %s global variable `%$s' of module `%k' that hasn't been loaded yet",
+                        access_names[access&ATTR_ACCESS_MASK],
+                        namelen,name,self->mo_name);
+}
+INTERN ATTR_COLD int DCALL
 err_module_no_such_global(DeeModuleObject *__restrict self,
                           char const *__restrict name, int access) {
  return DeeError_Throwf(&DeeError_AttributeError,
                         "Cannot %s unknown global variable: `%k.%s'",
                         access_names[access&ATTR_ACCESS_MASK],
                         self->mo_name,name);
+}
+INTERN ATTR_COLD int DCALL
+err_module_no_such_global_len(DeeModuleObject *__restrict self,
+                              char const *__restrict name,
+                              size_t namelen, int access) {
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot %s unknown global variable: `%k.%$s'",
+                        access_names[access&ATTR_ACCESS_MASK],
+                        self->mo_name,namelen,name);
 }
 INTERN ATTR_COLD int DCALL
 err_module_readonly_global(DeeModuleObject *__restrict self,

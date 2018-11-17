@@ -140,7 +140,10 @@ dex_load_file(DeeDexObject *__restrict self,
   /* Load import modules, using the same index as the original name. */
   for (i = 0; i < impcount; ++i) {
    DREF DeeObject *import;
-   import = DeeModule_OpenString(names[i],NULL,true);
+   import = DeeModule_OpenString(names[i],
+                                 strlen(names[i]),
+                                 NULL,
+                                 true);
    if unlikely(!import) {
     while (i--) Dee_Decref(imports[i]);
     goto err_imp;

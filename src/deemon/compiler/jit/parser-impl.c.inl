@@ -59,16 +59,19 @@
 #endif
 
 #ifdef JIT_SKIP
-#define IF_SKIP(...)     __VA_ARGS__
-#define IF_EVAL(...)     /* nothing */
+#define LOAD_LVALUE(obj,err) (void)0
+#define LOAD_LVALUE_OR_RETURN_ERROR(obj) (void)0
+#define IF_SKIP(...)      __VA_ARGS__
+#define IF_EVAL(...)      /* nothing */
 #define SYNTAXERROR(...) (DeeError_Throwf(&DeeError_SyntaxError,__VA_ARGS__), \
                           JITLexer_ErrorTrace(self,self->jl_tokstart),-1)
 #define DECREF(x)        (void)0
-#define ERROR            -1
-#define RETURN_TYPE      int
-#define LHS_OR_OK        0
-#define ISOK(x)          likely(!(x))
-#define ISERR(x)         unlikely(x)
+#define DECREF_MAYBE_LVALUE(x) (void)0
+#define ERROR             -1
+#define RETURN_TYPE       int
+#define LHS_OR_OK         0
+#define ISOK(x)           likely(!(x))
+#define ISERR(x)          unlikely(x)
 #define CALL_PRIMARY(name)          JITLexer_Skip##name(self,flags)
 #define CALL_PRIMARYF(name,flags)   JITLexer_Skip##name(self,flags)
 #define CALL_SECONDARY(name,result) JITLexer_Skip##name(self,JITLEXER_EVAL_FSECONDARY)
@@ -77,6 +80,10 @@
 #define DEFINE_SECONDARY(name) \
   INTERN int FCALL JITLexer_Skip##name(JITLexer *__restrict self, unsigned int flags)
 #else
+#define LOAD_LVALUE(obj,err)  \
+     do{if((obj) == JIT_LVALUE && ((obj) = JITLexer_PackLValue(self)) == NULL) goto err;}__WHILE0
+#define LOAD_LVALUE_OR_RETURN_ERROR(obj)  \
+     do{if((obj) == JIT_LVALUE && ((obj) = JITLexer_PackLValue(self)) == NULL) return NULL;}__WHILE0
 #define IF_SKIP(...)      /* nothing */
 #define IF_EVAL(...)      __VA_ARGS__
 #define SYNTAXERROR(...) (DeeError_Throwf(&DeeError_SyntaxError,__VA_ARGS__), \
@@ -84,6 +91,7 @@
 #define ERROR             NULL
 #define RETURN_TYPE       DREF DeeObject *
 #define DECREF(x)         Dee_Decref(x)
+#define DECREF_MAYBE_LVALUE(x) ((x) == JIT_LVALUE || Dee_Decref(x))
 #define LHS_OR_OK         lhs
 #define ISOK(x)           likely(x)
 #define ISERR(x)          unlikely(!(x))
@@ -96,11 +104,14 @@
    INTERN DREF DeeObject *FCALL JITLexer_Eval##name(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags)
 #endif
 
+
+
+
 DECL_BEGIN
 
 #ifndef ERROR_CANNOT_TEST_BINDING_DEFINED
 #define ERROR_CANNOT_TEST_BINDING_DEFINED 1
-PRIVATE ATTR_COLD int DCALL err_cannot_test_binding(void) {
+INTERN ATTR_COLD int DCALL err_cannot_test_binding(void) {
  return DeeError_Throwf(&DeeError_SyntaxError,
                         "Cannot test binding of expression. "
                         "Expected a symbol, or attribute expression");
@@ -305,6 +316,7 @@ not_a_cast:
    * >> (float)(pack 10,20,30); // Call with 1 argument `(10,20,30)'
    * Without this handling, the 4th line would be compiled as
    * `float(pack(10,20,30))', when we want it to be `float(10,20,30)' */
+  LOAD_LVALUE(lhs,err);
   JITLexer_Yield(self);
   if (self->jl_tok == ')') {
    /* Handle case #0 */
@@ -323,11 +335,13 @@ not_a_cast:
   /* Parse the cast-expression / argument list. */
   merge = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
   if (ISERR(merge)) goto err_lhs;
+  LOAD_LVALUE(merge,err_lhs);
   is_multiple = false;
   if (self->jl_tok == TOK_DOTS || self->jl_tok == ',') {
    is_multiple = true;
    merge = CALL_SECONDARY(CommaTupleOperand,merge);
    if (ISERR(merge)) goto err_lhs;
+   LOAD_LVALUE(merge,err_lhs);
   }
 #ifdef JIT_EVAL
   ASSERT(DeeTuple_Check(merge));
@@ -358,6 +372,7 @@ not_a_cast:
                                      JITLEXER_EVAL_FSECONDARY);
 #endif /* JIT_EVAL */
    if (ISERR(result)) goto err_merge;
+   LOAD_LVALUE(result,err_merge);
 #ifdef JIT_EVAL
    if (result == DeeTuple_GET(merge,0)) {
     /* Same argument expression. */
@@ -388,7 +403,9 @@ not_a_cast:
        goto not_a_cast;
 do_a_cast:
   /* Actually do a cast. */
+  LOAD_LVALUE(lhs,err);
   merge = CALL_PRIMARY(Unary);
+  LOAD_LVALUE(merge,err_lhs);
 #ifdef JIT_EVAL
   if (ISERR(merge)) goto err_lhs;
   result = DeeObject_Call(lhs,1,(DeeObject **)&merge);
@@ -405,6 +422,9 @@ err_merge:
  DECREF(merge);
 err_lhs:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif /* JIT_EVAL */
  return ERROR;
 }
 
@@ -434,6 +454,9 @@ DEFINE_PRIMARY(UnaryHead) {
  IF_EVAL(unsigned char *pos;)
  (void)flags;
  IF_EVAL(pos = self->jl_tokstart;)
+#ifdef JIT_EVAL
+ ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+#endif /* JIT_EVAL */
  switch (self->jl_tok) {
 
  case TOK_INT:
@@ -447,7 +470,7 @@ DEFINE_PRIMARY(UnaryHead) {
 #endif /* !JIT_EVAL */
 done_y1:
   JITLexer_Yield(self);
-  break;
+  goto done;
  case JIT_STRING:
   /* String literal */
 #ifdef JIT_EVAL
@@ -484,6 +507,7 @@ done_y1:
   result = CALL_PRIMARYF(Unary,JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
   if (ISERR(result)) goto done;
+  LOAD_LVALUE(result,err);
   {
    DREF DeeObject *new_result;
    new_result = DeeObject_SizeObject(result);
@@ -500,6 +524,7 @@ done_y1:
   result = CALL_PRIMARYF(Unary,JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
   if (ISERR(result)) goto done;
+  LOAD_LVALUE(result,err);
   {
    DREF DeeObject *new_result;
    new_result = DeeObject_Inv(result);
@@ -516,6 +541,7 @@ done_y1:
   result = CALL_PRIMARYF(Unary,JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
   if (ISERR(result)) goto done;
+  LOAD_LVALUE(result,err);
   {
    DREF DeeObject *new_result;
    new_result = DeeObject_Pos(result);
@@ -532,6 +558,7 @@ done_y1:
   result = CALL_PRIMARYF(Unary,JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
   if (ISERR(result)) goto done;
+  LOAD_LVALUE(result,err);
   {
    DREF DeeObject *new_result;
    new_result = DeeObject_Neg(result);
@@ -547,7 +574,7 @@ done_y1:
  case TOK_INC:
  case TOK_DEC:
   /* TODO: Need a custom parser protocol! */
-  break;
+  goto done;
 #endif
 
  case '!': /* not */
@@ -555,6 +582,7 @@ done_y1:
   result = CALL_PRIMARYF(Unary,JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
   if (ISERR(result)) goto done;
+  LOAD_LVALUE(result,err);
   {
    int new_result;
    new_result = DeeObject_Bool(result);
@@ -636,9 +664,8 @@ done_y1:
    allow_cast = false; /* Don't allow empty tuples for cast expressions. */
   } else {
    /* Parenthesis / tuple expression. */
-   ++self->jl_paren;
    result = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
-   --self->jl_paren;
+   LOAD_LVALUE(result,err);
    if (ISOK(result) && self->jl_tok == ',' || self->jl_tok == TOK_DOTS) {
     result = CALL_SECONDARY(CommaTupleOperand,result);
     allow_cast = false; /* Don't allow comma-lists for cast expressions. */
@@ -674,8 +701,10 @@ done_y1:
   }
   result = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
   if (ISERR(result)) goto err;
+  LOAD_LVALUE(result,err);
   result = CALL_SECONDARY(CommaListOperand,result);
   if (ISERR(result)) goto err;
+  LOAD_LVALUE(result,err);
   if likely(self->jl_tok == ']') {
    JITLexer_Yield(self);
   } else {
@@ -721,6 +750,7 @@ done_y1:
    /* Parse the initial key / sequence item. */
    result = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
    if (ISERR(result)) goto err;
+   LOAD_LVALUE(result,err);
    if (self->jl_tok == ':') {
     /* Mapping-like dict expression. */
     result = CALL_SECONDARY(CommaDictOperand,result);
@@ -766,6 +796,7 @@ done_y1:
                            JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
     if (ISERR(result)) goto done;
+    LOAD_LVALUE(result,err);
     {
      DREF DeeObject *new_result;
      new_result = DeeObject_Str(result);
@@ -804,6 +835,7 @@ done_y1:
                            JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
     if (ISERR(result)) goto done;
+    LOAD_LVALUE(result,err);
     {
      DREF DeeObject *new_result;
      new_result = DeeObject_Repr(result);
@@ -820,6 +852,7 @@ done_y1:
                            JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
     if (ISERR(result)) goto done;
+    LOAD_LVALUE(result,err);
     {
      DREF DeeObject *new_result;
      new_result = DeeObject_Copy(result);
@@ -836,6 +869,7 @@ done_y1:
                            JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
     if (ISERR(result)) goto done;
+    LOAD_LVALUE(result,err);
     {
      DREF DeeTypeObject *new_result;
      new_result = Dee_TYPE(result);
@@ -902,6 +936,7 @@ done_y1:
                            JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
     if (ISERR(result)) goto done;
+    LOAD_LVALUE(result,err);
     {
      DREF DeeObject *new_result;
      new_result = DeeObject_DeepCopy(result);
@@ -914,18 +949,57 @@ done_y1:
     goto done;
    }
    break;
-
   default: break;
   }
-  /* Fallback: identifier lookup. */
+  /* Fallback: identifier lookup / <x from y> expression. */
+  {
 #ifdef JIT_EVAL
-  result = JITContext_Lookup(self->jl_context,
-                            (char const *)self->jl_tokstart,
-                            (size_t)(self->jl_tokend - self->jl_tokstart));
+   char const *symbol_name = (char const *)self->jl_tokstart;
+   size_t symbol_size = (size_t)(self->jl_tokend - self->jl_tokstart);
+   JITLexer_Yield(self);
+   if (JITLexer_ISKWD(self,"from")) {
+    DREF DeeModuleObject *module;
+    struct module_symbol *symbol;
+    JITLexer_Yield(self);
+    module = (DREF DeeModuleObject *)JITLexer_EvalModule(self);
+    if unlikely(!module)
+       goto err;
+    symbol = DeeModule_GetSymbolStringLen(module,
+                                          symbol_name,
+                                          symbol_size,
+                                          hash_ptr(symbol_name,symbol_size));
+    if unlikely(!symbol) {
+     DeeError_Throwf(&DeeError_SymbolError,
+                     "Symbol `%$s' could not be found in module `%k'",
+                     symbol_size,symbol_name,module);
+     Dee_Decref(module);
+     goto err;
+    }
+    self->jl_lvalue.lv_kind = JIT_LVALUE_EXTERN;
+    self->jl_lvalue.lv_extern.lx_mod = module; /* Inherit reference. */
+    self->jl_lvalue.lv_extern.lx_sym = symbol;
+   } else {
+    if (!JITContext_Lookup(self->jl_context,
+                          (JITSymbol *)&self->jl_lvalue,
+                           symbol_name,
+                           symbol_size)) {
+     DeeError_Throwf(&DeeError_SymbolError,
+                     "Unknown variable `%$s'",
+                     symbol_size,symbol_name);
+     goto err;
+    }
+   }
+   result = JIT_LVALUE;
 #else /* JIT_EVAL */
-  result = 0;
+   result = 0;
+   JITLexer_Yield(self);
+   if (JITLexer_ISKWD(self,"from")) {
+    JITLexer_Yield(self);
+    if unlikely(JITLexer_SkipModule(self))
+       goto err;
+   }
 #endif /* !JIT_EVAL */
-  JITLexer_Yield(self);
+  }
  } break;
 
  default:
@@ -941,15 +1015,21 @@ err_r_invoke:
  JITLexer_ErrorTrace(self,pos);
 #endif
 err_r:
- DECREF(result);
+ DECREF_MAYBE_LVALUE(result);
 err:
  return ERROR;
 }
+
+
+
+
+
+
+
+
 DEFINE_PRIMARY(Unary) {
  RETURN_TYPE result;
  RETURN_TYPE rhs;
- IF_EVAL(JITLexer smlex;)
- IF_SKIP(JITSmallLexer smlex;)
  IF_EVAL(unsigned char *pos;)
  result = CALL_PRIMARY(UnaryHead);
  if (ISOK(result)) for (;;) {
@@ -973,6 +1053,7 @@ DEFINE_PRIMARY(Unary) {
 #ifdef JIT_EVAL
     {
      DREF DeeObject *opfun;
+     LOAD_LVALUE(result,err);
      opfun = JIT_GetOperatorFunction((uint16_t)opno);
      if unlikely(!opfun) goto err_r;
      rhs = DeeInstanceMethod_New(opfun,result);
@@ -987,6 +1068,7 @@ DEFINE_PRIMARY(Unary) {
    } else if (JITLexer_ISTOK(self,"class")) {
     JITLexer_Yield(self);
 #ifdef JIT_EVAL
+    LOAD_LVALUE(result,err);
     rhs = (DeeObject *)DeeObject_Class(result);
     Dee_Incref(rhs);
     Dee_Decref(result);
@@ -995,168 +1077,74 @@ DEFINE_PRIMARY(Unary) {
    } else if (JITLexer_ISTOK(self,"super")) {
     JITLexer_Yield(self);
 #ifdef JIT_EVAL
+    LOAD_LVALUE(result,err);
     rhs = DeeSuper_Of(result);
     if unlikely(!rhs) goto err_r_invoke;
     Dee_Decref(result);
     result = rhs;
 #endif /* JIT_EVAL */
    } else {
-    IF_EVAL(DREF DeeObject *attr_name;)
 #ifdef JIT_EVAL
+    char const *attr_name;
+    size_t attr_size;
+    LOAD_LVALUE(result,err);
     /* Generic attribute lookup. */
-    attr_name = DeeString_NewUtf8((char const *)self->jl_tokstart,
-                                  (size_t)(self->jl_tokend - self->jl_tokstart),
-                                   STRING_ERROR_FSTRICT);
-    if unlikely(!attr_name) goto err_r_invoke;
+    attr_name = (char const *)self->jl_tokstart;
+    attr_size = (size_t)(self->jl_tokend - self->jl_tokstart);
 #endif /* JIT_EVAL */
     JITLexer_Yield(self);
-    if ((self->jl_tok == ')' && self->jl_paren) ||
-       ((self->jl_tok == '!' || JITLexer_ISKWD(self,"is")) &&
-        (flags & JITLEXER_EVAL_FALLOWISBOUND)) ||
-       ((self->jl_tok >= TOK_ADD_EQUAL && self->jl_tok <= TOK_POW_EQUAL) &&
-        (flags & JITLEXER_EVAL_FALLOWINPLACE))) {
-     IF_EVAL(bool do_invert = false;)
-     memcpy(&smlex,self,sizeof(JITSmallLexer));
-     if (self->jl_tok == ')') {
-      unsigned int max_count = self->jl_paren;
-      for (;;) {
-       JITLexer_Yield((JITLexer *)&smlex);
-       if (smlex.jl_tok != ')')
-           break;
-       --max_count;
-       if (!max_count)
-           goto lookup_generic;
-      }
-     }
-     if (smlex.jl_tok == '!' &&
-        (flags & JITLEXER_EVAL_FALLOWISBOUND)) {
-      do JITLexer_Yield((JITLexer *)&smlex)
-#ifdef JIT_EVAL
-         , do_invert = !do_invert
-#endif
-         ;
-      while (smlex.jl_tok != '!');
-      if (!JITLexer_ISKWD(&smlex,"is"))
-          goto lookup_generic;
-     }
-     if (JITLexer_ISKWD(&smlex,"is") &&
-        (flags & JITLEXER_EVAL_FALLOWISBOUND)) {
-      JITLexer_Yield((JITLexer *)&smlex);
-      if (JITLexer_ISKWD(&smlex,"bound")) {
-       ++self->jl_suffix;
-#ifdef JIT_EVAL
-       /* Is-attribute-bound operation. */
-       {
-        int error;
-        error = DeeObject_BoundAttr(result,attr_name);
-        Dee_Decref(attr_name);
-        if (error == -1)
-            goto err_r_invoke;
-        Dee_Decref(result);
-        result = DeeBool_For((error > 0) ^ do_invert);
-        Dee_Incref(result);
-       }
-#endif
-      }
-     } else if ((smlex.jl_tok >= TOK_ADD_EQUAL &&
-                 smlex.jl_tok <= TOK_POW_EQUAL) &&
-                (flags & JITLEXER_EVAL_FALLOWINPLACE)) {
-#ifdef JIT_EVAL
-      int error;
-      DREF DeeObject *inplace_operand;
-      /* Attribute inplace operation. */
-      rhs = DeeObject_GetAttr(result,attr_name);
-      if unlikely(!rhs) { Dee_Decref(attr_name); goto err_r_invoke; }
-      memcpy((uint8_t *)&smlex + sizeof(JITSmallLexer),
-             (uint8_t *)self + sizeof(JITSmallLexer),
-              sizeof(JITLexer) - sizeof(JITSmallLexer));
-      JITLexer_Yield(&smlex);
-      inplace_operand = JITLexer_EvalCond(&smlex,JITLEXER_EVAL_FSECONDARY);
-      if unlikely(!inplace_operand) {
-err_attr_name_rhs:
-       Dee_Decref(rhs);
-err_attr_name:
-       Dee_Decref(attr_name);
-       goto err_r;
-      }
-      switch (self->jl_tok) {
-      case TOK_ADD_EQUAL: error = DeeObject_InplaceAdd(&rhs,inplace_operand); break;
-      case TOK_SUB_EQUAL: error = DeeObject_InplaceSub(&rhs,inplace_operand); break;
-      case TOK_MUL_EQUAL: error = DeeObject_InplaceMul(&rhs,inplace_operand); break;
-      case TOK_DIV_EQUAL: error = DeeObject_InplaceDiv(&rhs,inplace_operand); break;
-      case TOK_MOD_EQUAL: error = DeeObject_InplaceMod(&rhs,inplace_operand); break;
-      case TOK_SHL_EQUAL: error = DeeObject_InplaceShl(&rhs,inplace_operand); break;
-      case TOK_SHR_EQUAL: error = DeeObject_InplaceShr(&rhs,inplace_operand); break;
-      case TOK_AND_EQUAL: error = DeeObject_InplaceAnd(&rhs,inplace_operand); break;
-      case TOK_OR_EQUAL: error = DeeObject_InplaceOr(&rhs,inplace_operand); break;
-      case TOK_XOR_EQUAL: error = DeeObject_InplaceXor(&rhs,inplace_operand); break;
-      case TOK_POW_EQUAL: error = DeeObject_InplacePow(&rhs,inplace_operand); break;
-      default: __builtin_unreachable();
-      }
-      Dee_Decref(inplace_operand);
-      if unlikely(error)
-         goto err_attr_name_rhs;
-      error = DeeObject_SetAttr(result,attr_name,rhs);
-      Dee_Decref(attr_name);
-      Dee_Decref(result);
-      result = rhs;
-      if unlikely(error)
-         goto err_r_invoke;
-#endif /* JIT_EVAL */
-      ++self->jl_suffix;
-     } else {
-      goto lookup_generic;
-     }
-    } else {
-lookup_generic:
-     ;
 #ifdef JIT_EVAL
 #ifndef __OPTIMIZE_SIZE__
-     /* Optimization for callattr expressions. */
-     if (self->jl_tok == '(') {
-      DREF DeeObject *args;
+    /* Optimization for callattr expressions. */
+    if (self->jl_tok == '(') {
+     DREF DeeObject *attr_name_ob;
+     DREF DeeObject *args;
+     JITLexer_Yield(self);
+     if (self->jl_tok == ')') {
       JITLexer_Yield(self);
+      args = Dee_EmptyTuple;
+      Dee_Incref(Dee_EmptyTuple);
+     } else {
+      /* TODO: Keyword arguments! */
+      args = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
+      if (ISERR(args)) goto err_r;
+      LOAD_LVALUE(args,err_r);
+      args = CALL_SECONDARY(CommaTupleOperand,args);
+      if (ISERR(args)) goto err_r;
+      LOAD_LVALUE(args,err_r);
       if (self->jl_tok == ')') {
        JITLexer_Yield(self);
-       args = Dee_EmptyTuple;
-       Dee_Incref(Dee_EmptyTuple);
       } else {
-       /* TODO: Keyword arguments! */
-       args = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
-       if (ISERR(args)) goto err_attr_name;
-       args = CALL_SECONDARY(CommaTupleOperand,args);
-       if (ISERR(args)) goto err_attr_name;
-       if (self->jl_tok == ')') {
-        JITLexer_Yield(self);
-       } else {
-        SYNTAXERROR("Expected `)' to end call operation, but got `%$s'",
-                   (size_t)(self->jl_tokend - self->jl_tokstart),
-                            self->jl_tokstart);
-        Dee_Decref(args);
-        goto err_attr_name;
-       }
+       SYNTAXERROR("Expected `)' to end call operation, but got `%$s'",
+                  (size_t)(self->jl_tokend - self->jl_tokstart),
+                           self->jl_tokstart);
+       Dee_Decref(args);
+       goto err_r;
       }
-      rhs = DeeObject_CallAttrTuple(result,
-                                    attr_name,
-                                    args);
-      Dee_Decref(args);
-      Dee_Decref(attr_name);
-      if unlikely(!rhs)
-         goto err_r_invoke;
-      Dee_Decref(result);
-      result = rhs;
-     } else
-#endif
-     {
-      /* Generic attribute lookup */
-      rhs = DeeObject_GetAttr(result,attr_name);
-      Dee_Decref(attr_name);
-      if unlikely(!rhs) goto err_r_invoke;
-      Dee_Decref(result);
-      result = rhs;
      }
-#endif /* JIT_EVAL */
+     attr_name_ob = DeeString_NewUtf8(attr_name,attr_size,STRING_ERROR_FSTRICT);
+     if unlikely(!attr_name_ob) goto err_r_invoke;
+     rhs = DeeObject_CallAttrTuple(result,
+                                   attr_name_ob,
+                                   args);
+     Dee_Decref(attr_name_ob);
+     Dee_Decref(args);
+     if unlikely(!rhs)
+        goto err_r_invoke;
+     Dee_Decref(result);
+     result = rhs;
+    } else
+#endif
+    {
+     /* Generic attribute lookup */
+     ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+     self->jl_lvalue.lv_kind = JIT_LVALUE_ATTR_STR;
+     self->jl_lvalue.lv_attr_str.la_base = result; /* Inherit reference. */
+     self->jl_lvalue.lv_attr_str.la_name = attr_name;
+     self->jl_lvalue.lv_attr_str.la_nsiz = attr_size;
+     result = JIT_LVALUE;
     }
+#endif /* JIT_EVAL */
    }
    break;
 
@@ -1174,6 +1162,7 @@ lookup_generic:
   case '(': /* Call operator */
    IF_EVAL(pos = self->jl_tokstart;)
    JITLexer_Yield(self);
+   LOAD_LVALUE(result,err);
    if (self->jl_tok == ')') {
     JITLexer_Yield(self);
 #ifdef JIT_EVAL
@@ -1184,8 +1173,10 @@ lookup_generic:
     /* TODO: Keyword arguments! */
     rhs = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
     if (ISERR(rhs)) goto err_r;
+    LOAD_LVALUE(rhs,err_r);
     rhs = CALL_SECONDARY(CommaTupleOperand,rhs);
     if (ISERR(rhs)) goto err_r;
+    LOAD_LVALUE(rhs,err_r);
     if (self->jl_tok == ')') {
      JITLexer_Yield(self);
     } else {
@@ -1220,9 +1211,13 @@ err_r_invoke:
  JITLexer_ErrorTrace(self,pos);
 #endif
 err_r:
- DECREF(result);
+ DECREF_MAYBE_LVALUE(result);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
 }
+
 DEFINE_PRIMARY(Prod) {
  RETURN_TYPE result = CALL_PRIMARY(Unary);
  if (ISOK(result) && TOKEN_IS_PROD(self->jl_tok))
@@ -1252,12 +1247,8 @@ DEFINE_PRIMARY(Cmp) {
 }
 
 DEFINE_PRIMARY(CmpEQ) {
-#if 0
- RETURN_TYPE result = CALL_PRIMARY(Cmp);
-#else
  RETURN_TYPE result = CALL_PRIMARYF(Cmp,flags | JITLEXER_EVAL_FALLOWISBOUND);
-#endif
- if (ISOK(result) && TOKEN_IS_CMPEQ(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_CMPEQ(self))
      result = CALL_SECONDARY(CmpEQOperand,result);
  return result;
 }
@@ -1285,7 +1276,7 @@ DEFINE_PRIMARY(Or) {
 
 DEFINE_PRIMARY(As) {
  RETURN_TYPE result = CALL_PRIMARY(Or);
- if (ISOK(result) && TOKEN_IS_AS(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_AS(self))
      result = CALL_SECONDARY(AsOperand,result);
  return result;
 }
@@ -1325,6 +1316,16 @@ DEFINE_PRIMARY(Assign) {
                         JITLEXER_EVAL_FALLOWISBOUND);
  if (ISERR(result)) goto done;
  switch (self->jl_tok) {
+
+ case JIT_KEYWORD:
+  if (JITLexer_ISTOK(self,"is"))
+      goto case_cmpeq;
+  if (JITLexer_ISTOK(self,"in"))
+      goto case_cmpeq;
+  if (JITLexer_ISTOK(self,"as"))
+      goto case_as;
+  break;
+
  CASE_TOKEN_IS_PROD:
   result = CALL_SECONDARY(ProdOperand,result);
   if (ISERR(result)) goto done;
@@ -1343,8 +1344,9 @@ DEFINE_PRIMARY(Assign) {
    result = CALL_SECONDARY(CmpOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_CMPEQ(self->jl_tok)) {
+  if (TOKEN_IS_CMPEQ(self)) {
  CASE_TOKEN_IS_CMPEQ:
+case_cmpeq:
    result = CALL_SECONDARY(CmpEQOperand,result);
    if (ISERR(result)) goto done;
   }
@@ -1363,8 +1365,9 @@ DEFINE_PRIMARY(Assign) {
    result = CALL_SECONDARY(OrOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_AS(self->jl_tok)) {
+  if (TOKEN_IS_AS(self)) {
  CASE_TOKEN_IS_AS:
+case_as:
    result = CALL_SECONDARY(AsOperand,result);
    if (ISERR(result)) goto done;
   }
@@ -1404,11 +1407,13 @@ DEFINE_SECONDARY(ProdOperand) {
  IF_EVAL(unsigned char *pos;)
  IF_EVAL(unsigned int cmd = self->jl_tok;)
  ASSERT(TOKEN_IS_PROD(self->jl_tok));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
   rhs = CALL_PRIMARY(Unary);
   if (ISERR(rhs)) goto err_r;
+  LOAD_LVALUE(rhs,err_r);
 #ifdef JIT_EVAL
   switch (cmd) {
   case '*':
@@ -1443,6 +1448,9 @@ err_invoke:
 #endif
 err_r:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
 }
 
@@ -1452,6 +1460,7 @@ DEFINE_SECONDARY(SumOperand) {
  IF_EVAL(unsigned char *pos;)
  unsigned int cmd = self->jl_tok;
  ASSERT(TOKEN_IS_SUM(cmd));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
@@ -1467,6 +1476,7 @@ DEFINE_SECONDARY(SumOperand) {
   } else {
    rhs = CALL_PRIMARY(Prod);
    if (ISERR(rhs)) goto err_r;
+   LOAD_LVALUE(rhs,err_r);
 #ifdef JIT_EVAL
    switch (cmd) {
    case '+':
@@ -1497,6 +1507,9 @@ err_invoke_norhs:
 #endif
 err_r:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
 }
 
@@ -1506,11 +1519,13 @@ DEFINE_SECONDARY(ShiftOperand) {
  IF_EVAL(unsigned char *pos;)
  IF_EVAL(unsigned int cmd = self->jl_tok;)
  ASSERT(TOKEN_IS_SHIFT(self->jl_tok));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
   rhs = CALL_PRIMARY(Sum);
   if (ISERR(rhs)) goto err_r;
+  LOAD_LVALUE(rhs,err_r);
 #ifdef JIT_EVAL
   switch (cmd) {
   case TOK_SHL:
@@ -1539,6 +1554,9 @@ err_invoke:
 #endif
 err_r:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
 }
 
@@ -1548,6 +1566,7 @@ DEFINE_SECONDARY(CmpOperand) {
  IF_EVAL(unsigned char *pos;)
  unsigned int cmd = self->jl_tok;
  ASSERT(TOKEN_IS_CMP(cmd));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
@@ -1565,6 +1584,7 @@ DEFINE_SECONDARY(CmpOperand) {
   } else {
    rhs = CALL_PRIMARY(Shift);
    if (ISERR(rhs)) goto err_r;
+   LOAD_LVALUE(rhs,err_r);
 #ifdef JIT_EVAL
    switch (cmd) {
    case TOK_LOWER:
@@ -1601,6 +1621,9 @@ err_invoke_norhs:
 #endif
 err_r:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
 }
 
@@ -1609,7 +1632,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
  IF_EVAL(unsigned int cmd = self->jl_tok;)
- ASSERT(TOKEN_IS_CMPEQ(self->jl_tok));
+ ASSERT(TOKEN_IS_CMPEQ(self));
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   if (self->jl_tok == '!') {
@@ -1621,18 +1644,27 @@ DEFINE_SECONDARY(CmpEQOperand) {
     JITLexer_Yield(self);
     if (JITLexer_ISKWD(self,"bound")) {
      /* Suffix expression */
-     if (self->jl_suffix) {
-      --self->jl_suffix;
-     } else {
+#ifdef JIT_EVAL
+     int error;
+     if (lhs != JIT_LVALUE) {
       err_cannot_test_binding();
       goto err_r;
      }
+     error = JITLValue_IsBound(&self->jl_lvalue,self->jl_context);
+     JITLValue_Fini(&self->jl_lvalue);
+     self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+     if unlikely(error < 0) goto err;
+     lhs = DeeBool_For((error != 0) ^ inverted);
+     Dee_Incref(lhs);
+#endif
      JITLexer_Yield(self);
      goto continue_expr;
     }
+    LOAD_LVALUE(lhs,err);
     rhs = CALL_PRIMARYF(Cmp,flags | JITLEXER_EVAL_FALLOWISBOUND);
     if (ISERR(rhs)) goto err_r;
 #ifdef JIT_EVAL
+    LOAD_LVALUE(rhs,err_r);
     {
      bool is_instance;
      if (DeeNone_Check(rhs)) {
@@ -1650,11 +1682,13 @@ DEFINE_SECONDARY(CmpEQOperand) {
 #endif
     goto continue_expr;
    }
+   LOAD_LVALUE(lhs,err);
    if (JITLexer_ISKWD(self,"in")) {
     JITLexer_Yield(self);
     rhs = CALL_PRIMARYF(Cmp,flags | JITLEXER_EVAL_FALLOWISBOUND);
     if (ISERR(rhs)) goto err_r;
 #ifdef JIT_EVAL
+    LOAD_LVALUE(rhs,err_r);
     {
      merge = DeeObject_ContainsObject(rhs,lhs);
      if unlikely(!merge)
@@ -1679,10 +1713,54 @@ DEFINE_SECONDARY(CmpEQOperand) {
                        self->jl_tokstart);
    goto err_r;
   }
-  JITLexer_Yield(self);
+  if (JITLexer_ISKWD(self,"is")) {
+   JITLexer_Yield(self);
+   if (JITLexer_ISKWD(self,"bound")) {
+    JITLexer_Yield(self);
+#ifdef JIT_EVAL
+    {
+     int error;
+     if (lhs != JIT_LVALUE) {
+      err_cannot_test_binding();
+      goto err_r;
+     }
+     error = JITLValue_IsBound(&self->jl_lvalue,self->jl_context);
+     JITLValue_Fini(&self->jl_lvalue);
+     self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+     if unlikely(error < 0) goto err;
+     lhs = DeeBool_For(error);
+     Dee_Incref(lhs);
+    }
+#endif
+   } else {
+    LOAD_LVALUE(lhs,err);
+    rhs = CALL_PRIMARYF(Cmp,flags | JITLEXER_EVAL_FALLOWISBOUND);
+    if (ISERR(rhs)) goto err_r;
+#ifdef JIT_EVAL
+    LOAD_LVALUE(rhs,err_r);
+    {
+     bool is_instance;
+     if (DeeNone_Check(rhs)) {
+      is_instance = DeeNone_Check(lhs);
+     } else if (DeeSuper_Check(lhs)) {
+      is_instance = DeeType_IsInherited(DeeSuper_TYPE(lhs),(DeeTypeObject *)rhs);
+     } else {
+      is_instance = DeeObject_InstanceOf(lhs,(DeeTypeObject *)rhs);
+     }
+     merge = DeeBool_For(is_instance);
+     Dee_Incref(merge);
+    }
+#endif /* JIT_EVAL */
+   }
+   goto continue_expr;
+  } else {
+   JITLexer_Yield(self);
+  }
+  LOAD_LVALUE(lhs,err);
   rhs = CALL_PRIMARYF(Cmp,flags | JITLEXER_EVAL_FALLOWISBOUND);
   if (ISERR(rhs)) goto err_r;
 #ifdef JIT_EVAL
+  LOAD_LVALUE(rhs,err_r);
   switch (cmd) {
   case TOK_EQUAL:
    merge = DeeObject_CompareEqObject(lhs,rhs);
@@ -1698,20 +1776,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
    merge = DeeBool_For(lhs != rhs);
    Dee_Incref(merge);
    break;
-  {
-   bool is_instance;
-  case KWD_is:
-   if (DeeNone_Check(rhs)) {
-    is_instance = DeeNone_Check(lhs);
-   } else if (DeeSuper_Check(lhs)) {
-    is_instance = DeeType_IsInherited(DeeSuper_TYPE(lhs),(DeeTypeObject *)rhs);
-   } else {
-    is_instance = DeeObject_InstanceOf(lhs,(DeeTypeObject *)rhs);
-   }
-   merge = DeeBool_For(is_instance);
-   Dee_Incref(merge);
-  } break;
-  case KWD_in:
+  case JIT_KEYWORD:
    merge = DeeObject_ContainsObject(rhs,lhs);
    break;
   default: __builtin_unreachable();
@@ -1723,7 +1788,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
   lhs = merge;
 #endif
 continue_expr:
-  if (!TOKEN_IS_CMPEQ(self->jl_tok))
+  if (!TOKEN_IS_CMPEQ(self))
       break;
   IF_EVAL(cmd = self->jl_tok;)
  }
@@ -1736,6 +1801,9 @@ err_rhs:
 #endif
 err_r:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif /* JIT_EVAL */
  return ERROR;
 }
 
@@ -1744,12 +1812,14 @@ DEFINE_SECONDARY(AndOperand) {
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
  ASSERT(TOKEN_IS_AND(self->jl_tok));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
   rhs = CALL_PRIMARY(CmpEQ);
   if (ISERR(rhs)) goto err_r;
 #ifdef JIT_EVAL
+  LOAD_LVALUE(rhs,err_r);
   merge = DeeObject_And(lhs,rhs);
   if unlikely(!merge)
      goto err_invoke;
@@ -1768,6 +1838,9 @@ err_invoke:
 #endif
 err_r:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
 }
 
@@ -1776,12 +1849,14 @@ DEFINE_SECONDARY(XorOperand) {
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
  ASSERT(TOKEN_IS_XOR(self->jl_tok));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
   rhs = CALL_PRIMARY(And);
   if (ISERR(rhs)) goto err_r;
 #ifdef JIT_EVAL
+  LOAD_LVALUE(rhs,err_r);
   merge = DeeObject_Xor(lhs,rhs);
   if unlikely(!merge)
      goto err_invoke;
@@ -1800,6 +1875,9 @@ err_invoke:
 #endif
 err_r:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
 }
 
@@ -1808,12 +1886,14 @@ DEFINE_SECONDARY(OrOperand) {
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
  ASSERT(TOKEN_IS_OR(self->jl_tok));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
   rhs = CALL_PRIMARY(Xor);
   if (ISERR(rhs)) goto err_r;
 #ifdef JIT_EVAL
+  LOAD_LVALUE(rhs,err_r);
   merge = DeeObject_Or(lhs,rhs);
   if unlikely(!merge)
      goto err_invoke;
@@ -1832,6 +1912,9 @@ err_invoke:
 #endif
 err_r:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
 }
 
@@ -1839,13 +1922,15 @@ DEFINE_SECONDARY(AsOperand) {
  RETURN_TYPE rhs;
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
- ASSERT(TOKEN_IS_AS(self->jl_tok));
+ ASSERT(TOKEN_IS_AS(self));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
   rhs = CALL_PRIMARY(Or);
   if (ISERR(rhs)) goto err_r;
 #ifdef JIT_EVAL
+  LOAD_LVALUE(rhs,err_r);
   merge = DeeSuper_New((DeeTypeObject *)rhs,lhs);
   if unlikely(!merge)
      goto err_invoke;
@@ -1853,7 +1938,7 @@ DEFINE_SECONDARY(AsOperand) {
   Dee_Decref(lhs);
   lhs = merge;
 #endif
-  if (!TOKEN_IS_AS(self->jl_tok))
+  if (!TOKEN_IS_AS(self))
       break;
  }
  return LHS_OR_OK;
@@ -1864,6 +1949,9 @@ err_invoke:
 #endif
 err_r:
  DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
 }
 
@@ -1873,6 +1961,7 @@ DEFINE_SECONDARY(LandOperand) {
 #endif
  IF_EVAL(unsigned char *pos;)
  ASSERT(TOKEN_IS_LAND(self->jl_tok));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
@@ -1896,7 +1985,8 @@ DEFINE_SECONDARY(LandOperand) {
    Dee_Decref(lhs);
    if (b) {
     lhs = CALL_PRIMARY(As);
-    if (ISERR(lhs)) goto err_r;
+    if (ISERR(lhs)) goto err;
+    LOAD_LVALUE(lhs,err);
     b = DeeObject_Bool(lhs);
     if (b < 0) goto err_invoke_norhs;
     Dee_Decref(lhs);
@@ -1923,8 +2013,9 @@ continue_expr:
  /*DECREF(rhs);*/
 err_invoke_norhs:
  JITLexer_ErrorTrace(self,pos);
-#endif
+#else
 err_r:
+#endif
  DECREF(lhs);
 #ifdef JIT_EVAL
 err:
@@ -1938,6 +2029,7 @@ DEFINE_SECONDARY(LorOperand) {
 #endif
  IF_EVAL(unsigned char *pos;)
  ASSERT(TOKEN_IS_LOR(self->jl_tok));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
@@ -1966,7 +2058,8 @@ DEFINE_SECONDARY(LorOperand) {
     Dee_Incref(Dee_True);
    } else {
     lhs = CALL_PRIMARY(As);
-    if (ISERR(lhs)) goto err_r;
+    if (ISERR(lhs)) goto err;
+    LOAD_LVALUE(lhs,err);
     b = DeeObject_Bool(lhs);
     if (b < 0) goto err_invoke_norhs;
     Dee_Decref(lhs);
@@ -1988,8 +2081,9 @@ continue_expr:
  /*DECREF(rhs);*/
 err_invoke_norhs:
  JITLexer_ErrorTrace(self,pos);
-#endif
+#else
 err_r:
+#endif
  DECREF(lhs);
 #ifdef JIT_EVAL
 err:
@@ -2005,6 +2099,7 @@ DEFINE_SECONDARY(CondOperand) {
   * >> (x ? y)    // >> x ? y : none
   */
  ASSERT(TOKEN_IS_COND(self->jl_tok));
+ LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   JITLexer_Yield(self);
@@ -2026,6 +2121,7 @@ DEFINE_SECONDARY(CondOperand) {
      lhs = JITLexer_EvalCond(self,flags);
      if unlikely(!lhs)
         goto err;
+     LOAD_LVALUE(lhs,err);
     }
     goto continue_expr;
    }
@@ -2035,6 +2131,7 @@ DEFINE_SECONDARY(CondOperand) {
     lhs = JITLexer_EvalCond(self,flags);
     if unlikely(!lhs)
        goto err;
+    LOAD_LVALUE(lhs,err);
     if (self->jl_tok == ':') {
      JITLexer_Yield(self);
      if (maybe_expression_begin_c(*self->jl_tokstart)) {
@@ -2057,6 +2154,7 @@ DEFINE_SECONDARY(CondOperand) {
       lhs = JITLexer_EvalCond(self,flags);
       if unlikely(!lhs)
          goto err;
+      LOAD_LVALUE(lhs,err);
      }
     }
    }
@@ -2136,27 +2234,63 @@ DEFINE_SECONDARY(AssignOperand) {
  for (;;) {
   pos = self->jl_tokstart;
   if (self->jl_tok == TOK_COLLON_EQUAL) {
+   LOAD_LVALUE(lhs,err);
    JITLexer_Yield(self);
    rhs = CALL_PRIMARYF(Cond,flags | JITLEXER_EVAL_FALLOWINPLACE);
    if (ISERR(rhs)) goto err_r;
 #ifdef JIT_EVAL
+   LOAD_LVALUE(rhs,err_r);
    error = DeeObject_Assign(lhs,rhs);
    Dee_Decref(rhs);
    if unlikely(error)
       goto err_invoke;
 #endif /* JIT_EVAL */
-  } else if (self->jl_suffix) {
-   --self->jl_suffix;
-   JITLexer_Yield(self);
-   if unlikely(JITLexer_SkipCond(self,flags | JITLEXER_EVAL_FALLOWINPLACE))
-      goto err_r;
   } else {
 #ifdef JIT_EVAL
-   err_cannot_invoke_inplace(lhs,inplace_fops[self->jl_tok - TOK_INPLACE_MIN]);
+   JITLValue lhs_lvalue;
+   if (lhs != JIT_LVALUE) {
+    err_cannot_invoke_inplace(lhs,inplace_fops[self->jl_tok - TOK_INPLACE_MIN]);
+    goto err_invoke_norhs;
+   }
+   /* Store the L-value expression for LHS locally, so we can load another expression for RHS*/
+   memcpy(&lhs_lvalue,&self->jl_lvalue,sizeof(JITLValue));
+   self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+   JITLexer_Yield(self);
+   rhs = CALL_PRIMARYF(Cond,flags | JITLEXER_EVAL_FALLOWINPLACE);
+   if (ISERR(rhs)) { err_lvalue: JITLValue_Fini(&lhs_lvalue); goto err; }
+   LOAD_LVALUE(rhs,err_lvalue);
+   /* Load the L-value expression target object. */
+   lhs = JITLValue_GetValue(&lhs_lvalue,self->jl_context);
+   if unlikely(!lhs) {
+    Dee_Decref(rhs);
+    self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+    goto err_lvalue;
+   }
+   switch (cmd) {
+   case TOK_ADD_EQUAL: error = DeeObject_InplaceAdd(&lhs,rhs); break;
+   case TOK_SUB_EQUAL: error = DeeObject_InplaceSub(&lhs,rhs); break;
+   case TOK_MUL_EQUAL: error = DeeObject_InplaceMul(&lhs,rhs); break;
+   case TOK_DIV_EQUAL: error = DeeObject_InplaceDiv(&lhs,rhs); break;
+   case TOK_MOD_EQUAL: error = DeeObject_InplaceMod(&lhs,rhs); break;
+   case TOK_SHL_EQUAL: error = DeeObject_InplaceShl(&lhs,rhs); break;
+   case TOK_SHR_EQUAL: error = DeeObject_InplaceShr(&lhs,rhs); break;
+   case TOK_AND_EQUAL: error = DeeObject_InplaceAnd(&lhs,rhs); break;
+   case TOK_OR_EQUAL: error = DeeObject_InplaceOr(&lhs,rhs); break;
+   case TOK_XOR_EQUAL: error = DeeObject_InplaceXor(&lhs,rhs); break;
+   case TOK_POW_EQUAL: error = DeeObject_InplacePow(&lhs,rhs); break;
+   default: __builtin_unreachable();
+   }
+   if unlikely(error) { JITLValue_Fini(&lhs_lvalue); goto err_invoke; }
+   Dee_Decref(rhs);
+   /* Save back the l-value expression result object. */
+   error = JITLValue_SetValue(&lhs_lvalue,self->jl_context,lhs);
+   JITLValue_Fini(&lhs_lvalue);
+   if unlikely(error) goto err_r;
 #else
-   err_cannot_invoke_inplace(NULL,inplace_fops[self->jl_tok - TOK_INPLACE_MIN]);
+   JITLexer_Yield(self);
+   rhs = CALL_PRIMARYF(Cond,flags | JITLEXER_EVAL_FALLOWINPLACE);
+   if (ISERR(rhs)) goto err_r;
 #endif
-   goto err_invoke_norhs;
   }
   if (!TOKEN_IS_ASSIGN(self->jl_tok))
       break;
@@ -2166,11 +2300,14 @@ DEFINE_SECONDARY(AssignOperand) {
 #ifdef JIT_EVAL
 err_invoke:
  DECREF(rhs);
-#endif
 err_invoke_norhs:
  JITLexer_ErrorTrace(self,pos);
+#endif
 err_r:
- DECREF(lhs);
+ DECREF_MAYBE_LVALUE(lhs);
+#ifdef JIT_EVAL
+err:
+#endif /* JIT_EVAL */
  return ERROR;
 }
 
@@ -2185,6 +2322,7 @@ DEFINE_SECONDARY(CommaTupleOperand) {
  result = 0;
 #endif
  (void)flags;
+ LOAD_LVALUE(lhs,err_r);
 again:
  switch (self->jl_tok) {
 
@@ -2217,6 +2355,7 @@ again:
   lhs = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
   if (ISERR(lhs))
       goto err_r;
+  LOAD_LVALUE(lhs,err_r);
   goto again;
 
  default:
@@ -2251,6 +2390,7 @@ DEFINE_SECONDARY(CommaListOperand) {
  result = 0;
 #endif
  (void)flags;
+ LOAD_LVALUE(lhs,err_r);
 again:
  switch (self->jl_tok) {
 
@@ -2281,6 +2421,7 @@ again:
   lhs = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
   if (ISERR(lhs))
       goto err_r;
+  LOAD_LVALUE(lhs,err_r);
   goto again;
 
  default:
@@ -2316,11 +2457,13 @@ DEFINE_SECONDARY(CommaDictOperand) {
  result = 0;
 #endif
  (void)flags;
+ LOAD_LVALUE(lhs,err_r);
 again:
  JITLexer_Yield(self);
  value = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
  if (ISERR(value))
      goto err_lhs;
+ LOAD_LVALUE(value,err_lhs);
 #ifdef JIT_EVAL
  {
   int error = DeeObject_SetItem(result,lhs,value);
@@ -2354,6 +2497,8 @@ again:
   }
  } else {
   lhs = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
+  if (ISERR(lhs)) goto err_r;
+  LOAD_LVALUE(lhs,err_r);
   if (self->jl_tok != ':') {
    SYNTAXERROR("Expected `:' after key in mapping-like brace initializer, but got `%$s'",
               (size_t)(self->jl_tokend - self->jl_tokstart),
@@ -2373,12 +2518,15 @@ err_r:
  return ERROR;
 }
 
-
 DECL_END
 
+
+#undef LOAD_LVALUE
+#undef LOAD_LVALUE_OR_RETURN_ERROR
 #undef IF_SKIP
 #undef IF_EVAL
 #undef DECREF
+#undef DECREF_MAYBE_LVALUE
 #undef SYNTAXERROR
 #undef ERROR
 #undef RETURN_TYPE

@@ -150,6 +150,7 @@
     <ClCompile Include="..\src\deemon\compiler\interface\isymbol.c" />
     <ClCompile Include="..\src\deemon\compiler\jit\context.c" />
     <ClCompile Include="..\src\deemon\compiler\jit\lexer.c" />
+    <ClCompile Include="..\src\deemon\compiler\jit\object-table.c" />
     <ClCompile Include="..\src\deemon\compiler\jit\parser.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\asm.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\assert.c" />

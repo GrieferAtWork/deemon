@@ -124,7 +124,9 @@ INTDEF ATTR_COLD int DCALL err_unbound_attribute_c(struct class_desc *__restrict
 INTDEF ATTR_COLD int DCALL err_expected_string_for_attribute(DeeObject *__restrict but_instead_got);
 INTDEF ATTR_COLD int DCALL err_class_protected_member(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict member);
 INTERN ATTR_COLD int DCALL err_module_not_loaded_attr(struct module_object *__restrict self, char const *__restrict name, int access);
+INTERN ATTR_COLD int DCALL err_module_not_loaded_attr_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
 INTERN ATTR_COLD int DCALL err_module_no_such_global(struct module_object *__restrict self, char const *__restrict name, int access);
+INTERN ATTR_COLD int DCALL err_module_no_such_global_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
 INTERN ATTR_COLD int DCALL err_module_readonly_global(struct module_object *__restrict self, char const *__restrict name);
 INTERN ATTR_COLD int DCALL err_module_cannot_read_property(struct module_object *__restrict self, char const *__restrict name);
 INTERN ATTR_COLD int DCALL err_module_cannot_delete_property(struct module_object *__restrict self, char const *__restrict name);

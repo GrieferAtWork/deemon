@@ -1465,7 +1465,7 @@ struct type_object {
     struct type_math       *tp_math;     /* [0..1][owned_if(tp_class != NULL)] Math related operators. */
     struct type_cmp        *tp_cmp;      /* [0..1][owned_if(tp_class != NULL)] Compare operators. */
     struct type_seq        *tp_seq;      /* [0..1][owned_if(tp_class != NULL)] Sequence operators. */
-#define ITER_ISOK(x) (((uintptr_t)(x)-1) < (uintptr_t)-2l)
+#define ITER_ISOK(x) (((uintptr_t)(x)-1) < (uintptr_t)-2l) /* `x == NULL || x == ITER_DONE' */
 #define ITER_DONE     ((DeeObject *)-1l) /* Returned when the iterator has been exhausted. */
     DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self);
     struct type_attr       *tp_attr;     /* [0..1][owned_if(tp_class != NULL)] Attribute access operators. */

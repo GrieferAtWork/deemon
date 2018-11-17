@@ -175,6 +175,7 @@ DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
  }
  return result;
 }
+
 INTERN struct module_symbol *DCALL
 DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
                           char const *__restrict attr_name,
@@ -191,6 +192,25 @@ DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
  }
  return NULL;
 }
+
+INTERN struct module_symbol *DCALL
+DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
+                             char const *__restrict attr_name,
+                             size_t attr_name_len, dhash_t hash) {
+ dhash_t i,perturb;
+ ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
+ perturb = i = MODULE_HASHST(self,hash);
+ for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
+  struct module_symbol *item = MODULE_HASHIT(self,i);
+  if (!item->ss_name) break; /* Not found */
+  if (item->ss_hash != hash) continue; /* Non-matching hash */
+  if (MODULE_SYMBOL_GETNAMELEN(item) != attr_name_len) continue; /* Non-matching length */
+  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attr_name_len * sizeof(char)) != 0) continue;
+  return item;
+ }
+ return NULL;
+}
+
 INTERN DREF DeeObject *DCALL
 module_getattr_symbol(DeeModuleObject *__restrict self,
                       struct module_symbol *__restrict symbol) {
@@ -235,6 +255,7 @@ read_symbol:
  self = self->mo_importv[symbol->ss_extern.ss_impid];
  goto read_symbol;
 }
+
 INTERN int DCALL
 module_boundattr_symbol(DeeModuleObject *__restrict self,
                         struct module_symbol *__restrict symbol) {
@@ -298,6 +319,36 @@ module_getattr_impl(DeeModuleObject *__restrict self,
  result = DeeObject_GenericGetAttrString((DeeObject *)self,attr_name,hash);
  if (result != ITER_DONE) return result;
  err_module_no_such_global(self,attr_name,ATTR_ACCESS_GET);
+ return NULL;
+}
+
+LOCAL DREF DeeObject *DCALL
+module_getattr_len_impl(DeeModuleObject *__restrict self,
+                        char const *__restrict attr_name,
+                        size_t attr_name_len, dhash_t hash) {
+ dhash_t i,perturb; DREF DeeObject *result;
+ char *name_buf;
+ perturb = i = MODULE_HASHST(self,hash);
+ for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
+  struct module_symbol *item = MODULE_HASHIT(self,i);
+  if (!item->ss_name) break; /* Not found */
+  if (item->ss_hash != hash) continue; /* Non-matching hash */
+  if (MODULE_SYMBOL_GETNAMELEN(item) != attr_name_len) continue; /* Non-matching length */
+  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attr_name_len * sizeof(char)) == 0)
+      return module_getattr_symbol(self,item);
+ }
+ /* Fallback: Do a generic attribute lookup on the module. */
+ name_buf = (char *)Dee_AMalloc((attr_name_len + 1) * sizeof(char));
+ if unlikely(!name_buf) goto err;
+ memcpy(name_buf,attr_name,attr_name_len * sizeof(char));
+ name_buf[attr_name_len] = '\0';
+ result = DeeObject_GenericGetAttrString((DeeObject *)self,
+                                          name_buf,
+                                          hash);
+ Dee_AFree(name_buf);
+ if (result != ITER_DONE) return result;
+ err_module_no_such_global_len(self,attr_name,attr_name_len,ATTR_ACCESS_GET);
+err:
  return NULL;
 }
 
@@ -519,6 +570,24 @@ DeeModule_GetAttrString(DeeModuleObject *__restrict self,
   return NULL;
  }
  return module_getattr_impl(self,attr_name,hash);
+}
+INTERN DREF DeeObject *DCALL
+DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self,
+                           char const *__restrict attr_name,
+                           size_t attr_name_len, dhash_t hash) {
+ ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
+ if (!(self->mo_flags & MODULE_FDIDLOAD)) {
+  if (DeeInteractiveModule_Check(self)) {
+   DREF DeeObject *result;
+   interactivemodule_lockread(self);
+   result = module_getattr_len_impl(self,attr_name,attr_name_len,hash);
+   interactivemodule_lockendread(self);
+   return result;
+  }
+  err_module_not_loaded_attr_len(self,attr_name,attr_name_len,ATTR_ACCESS_GET);
+  return NULL;
+ }
+ return module_getattr_len_impl(self,attr_name,attr_name_len,hash);
 }
 INTERN int DCALL
 DeeModule_BoundAttrString(DeeModuleObject *__restrict self,

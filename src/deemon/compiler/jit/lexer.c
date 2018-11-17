@@ -37,14 +37,13 @@ JITLexer_Yield(JITLexer *__restrict self) {
  iter = self->jl_tokend;
 raw_again:
  self->jl_tokstart = iter;
+ if unlikely(iter >= self->jl_end) {
+  self->jl_tok = TOK_EOF;
+  self->jl_tokend = iter;
+  return;
+ }
  ch = *iter++;
  switch (ch) {
-
- case '\0':
-  if (iter < self->jl_end)
-      goto again; /* Whitespace */
-  self->jl_tok = TOK_EOF; /* EOF */
-  break;
 
  case '0': case '1': case '2': case '3':
  case '4': case '5': case '6': case '7':
@@ -54,8 +53,10 @@ raw_again:
   for (;;) {
    ch = *iter++;
    if unlikely(ch > 0x7f) {
+    unsigned char *start;
     /* UTF-8 sequence. */
     --iter;
+    start = iter;
     ch32 = utf8_readchar((char const **)&iter,
                          (char const *)self->jl_end);
     if (!(DeeUni_Flags(ch32) & (UNICODE_FSYMCONT | UNICODE_FDECIMAL))) {
@@ -63,11 +64,12 @@ raw_again:
       self->jl_tok = TOK_FLOAT;
       continue;
      }
-     --iter;
+     iter = start;
      break;
     }
    } else {
-    if (!(DeeUni_Flags(ch) & (UNICODE_FSYMCONT | UNICODE_FDECIMAL))) {
+    if (!(DeeUni_Flags(ch) & (UNICODE_FSYMCONT | UNICODE_FDECIMAL)) ||
+          iter >= self->jl_end) {
      if (ch == '.' && self->jl_tok == TOK_INT) {
       self->jl_tok = TOK_FLOAT;
       continue;
@@ -80,31 +82,44 @@ raw_again:
   break;
 
  case '<':
-  ch = *iter;
-  if (ch == '=') { ++iter; self->jl_tok = TOK_LOWER_EQUAL; break; }
-  if (ch == '<') {
-   ++iter;
-   if (*iter == '=') { self->jl_tok = TOK_SHL_EQUAL; ++iter; break; }
-   self->jl_tok = TOK_SHL;
-   break;
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '=') { ++iter; self->jl_tok = TOK_LOWER_EQUAL; break; }
+   if (ch == '<') {
+    ++iter;
+    if (likely(iter < self->jl_end) && *iter == '=') {
+     self->jl_tok = TOK_SHL_EQUAL;
+     ++iter;
+     break;
+    }
+    self->jl_tok = TOK_SHL;
+    break;
+   }
   }
   self->jl_tok = '<';
   break;
 
  case '>':
-  ch = *iter;
-  if (ch == '=') { ++iter; self->jl_tok = TOK_GREATER_EQUAL; break; }
-  if (ch == '>') {
-   ++iter;
-   if (*iter == '=') { self->jl_tok = TOK_SHR_EQUAL; ++iter; break; }
-   self->jl_tok = TOK_SHR;
-   break;
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '=') { ++iter; self->jl_tok = TOK_GREATER_EQUAL; break; }
+   if (ch == '>') {
+    ++iter;
+    if (likely(iter < self->jl_end) && *iter == '=') {
+     self->jl_tok = TOK_SHR_EQUAL;
+     ++iter;
+     break;
+    }
+    self->jl_tok = TOK_SHR;
+    break;
+   }
   }
   self->jl_tok = '>';
   break;
 
  case '.':
-  if (iter[0] == '.' && iter[1] == '.') {
+  if (likely(iter + 1 < self->jl_end) &&
+     (iter[0] == '.' && iter[1] == '.')) {
    iter += 2;
    self->jl_tok = TOK_DOTS;
    break;
@@ -112,58 +127,69 @@ raw_again:
   goto do_single;
 
  case '&':
-  ch = *iter;
-  if (ch == '&') { ++iter; self->jl_tok = TOK_LAND; break; }
-  if (ch == '=') { ++iter; self->jl_tok = TOK_AND_EQUAL; break; }
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '&') { ++iter; self->jl_tok = TOK_LAND; break; }
+   if (ch == '=') { ++iter; self->jl_tok = TOK_AND_EQUAL; break; }
+  }
   self->jl_tok = '&';
   break;
 
  case '|':
-  ch = *iter;
-  if (ch == '|') { ++iter; self->jl_tok = TOK_LOR; break; }
-  if (ch == '=') { ++iter; self->jl_tok = TOK_OR_EQUAL; break; }
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '|') { ++iter; self->jl_tok = TOK_LOR; break; }
+   if (ch == '=') { ++iter; self->jl_tok = TOK_OR_EQUAL; break; }
+  }
   self->jl_tok = '|';
   break;
 
  case '/':
-  ch = *iter;
-  if (ch == '=') { ++iter; self->jl_tok = TOK_DIV_EQUAL; break; }
-  if (ch == '*') {
-   /* Skip a C-like comment. */
-   ++iter;
-   while (iter < self->jl_end) {
-    ch = *iter++;
-    if (ch == '*' && *iter == '/') {
-     ++iter;
-     break;
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '=') { ++iter; self->jl_tok = TOK_DIV_EQUAL; break; }
+   if (ch == '*') {
+    /* Skip a C-like comment. */
+    ++iter;
+    while (iter < self->jl_end) {
+     ch = *iter++;
+     if (ch == '*') {
+      if unlikely(iter >= self->jl_end) break;
+      if (*iter == '/') { ++iter; break; }
+     }
     }
+    goto again;
    }
-   goto again;
-  }
-  if (ch == '/') {
-   /* Skip a C++-like comment. */
-   ++iter;
-   while (iter < self->jl_end) {
-    ch = *iter++;
-    if (ch == '\n') break;
-    if (ch == '\r') { if (*iter == '\n') ++iter; break; }
-    if (ch > 0x7f) {
-     --iter;
-     ch32 = utf8_readchar((char const **)&iter,
-                          (char const *)self->jl_end);
-     if (DeeUni_IsLF(ch32))
+   if (ch == '/') {
+    /* Skip a C++-like comment. */
+    ++iter;
+    while (iter < self->jl_end) {
+     ch = *iter++;
+     if (ch == '\n') break;
+     if (ch == '\r') {
+      if unlikely(iter >= self->jl_end)
          break;
+      if (*iter == '\n') ++iter;
+      break;
+     }
+     if (ch > 0x7f) {
+      --iter;
+      ch32 = utf8_readchar((char const **)&iter,
+                           (char const *)self->jl_end);
+      if (DeeUni_IsLF(ch32))
+          break;
+     }
     }
+    goto again;
    }
-   goto again;
   }
   self->jl_tok = '/';
   break;
 
  case '=':
-  if (*iter == '=') {
+  if (likely(iter < self->jl_end) && *iter == '=') {
    ++iter;
-   if (*iter == '=') {
+   if (likely(iter < self->jl_end) && *iter == '=') {
     ++iter;
     self->jl_tok = TOK_EQUAL3;
     break;
@@ -173,9 +199,9 @@ raw_again:
   }
   goto do_single;
  case '!':
-  if (*iter == '=') {
+  if (likely(iter < self->jl_end) && *iter == '=') {
    ++iter;
-   if (*iter == '=') {
+   if (likely(iter < self->jl_end) && *iter == '=') {
     ++iter;
     self->jl_tok = TOK_NOT_EQUAL3;
     break;
@@ -186,71 +212,93 @@ raw_again:
   goto do_single;
 
  case '+':
-  ch = *iter;
-  if (ch == '+') { ++iter; self->jl_tok = TOK_INC; break; }
-  if (ch == '=') { ++iter; self->jl_tok = TOK_ADD_EQUAL; break; }
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '+') { ++iter; self->jl_tok = TOK_INC; break; }
+   if (ch == '=') { ++iter; self->jl_tok = TOK_ADD_EQUAL; break; }
+  }
   self->jl_tok = '+';
   break;
  case '-':
-  ch = *iter;
-  if (ch == '>') { ++iter; self->jl_tok = TOK_ARROW; break; }
-  if (ch == '-') { ++iter; self->jl_tok = TOK_DEC; break; }
-  if (ch == '=') { ++iter; self->jl_tok = TOK_SUB_EQUAL; break; }
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '>') { ++iter; self->jl_tok = TOK_ARROW; break; }
+   if (ch == '-') { ++iter; self->jl_tok = TOK_DEC; break; }
+   if (ch == '=') { ++iter; self->jl_tok = TOK_SUB_EQUAL; break; }
+  }
   self->jl_tok = '-';
   break;
 
  case '*':
-  ch = *iter;
-  if (ch == '=') { ++iter; self->jl_tok = TOK_MUL_EQUAL; break; }
-  if (ch == '*') {
-   ++iter;
-   if (*iter == '=') {
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '=') { ++iter; self->jl_tok = TOK_MUL_EQUAL; break; }
+   if (ch == '*') {
     ++iter;
-    self->jl_tok = TOK_POW_EQUAL;
+    if (likely(iter < self->jl_end) && *iter == '=') {
+     ++iter;
+     self->jl_tok = TOK_POW_EQUAL;
+     break;
+    }
+    self->jl_tok = TOK_POW;
     break;
    }
-   self->jl_tok = TOK_POW;
-   break;
   }
   self->jl_tok = '*';
   break;
 
  case '^':
-  ch = *iter;
-  if (ch == '=') { ++iter; self->jl_tok = TOK_XOR_EQUAL; break; }
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '=') { ++iter; self->jl_tok = TOK_XOR_EQUAL; break; }
+  }
   self->jl_tok = '^';
   break;
 
  case '%':
-  ch = *iter;
-  if (ch == '=') { ++iter; self->jl_tok = TOK_MOD_EQUAL; break; }
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '=') { ++iter; self->jl_tok = TOK_MOD_EQUAL; break; }
+  }
   self->jl_tok = '%';
   break;
 
  case ':':
-  ch = *iter;
-  if (ch == '=') { ++iter; self->jl_tok = TOK_COLLON_EQUAL; break; }
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '=') { ++iter; self->jl_tok = TOK_COLLON_EQUAL; break; }
+  }
   self->jl_tok = ':';
   break;
 
  case '\'':
  case '\"':
-  for (;;) {
+  if unlikely(iter >= self->jl_end) {
+   self->jl_tokstart = (unsigned char *)"\"\"";
+   self->jl_tokend   = self->jl_tokstart + 2;
+  } else do {
    unsigned char ch2 = *iter++;
    if (ch2 == ch) break;
    if (ch2 == '\\' && iter < self->jl_end) ++iter;
-  }
+  } while likely(iter < self->jl_end);
   self->jl_tok = JIT_STRING;
   break;
 
  case 'r':
-  ch = *iter;
-  if (ch == '\'' || ch == '\"') {
-   /* Raw string literal. */
-   ++iter;
-   while (iter < self->jl_end && *iter++ != ch);
-   self->jl_tok = JIT_RAWSTRING;
-   break;
+  if likely(iter < self->jl_end) {
+   ch = *iter;
+   if (ch == '\'' || ch == '\"') {
+    /* Raw string literal. */
+    ++iter;
+    if unlikely(iter >= self->jl_end) {
+     self->jl_tokstart = (unsigned char *)"r\"\"";
+     self->jl_tokend   = self->jl_tokstart + 3;
+    } else {
+     while (iter < self->jl_end && *iter++ != ch);
+    }
+    self->jl_tok = JIT_RAWSTRING;
+    break;
+   }
   }
   goto scan_keyword;
 
@@ -284,12 +332,13 @@ scan_keyword:
  case 't': case 'T': case 'u': case 'U': case 'v': case 'V': case 'w': case 'W':
  case 'x': case 'X': case 'y': case 'Y': case 'z': case 'Z':
    /* Scan a keyword. */
-   for (;;) {
+   while likely(iter < self->jl_end) {
     ch = *iter++;
     if unlikely(ch > 0x7f) {
      /* UTF-8 sequence. */
-     unsigned char *start = iter;
+     unsigned char *start;
      --iter;
+     start = iter;
      ch32 = utf8_readchar((char const **)&iter,
                           (char const *)self->jl_end);
      if (!(DeeUni_Flags(ch32) & UNICODE_FSYMCONT)) {
@@ -315,15 +364,6 @@ do_single:
   break;
  }
  self->jl_tokend = iter;
-}
-
-
-INTERN void FCALL
-JITLexer_ErrorTrace(JITLexer *__restrict self,
-                    unsigned char *__restrict pos) {
- /* TODO: Remember this information for tracebacks. */
- (void)self;
- (void)pos;
 }
 
 

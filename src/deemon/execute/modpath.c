@@ -1486,12 +1486,25 @@ err_invalid_module_name(DeeObject *__restrict module_name) {
                         "%r is not a valid module name",
                         module_name);
 }
+PRIVATE ATTR_COLD int DCALL
+err_invalid_module_name_s(char const *__restrict module_name, size_t module_namesize) {
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "%$q is not a valid module name",
+                        module_namesize,module_name);
+}
 
 PRIVATE ATTR_COLD int DCALL
 err_module_not_found(DeeObject *__restrict module_name) {
  return DeeError_Throwf(&DeeError_FileNotFound,
                         "Module %r could not be found",
                         module_name);
+}
+
+PRIVATE ATTR_COLD int DCALL
+err_module_not_found_s(char const *__restrict module_name, size_t module_namesize) {
+ return DeeError_Throwf(&DeeError_FileNotFound,
+                        "Module %$q could not be found",
+                        module_namesize,module_name);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1771,11 +1784,12 @@ done:
 
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenString(/*utf-8*/char const *__restrict module_name,
+                     size_t module_namesize,
                      struct compiler_options *options,
                      bool throw_error) {
  DREF DeeObject *name_object,*result;
  name_object = DeeString_NewUtf8(module_name,
-                                 strlen(module_name),
+                                 module_namesize,
                                  STRING_ERROR_FSTRICT);
  if unlikely(!name_object) return NULL;
  result = DeeModule_Open(name_object,options,throw_error);
@@ -1791,6 +1805,26 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
                        size_t module_pathsize,
                        struct compiler_options *options,
                        bool throw_error) {
+ /*utf-8*/char *module_name_str;
+ module_name_str = DeeString_AsUtf8(module_name);
+ if unlikely(!module_name_str)
+    goto err;
+ if (*module_name_str != '.')
+     return DeeModule_Open(module_name,options,throw_error);
+ return DeeModule_OpenRelativeString(module_name_str,
+                                     WSTR_LENGTH(module_name_str),
+                                     module_pathname,
+                                     module_pathsize,
+                                     options,
+                                     throw_error);
+err:
+ return NULL;
+}
+PUBLIC DREF DeeObject *DCALL
+DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name, size_t module_namesize,
+                             /*utf-8*/char const *__restrict module_pathname, size_t module_pathsize,
+                             struct compiler_options *options,
+                             bool throw_error) {
  DREF DeeModuleObject *result; size_t i;
  DREF DeeStringObject *module_path;
  char *iter,*begin,*end,ch,*flush_start;
@@ -1800,13 +1834,11 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
  size_t module_ext_start;
 #endif
  struct unicode_printer full_path = UNICODE_PRINTER_INIT;
- ASSERT_OBJECT_TYPE_EXACT(module_name,&DeeString_Type);
- flush_start = begin = DeeString_AsUtf8(module_name);
- if unlikely(!begin) goto err;
- end = (iter = begin)+WSTR_LENGTH(begin);
+ flush_start = begin = (char *)module_name;
+ end = (iter = begin) + module_namesize;
  /* Shouldn't happen: Not actually a relative module name. */
- if (begin == end || *begin != '.')
-     return DeeModule_Open(module_name,options,throw_error);
+ if (*begin != '.')
+     return DeeModule_OpenString(module_name,module_namesize,options,throw_error);
  if (unicode_printer_print(&full_path,module_pathname,module_pathsize) < 0)
      goto err;
  /* Add a trailing slash is necessary. */
@@ -1829,7 +1861,7 @@ next:
   --iter;
   ch32 = utf8_readchar((char const **)&iter,end);
   if (!IS_VALID_MODULE_CHARACTER(ch32)) {
-   err_invalid_module_name(module_name);
+   err_invalid_module_name_s(module_name,module_namesize);
    goto err;
   }
   goto next;
@@ -1958,7 +1990,7 @@ done:
   * and if we're not supposed to return `ITER_DONE'. */
  if (result == (DREF DeeModuleObject *)ITER_DONE &&
      throw_error) {
-  err_module_not_found(module_name);
+  err_module_not_found_s(module_name,module_namesize);
   result = NULL;
  }
  return (DREF DeeObject *)result;
@@ -1966,24 +1998,6 @@ err:
  unicode_printer_fini(&full_path);
 err_noprinter:
  return NULL;
-}
-PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name,
-                             /*utf-8*/char const *__restrict module_pathname,
-                             size_t module_pathsize,
-                             struct compiler_options *options,
-                             bool throw_error) {
- DREF DeeObject *name_object,*result;
- name_object = DeeString_NewUtf8(module_name,
-                                 strlen(module_name),
-                                 STRING_ERROR_FSTRICT);
- if unlikely(!name_object) return NULL;
- result = DeeModule_OpenRelative(name_object,
-                                 module_pathname,
-                                 module_pathsize,
-                                 options,throw_error);
- Dee_Decref(name_object);
- return result;
 }
 
 INTERN DREF DeeObject *DCALL
@@ -2042,6 +2056,34 @@ DeeModule_ImportRel(DeeObject *__restrict basemodule,
                               (size_t)(end - begin),
                                options,
                                throw_error);
+err:
+ return NULL;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeModule_ImportRelString(DeeObject *__restrict basemodule,
+                          /*utf-8*/char const *__restrict module_name,
+                          size_t module_namesize,
+                          struct compiler_options *options,
+                          bool throw_error) {
+ DeeStringObject *path; char *begin,*end;
+ ASSERT_OBJECT_TYPE(basemodule,&DeeModule_Type);
+ /* Load the path of the currently executing code (for relative imports). */
+ path = ((DeeModuleObject *)basemodule)->mo_path;
+ if unlikely(!path)
+    return DeeModule_OpenString(module_name,module_namesize,options,throw_error);
+ ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
+ begin = DeeString_AsUtf8((DeeObject *)path);
+ if unlikely(!begin) goto err;
+ end = begin + WSTR_LENGTH(begin);
+ /* Find the end of the current path. */
+ while (begin < end && !ISSEP(end[-1])) --end;
+ return DeeModule_OpenRelativeString(module_name,
+                                     module_namesize,
+                                     begin,
+                                    (size_t)(end - begin),
+                                     options,
+                                     throw_error);
 err:
  return NULL;
 }

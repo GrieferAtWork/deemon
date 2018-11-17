@@ -827,6 +827,9 @@
     <ClCompile Include="..\src\deemon\compiler\jit\context.c">
       <Filter>src\deemon\compiler\jit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\jit\object-table.c">
+      <Filter>src\deemon\compiler\jit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">

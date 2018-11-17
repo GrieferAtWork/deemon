@@ -892,7 +892,7 @@ PRIVATE int DCALL cmd_help(char *arg) {
  } else {
   /* `print Doc from doc(arg)' */
   DREF DeeObject *doc_module,*doc_node; dssize_t error;
-  doc_module = DeeModule_OpenString("doc",NULL,true);
+  doc_module = DeeModule_OpenString("doc",3,NULL,true);
   if unlikely(!doc_module) goto err;
   if unlikely(DeeModule_RunInit(doc_module)) doc_node = NULL;
   else doc_node = DeeObject_CallAttrStringf(doc_module,"Doc","s",arg);
