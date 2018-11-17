@@ -964,11 +964,11 @@ TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
 PRIVATE int DCALL
 imod_init(InteractiveModule *__restrict self,
           DeeObject *__restrict source_stream,
-          DeeObject *source_pathname,
-          DeeObject *module_name,
+          unsigned int mode,
           int start_line, int start_col,
           struct compiler_options *options,
-          unsigned int mode,
+          DeeObject *source_pathname,
+          DeeObject *module_name,
           DeeObject *argv,
           DeeObject *default_symbols) {
  size_t i;
@@ -1441,13 +1441,13 @@ imod_ctor(InteractiveModule *__restrict self,
  }
  return imod_init(self,
                   argv[0],
-                  imod_path,
-                  imod_name,
+                  MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR |
+                  MODULE_INTERACTIVE_MODE_FONLYBASEFILE,
                   0,
                   0,
                   NULL,
-                  MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR |
-                  MODULE_INTERACTIVE_MODE_FONLYBASEFILE,
+                  imod_path,
+                  imod_name,
                   imod_argv,
                   imod_syms);
 err:
@@ -1459,11 +1459,11 @@ err:
 
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenInteractive(DeeObject *__restrict source_stream,
-                          DeeObject *source_pathname,
-                          DeeObject *module_name,
+                          unsigned int mode,
                           int start_line, int start_col,
                           struct compiler_options *options,
-                          unsigned int mode,
+                          DeeObject *source_pathname,
+                          DeeObject *module_name,
                           DeeObject *argv,
                           DeeObject *default_symbols) {
  DREF InteractiveModule *result;
@@ -1472,12 +1472,12 @@ DeeModule_OpenInteractive(DeeObject *__restrict source_stream,
  DeeObject_Init((DeeObject *)result,&DeeInteractiveModule_Type);
  if (imod_init(result,
                source_stream,
-               source_pathname,
-               module_name,
+               mode,
                start_line,
                start_col,
                options,
-               mode,
+               source_pathname,
+               module_name,
                argv,
                default_symbols))
      goto err_r;
@@ -1494,33 +1494,39 @@ err_r:
 
 DFUNDEF DREF DeeObject *DCALL
 DeeModule_OpenInteractiveString(DeeObject *__restrict source_stream,
-                                char const *source_pathname,
-                                char const *module_name,
+                                unsigned int mode,
                                 int start_line, int start_col,
                                 struct compiler_options *options,
-                                unsigned int mode,
+                                /*utf-8*/char const *source_pathname,
+                                size_t source_pathsize,
+                                /*utf-8*/char const *module_name,
+                                size_t module_namesize,
                                 DeeObject *argv,
                                 DeeObject *default_symbols) {
  DREF DeeObject *result;
  DREF DeeObject *module_name_ob = NULL;
  DREF DeeObject *source_pathname_ob = NULL;
- if (source_pathname) {
-  source_pathname_ob = DeeString_New(source_pathname);
+ if (source_pathsize) {
+  source_pathname_ob = DeeString_NewUtf8(source_pathname,
+                                         source_pathsize,
+                                         STRING_ERROR_FSTRICT);
   if unlikely(!source_pathname_ob)
      goto err;
  }
- if (module_name) {
-  module_name_ob = DeeString_New(module_name);
+ if (module_namesize) {
+  module_name_ob = DeeString_NewUtf8(module_name,
+                                     module_namesize,
+                                     STRING_ERROR_FSTRICT);
   if unlikely(!module_name_ob)
      goto err_source_pathname_ob;
  }
  result = DeeModule_OpenInteractive(source_stream,
-                                    source_pathname_ob,
-                                    module_name_ob,
+                                    mode,
                                     start_line,
                                     start_col,
                                     options,
-                                    mode,
+                                    source_pathname_ob,
+                                    module_name_ob,
                                     argv,
                                     default_symbols);
  Dee_XDecref(module_name_ob);

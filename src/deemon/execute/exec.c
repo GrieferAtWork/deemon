@@ -110,20 +110,22 @@ DeeExec_RunStreamString(DeeObject *__restrict source_stream,
                         struct compiler_options *options,
                         DeeObject *default_symbols,
                         /*utf-8*/char const *source_pathname,
-                        /*utf-8*/char const *module_name) {
+                        size_t source_pathsize,
+                        /*utf-8*/char const *module_name,
+                        size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *source_pathname_ob = NULL;
  DREF DeeObject *module_name_ob = NULL;
  if (source_pathname) {
   source_pathname_ob = DeeString_NewUtf8(source_pathname,
-                                         strlen(source_pathname),
+                                         source_pathsize,
                                          STRING_ERROR_FSTRICT);
   if unlikely(!source_pathname_ob)
      goto err;
  }
  if (module_name) {
   module_name_ob = DeeString_NewUtf8(module_name,
-                                     strlen(module_name),
+                                     module_namesize,
                                      STRING_ERROR_FSTRICT);
   if unlikely(!module_name_ob)
      goto err_source_pathname_ob;
@@ -184,20 +186,22 @@ DeeExec_CompileModuleStreamString(DeeObject *__restrict source_stream,
                                   struct compiler_options *options,
                                   DeeObject *default_symbols,
                                   /*utf-8*/char const *source_pathname,
-                                  /*utf-8*/char const *module_name) {
+                                  size_t source_pathsize,
+                                  /*utf-8*/char const *module_name,
+                                  size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *source_pathname_ob = NULL;
  DREF DeeObject *module_name_ob = NULL;
  if (source_pathname) {
   source_pathname_ob = DeeString_NewUtf8(source_pathname,
-                                         strlen(source_pathname),
+                                         source_pathsize,
                                          STRING_ERROR_FSTRICT);
   if unlikely(!source_pathname_ob)
      goto err;
  }
  if (module_name) {
   module_name_ob = DeeString_NewUtf8(module_name,
-                                     strlen(module_name),
+                                     module_namesize,
                                      STRING_ERROR_FSTRICT);
   if unlikely(!module_name_ob)
      goto err_source_pathname_ob;
@@ -225,7 +229,9 @@ DeeExec_CompileFunctionStreamString(DeeObject *__restrict source_stream,
                                     struct compiler_options *options,
                                     DeeObject *default_symbols,
                                     /*utf-8*/char const *source_pathname,
-                                    /*utf-8*/char const *module_name) {
+                                    size_t source_pathsize,
+                                    /*utf-8*/char const *module_name,
+                                    size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *module;
  module = DeeExec_CompileModuleStreamString(source_stream,
@@ -235,7 +241,9 @@ DeeExec_CompileFunctionStreamString(DeeObject *__restrict source_stream,
                                             options,
                                             default_symbols,
                                             source_pathname,
-                                            module_name);
+                                            source_pathsize,
+                                            module_name,
+                                            module_namesize);
  if unlikely(!module)
     goto err;
  result = DeeModule_GetRoot(module,true);
@@ -282,7 +290,9 @@ DeeExec_RunMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
                         struct compiler_options *options,
                         DeeObject *default_symbols,
                         /*utf-8*/char const *source_pathname,
-                        /*utf-8*/char const *module_name) {
+                        size_t source_pathsize,
+                        /*utf-8*/char const *module_name,
+                        size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *stream;
  stream = DeeFile_OpenRoMemory(data,data_size);
@@ -297,7 +307,9 @@ DeeExec_RunMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
                                   options,
                                   default_symbols,
                                   source_pathname,
-                                  module_name);
+                                  source_pathsize,
+                                  module_name,
+                                  module_namesize);
  DeeFile_ReleaseMemory(stream);
  return result;
 err:
@@ -359,7 +371,9 @@ DeeExec_CompileModuleMemoryString(/*utf-8*/char const *__restrict data, size_t d
                                   struct compiler_options *options,
                                   DeeObject *default_symbols,
                                   /*utf-8*/char const *source_pathname,
-                                  /*utf-8*/char const *module_name) {
+                                  size_t source_pathsize,
+                                  /*utf-8*/char const *module_name,
+                                  size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *stream;
  stream = DeeFile_OpenRoMemory(data,data_size);
@@ -372,7 +386,9 @@ DeeExec_CompileModuleMemoryString(/*utf-8*/char const *__restrict data, size_t d
                                             options,
                                             default_symbols,
                                             source_pathname,
-                                            module_name);
+                                            source_pathsize,
+                                            module_name,
+                                            module_namesize);
  DeeFile_ReleaseMemory(stream);
  return result;
 err:
@@ -384,7 +400,9 @@ DeeExec_CompileFunctionMemoryString(/*utf-8*/char const *__restrict data, size_t
                                     struct compiler_options *options,
                                     DeeObject *default_symbols,
                                     /*utf-8*/char const *source_pathname,
-                                    /*utf-8*/char const *module_name) {
+                                    size_t source_pathsize,
+                                    /*utf-8*/char const *module_name,
+                                    size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *stream;
  stream = DeeFile_OpenRoMemory(data,data_size);
@@ -397,7 +415,9 @@ DeeExec_CompileFunctionMemoryString(/*utf-8*/char const *__restrict data, size_t
                                               options,
                                               default_symbols,
                                               source_pathname,
-                                              module_name);
+                                              source_pathsize,
+                                              module_name,
+                                              module_namesize);
  DeeFile_ReleaseMemory(stream);
  return result;
 err:

@@ -1169,20 +1169,22 @@ err:
 }
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenFileString(/*utf-8*/char const *__restrict source_pathname,
+                         size_t source_pathsize,
                          /*utf-8*/char const *module_name,
+                         size_t module_namesize,
                          uint16_t file_class,
                          struct compiler_options *options) {
  DREF DeeObject *result;
  DREF DeeObject *module_name_ob = NULL;
  DREF DeeObject *source_pathname_ob;
  source_pathname_ob = DeeString_NewUtf8(source_pathname,
-                                        strlen(source_pathname),
+                                        source_pathsize,
                                         STRING_ERROR_FSTRICT);
  if unlikely(!source_pathname_ob)
     goto err;
- if (module_name) {
+ if (module_namesize) {
   module_name_ob = DeeString_NewUtf8(module_name,
-                                     strlen(source_pathname),
+                                     module_namesize,
                                      STRING_ERROR_FSTRICT);
   if unlikely(!module_name_ob)
      goto err_source_pathname_ob;
@@ -1206,10 +1208,10 @@ err:
  * from `file from deemon' */
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenStream(DeeObject *__restrict source_stream,
-                     DeeObject *source_pathname,
-                     DeeObject *module_name,
                      int start_line, int start_col,
-                     struct compiler_options *options) {
+                     struct compiler_options *options,
+                     DeeObject *source_pathname,
+                     DeeObject *module_name) {
  DREF DeeModuleObject *result; int load_error;
  /* Create a new module. */
  if (!module_name) {
@@ -1317,33 +1319,35 @@ err:
 }
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenStreamString(DeeObject *__restrict source_stream,
-                           /*utf-8*/char const *source_pathname,
-                           /*utf-8*/char const *module_name,
                            int start_line, int start_col,
-                           struct compiler_options *options) {
+                           struct compiler_options *options,
+                           /*utf-8*/char const *source_pathname,
+                           size_t source_pathsize,
+                           /*utf-8*/char const *module_name,
+                           size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *module_name_ob = NULL;
  DREF DeeObject *source_pathname_ob = NULL;
  if (source_pathname) {
   source_pathname_ob = DeeString_NewUtf8(source_pathname,
-                                         strlen(source_pathname),
+                                         source_pathsize,
                                          STRING_ERROR_FSTRICT);
   if unlikely(!source_pathname_ob)
      goto err;
  }
  if (module_name) {
   module_name_ob = DeeString_NewUtf8(module_name,
-                                     strlen(module_name),
+                                     module_namesize,
                                      STRING_ERROR_FSTRICT);
   if unlikely(!module_name_ob)
      goto err_source_pathname_ob;
  }
  result = DeeModule_OpenStream(source_stream,
-                               source_pathname_ob,
-                               module_name_ob,
                                start_line,
                                start_col,
-                               options);
+                               options,
+                               source_pathname_ob,
+                               module_name_ob);
  Dee_XDecref(module_name_ob);
  Dee_XDecref(source_pathname_ob);
  return result;
@@ -1374,53 +1378,55 @@ err:
  * @param: options:         An optional set of extended compiler options. */
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenMemory(/*utf-8*/char const *__restrict data, size_t data_size,
-                     DeeObject *source_pathname,
-                     DeeObject *module_name,
                      int start_line, int start_col,
-                     struct compiler_options *options) {
+                     struct compiler_options *options,
+                     DeeObject *source_pathname,
+                     DeeObject *module_name) {
  DREF DeeObject *source_stream,*result;
  source_stream = DeeFile_OpenRoMemory(data,data_size);
  if unlikely(!source_stream) return NULL;
  result = DeeModule_OpenStream(source_stream,
-                               source_pathname,
-                               module_name,
                                start_line,
                                start_col,
-                               options);
+                               options,
+                               source_pathname,
+                               module_name);
  DeeFile_ReleaseMemory(source_stream);
  return result;
 }
 
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
-                           /*utf-8*/char const *source_pathname,
-                           /*utf-8*/char const *module_name,
                            int start_line, int start_col,
-                           struct compiler_options *options) {
+                           struct compiler_options *options,
+                           /*utf-8*/char const *source_pathname,
+                           size_t source_pathsize,
+                           /*utf-8*/char const *module_name,
+                           size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *module_name_ob = NULL;
  DREF DeeObject *source_pathname_ob = NULL;
- if (source_pathname) {
+ if (source_pathsize) {
   source_pathname_ob = DeeString_NewUtf8(source_pathname,
-                                         strlen(source_pathname),
+                                         source_pathsize,
                                          STRING_ERROR_FSTRICT);
   if unlikely(!source_pathname_ob)
      goto err;
  }
- if (module_name) {
+ if (module_namesize) {
   module_name_ob = DeeString_NewUtf8(module_name,
-                                     strlen(module_name),
+                                     module_namesize,
                                      STRING_ERROR_FSTRICT);
   if unlikely(!module_name_ob)
      goto err_source_pathname_ob;
  }
  result = DeeModule_OpenMemory(data,
                                data_size,
-                               source_pathname_ob,
-                               module_name_ob,
                                start_line,
                                start_col,
-                               options);
+                               options,
+                               source_pathname_ob,
+                               module_name_ob);
  Dee_XDecref(module_name_ob);
  Dee_XDecref(source_pathname_ob);
  return result;
@@ -1433,10 +1439,10 @@ err:
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_NewString(/*utf-8*/char const *__restrict name) {
+DeeModule_NewString(/*utf-8*/char const *__restrict name, size_t namelen) {
  DREF DeeObject *name_object,*result;
  name_object = DeeString_NewUtf8(name,
-                                 strlen(name),
+                                 namelen,
                                  STRING_ERROR_FSTRICT);
  if unlikely(!name_object) return NULL;
  result = DeeModule_New(name_object);
@@ -1561,14 +1567,18 @@ DeeModule_Get(DeeObject *__restrict module_name) {
 #endif
                         );
 }
+
 PUBLIC DREF DeeObject *DCALL
-DeeModule_GetString(char const *__restrict module_name) {
- size_t length = strlen(module_name);
- return DeeModule_DoGet(module_name,length,
+DeeModule_GetString(/*utf-8*/char const *__restrict module_name,
+                    size_t module_namesize) {
+ return DeeModule_DoGet(module_name,
+                        module_namesize,
 #ifdef CONFIG_NOCASE_FS
-                        hash_caseptr(module_name,length)
+                        hash_caseptr(module_name,
+                                     module_namesize)
 #else
-                        hash_ptr(module_name,length)
+                        hash_ptr(module_name,
+                                 module_namesize)
 #endif
                         );
 }

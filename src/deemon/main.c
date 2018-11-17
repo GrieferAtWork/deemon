@@ -1036,13 +1036,15 @@ int main(int argc, char *argv[]) {
        (interactive_output = DeeFile_GetStd(DEE_STDERR)) == NULL)
         goto err;
    interactive_module = DeeModule_OpenInteractiveString(interactive_input,
-                                                        "STDIN",
-                                                        NULL,
+                                                        MODULE_INTERACTIVE_MODE_FONLYBASEFILE|
+                                                        MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR,
                                                         0,
                                                         0,
                                                        &script_options,
-                                                        MODULE_INTERACTIVE_MODE_FONLYBASEFILE|
-                                                        MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR,
+                                                        "STDIN",
+                                                        COMPILER_STRLEN("STDIN"),
+                                                        NULL,
+                                                        0,
                                                        (DeeObject *)sys_argv,
                                                         NULL);
    Dee_Decref(interactive_input);
@@ -1080,7 +1082,9 @@ int main(int argc, char *argv[]) {
 
   /* Run the module passed through argv[0] */
   user_module = (DREF DeeModuleObject *)DeeModule_OpenFileString(argv[0],
+                                                                 strlen(argv[0]),
                                                                  NULL,
+                                                                 0,
                                                                  MODULE_FILECLASS_SOURCE |
                                                                  MODULE_FILECLASS_THROWERROR,
                                                                 &script_options);
@@ -1930,11 +1934,13 @@ try_exec_format_impl(DeeObject *__restrict stream,
    /* Compile the format-script into a module. */
    script_module = (DREF DeeModuleObject *)DeeModule_OpenMemoryString(format_code_start,
                                                                      (size_t)(format_code_end - format_code_start),
-                                                                      filename,
-                                                                      NULL,
                                                                       format_code_start_line,
                                                                       format_code_start_col,
-                                                                     &opt);
+                                                                     &opt,
+                                                                      filename,
+                                                                      strlen(filename),
+                                                                      NULL,
+                                                                      0);
    /* Remove the format-script macro again. */
    TPPLexer_Undef("__FORMAT_SCRIPT__",17);
   }
