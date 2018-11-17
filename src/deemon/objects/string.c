@@ -267,9 +267,9 @@ PUBLIC char *
  /* Append a new string. */
  error = ascii_printer_print(self,str,length);
  if unlikely(error < 0) return NULL;
- ASSERT(self->ap_string);
+ ASSERT(self->ap_string || (!self->ap_length && !length));
  ASSERT(self->ap_length >= length);
- return self->ap_string->s_str+(self->ap_length-length);
+ return self->ap_string->s_str + (self->ap_length - length);
 }
 
 STATIC_ASSERT(STRING_WIDTH_1BYTE < 1);
