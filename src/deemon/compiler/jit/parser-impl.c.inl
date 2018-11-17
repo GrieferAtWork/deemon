@@ -1249,6 +1249,25 @@ err_r_temp_expected_rbrck:
   /* TODO: pack */
 
 
+  case '{':
+   /* Brace initializer expressions. */
+   LOAD_LVALUE(result,err);
+   rhs = CALL_PRIMARYF(UnaryHead,JITLEXER_EVAL_FSECONDARY);
+   if (ISERR(rhs)) goto err_r;
+#ifdef JIT_EVAL
+   LOAD_LVALUE(rhs,err_r);
+   {
+    DREF DeeObject *merge;
+    merge = DeeObject_Call(result,1,&rhs);
+    Dee_Decref(rhs);
+    if unlikely(!merge) goto err_r;
+    Dee_Decref(result);
+    result = merge;
+   }
+#endif
+   break;
+
+
   {
   case '(': /* Call operator */
    IF_EVAL(pos = self->jl_tokstart;)
@@ -2486,6 +2505,7 @@ again:
 
  case TOK_DOTS:
   /* Expand expression */
+  JITLexer_Yield(self);
 #ifdef JIT_EVAL
   if (DeeList_AppendSequence(result,lhs))
       goto err_lhs;

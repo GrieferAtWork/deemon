@@ -1381,20 +1381,15 @@ do_range:
    loc_here(&loc);
    other = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY);
    if unlikely(!other) goto err_r;
-#if 0 /* It's only the preferred type. - Nothing stopping the parser from using a different sequence type! */
-   if (!preferred_type)
-#endif
-   {
-    /* Use the brace AST in a single-argument call to `result' */
-    DREF struct ast **elemv;
-    elemv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
-    if unlikely(!elemv) { err_other: ast_decref(other); goto err_r; }
-    elemv[0] = other;
-    merge = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,elemv),&loc);
-    if unlikely(!merge) { Dee_Free(elemv); goto err_other; }
-    other = ast_setddi(ast_operator2(OPERATOR_CALL,0,result,merge),&loc);
-    ast_decref(merge);
-   }
+   /* Use the brace AST in a single-argument call to `result' */
+   DREF struct ast **elemv;
+   elemv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
+   if unlikely(!elemv) { err_other: ast_decref(other); goto err_r; }
+   elemv[0] = other;
+   merge = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,elemv),&loc);
+   if unlikely(!merge) { Dee_Free(elemv); goto err_other; }
+   other = ast_setddi(ast_operator2(OPERATOR_CALL,0,result,merge),&loc);
+   ast_decref(merge);
    /* Override the result AST when a special type-initialization was performed. */
    ast_decref(result);
    result = other;
