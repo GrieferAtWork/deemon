@@ -973,7 +973,6 @@ int main(int argc, char *argv[]) {
  DeeError_InstallKeyboardInterrupt();
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 
-
  /* Skip the first argument (the deemon executable name) */
  if (argc) --argc,++argv;
 

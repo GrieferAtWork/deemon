@@ -155,10 +155,12 @@ INTDEF DeeCMethodObject builtin_hasattr;
 INTDEF DeeCMethodObject builtin_boundattr;
 INTDEF DeeCMethodObject builtin_bounditem;
 INTDEF DeeCMethodObject builtin_import;
+INTDEF DeeCMethodObject builtin_exec;
 
 DECL_END
 #endif
 
+#if 1 /* TODO: Remove this one */
 /* The builtin function for querying documentation strings.
  * >> docfor(object ob) -> string;
  * >> docfor(object ob, string attr) -> string; */
@@ -168,6 +170,7 @@ BUILTIN_DOC(docfor,&builtin_get_documentation,MODSYM_FNORMAL,
             "@throw ValueError No documentation is associated with the specified object/attribute\n"
             "@throw AttributeError The specified @ob does not contain an attribute @attr\n"
             "@return The documentation string associated with @ob or its attribute @attr")
+#endif
 
 /* Check if an object has a given attribute.
  * >> hasattr(object ob, string attr) -> bool; */
@@ -208,9 +211,27 @@ BUILTIN_DOC(bounditem,&builtin_bounditem,MODSYM_FREADONLY,
  *       as a stand-alone within an expression. */
 BUILTIN_DOC_REUSE(import,&builtin_import,MODSYM_FNORMAL,
                   "(module_name:?Dstring)->?Dmodule\n"
+                  "(module_name:?Dstring,base:?Dmodule)->?Dmodule\n"
                   "@throw ValueError The given @module_name is invalid\n"
                   "@throw FileNotFound The named @module_name could not be found\n"
                   "@return The :module associated with the given @module_name")
+
+
+/* TODO: Add more options to this function */
+BUILTIN_DOC_REUSE(exec,&builtin_exec,MODSYM_FNORMAL,
+                  "(expr:?X3?Dstring?Dbytes?Dfile)->?Dobject\n"
+                  "Evaluate a user-code deemon expression and return the result\n"
+                  "This type of evaluation is much more restrictive that evaluation of "
+                  "normal user-code, as rather than being parsed, optimized, assembled "
+                  "and linked into a full byte-code object, execution happens with the "
+                  "help of a JIT compiler\n"
+                  "Note however that this compiler will never support preprocessor features "
+                  "such as directives, macros or escaped line-feeds, as well as other "
+                  "language-level features such as goto-labels or true support for type "
+                  "annotations\n"
+                  "The given @expr is evaluated as an expression, i.e. $\"10 + 20\" "
+                  "is accepted, while $\"print 42;\" isn't")
+
 
 /* Builtin runtime operator helpers. */
 BUILTIN_REUSE(__pooad,&rt_pooad,MODSYM_FREADONLY|MODSYM_FHIDDEN)

@@ -16,49 +16,53 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+#ifndef GUARD_DEEMON_COMPILER_JIT_CONTEXT_C
+#define GUARD_DEEMON_COMPILER_JIT_CONTEXT_C 1
 
-IF(CONFIG_NO_THREADS)
-	DEFINE("CONFIG_NO_THREADS")
-ELSE
-	C_FLAGS("-pthread")
-	L_FLAGS("-pthread")
-FI
+#include <deemon/api.h>
+#include <deemon/compiler/jit.h>
+#ifndef CONFIG_NO_JIT
+#include <deemon/int.h>
+#include <deemon/error.h>
+#include <deemon/class.h>
+#include <deemon/compiler/lexer.h>
+#include <hybrid/unaligned.h>
 
-BEGIN PROJECT("deemon")
-	DEFINE("CONFIG_BUILDING_DEEMON")
-	SET_OUTPUT_EXE("${BINPATH}/deemon")
-	IF(TARGET_WINDOWS)
-		L_FLAGS("-Wl,--out-implib=libdeemon.dll.a")
-		IF($TARGET_CPU == i?86)
-			L_FLAGS("-Wl,--stack,4194304")
-			L_FLAGS("-Wl,src/deemon/linker-scripts/link-deemon-gcc.def")
-		FI
-		IF($TARGET_CPU == x86_64)
-			L_FLAGS("-Wl,--stack,8388608")
-		FI
-	ELSE
-		L_FLAGS("-Wl,--export-dynamic")
-		LIB("dl")
-		LIB("m")
-	FI
-	IF($TARGET_CPU == i?86)
-		DEFINE("CONFIG_HAVE_EXEC_ASM")
-		SOURCE("deemon/execute/asm/exec-386.S")
-	FI
-	SOURCE("deemon/*.c")
-	SOURCE("deemon/compiler/*.c")
-	SOURCE("deemon/compiler/jit/*.c")
-	SOURCE("deemon/compiler/asm/*.c")
-	SOURCE("deemon/compiler/lexer/*.c")
-	SOURCE("deemon/compiler/interface/*.c")
-	SOURCE("deemon/compiler/optimize/*.c")
-	SOURCE("deemon/execute/*.c")
-	SOURCE("deemon/system/*.c")
-	SOURCE("deemon/objects/*.c")
-	SOURCE("deemon/objects/seq/*.c")
-	SOURCE("deemon/objects/unicode/*.c")
-	SOURCE("deemon/runtime/*.c")
-END
+#include "../../runtime/runtime_error.h"
 
-/* Pull in extension modules. */
-#include "dex/.sources"
+DECL_BEGIN
+
+INTERN DREF DeeObject *FCALL
+JITContext_Lookup(JITContext *__restrict self,
+                  /*utf-8*/char const *__restrict name,
+                  size_t namelen) {
+ /* TODO */
+ (void)self;
+ DeeError_Throwf(&DeeError_AttributeError,
+                 "Cannot resolve JIT symbol `%$s'",
+                 namelen,name);
+ return NULL;
+}
+
+INTERN DREF DeeObject *FCALL
+JITContext_LookupNth(JITContext *__restrict self,
+                     /*utf-8*/char const *__restrict name,
+                     size_t namelen, size_t nth) {
+ /* TODO */
+ (void)self;
+ DeeError_Throwf(&DeeError_AttributeError,
+                 "Cannot resolve %Iu%s JIT symbol `%$s'",nth,
+                 nth == 1 ? "st" :
+                 nth == 2 ? "nd" :
+                 nth == 3 ? "rd" : "th",
+                 namelen,name);
+ return NULL;
+}
+
+
+
+DECL_END
+
+#endif /* !CONFIG_NO_JIT */
+
+#endif /* !GUARD_DEEMON_COMPILER_JIT_CONTEXT_C */

@@ -212,6 +212,7 @@ for (local x: util::range(128)) {
 
 /* Lookup mode used by secondary AST operands */
 #define LOOKUP_SYM_SECONDARY  LOOKUP_SYM_NORMAL
+#define PARSE_UNARY_DISALLOW_CASTS 0x10000
 
 INTERN uint16_t parser_flags = PARSE_FNORMAL;
 INTERN bool DCALL maybe_expression_begin(void) {
@@ -534,7 +535,8 @@ do_unary_operator_kwd:
   } else
 #elif defined(CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS)
   if (tok == '(') {
-   result = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY);
+   result = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY |
+                                PARSE_UNARY_DISALLOW_CASTS);
   } else
 #endif
   {
@@ -578,7 +580,8 @@ do_unary_operator:
   } else
 #elif defined(CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS)
   if (tok == '(') {
-   result = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY);
+   result = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY |
+                                PARSE_UNARY_DISALLOW_CASTS);
   } else
 #endif
   {
@@ -791,8 +794,8 @@ do_create_class:
    if unlikely(likely(tok == ')') ? (yield() < 0) : 
                WARN(W_EXPECTED_RPAREN_AFTER_PACK))
       goto err_r;
-   if (has_paren == 1 &&
-       result->a_type != AST_MULTIPLE) {
+   if (has_paren == 1 && result->a_type != AST_MULTIPLE &&
+     !(lookup_mode & PARSE_UNARY_DISALLOW_CASTS)) {
     /* C-style cast expression (only for single-parenthesis expressions) */
     merge = ast_parse_cast(result);
     ast_decref(result);
@@ -828,7 +831,7 @@ do_create_class:
   old_flags = TPPLexer_Current->l_flags;
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
   if unlikely(yield() < 0) goto err_flags;
-  allow_cast = tok != '(';
+  allow_cast = tok != '(' && !(lookup_mode & PARSE_UNARY_DISALLOW_CASTS);
   if (tok == '{') {
    unsigned int was_expression;
    /* Statements in expressions. */
@@ -941,7 +944,7 @@ do_create_class:
   if unlikely(likely(tok == '(') ? (yield() < 0) :
               WARN(W_EXPECTED_LPAREN_AFTER_DEL))
      goto err_flags;
-  result = ast_putddi(ast_parse_del(lookup_mode),&loc);
+  result = ast_putddi(ast_parse_del(lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS),&loc);
   if unlikely(!result) goto err_flags;
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
@@ -1214,7 +1217,7 @@ default_case:
     if unlikely(yield() < 0) goto err;
     result = ast_parse_import_single(name);
    } else {
-    sym = lookup_symbol(lookup_mode,name,&loc);
+    sym = lookup_symbol(lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS,name,&loc);
     if unlikely(!sym) goto err;
     result = ast_sym(sym);
    }
@@ -1995,7 +1998,7 @@ ast_parse_assign_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
                        : OPERATOR_ASSIGN,0,lhs,rhs);
   } else {
    /* Inplace operation. */
-   merge = ast_operator2(inplace_fops[cmd-TOK_ADD_EQUAL],0,lhs,rhs);
+   merge = ast_operator2(inplace_fops[cmd-TOK_INPLACE_MIN],0,lhs,rhs);
   }
   ast_decref(rhs);
   ast_decref(lhs);

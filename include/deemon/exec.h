@@ -150,7 +150,7 @@ DFUNDEF NONNULL((1)) void DCALL Dee_SetArgv(/*Tuple*/DeeObject *__restrict argv)
 #define DEE_EXEC_RUNMODE_MASK                  0x000f /* Mode mask */
 #define DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS 0x4000 /* FLAG: Default symbols are declared as read/write globals (otherwise, they are read-only constants) */
 #define DEE_EXEC_RUNMODE_FHASPP                0x8000 /* FLAG: Enable the preprocessor.
-                                                       *  - When not set, preprocessor directives and macros are disabled. */
+                                                       *  - When not set, preprocessor directives, macros and escaped line-feeds are disabled. */
 struct compiler_options;
 
 /* Execute source code from `source_stream' and return the result of invoking it.

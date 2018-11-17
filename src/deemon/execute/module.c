@@ -604,9 +604,9 @@ DeeModule_RunInit(DeeObject *__restrict self) {
  if (me->mo_flags&MODULE_FDIDINIT)
      return 0;
  /* Make sure not to tinker with an interactive module's root code object. */
- if (me->mo_flags&MODULE_FINITIALIZING &&
-     DeeInteractiveModule_Check(self))
-     return 0;
+ if ((me->mo_flags & MODULE_FINITIALIZING) &&
+      DeeInteractiveModule_Check(self))
+      return 0;
 
  COMPILER_READ_BARRIER();
  caller = DeeThread_Self();

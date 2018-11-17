@@ -264,7 +264,7 @@ err:
 INTDEF struct opinfo basic_opinfo[OPERATOR_USERCOUNT];
 INTDEF struct opinfo file_opinfo[FILE_OPERATOR_COUNT];
 
-PRIVATE struct opinfo *DCALL
+INTERN struct opinfo *DCALL
 find_opinfo(struct opinfo *__restrict v, unsigned int c,
             char const *__restrict str, size_t len) {
  unsigned int i;

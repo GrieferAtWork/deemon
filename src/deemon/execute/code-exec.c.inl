@@ -1866,8 +1866,8 @@ do_push_module:
      bool is_instance;
      /* Special case: The deemon specs allow `none' to be
       *               written as the second argument to `is' */
-     if (DeeNone_Check(FIRST)) {
-      is_instance = DeeNone_Check(SECOND);
+     if (DeeNone_Check(SECOND)) {
+      is_instance = DeeNone_Check(FIRST);
      } else if (DeeSuper_Check(SECOND)) {
       is_instance = DeeType_IsInherited(DeeSuper_TYPE(SECOND),(DeeTypeObject *)FIRST);
      } else {

@@ -23,15 +23,20 @@
 #include <deemon/object.h>
 #include <deemon/code.h>
 #include <deemon/bool.h>
+#include <deemon/exec.h>
 #include <deemon/error.h>
 #include <deemon/thread.h>
+#include <deemon/bytes.h>
 #include <deemon/super.h>
+#include <deemon/file.h>
 #include <deemon/string.h>
 #include <deemon/format.h>
 #include <deemon/objmethod.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/arg.h>
+
+#include <deemon/compiler/jit.h>
 
 #include "runtime_error.h"
 
@@ -134,6 +139,81 @@ err:
  return NULL;
 }
 INTERN DEFINE_KWCMETHOD(builtin_import,&f_builtin_import);
+
+
+PRIVATE DREF DeeObject *DCALL
+f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+ DREF DeeObject *result; DeeObject *expr;
+ char const *usertext; size_t usersize;
+ PRIVATE struct keyword kwlist[] = { K(expr), KEND };
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o:exec",&expr))
+     goto err;
+ if (DeeString_Check(expr)) {
+  usertext = DeeString_AsUtf8(expr);
+  if unlikely(!usertext)
+     goto err;
+  usersize = WSTR_LENGTH(usertext);
+  Dee_Incref(expr);
+ } else if (DeeBytes_Check(expr)) {
+  usertext = (char *)DeeBytes_DATA(expr);
+  usersize = DeeBytes_SIZE(expr);
+  Dee_Incref(expr);
+ } else {
+  expr = DeeFile_ReadText(expr,(size_t)-1,true);
+  if unlikely(!expr) goto err;
+  if (DeeString_Check(expr)) {
+   usertext = DeeString_AsUtf8(expr);
+   if unlikely(!usertext)
+      goto err_expr;
+   usersize = WSTR_LENGTH(usertext);
+  } else {
+   usertext = (char *)DeeBytes_DATA(expr);
+   usersize = DeeBytes_SIZE(expr);
+  }
+ }
+#ifndef CONFIG_NO_JIT
+ {
+  JITContext context = JITCONTEXT_INIT;
+  JITLexer lexer;
+  lexer.jl_context = &context;
+  lexer.jl_paren   = 0;
+  lexer.jl_suffix  = 0;
+  JITLexer_Start(&lexer,
+                (unsigned char *)usertext,
+                (unsigned char *)usertext + usersize);
+  result = JITLexer_EvalExpression(&lexer,
+                                    JITLEXER_EVAL_FNORMAL);
+  if (likely(result) &&
+      unlikely(lexer.jl_tok != TOK_EOF)) {
+   DeeError_Throwf(&DeeError_SyntaxError,
+                   "Expected EOF but got `%$s'",
+                  (size_t)(lexer.jl_end - lexer.jl_tokstart),
+                   lexer.jl_tokstart);
+   Dee_Clear(result);
+  }
+  JITContext_Fini(&context);
+ }
+#else
+ result = DeeExec_RunMemory(usertext,
+                            usersize,
+                            DEE_EXEC_RUNMODE_EXPR,
+                            0,
+                            NULL,
+                            0,
+                            0,
+                            NULL,
+                            NULL,
+                            NULL,
+                            NULL);
+#endif
+ Dee_Decref_unlikely(expr);
+ return result;
+err_expr:
+ Dee_Decref(expr);
+err:
+ return NULL;
+}
+INTERN DEFINE_KWCMETHOD(builtin_exec,&f_builtin_exec);
 
 
 PRIVATE DREF DeeObject *DCALL
