@@ -2437,6 +2437,7 @@ again:
 
  case TOK_DOTS:
   /* Expand expression */
+  JITLexer_Yield(self);
 #ifdef JIT_EVAL
   new_result = DeeTuple_ConcatInherited(result,lhs);
   if unlikely(!new_result) goto err_lhs;
