@@ -335,14 +335,13 @@ not_a_cast:
   /* Parse the cast-expression / argument list. */
   merge = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
   if (ISERR(merge)) goto err_lhs;
-  LOAD_LVALUE(merge,err_lhs);
   is_multiple = false;
   if (self->jl_tok == TOK_DOTS || self->jl_tok == ',') {
    is_multiple = true;
    merge = CALL_SECONDARY(CommaTupleOperand,merge);
    if (ISERR(merge)) goto err_lhs;
-   LOAD_LVALUE(merge,err_lhs);
   }
+  LOAD_LVALUE(merge,err_lhs);
 #ifdef JIT_EVAL
   ASSERT(DeeTuple_Check(merge));
 #endif
@@ -665,14 +664,15 @@ done_y1:
   } else {
    /* Parenthesis / tuple expression. */
    result = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
-   LOAD_LVALUE(result,err);
-   if (ISOK(result) && self->jl_tok == ',' || self->jl_tok == TOK_DOTS) {
+   if (ISERR(result))
+       goto err;
+   if (self->jl_tok == TOK_DOTS || self->jl_tok == ',') {
     result = CALL_SECONDARY(CommaTupleOperand,result);
+    if (ISERR(result))
+        goto err;
     allow_cast = false; /* Don't allow comma-lists for cast expressions. */
    }
   }
-  if (ISERR(result))
-      goto err;
   if likely(self->jl_tok == ')') {
    JITLexer_Yield(self);
   } else {
@@ -701,7 +701,6 @@ done_y1:
   }
   result = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
   if (ISERR(result)) goto err;
-  LOAD_LVALUE(result,err);
   result = CALL_SECONDARY(CommaListOperand,result);
   if (ISERR(result)) goto err;
   LOAD_LVALUE(result,err);
@@ -750,7 +749,6 @@ done_y1:
    /* Parse the initial key / sequence item. */
    result = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
    if (ISERR(result)) goto err;
-   LOAD_LVALUE(result,err);
    if (self->jl_tok == ':') {
     /* Mapping-like dict expression. */
     result = CALL_SECONDARY(CommaDictOperand,result);
@@ -1108,7 +1106,6 @@ DEFINE_PRIMARY(Unary) {
       /* TODO: Keyword arguments! */
       args = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
       if (ISERR(args)) goto err_r;
-      LOAD_LVALUE(args,err_r);
       args = CALL_SECONDARY(CommaTupleOperand,args);
       if (ISERR(args)) goto err_r;
       LOAD_LVALUE(args,err_r);
@@ -1148,12 +1145,106 @@ DEFINE_PRIMARY(Unary) {
    }
    break;
 
-#if 0 /* TODO */
+  {
+   RETURN_TYPE temp;
   case '[': /* sequence operator */
    IF_EVAL(pos = self->jl_tokstart;)
-   JITLexer_Yield();
-   break;
+   JITLexer_Yield(self);
+   if (self->jl_tok == ':') {
+    JITLexer_Yield(self);
+    if (self->jl_tok == ']') {
+     JITLexer_Yield(self);
+#ifdef JIT_EVAL
+     ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+     self->jl_lvalue.lv_kind = JIT_LVALUE_RANGE;
+     self->jl_lvalue.lv_range.lr_base  = result; /* Inherit reference. */
+     self->jl_lvalue.lv_range.lr_start = Dee_None;
+     self->jl_lvalue.lv_range.lr_end   = Dee_None;
+     Dee_Incref_n(Dee_None,2);
+     result = JIT_LVALUE;
 #endif
+    } else {
+     temp = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
+     if (ISERR(temp)) goto err_r;
+     LOAD_LVALUE(temp,err_r);
+     if (self->jl_tok == ']') {
+      JITLexer_Yield(self);
+     } else {
+err_r_temp_expected_rbrck:
+      DECREF(temp);
+      SYNTAXERROR("Expected `]' to end `getitem' operator, but got `%$s'",
+                 (size_t)(self->jl_tokend - self->jl_tokstart),
+                          self->jl_tokstart);
+      goto err_r;
+     }
+#ifdef JIT_EVAL
+     ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+     self->jl_lvalue.lv_kind = JIT_LVALUE_RANGE;
+     self->jl_lvalue.lv_range.lr_base  = result; /* Inherit reference. */
+     self->jl_lvalue.lv_range.lr_start = Dee_None;
+     self->jl_lvalue.lv_range.lr_end   = temp;   /* Inherit reference. */
+     Dee_Incref(Dee_None);
+     result = JIT_LVALUE;
+#endif
+    }
+   } else {
+    temp = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
+    if (ISERR(temp)) goto err_r;
+    LOAD_LVALUE(temp,err_r);
+    if (self->jl_tok == ':') {
+     JITLexer_Yield(self);
+     if (self->jl_tok == ']') {
+      JITLexer_Yield(self);
+#ifdef JIT_EVAL
+      ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+      self->jl_lvalue.lv_kind = JIT_LVALUE_RANGE;
+      self->jl_lvalue.lv_range.lr_base  = result; /* Inherit reference. */
+      self->jl_lvalue.lv_range.lr_start = temp;   /* Inherit reference. */
+      self->jl_lvalue.lv_range.lr_end   = Dee_None;
+      Dee_Incref(Dee_None);
+      result = JIT_LVALUE;
+#endif
+     } else {
+#ifdef JIT_EVAL
+      DREF DeeObject *start_expr;
+      start_expr = temp;
+#endif
+      temp = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
+      if (self->jl_tok == ']') {
+       JITLexer_Yield(self);
+      } else {
+       DECREF(start_expr);
+       goto err_r_temp_expected_rbrck;
+      }
+#ifndef JIT_EVAL
+      if (ISERR(temp)) goto err_r;
+#else
+      if (ISERR(temp)) { err_start_expr: Dee_Decref(start_expr); goto err_r; }
+      LOAD_LVALUE(temp,err_start_expr);
+      ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+      self->jl_lvalue.lv_kind = JIT_LVALUE_RANGE;
+      self->jl_lvalue.lv_range.lr_base  = result;     /* Inherit reference. */
+      self->jl_lvalue.lv_range.lr_start = start_expr; /* Inherit reference. */
+      self->jl_lvalue.lv_range.lr_end   = temp;       /* Inherit reference. */
+      result = JIT_LVALUE;
+#endif
+     }
+    } else {
+     if (self->jl_tok == ']') {
+      JITLexer_Yield(self);
+     } else {
+      goto err_r_temp_expected_rbrck;
+     }
+#ifdef JIT_EVAL
+     ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+     self->jl_lvalue.lv_kind = JIT_LVALUE_ITEM;
+     self->jl_lvalue.lv_item.li_base  = result; /* Inherit reference. */
+     self->jl_lvalue.lv_item.li_index = temp;   /* Inherit reference. */
+     result = JIT_LVALUE;
+#endif
+    }
+   }
+  } break;
 
   /* TODO: pack */
 
@@ -1173,7 +1264,6 @@ DEFINE_PRIMARY(Unary) {
     /* TODO: Keyword arguments! */
     rhs = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
     if (ISERR(rhs)) goto err_r;
-    LOAD_LVALUE(rhs,err_r);
     rhs = CALL_SECONDARY(CommaTupleOperand,rhs);
     if (ISERR(rhs)) goto err_r;
     LOAD_LVALUE(rhs,err_r);
