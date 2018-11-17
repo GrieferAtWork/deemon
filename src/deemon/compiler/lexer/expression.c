@@ -1379,7 +1379,7 @@ do_range:
 
   case '{': /* Brace initializers. */
    loc_here(&loc);
-   other = ast_parse_expr(LOOKUP_SYM_SECONDARY);
+   other = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY);
    if unlikely(!other) goto err_r;
 #if 0 /* It's only the preferred type. - Nothing stopping the parser from using a different sequence type! */
    if (!preferred_type)
