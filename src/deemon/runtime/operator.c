@@ -371,7 +371,7 @@ do_invoke_alloc_any_ctor_kw:
     DeeObject_Free(result);
    }
    if (!type_inherit_constructors(object_type))
-        goto err_not_implemented_r;
+        goto err_not_implemented;
    if (object_type->tp_init.tp_alloc.tp_free)
     result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
    else if (object_type->tp_flags & TP_FGC)
@@ -395,6 +395,7 @@ do_invoke_alloc_any_ctor_kw:
       DeeGC_Track(result);
   return result;
  }
+err_not_implemented:
  err_unimplemented_constructor(object_type,0,NULL);
 err:
  return NULL;
@@ -484,7 +485,7 @@ do_invoke_alloc_copy:
     DeeObject_Free(result);
    }
    if (!type_inherit_constructors(object_type))
-        goto err_not_implemented_r;
+        goto err_not_implemented;
    if (object_type->tp_init.tp_alloc.tp_free)
     result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
    else if (object_type->tp_flags & TP_FGC)
@@ -511,6 +512,7 @@ do_invoke_alloc_copy:
       DeeGC_Track(result);
   return result;
  }
+err_not_implemented:
  err_unimplemented_constructor(object_type,argc,argv);
 err:
  return NULL;
@@ -667,7 +669,7 @@ do_invoke_alloc_copy:
     DeeObject_Free(result);
    }
    if (!type_inherit_constructors(object_type))
-        goto err_not_implemented_r;
+        goto err_not_implemented;
    if (object_type->tp_init.tp_alloc.tp_free)
     result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
    else if (object_type->tp_flags & TP_FGC)
@@ -694,6 +696,7 @@ do_invoke_alloc_copy:
       DeeGC_Track(result);
   return result;
  }
+err_not_implemented:
  err_unimplemented_constructor(object_type,argc,argv);
 err:
  return NULL;
@@ -1008,7 +1011,7 @@ do_invoke_alloc_any_ctor_kw:
     DeeObject_Free(result);
    }
    if (!type_inherit_constructors(tp_self))
-        goto err_not_implemented_r;
+        goto err_not_implemented;
    if (tp_self->tp_init.tp_alloc.tp_copy_ctor) {
     Dee_DecrefNokill(tp_self);
     goto do_invoke_alloc_copy;
@@ -1038,6 +1041,7 @@ do_invoke_alloc_any_ctor_kw:
       DeeGC_Track(result);
   return result;
  }
+err_not_implemented:
  err_unimplemented_constructor(tp_self,0,NULL);
 err:
  return NULL;
