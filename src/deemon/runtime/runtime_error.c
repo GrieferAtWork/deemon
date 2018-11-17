@@ -432,7 +432,7 @@ err_unbound_local(struct code_object *__restrict code,
 INTERN ATTR_COLD int DCALL
 err_illegal_instruction(struct code_object *__restrict code,
                         void *__restrict ip) {
- char const *code_name = DeeCode_NAME(code->co_ddi);
+ char const *code_name = DeeCode_NAME(code);
  if (!code_name) code_name = "<anonymous>";
  return DeeError_Throwf(&DeeError_IllegalInstruction,
                         "Illegal instruction at %s+%.4I32X",
