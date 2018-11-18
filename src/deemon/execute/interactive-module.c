@@ -427,6 +427,7 @@ do_exec_code:
  ASSERT(current_code->co_argc_min == 0);
  ASSERT(current_code->co_argc_max == 0);
  ASSERT(current_code->co_defaultv == NULL);
+ ASSERT(current_code->co_keywords == NULL);
  old_co_flags     = current_code->co_flags;
  old_co_localc    = current_code->co_localc;
  old_co_staticc   = current_code->co_staticc;
@@ -703,6 +704,7 @@ recover_old_code_object:
    Dee_Incref((DeeObject *)self);
    current_code->co_module   = (DREF DeeModuleObject *)self;
    current_code->co_defaultv = NULL;
+   current_code->co_keywords = NULL;
    current_code->co_ddi      = old_co_ddi;
    while (current_assembler.a_constc > old_co_staticc) {
     --current_assembler.a_constc;
@@ -1304,6 +1306,7 @@ err_compiler_basefile:
   init_code->co_defaultv  = NULL;
   init_code->co_staticv   = NULL;
   init_code->co_exceptv   = NULL;
+  init_code->co_keywords  = NULL;
   init_code->co_ddi       = &empty_ddi;
   init_code->co_code[0]   = ASM_UD;
   Dee_Incref((DeeObject *)self);
