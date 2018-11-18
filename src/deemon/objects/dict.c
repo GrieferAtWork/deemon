@@ -507,6 +507,32 @@ DeeDict_GetItemString(DeeObject *__restrict self,
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
+DeeDict_GetItemStringLen(DeeObject *__restrict self,
+                         char const *__restrict key,
+                         size_t keylen,
+                         dhash_t hash) {
+ DREF DeeObject *result;
+ dhash_t i,perturb;
+ DeeDict_LockRead(self);
+ perturb = i = DICT_HASHST(self,hash);
+ for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+  struct dict_item *item = DICT_HASHIT(self,i);
+  if (!item->di_key) break; /* Not found */
+  if (item->di_hash != hash) continue; /* Non-matching hash */
+  if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
+  if (DeeString_SIZE(item->di_key) != keylen) continue;
+  if (memcmp(DeeString_STR(item->di_key),key,keylen * sizeof(char)) == 0) {
+   result = item->di_value;
+   Dee_Incref(result);
+   DeeDict_LockEndRead(self);
+   return result;
+  }
+ }
+ DeeDict_LockEndRead(self);
+ err_unknown_key_str_len(self,key,keylen);
+ return NULL;
+}
+PUBLIC DREF DeeObject *DCALL
 DeeDict_GetItemStringDef(DeeObject *__restrict self,
                          char const *__restrict key,
                          dhash_t hash,
@@ -533,6 +559,35 @@ DeeDict_GetItemStringDef(DeeObject *__restrict self,
      Dee_Incref(def);
  return def;
 }
+PUBLIC DREF DeeObject *DCALL
+DeeDict_GetItemStringLenDef(DeeObject *__restrict self,
+                            char const *__restrict key,
+                            size_t keylen,
+                            dhash_t hash,
+                            DeeObject *__restrict def) {
+ DREF DeeObject *result;
+ dhash_t i,perturb;
+ ASSERT_OBJECT(def);
+ DeeDict_LockRead(self);
+ perturb = i = DICT_HASHST(self,hash);
+ for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+  struct dict_item *item = DICT_HASHIT(self,i);
+  if (!item->di_key) break; /* Not found */
+  if (item->di_hash != hash) continue; /* Non-matching hash */
+  if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
+  if (DeeString_SIZE(item->di_key) != keylen) continue;
+  if (memcmp(DeeString_STR(item->di_key),key,keylen * sizeof(char)) == 0) {
+   result = item->di_value;
+   Dee_Incref(result);
+   DeeDict_LockEndRead(self);
+   return result;
+  }
+ }
+ DeeDict_LockEndRead(self);
+ if (def != ITER_DONE)
+     Dee_Incref(def);
+ return def;
+}
 PUBLIC bool DCALL
 DeeDict_HasItemString(DeeObject *__restrict self,
                       char const *__restrict key,
@@ -546,6 +601,28 @@ DeeDict_HasItemString(DeeObject *__restrict self,
   if (item->di_hash != hash) continue; /* Non-matching hash */
   if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
   if (!strcmp(DeeString_STR(item->di_key),key)) {
+   DeeDict_LockEndRead(self);
+   return true;
+  }
+ }
+ DeeDict_LockEndRead(self);
+ return false;
+}
+PUBLIC bool DCALL
+DeeDict_HasItemStringLen(DeeObject *__restrict self,
+                         char const *__restrict key,
+                         size_t keylen,
+                         dhash_t hash) {
+ dhash_t i,perturb;
+ DeeDict_LockRead(self);
+ perturb = i = DICT_HASHST(self,hash);
+ for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+  struct dict_item *item = DICT_HASHIT(self,i);
+  if (!item->di_key) break; /* Not found */
+  if (item->di_hash != hash) continue; /* Non-matching hash */
+  if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
+  if (DeeString_SIZE(item->di_key) != keylen) continue;
+  if (memcmp(DeeString_STR(item->di_key),key,keylen * sizeof(char)) == 0) {
    DeeDict_LockEndRead(self);
    return true;
   }
@@ -594,8 +671,52 @@ again_lock:
   return 0;
  }
  DeeDict_LockEndRead(self);
- err_unknown_key_str(self,key);
- return -1;
+ return err_unknown_key_str(self,key);
+}
+PUBLIC int DCALL
+DeeDict_DelItemStringLen(DeeObject *__restrict self,
+                         char const *__restrict key,
+                         size_t keylen,
+                         dhash_t hash) {
+ Dict *me = (Dict *)self;
+ DREF DeeObject *old_key,*old_value;
+ dhash_t i,perturb;
+#ifndef CONFIG_NO_THREADS
+again_lock:
+#endif
+ DeeDict_LockRead(self);
+ perturb = i = DICT_HASHST(self,hash);
+ for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+  struct dict_item *item = DICT_HASHIT(self,i);
+  if (!item->di_key) break; // Not found
+  if (item->di_hash != hash) continue; // Non-matching hash
+  if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
+  if (DeeString_SIZE(item->di_key) != keylen) continue;
+  if (memcmp(DeeString_STR(item->di_key),key,keylen * sizeof(char)) != 0) continue;
+#ifndef CONFIG_NO_THREADS
+  if (!DeeDict_LockUpgrade(me)) {
+   DeeDict_LockEndWrite(me);
+   SCHED_YIELD();
+   goto again_lock;
+  }
+#endif
+  old_key = item->di_key;
+  old_value = item->di_value;
+  Dee_Incref(dummy);
+  item->di_key = dummy;
+  item->di_value = NULL;
+  ASSERT(me->d_used);
+  /* Try to rehash the dict and get rid of dummy
+   * items if there are a lot of them now. */
+  if (--me->d_used <= me->d_size/3)
+      dict_rehash(me,-1);
+  DeeDict_LockEndWrite(self);
+  Dee_Decref(old_value);
+  Dee_Decref(old_key);
+  return 0;
+ }
+ DeeDict_LockEndRead(self);
+ return err_unknown_key_str_len(self,key,keylen);
 }
 PUBLIC int DCALL
 DeeDict_SetItemString(DeeObject *__restrict self,
@@ -654,6 +775,88 @@ again:
   key_ob->s_hash = hash;
   key_ob->s_len  = key_len;
   memcpy(key_ob->s_str,key,(key_len+1)*sizeof(char));
+  if (first_dummy->di_key)
+      Dee_DecrefNokill(first_dummy->di_key);
+  /* Fill in the target slot. */
+  first_dummy->di_key   = (DREF DeeObject *)key_ob; /* Inherit reference. */
+  first_dummy->di_hash  = hash;
+  first_dummy->di_value = value;
+  Dee_Incref(value);
+  ++me->d_used;
+  ++me->d_size;
+  /* Try to keep the dict vector big at least twice as big as the element count. */
+  if (me->d_size*2 > me->d_mask)
+      dict_rehash(me,1);
+  DeeDict_LockEndWrite(self);
+  return 0;
+ }
+ /* Rehash the dict and try again. */
+ if (dict_rehash(me,1)) goto again;
+collect_memory:
+ DeeDict_LockEndWrite(self);
+ if (Dee_CollectMemory(1)) goto again_lock;
+ return -1;
+}
+
+PUBLIC int DCALL
+DeeDict_SetItemStringLen(DeeObject *__restrict self,
+                         char const *__restrict key,
+                         size_t keylen,
+                         dhash_t hash,
+                         DeeObject *__restrict value) {
+ Dict *me = (Dict *)self;
+ DREF DeeObject *old_value;
+ struct dict_item *first_dummy;
+ dhash_t i,perturb;
+again_lock:
+ DeeDict_LockRead(self);
+again:
+ first_dummy = NULL;
+ perturb = i = DICT_HASHST(self,hash);
+ for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+  struct dict_item *item = DICT_HASHIT(self,i);
+  if (!item->di_key) { if (!first_dummy) first_dummy = item; break; /* Not found */ }
+  if (item->di_key == dummy) { first_dummy = item; continue; }
+  if (item->di_hash != hash) continue; /* Non-matching hash */
+  if (!DeeString_Check(item->di_key)) continue;
+  if (DeeString_SIZE(item->di_key) != keylen) continue;
+  if (memcmp(DeeString_STR(item->di_key),key,keylen * sizeof(char)) != 0) continue;
+#ifndef CONFIG_NO_THREADS
+  if (!DeeDict_LockUpgrade(me)) {
+   DeeDict_LockEndWrite(me);
+   SCHED_YIELD();
+   goto again_lock;
+  }
+#endif
+  /* Override an existing entry. */
+  old_value = item->di_value;
+  Dee_Incref(value);
+  item->di_value = value;
+  DeeDict_LockEndWrite(self);
+  Dee_Decref(old_value);
+  return 0;
+ }
+#ifndef CONFIG_NO_THREADS
+ if (!DeeDict_LockUpgrade(me)) {
+  DeeDict_LockEndWrite(me);
+  SCHED_YIELD();
+  goto again_lock;
+ }
+#endif
+ if (first_dummy && me->d_size+1 < me->d_mask) {
+  DREF DeeStringObject *key_ob;
+  ASSERT(first_dummy != empty_dict_items);
+  ASSERT(!first_dummy->di_key ||
+          first_dummy->di_key == dummy);
+  /* Write to the first dummy item. */
+  key_ob = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject,s_str)+
+                                                      (keylen + 1)*sizeof(char));
+  if unlikely(!key_ob) goto collect_memory;
+  DeeObject_Init(key_ob,&DeeString_Type);
+  key_ob->s_hash = hash;
+  key_ob->s_len  = keylen;
+  memcpy(key_ob->s_str,key,keylen*sizeof(char));
+  key_ob->s_str[keylen] = '\0';
   if (first_dummy->di_key)
       Dee_DecrefNokill(first_dummy->di_key);
   /* Fill in the target slot. */

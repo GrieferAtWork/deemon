@@ -647,16 +647,8 @@ inline deemon::string (file::writer::string)() const { return inherit(DeeObject_
 #endif /* GUARD_DEEMON_CXX_FILE_H */
 
 
-inline string object::doc() const { return inherit(DeeObject_Doc(*this)); }
 inline string object::str() const { return inherit(DeeObject_Str(*this)); }
 inline string object::repr() const { return inherit(DeeObject_Repr(*this)); }
-inline string object::docattr(obj_string name) const { return inherit(DeeObject_GetAttr(*this,name)); }
-inline string object::docattr(char const *__restrict name) const { return inherit(DeeObject_GetAttrString(*this,name)); }
-inline string object::docattr(char const *__restrict name, dhash_t hash) const { return inherit(DeeObject_GetAttrStringHash(*this,name,hash)); }
-inline string object::attr_proxy_obj::doc() const { return inherit(DeeObject_GetAttr(m_ptr,m_str)); }
-inline string object::attr_proxy_str::doc() const { return inherit(DeeObject_GetAttrString(m_ptr,m_str)); }
-inline string object::attr_proxy_sth::doc() const { return inherit(DeeObject_GetAttrStringHash(m_ptr,m_str,m_hsh)); }
-
 inline string str(DeeObject *__restrict ob) { return inherit(DeeObject_Str(ob)); }
 inline string repr(DeeObject *__restrict ob) { return inherit(DeeObject_Repr(ob)); }
 

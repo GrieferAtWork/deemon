@@ -27,6 +27,7 @@
 #include <deemon/string.h>
 #include <deemon/file.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/jit.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>

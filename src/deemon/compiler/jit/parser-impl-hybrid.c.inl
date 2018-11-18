@@ -16,20 +16,33 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+#ifdef __INTELLISENSE__
+#include "parser-impl.c.inl"
+#endif
 
-Cs(asym)
-Cs(sym)
-Cs(ef)
-Cs(utf)
-#ifndef CONFIG_NO_JIT
-Cs(jit_object_table)
-#endif
-#ifdef CONFIG_AST_IS_STRUCT
-Cs(ast)
+DECL_BEGIN
+
+#ifdef JIT_EVAL
+INTERN DREF DeeObject *FCALL
+JITLexer_EvalStatementOrBraces(JITLexer *__restrict self,
+                               unsigned int *pwas_expression)
 #else
-Co(ast)
+INTERN int FCALL
+JITLexer_SkipStatementOrBraces(JITLexer *__restrict self,
+                               unsigned int *pwas_expression)
 #endif
-Co(super)
-Co(float)
-Co(compiler_item)
-Co(compiler_wrap)
+{
+ RETURN_TYPE result;
+ /* TODO: Auto-detect if it's a statement, or an expression. */
+#ifdef JIT_EVAL
+ result = JITLexer_EvalStatement(self);
+#else
+ result = JITLexer_SkipStatement(self);
+#endif
+ if (pwas_expression)
+    *pwas_expression = AST_PARSE_WASEXPR_NO;
+ return result;
+}
+
+DECL_END
+

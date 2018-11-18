@@ -489,6 +489,21 @@ err_unknown_attribute(DeeTypeObject *__restrict tp,
                         access_names[access&ATTR_ACCESS_MASK],tp,name);
 }
 INTERN ATTR_COLD int DCALL
+err_unknown_attribute_len(DeeTypeObject *__restrict tp,
+                          char const *__restrict name,
+                          size_t namelen,
+                          int access) {
+ ASSERT_OBJECT(tp);
+ ASSERT(!namelen || name);
+ ASSERT(DeeType_Check(tp));
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot %s unknown attribute `%k.%$s'",
+                        access_names[access&ATTR_ACCESS_MASK],
+                        tp,
+                        namelen,
+                        name);
+}
+INTERN ATTR_COLD int DCALL
 err_unknown_attribute_lookup(DeeTypeObject *__restrict tp,
                              char const *__restrict name) {
  return DeeError_Throwf(&DeeError_AttributeError,
@@ -513,6 +528,19 @@ err_cant_access_attribute(DeeTypeObject *__restrict tp,
                         "Cannot %s attribute `%k.%s'",
                         access_names[access&ATTR_ACCESS_MASK],
                         tp,name);
+}
+INTERN ATTR_COLD int DCALL
+err_cant_access_attribute_len(DeeTypeObject *__restrict tp,
+                              char const *__restrict name,
+                              size_t namelen,
+                              int access) {
+ ASSERT_OBJECT(tp);
+ ASSERT(!namelen || name);
+ ASSERT(DeeType_Check(tp));
+ return DeeError_Throwf(&DeeError_AttributeError,
+                        "Cannot %s attribute `%k.%$s'",
+                        access_names[access&ATTR_ACCESS_MASK],
+                        tp,namelen,name);
 }
 
 PRIVATE ATTR_RETNONNULL char const *DCALL
@@ -628,6 +656,14 @@ err_unknown_key_str(DeeObject *__restrict map, char const *__restrict key) {
  return DeeError_Throwf(&DeeError_KeyError,
                         "Could not find key `%s' in %k `%k'",
                         key,Dee_TYPE(map),map);
+}
+INTERN ATTR_COLD int DCALL
+err_unknown_key_str_len(DeeObject *__restrict map, char const *__restrict key, size_t keylen) {
+ ASSERT_OBJECT(map);
+ ASSERT(key);
+ return DeeError_Throwf(&DeeError_KeyError,
+                        "Could not find key `%$s' in %k `%k'",
+                        keylen,key,Dee_TYPE(map),map);
 }
 INTERN ATTR_COLD int DCALL
 err_empty_sequence(DeeObject *__restrict seq) {

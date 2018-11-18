@@ -426,7 +426,6 @@ class object: public detail::object_base {
     public:
         attr_proxy_obj(DeeObject *ptr, DeeObject *str) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str) {}
         attr_proxy_obj(attr_proxy_obj const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str) {}
-        WUNUSED string doc() const;
         WUNUSED DREF DeeObject *getref() const { return DeeObject_GetAttr(m_ptr,m_str); }
         WUNUSED DREF DeeObject *callref() const { return DeeObject_CallAttr(m_ptr,m_str,0,NULL); }
         WUNUSED DREF DeeObject *callref(obj_tuple args) const { return DeeObject_CallAttrTuple(m_ptr,m_str,args); }
@@ -444,7 +443,6 @@ class object: public detail::object_base {
         attr_proxy_str(DeeObject *ptr, char const *str) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str) {}
         attr_proxy_str(attr_proxy_str const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str) {}
         DREF DeeObject *getref() const { return DeeObject_GetAttrString(m_ptr,m_str); }
-        string doc() const;
         WUNUSED DREF DeeObject *callref() const { return DeeObject_CallAttrString(m_ptr,m_str,0,NULL); }
         WUNUSED DREF DeeObject *callref(obj_tuple args) const { return DeeObject_CallAttrString(m_ptr,m_str,DeeTuple_SIZE((DeeObject *)args),DeeTuple_ELEM((DeeObject *)args)); }
         WUNUSED DREF DeeObject *callref(size_t argc, DeeObject **__restrict argv) const { return DeeObject_CallAttrString(m_ptr,m_str,argc,argv); }
@@ -462,7 +460,6 @@ class object: public detail::object_base {
         attr_proxy_sth(DeeObject *ptr, char const *str, dhash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(hsh) {}
         attr_proxy_sth(attr_proxy_sth const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str), m_hsh(right.m_hsh) {}
         DREF DeeObject *getref() const { return DeeObject_GetAttrStringHash(m_ptr,m_str,m_hsh); }
-        string doc() const;
         WUNUSED DREF DeeObject *callref() const { return DeeObject_CallAttrStringHash(m_ptr,m_str,m_hsh,0,NULL); }
         WUNUSED DREF DeeObject *callref(obj_tuple args) const { return DeeObject_CallAttrStringHash(m_ptr,m_str,m_hsh,DeeTuple_SIZE((DeeObject *)args),DeeTuple_ELEM((DeeObject *)args)); }
         WUNUSED DREF DeeObject *callref(size_t argc, DeeObject **__restrict argv) const { return DeeObject_CallAttrStringHash(m_ptr,m_str,m_hsh,argc,argv); }
@@ -579,9 +576,6 @@ public:
     object getattr(obj_string name) const { return inherit(DeeObject_GetAttr(*this,name)); }
     object getattr(char const *__restrict name) const { return inherit(DeeObject_GetAttrString(*this,name)); }
     object getattr(char const *__restrict name, dhash_t hash) const { return inherit(DeeObject_GetAttrStringHash(*this,name,hash)); }
-    string docattr(obj_string name) const;
-    string docattr(char const *__restrict name) const;
-    string docattr(char const *__restrict name, dhash_t hash) const;
     bool hasattr(obj_string name) const { return throw_if_negative(DeeObject_HasAttr(*this,name)) != 0; }
     bool hasattr(char const *__restrict name) const { return throw_if_negative(DeeObject_HasAttrString(*this,name)) != 0; }
     bool hasattr(char const *__restrict name, dhash_t hash) const { return throw_if_negative(DeeObject_HasAttrStringHash(*this,name,hash)) != 0; }
@@ -678,7 +672,6 @@ public:
     object thiscall(DeeObject *__restrict this_arg, size_t argc, object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,(DeeObject **)argv,kw)); }
     object thiscall(DeeObject *__restrict this_arg, size_t argc, object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,(DeeObject **)argv,kw)); }
     object thiscall(DeeObject *__restrict this_arg, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,args.size(),(DeeObject **)args.begin(),kw)); }
-    string doc() const;
     string str() const;
     string repr() const;
     deemon::super super() const;

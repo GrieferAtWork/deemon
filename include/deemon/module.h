@@ -883,14 +883,18 @@ DeeModule_Import(DeeObject *__restrict module_name,
  * These functions act and behave just as once would expect, raising errors when
  * appropriate and returning NULL/false/-1 upon error or not knowing the given name. */
 INTDEF struct module_symbol *DCALL DeeModule_GetSymbolString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
-INTDEF struct module_symbol *DCALL DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attr_name_len, dhash_t hash);
+INTDEF struct module_symbol *DCALL DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 INTDEF struct module_symbol *DCALL DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid);
 INTDEF DREF DeeObject *DCALL DeeModule_GetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attr_name_len, dhash_t hash);
+INTDEF DREF DeeObject *DCALL DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 INTDEF bool DCALL DeeModule_HasAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+INTDEF bool DCALL DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 INTDEF int DCALL DeeModule_BoundAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+INTDEF int DCALL DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 INTDEF int DCALL DeeModule_DelAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+INTDEF int DCALL DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 INTDEF int DCALL DeeModule_SetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash, DeeObject *__restrict value);
+INTDEF int DCALL DeeModule_SetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, DeeObject *__restrict value);
 #endif
 
 /* Return the name of a global variable in the given module.

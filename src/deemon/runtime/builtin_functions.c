@@ -43,21 +43,6 @@
 DECL_BEGIN
 
 PRIVATE DREF DeeObject *DCALL
-f_builtin_get_documentation(size_t argc, DeeObject **__restrict argv) {
- DeeObject *self,*attr = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:docfor",&self,&attr))
-     goto err;
- if (!attr)
-     return DeeObject_Doc(self);
- if (DeeObject_AssertTypeExact(attr,&DeeString_Type))
-     goto err;
- return DeeObject_DocAttr(self,attr);
-err:
- return NULL;
-}
-INTERN DEFINE_CMETHOD(builtin_get_documentation,&f_builtin_get_documentation);
-
-PRIVATE DREF DeeObject *DCALL
 f_builtin_hasattr(size_t argc, DeeObject **__restrict argv) {
  DeeObject *self,*attr; int result;
  if (DeeArg_Unpack(argc,argv,"oo:hasattr",&self,&attr))
@@ -72,6 +57,20 @@ err:
  return NULL;
 }
 INTERN DEFINE_CMETHOD(builtin_hasattr,&f_builtin_hasattr);
+
+PRIVATE DREF DeeObject *DCALL
+f_builtin_hasitem(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *self,*key; int result;
+ if (DeeArg_Unpack(argc,argv,"oo:hasitem",&self,&key))
+     goto err;
+ result = DeeObject_HasItem(self,key);
+ if unlikely(result < 0)
+    goto err;
+ return_bool_(result);
+err:
+ return NULL;
+}
+INTERN DEFINE_CMETHOD(builtin_hasitem,&f_builtin_hasitem);
 
 PRIVATE DREF DeeObject *DCALL
 f_builtin_boundattr(size_t argc, DeeObject **__restrict argv) {
@@ -104,7 +103,7 @@ f_builtin_bounditem(size_t argc, DeeObject **__restrict argv) {
      goto err;
  switch (DeeObject_BoundItem(self,key,allow_missing)) {
  default: return_false;
- case 1: return_true;
+ case 1:  return_true;
  case -1: break; /* Error */
  }
 err:
@@ -194,6 +193,8 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
    JITLValue_Fini(&lexer.jl_lvalue);
   }
   if likely(result) {
+   ASSERT(!context.jc_retval);
+handle_result:
    if unlikely(lexer.jl_tok != TOK_EOF) {
     DeeError_Throwf(&DeeError_SyntaxError,
                     "Expected EOF but got `%$s'",
@@ -204,12 +205,18 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
     goto handle_error;
    }
   } else {
+   if unlikely(context.jc_retval) {
+    result = context.jc_retval;
+    goto handle_result;
+   }
    if (!lexer.jl_errpos)
         lexer.jl_errpos = lexer.jl_tokstart;
 handle_error:
+   JITLValue_Fini(&lexer.jl_lvalue);
    /* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
    ;
   }
+  Dee_XDecref(context.jc_globals);
   JITContext_Fini(&context);
  }
 #else

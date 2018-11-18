@@ -196,7 +196,7 @@ DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
 INTERN struct module_symbol *DCALL
 DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
                              char const *__restrict attr_name,
-                             size_t attr_name_len, dhash_t hash) {
+                             size_t attrlen, dhash_t hash) {
  dhash_t i,perturb;
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
  perturb = i = MODULE_HASHST(self,hash);
@@ -204,8 +204,8 @@ DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (MODULE_SYMBOL_GETNAMELEN(item) != attr_name_len) continue; /* Non-matching length */
-  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attr_name_len * sizeof(char)) != 0) continue;
+  if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
+  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) != 0) continue;
   return item;
  }
  return NULL;
@@ -325,30 +325,27 @@ module_getattr_impl(DeeModuleObject *__restrict self,
 LOCAL DREF DeeObject *DCALL
 module_getattr_len_impl(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name,
-                        size_t attr_name_len, dhash_t hash) {
+                        size_t attrlen, dhash_t hash) {
  dhash_t i,perturb; DREF DeeObject *result;
- char *name_buf;
  perturb = i = MODULE_HASHST(self,hash);
  for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
   struct module_symbol *item = MODULE_HASHIT(self,i);
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
-  if (MODULE_SYMBOL_GETNAMELEN(item) != attr_name_len) continue; /* Non-matching length */
-  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attr_name_len * sizeof(char)) == 0)
+  if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
+  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) == 0)
       return module_getattr_symbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
- name_buf = (char *)Dee_AMalloc((attr_name_len + 1) * sizeof(char));
- if unlikely(!name_buf) goto err;
- memcpy(name_buf,attr_name,attr_name_len * sizeof(char));
- name_buf[attr_name_len] = '\0';
- result = DeeObject_GenericGetAttrString((DeeObject *)self,
-                                          name_buf,
-                                          hash);
- Dee_AFree(name_buf);
+ result = DeeObject_GenericGetAttrStringLen((DeeObject *)self,
+                                             attr_name,
+                                             attrlen,
+                                             hash);
  if (result != ITER_DONE) return result;
- err_module_no_such_global_len(self,attr_name,attr_name_len,ATTR_ACCESS_GET);
-err:
+ err_module_no_such_global_len(self,
+                               attr_name,
+                               attrlen,
+                               ATTR_ACCESS_GET);
  return NULL;
 }
 
@@ -368,6 +365,27 @@ module_boundattr_impl(DeeModuleObject *__restrict self,
  return DeeObject_GenericBoundAttrString((DeeObject *)self,attr_name,hash);
 }
 
+LOCAL int DCALL
+module_boundattr_len_impl(DeeModuleObject *__restrict self,
+                          char const *__restrict attr_name,
+                          size_t attrlen, dhash_t hash) {
+ dhash_t i,perturb;
+ perturb = i = MODULE_HASHST(self,hash);
+ for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
+  struct module_symbol *item = MODULE_HASHIT(self,i);
+  if (!item->ss_name) break; /* Not found */
+  if (item->ss_hash != hash) continue; /* Non-matching hash */
+  if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
+  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) == 0)
+       return module_boundattr_symbol(self,item);
+ }
+ /* Fallback: Do a generic attribute lookup on the module. */
+ return DeeObject_GenericBoundAttrStringLen((DeeObject *)self,
+                                             attr_name,
+                                             attrlen,
+                                             hash);
+}
+
 LOCAL bool DCALL
 module_hasattr_impl(DeeModuleObject *__restrict self,
                     char const *__restrict attr_name, dhash_t hash) {
@@ -382,6 +400,27 @@ module_hasattr_impl(DeeModuleObject *__restrict self,
  }
  /* Fallback: Do a generic attribute lookup on the module. */
  return DeeObject_GenericHasAttrString((DeeObject *)self,attr_name,hash);
+}
+
+LOCAL bool DCALL
+module_hasattr_len_impl(DeeModuleObject *__restrict self,
+                        char const *__restrict attr_name,
+                        size_t attrlen, dhash_t hash) {
+ dhash_t i,perturb;
+ perturb = i = MODULE_HASHST(self,hash);
+ for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
+  struct module_symbol *item = MODULE_HASHIT(self,i);
+  if (!item->ss_name) break; /* Not found */
+  if (item->ss_hash != hash) continue; /* Non-matching hash */
+  if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
+  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) == 0)
+      return true;
+ }
+ /* Fallback: Do a generic attribute lookup on the module. */
+ return DeeObject_GenericHasAttrStringLen((DeeObject *)self,
+                                           attr_name,
+                                           attrlen,
+                                           hash);
 }
 
 INTERN int DCALL
@@ -451,6 +490,32 @@ module_delattr_impl(DeeModuleObject *__restrict self,
  error = DeeObject_GenericDelAttrString((DeeObject *)self,attr_name,hash);
  if unlikely(error <= 0) return error;
  return err_module_no_such_global(self,attr_name,ATTR_ACCESS_DEL);
+}
+
+LOCAL int DCALL
+module_delattr_len_impl(DeeModuleObject *__restrict self,
+                        char const *__restrict attr_name,
+                        size_t attrlen, dhash_t hash) {
+ int error; dhash_t i,perturb;
+ perturb = i = MODULE_HASHST(self,hash);
+ for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
+  struct module_symbol *item = MODULE_HASHIT(self,i);
+  if (!item->ss_name) break; /* Not found */
+  if (item->ss_hash != hash) continue; /* Non-matching hash */
+  if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
+  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) == 0)
+      return module_delattr_symbol(self,item);
+ }
+ /* Fallback: Do a generic attribute lookup on the module. */
+ error = DeeObject_GenericDelAttrStringLen((DeeObject *)self,
+                                            attr_name,
+                                            attrlen,
+                                            hash);
+ if unlikely(error <= 0) return error;
+ return err_module_no_such_global_len(self,
+                                      attr_name,
+                                      attrlen,
+                                      ATTR_ACCESS_DEL);
 }
 
 INTERN int DCALL
@@ -540,6 +605,34 @@ module_setattr_impl(DeeModuleObject *__restrict self,
  return err_module_no_such_global(self,attr_name,ATTR_ACCESS_SET);
 }
 
+LOCAL int DCALL
+module_setattr_len_impl(DeeModuleObject *__restrict self,
+                        char const *__restrict attr_name,
+                        size_t attrlen, dhash_t hash,
+                        DeeObject *__restrict value) {
+ int error; dhash_t i,perturb;
+ perturb = i = MODULE_HASHST(self,hash);
+ for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
+  struct module_symbol *item = MODULE_HASHIT(self,i);
+  if (!item->ss_name) break; /* Not found */
+  if (item->ss_hash != hash) continue; /* Non-matching hash */
+  if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
+  if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) == 0)
+      return module_setattr_symbol(self,item,value);
+ }
+ /* Fallback: Do a generic attribute lookup on the module. */
+ error = DeeObject_GenericSetAttrStringLen((DeeObject *)self,
+                                            attr_name,
+                                            attrlen,
+                                            hash,
+                                            value);
+ if unlikely(error <= 0) return error;
+ return err_module_no_such_global_len(self,
+                                      attr_name,
+                                      attrlen,
+                                      ATTR_ACCESS_SET);
+}
+
 
 #ifndef CONFIG_NO_THREADS
 INTDEF void DCALL interactivemodule_lockread(DeeModuleObject *__restrict self);
@@ -574,20 +667,23 @@ DeeModule_GetAttrString(DeeModuleObject *__restrict self,
 INTERN DREF DeeObject *DCALL
 DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self,
                            char const *__restrict attr_name,
-                           size_t attr_name_len, dhash_t hash) {
+                           size_t attrlen, dhash_t hash) {
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
  if (!(self->mo_flags & MODULE_FDIDLOAD)) {
   if (DeeInteractiveModule_Check(self)) {
    DREF DeeObject *result;
    interactivemodule_lockread(self);
-   result = module_getattr_len_impl(self,attr_name,attr_name_len,hash);
+   result = module_getattr_len_impl(self,attr_name,attrlen,hash);
    interactivemodule_lockendread(self);
    return result;
   }
-  err_module_not_loaded_attr_len(self,attr_name,attr_name_len,ATTR_ACCESS_GET);
+  err_module_not_loaded_attr_len(self,
+                                 attr_name,
+                                 attrlen,
+                                 ATTR_ACCESS_GET);
   return NULL;
  }
- return module_getattr_len_impl(self,attr_name,attr_name_len,hash);
+ return module_getattr_len_impl(self,attr_name,attrlen,hash);
 }
 INTERN int DCALL
 DeeModule_BoundAttrString(DeeModuleObject *__restrict self,
@@ -605,6 +701,23 @@ DeeModule_BoundAttrString(DeeModuleObject *__restrict self,
  }
  return module_boundattr_impl(self,attr_name,hash);
 }
+INTERN int DCALL
+DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self,
+                             char const *__restrict attr_name,
+                             size_t attrlen, dhash_t hash) {
+ ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
+ if (!(self->mo_flags & MODULE_FDIDLOAD)) {
+  if (DeeInteractiveModule_Check(self)) {
+   int result;
+   interactivemodule_lockread(self);
+   result = module_boundattr_len_impl(self,attr_name,attrlen,hash);
+   interactivemodule_lockendread(self);
+   return result;
+  }
+  return -2;
+ }
+ return module_boundattr_len_impl(self,attr_name,attrlen,hash);
+}
 INTERN bool DCALL
 DeeModule_HasAttrString(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name, dhash_t hash) {
@@ -621,6 +734,23 @@ DeeModule_HasAttrString(DeeModuleObject *__restrict self,
  }
  return module_hasattr_impl(self,attr_name,hash);
 }
+INTERN bool DCALL
+DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self,
+                           char const *__restrict attr_name,
+                           size_t attrlen, dhash_t hash) {
+ ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
+ if (!(self->mo_flags & MODULE_FDIDLOAD)) {
+  if (DeeInteractiveModule_Check(self)) {
+   bool result;
+   interactivemodule_lockread(self);
+   result = module_hasattr_len_impl(self,attr_name,attrlen,hash);
+   interactivemodule_lockendread(self);
+   return result;
+  }
+  return false;
+ }
+ return module_hasattr_len_impl(self,attr_name,attrlen,hash);
+}
 INTERN int DCALL
 DeeModule_DelAttrString(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name, dhash_t hash) {
@@ -633,9 +763,31 @@ DeeModule_DelAttrString(DeeModuleObject *__restrict self,
    interactivemodule_lockendwrite(self);
    return result;
   }
-  return err_module_not_loaded_attr(self,attr_name,ATTR_ACCESS_DEL);
+  return err_module_not_loaded_attr(self,
+                                    attr_name,
+                                    ATTR_ACCESS_DEL);
  }
  return module_delattr_impl(self,attr_name,hash);
+}
+INTERN int DCALL
+DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self,
+                           char const *__restrict attr_name,
+                           size_t attrlen, dhash_t hash) {
+ ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
+ if (!(self->mo_flags & MODULE_FDIDLOAD)) {
+  if (DeeInteractiveModule_Check(self)) {
+   int result;
+   interactivemodule_lockwrite(self);
+   result = module_delattr_len_impl(self,attr_name,attrlen,hash);
+   interactivemodule_lockendwrite(self);
+   return result;
+  }
+  return err_module_not_loaded_attr_len(self,
+                                        attr_name,
+                                        attrlen,
+                                        ATTR_ACCESS_DEL);
+ }
+ return module_delattr_len_impl(self,attr_name,attrlen,hash);
 }
 INTERN int DCALL
 DeeModule_SetAttrString(DeeModuleObject *__restrict self,
@@ -650,9 +802,32 @@ DeeModule_SetAttrString(DeeModuleObject *__restrict self,
    interactivemodule_lockendwrite(self);
    return result;
   }
-  return err_module_not_loaded_attr(self,attr_name,ATTR_ACCESS_SET);
+  return err_module_not_loaded_attr(self,
+                                    attr_name,
+                                    ATTR_ACCESS_SET);
  }
  return module_setattr_impl(self,attr_name,hash,value);
+}
+INTERN int DCALL
+DeeModule_SetAttrStringLen(DeeModuleObject *__restrict self,
+                           char const *__restrict attr_name,
+                           size_t attrlen, dhash_t hash,
+                           DeeObject *__restrict value) {
+ ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
+ if (!(self->mo_flags & MODULE_FDIDLOAD)) {
+  if (DeeInteractiveModule_Check(self)) {
+   int result;
+   interactivemodule_lockwrite(self);
+   result = module_setattr_len_impl(self,attr_name,attrlen,hash,value);
+   interactivemodule_lockendwrite(self);
+   return result;
+  }
+  return err_module_not_loaded_attr_len(self,
+                                        attr_name,
+                                        attrlen,
+                                        ATTR_ACCESS_SET);
+ }
+ return module_setattr_len_impl(self,attr_name,attrlen,hash,value);
 }
 
 

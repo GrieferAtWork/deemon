@@ -294,10 +294,6 @@ DEFINE_SECONDARY(CastOperand) {
  case '-': /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
  case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(cell(castexpr))' */
  case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(list(castexpr))' */
-#if 0
-  if (WARN(W_UNCLEAR_CAST_INTENT))
-      goto err;
-#endif
 not_a_cast:
   /* Not a cast expression. */
   result = LHS_OR_OK; /* Inherit reference */
@@ -399,8 +395,8 @@ not_a_cast:
  default:
   /* If what follows still isn't the start of
    * an expression, then this isn't a cast. */
-  if (!maybe_expression_begin_c(*self->jl_tokstart))
-       goto not_a_cast;
+  if (!JIT_MaybeExpressionBegin(self->jl_tok))
+      goto not_a_cast;
 do_a_cast:
   /* Actually do a cast. */
   LOAD_LVALUE(lhs,err);
@@ -571,12 +567,42 @@ done_y1:
 #endif
   goto done;
 
-#if 0
  case TOK_INC:
- case TOK_DEC:
-  /* TODO: Need a custom parser protocol! */
-  goto done;
+ case TOK_DEC: {
+#ifdef JIT_EVAL
+  unsigned int cmd = self->jl_tok;
+  int error;
 #endif
+  /* Need a custom parser protocol! */
+  JITLexer_Yield(self);
+  result = CALL_PRIMARYF(Unary,JITLEXER_EVAL_FSECONDARY);
+  if (ISERR(result)) goto done;
+#ifdef JIT_EVAL
+  if (result != JIT_LVALUE) {
+   err_cannot_invoke_inplace(NULL,
+                             cmd == TOK_INC
+                           ? OPERATOR_INC
+                           : OPERATOR_DEC);
+   goto err;
+  }
+  result = JITLValue_GetValue(&self->jl_lvalue,
+                               self->jl_context);
+  if unlikely(!result) goto err;
+  error = cmd == TOK_INC
+        ? DeeObject_Inc(&result)
+        : DeeObject_Dec(&result)
+        ;
+  if unlikely(error) goto err_r;
+  error = JITLValue_SetValue(&self->jl_lvalue,
+                              self->jl_context,
+                              result);
+  if unlikely(error) goto err_r;
+  JITLValue_Fini(&self->jl_lvalue);
+  JITLValue_Init(&self->jl_lvalue);
+#endif /* JIT_EVAL */
+  goto done;
+ }
+
 
  case '!': /* not */
   JITLexer_Yield(self);
@@ -603,53 +629,62 @@ done_y1:
   /* Parenthesis. */
   JITLexer_Yield(self);
   allow_cast = self->jl_tok != '(' && !(flags & JITLEXER_EVAL_FDISALLOWCAST);
-#if 0
+#if 1
   if (self->jl_tok == '{') {
    unsigned int was_expression;
    /* Statements in expressions. */
-   result = ast_parse_statement_or_braces(&was_expression);
+#ifdef JIT_EVAL
+   result = JITLexer_EvalStatementOrBraces(self,&was_expression);
+#else
+   result = JITLexer_SkipStatementOrBraces(self,&was_expression);
+#endif
+   if (ISERR(result)) goto err;
+   LOAD_LVALUE(result,err);
    allow_cast = false; /* Don't allow braces, or statements as cast expressions. */
    if (self->jl_tok == ',' && was_expression != AST_PARSE_WASEXPR_NO) {
-    DREF struct ast **tuple_branchv;
-    if unlikely(!result) goto err;
-    if unlikely(yield() < 0) goto err_r;
+    JITLexer_Yield(self);
     if (self->jl_tok == ')') {
      /* single-element tuple expression, where the single element is a sequence. */
-     tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-     if unlikely(!tuple_branchv) goto err_r;
-     tuple_branchv[0] = result; /* Inherit reference. */
-     merge = ast_multiple(AST_FMULTIPLE_TUPLE,1,tuple_branchv);
-     if unlikely(!merge) { Dee_Free(tuple_branchv); goto err_r; }
-     result = merge;
+#ifdef JIT_EVAL
+     DREF DeeObject *tuple;
+     tuple = DeeTuple_PackSymbolic(1,result);
+     if unlikely(!tuple) goto err_r;
+     result = tuple; /* Inherit reference. */
+#endif
     } else {
      /* There are more items! */
-     merge = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
-                             AST_FMULTIPLE_TUPLE,
-                             NULL);
-     if unlikely(!merge) goto err_r;
-     ASSERT(merge->a_type == AST_MULTIPLE ||
-           (merge->a_type == AST_CONSTEXPR && 
-            merge->a_constexpr == Dee_EmptyTuple));
-     if (merge->a_constexpr == Dee_EmptyTuple) {
-      tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-      if unlikely(!tuple_branchv) goto err_merge_r;
-      Dee_DecrefNokill(merge->a_constexpr);
-      merge->a_type = AST_MULTIPLE;
-      merge->a_flag = AST_FMULTIPLE_TUPLE;
-      merge->a_multiple.m_astc = 1;
+     RETURN_TYPE merge;
+#ifdef JIT_EVAL
+     merge = JITLexer_EvalComma(self,
+                                AST_COMMA_FORCEMULTIPLE,
+                               &DeeTuple_Type,
+                                NULL);
+#else
+     merge = JITLexer_SkipComma(self,
+                                AST_COMMA_FORCEMULTIPLE,
+                                NULL);
+#endif
+     if (ISERR(merge)) goto err_r;
+#ifdef JIT_EVAL
+     ASSERT(DeeTuple_Check(merge));
+     if (merge == Dee_EmptyTuple) {
+      DREF DeeObject *tuple;
+      Dee_DecrefNokill(merge);
+      tuple = DeeTuple_PackSymbolic(1,result);
+      if unlikely(!tuple) goto err_r;
+      result = tuple; /* Inherit reference. */
      } else {
-      tuple_branchv = (struct ast **)Dee_Realloc(merge->a_multiple.m_astv,
-                                                (merge->a_multiple.m_astc + 1) *
-                                                 sizeof(DREF struct ast *));
-      if unlikely(!tuple_branchv) goto err_merge_r;
-      MEMMOVE_PTR(tuple_branchv + 1,
-                  tuple_branchv,
-                  merge->a_multiple.m_astc);
-      ++merge->a_multiple.m_astc;
+      DREF DeeObject *tuple;
+      tuple = DeeTuple_NewUninitialized(1 + DeeTuple_SIZE(merge));
+      if unlikely(!tuple) { Dee_Decref(merge); goto err_r; }
+      DeeTuple_SET(tuple,0,result);        /* Inherit reference. */
+      MEMCPY_PTR(DeeTuple_ELEM(tuple) + 1,
+                 DeeTuple_ELEM(merge),
+                 DeeTuple_SIZE(merge));    /* Inherit references. */
+      DeeTuple_DecrefSymbolic(merge);
+      result = tuple;                      /* Inherit references. */
      }
-     tuple_branchv[0] = result; /* Inherit reference. */
-     merge->a_multiple.m_astv = tuple_branchv;
-     result = merge; /* Inherit reference. */
+#endif /* JIT_EVAL */
     }
    }
   } else
@@ -991,7 +1026,7 @@ skip_rbrck_and_done:
      result = ast_parse_statement_or_braces(NULL);
     } else
 #endif
-    if (maybe_expression_begin_c(*self->jl_tokstart)) {
+    if (JIT_MaybeExpressionBegin(self->jl_tok)) {
      /* Parse the packed expression. */
 #ifdef JIT_EVAL
      result = JITLexer_EvalComma(self,
@@ -1145,7 +1180,8 @@ skip_rbrck_and_done:
                          (JITSymbol *)&self->jl_lvalue,
                           symbol_name,
                           symbol_size,
-                          flags))
+                          flags,
+                          self->jl_text))
         goto err;
    }
    result = JIT_LVALUE;
@@ -1193,6 +1229,49 @@ DEFINE_PRIMARY(Unary) {
  result = CALL_PRIMARY(UnaryHead);
  if (ISOK(result)) for (;;) {
   switch (self->jl_tok) {
+
+  case TOK_INC:
+  case TOK_DEC: {
+#ifdef JIT_EVAL
+   DREF DeeObject *result_copy;
+   unsigned int cmd = self->jl_tok;
+   int error;
+#endif
+   /* Need a custom parser protocol! */
+   JITLexer_Yield(self);
+#ifdef JIT_EVAL
+   if (result != JIT_LVALUE) {
+    err_cannot_invoke_inplace(NULL,
+                              cmd == TOK_INC
+                            ? OPERATOR_INC
+                            : OPERATOR_DEC);
+    goto err;
+   }
+   result = JITLValue_GetValue(&self->jl_lvalue,
+                                self->jl_context);
+   if unlikely(!result) goto err;
+   result_copy = DeeObject_Copy(result);
+   if unlikely(!result_copy) goto err_r;
+   error = cmd == TOK_INC
+         ? DeeObject_Inc(&result)
+         : DeeObject_Dec(&result)
+         ;
+   if unlikely(error) {
+err_result_copy:
+    Dee_Decref(result_copy);
+    goto err_r;
+   }
+   error = JITLValue_SetValue(&self->jl_lvalue,
+                               self->jl_context,
+                               result);
+   if unlikely(error) goto err_result_copy;
+   JITLValue_Fini(&self->jl_lvalue);
+   JITLValue_Init(&self->jl_lvalue);
+   Dee_Decref(result);
+   result = result_copy; /* Inherit reference. */
+#endif /* JIT_EVAL */
+  } break;
+
 
   case '.':
    IF_EVAL(pos = self->jl_tokstart;)
@@ -1256,7 +1335,6 @@ DEFINE_PRIMARY(Unary) {
 #ifndef __OPTIMIZE_SIZE__
     /* Optimization for callattr expressions. */
     if (self->jl_tok == '(') {
-     DREF DeeObject *attr_name_ob;
      DREF DeeObject *args;
      JITLexer_Yield(self);
      if (self->jl_tok == ')') {
@@ -1280,12 +1358,10 @@ DEFINE_PRIMARY(Unary) {
        goto err_r;
       }
      }
-     attr_name_ob = DeeString_NewUtf8(attr_name,attr_size,STRING_ERROR_FSTRICT);
-     if unlikely(!attr_name_ob) goto err_r_invoke;
-     rhs = DeeObject_CallAttrTuple(result,
-                                   attr_name_ob,
-                                   args);
-     Dee_Decref(attr_name_ob);
+     rhs = DeeObject_CallAttrStringLenTuple(result,
+                                            attr_name,
+                                            attr_size,
+                                            args);
      Dee_Decref(args);
      if unlikely(!rhs)
         goto err_r_invoke;
@@ -1296,10 +1372,10 @@ DEFINE_PRIMARY(Unary) {
     {
      /* Generic attribute lookup */
      ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
-     self->jl_lvalue.lv_kind = JIT_LVALUE_ATTR_STR;
-     self->jl_lvalue.lv_attr_str.la_base = result; /* Inherit reference. */
-     self->jl_lvalue.lv_attr_str.la_name = attr_name;
-     self->jl_lvalue.lv_attr_str.la_nsiz = attr_size;
+     self->jl_lvalue.lv_kind = JIT_LVALUE_ATTRSTR;
+     self->jl_lvalue.lv_attrstr.la_base = result; /* Inherit reference. */
+     self->jl_lvalue.lv_attrstr.la_name = attr_name;
+     self->jl_lvalue.lv_attrstr.la_size = attr_size;
      result = JIT_LVALUE;
     }
 #endif /* JIT_EVAL */
@@ -2404,7 +2480,7 @@ DEFINE_SECONDARY(CondOperand) {
     LOAD_LVALUE(lhs,err);
     if (self->jl_tok == ':') {
      JITLexer_Yield(self);
-     if (maybe_expression_begin_c(*self->jl_tokstart)) {
+     if (JIT_MaybeExpressionBegin(self->jl_tok)) {
       if unlikely(JITLexer_SkipCond(self,flags))
          goto err_r;
      }
@@ -2419,7 +2495,7 @@ DEFINE_SECONDARY(CondOperand) {
      Dee_Incref(Dee_None);
     } else {
      JITLexer_Yield(self);
-     if (maybe_expression_begin_c(*self->jl_tokstart)) {
+     if (JIT_MaybeExpressionBegin(self->jl_tok)) {
       Dee_Decref(lhs);
       lhs = JITLexer_EvalCond(self,flags);
       if unlikely(!lhs)
@@ -2442,7 +2518,7 @@ DEFINE_SECONDARY(CondOperand) {
   if (self->jl_tok == ':') {
    /* Parse the false-branch. */
    JITLexer_Yield(self);
-   if (maybe_expression_begin_c(*self->jl_tokstart)) {
+   if (JIT_MaybeExpressionBegin(self->jl_tok)) {
     if unlikely(JITLexer_SkipCond(self,flags))
        goto err_r;
    } else {
@@ -2620,7 +2696,7 @@ again:
 #endif
   JITLexer_Yield(self);
   /* Allow  */
-  if (!maybe_expression_begin_c(*self->jl_tokstart))
+  if (!JIT_MaybeExpressionBegin(self->jl_tok))
       break;
   /* Load the next expression. */
   lhs = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
@@ -2687,7 +2763,7 @@ again:
 #endif
   JITLexer_Yield(self);
   /* Allow  */
-  if (!maybe_expression_begin_c(*self->jl_tokstart))
+  if (!JIT_MaybeExpressionBegin(self->jl_tok))
       break;
   /* Load the next expression. */
   lhs = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
@@ -2748,7 +2824,7 @@ again:
  if (self->jl_tok != ',')
      goto done;
  JITLexer_Yield(self);
- if (!maybe_expression_begin_c(*self->jl_tokstart))
+ if (!JIT_MaybeExpressionBegin(self->jl_tok))
      goto done;
  /* Parse the next key. */
  if (self->jl_tok == '.') {
@@ -2794,6 +2870,8 @@ DECL_END
 
 #ifndef __INTELLISENSE__
 #include "parser-impl-comma.c.inl"
+#include "parser-impl-statement.c.inl"
+#include "parser-impl-hybrid.c.inl"
 
 #undef LOAD_LVALUE
 #undef LOAD_LVALUE_OR_RETURN_ERROR

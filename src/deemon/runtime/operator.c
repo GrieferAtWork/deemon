@@ -3781,6 +3781,185 @@ err:
  return -1;
 }
 
+PUBLIC int
+(DCALL DeeObject_BoundItemStringLen)(DeeObject *__restrict self,
+                                     char const *__restrict key,
+                                     size_t keylen,
+                                     dhash_t hash,
+                                     bool allow_missing) {
+ int result;
+ DREF DeeObject *key_ob;
+ ASSERT_OBJECT(self);
+ if (DeeDict_CheckExact(self))
+     return DeeDict_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
+ if (DeeKwdsMapping_CheckExact(self))
+     return DeeKwdsMapping_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
+ /* Fallback: create a string object and use it for indexing. */
+ key_ob = DeeString_NewSizedWithHash(key,keylen,hash);
+ if unlikely(!key_ob) goto err;
+ result = DeeObject_BoundItem(self,key_ob,allow_missing);
+ Dee_Decref(key_ob);
+ return result;
+err:
+ return -1;
+}
+
+
+PUBLIC int
+(DCALL DeeObject_HasItem)(DeeObject *__restrict self,
+                          DeeObject *__restrict index) {
+ DREF DeeObject *result;
+ DeeTypeObject *tp_self; size_t i;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
+   struct type_nsi *nsi;
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi) {
+    if (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+     size_t size;
+     if (DeeObject_AsSize(index,&i))
+         goto err;
+     if (nsi->nsi_seqlike.nsi_getsize_fast) {
+      size = (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
+     } else {
+      size = (*nsi->nsi_seqlike.nsi_getsize)(self);
+      if unlikely(size == (size_t)-1) goto err;
+     }
+     return i < size;
+    } else if (nsi->nsi_class == TYPE_SEQX_CLASS_MAP) {
+     if (nsi->nsi_maplike.nsi_getdefault) {
+      result = (*nsi->nsi_maplike.nsi_getdefault)(self,index,ITER_DONE);
+      if (result == ITER_DONE)
+          return 0;
+      goto check_result;
+     }
+     /* We can't actually substitute with `operator contains', because
+      * if we did that, we may get a false positive for a valid key, but
+      * an unbound key none-the-less. */
+    }
+   }
+   /* Fallback create an integer object and use it for indexing. */
+   result = DeeType_INVOKE_GETITEM(tp_self,self,index);
+check_result:
+   if (!result) {
+    if (DeeError_Catch(&DeeError_UnboundItem) ||
+        DeeError_Catch(&DeeError_IndexError) ||
+        DeeError_Catch(&DeeError_KeyError))
+        return 0;
+    goto err;
+   }
+   Dee_Decref(result);
+   return 1;
+  }
+ } while (type_inherit_getitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_GETITEM);
+err:
+ return -1;
+}
+
+PUBLIC int
+(DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self,
+                               size_t index) {
+ DREF DeeObject *result,*index_ob;
+ DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ do {
+  if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
+   struct type_nsi *nsi;
+   nsi = tp_self->tp_seq->tp_nsi;
+   if (nsi) {
+    if (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+     size_t size;
+     if (nsi->nsi_seqlike.nsi_getsize_fast) {
+      size = (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
+     } else {
+      size = (*nsi->nsi_seqlike.nsi_getsize)(self);
+      if unlikely(size == (size_t)-1) goto err;
+     }
+     return index < size;
+    } else if (nsi->nsi_class == TYPE_SEQX_CLASS_MAP) {
+     if (nsi->nsi_maplike.nsi_getdefault) {
+      index_ob = DeeInt_NewSize(index);
+      if unlikely(!index_ob) goto err;
+      result = (*nsi->nsi_maplike.nsi_getdefault)(self,index_ob,ITER_DONE);
+      Dee_Decref(index_ob);
+      if (result == ITER_DONE)
+          return 0;
+      goto check_result;
+     }
+     /* We can't actually substitute with `operator contains', because
+      * if we did that, we may get a false positive for a valid key, but
+      * an unbound key none-the-less. */
+    }
+   }
+   /* Fallback create an integer object and use it for indexing. */
+   index_ob = DeeInt_NewSize(index);
+   if unlikely(!index_ob) goto err;
+   result = DeeType_INVOKE_GETITEM(tp_self,self,index_ob);
+   Dee_Decref(index_ob);
+check_result:
+   if (!result) {
+    if (DeeError_Catch(&DeeError_UnboundItem) ||
+        DeeError_Catch(&DeeError_IndexError) ||
+        DeeError_Catch(&DeeError_KeyError))
+        return 0;
+    goto err;
+   }
+   Dee_Decref(result);
+   return 1;
+  }
+ } while (type_inherit_getitem(tp_self));
+ err_unimplemented_operator(tp_self,OPERATOR_GETITEM);
+err:
+ return -1;
+}
+
+PUBLIC int
+(DCALL DeeObject_HasItemString)(DeeObject *__restrict self,
+                                char const *__restrict key,
+                                dhash_t hash) {
+ int result;
+ DREF DeeObject *key_ob;
+ ASSERT_OBJECT(self);
+ if (DeeDict_CheckExact(self))
+     return DeeDict_HasItemString(self,key,hash) ? 1 : 0;
+ if (DeeKwdsMapping_CheckExact(self))
+     return DeeKwdsMapping_HasItemString(self,key,hash) ? 1 : 0;
+ /* Fallback: create a string object and use it for indexing. */
+ key_ob = DeeString_NewWithHash(key,hash);
+ if unlikely(!key_ob) goto err;
+ result = DeeObject_HasItem(self,key_ob);
+ Dee_Decref(key_ob);
+ return result;
+err:
+ return -1;
+}
+
+PUBLIC int
+(DCALL DeeObject_HasItemStringLen)(DeeObject *__restrict self,
+                                   char const *__restrict key,
+                                   size_t keylen,
+                                   dhash_t hash) {
+ int result;
+ DREF DeeObject *key_ob;
+ ASSERT_OBJECT(self);
+ if (DeeDict_CheckExact(self))
+     return DeeDict_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
+ if (DeeKwdsMapping_CheckExact(self))
+     return DeeKwdsMapping_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
+ /* Fallback: create a string object and use it for indexing. */
+ key_ob = DeeString_NewSizedWithHash(key,keylen,hash);
+ if unlikely(!key_ob) goto err;
+ result = DeeObject_HasItem(self,key_ob);
+ Dee_Decref(key_ob);
+ return result;
+err:
+ return -1;
+}
+
 
 PUBLIC DREF DeeObject *DCALL
 DeeObject_GetItemDef(DeeObject *__restrict self,
@@ -3915,8 +4094,29 @@ err:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
+DeeObject_GetItemStringLen(DeeObject *__restrict self,
+                           char const *__restrict key,
+                           size_t keylen,
+                           dhash_t hash) {
+ DREF DeeObject *key_ob,*result;
+ ASSERT_OBJECT(self);
+ if (DeeDict_CheckExact(self))
+     return DeeDict_GetItemStringLen(self,key,keylen,hash);
+ if (DeeKwdsMapping_CheckExact(self))
+     return DeeKwdsMapping_GetItemStringLen(self,key,keylen,hash);
+ /* Fallback: create a string object and use it for indexing. */
+ key_ob = DeeString_NewSizedWithHash(key,keylen,hash);
+ if unlikely(!key_ob) goto err;
+ result = DeeObject_GetItem(self,key_ob);
+ Dee_Decref(key_ob);
+ return result;
+err:
+ return NULL;
+}
+PUBLIC DREF DeeObject *DCALL
 DeeObject_GetItemStringDef(DeeObject *__restrict self,
-                           char const *__restrict key, dhash_t hash,
+                           char const *__restrict key,
+                           dhash_t hash,
                            DeeObject *__restrict def) {
  DREF DeeObject *key_ob,*result;
  ASSERT_OBJECT(self);
@@ -3926,6 +4126,27 @@ DeeObject_GetItemStringDef(DeeObject *__restrict self,
      return DeeKwdsMapping_GetItemStringDef(self,key,hash,def);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewWithHash(key,hash);
+ if unlikely(!key_ob) goto err;
+ result = DeeObject_GetItemDef(self,key_ob,def);
+ Dee_Decref(key_ob);
+ return result;
+err:
+ return NULL;
+}
+PUBLIC DREF DeeObject *DCALL
+DeeObject_GetItemStringLenDef(DeeObject *__restrict self,
+                              char const *__restrict key,
+                              size_t keylen,
+                              dhash_t hash,
+                              DeeObject *__restrict def) {
+ DREF DeeObject *key_ob,*result;
+ ASSERT_OBJECT(self);
+ if (DeeDict_CheckExact(self))
+     return DeeDict_GetItemStringLenDef(self,key,keylen,hash,def);
+ if (DeeKwdsMapping_CheckExact(self))
+     return DeeKwdsMapping_GetItemStringLenDef(self,key,keylen,hash,def);
+ /* Fallback: create a string object and use it for indexing. */
+ key_ob = DeeString_NewSizedWithHash(key,keylen,hash);
  if unlikely(!key_ob) goto err;
  result = DeeObject_GetItemDef(self,key_ob,def);
  Dee_Decref(key_ob);
@@ -3949,6 +4170,23 @@ PUBLIC int (DCALL DeeObject_DelItemString)(DeeObject *__restrict self,
 err:
  return -1;
 }
+PUBLIC int (DCALL DeeObject_DelItemStringLen)(DeeObject *__restrict self,
+                                              char const *__restrict key,
+                                              size_t keylen,
+                                              dhash_t hash) {
+ DREF DeeObject *key_ob; int result;
+ ASSERT_OBJECT(self);
+ if (DeeDict_CheckExact(self))
+     return DeeDict_DelItemStringLen(self,key,keylen,hash);
+ /* Fallback: create a string object and use it for indexing. */
+ key_ob = DeeString_NewSizedWithHash(key,keylen,hash);
+ if unlikely(!key_ob) goto err;
+ result = DeeObject_DelItem(self,key_ob);
+ Dee_Decref(key_ob);
+ return result;
+err:
+ return -1;
+}
 PUBLIC int (DCALL DeeObject_SetItemString)(DeeObject *__restrict self,
                                            char const *__restrict key,
                                            dhash_t hash,
@@ -3960,6 +4198,25 @@ PUBLIC int (DCALL DeeObject_SetItemString)(DeeObject *__restrict self,
      return DeeDict_SetItemString(self,key,hash,value);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewWithHash(key,hash);
+ if unlikely(!key_ob) goto err;
+ result = DeeObject_SetItem(self,key_ob,value);
+ Dee_Decref(key_ob);
+ return result;
+err:
+ return -1;
+}
+PUBLIC int (DCALL DeeObject_SetItemStringLen)(DeeObject *__restrict self,
+                                              char const *__restrict key,
+                                              size_t keylen,
+                                              dhash_t hash,
+                                              DeeObject *__restrict value) {
+ DREF DeeObject *key_ob; int result;
+ ASSERT_OBJECT(self);
+ ASSERT_OBJECT(value);
+ if (DeeDict_CheckExact(self))
+     return DeeDict_SetItemStringLen(self,key,keylen,hash,value);
+ /* Fallback: create a string object and use it for indexing. */
+ key_ob = DeeString_NewSizedWithHash(key,keylen,hash);
  if unlikely(!key_ob) goto err;
  result = DeeObject_SetItem(self,key_ob,value);
  Dee_Decref(key_ob);
@@ -4452,40 +4709,6 @@ DEFINE_OPERATOR(void,PutBuf,
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-PUBLIC DREF /*String*/DeeObject *DCALL
-DeeObject_Doc(DeeObject *__restrict self) {
- DREF /*String*/DeeObject *result;
- /* Special case: Lookup documentation of `none' yields documentation of `DeeNone_Type' */
- if (self == Dee_None)
-     self = (DeeObject *)&DeeNone_Type;
- if (DeeType_Check(self)) {
-  DeeTypeObject *me = (DeeTypeObject *)self;
-  if (!me->tp_doc) goto nodoc;
-  if (me->tp_flags&TP_FDOCOBJECT) {
-   return_reference_((DeeObject *)COMPILER_CONTAINER_OF(me->tp_doc,DeeStringObject,s_str));
-  }
-  return DeeString_NewUtf8(me->tp_doc,
-                           strlen(me->tp_doc),
-                           STRING_ERROR_FIGNORE);
- }
- /* Fallback: Look for an attribute `__doc__' */
- result = DeeObject_GetAttrString(self,"__doc__");
- if (result) {
-  /* Make sure that it's a string. */
-  if (DeeObject_AssertTypeExact(result,&DeeString_Type))
-      Dee_Clear(result);
-  return result;
- }
- if (!DeeError_Catch(&DeeError_AttributeError) &&
-     !DeeError_Catch(&DeeError_NotImplemented))
-      return NULL;
-nodoc:
- DeeError_Throwf(&DeeError_ValueError,
-                 "No documentation found for `%k'",
-                 self);
- return NULL;
-}
-
 PUBLIC int
 (DCALL DeeObject_Unpack)(DeeObject *__restrict self,
                          size_t objc,

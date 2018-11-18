@@ -916,6 +916,15 @@
     <None Include="..\src\deemon\compiler\jit\parser-impl-comma.c.inl">
       <Filter>src\deemon\compiler\jit</Filter>
     </None>
+    <None Include="..\src\deemon\compiler\jit\parser-impl-statement.c.inl">
+      <Filter>src\deemon\compiler\jit</Filter>
+    </None>
+    <None Include="..\src\deemon\compiler\jit\parser-impl-hybrid.c.inl">
+      <Filter>src\deemon\compiler\jit</Filter>
+    </None>
+    <None Include="..\src\deemon\runtime\mro-impl.c.inl">
+      <Filter>src\deemon\runtime</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

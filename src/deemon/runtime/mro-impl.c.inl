@@ -16,346 +16,42 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_RUNTIME_MRO_C
-#define GUARD_DEEMON_RUNTIME_MRO_C 1
-
-#include <deemon/api.h>
-#include <deemon/object.h>
-#include <deemon/mro.h>
-#include <deemon/objmethod.h>
-#include <deemon/class.h>
-#include <deemon/file.h>
-#include <deemon/instancemethod.h>
-#include <deemon/arg.h>
-#include <deemon/none.h>
-#include <deemon/string.h>
-#include <deemon/attribute.h>
-#include <deemon/error.h>
-#include <deemon/tuple.h>
-
-#include "runtime_error.h"
+#ifdef __INTELLISENSE__
+#include "mro.c"
+#define MRO_LEN 1
+#endif
 
 DECL_BEGIN
 
-#ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(membercache_list_lock);
-#endif
-/* [0..1][lock(membercache_list_lock)]
- *  Linked list of all existing type-member caches. */
-PRIVATE struct membercache *membercache_list;
-
-#define streq(a,b) (strcmp(a,b) == 0)
-LOCAL bool DCALL
-streq_len(char const *__restrict zero_zterminated,
-          char const *__restrict comparand,
-          size_t comparand_length) {
- if (strlen(zero_zterminated) != comparand_length)
-     return false;
- return memcmp(zero_zterminated,comparand,comparand_length) == 0;
-}
-
-
-
-INTERN void DCALL
-membercache_fini(struct membercache *__restrict self) {
- MEMBERCACHE_WRITE(self);
- ASSERT((self->mc_table != NULL) ==
-        (self->mc_pself != NULL));
- if (!self->mc_table) {
-  MEMBERCACHE_ENDWRITE(self);
-  return;
- }
- Dee_Free(self->mc_table);
- self->mc_table = NULL;
- MEMBERCACHE_ENDWRITE(self);
-#ifndef CONFIG_NO_THREADS
- COMPILER_READ_BARRIER();
- rwlock_write(&membercache_list_lock);
-#endif
- ASSERT(!self->mc_table);
- /* Check check `mc_pself != NULL' again because another thread
-  * may have cleared the tables of all member caches while collecting
-  * memory, in the process unlinking all of them from the global chain. */
- if (self->mc_pself) {
-  if ((*self->mc_pself = self->mc_next) != NULL)
-        self->mc_next->mc_pself = self->mc_pself;
- }
-#ifndef CONFIG_NO_THREADS
- rwlock_endwrite(&membercache_list_lock);
-#endif
-}
-
-INTERN size_t DCALL
-membercache_clear(size_t max_clear) {
- size_t result = 0;
- struct membercache *entry;
-#ifndef CONFIG_NO_THREADS
- rwlock_write(&membercache_list_lock);
-#endif
- while ((entry = membercache_list) != NULL) {
-  MEMBERCACHE_WRITE(entry);
-  /* Pop this entry from the global chain. */
-  if ((membercache_list = entry->mc_next) != NULL) {
-   membercache_list->mc_pself = &membercache_list;
-  }
-  if (entry->mc_table) {
-   /* Track how much member this operation will be freeing up. */
-   result += (entry->mc_mask + 1) * sizeof(struct membercache);
-   /* Clear this entry's table. */
-   Dee_Free(entry->mc_table);
-   entry->mc_table = NULL;
-   entry->mc_mask  = 0;
-   entry->mc_size  = 0;
-  }
-  entry->mc_pself = NULL;
-#ifndef NDEBUG
-  memset(&entry->mc_next,0xcc,sizeof(void *));
-#endif
-  MEMBERCACHE_ENDWRITE(entry);
-  if (result >= max_clear)
-      break;
- }
-#ifndef CONFIG_NO_THREADS
- rwlock_endwrite(&membercache_list_lock);
-#endif
- return result;
-}
-
-STATIC_ASSERT(MEMBERCACHE_UNUSED == 0);
-PRIVATE ATTR_NOINLINE bool DCALL
-membercache_rehash(struct membercache *__restrict self) {
- struct membercache_slot *new_vector,*iter,*end;
- size_t new_mask = self->mc_mask;
- new_mask = (new_mask << 1)|1;
- if unlikely(new_mask == 1) new_mask = 16-1; /* Start out bigger than 2. */
- ASSERT(self->mc_size < new_mask);
- new_vector = (struct membercache_slot *)Dee_TryCalloc((new_mask+1)*sizeof(struct membercache_slot));
- if unlikely(!new_vector) return false;
- ASSERT((self->mc_table == NULL) == (self->mc_size == 0));
- ASSERT((self->mc_table == NULL) == (self->mc_mask == 0));
- if (self->mc_table == NULL) {
-  /* This is the first time that this cache is being rehashed.
-   * >> Register it in the global chain of member caches,
-   *    so we can clear it when memory gets low. */
-#ifndef CONFIG_NO_THREADS
-  rwlock_write(&membercache_list_lock);
-#endif
-  if ((self->mc_next = membercache_list) != NULL)
-       membercache_list->mc_pself = &self->mc_next;
-  self->mc_pself   = &membercache_list;
-  membercache_list = self;
-#ifndef CONFIG_NO_THREADS
-  rwlock_endwrite(&membercache_list_lock);
-#endif
- } else {
-  /* Re-insert all existing items into the new table vector. */
-  end = (iter = self->mc_table)+(self->mc_mask+1);
-  for (; iter != end; ++iter) {
-   struct membercache_slot *item;
-   dhash_t i,perturb;
-   /* Skip unused entires. */
-   if (iter->mcs_type == MEMBERCACHE_UNUSED) continue;
-   perturb = i = iter->mcs_hash & new_mask;
-   for (;; i = MEMBERCACHE_HASHNX(i,perturb),MEMBERCACHE_HASHPT(perturb)) {
-    item = &new_vector[i & new_mask];
-    if (item->mcs_type == MEMBERCACHE_UNUSED) break; /* Empty slot found. */
-   }
-   /* Transfer this object. */
-   memcpy(item,iter,sizeof(struct membercache_slot));
-  }
-  Dee_Free(self->mc_table);
- }
- self->mc_mask  = new_mask;
- self->mc_table = new_vector;
- return true;
-}
-
-
-
-/* Since this cache is totally optional, don't slow down when we can't get the lock. */
-#ifdef CONFIG_NO_THREADS
-#define MEMBERCACHE_TRYWRITE_OR_RETURN(self) (void)0
-#elif 1
-#define MEMBERCACHE_TRYWRITE_OR_RETURN(self) \
-        if (!rwlock_trywrite(&(self)->mc_lock)) return
+#ifdef MRO_LEN
+#define S(without_len,with_len) with_len
+#define NLen(x)                 x ## Len
+#define N_len(x)                x ## _len
+#define IF_LEN(...)             __VA_ARGS__
+#define IF_NLEN(...)            /* nothing */
+#define ATTR_ARG                char const *__restrict attr, size_t attrlen
+#define ATTREQ(item)            streq_len((item)->mcs_name,attr,attrlen)
+#define NAMEEQ(name)            streq_len(name,attr,attrlen)
 #else
-#define MEMBERCACHE_TRYWRITE_OR_RETURN(self) \
-        MEMBERCACHE_WRITE(self)
+#define S(without_len,with_len) without_len
+#define NLen(x)                 x
+#define N_len(x)                x
+#define IF_LEN(...)             /* nothing */
+#define IF_NLEN(...)            __VA_ARGS__
+#define ATTR_ARG                char const *__restrict attr
+#define ATTREQ(item)            streq((item)->mcs_name,attr)
+#define NAMEEQ(name)            streq(name,attr)
 #endif
 
-
-#define MEMBERCACHE_ADDENTRY(name,init) \
-{ \
- dhash_t i,perturb; \
- struct membercache_slot *item; \
- MEMBERCACHE_TRYWRITE_OR_RETURN(self); \
-again: \
- if (!self->mc_table) goto rehash_initial; \
- /* Re-check that the named attribute isn't already in-cache. */ \
- perturb = i = MEMBERCACHE_HASHST(self,hash); \
- for (;; i = MEMBERCACHE_HASHNX(i,perturb),MEMBERCACHE_HASHPT(perturb)) { \
-  item = MEMBERCACHE_HASHIT(self,i); \
-  if (item->mcs_type == MEMBERCACHE_UNUSED) break; \
-  if (item->mcs_hash != hash) continue; \
-  if (item->mcs_method.m_name != (name) && \
-     !streq(item->mcs_name,(name))) \
-      continue; \
-  /* Already in cache! */ \
-  MEMBERCACHE_ENDWRITE(self); \
-  return; \
- } \
- if (self->mc_size+1 >= self->mc_mask) { \
-rehash_initial: \
-  if (membercache_rehash(self)) goto again; \
-  goto done; /* Well... We couldn't rehash the cache so we can't add this entry. */ \
- } \
- /* Not found. - Use this empty slot. */ \
- item->mcs_hash   = hash; \
- item->mcs_decl   = decl; \
- init; \
- ++self->mc_size; \
- /* Try to keep the table vector big at least twice as big as the element count. */ \
- if (self->mc_size*2 > self->mc_mask) \
-     membercache_rehash(self); \
-done: \
- MEMBERCACHE_ENDWRITE(self); \
-}
-
-#define PRIVATE_IS_KNOWN_TYPETYPE(x) ((x) == &DeeType_Type || (x) == &DeeFileType_Type)
-#define MEMBERCACHE_GETTYPENAME(x) \
- (PRIVATE_IS_KNOWN_TYPETYPE(COMPILER_CONTAINER_OF(x,DeeTypeObject,tp_cache)->ob_type) ? \
-  COMPILER_CONTAINER_OF(x,DeeTypeObject,tp_cache)->tp_name : \
-  PRIVATE_IS_KNOWN_TYPETYPE(COMPILER_CONTAINER_OF(x,DeeTypeObject,tp_class_cache)->ob_type) ? \
-  COMPILER_CONTAINER_OF(x,DeeTypeObject,tp_class_cache)->tp_name : "?") \
-
-
-INTERN void DCALL
-membercache_addmethod(struct membercache *__restrict self,
-                      DeeTypeObject *__restrict decl, dhash_t hash,
-                      struct type_method const *__restrict method) {
- DEE_DPRINTF("[RT] Caching method `%s.%s' in `%s'\n",
-             decl->tp_name,method->m_name,
-             MEMBERCACHE_GETTYPENAME(self));
- MEMBERCACHE_ADDENTRY(method->m_name,{
-  item->mcs_type   = MEMBERCACHE_METHOD;
-  item->mcs_method = *method;
- });
-}
-INTERN void DCALL
-membercache_addinstancemethod(struct membercache *__restrict self,
-                              DeeTypeObject *__restrict decl, dhash_t hash,
-                              struct type_method const *__restrict method) {
- DEE_DPRINTF("[RT] Caching instance_method `%s.%s' in `%s'\n",
-             decl->tp_name,method->m_name,
-             MEMBERCACHE_GETTYPENAME(self));
- ASSERT(self != &decl->tp_cache);
- MEMBERCACHE_ADDENTRY(method->m_name,{
-  item->mcs_type   = MEMBERCACHE_INSTANCE_METHOD;
-  item->mcs_method = *method;
- });
-}
-
-INTERN void DCALL
-membercache_addgetset(struct membercache *__restrict self,
-                      DeeTypeObject *__restrict decl, dhash_t hash,
-                      struct type_getset const *__restrict getset) {
- DEE_DPRINTF("[RT] Caching getset `%s.%s' in `%s'\n",
-             decl->tp_name,getset->gs_name,
-             MEMBERCACHE_GETTYPENAME(self));
- MEMBERCACHE_ADDENTRY(getset->gs_name,{
-  item->mcs_type   = MEMBERCACHE_GETSET;
-  item->mcs_getset = *getset;
- });
-}
-INTERN void DCALL
-membercache_addinstancegetset(struct membercache *__restrict self,
-                              DeeTypeObject *__restrict decl, dhash_t hash,
-                              struct type_getset const *__restrict getset) {
- DEE_DPRINTF("[RT] Caching instance_getset `%s.%s' in `%s'\n",
-             decl->tp_name,getset->gs_name,
-             MEMBERCACHE_GETTYPENAME(self));
- ASSERT(self != &decl->tp_cache);
- MEMBERCACHE_ADDENTRY(getset->gs_name,{
-  item->mcs_type   = MEMBERCACHE_INSTANCE_GETSET;
-  item->mcs_getset = *getset;
- });
-}
-
-INTERN void DCALL
-membercache_addmember(struct membercache *__restrict self,
-                      DeeTypeObject *__restrict decl, dhash_t hash,
-                      struct type_member const *__restrict member) {
- DEE_DPRINTF("[RT] Caching member `%s.%s' in `%s'\n",
-             decl->tp_name,member->m_name,
-             MEMBERCACHE_GETTYPENAME(self));
- MEMBERCACHE_ADDENTRY(member->m_name,{
-  item->mcs_type   = MEMBERCACHE_MEMBER;
-  item->mcs_member = *member;
- });
-}
-INTERN void DCALL
-membercache_addinstancemember(struct membercache *__restrict self,
-                              DeeTypeObject *__restrict decl, dhash_t hash,
-                              struct type_member const *__restrict member) {
- DEE_DPRINTF("[RT] Caching instance_member `%s.%s' in `%s'\n",
-             decl->tp_name,member->m_name,
-             MEMBERCACHE_GETTYPENAME(self));
- ASSERT(self != &decl->tp_cache);
- MEMBERCACHE_ADDENTRY(member->m_name,{
-  item->mcs_type   = MEMBERCACHE_INSTANCE_MEMBER;
-  item->mcs_member = *member;
- });
-}
-
-INTERN void DCALL
-membercache_addattrib(struct membercache *__restrict self,
-                      DeeTypeObject *__restrict decl, dhash_t hash,
-                      struct class_attribute *__restrict attrib) {
- char const *name = DeeString_STR(attrib->ca_name);
- DEE_DPRINTF("[RT] Caching attribute `%s.%s' in `%s'\n",
-             decl->tp_name,name,
-             MEMBERCACHE_GETTYPENAME(self));
- MEMBERCACHE_ADDENTRY(name,{
-  item->mcs_type          = MEMBERCACHE_ATTRIB;
-  item->mcs_attrib.a_name = name;
-  item->mcs_attrib.a_attr = attrib;
-  item->mcs_attrib.a_desc = DeeClass_DESC(decl);
- });
-}
-INTERN void DCALL
-membercache_addinstanceattrib(struct membercache *__restrict self,
-                              DeeTypeObject *__restrict decl, dhash_t hash,
-                              struct class_attribute *__restrict attrib) {
- char const *name = DeeString_STR(attrib->ca_name);
- DEE_DPRINTF("[RT] Caching instance_attribute `%s.%s' in `%s'\n",
-             decl->tp_name,name,
-             MEMBERCACHE_GETTYPENAME(self));
- ASSERT(self != &decl->tp_cache);
- MEMBERCACHE_ADDENTRY(name,{
-  item->mcs_type          = MEMBERCACHE_INSTANCE_ATTRIB;
-  item->mcs_attrib.a_name = name;
-  item->mcs_attrib.a_attr = attrib;
-  item->mcs_attrib.a_desc = DeeClass_DESC(decl);
- });
-}
-
-#if 1
-#ifndef __INTELLISENSE__
-#define MRO_LEN 1
-#include "mro-impl.c.inl"
-#include "mro-impl.c.inl"
-#endif
-
-#else
 
 /* Lookup an attribute from cache.
  * @return: * :        The attribute value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
 INTERN DREF DeeObject *DCALL
-DeeType_GetCachedAttr(DeeTypeObject *__restrict tp_self,
-                      DeeObject *__restrict self,
-                      char const *__restrict name, dhash_t hash) {
+NLen(DeeType_GetCachedAttr)(DeeTypeObject *__restrict tp_self,
+                            DeeObject *__restrict self,
+                            ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -364,7 +60,7 @@ DeeType_GetCachedAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -388,7 +84,7 @@ DeeType_GetCachedAttr(DeeTypeObject *__restrict tp_self,
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -399,15 +95,15 @@ DeeType_GetCachedAttr(DeeTypeObject *__restrict tp_self,
    return type_member_get((struct type_member *)&buf,self);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_GetAttribute(desc,
                                    DeeInstance_DESC(desc,self),
-                                   self,attr);
+                                   self,catt);
   }
   default: __builtin_unreachable();
   }
@@ -419,8 +115,8 @@ err:
  return NULL;
 }
 INTERN DREF DeeObject *DCALL
-DeeType_GetCachedClassAttr(DeeTypeObject *__restrict tp_self,
-                           char const *__restrict name, dhash_t hash) {
+NLen(DeeType_GetCachedClassAttr)(DeeTypeObject *__restrict tp_self,
+                                 ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -429,7 +125,7 @@ DeeType_GetCachedClassAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -453,7 +149,7 @@ DeeType_GetCachedClassAttr(DeeTypeObject *__restrict tp_self,
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -464,13 +160,13 @@ DeeType_GetCachedClassAttr(DeeTypeObject *__restrict tp_self,
    return type_member_get((struct type_member *)&buf,(DeeObject *)tp_self);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_GetAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr);
+   return DeeInstance_GetAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt);
   }
   {
    dobjmethod_t func;
@@ -508,13 +204,13 @@ DeeType_GetCachedClassAttr(DeeTypeObject *__restrict tp_self,
    return DeeClsMember_New(type,&member);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_GetInstanceAttribute(type,attr);
+   return DeeClass_GetInstanceAttribute(type,catt);
   }
   default: __builtin_unreachable();
   }
@@ -526,8 +222,8 @@ err:
  return NULL;
 }
 INTERN DREF DeeObject *DCALL
-DeeType_GetCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
-                              char const *__restrict name, dhash_t hash) {
+NLen(DeeType_GetCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
+                                    ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -536,7 +232,7 @@ DeeType_GetCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -574,13 +270,13 @@ DeeType_GetCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
    return DeeClsMember_New(type,&member);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_GetInstanceAttribute(type,attr);
+   return DeeClass_GetInstanceAttribute(type,catt);
   }
   default: __builtin_unreachable();
   }
@@ -596,9 +292,9 @@ done:
  * @return: -1: An error occurred.
  * @return: -2: The attribute doesn't exist. */
 INTERN int DCALL
-DeeType_BoundCachedAttr(DeeTypeObject *__restrict tp_self,
-                        DeeObject *__restrict self,
-                        char const *__restrict name, dhash_t hash) {
+NLen(DeeType_BoundCachedAttr)(DeeTypeObject *__restrict tp_self,
+                              DeeObject *__restrict self,
+                              ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -607,7 +303,7 @@ DeeType_BoundCachedAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   case MEMBERCACHE_METHOD:
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -638,15 +334,15 @@ DeeType_BoundCachedAttr(DeeTypeObject *__restrict tp_self,
    return type_member_bound((struct type_member *)&buf,self);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_BoundAttribute(desc,
                                      DeeInstance_DESC(desc,self),
-                                     self,attr);
+                                     self,catt);
   }
   default: __builtin_unreachable();
   }
@@ -658,8 +354,8 @@ err:
  return -1;
 }
 INTERN int DCALL
-DeeType_BoundCachedClassAttr(DeeTypeObject *__restrict tp_self,
-                             char const *__restrict name, dhash_t hash) {
+NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *__restrict tp_self,
+                                   ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -668,7 +364,7 @@ DeeType_BoundCachedClassAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   case MEMBERCACHE_METHOD:
   case MEMBERCACHE_INSTANCE_METHOD:
@@ -702,22 +398,22 @@ DeeType_BoundCachedClassAttr(DeeTypeObject *__restrict tp_self,
    return type_member_bound((struct type_member *)&buf,(DeeObject *)tp_self);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_BoundAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr);
+   return DeeInstance_BoundAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_BoundInstanceAttribute(type,attr);
+   return DeeClass_BoundInstanceAttribute(type,catt);
   }
   default: __builtin_unreachable();
   }
@@ -729,8 +425,8 @@ err:
  return -1;
 }
 INTERN int DCALL
-DeeType_BoundCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
-                                char const *__restrict name, dhash_t hash) {
+NLen(DeeType_BoundCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
+                                      ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -739,7 +435,7 @@ DeeType_BoundCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   case MEMBERCACHE_METHOD:
   case MEMBERCACHE_GETSET:
@@ -747,13 +443,13 @@ DeeType_BoundCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return 1;
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_BoundInstanceAttribute(type,attr);
+   return DeeClass_BoundInstanceAttribute(type,catt);
   }
   default: __builtin_unreachable();
   }
@@ -767,8 +463,8 @@ done:
 /* @return: true : The attribute exists.
  * @return: false: The attribute doesn't exist. */
 INTERN bool DCALL
-DeeType_HasCachedAttr(DeeTypeObject *__restrict tp_self,
-                      char const *__restrict name, dhash_t hash) {
+NLen(DeeType_HasCachedAttr)(DeeTypeObject *__restrict tp_self,
+                            ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -777,7 +473,7 @@ DeeType_HasCachedAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
   return true;
  }
@@ -786,8 +482,8 @@ done:
  return false;
 }
 INTERN bool DCALL
-DeeType_HasCachedClassAttr(DeeTypeObject *__restrict tp_self,
-                           char const *__restrict name, dhash_t hash) {
+NLen(DeeType_HasCachedClassAttr)(DeeTypeObject *__restrict tp_self,
+                                 ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -796,7 +492,7 @@ DeeType_HasCachedClassAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
   return true;
  }
@@ -809,9 +505,9 @@ done:
  * @return:  0: Successfully invoked the delete-operator on the attribute.
  * @return: -1: An error occurred. */
 INTERN int DCALL
-DeeType_DelCachedAttr(DeeTypeObject *__restrict tp_self,
-                      DeeObject *__restrict self,
-                      char const *__restrict name, dhash_t hash) {
+NLen(DeeType_DelCachedAttr)(DeeTypeObject *__restrict tp_self,
+                            DeeObject *__restrict self,
+                            ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -820,14 +516,14 @@ DeeType_DelCachedAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    DeeTypeObject *type;
   case MEMBERCACHE_METHOD:
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return err_cant_access_attribute(type,name,ATTR_ACCESS_DEL);
+   return err_cant_access_attribute(type,attr,ATTR_ACCESS_DEL);
   }
   {
    ddelmethod_t del;
@@ -840,7 +536,7 @@ DeeType_DelCachedAttr(DeeTypeObject *__restrict tp_self,
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_DEL);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_DEL);
    goto err;
   }
   {
@@ -851,15 +547,15 @@ DeeType_DelCachedAttr(DeeTypeObject *__restrict tp_self,
    return type_member_del((struct type_member *)&buf,self);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_DelAttribute(desc,
                                    DeeInstance_DESC(desc,self),
-                                   self,attr);
+                                   self,catt);
   }
   default: __builtin_unreachable();
   }
@@ -871,8 +567,8 @@ err:
  return -1;
 }
 INTERN int DCALL
-DeeType_DelCachedClassAttr(DeeTypeObject *__restrict tp_self,
-                           char const *__restrict name, dhash_t hash) {
+NLen(DeeType_DelCachedClassAttr)(DeeTypeObject *__restrict tp_self,
+                                 ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -881,7 +577,7 @@ DeeType_DelCachedClassAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    DeeTypeObject *type;
@@ -891,7 +587,7 @@ DeeType_DelCachedClassAttr(DeeTypeObject *__restrict tp_self,
   case MEMBERCACHE_INSTANCE_MEMBER:
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return err_cant_access_attribute(type,name,ATTR_ACCESS_DEL);
+   return err_cant_access_attribute(type,attr,ATTR_ACCESS_DEL);
   }
   {
    ddelmethod_t del;
@@ -904,7 +600,7 @@ DeeType_DelCachedClassAttr(DeeTypeObject *__restrict tp_self,
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_DEL);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_DEL);
    goto err;
   }
   {
@@ -915,22 +611,22 @@ DeeType_DelCachedClassAttr(DeeTypeObject *__restrict tp_self,
    return type_member_del((struct type_member *)&buf,(DeeObject *)tp_self);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_DelAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr);
+   return DeeInstance_DelAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_DelInstanceAttribute(type,attr);
+   return DeeClass_DelInstanceAttribute(type,catt);
   }
   default: __builtin_unreachable();
   }
@@ -942,8 +638,8 @@ err:
  return -1;
 }
 INTERN int DCALL
-DeeType_DelCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
-                              char const *__restrict name, dhash_t hash) {
+NLen(DeeType_DelCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
+                                    ATTR_ARG, dhash_t hash) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -952,7 +648,7 @@ DeeType_DelCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    DeeTypeObject *type;
@@ -961,16 +657,16 @@ DeeType_DelCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
   case MEMBERCACHE_MEMBER:
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return err_cant_access_attribute(type,name,ATTR_ACCESS_DEL);
+   return err_cant_access_attribute(type,attr,ATTR_ACCESS_DEL);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_DelInstanceAttribute(type,attr);
+   return DeeClass_DelInstanceAttribute(type,catt);
   }
   default: __builtin_unreachable();
   }
@@ -984,10 +680,10 @@ done:
  * @return:  0: Successfully invoked the set-operator on the attribute.
  * @return: -1: An error occurred. */
 INTERN int DCALL
-DeeType_SetCachedAttr(DeeTypeObject *__restrict tp_self,
-                      DeeObject *__restrict self,
-                      char const *__restrict name, dhash_t hash,
-                      DeeObject *__restrict value) {
+NLen(DeeType_SetCachedAttr)(DeeTypeObject *__restrict tp_self,
+                            DeeObject *__restrict self,
+                            ATTR_ARG, dhash_t hash,
+                            DeeObject *__restrict value) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -996,14 +692,14 @@ DeeType_SetCachedAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    DeeTypeObject *type;
   case MEMBERCACHE_METHOD:
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return err_cant_access_attribute(type,name,ATTR_ACCESS_SET);
+   return err_cant_access_attribute(type,attr,ATTR_ACCESS_SET);
   }
   {
    dsetmethod_t set;
@@ -1016,7 +712,7 @@ DeeType_SetCachedAttr(DeeTypeObject *__restrict tp_self,
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_SET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_SET);
    goto err;
   }
   {
@@ -1027,15 +723,15 @@ DeeType_SetCachedAttr(DeeTypeObject *__restrict tp_self,
    return type_member_set((struct type_member *)&buf,self,value);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_SetAttribute(desc,
                                    DeeInstance_DESC(desc,self),
-                                   self,attr,value);
+                                   self,catt,value);
   }
   default: __builtin_unreachable();
   }
@@ -1047,9 +743,9 @@ err:
  return -1;
 }
 INTERN int DCALL
-DeeType_SetCachedClassAttr(DeeTypeObject *__restrict tp_self,
-                           char const *__restrict name, dhash_t hash,
-                           DeeObject *__restrict value) {
+NLen(DeeType_SetCachedClassAttr)(DeeTypeObject *__restrict tp_self,
+                                 ATTR_ARG, dhash_t hash,
+                                 DeeObject *__restrict value) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -1058,7 +754,7 @@ DeeType_SetCachedClassAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    DeeTypeObject *type;
@@ -1068,7 +764,7 @@ DeeType_SetCachedClassAttr(DeeTypeObject *__restrict tp_self,
   case MEMBERCACHE_INSTANCE_MEMBER:
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return err_cant_access_attribute(type,name,ATTR_ACCESS_SET);
+   return err_cant_access_attribute(type,attr,ATTR_ACCESS_SET);
   }
   {
    dsetmethod_t set;
@@ -1081,7 +777,7 @@ DeeType_SetCachedClassAttr(DeeTypeObject *__restrict tp_self,
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_SET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_SET);
    goto err;
   }
   {
@@ -1092,22 +788,22 @@ DeeType_SetCachedClassAttr(DeeTypeObject *__restrict tp_self,
    return type_member_set((struct type_member *)&buf,(DeeObject *)tp_self,value);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_SetAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,value);
+   return DeeInstance_SetAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,value);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_SetInstanceAttribute(type,attr,value);
+   return DeeClass_SetInstanceAttribute(type,catt,value);
   }
   default: __builtin_unreachable();
   }
@@ -1119,9 +815,9 @@ err:
  return -1;
 }
 INTERN int DCALL
-DeeType_SetCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
-                              char const *__restrict name, dhash_t hash,
-                              DeeObject *__restrict value) {
+NLen(DeeType_SetCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
+                                    ATTR_ARG, dhash_t hash,
+                                    DeeObject *__restrict value) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -1130,7 +826,7 @@ DeeType_SetCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    DeeTypeObject *type;
@@ -1139,16 +835,16 @@ DeeType_SetCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
   case MEMBERCACHE_MEMBER:
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return err_cant_access_attribute(type,name,ATTR_ACCESS_SET);
+   return err_cant_access_attribute(type,attr,ATTR_ACCESS_SET);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_SetInstanceAttribute(type,attr,value);
+   return DeeClass_SetInstanceAttribute(type,catt,value);
   }
   default: __builtin_unreachable();
   }
@@ -1163,10 +859,10 @@ done:
  * @return:  0: Successfully invoked the set-operator on the attribute.
  * @return: -1: An error occurred. */
 INTERN int DCALL
-DeeType_SetBasicCachedAttr(DeeTypeObject *__restrict tp_self,
-                           DeeObject *__restrict self,
-                           char const *__restrict name, dhash_t hash,
-                           DeeObject *__restrict value) {
+NLen(DeeType_SetBasicCachedAttr)(DeeTypeObject *__restrict tp_self,
+                                 DeeObject *__restrict self,
+                                 ATTR_ARG, dhash_t hash,
+                                 DeeObject *__restrict value) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -1175,7 +871,7 @@ DeeType_SetBasicCachedAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    struct buffer { uint8_t dat[COMPILER_OFFSETOF(struct type_member,m_doc)]; } buf;
@@ -1185,15 +881,15 @@ DeeType_SetBasicCachedAttr(DeeTypeObject *__restrict tp_self,
    return type_member_set((struct type_member *)&buf,self,value);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_SetBasicAttribute(desc,
                                         DeeInstance_DESC(desc,self),
-                                        self,attr,value);
+                                        self,catt,value);
   }
   default:
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -1205,9 +901,9 @@ done:
  return 1;
 }
 INTERN int DCALL
-DeeType_SetBasicCachedClassAttr(DeeTypeObject *__restrict tp_self,
-                                char const *__restrict name, dhash_t hash,
-                                DeeObject *__restrict value) {
+NLen(DeeType_SetBasicCachedClassAttr)(DeeTypeObject *__restrict tp_self,
+                                      ATTR_ARG, dhash_t hash,
+                                      DeeObject *__restrict value) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -1216,7 +912,7 @@ DeeType_SetBasicCachedClassAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    struct buffer { uint8_t dat[COMPILER_OFFSETOF(struct type_member,m_doc)]; } buf;
@@ -1226,22 +922,22 @@ DeeType_SetBasicCachedClassAttr(DeeTypeObject *__restrict tp_self,
    return type_member_set((struct type_member *)&buf,(DeeObject *)tp_self,value);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_SetBasicAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,value);
+   return DeeInstance_SetBasicAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,value);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_SetBasicInstanceAttribute(type,attr,value);
+   return DeeClass_SetBasicInstanceAttribute(type,catt,value);
   }
   default:
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -1254,9 +950,9 @@ done:
 }
 #if 0
 INTERN int DCALL
-DeeType_SetBasicCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
-                                   char const *__restrict name, dhash_t hash,
-                                   DeeObject *__restrict value) {
+NLen(DeeType_SetBasicCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
+                                         ATTR_ARG, dhash_t hash,
+                                         DeeObject *__restrict value) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -1265,16 +961,16 @@ DeeType_SetBasicCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_SetBasicInstanceAttribute(type,attr,value);
+   return DeeClass_SetBasicInstanceAttribute(type,catt,value);
   }
   default:
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -1291,10 +987,10 @@ done:
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedAttr(DeeTypeObject *__restrict tp_self,
-                       DeeObject *__restrict self,
-                       char const *__restrict name, dhash_t hash,
-                       size_t argc, DeeObject **__restrict argv) {
+NLen(DeeType_CallCachedAttr)(DeeTypeObject *__restrict tp_self,
+                             DeeObject *__restrict self,
+                             ATTR_ARG, dhash_t hash,
+                             size_t argc, DeeObject **__restrict argv) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -1303,7 +999,7 @@ DeeType_CallCachedAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -1332,7 +1028,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -1344,15 +1040,15 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_CallAttribute(desc,
                                     DeeInstance_DESC(desc,self),
-                                    self,attr,argc,argv);
+                                    self,catt,argc,argv);
   }
   default: __builtin_unreachable();
   }
@@ -1364,32 +1060,37 @@ err:
  return NULL;
 }
 
+
+#ifndef ERR_CLSPROPERTY_DEFINED
+#define ERR_CLSPROPERTY_DEFINED 1
 PRIVATE ATTR_COLD int DCALL err_cant_access_clsproperty_get(void) {
  return err_cant_access_attribute(&DeeClsProperty_Type,"get",ATTR_ACCESS_GET);
 }
+#endif /* !ERR_CLSPROPERTY_DEFINED */
+
 PRIVATE ATTR_COLD int DCALL
-err_classmember_requires_1_argument(char const *__restrict name) {
+N_len(err_classmember_requires_1_argument)(ATTR_ARG) {
  return DeeError_Throwf(&DeeError_TypeError,
-                        "classmember `%s' must be called with exactly 1 argument",
-                        name);
+                        "classmember `%" IF_LEN("$") "s' must be called with exactly 1 argument",
+                        IF_LEN(attrlen,) attr);
 }
 PRIVATE ATTR_COLD int DCALL
-err_classproperty_requires_1_argument(char const *__restrict name) {
+N_len(err_classproperty_requires_1_argument)(ATTR_ARG) {
  return DeeError_Throwf(&DeeError_TypeError,
-                        "classproperty `%s' must be called with exactly 1 argument",
-                        name);
+                        "classproperty `%" IF_LEN("$") "s' must be called with exactly 1 argument",
+                        IF_LEN(attrlen,) attr);
 }
 PRIVATE ATTR_COLD int DCALL
-err_classmethod_requires_at_least_1_argument(char const *__restrict name) {
+N_len(err_classmethod_requires_at_least_1_argument)(ATTR_ARG) {
  return DeeError_Throwf(&DeeError_TypeError,
-                        "classmethod `%s' must be called with at least 1 argument",
-                        name);
+                        "classmethod `%" IF_LEN("$") "s' must be called with at least 1 argument",
+                         IF_LEN(attrlen,) attr);
 }
 
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedClassAttr(DeeTypeObject *__restrict tp_self,
-                            char const *__restrict name, dhash_t hash,
-                            size_t argc, DeeObject **__restrict argv) {
+NLen(DeeType_CallCachedClassAttr)(DeeTypeObject *__restrict tp_self,
+                                  ATTR_ARG, dhash_t hash,
+                                  size_t argc, DeeObject **__restrict argv) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -1398,7 +1099,7 @@ DeeType_CallCachedClassAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -1427,7 +1128,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -1439,13 +1140,13 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_CallAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,argc,argv);
+   return DeeInstance_CallAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,argc,argv);
   }
   {
    dobjmethod_t func;
@@ -1500,13 +1201,13 @@ check_and_invoke_callback:
    return type_member_get(&member,argv[0]);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_CallInstanceAttribute(type,attr,argc,argv);
+   return DeeClass_CallInstanceAttribute(type,catt,argc,argv);
   }
   default: __builtin_unreachable();
   }
@@ -1518,22 +1219,22 @@ err_no_getter:
  err_cant_access_clsproperty_get();
  goto err;
 err_classmember_invalid_args:
- err_classmember_requires_1_argument(name);
+ N_len(err_classmember_requires_1_argument)(attr IF_LEN(,attrlen));
  goto err;
 err_classproperty_invalid_args:
- err_classproperty_requires_1_argument(name);
+ N_len(err_classproperty_requires_1_argument)(attr IF_LEN(,attrlen));
  goto err;
 err_classmethod_noargs:
- err_classmethod_requires_at_least_1_argument(name);
+ N_len(err_classmethod_requires_at_least_1_argument)(attr IF_LEN(,attrlen));
 err:
  return NULL;
 }
 
 #if 0
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
-                               char const *__restrict name, dhash_t hash,
-                               size_t argc, DeeObject **__restrict argv) {
+NLen(DeeType_CallCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
+                                     ATTR_ARG, dhash_t hash,
+                                     size_t argc, DeeObject **__restrict argv) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -1542,7 +1243,7 @@ DeeType_CallCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -1597,13 +1298,13 @@ DeeType_CallCachedInstanceAttr(DeeTypeObject *__restrict tp_self,
    return type_member_get(&member,argv[0]);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_CallInstanceAttribute(type,attr,argc,argv);
+   return DeeClass_CallInstanceAttribute(type,catt,argc,argv);
   }
   default: __builtin_unreachable();
   }
@@ -1615,13 +1316,13 @@ err_no_getter:
  err_cant_access_clsproperty_get();
  goto err;
 err_classmember_invalid_args:
- err_classmember_requires_1_argument(name);
+ err_classmember_requires_1_argument(attr);
  goto err;
 err_classproperty_invalid_args:
- err_classproperty_requires_1_argument(name);
+ err_classproperty_requires_1_argument(attr);
  goto err;
 err_classmethod_noargs:
- err_classmethod_requires_at_least_1_argument(name);
+ err_classmethod_requires_at_least_1_argument(attr);
 err:
  return NULL;
 }
@@ -1631,11 +1332,12 @@ err:
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedAttrKw(DeeTypeObject *__restrict tp_self,
-                         DeeObject *__restrict self,
-                         char const *__restrict name, dhash_t hash,
-                         size_t argc, DeeObject **__restrict argv,
-                         DeeObject *kw) {
+S(DeeType_CallCachedAttrKw,
+  DeeType_CallCachedAttrLenKw)(DeeTypeObject *__restrict tp_self,
+                               DeeObject *__restrict self,
+                               ATTR_ARG, dhash_t hash,
+                               size_t argc, DeeObject **__restrict argv,
+                               DeeObject *kw) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -1644,7 +1346,7 @@ DeeType_CallCachedAttrKw(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -1683,7 +1385,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -1695,15 +1397,15 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_CallAttributeKw(desc,
                                       DeeInstance_DESC(desc,self),
-                                      self,attr,argc,argv,kw);
+                                      self,catt,argc,argv,kw);
   }
   default: __builtin_unreachable();
   }
@@ -1712,7 +1414,7 @@ done:
  MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
  return ITER_DONE;
 err_no_keywords:
- err_keywords_func_not_accepted(name,kw);
+ err_keywords_func_not_accepted(attr,kw);
 err:
  return NULL;
 }
@@ -1720,10 +1422,11 @@ err:
 INTDEF struct keyword getter_kwlist[];
 
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedClassAttrKw(DeeTypeObject *__restrict tp_self,
-                              char const *__restrict name, dhash_t hash,
-                              size_t argc, DeeObject **__restrict argv,
-                              DeeObject *kw) {
+S(DeeType_CallCachedClassAttrKw,
+  DeeType_CallCachedClassAttrLenKw)(DeeTypeObject *__restrict tp_self,
+                                    ATTR_ARG, dhash_t hash,
+                                    size_t argc, DeeObject **__restrict argv,
+                                    DeeObject *kw) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -1732,7 +1435,7 @@ DeeType_CallCachedClassAttrKw(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -1771,7 +1474,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -1783,13 +1486,13 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_CallAttributeKw(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,argc,argv,kw);
+   return DeeInstance_CallAttributeKw(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,argc,argv,kw);
   }
   {
    dobjmethod_t func;
@@ -1856,13 +1559,13 @@ check_and_invoke_callback:
    return type_member_get(&member,thisarg);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_CallInstanceAttributeKw(type,attr,argc,argv,kw);
+   return DeeClass_CallInstanceAttributeKw(type,catt,argc,argv,kw);
   }
   default: __builtin_unreachable();
   }
@@ -1874,25 +1577,26 @@ err_no_getter:
  err_cant_access_clsproperty_get();
  goto err;
 err_classmember_invalid_args:
- err_classmember_requires_1_argument(name);
+ N_len(err_classmember_requires_1_argument)(attr IF_LEN(,attrlen));
  goto err;
 err_classproperty_invalid_args:
- err_classproperty_requires_1_argument(name);
+ N_len(err_classproperty_requires_1_argument)(attr IF_LEN(,attrlen));
  goto err;
 err_classmethod_noargs:
- err_classmethod_requires_at_least_1_argument(name);
+ N_len(err_classmethod_requires_at_least_1_argument)(attr IF_LEN(,attrlen));
  goto err;
 err_no_keywords:
- err_keywords_func_not_accepted(name,kw);
+ err_keywords_func_not_accepted(attr,kw);
 err:
  return NULL;
 }
 
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedInstanceAttrKw(DeeTypeObject *__restrict tp_self,
-                                 char const *__restrict name, dhash_t hash,
-                                 size_t argc, DeeObject **__restrict argv,
-                                 DeeObject *kw) {
+S(DeeType_CallCachedInstanceAttrKw,
+  DeeType_CallCachedInstanceAttrLenKw)(DeeTypeObject *__restrict tp_self,
+                                       ATTR_ARG, dhash_t hash,
+                                       size_t argc, DeeObject **__restrict argv,
+                                       DeeObject *kw) {
  dhash_t i,perturb;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -1901,7 +1605,7 @@ DeeType_CallCachedInstanceAttrKw(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -1968,13 +1672,13 @@ DeeType_CallCachedInstanceAttrKw(DeeTypeObject *__restrict tp_self,
    return type_member_get(&member,thisarg);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_CallInstanceAttributeKw(type,attr,argc,argv,kw);
+   return DeeClass_CallInstanceAttributeKw(type,catt,argc,argv,kw);
   }
   default: __builtin_unreachable();
   }
@@ -1986,29 +1690,31 @@ err_no_getter:
  err_cant_access_clsproperty_get();
  goto err;
 err_classmember_invalid_args:
- err_classmember_requires_1_argument(name);
+ N_len(err_classmember_requires_1_argument)(attr IF_LEN(,attrlen));
  goto err;
 err_classproperty_invalid_args:
- err_classproperty_requires_1_argument(name);
+ N_len(err_classproperty_requires_1_argument)(attr IF_LEN(,attrlen));
  goto err;
 err_classmethod_noargs:
- err_classmethod_requires_at_least_1_argument(name);
+ N_len(err_classmethod_requires_at_least_1_argument)(attr IF_LEN(,attrlen));
  goto err;
 err_no_keywords:
- err_keywords_func_not_accepted(name,kw);
+ err_keywords_func_not_accepted(attr,kw);
 err:
  return NULL;
 }
 
+#ifndef MRO_LEN
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 /* @return: * :        The returned value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedAttrTuple(DeeTypeObject *__restrict tp_self,
-                            DeeObject *__restrict self,
-                            char const *__restrict name, dhash_t hash,
-                            DeeObject *__restrict args) {
+S(DeeType_CallCachedAttrTuple,
+  DeeType_CallCachedAttrLenTuple)(DeeTypeObject *__restrict tp_self,
+                                  DeeObject *__restrict self,
+                                  ATTR_ARG, dhash_t hash,
+                                  DeeObject *__restrict args) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -2017,7 +1723,7 @@ DeeType_CallCachedAttrTuple(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -2046,7 +1752,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -2058,15 +1764,15 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_CallAttributeTuple(desc,
                                          DeeInstance_DESC(desc,self),
-                                         self,attr,args);
+                                         self,catt,args);
   }
   default: __builtin_unreachable();
   }
@@ -2079,9 +1785,10 @@ err:
 }
 
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedClassAttrTuple(DeeTypeObject *__restrict tp_self,
-                                 char const *__restrict name, dhash_t hash,
-                                 DeeObject *__restrict args) {
+S(DeeType_CallCachedClassAttrTuple,
+  DeeType_CallCachedClassAttrLenTuple)(DeeTypeObject *__restrict tp_self,
+                                       ATTR_ARG, dhash_t hash,
+                                       DeeObject *__restrict args) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -2090,7 +1797,7 @@ DeeType_CallCachedClassAttrTuple(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -2119,7 +1826,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -2131,14 +1838,14 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    return DeeInstance_CallAttributeTuple(desc,class_desc_as_instance(desc),
-                                        (DeeObject *)tp_self,attr,args);
+                                        (DeeObject *)tp_self,catt,args);
   }
   {
    dobjmethod_t func;
@@ -2193,13 +1900,13 @@ check_and_invoke_callback:
    return type_member_get(&member,DeeTuple_GET(args,0));
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_CallInstanceAttributeTuple(type,attr,args);
+   return DeeClass_CallInstanceAttributeTuple(type,catt,args);
   }
   default: __builtin_unreachable();
   }
@@ -2211,21 +1918,22 @@ err_no_getter:
  err_cant_access_clsproperty_get();
  goto err;
 err_classmember_invalid_args:
- err_classmember_requires_1_argument(name);
+ err_classmember_requires_1_argument(attr);
  goto err;
 err_classproperty_invalid_args:
- err_classproperty_requires_1_argument(name);
+ err_classproperty_requires_1_argument(attr);
  goto err;
 err_classmethod_noargs:
- err_classmethod_requires_at_least_1_argument(name);
+ err_classmethod_requires_at_least_1_argument(attr);
 err:
  return NULL;
 }
 #if 0
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedInstanceAttrTuple(DeeTypeObject *__restrict tp_self,
-                                    char const *__restrict name, dhash_t hash,
-                                    DeeObject *__restrict args) {
+S(DeeType_CallCachedInstanceAttrTuple,
+  DeeType_CallCachedInstanceAttrLenTuple)(DeeTypeObject *__restrict tp_self,
+                                          ATTR_ARG, dhash_t hash,
+                                          DeeObject *__restrict args) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -2234,7 +1942,7 @@ DeeType_CallCachedInstanceAttrTuple(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -2289,13 +1997,13 @@ DeeType_CallCachedInstanceAttrTuple(DeeTypeObject *__restrict tp_self,
    return type_member_get(&member,DeeTuple_GET(args,0));
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_CallInstanceAttributeTuple(type,attr,args);
+   return DeeClass_CallInstanceAttributeTuple(type,catt,args);
   }
   default: __builtin_unreachable();
   }
@@ -2307,22 +2015,23 @@ err_no_getter:
  err_cant_access_clsproperty_get();
  goto err;
 err_classmember_invalid_args:
- err_classmember_requires_1_argument(name);
+ err_classmember_requires_1_argument(attr);
  goto err;
 err_classproperty_invalid_args:
- err_classproperty_requires_1_argument(name);
+ err_classproperty_requires_1_argument(attr);
  goto err;
 err_classmethod_noargs:
- err_classmethod_requires_at_least_1_argument(name);
+ err_classmethod_requires_at_least_1_argument(attr);
 err:
  return NULL;
 }
 #endif
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedAttrTupleKw(DeeTypeObject *__restrict tp_self,
-                              DeeObject *__restrict self,
-                              char const *__restrict name, dhash_t hash,
-                              DeeObject *__restrict args, DeeObject *kw) {
+S(DeeType_CallCachedAttrTupleKw,
+  DeeType_CallCachedAttrLenTupleKw)(DeeTypeObject *__restrict tp_self,
+                                    DeeObject *__restrict self,
+                                    ATTR_ARG, dhash_t hash,
+                                    DeeObject *__restrict args, DeeObject *kw) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -2331,7 +2040,7 @@ DeeType_CallCachedAttrTupleKw(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -2370,7 +2079,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -2382,15 +2091,15 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_CallAttributeTupleKw(desc,
                                            DeeInstance_DESC(desc,self),
-                                           self,attr,args,kw);
+                                           self,catt,args,kw);
   }
   default: __builtin_unreachable();
   }
@@ -2399,15 +2108,16 @@ done:
  MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
  return ITER_DONE;
 err_no_keywords:
- err_keywords_func_not_accepted(name,kw);
+ err_keywords_func_not_accepted(attr,kw);
 err:
  return NULL;
 }
 
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedClassAttrTupleKw(DeeTypeObject *__restrict tp_self,
-                                   char const *__restrict name, dhash_t hash,
-                                   DeeObject *__restrict args, DeeObject *kw) {
+S(DeeType_CallCachedClassAttrTupleKw,
+  DeeType_CallCachedClassAttrLenTupleKw)(DeeTypeObject *__restrict tp_self,
+                                         ATTR_ARG, dhash_t hash,
+                                         DeeObject *__restrict args, DeeObject *kw) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -2416,7 +2126,7 @@ DeeType_CallCachedClassAttrTupleKw(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -2455,7 +2165,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -2467,13 +2177,13 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_CallAttributeTupleKw(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,args,kw);
+   return DeeInstance_CallAttributeTupleKw(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,args,kw);
   }
   {
    dobjmethod_t func;
@@ -2545,13 +2255,13 @@ check_and_invoke_callback:
    return type_member_get(&member,thisarg);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_CallInstanceAttributeTupleKw(type,attr,args,kw);
+   return DeeClass_CallInstanceAttributeTupleKw(type,catt,args,kw);
   }
   default: __builtin_unreachable();
   }
@@ -2563,24 +2273,25 @@ err_no_getter:
  err_cant_access_clsproperty_get();
  goto err;
 err_classmember_invalid_args:
- err_classmember_requires_1_argument(name);
+ err_classmember_requires_1_argument(attr);
  goto err;
 err_classproperty_invalid_args:
- err_classproperty_requires_1_argument(name);
+ err_classproperty_requires_1_argument(attr);
  goto err;
 err_classmethod_noargs:
- err_classmethod_requires_at_least_1_argument(name);
+ err_classmethod_requires_at_least_1_argument(attr);
  goto err;
 err_no_keywords:
- err_keywords_func_not_accepted(name,kw);
+ err_keywords_func_not_accepted(attr,kw);
 err:
  return NULL;
 }
 #if 0
 INTERN DREF DeeObject *DCALL
-DeeType_CallCachedInstanceAttrTupleKw(DeeTypeObject *__restrict tp_self,
-                                      char const *__restrict name, dhash_t hash,
-                                      DeeObject *__restrict args, DeeObject *kw) {
+S(DeeType_CallCachedInstanceAttrTupleKw,
+  DeeType_CallCachedInstanceAttrLenTupleKw)(DeeTypeObject *__restrict tp_self,
+                                            ATTR_ARG, dhash_t hash,
+                                            DeeObject *__restrict args, DeeObject *kw) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -2589,7 +2300,7 @@ DeeType_CallCachedInstanceAttrTupleKw(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -2661,13 +2372,13 @@ DeeType_CallCachedInstanceAttrTupleKw(DeeTypeObject *__restrict tp_self,
    return type_member_get(&member,thisarg);
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_CallInstanceAttributeTupleKw(type,attr,args,kw);
+   return DeeClass_CallInstanceAttributeTupleKw(type,catt,args,kw);
   }
   default: __builtin_unreachable();
   }
@@ -2679,23 +2390,27 @@ err_no_getter:
  err_cant_access_clsproperty_get();
  goto err;
 err_classmember_invalid_args:
- err_classmember_requires_1_argument(name);
+ err_classmember_requires_1_argument(attr);
  goto err;
 err_classproperty_invalid_args:
- err_classproperty_requires_1_argument(name);
+ err_classproperty_requires_1_argument(attr);
  goto err;
 err_classmethod_noargs:
- err_classmethod_requires_at_least_1_argument(name);
+ err_classmethod_requires_at_least_1_argument(attr);
  goto err;
 err_no_keywords:
- err_keywords_func_not_accepted(name,kw);
+ err_keywords_func_not_accepted(attr,kw);
 err:
  return NULL;
 }
 #endif
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* !MRO_LEN */
 
 
+#ifndef MRO_LEN
+#ifndef DKWOBJMETHOD_VCALLF_DEFINED
+#define DKWOBJMETHOD_VCALLF_DEFINED 1
 PRIVATE DREF DeeObject *DCALL
 dkwobjmethod_vcallf(dkwobjmethod_t self,
                     DeeObject *__restrict thisarg,
@@ -2730,15 +2445,17 @@ dobjmethod_vcallf(dobjmethod_t self,
 err:
  return NULL;
 }
+#endif /* !DKWOBJMETHOD_VCALLF_DEFINED */
 
 /* @return: * :        The returned value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
 INTERN DREF DeeObject *DCALL
-DeeType_VCallCachedAttrf(DeeTypeObject *__restrict tp_self,
-                         DeeObject *__restrict self,
-                         char const *__restrict name, dhash_t hash,
-                         char const *__restrict format, va_list args) {
+S(DeeType_VCallCachedAttrf,
+  DeeType_VCallCachedAttrLenf)(DeeTypeObject *__restrict tp_self,
+                               DeeObject *__restrict self,
+                               ATTR_ARG, dhash_t hash,
+                               char const *__restrict format, va_list args) {
  dhash_t i,perturb; DREF DeeObject *callback,*result;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -2747,7 +2464,7 @@ DeeType_VCallCachedAttrf(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -2776,7 +2493,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -2788,15 +2505,15 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_VCallAttributef(desc,
                                       DeeInstance_DESC(desc,self),
-                                      self,attr,format,args);
+                                      self,catt,format,args);
   }
   default: __builtin_unreachable();
   }
@@ -2808,9 +2525,10 @@ err:
  return NULL;
 }
 INTERN DREF DeeObject *DCALL
-DeeType_VCallCachedClassAttrf(DeeTypeObject *__restrict tp_self,
-                              char const *__restrict name, dhash_t hash,
-                              char const *__restrict format, va_list args) {
+S(DeeType_VCallCachedClassAttrf,
+  DeeType_VCallCachedClassAttrLenf)(DeeTypeObject *__restrict tp_self,
+                                    ATTR_ARG, dhash_t hash,
+                                    char const *__restrict format, va_list args) {
  dhash_t i,perturb; DREF DeeObject *callback,*result,*args_tuple;
  MEMBERCACHE_READ(&tp_self->tp_class_cache);
  if unlikely(!tp_self->tp_class_cache.mc_table) goto done;
@@ -2819,7 +2537,7 @@ DeeType_VCallCachedClassAttrf(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -2848,7 +2566,7 @@ check_and_invoke_callback:
    }
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   err_cant_access_attribute(type,name,ATTR_ACCESS_GET);
+   err_cant_access_attribute(type,attr,ATTR_ACCESS_GET);
    goto err;
   }
   {
@@ -2860,13 +2578,13 @@ check_and_invoke_callback:
    goto check_and_invoke_callback;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct class_desc *desc;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_VCallAttributef(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,attr,format,args);
+   return DeeInstance_VCallAttributef(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,format,args);
   }
   {
    dobjmethod_t func;
@@ -2942,13 +2660,13 @@ check_and_invoke_callback:
    return result;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_INSTANCE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_VCallInstanceAttributef(type,attr,format,args);
+   return DeeClass_VCallInstanceAttributef(type,catt,format,args);
   }
   default: __builtin_unreachable();
   }
@@ -2962,17 +2680,17 @@ err_no_getter:
 err_classmember_invalid_args_args_tuple:
  Dee_Decref(args_tuple);
 /*err_classmember_invalid_args:*/
- err_classmember_requires_1_argument(name);
+ err_classmember_requires_1_argument(attr);
  goto err;
 err_classproperty_invalid_args_args_tuple:
  Dee_Decref(args_tuple);
 /*err_classproperty_invalid_args:*/
- err_classproperty_requires_1_argument(name);
+ err_classproperty_requires_1_argument(attr);
  goto err;
 err_classmethod_noargs_args_tuple:
  Dee_Decref(args_tuple);
 /*err_classmethod_noargs:*/
- err_classmethod_requires_at_least_1_argument(name);
+ err_classmethod_requires_at_least_1_argument(attr);
  goto err;
 err_args_tuple:
  Dee_Decref(args_tuple);
@@ -2981,9 +2699,10 @@ err:
 }
 #if 0
 INTERN DREF DeeObject *DCALL
-DeeType_VCallCachedInstanceAttrf(DeeTypeObject *__restrict tp_self,
-                                 char const *__restrict name, dhash_t hash,
-                                 char const *__restrict format, va_list args) {
+S(DeeType_VCallCachedInstanceAttrf,
+  DeeType_VCallCachedInstanceAttrLenf)(DeeTypeObject *__restrict tp_self,
+                                      ATTR_ARG, dhash_t hash,
+                                      char const *__restrict format, va_list args) {
  dhash_t i,perturb; DREF DeeObject *callback,*result,*args_tuple;
  MEMBERCACHE_READ(&tp_self->tp_cache);
  if unlikely(!tp_self->tp_cache.mc_table) goto done;
@@ -2992,7 +2711,7 @@ DeeType_VCallCachedInstanceAttrf(DeeTypeObject *__restrict tp_self,
   struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache,i);
   if (item->mcs_type == MEMBERCACHE_UNUSED) break;
   if (item->mcs_hash != hash) continue;
-  if (!streq(item->mcs_name,name)) continue;
+  if (!ATTREQ(item)) continue;
   switch (item->mcs_type) {
   {
    dobjmethod_t func;
@@ -3068,13 +2787,13 @@ DeeType_VCallCachedInstanceAttrf(DeeTypeObject *__restrict tp_self,
    return result;
   }
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    DeeTypeObject *type;
   case MEMBERCACHE_ATTRIB:
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_VCallInstanceAttributef(type,attr,format,args);
+   return DeeClass_VCallInstanceAttributef(type,catt,format,args);
   }
   default: __builtin_unreachable();
   }
@@ -3088,17 +2807,17 @@ err_no_getter:
 err_classmember_invalid_args_args_tuple:
  Dee_Decref(args_tuple);
 /*err_classmember_invalid_args:*/
- err_classmember_requires_1_argument(name);
+ err_classmember_requires_1_argument(attr);
  goto err;
 err_classproperty_invalid_args_args_tuple:
  Dee_Decref(args_tuple);
 /*err_classproperty_invalid_args:*/
- err_classproperty_requires_1_argument(name);
+ err_classproperty_requires_1_argument(attr);
  goto err;
 err_classmethod_noargs_args_tuple:
  Dee_Decref(args_tuple);
 /*err_classmethod_noargs:*/
- err_classmethod_requires_at_least_1_argument(name);
+ err_classmethod_requires_at_least_1_argument(attr);
  goto err;
 err_args_tuple:
  Dee_Decref(args_tuple);
@@ -3106,10 +2825,16 @@ err:
  return NULL;
 }
 #endif
+#endif /* !MRO_LEN */
 
+
+#ifndef TYPE_MEMBER_TYPEFOR_DEFINED
+#define TYPE_MEMBER_TYPEFOR_DEFINED 1
 INTDEF DeeTypeObject *DCALL
 type_member_typefor(struct type_member *__restrict self);
+#endif
 
+#ifndef MRO_LEN
 INTERN int DCALL
 DeeType_FindCachedAttr(DeeTypeObject *__restrict tp_self, DeeObject *instance,
                        struct attribute_info *__restrict result,
@@ -3159,23 +2884,23 @@ DeeType_FindCachedAttr(DeeTypeObject *__restrict tp_self, DeeObject *instance,
    }
    break;
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct instance_desc *inst;
   case MEMBERCACHE_ATTRIB:
    doc  = NULL;
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    perm = ATTR_IMEMBER | ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET;
-   if (attr->ca_doc) {
-    doc   = DeeString_STR(attr->ca_doc);
+   if (catt->ca_doc) {
+    doc   = DeeString_STR(catt->ca_doc);
     perm |= ATTR_DOCOBJ;
-    Dee_Incref(attr->ca_doc);
+    Dee_Incref(catt->ca_doc);
    }
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
        perm |= ATTR_PRIVATE;
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
     perm       |= ATTR_PROPERTY;
     member_type = NULL;
-   } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+   } else if (catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
     perm       |= ATTR_PERMCALL;
     member_type = &DeeInstanceMethod_Type;
     Dee_Incref(member_type);
@@ -3183,29 +2908,29 @@ DeeType_FindCachedAttr(DeeTypeObject *__restrict tp_self, DeeObject *instance,
     member_type = NULL;
    }
    inst = NULL;
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
        inst = class_desc_as_instance(item->mcs_attrib.a_desc);
    else if (instance)
        inst = DeeInstance_DESC(item->mcs_attrib.a_desc,instance);
    if (inst) {
     rwlock_read(&inst->id_lock);
-    if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-     if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET])
+    if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+     if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
           perm &= ~ATTR_PERMGET;
-     if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-      if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL])
+     if (!(catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+      if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_DEL])
            perm &= ~ATTR_PERMDEL;
-      if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_SET])
+      if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_SET])
            perm &= ~ATTR_PERMSET;
      }
-    } else if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+    } else if (!(catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
      ASSERT(!member_type);
-     member_type = (DREF DeeTypeObject *)inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+     member_type = (DREF DeeTypeObject *)inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET];
      if (member_type) { member_type = Dee_TYPE(member_type); Dee_Incref(member_type); }
     }
     rwlock_endread(&inst->id_lock);
    }
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
        perm &= ~(ATTR_PERMDEL | ATTR_PERMSET);
   } break;
   default: __builtin_unreachable();
@@ -3280,23 +3005,23 @@ DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
    }
    break;
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
    struct instance_desc *inst;
   case MEMBERCACHE_ATTRIB:
    doc  = NULL;
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    perm = ATTR_CMEMBER | ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET;
-   if (attr->ca_doc) {
-    doc   = DeeString_STR(attr->ca_doc);
+   if (catt->ca_doc) {
+    doc   = DeeString_STR(catt->ca_doc);
     perm |= ATTR_DOCOBJ;
-    Dee_Incref(attr->ca_doc);
+    Dee_Incref(catt->ca_doc);
    }
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
        perm |= ATTR_PRIVATE;
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
     perm       |= ATTR_PROPERTY;
     member_type = NULL;
-   } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+   } else if (catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
     perm       |= ATTR_PERMCALL;
     member_type = &DeeInstanceMethod_Type;
     Dee_Incref(member_type);
@@ -3305,22 +3030,22 @@ DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
    }
    inst = class_desc_as_instance(item->mcs_attrib.a_desc);
    rwlock_read(&inst->id_lock);
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-    if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET])
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+    if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
          perm &= ~ATTR_PERMGET;
-    if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-     if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL])
+    if (!(catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+     if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_DEL])
           perm &= ~ATTR_PERMDEL;
-     if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_SET])
+     if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_SET])
           perm &= ~ATTR_PERMSET;
     }
-   } else if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+   } else if (!(catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
     ASSERT(!member_type);
-    member_type = (DREF DeeTypeObject *)inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+    member_type = (DREF DeeTypeObject *)inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET];
     if (member_type) { member_type = Dee_TYPE(member_type); Dee_Incref(member_type); }
    }
    rwlock_endread(&inst->id_lock);
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
        perm &= ~(ATTR_PERMDEL | ATTR_PERMSET);
   } break;
 
@@ -3356,49 +3081,49 @@ DeeType_FindCachedClassAttr(DeeTypeObject *__restrict tp_self,
    break;
 
   {
-   struct class_attribute *attr;
+   struct class_attribute *catt;
   case MEMBERCACHE_INSTANCE_ATTRIB:
    doc  = NULL;
-   attr = item->mcs_attrib.a_attr;
+   catt = item->mcs_attrib.a_attr;
    perm = ATTR_CMEMBER | ATTR_IMEMBER | ATTR_WRAPPER | ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET;
-   if (attr->ca_doc) {
-    doc   = DeeString_STR(attr->ca_doc);
+   if (catt->ca_doc) {
+    doc   = DeeString_STR(catt->ca_doc);
     perm |= ATTR_DOCOBJ;
-    Dee_Incref(attr->ca_doc);
+    Dee_Incref(catt->ca_doc);
    }
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
        perm |= ATTR_PRIVATE;
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
     perm       |= ATTR_PROPERTY;
     member_type = NULL;
-   } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+   } else if (catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
     perm       |= ATTR_PERMCALL;
     member_type = &DeeInstanceMethod_Type;
     Dee_Incref(member_type);
    } else {
     member_type = NULL;
    }
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
     struct instance_desc *inst;
     inst = class_desc_as_instance(item->mcs_attrib.a_desc);
     rwlock_read(&inst->id_lock);
-    if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-     if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET])
+    if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+     if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
           perm &= ~ATTR_PERMGET;
-     if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-      if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL])
+     if (!(catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+      if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_DEL])
            perm &= ~ATTR_PERMDEL;
-      if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_SET])
+      if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_SET])
            perm &= ~ATTR_PERMSET;
      }
-    } else if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+    } else if (!(catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
      ASSERT(!member_type);
-     member_type = (DREF DeeTypeObject *)inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+     member_type = (DREF DeeTypeObject *)inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET];
      if (member_type) { member_type = Dee_TYPE(member_type); Dee_Incref(member_type); }
     }
     rwlock_endread(&inst->id_lock);
    }
-   if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+   if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
        perm &= ~(ATTR_PERMDEL | ATTR_PERMSET);
   } break;
   default: __builtin_unreachable();
@@ -3424,67 +3149,82 @@ done:
 not_found:
  return 1;
 }
+#endif /* !MRO_LEN */
 
 
+
+#ifndef MRO_LEN
 INTDEF struct class_attribute *
 (DCALL DeeType_QueryAttributeWithHash)(DeeTypeObject *__restrict tp_invoker,
                                        DeeTypeObject *__restrict tp_self,
-                                       /*String*/DeeObject *__restrict name,
+                                       /*String*/DeeObject *__restrict attr,
                                        dhash_t hash) {
  struct class_attribute *result;
- result = DeeClass_QueryInstanceAttributeWithHash(tp_self,name,hash);
+ result = DeeClass_QueryInstanceAttributeWithHash(tp_self,attr,hash);
  if (result)
      membercache_addattrib(&tp_invoker->tp_cache,tp_self,hash,result);
  return result;
 }
+#endif /* !MRO_LEN */
 INTDEF struct class_attribute *
-(DCALL DeeType_QueryAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker,
-                                             DeeTypeObject *__restrict tp_self,
-                                             char const *__restrict name, dhash_t hash) {
+(DCALL S(DeeType_QueryAttributeStringWithHash,
+         DeeType_QueryAttributeStringLenWithHash))(DeeTypeObject *__restrict tp_invoker,
+                                                   DeeTypeObject *__restrict tp_self,
+                                                   ATTR_ARG, dhash_t hash) {
  struct class_attribute *result;
- result = DeeClass_QueryInstanceAttributeStringWithHash(tp_self,name,hash);
+ result = S(DeeClass_QueryInstanceAttributeStringWithHash(tp_self,attr,hash),
+            DeeClass_QueryInstanceAttributeStringLenWithHash(tp_self,attr,attrlen,hash));
  if (result)
      membercache_addattrib(&tp_invoker->tp_cache,tp_self,hash,result);
  return result;
 }
+#ifndef MRO_LEN
 INTDEF struct class_attribute *
 (DCALL DeeType_QueryClassAttributeWithHash)(DeeTypeObject *__restrict tp_invoker,
                                             DeeTypeObject *__restrict tp_self,
-                                            /*String*/DeeObject *__restrict name,
+                                            /*String*/DeeObject *__restrict attr,
                                             dhash_t hash) {
  struct class_attribute *result;
- result = DeeClass_QueryClassAttributeWithHash(tp_self,name,hash);
+ result = DeeClass_QueryClassAttributeWithHash(tp_self,attr,hash);
  if (result)
      membercache_addattrib(&tp_invoker->tp_class_cache,tp_self,hash,result);
  return result;
 }
+#endif /* !MRO_LEN */
+
 INTDEF struct class_attribute *
-(DCALL DeeType_QueryClassAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker,
-                                                  DeeTypeObject *__restrict tp_self,
-                                                  char const *__restrict name, dhash_t hash) {
+(DCALL S(DeeType_QueryClassAttributeStringWithHash,
+         DeeType_QueryClassAttributeStringLenWithHash))(DeeTypeObject *__restrict tp_invoker,
+                                                        DeeTypeObject *__restrict tp_self,
+                                                        ATTR_ARG, dhash_t hash) {
  struct class_attribute *result;
- result = DeeClass_QueryClassAttributeStringWithHash(tp_self,name,hash);
+ result = S(DeeClass_QueryClassAttributeStringWithHash(tp_self,attr,hash),
+            DeeClass_QueryClassAttributeStringLenWithHash(tp_self,attr,attrlen,hash));
  if (result)
      membercache_addattrib(&tp_invoker->tp_class_cache,tp_self,hash,result);
  return result;
 }
+#ifndef MRO_LEN
 INTDEF struct class_attribute *
 (DCALL DeeType_QueryInstanceAttributeWithHash)(DeeTypeObject *__restrict tp_invoker,
                                                DeeTypeObject *__restrict tp_self,
-                                               /*String*/DeeObject *__restrict name,
+                                               /*String*/DeeObject *__restrict attr,
                                                dhash_t hash) {
  struct class_attribute *result;
- result = DeeClass_QueryInstanceAttributeWithHash(tp_self,name,hash);
+ result = DeeClass_QueryInstanceAttributeWithHash(tp_self,attr,hash);
  if (result)
      membercache_addinstanceattrib(&tp_invoker->tp_class_cache,tp_self,hash,result);
  return result;
 }
+#endif /* !MRO_LEN */
 INTDEF struct class_attribute *
-(DCALL DeeType_QueryInstanceAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker,
-                                                     DeeTypeObject *__restrict tp_self,
-                                                     char const *__restrict name, dhash_t hash) {
+(DCALL S(DeeType_QueryInstanceAttributeStringWithHash,
+         DeeType_QueryInstanceAttributeStringLenWithHash))(DeeTypeObject *__restrict tp_invoker,
+                                                           DeeTypeObject *__restrict tp_self,
+                                                           ATTR_ARG, dhash_t hash) {
  struct class_attribute *result;
- result = DeeClass_QueryInstanceAttributeStringWithHash(tp_self,name,hash);
+ result = S(DeeClass_QueryInstanceAttributeStringWithHash(tp_self,attr,hash),
+            DeeClass_QueryInstanceAttributeStringLenWithHash(tp_self,attr,attrlen,hash));
  if (result)
      membercache_addinstanceattrib(&tp_invoker->tp_class_cache,tp_self,hash,result);
  return result;
@@ -3493,35 +3233,35 @@ INTDEF struct class_attribute *
 
 
 INTERN DREF DeeObject *DCALL
-type_method_getattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                    struct type_method *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash) {
+N_len(type_method_getattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                           struct type_method *__restrict chain, DeeObject *__restrict self,
+                           ATTR_ARG, dhash_t hash) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(cache,decl,hash,chain);
   return type_method_get(chain,self);
  }
  return ITER_DONE;
 }
 INTERN DREF DeeObject *
-(DCALL DeeType_GetInstanceMethodAttr)(DeeTypeObject *__restrict tp_invoker,
-                                      DeeTypeObject *__restrict tp_self,
-                                      char const *__restrict attr_name, dhash_t hash) {
+(DCALL NLen(DeeType_GetInstanceMethodAttr))(DeeTypeObject *__restrict tp_invoker,
+                                            DeeTypeObject *__restrict tp_self,
+                                            ATTR_ARG, dhash_t hash) {
  struct type_method *chain = tp_self->tp_methods;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemethod(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return type_obmeth_get(tp_self,chain);
  }
  return ITER_DONE;
 }
 INTERN DREF DeeObject *
-(DCALL DeeType_GetIInstanceMethodAttr)(DeeTypeObject *__restrict tp_invoker,
-                                       DeeTypeObject *__restrict tp_self,
-                                       char const *__restrict attr_name, dhash_t hash) {
+(DCALL NLen(DeeType_GetIInstanceMethodAttr))(DeeTypeObject *__restrict tp_invoker,
+                                             DeeTypeObject *__restrict tp_self,
+                                             ATTR_ARG, dhash_t hash) {
  struct type_method *chain = tp_self->tp_methods;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(&tp_invoker->tp_cache,tp_self,hash,chain);
   return type_obmeth_get(tp_self,chain);
  }
@@ -3529,25 +3269,25 @@ INTERN DREF DeeObject *
 }
 
 INTERN DREF DeeObject *DCALL
-type_method_callattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                     struct type_method *__restrict chain, DeeObject *__restrict self,
-                     char const *__restrict attr_name, dhash_t hash,
-                     size_t argc, DeeObject **__restrict argv) {
+N_len(type_method_callattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                            struct type_method *__restrict chain, DeeObject *__restrict self,
+                            ATTR_ARG, dhash_t hash,
+                            size_t argc, DeeObject **__restrict argv) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(cache,decl,hash,chain);
   return type_method_call(chain,self,argc,argv);
  }
  return ITER_DONE;
 }
 INTDEF DREF DeeObject *
-(DCALL DeeType_CallInstanceMethodAttr)(DeeTypeObject *__restrict tp_invoker,
-                                       DeeTypeObject *__restrict tp_self,
-                                       char const *__restrict attr_name, dhash_t hash,
-                                       size_t argc, DeeObject **__restrict argv) {
+(DCALL NLen(DeeType_CallInstanceMethodAttr))(DeeTypeObject *__restrict tp_invoker,
+                                             DeeTypeObject *__restrict tp_self,
+                                             ATTR_ARG, dhash_t hash,
+                                             size_t argc, DeeObject **__restrict argv) {
  struct type_method *chain = tp_self->tp_methods;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemethod(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return type_obmeth_call(tp_self,chain,argc,argv);
  }
@@ -3555,12 +3295,13 @@ INTDEF DREF DeeObject *
 }
 
 INTERN DREF DeeObject *DCALL
-type_method_callattr_kw(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                        struct type_method *__restrict chain, DeeObject *__restrict self,
-                        char const *__restrict attr_name, dhash_t hash,
-                        size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+S(type_method_callattr_kw,
+  type_method_callattr_len_kw)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                               struct type_method *__restrict chain, DeeObject *__restrict self,
+                               ATTR_ARG, dhash_t hash,
+                               size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(cache,decl,hash,chain);
   return type_method_call_kw(chain,self,argc,argv,kw);
  }
@@ -3568,43 +3309,30 @@ type_method_callattr_kw(struct membercache *__restrict cache, DeeTypeObject *__r
 }
 
 INTERN DREF DeeObject *
-(DCALL DeeType_CallInstanceMethodAttrKw)(DeeTypeObject *__restrict tp_invoker,
-                                         DeeTypeObject *__restrict tp_self,
-                                         char const *__restrict attr_name, dhash_t hash,
-                                         size_t argc, DeeObject **__restrict argv,
-                                         DeeObject *kw) {
+(DCALL S(DeeType_CallInstanceMethodAttrKw,
+         DeeType_CallInstanceMethodAttrLenKw))(DeeTypeObject *__restrict tp_invoker,
+                                               DeeTypeObject *__restrict tp_self,
+                                               ATTR_ARG, dhash_t hash,
+                                               size_t argc, DeeObject **__restrict argv,
+                                               DeeObject *kw) {
  struct type_method *chain = tp_self->tp_methods;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemethod(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return type_obmeth_call_kw(tp_self,chain,argc,argv,kw);
  }
  return ITER_DONE;
 }
 INTERN DREF DeeObject *
-(DCALL DeeType_CallIInstanceMethodAttrKw)(DeeTypeObject *__restrict tp_invoker,
-                                          DeeTypeObject *__restrict tp_self,
-                                          char const *__restrict attr_name, dhash_t hash,
-                                          size_t argc, DeeObject **__restrict argv,
-                                          DeeObject *kw) {
+(DCALL S(DeeType_CallIInstanceMethodAttrKw,
+         DeeType_CallIInstanceMethodAttrLenKw))(DeeTypeObject *__restrict tp_invoker,
+                                                DeeTypeObject *__restrict tp_self,
+                                                ATTR_ARG, dhash_t hash,
+                                                size_t argc, DeeObject **__restrict argv,
+                                                DeeObject *kw) {
  struct type_method *chain = tp_self->tp_methods;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
-  membercache_addmethod(&tp_invoker->tp_cache,tp_self,hash,chain);
-  return type_obmeth_call_kw(tp_self,chain,argc,argv,kw);
- }
- return ITER_DONE;
-}
-INTERN DREF DeeObject *
-(DCALL DeeType_CallIInstanceMethodAttrLenKw)(DeeTypeObject *__restrict tp_invoker,
-                                             DeeTypeObject *__restrict tp_self,
-                                             char const *__restrict attr_name,
-                                             size_t attrlen, dhash_t hash,
-                                             size_t argc, DeeObject **__restrict argv,
-                                             DeeObject *kw) {
- struct type_method *chain = tp_self->tp_methods;
- for (; chain->m_name; ++chain) {
-  if (streq_len(chain->m_name,attr_name,attrlen)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(&tp_invoker->tp_cache,tp_self,hash,chain);
   return type_obmeth_call_kw(tp_self,chain,argc,argv,kw);
  }
@@ -3612,27 +3340,29 @@ INTERN DREF DeeObject *
 }
 
 INTERN DREF DeeObject *DCALL
-type_instance_method_callattr_kw(struct membercache *__restrict cache,
-                                 DeeTypeObject *__restrict decl,
-                                 struct type_method *__restrict chain,
-                                 char const *__restrict attr_name, dhash_t hash,
-                                 size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+S(type_instance_method_callattr_kw,
+  type_instance_method_callattr_len_kw)(struct membercache *__restrict cache,
+                                        DeeTypeObject *__restrict decl,
+                                        struct type_method *__restrict chain,
+                                        ATTR_ARG, dhash_t hash,
+                                        size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemethod(cache,decl,hash,chain);
   return type_obmeth_call_kw(decl,chain,argc,argv,kw);
  }
  return ITER_DONE;
 }
 
+#ifndef MRO_LEN
 INTERN DREF DeeObject *DCALL
 type_method_vcallattrf(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
                        struct type_method *__restrict chain, DeeObject *__restrict self,
-                       char const *__restrict attr_name, dhash_t hash,
+                       ATTR_ARG, dhash_t hash,
                        char const *__restrict format, va_list args) {
  DREF DeeObject *result,*args_tuple;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(cache,decl,hash,chain);
   args_tuple = DeeTuple_VNewf(format,args);
   if unlikely(!args_tuple) goto err;
@@ -3651,12 +3381,12 @@ err:
 INTERN DREF DeeObject *
 (DCALL DeeType_VCallInstanceMethodAttrf)(DeeTypeObject *__restrict tp_invoker,
                                          DeeTypeObject *__restrict tp_self,
-                                         char const *__restrict attr_name, dhash_t hash,
+                                         ATTR_ARG, dhash_t hash,
                                          char const *__restrict format, va_list args) {
  DREF DeeObject *result,*args_tuple;
  struct type_method *chain = tp_self->tp_methods;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemethod(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   args_tuple = DeeTuple_VNewf(format,args);
   if unlikely(!args_tuple) goto err;
@@ -3674,12 +3404,12 @@ err:
 INTERN DREF DeeObject *
 (DCALL DeeType_VCallIInstanceMethodAttrf)(DeeTypeObject *__restrict tp_invoker,
                                           DeeTypeObject *__restrict tp_self,
-                                          char const *__restrict attr_name, dhash_t hash,
+                                          ATTR_ARG, dhash_t hash,
                                           char const *__restrict format, va_list args) {
  DREF DeeObject *result,*args_tuple;
  struct type_method *chain = tp_self->tp_methods;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(&tp_invoker->tp_cache,tp_self,hash,chain);
   args_tuple = DeeTuple_VNewf(format,args);
   if unlikely(!args_tuple) goto err;
@@ -3694,14 +3424,15 @@ err:
  return NULL;
 }
 #endif
+#endif /* !MRO_LEN */
 
 
 INTERN DREF DeeObject *DCALL /* GET_GETSET */
-type_getset_getattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                    struct type_getset *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash) {
+N_len(type_getset_getattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                           struct type_getset *__restrict chain, DeeObject *__restrict self,
+                           ATTR_ARG, dhash_t hash) {
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(cache,decl,hash,chain);
   return type_getset_get(chain,self);
  }
@@ -3709,37 +3440,37 @@ type_getset_getattr(struct membercache *__restrict cache, DeeTypeObject *__restr
 }
 
 INTERN DREF DeeObject *
-(DCALL DeeType_GetInstanceGetSetAttr)(DeeTypeObject *__restrict tp_invoker,
-                                      DeeTypeObject *__restrict tp_self,
-                                      char const *__restrict attr_name, dhash_t hash) {
+(DCALL NLen(DeeType_GetInstanceGetSetAttr))(DeeTypeObject *__restrict tp_invoker,
+                                            DeeTypeObject *__restrict tp_self,
+                                            ATTR_ARG, dhash_t hash) {
  struct type_getset *chain = tp_self->tp_getsets;
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addinstancegetset(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return type_obprop_get(tp_self,chain);
  }
  return ITER_DONE;
 }
 INTERN DREF DeeObject *
-(DCALL DeeType_GetIInstanceGetSetAttr)(DeeTypeObject *__restrict tp_invoker,
-                                       DeeTypeObject *__restrict tp_self,
-                                       char const *__restrict attr_name, dhash_t hash) {
+(DCALL NLen(DeeType_GetIInstanceGetSetAttr))(DeeTypeObject *__restrict tp_invoker,
+                                             DeeTypeObject *__restrict tp_self,
+                                             ATTR_ARG, dhash_t hash) {
  struct type_getset *chain = tp_self->tp_getsets;
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(&tp_invoker->tp_cache,tp_self,hash,chain);
   return type_obprop_get(tp_self,chain);
  }
  return ITER_DONE;
 }
 INTERN DREF DeeObject *
-(DCALL DeeType_CallInstanceGetSetAttr)(DeeTypeObject *__restrict tp_invoker,
-                                       DeeTypeObject *__restrict tp_self,
-                                       char const *__restrict attr_name, dhash_t hash,
-                                       size_t argc, DeeObject **__restrict argv) {
+(DCALL NLen(DeeType_CallInstanceGetSetAttr))(DeeTypeObject *__restrict tp_invoker,
+                                             DeeTypeObject *__restrict tp_self,
+                                             ATTR_ARG, dhash_t hash,
+                                             size_t argc, DeeObject **__restrict argv) {
  struct type_getset *chain = tp_self->tp_getsets;
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addinstancegetset(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return type_obprop_call(tp_self,chain,argc,argv);
  }
@@ -3747,13 +3478,13 @@ INTERN DREF DeeObject *
 }
 #if 0
 INTERN DREF DeeObject *
-(DCALL DeeType_CallIInstanceGetSetAttr)(DeeTypeObject *__restrict tp_invoker,
-                                        DeeTypeObject *__restrict tp_self,
-                                        char const *__restrict attr_name, dhash_t hash,
-                                        size_t argc, DeeObject **__restrict argv) {
+(DCALL NLen(DeeType_CallIInstanceGetSetAttr))(DeeTypeObject *__restrict tp_invoker,
+                                              DeeTypeObject *__restrict tp_self,
+                                              ATTR_ARG, dhash_t hash,
+                                              size_t argc, DeeObject **__restrict argv) {
  struct type_getset *chain = tp_self->tp_getsets;
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(&tp_invoker->tp_cache,tp_self,hash,chain);
   return type_obprop_call(tp_self,chain,argc,argv);
  }
@@ -3761,43 +3492,30 @@ INTERN DREF DeeObject *
 }
 #endif
 INTERN DREF DeeObject *
-(DCALL DeeType_CallInstanceGetSetAttrKw)(DeeTypeObject *__restrict tp_invoker,
-                                         DeeTypeObject *__restrict tp_self,
-                                         char const *__restrict attr_name, dhash_t hash,
-                                         size_t argc, DeeObject **__restrict argv,
-                                         DeeObject *kw) {
+(DCALL S(DeeType_CallInstanceGetSetAttrKw,
+         DeeType_CallInstanceGetSetAttrLenKw))(DeeTypeObject *__restrict tp_invoker,
+                                               DeeTypeObject *__restrict tp_self,
+                                               ATTR_ARG, dhash_t hash,
+                                               size_t argc, DeeObject **__restrict argv,
+                                               DeeObject *kw) {
  struct type_getset *chain = tp_self->tp_getsets;
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addinstancegetset(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return type_obprop_call_kw(tp_self,chain,argc,argv,kw);
  }
  return ITER_DONE;
 }
 INTERN DREF DeeObject *
-(DCALL DeeType_CallIInstanceGetSetAttrKw)(DeeTypeObject *__restrict tp_invoker,
-                                          DeeTypeObject *__restrict tp_self,
-                                          char const *__restrict attr_name, dhash_t hash,
-                                          size_t argc, DeeObject **__restrict argv,
-                                          DeeObject *kw) {
+(DCALL S(DeeType_CallIInstanceGetSetAttrKw,
+         DeeType_CallIInstanceGetSetAttrLenKw))(DeeTypeObject *__restrict tp_invoker,
+                                                DeeTypeObject *__restrict tp_self,
+                                                ATTR_ARG, dhash_t hash,
+                                                size_t argc, DeeObject **__restrict argv,
+                                                DeeObject *kw) {
  struct type_getset *chain = tp_self->tp_getsets;
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
-  membercache_addgetset(&tp_invoker->tp_cache,tp_self,hash,chain);
-  return type_obprop_call_kw(tp_self,chain,argc,argv,kw);
- }
- return ITER_DONE;
-}
-INTERN DREF DeeObject *
-(DCALL DeeType_CallIInstanceGetSetAttrLenKw)(DeeTypeObject *__restrict tp_invoker,
-                                             DeeTypeObject *__restrict tp_self,
-                                             char const *__restrict attr_name,
-                                             size_t attrlen, dhash_t hash,
-                                             size_t argc, DeeObject **__restrict argv,
-                                             DeeObject *kw) {
- struct type_getset *chain = tp_self->tp_getsets;
- for (; chain->gs_name; ++chain) {
-  if (streq_len(chain->gs_name,attr_name,attrlen)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(&tp_invoker->tp_cache,tp_self,hash,chain);
   return type_obprop_call_kw(tp_self,chain,argc,argv,kw);
  }
@@ -3807,12 +3525,12 @@ INTERN DREF DeeObject *
 
 
 INTERN int DCALL /* BOUND_GETSET */
-type_getset_boundattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                      struct type_getset *__restrict chain, DeeObject *__restrict self,
-                      char const *__restrict attr_name, dhash_t hash) {
+N_len(type_getset_boundattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                             struct type_getset *__restrict chain, DeeObject *__restrict self,
+                             ATTR_ARG, dhash_t hash) {
  DREF DeeObject *temp;
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(cache,decl,hash,chain);
   if unlikely(!chain->gs_get) return 0;
   temp = (*chain->gs_get)(self);
@@ -3827,11 +3545,11 @@ type_getset_boundattr(struct membercache *__restrict cache, DeeTypeObject *__res
 }
 
 INTERN int DCALL /* DEL_GETSET */
-type_getset_delattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                    struct type_getset *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash) {
+N_len(type_getset_delattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                           struct type_getset *__restrict chain, DeeObject *__restrict self,
+                           ATTR_ARG, dhash_t hash) {
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(cache,decl,hash,chain);
   return type_getset_del(chain,self);
  }
@@ -3839,11 +3557,11 @@ type_getset_delattr(struct membercache *__restrict cache, DeeTypeObject *__restr
 }
 
 INTERN int DCALL /* SET_GETSET */
-type_getset_setattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                    struct type_getset *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash, DeeObject *__restrict value) {
+N_len(type_getset_setattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                           struct type_getset *__restrict chain, DeeObject *__restrict self,
+                           ATTR_ARG, dhash_t hash, DeeObject *__restrict value) {
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(cache,decl,hash,chain);
   return type_getset_set(chain,self,value);
  }
@@ -3852,11 +3570,11 @@ type_getset_setattr(struct membercache *__restrict cache, DeeTypeObject *__restr
 
 
 INTERN DREF DeeObject *DCALL /* GET_MEMBER */
-type_member_getattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                    struct type_member *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash) {
+N_len(type_member_getattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                           struct type_member *__restrict chain, DeeObject *__restrict self,
+                           ATTR_ARG, dhash_t hash) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(cache,decl,hash,chain);
   return type_member_get(chain,self);
  }
@@ -3864,37 +3582,37 @@ type_member_getattr(struct membercache *__restrict cache, DeeTypeObject *__restr
 }
 
 INTERN DREF DeeObject *
-(DCALL DeeType_GetInstanceMemberAttr)(DeeTypeObject *__restrict tp_invoker,
-                                      DeeTypeObject *__restrict tp_self,
-                                      char const *__restrict attr_name, dhash_t hash) {
+(DCALL NLen(DeeType_GetInstanceMemberAttr))(DeeTypeObject *__restrict tp_invoker,
+                                            DeeTypeObject *__restrict tp_self,
+                                            ATTR_ARG, dhash_t hash) {
  struct type_member *chain = tp_self->tp_members;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemember(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return type_obmemb_get(tp_self,chain);
  }
  return ITER_DONE;
 }
 INTERN DREF DeeObject *
-(DCALL DeeType_GetIInstanceMemberAttr)(DeeTypeObject *__restrict tp_invoker,
-                                       DeeTypeObject *__restrict tp_self,
-                                       char const *__restrict attr_name, dhash_t hash) {
+(DCALL NLen(DeeType_GetIInstanceMemberAttr))(DeeTypeObject *__restrict tp_invoker,
+                                             DeeTypeObject *__restrict tp_self,
+                                             ATTR_ARG, dhash_t hash) {
  struct type_member *chain = tp_self->tp_members;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(&tp_invoker->tp_cache,tp_self,hash,chain);
   return type_obmemb_get(tp_self,chain);
  }
  return ITER_DONE;
 }
 INTERN DREF DeeObject *
-(DCALL DeeType_CallInstanceMemberAttr)(DeeTypeObject *__restrict tp_invoker,
-                                       DeeTypeObject *__restrict tp_self,
-                                       char const *__restrict attr_name, dhash_t hash,
-                                       size_t argc, DeeObject **__restrict argv) {
+(DCALL NLen(DeeType_CallInstanceMemberAttr))(DeeTypeObject *__restrict tp_invoker,
+                                             DeeTypeObject *__restrict tp_self,
+                                             ATTR_ARG, dhash_t hash,
+                                             size_t argc, DeeObject **__restrict argv) {
  struct type_member *chain = tp_self->tp_members;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemember(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return type_obmemb_call(tp_self,chain,argc,argv);
  }
@@ -3902,13 +3620,13 @@ INTERN DREF DeeObject *
 }
 #if 0
 INTERN DREF DeeObject *
-(DCALL DeeType_CallIInstanceMemberAttr)(DeeTypeObject *__restrict tp_invoker,
-                                        DeeTypeObject *__restrict tp_self,
-                                        char const *__restrict attr_name, dhash_t hash,
-                                        size_t argc, DeeObject **__restrict argv) {
+(DCALL NLen(DeeType_CallIInstanceMemberAttr))(DeeTypeObject *__restrict tp_invoker,
+                                              DeeTypeObject *__restrict tp_self,
+                                              ATTR_ARG, dhash_t hash,
+                                              size_t argc, DeeObject **__restrict argv) {
  struct type_member *chain = tp_self->tp_members;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(&tp_invoker->tp_cache,tp_self,hash,chain);
   return type_obmemb_call(tp_self,chain,argc,argv);
  }
@@ -3916,43 +3634,30 @@ INTERN DREF DeeObject *
 }
 #endif
 INTERN DREF DeeObject *
-(DCALL DeeType_CallInstanceMemberAttrKw)(DeeTypeObject *__restrict tp_invoker,
-                                         DeeTypeObject *__restrict tp_self,
-                                         char const *__restrict attr_name, dhash_t hash,
-                                         size_t argc, DeeObject **__restrict argv,
-                                         DeeObject *kw) {
+(DCALL S(DeeType_CallInstanceMemberAttrKw,
+         DeeType_CallInstanceMemberAttrLenKw))(DeeTypeObject *__restrict tp_invoker,
+                                               DeeTypeObject *__restrict tp_self,
+                                               ATTR_ARG, dhash_t hash,
+                                               size_t argc, DeeObject **__restrict argv,
+                                               DeeObject *kw) {
  struct type_member *chain = tp_self->tp_members;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemember(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return type_obmemb_call_kw(tp_self,chain,argc,argv,kw);
  }
  return ITER_DONE;
 }
 INTERN DREF DeeObject *
-(DCALL DeeType_CallIInstanceMemberAttrKw)(DeeTypeObject *__restrict tp_invoker,
-                                          DeeTypeObject *__restrict tp_self,
-                                          char const *__restrict attr_name, dhash_t hash,
-                                          size_t argc, DeeObject **__restrict argv,
-                                          DeeObject *kw) {
+(DCALL S(DeeType_CallIInstanceMemberAttrKw,
+         DeeType_CallIInstanceMemberAttrLenKw))(DeeTypeObject *__restrict tp_invoker,
+                                                DeeTypeObject *__restrict tp_self,
+                                                ATTR_ARG, dhash_t hash,
+                                                size_t argc, DeeObject **__restrict argv,
+                                                DeeObject *kw) {
  struct type_member *chain = tp_self->tp_members;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
-  membercache_addmember(&tp_invoker->tp_cache,tp_self,hash,chain);
-  return type_obmemb_call_kw(tp_self,chain,argc,argv,kw);
- }
- return ITER_DONE;
-}
-INTERN DREF DeeObject *
-(DCALL DeeType_CallIInstanceMemberAttrLenKw)(DeeTypeObject *__restrict tp_invoker,
-                                             DeeTypeObject *__restrict tp_self,
-                                             char const *__restrict attr_name,
-                                             size_t attrlen, dhash_t hash,
-                                             size_t argc, DeeObject **__restrict argv,
-                                             DeeObject *kw) {
- struct type_member *chain = tp_self->tp_members;
- for (; chain->m_name; ++chain) {
-  if (streq_len(chain->m_name,attr_name,attrlen)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(&tp_invoker->tp_cache,tp_self,hash,chain);
   return type_obmemb_call_kw(tp_self,chain,argc,argv,kw);
  }
@@ -3963,11 +3668,11 @@ INTERN DREF DeeObject *
 
 
 INTERN int DCALL /* BOUND_MEMBER */
-type_member_boundattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                      struct type_member *__restrict chain, DeeObject *__restrict self,
-                      char const *__restrict attr_name, dhash_t hash) {
+N_len(type_member_boundattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                             struct type_member *__restrict chain, DeeObject *__restrict self,
+                             ATTR_ARG, dhash_t hash) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(cache,decl,hash,chain);
   return type_member_bound(chain,self);
  }
@@ -3975,11 +3680,11 @@ type_member_boundattr(struct membercache *__restrict cache, DeeTypeObject *__res
 }
 
 INTERN int DCALL /* DEL_MEMBER */
-type_member_delattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                    struct type_member *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash) {
+N_len(type_member_delattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                           struct type_member *__restrict chain, DeeObject *__restrict self,
+                           ATTR_ARG, dhash_t hash) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(cache,decl,hash,chain);
   return type_member_del(chain,self);
  }
@@ -3987,11 +3692,11 @@ type_member_delattr(struct membercache *__restrict cache, DeeTypeObject *__restr
 }
 
 INTERN int DCALL /* SET_MEMBER */
-type_member_setattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
-                    struct type_member *__restrict chain, DeeObject *__restrict self,
-                    char const *__restrict attr_name, dhash_t hash, DeeObject *__restrict value) {
+N_len(type_member_setattr)(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
+                           struct type_member *__restrict chain, DeeObject *__restrict self,
+                           ATTR_ARG, dhash_t hash, DeeObject *__restrict value) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(cache,decl,hash,chain);
   return type_member_set(chain,self,value);
  }
@@ -4000,24 +3705,24 @@ type_member_setattr(struct membercache *__restrict cache, DeeTypeObject *__restr
 
 
 INTERN bool DCALL /* METHOD */
-type_method_hasattr(struct membercache *__restrict cache,
-                    DeeTypeObject *__restrict decl,
-                    struct type_method *__restrict chain,
-                    char const *__restrict attr_name, dhash_t hash) {
+N_len(type_method_hasattr)(struct membercache *__restrict cache,
+                           DeeTypeObject *__restrict decl,
+                           struct type_method *__restrict chain,
+                           ATTR_ARG, dhash_t hash) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(cache,decl,hash,chain);
   return true;
  }
  return false;
 }
 INTERN bool
-(DCALL DeeType_HasInstanceMethodAttr)(DeeTypeObject *__restrict tp_invoker,
-                                      DeeTypeObject *__restrict tp_self,
-                                      char const *__restrict attr_name, dhash_t hash) {
+(DCALL NLen(DeeType_HasInstanceMethodAttr))(DeeTypeObject *__restrict tp_invoker,
+                                            DeeTypeObject *__restrict tp_self,
+                                            ATTR_ARG, dhash_t hash) {
  struct type_method *chain = tp_self->tp_methods;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemethod(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return true;
  }
@@ -4025,25 +3730,25 @@ INTERN bool
 }
 
 INTERN bool DCALL /* GETSET */
-type_getset_hasattr(struct membercache *__restrict cache,
-                    DeeTypeObject *__restrict decl,
-                    struct type_getset *__restrict chain,
-                    char const *__restrict attr_name, dhash_t hash) {
+N_len(type_getset_hasattr)(struct membercache *__restrict cache,
+                           DeeTypeObject *__restrict decl,
+                           struct type_getset *__restrict chain,
+                           ATTR_ARG, dhash_t hash) {
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(cache,decl,hash,chain);
   return true;
  }
  return false;
 }
 INTERN bool
-(DCALL DeeType_HasInstanceGetSetAttr)(DeeTypeObject *__restrict tp_invoker,
-                                      DeeTypeObject *__restrict tp_self,
-                                      char const *__restrict attr_name,
-                                      dhash_t hash) {
+(DCALL NLen(DeeType_HasInstanceGetSetAttr))(DeeTypeObject *__restrict tp_invoker,
+                                            DeeTypeObject *__restrict tp_self,
+                                            ATTR_ARG,
+                                            dhash_t hash) {
  struct type_getset *chain = tp_self->tp_getsets;
  for (; chain->gs_name; ++chain) {
-  if (!streq(chain->gs_name,attr_name)) continue;
+  if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addinstancegetset(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return true;
  }
@@ -4051,25 +3756,25 @@ INTERN bool
 }
 
 INTERN bool DCALL /* MEMBER */
-type_member_hasattr(struct membercache *__restrict cache,
-                    DeeTypeObject *__restrict decl,
-                    struct type_member *__restrict chain,
-                    char const *__restrict attr_name, dhash_t hash) {
+N_len(type_member_hasattr)(struct membercache *__restrict cache,
+                           DeeTypeObject *__restrict decl,
+                           struct type_member *__restrict chain,
+                           ATTR_ARG, dhash_t hash) {
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(cache,decl,hash,chain);
   return true;
  }
  return false;
 }
 INTERN bool
-(DCALL DeeType_HasInstanceMemberAttr)(DeeTypeObject *__restrict tp_invoker,
-                                      DeeTypeObject *__restrict tp_self,
-                                      char const *__restrict attr_name,
-                                      dhash_t hash) {
+(DCALL NLen(DeeType_HasInstanceMemberAttr))(DeeTypeObject *__restrict tp_invoker,
+                                            DeeTypeObject *__restrict tp_self,
+                                            ATTR_ARG,
+                                            dhash_t hash) {
  struct type_member *chain = tp_self->tp_members;
  for (; chain->m_name; ++chain) {
-  if (!streq(chain->m_name,attr_name)) continue;
+  if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemember(&tp_invoker->tp_class_cache,tp_self,hash,chain);
   return true;
  }
@@ -4077,6 +3782,7 @@ INTERN bool
 }
 
 
+#ifndef MRO_LEN
 INTERN int DCALL /* METHOD */
 type_method_findattr(struct membercache *__restrict cache, DeeTypeObject *__restrict decl,
                      struct type_method *__restrict chain, uint16_t perm,
@@ -4232,8 +3938,16 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *__restrict tp_invoker,
  }
  return 1;
 }
-#endif
+#endif /* !MRO_LEN */
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_RUNTIME_MRO_C */
+#undef S
+#undef N_len
+#undef NLen
+#undef IF_LEN
+#undef IF_NLEN
+#undef ATTR_ARG
+#undef ATTREQ
+#undef NAMEEQ
+#undef MRO_LEN

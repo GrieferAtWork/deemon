@@ -24,7 +24,6 @@
 
 DECL_BEGIN
 
-#if 1
 #ifdef JIT_EVAL
 INTERN DREF DeeObject *DCALL
 JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode,
@@ -187,7 +186,8 @@ next_expr:
                         &var_symbol,
                         (char const *)self->jl_tokstart,
                         (size_t)(self->jl_tokend - self->jl_tokstart),
-                         used_lookup_mode) < 0)
+                         used_lookup_mode,
+                         self->jl_text) < 0)
        goto err_current;
 #endif /* JIT_EVAL */
    JITLexer_Yield(self);
@@ -235,7 +235,7 @@ err_currrent_var_symbol:
     JITLexer_Yield(self);
     /* TODO: Add support for applying annotations here! */
     if (self->jl_tok == ')' ||
-       (!has_paren && !maybe_expression_begin_c(*self->jl_tokstart))) {
+       (!has_paren && !JIT_MaybeExpressionBegin(self->jl_tok))) {
      /* Empty argument list (Same as none at all). */
 #ifdef JIT_EVAL
      args = Dee_EmptyTuple;
@@ -310,7 +310,7 @@ err_currrent_var_symbol:
    /* Peek the next token to check if it might be an expression. */
    memcpy(&smlex,self,sizeof(JITSmallLexer));
    JITLexer_Yield((JITLexer *)&smlex);
-   if (!maybe_expression_begin_c(*smlex.jl_tokstart))
+   if (!JIT_MaybeExpressionBegin(smlex.jl_tok))
        goto done_expression;
   }
   if (pout_mode)
@@ -333,10 +333,10 @@ err_currrent_var_symbol:
 continue_at_comma:
   JITLexer_Yield(self);
 #if 1
-  if (!maybe_expression_begin_c(*self->jl_tokstart))
+  if (!JIT_MaybeExpressionBegin(self->jl_tok))
        goto done_expression_nocurrent;
 #else
-  if (!maybe_expression_begin_c(*self->jl_tokstart)) {
+  if (!JIT_MaybeExpressionBegin(self->jl_tok)) {
    /* Special case: `x = (10,)'
     * Same as `x = pack(10)', in that a single-element tuple is created. */
 #ifdef JIT_EVAL
@@ -475,7 +475,7 @@ continue_expression_after_dots:
          goto set_multiple_and_continue_at_comma;
      memcpy(&smlex,self,sizeof(JITSmallLexer));
      JITLexer_Yield((JITLexer *)&smlex);
-     if (maybe_expression_begin_c(*smlex.jl_tokstart))
+     if (JIT_MaybeExpressionBegin(smlex.jl_tok))
          goto set_multiple_and_continue_at_comma_continue;
     }
     /* Pack the expression to-be returned. */
@@ -545,7 +545,7 @@ set_multiple_and_continue_at_comma:
    } else {
     memcpy(&smlex,self,sizeof(JITSmallLexer));
     JITLexer_Yield((JITLexer *)&smlex);
-    if (maybe_expression_begin_c(*smlex.jl_tokstart)) {
+    if (JIT_MaybeExpressionBegin(smlex.jl_tok)) {
 #ifdef JIT_EVAL
      error = objectlist_append(&expr_batch,current);
      if unlikely(error) goto err_current;
@@ -699,7 +699,6 @@ err_noexpr:
 #endif /* JIT_EVAL */
  return NULL;
 }
-#endif
 
 
 DECL_END

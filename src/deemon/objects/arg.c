@@ -369,6 +369,25 @@ kwds_findstr(Kwds *__restrict self,
  return (size_t)-1;
 }
 
+LOCAL size_t DCALL
+kwds_findstrlen(Kwds *__restrict self,
+                char const *__restrict name,
+                size_t namesize,
+                dhash_t hash) {
+ dhash_t i,perturb;
+ perturb = i = hash & self->kw_mask;
+ for (;; i = (i << 2) + i + perturb + 1,perturb >>= 5) {
+  struct kwds_entry *entry;
+  entry = &self->kw_map[i & self->kw_mask];
+  if (!entry->ke_name) break;
+  if (entry->ke_hash != hash) continue;
+  if (DeeString_SIZE(entry->ke_name) != namesize) continue;
+  if (memcmp(DeeString_STR(entry->ke_name),name,namesize * sizeof(char)) != 0) continue;
+  return entry->ke_index;
+ }
+ return (size_t)-1;
+}
+
 
 
 
@@ -1138,6 +1157,26 @@ DeeKwdsMapping_HasItemString(DeeObject *__restrict self,
 #endif
  return true;
 }
+INTERN bool DCALL
+DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self,
+                                char const *__restrict name,
+                                size_t namesize,
+                                dhash_t hash) {
+ size_t index; KwdsMapping *me;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeKwdsMapping_Type);
+ me = (KwdsMapping *)self;
+ index = kwds_findstrlen(me->kmo_kwds,name,namesize,hash);
+ if unlikely(index == (size_t)-1)
+    return false;
+#ifdef CONFIG_NO_THREADS
+ if unlikely(!me->kmo_argv)
+    return false;
+#else
+ if unlikely(!ATOMIC_READ(me->kmo_argv))
+    return false;
+#endif
+ return true;
+}
 INTERN DREF DeeObject *DCALL
 DeeKwdsMapping_GetItemString(DeeObject *__restrict self,
                              char const *__restrict name,
@@ -1173,6 +1212,60 @@ DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self,
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeKwdsMapping_Type);
  me = (KwdsMapping *)self;
  index = kwds_findstr(me->kmo_kwds,name,hash);
+ if unlikely(index == (size_t)-1) {
+no_such_key:
+  if (def != ITER_DONE)
+      Dee_Incref(def);
+  return def;
+ }
+ rwlock_read(&me->kmo_lock);
+ if unlikely(!me->kmo_argv) {
+  rwlock_endread(&me->kmo_lock);
+  goto no_such_key;
+ }
+ ASSERT(index < me->kmo_kwds->kw_size);
+ result = me->kmo_argv[index];
+ Dee_Incref(result);
+ rwlock_endread(&me->kmo_lock);
+ return result;
+}
+INTERN DREF DeeObject *DCALL
+DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self,
+                                char const *__restrict name,
+                                size_t namesize,
+                                dhash_t hash) {
+ size_t index; KwdsMapping *me;
+ DREF DeeObject *result;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeKwdsMapping_Type);
+ me = (KwdsMapping *)self;
+ index = kwds_findstrlen(me->kmo_kwds,name,namesize,hash);
+ if unlikely(index == (size_t)-1) {
+no_such_key:
+  err_unknown_key_str_len((DeeObject *)self,name,namesize);
+  return NULL;
+ }
+ rwlock_read(&me->kmo_lock);
+ if unlikely(!me->kmo_argv) {
+  rwlock_endread(&me->kmo_lock);
+  goto no_such_key;
+ }
+ ASSERT(index < me->kmo_kwds->kw_size);
+ result = me->kmo_argv[index];
+ Dee_Incref(result);
+ rwlock_endread(&me->kmo_lock);
+ return result;
+}
+INTERN DREF DeeObject *DCALL
+DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self,
+                                   char const *__restrict name,
+                                   size_t namesize,
+                                   dhash_t hash,
+                                   DeeObject *__restrict def) {
+ size_t index; KwdsMapping *me;
+ DREF DeeObject *result;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeKwdsMapping_Type);
+ me = (KwdsMapping *)self;
+ index = kwds_findstrlen(me->kmo_kwds,name,namesize,hash);
  if unlikely(index == (size_t)-1) {
 no_such_key:
   if (def != ITER_DONE)

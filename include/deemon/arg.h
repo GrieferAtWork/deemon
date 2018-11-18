@@ -221,8 +221,11 @@ DFUNDEF void DCALL DeeKwdsMapping_Decref(DREF DeeObject *__restrict self);
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF bool DCALL DeeKwdsMapping_HasItemString(DeeObject *__restrict self, char const *__restrict name, dhash_t hash);
+INTDEF bool DCALL DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemString(DeeObject *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
+INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
+INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
 #endif
 
 

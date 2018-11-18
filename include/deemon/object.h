@@ -1567,27 +1567,41 @@ INTDEF bool DCALL type_inherit_buffer(DeeTypeObject *__restrict self);        /*
  * @return: -1 / ---   / NULL:      Error.
  * @return:  0 / true  / * :        OK.
  * @return:  1 / false / ITER_DONE: Not found. */
-DFUNDEF DREF DeeObject *DCALL DeeObject_TGenericGetAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict name, dhash_t hash);
-DFUNDEF DREF DeeObject *DCALL DeeObject_TGenericCallAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict name, dhash_t hash, size_t argc, DeeObject **__restrict argv);
-DFUNDEF DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringKw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict name, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-DFUNDEF int DCALL DeeObject_TGenericDelAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict name, dhash_t hash);
-DFUNDEF int DCALL DeeObject_TGenericSetAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict value);
+DFUNDEF DREF DeeObject *DCALL DeeObject_TGenericGetAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, dhash_t hash);
+DFUNDEF DREF DeeObject *DCALL DeeObject_TGenericGetAttrStringLen(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+DFUNDEF DREF DeeObject *DCALL DeeObject_TGenericCallAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject **__restrict argv);
+DFUNDEF DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringLen(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject **__restrict argv);
+DFUNDEF DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringKw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+DFUNDEF DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringLenKw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+DFUNDEF int DCALL DeeObject_TGenericDelAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, dhash_t hash);
+DFUNDEF int DCALL DeeObject_TGenericDelAttrStringLen(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+DFUNDEF int DCALL DeeObject_TGenericSetAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, dhash_t hash, DeeObject *__restrict value);
+DFUNDEF int DCALL DeeObject_TGenericSetAttrStringLen(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *__restrict value);
 DFUNDEF dssize_t DCALL DeeObject_GenericEnumAttr(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg);
-#define DeeObject_GenericGetAttrString(self,name,hash)                 DeeObject_TGenericGetAttrString(Dee_TYPE(self),self,name,hash)
-#define DeeObject_GenericCallAttrString(self,name,hash,argc,argv)      DeeObject_TGenericCallAttrString(Dee_TYPE(self),self,name,hash,argc,argv)
-#define DeeObject_GenericCallAttrStringKw(self,name,hash,argc,argv,kw) DeeObject_TGenericCallAttrStringKw(Dee_TYPE(self),self,name,hash,argc,argv,kw)
-#define DeeObject_GenericDelAttrString(self,name,hash)                 DeeObject_TGenericDelAttrString(Dee_TYPE(self),self,name,hash)
-#define DeeObject_GenericSetAttrString(self,name,hash,value)           DeeObject_TGenericSetAttrString(Dee_TYPE(self),self,name,hash,value)
+#define DeeObject_GenericGetAttrString(self,attr,hash)                            DeeObject_TGenericGetAttrString(Dee_TYPE(self),self,attr,hash)
+#define DeeObject_GenericGetAttrStringLen(self,attr,attrlen,hash)                 DeeObject_TGenericGetAttrStringLen(Dee_TYPE(self),self,attr,attrlen,hash)
+#define DeeObject_GenericCallAttrString(self,attr,hash,argc,argv)                 DeeObject_TGenericCallAttrString(Dee_TYPE(self),self,attr,hash,argc,argv)
+#define DeeObject_GenericCallAttrStringLen(self,attr,attrlen,hash,argc,argv)      DeeObject_TGenericCallAttrStringLen(Dee_TYPE(self),self,attr,attrlen,hash,argc,argv)
+#define DeeObject_GenericCallAttrStringKw(self,attr,hash,argc,argv,kw)            DeeObject_TGenericCallAttrStringKw(Dee_TYPE(self),self,attr,hash,argc,argv,kw)
+#define DeeObject_GenericCallAttrStringLenKw(self,attr,attrlen,hash,argc,argv,kw) DeeObject_TGenericCallAttrStringLenKw(Dee_TYPE(self),self,attr,attrlen,hash,argc,argv,kw)
+#define DeeObject_GenericDelAttrString(self,attr,hash)                            DeeObject_TGenericDelAttrString(Dee_TYPE(self),self,attr,hash)
+#define DeeObject_GenericDelAttrStringLen(self,attr,attrlen,hash)                 DeeObject_TGenericDelAttrStringLen(Dee_TYPE(self),self,attr,attrlen,hash)
+#define DeeObject_GenericSetAttrString(self,attr,hash,value)                      DeeObject_TGenericSetAttrString(Dee_TYPE(self),self,attr,hash,value)
+#define DeeObject_GenericSetAttrStringLen(self,attr,attrlen,hash,value)           DeeObject_TGenericSetAttrStringLen(Dee_TYPE(self),self,attr,attrlen,hash,value)
 
 #ifdef CONFIG_BUILDING_DEEMON
 struct attribute_info;
 struct attribute_lookup_rules;
-INTERN bool DCALL DeeObject_TGenericHasAttrString(DeeTypeObject *__restrict tp_self, char const *__restrict name, dhash_t hash);
-INTERN int DCALL DeeObject_TGenericBoundAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict name, dhash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
-INTERN DREF DeeObject *DCALL DeeObject_GenericDocAttrString(DeeTypeObject *__restrict tp_self, char const *__restrict name, dhash_t hash);
+INTERN bool DCALL DeeObject_TGenericHasAttrString(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
+INTERN bool DCALL DeeObject_TGenericHasAttrStringLen(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTERN int DCALL DeeObject_TGenericBoundAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, dhash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
+INTERN int DCALL DeeObject_TGenericBoundAttrStringLen(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
 INTERN int DCALL DeeObject_GenericFindAttrString(DeeTypeObject *__restrict tp_self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-#define DeeObject_GenericBoundAttrString(self,name,hash)          DeeObject_TGenericBoundAttrString(Dee_TYPE(self),self,name,hash)
-#define DeeObject_GenericHasAttrString(self,name,hash)            DeeObject_TGenericHasAttrString(Dee_TYPE(self),name,hash)
+INTERN int DCALL DeeObject_GenericFindAttrStringLen(DeeTypeObject *__restrict tp_self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+#define DeeObject_GenericBoundAttrString(self,attr,hash)            DeeObject_TGenericBoundAttrString(Dee_TYPE(self),self,attr,hash)
+#define DeeObject_GenericBoundAttrStringLen(self,attr,attrlen,hash) DeeObject_TGenericBoundAttrStringLen(Dee_TYPE(self),self,attr,attrlen,hash)
+#define DeeObject_GenericHasAttrString(self,attr,hash)              DeeObject_TGenericHasAttrString(Dee_TYPE(self),attr,hash)
+#define DeeObject_GenericHasAttrStringLen(self,attr,attrlen,hash)   DeeObject_TGenericHasAttrStringLen(Dee_TYPE(self),attr,attrlen,hash)
 #endif
 
 
@@ -1910,13 +1924,17 @@ DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItem)(DeeObject *__restrict self, De
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemDef)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemIndex)(DeeObject *__restrict self, size_t index);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemStringDef)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict def);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetItemStringLenDef)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict def);
 DFUNDEF int (DCALL DeeObject_DelItem)(DeeObject *__restrict self, DeeObject *__restrict index);
 DFUNDEF int (DCALL DeeObject_DelItemIndex)(DeeObject *__restrict self, size_t index);
 DFUNDEF int (DCALL DeeObject_DelItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+DFUNDEF int (DCALL DeeObject_DelItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
 DFUNDEF int (DCALL DeeObject_SetItem)(DeeObject *__restrict self, DeeObject *__restrict index, DeeObject *__restrict value);
 DFUNDEF int (DCALL DeeObject_SetItemIndex)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
 DFUNDEF int (DCALL DeeObject_SetItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict value);
+DFUNDEF int (DCALL DeeObject_SetItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict value);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetRange)(DeeObject *__restrict self, DeeObject *__restrict begin, DeeObject *__restrict end);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *__restrict self, dssize_t begin, DeeObject *__restrict end);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetRangeEndIndex)(DeeObject *__restrict self, DeeObject *__restrict begin, dssize_t end);
@@ -1927,6 +1945,15 @@ DFUNDEF int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self, dss
 DFUNDEF int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self, DeeObject *__restrict begin, dssize_t end, DeeObject *__restrict value);
 DFUNDEF int (DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self, dssize_t begin, dssize_t end, DeeObject *__restrict value);
 
+/* Check if a given item exists (`deemon.hasitem(self,index)')
+ * @return: 0:  Doesn't exist;
+ * @return: 1:  Does exists;
+ * @return: -1: Error. */
+DFUNDEF int (DCALL DeeObject_HasItem)(DeeObject *__restrict self, DeeObject *__restrict index);
+DFUNDEF int (DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self, size_t index);
+DFUNDEF int (DCALL DeeObject_HasItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+DFUNDEF int (DCALL DeeObject_HasItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
+
 /* Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self,index)')
  * @return: 1 : Item is bound.
  * @return: 0 : Item isn't bound. (`UnboundItem' was caught internally)
@@ -1935,6 +1962,7 @@ DFUNDEF int (DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self, dssize_t
 DFUNDEF int (DCALL DeeObject_BoundItem)(DeeObject *__restrict self, DeeObject *__restrict index, bool allow_missing);
 DFUNDEF int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index, bool allow_missing);
 DFUNDEF int (DCALL DeeObject_BoundItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, bool allow_missing);
+DFUNDEF int (DCALL DeeObject_BoundItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, bool allow_missing);
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -2003,27 +2031,27 @@ DFUNDEF dssize_t (DCALL DeeObject_Foreach)(DeeObject *__restrict self, dforeach_
 /* Unpack the given sequence `self' into `opjc' items then stored within the `objv' vector. */
 DFUNDEF int (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc, DREF DeeObject **__restrict objv);
 
-/* Documentation string access.
- * @throw: Error.ValueError:     The object/attribute isn't documented.
- * @throw: Error.AttributeError: The attribute doesn't exist. */
-DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_Doc)(DeeObject *__restrict self);
-DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_DocAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
-DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_DocAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
-DFUNDEF DREF /*String*/DeeObject *(DCALL DeeObject_DocAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
-
 /* Object attribute access. */
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_GetAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
+#define DeeObject_GetAttrStringLen(self,attr_name,attrlen) DeeObject_GetAttrStringLenHash(self,attr_name,attrlen,hash_ptr(attr_name,attrlen))
 DFUNDEF int (DCALL DeeObject_HasAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
 DFUNDEF int (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self, char const *__restrict attr_name); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
 DFUNDEF int (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
+DFUNDEF int (DCALL DeeObject_HasAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
+#define DeeObject_HasAttrStringLen(self,attr_name,attrlen) DeeObject_HasAttrStringLenHash(self,attr_name,attrlen,hash_ptr(attr_name,attrlen))
 DFUNDEF int (DCALL DeeObject_DelAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
-DFUNDEF int (DCALL DeeObject_SetAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict value);
 DFUNDEF int (DCALL DeeObject_DelAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
 DFUNDEF int (DCALL DeeObject_DelAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+DFUNDEF int (DCALL DeeObject_DelAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
+#define DeeObject_DelAttrStringLen(self,attr_name,attrlen) DeeObject_DelAttrStringLenHash(self,attr_name,attrlen,hash_ptr(attr_name,attrlen))
+DFUNDEF int (DCALL DeeObject_SetAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict value);
 DFUNDEF int (DCALL DeeObject_SetAttrString)(DeeObject *__restrict self, char const *__restrict attr_name, DeeObject *__restrict value);
 DFUNDEF int (DCALL DeeObject_SetAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, DeeObject *__restrict value);
+DFUNDEF int (DCALL DeeObject_SetAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, DeeObject *__restrict value);
+#define DeeObject_SetAttrStringLen(self,attr_name,attrlen,value) DeeObject_SetAttrStringLenHash(self,attr_name,attrlen,hash_ptr(attr_name,attrlen),value)
 DFUNDEF dssize_t (DCALL DeeObject_EnumAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, denum_t proc, void *arg);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, size_t argc, DeeObject **__restrict argv);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrKw)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
@@ -2036,11 +2064,23 @@ DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringPack)(DeeObject *__restrict sel
 DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringPack)(DeeObject *__restrict self, char const *__restrict attr_name, size_t argc, va_list args);
 DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringf)(DeeObject *__restrict self, char const *__restrict attr_name, char const *__restrict format, ...);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringf)(DeeObject *__restrict self, char const *__restrict attr_name, char const *__restrict format, va_list args);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrStringKw)(DeeObject *__restrict self, char const *__restrict attr_name, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrStringHashKw)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrStringLenHashKw)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#define DeeObject_CallAttrStringLen(self,attr_name,attrlen,argc,argv)      DeeObject_CallAttrStringLenHash(self,attr_name,attrlen,hash_ptr(attr_name,attrlen),argc,argv)
+#define DeeObject_CallAttrStringLenPack(self,attr_name,attrlen,...)        DeeObject_CallAttrStringLenHashPack(self,attr_name,attrlen,hash_ptr(attr_name,attrlen),__VA_ARGS__)
+#define DeeObject_VCallAttrStringLenPack(self,attr_name,attrlen,argc,args) DeeObject_VCallAttrStringLenHashPack(self,attr_name,attrlen,hash_ptr(attr_name,attrlen),argc,args)
+#define DeeObject_CallAttrStringLenKw(self,attr_name,attrlen,argc,argv,kw) DeeObject_CallAttrStringLenHashKw(self,attr_name,attrlen,hash_ptr(attr_name,attrlen),argc,argv,kw)
 DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, size_t argc, DeeObject **__restrict argv);
-DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringPackHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, size_t argc, ...);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, DeeObject **__restrict argv);
+DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringHashPack)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, size_t argc, ...);
+DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringLenHashPack)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, ...);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringHashPack)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, size_t argc, va_list args);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringLenHashPack)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, va_list args);
 DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringHashf)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, ...);
+DFUNDEF DREF DeeObject *(DeeObject_CallAttrStringLenHashf)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, char const *__restrict format, ...);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringHashf)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, va_list args);
+DFUNDEF DREF DeeObject *(DCALL DeeObject_VCallAttrStringLenHashf)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
 #if defined(CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS) || defined(__OPTIMIZE_SIZE__)
 DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict args);
 DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict args, DeeObject *kw);
@@ -2048,6 +2088,15 @@ DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict 
 #define DeeObject_CallAttrTuple(self,attr_name,args)      DeeObject_CallAttr(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
 #define DeeObject_CallAttrTupleKw(self,attr_name,args,kw) DeeObject_CallAttrKw(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
 #endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
+#define DeeObject_CallAttrStringTuple(self,attr_name,args)                          DeeObject_CallAttrString(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeObject_CallAttrStringHashTuple(self,attr_name,hash,args)                 DeeObject_CallAttrStringHash(self,attr_name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeObject_CallAttrStringLenTuple(self,attr_name,attrlen,args)               DeeObject_CallAttrStringLen(self,attr_name,attrlen,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeObject_CallAttrStringLenHashTuple(self,attr_name,attrlen,hash,args)      DeeObject_CallAttrStringLenHash(self,attr_name,attrlen,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeObject_CallAttrStringTupleKw(self,attr_name,args,kw)                     DeeObject_CallAttrStringKw(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#define DeeObject_CallAttrStringHashTupleKw(self,attr_name,hash,args,kw)            DeeObject_CallAttrStringHashKw(self,attr_name,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#define DeeObject_CallAttrStringLenTupleKw(self,attr_name,attrlen,args,kw)          DeeObject_CallAttrStringLenKw(self,attr_name,attrlen,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#define DeeObject_CallAttrStringLenHashTupleKw(self,attr_name,attrlen,hash,args,kw) DeeObject_CallAttrStringLenHashKw(self,attr_name,attrlen,hash,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+
 
 /* @return: 1 : Attribute is bound.
  * @return: 0 : Attribute isn't bound.
@@ -2060,6 +2109,9 @@ DFUNDEF DREF DeeObject *(DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict 
 DFUNDEF int (DCALL DeeObject_BoundAttr)(DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
 DFUNDEF int (DCALL DeeObject_BoundAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
 DFUNDEF int (DCALL DeeObject_BoundAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+DFUNDEF int (DCALL DeeObject_BoundAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
+#define DeeObject_BoundAttrStringLen(self,attr_name,attrlen) \
+        DeeObject_BoundAttrStringLenHash(self,attr_name,attrlen,hash_ptr(attr_name,attrlen))
 
 
 /* With-operator invocation:
@@ -2101,13 +2153,13 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 
 #ifndef __OPTIMIZE_SIZE__
 #define DeeObject_GetAttrString(self,attr_name)                 DeeObject_GetAttrStringHash(self,attr_name,hash_str(attr_name))
-#define DeeObject_DocAttrString(self,attr_name)                 DeeObject_DocAttrStringHash(self,attr_name,hash_str(attr_name))
 #define DeeObject_BoundAttrString(self,attr_name)               DeeObject_BoundAttrStringHash(self,attr_name,hash_str(attr_name))
 #define DeeObject_HasAttrString(self,attr_name)                 DeeObject_HasAttrStringHash(self,attr_name,hash_str(attr_name))
 #define DeeObject_DelAttrString(self,attr_name)                 DeeObject_DelAttrStringHash(self,attr_name,hash_str(attr_name))
 #define DeeObject_SetAttrString(self,attr_name,value)           DeeObject_SetAttrStringHash(self,attr_name,hash_str(attr_name),value)
 #define DeeObject_CallAttrString(self,attr_name,argc,argv)      DeeObject_CallAttrStringHash(self,attr_name,hash_str(attr_name),argc,argv)
-#define DeeObject_CallAttrStringPack(self,attr_name,...)        DeeObject_CallAttrStringPackHash(self,attr_name,hash_str(attr_name),__VA_ARGS__)
+#define DeeObject_CallAttrStringKw(self,attr_name,argc,argv,kw) DeeObject_CallAttrStringHashKw(self,attr_name,hash_str(attr_name),argc,argv,kw)
+#define DeeObject_CallAttrStringPack(self,attr_name,...)        DeeObject_CallAttrStringHashPack(self,attr_name,hash_str(attr_name),__VA_ARGS__)
 #define DeeObject_VCallAttrStringPack(self,attr_name,argc,args) DeeObject_VCallAttrStringHashPack(self,attr_name,hash_str(attr_name),argc,args)
 #define DeeObject_CallAttrStringf(self,attr_name,...)           DeeObject_CallAttrStringHashf(self,attr_name,hash_str(attr_name),__VA_ARGS__)
 #define DeeObject_VCallAttrStringf(self,attr_name,format,args)  DeeObject_VCallAttrStringHashf(self,attr_name,hash_str(attr_name),format,args)

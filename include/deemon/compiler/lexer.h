@@ -210,6 +210,8 @@ INTDEF int DCALL ast_parse_lookup_mode(unsigned int *__restrict pmode);
 
 /* Return true if the current token may be the begin of an expression. */
 INTDEF bool DCALL maybe_expression_begin(void);
+
+/* TODO: This false detects `+' as valid, but doesn't consider something like `+=' */
 INTDEF bool DCALL maybe_expression_begin_c(char peek);
 
 /* Parse a try-statement/expression. */

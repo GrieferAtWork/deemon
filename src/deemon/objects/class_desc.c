@@ -3284,6 +3284,24 @@ DeeClassDescriptor_QueryClassAttributeStringWithHash(DeeClassDescriptorObject *_
  return NULL;
 }
 PUBLIC struct class_attribute *DCALL
+DeeClassDescriptor_QueryClassAttributeStringLenWithHash(DeeClassDescriptorObject *__restrict self,
+                                                        char const *__restrict name,
+                                                        size_t attrlen,
+                                                        dhash_t hash) {
+ struct class_attribute *result; dhash_t i,perturb;
+ i = perturb = hash & self->cd_cattr_mask;
+ for (;; DeeClassDescriptor_CATTRNEXT(i,perturb)) {
+  result = &self->cd_cattr_list[i & self->cd_cattr_mask];
+  if (!result->ca_name) break;
+  if (result->ca_hash != hash) continue;
+  if (DeeString_SIZE(result->ca_name) != attrlen) continue;
+  if (memcmp(DeeString_STR(result->ca_name),name,attrlen * sizeof(char)) != 0)
+      continue;
+  return result;
+ }
+ return NULL;
+}
+PUBLIC struct class_attribute *DCALL
 DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *__restrict self,
                                                   /*String*/DeeObject *__restrict name, dhash_t hash) {
  struct class_attribute *result; dhash_t i,perturb;
@@ -3311,6 +3329,23 @@ DeeClassDescriptor_QueryInstanceAttributeStringWithHash(DeeClassDescriptorObject
   if (!result->ca_name) break;
   if (result->ca_hash != hash) continue;
   if (strcmp(DeeString_STR(result->ca_name),name) != 0)
+      continue;
+  return result;
+ }
+ return NULL;
+}
+PUBLIC struct class_attribute *DCALL
+DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(DeeClassDescriptorObject *__restrict self,
+                                                           char const *__restrict name,
+                                                           size_t attrlen, dhash_t hash) {
+ struct class_attribute *result; dhash_t i,perturb;
+ i = perturb = hash & self->cd_iattr_mask;
+ for (;; DeeClassDescriptor_IATTRNEXT(i,perturb)) {
+  result = &self->cd_iattr_list[i & self->cd_iattr_mask];
+  if (!result->ca_name) break;
+  if (result->ca_hash != hash) continue;
+  if (DeeString_SIZE(result->ca_name) != attrlen) continue;
+  if (memcmp(DeeString_STR(result->ca_name),name,attrlen * sizeof(char)) != 0)
       continue;
   return result;
  }

@@ -83,6 +83,7 @@ INTDEF ATTR_COLD int DCALL err_invalid_instance_addr(DeeTypeObject *__restrict t
 INTDEF ATTR_COLD int DCALL err_invalid_refs_size(DeeObject *__restrict code, size_t num_refs);
 INTDEF ATTR_COLD int DCALL err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key);
 INTDEF ATTR_COLD int DCALL err_unknown_key_str(DeeObject *__restrict map, char const *__restrict key);
+INTDEF ATTR_COLD int DCALL err_unknown_key_str_len(DeeObject *__restrict map, char const *__restrict key, size_t keylen);
 INTDEF ATTR_COLD int DCALL err_empty_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD int DCALL err_changed_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD int DCALL err_item_not_found(DeeObject *__restrict seq, DeeObject *__restrict item);
@@ -114,10 +115,12 @@ INTDEF ATTR_COLD int DCALL err_unimplemented_operator3(DeeTypeObject *__restrict
 #define ATTR_ACCESS_MASK    3
 /* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD int DCALL err_unknown_attribute(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
+INTDEF ATTR_COLD int DCALL err_unknown_attribute_len(DeeTypeObject *__restrict tp, char const *__restrict name, size_t namelen, int access);
 INTDEF ATTR_COLD int DCALL err_unknown_attribute_lookup(DeeTypeObject *__restrict tp, char const *__restrict name);
 INTDEF ATTR_COLD int DCALL err_nodoc_attribute(char const *base, char const *__restrict name);
 /* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD int DCALL err_cant_access_attribute(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
+INTDEF ATTR_COLD int DCALL err_cant_access_attribute_len(DeeTypeObject *__restrict tp, char const *__restrict name, size_t namelen, int access);
 INTDEF ATTR_COLD int DCALL err_cant_access_attribute_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
 INTDEF ATTR_COLD int DCALL err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name);
 INTDEF ATTR_COLD int DCALL err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name);

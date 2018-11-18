@@ -35,6 +35,33 @@ DECL_BEGIN
 
 INTDEF DeeObject *rt_operator_names[1+(AST_OPERATOR_MAX-AST_OPERATOR_MIN)];
 
+INTERN bool FCALL
+JIT_MaybeExpressionBegin(unsigned int tok_id) {
+ bool result = false;
+ switch (tok_id) {
+ case '+':
+ case '-':
+ case '!':
+ case '~':
+ case '(':
+ case '#':
+ case '[': /* For lists. */
+ case '{': /* Brace initializers. */
+ case TOK_INC:
+ case TOK_DEC:
+ case TOK_INT:
+ case JIT_KEYWORD:
+ case JIT_STRING:
+ case JIT_RAWSTRING:
+  result = true;
+  break;
+
+ default: break;
+ }
+ return result;
+}
+
+
 INTERN DREF DeeObject *FCALL
 JIT_GetOperatorFunction(uint16_t opname) {
  DREF DeeObject *result;
@@ -111,7 +138,7 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
                  (size_t)(self->jl_tokend - self->jl_tokstart),
                   DEEINT_STRING(0,DEEINT_STRING_FNORMAL),
                  &val))
-      goto err;
+      goto err_trace;
   result = (int32_t)(uint16_t)val;
   goto done_y1;
  }
@@ -169,10 +196,11 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
   result = JITLexer_ParseOperatorName(self,features);
   if unlikely(result < 0) goto err;
   if unlikely(self->jl_tok != ')') {
-   return DeeError_Throwf(&DeeError_SyntaxError,
-                          "Expected `)' after `(', but got `%$s'",
-                         (size_t)(self->jl_tokend - self->jl_tokstart),
-                          self->jl_tokstart);
+   DeeError_Throwf(&DeeError_SyntaxError,
+                   "Expected `)' after `(', but got `%$s'",
+                  (size_t)(self->jl_tokend - self->jl_tokstart),
+                   self->jl_tokstart);
+   goto err_trace;
   }
   goto done_y1;
 
@@ -184,8 +212,9 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
  case JIT_STRING:
   if (self->jl_tokend != self->jl_tokstart + 2) {
 err_empty_string:
-   return DeeError_Throwf(&DeeError_SyntaxError,
-                          "Expected an empty string for `operator str'");
+   DeeError_Throwf(&DeeError_SyntaxError,
+                   "Expected an empty string for `operator str'");
+   goto err_trace;
   }
   result = OPERATOR_STR;
   break;
@@ -201,10 +230,11 @@ err_empty_string:
    JITLexer_Yield(self);
   } else {
 err_rbrck_after_lbrck:
-   return DeeError_Throwf(&DeeError_SyntaxError,
-                          "Expected `]' after `[', but got `%$s'",
-                         (size_t)(self->jl_tokend - self->jl_tokstart),
-                          self->jl_tokstart);
+   DeeError_Throwf(&DeeError_SyntaxError,
+                   "Expected `]' after `[', but got `%$s'",
+                  (size_t)(self->jl_tokend - self->jl_tokstart),
+                   self->jl_tokstart);
+   goto err_trace;
   }
   if (self->jl_tok == '=') {
    JITLexer_Yield(self);
@@ -260,10 +290,11 @@ err_rbrck_after_lbrck:
     }
     result = OPERATOR_DELATTR;
     if unlikely(self->jl_tok != '.') {
-     return DeeError_Throwf(&DeeError_SyntaxError,
-                            "Expected `[' or `.' after `del' in operator name, but got `%$s'",
-                           (size_t)(self->jl_tokend - self->jl_tokstart),
-                            self->jl_tokstart);
+     DeeError_Throwf(&DeeError_SyntaxError,
+                     "Expected `[' or `.' after `del' in operator name, but got `%$s'",
+                    (size_t)(self->jl_tokend - self->jl_tokstart),
+                     self->jl_tokstart);
+     goto err_trace;
     }
     goto done_y1;
    }
@@ -290,10 +321,11 @@ err_rbrck_after_lbrck:
     result = OPERATOR_MOVEASSIGN;
     if unlikely(self->jl_tok != '=' &&
                 self->jl_tok != TOK_COLLON_EQUAL) {
-     return DeeError_Throwf(&DeeError_SyntaxError,
-                            "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
-                           (size_t)(self->jl_tokend - self->jl_tokstart),
-                            self->jl_tokstart);
+     DeeError_Throwf(&DeeError_SyntaxError,
+                     "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
+                    (size_t)(self->jl_tokend - self->jl_tokstart),
+                     self->jl_tokstart);
+     goto err_trace;
     }
     goto done_y1;
    }
@@ -388,16 +420,19 @@ err_rbrck_after_lbrck:
     { result = OPERATOR_INT; goto done_y1; }
   }
 unknown:
-  return DeeError_Throwf(&DeeError_SyntaxError,
-                         "Unknown operator name `%$s'",
-                        (size_t)(self->jl_tokend - self->jl_tokstart),
-                         self->jl_tokstart);
+  DeeError_Throwf(&DeeError_SyntaxError,
+                  "Unknown operator name `%$s'",
+                 (size_t)(self->jl_tokend - self->jl_tokstart),
+                  self->jl_tokstart);
+  goto err_trace;
  } break;
  }
 done_y1:
  JITLexer_Yield(self);
 done:
  return result;
+err_trace:
+ JITLexer_ErrorTrace(self,self->jl_tokstart);
 err:
  return -1;
 }
@@ -414,7 +449,7 @@ print_module_name(JITLexer *__restrict self,
   if (self->jl_tok == '.' || self->jl_tok == TOK_DOTS) {
    if (printer &&
        unicode_printer_printascii(printer,"...",self->jl_tok == '.' ? 1 : 3) < 0)
-       goto err;
+       goto err_trace;
    result = 1;
    JITLexer_Yield(self);
    if (self->jl_tok != JIT_KEYWORD &&
@@ -428,7 +463,7 @@ print_module_name(JITLexer *__restrict self,
        unicode_printer_print(printer,
                             (char *)self->jl_tokstart,
                             (size_t)(self->jl_tokend - self->jl_tokstart)) < 0)
-       goto err;
+       goto err_trace;
    JITLexer_Yield(self);
    if (self->jl_tok != '.' && self->jl_tok != TOK_DOTS) break;
   } else if (self->jl_tok == JIT_STRING ||
@@ -438,13 +473,13 @@ print_module_name(JITLexer *__restrict self,
      if (unicode_printer_print(printer,
                               (char *)self->jl_tokstart + 2,
                               (size_t)(self->jl_tokend - self->jl_tokstart) - 3) < 0)
-         goto err;
+         goto err_trace;
     } else {
      if (DeeString_DecodeBackslashEscaped(printer,
                                          (char *)self->jl_tokstart + 1,
                                          (size_t)(self->jl_tokend - self->jl_tokstart) - 2,
                                           STRING_ERROR_FSTRICT) < 0)
-         goto err;
+         goto err_trace;
     }
    }
    JITLexer_Yield(self);
@@ -454,13 +489,17 @@ print_module_name(JITLexer *__restrict self,
        self->jl_tok != JIT_RAWSTRING)
        break;
   } else {
-   if (WARN(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST))
-       goto err;
-   break;
+   DeeError_Throwf(&DeeError_SyntaxError,
+                   "Expected `.', a keyword or a string in a module- or symbol-import list, but got `%$s'",
+                  (size_t)(self->jl_tokend - self->jl_tokstart),
+                   self->jl_tokstart);
+   goto err_trace;
   }
  }
  return result;
-err:
+err_trace:
+ JITLexer_ErrorTrace(self,self->jl_tokstart);
+/*err:*/
  return -1;
 }
 
@@ -545,7 +584,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
   /* The printer was used. */
   DREF DeeObject *str;
   str = unicode_printer_pack(&printer);
-  if unlikely(!str) goto err;
+  if unlikely(!str) goto err_trace;
   if (DeeString_STR(str)[0] != '.') {
    result = DeeModule_Open(str,NULL,true);
   } else {
@@ -554,7 +593,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
     DeeError_Throwf(&DeeError_CompilerError,
                     "Cannot import relative module %r",
                     str);
-    goto err;
+    goto err_trace;
    }
    result = DeeModule_ImportRel((DeeObject *)base,str,NULL,true);
   }
@@ -571,7 +610,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
                    "Cannot import relative module %$q",
                   (size_t)(name_end - name_start),
                    name_start);
-   goto err;
+   goto err_trace;
   }
   result = DeeModule_ImportRelString((DeeObject *)base,
                                      (char const *)name_start,
@@ -580,10 +619,14 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
                                       true);
  }
  if unlikely(!result)
-    goto err;
+    goto err_trace;
  if unlikely(DeeModule_RunInit(result) < 0)
-    Dee_Clear(result);
+    goto err_rt_r;
  return result;
+err_rt_r:
+ Dee_Decref(result);
+err_trace:
+ JITLexer_ErrorTrace(self,self->jl_tokstart);
 err:
  return NULL;
 }

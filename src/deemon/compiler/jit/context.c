@@ -34,6 +34,9 @@
 
 DECL_BEGIN
 
+/* Allocate/free a JIT object table from cache. */
+DEFINE_STRUCT_CACHE(jit_object_table,struct jit_object_table,32);
+
 INTERN void FCALL
 JITLValue_Fini(JITLValue *__restrict self) {
  switch (self->lv_kind) {
@@ -45,10 +48,10 @@ JITLValue_Fini(JITLValue *__restrict self) {
   Dee_Decref(self->lv_item.li_index);
   ATTR_FALLTHROUGH
  case JIT_LVALUE_EXTERN:
- case JIT_LVALUE_USERGLOB:
- case JIT_LVALUE_ATTR_STR:
+ case JIT_LVALUE_GLOBAL:
+ case JIT_LVALUE_ATTRSTR:
  case JIT_LVALUE_RVALUE:
-  Dee_Decref(self->lv_uglob_name);
+  Dee_Decref(self->lv_global);
   break;
  default: break;
  }
@@ -66,7 +69,7 @@ update_symbol_objent(JITSymbol *__restrict self) {
      goto do_reload;
  if (ent > tab->ot_list + tab->ot_mask)
      goto do_reload;
- if (ent->oe_namestr != self->js_objent.jo_namestr)
+ if (ent->oe_namestr != (unsigned char *)self->js_objent.jo_namestr)
      goto do_reload;
  if (ent->oe_namelen != self->js_objent.jo_namelen)
      goto do_reload;
@@ -83,7 +86,7 @@ do_reload:
    if unlikely(ent->oe_nameobj == ITER_DONE) continue;
    if (ent->oe_namehsh != hash) continue;
    if (ent->oe_namelen != self->js_objent.jo_namelen) continue;
-   if (ent->oe_namestr == self->js_objent.jo_namestr) break; /* Exact same string */
+   if (ent->oe_namestr == (unsigned char *)self->js_objent.jo_namestr) break; /* Exact same string */
    if (memcmp(ent->oe_namestr,
               self->js_objent.jo_namestr,
               self->js_objent.jo_namelen *
@@ -94,7 +97,7 @@ do_reload:
   }
   /* Update cached values. */
   self->js_objent.jo_ent     = ent;
-  self->js_objent.jo_namestr = ent->oe_namestr;
+  self->js_objent.jo_namestr = (char const *)ent->oe_namestr;
   self->js_objent.jo_namelen = ent->oe_namelen;
  }
  return true;
@@ -138,17 +141,21 @@ JITLValue_IsBound(JITLValue *__restrict self,
   if (result < -1) result = 0; /* Attribute doesn't exist */
   break;
 
- case JIT_LVALUE_USERGLOB:
-  ASSERT(context->jc_module || context->jc_uglobals);
-  if (context->jc_module) {
-   result = DeeModule_BoundAttrString((DeeModuleObject *)context->jc_module,
-                                       DeeString_STR(self->lv_uglob_name),
-                                       DeeString_Hash((DeeObject *)self->lv_uglob_name));
-  } else {
-   result = DeeObject_BoundItem(context->jc_uglobals,
-                               (DeeObject *)self->lv_uglob_name,
-                                true);
-  }
+ case JIT_LVALUE_GLOBAL:
+  ASSERT(context->jc_globals);
+  result = DeeObject_BoundItem(context->jc_globals,
+                              (DeeObject *)self->lv_global,
+                               true);
+  if (result < -1) result = 0; /* Attribute doesn't exist */
+  break;
+
+ case JIT_LVALUE_GLOBALSTR:
+  ASSERT(context->jc_globals);
+  result = DeeObject_BoundItemStringLen(context->jc_globals,
+                                        self->lv_globalstr.lg_namestr,
+                                        self->lv_globalstr.lg_namelen,
+                                        self->lv_globalstr.lg_namehsh,
+                                        true);
   if (result < -1) result = 0; /* Attribute doesn't exist */
   break;
 
@@ -158,19 +165,13 @@ JITLValue_IsBound(JITLValue *__restrict self,
   if (result < -1) result = 0; /* Attribute doesn't exist */
   break;
 
- {
-  DREF DeeObject *attr_name_ob;
- case JIT_LVALUE_ATTR_STR:
-  attr_name_ob = DeeString_NewUtf8(self->lv_attr_str.la_name,
-                                   self->lv_attr_str.la_nsiz,
-                                   STRING_ERROR_FSTRICT);
-  if unlikely(!attr_name_ob) goto err;
-  result = DeeObject_BoundAttr(self->lv_attr.la_base,
-                               attr_name_ob);
-  self->lv_attr.la_name = (DREF DeeStringObject *)attr_name_ob; /* Inherit reference. */
-  self->lv_kind = JIT_LVALUE_ATTR;
+ case JIT_LVALUE_ATTRSTR:
+  result = DeeObject_BoundAttrStringLenHash(self->lv_attrstr.la_base,
+                                            self->lv_attrstr.la_name,
+                                            self->lv_attrstr.la_size,
+                                            self->lv_attrstr.la_hash);
   if (result < -1) result = 0; /* Attribute doesn't exist */
- } break;
+  break;
 
  case JIT_LVALUE_ITEM:
   result = DeeObject_BoundItem(self->lv_item.li_base,
@@ -228,16 +229,18 @@ err_unbound:
                                  self->lv_extern.lx_sym);
   break;
 
- case JIT_LVALUE_USERGLOB:
-  ASSERT(context->jc_module || context->jc_uglobals);
-  if (context->jc_module) {
-   result = DeeModule_GetAttrString((DeeModuleObject *)context->jc_module,
-                                     DeeString_STR(self->lv_uglob_name),
-                                     DeeString_Hash((DeeObject *)self->lv_uglob_name));
-  } else {
-   result = DeeObject_GetItem(context->jc_uglobals,
-                             (DeeObject *)self->lv_uglob_name);
-  }
+ case JIT_LVALUE_GLOBAL:
+  ASSERT(context->jc_globals);
+  result = DeeObject_GetItem(context->jc_globals,
+                            (DeeObject *)self->lv_global);
+  break;
+
+ case JIT_LVALUE_GLOBALSTR:
+  ASSERT(context->jc_globals);
+  result = DeeObject_GetItemStringLen(context->jc_globals,
+                                      self->lv_globalstr.lg_namestr,
+                                      self->lv_globalstr.lg_namelen,
+                                      self->lv_globalstr.lg_namehsh);
   break;
 
  case JIT_LVALUE_ATTR:
@@ -245,18 +248,12 @@ err_unbound:
                             (DeeObject *)self->lv_attr.la_name);
   break;
 
- {
-  DREF DeeObject *attr_name_ob;
- case JIT_LVALUE_ATTR_STR:
-  attr_name_ob = DeeString_NewUtf8(self->lv_attr_str.la_name,
-                                   self->lv_attr_str.la_nsiz,
-                                   STRING_ERROR_FSTRICT);
-  if unlikely(!attr_name_ob) goto err;
-  result = DeeObject_GetAttr(self->lv_attr.la_base,
-                             attr_name_ob);
-  self->lv_attr.la_name = (DREF DeeStringObject *)attr_name_ob; /* Inherit reference. */
-  self->lv_kind = JIT_LVALUE_ATTR;
- } break;
+ case JIT_LVALUE_ATTRSTR:
+  result = DeeObject_GetAttrStringLenHash(self->lv_attr.la_base,
+                                          self->lv_attrstr.la_name,
+                                          self->lv_attrstr.la_size,
+                                          self->lv_attrstr.la_hash);
+  break;
 
  case JIT_LVALUE_ITEM:
   result = DeeObject_GetItem(self->lv_item.li_base,
@@ -315,34 +312,31 @@ JITLValue_DelValue(JITLValue *__restrict self,
                                  self->lv_extern.lx_sym);
   break;
 
- case JIT_LVALUE_USERGLOB:
-  ASSERT(context->jc_module || context->jc_uglobals);
-  if (context->jc_module) {
-   result = DeeModule_DelAttrString((DeeModuleObject *)context->jc_module,
-                                     DeeString_STR(self->lv_uglob_name),
-                                     DeeString_Hash((DeeObject *)self->lv_uglob_name));
-  } else {
-   result = DeeObject_DelItem(context->jc_uglobals,
-                             (DeeObject *)self->lv_uglob_name);
-  }
+ case JIT_LVALUE_GLOBAL:
+  ASSERT(context->jc_globals);
+  result = DeeObject_DelItem(context->jc_globals,
+                            (DeeObject *)self->lv_global);
+  break;
+
+ case JIT_LVALUE_GLOBALSTR:
+  ASSERT(context->jc_globals);
+  result = DeeObject_DelItemStringLen(context->jc_globals,
+                                      self->lv_globalstr.lg_namestr,
+                                      self->lv_globalstr.lg_namelen,
+                                      self->lv_globalstr.lg_namehsh);
   break;
 
  case JIT_LVALUE_ATTR:
   result = DeeObject_DelAttr(self->lv_attr.la_base,
                             (DeeObject *)self->lv_attr.la_name);
   break;
- {
-  DREF DeeObject *attr_name_ob;
- case JIT_LVALUE_ATTR_STR:
-  attr_name_ob = DeeString_NewUtf8(self->lv_attr_str.la_name,
-                                   self->lv_attr_str.la_nsiz,
-                                   STRING_ERROR_FSTRICT);
-  if unlikely(!attr_name_ob) goto err;
-  result = DeeObject_DelAttr(self->lv_attr.la_base,
-                             attr_name_ob);
-  self->lv_attr.la_name = (DREF DeeStringObject *)attr_name_ob; /* Inherit reference. */
-  self->lv_kind = JIT_LVALUE_ATTR;
- } break;
+
+ case JIT_LVALUE_ATTRSTR:
+  result = DeeObject_DelAttrStringLenHash(self->lv_attrstr.la_base,
+                                          self->lv_attrstr.la_name,
+                                          self->lv_attrstr.la_size,
+                                          self->lv_attrstr.la_hash);
+  break;
 
  case JIT_LVALUE_ITEM:
   result = DeeObject_DelItem(self->lv_item.li_base,
@@ -405,18 +399,20 @@ JITLValue_SetValue(JITLValue *__restrict self,
                                  value);
   break;
 
- case JIT_LVALUE_USERGLOB:
-  ASSERT(context->jc_module || context->jc_uglobals);
-  if (context->jc_module) {
-   result = DeeModule_SetAttrString((DeeModuleObject *)context->jc_module,
-                                     DeeString_STR(self->lv_uglob_name),
-                                     DeeString_Hash((DeeObject *)self->lv_uglob_name),
-                                     value);
-  } else {
-   result = DeeObject_SetItem(context->jc_uglobals,
-                             (DeeObject *)self->lv_uglob_name,
-                              value);
-  }
+ case JIT_LVALUE_GLOBAL:
+  ASSERT(context->jc_globals);
+  result = DeeObject_SetItem(context->jc_globals,
+                            (DeeObject *)self->lv_global,
+                             value);
+  break;
+
+ case JIT_LVALUE_GLOBALSTR:
+  ASSERT(context->jc_globals);
+  result = DeeObject_SetItemStringLen(context->jc_globals,
+                                      self->lv_globalstr.lg_namestr,
+                                      self->lv_globalstr.lg_namelen,
+                                      self->lv_globalstr.lg_namehsh,
+                                      value);
   break;
 
  case JIT_LVALUE_ATTR:
@@ -425,19 +421,13 @@ JITLValue_SetValue(JITLValue *__restrict self,
                              value);
   break;
 
- {
-  DREF DeeObject *attr_name_ob;
- case JIT_LVALUE_ATTR_STR:
-  attr_name_ob = DeeString_NewUtf8(self->lv_attr_str.la_name,
-                                   self->lv_attr_str.la_nsiz,
-                                   STRING_ERROR_FSTRICT);
-  if unlikely(!attr_name_ob) goto err;
-  result = DeeObject_SetAttr(self->lv_attr.la_base,
-                             attr_name_ob,
-                             value);
-  self->lv_attr.la_name = (DREF DeeStringObject *)attr_name_ob; /* Inherit reference. */
-  self->lv_kind = JIT_LVALUE_ATTR;
- } break;
+ case JIT_LVALUE_ATTRSTR:
+  result = DeeObject_SetAttrStringLenHash(self->lv_attrstr.la_base,
+                                          self->lv_attrstr.la_name,
+                                          self->lv_attrstr.la_size,
+                                          self->lv_attrstr.la_hash,
+                                          value);
+  break;
 
  case JIT_LVALUE_ITEM:
   result = DeeObject_SetItem(self->lv_item.li_base,
@@ -580,6 +570,43 @@ JITLexer_PackLValue(JITLexer *__restrict self) {
 }
 
 
+
+INTERN void DCALL
+_JITContext_PopLocals(JITContext *__restrict self) {
+ JITObjectTable *tab;
+ ASSERT(self->jc_locals.otp_ind == 0);
+ tab = self->jc_locals.otp_tab;
+ if (!tab) return;
+ self->jc_locals = tab->ot_prev;
+ JITObjectTable_Fini(tab);
+ jit_object_table_free(tab);
+}
+
+
+/* Get a pointer to the first locals object-table for the current scope,
+ * either for reading (in which case `NULL' is indicative of an empty scope),
+ * or for writing (in which case `NULL' indicates an error) */
+INTERN JITObjectTable *DCALL
+JITContext_GetRWLocals(JITContext *__restrict self) {
+ JITObjectTable *result;
+ ASSERT(self->jc_locals.otp_ind >= 1);
+ result = self->jc_locals.otp_tab;
+ if (result && self->jc_locals.otp_ind == 1)
+     return result;
+ /* Must create a new table for our own usage. */
+ result = jit_object_table_alloc();
+ if unlikely(!result) goto done;
+ JITObjectTable_Init(result);
+ --self->jc_locals.otp_ind;
+ result->ot_prev = self->jc_locals;
+ self->jc_locals.otp_tab = result;
+ self->jc_locals.otp_ind = 1;
+done:
+ return result;
+}
+
+
+
 /* Lookup a given symbol within a specific JIT context
  * @param: mode: Set of `LOOKUP_SYM_*'
  * @return: 0:  The specified symbol was found, and `result' was filled
@@ -588,16 +615,82 @@ INTERN int FCALL
 JITContext_Lookup(JITContext *__restrict self,
                   struct jit_symbol *__restrict result,
                   /*utf-8*/char const *__restrict name,
-                  size_t namelen, unsigned int mode) {
- (void)self;
- (void)result;
- (void)name;
- (void)namelen;
- (void)mode;
- /* TODO */
- return DeeError_Throwf(&DeeError_SymbolError,
-                        "Unknown variable `%$s'",
-                        namelen,name);
+                  size_t namelen, unsigned int mode,
+                  DeeObject *__restrict nameobj) {
+ JITObjectTable *tab;
+ struct jit_object_entry *ent;
+ dhash_t hash = hash_ptr(name,namelen);
+ switch (mode & LOOKUP_SYM_VMASK) {
+ case LOOKUP_SYM_VLOCAL:
+  /* Search for a local symbol. */
+  tab = JITContext_GetROLocals(self);
+  if (!tab) break; /* No locals */
+  ent = JITObjectTable_Lookup(tab,
+                             (unsigned char *)name,
+                              namelen,
+                              hash);
+  if (!ent) break;
+  /* Found a local variable entry. */
+set_object_entry:
+  result->js_kind              = JIT_SYMBOL_OBJENT;
+  result->js_objent.jo_tab     = tab;
+  result->js_objent.jo_ent     = ent;
+  result->js_objent.jo_namestr = (char *)ent->oe_namestr;
+  result->js_objent.jo_namelen = ent->oe_namelen;
+done:
+  return 0;
+ case LOOKUP_SYM_VGLOBAL:
+set_global:
+  result->js_kind = JIT_SYMBOL_GLOBALSTR;
+  result->js_globalstr.jg_namestr = name;
+  result->js_globalstr.jg_namelen = namelen;
+  result->js_globalstr.jg_namehsh = hash;
+  goto done;
+ default:
+  tab = JITContext_GetROLocals(self);
+  for (; tab; tab = tab->ot_prev.otp_tab) {
+   ent = JITObjectTable_Lookup(tab,
+                              (unsigned char *)name,
+                               namelen,
+                               hash);
+   if (ent) goto set_object_entry;
+  }
+  if (!self->jc_globals) break;
+  /* If we're not allowed to declare things, always
+   * assume that this is referring to a global */
+  if (!(mode & LOOKUP_SYM_ALLOWDECL))
+      goto set_global;
+  /* Check if the symbol exists within the global symbol table. */
+  {
+   int error;
+   error = DeeObject_HasItemStringLen(self->jc_globals,
+                                      name,
+                                      namelen,
+                                      hash);
+   if unlikely(error < 0) goto err;
+   if (error)
+       goto set_global; /* Known global */
+  }
+  break;
+ }
+ if unlikely(!(mode & LOOKUP_SYM_ALLOWDECL))
+    goto err_unknown_var;
+ /* Create a new local variable. */
+ tab = JITContext_GetRWLocals(self);
+ if unlikely(!tab) goto err;
+ ent = JITObjectTable_Create(tab,
+                            (unsigned char *)name,
+                             namelen,
+                             hash,
+                             nameobj);
+ if unlikely(!ent) goto err;
+ goto set_object_entry;
+err_unknown_var:
+ DeeError_Throwf(&DeeError_SymbolError,
+                 "Unknown variable `%$s'",
+                 namelen,name);
+err:
+ return -1;
 }
 INTERN int FCALL
 JITContext_LookupNth(JITContext *__restrict self,
