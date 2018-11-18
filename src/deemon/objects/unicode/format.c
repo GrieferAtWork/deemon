@@ -66,22 +66,15 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
   ASSERT(!DeeUni_IsSymCont('}'));
   while (DeeUni_IsSymCont(*key_end))
      ++key_end;
-  if (!do_eval) result = Dee_None,Dee_Incref(result);
-  else if (DeeDict_CheckExact(self->f_args)) {
-   char *key; size_t key_length;
-   key_length = (size_t)(key_end-fmt_start);
-   key = (char *)Dee_AMalloc((key_length+1)*sizeof(char));
-   if (!key) goto err;
-   memcpy(key,fmt_start,key_length*sizeof(char));
-   key[key_length] = '\0';
-   result = DeeDict_GetItemString(self->f_args,key,hash_str(key));
-   Dee_AFree(key);
-  } else {
-   DREF DeeObject *key;
-   key = DeeString_NewSized(fmt_start,(size_t)(key_end-fmt_start));
-   if unlikely(!key) goto err;
-   result = DeeObject_GetItem(self->f_args,key);
-   Dee_Decref(key);
+  if (!do_eval)
+   result = Dee_None,
+   Dee_Incref(result);
+  else {
+   size_t len = (size_t)(key_end - fmt_start);
+   result = DeeObject_GetItemStringLen(self->f_args,
+                                       fmt_start,
+                                       len,
+                                       hash_ptr(fmt_start,len));
   }
   fmt_start = key_end;
  } else if (DeeUni_IsDecimal(ch)) {
@@ -177,7 +170,8 @@ Formatter_GetUnaryIndex(char **__restrict pfmt_start) {
   ASSERT(!DeeUni_IsSymCont('}'));
   while (DeeUni_IsSymCont(*key_end))
      ++key_end;
-  result = DeeString_NewSized(fmt_start,(size_t)(key_end-fmt_start));
+  result = DeeString_NewSized(fmt_start,
+                             (size_t)(key_end - fmt_start));
   fmt_start = key_end;
  } else if (DeeUni_IsDecimal(ch)) {
   /* list-style index lookup */
@@ -214,7 +208,8 @@ Formatter_GetUnaryKey(char **__restrict pfmt_start) {
   ASSERT(!DeeUni_IsSymCont('}'));
   while (DeeUni_IsSymCont(*key_end))
      ++key_end;
-  result = DeeString_NewSized(fmt_start,(size_t)(key_end-fmt_start));
+  result = DeeString_NewSized(fmt_start,
+                             (size_t)(key_end - fmt_start));
   fmt_start = key_end;
 #if 0 /* TODO: Quoted strings? */
  } else if (ch == '\'') {

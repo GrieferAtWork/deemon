@@ -85,7 +85,7 @@ DECL_BEGIN
 #define r2 13
 #define m  5
 #define n  0xe6546b64
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_ptr(void const *__restrict ptr, size_t n_bytes) {
  uint8_t const *tail;
  uint32_t k1; size_t i;
@@ -123,7 +123,7 @@ hash_ptr(void const *__restrict ptr, size_t n_bytes) {
  return hash;
 }
 
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_ptrw(uint16_t const *__restrict ptr, size_t n_words) {
  uint16_t const *tail;
  uint32_t k1; size_t i;
@@ -162,7 +162,7 @@ hash_ptrw(uint16_t const *__restrict ptr, size_t n_words) {
  hash ^= (hash >> 16);
  return hash;
 }
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_ptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  uint32_t const *tail;
  uint32_t k1; size_t i;
@@ -201,7 +201,7 @@ hash_ptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  hash ^= (hash >> 16);
  return hash;
 }
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
  uint8_t const *tail;
  uint32_t k1; size_t i;
@@ -248,7 +248,7 @@ hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
  return hash;
 }
 
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_caseptrw(uint16_t const *__restrict ptr, size_t n_words) {
  uint16_t const *tail;
  uint32_t k1; size_t i;
@@ -287,7 +287,7 @@ hash_caseptrw(uint16_t const *__restrict ptr, size_t n_words) {
  hash ^= (hash >> 16);
  return hash;
 }
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  uint32_t const *tail;
  uint32_t k1; size_t i;
@@ -339,7 +339,7 @@ hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
 #define m    0xc6a4a7935bd1e995ull
 #define r    47
 #define seed 0xe17a1465
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_ptr(void const *__restrict ptr, size_t n_bytes) {
  dhash_t h = seed ^ (n_bytes * m);
  size_t len8 = n_bytes / 8;
@@ -368,7 +368,7 @@ hash_ptr(void const *__restrict ptr, size_t n_bytes) {
  h ^= h >> r;
  return h;
 }
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_ptrw(uint16_t const *__restrict ptr, size_t n_words) {
  dhash_t h = seed ^ (n_words * m);
  size_t len8 = n_words / 8;
@@ -405,7 +405,7 @@ hash_ptrw(uint16_t const *__restrict ptr, size_t n_words) {
  h ^= h >> r;
  return h;
 }
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_ptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  dhash_t h = seed ^ (n_dwords * m);
  size_t len8 = n_dwords / 8;
@@ -442,7 +442,7 @@ hash_ptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  h ^= h >> r;
  return h;
 }
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
  dhash_t h = seed ^ (n_bytes * m);
  size_t len8 = n_bytes / 8;
@@ -483,7 +483,7 @@ hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
  h ^= h >> r;
  return h;
 }
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_caseptrw(uint16_t const *__restrict ptr, size_t n_words) {
  dhash_t h = seed ^ (n_words * m);
  size_t len8 = n_words / 8;
@@ -520,7 +520,7 @@ hash_caseptrw(uint16_t const *__restrict ptr, size_t n_words) {
  h ^= h >> r;
  return h;
 }
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  dhash_t h = seed ^ (n_dwords * m);
  size_t len8 = n_dwords / 8;
@@ -572,7 +572,7 @@ hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
 #define BEGIN_TRYALLOC()  DBG_ALIGNMENT_DISABLE()
 #define END_TRYALLOC()    DBG_ALIGNMENT_ENABLE()
 
-PUBLIC dhash_t DCALL
+PUBLIC ATTR_PURE dhash_t DCALL
 hash_str(char const *__restrict str) {
  return hash_ptr(str,strlen(str));
 }

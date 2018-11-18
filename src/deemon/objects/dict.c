@@ -482,7 +482,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 
 
 
-PUBLIC DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 DeeDict_GetItemString(DeeObject *__restrict self,
                       char const *__restrict key,
                       dhash_t hash) {
@@ -506,7 +506,8 @@ DeeDict_GetItemString(DeeObject *__restrict self,
  err_unknown_key_str(self,key);
  return NULL;
 }
-PUBLIC DREF DeeObject *DCALL
+
+INTERN DREF DeeObject *DCALL
 DeeDict_GetItemStringLen(DeeObject *__restrict self,
                          char const *__restrict key,
                          size_t keylen,
@@ -532,7 +533,8 @@ DeeDict_GetItemStringLen(DeeObject *__restrict self,
  err_unknown_key_str_len(self,key,keylen);
  return NULL;
 }
-PUBLIC DREF DeeObject *DCALL
+
+INTERN DREF DeeObject *DCALL
 DeeDict_GetItemStringDef(DeeObject *__restrict self,
                          char const *__restrict key,
                          dhash_t hash,
@@ -559,7 +561,8 @@ DeeDict_GetItemStringDef(DeeObject *__restrict self,
      Dee_Incref(def);
  return def;
 }
-PUBLIC DREF DeeObject *DCALL
+
+INTERN DREF DeeObject *DCALL
 DeeDict_GetItemStringLenDef(DeeObject *__restrict self,
                             char const *__restrict key,
                             size_t keylen,
@@ -588,7 +591,8 @@ DeeDict_GetItemStringLenDef(DeeObject *__restrict self,
      Dee_Incref(def);
  return def;
 }
-PUBLIC bool DCALL
+
+INTERN bool DCALL
 DeeDict_HasItemString(DeeObject *__restrict self,
                       char const *__restrict key,
                       dhash_t hash) {
@@ -608,7 +612,8 @@ DeeDict_HasItemString(DeeObject *__restrict self,
  DeeDict_LockEndRead(self);
  return false;
 }
-PUBLIC bool DCALL
+
+INTERN bool DCALL
 DeeDict_HasItemStringLen(DeeObject *__restrict self,
                          char const *__restrict key,
                          size_t keylen,
@@ -630,7 +635,8 @@ DeeDict_HasItemStringLen(DeeObject *__restrict self,
  DeeDict_LockEndRead(self);
  return false;
 }
-PUBLIC int DCALL
+
+INTERN int DCALL
 DeeDict_DelItemString(DeeObject *__restrict self,
                       char const *__restrict key,
                       dhash_t hash) {
@@ -673,7 +679,8 @@ again_lock:
  DeeDict_LockEndRead(self);
  return err_unknown_key_str(self,key);
 }
-PUBLIC int DCALL
+
+INTERN int DCALL
 DeeDict_DelItemStringLen(DeeObject *__restrict self,
                          char const *__restrict key,
                          size_t keylen,
@@ -718,7 +725,8 @@ again_lock:
  DeeDict_LockEndRead(self);
  return err_unknown_key_str_len(self,key,keylen);
 }
-PUBLIC int DCALL
+
+INTERN int DCALL
 DeeDict_SetItemString(DeeObject *__restrict self,
                       char const *__restrict key,
                       dhash_t hash,
@@ -798,7 +806,7 @@ collect_memory:
  return -1;
 }
 
-PUBLIC int DCALL
+INTERN int DCALL
 DeeDict_SetItemStringLen(DeeObject *__restrict self,
                          char const *__restrict key,
                          size_t keylen,
@@ -968,7 +976,7 @@ restart:
  err_unknown_key((DeeObject *)self,key);
  return NULL;
 }
-PUBLIC DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 DeeDict_GetItemDef(DeeObject *__restrict self,
                    DeeObject *__restrict key,
                    DeeObject *__restrict def) {

@@ -2548,7 +2548,7 @@ INTERN bool DCALL type_inherit_add(DeeTypeObject *__restrict self) {
      !base_math->tp_sub && !base_math->tp_inplace_sub &&
      !base_math->tp_inc && !base_math->tp_dec)) && !type_inherit_add(base)))
       return false;
- DEE_DPRINTF("[RT] Inherit `operator add' %q from into %q\n",
+ DEE_DPRINTF("[RT] Inherit `operator add' from %q into %q\n",
              base->tp_name,self->tp_name);
  base_math = base->tp_math;
  if (self->tp_math) {
@@ -3066,7 +3066,7 @@ INTERN bool DCALL type_inherit_compare(DeeTypeObject *__restrict self) {
      !base_cmp->tp_gr && !base_cmp->tp_ge)) &&
      !type_inherit_compare(base)))
       return false;
- DEE_DPRINTF("[RT] Inherit `operator <compare>' %q from into %q\n",
+ DEE_DPRINTF("[RT] Inherit `operator <compare>' from %q into %q\n",
              base->tp_name,self->tp_name);
  base_cmp = base->tp_cmp;
  if (self->tp_cmp) {
@@ -3767,8 +3767,11 @@ PUBLIC int
  int result;
  DREF DeeObject *key_ob;
  ASSERT_OBJECT(self);
+ /* Optimization for specific types. */
  if (DeeDict_CheckExact(self))
      return DeeDict_HasItemString(self,key,hash) ? 1 : 0;
+ if (DeeRoDict_CheckExact(self))
+     return DeeRoDict_HasItemString(self,key,hash) ? 1 : 0;
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_HasItemString(self,key,hash) ? 1 : 0;
  /* Fallback: create a string object and use it for indexing. */
@@ -3790,8 +3793,11 @@ PUBLIC int
  int result;
  DREF DeeObject *key_ob;
  ASSERT_OBJECT(self);
+ /* Optimization for specific types. */
  if (DeeDict_CheckExact(self))
      return DeeDict_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
+ if (DeeRoDict_CheckExact(self))
+     return DeeRoDict_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
  /* Fallback: create a string object and use it for indexing. */
@@ -3926,6 +3932,8 @@ PUBLIC int
  ASSERT_OBJECT(self);
  if (DeeDict_CheckExact(self))
      return DeeDict_HasItemString(self,key,hash) ? 1 : 0;
+ if (DeeRoDict_CheckExact(self))
+     return DeeRoDict_HasItemString(self,key,hash) ? 1 : 0;
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_HasItemString(self,key,hash) ? 1 : 0;
  /* Fallback: create a string object and use it for indexing. */
@@ -3948,6 +3956,8 @@ PUBLIC int
  ASSERT_OBJECT(self);
  if (DeeDict_CheckExact(self))
      return DeeDict_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
+ if (DeeRoDict_CheckExact(self))
+     return DeeRoDict_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
  /* Fallback: create a string object and use it for indexing. */
@@ -4082,6 +4092,8 @@ DeeObject_GetItemString(DeeObject *__restrict self,
  ASSERT_OBJECT(self);
  if (DeeDict_CheckExact(self))
      return DeeDict_GetItemString(self,key,hash);
+ if (DeeRoDict_CheckExact(self))
+     return DeeRoDict_GetItemString(self,key,hash);
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_GetItemString(self,key,hash);
  /* Fallback: create a string object and use it for indexing. */
@@ -4102,6 +4114,8 @@ DeeObject_GetItemStringLen(DeeObject *__restrict self,
  ASSERT_OBJECT(self);
  if (DeeDict_CheckExact(self))
      return DeeDict_GetItemStringLen(self,key,keylen,hash);
+ if (DeeRoDict_CheckExact(self))
+     return DeeRoDict_GetItemStringLen(self,key,keylen,hash);
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_GetItemStringLen(self,key,keylen,hash);
  /* Fallback: create a string object and use it for indexing. */
@@ -4122,6 +4136,8 @@ DeeObject_GetItemStringDef(DeeObject *__restrict self,
  ASSERT_OBJECT(self);
  if (DeeDict_CheckExact(self))
      return DeeDict_GetItemStringDef(self,key,hash,def);
+ if (DeeRoDict_CheckExact(self))
+     return DeeRoDict_GetItemStringDef(self,key,hash,def);
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_GetItemStringDef(self,key,hash,def);
  /* Fallback: create a string object and use it for indexing. */
@@ -4143,6 +4159,8 @@ DeeObject_GetItemStringLenDef(DeeObject *__restrict self,
  ASSERT_OBJECT(self);
  if (DeeDict_CheckExact(self))
      return DeeDict_GetItemStringLenDef(self,key,keylen,hash,def);
+ if (DeeRoDict_CheckExact(self))
+     return DeeRoDict_GetItemStringLenDef(self,key,keylen,hash,def);
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_GetItemStringLenDef(self,key,keylen,hash,def);
  /* Fallback: create a string object and use it for indexing. */

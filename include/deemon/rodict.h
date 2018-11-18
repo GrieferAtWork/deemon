@@ -79,10 +79,15 @@ DFUNDEF DREF DeeObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
 DFUNDEF int DCALL DeeRoDict_Insert(DREF DeeObject **__restrict pself, DeeObject *__restrict key, DeeObject *__restrict value);
 
 
-DFUNDEF DREF DeeObject *DCALL DeeRoDict_GetItemString(DeeObject *__restrict self, char const *__restrict key);
-DFUNDEF DREF DeeObject *DCALL DeeRoDict_GetItemDef(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
-DFUNDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, DeeObject *__restrict def);
-DFUNDEF bool DCALL DeeRoDict_HasItemString(DeeObject *__restrict self, char const *__restrict key);
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemDef(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
+INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
+INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict def);
+INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict def);
+INTDEF bool DCALL DeeRoDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+INTDEF bool DCALL DeeRoDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
+#endif /* CONFIG_BUILDING_DEEMON */
 
 /* Hash-iteration control. */
 #define RODICT_HASHST(self,hash)  ((hash) & ((DeeRoDictObject *)REQUIRES_OBJECT(self))->rd_mask)

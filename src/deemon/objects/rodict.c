@@ -554,7 +554,7 @@ err:
  return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 DeeRoDict_GetItemDef(DeeObject *__restrict self,
                      DeeObject *__restrict key,
                      DeeObject *__restrict def) {
@@ -579,12 +579,13 @@ err:
  return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 DeeRoDict_GetItemString(DeeObject *__restrict self,
-                        char const *__restrict key) {
- size_t i,perturb,hash; struct rodict_item *item;
+                        char const *__restrict key,
+                        dhash_t hash) {
+ size_t i,perturb;
+ struct rodict_item *item;
  Dict *me = (Dict *)self;
- hash    = hash_str(key);
  perturb = i = hash & me->rd_mask;
  for (;; i = RODICT_HASHNX(i,perturb),RODICT_HASHPT(perturb)) {
   item = &me->rd_elem[i & me->rd_mask];
@@ -599,13 +600,36 @@ DeeRoDict_GetItemString(DeeObject *__restrict self,
  return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
+DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
+                           char const *__restrict key,
+                           size_t keylen,
+                           dhash_t hash) {
+ size_t i,perturb;
+ struct rodict_item *item;
+ Dict *me = (Dict *)self;
+ perturb = i = hash & me->rd_mask;
+ for (;; i = RODICT_HASHNX(i,perturb),RODICT_HASHPT(perturb)) {
+  item = &me->rd_elem[i & me->rd_mask];
+  if (!item->di_key) break;
+  if (item->di_hash != hash) continue;
+  if (!DeeString_Check(item->di_key)) continue;
+  if (DeeString_SIZE(item->di_key) != keylen) continue;
+  if (memcmp(DeeString_STR(item->di_key),key,keylen * sizeof(char)) != 0) continue;
+  /* Found it! */
+  return_reference_(item->di_value);
+ }
+ err_unknown_key_str(self,key);
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
 DeeRoDict_GetItemStringDef(DeeObject *__restrict self,
                            char const *__restrict key,
+                           dhash_t hash,
                            DeeObject *__restrict def) {
- size_t i,perturb,hash; struct rodict_item *item;
+ size_t i,perturb; struct rodict_item *item;
  Dict *me = (Dict *)self;
- hash    = hash_str(key);
  perturb = i = hash & me->rd_mask;
  for (;; i = RODICT_HASHNX(i,perturb),RODICT_HASHPT(perturb)) {
   item = &me->rd_elem[i & me->rd_mask];
@@ -619,12 +643,34 @@ DeeRoDict_GetItemStringDef(DeeObject *__restrict self,
  return_reference_(def);
 }
 
-PUBLIC bool DCALL
-DeeRoDict_HasItemString(DeeObject *__restrict self,
-                        char const *__restrict key) {
- size_t i,perturb,hash; struct rodict_item *item;
+INTERN DREF DeeObject *DCALL
+DeeRoDict_GetItemStringLenDef(DeeObject *__restrict self,
+                              char const *__restrict key,
+                              size_t keylen,
+                              dhash_t hash,
+                              DeeObject *__restrict def) {
+ size_t i,perturb; struct rodict_item *item;
  Dict *me = (Dict *)self;
- hash    = hash_str(key);
+ perturb = i = hash & me->rd_mask;
+ for (;; i = RODICT_HASHNX(i,perturb),RODICT_HASHPT(perturb)) {
+  item = &me->rd_elem[i & me->rd_mask];
+  if (!item->di_key) break;
+  if (item->di_hash != hash) continue;
+  if (!DeeString_Check(item->di_key)) continue;
+  if (DeeString_SIZE(item->di_key) != keylen) continue;
+  if (memcmp(DeeString_STR(item->di_key),key,keylen * sizeof(char)) != 0) continue;
+  /* Found it! */
+  return_reference_(item->di_value);
+ }
+ return_reference_(def);
+}
+
+INTERN bool DCALL
+DeeRoDict_HasItemString(DeeObject *__restrict self,
+                        char const *__restrict key,
+                        dhash_t hash) {
+ size_t i,perturb; struct rodict_item *item;
+ Dict *me = (Dict *)self;
  perturb = i = hash & me->rd_mask;
  for (;; i = RODICT_HASHNX(i,perturb),RODICT_HASHPT(perturb)) {
   item = &me->rd_elem[i & me->rd_mask];
@@ -632,6 +678,27 @@ DeeRoDict_HasItemString(DeeObject *__restrict self,
   if (item->di_hash != hash) continue;
   if (!DeeString_Check(item->di_key)) continue;
   if (strcmp(key,DeeString_STR(item->di_key)) != 0) continue;
+  /* Found it! */
+  return true;
+ }
+ return false;
+}
+
+INTERN bool DCALL
+DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
+                           char const *__restrict key,
+                           size_t keylen,
+                           dhash_t hash) {
+ size_t i,perturb; struct rodict_item *item;
+ Dict *me = (Dict *)self;
+ perturb = i = hash & me->rd_mask;
+ for (;; i = RODICT_HASHNX(i,perturb),RODICT_HASHPT(perturb)) {
+  item = &me->rd_elem[i & me->rd_mask];
+  if (!item->di_key) break;
+  if (item->di_hash != hash) continue;
+  if (!DeeString_Check(item->di_key)) continue;
+  if (DeeString_SIZE(item->di_key) != keylen) continue;
+  if (memcmp(DeeString_STR(item->di_key),key,keylen * sizeof(char)) != 0) continue;
   /* Found it! */
   return true;
  }

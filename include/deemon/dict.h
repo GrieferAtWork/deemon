@@ -81,17 +81,19 @@ DFUNDEF DREF DeeObject *DCALL DeeDict_FromSequence(DeeObject *__restrict self);
 DFUNDEF DREF DeeObject *DCALL DeeDict_FromIterator(DeeObject *__restrict self);
 
 
-DFUNDEF DREF DeeObject *DCALL DeeDict_GetItemDef(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
-DFUNDEF DREF DeeObject *DCALL DeeDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-DFUNDEF DREF DeeObject *DCALL DeeDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict def);
-DFUNDEF DREF DeeObject *DCALL DeeDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
-DFUNDEF DREF DeeObject *DCALL DeeDict_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict def);
-DFUNDEF int DCALL DeeDict_DelItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-DFUNDEF int DCALL DeeDict_DelItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
-DFUNDEF int DCALL DeeDict_SetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict value);
-DFUNDEF int DCALL DeeDict_SetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict value);
-DFUNDEF bool DCALL DeeDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-DFUNDEF bool DCALL DeeDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF DREF DeeObject *DCALL DeeDict_GetItemDef(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
+INTDEF DREF DeeObject *DCALL DeeDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+INTDEF DREF DeeObject *DCALL DeeDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict def);
+INTDEF DREF DeeObject *DCALL DeeDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
+INTDEF DREF DeeObject *DCALL DeeDict_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict def);
+INTDEF int DCALL DeeDict_DelItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+INTDEF int DCALL DeeDict_DelItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
+INTDEF int DCALL DeeDict_SetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict value);
+INTDEF int DCALL DeeDict_SetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict value);
+INTDEF bool DCALL DeeDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
+INTDEF bool DCALL DeeDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
+#endif /* CONFIG_BUILDING_DEEMON */
 
 /* Create a new dict by inheriting a set of passed key-item pairs.
  * @param: key_items:    A vector containing `num_keyitems*2' elements,
