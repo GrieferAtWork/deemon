@@ -922,14 +922,8 @@ INTDEF void DCALL basescope_push_ob(DeeBaseScopeObject *__restrict scope);
  * @param: mode:     Set of `LOOKUP_SYM_*'
  * @param: warn_loc: When non-NULL the location to reference in warnings.
  *                   When NULL, the current location is used instead.
- * @return: SYMBOL_IGNORE: The caller should ignore this symbol, replacing
- *                         it with a none-expression, or placeholder.
- *                         This is what is done to prevent unused reference
- *                         variables from popping up when they are only
- *                         used from dead branches (aka: `parser_flags & PARSE_DEAD')
- * @return: * :            A new reference to the symbol requested.
- * @return: NULL:          An error occurred.
- */
+ * @return: * :      A new reference to the symbol requested.
+ * @return: NULL:    An error occurred. */
 INTDEF struct symbol *DCALL
 lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
               struct ast_loc *warn_loc);

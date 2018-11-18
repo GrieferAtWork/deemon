@@ -554,10 +554,9 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
     DeeError_Throwf(&DeeError_CompilerError,
                     "Cannot import relative module %r",
                     str);
-    result = NULL;
-   } else {
-    result = DeeModule_ImportRel((DeeObject *)base,str,NULL,true);
+    goto err;
    }
+   result = DeeModule_ImportRel((DeeObject *)base,str,NULL,true);
   }
   Dee_Decref(str);
  } else if (name_start[0] != '.') {
@@ -572,19 +571,62 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
                    "Cannot import relative module %$q",
                   (size_t)(name_end - name_start),
                    name_start);
-   result = NULL;
-  } else {
-   result = DeeModule_ImportRelString((DeeObject *)base,
-                                      (char const *)name_start,
-                                      (size_t)(name_end - name_start),
-                                       NULL,
-                                       true);
+   goto err;
   }
+  result = DeeModule_ImportRelString((DeeObject *)base,
+                                     (char const *)name_start,
+                                     (size_t)(name_end - name_start),
+                                      NULL,
+                                      true);
  }
+ if unlikely(!result)
+    goto err;
+ if unlikely(DeeModule_RunInit(result) < 0)
+    Dee_Clear(result);
  return result;
 err:
  return NULL;
 }
+
+
+/* Parse lookup mode modifiers:
+ * >> local x = 42;
+ *    ^     ^
+ */
+INTERN int DCALL
+JITLexer_ParseLookupMode(JITLexer *__restrict self,
+                         unsigned int *__restrict pmode) {
+next_modifier:
+ if (self->jl_tok == JIT_KEYWORD) {
+  if (JITLexer_ISTOK(self,"local")) {
+   *pmode &= ~LOOKUP_SYM_VMASK;
+   *pmode |= LOOKUP_SYM_VLOCAL;
+continue_modifier:
+   JITLexer_Yield(self);
+   goto next_modifier;
+  }
+  if (JITLexer_ISTOK(self,"global")) {
+   *pmode &= ~LOOKUP_SYM_VMASK;
+   *pmode |= LOOKUP_SYM_VGLOBAL;
+   goto continue_modifier;
+  }
+  if (JITLexer_ISTOK(self,"static")) {
+   *pmode &= ~LOOKUP_SYM_STACK;
+   *pmode |= LOOKUP_SYM_STATIC;
+   goto continue_modifier;
+  }
+  if (JITLexer_ISTOK(self,"__stack")) {
+   *pmode &= ~LOOKUP_SYM_STATIC;
+   *pmode |= LOOKUP_SYM_STACK;
+   goto continue_modifier;
+  }
+ }
+ return 0;
+/*
+err:
+ return -1;*/
+}
+
 
 
 DECL_END

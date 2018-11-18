@@ -52,6 +52,7 @@ DECL_BEGIN
 typedef struct jit_small_lexer JITSmallLexer;
 typedef struct jit_symbol JITSymbol;
 typedef struct jit_lvalue JITLValue;
+typedef struct jit_lvalue_list JITLValueList;
 typedef struct jit_lexer JITLexer;
 typedef struct jit_module JITModule;
 typedef struct jit_context JITContext;
@@ -126,7 +127,7 @@ INTDEF void FCALL JITSymbol_Fini(JITSymbol *__restrict self);
 #define JIT_LVALUE_ATTR_STR   0x0101              /* Attribute string expression. */
 #define JIT_LVALUE_ITEM       0x0102              /* Item expression. */
 #define JIT_LVALUE_RANGE      0x0103              /* Range expression. */
-#define JIT_LVALUE_EXPAND     0x0104              /* An expand expression (read-only) */
+#define JIT_LVALUE_RVALUE     0x0200              /* R-value expression (just a regular, read-only expression, but stored inside of an L-Value descriptor). */
 struct jit_lvalue {
     uint16_t lv_kind;  /* L-value kind (One of JIT_LVALUE_*) */
     uint16_t lv_pad[(sizeof(void *)-2)/2];
@@ -137,7 +138,7 @@ struct jit_lvalue {
             struct jit_object_table *lo_tab;     /* [1..1] The object table in question. */
             char const              *lo_namestr; /* [0..lo_namelen] The object name. */
             size_t                   lo_namesiz; /* Length of the object name. */
-        } js_objent; /* JIT_SYMBOL_OBJENT -- Object table entry. */
+        } lv_objent; /* JIT_SYMBOL_OBJENT -- Object table entry. */
         struct {
             DREF DeeModuleObject *lx_mod; /* [1..1] The module that is being referenced.
                                            * NOTE: Guarantied to be a regular, or a DEX module. */
@@ -162,7 +163,7 @@ struct jit_lvalue {
             DREF DeeObject *lr_start; /* [1..1] Range start index object */
             DREF DeeObject *lr_end;   /* [1..1] Range end index object */
         } lv_range; /* JIT_LVALUE_RANGE */
-        DREF DeeObject *lv_expand; /* [1..1] JIT_LVALUE_EXPAND */
+        DREF DeeObject *lv_rvalue;    /* [1..1] JIT_LVALUE_RVALUE */
     };
 };
 
@@ -177,6 +178,39 @@ INTDEF int FCALL JITLValue_IsBound(JITLValue *__restrict self, JITContext *__res
 INTDEF DREF DeeObject *FCALL JITLValue_GetValue(JITLValue *__restrict self, JITContext *__restrict context);
 INTDEF int FCALL JITLValue_DelValue(JITLValue *__restrict self, JITContext *__restrict context);
 INTDEF int FCALL JITLValue_SetValue(JITLValue *__restrict self, JITContext *__restrict context, DeeObject *__restrict value);
+
+
+struct jit_lvalue_list {
+    size_t     ll_size;  /* Number of used entires. */
+    size_t     ll_alloc; /* Number of allocated entires. */
+    JITLValue *ll_list;  /* [0..ll_size|ALLOC(ll_alloc)][owned] Vector of L-values. */
+};
+
+#define JITLVALUELIST_INIT       { 0, 0, NULL }
+#define JITLValueList_Init(self) ((self)->ll_size = (self)->ll_alloc = 0,(self)->ll_list = NULL)
+#define JITLValueList_CInit(self) (ASSERT((self)->ll_size == 0), \
+                                   ASSERT((self)->ll_alloc == 0), \
+                                   ASSERT((self)->ll_list == NULL))
+/* Finalize the given L-value list. */
+INTDEF void DCALL JITLValueList_Fini(JITLValueList *__restrict self);
+
+/* Append the given @value onto @self, returning -1 on error and 0 on success. */
+INTDEF int DCALL
+JITLValueList_Append(JITLValueList *__restrict self,
+                     /*inherit(on_success)*/JITLValue *__restrict value);
+/* Append an R-value expression. */
+INTDEF int DCALL
+JITLValueList_AppendRValue(JITLValueList *__restrict self,
+                           DeeObject *__restrict value);
+
+struct objectlist;
+/* Copy `self' and append all of the referenced objects to the given object list.
+ * NOTE: `self' remains valid after this operation! */
+INTDEF int DCALL
+JITLValueList_CopyObjects(JITLValueList *__restrict self,
+                          struct objectlist *__restrict dst,
+                          JITContext *__restrict context);
+
 
 
 struct jit_small_lexer {
@@ -336,17 +370,20 @@ struct jit_context {
 #define JITContext_Init(x)   memset(x,0,sizeof(JITContext))
 #define JITContext_Fini(x)   Dee_XDecref((DeeObject *)(x)->jc_module)
 
+#define JITContext_IsGlobalScope(x) true /* TODO */
+
 
 
 /* Lookup a given symbol within a specific JIT context
- * @return: true:  The specified symbol was found, and `result' was filled
- * @return: false: The symbol could not be found, and `result' was set to `JIT_SYMBOL_NONE' */
-INTDEF bool FCALL
+ * @param: mode: Set of `LOOKUP_SYM_*'
+ * @return: 0:  The specified symbol was found, and `result' was filled
+ * @return: -1: An error occurred. */
+INTDEF int FCALL
 JITContext_Lookup(JITContext *__restrict self,
                   struct jit_symbol *__restrict result,
                   /*utf-8*/char const *__restrict name,
-                  size_t namelen);
-INTDEF bool FCALL
+                  size_t namelen, unsigned int mode);
+INTDEF int FCALL
 JITContext_LookupNth(JITContext *__restrict self,
                      struct jit_symbol *__restrict result,
                      /*utf-8*/char const *__restrict name,
@@ -363,7 +400,7 @@ INTDEF int32_t FCALL JITLexer_ParseOperatorName(JITLexer *__restrict self, uint1
 /* Return the operator function for `opname', as exported from the `operators' module. */
 INTDEF DREF DeeObject *FCALL JIT_GetOperatorFunction(uint16_t opname);
 
-/* JIT-specific evaluation flags. */
+/* JIT-specific evaluation flags (may be optionally or'd with `LOOKUP_SYM_*'). */
 #define JITLEXER_EVAL_FNORMAL       0x0000 /* Normal evaluation flags. */
 #define JITLEXER_EVAL_FALLOWINPLACE 0x0010 /* Primary expression evaluation */
 #define JITLEXER_EVAL_FALLOWISBOUND 0x0020 /* Primary expression evaluation */
@@ -413,6 +450,26 @@ INTDEF DREF /*Module*/DeeObject *FCALL JITLexer_EvalModule(JITLexer *__restrict 
 #define JITLexer_SkipModule(self) (JITLexer_ParseModuleName(self,NULL,NULL,NULL) < 0 ? -1 : 0)
 
 
+/* Parse a comma-separated list of expressions,
+ * as well as assignment/inplace expressions.
+ * >> foo = 42;             // (foo = (42));
+ * >> foo += 42;            // (foo += (42));
+ * >> foo,bar = (10,20)...; // (foo,bar = (10,20)...);
+ * >> foo,bar = 10;         // (foo,(bar = 10));
+ * >> { 10 }                // (list { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * >> { "foo": 10 }         // (dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * @param: mode:      Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
+ * @param: seq_type:  The type of sequence to generate (one of `DeeTuple_Type' or `DeeList_Type')
+ *                    When `NULL', evaluate to the last comma-expression.
+ * @param: pout_mode: When non-NULL, instead of parsing a `;' when required,
+ *                    set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
+INTDEF DREF DeeObject *DCALL JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode, DeeTypeObject *seq_type, uint16_t *pout_mode);
+INTDEF int DCALL JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode, uint16_t *pout_mode);
+
+/* Additional flags only used by the JIT compiler. */
+#define AST_COMMA_OUT_FMULTIPLE 0x0010 /* Multiple expressions were parsed. */
+
+
 /* Parse a module name, either writing it to `*printer' (if non-NULL),
  * or storing the name's start and end pointers in `*pname_start' and
  * `*pname_end'
@@ -425,6 +482,14 @@ JITLexer_ParseModuleName(JITLexer *__restrict self,
                          struct unicode_printer *printer,
                          /*utf-8*/unsigned char **pname_start,
                          /*utf-8*/unsigned char **pname_end);
+
+/* Parse lookup mode modifiers:
+ * >> local x = 42;
+ *    ^     ^
+ */
+INTDEF int DCALL JITLexer_ParseLookupMode(JITLexer *__restrict self,
+                                          unsigned int *__restrict pmode);
+
 
 
 

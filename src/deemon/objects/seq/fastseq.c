@@ -149,6 +149,13 @@ again:
 }
 
 
+/* Allocate a suitable heap-vector for all the elements of a given sequence,
+ * before returning that vector (then populated by [1..1] references), which
+ * the caller must inherit upon success.
+ * @return: * :   A vector of objects (with a length of `*plength'),
+ *                that must be freed using `Dee_Free', before inheriting
+ *                a reference to each of its elements.
+ * @return: NULL: An error occurred. */
 PUBLIC /*owned(Dee_Free)*/DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     size_t *__restrict plength) {
@@ -289,6 +296,24 @@ err:
 }
 
 
+/* Same as `DeeSeq_AsHeapVectorWithAlloc()', however also inherit
+ * a pre-allocated heap-vector `*pvector' with an allocated size
+ * of `IN(*pallocated) * sizeof(DeeObject *)', which is updated
+ * as more memory needs to be allocated.
+ * NOTE: `*pvector' may be updated to point to a new vector, even
+ *       when the function fails (i.e. (size_t)-1 is returned)
+ * @param: pvector:     A pointer to a preallocated object-vector `[0..IN(*pallocated)]'
+ *                      May only point to a `NULL' vector when `IN(*pallocated)' is ZERO(0).
+ *                      Upon return, this pointer may have been updated to point to a
+ *                      realloc()-ated vector, should the need to allocate more memory
+ *                      have arisen.
+ * @param: pallocated:  A pointer to an information field describing how much pointers
+ *                      are allocated upon entry / how much are allocated upon exit.
+ *                      Just as `pvector', this pointer may be updated, even upon error.
+ * @return: * :         The amount of filled in objects in `*pvector'
+ * @return: (size_t)-1: An error occurred. Note that both `*pvector' and `*pallocated'
+ *                      may have been modified since entry, with their original values
+ *                      no longer being valid! */
 PUBLIC size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
@@ -305,7 +330,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
    new_elemv = (DeeObject **)Dee_Realloc(elemv,elemc * sizeof(DeeObject *));
    if unlikely(!new_elemv) goto err;
    *pvector    = elemv = new_elemv;
-   *pallocated = elema;
+   *pallocated = elemc;
   }
   for (i = 0; i < elemc; ++i) {
    elem = DeeFastSeq_GetItem(self,i);
@@ -352,6 +377,84 @@ err_iterator:
  goto err;
 err_i:
  while (i--) Dee_Decref(elemv[i]);
+err:
+ return (size_t)-1;
+}
+
+
+/* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
+ * that `IN(*pallocated) >= offset', while also leaving the first
+ * `offset' vector entries untouched and inserting the first enumerated
+ * sequence element at `(*pvector)[offset]', rather than `(*pvector)[0]'
+ * -> This function can be used to efficiently append elements to a
+ *    vector which may already contain other objects upon entry. */
+PUBLIC size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
+                                        /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
+                                        /*in-out*/size_t *__restrict pallocated,
+                                        /*in*/size_t offset) {
+ DeeObject **new_elemv,**elemv = *pvector;
+ DREF DeeObject *iterator,*elem;
+ size_t elema = *pallocated;
+ size_t elemc,i;
+ ASSERT(elema >= offset);
+ ASSERT(!elema || elemv);
+ elemc = DeeFastSeq_GetSize(self);
+ if (elemc != DEE_FASTSEQ_NOTFAST) {
+  /* Fast sequence optimizations. */
+  if (elemc > (elema - offset)) {
+   new_elemv = (DeeObject **)Dee_Realloc(elemv,
+                                        (offset + elemc) *
+                                         sizeof(DeeObject *));
+   if unlikely(!new_elemv) goto err;
+   *pvector    = elemv = new_elemv;
+   *pallocated = offset + elemc;
+  }
+  for (i = 0; i < elemc; ++i) {
+   elem = DeeFastSeq_GetItem(self,i);
+   if unlikely(!elem) goto err_i;
+   elemv[offset + i] = elem; /* Inherit reference. */
+  }
+ } else {
+  /* Use iterators. */
+  iterator = DeeObject_IterSelf(self);
+  if unlikely(!iterator) goto err;
+  elemc = 0;
+  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+   ASSERT(elemc <= (elema - offset));
+   if (elemc >= (elema - offset)) {
+    /* Allocate more memory. */
+    size_t new_elema = elema * 2;
+    if unlikely(new_elema < 16) new_elema = 16;
+    new_elemv = (DeeObject **)Dee_TryRealloc(elemv,new_elema *
+                                             sizeof(DeeObject *));
+    if unlikely(!new_elemv) {
+     new_elema = offset + elemc + 1;
+     new_elemv = (DeeObject **)Dee_Realloc(elemv,new_elema *
+                                           sizeof(DeeObject *));
+     if unlikely(!new_elemv) goto err_iterator_elemc;
+    }
+    elemv = new_elemv;
+    elema = new_elema;
+   }
+   elemv[offset + elemc] = elem; /* Inherit reference. */
+   ++elemc;
+  }
+  *pvector    = elemv;
+  *pallocated = elema;
+  if unlikely(!elem) goto err_iterator;
+  Dee_Decref(iterator);
+ }
+ return elemc;
+err_iterator_elemc:
+ while (elemc--) Dee_Decref(elemv[offset + elemc]);
+ *pvector    = elemv;
+ *pallocated = elema;
+err_iterator:
+ Dee_Decref(iterator);
+ goto err;
+err_i:
+ while (i--) Dee_Decref(elemv[offset + i]);
 err:
  return (size_t)-1;
 }

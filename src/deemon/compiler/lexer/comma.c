@@ -535,7 +535,7 @@ err_args:
  }
 
  if (tok == ',' && !(mode&AST_COMMA_PARSESINGLE)) {
-  if (mode&AST_COMMA_STRICTCOMMA) {
+  if (mode & AST_COMMA_STRICTCOMMA) {
    /* Peek the next token to check if it might be an expression. */
    char *next = peek_next_token(NULL);
    if unlikely(!next) goto err;
@@ -555,13 +555,13 @@ continue_at_comma:
    /* Flush any remaining entries from the comma-list. */
    error = astlist_appendall(&expr_batch,&expr_comma);
    if unlikely(error) goto err;
+   Dee_Free(expr_comma.ast_v);
    /* Pack the branch together to form a multi-branch AST. */
    astlist_trunc(&expr_batch);
    current = ast_multiple(flags,expr_batch.ast_c,expr_batch.ast_v);
-   if unlikely(!current) goto err;
+   if unlikely(!current) goto err_nocomma;
    /* Free an remaining buffers. */
    /*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
-   Dee_Free(expr_comma.ast_v);
    /* WARNING: At this point, both `expr_batch' and `expr_comma' are
     *          in an undefined state, but don't hold any real data. */
    goto done_expression_nomerge;
@@ -746,6 +746,7 @@ err_decl:
 #endif
 err:
  astlist_fini(&expr_comma);
+err_nocomma:
  astlist_fini(&expr_batch);
  return NULL;
 }

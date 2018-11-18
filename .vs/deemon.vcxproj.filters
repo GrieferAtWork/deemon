@@ -336,6 +336,9 @@
     <ClInclude Include="..\include\deemon\util\seqwriter.h">
       <Filter>include\deemon\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\util\objectlist.h">
+      <Filter>include\deemon\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -908,6 +911,9 @@
       <Filter>src\deemon\compiler\lexer</Filter>
     </None>
     <None Include="..\src\deemon\compiler\jit\parser-impl.c.inl">
+      <Filter>src\deemon\compiler\jit</Filter>
+    </None>
+    <None Include="..\src\deemon\compiler\jit\parser-impl-comma.c.inl">
       <Filter>src\deemon\compiler\jit</Filter>
     </None>
   </ItemGroup>

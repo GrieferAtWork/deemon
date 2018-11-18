@@ -85,6 +85,8 @@ DDATDEF DeeTypeObject DeeList_Type;
 /* Create a new list object from a vector. */
 DFUNDEF DREF DeeObject *DCALL DeeList_NewVector(size_t objc, DeeObject *const *__restrict objv);
 DFUNDEF DREF DeeObject *DCALL DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *__restrict objv);
+/* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
+DFUNDEF DREF DeeObject *DCALL DeeList_NewVectorInheritedHeap(size_t obja, size_t objc, /*inherit(on_success)*/DREF DeeObject **__restrict objv);
 
 /* Create a new list object. */
 #define DeeList_New()   DeeObject_NewDefault(&DeeList_Type)

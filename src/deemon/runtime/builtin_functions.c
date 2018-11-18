@@ -171,7 +171,7 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
    usersize = DeeBytes_SIZE(expr);
   }
  }
-#ifndef CONFIG_NO_JIT
+#if !defined(CONFIG_NO_JIT) && 1
  {
   JITContext context = JITCONTEXT_INIT;
   JITLexer lexer;
@@ -184,8 +184,8 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
                 (unsigned char *)usertext + usersize);
   result = JITLexer_EvalExpression(&lexer,
                                     JITLEXER_EVAL_FNORMAL);
-  ASSERT((result == JIT_LVALUE) ==
-         (lexer.jl_lvalue.lv_kind != JIT_LVALUE_NONE));
+  ASSERT(!result || (result == JIT_LVALUE) ==
+        (lexer.jl_lvalue.lv_kind != JIT_LVALUE_NONE));
   /* Check if the resulting expression evaluates to an L-Value
    * If so, unpack that l-value to access the pointed-to object. */
   if (result == JIT_LVALUE) {

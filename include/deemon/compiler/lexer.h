@@ -167,10 +167,10 @@ INTDEF struct symbol *FCALL ast_parse_import_single_sym(struct TPPKeyword *__res
  * >> foo,bar = 10;         // (foo,(bar = 10));
  * >> { 10 }                // (list { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
  * >> { "foo": 10 }         // (dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
- * @param: mode:         Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
- * @param: flags:        Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
- * @param: pparser_mode: When non-NULL, instead of parsing a `;' when required,
- *                       set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
+ * @param: mode:      Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
+ * @param: flags:     Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
+ * @param: pout_mode: When non-NULL, instead of parsing a `;' when required,
+ *                    set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
 INTDEF DREF struct ast *DCALL
 ast_parse_comma(uint16_t mode, uint16_t flags,
                 uint16_t *pout_mode);

@@ -605,6 +605,18 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
                                   /*in-out*/size_t *__restrict pallocated);
 
+/* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
+ * that `IN(*pallocated) >= offset', while also leaving the first
+ * `offset' vector entries untouched and inserting the first enumerated
+ * sequence element at `(*pvector)[offset]', rather than `(*pvector)[0]'
+ * -> This function can be used to efficiently append elements to a
+ *    vector which may already contain other objects upon entry. */
+DFUNDEF size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
+                                        /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
+                                        /*in-out*/size_t *__restrict pallocated,
+                                        /*in*/size_t offset);
+
 
 #ifdef GUARD_DEEMON_OBJMETHOD_H
 #ifdef CONFIG_BUILDING_DEEMON

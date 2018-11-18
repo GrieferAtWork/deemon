@@ -357,14 +357,31 @@ DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *__restrict objv) 
  return result;
 }
 PUBLIC DREF DeeObject *DCALL
+DeeList_NewVectorInheritedHeap(size_t obja, size_t objc,
+                               /*inherit(on_success)*/DREF DeeObject **__restrict objv) {
+ DREF DeeListObject *result;
+ result = (DREF DeeListObject *)DeeGCObject_Malloc(sizeof(DeeListObject));
+ if unlikely(!result) return NULL;
+ result->l_elem  = objv; /* Inherit */
+ result->l_alloc = obja;
+ result->l_size  = objc;
+ DeeObject_Init(result,&DeeList_Type);
+#ifndef CONFIG_NO_THREADS
+ rwlock_init(&result->l_lock);
+#endif /* !CONFIG_NO_THREADS */
+ DeeGC_Track((DeeObject *)result);
+ return (DREF DeeObject *)result;
+}
+PUBLIC DREF DeeObject *DCALL
 DeeList_NewVector(size_t objc, DeeObject *const *__restrict objv) {
- DREF DeeObject *result,**iter,**end;
+ DREF DeeObject *result; size_t i;
+ for (i = 0; i < objc; ++i) Dee_Incref(objv[i]);
  result = DeeList_NewVectorInherited(objc,objv);
- if (result) {
-  end = (iter = DeeList_ELEM(result))+DeeList_SIZE(result);
-  for (; iter != end; ++iter) Dee_Incref(*iter);
- }
+ if unlikely(!result) goto err;
  return result;
+err:
+ for (i = 0; i < objc; ++i) Dee_Decref(objv[i]);
+ return NULL;
 }
 
 INTERN DREF DeeObject *DCALL

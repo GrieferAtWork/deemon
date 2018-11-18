@@ -1,0 +1,110 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* Assert correct evaluation of some basic JIT expressions. */
+
+import deemon;
+import * from deemon;
+
+function identical(a,b) {
+	return type a === type b && a == b;
+}
+
+/* Basic literal / constant parsing. */
+assert identical(exec('1'),          1);
+assert identical(exec('1.0'),        1.0);
+assert identical(exec('"foo"'),      "foo");
+assert identical(exec("'foo'"),      "foo");
+assert identical(exec('true'),       true);
+assert identical(exec('false'),      false);
+assert identical(exec('none'),       none);
+
+/* Simple arithmetic. */
+assert identical(exec('10*2 + 11*3'),53);
+assert identical(exec('10/2*5'),     25);
+assert identical(exec('10/(2*5)'),   1);
+
+/* Simple unary instructions */
+assert identical(exec('str 1'),      "1");
+assert identical(exec('str 1.0'),    "1.0");
+assert identical(exec('type true'),  bool);
+assert identical(exec('type(true)'), bool);
+assert identical(exec('str(true)'),  "true");
+
+/* Parenthesis vs. tuples, as well as expand-sequence casting. */
+assert identical(exec('(1)'),        1);
+assert identical(exec('(1,)'),       tuple { 1 });
+assert identical(exec('(1,2)'),      tuple { 1, 2 });
+assert identical(exec('([]...)'),    tuple { });
+assert identical(exec('([]...,)'),   tuple { });
+assert identical(exec('([1]...)'),   tuple { 1 });
+assert identical(exec('([1]...,)'),  tuple { 1 });
+assert identical(exec('([1,2]...)'), tuple { 1, 2 });
+assert identical(exec('([1,2]...,)'),tuple { 1, 2 });
+assert identical(exec('[]'),         list { });
+assert identical(exec('[1]'),        list { 1 });
+assert identical(exec('[1,]'),       list { 1 });
+assert identical(exec('[1,2]'),      list { 1, 2 });
+assert identical(exec('[()...]'),    list { });
+assert identical(exec('[()...,]'),   list { });
+assert identical(exec('[(1,)...]'),  list { 1 });
+assert identical(exec('[(1,)...,]'), list { 1 });
+assert identical(exec('[(1,2)...]'), list { 1, 2 });
+assert identical(exec('[(1,2)...,]'),list { 1, 2 });
+assert identical(exec('(tuple from deemon)([:5])'),tuple { 0, 1, 2, 3, 4 });
+assert identical(exec('tuple from deemon([:5])'),tuple { 0, 1, 2, 3, 4 });
+
+/* Range expressions. */
+assert identical(exec('[:20]'),      sequence.range(0,20));
+assert identical(exec('[:20,2]'),    sequence.range(0,20,2));
+assert identical(exec('[10:20]'),    sequence.range(10,20));
+assert identical(exec('[10:20,2]'),  sequence.range(10,20,2));
+
+/* Attribute lookup. */
+assert identical(exec('(string from deemon).center'), string.center);
+
+/* The builtin import() function. */
+assert exec('import("deemon")') === deemon;
+
+/* Bound expressions. */
+assert identical(exec('"foo".find is bound'),true);
+assert identical(exec('"foo".nonexisting_symbols is bound'),false);
+assert identical(exec('"foo".find !is bound'),false);
+assert identical(exec('"foo".nonexisting_symbols !is bound'),true);
+assert identical(exec('"foo".find !!is bound'),true);
+assert identical(exec('"foo".nonexisting_symbols !!is bound'),false);
+assert identical(exec('bound("foo".find)'),true);
+assert identical(exec('bound("foo".nonexisting_symbols)'),false);
+
+
+/* Conditional execution containing an errorous dead branch. */
+assert identical(exec('true ? "ok" : "foo".bar.baz.bim'),"ok");
+
+
+
+
+
+
+
+
+
+
+
+

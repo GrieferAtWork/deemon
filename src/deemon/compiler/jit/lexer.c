@@ -50,7 +50,7 @@ raw_again:
  case '8': case '9':
   /* Scan an integer or floating point token. */
   self->jl_tok = TOK_INT;
-  for (;;) {
+  while (iter < self->jl_end) {
    ch = *iter++;
    if unlikely(ch > 0x7f) {
     unsigned char *start;
@@ -68,8 +68,7 @@ raw_again:
      break;
     }
    } else {
-    if (!(DeeUni_Flags(ch) & (UNICODE_FSYMCONT | UNICODE_FDECIMAL)) ||
-          iter >= self->jl_end) {
+    if (!(DeeUni_Flags(ch) & (UNICODE_FSYMCONT | UNICODE_FDECIMAL))) {
      if (ch == '.' && self->jl_tok == TOK_INT) {
       self->jl_tok = TOK_FLOAT;
       continue;

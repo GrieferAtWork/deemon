@@ -45,12 +45,6 @@
 
 DECL_BEGIN
 
-#undef CONFIG_PARSE_UNARY_KEYWORD_CONSUMED_PARENTHESIS
-//#define CONFIG_PARSE_UNARY_KEYWORD_CONSUMED_PARENTHESIS 1
-#undef CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS
-#define CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS 1
-
-
 #define GET_CHOP(x) (ASSERT((x) < 128),chops[x])
 INTERN uint8_t const chops[128] = {
 /*[[[deemon
@@ -493,15 +487,9 @@ mkconst:
  case KWD_bound:
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
-  if (tok == '(') { /* Parenthesis is optional. */
-   old_flags = TPPLexer_Current->l_flags;
-   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-   if unlikely(yield() < 0) goto err_flags;
-   result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
-   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-   if unlikely(likely(tok == ')') ? (yield() < 0) :
-               WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
-      goto err;
+  if (tok == '(') {
+   result = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY |
+                                PARSE_UNARY_DISALLOW_CASTS);
   } else {
    result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
   }
@@ -522,24 +510,10 @@ mkconst:
 do_unary_operator_kwd:
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
-#ifdef CONFIG_PARSE_UNARY_KEYWORD_CONSUMED_PARENTHESIS
-  if (tok == '(') {
-   old_flags = TPPLexer_Current->l_flags;
-   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-   if unlikely(yield() < 0) goto err_flags;
-   result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
-   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-   if unlikely(likely(tok == ')') ? (yield() < 0) :
-               WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
-      goto err;
-  } else
-#elif defined(CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS)
   if (tok == '(') {
    result = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY |
                                 PARSE_UNARY_DISALLOW_CASTS);
-  } else
-#endif
-  {
+  } else {
    result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
   }
   if unlikely(!result) goto err;
@@ -567,24 +541,10 @@ do_unary_operator:
  case KWD_type:
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
-#ifdef CONFIG_PARSE_UNARY_KEYWORD_CONSUMED_PARENTHESIS
-  if (tok == '(') {
-   old_flags = TPPLexer_Current->l_flags;
-   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-   if unlikely(yield() < 0) goto err_flags;
-   result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
-   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-   if unlikely(likely(tok == ')') ? (yield() < 0) :
-               WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
-       goto err;
-  } else
-#elif defined(CONFIG_PARSE_UNARY_KEYWORD_BASE_PARENTHESIS)
   if (tok == '(') {
    result = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY |
                                 PARSE_UNARY_DISALLOW_CASTS);
-  } else
-#endif
-  {
+  } else {
    result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
   }
   if unlikely(!result) goto err;
@@ -794,6 +754,8 @@ do_create_class:
    if unlikely(likely(tok == ')') ? (yield() < 0) : 
                WARN(W_EXPECTED_RPAREN_AFTER_PACK))
       goto err_r;
+#if 0 /* The `result->a_type != AST_MULTIPLE' would never
+       * fly, because of the `AST_COMMA_FORCEMULTIPLE' */
    if (has_paren == 1 && result->a_type != AST_MULTIPLE &&
      !(lookup_mode & PARSE_UNARY_DISALLOW_CASTS)) {
     /* C-style cast expression (only for single-parenthesis expressions) */
@@ -801,6 +763,7 @@ do_create_class:
     ast_decref(result);
     result = merge;
    }
+#endif
   }
  } break;
 

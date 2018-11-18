@@ -27,6 +27,7 @@
 #include <deemon/none.h>
 #include <deemon/class.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/util/objectlist.h>
 #include <hybrid/unaligned.h>
 
 #include "../../runtime/runtime_error.h"
@@ -46,8 +47,8 @@ JITLValue_Fini(JITLValue *__restrict self) {
  case JIT_LVALUE_EXTERN:
  case JIT_LVALUE_USERGLOB:
  case JIT_LVALUE_ATTR_STR:
- case JIT_LVALUE_EXPAND:
-  Dee_Decref(self->lv_expand);
+ case JIT_LVALUE_RVALUE:
+  Dee_Decref(self->lv_uglob_name);
   break;
  default: break;
  }
@@ -128,7 +129,7 @@ JITLValue_IsBound(JITLValue *__restrict self,
  case JIT_LVALUE_OBJENT:
   if unlikely(!update_symbol_objent((JITSymbol *)self))
      goto err;
-  result = self->js_objent.lo_ent->oe_value != NULL;
+  result = self->lv_objent.lo_ent->oe_value != NULL;
   break;
 
  case JIT_LVALUE_EXTERN:
@@ -150,11 +151,13 @@ JITLValue_IsBound(JITLValue *__restrict self,
   }
   if (result < -1) result = 0; /* Attribute doesn't exist */
   break;
+
  case JIT_LVALUE_ATTR:
   result = DeeObject_BoundAttr(self->lv_attr.la_base,
                               (DeeObject *)self->lv_attr.la_name);
   if (result < -1) result = 0; /* Attribute doesn't exist */
   break;
+
  {
   DREF DeeObject *attr_name_ob;
  case JIT_LVALUE_ATTR_STR:
@@ -177,8 +180,11 @@ JITLValue_IsBound(JITLValue *__restrict self,
   break;
 
  case JIT_LVALUE_RANGE:
- case JIT_LVALUE_EXPAND:
   return err_cannot_test_binding();
+
+ case JIT_LVALUE_RVALUE:
+  result = 1;
+  break;
 
  default: __builtin_unreachable();
  }
@@ -211,7 +217,7 @@ err_unbound:
  case JIT_LVALUE_OBJENT:
   if unlikely(!update_symbol_objent((JITSymbol *)self))
      goto err;
-  result = self->js_objent.lo_ent->oe_value;
+  result = self->lv_objent.lo_ent->oe_value;
   if unlikely(!result)
      goto err_unbound;
   Dee_Incref(result);
@@ -261,9 +267,10 @@ err_unbound:
                               self->lv_range.lr_start,
                               self->lv_range.lr_end);
   break;
- case JIT_LVALUE_EXPAND:
-  if (DeeObject_Unpack(self->lv_expand,1,&result))
-      goto err;
+
+ case JIT_LVALUE_RVALUE:
+  result = self->lv_rvalue;
+  Dee_Incref(result);
   break;
 
  default: __builtin_unreachable();
@@ -297,8 +304,8 @@ JITLValue_DelValue(JITLValue *__restrict self,
  case JIT_LVALUE_OBJENT:
   if unlikely(!update_symbol_objent((JITSymbol *)self))
      goto err;
-  old_value = self->js_objent.lo_ent->oe_value;
-  self->js_objent.lo_ent->oe_value = NULL;
+  old_value = self->lv_objent.lo_ent->oe_value;
+  self->lv_objent.lo_ent->oe_value = NULL;
   Dee_XDecref(old_value);
   result = 0;
  } break;
@@ -346,9 +353,10 @@ JITLValue_DelValue(JITLValue *__restrict self,
                               self->lv_range.lr_start,
                               self->lv_range.lr_end);
   break;
- case JIT_LVALUE_EXPAND:
+
+ case JIT_LVALUE_RVALUE:
   result = DeeError_Throwf(&DeeError_SyntaxError,
-                           "Cannot assign value to expand expression");
+                           "Cannot delete R-value");
   break;
 
  default: __builtin_unreachable();
@@ -385,8 +393,8 @@ JITLValue_SetValue(JITLValue *__restrict self,
   if unlikely(!update_symbol_objent((JITSymbol *)self))
      goto err;
   Dee_Incref(value);
-  old_value = self->js_objent.lo_ent->oe_value;
-  self->js_objent.lo_ent->oe_value = value;
+  old_value = self->lv_objent.lo_ent->oe_value;
+  self->lv_objent.lo_ent->oe_value = value;
   Dee_XDecref(old_value);
   result = 0;
  } break;
@@ -444,14 +452,113 @@ JITLValue_SetValue(JITLValue *__restrict self,
                               value);
   break;
 
- case JIT_LVALUE_EXPAND:
+ case JIT_LVALUE_RVALUE:
   result = DeeError_Throwf(&DeeError_SyntaxError,
-                           "Cannot assign value to expand expression");
+                           "Cannot store to R-value");
   break;
 
  default: __builtin_unreachable();
  }
  return result;
+err:
+ return -1;
+}
+
+
+/* Finalize the given L-value list. */
+INTERN void DCALL
+JITLValueList_Fini(JITLValueList *__restrict self) {
+ size_t i;
+ for (i = 0; i < self->ll_size; ++i)
+    JITLValue_Fini(&self->ll_list[i]);
+ Dee_Free(self->ll_list);
+}
+
+/* Append the given @value onto @self, returning -1 on error and 0 on success. */
+INTERN int DCALL
+JITLValueList_Append(JITLValueList *__restrict self,
+                     /*inherit(on_success)*/JITLValue *__restrict value) {
+ ASSERT(self->ll_size <= self->ll_alloc);
+ if (self->ll_size >= self->ll_alloc) {
+  JITLValue *new_list;
+  size_t new_alloc = self->ll_alloc * 2;
+  if (!new_alloc) new_alloc = 1;
+  ASSERT(new_alloc > self->ll_size);
+  new_list = (JITLValue *)Dee_TryRealloc(self->ll_list,
+                                         new_alloc *
+                                         sizeof(JITLValue));
+  if unlikely(!new_list) {
+   new_alloc = self->ll_size + 1;
+   new_list = (JITLValue *)Dee_Realloc(self->ll_list,
+                                       new_alloc *
+                                       sizeof(JITLValue));
+   if unlikely(!new_list) goto err;
+  }
+  self->ll_list  = new_list;
+  self->ll_alloc = new_alloc;
+ }
+ /* Inherit all of the given data. */
+ memcpy(&self->ll_list[self->ll_size],value,sizeof(JITLValue));
+ ++self->ll_size;
+ return 0;
+err:
+ return -1;
+}
+
+/* Append an R-value expression. */
+INTERN int DCALL
+JITLValueList_AppendRValue(JITLValueList *__restrict self,
+                           DeeObject *__restrict value) {
+ ASSERT(self->ll_size <= self->ll_alloc);
+ if (self->ll_size >= self->ll_alloc) {
+  JITLValue *new_list;
+  size_t new_alloc = self->ll_alloc * 2;
+  if (!new_alloc) new_alloc = 1;
+  ASSERT(new_alloc > self->ll_size);
+  new_list = (JITLValue *)Dee_TryRealloc(self->ll_list,
+                                         new_alloc *
+                                         sizeof(JITLValue));
+  if unlikely(!new_list) {
+   new_alloc = self->ll_size + 1;
+   new_list = (JITLValue *)Dee_Realloc(self->ll_list,
+                                       new_alloc *
+                                       sizeof(JITLValue));
+   if unlikely(!new_list) goto err;
+  }
+  self->ll_list  = new_list;
+  self->ll_alloc = new_alloc;
+ }
+ /* Initialize an R-value descriptor. */
+ self->ll_list[self->ll_size].lv_kind   = JIT_LVALUE_RVALUE;
+ self->ll_list[self->ll_size].lv_rvalue = value;
+ Dee_Incref(value);
+ ++self->ll_size;
+ return 0;
+err:
+ return -1;
+}
+
+
+/* Pack `self' and append all of the referenced objects to the given object list. */
+INTERN int DCALL
+JITLValueList_CopyObjects(JITLValueList *__restrict self,
+                          struct objectlist *__restrict dst,
+                          JITContext *__restrict context) {
+ size_t i; DREF DeeObject **buf;
+ if (!self->ll_size) goto done;
+ buf = objectlist_alloc(dst,self->ll_size);
+ if unlikely(!buf) goto err;
+ for (i = 0; i < self->ll_size; ++i) {
+  DREF DeeObject *ob;
+  ob = JITLValue_GetValue(&self->ll_list[i],context);
+  if unlikely(!ob)
+     goto err_i;
+  buf[i] = ob; /* Inherit reference. */
+ }
+done:
+ return 0;
+err_i:
+ dst->ol_size -= (self->ll_size - i);
 err:
  return -1;
 }
@@ -474,21 +581,25 @@ JITLexer_PackLValue(JITLexer *__restrict self) {
 
 
 /* Lookup a given symbol within a specific JIT context
- * @return: true:  The specified symbol was found, and `result' was filled
- * @return: false: The symbol could not be found, and `result' was set to `JIT_SYMBOL_NONE' */
-INTERN bool FCALL
+ * @param: mode: Set of `LOOKUP_SYM_*'
+ * @return: 0:  The specified symbol was found, and `result' was filled
+ * @return: -1: An error occurred. */
+INTERN int FCALL
 JITContext_Lookup(JITContext *__restrict self,
                   struct jit_symbol *__restrict result,
                   /*utf-8*/char const *__restrict name,
-                  size_t namelen) {
+                  size_t namelen, unsigned int mode) {
  (void)self;
  (void)result;
  (void)name;
  (void)namelen;
+ (void)mode;
  /* TODO */
- return false;
+ return DeeError_Throwf(&DeeError_SymbolError,
+                        "Unknown variable `%$s'",
+                        namelen,name);
 }
-INTERN bool FCALL
+INTERN int FCALL
 JITContext_LookupNth(JITContext *__restrict self,
                      struct jit_symbol *__restrict result,
                      /*utf-8*/char const *__restrict name,
@@ -499,7 +610,9 @@ JITContext_LookupNth(JITContext *__restrict self,
  (void)namelen;
  (void)nth;
  /* TODO */
- return false;
+ return DeeError_Throwf(&DeeError_SymbolError,
+                        "Unknown variable `%$s'",
+                        namelen,name);
 }
 
 
