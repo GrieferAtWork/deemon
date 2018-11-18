@@ -255,6 +255,7 @@ class sequence: public detail::sequence_base {
     public:
         item_proxy_obj(DeeObject *ptr, DeeObject *str) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str) {}
         item_proxy_obj(item_proxy_obj const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str) {}
+        bool has() const { int result = DeeObject_HasItem(m_ptr,m_str); if (result < 0) throw_last_deemon_exception(); return result != 0; }
         bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItem(m_ptr,m_str,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItem(m_ptr,m_str); }
         DREF DeeObject *getref_def(DeeObject *__restrict def) const { return DeeObject_GetItemDef(m_ptr,m_str,def); }
@@ -269,6 +270,7 @@ class sequence: public detail::sequence_base {
     public:
         item_proxy_idx(DeeObject *ptr, size_t idx) DEE_CXX_NOTHROW: m_ptr(ptr), m_idx(idx) {}
         item_proxy_idx(item_proxy_idx const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_idx(right.m_idx) {}
+        bool has() const { int result = DeeObject_HasItemIndex(m_ptr,m_idx); if (result < 0) throw_last_deemon_exception(); return result != 0; }
         bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemIndex(m_ptr,m_idx,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItemIndex(m_ptr,m_idx); }
         DREF DeeObject *getref_def(DeeObject *__restrict def) const { DREF DeeObject *result,*index_ob = throw_if_null(DeeInt_NewSize(m_idx)); result = DeeObject_GetItemDef(m_ptr,index_ob,def); Dee_Decref(index_ob); return inherit(result); }
@@ -285,12 +287,30 @@ class sequence: public detail::sequence_base {
         item_proxy_sth(DeeObject *ptr, char const *str) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(hash_str(str)) {}
         item_proxy_sth(DeeObject *ptr, char const *str, dhash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(hsh) {}
         item_proxy_sth(item_proxy_sth const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str), m_hsh(right.m_hsh) {}
+        bool has() const { int result = DeeObject_HasItemString(m_ptr,m_str,m_hsh); if (result < 0) throw_last_deemon_exception(); return result != 0; }
         bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemString(m_ptr,m_str,m_hsh,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItemString(m_ptr,m_str,m_hsh); }
         DREF DeeObject *getref_def(DeeObject *__restrict def) const { return DeeObject_GetItemStringDef(m_ptr,m_str,m_hsh,def); }
         T getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
         void del() const { throw_if_nonzero(DeeObject_DelItemString(m_ptr,m_str,m_hsh)); }
         item_proxy_sth const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetItemString(m_ptr,m_str,m_hsh,value)); return *this; }
+    };
+    class item_proxy_shn: public proxy_base<item_proxy_shn> {
+    private:
+        DeeObject  *m_ptr;
+        char const *m_str;
+        size_t      m_len;
+        dhash_t     m_hsh;
+    public:
+        item_proxy_shn(DeeObject *ptr, char const *str, size_t len, dhash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_len(len), m_hsh(hsh) {}
+        item_proxy_shn(item_proxy_shn const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str), m_len(right.m_len), m_hsh(right.m_hsh) {}
+        bool has() const { int result = DeeObject_HasItemStringLen(m_ptr,m_str,m_len,m_hsh); if (result < 0) throw_last_deemon_exception(); return result != 0; }
+        bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemStringLen(m_ptr,m_str,m_len,m_hsh,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
+        DREF DeeObject *getref() const { return DeeObject_GetItemStringLen(m_ptr,m_str,m_len,m_hsh); }
+        DREF DeeObject *getref_def(DeeObject *__restrict def) const { return DeeObject_GetItemStringLenDef(m_ptr,m_str,m_len,m_hsh,def); }
+        T getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
+        void del() const { throw_if_nonzero(DeeObject_DelItemStringLen(m_ptr,m_str,m_len,m_hsh)); }
+        item_proxy_shn const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetItemStringLen(m_ptr,m_str,m_len,m_hsh,value)); return *this; }
     };
     class range_proxy_oo: public seq_proxy_base<range_proxy_oo> {
     private:
@@ -373,14 +393,17 @@ public: /* sequence from deemon */
     WUNUSED item_proxy_idx item(size_t index) const { return item_proxy_idx(*this,index); }
     WUNUSED item_proxy_sth item(char const *__restrict name) const { return item_proxy_sth(*this,name); }
     WUNUSED item_proxy_sth item(char const *__restrict name, dhash_t hash) const { return item_proxy_sth(*this,name,hash); }
+    WUNUSED item_proxy_shn item(char const *__restrict name, size_t len, dhash_t hash) const { return item_proxy_shn(*this,name,len,hash); }
     WUNUSED T getitem(DeeObject *__restrict index) const { return inherit(DeeObject_GetItem(*this,index)); }
     WUNUSED T getitem(size_t index) const { return inherit(DeeObject_GetItemIndex(*this,index)); }
     WUNUSED T getitem(char const *__restrict name) const { return inherit(DeeObject_GetItemString(*this,name,hash_str(name))); }
     WUNUSED T getitem(char const *__restrict name, dhash_t hash) const { return inherit(DeeObject_GetItemString(*this,name,hash)); }
+    WUNUSED T getitem(char const *__restrict name, size_t len, dhash_t hash) const { return inherit(DeeObject_GetItemStringLen(*this,name,len,hash)); }
     WUNUSED T getitem_def(DeeObject *__restrict index, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemDef(*this,index,def)); }
     WUNUSED T getitem_def(size_t index, DeeObject *__restrict def) const { DREF DeeObject *result,*index_ob = throw_if_null(DeeInt_NewSize(index)); result = DeeObject_GetItemDef(*this,index_ob,def); Dee_Decref(index_ob); return inherit(result); }
     WUNUSED T getitem_def(char const *__restrict name, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash_str(name),def)); }
     WUNUSED T getitem_def(char const *__restrict name, dhash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash,def)); }
+    WUNUSED T getitem_def(char const *__restrict name, size_t len, dhash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringLenDef(*this,name,len,hash,def)); }
     WUNUSED item_proxy_obj operator [](DeeObject *__restrict index) const { return item_proxy_obj(*this,index); }
     WUNUSED item_proxy_idx operator [](size_t index) const { return item_proxy_idx(*this,index); }
     WUNUSED item_proxy_sth operator [](char const *__restrict name) const { return item_proxy_sth(*this,name); }
