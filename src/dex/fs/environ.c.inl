@@ -71,7 +71,7 @@ PRIVATE char *empty_env[] = { NULL };
 
 PRIVATE int DCALL
 env_init(Env *__restrict self) {
-again:
+/*again:*/
  rwlock_read(&env_lock);
  self->e_iter    = environ;
  self->e_version = env_version;
@@ -167,7 +167,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 enviterator_next_key(DeeObject *__restrict self) {
  unsigned int my_version;
  DREF DeeObject *name;
@@ -208,7 +208,7 @@ err:
  return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 enviterator_next_value(DeeObject *__restrict self) {
  unsigned int my_version;
  DREF DeeObject *value;
@@ -341,11 +341,8 @@ again:
  DBG_ALIGNMENT_ENABLE();
  if (!strval) {
   rwlock_endread(&env_lock);
-  if (!try_get) {
-   DeeError_Throwf(&DeeError_KeyError,
-                   "Unknown environment variable `%s'",
-                   name);
-  }
+  if (!try_get)
+       err_unknown_env_var(name);
   return NULL;
  }
  valsiz = strlen(strval);

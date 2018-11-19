@@ -2605,7 +2605,7 @@ PRIVATE DEFINE_STRING(default_deemon_home,CONFIG_DEEMON_HOME);
 #if !defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HOST_UNIX)
 INTERN DREF DeeObject *DCALL
 unix_readlink(char const *__restrict path) {
- DREF DeeObject *result; char *buffer,*new_buffer; int error;
+ char *buffer,*new_buffer; int error;
  size_t bufsize,new_size; dssize_t req_size;
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
  bufsize = PATH_MAX;

@@ -26,13 +26,8 @@
 	IF(TARGET_WINDOWS) \
 		LIB("deemon") \
 		L_FLAGS("-static-libgcc") \
-	ELSE \
-		LIB(":deemon") \
-		LIB("c") \
-		L_FLAGS("-nostartfiles") \
-		L_FLAGS("-nostdlib") \
-		L_FLAGS("-Wl,-shared") \
 	FI \
+/**/
 
 
 /* On windows, we _must_ use a c++ compiler because in order to be able to

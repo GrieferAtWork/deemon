@@ -753,12 +753,7 @@ appexit_class_atexit(DeeObject *__restrict UNUSED(self),
  return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
-appexit_class_exit(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **__restrict argv) {
- int exitcode = EXIT_FAILURE; bool run_atexit = true;
- if (DeeArg_Unpack(argc,argv,"|db:exit",&exitcode,&run_atexit))
-     return NULL;
+PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 #if !defined(CONFIG_NO_STDLIB) && 1
  if (run_atexit)
      exit(exitcode);
@@ -792,9 +787,20 @@ appexit_class_exit(DeeObject *__restrict UNUSED(self),
   DeeError_Throw((DeeObject *)error);
   Dee_Decref(error);
 err:
-  return NULL;
+  return -1;
  }
 #endif
+}
+
+PRIVATE DREF DeeObject *DCALL
+appexit_class_exit(DeeObject *__restrict UNUSED(self),
+                   size_t argc, DeeObject **__restrict argv) {
+ int exitcode = EXIT_FAILURE; bool run_atexit = true;
+ if (DeeArg_Unpack(argc,argv,"|db:exit",&exitcode,&run_atexit))
+     goto err;
+ Dee_Exit(exitcode,run_atexit);
+err:
+ return NULL;
 }
 
 PRIVATE struct type_method appexit_class_methods[] = {

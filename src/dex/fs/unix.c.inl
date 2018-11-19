@@ -1111,7 +1111,7 @@ err:
 INTERN int DCALL
 fs_chmod(DeeObject *__restrict path,
          DeeObject *__restrict mode) {
- uint16_t mask,flags; int error;
+ uint16_t mask,flags;
  if (DeeThread_CheckInterrupt()) goto err;
  if (fs_getchmod_mask(mode,&mask,&flags))
      goto err;
@@ -1597,7 +1597,7 @@ no_link:
    }
    goto err;
   }
-  if (req_size <= bufsize) break;
+  if ((size_t)req_size <= bufsize) break;
   DBG_ALIGNMENT_DISABLE();
   /* TODO: Unicode support through UTF-8 */
   if (LSTAT(DeeString_STR(path),&st))
@@ -1656,7 +1656,7 @@ PRIVATE DREF DeeStringObject *DCALL
 diriter_next(DirIterator *__restrict self) {
  DREF DeeStringObject *result;
  struct dirent *ent; size_t result_length;
-again:
+/*again:*/
 #ifndef CONFIG_NO_THREADS
  rwlock_write(&self->d_lock);
 #endif

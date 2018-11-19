@@ -1246,11 +1246,19 @@ PRIVATE void DCALL determine_is_dprint_enabled(void) {
 #endif /* CONFIG_HOST_WINDOWS */
  env = getenv("DEEMON_SILENT");
  DBG_ALIGNMENT_ENABLE();
+#ifdef CONFIG_HOST_WINDOWS
  if (env && *env)
   _Dee_dprint_enabled = 0;
  else {
   _Dee_dprint_enabled = 1;
  }
+#else
+ if (env && *env)
+  _Dee_dprint_enabled = *env == '0';
+ else {
+  _Dee_dprint_enabled = 0;
+ }
+#endif
 }
 #endif
 

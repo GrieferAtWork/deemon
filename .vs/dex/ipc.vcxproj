@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\src\dex\ipc\generic.c.inl" />
     <None Include="..\..\src\dex\ipc\nt.c.inl" />
+    <None Include="..\..\src\dex\ipc\unix.c.inl" />
     <None Include="..\..\src\dex\ipc\windows-cmdline.c.inl" />
     <None Include="..\..\src\dex\ipc\windows-pipe.c.inl" />
     <None Include="..\..\src\dex\ipc\windows.c.inl" />

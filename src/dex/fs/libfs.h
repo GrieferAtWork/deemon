@@ -23,6 +23,8 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #define CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE 1
+#else
+#define CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE 1 /* XXX: TODO */
 #endif
 
 #include <deemon/dex.h>
@@ -108,6 +110,13 @@ INTDEF int DCALL nt_printhome_process(struct unicode_printer *__restrict printer
 #   define STAT_ISGID  0002000 /* Set group ID on execution. */
 #   define STAT_ISVTX  0001000 /* Save swapped text after use (sticky). */
 #else
+#ifdef __S_IFMT
+#   define STAT_IFMT   __S_IFMT
+#elif defined(S_IFMT)
+#   define STAT_IFMT   S_IFMT
+#else
+#   define STAT_IFMT   0170000
+#endif
 #ifdef __S_IFDIR
 #   define STAT_IFDIR  __S_IFDIR
 #elif defined(S_IFDIR)

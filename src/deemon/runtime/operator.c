@@ -4482,10 +4482,10 @@ INTDEF DREF DeeObject *DCALL super_getattr(DeeObject *__restrict self, DeeObject
 INTDEF DREF DeeObject *DCALL DeeObject_TCallAttr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv);
 #endif
 
-DEFINE_INTERNAL_OPERATOR(DREF DeeObject *,CallAttr,
-                        (DeeObject *__restrict self,
-                         /*String*/DeeObject *__restrict attr_name,
-                         size_t argc, DeeObject **__restrict argv)) {
+DEFINE_OPERATOR(DREF DeeObject *,CallAttr,
+               (DeeObject *__restrict self,
+                /*String*/DeeObject *__restrict attr_name,
+                size_t argc, DeeObject **__restrict argv)) {
  DREF DeeObject *result; dhash_t hash;
  DeeTypeObject *iter;
  LOAD_TP_SELF;

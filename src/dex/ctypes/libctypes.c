@@ -565,7 +565,7 @@ PRIVATE struct dex_symbol symbols[] = {
       DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
           "@return Always re-returns @dst as a :void.ptr\n"
           "Same as :memcpy, but the source and destination ranges are allowed to overlap") },
-    { "mempmove",     (DeeObject *)&ctypes_memmove, MODSYM_FNORMAL,
+    { "mempmove",     (DeeObject *)&ctypes_mempmove, MODSYM_FNORMAL,
       DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
           "@return Always re-returns ${dst + size} as a :void.ptr\n"
           "Same as :memcpy, but returns ${dst + size}") },

@@ -119,6 +119,11 @@ DFUNDEF int DCALL Dee_RunAtExit(uint16_t flags);
 #define DEE_RUNATEXIT_FDONTRUN 0x0002 /* Do not execute callbacks, but discard all of them.
                                        * However, still disallow further calls to `Dee_AtExit()' */
 
+/* Terminate the application the same way `deemon.Error.AppExit.exit()' would,
+ * either through use of `exit()' from <stdlib.h>, or by throwing an exception.
+ * NOTE: When available, calling stdlib's `exit()' is identical to this.
+ * @return: -1: If this function returns at all, it always returns `-1' */
+DFUNDEF int DCALL Dee_Exit(int exitcode, bool run_atexit);
 
 
 /* Get/Set the user-code argument vector that is

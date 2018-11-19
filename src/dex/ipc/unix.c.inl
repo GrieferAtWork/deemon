@@ -16,41 +16,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_IPC_LIBIPC_C
-#define GUARD_DEX_IPC_LIBIPC_C 1
-#define _KOS_SOURCE 1
+#ifndef GUARD_DEX_IPC_UNIX_C_INL
+#define GUARD_DEX_IPC_UNIX_C_INL 1
 
-#include "libipc.h"
+/* TODO */
+#include "generic.c.inl"
 
-#include <deemon/api.h>
-#include <deemon/dex.h>
-
-DECL_BEGIN
-
-PRIVATE struct dex_symbol symbols[] = {
-    { "process", (DeeObject *)&DeeProcess_Type },
-    { "enumproc", (DeeObject *)&DeeProcEnum_Type },
-    { "pipe", (DeeObject *)&DeePipe_Type },
-    { NULL }
-};
-
-PUBLIC struct dex DEX = {
-    /* .d_symbols      = */symbols,
-    /* .d_init         = */NULL,
-    /* .d_fini         = */NULL,
-    /* .d_import_names = */{ NULL }
-};
-
-DECL_END
-
-#ifndef __INTELLISENSE__
-#ifdef CONFIG_HOST_WINDOWS
-#   include "windows.c.inl"
-#elif defined(CONFIG_HOST_UNIX)
-#   include "unix.c.inl"
-#else
-#   include "generic.c.inl"
-#endif
-#endif
-
-#endif /* !GUARD_DEX_IPC_LIBIPC_C */
+#endif /* !GUARD_DEX_IPC_UNIX_C_INL */

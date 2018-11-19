@@ -103,7 +103,7 @@ PRIVATE struct type_member pipe_class_members[] = {
 
 PRIVATE struct type_method pipe_class_methods[] = {
     { "new", &pipe_class_new,
-      DOC("(size_hint=!0)->(?#reader,?#writer)\n"
+      DOC("(size_hint=!0)->?T2?#reader?#writer\n"
           "Creates a new pair of linked pipe files") },
     { NULL }
 };
