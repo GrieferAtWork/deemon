@@ -1465,28 +1465,42 @@ err:
 }
 
 
+
 PUBLIC int DCALL
 DeeInt_TryAs8(DeeObject *__restrict self, int8_t *__restrict value) {
- int16_t val16; int result;
- result = DeeInt_TryAs16(self,&val16);
+ int result;
+#if DIGIT_BITS <= 16
+ int16_t digval;
+ result = DeeInt_TryAs16(self,&digval);
+#else
+ int32_t digval;
+ result = DeeInt_TryAs32(self,&digval);
+#endif
  switch (result) {
  case INT_UNSIGNED:
-  if ((uint16_t)val16 > 0xff)
+#if DIGIT_BITS <= 16
+  if ((uint16_t)digval > 0xff)
       return INT_POS_OVERFLOW;
-  *value = (int8_t)(uint8_t)(uint16_t)val16;
+  *value = (int8_t)(uint8_t)(uint16_t)digval;
+#else
+  if ((uint32_t)digval > 0xff)
+      return INT_POS_OVERFLOW;
+  *value = (int8_t)(uint8_t)(uint32_t)digval;
+#endif
   break;
  case INT_SIGNED:
-  if (val16 > INT8_MAX)
+  if (digval > INT8_MAX)
       return INT_POS_OVERFLOW;
-  if (val16 < INT8_MIN)
+  if (digval < INT8_MIN)
       return INT_NEG_OVERFLOW;
-  *value = (int8_t)val16;
+  *value = (int8_t)digval;
   break;
  }
  return result;
 }
 PUBLIC int DCALL
 DeeInt_TryAs16(DeeObject *__restrict self, int16_t *__restrict value) {
+#if DIGIT_BITS <= 16
  uint16_t prev,result; int sign;
  dssize_t i;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeInt_Type);
@@ -1523,6 +1537,25 @@ overflow:
  }
  *value = (int16_t)result;
  return INT_UNSIGNED;
+#else
+ int32_t digval;
+ int result = DeeInt_TryAs32(self,&digval);
+ switch (result) {
+ case INT_UNSIGNED:
+  if ((uint32_t)digval > 0xffff)
+      return INT_POS_OVERFLOW;
+  *value = (int16_t)(uint16_t)(uint32_t)digval;
+  break;
+ case INT_SIGNED:
+  if (digval > INT16_MAX)
+      return INT_POS_OVERFLOW;
+  if (digval < INT16_MIN)
+      return INT_NEG_OVERFLOW;
+  *value = (int16_t)digval;
+  break;
+ }
+ return result;
+#endif
 }
 PUBLIC int DCALL
 DeeInt_TryAs32(DeeObject *__restrict self, int32_t *__restrict value) {

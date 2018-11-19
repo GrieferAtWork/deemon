@@ -1376,6 +1376,7 @@ err_result_copy:
      self->jl_lvalue.lv_attrstr.la_base = result; /* Inherit reference. */
      self->jl_lvalue.lv_attrstr.la_name = attr_name;
      self->jl_lvalue.lv_attrstr.la_size = attr_size;
+     self->jl_lvalue.lv_attrstr.la_hash = hash_ptr(attr_name,attr_size);
      result = JIT_LVALUE;
     }
 #endif /* JIT_EVAL */
@@ -2453,7 +2454,7 @@ DEFINE_SECONDARY(CondOperand) {
   {
    int b = DeeObject_Bool(lhs);
    if unlikely(b < 0)
-      goto err_r;
+      goto err_invoke;
    if (self->jl_tok == ':') {
     /* Missing true-branch. */
     JITLexer_Yield(self);
@@ -2531,6 +2532,10 @@ continue_expr:
        break;
  }
  return LHS_OR_OK;
+#ifdef JIT_EVAL
+err_invoke:
+ JITLexer_ErrorTrace(self,pos);
+#endif
 err_r:
  DECREF(lhs);
 #ifdef JIT_EVAL
@@ -2574,11 +2579,11 @@ PRIVATE uint16_t const inplace_fops[] = {
 DEFINE_SECONDARY(AssignOperand) {
  RETURN_TYPE rhs;
  IF_EVAL(int error;)
- unsigned char *pos;
+ IF_EVAL(unsigned char *pos;)
  IF_EVAL(unsigned int cmd = self->jl_tok;)
  ASSERT(TOKEN_IS_ASSIGN(self->jl_tok));
  for (;;) {
-  pos = self->jl_tokstart;
+  IF_EVAL(pos = self->jl_tokstart;)
   if (self->jl_tok == TOK_COLLON_EQUAL) {
    LOAD_LVALUE(lhs,err);
    JITLexer_Yield(self);
@@ -2613,17 +2618,17 @@ DEFINE_SECONDARY(AssignOperand) {
     goto err_lvalue;
    }
    switch (cmd) {
-   case TOK_ADD_EQUAL: error = DeeObject_InplaceAdd(&lhs,rhs); break;
-   case TOK_SUB_EQUAL: error = DeeObject_InplaceSub(&lhs,rhs); break;
-   case TOK_MUL_EQUAL: error = DeeObject_InplaceMul(&lhs,rhs); break;
-   case TOK_DIV_EQUAL: error = DeeObject_InplaceDiv(&lhs,rhs); break;
-   case TOK_MOD_EQUAL: error = DeeObject_InplaceMod(&lhs,rhs); break;
-   case TOK_SHL_EQUAL: error = DeeObject_InplaceShl(&lhs,rhs); break;
-   case TOK_SHR_EQUAL: error = DeeObject_InplaceShr(&lhs,rhs); break;
-   case TOK_AND_EQUAL: error = DeeObject_InplaceAnd(&lhs,rhs); break;
-   case TOK_OR_EQUAL: error = DeeObject_InplaceOr(&lhs,rhs); break;
-   case TOK_XOR_EQUAL: error = DeeObject_InplaceXor(&lhs,rhs); break;
-   case TOK_POW_EQUAL: error = DeeObject_InplacePow(&lhs,rhs); break;
+   case TOK_ADD_EQUAL: error = DeeObject_InplaceAdd((DeeObject **)&lhs,rhs); break;
+   case TOK_SUB_EQUAL: error = DeeObject_InplaceSub((DeeObject **)&lhs,rhs); break;
+   case TOK_MUL_EQUAL: error = DeeObject_InplaceMul((DeeObject **)&lhs,rhs); break;
+   case TOK_DIV_EQUAL: error = DeeObject_InplaceDiv((DeeObject **)&lhs,rhs); break;
+   case TOK_MOD_EQUAL: error = DeeObject_InplaceMod((DeeObject **)&lhs,rhs); break;
+   case TOK_SHL_EQUAL: error = DeeObject_InplaceShl((DeeObject **)&lhs,rhs); break;
+   case TOK_SHR_EQUAL: error = DeeObject_InplaceShr((DeeObject **)&lhs,rhs); break;
+   case TOK_AND_EQUAL: error = DeeObject_InplaceAnd((DeeObject **)&lhs,rhs); break;
+   case TOK_OR_EQUAL: error = DeeObject_InplaceOr((DeeObject **)&lhs,rhs); break;
+   case TOK_XOR_EQUAL: error = DeeObject_InplaceXor((DeeObject **)&lhs,rhs); break;
+   case TOK_POW_EQUAL: error = DeeObject_InplacePow((DeeObject **)&lhs,rhs); break;
    default: __builtin_unreachable();
    }
    if unlikely(error) { JITLValue_Fini(&lhs_lvalue); goto err_invoke; }

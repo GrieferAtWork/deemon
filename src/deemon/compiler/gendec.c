@@ -1090,7 +1090,7 @@ nope:
 /* Emit a DDI-compatible string table. */
 PRIVATE int DCALL
 dec_do_putddi_strtab(DeeDDIObject *__restrict self,
-                     uintptr_t const *__restrict vec,
+                     uint32_t const *__restrict vec,
                      uint32_t length) {
  struct dec_section *ddi_sec; uint32_t straddr;
  uint32_t i; char *str; uint8_t *strptr;
@@ -1120,7 +1120,7 @@ err:
 /* Emit a DDI-compatible string table and return a symbol for its starting address. */
 PRIVATE struct dec_sym *DCALL
 dec_putddi_strtab(DeeDDIObject *__restrict self,
-                  uintptr_t const *__restrict vec,
+                  uint32_t const *__restrict vec,
                   uint32_t length) {
  struct dec_section *result,*old_sec;
  /* Create a new section within which debug data will be placed. */
@@ -1142,7 +1142,7 @@ err:
 /* Generate a DDI-compatible string table and emit a pointer to it. */
 PRIVATE int DCALL
 dec_putddi_strtab_ptr(DeeDDIObject *__restrict self,
-                      uintptr_t const *__restrict vec,
+                      uint32_t const *__restrict vec,
                       uint32_t length, bool use_16bit) {
  struct dec_sym *sym;
  if (length) {
@@ -1376,7 +1376,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
      if unlikely(!name) goto err;
      addr = dec_ptr2addr(name);
      dec_curr = kwd_section;
-     if (dec_putptr(len)) goto err;
+     if (dec_putptr((uint32_t)len)) goto err;
      if (dec_putptr(addr)) goto err;
     } else {
      dec_curr = kwd_section; /* Unnamed */

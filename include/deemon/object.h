@@ -1539,40 +1539,40 @@ DFUNDEF WUNUSED bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED bool DCALL type_inherit_constructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
-INTDEF WUNUSED bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str */
-INTDEF WUNUSED bool DCALL type_inherit_repr(DeeTypeObject *__restrict self);          /* tp_repr */
-INTDEF WUNUSED bool DCALL type_inherit_bool(DeeTypeObject *__restrict self);          /* tp_bool */
-INTDEF WUNUSED bool DCALL type_inherit_call(DeeTypeObject *__restrict self);          /* tp_call */
-INTDEF WUNUSED bool DCALL type_inherit_hash(DeeTypeObject *__restrict self);          /* tp_hash */
-INTDEF WUNUSED bool DCALL type_inherit_int(DeeTypeObject *__restrict self);           /* tp_int, tp_int32, tp_int64, tp_double */
-INTDEF WUNUSED bool DCALL type_inherit_inv(DeeTypeObject *__restrict self);           /* tp_inv */
-INTDEF WUNUSED bool DCALL type_inherit_pos(DeeTypeObject *__restrict self);           /* tp_pos */
-INTDEF WUNUSED bool DCALL type_inherit_neg(DeeTypeObject *__restrict self);           /* tp_neg */
-INTDEF WUNUSED bool DCALL type_inherit_add(DeeTypeObject *__restrict self);           /* tp_add, tp_sub, tp_inplace_add, tp_inplace_sub, tp_inc, tp_dec */
-INTDEF WUNUSED bool DCALL type_inherit_mul(DeeTypeObject *__restrict self);           /* tp_mul, tp_inplace_mul */
-INTDEF WUNUSED bool DCALL type_inherit_div(DeeTypeObject *__restrict self);           /* tp_div, tp_inplace_div */
-INTDEF WUNUSED bool DCALL type_inherit_mod(DeeTypeObject *__restrict self);           /* tp_mod, tp_inplace_mod */
-INTDEF WUNUSED bool DCALL type_inherit_shl(DeeTypeObject *__restrict self);           /* tp_shl, tp_inplace_shl */
-INTDEF WUNUSED bool DCALL type_inherit_shr(DeeTypeObject *__restrict self);           /* tp_shr, tp_inplace_shr */
-INTDEF WUNUSED bool DCALL type_inherit_and(DeeTypeObject *__restrict self);           /* tp_and, tp_inplace_and */
-INTDEF WUNUSED bool DCALL type_inherit_or(DeeTypeObject *__restrict self);            /* tp_or, tp_inplace_or */
-INTDEF WUNUSED bool DCALL type_inherit_xor(DeeTypeObject *__restrict self);           /* tp_xor, tp_inplace_xor */
-INTDEF WUNUSED bool DCALL type_inherit_pow(DeeTypeObject *__restrict self);           /* tp_pow, tp_inplace_pow */
-INTDEF WUNUSED bool DCALL type_inherit_compare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
-INTDEF WUNUSED bool DCALL type_inherit_iternext(DeeTypeObject *__restrict self);      /* tp_iter_next */
-INTDEF WUNUSED bool DCALL type_inherit_iterself(DeeTypeObject *__restrict self);      /* tp_iter_self */
-INTDEF WUNUSED bool DCALL type_inherit_size(DeeTypeObject *__restrict self);          /* tp_size */
-INTDEF WUNUSED bool DCALL type_inherit_contains(DeeTypeObject *__restrict self);      /* tp_contains */
-INTDEF WUNUSED bool DCALL type_inherit_getitem(DeeTypeObject *__restrict self);       /* tp_get */
-INTDEF WUNUSED bool DCALL type_inherit_delitem(DeeTypeObject *__restrict self);       /* tp_del */
-INTDEF WUNUSED bool DCALL type_inherit_setitem(DeeTypeObject *__restrict self);       /* tp_set */
-INTDEF WUNUSED bool DCALL type_inherit_getrange(DeeTypeObject *__restrict self);      /* tp_range_get */
-INTDEF WUNUSED bool DCALL type_inherit_delrange(DeeTypeObject *__restrict self);      /* tp_range_del */
-INTDEF WUNUSED bool DCALL type_inherit_setrange(DeeTypeObject *__restrict self);      /* tp_range_set */
-INTDEF WUNUSED bool DCALL type_inherit_nsi(DeeTypeObject *__restrict self);           /* tp_nsi (only succeeds if `self' has no `tp_seq' field) */
-INTDEF WUNUSED bool DCALL type_inherit_with(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
-INTDEF WUNUSED bool DCALL type_inherit_buffer(DeeTypeObject *__restrict self);        /* tp_getbuf, tp_putbuf, tp_buffer_flags */
+INTDEF bool DCALL type_inherit_constructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
+INTDEF bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str */
+INTDEF bool DCALL type_inherit_repr(DeeTypeObject *__restrict self);          /* tp_repr */
+INTDEF bool DCALL type_inherit_bool(DeeTypeObject *__restrict self);          /* tp_bool */
+INTDEF bool DCALL type_inherit_call(DeeTypeObject *__restrict self);          /* tp_call */
+INTDEF bool DCALL type_inherit_hash(DeeTypeObject *__restrict self);          /* tp_hash */
+INTDEF bool DCALL type_inherit_int(DeeTypeObject *__restrict self);           /* tp_int, tp_int32, tp_int64, tp_double */
+INTDEF bool DCALL type_inherit_inv(DeeTypeObject *__restrict self);           /* tp_inv */
+INTDEF bool DCALL type_inherit_pos(DeeTypeObject *__restrict self);           /* tp_pos */
+INTDEF bool DCALL type_inherit_neg(DeeTypeObject *__restrict self);           /* tp_neg */
+INTDEF bool DCALL type_inherit_add(DeeTypeObject *__restrict self);           /* tp_add, tp_sub, tp_inplace_add, tp_inplace_sub, tp_inc, tp_dec */
+INTDEF bool DCALL type_inherit_mul(DeeTypeObject *__restrict self);           /* tp_mul, tp_inplace_mul */
+INTDEF bool DCALL type_inherit_div(DeeTypeObject *__restrict self);           /* tp_div, tp_inplace_div */
+INTDEF bool DCALL type_inherit_mod(DeeTypeObject *__restrict self);           /* tp_mod, tp_inplace_mod */
+INTDEF bool DCALL type_inherit_shl(DeeTypeObject *__restrict self);           /* tp_shl, tp_inplace_shl */
+INTDEF bool DCALL type_inherit_shr(DeeTypeObject *__restrict self);           /* tp_shr, tp_inplace_shr */
+INTDEF bool DCALL type_inherit_and(DeeTypeObject *__restrict self);           /* tp_and, tp_inplace_and */
+INTDEF bool DCALL type_inherit_or(DeeTypeObject *__restrict self);            /* tp_or, tp_inplace_or */
+INTDEF bool DCALL type_inherit_xor(DeeTypeObject *__restrict self);           /* tp_xor, tp_inplace_xor */
+INTDEF bool DCALL type_inherit_pow(DeeTypeObject *__restrict self);           /* tp_pow, tp_inplace_pow */
+INTDEF bool DCALL type_inherit_compare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
+INTDEF bool DCALL type_inherit_iternext(DeeTypeObject *__restrict self);      /* tp_iter_next */
+INTDEF bool DCALL type_inherit_iterself(DeeTypeObject *__restrict self);      /* tp_iter_self */
+INTDEF bool DCALL type_inherit_size(DeeTypeObject *__restrict self);          /* tp_size */
+INTDEF bool DCALL type_inherit_contains(DeeTypeObject *__restrict self);      /* tp_contains */
+INTDEF bool DCALL type_inherit_getitem(DeeTypeObject *__restrict self);       /* tp_get */
+INTDEF bool DCALL type_inherit_delitem(DeeTypeObject *__restrict self);       /* tp_del */
+INTDEF bool DCALL type_inherit_setitem(DeeTypeObject *__restrict self);       /* tp_set */
+INTDEF bool DCALL type_inherit_getrange(DeeTypeObject *__restrict self);      /* tp_range_get */
+INTDEF bool DCALL type_inherit_delrange(DeeTypeObject *__restrict self);      /* tp_range_del */
+INTDEF bool DCALL type_inherit_setrange(DeeTypeObject *__restrict self);      /* tp_range_set */
+INTDEF bool DCALL type_inherit_nsi(DeeTypeObject *__restrict self);           /* tp_nsi (only succeeds if `self' has no `tp_seq' field) */
+INTDEF bool DCALL type_inherit_with(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
+INTDEF bool DCALL type_inherit_buffer(DeeTypeObject *__restrict self);        /* tp_getbuf, tp_putbuf, tp_buffer_flags */
 #endif
 
 

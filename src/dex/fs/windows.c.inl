@@ -1886,9 +1886,9 @@ user_get_name_and_domain(struct user_object *__restrict self,
  }
  DBG_ALIGNMENT_ENABLE();
  if (wNameBuffer[wNameBufSize])
-     wNameBufSize = wcsnlen(wNameBuffer,wNameBufSize);
+     wNameBufSize = (DWORD)wcsnlen(wNameBuffer,wNameBufSize);
  if (wDomainBuffer[wDomainBufSize])
-     wDomainBufSize = wcsnlen(wDomainBuffer,wDomainBufSize);
+     wDomainBufSize = (DWORD)wcsnlen(wDomainBuffer,wDomainBufSize);
  wNewBuffer = DeeString_TryResizeWideBuffer(wNameBuffer,wNameBufSize);
  if likely(wNewBuffer) wNameBuffer = wNewBuffer;
  wNewBuffer = DeeString_TryResizeWideBuffer(wDomainBuffer,wDomainBufSize);

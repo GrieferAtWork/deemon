@@ -45,6 +45,33 @@ JITLexer_SkipStatement(JITLexer *__restrict self)
 
  case '{':
   JITLexer_Yield(self);
+#ifndef JIT_EVAL
+  /* Special case optimization:
+   *  -> Since we're supposed to skip the statement, we can optimize for
+   *     this case by scanning ahead for the next matching `}' token! */
+  {
+   unsigned int recursion = 1;
+   for (;;) {
+    switch (self->jl_tok) {
+    case '{':
+     ++recursion;
+     break;
+    case '}':
+     JITLexer_Yield(self);
+     --recursion;
+     if (!recursion)
+         goto done_skip;
+     break;
+    case TOK_EOF:
+     SYNTAXERROR("Missing `}' following statement beginning with `{'");
+     goto err;
+    default: break;
+    }
+   }
+done_skip:
+   result = 0;
+  }
+#else
   IF_EVAL(JITContext_PushScope(self->jl_context));
   for (;;) {
 #ifdef JIT_EVAL
@@ -69,6 +96,7 @@ JITLexer_SkipStatement(JITLexer *__restrict self)
   LOAD_LVALUE(result,err_popscope);
   IF_EVAL(JITContext_PopScope(self->jl_context));
   JITLexer_Yield(self);
+#endif
   break;
 
  default:
@@ -92,9 +120,11 @@ JITLexer_SkipStatement(JITLexer *__restrict self)
   break;
  }
  return result;
+#ifdef JIT_EVAL
 err_popscope:
- IF_EVAL(JITContext_PopScope(self->jl_context));
-/*err:*/
+ JITContext_PopScope(self->jl_context);
+#endif
+IF_SKIP(err:)
  return ERROR;
 }
 

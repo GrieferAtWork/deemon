@@ -377,16 +377,16 @@ dex_initialize(DeeDexObject *__restrict self) {
   /* Install notification hooks. */
   hooks = self->d_dex->d_notify;
   if (hooks) for (; hooks->dn_name; ++hooks) {
-   if unlikely(DeeNotify_BeginListen(hooks->dn_class,
-                                    (DeeObject *)hooks->dn_name,
-                                     hooks->dn_callback,
-                                     hooks->dn_arg) < 0) {
+   if unlikely(DeeNotify_BeginListen((uint16_t)hooks->dn_class,
+                                     (DeeObject *)hooks->dn_name,
+                                      hooks->dn_callback,
+                                      hooks->dn_arg) < 0) {
     while (hooks != self->d_dex->d_notify) {
      --hooks;
-     DeeNotify_EndListen(hooks->dn_class,
-                        (DeeObject *)hooks->dn_name,
-                         hooks->dn_callback,
-                         hooks->dn_arg);
+     DeeNotify_EndListen((uint16_t)hooks->dn_class,
+                         (DeeObject *)hooks->dn_name,
+                          hooks->dn_callback,
+                          hooks->dn_arg);
     }
     if (self->d_dex->d_fini)
       (*self->d_dex->d_fini)(self);
@@ -426,10 +426,10 @@ dex_fini(DeeDexObject *__restrict self) {
    /* Uninstall notification hooks. */
    hooks = self->d_dex->d_notify;
    if (hooks) for (; hooks->dn_name; ++hooks) {
-    DeeNotify_EndListen(hooks->dn_class,
-                       (DeeObject *)hooks->dn_name,
-                        hooks->dn_callback,
-                        hooks->dn_arg);
+    DeeNotify_EndListen((uint16_t)hooks->dn_class,
+                        (DeeObject *)hooks->dn_name,
+                         hooks->dn_callback,
+                         hooks->dn_arg);
    }
 #endif /* !CONFIG_NO_NOTIFICATIONS */
    if (self->d_dex->d_fini)

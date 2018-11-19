@@ -355,6 +355,7 @@ scan_keyword:
    break;
   }
   /* Fallback: single-character token. */
+  ATTR_FALLTHROUGH
  case '(': case ')': case '[': case ']':
  case '{': case '}': case '?': case '@':
  case ',': case ';': case '~': case '#':

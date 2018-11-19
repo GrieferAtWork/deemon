@@ -697,7 +697,7 @@ err_nocomma:
  objectlist_fini(&expr_batch);
 err_noexpr:
 #endif /* JIT_EVAL */
- return NULL;
+ return ERROR;
 }
 
 

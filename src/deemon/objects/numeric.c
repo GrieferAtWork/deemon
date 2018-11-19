@@ -238,9 +238,9 @@ numeric_swap128(DeeObject *__restrict self) {
  uint64_t temp;
  if unlikely(DeeObject_GetInt128(self,(dint128_t *)&result) < 0)
     goto err;
- temp = result.int_i64[0];
- result.int_i64[0] = BSWAP64(result.int_i64[1]);
- result.int_i64[1] = BSWAP64(temp);
+ temp = DUINT128_GET64(result)[0];
+ DUINT128_GET64(result)[0] = BSWAP64(DUINT128_GET64(result)[1]);
+ DUINT128_GET64(result)[1] = BSWAP64(temp);
  return DeeInt_NewU128(result);
 err:
  return NULL;
@@ -279,9 +279,9 @@ numeric_sswap128(DeeObject *__restrict self) {
  uint64_t temp;
  if unlikely(DeeObject_GetInt128(self,(dint128_t *)&result) < 0)
     goto err;
- temp = result.int_i64[0];
- result.int_i64[0] = BSWAP64(result.int_i64[1]);
- result.int_i64[1] = BSWAP64(temp);
+ temp = DUINT128_GET64(result)[0];
+ DUINT128_GET64(result)[0] = BSWAP64(DUINT128_GET64(result)[1]);
+ DUINT128_GET64(result)[1] = BSWAP64(temp);
  return DeeInt_NewS128(result);
 err:
  return NULL;
