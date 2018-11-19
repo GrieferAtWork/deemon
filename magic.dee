@@ -1380,7 +1380,8 @@ print "# $ ./make.sh  TARGET_WINDOWS TARGET_ARCH=i686";
 print;
 print "# Recognized options:";
 local print_options = [];
-print_options.extend(list(default_options).sorted());
+print_options.extend(default_options);
+print_options.sort();
 for (local x: known_options) {
 	if ("$" !in x)
 		print_options.append(pack(x,""));
