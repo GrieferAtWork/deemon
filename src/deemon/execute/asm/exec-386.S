@@ -1295,7 +1295,6 @@ target_ret_none:
 	jmp   .end_return
 
 
-
 target_ret:
 	/* Check if we're overwriting a previous return value
 	 * (which can happen when `return' appears in a finally-block) */
@@ -1306,6 +1305,12 @@ target_ret:
 	jz     .end_return /* Execute finally handlers before returning. */
 	jmp    .end_without_finally
 
+
+target_setret:
+	unset_result %eax
+	sp_pop %eax
+	movl   %eax, FRAME_RESULT
+	jmp   .disp
 
 
 target_yieldall:

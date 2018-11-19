@@ -1122,6 +1122,13 @@ next_instr:
      goto end_return;
  }
 
+ TARGET(ASM_SETRET,-1,+0) {
+     if (ITER_ISOK(frame->cf_result))
+         Dee_Decref(frame->cf_result);
+     frame->cf_result = POP();
+     DISPATCH();
+ }
+
  TARGET(ASM_YIELDALL,-1,+0) {
      ASSERT_YIELDING();
      if (ITER_ISOK(frame->cf_result))
