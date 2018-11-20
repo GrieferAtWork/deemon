@@ -146,6 +146,8 @@ dict_insert_iterator(Dict *__restrict self,
   Dee_Decref(elem);
   if unlikely(dict_setitem(self,key_and_value[0],key_and_value[1]))
      goto err_item;
+  Dee_Decref(key_and_value[1]);
+  Dee_Decref(key_and_value[0]);
   if (DeeThread_CheckInterrupt())
       goto err;
  }

@@ -137,8 +137,10 @@ set_init_iterator(Set *__restrict self,
  }
  if unlikely(!elem) goto err;
  return 0;
-err_elem: Dee_Decref(elem);
-err:      return -1;
+err_elem:
+ Dee_Decref(elem);
+err:
+ return -1;
 }
 
 PUBLIC DREF DeeObject *DCALL
