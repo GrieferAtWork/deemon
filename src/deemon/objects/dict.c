@@ -782,6 +782,7 @@ again:
                                                       (key_len+1)*sizeof(char));
   if unlikely(!key_ob) goto collect_memory;
   DeeObject_Init(key_ob,&DeeString_Type);
+  key_ob->s_data = NULL;
   key_ob->s_hash = hash;
   key_ob->s_len  = key_len;
   memcpy(key_ob->s_str,key,(key_len+1)*sizeof(char));
@@ -863,6 +864,7 @@ again:
                                                       (keylen + 1)*sizeof(char));
   if unlikely(!key_ob) goto collect_memory;
   DeeObject_Init(key_ob,&DeeString_Type);
+  key_ob->s_data = NULL;
   key_ob->s_hash = hash;
   key_ob->s_len  = keylen;
   memcpy(key_ob->s_str,key,keylen*sizeof(char));
