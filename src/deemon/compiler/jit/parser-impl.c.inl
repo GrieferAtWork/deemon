@@ -781,6 +781,147 @@ done_y1:
   JITLexer_Yield(self);
   if (self->jl_tok == ']') {
    JITLexer_Yield(self);
+   if (self->jl_tok == '(') {
+#ifdef JIT_EVAL
+    unsigned char *param_start;
+    unsigned char *param_end;
+    unsigned int recursion;
+#endif
+    JITLexer_Yield(self);
+#ifdef JIT_EVAL
+    param_end = param_start = self->jl_tokstart;
+    recursion = 1;
+    while (self->jl_tok) {
+     if (self->jl_tok == '(')
+      ++recursion;
+     else if (self->jl_tok == ')') {
+      --recursion;
+      if (!recursion) {
+       JITLexer_Yield(self);
+       break;
+      }
+     }
+     param_end = self->jl_tokend;
+     JITLexer_Yield(self);
+    }
+#else
+    if (JITLexer_SkipPair(self,'(',')'))
+        goto err;
+#endif
+    if (self->jl_tok == TOK_ARROW) {
+#ifdef JIT_EVAL
+     /* Lambda function. */
+     unsigned char *source_start;
+     unsigned char *source_end;
+     JITLexer_Yield(self);
+     source_start = self->jl_tokstart;
+     if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FSECONDARY))
+         goto err;
+     source_end = self->jl_tokstart;
+     /* Trim trailing whitespace. */
+     while (source_end > source_start) {
+      uint32_t ch;
+      char const *next = (char const *)source_end;
+      ch = utf8_readchar_rev(&next,(char const *)source_start);
+      if (!DeeUni_IsSpace(ch)) break;
+      source_end = (unsigned char *)ch;
+     }
+     result = JITFunction_New(NULL,
+                              NULL,
+                             (char const *)param_start,
+                             (char const *)param_end,
+                             (char const *)source_start,
+                             (char const *)source_end,
+                              self->jl_context->jc_locals.otp_tab,
+                              self->jl_text,
+                              self->jl_context->jc_impbase,
+                              self->jl_context->jc_globals,
+                              JIT_FUNCTION_FRETEXPR);
+     goto done;
+#else
+     goto skip_arrow_lambda;
+#endif
+    } else if (self->jl_tok == '{') {
+#ifdef JIT_EVAL
+     /* Lambda function. */
+     unsigned char *source_start;
+     unsigned char *source_end;
+     unsigned int recursion = 1;
+     JITLexer_Yield(self);
+     source_end = source_start = self->jl_tokstart;
+     /* Scan the body of the function. */
+     while (self->jl_tok) {
+      if (self->jl_tok == '{')
+       ++recursion;
+      else if (self->jl_tok == '}') {
+       --recursion;
+       if (!recursion) {
+        JITLexer_Yield(self);
+        break;
+       }
+      }
+      source_end = self->jl_tokend;
+      JITLexer_Yield(self);
+     }
+     result = JITFunction_New(NULL,
+                              NULL,
+                             (char const *)param_start,
+                             (char const *)param_end,
+                             (char const *)source_start,
+                             (char const *)source_end,
+                              self->jl_context->jc_locals.otp_tab,
+                              self->jl_text,
+                              self->jl_context->jc_impbase,
+                              self->jl_context->jc_globals,
+                              JIT_FUNCTION_FNORMAL);
+     goto done;
+#else
+     goto skip_brace_lambda;
+#endif
+    } else {
+     SYNTAXERROR("Expected `{' or `->' after `function' or `[](...)', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+     goto err;
+    }
+   }
+   if (self->jl_tok == TOK_ARROW) {
+#ifdef JIT_EVAL
+    /* Lambda function. */
+    unsigned char *source_start;
+    unsigned char *source_end;
+    JITLexer_Yield(self);
+    source_start = self->jl_tokstart;
+    if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FSECONDARY))
+        goto err;
+    source_end = self->jl_tokstart;
+    /* Trim trailing whitespace. */
+    while (source_end > source_start) {
+     uint32_t ch;
+     char const *next = (char const *)source_end;
+     ch = utf8_readchar_rev(&next,(char const *)source_start);
+     if (!DeeUni_IsSpace(ch)) break;
+     source_end = (unsigned char *)ch;
+    }
+    result = JITFunction_New(NULL,
+                             NULL,
+                             NULL,
+                             NULL,
+                            (char const *)source_start,
+                            (char const *)source_end,
+                             self->jl_context->jc_locals.otp_tab,
+                             self->jl_text,
+                             self->jl_context->jc_impbase,
+                             self->jl_context->jc_globals,
+                             JIT_FUNCTION_FRETEXPR);
+    goto done;
+#else
+skip_arrow_lambda:
+    JITLexer_Yield(self);
+    result = JITLexer_SkipExpression(self,JITLEXER_EVAL_FSECONDARY);
+    goto done;
+#endif
+   }
    if (self->jl_tok == '{') {
 #ifdef JIT_EVAL
     /* Lambda function. */
@@ -816,6 +957,7 @@ done_y1:
                              JIT_FUNCTION_FNORMAL);
     goto done;
 #else
+skip_brace_lambda:
     JITLexer_Yield(self);
     result = JITLexer_SkipPair(self,'{','}');
     goto done;

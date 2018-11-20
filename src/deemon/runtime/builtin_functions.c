@@ -142,10 +142,11 @@ INTERN DEFINE_KWCMETHOD(builtin_import,&f_builtin_import);
 
 PRIVATE DREF DeeObject *DCALL
 f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
- DREF DeeObject *result; DeeObject *expr,*globals = NULL;
+ DREF DeeObject *result;
+ DeeObject *expr,*globals = NULL;
  char const *usertext; size_t usersize;
  PRIVATE struct keyword kwlist[] = { K(expr), K(globals), KEND };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:exec",&expr,&globals))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:exec",&expr,&globals))
      goto err;
  if (DeeString_Check(expr)) {
   usertext = DeeString_AsUtf8(expr);
@@ -184,8 +185,13 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
   JITLexer_Start(&lexer,
                 (unsigned char *)usertext,
                 (unsigned char *)usertext + usersize);
-  result = JITLexer_EvalExpression(&lexer,
-                                    JITLEXER_EVAL_FNORMAL);
+  result = JITLexer_EvalComma(&lexer,
+                              AST_COMMA_NORMAL |
+                              AST_COMMA_STRICTCOMMA |
+                              AST_COMMA_NOSUFFIXKWD |
+                              AST_COMMA_PARSESINGLE,
+                              NULL,
+                              NULL);
   ASSERT(!result || (result == JIT_LVALUE) ==
         (lexer.jl_lvalue.lv_kind != JIT_LVALUE_NONE));
   /* Check if the resulting expression evaluates to an L-Value
@@ -220,14 +226,16 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
     Dee_Clear(result);
     goto handle_error;
    }
-  } else if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
-   result = context.jc_retval;
   } else if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
-   /* Exited code via unconventional means, such as `break' or `continue' */
-   DeeError_Throwf(&DeeError_SyntaxError,
-                   "Attempted to use `break' or `continue' used outside of a loop");
-   lexer.jl_errpos = lexer.jl_tokstart;
-   goto handle_error;
+   if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
+    result = context.jc_retval;
+   } else {
+    /* Exited code via unconventional means, such as `break' or `continue' */
+    DeeError_Throwf(&DeeError_SyntaxError,
+                    "Attempted to use `break' or `continue' used outside of a loop");
+    lexer.jl_errpos = lexer.jl_tokstart;
+    goto handle_error;
+   }
   } else {
    if (!lexer.jl_errpos)
         lexer.jl_errpos = lexer.jl_tokstart;
@@ -250,7 +258,7 @@ handle_error:
                             0,
                             0,
                             NULL,
-                            NULL,
+                            globals,
                             NULL,
                             NULL);
 #endif

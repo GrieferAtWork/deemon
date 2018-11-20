@@ -97,7 +97,14 @@ assert identical(exec('bound("foo".nonexisting_symbols)'),false);
 /* Conditional execution containing an errorous dead branch. */
 assert identical(exec('true ? "ok" : "foo".bar.baz.bim'),"ok");
 
-
+{
+	local glob = dict {
+		"x" : "foo",
+		"y" : 20,
+	};
+	exec("result = x.center(y - 5)", globals: glob);
+	assert identical(glob["result"],"foo".center(15));
+}
 
 
 

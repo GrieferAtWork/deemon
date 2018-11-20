@@ -121,10 +121,11 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
     continue;
    }
    /* Restore the old special return branch, if it was set. */
-   if (JITCONTEXT_RETVAL_ISSET(self->jl_context->jc_retval)) {
+   if (self->jl_context->jc_retval &&
+       JITCONTEXT_RETVAL_ISSET(self->jl_context->jc_retval)) {
     Dee_Decref(self->jl_context->jc_retval);
     self->jl_context->jc_retval = old_return_expr; /* Inherit reference. */
-   } else if (JITCONTEXT_RETVAL_ISSET(old_return_expr)) {
+   } else if (old_return_expr && JITCONTEXT_RETVAL_ISSET(old_return_expr)) {
     self->jl_context->jc_retval = old_return_expr; /* Inherit reference. */
    } else {
     /* Don't restore special return branches, which finally is allowed

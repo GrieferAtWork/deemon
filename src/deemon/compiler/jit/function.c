@@ -304,14 +304,17 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
     Dee_Clear(result);
     goto handle_error;
    }
-  } else load_return_value: if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
-   result = context.jc_retval;
-  } else if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
-   /* Exited code via unconventional means, such as `break' or `continue' */
-   DeeError_Throwf(&DeeError_SyntaxError,
-                   "Attempted to use `break' or `continue' used outside of a loop");
-   lexer.jl_errpos = lexer.jl_tokstart;
-   goto handle_error;
+  } else load_return_value:
+  if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
+   if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
+    result = context.jc_retval;
+   } else {
+    /* Exited code via unconventional means, such as `break' or `continue' */
+    DeeError_Throwf(&DeeError_SyntaxError,
+                    "Attempted to use `break' or `continue' used outside of a loop");
+    lexer.jl_errpos = lexer.jl_tokstart;
+    goto handle_error;
+   }
   } else {
    if (!lexer.jl_errpos)
         lexer.jl_errpos = lexer.jl_tokstart;
