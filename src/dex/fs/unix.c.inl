@@ -853,56 +853,70 @@ PRIVATE DREF DeeObject *DCALL
 stat_isdir(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":isdir"))
-     return NULL;
+     goto err;
  return_bool(S_ISDIR(self->st_stat.st_mode));
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 stat_ischr(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":ischr"))
-     return NULL;
+     goto err;
  return_bool(S_ISCHR(self->st_stat.st_mode));
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 stat_isblk(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":isblk"))
-     return NULL;
+     goto err;
  return_bool(S_ISBLK(self->st_stat.st_mode));
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 stat_isreg(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":isreg"))
-     return NULL;
+     goto err;
  return_bool(S_ISREG(self->st_stat.st_mode));
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 stat_isfifo(DeeStatObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":isfifo"))
-     return NULL;
+     goto err;
  return_bool(S_ISFIFO(self->st_stat.st_mode));
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 stat_islnk(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":islnk"))
-     return NULL;
+     goto err;
  return_bool(S_ISLNK(self->st_stat.st_mode));
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 stat_issock(DeeStatObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":issock"))
-     return NULL;
+     goto err;
  return_bool(S_ISSOCK(self->st_stat.st_mode));
+err:
+ return NULL;
 }
 
 PRIVATE struct type_method stat_methods[] = {

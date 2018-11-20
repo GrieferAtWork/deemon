@@ -312,6 +312,21 @@ err_invalid_argc(char const *function_name, size_t argc_cur,
  }
 }
 INTERN ATTR_COLD int DCALL
+err_invalid_argc_len(char const *function_name, size_t function_size,
+                     size_t argc_cur, size_t argc_min, size_t argc_max) {
+ if (argc_min == argc_max) {
+  return DeeError_Throwf(&DeeError_TypeError,
+                         "function%s%$s expects %Iu arguments when %Iu w%s given",
+                         function_size ? " " : "",function_size,function_name,
+                         argc_min,argc_cur,argc_cur == 1 ? "as" : "ere");
+ } else {
+  return DeeError_Throwf(&DeeError_TypeError,
+                         "function%s%$s expects between %Iu and %Iu arguments when %Iu w%s given",
+                         function_size ? " " : "",function_size,function_name,
+                         argc_min,argc_max,argc_cur,argc_cur == 1 ? "as" : "ere");
+ }
+}
+INTERN ATTR_COLD int DCALL
 err_invalid_argc_va(char const *function_name, size_t argc_cur, size_t argc_min) {
  return DeeError_Throwf(&DeeError_TypeError,
                         "function%s%s expects at least %Iu arguments when only %Iu w%s given",

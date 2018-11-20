@@ -376,20 +376,13 @@ INTDEF DREF struct ast *FCALL ast_parse_cast(struct ast *__restrict typeexpr);
 #define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
 #define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
 
-/* @param: mode:            Set of `AST_COMMA_*' - What is allowed and when should we pack values.
- * @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
+/* @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
 INTERN DREF struct ast *FCALL
-ast_parse_statement_or_expression(uint16_t mode,
-                                  unsigned int *pwas_expression);
-
-/* Flags for parsing a single expression in hybrid mode. */
-#define AST_COMMA_MODE_HYBRID_SINGLE \
-       (AST_COMMA_PARSESINGLE | AST_COMMA_NOSUFFIXKWD | \
-        AST_COMMA_ALLOWVARDECLS | AST_COMMA_PARSESEMI)
+ast_parse_statement_or_expression(unsigned int *pwas_expression);
 
 /* Parse a primary and second expression in hybrid mode. */
 #define ast_parse_hybrid_primary(pwas_expression) \
-        ast_parse_statement_or_expression(AST_COMMA_MODE_HYBRID_SINGLE,pwas_expression)
+        ast_parse_statement_or_expression(pwas_expression)
 LOCAL DREF struct ast *FCALL
 ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
  DREF struct ast *result;
@@ -401,8 +394,7 @@ ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
   result = ast_parse_expr(LOOKUP_SYM_NORMAL);
   break;
  case AST_PARSE_WASEXPR_MAYBE:
-  result = ast_parse_statement_or_expression(AST_COMMA_MODE_HYBRID_SINGLE,
-                                             pwas_expression);
+  result = ast_parse_statement_or_expression(pwas_expression);
   break;
  default: __builtin_unreachable();
  }

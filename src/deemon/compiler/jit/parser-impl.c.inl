@@ -61,10 +61,12 @@
 #ifdef JIT_SKIP
 #define LOAD_LVALUE(obj,err) (void)0
 #define LOAD_LVALUE_OR_RETURN_ERROR(obj) (void)0
+#define IFELSE(if_eval,if_skip) if_skip
 #define IF_SKIP(...)      __VA_ARGS__
 #define IF_EVAL(...)      /* nothing */
 #define SYNTAXERROR(...) (DeeError_Throwf(&DeeError_SyntaxError,__VA_ARGS__), \
-                          JITLexer_ErrorTrace(self,self->jl_tokstart),-1)
+                          JITLexer_ErrorTrace(self,self->jl_tokstart), \
+                          self->jl_context->jc_flags |= JITCONTEXT_FSERROR,-1)
 #define DECREF(x)        (void)0
 #define DECREF_MAYBE_LVALUE(x) (void)0
 #define ERROR             -1
@@ -72,6 +74,7 @@
 #define LHS_OR_OK         0
 #define ISOK(x)           likely(!(x))
 #define ISERR(x)          unlikely(x)
+#define FUNC(x)           JITLexer_Skip##x
 #define CALL_PRIMARY(name)          JITLexer_Skip##name(self,flags)
 #define CALL_PRIMARYF(name,flags)   JITLexer_Skip##name(self,flags)
 #define CALL_SECONDARY(name,result) JITLexer_Skip##name(self,JITLEXER_EVAL_FSECONDARY)
@@ -84,10 +87,12 @@
      do{if((obj) == JIT_LVALUE && ((obj) = JITLexer_PackLValue(self)) == NULL) goto err;}__WHILE0
 #define LOAD_LVALUE_OR_RETURN_ERROR(obj)  \
      do{if((obj) == JIT_LVALUE && ((obj) = JITLexer_PackLValue(self)) == NULL) return NULL;}__WHILE0
+#define IFELSE(if_eval,if_skip) if_eval
 #define IF_SKIP(...)      /* nothing */
 #define IF_EVAL(...)      __VA_ARGS__
 #define SYNTAXERROR(...) (DeeError_Throwf(&DeeError_SyntaxError,__VA_ARGS__), \
-                          JITLexer_ErrorTrace(self,self->jl_tokstart),NULL)
+                          JITLexer_ErrorTrace(self,self->jl_tokstart), \
+                          self->jl_context->jc_flags |= JITCONTEXT_FSERROR,NULL)
 #define ERROR             NULL
 #define RETURN_TYPE       DREF DeeObject *
 #define DECREF(x)         Dee_Decref(x)
@@ -95,6 +100,7 @@
 #define LHS_OR_OK         lhs
 #define ISOK(x)           likely(x)
 #define ISERR(x)          unlikely(!(x))
+#define FUNC(x)           JITLexer_Eval##x
 #define CALL_PRIMARY(name)          JITLexer_Eval##name(self,flags)
 #define CALL_PRIMARYF(name,flags)   JITLexer_Eval##name(self,flags)
 #define CALL_SECONDARY(name,result) JITLexer_Eval##name(self,result,JITLEXER_EVAL_FSECONDARY)
@@ -111,10 +117,10 @@ DECL_BEGIN
 
 #ifndef ERROR_CANNOT_TEST_BINDING_DEFINED
 #define ERROR_CANNOT_TEST_BINDING_DEFINED 1
-INTERN ATTR_COLD int DCALL err_cannot_test_binding(void) {
- return DeeError_Throwf(&DeeError_SyntaxError,
-                        "Cannot test binding of expression. "
-                        "Expected a symbol, or attribute expression");
+INTERN ATTR_COLD int DCALL err_cannot_test_binding(JITLexer *__restrict self) {
+ SYNTAXERROR("Cannot test binding of expression. "
+             "Expected a symbol, or attribute expression");
+ return -1;
 }
 PRIVATE ATTR_COLD int DCALL
 err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
@@ -144,7 +150,7 @@ err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
 #ifndef TPPLIKE_STRING_TO_FLOAT_DEFINED
 #define TPPLIKE_STRING_TO_FLOAT_DEFINED 1
 PRIVATE DREF DeeObject *DCALL
-JIT_atof(char const *__restrict start, size_t length) {
+JIT_atof(JITLexer *__restrict self, char const *__restrict start, size_t length) {
  double fltval = 0; char *iter,*end,ch;
  int numsys,more,float_extension_mult;
  iter = (char *)start;
@@ -233,9 +239,8 @@ sfx:
  goto done;
 err_invalid_suffix:
  --iter;
- DeeError_Throwf(&DeeError_SyntaxError,
-                 "Invalid floating point number %$q",
-                 length,start);
+ SYNTAXERROR("Invalid floating point number %$q",
+             length,start);
  return NULL;
 done_zero:
  return DeeFloat_New(0.0);
@@ -329,23 +334,16 @@ not_a_cast:
   }
   second_paren = self->jl_tok == '(';
   /* Parse the cast-expression / argument list. */
-#ifdef JIT_EVAL
-  merge = JITLexer_EvalComma(self,AST_COMMA_FORCEMULTIPLE,&DeeTuple_Type,&out_mode);
-#else
-  merge = JITLexer_SkipComma(self,AST_COMMA_FORCEMULTIPLE,&out_mode);
-#endif
+  merge = FUNC(Comma)(self,AST_COMMA_FORCEMULTIPLE,IF_EVAL(&DeeTuple_Type,)&out_mode);
   if (ISERR(merge)) goto err_lhs;
   LOAD_LVALUE(merge,err_lhs);
-#ifdef JIT_EVAL
-  ASSERT(DeeTuple_Check(merge));
-#endif
+  IF_EVAL(ASSERT(DeeTuple_Check(merge));)
   if likely(self->jl_tok == ')') {
    JITLexer_Yield(self);
   } else {
-   DeeError_Throwf(&DeeError_SyntaxError,
-                   "Expected `)' after `(', but got `%$s'",
-                  (size_t)(self->jl_tokend - self->jl_tokstart),
-                   self->jl_tokstart);
+   SYNTAXERROR("Expected `)' after `(', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
    goto err_merge;
   }
   if (!second_paren && !(out_mode & AST_COMMA_OUT_FMULTIPLE)) {
@@ -445,6 +443,76 @@ err_expected_eq_after_dot(JITLexer *__restrict self) {
 #endif
 
 
+
+
+
+
+
+
+
+
+INTERN RETURN_TYPE FCALL
+FUNC(BraceItems)(JITLexer *__restrict self) {
+ RETURN_TYPE result;
+ if (self->jl_tok == '}') {
+  JITLexer_Yield(self);
+  /* Empty sequence. */
+#ifdef JIT_EVAL
+  result = Dee_EmptySeq;
+  Dee_Incref(Dee_EmptySeq);
+#else
+  result = 0;
+#endif
+  goto done;
+ }
+ if (self->jl_tok == '.') {
+  IF_EVAL(DREF DeeObject *first_key;)
+  JITLexer_Yield(self);
+  if (self->jl_tok != JIT_KEYWORD) {
+   err_expected_keyword_after_dot(self);
+   goto err;
+  }
+#ifdef JIT_EVAL
+  first_key = DeeString_NewUtf8((char const *)self->jl_tokstart,
+                                (size_t)(self->jl_tokend - self->jl_tokstart),
+                                 STRING_ERROR_FSTRICT);
+  if unlikely(!first_key) goto err;
+#endif
+  if (self->jl_tok != '=') {
+   err_expected_eq_after_dot(self);
+   goto err;
+  }
+  result = CALL_SECONDARY(CommaDictOperand,first_key);
+ } else {
+  /* Parse the initial key / sequence item. */
+  result = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
+  if (ISERR(result)) goto err;
+  if (self->jl_tok == ':') {
+   /* Mapping-like dict expression. */
+   result = CALL_SECONDARY(CommaDictOperand,result);
+  } else {
+   result = CALL_SECONDARY(CommaListOperand,result);
+  }
+ }
+done:
+ return result;
+err:
+ return ERROR;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 DEFINE_PRIMARY(UnaryHead) {
  RETURN_TYPE result;
  IF_EVAL(unsigned char *pos;)
@@ -491,8 +559,9 @@ done_y1:
  case TOK_FLOAT:
   /* Floating point constant */
 #ifdef JIT_EVAL
-  result = JIT_atof((char const *)self->jl_tokstart,
-                    (size_t)(self->jl_tokend - self->jl_tokstart));
+  result = JIT_atof(self,
+                   (char const *)self->jl_tokstart,
+                   (size_t)(self->jl_tokend - self->jl_tokstart));
 #else /* JIT_EVAL */
   result = 0;
 #endif /* !JIT_EVAL */
@@ -633,11 +702,7 @@ done_y1:
   if (self->jl_tok == '{') {
    unsigned int was_expression;
    /* Statements in expressions. */
-#ifdef JIT_EVAL
-   result = JITLexer_EvalStatementOrBraces(self,&was_expression);
-#else
-   result = JITLexer_SkipStatementOrBraces(self,&was_expression);
-#endif
+   result = FUNC(StatementOrBraces)(self,&was_expression);
    if (ISERR(result)) goto err;
    LOAD_LVALUE(result,err);
    allow_cast = false; /* Don't allow braces, or statements as cast expressions. */
@@ -654,16 +719,7 @@ done_y1:
     } else {
      /* There are more items! */
      RETURN_TYPE merge;
-#ifdef JIT_EVAL
-     merge = JITLexer_EvalComma(self,
-                                AST_COMMA_FORCEMULTIPLE,
-                               &DeeTuple_Type,
-                                NULL);
-#else
-     merge = JITLexer_SkipComma(self,
-                                AST_COMMA_FORCEMULTIPLE,
-                                NULL);
-#endif
+     merge = FUNC(Comma)(self,AST_COMMA_FORCEMULTIPLE,IF_EVAL(&DeeTuple_Type,)NULL);
      if (ISERR(merge)) goto err_r;
 #ifdef JIT_EVAL
      ASSERT(DeeTuple_Check(merge));
@@ -701,11 +757,7 @@ done_y1:
   } else {
    /* Parenthesis / tuple expression. */
    out_mode = 0;
-#ifdef JIT_EVAL
-   result = JITLexer_EvalComma(self,AST_COMMA_NORMAL,&DeeTuple_Type,&out_mode);
-#else
-   result = JITLexer_SkipComma(self,AST_COMMA_NORMAL,&out_mode);
-#endif
+   result = FUNC(Comma)(self,AST_COMMA_NORMAL,IF_EVAL(&DeeTuple_Type,)&out_mode);
    if (ISERR(result))
        goto err;
    if (out_mode & AST_COMMA_OUT_FMULTIPLE)
@@ -729,6 +781,47 @@ done_y1:
   JITLexer_Yield(self);
   if (self->jl_tok == ']') {
    JITLexer_Yield(self);
+   if (self->jl_tok == '{') {
+#ifdef JIT_EVAL
+    /* Lambda function. */
+    unsigned char *source_start;
+    unsigned char *source_end;
+    unsigned int recursion = 1;
+    JITLexer_Yield(self);
+    source_end = source_start = self->jl_tokstart;
+    /* Scan the body of the function. */
+    while (self->jl_tok) {
+     if (self->jl_tok == '{')
+      ++recursion;
+     else if (self->jl_tok == '}') {
+      --recursion;
+      if (!recursion) {
+       JITLexer_Yield(self);
+       break;
+      }
+     }
+     source_end = self->jl_tokend;
+     JITLexer_Yield(self);
+    }
+    result = JITFunction_New(NULL,
+                             NULL,
+                             NULL,
+                             NULL,
+                            (char const *)source_start,
+                            (char const *)source_end,
+                             self->jl_context->jc_locals.otp_tab,
+                             self->jl_text,
+                             self->jl_context->jc_impbase,
+                             self->jl_context->jc_globals,
+                             JIT_FUNCTION_FNORMAL);
+    goto done;
+#else
+    JITLexer_Yield(self);
+    result = JITLexer_SkipPair(self,'{','}');
+    goto done;
+#endif
+   }
+
    /* Empty list. */
 #ifdef JIT_EVAL
    result = DeeList_New();
@@ -851,51 +944,12 @@ skip_rbrck_and_done:
 
  case '{':
   JITLexer_Yield(self);
-  if (self->jl_tok == '}') {
-   JITLexer_Yield(self);
-   /* Empty sequence. */
-#ifdef JIT_EVAL
-   result = Dee_EmptySeq;
-   Dee_Incref(Dee_EmptySeq);
-#else
-   result = 0;
-#endif
-   break;
-  }
-  if (self->jl_tok == '.') {
-   IF_EVAL(DREF DeeObject *first_key;)
-   JITLexer_Yield(self);
-   if (self->jl_tok != JIT_KEYWORD) {
-    err_expected_keyword_after_dot(self);
-    goto err;
-   }
-#ifdef JIT_EVAL
-   first_key = DeeString_NewUtf8((char const *)self->jl_tokstart,
-                                 (size_t)(self->jl_tokend - self->jl_tokstart),
-                                  STRING_ERROR_FSTRICT);
-   if unlikely(!first_key) goto err;
-#endif
-   if (self->jl_tok != '=') {
-    err_expected_eq_after_dot(self);
-    goto err;
-   }
-   result = CALL_SECONDARY(CommaDictOperand,first_key);
-  } else {
-   /* Parse the initial key / sequence item. */
-   result = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
-   if (ISERR(result)) goto err;
-   if (self->jl_tok == ':') {
-    /* Mapping-like dict expression. */
-    result = CALL_SECONDARY(CommaDictOperand,result);
-   } else {
-    result = CALL_SECONDARY(CommaListOperand,result); /* TODO */
-   }
-  }
+  result = FUNC(BraceItems)(self);
   if (ISERR(result)) goto err;
   if likely(self->jl_tok == '}') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `}' after `{', but got `%$s'",
+   SYNTAXERROR("Expected `}' to end a brace initializer, but got `%$s'",
               (size_t)(self->jl_tokend - self->jl_tokstart),
                        self->jl_tokstart);
    goto err_r;
@@ -912,14 +966,17 @@ skip_rbrck_and_done:
   switch (tok_length) {
 
   case 2:
-#if 0
    if (tok_begin[0] == 'i' &&
        tok_begin[1] == 'f') {
-    /* TODO: if-in-expression */
+    result = FUNC(If)(self,false);
+    goto done;
    }
-#endif
+   if (tok_begin[0] == 'd' &&
+       tok_begin[1] == 'o') {
+    result = FUNC(Do)(self,false);
+    goto done;
+   }
    break;
-
 
   case 3:
    if (tok_begin[0] == 's' &&
@@ -939,6 +996,18 @@ skip_rbrck_and_done:
      result = new_result;
     }
 #endif
+    goto done;
+   }
+   if (tok_begin[0] == 't' &&
+       tok_begin[1] == 'r' &&
+       tok_begin[2] == 'y') {
+    result = FUNC(Try)(self,false);
+    goto done;
+   }
+   if (tok_begin[0] == 'f' &&
+       tok_begin[1] == 'o' &&
+       tok_begin[2] == 'r') {
+    result = FUNC(For)(self,false);
     goto done;
    }
    break;
@@ -1028,20 +1097,12 @@ skip_rbrck_and_done:
 #endif
     if (JIT_MaybeExpressionBegin(self->jl_tok)) {
      /* Parse the packed expression. */
-#ifdef JIT_EVAL
-     result = JITLexer_EvalComma(self,
-                                 has_paren
-                               ? AST_COMMA_FORCEMULTIPLE
-                               : AST_COMMA_FORCEMULTIPLE|AST_COMMA_STRICTCOMMA,
-                                &DeeTuple_Type,
-                                 NULL);
-#else
-     result = JITLexer_SkipComma(self,
-                                 has_paren
-                               ? AST_COMMA_FORCEMULTIPLE
-                               : AST_COMMA_FORCEMULTIPLE|AST_COMMA_STRICTCOMMA,
-                                 NULL);
-#endif
+     result = FUNC(Comma)(self,
+                          has_paren
+                        ? AST_COMMA_FORCEMULTIPLE
+                        : AST_COMMA_FORCEMULTIPLE|AST_COMMA_STRICTCOMMA,
+                          IF_EVAL(&DeeTuple_Type,)
+                          NULL);
      if (ISERR(result))
          goto err;
     } else {
@@ -1062,6 +1123,10 @@ skip_rbrck_and_done:
       goto err_r;
      }
     }
+    goto done;
+   }
+   if (name == ENCODE4('w','i','t','h')) {
+    result = FUNC(With)(self,false);
     goto done;
    }
    break;
@@ -1085,7 +1150,7 @@ skip_rbrck_and_done:
 #ifdef JIT_EVAL
     if (ISERR(result)) goto done;
     if (result != JIT_LVALUE) {
-     err_cannot_test_binding();
+     err_cannot_test_binding(self);
      goto err_r;
     }
     /* Test the lvalue expression for being bound. */
@@ -1100,6 +1165,11 @@ skip_rbrck_and_done:
      Dee_Incref(result);
     }
 #endif
+    goto done;
+   }
+   if (name == ENCODE4('w','h','i','l') &&
+       *(uint8_t *)(tok_begin + 4) == 'e') {
+    result = FUNC(While)(self,false);
     goto done;
    }
    break;
@@ -1124,6 +1194,15 @@ skip_rbrck_and_done:
 #endif
    break;
 
+  case 7:
+   name = UNALIGNED_GET32((uint32_t *)tok_begin);
+   if (name == ENCODE4('f','o','r','e') &&
+       UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a','c') &&
+       *(uint8_t *)(tok_begin + 6) == 'h') {
+    result = FUNC(Foreach)(self,false);
+    goto done;
+   }
+   break;
 
   case 8:
    name = UNALIGNED_GET32((uint32_t *)tok_begin);
@@ -1559,9 +1638,7 @@ err_r_invoke:
 #endif
 err_r:
  DECREF_MAYBE_LVALUE(result);
-#ifdef JIT_EVAL
-err:
-#endif
+IF_EVAL(err:)
  return ERROR;
 }
 
@@ -1713,7 +1790,7 @@ case_cmpeq:
    if (ISERR(result)) goto done;
   }
   if (TOKEN_IS_AS(self)) {
- CASE_TOKEN_IS_AS:
+ /*CASE_TOKEN_IS_AS:*/
 case_as:
    result = CALL_SECONDARY(AsOperand,result);
    if (ISERR(result)) goto done;
@@ -1994,7 +2071,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 #ifdef JIT_EVAL
      int error;
      if (lhs != JIT_LVALUE) {
-      err_cannot_test_binding();
+      err_cannot_test_binding(self);
       goto err_r;
      }
      error = JITLValue_IsBound(&self->jl_lvalue,self->jl_context);
@@ -2068,7 +2145,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
     {
      int error;
      if (lhs != JIT_LVALUE) {
-      err_cannot_test_binding();
+      err_cannot_test_binding(self);
       goto err_r;
      }
      error = JITLValue_IsBound(&self->jl_lvalue,self->jl_context);
@@ -2871,6 +2948,97 @@ err_r:
  return ERROR;
 }
 
+INTERN RETURN_TYPE FCALL
+FUNC(Operand)(JITLexer *__restrict self,
+              IF_EVAL(/*inherit(always)*/DREF DeeObject *__restrict lhs,)
+              unsigned int flags) {
+ RETURN_TYPE result = LHS_OR_OK;
+ (void)flags;
+ switch (self->jl_tok) {
+
+ case JIT_KEYWORD:
+  if (JITLexer_ISTOK(self,"is"))
+      goto case_cmpeq;
+  if (JITLexer_ISTOK(self,"in"))
+      goto case_cmpeq;
+  if (JITLexer_ISTOK(self,"as"))
+      goto case_as;
+  break;
+
+ CASE_TOKEN_IS_PROD:
+  result = CALL_SECONDARY(ProdOperand,result);
+  if (ISERR(result)) goto done;
+  if (TOKEN_IS_SUM(self->jl_tok)) {
+ CASE_TOKEN_IS_SUM:
+   result = CALL_SECONDARY(SumOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_SHIFT(self->jl_tok)) {
+ CASE_TOKEN_IS_SHIFT:
+   result = CALL_SECONDARY(ShiftOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_CMP(self->jl_tok)) {
+ CASE_TOKEN_IS_CMP:
+   result = CALL_SECONDARY(CmpOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_CMPEQ(self)) {
+ CASE_TOKEN_IS_CMPEQ:
+case_cmpeq:
+   result = CALL_SECONDARY(CmpEQOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_AND(self->jl_tok)) {
+ CASE_TOKEN_IS_AND:
+   result = CALL_SECONDARY(AndOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_XOR(self->jl_tok)) {
+ CASE_TOKEN_IS_XOR:
+   result = CALL_SECONDARY(XorOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_OR(self->jl_tok)) {
+ CASE_TOKEN_IS_OR:
+   result = CALL_SECONDARY(OrOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_AS(self)) {
+ /*CASE_TOKEN_IS_AS:*/
+case_as:
+   result = CALL_SECONDARY(AsOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_LAND(self->jl_tok)) {
+ CASE_TOKEN_IS_LAND:
+   result = CALL_SECONDARY(LandOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_LOR(self->jl_tok)) {
+ CASE_TOKEN_IS_LOR:
+   result = CALL_SECONDARY(LorOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_COND(self->jl_tok)) {
+ CASE_TOKEN_IS_COND:
+   result = CALL_SECONDARY(CondOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_ASSIGN(self->jl_tok)) {
+ CASE_TOKEN_IS_ASSIGN:
+   result = CALL_SECONDARY(AssignOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  break;
+ default: break;
+ }
+done:
+ return result;
+}
+
+
+
 DECL_END
 
 #ifndef __INTELLISENSE__
@@ -2897,6 +3065,8 @@ DECL_END
 #undef CALL_SECONDARY
 #undef JITLEXER_EVAL_FSECONDARY
 
+#undef FUNC
+#undef IFELSE
 #undef JIT_EVAL
 #undef JIT_SKIP
 #endif

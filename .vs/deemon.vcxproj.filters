@@ -833,6 +833,9 @@
     <ClCompile Include="..\src\deemon\compiler\jit\object-table.c">
       <Filter>src\deemon\compiler\jit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\jit\function.c">
+      <Filter>src\deemon\compiler\jit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">
@@ -924,6 +927,9 @@
     </None>
     <None Include="..\src\deemon\runtime\mro-impl.c.inl">
       <Filter>src\deemon\runtime</Filter>
+    </None>
+    <None Include="..\src\deemon\compiler\jit\parser-impl-hybrid-parts.c.inl">
+      <Filter>src\deemon\compiler\jit</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

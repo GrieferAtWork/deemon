@@ -221,8 +221,7 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
  result_v[1] = merge; /* Inherit. */
 
  /* Finally, parse the content of the wrapped try-statement. */
- result = ast_parse_statement_or_expression(AST_COMMA_MODE_HYBRID_SINGLE,
-                                            pwas_expression);
+ result = ast_parse_statement_or_expression(pwas_expression);
  if unlikely(!result) goto err_result_v_1;
 
  /* Create the leave-expression for the finally block. */

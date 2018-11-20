@@ -671,6 +671,37 @@ err:
 }
 
 
+/* Recursively skip a pair of tokens, such as `{' and `}' or `(' and `)'
+ * NOTE: Entry is expected to be after the initial instance of `pair_open' */
+INTERN int FCALL
+JITLexer_SkipPair(JITLexer *__restrict self,
+                  unsigned int pair_open,
+                  unsigned int pair_close) {
+ unsigned char *start = self->jl_tokstart;
+ unsigned int recursion = 1;
+ for (;;) {
+  if (!self->jl_tok)
+       goto err_eof;
+  if (self->jl_tok == pair_open)
+      ++recursion;
+  else if (self->jl_tok == pair_close) {
+   --recursion;
+   if (!recursion) {
+    JITLexer_Yield(self);
+    break;
+   }
+  }
+  JITLexer_Yield(self);
+ }
+ return 0;
+err_eof:
+ JITLexer_ErrorTrace(self,start);
+ self->jl_context->jc_flags |= JITCONTEXT_FSERROR;
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Missing `%c' after `%c'",pair_close,pair_open);
+}
+
+
 
 DECL_END
 

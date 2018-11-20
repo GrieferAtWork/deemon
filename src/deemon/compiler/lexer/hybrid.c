@@ -46,8 +46,7 @@ err_flags:
 
 /* @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
 INTERN DREF struct ast *FCALL
-ast_parse_statement_or_expression(uint16_t mode,
-                                  unsigned int *pwas_expression) {
+ast_parse_statement_or_expression(unsigned int *pwas_expression) {
  DREF struct ast *result;
  unsigned int was_expression;
  switch (tok) {
@@ -96,7 +95,7 @@ ast_parse_statement_or_expression(uint16_t mode,
   break;
 
  case KWD_from:
- case KWD_del:
+ case KWD_del: /* TODO: This can also appear in expressions! */
  case KWD_return:
  case KWD_yield:
  case KWD_throw:
@@ -122,7 +121,12 @@ ast_parse_statement_or_expression(uint16_t mode,
  default:
   old_varc = current_scope->s_mapc;
   comma_mode = 0;
-  result = ast_parse_comma(mode,AST_FMULTIPLE_GENERIC,&comma_mode);
+  result = ast_parse_comma(AST_COMMA_PARSESINGLE |
+                           AST_COMMA_NOSUFFIXKWD |
+                           AST_COMMA_ALLOWVARDECLS |
+                           AST_COMMA_PARSESEMI,
+                           AST_FMULTIPLE_GENERIC,
+                          &comma_mode);
   if unlikely(!result) goto done;
   if (tok == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
    if unlikely(yield() < 0) goto err_r;
@@ -362,7 +366,7 @@ parse_remainder_after_semicolon_hybrid_popscope:
 
 
  case KWD_from:
- case KWD_del:
+ case KWD_del: /* TODO: This can also appear in expressions! */
  case KWD_return:
  case KWD_yield:
  case KWD_throw:

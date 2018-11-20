@@ -111,6 +111,22 @@ JITObjectTable_Fini(JITObjectTable *__restrict self) {
  Dee_Free(self->ot_list);
 }
 
+INTERN void DCALL
+JITObjectTable_Fini_iterdone(JITObjectTable *__restrict self) {
+ size_t i;
+ if (self->ot_list == jit_empty_object_list)
+     return;
+ for (i = 0; i <= self->ot_mask; ++i) {
+  DeeObject *nameobj;
+  nameobj = self->ot_list[i].oe_nameobj;
+  if (!ITER_ISOK(nameobj)) continue;
+  if (ITER_ISOK(self->ot_list[i].oe_value))
+      Dee_Decref(self->ot_list[i].oe_value);
+  Dee_Decref_unlikely(nameobj);
+ }
+ Dee_Free(self->ot_list);
+}
+
 INTERN bool DCALL
 JITObjectTable_TryRehash(JITObjectTable *__restrict self,
                          size_t new_mask) {

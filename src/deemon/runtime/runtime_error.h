@@ -57,8 +57,8 @@ INTDEF ATTR_COLD int DCALL err_keywords_bad_for_argc(size_t argc, size_t kwdc);
 INTDEF ATTR_COLD int DCALL err_keywords_not_found(char const *__restrict keyword);
 INTDEF ATTR_COLD int DCALL err_invalid_segment_size(size_t segsz);
 INTDEF ATTR_COLD int DCALL err_invalid_distribution_count(size_t distcnt);
-INTDEF ATTR_COLD int DCALL err_invalid_argc(char const *function_name, size_t argc_cur,
-                                            size_t argc_min, size_t argc_max);
+INTDEF ATTR_COLD int DCALL err_invalid_argc(char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);
+INTDEF ATTR_COLD int DCALL err_invalid_argc_len(char const *function_name, size_t function_size, size_t argc_cur, size_t argc_min, size_t argc_max);
 INTDEF ATTR_COLD int DCALL err_invalid_argc_va(char const *function_name, size_t argc_cur, size_t argc_min);
 INTDEF ATTR_COLD int DCALL err_invalid_argc_unpack(DeeObject *__restrict unpack_object,
                                                    size_t argc_cur, size_t argc_min, size_t argc_max);

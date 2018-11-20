@@ -111,7 +111,6 @@ err_unloaded:
 
 
 
-INTDEF ATTR_COLD int DCALL err_cannot_test_binding(void);
 INTDEF DREF DeeObject *DCALL module_getattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
 INTDEF int DCALL module_boundattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
 INTDEF int DCALL module_delattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
@@ -181,7 +180,10 @@ JITLValue_IsBound(JITLValue *__restrict self,
   break;
 
  case JIT_LVALUE_RANGE:
-  return err_cannot_test_binding();
+  context->jc_flags |= JITCONTEXT_FSERROR;
+  return DeeError_Throwf(&DeeError_SyntaxError,
+                         "Cannot test binding of expression. "
+                         "Expected a symbol, or attribute expression");
 
  case JIT_LVALUE_RVALUE:
   result = 1;

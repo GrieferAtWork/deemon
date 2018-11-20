@@ -142,10 +142,10 @@ INTERN DEFINE_KWCMETHOD(builtin_import,&f_builtin_import);
 
 PRIVATE DREF DeeObject *DCALL
 f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
- DREF DeeObject *result; DeeObject *expr;
+ DREF DeeObject *result; DeeObject *expr,*globals = NULL;
  char const *usertext; size_t usersize;
- PRIVATE struct keyword kwlist[] = { K(expr), KEND };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o:exec",&expr))
+ PRIVATE struct keyword kwlist[] = { K(expr), K(globals), KEND };
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:exec",&expr,&globals))
      goto err;
  if (DeeString_Check(expr)) {
   usertext = DeeString_AsUtf8(expr);
@@ -174,9 +174,12 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  {
   JITContext context = JITCONTEXT_INIT;
   JITLexer lexer;
-  lexer.jl_context = &context;
-  lexer.jl_errpos  = NULL;
-  lexer.jl_text    = expr;
+  DeeThreadObject *ts = DeeThread_Self();
+  context.jc_except   = ts->t_exceptsz;
+  context.jc_globals  = globals;
+  lexer.jl_context    = &context;
+  lexer.jl_errpos     = NULL;
+  lexer.jl_text       = expr;
   JITLValue_Init(&lexer.jl_lvalue);
   JITLexer_Start(&lexer,
                 (unsigned char *)usertext,
@@ -192,9 +195,22 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
                                &context);
    JITLValue_Fini(&lexer.jl_lvalue);
   }
+  ASSERT(ts->t_exceptsz >= context.jc_except);
+  /* Check for non-propagated exceptions. */
+  if (ts->t_exceptsz > context.jc_except) {
+   if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
+    if (JITCONTEXT_RETVAL_ISSET(context.jc_retval))
+        Dee_Decref(context.jc_retval);
+    context.jc_retval = JITCONTEXT_RETVAL_UNSET;
+   }
+   Dee_XClear(result);
+   while (ts->t_exceptsz > context.jc_except + 1) {
+    DeeError_Print("Discarding secondary error\n",
+                   ERROR_PRINT_DOHANDLE);
+   }
+  }
   if likely(result) {
-   ASSERT(!context.jc_retval);
-handle_result:
+   ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
    if unlikely(lexer.jl_tok != TOK_EOF) {
     DeeError_Throwf(&DeeError_SyntaxError,
                     "Expected EOF but got `%$s'",
@@ -204,11 +220,15 @@ handle_result:
     Dee_Clear(result);
     goto handle_error;
    }
+  } else if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
+   result = context.jc_retval;
+  } else if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
+   /* Exited code via unconventional means, such as `break' or `continue' */
+   DeeError_Throwf(&DeeError_SyntaxError,
+                   "Attempted to use `break' or `continue' used outside of a loop");
+   lexer.jl_errpos = lexer.jl_tokstart;
+   goto handle_error;
   } else {
-   if unlikely(context.jc_retval) {
-    result = context.jc_retval;
-    goto handle_result;
-   }
    if (!lexer.jl_errpos)
         lexer.jl_errpos = lexer.jl_tokstart;
 handle_error:
@@ -216,7 +236,9 @@ handle_error:
    /* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
    ;
   }
-  Dee_XDecref(context.jc_globals);
+  ASSERT(!globals || context.jc_globals == globals);
+  if (context.jc_globals != globals)
+      Dee_Decref(context.jc_globals);
   JITContext_Fini(&context);
  }
 #else

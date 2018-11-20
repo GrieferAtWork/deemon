@@ -370,10 +370,10 @@ kwds_findstr(Kwds *__restrict self,
 }
 
 LOCAL size_t DCALL
-kwds_findstrlen(Kwds *__restrict self,
-                char const *__restrict name,
-                size_t namesize,
-                dhash_t hash) {
+kwds_findstr_len(Kwds *__restrict self,
+                 char const *__restrict name,
+                 size_t namesize,
+                 dhash_t hash) {
  dhash_t i,perturb;
  perturb = i = hash & self->kw_mask;
  for (;; i = (i << 2) + i + perturb + 1,perturb >>= 5) {
@@ -1165,7 +1165,7 @@ DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self,
  size_t index; KwdsMapping *me;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeKwdsMapping_Type);
  me = (KwdsMapping *)self;
- index = kwds_findstrlen(me->kmo_kwds,name,namesize,hash);
+ index = kwds_findstr_len(me->kmo_kwds,name,namesize,hash);
  if unlikely(index == (size_t)-1)
     return false;
 #ifdef CONFIG_NO_THREADS
@@ -1238,7 +1238,7 @@ DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self,
  DREF DeeObject *result;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeKwdsMapping_Type);
  me = (KwdsMapping *)self;
- index = kwds_findstrlen(me->kmo_kwds,name,namesize,hash);
+ index = kwds_findstr_len(me->kmo_kwds,name,namesize,hash);
  if unlikely(index == (size_t)-1) {
 no_such_key:
   err_unknown_key_str_len((DeeObject *)self,name,namesize);
@@ -1265,7 +1265,7 @@ DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self,
  DREF DeeObject *result;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeKwdsMapping_Type);
  me = (KwdsMapping *)self;
- index = kwds_findstrlen(me->kmo_kwds,name,namesize,hash);
+ index = kwds_findstr_len(me->kmo_kwds,name,namesize,hash);
  if unlikely(index == (size_t)-1) {
 no_such_key:
   if (def != ITER_DONE)
@@ -1350,6 +1350,31 @@ DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv,
  return DeeObject_GetItemString(kw,name,hash);
 }
 PUBLIC DREF DeeObject *DCALL
+DeeArg_GetKwStringLen(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
+                      char const *__restrict name, size_t namelen, dhash_t hash) {
+ if (!kw) {
+  err_unknown_key_str_len(Dee_EmptyMapping,name,namelen);
+  return NULL;
+ }
+ if (DeeKwds_Check(kw)) {
+  size_t kw_index;
+  size_t num_keywords = DeeKwds_SIZE(kw);
+  if (num_keywords > argc) {
+   /* Argument list is too short of the given keywords */
+   err_keywords_bad_for_argc(argc,num_keywords);
+   return NULL;
+  }
+  kw_index = kwds_findstr_len((Kwds *)kw,name,namelen,hash);
+  if (kw_index == (size_t)-1) {
+   err_keywords_not_found(name);
+   return NULL;
+  }
+  ASSERT(kw_index < num_keywords);
+  return_reference(argv[(argc - num_keywords) + kw_index]);
+ }
+ return DeeObject_GetItemStringLen(kw,name,namelen,hash);
+}
+PUBLIC DREF DeeObject *DCALL
 DeeArg_GetKwStringDef(size_t argc, DeeObject **__restrict argv,
                       DeeObject *kw, char const *__restrict name,
                       DeeObject *__restrict def) {
@@ -1373,6 +1398,30 @@ return_def:
   return_reference(argv[(argc - num_keywords) + kw_index]);
  }
  return DeeObject_GetItemStringDef(kw,name,hash,def);
+}
+PUBLIC DREF DeeObject *DCALL
+DeeArg_GetKwStringLenDef(size_t argc, DeeObject **__restrict argv,
+                         DeeObject *kw, char const *__restrict name,
+                         size_t namelen, dhash_t hash,
+                         DeeObject *__restrict def) {
+ if (!kw) {
+return_def:
+  if (def != ITER_DONE)
+      Dee_Incref(def);
+  return def;
+ }
+ if (DeeKwds_Check(kw)) {
+  size_t kw_index;
+  size_t num_keywords = DeeKwds_SIZE(kw);
+  if (num_keywords > argc)
+      goto return_def;
+  kw_index = kwds_findstr_len((Kwds *)kw,name,namelen,hash);
+  if (kw_index == (size_t)-1)
+      goto return_def;
+  ASSERT(kw_index < num_keywords);
+  return_reference(argv[(argc - num_keywords) + kw_index]);
+ }
+ return DeeObject_GetItemStringLenDef(kw,name,namelen,hash,def);
 }
 
 

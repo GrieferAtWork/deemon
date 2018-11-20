@@ -238,12 +238,20 @@ DFUNDEF void DCALL DeeArg_PutKw(size_t argc, DeeObject **__restrict argv, DeeObj
 /* In a keyword-enabled function, return the argument associated with a given
  * `name', or throw a TypeError exception or return `def' if not provided. */
 DFUNDEF DREF DeeObject *DCALL
-DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv,
-                   DeeObject *kw, char const *__restrict name);
+DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
+                   char const *__restrict name);
+DFUNDEF DREF DeeObject *DCALL
+DeeArg_GetKwStringLen(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
+                      char const *__restrict name, size_t namelen, dhash_t hash);
 DFUNDEF DREF DeeObject *DCALL
 DeeArg_GetKwStringDef(size_t argc, DeeObject **__restrict argv,
                       DeeObject *kw, char const *__restrict name,
                       DeeObject *__restrict def);
+DFUNDEF DREF DeeObject *DCALL
+DeeArg_GetKwStringLenDef(size_t argc, DeeObject **__restrict argv,
+                         DeeObject *kw, char const *__restrict name,
+                         size_t namelen, dhash_t hash,
+                         DeeObject *__restrict def);
 
 
 
