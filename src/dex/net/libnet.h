@@ -57,6 +57,33 @@
 #include <stdio.h>
 #include <limits.h>
 
+#ifndef __NO_has_include
+#undef CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H
+#if __has_include(<bluetooth/bluetooth.h>) && \
+    __has_include(<bluetooth/rfcomm.h>) && \
+    __has_include(<bluetooth/l2cap.h>) && \
+    __has_include(<bluetooth/sco.h>) && \
+    __has_include(<bluetooth/hci.h>)
+#define CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H 1
+#endif
+#undef CONFIG_HAVE_INCLUDE_BLUETOOTH_H
+#if __has_include(<bluetooth.h>)
+#define CONFIG_HAVE_INCLUDE_BLUETOOTH_H 1
+#endif
+#undef CONFIG_HAVE_INCLUDE_LINUX_NETLINK_H
+#if __has_include(<linux/netlink.h>)
+#define CONFIG_HAVE_INCLUDE_LINUX_NETLINK_H 1
+#endif
+#undef CONFIG_HAVE_INCLUDE_ASM_TYPES_H
+#if __has_include(<asm/types.h>)
+#define CONFIG_HAVE_INCLUDE_ASM_TYPES_H 1
+#endif
+#undef CONFIG_HAVE_INCLUDE_SYS_UN_H
+#if __has_include(<sys/un.h>)
+#define CONFIG_HAVE_INCLUDE_SYS_UN_H 1
+#endif
+#endif
+
 #ifdef CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
@@ -611,9 +638,9 @@ typedef int               neterrno_t;
 
 
 typedef union {
-    struct sockaddr          sa;
+    struct sockaddr         sa;
 #ifdef AF_INET
-    struct sockaddr_in       sa_inet;
+    struct sockaddr_in      sa_inet;
 #endif
 #ifdef AF_INET6
     struct sockaddr_in6     sa_inet6;
@@ -626,10 +653,10 @@ typedef union {
     struct sockaddr_nl      sa_nl;
 #endif
 #ifdef AF_BLUETOOTH
-    struct sockaddr_l2       bt_l2;
-    struct sockaddr_rc       bt_rc;
-    struct sockaddr_sco      bt_sco;
-    struct sockaddr_hci      bt_hci;
+    struct sockaddr_l2      bt_l2;
+    struct sockaddr_rc      bt_rc;
+    struct sockaddr_sco     bt_sco;
+    struct sockaddr_hci     bt_hci;
 #endif
 } SockAddr;
 
@@ -860,7 +887,7 @@ INTDEF DeeTypeObject     DeeError_MessageSize;
 INTDEF DeeTypeObject     DeeError_AddrInUse;
 INTDEF DeeTypeObject     DeeError_AddrNotAvail;
 INTDEF DeeTypeObject     DeeError_HostNotFound; /* Host name does not exist. */
-INTDEF DeeTypeObject        DeeError_NoHostAddress; /* Host has no addresses associated with it. */
+INTDEF DeeTypeObject         DeeError_NoHostAddress; /* Host has no addresses associated with it. */
 
 /* Throws an `Error.SystemError.FSError.HandleClosed' */
 INTDEF void DCALL err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self);

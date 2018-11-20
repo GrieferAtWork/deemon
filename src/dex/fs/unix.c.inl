@@ -50,10 +50,14 @@ typedef int ssize_t;
 #include <io.h>
 #include <direct.h>
 #include <wchar.h>
-#define __stat64 _stat64
-#define stat64   _stat64
-#define lstat64  _stat64
-#define fstat64  _fstat64
+#define __stat64  _stat64
+#define stat64    _stat64
+#define lstat64   _stat64
+#define _wstat    _wstat
+#define _wlstat   _wstat
+#define _wstat64  _wstat64
+#define _wlstat64 _wstat64
+#define fstat64   _fstat64
 
 #include <errno.h>
 #include <Windows.h>
@@ -94,6 +98,14 @@ struct __dirstream {
 LOCAL int (link)(char const *existing_path,
                  char const *new_path) {
  if (!CreateHardLinkA(new_path,existing_path,NULL)) {
+  _set_doserrno(GetLastError());
+  return -1;
+ }
+ return 0;
+}
+LOCAL int (_wlink)(wchar_t const *existing_path,
+                   wchar_t const *new_path) {
+ if (!CreateHardLinkW(new_path,existing_path,NULL)) {
   _set_doserrno(GetLastError());
   return -1;
  }
@@ -223,10 +235,56 @@ LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
 }
 #endif /* !__USE_GNU */
 
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 64
+#endif
+#if !HOST_NAME_MAX
+#undef HOST_NAME_MAX
+#define HOST_NAME_MAX 64
+#endif
+
 INTERN DREF /*String*/DeeObject *
 DCALL fs_gethostname(void) {
- /* TODO: gethostname() */
- DERROR_NOTIMPLEMENTED();
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ size_t buflen = HOST_NAME_MAX; char *newbuf;
+ char *buf = unicode_printer_alloc_utf8(&printer,buflen);
+ if unlikely(!buf) goto err_printer;
+ DBG_ALIGNMENT_DISABLE();
+ while (gethostname(buf,buflen) < 0) {
+  int error = errno;
+  DBG_ALIGNMENT_ENABLE();
+#ifdef ENAMETOOLONG
+  if (error == EINVAL || error == ENAMETOOLONG)
+#else
+  if (error == EINVAL)
+#endif
+  {
+#ifdef ENAMETOOLONG
+   if (error == EINVAL)
+#endif
+   {
+    if (buflen >= 0x10000)
+        goto err_generic;
+   }
+   buflen *= 2;
+   newbuf = unicode_printer_resize_utf8(&printer,buf,buflen);
+   if unlikely(!newbuf) goto err;
+  } else {
+err_generic:
+   DeeError_SysThrowf(&DeeError_SystemError,error,
+                      "Failed to determine host name");
+   goto err;
+  }
+  DBG_ALIGNMENT_DISABLE();
+ }
+ DBG_ALIGNMENT_ENABLE();
+ if (unicode_printer_confirm_utf8(&printer,buf,strnlen(buf,buflen)) < 0)
+     goto err_printer;
+ return unicode_printer_pack(&printer);
+err:
+ unicode_printer_free_utf8(&printer,buf);
+err_printer:
+ unicode_printer_fini(&printer);
  return NULL;
 }
 
@@ -461,11 +519,14 @@ try_filename:
   DBG_ALIGNMENT_ENABLE();
  }
 #else
- if (!DeeString_SIZE(path)) goto done;
- DBG_ALIGNMENT_DISABLE();
- /* TODO: Unicode support through UTF-8 */
- error = chdir(DeeString_STR(path));
- DBG_ALIGNMENT_ENABLE();
+ {
+  char *utf8 = DeeString_AsUtf8(path);
+  if unlikely(!utf8) goto err;
+  if unlikely(!*utf8) goto done;
+  DBG_ALIGNMENT_DISABLE();
+  error = chdir(utf8);
+  DBG_ALIGNMENT_ENABLE();
+ }
 #endif
 #ifdef HAVE_FCHDIR
 check_error:
@@ -578,11 +639,19 @@ INTERN DeeTypeObject DeeUser_Type = {
 #define STAT        stat64
 #define LSTAT       lstat64
 #define FSTAT       fstat64
+#ifdef _WIO_DEFINED
+#define _WSTAT      _wstat64
+#define _WLSTAT     _wlstat64
+#endif
 #else
 #define STRUCT_STAT struct stat
 #define STAT        stat
 #define LSTAT       lstat
 #define FSTAT       fstat
+#ifdef _WIO_DEFINED
+#define _WSTAT      _wstat
+#define _WLSTAT     _wlstat
+#endif
 #endif
 
 
@@ -625,12 +694,25 @@ Stat_Init(STRUCT_STAT *__restrict self,
   error = FSTAT(fd,self);
   DBG_ALIGNMENT_ENABLE();
  } else {
+#ifdef _WIO_DEFINED
+  wchar_t *wpath;
+  wpath = (wchar_t *)DeeString_AsWide(path);
+  if unlikely(!wpath) goto err;
   /* Do a filename stat. */
   DBG_ALIGNMENT_DISABLE();
-  /* TODO: Unicode support through UTF-8 */
-  error = do_lstat ? LSTAT(DeeString_STR(path),self)
-                   :  STAT(DeeString_STR(path),self);
+  error = do_lstat ? _WLSTAT(wpath,self)
+                   :  _WSTAT(wpath,self);
   DBG_ALIGNMENT_ENABLE();
+#else
+  char *utf8;
+  utf8 = DeeString_AsUtf8(path);
+  if unlikely(!utf8) goto err;
+  /* Do a filename stat. */
+  DBG_ALIGNMENT_DISABLE();
+  error = do_lstat ? LSTAT(utf8,self)
+                   :  STAT(utf8,self);
+  DBG_ALIGNMENT_ENABLE();
+#endif
  }
  if unlikely(error) {
   error = errno;
@@ -662,8 +744,10 @@ stat_ctor(DeeStatObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
  if (DeeArg_Unpack(argc,argv,"o:stat",&path))
-     return -1;
+     goto err;
  return Stat_Init(&self->st_stat,path,false,false);
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -671,8 +755,10 @@ lstat_ctor(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
  if (DeeArg_Unpack(argc,argv,"o:lstat",&path))
-     return -1;
+     goto err;
  return Stat_Init(&self->st_stat,path,false,true);
+err:
+ return -1;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -946,7 +1032,7 @@ do_ishidden(DeeObject *__restrict path) {
   goto done;
  }
  /* Check if the filename starts with a `.' (DOT) */
- iter = (begin = DeeString_STR(path))+DeeString_SIZE(path);
+ iter = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
  while (iter != begin && iter[-1] != '/') --iter;
  return *iter == '.';
 done:
@@ -1126,7 +1212,8 @@ fs_chown(DeeObject *__restrict path,
          DeeObject *__restrict user,
          DeeObject *__restrict group) {
  if (DeeThread_CheckInterrupt()) goto err;
- (void)path,(void)user,(void)group; /* TODO */
+ (void)path,(void)user,(void)group;
+ /* TODO: chown() */
  DERROR_NOTIMPLEMENTED();
 err:
  return -1;
@@ -1151,10 +1238,13 @@ fs_mkdir(DeeObject *__restrict path,
   DBG_ALIGNMENT_ENABLE();
  }
 #else
- DBG_ALIGNMENT_DISABLE();
- /* TODO: Unicode support through UTF-8 */
- error = mkdir(DeeString_STR(path),creat_mode);
- DBG_ALIGNMENT_ENABLE();
+ {
+  char *utf8 = DeeString_AsUtf8(path);
+  if unlikely(!utf8) goto err;
+  DBG_ALIGNMENT_DISABLE();
+  error = mkdir(utf8,creat_mode);
+  DBG_ALIGNMENT_ENABLE();
+ }
 #endif
  if unlikely(error) {
   error = errno;
@@ -1183,41 +1273,52 @@ err:
  return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 handle_rmdir_error(int error, DeeObject *__restrict path) {
  if (error == EACCES) {
 no_access:
   DBG_ALIGNMENT_ENABLE();
-  err_path_no_write_access(error,path);
+  return err_path_no_write_access(error,path);
  } else if (error == EBUSY || error == EINVAL) {
-  err_path_busy(error,path);
+  return err_path_busy(error,path);
  } else if (error == ENOENT) {
-  err_path_not_found(error,path);
+  return err_path_not_found(error,path);
  } else if (error == ENOTDIR) {
-  err_path_no_dir(error,path);
+  return err_path_no_dir(error,path);
  } else if (error == ENOTEMPTY) {
-  err_path_not_empty(error,path);
+  return err_path_not_empty(error,path);
  } else if (error == EROFS) {
-  err_path_readonly(error,path);
+  return err_path_readonly(error,path);
  } else if (error == EPERM) {
   STRUCT_STAT st;
   /* Posix states that `EPERM' may be returned because of the sticky bit.
    * However in that event, we want to throw an access error, not an
    * unsupported-api error. */
+#ifdef _WIO_DEFINED
+  wchar_t *wpath;
+  wpath = (wchar_t *)DeeString_AsWide(path);
+  if unlikely(!wpath) return -1;
   DBG_ALIGNMENT_DISABLE();
-  /* TODO: Unicode support through UTF-8 */
-  if (!STAT(DeeString_STR(path),&st) &&
-      (st.st_mode&STAT_ISVTX))
+  if (!_WLSTAT(wpath,&st) && (st.st_mode & STAT_ISVTX))
        goto no_access;
   DBG_ALIGNMENT_ENABLE();
-  DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
-                     "The filesystem hosting the path %r does "
-                     "not support the removal of directories",
-                     path);
+#else
+  char *utf8;
+  utf8 = DeeString_AsUtf8(path);
+  if unlikely(!utf8) return -1;
+  DBG_ALIGNMENT_DISABLE();
+  if (!LSTAT(utf8,&st) && (st.st_mode & STAT_ISVTX))
+       goto no_access;
+  DBG_ALIGNMENT_ENABLE();
+#endif
+  return DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
+                            "The filesystem hosting the path %r does "
+                            "not support the removal of directories",
+                            path);
  } else {
-  DeeError_SysThrowf(&DeeError_FSError,error,
-                     "Failed to remove directory %r",
-                     path);
+  return DeeError_SysThrowf(&DeeError_FSError,error,
+                            "Failed to remove directory %r",
+                            path);
  }
 }
 
@@ -1236,55 +1337,68 @@ fs_rmdir(DeeObject *__restrict path) {
   DBG_ALIGNMENT_ENABLE();
  }
 #else
- DBG_ALIGNMENT_DISABLE();
- error = rmdir(DeeString_STR(path));
- DBG_ALIGNMENT_ENABLE();
-#endif
- if unlikely(error) {
-  handle_rmdir_error(errno,path);
-  goto err;
+ {
+  char *utf8 = DeeString_AsUtf8(path);
+  if unlikely(!utf8) goto err;
+  DBG_ALIGNMENT_DISABLE();
+  error = rmdir(utf8);
+  DBG_ALIGNMENT_ENABLE();
  }
+#endif
+ if unlikely(error)
+    return handle_rmdir_error(errno,path);
  return 0;
 err:
  return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE ATTR_COLD int DCALL
 handle_unlink_error(int error, DeeObject *__restrict path) {
  if (error == EACCES) {
 err_access:
-  err_path_no_write_access(error,path);
+  return err_path_no_write_access(error,path);
  } else if (error == EBUSY) {
-  err_path_busy(error,path);
+  return err_path_busy(error,path);
  } else if (error == EISDIR) {
 err_isdir:
-  err_path_is_dir(error,path);
+  return err_path_is_dir(error,path);
  } else if (error == ENOTDIR) {
-  err_path_no_dir(error,path);
+  return err_path_no_dir(error,path);
  } else if (error == ENOENT) {
-  err_path_not_found(error,path);
+  return err_path_not_found(error,path);
  } else if (error == EPERM) {
   /* Posix states that this is the return value when the path is a directory,
    * but also if the filesystem does not support unlinking files. */
   STRUCT_STAT st;
+#ifdef _WIO_DEFINED
+  wchar_t *wpath;
+  wpath = (wchar_t *)DeeString_AsWide(path);
+  if unlikely(!wpath) return -1;
   DBG_ALIGNMENT_DISABLE();
-  /* TODO: Unicode support through UTF-8 */
-  if (!STAT(DeeString_STR(path),&st)) {
+  if (!_WLSTAT(wpath,&st))
+#else
+  char *utf8;
+  utf8 = DeeString_AsUtf8(path);
+  if unlikely(!utf8) return -1;
+  DBG_ALIGNMENT_DISABLE();
+  if (!LSTAT(utf8,&st))
+#endif
+  {
    DBG_ALIGNMENT_ENABLE();
    if (S_ISDIR(st.st_mode)) goto err_isdir;
    /* Posix also states that the presence of the
     * S_ISVTX bit may cause EPERM to be returned. */
-   if (st.st_mode&STAT_ISVTX) goto err_access;
+   if (st.st_mode & STAT_ISVTX) goto err_access;
   }
   DBG_ALIGNMENT_ENABLE();
-  DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
-                     "The filesystem hosting the path %r "
-                     "does not support unlinking files",
-                     path);
+  return DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
+                            "The filesystem hosting the path %r "
+                            "does not support unlinking files",
+                            path);
  } else {
-  DeeError_SysThrowf(&DeeError_FSError,error,
-                     "Failed to unlink file %r",
-                     path);
+  return DeeError_SysThrowf(&DeeError_FSError,error,
+                            "Failed to unlink file %r",
+                            path);
  }
 }
 
@@ -1303,10 +1417,13 @@ fs_unlink(DeeObject *__restrict path) {
   DBG_ALIGNMENT_ENABLE();
  }
 #else
- DBG_ALIGNMENT_DISABLE();
- /* TODO: Unicode support through UTF-8 */
- error = unlink(DeeString_STR(path));
- DBG_ALIGNMENT_ENABLE();
+ {
+  char *utf8 = DeeString_AsUtf8(path);
+  if unlikely(!utf8) goto err;
+  DBG_ALIGNMENT_DISABLE();
+  error = unlink(utf8);
+  DBG_ALIGNMENT_ENABLE();
+ }
 #endif
  if unlikely(error) {
   handle_unlink_error(errno,path);
@@ -1321,6 +1438,8 @@ fs_remove(DeeObject *__restrict path) {
  int error;
 #ifdef _WIO_DEFINED
  wchar_t *wpath;
+#else
+ char *utf8;
 #endif
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeObject_AssertTypeExact(path,&DeeString_Type))
@@ -1332,9 +1451,10 @@ fs_remove(DeeObject *__restrict path) {
  error = _wunlink(wpath);
  DBG_ALIGNMENT_ENABLE();
 #else
+ utf8 = DeeString_AsUtf8(path);
+ if unlikely(!utf8) goto err;
  DBG_ALIGNMENT_DISABLE();
- /* TODO: Unicode support through UTF-8 */
- error = unlink(DeeString_STR(path));
+ error = unlink(utf8);
  DBG_ALIGNMENT_ENABLE();
 #endif
  if (error) {
@@ -1345,8 +1465,7 @@ fs_remove(DeeObject *__restrict path) {
 #ifdef _WIO_DEFINED
    error = _wrmdir(wpath);
 #else
-   /* TODO: Unicode support through UTF-8 */
-   error = rmdir(DeeString_STR(path));
+   error = rmdir(utf8);
 #endif
    DBG_ALIGNMENT_ENABLE();
    if likely(!error) goto done;
@@ -1400,6 +1519,13 @@ INTERN int DCALL
 fs_rename(DeeObject *__restrict existing_path,
           DeeObject *__restrict new_path) {
  int error;
+#ifdef _WIO_DEFINED
+ wchar_t *woldpath;
+ wchar_t *wnewpath;
+#else
+ char *uoldpath;
+ char *unewpath;
+#endif
  if (!DeeString_Check(existing_path)) {
   existing_path = DeeFile_Filename(existing_path);
   if unlikely(!existing_path) goto err;
@@ -1410,56 +1536,72 @@ fs_rename(DeeObject *__restrict existing_path,
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeObject_AssertTypeExact(new_path,&DeeString_Type))
      goto err;
+#ifdef _WIO_DEFINED
+ woldpath = (wchar_t *)DeeString_AsWide(existing_path);
+ if unlikely(!woldpath) goto err;
+ wnewpath = (wchar_t *)DeeString_AsWide(new_path);
+ if unlikely(!wnewpath) goto err;
+#else
+ uoldpath = DeeString_AsUtf8(existing_path);
+ if unlikely(!uoldpath) goto err;
+ unewpath = DeeString_AsUtf8(new_path);
+ if unlikely(!unewpath) goto err;
+#endif
  DBG_ALIGNMENT_DISABLE();
- /* TODO: Unicode support through UTF-8 */
- /* TODO: _wrename() */
- error = rename(DeeString_STR(existing_path),
-                DeeString_STR(new_path));
+#ifdef _WIO_DEFINED
+ error = _wrename(woldpath,wnewpath);
+#else
+ error = rename(uoldpath,unewpath);
+#endif
  DBG_ALIGNMENT_ENABLE();
- if unlikely(error) {
-  error = errno;
-  if (error == EACCES) {
+ if likely(!error) return 0;
+ error = errno;
+ if (error == EACCES) {
 err_access:
-   DBG_ALIGNMENT_ENABLE();
-   err_path_no_access2(error,existing_path,new_path);
-  } else if (error == EBUSY) {
-   DeeError_SysThrowf(&DeeError_BusyFile,error,
-                      "Path %r or %r cannot be accessed because it is already in use",
-                      existing_path,new_path);
-  } else if (error == EINVAL) {
-   DeeError_Throwf(&DeeError_ValueError,
-                   "Cannot rename path %r to %r which is a sub-directory of the old",
-                   existing_path,new_path);
-  } else if (error == ENOENT) {
-   err_path_not_found2(error,existing_path,new_path);
-  } else if (error == ENOTEMPTY || error == EEXIST) {
-   err_path_exists(error,new_path);
-  } else if (error == ENOTDIR) {
-   DeeError_SysThrowf(&DeeError_NoDirectory,error,
-                      "Some part of the path %r or %r is not a directory",
-                      existing_path,new_path);
-  } else if (error == EPERM) {
-   STRUCT_STAT st;
-   /* The same deal concerning the sticky bit. */
-   DBG_ALIGNMENT_DISABLE();
-   /* TODO: Unicode support through UTF-8 */
-   if ((!STAT(DeeString_STR(existing_path),&st) && (st.st_mode&STAT_ISVTX)) ||
-       (!STAT(DeeString_STR(new_path),&st) && (st.st_mode&STAT_ISVTX)))
-         goto err_access;
-   DBG_ALIGNMENT_ENABLE();
-   DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
-                      "The filesystem hosting the paths %r and %r "
-                      "does not support renaming of files",
-                      existing_path,new_path);
-  } else if (error == EROFS) {
-   err_path_readonly2(error,existing_path,new_path);
-  } else if (error == EXDEV) {
-   err_path_crossdev2(error,existing_path,new_path);
-  } else {
-   DeeError_SysThrowf(&DeeError_FSError,error,
-                      "Failed to rename %r to %r",
-                      existing_path,new_path);
-  }
+  DBG_ALIGNMENT_ENABLE();
+  err_path_no_access2(error,existing_path,new_path);
+ } else if (error == EBUSY) {
+  DeeError_SysThrowf(&DeeError_BusyFile,error,
+                     "Path %r or %r cannot be accessed because it is already in use",
+                     existing_path,new_path);
+ } else if (error == EINVAL) {
+  DeeError_Throwf(&DeeError_ValueError,
+                  "Cannot rename path %r to %r which is a sub-directory of the old",
+                  existing_path,new_path);
+ } else if (error == ENOENT) {
+  err_path_not_found2(error,existing_path,new_path);
+ } else if (error == ENOTEMPTY || error == EEXIST) {
+  err_path_exists(error,new_path);
+ } else if (error == ENOTDIR) {
+  DeeError_SysThrowf(&DeeError_NoDirectory,error,
+                     "Some part of the path %r or %r is not a directory",
+                     existing_path,new_path);
+ } else if (error == EPERM) {
+  STRUCT_STAT st;
+  /* The same deal concerning the sticky bit. */
+  DBG_ALIGNMENT_DISABLE();
+#ifdef _WIO_DEFINED
+  if ((!_WSTAT(woldpath,&st) && (st.st_mode&STAT_ISVTX)) ||
+      (!_WSTAT(wnewpath,&st) && (st.st_mode&STAT_ISVTX)))
+        goto err_access;
+#else
+  if ((!STAT(uoldpath,&st) && (st.st_mode&STAT_ISVTX)) ||
+      (!STAT(unewpath,&st) && (st.st_mode&STAT_ISVTX)))
+        goto err_access;
+#endif
+  DBG_ALIGNMENT_ENABLE();
+  DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
+                     "The filesystem hosting the paths %r and %r "
+                     "does not support renaming of files",
+                     existing_path,new_path);
+ } else if (error == EROFS) {
+  err_path_readonly2(error,existing_path,new_path);
+ } else if (error == EXDEV) {
+  err_path_crossdev2(error,existing_path,new_path);
+ } else {
+  DeeError_SysThrowf(&DeeError_FSError,error,
+                     "Failed to rename %r to %r",
+                     existing_path,new_path);
  }
 err:
  return -1;
@@ -1471,6 +1613,13 @@ INTERN int DCALL
 fs_link(DeeObject *__restrict existing_path,
         DeeObject *__restrict new_path) {
  int error;
+#ifdef _WIO_DEFINED
+ wchar_t *woldpath;
+ wchar_t *wnewpath;
+#else
+ char *uoldpath;
+ char *unewpath;
+#endif
  if (!DeeString_Check(existing_path)) {
   existing_path = DeeFile_Filename(existing_path);
   if unlikely(!existing_path) goto err;
@@ -1480,33 +1629,45 @@ fs_link(DeeObject *__restrict existing_path,
  }
  if (DeeObject_AssertTypeExact(new_path,&DeeString_Type))
      goto err;
+#ifdef _WIO_DEFINED
+ woldpath = (wchar_t *)DeeString_AsWide(existing_path);
+ if unlikely(!woldpath) goto err;
+ wnewpath = (wchar_t *)DeeString_AsWide(new_path);
+ if unlikely(!wnewpath) goto err;
+#else
+ uoldpath = DeeString_AsUtf8(existing_path);
+ if unlikely(!uoldpath) goto err;
+ unewpath = DeeString_AsUtf8(new_path);
+ if unlikely(!unewpath) goto err;
+#endif
  DBG_ALIGNMENT_DISABLE();
- /* TODO: Unicode support through UTF-8 */
- error = link(DeeString_STR(existing_path),
-              DeeString_STR(new_path));
+#ifdef _WIO_DEFINED
+ error = _wlink(woldpath,wnewpath);
+#else
+ error = link(uoldpath,unewpath);
+#endif
  DBG_ALIGNMENT_ENABLE();
- if unlikely(error) {
-  error = errno;
-  if (error == EACCES) {
-   err_path_no_access2(error,existing_path,new_path);
-  } else if (error == EEXIST) {
-   err_path_exists(error,new_path);
-  } else if (error == ENOENT) {
-   err_path_not_found2(error,existing_path,new_path);
-  } else if (error == EPERM) {
-   DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
-                      "The filesystem hosting the paths %r and %r "
-                      "does not support creation of hardlinks",
-                      existing_path,new_path);
-  } else if (error == EROFS) {
-   err_path_readonly2(error,existing_path,new_path);
-  } else if (error == EXDEV) {
-   err_path_crossdev2(error,existing_path,new_path);
-  } else {
-   DeeError_SysThrowf(&DeeError_FSError,error,
-                      "Failed to rename %r to %r",
-                      existing_path,new_path);
-  }
+ if likely(!error) return 0;
+ error = errno;
+ if (error == EACCES) {
+  err_path_no_access2(error,existing_path,new_path);
+ } else if (error == EEXIST) {
+  err_path_exists(error,new_path);
+ } else if (error == ENOENT) {
+  err_path_not_found2(error,existing_path,new_path);
+ } else if (error == EPERM) {
+  DeeError_SysThrowf(&DeeError_UnsupportedAPI,error,
+                     "The filesystem hosting the paths %r and %r "
+                     "does not support creation of hardlinks",
+                     existing_path,new_path);
+ } else if (error == EROFS) {
+  err_path_readonly2(error,existing_path,new_path);
+ } else if (error == EXDEV) {
+  err_path_crossdev2(error,existing_path,new_path);
+ } else {
+  DeeError_SysThrowf(&DeeError_FSError,error,
+                     "Failed to rename %r to %r",
+                     existing_path,new_path);
  }
 err:
  return -1;
@@ -1516,17 +1677,24 @@ fs_symlink(DeeObject *__restrict target_text,
            DeeObject *__restrict link_path,
            bool format_target) {
  int error;
+ char *utarget_text;
+ char *ulink_path;
  (void)format_target;
- if (DeeObject_AssertTypeExact(target_text,&DeeString_Type) ||
-     DeeObject_AssertTypeExact(link_path,&DeeString_Type))
+ if (DeeObject_AssertTypeExact(target_text,&DeeString_Type))
      goto err;
+ if (DeeObject_AssertTypeExact(link_path,&DeeString_Type))
+     goto err;
+ utarget_text = DeeString_AsUtf8(target_text);
+ if unlikely(!utarget_text) goto err;
+ ulink_path = DeeString_AsUtf8(link_path);
+ if unlikely(!ulink_path) goto err;
  DBG_ALIGNMENT_DISABLE();
- /* TODO: Unicode support through UTF-8 */
- error = symlink(DeeString_STR(target_text),
-                 DeeString_STR(link_path));
+ error = symlink(utarget_text,ulink_path);
  DBG_ALIGNMENT_ENABLE();
  if unlikely(error) {
+  DBG_ALIGNMENT_DISABLE();
   error = errno;
+  DBG_ALIGNMENT_ENABLE();
   if (error == EACCES) {
    err_path_no_access(error,link_path);
   } else if (error == EEXIST) {
@@ -1554,70 +1722,73 @@ err:
 
 INTERN DREF DeeObject *DCALL
 fs_readlink(DeeObject *__restrict path) {
- char *buffer; int error;
- size_t bufsize,new_size; ssize_t req_size;
- struct ascii_printer printer = ASCII_PRINTER_INIT;
  if (!DeeString_Check(path)) {
   DREF DeeObject *result;
   path = DeeFile_Filename(path);
-  if unlikely(!path) goto err;
+  if unlikely(!path) return NULL;
   result = fs_readlink(path);
   Dee_Decref(path);
   return result;
- }
- /* XXX: Support KOS's freadlink() extension. */
- bufsize = PATH_MAX;
- buffer  = ascii_printer_alloc(&printer,bufsize);
- if unlikely(!buffer) goto err;
- for (;;) {
-  STRUCT_STAT st;
-  DBG_ALIGNMENT_DISABLE();
-  /* TODO: Unicode support through UTF-8 */
-  req_size = readlink(DeeString_STR(path),buffer,bufsize+1);
-  DBG_ALIGNMENT_ENABLE();
-  if unlikely(req_size < 0) {
+ } else {
+  char *utf8,*buffer,*new_buffer; int error;
+  size_t bufsize,new_size; dssize_t req_size;
+  struct unicode_printer printer = UNICODE_PRINTER_INIT;
+  utf8 = DeeString_AsUtf8(path);
+  if unlikely(!utf8) goto err_printer;
+  bufsize = PATH_MAX;
+  buffer  = unicode_printer_alloc_utf8(&printer,bufsize);
+  if unlikely(!buffer) goto err_printer;
+  for (;;) {
+   STRUCT_STAT st;
+   DBG_ALIGNMENT_DISABLE();
+   req_size = readlink(utf8,buffer,bufsize+1);
+   if unlikely(req_size < 0) {
 handle_error:
-   DBG_ALIGNMENT_ENABLE();
-   error = errno;
-   if (error == EACCES) {
-    err_path_no_access(error,path);
-   } else if (error == ENOTDIR) {
-    err_path_no_dir(error,path);
-   } else if (error == ENOENT) {
-    err_path_not_found(error,path);
-   } else if (error == EINVAL) {
+    error = errno;
+    DBG_ALIGNMENT_ENABLE();
+    if (error == EACCES) {
+     err_path_no_access(error,path);
+    } else if (error == ENOTDIR) {
+     err_path_no_dir(error,path);
+    } else if (error == ENOENT) {
+     err_path_not_found(error,path);
+    } else if (error == EINVAL) {
 no_link:
-    DeeError_SysThrowf(&DeeError_NoLink,error,
-                       "Path %r is not a symbolic link",
-                       path);
-   } else {
-    DeeError_SysThrowf(&DeeError_FSError,error,
-                       "Failed to read symbolic link %r",
-                       path);
+     DeeError_SysThrowf(&DeeError_NoLink,error,
+                        "Path %r is not a symbolic link",
+                        path);
+    } else {
+     DeeError_SysThrowf(&DeeError_FSError,error,
+                        "Failed to read symbolic link %r",
+                        path);
+    }
+    goto err;
    }
-   goto err;
+   DBG_ALIGNMENT_ENABLE();
+   if ((size_t)req_size <= bufsize) break;
+   DBG_ALIGNMENT_DISABLE();
+   if (LSTAT(utf8,&st))
+       goto handle_error;
+   DBG_ALIGNMENT_ENABLE();
+   /* Ensure that this is still a symbolic link. */
+   if (!S_ISLNK(st.st_mode)) { error = EINVAL; goto no_link; }
+   new_size = (size_t)st.st_size;
+   if (new_size <= bufsize) break; /* Shouldn't happen, but might due to race conditions? */
+   new_buffer = unicode_printer_resize_utf8(&printer,buffer,new_size);
+   if unlikely(!new_buffer) goto err;
+   buffer  = new_buffer;
+   bufsize = new_size;
   }
-  if ((size_t)req_size <= bufsize) break;
-  DBG_ALIGNMENT_DISABLE();
-  /* TODO: Unicode support through UTF-8 */
-  if (LSTAT(DeeString_STR(path),&st))
-      goto handle_error;
-  DBG_ALIGNMENT_ENABLE();
-  /* Ensure that this is still a symbolic link. */
-  if (!S_ISLNK(st.st_mode)) { error = EINVAL; goto no_link; }
-  new_size = (size_t)st.st_size;
-  if (new_size <= bufsize) break; /* Shouldn't happen, but might due to race conditions? */
-  buffer = ascii_printer_alloc(&printer,new_size-bufsize);
-  if unlikely(!buffer) goto err;
-  buffer -= bufsize;
-  bufsize = new_size;
- }
- /* Release unused data. */
- ascii_printer_release(&printer,(size_t)(bufsize-req_size));
- return ascii_printer_pack(&printer);
+  /* Release unused data. */
+  if (unicode_printer_confirm_utf8(&printer,buffer,(size_t)req_size) < 0)
+      goto err_printer;
+  return unicode_printer_pack(&printer);
 err:
- ascii_printer_fini(&printer);
- return NULL;
+  unicode_printer_free_utf8(&printer,buffer);
+err_printer:
+  unicode_printer_fini(&printer);
+  return NULL;
+ }
 }
 
 
@@ -1717,7 +1888,11 @@ err:
 }
 
 PRIVATE ATTR_COLD int DCALL
-err_handle_opendir(int error, DeeObject *__restrict path) {
+err_handle_opendir(DeeObject *__restrict path) {
+ int error;
+ DBG_ALIGNMENT_DISABLE();
+ error = errno;
+ DBG_ALIGNMENT_ENABLE();
  if (error == ENOENT)
      return err_path_not_found(error,path);
  if (error == ENOTDIR)
@@ -1729,17 +1904,18 @@ err_handle_opendir(int error, DeeObject *__restrict path) {
 
 PRIVATE DREF DirIterator *DCALL
 dir_iter(Dir *__restrict self) {
- DREF DirIterator *result;
+ DREF DirIterator *result; char *utf8;
  if (DeeThread_CheckInterrupt()) goto err;
  result = DeeObject_MALLOC(DirIterator);
  if unlikely(!result) goto err;
  /* Open a directory descriptor. */
+ utf8 = DeeString_AsUtf8((DeeObject *)self->d_path);
+ if unlikely(!utf8) goto err_r;
  DBG_ALIGNMENT_DISABLE();
- /* TODO: Unicode support through UTF-8 */
- result->d_hnd = opendir(DeeString_STR(self->d_path));
+ result->d_hnd = opendir(utf8);
  DBG_ALIGNMENT_ENABLE();
  if unlikely(!result->d_hnd) {
-  err_handle_opendir(errno,(DeeObject *)self->d_path);
+  err_handle_opendir((DeeObject *)self->d_path);
   goto err_r;
  }
  Dee_Incref(self);
@@ -1953,14 +2129,18 @@ queryiter_next(QueryIterator *__restrict self) {
 again:
  result = diriter_next(&self->q_iter);
  if (ITER_ISOK(result)) {
-  /* TODO: Unicode support through UTF-8 */
-  if (wild_match(DeeString_STR(result),self->q_wild) != 0) {
+  char *utf8 = DeeString_AsUtf8((DeeObject *)result);
+  if unlikely(!utf8) goto err_r;
+  if (wild_match(utf8,self->q_wild) != 0) {
    /* Non-matching entry (read more) */
    Dee_Decref(result);
    goto again;
   }
  }
  return result;
+err_r:
+ Dee_Decref(result);
+ return NULL;
 }
 
 
@@ -2021,45 +2201,45 @@ PRIVATE struct type_member query_class_members[] = {
 PRIVATE DREF QueryIterator *DCALL
 query_iter(Dir *__restrict self) {
  DREF QueryIterator *result;
- char *query_start;
+ char *query_start,*query_str;
  if (DeeThread_CheckInterrupt()) goto err;
  result = DeeObject_MALLOC(QueryIterator);
  if unlikely(!result) goto err;
- /* TODO: Unicode support through UTF-8 */
- query_start = (char *)memrchr(DeeString_STR(self->d_path),'/',
-                               DeeString_SIZE(self->d_path));
+ query_str = DeeString_AsUtf8((DeeObject *)self->d_path);
+ if unlikely(!query_str) goto err;
+ query_start = (char *)memrchr(query_str,'/',WSTR_LENGTH(query_str));
  if (!query_start) {
   /* Open a directory descriptor. */
   result->q_iter.d_hnd = opendir(".");
-  query_start = DeeString_STR(self->d_path);
+  query_start = query_str;
  } else {
   /* Open a directory descriptor. */
   if (DeeObject_IsShared(self->d_path)) {
-   char  *temp_filename; int old_errno;
-   size_t temp_filesize = (size_t)(query_start-DeeString_STR(self->d_path));
-   temp_filename = (char *)Dee_Malloc(temp_filesize*sizeof(char));
+   char *temp_filename; int old_errno;
+   size_t temp_filesize = (size_t)(query_start - query_str);
+   temp_filename = (char *)Dee_AMalloc((temp_filesize + 1) * sizeof(char));
    if unlikely(!temp_filename) goto err_r;
-   memcpy(temp_filename,DeeString_STR(self->d_path),temp_filesize*sizeof(char));
-   temp_filename[temp_filesize-1] = '\0'; /* Override the '/' to terminate the string. */
+   memcpy(temp_filename,query_str,temp_filesize * sizeof(char));
+   temp_filename[temp_filesize] = '\0'; /* Override the '/' to terminate the string. */
    DBG_ALIGNMENT_DISABLE();
-   result->q_iter.d_hnd = opendir(DeeString_STR(self->d_path));
-   DBG_ALIGNMENT_ENABLE();
+   result->q_iter.d_hnd = opendir(temp_filename);
    /* Free the temporary buffer, but preserve errno. */
    old_errno = errno;
-   Dee_Free(temp_filename);
+   Dee_AFree(temp_filename);
    errno = old_errno;
+   DBG_ALIGNMENT_ENABLE();
   } else {
    /* Cheat a bit so we don't have to allocate a second buffer. */
    *query_start = '\0';
    DBG_ALIGNMENT_DISABLE();
-   result->q_iter.d_hnd = opendir(DeeString_STR(self->d_path));
+   result->q_iter.d_hnd = opendir(query_str);
    DBG_ALIGNMENT_ENABLE();
    *query_start = '/';
   }
   ++query_start;
  }
  if unlikely(!result->q_iter.d_hnd) {
-  err_handle_opendir(errno,(DeeObject *)self->d_path);
+  err_handle_opendir((DeeObject *)self->d_path);
   goto err_r;
  }
  Dee_Incref(self);
@@ -2068,7 +2248,7 @@ query_iter(Dir *__restrict self) {
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&result->q_iter.d_lock);
 #endif
- DeeObject_Init(&result->q_iter,&DeeDirIterator_Type);
+ DeeObject_Init(&result->q_iter,&DeeQueryIterator_Type);
  return result;
 err_r: DeeObject_Free(result);
 err:   return NULL;

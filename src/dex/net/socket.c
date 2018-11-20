@@ -521,19 +521,19 @@ err:
  * But to still ensure that this blocking call can be interrupted by
  * `thread.interrupt()', we need to use this system call right here: */
 PRIVATE DWORD DCALL
-select_interruptible(SOCKET sock, DWORD lNetworkEvents, DWORD timeout) {
- DWORD result; HANDLE sockevent;
+select_interruptible(SOCKET hSocket, LONG lNetworkEvents, DWORD dwTimeout) {
+ DWORD dwResult; HANDLE hSockEvent;
  /* NOTE: No need to do further error checking.
   *       These API functions will propagate errors for us automatically. */
  DBG_ALIGNMENT_DISABLE();
- sockevent = WSACreateEvent();
- WSAEventSelect(sock,sockevent,lNetworkEvents);
- result = WSAWaitForMultipleEvents(1,&sockevent,FALSE,timeout,TRUE);
+ hSockEvent = WSACreateEvent();
+ WSAEventSelect(hSocket,hSockEvent,lNetworkEvents);
+ dwResult = WSAWaitForMultipleEvents(1,&hSockEvent,FALSE,dwTimeout,TRUE);
  /* Apparently this is required to prevent the event also closing the socket??? */
- WSAEventSelect(sock,sockevent,0);
- WSACloseEvent(sockevent);
+ WSAEventSelect(hSocket,hSockEvent,0);
+ WSACloseEvent(hSockEvent);
  DBG_ALIGNMENT_ENABLE();
- return result;
+ return dwResult;
 }
 #endif
 
@@ -541,7 +541,8 @@ select_interruptible(SOCKET sock, DWORD lNetworkEvents, DWORD timeout) {
 
 
 PRIVATE ATTR_COLD int DCALL
-err_network_down(int error, Socket *__restrict socket, SockAddr const *__restrict addr) {
+err_network_down(int error, Socket *__restrict socket,
+                 SockAddr const *__restrict addr) {
  return DeeError_SysThrowf(&DeeError_NetUnreachable,error,
                            "No route to network of %K can be established",
                            SockAddr_ToString(addr,socket->s_proto,
@@ -797,6 +798,7 @@ restart:
  socklen = SockAddr_Sizeof(self->s_sockaddr.sa.sa_family,self->s_proto);
  if (timeout_microseconds == (uint64_t)-1) {
   /* Accept. */
+restart_no_timeout:
   if (DeeThread_CheckInterrupt())
       goto err;
   socket_read(self);
@@ -814,7 +816,7 @@ restart:
    socket_endread(self);
    if (error == WSA_WAIT_IO_COMPLETION ||
        error == WSA_WAIT_TIMEOUT)
-       goto restart;
+       goto restart_no_timeout;
    goto handle_accept_error_neterror;
   }
 #else
@@ -838,7 +840,7 @@ restart:
     goto handle_accept_error_neterror;
    }
    DBG_ALIGNMENT_ENABLE();
-   goto do_timed_select;
+   goto restart_no_timeout;
   }
 #endif
   DBG_ALIGNMENT_DISABLE();
@@ -881,7 +883,11 @@ do_try_select:
      DBG_ALIGNMENT_DISABLE();
      if (GET_NET_ERROR() == EINTR) {
       DBG_ALIGNMENT_ENABLE();
+#if 1 /* Handle EINTR the same way we would handle a timeout. */
+      return 1;
+#else
       goto do_try_select;
+#endif
      }
      DBG_ALIGNMENT_ENABLE();
 #endif

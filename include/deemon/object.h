@@ -2240,6 +2240,41 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 #endif
 
 
+#if 1 /* Integer conversion with automatic operand size. */
+INTDEF ATTR_ERROR("Invalid integer size") int _Dee_invalid_integer_size(void);
+#ifndef __NO_builtin_choose_expr
+#define DeeObject_AsSINT(self,result) \
+      __builtin_choose_expr(sizeof(*(result)) == 1,DeeObject_AsInt8(self,(int8_t *)(result)), \
+      __builtin_choose_expr(sizeof(*(result)) == 2,DeeObject_AsInt16(self,(int16_t *)(result)), \
+      __builtin_choose_expr(sizeof(*(result)) == 4,DeeObject_AsInt32(self,(int32_t *)(result)), \
+      __builtin_choose_expr(sizeof(*(result)) == 8,DeeObject_AsInt64(self,(int64_t *)(result)), \
+      __builtin_choose_expr(sizeof(*(result)) == 16,DeeObject_AsInt128(self,(uint128_t *)(result)), \
+                                                   _Dee_invalid_integer_size())))))
+#define DeeObject_AsUINT(self,result) \
+      __builtin_choose_expr(sizeof(*(result)) == 1,DeeObject_AsUInt8(self,(uint8_t *)(result)), \
+      __builtin_choose_expr(sizeof(*(result)) == 2,DeeObject_AsUInt16(self,(uint16_t *)(result)), \
+      __builtin_choose_expr(sizeof(*(result)) == 4,DeeObject_AsUInt32(self,(uint32_t *)(result)), \
+      __builtin_choose_expr(sizeof(*(result)) == 8,DeeObject_AsUInt64(self,(uint64_t *)(result)), \
+      __builtin_choose_expr(sizeof(*(result)) == 16,DeeObject_AsUInt128(self,(duint128_t *)(result)), \
+                                                   _Dee_invalid_integer_size())))))
+#else
+#define DeeObject_AsSINT(self,result) \
+      (sizeof(*(result)) == 1 ? DeeObject_AsInt8(self,(int8_t *)(result)) : \
+       sizeof(*(result)) == 2 ? DeeObject_AsInt16(self,(int16_t *)(result)) : \
+       sizeof(*(result)) == 4 ? DeeObject_AsInt32(self,(int32_t *)(result)) : \
+       sizeof(*(result)) == 8 ? DeeObject_AsInt64(self,(int64_t *)(result)) : \
+       sizeof(*(result)) == 16 ? DeeObject_AsInt128(self,(uint128_t *)(result)) : \
+                                _Dee_invalid_integer_size())
+#define DeeObject_AsUINT(self,result) \
+      (sizeof(*(result)) == 1 ? DeeObject_AsUInt8(self,(uint8_t *)(result)) : \
+       sizeof(*(result)) == 2 ? DeeObject_AsUInt16(self,(uint16_t *)(result)) : \
+       sizeof(*(result)) == 4 ? DeeObject_AsUInt32(self,(uint32_t *)(result)) : \
+       sizeof(*(result)) == 8 ? DeeObject_AsUInt64(self,(uint64_t *)(result)) : \
+       sizeof(*(result)) == 16 ? DeeObject_AsUInt128(self,(duint128_t *)(result)) : \
+                                _Dee_invalid_integer_size())
+#endif
+#endif
+
 
 
 /* A hybrid between alloca and malloc, using alloca for

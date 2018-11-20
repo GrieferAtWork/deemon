@@ -1408,17 +1408,14 @@ do_generic_string_2:
 #endif
 
 #ifdef AF_NETLINK
-#ifndef __SIZEOF_PID_T__
-#define __SIZEOF_PID_T__ 4
-#endif
  case AF_NETLINK: {
   switch (argc) {
   case 1: goto do_generic_string;
   case 2:
    memset(&self->sa_nl,0,sizeof(struct sockaddr_nl));
    self->sa_nl.nl_family = AF_NETLINK;
-   if (DeeObject_AsXInt(__SIZEOF_PID_T__,argv[0],&self->sa_nl.nl_pid) ||
-       DeeObject_AsUInt32(argv[1],&self->sa_nl.nl_groups))
+   if (DeeObject_AsUINT(argv[0],&self->sa_nl.nl_pid) ||
+       DeeObject_AsUINT(argv[1],&self->sa_nl.nl_groups))
        goto err;
    break;
   default:
@@ -1445,7 +1442,7 @@ do_generic_string_2:
    }
    self->bt_l2.l2_family = AF_BLUETOOTH;
    if (DeeObject_AssertTypeExact(argv[0],&DeeString_Type)) goto err;
-   if (DeeObject_AsUInt16(argv[1],&self->bt_l2.l2_psm)) goto err;
+   if (DeeObject_AsUINT(argv[1],&self->bt_l2.l2_psm)) goto err;
    if unlikely(priv_stobdaddr(DeeString_STR(argv[0]),&self->bt_l2.l2_bdaddr)) goto err;
   } break;
   case BTPROTO_RFCOMM: {
@@ -1459,7 +1456,7 @@ do_generic_string_2:
    }
    self->bt_rc.rc_family = AF_BLUETOOTH;
    if (DeeObject_AssertTypeExact(argv[0],&DeeString_Type)) goto err;
-   if (DeeObject_AsUInt16(argv[1],&self->bt_rc.rc_channel)) goto err;
+   if (DeeObject_AsUINT(argv[1],&self->bt_rc.rc_channel)) goto err;
    if unlikely(priv_stobdaddr(DeeString_STR(argv[0]),&self->bt_rc.rc_bdaddr)) goto err;
   } break;
   case BTPROTO_HCI: {
@@ -1474,9 +1471,9 @@ do_generic_string_2:
    self->bt_hci.hci_family = AF_BLUETOOTH;
 #if defined(__NetBSD__) || defined(__DragonFly__)
    if (DeeObject_AssertTypeExact(argv[0],&DeeString_Type)) goto err;
-   if unlikely(setbdaddr(DeeString_StR(argv[0]),&self->bt_hci.hci_bdaddr)) goto err;
+   if unlikely(priv_stobdaddr(DeeString_StR(argv[0]),&self->bt_hci.hci_bdaddr)) goto err;
 #else
-   if (DeeObject_AsUInt16(argv[0],&self->bt_hci.hci_dev)) goto err;
+   if (DeeObject_AsUINT(argv[0],&self->bt_hci.hci_dev)) goto err;
 #endif
   } break;
 
