@@ -24,7 +24,9 @@
 #include <deemon/object.h>
 #include <deemon/none.h>
 #include <deemon/util/string.h>
+#include <deemon/error.h>
 #include <deemon/tuple.h>
+#include <deemon/seq.h>
 #include <deemon/hashset.h>
 #include <deemon/list.h>
 #include <deemon/dict.h>
@@ -59,13 +61,6 @@ multiple_continue_at_iter:
   if (self->a_flag == AST_FMULTIPLE_KEEPLAST && iter != end-1)
       using_value = false;
   if (ast_optimize(stack,*iter,using_value)) goto err;
-  /* TODO: Optimize something like this:
-   *       `[10,20,[30,40]...]' --> [10,20,30,40]'
-   * NOTE: This shouldn't even be exclusive to constant expressions!
-   *       Any time an ast_expand(ast_multiple()) is encounted
-   *       here, we can insert all the elements from the
-   *       underlying AST here!
-   */
   if ((*iter)->a_type != AST_CONSTEXPR) only_constexpr = false;
   temp = ast_doesnt_return(*iter,AST_DOESNT_RETURN_FNORMAL);
   if (temp < 0) is_unreachable = temp == -2;
@@ -231,6 +226,107 @@ after_multiple_constexpr:
    OPTIMIZE_VERBOSE("Replace empty multi-ast with `none'\n");
    goto did_optimize;
   default: break;
+  }
+ } else {
+  /* Try to optimize something like `[10,[x,y]...]' to `[10,x,y]' */
+  end = (iter = self->a_multiple.m_astv) + self->a_multiple.m_astc;
+continue_inline_at_iter:
+  for (; iter < end; ++iter) {
+   struct ast *inner;
+   if ((*iter)->a_type != AST_EXPAND)
+        continue;
+   inner = (*iter)->a_expand;
+   if (inner->a_type == AST_MULTIPLE &&
+       inner->a_flag != AST_FMULTIPLE_KEEPLAST) {
+    DREF struct ast **new_astv;
+    struct ast *expand = *iter;
+    size_t move_count;
+    OPTIMIZE_VERBOSEAT(inner,"Inline expanded multi-branch into containing sequence\n");
+    ++optimizer_count;
+    /* Simply inline all of the expanded sequence expressions. */
+    if (!inner->a_multiple.m_astc) {
+     ast_decref(expand);
+     --end;
+     MEMMOVE_PTR(iter,iter + 1,(size_t)(end - iter));
+     --self->a_multiple.m_astc;
+     goto continue_inline_at_iter;
+    }
+    new_astv = (DREF struct ast **)Dee_Realloc(self->a_multiple.m_astv,
+                                              (self->a_multiple.m_astc - 1 +
+                                               inner->a_multiple.m_astc) *
+                                               sizeof(DREF struct ast *));
+    if unlikely(!new_astv) goto err;
+    move_count = (size_t)((end - iter) - 1);
+    iter = new_astv + (iter - self->a_multiple.m_astv);
+    self->a_multiple.m_astv  = new_astv;
+    self->a_multiple.m_astc += inner->a_multiple.m_astc - 1;
+    end = new_astv + self->a_multiple.m_astc;
+    MEMMOVE_PTR(iter + inner->a_multiple.m_astc,
+                iter + 1,
+                move_count);
+    MEMCPY_PTR(iter,
+               inner->a_multiple.m_astv,
+               inner->a_multiple.m_astc);
+    Dee_Free(inner->a_multiple.m_astv);
+    inner->a_multiple.m_astc = 0;
+    inner->a_multiple.m_astv = NULL;
+    ast_decref(expand);
+    goto continue_inline_at_iter;
+   } else if (inner->a_type == AST_CONSTEXPR) {
+    DREF struct ast **new_astv;
+    DREF DeeObject **vec; size_t len,i;
+    struct ast *expand = *iter;
+    size_t move_count;
+    vec = DeeSeq_AsHeapVector(inner->a_constexpr,&len);
+    if unlikely(!vec) {
+     DeeError_Handled(ERROR_HANDLED_RESTORE);
+     continue;
+    }
+    OPTIMIZE_VERBOSEAT(inner,"Inline expanded constant-branch into containing sequence\n");
+    ++optimizer_count;
+    if (!len) {
+     ast_decref(expand);
+     --end;
+     MEMMOVE_PTR(iter,iter + 1,(size_t)(end - iter));
+     --self->a_multiple.m_astc;
+     goto continue_inline_at_iter;
+    }
+    new_astv = (DREF struct ast **)Dee_Realloc(self->a_multiple.m_astv,
+                                              (self->a_multiple.m_astc - 1 + len) *
+                                               sizeof(DREF struct ast *));
+    if unlikely(!new_astv) {
+err_expand_vec:
+     while (len--) Dee_Decref(vec[len]);
+     Dee_Free(vec);
+     goto err;
+    }
+    move_count = (size_t)((end - iter) - 1);
+    iter = new_astv + (iter - self->a_multiple.m_astv);
+    self->a_multiple.m_astv  = new_astv;
+    self->a_multiple.m_astc += len - 1;
+    end = new_astv + self->a_multiple.m_astc;
+    MEMMOVE_PTR(iter + len,
+                iter + 1,
+                move_count);
+    /* Wrap all of the sequence elements of the
+     * inner expression into constant-branches. */
+    for (i = 0; i < len; ++i) {
+     DREF struct ast *constant_ast;
+     constant_ast = ast_setddi(ast_constexpr(vec[i]),&inner->a_ddi);
+     if unlikely(!constant_ast) {
+      MEMMOVE_PTR(iter + i + len,
+                  iter + i + 1,
+                  move_count - i);
+      self->a_multiple.m_astc -= len - i;
+      goto err_expand_vec;
+     }
+     iter[i] = constant_ast; /* Inherit reference */
+    }
+    while (len--) Dee_Decref(vec[len]);
+    Dee_Free(vec);
+    ast_decref(expand);
+    goto continue_inline_at_iter;
+   }
   }
  }
  return 0;
