@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+#define PREVENT_OPTIMIZATIONS(x) __asm__("" : "+x" (x))
 
 /* With the introduction of the new symbol system, symbol references are
  * handled implicitly internally. Because of this, the assembler must be
@@ -27,6 +28,13 @@
 local a = "a";
 local b = "b";
 local c = "c";
+
+/* Prevent variables from being propagated, as them being turned into
+ * constants would really test the validity of recursively referenced
+ * symbol. */
+PREVENT_OPTIMIZATIONS(a);
+PREVENT_OPTIMIZATIONS(b);
+PREVENT_OPTIMIZATIONS(c);
 
 function outer() {
 	assert a == "a";
@@ -44,20 +52,24 @@ function outer() {
 			assert b == "b";
 			assert a == "a";
 		}
+		PREVENT_OPTIMIZATIONS(inner2);
 		inner2();
 	}
+	PREVENT_OPTIMIZATIONS(inner);
 	inner();
 	function inner2() {
 		assert c == "c";
 		assert b == "b";
 		assert a == "a";
 	}
+	PREVENT_OPTIMIZATIONS(inner2);
 	inner2();
 	/* Make sure that the compiler didn't mess up referece indices. */
 	assert a == "a";
 	assert b == "b";
 	assert c == "c";
 }
+PREVENT_OPTIMIZATIONS(outer);
 
 outer();
 

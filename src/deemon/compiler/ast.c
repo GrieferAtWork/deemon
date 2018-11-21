@@ -537,6 +537,9 @@ DEFINE_AST_GENERATOR(ast_expand,
                     (struct ast *__restrict expr)) {
  DREF struct ast *result;
  ASSERT_AST(expr);
+#if 0 /* This cases problems with code such as `([foo]...)' being
+       * interpreted as though it was written as `(foo)', rather
+       * than as written as `(foo,)' */
  /* To prevent ambiguity, always expand single-element,
   * sequence-multi-expressions without going through an AST_EXPAND. */
  if (expr->a_type == AST_MULTIPLE &&
@@ -546,6 +549,7 @@ DEFINE_AST_GENERATOR(ast_expand,
   ast_incref(result);
   return result;
  }
+#endif
  if likely((result = ast_new()) != NULL) {
   result->a_type       = AST_EXPAND;
   result->a_expand = expr;
