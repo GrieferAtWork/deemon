@@ -359,6 +359,45 @@ again:
  return false;
 }
 
+INTERN bool DCALL
+symbol_set_haseffect(struct symbol *__restrict self,
+                     DeeScopeObject *__restrict caller_scope) {
+again:
+ switch (self->s_type) {
+
+ case SYMBOL_TYPE_ALIAS:
+  self = SYMBOL_ALIAS(self);
+  goto again;
+
+ case SYMBOL_TYPE_CATTR:
+  if (!(self->s_attr.a_attr->ca_flag &
+        /* A non-private symbol may be accessed from the outside, meaning
+         * that writing to this kind of symbol _does_ have side-effects. */
+        CLASS_ATTRIBUTE_FPRIVATE))
+      return true;
+  if (self->s_attr.a_attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+      return true; /* Properties have side-effects */
+  if (symbol_get_haseffect(self->s_attr.a_class,caller_scope))
+      return true;
+  if (!self->s_attr.a_this) break;
+  /* The attribute must be accessed as virtual. */
+  if unlikely(!symbol_reachable(self,caller_scope))
+     return true;
+  return symbol_get_haseffect(self->s_attr.a_this,caller_scope);
+
+ case SYMBOL_TYPE_EXTERN:
+  if (self->s_extern.e_symbol->ss_flags & MODSYM_FPROPERTY)
+      return true;
+  break;
+
+ case SYMBOL_TYPE_GETSET:
+  return true;
+
+ default: break;
+ }
+ return false;
+}
+
 
 
 INTERN void DCALL

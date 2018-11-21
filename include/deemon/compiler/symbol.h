@@ -741,9 +741,9 @@ INTDEF bool DCALL symbol_uses_symbol_on_set(struct symbol *__restrict self, stru
  * Note that UnboundLocal errors (as thrown when accessing an unbound local symbol) are
  * not considered true side-effects for this purpose. */
 INTDEF bool DCALL symbol_get_haseffect(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
+INTDEF bool DCALL symbol_set_haseffect(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
 #define symbol_bnd_haseffect(self,caller_scope) symbol_get_haseffect(self,caller_scope)
-#define symbol_del_haseffect(self,caller_scope) symbol_get_haseffect(self,caller_scope)
-#define symbol_set_haseffect(self,caller_scope) symbol_get_haseffect(self,caller_scope)
+#define symbol_del_haseffect(self,caller_scope) symbol_set_haseffect(self,caller_scope)
 #define CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT 1
 #define CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT 1
 
