@@ -1894,11 +1894,11 @@ next:
     if (!ISSEP(ch)) break;
     --old_length;
    }
-   new_end = (size_t)unicode_printer_memchr(&full_path,'/',0,old_length);
+   new_end = (size_t)unicode_printer_memrchr(&full_path,'/',0,old_length);
 #ifdef CONFIG_HOST_WINDOWS
    {
     size_t temp;
-    temp = (size_t)unicode_printer_memchr(&full_path,'\\',0,old_length);
+    temp = (size_t)unicode_printer_memrchr(&full_path,'\\',0,old_length);
     if (new_end > temp)
         new_end = temp;
    }
