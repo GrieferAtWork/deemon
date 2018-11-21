@@ -37,6 +37,7 @@
 #include <deemon/map.h>
 #include <deemon/string.h>
 #include <deemon/util/string.h>
+#include <deemon/rodict.h>
 
 #include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
@@ -113,21 +114,6 @@ err_r:
  return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeDict_FromSequence(DeeObject *__restrict self) {
- DREF DeeObject *result;
- if (DeeDict_CheckExact(self)) {
-  if (!DeeObject_IsShared(self))
-       return_reference_(self);
-  return DeeObject_Copy(self);
- }
- if unlikely((self = DeeObject_IterSelf(self)) == NULL)
-    return NULL;
- result = DeeDict_FromIterator(self);
- Dee_Decref(self);
- return result;
-}
-
 PRIVATE int DCALL
 dict_setitem(Dict *__restrict self,
              DeeObject *__restrict key,
@@ -173,11 +159,66 @@ dict_init_iterator(Dict *__restrict self,
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&self->d_lock);
 #endif /* !CONFIG_NO_THREADS */
+ weakref_support_init(self);
  if unlikely(dict_insert_iterator(self,iterator)) {
   dict_fini(self);
   return -1;
  }
  return 0;
+}
+
+PRIVATE int DCALL dict_copy(Dict *__restrict self, Dict *__restrict other);
+
+STATIC_ASSERT(sizeof(struct dict_item) == sizeof(struct rodict_item));
+STATIC_ASSERT(COMPILER_OFFSETOF(struct dict_item,di_key) == COMPILER_OFFSETOF(struct rodict_item,di_key));
+STATIC_ASSERT(COMPILER_OFFSETOF(struct dict_item,di_value) == COMPILER_OFFSETOF(struct rodict_item,di_value));
+STATIC_ASSERT(COMPILER_OFFSETOF(struct dict_item,di_hash) == COMPILER_OFFSETOF(struct rodict_item,di_hash));
+
+PRIVATE int DCALL
+dict_init_sequence(Dict *__restrict self,
+                   DeeObject *__restrict sequence) {
+ DREF DeeObject *iterator; int error;
+ DeeTypeObject *tp = Dee_TYPE(sequence);
+ if (tp == &DeeDict_Type)
+     return dict_copy(self,(Dict *)sequence);
+ /* Optimizations for `_rodict' */
+ if (tp == &DeeRoDict_Type) {
+  struct dict_item *iter,*end;
+  DeeRoDictObject *src = (DeeRoDictObject *)sequence;
+#ifndef CONFIG_NO_THREADS
+  rwlock_init(&self->d_lock);
+#endif /* !CONFIG_NO_THREADS */
+  self->d_mask = src->rd_mask;
+  self->d_used = self->d_size = src->rd_size;
+  if unlikely(!self->d_size)
+     self->d_elem = (struct dict_item *)empty_dict_items;
+  else {
+   self->d_elem = (struct dict_item *)Dee_Malloc((src->rd_mask + 1) *
+                                                  sizeof(struct dict_item));
+   if unlikely(!self->d_elem)
+      goto err;
+   memcpy(self->d_elem,src->rd_elem,
+         (self->d_mask + 1) * sizeof(struct dict_item));
+   end = (iter = self->d_elem) + (self->d_mask + 1);
+   for (; iter != end; ++iter) {
+    if (!iter->di_key) continue;
+    Dee_Incref(iter->di_key);
+    Dee_Incref(iter->di_value);
+   }
+  }
+  weakref_support_init(self);
+  return 0;
+ }
+ /* TODO: Optimizations for `_sharedmap' */
+ /* TODO: Fast-sequence support */
+
+ iterator = DeeObject_IterSelf(sequence);
+ if unlikely(!iterator) goto err;
+ error = dict_init_iterator(self,iterator);
+ Dee_Decref(iterator);
+ return error;
+err:
+ return -1;
 }
 
 PUBLIC DREF DeeObject *DCALL
@@ -186,7 +227,6 @@ DeeDict_FromIterator(DeeObject *__restrict self) {
  result = (DREF Dict *)DeeGCObject_Malloc(sizeof(Dict));
  if unlikely(!result) return NULL;
  if unlikely(dict_init_iterator(result,self)) goto err;
- weakref_support_init(result);
  DeeObject_Init(result,&DeeDict_Type);
  DeeGC_Track((DeeObject *)result);
  return (DREF DeeObject *)result;
@@ -194,6 +234,21 @@ err:
  DeeGCObject_Free(result);
  return NULL;
 }
+
+PUBLIC DREF DeeObject *DCALL
+DeeDict_FromSequence(DeeObject *__restrict self) {
+ DREF Dict *result;
+ result = (DREF Dict *)DeeGCObject_Malloc(sizeof(Dict));
+ if unlikely(!result) return NULL;
+ if unlikely(dict_init_sequence(result,self)) goto err;
+ DeeObject_Init(result,&DeeDict_Type);
+ DeeGC_Track((DeeObject *)result);
+ return (DREF DeeObject *)result;
+err:
+ DeeGCObject_Free(result);
+ return NULL;
+}
+
 
 
 PRIVATE int DCALL
@@ -1192,7 +1247,8 @@ again:
 PRIVATE int DCALL
 dict_setitem_ex(Dict *__restrict self,
                 DeeObject *__restrict key,
-                DeeObject *__restrict value, int mode,
+                DeeObject *__restrict value,
+                unsigned int mode,
                 DeeObject **pold_value) {
  size_t mask; struct dict_item *vector; int error;
  struct dict_item *first_dummy;
@@ -1351,13 +1407,13 @@ PRIVATE struct type_nsi dict_nsi = {
     /* .nsi_flags   = */TYPE_SEQX_FMUTABLE|TYPE_SEQX_FRESIZABLE,
     {
         /* .nsi_maplike = */{
-                /* .nsi_getsize    = */(void *)&dict_nsi_getsize,
-                /* .nsi_nextkey    = */(void *)&dictiterator_next_key,
-                /* .nsi_nextvalue  = */(void *)&dictiterator_next_value,
-                /* .nsi_getdefault = */(void *)&DeeDict_GetItemDef,
-                /* .nsi_setdefault = */(void *)&dict_nsi_setdefault,
-                /* .nsi_updateold  = */(void *)&dict_nsi_updateold,
-                /* .nsi_insertnew  = */(void *)&dict_nsi_insertnew
+            /* .nsi_getsize    = */(void *)&dict_nsi_getsize,
+            /* .nsi_nextkey    = */(void *)&dictiterator_next_key,
+            /* .nsi_nextvalue  = */(void *)&dictiterator_next_value,
+            /* .nsi_getdefault = */(void *)&DeeDict_GetItemDef,
+            /* .nsi_setdefault = */(void *)&dict_nsi_setdefault,
+            /* .nsi_updateold  = */(void *)&dict_nsi_updateold,
+            /* .nsi_insertnew  = */(void *)&dict_nsi_insertnew
         }
     }
 };
@@ -1436,18 +1492,10 @@ dict_bool(Dict *__restrict self) {
 PRIVATE int DCALL
 dict_init(Dict *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- DeeObject *seq; int error;
+ DeeObject *seq;
  if unlikely(DeeArg_Unpack(argc,argv,"o:dict",&seq))
     goto err;
- /* TODO: Support for initialization from `_rodict' */
- /* TODO: Support for initialization from `_sharedmap' */
- /* TODO: Fast-sequence support */
- if unlikely((seq = DeeObject_IterSelf(seq)) == NULL)
-    goto err;
- error = dict_init_iterator(self,seq);
- Dee_Decref(seq);
- weakref_support_init(self);
- return error;
+ return dict_init_sequence(self,seq);
 err:
  return -1;
 }

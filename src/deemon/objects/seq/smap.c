@@ -529,10 +529,10 @@ PRIVATE struct type_nsi smap_nsi = {
     /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_maplike = */{
-                /* .nsi_getsize    = */(void *)&smap_nsi_getsize,
-                /* .nsi_nextkey    = */(void *)&smap_nsi_nextkey,
-                /* .nsi_nextvalue  = */(void *)&smap_nsi_nextvalue,
-                /* .nsi_getdefault = */(void *)&smap_nsi_getdefault
+            /* .nsi_getsize    = */(void *)&smap_nsi_getsize,
+            /* .nsi_nextkey    = */(void *)&smap_nsi_nextkey,
+            /* .nsi_nextvalue  = */(void *)&smap_nsi_nextvalue,
+            /* .nsi_getdefault = */(void *)&smap_nsi_getdefault
         }
     }
 };

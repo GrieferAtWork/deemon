@@ -349,13 +349,13 @@ PRIVATE struct type_nsi cot_nsi = {
     /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_maplike = */{
-                /* .nsi_getsize    = */(void *)&cot_nsi_getsize,
-                /* .nsi_nextkey    = */(void *)&coti_next_key,
-                /* .nsi_nextvalue  = */(void *)&coti_next_value,
-                /* .nsi_getdefault = */(void *)&cot_getitemdef,
-                /* .nsi_setdefault = */(void *)NULL,
-                /* .nsi_updateold  = */(void *)NULL,
-                /* .nsi_insertnew  = */(void *)NULL
+            /* .nsi_getsize    = */(void *)&cot_nsi_getsize,
+            /* .nsi_nextkey    = */(void *)&coti_next_key,
+            /* .nsi_nextvalue  = */(void *)&coti_next_value,
+            /* .nsi_getdefault = */(void *)&cot_getitemdef,
+            /* .nsi_setdefault = */(void *)NULL,
+            /* .nsi_updateold  = */(void *)NULL,
+            /* .nsi_insertnew  = */(void *)NULL
         }
     }
 };
@@ -795,13 +795,13 @@ PRIVATE struct type_nsi cat_nsi = {
     /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_maplike = */{
-                /* .nsi_getsize    = */(void *)&cat_nsi_getsize,
-                /* .nsi_nextkey    = */(void *)&cati_next_key,
-                /* .nsi_nextvalue  = */(void *)&cati_next_value,
-                /* .nsi_getdefault = */(void *)&cat_getitemdef,
-                /* .nsi_setdefault = */(void *)NULL,
-                /* .nsi_updateold  = */(void *)NULL,
-                /* .nsi_insertnew  = */(void *)NULL
+            /* .nsi_getsize    = */(void *)&cat_nsi_getsize,
+            /* .nsi_nextkey    = */(void *)&cati_next_key,
+            /* .nsi_nextvalue  = */(void *)&cati_next_value,
+            /* .nsi_getdefault = */(void *)&cat_getitemdef,
+            /* .nsi_setdefault = */(void *)NULL,
+            /* .nsi_updateold  = */(void *)NULL,
+            /* .nsi_insertnew  = */(void *)NULL
         }
     }
 };

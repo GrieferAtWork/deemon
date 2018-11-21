@@ -766,10 +766,10 @@ PRIVATE struct type_nsi rodict_nsi = {
     /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_maplike = */{
-                /* .nsi_getsize    = */(void *)&rodict_nsi_getsize,
-                /* .nsi_nextkey    = */(void *)&rodictiterator_next_key,
-                /* .nsi_nextvalue  = */(void *)&rodictiterator_next_value,
-                /* .nsi_getdefault = */(void *)&DeeRoDict_GetItemDef
+            /* .nsi_getsize    = */(void *)&rodict_nsi_getsize,
+            /* .nsi_nextkey    = */(void *)&rodictiterator_next_key,
+            /* .nsi_nextvalue  = */(void *)&rodictiterator_next_value,
+            /* .nsi_getdefault = */(void *)&DeeRoDict_GetItemDef
         }
     }
 };

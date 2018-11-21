@@ -519,10 +519,10 @@ PRIVATE struct type_nsi kwds_nsi = {
     /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_maplike = */{
-                /* .nsi_getsize    = */(void *)&kwds_nsi_getsize,
-                /* .nsi_nextkey    = */(void *)&kwds_nsi_nextkey,
-                /* .nsi_nextvalue  = */(void *)&kwds_nsi_nextvalue,
-                /* .nsi_getdefault = */(void *)&kwds_nsi_getdefault
+            /* .nsi_getsize    = */(void *)&kwds_nsi_getsize,
+            /* .nsi_nextkey    = */(void *)&kwds_nsi_nextkey,
+            /* .nsi_nextvalue  = */(void *)&kwds_nsi_nextvalue,
+            /* .nsi_getdefault = */(void *)&kwds_nsi_getdefault
         }
     }
 };
@@ -990,10 +990,10 @@ PRIVATE struct type_nsi kmap_nsi = {
     /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
     {
         /* .nsi_maplike = */{
-                /* .nsi_getsize    = */(void *)&kmap_nsi_getsize,
-                /* .nsi_nextkey    = */(void *)&kmap_nsi_nextkey,
-                /* .nsi_nextvalue  = */(void *)&kmap_nsi_nextvalue,
-                /* .nsi_getdefault = */(void *)&kmap_nsi_getdefault
+            /* .nsi_getsize    = */(void *)&kmap_nsi_getsize,
+            /* .nsi_nextkey    = */(void *)&kmap_nsi_nextkey,
+            /* .nsi_nextvalue  = */(void *)&kmap_nsi_nextvalue,
+            /* .nsi_getdefault = */(void *)&kmap_nsi_getdefault
         }
     }
 };
