@@ -1399,8 +1399,7 @@ skip_rbrck_and_done:
                          (JITSymbol *)&self->jl_lvalue,
                           symbol_name,
                           symbol_size,
-                          flags,
-                          self->jl_text))
+                          flags))
         goto err;
    }
    result = JIT_LVALUE;

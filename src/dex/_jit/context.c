@@ -65,7 +65,7 @@ update_symbol_objent(JITSymbol *__restrict self) {
      goto do_reload;
  if (ent > tab->ot_list + tab->ot_mask)
      goto do_reload;
- if (ent->oe_namestr != (unsigned char *)self->js_objent.jo_namestr)
+ if (ent->oe_namestr != self->js_objent.jo_namestr)
      goto do_reload;
  if (ent->oe_namelen != self->js_objent.jo_namelen)
      goto do_reload;
@@ -78,11 +78,11 @@ do_reload:
   i = perturb = hash & tab->ot_mask;
   for (;; JITObjectTable_NEXT(i,perturb)) {
    ent = &tab->ot_list[i & tab->ot_mask];
-   if unlikely(!ent->oe_nameobj) goto err_unloaded;
-   if unlikely(ent->oe_nameobj == ITER_DONE) continue;
+   if unlikely(!ent->oe_namestr) goto err_unloaded;
+   if (ent->oe_namestr == (char *)ITER_DONE) continue;
    if (ent->oe_namehsh != hash) continue;
    if (ent->oe_namelen != self->js_objent.jo_namelen) continue;
-   if (ent->oe_namestr == (unsigned char *)self->js_objent.jo_namestr) break; /* Exact same string */
+   if (ent->oe_namestr == (char *)self->js_objent.jo_namestr) break; /* Exact same string */
    if (memcmp(ent->oe_namestr,
               self->js_objent.jo_namestr,
               self->js_objent.jo_namelen *
@@ -605,8 +605,7 @@ INTERN int FCALL
 JITContext_Lookup(JITContext *__restrict self,
                   struct jit_symbol *__restrict result,
                   /*utf-8*/char const *__restrict name,
-                  size_t namelen, unsigned int mode,
-                  DeeObject *__restrict nameobj) {
+                  size_t namelen, unsigned int mode) {
  JITObjectTable *tab;
  struct jit_object_entry *ent;
  dhash_t hash = hash_ptr(name,namelen);
@@ -616,7 +615,7 @@ JITContext_Lookup(JITContext *__restrict self,
   tab = JITContext_GetROLocals(self);
   if (!tab) break; /* No locals */
   ent = JITObjectTable_Lookup(tab,
-                             (unsigned char *)name,
+                              name,
                               namelen,
                               hash);
   if (!ent) break;
@@ -625,7 +624,7 @@ set_object_entry:
   result->js_kind              = JIT_SYMBOL_OBJENT;
   result->js_objent.jo_tab     = tab;
   result->js_objent.jo_ent     = ent;
-  result->js_objent.jo_namestr = (char *)ent->oe_namestr;
+  result->js_objent.jo_namestr = ent->oe_namestr;
   result->js_objent.jo_namelen = ent->oe_namelen;
 done:
   return 0;
@@ -640,7 +639,7 @@ set_global:
   tab = JITContext_GetROLocals(self);
   for (; tab; tab = tab->ot_prev.otp_tab) {
    ent = JITObjectTable_Lookup(tab,
-                              (unsigned char *)name,
+                               name,
                                namelen,
                                hash);
    if (ent) goto set_object_entry;
@@ -669,10 +668,9 @@ set_global:
  tab = JITContext_GetRWLocals(self);
  if unlikely(!tab) goto err;
  ent = JITObjectTable_Create(tab,
-                            (unsigned char *)name,
+                             name,
                              namelen,
-                             hash,
-                             nameobj);
+                             hash);
  if unlikely(!ent) goto err;
  goto set_object_entry;
 err_unknown_var:

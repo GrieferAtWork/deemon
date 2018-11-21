@@ -78,11 +78,11 @@ JITFunction_New(/*utf-8*/char const *name_start,
 
  if (name_start < name_end) {
   struct jit_object_entry *ent;
+  size_t len = (size_t)(name_end - name_start);
   ent = JITObjectTable_Create(&result->jf_args,
-                             (unsigned char *)name_start,
-                             (size_t)(name_end - name_start),
-                              hash_ptr(name_start,(size_t)(name_end - name_start)),
-                              source);
+                              name_start,
+                              len,
+                              hash_ptr(name_start,len));
   if unlikely(!ent)
      goto err_r;
   result->jf_selfarg = (size_t)(ent - result->jf_args.ot_list);
@@ -120,17 +120,16 @@ jf_visit(JITFunction *__restrict self, dvisit_t proc, void *arg) {
  Dee_XVisit(self->jc_globals);
  if (self->jf_args.ot_list != jit_empty_object_list) {
   for (i = 0; i <= self->jf_args.ot_mask; ++i) {
-   DeeObject *nameobj;
-   nameobj = self->jf_args.ot_list[i].oe_nameobj;
-   if (!ITER_ISOK(nameobj)) continue;
+   if (!ITER_ISOK(self->jf_args.ot_list[i].oe_namestr))
+        continue;
    Dee_XVisit(self->jf_args.ot_list[i].oe_value);
   }
  }
  if (self->jf_refs.ot_list != jit_empty_object_list) {
   for (i = 0; i <= self->jf_refs.ot_mask; ++i) {
    DeeObject *nameobj;
-   nameobj = self->jf_refs.ot_list[i].oe_nameobj;
-   if (!ITER_ISOK(nameobj)) continue;
+   if (!ITER_ISOK(self->jf_refs.ot_list[i].oe_namestr))
+       continue;
    Dee_XVisit(self->jf_refs.ot_list[i].oe_value);
   }
  }
@@ -262,9 +261,8 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
 
  /* Assign references to all objects from base-locals */
  for (i = 0; i <= base_locals.ot_mask; ++i) {
-  if (!ITER_ISOK(base_locals.ot_list[i].oe_nameobj))
+  if (!ITER_ISOK(base_locals.ot_list[i].oe_namestr))
        continue;
-  Dee_Incref(base_locals.ot_list[i].oe_nameobj);
   Dee_XIncref(base_locals.ot_list[i].oe_value);
  }
 

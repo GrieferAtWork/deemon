@@ -186,8 +186,7 @@ next_expr:
                         &var_symbol,
                         (char const *)self->jl_tokstart,
                         (size_t)(self->jl_tokend - self->jl_tokstart),
-                         used_lookup_mode,
-                         self->jl_text) < 0)
+                         used_lookup_mode) < 0)
        goto err_current;
 #endif /* JIT_EVAL */
    JITLexer_Yield(self);

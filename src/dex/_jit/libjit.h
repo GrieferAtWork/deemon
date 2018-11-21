@@ -273,7 +273,7 @@ struct jit_lvalue {
             DREF DeeObject      *la_base; /* [1..1] Expression base object */
             /*utf-8*/char const *la_name; /* [0..la_size] Attribute name. */
             size_t               la_size; /* Length of the attribute name. */
-            dhash_t              la_hash; /* Length of the attribute name. */
+            dhash_t              la_hash; /* Hash of the attribute name. */
         } lv_attrstr; /* JIT_LVALUE_ATTRSTR */
         struct {
             DREF DeeObject *li_base;  /* [1..1] Expression base object */
@@ -396,12 +396,12 @@ JITLexer_ErrorTrace(JITLexer *__restrict self,
 
 
 struct jit_object_entry {
-    DREF DeeObject         *oe_nameobj; /* [0..1] The object that owns the `oe_namestr' string (usually a string or bytes object)
-                                         * NOTE: `NULL' indicates an unused/sentinal entry; `ITER_DONE' indicates a deleted entry. */
-    /*utf-8*/unsigned char *oe_namestr; /* [0..oe_namelen] Name of the object */
-    size_t                  oe_namelen; /* Length of the object name. */
-    dhash_t                 oe_namehsh; /* Hash of the object name. */
-    DREF DeeObject         *oe_value;   /* [0..1] Value associated with this entry (NULL if unbound). */
+    /*utf-8*/char const *oe_namestr; /* [0..oe_namelen] Name of the object
+                                      * NOTE: `NULL' indicates an unused/sentinal entry;
+                                      *       `ITER_DONE' indicates a deleted entry. */
+    size_t               oe_namelen; /* Length of the object name. */
+    dhash_t              oe_namehsh; /* Hash of the object name. */
+    DREF DeeObject      *oe_value;   /* [0..1] Value associated with this entry (NULL if unbound). */
 };
 struct jit_object_table_pointer {
     JITObjectTable    *otp_tab; /* [0..1] The table that is being referenced. */
@@ -460,9 +460,8 @@ JITObjectTable_UpdateTable(JITObjectTable *__restrict dst,
  * @return: -1: An error occurred (failed to increase the hash size of `self') */
 INTDEF int DCALL
 JITObjectTable_Update(JITObjectTable *__restrict self,
-                      /*utf-8*/unsigned char *namestr,
+                      /*utf-8*/char const *namestr,
                       size_t namelen, dhash_t namehsh,
-                      DeeObject *__restrict nameobj,
                       DeeObject *value,
                       bool override_existing);
 
@@ -471,7 +470,7 @@ JITObjectTable_Update(JITObjectTable *__restrict self,
  * @return: false: The object table didn't include an entry matching the given name. */
 INTDEF bool DCALL
 JITObjectTable_Delete(JITObjectTable *__restrict self,
-                      /*utf-8*/unsigned char *namestr,
+                      /*utf-8*/char const *namestr,
                       size_t namelen, dhash_t namehsh);
 
 /* Lookup a given object within `self'
@@ -479,7 +478,7 @@ JITObjectTable_Delete(JITObjectTable *__restrict self,
  * @return: NULL: Could not find an object matching the specified name. (no error was thrown) */
 INTDEF struct jit_object_entry *DCALL
 JITObjectTable_Lookup(JITObjectTable *__restrict self,
-                      /*utf-8*/unsigned char *namestr,
+                      /*utf-8*/char const *namestr,
                       size_t namelen, dhash_t namehsh);
 
 /* Lookup or create an entry for a given name within `self'
@@ -487,9 +486,8 @@ JITObjectTable_Lookup(JITObjectTable *__restrict self,
  * @return: NULL: Failed to create a new entry. (an error _WAS_ thrown) */
 INTDEF struct jit_object_entry *DCALL
 JITObjectTable_Create(JITObjectTable *__restrict self,
-                      /*utf-8*/unsigned char *namestr,
-                      size_t namelen, dhash_t namehsh,
-                      DeeObject *__restrict nameobj);
+                      /*utf-8*/char const *namestr,
+                      size_t namelen, dhash_t namehsh);
 
 
 
@@ -571,8 +569,7 @@ INTDEF int FCALL
 JITContext_Lookup(JITContext *__restrict self,
                   struct jit_symbol *__restrict result,
                   /*utf-8*/char const *__restrict name,
-                  size_t namelen, unsigned int mode,
-                  DeeObject *__restrict nameobj);
+                  size_t namelen, unsigned int mode);
 INTDEF int FCALL
 JITContext_LookupNth(JITContext *__restrict self,
                      struct jit_symbol *__restrict result,

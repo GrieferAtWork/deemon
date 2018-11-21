@@ -175,10 +175,9 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
       tab = JITContext_GetRWLocals(self->jl_context);
       if unlikely(!tab) goto err_r_popscope;
       if (JITObjectTable_Update(tab,
-                               (unsigned char *)symbol_name,
+                                symbol_name,
                                 symbol_size,
                                 hash_ptr(symbol_name,symbol_size),
-                                self->jl_text,
                                 current,
                                 true) < 0)
           goto err_r_popscope;
