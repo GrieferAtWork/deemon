@@ -2241,7 +2241,7 @@ DecFile_LoadCode(DecFile *__restrict self,
   DREF DeeStringObject **kwds; uint16_t i;
   uint32_t string_size = LESWAP32(self->df_ehdr->e_strsiz);
   char *strtab = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
-  uint8_t *kwd_reader = self->df_base + header.co_ddioff;
+  uint8_t *kwd_reader = self->df_base + header.co_kwdoff;
   if unlikely(kwd_reader >= end || kwd_reader < self->df_base)
      GOTO_CORRUPTED(kwd_reader,corrupt_r_ddi);
   kwds = (DREF DeeStringObject **)Dee_Malloc(result->co_argc_max *

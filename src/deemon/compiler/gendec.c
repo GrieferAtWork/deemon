@@ -1358,7 +1358,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
     dec_curr = SC_STRING;
     name = (uint8_t *)DeeString_AsUtf8((DeeObject *)self->co_keywords[i]);
     if unlikely(!name) goto err;
-    name = dec_allocstr(name,WSTR_LENGTH(name) * sizeof(char));
+    name = dec_allocstr(name,(WSTR_LENGTH(name) + 1) * sizeof(char));
     if unlikely(!name) goto err;
     addr = dec_ptr2addr(name);
     dec_curr = kwd_section;
