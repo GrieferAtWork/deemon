@@ -2402,7 +2402,12 @@ do_writeonly_symbol_optimization:
     *    >> mov local @x, @"foobar"  // When `x' is never used, this should get deleted.
     *    >> ...
     */
-#if 1
+#if 0 /* TODO: This can only be done when the length of the the source
+       *       operand's lifetime doesn't have any side-effects.
+       *       When done unconditionally, this optimization breaks the
+       *       assumption that an object may not be destroyed before
+       *       its associated scope has ended.
+       */
    if ((opcode & 0xff) == ASM_POP_LOCAL) {
     instruction_t *scanner = next;
     bool after_jmp = false;
@@ -2562,8 +2567,8 @@ delete_symbol_store:
     /* Yes, we can optimize away this use case. */
     goto delete_symbol_store;
    }
-#endif
 done_pop_optimization:
+#endif
    iter    = next;
    stacksz = next_stacksz;
    validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin),stacksz);

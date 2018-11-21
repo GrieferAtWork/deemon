@@ -692,7 +692,7 @@ check_getattr_base_symbol_class_small:
          function_self->a_action.a_act0->a_sym->s_type == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_THIS(function_self->a_action.a_act0->a_sym) &&
          /* Because we can't inline the argument tuple, only do this variant
-          * if we either don't have to allocate too man additional stack-slots,
+          * if we either don't have to allocate too many additional stack-slots,
           * of when doing so wouldn't increase the size of the resulting text. */
          /* When optimizing for size, only use this variant for up to 2 arguments:
           * >> push     callattr this, ref <imm8/16>, @"foo", #... // 5 bytes

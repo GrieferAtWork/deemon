@@ -708,7 +708,7 @@ struct assembler {
 #define ASM_FOPTIMIZE      0x0002      /* Optimize generated assembly and perform minor improvements
                                         * during generation, so long as they don't impact DDI. */
 #define ASM_FOPTIMIZE_SIZE 0x0100      /* When the decision between smaller vs. faster code comes up, choose smaller code. */
-#define ASM_FREUSELOC      0x0004      /* Allow local variables to be re-used. (Though this breaks debug information for local variable names) */
+#define ASM_FREUSELOC      0x0004      /* Allow local variables to be re-used. (May make manual debugging more difficult) */
 #define ASM_FPEEPHOLE      0x0008      /* Perform peephole optimizations. */
 #define ASM_FSTACKDISP     0x0010      /* The stack may get displaced between instruction at (seemingly) random intervals.
                                         * When this flag is set, much more optimal code can be generated for stack variables,
