@@ -32,6 +32,7 @@
 #include <deemon/arg.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
+#include <deemon/roset.h>
 #include <deemon/int.h>
 
 #include "../runtime/strings.h"
@@ -104,22 +105,10 @@ err_r:
  return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeHashSet_FromSequence(DeeObject *__restrict self) {
- DREF DeeObject *result;
- if (DeeHashSet_CheckExact(self))
-     return DeeObject_Copy(self);
- if unlikely((self = DeeObject_IterSelf(self)) == NULL)
-    return NULL;
- result = DeeHashSet_FromIterator(self);
- Dee_Decref(self);
- return result;
-}
-
 
 PRIVATE int DCALL
 set_init_iterator(Set *__restrict self,
-                   DeeObject *__restrict iterator) {
+                  DeeObject *__restrict iterator) {
  DREF DeeObject *elem;
  self->s_mask = 0;
  self->s_size = 0;
@@ -128,6 +117,7 @@ set_init_iterator(Set *__restrict self,
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&self->s_lock);
 #endif /* !CONFIG_NO_THREADS */
+ weakref_support_init(self);
  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
   if unlikely(DeeHashSet_Insert((DeeObject *)self,elem) < 0)
      goto err_elem;
@@ -143,13 +133,76 @@ err:
  return -1;
 }
 
+PRIVATE int DCALL set_copy(Set *__restrict self, Set *__restrict other);
+
+STATIC_ASSERT(sizeof(struct hashset_item) == sizeof(struct roset_item));
+STATIC_ASSERT(COMPILER_OFFSETOF(struct hashset_item,si_key) == COMPILER_OFFSETOF(struct roset_item,si_key));
+STATIC_ASSERT(COMPILER_OFFSETOF(struct hashset_item,si_hash) == COMPILER_OFFSETOF(struct roset_item,si_hash));
+
+PRIVATE int DCALL
+set_init_sequence(Set *__restrict self,
+                  DeeObject *__restrict sequence) {
+ DREF DeeObject *iterator; int error;
+ DeeTypeObject *tp = Dee_TYPE(sequence);
+ if (tp == &DeeHashSet_Type)
+     return set_copy(self,(Set *)sequence);
+ /* Optimizations for `_roset' */
+ if (tp == &DeeRoSet_Type) {
+  struct hashset_item *iter,*end;
+  DeeRoSetObject *src = (DeeRoSetObject *)sequence;
+#ifndef CONFIG_NO_THREADS
+  rwlock_init(&self->s_lock);
+#endif /* !CONFIG_NO_THREADS */
+  self->s_mask = src->rs_mask;
+  self->s_used = self->s_size = src->rs_size;
+  if unlikely(!self->s_size)
+     self->s_elem = (struct hashset_item *)empty_set_items;
+  else {
+   self->s_elem = (struct hashset_item *)Dee_Malloc((src->rs_mask + 1) *
+                                                     sizeof(struct hashset_item));
+   if unlikely(!self->s_elem)
+      goto err;
+   memcpy(self->s_elem,src->rs_elem,
+         (self->s_mask + 1) * sizeof(struct hashset_item));
+   end = (iter = self->s_elem) + (self->s_mask + 1);
+   for (; iter != end; ++iter)
+       Dee_XIncref(iter->si_key);
+  }
+  weakref_support_init(self);
+  return 0;
+ }
+ /* TODO: Optimizations for `_sharedvector' */
+ /* TODO: Fast-sequence support */
+
+ iterator = DeeObject_IterSelf(sequence);
+ if unlikely(!iterator) goto err;
+ error = set_init_iterator(self,iterator);
+ Dee_Decref(iterator);
+ return error;
+err:
+ return -1;
+}
+
 PUBLIC DREF DeeObject *DCALL
 DeeHashSet_FromIterator(DeeObject *__restrict self) {
  DREF Set *result;
  result = (DREF Set *)DeeGCObject_Malloc(sizeof(Set));
  if unlikely(!result) return NULL;
  if unlikely(set_init_iterator(result,self)) goto err;
- weakref_support_init(result);
+ DeeObject_Init(result,&DeeHashSet_Type);
+ DeeGC_Track((DeeObject *)result);
+ return (DREF DeeObject *)result;
+err:
+ DeeGCObject_Free(result);
+ return NULL;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeHashSet_FromSequence(DeeObject *__restrict self) {
+ DREF Set *result;
+ result = (DREF Set *)DeeGCObject_Malloc(sizeof(Set));
+ if unlikely(!result) return NULL;
+ if unlikely(set_init_sequence(result,self)) goto err;
  DeeObject_Init(result,&DeeHashSet_Type);
  DeeGC_Track((DeeObject *)result);
  return (DREF DeeObject *)result;
@@ -1239,7 +1292,6 @@ set_init(Set *__restrict self,
     goto err;
  error = set_init_iterator(self,seq);
  Dee_Decref(seq);
- weakref_support_init(self);
  return error;
 err:
  return -1;
