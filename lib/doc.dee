@@ -3084,15 +3084,15 @@ err_unknown_attribute:
 
 	@@Automatically generate documentation for native type constructors.
 	private autogenerate_native_constructor_descl(): {DocSection...} {
-		if (object.__issuperconstructible__) {
+		if (deemon.type_.__issuperconstructible__(object)) {
 			yield DocSection(this,"constructor->!S");
 		} else {
 			local hasany = false;
-			if (object.__isnoargconstructible__) {
+			if (deemon.type_.__isnoargconstructible__(object)) {
 				yield DocSection(this,"constructor()->");
 				hasany = true;
 			}
-			if (object.__isvarargconstructible__) {
+			if (deemon.type_.__isvarargconstructible__(object)) {
 				yield DocSection(this,"constructor->");
 				hasany = true;
 			}
@@ -3123,15 +3123,16 @@ err_unknown_attribute:
 			 * specified operator, auto-generate a doc for it. */
 			if (object !is bound)
 				return;
-			if (object.__isclass__) {
-				local cls = object.__class__;
+			if (deemon.type_.__isclass__(object)) {
+				local cls = deemon.type_.__class__(object);
 				/* Check if `cls' makes any mention of the operator
 				 * For example: `operator str = del;' */
 				local opaddr = cls.operators.get(opname);
 				if (opaddr !is none) {
 					/* The operator does indeed get overwritten by this class */
-					if (object.__ctable__[opaddr] is bound) {
-						local fun = object.__ctable__[opaddr];
+					local ctab = deemon.type_.__ctable__(object);
+					if (ctab[opaddr] is bound) {
+						local fun = ctab[opaddr];
 						if (fun is deemon.function_) {
 							file.writer resdoc;
 							resdoc << opname;
@@ -3152,7 +3153,7 @@ err_unknown_attribute:
 					}
 				}
 			} else {
-				if (object.hasprivateoperator(opname))
+				if (deemon.type_.hasprivateoperator(object,opname))
 					yield autogenerate_opdecl(opname)...;
 				else if (opname == "constructor") {
 					yield autogenerate_native_constructor_descl()...;
@@ -3174,9 +3175,9 @@ err_unknown_attribute:
 		}
 		/* Enumerate operators overwritten, but not documented */
 		if (object is bound && istype) {
-			if (object.__isclass__) {
-				local ctab = object.__ctable__;
-				local cls = object.__class__;
+			if (deemon.type_.__isclass__(object)) {
+				local ctab = deemon.type_.__ctable__(object);
+				local cls = deemon.type_.__class__(object);
 				local ops = cls.operators;
 				if (cls.hassuperconstructor && "constructor" !in result)
 					result["constructor"] = (DocSection(this,"constructor->!S"),);
@@ -3206,7 +3207,7 @@ err_unknown_attribute:
 			} else {
 				if ("constructor" !in result)
 					result["constructor"] = tuple(autogenerate_native_constructor_descl());
-				for (local name: object.__operators__) {
+				for (local name: deemon.type_.__operators__(object)) {
 					if (name !is string)
 						continue;
 					/* Don't implicitly generate documentation for destructors of native classes

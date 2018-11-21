@@ -327,14 +327,13 @@ function get_home_page(fp: file) {
 function get_page(fp: file, path: string) {
 	path = path.strip("/").strip();
 	path = path.split("/");
+	if (!path)
+		return get_home_page(fp);
 	if (path[0] == "modules") {
 		if (#path >= 2) {
 			return get_module_page(fp,path[1:]);
 		}
 		return get_modules_list(fp);
-	}
-	if (path[0] == "") {
-		return get_home_page(fp);
 	}
 	throw "Missing page: {!r}".format({ path });
 }
