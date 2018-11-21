@@ -1925,7 +1925,7 @@ do_unused_operand_optimization_ex:
    iter = next_instruction;
    contains_stack_max = false;
    /* Enumerate following instructions. */
-   while (iter < end && !IS_PROTECTED(iter)) {
+   if (opcode == ASM_DUP) while (iter < end && !IS_PROTECTED(iter)) {
     uint16_t sp_add,sp_sub; instruction_t *next;
     uint16_t old_stacksz;
     /* Handle unconditional jumps. */
