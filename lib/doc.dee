@@ -661,7 +661,7 @@ again:
 	if (s[result] != "?") {
 		result = s.find("?");
 		if (result < 0)
-			result = #s;
+			result = len;
 		return result;
 	}
 	++result;
@@ -707,7 +707,7 @@ again:
 	case "Q": {
 		local end = find_nonescaped(s,"]",result + 1);
 		if (end < 0)
-			end = #s - 1;
+			end = len - 1;
 		result = end + 1;
 	}	break;
 	default:
@@ -717,13 +717,147 @@ again:
 	return result;
 }
 
-//@@Fully detailed names for specific type expressions
-//local typeexpr_shorthands: {(string,string)...} = {
-//	"?Dsequence" : "?S?O",
-//	"?Dmapping" : "?S?T2?O?O",
-//	"?Edeemon:sequence" : "?S?O",
-//	"?Edeemon:mapping" : "?S?T2?O?O",
-//};
+
+@@Returns the character index where a default expression starting at @start ends
+local function deflexpr_end(s: string, start: int): int {
+	local len = #s;
+	local result = start;
+again:
+	if (result >= len)
+		return result;
+	if (s[result] != "!") {
+		result = s.find("!");
+		if (result < 0)
+			result = len;
+		return result;
+	}
+	++result;
+	if (result >= len)
+		return result;
+	switch (s[result]) {
+	case "V":
+		++result; /* VA */
+	case "P":
+	case "#":
+	case "D":
+	case "U":
+	case "G":
+	case "M":
+		++result;
+		result = decode_name_end(s,result);
+		break;
+	case "E":
+		++result;
+		result = decode_name_end(s,result);
+		if (s[result] == ":") {
+			++result;
+			result = decode_name_end(s,result);
+		}
+		break;
+	case "T":
+	case "L":
+	case "S":
+	case "H": {
+		++result;
+		local n_start = result;
+		while (result < len && s.isdigit(result))
+			++result;
+		local n = try int(s[n_start:result]) catch (...) 0;
+		for (none: [:n])
+			result = deflexpr_end(s,result);
+	}	break;
+	case "!":
+		++result;
+		if (result >= len)
+			break;
+		switch (s[result]) {
+		case "!":
+			++result;
+			if (result >= len)
+				break;
+			switch (s[result]) {
+			case "!": /* NOT */
+				++result;
+				goto again;
+			case "<": /* shl */
+			case ">": /* shr */
+				++result;
+				result = deflexpr_end(s,result);
+				goto again;
+			default: break;
+			}
+			break;
+		case "+":
+		case "-":
+		case "*":
+		case "=":
+		case "<":
+		case ">":
+		case "C":
+			++result;
+			result = deflexpr_end(s,result);
+			goto again;
+		case "[":
+			++result;
+			result = deflexpr_end(s,result);
+			result = deflexpr_end(s,result);
+			goto again;
+		default:
+			break;
+		}
+		++result;
+		goto again;
+	case "C":
+	case "X":
+	case "W":
+	case "O":
+	case "K":
+	case "R":
+	case "Q":
+	case "+":
+	case "~":
+		++result;
+		goto again;
+	case "*":
+	case "/":
+	case "%":
+	case "&":
+	case "|":
+	case "^":
+	case "=":
+	case "<":
+	case ">":
+	case "[":
+		++result;
+		result = deflexpr_end(s,result);
+		goto again;
+	case "I": /* conditional expression */
+		++result;
+		result = deflexpr_end(s,result);
+		result = deflexpr_end(s,result);
+		goto again;
+	case "-":
+		++result;
+	default:
+		if (result < len && s.isdigit(result)) {
+			for (;;) {
+				++result;
+				if (result >= len)
+					break;
+				if (!s.isdigit(result) && s[result] != ".")
+					break;
+			}
+			break;
+		} else {
+			++result;
+		}
+		break;
+	}
+	return result;
+}
+
+
+
 
 @@Abstract representation of a type expression, including
 @@support for generic sequence expressions, alternative
@@ -1134,7 +1268,7 @@ class Expression: weakrefable {
 				yield Aparam.typ.types...;
 				break;
 			case "S":
-				yield Stype;
+				yield StypeExpr;
 				break;
 			default:
 				yield TypeExpr(docdecl,"?O");
@@ -1198,6 +1332,9 @@ class Expression: weakrefable {
 					/* New-style default expression. */
 					local id = m_docstring[1];
 					if (id == "P" || id.isdigit()) {
+						m_kind = "C";
+					} else if (id == "-" && #m_docstring >= 2 &&
+					          (m_docstring.isdigit(2) || m_docstring[2] == ".")) {
 						m_kind = "C";
 					} else if (id in ["N","t","f"]) {
 						local map = { "N" : none, "t" : true, "f" : false };
@@ -1267,27 +1404,112 @@ done:
 		}
 	}
 
+	@@Initialize #m_cache as (module_name: string | module | none, module_attr: string | none)
+	@@When `module_name' is set to ".", referr to the current module.
+	private Edecode() {
+		switch (m_docstring[1]) {
+		case "D":
+			m_cache = (deemon,m_docstring.substr(2));
+			break;
+		case "U":
+			m_cache = (none,m_docstring.substr(2));
+			break;
+		case "G":
+			m_cache = (".",m_docstring.substr(2));
+			break;
+		case "E": {
+			local sep = find_nonescaped(m_docstring,":",2);
+			if (sep < 0) {
+				m_cache = (m_docstring.substr(2),none);
+			} else {
+				m_cache = (m_docstring.substr(sep),m_docstring.substr(sep + 1));
+			}
+		}	break;
+		case "M":
+			m_cache = (m_docstring.substr(2),none);
+			break;
+		default:
+			m_cache = (none,m_docstring);
+			break;
+		}
+	}
+
+	@@Returns the doc-path for the externally referenced
+	@@object, or :none if that path is unavailable.
 	public final property Epath: string | none = {
 		get(): string | none {
-			/* TODO */
+			local modnam = Emodulename;
+			if (modnam is none)
+				return none;
+			local att = Emoduleattr;
+			if (att is none)
+				return "/" + modnam;
+			return "/{}/{}".format({ modnam, att });
 		}
 	}
 
+	@@Return the doc node for the externally referenced
+	@@object, or :none if that object cannot be traced.
 	public final property Enode: Doc | none = {
 		get(): Doc | none {
-			/* TODO */
+			local mod = Emodule;
+			if (mod is none)
+				return none;
+			return Doc(mod,Emoduleattr);
 		}
 	}
 
+	@@The module that is being imported
 	public final property Emodule: module | none = {
-		get(): string | none {
-			/* module | TODO */
+		get(): module | none {
+			if (m_cache !is bound)
+				Edecode();
+			local result = m_cache[0];
+			if (result !is module && result !is none) {
+				if (result.startswith(".")) {
+					local base = docnode.value.module;
+					result = result == "."
+						? base
+						: import(result,base: base)
+						;
+				} else {
+					result = import(result);
+				}
+			}
+			return result;
 		}
 	}
 
+	@@The name of the module that is being imported
+	public final property Emodulename: string | none = {
+		get(): string | none {
+			if (m_cache !is bound)
+				Edecode();
+			local result = m_cache[0];
+			if (result is module)
+				result = module.__name__(result);
+			return result;
+		}
+	}
+
+	@@The name of the attribute that is being imported from the #Emodule
+	@@If the external reference applies directly to a module, evaluate to :none
+	public final property Emoduleattr: string | none = {
+		get(): string {
+			if (m_cache !is bound)
+				Edecode();
+			return m_cache[1];
+		}
+	}
+
+	@@The external object that is being referenced
 	public final property Evalue: object | none = {
 		get(): object | none {
-			/* TODO */
+			local mod = Emodule;
+			local att = m_cache[1];
+			if (mod !is none && att !is none)
+				mod = mod.operator . (att);
+			return mod;
 		}
 	}
 
@@ -1327,7 +1549,6 @@ done:
 	@@Returns the name of the undefined object referenced
 	public final property Uname: string = {
 		get(): string {
-			/* TODO */
 			if (m_cache !is bound)
 				m_cache = decode_name(m_docstring.substr(2));
 			return m_cache;
@@ -1336,10 +1557,20 @@ done:
 
 	@@Returns the sequence element expression of @this
 	public final property Sitems: {Expression...} = {
-		get(): string {
-			/* TODO */
-			if (m_cache !is bound)
-				m_cache = decode_name(m_docstring.substr(2));
+		get(): {Expression...} {
+			if (m_cache !is bound) {
+				local pos = 3;
+				while (pos < #m_docstring && m_docstring.isdigit(pos))
+					++pos;
+				local count = try int(m_docstring.substr(2,pos)) catch (...) 0;
+				local items = list(count);
+				for (local i: [:count]) {
+					local start = pos;
+					pos = deflexpr_end(m_docstring,pos);
+					items[i] = Expression(docdecl,m_docstring.substr(start,pos));
+				}
+				m_cache = tuple(items);
+			}
 			return m_cache;
 		}
 	}
@@ -1350,14 +1581,26 @@ done:
 	@@ - :deemon.dict
 	@@ - :deemon.hashset
 	public final property Stype: deemon.type_ = {
-		get(): string {
+		get(): deemon.type_ {
 			local map = {
 				"L" : deemon.list,
 				"T" : deemon.tuple,
-				"D" : deemon.list,
+				"D" : deemon.dict,
 				"S" : deemon.hashset,
 			};
 			return map[m_docstring[1]];
+		}
+	}
+	@@Similar to #Stype, but return the associated type expression
+	public final property StypeExpr: TypeExpr = {
+		get(): TypeExpr {
+			local map = {
+				"L" : "?Dlist",
+				"T" : "?Dtuple",
+				"D" : "?Ddict",
+				"S" : "?Dhashset",
+			};
+			return TypeExpr(docdecl,map[m_docstring[1]]);
 		}
 	}
 
@@ -1387,9 +1630,54 @@ done:
 			return repr Cvalue;
 		case "A":
 			return Aparam.name;
-		default:
-			return docstring;
+		case "E": {
+			local mod = Emodulename;
+			local att = Emoduleattr;
+			if (mod is none)
+				return str att;
+			if (att is none)
+				return mod;
+			return "{}.{}".format({ mod, att });
 		}
+		case "U":
+			return Uname;
+		case "S":
+			switch (m_docstring[1]) {
+			case "L":
+				return "[{}]".format({ ",".join(Sitems) });
+			case "T": {
+				local t = tuple(Sitems);
+				if (!t) return "()";
+				if (#t == 1)
+					return "({},)".format({ t[0] });
+				return "({})".format({ ",".join(t) });
+			}
+			case "D": {
+				file.writer result;
+				result << "{ ";
+				local is_first = true;
+				for (local a,b: Sitems.segments(2)) {
+					if (!is_first)
+						result << ", ";
+					is_first = false;
+					result << a << " : " << b;
+				}
+				result << (is_first ? "}" : " }");
+				return result.string;
+			}
+			case "S":
+				return "{{ {} }}".format({ ", ".join(Sitems) });
+			default:
+				break;
+			}
+			break;
+		case "O":
+			/* TODO: Operator */
+			break;
+		default:
+			break;
+		}
+		return docstring;
 	}
 }
 

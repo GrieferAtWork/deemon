@@ -247,8 +247,8 @@ PRIVATE DREF DeeObject *DCALL bool_gettrue(DeeObject *__restrict UNUSED(self)) {
 PRIVATE DREF DeeObject *DCALL bool_getfalse(DeeObject *__restrict UNUSED(self)) { return_false; }
 
 PRIVATE struct type_getset bool_class_getsets[] = {
-    { DeeString_STR(&str_true), &bool_gettrue, NULL, NULL },
-    { DeeString_STR(&str_false), &bool_getfalse, NULL, NULL },
+    { DeeString_STR(&str_true), &bool_gettrue, NULL, NULL, DOC("->?Dbool") },
+    { DeeString_STR(&str_false), &bool_getfalse, NULL, NULL, DOC("->?Dbool") },
     { NULL }
 };
 
