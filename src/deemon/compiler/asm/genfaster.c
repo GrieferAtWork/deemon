@@ -128,7 +128,7 @@ restore_error:
  }
  /* Generate the expression. */
 push_generic:
- /* TODO: If `ast' is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_SET' */
+ /* TODO: If `ast' is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_HASHSET' */
  return ast_genasm(self,gflags);
 }
 

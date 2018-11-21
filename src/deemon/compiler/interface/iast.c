@@ -423,7 +423,7 @@ ast_getmultiple_typing(Ast *__restrict self) {
   case AST_FMULTIPLE_LIST:
    result = (DeeObject *)&DeeList_Type;
    break;
-  case AST_FMULTIPLE_SET:
+  case AST_FMULTIPLE_HASHSET:
    result = (DeeObject *)&DeeHashSet_Type;
    break;
   case AST_FMULTIPLE_DICT:
@@ -3095,7 +3095,7 @@ force_scope:
    }
    PRINT("]");
    break;
-  case AST_FMULTIPLE_SET:
+  case AST_FMULTIPLE_HASHSET:
   case AST_FMULTIPLE_GENERIC:
    PRINT("{ ");
    for (i = 0; i < self->a_multiple.m_astc; ++i) {
@@ -4399,7 +4399,7 @@ print_ast_repr(struct ast *__restrict self,
   typing = NULL;
   /**/ if (self->a_flag == AST_FMULTIPLE_TUPLE) typing = "tuple";
   else if (self->a_flag == AST_FMULTIPLE_LIST) typing = "list";
-  else if (self->a_flag == AST_FMULTIPLE_SET) typing = "set";
+  else if (self->a_flag == AST_FMULTIPLE_HASHSET) typing = "set";
   else if (self->a_flag == AST_FMULTIPLE_DICT) typing = "dict";
   else if (self->a_flag == AST_FMULTIPLE_GENERIC) typing = "sequence";
   else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) typing = "mapping";

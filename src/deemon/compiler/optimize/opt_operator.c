@@ -26,6 +26,9 @@
 #include <deemon/bytes.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
+#include <deemon/list.h>
+#include <deemon/dict.h>
+#include <deemon/hashset.h>
 #include <deemon/error.h>
 #include <deemon/objmethod.h>
 #include <deemon/compiler/ast.h>
@@ -343,24 +346,71 @@ generic_operator_optimizations:
      self->a_operator.o_op1->a_type == AST_MULTIPLE &&
      self->a_operator.o_op1->a_multiple.m_astc == 1 &&
      self->a_operator.o_op0->a_type == AST_CONSTEXPR) {
-  /* Certain types of calls can be optimized away:
-   * >> local x = list([10,20,30]); // Optimize to `x = [10,20,30]' */
   DeeObject *function = self->a_operator.o_op0->a_constexpr;
   struct ast *cast_expr = self->a_operator.o_op1->a_multiple.m_astv[0];
   if (has_cast_constructor(function) &&
       ast_predict_type(cast_expr) == (DeeTypeObject *)function) {
+   /* Certain types of calls can be optimized away:
+    * >> local x = list([10,20,30]); // Optimize to `x = [10,20,30]' */
    OPTIMIZE_VERBOSE("Discard no-op cast-style function call to %k\n",function);
    /* We can simply get rid of this function call! */
    if (ast_assign(self,cast_expr)) goto err;
-   return 0;
+   goto did_optimize;
   }
-  /* TODO: Propagate explicit cast calls to underlying sequence types:
-   * >> tuple([10,20,30]); // Optimize to `pack(10,20,30)' */
+  if (cast_expr->a_type == AST_MULTIPLE &&
+      cast_expr->a_flag != AST_FMULTIPLE_KEEPLAST) {
+   /* Propagate explicit cast calls to underlying sequence types:
+    * >> tuple([10,20,30]); // Optimize to `pack(10,20,30)' */
+   uint16_t new_kind;
+   if (function == (DeeObject *)&DeeTuple_Type)
+    new_kind = AST_FMULTIPLE_TUPLE;
+   else if (function == (DeeObject *)&DeeList_Type)
+    new_kind = AST_FMULTIPLE_LIST;
+   else if (function == (DeeObject *)&DeeHashSet_Type)
+    new_kind = AST_FMULTIPLE_HASHSET;
+   else if (function == (DeeObject *)&DeeDict_Type)
+    new_kind = AST_FMULTIPLE_DICT;
+   else {
+    goto after_sequence_cast_propagation;
+   }
+   if (AST_FMULTIPLE_ISDICT(new_kind)) {
+    if (!AST_FMULTIPLE_ISDICT(cast_expr->a_flag)) {
+     /* TODO: unpack each element of `cast_expr' into a key/value
+      *       pair, and inline all of them into a new multi-branch
+      *       If this isn't possible for all branches, don't perform
+      *       the optimization.
+      * >> local x = [("foo",a),("bar",b)];
+      * >> // Optimize into this:
+      * >> local y = dict { "foo" : a, "bar" : b }; */
+     goto after_sequence_cast_propagation;
+    }
+   } else {
+    if (AST_FMULTIPLE_ISDICT(cast_expr->a_flag)) {
+     if unlikely((cast_expr->a_multiple.m_astc & 1) != 0)
+        goto after_sequence_cast_propagation;
+     /* TODO: Take every first and second element and pack them together
+      *       as tuple expression-like multi-branches.
+      * >> local x = list { "foo" : a, "bar" : b };
+      * >> // Optimize into this:
+      * >> local y = [("foo",a),("bar",b)];
+      */
+     goto after_sequence_cast_propagation;
+    }
+   }
+   OPTIMIZE_VERBOSE("Propagate cast-style function call to %k "
+                    "onto expression getting casted\n",function);
+   cast_expr->a_flag = new_kind;
+   if (ast_assign(self,cast_expr))
+       goto err;
+   goto did_optimize;
+  }
+after_sequence_cast_propagation:
+  ;
  }
+done:
+ return 0;
 did_optimize:
  ++optimizer_count;
- return 0;
-done:
  return 0;
 err:
  return -1;

@@ -83,7 +83,7 @@ ast_predict_type(struct ast *__restrict self) {
       return &DeeTuple_Type;
   if (self->a_flag == AST_FMULTIPLE_LIST)
       return &DeeList_Type;
-  if (self->a_flag == AST_FMULTIPLE_SET)
+  if (self->a_flag == AST_FMULTIPLE_HASHSET)
       return &DeeHashSet_Type;
   if (self->a_flag == AST_FMULTIPLE_DICT)
       return &DeeDict_Type;

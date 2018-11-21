@@ -394,10 +394,10 @@ STATIC_ASSERT((AST_FMULTIPLE_GENERIC&3) <= 1);
 STATIC_ASSERT((AST_FMULTIPLE_GENERIC_KEYS&3) == (AST_FMULTIPLE_DICT&3));
 
 PRIVATE struct seqops seqops_info[4] = {
-    /* [AST_FMULTIPLE_TUPLE & 3] = */{ &DeeTuple_Type,   { ASM_PACK_TUPLE,   ASM16_PACK_TUPLE },   ASM_CAST_TUPLE },
-    /* [AST_FMULTIPLE_LIST  & 3] = */{ &DeeList_Type,    { ASM_PACK_LIST,    ASM16_PACK_LIST },    ASM_CAST_LIST },
-    /* [AST_FMULTIPLE_SET   & 3] = */{ &DeeHashSet_Type, { ASM_PACK_HASHSET, ASM16_PACK_HASHSET }, ASM_CAST_HASHSET },
-    /* [AST_FMULTIPLE_DICT  & 3] = */{ &DeeDict_Type,    { ASM_PACK_DICT,    ASM16_PACK_DICT },    ASM_CAST_DICT }
+    /* [AST_FMULTIPLE_TUPLE   & 3] = */{ &DeeTuple_Type,   { ASM_PACK_TUPLE,   ASM16_PACK_TUPLE },   ASM_CAST_TUPLE },
+    /* [AST_FMULTIPLE_LIST    & 3] = */{ &DeeList_Type,    { ASM_PACK_LIST,    ASM16_PACK_LIST },    ASM_CAST_LIST },
+    /* [AST_FMULTIPLE_HASHSET & 3] = */{ &DeeHashSet_Type, { ASM_PACK_HASHSET, ASM16_PACK_HASHSET }, ASM_CAST_HASHSET },
+    /* [AST_FMULTIPLE_DICT    & 3] = */{ &DeeDict_Type,    { ASM_PACK_DICT,    ASM16_PACK_DICT },    ASM_CAST_DICT }
 };
 
 /* @param: type: One of `AST_FMULTIPLE_*' */
@@ -533,7 +533,7 @@ done_push_none:
     /* Must push an empty sequence. */
     if (AST_FMULTIPLE_ISDICT(self->a_flag)) {
      error = asm_gpack_dict(0);
-    } else if (self->a_flag == AST_FMULTIPLE_SET) {
+    } else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
      error = asm_gpack_hashset(0);
     } else if (self->a_flag == AST_FMULTIPLE_LIST) {
      error = asm_gpack_list(0);

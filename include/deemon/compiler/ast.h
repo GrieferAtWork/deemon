@@ -177,7 +177,7 @@ struct ast {
                                                  *          If an `AST_EXPAND' expression appears in the sequence,  */
 #   define AST_FMULTIPLE_TUPLE          0x1000  /* Pack all elements into a tuple, correctly handling `AST_EXPAND' elements. */
 #   define AST_FMULTIPLE_LIST           0x1001  /* Pack all elements into a list, correctly handling `AST_EXPAND' elements. */
-#   define AST_FMULTIPLE_SET            0x1002  /* Pack all elements into a set, correctly handling `AST_EXPAND' elements. */
+#   define AST_FMULTIPLE_HASHSET        0x1002  /* Pack all elements into a hashset, correctly handling `AST_EXPAND' elements. */
 #   define AST_FMULTIPLE_DICT           0x1003  /* Pack all elements into a dict, correctly handling `AST_EXPAND' elements.
                                                  * NOTE: This sequence class requires that `m_astc' is aligned
                                                  *       by 2, with every first used as key, and every second as item.

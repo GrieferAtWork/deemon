@@ -433,7 +433,7 @@ get_ast_multiple_typing(DeeTypeObject *__restrict typing) {
  } else if (typing == &DeeList_Type) {
   result = AST_FMULTIPLE_LIST;
  } else if (typing == &DeeHashSet_Type) {
-  result = AST_FMULTIPLE_SET;
+  result = AST_FMULTIPLE_HASHSET;
  } else if (typing == &DeeDict_Type) {
   result = AST_FMULTIPLE_DICT;
  } else if (typing == &DeeSeq_Type) {

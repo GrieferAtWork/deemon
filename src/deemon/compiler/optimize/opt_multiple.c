@@ -103,7 +103,7 @@ multiple_continue_at_iter:
    } else if (self->a_flag == AST_FMULTIPLE_LIST) {
     cexpr = DeeList_New();
     if unlikely(!cexpr) goto err;
-   } else if (self->a_flag == AST_FMULTIPLE_SET) {
+   } else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
     cexpr = DeeHashSet_New();
     if unlikely(!cexpr) goto err;
    } else if (self->a_flag == AST_FMULTIPLE_DICT) {
@@ -149,7 +149,7 @@ multiple_continue_at_iter:
    DeeGC_Track((DeeObject *)new_list);
    Dee_Free(self->a_multiple.m_astv);
    self->a_constexpr = new_list; /* Inherit reference. */
-  } else if (self->a_flag == AST_FMULTIPLE_SET) {
+  } else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
    DREF DeeObject *new_set; size_t i;
    new_set = DeeHashSet_New();
    if unlikely(!new_set) goto err;
