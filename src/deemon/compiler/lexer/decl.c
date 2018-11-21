@@ -394,7 +394,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
  }
  if (!DeeType_Check(ob))
      goto print_object;
- deemon = get_deemon_module();
+ deemon = DeeModule_GetDeemon();
  /* Search the builtin `deemon' module for this export. */
  for (i = 0; i < deemon->mo_globalc; ++i) {
   struct module_symbol *sym;

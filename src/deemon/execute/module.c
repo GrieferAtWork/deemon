@@ -150,7 +150,7 @@ INTERN struct module_symbol empty_module_buckets[] = {
 
 
 
-INTERN struct module_symbol *DCALL
+PUBLIC struct module_symbol *DCALL
 DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
  struct module_symbol *iter,*end;
  struct module_symbol *result = NULL;
@@ -176,12 +176,13 @@ DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
  return result;
 }
 
-INTERN struct module_symbol *DCALL
+PUBLIC struct module_symbol *DCALL
 DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
                           char const *__restrict attr_name,
                           dhash_t hash) {
  dhash_t i,perturb;
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
+ ASSERT(!DeeInteractiveModule_Check(self));
  perturb = i = MODULE_HASHST(self,hash);
  for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
   struct module_symbol *item = MODULE_HASHIT(self,i);
@@ -193,7 +194,7 @@ DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
  return NULL;
 }
 
-INTERN struct module_symbol *DCALL
+PUBLIC struct module_symbol *DCALL
 DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
                              char const *__restrict attr_name,
                              size_t attrlen, dhash_t hash) {
@@ -211,10 +212,12 @@ DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
  return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-module_getattr_symbol(DeeModuleObject *__restrict self,
-                      struct module_symbol *__restrict symbol) {
+PUBLIC DREF DeeObject *DCALL
+DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self,
+                        struct module_symbol *__restrict symbol) {
  DREF DeeObject *result;
+ ASSERT(symbol >= self->mo_bucketv &&
+        symbol <= self->mo_bucketv + self->mo_bucketm);
  if likely(!(symbol->ss_flags & (MODSYM_FEXTERN|MODSYM_FPROPERTY))) {
 read_symbol:
   ASSERT(symbol->ss_index < self->mo_globalc);
@@ -256,9 +259,11 @@ read_symbol:
  goto read_symbol;
 }
 
-INTERN int DCALL
-module_boundattr_symbol(DeeModuleObject *__restrict self,
-                        struct module_symbol *__restrict symbol) {
+PUBLIC int DCALL
+DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self,
+                          struct module_symbol *__restrict symbol) {
+ ASSERT(symbol >= self->mo_bucketv &&
+        symbol <= self->mo_bucketv + self->mo_bucketm);
  if likely(!(symbol->ss_flags & (MODSYM_FEXTERN|MODSYM_FPROPERTY))) {
   bool result;
 read_symbol:
@@ -313,7 +318,7 @@ module_getattr_impl(DeeModuleObject *__restrict self,
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
   if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name))
-       return module_getattr_symbol(self,item);
+       return DeeModule_GetAttrSymbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
  result = DeeObject_GenericGetAttrString((DeeObject *)self,attr_name,hash);
@@ -334,7 +339,7 @@ module_getattr_len_impl(DeeModuleObject *__restrict self,
   if (item->ss_hash != hash) continue; /* Non-matching hash */
   if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
   if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) == 0)
-      return module_getattr_symbol(self,item);
+      return DeeModule_GetAttrSymbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
  result = DeeObject_GenericGetAttrStringLen((DeeObject *)self,
@@ -359,7 +364,7 @@ module_boundattr_impl(DeeModuleObject *__restrict self,
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
   if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name))
-       return module_boundattr_symbol(self,item);
+       return DeeModule_BoundAttrSymbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
  return DeeObject_GenericBoundAttrString((DeeObject *)self,attr_name,hash);
@@ -377,7 +382,7 @@ module_boundattr_len_impl(DeeModuleObject *__restrict self,
   if (item->ss_hash != hash) continue; /* Non-matching hash */
   if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
   if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) == 0)
-       return module_boundattr_symbol(self,item);
+       return DeeModule_BoundAttrSymbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
  return DeeObject_GenericBoundAttrStringLen((DeeObject *)self,
@@ -423,10 +428,12 @@ module_hasattr_len_impl(DeeModuleObject *__restrict self,
                                            hash);
 }
 
-INTERN int DCALL
-module_delattr_symbol(DeeModuleObject *__restrict self,
-                      struct module_symbol *__restrict symbol) {
+PUBLIC int DCALL
+DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
+                        struct module_symbol *__restrict symbol) {
  DREF DeeObject *old_value;
+ ASSERT(symbol >= self->mo_bucketv &&
+        symbol <= self->mo_bucketv + self->mo_bucketm);
  if unlikely(symbol->ss_flags&(MODSYM_FREADONLY|MODSYM_FEXTERN|MODSYM_FPROPERTY)) {
   if (symbol->ss_flags & MODSYM_FREADONLY)
       return err_module_readonly_global(self,MODULE_SYMBOL_GETNAMESTR(symbol));
@@ -484,7 +491,7 @@ module_delattr_impl(DeeModuleObject *__restrict self,
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
   if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name))
-       return module_delattr_symbol(self,item);
+       return DeeModule_DelAttrSymbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
  error = DeeObject_GenericDelAttrString((DeeObject *)self,attr_name,hash);
@@ -504,7 +511,7 @@ module_delattr_len_impl(DeeModuleObject *__restrict self,
   if (item->ss_hash != hash) continue; /* Non-matching hash */
   if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
   if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) == 0)
-      return module_delattr_symbol(self,item);
+      return DeeModule_DelAttrSymbol(self,item);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
  error = DeeObject_GenericDelAttrStringLen((DeeObject *)self,
@@ -518,11 +525,13 @@ module_delattr_len_impl(DeeModuleObject *__restrict self,
                                       ATTR_ACCESS_DEL);
 }
 
-INTERN int DCALL
-module_setattr_symbol(DeeModuleObject *__restrict self,
-                      struct module_symbol *__restrict symbol,
-                      DeeObject *__restrict value) {
+PUBLIC int DCALL
+DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
+                        struct module_symbol *__restrict symbol,
+                        DeeObject *__restrict value) {
  DREF DeeObject *temp;
+ ASSERT(symbol >= self->mo_bucketv &&
+        symbol <= self->mo_bucketv + self->mo_bucketm);
  if unlikely(symbol->ss_flags&(MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FEXTERN)) {
   if unlikely(symbol->ss_flags & MODSYM_FEXTERN) {
    ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
@@ -597,7 +606,7 @@ module_setattr_impl(DeeModuleObject *__restrict self,
   if (!item->ss_name) break; /* Not found */
   if (item->ss_hash != hash) continue; /* Non-matching hash */
   if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name))
-       return module_setattr_symbol(self,item,value);
+       return DeeModule_SetAttrSymbol(self,item,value);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
  error = DeeObject_GenericSetAttrString((DeeObject *)self,attr_name,hash,value);
@@ -618,7 +627,7 @@ module_setattr_len_impl(DeeModuleObject *__restrict self,
   if (item->ss_hash != hash) continue; /* Non-matching hash */
   if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen) continue; /* Non-matching length */
   if (memcmp(MODULE_SYMBOL_GETNAMESTR(item),attr_name,attrlen * sizeof(char)) == 0)
-      return module_setattr_symbol(self,item,value);
+      return DeeModule_SetAttrSymbol(self,item,value);
  }
  /* Fallback: Do a generic attribute lookup on the module. */
  error = DeeObject_GenericSetAttrStringLen((DeeObject *)self,

@@ -128,6 +128,17 @@ INTERN struct opinfo file_opinfo[FILE_OPERATOR_COUNT] = {
 };
 
 PUBLIC uint16_t DCALL
+Dee_OperatorFromNameLen(DeeTypeObject *typetype,
+                        char const *__restrict name,
+                        size_t namelen) {
+ char buf[32];
+ if (namelen >= 32)
+     return (uint16_t)-1; /* No operator has that long of a name... */
+ memcpy(buf,name,namelen);
+ buf[namelen] = 0;
+ return Dee_OperatorFromName(typetype,buf);
+}
+PUBLIC uint16_t DCALL
 Dee_OperatorFromName(DeeTypeObject *typetype,
                      char const *__restrict name) {
 #define EQAT(ptr,str) (memcmp(ptr,str,sizeof(str)) == 0)

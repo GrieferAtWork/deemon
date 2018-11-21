@@ -413,14 +413,14 @@ INTDEF size_t DCALL membercache_clear(size_t max_clear);
 PRIVATE void DCALL
 dex_fini(DeeDexObject *__restrict self) {
  ASSERT(!self->d_pself);
- if (self->d_module.mo_flags&MODULE_FDIDLOAD) {
+ if (self->d_module.mo_flags & MODULE_FDIDLOAD) {
   uint16_t i;
   /* Clear global variables before we unload the module,
    * because most likely they're all still pointing inside. */
   for (i = 0; i < self->d_module.mo_globalc; ++i)
        Dee_XClear(self->d_module.mo_globalv[i]);
   ASSERT(self->d_dex);
-  if (self->d_module.mo_flags&MODULE_FDIDINIT) {
+  if (self->d_module.mo_flags & MODULE_FDIDINIT) {
 #ifndef CONFIG_NO_NOTIFICATIONS
    struct dex_notification *hooks;
    /* Uninstall notification hooks. */
@@ -547,7 +547,7 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
    /* Type is declared as part of the builtin `deemon' module. */
    DBG_ALIGNMENT_ENABLE();
    Dee_Incref(&deemon_module);
-   return (DREF DeeObject *)get_deemon_module();
+   return (DREF DeeObject *)DeeModule_GetDeemon();
   }
   DBG_ALIGNMENT_ENABLE();
  }
@@ -570,7 +570,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict UNUSED(self),
 PUBLIC DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *__restrict UNUSED(ptr)) {
  Dee_Incref(&deemon_module);
- return (DREF DeeObject *)get_deemon_module();
+ return (DREF DeeObject *)DeeModule_GetDeemon();
 }
 
 DECL_END

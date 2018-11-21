@@ -412,7 +412,8 @@ DeeSeq_Reduce(DeeObject *__restrict self,
  }
  return result;
 }
-INTERN DREF DeeObject *DCALL
+
+PUBLIC DREF DeeObject *DCALL
 DeeSeq_Sum(DeeObject *__restrict self) {
  DREF DeeObject *iterator,*elem,*merge;
  DREF DeeObject *result = NULL;
@@ -510,7 +511,8 @@ err_iter:
  Dee_Decref(iterator);
  return NULL;
 }
-INTERN int DCALL
+
+PUBLIC int DCALL
 DeeSeq_Any(DeeObject *__restrict self) {
  DREF DeeObject *iterator,*elem;
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
@@ -534,7 +536,8 @@ err_iter:
  Dee_Decref(iterator);
  goto err;
 }
-INTERN int DCALL
+
+PUBLIC int DCALL
 DeeSeq_All(DeeObject *__restrict self) {
  DREF DeeObject *iterator,*elem;
  if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
@@ -558,6 +561,7 @@ err_iter:
  Dee_Decref(iterator);
  goto err;
 }
+
 INTERN int DCALL
 DeeSeq_Parity(DeeObject *__restrict self) {
  DREF DeeObject *iterator,*elem; int result = 0;
@@ -693,7 +697,7 @@ err_r_iter:
  return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+PUBLIC DREF DeeObject *DCALL
 DeeSeq_Min(DeeObject *__restrict self, DeeObject *key) {
  DREF DeeObject *elem,*iterator,*result = NULL; int temp;
  if (key) return DeeSeq_Min_k(self,key);
@@ -734,7 +738,8 @@ err_r_iter:
  Dee_Decref(iterator);
  return NULL;
 }
-INTERN DREF DeeObject *DCALL
+
+PUBLIC DREF DeeObject *DCALL
 DeeSeq_Max(DeeObject *__restrict self, DeeObject *key) {
  DREF DeeObject *elem,*iterator,*result = NULL; int temp;
  if (key) return DeeSeq_Max_k(self,key);

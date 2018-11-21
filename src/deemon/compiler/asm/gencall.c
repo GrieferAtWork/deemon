@@ -1200,7 +1200,7 @@ invoke_cattr_funsym_argv:
       if (asm_gcall(argc + 1)) goto err; /* result */
       goto pop_unused;
      }
-     symid = asm_newmodule(get_deemon_module());
+     symid = asm_newmodule(DeeModule_GetDeemon());
      if unlikely(symid < 0) goto err; /* Call as an instancemethod */
      if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err;
      /* Fallthrough to invoke the instancemethod normally. */
@@ -1289,7 +1289,7 @@ invoke_cattr_funsym_argv:
      if (asm_gcall(argc + 1)) goto err;
      goto pop_unused;
     }
-    symid = asm_newmodule(get_deemon_module());
+    symid = asm_newmodule(DeeModule_GetDeemon());
     if unlikely(symid < 0) goto err; /* Call as an instancemethod */
     if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err;
     /* Fallthrough to invoke the instancemethod normally. */

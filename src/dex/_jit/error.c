@@ -16,17 +16,35 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_RT_LIBRT_H
-#define GUARD_DEX_RT_LIBRT_H 1
+#ifndef GUARD_DEX_JIT_ERROR_C
+#define GUARD_DEX_JIT_ERROR_C 1
 
-#include <deemon/api.h>
-#include <deemon/dex.h>
-#include <deemon/object.h>
+#include "libjit.h"
+#include <deemon/error.h>
 
 DECL_BEGIN
 
+INTERN ATTR_COLD int DCALL
+err_invalid_argc_len(char const *function_name, size_t function_size,
+                     size_t argc_cur, size_t argc_min, size_t argc_max) {
+ if (argc_min == argc_max) {
+  return DeeError_Throwf(&DeeError_TypeError,
+                         "function%s%$s expects %Iu arguments when %Iu w%s given",
+                         function_size ? " " : "",function_size,function_name,
+                         argc_min,argc_cur,argc_cur == 1 ? "as" : "ere");
+ } else {
+  return DeeError_Throwf(&DeeError_TypeError,
+                         "function%s%$s expects between %Iu and %Iu arguments when %Iu w%s given",
+                         function_size ? " " : "",function_size,function_name,
+                         argc_min,argc_max,argc_cur,argc_cur == 1 ? "as" : "ere");
+ }
+}
+
+INTERN ATTR_COLD int DCALL err_no_active_exception(void) {
+ return DeeError_Throwf(&DeeError_RuntimeError,"No active exception");
+}
 
 
 DECL_END
 
-#endif /* !GUARD_DEX_RT_LIBRT_H */
+#endif /* !GUARD_DEX_JIT_ERROR_C */

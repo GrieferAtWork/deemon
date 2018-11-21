@@ -35,7 +35,6 @@
     <ClInclude Include="..\include\deemon\compiler\dec.h" />
     <ClInclude Include="..\include\deemon\compiler\error.h" />
     <ClInclude Include="..\include\deemon\compiler\interface.h" />
-    <ClInclude Include="..\include\deemon\compiler\jit.h" />
     <ClInclude Include="..\include\deemon\compiler\lexer.h" />
     <ClInclude Include="..\include\deemon\compiler\optimize.h" />
     <ClInclude Include="..\include\deemon\compiler\symbol.h" />
@@ -149,11 +148,6 @@
     <ClCompile Include="..\src\deemon\compiler\interface\iparser.c" />
     <ClCompile Include="..\src\deemon\compiler\interface\iscope.c" />
     <ClCompile Include="..\src\deemon\compiler\interface\isymbol.c" />
-    <ClCompile Include="..\src\deemon\compiler\jit\context.c" />
-    <ClCompile Include="..\src\deemon\compiler\jit\function.c" />
-    <ClCompile Include="..\src\deemon\compiler\jit\lexer.c" />
-    <ClCompile Include="..\src\deemon\compiler\jit\object-table.c" />
-    <ClCompile Include="..\src\deemon\compiler\jit\parser.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\asm.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\assert.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\brace.c" />
@@ -296,11 +290,6 @@ ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj;%(Outputs)</Outputs>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
-    <None Include="..\src\deemon\compiler\jit\parser-impl-comma.c.inl" />
-    <None Include="..\src\deemon\compiler\jit\parser-impl-hybrid-parts.c.inl" />
-    <None Include="..\src\deemon\compiler\jit\parser-impl-hybrid.c.inl" />
-    <None Include="..\src\deemon\compiler\jit\parser-impl-statement.c.inl" />
-    <None Include="..\src\deemon\compiler\jit\parser-impl.c.inl" />
     <None Include="..\src\deemon\compiler\lexer\decl-escape-text-impl.c.inl" />
     <None Include="..\src\deemon\execute\asm\exec-386.S">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">false</DeploymentContent>

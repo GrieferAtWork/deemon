@@ -16,13 +16,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_JIT_OBJECT_TABLE_C
-#define GUARD_DEEMON_COMPILER_JIT_OBJECT_TABLE_C 1
+#ifndef GUARD_DEX_JIT_OBJECT_TABLE_C
+#define GUARD_DEX_JIT_OBJECT_TABLE_C 1
 
-#include <deemon/api.h>
-#include <deemon/compiler/jit.h>
-#ifndef CONFIG_NO_JIT
-
+#include "libjit.h"
 #include <deemon/object.h>
 #include <deemon/module.h>
 #include <deemon/string.h>
@@ -392,6 +389,5 @@ again:
 
 
 DECL_END
-#endif /* !CONFIG_NO_JIT */
 
-#endif /* !GUARD_DEEMON_COMPILER_JIT_OBJECT_TABLE_C */
+#endif /* !GUARD_DEX_JIT_OBJECT_TABLE_C */

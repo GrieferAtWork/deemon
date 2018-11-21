@@ -333,6 +333,17 @@ struct type_nsi {
  * expose NSI functionality. */
 DFUNDEF struct type_nsi *DCALL DeeType_NSI(DeeTypeObject *__restrict tp);
 
+/* Create new range sequence objects. */
+DFUNDEF DREF DeeObject *DCALL DeeRange_New(DeeObject *__restrict begin, DeeObject *__restrict end, DeeObject *step);
+DFUNDEF DREF DeeObject *DCALL DeeRange_NewInt(dssize_t begin, dssize_t end, dssize_t step);
+
+/* Functions used to implement special sequence expressions,
+ * such as `x + ...' (as `DeeSeq_Sum'), etc. */
+DFUNDEF DREF DeeObject *DCALL DeeSeq_Sum(DeeObject *__restrict self);
+DFUNDEF int DCALL DeeSeq_Any(DeeObject *__restrict self);
+DFUNDEF int DCALL DeeSeq_All(DeeObject *__restrict self);
+DFUNDEF DREF DeeObject *DCALL DeeSeq_Min(DeeObject *__restrict self, DeeObject *key);
+DFUNDEF DREF DeeObject *DCALL DeeSeq_Max(DeeObject *__restrict self, DeeObject *key);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Mutable-sequence API */
@@ -365,11 +376,6 @@ INTDEF int DCALL DeeSeq_Sort(DeeObject *__restrict self, DeeObject *key);
  * @return: -1: An error occurred. */
 INTDEF int DCALL DeeSeq_IsMutable(DeeObject *__restrict self);
 INTDEF int DCALL DeeSeq_IsResizable(DeeObject *__restrict self);
-
-
-/* Create new range sequence objects. */
-INTDEF DREF DeeObject *DCALL DeeRange_New(DeeObject *__restrict begin, DeeObject *__restrict end, DeeObject *step);
-INTDEF DREF DeeObject *DCALL DeeRange_NewInt(dssize_t begin, dssize_t end, dssize_t step);
 
 /* NOTE: Technically, all of these functions can be used on any type of object,
  *       but all objects derived from `DeeSeq_Type' automatically implement
@@ -424,12 +430,7 @@ INTDEF int DCALL DeeSeq_NonEmpty(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeSeq_Front(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeSeq_Back(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeSeq_Reduce(DeeObject *__restrict self, DeeObject *__restrict combine, DeeObject *__restrict init);
-INTDEF DREF DeeObject *DCALL DeeSeq_Sum(DeeObject *__restrict self);
-INTDEF int DCALL DeeSeq_Any(DeeObject *__restrict self);
-INTDEF int DCALL DeeSeq_All(DeeObject *__restrict self);
 INTDEF int DCALL DeeSeq_Parity(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeSeq_Min(DeeObject *__restrict self, DeeObject *key);
-INTDEF DREF DeeObject *DCALL DeeSeq_Max(DeeObject *__restrict self, DeeObject *key);
 INTDEF size_t DCALL DeeSeq_Count(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
 INTDEF DREF DeeObject *DCALL DeeSeq_Locate(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
 INTDEF DREF DeeObject *DCALL DeeSeq_RLocate(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);

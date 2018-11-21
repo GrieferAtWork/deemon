@@ -21,7 +21,6 @@
 #endif
 
 #include <deemon/thread.h>
-#include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
 

@@ -214,7 +214,7 @@ emit_instruction:
   if (asm_grrot(argc+1)) goto err;
   /* STACK: message, operator_name, a, [b, [c, [d]]] */
   /* Add `deemon' to the import list. */
-  deemon_modid = asm_newmodule(get_deemon_module());
+  deemon_modid = asm_newmodule(DeeModule_GetDeemon());
   if unlikely(deemon_modid < 0) goto err;
   /* Generate the call to the builtin assertion function. */
   if (asm_gcall_extern((uint16_t)deemon_modid,id___assert,argc+2)) goto err;
@@ -288,7 +288,7 @@ emit_instruction:
   ++argc;
  }
  /* Add `deemon' to the import list. */
- deemon_modid = asm_newmodule(get_deemon_module());
+ deemon_modid = asm_newmodule(DeeModule_GetDeemon());
  if unlikely(deemon_modid < 0) goto err;
  /* Generate the call to the builtin assertion function. */
  if (asm_gcall_extern((uint16_t)deemon_modid,id___assert,argc)) goto err;

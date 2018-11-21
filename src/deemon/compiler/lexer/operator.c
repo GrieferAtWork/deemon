@@ -151,7 +151,7 @@ do_generic:
   function_symbol = new_unnamed_symbol();
   if unlikely(!function_symbol) goto err;
   function_symbol->s_type = SYMBOL_TYPE_EXTERN;
-  function_symbol->s_extern.e_module = get_deemon_module();
+  function_symbol->s_extern.e_module = DeeModule_GetDeemon();
   Dee_Incref(function_symbol->s_extern.e_module);
   function_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(function_symbol->s_extern.e_module,
                                                                  DeeString_STR(function_name),
@@ -238,7 +238,7 @@ do_generic:
   function_symbol = new_unnamed_symbol();
   if unlikely(!function_symbol) goto err_args;
   function_symbol->s_type = SYMBOL_TYPE_EXTERN;
-  function_symbol->s_extern.e_module = get_deemon_module();
+  function_symbol->s_extern.e_module = DeeModule_GetDeemon();
   Dee_Incref(function_symbol->s_extern.e_module);
   function_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(function_symbol->s_extern.e_module,
                                                                  DeeString_STR(function_name),

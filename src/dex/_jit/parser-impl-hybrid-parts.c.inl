@@ -226,7 +226,7 @@ err_handle_catch_except:
       if (ITER_ISOK(exc->ef_trace))
           Dee_Decref((DeeObject *)exc->ef_trace);
       Dee_Decref(exc->ef_error);
-      ef_free(exc);
+      Dee_Free(exc); /*ef_free(exc);*/
      }
      continue;
     } else {

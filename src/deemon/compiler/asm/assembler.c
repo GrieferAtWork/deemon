@@ -2848,7 +2848,7 @@ did_find_export:
   result = new_unnamed_symbol_in_scope((DeeScopeObject *)current_rootscope);
   if unlikely(!result) goto done_result;
   result->s_type            = SYMBOL_TYPE_EXTERN;
-  result->s_extern.e_module = get_deemon_module();
+  result->s_extern.e_module = DeeModule_GetDeemon();
   result->s_extern.e_symbol = DeeModule_GetSymbolID(&deemon_module,i);
   ASSERT(result->s_extern.e_symbol != NULL);
 done_result:
@@ -2974,7 +2974,7 @@ do_savearg:
    /* Throw a TypeError indicating an invalid argument count:
     * >>    push $<max_argc>
     * >>    call extern @deemon:@__badcall */
-   deemon_modid = asm_newmodule(get_deemon_module());
+   deemon_modid = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(deemon_modid < 0) goto err;
    max_argc_ob = DeeInt_NewU16(current_basescope->bs_argc);
    if unlikely(!max_argc_ob) goto err;

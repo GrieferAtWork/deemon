@@ -165,6 +165,7 @@ BEGIN
 		END
 
 		/* Simple extensions that don't require special link arguments. */
+		BEGIN DEX("_jit")         SOURCE("_jit/*.c")         END
 		BEGIN DEX("time")         SOURCE("time/*.c")         END
 		BEGIN DEX("fs")           SOURCE("fs/*.c")           END
 		BEGIN DEX("rt")           SOURCE("rt/*.c")           END

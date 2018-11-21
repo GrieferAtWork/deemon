@@ -205,21 +205,17 @@ flt_ext:
 #define float_extension_off more
  float_extension_pos = 1;
  float_extension_off = 0;
- while (SKIP_WRAPLF(iter,end));
  if (iter == end) { --iter; goto sfx; }
  ch = *iter++;
- while (SKIP_WRAPLF(iter,end));
  if (ch == '-' || ch == '+') {
   float_extension_pos = (ch == '+');
   if (iter == end) { --iter; goto sfx; }
   ch = *iter++;
-  while (SKIP_WRAPLF(iter,end));
  }
  while (ch >= '0' && ch <= '9') {
   float_extension_off = float_extension_off*10+(ch-'0');
   if (iter == end) break;
   ch = *iter++;
-  while (SKIP_WRAPLF(iter,end));
  }
  float_extension_mult = 1;
  while (float_extension_off != 0) {
@@ -245,11 +241,6 @@ err_invalid_suffix:
 done_zero:
  return DeeFloat_New(0.0);
 }
-#endif
-
-#ifndef BUILTIN_IMPORT_DEFINED
-#define BUILTIN_IMPORT_DEFINED 1
-INTDEF DeeCMethodObject builtin_import;
 #endif
 
 DEFINE_PRIMARY(YieldAndParseUnaryKeywordOperand) {
@@ -972,6 +963,9 @@ skip_brace_lambda:
 #endif
    goto done;
   }
+#ifndef JIT_EVAL
+  result = JITLexer_SkipPair(self,'[',']');
+#else /* !JIT_EVAL */
   if (self->jl_tok == ':') {
    /* Range generator with zero starting value. */
    JITLexer_Yield(self);
@@ -1082,10 +1076,14 @@ skip_rbrck_and_done:
                        self->jl_tokstart);
    goto err_r;
   }
+#endif /* JIT_EVAL */
   goto done;
 
  case '{':
   JITLexer_Yield(self);
+#ifndef JIT_EVAL
+  result = JITLexer_SkipPair(self,'{','}');
+#else /* !JIT_EVAL */
   result = FUNC(BraceItems)(self);
   if (ISERR(result)) goto err;
   if likely(self->jl_tok == '}') {
@@ -1096,6 +1094,7 @@ skip_rbrck_and_done:
                        self->jl_tokstart);
    goto err_r;
   }
+#endif /* JIT_EVAL */
   break;
 
  {
@@ -1321,8 +1320,7 @@ skip_rbrck_and_done:
    if (name == ENCODE4('i','m','p','o') &&
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r','t')) {
 #ifdef JIT_EVAL
-    result = (DREF DeeObject *)&builtin_import;
-    Dee_Incref(&builtin_import);
+    result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(),"import");
 #else /* JIT_EVAL */
     result = 0;
 #endif /* !JIT_EVAL */
@@ -2901,7 +2899,7 @@ again:
   JITLexer_Yield(self);
 #ifdef JIT_EVAL
   new_result = DeeTuple_ConcatInherited(result,lhs);
-  if unlikely(!new_result) goto err_lhs;
+  if unlikely(!new_result) goto err_r_lhs;
   result = new_result;
   Dee_Decref(lhs);
 #endif
@@ -2911,7 +2909,7 @@ again:
   __IF0 {
  case ',':
    new_result = DeeTuple_Append(result,lhs);
-   if unlikely(!new_result) goto err_lhs;
+   if unlikely(!new_result) goto err_r_lhs;
    Dee_Decref(lhs);
    result = new_result;
   }
@@ -2932,7 +2930,7 @@ again:
  default:
 #ifdef JIT_EVAL
   new_result = DeeTuple_Append(result,lhs);
-  if unlikely(!new_result) goto err_lhs;
+  if unlikely(!new_result) goto err_r_lhs;
   Dee_Decref(lhs);
   result = new_result;
 #endif
@@ -2940,7 +2938,7 @@ again:
  }
  return result;
 #ifdef JIT_EVAL
-err_lhs:
+err_r_lhs:
  DECREF(lhs);
 #endif
 err_r:

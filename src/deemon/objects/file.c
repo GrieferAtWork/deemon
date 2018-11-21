@@ -1362,7 +1362,7 @@ again:
 #ifndef CONFIG_NO_THREADS
   rwlock_write(&files_module_lock);
 #endif
-  if unlikely(files_module) {
+  if unlikely(ATOMIC_READ(files_module)) {
 #ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&files_module_lock);
 #endif

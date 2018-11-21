@@ -1382,7 +1382,12 @@ Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t id);
  * though `*' is resolved and causes `OPERATOR_MUL' to be returned)
  * @return: (uint16_t)-1: No operator matching `name' exists (no error was thrown). */
 DFUNDEF WUNUSED uint16_t DCALL
-Dee_OperatorFromName(DeeTypeObject *typetype, char const *__restrict name);
+Dee_OperatorFromName(DeeTypeObject *typetype,
+                     char const *__restrict name);
+DFUNDEF WUNUSED uint16_t DCALL
+Dee_OperatorFromNameLen(DeeTypeObject *typetype,
+                        char const *__restrict name,
+                        size_t namelen);
 
 
 /* Invoke an operator on a given object, given its ID and arguments.

@@ -273,14 +273,16 @@ struct module_object {
 /* Lock/unlock the symbols of an interactive module object.
  * If `self' is a regular module, these are no-ops. */
 #ifndef CONFIG_NO_THREADS
-DFUNDEF void DCALL DeeModule_LockSymbols(DeeObject *__restrict self);
-DFUNDEF void DCALL DeeModule_UnlockSymbols(DeeObject *__restrict self);
+DFUNDEF void DCALL DeeModule_LockSymbols(DeeModuleObject *__restrict self);
+DFUNDEF void DCALL DeeModule_UnlockSymbols(DeeModuleObject *__restrict self);
 #else /* !CONFIG_NO_THREADS */
 #define DeeModule_LockSymbols(self)   (void)0
 #define DeeModule_UnlockSymbols(self) (void)0
 #endif /* CONFIG_NO_THREADS */
 
 
+/* The module of builtin objects accessible by opening `deemon'. */
+DFUNDEF ATTR_RETNONNULL DeeModuleObject *DCALL DeeModule_GetDeemon(void);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* A stub module-object named `' (empty string), and pointing to `empty_code'. */
@@ -289,8 +291,6 @@ struct static_module_struct {
     struct gc_head_raw m_head;
     DeeModuleObject    m_module;
 };
-/* The module of builtin objects accessible by opening `deemon'. */
-INTDEF ATTR_RETNONNULL DeeModuleObject *DCALL get_deemon_module(void);
 
 #ifdef __INTELLISENSE__
 INTDEF DeeModuleObject empty_module;
@@ -882,9 +882,6 @@ DeeModule_Import(DeeObject *__restrict module_name,
 /* Access global variables of a given module by their name described by a C-string.
  * These functions act and behave just as once would expect, raising errors when
  * appropriate and returning NULL/false/-1 upon error or not knowing the given name. */
-INTDEF struct module_symbol *DCALL DeeModule_GetSymbolString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
-INTDEF struct module_symbol *DCALL DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
-INTDEF struct module_symbol *DCALL DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid);
 INTDEF DREF DeeObject *DCALL DeeModule_GetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
 INTDEF DREF DeeObject *DCALL DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 INTDEF bool DCALL DeeModule_HasAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
@@ -896,6 +893,22 @@ INTDEF int DCALL DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self, ch
 INTDEF int DCALL DeeModule_SetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash, DeeObject *__restrict value);
 INTDEF int DCALL DeeModule_SetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, DeeObject *__restrict value);
 #endif
+
+/* Lookup the module symbol associated with a given its name or GID.
+ * If the symbol could not be found, return `NULL', but _DONT_ throw an error.
+ * WARNING: When `self' could potentially be an interactive module, you
+ *          must surround a call to any of these functions with a lock that
+ *          can be acquired / released using `DeeModule_LockSymbols()' /
+ *         `DeeModule_UnlockSymbols()'
+ *          Additionally, you must be extremely careful, as an interactive
+ *          module may arbitrarily modify its global object table! */
+DFUNDEF struct module_symbol *DCALL DeeModule_GetSymbolString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash);
+DFUNDEF struct module_symbol *DCALL DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
+DFUNDEF struct module_symbol *DCALL DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid);
+DFUNDEF DREF DeeObject *DCALL DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
+DFUNDEF int DCALL DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
+DFUNDEF int DCALL DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
+DFUNDEF int DCALL DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol, DeeObject *__restrict value);
 
 /* Return the name of a global variable in the given module.
  * NOTE: This function does _NOT_ return a reference to a string, but the raw string object.

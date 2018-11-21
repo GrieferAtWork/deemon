@@ -47,7 +47,6 @@ BEGIN PROJECT("deemon")
 	FI
 	SOURCE("deemon/*.c")
 	SOURCE("deemon/compiler/*.c")
-	SOURCE("deemon/compiler/jit/*.c")
 	SOURCE("deemon/compiler/asm/*.c")
 	SOURCE("deemon/compiler/lexer/*.c")
 	SOURCE("deemon/compiler/interface/*.c")

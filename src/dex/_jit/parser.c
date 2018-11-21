@@ -16,24 +16,29 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_JIT_PARSER_C
-#define GUARD_DEEMON_COMPILER_JIT_PARSER_C 1
+#ifndef GUARD_DEX_JIT_PARSER_C
+#define GUARD_DEX_JIT_PARSER_C 1
 
-#include <deemon/api.h>
-#include <deemon/compiler/jit.h>
-#ifndef CONFIG_NO_JIT
+#include "libjit.h"
 #include <deemon/int.h>
 #include <deemon/error.h>
 #include <deemon/class.h>
+#include <deemon/file.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/stringutils.h>
 #include <hybrid/unaligned.h>
 
-#include "../../runtime/strings.h"
-
 DECL_BEGIN
 
-INTDEF DeeObject *rt_operator_names[1+(AST_OPERATOR_MAX-AST_OPERATOR_MIN)];
+/* Special symbol names to generate function calls to
+ * when the argument count cannot be determined. */
+INTERN char const rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)][8] = {
+    /* [AST_OPERATOR_POS_OR_ADD           - AST_OPERATOR_MIN] = */"__pooad",
+    /* [AST_OPERATOR_NEG_OR_SUB           - AST_OPERATOR_MIN] = */"__neosb",
+    /* [AST_OPERATOR_GETITEM_OR_SETITEM   - AST_OPERATOR_MIN] = */"__giosi",
+    /* [AST_OPERATOR_GETRANGE_OR_SETRANGE - AST_OPERATOR_MIN] = */"__grosr",
+    /* [AST_OPERATOR_GETATTR_OR_SETATTR   - AST_OPERATOR_MIN] = */"__gaosa"
+};
 
 INTERN bool FCALL
 JIT_MaybeExpressionBegin(unsigned int tok_id) {
@@ -61,6 +66,8 @@ JIT_MaybeExpressionBegin(unsigned int tok_id) {
  return result;
 }
 
+PRIVATE DEFINE_STRING(str_operators,"operators");
+
 
 INTERN DREF DeeObject *FCALL
 JIT_GetOperatorFunction(uint16_t opname) {
@@ -71,10 +78,8 @@ JIT_GetOperatorFunction(uint16_t opname) {
  if (opname >= AST_OPERATOR_MIN &&
      opname <= AST_OPERATOR_MAX) {
   /* Special, ambiguous operator. */
-  DeeObject *name;
-  name        = rt_operator_names[opname-AST_OPERATOR_MIN];
-  symbol_name = DeeString_STR(name);
-  hash        = DeeString_Hash(name);
+  symbol_name = rt_operator_names[opname - AST_OPERATOR_MIN];
+  hash        = hash_ptr(symbol_name,8);
  } else {
   struct opinfo *info;
   /* Default case: determine the operator symbol using generic-operator info. */
@@ -84,16 +89,18 @@ JIT_GetOperatorFunction(uint16_t opname) {
    hash = hash_str(symbol_name);
   }
  }
- operators_module = (DREF DeeModuleObject *)DeeModule_Open(&str_operators,NULL,true);
+ operators_module = (DREF DeeModuleObject *)DeeModule_Open((DeeObject *)&str_operators,
+                                                            NULL,
+                                                            true);
  if unlikely(!operators_module) goto err;
  if (symbol_name) {
-  result = DeeModule_GetAttrString(operators_module,
-                                   symbol_name,
-                                   hash);
+  result = DeeObject_GetAttrStringHash((DeeObject *)operators_module,
+                                        symbol_name,
+                                        hash);
  } else {
   /* Fallback: Invoke `operator(id)' to generate the default callback. */
-  result = DeeModule_GetAttrString(operators_module,"operator",
-                                   hash_ptr("operator",COMPILER_STRLEN("operator")));
+  result = DeeObject_GetAttrStringHash((DeeObject *)operators_module,"operator",
+                                        hash_ptr("operator",COMPILER_STRLEN("operator")));
   if likely(result) {
    DREF DeeObject *callback_result;
    callback_result = DeeObject_Callf(result,"I16u",opname);
@@ -116,13 +123,6 @@ err:
 #define ENCODE2(a,b)     ((b)|(a)<<8)
 #define ENCODE4(a,b,c,d) ((d)|(c)<<8|(b)<<16|(a)<<24)
 #endif
-
-INTDEF struct opinfo basic_opinfo[OPERATOR_USERCOUNT];
-INTDEF struct opinfo file_opinfo[FILE_OPERATOR_COUNT];
-
-INTDEF struct opinfo *DCALL
-find_opinfo(struct opinfo *__restrict v, unsigned int c,
-            char const *__restrict str, size_t len);
 
 
 INTERN int32_t FCALL
@@ -381,13 +381,12 @@ err_rbrck_after_lbrck:
   /* Query an explicit operator by its name.
    * NOTE: This is also where a lot of backwards-compatibility lies, as
    *       the old deemon used to only accept e.g.: `operator __contains__'. */
-  { struct opinfo *info;
-    info = find_opinfo(basic_opinfo,COMPILER_LENOF(basic_opinfo),name_begin,name_size);
-    if (info) { result = (uint16_t)(info-basic_opinfo); goto done_y1; }
-    if (!(features & P_OPERATOR_FNOFILE)) {
-     info = find_opinfo(file_opinfo,COMPILER_LENOF(file_opinfo),name_begin,name_size);
-     if (info) { result = OPERATOR_EXTENDED(0)+(uint16_t)(info-file_opinfo); goto done_y1; }
-    }
+  { uint16_t opid;
+    DeeTypeObject *typetype;
+    typetype = features & P_OPERATOR_FNOFILE ? NULL : &DeeFileType_Type;
+    opid = Dee_OperatorFromNameLen(typetype,name_begin,name_size);
+    if (opid != (uint16_t)-1) { result = opid; goto done_y1; }
+
     /* Even more backwards compatibility. */
     if (name_size == 2) {
      if (UNALIGNED_GET16((uint16_t *)(name_begin + 0)) == ENCODE2('l','t'))
@@ -712,6 +711,4 @@ DECL_END
 #include "parser-impl.c.inl"
 #endif
 
-#endif /* !CONFIG_NO_JIT */
-
-#endif /* !GUARD_DEEMON_COMPILER_JIT_PARSER_C */
+#endif /* !GUARD_DEX_JIT_PARSER_C */

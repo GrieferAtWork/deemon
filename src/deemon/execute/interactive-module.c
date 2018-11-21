@@ -166,7 +166,8 @@ interactivemodule_lockendwrite(InteractiveModule *__restrict self) {
  recursive_rwlock_endwrite(&self->im_exec_lock);
 }
 
-LOCAL bool DCALL is_an_imod(DeeObject *__restrict self) {
+LOCAL bool DCALL
+is_an_imod(DeeModuleObject *__restrict self) {
  DeeTypeObject *tp_self = Dee_TYPE(self);
  ASSERT_OBJECT(self);
  for (;;) {
@@ -181,12 +182,12 @@ LOCAL bool DCALL is_an_imod(DeeObject *__restrict self) {
 }
 
 PUBLIC void DCALL
-DeeModule_LockSymbols(DeeObject *__restrict self) {
+DeeModule_LockSymbols(DeeModuleObject *__restrict self) {
  if (is_an_imod(self))
      recursive_rwlock_read(&((InteractiveModule *)self)->im_exec_lock);
 }
 PUBLIC void DCALL
-DeeModule_UnlockSymbols(DeeObject *__restrict self) {
+DeeModule_UnlockSymbols(DeeModuleObject *__restrict self) {
  if (is_an_imod(self))
      recursive_rwlock_endread(&((InteractiveModule *)self)->im_exec_lock);
 }

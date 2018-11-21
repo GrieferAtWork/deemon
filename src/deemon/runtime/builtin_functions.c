@@ -35,9 +35,9 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/arg.h>
+#include <deemon/util/rwlock.h>
 
-#include <deemon/compiler/jit.h>
-
+#include "strings.h"
 #include "runtime_error.h"
 
 DECL_BEGIN
@@ -139,14 +139,15 @@ err:
 }
 INTERN DEFINE_KWCMETHOD(builtin_import,&f_builtin_import);
 
-
 PRIVATE DREF DeeObject *DCALL
-f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+builtin_exec_fallback(size_t argc,
+                      DeeObject **__restrict argv,
+                      DeeObject *kw) {
  DREF DeeObject *result;
  DeeObject *expr,*globals = NULL;
  char const *usertext; size_t usersize;
  PRIVATE struct keyword kwlist[] = { K(expr), K(globals), KEND };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:exec",&expr,&globals))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:exec",&expr,&globals))
      goto err;
  if (DeeString_Check(expr)) {
   usertext = DeeString_AsUtf8(expr);
@@ -171,85 +172,6 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
    usersize = DeeBytes_SIZE(expr);
   }
  }
-#if !defined(CONFIG_NO_JIT) && 1
- {
-  JITContext context = JITCONTEXT_INIT;
-  JITLexer lexer;
-  DeeThreadObject *ts = DeeThread_Self();
-  context.jc_except   = ts->t_exceptsz;
-  context.jc_globals  = globals;
-  lexer.jl_context    = &context;
-  lexer.jl_errpos     = NULL;
-  lexer.jl_text       = expr;
-  JITLValue_Init(&lexer.jl_lvalue);
-  JITLexer_Start(&lexer,
-                (unsigned char *)usertext,
-                (unsigned char *)usertext + usersize);
-  result = JITLexer_EvalComma(&lexer,
-                              AST_COMMA_NORMAL |
-                              AST_COMMA_STRICTCOMMA |
-                              AST_COMMA_NOSUFFIXKWD |
-                              AST_COMMA_PARSESINGLE,
-                              NULL,
-                              NULL);
-  ASSERT(!result || (result == JIT_LVALUE) ==
-        (lexer.jl_lvalue.lv_kind != JIT_LVALUE_NONE));
-  /* Check if the resulting expression evaluates to an L-Value
-   * If so, unpack that l-value to access the pointed-to object. */
-  if (result == JIT_LVALUE) {
-   result = JITLValue_GetValue(&lexer.jl_lvalue,
-                               &context);
-   JITLValue_Fini(&lexer.jl_lvalue);
-  }
-  ASSERT(ts->t_exceptsz >= context.jc_except);
-  /* Check for non-propagated exceptions. */
-  if (ts->t_exceptsz > context.jc_except) {
-   if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
-    if (JITCONTEXT_RETVAL_ISSET(context.jc_retval))
-        Dee_Decref(context.jc_retval);
-    context.jc_retval = JITCONTEXT_RETVAL_UNSET;
-   }
-   Dee_XClear(result);
-   while (ts->t_exceptsz > context.jc_except + 1) {
-    DeeError_Print("Discarding secondary error\n",
-                   ERROR_PRINT_DOHANDLE);
-   }
-  }
-  if likely(result) {
-   ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
-   if unlikely(lexer.jl_tok != TOK_EOF) {
-    DeeError_Throwf(&DeeError_SyntaxError,
-                    "Expected EOF but got `%$s'",
-                   (size_t)(lexer.jl_end - lexer.jl_tokstart),
-                    lexer.jl_tokstart);
-    lexer.jl_errpos = lexer.jl_tokstart;
-    Dee_Clear(result);
-    goto handle_error;
-   }
-  } else if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
-   if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
-    result = context.jc_retval;
-   } else {
-    /* Exited code via unconventional means, such as `break' or `continue' */
-    DeeError_Throwf(&DeeError_SyntaxError,
-                    "Attempted to use `break' or `continue' used outside of a loop");
-    lexer.jl_errpos = lexer.jl_tokstart;
-    goto handle_error;
-   }
-  } else {
-   if (!lexer.jl_errpos)
-        lexer.jl_errpos = lexer.jl_tokstart;
-handle_error:
-   JITLValue_Fini(&lexer.jl_lvalue);
-   /* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
-   ;
-  }
-  ASSERT(!globals || context.jc_globals == globals);
-  if (context.jc_globals != globals)
-      Dee_Decref(context.jc_globals);
-  JITContext_Fini(&context);
- }
-#else
  result = DeeExec_RunMemory(usertext,
                             usersize,
                             DEE_EXEC_RUNMODE_EXPR,
@@ -261,11 +183,134 @@ handle_error:
                             globals,
                             NULL,
                             NULL);
-#endif
  Dee_Decref_unlikely(expr);
  return result;
 err_expr:
  Dee_Decref(expr);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *jit_module = NULL; /* import("_jit") */
+PRIVATE DREF DeeObject *jit_exec = NULL;   /* _jit.exec */
+
+#ifndef CONFIG_NO_THREADS
+PRIVATE DEFINE_RWLOCK(jit_access_lock);
+#endif
+
+INTERN bool DCALL clear_jit_cache(void) {
+ DREF DeeObject *mod,*exec;
+ rwlock_write(&jit_access_lock);
+ mod  = jit_module;
+ exec = jit_exec;
+ if (!ITER_ISOK(mod)) {
+  ASSERT(!ITER_ISOK(exec));
+  rwlock_endwrite(&jit_access_lock);
+  return false;
+ }
+ jit_module = NULL;
+ jit_exec   = NULL;
+ rwlock_endwrite(&jit_access_lock);
+ Dee_Decref(mod);
+ if (ITER_ISOK(exec))
+     Dee_Decref(exec);
+ return true;
+}
+
+PRIVATE DREF DeeObject *DCALL get_jit_module(void) {
+ DREF DeeObject *result;
+again:
+ rwlock_read(&jit_access_lock);
+ result = jit_module;
+ if unlikely(!result) {
+  rwlock_endread(&jit_access_lock);
+  result = DeeModule_Open(&str__jit,NULL,false);
+  if unlikely(!result) return NULL;
+  if (result != ITER_DONE) {
+   if unlikely(DeeModule_RunInit(result) < 0) {
+    Dee_Decref(result);
+    return NULL;
+   }
+  }
+  rwlock_write(&jit_access_lock);
+  if unlikely(ATOMIC_READ(jit_module)) {
+   rwlock_endwrite(&jit_access_lock);
+   Dee_Decref(result);
+   goto again;
+  }
+  Dee_Incref(result);
+  jit_module = result;
+  rwlock_endwrite(&jit_access_lock);
+ } else {
+  if (result != ITER_DONE)
+      Dee_Incref(result);
+  rwlock_endread(&jit_access_lock);
+ }
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+ DREF DeeObject *result,*exec;
+ rwlock_read(&jit_access_lock);
+ exec = jit_exec;
+ if likely(ITER_ISOK(exec)) {
+  Dee_Incref(exec);
+  rwlock_endread(&jit_access_lock);
+do_exec:
+  result = DeeObject_CallKw(exec,argc,argv,kw);
+  Dee_Decref(exec);
+  return result;
+ }
+ rwlock_endread(&jit_access_lock);
+ if unlikely(exec == ITER_DONE)
+    goto fallback;
+ /* Load the exec function. */
+ {
+  DREF DeeObject *module;
+  module = get_jit_module();
+  if unlikely(!ITER_ISOK(module)) {
+   if unlikely(!module) goto err;
+   rwlock_write(&jit_access_lock);
+   exec = ATOMIC_READ(jit_exec);
+   if (exec == NULL) {
+    jit_exec = ITER_DONE;
+    rwlock_endwrite(&jit_access_lock);
+    goto fallback;
+   }
+   if unlikely(ITER_ISOK(exec)) {
+    /* Shouldn't happen... */
+    Dee_Incref(exec);
+    rwlock_endwrite(&jit_access_lock);
+    goto do_exec;
+   }
+   rwlock_endwrite(&jit_access_lock);
+   goto fallback;
+  }
+  /* Load the exec function. */
+  exec = DeeObject_GetAttr(module,&str_exec);
+  Dee_Decref(module);
+  if unlikely(!exec) goto err;
+  rwlock_write(&jit_access_lock);
+  module = ATOMIC_READ(jit_exec);
+  if likely(!module) {
+set_exec_and_run:
+   jit_exec = exec;
+   Dee_Incref(exec);
+   rwlock_endwrite(&jit_access_lock);
+   goto do_exec;
+  }
+  if unlikely(module == ITER_DONE)
+     goto set_exec_and_run;
+  Dee_Incref(module);
+  rwlock_endwrite(&jit_access_lock);
+  Dee_Decref(exec);
+  exec = module;
+  goto do_exec;
+ }
+fallback:
+ return builtin_exec_fallback(argc,argv,kw);
 err:
  return NULL;
 }

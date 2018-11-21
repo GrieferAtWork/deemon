@@ -16,12 +16,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_JIT_CONTEXT_C
-#define GUARD_DEEMON_COMPILER_JIT_CONTEXT_C 1
+#ifndef GUARD_DEX_JIT_CONTEXT_C
+#define GUARD_DEX_JIT_CONTEXT_C 1
 
-#include <deemon/api.h>
-#include <deemon/compiler/jit.h>
-#ifndef CONFIG_NO_JIT
+#include "libjit.h"
 #include <deemon/int.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
@@ -29,8 +27,6 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/util/objectlist.h>
 #include <hybrid/unaligned.h>
-
-#include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
 
@@ -110,14 +106,6 @@ err_unloaded:
 }
 
 
-
-INTDEF DREF DeeObject *DCALL module_getattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
-INTDEF int DCALL module_boundattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
-INTDEF int DCALL module_delattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
-INTDEF int DCALL module_setattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol, DeeObject *__restrict value);
-
-
-
 INTERN int FCALL
 JITLValue_IsBound(JITLValue *__restrict self,
                   JITContext *__restrict context) {
@@ -135,8 +123,8 @@ JITLValue_IsBound(JITLValue *__restrict self,
   break;
 
  case JIT_LVALUE_EXTERN:
-  result = module_boundattr_symbol(self->lv_extern.lx_mod,
-                                   self->lv_extern.lx_sym);
+  result = DeeModule_BoundAttrSymbol(self->lv_extern.lx_mod,
+                                     self->lv_extern.lx_sym);
   if (result < -1) result = 0; /* Attribute doesn't exist */
   break;
 
@@ -227,8 +215,8 @@ err_unbound:
   break;
 
  case JIT_LVALUE_EXTERN:
-  result = module_getattr_symbol(self->lv_extern.lx_mod,
-                                 self->lv_extern.lx_sym);
+  result = DeeModule_GetAttrSymbol(self->lv_extern.lx_mod,
+                                   self->lv_extern.lx_sym);
   break;
 
  case JIT_LVALUE_GLOBAL:
@@ -310,8 +298,8 @@ JITLValue_DelValue(JITLValue *__restrict self,
  } break;
 
  case JIT_LVALUE_EXTERN:
-  result = module_delattr_symbol(self->lv_extern.lx_mod,
-                                 self->lv_extern.lx_sym);
+  result = DeeModule_DelAttrSymbol(self->lv_extern.lx_mod,
+                                   self->lv_extern.lx_sym);
   break;
 
  case JIT_LVALUE_GLOBAL:
@@ -396,9 +384,9 @@ JITLValue_SetValue(JITLValue *__restrict self,
  } break;
 
  case JIT_LVALUE_EXTERN:
-  result = module_setattr_symbol(self->lv_extern.lx_mod,
-                                 self->lv_extern.lx_sym,
-                                 value);
+  result = DeeModule_SetAttrSymbol(self->lv_extern.lx_mod,
+                                   self->lv_extern.lx_sym,
+                                   value);
   break;
 
  case JIT_LVALUE_GLOBAL:
@@ -714,6 +702,4 @@ JITContext_LookupNth(JITContext *__restrict self,
 
 DECL_END
 
-#endif /* !CONFIG_NO_JIT */
-
-#endif /* !GUARD_DEEMON_COMPILER_JIT_CONTEXT_C */
+#endif /* !GUARD_DEX_JIT_CONTEXT_C */

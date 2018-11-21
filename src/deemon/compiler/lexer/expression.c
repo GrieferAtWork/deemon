@@ -395,7 +395,7 @@ INTERN DREF struct ast *FCALL ast_sym_import_from_deemon(void) {
  if unlikely(!import_symbol) goto err;
  /* Setup an external symbol pointing at `import from deemon' */
  import_symbol->s_type = SYMBOL_TYPE_EXTERN;
- import_symbol->s_extern.e_module = get_deemon_module();
+ import_symbol->s_extern.e_module = DeeModule_GetDeemon();
  Dee_Incref(import_symbol->s_extern.e_module);
  import_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(import_symbol->s_extern.e_module,
                                                               DeeString_STR(&str_import),

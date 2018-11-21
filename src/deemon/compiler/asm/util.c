@@ -661,7 +661,7 @@ check_function_class:
       return asm_gcall(argc + 1);                          /* result */
      }
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;   /* args..., func, class_sym */
-     symid = asm_newmodule(get_deemon_module());
+     symid = asm_newmodule(DeeModule_GetDeemon());
      if unlikely(symid < 0) goto err; /* Call as an instancemethod */
      if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err; /* args..., class_sym.func */
      /* Fallthrough to invoke the instancemethod normally. */
@@ -735,7 +735,7 @@ check_function_class:
      return asm_gcall(argc + 1);
     }
     if (asm_gpush_symbol(this_sym,warn_ast)) goto err;  /* args..., func, this */
-    symid = asm_newmodule(get_deemon_module());
+    symid = asm_newmodule(DeeModule_GetDeemon());
     if unlikely(symid < 0) goto err; /* Call as an instancemethod */
     if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2))
         goto err; /* args..., this.func */
@@ -874,7 +874,7 @@ check_sym_class:
     }
    } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;   /* func, class_sym */
-    symid = asm_newmodule(get_deemon_module());
+    symid = asm_newmodule(DeeModule_GetDeemon());
     if unlikely(symid < 0) goto err; /* Call as an instancemethod */
     if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err; /* class_sym.func */
    }
@@ -932,7 +932,7 @@ check_sym_class:
   }
   if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
    /* Access to an instance member function (must produce a bound method). */
-   symid = asm_newmodule(get_deemon_module());
+   symid = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(symid < 0) goto err;
    if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
    return asm_gcall_extern((uint16_t)symid,id_instancemethod,2);
@@ -964,7 +964,7 @@ check_sym_class:
    /* Must bind the function. */
    if (asm_gpush_this_function()) goto err;
    if (asm_gpush_this()) goto err;
-   symid = asm_newmodule(get_deemon_module());
+   symid = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(symid < 0) goto err;
    return asm_gcall_extern((uint16_t)symid,id_instancemethod,2);
   }

@@ -58,9 +58,6 @@
     <Filter Include="src\deemon\compiler\interface">
       <UniqueIdentifier>{aeb9a0ca-b69e-4dca-b272-d320ee5ec8a2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\deemon\compiler\jit">
-      <UniqueIdentifier>{eceb6696-dafb-4b2d-988a-e21563267719}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\deemon\api.h">
@@ -329,9 +326,6 @@
     </ClInclude>
     <ClInclude Include="..\include\deemon\util\bytewriter.h">
       <Filter>include\deemon\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\compiler\jit.h">
-      <Filter>include\deemon\compiler</Filter>
     </ClInclude>
     <ClInclude Include="..\include\deemon\util\seqwriter.h">
       <Filter>include\deemon\util</Filter>
@@ -821,21 +815,6 @@
     <ClCompile Include="..\src\deemon\compiler\lexer\decl.c">
       <Filter>src\deemon\compiler\lexer</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\deemon\compiler\jit\lexer.c">
-      <Filter>src\deemon\compiler\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\deemon\compiler\jit\parser.c">
-      <Filter>src\deemon\compiler\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\deemon\compiler\jit\context.c">
-      <Filter>src\deemon\compiler\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\deemon\compiler\jit\object-table.c">
-      <Filter>src\deemon\compiler\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\deemon\compiler\jit\function.c">
-      <Filter>src\deemon\compiler\jit</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">
@@ -913,23 +892,8 @@
     <None Include="..\src\deemon\compiler\lexer\decl-escape-text-impl.c.inl">
       <Filter>src\deemon\compiler\lexer</Filter>
     </None>
-    <None Include="..\src\deemon\compiler\jit\parser-impl.c.inl">
-      <Filter>src\deemon\compiler\jit</Filter>
-    </None>
-    <None Include="..\src\deemon\compiler\jit\parser-impl-comma.c.inl">
-      <Filter>src\deemon\compiler\jit</Filter>
-    </None>
-    <None Include="..\src\deemon\compiler\jit\parser-impl-statement.c.inl">
-      <Filter>src\deemon\compiler\jit</Filter>
-    </None>
-    <None Include="..\src\deemon\compiler\jit\parser-impl-hybrid.c.inl">
-      <Filter>src\deemon\compiler\jit</Filter>
-    </None>
     <None Include="..\src\deemon\runtime\mro-impl.c.inl">
       <Filter>src\deemon\runtime</Filter>
-    </None>
-    <None Include="..\src\deemon\compiler\jit\parser-impl-hybrid-parts.c.inl">
-      <Filter>src\deemon\compiler\jit</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

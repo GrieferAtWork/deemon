@@ -16,33 +16,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_JIT_H
-#define GUARD_DEEMON_COMPILER_JIT_H 1
+#ifndef GUARD_DEX_JIT_LIBJIT_H
+#define GUARD_DEX_JIT_LIBJIT_H 1
 
-#include "../api.h"
-
-/* TODO: Move the JIT compiler into its a separate DEX */
-
-/* Disable JIT when optimizing for size. */
-#ifdef __OPTIMIZE_SIZE__
-#define CONFIG_NO_JIT 1
-#endif
-
-/* The deemon JIT compiler is mainly intended for execution of
- * simple user expressions, with the aim of minimizing the amount
- * of time spent trying to preprocess, parse, assemble, link, etc.
- * user input, and instead do everything at once.
- * To maintain this goal, severe restrictions have to be imposed
- * on the JIT compiler, the most important of which is the absence
- * of the C preprocessor, removing directives, macros and escaped
- * line-feeds. */
-#ifdef CONFIG_BUILDING_DEEMON
-#ifndef CONFIG_NO_JIT
-#include "../object.h"
-#include "../module.h"
-#include "../util/cache.h"
-#include "lexer.h"
-#include "tpp.h"
+#include <deemon/api.h>
+#include <deemon/dex.h>
+#include <deemon/object.h>
+#include <deemon/util/cache.h>
 
 DECL_BEGIN
 
@@ -50,6 +30,113 @@ DECL_BEGIN
 #define JIT_KEYWORD    TOK_KEYWORD_BEGIN
 #define JIT_STRING     TOK_STRING
 #define JIT_RAWSTRING  TOK_CHAR
+
+enum {
+    /* Special tokens. */
+    TOK_EOF       = '\0', /* END-OF-FILE (will always be ZERO) */
+    TOK_CHAR      = '\'', /* 'f'. */
+    TOK_STRING    = '\"', /* "foobar". (also includes `r"foobar"' when `TPP_CONFIG_RAW_STRING_LITERALS' is enabled) */
+    TOK_INT       = '0',  /* 42 */
+    TOK_FLOAT     = 'f',  /* 42.0 */
+    TOK_LF        = '\n',
+    TOK_SPACE     = ' ',
+    TOK_COMMENT   = 'c',  /* like this one! */
+
+    /* Single-character tokens (always equal to that character's ordinal). */
+    TOK_ADD       = '+',
+    TOK_AND       = '&',
+    TOK_ASSIGN    = '=',
+    TOK_AT        = '@',
+    TOK_BACKSLASH = '\\',
+    TOK_COLLON    = ':',
+    TOK_COMMA     = ',',
+    TOK_DIV       = '/',
+    TOK_DOT       = '.',
+    TOK_HASH      = '#',
+    TOK_LANGLE    = '<',
+    TOK_LBRACE    = '{',
+    TOK_LBRACKET  = '[',
+    TOK_LPAREN    = '(',
+    TOK_MOD       = '%',
+    TOK_MUL       = '*',
+    TOK_NOT       = '!',
+    TOK_OR        = '|',
+    TOK_QUESTION  = '?',
+    TOK_RANGLE    = '>',
+    TOK_RBRACE    = '}',
+    TOK_RBRACKET  = ']',
+    TOK_RPAREN    = ')',
+    TOK_SEMICOLON = ';',
+    TOK_SUB       = '-',
+    TOK_TILDE     = '~',
+    TOK_XOR       = '^',
+
+    /* Double(or more-character tokens. */
+    TOK_TWOCHAR_BEGIN = 256,
+    TOK_SHL = TOK_TWOCHAR_BEGIN, /* "<<". */
+    TOK_SHR,           /* ">>". */
+    TOK_EQUAL,         /* "==". */
+    TOK_NOT_EQUAL,     /* "!=". */
+    TOK_GREATER_EQUAL, /* ">=". */
+    TOK_LOWER_EQUAL,   /* "<=". */
+    TOK_DOTS,          /* "...". */
+    TOK_ADD_EQUAL,     /* "+=". */
+    TOK_SUB_EQUAL,     /* "-=". */
+    TOK_MUL_EQUAL,     /* "*=". */
+    TOK_DIV_EQUAL,     /* "/=". */
+    TOK_MOD_EQUAL,     /* "%=". */
+    TOK_SHL_EQUAL,     /* "<<=". */
+    TOK_SHR_EQUAL,     /* ">>=". */
+    TOK_AND_EQUAL,     /* "&=". */
+    TOK_OR_EQUAL,      /* "|=". */
+    TOK_XOR_EQUAL,     /* "^=". */
+    TOK_POW_EQUAL,     /* "**=". */
+    TOK_AT_EQUAL,      /* "@=". */
+    TOK_GLUE,          /* "##". */
+    TOK_LAND,          /* "&&". */
+    TOK_LOR,           /* "||". */
+    TOK_LXOR,          /* "^^". */
+    TOK_INC,           /* "++". */
+    TOK_DEC,           /* "--". */
+    TOK_POW,           /* "**". */
+    TOK_TILDE_TILDE,   /* "~~". */
+    TOK_ARROW,         /* "->". */
+    TOK_COLLON_EQUAL,  /* ":=". */
+    TOK_NAMESPACE,     /* "::". */
+    TOK_ARROW_STAR,    /* "->*". */
+    TOK_DOT_STAR,      /* ".*". */
+    TOK_DOTDOT,        /* "..". */
+    TOK_LOGT,          /* "<>". */
+    TOK_LANGLE3,       /* "<<<". */
+    TOK_RANGLE3,       /* ">>>". */
+    TOK_LANGLE3_EQUAL, /* "<<<=". */
+    TOK_RANGLE3_EQUAL, /* ">>>=". */
+    TOK_EQUAL3,        /* "===". */
+    TOK_NOT_EQUAL3,    /* "!==". */
+    TOK_KEYWORD_BEGIN, /* KEEP THIS THE LAST TOKEN! */
+
+    TOK_TWOCHAR_END = TOK_KEYWORD_BEGIN,
+
+    /* Name aliases */
+    TOK_POS           = TOK_ADD,
+    TOK_NEG           = TOK_SUB,
+    TOK_LOWER         = TOK_LANGLE,
+    TOK_GREATER       = TOK_RANGLE,
+    TOK_COLLON_COLLON = TOK_NAMESPACE,
+    TOK_LOWER_GREATER = TOK_LOGT,
+    TOK_LANGLE_RANGLE = TOK_LOGT,
+    TOK_LANGLE1       = TOK_LANGLE,
+    TOK_LANGLE2       = TOK_SHL,
+    TOK_LANGLE_EQUAL  = TOK_LOWER_EQUAL,
+    TOK_LANGLE1_EQUAL = TOK_LOWER_EQUAL,
+    TOK_LANGLE2_EQUAL = TOK_SHL_EQUAL,
+    TOK_RANGLE1       = TOK_RANGLE,
+    TOK_RANGLE2       = TOK_SHR,
+    TOK_RANGLE_EQUAL  = TOK_GREATER_EQUAL,
+    TOK_RANGLE1_EQUAL = TOK_GREATER_EQUAL,
+    TOK_RANGLE2_EQUAL = TOK_SHR_EQUAL,
+};
+
 
 typedef struct jit_small_lexer JITSmallLexer;
 typedef struct jit_symbol JITSymbol;
@@ -60,19 +147,41 @@ typedef struct jit_context JITContext;
 typedef struct jit_object_table JITObjectTable;
 
 
-#undef TOKEN_IS_CMPEQ
+/* Check if the given token qualifies for the associated operation parser function. */
+#define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TOK_POW)
+#define TOKEN_IS_SUM(tok)    ((tok) == '+' || (tok) == '-')
+#define TOKEN_IS_SHIFT(tok)  ((tok) == TOK_SHL || (tok) == TOK_SHR)
+#define TOKEN_IS_CMP(tok)    ((tok) == TOK_LOWER || (tok) == TOK_LOWER_EQUAL || (tok) == TOK_GREATER || (tok) == TOK_GREATER_EQUAL)
 #define TOKEN_IS_CMPEQ(self)  \
       ((self)->jl_tok == TOK_EQUAL || (self)->jl_tok == TOK_NOT_EQUAL || \
        (self)->jl_tok == TOK_EQUAL3 || (self)->jl_tok == TOK_NOT_EQUAL3 || \
        (self)->jl_tok == '!' || \
       ((self)->jl_tok == JIT_KEYWORD && \
        (JITLexer_ISTOK(self,"is") || JITLexer_ISTOK(self,"in"))))
-#undef CASE_TOKEN_IS_CMPEQ
-#define CASE_TOKEN_IS_CMPEQ  \
-      case TOK_EQUAL: case TOK_NOT_EQUAL: case TOK_EQUAL3: case TOK_NOT_EQUAL3: case '!'
-#undef TOKEN_IS_AS
-#define TOKEN_IS_AS(self) \
-     ((self)->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self,"as"))
+#define TOKEN_IS_AND(tok)    ((tok) == '&')
+#define TOKEN_IS_XOR(tok)    ((tok) == '^')
+#define TOKEN_IS_OR(tok)     ((tok) == '|')
+#define TOKEN_IS_AS(self)    ((self)->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self,"as"))
+#define TOKEN_IS_LAND(tok)   ((tok) == TOK_LAND)
+#define TOKEN_IS_LOR(tok)    ((tok) == TOK_LOR)
+#define TOKEN_IS_COND(tok)   ((tok) == '?')
+#define TOKEN_IS_ASSIGN(tok) ((tok) == TOK_COLLON_EQUAL || ((tok) >= TOK_ADD_EQUAL && (tok) <= TOK_POW_EQUAL))
+
+#define CASE_TOKEN_IS_PROD   case '*': case '/': case '%': case TOK_POW
+#define CASE_TOKEN_IS_SUM    case '+': case '-'
+#define CASE_TOKEN_IS_SHIFT  case TOK_SHL: case TOK_SHR
+#define CASE_TOKEN_IS_CMP    case TOK_LOWER: case TOK_LOWER_EQUAL: case TOK_GREATER: case TOK_GREATER_EQUAL
+#define CASE_TOKEN_IS_CMPEQ  case TOK_EQUAL: case TOK_NOT_EQUAL: case TOK_EQUAL3: case TOK_NOT_EQUAL3: case '!'
+#define CASE_TOKEN_IS_AND    case '&'
+#define CASE_TOKEN_IS_XOR    case '^'
+#define CASE_TOKEN_IS_OR     case '|'
+#define CASE_TOKEN_IS_LAND   case TOK_LAND
+#define CASE_TOKEN_IS_LOR    case TOK_LOR
+#define CASE_TOKEN_IS_COND   case '?'
+#define CASE_TOKEN_IS_ASSIGN case TOK_COLLON_EQUAL: case TOK_ADD_EQUAL: case TOK_SUB_EQUAL: case TOK_MUL_EQUAL: case TOK_DIV_EQUAL: case TOK_MOD_EQUAL: \
+                             case TOK_SHL_EQUAL: case TOK_SHR_EQUAL: case TOK_AND_EQUAL: case TOK_OR_EQUAL: case TOK_XOR_EQUAL: case TOK_POW_EQUAL
+
+
 
 
 struct jit_object_entry;
@@ -395,7 +504,8 @@ JITObjectTable_Create(JITObjectTable *__restrict self,
 
 struct jit_context {
     DeeModuleObject *jc_impbase;  /* [0..1] Base module used for relative, static imports (such as `foo from .baz.bar')
-                                   * When `NULL', code isn't allowed to perform relative imports. */
+                                   * When `NULL', code isn't allowed to perform relative imports.
+                                   * NOTE: If this isn't a module, JIT itself will throw an error. */
     struct jit_object_table_pointer
                      jc_locals;   /* Local variable table (forms a chain all the way to the previous base-scope) */
     DeeObject       *jc_globals;  /* [0..1] A pre-defined, mapping-like object containing pre-defined globals.
@@ -469,6 +579,15 @@ JITContext_LookupNth(JITContext *__restrict self,
                      /*utf-8*/char const *__restrict name,
                      size_t namelen, size_t nth);
 
+#define LOOKUP_SYM_NORMAL    0x0000
+#define LOOKUP_SYM_VDEFAULT  0x0000 /* Default visibility. */
+#define LOOKUP_SYM_VLOCAL    0x0001 /* Lookup rules when `local' is prefixed. */
+#define LOOKUP_SYM_VGLOBAL   0x0002 /* Lookup rules when `global' is prefixed. */
+#define LOOKUP_SYM_VMASK     0x0003 /* Mask for visibility options. */
+#define LOOKUP_SYM_STATIC    0x0100 /* Create static variables / warn about non-static, existing variables. */
+#define LOOKUP_SYM_STACK     0x0200 /* Create stack variables / warn about non-stack, existing variables. */
+#define LOOKUP_SYM_ALLOWDECL 0x8000 /* Allow declaration of new variables (HINT: Unless set, warn when new variables are created). */
+
 
 
 /* Parse an operator name, as can be found in an `x.operator <NAME>' expression
@@ -476,6 +595,24 @@ JITContext_LookupNth(JITContext *__restrict self,
  * @return: * : One of `OPERATOR_*' or `AST_OPERATOR_*'
  * @return: -1: An error occurred. */
 INTDEF int32_t FCALL JITLexer_ParseOperatorName(JITLexer *__restrict self, uint16_t features);
+#define P_OPERATOR_FNORMAL 0x0000
+#define P_OPERATOR_FCLASS  0x0001 /* Allow class-specific operator names. */
+#define P_OPERATOR_FNOFILE 0x0002 /* Don't allow file-specific operator names. */
+
+
+/* Ambiguous operator codes.
+ * The caller should resolved these based on operand count. */
+#define AST_OPERATOR_POS_OR_ADD           0xf000 /* `+' */
+#define AST_OPERATOR_NEG_OR_SUB           0xf001 /* `-' */
+#define AST_OPERATOR_GETITEM_OR_SETITEM   0xf002 /* `[]' */
+#define AST_OPERATOR_GETRANGE_OR_SETRANGE 0xf003 /* `[:]' */
+#define AST_OPERATOR_GETATTR_OR_SETATTR   0xf004 /* `.' */
+#define AST_OPERATOR_MIN                  0xf000
+#define AST_OPERATOR_MAX                  0xf004
+
+/* Special class operators. */
+#define AST_OPERATOR_FOR                  0xf005 /* `for' */
+
 
 /* Check if a token `tok_id' may referr to the start of an expression. */
 INTDEF bool FCALL JIT_MaybeExpressionBegin(unsigned int tok_id);
@@ -550,6 +687,22 @@ INTDEF DREF /*Module*/DeeObject *FCALL JITLexer_EvalModule(JITLexer *__restrict 
 INTDEF DREF DeeObject *DCALL JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode, DeeTypeObject *seq_type, uint16_t *pout_mode);
 INTDEF int DCALL JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode, uint16_t *pout_mode);
 
+#define AST_COMMA_NORMAL        0x0000
+#define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags' */
+#define AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,' being followed by another expression.
+                                        * NOTE: When this flag is set, trailing `,' are not parsed, but remain as the active token upon exit. */
+#define AST_COMMA_ALLOWNONBLOCK 0x0040 /* Allow non-blocking yields for a trailing `;'. */
+#define AST_COMMA_NOSUFFIXKWD   0x0080 /* Don't parse c-style variable declarations for reserved keywords.
+                                        * This is required for `else', `catch', `finally', etc.
+                                        * >> `try foo catch (...)' (don't interpret as `local catch = foo(...)' when starting with `foo') */
+#define AST_COMMA_ALLOWTYPEDECL 0x0800 /* Allow type declaration to be appended to variables, as well as documentation strings to be consumed. */
+#define AST_COMMA_ALLOWKWDLIST  0x1000 /* Stop if what a keyword list label is encountered. */
+#define AST_COMMA_PARSESINGLE   0x2000 /* Only parse a single expression. */
+#define AST_COMMA_PARSESEMI     0x4000 /* Parse a `;' as part of the expression (if a `;' is required). */
+#define AST_COMMA_ALLOWVARDECLS 0x8000 /* Allow new variables to be declared. */
+
+#define AST_COMMA_OUT_FNORMAL   0x0000 /* Normal comma output flags. */
+#define AST_COMMA_OUT_FNEEDSEMI 0x0001 /* Set if a semicolon is required. */
 /* Additional flags only used by the JIT compiler. */
 #define AST_COMMA_OUT_FMULTIPLE 0x0010 /* Multiple expressions were parsed. */
 
@@ -692,6 +845,10 @@ INTDEF int FCALL JITLexer_SkipImportHybrid(JITLexer *__restrict self, bool is_fr
 INTDEF DREF DeeObject *FCALL JITLexer_EvalHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
 INTDEF int FCALL JITLexer_SkipHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
 
+#define AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
+#define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
+#define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
+
 
 LOCAL DREF DeeObject *FCALL
 JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
@@ -799,11 +956,9 @@ JITFunction_New(/*utf-8*/char const *name_start,
                 uint16_t flags);
 
 
-
-
+INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
+INTDEF ATTR_COLD int DCALL err_invalid_argc_len(char const *function_name, size_t function_size, size_t argc_cur, size_t argc_min, size_t argc_max);
 
 DECL_END
-#endif /* !CONFIG_NO_JIT */
-#endif /* CONFIG_BUILDING_DEEMON */
 
-#endif /* !GUARD_DEEMON_COMPILER_JIT_H */
+#endif /* !GUARD_DEX_JIT_LIBJIT_H */

@@ -21,9 +21,6 @@ Cs(asym)
 Cs(sym)
 Cs(ef)
 Cs(utf)
-#ifndef CONFIG_NO_JIT
-Cs(jit_object_table)
-#endif
 #ifdef CONFIG_AST_IS_STRUCT
 Cs(ast)
 #else

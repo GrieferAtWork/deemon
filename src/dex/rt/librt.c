@@ -16,8 +16,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_FS_LIBRT_C
-#define GUARD_DEX_FS_LIBRT_C 1
+#ifndef GUARD_DEX_RT_LIBRT_C
+#define GUARD_DEX_RT_LIBRT_C 1
 
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -149,4 +149,4 @@ PUBLIC struct dex DEX = {
 
 DECL_END
 
-#endif /* !GUARD_DEX_FS_LIBRT_C */
+#endif /* !GUARD_DEX_RT_LIBRT_C */

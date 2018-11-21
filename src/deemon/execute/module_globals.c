@@ -37,9 +37,6 @@
 
 DECL_BEGIN
 
-INTDEF DREF DeeObject *DCALL module_getattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
-INTDEF int DCALL module_delattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol);
-INTDEF int DCALL module_setattr_symbol(DeeModuleObject *__restrict self, struct module_symbol *__restrict symbol, DeeObject *__restrict value);
 
 typedef struct {
     OBJECT_HEAD
@@ -182,13 +179,13 @@ mei_next(ModuleExportsIterator *__restrict self) {
  DREF DeeObject *result,*result_name,*result_value;
  DeeModuleObject *module = self->mei_module;
  uint16_t old_index,new_index;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
 again:
  for (;;) {
   struct module_symbol *symbol;
   old_index = READ_INDEX(self);
   if (old_index > module->mo_bucketm) {
-   DeeModule_UnlockSymbols((DeeObject *)module);
+   DeeModule_UnlockSymbols(module);
    return ITER_DONE;
   }
   new_index = old_index;
@@ -197,7 +194,7 @@ again:
    if (symbol->ss_name) {
     result_name = (DREF DeeObject *)module_symbol_getnameobj(symbol);
     if unlikely(!result_name) {
-     DeeModule_UnlockSymbols((DeeObject *)module);
+     DeeModule_UnlockSymbols(module);
      return NULL;
     }
     break;
@@ -207,7 +204,7 @@ continue_symbol_search:
    if (new_index > module->mo_bucketm) {
     if (!ATOMIC_CMPXCH(self->mei_index,old_index,new_index))
         goto again;
-    DeeModule_UnlockSymbols((DeeObject *)module);
+    DeeModule_UnlockSymbols(module);
     return ITER_DONE;
    }
   }
@@ -222,7 +219,7 @@ continue_symbol_search:
   Dee_Decref_unlikely(result_value);
  }
  Dee_Incref(result_name);
- DeeModule_UnlockSymbols((DeeObject *)module);
+ DeeModule_UnlockSymbols(module);
  result = DeeTuple_PackSymbolic(2,result_name,result_value);
  if unlikely(!result) {
   Dee_Decref_unlikely(result_name);
@@ -336,11 +333,11 @@ PRIVATE DREF DeeObject *DCALL
 me_size(ModuleExports *__restrict self) {
  size_t i,total_symbols = 0;
  DeeModuleObject *module = self->me_module;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
  for (i = 0; i <= module->mo_bucketm; ++i)
     if (module->mo_bucketv[i].ss_name)
         ++total_symbols;
- DeeModule_UnlockSymbols((DeeObject *)module);
+ DeeModule_UnlockSymbols(module);
  return DeeInt_NewSize(total_symbols);
 }
 
@@ -350,11 +347,11 @@ me_contains(ModuleExports *__restrict self, DeeObject *__restrict key) {
  DeeModuleObject *module = self->me_module;
  if (!DeeString_Check(key))
       return_false;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
  result = DeeModule_GetSymbolString(module,
                                     DeeString_STR(key),
                                     DeeString_Hash(key)) != NULL;
- DeeModule_UnlockSymbols((DeeObject *)module);
+ DeeModule_UnlockSymbols(module);
  return_bool_(result);
 }
 
@@ -423,18 +420,18 @@ me_get(ModuleExports *__restrict self, DeeObject *__restrict key) {
  struct module_symbol *symbol;
  if (!DeeString_Check(key))
       goto unknown_key;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
  symbol = DeeModule_GetSymbolString(module,
                                     DeeString_STR(key),
                                     DeeString_Hash(key));
  if unlikely(!symbol) {
-  DeeModule_UnlockSymbols((DeeObject *)module);
+  DeeModule_UnlockSymbols(module);
 unknown_key:
   err_unknown_key((DeeObject *)self,key);
   return NULL;
  }
  result = module_my_getattr_symbol(self,module,symbol);
- DeeModule_UnlockSymbols((DeeObject *)module);
+ DeeModule_UnlockSymbols(module);
  return result;
 }
 
@@ -448,19 +445,19 @@ me_get_f(ModuleExports *__restrict self,
      goto err;
  if (!DeeString_Check(key))
       goto unknown_key;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
  symbol = DeeModule_GetSymbolString(module,
                                     DeeString_STR(key),
                                     DeeString_Hash(key));
  if unlikely(!symbol) {
-  DeeModule_UnlockSymbols((DeeObject *)module);
+  DeeModule_UnlockSymbols(module);
 unknown_key:
   err_unknown_key((DeeObject *)self,key);
 err:
   return NULL;
  }
  result = module_it_getattr_symbol(module,symbol);
- DeeModule_UnlockSymbols((DeeObject *)module);
+ DeeModule_UnlockSymbols(module);
  if (result == ITER_DONE) {
   result = defl;
   Dee_Incref(defl);
@@ -475,18 +472,18 @@ me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
  struct module_symbol *symbol;
  if (!DeeString_Check(key))
       goto unknown_key;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
  symbol = DeeModule_GetSymbolString(module,
                                     DeeString_STR(key),
                                     DeeString_Hash(key));
  if unlikely(!symbol) {
-  DeeModule_UnlockSymbols((DeeObject *)module);
+  DeeModule_UnlockSymbols(module);
 unknown_key:
   err_unknown_key((DeeObject *)self,key);
   return -1;
  }
- result = module_delattr_symbol(module,symbol);
- DeeModule_UnlockSymbols((DeeObject *)module);
+ result = DeeModule_DelAttrSymbol(module,symbol);
+ DeeModule_UnlockSymbols(module);
  return result;
 }
 
@@ -499,18 +496,18 @@ me_set(ModuleExports *__restrict self,
  struct module_symbol *symbol;
  if (!DeeString_Check(key))
       goto unknown_key;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
  symbol = DeeModule_GetSymbolString(module,
                                     DeeString_STR(key),
                                     DeeString_Hash(key));
  if unlikely(!symbol) {
-  DeeModule_UnlockSymbols((DeeObject *)module);
+  DeeModule_UnlockSymbols(module);
 unknown_key:
   err_unknown_key((DeeObject *)self,key);
   return -1;
  }
- result = module_setattr_symbol(module,symbol,value);
- DeeModule_UnlockSymbols((DeeObject *)module);
+ result = DeeModule_SetAttrSymbol(module,symbol,value);
+ DeeModule_UnlockSymbols(module);
  return result;
 }
 
@@ -672,12 +669,12 @@ mgi_next(ModuleGlobalsIterator *__restrict self) {
  return result;
 #else
  uint16_t old_index,new_index;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
 again:
  for (;;) {
   old_index = ATOMIC_READ(self->mgi_index);
   if (old_index >= module->mo_globalc) {
-   DeeModule_UnlockSymbols((DeeObject *)module);
+   DeeModule_UnlockSymbols(module);
    return ITER_DONE;
   }
   new_index = old_index;
@@ -697,7 +694,7 @@ again:
       break;
   Dee_Decref(result);
  }
- DeeModule_UnlockSymbols((DeeObject *)module);
+ DeeModule_UnlockSymbols(module);
  return result;
 #endif
 }
@@ -814,10 +811,10 @@ mg_get(ModuleGlobals *__restrict self,
  DeeModuleObject *module = self->mg_module;
  if (DeeObject_AsSize(index_ob,&index))
      return NULL;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
  if (index >= module->mo_globalc) {
   size_t num_globals = module->mo_globalc;
-  DeeModule_UnlockSymbols((DeeObject *)module);
+  DeeModule_UnlockSymbols(module);
   err_index_out_of_bounds((DeeObject *)self,index,num_globals);
   return NULL;
  }
@@ -825,13 +822,13 @@ mg_get(ModuleGlobals *__restrict self,
  result = module->mo_globalv[index];
  if unlikely(!result) {
   rwlock_endread(&module->mo_lock);
-  DeeModule_UnlockSymbols((DeeObject *)module);
+  DeeModule_UnlockSymbols(module);
   err_unbound_index((DeeObject *)self,index);
   return NULL;
  }
  Dee_Incref(result);
  rwlock_endread(&module->mo_lock);
- DeeModule_UnlockSymbols((DeeObject *)module);
+ DeeModule_UnlockSymbols(module);
  return result;
 }
 
@@ -843,10 +840,10 @@ mg_set(ModuleGlobals *__restrict self,
  DeeModuleObject *module = self->mg_module;
  if (DeeObject_AsSize(index_ob,&index))
      return -1;
- DeeModule_LockSymbols((DeeObject *)module);
+ DeeModule_LockSymbols(module);
  if (index >= module->mo_globalc) {
   size_t num_globals = module->mo_globalc;
-  DeeModule_UnlockSymbols((DeeObject *)module);
+  DeeModule_UnlockSymbols(module);
   return err_index_out_of_bounds((DeeObject *)self,index,num_globals);
  }
  rwlock_write(&module->mo_lock);
@@ -854,7 +851,7 @@ mg_set(ModuleGlobals *__restrict self,
  result = module->mo_globalv[index];
  module->mo_globalv[index] = value;
  rwlock_endwrite(&module->mo_lock);
- DeeModule_UnlockSymbols((DeeObject *)module);
+ DeeModule_UnlockSymbols(module);
  Dee_XDecref(result);
  return 0;
 }

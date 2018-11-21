@@ -16,12 +16,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_JIT_FUNCTION_C
-#define GUARD_DEEMON_COMPILER_JIT_FUNCTION_C 1
+#ifndef GUARD_DEX_JIT_FUNCTION_C
+#define GUARD_DEX_JIT_FUNCTION_C 1
 
-#include <deemon/api.h>
-#include <deemon/compiler/jit.h>
-#ifndef CONFIG_NO_JIT
+#include "libjit.h"
 #include <deemon/arg.h>
 #include <deemon/format.h>
 #include <deemon/none.h>
@@ -30,7 +28,6 @@
 #include <deemon/callable.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
-#include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
 
@@ -362,10 +359,11 @@ err:
  return NULL;
 err_argc:
  if (self->jf_selfarg == (size_t)-1) {
-  err_invalid_argc(NULL,
-                   argc,
-                   self->jf_argc_min,
-                   self->jf_argc_max);
+  err_invalid_argc_len(NULL,
+                       0,
+                       argc,
+                       self->jf_argc_min,
+                       self->jf_argc_max);
  } else {
   struct jit_object_entry *ent;
   ent = &self->jf_args.ot_list[self->jf_selfarg];
@@ -434,7 +432,8 @@ PRIVATE struct type_getset jf_getsets[] = {
 
 PRIVATE struct type_member jf_members[] = {
     TYPE_MEMBER_FIELD("__impbase__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_impbase)),
-    TYPE_MEMBER_FIELD_DOC("__globals__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jc_globals),"->?X2?S?T2?Dstring?O?N"),
+    TYPE_MEMBER_FIELD_DOC("__globals__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jc_globals),
+                          "->?X2?S?T2?Dstring?O?N"),
     TYPE_MEMBER_END
 };
 
@@ -486,6 +485,5 @@ INTERN DeeTypeObject JITFunction_Type = {
 };
 
 DECL_END
-#endif /* !CONFIG_NO_JIT */
 
-#endif /* !GUARD_DEEMON_COMPILER_JIT_FUNCTION_C */
+#endif /* !GUARD_DEX_JIT_FUNCTION_C */

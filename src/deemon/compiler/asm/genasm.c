@@ -1837,7 +1837,7 @@ operator_without_prefix:
    int32_t deemon_modid;
   ACTION(AST_FACTION_CELL0)
    if (!PUSH_RESULT) goto done;
-   deemon_modid = asm_newmodule(get_deemon_module());
+   deemon_modid = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(deemon_modid < 0) goto err;
    if (asm_gcall_extern((uint16_t)deemon_modid,id_cell,0)) goto err;
   } break;
@@ -1846,7 +1846,7 @@ operator_without_prefix:
   ACTION(AST_FACTION_CELL1)
    if (ast_genasm(self->a_action.a_act0,PUSH_RESULT)) goto err;
    if (!PUSH_RESULT) goto done;
-   deemon_modid = asm_newmodule(get_deemon_module());
+   deemon_modid = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(deemon_modid < 0) goto err;
    if (asm_gcall_extern((uint16_t)deemon_modid,id_cell,1)) goto err;
   } break;

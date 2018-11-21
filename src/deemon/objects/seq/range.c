@@ -1069,7 +1069,7 @@ INTERN DeeTypeObject IntRange_Type = {
 #undef ALWAYS_USE_OBJECT_RANGES
 /* #define ALWAYS_USE_OBJECT_RANGES 1 */
 
-INTERN DREF DeeObject *DCALL
+PUBLIC DREF DeeObject *DCALL
 DeeRange_NewInt(dssize_t begin,
                 dssize_t end,
                 dssize_t step) {
@@ -1098,7 +1098,8 @@ DeeRange_NewInt(dssize_t begin,
  return (DREF DeeObject *)result;
 #endif
 }
-INTERN DREF DeeObject *DCALL
+
+PUBLIC DREF DeeObject *DCALL
 DeeRange_New(DeeObject *__restrict begin,
              DeeObject *__restrict end,
              DeeObject *step) {

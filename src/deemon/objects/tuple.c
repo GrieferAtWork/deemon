@@ -649,7 +649,7 @@ PUBLIC DREF DeeObject *
 }
 
 
-INTERN DREF DeeObject *DCALL
+PUBLIC DREF DeeObject *DCALL
 DeeTuple_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
                          /*inherit(on_success)*/DREF DeeObject **__restrict argv) {
  DREF DeeTupleObject *result;
@@ -677,7 +677,8 @@ DeeTuple_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self,
 err:
  return NULL;
 }
-INTERN DREF DeeObject *DCALL
+
+PUBLIC DREF DeeObject *DCALL
 DeeTuple_ConcatInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self,
                          DeeObject *__restrict sequence) {
  DeeObject **iter,**end,**srcdst;

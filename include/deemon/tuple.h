@@ -103,17 +103,14 @@ DFUNDEF DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(
 DFUNDEF DREF DeeObject *DeeTuple_Newf(char const *__restrict format, ...);
 DFUNDEF DREF DeeObject *DCALL DeeTuple_VNewf(char const *__restrict format, va_list args);
 
-
-#ifdef CONFIG_BUILDING_DEEMON
 /* Concat a tuple and some generic sequence,
  * inheriting a reference from `self' in the process. */
-INTDEF DREF DeeObject *DCALL
+DFUNDEF DREF DeeObject *DCALL
 DeeTuple_ConcatInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self,
                          DeeObject *__restrict sequence);
-INTDEF DREF DeeObject *DCALL
+DFUNDEF DREF DeeObject *DCALL
 DeeTuple_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
                          /*inherit(on_success)*/DREF DeeObject **__restrict argv);
-#endif
 
 /* Append all elements from an iterator to a tuple.
  * @assume(DeeTuple_IsEmpty(*pself) || !DeeObject_IsShared(*pself)); */

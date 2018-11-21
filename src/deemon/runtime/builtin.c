@@ -149,7 +149,7 @@ PRIVATE ATTR_NOINLINE void DCALL init_builtins(void) {
 PRIVATE int init_state = INIT_PENDING;
 
 INTERN ATTR_RETNONNULL DeeModuleObject *
-DCALL get_deemon_module(void) {
+DCALL DeeModule_GetDeemon(void) {
  /* Lazily calculate hashes of exported objects upon first access. */
  if unlikely(init_state != INIT_COMPLET) {
 #ifdef CONFIG_NO_THREADS

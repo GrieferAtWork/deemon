@@ -758,6 +758,7 @@ Dee_SetArgv(/*Tuple*/DeeObject *__restrict argv) {
 #endif
 
 INTDEF bool DCALL libcodecs_shutdown(void);
+INTDEF bool DCALL clear_jit_cache(void);
 #ifndef CONFIG_NO_NOTIFICATIONS
 INTDEF bool DCALL clear_fs_module(void);
 #endif /* !CONFIG_NO_NOTIFICATIONS */
@@ -766,6 +767,7 @@ PRIVATE bool DCALL shutdown_globals(void) {
  bool result;
  result  = DeeModule_FiniPath();
  result |= libcodecs_shutdown();
+ result |= clear_jit_cache();
  result |= DeeFile_ResetStd();
  result |= DeeThread_ClearTls();
 #ifndef CONFIG_NO_THREADS

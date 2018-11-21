@@ -1523,7 +1523,7 @@ DeeModule_DoGet(char const *__restrict name,
      memcmp(name,DeeString_STR(&str_deemon),
             DeeString_SIZE(&str_deemon)*sizeof(char)) == 0) {
   /* Yes, they did. */
-  result = get_deemon_module();
+  result = DeeModule_GetDeemon();
   Dee_Incref(result);
   goto done;
  }
@@ -1615,7 +1615,7 @@ DeeModule_Open(DeeObject *__restrict module_name,
      memcmp(DeeString_STR(module_name),DeeString_STR(&str_deemon),
             DeeString_SIZE(&str_deemon)*sizeof(char)) == 0) {
   /* Yes, it is. */
-  result = get_deemon_module();
+  result = DeeModule_GetDeemon();
   Dee_Incref(result);
   goto done;
  }
