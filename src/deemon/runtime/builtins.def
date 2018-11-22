@@ -154,8 +154,8 @@ INTDEF DeeCMethodObject builtin_hasattr;
 INTDEF DeeCMethodObject builtin_hasitem;
 INTDEF DeeCMethodObject builtin_boundattr;
 INTDEF DeeCMethodObject builtin_bounditem;
-INTDEF DeeCMethodObject builtin_import;
-INTDEF DeeCMethodObject builtin_exec;
+INTDEF DeeKwCMethodObject builtin_import;
+INTDEF DeeKwCMethodObject builtin_exec;
 
 DECL_END
 #endif
@@ -213,7 +213,7 @@ BUILTIN_DOC_REUSE(import,&builtin_import,MODSYM_FNORMAL,
 
 /* TODO: Add more options to this function */
 BUILTIN_DOC_REUSE(exec,&builtin_exec,MODSYM_FNORMAL,
-                  "(expr:?X3?Dstring?Dbytes?Dfile)->?Dobject\n"
+                  "(expr:?X3?Dstring?Dbytes?Dfile,globals?:?S?T2?Dstring?O,base?:?Dmodule)->?Dobject\n"
                   "Evaluate a user-code deemon expression and return the result\n"
                   "This type of evaluation is much more restrictive that evaluation of "
                   "normal user-code, as rather than being parsed, optimized, assembled "

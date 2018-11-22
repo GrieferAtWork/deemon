@@ -458,7 +458,8 @@ PRIVATE struct type_method cell_methods[] = {
       DOC("(value)->?Dbool\n"
           "Set (override) @this cell's value, returning :true if a previous value "
           "has been overwritten, or :falue if no value had been set before") },
-    { "xch", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_xch,
+    { DeeString_STR(&str_xch),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_xch,
       DOC("(value)->\n"
           "@throw ValueError @this cell is empty\n"
           "Overwrite the cell's value and return the old value or throw an error when it was empty\n"

@@ -40,6 +40,7 @@
 #include <deemon/stringutils.h>
 
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -2550,18 +2551,22 @@ err:
 }
 
 PRIVATE struct type_method lexer_syspaths_methods[] = {
-    { "push", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_syspaths_push,
+    { "push",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_syspaths_push,
       DOC("()\n"
           "Push (remember) the current state of system include paths\n"
           "This is the same as using ${#pragma TPP include_path(push)}") },
-    { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_syspaths_pop,
+    { DeeString_STR(&str_pop),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_syspaths_pop,
       DOC("->?Dbool\n"
           "Pop (restore) a previously pushed system include path state\n"
           "This is the same as using ${#pragma TPP include_path(pop)}") },
-    { "insert", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_syspaths_insert,
+    { DeeString_STR(&str_insert),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_syspaths_insert,
       DOC("(path:?Dstring)->?Dbool\n"
           "Append the given @path at the end of the list of system include paths") },
-    { "remove", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_syspaths_remove,
+    { DeeString_STR(&str_remove),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_syspaths_remove,
       DOC("(path:?Dstring)->?Dbool\n"
           "Remove the given @path from the list of system include paths") },
     { NULL }

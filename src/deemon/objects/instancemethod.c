@@ -23,6 +23,7 @@
 #include <deemon/class.h>
 #include <deemon/object.h>
 #include <deemon/arg.h>
+#include <deemon/error.h>
 #include <deemon/callable.h>
 #include <deemon/instancemethod.h>
 #include <deemon/super.h>
@@ -220,16 +221,51 @@ PRIVATE DREF DeeObject *DCALL
 instancemethod_get_name(InstanceMethod *__restrict self) {
  struct class_attribute *attr;
  attr = instancemethod_getattr(self,NULL,NULL);
- if (!attr) return_none;
+ if (!attr) goto return_attr;
  return_reference_((DeeObject *)attr->ca_name);
+return_attr:
+ {
+  DREF DeeObject *result;
+  result = DeeObject_GetAttr(self->im_func,&str___name__);
+  if unlikely(!result) {
+   if (DeeError_Catch(&DeeError_AttributeError) ||
+       DeeError_Catch(&DeeError_NotImplemented))
+       return_none;
+  }
+  return result;
+ }
 }
 
 PRIVATE DREF DeeObject *DCALL
 instancemethod_get_doc(InstanceMethod *__restrict self) {
  struct class_attribute *attr;
  attr = instancemethod_getattr(self,NULL,NULL);
- if (!attr || !attr->ca_doc) return_none;
+ if (!attr) goto return_attr;
+ if (!attr->ca_doc) return_none;
  return_reference_((DeeObject *)attr->ca_doc);
+return_attr:
+ {
+  DREF DeeObject *result;
+  result = DeeObject_GetAttr(self->im_func,&str___doc__);
+  if unlikely(!result) {
+   if (DeeError_Catch(&DeeError_AttributeError) ||
+       DeeError_Catch(&DeeError_NotImplemented))
+       return_none;
+  }
+  return result;
+ }
+}
+
+PRIVATE DREF DeeObject *DCALL
+instancemethod_get_kwds(InstanceMethod *__restrict self) {
+ DREF DeeObject *result;
+ result = DeeObject_GetAttr(self->im_func,&str___kwds__);
+ if unlikely(!result) {
+  if (DeeError_Catch(&DeeError_AttributeError) ||
+      DeeError_Catch(&DeeError_NotImplemented))
+      return_none;
+ }
+ return result;
 }
 
 PRIVATE DREF DeeTypeObject *DCALL
@@ -242,25 +278,30 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 instancemethod_get_module(InstanceMethod *__restrict self) {
- return DeeObject_GetAttrString(self->im_func,"__module__");
+ return DeeObject_GetAttr(self->im_func,&str___module__);
 }
 
 PRIVATE struct type_getset im_getsets[] = {
-    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_name, NULL, NULL,
-      DOC("->?Dstring\n"
-          "->?N\n"
+    { DeeString_STR(&str___name__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_name, NULL, NULL,
+      DOC("->?X2?Dstring?N\n"
           "The name of the function being bound, or :none if unknown") },
-    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_doc, NULL, NULL,
-      DOC("->?Dstring\n"
-          "->?N\n"
+    { DeeString_STR(&str___doc__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_doc, NULL, NULL,
+      DOC("->?X2?Dstring?N\n"
           "The documentation string of the function being bound, or :none if unknown") },
-    { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_type, NULL, NULL,
-      DOC("->?Dtype\n"
-          "->?N\n"
+    { DeeString_STR(&str___kwds__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_kwds, NULL, NULL,
+      DOC("->?S?Dstring\n"
+          "Returns a sequence of keyword argument names accepted by @this function\n"
+          "If @this function doesn't accept keyword arguments, an empty sequence is returned") },
+    { DeeString_STR(&str___type__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_type, NULL, NULL,
+      DOC("->?X2?Dtype?N\n"
           "The type implementing the function that is being bound, or :none if unknown") },
-    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_module, NULL, NULL,
-      DOC("->?Dmodule\n"
-          "->?N\n"
+    { DeeString_STR(&str___module__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_module, NULL, NULL,
+      DOC("->?X2?Dmodule?N\n"
           "The type within which the bound function was defined "
           "(alias for :function.__module__ though ${__func__.__module__})\n"
           "If something other than a user-level function was set for #__func__, "

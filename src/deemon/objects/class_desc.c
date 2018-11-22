@@ -42,6 +42,7 @@
 
 
 #include "../runtime/runtime_error.h"
+#include "../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -203,7 +204,8 @@ PRIVATE struct type_cmp coti_cmp = {
 };
 
 PRIVATE struct type_getset coti_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_getseq, NULL, NULL,
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_getseq, NULL, NULL,
       DOC("->?Aoperators?Ert:classdescriptor") },
     { NULL }
 };
@@ -649,7 +651,8 @@ done:
 }
 
 PRIVATE struct type_getset cati_getsets[] = {
-    { "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_getseq, NULL, NULL,
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_getseq, NULL, NULL,
       DOC("->?Aattributes?Ert:classdescriptor") },
     { NULL }
 };
@@ -874,7 +877,7 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeMapping_Type,
+    /* .tp_base     = */&DeeIterator_Type,
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
@@ -1499,8 +1502,9 @@ ot_isitable(ObjectTable *__restrict self) {
 }
 
 PRIVATE struct type_getset ot_getsets[] = {
-    { "__type__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_gettype, NULL, NULL,
-       DOC("->?Dtype\nThe type describing @this object table") },
+    { DeeString_STR(&str___type__),
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_gettype, NULL, NULL,
+      DOC("->?Dtype\nThe type describing @this object table") },
     { "__class__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_getclass, NULL, NULL,
       DOC("->?Ert:classdescriptor\nSame as ${this.__type__.__class__}") },
     { "__isctable__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_isctable, NULL, NULL,
@@ -1769,25 +1773,29 @@ instancemember_get_canset(DeeInstanceMemberObject *__restrict self) {
 }
 
 PRIVATE struct type_getset instancemember_getsets[] = {
-    { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_canget, NULL, NULL,
+    { "canget",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_canget, NULL, NULL,
       DOC("->?Dbool\n"
           "Returns :true if @this member can be read from") },
-    { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_candel, NULL, NULL,
+    { "candel",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_candel, NULL, NULL,
       DOC("->?Dbool\n"
           "Returns :true if @this member can be deleted") },
-    { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_canset, NULL, NULL,
+    { "canset",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_canset, NULL, NULL,
       DOC("->?Dbool\n"
           "Returns :true if @this member can be written to") },
-    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_name, NULL, NULL,
+    { DeeString_STR(&str___name__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_name, NULL, NULL,
       DOC("->?Dstring\n"
           "The name of @this instance member") },
-    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_doc, NULL, NULL,
-      DOC("->?Dstring\n"
-          "->?N\n"
+    { DeeString_STR(&str___doc__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_doc, NULL, NULL,
+      DOC("->?X2?Dstring?N\n"
           "The documentation string associated with @this instance member") },
-    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_module, NULL, NULL,
-      DOC("->?Dmodule\n"
-          "->?N\n"
+    { DeeString_STR(&str___module__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_module, NULL, NULL,
+      DOC("->?X2?Dmodule?N\n"
           "Returns the module that is defining @this instance "
           "member, or :none if that module could not be defined") },
     { NULL }

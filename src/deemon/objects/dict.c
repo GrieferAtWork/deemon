@@ -1699,15 +1699,18 @@ err:
  */
 
 PRIVATE struct type_method dict_methods[] = {
-    { DeeString_STR(&str_get), (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_get,
+    { DeeString_STR(&str_get),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_get,
        DOC("(key,def=!N)->\n"
            "@return The value associated with @key or @def when @key has no value associated") },
-    { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_pop,
-       DOC("(key)->\n"
-           "(key,def)->\n"
-           "@throw KeyError No @def was given and @key was not found\n"
-           "Delete @key from @this and return its previously assigned value or @def when @key had no item associated") },
-    { "clear", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_doclear,
+    { DeeString_STR(&str_pop),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_pop,
+      DOC("(key)->\n"
+          "(key,def)->\n"
+          "@throw KeyError No @def was given and @key was not found\n"
+          "Delete @key from @this and return its previously assigned value or @def when @key had no item associated") },
+    { DeeString_STR(&str_clear),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_doclear,
       DOC("()\n"
           "Clear all values from @this :dict") },
     { "keys", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_keys,

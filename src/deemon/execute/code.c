@@ -641,6 +641,16 @@ restart:
 }
 
 PRIVATE DREF DeeObject *DCALL
+code_get_kwds(DeeCodeObject *__restrict self) {
+ ASSERT(self->co_argc_max >= self->co_argc_min);
+ if (!self->co_keywords)
+      return_empty_seq;
+ return DeeRefVector_NewReadonly((DeeObject *)self,
+                                 (size_t)self->co_argc_max,
+                                 (DeeObject *const *)self->co_keywords);
+}
+
+PRIVATE DREF DeeObject *DCALL
 code_getdefault(DeeCodeObject *__restrict self) {
  ASSERT(self->co_argc_max >= self->co_argc_min);
  return DeeRefVector_NewReadonly((DeeObject *)self,
@@ -795,74 +805,89 @@ PRIVATE struct type_member code_members[] = {
 };
 
 PRIVATE struct type_getset code_getsets[] = {
-    { "__name__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_name, NULL, NULL,
-      DOC("->?Dstring\n"
-          "->?N\n"
+    { DeeString_STR(&str___name__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_name, NULL, NULL,
+      DOC("->?X2?Dstring?N\n"
           "Returns the name of @this code object, or :none if unknown (s.a. :function.__name__)") },
-    { "__doc__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_doc, NULL, NULL,
-      DOC("->?Dstring\n"
-          "->?N\n"
+    { DeeString_STR(&str___doc__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_doc, NULL, NULL,
+      DOC("->?X2?Dstring?N\n"
           "Returns the documentation string of @this code object, or :none if unknown (s.a. :function.__doc__)") },
-    { "__type__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_type, NULL, NULL,
-      DOC("->?Dtype\n"
-          "->?N\n"
+    { DeeString_STR(&str___type__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_type, NULL, NULL,
+      DOC("->?X2?Dtype?N\n"
           "Try to determine if @this code object is defined as part of a user-defined class, "
           "and if it is, return that class type, or :none if that class couldn't be found, "
           "of if @this code object is defined as stand-alone (s.a. :function.__type__)") },
-    { "__operator__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operator, NULL, NULL,
-      DOC("->?Dint\n"
-          "->?N\n"
+    { DeeString_STR(&str___kwds__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_kwds, NULL, NULL,
+      DOC("->?S?Dstring\n"
+          "Returns a sequence of keyword argument names accepted by @this code object\n"
+          "If @this code doesn't accept keyword arguments, an empty sequence is returned") },
+    { "__operator__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operator, NULL, NULL,
+      DOC("->?X2?Dint?N\n"
           "Try to determine if @this code object is defined as part of a user-defined class, "
           "and if so, if it is used to define an operator callback. If that is the case, "
           "return the internal ID of the operator that @this code object provides, or :none "
           "if that class couldn't be found, @this code object is defined as stand-alone, or "
           "defined as a class- or instance-method (s.a. :function.__operator__)") },
-    { "__operatorname__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operatorname, NULL, NULL,
-      DOC("->?Dstring\n"
-          "->?Dint\n"
-          "->?N\n"
+    { "__operatorname__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operatorname, NULL, NULL,
+      DOC("->?X3?Dstring?Dint?N\n"
           "Same as #__operator__, but instead try to return the unambiguous name of the "
           "operator, though still return its ID if the operator isn't recognized as being "
           "part of the standard (s.a. :function.__operatorname__)") },
-    { "__property__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_property, NULL, NULL,
-      DOC("->?Dint\n"
-          "->?N\n"
+    { "__property__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_property, NULL, NULL,
+      DOC("->?X2?Dint?N\n"
           "Returns an integer describing the kind if @this code is part of a property or getset, "
           "or returns :none if the function's property could not be found, or if the function isn't "
           "declared as a property callback (s.a. :function.__property__)") },
-    { "__default__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getdefault, NULL, NULL,
+    { "__default__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getdefault, NULL, NULL,
       DOC("->?S?O\n"
           "Access to the default values of arguments") },
-    { "__static__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getstatic, NULL, NULL,
+    { "__static__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getstatic, NULL, NULL,
       DOC("->?S?O\n"
           "Access to the static values of @this code object") },
-    { "__isyielding__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isyielding, NULL, NULL,
+    { "__isyielding__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isyielding, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the code object is for a yield-function") },
-    { "__iscopyable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_iscopyable, NULL, NULL,
+    { "__iscopyable__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_iscopyable, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if execution frames of the code object can be copied") },
-    { "__hasassembly__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasassembly, NULL, NULL,
+    { "__hasassembly__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasassembly, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if assembly of the code object is executed in safe-mode") },
-    { "__islenient__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_islenient, NULL, NULL,
+    { "__islenient__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_islenient, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the runtime stack allocation allows for leniency") },
-    { "__hasvarargs__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasvarargs, NULL, NULL,
+    { "__hasvarargs__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasvarargs, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the code object takes its last argument as a varargs-tuple") },
-    { "__isthiscall__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isthiscall, NULL, NULL,
+    { "__isthiscall__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isthiscall, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the code object requires a hidden leading this-argument") },
-    { "__hasheapframe__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasheapframe, NULL, NULL,
+    { "__hasheapframe__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasheapframe, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the runtime stack-frame must be allocated on the heap") },
-    { "__hasfinally__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasfinally, NULL, NULL,
+    { "__hasfinally__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasfinally, NULL, NULL,
       DOC("->?Dbool\n"
           "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
           "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in "
           "the user's source code, as the compiler may try to optimize this flag away to speed up runtime execution") },
-    { "__isconstructor__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isconstructor, NULL, NULL,
+    { "__isconstructor__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isconstructor, NULL, NULL,
       DOC("->?Dbool\n"
           "True for class constructor code objects. - When set, don't include the this-argument in "
           "tracebacks, thus preventing incomplete instances from being leaked when the constructor "

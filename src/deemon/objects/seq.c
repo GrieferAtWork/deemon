@@ -1551,7 +1551,8 @@ PRIVATE DREF DeeObject *DCALL
 seq_remove(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key; int result; size_t start,end;
- if (get_sequence_find_args("remove",argc,argv,&elem,&key,&start,&end))
+ if (get_sequence_find_args(DeeString_STR(&str_remove),
+                            argc,argv,&elem,&key,&start,&end))
      goto err;
  result = DeeSeq_Remove(self,start,end,elem,key);
  if unlikely(result < 0) goto err;
@@ -1563,7 +1564,8 @@ PRIVATE DREF DeeObject *DCALL
 seq_rremove(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key; int result; size_t start,end;
- if (get_sequence_find_args("rremove",argc,argv,&elem,&key,&start,&end))
+ if (get_sequence_find_args(DeeString_STR(&str_rremove),
+                            argc,argv,&elem,&key,&start,&end))
      goto err;
  result = DeeSeq_RRemove(self,start,end,elem,key);
  if unlikely(result < 0) goto err;
@@ -1575,7 +1577,8 @@ PRIVATE DREF DeeObject *DCALL
 seq_removeall(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key; size_t result; size_t start,end;
- if (get_sequence_find_args("removeall",argc,argv,&elem,&key,&start,&end))
+ if (get_sequence_find_args(DeeString_STR(&str_removeall),
+                            argc,argv,&elem,&key,&start,&end))
      goto err;
  result = DeeSeq_RemoveAll(self,start,end,elem,key);
  if unlikely(result == (size_t)-1) goto err;

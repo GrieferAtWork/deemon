@@ -1379,37 +1379,47 @@ set_remove(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
 }
 
 PRIVATE struct type_method set_methods[] = {
-    { "clear", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_doclear,
-      DOC("()\n"
-          "Clear all items from the set") },
-    { "pop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
+    { DeeString_STR(&str_pop),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
       DOC("->\n"
           "@throw ValueError The set is empty\nPop a random item from the set and return it") },
-    { "popitem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
+    { DeeString_STR(&str_clear),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_doclear,
+      DOC("()\n"
+          "Clear all items from the set") },
+    { "popitem",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
       DOC("->\n"
           "@throw ValueError The set is empty\nPop a random item from the set and return it (alias for #pop)") },
-    { "unify", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_unify,
+    { "unify",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_unify,
       DOC("(ob)->\n"
           "Insert @ob into the set if it wasn't inserted before, and re-return it, or the pre-existing instance") },
-    { "insert", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_insert,
+    { DeeString_STR(&str_insert),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_insert,
       DOC("(ob)->?Dbool\n"
           "Returns :true if the object wasn't apart of the set before") },
-    { "update", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_update,
+    { "update",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_update,
       DOC("(items:?S?O)->?Dint\n"
           "Insert all items from @items into @this set, and return the number of inserted items") },
-    { DeeString_STR(&str_remove), (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_remove,
+    { DeeString_STR(&str_remove),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_remove,
       DOC("(ob)->?Dbool\n"
           "Returns :true if the object was removed from the set") },
     /* Alternative function names. */
-    { "add", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_insert,
+    { "add",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_insert,
       DOC("(ob)->?Dbool\n"
           "Deprecated alias for #insert") },
-    { "discard", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_remove,
+    { "discard",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_remove,
       DOC("(ob)->?Dbool\n"
           "Deprecated alias for #remove") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Old function names. */
-    { "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_update,
+    { "insert_all",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_update,
       DOC("(ob)->?Dbool\n"
           "Deprecated alias for #update") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

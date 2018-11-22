@@ -3743,7 +3743,8 @@ PRIVATE struct type_getset type_getsets[] = {
       DOC("->?Ert:classdescriptor\n"
           "@throw AttributeError @this type is a user-defined class (s.a. #__isclass__)\n"
           "Returns the internal class-descriptor descriptor for a user-defined class") },
-    { "__module__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_module, NULL, NULL,
+    { DeeString_STR(&str___module__),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_module, NULL, NULL,
       DOC("->?Dmodule\n"
           "->?N\n"
           "Return the module used to define @this type, or :none if the module cannot "

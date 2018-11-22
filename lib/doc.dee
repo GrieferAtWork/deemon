@@ -21,6 +21,13 @@ import util;
 import deemon;
 import * from deemon;
 
+global Doc;
+global DocSection;
+global Declaration;
+global Parameter;
+global Expression;
+
+
 local function decode_name_content(name: string): string {
 	name = name.substr(1,#name - 1);
 	name = name.replace("\\\n","\n");
@@ -136,7 +143,17 @@ local function encode_expr(ob: object): string | none {
 @@out for generating names for unknown arguments:
 @@Start by using each of abcdefghijklmnopqrstuvwxyz, the continue
 @@by generating names aa ab ac, etc.
-local function get_generic_argument_name(n: int): string {
+@@Additionally, when @d is given, try to extract argument name information
+@@from keyword information meta-data taken from the Doc node's bound object.
+local function get_generic_argument_name(n: int, d: Doc | none = none): string {
+	if (d !is none && d.object is bound) {
+		local ob = d.object;
+		if (hasattr(ob,"__kwds__")) {
+			local kwds = ob.__kwds__;
+			if (n < #kwds)
+				return kwds[n];
+		}
+	}
 	local pat = "abcdefghijklmnopqrstuvwxyz";
 	local result = "";
 	do {
@@ -242,12 +259,6 @@ local function decode_name_end(name: string, start: int = 0): int {
 }
 
 
-
-global Doc;
-global DocSection;
-global Declaration;
-global Parameter;
-global Expression;
 
 @@Lookup table to convert pretty operator names to their real counterparts
 local operator_defaults: {(string,string)...} = {
@@ -1795,8 +1806,8 @@ class Parameter: weakrefable {
 			}
 		}
 		if (!doclen) {
-			/* TODO: Try to extract the argument name from kwargs information */
-			m_namstring = get_generic_argument_name(docargi);
+			/* Try to extract the argument name from kwargs information */
+			m_namstring = get_generic_argument_name(docargi,docdecl.value.docnode.value);
 			return;
 		}
 		/* Decode the parameter string new-style. */
@@ -1817,9 +1828,8 @@ class Parameter: weakrefable {
 			if (name_end < doclen)
 				++name_end;
 		} else {
-			/* TODO: Try to extract the argument name from kwargs information */
 			/* Parameter is unnamed. */
-			m_namstring = get_generic_argument_name(docargi);
+			m_namstring = get_generic_argument_name(docargi,docdecl.value.docnode.value);
 			name_end = 0;
 		}
 		if (name_end >= doclen)
@@ -2592,11 +2602,17 @@ local function generate_function_params(fp: file, fun: deemon.function_) {
 	local code = fun.__code__;
 	local argc_min = code.__argc_min__;
 	local argc_max = code.__argc_max__;
+	local kwds = code.__kwds__;
+	local n_kwds = #kwds;
 	fp << "(";
 	for (local i: [:argc_min]) {
 		if (i != 0)
 			fp << ",";
-		fp << get_generic_argument_name(i);
+		if (i < n_kwds) {
+			fp << kwds[i];
+		} else {
+			fp << get_generic_argument_name(i);
+		}
 	}
 	if (argc_max > argc_min) {
 		local defl = code.__default__;
@@ -2605,7 +2621,11 @@ local function generate_function_params(fp: file, fun: deemon.function_) {
 		for (local i: [:argc_max - argc_min]) {
 			if (i != 0)
 				fp << ",";
-			fp << get_generic_argument_name(i);
+			if (i < n_kwds) {
+				fp << kwds[i];
+			} else {
+				fp << get_generic_argument_name(i);
+			}
 			local default_value = defl[i];
 			/* Only emit type information when the default value isn't none
 			 * Since `none' is usually used as a placeholder, the user probably
@@ -2620,7 +2640,10 @@ local function generate_function_params(fp: file, fun: deemon.function_) {
 	if (code.__hasvarargs__) {
 		if (argc_max)
 			fp << ",";
-		fp << get_generic_argument_name(argc_max) << "!";
+		fp << (argc_max < n_kwds
+			? kwds[argc_max]
+			: get_generic_argument_name(argc_max))
+			<< "!";
 	}
 	fp << ")";
 }
