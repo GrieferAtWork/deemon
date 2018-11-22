@@ -79,8 +79,8 @@ lookup_code_info_in_class(DeeTypeObject *__restrict type,
                          (CLASS_ATTRIBUTE_FCLASSMEM|CLASS_ATTRIBUTE_FMETHOD))
         continue;
     if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-     if (addr > (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) ?
-         attr->ca_addr : attr->ca_addr + 2) continue;
+     if (addr > ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) ?
+         attr->ca_addr : attr->ca_addr + 2)) continue;
      info->fi_getset = (uint16_t)(addr - attr->ca_addr);
     } else {
      if (addr > attr->ca_addr) continue;
@@ -100,8 +100,8 @@ lookup_code_info_in_class(DeeTypeObject *__restrict type,
     if (!attr->ca_name) continue;
     if (addr < attr->ca_addr) continue;
     if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-     if (addr > (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) ?
-         attr->ca_addr : attr->ca_addr + 2) continue;
+     if (addr > ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) ?
+         attr->ca_addr : attr->ca_addr + 2)) continue;
      info->fi_getset = (uint16_t)(addr - attr->ca_addr);
     } else {
      if (addr > attr->ca_addr) continue;
