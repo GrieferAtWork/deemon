@@ -32,7 +32,6 @@
 #include <deemon/file.h>
 #include <deemon/seq.h>
 #include <deemon/filetypes.h>
-#include <deemon/dex.h>
 #include <deemon/string.h>
 #include <deemon/arg.h>
 

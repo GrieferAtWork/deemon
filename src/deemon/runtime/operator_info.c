@@ -132,8 +132,8 @@ Dee_OperatorFromNameLen(DeeTypeObject *typetype,
                         char const *__restrict name,
                         size_t namelen) {
  char buf[32];
- if (namelen >= 32)
-     return (uint16_t)-1; /* No operator has that long of a name... */
+ if (namelen >= COMPILER_LENOF(buf))
+     return (uint16_t)-1; /* No valid operator has that long of a name... */
  memcpy(buf,name,namelen);
  buf[namelen] = 0;
  return Dee_OperatorFromName(typetype,buf);

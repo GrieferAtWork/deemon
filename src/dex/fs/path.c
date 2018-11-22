@@ -933,12 +933,10 @@ print_env:
    if (error) flush_start = env_start;
   } else {
    /* Do a key-lookup in the given variable mapping. */
-   DREF DeeObject *key,*item;
-   key = DeeString_NewUtf8(name_start,(size_t)(name_end - name_start),
-                           STRING_ERROR_FSTRICT);
-   if unlikely(!key) goto err;
-   item = DeeObject_GetItem(environ_mapping,key);
-   Dee_Decref(key);
+   DREF DeeObject *item;
+   item = DeeObject_GetItemStringLen(environ_mapping,name_start,
+                                    (size_t)(name_end - name_start),
+                                     hash_ptr(name_start,(size_t)(name_end - name_start)));
    if unlikely(!item) {
     /* When the item wasn't found, try to handle `KeyError'. */
     if (!(options&FS_EXPAND_FNOFAIL) ||

@@ -471,7 +471,7 @@ f_rt_giosi(size_t argc, DeeObject **__restrict argv) {
  case 3:
   if (DeeObject_SetItem(argv[0],argv[1],argv[2]))
       goto err;
-  return_none;
+  return_reference_(argv[2]);
  default: break;
  }
  err_invalid_argc("operator []",argc,2,3);
@@ -485,7 +485,7 @@ f_rt_grosr(size_t argc, DeeObject **__restrict argv) {
  case 4:
   if (DeeObject_SetRange(argv[0],argv[1],argv[2],argv[3]))
       goto err;
-  return_none;
+  return_reference_(argv[3]);
  default: break;
  }
  err_invalid_argc("operator [:]",argc,3,4);
