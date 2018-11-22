@@ -886,11 +886,11 @@ INTERN bool DCALL asm_minjmp(void) {
 
   case R_DMN_STCKA16:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-   if (iter->ar_sym->as_stck < INT8_MAX) {
+   if (iter->ar_sym->as_stck < UINT8_MAX) {
     uint8_t *instr = (uint8_t *)(sc_main.sec_begin + iter->ar_addr - 1);
     /* Check if the second byte is a sign extension. */
-    if (instr[2] == ((instr[1]&0x80) ? 0xff : 0x00)) {
-     /* Convert into a `R_DMN_STCKAS8' */
+    if (instr[2] == 0x00) {
+     /* Convert into a `R_DMN_STCKA8' */
      if (instr != sc_main.sec_begin && instr[-1] == ASM_EXTENDED1) {
       *(instr - 1) = ASM_DELOP; /* Mark the unused bytes as a DELOP. */
       *(instr + 2) = ASM_DELOP;
@@ -899,7 +899,7 @@ INTERN bool DCALL asm_minjmp(void) {
       *(instr + 0) &= ~1;
       *(instr + 2)  = ASM_DELOP; /* Mark the unused byte as a DELOP. */
      }
-     iter->ar_type = R_DMN_STCKAS8;
+     iter->ar_type = R_DMN_STCKA8;
      result = true;
     }
    }
@@ -1142,12 +1142,12 @@ INTERN int DCALL asm_linkstack(void) {
     UNALIGNED_SETLE16((uint16_t *)target,(uint16_t)(int16_t)rel_value);
    }
    break;
-  case R_DMN_STCKAS8:
+  case R_DMN_STCKA8:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-   rel_value = *(int8_t *)target + iter->ar_sym->as_stck;
-   if unlikely(rel_value < INT8_MIN || rel_value > INT8_MAX)
+   rel_value = *(uint8_t *)target + iter->ar_sym->as_stck;
+   if unlikely((uint32_t)rel_value > UINT8_MAX)
       goto trunc;
-   *(int8_t *)target = (int8_t)rel_value;
+   *(uint8_t *)target = (uint8_t)rel_value;
    break;
   case R_DMN_STCKA16:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
@@ -1216,9 +1216,12 @@ INTERN int DCALL asm_linktext(void) {
    rel_value += UNALIGNED_GETLE32((uint32_t *)target);
    UNALIGNED_SETLE32((uint32_t *)target,(uint32_t)rel_value);
    break;
-  case R_DMN_ABSS8:
+  case R_DMN_ABS8:
    rel_value += iter->ar_addr;
-   ATTR_FALLTHROUGH
+   if unlikely((uint32_t)rel_value > UINT8_MAX)
+      goto trunc;
+   *(uint8_t *)target = (uint8_t)rel_value;
+   break;
   case R_DMN_DISP8:
    rel_value += *(int8_t *)target;
    if unlikely(rel_value < INT8_MIN ||
@@ -1256,12 +1259,12 @@ INTERN int DCALL asm_linktext(void) {
       goto trunc;
    UNALIGNED_SETLE16((uint16_t *)target,(uint16_t)(int16_t)rel_value);
    break;
-  case R_DMN_STCKAS8:
+  case R_DMN_STCKA8:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-   rel_value = *(int8_t *)target + iter->ar_sym->as_stck;
-   if unlikely(rel_value < INT8_MIN || rel_value > INT8_MAX)
+   rel_value = *(uint8_t *)target + iter->ar_sym->as_stck;
+   if unlikely((uint32_t)rel_value > UINT8_MAX)
       goto trunc;
-   *(int8_t *)target = (int8_t)rel_value;
+   *(uint8_t *)target = (uint8_t)rel_value;
    break;
   case R_DMN_STCKA16:
    ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);

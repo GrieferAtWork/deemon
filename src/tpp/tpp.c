@@ -1937,7 +1937,12 @@ PUBLIC struct TPPFile TPPFile_Empty = {
     /* f_textfile.f_flags       */TPP_TEXTFILE_FLAG_NOGUARD|TPP_TEXTFILE_FLAG_INTERNAL,
     /* f_textfile.f_encoding    */TPP_ENCODING_UTF8,
     /* f_textfile.f_padding     */{0},
-    /* f_textfile.f_newguard    */NULL}}
+    /* f_textfile.f_newguard    */NULL
+#ifndef TPP_CONFIG_NO_PRECACHE_TEXTLINES
+    /* f_textfile.f_lfpos       */,NULL
+    /* f_textfile.f_lfcount     */,0
+#endif /* !TPP_CONFIG_NO_PRECACHE_TEXTLINES */
+    }}
 };
 
 
@@ -2252,8 +2257,36 @@ TPPFile_LCAt(struct TPPFile const *__restrict self,
   info->lc_line = self->f_textfile.f_lineoff;
 fallback_cl:
   /* Found regular, old line-feeds. */
+#ifndef TPP_CONFIG_NO_PRECACHE_TEXTLINES
+  /* By pre-caching line indices here, we prevent a bottleneck that would otherwise
+   * cause compilers using this function to generate debug information to spend up
+   * to 70% of compilation time simply trying to collect debug information by counting
+   * the number of lines they have already wandered into some input file. */
+  if (self->f_textfile.f_lfpos >= self->f_begin &&
+      self->f_textfile.f_lfpos < self->f_end) {
+   size_t count;
+   if (text_pointer > self->f_textfile.f_lfpos) {
+    count = string_count_lf((char *)self->f_textfile.f_lfpos,
+                            (size_t)(text_pointer - self->f_textfile.f_lfpos));
+    ((struct TPPFile *)self)->f_textfile.f_lfcnt += count;
+   } else {
+    count = string_count_lf((char *)text_pointer,
+                            (size_t)(self->f_textfile.f_lfpos - text_pointer));
+    ((struct TPPFile *)self)->f_textfile.f_lfcnt -= count;
+   }
+   info->lc_line += (line_t)self->f_textfile.f_lfcnt;
+  } else {
+   size_t count;
+   count = string_count_lf(self->f_begin,
+                          (size_t)(text_pointer - self->f_begin));
+   ((struct TPPFile *)self)->f_textfile.f_lfcnt = count;
+   info->lc_line += (line_t)count;
+  }
+  ((struct TPPFile *)self)->f_textfile.f_lfpos = text_pointer;
+#else /* !TPP_CONFIG_NO_PRECACHE_TEXTLINES */
   info->lc_line += (line_t)string_count_lf(self->f_begin,
                                           (size_t)(text_pointer-self->f_begin));
+#endif /* TPP_CONFIG_NO_PRECACHE_TEXTLINES */
   /* NOTE: Must accept \0 as linefeed here to correctly
    *       determine column numbers after a #define directive. */
   column_num = 0;
@@ -2720,6 +2753,9 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
    self->f_textfile.f_lineoff += (line_t)string_count_lf(self->f_begin,
                                                         (size_t)(self->f_end-self->f_begin));
    assert(self->f_end == newchunk->s_text+end_offset);
+#ifndef TPP_CONFIG_NO_PRECACHE_TEXTLINES
+   self->f_textfile.f_lfpos = NULL;
+#endif
    if (newchunk->s_refcnt == 1) {
     memmove(newchunk->s_text,self->f_end,prefix_size*sizeof(char));
     newchunk = (struct TPPString *)API_REALLOC(newchunk,TPP_OFFSETOF(struct TPPString,s_text)+
@@ -8631,8 +8667,13 @@ create_int_file:
      else if (tok == ')' && !--recursion) break;
      TPPLexer_Yield();
     }
+#if 1
+    if (tok != ')')
+        WARN(W_EXPECTED_RPAREN);
+#else
     if (tok == ')') TPPLexer_Yield();
     else WARN(W_EXPECTED_RPAREN)/*,tok = 0*/; /* NOTE: Set tok to 0 to force a reload below. */
+#endif
    }
    if (!pragma_error) token.t_file->f_pos = old_filepos; /* Restore the old file pointer. */
    popeof();

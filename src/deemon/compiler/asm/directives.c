@@ -155,7 +155,7 @@ struct reloc_type {
 PRIVATE struct reloc_type const reloc_db[] = {
     /* [R_DMN_NONE]     = */ { "NONE" },
     /* [R_DMN_STATIC16] = */ { "STATIC16" },
-    /* [R_DMN_ABSS8]    = */ { "ABSS8" },
+    /* [R_DMN_ABS8]     = */ { "ABS8" },
     /* [R_DMN_ABS16]    = */ { "ABS16" },
     /* [R_DMN_ABS32]    = */ { "ABS32" },
     /* [R_DMN_DISP8]    = */ { "DISP8" },
@@ -163,7 +163,7 @@ PRIVATE struct reloc_type const reloc_db[] = {
     /* [R_DMN_DISP32]   = */ { "DISP32" },
     /* [R_DMN_STCK8]    = */ { "STCK8" },
     /* [R_DMN_STCK16]   = */ { "STCK16" },
-    /* [R_DMN_STCKAS8]  = */ { "STCKAS8" },
+    /* [R_DMN_STCKA8]   = */ { "STCKA8" },
     /* [R_DMN_STCKA16]  = */ { "STCKA16" },
     /* [R_DMN_DELHAND]  = */ { "DELHAND" },
 };
@@ -455,7 +455,7 @@ do_emit_memory:
      relo_type = R_DMN_ABS16|R_DMN_FUSER;
      break;
     case (ASM_OVERLOAD_FRELABS << 8) | 1:
-     relo_type = R_DMN_ABSS8|R_DMN_FUSER;
+     relo_type = R_DMN_ABS8|R_DMN_FUSER;
      break;
     case (ASM_OVERLOAD_FRELDSP << 8) | 8:
     case (ASM_OVERLOAD_FRELDSP << 8) | 4:
@@ -473,7 +473,7 @@ do_emit_memory:
      relo_type = R_DMN_STCKA16|R_DMN_FUSER;
      break;
     case (ASM_OVERLOAD_FSTKABS << 8) | 1:
-     relo_type = R_DMN_STCKAS8|R_DMN_FUSER;
+     relo_type = R_DMN_STCKA8|R_DMN_FUSER;
      break;
     case (ASM_OVERLOAD_FSTKDSP << 8) | 8:
     case (ASM_OVERLOAD_FSTKDSP << 8) | 4:

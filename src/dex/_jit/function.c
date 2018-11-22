@@ -127,7 +127,6 @@ jf_visit(JITFunction *__restrict self, dvisit_t proc, void *arg) {
  }
  if (self->jf_refs.ot_list != jit_empty_object_list) {
   for (i = 0; i <= self->jf_refs.ot_mask; ++i) {
-   DeeObject *nameobj;
    if (!ITER_ISOK(self->jf_refs.ot_list[i].oe_namestr))
        continue;
    Dee_XVisit(self->jf_refs.ot_list[i].oe_value);

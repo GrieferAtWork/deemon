@@ -35,6 +35,7 @@
 /* #define TPP_CONFIG_RAW_STRING_LITERALS 0/1 */
 /* #define TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS 0/1 */
 /* #define TPP_CONFIG_NONBLOCKING_IO */
+/* #define TPP_CONFIG_NO_PRECACHE_TEXTLINES */
 /* #   define TPP_USERSTREAM_TYPE                               <type> // typedef ... stream_t; */
 /* #   define TPP_USERSTREAM_INVALID                            <expr> // static stream_t const TPP_STREAM_INVALID = ...; */
 /* #   define TPP_USERSTREAM_FOPEN(filename)                    <expr> // stream_t *TPP_USERSTREAM_FCLOSE(char const *__restrict filename) { ... } */
@@ -555,6 +556,13 @@ struct TPPTextFile {
                                              *        the start of the file. When the file is popped from the #include-stack,
                                              *        this is non-NULL and `TPP_TEXTFILE_FLAG_NOGUARD' isn't set, this keyword
                                              *        will be copied into the `f_guard' field if not already set. */
+#ifndef TPP_CONFIG_NO_PRECACHE_TEXTLINES
+    char const              *f_lfpos;       /* [?..?] Cached line-feed counter pointer.
+                                             * This pointer is only valid if it points
+                                             * into the file's current text-block. */
+    size_t                   f_lfcnt;       /* [valid_if(is_valid(f_lfpos))] Number of line-feeds
+                                             * that can be found between the file's start and `f_lfpos'. */
+#endif /* TPP_CONFIG_NO_PRECACHE_TEXTLINES */
 #ifdef TPP_USERTEXTDATA
     TPP_USERTEXTDATA /* Optional user-defined data memory (when present, initialized to ZERO) */
 #endif

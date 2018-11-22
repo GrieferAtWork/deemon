@@ -532,10 +532,10 @@ struct reldesc {
  * Unsupported relocations are encoded as `R_DMN_NONE' */
 PRIVATE struct reldesc const
 reldescs[ASM_OVERLOAD_FRELMSK+1] = {
-    /* [ASM_OVERLOAD_FRELABS] = */{ R_DMN_ABSS8, R_DMN_ABS16, R_DMN_ABS32 },
+    /* [ASM_OVERLOAD_FRELABS] = */{ R_DMN_ABS8, R_DMN_ABS16, R_DMN_ABS32 },
     /* [ASM_OVERLOAD_FRELDSP] = */{ R_DMN_DISP8, R_DMN_DISP16, R_DMN_DISP32 },
     /* [ASM_OVERLOAD_FSTKABS] = */{ R_DMN_STCK8, R_DMN_STCK16, R_DMN_NONE },
-    /* [ASM_OVERLOAD_FSTKDSP] = */{ R_DMN_STCKAS8, R_DMN_STCKA16, R_DMN_NONE },
+    /* [ASM_OVERLOAD_FSTKDSP] = */{ R_DMN_STCKA8, R_DMN_STCKA16, R_DMN_NONE },
 };
 
 /* @param: flags: Set of `ASM_OVERLOAD_F*'

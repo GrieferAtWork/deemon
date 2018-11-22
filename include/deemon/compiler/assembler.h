@@ -26,10 +26,11 @@
 #include "../code.h"
 #include "../asm.h"
 #include "../format.h"
-#include <hybrid/typecore.h>
 #include "ast.h"
 #include "symbol.h"
 #include "tpp.h"
+
+#include <hybrid/typecore.h>
 #include <stdint.h>
 
 DECL_BEGIN
@@ -38,7 +39,7 @@ struct ascii_printer;
 
 #define R_DMN_NONE      0 /* `// Nothing' */
 #define R_DMN_STATIC16  1 /* `u16 = u16 + a_constc;' */
-#define R_DMN_ABSS8     2 /* `s8  = s8 + ar_sym->as_addr;' */
+#define R_DMN_ABS8      2 /* `u8  = u8 + ar_sym->as_addr;' */
 #define R_DMN_ABS16     3 /* `u16 = u16 + ar_sym->as_addr;' */
 #define R_DMN_ABS32     4 /* `u32 = u32 + ar_sym->as_addr;' */
 #define R_DMN_DISP8     5 /* `s8  = s8 + (ar_sym->as_addr - ar_addr);' */
@@ -46,7 +47,7 @@ struct ascii_printer;
 #define R_DMN_DISP32    7 /* `s32 = s32 + (ar_sym->as_addr - ar_addr);' */
 #define R_DMN_STCK8     8 /* `s8  = ar_sym->as_stck - s8;' */
 #define R_DMN_STCK16    9 /* `s16 = ar_sym->as_stck - s16;' */
-#define R_DMN_STCKAS8  10 /* `s8  = s8 + ar_sym->as_stck;' */
+#define R_DMN_STCKA8   10 /* `u8  = u8 + ar_sym->as_stck;' */
 #define R_DMN_STCKA16  11 /* `u16 = u16 + ar_sym->as_stck;' */
 #define R_DMN_DELHAND  12 /* Special relocation: placed at the start of an instruction chain
                            * consisting of `ASM_ENDCATCH', `ASM_ENDFINALLY' and `ASM_ENDFINALLY_N'

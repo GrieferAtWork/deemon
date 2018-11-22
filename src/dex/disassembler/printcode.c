@@ -814,7 +814,8 @@ prefix_except_prefix:
    char bytes[INSTRLEN_MAX*3];
    size_t i,num_bytes;
    num_bytes = (size_t)(next-iter);
-   ASSERT(num_bytes <= INSTRLEN_MAX);
+   if unlikely(num_bytes > INSTRLEN_MAX)
+      num_bytes = INSTRLEN_MAX;
    for (i = 0; i < num_bytes; ++i) {
     uint8_t byte;
     bytes[(i*3)+2] = ' ';
@@ -851,6 +852,35 @@ prefix_except_prefix:
    if unlikely(temp < 0) goto err;
    result += temp;
    PRINT("\n");
+#if INSTRLEN_MAX > LINE_MAXBYTES*2
+   {
+    size_t offset = LINE_MAXBYTES;
+    while (num_bytes) {
+     size_t line_bytes = num_bytes;
+     if (line_bytes > LINE_MAXBYTES)
+         line_bytes = LINE_MAXBYTES;
+     if (prefix_len) print(line_prefix,prefix_len);
+     if (!(flags & PCODE_FNOADDRESS)) print(whitespace,7);
+     if (flags & PCODE_FNOJUMPARROW) {
+      bytes[offset*3+(line_bytes*3)-1] = '\n';
+      print(bytes+offset*3,line_bytes*3);
+     } else {
+      print(bytes+offset*3,line_bytes*3);
+      if (LINE_MAXBYTES != line_bytes)
+          print(whitespace,(LINE_MAXBYTES-line_bytes)*3);
+      if (!(flags & PCODE_FNODEPTH)) print(whitespace,(sp_width*2)+7);
+      temp = textjumps_print(printer,arg,&jumps,
+                            (code_addr_t)(next - start_addr),
+                            (code_addr_t)(next - start_addr));
+      if unlikely(temp < 0) goto err;
+      result += temp;
+      PRINT("\n");
+     }
+     num_bytes -= line_bytes;
+     offset += line_bytes;
+    }
+   }
+#else
    if (num_bytes) {
     if (prefix_len) print(line_prefix,prefix_len);
     if (!(flags & PCODE_FNOADDRESS)) print(whitespace,7);
@@ -871,6 +901,7 @@ prefix_except_prefix:
      PRINT("\n");
     }
    }
+#endif
   } else {
    if (!(flags & PCODE_FNODEPTH)) {
     temp = print_sp_transition(printer,arg,stacksz,new_stacksz,sp_width);
