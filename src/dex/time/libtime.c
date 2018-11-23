@@ -1385,7 +1385,7 @@ time_del_time_t(DeeTimeObject *__restrict self) {
  return time_set_time_t(self,Dee_None);
 }
 
-DOC_DEF(docof_timeas,"->?Gtime\n"
+DOC_DEF(docof_timeas,"->?GTime\n"
         "@throw ValueError The given value cannot be negative, or is too large to fit the view\n"
         "Get/Set this specific representation of time, potentially clamped to the limits of the next-greater view\n"
         "Note that these representations are always zero-based, meaning "
@@ -1409,7 +1409,7 @@ PRIVATE struct type_getset time_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_timepart_get,
       (int(DCALL *)(DeeObject *__restrict))&time_timepart_del,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&time_timepart_set,
-       DOC("->?Gtime\n"
+       DOC("->?GTime\n"
            "Read/write the time portion of @this time object, that is everything below the "
            "day-threshold, including #hour, #minute, #second, #millisecond and #microsecond\n"
            "When setting, the passed objected is interpreted as an integer describing the "
@@ -1418,7 +1418,7 @@ PRIVATE struct type_getset time_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_datepart_get,
       (int(DCALL *)(DeeObject *__restrict))&time_datepart_del,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&time_datepart_set,
-       DOC("->?Gtime\n"
+       DOC("->?GTime\n"
            "@throw ValueError Attempted to assign a time value with a non-zero #timepart\n"
            "Read/write the date portion of @this time object, that is everything "
            "above the day-threshold, including #mday, #month and #year\n"
@@ -1478,21 +1478,21 @@ PRIVATE struct type_getset time_getsets[] = {
     { timestr_decades, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas) },
     { timestr_centuries, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas) },
     { timestr_millenia, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas) },
-    { "mweek", &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, DOC("->?Gtime\nMiddle-way alias for #monthweek") },
-    { "yweek", &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, DOC("->?Gtime\nMiddle-way alias for #yearweek") },
+    { "mweek", &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, DOC("->?GTime\nMiddle-way alias for #monthweek") },
+    { "yweek", &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, DOC("->?GTime\nMiddle-way alias for #yearweek") },
     /* Deprecated names/functions. */
-    { "msecond", &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC("->?Gtime\nDeprecated alias for #mic / #millisecond") },
-    { "mseconds", &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC("->?Gtime\nDeprecated alias for #mics / #milliseconds") },
+    { "msecond", &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC("->?GTime\nDeprecated alias for #mic / #millisecond") },
+    { "mseconds", &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC("->?GTime\nDeprecated alias for #mics / #milliseconds") },
     { "time",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_timepart_get,
       (int(DCALL *)(DeeObject *__restrict))&time_timepart_del,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&time_timepart_set,
-       DOC("->?Gtime\nDeprecated alias for #timepart") },
+       DOC("->?GTime\nDeprecated alias for #timepart") },
     { "part",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_datepart_get,
       (int(DCALL *)(DeeObject *__restrict))&time_datepart_del,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&time_datepart_set,
-       DOC("->?Gtime\nDeprecated alias for #datepart") },
+       DOC("->?GTime\nDeprecated alias for #datepart") },
     { "time_t",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_get_time_t,
       (int(DCALL *)(DeeObject *__restrict))&time_del_time_t,
@@ -1936,22 +1936,22 @@ time_class_freq(DeeObject *__restrict UNUSED(self),
 PRIVATE struct type_method time_class_methods[] = {
     /* For backwards compatibility with the old deemon (which
      * did everything as part of the `time' builtin type) */
-    { "now", &time_class_now, DOC("->?Gtime\nDeprecated. Use :time:now instead") },
-    { "tick", &time_class_tick, DOC("->?Gtime\nDeprecated. Use :time:tick instead") },
+    { "now", &time_class_now, DOC("->?GTime\nDeprecated. Use :time:now instead") },
+    { "tick", &time_class_tick, DOC("->?GTime\nDeprecated. Use :time:tick instead") },
     { "freq", &time_class_freq, DOC("->?Dint\nDeprecated. Always returns ${1000000}") },
     { "time", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&time_class_maketime,
-       DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?Gtime\n"
+       DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?GTime\n"
            "Deprecated. Use :maketime instead"),
       TYPE_METHOD_FKWDS },
     { "date", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&time_class_makedate,
-       DOC("(year=!0,month=!0,day=!0)->?Gtime\n"
+       DOC("(year=!0,month=!0,day=!0)->?GTime\n"
            "Deprecated. Use :makedate instead"),
       TYPE_METHOD_FKWDS },
     { "from_time_t", &time_class_from_time_t,
-      DOC("(time_t_value:?Dint)->?Gtime\n"
+      DOC("(time_t_value:?Dint)->?GTime\n"
           "Deprecated") },
 #define ADD_INTERVAL_CALLBACK(name,func) \
-    { name, &time_class_##func, DOC("(value:?Dint)->?Gtime\nDeprecated. Use :time:" #func " instead") }
+    { name, &time_class_##func, DOC("(value:?Dint)->?GTime\nDeprecated. Use :time:" #func " instead") }
     ADD_INTERVAL_CALLBACK("mseconds",milliseconds),
     ADD_INTERVAL_CALLBACK(timestr_seconds,seconds),
     ADD_INTERVAL_CALLBACK(timestr_minutes,minutes),
@@ -2122,7 +2122,7 @@ PRIVATE struct type_cmp time_cmp = {
 
 INTERN DeeTypeObject DeeTime_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"time",
+    /* .tp_name     = */"Time",
     /* .tp_doc      = */DOC("(year=!0,month=!0,day=!0,hour=!0,minute=!0,"
                              "second=!0,millisecond=!0,microsecond=!0)\n"
                              "Construct a new time object from the given arguments.\n"
@@ -2193,29 +2193,29 @@ PRIVATE DEFINE_KWCMETHOD(libtime_makedate,&f_libtime_makedate);
 PRIVATE DEFINE_CMETHOD(libtime_makeanon,&f_libtime_makeanon);
 
 PRIVATE struct dex_symbol symbols[] = {
-    { "time", (DeeObject *)&DeeTime_Type },
+    { "Time", (DeeObject *)&DeeTime_Type },
     { "now", (DeeObject *)&libtime_now, MODSYM_FNORMAL,
-      DOC("->?Gtime\n"
+      DOC("->?GTime\n"
           "Returns the current time with as much precision as possible") },
     { "tick", (DeeObject *)&libtime_tick, MODSYM_FNORMAL,
-      DOC("->?Gtime\n"
+      DOC("->?GTime\n"
           "Returns the current tick suitable for high-precision timings.\n"
           "The tick itself is offset from some undefined point in time, meaning that the only "
           "meaningful use, is to subtract the return values of two calls to this function.\n"
           "The value of the tick (in microseconds) can easily be extracted by casting/using "
           "the return value as an integer") },
     { "maketime", (DeeObject *)&libtime_maketime, MODSYM_FNORMAL,
-      DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?Gtime\n"
+      DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?GTime\n"
           "Construct a new :time object using the given arguments for the "
           "sub-day portion, while filling in the remainder as all zeroes:\n"
-          ">time from time(0,0,0,hour,minute,second,millisecond,microsecond)") },
+          ">Time from time(0,0,0,hour,minute,second,millisecond,microsecond)") },
     { "makedate", (DeeObject *)&libtime_makedate, MODSYM_FNORMAL,
-      DOC("(year=!0,month=!0,day=!0)->?Gtime\n"
+      DOC("(year=!0,month=!0,day=!0)->?GTime\n"
           "Construct a new :time object using the given arguments for the "
           "post-day portion, while filling in the remainder as all zeroes:\n"
-          ">time from time(year,month,day,0,0,0,0,0)") },
+          ">Time from time(year,month,day,0,0,0,0,0)") },
     { "makeanon", (DeeObject *)&libtime_makeanon, MODSYM_FNORMAL,
-      DOC("(microseconds:?Dint)->?Gtime\n"
+      DOC("(microseconds:?Dint)->?GTime\n"
           "Construct a new anonymous (generic-representation) time object, "
           "given the amount of @microseconds it ought to represent\n"
           "This function is mainly used by other libraries for constructing time "
@@ -2233,7 +2233,7 @@ PRIVATE struct dex_symbol symbols[] = {
      */
 #define ADD_INTERVAL_CALLBACK(name,func) \
     { name, (DeeObject *)&libtime_##func, MODSYM_FNORMAL, \
-      DOC("(value:?Dint)->?Gtime\n@return A time interval of @value " #func) }
+      DOC("(value:?Dint)->?GTime\n@return A time interval of @value " #func) }
     ADD_INTERVAL_CALLBACK(timestr_microseconds,microseconds),
     ADD_INTERVAL_CALLBACK(timestr_milliseconds,milliseconds),
     ADD_INTERVAL_CALLBACK(timestr_seconds,seconds),

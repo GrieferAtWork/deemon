@@ -220,9 +220,9 @@ INTDEF DeeTypeObject DeeQuery_Type;
  * >> property st_gid   -> group;
  * >> property st_rdev  -> int;
  * >> property st_size  -> int;
- * >> property st_atime -> time from time;
- * >> property st_mtime -> time from time;
- * >> property st_ctime -> time from time;
+ * >> property st_atime -> Time from time;
+ * >> property st_mtime -> Time from time;
+ * >> property st_ctime -> Time from time;
  */
 INTDEF DeeTypeObject DeeStat_Type;
 INTDEF DeeTypeObject DeeLStat_Type;

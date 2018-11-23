@@ -19,4 +19,4 @@
 #pragma once
 #include "__stddef.dee"
 
-import time from time;
+from time import time = Time;

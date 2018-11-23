@@ -1073,9 +1073,9 @@ PRIVATE struct dex_symbol symbols[] = {
           "Change the current working directory to @path, which may be a path "
           "relative to the old current working directory") },
     { "chtime", (DeeObject *)&libfs_chtime, MODSYM_FNORMAL,
-      DOC("(path:?Dstring,atime:?Etime:time=!N,mtime:?Etime:time=!N,ctime:?Etime:time=!N)\n"
-          "(fp:?Dfile,atime:?Etime:time=!N,mtime:?Etime:time=!N,ctime:?Etime:time=!N)\n"
-          "(fd:?Dint,atime:?Etime:time=!N,mtime:?Etime:time=!N,ctime:?Etime:time=!N)\n"
+      DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N)\n"
+          "(fp:?Dfile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N)\n"
+          "(fd:?Dint,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
