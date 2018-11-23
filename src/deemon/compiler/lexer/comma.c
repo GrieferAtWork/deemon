@@ -339,10 +339,10 @@ next_expr:
     char *next = peek_next_token(NULL);
     if unlikely(!next) goto err;
     if (*next == ':') {
-     /* Make sure it isn't a `::' token. */
+     /* Make sure it isn't a `::' or `:=' token. */
      ++next;
      while (SKIP_WRAPLF(next,token.t_file->f_end));
-     if (*next != ':')
+     if (*next != ':' && *next != '=')
           goto done_expression_nocurrent;
     }
    }
