@@ -703,7 +703,7 @@ struct TPPFile {
 
 TPPFUN struct TPPFile TPPFile_Empty;
 #define TPPFile_Incref(self)          (void)(++(self)->f_refcnt)
-#define TPPFile_Decref(self)          (void)(--(self)->f_refcnt || (TPPFile_Destroy(self),0))
+#define TPPFile_Decref(self)          (void)(assert((self)->f_refcnt),--(self)->f_refcnt || (TPPFile_Destroy(self),0))
 TPPFUN void TPPCALL TPPFile_Destroy(struct TPPFile *__restrict self);
 
 /* Create a new explicit text file by inherited the given `inherited_text'.

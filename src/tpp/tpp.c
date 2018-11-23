@@ -2255,7 +2255,6 @@ TPPFile_LCAt(struct TPPFile const *__restrict self,
   /* Start out with the base line-offset, as tracked
    * by the current file-chunk, or #line directives. */
   info->lc_line = self->f_textfile.f_lineoff;
-fallback_cl:
   /* Found regular, old line-feeds. */
 #ifndef TPP_CONFIG_NO_PRECACHE_TEXTLINES
   /* By pre-caching line indices here, we prevent a bottleneck that would otherwise
@@ -2283,7 +2282,9 @@ fallback_cl:
    info->lc_line += (line_t)count;
   }
   ((struct TPPFile *)self)->f_textfile.f_lfpos = text_pointer;
+fallback_cl:
 #else /* !TPP_CONFIG_NO_PRECACHE_TEXTLINES */
+fallback_cl:
   info->lc_line += (line_t)string_count_lf(self->f_begin,
                                           (size_t)(text_pointer-self->f_begin));
 #endif /* TPP_CONFIG_NO_PRECACHE_TEXTLINES */
@@ -2297,7 +2298,7 @@ fallback_cl:
  } break;
  case TPPFILE_KIND_MACRO:
   *info = self->f_macro.m_defloc;
-  if ((self->f_macro.m_flags&TPP_MACROFILE_KIND) == TPP_MACROFILE_KIND_EXPANDED) {
+  if ((self->f_macro.m_flags & TPP_MACROFILE_KIND) == TPP_MACROFILE_KIND_EXPANDED) {
    /* Unless the macro file was constructed manually,
     * or simply non-conforming to all the minor details
     * of how TPP creates them, this should never fail...
@@ -2309,6 +2310,10 @@ fallback_cl:
    if (TPPMacroFile_LCInfo(self,info,(char *)text_pointer)) return;
   }
   /* Fallback code for anything that isn't an expanded macro. */
+#ifndef TPP_CONFIG_NO_PRECACHE_TEXTLINES
+  info->lc_line += (line_t)string_count_lf(self->f_begin,
+                                          (size_t)(text_pointer - self->f_begin));
+#endif /* !TPP_CONFIG_NO_PRECACHE_TEXTLINES */
   goto fallback_cl;
  case TPPFILE_KIND_EXPLICIT:
   if ((self = self->f_prev) != NULL) {
