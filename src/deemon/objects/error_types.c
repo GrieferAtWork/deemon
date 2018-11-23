@@ -277,10 +277,10 @@ error_repr(DeeErrorObject *__restrict self) {
 }
 PRIVATE struct type_member error_members[] = {
     TYPE_MEMBER_FIELD_DOC("inner",STRUCT_OBJECT_OPT,offsetof(DeeErrorObject,e_inner),
-                          "->\n"
+                          "->?X3?DError?O?N\n"
                           "An optional inner error object, or :none when not set"),
     TYPE_MEMBER_FIELD_DOC("message",STRUCT_OBJECT_OPT,offsetof(DeeErrorObject,e_message),
-                          "->?Dstring\n"
+                          "->?X2?Dstring?N\n"
                           "The error message associated with this Error object, or :none when not set"),
     TYPE_MEMBER_END
 };
@@ -289,9 +289,9 @@ PUBLIC DeeTypeObject DeeError_Error = {
     /* .tp_name     = */DeeString_STR(&str_Error),
     /* .tp_doc      = */DOC("Base class for all errors thrown by the runtime\n"
                             "\n"
-                            "()\n"
-                            "(message:?Dstring)\n"
-                            "(message:?Dstring,inner)"),
+                            "(message?:?Dstring,inner?:?X2?DError?O)\n"
+                            "Create a new error object with the given @message and @inner error"
+                            ),
     /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

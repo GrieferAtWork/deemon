@@ -295,8 +295,8 @@ local operator_defaults: {(string,string)...} = {
 @@Lookup table to convert pretty operator names to their real counterparts
 local operator_names: {(string,string)...} = {
 	"this" : "constructor", "~this" : "destructor", ":=" : "assign",
-	"move:=" : "moveassign", ":=move" : "moveassign",
-	"#" : "size", "~" : "inv", "+" : none, "-" : none,
+	"move:=" : "moveassign", ":=move" : "moveassign", "++" : "inc",
+	"--" : "dec", "#" : "size", "~" : "inv", "+" : none, "-" : none,
 	"*" : "mul", "/" : "div", "%" : "mod", "<<" : "shl",
 	">>" : "shr", "&" : "and", "|" : "or", "^" : "xor",
 	"**" : "pow", "+=" : "iadd", "-=" : "isub", "*=" : "imul",
@@ -410,8 +410,39 @@ local function get_qualified_typepath(docnode: weakref with Doc, qual: string): 
 	return none;
 }
 
+local function find_error_by_name(t: type_, qual: string, s: string): string | none {
+	if (t.__name__ == s)
+		return qual;
+	for (local attr: deemon.enumattr(t)) {
+		if (attr.decl != t) break;
+		if (attr.attrtype != type deemon.object) break;
+		if (!attr.isclass) continue;
+		local result = find_error_by_name(
+			t.operator . (attr.name),
+			"?A{}{}".format({ attr.name, qual }),
+			s);
+		if (result !is none)
+			return result;
+	}
+}
+
 local function qualify_legacy_typeref(docnode: weakref with Doc, s: string): string {
-	/* TODO: Search for a legacy-like type reference */
+	/* Search for a legacy-like type reference */
+	local node = docnode.value;
+	if (!node.istype && node.parent !is none)
+		node = node.parent;
+	do {
+		if (node.haschild(s))
+			return "?A{}{}".format({ encode_name(s), node.qualpath });
+		node = node.parent;
+	} while (node !is none);
+	/* Search for known sub-classes of `Error' */
+	local result = find_error_by_name(Error,"?DError",s);
+	if (result !is none)
+		return result;
+	/* Search the deemon module itself. */
+	if (hasattr(deemon,s))
+		return "?D" + encode_name(s);
 	/* Fallback: Invalid encoding -> Encode an unknown */
 	return "?U" + encode_name(s);
 }
@@ -424,7 +455,7 @@ local function qualify_typeref_string(docnode: weakref with Doc, s: string): str
 			local node = docnode.value;
 			if (!node.istype && node.parent !is none)
 				node = node.parent;
-			return node.qualified_path;
+			return node.qualpath;
 		}	break;
 		case "#": {
 			local node = docnode.value;
@@ -441,7 +472,7 @@ local function qualify_typeref_string(docnode: weakref with Doc, s: string): str
 				node = node.parent;
 			return "?A{}{}".format({
 				s.substr(2,len),
-				node.qualified_path,
+				node.qualpath,
 			});
 		}	break;
 		case "N": return "?Edeemon:none";
@@ -2349,14 +2380,14 @@ class Declaration: weakrefable {
 					", ".join(par),
 				});
 			} else {
-				return "{}({}) -> {}".format({
+				return "{}({}): {}".format({
 					name,
 					", ".join(par),
 					ret
 				});
 			}
 		}
-		return "{} -> {}".format({
+		return "{}: {}".format({
 			name,
 			ret
 		});
@@ -2713,7 +2744,7 @@ class Doc: weakrefable {
 	@@NOTE: Because <TYPE> encoding includes support for untracable components,
 	@@      this property always evaluates to a string and simply uses
 	@@      the ?U encoding when the qualified path cannot be determined.
-	public final property qualified_path: string = {
+	public final property qualpath: string = {
 		get(): string {
 			if (m_qualified_path !is bound) {
 				local par = parent;
@@ -2728,7 +2759,7 @@ class Doc: weakrefable {
 				} else {
 					m_qualified_path = "?A{}{}".format({
 						encode_name(name),
-						par.qualified_path,
+						par.qualpath,
 					});
 				}
 			}
@@ -2880,9 +2911,10 @@ class Doc: weakrefable {
 			}
 			if (doc_parent_or_path is deemon.type_) {
 				/* Doc(type) */
-				local type_module = deemon.type_.__module__(doc_parent_or_path);
-				m_parent = type_module;
+				local type_module;
+load_type_input:
 				object = doc_parent_or_path;
+				m_parent = type_module = deemon.type_.__module__(doc_parent_or_path);
 				docstring = deemon.type_.__doc__(doc_parent_or_path).rstrip();
 				istype = true;
 				name = deemon.type_.__name__(doc_parent_or_path);
@@ -2891,7 +2923,13 @@ class Doc: weakrefable {
 					m_path = none;
 				} else {
 					m_attr = deemon.attribute.lookup(type_module,name);
-					m_path = "/{}/{}".format({ deemon.module.__name__(type_module), name });
+					if (m_attr is none) {
+						module;
+						m_parent = none;
+						m_path = none;
+					} else {
+						m_path = "/{}/{}".format({ deemon.module.__name__(type_module), name });
+					}
 				}
 				return;
 			}
@@ -2918,6 +2956,12 @@ class Doc: weakrefable {
 			}
 			/* Support for attribute wrappers */
 			if (doc_parent_or_path !is string) {
+				/* Check for singleton-like object instances. */
+				local tp = type doc_parent_or_path;
+				if (!deemon.type_.__isconstructible__(tp)) {
+					doc_parent_or_path = tp;
+					goto load_type_input;
+				}
 				name = doc_parent_or_path.__name__;
 				local ds = doc_parent_or_path.__doc__;
 				if (ds is none)
@@ -2943,14 +2987,10 @@ do_load_wrapper_module:
 						goto do_throw_unknown_object_origin;
 					}
 					if (mod is none) {
-						if (doc_parent_or_path is none) {
-							mod = deemon;
-						} else {
 do_throw_unknown_object_origin:
-							throw Error.AttributeError(
-								"Failed to determine the declaring type or module of {!r}".
-								format({ doc_parent_or_path }));
-						}
+						throw Error.AttributeError(
+							"Failed to determine the declaring type or module of {!r}".
+							format({ doc_parent_or_path }));
 					}
 					m_parent = mod;
 				}
@@ -3076,14 +3116,21 @@ err_unknown_attribute:
 			}
 		}
 		/* Types implement their own documentation strings. */
-		if (object is bound && object is deemon.type_) {
-			docstring = deemon.type_.__doc__(object).rstrip();
-			istype    = true;
+		if (object is bound) {
+			if (object is deemon.type_) {
+set_is_type:
+				docstring = deemon.type_.__doc__(object).rstrip();
+				istype = true;
+			} else if (deemon.type_.__issingleton__(type object)) {
+				/* When accessing the documentation of a singleton object instance
+				 * (as indicated by us having an instance of that singleton, when its
+				 * type offers no way of being constructed; `this = del'), display
+				 * documentation for the type instead of the singleton */
+				object = type object;
+				issingleton = true;
+				goto set_is_type;
+			}
 		}
-		/* TODO: When accessing the documentation of a singleton object instance
-		 *      (as indicated by us having an instance of that singleton, when its
-		 *       type offers no way of being constructed; `this = del'), display
-		 *       documentation for the type instead of the singleton */
 		local tp = my_attr.attrtype;
 		if (tp !is none && deemon.type_.derivedfrom(tp,deemon.type_))
 			istype = true;
@@ -3160,6 +3207,16 @@ err_unknown_attribute:
 	@@Evaluates to :true if the object is a type
 	public final member istype: bool = false;
 
+	@@Evaluates to :true if the object is a type, but was accessed via a singleton
+	@@An example of this is :deemon.gc or :none, which are both singleton objects
+	@@that, when accessed via Doc, should display the documentation of their
+	@@respective type, rather than what little text may be available for the
+	@@single instance itself.
+	@@Since such Doc nodes would otherwise be indistinguishable from nodes created
+	@@for the actual types, nodes create via a singleton instance have this field
+	@@set to :true
+	public final member issingleton: bool = false;
+
 	@@Evaluates to :true if the object is an operator
 	public final member isoperator: bool = false;
 
@@ -3169,6 +3226,7 @@ err_unknown_attribute:
 	@@%{table Name|Description
 	@@$"module"|The node refers to a module
 	@@$"type"|The node refers to a type
+	@@$"singleton"|The node refers to a type accessed via a singleton
 	@@$"functionThe node refers to a function
 	@@$"class_function"|The node refers to a class-function
 	@@$"member"|The node refers to a member or global module-variable
@@ -3180,6 +3238,8 @@ err_unknown_attribute:
 	public final property kind: string | none = {
 		get(): string | none {
 			local at;
+			if (istype)
+				return issingleton ? "singleton" : "type";
 			if (object !is bound) {
 				at = attr;
 				if (at is none)
@@ -3187,8 +3247,6 @@ err_unknown_attribute:
 			} else {
 				if (object is deemon.module)
 					return "module";
-				if (object is deemon.type_)
-					return "type";
 			}
 			if (at !is bound)
 				at = attr;
@@ -3208,12 +3266,26 @@ err_unknown_attribute:
 	public final property modulenode: Doc | none = {
 		get() {
 			local x = this;
-			while (x.parent !is none)
-				x = x.parent;
-			assert x is none || x.object is bound;
-			assert x is none || x.object is deemon.module;
-			assert x is none || x.ismodule;
-			return x;
+			for (;;) {
+				if (x.parent !is none) {
+					x = x.parent;
+					continue;
+				}
+				if (x.ismodule)
+					return x;
+				break;
+			}
+			x = this;
+			for (;;) {
+				if (x.istype && x.object is bound) {
+					local mod = deemon.type_.__module__(x.object);
+					if (mod !is none)
+						return Doc(mod);
+				}
+				if (x.parent is none)
+					break;
+			}
+			return none;
 		}
 	}
 
@@ -3221,7 +3293,27 @@ err_unknown_attribute:
 	@@If the module could not be determined, return :none instead
 	public final property module: deemon.module | none = {
 		get() {
-			return modulenode.object;
+			local x = this;
+			for (;;) {
+				if (x.parent !is none) {
+					x = x.parent;
+					continue;
+				}
+				if (x.ismodule)
+					return x.object;
+				break;
+			}
+			x = this;
+			for (;;) {
+				if (x.istype && x.object is bound) {
+					local mod = deemon.type_.__module__(x.object);
+					if (mod !is none)
+						return mod;
+				}
+				if (x.parent is none)
+					break;
+			}
+			return none;
 		}
 	}
 
@@ -3567,6 +3659,25 @@ err_unknown_attribute:
 		 *      (aka `x !in m_operator_sections.keys()') */
 	}
 
+	@@Check if @this doc node has a child attribute @name
+	public final function haschild(name: string): bool {
+		if (!this.haschildren)
+			return false;
+		if (this.istype && name.startswith("op:"))
+			return !!getopdoc(name[3:]);
+		if (object !is bound)
+			return false;
+		local my_object = object;
+		local decl_object = my_object;
+		if (decl_object !is deemon.type_ &&
+		    decl_object !is deemon.module)
+			decl_object = type decl_object;
+		if (name.startswith("i:"))
+			return attribute.exists(my_object,name[2:],"i",decl: decl_object);
+		if (name.startswith("c:"))
+			return attribute.exists(my_object,name[2:],"i","",decl: decl_object);
+		return attribute.exists(my_object,name,decl: decl_object);
+	}
 
 	@@Enumerate all child nodes of @this documentation node
 	operator for(): {Doc...} {

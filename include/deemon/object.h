@@ -1473,7 +1473,8 @@ struct type_object {
                                           * NOTE: This member must explicitly be initialized during object construction
                                           *       using `weakref_support_init' and `weakref_support_fini', during destruction. */
 #define TF_NONE             0x00000000   /* No special features. */
-#define TF_HASFILEOPS       0x80000000   /* The type implements file operations (for types typed as DeeFileType_Type). */
+#define TF_HASFILEOPS       0x00000001   /* The type implements file operations (for types typed as DeeFileType_Type). */
+#define TF_SINGLETON        0x80000000   /* This type is a singleton. */
     uint32_t                tp_features; /* Type sub-class specific features (Set of `TF_*'). */
     DREF DeeTypeObject     *tp_base;     /* [0..1][const] Base class.
                                           * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
@@ -1530,7 +1531,7 @@ struct type_object {
 #define DeeType_IsSuperConstructible(x)  (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FINHERITCTOR)
 #define DeeType_IsNoArgConstructible(x)  (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_ctor != NULL)
 #define DeeType_IsVarArgConstructible(x) (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_any_ctor != NULL || ((DeeTypeObject *)(x))->tp_init.tp_alloc.tp_any_ctor_kw != NULL)
-#define DeeType_IsConstructible(x)       (DeeType_IsNoArgConstructible(x) || DeeType_IsVarArgConstructible(x))
+#define DeeType_IsConstructible(x)       (DeeType_IsSuperConstructible(x) || DeeType_IsNoArgConstructible(x) || DeeType_IsVarArgConstructible(x))
 #define DeeType_IsCopyable(x)            (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_copy_ctor != NULL || ((DeeTypeObject *)(x))->tp_init.tp_alloc.tp_deep_ctor != NULL)
 #define DeeType_Base(x)           (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_base)
 #define DeeType_GCPriority(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_gc->tp_gcprio : GC_PRIORITY_LATE)

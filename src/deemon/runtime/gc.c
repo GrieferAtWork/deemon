@@ -1245,7 +1245,7 @@ err:
 
 PRIVATE struct type_method gcenum_methods[] = {
     { "collect", &gcenum_collect,
-      DOC("(max:?Dint=-1)->?Dint\n"
+      DOC("(max=!-1)->?Dint\n"
           "Try to collect at least @max GC objects and return the actual number collected\n"
           "Note that more than @max objects may be collected if sufficiently large reference cycles exist") },
     { "referred", &gcenum_referred,
@@ -1275,7 +1275,7 @@ PRIVATE DeeTypeObject GCEnum_Type = {
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
-    /* .tp_features = */TF_NONE,
+    /* .tp_features = */TF_SINGLETON,
     /* .tp_base     = */&DeeSeq_Type,
     /* .tp_init = */{
         {

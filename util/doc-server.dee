@@ -157,7 +157,7 @@ function print_decl_params(fp: file, decl: Declaration) {
 	}
 	local ret = decl.ret;
 	if (decl.istypeexplicit || !ret.isnone) {
-		fp << " -> ";
+		fp << ": ";
 		print_typeexpr(fp,ret);
 	}
 }

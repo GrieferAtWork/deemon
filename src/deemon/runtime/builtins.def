@@ -204,8 +204,7 @@ BUILTIN_DOC(bounditem,&builtin_bounditem,MODSYM_FREADONLY,
  * NOTE: This is what `import' links against when
  *       as a stand-alone within an expression. */
 BUILTIN_DOC_REUSE(import,&builtin_import,MODSYM_FNORMAL,
-                  "(module_name:?Dstring)->?Dmodule\n"
-                  "(module_name:?Dstring,base:?Dmodule)->?Dmodule\n"
+                  "(module_name:?Dstring,base?:?Dmodule)->?Dmodule\n"
                   "@throw ValueError The given @module_name is invalid\n"
                   "@throw FileNotFound The named @module_name could not be found\n"
                   "@return The :module associated with the given @module_name")
