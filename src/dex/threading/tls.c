@@ -699,7 +699,7 @@ PRIVATE struct type_cmp tls_cmp = {
 
 INTERN DeeTypeObject DeeTls_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"tls",
+    /* .tp_name     = */"Tls",
     /* .tp_doc      = */DOC("()\n"
                             "(factory:?Dcallable)\n"
                             "Construct a new tls descriptor using an optional @factory that "

@@ -28,9 +28,9 @@
 DECL_BEGIN
 
 PRIVATE struct dex_symbol symbols[] = {
-    { "process", (DeeObject *)&DeeProcess_Type },
+    { "Process", (DeeObject *)&DeeProcess_Type },
     { "enumproc", (DeeObject *)&DeeProcEnum_Type },
-    { "pipe", (DeeObject *)&DeePipe_Type },
+    { "Pipe", (DeeObject *)&DeePipe_Type },
     { NULL }
 };
 

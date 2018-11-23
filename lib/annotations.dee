@@ -157,13 +157,13 @@ class Deprecated: callable {
 
 @@An annotation that may be used wrap a function as only being allowed to be executed by a single thread at a time, as well as allow the function to be used in $with-statements
 @@>import Synchronized from annotations;
-@@>import mutex from threading;
+@@>import Mutex from threading;
 @@>@Synchronized
 @@>function myfunc() {
 @@> print "Synchronized call to myfunc()";
 @@>}
 @@>
-@@>local mylock = mutex();
+@@>local mylock = Mutex();
 @@>@Synchronized(mylock)
 @@>function myfunc() {
 @@> print "Synchronized call to myfunc()";
@@ -171,15 +171,15 @@ class Deprecated: callable {
 @@When annotated with an explicit lock object, the annotated function is called while being surrounded by an ${operator enter} / ${operator leave} pair, thus allowing the use of a lock to restrict invocation"
 class Synchronized: callable {
 	private member m_func: callable;
-	private member m_lock: mutex from threading | object;
-	@@@param lock The lock that is entered prior to invocation of @func, and will be left afterwards. When omit, a new instance of :threading.mutex will be constructed and used in its place"
+	private member m_lock: Mutex from threading | object;
+	@@@param lock The lock that is entered prior to invocation of @func, and will be left afterwards. When omit, a new instance of :threading.Mutex will be constructed and used in its place"
 	@@Construct a new Synchronized function annotation for @func
-	this(func: callable, lock?: mutex from threading | object) {
+	this(func: callable, lock?: Mutex from threading | object) {
 		m_func = func;
 		if (lock is bound)
 			m_lock = lock;
 		else {
-			m_lock = import("threading").mutex();
+			m_lock = import("threading").Mutex();
 		}
 	}
 

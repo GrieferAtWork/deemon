@@ -409,7 +409,7 @@ PRIVATE struct type_member struct_type_members[] = {
 
 INTERN DeeTypeObject DeeStructType_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"struct_type",
+    /* .tp_name     = */"StructType",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FGC|TP_FVARIABLE,
     /* .tp_weakrefs = */0,
@@ -723,7 +723,7 @@ INTERN DeeStructTypeObject DeeStruct_Type = {
     /* .st_base = */{
         /* .st_base = */{
             OBJECT_HEAD_INIT((DeeTypeObject *)&DeeStructType_Type),
-            /* .tp_name     = */"struct",
+            /* .tp_name     = */"Struct",
             /* .tp_doc      = */NULL,
             /* .tp_flags    = */TP_FNORMAL|TP_FINHERITCTOR|TP_FTRUNCATE|TP_FMOVEANY,
             /* .tp_weakrefs = */0,

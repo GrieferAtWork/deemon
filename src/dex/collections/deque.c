@@ -1214,7 +1214,7 @@ PRIVATE struct type_member deq_class_members[] = {
 
 INTERN DeeTypeObject Deque_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"deque",
+    /* .tp_name     = */"Deque",
     /* .tp_doc      = */DOC("A double-ended queue that allows for O(1) insertion and removal at the front "
                             "and back, while still providing a decently fast index-based item lookup, "
                             "as well as fast iteration both in forward, as well as in reverse\n"
@@ -1406,7 +1406,7 @@ PRIVATE struct type_member deqiter_members[] = {
 
 INTERN DeeTypeObject DequeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"deque.iterator",
+    /* .tp_name     = */"DequeIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

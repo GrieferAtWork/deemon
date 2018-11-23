@@ -48,7 +48,8 @@ err_index_out_of_bounds(DeeObject *__restrict self,
 
 
 PRIVATE struct dex_symbol symbols[] = {
-    { "deque", (DeeObject *)&Deque_Type },
+    { "Deque", (DeeObject *)&Deque_Type },
+//     { "FixedList", (DeeObject *)&FixedList_Type },
     { NULL }
 };
 

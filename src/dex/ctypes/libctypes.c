@@ -385,21 +385,21 @@ PRIVATE DEFINE_CMETHOD(ctypes_strfry,capi_strfry);
 
 PRIVATE struct dex_symbol symbols[] = {
     /* Export the underlying type-system used by ctypes. */
-    { "structured_type", (DeeObject *)&DeeSType_Type },
-    { "pointer_type", (DeeObject *)&DeePointerType_Type },
-    { "lvalue_type", (DeeObject *)&DeeLValueType_Type },
-    { "array_type", (DeeObject *)&DeeArrayType_Type },
-    { "struct_type", (DeeObject *)&DeeStructType_Type },
-    { "function_type", (DeeObject *)&DeeCFunctionType_Type },
-    { "structured", (DeeObject *)&DeeStructured_Type },
-    { "pointer", (DeeObject *)&DeePointer_Type },
-    { "lvalue", (DeeObject *)&DeeLValue_Type },
-    { "array", (DeeObject *)&DeeArray_Type },
-    { "struct", (DeeObject *)&DeeStruct_Type },
-    { "function", (DeeObject *)&DeeCFunction_Type },
+    { "StructuredType", (DeeObject *)&DeeSType_Type },
+    { "PointerType", (DeeObject *)&DeePointerType_Type },
+    { "LValueType", (DeeObject *)&DeeLValueType_Type },
+    { "ArrayType", (DeeObject *)&DeeArrayType_Type },
+    { "StructType", (DeeObject *)&DeeStructType_Type },
+    { "FunctionType", (DeeObject *)&DeeCFunctionType_Type },
+    { "Structured", (DeeObject *)&DeeStructured_Type },
+    { "Pointer", (DeeObject *)&DeePointer_Type },
+    { "LValue", (DeeObject *)&DeeLValue_Type },
+    { "Array", (DeeObject *)&DeeArray_Type },
+    { "Struct", (DeeObject *)&DeeStruct_Type },
+    { "Function", (DeeObject *)&DeeCFunction_Type },
 
     /* A wrapper around the native shared-library loader. */
-    { "shlib", (DeeObject *)&DeeShlib_Type },
+    { "ShLib", (DeeObject *)&DeeShlib_Type },
 
     /* Export all the C-types. */
     { "void", (DeeObject *)&DeeCVoid_Type },

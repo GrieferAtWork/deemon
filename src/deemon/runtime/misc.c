@@ -563,6 +563,13 @@ hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
 #endif
 
 #if 0
+#define HEAP_CHECK()  DEE_CHECKMEMORY()
+#else
+#define HEAP_CHECK()  (void)0
+#endif
+
+
+#if 0
 #define BEGIN_ALLOC()    (DBG_ALIGNMENT_DISABLE(),DeeMem_ClearCaches((size_t)-1))
 #else
 #define BEGIN_ALLOC()     DBG_ALIGNMENT_DISABLE()
@@ -580,6 +587,7 @@ PUBLIC ATTR_MALLOC void *(DCALL Dee_Malloc)(size_t n_bytes) {
  void *result;
 again:
  BEGIN_ALLOC();
+ HEAP_CHECK();
  result = (malloc)(n_bytes);
  if unlikely(!result) {
 #ifndef __MALLOC_ZERO_IS_NONNULL
@@ -599,6 +607,7 @@ PUBLIC ATTR_MALLOC void *(DCALL Dee_Calloc)(size_t n_bytes) {
  void *result;
 again:
  BEGIN_ALLOC();
+ HEAP_CHECK();
  result = (calloc)(1,n_bytes);
  END_ALLOC();
  if unlikely(!result) {
@@ -623,6 +632,7 @@ PUBLIC void *(DCALL Dee_Realloc)(void *ptr, size_t n_bytes) {
 #endif
 again:
  BEGIN_ALLOC();
+ HEAP_CHECK();
  result = (realloc)(ptr,n_bytes);
  END_ALLOC();
  if unlikely(!result) {
@@ -638,6 +648,7 @@ again:
 PUBLIC ATTR_MALLOC void *(DCALL Dee_TryMalloc)(size_t n_bytes) {
  void *result;
  BEGIN_TRYALLOC();
+ HEAP_CHECK();
  result = (malloc)(n_bytes);
  END_TRYALLOC();
 #ifndef __MALLOC_ZERO_IS_NONNULL
@@ -653,6 +664,7 @@ PUBLIC ATTR_MALLOC void *(DCALL Dee_TryMalloc)(size_t n_bytes) {
 PUBLIC ATTR_MALLOC void *(DCALL Dee_TryCalloc)(size_t n_bytes) {
  void *result;
  BEGIN_TRYALLOC();
+ HEAP_CHECK();
  result = (calloc)(1,n_bytes);
  END_TRYALLOC();
 #ifndef __MALLOC_ZERO_IS_NONNULL
@@ -672,6 +684,7 @@ PUBLIC void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes) {
     n_bytes = 1;
 #endif
  BEGIN_TRYALLOC();
+ HEAP_CHECK();
  result = (realloc)(ptr,n_bytes);
  END_TRYALLOC();
  return result;
@@ -679,6 +692,7 @@ PUBLIC void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes) {
 
 PUBLIC void (DCALL Dee_Free)(void *ptr) {
  DBG_ALIGNMENT_DISABLE();
+ HEAP_CHECK();
  (free)(ptr);
  DBG_ALIGNMENT_ENABLE();
 }
@@ -690,6 +704,7 @@ PUBLIC void (DCALL Dee_Free)(void *ptr) {
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ HEAP_CHECK();
  BEGIN_TRYALLOC();
 #ifdef __KERNEL__
  result = _malloc_d(n_bytes,file,line,NULL,NULL);
@@ -713,6 +728,7 @@ PUBLIC ATTR_MALLOC void *
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ HEAP_CHECK();
  BEGIN_TRYALLOC();
 #ifdef __KERNEL__
  result = _calloc_d(1,n_bytes,file,line,NULL,NULL);
@@ -740,6 +756,7 @@ PUBLIC void *
  if unlikely(!n_bytes)
     n_bytes = 1;
 #endif
+ HEAP_CHECK();
  BEGIN_TRYALLOC();
 #ifdef __KERNEL__
  result = _realloc_d(ptr,n_bytes,file,line,NULL,NULL);
@@ -752,6 +769,7 @@ PUBLIC void *
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ HEAP_CHECK();
 again:
  BEGIN_ALLOC();
 #ifdef __KERNEL__
@@ -781,6 +799,7 @@ again:
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ HEAP_CHECK();
 again:
  BEGIN_ALLOC();
 #ifdef __KERNEL__
@@ -810,6 +829,7 @@ again:
 PUBLIC void *
 (DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line) {
  void *result;
+ HEAP_CHECK();
 #ifndef __MALLOC_ZERO_IS_NONNULL
  if unlikely(!n_bytes)
     n_bytes = 1;
@@ -831,6 +851,7 @@ again:
 PUBLIC void
 (DCALL DeeDbg_Free)(void *ptr, char const *file, int line) {
  DBG_ALIGNMENT_DISABLE();
+ HEAP_CHECK();
 #ifdef __KERNEL__
  _free_d(ptr,file,line,NULL,NULL);
 #else
@@ -844,6 +865,7 @@ PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line) {
  void *result;
  BEGIN_TRYALLOC();
+ HEAP_CHECK();
  result = _malloc_dbg(n_bytes,_NORMAL_BLOCK,file,line);
  END_TRYALLOC();
 #ifndef __MALLOC_ZERO_IS_NONNULL
@@ -859,6 +881,7 @@ PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line) {
  void *result;
  BEGIN_TRYALLOC();
+ HEAP_CHECK();
  result = _calloc_dbg(1,n_bytes,_NORMAL_BLOCK,file,line);
  END_TRYALLOC();
 #ifndef __MALLOC_ZERO_IS_NONNULL
@@ -878,6 +901,7 @@ PUBLIC void *
     n_bytes = 1;
 #endif
  BEGIN_TRYALLOC();
+ HEAP_CHECK();
  result = _realloc_dbg(ptr,n_bytes,_NORMAL_BLOCK,file,line);
  END_TRYALLOC();
  return result;
@@ -887,6 +911,7 @@ PUBLIC ATTR_MALLOC void *
  void *result;
 again:
  BEGIN_ALLOC();
+ HEAP_CHECK();
  result = _malloc_dbg(n_bytes,_NORMAL_BLOCK,file,line);
  END_ALLOC();
  if unlikely(!result) {
@@ -908,6 +933,7 @@ PUBLIC ATTR_MALLOC void *
  void *result;
 again:
  BEGIN_ALLOC();
+ HEAP_CHECK();
  result = _calloc_dbg(1,n_bytes,_NORMAL_BLOCK,file,line);
  END_ALLOC();
  if unlikely(!result) {
@@ -933,6 +959,7 @@ PUBLIC void *
 #endif
 again:
  BEGIN_ALLOC();
+ HEAP_CHECK();
  result = _realloc_dbg(ptr,n_bytes,_NORMAL_BLOCK,file,line);
  END_ALLOC();
  if unlikely(!result) {
@@ -943,11 +970,12 @@ again:
 PUBLIC void
 (DCALL DeeDbg_Free)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
  DBG_ALIGNMENT_DISABLE();
+ HEAP_CHECK();
  _free_dbg(ptr,_NORMAL_BLOCK);
  DBG_ALIGNMENT_ENABLE();
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && 0
 extern ATTR_DLLIMPORT void __cdecl _lock(_In_ int _File);
 extern ATTR_DLLIMPORT void __cdecl _unlock(_Inout_ int _File);
 #define _HEAP_LOCK 4
@@ -1021,6 +1049,7 @@ PUBLIC void *
  if (ptr) {
   _CrtMemBlockHeader *hdr;
   DBG_ALIGNMENT_DISABLE();
+  HEAP_CHECK();
   _lock(_HEAP_LOCK);
   __try {
    hdr = pHdr(ptr);

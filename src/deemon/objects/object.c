@@ -226,9 +226,16 @@ Dee_weakref_init(struct weakref *__restrict self, DeeObject *__restrict ob) {
  return true;
 }
 
+#ifdef __INTELLISENSE__
 PUBLIC void
 (DCALL Dee_weakref_copy)(struct weakref *__restrict self,
-                         struct weakref *__restrict other) {
+                         struct weakref const *__restrict other)
+#else
+PUBLIC void
+(DCALL Dee_weakref_copy)(struct weakref *__restrict self,
+                         struct weakref *__restrict other)
+#endif
+{
  ASSERT(self);
  ASSERT(other);
 #ifndef NDEBUG
@@ -244,8 +251,8 @@ PUBLIC void
   if likely(other->wr_obj) {
    LOCK_POINTER(*other->wr_pself);
    self->wr_pself  = other->wr_pself;
-   self->wr_next   = other;
-   other->wr_pself = &self->wr_next;
+   self->wr_next   = (struct weakref *)other;
+   ((struct weakref *)other)->wr_pself = &self->wr_next;
    WEAKREF_UNLOCK(other);
    ATOMIC_WRITE(*self->wr_pself,self);
   } else {
@@ -257,9 +264,16 @@ PUBLIC void
  }
 }
 
+#ifdef __INTELLISENSE__
 PUBLIC void
 (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
-                               struct weakref *__restrict other) {
+                               struct weakref const *__restrict other)
+#else
+PUBLIC void
+(DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
+                               struct weakref *__restrict other)
+#endif
+{
  ASSERT(self);
  ASSERT(other);
 #ifndef NDEBUG
@@ -319,8 +333,8 @@ again:
     }
     ATOMIC_WRITE(*self->wr_pself,next);
    }
-   self->wr_pself  = other->wr_pself;
-   other->wr_pself = &self->wr_next;
+   self->wr_pself = other->wr_pself;
+   ((struct weakref *)other)->wr_pself = &self->wr_next;
    WEAKREF_UNLOCK(other);
    ATOMIC_WRITE(self->wr_next,other);
    ATOMIC_WRITE(*self->wr_pself,self);

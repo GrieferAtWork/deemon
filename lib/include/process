@@ -21,4 +21,4 @@
 
 import process_id = int from deemon;
 import process_return = int from deemon;
-import process from ipc;
+import process = Process from ipc;

@@ -1002,7 +1002,7 @@ seq_parity(DeeObject *__restrict self,
  return unlikely(result < 0) ? NULL : DeeObject_NewRef(DeeBool_For(result));
 }
 
-INTERN struct keyword seq_sort_kwlist[] = { K(key), KEND };
+INTERN DEFINE_KWLIST(seq_sort_kwlist,{ K(key), KEND });
 PRIVATE DREF DeeObject *DCALL
 seq_min(DeeObject *__restrict self, size_t argc,
         DeeObject **__restrict argv, DeeObject *kw) {
@@ -1413,7 +1413,7 @@ err:
 
 
 /* Mutable-sequence functions */
-INTERN struct keyword seq_insert_kwlist[] = { K(index), K(item), KEND };
+INTERN DEFINE_KWLIST(seq_insert_kwlist,{ K(index), K(item), KEND });
 PRIVATE DREF DeeObject *DCALL
 seq_insert(DeeObject *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
@@ -1427,7 +1427,7 @@ err:
  return NULL;
 }
 
-INTERN struct keyword seq_insertall_kwlist[] = { K(index), K(items), KEND };
+INTERN DEFINE_KWLIST(seq_insertall_kwlist,{ K(index), K(items), KEND });
 PRIVATE DREF DeeObject *DCALL
 seq_insertall(DeeObject *__restrict self, size_t argc,
               DeeObject **__restrict argv, DeeObject *kw) {
@@ -1441,7 +1441,7 @@ err:
  return NULL;
 }
 
-INTERN struct keyword seq_erase_kwlist[] = { K(index), K(count), KEND };
+INTERN DEFINE_KWLIST(seq_erase_kwlist,{ K(index), K(count), KEND });
 PRIVATE DREF DeeObject *DCALL
 seq_erase(DeeObject *__restrict self, size_t argc,
           DeeObject **__restrict argv, DeeObject *kw) {
@@ -1456,7 +1456,7 @@ err:
  return NULL;
 }
 
-INTERN struct keyword seq_xch_kwlist[] = { K(index), K(value), KEND };
+INTERN DEFINE_KWLIST(seq_xch_kwlist,{ K(index), K(value), KEND });
 PRIVATE DREF DeeObject *DCALL
 seq_xch(DeeObject *__restrict self, size_t argc,
         DeeObject **__restrict argv, DeeObject *kw) {
@@ -1468,7 +1468,7 @@ err:
  return NULL;
 }
 
-INTERN struct keyword seq_pop_kwlist[] = { K(index), KEND };
+INTERN DEFINE_KWLIST(seq_pop_kwlist,{ K(index), KEND });
 PRIVATE DREF DeeObject *DCALL
 seq_pop(DeeObject *__restrict self, size_t argc,
         DeeObject **__restrict argv, DeeObject *kw) {
@@ -1587,7 +1587,7 @@ err:
  return NULL;
 }
 
-INTERN struct keyword seq_removeif_kwlist[] = { K(should), K(start), K(end), KEND };
+INTERN DEFINE_KWLIST(seq_removeif_kwlist,{ K(should), K(start), K(end), KEND });
 PRIVATE DREF DeeObject *DCALL
 seq_removeif(DeeObject *__restrict self, size_t argc,
              DeeObject **__restrict argv, DeeObject *kw) {
@@ -1620,7 +1620,7 @@ seq_fill(DeeObject *__restrict self, size_t argc,
          DeeObject **__restrict argv, DeeObject *kw) {
  size_t start = 0,end = (size_t)-1,result;
  DeeObject *filler = Dee_None;
- PRIVATE struct keyword kwlist[] = { K(start), K(end), K(filler), KEND };
+ PRIVATE DEFINE_KWLIST(kwlist,{ K(start), K(end), K(filler), KEND });
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|IdIdo:fill",&start,&end,&filler))
      goto err;
  result = DeeSeq_Fill(self,start,end,filler);
@@ -1630,7 +1630,7 @@ err:
  return NULL;
 }
 
-INTERN struct keyword seq_resize_kwlist[] = { K(newsize), K(filler), KEND };
+INTERN DEFINE_KWLIST(seq_resize_kwlist,{ K(newsize), K(filler), KEND });
 PRIVATE DREF DeeObject *DCALL
 seq_resize(DeeObject *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {

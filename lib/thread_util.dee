@@ -17,6 +17,8 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+import * from deemon;
+import * from threading;
 
 
 @@Suspends executing within the given thread @t until the returned object
@@ -44,10 +46,9 @@
 @@>thread.sleep(seconds(1));
 @@>thread.interrupt();
 @@>thread.join();
-function suspend_thread(t: thread from deemon) {
-	import semaphore from threading;
-	local key = semaphore(0);
-	local sync = semaphore(0);
+function suspend_thread(t: thread) {
+	local key = Semaphore(0);
+	local sync = Semaphore(0);
 
 	/* Send an interrupt to the thread. */
 	t.interrupt([]{

@@ -273,11 +273,15 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, i
 
 /* Object weak reference tracing. */
 struct weakref {
+    /* TODO: Weakref destruction notification support!
+     *       Then we can implement containers that automatically
+     *       remove elements once those elements have been destroyed.
+     *       Such a container would be beautiful for the purposes of caching... */
     struct weakref **wr_pself; /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)] Indirect self pointer. */
     struct weakref  *wr_next;  /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)][ORDER(BEFORE(*wr_pself))] Next weak references. */
     DeeObject       *wr_obj;   /* [0..1][lock(BIT0(wr_next))] Pointed-to object. */
 };
-#define WEAKREF_INIT  {NULL,NULL,NULL}
+#define WEAKREF_INIT { NULL, NULL, NULL }
 #define WEAKREF(T)     struct weakref
 
 struct weakref_list {

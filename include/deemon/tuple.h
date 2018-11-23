@@ -45,6 +45,20 @@ struct tuple_object {
 #define DeeTuple_GET(ob,i)                  ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]
 #define DeeTuple_SET(ob,i,v)                ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]=(v)
 
+/* Define a statically allocated tuple:
+ * >> PRIVATE DEFINE_TUPLE(my_tuple,2,{ Dee_EmptyString, Dee_EmptyString }); */
+#define DEFINE_TUPLE(name,elemc,...) \
+struct { \
+    OBJECT_HEAD \
+    size_t     t_size; \
+    DeeObject *t_elem[elemc]; \
+} name = { \
+    OBJECT_HEAD_INIT(&DeeTuple_Type), \
+    elemc, \
+    __VA_ARGS__ \
+}
+
+
 #ifdef GUARD_DEEMON_OBJECTS_TUPLE_C
 struct empty_tuple_object { OBJECT_HEAD size_t t_size; };
 DDATDEF struct empty_tuple_object DeeTuple_Empty;

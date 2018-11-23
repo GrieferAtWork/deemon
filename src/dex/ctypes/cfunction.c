@@ -131,7 +131,7 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
     /* .ft_base = */{
         /* .st_base = */{
             OBJECT_HEAD_INIT((DeeTypeObject *)&DeeCFunctionType_Type),
-            /* .tp_name     = */"function",
+            /* .tp_name     = */"Function",
             /* .tp_doc      = */NULL,
             /* Don't inherit constructors, because this type cannot be constructed.
              * The only way that function types can be used is through pointers or l-values. */

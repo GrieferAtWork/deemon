@@ -299,7 +299,7 @@ create_inst:
 
 INTERN DeeTypeObject DeeSType_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"structured_type",
+    /* .tp_name     = */"StructuredType",
     /* .tp_doc      = */DOC("[]->\n"
                             "Construct new array types using @this type as item type\n"
                             "\n"
@@ -380,7 +380,7 @@ PRIVATE struct type_member ptype_members[] = {
 
 INTERN DeeTypeObject DeePointerType_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"pointer_type",
+    /* .tp_name     = */"PointerType",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FGC,
     /* .tp_weakrefs = */0,
@@ -468,7 +468,7 @@ ltype_fini(DeeLValueTypeObject *__restrict self) {
 
 INTERN DeeTypeObject DeeLValueType_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"lvalue_type",
+    /* .tp_name     = */"LValueType",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FGC,
     /* .tp_weakrefs = */0,
@@ -1016,7 +1016,7 @@ PRIVATE struct type_method struct_methods[] = {
 INTERN DeeSTypeObject DeeStructured_Type = {
     /* .st_base = */{
         OBJECT_HEAD_INIT((DeeTypeObject *)&DeeSType_Type),
-        /* .tp_name     = */"structured",
+        /* .tp_name     = */"Structured",
         /* .tp_doc      = */NULL,
         /* .tp_flags    = */TP_FNORMAL|TP_FTRUNCATE|TP_FMOVEANY,
         /* .tp_weakrefs = */0,
@@ -1711,7 +1711,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeArrayTypeObject,at_orig) ==
 
 INTERN DeeTypeObject DeeArrayType_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"array_type",
+    /* .tp_name     = */"ArrayType",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FGC,
     /* .tp_weakrefs = */0,
@@ -1834,7 +1834,7 @@ PRIVATE struct type_member ftype_members[] = {
 
 INTERN DeeTypeObject DeeCFunctionType_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"function_type",
+    /* .tp_name     = */"FunctionType",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FGC,
     /* .tp_weakrefs = */0,

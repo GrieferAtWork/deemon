@@ -182,22 +182,46 @@
 #endif
 #endif
 
-#ifdef __PE__
-#   define __IMPDEF  extern __ATTR_DLLIMPORT
-#   define __EXPDEF  extern __ATTR_DLLEXPORT
-#   define __PUBDEF  extern
-#   define __PRIVATE static
-#   define __INTDEF  extern
-#   define __PUBLIC  __ATTR_DLLEXPORT
-#   define __INTERN  /* Nothing */
+#ifndef __CC__
+#   define __IMPDEF        /* Nothing */
+#   define __EXPDEF        /* Nothing */
+#   define __PUBDEF        /* Nothing */
+#   define __PRIVATE       /* Nothing */
+#   define __INTDEF        /* Nothing */
+#   define __PUBLIC        /* Nothing */
+#   define __INTERN        /* Nothing */
+#   define __PUBLIC_CONST  /* Nothing */
+#   define __INTERN_CONST  /* Nothing */
+#elif defined(__PE__)
+#   define __IMPDEF        extern __ATTR_DLLIMPORT
+#   define __EXPDEF        extern __ATTR_DLLEXPORT
+#   define __PUBDEF        extern
+#   define __PRIVATE       static
+#   define __INTDEF        extern
+#   define __PUBLIC        __ATTR_DLLEXPORT
+#   define __INTERN        /* Nothing */
+#ifdef __cplusplus
+#   define __PUBLIC_CONST  extern __ATTR_DLLEXPORT
+#   define __INTERN_CONST  extern /* Nothing */
 #else
-#   define __IMPDEF  extern __ATTR_VISIBILITY("default")
-#   define __EXPDEF  extern __ATTR_VISIBILITY("default")
-#   define __PUBDEF  extern __ATTR_VISIBILITY("default")
-#   define __PUBLIC         __ATTR_VISIBILITY("default")
-#   define __PRIVATE static
-#   define __INTDEF  extern __ATTR_VISIBILITY("hidden")
-#   define __INTERN         __ATTR_VISIBILITY("hidden")
+#   define __PUBLIC_CONST  __ATTR_DLLEXPORT
+#   define __INTERN_CONST  /* Nothing */
+#endif
+#else
+#   define __IMPDEF        extern __ATTR_VISIBILITY("default")
+#   define __EXPDEF        extern __ATTR_VISIBILITY("default")
+#   define __PUBDEF        extern __ATTR_VISIBILITY("default")
+#   define __PUBLIC               __ATTR_VISIBILITY("default")
+#   define __PRIVATE       static
+#   define __INTDEF        extern __ATTR_VISIBILITY("hidden")
+#   define __INTERN               __ATTR_VISIBILITY("hidden")
+#ifdef __cplusplus
+#   define __PUBLIC_CONST  extern __ATTR_VISIBILITY("default")
+#   define __INTERN_CONST  extern __ATTR_VISIBILITY("hidden")
+#else
+#   define __PUBLIC_CONST         __ATTR_VISIBILITY("default")
+#   define __INTERN_CONST         __ATTR_VISIBILITY("hidden")
+#endif
 #endif
 
 

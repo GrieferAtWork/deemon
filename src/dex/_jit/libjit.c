@@ -166,7 +166,7 @@ PRIVATE struct dex_symbol symbols[] = {
       DOC("(expr:?X3?Dstring?Dbytes?Dfile,globals?:?S?T2?Dstring?O,base?:?Dmodule)->\n"
           "Execute a given expression @expr and return the result\n"
           "This function is used to implement the builtin :deemon.exec function") },
-    { "function_", (DeeObject *)&JITFunction_Type },
+    { "Function", (DeeObject *)&JITFunction_Type },
     { NULL }
 };
 

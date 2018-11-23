@@ -256,8 +256,6 @@ DequeIterator_NextItemPointer(DequeIterator *__restrict self,
 }
 
 
-
-
 typedef struct {
     OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
@@ -273,6 +271,33 @@ typedef struct {
 /* The deque type, and its iterator. */
 INTDEF DeeTypeObject Deque_Type;
 INTDEF DeeTypeObject DequeIterator_Type;
+
+
+
+
+typedef struct {
+    /* A fixed-length list who's elements may be modified
+     * Basically a tuple, but its elements can change.
+     * Additionally, elements may either be bound or unbound,
+     * with `del this[x]' causing the x'th item to become unbound. */
+    OBJECT_HEAD /* GC object */
+    WEAKREF_SUPPORT
+#ifndef CONFIG_NO_THREADS
+    rwlock_t        fl_lock;       /* Lock for this list. */
+#endif
+    size_t          fl_size;       /* [const] Length of the list. */
+    DREF DeeObject *fl_elem[1024]; /* [0..1][fl_size] List items. */
+} FixedList;
+
+typedef struct {
+    OBJECT_HEAD
+    DREF FixedList    *li_list; /* [1..1][const] The list being iterated. */
+    ATOMIC_DATA size_t li_iter; /* Iterator position. */
+} FixedListIterator;
+
+
+INTDEF DeeTypeObject FixedList_Type;
+INTDEF DeeTypeObject FixedListIterator_Type;
 
 
 

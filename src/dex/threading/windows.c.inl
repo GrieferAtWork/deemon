@@ -237,7 +237,7 @@ PRIVATE struct type_with sema_with = {
 
 INTERN DeeTypeObject DeeSemaphore_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"semaphore",
+    /* .tp_name     = */"Semaphore",
     /* .tp_doc      = */DOC("(num_tickets=!0)\n"
                             "Construct a new semaphore with @num_tickets initial tickets\n"
                             "\n"
@@ -456,7 +456,7 @@ PRIVATE struct type_method mutex_methods[] = {
 
 INTERN DeeTypeObject DeeMutex_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"mutex",
+    /* .tp_name     = */"Mutex",
     /* .tp_doc      = */DOC("Construct a new mutex (mutual exclusion) object\n"
                             "\n"
                             "enter->\n"

@@ -33,7 +33,7 @@ DECL_BEGIN
 INTERN DeeFileTypeObject Joined_Type = {
     /* .ft_base = */{
         OBJECT_HEAD_INIT(&DeeFileType_Type),
-        /* .tp_name     = */"joined",
+        /* .tp_name     = */"Joined",
         /* .tp_doc      = */NULL,
         /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FVARIABLE,
         /* .tp_weakrefs = */0,

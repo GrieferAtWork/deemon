@@ -264,6 +264,7 @@ struct keyword {
 #define K(x)  { #x, (dhash_t)-1 }
 #define KS(s) { s, (dhash_t)-1 }
 #define KEND  { NULL }
+#define DEFINE_KWLIST(name,...) struct keyword name[] = __VA_ARGS__
 
 
 /* Same as the regular unpack functions above, however these are enabled to

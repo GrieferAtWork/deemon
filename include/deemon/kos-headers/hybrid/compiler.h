@@ -181,6 +181,8 @@
 #define PUBLIC              __PUBLIC
 #define INTERN              __INTERN
 #define INTDEF              __INTDEF
+#define PUBLIC_CONST        __PUBLIC_CONST
+#define INTERN_CONST        __INTERN_CONST
 #define PRIVATE             __PRIVATE
 #define FORCELOCAL          __FORCELOCAL
 #define LOCAL               __LOCAL

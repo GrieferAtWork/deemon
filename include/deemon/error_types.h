@@ -56,21 +56,21 @@ struct compiler_error_loc {
 struct compiler_error_object {
     ERROR_OBJECT_HEAD
     WEAKREF_SUPPORT
-    int                           ce_mode;    /* Fatality mode (One of `COMPILER_ERROR_FATALITY_*'). */
-    int                           ce_wnum;    /* [const] The TPP-assigned warning ID of this error (One of `W_*'). */
-    struct compiler_error_loc     ce_locs;    /* [const] The parser location where the error occurred. */
-    struct compiler_error_loc    *ce_loc;     /* [1..1][const] The main compiler location (that is the first text-file that can be encountered when walking `ce_locs') */
-    struct weakref                ce_master;  /* Weak reference to the master compiler error. */
-    size_t                        ce_errorc;  /* [const] Number of contained compiler errors. */
-    DREF DeeCompilerErrorObject **ce_errorv;  /* [1..1][REF_IF(!= self)][const][0..ce_errorc][owned][const]
-                                               * Vector of other errors/warnings that occurred, leading up to this one.
-                                               * NOTE: The master compiler error (aka. `this' error) is
-                                               *       the error that caused compilation to actually fail,
-                                               *       meaning that it is the first matching error in the
-                                               *       following list of conditions:
-                                               *        - ce_mode == COMPILER_ERROR_FATALITY_FORCEFATAL
-                                               *        - ce_mode == COMPILER_ERROR_FATALITY_FATAL
-                                               *        - ce_mode == COMPILER_ERROR_FATALITY_ERROR */
+    int                             ce_mode;   /* Fatality mode (One of `COMPILER_ERROR_FATALITY_*'). */
+    int                             ce_wnum;   /* [const] The TPP-assigned warning ID of this error (One of `W_*'). */
+    struct compiler_error_loc       ce_locs;   /* [const] The parser location where the error occurred. */
+    struct compiler_error_loc      *ce_loc;    /* [1..1][const] The main compiler location (that is the first text-file that can be encountered when walking `ce_locs') */
+    WEAKREF(DeeCompilerErrorObject) ce_master; /* Weak reference to the master compiler error. */
+    size_t                          ce_errorc; /* [const] Number of contained compiler errors. */
+    DREF DeeCompilerErrorObject   **ce_errorv; /* [1..1][REF_IF(!= self)][const][0..ce_errorc][owned][const]
+                                                * Vector of other errors/warnings that occurred, leading up to this one.
+                                                * NOTE: The master compiler error (aka. `this' error) is
+                                                *       the error that caused compilation to actually fail,
+                                                *       meaning that it is the first matching error in the
+                                                *       following list of conditions:
+                                                *        - ce_mode == COMPILER_ERROR_FATALITY_FORCEFATAL
+                                                *        - ce_mode == COMPILER_ERROR_FATALITY_FATAL
+                                                *        - ce_mode == COMPILER_ERROR_FATALITY_ERROR */
 };
 
 

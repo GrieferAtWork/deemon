@@ -379,7 +379,7 @@ PRIVATE struct type_method shlib_methods[] = {
 
 INTERN DeeTypeObject DeeShlib_Type = {
     OBJECT_HEAD_INIT((DeeTypeObject *)&DeeType_Type),
-    /* .tp_name     = */"shlib",
+    /* .tp_name     = */"ShLib",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

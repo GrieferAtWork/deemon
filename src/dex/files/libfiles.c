@@ -28,7 +28,7 @@
 DECL_BEGIN
 
 PRIVATE struct dex_symbol symbols[] = {
-    { "joined", (DeeObject *)&Joined_Type },
+    { "Joined", (DeeObject *)&Joined_Type },
     //{ "decoder", (DeeObject *)&Decoder_Type }, /* TODO */
     { NULL }
 };

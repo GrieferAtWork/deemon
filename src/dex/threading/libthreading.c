@@ -31,10 +31,10 @@ DECL_BEGIN
 
 
 PRIVATE struct dex_symbol symbols[] = {
-    { "semaphore", (DeeObject *)&DeeSemaphore_Type },
-    { "mutex", (DeeObject *)&DeeMutex_Type },
-    //{ "rwlock", (DeeObject *)&DeeRWLock_Type }, /* TODO */
-    { "tls", (DeeObject *)&DeeTls_Type },
+    { "Semaphore", (DeeObject *)&DeeSemaphore_Type },
+    { "Mutex", (DeeObject *)&DeeMutex_Type },
+    //{ "RwLock", (DeeObject *)&DeeRWLock_Type }, /* TODO */
+    { "Tls", (DeeObject *)&DeeTls_Type },
     { NULL }
 };
 

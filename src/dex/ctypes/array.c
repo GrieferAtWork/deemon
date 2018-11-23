@@ -132,7 +132,7 @@ PRIVATE struct type_getset aiter_getsets[] = {
 
 PRIVATE DeeTypeObject ArrayIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"array.iterator",
+    /* .tp_name     = */"ArrayIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -591,7 +591,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
     /* .ft_base = */{
         /* .st_base = */{
             OBJECT_HEAD_INIT((DeeTypeObject *)&DeeArrayType_Type),
-            /* .tp_name     = */"array",
+            /* .tp_name     = */"Array",
             /* .tp_doc      = */NULL,
             /* .tp_flags    = */TP_FNORMAL|TP_FINHERITCTOR|TP_FTRUNCATE|TP_FMOVEANY,
             /* .tp_weakrefs = */0,

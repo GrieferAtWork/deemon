@@ -37,6 +37,11 @@ struct instance_method {
 DDATDEF DeeTypeObject DeeInstanceMethod_Type;
 #define DeeInstanceMethod_Check(ob)      DeeObject_InstanceOf(ob,&DeeInstanceMethod_Type)
 #define DeeInstanceMethod_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeInstanceMethod_Type)
+#define DEFINE_INSTANCEMETHOD(name,func,thisarg) \
+DeeInstanceMethodObject name = { \
+    OBJECT_HEAD_INIT(&DeeInstanceMethod_Type), \
+   (DREF DeeObject *)(func), (DREF DeeObject *)(thisarg) }
+
 
 /* Create a new instance method.
  * This is a simple wrapper object that simply invokes a thiscall on

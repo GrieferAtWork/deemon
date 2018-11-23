@@ -227,7 +227,7 @@ INTERN DeePointerTypeObject DeePointer_Type = {
     /* .pt_base = */{
         /* .st_base = */{
             OBJECT_HEAD_INIT((DeeTypeObject *)&DeePointerType_Type),
-            /* .tp_name     = */"pointer",
+            /* .tp_name     = */"Pointer",
             /* .tp_doc      = */NULL,
             /* .tp_flags    = */TP_FNORMAL|TP_FTRUNCATE|TP_FMOVEANY|TP_FINHERITCTOR,
             /* .tp_weakrefs = */0,
@@ -604,7 +604,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
     /* .pt_base = */{
         /* .st_base = */{
             OBJECT_HEAD_INIT((DeeTypeObject *)&DeeLValueType_Type),
-            /* .tp_name     = */"lvalue",
+            /* .tp_name     = */"LValue",
             /* .tp_doc      = */NULL,
             /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FMOVEANY|TP_FTRUNCATE,
             /* .tp_weakrefs = */0,
