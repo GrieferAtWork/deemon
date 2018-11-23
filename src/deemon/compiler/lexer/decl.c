@@ -707,10 +707,13 @@ decl_ast_print(struct decl_ast const *__restrict self,
    if (i != 0 && unicode_printer_putascii(printer,','))
        goto err;
    arg = argv[i];
+#if 0 /* Since we always generate keyword information, the names of
+       * positional arguments can always be extracted from code keywords. */
    if (unicode_printer_print(printer,
                              arg->s_name->k_name,
                              arg->s_name->k_size) < 0)
        goto err;
+#endif
    if (!decl_ast_isempty(&arg->s_decltype) &&
       (i < scope->bs_argc_min ||
       !decl_ast_istype(&arg->s_decltype, /* Don't encode a type if it can be deduced from the default argument */

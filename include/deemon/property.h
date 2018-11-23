@@ -29,7 +29,7 @@ typedef struct property_object DeePropertyObject;
 struct property_object {
     /* A wrapper object describing an instance
      * property when accessed through the class:
-     * >> class my_class {
+     * >> class MyClass {
      * >>     private foo_value = 42;
      * >>     
      * >>     foo = {
@@ -44,11 +44,11 @@ struct property_object {
      * >>     }
      * >> }
      * >>
-     * >> local prop = my_class.foo; // This is a `struct property_object'
-     * >> print repr prop;         // `property { get = @thiscall function(), set = @thiscall function(v) }'
-     * >> local inst = my_class();
-     * >> print inst.foo;          // `In getter' `42'
-     * >> print prop.get(inst);    // `In getter' `42'
+     * >> local prop = MyClass.foo; // This is a `struct property_object'
+     * >> print repr prop;          // `property { get = @thiscall function(), set = @thiscall function(v) }'
+     * >> local inst = MyClass();
+     * >> print inst.foo;           // `In getter' `42'
+     * >> print prop.get(inst);     // `In getter' `42'
      * Note that property wrappers are always unbound and not actually
      * used when accessing instance members through normal means.
      * They are merely used as syntactical sugar to allow access to

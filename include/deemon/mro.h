@@ -31,8 +31,9 @@ DECL_BEGIN
  *
  * Defines all the functions and types (except for `membercache' itself,
  * which needs to be defined in `object.h', because it appears 2x as an
- * inlined structure in each type object) that are required to resolve,
- * as well as cache the attributes of types, both builtin, and user-defined. */
+ * inlined structure in every type object) that are required to resolve,
+ * as well as cache the attributes of types/classes, both builtin, and
+ * user-defined. */
 
 
 struct class_attribute;
@@ -53,7 +54,8 @@ struct membercache_slot {
     uint16_t               mcs_pad[(sizeof(void *)-2)/2];
     dhash_t                mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][== hash_str(mcs_name)] */
     DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][1..1][const]
-                                        * One of the base-classes of type, providing this attribute. */
+                                        * The type that is providing this attribute, which must be
+                                        * the associated type itself, or one of its base-classes. */
     union {
         char const        *mcs_name;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)] */
         struct type_method mcs_method; /* [valid_if(mcs_type == MEMBERCACHE_METHOD || mcs_type == MEMBERCACHE_INSTANCE_METHOD)] */

@@ -1809,7 +1809,8 @@ class Parameter: weakrefable {
 		}
 		if (!doclen) {
 			/* Try to extract the argument name from kwargs information */
-			m_namstring = get_generic_argument_name(docargi,docdecl.value.docnode.value);
+			m_namstring = get_generic_argument_name(docargi,
+				docdecl.value.docsect.value.docnode.value);
 			return;
 		}
 		/* Decode the parameter string new-style. */
@@ -1831,7 +1832,8 @@ class Parameter: weakrefable {
 				++name_end;
 		} else {
 			/* Parameter is unnamed. */
-			m_namstring = get_generic_argument_name(docargi,docdecl.value.docnode.value);
+			m_namstring = get_generic_argument_name(docargi,
+				docdecl.value.docsect.value.docnode.value);
 			name_end = 0;
 		}
 		if (name_end >= doclen)
@@ -2317,7 +2319,8 @@ class Declaration: weakrefable {
 	}
 
 	@@If @this declaration is that of a function or operator, check if the
-	@@type specifications of that function allow
+	@@type specifications of that function allow the given @args to be used
+	@@in a call to the function or operator
 	public final isaccepted(args...: object): bool {
 		local par = parameters;
 		if (par is none)
