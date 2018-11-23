@@ -94,6 +94,7 @@ local function encode_type(tp: deemon.type_): string {
 	if (mod === deemon)
 		return "?D" + encode_name(name);
 	return "?E{}:{}".format({
+		/* TODO: This only works for global modules! */
 		encode_name(deemon.module.__name__(mod)),
 		encode_name(name),
 	});
@@ -431,6 +432,7 @@ local function qualify_typeref_string(docnode: weakref with Doc, s: string): str
 			if (node.ismodule) {
 				local mod = node.module;
 				return "?E{}:{}".format({
+					/* TODO: This only works for global modules! */
 					encode_name(deemon.module.__name__(mod)),
 					s.substr(2,len)
 				});
@@ -2684,22 +2686,30 @@ local function generate_function_params(fp: file, fun: deemon.function_) {
 class Doc: weakrefable {
 
 	@@A universally, unique path that can be used to address this Doc item
+	@@NOTE: If the path cannot be determined, return :none instead
 	@@NOTE: The returned path includes a leading $"/"
-	public final property path: string = {
+	public final property path: string | none = {
 		get(): string {
 			if (m_path !is bound) {
 				local par = parent;
-				if (par is none)
-					m_path = "/" + name;
-				else
-					m_path = "{}/{}".format({ parent.path, name });
+				if (par is none) {
+					m_path = ismodule ? "/" + name : none;
+				} else {
+					par = parent.path;
+					m_path = par is none
+						? none
+						: "{}/{}".format({ par, name });
+				}
 			}
 			return m_path;
 		}
 	}
-	private member m_path: string;
+	private member m_path: string | none;
 
 	@@Similar to @path, but return the qualified path in <TYPE> encoding
+	@@NOTE: Because <TYPE> encoding includes support for untracable components,
+	@@      this property always evaluates to a string and simply uses
+	@@      the ?U encoding when the qualified path cannot be determined.
 	public final property qualified_path: string = {
 		get(): string {
 			if (m_qualified_path !is bound) {
@@ -2708,6 +2718,7 @@ class Doc: weakrefable {
 					m_qualified_path = "?U" + encode_name(name);
 				else if (par.ismodule) {
 					m_qualified_path = "?E{}:{}".format({
+						/* TODO: This only works for global modules! */
 						encode_name(par.name),
 						encode_name(name),
 					});
@@ -2929,10 +2940,14 @@ do_load_wrapper_module:
 						goto do_throw_unknown_object_origin;
 					}
 					if (mod is none) {
+						if (doc_parent_or_path is none) {
+							mod = deemon;
+						} else {
 do_throw_unknown_object_origin:
-						throw Error.AttributeError(
-							"Failed to determine the declaring type or module of {!r}".
-							format({ doc_parent_or_path }));
+							throw Error.AttributeError(
+								"Failed to determine the declaring type or module of {!r}".
+								format({ doc_parent_or_path }));
+						}
 					}
 					m_parent = mod;
 				}
