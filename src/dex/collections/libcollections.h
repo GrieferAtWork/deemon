@@ -160,14 +160,9 @@ INTDEF ATTR_RETNONNULL DREF DeeObject *DCALL Deque_Pop_unlocked(Deque *__restric
 
 /* Insert/delete an item at a given index. */
 INTDEF int DCALL Deque_Insert(Deque *__restrict self, size_t index, DeeObject *__restrict item);
-INTDEF dssize_t DCALL Deque_Erase(Deque *__restrict self, size_t index, size_t num_items);
+INTDEF size_t DCALL Deque_Erase(Deque *__restrict self, size_t index, size_t num_items);
 INTDEF DREF DeeObject *DCALL Deque_Pop(Deque *__restrict self, size_t index);
-
-
-INTDEF ATTR_COLD void DCALL err_empty_sequence(DeeObject *__restrict seq);
-INTDEF ATTR_COLD void DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);
-
-
+INTDEF DREF DeeObject *DCALL Deque_Pops(Deque *__restrict self, dssize_t index);
 
 typedef struct {
     DequeBucket *di_bucket;
@@ -299,6 +294,12 @@ typedef struct {
 INTDEF DeeTypeObject FixedList_Type;
 INTDEF DeeTypeObject FixedListIterator_Type;
 
+
+
+
+INTDEF ATTR_COLD int DCALL err_empty_sequence(DeeObject *__restrict seq);
+INTDEF ATTR_COLD int DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);
+INTDEF ATTR_COLD int DCALL err_unbound_index(DeeObject *__restrict self, size_t index);
 
 
 DECL_END

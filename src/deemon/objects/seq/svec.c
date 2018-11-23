@@ -421,17 +421,23 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
   return err_readonly_rvec();
  }
  oldobj = self->rv_vector[index];
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
  if unlikely(!oldobj) {
 #ifndef CONFIG_NO_THREADS
   rwlock_endwrite(self->rv_plock);
 #endif
   return err_unbound_index((DeeObject *)self,index);
  }
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
  self->rv_vector[index] = NULL;
 #ifndef CONFIG_NO_THREADS
  rwlock_endwrite(self->rv_plock);
 #endif
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
  Dee_Decref(oldobj);
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
+ Dee_XDecref(oldobj);
+#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
  return 0;
 }
 PRIVATE void DCALL

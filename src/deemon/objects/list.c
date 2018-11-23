@@ -2004,21 +2004,6 @@ list_nsi_getitem(List *__restrict self,
  return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-list_nsi_getitem_fast(List *__restrict self,
-                      size_t index) {
- DREF DeeObject *result;
- DeeList_LockRead(self);
- if unlikely(index >= DeeList_SIZE(self)) {
-  result = NULL;
- } else {
-  result = DeeList_GET(self,index);
-  Dee_Incref(result);
- }
- DeeList_LockEndRead(self);
- return result;
-}
-
 PRIVATE size_t DCALL
 list_nsi_find(List *__restrict self,
               size_t start, size_t end,
@@ -2102,7 +2087,7 @@ PRIVATE struct type_nsi list_nsi = {
             /* .nsi_getitem      = */(void *)&list_nsi_getitem,
             /* .nsi_delitem      = */(void *)&list_delitem_index,
             /* .nsi_setitem      = */(void *)&list_setitem_index,
-            /* .nsi_getitem_fast = */(void *)&list_nsi_getitem_fast,
+            /* .nsi_getitem_fast = */(void *)NULL,
             /* .nsi_getrange     = */(void *)&list_getrange_i,
             /* .nsi_getrange_n   = */(void *)&list_getrange_in,
             /* .nsi_setrange     = */(void *)&list_setrange_i,

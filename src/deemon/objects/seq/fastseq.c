@@ -25,6 +25,7 @@
 #include <deemon/tuple.h>
 #include <deemon/list.h>
 #include <deemon/none.h>
+#include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/thread.h>
 #include <deemon/bytes.h>
@@ -95,6 +96,7 @@ DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
  if (nsi->nsi_seqlike.nsi_getitem_fast) {
   DREF DeeObject *result;
   result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,index);
+  ASSERT(result != ITER_DONE);
   if unlikely(!result)
      err_unbound_index(self,index);
   return result;
@@ -102,6 +104,36 @@ DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
  ASSERT(nsi->nsi_seqlike.nsi_getitem);
  return (*nsi->nsi_seqlike.nsi_getitem)(self,index);
 }
+
+/* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE an error
+ * occurred, and `NULL' if the item has been marked as unbound. */
+PUBLIC DREF DeeObject *DCALL
+DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
+ DREF DeeObject *result;
+ DeeTypeObject *tp_self;
+ struct type_seq *seq;
+ struct type_nsi *nsi;
+ ASSERT_OBJECT(self);
+ tp_self = Dee_TYPE(self);
+ seq = tp_self->tp_seq;
+ ASSERT(seq);
+ nsi = seq->tp_nsi;
+ ASSERT(nsi);
+ ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
+ if (nsi->nsi_seqlike.nsi_getitem_fast) {
+  result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,index);
+  ASSERT(result != ITER_DONE);
+  return result;
+ }
+ ASSERT(nsi->nsi_seqlike.nsi_getitem);
+ result = (*nsi->nsi_seqlike.nsi_getitem)(self,index);
+ if unlikely(!result) {
+  if (!DeeError_Catch(&DeeError_UnboundItem))
+       result = ITER_DONE;
+ }
+ return result;
+}
+
 
 
 PUBLIC size_t DCALL

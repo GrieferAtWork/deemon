@@ -28,28 +28,36 @@
 
 DECL_BEGIN
 
-INTERN ATTR_COLD void DCALL
+INTERN ATTR_COLD int DCALL
 err_empty_sequence(DeeObject *__restrict seq) {
  ASSERT_OBJECT(seq);
- DeeError_Throwf(&DeeError_ValueError,
-                 "Empty sequence of type `%k' encountered",
-                 Dee_TYPE(seq));
+ return DeeError_Throwf(&DeeError_ValueError,
+                        "Empty sequence of type `%k' encountered",
+                        Dee_TYPE(seq));
 }
 
-INTERN ATTR_COLD void DCALL
+INTERN ATTR_COLD int DCALL
 err_index_out_of_bounds(DeeObject *__restrict self,
                         size_t index, size_t size) {
  ASSERT_OBJECT(self);
  ASSERT(index >= size);
- DeeError_Throwf(&DeeError_IndexError,
-                 "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
-                 index,size,Dee_TYPE(self));
+ return DeeError_Throwf(&DeeError_IndexError,
+                        "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
+                        index,size,Dee_TYPE(self));
+}
+
+INTERN ATTR_COLD int DCALL
+err_unbound_index(DeeObject *__restrict self, size_t index) {
+ ASSERT_OBJECT(self);
+ return DeeError_Throwf(&DeeError_UnboundItem,
+                        "Index `%Iu' of instance of `%k': %k has not been bound",
+                        index,Dee_TYPE(self),self);
 }
 
 
 PRIVATE struct dex_symbol symbols[] = {
     { "Deque", (DeeObject *)&Deque_Type },
-//     { "FixedList", (DeeObject *)&FixedList_Type },
+    { "FixedList", (DeeObject *)&FixedList_Type },
     { NULL }
 };
 
