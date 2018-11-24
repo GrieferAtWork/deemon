@@ -912,6 +912,48 @@ libdisasm_printref(dformatprinter printer, void *arg,
 print_generic:
  return DeeFormat_Printf(printer,arg,"ref %u",(unsigned int)rid);
 }
+
+PRIVATE DREF DeeClassDescriptorObject *DCALL
+find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
+                                   char const *__restrict class_name) {
+ DREF DeeClassDescriptorObject *result;
+ uint16_t i; bool has_child_code = false;
+ rwlock_read(&code->co_static_lock);
+ for (i = 0; i < code->co_staticc; ++i) {
+  result = (DeeClassDescriptorObject *)code->co_staticv[i];
+  if (!DeeClassDescriptor_Check(result)) {
+   if (DeeCode_Check(result))
+       has_child_code = true;
+   continue;
+  }
+  if (!result->cd_name) continue;
+  if (strcmp(DeeString_STR(result->cd_name),class_name) != 0)
+      continue;
+  /* Found it! */
+  Dee_Incref(result);
+  rwlock_endread(&code->co_static_lock);
+  return result;
+ }
+ if (has_child_code) {
+  /* Also search child-code nodes. */
+  DREF DeeCodeObject *child_code;
+  for (i = 0; i < code->co_staticc; ++i) {
+   child_code = (DREF DeeCodeObject *)code->co_staticv[i];
+   if (!DeeCode_Check(child_code)) continue;
+   rwlock_endread(&code->co_static_lock);
+   result = find_class_descriptor_in_constants(child_code,class_name);
+   if (result) {
+    Dee_Decref(child_code);
+    return result;
+   }
+   rwlock_read(&code->co_static_lock);
+  }
+ }
+ rwlock_endread(&code->co_static_lock);
+ return NULL;
+}
+
+
 PRIVATE dssize_t DCALL
 libdisasm_printmembername(dformatprinter printer, void *arg,
                           uint16_t rid, uint16_t mid,
@@ -929,20 +971,37 @@ libdisasm_printmembername(dformatprinter printer, void *arg,
     class_sym = DeeModule_GetSymbolString(code->co_module,
                                           class_name,
                                           hash_str(class_name));
-    if (class_sym &&
-      !(class_sym->ss_flags & (MODSYM_FPROPERTY | MODSYM_FEXTERN)) &&
-        class_sym->ss_index < mod->mo_globalc) {
+    if (!class_sym)
+        goto search_module_root_constants;
+    if (class_sym->ss_index < mod->mo_globalc &&
+      !(class_sym->ss_flags & (MODSYM_FPROPERTY | MODSYM_FEXTERN))) {
      DREF DeeObject *class_type;
+     DeeClassDescriptorObject *desc;
      rwlock_read(&mod->mo_lock);
      class_type = mod->mo_globalv[class_sym->ss_index];
      Dee_XIncref(class_type);
      rwlock_endread(&mod->mo_lock);
-     if (class_type) {
+     if (!class_type) {
+      DREF DeeCodeObject *root;
+search_module_root_constants:
+      rwlock_read(&mod->mo_lock);
+      root = mod->mo_root;
+      Dee_XIncref(root);
+      rwlock_endread(&mod->mo_lock);
+      if (root) {
+       desc = find_class_descriptor_in_constants(root,class_name);
+       Dee_Decref(root);
+       if (desc) {
+        class_type = (DREF DeeObject *)desc; /* Inherit reference. (will be dropped later) */
+        goto do_search_desc;
+       }
+      }
+     } else {
       if (DeeType_Check(class_type) &&
           DeeType_IsClass(class_type)) {
-       DeeClassDescriptorObject *desc;
        struct class_attribute *attr;
        desc = DeeClass_DESC(class_type)->cd_desc;
+do_search_desc:
        if (mid < (is_cmember ? desc->cd_cmemb_size : desc->cd_imemb_size)) {
         size_t i; dssize_t result;
         if (desc->cd_name) class_name = DeeString_STR(desc->cd_name);
