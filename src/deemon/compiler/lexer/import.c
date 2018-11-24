@@ -308,7 +308,9 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
  utf8_repr = DeeString_AsUtf8((DeeObject *)module_name);
  if unlikely(!utf8_repr) goto err;
  symbol_start = (char *)memrchr(utf8_repr,'.',WSTR_LENGTH(utf8_repr));
- if (!symbol_start) symbol_start = utf8_repr;
+ if (!symbol_start)
+      symbol_start = utf8_repr;
+ else ++symbol_start;
  symbol_length = (size_t)((utf8_repr + WSTR_LENGTH(utf8_repr)) - symbol_start);
  /* Make sure that the symbol name is valid. */
  {
