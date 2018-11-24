@@ -26,12 +26,12 @@ import fs;
 
 function write_page_head(fp,title) {
 	fp <<
-		"<!DOCTYPE HTLM>\r\n"
+		"<!DOCTYPE html>\r\n"
 		"<html>\r\n"
 		"<head>\r\n"
-			"<meta charset=\"UTF-8\">"
-			"<link rel=\"stylesheet\" href=\"/style.css\">"
-			"<title>{}</title>"
+			"\t<meta charset=\"UTF-8\">\r\n"
+			"\t<link rel=\"stylesheet\" href=\"/style.css\">\r\n"
+			"\t<title>{}</title>\r\n"
 		"</head>\r\n"
 		"<body>\r\n"
 		.format({
@@ -187,7 +187,7 @@ function get_module_page(fp: file, path: {string...}) {
 		d.path,
 		d.prettypathname
 	});
-	fp << "</ul></nav><main>\r\n";
+	fp << "</ul></nav>\r\n<main>\r\n";
 	fp << "<h2><b>" << d.kind << "</b>: " << d.name;
 	if (d.istype && d.object is bound) {
 		local base = deemon.type_.__base__(d.object);
@@ -259,16 +259,16 @@ function get_module_page(fp: file, path: {string...}) {
 	write_page_tail(fp);
 }
 
-function ls_modules_path(p: string, prefix: string): {string...} {
+function ls_modules_path(p: string, prefix: string, show_all: bool = false): {string...} {
 	import fs;
 	try {
 		for (local f: fs.dir(p)) {
 			local path = fs.joinpath(p,f);
-			if (f.startswith("_"))
+			if (f.startswith("_") && !show_all)
 				continue; /* Hidden symbol (e.g. `_codecs') */
 			if (fs.stat.isdir(path)) {
 				/* Skip files found in /include-folders. */
-				if (f == "include")
+				if (f == "include" && !show_all)
 					continue;
 				local new_prefix = "{}{}.".format({ prefix, f });
 				for (local x: ls_modules_path(path,prefix))
@@ -276,13 +276,13 @@ function ls_modules_path(p: string, prefix: string): {string...} {
 				continue;
 			}
 			if (f.startswith(".") && f.startswith(".dec"))
-				yield f[1:#f-4];
+				yield f[1:-4];
 			else if (f.endswith(".so"))
-				yield f[:#f-3];
+				yield f[:-3];
 			else if (f.endswith(".dll"))
-				yield f[:#f-4];
+				yield f[:-4];
 			else if (f.endswith(".dee"))
-				yield f[:#f-4];
+				yield f[:-4];
 		}
 	} catch (...) {
 	}
@@ -300,7 +300,7 @@ function get_modules_list(fp: file) {
 	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>"
-		"</ul></nav><main>\r\n";
+		"</ul></nav>\r\n<main>\r\n";
 	for (local name: ls_modules()) {
 		fp	<< "<div class=\"module_item\"><a href=\"/modules/"
 			<< name
@@ -358,8 +358,10 @@ function ClientThreadMain(con) {
 				} else {
 					command = command[3:#command-8].strip();
 					local content;
+					local content_type = "text/html";
 					if (command == "/style.css") {
 						content = file.open(fs.headof(__FILE__) + "/style.css","r").read();
+						content_type = "text/css";
 					} else {
 						content = file.writer();
 						get_page(content,command);
@@ -367,8 +369,8 @@ function ClientThreadMain(con) {
 					}
 					fp << protocol << " 200 OK\r\n"
 						"Content-Length: {}\r\n"
-						"Content-Type: text/html; charset=UTF-8\r\n"
-						"\r\n".format({ #content });
+						"Content-Type: {}; charset=UTF-8\r\n"
+						"\r\n".format({ #content, content_type });
 					fp.write(content);
 				}
 				con.send(fp.string.encode("UTF-8"));

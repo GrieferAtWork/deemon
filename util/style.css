@@ -13,8 +13,8 @@ a:hover {
 nav {
 	position: -webkit-sticky;
 	position: sticky;
-	top: 0;
-	box-shadow: 0 4px 4px 0 rgba(0,0,0,.3);
+	top: 0px;
+	box-shadow: 0px 4px 4px 0px rgba(0,0,0,.3);
 	border-bottom: 2px solid #8c8593;
 	background-color: #d9d6db;
 	color: black;
@@ -26,23 +26,23 @@ nav {
 }
 nav ul {
 	list-style-type: none;
-	margin: 0;
-	padding: 0;
-	border: 0;
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
 	overflow: hidden;
 }
 nav ul li {
 	float: left;
-	margin: 0;
-	padding: 0;
-	border: 0;
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
 }
 nav ul li a {
 	display: block;
 	padding: 2px 8px;
-	margin: 0;
-	padding: 0;
-	border: 0;
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
 	text-decoration: none; /* Gets rid of link underlines */
 }
 nav ul li a:hover {
@@ -51,7 +51,7 @@ nav ul li a:hover {
 }
 
 .sep {
-	padding: 0 10px;
+	padding: 0px 10px;
 }
 
 
@@ -74,7 +74,7 @@ code {
 body {
 	background-color: #666666;
 	color: #e6e6e6;
-	margin: 0;
+	margin: 0px;
 }
 main {
 	width: 1000px;
@@ -82,7 +82,7 @@ main {
 	border: 1px solid black;
 	background-color: #4d4d4d;
 	padding: 8px;
-	box-shadow: 0 0 4px 4px rgba(0,0,0,.2);
+	box-shadow: 0px 0px 4px 4px rgba(0,0,0,.2);
 }
 var {
 	font-style: normal;
@@ -112,7 +112,7 @@ th {
 
 .category_title {
 	font-size: 30px;
-	margin: 20px 0 10px 0;
+	margin: 20px 0px 10px 0px;
 	border-bottom: 10px solid #d9d6db;
 }
 .source {
